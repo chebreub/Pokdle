@@ -12216,7 +12216,7 @@ body.theme-dark .home-social-suite {
 
 .home-extras-coming-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
 }
 
@@ -12237,7 +12237,7 @@ body.theme-dark .home-social-suite {
 
 .home-extras-focus-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -12814,9 +12814,84 @@ body.theme-dark .home-social-suite {
 }
 
 .home-builder-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.team-builder-summary-top {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.team-builder-synthesis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.team-builder-synthesis-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(120, 157, 214, 0.18);
+  background: linear-gradient(180deg, rgba(248,251,255,0.96), rgba(239,245,255,0.92));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+.team-builder-synthesis-head {
+  display: grid;
+  gap: 4px;
+}
+
+.team-builder-synthesis-head h5 {
+  margin: 0;
+  color: var(--strong-text);
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.team-builder-synthesis-head p {
+  margin: 0;
+  color: var(--soft-text);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.team-builder-synthesis-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-builder-offense-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.team-builder-offense-stat {
+  display: grid;
+  gap: 4px;
+  padding: 10px 11px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 157, 214, 0.18);
+  background: rgba(113, 147, 205, 0.1);
+}
+
+.team-builder-offense-stat span {
+  color: #35537d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.team-builder-offense-stat strong {
+  color: var(--strong-text);
+  font-size: 1.02rem;
+  line-height: 1.1;
 }
 
 .home-builder-summary-chip {
@@ -13160,6 +13235,29 @@ body.theme-dark .home-builder-summary-chip b {
   color: #edf5ff;
 }
 
+body.theme-dark .team-builder-synthesis-card {
+  border-color: rgba(145, 180, 235, 0.16);
+  background: linear-gradient(180deg, rgba(29, 48, 80, 0.9), rgba(22, 38, 64, 0.92));
+}
+
+body.theme-dark .team-builder-synthesis-head h5,
+body.theme-dark .team-builder-offense-stat strong {
+  color: #edf5ff;
+}
+
+body.theme-dark .team-builder-synthesis-head p {
+  color: #c6d7f0;
+}
+
+body.theme-dark .team-builder-offense-stat {
+  border-color: rgba(145, 180, 235, 0.16);
+  background: rgba(123, 167, 255, 0.12);
+}
+
+body.theme-dark .team-builder-offense-stat span {
+  color: #d8e7ff;
+}
+
 body.theme-dark .home-builder-editor {
   border-color: rgba(145, 180, 235, 0.16);
   background: linear-gradient(180deg, rgba(29, 48, 80, 0.88), rgba(22, 38, 64, 0.92));
@@ -13171,6 +13269,8 @@ body.theme-dark .home-builder-editor {
   .home-builder-fields,
   .home-builder-moves,
   .home-builder-grid,
+  .team-builder-synthesis-grid,
+  .team-builder-offense-grid,
   .home-extras-focus-grid,
   .home-extras-coming-grid {
     grid-template-columns: 1fr;

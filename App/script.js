@@ -3636,6 +3636,105 @@ function getTeamBuilderSlotPokemonTypes(slot) {
   return pokemon ? [pokemon.type1, pokemon.type2].filter(Boolean) : [];
 }
 
+function getTeamBuilderOffenseBucket(slot) {
+  const preset = String(slot?.evPreset || "");
+  if (preset === "offensive-physique") return "physique";
+  if (preset === "offensive-speciale") return "speciale";
+  if (preset === "support" || preset === "bulky") return "support";
+  if (preset === "rapide") {
+    const atk = Number(slot?.evs?.atk) || 0;
+    const spa = Number(slot?.evs?.spa) || 0;
+    if (atk === spa) return "support";
+    return atk > spa ? "physique" : "speciale";
+  }
+  if (preset !== "custom") return "support";
+
+  const atk = Number(slot?.evs?.atk) || 0;
+  const spa = Number(slot?.evs?.spa) || 0;
+  const hp = Number(slot?.evs?.hp) || 0;
+  const def = Number(slot?.evs?.def) || 0;
+  const spd = Number(slot?.evs?.spd) || 0;
+  const bulk = hp + def + spd;
+  const speed = Number(slot?.evs?.spe) || 0;
+
+  if (atk >= 180 && atk >= spa + 60) return "physique";
+  if (spa >= 180 && spa >= atk + 60) return "speciale";
+  if (bulk >= 420 || speed < 128) return "support";
+  return atk >= spa ? "physique" : "speciale";
+}
+
+function getTeamBuilderTeamSynthesis() {
+  const filledSlots = [];
+  const typeCounts = new Map();
+  const offenseCounts = { physique: 0, speciale: 0, support: 0 };
+  let moveCount = 0;
+
+  for (const slot of teamBuilderState) {
+    if (!slot) continue;
+    moveCount += slot.moves.filter(Boolean).length;
+
+    const pokemon = getTeamBuilderPokemon(slot);
+    if (!pokemon) continue;
+
+    const types = [pokemon.type1, pokemon.type2].filter(Boolean);
+    filledSlots.push({ slot, pokemon, types });
+
+    types.forEach((type) => {
+      typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
+    });
+
+    const bucket = getTeamBuilderOffenseBucket(slot);
+    offenseCounts[bucket] += 1;
+  }
+
+  const attackTypes = Object.keys(TYPE_EFFECTIVENESS);
+  const teamMatchups = attackTypes.map((attackType) => {
+    const multipliers = filledSlots.map(({ types }) => {
+      if (!types.length) return 1;
+      return types.reduce((product, defenseType) => product * attackMultiplier(attackType, defenseType), 1);
+    });
+    const weakCount = multipliers.filter((multiplier) => multiplier > 1).length;
+    const resistCount = multipliers.filter((multiplier) => multiplier > 0 && multiplier < 1).length;
+    const immuneCount = multipliers.filter((multiplier) => multiplier === 0).length;
+    const coverageScore = resistCount + immuneCount * 2;
+    const threatScore = weakCount * 3 + (multipliers.length ? Math.max(...multipliers) : 0);
+    const maxMultiplier = multipliers.length ? Math.max(...multipliers) : 0;
+    return {
+      type: attackType,
+      weakCount,
+      resistCount,
+      immuneCount,
+      coverageScore,
+      threatScore,
+      maxMultiplier,
+    };
+  });
+
+  const weaknesses = teamMatchups
+    .filter((row) => row.weakCount > 0)
+    .sort((a, b) => b.threatScore - a.threatScore || b.weakCount - a.weakCount || b.maxMultiplier - a.maxMultiplier || a.type.localeCompare(b.type, "fr"))
+    .slice(0, 4);
+
+  const coverage = teamMatchups
+    .filter((row) => row.coverageScore > 0)
+    .sort((a, b) => b.coverageScore - a.coverageScore || b.immuneCount - a.immuneCount || a.type.localeCompare(b.type, "fr"))
+    .slice(0, 4);
+
+  const duplicates = [...typeCounts.entries()]
+    .filter(([, count]) => count > 1)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"));
+
+  return {
+    filledCount: filledSlots.length,
+    distinctTypeCount: typeCounts.size,
+    moveCount,
+    offenseCounts,
+    weaknesses,
+    coverage,
+    duplicates,
+  };
+}
+
 function getTeamBuilderPokemonCatalog() {
   return [...POKEMON_LIST].sort((a, b) => a.name.localeCompare(b.name, "fr"));
 }
@@ -3929,18 +4028,89 @@ function renderTeamBuilderSummary() {
   const summary = document.getElementById("team-builder-summary");
   if (!summary) return;
 
-  const filledSlots = teamBuilderState.filter((slot) => slot.pokemonId).length;
-  const distinctTypes = new Set();
-  let moveCount = 0;
-  teamBuilderState.forEach((slot) => {
-    getTeamBuilderSlotPokemonTypes(slot).forEach((type) => distinctTypes.add(type));
-    moveCount += slot.moves.filter(Boolean).length;
-  });
+  const synthesis = getTeamBuilderTeamSynthesis();
+  const renderChip = (label, value) => `
+    <span class="home-builder-summary-chip">
+      ${escapeHtml(label)}: <b>${escapeHtml(value)}</b>
+    </span>
+  `;
+  const renderTypeChip = (type, meta) => `
+    <span class="home-analysis-chip">
+      <b>${escapeHtml(type)}</b>
+      <small>${escapeHtml(meta)}</small>
+    </span>
+  `;
+
+  const threatsHtml = synthesis.weaknesses.length
+    ? synthesis.weaknesses
+        .map((row) => renderTypeChip(row.type, row.weakCount === 1 ? "1 faiblesse" : `${row.weakCount} faiblesses`))
+        .join("")
+    : '<span class="home-type-helper-empty">Aucune faiblesse marquée.</span>';
+
+  const coverageHtml = synthesis.coverage.length
+    ? synthesis.coverage
+        .map((row) => {
+          const parts = [];
+          if (row.resistCount) parts.push(`${row.resistCount} résistance${row.resistCount > 1 ? "s" : ""}`);
+          if (row.immuneCount) parts.push(`${row.immuneCount} immunité${row.immuneCount > 1 ? "s" : ""}`);
+          return renderTypeChip(row.type, parts.join(" + ") || "Couverture");
+        })
+        .join("")
+    : '<span class="home-type-helper-empty">Aucune couverture notable.</span>';
+
+  const duplicatesHtml = synthesis.duplicates.length
+    ? synthesis.duplicates.map(([type, count]) => renderTypeChip(type, `x${count}`)).join("")
+    : '<span class="home-type-helper-empty">Aucun doublon évident.</span>';
 
   summary.innerHTML = `
-    <span class="home-builder-summary-chip">Slots: <b>${filledSlots}/6</b></span>
-    <span class="home-builder-summary-chip">Types: <b>${distinctTypes.size}</b></span>
-    <span class="home-builder-summary-chip">Attaques: <b>${moveCount}/24</b></span>
+    <div class="team-builder-summary-top">
+      ${renderChip("Slots", `${synthesis.filledCount}/6`)}
+      ${renderChip("Types présents", String(synthesis.distinctTypeCount))}
+      ${renderChip("Attaques", `${synthesis.moveCount}/24`)}
+    </div>
+    <div class="team-builder-synthesis-grid">
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Faiblesses à surveiller</h5>
+          <p>Les types qui punissent le plus la team.</p>
+        </div>
+        <div class="team-builder-synthesis-list">${threatsHtml}</div>
+      </section>
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Couverture utile</h5>
+          <p>Les types déjà bien encaissés par l'équipe.</p>
+        </div>
+        <div class="team-builder-synthesis-list">${coverageHtml}</div>
+      </section>
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Répartition offensive</h5>
+          <p>Vue simple des rôles de slot préparés.</p>
+        </div>
+        <div class="team-builder-offense-grid">
+          <div class="team-builder-offense-stat">
+            <span>Physique</span>
+            <strong>${synthesis.offenseCounts.physique}</strong>
+          </div>
+          <div class="team-builder-offense-stat">
+            <span>Spécial</span>
+            <strong>${synthesis.offenseCounts.speciale}</strong>
+          </div>
+          <div class="team-builder-offense-stat">
+            <span>Support</span>
+            <strong>${synthesis.offenseCounts.support}</strong>
+          </div>
+        </div>
+      </section>
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Doublons évidents</h5>
+          <p>Types répétés à surveiller avant de valider la team.</p>
+        </div>
+        <div class="team-builder-synthesis-list">${duplicatesHtml}</div>
+      </section>
+    </div>
   `;
 }
 
