@@ -12,9 +12,6 @@ const io = new Server(server, {
 });
 
 const rooms = new Map();
-const POKEMON_LIST = loadPokemonList();
-const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
-const MAX_ROOM_SIZE = 2;
 const NAME_OVERRIDES = {
   "??lectrode": "Électrode",
   "??lekid": "Élekid",
@@ -31,6 +28,9 @@ const NAME_OVERRIDES = {
   "??kaéser": "Ékaïser",
   "??thernatos": "Éthernatos",
 };
+const POKEMON_LIST = loadPokemonList();
+const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
+const MAX_ROOM_SIZE = 2;
 
 app.use(express.static(__dirname));
 
