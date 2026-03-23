@@ -15,6 +15,22 @@ const rooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
+const NAME_OVERRIDES = {
+  "??lectrode": "Électrode",
+  "??lekid": "Élekid",
+  "??crémeuh": "Écrémeuh",
+  "??lecsprint": "Élecsprint",
+  "??crapince": "Écrapince",
+  "??oko": "Éoko",
+  "??tourmi": "Étourmi",
+  "??tourvol": "Étourvol",
+  "??touraptor": "Étouraptor",
+  "??cayon": "Écayon",
+  "??lekable": "Élekable",
+  "??caéd": "Écaïd",
+  "??kaéser": "Ékaïser",
+  "??thernatos": "Éthernatos",
+};
 
 app.use(express.static(__dirname));
 
@@ -150,7 +166,10 @@ function loadPokemonList() {
   const raw = fs.readFileSync(filePath, "utf8");
   const match = raw.match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/);
   if (!match) throw new Error("POKEMON_LIST introuvable dans pokemon.js");
-  return JSON.parse(match[1]);
+  return JSON.parse(match[1]).map((pokemon) => {
+    if (pokemon && NAME_OVERRIDES[pokemon.name]) pokemon.name = NAME_OVERRIDES[pokemon.name];
+    return pokemon;
+  });
 }
 
 function sanitizeNickname(value) {

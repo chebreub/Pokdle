@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   stats: "pokedle_stats_v1",
   game: "pokedle_game_v1",
   ranking: "pokedle_ranking_v1",
+  teamBuilder: "pokedle_team_builder_v1",
   gamesRanking: "pokedle_games_ranking_v1",
   profile: "pokedle_profile_v1",
   achievements: "pokedle_achievements_v1",
@@ -54,8 +55,23 @@ const BOT_DUEL_MIN_SOLVE_TURN = 4;
 const BOT_DUEL_MAX_SOLVE_TURN = 7;
 const BOT_DUEL_TURN_DELAY_MS = 2200;
 
-// Keep overrides empty: pokemon.js is the source of truth (ids + FR names + sprites).
-const NAME_OVERRIDES = {};
+// Keep overrides limited to data that still contains corrupted accents.
+const NAME_OVERRIDES = {
+  "??lectrode": "Électrode",
+  "??lekid": "Élekid",
+  "??crémeuh": "Écrémeuh",
+  "??lecsprint": "Élecsprint",
+  "??crapince": "Écrapince",
+  "??oko": "Éoko",
+  "??tourmi": "Étourmi",
+  "??tourvol": "Étourvol",
+  "??touraptor": "Étouraptor",
+  "??cayon": "Écayon",
+  "??lekable": "Élekable",
+  "??caéd": "Écaïd",
+  "??kaéser": "Ékaïser",
+  "??thernatos": "Éthernatos",
+};
 const SPRITE_ID_OVERRIDES_BY_NAME = {};
 // Extra playable forms (regional, mega, special).
 // We keep base species sprites by default to avoid broken links.
@@ -334,6 +350,17 @@ let rankingSelected = null;
 let rankingCandidates = [];
 let rankingFiltered = [];
 let rankAcIndex = -1;
+let teamBuilderState = null;
+let teamBuilderActiveSlot = 0;
+let teamBuilderPokemonSearch = "";
+let teamBuilderPokemonPickerOpen = false;
+let teamBuilderStrategicRenderVersion = 0;
+let teamBuilderTalentOptionsCache = new Map();
+let teamLibraryFilters = {
+  generation: "all",
+  format: "all",
+  style: "all",
+};
 let mysteryClues = [];
 let cryAudio = null;
 let quizQuestions = [];
@@ -351,6 +378,324 @@ let pokedexSelectedShiny = false;
 let typeChartEra = "gen6+";
 let typeChartOffenseFilter = "all";
 let typeChartDefenseFilter = "all";
+
+const TEAM_BUILDER_ITEMS = [
+  "Aucun",
+  "Restes",
+  "Orbe Vie",
+  "Bandeau Choix",
+  "Mouchoir Choix",
+  "Lunettes Choix",
+  "Veste de Combat",
+  "Casque Brut",
+  "Grosses Bottes",
+  "Orbe Flamme",
+  "Orbe Toxik",
+  "Ceinture Force",
+  "Baie Prine",
+  "Baie Lampou",
+  "Poudre Argentée",
+  "Peau Métal",
+  "Solide Roc",
+  "Boue Noire",
+  "Lumargile",
+  "Herbe Pouvoir",
+  "Vive Griffe",
+  "Charbon",
+  "Aimant",
+  "Eau Mystique",
+  "Evoluroc",
+];
+
+const TEAM_BUILDER_GIMMICKS = [
+  "Aucun",
+  "Méga",
+  "Téra",
+  "Move Z",
+  "Dynamax",
+  "Autre mécanique",
+];
+
+const TEAM_BUILDER_MOVE_LIBRARY = [
+  { name: "Séisme", types: ["Sol"] },
+  { name: "Lance-Flammes", types: ["Feu"] },
+  { name: "Hydrocanon", types: ["Eau"] },
+  { name: "Lame-Feuille", types: ["Plante"] },
+  { name: "Tonnerre", types: ["Électrik"] },
+  { name: "Laser Glace", types: ["Glace"] },
+  { name: "Close Combat", types: ["Combat"] },
+  { name: "Bomb-Beurk", types: ["Poison"] },
+  { name: "Draco-Météore", types: ["Dragon"] },
+  { name: "Boutefeu", types: ["Feu"] },
+  { name: "Surf", types: ["Eau"] },
+  { name: "Éco-Sphère", types: ["Plante"] },
+  { name: "Fatal-Foudre", types: ["Électrik"] },
+  { name: "Vent Violent", types: ["Vol"] },
+  { name: "Clonage", types: [] },
+  { name: "Change Éclair", types: ["Électrik"] },
+  { name: "Machouille", types: ["Ténèbres"] },
+  { name: "Ball'Ombre", types: ["Spectre"] },
+  { name: "Vibrobscur", types: ["Ténèbres"] },
+  { name: "Psyko", types: ["Psy"] },
+  { name: "Aurasphère", types: ["Combat"] },
+  { name: "Nœud Herbe", types: ["Plante"] },
+  { name: "Ébullilave", types: ["Feu"] },
+  { name: "Vive-Attaque", types: [] },
+  { name: "Retour", types: [] },
+  { name: "Plaquage", types: [] },
+  { name: "Ultralaser", types: [] },
+  { name: "Écrasement", types: [] },
+  { name: "Bélier", types: [] },
+  { name: "Métronome", types: [] },
+  { name: "Attraction", types: [] },
+  { name: "Repos", types: [] },
+  { name: "Piège de Roc", types: ["Roche"] },
+  { name: "Demi-Tour", types: ["Insecte"] },
+  { name: "Tour Rapide", types: ["Sol"] },
+  { name: "Abri", types: [] },
+  { name: "Lame d'Air", types: ["Vol"] },
+  { name: "Choc Mental", types: ["Psy"] },
+  { name: "Direct Toxik", types: ["Poison"] },
+  { name: "Canon Graine", types: ["Plante"] },
+  { name: "Câlinerie", types: ["Fée"] },
+  { name: "Éclat Magique", types: ["Fée"] },
+  { name: "Tête de Fer", types: ["Acier"] },
+  { name: "Pisto-Poing", types: ["Acier"] },
+  { name: "Crocs Feu", types: ["Feu"] },
+  { name: "Crocs Givre", types: ["Glace"] },
+  { name: "Crocs Éclair", types: ["Électrik"] },
+  { name: "Sabotage", types: ["Ténèbres"] },
+  { name: "Danse-Lames", types: [] },
+  { name: "Atterrissage", types: ["Vol"] },
+  { name: "Toxik", types: ["Poison"] },
+  { name: "Vœu Soin", types: ["Fée"] },
+  { name: "Protection", types: [] },
+  { name: "Mur Lumière", types: ["Psy"] },
+  { name: "Reflet", types: ["Psy"] },
+  { name: "Dracochoc", types: ["Dragon"] },
+  { name: "Giga-Sangsue", types: ["Plante"] },
+  { name: "Éclair Fou", types: ["Électrik"] },
+  { name: "Telluriforce", types: ["Sol"] },
+  { name: "Cradovague", types: ["Poison"] },
+  { name: "Tricherie", types: ["Ténèbres"] },
+  { name: "Poing Glace", types: ["Glace"] },
+  { name: "Poing-Éclair", types: ["Électrik"] },
+  { name: "Poing de Feu", types: ["Feu"] },
+  { name: "Psykoud'Boul", types: ["Psy"] },
+];
+const TEAM_BUILDER_MOVES = TEAM_BUILDER_MOVE_LIBRARY.map((move) => move.name);
+
+const TEAM_BUILDER_NATURES = [
+  { value: "Hardi", label: "Hardi (neutre)" },
+  { value: "Docile", label: "Docile (neutre)" },
+  { value: "Sérieux", label: "Sérieux (neutre)" },
+  { value: "Bizarre", label: "Bizarre (neutre)" },
+  { value: "Pudique", label: "Pudique (neutre)" },
+  { value: "Solo", label: "Solo (+Attaque, -Défense)" },
+  { value: "Brave", label: "Brave (+Attaque, -Vitesse)" },
+  { value: "Rigide", label: "Rigide (+Attaque, -Attaque Spé.)" },
+  { value: "Mauvais", label: "Mauvais (+Attaque, -Défense Spé.)" },
+  { value: "Assuré", label: "Assuré (+Défense, -Attaque)" },
+  { value: "Relax", label: "Relax (+Défense, -Vitesse)" },
+  { value: "Malin", label: "Malin (+Défense, -Attaque Spé.)" },
+  { value: "Lâche", label: "Lâche (+Défense, -Défense Spé.)" },
+  { value: "Timide", label: "Timide (+Vitesse, -Attaque)" },
+  { value: "Pressé", label: "Pressé (+Vitesse, -Défense)" },
+  { value: "Jovial", label: "Jovial (+Vitesse, -Attaque Spé.)" },
+  { value: "Naïf", label: "Naïf (+Vitesse, -Défense Spé.)" },
+  { value: "Modeste", label: "Modeste (+Attaque Spé., -Attaque)" },
+  { value: "Doux", label: "Doux (+Attaque Spé., -Défense)" },
+  { value: "Discret", label: "Discret (+Attaque Spé., -Vitesse)" },
+  { value: "Foufou", label: "Foufou (+Attaque Spé., -Défense Spé.)" },
+  { value: "Calme", label: "Calme (+Défense Spé., -Attaque)" },
+  { value: "Gentil", label: "Gentil (+Défense Spé., -Défense)" },
+  { value: "Prudent", label: "Prudent (+Défense Spé., -Attaque Spé.)" },
+  { value: "Malpoli", label: "Malpoli (+Défense Spé., -Vitesse)" },
+];
+
+const TEAM_BUILDER_EV_PRESETS = [
+  {
+    value: "offensive-physique",
+    label: "Offensif physique",
+    spread: { hp: 4, atk: 252, def: 0, spa: 0, spd: 0, spe: 252 },
+  },
+  {
+    value: "offensive-speciale",
+    label: "Offensif spécial",
+    spread: { hp: 4, atk: 0, def: 0, spa: 252, spd: 0, spe: 252 },
+  },
+  {
+    value: "rapide",
+    label: "Rapide",
+    spread: { hp: 252, atk: 0, def: 4, spa: 0, spd: 0, spe: 252 },
+  },
+  {
+    value: "bulky",
+    label: "Bulky",
+    spread: { hp: 252, atk: 0, def: 252, spa: 0, spd: 4, spe: 0 },
+  },
+  {
+    value: "support",
+    label: "Support",
+    spread: { hp: 252, atk: 0, def: 0, spa: 0, spd: 252, spe: 4 },
+  },
+  { value: "custom", label: "Custom", spread: null },
+];
+
+const TEAM_BUILDER_IV_PRESETS = [
+  { value: "all31", label: "31 partout", spread: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 } },
+  { value: "zero-attack", label: "0 Attaque", spread: { hp: 31, atk: 0, def: 31, spa: 31, spd: 31, spe: 31 } },
+  { value: "zero-speed", label: "0 Vitesse", spread: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 0 } },
+  { value: "custom", label: "Custom", spread: null },
+];
+
+const TEAM_LIBRARY_GENERATION_OPTIONS = [
+  { value: "all", label: "Toutes" },
+  { value: "1", label: "Gen 1" },
+  { value: "2", label: "Gen 2" },
+  { value: "3", label: "Gen 3" },
+  { value: "4", label: "Gen 4" },
+  { value: "5", label: "Gen 5" },
+  { value: "6", label: "Gen 6" },
+  { value: "7", label: "Gen 7" },
+  { value: "8", label: "Gen 8" },
+  { value: "9", label: "Gen 9" },
+];
+
+const TEAM_LIBRARY_FORMAT_OPTIONS = [
+  { value: "all", label: "Tous" },
+  { value: "OU", label: "OU" },
+  { value: "UU", label: "UU" },
+  { value: "VGC", label: "VGC" },
+  { value: "NatDex", label: "NatDex" },
+  { value: "Doubles", label: "Doubles" },
+];
+
+const TEAM_LIBRARY_STYLE_OPTIONS = [
+  { value: "all", label: "Tous" },
+  { value: "balanced", label: "Balanced" },
+  { value: "bulky-offense", label: "Bulky offense" },
+  { value: "ho", label: "Hyper offense" },
+  { value: "rain", label: "Rain" },
+  { value: "sun", label: "Sun" },
+  { value: "sand", label: "Sand" },
+  { value: "trick-room", label: "Trick Room" },
+];
+
+const TEAM_LIBRARY_STYLE_LABELS = {
+  balanced: "Balanced",
+  "bulky-offense": "Bulky offense",
+  ho: "Hyper offense",
+  rain: "Rain",
+  sun: "Sun",
+  sand: "Sand",
+  "trick-room": "Trick Room",
+};
+
+const TEAM_LIBRARY_TEMPLATES = [
+  {
+    id: "rain-tempo",
+    name: "Tempo Pluie",
+    generation: "7",
+    format: "OU",
+    style: "rain",
+    summary: "Une base pluie simple à piloter avec pivot, pression spéciale et finitions rapides.",
+    tags: ["Rain", "Pivot", "Speed control"],
+    slots: [
+      { pokemonId: 279, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Surf", "Vent Violent", "Atterrissage", "Abri"], nature: "Calme", evPreset: "support", ivPreset: "all31" },
+      { pokemonId: 230, item: "Orbe Vie", gimmick: "Aucun", moves: ["Hydrocanon", "Dracochoc", "Abri", "Surf"], nature: "Modeste", evPreset: "offensive-speciale", ivPreset: "all31" },
+      { pokemonId: 260, item: "Restes", gimmick: "Aucun", moves: ["Séisme", "Surf", "Piège de Roc", "Toxik"], nature: "Rigide", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 748, item: "Restes", gimmick: "Aucun", moves: ["Toxik", "Bomb-Beurk", "Repos", "Abri"], nature: "Calme", evPreset: "bulky", ivPreset: "all31" },
+      { pokemonId: 598, item: "Casque Brut", gimmick: "Aucun", moves: ["Piège de Roc", "Canon Graine", "Tête de Fer", "Sabotage"], nature: "Relax", evPreset: "bulky", ivPreset: "all31" },
+      { pokemonId: 145, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Fatal-Foudre", "Lame d'Air", "Atterrissage", "Demi-Tour"], nature: "Timide", evPreset: "offensive-speciale", ivPreset: "all31" },
+    ],
+  },
+  {
+    id: "sand-balance",
+    name: "Balance Sable",
+    generation: "4",
+    format: "NatDex",
+    style: "sand",
+    summary: "Le sable pose les bases et laisse les pivots contrôler le rythme de la partie.",
+    tags: ["Sand", "Balance", "Pivots"],
+    slots: [
+      { pokemonId: 248, item: "Restes", gimmick: "Aucun", moves: ["Piège de Roc", "Sabotage", "Tête de Fer", "Danse-Lames"], nature: "Rigide", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 450, item: "Restes", gimmick: "Aucun", moves: ["Séisme", "Repos", "Toxik", "Piège de Roc"], nature: "Assuré", evPreset: "bulky", ivPreset: "all31" },
+      { pokemonId: 472, item: "Boue Noire", gimmick: "Aucun", moves: ["Séisme", "Atterrissage", "Toxik", "Protection"], nature: "Malin", evPreset: "bulky", ivPreset: "zero-attack" },
+      { pokemonId: 485, item: "Restes", gimmick: "Aucun", moves: ["Lance-Flammes", "Telluriforce", "Piège de Roc", "Toxik"], nature: "Modeste", evPreset: "offensive-speciale", ivPreset: "all31" },
+      { pokemonId: 227, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Lame d'Air", "Atterrissage", "Protection", "Repos"], nature: "Assuré", evPreset: "bulky", ivPreset: "all31" },
+      { pokemonId: 479, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Tonnerre", "Hydrocanon", "Change Éclair", "Protection"], nature: "Timide", evPreset: "offensive-speciale", ivPreset: "all31" },
+    ],
+  },
+  {
+    id: "bulky-offense",
+    name: "Offense Bulky",
+    generation: "6",
+    format: "OU",
+    style: "bulky-offense",
+    summary: "Des menaces claires et assez d’outils défensifs pour ne pas subir le tempo adverse.",
+    tags: ["Balanced", "Offense", "Pressure"],
+    slots: [
+      { pokemonId: 445, item: "Casque Brut", gimmick: "Aucun", moves: ["Séisme", "Dracochoc", "Piège de Roc", "Tête de Fer"], nature: "Rigide", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 184, item: "Bandeau Choix", gimmick: "Aucun", moves: ["Câlinerie", "Sabotage", "Pisto-Poing", "Repos"], nature: "Rigide", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 36, item: "Restes", gimmick: "Aucun", moves: ["Câlinerie", "Toxik", "Protection", "Vœu Soin"], nature: "Calme", evPreset: "support", ivPreset: "all31" },
+      { pokemonId: 663, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Vent Violent", "Atterrissage", "Demi-Tour", "Poing de Feu"], nature: "Jovial", evPreset: "rapide", ivPreset: "all31" },
+      { pokemonId: 681, item: "Restes", gimmick: "Aucun", moves: ["Ball'Ombre", "Tête de Fer", "Protection", "Clonage"], nature: "Brave", evPreset: "offensive-physique", ivPreset: "zero-speed" },
+      { pokemonId: 448, item: "Orbe Vie", gimmick: "Aucun", moves: ["Close Combat", "Tête de Fer", "Pisto-Poing", "Danse-Lames"], nature: "Jovial", evPreset: "offensive-physique", ivPreset: "all31" },
+    ],
+  },
+  {
+    id: "sun-pressure",
+    name: "Pression Soleil",
+    generation: "8",
+    format: "OU",
+    style: "sun",
+    summary: "Le soleil multiplie la pression immédiate et valorise les pivots qui prennent le terrain.",
+    tags: ["Sun", "Pressure", "Tempo"],
+    slots: [
+      { pokemonId: 324, item: "Charbon", gimmick: "Aucun", moves: ["Ébullilave", "Piège de Roc", "Abri", "Repos"], nature: "Assuré", evPreset: "support", ivPreset: "all31" },
+      { pokemonId: 3, item: "Boue Noire", gimmick: "Aucun", moves: ["Éco-Sphère", "Giga-Sangsue", "Clonage", "Toxik"], nature: "Modeste", evPreset: "offensive-speciale", ivPreset: "all31" },
+      { pokemonId: 6, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Lance-Flammes", "Vent Violent", "Dracochoc", "Atterrissage"], nature: "Timide", evPreset: "offensive-speciale", ivPreset: "all31" },
+      { pokemonId: 59, item: "Grosses Bottes", gimmick: "Aucun", moves: ["Poing de Feu", "Crocs Éclair", "Atterrissage", "Toxik"], nature: "Jovial", evPreset: "bulky", ivPreset: "all31" },
+      { pokemonId: 637, item: "Orbe Vie", gimmick: "Aucun", moves: ["Ébullilave", "Vent Violent", "Clonage", "Atterrissage"], nature: "Modeste", evPreset: "offensive-speciale", ivPreset: "all31" },
+      { pokemonId: 887, item: "Mouchoir Choix", gimmick: "Aucun", moves: ["Draco-Météore", "Ball'Ombre", "Demi-Tour", "Tricherie"], nature: "Timide", evPreset: "rapide", ivPreset: "all31" },
+    ],
+  },
+  {
+    id: "trick-room-core",
+    name: "Cœur Distorsion",
+    generation: "9",
+    format: "VGC",
+    style: "trick-room",
+    summary: "Un noyau lent et explosif pensé pour poser la Distorsion puis frapper fort.",
+    tags: ["Trick Room", "VGC", "Slow power"],
+    slots: [
+      { pokemonId: 826, item: "Restes", gimmick: "Téra", moves: ["Éclat Magique", "Psyko", "Clonage", "Protection"], nature: "Discret", evPreset: "support", ivPreset: "zero-speed" },
+      { pokemonId: 876, item: "Restes", gimmick: "Téra", moves: ["Choc Mental", "Mur Lumière", "Reflet", "Vœu Soin"], nature: "Calme", evPreset: "support", ivPreset: "all31" },
+      { pokemonId: 901, item: "Orbe Vie", gimmick: "Téra", moves: ["Séisme", "Close Combat", "Bélier", "Protection"], nature: "Brave", evPreset: "offensive-physique", ivPreset: "zero-speed" },
+      { pokemonId: 324, item: "Charbon", gimmick: "Téra", moves: ["Ébullilave", "Piège de Roc", "Abri", "Repos"], nature: "Relax", evPreset: "bulky", ivPreset: "zero-speed" },
+      { pokemonId: 591, item: "Boue Noire", gimmick: "Téra", moves: ["Giga-Sangsue", "Toxik", "Clonage", "Abri"], nature: "Calme", evPreset: "support", ivPreset: "zero-speed" },
+      { pokemonId: 983, item: "Bandeau Choix", gimmick: "Téra", moves: ["Tête de Fer", "Sabotage", "Danse-Lames", "Protection"], nature: "Brave", evPreset: "offensive-physique", ivPreset: "zero-speed" },
+    ],
+  },
+  {
+    id: "ho-blitz",
+    name: "Blitz HO",
+    generation: "9",
+    format: "OU",
+    style: "ho",
+    summary: "Des menaces rapides et une forte densité de pression offensive pour jouer le tempo.",
+    tags: ["HO", "Pressure", "Speed"],
+    slots: [
+      { pokemonId: 984, item: "Ceinture Force", gimmick: "Téra", moves: ["Séisme", "Close Combat", "Tour Rapide", "Piège de Roc"], nature: "Jovial", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 1006, item: "Orbe Vie", gimmick: "Téra", moves: ["Éclat Magique", "Close Combat", "Danse-Lames", "Tête de Fer"], nature: "Jovial", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 1000, item: "Grosses Bottes", gimmick: "Téra", moves: ["Ball'Ombre", "Tricherie", "Protection", "Reflet"], nature: "Modeste", evPreset: "offensive-speciale", ivPreset: "all31" },
+      { pokemonId: 1005, item: "Orbe Vie", gimmick: "Téra", moves: ["Draco-Météore", "Tricherie", "Danse-Lames", "Clonage"], nature: "Jovial", evPreset: "offensive-physique", ivPreset: "all31" },
+      { pokemonId: 887, item: "Mouchoir Choix", gimmick: "Téra", moves: ["Draco-Météore", "Ball'Ombre", "Demi-Tour", "Clonage"], nature: "Timide", evPreset: "rapide", ivPreset: "all31" },
+      { pokemonId: 983, item: "Bandeau Choix", gimmick: "Téra", moves: ["Tête de Fer", "Sabotage", "Danse-Lames", "Protection"], nature: "Brave", evPreset: "offensive-physique", ivPreset: "zero-speed" },
+    ],
+  },
+];
 
 function createPartySession() {
   return {
@@ -583,6 +928,8 @@ let draftArenaState = null;
 const POKEDEX_API_CACHE = new Map();
 const POKEDEX_SPECIES_CACHE = new Map();
 const POKEDEX_ABILITY_CACHE = new Map();
+const TEAM_BUILDER_MOVE_POOL_CACHE = new Map();
+const TEAM_BUILDER_MOVE_POOL_PENDING = new Map();
 
 const QUIZ_QUESTIONS = [
   { question: "Quel type est immunisé aux attaques Dragon ?", options: ["Acier", "Fée", "Glace", "Psy"], answer: 1 },
@@ -632,6 +979,8 @@ window.addEventListener("DOMContentLoaded", () => {
   initHomeTypeHelper();
   initHomeDefenseTypeHelper();
   initHomeTeamSuggestionHelper();
+  initTeamBuilderModule();
+  initTeamsModule();
   initEmulatorMode();
   resolveExtraFormSprites();
 
@@ -986,6 +1335,8 @@ function openCurrentGameScreen() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   document.getElementById("screen-profile")?.classList.add("hidden");
   document.getElementById("screen-achievements")?.classList.add("hidden");
   document.getElementById("screen-history")?.classList.add("hidden");
@@ -1015,12 +1366,16 @@ function openCurrentGameScreen() {
 }
 function goToConfig() {
   partySession = null;
+  teamBuilderPokemonPickerOpen = false;
+  teamBuilderPokemonSearch = "";
   document.getElementById("screen-game").classList.add("hidden");
   document.getElementById("screen-ranking").classList.add("hidden");
   document.getElementById("screen-games-ranking").classList.add("hidden");
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   document.getElementById("screen-profile")?.classList.add("hidden");
   document.getElementById("screen-achievements")?.classList.add("hidden");
   document.getElementById("screen-history")?.classList.add("hidden");
@@ -2209,6 +2564,31 @@ const RANKING_TYPEBAR_URL = "typebar.png";
 const RANKING_GENBAR_URL = "genbar.png";
 const TYPEBAR_COL_COUNT = 22; // Normal..Favorite
 const GENBAR_ROW_COUNT = 10; // Pick your favorites + Gen I..IX
+const RANKING_SPECIAL_FORM_NAMES = new Set([
+  "Giratina Forme Originelle",
+  "Shaymin Forme Céleste",
+  "Fulguris Forme Totémique",
+  "Boréas Forme Totémique",
+  "Démétéros Forme Totémique",
+  "Fort-Ivoire",
+  "Hurle-Queue",
+  "Fongus-Furie",
+  "Flotte-Mèche",
+  "Rampe-Ailes",
+  "Pelage-Sablé",
+  "Roue-de-Fer",
+  "Hotte-de-Fer",
+  "Paume-de-Fer",
+  "Têtes-de-Fer",
+  "Mite-de-Fer",
+  "Épine-de-Fer",
+  "Rugit-Lune",
+  "Garde-de-Fer",
+  "Koraidon",
+  "Miraidon",
+  "Serpente-Eau",
+  "Vert-de-Fer",
+]);
 
 const SPECIAL_COLUMN_HEADER_INDEX = {
   starter: 18,
@@ -2216,6 +2596,10 @@ const SPECIAL_COLUMN_HEADER_INDEX = {
   legend: 20,
   favorite: 21,
 };
+
+function isRankingSpecialForm(pokemon) {
+  return Boolean(pokemon?.isAltForm) || RANKING_SPECIAL_FORM_NAMES.has(pokemon?.name);
+}
 
 function buildRankingColumns() {
   const cols = RANKING_TYPES.map((type, index) => ({
@@ -2227,7 +2611,7 @@ function buildRankingColumns() {
 
   cols.push(
     { key: "starter", label: "Starter", headerIndex: SPECIAL_COLUMN_HEADER_INDEX.starter, matcher: (p) => STARTER_IDS.has(p.id) },
-    { key: "gimmick", label: "Forme", headerIndex: SPECIAL_COLUMN_HEADER_INDEX.gimmick, matcher: (p) => Boolean(p.isAltForm) },
+    { key: "gimmick", label: "Forme", headerIndex: SPECIAL_COLUMN_HEADER_INDEX.gimmick, matcher: (p) => isRankingSpecialForm(p) },
     { key: "legend", label: "Légendes", headerIndex: SPECIAL_COLUMN_HEADER_INDEX.legend, matcher: (p) => LEGENDARY_IDS.has(p.id) }
   );
 
@@ -2260,6 +2644,18 @@ function fillGenHeaderCell(th, gen) {
   th.appendChild(wrap);
 }
 
+function fillFavoriteRowCell(th) {
+  const wrap = document.createElement("div");
+  wrap.className = "rank-gen-sheet";
+  wrap.style.setProperty("--sheet-index", String(GENBAR_ROW_COUNT - 1));
+  wrap.style.setProperty("--sheet-count", String(GENBAR_ROW_COUNT - 1));
+  wrap.style.setProperty("--sheet-url", `url("${RANKING_GENBAR_URL}")`);
+  wrap.title = "Favorite";
+  wrap.setAttribute("aria-label", "Favorite");
+  th.innerHTML = "";
+  th.appendChild(wrap);
+}
+
 function fillCornerHeaderCell(th) {
   const wrap = document.createElement("div");
   wrap.className = "rank-corner-label";
@@ -2275,6 +2671,10 @@ function rankingCellKey(gen, colKey) {
 
 function rankingFavoriteKey(gen) {
   return "fav|" + String(gen);
+}
+
+function rankingFavoriteRowKey(colKey) {
+  return "favrow|" + String(colKey);
 }
 
 function loadRankingChoices() {
@@ -2293,6 +2693,8 @@ function openRankingMode() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
   document.getElementById("screen-ranking").classList.remove("hidden");
   setGlobalNavActive("rank");
@@ -2317,8 +2719,48 @@ function getRowCandidates(gen) {
   return out;
 }
 
+function getColumnCandidates(colKey) {
+  const out = [];
+  const seen = new Set();
+  for (let gen = 1; gen <= 9; gen += 1) {
+    const p = getRankingChoicePokemon(gen, colKey);
+    if (!p || seen.has(p.id)) continue;
+    seen.add(p.id);
+    out.push(p);
+  }
+  return out;
+}
+
+function getFavoriteRowCandidates(colKey) {
+  if (colKey === "favorite") {
+    const seen = new Set();
+    const merged = [];
+    for (let gen = 1; gen <= 9; gen += 1) {
+      const rowFav = getRowFavoritePokemon(gen);
+      if (rowFav && !seen.has(rowFav.id)) {
+        seen.add(rowFav.id);
+        merged.push(rowFav);
+      }
+    }
+    for (const col of RANKING_COLUMNS) {
+      const colFav = getFavoriteRowPokemon(col.key);
+      if (colFav && !seen.has(colFav.id)) {
+        seen.add(colFav.id);
+        merged.push(colFav);
+      }
+    }
+    return merged.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  }
+  return getColumnCandidates(colKey).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
+
 function getRowFavoritePokemon(gen) {
   const id = Number(rankingChoices[rankingFavoriteKey(gen)]);
+  return Number.isInteger(id) ? POKEMON_BY_ID.get(id) || null : null;
+}
+
+function getFavoriteRowPokemon(colKey) {
+  const id = Number(rankingChoices[rankingFavoriteRowKey(colKey)]);
   return Number.isInteger(id) ? POKEMON_BY_ID.get(id) || null : null;
 }
 
@@ -2423,6 +2865,71 @@ function renderRankingGrid() {
     tbody.appendChild(tr);
   }
 
+  const favRow = document.createElement("tr");
+
+  const favRowHead = document.createElement("th");
+  favRowHead.className = "rank-gen-head rank-favorite-row-head";
+  fillFavoriteRowCell(favRowHead);
+  favRow.appendChild(favRowHead);
+
+  for (const col of RANKING_COLUMNS) {
+    const td = document.createElement("td");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "rank-slot rank-favorite-slot";
+
+    const pokemon = getFavoriteRowPokemon(col.key);
+    if (pokemon) {
+      btn.classList.add("filled");
+      const img = document.createElement("img");
+      img.src = getPokemonSprite(pokemon);
+      img.alt = pokemon.name;
+      img.loading = "lazy";
+      const label = document.createElement("span");
+      label.textContent = pokemon.name;
+      btn.appendChild(img);
+      btn.appendChild(label);
+    } else {
+      const empty = document.createElement("span");
+      empty.className = "rank-slot-empty";
+      empty.textContent = "+";
+      btn.appendChild(empty);
+    }
+
+    btn.addEventListener("click", () => openRankingPickerForFavoriteRow(col.key, btn));
+    td.appendChild(btn);
+    favRow.appendChild(td);
+  }
+
+  const favTd = document.createElement("td");
+  const favBtn = document.createElement("button");
+  favBtn.type = "button";
+  favBtn.className = "rank-slot rank-favorite-slot";
+
+  const favPokemon = getFavoriteRowPokemon("favorite");
+  if (favPokemon) {
+    favBtn.classList.add("filled");
+    const img = document.createElement("img");
+    img.src = getPokemonSprite(favPokemon);
+    img.alt = favPokemon.name;
+    img.loading = "lazy";
+    const label = document.createElement("span");
+    label.textContent = favPokemon.name;
+    favBtn.appendChild(img);
+    favBtn.appendChild(label);
+  } else {
+    const empty = document.createElement("span");
+    empty.className = "rank-slot-empty";
+    empty.textContent = "?";
+    favBtn.appendChild(empty);
+  }
+
+  favBtn.addEventListener("click", () => openRankingPickerForFavoriteRow("favorite", favBtn));
+  favTd.appendChild(favBtn);
+  favRow.appendChild(favTd);
+
+  tbody.appendChild(favRow);
+
   table.appendChild(tbody);
   wrap.appendChild(table);
   renderPickedSummary();
@@ -2450,6 +2957,20 @@ function openRankingPickerForRowFavorite(gen, anchorEl) {
     : "Aucun Pokémon sélectionné sur cette ligne";
 
   showRankingFloatPicker("Gen " + gen + " • Préféré", sub, rankingCandidates, anchorEl);
+}
+
+function openRankingPickerForFavoriteRow(colKey, anchorEl) {
+  rankingSelected = { mode: "favRow", colKey, key: rankingFavoriteRowKey(colKey), anchorEl };
+  rankingCandidates = getFavoriteRowCandidates(colKey);
+
+  const col = colKey === "favorite"
+    ? "Favori global"
+    : (RANKING_COLUMNS.find((c) => c.key === colKey)?.label || "Type");
+  const subtitle = colKey === "favorite"
+    ? "Tous les Pokémon déjà retenus en ligne et en colonne"
+    : "Choisis le meilleur Pokémon déjà retenu dans cette colonne";
+
+  showRankingFloatPicker("Favorite • " + col, subtitle, rankingCandidates, anchorEl);
 }
 
 function showRankingFloatPicker(title, subtitle, candidates, anchorEl) {
@@ -2493,25 +3014,43 @@ function showRankingFloatPicker(title, subtitle, candidates, anchorEl) {
 
   const anchor = anchorEl ? anchorEl.getBoundingClientRect() : null;
   const pickerRect = picker.getBoundingClientRect();
+  const host = picker.closest("#screen-ranking > .card") || picker.parentElement;
+  const hostRect = host ? host.getBoundingClientRect() : null;
+  const margin = 12;
 
   let left = 20;
   let top = 20;
 
-  if (anchor) {
-    left = anchor.left + (anchor.width / 2) - (pickerRect.width / 2);
-    top = anchor.top + anchor.height + 8;
+  if (anchor && hostRect) {
+    const spaceBelow = hostRect.bottom - anchor.bottom - margin;
+    const spaceAbove = anchor.top - hostRect.top - margin;
+    const spaceRight = hostRect.right - anchor.right - margin;
+    const spaceLeft = anchor.left - hostRect.left - margin;
 
-    const maxLeft = window.innerWidth - pickerRect.width - 12;
-    left = Math.max(12, Math.min(left, Math.max(12, maxLeft)));
-
-    const maxTop = window.innerHeight - pickerRect.height - 12;
-    if (top > maxTop) {
-      top = Math.max(12, anchor.top - pickerRect.height - 8);
+    if (spaceBelow >= pickerRect.height + 8 || spaceBelow >= spaceAbove) {
+      top = anchor.bottom - hostRect.top + 8;
+    } else {
+      top = anchor.top - hostRect.top - pickerRect.height - 8;
     }
+
+    if (spaceRight >= pickerRect.width) {
+      left = anchor.left - hostRect.left;
+    } else if (spaceLeft >= pickerRect.width) {
+      left = anchor.right - hostRect.left - pickerRect.width;
+    } else {
+      left = anchor.left - hostRect.left + (anchor.width / 2) - (pickerRect.width / 2);
+    }
+
+    const maxLeft = hostRect.width - pickerRect.width - margin;
+    const maxTop = hostRect.height - pickerRect.height - margin;
+    left = Math.max(margin, Math.min(left, Math.max(margin, maxLeft)));
+    top = Math.max(margin, Math.min(top, Math.max(margin, maxTop)));
   }
 
   picker.style.left = Math.round(left) + "px";
   picker.style.top = Math.round(top) + "px";
+  picker.style.right = "auto";
+  picker.style.bottom = "auto";
 }
 
 function closeRankingPicker() {
@@ -2836,6 +3375,8 @@ function openTypeChartScreen() {
     "screen-history",
     "screen-multiplayer",
     "screen-odd-one-out",
+    "screen-team-builder",
+    "screen-teams",
     "screen-emulator",
   ].forEach(hideScreen);
   stopEmulatorSession();
@@ -2892,34 +3433,89 @@ function initHomeTypeHelper() {
   renderHomeTypeHelper();
 }
 
-function renderHomeDefenseTypeHelper() {
-  const type1 = document.getElementById("home-defense-type1");
-  const type2 = document.getElementById("home-defense-type2");
-  const weak = document.getElementById("home-defense-weaknesses");
-  const resist = document.getElementById("home-defense-resistances");
-  const immune = document.getElementById("home-defense-immunities");
-  if (!type1 || !type2 || !weak || !resist || !immune) return;
+const HOME_DEFENSE_TEAM_SELECT_IDS = [
+  "home-defense-slot1-type1",
+  "home-defense-slot1-type2",
+  "home-defense-slot2-type1",
+  "home-defense-slot2-type2",
+  "home-defense-slot3-type1",
+  "home-defense-slot3-type2",
+];
 
-  const selectedType1 = type1.value;
-  const selectedType2 = type2.value || null;
-  const entries = Object.keys(TYPE_EFFECTIVENESS).map((atk) => {
-    const multiplier = attackMultiplier(atk, selectedType1) * attackMultiplier(atk, selectedType2);
-    return { type: atk, multiplier };
+const HOME_DEFENSE_TEAM_TYPES = Object.keys(TYPE_EFFECTIVENESS);
+
+function renderHomeAnalysisChip(type, meta) {
+  return `<span class="home-analysis-chip"><b>${escapeHtml(type)}</b><small>${escapeHtml(meta)}</small></span>`;
+}
+
+function getHomeDefenseTeamSlots() {
+  const slots = [];
+  for (let i = 1; i <= 3; i += 1) {
+    const type1 = document.getElementById(`home-defense-slot${i}-type1`);
+    const type2 = document.getElementById(`home-defense-slot${i}-type2`);
+    if (!type1 || !type2) continue;
+    const t1 = type1.value || "";
+    const t2 = type2.value || "";
+    if (!t1) continue;
+    slots.push([t1].concat(t2 ? [t2] : []));
+  }
+  return slots;
+}
+
+function renderHomeDefenseTypeHelper() {
+  const weak = document.getElementById("home-defense-team-weaknesses");
+  const cover = document.getElementById("home-defense-team-coverage");
+  if (!weak || !cover) return;
+
+  const slots = getHomeDefenseTeamSlots();
+  if (!slots.length) {
+    weak.innerHTML = '<span class="home-type-helper-empty">Ajoute au moins un slot.</span>';
+    cover.innerHTML = '<span class="home-type-helper-empty">La couverture apparaîtra ici.</span>';
+    return;
+  }
+
+  const rows = HOME_DEFENSE_TEAM_TYPES.map((attackType) => {
+    const multipliers = slots.map((slot) => slot.reduce((product, defenseType) => product * attackMultiplier(attackType, defenseType), 1));
+    const weakCount = multipliers.filter((multiplier) => multiplier > 1).length;
+    const coverCount = multipliers.filter((multiplier) => multiplier > 0 && multiplier < 1).length;
+    const immuneCount = multipliers.filter((multiplier) => multiplier === 0).length;
+    const coverageScore = coverCount + (immuneCount * 2);
+    const maxMultiplier = multipliers.length ? Math.max(...multipliers) : 0;
+    return { type: attackType, weakCount, coverCount, immuneCount, coverageScore, maxMultiplier };
   });
 
-  const renderList = (items) => items.length ? items.map((entry) => typeBadgeHtml(entry.type)).join("") : '<span class="home-type-helper-empty">Aucun</span>';
+  const threats = rows
+    .filter((row) => row.weakCount > 0)
+    .sort((a, b) => b.weakCount - a.weakCount || b.maxMultiplier - a.maxMultiplier || a.type.localeCompare(b.type, "fr"))
+    .slice(0, 4);
 
-  weak.innerHTML = renderList(entries.filter((entry) => entry.multiplier > 1).sort((a, b) => b.multiplier - a.multiplier));
-  resist.innerHTML = renderList(entries.filter((entry) => entry.multiplier > 0 && entry.multiplier < 1).sort((a, b) => a.multiplier - b.multiplier));
-  immune.innerHTML = renderList(entries.filter((entry) => entry.multiplier === 0));
+  const coverage = rows
+    .filter((row) => row.coverageScore > 0)
+    .sort((a, b) => b.coverageScore - a.coverageScore || b.immuneCount - a.immuneCount || a.type.localeCompare(b.type, "fr"))
+    .slice(0, 4);
+
+  weak.innerHTML = threats.length
+    ? threats.map((row) => renderHomeAnalysisChip(row.type, `×${row.weakCount}`)).join("")
+    : '<span class="home-type-helper-empty">Aucune faiblesse marquée.</span>';
+
+  cover.innerHTML = coverage.length
+    ? coverage.map((row) => renderHomeAnalysisChip(row.type, `×${row.coverageScore}`)).join("")
+    : '<span class="home-type-helper-empty">Aucune couverture notable.</span>';
 }
 
 function initHomeDefenseTypeHelper() {
-  const type1 = document.getElementById("home-defense-type1");
-  const type2 = document.getElementById("home-defense-type2");
-  if (!type1 || !type2) return;
-  type1.addEventListener("change", renderHomeDefenseTypeHelper);
-  type2.addEventListener("change", renderHomeDefenseTypeHelper);
+  for (const id of HOME_DEFENSE_TEAM_SELECT_IDS) {
+    const select = document.getElementById(id);
+    if (!select || select.dataset.ready) continue;
+    select.innerHTML = [
+      '<option value="">Aucun</option>',
+      ...HOME_DEFENSE_TEAM_TYPES.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`),
+    ].join("");
+    select.dataset.ready = "1";
+    if (id === "home-defense-slot1-type1") select.value = "Normal";
+    else select.value = "";
+    select.addEventListener("change", renderHomeDefenseTypeHelper);
+  }
   renderHomeDefenseTypeHelper();
 }
 
@@ -2963,6 +3559,1049 @@ function initHomeTeamSuggestionHelper() {
   type1.addEventListener("change", renderHomeTeamSuggestionHelper);
   type2.addEventListener("change", renderHomeTeamSuggestionHelper);
   renderHomeTeamSuggestionHelper();
+}
+
+function createTeamBuilderEmptySlot() {
+  return {
+    pokemonId: null,
+    item: "",
+    gimmick: "",
+    moves: ["", "", "", ""],
+    nature: "Hardi",
+    talent: "",
+    evPreset: "offensive-physique",
+    evs: { hp: 4, atk: 252, def: 0, spa: 0, spd: 0, spe: 252 },
+    ivPreset: "all31",
+    ivs: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+  };
+}
+
+function createTeamBuilderState() {
+  return Array.from({ length: 6 }, () => createTeamBuilderEmptySlot());
+}
+
+function normalizeTeamBuilderSpread(spread, defaultStat = 0, minStat = 0, maxStat = 252) {
+  const safe = (value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return defaultStat;
+    return Math.max(minStat, Math.min(maxStat, Math.round(n)));
+  };
+  return {
+    hp: safe(spread?.hp),
+    atk: safe(spread?.atk),
+    def: safe(spread?.def),
+    spa: safe(spread?.spa),
+    spd: safe(spread?.spd),
+    spe: safe(spread?.spe),
+  };
+}
+
+function normalizeTeamBuilderState(state) {
+  const slots = Array.isArray(state) ? state.slice(0, 6) : [];
+  while (slots.length < 6) slots.push(createTeamBuilderEmptySlot());
+  return slots.map((slot) => ({
+    pokemonId: (() => {
+      const id = Number(slot?.pokemonId);
+      return Number.isInteger(id) && id > 0 ? id : null;
+    })(),
+    item: TEAM_BUILDER_ITEMS.includes(slot?.item) ? slot.item : "",
+    gimmick: TEAM_BUILDER_GIMMICKS.includes(slot?.gimmick) ? slot.gimmick : "",
+    moves: Array.isArray(slot?.moves)
+      ? slot.moves.slice(0, 4).map((move) => (typeof move === "string" ? move.trim() : ""))
+      : ["", "", "", ""],
+    nature: TEAM_BUILDER_NATURES.some((nature) => nature.value === slot?.nature) ? slot.nature : "Hardi",
+    talent: typeof slot?.talent === "string" ? slot.talent : "",
+    evPreset: TEAM_BUILDER_EV_PRESETS.some((preset) => preset.value === slot?.evPreset) ? slot.evPreset : "offensive-physique",
+    evs: slot?.evs ? normalizeTeamBuilderSpread(slot.evs, 0, 0, 252) : createTeamBuilderEmptySlot().evs,
+    ivPreset: TEAM_BUILDER_IV_PRESETS.some((preset) => preset.value === slot?.ivPreset) ? slot.ivPreset : "all31",
+    ivs: slot?.ivs ? normalizeTeamBuilderSpread(slot.ivs, 31, 0, 31) : createTeamBuilderEmptySlot().ivs,
+  }));
+}
+
+function loadTeamBuilderState() {
+  const parsed = readJson(STORAGE_KEYS.teamBuilder, null);
+  teamBuilderState = normalizeTeamBuilderState(parsed);
+}
+
+function saveTeamBuilderState() {
+  writeJson(STORAGE_KEYS.teamBuilder, teamBuilderState);
+}
+
+function getTeamBuilderPokemon(slot) {
+  return slot?.pokemonId ? POKEMON_BY_ID.get(slot.pokemonId) || null : null;
+}
+
+function getTeamBuilderSlotPokemonTypes(slot) {
+  const pokemon = getTeamBuilderPokemon(slot);
+  return pokemon ? [pokemon.type1, pokemon.type2].filter(Boolean) : [];
+}
+
+function getTeamBuilderPokemonCatalog() {
+  return [...POKEMON_LIST].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+}
+
+function getTeamBuilderPokemonApiKey(pokemon) {
+  if (!pokemon) return null;
+  if (FORM_API_NAME_BY_NAME[pokemon.name]) return FORM_API_NAME_BY_NAME[pokemon.name];
+  const baseId = Number.isInteger(pokemon.baseId) && pokemon.baseId > 0 ? pokemon.baseId : null;
+  const spriteId = Number.isInteger(getPokemonSpriteId(pokemon)) && getPokemonSpriteId(pokemon) > 0 ? getPokemonSpriteId(pokemon) : null;
+  return String(baseId || spriteId || "");
+}
+
+function getTeamBuilderPokemonTalentCacheKey(pokemon) {
+  return getTeamBuilderPokemonApiKey(pokemon) || `pokemon-${pokemon?.id || "unknown"}`;
+}
+
+function getTeamBuilderPokemonNatureOptions() {
+  return TEAM_BUILDER_NATURES;
+}
+
+function getTeamBuilderNatureLabel(value) {
+  return TEAM_BUILDER_NATURES.find((nature) => nature.value === value)?.label || "Hardi (neutre)";
+}
+
+function getTeamBuilderSpreadPreset(presets, value) {
+  return presets.find((preset) => preset.value === value) || presets[0];
+}
+
+function cloneTeamBuilderSpread(spread) {
+  return normalizeTeamBuilderSpread(spread, 0, 0, 999);
+}
+
+function formatTeamBuilderSpreadShort(spread) {
+  if (!spread) return "0 / 0 / 0 / 0 / 0 / 0";
+  return [spread.hp, spread.atk, spread.def, spread.spa, spread.spd, spread.spe].map((n) => String(Number(n) || 0)).join(" / ");
+}
+
+function applyTeamBuilderSpreadPreset(slot, presetValue, kind) {
+  const presets = kind === "iv" ? TEAM_BUILDER_IV_PRESETS : TEAM_BUILDER_EV_PRESETS;
+  const preset = getTeamBuilderSpreadPreset(presets, presetValue);
+  if (!slot || !preset) return;
+
+  if (kind === "iv") {
+    slot.ivPreset = preset.value;
+    if (preset.spread) slot.ivs = cloneTeamBuilderSpread(preset.spread);
+  } else {
+    slot.evPreset = preset.value;
+    if (preset.spread) slot.evs = cloneTeamBuilderSpread(preset.spread);
+  }
+}
+
+async function fetchTeamBuilderPokemonApiData(pokemon) {
+  const key = getTeamBuilderPokemonApiKey(pokemon);
+  if (!key) return null;
+  const cacheKey = `team-builder:${key}`;
+  if (POKEDEX_API_CACHE.has(cacheKey)) return POKEDEX_API_CACHE.get(cacheKey);
+
+  try {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${key}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    POKEDEX_API_CACHE.set(cacheKey, data);
+    return data;
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function getTeamBuilderTalentOptions(pokemonData) {
+  const abilities = Array.isArray(pokemonData?.abilities) ? pokemonData.abilities : [];
+  if (!abilities.length) {
+    return [{ value: "", label: "Talent principal" }];
+  }
+  return Promise.all(
+    abilities
+      .slice()
+      .sort((a, b) => Number(a.slot) - Number(b.slot))
+      .map(async (entry, index) => {
+        const abilityData = await fetchPokedexAbilityData(entry.ability?.url);
+        const fr = abilityNameFr(abilityData);
+        const raw = entry.ability?.name || `talent-${index + 1}`;
+        const fallback = raw
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        const label = fr || fallback;
+        return {
+          value: label,
+          label: entry.is_hidden ? `${label} (caché)` : label,
+        };
+      })
+  );
+}
+
+const TEAM_BUILDER_MOVE_TYPE_LABELS = {
+  normal: "Normal",
+  fire: "Feu",
+  water: "Eau",
+  electric: "Électrik",
+  grass: "Plante",
+  ice: "Glace",
+  fighting: "Combat",
+  poison: "Poison",
+  ground: "Sol",
+  flying: "Vol",
+  psychic: "Psy",
+  bug: "Insecte",
+  rock: "Roche",
+  ghost: "Spectre",
+  dragon: "Dragon",
+  dark: "Ténèbres",
+  steel: "Acier",
+  fairy: "Fée",
+};
+
+function typeLabelFrFromApiName(typeName) {
+  return TEAM_BUILDER_MOVE_TYPE_LABELS[typeName] || String(typeName || "").replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function moveNameFr(moveData) {
+  if (!moveData?.names) return null;
+  const fr = moveData.names.find((entry) => entry?.language?.name === "fr");
+  return fr?.name || null;
+}
+
+function moveMethodRank(methodName) {
+  const normalized = String(methodName || "");
+  if (normalized === "level-up") return 0;
+  if (normalized === "machine") return 1;
+  if (normalized === "tutor") return 2;
+  if (normalized === "egg") return 3;
+  return 4;
+}
+
+function getTeamBuilderMoveCacheKey(pokemon) {
+  return `team-builder-moves:${getTeamBuilderPokemonApiKey(pokemon) || pokemon?.id || "unknown"}`;
+}
+
+async function fetchPokedexMoveData(url) {
+  if (typeof url !== "string" || !url) return null;
+  if (POKEDEX_API_CACHE.has(url)) return POKEDEX_API_CACHE.get(url);
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const data = await response.json();
+    POKEDEX_API_CACHE.set(url, data);
+    return data;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function buildTeamBuilderFallbackMovePool(pokemon) {
+  const selectedTypes = pokemon ? [pokemon.type1, pokemon.type2].filter(Boolean) : [];
+  const pool = TEAM_BUILDER_MOVE_LIBRARY.slice();
+  const priority = new Map([
+    ["Feu", 0],
+    ["Eau", 1],
+    ["Plante", 2],
+    ["Électrik", 3],
+    ["Glace", 4],
+    ["Combat", 5],
+    ["Dragon", 6],
+    ["Ténèbres", 7],
+    ["Psy", 8],
+    ["Vol", 9],
+    ["Fée", 10],
+    ["Acier", 11],
+    ["Poison", 12],
+    ["Sol", 13],
+    ["Spectre", 14],
+    ["Roche", 15],
+    ["Insecte", 16],
+    ["Utilitaire", 50],
+  ]);
+
+  return pool.slice().sort((a, b) => {
+    const score = (move) => {
+      if (!selectedTypes.length) return move.types.length ? 2 : 1;
+      if (!move.types.length) return 1;
+      if (move.types.some((type) => selectedTypes.includes(type))) return 0;
+      return 2;
+    };
+    const pa = score(a);
+    const pb = score(b);
+    const ta = a.types.length ? Math.min(...a.types.map((type) => priority.get(type) ?? 40)) : 99;
+    const tb = b.types.length ? Math.min(...b.types.map((type) => priority.get(type) ?? 40)) : 99;
+    return pa - pb || ta - tb || a.name.localeCompare(b.name, "fr");
+  });
+}
+
+async function getTeamBuilderMovePoolForPokemon(pokemon) {
+  const cacheKey = getTeamBuilderMoveCacheKey(pokemon);
+  if (TEAM_BUILDER_MOVE_POOL_CACHE.has(cacheKey)) return TEAM_BUILDER_MOVE_POOL_CACHE.get(cacheKey);
+  if (TEAM_BUILDER_MOVE_POOL_PENDING.has(cacheKey)) return TEAM_BUILDER_MOVE_POOL_PENDING.get(cacheKey);
+
+  const promise = (async () => {
+    const pokemonData = await fetchTeamBuilderPokemonApiData(pokemon);
+    const fallback = buildTeamBuilderFallbackMovePool(pokemon);
+    if (!pokemonData?.moves?.length) return fallback;
+
+    const seen = new Map();
+    for (const entry of pokemonData.moves) {
+      const moveUrl = entry?.move?.url;
+      const moveName = entry?.move?.name;
+      const details = Array.isArray(entry?.version_group_details) ? entry.version_group_details : [];
+      if (!moveUrl || !details.length) continue;
+
+      const bestDetail = details
+        .slice()
+        .sort((a, b) => moveMethodRank(a?.move_learn_method?.name) - moveMethodRank(b?.move_learn_method?.name) || Number(a?.level_learned_at || 0) - Number(b?.level_learned_at || 0))[0];
+      const rank = moveMethodRank(bestDetail?.move_learn_method?.name);
+      const level = Number(bestDetail?.level_learned_at || 0);
+      const prev = seen.get(moveUrl);
+      if (prev && prev.rank <= rank && prev.level <= level) continue;
+      seen.set(moveUrl, { moveUrl, moveName, rank, level });
+    }
+
+    const pokemonTypes = new Set([pokemon?.type1, pokemon?.type2].filter(Boolean));
+    const moves = await Promise.all(
+      [...seen.values()].map(async (entry) => {
+        const moveData = await fetchPokedexMoveData(entry.moveUrl);
+        const frName = moveNameFr(moveData);
+        const rawName = entry.moveName || "Attaque";
+        const fallbackName = rawName.charAt(0).toUpperCase() + rawName.slice(1).replace(/-/g, " ");
+        const typeApi = moveData?.type?.name || "";
+        const typeFr = typeLabelFrFromApiName(typeApi);
+        const typeMatches = pokemonTypes.has(typeFr);
+        return {
+          name: frName || fallbackName,
+          types: typeFr ? [typeFr] : [],
+          rank: entry.rank,
+          level: entry.level,
+          typeMatches,
+        };
+      })
+    );
+
+    const unique = new Map();
+    for (const move of moves) {
+      if (!move?.name) continue;
+      const prev = unique.get(move.name);
+      if (!prev) {
+        unique.set(move.name, move);
+        continue;
+      }
+      if (move.rank < prev.rank || (move.rank === prev.rank && move.level < prev.level)) {
+        unique.set(move.name, move);
+      }
+    }
+
+    const sorted = [...unique.values()].sort((a, b) => {
+      const typeScore = (move) => (move.typeMatches ? 0 : move.types.length ? 1 : 2);
+      const rankScore = a.rank - b.rank || a.level - b.level;
+      return typeScore(a) - typeScore(b) || rankScore || a.name.localeCompare(b.name, "fr");
+    });
+
+    return sorted.length ? sorted.slice(0, 48) : fallback;
+  })();
+
+  TEAM_BUILDER_MOVE_POOL_PENDING.set(cacheKey, promise);
+  try {
+    const result = await promise;
+    TEAM_BUILDER_MOVE_POOL_CACHE.set(cacheKey, result);
+    return result;
+  } finally {
+    TEAM_BUILDER_MOVE_POOL_PENDING.delete(cacheKey);
+  }
+}
+
+function getTeamBuilderMovePool(slot) {
+  const pokemon = getTeamBuilderPokemon(slot);
+  return buildTeamBuilderFallbackMovePool(pokemon);
+}
+
+function sanitizeTeamBuilderSlotMoves(slot, movePool) {
+  if (!slot) return false;
+  const allowed = new Set(movePool.map((move) => move.name));
+  let changed = false;
+  slot.moves = slot.moves.map((move) => {
+    if (!move) return "";
+    if (!allowed.has(move)) {
+      changed = true;
+      return "";
+    }
+    return move;
+  });
+  return changed;
+}
+
+function renderTeamBuilderSummary() {
+  const summary = document.getElementById("team-builder-summary");
+  if (!summary) return;
+
+  const filledSlots = teamBuilderState.filter((slot) => slot.pokemonId).length;
+  const distinctTypes = new Set();
+  let moveCount = 0;
+  teamBuilderState.forEach((slot) => {
+    getTeamBuilderSlotPokemonTypes(slot).forEach((type) => distinctTypes.add(type));
+    moveCount += slot.moves.filter(Boolean).length;
+  });
+
+  summary.innerHTML = `
+    <span class="home-builder-summary-chip">Slots: <b>${filledSlots}/6</b></span>
+    <span class="home-builder-summary-chip">Types: <b>${distinctTypes.size}</b></span>
+    <span class="home-builder-summary-chip">Attaques: <b>${moveCount}/24</b></span>
+  `;
+}
+
+function renderTeamBuilderGrid() {
+  const grid = document.getElementById("team-builder-grid");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  teamBuilderState.forEach((slot, index) => {
+    const pokemon = getTeamBuilderPokemon(slot);
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "home-builder-slot" + (index === teamBuilderActiveSlot ? " is-active" : "") + (pokemon ? " is-filled" : "");
+    card.addEventListener("click", () => {
+      teamBuilderActiveSlot = index;
+      renderTeamBuilderModule();
+    });
+
+    const head = document.createElement("div");
+    head.className = "home-builder-slot-head";
+    head.innerHTML = `<span>Slot ${index + 1}</span><small>${pokemon ? "Actif" : "Vide"}</small>`;
+
+    const body = document.createElement("div");
+    body.className = "home-builder-slot-body";
+    if (pokemon) {
+      const img = document.createElement("img");
+      img.src = getPokemonSprite(pokemon);
+      img.alt = pokemon.name;
+      img.loading = "lazy";
+
+      const info = document.createElement("div");
+      info.className = "home-builder-slot-info";
+      info.innerHTML = `
+        <strong>${escapeHtml(pokemon.name)}</strong>
+        <div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
+        <p>${escapeHtml(slot.item || "Aucun")} · ${escapeHtml(slot.gimmick || "Aucun")}</p>
+        <small>${escapeHtml(slot.nature || "Hardi")} · ${escapeHtml(slot.talent || "Talent principal")}</small>
+        <small>${slot.moves.filter(Boolean).length} attaque(s)</small>
+      `;
+
+      body.appendChild(img);
+      body.appendChild(info);
+    } else {
+      body.innerHTML = '<span class="home-builder-slot-empty">Clique pour ajouter un Pokémon.</span>';
+    }
+
+    card.appendChild(head);
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+}
+
+function buildTeamBuilderOptions() {
+  const itemSelect = document.getElementById("team-builder-item");
+  const gimmickSelect = document.getElementById("team-builder-gimmick");
+
+  const fillSelect = (select, values, allowEmptyLabel) => {
+    if (!select || select.dataset.ready) return;
+    select.innerHTML = [
+      `<option value="">${escapeHtml(allowEmptyLabel)}</option>`,
+      ...values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`),
+    ].join("");
+    select.dataset.ready = "1";
+  };
+
+  fillSelect(itemSelect, TEAM_BUILDER_ITEMS.filter((item) => item !== "Aucun"), "Aucun");
+  fillSelect(gimmickSelect, TEAM_BUILDER_GIMMICKS.filter((gimmick) => gimmick !== "Aucun"), "Aucun");
+}
+
+function setTeamBuilderPokemonSelection(pokemon) {
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  if (!slot || !pokemon) return;
+  slot.pokemonId = pokemon.id;
+  teamBuilderPokemonSearch = "";
+  teamBuilderPokemonPickerOpen = false;
+  saveTeamBuilderState();
+  renderTeamBuilderModule();
+}
+
+function toggleTeamBuilderPokemonPicker() {
+  if (teamBuilderPokemonPickerOpen) closeTeamBuilderPokemonPicker();
+  else openTeamBuilderPokemonPicker();
+}
+
+function selectTeamBuilderPokemonById(pokemonId) {
+  const id = Number(pokemonId);
+  const pokemon = Number.isInteger(id) ? POKEMON_BY_ID.get(id) : null;
+  if (pokemon) setTeamBuilderPokemonSelection(pokemon);
+}
+
+function openTeamBuilderPokemonPicker() {
+  teamBuilderPokemonPickerOpen = true;
+  renderTeamBuilderModule();
+  window.requestAnimationFrame(() => {
+    document.getElementById("team-builder-pokemon-search")?.focus();
+  });
+}
+
+function closeTeamBuilderPokemonPicker() {
+  if (!teamBuilderPokemonPickerOpen) return;
+  teamBuilderPokemonPickerOpen = false;
+  renderTeamBuilderModule();
+}
+
+function renderTeamBuilderPokemonPicker() {
+  const trigger = document.getElementById("team-builder-pokemon-trigger");
+  const triggerPreview = document.getElementById("team-builder-pokemon-trigger-preview");
+  const triggerText = document.getElementById("team-builder-pokemon-trigger-text");
+  const triggerCta = document.getElementById("team-builder-pokemon-trigger-cta");
+  const picker = document.getElementById("team-builder-pokemon-picker");
+  const search = document.getElementById("team-builder-pokemon-search");
+  const clear = document.getElementById("team-builder-pokemon-clear");
+  const results = document.getElementById("team-builder-pokemon-results");
+  if (!trigger || !triggerPreview || !triggerText || !triggerCta || !picker || !search || !clear || !results) return;
+
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  const pokemon = getTeamBuilderPokemon(slot);
+  const query = teamBuilderPokemonSearch.trim().toLowerCase();
+  const catalog = getTeamBuilderPokemonCatalog().filter((entry) => {
+    if (!query) return true;
+    return entry.name.toLowerCase().includes(query) || [entry.type1, entry.type2].some((type) => type && type.toLowerCase().includes(query));
+  });
+
+  trigger.setAttribute("aria-expanded", String(teamBuilderPokemonPickerOpen));
+  trigger.classList.toggle("is-empty", !pokemon);
+  triggerPreview.innerHTML = pokemon
+    ? `<img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" />`
+    : `<span class="team-builder-pokemon-trigger-placeholder">?</span>`;
+  triggerText.textContent = pokemon ? pokemon.name : "Choisir un Pokémon";
+  triggerCta.textContent = pokemon ? "Changer" : "Ouvrir";
+
+  picker.classList.toggle("hidden", !teamBuilderPokemonPickerOpen);
+  search.value = teamBuilderPokemonSearch;
+  clear.textContent = teamBuilderPokemonSearch ? "Effacer" : pokemon ? "Vider" : "Fermer";
+
+  if (!teamBuilderPokemonPickerOpen) {
+    results.innerHTML = "";
+    return;
+  }
+
+  const visible = catalog.slice(0, 60);
+  if (!visible.length) {
+    results.innerHTML = '<p class="team-builder-pokemon-empty">Aucun Pokémon trouvé.</p>';
+    return;
+  }
+
+  results.innerHTML = visible.map((entry) => {
+    const isSelected = pokemon?.id === entry.id;
+    return `
+      <button type="button" class="team-builder-pokemon-card${isSelected ? " is-selected" : ""}" data-pokemon-id="${entry.id}" onclick="selectTeamBuilderPokemonById(${entry.id})">
+        <img src="${getPokemonSprite(entry)}" alt="${escapeHtml(entry.name)}" loading="lazy" />
+        <strong>${escapeHtml(entry.name)}</strong>
+        <div class="pokemon-card-types">${typeBadgesHtml(entry.type1, entry.type2)}</div>
+      </button>
+    `;
+  }).join("");
+}
+
+function fillTeamBuilderSelect(select, values, emptyLabel) {
+  if (!select || select.dataset.ready) return;
+  select.innerHTML = [
+    `<option value="">${escapeHtml(emptyLabel)}</option>`,
+    ...values.map((entry) => `<option value="${escapeHtml(entry.value || entry)}">${escapeHtml(entry.label || entry)}</option>`),
+  ].join("");
+  select.dataset.ready = "1";
+}
+
+function renderTeamBuilderStrategicFields() {
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  if (!slot) return;
+
+  const currentRenderVersion = ++teamBuilderStrategicRenderVersion;
+  const pokemon = getTeamBuilderPokemon(slot);
+
+  const natureSelect = document.getElementById("team-builder-nature");
+  const talentSelect = document.getElementById("team-builder-talent");
+  const evPresetSelect = document.getElementById("team-builder-ev-preset");
+  const ivPresetSelect = document.getElementById("team-builder-iv-preset");
+  const evCustom = document.getElementById("team-builder-ev-custom");
+  const ivCustom = document.getElementById("team-builder-iv-custom");
+  const evInputs = {
+    hp: document.getElementById("team-builder-ev-hp"),
+    atk: document.getElementById("team-builder-ev-atk"),
+    def: document.getElementById("team-builder-ev-def"),
+    spa: document.getElementById("team-builder-ev-spa"),
+    spd: document.getElementById("team-builder-ev-spd"),
+    spe: document.getElementById("team-builder-ev-spe"),
+  };
+  const ivInputs = {
+    hp: document.getElementById("team-builder-iv-hp"),
+    atk: document.getElementById("team-builder-iv-atk"),
+    def: document.getElementById("team-builder-iv-def"),
+    spa: document.getElementById("team-builder-iv-spa"),
+    spd: document.getElementById("team-builder-iv-spd"),
+    spe: document.getElementById("team-builder-iv-spe"),
+  };
+
+  fillTeamBuilderSelect(natureSelect, TEAM_BUILDER_NATURES, "Nature");
+  fillTeamBuilderSelect(evPresetSelect, TEAM_BUILDER_EV_PRESETS, "Preset EV");
+  fillTeamBuilderSelect(ivPresetSelect, TEAM_BUILDER_IV_PRESETS, "Preset IV");
+
+  if (natureSelect) natureSelect.value = slot.nature || "Hardi";
+  if (evPresetSelect) evPresetSelect.value = slot.evPreset || "offensive-physique";
+  if (ivPresetSelect) ivPresetSelect.value = slot.ivPreset || "all31";
+
+  const isEvCustom = slot.evPreset === "custom";
+  const isIvCustom = slot.ivPreset === "custom";
+  evCustom?.classList.toggle("hidden", !isEvCustom);
+  ivCustom?.classList.toggle("hidden", !isIvCustom);
+
+  if (isEvCustom) {
+    Object.entries(evInputs).forEach(([key, input]) => {
+      if (input) input.value = Number(slot.evs?.[key]) || 0;
+    });
+  }
+
+  if (isIvCustom) {
+    Object.entries(ivInputs).forEach(([key, input]) => {
+      if (input) input.value = Number(slot.ivs?.[key]) || 0;
+    });
+  }
+
+  if (!talentSelect) return;
+  talentSelect.innerHTML = '<option value="">Chargement des talents…</option>';
+  talentSelect.disabled = true;
+
+  const finalizeTalentOptions = (options) => {
+    if (currentRenderVersion !== teamBuilderStrategicRenderVersion) return;
+    const validValues = new Set(options.map((option) => option.value));
+    const currentValue = validValues.has(slot.talent) ? slot.talent : (options[0]?.value || "");
+    if (slot.talent !== currentValue) {
+      slot.talent = currentValue;
+      saveTeamBuilderState();
+    }
+
+    talentSelect.disabled = false;
+    talentSelect.innerHTML = [
+      '<option value="">Talent principal</option>',
+      ...options.map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`),
+    ].join("");
+    talentSelect.value = currentValue;
+  };
+
+  if (!pokemon) {
+    finalizeTalentOptions([{ value: "", label: "Talent principal" }]);
+    return;
+  }
+
+  const cacheKey = getTeamBuilderPokemonTalentCacheKey(pokemon);
+  if (teamBuilderTalentOptionsCache.has(cacheKey)) {
+    finalizeTalentOptions(teamBuilderTalentOptionsCache.get(cacheKey));
+    return;
+  }
+
+  fetchTeamBuilderPokemonApiData(pokemon).then(async (data) => {
+    if (currentRenderVersion !== teamBuilderStrategicRenderVersion) return;
+    const options = await getTeamBuilderTalentOptions(data);
+    teamBuilderTalentOptionsCache.set(cacheKey, options);
+    finalizeTalentOptions(options);
+  });
+}
+
+function updateTeamBuilderField(field, value, moveIndex = null) {
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  if (!slot) return;
+
+  if (field === "pokemon") {
+    const pokemon = findPokemonGlobalByName(String(value || "").trim());
+    slot.pokemonId = pokemon ? pokemon.id : null;
+  } else if (field === "item") {
+    slot.item = value || "Aucun";
+  } else if (field === "gimmick") {
+    slot.gimmick = value || "Aucun";
+  } else if (field === "move" && Number.isInteger(moveIndex)) {
+    slot.moves[moveIndex] = typeof value === "string" ? value : "";
+  }
+
+  saveTeamBuilderState();
+  renderTeamBuilderModule();
+}
+
+function updateTeamBuilderStrategicField(field, value) {
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  if (!slot) return;
+
+  if (field === "nature") {
+    slot.nature = TEAM_BUILDER_NATURES.some((nature) => nature.value === value) ? value : "Hardi";
+  } else if (field === "talent") {
+    slot.talent = String(value || "");
+  } else if (field === "ev-preset") {
+    applyTeamBuilderSpreadPreset(slot, String(value || "offensive-physique"), "ev");
+  } else if (field === "iv-preset") {
+    applyTeamBuilderSpreadPreset(slot, String(value || "all31"), "iv");
+  } else if (field === "ev-custom" || field === "iv-custom") {
+    const isEv = field === "ev-custom";
+    const min = isEv ? 0 : 0;
+    const max = isEv ? 252 : 31;
+    const next = {
+      hp: Number(document.getElementById(isEv ? "team-builder-ev-hp" : "team-builder-iv-hp")?.value) || 0,
+      atk: Number(document.getElementById(isEv ? "team-builder-ev-atk" : "team-builder-iv-atk")?.value) || 0,
+      def: Number(document.getElementById(isEv ? "team-builder-ev-def" : "team-builder-iv-def")?.value) || 0,
+      spa: Number(document.getElementById(isEv ? "team-builder-ev-spa" : "team-builder-iv-spa")?.value) || 0,
+      spd: Number(document.getElementById(isEv ? "team-builder-ev-spd" : "team-builder-iv-spd")?.value) || 0,
+      spe: Number(document.getElementById(isEv ? "team-builder-ev-spe" : "team-builder-iv-spe")?.value) || 0,
+    };
+    const normalized = normalizeTeamBuilderSpread(next, isEv ? 0 : 31, min, max);
+    if (isEv) {
+      slot.evPreset = "custom";
+      slot.evs = normalized;
+    } else {
+      slot.ivPreset = "custom";
+      slot.ivs = normalized;
+    }
+  }
+
+  saveTeamBuilderState();
+  renderTeamBuilderModule();
+}
+
+function clearTeamBuilderSlot() {
+  teamBuilderState[teamBuilderActiveSlot] = createTeamBuilderEmptySlot();
+  teamBuilderPokemonPickerOpen = false;
+  teamBuilderPokemonSearch = "";
+  saveTeamBuilderState();
+  renderTeamBuilderModule();
+}
+
+function renderTeamBuilderEditor() {
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  if (!slot) return;
+
+  const title = document.getElementById("team-builder-editor-title");
+  const sub = document.getElementById("team-builder-editor-sub");
+  const itemSelect = document.getElementById("team-builder-item");
+  const gimmickSelect = document.getElementById("team-builder-gimmick");
+  const moveSelects = [
+    document.getElementById("team-builder-move-1"),
+    document.getElementById("team-builder-move-2"),
+    document.getElementById("team-builder-move-3"),
+    document.getElementById("team-builder-move-4"),
+  ];
+
+  const pokemon = getTeamBuilderPokemon(slot);
+  if (title) title.textContent = `Slot ${teamBuilderActiveSlot + 1}`;
+  if (sub) sub.textContent = pokemon ? `${pokemon.name} · Clique un autre slot pour l’éditer.` : "Choisis un Pokémon, un objet et une mécanique de slot.";
+  renderTeamBuilderPokemonPicker();
+  renderTeamBuilderStrategicFields();
+  if (itemSelect) itemSelect.value = slot.item || "";
+  if (gimmickSelect) gimmickSelect.value = slot.gimmick || "";
+  moveSelects.forEach((select, index) => {
+    if (!select) return;
+    select.innerHTML = [
+      pokemon ? '<option value="">Chargement des attaques…</option>' : '<option value="">Aucune attaque</option>',
+    ].join("");
+    select.value = slot.moves[index] || "";
+    select.disabled = !pokemon;
+  });
+
+  if (!pokemon) return;
+
+  const renderVersion = teamBuilderStrategicRenderVersion;
+  getTeamBuilderMovePoolForPokemon(pokemon).then((movePool) => {
+    const currentPokemon = getTeamBuilderPokemon(teamBuilderState[teamBuilderActiveSlot]);
+    if (renderVersion !== teamBuilderStrategicRenderVersion || !currentPokemon || currentPokemon.id !== pokemon.id) return;
+    if (sanitizeTeamBuilderSlotMoves(slot, movePool)) saveTeamBuilderState();
+    moveSelects.forEach((select, index) => {
+      if (!select) return;
+      select.disabled = false;
+      select.innerHTML = [
+        '<option value="">Aucune attaque</option>',
+        ...movePool.map((move) => `<option value="${escapeHtml(move.name)}">${escapeHtml(move.name)}${move.types.length ? ` (${escapeHtml(move.types.join(" / "))})` : ""}</option>`),
+      ].join("");
+      select.value = slot.moves[index] || "";
+    });
+    renderTeamBuilderSummary();
+  });
+}
+
+function renderTeamBuilderModule() {
+  if (!teamBuilderState) loadTeamBuilderState();
+  renderTeamBuilderSummary();
+  renderTeamBuilderGrid();
+  renderTeamBuilderEditor();
+}
+
+function initTeamBuilderModule() {
+  loadTeamBuilderState();
+  buildTeamBuilderOptions();
+  const moveSelects = [
+    document.getElementById("team-builder-move-1"),
+    document.getElementById("team-builder-move-2"),
+    document.getElementById("team-builder-move-3"),
+    document.getElementById("team-builder-move-4"),
+  ];
+
+  const root = document.getElementById("screen-team-builder");
+  if (root && !root.dataset.delegated) {
+    root.dataset.delegated = "1";
+    root.addEventListener("click", (event) => {
+      const target = event.target;
+      const clear = target.closest("#team-builder-pokemon-clear");
+      if (clear) {
+        event.preventDefault();
+        event.stopPropagation();
+        const search = document.getElementById("team-builder-pokemon-search");
+        if (teamBuilderPokemonPickerOpen && teamBuilderPokemonSearch) {
+          teamBuilderPokemonSearch = "";
+          renderTeamBuilderPokemonPicker();
+          window.requestAnimationFrame(() => search?.focus());
+        } else if (teamBuilderPokemonPickerOpen && getTeamBuilderPokemon(teamBuilderState[teamBuilderActiveSlot])) {
+          clearTeamBuilderSlot();
+        } else {
+          closeTeamBuilderPokemonPicker();
+        }
+        return;
+      }
+
+      const card = target.closest("[data-pokemon-id]");
+      if (card && root.contains(card)) {
+        event.stopPropagation();
+        const pokemonId = Number(card.getAttribute("data-pokemon-id"));
+        const pokemon = Number.isInteger(pokemonId) ? POKEMON_BY_ID.get(pokemonId) : null;
+        if (pokemon) setTeamBuilderPokemonSelection(pokemon);
+      }
+    });
+
+    root.addEventListener("input", (event) => {
+      const target = event.target;
+      if (target?.id === "team-builder-pokemon-search") {
+        teamBuilderPokemonSearch = target.value;
+        renderTeamBuilderPokemonPicker();
+      }
+      if (target?.matches?.("#team-builder-ev-hp, #team-builder-ev-atk, #team-builder-ev-def, #team-builder-ev-spa, #team-builder-ev-spd, #team-builder-ev-spe")) {
+        updateTeamBuilderStrategicField("ev-custom");
+      }
+      if (target?.matches?.("#team-builder-iv-hp, #team-builder-iv-atk, #team-builder-iv-def, #team-builder-iv-spa, #team-builder-iv-spd, #team-builder-iv-spe")) {
+        updateTeamBuilderStrategicField("iv-custom");
+      }
+    });
+
+    root.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!target?.id) return;
+      if (target.id === "team-builder-item") updateTeamBuilderField("item", target.value);
+      else if (target.id === "team-builder-gimmick") updateTeamBuilderField("gimmick", target.value);
+      else if (target.id === "team-builder-nature") updateTeamBuilderStrategicField("nature", target.value);
+      else if (target.id === "team-builder-talent") updateTeamBuilderStrategicField("talent", target.value);
+      else if (target.id === "team-builder-ev-preset") updateTeamBuilderStrategicField("ev-preset", target.value);
+      else if (target.id === "team-builder-iv-preset") updateTeamBuilderStrategicField("iv-preset", target.value);
+      else {
+        const moveIndex = ["team-builder-move-1", "team-builder-move-2", "team-builder-move-3", "team-builder-move-4"].indexOf(target.id);
+        if (moveIndex >= 0) updateTeamBuilderField("move", target.value, moveIndex);
+      }
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!teamBuilderPokemonPickerOpen) return;
+    const target = event.target;
+    const pickerEl = document.getElementById("team-builder-pokemon-picker");
+    const triggerEl = document.getElementById("team-builder-pokemon-trigger");
+    if (pickerEl?.contains(target) || triggerEl?.contains(target)) return;
+    closeTeamBuilderPokemonPicker();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeTeamBuilderPokemonPicker();
+  });
+
+  renderTeamBuilderModule();
+}
+
+function openTeamBuilderScreen() {
+  goToConfig();
+  document.getElementById("screen-config").classList.add("hidden");
+  document.querySelector(".search-bar")?.classList.add("hidden");
+  showScreen("screen-team-builder");
+  setGlobalNavActive("champions");
+  renderTeamBuilderModule();
+  window.requestAnimationFrame(() => {
+    document.getElementById("screen-team-builder")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function resetTeamBuilder() {
+  teamBuilderState = createTeamBuilderState();
+  teamBuilderActiveSlot = 0;
+  teamBuilderPokemonPickerOpen = false;
+  teamBuilderPokemonSearch = "";
+  saveTeamBuilderState();
+  renderTeamBuilderModule();
+}
+
+function getTeamLibraryTemplateById(id) {
+  return TEAM_LIBRARY_TEMPLATES.find((template) => template.id === id) || null;
+}
+
+function getTeamLibraryStyleLabel(style) {
+  return TEAM_LIBRARY_STYLE_LABELS[style] || style || "Balanced";
+}
+
+function renderTeamLibraryPokemonCard(pokemonId) {
+  const pokemon = POKEMON_BY_ID.get(Number(pokemonId));
+  if (!pokemon) {
+    return `
+      <div class="team-template-pokemon is-empty">
+        <span class="team-template-pokemon-sprite">?</span>
+        <strong>Pokémon</strong>
+        <small>Indisponible</small>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="team-template-pokemon">
+      <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" />
+      <strong>${escapeHtml(pokemon.name)}</strong>
+      <div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
+    </div>
+  `;
+}
+
+function applyTeamTemplateToBuilder(template) {
+  if (!template) return;
+  const slots = Array.isArray(template.slots) ? template.slots.map((slot) => ({
+    pokemonId: Number.isInteger(slot?.pokemonId) ? slot.pokemonId : null,
+    item: typeof slot?.item === "string" ? slot.item : "",
+    gimmick: typeof slot?.gimmick === "string" ? slot.gimmick : "",
+    moves: Array.isArray(slot?.moves)
+      ? slot.moves.slice(0, 4).map((move) => (typeof move === "string" ? move.trim() : ""))
+      : ["", "", "", ""],
+    nature: TEAM_BUILDER_NATURES.some((nature) => nature.value === slot?.nature) ? slot.nature : "Hardi",
+    talent: typeof slot?.talent === "string" ? slot.talent : "",
+    evPreset: TEAM_BUILDER_EV_PRESETS.some((preset) => preset.value === slot?.evPreset) ? slot.evPreset : "offensive-physique",
+    evs: slot?.evs ? normalizeTeamBuilderSpread(slot.evs, 0, 0, 252) : createTeamBuilderEmptySlot().evs,
+    ivPreset: TEAM_BUILDER_IV_PRESETS.some((preset) => preset.value === slot?.ivPreset) ? slot.ivPreset : "all31",
+    ivs: slot?.ivs ? normalizeTeamBuilderSpread(slot.ivs, 31, 0, 31) : createTeamBuilderEmptySlot().ivs,
+  })) : [];
+
+  teamBuilderState = normalizeTeamBuilderState(slots);
+  teamBuilderActiveSlot = 0;
+  teamBuilderPokemonPickerOpen = false;
+  teamBuilderPokemonSearch = "";
+  saveTeamBuilderState();
+}
+
+function openTeamTemplateInBuilder(templateId) {
+  const template = getTeamLibraryTemplateById(templateId);
+  if (!template) return;
+  applyTeamTemplateToBuilder(template);
+  openTeamBuilderScreen();
+}
+
+function resetTeamLibraryFilters() {
+  teamLibraryFilters = {
+    generation: "all",
+    format: "all",
+    style: "all",
+  };
+  renderTeamsScreen();
+}
+
+function fillTeamLibrarySelect(select, values) {
+  if (!select || select.dataset.ready) return;
+  select.innerHTML = values.map((entry) => `<option value="${escapeHtml(entry.value)}">${escapeHtml(entry.label)}</option>`).join("");
+  select.dataset.ready = "1";
+}
+
+function renderTeamsScreen() {
+  const generationSelect = document.getElementById("teams-filter-generation");
+  const formatSelect = document.getElementById("teams-filter-format");
+  const styleSelect = document.getElementById("teams-filter-style");
+  const grid = document.getElementById("teams-grid");
+  if (!generationSelect || !formatSelect || !styleSelect || !grid) return;
+
+  fillTeamLibrarySelect(generationSelect, TEAM_LIBRARY_GENERATION_OPTIONS);
+  fillTeamLibrarySelect(formatSelect, TEAM_LIBRARY_FORMAT_OPTIONS);
+  fillTeamLibrarySelect(styleSelect, TEAM_LIBRARY_STYLE_OPTIONS);
+
+  generationSelect.value = teamLibraryFilters.generation;
+  formatSelect.value = teamLibraryFilters.format;
+  styleSelect.value = teamLibraryFilters.style;
+
+  const templates = TEAM_LIBRARY_TEMPLATES.filter((template) => {
+    const generationMatch = teamLibraryFilters.generation === "all" || template.generation === teamLibraryFilters.generation;
+    const formatMatch = teamLibraryFilters.format === "all" || template.format === teamLibraryFilters.format;
+    const styleMatch = teamLibraryFilters.style === "all" || template.style === teamLibraryFilters.style;
+    return generationMatch && formatMatch && styleMatch;
+  });
+
+  if (!templates.length) {
+    grid.innerHTML = '<p class="teams-empty">Aucun template ne correspond à ces filtres.</p>';
+    return;
+  }
+
+  grid.innerHTML = templates.map((template) => {
+    const roster = (template.slots || []).slice(0, 6).map((slot) => renderTeamLibraryPokemonCard(slot.pokemonId)).join("");
+    const tags = [
+      `Gen ${template.generation}`,
+      template.format,
+      getTeamLibraryStyleLabel(template.style),
+      ...(Array.isArray(template.tags) ? template.tags.slice(0, 2) : []),
+    ].filter(Boolean);
+
+    return `
+      <article class="team-template-card">
+        <div class="team-template-head">
+          <div>
+            <h3>${escapeHtml(template.name)}</h3>
+            <p>${escapeHtml(template.summary)}</p>
+          </div>
+          <span class="team-template-count">6 Pokémon</span>
+        </div>
+        <div class="team-template-tags">
+          ${tags.map((tag) => `<span class="team-template-tag">${escapeHtml(tag)}</span>`).join("")}
+        </div>
+        <div class="team-template-squad" aria-label="Équipe exemple">
+          ${roster}
+        </div>
+        <div class="team-template-actions">
+          <button class="btn-blue" type="button" onclick="openTeamTemplateInBuilder('${escapeHtml(template.id)}')">Utiliser comme base</button>
+          <span>Ouvre le builder avec cette base déjà posée.</span>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function openTeamsScreen() {
+  closeOverlayModal();
+  goToConfig();
+  document.getElementById("screen-config").classList.add("hidden");
+  document.querySelector(".search-bar")?.classList.add("hidden");
+  showScreen("screen-teams");
+  setGlobalNavActive("champions");
+  renderTeamsScreen();
+  window.requestAnimationFrame(() => {
+    document.getElementById("screen-teams")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function initTeamsModule() {
+  const generationSelect = document.getElementById("teams-filter-generation");
+  const formatSelect = document.getElementById("teams-filter-format");
+  const styleSelect = document.getElementById("teams-filter-style");
+  if (!generationSelect || !formatSelect || !styleSelect) return;
+
+  generationSelect.addEventListener("change", (event) => {
+    teamLibraryFilters.generation = event.target.value || "all";
+    renderTeamsScreen();
+  });
+  formatSelect.addEventListener("change", (event) => {
+    teamLibraryFilters.format = event.target.value || "all";
+    renderTeamsScreen();
+  });
+  styleSelect.addEventListener("change", (event) => {
+    teamLibraryFilters.style = event.target.value || "all";
+    renderTeamsScreen();
+  });
+
+  renderTeamsScreen();
 }
 
 function typeBadgesHtml(type1, type2) {
@@ -3240,6 +4879,8 @@ function openPokedexMode() {
   document.getElementById("screen-games-ranking").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
   document.getElementById("screen-pokedex").classList.remove("hidden");
   setGlobalNavActive("pokedex");
@@ -3454,6 +5095,8 @@ function openGamesRankingMode() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
   closeRankingPicker();
   document.getElementById("screen-games-ranking").classList.remove("hidden");
@@ -4088,6 +5731,8 @@ function openDraftArenaMode() {
   document.getElementById("screen-games-ranking").classList.add("hidden");
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   closeRankingPicker();
   stopCrySound();
   setQuizModeLayout(false);
@@ -4470,6 +6115,8 @@ function openEmulatorMode() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
   closeRankingPicker();
   stopCrySound();
   setQuizModeLayout(false);
@@ -5028,7 +6675,7 @@ function cleanMojibake(value) {
 
   let out = value;
 
-  if (out.includes("?") || out.includes("?") || out.includes("?")) {
+  if (/[ÃÂ�]/.test(out)) {
     try {
       out = decodeURIComponent(escape(out));
     } catch (_err) {
@@ -5037,26 +6684,24 @@ function cleanMojibake(value) {
   }
 
   const fixes = {
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "?",
-    "?": "'",
-    "?": "-",
-    "?": "-",
-    "?": "?",
-    "?": "?",
-    "?": "?"
+    "Ã©": "é",
+    "Ã¨": "è",
+    "Ãª": "ê",
+    "Ã«": "ë",
+    "Ã¢": "à",
+    "Ã§": "ç",
+    "Ã´": "ô",
+    "Ã¹": "ù",
+    "Ã»": "û",
+    "Ã¯": "ï",
+    "Ã": "",
+    "Â": "",
+    "â€™": "'",
+    "â€œ": "\"",
+    "â€\u009d": "\"",
+    "â€“": "-",
+    "â€”": "-",
+    "�": ""
   };
 
   for (const [bad, good] of Object.entries(fixes)) {
@@ -5474,7 +7119,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams'].forEach(hideScreen);
 }
 
 function ensureOverlay(title, html) {
@@ -5570,6 +7215,8 @@ function showStandardGameScreen() {
   hideScreen("screen-games-ranking");
   hideScreen("screen-pokedex");
   hideScreen("screen-draft-arena");
+  hideScreen("screen-team-builder");
+  hideScreen("screen-teams");
   hideScreen("screen-profile");
   hideScreen("screen-achievements");
   hideScreen("screen-history");
@@ -5851,6 +7498,8 @@ function openOddOneOutMode() {
   hideScreen("screen-pokedex");
   hideScreen("screen-type-chart");
   hideScreen("screen-draft-arena");
+  hideScreen("screen-team-builder");
+  hideScreen("screen-teams");
   hideScreen("screen-profile");
   hideScreen("screen-achievements");
   hideScreen("screen-history");
@@ -6303,6 +7952,8 @@ function openMultiplayerMode() {
   closeOverlayModal();
   goToConfig();
   hideScreen("screen-config");
+  hideScreen("screen-team-builder");
+  hideScreen("screen-teams");
   showScreen("screen-multiplayer");
   document.querySelector(".search-bar")?.classList.add("hidden");
   renderMultiplayerBotScreen();
@@ -7029,6 +8680,8 @@ function openMultiplayerMode() {
   closeOverlayModal();
   goToConfig();
   hideScreen("screen-config");
+  hideScreen("screen-team-builder");
+  hideScreen("screen-teams");
   showScreen("screen-multiplayer");
   document.querySelector(".search-bar")?.classList.add("hidden");
   ensureMultiplayerLiveState();

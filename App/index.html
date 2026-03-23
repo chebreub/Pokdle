@@ -190,13 +190,21 @@
             <div class="home-extras-subhead">Champions Lab</div>
             <p class="home-extras-copy">Prépare tes combats Pokémon Champions avec des outils simples, lisibles et utiles.</p>
             <div class="home-extras-coming-grid">
-              <div class="home-coming-tile" aria-disabled="true">
+              <div class="home-coming-tile home-builder-access">
                 <span class="home-coming-title">Builder d’équipe</span>
-                <span class="home-coming-badge">Bientôt</span>
+                <p class="home-builder-note">Ouvre un espace dédié pour poser une team de 6 avec Pokémon, objet, gimmick et 4 attaques par slot.</p>
+                <div class="home-builder-access-actions">
+                  <span class="home-coming-badge">V1</span>
+                  <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Ouvrir le builder</button>
+                </div>
               </div>
-              <div class="home-coming-tile" aria-disabled="true">
-                <span class="home-coming-title">Analyse des faiblesses</span>
-                <span class="home-coming-badge">Bientôt</span>
+              <div class="home-coming-tile home-teams-access">
+                <span class="home-coming-title">Équipes / Teams</span>
+                <p class="home-builder-note">Parcours des bases prêtes à jouer, puis ouvre-les directement dans le builder.</p>
+                <div class="home-builder-access-actions">
+                  <span class="home-coming-badge">Templates</span>
+                  <button class="btn-blue" type="button" onclick="openTeamsScreen()">Explorer</button>
+                </div>
               </div>
               <div class="home-coming-tile" aria-disabled="true">
                 <span class="home-coming-title">Fiches stratégiques</span>
@@ -261,71 +269,60 @@
                   </div>
                 </div>
               </div>
-              <div class="home-type-helper home-type-helper-defense">
+              <div class="home-type-helper home-type-helper-defense home-team-analysis">
                 <div class="home-type-helper-head">
-                  <h4>Faiblesses d’un Pokémon</h4>
+                  <h4>Analyse des faiblesses</h4>
                 </div>
-                <div class="home-type-helper-dual-picks">
-                  <label class="home-type-helper-label" for="home-defense-type1">
-                    <span>Type 1</span>
-                    <select id="home-defense-type1">
-                      <option value="Normal">Normal</option>
-                      <option value="Feu">Feu</option>
-                      <option value="Eau">Eau</option>
-                      <option value="Plante">Plante</option>
-                      <option value="Électrik">Électrik</option>
-                      <option value="Glace">Glace</option>
-                      <option value="Combat">Combat</option>
-                      <option value="Poison">Poison</option>
-                      <option value="Sol">Sol</option>
-                      <option value="Vol">Vol</option>
-                      <option value="Psy">Psy</option>
-                      <option value="Insecte">Insecte</option>
-                      <option value="Roche">Roche</option>
-                      <option value="Spectre">Spectre</option>
-                      <option value="Dragon">Dragon</option>
-                      <option value="Ténèbres">Ténèbres</option>
-                      <option value="Acier">Acier</option>
-                      <option value="Fée">Fée</option>
-                    </select>
-                  </label>
-                  <label class="home-type-helper-label" for="home-defense-type2">
-                    <span>Type 2 (optionnel)</span>
-                    <select id="home-defense-type2">
-                      <option value="">Aucun</option>
-                      <option value="Normal">Normal</option>
-                      <option value="Feu">Feu</option>
-                      <option value="Eau">Eau</option>
-                      <option value="Plante">Plante</option>
-                      <option value="Électrik">Électrik</option>
-                      <option value="Glace">Glace</option>
-                      <option value="Combat">Combat</option>
-                      <option value="Poison">Poison</option>
-                      <option value="Sol">Sol</option>
-                      <option value="Vol">Vol</option>
-                      <option value="Psy">Psy</option>
-                      <option value="Insecte">Insecte</option>
-                      <option value="Roche">Roche</option>
-                      <option value="Spectre">Spectre</option>
-                      <option value="Dragon">Dragon</option>
-                      <option value="Ténèbres">Ténèbres</option>
-                      <option value="Acier">Acier</option>
-                      <option value="Fée">Fée</option>
-                    </select>
-                  </label>
+                <p class="home-type-helper-note">Ajoute jusqu’à 3 Pokémon pour repérer vite les types qui menacent l’équipe et ceux qui sont déjà bien couverts.</p>
+                <div class="home-team-analysis-slots">
+                  <div class="home-team-analysis-slot">
+                    <div class="home-team-analysis-slot-head">Slot 1</div>
+                    <div class="home-team-analysis-slot-grid">
+                      <label class="home-type-helper-label" for="home-defense-slot1-type1">
+                        <span>Type 1</span>
+                        <select id="home-defense-slot1-type1"></select>
+                      </label>
+                      <label class="home-type-helper-label" for="home-defense-slot1-type2">
+                        <span>Type 2 (optionnel)</span>
+                        <select id="home-defense-slot1-type2"></select>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="home-team-analysis-slot">
+                    <div class="home-team-analysis-slot-head">Slot 2</div>
+                    <div class="home-team-analysis-slot-grid">
+                      <label class="home-type-helper-label" for="home-defense-slot2-type1">
+                        <span>Type 1</span>
+                        <select id="home-defense-slot2-type1"></select>
+                      </label>
+                      <label class="home-type-helper-label" for="home-defense-slot2-type2">
+                        <span>Type 2 (optionnel)</span>
+                        <select id="home-defense-slot2-type2"></select>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="home-team-analysis-slot">
+                    <div class="home-team-analysis-slot-head">Slot 3</div>
+                    <div class="home-team-analysis-slot-grid">
+                      <label class="home-type-helper-label" for="home-defense-slot3-type1">
+                        <span>Type 1</span>
+                        <select id="home-defense-slot3-type1"></select>
+                      </label>
+                      <label class="home-type-helper-label" for="home-defense-slot3-type2">
+                        <span>Type 2 (optionnel)</span>
+                        <select id="home-defense-slot3-type2"></select>
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div class="home-type-helper-results">
                   <div class="home-type-helper-row">
-                    <span>Faiblesses</span>
-                    <div id="home-defense-weaknesses" class="home-type-helper-badges"></div>
+                    <span>Faiblesses d’équipe à surveiller</span>
+                    <div id="home-defense-team-weaknesses" class="home-type-helper-badges"></div>
                   </div>
                   <div class="home-type-helper-row">
-                    <span>Résistances</span>
-                    <div id="home-defense-resistances" class="home-type-helper-badges"></div>
-                  </div>
-                  <div class="home-type-helper-row">
-                    <span>Immunités</span>
-                    <div id="home-defense-immunities" class="home-type-helper-badges"></div>
+                    <span>Types plutôt bien couverts</span>
+                    <div id="home-defense-team-coverage" class="home-type-helper-badges"></div>
                   </div>
                 </div>
               </div>
@@ -676,6 +673,150 @@
         <h2 class="card-title">&#129513; Récap des choix</h2>
         <p class="card-desc">Tous les Pokémon actuellement sélectionnés dans la grille.</p>
         <div id="ranking-picked-grid" class="ranking-picked-grid"></div>
+      </div>
+    </div>
+
+    <div id="screen-team-builder" class="hidden">
+      <div class="card team-builder-screen-card">
+        <div class="ranking-head">
+          <h2 class="card-title">🧱 Builder d’équipe</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-yellow" type="button" onclick="resetTeamBuilder()">🧹 Réinitialiser</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">← Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Construis une base de team de 6, avec Pokémon, objet tenu, gimmick et 4 attaques par slot. Le tout est sauvegardé en local.</p>
+        <div class="home-coming-tile home-builder-v1 team-builder-module">
+          <div class="home-builder-head">
+            <div>
+              <span class="home-coming-title">Builder d’équipe v1</span>
+              <p class="home-builder-note">Pose ta team ici, un slot à la fois. C’est une base simple, prête à être enrichie ensuite.</p>
+            </div>
+            <span class="home-coming-badge">Local</span>
+          </div>
+          <div class="home-builder-summary" id="team-builder-summary"></div>
+          <div class="home-builder-grid" id="team-builder-grid" aria-label="Slots de la team"></div>
+          <div class="home-builder-editor">
+            <div class="home-builder-editor-head">
+              <h4 id="team-builder-editor-title">Slot 1</h4>
+              <p id="team-builder-editor-sub">Clique un slot pour l’éditer.</p>
+            </div>
+            <div class="home-builder-fields">
+              <div class="home-type-helper-label team-builder-pokemon-picker">
+                <span>Pokémon</span>
+                <button id="team-builder-pokemon-trigger" class="team-builder-pokemon-trigger" type="button" aria-expanded="false" onclick="toggleTeamBuilderPokemonPicker()">
+                  <span class="team-builder-pokemon-trigger-preview" id="team-builder-pokemon-trigger-preview"></span>
+                  <span class="team-builder-pokemon-trigger-text" id="team-builder-pokemon-trigger-text">Choisir un Pokémon</span>
+                  <span class="team-builder-pokemon-trigger-cta" id="team-builder-pokemon-trigger-cta">Ouvrir</span>
+                </button>
+                <div id="team-builder-pokemon-picker" class="team-builder-pokemon-picker-panel hidden" role="dialog" aria-label="Sélecteur de Pokémon">
+                  <div class="team-builder-pokemon-picker-head">
+                    <input id="team-builder-pokemon-search" type="search" placeholder="Rechercher un Pokémon" autocomplete="off" />
+                    <button id="team-builder-pokemon-clear" class="btn-ghost" type="button">Effacer</button>
+                  </div>
+                  <div id="team-builder-pokemon-results" class="team-builder-pokemon-results"></div>
+                </div>
+              </div>
+              <label class="home-type-helper-label" for="team-builder-item">
+                <span>Objet tenu</span>
+                <select id="team-builder-item"></select>
+              </label>
+              <label class="home-type-helper-label" for="team-builder-gimmick">
+                <span>Gimmick / mécanique</span>
+                <select id="team-builder-gimmick"></select>
+              </label>
+            </div>
+            <div class="home-builder-moves">
+              <label class="home-type-helper-label" for="team-builder-move-1">
+                <span>Attaque 1</span>
+                <select id="team-builder-move-1"></select>
+              </label>
+              <label class="home-type-helper-label" for="team-builder-move-2">
+                <span>Attaque 2</span>
+                <select id="team-builder-move-2"></select>
+              </label>
+              <label class="home-type-helper-label" for="team-builder-move-3">
+                <span>Attaque 3</span>
+                <select id="team-builder-move-3"></select>
+              </label>
+              <label class="home-type-helper-label" for="team-builder-move-4">
+                <span>Attaque 4</span>
+                <select id="team-builder-move-4"></select>
+              </label>
+            </div>
+            <div class="team-builder-strategic">
+              <div class="home-builder-editor-head">
+                <h4>Réglages stratégiques</h4>
+                <p>Des réglages simples et guidés pour préparer le slot sans alourdir le builder.</p>
+              </div>
+              <div class="team-builder-strategic-grid">
+                <label class="home-type-helper-label" for="team-builder-nature">
+                  <span>Nature</span>
+                  <select id="team-builder-nature"></select>
+                </label>
+                <label class="home-type-helper-label" for="team-builder-talent">
+                  <span>Talent</span>
+                  <select id="team-builder-talent"></select>
+                </label>
+                <label class="home-type-helper-label" for="team-builder-ev-preset">
+                  <span>EV</span>
+                  <select id="team-builder-ev-preset"></select>
+                </label>
+                <label class="home-type-helper-label" for="team-builder-iv-preset">
+                  <span>IV</span>
+                  <select id="team-builder-iv-preset"></select>
+                </label>
+              </div>
+              <div id="team-builder-ev-custom" class="team-builder-custom-grid hidden">
+                <label class="home-type-helper-label" for="team-builder-ev-hp"><span>EV PV</span><input id="team-builder-ev-hp" type="number" min="0" max="252" step="4" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-ev-atk"><span>EV Att.</span><input id="team-builder-ev-atk" type="number" min="0" max="252" step="4" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-ev-def"><span>EV Déf.</span><input id="team-builder-ev-def" type="number" min="0" max="252" step="4" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-ev-spa"><span>EV Att. Spé.</span><input id="team-builder-ev-spa" type="number" min="0" max="252" step="4" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-ev-spd"><span>EV Déf. Spé.</span><input id="team-builder-ev-spd" type="number" min="0" max="252" step="4" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-ev-spe"><span>EV Vit.</span><input id="team-builder-ev-spe" type="number" min="0" max="252" step="4" inputmode="numeric" /></label>
+              </div>
+              <div id="team-builder-iv-custom" class="team-builder-custom-grid hidden">
+                <label class="home-type-helper-label" for="team-builder-iv-hp"><span>IV PV</span><input id="team-builder-iv-hp" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-iv-atk"><span>IV Att.</span><input id="team-builder-iv-atk" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-iv-def"><span>IV Déf.</span><input id="team-builder-iv-def" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-iv-spa"><span>IV Att. Spé.</span><input id="team-builder-iv-spa" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-iv-spd"><span>IV Déf. Spé.</span><input id="team-builder-iv-spd" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
+                <label class="home-type-helper-label" for="team-builder-iv-spe"><span>IV Vit.</span><input id="team-builder-iv-spe" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
+              </div>
+              <p class="home-builder-footnote">EV guidés par presets, ou en custom si besoin. Les IV servent surtout à affiner un slot précis.</p>
+            </div>
+            <p class="home-builder-footnote">Base simple, sauvegardée localement. Les attaques sont priorisées selon le Pokémon choisi, puis le builder pourra être enrichi ensuite avec de vrais movepools et des synergies.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-teams" class="hidden">
+      <div class="card teams-screen-card">
+        <div class="ranking-head">
+          <h2 class="card-title">🧩 Équipes / Teams</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-yellow" type="button" onclick="resetTeamLibraryFilters()">🧹 Réinitialiser</button>
+            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Ouvrir le builder</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">← Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Quelques bases d’équipes prêtes à jouer pour partir d’un point solide, filtrables par génération, format et style.</p>
+        <div class="teams-toolbar">
+          <label class="home-type-helper-label teams-filter-field" for="teams-filter-generation">
+            <span>Génération</span>
+            <select id="teams-filter-generation"></select>
+          </label>
+          <label class="home-type-helper-label teams-filter-field" for="teams-filter-format">
+            <span>Format / tier</span>
+            <select id="teams-filter-format"></select>
+          </label>
+          <label class="home-type-helper-label teams-filter-field" for="teams-filter-style">
+            <span>Style</span>
+            <select id="teams-filter-style"></select>
+          </label>
+        </div>
+        <div id="teams-grid" class="teams-grid" aria-label="Bases d'équipes"></div>
       </div>
     </div>
 
