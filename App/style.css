@@ -5919,6 +5919,55 @@ select:focus-visible {
   margin-bottom: 12px;
 }
 
+.draft-dev-battle-benches {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 12px;
+}
+
+.draft-dev-battle-bench-list {
+  display: grid;
+  gap: 8px;
+}
+
+.draft-dev-battle-bench-item {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.draft-dev-battle-bench-item img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.draft-dev-battle-bench-item b {
+  display: block;
+  font-size: 0.88rem;
+}
+
+.draft-dev-battle-bench-item small {
+  color: #d6e6ff;
+  font-weight: 700;
+}
+
+.draft-dev-battle-bench-item.is-active {
+  outline: 1px solid rgba(111, 171, 255, 0.42);
+  background: rgba(67, 108, 190, 0.24);
+}
+
+.draft-dev-battle-bench-item.is-ko {
+  opacity: 0.5;
+  background: rgba(111, 38, 38, 0.24);
+}
+
 .draft-dev-battle-log {
   display: grid;
   gap: 10px;
@@ -6126,9 +6175,46 @@ select:focus-visible {
   background: rgba(174, 99, 31, 0.28);
 }
 
+.draft-dev-battle-status.is-switch {
+  border-color: rgba(255, 216, 116, 0.42);
+  background: rgba(170, 132, 34, 0.28);
+}
+
 .draft-dev-battle-status.is-finished {
   border-color: rgba(114, 220, 146, 0.42);
   background: rgba(35, 116, 67, 0.3);
+}
+
+.draft-dev-battle-switch {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 111, 0.28);
+  background: rgba(82, 61, 14, 0.22);
+  display: grid;
+  gap: 10px;
+}
+
+.draft-dev-battle-switch b {
+  color: #f8fbff;
+}
+
+.draft-dev-battle-switch-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.draft-dev-battle-switch-btn {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  text-align: left;
+}
+
+.draft-dev-battle-switch-btn small {
+  color: #d9e8ff;
+  font-weight: 700;
 }
 
 .draft-dev-battle-turn {

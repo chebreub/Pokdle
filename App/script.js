@@ -6140,6 +6140,7 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries) {
     phase: "ready",
     turn: 1,
     turnState: "player",
+    pendingSwitch: false,
     leftTeam,
     rightTeam,
     leftActiveIndex: 0,
@@ -6196,14 +6197,52 @@ function getDraftSimpleBattleHpPercent(sideState) {
 
 function getDraftSimpleBattleStatusText(state) {
   if (state?.phase === "finished") return "Combat terminé";
+  if (state?.pendingSwitch) return "Choisis ton prochain Pokémon";
   if (state?.turnState === "enemy") return "L’adversaire attaque...";
   return "À toi de jouer";
 }
 
 function getDraftSimpleBattleStatusClass(state) {
   if (state?.phase === "finished") return "is-finished";
+  if (state?.pendingSwitch) return "is-switch";
   if (state?.turnState === "enemy") return "is-enemy";
   return "is-player";
+}
+
+function getDraftSimpleBattleAvailableSwitchIndexes(state) {
+  if (!state?.leftTeam) return [];
+  const out = [];
+  for (let index = 0; index < state.leftTeam.length; index += 1) {
+    const member = state.leftTeam[index];
+    if (!member || member.currentHp <= 0) continue;
+    if (index === state.leftActiveIndex) continue;
+    out.push(index);
+  }
+  return out;
+}
+
+function renderDraftSimpleBattleBench(team = [], activeIndex = 0, sideLabel = "Équipe") {
+  const items = team.map((member, index) => {
+    if (!member?.pokemon) return "";
+    const stateClass = member.currentHp <= 0 ? "is-ko" : index === activeIndex ? "is-active" : "is-ready";
+    const stateLabel = member.currentHp <= 0 ? "KO" : index === activeIndex ? "Actif" : `${member.currentHp}/${member.maxHp} PV`;
+    return `
+      <div class="draft-dev-battle-bench-item ${stateClass}">
+        <img src="${escapeHtml(getPokemonSprite(member.pokemon))}" alt="${escapeHtml(member.pokemon.name)}">
+        <div>
+          <b>${escapeHtml(member.pokemon.name)}</b>
+          <small>${escapeHtml(stateLabel)}</small>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="draft-summary-card draft-dev-battle-bench">
+      <span>${escapeHtml(sideLabel)}</span>
+      <div class="draft-dev-battle-bench-list">${items}</div>
+    </div>
+  `;
 }
 
 function ensureDraftSimpleBattleDevPanel() {
@@ -6270,8 +6309,8 @@ function renderDraftSimpleBattleDevPanel(state) {
         const sideLabel = action.side === "left" ? "Joueur" : "Adversaire";
         return `<li><b>${sideLabel}</b> envoie <b>${escapeHtml(action.pokemonName || "Pokémon")}</b> au combat.</li>`;
       }
-      const actor = action.side === "left" ? state.left.pokemon.name : state.right.pokemon.name;
-      const target = action.side === "left" ? state.right.pokemon.name : state.left.pokemon.name;
+      const actor = action.actorName || (action.side === "left" ? state.left.pokemon.name : state.right.pokemon.name);
+      const target = action.targetName || (action.side === "left" ? state.right.pokemon.name : state.left.pokemon.name);
       const effectText = getDraftSimpleBattleEffectivenessText(action.effectiveness);
       const extras = [
         `${action.damage} dégâts`,
@@ -6315,6 +6354,25 @@ function renderDraftSimpleBattleDevPanel(state) {
       </div>`
     : `<div class="draft-dev-battle-result"><b>Duel en cours</b><span>Choisis une attaque pour jouer le prochain tour.</span></div>`;
 
+  const switchHtml = state.pendingSwitch
+    ? `
+      <div class="draft-dev-battle-switch">
+        <b>Ton Pokémon est KO. Choisis le suivant :</b>
+        <div class="draft-dev-battle-switch-options">
+          ${getDraftSimpleBattleAvailableSwitchIndexes(state).map((index) => {
+            const member = state.leftTeam[index];
+            return `
+              <button type="button" class="btn-ghost draft-dev-battle-switch-btn" onclick="chooseDraftSimpleBattleReplacement(${index})">
+                <span>${escapeHtml(member.pokemon.name)}</span>
+                <small>PV ${member.currentHp} / ${member.maxHp}</small>
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `
+    : "";
+
   body.innerHTML = `
     <div class="draft-dev-battle-fighters">
       <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
@@ -6356,6 +6414,10 @@ function renderDraftSimpleBattleDevPanel(state) {
         </div>
       </div>
     </div>
+    <div class="draft-dev-battle-benches">
+      ${renderDraftSimpleBattleBench(state.leftTeam, state.leftActiveIndex, "Banc joueur")}
+      ${renderDraftSimpleBattleBench(state.rightTeam, state.rightActiveIndex, "Banc adverse")}
+    </div>
     <div class="draft-dev-battle-meta">
       <div class="draft-summary-card draft-dev-battle-status ${statusClass}"><span>Statut</span><b>${escapeHtml(statusText)}</b></div>
       <div class="draft-summary-card"><span>Ordre du tour</span><b>${escapeHtml(orderLabel)}</b></div>
@@ -6363,6 +6425,7 @@ function renderDraftSimpleBattleDevPanel(state) {
       <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
     </div>
     ${resultHtml}
+    ${switchHtml}
     <div class="draft-dev-battle-actions">${movesHtml}</div>
     <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
   `;
@@ -6389,7 +6452,7 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
   state.turn += 1;
   state.phase = leftRemaining <= 0 || rightRemaining <= 0 ? "finished" : "ready";
-  state.turnState = state.phase === "finished" ? "finished" : "player";
+  state.turnState = state.phase === "finished" ? "finished" : state.pendingSwitch ? "switch" : "player";
   if (turnEntry && !turnEntry.order?.length) {
     turnEntry.order = ["left", "right"];
   }
@@ -6398,8 +6461,31 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   return state;
 }
 
+function chooseDraftSimpleBattleReplacement(teamIndex) {
+  const state = draftSimpleBattleDevUiState;
+  if (!state || !state.pendingSwitch || state.phase === "finished") return null;
+  const nextIndex = Number(teamIndex);
+  const nextMember = state.leftTeam[nextIndex];
+  if (!Number.isInteger(nextIndex) || !nextMember || nextMember.currentHp <= 0 || nextIndex === state.leftActiveIndex) return null;
+
+  state.leftActiveIndex = nextIndex;
+  state.pendingSwitch = false;
+  state.turnState = "player";
+  syncDraftSimpleBattleActiveBattlers(state);
+  const lastTurn = state.log[state.log.length - 1];
+  if (lastTurn) {
+    lastTurn.actions.push({
+      side: "left",
+      event: "sendout",
+      pokemonName: nextMember.pokemon.name,
+    });
+  }
+  renderDraftSimpleBattleDevPanel(state);
+  return state;
+}
+
 function runDraftSimpleBattleDevTurn(moveIndex = 0) {
-  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.turnState !== "player") return null;
+  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.turnState !== "player" || draftSimpleBattleDevUiState.pendingSwitch) return null;
 
   const state = draftSimpleBattleDevUiState;
   syncDraftSimpleBattleActiveBattlers(state);
@@ -6410,7 +6496,12 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
 
   const playerAction = resolveDraftSimpleBattleAttack(state.gen, state.left, state.right, moveIndex);
   if (playerAction) {
-    turnEntry.actions.push({ side: "left", ...playerAction });
+    turnEntry.actions.push({
+      side: "left",
+      actorName: state.left.pokemon.name,
+      targetName: state.right.pokemon.name,
+      ...playerAction,
+    });
   }
 
   if (playerAction?.knockout && state.right.currentHp <= 0) {
@@ -6442,17 +6533,15 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
     }
     const enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyMoveIndex);
     if (enemyAction) {
-      turnEntry.actions.push({ side: "right", ...enemyAction });
+      turnEntry.actions.push({
+        side: "right",
+        actorName: state.right.pokemon.name,
+        targetName: state.left.pokemon.name,
+        ...enemyAction,
+      });
     }
     if (enemyAction?.knockout && state.left.currentHp <= 0) {
-      const nextPlayer = sendNextDraftSimpleBattleBattler(state, "left");
-      if (nextPlayer) {
-        turnEntry.actions.push({
-          side: "left",
-          event: "sendout",
-          pokemonName: nextPlayer.pokemon.name,
-        });
-      }
+      state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
     }
     finishDraftSimpleBattleDevTurn(state, turnEntry);
     draftSimpleBattleTurnTimer = null;
@@ -6498,6 +6587,7 @@ window.runDraftSimpleBattleDevTests = runDraftSimpleBattleDevTests;
 window.runDraftSimpleBattleDraftConversionDevTest = runDraftSimpleBattleDraftConversionDevTest;
 window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDraftConversionDevVisualTest;
 window.runDraftSimpleBattleDevTurn = runDraftSimpleBattleDevTurn;
+window.chooseDraftSimpleBattleReplacement = chooseDraftSimpleBattleReplacement;
 window.replayDraftSimpleBattleDevDuel = replayDraftSimpleBattleDevDuel;
 window.clearDraftSimpleBattleDevPanel = clearDraftSimpleBattleDevPanel;
 
