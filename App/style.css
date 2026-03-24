@@ -5962,16 +5962,16 @@ select:focus-visible {
   position: relative;
   grid-template-columns: repeat(2, minmax(260px, 1fr));
   align-items: start;
-  gap: 10px 32px;
-  padding: 2px 8px 6px;
-  margin-bottom: 4px;
+  gap: 6px 28px;
+  padding: 0 8px 2px;
+  margin-bottom: 2px;
 }
 
 .draft-dev-battle-fighters::before {
   content: "";
   position: absolute;
-  inset: 12px 7% 12px;
-  border-radius: 24px;
+  inset: 8px 8% 8px;
+  border-radius: 22px;
   background:
     radial-gradient(circle at 24% 72%, rgba(89, 153, 255, 0.16), transparent 26%),
     radial-gradient(circle at 78% 22%, rgba(255, 132, 132, 0.12), transparent 24%),
@@ -6044,7 +6044,7 @@ select:focus-visible {
 .draft-dev-battle-log {
   display: grid;
   gap: 8px;
-  max-height: 132px;
+  max-height: 112px;
   overflow: auto;
   padding-right: 4px;
 }
@@ -6092,7 +6092,7 @@ select:focus-visible {
   grid-column: 1;
   align-self: end;
   justify-self: start;
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
 .draft-dev-battle-fighter.is-foe {
@@ -6100,7 +6100,7 @@ select:focus-visible {
   grid-column: 2;
   align-self: start;
   justify-self: end;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
 .draft-dev-battle-fighter-head {
@@ -6284,7 +6284,7 @@ select:focus-visible {
     radial-gradient(circle at top right, rgba(122, 227, 155, 0.14), transparent 34%),
     rgba(9, 41, 26, 0.72);
   box-shadow: 0 0 0 1px rgba(110, 211, 142, 0.12), 0 18px 36px rgba(26, 98, 57, 0.18);
-  animation: draftBattleWinPulse 1.2s ease-out;
+  animation: draftBattleWinPulse 1.4s ease-out, draftBattleWinGlow 1.6s ease-out;
 }
 
 .draft-dev-battle-result.is-finished.is-loss {
@@ -6306,6 +6306,20 @@ select:focus-visible {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes draftBattleWinGlow {
+  0% {
+    filter: saturate(1);
+    box-shadow: 0 0 0 0 rgba(124, 238, 160, 0.32), 0 18px 36px rgba(26, 98, 57, 0.18);
+  }
+  45% {
+    filter: saturate(1.14);
+    box-shadow: 0 0 0 14px rgba(124, 238, 160, 0), 0 24px 44px rgba(26, 98, 57, 0.26);
+  }
+  100% {
+    filter: saturate(1);
   }
 }
 
@@ -6399,7 +6413,7 @@ select:focus-visible {
 
 @media (min-width: 1080px) {
   #draft-dev-battle-body {
-    grid-template-columns: minmax(0, 1fr) 270px;
+    grid-template-columns: minmax(0, 1fr) 248px;
     grid-template-areas:
       "fighters fighters"
       "actions benches"
@@ -14533,16 +14547,16 @@ body.theme-dark .home-hero {
 }
 
 .home-hero-title {
-  max-width: 12ch;
-  font-size: clamp(2.5rem, 4vw, 4.3rem) !important;
-  line-height: 1.04 !important;
+  max-width: 14ch;
+  font-size: clamp(2.15rem, 3.4vw, 3.6rem) !important;
+  line-height: 1.08 !important;
   letter-spacing: -0.03em;
   color: #17345f !important;
 }
 
 .home-hero-text {
-  max-width: 58ch;
-  font-size: 1.08rem !important;
+  max-width: 52ch;
+  font-size: 1rem !important;
   color: #486585 !important;
 }
 
@@ -14563,8 +14577,43 @@ body.theme-dark .home-hero {
 }
 
 .home-category-card {
-  padding: 30px !important;
-  gap: 24px !important;
+  padding: 28px !important;
+  gap: 18px !important;
+}
+
+#home-play {
+  grid-column: 1 / -1;
+  padding: 34px !important;
+}
+
+#home-play .card-title {
+  font-size: 1.14rem !important;
+}
+
+#home-play .card-desc {
+  max-width: 58ch;
+}
+
+.home-category-head .card-desc {
+  margin-top: 4px;
+  max-width: 48ch;
+  font-size: 0.96rem !important;
+  line-height: 1.5;
+}
+
+#home-play .home-mode-grid {
+  grid-template-columns: repeat(2, minmax(0, 280px));
+  justify-content: start;
+}
+
+#home-social,
+#home-extras {
+  align-self: start;
+}
+
+#home-social .card-title,
+#home-extras .card-title {
+  font-size: 1rem !important;
 }
 
 .home-category-head {
@@ -14590,8 +14639,41 @@ body.theme-dark .home-hero {
 .home-social-suite-note,
 .home-social-launch-copy,
 .home-social-launch-note,
-.home-social-note p {
+.home-social-note p,
+.home-category-note {
   color: #4f6a8b !important;
+}
+
+.home-category-note {
+  margin: -2px 0 0;
+  max-width: 50ch;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+@media (max-width: 900px) {
+  .home-categories {
+    grid-template-columns: 1fr !important;
+  }
+
+  #home-play {
+    grid-column: auto;
+    padding: 30px !important;
+  }
+
+  #home-play .home-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-category-card {
+    gap: 16px !important;
+  }
+
+  .home-category-note,
+  .home-category-head .card-desc {
+    max-width: none;
+  }
 }
 
 .home-social-suite,
@@ -14606,8 +14688,24 @@ body.theme-dark .home-hero {
 }
 
 .home-mode-grid > button {
-  min-height: 74px !important;
-  border-radius: 20px !important;
+  min-height: 68px !important;
+  border-radius: 18px !important;
+  padding: 14px 16px !important;
+  font-size: 0.98rem !important;
+  box-shadow: 0 10px 20px rgba(17, 37, 69, 0.08);
+}
+
+.home-category-card .home-mode-grid {
+  gap: 12px;
+}
+
+.home-category-card .home-mode-grid > button:first-child {
+  box-shadow: 0 14px 26px rgba(17, 37, 69, 0.12);
+}
+
+.home-category-card .home-mode-grid > button:last-child {
+  opacity: 0.96;
+  box-shadow: 0 8px 16px rgba(17, 37, 69, 0.06);
 }
 
 body.theme-dark #screen-config::before {
