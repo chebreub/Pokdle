@@ -5899,6 +5899,10 @@ select:focus-visible {
   margin-top: 18px;
 }
 
+#draft-battle-pokemon {
+  min-width: 210px;
+}
+
 .draft-dev-battle-head {
   display: flex;
   align-items: center;
@@ -5920,8 +5924,46 @@ select:focus-visible {
   gap: 10px;
 }
 
+.draft-dev-battle-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 10px 0;
+}
+
+.draft-dev-battle-intro-side {
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 18px 16px;
+}
+
+.draft-dev-battle-intro-side img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 10px 18px rgba(5, 14, 28, 0.28));
+}
+
+.draft-dev-battle-intro-vs {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #f6fbff;
+  letter-spacing: 0.08em;
+}
+
 .draft-dev-battle-fighter {
   gap: 10px;
+}
+
+.draft-dev-battle-fighter.is-player {
+  border-color: rgba(88, 149, 255, 0.42);
+}
+
+.draft-dev-battle-fighter.is-foe {
+  border-color: rgba(255, 120, 120, 0.34);
 }
 
 .draft-dev-battle-fighter-head {
@@ -5944,6 +5986,38 @@ select:focus-visible {
   font-weight: 700;
 }
 
+.draft-dev-battle-hp {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.draft-dev-battle-hp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #eff6ff;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.draft-dev-battle-hp-track {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(205, 223, 248, 0.22);
+  border: 1px solid rgba(168, 197, 239, 0.22);
+}
+
+.draft-dev-battle-hp-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #53d6e6 0%, #73d55b 45%, #ffd04f 75%, #ff744a 100%);
+}
+
 .draft-dev-battle-actions {
   margin-bottom: 12px;
   display: grid;
@@ -5960,10 +6034,50 @@ select:focus-visible {
   text-align: left;
 }
 
-.draft-dev-battle-move small {
-  color: rgba(239, 246, 255, 0.86);
+.draft-dev-battle-move-name {
+  font-weight: 800;
+}
+
+.draft-dev-battle-move-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.draft-dev-battle-move-type,
+.draft-dev-battle-move-power {
+  color: rgba(239, 246, 255, 0.9);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.draft-dev-battle-move-type {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.draft-dev-battle-move-effect {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.draft-dev-battle-move-effect.is-super {
+  color: #9df07d;
+}
+
+.draft-dev-battle-move-effect.is-neutral {
+  color: #f5f8ff;
+}
+
+.draft-dev-battle-move-effect.is-low {
+  color: #ffd46a;
+}
+
+.draft-dev-battle-move-effect.is-none {
+  color: #ff8d8d;
 }
 
 .draft-dev-battle-move:disabled {
@@ -5988,6 +6102,33 @@ select:focus-visible {
 .draft-dev-battle-result span {
   color: #d9e9ff;
   font-weight: 600;
+}
+
+.draft-dev-battle-result.is-finished {
+  border-color: rgba(166, 205, 255, 0.34);
+  background: rgba(8, 26, 49, 0.66);
+}
+
+.draft-dev-battle-result-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.draft-dev-battle-status.is-player {
+  border-color: rgba(98, 158, 255, 0.42);
+  background: rgba(41, 99, 196, 0.32);
+}
+
+.draft-dev-battle-status.is-enemy {
+  border-color: rgba(255, 179, 99, 0.42);
+  background: rgba(174, 99, 31, 0.28);
+}
+
+.draft-dev-battle-status.is-finished {
+  border-color: rgba(114, 220, 146, 0.42);
+  background: rgba(35, 116, 67, 0.3);
 }
 
 .draft-dev-battle-turn {
