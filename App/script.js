@@ -5474,6 +5474,7 @@ function createDraftArenaState() {
     selectedGen: null,
     team: [],
     selectedBattlePokemonId: null,
+    enemyBattleTeam: [],
     selectedDexIds: new Set(),
     options: [],
     shinyCount: 0,
@@ -5597,7 +5598,7 @@ function getDraftCachedPokemonPowerData(pokemon) {
 
 const DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER = 70;
 const DRAFT_SIMPLE_BATTLE_STAB = 1.5;
-const DRAFT_SIMPLE_BATTLE_TEAM_SIZE = 3;
+const DRAFT_SIMPLE_BATTLE_TEAM_SIZE = DRAFT_TEAM_SIZE;
 let draftSimpleBattleDevUiState = null;
 let draftSimpleBattleIntroTimer = null;
 let draftSimpleBattleTurnTimer = null;
@@ -6042,39 +6043,29 @@ function getDraftSimpleBattlePlayerTeamEntries() {
   return ordered.slice(0, DRAFT_SIMPLE_BATTLE_TEAM_SIZE);
 }
 
-function getDraftSimpleBattleDevOpponentTeamEntries(playerEntries = []) {
+function buildDraftSimpleBattleBotTeamEntries(playerEntries = []) {
   const playerDexIds = new Set(
     playerEntries
       .map((entry) => entry?.pokemon)
       .filter(Boolean)
       .map((pokemon) => getPokemonSpriteId(pokemon))
   );
-  const desiredCount = Math.max(1, Math.min(DRAFT_SIMPLE_BATTLE_TEAM_SIZE, playerEntries.length || 1));
+  const desiredCount = DRAFT_SIMPLE_BATTLE_TEAM_SIZE;
   const picks = [];
   const usedDexIds = new Set(playerDexIds);
-
-  const optionOpponents = (draftArenaState?.options || [])
-    .map((entry) => entry?.pokemon)
-    .filter(Boolean)
-    .filter((pokemon) => !usedDexIds.has(getPokemonSpriteId(pokemon)));
-
-  for (const pokemon of optionOpponents) {
-    if (picks.length >= desiredCount) break;
-    usedDexIds.add(getPokemonSpriteId(pokemon));
-    picks.push({ pokemon });
-  }
 
   const genPool = draftArenaState?.selectedGen
     ? getDraftPoolForGeneration(draftArenaState.selectedGen)
     : POKEMON_LIST;
-  if (picks.length < desiredCount) {
-    const weightedOpponents = buildDraftWeightedWave(genPool || [], desiredCount - picks.length, usedDexIds);
-    weightedOpponents.forEach((pokemon) => {
-      if (!pokemon) return;
-      usedDexIds.add(getPokemonSpriteId(pokemon));
-      picks.push({ pokemon });
-    });
-  }
+
+  // Solo enemy team must come from a dedicated external pool, never from the
+  // player's own picks. This same entry point can later accept a room enemy team.
+  const weightedOpponents = buildDraftWeightedWave(genPool || [], desiredCount, usedDexIds);
+  weightedOpponents.forEach((pokemon) => {
+    if (!pokemon) return;
+    usedDexIds.add(getPokemonSpriteId(pokemon));
+    picks.push({ pokemon });
+  });
 
   const fallbackIds = [9, 25, 7, 4, 74];
   for (const id of fallbackIds) {
@@ -6088,12 +6079,31 @@ function getDraftSimpleBattleDevOpponentTeamEntries(playerEntries = []) {
   return picks.slice(0, desiredCount);
 }
 
+function getDraftSimpleBattleEnemyTeamEntries(options = {}) {
+  const source = options.source || "bot";
+  const playerEntries = Array.isArray(options.playerEntries) ? options.playerEntries : [];
+
+  if (source === "room" && Array.isArray(options.enemyEntries) && options.enemyEntries.length) {
+    return options.enemyEntries
+      .filter((entry) => entry?.pokemon)
+      .slice(0, DRAFT_SIMPLE_BATTLE_TEAM_SIZE);
+  }
+
+  return buildDraftSimpleBattleBotTeamEntries(playerEntries);
+}
+
 function getDraftSimpleBattleDevEntries() {
-  const leftEntries = getDraftSimpleBattlePlayerTeamEntries();
-  const safeLeftEntries = leftEntries.length ? leftEntries : [{ pokemon: getDraftSimpleBattleDevPokemon(6) }];
-  const rightEntries = getDraftSimpleBattleDevOpponentTeamEntries(safeLeftEntries);
-  const safeRightEntries = rightEntries.length ? rightEntries : [{ pokemon: getDraftSimpleBattleDevPokemon(25) }];
-  return { leftEntries: safeLeftEntries, rightEntries: safeRightEntries };
+  const playerDraftTeam = getDraftSimpleBattlePlayerTeamEntries();
+  const safePlayerDraftTeam = playerDraftTeam.length ? playerDraftTeam : [{ pokemon: getDraftSimpleBattleDevPokemon(6) }];
+  const enemyDraftTeam = getDraftSimpleBattleEnemyTeamEntries({
+    source: "bot",
+    playerEntries: safePlayerDraftTeam,
+  });
+  const safeEnemyDraftTeam = enemyDraftTeam.length ? enemyDraftTeam : [{ pokemon: getDraftSimpleBattleDevPokemon(25) }];
+  return {
+    playerDraftTeam: safePlayerDraftTeam,
+    enemyDraftTeam: safeEnemyDraftTeam,
+  };
 }
 
 function selectDraftBattlePokemon(pokemonId) {
@@ -6742,8 +6752,8 @@ function runDraftSimpleBattleDraftConversionDevVisualTest() {
     console.warn("Ouvre d'abord l'écran Draft Arènes pour voir le panneau de dev.");
   }
 
-  const { leftEntries, rightEntries } = getDraftSimpleBattleDevEntries();
-  const state = createDraftSimpleBattleDevUiState(leftEntries, rightEntries);
+  const { playerDraftTeam, enemyDraftTeam } = getDraftSimpleBattleDevEntries();
+  const state = createDraftSimpleBattleDevUiState(playerDraftTeam, enemyDraftTeam);
   if (!state) {
     console.warn("Impossible de construire la simulation de dev.");
     return null;
