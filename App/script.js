@@ -5564,16 +5564,19 @@ function getDraftRarityInfo(statsTotal, pokemon) {
 
 function buildDraftPowerMetrics(pokemon, stats = null) {
   const values = stats ? [stats.hp, stats.attack, stats.defense, stats.spAttack, stats.spDefense, stats.speed] : [];
-  const statsTotal = values.length && values.every((value) => Number.isFinite(value))
+  const statGlobal = values.length && values.every((value) => Number.isFinite(value))
     ? values.reduce((sum, value) => sum + value, 0)
     : getDraftFallbackStatTotal(pokemon);
-  const rarity = getDraftRarityInfo(statsTotal, pokemon);
+  const rarity = getDraftRarityInfo(statGlobal, pokemon);
   const stageBonus = (Number(pokemon?.stage) || 1) * 4;
   const dualTypeBonus = pokemon?.type2 ? 4 : 0;
-  const power = clampDraftValue(Math.round(statsTotal / 7.2 + rarity.score + stageBonus + dualTypeBonus), 35, 100);
+  // `power` stays as the internal balancing score for the Draft.
+  // Visible UI now relies on the real base-stat total via `statGlobal`.
+  const power = clampDraftValue(Math.round(statGlobal / 7.2 + rarity.score + stageBonus + dualTypeBonus), 35, 100);
   return {
     power,
-    statsTotal,
+    statGlobal,
+    statsTotal: statGlobal,
     rarityLabel: rarity.label,
     rarityScore: rarity.score,
   };
@@ -6203,6 +6206,16 @@ function isDraftSimpleBattlePlayerWin(state) {
   return leftRemaining > 0 && rightRemaining <= 0;
 }
 
+function getDraftSimpleBattleDisplayBattler(state, side) {
+  const team = side === "left" ? state?.leftTeam : state?.rightTeam;
+  const active = side === "left" ? state?.left : state?.right;
+  const activeIndex = side === "left" ? state?.leftActiveIndex : state?.rightActiveIndex;
+  if (active) return active;
+  if (!Array.isArray(team) || !team.length) return null;
+  const safeIndex = Math.min(Math.max(Number(activeIndex) || 0, 0), team.length - 1);
+  return team[safeIndex] || team[team.length - 1] || null;
+}
+
 function replayDraftSimpleBattleDevDuel() {
   return runDraftSimpleBattleDraftConversionDevVisualTest();
 }
@@ -6376,21 +6389,24 @@ function ensureDraftSimpleBattleDevPanel() {
 function renderDraftSimpleBattleDevPanel(state) {
   const panel = ensureDraftSimpleBattleDevPanel();
   const body = document.getElementById("draft-dev-battle-body");
-  if (!panel || !body || !state?.left || !state?.right) return;
+  if (!panel || !body || !state) return;
 
   if (state.showIntro) {
+    const introLeft = getDraftSimpleBattleDisplayBattler(state, "left");
+    const introRight = getDraftSimpleBattleDisplayBattler(state, "right");
+    if (!introLeft || !introRight) return;
     body.innerHTML = `
       <div class="draft-dev-battle-intro">
         <div class="draft-summary-card draft-dev-battle-intro-side is-player">
           <span>Joueur</span>
-          <img src="${escapeHtml(getPokemonSprite(state.left.pokemon))}" alt="${escapeHtml(state.left.pokemon.name)}">
-          <b>${escapeHtml(state.left.pokemon.name)}</b>
+          <img src="${escapeHtml(getPokemonSprite(introLeft.pokemon))}" alt="${escapeHtml(introLeft.pokemon.name)}">
+          <b>${escapeHtml(introLeft.pokemon.name)}</b>
         </div>
         <div class="draft-dev-battle-intro-vs">VS</div>
         <div class="draft-summary-card draft-dev-battle-intro-side is-foe">
           <span>Adversaire</span>
-          <img src="${escapeHtml(getPokemonSprite(state.right.pokemon))}" alt="${escapeHtml(state.right.pokemon.name)}">
-          <b>${escapeHtml(state.right.pokemon.name)}</b>
+          <img src="${escapeHtml(getPokemonSprite(introRight.pokemon))}" alt="${escapeHtml(introRight.pokemon.name)}">
+          <b>${escapeHtml(introRight.pokemon.name)}</b>
         </div>
       </div>
     `;
@@ -6399,14 +6415,17 @@ function renderDraftSimpleBattleDevPanel(state) {
   }
 
   syncDraftSimpleBattleActiveBattlers(state);
+  const displayLeft = getDraftSimpleBattleDisplayBattler(state, "left");
+  const displayRight = getDraftSimpleBattleDisplayBattler(state, "right");
+  if (!displayLeft || !displayRight) return;
   const lastTurn = state.log[state.log.length - 1] || null;
-  const currentOrder = lastTurn?.order || getDraftSimpleBattleTurnOrder(state.left, state.right);
+  const currentOrder = lastTurn?.order || getDraftSimpleBattleTurnOrder(displayLeft, displayRight);
   const orderLabel = currentOrder
-    .map((side) => (side === "left" ? state.left.pokemon.name : state.right.pokemon.name))
+    .map((side) => (side === "left" ? displayLeft.pokemon.name : displayRight.pokemon.name))
     .join(" -> ");
   const winner = getDraftSimpleBattleWinnerName(state);
-  const leftHpPercent = getDraftSimpleBattleHpPercent(state.left);
-  const rightHpPercent = getDraftSimpleBattleHpPercent(state.right);
+  const leftHpPercent = getDraftSimpleBattleHpPercent(displayLeft);
+  const rightHpPercent = getDraftSimpleBattleHpPercent(displayRight);
   const statusText = getDraftSimpleBattleStatusText(state);
   const statusClass = getDraftSimpleBattleStatusClass(state);
 
@@ -6416,8 +6435,8 @@ function renderDraftSimpleBattleDevPanel(state) {
         const sideLabel = action.side === "left" ? "Joueur" : "Adversaire";
         return `<li><b>${sideLabel}</b> envoie <b>${escapeHtml(action.pokemonName || "Pokémon")}</b> au combat.</li>`;
       }
-      const actor = action.actorName || (action.side === "left" ? state.left.pokemon.name : state.right.pokemon.name);
-      const target = action.targetName || (action.side === "left" ? state.right.pokemon.name : state.left.pokemon.name);
+      const actor = action.actorName || (action.side === "left" ? displayLeft.pokemon.name : displayRight.pokemon.name);
+      const target = action.targetName || (action.side === "left" ? displayRight.pokemon.name : displayLeft.pokemon.name);
       const effectText = getDraftSimpleBattleEffectivenessText(action.effectiveness);
       const extras = [
         `${action.damage} dégâts`,
@@ -6429,8 +6448,8 @@ function renderDraftSimpleBattleDevPanel(state) {
     return `<div class="draft-dev-battle-turn"><strong>Tour ${entry.turn}</strong><ul>${lines || "<li>Aucune action</li>"}</ul></div>`;
   }).join("");
 
-  const movesHtml = (state.left.moves || []).map((move, index) => {
-    const moveEffectiveness = getDraftSimpleBattleTypeMultiplier(state.gen, move?.type, state.right);
+  const movesHtml = (displayLeft.moves || []).map((move, index) => {
+    const moveEffectiveness = getDraftSimpleBattleTypeMultiplier(state.gen, move?.type, displayRight);
     const moveEffectivenessText = getDraftSimpleBattleEffectivenessText(moveEffectiveness);
     const moveEffectivenessClass = getDraftSimpleBattleEffectivenessClass(moveEffectiveness);
     return `
@@ -6486,15 +6505,15 @@ function renderDraftSimpleBattleDevPanel(state) {
     <div class="draft-dev-battle-fighters">
       <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
         <div class="draft-dev-battle-fighter-head">
-          <img src="${escapeHtml(getPokemonSprite(state.left.pokemon))}" alt="${escapeHtml(state.left.pokemon.name)}">
+          <img src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
           <div>
             <span>Joueur</span>
-            <b>${escapeHtml(state.left.pokemon.name)}</b>
-            <small>PV ${state.left.currentHp} / ${state.left.maxHp} • Vitesse ${state.left.speed} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
+            <b>${escapeHtml(displayLeft.pokemon.name)}</b>
+            <small>PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${displayLeft.speed} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
             <div class="draft-dev-battle-hp">
               <div class="draft-dev-battle-hp-meta">
                 <strong>PV</strong>
-                <span>${state.left.currentHp} / ${state.left.maxHp}</span>
+                <span>${displayLeft.currentHp} / ${displayLeft.maxHp}</span>
               </div>
               <div class="draft-dev-battle-hp-track">
                 <span class="draft-dev-battle-hp-fill" style="width:${leftHpPercent}%"></span>
@@ -6505,15 +6524,15 @@ function renderDraftSimpleBattleDevPanel(state) {
       </div>
       <div class="draft-summary-card wide draft-dev-battle-fighter is-foe">
         <div class="draft-dev-battle-fighter-head">
-          <img src="${escapeHtml(getPokemonSprite(state.right.pokemon))}" alt="${escapeHtml(state.right.pokemon.name)}">
+          <img src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
           <div>
             <span>Adversaire</span>
-            <b>${escapeHtml(state.right.pokemon.name)}</b>
-            <small>PV ${state.right.currentHp} / ${state.right.maxHp} • Vitesse ${state.right.speed} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
+            <b>${escapeHtml(displayRight.pokemon.name)}</b>
+            <small>PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${displayRight.speed} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
             <div class="draft-dev-battle-hp">
               <div class="draft-dev-battle-hp-meta">
                 <strong>PV</strong>
-                <span>${state.right.currentHp} / ${state.right.maxHp}</span>
+                <span>${displayRight.currentHp} / ${displayRight.maxHp}</span>
               </div>
               <div class="draft-dev-battle-hp-track">
                 <span class="draft-dev-battle-hp-fill" style="width:${rightHpPercent}%"></span>
@@ -7348,7 +7367,7 @@ function renderDraftArena() {
           <img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${normalSprite}'" />
           <strong>${escapeHtml(option.pokemon.name)}</strong>
           <span>#${spriteId}</span>
-          <span class="draft-card-meta">Puissance ${metrics.power} • ${escapeHtml(metrics.rarityLabel)}</span>
+          <span class="draft-card-meta">Stat global ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
           <div class="draft-type-row">${typeBadgesHtml(option.pokemon.type1, option.pokemon.type2)}</div>
           ${option.locked ? '<span class="draft-lock-mark">Sélectionné</span>' : ""}
           ${sparkle}
@@ -7389,7 +7408,7 @@ function renderDraftArena() {
         <div>
           <b>${escapeHtml(member.pokemon.name)}</b>
           <span>${escapeHtml(member.pokemon.type1)}${member.pokemon.type2 ? ` / ${escapeHtml(member.pokemon.type2)}` : ""}</span>
-          <small>Puissance ${metrics.power} • ${escapeHtml(metrics.rarityLabel)}</small>
+          <small>Stat global ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</small>
         </div>
       `;
       team.appendChild(item);
@@ -7397,11 +7416,11 @@ function renderDraftArena() {
   }
 
   if (teamMetrics) {
-    const currentTeamPower = draftArenaState.team.reduce((sum, member) => sum + getDraftCachedPokemonPowerData(member.pokemon).power, 0);
+    const currentTeamStatGlobal = draftArenaState.team.reduce((sum, member) => sum + (getDraftCachedPokemonPowerData(member.pokemon).statGlobal || 0), 0);
     const currentSynergy = draftArenaState.team.length ? getDraftTeamSynergy(draftArenaState.team.map((member) => ({ ...member, metrics: getDraftCachedPokemonPowerData(member.pokemon) }))) : null;
     teamMetrics.innerHTML = draftArenaState.team.length
       ? `
-        <div class="draft-summary-card"><span>Puissance totale</span><b>${draftArenaState.teamPower || currentTeamPower}</b></div>
+        <div class="draft-summary-card"><span>Stat global total</span><b>${currentTeamStatGlobal}</b></div>
         <div class="draft-summary-card"><span>Synergie</span><b>${draftArenaState.runSummary?.synergyLabel || currentSynergy?.label || "-"}</b></div>
         <div class="draft-summary-card"><span>Région</span><b>${draftArenaState.selectedGen ? escapeHtml(draftGenLabel(draftArenaState.selectedGen)) : "-"}</b></div>
       `
