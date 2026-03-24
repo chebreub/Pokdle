@@ -5919,11 +5919,42 @@ select:focus-visible {
   margin-bottom: 12px;
 }
 
+.draft-dev-battle-fighters {
+  position: relative;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  align-items: start;
+  gap: 28px 48px;
+  padding: 10px 12px 20px;
+  margin-bottom: 18px;
+}
+
+.draft-dev-battle-fighters::before {
+  content: "";
+  position: absolute;
+  inset: 18px 6% 18px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 24% 72%, rgba(89, 153, 255, 0.16), transparent 26%),
+    radial-gradient(circle at 78% 22%, rgba(255, 132, 132, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(8, 19, 36, 0.08));
+  border: 1px solid rgba(164, 194, 236, 0.14);
+  pointer-events: none;
+}
+
 .draft-dev-battle-benches {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   margin-bottom: 12px;
+  opacity: 0.88;
+}
+
+.draft-dev-battle-bench {
+  background: rgba(11, 39, 72, 0.46);
+}
+
+.draft-dev-battle-bench span {
+  color: #d4e5ff;
 }
 
 .draft-dev-battle-bench-list {
@@ -6004,15 +6035,27 @@ select:focus-visible {
 }
 
 .draft-dev-battle-fighter {
+  position: relative;
+  z-index: 1;
   gap: 10px;
+  width: min(100%, 420px);
+  box-shadow: 0 16px 30px rgba(8, 20, 36, 0.18);
 }
 
 .draft-dev-battle-fighter.is-player {
   border-color: rgba(88, 149, 255, 0.42);
+  grid-column: 1;
+  align-self: end;
+  justify-self: start;
+  margin-top: 82px;
 }
 
 .draft-dev-battle-fighter.is-foe {
   border-color: rgba(255, 120, 120, 0.34);
+  grid-column: 2;
+  align-self: start;
+  justify-self: end;
+  margin-bottom: 82px;
 }
 
 .draft-dev-battle-fighter-head {
@@ -6072,6 +6115,27 @@ select:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
+}
+
+@media (max-width: 940px) {
+  .draft-dev-battle-fighters {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 0;
+  }
+
+  .draft-dev-battle-fighters::before {
+    display: none;
+  }
+
+  .draft-dev-battle-fighter.is-player,
+  .draft-dev-battle-fighter.is-foe {
+    grid-column: auto;
+    justify-self: stretch;
+    align-self: auto;
+    margin: 0;
+    width: 100%;
+  }
 }
 
 .draft-dev-battle-move {
@@ -6215,6 +6279,12 @@ select:focus-visible {
 .draft-dev-battle-switch-btn small {
   color: #d9e8ff;
   font-weight: 700;
+}
+
+.draft-dev-battle-extra-action {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .draft-dev-battle-turn {

@@ -6141,6 +6141,7 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries) {
     turn: 1,
     turnState: "player",
     pendingSwitch: false,
+    pendingSwitchReason: null,
     leftTeam,
     rightTeam,
     leftActiveIndex: 0,
@@ -6185,6 +6186,13 @@ function getDraftSimpleBattleWinnerName(state) {
   return "Aucun vainqueur";
 }
 
+function isDraftSimpleBattlePlayerWin(state) {
+  if (!state) return false;
+  const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
+  const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
+  return leftRemaining > 0 && rightRemaining <= 0;
+}
+
 function replayDraftSimpleBattleDevDuel() {
   return runDraftSimpleBattleDraftConversionDevVisualTest();
 }
@@ -6197,7 +6205,7 @@ function getDraftSimpleBattleHpPercent(sideState) {
 
 function getDraftSimpleBattleStatusText(state) {
   if (state?.phase === "finished") return "Combat terminé";
-  if (state?.pendingSwitch) return "Choisis ton prochain Pokémon";
+  if (state?.pendingSwitch) return state.pendingSwitchReason === "manual" ? "Choisis le Pokémon à envoyer" : "Choisis ton prochain Pokémon";
   if (state?.turnState === "enemy") return "L’adversaire attaque...";
   return "À toi de jouer";
 }
@@ -6219,6 +6227,95 @@ function getDraftSimpleBattleAvailableSwitchIndexes(state) {
     out.push(index);
   }
   return out;
+}
+
+function getDraftSimpleBattleAvailableEnemySwitchIndexes(state) {
+  if (!state?.rightTeam) return [];
+  const out = [];
+  for (let index = 0; index < state.rightTeam.length; index += 1) {
+    const member = state.rightTeam[index];
+    if (!member || member.currentHp <= 0) continue;
+    if (index === state.rightActiveIndex) continue;
+    out.push(index);
+  }
+  return out;
+}
+
+function getDraftSimpleBattleBestMoveScore(gen, attackerState, defenderState) {
+  const moves = attackerState?.moves || [];
+  let best = -Infinity;
+  for (let index = 0; index < moves.length; index += 1) {
+    const move = moves[index];
+    const multiplier = getDraftSimpleBattleTypeMultiplier(gen, move?.type, defenderState);
+    const score = multiplier * (Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER);
+    if (score > best) best = score;
+  }
+  return best > -Infinity ? best : 0;
+}
+
+function chooseDraftSimpleBattleEnemyAction(state) {
+  const enemy = state?.right;
+  const player = state?.left;
+  if (!enemy || !player) {
+    return { kind: "move", moveIndex: 0 };
+  }
+
+  const moveEntries = (enemy.moves || []).map((move, index) => {
+    const multiplier = getDraftSimpleBattleTypeMultiplier(state.gen, move?.type, player);
+    const power = Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER;
+    const score = multiplier * power;
+    return { index, multiplier, power, score };
+  });
+
+  const bestMove = moveEntries.slice().sort((a, b) => b.score - a.score)[0] || { index: 0, multiplier: 1, score: 0 };
+  const playerPressure = getDraftSimpleBattleBestMoveScore(state.gen, player, enemy);
+  const enemyPressure = bestMove.score;
+  const enemyHpRatio = (Number(enemy.currentHp) || 0) / Math.max(1, Number(enemy.maxHp) || 1);
+  const enemySwitches = getDraftSimpleBattleAvailableEnemySwitchIndexes(state);
+
+  // Very light switch logic:
+  // - switch only if the current matchup is clearly bad
+  // - or if all available attacks are terrible / ineffective
+  // - keep switching rare and easy to reason about
+  if (enemySwitches.length) {
+    const allMovesBad = moveEntries.length && moveEntries.every((entry) => entry.multiplier <= 0.5);
+    const noUsefulMove = moveEntries.length && moveEntries.every((entry) => entry.multiplier === 0);
+    const badMatchup = playerPressure >= enemyPressure * 1.7 && enemyHpRatio <= 0.55;
+
+    if (noUsefulMove || allMovesBad || badMatchup) {
+      const switchCandidates = enemySwitches
+        .map((teamIndex) => {
+          const battler = state.rightTeam[teamIndex];
+          return {
+            teamIndex,
+            battler,
+            pressure: getDraftSimpleBattleBestMoveScore(state.gen, battler, player),
+          };
+        })
+        .sort((a, b) => b.pressure - a.pressure);
+
+      if (switchCandidates[0] && switchCandidates[0].pressure > enemyPressure) {
+        return { kind: "switch", teamIndex: switchCandidates[0].teamIndex };
+      }
+    }
+  }
+
+  const superEffective = moveEntries.filter((entry) => entry.multiplier > 1).sort((a, b) => b.score - a.score);
+  if (superEffective[0]) {
+    return { kind: "move", moveIndex: superEffective[0].index };
+  }
+
+  const neutral = moveEntries.filter((entry) => entry.multiplier === 1).sort((a, b) => b.power - a.power);
+  if (neutral[0]) {
+    return { kind: "move", moveIndex: neutral[0].index };
+  }
+
+  const resisted = moveEntries.filter((entry) => entry.multiplier > 0 && entry.multiplier < 1).sort((a, b) => b.score - a.score);
+  if (resisted[0]) {
+    return { kind: "move", moveIndex: resisted[0].index };
+  }
+
+  return { kind: "move", moveIndex: bestMove.index || 0 };
 }
 
 function renderDraftSimpleBattleBench(team = [], activeIndex = 0, sideLabel = "Équipe") {
@@ -6343,10 +6440,12 @@ function renderDraftSimpleBattleDevPanel(state) {
   `;
   }).join("");
 
+  const playerWin = isDraftSimpleBattlePlayerWin(state);
   const resultHtml = state.phase === "finished"
-    ? `<div class="draft-dev-battle-result is-finished">
-        <b>${winner === state.left.pokemon.name ? "Victoire" : "Défaite"}</b>
-        <span>${escapeHtml(winner)} remporte le duel.</span>
+    ? `<div class="draft-dev-battle-result is-finished ${playerWin ? "is-win" : "is-loss"}">
+        <b>${playerWin ? "Victoire" : "Défaite"}</b>
+        <span>${playerWin ? "Ton équipe remporte le duel." : "Le duel t’échappe cette fois."}</span>
+        <span>${escapeHtml(winner)} termine le match pour ${playerWin ? "ton équipe" : "l’adversaire"}.</span>
         <div class="draft-dev-battle-result-actions">
           <button type="button" class="btn-blue" onclick="replayDraftSimpleBattleDevDuel()">Rejouer</button>
           <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
@@ -6354,10 +6453,10 @@ function renderDraftSimpleBattleDevPanel(state) {
       </div>`
     : `<div class="draft-dev-battle-result"><b>Duel en cours</b><span>Choisis une attaque pour jouer le prochain tour.</span></div>`;
 
-  const switchHtml = state.pendingSwitch
+  const switchHtml = state.pendingSwitch && state.phase !== "finished"
     ? `
       <div class="draft-dev-battle-switch">
-        <b>Ton Pokémon est KO. Choisis le suivant :</b>
+        <b>${state.pendingSwitchReason === "manual" ? "Choisis le Pokémon à envoyer :" : "Ton Pokémon est KO. Choisis le suivant :"}</b>
         <div class="draft-dev-battle-switch-options">
           ${getDraftSimpleBattleAvailableSwitchIndexes(state).map((index) => {
             const member = state.leftTeam[index];
@@ -6426,7 +6525,10 @@ function renderDraftSimpleBattleDevPanel(state) {
     </div>
     ${resultHtml}
     ${switchHtml}
-    <div class="draft-dev-battle-actions">${movesHtml}</div>
+    ${!state.pendingSwitch && state.phase !== "finished" && getDraftSimpleBattleAvailableSwitchIndexes(state).length
+      ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch()">Changer de Pokémon</button></div>`
+      : ""}
+    ${state.phase !== "finished" && !state.pendingSwitch ? `<div class="draft-dev-battle-actions">${movesHtml}</div>` : ""}
     <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
   `;
 
@@ -6452,6 +6554,10 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
   state.turn += 1;
   state.phase = leftRemaining <= 0 || rightRemaining <= 0 ? "finished" : "ready";
+  if (state.phase === "finished") {
+    state.pendingSwitch = false;
+    state.pendingSwitchReason = null;
+  }
   state.turnState = state.phase === "finished" ? "finished" : state.pendingSwitch ? "switch" : "player";
   if (turnEntry && !turnEntry.order?.length) {
     turnEntry.order = ["left", "right"];
@@ -6469,8 +6575,10 @@ function chooseDraftSimpleBattleReplacement(teamIndex) {
   if (!Number.isInteger(nextIndex) || !nextMember || nextMember.currentHp <= 0 || nextIndex === state.leftActiveIndex) return null;
 
   state.leftActiveIndex = nextIndex;
+  const switchReason = state.pendingSwitchReason;
   state.pendingSwitch = false;
-  state.turnState = "player";
+  state.pendingSwitchReason = null;
+  state.turnState = switchReason === "manual" ? "enemy" : "player";
   syncDraftSimpleBattleActiveBattlers(state);
   const lastTurn = state.log[state.log.length - 1];
   if (lastTurn) {
@@ -6480,8 +6588,70 @@ function chooseDraftSimpleBattleReplacement(teamIndex) {
       pokemonName: nextMember.pokemon.name,
     });
   }
+
+  if (switchReason === "manual" && state.phase !== "finished") {
+    renderDraftSimpleBattleDevPanel(state);
+    if (draftSimpleBattleTurnTimer) clearTimeout(draftSimpleBattleTurnTimer);
+    const enemyMoves = state.right?.moves || [];
+    const enemyMoveIndex = enemyMoves.length ? Math.floor(Math.random() * enemyMoves.length) : 0;
+    draftSimpleBattleTurnTimer = setTimeout(() => {
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state) return;
+      syncDraftSimpleBattleActiveBattlers(state);
+      if (!state.right || !state.left) {
+        finishDraftSimpleBattleDevTurn(state, lastTurn);
+        draftSimpleBattleTurnTimer = null;
+        return;
+      }
+      const enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyMoveIndex);
+      if (enemyAction && lastTurn) {
+        lastTurn.actions.push({
+          side: "right",
+          actorName: state.right.pokemon.name,
+          targetName: state.left.pokemon.name,
+          ...enemyAction,
+        });
+      }
+      if (enemyAction?.knockout && state.left.currentHp <= 0) {
+        state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
+        state.pendingSwitchReason = state.pendingSwitch ? "ko" : null;
+      }
+      finishDraftSimpleBattleDevTurn(state, lastTurn);
+      draftSimpleBattleTurnTimer = null;
+    }, 700);
+    return state;
+  }
+
   renderDraftSimpleBattleDevPanel(state);
   return state;
+}
+
+function openDraftSimpleBattleManualSwitch() {
+  const state = draftSimpleBattleDevUiState;
+  if (!state || state.phase === "finished" || state.turnState !== "player" || state.pendingSwitch) return null;
+  if (!getDraftSimpleBattleAvailableSwitchIndexes(state).length) return null;
+
+  state.pendingSwitch = true;
+  state.pendingSwitchReason = "manual";
+  state.log.push({ turn: state.turn, order: ["left", "right"], actions: [] });
+  renderDraftSimpleBattleDevPanel(state);
+  return state;
+}
+
+function chooseDraftSimpleBattleEnemyReplacement(state) {
+  const options = getDraftSimpleBattleAvailableEnemySwitchIndexes(state);
+  if (!options.length) return null;
+  const player = state?.left;
+  const ranked = options
+    .map((teamIndex) => {
+      const battler = state.rightTeam[teamIndex];
+      return {
+        teamIndex,
+        battler,
+        pressure: getDraftSimpleBattleBestMoveScore(state.gen, battler, player),
+      };
+    })
+    .sort((a, b) => b.pressure - a.pressure);
+  return ranked[0]?.teamIndex ?? options[0];
 }
 
 function runDraftSimpleBattleDevTurn(moveIndex = 0) {
@@ -6489,8 +6659,6 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
 
   const state = draftSimpleBattleDevUiState;
   syncDraftSimpleBattleActiveBattlers(state);
-  const enemyMoves = state.right?.moves || [];
-  const enemyMoveIndex = enemyMoves.length ? Math.floor(Math.random() * enemyMoves.length) : 0;
   const turnEntry = { turn: state.turn, order: ["left", "right"], actions: [] };
   state.log.push(turnEntry);
 
@@ -6531,17 +6699,35 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
       draftSimpleBattleTurnTimer = null;
       return;
     }
-    const enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyMoveIndex);
-    if (enemyAction) {
-      turnEntry.actions.push({
-        side: "right",
-        actorName: state.right.pokemon.name,
-        targetName: state.left.pokemon.name,
-        ...enemyAction,
-      });
+    const enemyDecision = chooseDraftSimpleBattleEnemyAction(state);
+    let enemyAction = null;
+
+    if (enemyDecision.kind === "switch") {
+      const switched = state.rightTeam[enemyDecision.teamIndex];
+      state.rightActiveIndex = enemyDecision.teamIndex;
+      syncDraftSimpleBattleActiveBattlers(state);
+      if (switched) {
+        turnEntry.actions.push({
+          side: "right",
+          event: "sendout",
+          pokemonName: switched.pokemon.name,
+        });
+      }
+    } else {
+      enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyDecision.moveIndex);
+      if (enemyAction) {
+        turnEntry.actions.push({
+          side: "right",
+          actorName: state.right.pokemon.name,
+          targetName: state.left.pokemon.name,
+          ...enemyAction,
+        });
+      }
     }
+
     if (enemyAction?.knockout && state.left.currentHp <= 0) {
       state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
+      state.pendingSwitchReason = state.pendingSwitch ? "ko" : null;
     }
     finishDraftSimpleBattleDevTurn(state, turnEntry);
     draftSimpleBattleTurnTimer = null;
@@ -6587,6 +6773,7 @@ window.runDraftSimpleBattleDevTests = runDraftSimpleBattleDevTests;
 window.runDraftSimpleBattleDraftConversionDevTest = runDraftSimpleBattleDraftConversionDevTest;
 window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDraftConversionDevVisualTest;
 window.runDraftSimpleBattleDevTurn = runDraftSimpleBattleDevTurn;
+window.openDraftSimpleBattleManualSwitch = openDraftSimpleBattleManualSwitch;
 window.chooseDraftSimpleBattleReplacement = chooseDraftSimpleBattleReplacement;
 window.replayDraftSimpleBattleDevDuel = replayDraftSimpleBattleDevDuel;
 window.clearDraftSimpleBattleDevPanel = clearDraftSimpleBattleDevPanel;
