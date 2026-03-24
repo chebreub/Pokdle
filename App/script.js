@@ -6025,13 +6025,47 @@ function simulateDraftSimpleBattleFromDraftEntries(leftEntry, rightEntry, maxTur
   return state;
 }
 
+function getDraftSimpleBattleDevOpponentEntry(playerEntry) {
+  const playerPokemon = getDraftSimpleBattlePokemonFromDraftEntry(playerEntry);
+  const playerDexIds = new Set(
+    (draftArenaState?.team || [])
+      .map((entry) => entry?.pokemon)
+      .filter(Boolean)
+      .map((pokemon) => getPokemonSpriteId(pokemon))
+  );
+
+  const optionOpponent = (draftArenaState?.options || [])
+    .map((entry) => entry?.pokemon)
+    .filter(Boolean)
+    .find((pokemon) => !playerDexIds.has(getPokemonSpriteId(pokemon)));
+  if (optionOpponent) {
+    return { pokemon: optionOpponent };
+  }
+
+  const genPool = draftArenaState?.selectedGen
+    ? getDraftPoolForGeneration(draftArenaState.selectedGen)
+    : POKEMON_LIST;
+  const fallbackOpponent = (genPool || []).find((pokemon) => !playerDexIds.has(getPokemonSpriteId(pokemon)));
+  if (fallbackOpponent) {
+    return { pokemon: fallbackOpponent };
+  }
+
+  // Final safety net: never mirror the player's own team into the enemy slot.
+  // If the draft pool is unexpectedly empty, fall back to a dedicated external Pokemon.
+  if (!playerPokemon || getPokemonSpriteId(playerPokemon) !== getPokemonSpriteId(getDraftSimpleBattleDevPokemon(9))) {
+    return { pokemon: getDraftSimpleBattleDevPokemon(9) };
+  }
+  return { pokemon: getDraftSimpleBattleDevPokemon(25) };
+}
+
 function getDraftSimpleBattleDevEntries() {
   const teamEntries = Array.isArray(draftArenaState?.team) ? draftArenaState.team.filter((entry) => entry?.pokemon) : [];
   const leftEntry = teamEntries[0] || { pokemon: getDraftSimpleBattleDevPokemon(6) };
-  let rightEntry = teamEntries[1] || { pokemon: getDraftSimpleBattleDevPokemon(9) };
+  let rightEntry = getDraftSimpleBattleDevOpponentEntry(leftEntry);
 
+  // Hard guard: the mini duel must never simulate a player-vs-player-team mirror.
   if (leftEntry?.pokemon && rightEntry?.pokemon && getPokemonSpriteId(leftEntry.pokemon) === getPokemonSpriteId(rightEntry.pokemon)) {
-    rightEntry = { pokemon: getDraftSimpleBattleDevPokemon(9) };
+    rightEntry = { pokemon: getDraftSimpleBattleDevPokemon(25) };
   }
 
   return { leftEntry, rightEntry };
