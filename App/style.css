@@ -5895,6 +5895,54 @@ select:focus-visible {
   font-size: 0.96rem;
 }
 
+.draft-dev-battle-panel {
+  margin-top: 18px;
+}
+
+.draft-dev-battle-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.draft-dev-battle-fighters,
+.draft-dev-battle-meta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 12px;
+}
+
+.draft-dev-battle-log {
+  display: grid;
+  gap: 10px;
+}
+
+.draft-dev-battle-turn {
+  background: rgba(9, 20, 36, 0.34);
+  border: 1px solid rgba(157, 192, 245, 0.18);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.draft-dev-battle-turn strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #f4f8ff;
+}
+
+.draft-dev-battle-turn ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #dbe9ff;
+}
+
+.draft-dev-battle-turn li + li {
+  margin-top: 6px;
+}
+
 .draft-badge-item,
 .draft-arena-row {
   opacity: 0;

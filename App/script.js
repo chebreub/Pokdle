@@ -5586,6 +5586,549 @@ function getDraftCachedPokemonPowerData(pokemon) {
   return DRAFT_POWER_CACHE.get(key) || buildDraftPowerMetrics(pokemon, null);
 }
 
+// ============================================================
+// DRAFT SIMPLE BATTLE FOUNDATION
+// Minimal future-ready combat scaffold for a simplified 1v1 mode.
+// Intentionally excludes: status, items, abilities, switch, weather,
+// terrain and complex stat boosts. Keep this isolated from the live draft
+// flow until a dedicated combat phase is added.
+// ============================================================
+
+const DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER = 70;
+const DRAFT_SIMPLE_BATTLE_STAB = 1.5;
+
+function clampDraftSimpleBattleHp(value) {
+  return Math.max(1, Math.round(Number(value) || 1));
+}
+
+function getDraftSimpleBattleFallbackStats(pokemon) {
+  const stage = Number(pokemon?.stage) || 1;
+  return {
+    hp: clampDraftSimpleBattleHp(55 + stage * 18 + Math.round((Number(pokemon?.weight) || 0) / 10)),
+    attack: 60 + stage * 12,
+    defense: 60 + stage * 12,
+    spAttack: 60 + stage * 12,
+    spDefense: 60 + stage * 12,
+    speed: 55 + stage * 10,
+  };
+}
+
+function getDraftSimpleBattleStats(pokemon) {
+  const cached = MYSTERY_STAT_CACHE.get(getMysteryApiId(pokemon));
+  if (cached) {
+    return {
+      hp: clampDraftSimpleBattleHp(cached.hp),
+      attack: Number(cached.attack) || 0,
+      defense: Number(cached.defense) || 0,
+      spAttack: Number(cached.spAttack) || 0,
+      spDefense: Number(cached.spDefense) || 0,
+      speed: Number(cached.speed) || 0,
+    };
+  }
+  return getDraftSimpleBattleFallbackStats(pokemon);
+}
+
+function createDraftSimpleBattleMove(label, type, options = {}) {
+  return {
+    name: label || "Attaque",
+    type: type || "Normal",
+    power: Math.max(1, Number(options.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER),
+    category: options.category === "special" ? "special" : "physical",
+  };
+}
+
+function buildDraftSimpleBattleDefaultMoves(pokemon) {
+  const moves = [];
+  if (pokemon?.type1) {
+    moves.push(createDraftSimpleBattleMove(`${pokemon.type1} - STAB`, pokemon.type1));
+  }
+  if (pokemon?.type2) {
+    moves.push(createDraftSimpleBattleMove(`${pokemon.type2} - STAB`, pokemon.type2, { category: "special" }));
+  }
+  moves.push(createDraftSimpleBattleMove("Couverture neutre", "Normal"));
+  moves.push(createDraftSimpleBattleMove("Frappe rapide", pokemon?.type1 || "Normal", { power: 55 }));
+  return moves.slice(0, 4);
+}
+
+function createDraftSimpleBattlePokemonState(pokemon, moves = null) {
+  const stats = getDraftSimpleBattleStats(pokemon);
+  return {
+    pokemon,
+    currentHp: stats.hp,
+    maxHp: stats.hp,
+    speed: Math.max(1, Number(stats.speed) || 1),
+    stats,
+    moves: (Array.isArray(moves) && moves.length ? moves : buildDraftSimpleBattleDefaultMoves(pokemon)).slice(0, 4),
+  };
+}
+
+function getDraftSimpleBattleStabMultiplier(attackerState, move) {
+  const attacker = attackerState?.pokemon;
+  return attacker && (attacker.type1 === move?.type || attacker.type2 === move?.type)
+    ? DRAFT_SIMPLE_BATTLE_STAB
+    : 1;
+}
+
+function getDraftSimpleBattleTypeMultiplier(gen, moveType, defenderState) {
+  const defender = defenderState?.pokemon;
+  if (!defender || !moveType) return 1;
+  return getDraftAttackMultiplier(gen, moveType, defender.type1) * getDraftAttackMultiplier(gen, moveType, defender.type2 || null);
+}
+
+function getDraftSimpleBattleTurnOrder(leftState, rightState) {
+  const leftSpeed = Number(leftState?.speed) || 0;
+  const rightSpeed = Number(rightState?.speed) || 0;
+  if (leftSpeed === rightSpeed) {
+    return Math.random() < 0.5 ? ["left", "right"] : ["right", "left"];
+  }
+  return leftSpeed > rightSpeed ? ["left", "right"] : ["right", "left"];
+}
+
+function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move) {
+  const attackStat = move?.category === "special"
+    ? Math.max(1, Number(attackerState?.stats?.spAttack) || 1)
+    : Math.max(1, Number(attackerState?.stats?.attack) || 1);
+  const defenseStat = move?.category === "special"
+    ? Math.max(1, Number(defenderState?.stats?.spDefense) || 1)
+    : Math.max(1, Number(defenderState?.stats?.defense) || 1);
+  const stab = getDraftSimpleBattleStabMultiplier(attackerState, move);
+  const effectiveness = getDraftSimpleBattleTypeMultiplier(gen, move?.type, defenderState);
+  const rawDamage = ((Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER) * (attackStat / defenseStat)) * stab * effectiveness;
+  const damage = effectiveness === 0 ? 0 : Math.max(1, Math.round(rawDamage / 12));
+  return {
+    damage,
+    stab,
+    effectiveness,
+  };
+}
+
+function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveIndex = 0) {
+  const move = attackerState?.moves?.[moveIndex];
+  if (!move || !attackerState || !defenderState) return null;
+  const result = computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move);
+  defenderState.currentHp = Math.max(0, defenderState.currentHp - result.damage);
+  return {
+    move,
+    damage: result.damage,
+    stab: result.stab,
+    effectiveness: result.effectiveness,
+    defenderRemainingHp: defenderState.currentHp,
+    knockout: defenderState.currentHp <= 0,
+  };
+}
+
+function createDraftSimpleBattleState(leftPokemon, rightPokemon, options = {}) {
+  // Future extension points:
+  // - plug real move selection from draft picks
+  // - add round loop / UI log
+  // - add optional advanced rules in separate helpers, not here
+  return {
+    gen: Number(options.gen) || Number(leftPokemon?.gen) || Number(rightPokemon?.gen) || 1,
+    phase: "ready",
+    turn: 1,
+    left: createDraftSimpleBattlePokemonState(leftPokemon, options.leftMoves),
+    right: createDraftSimpleBattlePokemonState(rightPokemon, options.rightMoves),
+    log: [],
+  };
+}
+
+function resolveDraftSimpleBattleTurn(state, leftMoveIndex = 0, rightMoveIndex = 0) {
+  if (!state?.left || !state?.right) return null;
+  if (state.left.currentHp <= 0 || state.right.currentHp <= 0) return null;
+
+  const order = getDraftSimpleBattleTurnOrder(state.left, state.right);
+  const turnLog = [];
+
+  for (const side of order) {
+    const attacker = side === "left" ? state.left : state.right;
+    const defender = side === "left" ? state.right : state.left;
+    const moveIndex = side === "left" ? leftMoveIndex : rightMoveIndex;
+    if (attacker.currentHp <= 0 || defender.currentHp <= 0) continue;
+    const action = resolveDraftSimpleBattleAttack(state.gen, attacker, defender, moveIndex);
+    if (!action) continue;
+    turnLog.push({ side, ...action });
+    if (action.knockout) break;
+  }
+
+  state.log.push({ turn: state.turn, actions: turnLog });
+  state.turn += 1;
+  state.phase = state.left.currentHp <= 0 || state.right.currentHp <= 0 ? "finished" : "ready";
+  return turnLog;
+}
+
+function getDraftSimpleBattleMoveLibraryEntry(moveName) {
+  return TEAM_BUILDER_MOVE_LIBRARY.find((move) => move.name === moveName) || null;
+}
+
+function getDraftSimpleBattleTemplateMovesForPokemon(pokemon) {
+  const pokemonId = Number(pokemon?.id);
+  if (!Number.isInteger(pokemonId)) return [];
+  for (const template of TEAM_LIBRARY_TEMPLATES) {
+    const slot = template?.slots?.find((entry) => Number(entry?.pokemonId) === pokemonId);
+    if (slot?.moves?.length) {
+      return slot.moves.slice(0, 4);
+    }
+  }
+  return [];
+}
+
+function getDraftSimpleBattleMoveCategory(type) {
+  const specialTypes = new Set(["Feu", "Eau", "Plante", "Électrik", "Glace", "Psy", "Dragon", "Spectre", "Ténèbres", "Fée", "Poison"]);
+  return specialTypes.has(type) ? "special" : "physical";
+}
+
+function convertDraftMoveNameToSimpleBattleMove(moveName, pokemon) {
+  const entry = getDraftSimpleBattleMoveLibraryEntry(moveName);
+  const moveType = entry?.types?.[0] || pokemon?.type1 || "Normal";
+  // Fallback intentionally stays simple: if the project has no richer move data
+  // for this move, we still keep a usable typed attack for dev simulations.
+  return createDraftSimpleBattleMove(
+    moveName || "Attaque",
+    moveType,
+    { category: getDraftSimpleBattleMoveCategory(moveType) }
+  );
+}
+
+function buildDraftSimpleBattleMovesFromDraftPokemon(pokemon) {
+  const templateMoves = getDraftSimpleBattleTemplateMovesForPokemon(pokemon)
+    .map((moveName) => convertDraftMoveNameToSimpleBattleMove(moveName, pokemon))
+    .slice(0, 4);
+
+  if (templateMoves.length) {
+    return templateMoves;
+  }
+
+  // Fallback path for Pokémon without stored moveset in project data.
+  // Keep this minimal and deterministic for future integration with a real draft combat UI.
+  return buildDraftSimpleBattleDefaultMoves(pokemon);
+}
+
+function getDraftSimpleBattlePokemonFromDraftEntry(draftEntry) {
+  if (draftEntry?.pokemon) return draftEntry.pokemon;
+  return draftEntry || null;
+}
+
+function convertDraftPokemonToSimpleBattler(draftEntry, options = {}) {
+  const pokemon = getDraftSimpleBattlePokemonFromDraftEntry(draftEntry);
+  if (!pokemon) return null;
+  const moves = Array.isArray(options.moves) && options.moves.length
+    ? options.moves.slice(0, 4)
+    : buildDraftSimpleBattleMovesFromDraftPokemon(pokemon);
+  return createDraftSimpleBattlePokemonState(pokemon, moves);
+}
+
+function getDraftSimpleBattleDevPokemon(id) {
+  return POKEMON_BY_ID.get(id) || null;
+}
+
+function logDraftSimpleBattleDevResult(title, passed, details) {
+  const prefix = passed ? "[OK]" : "[FAIL]";
+  console.log(`${prefix} Draft Simple Battle Test - ${title}`);
+  if (details) console.log(details);
+}
+
+function runDraftSimpleBattleDevTests() {
+  const pikachu = getDraftSimpleBattleDevPokemon(25);
+  const racaillou = getDraftSimpleBattleDevPokemon(74);
+  const salameche = getDraftSimpleBattleDevPokemon(4);
+  const carapuce = getDraftSimpleBattleDevPokemon(7);
+  const abo = getDraftSimpleBattleDevPokemon(23);
+  const nosferapti = getDraftSimpleBattleDevPokemon(41);
+  const piafabec = getDraftSimpleBattleDevPokemon(21);
+  const triopikeur = getDraftSimpleBattleDevPokemon(51);
+
+  if (!pikachu || !racaillou || !salameche || !carapuce || !abo || !nosferapti || !piafabec || !triopikeur) {
+    console.warn("Draft Simple Battle Dev Tests: Pokémon de test introuvables.");
+    return;
+  }
+
+  console.group("Draft Simple Battle Dev Tests");
+
+  const fastState = createDraftSimpleBattleState(
+    pikachu,
+    racaillou,
+    {
+      leftMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      rightMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      gen: 1,
+    }
+  );
+  const speedOrder = getDraftSimpleBattleTurnOrder(fastState.left, fastState.right);
+  logDraftSimpleBattleDevResult(
+    "Ordre du tour selon la vitesse",
+    speedOrder[0] === "left",
+    `Premier à jouer : ${speedOrder[0]} (Pikachu ${fastState.left.speed} / Racaillou ${fastState.right.speed})`
+  );
+
+  const stabState = createDraftSimpleBattleState(
+    pikachu,
+    carapuce,
+    {
+      leftMoves: [createDraftSimpleBattleMove("Éclair", "Électrik")],
+      rightMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      gen: 1,
+    }
+  );
+  const stabOnly = computeDraftSimpleBattleDamage(1, stabState.left, stabState.right, stabState.left.moves[0]);
+  logDraftSimpleBattleDevResult(
+    "STAB appliqué",
+    Math.abs(stabOnly.stab - 1.5) < 0.001,
+    `STAB calculé : ${stabOnly.stab}`
+  );
+
+  const weaknessState = createDraftSimpleBattleState(
+    pikachu,
+    carapuce,
+    {
+      leftMoves: [createDraftSimpleBattleMove("Tonnerre", "Électrik", { power: 90, category: "special" })],
+      rightMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      gen: 1,
+    }
+  );
+  const weakness = computeDraftSimpleBattleDamage(1, weaknessState.left, weaknessState.right, weaknessState.left.moves[0]);
+  logDraftSimpleBattleDevResult(
+    "Faiblesse x2",
+    Math.abs(weakness.effectiveness - 2) < 0.001,
+    `Multiplicateur : ${weakness.effectiveness}, dégâts : ${weakness.damage}`
+  );
+
+  const resistState = createDraftSimpleBattleState(
+    salameche,
+    carapuce,
+    {
+      leftMoves: [createDraftSimpleBattleMove("Flammèche", "Feu", { power: 70, category: "special" })],
+      rightMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      gen: 1,
+    }
+  );
+  const resist = computeDraftSimpleBattleDamage(1, resistState.left, resistState.right, resistState.left.moves[0]);
+  logDraftSimpleBattleDevResult(
+    "Résistance x0.5",
+    Math.abs(resist.effectiveness - 0.5) < 0.001,
+    `Multiplicateur : ${resist.effectiveness}, dégâts : ${resist.damage}`
+  );
+
+  const immuneState = createDraftSimpleBattleState(
+    abo,
+    nosferapti,
+    {
+      leftMoves: [createDraftSimpleBattleMove("Séisme", "Sol", { power: 90 })],
+      rightMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      gen: 6,
+    }
+  );
+  const immune = computeDraftSimpleBattleDamage(6, immuneState.left, immuneState.right, immuneState.left.moves[0]);
+  logDraftSimpleBattleDevResult(
+    "Immunité de type",
+    immune.effectiveness === 0 && immune.damage === 0,
+    `Multiplicateur : ${immune.effectiveness}, dégâts : ${immune.damage}`
+  );
+
+  const koState = createDraftSimpleBattleState(
+    triopikeur,
+    piafabec,
+    {
+      leftMoves: [createDraftSimpleBattleMove("Éboulement", "Roche", { power: 240 })],
+      rightMoves: [createDraftSimpleBattleMove("Charge", "Normal")],
+      gen: 1,
+    }
+  );
+  const koResult = resolveDraftSimpleBattleAttack(1, koState.left, koState.right, 0);
+  logDraftSimpleBattleDevResult(
+    "KO quand les PV tombent à 0",
+    Boolean(koResult?.knockout) && koState.right.currentHp === 0,
+    `PV restants défenseur : ${koState.right.currentHp}, KO : ${koResult?.knockout}`
+  );
+
+  console.groupEnd();
+  return true;
+}
+
+function runDraftSimpleBattleDraftConversionDevTest() {
+  const leftEntry = draftArenaState?.team?.[0] || { pokemon: getDraftSimpleBattleDevPokemon(6) };
+  const rightEntry = draftArenaState?.team?.[1] || { pokemon: getDraftSimpleBattleDevPokemon(9) };
+  const leftPokemon = getDraftSimpleBattlePokemonFromDraftEntry(leftEntry);
+  const rightPokemon = getDraftSimpleBattlePokemonFromDraftEntry(rightEntry);
+
+  if (!leftPokemon || !rightPokemon) {
+    console.warn("Draft Simple Battle Draft Conversion Test: il faut 2 Pokémon valides.");
+    return;
+  }
+
+  const left = convertDraftPokemonToSimpleBattler(leftEntry);
+  const right = convertDraftPokemonToSimpleBattler(rightEntry);
+  const state = {
+    gen: Number(leftPokemon.gen) || Number(rightPokemon.gen) || 1,
+    phase: "ready",
+    turn: 1,
+    left,
+    right,
+    log: [],
+  };
+
+  console.group("Draft Simple Battle Draft Conversion Test");
+  console.log("Left fighter", {
+    name: left.pokemon.name,
+    types: [left.pokemon.type1, left.pokemon.type2].filter(Boolean),
+    hp: left.maxHp,
+    speed: left.speed,
+    moves: left.moves.map((move) => `${move.name} (${move.type})`),
+  });
+  console.log("Right fighter", {
+    name: right.pokemon.name,
+    types: [right.pokemon.type1, right.pokemon.type2].filter(Boolean),
+    hp: right.maxHp,
+    speed: right.speed,
+    moves: right.moves.map((move) => `${move.name} (${move.type})`),
+  });
+
+  let safety = 0;
+  while (state.phase !== "finished" && safety < 12) {
+    const turnLog = resolveDraftSimpleBattleTurn(state, 0, 0) || [];
+    console.log(`Tour ${state.turn - 1}`, turnLog);
+    safety += 1;
+  }
+
+  console.log("Résultat final", {
+    leftHp: state.left.currentHp,
+    rightHp: state.right.currentHp,
+    winner: state.left.currentHp > 0 && state.right.currentHp <= 0
+      ? state.left.pokemon.name
+      : state.right.currentHp > 0 && state.left.currentHp <= 0
+        ? state.right.pokemon.name
+        : "Aucun vainqueur",
+  });
+  console.groupEnd();
+  return state;
+}
+
+function simulateDraftSimpleBattleFromDraftEntries(leftEntry, rightEntry, maxTurns = 12) {
+  const leftPokemon = getDraftSimpleBattlePokemonFromDraftEntry(leftEntry);
+  const rightPokemon = getDraftSimpleBattlePokemonFromDraftEntry(rightEntry);
+  if (!leftPokemon || !rightPokemon) return null;
+
+  const state = {
+    gen: Number(leftPokemon.gen) || Number(rightPokemon.gen) || 1,
+    phase: "ready",
+    turn: 1,
+    left: convertDraftPokemonToSimpleBattler(leftEntry),
+    right: convertDraftPokemonToSimpleBattler(rightEntry),
+    log: [],
+  };
+
+  let safety = 0;
+  while (state.phase !== "finished" && safety < maxTurns) {
+    resolveDraftSimpleBattleTurn(state, 0, 0);
+    safety += 1;
+  }
+  return state;
+}
+
+function ensureDraftSimpleBattleDevPanel() {
+  let panel = document.getElementById("draft-dev-battle-panel");
+  if (panel) return panel;
+
+  const host = document.querySelector("#screen-draft-arena .draft-card");
+  if (!host) return null;
+
+  panel = document.createElement("section");
+  panel.id = "draft-dev-battle-panel";
+  panel.className = "draft-panel draft-dev-battle-panel hidden";
+  panel.innerHTML = `
+    <div class="draft-dev-battle-head">
+      <h3>Dev Battle Foundation</h3>
+      <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Fermer</button>
+    </div>
+    <div id="draft-dev-battle-body"></div>
+  `;
+  host.appendChild(panel);
+  return panel;
+}
+
+function renderDraftSimpleBattleDevPanel(state) {
+  const panel = ensureDraftSimpleBattleDevPanel();
+  const body = document.getElementById("draft-dev-battle-body");
+  if (!panel || !body || !state?.left || !state?.right) return;
+
+  const firstActor = state.log[0]?.actions?.[0]?.side === "left"
+    ? state.left.pokemon.name
+    : state.log[0]?.actions?.[0]?.side === "right"
+      ? state.right.pokemon.name
+      : "-";
+
+  const winner = state.left.currentHp > 0 && state.right.currentHp <= 0
+    ? state.left.pokemon.name
+    : state.right.currentHp > 0 && state.left.currentHp <= 0
+      ? state.right.pokemon.name
+      : "Aucun vainqueur";
+
+  const actionsHtml = state.log.map((entry) => {
+    const lines = (entry.actions || []).map((action) => {
+      const actor = action.side === "left" ? state.left.pokemon.name : state.right.pokemon.name;
+      const target = action.side === "left" ? state.right.pokemon.name : state.left.pokemon.name;
+      const eff = action.effectiveness === 2 ? "x2" : action.effectiveness === 0.5 ? "x0.5" : action.effectiveness === 0 ? "x0" : "x1";
+      return `<li><b>${escapeHtml(actor)}</b> utilise <b>${escapeHtml(action.move?.name || "Attaque")}</b> sur ${escapeHtml(target)} : ${action.damage} dégâts • STAB ${action.stab} • ${eff}${action.knockout ? " • KO" : ""}</li>`;
+    }).join("");
+    return `<div class="draft-dev-battle-turn"><strong>Tour ${entry.turn}</strong><ul>${lines || "<li>Aucune action</li>"}</ul></div>`;
+  }).join("");
+
+  body.innerHTML = `
+    <div class="draft-dev-battle-fighters">
+      <div class="draft-summary-card wide">
+        <span>${escapeHtml(state.left.pokemon.name)}</span>
+        <b>PV ${state.left.currentHp} / ${state.left.maxHp}</b>
+        <small>Vitesse ${state.left.speed}</small>
+      </div>
+      <div class="draft-summary-card wide">
+        <span>${escapeHtml(state.right.pokemon.name)}</span>
+        <b>PV ${state.right.currentHp} / ${state.right.maxHp}</b>
+        <small>Vitesse ${state.right.speed}</small>
+      </div>
+    </div>
+    <div class="draft-dev-battle-meta">
+      <div class="draft-summary-card"><span>Premier</span><b>${escapeHtml(firstActor)}</b></div>
+      <div class="draft-summary-card"><span>Tours</span><b>${state.log.length}</b></div>
+      <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
+    </div>
+    <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
+  `;
+
+  panel.classList.remove("hidden");
+}
+
+function clearDraftSimpleBattleDevPanel() {
+  document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
+}
+
+function runDraftSimpleBattleDraftConversionDevVisualTest() {
+  const screen = document.getElementById("screen-draft-arena");
+  if (!screen || screen.classList.contains("hidden")) {
+    console.warn("Ouvre d'abord l'écran Draft Arènes pour voir le panneau de dev.");
+  }
+
+  const leftEntry = draftArenaState?.team?.[0] || { pokemon: getDraftSimpleBattleDevPokemon(6) };
+  const rightEntry = draftArenaState?.team?.[1] || { pokemon: getDraftSimpleBattleDevPokemon(9) };
+  const state = simulateDraftSimpleBattleFromDraftEntries(leftEntry, rightEntry);
+  if (!state) {
+    console.warn("Impossible de construire la simulation de dev.");
+    return null;
+  }
+
+  renderDraftSimpleBattleDevPanel(state);
+  console.log("Draft Simple Battle Dev Panel", {
+    left: state.left.pokemon.name,
+    right: state.right.pokemon.name,
+    turns: state.log.length,
+  });
+  return state;
+}
+
+window.runDraftSimpleBattleDevTests = runDraftSimpleBattleDevTests;
+window.runDraftSimpleBattleDraftConversionDevTest = runDraftSimpleBattleDraftConversionDevTest;
+window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDraftConversionDevVisualTest;
+window.clearDraftSimpleBattleDevPanel = clearDraftSimpleBattleDevPanel;
+
+
 async function getDraftPokemonPowerData(pokemon) {
   const key = getDraftPowerCacheKey(pokemon);
   if (DRAFT_POWER_CACHE.has(key)) return DRAFT_POWER_CACHE.get(key);
@@ -5620,6 +6163,83 @@ function pickRandomUniquePokemon(pool, count, excludeDexIds = new Set()) {
   return out;
 }
 
+function getDraftWeightedChance(power) {
+  // Draft weighting is intentionally centered on medium-power Pokemon:
+  // - weak picks can still appear, but should not flood every wave
+  // - medium picks are the most common draft backbone
+  // - very strong picks stay possible, but much rarer
+  const normalized = clampDraftValue(Number(power) || 0, 35, 110);
+
+  if (normalized <= 48) {
+    return 0.48;
+  }
+  if (normalized <= 58) {
+    return 0.72;
+  }
+  if (normalized <= 72) {
+    return 1;
+  }
+  if (normalized <= 82) {
+    return 0.7;
+  }
+  if (normalized <= 92) {
+    return 0.36;
+  }
+  return 0.15;
+}
+
+function pickWeightedDraftPokemon(pool, excludeDexIds = new Set(), options = {}) {
+  const heavyThreatCount = Number(options.heavyThreatCount) || 0;
+  const source = pool
+    .filter((pokemon) => !excludeDexIds.has(getPokemonSpriteId(pokemon)))
+    .map((pokemon) => {
+      const power = getDraftCachedPokemonPowerData(pokemon).power;
+      let weight = getDraftWeightedChance(power);
+
+      // Once a wave already contains a very strong threat, heavily reduce the
+      // chance of drawing another one. This keeps "wow" picks possible while
+      // avoiding waves dominated by multiple huge threats too often.
+      if (power >= 88 && heavyThreatCount >= 1) {
+        weight *= 0.18;
+      } else if (power >= 82 && heavyThreatCount >= 1) {
+        weight *= 0.45;
+      }
+
+      return { pokemon, weight };
+    })
+    .filter((entry) => entry.weight > 0);
+
+  if (!source.length) return null;
+
+  const totalWeight = source.reduce((sum, entry) => sum + entry.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const entry of source) {
+    roll -= entry.weight;
+    if (roll <= 0) {
+      return entry.pokemon;
+    }
+  }
+  return source[source.length - 1]?.pokemon || null;
+}
+
+function buildDraftWeightedWave(pool, count, excludeDexIds = new Set()) {
+  const picks = [];
+  const usedDexIds = new Set(excludeDexIds);
+  let heavyThreatCount = 0;
+
+  while (picks.length < count) {
+    const picked = pickWeightedDraftPokemon(pool, usedDexIds, { heavyThreatCount });
+    if (!picked) break;
+    usedDexIds.add(getPokemonSpriteId(picked));
+    picks.push(picked);
+    if (getDraftCachedPokemonPowerData(picked).power >= 82) {
+      heavyThreatCount += 1;
+    }
+  }
+
+  return picks;
+}
+
 function createDraftOptionEntry(pokemon, locked = false, shiny = Math.random() < DRAFT_SHINY_CHANCE) {
   return {
     pokemon,
@@ -5649,10 +6269,9 @@ function fillDraftArenaOptions() {
     if (option?.pokemon) excludeDexIds.add(getPokemonSpriteId(option.pokemon));
   });
 
-  while (draftArenaState.options.length < DRAFT_PICK_COUNT) {
-    const pokemon = pickRandomUniquePokemon(pool, 1, excludeDexIds)[0];
-    if (!pokemon) break;
-    excludeDexIds.add(getPokemonSpriteId(pokemon));
+  const missingCount = Math.max(0, DRAFT_PICK_COUNT - draftArenaState.options.length);
+  const weightedWave = buildDraftWeightedWave(pool, missingCount, excludeDexIds);
+  for (const pokemon of weightedWave) {
     draftArenaState.options.push(createDraftOptionEntry(pokemon));
   }
 
@@ -5676,14 +6295,19 @@ function replaceDraftArenaOption(optionIndex) {
     return option;
   });
 
+  const unlockedIndexes = [];
   for (let index = 0; index < draftArenaState.options.length; index += 1) {
     const option = draftArenaState.options[index];
     if (!option || option.locked) continue;
-    const replacement = pickRandomUniquePokemon(pool, 1, excludeDexIds)[0];
-    if (!replacement) continue;
-    excludeDexIds.add(getPokemonSpriteId(replacement));
-    draftArenaState.options[index] = createDraftOptionEntry(replacement);
+    unlockedIndexes.push(index);
   }
+
+  const replacements = buildDraftWeightedWave(pool, unlockedIndexes.length, excludeDexIds);
+  unlockedIndexes.forEach((index, replacementIndex) => {
+    const replacement = replacements[replacementIndex];
+    if (!replacement) return;
+    draftArenaState.options[index] = createDraftOptionEntry(replacement);
+  });
   warmDraftPokemonMetrics([
     ...draftArenaState.options.filter(Boolean).map((option) => option.pokemon),
     ...draftArenaState.team.map((member) => member.pokemon),
