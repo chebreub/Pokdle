@@ -5920,6 +5920,76 @@ select:focus-visible {
   gap: 10px;
 }
 
+.draft-dev-battle-fighter {
+  gap: 10px;
+}
+
+.draft-dev-battle-fighter-head {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.draft-dev-battle-fighter-head img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 10px 18px rgba(5, 14, 28, 0.28));
+}
+
+.draft-dev-battle-fighter-head small {
+  color: #d8e7ff;
+  font-weight: 700;
+}
+
+.draft-dev-battle-actions {
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.draft-dev-battle-move {
+  min-height: 62px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 4px;
+  text-align: left;
+}
+
+.draft-dev-battle-move small {
+  color: rgba(239, 246, 255, 0.86);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.draft-dev-battle-move:disabled {
+  opacity: 0.56;
+  cursor: default;
+}
+
+.draft-dev-battle-result {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(162, 195, 242, 0.28);
+  background: rgba(10, 30, 53, 0.46);
+  display: grid;
+  gap: 6px;
+}
+
+.draft-dev-battle-result b {
+  color: #f7fbff;
+}
+
+.draft-dev-battle-result span {
+  color: #d9e9ff;
+  font-weight: 600;
+}
+
 .draft-dev-battle-turn {
   background: rgba(9, 20, 36, 0.34);
   border: 1px solid rgba(157, 192, 245, 0.18);

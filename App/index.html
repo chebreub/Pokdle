@@ -859,13 +859,15 @@
     </div>
     <div id="screen-draft-arena" class="hidden">
       <div class="card draft-card">
-        <div class="ranking-head">
-          <h2 class="card-title">&#127924; Draft Arènes</h2>
-          <div class="ranking-head-actions">
-            <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+          <div class="ranking-head">
+            <h2 class="card-title">&#127924; Draft Arènes</h2>
+            <div class="ranking-head-actions">
+              <button class="btn-ghost" type="button" onclick="runDraftSimpleBattleDraftConversionDevVisualTest()">Tester combat draft</button>
+              <button class="btn-ghost" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer test</button>
+              <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
+              <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            </div>
           </div>
-        </div>
         <p class="card-desc">Choisis une génération, drafte 6 Pokémon (6 choix aléatoires à chaque tour), puis vois quels badges ton équipe peut obtenir.</p>
 
         <div class="draft-progress">

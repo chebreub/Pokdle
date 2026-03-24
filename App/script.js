@@ -5596,6 +5596,7 @@ function getDraftCachedPokemonPowerData(pokemon) {
 
 const DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER = 70;
 const DRAFT_SIMPLE_BATTLE_STAB = 1.5;
+let draftSimpleBattleDevUiState = null;
 
 function clampDraftSimpleBattleHp(value) {
   return Math.max(1, Math.round(Number(value) || 1));
@@ -5750,7 +5751,7 @@ function resolveDraftSimpleBattleTurn(state, leftMoveIndex = 0, rightMoveIndex =
     if (action.knockout) break;
   }
 
-  state.log.push({ turn: state.turn, actions: turnLog });
+  state.log.push({ turn: state.turn, order: order.slice(), actions: turnLog });
   state.turn += 1;
   state.phase = state.left.currentHp <= 0 || state.right.currentHp <= 0 ? "finished" : "ready";
   return turnLog;
@@ -6024,6 +6025,49 @@ function simulateDraftSimpleBattleFromDraftEntries(leftEntry, rightEntry, maxTur
   return state;
 }
 
+function getDraftSimpleBattleDevEntries() {
+  const teamEntries = Array.isArray(draftArenaState?.team) ? draftArenaState.team.filter((entry) => entry?.pokemon) : [];
+  const leftEntry = teamEntries[0] || { pokemon: getDraftSimpleBattleDevPokemon(6) };
+  let rightEntry = teamEntries[1] || { pokemon: getDraftSimpleBattleDevPokemon(9) };
+
+  if (leftEntry?.pokemon && rightEntry?.pokemon && getPokemonSpriteId(leftEntry.pokemon) === getPokemonSpriteId(rightEntry.pokemon)) {
+    rightEntry = { pokemon: getDraftSimpleBattleDevPokemon(9) };
+  }
+
+  return { leftEntry, rightEntry };
+}
+
+function createDraftSimpleBattleDevUiState(leftEntry, rightEntry) {
+  const leftPokemon = getDraftSimpleBattlePokemonFromDraftEntry(leftEntry);
+  const rightPokemon = getDraftSimpleBattlePokemonFromDraftEntry(rightEntry);
+  if (!leftPokemon || !rightPokemon) return null;
+
+  return {
+    gen: Number(leftPokemon.gen) || Number(rightPokemon.gen) || 1,
+    phase: "ready",
+    turn: 1,
+    left: convertDraftPokemonToSimpleBattler(leftEntry),
+    right: convertDraftPokemonToSimpleBattler(rightEntry),
+    log: [],
+  };
+}
+
+function getDraftSimpleBattleEffectivenessLabel(value) {
+  if (value === 0) return "x0";
+  if (value >= 4) return "x4";
+  if (value >= 2) return "x2";
+  if (value <= 0.25) return "x0.25";
+  if (value <= 0.5) return "x0.5";
+  return "x1";
+}
+
+function getDraftSimpleBattleWinnerName(state) {
+  if (!state?.left || !state?.right) return "Aucun vainqueur";
+  if (state.left.currentHp > 0 && state.right.currentHp <= 0) return state.left.pokemon.name;
+  if (state.right.currentHp > 0 && state.left.currentHp <= 0) return state.right.pokemon.name;
+  return "Aucun vainqueur";
+}
+
 function ensureDraftSimpleBattleDevPanel() {
   let panel = document.getElementById("draft-dev-battle-panel");
   if (panel) return panel;
@@ -6050,46 +6094,69 @@ function renderDraftSimpleBattleDevPanel(state) {
   const body = document.getElementById("draft-dev-battle-body");
   if (!panel || !body || !state?.left || !state?.right) return;
 
-  const firstActor = state.log[0]?.actions?.[0]?.side === "left"
-    ? state.left.pokemon.name
-    : state.log[0]?.actions?.[0]?.side === "right"
-      ? state.right.pokemon.name
-      : "-";
-
-  const winner = state.left.currentHp > 0 && state.right.currentHp <= 0
-    ? state.left.pokemon.name
-    : state.right.currentHp > 0 && state.left.currentHp <= 0
-      ? state.right.pokemon.name
-      : "Aucun vainqueur";
+  const lastTurn = state.log[state.log.length - 1] || null;
+  const currentOrder = lastTurn?.order || getDraftSimpleBattleTurnOrder(state.left, state.right);
+  const orderLabel = currentOrder
+    .map((side) => (side === "left" ? state.left.pokemon.name : state.right.pokemon.name))
+    .join(" -> ");
+  const winner = getDraftSimpleBattleWinnerName(state);
 
   const actionsHtml = state.log.map((entry) => {
     const lines = (entry.actions || []).map((action) => {
       const actor = action.side === "left" ? state.left.pokemon.name : state.right.pokemon.name;
       const target = action.side === "left" ? state.right.pokemon.name : state.left.pokemon.name;
-      const eff = action.effectiveness === 2 ? "x2" : action.effectiveness === 0.5 ? "x0.5" : action.effectiveness === 0 ? "x0" : "x1";
+      const eff = getDraftSimpleBattleEffectivenessLabel(action.effectiveness);
       return `<li><b>${escapeHtml(actor)}</b> utilise <b>${escapeHtml(action.move?.name || "Attaque")}</b> sur ${escapeHtml(target)} : ${action.damage} dégâts • STAB ${action.stab} • ${eff}${action.knockout ? " • KO" : ""}</li>`;
     }).join("");
     return `<div class="draft-dev-battle-turn"><strong>Tour ${entry.turn}</strong><ul>${lines || "<li>Aucune action</li>"}</ul></div>`;
   }).join("");
 
+  const movesHtml = (state.left.moves || []).map((move, index) => `
+    <button
+      type="button"
+      class="btn-blue draft-dev-battle-move"
+      onclick="runDraftSimpleBattleDevTurn(${index})"
+      ${state.phase === "finished" ? "disabled" : ""}
+    >
+      <span>${escapeHtml(move.name)}</span>
+      <small>${escapeHtml(move.type)} • ${move.power}</small>
+    </button>
+  `).join("");
+
+  const resultHtml = state.phase === "finished"
+    ? `<div class="draft-dev-battle-result"><b>${winner === state.left.pokemon.name ? "Victoire du joueur" : "Victoire adverse"}</b><span>${escapeHtml(winner)} remporte le duel.</span></div>`
+    : `<div class="draft-dev-battle-result"><b>Duel en cours</b><span>Choisis une attaque pour jouer le prochain tour.</span></div>`;
+
   body.innerHTML = `
     <div class="draft-dev-battle-fighters">
-      <div class="draft-summary-card wide">
-        <span>${escapeHtml(state.left.pokemon.name)}</span>
-        <b>PV ${state.left.currentHp} / ${state.left.maxHp}</b>
-        <small>Vitesse ${state.left.speed}</small>
+      <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
+        <div class="draft-dev-battle-fighter-head">
+          <img src="${escapeHtml(getPokemonSprite(state.left.pokemon))}" alt="${escapeHtml(state.left.pokemon.name)}">
+          <div>
+            <span>Joueur</span>
+            <b>${escapeHtml(state.left.pokemon.name)}</b>
+            <small>PV ${state.left.currentHp} / ${state.left.maxHp} • Vitesse ${state.left.speed}</small>
+          </div>
+        </div>
       </div>
-      <div class="draft-summary-card wide">
-        <span>${escapeHtml(state.right.pokemon.name)}</span>
-        <b>PV ${state.right.currentHp} / ${state.right.maxHp}</b>
-        <small>Vitesse ${state.right.speed}</small>
+      <div class="draft-summary-card wide draft-dev-battle-fighter is-foe">
+        <div class="draft-dev-battle-fighter-head">
+          <img src="${escapeHtml(getPokemonSprite(state.right.pokemon))}" alt="${escapeHtml(state.right.pokemon.name)}">
+          <div>
+            <span>Adversaire</span>
+            <b>${escapeHtml(state.right.pokemon.name)}</b>
+            <small>PV ${state.right.currentHp} / ${state.right.maxHp} • Vitesse ${state.right.speed}</small>
+          </div>
+        </div>
       </div>
     </div>
     <div class="draft-dev-battle-meta">
-      <div class="draft-summary-card"><span>Premier</span><b>${escapeHtml(firstActor)}</b></div>
+      <div class="draft-summary-card"><span>Ordre du tour</span><b>${escapeHtml(orderLabel)}</b></div>
       <div class="draft-summary-card"><span>Tours</span><b>${state.log.length}</b></div>
       <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
     </div>
+    ${resultHtml}
+    <div class="draft-dev-battle-actions">${movesHtml}</div>
     <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
   `;
 
@@ -6097,7 +6164,18 @@ function renderDraftSimpleBattleDevPanel(state) {
 }
 
 function clearDraftSimpleBattleDevPanel() {
+  draftSimpleBattleDevUiState = null;
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
+}
+
+function runDraftSimpleBattleDevTurn(moveIndex = 0) {
+  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished") return null;
+
+  const enemyMoves = draftSimpleBattleDevUiState.right?.moves || [];
+  const enemyMoveIndex = enemyMoves.length ? Math.floor(Math.random() * enemyMoves.length) : 0;
+  resolveDraftSimpleBattleTurn(draftSimpleBattleDevUiState, moveIndex, enemyMoveIndex);
+  renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+  return draftSimpleBattleDevUiState;
 }
 
 function runDraftSimpleBattleDraftConversionDevVisualTest() {
@@ -6106,19 +6184,19 @@ function runDraftSimpleBattleDraftConversionDevVisualTest() {
     console.warn("Ouvre d'abord l'écran Draft Arènes pour voir le panneau de dev.");
   }
 
-  const leftEntry = draftArenaState?.team?.[0] || { pokemon: getDraftSimpleBattleDevPokemon(6) };
-  const rightEntry = draftArenaState?.team?.[1] || { pokemon: getDraftSimpleBattleDevPokemon(9) };
-  const state = simulateDraftSimpleBattleFromDraftEntries(leftEntry, rightEntry);
+  const { leftEntry, rightEntry } = getDraftSimpleBattleDevEntries();
+  const state = createDraftSimpleBattleDevUiState(leftEntry, rightEntry);
   if (!state) {
     console.warn("Impossible de construire la simulation de dev.");
     return null;
   }
 
+  draftSimpleBattleDevUiState = state;
   renderDraftSimpleBattleDevPanel(state);
-  console.log("Draft Simple Battle Dev Panel", {
+  console.log("Draft Simple Battle Dev Duel", {
     left: state.left.pokemon.name,
     right: state.right.pokemon.name,
-    turns: state.log.length,
+    moves: state.left.moves.map((move) => move.name),
   });
   return state;
 }
@@ -6126,6 +6204,7 @@ function runDraftSimpleBattleDraftConversionDevVisualTest() {
 window.runDraftSimpleBattleDevTests = runDraftSimpleBattleDevTests;
 window.runDraftSimpleBattleDraftConversionDevTest = runDraftSimpleBattleDraftConversionDevTest;
 window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDraftConversionDevVisualTest;
+window.runDraftSimpleBattleDevTurn = runDraftSimpleBattleDevTurn;
 window.clearDraftSimpleBattleDevPanel = clearDraftSimpleBattleDevPanel;
 
 
