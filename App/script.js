@@ -5505,11 +5505,14 @@ const DRAFT_ARENAS_BY_GEN = {
 
 function createDraftArenaState() {
   return {
-    phase: "gen", // gen | draft | result
+    phase: "gen", // gen | draft | battle | result
     selectedGen: null,
     team: [],
     selectedBattlePokemonId: null,
     enemyBattleTeam: [],
+    currentArenaIndex: 0,
+    teamData: [],
+    synergyData: null,
     selectedDexIds: new Set(),
     options: [],
     shinyCount: 0,
@@ -5637,6 +5640,71 @@ function getDraftCachedPokemonPowerData(pokemon) {
 const DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER = 70;
 const DRAFT_SIMPLE_BATTLE_STAB = 1.5;
 const DRAFT_SIMPLE_BATTLE_TEAM_SIZE = DRAFT_TEAM_SIZE;
+const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
+  "Séisme": { power: 100, category: "physical" },
+  "Lance-Flammes": { power: 90, category: "special" },
+  "Hydrocanon": { power: 110, category: "special" },
+  "Lame-Feuille": { power: 90, category: "physical" },
+  "Tonnerre": { power: 90, category: "special" },
+  "Laser Glace": { power: 90, category: "special" },
+  "Close Combat": { power: 120, category: "physical" },
+  "Bomb-Beurk": { power: 90, category: "special" },
+  "Draco-Météore": { power: 130, category: "special" },
+  "Boutefeu": { power: 120, category: "physical" },
+  "Surf": { power: 90, category: "special" },
+  "Éco-Sphère": { power: 90, category: "special" },
+  "Fatal-Foudre": { power: 110, category: "special" },
+  "Vent Violent": { power: 110, category: "special" },
+  "Change Éclair": { power: 70, category: "special" },
+  "Machouille": { power: 80, category: "physical" },
+  "Ball'Ombre": { power: 80, category: "special" },
+  "Vibrobscur": { power: 80, category: "special" },
+  "Psyko": { power: 90, category: "special" },
+  "Aurasphère": { power: 80, category: "special" },
+  "Nœud Herbe": { power: 80, category: "special" },
+  "Ébullilave": { power: 80, category: "special" },
+  "Vive-Attaque": { power: 40, category: "physical" },
+  "Retour": { power: 90, category: "physical" },
+  "Plaquage": { power: 85, category: "physical" },
+  "Ultralaser": { power: 150, category: "special" },
+  "Écrasement": { power: 65, category: "physical" },
+  "Bélier": { power: 90, category: "physical" },
+  "Piège de Roc": { power: 0, category: "status" },
+  "Demi-Tour": { power: 70, category: "physical" },
+  "Tour Rapide": { power: 50, category: "physical" },
+  "Abri": { power: 0, category: "status" },
+  "Clonage": { power: 0, category: "status" },
+  "Repos": { power: 0, category: "status" },
+  "Danse-Lames": { power: 0, category: "status" },
+  "Protection": { power: 0, category: "status" },
+  "Mur Lumière": { power: 0, category: "status" },
+  "Reflet": { power: 0, category: "status" },
+  "Lame d'Air": { power: 75, category: "special" },
+  "Choc Mental": { power: 50, category: "special" },
+  "Direct Toxik": { power: 80, category: "physical" },
+  "Canon Graine": { power: 80, category: "physical" },
+  "Câlinerie": { power: 90, category: "physical" },
+  "Éclat Magique": { power: 80, category: "special" },
+  "Tête de Fer": { power: 80, category: "physical" },
+  "Pisto-Poing": { power: 40, category: "physical" },
+  "Crocs Feu": { power: 65, category: "physical" },
+  "Crocs Givre": { power: 65, category: "physical" },
+  "Crocs Éclair": { power: 65, category: "physical" },
+  "Sabotage": { power: 65, category: "physical" },
+  "Atterrissage": { power: 0, category: "status" },
+  "Toxik": { power: 0, category: "status" },
+  "Vœu Soin": { power: 0, category: "status" },
+  "Dracochoc": { power: 85, category: "special" },
+  "Giga-Sangsue": { power: 75, category: "special" },
+  "Éclair Fou": { power: 90, category: "physical" },
+  "Telluriforce": { power: 90, category: "special" },
+  "Cradovague": { power: 95, category: "special" },
+  "Tricherie": { power: 95, category: "physical" },
+  "Poing Glace": { power: 75, category: "physical" },
+  "Poing-Éclair": { power: 75, category: "physical" },
+  "Poing de Feu": { power: 75, category: "physical" },
+  "Psykoud'Boul": { power: 80, category: "physical" },
+};
 let draftSimpleBattleDevUiState = null;
 let draftSimpleBattleIntroTimer = null;
 let draftSimpleBattleTurnTimer = null;
@@ -5685,7 +5753,7 @@ function createDraftSimpleBattleMove(label, type, options = {}) {
     name: label || "Attaque",
     type: type || "Normal",
     power: Math.max(1, Number(options.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER),
-    category: options.category === "special" ? "special" : "physical",
+    category: options.category === "special" ? "special" : options.category === "status" ? "status" : "physical",
   };
 }
 
@@ -5751,6 +5819,37 @@ function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move)
     damage,
     stab,
     effectiveness,
+  };
+}
+
+function getDraftSimpleBattleEstimatedMoveOutcome(gen, attackerState, defenderState, move) {
+  if (!attackerState || !defenderState || !move) {
+    return {
+      move,
+      damage: 0,
+      stab: 1,
+      effectiveness: 1,
+      knockout: false,
+      score: 0,
+    };
+  }
+  const result = computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move);
+  const defenderHp = Math.max(0, Number(defenderState.currentHp) || 0);
+  const damage = Math.max(0, Number(result.damage) || 0);
+  const knockout = defenderHp > 0 && damage >= defenderHp;
+  const score =
+    damage +
+    (knockout ? 500 : 0) +
+    ((Number(result.effectiveness) || 1) > 1 ? 80 : 0) +
+    ((Number(result.effectiveness) || 1) === 0 ? -300 : 0) +
+    ((Number(result.stab) || 1) > 1 ? 18 : 0);
+  return {
+    move,
+    damage,
+    stab: result.stab,
+    effectiveness: result.effectiveness,
+    knockout,
+    score,
   };
 }
 
@@ -5832,22 +5931,69 @@ function getDraftSimpleBattleMoveCategory(type) {
 function convertDraftMoveNameToSimpleBattleMove(moveName, pokemon) {
   const entry = getDraftSimpleBattleMoveLibraryEntry(moveName);
   const moveType = entry?.types?.[0] || pokemon?.type1 || "Normal";
+  const override = DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES[moveName] || null;
   // Fallback intentionally stays simple: if the project has no richer move data
   // for this move, we still keep a usable typed attack for dev simulations.
   return createDraftSimpleBattleMove(
     moveName || "Attaque",
     moveType,
-    { category: getDraftSimpleBattleMoveCategory(moveType) }
+    {
+      power: override?.power,
+      category: override?.category || getDraftSimpleBattleMoveCategory(moveType),
+    }
   );
+}
+
+function buildDraftSimpleBattleCuratedMoveSet(pokemon, sourceMoves = []) {
+  const unique = [];
+  const seen = new Set();
+  sourceMoves.forEach((move) => {
+    if (!move?.name || seen.has(move.name)) return;
+    seen.add(move.name);
+    unique.push(move);
+  });
+  if (!unique.length) return [];
+
+  const stabTypes = new Set([pokemon?.type1, pokemon?.type2].filter(Boolean));
+  const damaging = unique.filter((move) => Number(move.power) > 0 && move.category !== "status");
+  const selected = [];
+  const selectedNames = new Set();
+
+  const pushMove = (move) => {
+    if (!move?.name || selectedNames.has(move.name) || selected.length >= 4) return;
+    selected.push(move);
+    selectedNames.add(move.name);
+  };
+
+  damaging
+    .filter((move) => stabTypes.has(move.type))
+    .sort((a, b) => (Number(b.power) || 0) - (Number(a.power) || 0))
+    .forEach(pushMove);
+
+  damaging
+    .filter((move) => !stabTypes.has(move.type))
+    .sort((a, b) => (Number(b.power) || 0) - (Number(a.power) || 0))
+    .forEach(pushMove);
+
+  unique.forEach(pushMove);
+  return selected.slice(0, 4);
 }
 
 function buildDraftSimpleBattleMovesFromDraftPokemon(pokemon) {
   const templateMoves = getDraftSimpleBattleTemplateMovesForPokemon(pokemon)
     .map((moveName) => convertDraftMoveNameToSimpleBattleMove(moveName, pokemon))
-    .slice(0, 4);
+    .slice(0, 8);
 
   if (templateMoves.length) {
-    return templateMoves;
+    const curatedTemplateMoves = buildDraftSimpleBattleCuratedMoveSet(pokemon, templateMoves);
+    if (curatedTemplateMoves.length) return curatedTemplateMoves;
+  }
+
+  const fallbackPool = buildTeamBuilderFallbackMovePool(pokemon)
+    .map((entry) => convertDraftMoveNameToSimpleBattleMove(entry.name, pokemon));
+  const curatedFallbackPool = buildDraftSimpleBattleCuratedMoveSet(pokemon, fallbackPool);
+  if (curatedFallbackPool.length) {
+    return curatedFallbackPool;
   }
 
   // Fallback path for Pokémon without stored moveset in project data.
@@ -6159,6 +6305,23 @@ function selectDraftBattlePokemon(pokemonId) {
   renderDraftArena();
 }
 
+function selectDraftSimpleBattlePreviewLead(teamIndex) {
+  if (!draftSimpleBattleDevUiState || !draftArenaState || !draftSimpleBattleDevUiState.showPreview) return;
+  const nextIndex = Number(teamIndex);
+  const nextLead = draftSimpleBattleDevUiState.leftTeam[nextIndex];
+  if (!Number.isInteger(nextIndex) || !nextLead?.pokemon) return;
+
+  draftArenaState.selectedBattlePokemonId = nextLead.pokemon.id;
+  draftSimpleBattleDevUiState.leftTeam = [
+    nextLead,
+    ...draftSimpleBattleDevUiState.leftTeam.filter((_, index) => index !== nextIndex),
+  ];
+  draftSimpleBattleDevUiState.leftActiveIndex = 0;
+  syncDraftSimpleBattleActiveBattlers(draftSimpleBattleDevUiState);
+  draftSimpleBattleDevUiState.sceneMessage = `${nextLead.pokemon.name} sera envoyé en premier.`;
+  renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+}
+
 function getDraftSimpleBattleRemainingCount(team = [], activeIndex = 0) {
   return team.filter((member) => member && member.currentHp > 0).length;
 }
@@ -6196,7 +6359,7 @@ function sendNextDraftSimpleBattleBattler(state, side) {
   return state[side];
 }
 
-function createDraftSimpleBattleDevUiState(leftEntries, rightEntries) {
+function createDraftSimpleBattleDevUiState(leftEntries, rightEntries, options = {}) {
   const leftTeam = (leftEntries || []).map((entry) => convertDraftPokemonToSimpleBattler(entry)).filter(Boolean);
   const rightTeam = (rightEntries || []).map((entry) => convertDraftPokemonToSimpleBattler(entry)).filter(Boolean);
   const leftPokemon = leftTeam[0]?.pokemon || null;
@@ -6217,6 +6380,13 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries) {
     left: null,
     right: null,
     log: [],
+    sceneMessage: "",
+    mode: options.mode || "dev",
+    title: options.title || "Combat Draft",
+    arena: options.arena || null,
+    onFinish: typeof options.onFinish === "function" ? options.onFinish : null,
+    postBattleAction: null,
+    finishHandled: false,
   };
   syncDraftSimpleBattleActiveBattlers(state);
   return state;
@@ -6285,6 +6455,11 @@ function getDraftSimpleBattleWinnerName(state) {
   return "Aucun vainqueur";
 }
 
+function getDraftSimpleBattleTeamWinnerLabel(state) {
+  if (!state) return "Aucune équipe";
+  return isDraftSimpleBattlePlayerWin(state) ? "Équipe joueur" : "Équipe adverse";
+}
+
 function isDraftSimpleBattlePlayerWin(state) {
   if (!state) return false;
   const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
@@ -6317,6 +6492,33 @@ function getDraftSimpleBattleStatusText(state) {
   if (state?.pendingSwitch) return state.pendingSwitchReason === "manual" ? "Choisis le Pokémon à envoyer" : "Choisis ton prochain Pokémon";
   if (state?.turnState === "enemy") return "L’adversaire attaque...";
   return "À toi de jouer";
+}
+
+function getDraftSimpleBattleMatchupHint(gen, attackerState, defenderState) {
+  if (!attackerState || !defenderState) return "Matchup en attente.";
+  const attackPressure = getDraftSimpleBattleBestMoveScore(gen, attackerState, defenderState);
+  const defensePressure = getDraftSimpleBattleBestMoveScore(gen, defenderState, attackerState);
+  if (attackPressure >= defensePressure * 1.35) return "Matchup favorable";
+  if (defensePressure >= attackPressure * 1.35) return "Matchup risqué";
+  return "Matchup équilibré";
+}
+
+function getDraftSimpleBattleSceneText(state) {
+  if (!state) return "";
+  if (state.sceneMessage) return state.sceneMessage;
+  if (state.phase === "finished") return `${getDraftSimpleBattleTeamWinnerLabel(state)} remporte le duel.`;
+  if (state.pendingSwitch) {
+    return state.pendingSwitchReason === "manual"
+      ? "Choisis le Pokémon à envoyer avant la réponse adverse."
+      : "Ton Pokémon est KO. Envoie vite le suivant.";
+  }
+  if (state.turnState === "enemy" && state.right?.pokemon?.name) {
+    return `${state.right.pokemon.name} prépare sa réponse.`;
+  }
+  if (state.left?.pokemon?.name && state.right?.pokemon?.name) {
+    return `${state.left.pokemon.name} fait face à ${state.right.pokemon.name}.`;
+  }
+  return "Le duel est prêt.";
 }
 
 function getDraftSimpleBattleStatusClass(state) {
@@ -6354,9 +6556,8 @@ function getDraftSimpleBattleBestMoveScore(gen, attackerState, defenderState) {
   const moves = attackerState?.moves || [];
   let best = -Infinity;
   for (let index = 0; index < moves.length; index += 1) {
-    const move = moves[index];
-    const multiplier = getDraftSimpleBattleTypeMultiplier(gen, move?.type, defenderState);
-    const score = multiplier * (Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER);
+    const outcome = getDraftSimpleBattleEstimatedMoveOutcome(gen, attackerState, defenderState, moves[index]);
+    const score = outcome.score;
     if (score > best) best = score;
   }
   return best > -Infinity ? best : 0;
@@ -6370,17 +6571,27 @@ function chooseDraftSimpleBattleEnemyAction(state) {
   }
 
   const moveEntries = (enemy.moves || []).map((move, index) => {
-    const multiplier = getDraftSimpleBattleTypeMultiplier(state.gen, move?.type, player);
-    const power = Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER;
-    const score = multiplier * power;
-    return { index, multiplier, power, score };
+    const outcome = getDraftSimpleBattleEstimatedMoveOutcome(state.gen, enemy, player, move);
+    return {
+      index,
+      multiplier: outcome.effectiveness,
+      power: Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER,
+      damage: outcome.damage,
+      knockout: outcome.knockout,
+      score: outcome.score,
+    };
   });
 
-  const bestMove = moveEntries.slice().sort((a, b) => b.score - a.score)[0] || { index: 0, multiplier: 1, score: 0 };
+  const bestMove = moveEntries.slice().sort((a, b) => b.score - a.score)[0] || { index: 0, multiplier: 1, score: 0, damage: 0, knockout: false };
   const playerPressure = getDraftSimpleBattleBestMoveScore(state.gen, player, enemy);
   const enemyPressure = bestMove.score;
   const enemyHpRatio = (Number(enemy.currentHp) || 0) / Math.max(1, Number(enemy.maxHp) || 1);
   const enemySwitches = getDraftSimpleBattleAvailableEnemySwitchIndexes(state);
+  const canFinishPlayer = moveEntries.filter((entry) => entry.knockout && entry.multiplier > 0).sort((a, b) => b.score - a.score)[0];
+
+  if (canFinishPlayer) {
+    return { kind: "move", moveIndex: canFinishPlayer.index };
+  }
 
   // Very light switch logic:
   // - switch only if the current matchup is clearly bad
@@ -6389,21 +6600,24 @@ function chooseDraftSimpleBattleEnemyAction(state) {
   if (enemySwitches.length) {
     const allMovesBad = moveEntries.length && moveEntries.every((entry) => entry.multiplier <= 0.5);
     const noUsefulMove = moveEntries.length && moveEntries.every((entry) => entry.multiplier === 0);
-    const badMatchup = playerPressure >= enemyPressure * 1.7 && enemyHpRatio <= 0.55;
+    const threatenedNow = playerPressure >= Math.max(45, enemy.currentHp + 20);
+    const badMatchup = playerPressure >= enemyPressure * 1.55 && enemyHpRatio <= 0.68;
 
-    if (noUsefulMove || allMovesBad || badMatchup) {
+    if (noUsefulMove || allMovesBad || badMatchup || threatenedNow) {
       const switchCandidates = enemySwitches
         .map((teamIndex) => {
           const battler = state.rightTeam[teamIndex];
+          const playerBestIntoCandidate = getDraftSimpleBattleBestMoveScore(state.gen, player, battler);
           return {
             teamIndex,
             battler,
             pressure: getDraftSimpleBattleBestMoveScore(state.gen, battler, player),
+            defense: playerBestIntoCandidate,
           };
         })
-        .sort((a, b) => b.pressure - a.pressure);
+        .sort((a, b) => (b.pressure - b.defense) - (a.pressure - a.defense));
 
-      if (switchCandidates[0] && switchCandidates[0].pressure > enemyPressure) {
+      if (switchCandidates[0] && switchCandidates[0].pressure > enemyPressure && switchCandidates[0].defense < playerPressure) {
         return { kind: "switch", teamIndex: switchCandidates[0].teamIndex };
       }
     }
@@ -6425,6 +6639,34 @@ function chooseDraftSimpleBattleEnemyAction(state) {
   }
 
   return { kind: "move", moveIndex: bestMove.index || 0 };
+}
+
+function renderDraftSimpleBattlePreviewTeam(team = [], sideLabel = "Équipe", sideClass = "", options = {}) {
+  const items = team.map((member, index) => {
+    if (!member?.pokemon) return "";
+    const isSelectable = Boolean(options.selectable);
+    const isSelected = Boolean(options.selectedIndex === index);
+    const elementTag = isSelectable ? "button" : "div";
+    const actionAttrs = isSelectable
+      ? `type="button" onclick="selectDraftSimpleBattlePreviewLead(${index})" aria-label="Choisir ${escapeHtml(member.pokemon.name)} comme Pokémon de départ"`
+      : "";
+    return `
+      <${elementTag} class="draft-dev-battle-preview-member ${sideClass}${isSelected ? " is-selected" : ""}${isSelectable ? " is-selectable" : ""}" ${actionAttrs}>
+        <img src="${escapeHtml(getPokemonSprite(member.pokemon))}" alt="${escapeHtml(member.pokemon.name)}">
+        <div>
+          <b>${escapeHtml(member.pokemon.name)}</b>
+          <small>${isSelectable && isSelected ? "Lead sélectionné" : `Slot ${index + 1}`} • PV ${member.maxHp} • Vitesse ${member.speed}</small>
+        </div>
+      </${elementTag}>
+    `;
+  }).join("");
+
+  return `
+    <div class="draft-summary-card draft-dev-battle-preview-team ${sideClass}">
+      <span>${escapeHtml(sideLabel)}</span>
+      <div class="draft-dev-battle-preview-list">${items}</div>
+    </div>
+  `;
 }
 
 function renderDraftSimpleBattleBench(team = [], activeIndex = 0, sideLabel = "Équipe") {
@@ -6476,6 +6718,38 @@ function renderDraftSimpleBattleDevPanel(state) {
   const panel = ensureDraftSimpleBattleDevPanel();
   const body = document.getElementById("draft-dev-battle-body");
   if (!panel || !body || !state) return;
+  const heading = panel.querySelector(".draft-dev-battle-head h3");
+  if (heading) heading.textContent = state.title || "Combat Draft";
+
+  if (state.showPreview) {
+    const previewLeft = state.leftTeam[0] || null;
+    const previewRight = state.rightTeam[0] || null;
+    const previewHint = previewLeft && previewRight
+      ? getDraftSimpleBattleMatchupHint(state.gen, previewLeft, previewRight)
+      : "Lead à confirmer";
+    body.innerHTML = `
+      <div class="draft-dev-battle-preview">
+        <div class="draft-dev-battle-preview-head">
+          <b>Préparation du duel</b>
+          <span>Clique sur un Pokémon de ton équipe pour choisir ton lead, puis lance le duel.</span>
+        </div>
+        <div class="draft-dev-battle-scene-note is-preview">
+          <b>Lead pressenti</b>
+          <span>${escapeHtml(previewLeft?.pokemon?.name || "Ton lead")} vs ${escapeHtml(previewRight?.pokemon?.name || "Lead adverse")} • ${escapeHtml(previewHint)}</span>
+        </div>
+        <div class="draft-dev-battle-preview-grid">
+          ${renderDraftSimpleBattlePreviewTeam(state.leftTeam, "Équipe joueur", "is-player", { selectable: true, selectedIndex: state.leftActiveIndex || 0 })}
+          ${renderDraftSimpleBattlePreviewTeam(state.rightTeam, "Équipe adverse", "is-foe")}
+        </div>
+        <div class="draft-dev-battle-preview-actions">
+          <button type="button" class="btn-red" onclick="startDraftSimpleBattlePreview()">Commencer le duel</button>
+          <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
+        </div>
+      </div>
+    `;
+    panel.classList.remove("hidden");
+    return;
+  }
 
   if (state.showIntro) {
     const introLeft = getDraftSimpleBattleDisplayBattler(state, "left");
@@ -6560,13 +6834,18 @@ function renderDraftSimpleBattleDevPanel(state) {
   }).join("");
 
   const playerWin = isDraftSimpleBattlePlayerWin(state);
+  const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
+  const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
+  const sceneText = getDraftSimpleBattleSceneText(state);
   const resultHtml = isFinished
     ? `<div class="draft-dev-battle-result is-finished ${playerWin ? "is-win" : "is-loss"}">
         <b>${playerWin ? "Victoire !" : "Défaite"}</b>
         <span>${playerWin ? "Ton équipe remporte le duel avec brio." : "Le duel t’échappe cette fois."}</span>
         <span>${escapeHtml(winner)} termine le match pour ${playerWin ? "ton équipe" : "l’adversaire"}.</span>
+        <span>${escapeHtml(getDraftSimpleBattleTeamWinnerLabel(state))} • Dernier Pokémon debout : ${escapeHtml(winner)}</span>
+        <span>Résumé : ${state.log.length} tours • ${leftRemaining} survivant(s) côté joueur • ${rightRemaining} survivant(s) côté adverse.</span>
         <div class="draft-dev-battle-result-actions">
-          <button type="button" class="btn-blue" onclick="replayDraftSimpleBattleDevDuel()">Rejouer</button>
+          <button type="button" class="btn-blue" onclick="${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.action ? state.postBattleAction.action : "replayDraftSimpleBattleDevDuel")}()">${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.label ? state.postBattleAction.label : "Rejouer")}</button>
           <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
         </div>
       </div>`
@@ -6596,6 +6875,10 @@ function renderDraftSimpleBattleDevPanel(state) {
     : "";
 
   body.innerHTML = `
+    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
+      <b>${isFinished ? "Fin du match" : "Scène de combat"}</b>
+      <span>${escapeHtml(sceneText)}</span>
+    </div>
     <div class="draft-dev-battle-fighters">
       <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
         <div class="draft-dev-battle-fighter-head">
@@ -6672,6 +6955,23 @@ function clearDraftSimpleBattleDevPanel() {
   document.getElementById("draft-battle-close")?.classList.add("hidden");
 }
 
+function startDraftSimpleBattlePreview() {
+  if (!draftSimpleBattleDevUiState) return null;
+  draftSimpleBattleDevUiState.showPreview = false;
+  draftSimpleBattleDevUiState.showIntro = true;
+  draftSimpleBattleDevUiState.sceneMessage = `${draftSimpleBattleDevUiState.left?.pokemon?.name || "Ton Pokémon"} entre au combat face à ${draftSimpleBattleDevUiState.right?.pokemon?.name || "l’adversaire"} !`;
+  renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+  if (draftSimpleBattleIntroTimer) clearTimeout(draftSimpleBattleIntroTimer);
+  draftSimpleBattleIntroTimer = setTimeout(() => {
+    if (!draftSimpleBattleDevUiState) return;
+    draftSimpleBattleDevUiState.showIntro = false;
+    draftSimpleBattleDevUiState.turnState = "player";
+    renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+    draftSimpleBattleIntroTimer = null;
+  }, 1000);
+  return draftSimpleBattleDevUiState;
+}
+
 function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
@@ -6680,6 +6980,11 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   if (state.phase === "finished") {
     state.pendingSwitch = false;
     state.pendingSwitchReason = null;
+    state.sceneMessage = `${getDraftSimpleBattleTeamWinnerLabel(state)} gagne le match avec ${getDraftSimpleBattleWinnerName(state)}.`;
+  } else if (state.pendingSwitch) {
+    state.sceneMessage = "Ton Pokémon tombe KO. Choisis vite le remplaçant.";
+  } else {
+    state.sceneMessage = "";
   }
   state.turnState = state.phase === "finished" ? "finished" : state.pendingSwitch ? "switch" : "player";
   if (turnEntry && !turnEntry.order?.length) {
@@ -6687,6 +6992,11 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   }
   syncDraftSimpleBattleActiveBattlers(state);
   renderDraftSimpleBattleDevPanel(state);
+  if (state.phase === "finished" && !state.finishHandled && typeof state.onFinish === "function") {
+    state.finishHandled = true;
+    state.onFinish(state);
+    renderDraftSimpleBattleDevPanel(state);
+  }
   return state;
 }
 
@@ -6711,6 +7021,7 @@ function chooseDraftSimpleBattleReplacement(teamIndex) {
       pokemonName: nextMember.pokemon.name,
     });
   }
+  state.sceneMessage = `${nextMember.pokemon.name} rejoint le terrain !`;
 
   if (switchReason === "manual" && state.phase !== "finished") {
     renderDraftSimpleBattleDevPanel(state);
@@ -6738,6 +7049,9 @@ function chooseDraftSimpleBattleReplacement(teamIndex) {
         state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
         state.pendingSwitchReason = state.pendingSwitch ? "ko" : null;
       }
+      if (!enemyAction?.knockout && state.phase !== "finished") {
+        state.sceneMessage = `${state.right.pokemon.name} termine sa réponse.`;
+      }
       finishDraftSimpleBattleDevTurn(state, lastTurn);
       draftSimpleBattleTurnTimer = null;
     }, 700);
@@ -6755,6 +7069,7 @@ function openDraftSimpleBattleManualSwitch() {
 
   state.pendingSwitch = true;
   state.pendingSwitchReason = "manual";
+  state.sceneMessage = "Choisis un autre Pokémon : ce changement consommera ton tour.";
   state.log.push({ turn: state.turn, order: ["left", "right"], actions: [] });
   renderDraftSimpleBattleDevPanel(state);
   return state;
@@ -6835,6 +7150,7 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
           event: "sendout",
           pokemonName: switched.pokemon.name,
         });
+        state.sceneMessage = `L’adversaire rappelle son Pokémon et envoie ${switched.pokemon.name} !`;
       }
     } else {
       enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyDecision.moveIndex);
@@ -6845,6 +7161,7 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
           targetName: state.left.pokemon.name,
           ...enemyAction,
         });
+        state.sceneMessage = `${state.right.pokemon.name} contre-attaque avec ${enemyAction.move?.name || "son attaque"} !`;
       }
     }
 
@@ -6860,30 +7177,30 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
 }
 
 function runDraftSimpleBattleDraftConversionDevVisualTest() {
+  if (draftArenaState?.team?.length >= DRAFT_TEAM_SIZE && (draftArenaState.phase === "battle" || draftArenaState.phase === "result")) {
+    return launchDraftArenaBattle();
+  }
+
   const screen = document.getElementById("screen-draft-arena");
   if (!screen || screen.classList.contains("hidden")) {
     console.warn("Ouvre d'abord l'écran Draft Arènes pour voir le panneau de dev.");
   }
 
   const { playerDraftTeam, enemyDraftTeam } = getDraftSimpleBattleDevEntries();
-  const state = createDraftSimpleBattleDevUiState(playerDraftTeam, enemyDraftTeam);
+  const state = createDraftSimpleBattleDevUiState(playerDraftTeam, enemyDraftTeam, {
+    mode: "dev",
+    title: "Combat Draft",
+  });
   if (!state) {
     console.warn("Impossible de construire la simulation de dev.");
     return null;
   }
 
   draftSimpleBattleDevUiState = state;
-  draftSimpleBattleDevUiState.showIntro = true;
+  draftSimpleBattleDevUiState.showPreview = true;
+  draftSimpleBattleDevUiState.showIntro = false;
   renderDraftSimpleBattleDevPanel(state);
   document.getElementById("draft-battle-close")?.classList.remove("hidden");
-  if (draftSimpleBattleIntroTimer) clearTimeout(draftSimpleBattleIntroTimer);
-  draftSimpleBattleIntroTimer = setTimeout(() => {
-    if (!draftSimpleBattleDevUiState) return;
-    draftSimpleBattleDevUiState.showIntro = false;
-    draftSimpleBattleDevUiState.turnState = "player";
-    renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
-    draftSimpleBattleIntroTimer = null;
-  }, 1100);
   console.log("Draft Simple Battle Dev Duel", {
     left: state.left.pokemon.name,
     right: state.right.pokemon.name,
@@ -6895,7 +7212,12 @@ function runDraftSimpleBattleDraftConversionDevVisualTest() {
 window.runDraftSimpleBattleDevTests = runDraftSimpleBattleDevTests;
 window.runDraftSimpleBattleDraftConversionDevTest = runDraftSimpleBattleDraftConversionDevTest;
 window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDraftConversionDevVisualTest;
+window.launchDraftArenaBattle = launchDraftArenaBattle;
+window.continueDraftArenaBattleRun = continueDraftArenaBattleRun;
+window.finishDraftArenaBattleView = finishDraftArenaBattleView;
+window.selectDraftSimpleBattlePreviewLead = selectDraftSimpleBattlePreviewLead;
 window.runDraftSimpleBattleDevTurn = runDraftSimpleBattleDevTurn;
+window.startDraftSimpleBattlePreview = startDraftSimpleBattlePreview;
 window.openDraftSimpleBattleManualSwitch = openDraftSimpleBattleManualSwitch;
 window.chooseDraftSimpleBattleReplacement = chooseDraftSimpleBattleReplacement;
 window.replayDraftSimpleBattleDevDuel = replayDraftSimpleBattleDevDuel;
@@ -7221,6 +7543,252 @@ function buildDraftRunSummary(teamData, badgeResults, synergy) {
   };
 }
 
+function buildDraftArenaLiveSummary(teamData, badgeResults, synergy, currentArena = null) {
+  const summary = buildDraftRunSummary(teamData, badgeResults, synergy);
+  const wonCount = badgeResults.filter((result) => result.status === "won").length;
+  const blocked = badgeResults.find((result) => result.status === "blocked");
+  if (blocked) return summary;
+  if (currentArena) {
+    summary.status = `Arène en cours : ${currentArena.name}`;
+  } else if (wonCount) {
+    summary.status = `${wonCount} badge${wonCount > 1 ? "s" : ""} obtenu${wonCount > 1 ? "s" : ""}`;
+  } else {
+    summary.status = "Run prête à commencer";
+  }
+  return summary;
+}
+
+function buildDraftArenaEnemyTeamEntries(arena, playerEntries = []) {
+  if (!arena || !draftArenaState?.selectedGen) return [];
+
+  const playerDexIds = new Set(
+    playerEntries
+      .map((entry) => entry?.pokemon)
+      .filter(Boolean)
+      .map((pokemon) => getPokemonSpriteId(pokemon))
+  );
+  const genPool = getDraftPoolForGeneration(draftArenaState.selectedGen);
+  const themedPool = genPool.filter((pokemon) => pokemon?.type1 === arena.type || pokemon?.type2 === arena.type);
+  const usedDexIds = new Set(playerDexIds);
+  const picks = [];
+
+  const themedPicks = buildDraftWeightedWave(themedPool, DRAFT_SIMPLE_BATTLE_TEAM_SIZE, usedDexIds);
+  themedPicks.forEach((pokemon) => {
+    if (!pokemon) return;
+    const dexId = getPokemonSpriteId(pokemon);
+    if (usedDexIds.has(dexId)) return;
+    usedDexIds.add(dexId);
+    picks.push({ pokemon });
+  });
+
+  if (picks.length < DRAFT_SIMPLE_BATTLE_TEAM_SIZE) {
+    const fallbackPicks = buildDraftWeightedWave(genPool, DRAFT_SIMPLE_BATTLE_TEAM_SIZE - picks.length, usedDexIds);
+    fallbackPicks.forEach((pokemon) => {
+      if (!pokemon) return;
+      const dexId = getPokemonSpriteId(pokemon);
+      if (usedDexIds.has(dexId)) return;
+      usedDexIds.add(dexId);
+      picks.push({ pokemon });
+    });
+  }
+
+  return picks.slice(0, DRAFT_SIMPLE_BATTLE_TEAM_SIZE);
+}
+
+function getDraftArenaCurrentArena() {
+  if (!draftArenaState?.selectedGen) return null;
+  const arenas = DRAFT_ARENAS_BY_GEN[draftArenaState.selectedGen] || [];
+  const index = clampDraftValue(Number(draftArenaState.currentArenaIndex) || 0, 0, Math.max(0, arenas.length - 1));
+  return arenas[index] || null;
+}
+
+function buildDraftArenaBattleButtonMeta() {
+  const battleTeam = draftArenaState?.team?.filter((entry) => entry?.pokemon) || [];
+  if (battleTeam.length < DRAFT_TEAM_SIZE) {
+    return {
+      disabled: true,
+      label: "Lancer le duel",
+      title: "Complète d’abord ton équipe de 6 Pokémon.",
+    };
+  }
+
+  if (draftArenaState?.phase === "result" && draftArenaState?.runSummary) {
+    return {
+      disabled: true,
+      label: "Run terminée",
+      title: "Relance un nouveau draft pour recommencer la run.",
+    };
+  }
+
+  const currentArena = getDraftArenaCurrentArena();
+  if (draftArenaState?.phase === "battle" && currentArena) {
+    return {
+      disabled: false,
+      label: `Affronter ${currentArena.name}`,
+      title: `Lancer le vrai duel contre ${currentArena.name}.`,
+    };
+  }
+
+  return {
+    disabled: false,
+    label: "Lancer le duel",
+    title: "Ouvrir le combat simplifié du Draft.",
+  };
+}
+
+async function prepareDraftArenaBattleRun() {
+  if (!draftArenaState || draftArenaState.team.length < DRAFT_TEAM_SIZE || !draftArenaState.selectedGen) return false;
+  const snapshot = draftArenaState;
+  snapshot.evaluating = true;
+  snapshot.message = `Préparation de la run ${draftGenLabel(snapshot.selectedGen)}...`;
+  renderDraftArena();
+
+  const teamData = await Promise.all(snapshot.team.map(async (member) => ({
+    ...member,
+    metrics: await getDraftPokemonPowerData(member.pokemon),
+  })));
+
+  if (snapshot !== draftArenaState) return false;
+
+  const arenas = DRAFT_ARENAS_BY_GEN[snapshot.selectedGen] || [];
+  const synergy = getDraftTeamSynergy(teamData);
+  snapshot.teamData = teamData;
+  snapshot.synergyData = synergy;
+  snapshot.currentArenaIndex = 0;
+  snapshot.badgeResults = arenas.map((arena, arenaIndex) => ({
+    ...analyzeDraftArenaBattle(teamData, arena, arenaIndex, snapshot.selectedGen, synergy),
+    won: false,
+    status: arenaIndex === 0 ? "pending" : "untried",
+  }));
+  snapshot.teamPower = teamData.reduce((sum, member) => sum + member.metrics.power, 0);
+  snapshot.teamSynergy = synergy.score;
+  snapshot.runSummary = buildDraftArenaLiveSummary(teamData, snapshot.badgeResults, synergy, arenas[0] || null);
+  snapshot.evaluating = false;
+  snapshot.phase = "battle";
+  snapshot.message = arenas[0]
+    ? `Ton équipe est prête. Première arène : ${arenas[0].name} (${arenas[0].type}).`
+    : "Ton équipe est prête pour le duel.";
+  renderDraftArena();
+  return true;
+}
+
+function updateDraftArenaRunAfterBattle(battleState) {
+  if (!draftArenaState || !draftArenaState.teamData?.length || !draftArenaState.synergyData) return;
+
+  const arenas = DRAFT_ARENAS_BY_GEN[draftArenaState.selectedGen] || [];
+  const arenaIndex = clampDraftValue(Number(draftArenaState.currentArenaIndex) || 0, 0, Math.max(0, arenas.length - 1));
+  const currentArena = arenas[arenaIndex];
+  if (!currentArena || !draftArenaState.badgeResults[arenaIndex]) return;
+
+  const playerWin = isDraftSimpleBattlePlayerWin(battleState);
+  const winnerName = getDraftSimpleBattleWinnerName(battleState);
+  const currentResult = draftArenaState.badgeResults[arenaIndex];
+
+  draftArenaState.badgeResults[arenaIndex] = {
+    ...currentResult,
+    won: playerWin,
+    status: playerWin ? "won" : "blocked",
+    explanation: playerWin
+      ? `Victoire réelle contre ${currentArena.name}. ${winnerName} termine le duel pour ton équipe.`
+      : `Défaite réelle contre ${currentArena.name}. ${winnerName} bloque la progression de la run.`,
+  };
+
+  if (!playerWin) {
+    for (let index = arenaIndex + 1; index < draftArenaState.badgeResults.length; index += 1) {
+      draftArenaState.badgeResults[index] = {
+        ...draftArenaState.badgeResults[index],
+        won: false,
+        status: "untried",
+        explanation: "Arène non tentée car la run s'est arrêtée avant.",
+      };
+    }
+    draftArenaState.phase = "result";
+    draftArenaState.runSummary = buildDraftRunSummary(draftArenaState.teamData, draftArenaState.badgeResults, draftArenaState.synergyData);
+    draftArenaState.message = `Run arrêtée contre ${currentArena.name}. ${draftArenaState.runSummary.wonCount} badge${draftArenaState.runSummary.wonCount > 1 ? "s" : ""} remporté${draftArenaState.runSummary.wonCount > 1 ? "s" : ""}.`;
+    battleState.postBattleAction = {
+      label: "Voir le bilan",
+      action: "finishDraftArenaBattleView",
+    };
+    renderDraftArena();
+    return;
+  }
+
+  const nextArenaIndex = arenaIndex + 1;
+  if (nextArenaIndex >= arenas.length) {
+    draftArenaState.phase = "result";
+    draftArenaState.currentArenaIndex = arenas.length;
+    draftArenaState.runSummary = buildDraftRunSummary(draftArenaState.teamData, draftArenaState.badgeResults, draftArenaState.synergyData);
+    draftArenaState.message = `Run parfaite sur ${draftGenLabel(draftArenaState.selectedGen)}. Les ${draftArenaState.runSummary.wonCount} arènes sont remportées.`;
+    battleState.postBattleAction = {
+      label: "Voir le bilan",
+      action: "finishDraftArenaBattleView",
+    };
+    renderDraftArena();
+    return;
+  }
+
+  draftArenaState.currentArenaIndex = nextArenaIndex;
+  draftArenaState.badgeResults = draftArenaState.badgeResults.map((result, index) => {
+    if (index === nextArenaIndex) {
+      return { ...result, status: "pending" };
+    }
+    if (index > nextArenaIndex && result.status !== "won") {
+      return { ...result, status: "untried" };
+    }
+    return result;
+  });
+  draftArenaState.phase = "battle";
+  draftArenaState.runSummary = buildDraftArenaLiveSummary(draftArenaState.teamData, draftArenaState.badgeResults, draftArenaState.synergyData, arenas[nextArenaIndex]);
+  draftArenaState.message = `Badge obtenu. Prochaine arène : ${arenas[nextArenaIndex].name} (${arenas[nextArenaIndex].type}).`;
+  battleState.postBattleAction = {
+    label: "Arène suivante",
+    action: "continueDraftArenaBattleRun",
+  };
+  renderDraftArena();
+}
+
+async function launchDraftArenaBattle() {
+  if (!draftArenaState) return null;
+  if (draftArenaState.team.length < DRAFT_TEAM_SIZE) return null;
+
+  if (!draftArenaState.badgeResults.length || !draftArenaState.teamData?.length || !draftArenaState.synergyData) {
+    const prepared = await prepareDraftArenaBattleRun();
+    if (!prepared || !draftArenaState) return null;
+  }
+
+  const currentArena = getDraftArenaCurrentArena();
+  if (!currentArena) return null;
+
+  const playerDraftTeam = getDraftSimpleBattlePlayerTeamEntries();
+  const enemyDraftTeam = buildDraftArenaEnemyTeamEntries(currentArena, playerDraftTeam);
+  const state = createDraftSimpleBattleDevUiState(playerDraftTeam, enemyDraftTeam, {
+    mode: "arena-run",
+    title: `Arène ${draftArenaState.currentArenaIndex + 1} • ${currentArena.name}`,
+    arena: currentArena,
+    onFinish: updateDraftArenaRunAfterBattle,
+  });
+  if (!state) return null;
+
+  draftArenaState.enemyBattleTeam = enemyDraftTeam;
+  draftSimpleBattleDevUiState = state;
+  draftSimpleBattleDevUiState.showPreview = true;
+  draftSimpleBattleDevUiState.showIntro = false;
+  renderDraftSimpleBattleDevPanel(state);
+  document.getElementById("draft-battle-close")?.classList.remove("hidden");
+  return state;
+}
+
+function continueDraftArenaBattleRun() {
+  clearDraftSimpleBattleDevPanel();
+  return launchDraftArenaBattle();
+}
+
+function finishDraftArenaBattleView() {
+  clearDraftSimpleBattleDevPanel();
+  renderDraftArena();
+  return draftArenaState;
+}
+
 function buildDraftArenaIndicators(result, runSummary) {
   if (!result || result.status === "untried") return ["Arène non tentée"];
 
@@ -7336,8 +7904,10 @@ async function pickDraftArenaOption(pokemonId) {
   if (picked.shiny) draftArenaState.shinyCount += 1;
 
   if (draftArenaState.team.length >= DRAFT_TEAM_SIZE) {
-    draftArenaState.phase = "result";
-    await resolveDraftArenaRun();
+    const prepared = await prepareDraftArenaBattleRun();
+    if (prepared) {
+      await launchDraftArenaBattle();
+    }
     return;
   } else {
     const remain = DRAFT_TEAM_SIZE - draftArenaState.team.length;
@@ -7404,11 +7974,10 @@ function renderDraftArena() {
   }
 
   if (battleLaunch) {
-    const hasPlayableBattler = Boolean(draftArenaState.team?.[0]?.pokemon);
-    battleLaunch.disabled = !hasPlayableBattler;
-    battleLaunch.title = hasPlayableBattler
-      ? "Lancer un mini duel avec ton Pokémon drafté."
-      : "Drafte au moins un Pokémon pour lancer le duel.";
+    const battleMeta = buildDraftArenaBattleButtonMeta();
+    battleLaunch.disabled = battleMeta.disabled;
+    battleLaunch.title = battleMeta.title;
+    battleLaunch.textContent = battleMeta.label;
   }
   if (battleClose && (!draftSimpleBattleDevUiState || document.getElementById("draft-dev-battle-panel")?.classList.contains("hidden"))) {
     battleClose.classList.add("hidden");
@@ -7435,12 +8004,14 @@ function renderDraftArena() {
       msg.className = "pokedex-muted";
       msg.textContent = "Sélectionne d'abord une génération.";
       options.appendChild(msg);
-    } else if (draftArenaState.phase === "result") {
+    } else if (draftArenaState.phase === "result" || draftArenaState.phase === "battle") {
       const msg = document.createElement("p");
       msg.className = "pokedex-muted";
       msg.textContent = draftArenaState.evaluating
-        ? "Calcul de la run en cours..."
-        : "Draft terminé. Consulte la run ci-dessous.";
+        ? "Préparation de la run en cours..."
+        : draftArenaState.phase === "battle"
+          ? "Ton équipe est prête. Lance ou poursuis l’arène en cours."
+          : "Draft terminé. Consulte la run ci-dessous.";
       options.appendChild(msg);
     } else if (!draftArenaState.options.length) {
       const msg = document.createElement("p");
@@ -7530,18 +8101,18 @@ function renderDraftArena() {
   }
 
   if (resultWrap) {
-    resultWrap.classList.toggle("hidden", draftArenaState.phase !== "result");
+    resultWrap.classList.toggle("hidden", draftArenaState.phase !== "result" && draftArenaState.phase !== "battle");
   }
   if (detailToggle) {
     detailToggle.textContent = draftArenaState.showDetailedAnalysis ? "Masquer l'analyse détaillée" : "Voir l'analyse détaillée";
-    detailToggle.classList.toggle("hidden", draftArenaState.phase !== "result");
+    detailToggle.classList.toggle("hidden", draftArenaState.phase !== "result" && draftArenaState.phase !== "battle");
   }
 
   if (runSummary) {
-    if (draftArenaState.phase !== "result") {
+    if (draftArenaState.phase !== "result" && draftArenaState.phase !== "battle") {
       runSummary.innerHTML = "";
     } else if (draftArenaState.evaluating) {
-      runSummary.innerHTML = `<div class="draft-summary-card wide"><span>Analyse</span><b>Simulation de la run en cours...</b></div>`;
+      runSummary.innerHTML = `<div class="draft-summary-card wide"><span>Analyse</span><b>Préparation de la run en cours...</b></div>`;
     } else if (draftArenaState.runSummary) {
       runSummary.innerHTML = `
         <div class="draft-summary-card"><span>Statut</span><b>${escapeHtml(draftArenaState.runSummary.status)}</b></div>
