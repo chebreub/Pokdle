@@ -5896,6 +5896,12 @@ select:focus-visible {
 }
 
 .draft-dev-battle-panel {
+  --draft-arena-image: none;
+  --draft-arena-glow-a: rgba(102, 165, 255, 0.12);
+  --draft-arena-glow-b: rgba(255, 136, 136, 0.1);
+  --draft-arena-line: rgba(161, 196, 244, 0.32);
+  --draft-arena-card: rgba(10, 31, 57, 0.94);
+  --draft-arena-card-2: rgba(8, 22, 43, 0.96);
   position: fixed;
   inset: 20px;
   z-index: 2400;
@@ -5906,9 +5912,9 @@ select:focus-visible {
   padding: 18px 20px;
   border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(10, 31, 57, 0.94), rgba(8, 22, 43, 0.96)),
+    linear-gradient(180deg, var(--draft-arena-card), var(--draft-arena-card-2)),
     rgba(8, 24, 46, 0.96);
-  border: 1px solid rgba(161, 196, 244, 0.32);
+  border: 1px solid var(--draft-arena-line);
   box-shadow:
     0 26px 48px rgba(4, 14, 29, 0.28),
     0 0 0 9999px rgba(5, 12, 23, 0.42);
@@ -5920,9 +5926,111 @@ select:focus-visible {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 22% 72%, rgba(102, 165, 255, 0.12), transparent 24%),
-    radial-gradient(circle at 80% 18%, rgba(255, 136, 136, 0.1), transparent 22%);
+    var(--draft-arena-image) no-repeat right 36px top 34px / 220px auto,
+    radial-gradient(circle at 22% 72%, var(--draft-arena-glow-a), transparent 24%),
+    radial-gradient(circle at 80% 18%, var(--draft-arena-glow-b), transparent 22%),
+    linear-gradient(135deg, rgba(255,255,255,0.02), transparent 46%);
+  opacity: 0.95;
+  filter: saturate(1.05);
   pointer-events: none;
+}
+
+.draft-dev-battle-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 16, 28, 0.24), transparent 26%, transparent 74%, rgba(8, 16, 28, 0.22)),
+    radial-gradient(circle at 18% 84%, rgba(255,255,255,0.04), transparent 18%);
+  pointer-events: none;
+}
+
+.draft-dev-battle-panel.theme-roche,
+.draft-dev-battle-panel.theme-sol {
+  --draft-arena-glow-a: rgba(206, 166, 96, 0.18);
+  --draft-arena-glow-b: rgba(124, 94, 56, 0.16);
+  --draft-arena-line: rgba(216, 185, 126, 0.34);
+  --draft-arena-card: rgba(42, 29, 18, 0.95);
+  --draft-arena-card-2: rgba(26, 19, 12, 0.98);
+}
+
+.draft-dev-battle-panel.theme-eau,
+.draft-dev-battle-panel.theme-glace {
+  --draft-arena-glow-a: rgba(84, 182, 255, 0.2);
+  --draft-arena-glow-b: rgba(158, 227, 255, 0.16);
+  --draft-arena-line: rgba(132, 205, 255, 0.34);
+  --draft-arena-card: rgba(14, 36, 68, 0.95);
+  --draft-arena-card-2: rgba(8, 21, 42, 0.98);
+}
+
+.draft-dev-battle-panel.theme-feu {
+  --draft-arena-glow-a: rgba(255, 124, 77, 0.2);
+  --draft-arena-glow-b: rgba(255, 203, 92, 0.12);
+  --draft-arena-line: rgba(255, 162, 109, 0.34);
+  --draft-arena-card: rgba(52, 19, 14, 0.95);
+  --draft-arena-card-2: rgba(28, 10, 8, 0.98);
+}
+
+.draft-dev-battle-panel.theme-plante,
+.draft-dev-battle-panel.theme-insecte {
+  --draft-arena-glow-a: rgba(108, 204, 113, 0.18);
+  --draft-arena-glow-b: rgba(186, 234, 122, 0.12);
+  --draft-arena-line: rgba(144, 215, 123, 0.34);
+  --draft-arena-card: rgba(17, 42, 24, 0.95);
+  --draft-arena-card-2: rgba(11, 24, 15, 0.98);
+}
+
+.draft-dev-battle-panel.theme-electrik {
+  --draft-arena-glow-a: rgba(255, 211, 82, 0.2);
+  --draft-arena-glow-b: rgba(255, 242, 153, 0.14);
+  --draft-arena-line: rgba(255, 217, 107, 0.34);
+  --draft-arena-card: rgba(46, 34, 11, 0.95);
+  --draft-arena-card-2: rgba(25, 19, 7, 0.98);
+}
+
+.draft-dev-battle-panel.theme-psy,
+.draft-dev-battle-panel.theme-fee {
+  --draft-arena-glow-a: rgba(255, 121, 184, 0.18);
+  --draft-arena-glow-b: rgba(188, 141, 255, 0.14);
+  --draft-arena-line: rgba(233, 171, 255, 0.34);
+  --draft-arena-card: rgba(40, 18, 46, 0.95);
+  --draft-arena-card-2: rgba(22, 10, 28, 0.98);
+}
+
+.draft-dev-battle-panel.theme-spectre,
+.draft-dev-battle-panel.theme-tenebres,
+.draft-dev-battle-panel.theme-poison {
+  --draft-arena-glow-a: rgba(160, 108, 255, 0.18);
+  --draft-arena-glow-b: rgba(255, 95, 184, 0.1);
+  --draft-arena-line: rgba(186, 147, 255, 0.34);
+  --draft-arena-card: rgba(23, 16, 44, 0.95);
+  --draft-arena-card-2: rgba(13, 9, 23, 0.98);
+}
+
+.draft-dev-battle-panel.theme-combat {
+  --draft-arena-glow-a: rgba(255, 128, 128, 0.18);
+  --draft-arena-glow-b: rgba(255, 187, 122, 0.12);
+  --draft-arena-line: rgba(255, 161, 134, 0.34);
+  --draft-arena-card: rgba(47, 18, 18, 0.95);
+  --draft-arena-card-2: rgba(26, 11, 11, 0.98);
+}
+
+.draft-dev-battle-panel.theme-vol,
+.draft-dev-battle-panel.theme-dragon {
+  --draft-arena-glow-a: rgba(109, 150, 255, 0.18);
+  --draft-arena-glow-b: rgba(157, 205, 255, 0.12);
+  --draft-arena-line: rgba(150, 188, 255, 0.34);
+  --draft-arena-card: rgba(16, 24, 50, 0.95);
+  --draft-arena-card-2: rgba(10, 14, 28, 0.98);
+}
+
+.draft-dev-battle-panel.theme-acier,
+.draft-dev-battle-panel.theme-normal {
+  --draft-arena-glow-a: rgba(178, 196, 214, 0.18);
+  --draft-arena-glow-b: rgba(235, 240, 245, 0.08);
+  --draft-arena-line: rgba(192, 205, 219, 0.34);
+  --draft-arena-card: rgba(24, 31, 40, 0.95);
+  --draft-arena-card-2: rgba(14, 19, 25, 0.98);
 }
 
 .draft-dev-battle-panel > * {
@@ -6041,6 +6149,12 @@ select:focus-visible {
   background: rgba(111, 38, 38, 0.24);
 }
 
+.draft-dev-battle-switch-cancel {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .draft-dev-battle-log {
   display: grid;
   gap: 8px;
@@ -6066,6 +6180,92 @@ select:focus-visible {
 .draft-dev-battle-preview-head {
   display: grid;
   gap: 4px;
+}
+
+.draft-dev-battle-arena-banner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+    rgba(255, 255, 255, 0.04);
+  box-shadow: 0 14px 28px rgba(4, 14, 29, 0.14);
+}
+
+.draft-dev-battle-arena-banner.is-intro,
+.draft-dev-battle-arena-banner.is-live {
+  margin-bottom: 8px;
+}
+
+.draft-dev-battle-arena-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  min-height: 68px;
+}
+
+.draft-dev-battle-arena-banner b {
+  display: block;
+  color: #fff7df;
+  font-size: 1rem;
+}
+
+.draft-dev-battle-arena-banner span {
+  color: #dce9ff;
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.draft-dev-battle-panel.theme-roche .draft-dev-battle-arena-banner,
+.draft-dev-battle-panel.theme-sol .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(211, 170, 95, 0.14), rgba(112, 78, 42, 0.08)),
+    rgba(255,255,255,0.04);
+}
+
+.draft-dev-battle-panel.theme-eau .draft-dev-battle-arena-banner,
+.draft-dev-battle-panel.theme-glace .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(90, 179, 255, 0.16), rgba(126, 232, 255, 0.08)),
+    rgba(255,255,255,0.04);
+}
+
+.draft-dev-battle-panel.theme-feu .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(255, 126, 79, 0.16), rgba(255, 192, 92, 0.08)),
+    rgba(255,255,255,0.04);
+}
+
+.draft-dev-battle-panel.theme-plante .draft-dev-battle-arena-banner,
+.draft-dev-battle-panel.theme-insecte .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(116, 205, 112, 0.16), rgba(186, 234, 122, 0.08)),
+    rgba(255,255,255,0.04);
+}
+
+.draft-dev-battle-panel.theme-poison .draft-dev-battle-arena-banner,
+.draft-dev-battle-panel.theme-spectre .draft-dev-battle-arena-banner,
+.draft-dev-battle-panel.theme-tenebres .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(170, 112, 255, 0.16), rgba(255, 101, 181, 0.06)),
+    rgba(255,255,255,0.04);
+}
+
+.draft-dev-battle-panel.theme-electrik .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(255, 218, 86, 0.18), rgba(255, 243, 153, 0.07)),
+    rgba(255,255,255,0.04);
+}
+
+.draft-dev-battle-panel.theme-combat .draft-dev-battle-arena-banner {
+  background:
+    linear-gradient(135deg, rgba(255, 130, 130, 0.16), rgba(255, 187, 122, 0.07)),
+    rgba(255,255,255,0.04);
 }
 
 .draft-dev-battle-preview-head b {
