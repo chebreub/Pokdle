@@ -9638,7 +9638,7 @@ function renderMultiplayerGenerationGrid() {
 
   const roomStatus = multiplayerLiveState?.room?.status || "";
   const self = state.room?.players?.find((player) => player.isSelf) || null;
-  const disabled = roomStatus === "waiting" || roomStatus === "live" || Boolean(state.room?.code && !self?.isHost);
+  const disabled = roomStatus === "live" || Boolean(state.room?.code && !self?.isHost);
   grid.querySelectorAll(".gen-item").forEach((item) => {
     if (disabled) item.classList.add("is-disabled");
     else item.classList.remove("is-disabled");
@@ -9647,7 +9647,7 @@ function renderMultiplayerGenerationGrid() {
 
 function handleMultiplayerGenerationChange(gen, item) {
   const roomStatus = multiplayerLiveState?.room?.status || "";
-  if (roomStatus === "waiting" || roomStatus === "live") return;
+  if (roomStatus === "live") return;
 
   const state = ensureMultiplayerLiveState();
   const self = state.room?.players?.find((player) => player.isSelf) || null;
@@ -9899,7 +9899,8 @@ function ensureMultiplayerWinOverlay() {
       <button class="multiplayer-win-close" type="button" aria-label="Fermer" onclick="hideMultiplayerWinOverlay()">×</button>
       <div id="multiplayer-win-content"></div>
       <div class="multiplayer-result-actions multiplayer-win-actions">
-        <button class="btn-red" type="button" onclick="hideMultiplayerWinOverlay(); restartMultiplayerRound()">Rejouer</button>
+        <button class="btn-red" type="button" onclick="hideMultiplayerWinOverlay(); restartMultiplayerRound('same')">Rejouer pareil</button>
+        <button class="btn-blue" type="button" onclick="hideMultiplayerWinOverlay(); restartMultiplayerRound('updated')">Relancer avec ces générations</button>
         <button class="btn-ghost" type="button" onclick="hideMultiplayerWinOverlay(); goToConfig()">Retour accueil</button>
       </div>
     </div>
@@ -10146,10 +10147,10 @@ function createMultiplayerRoom() {
     socket.emit("duel:leave-room");
   }
   setMultiplayerError("");
-  multiplayerLiveState = createDefaultMultiplayerLiveState();
-  setMultiplayerConnectionStatus(socket.connected ? "online" : "connecting");
-
   const selectedGensForRoom = getMultiplayerSelectedGens();
+  multiplayerLiveState = createDefaultMultiplayerLiveState();
+  multiplayerLiveState.selectedGens = new Set(selectedGensForRoom);
+  setMultiplayerConnectionStatus(socket.connected ? "online" : "connecting");
   socket.emit("duel:create-room", { nickname, selectedGens: selectedGensForRoom }, (response = {}) => {
     if (!response.ok) {
       setMultiplayerError(response.error || "Impossible de créer la room.");
@@ -10233,7 +10234,7 @@ function submitMultiplayerGuess() {
   });
 }
 
-function restartMultiplayerRound() {
+function restartMultiplayerRound(mode = "same") {
   const room = multiplayerLiveState?.room;
   if (!room || room.status !== "finished") return;
   if (!multiplayerSocket?.connected) {
@@ -10242,10 +10243,17 @@ function restartMultiplayerRound() {
   }
 
   setMultiplayerError("");
-  const selectedGensForRoom = Array.isArray(room.selectedGens) && room.selectedGens.length
-    ? room.selectedGens.slice()
-    : getMultiplayerSelectedGens();
-  multiplayerSocket.emit("duel:restart-round", {}, (response = {}) => {
+  const self = room.players?.find((player) => player.isSelf) || null;
+  const selectedGensForRoom = mode === "updated"
+    ? getMultiplayerSelectedGens()
+    : Array.isArray(room.selectedGens) && room.selectedGens.length
+      ? room.selectedGens.slice()
+      : getMultiplayerSelectedGens();
+  if (mode === "updated" && !self?.isHost) {
+    setMultiplayerError("Seul le créateur peut relancer avec d'autres générations.");
+    return;
+  }
+  multiplayerSocket.emit("duel:restart-round", { selectedGens: selectedGensForRoom }, (response = {}) => {
     if (!response.ok) {
       setMultiplayerError(response.error || "Impossible de relancer la manche.");
       return;

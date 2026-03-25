@@ -142,6 +142,12 @@ io.on("connection", (socket) => {
     if (room.players.length !== MAX_ROOM_SIZE || room.players.some((player) => !player.connected)) {
       return respond(ack, { ok: false, error: "Les deux joueurs doivent être présents pour rejouer." });
     }
+    if (Array.isArray(payload.selectedGens)) {
+      if (room.hostId !== socket.id) {
+        return respond(ack, { ok: false, error: "Seul le créateur peut changer les générations." });
+      }
+      room.selectedGens = normalizeSelectedGens(payload.selectedGens);
+    }
     resetRoomForNewRound(room);
     startRoom(room);
     emitRoomState(room);
