@@ -53,8 +53,8 @@
       <section class="home-hero card">
         <div class="home-hero-copy">
           <div class="home-hero-kicker">Mini-jeux Pokémon</div>
-          <h2 class="home-hero-title">Le hub Pokémon pour jouer vite, lancer un défi et préparer ses combats.</h2>
-          <p class="home-hero-text">Mini-jeux, défis entre amis, collection et premiers outils pour Pokémon Champions dans une interface claire et rapide.</p>
+          <h2 class="home-hero-title">Joue vite, lance un défi et prépare tes combats.</h2>
+          <p class="home-hero-text">Mini-jeux, défis entre amis et premiers outils stratégiques sur une interface simple et rapide.</p>
           <div class="home-hero-actions">
             <button class="btn-red home-hero-cta" onclick="startPartyMode()">Lancer Party Pokémon</button>
             <button class="btn-blue" type="button" onclick="scrollToHomeCategory('social')">Lancer un défi</button>
@@ -63,7 +63,6 @@
           <div class="home-hero-highlights">
             <span class="hero-chip">Mini-jeux rapides</span>
             <span class="hero-chip">Défis entre amis</span>
-            <span class="hero-chip">Progression joueur</span>
             <span class="hero-chip">Champions Lab</span>
           </div>
         </div>
@@ -96,16 +95,22 @@
               <span class="home-category-icon">🎮</span>
               <h2 class="card-title">Jouer</h2>
             </div>
-            <p class="card-desc">Les modes essentiels pour lancer une partie sans attendre.</p>
+            <p class="card-desc">Lance une partie tout de suite, sans te perdre dans tous les modes dès l’accueil.</p>
           </div>
+          <p class="home-category-note">Le reste des variantes reste disponible dans le site, mais l’accueil garde ici l’essentiel.</p>
           <div class="mode-buttons home-mode-grid">
             <button class="btn-red" onclick="startPartyMode()"><span class="btn-icon">🎲</span>Party Pokémon</button>
             <button class="btn-blue" onclick="startNormalGame()"><span class="btn-icon">🔎</span>Pokémon mystère</button>
-            <button class="btn-blue" onclick="startDailyGame()"><span class="btn-icon">📅</span>Pokémon du jour</button>
-            <button class="btn-blue" onclick="startSilhouetteGame()"><span class="btn-icon">🕶️</span>Mode zoom progressif</button>
-            <button class="btn-blue" onclick="startPixelGame()"><span class="btn-icon">🧩</span>Mode pixelisé</button>
-            <button class="btn-blue" onclick="startDescriptionMode()"><span class="btn-icon">📝</span>Description Pokédex</button>
-            <button class="btn-blue" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
+          </div>
+          <div id="mode-pro-hub" class="mode-pro-hub">
+            <div class="mode-pro-head">
+              <h3>Autres modes</h3>
+            </div>
+            <div class="mode-pro-controls">
+              <select id="mode-select-pro"></select>
+              <button class="btn-blue" id="mode-launch-btn" onclick="launchSelectedMode()">Ouvrir</button>
+            </div>
+            <p id="mode-pro-desc" class="mode-pro-desc">Retrouve ici les autres jeux et outils du site sans surcharger l’accueil.</p>
           </div>
         </article>
 
@@ -115,65 +120,12 @@
               <span class="home-category-icon">⚡</span>
               <h2 class="card-title">Social</h2>
             </div>
-            <p class="card-desc">Des formats rapides pour jouer à deux, comparer ses scores et lancer un défi.</p>
+            <p class="card-desc">Le point d’entrée rapide pour jouer à deux, lancer un défi et partager une partie courte.</p>
           </div>
-          <p class="home-social-intro">Des formats pensés pour jouer à deux, se challenger vite et partager une partie.</p>
-          <div class="home-social-suite">
-            <div class="home-social-suite-head">
-              <h4>Jouer à plusieurs</h4>
-              <p>Des formats rapides pour lancer un duel, partager un défi ou improviser un mini challenge Pokémon.</p>
-            </div>
-            <div class="home-social-launch">
-              <div class="home-social-subhead">Lancer un duel</div>
-              <p class="home-social-launch-copy">Affronte un ami, partage un code ou lance une partie rapide entre collègues.</p>
-              <div class="mode-buttons home-mode-grid">
-                <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Créer un duel</button>
-                <button class="btn-yellow" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
-              </div>
-              <p class="home-social-launch-note">Idéal pour une pause café, un mini challenge ou un duel express.</p>
-            </div>
-            <div class="home-social-block">
-              <div class="home-social-subhead">Jouer entre amis</div>
-              <div class="mode-buttons home-mode-grid">
-                <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Duel live 1v1</button>
-                <button class="btn-yellow" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Défi Ami</button>
-              </div>
-            </div>
-            <div class="home-social-block">
-              <div class="home-social-subhead">Défis rapides</div>
-              <div class="mode-buttons home-mode-grid">
-                <button class="btn-blue" onclick="startQuizGame()"><span class="btn-icon">❓</span>Quiz Pokémon</button>
-                <button class="btn-blue" onclick="startMysteryStatGame()"><span class="btn-icon">🧠</span>Stat Mystère</button>
-                <button class="btn-blue" onclick="startWeightBattle()"><span class="btn-icon">⚖️</span>Duel de poids</button>
-                <button class="btn-blue" onclick="startEvolutionChainGame()"><span class="btn-icon">🔁</span>Chaîne d'évolution</button>
-                <button class="btn-blue" onclick="startPokedexOrderGame()"><span class="btn-icon">#</span>Ordre Pokédex</button>
-                <button class="btn-blue" onclick="openOddOneOutMode()"><span class="btn-icon">🔍</span>Intrus Pokémon</button>
-              </div>
-            </div>
-            <div class="home-social-note">
-              <h3>Pause café</h3>
-              <p>Lance une partie courte, défie un collègue ou partage un challenge en quelques secondes.</p>
-            </div>
-            <p class="home-social-suite-note">Pensé pour les amis, les petits groupes et les pauses café.</p>
-          </div>
-        </article>
-
-        <article id="home-collection" class="card home-category-card">
-          <div class="home-category-head">
-            <div>
-              <span class="home-category-icon">📚</span>
-              <h2 class="card-title">Collection</h2>
-            </div>
-            <p class="card-desc">Retrouve tes repères de collection, de suivi et de progression.</p>
-          </div>
+          <p class="home-category-note">Les mini-défis et variantes sociales restent accessibles ensuite, sans encombrer l’accueil.</p>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" onclick="openPokedexMode()"><span class="btn-icon">📖</span>Pokédex</button>
-            <button class="btn-blue" onclick="openTypeChartScreen()"><span class="btn-icon">🧮</span>Table des types</button>
-            <button class="btn-blue" onclick="openProfileScreen()"><span class="btn-icon">👤</span>Profil joueur</button>
-            <button class="btn-blue" onclick="openAchievementsScreen()"><span class="btn-icon">🏆</span>Succès</button>
-            <button class="btn-blue" onclick="openRankingMode()"><span class="btn-icon">📋</span>Mode classement</button>
-            <button class="btn-blue" onclick="openGamesRankingMode()"><span class="btn-icon">🥇</span>Classement des jeux</button>
-            <button class="btn-blue" onclick="openMatchHistoryScreen()"><span class="btn-icon">🕘</span>Historique</button>
+            <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Créer un duel</button>
+            <button class="btn-yellow" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
           </div>
         </article>
 
@@ -183,250 +135,15 @@
               <span class="home-category-icon">🛠️</span>
               <h2 class="card-title">Champions Lab & Extras</h2>
             </div>
-            <p class="card-desc">Prépare tes combats, explore des outils stratégiques et garde aussi accès aux modules bonus du site.</p>
+            <p class="card-desc">Prépare une team, ouvre les outils utiles et garde un accès simple aux modules bonus.</p>
           </div>
-          <p class="home-extras-intro">Une boîte à outils légère pour compléter Pokémon Champions sans perdre l’esprit fun du site.</p>
-          <div class="home-extras-block">
-            <div class="home-extras-subhead">Champions Lab</div>
-            <p class="home-extras-copy">Prépare tes combats Pokémon Champions avec des outils simples, lisibles et utiles.</p>
-            <div class="home-extras-coming-grid">
-              <div class="home-coming-tile home-builder-access">
-                <span class="home-coming-title">Builder d’équipe</span>
-                <p class="home-builder-note">Ouvre un espace dédié pour poser une team de 6 avec Pokémon, objet, gimmick et 4 attaques par slot.</p>
-                <div class="home-builder-access-actions">
-                  <span class="home-coming-badge">V1</span>
-                  <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Ouvrir le builder</button>
-                </div>
-              </div>
-              <div class="home-coming-tile home-teams-access">
-                <span class="home-coming-title">Équipes / Teams</span>
-                <p class="home-builder-note">Parcours des bases prêtes à jouer, puis ouvre-les directement dans le builder.</p>
-                <div class="home-builder-access-actions">
-                  <span class="home-coming-badge">Templates</span>
-                  <button class="btn-blue" type="button" onclick="openTeamsScreen()">Explorer</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="home-extras-block home-extras-focus">
-            <div class="home-extras-subhead">Focus stratégique</div>
-            <p class="home-extras-copy">Commence à préparer tes combats avec des repères simples sur les types, les matchups et l’équilibre d’équipe.</p>
-            <div class="home-extras-focus-tag">Première brique de Champions Lab</div>
-            <div class="home-extras-focus-grid">
-              <button class="btn-blue" onclick="openTypeChartScreen()"><span class="btn-icon">🛡️</span>Faiblesses défensives</button>
-              <button class="btn-blue" onclick="openTypeChartScreen()"><span class="btn-icon">⚔️</span>Couverture offensive</button>
-            </div>
-            <div class="home-extras-toolbox">
-              <div class="home-extras-toolbox-head">
-                <h4>Boîte à outils rapide</h4>
-                <p>Des repères simples pour lire plus vite les matchups, les faiblesses et l’équilibre d’équipe.</p>
-              </div>
-              <div class="home-type-helper">
-                <div class="home-type-helper-head">
-                  <h4>Repère rapide des types</h4>
-                </div>
-                <label class="home-type-helper-label" for="home-type-helper-select">Choisis un type</label>
-                <select id="home-type-helper-select">
-                  <option value="Normal">Normal</option>
-                  <option value="Feu">Feu</option>
-                  <option value="Eau">Eau</option>
-                  <option value="Plante">Plante</option>
-                  <option value="Électrik">Électrik</option>
-                  <option value="Glace">Glace</option>
-                  <option value="Combat">Combat</option>
-                  <option value="Poison">Poison</option>
-                  <option value="Sol">Sol</option>
-                  <option value="Vol">Vol</option>
-                  <option value="Psy">Psy</option>
-                  <option value="Insecte">Insecte</option>
-                  <option value="Roche">Roche</option>
-                  <option value="Spectre">Spectre</option>
-                  <option value="Dragon">Dragon</option>
-                  <option value="Ténèbres">Ténèbres</option>
-                  <option value="Acier">Acier</option>
-                  <option value="Fée">Fée</option>
-                </select>
-                <div class="home-type-helper-results">
-                  <div class="home-type-helper-row">
-                    <span>Fort contre</span>
-                    <div id="home-type-helper-strong" class="home-type-helper-badges"></div>
-                  </div>
-                  <div class="home-type-helper-row">
-                    <span>Faible contre</span>
-                    <div id="home-type-helper-weak" class="home-type-helper-badges"></div>
-                  </div>
-                  <div class="home-type-helper-row">
-                    <span>Peu efficace contre</span>
-                    <div id="home-type-helper-resisted" class="home-type-helper-badges"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="home-type-helper home-type-helper-defense home-team-analysis">
-                <div class="home-type-helper-head">
-                  <h4>Analyse des faiblesses</h4>
-                </div>
-                <p class="home-type-helper-note">Ajoute jusqu’à 3 Pokémon pour repérer vite les types qui menacent l’équipe et ceux qui sont déjà bien couverts.</p>
-                <div class="home-team-analysis-slots">
-                  <div class="home-team-analysis-slot">
-                    <div class="home-team-analysis-slot-head">Slot 1</div>
-                    <div class="home-team-analysis-slot-grid">
-                      <label class="home-type-helper-label" for="home-defense-slot1-type1">
-                        <span>Type 1</span>
-                        <select id="home-defense-slot1-type1"></select>
-                      </label>
-                      <label class="home-type-helper-label" for="home-defense-slot1-type2">
-                        <span>Type 2 (optionnel)</span>
-                        <select id="home-defense-slot1-type2"></select>
-                      </label>
-                    </div>
-                  </div>
-                  <div class="home-team-analysis-slot">
-                    <div class="home-team-analysis-slot-head">Slot 2</div>
-                    <div class="home-team-analysis-slot-grid">
-                      <label class="home-type-helper-label" for="home-defense-slot2-type1">
-                        <span>Type 1</span>
-                        <select id="home-defense-slot2-type1"></select>
-                      </label>
-                      <label class="home-type-helper-label" for="home-defense-slot2-type2">
-                        <span>Type 2 (optionnel)</span>
-                        <select id="home-defense-slot2-type2"></select>
-                      </label>
-                    </div>
-                  </div>
-                  <div class="home-team-analysis-slot">
-                    <div class="home-team-analysis-slot-head">Slot 3</div>
-                    <div class="home-team-analysis-slot-grid">
-                      <label class="home-type-helper-label" for="home-defense-slot3-type1">
-                        <span>Type 1</span>
-                        <select id="home-defense-slot3-type1"></select>
-                      </label>
-                      <label class="home-type-helper-label" for="home-defense-slot3-type2">
-                        <span>Type 2 (optionnel)</span>
-                        <select id="home-defense-slot3-type2"></select>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div class="home-type-helper-results">
-                  <div class="home-type-helper-row">
-                    <span>Faiblesses d’équipe à surveiller</span>
-                    <div id="home-defense-team-weaknesses" class="home-type-helper-badges"></div>
-                  </div>
-                  <div class="home-type-helper-row">
-                    <span>Types plutôt bien couverts</span>
-                    <div id="home-defense-team-coverage" class="home-type-helper-badges"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="home-type-helper home-type-helper-team">
-                <div class="home-type-helper-head">
-                  <h4>Compléter une team</h4>
-                </div>
-                <p class="home-type-helper-note">Un repère rapide pour équilibrer une team sans passer par un builder complet.</p>
-                <div class="home-type-helper-dual-picks">
-                  <label class="home-type-helper-label" for="home-team-type1">
-                    <span>Type déjà présent 1</span>
-                    <select id="home-team-type1">
-                      <option value="Normal">Normal</option>
-                      <option value="Feu">Feu</option>
-                      <option value="Eau">Eau</option>
-                      <option value="Plante">Plante</option>
-                      <option value="Électrik">Électrik</option>
-                      <option value="Glace">Glace</option>
-                      <option value="Combat">Combat</option>
-                      <option value="Poison">Poison</option>
-                      <option value="Sol">Sol</option>
-                      <option value="Vol">Vol</option>
-                      <option value="Psy">Psy</option>
-                      <option value="Insecte">Insecte</option>
-                      <option value="Roche">Roche</option>
-                      <option value="Spectre">Spectre</option>
-                      <option value="Dragon">Dragon</option>
-                      <option value="Ténèbres">Ténèbres</option>
-                      <option value="Acier">Acier</option>
-                      <option value="Fée">Fée</option>
-                    </select>
-                  </label>
-                  <label class="home-type-helper-label" for="home-team-type2">
-                    <span>Type déjà présent 2 (optionnel)</span>
-                    <select id="home-team-type2">
-                      <option value="">Aucun</option>
-                      <option value="Normal">Normal</option>
-                      <option value="Feu">Feu</option>
-                      <option value="Eau">Eau</option>
-                      <option value="Plante">Plante</option>
-                      <option value="Électrik">Électrik</option>
-                      <option value="Glace">Glace</option>
-                      <option value="Combat">Combat</option>
-                      <option value="Poison">Poison</option>
-                      <option value="Sol">Sol</option>
-                      <option value="Vol">Vol</option>
-                      <option value="Psy">Psy</option>
-                      <option value="Insecte">Insecte</option>
-                      <option value="Roche">Roche</option>
-                      <option value="Spectre">Spectre</option>
-                      <option value="Dragon">Dragon</option>
-                      <option value="Ténèbres">Ténèbres</option>
-                      <option value="Acier">Acier</option>
-                      <option value="Fée">Fée</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="home-type-helper-results">
-                  <div class="home-type-helper-row">
-                    <span>Types à envisager</span>
-                    <div id="home-team-suggestions" class="home-type-helper-badges"></div>
-                  </div>
-                </div>
-              </div>
-              <p class="home-extras-toolbox-note">D’autres outils Champions Lab arriveront bientôt.</p>
-            </div>
-          </div>
-          <div class="home-extras-block">
-            <div class="home-extras-subhead">Modes annexes</div>
-            <div class="mode-buttons home-mode-grid">
-              <button class="btn-blue" onclick="openDraftArenaMode()"><span class="btn-icon">🎤</span>Draft Arènes</button>
-              <button class="btn-blue" onclick="openEmulatorMode()"><span class="btn-icon">🖹</span>Émulateur GBA/GBC</button>
-            </div>
-          </div>
-          <div id="mode-pro-hub" class="mode-pro-hub">
-            <div class="mode-pro-head">
-              <h3>Accès rapide</h3>
-              <div id="mode-cat-filters" class="mode-cat-filters">
-                <button type="button" class="mode-cat-btn active" data-cat="all">Tous</button>
-                <button type="button" class="mode-cat-btn" data-cat="classic">Classiques</button>
-                <button type="button" class="mode-cat-btn" data-cat="challenge">Défis</button>
-                <button type="button" class="mode-cat-btn" data-cat="collection">Collection</button>
-                <button type="button" class="mode-cat-btn" data-cat="tools">Outils</button>
-              </div>
-            </div>
-            <div class="mode-pro-controls">
-              <select id="mode-select-pro"></select>
-              <button class="btn-red" id="mode-launch-btn" onclick="launchSelectedMode()">Lancer</button>
-            </div>
-            <p id="mode-pro-desc" class="mode-pro-desc">Choisis un mode et lance immédiatement.</p>
+          <p class="home-category-note">Les outils détaillés et les écrans bonus restent accessibles ensuite, sans encombrer la home.</p>
+          <div class="mode-buttons home-mode-grid">
+            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Ouvrir le builder</button>
+            <button class="btn-blue" onclick="openDraftArenaMode()"><span class="btn-icon">🎤</span>Draft Arènes</button>
           </div>
         </article>
       </section>
-
-      <div class="card home-social-banner">
-        <div class="home-social-banner-copy">
-          <div>
-            <h2 class="card-title">Entre amis ou au bureau</h2>
-            <p class="card-desc">Lance un duel rapide, partage un défi ou improvise un mini challenge Pokémon le temps d’une pause.</p>
-          </div>
-          <div class="home-social-banner-chips">
-            <span class="hero-chip">Duel rapide</span>
-            <span class="hero-chip">Défi partagé</span>
-            <span class="hero-chip">Challenge bureau</span>
-          </div>
-          <div class="home-social-banner-actions">
-            <button class="btn-blue" type="button" onclick="openMultiplayerMode()">Créer un duel</button>
-            <button class="btn-yellow" type="button" onclick="showChallengePanel()">Envoyer un défi</button>
-          </div>
-          <p class="home-social-banner-note">Pensé pour des parties courtes, fun et faciles à lancer.</p>
-        </div>
-      </div>
 
       <div id="challenge-panel" class="card challenge-panel hidden">
         <p class="challenge-title">🤝 Choisir un Pokémon et envoyer le lien :</p>
