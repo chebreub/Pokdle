@@ -6468,9 +6468,9 @@ const DRAFT_SIMPLE_BATTLE_MAJOR_STATUSES = new Set([
 const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Séisme": { power: 100, category: "physical", pp: 10 },
   "Lance-Flammes": { power: 90, category: "special", pp: 15, effect: { kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" } },
-  "Hydrocanon": { power: 110, category: "special", pp: 5 },
+  "Hydrocanon": { power: 110, category: "special", pp: 5, accuracy: 80 },
   "Lame-Feuille": { power: 90, category: "physical", pp: 15 },
-  "Tonnerre": { power: 90, category: "special", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
+  "Tonnerre": { power: 90, category: "special", accuracy: 100, effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
   "Laser Glace": { power: 90, category: "special", pp: 10, effect: { kind: "status", status: "frozen", chance: 0.1, label: "Peut geler" } },
   "Close Combat": { power: 120, category: "physical", pp: 5 },
   "Bomb-Beurk": { power: 90, category: "special" },
@@ -6478,8 +6478,8 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Boutefeu": { power: 120, category: "physical", effect: { kind: "recoil", ratio: 0.33, label: "Subit du recul" } },
   "Surf": { power: 90, category: "special" },
   "Éco-Sphère": { power: 90, category: "special" },
-  "Fatal-Foudre": { power: 110, category: "special", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
-  "Vent Violent": { power: 110, category: "special" },
+  "Fatal-Foudre": { power: 110, category: "special", accuracy: 70, effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
+  "Vent Violent": { power: 110, category: "special", accuracy: 70 },
   "Change Éclair": { power: 70, category: "special" },
   "Machouille": { power: 80, category: "physical" },
   "Ball'Ombre": { power: 80, category: "special" },
@@ -6491,7 +6491,7 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Vive-Attaque": { power: 40, category: "physical", priority: 1, type: "Normal" },
   "Retour": { power: 90, category: "physical", type: "Normal" },
   "Plaquage": { power: 85, category: "physical", type: "Normal", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
-  "Ultralaser": { power: 150, category: "special", type: "Normal" },
+  "Ultralaser": { power: 150, category: "special", type: "Normal", accuracy: 90 },
   "Écrasement": { power: 65, category: "physical", type: "Normal" },
   "Bélier": { power: 90, category: "physical", type: "Normal" },
   "Piège de Roc": { power: 0, category: "status" },
@@ -6517,7 +6517,7 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Crocs Éclair": { power: 65, category: "physical", effect: { kind: "status", status: "paralysed", chance: 0.1, label: "Peut paralyser" } },
   "Sabotage": { power: 65, category: "physical" },
   "Atterrissage": { power: 0, category: "status", effect: { kind: "heal", ratio: 0.33, label: "Récupère des PV" } },
-  "Toxik": { power: 0, category: "status", effect: { kind: "status", status: "badly_poisoned", chance: 1, label: "Empoisonne gravement" }, pp: 10 },
+  "Toxik": { power: 0, category: "status", effect: { kind: "status", status: "badly_poisoned", chance: 1, label: "Empoisonne gravement" }, pp: 10, accuracy: 85 },
   "Vœu Soin": { power: 0, category: "status" },
   "Dracochoc": { power: 85, category: "special" },
   "Giga-Sangsue": { power: 75, category: "special" },
@@ -6596,6 +6596,8 @@ function getDraftSimpleBattleStats(pokemon) {
 function createDraftSimpleBattleMove(label, type, options = {}) {
   const category = options.category === "special" ? "special" : options.category === "status" ? "status" : "physical";
   const ppMax = Math.max(1, Number(options.pp) || getDraftSimpleBattleDefaultPp({ category, power: options.power }));
+  const accuracy = Math.max(1, Math.min(100, Number(options.accuracy) || 100));
+  const critStage = Math.max(0, Number(options.critStage) || 0);
   return {
     name: label || "Attaque",
     type: type || "Normal",
@@ -6605,6 +6607,8 @@ function createDraftSimpleBattleMove(label, type, options = {}) {
     category,
     priority: Number.isFinite(Number(options.priority)) ? Number(options.priority) : 0,
     effect: options.effect || null,
+    accuracy,
+    critStage,
     ppMax,
     ppCurrent: ppMax,
   };
@@ -7098,7 +7102,7 @@ function runDraftSimpleBattleEndOfTurn(state, turnEntry) {
   return { state, turnEntry };
 }
 
-function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move) {
+function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move, options = {}) {
   const attackStat = move?.category === "special"
     ? getDraftSimpleBattleCurrentStat(attackerState, "spAttack")
     : getDraftSimpleBattleCurrentStat(attackerState, "attack");
@@ -7126,12 +7130,15 @@ function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move)
   // This keeps x2/x4 meaningful without turning every neutral hit into a one-shot.
   const virtualLevelFactor = 12;
   const baseDamage = (((virtualLevelFactor * power * (safeAttack / safeDefense)) / 50) + 2);
-  const modifiedDamage = baseDamage * stab * effectiveness;
+  const critical = Boolean(options.critical);
+  const critMultiplier = critical ? 2 : 1;
+  const modifiedDamage = baseDamage * critMultiplier * stab * effectiveness;
   const damage = effectiveness === 0 ? 0 : Math.max(1, Math.round(modifiedDamage));
   return {
     damage,
     stab,
     effectiveness,
+    critical,
     blocked: false,
   };
 }
@@ -7143,6 +7150,18 @@ function resolveDraftSimpleBattleMoveRecoil(attackerState, move, damageDealt) {
   }
   if (ratio <= 0 || !attackerState) return 0;
   return Math.max(1, Math.floor(Math.max(1, damageDealt) * ratio));
+}
+
+function doesDraftSimpleBattleMoveHit(move, attackerState, defenderState) {
+  if (!move) return false;
+  const accuracy = Math.max(1, Math.min(100, Number(move.accuracy) || 100));
+  return Math.random() * 100 < accuracy;
+}
+
+function doesDraftSimpleBattleMoveCrit(move) {
+  const critStage = Math.max(0, Number(move?.critStage) || 0);
+  const critChance = critStage >= 1 ? 0.125 : 0.0625;
+  return Math.random() < critChance;
 }
 
 function getDraftSimpleBattleEstimatedMoveOutcome(gen, attackerState, defenderState, move) {
@@ -7241,6 +7260,20 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
     if (!spentMove) {
       return null;
     }
+  }
+  if (!doesDraftSimpleBattleMoveHit(move, attackerState, defenderState)) {
+    return {
+      move,
+      damage: 0,
+      stab: 1,
+      effectiveness: 1,
+      defenderRemainingHp: defenderState.currentHp,
+      knockout: false,
+      missed: true,
+      supportText: "Rate sa cible",
+      appliedEffect: "miss",
+      usedStruggle,
+    };
   }
   if (move.category === "status") {
     const effect = move.effect || {};
@@ -7365,7 +7398,8 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
   if (defenderState.status === "frozen" && move.type === "Feu") {
     clearDraftSimpleBattleMajorStatus(defenderState);
   }
-  const result = computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move);
+  const critical = doesDraftSimpleBattleMoveCrit(move);
+  const result = computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move, { critical });
   defenderState.currentHp = Math.max(0, defenderState.currentHp - result.damage);
   const appliedStatus = defenderState.currentHp > 0 ? tryDraftSimpleBattleApplyStatus(move, attackerState, defenderState) : null;
   const recoil = resolveDraftSimpleBattleMoveRecoil(attackerState, move, result.damage);
@@ -7377,6 +7411,7 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
     damage: result.damage,
     stab: result.stab,
     effectiveness: result.effectiveness,
+    critical: result.critical,
     blocked: result.blocked,
     defenderRemainingHp: defenderState.currentHp,
     knockout: defenderState.currentHp <= 0,
@@ -7474,6 +7509,8 @@ function convertDraftMoveNameToSimpleBattleMove(moveName, pokemon) {
       category: override?.category || getDraftSimpleBattleMoveCategory(moveType),
       priority: override?.priority,
       effect: override?.effect,
+      accuracy: override?.accuracy,
+      pp: override?.pp,
     }
   );
 }
@@ -8170,6 +8207,9 @@ function getDraftSimpleBattleOrderHint(currentOrder, leftState, rightState) {
 }
 
 function getDraftSimpleBattleActionNotes(action) {
+  if (action?.missed) {
+    return "rate";
+  }
   if (action?.preventedBy === "paralysed") {
     return "paralysé • ne peut pas agir";
   }
@@ -8186,6 +8226,7 @@ function getDraftSimpleBattleActionNotes(action) {
   const category = action?.move?.category === "special" ? "attaque spéciale" : "attaque physique";
   notes.push(category);
   if (action?.usedStruggle) notes.push("Struggle");
+  if (action?.critical) notes.push("coup critique");
   if ((Number(action?.stab) || 1) > 1) notes.push("STAB");
   if (action?.blocked) notes.push("bloqué");
   if (action?.statusApplied && action?.inflictedStatus === "paralysed") notes.push("paralyse");
@@ -8692,6 +8733,9 @@ function renderDraftSimpleBattleDevPanel(state) {
       }
       const actor = action.actorName || (action.side === "left" ? displayLeft.pokemon.name : displayRight.pokemon.name);
       const target = action.targetName || (action.side === "left" ? displayRight.pokemon.name : displayLeft.pokemon.name);
+      if (action.missed) {
+        return `<li><b>${escapeHtml(actor)}</b> utilise <b>${escapeHtml(action.move?.name || "Attaque")}</b> sur ${escapeHtml(target)} : rate.</li>`;
+      }
       const extras = action.move?.category === "status"
         ? [
           getDraftSimpleBattleActionNotes(action),
