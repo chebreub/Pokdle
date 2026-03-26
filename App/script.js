@@ -6457,20 +6457,28 @@ function getDraftCachedPokemonPowerData(pokemon) {
 const DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER = 70;
 const DRAFT_SIMPLE_BATTLE_STAB = 1.5;
 const DRAFT_SIMPLE_BATTLE_TEAM_SIZE = DRAFT_TEAM_SIZE;
+const DRAFT_SIMPLE_BATTLE_MAJOR_STATUSES = new Set([
+  "paralysed",
+  "burned",
+  "poisoned",
+  "badly_poisoned",
+  "asleep",
+  "frozen",
+]);
 const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
-  "Séisme": { power: 100, category: "physical" },
-  "Lance-Flammes": { power: 90, category: "special" },
-  "Hydrocanon": { power: 110, category: "special" },
-  "Lame-Feuille": { power: 90, category: "physical" },
-  "Tonnerre": { power: 90, category: "special" },
-  "Laser Glace": { power: 90, category: "special" },
-  "Close Combat": { power: 120, category: "physical" },
+  "Séisme": { power: 100, category: "physical", pp: 10 },
+  "Lance-Flammes": { power: 90, category: "special", pp: 15, effect: { kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" } },
+  "Hydrocanon": { power: 110, category: "special", pp: 5 },
+  "Lame-Feuille": { power: 90, category: "physical", pp: 15 },
+  "Tonnerre": { power: 90, category: "special", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
+  "Laser Glace": { power: 90, category: "special", pp: 10, effect: { kind: "status", status: "frozen", chance: 0.1, label: "Peut geler" } },
+  "Close Combat": { power: 120, category: "physical", pp: 5 },
   "Bomb-Beurk": { power: 90, category: "special" },
   "Draco-Météore": { power: 130, category: "special" },
-  "Boutefeu": { power: 120, category: "physical" },
+  "Boutefeu": { power: 120, category: "physical", effect: { kind: "recoil", ratio: 0.33, label: "Subit du recul" } },
   "Surf": { power: 90, category: "special" },
   "Éco-Sphère": { power: 90, category: "special" },
-  "Fatal-Foudre": { power: 110, category: "special" },
+  "Fatal-Foudre": { power: 110, category: "special", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
   "Vent Violent": { power: 110, category: "special" },
   "Change Éclair": { power: 70, category: "special" },
   "Machouille": { power: 80, category: "physical" },
@@ -6482,16 +6490,16 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Ébullilave": { power: 80, category: "special" },
   "Vive-Attaque": { power: 40, category: "physical", priority: 1, type: "Normal" },
   "Retour": { power: 90, category: "physical", type: "Normal" },
-  "Plaquage": { power: 85, category: "physical", type: "Normal" },
+  "Plaquage": { power: 85, category: "physical", type: "Normal", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
   "Ultralaser": { power: 150, category: "special", type: "Normal" },
   "Écrasement": { power: 65, category: "physical", type: "Normal" },
   "Bélier": { power: 90, category: "physical", type: "Normal" },
   "Piège de Roc": { power: 0, category: "status" },
   "Demi-Tour": { power: 70, category: "physical" },
   "Tour Rapide": { power: 50, category: "physical" },
-  "Abri": { power: 0, category: "status", effect: { kind: "protect", label: "Se protège" } },
+  "Abri": { power: 0, category: "status", effect: { kind: "protect", label: "Se protège" }, pp: 10 },
   "Clonage": { power: 0, category: "status" },
-  "Repos": { power: 0, category: "status", effect: { kind: "heal", ratio: 0.45, label: "Récupère des PV" } },
+  "Repos": { power: 0, category: "status", effect: { kind: "rest", label: "S'endort et récupère des PV" }, pp: 10 },
   "Danse-Lames": { power: 0, category: "status", effect: { kind: "buff", stat: "attack", factor: 1.25, label: "Attaque monte" } },
   "Protection": { power: 0, category: "status" },
   "Mur Lumière": { power: 0, category: "status" },
@@ -6505,11 +6513,11 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Tête de Fer": { power: 80, category: "physical" },
   "Pisto-Poing": { power: 40, category: "physical", priority: 1 },
   "Crocs Feu": { power: 65, category: "physical" },
-  "Crocs Givre": { power: 65, category: "physical" },
-  "Crocs Éclair": { power: 65, category: "physical" },
+  "Crocs Givre": { power: 65, category: "physical", effect: { kind: "status", status: "frozen", chance: 0.1, label: "Peut geler" } },
+  "Crocs Éclair": { power: 65, category: "physical", effect: { kind: "status", status: "paralysed", chance: 0.1, label: "Peut paralyser" } },
   "Sabotage": { power: 65, category: "physical" },
   "Atterrissage": { power: 0, category: "status", effect: { kind: "heal", ratio: 0.33, label: "Récupère des PV" } },
-  "Toxik": { power: 0, category: "status" },
+  "Toxik": { power: 0, category: "status", effect: { kind: "status", status: "badly_poisoned", chance: 1, label: "Empoisonne gravement" }, pp: 10 },
   "Vœu Soin": { power: 0, category: "status" },
   "Dracochoc": { power: 85, category: "special" },
   "Giga-Sangsue": { power: 75, category: "special" },
@@ -6518,8 +6526,9 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Cradovague": { power: 95, category: "special" },
   "Tricherie": { power: 95, category: "physical" },
   "Poing Glace": { power: 75, category: "physical" },
-  "Poing-Éclair": { power: 75, category: "physical" },
-  "Poing de Feu": { power: 75, category: "physical" },
+  "Poing-Éclair": { power: 75, category: "physical", effect: { kind: "status", status: "paralysed", chance: 0.1, label: "Peut paralyser" } },
+  "Cage-Éclair": { power: 0, category: "status", effect: { kind: "status", status: "paralysed", chance: 1, label: "Paralyse" } },
+  "Poing de Feu": { power: 75, category: "physical", effect: { kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" } },
   "Psykoud'Boul": { power: 80, category: "physical" },
 };
 let draftSimpleBattleDevUiState = null;
@@ -6528,6 +6537,25 @@ let draftSimpleBattleTurnTimer = null;
 
 function clampDraftSimpleBattleHp(value) {
   return Math.max(1, Math.round(Number(value) || 1));
+}
+
+function getDraftSimpleBattleDefaultPp(options = {}) {
+  const category = options.category === "status" ? "status" : "damaging";
+  const power = Number(options.power) || 0;
+  if (category === "status") return 20;
+  if (power >= 120) return 5;
+  if (power >= 90) return 10;
+  if (power >= 70) return 15;
+  return 20;
+}
+
+function createDraftSimpleBattleStruggleMove() {
+  return createDraftSimpleBattleMove("Struggle", "Normal", {
+    power: 50,
+    category: "physical",
+    pp: 1,
+    effect: { kind: "recoil", ratio: 0.25, label: "Subit du recul" },
+  });
 }
 
 function getDraftSimpleBattleMaxHpFromBaseHp(baseHp) {
@@ -6567,6 +6595,7 @@ function getDraftSimpleBattleStats(pokemon) {
 
 function createDraftSimpleBattleMove(label, type, options = {}) {
   const category = options.category === "special" ? "special" : options.category === "status" ? "status" : "physical";
+  const ppMax = Math.max(1, Number(options.pp) || getDraftSimpleBattleDefaultPp({ category, power: options.power }));
   return {
     name: label || "Attaque",
     type: type || "Normal",
@@ -6576,6 +6605,8 @@ function createDraftSimpleBattleMove(label, type, options = {}) {
     category,
     priority: Number.isFinite(Number(options.priority)) ? Number(options.priority) : 0,
     effect: options.effect || null,
+    ppMax,
+    ppCurrent: ppMax,
   };
 }
 
@@ -6732,19 +6763,61 @@ function createDraftSimpleBattlePokemonState(pokemon, moves = null) {
       spDefense: 1,
       speed: 1,
     },
+    status: null,
+    statusState: {
+      sleepTurns: 0,
+      toxicCounter: 0,
+    },
     protected: false,
     moves: (Array.isArray(moves) && moves.length ? moves : buildDraftSimpleBattleDefaultMoves(pokemon)).slice(0, 4),
+  };
+}
+
+function getDraftSimpleBattleStatusLabel(status) {
+  if (status === "paralysed") return "Paralysé";
+  if (status === "burned") return "Brûlé";
+  if (status === "poisoned") return "Empoisonné";
+  if (status === "badly_poisoned") return "Toxique";
+  if (status === "asleep") return "Endormi";
+  if (status === "frozen") return "Gelé";
+  return "";
+}
+
+function getDraftSimpleBattleStatusShortLabel(status) {
+  if (status === "paralysed") return "PAR";
+  if (status === "burned") return "BRN";
+  if (status === "poisoned") return "PSN";
+  if (status === "badly_poisoned") return "TOX";
+  if (status === "asleep") return "SLP";
+  if (status === "frozen") return "FRZ";
+  return "";
+}
+
+function clearDraftSimpleBattleMajorStatus(battler) {
+  if (!battler) return;
+  battler.status = null;
+  battler.statusState = {
+    sleepTurns: 0,
+    toxicCounter: 0,
   };
 }
 
 function getDraftSimpleBattleCurrentStat(sideState, statKey) {
   const baseValue = Math.max(1, Number(sideState?.stats?.[statKey]) || 1);
   const multiplier = getDraftSimpleBattleStatMultiplier(sideState?.modifiers?.[statKey] || 1);
-  return Math.max(1, Math.round(baseValue * multiplier));
+  let effectiveValue = Math.max(1, Math.round(baseValue * multiplier));
+  if (statKey === "attack" && sideState?.status === "burned") {
+    effectiveValue = Math.max(1, Math.floor(effectiveValue / 2));
+  }
+  return effectiveValue;
 }
 
 function getDraftSimpleBattleCurrentSpeed(sideState) {
-  return getDraftSimpleBattleCurrentStat(sideState, "speed");
+  const speed = getDraftSimpleBattleCurrentStat(sideState, "speed");
+  if (sideState?.status === "paralysed") {
+    return Math.max(1, Math.floor(speed / 4));
+  }
+  return speed;
 }
 
 function getDraftSimpleBattleStabMultiplier(attackerState, move) {
@@ -6775,7 +6848,12 @@ function getDraftSimpleBattleTurnOrderForMoves(leftState, leftMove, rightState, 
   if (leftPriority !== rightPriority) {
     return leftPriority > rightPriority ? ["left", "right"] : ["right", "left"];
   }
-  return getDraftSimpleBattleTurnOrder(leftState, rightState);
+  const leftSpeed = getDraftSimpleBattleCurrentSpeed(leftState);
+  const rightSpeed = getDraftSimpleBattleCurrentSpeed(rightState);
+  if (leftSpeed === rightSpeed) {
+    return Math.random() < 0.5 ? ["left", "right"] : ["right", "left"];
+  }
+  return leftSpeed > rightSpeed ? ["left", "right"] : ["right", "left"];
 }
 
 function clearDraftSimpleBattleTurnFlags(state) {
@@ -6786,6 +6864,238 @@ function clearDraftSimpleBattleTurnFlags(state) {
   (state.rightTeam || []).forEach((member) => {
     if (member) member.protected = false;
   });
+}
+
+function getDraftSimpleBattleUsableMoveIndexes(battler) {
+  return (battler?.moves || [])
+    .map((move, index) => ({ move, index }))
+    .filter(({ move }) => (Number(move?.ppCurrent) || 0) > 0)
+    .map(({ index }) => index);
+}
+
+function getDraftSimpleBattleMoveForAction(battler, action) {
+  const normalized = getDraftSimpleBattleNormalizedAction(action, 0);
+  if (normalized.kind === "struggle") return createDraftSimpleBattleStruggleMove();
+  const move = battler?.moves?.[normalized.moveIndex] || null;
+  if (move && (Number(move.ppCurrent) || 0) > 0) return move;
+  const usableIndexes = getDraftSimpleBattleUsableMoveIndexes(battler);
+  if (usableIndexes.length) {
+    return battler.moves[usableIndexes[0]];
+  }
+  return createDraftSimpleBattleStruggleMove();
+}
+
+function consumeDraftSimpleBattleMovePp(battler, action) {
+  const normalized = getDraftSimpleBattleNormalizedAction(action, 0);
+  if (normalized.kind !== "move") return null;
+  const move = battler?.moves?.[normalized.moveIndex] || null;
+  if (!move || (Number(move.ppCurrent) || 0) <= 0) return null;
+  move.ppCurrent = Math.max(0, (Number(move.ppCurrent) || 0) - 1);
+  return move;
+}
+
+function getDraftSimpleBattleStatusFailureReason(defenderState, status, move) {
+  if (!defenderState || !DRAFT_SIMPLE_BATTLE_MAJOR_STATUSES.has(status)) return "";
+  if (defenderState.status) return "a déjà un statut majeur";
+  const defender = defenderState.pokemon || {};
+  if (status === "burned" && (defender.type1 === "Feu" || defender.type2 === "Feu")) return "immunité au Feu";
+  if ((status === "poisoned" || status === "badly_poisoned") && (defender.type1 === "Poison" || defender.type2 === "Poison" || defender.type1 === "Acier" || defender.type2 === "Acier")) return "immunité au poison";
+  if (status === "frozen" && (defender.type1 === "Glace" || defender.type2 === "Glace")) return "immunité à la Glace";
+  if (status === "paralysed" && move?.type === "Électrik" && (defender.type1 === "Sol" || defender.type2 === "Sol")) return "immunité au Sol";
+  return "";
+}
+
+function getDraftSimpleBattleNormalizedAction(action, fallbackMoveIndex = 0) {
+  if (typeof action === "number") {
+    return { kind: "move", moveIndex: action };
+  }
+  if (!action || typeof action !== "object") {
+    return { kind: "move", moveIndex: fallbackMoveIndex };
+  }
+  if (action.kind === "struggle") {
+    return { kind: "struggle" };
+  }
+  if (action.kind === "switch") {
+    return {
+      kind: "switch",
+      teamIndex: Number(action.teamIndex),
+      pokemonName: action.pokemonName || "",
+    };
+  }
+  return {
+    kind: "move",
+    moveIndex: Number.isInteger(Number(action.moveIndex)) ? Number(action.moveIndex) : fallbackMoveIndex,
+  };
+}
+
+function getDraftSimpleBattleActionPriority(state, side, action) {
+  if (action?.kind === "switch") return 6;
+  const battler = side === "left" ? state?.left : state?.right;
+  const move = getDraftSimpleBattleMoveForAction(battler, action);
+  return Number(move?.priority) || 0;
+}
+
+function getDraftSimpleBattleTurnOrderForActions(state, leftAction, rightAction) {
+  const normalizedLeft = getDraftSimpleBattleNormalizedAction(leftAction, 0);
+  const normalizedRight = getDraftSimpleBattleNormalizedAction(rightAction, 0);
+  const leftPriority = getDraftSimpleBattleActionPriority(state, "left", normalizedLeft);
+  const rightPriority = getDraftSimpleBattleActionPriority(state, "right", normalizedRight);
+  if (leftPriority !== rightPriority) {
+    return leftPriority > rightPriority ? ["left", "right"] : ["right", "left"];
+  }
+  const leftSpeed = getDraftSimpleBattleCurrentSpeed(state?.left);
+  const rightSpeed = getDraftSimpleBattleCurrentSpeed(state?.right);
+  if (leftSpeed === rightSpeed) {
+    return Math.random() < 0.5 ? ["left", "right"] : ["right", "left"];
+  }
+  return leftSpeed > rightSpeed ? ["left", "right"] : ["right", "left"];
+}
+
+function canDraftSimpleBattleBattlerAct(battler) {
+  return Boolean(battler && Number(battler.currentHp) > 0);
+}
+
+function resolveDraftSimpleBattleCanAct(state, side, battler) {
+  if (!canDraftSimpleBattleBattlerAct(battler)) {
+    return {
+      canAct: false,
+      reason: "ko",
+    };
+  }
+  if (battler?.status === "asleep") {
+    const currentSleepTurns = Math.max(0, Number(battler?.statusState?.sleepTurns) || 0);
+    if (currentSleepTurns > 0) {
+      battler.statusState.sleepTurns = currentSleepTurns - 1;
+    }
+    if ((Number(battler?.statusState?.sleepTurns) || 0) > 0) {
+      return {
+        canAct: false,
+        reason: "sleep",
+        action: {
+          side,
+          actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+          prevented: true,
+          preventedBy: "asleep",
+          supportText: "Endormi, il ne peut pas agir",
+        },
+      };
+    }
+    clearDraftSimpleBattleMajorStatus(battler);
+    return {
+      canAct: true,
+      preAction: {
+        side,
+        actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+        supportText: "Se réveille",
+        appliedEffect: "wake-up",
+      },
+    };
+  }
+  if (battler?.status === "frozen") {
+    if (Math.random() < 0.2) {
+      clearDraftSimpleBattleMajorStatus(battler);
+      return {
+        canAct: true,
+        preAction: {
+          side,
+          actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+          supportText: "Dégèle",
+          appliedEffect: "thawed",
+        },
+      };
+    }
+    return {
+      canAct: false,
+      reason: "frozen",
+      action: {
+        side,
+        actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+        prevented: true,
+        preventedBy: "frozen",
+        supportText: "Gelé, il ne peut pas agir",
+      },
+    };
+  }
+  if (battler?.status === "paralysed" && Math.random() < 0.25) {
+    return {
+      canAct: false,
+      reason: "paralysis",
+      action: {
+        side,
+        actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+        prevented: true,
+        preventedBy: "paralysed",
+        supportText: "Paralysé, il ne peut pas agir",
+      },
+    };
+  }
+  return { canAct: true };
+}
+
+function tryDraftSimpleBattleApplyStatus(move, attackerState, defenderState) {
+  const effect = move?.effect || null;
+  if (!effect || effect.kind !== "status" || !effect.status || !defenderState) return null;
+  const failureReason = getDraftSimpleBattleStatusFailureReason(defenderState, effect.status, move);
+  if (failureReason) {
+    return {
+      status: effect.status,
+      statusApplied: false,
+      failureReason,
+    };
+  }
+  const chance = Math.max(0, Math.min(1, Number(effect.chance) || 0));
+  if (chance <= 0) return null;
+  if (Math.random() > chance) return null;
+  defenderState.status = effect.status;
+  if (!defenderState.statusState) {
+    defenderState.statusState = { sleepTurns: 0, toxicCounter: 0 };
+  }
+  if (effect.status === "asleep") {
+    defenderState.statusState.sleepTurns = 2 + Math.floor(Math.random() * 3);
+  }
+  if (effect.status === "badly_poisoned") {
+    defenderState.statusState.toxicCounter = 0;
+  }
+  return {
+    status: effect.status,
+    statusApplied: true,
+    supportText: effect.label || getDraftSimpleBattleStatusLabel(effect.status) || "Statut appliqué",
+  };
+}
+
+function runDraftSimpleBattleEndOfTurn(state, turnEntry) {
+  const applyResidual = (side) => {
+    const battler = side === "left" ? state?.left : state?.right;
+    if (!battler || battler.currentHp <= 0 || !battler.status) return;
+    let damage = 0;
+    let supportText = "";
+    if (battler.status === "burned") {
+      damage = Math.max(1, Math.floor(Math.max(1, battler.maxHp) / 8));
+      supportText = "Souffre de sa brûlure";
+    } else if (battler.status === "poisoned") {
+      damage = Math.max(1, Math.floor(Math.max(1, battler.maxHp) / 8));
+      supportText = "Souffre du poison";
+    } else if (battler.status === "badly_poisoned") {
+      battler.statusState.toxicCounter = Math.max(1, Number(battler.statusState?.toxicCounter) || 0) + 1;
+      damage = Math.max(1, Math.floor((Math.max(1, battler.maxHp) * battler.statusState.toxicCounter) / 16));
+      supportText = "Le poison s'aggrave";
+    }
+    if (damage <= 0) return;
+    battler.currentHp = Math.max(0, battler.currentHp - damage);
+    turnEntry.actions.push({
+      side,
+      actorName: battler.pokemon.name,
+      damage,
+      knockout: battler.currentHp <= 0,
+      supportText,
+      appliedEffect: battler.status,
+      residual: true,
+    });
+  };
+
+  applyResidual("left");
+  applyResidual("right");
+  return { state, turnEntry };
 }
 
 function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move) {
@@ -6805,14 +7115,34 @@ function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move)
       blocked: true,
     };
   }
-  const rawDamage = ((Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER) * (attackStat / defenseStat)) * stab * effectiveness;
-  const damage = effectiveness === 0 ? 0 : Math.max(1, Math.round(rawDamage / 13.5));
+  const power = Math.max(1, Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER);
+  const safeAttack = Math.max(1, Number(attackStat) || 1);
+  const safeDefense = Math.max(1, Number(defenseStat) || 1);
+
+  // Simplified Pokemon-like damage core:
+  // - fixed virtual level
+  // - physical/special split via attack/defense stats
+  // - then STAB and type effectiveness apply at full weight
+  // This keeps x2/x4 meaningful without turning every neutral hit into a one-shot.
+  const virtualLevelFactor = 12;
+  const baseDamage = (((virtualLevelFactor * power * (safeAttack / safeDefense)) / 50) + 2);
+  const modifiedDamage = baseDamage * stab * effectiveness;
+  const damage = effectiveness === 0 ? 0 : Math.max(1, Math.round(modifiedDamage));
   return {
     damage,
     stab,
     effectiveness,
     blocked: false,
   };
+}
+
+function resolveDraftSimpleBattleMoveRecoil(attackerState, move, damageDealt) {
+  const ratio = Number(move?.effect?.ratio) || 0;
+  if (move?.name === "Struggle") {
+    return Math.max(1, Math.floor(Math.max(1, damageDealt) / 4));
+  }
+  if (ratio <= 0 || !attackerState) return 0;
+  return Math.max(1, Math.floor(Math.max(1, damageDealt) * ratio));
 }
 
 function getDraftSimpleBattleEstimatedMoveOutcome(gen, attackerState, defenderState, move) {
@@ -6879,11 +7209,60 @@ function getDraftSimpleBattleEstimatedMoveOutcome(gen, attackerState, defenderSt
   };
 }
 
-function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveIndex = 0) {
-  const move = attackerState?.moves?.[moveIndex];
+function getDraftSimpleBattleUsableEnemyMoveEntries(state) {
+  const enemy = state?.right;
+  const player = state?.left;
+  const usableIndexes = getDraftSimpleBattleUsableMoveIndexes(enemy);
+  if (!enemy || !player) return [];
+  return usableIndexes.map((index) => {
+    const move = enemy.moves[index];
+    const outcome = getDraftSimpleBattleEstimatedMoveOutcome(state.gen, enemy, player, move);
+    return {
+      index,
+      multiplier: outcome.effectiveness,
+      power: Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER,
+      damage: outcome.damage,
+      knockout: outcome.knockout,
+      score: outcome.score,
+      isSupport: Boolean(outcome.isSupport || move?.category === "status"),
+      summary: outcome.summary || "",
+      effect: move?.effect || null,
+    };
+  });
+}
+
+function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actionOrMoveIndex = 0) {
+  const normalizedAction = getDraftSimpleBattleNormalizedAction(actionOrMoveIndex, 0);
+  const move = getDraftSimpleBattleMoveForAction(attackerState, normalizedAction);
   if (!move || !attackerState || !defenderState) return null;
+  const usedStruggle = move.name === "Struggle";
+  if (!usedStruggle) {
+    const spentMove = consumeDraftSimpleBattleMovePp(attackerState, normalizedAction);
+    if (!spentMove) {
+      return null;
+    }
+  }
   if (move.category === "status") {
     const effect = move.effect || {};
+    if (effect.kind === "status" && effect.status) {
+      const appliedStatus = tryDraftSimpleBattleApplyStatus(move, attackerState, defenderState);
+      return {
+        move,
+        damage: 0,
+        stab: 1,
+        effectiveness: 1,
+        defenderRemainingHp: defenderState.currentHp,
+        knockout: false,
+        supportText: appliedStatus?.statusApplied
+          ? `${getDraftSimpleBattleStatusLabel(appliedStatus.status)}`
+          : (appliedStatus?.failureReason || effect.label || "Statut tenté"),
+        appliedEffect: appliedStatus?.statusApplied ? effect.status : "status-failed",
+        statusApplied: Boolean(appliedStatus?.statusApplied),
+        inflictedStatus: appliedStatus?.status || null,
+        statusFailedReason: appliedStatus?.failureReason || "",
+        usedStruggle,
+      };
+    }
     if (effect.kind === "protect") {
       attackerState.protected = true;
       return {
@@ -6895,6 +7274,7 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveI
         knockout: false,
         supportText: effect.label || "Se protège",
         appliedEffect: "protect",
+        usedStruggle,
       };
     }
     if (effect.kind === "heal") {
@@ -6911,6 +7291,27 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveI
         heal: attackerState.currentHp - previousHp,
         supportText: effect.label || "Récupère des PV",
         appliedEffect: "heal",
+        usedStruggle,
+      };
+    }
+    if (effect.kind === "rest") {
+      const previousHp = attackerState.currentHp;
+      attackerState.currentHp = attackerState.maxHp;
+      attackerState.status = "asleep";
+      attackerState.statusState.sleepTurns = 2;
+      return {
+        move,
+        damage: 0,
+        stab: 1,
+        effectiveness: 1,
+        defenderRemainingHp: defenderState.currentHp,
+        knockout: false,
+        heal: attackerState.currentHp - previousHp,
+        supportText: effect.label || "S'endort",
+        appliedEffect: "rest",
+        statusApplied: true,
+        inflictedStatus: "asleep",
+        usedStruggle,
       };
     }
     if (effect.kind === "buff" && effect.stat) {
@@ -6925,6 +7326,7 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveI
         knockout: false,
         supportText: effect.label || `${effect.stat} monte`,
         appliedEffect: "buff",
+        usedStruggle,
       };
     }
     if (effect.kind === "buff-multi" && effect.stats) {
@@ -6941,6 +7343,7 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveI
         knockout: false,
         supportText: effect.label || "Stats montent",
         appliedEffect: "buff",
+        usedStruggle,
       };
     }
     if (effect.kind === "debuff" && effect.stat) {
@@ -6955,11 +7358,20 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveI
         knockout: false,
         supportText: effect.label || `${effect.stat} baisse`,
         appliedEffect: "debuff",
+        usedStruggle,
       };
     }
   }
+  if (defenderState.status === "frozen" && move.type === "Feu") {
+    clearDraftSimpleBattleMajorStatus(defenderState);
+  }
   const result = computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move);
   defenderState.currentHp = Math.max(0, defenderState.currentHp - result.damage);
+  const appliedStatus = defenderState.currentHp > 0 ? tryDraftSimpleBattleApplyStatus(move, attackerState, defenderState) : null;
+  const recoil = resolveDraftSimpleBattleMoveRecoil(attackerState, move, result.damage);
+  if (recoil > 0) {
+    attackerState.currentHp = Math.max(0, attackerState.currentHp - recoil);
+  }
   return {
     move,
     damage: result.damage,
@@ -6968,6 +7380,12 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, moveI
     blocked: result.blocked,
     defenderRemainingHp: defenderState.currentHp,
     knockout: defenderState.currentHp <= 0,
+    statusApplied: Boolean(appliedStatus?.statusApplied),
+    inflictedStatus: appliedStatus?.status || null,
+    statusFailedReason: appliedStatus?.failureReason || "",
+    recoil,
+    selfKnockout: attackerState.currentHp <= 0,
+    usedStruggle,
   };
 }
 
@@ -6990,23 +7408,31 @@ function resolveDraftSimpleBattleTurn(state, leftMoveIndex = 0, rightMoveIndex =
   if (!state?.left || !state?.right) return null;
   if (state.left.currentHp <= 0 || state.right.currentHp <= 0) return null;
 
-  const leftMove = state.left.moves?.[leftMoveIndex];
-  const rightMove = state.right.moves?.[rightMoveIndex];
-  const order = getDraftSimpleBattleTurnOrderForMoves(state.left, leftMove, state.right, rightMove);
+  const leftAction = getDraftSimpleBattleNormalizedAction(leftMoveIndex, 0);
+  const rightAction = getDraftSimpleBattleNormalizedAction(rightMoveIndex, 0);
+  const order = getDraftSimpleBattleTurnOrderForActions(state, leftAction, rightAction);
   const turnLog = [];
 
   for (const side of order) {
     const attacker = side === "left" ? state.left : state.right;
     const defender = side === "left" ? state.right : state.left;
-    const moveIndex = side === "left" ? leftMoveIndex : rightMoveIndex;
-    if (attacker.currentHp <= 0 || defender.currentHp <= 0) continue;
-    const action = resolveDraftSimpleBattleAttack(state.gen, attacker, defender, moveIndex);
+    const actionChoice = side === "left" ? leftAction : rightAction;
+    const actCheck = resolveDraftSimpleBattleCanAct(state, side, attacker);
+    if (actCheck.preAction) turnLog.push(actCheck.preAction);
+    if (!actCheck.canAct) {
+      if (actCheck.action) turnLog.push(actCheck.action);
+      continue;
+    }
+    if (!canDraftSimpleBattleBattlerAct(defender)) continue;
+    if (actionChoice.kind !== "move") continue;
+    const action = resolveDraftSimpleBattleAttack(state.gen, attacker, defender, actionChoice.moveIndex);
     if (!action) continue;
     turnLog.push({ side, ...action });
     if (action.knockout) break;
   }
 
   state.log.push({ turn: state.turn, order: order.slice(), actions: turnLog });
+  runDraftSimpleBattleEndOfTurn(state, state.log[state.log.length - 1]);
   state.turn += 1;
   state.phase = state.left.currentHp <= 0 || state.right.currentHp <= 0 ? "finished" : "ready";
   clearDraftSimpleBattleTurnFlags(state);
@@ -7567,6 +7993,7 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries, options = 
     phase: "ready",
     turn: 1,
     turnState: "player",
+    queuedTurn: null,
     pendingSwitch: false,
     pendingSwitchReason: null,
     leftTeam,
@@ -7586,6 +8013,123 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries, options = 
   };
   syncDraftSimpleBattleActiveBattlers(state);
   return state;
+}
+
+function buildDraftSimpleBattleQueuedTurn(state, playerAction) {
+  if (!state || !playerAction || state.phase === "finished") return null;
+  syncDraftSimpleBattleActiveBattlers(state);
+  const normalizedPlayerAction = getDraftSimpleBattleNormalizedAction(playerAction, 0);
+  const enemyAction = chooseDraftSimpleBattleEnemyAction(state);
+  const queuedTurn = {
+    turn: state.turn,
+    left: normalizedPlayerAction.kind === "move" && !getDraftSimpleBattleUsableMoveIndexes(state.left).length
+      ? { kind: "struggle" }
+      : normalizedPlayerAction,
+    right: getDraftSimpleBattleNormalizedAction(enemyAction, 0),
+    order: ["left", "right"],
+  };
+  queuedTurn.order = getDraftSimpleBattleTurnOrderForActions(state, queuedTurn.left, queuedTurn.right);
+
+  return queuedTurn;
+}
+
+function scheduleDraftSimpleBattleTurnResolution(state) {
+  if (!state?.queuedTurn) return null;
+  state.turnState = "resolving";
+  state.sceneMessage = "Actions choisies. Résolution du tour...";
+  renderDraftSimpleBattleDevPanel(state);
+  if (draftSimpleBattleTurnTimer) clearTimeout(draftSimpleBattleTurnTimer);
+  draftSimpleBattleTurnTimer = setTimeout(() => {
+    if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state) return;
+    resolveDraftSimpleBattleQueuedTurn(state);
+    draftSimpleBattleTurnTimer = null;
+  }, 700);
+  return state;
+}
+
+function resolveDraftSimpleBattleQueuedTurn(state) {
+  if (!state?.queuedTurn || state.phase === "finished") return null;
+  syncDraftSimpleBattleActiveBattlers(state);
+  const queuedTurn = state.queuedTurn;
+  const turnEntry = { turn: state.turn, order: queuedTurn.order?.slice?.() || ["left", "right"], actions: [] };
+  state.log.push(turnEntry);
+
+  for (const side of queuedTurn.order || ["left", "right"]) {
+    syncDraftSimpleBattleActiveBattlers(state);
+    const actingState = side === "left" ? state.left : state.right;
+    const targetState = side === "left" ? state.right : state.left;
+    const actingAction = side === "left" ? queuedTurn.left : queuedTurn.right;
+    if (!actingAction) continue;
+
+    if (actingAction.kind === "switch") {
+      if (!canDraftSimpleBattleBattlerAct(actingState)) continue;
+      const team = side === "left" ? state.leftTeam : state.rightTeam;
+      const indexKey = side === "left" ? "leftActiveIndex" : "rightActiveIndex";
+      const switched = team?.[actingAction.teamIndex];
+      if (!switched || switched.currentHp <= 0 || actingAction.teamIndex === state[indexKey]) continue;
+      state[indexKey] = actingAction.teamIndex;
+      syncDraftSimpleBattleActiveBattlers(state);
+      turnEntry.actions.push({
+        side,
+        event: "sendout",
+        pokemonName: switched.pokemon.name,
+      });
+      state.sceneMessage = side === "left"
+        ? `${switched.pokemon.name} rejoint le terrain !`
+        : `L’adversaire rappelle son Pokémon et envoie ${switched.pokemon.name} !`;
+      continue;
+    }
+
+    const actCheck = resolveDraftSimpleBattleCanAct(state, side, actingState);
+    if (actCheck.preAction) {
+      turnEntry.actions.push(actCheck.preAction);
+    }
+    if (!actCheck.canAct) {
+      if (actCheck.action) {
+        turnEntry.actions.push(actCheck.action);
+        state.sceneMessage = `${actCheck.action.actorName} : ${actCheck.action.supportText}.`;
+      }
+      continue;
+    }
+
+    if (!canDraftSimpleBattleBattlerAct(targetState) && actingAction.kind === "move") {
+      continue;
+    }
+
+    const resolvedAction = resolveDraftSimpleBattleAttack(state.gen, actingState, targetState, actingAction.moveIndex);
+    if (!resolvedAction) continue;
+
+    turnEntry.actions.push({
+      side,
+      actorName: actingState.pokemon.name,
+      targetName: targetState.pokemon.name,
+      ...resolvedAction,
+    });
+
+    if (side === "left") {
+      state.sceneMessage = `${actingState.pokemon.name} lance ${resolvedAction.move?.name || "son attaque"} !`;
+      if (resolvedAction.knockout && state.right.currentHp <= 0) {
+        const nextOpponent = sendNextDraftSimpleBattleBattler(state, "right");
+        if (nextOpponent) {
+          turnEntry.actions.push({
+            side: "right",
+            event: "sendout",
+            pokemonName: nextOpponent.pokemon.name,
+          });
+        }
+      }
+    } else {
+      state.sceneMessage = `${actingState.pokemon.name} utilise ${resolvedAction.move?.name || "son attaque"} !`;
+      if (resolvedAction.knockout && state.left.currentHp <= 0) {
+        state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
+        state.pendingSwitchReason = state.pendingSwitch ? "ko" : null;
+      }
+    }
+  }
+
+  runDraftSimpleBattleEndOfTurn(state, turnEntry);
+  state.queuedTurn = null;
+  return finishDraftSimpleBattleDevTurn(state, turnEntry);
 }
 
 function getDraftSimpleBattleEffectivenessLabel(value) {
@@ -7626,14 +8170,30 @@ function getDraftSimpleBattleOrderHint(currentOrder, leftState, rightState) {
 }
 
 function getDraftSimpleBattleActionNotes(action) {
+  if (action?.preventedBy === "paralysed") {
+    return "paralysé • ne peut pas agir";
+  }
+  if (action?.preventedBy === "asleep") {
+    return "endormi • ne peut pas agir";
+  }
+  if (action?.preventedBy === "frozen") {
+    return "gelé • ne peut pas agir";
+  }
   if (action?.move?.category === "status") {
     return action?.supportText || "soutien";
   }
   const notes = [];
   const category = action?.move?.category === "special" ? "attaque spéciale" : "attaque physique";
   notes.push(category);
+  if (action?.usedStruggle) notes.push("Struggle");
   if ((Number(action?.stab) || 1) > 1) notes.push("STAB");
   if (action?.blocked) notes.push("bloqué");
+  if (action?.statusApplied && action?.inflictedStatus === "paralysed") notes.push("paralyse");
+  if (action?.statusApplied && action?.inflictedStatus === "burned") notes.push("brûle");
+  if (action?.statusApplied && action?.inflictedStatus === "poisoned") notes.push("empoisonne");
+  if (action?.statusApplied && action?.inflictedStatus === "badly_poisoned") notes.push("toxique");
+  if (action?.statusApplied && action?.inflictedStatus === "asleep") notes.push("endort");
+  if (action?.statusApplied && action?.inflictedStatus === "frozen") notes.push("gèle");
   if (action?.effectiveness === 0) {
     notes.push("aucun effet");
   } else if ((Number(action?.effectiveness) || 1) > 1) {
@@ -7690,6 +8250,7 @@ function getDraftSimpleBattleHpPercent(sideState) {
 function getDraftSimpleBattleStatusText(state) {
   if (state?.phase === "finished") return "Combat terminé";
   if (state?.pendingSwitch) return state.pendingSwitchReason === "manual" ? "Choisis le Pokémon à envoyer" : "Choisis ton prochain Pokémon";
+  if (state?.turnState === "resolving") return "Résolution du tour...";
   if (state?.turnState === "enemy") return "L’adversaire attaque...";
   return "À toi de jouer";
 }
@@ -7715,6 +8276,9 @@ function getDraftSimpleBattleSceneText(state) {
   if (state.turnState === "enemy" && state.right?.pokemon?.name) {
     return `${state.right.pokemon.name} prépare sa réponse.`;
   }
+  if (state.turnState === "resolving") {
+    return "Les actions des deux camps sont verrouillées. Résolution du tour en cours.";
+  }
   if (state.left?.pokemon?.name && state.right?.pokemon?.name) {
     return `${state.left.pokemon.name} fait face à ${state.right.pokemon.name}.`;
   }
@@ -7724,6 +8288,7 @@ function getDraftSimpleBattleSceneText(state) {
 function getDraftSimpleBattleStatusClass(state) {
   if (state?.phase === "finished") return "is-finished";
   if (state?.pendingSwitch) return "is-switch";
+  if (state?.turnState === "resolving") return "is-enemy";
   if (state?.turnState === "enemy") return "is-enemy";
   return "is-player";
 }
@@ -7776,20 +8341,10 @@ function chooseDraftSimpleBattleEnemyAction(state) {
     return { kind: "move", moveIndex: 0 };
   }
 
-  const moveEntries = (enemy.moves || []).map((move, index) => {
-    const outcome = getDraftSimpleBattleEstimatedMoveOutcome(state.gen, enemy, player, move);
-    return {
-      index,
-      multiplier: outcome.effectiveness,
-      power: Number(move?.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER,
-      damage: outcome.damage,
-      knockout: outcome.knockout,
-      score: outcome.score,
-      isSupport: Boolean(outcome.isSupport || move?.category === "status"),
-      summary: outcome.summary || "",
-      effect: move?.effect || null,
-    };
-  });
+  const moveEntries = getDraftSimpleBattleUsableEnemyMoveEntries(state);
+  if (!moveEntries.length) {
+    return { kind: "struggle" };
+  }
 
   const bestMove = moveEntries.slice().sort((a, b) => b.score - a.score)[0] || { index: 0, multiplier: 1, score: 0, damage: 0, knockout: false };
   const bestDamagingMove = getDraftSimpleBattleBestDamagingMoveEntry(moveEntries) || bestMove;
@@ -7925,7 +8480,12 @@ function renderDraftSimpleBattleBench(team = [], activeIndex = 0, sideLabel = "�
   const items = team.map((member, index) => {
     if (!member?.pokemon) return "";
     const stateClass = member.currentHp <= 0 ? "is-ko" : index === activeIndex ? "is-active" : "is-ready";
-    const stateLabel = member.currentHp <= 0 ? "KO" : index === activeIndex ? "Actif" : `${member.currentHp}/${member.maxHp} PV`;
+    const statusShort = getDraftSimpleBattleStatusShortLabel(member.status);
+    const stateLabel = member.currentHp <= 0
+      ? "KO"
+      : index === activeIndex
+        ? `${statusShort ? `${statusShort} • ` : ""}Actif`
+        : `${member.currentHp}/${member.maxHp} PV${statusShort ? ` • ${statusShort}` : ""}`;
     return `
       <div class="draft-dev-battle-bench-item ${stateClass}">
         <img src="${escapeHtml(getPokemonSprite(member.pokemon))}" alt="${escapeHtml(member.pokemon.name)}">
@@ -7984,31 +8544,89 @@ function renderDraftSimpleBattleDevPanel(state) {
     const previewHint = previewLeft && previewRight
       ? getDraftSimpleBattleMatchupHint(state.gen, previewLeft, previewRight)
       : "Lead à confirmer";
+    const previewPlayer = previewLeft ? {
+      currentHp: previewLeft.maxHp,
+      maxHp: previewLeft.maxHp,
+      speed: previewLeft.speed,
+      pokemon: previewLeft.pokemon,
+    } : null;
+    const previewEnemy = previewRight ? {
+      currentHp: previewRight.maxHp,
+      maxHp: previewRight.maxHp,
+      speed: previewRight.speed,
+      pokemon: previewRight.pokemon,
+    } : null;
     body.innerHTML = `
-      <div class="draft-dev-battle-preview">
-        <div class="draft-dev-battle-preview-head">
-          <div class="draft-dev-battle-arena-banner">
-            <div class="draft-dev-battle-arena-badge">${state.arena ? getDraftBadgeMarkup(state.arena, "preview") : ""}</div>
-            <div>
-              <b>${escapeHtml(state.arena ? `Arène ${state.arena.name}` : "Préparation du duel")}</b>
-              <span>${escapeHtml(state.arena ? getDraftArenaPreviewHint(state.arena) : "Clique sur un Pokémon de ton équipe pour choisir ton lead, puis lance le duel.")}</span>
-            </div>
-          </div>
-          <span>Clique sur un Pokémon de ton équipe pour choisir ton lead, puis lance le duel.</span>
-        </div>
-        <div class="draft-dev-battle-scene-note is-preview">
-          <b>Lead pressenti</b>
-          <span>${escapeHtml(previewLeft?.pokemon?.name || "Ton lead")} vs ${escapeHtml(previewRight?.pokemon?.name || "Lead adverse")} • ${escapeHtml(previewHint)}</span>
-        </div>
-        <div class="draft-dev-battle-preview-grid">
-          ${renderDraftSimpleBattlePreviewTeam(state.leftTeam, "Équipe joueur", "is-player", { selectable: true, selectedIndex: state.leftActiveIndex || 0 })}
-          ${renderDraftSimpleBattlePreviewTeam(state.rightTeam, state.arena?.name ? `Équipe de ${state.arena.name}` : "Équipe adverse", "is-foe")}
-        </div>
-        <div class="draft-dev-battle-preview-actions">
-          <button type="button" class="btn-red" onclick="startDraftSimpleBattlePreview()">Commencer le duel</button>
-          <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
+      <div class="draft-dev-battle-arena-banner is-live">
+        <div class="draft-dev-battle-arena-badge">${state.arena ? getDraftBadgeMarkup(state.arena, "preview") : ""}</div>
+        <div>
+          <b>${escapeHtml(state.arena ? `Arène ${state.arena.name}` : "Préparation du duel")}</b>
+          <span>${escapeHtml(state.arena ? getDraftArenaPreviewHint(state.arena) : "Choisis ton lead puis lance le duel.")}</span>
         </div>
       </div>
+      <div class="draft-dev-battle-scene-note is-preview">
+        <b>Préparation</b>
+        <span>${escapeHtml(previewLeft?.pokemon?.name || "Ton lead")} vs ${escapeHtml(previewRight?.pokemon?.name || "Lead adverse")} • ${escapeHtml(previewHint)}</span>
+      </div>
+      <div class="draft-dev-battle-fighters draft-dev-battle-fighters-preview">
+        <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
+          <div class="draft-dev-battle-fighter-head">
+            <img src="${escapeHtml(getPokemonSprite(previewPlayer?.pokemon || {}))}" alt="${escapeHtml(previewPlayer?.pokemon?.name || "Pokémon joueur")}">
+            <div>
+              <span>Joueur</span>
+              <b>${escapeHtml(previewPlayer?.pokemon?.name || "Lead à choisir")}</b>
+              <small>${previewPlayer ? `PV ${previewPlayer.maxHp} • Vitesse ${previewPlayer.speed}` : "Choisis ton Pokémon de départ"}</small>
+              ${previewPlayer ? `
+                <div class="draft-dev-battle-hp">
+                  <div class="draft-dev-battle-hp-meta">
+                    <strong>PV</strong>
+                    <span>${previewPlayer.maxHp} / ${previewPlayer.maxHp}</span>
+                  </div>
+                  <div class="draft-dev-battle-hp-track">
+                    <span class="draft-dev-battle-hp-fill" style="width:100%"></span>
+                  </div>
+                </div>
+              ` : ""}
+            </div>
+          </div>
+        </div>
+        <div class="draft-summary-card wide draft-dev-battle-fighter is-foe">
+          <div class="draft-dev-battle-fighter-head">
+            <img src="${escapeHtml(getPokemonSprite(previewEnemy?.pokemon || {}))}" alt="${escapeHtml(previewEnemy?.pokemon?.name || "Pokémon adverse")}">
+            <div>
+              <span>Adversaire</span>
+              <b>${escapeHtml(previewEnemy?.pokemon?.name || "Lead adverse")}</b>
+              <small>${previewEnemy ? `PV ${previewEnemy.maxHp} • Vitesse ${previewEnemy.speed}` : "Lead adverse à venir"}</small>
+              ${previewEnemy ? `
+                <div class="draft-dev-battle-hp">
+                  <div class="draft-dev-battle-hp-meta">
+                    <strong>PV</strong>
+                    <span>${previewEnemy.maxHp} / ${previewEnemy.maxHp}</span>
+                  </div>
+                  <div class="draft-dev-battle-hp-track">
+                    <span class="draft-dev-battle-hp-fill" style="width:100%"></span>
+                  </div>
+                </div>
+              ` : ""}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="draft-dev-battle-benches">
+        ${renderDraftSimpleBattlePreviewTeam(state.leftTeam, "Équipe joueur", "is-player", { selectable: true, selectedIndex: state.leftActiveIndex || 0 })}
+        ${renderDraftSimpleBattlePreviewTeam(state.rightTeam, state.arena?.name ? `Équipe de ${state.arena.name}` : "Équipe adverse", "is-foe")}
+      </div>
+      <div class="draft-dev-battle-meta">
+        <div class="draft-summary-card draft-dev-battle-status is-player"><span>Statut</span><b>${escapeHtml(previewLeft ? "Lead verrouillé" : "Lead à choisir")}</b></div>
+        <div class="draft-summary-card"><span>Ordre pressenti</span><b>${escapeHtml(previewLeft?.pokemon?.name || "Ton lead")} -> ${escapeHtml(previewRight?.pokemon?.name || "Adversaire")}</b><small>${escapeHtml(previewHint)}</small></div>
+        <div class="draft-summary-card"><span>Équipe joueur</span><b>${state.leftTeam.length} Pokémon</b></div>
+        <div class="draft-summary-card"><span>Équipe adverse</span><b>${state.rightTeam.length} Pokémon</b></div>
+      </div>
+      <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
+        <button type="button" class="btn-red draft-dev-battle-preview-cta" onclick="startDraftSimpleBattlePreview()">Commencer le duel</button>
+        <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
+      </div>
+      <div class="draft-dev-battle-log"><p class="card-desc">Clique un Pokémon dans le banc joueur pour choisir ton lead, puis lance le duel.</p></div>
     `;
     panel.classList.remove("hidden");
     return;
@@ -8059,6 +8677,8 @@ function renderDraftSimpleBattleDevPanel(state) {
   const rightHpPercent = getDraftSimpleBattleHpPercent(displayRight);
   const statusText = getDraftSimpleBattleStatusText(state);
   const statusClass = getDraftSimpleBattleStatusClass(state);
+  const leftStatusLabel = getDraftSimpleBattleStatusLabel(displayLeft.status);
+  const rightStatusLabel = getDraftSimpleBattleStatusLabel(displayRight.status);
   const isFinished = state.phase === "finished";
   const needsForcedSwitch = !isFinished && state.pendingSwitch;
   const isEnemyTurn = !isFinished && !needsForcedSwitch && state.turnState === "enemy";
@@ -8076,11 +8696,14 @@ function renderDraftSimpleBattleDevPanel(state) {
         ? [
           getDraftSimpleBattleActionNotes(action),
           action.heal ? `+${action.heal} PV` : "",
+          action.statusFailedReason ? action.statusFailedReason : "",
         ].filter(Boolean).join(" • ")
         : [
           `${action.damage} dégâts`,
           getDraftSimpleBattleActionNotes(action),
+          action.recoil ? `recul ${action.recoil}` : "",
           action.knockout ? "KO" : "",
+          action.selfKnockout ? "recul KO" : "",
         ].filter(Boolean).join(" • ");
       return `<li><b>${escapeHtml(actor)}</b> utilise <b>${escapeHtml(action.move?.name || "Attaque")}</b> sur ${escapeHtml(target)} : ${extras}</li>`;
     }).join("");
@@ -8100,17 +8723,29 @@ function renderDraftSimpleBattleDevPanel(state) {
       type="button"
       class="btn-blue draft-dev-battle-move"
       onclick="runDraftSimpleBattleDevTurn(${index})"
-      ${state.phase === "finished" || state.turnState !== "player" ? "disabled" : ""}
+      ${(state.phase === "finished" || state.turnState !== "player" || (Number(move?.ppCurrent) || 0) <= 0) ? "disabled" : ""}
     >
       <span class="draft-dev-battle-move-name">${escapeHtml(move.name)}</span>
       <span class="draft-dev-battle-move-meta">
         <small class="draft-dev-battle-move-type">${escapeHtml(move.type)}</small>
         ${Number(move.power) ? `<small class="draft-dev-battle-move-power">Puissance ${move.power}</small>` : ""}
+        <small class="draft-dev-battle-move-power">PP ${Number(move?.ppCurrent) || 0}/${Number(move?.ppMax) || 0}</small>
       </span>
       <span class="draft-dev-battle-move-effect ${moveEffectivenessClass}">${escapeHtml(moveEffectivenessText)}</span>
     </button>
   `;
   }).join("");
+  const struggleOnly = !getDraftSimpleBattleUsableMoveIndexes(displayLeft).length;
+  const struggleHtml = struggleOnly
+    ? `<button type="button" class="btn-blue draft-dev-battle-move" onclick="runDraftSimpleBattleDevStruggle()" ${state.phase === "finished" || state.turnState !== "player" ? "disabled" : ""}>
+        <span class="draft-dev-battle-move-name">Struggle</span>
+        <span class="draft-dev-battle-move-meta">
+          <small class="draft-dev-battle-move-type">Normal</small>
+          <small class="draft-dev-battle-move-power">PP forcé</small>
+        </span>
+        <span class="draft-dev-battle-move-effect is-low">Frappe avec recul</span>
+      </button>`
+    : "";
 
   const playerWin = isDraftSimpleBattlePlayerWin(state);
   const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
@@ -8177,7 +8812,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           <div>
             <span>Joueur</span>
             <b>${escapeHtml(displayLeft.pokemon.name)}</b>
-            <small>PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${displayLeft.speed} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
+            <small>PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayLeft)}${leftStatusLabel ? ` • ${leftStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
             <div class="draft-dev-battle-hp">
               <div class="draft-dev-battle-hp-meta">
                 <strong>PV</strong>
@@ -8196,7 +8831,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           <div>
             <span>Adversaire</span>
             <b>${escapeHtml(displayRight.pokemon.name)}</b>
-            <small>PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${displayRight.speed} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
+            <small>PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayRight)}${rightStatusLabel ? ` • ${rightStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
             <div class="draft-dev-battle-hp">
               <div class="draft-dev-battle-hp-meta">
                 <strong>PV</strong>
@@ -8225,7 +8860,7 @@ function renderDraftSimpleBattleDevPanel(state) {
     ${isPlayerTurn && getDraftSimpleBattleAvailableSwitchIndexes(state).length
       ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch()">Changer de Pokémon</button></div>`
       : ""}
-    ${isPlayerTurn ? `<div class="draft-dev-battle-actions">${movesHtml}</div>` : ""}
+    ${isPlayerTurn ? `<div class="draft-dev-battle-actions">${struggleHtml || movesHtml}</div>` : ""}
     <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
   `;
 
@@ -8269,6 +8904,7 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
   state.turn += 1;
   state.phase = leftRemaining <= 0 || rightRemaining <= 0 ? "finished" : "ready";
+  state.queuedTurn = null;
   clearDraftSimpleBattleTurnFlags(state);
   if (state.phase === "finished") {
     state.pendingSwitch = false;
@@ -8304,51 +8940,18 @@ function chooseDraftSimpleBattleReplacement(teamIndex) {
   const switchReason = state.pendingSwitchReason;
   state.pendingSwitch = false;
   state.pendingSwitchReason = null;
-  state.turnState = switchReason === "manual" ? "enemy" : "player";
+  state.queuedTurn = null;
+  state.turnState = switchReason === "manual" ? "resolving" : "player";
   syncDraftSimpleBattleActiveBattlers(state);
-  const lastTurn = state.log[state.log.length - 1];
-  if (lastTurn) {
-    lastTurn.actions.push({
-      side: "left",
-      event: "sendout",
-      pokemonName: nextMember.pokemon.name,
-    });
-  }
   state.sceneMessage = `${nextMember.pokemon.name} rejoint le terrain !`;
 
   if (switchReason === "manual" && state.phase !== "finished") {
-    renderDraftSimpleBattleDevPanel(state);
-    if (draftSimpleBattleTurnTimer) clearTimeout(draftSimpleBattleTurnTimer);
-    const enemyMoves = state.right?.moves || [];
-    const enemyMoveIndex = enemyMoves.length ? Math.floor(Math.random() * enemyMoves.length) : 0;
-    draftSimpleBattleTurnTimer = setTimeout(() => {
-      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state) return;
-      syncDraftSimpleBattleActiveBattlers(state);
-      if (!state.right || !state.left) {
-        finishDraftSimpleBattleDevTurn(state, lastTurn);
-        draftSimpleBattleTurnTimer = null;
-        return;
-      }
-      const enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyMoveIndex);
-      if (enemyAction && lastTurn) {
-        lastTurn.actions.push({
-          side: "right",
-          actorName: state.right.pokemon.name,
-          targetName: state.left.pokemon.name,
-          ...enemyAction,
-        });
-      }
-      if (enemyAction?.knockout && state.left.currentHp <= 0) {
-        state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
-        state.pendingSwitchReason = state.pendingSwitch ? "ko" : null;
-      }
-      if (!enemyAction?.knockout && state.phase !== "finished") {
-        state.sceneMessage = `${state.right.pokemon.name} termine sa réponse.`;
-      }
-      finishDraftSimpleBattleDevTurn(state, lastTurn);
-      draftSimpleBattleTurnTimer = null;
-    }, 700);
-    return state;
+    state.queuedTurn = buildDraftSimpleBattleQueuedTurn(state, {
+      kind: "switch",
+      teamIndex: nextIndex,
+      pokemonName: nextMember.pokemon.name,
+    });
+    return scheduleDraftSimpleBattleTurnResolution(state);
   }
 
   renderDraftSimpleBattleDevPanel(state);
@@ -8406,114 +9009,18 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0) {
   if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.turnState !== "player" || draftSimpleBattleDevUiState.pendingSwitch) return null;
 
   const state = draftSimpleBattleDevUiState;
-  syncDraftSimpleBattleActiveBattlers(state);
-  const turnEntry = { turn: state.turn, order: ["left", "right"], actions: [] };
-  state.log.push(turnEntry);
+  state.queuedTurn = buildDraftSimpleBattleQueuedTurn(state, {
+    kind: "move",
+    moveIndex,
+  });
+  return scheduleDraftSimpleBattleTurnResolution(state);
+}
 
-  const playerMove = state.left?.moves?.[moveIndex];
-  const enemyDecision = chooseDraftSimpleBattleEnemyAction(state);
-  if (enemyDecision.kind === "switch") {
-    const playerAction = resolveDraftSimpleBattleAttack(state.gen, state.left, state.right, moveIndex);
-    if (playerAction) {
-      turnEntry.actions.push({
-        side: "left",
-        actorName: state.left.pokemon.name,
-        targetName: state.right.pokemon.name,
-        ...playerAction,
-      });
-    }
-
-    if (playerAction?.knockout && state.right.currentHp <= 0) {
-      const nextOpponent = sendNextDraftSimpleBattleBattler(state, "right");
-      if (nextOpponent) {
-        turnEntry.actions.push({
-          side: "right",
-          event: "sendout",
-          pokemonName: nextOpponent.pokemon.name,
-        });
-      }
-      return finishDraftSimpleBattleDevTurn(state, turnEntry);
-    }
-
-    state.turnState = "enemy";
-    renderDraftSimpleBattleDevPanel(state);
-    if (draftSimpleBattleTurnTimer) clearTimeout(draftSimpleBattleTurnTimer);
-    draftSimpleBattleTurnTimer = setTimeout(() => {
-      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state) return;
-      const switched = state.rightTeam[enemyDecision.teamIndex];
-      state.rightActiveIndex = enemyDecision.teamIndex;
-      syncDraftSimpleBattleActiveBattlers(state);
-      if (switched) {
-        turnEntry.actions.push({
-          side: "right",
-          event: "sendout",
-          pokemonName: switched.pokemon.name,
-        });
-        state.sceneMessage = `L’adversaire rappelle son Pokémon et envoie ${switched.pokemon.name} !`;
-      }
-      finishDraftSimpleBattleDevTurn(state, turnEntry);
-      draftSimpleBattleTurnTimer = null;
-    }, 700);
-    return state;
-  }
-
-  const enemyMove = state.right?.moves?.[enemyDecision.moveIndex];
-  const order = getDraftSimpleBattleTurnOrderForMoves(state.left, playerMove, state.right, enemyMove);
-  turnEntry.order = order.slice();
-  state.turnState = "enemy";
-  renderDraftSimpleBattleDevPanel(state);
-
-  if (draftSimpleBattleTurnTimer) clearTimeout(draftSimpleBattleTurnTimer);
-  draftSimpleBattleTurnTimer = setTimeout(() => {
-    if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state) return;
-    syncDraftSimpleBattleActiveBattlers(state);
-    for (const side of order) {
-      if (!state.left || !state.right || state.left.currentHp <= 0 || state.right.currentHp <= 0) break;
-      if (side === "left") {
-        const playerAction = resolveDraftSimpleBattleAttack(state.gen, state.left, state.right, moveIndex);
-        if (playerAction) {
-          turnEntry.actions.push({
-            side: "left",
-            actorName: state.left.pokemon.name,
-            targetName: state.right.pokemon.name,
-            ...playerAction,
-          });
-          state.sceneMessage = `${state.left.pokemon.name} lance ${playerAction.move?.name || "son attaque"} !`;
-        }
-        if (playerAction?.knockout && state.right.currentHp <= 0) {
-          const nextOpponent = sendNextDraftSimpleBattleBattler(state, "right");
-          if (nextOpponent) {
-            turnEntry.actions.push({
-              side: "right",
-              event: "sendout",
-              pokemonName: nextOpponent.pokemon.name,
-            });
-          }
-          break;
-        }
-      } else {
-        const enemyAction = resolveDraftSimpleBattleAttack(state.gen, state.right, state.left, enemyDecision.moveIndex);
-        if (enemyAction) {
-          turnEntry.actions.push({
-            side: "right",
-            actorName: state.right.pokemon.name,
-            targetName: state.left.pokemon.name,
-            ...enemyAction,
-          });
-          state.sceneMessage = `${state.right.pokemon.name} répond avec ${enemyAction.move?.name || "son attaque"} !`;
-        }
-        if (enemyAction?.knockout && state.left.currentHp <= 0) {
-          state.pendingSwitch = getDraftSimpleBattleAvailableSwitchIndexes(state).length > 0;
-          state.pendingSwitchReason = state.pendingSwitch ? "ko" : null;
-          break;
-        }
-      }
-    }
-    finishDraftSimpleBattleDevTurn(state, turnEntry);
-    draftSimpleBattleTurnTimer = null;
-  }, 700);
-
-  return state;
+function runDraftSimpleBattleDevStruggle() {
+  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.turnState !== "player" || draftSimpleBattleDevUiState.pendingSwitch) return null;
+  const state = draftSimpleBattleDevUiState;
+  state.queuedTurn = buildDraftSimpleBattleQueuedTurn(state, { kind: "struggle" });
+  return scheduleDraftSimpleBattleTurnResolution(state);
 }
 
 function runDraftSimpleBattleDraftConversionDevVisualTest() {
@@ -8557,6 +9064,7 @@ window.continueDraftArenaBattleRun = continueDraftArenaBattleRun;
 window.finishDraftArenaBattleView = finishDraftArenaBattleView;
 window.selectDraftSimpleBattlePreviewLead = selectDraftSimpleBattlePreviewLead;
 window.runDraftSimpleBattleDevTurn = runDraftSimpleBattleDevTurn;
+window.runDraftSimpleBattleDevStruggle = runDraftSimpleBattleDevStruggle;
 window.startDraftSimpleBattlePreview = startDraftSimpleBattlePreview;
 window.openDraftSimpleBattleManualSwitch = openDraftSimpleBattleManualSwitch;
 window.cancelDraftSimpleBattleManualSwitch = cancelDraftSimpleBattleManualSwitch;
