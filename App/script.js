@@ -4367,39 +4367,52 @@ function renderTeamBuilderSummary() {
         .join("")
     : '<span class="home-type-helper-empty">Les relais défensifs apparaîtront ici avec plus de slots remplis.</span>';
 
-  summary.innerHTML = `
-    <div class="team-builder-summary-top">
-      ${renderChip("Slots", `${synthesis.filledCount}/6`)}
-      ${renderChip("Types présents", String(synthesis.distinctTypeCount))}
-      ${renderChip("Attaques", `${synthesis.moveCount}/24`)}
-      ${renderChip("Types offensifs", String(synthesis.selectedMoveTypeCount))}
-    </div>
-    <div class="team-builder-synthesis-grid">
-      <section class="team-builder-synthesis-card">
-        <div class="team-builder-synthesis-head">
-          <h5>Vue d’ensemble équipe</h5>
-          <p>Lecture rapide de la construction actuelle et des grands repères de team.</p>
-        </div>
+  const overviewHtml = `
+    <div class="team-builder-overview-groups">
+      <div class="team-builder-overview-group is-alert">
+        <span class="team-builder-overview-label">Doublons</span>
         <div class="team-builder-synthesis-list">${duplicatesHtml}</div>
+      </div>
+      <div class="team-builder-overview-group">
+        <span class="team-builder-overview-label">Rôles présents</span>
         <div class="team-builder-synthesis-list">${roleSummaryHtml}</div>
+      </div>
+      <div class="team-builder-overview-group is-suggestion">
+        <span class="team-builder-overview-label">Types à envisager</span>
         <div class="team-builder-synthesis-list">${suggestedTypesHtml}</div>
-      </section>
-      <section class="team-builder-synthesis-card">
-        <div class="team-builder-synthesis-head">
-          <h5>Couvertures et faiblesses</h5>
-          <p>Ce que la team encaisse déjà bien, et les types encore les plus dangereux.</p>
-        </div>
+      </div>
+    </div>
+  `;
+
+  const defensePanelHtml = `
+    <div class="team-builder-overview-groups">
+      <div class="team-builder-overview-group is-alert">
+        <span class="team-builder-overview-label">Faiblesses à surveiller</span>
         <div class="team-builder-synthesis-list">${threatsHtml}</div>
+      </div>
+      <div class="team-builder-overview-group is-defense">
+        <span class="team-builder-overview-label">Couvertures défensives</span>
         <div class="team-builder-synthesis-list">${coverageHtml}</div>
+      </div>
+      <div class="team-builder-overview-group is-link">
+        <span class="team-builder-overview-label">Couvertures internes</span>
         <div class="team-builder-synthesis-list">${internalCoverageHtml}</div>
-      </section>
-      <section class="team-builder-synthesis-card">
-        <div class="team-builder-synthesis-head">
-          <h5>Rôles et angles morts</h5>
-          <p>Répartition offensive actuelle, menaces bien pressées et points encore faibles.</p>
-        </div>
+      </div>
+    </div>
+  `;
+
+  const offensePanelHtml = `
+    <div class="team-builder-overview-groups">
+      <div class="team-builder-overview-group is-defense">
+        <span class="team-builder-overview-label">Couverture offensive</span>
         <div class="team-builder-synthesis-list">${bestOffenseHtml}</div>
+      </div>
+      <div class="team-builder-overview-group is-alert">
+        <span class="team-builder-overview-label">Angles morts</span>
         <div class="team-builder-synthesis-list">${blindSpotsHtml}</div>
+      </div>
+      <div class="team-builder-overview-group is-link">
+        <span class="team-builder-overview-label">Répartition</span>
         <div class="team-builder-offense-grid">
           <div class="team-builder-offense-stat">
             <span>Physique</span>
@@ -4414,6 +4427,38 @@ function renderTeamBuilderSummary() {
             <strong>${synthesis.offenseCounts.support}</strong>
           </div>
         </div>
+      </div>
+    </div>
+  `;
+
+  summary.innerHTML = `
+    <div class="team-builder-summary-top">
+      ${renderChip("Slots", `${synthesis.filledCount}/6`)}
+      ${renderChip("Types présents", String(synthesis.distinctTypeCount))}
+      ${renderChip("Attaques", `${synthesis.moveCount}/24`)}
+      ${renderChip("Types offensifs", String(synthesis.selectedMoveTypeCount))}
+    </div>
+    <div class="team-builder-synthesis-grid">
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Vue d’ensemble équipe</h5>
+          <p>Lecture rapide de la construction actuelle et des grands repères de team.</p>
+        </div>
+        ${overviewHtml}
+      </section>
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Couvertures et faiblesses</h5>
+          <p>Ce que la team encaisse déjà bien, et les types encore les plus dangereux.</p>
+        </div>
+        ${defensePanelHtml}
+      </section>
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Rôles et angles morts</h5>
+          <p>Répartition offensive actuelle, menaces bien pressées et points encore faibles.</p>
+        </div>
+        ${offensePanelHtml}
       </section>
     </div>
   `;
