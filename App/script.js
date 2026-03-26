@@ -6308,6 +6308,18 @@ const DRAFT_ARENA_TYPE_IMAGE_BY_TYPE = {
   "Fée": "Fairy.png",
 };
 
+const DRAFT_ARENA_BACKGROUND_IMAGE_BY_NAME = Object.freeze(
+  Object.fromEntries(
+    Object.values(DRAFT_ARENAS_BY_GEN)
+      .flat()
+      .filter((arena) => arena?.name && arena?.badgeFile)
+      .map((arena) => [
+        arena.name,
+        `https://archives.bulbagarden.net/wiki/Special:Redirect/file/${arena.badgeFile}`,
+      ])
+  )
+);
+
 function createDraftArenaState() {
   return {
     phase: "gen", // gen | draft | battle | result
@@ -6567,17 +6579,136 @@ function createDraftSimpleBattleMove(label, type, options = {}) {
   };
 }
 
+function getDraftSimpleBattleOffenseProfile(pokemon) {
+  const stats = getDraftSimpleBattleStats(pokemon);
+  const attack = Number(stats.attack) || 1;
+  const spAttack = Number(stats.spAttack) || 1;
+  const speed = Number(stats.speed) || 1;
+  const preferredCategory = spAttack > attack + 12 ? "special" : attack > spAttack + 12 ? "physical" : "mixed";
+  return {
+    stats,
+    preferredCategory,
+    fast: speed >= 95,
+  };
+}
+
+function getDraftSimpleBattlePreferredMoveNamesForType(type, profile) {
+  const category = profile?.preferredCategory || "mixed";
+  const preferPhysical = category === "physical";
+  const preferSpecial = category === "special";
+  const byType = {
+    "Feu": preferPhysical ? ["Boutefeu", "Crocs Feu", "Poing de Feu", "Lance-Flammes", "Ébullilave"] : ["Lance-Flammes", "Ébullilave", "Boutefeu", "Crocs Feu"],
+    "Eau": ["Surf", "Hydrocanon"],
+    "Plante": preferPhysical ? ["Lame-Feuille", "Canon Graine", "Giga-Sangsue", "Éco-Sphère", "Nœud Herbe"] : ["Éco-Sphère", "Giga-Sangsue", "Nœud Herbe", "Lame-Feuille", "Canon Graine"],
+    "Électrik": preferPhysical ? ["Éclair Fou", "Crocs Éclair", "Poing-Éclair", "Tonnerre", "Fatal-Foudre", "Change Éclair"] : ["Tonnerre", "Change Éclair", "Fatal-Foudre", "Éclair Fou", "Crocs Éclair"],
+    "Glace": preferPhysical ? ["Crocs Givre", "Poing Glace", "Laser Glace"] : ["Laser Glace", "Crocs Givre", "Poing Glace"],
+    "Combat": preferPhysical ? ["Close Combat", "Aurasphère"] : ["Aurasphère", "Close Combat"],
+    "Poison": preferPhysical ? ["Direct Toxik", "Cradovague", "Bomb-Beurk"] : ["Cradovague", "Bomb-Beurk", "Direct Toxik"],
+    "Dragon": ["Draco-Météore", "Dracochoc"],
+    "Vol": preferPhysical ? ["Vent Violent", "Lame d'Air"] : ["Vent Violent", "Lame d'Air"],
+    "Psy": preferPhysical ? ["Psykoud'Boul", "Psyko", "Choc Mental"] : ["Psyko", "Choc Mental", "Psykoud'Boul"],
+    "Ténèbres": preferPhysical ? ["Sabotage", "Machouille", "Tricherie", "Vibrobscur"] : ["Vibrobscur", "Machouille", "Sabotage", "Tricherie"],
+    "Spectre": ["Ball'Ombre"],
+    "Fée": preferPhysical ? ["Câlinerie", "Éclat Magique"] : ["Éclat Magique", "Câlinerie"],
+    "Acier": preferPhysical ? ["Tête de Fer", "Pisto-Poing"] : ["Tête de Fer", "Pisto-Poing"],
+    "Sol": preferPhysical ? ["Séisme", "Telluriforce", "Tour Rapide"] : ["Telluriforce", "Séisme", "Tour Rapide"],
+    "Roche": ["Piège de Roc"],
+    "Insecte": ["Demi-Tour"],
+    "Normal": profile?.fast ? ["Vive-Attaque", "Plaquage", "Retour"] : ["Plaquage", "Retour", "Vive-Attaque"],
+  };
+  return byType[type] || [];
+}
+
+function getDraftSimpleBattleCoverageTypeTargets(pokemon) {
+  const types = [pokemon?.type1, pokemon?.type2].filter(Boolean);
+  const coverageMap = {
+    "Feu": ["Sol", "Combat", "Dragon"],
+    "Eau": ["Glace", "Sol", "Combat"],
+    "Plante": ["Sol", "Poison", "Glace"],
+    "Électrik": ["Glace", "Plante", "Ténèbres"],
+    "Glace": ["Eau", "Acier", "Combat"],
+    "Combat": ["Ténèbres", "Acier", "Psy"],
+    "Poison": ["Sol", "Ténèbres", "Spectre"],
+    "Sol": ["Roche", "Acier", "Glace"],
+    "Vol": ["Combat", "Sol", "Dragon"],
+    "Psy": ["Fée", "Combat", "Spectre"],
+    "Insecte": ["Sol", "Combat", "Plante"],
+    "Roche": ["Sol", "Combat", "Acier"],
+    "Spectre": ["Poison", "Fée", "Combat"],
+    "Dragon": ["Feu", "Eau", "Électrik"],
+    "Ténèbres": ["Combat", "Poison", "Fée"],
+    "Acier": ["Sol", "Fée", "Dragon"],
+    "Fée": ["Psy", "Acier", "Plante"],
+    "Normal": ["Combat", "Ténèbres"],
+  };
+  const targets = new Set();
+  types.forEach((type) => (coverageMap[type] || []).forEach((target) => targets.add(target)));
+  return [...targets];
+}
+
+function getDraftSimpleBattleUtilityMoveNames(pokemon, profile) {
+  const types = [pokemon?.type1, pokemon?.type2].filter(Boolean);
+  const utilities = [];
+  if ((profile?.preferredCategory === "physical" || profile?.preferredCategory === "mixed")) utilities.push("Danse-Lames");
+  if (profile?.fast) utilities.push("Abri");
+  if (types.includes("Vol")) utilities.push("Atterrissage");
+  if (types.includes("Roche")) utilities.push("Piège de Roc");
+  if (types.includes("Électrik")) utilities.push("Change Éclair");
+  if (types.includes("Insecte")) utilities.push("Demi-Tour");
+  utilities.push("Abri");
+  return [...new Set(utilities)];
+}
+
 function buildDraftSimpleBattleDefaultMoves(pokemon) {
-  const moves = [];
-  if (pokemon?.type1) {
-    moves.push(createDraftSimpleBattleMove(`${pokemon.type1} - STAB`, pokemon.type1));
+  const profile = getDraftSimpleBattleOffenseProfile(pokemon);
+  const selected = [];
+  const selectedNames = new Set();
+  const pushMoveByName = (moveName) => {
+    if (!moveName || selected.length >= 4 || selectedNames.has(moveName)) return false;
+    const move = convertDraftMoveNameToSimpleBattleMove(moveName, pokemon);
+    if (!move?.name || selectedNames.has(move.name)) return false;
+    selected.push(move);
+    selectedNames.add(move.name);
+    return true;
+  };
+
+  [pokemon?.type1, pokemon?.type2].filter(Boolean).forEach((type) => {
+    getDraftSimpleBattlePreferredMoveNamesForType(type, profile).forEach(pushMoveByName);
+  });
+
+  getDraftSimpleBattleCoverageTypeTargets(pokemon).forEach((type) => {
+    getDraftSimpleBattlePreferredMoveNamesForType(type, profile).forEach(pushMoveByName);
+  });
+
+  getDraftSimpleBattleUtilityMoveNames(pokemon, profile).slice(0, 1).forEach(pushMoveByName);
+
+  ["Vive-Attaque", "Plaquage", "Retour"].forEach(pushMoveByName);
+
+  if (!selected.length && pokemon?.type1) {
+    selected.push(createDraftSimpleBattleMove(`${pokemon.type1} - STAB`, pokemon.type1, {
+      category: profile.preferredCategory === "special" ? "special" : "physical",
+    }));
   }
-  if (pokemon?.type2) {
-    moves.push(createDraftSimpleBattleMove(`${pokemon.type2} - STAB`, pokemon.type2, { category: "special" }));
+  if (selected.length < 2 && pokemon?.type2 && pokemon.type2 !== pokemon.type1) {
+    selected.push(createDraftSimpleBattleMove(`${pokemon.type2} - STAB`, pokemon.type2, {
+      category: profile.preferredCategory === "physical" ? "physical" : "special",
+    }));
   }
-  moves.push(createDraftSimpleBattleMove("Couverture neutre", "Normal"));
-  moves.push(createDraftSimpleBattleMove("Frappe rapide", pokemon?.type1 || "Normal", { power: 55 }));
-  return moves.slice(0, 4);
+  if (selected.length < 3) {
+    const fallbackCoverageType = getDraftSimpleBattleCoverageTypeTargets(pokemon)[0] || "Normal";
+    selected.push(createDraftSimpleBattleMove("Couverture fiable", fallbackCoverageType, {
+      category: profile.preferredCategory === "physical" ? "physical" : "special",
+      power: 75,
+    }));
+  }
+  if (selected.length < 4) {
+    selected.push(createDraftSimpleBattleMove(profile.fast ? "Frappe rapide" : "Couverture neutre", profile.fast ? "Normal" : (pokemon?.type1 || "Normal"), {
+      power: profile.fast ? 40 : 70,
+      priority: profile.fast ? 1 : 0,
+      category: profile.fast ? "physical" : (profile.preferredCategory === "special" ? "special" : "physical"),
+    }));
+  }
+  return selected.slice(0, 4);
 }
 
 function getDraftSimpleBattleStatMultiplier(value) {
@@ -7816,10 +7947,12 @@ function renderDraftSimpleBattleBench(team = [], activeIndex = 0, sideLabel = "�
 
 function ensureDraftSimpleBattleDevPanel() {
   let panel = document.getElementById("draft-dev-battle-panel");
-  if (panel) return panel;
-
-  const host = document.querySelector("#screen-draft-arena .draft-card");
-  if (!host) return null;
+  if (panel) {
+    if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+    return panel;
+  }
 
   panel = document.createElement("section");
   panel.id = "draft-dev-battle-panel";
@@ -7831,7 +7964,7 @@ function ensureDraftSimpleBattleDevPanel() {
     </div>
     <div id="draft-dev-battle-body"></div>
   `;
-  host.appendChild(panel);
+  document.body.appendChild(panel);
   return panel;
 }
 
@@ -7839,6 +7972,7 @@ function renderDraftSimpleBattleDevPanel(state) {
   const panel = ensureDraftSimpleBattleDevPanel();
   const body = document.getElementById("draft-dev-battle-body");
   if (!panel || !body || !state) return;
+  document.body.classList.add("draft-battle-open");
   const heading = panel.querySelector(".draft-dev-battle-head h3");
   if (heading) heading.textContent = state.title || "Combat Draft";
   panel.className = `draft-panel draft-dev-battle-panel ${state.arena ? getDraftArenaThemeClass(state.arena) : "theme-neutral"}`;
@@ -8108,6 +8242,7 @@ function clearDraftSimpleBattleDevPanel() {
     draftSimpleBattleTurnTimer = null;
   }
   draftSimpleBattleDevUiState = null;
+  document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
 }
@@ -8868,6 +9003,8 @@ function getDraftArenaPreviewHint(arena) {
 }
 
 function getDraftArenaTypeImageUrl(arena) {
+  const arenaImage = DRAFT_ARENA_BACKGROUND_IMAGE_BY_NAME[arena?.name || ""];
+  if (arenaImage) return arenaImage;
   const fileName = DRAFT_ARENA_TYPE_IMAGE_BY_TYPE[arena?.type];
   return fileName ? `types/${fileName}` : "";
 }
@@ -9237,8 +9374,17 @@ function renderDraftArena() {
   if (genBadge) genBadge.textContent = draftArenaState.selectedGen ? `Génération : ${draftGenLabel(draftArenaState.selectedGen)}` : "Génération : -";
   if (picksBadge) picksBadge.textContent = `Équipe : ${draftArenaState.team.length} / ${DRAFT_TEAM_SIZE}`;
   if (shinyBadge) shinyBadge.textContent = `Shiny : ${draftArenaState.shinyCount}`;
-
   const wonCount = draftArenaState.badgeResults.filter((result) => result.status === "won").length;
+
+  const progressRatio = Math.max(0, Math.min(1, (draftArenaState.team.length || 0) / DRAFT_TEAM_SIZE));
+  const progressWrap = screen.querySelector(".draft-progress");
+  if (progressWrap) {
+    progressWrap.style.setProperty("--draft-progress-fill", `${Math.round(progressRatio * 100)}%`);
+    progressWrap.dataset.stage = draftArenaState.team.length >= DRAFT_TEAM_SIZE ? "ready" : draftArenaState.selectedGen ? "drafting" : "idle";
+  }
+  if (genBadge) genBadge.dataset.state = draftArenaState.selectedGen ? "selected" : "empty";
+  if (picksBadge) picksBadge.dataset.state = draftArenaState.team.length >= DRAFT_TEAM_SIZE ? "complete" : draftArenaState.team.length > 0 ? "progress" : "empty";
+  if (badgeCount) badgeCount.dataset.state = wonCount > 0 ? "active" : "empty";
   if (badgeCount) badgeCount.textContent = `Badges : ${wonCount} / 8`;
 
   if (battlePokemonSelect) {
@@ -9269,6 +9415,7 @@ function renderDraftArena() {
     battleLaunch.disabled = battleMeta.disabled;
     battleLaunch.title = battleMeta.title;
     battleLaunch.textContent = battleMeta.label;
+    battleLaunch.dataset.state = battleMeta.disabled ? "locked" : draftArenaState.team.length >= DRAFT_TEAM_SIZE ? "ready" : "idle";
   }
   if (battleClose && (!draftSimpleBattleDevUiState || document.getElementById("draft-dev-battle-panel")?.classList.contains("hidden"))) {
     battleClose.classList.add("hidden");
@@ -9325,7 +9472,6 @@ function renderDraftArena() {
           <span>#${spriteId}</span>
           <span class="draft-card-meta">Stat global ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
           <div class="draft-type-row">${typeBadgesHtml(option.pokemon.type1, option.pokemon.type2)}</div>
-          ${option.locked ? '<span class="draft-lock-mark">Sélectionné</span>' : ""}
           ${sparkle}
         `;
         card.disabled = Boolean(option.locked);
@@ -9349,7 +9495,13 @@ function renderDraftArena() {
       if (!member) {
         const empty = document.createElement("div");
         empty.className = "draft-team-card placeholder";
-        empty.innerHTML = `<div><b>Slot ${index + 1}</b><span>En attente de sélection</span></div>`;
+        empty.innerHTML = `
+          <div class="draft-team-card-body">
+            <small class="draft-team-slot-label">Slot ${index + 1}</small>
+            <b>En attente</b>
+            <span>Choisis un Pokémon pour compléter l’équipe.</span>
+          </div>
+        `;
         team.appendChild(empty);
         continue;
       }
@@ -9358,12 +9510,15 @@ function renderDraftArena() {
       const shownSprite = member.shiny ? getPokemonShinySprite(member.pokemon) : normalSprite;
       const item = document.createElement("div");
       const metrics = getDraftCachedPokemonPowerData(member.pokemon);
-      item.className = "draft-team-card" + (member.shiny ? " is-shiny" : "");
+      const isLatest = index === draftArenaState.team.length - 1;
+      const typesHtml = [member.pokemon.type1, member.pokemon.type2].filter(Boolean).map((type) => typeBadgeHtml(type)).join("");
+      item.className = "draft-team-card" + (member.shiny ? " is-shiny" : "") + (isLatest ? " is-latest" : " is-filled");
       item.innerHTML = `
         <img src="${shownSprite}" alt="${escapeHtml(member.pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${normalSprite}'" />
-        <div>
+        <div class="draft-team-card-body">
+          <small class="draft-team-slot-label">Slot ${index + 1}${isLatest ? " • Nouveau" : ""}</small>
           <b>${escapeHtml(member.pokemon.name)}</b>
-          <span>${escapeHtml(member.pokemon.type1)}${member.pokemon.type2 ? ` / ${escapeHtml(member.pokemon.type2)}` : ""}</span>
+          <div class="draft-team-card-types">${typesHtml}</div>
           <small>Stat global ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</small>
         </div>
       `;
