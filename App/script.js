@@ -513,6 +513,29 @@ const TEAM_BUILDER_NATURES = [
   { value: "Malpoli", label: "Malpoli (+Défense Spé., -Vitesse)" },
 ];
 
+const TEAM_BUILDER_NATURE_EFFECTS = {
+  Solo: { up: "atk", down: "def" },
+  Brave: { up: "atk", down: "spe" },
+  Rigide: { up: "atk", down: "spa" },
+  Mauvais: { up: "atk", down: "spd" },
+  Assuré: { up: "def", down: "atk" },
+  Relax: { up: "def", down: "spe" },
+  Malin: { up: "def", down: "spa" },
+  Lâche: { up: "def", down: "spd" },
+  Timide: { up: "spe", down: "atk" },
+  Pressé: { up: "spe", down: "def" },
+  Jovial: { up: "spe", down: "spa" },
+  Naïf: { up: "spe", down: "spd" },
+  Modeste: { up: "spa", down: "atk" },
+  Doux: { up: "spa", down: "def" },
+  Discret: { up: "spa", down: "spe" },
+  Foufou: { up: "spa", down: "spd" },
+  Calme: { up: "spd", down: "atk" },
+  Gentil: { up: "spd", down: "def" },
+  Prudent: { up: "spd", down: "spa" },
+  Malpoli: { up: "spd", down: "spe" },
+};
+
 const TEAM_BUILDER_EV_PRESETS = [
   {
     value: "offensive-physique",
@@ -3663,11 +3686,184 @@ function getTeamBuilderOffenseBucket(slot) {
   return atk >= spa ? "physique" : "speciale";
 }
 
+function getTeamBuilderSlotSelectedMoveTypes(slot) {
+  const pokemon = getTeamBuilderPokemon(slot);
+  if (!pokemon) return [];
+
+  const movePool = getTeamBuilderMovePool(slot);
+  const moveTypes = [];
+  const seen = new Set();
+
+  (slot.moves || []).forEach((moveName) => {
+    if (!moveName) return;
+    const move = movePool.find((entry) => entry.name === moveName);
+    const type = Array.isArray(move?.types) && move.types.length
+      ? move.types[0]
+      : null;
+    if (!type || seen.has(type)) return;
+    seen.add(type);
+    moveTypes.push(type);
+  });
+
+  return moveTypes;
+}
+
+function getTeamBuilderSuggestedTypes(synthesis, filledSlots) {
+  const existingTypes = new Set();
+  filledSlots.forEach(({ types }) => types.forEach((type) => existingTypes.add(type)));
+
+  return Object.keys(TYPE_EFFECTIVENESS)
+    .filter((candidate) => !existingTypes.has(candidate))
+    .map((candidate) => {
+      const weaknessHelp = (synthesis.weaknesses || []).reduce((sum, row) => {
+        const multiplier = attackMultiplier(row.type, candidate);
+        if (multiplier === 0) return sum + 4;
+        if (multiplier < 1) return sum + 3;
+        return sum;
+      }, 0);
+      const blindSpotHelp = (synthesis.offenseBlindSpots || []).reduce((sum, row) => {
+        const offensiveMultiplier = attackMultiplier(candidate, row.type);
+        if (offensiveMultiplier > 1) return sum + 3;
+        if (offensiveMultiplier === 1) return sum + 1;
+        return sum;
+      }, 0);
+      const duplicatePenalty = existingTypes.has(candidate) ? 4 : 0;
+      const score = weaknessHelp + blindSpotHelp - duplicatePenalty;
+      return { type: candidate, score };
+    })
+    .sort((a, b) => b.score - a.score || a.type.localeCompare(b.type, "fr"))
+    .slice(0, 4);
+}
+
+function getTeamBuilderSlotDefenseProfile(slot) {
+  const pokemon = getTeamBuilderPokemon(slot);
+  if (!pokemon) {
+    return {
+      weaknesses: [],
+      resistances: [],
+      immunities: [],
+    };
+  }
+
+  const defendingTypes = [pokemon.type1, pokemon.type2].filter(Boolean);
+  const rows = Object.keys(TYPE_EFFECTIVENESS).map((attackType) => {
+    const multiplier = defendingTypes.reduce((product, defenseType) => product * attackMultiplier(attackType, defenseType), 1);
+    return { type: attackType, multiplier };
+  });
+
+  return {
+    weaknesses: rows.filter((row) => row.multiplier > 1).sort((a, b) => b.multiplier - a.multiplier || a.type.localeCompare(b.type, "fr")).slice(0, 4),
+    resistances: rows.filter((row) => row.multiplier > 0 && row.multiplier < 1).sort((a, b) => a.multiplier - b.multiplier || a.type.localeCompare(b.type, "fr")).slice(0, 4),
+    immunities: rows.filter((row) => row.multiplier === 0).sort((a, b) => a.type.localeCompare(b.type, "fr")).slice(0, 3),
+  };
+}
+
+function getTeamBuilderInternalCoverage(filledSlots) {
+  const links = [];
+  filledSlots.forEach((entry, index) => {
+    const defense = getTeamBuilderSlotDefenseProfile(entry.slot);
+    defense.weaknesses.forEach((weakness) => {
+      const cover = filledSlots.find((candidate, candidateIndex) => {
+        if (candidateIndex === index) return false;
+        const candidateDefense = getTeamBuilderSlotDefenseProfile(candidate.slot);
+        return candidateDefense.immunities.some((row) => row.type === weakness.type)
+          || candidateDefense.resistances.some((row) => row.type === weakness.type);
+      });
+      if (!cover) return;
+      links.push({
+        weakTo: weakness.type,
+        source: entry.pokemon.name,
+        cover: cover.pokemon.name,
+      });
+    });
+  });
+
+  const seen = new Set();
+  return links.filter((entry) => {
+    const key = `${entry.source}:${entry.weakTo}:${entry.cover}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 6);
+}
+
+function getTeamBuilderSlotRoleData(slot) {
+  const pokemon = getTeamBuilderPokemon(slot);
+  if (!pokemon) {
+    return {
+      primary: "Slot vide",
+      chips: [],
+      bucket: "empty",
+    };
+  }
+
+  const movePool = getTeamBuilderMovePool(slot);
+  const selectedMoves = (slot.moves || [])
+    .filter(Boolean)
+    .map((moveName) => movePool.find((entry) => entry.name === moveName))
+    .filter(Boolean);
+  const stats = {
+    hp: Number(slot?.evs?.hp) || 0,
+    atk: Number(slot?.evs?.atk) || 0,
+    def: Number(slot?.evs?.def) || 0,
+    spa: Number(slot?.evs?.spa) || 0,
+    spd: Number(slot?.evs?.spd) || 0,
+    spe: Number(slot?.evs?.spe) || 0,
+  };
+  const bulk = stats.hp + stats.def + stats.spd;
+  const speed = stats.spe;
+  const attackBias = stats.atk - stats.spa;
+  const supportMoves = ["Atterrissage", "Repos", "Abri", "Danse-Lames", "Mur Lumière", "Protection", "Reflet", "Toxik", "Vœu Soin"];
+  const supportCount = selectedMoves.filter((move) => supportMoves.includes(move.name)).length;
+  const selectedMoveTypes = getTeamBuilderSlotSelectedMoveTypes(slot);
+  const stabCount = selectedMoves.filter((move) => move.types?.some((type) => type === pokemon.type1 || type === pokemon.type2)).length;
+  const coverageCount = selectedMoveTypes.filter((type) => type !== pokemon.type1 && type !== pokemon.type2).length;
+
+  let primary = "Pivot";
+  let bucket = "pivot";
+  if (supportCount >= 2 || (bulk >= 340 && speed <= 80)) {
+    primary = "Support";
+    bucket = "support";
+  } else if (speed >= 180 && (stats.atk >= 180 || stats.spa >= 180)) {
+    primary = "Revenge killer";
+    bucket = "speed";
+  } else if (stats.atk >= 220 && attackBias >= 40) {
+    primary = "Sweeper physique";
+    bucket = "physical";
+  } else if (stats.spa >= 220 && attackBias <= -40) {
+    primary = "Sweeper spécial";
+    bucket = "special";
+  } else if (bulk >= 430) {
+    primary = "Tank";
+    bucket = "tank";
+  } else if (coverageCount >= 2 && stabCount >= 1) {
+    primary = "Breaker";
+    bucket = "breaker";
+  }
+
+  const chips = [];
+  if (stabCount >= 2) chips.push("Double STAB");
+  else if (stabCount >= 1) chips.push("STAB fiable");
+  if (coverageCount >= 2) chips.push("Bonne couverture");
+  else if (coverageCount === 1) chips.push("Couverture simple");
+  if (speed >= 180) chips.push("Rapide");
+  if (bulk >= 430) chips.push("Solide");
+  if (supportCount >= 1) chips.push("Outil utile");
+
+  return {
+    primary,
+    chips: chips.slice(0, 3),
+    bucket,
+  };
+}
+
 function getTeamBuilderTeamSynthesis() {
   const filledSlots = [];
   const typeCounts = new Map();
   const offenseCounts = { physique: 0, speciale: 0, support: 0 };
+  const roleCounts = new Map();
   let moveCount = 0;
+  const selectedMoveTypes = new Set();
 
   for (const slot of teamBuilderState) {
     if (!slot) continue;
@@ -3685,6 +3881,11 @@ function getTeamBuilderTeamSynthesis() {
 
     const bucket = getTeamBuilderOffenseBucket(slot);
     offenseCounts[bucket] += 1;
+
+    const role = getTeamBuilderSlotRoleData(slot);
+    roleCounts.set(role.primary, (roleCounts.get(role.primary) || 0) + 1);
+
+    getTeamBuilderSlotSelectedMoveTypes(slot).forEach((type) => selectedMoveTypes.add(type));
   }
 
   const attackTypes = Object.keys(TYPE_EFFECTIVENESS);
@@ -3724,7 +3925,30 @@ function getTeamBuilderTeamSynthesis() {
     .filter(([, count]) => count > 1)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"));
 
-  return {
+  const offensiveCoverage = attackTypes
+    .map((defenseType) => {
+      const superCount = [...selectedMoveTypes].filter((attackType) => attackMultiplier(attackType, defenseType) > 1).length;
+      const immuneCount = [...selectedMoveTypes].filter((attackType) => attackMultiplier(attackType, defenseType) === 0).length;
+      const neutralCount = [...selectedMoveTypes].filter((attackType) => attackMultiplier(attackType, defenseType) === 1).length;
+      return {
+        type: defenseType,
+        superCount,
+        immuneCount,
+        neutralCount,
+      };
+    })
+    .sort((a, b) => b.superCount - a.superCount || a.immuneCount - b.immuneCount || a.type.localeCompare(b.type, "fr"));
+
+  const bestOffense = offensiveCoverage
+    .filter((row) => row.superCount > 0)
+    .slice(0, 4);
+
+  const offenseBlindSpots = offensiveCoverage
+    .filter((row) => row.superCount === 0)
+    .sort((a, b) => a.neutralCount - b.neutralCount || b.immuneCount - a.immuneCount || a.type.localeCompare(b.type, "fr"))
+    .slice(0, 4);
+
+  const synthesis = {
     filledCount: filledSlots.length,
     distinctTypeCount: typeCounts.size,
     moveCount,
@@ -3732,7 +3956,17 @@ function getTeamBuilderTeamSynthesis() {
     weaknesses,
     coverage,
     duplicates,
+    selectedMoveTypeCount: selectedMoveTypes.size,
+    bestOffense,
+    offenseBlindSpots,
+    roleSummary: [...roleCounts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"))
+      .slice(0, 4),
+    internalCoverage: getTeamBuilderInternalCoverage(filledSlots),
   };
+  synthesis.suggestedTypes = getTeamBuilderSuggestedTypes(synthesis, filledSlots);
+
+  return synthesis;
 }
 
 function getTeamBuilderPokemonCatalog() {
@@ -3757,6 +3991,15 @@ function getTeamBuilderPokemonNatureOptions() {
 
 function getTeamBuilderNatureLabel(value) {
   return TEAM_BUILDER_NATURES.find((nature) => nature.value === value)?.label || "Hardi (neutre)";
+}
+
+function getTeamBuilderNatureModifiers(natureValue) {
+  const modifiers = { atk: 1, def: 1, spa: 1, spd: 1, spe: 1 };
+  const nature = TEAM_BUILDER_NATURE_EFFECTS[natureValue];
+  if (!nature) return modifiers;
+  if (nature.up && modifiers[nature.up] != null) modifiers[nature.up] = 1.1;
+  if (nature.down && modifiers[nature.down] != null) modifiers[nature.down] = 0.9;
+  return modifiers;
 }
 
 function getTeamBuilderSpreadPreset(presets, value) {
@@ -4094,32 +4337,69 @@ function renderTeamBuilderSummary() {
     ? synthesis.duplicates.map(([type, count]) => renderTypeChip(type, `x${count}`)).join("")
     : '<span class="home-type-helper-empty">Aucun doublon évident.</span>';
 
+  const bestOffenseHtml = synthesis.bestOffense.length
+    ? synthesis.bestOffense
+        .map((row) => renderTypeChip(row.type, row.superCount === 1 ? "1 attaque forte" : `${row.superCount} attaques fortes`))
+        .join("")
+    : '<span class="home-type-helper-empty">Aucune couverture offensive claire.</span>';
+
+  const blindSpotsHtml = synthesis.offenseBlindSpots.length
+    ? synthesis.offenseBlindSpots
+        .map((row) => renderTypeChip(row.type, row.immuneCount ? "attention aux immunités" : "peu de pression"))
+        .join("")
+    : '<span class="home-type-helper-empty">Aucun angle mort marqué.</span>';
+
+  const suggestedTypesHtml = synthesis.suggestedTypes.length
+    ? synthesis.suggestedTypes
+        .map((row) => renderTypeChip(row.type, "à envisager"))
+        .join("")
+    : '<span class="home-type-helper-empty">Aucune suggestion claire.</span>';
+
+  const roleSummaryHtml = synthesis.roleSummary.length
+    ? synthesis.roleSummary
+        .map(([role, count]) => renderTypeChip(role, count > 1 ? `${count} slots` : "1 slot"))
+        .join("")
+    : '<span class="home-type-helper-empty">Les rôles se liront ici au fur et à mesure.</span>';
+
+  const internalCoverageHtml = synthesis.internalCoverage.length
+    ? synthesis.internalCoverage
+        .map((entry) => renderTypeChip(entry.weakTo, `${entry.source} -> ${entry.cover}`))
+        .join("")
+    : '<span class="home-type-helper-empty">Les relais défensifs apparaîtront ici avec plus de slots remplis.</span>';
+
   summary.innerHTML = `
     <div class="team-builder-summary-top">
       ${renderChip("Slots", `${synthesis.filledCount}/6`)}
       ${renderChip("Types présents", String(synthesis.distinctTypeCount))}
       ${renderChip("Attaques", `${synthesis.moveCount}/24`)}
+      ${renderChip("Types offensifs", String(synthesis.selectedMoveTypeCount))}
     </div>
     <div class="team-builder-synthesis-grid">
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
-          <h5>Faiblesses à surveiller</h5>
-          <p>Les types qui punissent le plus la team.</p>
+          <h5>Vue d’ensemble équipe</h5>
+          <p>Lecture rapide de la construction actuelle et des grands repères de team.</p>
+        </div>
+        <div class="team-builder-synthesis-list">${duplicatesHtml}</div>
+        <div class="team-builder-synthesis-list">${roleSummaryHtml}</div>
+        <div class="team-builder-synthesis-list">${suggestedTypesHtml}</div>
+      </section>
+      <section class="team-builder-synthesis-card">
+        <div class="team-builder-synthesis-head">
+          <h5>Couvertures et faiblesses</h5>
+          <p>Ce que la team encaisse déjà bien, et les types encore les plus dangereux.</p>
         </div>
         <div class="team-builder-synthesis-list">${threatsHtml}</div>
-      </section>
-      <section class="team-builder-synthesis-card">
-        <div class="team-builder-synthesis-head">
-          <h5>Couverture utile</h5>
-          <p>Les types déjà bien encaissés par l'équipe.</p>
-        </div>
         <div class="team-builder-synthesis-list">${coverageHtml}</div>
+        <div class="team-builder-synthesis-list">${internalCoverageHtml}</div>
       </section>
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
-          <h5>Répartition offensive</h5>
-          <p>Vue simple des rôles de slot préparés.</p>
+          <h5>Rôles et angles morts</h5>
+          <p>Répartition offensive actuelle, menaces bien pressées et points encore faibles.</p>
         </div>
+        <div class="team-builder-synthesis-list">${bestOffenseHtml}</div>
+        <div class="team-builder-synthesis-list">${blindSpotsHtml}</div>
         <div class="team-builder-offense-grid">
           <div class="team-builder-offense-stat">
             <span>Physique</span>
@@ -4134,13 +4414,6 @@ function renderTeamBuilderSummary() {
             <strong>${synthesis.offenseCounts.support}</strong>
           </div>
         </div>
-      </section>
-      <section class="team-builder-synthesis-card">
-        <div class="team-builder-synthesis-head">
-          <h5>Doublons évidents</h5>
-          <p>Types répétés à surveiller avant de valider la team.</p>
-        </div>
-        <div class="team-builder-synthesis-list">${duplicatesHtml}</div>
       </section>
     </div>
   `;
@@ -4169,6 +4442,7 @@ function renderTeamBuilderGrid() {
     const body = document.createElement("div");
     body.className = "home-builder-slot-body";
     if (pokemon) {
+      const role = getTeamBuilderSlotRoleData(slot);
       const img = document.createElement("img");
       img.src = getPokemonSprite(pokemon);
       img.alt = pokemon.name;
@@ -4179,15 +4453,17 @@ function renderTeamBuilderGrid() {
       info.innerHTML = `
         <strong>${escapeHtml(pokemon.name)}</strong>
         <div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
-        <p>${escapeHtml(slot.item || "Aucun")} · ${escapeHtml(slot.gimmick || "Aucun")}</p>
-        <small>${escapeHtml(slot.nature || "Hardi")} · ${escapeHtml(slot.talent || "Talent principal")}</small>
+        <div class="team-builder-role-line">
+          <span class="team-builder-role-badge">${escapeHtml(role.primary)}</span>
+          ${role.chips[0] ? `<span class="team-builder-role-chip">${escapeHtml(role.chips[0])}</span>` : ""}
+        </div>
         <small>${slot.moves.filter(Boolean).length} attaque(s)</small>
       `;
 
       body.appendChild(img);
       body.appendChild(info);
     } else {
-      body.innerHTML = '<span class="home-builder-slot-empty">Clique pour ajouter un Pokémon.</span>';
+      body.innerHTML = '<span class="home-builder-slot-empty">Ajoute un Pokémon</span>';
     }
 
     card.appendChild(head);
@@ -4309,6 +4585,124 @@ function fillTeamBuilderSelect(select, values, emptyLabel) {
     ...values.map((entry) => `<option value="${escapeHtml(entry.value || entry)}">${escapeHtml(entry.label || entry)}</option>`),
   ].join("");
   select.dataset.ready = "1";
+}
+
+function getTeamBuilderComputedStatBaseMap(pokeData) {
+  return {
+    hp: statFromPokemonData(pokeData, "hp"),
+    atk: statFromPokemonData(pokeData, "attack"),
+    def: statFromPokemonData(pokeData, "defense"),
+    spa: statFromPokemonData(pokeData, "special-attack"),
+    spd: statFromPokemonData(pokeData, "special-defense"),
+    spe: statFromPokemonData(pokeData, "speed"),
+  };
+}
+
+function computeTeamBuilderFinalStats(pokeData, slot, level = 100) {
+  const baseStats = getTeamBuilderComputedStatBaseMap(pokeData);
+  const evs = normalizeTeamBuilderSpread(slot?.evs, 0, 0, 252);
+  const ivs = normalizeTeamBuilderSpread(slot?.ivs, 31, 0, 31);
+  const nature = getTeamBuilderNatureModifiers(slot?.nature || "Hardi");
+  const finalStats = {};
+
+  ["hp", "atk", "def", "spa", "spd", "spe"].forEach((key) => {
+    const base = Number(baseStats[key]);
+    if (!Number.isFinite(base)) {
+      finalStats[key] = null;
+      return;
+    }
+    const iv = Number(ivs[key]) || 0;
+    const ev = Number(evs[key]) || 0;
+    const core = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100);
+    if (key === "hp") {
+      finalStats.hp = core + level + 10;
+    } else {
+      finalStats[key] = Math.floor((core + 5) * (nature[key] || 1));
+    }
+  });
+
+  finalStats.total = ["hp", "atk", "def", "spa", "spd", "spe"].reduce((sum, key) => {
+    return sum + (Number.isFinite(finalStats[key]) ? finalStats[key] : 0);
+  }, 0);
+  return finalStats;
+}
+
+function renderTeamBuilderComputedStatsContent(content) {
+  const root = document.getElementById("team-builder-computed-stats");
+  if (!root) return;
+  root.innerHTML = content;
+}
+
+function renderTeamBuilderComputedStats() {
+  const root = document.getElementById("team-builder-computed-stats");
+  if (!root) return;
+
+  const slot = teamBuilderState[teamBuilderActiveSlot];
+  const pokemon = getTeamBuilderPokemon(slot);
+  const header = `
+    <div class="team-builder-computed-stats-head">
+      <div>
+        <h5>Stats finales</h5>
+        <p>Calcul simple au niveau 100 selon base stats, nature, EV et IV.</p>
+      </div>
+      <span class="home-coming-badge">Niv. 100</span>
+    </div>
+  `;
+
+  if (!pokemon) {
+    renderTeamBuilderComputedStatsContent(`${header}<p class="team-builder-computed-stats-empty">Choisis un Pokémon pour voir ses stats finales.</p>`);
+    return;
+  }
+
+  renderTeamBuilderComputedStatsContent(`${header}<p class="team-builder-computed-stats-empty">Calcul des stats de ${escapeHtml(pokemon.name)}…</p>`);
+
+  const activeSlotIndex = teamBuilderActiveSlot;
+  const activePokemonId = pokemon.id;
+  fetchTeamBuilderPokemonApiData(pokemon).then((data) => {
+    const currentSlot = teamBuilderState[activeSlotIndex];
+    const currentPokemon = getTeamBuilderPokemon(currentSlot);
+    if (activeSlotIndex !== teamBuilderActiveSlot || !currentPokemon || currentPokemon.id !== activePokemonId) return;
+
+    const finalStats = computeTeamBuilderFinalStats(data, currentSlot, 100);
+    const hasStats = ["hp", "atk", "def", "spa", "spd", "spe"].some((key) => Number.isFinite(finalStats[key]));
+    if (!hasStats) {
+      renderTeamBuilderComputedStatsContent(`${header}<p class="team-builder-computed-stats-empty">Stats indisponibles pour ce Pokémon pour l’instant.</p>`);
+      return;
+    }
+
+    const statsHtml = [
+      { key: "hp", label: "PV", max: 450 },
+      { key: "atk", label: "Attaque", max: 450 },
+      { key: "def", label: "Défense", max: 450 },
+      { key: "spa", label: "Att. Spé.", max: 450 },
+      { key: "spd", label: "Déf. Spé.", max: 450 },
+      { key: "spe", label: "Vitesse", max: 450 },
+    ].map((entry) => {
+      const value = Number.isFinite(finalStats[entry.key]) ? finalStats[entry.key] : "—";
+      const ratio = Number.isFinite(finalStats[entry.key]) ? Math.max(0, Math.min(1, finalStats[entry.key] / entry.max)) : 0;
+      return `
+        <div class="team-builder-computed-stat">
+          <span>${entry.label}</span>
+          <strong>${value}</strong>
+          <i><b style="width:${Math.round(ratio * 100)}%"></b></i>
+        </div>
+      `;
+    }).join("");
+
+    renderTeamBuilderComputedStatsContent(`
+      ${header}
+      <div class="team-builder-computed-stats-grid">${statsHtml}</div>
+      <div class="team-builder-computed-stats-total">
+        <span>Total estimé</span>
+        <strong>${finalStats.total}</strong>
+      </div>
+    `);
+  }).catch(() => {
+    const currentSlot = teamBuilderState[activeSlotIndex];
+    const currentPokemon = getTeamBuilderPokemon(currentSlot);
+    if (activeSlotIndex !== teamBuilderActiveSlot || !currentPokemon || currentPokemon.id !== activePokemonId) return;
+    renderTeamBuilderComputedStatsContent(`${header}<p class="team-builder-computed-stats-empty">Impossible de récupérer les stats pour ce Pokémon.</p>`);
+  });
 }
 
 function renderTeamBuilderStrategicFields() {
@@ -4480,6 +4874,7 @@ function renderTeamBuilderEditor() {
 
   const title = document.getElementById("team-builder-editor-title");
   const sub = document.getElementById("team-builder-editor-sub");
+  const identity = document.getElementById("team-builder-editor-identity");
   const itemSelect = document.getElementById("team-builder-item");
   const gimmickSelect = document.getElementById("team-builder-gimmick");
   const moveSelects = [
@@ -4492,16 +4887,53 @@ function renderTeamBuilderEditor() {
   const pokemon = getTeamBuilderPokemon(slot);
   if (title) title.textContent = `Slot ${teamBuilderActiveSlot + 1}`;
   if (sub) sub.textContent = pokemon ? `${pokemon.name} · Clique un autre slot pour l’éditer.` : "Choisis un Pokémon, un objet et une mécanique de slot.";
+  if (identity) {
+    identity.innerHTML = pokemon ? `
+      <div class="team-builder-editor-identity-card">
+        <div class="team-builder-editor-identity-visual">
+          <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" />
+        </div>
+        <div class="team-builder-editor-identity-copy">
+          <div class="team-builder-editor-identity-top">
+            <span class="team-builder-editor-slot-badge">Slot ${teamBuilderActiveSlot + 1}</span>
+            <span class="team-builder-editor-status-badge">Actif</span>
+          </div>
+          <strong>${escapeHtml(pokemon.name)}</strong>
+          <div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
+        </div>
+      </div>
+    ` : `
+      <div class="team-builder-editor-identity-card is-empty">
+        <div class="team-builder-editor-identity-copy">
+          <div class="team-builder-editor-identity-top">
+            <span class="team-builder-editor-slot-badge">Slot ${teamBuilderActiveSlot + 1}</span>
+            <span class="team-builder-editor-status-badge">Vide</span>
+          </div>
+          <strong>Choisis un Pokémon</strong>
+          <p>Le slot actif apparaîtra ici avec ses types.</p>
+        </div>
+      </div>
+    `;
+  }
   renderTeamBuilderPokemonPicker();
   renderTeamBuilderStrategicFields();
+  renderTeamBuilderComputedStats();
   if (itemSelect) itemSelect.value = slot.item || "";
   if (gimmickSelect) gimmickSelect.value = slot.gimmick || "";
   moveSelects.forEach((select, index) => {
     if (!select) return;
+    const field = document.getElementById(`team-builder-move-field-${index + 1}`);
+    const state = document.getElementById(`team-builder-move-state-${index + 1}`);
+    const clearBtn = field?.querySelector(".team-builder-move-clear");
+    const currentMove = slot.moves[index] || "";
+    field?.classList.toggle("is-filled", Boolean(currentMove));
+    field?.classList.toggle("is-empty", !currentMove);
+    clearBtn?.classList.toggle("hidden", !currentMove);
+    if (state) state.textContent = currentMove ? `Choisie : ${currentMove}` : "Slot vide";
     select.innerHTML = [
       pokemon ? '<option value="">Chargement des attaques…</option>' : '<option value="">Aucune attaque</option>',
     ].join("");
-    select.value = slot.moves[index] || "";
+    select.value = currentMove;
     select.disabled = !pokemon;
   });
 
@@ -4514,12 +4946,20 @@ function renderTeamBuilderEditor() {
     if (sanitizeTeamBuilderSlotMoves(slot, movePool)) saveTeamBuilderState();
     moveSelects.forEach((select, index) => {
       if (!select) return;
+      const field = document.getElementById(`team-builder-move-field-${index + 1}`);
+      const state = document.getElementById(`team-builder-move-state-${index + 1}`);
+      const clearBtn = field?.querySelector(".team-builder-move-clear");
+      const currentMove = slot.moves[index] || "";
       select.disabled = false;
       select.innerHTML = [
         '<option value="">Aucune attaque</option>',
         ...movePool.map((move) => `<option value="${escapeHtml(move.name)}">${escapeHtml(move.name)}${move.types.length ? ` (${escapeHtml(move.types.join(" / "))})` : ""}</option>`),
       ].join("");
-      select.value = slot.moves[index] || "";
+      select.value = currentMove;
+      field?.classList.toggle("is-filled", Boolean(currentMove));
+      field?.classList.toggle("is-empty", !currentMove);
+      clearBtn?.classList.toggle("hidden", !currentMove);
+      if (state) state.textContent = currentMove ? `Choisie : ${currentMove}` : "Slot vide";
     });
     renderTeamBuilderSummary();
   });
@@ -4530,6 +4970,7 @@ function renderTeamBuilderModule() {
   renderTeamBuilderSummary();
   renderTeamBuilderGrid();
   renderTeamBuilderEditor();
+  renderTeamBuilderExport();
 }
 
 function initTeamBuilderModule() {
@@ -4637,6 +5078,214 @@ function resetTeamBuilder() {
   teamBuilderPokemonSearch = "";
   saveTeamBuilderState();
   renderTeamBuilderModule();
+}
+
+function getTeamBuilderExportStatLabel(key) {
+  const labels = {
+    hp: "HP",
+    atk: "Atk",
+    def: "Def",
+    spa: "SpA",
+    spd: "SpD",
+    spe: "Spe",
+  };
+  return labels[key] || key;
+}
+
+function formatTeamBuilderExportSpread(spread, options = {}) {
+  const defaultValue = Number(options.defaultValue);
+  const showZeros = Boolean(options.showZeros);
+  const parts = ["hp", "atk", "def", "spa", "spd", "spe"]
+    .map((key) => {
+      const value = Number(spread?.[key]);
+      if (!Number.isFinite(value)) return null;
+      if (!showZeros && value === 0) return null;
+      if (Number.isFinite(defaultValue) && value === defaultValue) return null;
+      return `${value} ${getTeamBuilderExportStatLabel(key)}`;
+    })
+    .filter(Boolean);
+  return parts.join(" / ");
+}
+
+function buildTeamBuilderSlotExport(slot) {
+  const pokemon = getTeamBuilderPokemon(slot);
+  if (!pokemon) return "";
+
+  const lines = [];
+  lines.push(`${pokemon.name}${slot.item ? ` @ ${slot.item}` : ""}`);
+  if (slot.talent) lines.push(`Talent: ${slot.talent}`);
+  if (slot.gimmick) lines.push(`Gimmick: ${slot.gimmick}`);
+  if (slot.nature) lines.push(`${slot.nature} Nature`);
+
+  const evLine = formatTeamBuilderExportSpread(slot.evs, { defaultValue: 0 });
+  if (evLine) lines.push(`EVs: ${evLine}`);
+
+  const ivLine = formatTeamBuilderExportSpread(slot.ivs, { defaultValue: 31 });
+  if (ivLine) lines.push(`IVs: ${ivLine}`);
+
+  slot.moves
+    .filter(Boolean)
+    .forEach((move) => lines.push(`- ${move}`));
+
+  return lines.join("\n");
+}
+
+function buildTeamBuilderExportText() {
+  const filled = teamBuilderState
+    .map((slot) => buildTeamBuilderSlotExport(slot))
+    .filter(Boolean);
+
+  return filled.length
+    ? filled.join("\n\n")
+    : "Aucun Pokémon ajouté pour l’instant.";
+}
+
+function renderTeamBuilderExport() {
+  const output = document.getElementById("team-builder-export-output");
+  const meta = document.getElementById("team-builder-export-meta");
+  if (!output || !meta) return;
+
+  const filledCount = teamBuilderState.filter((slot) => getTeamBuilderPokemon(slot)).length;
+  output.value = buildTeamBuilderExportText();
+  meta.textContent = `${filledCount} Pokémon`;
+}
+
+function copyTeamBuilderExport() {
+  const text = buildTeamBuilderExportText();
+  const msg = document.getElementById("team-builder-export-msg");
+  navigator.clipboard.writeText(text).then(() => {
+    if (!msg) return;
+    msg.textContent = "Export copié.";
+    msg.classList.remove("hidden");
+    setTimeout(() => msg.classList.add("hidden"), 2200);
+  }).catch(() => {
+    if (!msg) return;
+    msg.textContent = "Copie impossible.";
+    msg.classList.remove("hidden");
+    setTimeout(() => msg.classList.add("hidden"), 2200);
+  });
+}
+
+function getTeamBuilderNatureValueFromImport(raw) {
+  const target = norm(String(raw || "").replace(/\s+nature$/i, "").trim());
+  if (!target) return "Hardi";
+  const match = TEAM_BUILDER_NATURES.find((entry) => norm(entry.value) === target || norm(entry.label) === target);
+  return match?.value || "Hardi";
+}
+
+function getTeamBuilderPresetValueFromSpread(presets, spread) {
+  const keys = ["hp", "atk", "def", "spa", "spd", "spe"];
+  const match = presets.find((preset) => preset.spread && keys.every((key) => Number(preset.spread[key] || 0) === Number(spread?.[key] || 0)));
+  return match?.value || "custom";
+}
+
+function parseTeamBuilderSpreadLine(line, fallbackDefault = 0) {
+  const spread = { hp: fallbackDefault, atk: fallbackDefault, def: fallbackDefault, spa: fallbackDefault, spd: fallbackDefault, spe: fallbackDefault };
+  const map = {
+    hp: "hp",
+    atk: "atk",
+    def: "def",
+    spa: "spa",
+    spd: "spd",
+    spe: "spe",
+  };
+  const matches = String(line || "").match(/(\d+)\s*(HP|Atk|Def|SpA|SpD|Spe)/gi) || [];
+  matches.forEach((chunk) => {
+    const parts = chunk.match(/(\d+)\s*(HP|Atk|Def|SpA|SpD|Spe)/i);
+    if (!parts) return;
+    const value = Number(parts[1]);
+    const key = map[String(parts[2]).toLowerCase()];
+    if (!key || !Number.isFinite(value)) return;
+    spread[key] = value;
+  });
+  return spread;
+}
+
+function parseTeamBuilderImportBlock(block) {
+  const lines = String(block || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (!lines.length) return null;
+
+  const head = lines[0];
+  const [pokemonRaw, itemRaw] = head.split("@").map((part) => String(part || "").trim());
+  const pokemonName = pokemonRaw.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  const pokemon = findPokemonGlobalByName(pokemonName);
+  if (!pokemon) return null;
+
+  const slot = createTeamBuilderEmptySlot();
+  slot.pokemonId = pokemon.id;
+  slot.item = TEAM_BUILDER_ITEMS.includes(itemRaw) ? itemRaw : "";
+
+  lines.slice(1).forEach((line) => {
+    if (/^talent\s*:/i.test(line)) {
+      slot.talent = line.split(":").slice(1).join(":").trim();
+      return;
+    }
+    if (/^gimmick\s*:/i.test(line)) {
+      const gimmick = line.split(":").slice(1).join(":").trim();
+      slot.gimmick = TEAM_BUILDER_GIMMICKS.includes(gimmick) ? gimmick : "";
+      return;
+    }
+    if (/nature$/i.test(line)) {
+      slot.nature = getTeamBuilderNatureValueFromImport(line);
+      return;
+    }
+    if (/^evs\s*:/i.test(line)) {
+      const spread = parseTeamBuilderSpreadLine(line, 0);
+      slot.evs = normalizeTeamBuilderSpread(spread, 0, 0, 252);
+      slot.evPreset = getTeamBuilderPresetValueFromSpread(TEAM_BUILDER_EV_PRESETS, slot.evs);
+      return;
+    }
+    if (/^ivs\s*:/i.test(line)) {
+      const spread = parseTeamBuilderSpreadLine(line, 31);
+      slot.ivs = normalizeTeamBuilderSpread(spread, 31, 0, 31);
+      slot.ivPreset = getTeamBuilderPresetValueFromSpread(TEAM_BUILDER_IV_PRESETS, slot.ivs);
+      return;
+    }
+    if (/^-/.test(line)) {
+      const moveName = line.replace(/^-+\s*/, "").trim();
+      const nextIndex = slot.moves.findIndex((move) => !move);
+      if (nextIndex >= 0) slot.moves[nextIndex] = moveName;
+    }
+  });
+
+  return slot;
+}
+
+function importTeamBuilderText() {
+  const input = document.getElementById("team-builder-import-input");
+  const msg = document.getElementById("team-builder-import-msg");
+  if (!input || !msg) return;
+
+  const blocks = String(input.value || "")
+    .split(/\r?\n\s*\r?\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  const slots = blocks
+    .map((block) => parseTeamBuilderImportBlock(block))
+    .filter(Boolean)
+    .slice(0, 6);
+
+  if (!slots.length) {
+    msg.textContent = "Import impossible.";
+    msg.classList.remove("hidden");
+    setTimeout(() => msg.classList.add("hidden"), 2200);
+    return;
+  }
+
+  teamBuilderState = normalizeTeamBuilderState(slots);
+  teamBuilderActiveSlot = 0;
+  teamBuilderPokemonPickerOpen = false;
+  teamBuilderPokemonSearch = "";
+  saveTeamBuilderState();
+  renderTeamBuilderModule();
+
+  msg.textContent = `${slots.length} slot${slots.length > 1 ? "s" : ""} importé${slots.length > 1 ? "s" : ""}.`;
+  msg.classList.remove("hidden");
+  setTimeout(() => msg.classList.add("hidden"), 2200);
 }
 
 function getTeamLibraryTemplateById(id) {
@@ -5774,12 +6423,12 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Aurasphère": { power: 80, category: "special" },
   "Nœud Herbe": { power: 80, category: "special" },
   "Ébullilave": { power: 80, category: "special" },
-  "Vive-Attaque": { power: 40, category: "physical", priority: 1 },
-  "Retour": { power: 90, category: "physical" },
-  "Plaquage": { power: 85, category: "physical" },
-  "Ultralaser": { power: 150, category: "special" },
-  "Écrasement": { power: 65, category: "physical" },
-  "Bélier": { power: 90, category: "physical" },
+  "Vive-Attaque": { power: 40, category: "physical", priority: 1, type: "Normal" },
+  "Retour": { power: 90, category: "physical", type: "Normal" },
+  "Plaquage": { power: 85, category: "physical", type: "Normal" },
+  "Ultralaser": { power: 150, category: "special", type: "Normal" },
+  "Écrasement": { power: 65, category: "physical", type: "Normal" },
+  "Bélier": { power: 90, category: "physical", type: "Normal" },
   "Piège de Roc": { power: 0, category: "status" },
   "Demi-Tour": { power: 70, category: "physical" },
   "Tour Rapide": { power: 50, category: "physical" },
@@ -6211,8 +6860,8 @@ function getDraftSimpleBattleMoveCategory(type) {
 
 function convertDraftMoveNameToSimpleBattleMove(moveName, pokemon) {
   const entry = getDraftSimpleBattleMoveLibraryEntry(moveName);
-  const moveType = entry?.types?.[0] || pokemon?.type1 || "Normal";
   const override = DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES[moveName] || null;
+  const moveType = override?.type || entry?.types?.[0] || pokemon?.type1 || "Normal";
   // Fallback intentionally stays simple: if the project has no richer move data
   // for this move, we still keep a usable typed attack for dev simulations.
   return createDraftSimpleBattleMove(
@@ -6346,8 +6995,12 @@ function buildDraftSimpleBattleMovesFromDraftPokemon(pokemon) {
 
   const fallbackPool = buildTeamBuilderFallbackMovePool(pokemon)
     .map((entry) => convertDraftMoveNameToSimpleBattleMove(entry.name, pokemon));
-  const combinedPool = [...templateMoves, ...fallbackPool];
-  const curatedFallbackPool = buildDraftSimpleBattleCuratedMoveSet(pokemon, combinedPool);
+  const strictFallbackPool = fallbackPool.filter((move) => !isDraftSimpleBattleGenericNormalMove(move, pokemon));
+  const combinedPool = [...templateMoves, ...strictFallbackPool];
+  let curatedFallbackPool = buildDraftSimpleBattleCuratedMoveSet(pokemon, combinedPool);
+  if (curatedFallbackPool.length < 4) {
+    curatedFallbackPool = buildDraftSimpleBattleCuratedMoveSet(pokemon, [...templateMoves, ...fallbackPool]);
+  }
   if (curatedFallbackPool.length) {
     return curatedFallbackPool;
   }

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pokédle - Devinez le Pokémon</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='white'/%3E%3Cpath d='M2 32a30 30 0 0 1 60 0Z' fill='%23ef4438'/%3E%3Cpath d='M2 32h60' stroke='%231b315f' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='white' stroke='%231b315f' stroke-width='6'/%3E%3C/svg%3E">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -390,6 +391,7 @@
         <div class="ranking-head">
           <h2 class="card-title">🧱 Builder d’équipe</h2>
           <div class="ranking-head-actions">
+            <button class="btn-blue" type="button" onclick="openTeamsScreen()">🧩 Bases d’équipes</button>
             <button class="btn-yellow" type="button" onclick="resetTeamBuilder()">🧹 Réinitialiser</button>
             <button class="btn-ghost" type="button" onclick="goToConfig()">← Retour</button>
           </div>
@@ -409,52 +411,83 @@
             <div class="home-builder-editor-head">
               <h4 id="team-builder-editor-title">Slot 1</h4>
               <p id="team-builder-editor-sub">Clique un slot pour l’éditer.</p>
+              <div id="team-builder-editor-identity" class="team-builder-editor-identity" aria-live="polite"></div>
             </div>
-            <div class="home-builder-fields">
-              <div class="home-type-helper-label team-builder-pokemon-picker">
-                <span>Pokémon</span>
-                <button id="team-builder-pokemon-trigger" class="team-builder-pokemon-trigger" type="button" aria-expanded="false" onclick="toggleTeamBuilderPokemonPicker()">
-                  <span class="team-builder-pokemon-trigger-preview" id="team-builder-pokemon-trigger-preview"></span>
-                  <span class="team-builder-pokemon-trigger-text" id="team-builder-pokemon-trigger-text">Choisir un Pokémon</span>
-                  <span class="team-builder-pokemon-trigger-cta" id="team-builder-pokemon-trigger-cta">Ouvrir</span>
-                </button>
-                <div id="team-builder-pokemon-picker" class="team-builder-pokemon-picker-panel hidden" role="dialog" aria-label="Sélecteur de Pokémon">
-                  <div class="team-builder-pokemon-picker-head">
-                    <input id="team-builder-pokemon-search" type="search" placeholder="Rechercher un Pokémon" autocomplete="off" />
-                    <button id="team-builder-pokemon-clear" class="btn-ghost" type="button">Effacer</button>
+            <section class="team-builder-editor-section">
+              <div class="team-builder-editor-section-head">
+                <h5>Pokémon</h5>
+                <p>Choisis le Pokémon du slot et garde une lecture simple de sa base.</p>
+              </div>
+              <div class="home-builder-fields team-builder-fields-single">
+                <div class="home-type-helper-label team-builder-pokemon-picker">
+                  <span>Pokémon</span>
+                  <button id="team-builder-pokemon-trigger" class="team-builder-pokemon-trigger" type="button" aria-expanded="false" onclick="toggleTeamBuilderPokemonPicker()">
+                    <span class="team-builder-pokemon-trigger-preview" id="team-builder-pokemon-trigger-preview"></span>
+                    <span class="team-builder-pokemon-trigger-text" id="team-builder-pokemon-trigger-text">Choisir un Pokémon</span>
+                    <span class="team-builder-pokemon-trigger-cta" id="team-builder-pokemon-trigger-cta">Ouvrir</span>
+                  </button>
+                  <div id="team-builder-pokemon-picker" class="team-builder-pokemon-picker-panel hidden" role="dialog" aria-label="Sélecteur de Pokémon">
+                    <div class="team-builder-pokemon-picker-head">
+                      <input id="team-builder-pokemon-search" type="search" placeholder="Rechercher un Pokémon" autocomplete="off" />
+                      <button id="team-builder-pokemon-clear" class="btn-ghost" type="button">Effacer</button>
+                    </div>
+                    <div id="team-builder-pokemon-results" class="team-builder-pokemon-results"></div>
                   </div>
-                  <div id="team-builder-pokemon-results" class="team-builder-pokemon-results"></div>
                 </div>
               </div>
-              <label class="home-type-helper-label" for="team-builder-item">
-                <span>Objet tenu</span>
-                <select id="team-builder-item"></select>
-              </label>
-              <label class="home-type-helper-label" for="team-builder-gimmick">
-                <span>Gimmick / mécanique</span>
-                <select id="team-builder-gimmick"></select>
-              </label>
-            </div>
-            <div class="home-builder-moves">
-              <label class="home-type-helper-label" for="team-builder-move-1">
-                <span>Attaque 1</span>
-                <select id="team-builder-move-1"></select>
-              </label>
-              <label class="home-type-helper-label" for="team-builder-move-2">
-                <span>Attaque 2</span>
-                <select id="team-builder-move-2"></select>
-              </label>
-              <label class="home-type-helper-label" for="team-builder-move-3">
-                <span>Attaque 3</span>
-                <select id="team-builder-move-3"></select>
-              </label>
-              <label class="home-type-helper-label" for="team-builder-move-4">
-                <span>Attaque 4</span>
-                <select id="team-builder-move-4"></select>
-              </label>
-            </div>
-            <div class="team-builder-strategic">
-              <div class="home-builder-editor-head">
+            </section>
+            <section class="team-builder-editor-section">
+              <div class="team-builder-editor-section-head">
+                <h5>Set</h5>
+                <p>Objet, gimmick et attaques du slot, regroupés dans une seule zone claire.</p>
+              </div>
+              <div class="home-builder-fields">
+                <label class="home-type-helper-label" for="team-builder-item">
+                  <span>Objet tenu</span>
+                  <select id="team-builder-item"></select>
+                </label>
+                <label class="home-type-helper-label" for="team-builder-gimmick">
+                  <span>Gimmick / mécanique</span>
+                  <select id="team-builder-gimmick"></select>
+                </label>
+              </div>
+              <div class="home-builder-moves">
+                <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-1" id="team-builder-move-field-1">
+                  <span class="team-builder-move-label-row">
+                    <span>Attaque 1</span>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 0)">Vider</button>
+                  </span>
+                  <select id="team-builder-move-1"></select>
+                  <small class="team-builder-move-state" id="team-builder-move-state-1">Slot vide</small>
+                </label>
+                <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-2" id="team-builder-move-field-2">
+                  <span class="team-builder-move-label-row">
+                    <span>Attaque 2</span>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 1)">Vider</button>
+                  </span>
+                  <select id="team-builder-move-2"></select>
+                  <small class="team-builder-move-state" id="team-builder-move-state-2">Slot vide</small>
+                </label>
+                <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-3" id="team-builder-move-field-3">
+                  <span class="team-builder-move-label-row">
+                    <span>Attaque 3</span>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 2)">Vider</button>
+                  </span>
+                  <select id="team-builder-move-3"></select>
+                  <small class="team-builder-move-state" id="team-builder-move-state-3">Slot vide</small>
+                </label>
+                <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-4" id="team-builder-move-field-4">
+                  <span class="team-builder-move-label-row">
+                    <span>Attaque 4</span>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 3)">Vider</button>
+                  </span>
+                  <select id="team-builder-move-4"></select>
+                  <small class="team-builder-move-state" id="team-builder-move-state-4">Slot vide</small>
+                </label>
+              </div>
+            </section>
+            <section class="team-builder-editor-section team-builder-strategic">
+              <div class="team-builder-editor-section-head">
                 <h4>Réglages stratégiques</h4>
                 <p>Des réglages simples et guidés pour préparer le slot sans alourdir le builder.</p>
               </div>
@@ -493,8 +526,52 @@
                 <label class="home-type-helper-label" for="team-builder-iv-spe"><span>IV Vit.</span><input id="team-builder-iv-spe" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
               </div>
               <p class="home-builder-footnote">EV guidés par presets, ou en custom si besoin. Les IV servent surtout à affiner un slot précis.</p>
-            </div>
+            </section>
+            <section class="team-builder-editor-section">
+              <div class="team-builder-editor-section-head">
+                <h5>Stats finales</h5>
+                <p>Lecture rapide du résultat du slot avec sa nature, ses EV et ses IV.</p>
+              </div>
+              <div id="team-builder-computed-stats" class="team-builder-computed-stats" aria-live="polite"></div>
+            </section>
             <p class="home-builder-footnote">Base simple, sauvegardée localement. Les attaques sont priorisées selon le Pokémon choisi, puis le builder pourra être enrichi ensuite avec de vrais movepools et des synergies.</p>
+          </div>
+          <div class="team-builder-export">
+            <div class="team-builder-export-head">
+              <div>
+                <h4>Export rapide</h4>
+                <p>Copie ta team au format texte pour la garder, la partager ou la retravailler ailleurs.</p>
+              </div>
+              <span id="team-builder-export-meta" class="home-coming-badge">0 Pokémon</span>
+            </div>
+            <textarea id="team-builder-export-output" class="team-builder-export-output" readonly spellcheck="false" aria-label="Export texte de la team"></textarea>
+            <div class="team-builder-export-actions">
+              <button class="btn-blue" type="button" onclick="copyTeamBuilderExport()">Copier l’export</button>
+              <p id="team-builder-export-msg" class="card-desc hidden">Export copié.</p>
+            </div>
+          </div>
+          <div class="team-builder-export">
+            <div class="team-builder-export-head">
+              <div>
+                <h4>Import rapide</h4>
+                <p>Colle une team texte simple pour remplir automatiquement le builder.</p>
+              </div>
+              <span class="home-coming-badge">Texte</span>
+            </div>
+            <textarea id="team-builder-import-input" class="team-builder-export-output" spellcheck="false" aria-label="Import texte de la team" placeholder="Exemple :
+
+Dracolosse @ Restes
+Talent: Attention
+Jovial Nature
+EVs: 252 Atk / 4 Def / 252 Spe
+- Colère
+- Séisme
+- Atterrissage
+- Danse-Lames"></textarea>
+            <div class="team-builder-export-actions">
+              <button class="btn-blue" type="button" onclick="importTeamBuilderText()">Importer dans le builder</button>
+              <p id="team-builder-import-msg" class="card-desc hidden">Import terminé.</p>
+            </div>
           </div>
         </div>
       </div>
