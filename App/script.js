@@ -280,6 +280,7 @@ let acIndex = -1;
 let multiplayerBotState = null;
 let multiplayerLiveState = null;
 let multiplayerSocket = null;
+let draftBattleNetworkSession = null;
 
 let gameMode = "normal"; // normal | challenge | daily
 let winRegisteredForCurrentGame = false;
@@ -6468,20 +6469,20 @@ const DRAFT_SIMPLE_BATTLE_MAJOR_STATUSES = new Set([
 const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Séisme": { power: 100, category: "physical", pp: 10 },
   "Lance-Flammes": { power: 90, category: "special", pp: 15, effect: { kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" } },
-  "Hydrocanon": { power: 110, category: "special", pp: 5, accuracy: 80 },
+  "Hydrocanon": { power: 110, category: "special", pp: 5, accuracy: 80, effect: { kind: "recharge", label: "Doit recharger" } },
   "Lame-Feuille": { power: 90, category: "physical", pp: 15 },
   "Tonnerre": { power: 90, category: "special", accuracy: 100, effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
   "Laser Glace": { power: 90, category: "special", pp: 10, effect: { kind: "status", status: "frozen", chance: 0.1, label: "Peut geler" } },
   "Close Combat": { power: 120, category: "physical", pp: 5 },
   "Bomb-Beurk": { power: 90, category: "special" },
   "Draco-Météore": { power: 130, category: "special" },
-  "Boutefeu": { power: 120, category: "physical", effect: { kind: "recoil", ratio: 0.33, label: "Subit du recul" } },
+  "Boutefeu": { power: 120, category: "physical", effects: [{ kind: "recoil", ratio: 0.33, label: "Subit du recul" }, { kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" }] },
   "Surf": { power: 90, category: "special" },
   "Éco-Sphère": { power: 90, category: "special" },
   "Fatal-Foudre": { power: 110, category: "special", accuracy: 70, effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
-  "Vent Violent": { power: 110, category: "special", accuracy: 70 },
+  "Vent Violent": { power: 110, category: "special", accuracy: 70, effect: { kind: "flinch", chance: 0.3, label: "Peut apeurer" } },
   "Change Éclair": { power: 70, category: "special" },
-  "Machouille": { power: 80, category: "physical" },
+  "Machouille": { power: 80, category: "physical", effect: { kind: "debuff", stat: "defense", stages: 1, target: "foe", chance: 0.2, label: "Peut baisser la Défense" } },
   "Ball'Ombre": { power: 80, category: "special" },
   "Vibrobscur": { power: 80, category: "special" },
   "Psyko": { power: 90, category: "special" },
@@ -6491,37 +6492,37 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Vive-Attaque": { power: 40, category: "physical", priority: 1, type: "Normal" },
   "Retour": { power: 90, category: "physical", type: "Normal" },
   "Plaquage": { power: 85, category: "physical", type: "Normal", effect: { kind: "status", status: "paralysed", chance: 0.3, label: "Peut paralyser" } },
-  "Ultralaser": { power: 150, category: "special", type: "Normal", accuracy: 90 },
+  "Ultralaser": { power: 150, category: "special", type: "Normal", accuracy: 90, effect: { kind: "recharge", label: "Doit recharger" } },
   "Écrasement": { power: 65, category: "physical", type: "Normal" },
-  "Bélier": { power: 90, category: "physical", type: "Normal" },
+  "Bélier": { power: 90, category: "physical", type: "Normal", effect: { kind: "recoil", ratio: 0.25, label: "Subit du recul" } },
   "Piège de Roc": { power: 0, category: "status" },
   "Demi-Tour": { power: 70, category: "physical" },
   "Tour Rapide": { power: 50, category: "physical" },
   "Abri": { power: 0, category: "status", effect: { kind: "protect", label: "Se protège" }, pp: 10 },
   "Clonage": { power: 0, category: "status" },
   "Repos": { power: 0, category: "status", effect: { kind: "rest", label: "S'endort et récupère des PV" }, pp: 10 },
-  "Danse-Lames": { power: 0, category: "status", effect: { kind: "buff", stat: "attack", factor: 1.25, label: "Attaque monte" } },
+  "Danse-Lames": { power: 0, category: "status", effect: { kind: "buff", stat: "attack", stages: 2, label: "L'Attaque augmente beaucoup !" } },
   "Protection": { power: 0, category: "status" },
-  "Mur Lumière": { power: 0, category: "status" },
-  "Reflet": { power: 0, category: "status" },
-  "Lame d'Air": { power: 75, category: "special" },
+  "Mur Lumière": { power: 0, category: "status", effect: { kind: "buff", stat: "spDefense", stages: 1, label: "La Défense Spéciale augmente !" } },
+  "Reflet": { power: 0, category: "status", effect: { kind: "buff", stat: "evasion", stages: 1, label: "L'esquive augmente !" } },
+  "Lame d'Air": { power: 75, category: "special", effect: { kind: "flinch", chance: 0.3, label: "Peut apeurer" } },
   "Choc Mental": { power: 50, category: "special" },
   "Direct Toxik": { power: 80, category: "physical" },
   "Canon Graine": { power: 80, category: "physical" },
   "Câlinerie": { power: 90, category: "physical" },
   "Éclat Magique": { power: 80, category: "special" },
-  "Tête de Fer": { power: 80, category: "physical" },
+  "Tête de Fer": { power: 80, category: "physical", effect: { kind: "flinch", chance: 0.3, label: "Peut apeurer" } },
   "Pisto-Poing": { power: 40, category: "physical", priority: 1 },
-  "Crocs Feu": { power: 65, category: "physical" },
-  "Crocs Givre": { power: 65, category: "physical", effect: { kind: "status", status: "frozen", chance: 0.1, label: "Peut geler" } },
-  "Crocs Éclair": { power: 65, category: "physical", effect: { kind: "status", status: "paralysed", chance: 0.1, label: "Peut paralyser" } },
+  "Crocs Feu": { power: 65, category: "physical", effects: [{ kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" }, { kind: "flinch", chance: 0.1, label: "Peut apeurer" }] },
+  "Crocs Givre": { power: 65, category: "physical", effects: [{ kind: "status", status: "frozen", chance: 0.1, label: "Peut geler" }, { kind: "flinch", chance: 0.1, label: "Peut apeurer" }] },
+  "Crocs Éclair": { power: 65, category: "physical", effects: [{ kind: "status", status: "paralysed", chance: 0.1, label: "Peut paralyser" }, { kind: "flinch", chance: 0.1, label: "Peut apeurer" }] },
   "Sabotage": { power: 65, category: "physical" },
   "Atterrissage": { power: 0, category: "status", effect: { kind: "heal", ratio: 0.33, label: "Récupère des PV" } },
   "Toxik": { power: 0, category: "status", effect: { kind: "status", status: "badly_poisoned", chance: 1, label: "Empoisonne gravement" }, pp: 10, accuracy: 85 },
   "Vœu Soin": { power: 0, category: "status" },
   "Dracochoc": { power: 85, category: "special" },
-  "Giga-Sangsue": { power: 75, category: "special" },
-  "Éclair Fou": { power: 90, category: "physical" },
+  "Giga-Sangsue": { power: 75, category: "special", effect: { kind: "drain", ratio: 0.5, label: "Absorbe des PV" } },
+  "Éclair Fou": { power: 90, category: "physical", effect: { kind: "recoil", ratio: 0.25, label: "Subit du recul" } },
   "Telluriforce": { power: 90, category: "special" },
   "Cradovague": { power: 95, category: "special" },
   "Tricherie": { power: 95, category: "physical" },
@@ -6529,11 +6530,16 @@ const DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES = {
   "Poing-Éclair": { power: 75, category: "physical", effect: { kind: "status", status: "paralysed", chance: 0.1, label: "Peut paralyser" } },
   "Cage-Éclair": { power: 0, category: "status", effect: { kind: "status", status: "paralysed", chance: 1, label: "Paralyse" } },
   "Poing de Feu": { power: 75, category: "physical", effect: { kind: "status", status: "burned", chance: 0.1, label: "Peut brûler" } },
-  "Psykoud'Boul": { power: 80, category: "physical" },
+  "Psykoud'Boul": { power: 80, category: "physical", effect: { kind: "flinch", chance: 0.2, label: "Peut apeurer" } },
+  "Draco-Rage": { power: 1, category: "special", effect: { kind: "fixed-damage", value: 40, label: "Inflige 40 PV fixes" } },
+  "Sonicboom": { power: 1, category: "special", effect: { kind: "fixed-damage", value: 20, label: "Inflige 20 PV fixes" } },
+  "Ombre Nocturne": { power: 1, category: "special", effect: { kind: "fixed-damage", value: 50, label: "Inflige des dégâts fixes" } },
+  "Frappe Atlas": { power: 1, category: "physical", effect: { kind: "fixed-damage", value: 50, label: "Inflige des dégâts fixes" } },
 };
 let draftSimpleBattleDevUiState = null;
 let draftSimpleBattleIntroTimer = null;
 let draftSimpleBattleTurnTimer = null;
+let draftSimpleBattleReplayTimer = null;
 
 function clampDraftSimpleBattleHp(value) {
   return Math.max(1, Math.round(Number(value) || 1));
@@ -6598,6 +6604,7 @@ function createDraftSimpleBattleMove(label, type, options = {}) {
   const ppMax = Math.max(1, Number(options.pp) || getDraftSimpleBattleDefaultPp({ category, power: options.power }));
   const accuracy = Math.max(1, Math.min(100, Number(options.accuracy) || 100));
   const critStage = Math.max(0, Number(options.critStage) || 0);
+  const normalizedEffects = normalizeDraftSimpleBattleMoveEffects(options);
   return {
     name: label || "Attaque",
     type: type || "Normal",
@@ -6606,12 +6613,51 @@ function createDraftSimpleBattleMove(label, type, options = {}) {
       : Math.max(1, Number(options.power) || DRAFT_SIMPLE_BATTLE_DEFAULT_MOVE_POWER),
     category,
     priority: Number.isFinite(Number(options.priority)) ? Number(options.priority) : 0,
-    effect: options.effect || null,
+    effect: normalizedEffects[0] || null,
+    effects: normalizedEffects,
+    flags: buildDraftSimpleBattleMoveFlags(normalizedEffects, options),
     accuracy,
     critStage,
     ppMax,
     ppCurrent: ppMax,
   };
+}
+
+function normalizeDraftSimpleBattleMoveEffects(options = {}) {
+  const rawEffects = [];
+  if (Array.isArray(options.effects)) rawEffects.push(...options.effects);
+  if (options.effect) rawEffects.push(options.effect);
+  return rawEffects
+    .filter(Boolean)
+    .map((effect) => ({ ...effect }));
+}
+
+function buildDraftSimpleBattleMoveFlags(effects = [], options = {}) {
+  const flags = {
+    contact: Boolean(options.contact),
+    recoil: false,
+    drain: false,
+    recharge: false,
+    protectLike: false,
+    fixedDamage: false,
+    flinch: false,
+  };
+  effects.forEach((effect) => {
+    if (!effect?.kind) return;
+    if (effect.kind === "recoil") flags.recoil = true;
+    if (effect.kind === "drain") flags.drain = true;
+    if (effect.kind === "recharge") flags.recharge = true;
+    if (effect.kind === "protect") flags.protectLike = true;
+    if (effect.kind === "fixed-damage") flags.fixedDamage = true;
+    if (effect.kind === "flinch") flags.flinch = true;
+  });
+  return flags;
+}
+
+function getDraftSimpleBattleMoveEffects(move) {
+  if (!move) return [];
+  if (Array.isArray(move.effects) && move.effects.length) return move.effects;
+  return move.effect ? [move.effect] : [];
 }
 
 function getDraftSimpleBattleOffenseProfile(pokemon) {
@@ -6746,10 +6792,88 @@ function buildDraftSimpleBattleDefaultMoves(pokemon) {
   return selected.slice(0, 4);
 }
 
-function getDraftSimpleBattleStatMultiplier(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 1;
-  return clampDraftValue(numeric, 0.55, 1.8);
+function clampDraftSimpleBattleStage(value) {
+  return clampDraftValue(Math.round(Number(value) || 0), -6, 6);
+}
+
+function getDraftSimpleBattleStageMultiplier(stage) {
+  const clampedStage = clampDraftSimpleBattleStage(stage);
+  if (clampedStage >= 0) {
+    return (2 + clampedStage) / 2;
+  }
+  return 2 / (2 + Math.abs(clampedStage));
+}
+
+function getDraftSimpleBattleAccuracyMultiplier(accuracyStage, evasionStage) {
+  const effectiveStage = clampDraftSimpleBattleStage((Number(accuracyStage) || 0) - (Number(evasionStage) || 0));
+  if (effectiveStage >= 0) {
+    return (3 + effectiveStage) / 3;
+  }
+  return 3 / (3 + Math.abs(effectiveStage));
+}
+
+function getDraftSimpleBattleStatStageLabel(statKey) {
+  const labels = {
+    attack: "L'Attaque",
+    defense: "La Défense",
+    spAttack: "L'Attaque Spéciale",
+    spDefense: "La Défense Spéciale",
+    speed: "La Vitesse",
+    accuracy: "La Précision",
+    evasion: "L'esquive",
+  };
+  return labels[statKey] || "La statistique";
+}
+
+function getDraftSimpleBattleStageChangeText(statKey, delta) {
+  const label = getDraftSimpleBattleStatStageLabel(statKey);
+  if (delta >= 2) return `${label} augmente beaucoup !`;
+  if (delta === 1) return `${label} augmente !`;
+  if (delta <= -2) return `${label} baisse beaucoup !`;
+  if (delta === -1) return `${label} baisse !`;
+  return `${label} ne change pas.`;
+}
+
+function applyDraftSimpleBattleStageChange(battler, statKey, delta) {
+  if (!battler || !statKey || !delta) {
+    return {
+      changed: false,
+      stage: 0,
+      deltaApplied: 0,
+      message: "",
+    };
+  }
+  if (!battler.stages) {
+    battler.stages = {
+      attack: 0,
+      defense: 0,
+      spAttack: 0,
+      spDefense: 0,
+      speed: 0,
+      accuracy: 0,
+      evasion: 0,
+    };
+  }
+  const previousStage = clampDraftSimpleBattleStage(battler.stages[statKey] || 0);
+  const nextStage = clampDraftSimpleBattleStage(previousStage + delta);
+  battler.stages[statKey] = nextStage;
+  const deltaApplied = nextStage - previousStage;
+  if (!deltaApplied) {
+    return {
+      changed: false,
+      stage: nextStage,
+      deltaApplied: 0,
+      message: delta > 0
+        ? `${getDraftSimpleBattleStatStageLabel(statKey)} est déjà au maximum.`
+        : `${getDraftSimpleBattleStatStageLabel(statKey)} est déjà au minimum.`,
+    };
+  }
+  return {
+    changed: true,
+    stage: nextStage,
+    deltaApplied,
+    message: getDraftSimpleBattleStageChangeText(statKey, deltaApplied),
+  };
 }
 
 function createDraftSimpleBattlePokemonState(pokemon, moves = null) {
@@ -6760,17 +6884,23 @@ function createDraftSimpleBattlePokemonState(pokemon, moves = null) {
     maxHp: stats.hp,
     speed: Math.max(1, Number(stats.speed) || 1),
     stats,
-    modifiers: {
-      attack: 1,
-      defense: 1,
-      spAttack: 1,
-      spDefense: 1,
-      speed: 1,
+    stages: {
+      attack: 0,
+      defense: 0,
+      spAttack: 0,
+      spDefense: 0,
+      speed: 0,
+      accuracy: 0,
+      evasion: 0,
     },
     status: null,
     statusState: {
       sleepTurns: 0,
       toxicCounter: 0,
+    },
+    volatileState: {
+      flinched: false,
+      mustRecharge: false,
     },
     protected: false,
     moves: (Array.isArray(moves) && moves.length ? moves : buildDraftSimpleBattleDefaultMoves(pokemon)).slice(0, 4),
@@ -6808,7 +6938,7 @@ function clearDraftSimpleBattleMajorStatus(battler) {
 
 function getDraftSimpleBattleCurrentStat(sideState, statKey) {
   const baseValue = Math.max(1, Number(sideState?.stats?.[statKey]) || 1);
-  const multiplier = getDraftSimpleBattleStatMultiplier(sideState?.modifiers?.[statKey] || 1);
+  const multiplier = getDraftSimpleBattleStageMultiplier(sideState?.stages?.[statKey] || 0);
   let effectiveValue = Math.max(1, Math.round(baseValue * multiplier));
   if (statKey === "attack" && sideState?.status === "burned") {
     effectiveValue = Math.max(1, Math.floor(effectiveValue / 2));
@@ -6863,10 +6993,16 @@ function getDraftSimpleBattleTurnOrderForMoves(leftState, leftMove, rightState, 
 function clearDraftSimpleBattleTurnFlags(state) {
   if (!state) return;
   (state.leftTeam || []).forEach((member) => {
-    if (member) member.protected = false;
+    if (member) {
+      member.protected = false;
+      if (member.volatileState) member.volatileState.flinched = false;
+    }
   });
   (state.rightTeam || []).forEach((member) => {
-    if (member) member.protected = false;
+    if (member) {
+      member.protected = false;
+      if (member.volatileState) member.volatileState.flinched = false;
+    }
   });
 }
 
@@ -6964,6 +7100,34 @@ function resolveDraftSimpleBattleCanAct(state, side, battler) {
     return {
       canAct: false,
       reason: "ko",
+    };
+  }
+  if (battler?.volatileState?.mustRecharge) {
+    battler.volatileState.mustRecharge = false;
+    return {
+      canAct: false,
+      reason: "recharge",
+      action: {
+        side,
+        actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+        prevented: true,
+        preventedBy: "recharge",
+        supportText: "Doit recharger ce tour",
+      },
+    };
+  }
+  if (battler?.volatileState?.flinched) {
+    battler.volatileState.flinched = false;
+    return {
+      canAct: false,
+      reason: "flinch",
+      action: {
+        side,
+        actorName: battler?.pokemon?.name || (side === "left" ? "Joueur" : "Adversaire"),
+        prevented: true,
+        preventedBy: "flinched",
+        supportText: "Apeuré, il ne peut pas agir",
+      },
     };
   }
   if (battler?.status === "asleep") {
@@ -7144,7 +7308,8 @@ function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move,
 }
 
 function resolveDraftSimpleBattleMoveRecoil(attackerState, move, damageDealt) {
-  const ratio = Number(move?.effect?.ratio) || 0;
+  const recoilEffect = getDraftSimpleBattleMoveEffects(move).find((effect) => effect?.kind === "recoil") || null;
+  const ratio = Number(recoilEffect?.ratio) || 0;
   if (move?.name === "Struggle") {
     return Math.max(1, Math.floor(Math.max(1, damageDealt) / 4));
   }
@@ -7152,10 +7317,63 @@ function resolveDraftSimpleBattleMoveRecoil(attackerState, move, damageDealt) {
   return Math.max(1, Math.floor(Math.max(1, damageDealt) * ratio));
 }
 
+function resolveDraftSimpleBattleMoveDrain(attackerState, move, damageDealt) {
+  const drainEffect = getDraftSimpleBattleMoveEffects(move).find((effect) => effect?.kind === "drain") || null;
+  const ratio = Number(drainEffect?.ratio) || 0;
+  if (!attackerState || ratio <= 0 || damageDealt <= 0) return 0;
+  const healed = Math.max(1, Math.floor(damageDealt * ratio));
+  const previousHp = attackerState.currentHp;
+  attackerState.currentHp = Math.min(attackerState.maxHp, attackerState.currentHp + healed);
+  return Math.max(0, attackerState.currentHp - previousHp);
+}
+
+function getDraftSimpleBattleFixedDamage(move, attackerState, defenderState) {
+  const fixedEffect = getDraftSimpleBattleMoveEffects(move).find((effect) => effect?.kind === "fixed-damage") || null;
+  if (!fixedEffect) return 0;
+  if (fixedEffect.mode === "level") {
+    return Math.max(1, Number(fixedEffect.value) || 50);
+  }
+  return Math.max(1, Number(fixedEffect.value) || 0);
+}
+
+function tryDraftSimpleBattleApplySecondaryEffect(effect, move, attackerState, defenderState, damageDealt) {
+  if (!effect || !attackerState || !defenderState) return null;
+  if (effect.kind === "status" && effect.status && damageDealt > 0) {
+    return tryDraftSimpleBattleApplyStatus({ ...move, effect }, attackerState, defenderState);
+  }
+  if (effect.kind === "debuff" && effect.stat && damageDealt > 0) {
+    const chance = Math.max(0, Math.min(1, Number(effect.chance) || 1));
+    if (Math.random() > chance) return null;
+    const target = effect.target === "self" ? attackerState : defenderState;
+    const applied = applyDraftSimpleBattleStageChange(target, effect.stat, -(Math.abs(Number(effect.stages)) || 1));
+    return {
+      supportText: applied.message,
+      appliedEffect: "debuff",
+    };
+  }
+  if (effect.kind === "flinch" && damageDealt > 0 && defenderState.currentHp > 0) {
+    const chance = Math.max(0, Math.min(1, Number(effect.chance) || 1));
+    if (Math.random() > chance) return null;
+    if (!defenderState.volatileState) defenderState.volatileState = { flinched: false, mustRecharge: false };
+    defenderState.volatileState.flinched = true;
+    return {
+      supportText: effect.label || "Apeure la cible",
+      appliedEffect: "flinch",
+      flinchApplied: true,
+    };
+  }
+  return null;
+}
+
 function doesDraftSimpleBattleMoveHit(move, attackerState, defenderState) {
   if (!move) return false;
-  const accuracy = Math.max(1, Math.min(100, Number(move.accuracy) || 100));
-  return Math.random() * 100 < accuracy;
+  const baseAccuracy = Math.max(1, Math.min(100, Number(move.accuracy) || 100));
+  const accuracyMultiplier = getDraftSimpleBattleAccuracyMultiplier(
+    attackerState?.stages?.accuracy || 0,
+    defenderState?.stages?.evasion || 0
+  );
+  const finalAccuracy = Math.max(1, Math.min(100, baseAccuracy * accuracyMultiplier));
+  return Math.random() * 100 < finalAccuracy;
 }
 
 function doesDraftSimpleBattleMoveCrit(move) {
@@ -7176,7 +7394,7 @@ function getDraftSimpleBattleEstimatedMoveOutcome(gen, attackerState, defenderSt
     };
   }
   if (move.category === "status") {
-    const effect = move.effect || {};
+    const effect = getDraftSimpleBattleMoveEffects(move)[0] || {};
     let score = 12;
     let summary = effect.label || "Soutien";
     if (effect.kind === "heal") {
@@ -7254,14 +7472,22 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
   const normalizedAction = getDraftSimpleBattleNormalizedAction(actionOrMoveIndex, 0);
   const move = getDraftSimpleBattleMoveForAction(attackerState, normalizedAction);
   if (!move || !attackerState || !defenderState) return null;
+
+  const effects = getDraftSimpleBattleMoveEffects(move);
+  const primaryEffect = effects[0] || null;
+  const rechargeEffect = effects.find((effect) => effect?.kind === "recharge") || null;
   const usedStruggle = move.name === "Struggle";
+
   if (!usedStruggle) {
     const spentMove = consumeDraftSimpleBattleMovePp(attackerState, normalizedAction);
-    if (!spentMove) {
-      return null;
-    }
+    if (!spentMove) return null;
   }
+
   if (!doesDraftSimpleBattleMoveHit(move, attackerState, defenderState)) {
+    if (rechargeEffect) {
+      if (!attackerState.volatileState) attackerState.volatileState = { flinched: false, mustRecharge: false };
+      attackerState.volatileState.mustRecharge = true;
+    }
     return {
       move,
       damage: 0,
@@ -7272,12 +7498,13 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
       missed: true,
       supportText: "Rate sa cible",
       appliedEffect: "miss",
+      needsRecharge: Boolean(rechargeEffect),
       usedStruggle,
     };
   }
+
   if (move.category === "status") {
-    const effect = move.effect || {};
-    if (effect.kind === "status" && effect.status) {
+    if (primaryEffect?.kind === "status" && primaryEffect.status) {
       const appliedStatus = tryDraftSimpleBattleApplyStatus(move, attackerState, defenderState);
       return {
         move,
@@ -7288,15 +7515,15 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         knockout: false,
         supportText: appliedStatus?.statusApplied
           ? `${getDraftSimpleBattleStatusLabel(appliedStatus.status)}`
-          : (appliedStatus?.failureReason || effect.label || "Statut tenté"),
-        appliedEffect: appliedStatus?.statusApplied ? effect.status : "status-failed",
+          : (appliedStatus?.failureReason || primaryEffect.label || "Statut tenté"),
+        appliedEffect: appliedStatus?.statusApplied ? primaryEffect.status : "status-failed",
         statusApplied: Boolean(appliedStatus?.statusApplied),
         inflictedStatus: appliedStatus?.status || null,
         statusFailedReason: appliedStatus?.failureReason || "",
         usedStruggle,
       };
     }
-    if (effect.kind === "protect") {
+    if (primaryEffect?.kind === "protect") {
       attackerState.protected = true;
       return {
         move,
@@ -7305,13 +7532,13 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         effectiveness: 1,
         defenderRemainingHp: defenderState.currentHp,
         knockout: false,
-        supportText: effect.label || "Se protège",
+        supportText: primaryEffect.label || "Se protège",
         appliedEffect: "protect",
         usedStruggle,
       };
     }
-    if (effect.kind === "heal") {
-      const healAmount = Math.max(1, Math.round((Number(effect.ratio) || 0.3) * Math.max(1, Number(attackerState.maxHp) || 1)));
+    if (primaryEffect?.kind === "heal") {
+      const healAmount = Math.max(1, Math.round((Number(primaryEffect.ratio) || 0.3) * Math.max(1, Number(attackerState.maxHp) || 1)));
       const previousHp = attackerState.currentHp;
       attackerState.currentHp = Math.min(attackerState.maxHp, attackerState.currentHp + healAmount);
       return {
@@ -7322,12 +7549,12 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         defenderRemainingHp: defenderState.currentHp,
         knockout: false,
         heal: attackerState.currentHp - previousHp,
-        supportText: effect.label || "Récupère des PV",
+        supportText: primaryEffect.label || "Récupère des PV",
         appliedEffect: "heal",
         usedStruggle,
       };
     }
-    if (effect.kind === "rest") {
+    if (primaryEffect?.kind === "rest") {
       const previousHp = attackerState.currentHp;
       attackerState.currentHp = attackerState.maxHp;
       attackerState.status = "asleep";
@@ -7340,16 +7567,15 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         defenderRemainingHp: defenderState.currentHp,
         knockout: false,
         heal: attackerState.currentHp - previousHp,
-        supportText: effect.label || "S'endort",
+        supportText: primaryEffect.label || "S'endort",
         appliedEffect: "rest",
         statusApplied: true,
         inflictedStatus: "asleep",
         usedStruggle,
       };
     }
-    if (effect.kind === "buff" && effect.stat) {
-      const current = getDraftSimpleBattleStatMultiplier(attackerState.modifiers?.[effect.stat] || 1);
-      attackerState.modifiers[effect.stat] = getDraftSimpleBattleStatMultiplier(current * (Number(effect.factor) || 1.15));
+    if (primaryEffect?.kind === "buff" && primaryEffect.stat) {
+      const result = applyDraftSimpleBattleStageChange(attackerState, primaryEffect.stat, Number(primaryEffect.stages) || 1);
       return {
         move,
         damage: 0,
@@ -7357,15 +7583,16 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         effectiveness: 1,
         defenderRemainingHp: defenderState.currentHp,
         knockout: false,
-        supportText: effect.label || `${effect.stat} monte`,
+        supportText: result.message || primaryEffect.label || `${primaryEffect.stat} monte`,
         appliedEffect: "buff",
         usedStruggle,
       };
     }
-    if (effect.kind === "buff-multi" && effect.stats) {
-      Object.entries(effect.stats).forEach(([statKey, factor]) => {
-        const current = getDraftSimpleBattleStatMultiplier(attackerState.modifiers?.[statKey] || 1);
-        attackerState.modifiers[statKey] = getDraftSimpleBattleStatMultiplier(current * (Number(factor) || 1.1));
+    if (primaryEffect?.kind === "buff-multi" && primaryEffect.stats) {
+      const messages = [];
+      Object.entries(primaryEffect.stats).forEach(([statKey, factor]) => {
+        const result = applyDraftSimpleBattleStageChange(attackerState, statKey, Number(factor) || 1);
+        if (result.message) messages.push(result.message);
       });
       return {
         move,
@@ -7374,14 +7601,13 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         effectiveness: 1,
         defenderRemainingHp: defenderState.currentHp,
         knockout: false,
-        supportText: effect.label || "Stats montent",
+        supportText: messages[0] || primaryEffect.label || "Les stats augmentent !",
         appliedEffect: "buff",
         usedStruggle,
       };
     }
-    if (effect.kind === "debuff" && effect.stat) {
-      const current = getDraftSimpleBattleStatMultiplier(defenderState.modifiers?.[effect.stat] || 1);
-      defenderState.modifiers[effect.stat] = getDraftSimpleBattleStatMultiplier(current * (Number(effect.factor) || 0.9));
+    if (primaryEffect?.kind === "debuff" && primaryEffect.stat) {
+      const result = applyDraftSimpleBattleStageChange(defenderState, primaryEffect.stat, -(Math.abs(Number(primaryEffect.stages)) || 1));
       return {
         move,
         damage: 0,
@@ -7389,23 +7615,51 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
         effectiveness: 1,
         defenderRemainingHp: defenderState.currentHp,
         knockout: false,
-        supportText: effect.label || `${effect.stat} baisse`,
+        supportText: result.message || primaryEffect.label || `${primaryEffect.stat} baisse`,
         appliedEffect: "debuff",
         usedStruggle,
       };
     }
   }
+
   if (defenderState.status === "frozen" && move.type === "Feu") {
     clearDraftSimpleBattleMajorStatus(defenderState);
   }
+
   const critical = doesDraftSimpleBattleMoveCrit(move);
-  const result = computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move, { critical });
+  const fixedDamage = getDraftSimpleBattleFixedDamage(move, attackerState, defenderState);
+  const result = fixedDamage > 0
+    ? {
+        damage: defenderState?.protected ? 0 : fixedDamage,
+        stab: getDraftSimpleBattleStabMultiplier(attackerState, move),
+        effectiveness: getDraftSimpleBattleTypeMultiplier(gen, move?.type, defenderState),
+        critical,
+        blocked: Boolean(defenderState?.protected),
+        fixedDamage: true,
+      }
+    : computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move, { critical });
+
   defenderState.currentHp = Math.max(0, defenderState.currentHp - result.damage);
-  const appliedStatus = defenderState.currentHp > 0 ? tryDraftSimpleBattleApplyStatus(move, attackerState, defenderState) : null;
+
+  const secondaryResults = defenderState.currentHp > 0
+    ? effects
+      .map((effect) => tryDraftSimpleBattleApplySecondaryEffect(effect, move, attackerState, defenderState, result.damage))
+      .filter(Boolean)
+    : [];
+  const appliedStatus = secondaryResults.find((entry) => entry?.statusApplied) || null;
+  const appliedDebuff = secondaryResults.find((entry) => entry?.appliedEffect === "debuff") || null;
+  const flinchResult = secondaryResults.find((entry) => entry?.flinchApplied) || null;
+  const drain = resolveDraftSimpleBattleMoveDrain(attackerState, move, result.damage);
   const recoil = resolveDraftSimpleBattleMoveRecoil(attackerState, move, result.damage);
+
   if (recoil > 0) {
     attackerState.currentHp = Math.max(0, attackerState.currentHp - recoil);
   }
+  if (rechargeEffect) {
+    if (!attackerState.volatileState) attackerState.volatileState = { flinched: false, mustRecharge: false };
+    attackerState.volatileState.mustRecharge = true;
+  }
+
   return {
     move,
     damage: result.damage,
@@ -7413,12 +7667,18 @@ function resolveDraftSimpleBattleAttack(gen, attackerState, defenderState, actio
     effectiveness: result.effectiveness,
     critical: result.critical,
     blocked: result.blocked,
+    fixedDamage: Boolean(result.fixedDamage),
     defenderRemainingHp: defenderState.currentHp,
     knockout: defenderState.currentHp <= 0,
     statusApplied: Boolean(appliedStatus?.statusApplied),
     inflictedStatus: appliedStatus?.status || null,
     statusFailedReason: appliedStatus?.failureReason || "",
+    statDebuffApplied: Boolean(appliedDebuff),
+    flinchApplied: Boolean(flinchResult),
+    drain,
     recoil,
+    needsRecharge: Boolean(rechargeEffect),
+    supportText: flinchResult?.supportText || appliedDebuff?.supportText || "",
     selfKnockout: attackerState.currentHp <= 0,
     usedStruggle,
   };
@@ -7516,12 +7776,12 @@ function convertDraftMoveNameToSimpleBattleMove(moveName, pokemon) {
 }
 
 function getDraftSimpleBattleUtilityMoveScore(move) {
-  const effect = move?.effect || {};
-  if (effect.kind === "heal") return 5;
-  if (effect.kind === "protect") return 4;
-  if (effect.kind === "buff-multi") return 4;
-  if (effect.kind === "buff") return 3;
-  if (effect.kind === "debuff") return 2;
+  const effects = getDraftSimpleBattleMoveEffects(move);
+  if (effects.some((effect) => effect?.kind === "heal" || effect?.kind === "rest")) return 5;
+  if (effects.some((effect) => effect?.kind === "protect")) return 4;
+  if (effects.some((effect) => effect?.kind === "buff-multi")) return 4;
+  if (effects.some((effect) => effect?.kind === "buff")) return 3;
+  if (effects.some((effect) => effect?.kind === "debuff" || effect?.kind === "status")) return 2;
   return 1;
 }
 
@@ -7991,6 +8251,33 @@ function syncDraftSimpleBattleActiveBattlers(state) {
   state.right = state.rightTeam[state.rightActiveIndex] || null;
 }
 
+function runDraftSimpleBattleSwitchHooks(state, side, battler, context = {}) {
+  if (!state || !battler) return;
+  const hooks = state.switchHooks || {};
+  const hookList = Array.isArray(hooks.onSwitchIn) ? hooks.onSwitchIn : [];
+  hookList.forEach((hook) => {
+    if (typeof hook === "function") {
+      hook({ state, side, battler, context });
+    }
+  });
+}
+
+function executeDraftSimpleBattleSwitch(state, side, teamIndex, options = {}) {
+  if (!state) return null;
+  const teamKey = side === "left" ? "leftTeam" : "rightTeam";
+  const indexKey = side === "left" ? "leftActiveIndex" : "rightActiveIndex";
+  const team = state[teamKey] || [];
+  const nextIndex = Number(teamIndex);
+  const battler = team[nextIndex];
+  if (!Number.isInteger(nextIndex) || !battler || battler.currentHp <= 0 || nextIndex === state[indexKey]) {
+    return null;
+  }
+  state[indexKey] = nextIndex;
+  syncDraftSimpleBattleActiveBattlers(state);
+  runDraftSimpleBattleSwitchHooks(state, side, battler, options);
+  return battler;
+}
+
 function sendNextDraftSimpleBattleBattler(state, side) {
   const teamKey = side === "left" ? "leftTeam" : "rightTeam";
   const indexKey = side === "left" ? "leftActiveIndex" : "rightActiveIndex";
@@ -8002,9 +8289,90 @@ function sendNextDraftSimpleBattleBattler(state, side) {
     syncDraftSimpleBattleActiveBattlers(state);
     return null;
   }
-  state[indexKey] = nextIndex;
+  return executeDraftSimpleBattleSwitch(state, side, nextIndex, {
+    reason: "forced-ko",
+    forced: true,
+  });
+}
+
+function getDraftSimpleBattleNetworkMeta(state) {
+  if (!state?.network) {
+    state.network = {
+      enabled: false,
+      roomCode: "",
+      localSide: "left",
+      isHost: false,
+      players: [],
+      pendingTurn: null,
+      pendingReplacement: null,
+      waitingRemote: false,
+      resolvingTurn: null,
+      submittedTurn: null,
+      submittedReplacementKey: "",
+      stateVersion: 0,
+    };
+  }
+  return state.network;
+}
+
+function isDraftSimpleBattleNetworkMode(state) {
+  return Boolean(state?.network?.enabled && state?.network?.roomCode);
+}
+
+function getDraftSimpleBattleNetworkLocalSide(state) {
+  return state?.network?.localSide || "left";
+}
+
+function cloneDraftSimpleBattleNetworkState(state) {
+  if (!state) return null;
+  const snapshot = JSON.parse(JSON.stringify(state));
+  delete snapshot.onFinish;
+  delete snapshot.postBattleAction;
+  delete snapshot.finishHandled;
+  snapshot.switchHooks = { onSwitchIn: [] };
+  snapshot.network = {
+    enabled: Boolean(state.network?.enabled),
+    roomCode: state.network?.roomCode || "",
+    localSide: state.network?.localSide || "left",
+    isHost: Boolean(state.network?.isHost),
+    players: Array.isArray(state.network?.players) ? state.network.players : [],
+    pendingTurn: state.network?.pendingTurn || null,
+    pendingReplacement: state.network?.pendingReplacement || null,
+    waitingRemote: Boolean(state.network?.waitingRemote),
+    resolvingTurn: state.network?.resolvingTurn || null,
+    submittedTurn: state.network?.submittedTurn || null,
+    submittedReplacementKey: state.network?.submittedReplacementKey || "",
+    stateVersion: Number(state.network?.stateVersion) || 0,
+  };
+  return snapshot;
+}
+
+function hydrateDraftSimpleBattleNetworkState(snapshot, networkMeta = null) {
+  if (!snapshot || typeof snapshot !== "object") return null;
+  const state = JSON.parse(JSON.stringify(snapshot));
+  state.onFinish = null;
+  state.postBattleAction = null;
+  state.finishHandled = false;
+  state.switchHooks = { onSwitchIn: [] };
+  state.showPreview = Boolean(state.showPreview);
+  state.showIntro = Boolean(state.showIntro);
+  const meta = networkMeta || state.network || {};
+  state.network = {
+    enabled: Boolean(meta.enabled),
+    roomCode: meta.roomCode || "",
+    localSide: meta.localSide || "left",
+    isHost: Boolean(meta.isHost),
+    players: Array.isArray(meta.players) ? meta.players : [],
+    pendingTurn: meta.pendingTurn || null,
+    pendingReplacement: meta.pendingReplacement || null,
+    waitingRemote: Boolean(meta.waitingRemote),
+    resolvingTurn: meta.resolvingTurn || null,
+    submittedTurn: meta.submittedTurn || null,
+    submittedReplacementKey: meta.submittedReplacementKey || "",
+    stateVersion: Number(meta.stateVersion) || 0,
+  };
   syncDraftSimpleBattleActiveBattlers(state);
-  return state[side];
+  return state;
 }
 
 function createDraftSimpleBattleDevUiState(leftEntries, rightEntries, options = {}) {
@@ -8029,10 +8397,13 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries, options = 
     gen: Number(leftPokemon.gen) || Number(rightPokemon.gen) || 1,
     phase: "ready",
     turn: 1,
-    turnState: "player",
+    turnState: "left-action",
+    pendingTurn: null,
     queuedTurn: null,
     pendingSwitch: false,
     pendingSwitchReason: null,
+    pendingSwitchSide: null,
+    hotseatPendingSide: null,
     leftTeam,
     rightTeam,
     leftActiveIndex: 0,
@@ -8047,27 +8418,441 @@ function createDraftSimpleBattleDevUiState(leftEntries, rightEntries, options = 
     onFinish: typeof options.onFinish === "function" ? options.onFinish : null,
     postBattleAction: null,
     finishHandled: false,
+    controllers: {
+      left: options.controllers?.left || "human",
+      right: options.controllers?.right || "ai",
+    },
+    switchHooks: {
+      onSwitchIn: [],
+    },
+    network: {
+      enabled: false,
+      roomCode: "",
+      localSide: "left",
+      isHost: false,
+      players: [],
+      pendingTurn: null,
+      pendingReplacement: null,
+      waitingRemote: false,
+      resolvingTurn: null,
+      submittedTurn: null,
+      submittedReplacementKey: "",
+      stateVersion: 0,
+    },
   };
   syncDraftSimpleBattleActiveBattlers(state);
   return state;
 }
 
-function buildDraftSimpleBattleQueuedTurn(state, playerAction) {
+function isDraftSimpleBattleHumanControlled(state, side) {
+  return (state?.controllers?.[side] || "ai") === "human";
+}
+
+function isDraftSimpleBattleLocalHotseat(state) {
+  return isDraftSimpleBattleHumanControlled(state, "left") && isDraftSimpleBattleHumanControlled(state, "right");
+}
+
+function getDraftSimpleBattleCurrentActionSide(state) {
+  if (state?.turnState === "right-action") return "right";
+  return "left";
+}
+
+function createDraftSimpleBattlePendingTurn(state) {
+  return {
+    turn: Number(state?.turn) || 1,
+    actions: {
+      left: null,
+      right: null,
+    },
+    required: {
+      left: true,
+      right: true,
+    },
+  };
+}
+
+function createDraftSimpleBattleSubmittedAction(side, action, options = {}) {
+  return {
+    side,
+    source: options.source || "system",
+    type: options.type || action?.kind || "move",
+    action: getDraftSimpleBattleNormalizedAction(action, 0),
+    submittedAtTurn: Number(options.turn) || 0,
+  };
+}
+
+function getDraftSimpleBattleResolvedSubmittedAction(state, side, submitted) {
+  const battler = side === "left" ? state?.left : state?.right;
+  const action = getDraftSimpleBattleNormalizedAction(submitted?.action, 0);
+  if (action.kind === "move" && !getDraftSimpleBattleUsableMoveIndexes(battler).length) {
+    return { kind: "struggle" };
+  }
+  return action;
+}
+
+function isDraftSimpleBattleTurnReady(pendingTurn) {
+  if (!pendingTurn) return false;
+  return ["left", "right"].every((side) => !pendingTurn.required?.[side] || Boolean(pendingTurn.actions?.[side]));
+}
+
+function buildDraftSimpleBattleQueuedTurnFromPendingTurn(state) {
+  if (!state?.pendingTurn || !isDraftSimpleBattleTurnReady(state.pendingTurn) || state.phase === "finished") return null;
+  const leftAction = getDraftSimpleBattleResolvedSubmittedAction(state, "left", state.pendingTurn.actions.left);
+  const rightAction = getDraftSimpleBattleResolvedSubmittedAction(state, "right", state.pendingTurn.actions.right);
+  const queuedTurn = {
+    turn: state.pendingTurn.turn,
+    submissions: {
+      left: state.pendingTurn.actions.left,
+      right: state.pendingTurn.actions.right,
+    },
+    left: leftAction,
+    right: rightAction,
+    order: getDraftSimpleBattleTurnOrderForActions(state, leftAction, rightAction),
+  };
+  return queuedTurn;
+}
+
+function submitDraftSimpleBattleTurnAction(state, side, action, options = {}) {
+  if (!state || state.phase === "finished" || !side) return null;
+  syncDraftSimpleBattleActiveBattlers(state);
+  if (!state.pendingTurn || Number(state.pendingTurn.turn) !== Number(state.turn)) {
+    state.pendingTurn = createDraftSimpleBattlePendingTurn(state);
+  }
+  state.pendingTurn.actions[side] = createDraftSimpleBattleSubmittedAction(side, action, {
+    source: options.source || "system",
+    type: options.type,
+    turn: state.turn,
+  });
+  if (isDraftSimpleBattleTurnReady(state.pendingTurn)) {
+    state.queuedTurn = buildDraftSimpleBattleQueuedTurnFromPendingTurn(state);
+    state.pendingTurn = null;
+    return state.queuedTurn;
+  }
+  return null;
+}
+
+function prepareDraftSimpleBattleQueuedTurn(state, playerAction) {
   if (!state || !playerAction || state.phase === "finished") return null;
   syncDraftSimpleBattleActiveBattlers(state);
-  const normalizedPlayerAction = getDraftSimpleBattleNormalizedAction(playerAction, 0);
+  const actingSide = getDraftSimpleBattleCurrentActionSide(state);
+  const opposingSide = actingSide === "left" ? "right" : "left";
+  if (isDraftSimpleBattleNetworkMode(state)) {
+    return submitDraftSimpleBattleNetworkAction(state, actingSide, playerAction, { source: "player" });
+  }
+  submitDraftSimpleBattleTurnAction(state, actingSide, playerAction, {
+    source: "player",
+  });
+  if (isDraftSimpleBattleHumanControlled(state, opposingSide)) {
+    state.turnState = "hotseat-transition";
+    state.hotseatPendingSide = opposingSide;
+    state.sceneMessage = actingSide === "left"
+      ? "Action gauche enregistrée. Passe au joueur droit."
+      : "Action droite enregistrée. Passe au joueur gauche.";
+    renderDraftSimpleBattleDevPanel(state);
+    return state.pendingTurn;
+  }
   const enemyAction = chooseDraftSimpleBattleEnemyAction(state);
-  const queuedTurn = {
-    turn: state.turn,
-    left: normalizedPlayerAction.kind === "move" && !getDraftSimpleBattleUsableMoveIndexes(state.left).length
-      ? { kind: "struggle" }
-      : normalizedPlayerAction,
-    right: getDraftSimpleBattleNormalizedAction(enemyAction, 0),
-    order: ["left", "right"],
-  };
-  queuedTurn.order = getDraftSimpleBattleTurnOrderForActions(state, queuedTurn.left, queuedTurn.right);
+  return submitDraftSimpleBattleTurnAction(state, opposingSide, enemyAction, {
+    source: "ai",
+  });
+}
 
-  return queuedTurn;
+function continueDraftSimpleBattleHotseat() {
+  const state = draftSimpleBattleDevUiState;
+  if (!state || state.phase === "finished" || state.turnState !== "hotseat-transition") return null;
+  const nextSide = state.hotseatPendingSide || "right";
+  state.hotseatPendingSide = null;
+  state.turnState = nextSide === "right" ? "right-action" : "left-action";
+  if (state.pendingSwitch) {
+    state.sceneMessage = nextSide === "right"
+      ? "Joueur droit, choisis ton remplaçant."
+      : "Joueur gauche, choisis ton remplaçant.";
+  } else {
+    state.sceneMessage = nextSide === "right"
+      ? "Joueur droit, choisis ton action."
+      : "Joueur gauche, choisis ton action.";
+  }
+  renderDraftSimpleBattleDevPanel(state);
+  return state;
+}
+
+function ensureDraftSimpleBattleNetworkSession() {
+  if (!draftBattleNetworkSession) {
+    draftBattleNetworkSession = {
+      room: null,
+    };
+  }
+  return draftBattleNetworkSession;
+}
+
+function sanitizePlayerNickname(value) {
+  return String(value || "").trim().replace(/[<>]/g, "").slice(0, 24);
+}
+
+function buildDraftSimpleBattleNetworkMetaFromRoom(roomState, fallbackState = null) {
+  const self = roomState?.players?.find?.((player) => player.isSelf) || null;
+  const base = fallbackState?.network || {};
+  return {
+    enabled: true,
+    roomCode: roomState?.code || base.roomCode || "",
+    localSide: self?.side || base.localSide || "left",
+    isHost: Boolean(self?.isHost || base.isHost),
+    players: Array.isArray(roomState?.players) ? roomState.players : (base.players || []),
+    pendingTurn: roomState?.pendingTurn || null,
+    pendingReplacement: roomState?.pendingReplacement || null,
+    waitingRemote: Boolean(base.waitingRemote),
+    resolvingTurn: roomState?.resolvingTurn || base.resolvingTurn || null,
+    submittedTurn: base.submittedTurn || null,
+    submittedReplacementKey: base.submittedReplacementKey || "",
+    stateVersion: Number(roomState?.version) || Number(base.stateVersion) || 0,
+  };
+}
+
+function getDraftSimpleBattleCurrentNetworkActorLabel(state) {
+  return getDraftSimpleBattleNetworkLocalSide(state) === "right" ? "joueur droite" : "joueur gauche";
+}
+
+function getDraftSimpleBattleNetworkOpponent(state) {
+  const localSide = getDraftSimpleBattleNetworkLocalSide(state);
+  return getDraftSimpleBattleNetworkMeta(state).players?.find?.((player) => player.side !== localSide) || null;
+}
+
+function isDraftSimpleBattleNetworkRoomReady(state) {
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  const players = Array.isArray(network.players) ? network.players : [];
+  return players.length >= 2 && players.every((player) => player.connected !== false);
+}
+
+function getDraftSimpleBattleNetworkRoleLabel(state) {
+  return getDraftSimpleBattleNetworkMeta(state).isHost ? "Hôte" : "Invité";
+}
+
+function getDraftSimpleBattleNetworkRoomStatusText(state) {
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  if (!network.roomCode) return "Aucune room réseau active";
+  if (state?.phase === "finished") return "Combat réseau terminé";
+  if (state?.showPreview) {
+    return isDraftSimpleBattleNetworkRoomReady(state)
+      ? "Room prête"
+      : "En attente du second joueur";
+  }
+  if (state?.pendingSwitch) {
+    return state.pendingSwitchSide === network.localSide
+      ? "Ton remplacement est requis"
+      : "Remplacement adverse en attente";
+  }
+  if (state?.turnState === "resolving" || network.resolvingTurn) return "Résolution du tour";
+  if (network.waitingRemote) return "Action envoyée";
+  if (getDraftSimpleBattleCurrentActionSide(state) === network.localSide) return "À toi de jouer";
+  return "En attente de l’autre joueur";
+}
+
+function getDraftSimpleBattleNetworkLaunchHint(state) {
+  if (isDraftSimpleBattleNetworkRoomReady(state)) {
+    return getDraftSimpleBattleNetworkMeta(state).isHost
+      ? "La room est complète. L’hôte peut lancer le combat."
+      : "La room est complète. Attends que l’hôte lance le combat.";
+  }
+  return "Le combat réseau se lance dès que l’autre joueur a rejoint la room.";
+}
+
+function getDraftSimpleBattleNetworkTurnHint(state) {
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  if (state?.phase === "finished") return "Le combat réseau est terminé.";
+  if (state?.pendingSwitch) {
+    return state.pendingSwitchSide === network.localSide
+      ? "Choisis le Pokémon à envoyer pour continuer."
+      : "L’adversaire doit choisir son remplaçant.";
+  }
+  if (state?.turnState === "resolving" || network.resolvingTurn) return "Les deux actions sont verrouillées. Résolution du tour en cours.";
+  if (network.waitingRemote) return "Ton action est enregistrée. On attend maintenant l’autre joueur.";
+  if (getDraftSimpleBattleCurrentActionSide(state) === network.localSide) return "À toi de choisir une action pour ce tour.";
+  return "L’autre joueur est en train de choisir son action.";
+}
+
+function submitDraftSimpleBattleNetworkAction(state, side, action, options = {}) {
+  const socket = ensureMultiplayerSocket();
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  if (!socket?.connected || !network.roomCode) return null;
+  if (getDraftSimpleBattleNetworkLocalSide(state) !== side) return null;
+  if (network.resolvingTurn) return null;
+  if (Number(network.submittedTurn) === Number(state.turn)) return null;
+
+  syncDraftSimpleBattleActiveBattlers(state);
+  if (!state.pendingTurn || Number(state.pendingTurn.turn) !== Number(state.turn)) {
+    state.pendingTurn = createDraftSimpleBattlePendingTurn(state);
+  }
+  if (state.pendingTurn.actions[side]) return state.pendingTurn;
+  state.pendingTurn.actions[side] = createDraftSimpleBattleSubmittedAction(side, action, {
+    source: options.source || "player",
+    type: options.type,
+    turn: state.turn,
+  });
+  network.pendingTurn = state.pendingTurn;
+  network.waitingRemote = true;
+  network.submittedTurn = state.turn;
+  state.sceneMessage = `${getDraftSimpleBattleCurrentNetworkActorLabel(state)} : action enregistrée. En attente de l'autre joueur.`;
+  renderDraftSimpleBattleDevPanel(state);
+
+  socket.emit("draft-battle:submit-action", {
+    code: network.roomCode,
+    turn: state.turn,
+    submittedAction: state.pendingTurn.actions[side],
+  }, (response = {}) => {
+    if (!response.ok) {
+      network.waitingRemote = false;
+      network.submittedTurn = null;
+      if (state.pendingTurn?.actions) state.pendingTurn.actions[side] = null;
+      state.sceneMessage = response.error || "Action réseau refusée.";
+      renderDraftSimpleBattleDevPanel(state);
+    }
+  });
+  return state.pendingTurn;
+}
+
+function submitDraftSimpleBattleNetworkReplacement(state, side, teamIndex) {
+  const socket = ensureMultiplayerSocket();
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  if (!socket?.connected || !network.roomCode) return null;
+  if (getDraftSimpleBattleNetworkLocalSide(state) !== side) return null;
+  const replacementKey = `${state.turn}:${side}`;
+  if (network.submittedReplacementKey === replacementKey) return null;
+  network.pendingReplacement = { side, teamIndex };
+  network.waitingRemote = true;
+  network.submittedReplacementKey = replacementKey;
+  state.sceneMessage = `${getDraftSimpleBattleCurrentNetworkActorLabel(state)} : remplaçant envoyé au serveur.`;
+  renderDraftSimpleBattleDevPanel(state);
+  socket.emit("draft-battle:submit-replacement", {
+    code: network.roomCode,
+    teamIndex,
+  }, (response = {}) => {
+    if (!response.ok) {
+      network.waitingRemote = false;
+      network.submittedReplacementKey = "";
+      network.pendingReplacement = null;
+      state.sceneMessage = response.error || "Remplacement réseau refusé.";
+      renderDraftSimpleBattleDevPanel(state);
+    }
+  });
+  return true;
+}
+
+function commitDraftSimpleBattleNetworkState(state) {
+  const socket = ensureMultiplayerSocket();
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  if (!socket?.connected || !network.roomCode || !network.isHost) return null;
+  const snapshot = cloneDraftSimpleBattleNetworkState(state);
+  socket.emit("draft-battle:commit-state", {
+    code: network.roomCode,
+    battleState: snapshot,
+  });
+  return snapshot;
+}
+
+function handleDraftSimpleBattleNetworkRoomState(roomState) {
+  const session = ensureDraftSimpleBattleNetworkSession();
+  session.room = roomState || null;
+  if (!roomState?.battleState) return;
+
+  const previousLogLength = draftSimpleBattleDevUiState?.log?.length || 0;
+  const currentState = draftSimpleBattleDevUiState;
+  if (currentState?.network?.stateVersion && Number(roomState?.version) < Number(currentState.network.stateVersion)) {
+    return;
+  }
+  const networkMeta = buildDraftSimpleBattleNetworkMetaFromRoom(roomState, currentState);
+  const nextState = hydrateDraftSimpleBattleNetworkState(roomState.battleState, networkMeta);
+  if (!nextState) return;
+  nextState.pendingTurn = roomState.pendingTurn === undefined ? (currentState?.pendingTurn || null) : roomState.pendingTurn;
+  nextState.network.pendingTurn = nextState.pendingTurn;
+  nextState.network.waitingRemote = Boolean(
+    nextState.pendingTurn?.actions?.[nextState.network.localSide]
+    && !nextState.pendingTurn?.actions?.[nextState.network.localSide === "left" ? "right" : "left"]
+  );
+  nextState.network.resolvingTurn = roomState.resolvingTurn || null;
+  nextState.network.stateVersion = Number(roomState.version) || nextState.network.stateVersion || 0;
+  nextState.title = roomState?.code ? `Draft Combat 1v1 • ${roomState.code}` : (nextState.title || "Draft Combat 1v1");
+  draftSimpleBattleDevUiState = nextState;
+  document.getElementById("draft-battle-close")?.classList.remove("hidden");
+  renderDraftSimpleBattleDevPanel(nextState);
+  if ((nextState.log?.length || 0) > previousLogLength) {
+    startDraftSimpleBattleTurnReplay(nextState, nextState.log[nextState.log.length - 1]);
+  }
+}
+
+function handleDraftSimpleBattleNetworkBattleState(payload = {}) {
+  const previousLogLength = draftSimpleBattleDevUiState?.log?.length || 0;
+  const roomState = ensureDraftSimpleBattleNetworkSession().room || {};
+  const networkMeta = buildDraftSimpleBattleNetworkMetaFromRoom({
+    ...(roomState || {}),
+    code: payload.code || roomState.code,
+    status: payload.status || roomState.status,
+    pendingTurn: null,
+    pendingReplacement: null,
+    players: roomState.players || [],
+  }, draftSimpleBattleDevUiState);
+  const nextState = hydrateDraftSimpleBattleNetworkState(payload.battleState, networkMeta);
+  if (!nextState) return;
+  nextState.title = payload.code ? `Draft Combat 1v1 • ${payload.code}` : (nextState.title || "Draft Combat 1v1");
+  nextState.network.waitingRemote = false;
+  nextState.network.resolvingTurn = null;
+  nextState.network.submittedTurn = null;
+  nextState.network.submittedReplacementKey = "";
+  nextState.network.stateVersion = Number(roomState.version) || nextState.network.stateVersion || 0;
+  if (ensureDraftSimpleBattleNetworkSession().room) {
+    ensureDraftSimpleBattleNetworkSession().room.battleState = payload.battleState;
+    ensureDraftSimpleBattleNetworkSession().room.pendingTurn = null;
+    ensureDraftSimpleBattleNetworkSession().room.pendingReplacement = null;
+    ensureDraftSimpleBattleNetworkSession().room.resolvingTurn = null;
+    ensureDraftSimpleBattleNetworkSession().room.resolvingReplacement = null;
+  }
+  draftSimpleBattleDevUiState = nextState;
+  renderDraftSimpleBattleDevPanel(nextState);
+  if ((nextState.log?.length || 0) > previousLogLength) {
+    startDraftSimpleBattleTurnReplay(nextState, nextState.log[nextState.log.length - 1]);
+  }
+}
+
+function handleDraftSimpleBattleNetworkResolveTurn(payload = {}) {
+  const state = draftSimpleBattleDevUiState;
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  if (!state || !network.isHost || network.roomCode !== payload.code) return;
+  if (Number(network.resolvingTurn) === Number(payload.turn)) return;
+  network.resolvingTurn = payload.turn;
+  state.pendingTurn = payload.pendingTurn || state.pendingTurn;
+  state.queuedTurn = buildDraftSimpleBattleQueuedTurnFromPendingTurn(state);
+  state.network.pendingTurn = state.pendingTurn;
+  if (state.queuedTurn) {
+    resolveDraftSimpleBattleQueuedTurn(state);
+    commitDraftSimpleBattleNetworkState(state);
+  }
+}
+
+function handleDraftSimpleBattleNetworkResolveReplacement(payload = {}) {
+  const state = draftSimpleBattleDevUiState;
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  const replacement = payload.replacement || null;
+  if (!state || !network.isHost || network.roomCode !== payload.code || !replacement) return;
+  if (network.pendingReplacement?.side === replacement.side && network.pendingReplacement?.teamIndex === replacement.teamIndex && network.waitingRemote) {
+    return;
+  }
+  chooseDraftSimpleBattleReplacement(replacement.teamIndex, replacement.side, { bypassNetwork: true });
+  commitDraftSimpleBattleNetworkState(state);
+}
+
+function handleDraftSimpleBattleNetworkRoomClosed(payload = {}) {
+  draftBattleNetworkSession = null;
+  if (!draftSimpleBattleDevUiState) return;
+  const state = draftSimpleBattleDevUiState;
+  if (state.network) {
+    state.network.enabled = false;
+    state.network.roomCode = "";
+    state.network.waitingRemote = false;
+    state.network.submittedTurn = null;
+    state.network.submittedReplacementKey = "";
+    state.network.resolvingTurn = null;
+  }
+  state.sceneMessage = payload.reason || "La room Draft Combat a été fermée.";
+  renderDraftSimpleBattleDevPanel(state);
 }
 
 function scheduleDraftSimpleBattleTurnResolution(state) {
@@ -8100,16 +8885,16 @@ function resolveDraftSimpleBattleQueuedTurn(state) {
 
     if (actingAction.kind === "switch") {
       if (!canDraftSimpleBattleBattlerAct(actingState)) continue;
-      const team = side === "left" ? state.leftTeam : state.rightTeam;
-      const indexKey = side === "left" ? "leftActiveIndex" : "rightActiveIndex";
-      const switched = team?.[actingAction.teamIndex];
-      if (!switched || switched.currentHp <= 0 || actingAction.teamIndex === state[indexKey]) continue;
-      state[indexKey] = actingAction.teamIndex;
-      syncDraftSimpleBattleActiveBattlers(state);
+      const switched = executeDraftSimpleBattleSwitch(state, side, actingAction.teamIndex, {
+        reason: "turn-switch",
+        voluntary: true,
+      });
+      if (!switched) continue;
       turnEntry.actions.push({
         side,
         event: "sendout",
         pokemonName: switched.pokemon.name,
+        forced: false,
       });
       state.sceneMessage = side === "left"
         ? `${switched.pokemon.name} rejoint le terrain !`
@@ -8152,6 +8937,7 @@ function resolveDraftSimpleBattleQueuedTurn(state) {
             side: "right",
             event: "sendout",
             pokemonName: nextOpponent.pokemon.name,
+            forced: true,
           });
         }
       }
@@ -8166,6 +8952,7 @@ function resolveDraftSimpleBattleQueuedTurn(state) {
 
   runDraftSimpleBattleEndOfTurn(state, turnEntry);
   state.queuedTurn = null;
+  state.pendingTurn = null;
   return finishDraftSimpleBattleDevTurn(state, turnEntry);
 }
 
@@ -8210,6 +8997,12 @@ function getDraftSimpleBattleActionNotes(action) {
   if (action?.missed) {
     return "rate";
   }
+  if (action?.preventedBy === "recharge") {
+    return "recharge • ne peut pas agir";
+  }
+  if (action?.preventedBy === "flinched") {
+    return "apeuré • ne peut pas agir";
+  }
   if (action?.preventedBy === "paralysed") {
     return "paralysé • ne peut pas agir";
   }
@@ -8227,8 +9020,13 @@ function getDraftSimpleBattleActionNotes(action) {
   notes.push(category);
   if (action?.usedStruggle) notes.push("Struggle");
   if (action?.critical) notes.push("coup critique");
+  if (action?.fixedDamage) notes.push("dégâts fixes");
   if ((Number(action?.stab) || 1) > 1) notes.push("STAB");
   if (action?.blocked) notes.push("bloqué");
+  if (action?.drain) notes.push(`drain ${action.drain}`);
+  if (action?.recoil) notes.push(`recul ${action.recoil}`);
+  if (action?.needsRecharge) notes.push("recharge");
+  if (action?.flinchApplied) notes.push("apeure");
   if (action?.statusApplied && action?.inflictedStatus === "paralysed") notes.push("paralyse");
   if (action?.statusApplied && action?.inflictedStatus === "burned") notes.push("brûle");
   if (action?.statusApplied && action?.inflictedStatus === "poisoned") notes.push("empoisonne");
@@ -8245,6 +9043,163 @@ function getDraftSimpleBattleActionNotes(action) {
     notes.push("efficace");
   }
   return notes.join(" • ");
+}
+
+function getDraftSimpleBattleStatusShortLabel(status) {
+  return {
+    paralysed: "PAR",
+    burned: "BRÛLURE",
+    poisoned: "POISON",
+    badly_poisoned: "TOXIC",
+    asleep: "SOMMEIL",
+    frozen: "GEL",
+  }[status] || "STATUT";
+}
+
+function buildDraftSimpleBattleActionFeedItem(action, displayLeft, displayRight) {
+  if (!action) return null;
+  if (action.event === "sendout") {
+    return {
+      kind: "switch",
+      title: action.side === "left" ? "Entrée joueur" : "Entrée adverse",
+      body: `${action.pokemonName || "Pokémon"} entre au combat.`,
+      meta: action.forced ? "Remplacement forcé" : "Switch",
+      tags: [action.forced ? "Remplacement" : "Switch"],
+    };
+  }
+
+  const actor = action.actorName || (action.side === "left" ? displayLeft?.pokemon?.name : displayRight?.pokemon?.name) || "Pokémon";
+  const target = action.targetName || (action.side === "left" ? displayRight?.pokemon?.name : displayLeft?.pokemon?.name) || "cible";
+
+  if (action.residual) {
+    return {
+      kind: "residual",
+      title: `${actor} subit la fin de tour`,
+      body: `${action.supportText || "Effet résiduel"} : ${action.damage || 0} PV perdus.`,
+      meta: action.knockout ? "KO" : "Fin de tour",
+      tags: [getDraftSimpleBattleStatusShortLabel(action.appliedEffect), action.knockout ? "KO" : "Fin de tour"].filter(Boolean),
+    };
+  }
+
+  if (!action.move) {
+    return {
+      kind: "info",
+      title: actor,
+      body: action.supportText || "Action résolue.",
+      meta: "",
+      tags: [],
+    };
+  }
+
+  const tags = [];
+  if (action.missed) tags.push("Raté");
+  if (action.critical) tags.push("Critique");
+  if (action.statusApplied) tags.push(getDraftSimpleBattleStatusShortLabel(action.inflictedStatus));
+  if (action.knockout) tags.push("KO");
+  if (action.recoil) tags.push("Recul");
+  if (action.drain) tags.push("Drain");
+  if (action.effectiveness === 0) tags.push("Aucun effet");
+  else if ((Number(action.effectiveness) || 1) > 1) tags.push("Super efficace");
+  else if ((Number(action.effectiveness) || 1) < 1) tags.push("Pas très efficace");
+
+  if (action.move.category === "status") {
+    return {
+      kind: "status",
+      title: `${actor} utilise ${action.move.name}`,
+      body: action.statusApplied
+        ? `${target} subit ${getDraftSimpleBattleStatusLabel(action.inflictedStatus) || "un statut"}.`
+        : (action.statusFailedReason || action.supportText || "Effet de statut."),
+      meta: action.statusApplied ? "Statut infligé" : "Aucun effet",
+      tags,
+    };
+  }
+
+  return {
+    kind: action.missed ? "miss" : "attack",
+    title: `${actor} utilise ${action.move.name}`,
+    body: action.missed
+      ? `${target} évite l’attaque.`
+      : `${target} perd ${action.damage || 0} PV.${action.knockout ? " KO." : ""}`,
+    meta: action.missed ? "Raté" : `${action.damage || 0} dégâts`,
+    tags,
+  };
+}
+
+function clearDraftSimpleBattleReplay(state = draftSimpleBattleDevUiState) {
+  if (draftSimpleBattleReplayTimer) {
+    clearTimeout(draftSimpleBattleReplayTimer);
+    draftSimpleBattleReplayTimer = null;
+  }
+  if (state?.visualReplay) {
+    state.visualReplay.active = false;
+  }
+}
+
+function getDraftSimpleBattleReplayActionDelay(action) {
+  if (!action) return 180;
+  if (action.event === "sendout") return 240;
+  if (action.residual) return 220;
+  if (action.missed) return 180;
+  if (action.knockout) return 280;
+  if (action.statusApplied || action.move?.category === "status") return 220;
+  return 190;
+}
+
+function getDraftSimpleBattleReplayMessage(action) {
+  if (!action) return "";
+  if (action.event === "sendout") {
+    return `${action.pokemonName || "Pokémon"} rejoint le terrain.`;
+  }
+  const actor = action.actorName || "Pokémon";
+  const target = action.targetName || "la cible";
+  if (action.residual) {
+    return `${actor} subit ${action.supportText || "la fin de tour"}.`;
+  }
+  if (action.missed) {
+    return `${actor} lance ${action.move?.name || "une attaque"}, mais ${target} l'évite.`;
+  }
+  if (action.move?.category === "status") {
+    return action.statusApplied
+      ? `${actor} applique ${getDraftSimpleBattleStatusLabel(action.inflictedStatus) || "un statut"} à ${target}.`
+      : `${actor} utilise ${action.move?.name || "une capacité de statut"}.`;
+  }
+  if (action.knockout) {
+    return `${actor} frappe ${target} et le met KO.`;
+  }
+  return `${actor} utilise ${action.move?.name || "une attaque"} sur ${target}.`;
+}
+
+function startDraftSimpleBattleTurnReplay(state, turnEntry) {
+  if (!state || !turnEntry || !Array.isArray(turnEntry.actions) || !turnEntry.actions.length) return state;
+  clearDraftSimpleBattleReplay(state);
+  state.visualReplay = {
+    active: true,
+    turn: turnEntry.turn,
+    visibleCount: 0,
+  };
+
+  const revealNext = () => {
+    if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+      clearDraftSimpleBattleReplay(state);
+      return;
+    }
+    const nextCount = (state.visualReplay.visibleCount || 0) + 1;
+    state.visualReplay.visibleCount = nextCount;
+    const currentAction = turnEntry.actions[nextCount - 1] || null;
+    const replayMessage = getDraftSimpleBattleReplayMessage(currentAction);
+    if (replayMessage) state.sceneMessage = replayMessage;
+    renderDraftSimpleBattleDevPanel(state);
+    if (nextCount >= turnEntry.actions.length) {
+      state.visualReplay.active = false;
+      draftSimpleBattleReplayTimer = null;
+      renderDraftSimpleBattleDevPanel(state);
+      return;
+    }
+    draftSimpleBattleReplayTimer = setTimeout(revealNext, getDraftSimpleBattleReplayActionDelay(currentAction));
+  };
+
+  draftSimpleBattleReplayTimer = setTimeout(revealNext, 90);
+  return state;
 }
 
 function getDraftSimpleBattleWinnerName(state) {
@@ -8290,10 +9245,17 @@ function getDraftSimpleBattleHpPercent(sideState) {
 
 function getDraftSimpleBattleStatusText(state) {
   if (state?.phase === "finished") return "Combat terminé";
-  if (state?.pendingSwitch) return state.pendingSwitchReason === "manual" ? "Choisis le Pokémon à envoyer" : "Choisis ton prochain Pokémon";
+  if (state?.pendingSwitch) {
+    const sideText = state.pendingSwitchSide === "right" ? "joueur droite" : "joueur gauche";
+    return state.pendingSwitchReason === "manual" ? `Choisis le Pokémon à envoyer (${sideText})` : `Choisis le prochain Pokémon (${sideText})`;
+  }
+  if (state?.network?.waitingRemote) return "Action enregistrée • en attente de l’autre joueur";
+  if (state?.pendingTurn?.actions?.left && !state?.pendingTurn?.actions?.right) return "Action gauche choisie • en attente action droite";
+  if (state?.pendingTurn?.actions?.right && !state?.pendingTurn?.actions?.left) return "Action droite choisie • en attente action gauche";
   if (state?.turnState === "resolving") return "Résolution du tour...";
   if (state?.turnState === "enemy") return "L’adversaire attaque...";
-  return "À toi de jouer";
+  if (state?.turnState === "right-action") return "À droite de jouer";
+  return "À gauche de jouer";
 }
 
 function getDraftSimpleBattleMatchupHint(gen, attackerState, defenderState) {
@@ -8308,11 +9270,15 @@ function getDraftSimpleBattleMatchupHint(gen, attackerState, defenderState) {
 function getDraftSimpleBattleSceneText(state) {
   if (!state) return "";
   if (state.sceneMessage) return state.sceneMessage;
+  if (state?.network?.enabled && state?.showPreview && state?.network?.roomCode) {
+    return `Room ${state.network.roomCode} prête pour le 1v1 Draft Combat.`;
+  }
   if (state.phase === "finished") return `${getDraftSimpleBattleTeamWinnerLabel(state)} remporte le duel.`;
   if (state.pendingSwitch) {
+    const sideText = state.pendingSwitchSide === "right" ? "joueur droite" : "joueur gauche";
     return state.pendingSwitchReason === "manual"
-      ? "Choisis le Pokémon à envoyer avant la réponse adverse."
-      : "Ton Pokémon est KO. Envoie vite le suivant.";
+      ? `Choisis le Pokémon à envoyer pour ${sideText}.`
+      : `Un Pokémon de ${sideText} est KO. Envoie vite le suivant.`;
   }
   if (state.turnState === "enemy" && state.right?.pokemon?.name) {
     return `${state.right.pokemon.name} prépare sa réponse.`;
@@ -8324,6 +9290,52 @@ function getDraftSimpleBattleSceneText(state) {
     return `${state.left.pokemon.name} fait face à ${state.right.pokemon.name}.`;
   }
   return "Le duel est prêt.";
+}
+
+function getDraftSimpleBattleVisualFeedback(state) {
+  const lastTurn = state?.log?.[state.log.length - 1];
+  const actions = Array.isArray(lastTurn?.actions) ? lastTurn.actions : [];
+  const feedback = {
+    leftClass: "",
+    rightClass: "",
+    badges: [],
+  };
+  if (!actions.length) return feedback;
+
+  const latestAttack = [...actions].reverse().find((action) => action?.move || action?.event === "sendout") || null;
+  if (!latestAttack) return feedback;
+
+  if (latestAttack.event === "sendout") {
+    const side = latestAttack.side === "right" ? "right" : "left";
+    feedback[`${side}Class`] = "is-switch-in";
+    feedback.badges.push(side === "left" ? "Entrée en jeu" : "Adversaire envoyé");
+    return feedback;
+  }
+
+  const actorSide = latestAttack.side === "right" ? "right" : "left";
+  const targetSide = actorSide === "left" ? "right" : "left";
+  feedback[`${actorSide}Class`] = "is-attacking";
+  if (latestAttack.knockout) {
+    feedback[`${targetSide}Class`] = "is-ko";
+    feedback.badges.push("KO");
+  } else if (latestAttack.damage > 0 || latestAttack.missed) {
+    feedback[`${targetSide}Class`] = latestAttack.missed ? "is-dodged" : "is-hit";
+  }
+  if (latestAttack.critical) feedback.badges.push("Coup critique");
+  if ((Number(latestAttack.effectiveness) || 1) > 1) feedback.badges.push("Super efficace");
+  if ((Number(latestAttack.effectiveness) || 1) > 0 && (Number(latestAttack.effectiveness) || 1) < 1) feedback.badges.push("Pas très efficace");
+  if (latestAttack.statusApplied) {
+    const label = {
+      paralysed: "Paralysie",
+      burned: "Brûlure",
+      poisoned: "Poison",
+      badly_poisoned: "Toxic",
+      asleep: "Sommeil",
+      frozen: "Gel",
+    }[latestAttack.inflictedStatus] || "Statut";
+    feedback.badges.push(label);
+  }
+  return feedback;
 }
 
 function getDraftSimpleBattleStatusClass(state) {
@@ -8356,6 +9368,12 @@ function getDraftSimpleBattleAvailableEnemySwitchIndexes(state) {
     out.push(index);
   }
   return out;
+}
+
+function getDraftSimpleBattleAvailableSwitchIndexesForSide(state, side = "left") {
+  return side === "right"
+    ? getDraftSimpleBattleAvailableEnemySwitchIndexes(state)
+    : getDraftSimpleBattleAvailableSwitchIndexes(state);
 }
 
 function getDraftSimpleBattleBestMoveScore(gen, attackerState, defenderState) {
@@ -8580,6 +9598,12 @@ function renderDraftSimpleBattleDevPanel(state) {
   panel.style.setProperty("--draft-arena-image", state.arena ? `url("${getDraftArenaTypeImageUrl(state.arena)}")` : "none");
 
   if (state.showPreview) {
+    const network = getDraftSimpleBattleNetworkMeta(state);
+    const isNetwork = isDraftSimpleBattleNetworkMode(state);
+    const roomReady = isDraftSimpleBattleNetworkRoomReady(state);
+    const opponent = getDraftSimpleBattleNetworkOpponent(state);
+    const roomStatusText = getDraftSimpleBattleNetworkRoomStatusText(state);
+    const launchHint = getDraftSimpleBattleNetworkLaunchHint(state);
     const previewLeft = state.leftTeam[0] || null;
     const previewRight = state.rightTeam[0] || null;
     const previewHint = previewLeft && previewRight
@@ -8609,6 +9633,33 @@ function renderDraftSimpleBattleDevPanel(state) {
         <b>Préparation</b>
         <span>${escapeHtml(previewLeft?.pokemon?.name || "Ton lead")} vs ${escapeHtml(previewRight?.pokemon?.name || "Lead adverse")} • ${escapeHtml(previewHint)}</span>
       </div>
+      ${isNetwork ? `
+        <div class="draft-dev-battle-network-card">
+          <div class="draft-dev-battle-network-head">
+            <b>Room réseau</b>
+            <span class="draft-dev-battle-network-role">${escapeHtml(getDraftSimpleBattleNetworkRoleLabel(state))}</span>
+          </div>
+          <div class="draft-dev-battle-network-grid">
+            <div class="draft-dev-battle-network-item">
+              <span>Code room</span>
+              <b>${escapeHtml(network.roomCode || "—")}</b>
+            </div>
+            <div class="draft-dev-battle-network-item">
+              <span>État</span>
+              <b>${escapeHtml(roomStatusText)}</b>
+            </div>
+            <div class="draft-dev-battle-network-item">
+              <span>Autre joueur</span>
+              <b>${escapeHtml(opponent?.nickname || "Absent")}</b>
+            </div>
+            <div class="draft-dev-battle-network-item">
+              <span>Connexion</span>
+              <b>${escapeHtml(opponent?.connected === false || !opponent ? "En attente" : "Connecté")}</b>
+            </div>
+          </div>
+          <small>${escapeHtml(launchHint)}</small>
+        </div>
+      ` : ""}
       <div class="draft-dev-battle-fighters draft-dev-battle-fighters-preview">
         <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
           <div class="draft-dev-battle-fighter-head">
@@ -8664,10 +9715,17 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="draft-summary-card"><span>Équipe adverse</span><b>${state.rightTeam.length} Pokémon</b></div>
       </div>
       <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
-        <button type="button" class="btn-red draft-dev-battle-preview-cta" onclick="startDraftSimpleBattlePreview()">Commencer le duel</button>
+        <button type="button" class="btn-red draft-dev-battle-preview-cta" onclick="startDraftSimpleBattlePreview()" ${isNetwork && (!network.isHost || !roomReady) ? "disabled" : ""}>${isNetwork ? "Lancer le combat réseau" : "Commencer le duel"}</button>
+        <button type="button" class="btn-blue" onclick="runDraftSimpleBattleLocalPvpTest()">Mode local 1v1</button>
+        <button type="button" class="btn-blue" onclick="hostDraftSimpleBattleNetworkRoom()">${isNetwork ? `Room ${escapeHtml(network.roomCode || "réseau")}` : "Créer room 1v1"}</button>
+        <button type="button" class="btn-ghost" onclick="joinDraftSimpleBattleNetworkRoom()">Rejoindre room</button>
         <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
       </div>
-      <div class="draft-dev-battle-log"><p class="card-desc">Clique un Pokémon dans le banc joueur pour choisir ton lead, puis lance le duel.</p></div>
+      <div class="draft-dev-battle-log"><p class="card-desc">${escapeHtml(isNetwork
+        ? (!network.roomCode
+          ? "Crée une room ou rejoins-en une pour activer le 1v1 réseau."
+          : launchHint)
+        : "Clique un Pokémon dans le banc joueur pour choisir ton lead, puis lance le duel.")}</p></div>
     `;
     panel.classList.remove("hidden");
     return;
@@ -8703,6 +9761,35 @@ function renderDraftSimpleBattleDevPanel(state) {
     return;
   }
 
+  if (state.turnState === "hotseat-transition") {
+    body.innerHTML = `
+      <div class="draft-dev-battle-arena-banner is-live">
+        <div class="draft-dev-battle-arena-badge">${state.arena ? getDraftBadgeMarkup(state.arena, "live") : ""}</div>
+        <div>
+          <b>${escapeHtml(state.title || "Combat Draft")}</b>
+          <span>${escapeHtml(state.pendingSwitch
+            ? "Passation du navigateur pour le choix du remplaçant."
+            : "Passation du navigateur pour le choix de l’action suivante.")}</span>
+        </div>
+      </div>
+      <div class="draft-dev-battle-scene-note is-preview">
+        <b>Action enregistrée</b>
+        <span>${escapeHtml(state.sceneMessage || "Passe l’écran au joueur suivant.")}</span>
+      </div>
+      <div class="draft-dev-battle-result">
+        <b>${escapeHtml(state.hotseatPendingSide === "right" ? "Joueur droite en attente" : "Joueur gauche en attente")}</b>
+        <span>${escapeHtml(state.pendingSwitch
+          ? "Le joueur suivant va choisir le Pokémon à envoyer."
+          : "Le joueur suivant va choisir son action sans voir celle de l’autre.")}</span>
+      </div>
+      <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
+        <button type="button" class="btn-red draft-dev-battle-preview-cta" onclick="continueDraftSimpleBattleHotseat()">Passer au joueur suivant</button>
+      </div>
+    `;
+    panel.classList.remove("hidden");
+    return;
+  }
+
   syncDraftSimpleBattleActiveBattlers(state);
   const displayLeft = getDraftSimpleBattleDisplayBattler(state, "left");
   const displayRight = getDraftSimpleBattleDisplayBattler(state, "right");
@@ -8716,6 +9803,12 @@ function renderDraftSimpleBattleDevPanel(state) {
   const winner = getDraftSimpleBattleWinnerName(state);
   const leftHpPercent = getDraftSimpleBattleHpPercent(displayLeft);
   const rightHpPercent = getDraftSimpleBattleHpPercent(displayRight);
+  const network = getDraftSimpleBattleNetworkMeta(state);
+  const isNetwork = isDraftSimpleBattleNetworkMode(state);
+  const localSide = getDraftSimpleBattleNetworkLocalSide(state);
+  const networkOpponent = getDraftSimpleBattleNetworkOpponent(state);
+  const networkTurnHint = getDraftSimpleBattleNetworkTurnHint(state);
+  const visualFeedback = getDraftSimpleBattleVisualFeedback(state);
   const statusText = getDraftSimpleBattleStatusText(state);
   const statusClass = getDraftSimpleBattleStatusClass(state);
   const leftStatusLabel = getDraftSimpleBattleStatusLabel(displayLeft.status);
@@ -8724,38 +9817,44 @@ function renderDraftSimpleBattleDevPanel(state) {
   const needsForcedSwitch = !isFinished && state.pendingSwitch;
   const isEnemyTurn = !isFinished && !needsForcedSwitch && state.turnState === "enemy";
   const isPlayerTurn = !isFinished && !needsForcedSwitch && !isEnemyTurn;
+  const isReplayingTurn = Boolean(state.visualReplay?.active);
+  const currentActionSide = getDraftSimpleBattleCurrentActionSide(state);
+  const currentActionBattler = currentActionSide === "right" ? displayRight : displayLeft;
+  const currentActionTarget = currentActionSide === "right" ? displayLeft : displayRight;
+  const canLocalChooseAction = isPlayerTurn && !isReplayingTurn && (!isNetwork || currentActionSide === localSide) && !network.waitingRemote;
+  const canLocalChooseReplacement = needsForcedSwitch && (!isNetwork || (state.pendingSwitchSide || "left") === localSide);
 
   const actionsHtml = state.log.map((entry) => {
-    const lines = (entry.actions || []).map((action) => {
-      if (action.event === "sendout") {
-        const sideLabel = action.side === "left" ? "Joueur" : "Adversaire";
-        return `<li><b>${sideLabel}</b> envoie <b>${escapeHtml(action.pokemonName || "Pokémon")}</b> au combat.</li>`;
-      }
-      const actor = action.actorName || (action.side === "left" ? displayLeft.pokemon.name : displayRight.pokemon.name);
-      const target = action.targetName || (action.side === "left" ? displayRight.pokemon.name : displayLeft.pokemon.name);
-      if (action.missed) {
-        return `<li><b>${escapeHtml(actor)}</b> utilise <b>${escapeHtml(action.move?.name || "Attaque")}</b> sur ${escapeHtml(target)} : rate.</li>`;
-      }
-      const extras = action.move?.category === "status"
-        ? [
-          getDraftSimpleBattleActionNotes(action),
-          action.heal ? `+${action.heal} PV` : "",
-          action.statusFailedReason ? action.statusFailedReason : "",
-        ].filter(Boolean).join(" • ")
-        : [
-          `${action.damage} dégâts`,
-          getDraftSimpleBattleActionNotes(action),
-          action.recoil ? `recul ${action.recoil}` : "",
-          action.knockout ? "KO" : "",
-          action.selfKnockout ? "recul KO" : "",
-        ].filter(Boolean).join(" • ");
-      return `<li><b>${escapeHtml(actor)}</b> utilise <b>${escapeHtml(action.move?.name || "Attaque")}</b> sur ${escapeHtml(target)} : ${extras}</li>`;
+    const maxVisible = state.visualReplay?.active && Number(state.visualReplay.turn) === Number(entry.turn)
+      ? Math.max(0, Number(state.visualReplay.visibleCount) || 0)
+      : (entry.actions || []).length;
+    const cards = (entry.actions || []).slice(0, maxVisible).map((action) => {
+      const item = buildDraftSimpleBattleActionFeedItem(action, displayLeft, displayRight);
+      if (!item) return "";
+      return `
+        <article class="draft-dev-battle-feed-item is-${escapeHtml(item.kind || "info")}">
+          <div class="draft-dev-battle-feed-head">
+            <strong>${escapeHtml(item.title)}</strong>
+            ${item.meta ? `<span>${escapeHtml(item.meta)}</span>` : ""}
+          </div>
+          <p>${escapeHtml(item.body)}</p>
+          ${item.tags?.length ? `<div class="draft-dev-battle-feed-tags">${item.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+        </article>
+      `;
     }).join("");
-    return `<div class="draft-dev-battle-turn"><strong>Tour ${entry.turn}</strong><ul>${lines || "<li>Aucune action</li>"}</ul></div>`;
+    return `
+      <div class="draft-dev-battle-turn">
+        <div class="draft-dev-battle-turn-head">
+          <strong>Tour ${entry.turn}</strong>
+          <span>${escapeHtml((entry.order || []).map((side) => side === "left" ? "Gauche" : "Droite").join(" → ") || "Ordre en attente")}</span>
+        </div>
+        <div class="draft-dev-battle-feed-list">${cards || (state.visualReplay?.active && Number(state.visualReplay.turn) === Number(entry.turn) ? '<p class="card-desc">Résolution du tour...</p>' : '<p class="card-desc">Aucune action.</p>')}</div>
+      </div>
+    `;
   }).join("");
 
-  const movesHtml = (displayLeft.moves || []).map((move, index) => {
-    const moveEffectiveness = getDraftSimpleBattleTypeMultiplier(state.gen, move?.type, displayRight);
+  const movesHtml = (currentActionBattler.moves || []).map((move, index) => {
+    const moveEffectiveness = getDraftSimpleBattleTypeMultiplier(state.gen, move?.type, currentActionTarget);
     const moveEffectivenessText = move?.category === "status"
       ? (move?.effect?.label || "Soutien")
       : getDraftSimpleBattleEffectivenessText(moveEffectiveness);
@@ -8766,8 +9865,8 @@ function renderDraftSimpleBattleDevPanel(state) {
     <button
       type="button"
       class="btn-blue draft-dev-battle-move"
-      onclick="runDraftSimpleBattleDevTurn(${index})"
-      ${(state.phase === "finished" || state.turnState !== "player" || (Number(move?.ppCurrent) || 0) <= 0) ? "disabled" : ""}
+      onclick="runDraftSimpleBattleDevTurn(${index}, '${currentActionSide}')"
+      ${(state.phase === "finished" || !canLocalChooseAction || (Number(move?.ppCurrent) || 0) <= 0) ? "disabled" : ""}
     >
       <span class="draft-dev-battle-move-name">${escapeHtml(move.name)}</span>
       <span class="draft-dev-battle-move-meta">
@@ -8779,9 +9878,9 @@ function renderDraftSimpleBattleDevPanel(state) {
     </button>
   `;
   }).join("");
-  const struggleOnly = !getDraftSimpleBattleUsableMoveIndexes(displayLeft).length;
+  const struggleOnly = !getDraftSimpleBattleUsableMoveIndexes(currentActionBattler).length;
   const struggleHtml = struggleOnly
-    ? `<button type="button" class="btn-blue draft-dev-battle-move" onclick="runDraftSimpleBattleDevStruggle()" ${state.phase === "finished" || state.turnState !== "player" ? "disabled" : ""}>
+    ? `<button type="button" class="btn-blue draft-dev-battle-move" onclick="runDraftSimpleBattleDevStruggle('${currentActionSide}')" ${state.phase === "finished" || !canLocalChooseAction ? "disabled" : ""}>
         <span class="draft-dev-battle-move-name">Struggle</span>
         <span class="draft-dev-battle-move-meta">
           <small class="draft-dev-battle-move-type">Normal</small>
@@ -8810,18 +9909,21 @@ function renderDraftSimpleBattleDevPanel(state) {
     : isEnemyTurn
       ? `<div class="draft-dev-battle-result"><b>Duel en cours</b><span>L’adversaire prépare sa réponse.</span></div>`
       : isPlayerTurn
-        ? `<div class="draft-dev-battle-result"><b>Duel en cours</b><span>Choisis une attaque pour jouer le prochain tour.</span></div>`
+        ? `<div class="draft-dev-battle-result"><b>${escapeHtml(isNetwork ? getDraftSimpleBattleNetworkRoomStatusText(state) : "Duel en cours")}</b><span>${escapeHtml(isNetwork ? networkTurnHint : (canLocalChooseAction ? "Choisis une attaque pour jouer le prochain tour." : "Action adverse en attente ou déjà verrouillée."))}</span></div>`
         : "";
 
   const switchHtml = needsForcedSwitch
     ? `
       <div class="draft-dev-battle-switch">
-        <b>${state.pendingSwitchReason === "manual" ? "Choisis le Pokémon à envoyer :" : "Ton Pokémon est KO. Choisis le suivant :"}</b>
+        <b>${state.pendingSwitchReason === "manual"
+          ? `Choisis le Pokémon à envoyer (${state.pendingSwitchSide === "right" ? "droite" : "gauche"}) :`
+          : `Le Pokémon ${state.pendingSwitchSide === "right" ? "droit" : "gauche"} est KO. Choisis le suivant :`}</b>
+        ${isNetwork ? `<span class="draft-dev-battle-switch-note">${escapeHtml((state.pendingSwitchSide || "left") === localSide ? "Ton remplacement est requis pour continuer." : "On attend le remplacement de l’autre joueur.")}</span>` : ""}
         <div class="draft-dev-battle-switch-options">
-          ${getDraftSimpleBattleAvailableSwitchIndexes(state).map((index) => {
-            const member = state.leftTeam[index];
+          ${getDraftSimpleBattleAvailableSwitchIndexesForSide(state, state.pendingSwitchSide || "left").map((index) => {
+            const member = (state.pendingSwitchSide === "right" ? state.rightTeam : state.leftTeam)[index];
             return `
-              <button type="button" class="btn-ghost draft-dev-battle-switch-btn" onclick="chooseDraftSimpleBattleReplacement(${index})">
+              <button type="button" class="btn-ghost draft-dev-battle-switch-btn" onclick="chooseDraftSimpleBattleReplacement(${index}, '${state.pendingSwitchSide || "left"}')" ${!canLocalChooseReplacement ? "disabled" : ""}>
                 <span>${escapeHtml(member.pokemon.name)}</span>
                 <small>PV ${member.currentHp} / ${member.maxHp}</small>
               </button>
@@ -8845,12 +9947,44 @@ function renderDraftSimpleBattleDevPanel(state) {
         </div>
       </div>
     ` : ""}
+    ${isNetwork ? `
+      <div class="draft-dev-battle-network-card is-live">
+        <div class="draft-dev-battle-network-head">
+          <b>Draft Combat 1v1</b>
+          <span class="draft-dev-battle-network-role">${escapeHtml(getDraftSimpleBattleNetworkRoleLabel(state))}</span>
+        </div>
+        <div class="draft-dev-battle-network-grid">
+          <div class="draft-dev-battle-network-item">
+            <span>Code room</span>
+            <b>${escapeHtml(network.roomCode || "—")}</b>
+          </div>
+          <div class="draft-dev-battle-network-item">
+            <span>État réseau</span>
+            <b>${escapeHtml(getDraftSimpleBattleNetworkRoomStatusText(state))}</b>
+          </div>
+          <div class="draft-dev-battle-network-item">
+            <span>Camp local</span>
+            <b>${escapeHtml(localSide === "left" ? "Gauche" : "Droite")}</b>
+          </div>
+          <div class="draft-dev-battle-network-item">
+            <span>Autre joueur</span>
+            <b>${escapeHtml(networkOpponent?.nickname || "Absent")}</b>
+          </div>
+        </div>
+        <small>${escapeHtml(networkTurnHint)}</small>
+      </div>
+    ` : ""}
     <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
       <b>${isFinished ? "Fin du match" : "Scène de combat"}</b>
       <span>${escapeHtml(sceneText)}</span>
     </div>
+    ${visualFeedback.badges.length ? `
+      <div class="draft-dev-battle-event-strip">
+        ${visualFeedback.badges.map((label) => `<span class="draft-dev-battle-event-badge">${escapeHtml(label)}</span>`).join("")}
+      </div>
+    ` : ""}
     <div class="draft-dev-battle-fighters">
-      <div class="draft-summary-card wide draft-dev-battle-fighter is-player">
+      <div class="draft-summary-card wide draft-dev-battle-fighter is-player ${visualFeedback.leftClass}">
         <div class="draft-dev-battle-fighter-head">
           <img src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
           <div>
@@ -8869,7 +10003,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           </div>
         </div>
       </div>
-      <div class="draft-summary-card wide draft-dev-battle-fighter is-foe">
+      <div class="draft-summary-card wide draft-dev-battle-fighter is-foe ${visualFeedback.rightClass}">
         <div class="draft-dev-battle-fighter-head">
           <img src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
           <div>
@@ -8901,10 +10035,10 @@ function renderDraftSimpleBattleDevPanel(state) {
     </div>
     ${resultHtml}
     ${switchHtml}
-    ${isPlayerTurn && getDraftSimpleBattleAvailableSwitchIndexes(state).length
-      ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch()">Changer de Pokémon</button></div>`
+    ${canLocalChooseAction && getDraftSimpleBattleAvailableSwitchIndexesForSide(state, currentActionSide).length
+      ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch('${currentActionSide}')">Changer de Pokémon</button></div>`
       : ""}
-    ${isPlayerTurn ? `<div class="draft-dev-battle-actions">${struggleHtml || movesHtml}</div>` : ""}
+    ${isPlayerTurn ? `<div class="draft-dev-battle-actions"><div class="card-desc">${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.</p>`}</div>` : ""}
     <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
   `;
 
@@ -8920,6 +10054,16 @@ function clearDraftSimpleBattleDevPanel() {
     clearTimeout(draftSimpleBattleTurnTimer);
     draftSimpleBattleTurnTimer = null;
   }
+  clearDraftSimpleBattleReplay();
+  if (draftSimpleBattleDevUiState) {
+    if (isDraftSimpleBattleNetworkMode(draftSimpleBattleDevUiState) && multiplayerSocket?.connected) {
+      multiplayerSocket.emit("draft-battle:leave-room");
+    }
+    draftSimpleBattleDevUiState.pendingTurn = null;
+    draftSimpleBattleDevUiState.hotseatPendingSide = null;
+    draftSimpleBattleDevUiState.visualReplay = null;
+  }
+  draftBattleNetworkSession = null;
   draftSimpleBattleDevUiState = null;
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
@@ -8928,6 +10072,17 @@ function clearDraftSimpleBattleDevPanel() {
 
 function startDraftSimpleBattlePreview() {
   if (!draftSimpleBattleDevUiState) return null;
+  if (isDraftSimpleBattleNetworkMode(draftSimpleBattleDevUiState)) {
+    const network = getDraftSimpleBattleNetworkMeta(draftSimpleBattleDevUiState);
+    if (!network.isHost || (network.players || []).length < 2) return null;
+    draftSimpleBattleDevUiState.showPreview = false;
+    draftSimpleBattleDevUiState.showIntro = false;
+    draftSimpleBattleDevUiState.turnState = "left-action";
+    draftSimpleBattleDevUiState.sceneMessage = `${draftSimpleBattleDevUiState.left?.pokemon?.name || "Le Pokémon gauche"} entre au combat face à ${draftSimpleBattleDevUiState.right?.pokemon?.name || "l’adversaire"} !`;
+    commitDraftSimpleBattleNetworkState(draftSimpleBattleDevUiState);
+    renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+    return draftSimpleBattleDevUiState;
+  }
   draftSimpleBattleDevUiState.showPreview = false;
   draftSimpleBattleDevUiState.showIntro = true;
   draftSimpleBattleDevUiState.sceneMessage = `${draftSimpleBattleDevUiState.left?.pokemon?.name || "Ton Pokémon"} entre au combat face à ${draftSimpleBattleDevUiState.right?.pokemon?.name || "l’adversaire"} !`;
@@ -8936,7 +10091,7 @@ function startDraftSimpleBattlePreview() {
   draftSimpleBattleIntroTimer = setTimeout(() => {
     if (!draftSimpleBattleDevUiState) return;
     draftSimpleBattleDevUiState.showIntro = false;
-    draftSimpleBattleDevUiState.turnState = "player";
+    draftSimpleBattleDevUiState.turnState = "left-action";
     renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
     draftSimpleBattleIntroTimer = null;
   }, 1000);
@@ -8948,23 +10103,70 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
   state.turn += 1;
   state.phase = leftRemaining <= 0 || rightRemaining <= 0 ? "finished" : "ready";
+  state.pendingTurn = null;
   state.queuedTurn = null;
   clearDraftSimpleBattleTurnFlags(state);
   if (state.phase === "finished") {
     state.pendingSwitch = false;
     state.pendingSwitchReason = null;
+    state.pendingSwitchSide = null;
+    state.hotseatPendingSide = null;
     state.sceneMessage = `${getDraftSimpleBattleTeamWinnerLabel(state)} gagne le match avec ${getDraftSimpleBattleWinnerName(state)}.`;
+  } else if (state.left && state.left.currentHp <= 0) {
+    const hasForcedReplacement = getDraftSimpleBattleAvailableSwitchIndexesForSide(state, "left").length > 0;
+    state.pendingSwitch = hasForcedReplacement;
+    state.pendingSwitchReason = hasForcedReplacement ? "ko" : null;
+    state.pendingSwitchSide = hasForcedReplacement ? "left" : null;
+    if (hasForcedReplacement && isDraftSimpleBattleLocalHotseat(state)) {
+      state.turnState = "hotseat-transition";
+      state.hotseatPendingSide = "left";
+      state.sceneMessage = "Le Pokémon gauche est KO. Passe au joueur gauche.";
+    } else {
+      state.sceneMessage = hasForcedReplacement
+        ? "Le Pokémon gauche tombe KO. Choisis vite le remplaçant."
+        : state.sceneMessage;
+    }
+  } else if (state.right && state.right.currentHp <= 0 && isDraftSimpleBattleHumanControlled(state, "right")) {
+    const hasForcedReplacement = getDraftSimpleBattleAvailableSwitchIndexesForSide(state, "right").length > 0;
+    state.pendingSwitch = hasForcedReplacement;
+    state.pendingSwitchReason = hasForcedReplacement ? "ko" : null;
+    state.pendingSwitchSide = hasForcedReplacement ? "right" : null;
+    if (hasForcedReplacement && isDraftSimpleBattleLocalHotseat(state)) {
+      state.turnState = "hotseat-transition";
+      state.hotseatPendingSide = "right";
+      state.sceneMessage = "Le Pokémon droit est KO. Passe au joueur droit.";
+    } else {
+      state.sceneMessage = hasForcedReplacement
+        ? "Le Pokémon droit tombe KO. Choisis vite le remplaçant."
+        : state.sceneMessage;
+    }
   } else if (state.pendingSwitch) {
-    state.sceneMessage = "Ton Pokémon tombe KO. Choisis vite le remplaçant.";
+    state.sceneMessage = state.pendingSwitchSide === "right"
+      ? "Le Pokémon droit tombe KO. Choisis vite le remplaçant."
+      : "Le Pokémon gauche tombe KO. Choisis vite le remplaçant.";
   } else {
+    state.pendingSwitch = false;
+    state.pendingSwitchReason = null;
+    state.pendingSwitchSide = null;
+    state.hotseatPendingSide = null;
     state.sceneMessage = "";
   }
-  state.turnState = state.phase === "finished" ? "finished" : state.pendingSwitch ? "switch" : "player";
+  if (state.phase === "finished") {
+    state.turnState = "finished";
+  } else if (state.turnState === "hotseat-transition") {
+    // keep transition state set above
+  } else {
+    state.turnState = state.pendingSwitch ? "switch" : "left-action";
+  }
   if (turnEntry && !turnEntry.order?.length) {
     turnEntry.order = ["left", "right"];
   }
   syncDraftSimpleBattleActiveBattlers(state);
+  clearDraftSimpleBattleReplay(state);
   renderDraftSimpleBattleDevPanel(state);
+  if (turnEntry?.actions?.length) {
+    startDraftSimpleBattleTurnReplay(state, turnEntry);
+  }
   if (state.phase === "finished" && !state.finishHandled && typeof state.onFinish === "function") {
     state.finishHandled = true;
     state.onFinish(state);
@@ -8973,43 +10175,89 @@ function finishDraftSimpleBattleDevTurn(state, turnEntry) {
   return state;
 }
 
-function chooseDraftSimpleBattleReplacement(teamIndex) {
+function chooseDraftSimpleBattleReplacement(teamIndex, side = null, options = {}) {
   const state = draftSimpleBattleDevUiState;
   if (!state || !state.pendingSwitch || state.phase === "finished") return null;
+  const replacementSide = side || state.pendingSwitchSide || "left";
   const nextIndex = Number(teamIndex);
-  const nextMember = state.leftTeam[nextIndex];
-  if (!Number.isInteger(nextIndex) || !nextMember || nextMember.currentHp <= 0 || nextIndex === state.leftActiveIndex) return null;
+  const team = replacementSide === "right" ? state.rightTeam : state.leftTeam;
+  const activeIndex = replacementSide === "right" ? state.rightActiveIndex : state.leftActiveIndex;
+  const nextMember = team[nextIndex];
+  if (!Number.isInteger(nextIndex) || !nextMember || nextMember.currentHp <= 0 || nextIndex === activeIndex) return null;
 
-  state.leftActiveIndex = nextIndex;
   const switchReason = state.pendingSwitchReason;
   state.pendingSwitch = false;
   state.pendingSwitchReason = null;
+  state.pendingSwitchSide = null;
+  state.pendingTurn = null;
   state.queuedTurn = null;
-  state.turnState = switchReason === "manual" ? "resolving" : "player";
-  syncDraftSimpleBattleActiveBattlers(state);
-  state.sceneMessage = `${nextMember.pokemon.name} rejoint le terrain !`;
+  state.turnState = switchReason === "manual" ? "resolving" : "left-action";
+
+  if (isDraftSimpleBattleNetworkMode(state) && !options.bypassNetwork) {
+    if (switchReason === "manual") {
+      state.pendingSwitch = false;
+      state.pendingSwitchReason = null;
+      state.pendingSwitchSide = null;
+      state.turnState = replacementSide === "right" ? "right-action" : "left-action";
+      return submitDraftSimpleBattleNetworkAction(state, replacementSide, {
+        kind: "switch",
+        teamIndex: nextIndex,
+        pokemonName: nextMember.pokemon.name,
+      }, { source: "player" });
+    }
+    return submitDraftSimpleBattleNetworkReplacement(state, replacementSide, nextIndex);
+  }
 
   if (switchReason === "manual" && state.phase !== "finished") {
-    state.queuedTurn = buildDraftSimpleBattleQueuedTurn(state, {
+    state.turnState = replacementSide === "left" ? "left-action" : "right-action";
+    submitDraftSimpleBattleTurnAction(state, replacementSide, {
       kind: "switch",
       teamIndex: nextIndex,
       pokemonName: nextMember.pokemon.name,
+    }, {
+      source: "player",
     });
+    const otherSide = replacementSide === "left" ? "right" : "left";
+    if (!isDraftSimpleBattleHumanControlled(state, otherSide)) {
+      const enemyAction = chooseDraftSimpleBattleEnemyAction(state);
+      submitDraftSimpleBattleTurnAction(state, otherSide, enemyAction, { source: "ai" });
+    } else {
+      state.turnState = otherSide === "left" ? "left-action" : "right-action";
+      state.sceneMessage = replacementSide === "left"
+        ? "Action gauche choisie. En attente action droite."
+        : "Action droite choisie. En attente action gauche.";
+      renderDraftSimpleBattleDevPanel(state);
+      return state;
+    }
     return scheduleDraftSimpleBattleTurnResolution(state);
   }
 
+  const switched = executeDraftSimpleBattleSwitch(state, replacementSide, nextIndex, {
+    reason: "forced-ko",
+    forced: true,
+  });
+  if (!switched) return null;
+  state.sceneMessage = `${switched.pokemon.name} rejoint le terrain !`;
+  state.turnState = "left-action";
   renderDraftSimpleBattleDevPanel(state);
   return state;
 }
 
-function openDraftSimpleBattleManualSwitch() {
+function openDraftSimpleBattleManualSwitch(side = null) {
   const state = draftSimpleBattleDevUiState;
-  if (!state || state.phase === "finished" || state.turnState !== "player" || state.pendingSwitch) return null;
-  if (!getDraftSimpleBattleAvailableSwitchIndexes(state).length) return null;
+  if (!state || state.phase === "finished" || state.pendingSwitch) return null;
+  const switchSide = side || getDraftSimpleBattleCurrentActionSide(state);
+  if (isDraftSimpleBattleNetworkMode(state) && getDraftSimpleBattleNetworkLocalSide(state) !== switchSide) return null;
+  const expectedTurnState = switchSide === "right" ? "right-action" : "left-action";
+  if (state.turnState !== expectedTurnState) return null;
+  if (!getDraftSimpleBattleAvailableSwitchIndexesForSide(state, switchSide).length) return null;
 
   state.pendingSwitch = true;
   state.pendingSwitchReason = "manual";
-  state.sceneMessage = "Choisis un autre Pokémon : ce changement consommera ton tour.";
+  state.pendingSwitchSide = switchSide;
+  state.sceneMessage = switchSide === "right"
+    ? "Choisis un autre Pokémon à droite : ce changement consommera ton tour."
+    : "Choisis un autre Pokémon à gauche : ce changement consommera ton tour.";
   state.log.push({ turn: state.turn, order: ["left", "right"], actions: [] });
   renderDraftSimpleBattleDevPanel(state);
   return state;
@@ -9018,10 +10266,17 @@ function openDraftSimpleBattleManualSwitch() {
 function cancelDraftSimpleBattleManualSwitch() {
   const state = draftSimpleBattleDevUiState;
   if (!state || state.phase === "finished" || !state.pendingSwitch || state.pendingSwitchReason !== "manual") return null;
+  const switchSide = state.pendingSwitchSide || "left";
   state.pendingSwitch = false;
   state.pendingSwitchReason = null;
-  state.turnState = "player";
-  state.sceneMessage = `${state.left?.pokemon?.name || "Ton Pokémon"} reste au combat.`;
+  state.pendingSwitchSide = null;
+  state.pendingTurn = null;
+  state.queuedTurn = null;
+  state.hotseatPendingSide = null;
+  state.turnState = switchSide === "right" ? "right-action" : "left-action";
+  state.sceneMessage = switchSide === "right"
+    ? `${state.right?.pokemon?.name || "Le Pokémon droit"} reste au combat.`
+    : `${state.left?.pokemon?.name || "Le Pokémon gauche"} reste au combat.`;
   if (state.log.length) {
     const lastTurn = state.log[state.log.length - 1];
     if (lastTurn && Array.isArray(lastTurn.actions) && lastTurn.actions.length === 0) {
@@ -9049,22 +10304,30 @@ function chooseDraftSimpleBattleEnemyReplacement(state) {
   return ranked[0]?.teamIndex ?? options[0];
 }
 
-function runDraftSimpleBattleDevTurn(moveIndex = 0) {
-  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.turnState !== "player" || draftSimpleBattleDevUiState.pendingSwitch) return null;
+function runDraftSimpleBattleDevTurn(moveIndex = 0, side = null) {
+  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.pendingSwitch) return null;
 
   const state = draftSimpleBattleDevUiState;
-  state.queuedTurn = buildDraftSimpleBattleQueuedTurn(state, {
+  const actionSide = side || getDraftSimpleBattleCurrentActionSide(state);
+  if (isDraftSimpleBattleNetworkMode(state) && getDraftSimpleBattleNetworkLocalSide(state) !== actionSide) return null;
+  const expectedTurnState = actionSide === "right" ? "right-action" : "left-action";
+  if (state.turnState !== expectedTurnState) return null;
+  prepareDraftSimpleBattleQueuedTurn(state, {
     kind: "move",
     moveIndex,
   });
-  return scheduleDraftSimpleBattleTurnResolution(state);
+  return state.queuedTurn ? scheduleDraftSimpleBattleTurnResolution(state) : state;
 }
 
-function runDraftSimpleBattleDevStruggle() {
-  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.turnState !== "player" || draftSimpleBattleDevUiState.pendingSwitch) return null;
+function runDraftSimpleBattleDevStruggle(side = null) {
+  if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState.phase === "finished" || draftSimpleBattleDevUiState.pendingSwitch) return null;
   const state = draftSimpleBattleDevUiState;
-  state.queuedTurn = buildDraftSimpleBattleQueuedTurn(state, { kind: "struggle" });
-  return scheduleDraftSimpleBattleTurnResolution(state);
+  const actionSide = side || getDraftSimpleBattleCurrentActionSide(state);
+  if (isDraftSimpleBattleNetworkMode(state) && getDraftSimpleBattleNetworkLocalSide(state) !== actionSide) return null;
+  const expectedTurnState = actionSide === "right" ? "right-action" : "left-action";
+  if (state.turnState !== expectedTurnState) return null;
+  prepareDraftSimpleBattleQueuedTurn(state, { kind: "struggle" });
+  return state.queuedTurn ? scheduleDraftSimpleBattleTurnResolution(state) : state;
 }
 
 function runDraftSimpleBattleDraftConversionDevVisualTest() {
@@ -9100,9 +10363,106 @@ function runDraftSimpleBattleDraftConversionDevVisualTest() {
   return state;
 }
 
+function runDraftSimpleBattleLocalPvpTest() {
+  const { playerDraftTeam, enemyDraftTeam } = getDraftSimpleBattleDevEntries();
+  const state = createDraftSimpleBattleDevUiState(playerDraftTeam, enemyDraftTeam, {
+    mode: "local-pvp",
+    title: "Draft Combat Local 1v1",
+    controllers: {
+      left: "human",
+      right: "human",
+    },
+  });
+  if (!state) return null;
+  draftSimpleBattleDevUiState = state;
+  state.showPreview = false;
+  state.showIntro = false;
+  state.turnState = "left-action";
+  state.sceneMessage = "Mode local 1v1 : joueur gauche, choisis ton action.";
+  renderDraftSimpleBattleDevPanel(state);
+  document.getElementById("draft-battle-close")?.classList.remove("hidden");
+  return state;
+}
+
+function hostDraftSimpleBattleNetworkRoom() {
+  const socket = ensureMultiplayerSocket();
+  const baseState = draftSimpleBattleDevUiState?.showPreview
+    ? draftSimpleBattleDevUiState
+    : runDraftSimpleBattleDraftConversionDevVisualTest();
+  if (!socket?.connected || !baseState) return null;
+  if (draftBattleNetworkSession?.room?.code) {
+    socket.emit("draft-battle:leave-room");
+    draftBattleNetworkSession = null;
+  }
+
+  const nickname = sanitizePlayerNickname(window.prompt("Pseudo pour la room Draft Combat :", playerProfile.nickname || "Joueur 1") || "") || "Joueur 1";
+  const state = hydrateDraftSimpleBattleNetworkState(cloneDraftSimpleBattleNetworkState(baseState), {
+    enabled: true,
+    localSide: "left",
+    isHost: true,
+    players: [],
+    pendingTurn: null,
+    pendingReplacement: null,
+    waitingRemote: false,
+  });
+  if (!state) return null;
+  state.mode = "network-pvp";
+  state.title = "Draft Combat 1v1";
+  state.controllers.left = "human";
+  state.controllers.right = "human";
+  state.showPreview = true;
+  state.showIntro = false;
+  state.turnState = "left-action";
+  state.sceneMessage = "Room réseau en cours de création...";
+  draftSimpleBattleDevUiState = state;
+  renderDraftSimpleBattleDevPanel(state);
+
+  socket.emit("draft-battle:create-room", {
+    nickname,
+    battleState: cloneDraftSimpleBattleNetworkState(state),
+  }, (response = {}) => {
+    if (!response.ok) {
+      state.sceneMessage = response.error || "Impossible de créer la room réseau.";
+      renderDraftSimpleBattleDevPanel(state);
+      return;
+    }
+    const room = response.room || null;
+    state.network = buildDraftSimpleBattleNetworkMetaFromRoom(room, state);
+    state.sceneMessage = `Room ${room?.code || ""} créée. Partage le code au second joueur.`;
+    draftBattleNetworkSession = { room };
+    renderDraftSimpleBattleDevPanel(state);
+  });
+  return state;
+}
+
+function joinDraftSimpleBattleNetworkRoom() {
+  const socket = ensureMultiplayerSocket();
+  if (!socket?.connected) return null;
+  if (draftBattleNetworkSession?.room?.code) {
+    socket.emit("draft-battle:leave-room");
+    draftBattleNetworkSession = null;
+  }
+  const code = String(window.prompt("Code de room Draft Combat :", "") || "").trim().toUpperCase();
+  if (!code) return null;
+  const nickname = sanitizePlayerNickname(window.prompt("Pseudo pour rejoindre le combat :", playerProfile.nickname || "Joueur 2") || "") || "Joueur 2";
+  socket.emit("draft-battle:join-room", {
+    code,
+    nickname,
+  }, (response = {}) => {
+    if (!response.ok) {
+      alert(response.error || "Impossible de rejoindre la room.");
+    }
+  });
+  return true;
+}
+
 window.runDraftSimpleBattleDevTests = runDraftSimpleBattleDevTests;
 window.runDraftSimpleBattleDraftConversionDevTest = runDraftSimpleBattleDraftConversionDevTest;
 window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDraftConversionDevVisualTest;
+window.runDraftSimpleBattleLocalPvpTest = runDraftSimpleBattleLocalPvpTest;
+window.hostDraftSimpleBattleNetworkRoom = hostDraftSimpleBattleNetworkRoom;
+window.joinDraftSimpleBattleNetworkRoom = joinDraftSimpleBattleNetworkRoom;
+window.continueDraftSimpleBattleHotseat = continueDraftSimpleBattleHotseat;
 window.launchDraftArenaBattle = launchDraftArenaBattle;
 window.continueDraftArenaBattleRun = continueDraftArenaBattleRun;
 window.finishDraftArenaBattleView = finishDraftArenaBattleView;
@@ -12316,6 +13676,26 @@ function ensureMultiplayerSocket() {
     resetMultiplayerLiveSession();
     setMultiplayerError(payload.reason || "La room a été fermée.");
     renderMultiplayerBotScreen();
+  });
+
+  multiplayerSocket.on("draft-battle:room-state", (roomState) => {
+    handleDraftSimpleBattleNetworkRoomState(roomState);
+  });
+
+  multiplayerSocket.on("draft-battle:state", (payload = {}) => {
+    handleDraftSimpleBattleNetworkBattleState(payload);
+  });
+
+  multiplayerSocket.on("draft-battle:resolve-turn", (payload = {}) => {
+    handleDraftSimpleBattleNetworkResolveTurn(payload);
+  });
+
+  multiplayerSocket.on("draft-battle:resolve-replacement", (payload = {}) => {
+    handleDraftSimpleBattleNetworkResolveReplacement(payload);
+  });
+
+  multiplayerSocket.on("draft-battle:room-closed", (payload = {}) => {
+    handleDraftSimpleBattleNetworkRoomClosed(payload);
   });
 
   return multiplayerSocket;

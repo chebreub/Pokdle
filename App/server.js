@@ -12,6 +12,7 @@ const io = new Server(server, {
 });
 
 const rooms = new Map();
+const draftBattleRooms = new Map();
 const NAME_OVERRIDES = {
   "??lectrode": "Électrode",
   "??lekid": "Élekid",
@@ -156,6 +157,142 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     handleDisconnect(socket.id, false);
+    handleDraftBattleDisconnect(socket.id, false);
+  });
+
+  socket.on("draft-battle:create-room", (payload = {}, ack) => {
+    try {
+      handleDraftBattleDisconnect(socket.id, true);
+      const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
+      const battleState = payload.battleState && typeof payload.battleState === "object" ? payload.battleState : null;
+      if (!battleState) return respond(ack, { ok: false, error: "État de combat invalide." });
+
+      const code = generateDraftBattleRoomCode();
+      const room = {
+        code,
+        status: "waiting",
+        hostId: socket.id,
+        players: [],
+        battleState,
+        pendingTurn: null,
+        pendingReplacement: null,
+        resolvingTurn: null,
+        resolvingReplacement: null,
+        version: 1,
+        cleanupTimer: null,
+      };
+      draftBattleRooms.set(code, room);
+      joinPlayerToDraftBattleRoom(room, socket, nickname, "left");
+      emitDraftBattleRoomState(room);
+      respond(ack, { ok: true, code, room: publicDraftBattleRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Impossible de créer la room Draft Combat." });
+    }
+  });
+
+  socket.on("draft-battle:join-room", (payload = {}, ack) => {
+    try {
+      handleDraftBattleDisconnect(socket.id, true);
+      const code = sanitizeRoomCode(payload.code);
+      const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
+      const room = draftBattleRooms.get(code);
+      if (!room) return respond(ack, { ok: false, error: "Room Draft Combat introuvable." });
+      if (room.players.length >= MAX_ROOM_SIZE) return respond(ack, { ok: false, error: "La room est déjà complète." });
+
+      joinPlayerToDraftBattleRoom(room, socket, nickname, "right");
+      room.status = room.players.length === MAX_ROOM_SIZE ? "live" : "waiting";
+      emitDraftBattleRoomState(room);
+      respond(ack, { ok: true, code, room: publicDraftBattleRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Impossible de rejoindre la room Draft Combat." });
+    }
+  });
+
+  socket.on("draft-battle:leave-room", () => {
+    handleDraftBattleDisconnect(socket.id, true);
+  });
+
+  socket.on("draft-battle:submit-action", (payload = {}, ack) => {
+    const room = findDraftBattleRoomBySocket(socket.id);
+    if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
+    if (room.status !== "live") return respond(ack, { ok: false, error: "Le combat n'est pas prêt." });
+    if (room.resolvingTurn) return respond(ack, { ok: false, error: "La résolution du tour est déjà en cours." });
+    const player = room.players.find((entry) => entry.id === socket.id);
+    if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+    const expectedTurn = Number(room.battleState?.turn) || 1;
+    const requestedTurn = Number(payload.turn) || expectedTurn;
+    if (requestedTurn !== expectedTurn) return respond(ack, { ok: false, error: "Tour réseau obsolète." });
+
+    if (!room.pendingTurn || Number(room.pendingTurn.turn) !== requestedTurn) {
+      room.pendingTurn = {
+        turn: requestedTurn,
+        actions: { left: null, right: null },
+      };
+    }
+    if (room.pendingTurn.actions[player.side]) {
+      return respond(ack, { ok: false, error: "Action déjà enregistrée pour ce tour." });
+    }
+    room.pendingTurn.actions[player.side] = payload.submittedAction || null;
+    emitDraftBattleRoomState(room);
+
+    if (room.pendingTurn.actions.left && room.pendingTurn.actions.right) {
+      room.resolvingTurn = room.pendingTurn.turn;
+      io.to(room.hostId).emit("draft-battle:resolve-turn", {
+        code: room.code,
+        turn: room.pendingTurn.turn,
+        pendingTurn: room.pendingTurn,
+      });
+    }
+    respond(ack, { ok: true });
+  });
+
+  socket.on("draft-battle:submit-replacement", (payload = {}, ack) => {
+    const room = findDraftBattleRoomBySocket(socket.id);
+    if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
+    if (room.status === "finished") return respond(ack, { ok: false, error: "Le combat est terminé." });
+    const player = room.players.find((entry) => entry.id === socket.id);
+    if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+    if (!room.battleState?.pendingSwitch || room.battleState?.pendingSwitchSide !== player.side) {
+      return respond(ack, { ok: false, error: "Aucun remplacement forcé attendu pour ce camp." });
+    }
+    if (room.resolvingReplacement || room.pendingReplacement?.side === player.side) {
+      return respond(ack, { ok: false, error: "Remplaçant déjà envoyé." });
+    }
+
+    room.pendingReplacement = {
+      side: player.side,
+      teamIndex: Number(payload.teamIndex),
+    };
+    room.resolvingReplacement = room.pendingReplacement;
+    emitDraftBattleRoomState(room);
+    io.to(room.hostId).emit("draft-battle:resolve-replacement", {
+      code: room.code,
+      replacement: room.pendingReplacement,
+    });
+    respond(ack, { ok: true });
+  });
+
+  socket.on("draft-battle:commit-state", (payload = {}, ack) => {
+    const room = findDraftBattleRoomBySocket(socket.id);
+    if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
+    if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut valider l'état." });
+    if (!payload.battleState || typeof payload.battleState !== "object") {
+      return respond(ack, { ok: false, error: "État de combat invalide." });
+    }
+    if (!room.resolvingTurn && !room.resolvingReplacement) {
+      return respond(ack, { ok: false, error: "Aucune résolution en attente." });
+    }
+
+    room.battleState = payload.battleState;
+    room.pendingTurn = null;
+    room.pendingReplacement = null;
+    room.resolvingTurn = null;
+    room.resolvingReplacement = null;
+    room.version += 1;
+    room.status = payload.battleState?.phase === "finished" ? "finished" : "live";
+    emitDraftBattleState(room);
+    emitDraftBattleRoomState(room);
+    respond(ack, { ok: true });
   });
 });
 
@@ -202,6 +339,15 @@ function generateRoomCode() {
   return code;
 }
 
+function generateDraftBattleRoomCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  do {
+    code = `DB${Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("")}`;
+  } while (draftBattleRooms.has(code));
+  return code;
+}
+
 function joinPlayerToRoom(room, socket, nickname) {
   socket.join(room.code);
   socket.data.roomCode = room.code;
@@ -213,6 +359,17 @@ function joinPlayerToRoom(room, socket, nickname) {
     lastGuess: "",
     correct: false,
     guesses: [],
+  });
+}
+
+function joinPlayerToDraftBattleRoom(room, socket, nickname, side) {
+  socket.join(room.code);
+  socket.data.draftBattleRoomCode = room.code;
+  room.players.push({
+    id: socket.id,
+    nickname,
+    side,
+    connected: true,
   });
 }
 
@@ -315,6 +472,68 @@ function handleDisconnect(socketId, voluntary) {
   if (room.status === "finished") {
     scheduleRoomCleanup(room);
   }
+}
+
+function findDraftBattleRoomBySocket(socketId) {
+  const roomCode = io.sockets.sockets.get(socketId)?.data?.draftBattleRoomCode;
+  if (roomCode && draftBattleRooms.has(roomCode)) return draftBattleRooms.get(roomCode);
+  for (const room of draftBattleRooms.values()) {
+    if (room.players.some((player) => player.id === socketId)) return room;
+  }
+  return null;
+}
+
+function publicDraftBattleRoomState(room, viewerId = null) {
+  return {
+    code: room.code,
+    status: room.status,
+    hostId: room.hostId,
+    players: room.players.map((player) => ({
+      id: player.id,
+      nickname: player.nickname,
+      side: player.side,
+      connected: player.connected,
+      isSelf: player.id === viewerId,
+      isHost: player.id === room.hostId,
+    })),
+    pendingTurn: room.pendingTurn,
+    pendingReplacement: room.pendingReplacement,
+    resolvingTurn: room.resolvingTurn,
+    resolvingReplacement: room.resolvingReplacement,
+    version: room.version,
+    battleState: room.battleState,
+  };
+}
+
+function emitDraftBattleRoomState(room) {
+  for (const player of room.players) {
+    io.to(player.id).emit("draft-battle:room-state", publicDraftBattleRoomState(room, player.id));
+  }
+}
+
+function emitDraftBattleState(room) {
+  io.to(room.code).emit("draft-battle:state", {
+    code: room.code,
+    battleState: room.battleState,
+    status: room.status,
+  });
+}
+
+function handleDraftBattleDisconnect(socketId, voluntary, options = {}) {
+  const room = findDraftBattleRoomBySocket(socketId);
+  if (!room) return;
+  const socket = io.sockets.sockets.get(socketId);
+  if (socket?.data) socket.data.draftBattleRoomCode = null;
+  const player = room.players.find((entry) => entry.id === socketId);
+  if (!player) return;
+  player.connected = false;
+
+  if (!options.silent) {
+    io.to(room.code).emit("draft-battle:room-closed", {
+      reason: voluntary ? `${player.nickname} a quitté le combat.` : `${player.nickname} s'est déconnecté.`,
+    });
+  }
+  draftBattleRooms.delete(room.code);
 }
 
 function scheduleRoomCleanup(room) {
