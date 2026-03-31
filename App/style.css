@@ -17159,57 +17159,91 @@ body.theme-dark .team-builder-export-output {
 #screen-stat-clash {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
+  min-height: 0;
 }
 
 .stat-clash-screen-card {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: clamp(600px, calc(100vh - 176px), 800px);
+  max-height: calc(100vh - 128px);
+  padding: 12px 14px 10px;
+}
+
+#screen-stat-clash .ranking-head {
+  margin-bottom: 0;
+  gap: 8px;
+  align-items: center;
+}
+
+#screen-stat-clash .ranking-head .card-title {
+  font-size: clamp(1.14rem, 0.98rem + 0.42vw, 1.45rem);
+  margin: 0;
+}
+
+#screen-stat-clash .ranking-head-actions {
+  gap: 6px;
+}
+
+#screen-stat-clash > .card > .card-desc,
+.stat-clash-screen-card > .card-desc {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.3;
 }
 
 .stat-clash-root {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .stat-clash-shell {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .stat-clash-topline {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
+  font-size: 0.88rem;
 }
 
 .stat-clash-mode-switch,
 .stat-clash-room-row {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
   align-items: center;
 }
 
 .stat-clash-room-panel {
-  padding: 14px;
-  border-radius: 16px;
+  padding: 9px 10px;
+  border-radius: 14px;
   border: 1px solid rgba(158, 182, 222, 0.48);
   background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,255,0.95));
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .stat-clash-room-panel input {
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 12px;
+  min-height: 38px;
+  padding: 7px 9px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--text);
-  font: 800 0.96rem "Nunito", sans-serif;
+  font: 800 0.88rem "Nunito", sans-serif;
   flex: 1 1 180px;
 }
 
@@ -17219,25 +17253,29 @@ body.theme-dark .team-builder-export-output {
 
 .stat-clash-board {
   display: grid;
-  grid-template-columns: minmax(250px, 1fr) minmax(320px, 1.08fr) minmax(250px, 1fr);
-  gap: 16px;
-  align-items: start;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(310px, 1.08fr) minmax(220px, 0.9fr);
+  gap: 10px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .stat-clash-player-card,
 .stat-clash-center-card,
 .stat-clash-final-card {
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid rgba(158, 182, 222, 0.48);
   background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,255,0.95));
   box-shadow: 0 14px 28px rgba(22, 44, 80, 0.08);
+  min-height: 0;
 }
 
 .stat-clash-player-card {
-  padding: 16px;
+  padding: 10px;
   display: grid;
-  gap: 14px;
+  gap: 8px;
   min-height: 100%;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
 .stat-clash-player-card.is-winner {
@@ -17248,17 +17286,17 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-player-head {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
 }
 
 .stat-clash-player-side {
   color: #5a6f92;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .stat-clash-player-head h3,
@@ -17266,17 +17304,17 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-final-head h3 {
   margin: 0;
   color: #17345e;
-  font-size: 1.18rem;
+  font-size: 0.98rem;
 }
 
 .stat-clash-score-box {
-  min-width: 88px;
-  padding: 10px 12px;
-  border-radius: 14px;
+  min-width: 70px;
+  padding: 7px 9px;
+  border-radius: 12px;
   background: linear-gradient(180deg, #153760 0%, #102c4c 100%);
   color: #fff;
   display: grid;
-  gap: 3px;
+  gap: 2px;
   text-align: right;
 }
 
@@ -17286,7 +17324,7 @@ body.theme-dark .team-builder-export-output {
 }
 
 .stat-clash-score-box b {
-  font-size: 1.5rem;
+  font-size: 1.18rem;
   line-height: 1;
 }
 
@@ -17302,13 +17340,15 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-player-copy,
 .stat-clash-history-block {
   display: grid;
-  gap: 10px;
+  gap: 6px;
+  min-height: 0;
 }
 
 .stat-clash-player-status {
   color: #35527f;
   font-weight: 800;
-  font-size: 0.92rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .stat-clash-drafted-row,
@@ -17320,12 +17360,12 @@ body.theme-dark .team-builder-export-output {
 
 .stat-clash-drafted-chip,
 .stat-clash-remaining-chip {
-  padding: 7px 10px;
+  padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid rgba(146, 173, 215, 0.5);
   background: #eef4ff;
   color: #214676;
-  font-size: 0.78rem;
+  font-size: 0.71rem;
   font-weight: 900;
 }
 
@@ -17349,18 +17389,18 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-stat-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7px;
 }
 
 .stat-clash-stat-btn {
-  min-height: 68px;
-  padding: 10px 12px;
-  border-radius: 14px;
+  min-height: 48px;
+  padding: 7px 9px;
+  border-radius: 12px;
   border: 1px solid rgba(143, 170, 212, 0.56);
   background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
   color: #17345d;
   display: grid;
-  gap: 4px;
+  gap: 1px;
   text-align: left;
   cursor: pointer;
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
@@ -17373,12 +17413,12 @@ body.theme-dark .team-builder-export-output {
 }
 
 .stat-clash-stat-btn span {
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   font-weight: 900;
 }
 
 .stat-clash-stat-btn b {
-  font-size: 1.12rem;
+  font-size: 0.9rem;
 }
 
 .stat-clash-stat-btn.is-selected {
@@ -17421,30 +17461,38 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-remaining-block h4 {
   margin: 0;
   color: #274977;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
 }
 
 .stat-clash-history-list {
   display: grid;
-  gap: 8px;
+  gap: 5px;
+  min-height: 0;
+  max-height: clamp(102px, 16vh, 146px);
+  overflow: auto;
+  padding-right: 3px;
 }
 
 .stat-clash-history-item {
-  padding: 10px 12px;
-  border-radius: 12px;
+  padding: 6px 8px;
+  border-radius: 9px;
   background: #f4f7fd;
   border: 1px solid rgba(175, 196, 231, 0.4);
   display: grid;
-  gap: 2px;
+  gap: 1px;
 }
 
 .stat-clash-history-item span,
 .stat-clash-history-item small {
   color: #5d7396;
+  font-size: 0.69rem;
+  line-height: 1.25;
 }
 
 .stat-clash-history-item b {
   color: #17355f;
+  font-size: 0.78rem;
+  line-height: 1.25;
 }
 
 .stat-clash-empty {
@@ -17452,21 +17500,24 @@ body.theme-dark .team-builder-export-output {
 }
 
 .stat-clash-center-card {
-  padding: 16px;
+  padding: 10px;
   display: grid;
-  gap: 14px;
+  gap: 8px;
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .stat-clash-randomizer {
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 15px;
+  padding: 10px;
   border: 1px solid rgba(137, 167, 214, 0.44);
   background:
     radial-gradient(circle at top, rgba(255,225,115,0.28), transparent 40%),
     linear-gradient(180deg, #173b69 0%, #102949 100%);
   color: #fff;
   display: grid;
-  gap: 14px;
+  gap: 8px;
+  align-content: start;
+  min-height: 0;
 }
 
 .stat-clash-randomizer.is-rolling .stat-clash-sprite-wrap img {
@@ -17482,15 +17533,16 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-randomizer-head {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   font-weight: 800;
   color: rgba(243, 248, 255, 0.84);
+  font-size: 0.78rem;
 }
 
 .stat-clash-sprite-wrap {
-  min-height: 180px;
-  border-radius: 18px;
+  min-height: 114px;
+  border-radius: 14px;
   background: radial-gradient(circle at center, rgba(255,255,255,0.26), rgba(255,255,255,0.05));
   border: 1px solid rgba(255,255,255,0.18);
   display: flex;
@@ -17500,28 +17552,28 @@ body.theme-dark .team-builder-export-output {
 }
 
 .stat-clash-sprite-wrap img {
-  width: 144px;
-  height: 144px;
+  width: clamp(80px, 9vw, 112px);
+  height: clamp(80px, 9vw, 112px);
   image-rendering: pixelated;
   filter: drop-shadow(0 16px 24px rgba(0,0,0,0.28));
 }
 
 .stat-clash-sprite-placeholder {
-  width: 104px;
-  height: 104px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   border: 3px dashed rgba(255,255,255,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 900 2.4rem/1 "Nunito", sans-serif;
+  font: 900 1.8rem/1 "Nunito", sans-serif;
   color: rgba(255,255,255,0.75);
 }
 
 .stat-clash-pokemon-meta {
   text-align: center;
   display: grid;
-  gap: 6px;
+  gap: 3px;
 }
 
 .stat-clash-pokemon-meta h3 {
@@ -17532,24 +17584,28 @@ body.theme-dark .team-builder-export-output {
   color: rgba(237, 243, 255, 0.82);
   font-weight: 700;
   margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
 }
 
 .stat-clash-timer {
   display: grid;
-  gap: 8px;
-  justify-items: center;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 9px;
+  align-items: center;
 }
 
 .stat-clash-timer-ring {
-  width: 82px;
-  height: 82px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  border: 4px solid rgba(255, 214, 87, 0.82);
+  border: 3px solid rgba(255, 214, 87, 0.82);
   background: radial-gradient(circle, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 6px rgba(255, 214, 87, 0.12);
+  box-shadow: 0 0 0 3px rgba(255, 214, 87, 0.12);
+  grid-row: span 2;
 }
 
 .stat-clash-timer.is-live .stat-clash-timer-ring {
@@ -17562,17 +17618,18 @@ body.theme-dark .team-builder-export-output {
 }
 
 .stat-clash-timer-ring span {
-  font-size: 1.6rem;
+  font-size: 1.12rem;
   font-weight: 900;
   color: #fff;
 }
 
 .stat-clash-timer-track {
   width: 100%;
-  height: 10px;
+  height: 7px;
   border-radius: 999px;
   overflow: hidden;
   background: rgba(255,255,255,0.16);
+  align-self: end;
 }
 
 .stat-clash-timer-fill {
@@ -17584,44 +17641,47 @@ body.theme-dark .team-builder-export-output {
 
 .stat-clash-timer small {
   color: rgba(239, 245, 255, 0.82);
-  text-align: center;
+  text-align: left;
+  font-size: 0.72rem;
+  line-height: 1.25;
 }
 
 .stat-clash-reveal-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7px;
 }
 
 .stat-clash-reveal-card {
-  padding: 12px;
-  border-radius: 14px;
+  padding: 7px 8px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.16);
   display: grid;
-  gap: 4px;
+  gap: 1px;
   text-align: center;
 }
 
 .stat-clash-reveal-card span,
 .stat-clash-reveal-card small {
   color: rgba(241, 246, 255, 0.8);
+  font-size: 0.68rem;
 }
 
 .stat-clash-reveal-card b {
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.84rem;
 }
 
 .stat-clash-remaining-block {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .stat-clash-final-card {
-  padding: 16px;
+  padding: 12px;
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .stat-clash-final-card.is-win {
@@ -17636,12 +17696,12 @@ body.theme-dark .team-builder-export-output {
 .stat-clash-final-head {
   text-align: center;
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .stat-clash-final-kicker {
   color: #61789d;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -17661,7 +17721,7 @@ body.theme-dark .team-builder-export-output {
 
 .stat-clash-final-score {
   border-radius: 14px;
-  padding: 12px;
+  padding: 9px;
   background: #f4f7fd;
   border: 1px solid rgba(162, 185, 222, 0.42);
   display: grid;
@@ -17676,14 +17736,23 @@ body.theme-dark .team-builder-export-output {
 
 .stat-clash-final-score b {
   color: #17345e;
-  font-size: 1.8rem;
+  font-size: 1.48rem;
 }
 
 .stat-clash-final-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.stat-clash-history-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.stat-clash-history-list::-webkit-scrollbar-thumb {
+  background: rgba(104, 129, 171, 0.42);
+  border-radius: 999px;
 }
 
 body.theme-dark .stat-clash-player-card,
@@ -17738,6 +17807,11 @@ body.theme-dark .stat-clash-room-panel input {
 }
 
 @media (max-width: 1080px) {
+  .stat-clash-screen-card {
+    max-height: none;
+    min-height: 0;
+  }
+
   .stat-clash-board {
     grid-template-columns: 1fr;
   }
