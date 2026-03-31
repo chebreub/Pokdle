@@ -17154,3 +17154,617 @@ body.theme-dark .team-builder-export-output {
   background: rgba(6, 16, 31, 0.94);
   border-color: rgba(96, 131, 194, 0.3);
 }
+
+/* Stat Clash 1v1 */
+#screen-stat-clash {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-clash-screen-card {
+  overflow: hidden;
+}
+
+.stat-clash-root {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stat-clash-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-clash-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.stat-clash-mode-switch,
+.stat-clash-room-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.stat-clash-room-panel {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(158, 182, 222, 0.48);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,255,0.95));
+  display: grid;
+  gap: 10px;
+}
+
+.stat-clash-room-panel input {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  font: 800 0.96rem "Nunito", sans-serif;
+  flex: 1 1 180px;
+}
+
+.stat-clash-rule-tag {
+  background: linear-gradient(180deg, #275ea8 0%, #1e4780 100%);
+}
+
+.stat-clash-board {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) minmax(320px, 1.08fr) minmax(250px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.stat-clash-player-card,
+.stat-clash-center-card,
+.stat-clash-final-card {
+  border-radius: 18px;
+  border: 1px solid rgba(158, 182, 222, 0.48);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,255,0.95));
+  box-shadow: 0 14px 28px rgba(22, 44, 80, 0.08);
+}
+
+.stat-clash-player-card {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  min-height: 100%;
+}
+
+.stat-clash-player-card.is-winner {
+  border-color: rgba(255, 203, 73, 0.82);
+  box-shadow: 0 18px 34px rgba(233, 170, 36, 0.18);
+}
+
+.stat-clash-player-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.stat-clash-player-side {
+  color: #5a6f92;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.stat-clash-player-head h3,
+.stat-clash-pokemon-meta h3,
+.stat-clash-final-head h3 {
+  margin: 0;
+  color: #17345e;
+  font-size: 1.18rem;
+}
+
+.stat-clash-score-box {
+  min-width: 88px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #153760 0%, #102c4c 100%);
+  color: #fff;
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+
+.stat-clash-score-box span,
+.stat-clash-score-box small {
+  color: rgba(240, 245, 255, 0.82);
+}
+
+.stat-clash-score-box b {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stat-clash-score-box.is-animating {
+  animation: stat-clash-score-pulse 0.5s ease infinite alternate;
+}
+
+@keyframes stat-clash-score-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+.stat-clash-player-copy,
+.stat-clash-history-block {
+  display: grid;
+  gap: 10px;
+}
+
+.stat-clash-player-status {
+  color: #35527f;
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.stat-clash-drafted-row,
+.stat-clash-remaining-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stat-clash-drafted-chip,
+.stat-clash-remaining-chip {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(146, 173, 215, 0.5);
+  background: #eef4ff;
+  color: #214676;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.stat-clash-drafted-chip.is-empty {
+  opacity: 0.7;
+}
+
+.stat-clash-remaining-chip.is-locked {
+  background: #fff6df;
+  border-color: rgba(236, 184, 69, 0.54);
+  color: #926100;
+}
+
+.stat-clash-remaining-chip.is-used {
+  background: #e6eaf3;
+  border-color: rgba(110, 124, 154, 0.42);
+  color: #5f6d87;
+  text-decoration: line-through;
+}
+
+.stat-clash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-clash-stat-btn {
+  min-height: 68px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(143, 170, 212, 0.56);
+  background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+  color: #17345d;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.stat-clash-stat-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(69, 124, 219, 0.6);
+  box-shadow: 0 10px 18px rgba(31, 77, 150, 0.12);
+}
+
+.stat-clash-stat-btn span {
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.stat-clash-stat-btn b {
+  font-size: 1.12rem;
+}
+
+.stat-clash-stat-btn.is-selected {
+  background: linear-gradient(180deg, #ffe38a 0%, #ffc739 100%);
+  border-color: rgba(220, 161, 0, 0.74);
+  color: #4e3400;
+}
+
+.stat-clash-stat-btn.is-selected:disabled,
+.stat-clash-stat-btn:disabled.is-selected {
+  background: linear-gradient(180deg, #ffe38a 0%, #ffc739 100%);
+  border-color: rgba(220, 161, 0, 0.74);
+  color: #4e3400;
+  opacity: 1;
+}
+
+.stat-clash-stat-btn.is-used,
+.stat-clash-stat-btn.is-locked,
+.stat-clash-stat-btn:disabled {
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.stat-clash-stat-btn.is-used,
+.stat-clash-stat-btn:disabled.is-used {
+  background: linear-gradient(180deg, #edf1f7 0%, #e2e7f0 100%);
+  border-color: rgba(143, 156, 181, 0.5);
+  color: #73819b;
+}
+
+.stat-clash-stat-btn.is-locked,
+.stat-clash-stat-btn:disabled.is-locked {
+  background: linear-gradient(180deg, #fff8e6 0%, #ffefbf 100%);
+  border-color: rgba(230, 177, 58, 0.5);
+  color: #8b6200;
+}
+
+.stat-clash-history-block h4,
+.stat-clash-remaining-block h4 {
+  margin: 0;
+  color: #274977;
+  font-size: 0.9rem;
+}
+
+.stat-clash-history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.stat-clash-history-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f4f7fd;
+  border: 1px solid rgba(175, 196, 231, 0.4);
+  display: grid;
+  gap: 2px;
+}
+
+.stat-clash-history-item span,
+.stat-clash-history-item small {
+  color: #5d7396;
+}
+
+.stat-clash-history-item b {
+  color: #17355f;
+}
+
+.stat-clash-empty {
+  margin: 0;
+}
+
+.stat-clash-center-card {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.stat-clash-randomizer {
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid rgba(137, 167, 214, 0.44);
+  background:
+    radial-gradient(circle at top, rgba(255,225,115,0.28), transparent 40%),
+    linear-gradient(180deg, #173b69 0%, #102949 100%);
+  color: #fff;
+  display: grid;
+  gap: 14px;
+}
+
+.stat-clash-randomizer.is-rolling .stat-clash-sprite-wrap img {
+  animation: stat-clash-randomizer-roll 0.22s linear infinite;
+}
+
+@keyframes stat-clash-randomizer-roll {
+  0% { transform: translateY(-4px) scale(0.96); filter: blur(1px); }
+  50% { transform: translateY(4px) scale(1.05); filter: blur(0); }
+  100% { transform: translateY(-4px) scale(0.96); filter: blur(1px); }
+}
+
+.stat-clash-randomizer-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  font-weight: 800;
+  color: rgba(243, 248, 255, 0.84);
+}
+
+.stat-clash-sprite-wrap {
+  min-height: 180px;
+  border-radius: 18px;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.26), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.stat-clash-sprite-wrap img {
+  width: 144px;
+  height: 144px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 16px 24px rgba(0,0,0,0.28));
+}
+
+.stat-clash-sprite-placeholder {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 3px dashed rgba(255,255,255,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 900 2.4rem/1 "Nunito", sans-serif;
+  color: rgba(255,255,255,0.75);
+}
+
+.stat-clash-pokemon-meta {
+  text-align: center;
+  display: grid;
+  gap: 6px;
+}
+
+.stat-clash-pokemon-meta h3 {
+  color: #fff;
+}
+
+.stat-clash-pokemon-meta p {
+  color: rgba(237, 243, 255, 0.82);
+  font-weight: 700;
+  margin: 0;
+}
+
+.stat-clash-timer {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.stat-clash-timer-ring {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 214, 87, 0.82);
+  background: radial-gradient(circle, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 6px rgba(255, 214, 87, 0.12);
+}
+
+.stat-clash-timer.is-live .stat-clash-timer-ring {
+  animation: stat-clash-timer-pulse 0.7s ease infinite alternate;
+}
+
+@keyframes stat-clash-timer-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+.stat-clash-timer-ring span {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.stat-clash-timer-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.16);
+}
+
+.stat-clash-timer-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffe26e 0%, #ff9d42 60%, #ff5757 100%);
+  transition: width 0.12s linear;
+}
+
+.stat-clash-timer small {
+  color: rgba(239, 245, 255, 0.82);
+  text-align: center;
+}
+
+.stat-clash-reveal-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-clash-reveal-card {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.16);
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.stat-clash-reveal-card span,
+.stat-clash-reveal-card small {
+  color: rgba(241, 246, 255, 0.8);
+}
+
+.stat-clash-reveal-card b {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.stat-clash-remaining-block {
+  display: grid;
+  gap: 10px;
+}
+
+.stat-clash-final-card {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.stat-clash-final-card.is-win {
+  border-color: rgba(255, 206, 80, 0.8);
+  box-shadow: 0 18px 36px rgba(240, 181, 37, 0.18);
+}
+
+.stat-clash-final-card.is-tie {
+  border-color: rgba(112, 141, 190, 0.64);
+}
+
+.stat-clash-final-head {
+  text-align: center;
+  display: grid;
+  gap: 6px;
+}
+
+.stat-clash-final-kicker {
+  color: #61789d;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-clash-final-head p {
+  margin: 0;
+  color: #405877;
+  font-weight: 800;
+}
+
+.stat-clash-final-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-clash-final-score {
+  border-radius: 14px;
+  padding: 12px;
+  background: #f4f7fd;
+  border: 1px solid rgba(162, 185, 222, 0.42);
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.stat-clash-final-score span {
+  color: #5f7598;
+  font-weight: 800;
+}
+
+.stat-clash-final-score b {
+  color: #17345e;
+  font-size: 1.8rem;
+}
+
+.stat-clash-final-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+body.theme-dark .stat-clash-player-card,
+body.theme-dark .stat-clash-center-card,
+body.theme-dark .stat-clash-final-card,
+body.theme-dark .stat-clash-room-panel {
+  background: linear-gradient(180deg, rgba(16, 28, 49, 0.92), rgba(11, 23, 41, 0.88));
+  border-color: rgba(96, 131, 194, 0.24);
+}
+
+body.theme-dark .stat-clash-player-head h3,
+body.theme-dark .stat-clash-history-block h4,
+body.theme-dark .stat-clash-remaining-block h4,
+body.theme-dark .stat-clash-final-head h3,
+body.theme-dark .stat-clash-final-score b {
+  color: #edf4ff;
+}
+
+body.theme-dark .stat-clash-player-side,
+body.theme-dark .stat-clash-player-status,
+body.theme-dark .stat-clash-history-item span,
+body.theme-dark .stat-clash-history-item small,
+body.theme-dark .stat-clash-final-head p,
+body.theme-dark .stat-clash-final-kicker,
+body.theme-dark .stat-clash-final-score span {
+  color: #b8c9e5;
+}
+
+body.theme-dark .stat-clash-stat-btn {
+  background: linear-gradient(180deg, rgba(22, 40, 71, 0.92), rgba(16, 31, 54, 0.92));
+  border-color: rgba(96, 131, 194, 0.3);
+  color: #edf4ff;
+}
+
+body.theme-dark .stat-clash-stat-btn.is-selected {
+  background: linear-gradient(180deg, #ffe38a 0%, #ffc739 100%);
+  color: #4e3400;
+}
+
+body.theme-dark .stat-clash-drafted-chip,
+body.theme-dark .stat-clash-remaining-chip,
+body.theme-dark .stat-clash-history-item,
+body.theme-dark .stat-clash-final-score {
+  background: rgba(22, 40, 71, 0.76);
+  border-color: rgba(96, 131, 194, 0.28);
+}
+
+body.theme-dark .stat-clash-room-panel input {
+  background: rgba(22, 40, 71, 0.92);
+  border-color: rgba(96, 131, 194, 0.3);
+  color: #edf4ff;
+}
+
+@media (max-width: 1080px) {
+  .stat-clash-board {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-clash-center-card {
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .stat-clash-screen-card {
+    padding: 18px;
+  }
+
+  .stat-clash-stat-grid,
+  .stat-clash-reveal-row,
+  .stat-clash-final-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-clash-player-head,
+  .stat-clash-randomizer-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stat-clash-score-box {
+    text-align: left;
+  }
+}

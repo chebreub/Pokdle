@@ -126,6 +126,7 @@
           <p class="home-category-note">Les mini-défis et variantes sociales restent accessibles ensuite, sans encombrer l’accueil.</p>
           <div class="mode-buttons home-mode-grid">
             <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Créer un duel</button>
+            <button class="btn-red" onclick="openStatClashMode()"><span class="btn-icon">📊</span>Stat Clash 1v1</button>
             <button class="btn-yellow" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
           </div>
         </article>
@@ -1079,6 +1080,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
             </div>
           </section>
         </div>
+      </div>
+    </div>
+
+    <div id="screen-stat-clash" class="hidden">
+      <div class="card stat-clash-screen-card">
+        <div class="ranking-head">
+          <h2 class="card-title">📊 Stat Clash 1v1</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Choisissez chacun une stat réelle du Pokémon tiré. Chaque stat ne peut être utilisée qu'une seule fois dans toute la partie.</p>
+        <div id="stat-clash-root" class="stat-clash-root"></div>
       </div>
     </div>
 
