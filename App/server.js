@@ -219,6 +219,7 @@ io.on("connection", (socket) => {
       handleStatClashDisconnect(socket.id, true);
       const code = sanitizeRoomCode(payload.code);
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
+      if (!code) return respond(ack, { ok: false, error: "Code de room invalide." });
       const room = statClashRooms.get(code);
       if (!room) return respond(ack, { ok: false, error: "Room Stat Clash introuvable." });
       if (room.players.length >= (room.maxPlayers || STAT_CLASH_MAX_PLAYERS)) return respond(ack, { ok: false, error: "La room est déjà complète." });
@@ -226,6 +227,7 @@ io.on("connection", (socket) => {
 
       joinPlayerToStatClashRoom(room, socket, nickname);
       emitStatClashRoomState(room);
+      io.to(room.code).emit("stat-clash:room-presence", { code: room.code, connectedCount: getConnectedStatClashPlayers(room).length });
       respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
       respond(ack, { ok: false, error: "Impossible de rejoindre la room Stat Clash." });

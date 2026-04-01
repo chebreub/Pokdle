@@ -2557,7 +2557,9 @@ function syncStatClashNickname() {
 function syncStatClashJoinCode() {
   const input = document.getElementById("stat-clash-room-input");
   if (!statClashState || !input) return;
-  statClashState.roomCodeDraft = String(input.value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  const sanitized = String(input.value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  statClashState.roomCodeDraft = sanitized;
+  if (input.value !== sanitized) input.value = sanitized;
 }
 
 function getStatClashRoomSubmittedNickname() {
@@ -2807,20 +2809,23 @@ function joinStatClashRoom() {
     return renderStatClashScreen();
   }
   syncStatClashNickname();
-  syncStatClashJoinCode();
+  const codeInput = document.getElementById("stat-clash-room-input");
+  const liveCode = String(codeInput?.value || statClashState.roomCodeDraft || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  statClashState.roomCodeDraft = liveCode;
+  statClashState.roomJoinCode = liveCode;
+  if (codeInput && codeInput.value !== liveCode) codeInput.value = liveCode;
   const nickname = getStatClashRoomSubmittedNickname();
   statClashState.players.left.label = nickname;
-  statClashState.roomJoinCode = statClashState.roomCodeDraft;
-  if (!statClashState.roomCodeDraft) {
+  if (!liveCode) {
     setStatClashRoomFeedback("Entre un code room valide avant de rejoindre.", "error");
     return renderStatClashScreen();
   }
   statClashState.roomPendingAction = "joining";
-  setStatClashRoomFeedback(`Connexion à ${statClashState.roomCodeDraft}…`, "info");
+  setStatClashRoomFeedback(`Connexion à ${liveCode}…`, "info");
   renderStatClashScreen();
   socket.emit("stat-clash:join-room", {
     nickname,
-    code: statClashState.roomCodeDraft,
+    code: liveCode,
   }, (response = {}) => {
     statClashState && (statClashState.roomPendingAction = "");
     if (!response.ok) {
@@ -15112,6 +15117,14 @@ function ensureMultiplayerSocket() {
   multiplayerSocket.on("stat-clash:room-state", (roomState) => {
     if (!statClashState) return;
     applyStatClashRoomState(roomState);
+  });
+
+  multiplayerSocket.on("stat-clash:room-presence", (payload = {}) => {
+    if (!statClashState?.mode || statClashState.mode !== "room") return;
+    if (payload?.code && statClashState.room?.code === payload.code) {
+      setStatClashRoomFeedback(`Joueurs connectés : ${payload.connectedCount || 0}/${statClashState.room?.maxPlayers || 2}`, "success");
+      renderStatClashScreen();
+    }
   });
 
   multiplayerSocket.on("stat-clash:finished", (roomState) => {
