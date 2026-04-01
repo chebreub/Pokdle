@@ -632,6 +632,7 @@ function resetStatClashRoomForNewMatch(room) {
   room.currentStats = null;
   room.reveal = null;
   room.deadlineAt = null;
+  room.rollEndsAt = null;
   room.startedAt = null;
   room.winnerId = null;
   room.endedReason = null;
@@ -673,7 +674,8 @@ async function startStatClashRound(room) {
   room.currentPokemon && room.usedPokemonIds.push(Number(room.currentPokemon.id));
   room.reveal = null;
   room.roundPhase = "rolling";
-  room.deadlineAt = Date.now() + STAT_CLASH_ROLL_MS + STAT_CLASH_PICK_MS;
+  room.rollEndsAt = Date.now() + STAT_CLASH_ROLL_MS;
+  room.deadlineAt = null;
   for (const player of room.players) {
     player.pendingPickKey = null;
     player.pendingSubmittedAt = null;
@@ -681,11 +683,13 @@ async function startStatClashRound(room) {
   emitStatClashRoomState(room);
   room.rollTimer = setTimeout(() => {
     room.roundPhase = "picking";
+    room.rollEndsAt = null;
+    room.deadlineAt = Date.now() + STAT_CLASH_PICK_MS;
     emitStatClashRoomState(room);
+    room.resolveTimer = setTimeout(() => {
+      resolveStatClashRound(room);
+    }, STAT_CLASH_PICK_MS);
   }, STAT_CLASH_ROLL_MS);
-  room.resolveTimer = setTimeout(() => {
-    resolveStatClashRound(room);
-  }, STAT_CLASH_ROLL_MS + STAT_CLASH_PICK_MS);
 }
 
 function pickBestRemainingStatKey(usedKeys, stats) {
@@ -874,6 +878,7 @@ function publicStatClashRoomState(room, viewerId = null) {
     connectedCount,
     canStart: canStatClashRoomStart(room) && room.status !== "live" && room.status !== "starting",
     startedAt: room.startedAt || null,
+    rollEndsAt: room.rollEndsAt || null,
     selectedGens: room.selectedGens,
     round: room.round,
     totalRounds: room.totalRounds,
