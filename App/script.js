@@ -296,12 +296,39 @@ let quizSessionLogged = false;
 injectExtraForms();
 normalizePokemonData();
 
-const FULL_SEARCH_INDEX = POKEMON_LIST.map((pokemon) => ({
+const POKEMON_CATALOG = POKEMON_LIST;
+
+function getPokemonCatalog() {
+  return POKEMON_CATALOG;
+}
+
+function getPokemonUiList({ gens = null, includeAltForms = true } = {}) {
+  const source = getPokemonCatalog();
+  const hasGenFilter = gens instanceof Set || Array.isArray(gens);
+  const allowedGens = hasGenFilter
+    ? gens instanceof Set
+      ? gens
+      : new Set(gens.map((value) => Number(value)))
+    : null;
+
+  return source.filter((pokemon) => {
+    if (!pokemon) return false;
+    if (!includeAltForms && pokemon.isAltForm) return false;
+    if (allowedGens && !allowedGens.has(Number(pokemon.gen))) return false;
+    return true;
+  });
+}
+
+function getPokemonCountForGeneration(gen, { includeAltForms = true } = {}) {
+  return getPokemonUiList({ gens: [gen], includeAltForms }).length;
+}
+
+const FULL_SEARCH_INDEX = getPokemonCatalog().map((pokemon) => ({
   pokemon,
   normName: norm(pokemon.name),
 }));
 
-const POKEMON_BY_ID = new Map(POKEMON_LIST.map((p) => [p.id, p]));
+const POKEMON_BY_ID = new Map(getPokemonCatalog().map((p) => [p.id, p]));
 
 let activeSearchIndex = [];
 let activeNameMap = new Map(); // normalized name -> pokemon (active pool)
@@ -1046,7 +1073,7 @@ function buildGenGrid() {
 
   Object.entries(GENERATIONS).forEach(([n, data]) => {
     const gen = parseInt(n, 10);
-    const count = POKEMON_LIST.filter((p) => p.gen === gen).length;
+    const count = getPokemonCountForGeneration(gen, { includeAltForms: false });
     const isOn = selectedGens.has(gen);
 
     const item = document.createElement("label");
@@ -1282,7 +1309,7 @@ function startChallengeGame(pokemon) {
   selectedGens = new Set([pokemon.gen]);
   buildGenGrid();
 
-  const pool = POKEMON_LIST.filter((p) => p.gen === pokemon.gen);
+  const pool = getPokemonUiList({ gens: [pokemon.gen] });
   startGameWithSecret(pokemon, pool);
 }
 
@@ -1479,7 +1506,7 @@ function scrollToHomeCategory(category) {
 }
 
 function getPoolFromSelectedGens() {
-  return POKEMON_LIST.filter((p) => selectedGens.has(p.gen));
+  return getPokemonUiList({ gens: selectedGens });
 }
 
 function updateTopTag() {
@@ -2216,7 +2243,7 @@ function openStatClashMode() {
 }
 
 function getStatClashPool() {
-  return POKEMON_LIST.filter((pokemon) => Boolean(getMysteryApiId(pokemon)));
+  return getPokemonUiList().filter((pokemon) => Boolean(getMysteryApiId(pokemon)));
 }
 
 function createStatClashPlayer(side, label) {
@@ -3440,7 +3467,7 @@ function randomUniqueChoices(baseList, correctValue, count = 4) {
 function buildQuizQuestionPool() {
   const pool = QUIZ_QUESTIONS.slice();
 
-  const base = POKEMON_LIST.filter((p) => !p.isAltForm && Number.isInteger(p.id) && p.id <= 1025);
+  const base = getPokemonUiList({ includeAltForms: false }).filter((p) => Number.isInteger(p.id) && p.id <= 1025);
   const sampled = shuffleArray(base.slice()).slice(0, 120);
 
   const allTypes = [...new Set(base.map((p) => p.type1).filter(Boolean))];
@@ -13656,7 +13683,7 @@ function restoreSavedGame() {
   buildGenGrid();
 
   gameMode = save.mode;
-  activePool = gameMode === "daily" ? POKEMON_LIST.slice() : getPoolFromSelectedGens();
+  activePool = gameMode === "daily" ? getPokemonUiList() : getPoolFromSelectedGens();
 
   if (!activePool.length) {
     activePool = [secret];
@@ -14533,7 +14560,7 @@ function setOddDifficulty(value) {
 
 function nextOddOneOutPuzzle() {
   const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
-  const source = pool.length >= 12 ? pool : POKEMON_LIST.filter((pokemon) => !pokemon.isAltForm);
+  const source = pool.length >= 12 ? pool : getPokemonUiList({ includeAltForms: false });
   const rules = buildOddRuleSet();
   let puzzle = null;
   for (let i = 0; i < rules.length && !puzzle; i += 1) {
@@ -15107,7 +15134,7 @@ function getMultiplayerRoomPool() {
   const gens = Array.isArray(room?.selectedGens) && room.selectedGens.length
     ? new Set(room.selectedGens.map((value) => Number(value)))
     : new Set(getMultiplayerSelectedGens());
-  return POKEMON_LIST.filter((pokemon) => !pokemon.isAltForm && gens.has(Number(pokemon.gen)));
+  return getPokemonUiList({ gens, includeAltForms: false });
 }
 
 function setMultiplayerError(message = "") {
@@ -15141,7 +15168,7 @@ function renderMultiplayerGenerationGrid() {
   grid.innerHTML = "";
   Object.entries(GENERATIONS).forEach(([n, data]) => {
     const gen = Number(n);
-    const count = POKEMON_LIST.filter((p) => p.gen === gen).length;
+    const count = getPokemonCountForGeneration(gen, { includeAltForms: false });
     const isOn = selectedSet.has(gen);
     const item = document.createElement("label");
     item.className = "gen-item" + (isOn ? " on" : "");
