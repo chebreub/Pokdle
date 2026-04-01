@@ -2781,11 +2781,13 @@ function createStatClashRoom() {
   statClashState.players.left.label = nickname;
   statClashState.roomPendingAction = "creating";
   setStatClashRoomFeedback("Création de la room…", "info");
+  console.debug("[stat-clash][client][create-room] emit", { nickname, selectedGens: [...selectedGens].sort((a, b) => a - b) });
   renderStatClashScreen();
   socket.emit("stat-clash:create-room", {
     nickname,
     selectedGens: [...selectedGens].sort((a, b) => a - b),
   }, (response = {}) => {
+    console.debug("[stat-clash][client][create-room] ack", response);
     statClashState && (statClashState.roomPendingAction = "");
     if (!response.ok) {
       setStatClashRoomFeedback(response.error || "Impossible de créer la room Stat Clash.", "error");
@@ -2822,11 +2824,13 @@ function joinStatClashRoom() {
   }
   statClashState.roomPendingAction = "joining";
   setStatClashRoomFeedback(`Connexion à ${liveCode}…`, "info");
+  console.debug("[stat-clash][client][join-room] emit", { nickname, code: liveCode });
   renderStatClashScreen();
   socket.emit("stat-clash:join-room", {
     nickname,
     code: liveCode,
   }, (response = {}) => {
+    console.debug("[stat-clash][client][join-room] ack", response);
     statClashState && (statClashState.roomPendingAction = "");
     if (!response.ok) {
       setStatClashRoomFeedback(response.error || "Impossible de rejoindre la room Stat Clash.", "error");
@@ -15116,11 +15120,13 @@ function ensureMultiplayerSocket() {
 
   multiplayerSocket.on("stat-clash:room-state", (roomState) => {
     if (!statClashState) return;
+    console.debug("[stat-clash][client][room-state] recv", roomState);
     applyStatClashRoomState(roomState);
   });
 
   multiplayerSocket.on("stat-clash:room-presence", (payload = {}) => {
     if (!statClashState?.mode || statClashState.mode !== "room") return;
+    console.debug("[stat-clash][client][room-presence] recv", payload);
     if (payload?.code && statClashState.room?.code === payload.code) {
       setStatClashRoomFeedback(`Joueurs connectés : ${payload.connectedCount || 0}/${statClashState.room?.maxPlayers || 2}`, "success");
       renderStatClashScreen();

@@ -176,6 +176,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:create-room", (payload = {}, ack) => {
     try {
+      console.log("[stat-clash][create-room] request", { socketId: socket.id, nickname: payload.nickname, selectedGens: payload.selectedGens });
       handleStatClashDisconnect(socket.id, true);
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
       const selectedGens = normalizeSelectedGens(payload.selectedGens);
@@ -207,29 +208,36 @@ io.on("connection", (socket) => {
       };
       statClashRooms.set(code, room);
       joinPlayerToStatClashRoom(room, socket, nickname);
+      console.log("[stat-clash][create-room] created", { code, hostId: socket.id, players: room.players.map((player) => ({ id: player.id, side: player.side, nickname: player.nickname })) });
       emitStatClashRoomState(room);
       respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
+      console.error("[stat-clash][create-room] error", _error);
       respond(ack, { ok: false, error: "Impossible de créer la room Stat Clash." });
     }
   });
 
   socket.on("stat-clash:join-room", async (payload = {}, ack) => {
     try {
+      console.log("[stat-clash][join-room] request", { socketId: socket.id, rawCode: payload.code, nickname: payload.nickname });
       handleStatClashDisconnect(socket.id, true);
       const code = sanitizeRoomCode(payload.code);
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
+      console.log("[stat-clash][join-room] sanitized", { socketId: socket.id, code, nickname });
       if (!code) return respond(ack, { ok: false, error: "Code de room invalide." });
       const room = statClashRooms.get(code);
+      console.log("[stat-clash][join-room] lookup", { code, exists: Boolean(room), knownRooms: [...statClashRooms.keys()] });
       if (!room) return respond(ack, { ok: false, error: "Room Stat Clash introuvable." });
       if (room.players.length >= (room.maxPlayers || STAT_CLASH_MAX_PLAYERS)) return respond(ack, { ok: false, error: "La room est déjà complète." });
       if (room.status === "finished") return respond(ack, { ok: false, error: "Cette room est terminée." });
 
       joinPlayerToStatClashRoom(room, socket, nickname);
+      console.log("[stat-clash][join-room] joined", { code, players: room.players.map((player) => ({ id: player.id, nickname: player.nickname, side: player.side, connected: player.connected })) });
       emitStatClashRoomState(room);
       io.to(room.code).emit("stat-clash:room-presence", { code: room.code, connectedCount: getConnectedStatClashPlayers(room).length });
       respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
+      console.error("[stat-clash][join-room] error", _error);
       respond(ack, { ok: false, error: "Impossible de rejoindre la room Stat Clash." });
     }
   });
@@ -902,6 +910,13 @@ function emitRoomState(room) {
 }
 
 function emitStatClashRoomState(room) {
+  console.log("[stat-clash][room-state] emit", {
+    code: room.code,
+    status: room.status,
+    roundPhase: room.roundPhase,
+    connectedCount: getConnectedStatClashPlayers(room).length,
+    players: room.players.map((player) => ({ id: player.id, nickname: player.nickname, side: player.side, connected: player.connected })),
+  });
   for (const player of room.players) {
     io.to(player.id).emit("stat-clash:room-state", publicStatClashRoomState(room, player.id));
   }
