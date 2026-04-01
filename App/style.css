@@ -17256,6 +17256,76 @@ body.theme-dark .team-builder-export-output {
   gap: 5px;
 }
 
+.stat-clash-room-presence {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stat-clash-room-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: 10px;
+  background: rgba(245, 248, 255, 0.96);
+  border: 1px solid rgba(166, 186, 223, 0.42);
+}
+
+.stat-clash-room-player strong {
+  display: block;
+  color: #17345d;
+  font-size: 0.76rem;
+}
+
+.stat-clash-room-player small {
+  display: block;
+  color: #5d7497;
+  font-size: 0.68rem;
+}
+
+.stat-clash-room-player.is-disconnected {
+  opacity: 0.7;
+}
+
+.stat-clash-room-player-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.stat-clash-room-badge {
+  padding: 3px 6px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-clash-room-badge.is-host {
+  background: #ffe9b6;
+  color: #8d5f00;
+}
+
+.stat-clash-room-badge.is-self {
+  background: #e4f0ff;
+  color: #2457ad;
+}
+
+.stat-clash-room-badge.is-guest {
+  background: #eef2fb;
+  color: #546886;
+}
+
+.stat-clash-room-waiting {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #4e678c;
+}
+
 .stat-clash-room-panel input {
   min-height: 36px;
   padding: 6px 9px;
@@ -17785,6 +17855,38 @@ body.theme-dark .team-builder-export-output {
   gap: 7px;
 }
 
+.stat-clash-reveal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stat-clash-reveal-stat {
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.14);
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.stat-clash-reveal-stat span {
+  color: rgba(241, 246, 255, 0.8);
+  font-size: 0.67rem;
+}
+
+.stat-clash-reveal-stat b {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.stat-clash-reveal-stat.is-picked {
+  background: rgba(255, 224, 130, 0.18);
+  border-color: rgba(255, 214, 87, 0.44);
+  box-shadow: inset 0 0 0 1px rgba(255, 214, 87, 0.14);
+}
+
 .stat-clash-reveal-card {
   padding: 7px 8px;
   border-radius: 12px;
@@ -17960,6 +18062,35 @@ body.theme-dark .stat-clash-room-status {
   border-color: rgba(96, 131, 194, 0.28);
 }
 
+body.theme-dark .stat-clash-room-player {
+  background: rgba(19, 35, 61, 0.92);
+  border-color: rgba(96, 131, 194, 0.24);
+}
+
+body.theme-dark .stat-clash-room-player strong {
+  color: #edf4ff;
+}
+
+body.theme-dark .stat-clash-room-player small,
+body.theme-dark .stat-clash-room-waiting {
+  color: #b8c9e5;
+}
+
+body.theme-dark .stat-clash-room-badge.is-host {
+  background: rgba(116, 86, 16, 0.9);
+  color: #ffe7a8;
+}
+
+body.theme-dark .stat-clash-room-badge.is-self {
+  background: rgba(31, 72, 129, 0.92);
+  color: #dcecff;
+}
+
+body.theme-dark .stat-clash-room-badge.is-guest {
+  background: rgba(51, 64, 93, 0.9);
+  color: #d1dceb;
+}
+
 body.theme-dark .stat-clash-room-status strong {
   color: #edf4ff;
 }
@@ -17995,6 +18126,11 @@ body.theme-dark .stat-clash-room-feedback.error {
   }
 
   .stat-clash-board {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-clash-room-presence,
+  .stat-clash-reveal-stats {
     grid-template-columns: 1fr;
   }
 

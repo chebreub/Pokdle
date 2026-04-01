@@ -35,7 +35,10 @@ const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
 const STAT_CLASH_TOTAL_ROUNDS = 6;
+const STAT_CLASH_MAX_PLAYERS = 2;
+const STAT_CLASH_PLAYER_SEATS = ["left", "right", "seat3", "seat4"];
 const STAT_CLASH_ROLL_MS = 1800;
+const STAT_CLASH_START_DELAY_MS = 900;
 const STAT_CLASH_PICK_MS = 10000;
 const STAT_CLASH_REVEAL_MS = 2200;
 const STAT_CLASH_STAT_KEYS = ["hp", "attack", "defense", "spAttack", "spDefense", "speed"];
@@ -179,11 +182,12 @@ io.on("connection", (socket) => {
       const code = generateStatClashRoomCode();
       const room = {
         code,
-        status: "waiting",
+        status: "lobby",
         roundPhase: "waiting",
         createdAt: Date.now(),
         hostId: socket.id,
         players: [],
+        maxPlayers: STAT_CLASH_MAX_PLAYERS,
         selectedGens,
         round: 0,
         totalRounds: STAT_CLASH_TOTAL_ROUNDS,
@@ -196,12 +200,13 @@ io.on("connection", (socket) => {
         winnerId: null,
         endedReason: null,
         cleanupTimer: null,
+        startTimer: null,
         rollTimer: null,
         resolveTimer: null,
         nextRoundTimer: null,
       };
       statClashRooms.set(code, room);
-      joinPlayerToStatClashRoom(room, socket, nickname, "left");
+      joinPlayerToStatClashRoom(room, socket, nickname);
       emitStatClashRoomState(room);
       respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
@@ -216,16 +221,42 @@ io.on("connection", (socket) => {
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
       const room = statClashRooms.get(code);
       if (!room) return respond(ack, { ok: false, error: "Room Stat Clash introuvable." });
-      if (room.players.length >= MAX_ROOM_SIZE) return respond(ack, { ok: false, error: "La room est déjà complète." });
+      if (room.players.length >= (room.maxPlayers || STAT_CLASH_MAX_PLAYERS)) return respond(ack, { ok: false, error: "La room est déjà complète." });
       if (room.status === "finished") return respond(ack, { ok: false, error: "Cette room est terminée." });
 
-      joinPlayerToStatClashRoom(room, socket, nickname, "right");
-      if (room.players.length === MAX_ROOM_SIZE) await startStatClashMatch(room);
+      joinPlayerToStatClashRoom(room, socket, nickname);
       emitStatClashRoomState(room);
       respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
       respond(ack, { ok: false, error: "Impossible de rejoindre la room Stat Clash." });
     }
+  });
+
+  socket.on("stat-clash:start-game", (payload = {}, ack) => {
+    const room = findStatClashRoomBySocket(socket.id);
+    if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
+    if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer la partie." });
+    if (!canStatClashRoomStart(room)) return respond(ack, { ok: false, error: "La room n'est pas prête. Il faut deux joueurs connectés." });
+    if (room.status === "starting" || room.status === "live") return respond(ack, { ok: false, error: "La partie est déjà en cours de lancement." });
+
+    room.status = "starting";
+    room.roundPhase = "waiting";
+    room.startedAt = Date.now() + STAT_CLASH_START_DELAY_MS;
+    emitStatClashRoomState(room);
+    clearStatClashRoomTimers(room);
+    room.startTimer = setTimeout(async () => {
+      room.startTimer = null;
+      if (!canStatClashRoomStart(room)) {
+        room.status = "lobby";
+        room.roundPhase = "waiting";
+        room.startedAt = null;
+        emitStatClashRoomState(room);
+        return;
+      }
+      await startStatClashMatch(room);
+    }, STAT_CLASH_START_DELAY_MS);
+
+    respond(ack, { ok: true, room: publicStatClashRoomState(room, socket.id) });
   });
 
   socket.on("stat-clash:submit-pick", (payload = {}, ack) => {
@@ -266,7 +297,7 @@ io.on("connection", (socket) => {
     const room = findStatClashRoomBySocket(socket.id);
     if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
     if (room.status !== "finished") return respond(ack, { ok: false, error: "La partie n'est pas terminée." });
-    if (room.players.length !== MAX_ROOM_SIZE || room.players.some((player) => !player.connected)) {
+    if (!canStatClashRoomStart(room)) {
       return respond(ack, { ok: false, error: "Les deux joueurs doivent être présents pour rejouer." });
     }
     if (Array.isArray(payload.selectedGens)) {
@@ -274,7 +305,8 @@ io.on("connection", (socket) => {
       room.selectedGens = normalizeSelectedGens(payload.selectedGens);
     }
     resetStatClashRoomForNewMatch(room);
-    await startStatClashMatch(room);
+    room.status = "lobby";
+    room.roundPhase = "waiting";
     emitStatClashRoomState(room);
     respond(ack, { ok: true, room: publicStatClashRoomState(room, socket.id) });
   });
@@ -581,7 +613,7 @@ async function fetchStatClashPokemonStats(pokemonId) {
 function resetStatClashRoomForNewMatch(room) {
   clearStatClashCleanup(room);
   clearStatClashRoomTimers(room);
-  room.status = "waiting";
+  room.status = "lobby";
   room.roundPhase = "waiting";
   room.round = 0;
   room.usedStatKeysBySide = { left: [], right: [] };
@@ -590,6 +622,7 @@ function resetStatClashRoomForNewMatch(room) {
   room.currentStats = null;
   room.reveal = null;
   room.deadlineAt = null;
+  room.startedAt = null;
   room.winnerId = null;
   room.endedReason = null;
   for (const player of room.players) {
@@ -598,6 +631,14 @@ function resetStatClashRoomForNewMatch(room) {
     player.pendingPickKey = null;
     player.pendingSubmittedAt = null;
   }
+}
+
+function getConnectedStatClashPlayers(room) {
+  return room.players.filter((player) => player.connected);
+}
+
+function canStatClashRoomStart(room) {
+  return getConnectedStatClashPlayers(room).length >= (room.maxPlayers || STAT_CLASH_MAX_PLAYERS);
 }
 
 function getStatClashPoolForRoom(room) {
@@ -740,10 +781,12 @@ function joinPlayerToRoom(room, socket, nickname) {
 function joinPlayerToStatClashRoom(room, socket, nickname, side) {
   socket.join(room.code);
   socket.data.statClashRoomCode = room.code;
+  const assignedSide = side || STAT_CLASH_PLAYER_SEATS.find((seat) => !room.players.some((player) => player.side === seat)) || `seat${room.players.length + 1}`;
   room.players.push({
     id: socket.id,
     nickname,
-    side,
+    side: assignedSide,
+    seatIndex: room.players.length,
     connected: true,
     score: 0,
     history: [],
@@ -811,11 +854,16 @@ function publicRoomState(room, viewerId = null) {
 }
 
 function publicStatClashRoomState(room, viewerId = null) {
+  const connectedCount = getConnectedStatClashPlayers(room).length;
   return {
     code: room.code,
     status: room.status,
     roundPhase: room.roundPhase,
     hostId: room.hostId,
+    maxPlayers: room.maxPlayers || STAT_CLASH_MAX_PLAYERS,
+    connectedCount,
+    canStart: canStatClashRoomStart(room) && room.status !== "live" && room.status !== "starting",
+    startedAt: room.startedAt || null,
     selectedGens: room.selectedGens,
     round: room.round,
     totalRounds: room.totalRounds,
@@ -828,10 +876,12 @@ function publicStatClashRoomState(room, viewerId = null) {
     endedReason: room.endedReason,
     currentPokemon: serializePokemon(room.currentPokemon),
     reveal: room.reveal,
+    revealStats: room.roundPhase === "reveal" || room.status === "finished" ? room.currentStats : null,
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
       side: player.side,
+      seatIndex: Number(player.seatIndex) || 0,
       connected: player.connected,
       score: player.score,
       history: player.history,
@@ -929,11 +979,19 @@ function handleStatClashDisconnect(socketId, voluntary) {
   player.connected = false;
   clearStatClashRoomTimers(room);
 
-  if (room.status === "waiting") {
-    io.to(room.code).emit("stat-clash:room-closed", {
-      reason: voluntary ? "Le créateur a quitté la room." : `${player.nickname} s'est déconnecté.`,
-    });
-    statClashRooms.delete(room.code);
+  if (room.status === "lobby" || room.status === "starting") {
+    if (room.hostId === socketId) {
+      io.to(room.code).emit("stat-clash:room-closed", {
+        reason: voluntary ? "L'hôte a fermé la room." : `${player.nickname} s'est déconnecté.`,
+      });
+      statClashRooms.delete(room.code);
+      return;
+    }
+    room.players = room.players.filter((entry) => entry.id !== socketId);
+    room.status = "lobby";
+    room.roundPhase = "waiting";
+    room.startedAt = null;
+    emitStatClashRoomState(room);
     return;
   }
 
@@ -1044,7 +1102,7 @@ function clearStatClashCleanup(room) {
 }
 
 function clearStatClashRoomTimers(room) {
-  ["rollTimer", "resolveTimer", "nextRoundTimer"].forEach((key) => {
+  ["startTimer", "rollTimer", "resolveTimer", "nextRoundTimer"].forEach((key) => {
     if (!room?.[key]) return;
     clearTimeout(room[key]);
     room[key] = null;
