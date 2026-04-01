@@ -17262,6 +17262,25 @@ body.theme-dark .team-builder-export-output {
   gap: 6px;
 }
 
+.stat-clash-room-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.74rem;
+  color: #4f678c;
+}
+
+.stat-clash-room-summary b {
+  color: #183760;
+}
+
+.stat-clash-room-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .stat-clash-room-player {
   display: flex;
   justify-content: space-between;
@@ -17324,6 +17343,51 @@ body.theme-dark .team-builder-export-output {
   margin: 0;
   font-size: 0.74rem;
   color: #4e678c;
+}
+
+.stat-clash-lobby-center {
+  border-radius: 15px;
+  border: 1px solid rgba(137, 167, 214, 0.32);
+  background:
+    radial-gradient(circle at top, rgba(255,225,115,0.16), transparent 44%),
+    linear-gradient(180deg, #173b69 0%, #102949 100%);
+  color: #fff;
+  display: grid;
+  gap: 10px;
+  padding: 16px 14px;
+  align-content: center;
+  min-height: 100%;
+}
+
+.stat-clash-lobby-center-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  color: rgba(243, 248, 255, 0.86);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.stat-clash-lobby-center-body {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.stat-clash-lobby-center-body h3 {
+  margin: 0;
+  font-size: 1.24rem;
+  color: #fff;
+}
+
+.stat-clash-lobby-center-body p {
+  margin: 0;
+  max-width: 38ch;
+  color: rgba(237, 243, 255, 0.82);
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .stat-clash-room-panel input {
@@ -18074,6 +18138,14 @@ body.theme-dark .stat-clash-room-player strong {
 body.theme-dark .stat-clash-room-player small,
 body.theme-dark .stat-clash-room-waiting {
   color: #b8c9e5;
+}
+
+body.theme-dark .stat-clash-room-summary {
+  color: #b8c9e5;
+}
+
+body.theme-dark .stat-clash-room-summary b {
+  color: #edf4ff;
 }
 
 body.theme-dark .stat-clash-room-badge.is-host {

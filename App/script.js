@@ -2239,6 +2239,8 @@ function createStatClashState() {
     revealStats: null,
     room: null,
     roomJoinCode: "",
+    roomNameDraft: "",
+    roomCodeDraft: "",
     roomToken: "",
     roomFeedback: "",
     roomFeedbackTone: "info",
@@ -2548,16 +2550,20 @@ function finalizeStatClashBotGame() {
 
 function syncStatClashNickname() {
   const input = document.getElementById("stat-clash-nickname");
-  const nextName = String(input?.value || playerProfile.nickname || "").trim() || "Joueur 1";
-  if (statClashState) statClashState.players.left.label = nextName;
-  if (input) input.value = nextName;
+  if (!statClashState || !input) return;
+  statClashState.roomNameDraft = String(input.value || "").slice(0, 24);
 }
 
 function syncStatClashJoinCode() {
   const input = document.getElementById("stat-clash-room-input");
   if (!statClashState || !input) return;
-  statClashState.roomJoinCode = String(input.value || "").trim().toUpperCase();
-  input.value = statClashState.roomJoinCode;
+  statClashState.roomCodeDraft = String(input.value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+}
+
+function getStatClashRoomSubmittedNickname() {
+  const draft = String(statClashState?.roomNameDraft || "").trim();
+  const profileName = String(playerProfile?.nickname || "").trim();
+  return draft || profileName || "Joueur 1";
 }
 
 function setStatClashRoomFeedback(message, tone = "info") {
@@ -2718,23 +2724,25 @@ function applyStatClashRoomState(roomState) {
   statClashState.players.right.displayScore = opponent?.score || 0;
   statClashState.players.right.history = Array.isArray(opponent?.history) ? opponent.history.slice() : [];
   statClashState.players.right.pendingPick = opponent?.hasLockedPick ? { key: null, auto: false } : null;
+  if (!statClashState.roomNameDraft && localPlayer?.nickname) statClashState.roomNameDraft = localPlayer.nickname;
+  if (roomState?.code) statClashState.roomJoinCode = roomState.code;
   statClashState.roomPendingAction = "";
   const nextToken = roomState?.currentPokemon ? `${roomState.round}:${roomState.currentPokemon.id}` : "";
   const isNewRound = nextToken && nextToken !== statClashState.roomToken;
   statClashState.roomToken = nextToken;
-  statClashState.statusText = roomState?.status === "waiting"
-    ? roomState?.players?.length === 2 ? "Room complète. La partie démarre..." : "En attente d'un second joueur."
-    : roomState?.status === "lobby"
-      ? roomState?.canStart ? "Room complète. En attente du lancement par l'hôte." : "Lobby room en attente."
-      : roomState?.status === "starting"
-        ? "Lancement synchronisé en cours."
-    : roomState?.roundPhase === "picking"
-      ? "Choisis une stat. La stat adverse reste cachée jusqu'au reveal."
-      : roomState?.roundPhase === "reveal"
-        ? "Révélation des choix."
-        : roomState?.status === "finished"
-          ? "Partie terminée."
-          : "Randomizer en cours.";
+  statClashState.statusText = roomState?.status === "lobby"
+    ? roomState?.canStart ? "Room complète. En attente du lancement par l'hôte." : "En attente d'un autre joueur."
+    : roomState?.status === "starting"
+      ? "Lancement synchronisé en cours."
+      : roomState?.roundPhase === "picking"
+        ? "Choisis une stat. La stat adverse reste cachée jusqu'au reveal."
+        : roomState?.roundPhase === "reveal"
+          ? "Révélation des choix."
+          : roomState?.status === "finished"
+            ? "Partie terminée."
+            : roomState?.status === "live"
+              ? "Randomizer en cours."
+              : "Lobby room en attente.";
   renderStatClashScreen();
   if (roomState?.roundPhase === "rolling" && isNewRound) playStatClashRoomRolling(roomState);
   if (roomState?.roundPhase === "picking" && !isNewRound) {
@@ -2767,11 +2775,13 @@ function createStatClashRoom() {
     return renderStatClashScreen();
   }
   syncStatClashNickname();
+  const nickname = getStatClashRoomSubmittedNickname();
+  statClashState.players.left.label = nickname;
   statClashState.roomPendingAction = "creating";
   setStatClashRoomFeedback("Création de la room…", "info");
   renderStatClashScreen();
   socket.emit("stat-clash:create-room", {
-    nickname: statClashState.players.left.label,
+    nickname,
     selectedGens: [...selectedGens].sort((a, b) => a - b),
   }, (response = {}) => {
     statClashState && (statClashState.roomPendingAction = "");
@@ -2798,16 +2808,19 @@ function joinStatClashRoom() {
   }
   syncStatClashNickname();
   syncStatClashJoinCode();
-  if (!statClashState.roomJoinCode) {
+  const nickname = getStatClashRoomSubmittedNickname();
+  statClashState.players.left.label = nickname;
+  statClashState.roomJoinCode = statClashState.roomCodeDraft;
+  if (!statClashState.roomCodeDraft) {
     setStatClashRoomFeedback("Entre un code room valide avant de rejoindre.", "error");
     return renderStatClashScreen();
   }
   statClashState.roomPendingAction = "joining";
-  setStatClashRoomFeedback(`Connexion à ${statClashState.roomJoinCode}…`, "info");
+  setStatClashRoomFeedback(`Connexion à ${statClashState.roomCodeDraft}…`, "info");
   renderStatClashScreen();
   socket.emit("stat-clash:join-room", {
-    nickname: statClashState.players.left.label,
-    code: statClashState.roomJoinCode,
+    nickname,
+    code: statClashState.roomCodeDraft,
   }, (response = {}) => {
     statClashState && (statClashState.roomPendingAction = "");
     if (!response.ok) {
@@ -2841,6 +2854,8 @@ function leaveStatClashRoom(resetOnly = false) {
   statClashState.timerLeftMs = STAT_CLASH_PICK_TIME_MS;
   statClashState.players.left = createStatClashPlayer("left", statClashState.players.left.label || "Joueur 1");
   statClashState.players.right = createStatClashPlayer("right", "Adversaire en attente");
+  statClashState.roomJoinCode = "";
+  statClashState.roomCodeDraft = "";
   setStatClashRoomFeedback("Room quittée. Tu peux en créer une autre ou rejoindre un code.", "info");
   renderStatClashScreen();
 }
@@ -2920,8 +2935,10 @@ function switchStatClashMode(mode) {
     statClashState.roomToken = "";
     statClashState.currentPokemon = null;
     statClashState.randomizerPokemon = null;
-  statClashState.reveal = null;
-  statClashState.revealStats = null;
+    statClashState.reveal = null;
+    statClashState.revealStats = null;
+    statClashState.roomJoinCode = "";
+    statClashState.roomCodeDraft = "";
     statClashState.players.left = createStatClashPlayer("left", statClashState.players.left.label || "Joueur 1");
     statClashState.players.right = createStatClashPlayer("right", "Adversaire en attente");
     setStatClashRoomFeedback("Crée une room pour inviter un autre joueur.", "info");
@@ -2940,6 +2957,8 @@ function renderStatClashScreen() {
   const room = state.room;
   const roomUi = isRoom ? getStatClashRoomUiState(state) : null;
   const roomBusy = Boolean(state.roomPendingAction);
+  const roomIsLive = isRoom && room?.status === "live";
+  const roomIsLobby = isRoom && (!room || room.status === "lobby" || room.status === "starting");
   const selfRoomPlayer = isRoom ? room?.players?.find((player) => player.isSelf) || null : null;
   const roomPlayersHtml = isRoom
     ? (room?.players?.length
@@ -2949,12 +2968,15 @@ function renderStatClashScreen() {
         .map((player, index) => `<div class="stat-clash-room-player ${player.connected ? "is-connected" : "is-disconnected"}"><div><strong>${escapeHtml(player.nickname || `Joueur ${index + 1}`)}</strong><small>${player.connected ? "Connecté" : "En attente"}</small></div><span class="stat-clash-room-player-badges">${player.isHost ? '<span class="stat-clash-room-badge is-host">Host</span>' : ""}${player.isSelf ? '<span class="stat-clash-room-badge is-self">Toi</span>' : '<span class="stat-clash-room-badge is-guest">Invité</span>'}</span></div>`).join("")
       : '<div class="stat-clash-room-player is-empty"><div><strong>Joueur 1</strong><small>En attente</small></div></div>')
     : "";
-  const current = state.randomizerPokemon || state.currentPokemon;
+  const current = roomIsLive || !isRoom ? (state.randomizerPokemon || state.currentPokemon) : null;
   const currentSprite = current ? getPokemonSprite(current) : "";
   const timerPct = Math.max(0, Math.min(100, (state.timerLeftMs / STAT_CLASH_PICK_TIME_MS) * 100));
   const winnerKey = state.phase === "finished"
     ? state.players.left.score === state.players.right.score ? "tie" : state.players.left.score > state.players.right.score ? "left" : "right"
     : null;
+  const toplineHtml = isRoom && roomIsLobby
+    ? `<span class="tag-gen">Lobby Room 1v1</span><span class="tag-tries">Joueurs connectés : <b>${Number(room?.connectedCount || room?.players?.filter((player) => player.connected).length || 0)}/${Number(room?.maxPlayers || 2)}</b></span><span class="tag-gen stat-clash-rule-tag">${escapeHtml(roomUi?.detail || "En attente de la room.")}</span>`
+    : `<span class="tag-gen">Manche ${state.round} / ${state.totalRounds}</span><span class="tag-tries">Tes stats restantes : <b>${STAT_CLASH_STATS.length - state.usedStatsBySide.left.length}</b></span><span class="tag-gen stat-clash-rule-tag">Les stats restent cachées jusqu'au reveal final de manche.</span>`;
   const remainingHtml = STAT_CLASH_STATS.map((entry) => `<span class="stat-clash-remaining-chip ${state.usedStatsBySide.left.includes(entry.key) ? "is-used" : ""}">${escapeHtml(entry.label)}</span>`).join("");
   const revealStatsHtml = state.revealStats
     ? `<div class="stat-clash-reveal-stats">${STAT_CLASH_STATS.map((entry) => `<div class="stat-clash-reveal-stat ${state.reveal?.left?.statKey === entry.key || state.reveal?.right?.statKey === entry.key ? "is-picked" : ""}"><span>${escapeHtml(entry.label)}</span><b>${getStatClashValue(entry.key, state.revealStats)}</b></div>`).join("")}</div>`
@@ -2987,9 +3009,16 @@ function renderStatClashScreen() {
             : "En attente du prochain reveal.";
     return `<section class="stat-clash-player-card ${winnerKey === side ? "is-winner" : ""}"><div class="stat-clash-player-head"><div><p class="stat-clash-player-side">${isOpponent ? (isRoom ? "Room 1v1" : "Bot") : "Toi"}</p><h3>${escapeHtml(player.label)}</h3></div><div class="stat-clash-score-box ${state.phase === "scoring" ? "is-animating" : ""}"><span>Total</span><b>${Math.round(player.displayScore || 0)}</b>${state.reveal?.[side] ? `<small>${escapeHtml(state.reveal[side].statLabel)} +${state.reveal[side].value}</small>` : ""}</div></div><div class="stat-clash-player-copy"><p class="stat-clash-player-status">${statusText}</p></div>${buttonsHtml ? `<div class="stat-clash-stat-grid">${buttonsHtml}</div>` : ""}<div class="stat-clash-history-block"><h4>Historique</h4><div class="stat-clash-history-list">${historyHtml}</div></div></section>`;
   };
-  const roomControls = isRoom ? `<section class="stat-clash-room-panel"><div class="stat-clash-room-toolbar"><div class="stat-clash-room-row"><input id="stat-clash-nickname" class="stat-clash-room-input" type="text" maxlength="24" value="${escapeHtml(state.players.left.label)}" placeholder="Ton pseudo" oninput="syncStatClashNickname()" ${roomBusy || room?.status === "live" || room?.status === "starting" ? "disabled" : ""} /><button class="btn-blue" type="button" onclick="createStatClashRoom()" ${room?.code || roomBusy ? "disabled" : ""}>${state.roomPendingAction === "creating" ? "Création…" : "Créer"}</button></div><div class="stat-clash-room-row"><input id="stat-clash-room-input" class="stat-clash-room-input stat-clash-room-code-input" type="text" maxlength="6" value="${escapeHtml(state.roomJoinCode || "")}" placeholder="Code room" oninput="syncStatClashJoinCode()" ${roomBusy || room?.code ? "disabled" : ""} /><button class="btn-ghost" type="button" onclick="joinStatClashRoom()" ${roomBusy || room?.code || !state.roomJoinCode ? "disabled" : ""}>${state.roomPendingAction === "joining" ? "Connexion…" : "Rejoindre"}</button>${room?.code ? `<button class="btn-ghost" type="button" onclick="copyStatClashRoomCode()">Copier ${escapeHtml(room.code)}</button><button class="btn-ghost" type="button" onclick="leaveStatClashRoom()">Quitter</button>${selfRoomPlayer?.isHost ? `<button class="btn-red" type="button" onclick="startStatClashRoomGame()" ${roomBusy || !room?.canStart || room?.status === "live" || room?.status === "starting" ? "disabled" : ""}>${room?.status === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : ""}` : ""}</div></div><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div><div class="stat-clash-room-presence">${roomPlayersHtml}</div>${room?.code && !selfRoomPlayer?.isHost && room?.canStart && room?.status === "lobby" ? '<p class="card-desc stat-clash-room-waiting">Room prête. En attente du lancement par l\'hôte.</p>' : ""}</section>` : "";
+  const roomControls = isRoom
+    ? room?.code
+      ? `<section class="stat-clash-room-panel"><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div><div class="stat-clash-room-summary"><span><b>Room :</b> ${escapeHtml(room.code)}</span><span><b>Joueurs :</b> ${Number(room.connectedCount || room.players?.filter((player) => player.connected).length || 0)}/${Number(room.maxPlayers || 2)}</span><span><b>Statut :</b> ${escapeHtml(room.status === "starting" ? "Lancement..." : room.canStart ? "Prête" : "En attente")}</span></div><div class="stat-clash-room-presence">${roomPlayersHtml}</div><div class="stat-clash-room-actions"><button class="btn-ghost" type="button" onclick="copyStatClashRoomCode()">Copier</button><button class="btn-ghost" type="button" onclick="leaveStatClashRoom()">Quitter</button>${selfRoomPlayer?.isHost ? `<button class="btn-red" type="button" onclick="startStatClashRoomGame()" ${roomBusy || !room?.canStart || room?.status === "live" || room?.status === "starting" ? "disabled" : ""}>${room?.status === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : ""}</div>${!selfRoomPlayer?.isHost && room?.canStart && room?.status === "lobby" ? '<p class="card-desc stat-clash-room-waiting">En attente du lancement par l’hôte.</p>' : ""}</section>`
+      : `<section class="stat-clash-room-panel"><div class="stat-clash-room-toolbar"><div class="stat-clash-room-row"><input id="stat-clash-nickname" class="stat-clash-room-input" type="text" maxlength="24" value="${escapeHtml(state.roomNameDraft || "")}" placeholder="Ton pseudo" oninput="syncStatClashNickname()" ${roomBusy ? "disabled" : ""} /><button class="btn-blue" type="button" onclick="createStatClashRoom()" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "creating" ? "Création…" : "Créer"}</button></div><div class="stat-clash-room-row"><input id="stat-clash-room-input" class="stat-clash-room-input stat-clash-room-code-input" type="text" maxlength="6" value="${escapeHtml(state.roomCodeDraft || "")}" placeholder="Code de room" oninput="syncStatClashJoinCode()" ${roomBusy ? "disabled" : ""} /><button class="btn-ghost" type="button" onclick="joinStatClashRoom()" ${roomBusy || !state.roomCodeDraft ? "disabled" : ""}>${state.roomPendingAction === "joining" ? "Connexion…" : "Rejoindre"}</button></div></div><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div></section>`
+    : "";
+  const lobbyCenterHtml = isRoom && roomIsLobby
+    ? `<div class="stat-clash-lobby-center"><div class="stat-clash-lobby-center-head"><span>Lobby Room 1v1</span><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(roomUi?.detail || "En attente de la room.")}</h3><p>${escapeHtml(selfRoomPlayer?.isHost ? "Partage le code puis lance la partie quand la room est complète." : room?.code ? `Connecté à ${room.code}. Attends le lancement par l’hôte.` : "Crée une room ou rejoins-en une avec un code.")}</p></div></div>`
+    : `<div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>Pokémon tiré</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(current))}'" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${state.phase === "picking" ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "picking" ? "Le timer choisit automatiquement si besoin." : "Le randomizer prépare la manche."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div>`;
   const finalHtml = state.phase === "finished" ? `<section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}"><div class="stat-clash-final-head"><p class="stat-clash-final-kicker">Résultat final</p><h3>${winnerKey === "tie" ? "Égalité" : `${escapeHtml(state.players[winnerKey].label)} gagne`}</h3><p>${state.players.left.score} à ${state.players.right.score}</p></div><div class="stat-clash-final-actions"><button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button><button class="btn-ghost" type="button" onclick="goToConfig()">Retour menu</button></div></section>` : "";
-  root.innerHTML = `<div class="stat-clash-shell mode-${isRoom ? "room" : "bot"} phase-${escapeHtml(state.phase)}"><div class="stat-clash-mode-switch"><button class="btn-${isRoom ? "ghost" : "red"}" type="button" onclick="switchStatClashMode('bot')">Vs Bot</button><button class="btn-${isRoom ? "red" : "ghost"}" type="button" onclick="switchStatClashMode('room')">Room 1v1</button></div>${roomControls}<div class="stat-clash-topline"><span class="tag-gen">Manche ${state.round} / ${state.totalRounds}</span><span class="tag-tries">Tes stats restantes : <b>${STAT_CLASH_STATS.length - state.usedStatsBySide.left.length}</b></span><span class="tag-gen stat-clash-rule-tag">Les stats restent cachées jusqu'au reveal final de manche.</span></div><div class="stat-clash-board">${renderPlayerCard("left", state.players.left, false)}<section class="stat-clash-center-card"><div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>Pokémon tiré</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(current))}'" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${state.phase === "picking" ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "picking" ? "Le timer choisit automatiquement si besoin." : "Le randomizer prépare la manche."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div><div class="stat-clash-remaining-block"><h4>Stats restantes pour toi</h4><div class="stat-clash-remaining-list">${remainingHtml}</div></div>${finalHtml}</section>${renderPlayerCard("right", state.players.right, true)}</div></div>`;
+  root.innerHTML = `<div class="stat-clash-shell mode-${isRoom ? "room" : "bot"} phase-${escapeHtml(state.phase)}"><div class="stat-clash-mode-switch"><button class="btn-${isRoom ? "ghost" : "red"}" type="button" onclick="switchStatClashMode('bot')">Vs Bot</button><button class="btn-${isRoom ? "red" : "ghost"}" type="button" onclick="switchStatClashMode('room')">Room 1v1</button></div>${roomControls}<div class="stat-clash-topline">${toplineHtml}</div><div class="stat-clash-board">${renderPlayerCard("left", state.players.left, false)}<section class="stat-clash-center-card">${lobbyCenterHtml}${(!isRoom || roomIsLive) ? `<div class="stat-clash-remaining-block"><h4>Stats restantes pour toi</h4><div class="stat-clash-remaining-list">${remainingHtml}</div></div>` : ""}${finalHtml}</section>${renderPlayerCard("right", state.players.right, true)}</div></div>`;
 }
 
 function openStatClashMode() {
