@@ -40,7 +40,7 @@ const STAT_CLASH_PLAYER_SEATS = ["left", "right", "seat3", "seat4"];
 const STAT_CLASH_ROLL_MS = 1800;
 const STAT_CLASH_START_DELAY_MS = 900;
 const STAT_CLASH_PICK_MS = 10000;
-const STAT_CLASH_REVEAL_MS = 2200;
+const STAT_CLASH_REVEAL_MS = 1500;
 const STAT_CLASH_STAT_KEYS = ["hp", "attack", "defense", "spAttack", "spDefense", "speed"];
 const STAT_CLASH_STAT_LABELS = {
   hp: "PV",
@@ -286,7 +286,7 @@ io.on("connection", (socket) => {
     player.pendingPickKey = statKey;
     player.pendingSubmittedAt = Date.now();
     emitStatClashRoomState(room);
-    if (room.players.every((entry) => entry.pendingPickKey)) {
+    if (getConnectedStatClashPlayers(room).every((entry) => entry.pendingPickKey)) {
       resolveStatClashRound(room);
     }
     respond(ack, { ok: true });

@@ -384,6 +384,7 @@ let statClashRuntime = {
   timeouts: new Set(),
   intervals: new Set(),
   animationFrame: null,
+  timerInterval: null,
 };
 
 const STAT_CLASH_ROUND_TOTAL = 6;
@@ -2230,6 +2231,7 @@ function createStatClashState() {
     round: 1,
     totalRounds: STAT_CLASH_ROUND_TOTAL,
     timerLeftMs: STAT_CLASH_PICK_TIME_MS,
+    timerDurationMs: STAT_CLASH_PICK_TIME_MS,
     statusText: "Choisis ton format de duel.",
     selectedGens: [...selectedGens].sort((a, b) => a - b),
     pool: getStatClashPool(),
@@ -2259,7 +2261,8 @@ function resetStatClashRuntime() {
   statClashRuntime.timeouts.forEach((id) => clearTimeout(id));
   statClashRuntime.intervals.forEach((id) => clearInterval(id));
   if (statClashRuntime.animationFrame !== null) cancelAnimationFrame(statClashRuntime.animationFrame);
-  statClashRuntime = { timeouts: new Set(), intervals: new Set(), animationFrame: null };
+  if (statClashRuntime.timerInterval) clearInterval(statClashRuntime.timerInterval);
+  statClashRuntime = { timeouts: new Set(), intervals: new Set(), animationFrame: null, timerInterval: null };
 }
 
 function trackStatClashTimeout(callback, delay) {
@@ -2281,6 +2284,7 @@ function clearTrackedStatClashInterval(id) {
   if (!id) return;
   clearInterval(id);
   statClashRuntime.intervals.delete(id);
+  if (statClashRuntime.timerInterval === id) statClashRuntime.timerInterval = null;
 }
 
 function setTrackedStatClashAnimationFrame(callback) {
@@ -2356,6 +2360,13 @@ function getStatClashRemainingStats(usedStats = []) {
   return STAT_CLASH_STATS.filter((entry) => !blocked.has(entry.key));
 }
 
+function setStatClashTimerInterval(callback, delay) {
+  if (statClashRuntime.timerInterval) clearTrackedStatClashInterval(statClashRuntime.timerInterval);
+  const id = trackStatClashInterval(callback, delay);
+  statClashRuntime.timerInterval = id;
+  return id;
+}
+
 function buildStatClashRandomizerSequence(finalPokemon, pool) {
   const source = shuffleArray(pool.filter((pokemon) => pokemon.id !== finalPokemon.id)).slice(0, Math.max(0, STAT_CLASH_RANDOMIZER_STEPS - 1));
   return [...source, finalPokemon];
@@ -2400,16 +2411,17 @@ function resolveHiddenStatClashChoices(picks, usedStatsBySide, stats) {
   });
 }
 
-function runStatClashRandomizer(sequence, finalPokemon, onDone) {
+function runStatClashRandomizer(sequence, finalPokemon, onDone, totalDuration = STAT_CLASH_ROLL_MS) {
   const state = statClashState;
   if (!state) return;
   state.phase = "rolling";
   state.statusText = "Le randomizer tourne...";
   state.randomizerPokemon = sequence[0] || finalPokemon;
   renderStatClashScreen();
-  let totalDelay = 0;
+  const steps = Math.max(1, sequence.length);
+  const stepDuration = Math.max(40, Math.floor(totalDuration / steps));
   sequence.forEach((pokemon, index) => {
-    totalDelay += STAT_CLASH_RANDOMIZER_BASE_DELAY_MS + index * 20;
+    const totalDelay = Math.min(totalDuration, stepDuration * (index + 1));
     trackStatClashTimeout(() => {
       if (!statClashState) return;
       statClashState.randomizerPokemon = pokemon;
@@ -2449,7 +2461,7 @@ function autoPickLocalStatClash(side) {
   if (!state || state.mode !== "bot") return;
   const player = state.players[side];
   if (!player || player.pendingPick) return;
-  const best = getStatClashRemainingStats(state.usedStatsBySide.right)
+  const best = getStatClashRemainingStats(state.usedStatsBySide[side])
     .sort((left, right) => getStatClashValue(right.key, state.currentStats) - getStatClashValue(left.key, state.currentStats))[0];
   if (!best) return;
   player.pendingPick = { key: best.key, auto: true };
@@ -2504,6 +2516,7 @@ function startStatClashBotTimer() {
   if (!state || state.mode !== "bot") return;
   state.phase = "picking";
   state.timerLeftMs = STAT_CLASH_PICK_TIME_MS;
+  state.timerDurationMs = STAT_CLASH_PICK_TIME_MS;
   state.statusText = "Choisis une stat. Le choix adverse reste caché jusqu'au reveal.";
   renderStatClashScreen();
   trackStatClashTimeout(() => {
@@ -2513,7 +2526,7 @@ function startStatClashBotTimer() {
     maybeResolveLocalStatClashRound();
   }, 1400 + Math.floor(Math.random() * 4200));
   const startedAt = Date.now();
-  const intervalId = trackStatClashInterval(() => {
+  const intervalId = setStatClashTimerInterval(() => {
     if (!statClashState || statClashState.mode !== "bot" || statClashState.phase !== "picking") return clearTrackedStatClashInterval(intervalId);
     statClashState.timerLeftMs = Math.max(0, STAT_CLASH_PICK_TIME_MS - (Date.now() - startedAt));
     updateStatClashTimerUi();
@@ -2549,7 +2562,7 @@ async function startStatClashBotRound() {
   state.currentPokemon = roundData.pokemon;
   state.currentStats = roundData.stats;
   const sequence = buildStatClashRandomizerSequence(roundData.pokemon, state.pool);
-  runStatClashRandomizer(sequence, roundData.pokemon, () => startStatClashBotTimer());
+  runStatClashRandomizer(sequence, roundData.pokemon, () => startStatClashBotTimer(), STAT_CLASH_ROLL_MS);
 }
 
 function startStatClashBotGame() {
@@ -2702,12 +2715,30 @@ function getStatClashRoomOpponent() {
   return statClashState?.room?.players?.find((player) => !player.isSelf) || null;
 }
 
+function remapStatClashRoomSideData(roomState, localPlayer, opponent) {
+  const localServerSide = localPlayer?.side || "left";
+  const opponentServerSide = opponent?.side || (localServerSide === "left" ? "right" : "left");
+  const pickBySide = roomState?.reveal || {};
+  return {
+    localServerSide,
+    opponentServerSide,
+    usedStatsBySide: {
+      left: Array.isArray(roomState?.usedStatKeysBySide?.[localServerSide]) ? roomState.usedStatKeysBySide[localServerSide].slice() : [],
+      right: Array.isArray(roomState?.usedStatKeysBySide?.[opponentServerSide]) ? roomState.usedStatKeysBySide[opponentServerSide].slice() : [],
+    },
+    reveal: {
+      left: pickBySide?.[localServerSide] || null,
+      right: pickBySide?.[opponentServerSide] || null,
+    },
+  };
+}
+
 function updateStatClashRoomTimer() {
   const state = statClashState;
   if (!state?.room) return;
   const needsTimer = state.room.status === "starting" || state.room.roundPhase === "rolling" || state.room.roundPhase === "picking";
   if (!needsTimer) return;
-  const intervalId = trackStatClashInterval(() => {
+  const intervalId = setStatClashTimerInterval(() => {
     if (!statClashState?.room) return clearTrackedStatClashInterval(intervalId);
     if (statClashState.room.status === "starting") {
       statClashState.timerDurationMs = STAT_CLASH_START_DELAY_MS;
@@ -2742,7 +2773,7 @@ function playStatClashRoomRolling(roomState) {
     statClashState.timerLeftMs = Math.max(0, Number(roomState.rollEndsAt || 0) - Date.now());
     renderStatClashScreen();
     updateStatClashRoomTimer();
-  });
+  }, Math.max(200, Number(roomState.rollEndsAt || 0) - Date.now()));
 }
 
 function applyStatClashRoomState(roomState) {
@@ -2752,12 +2783,13 @@ function applyStatClashRoomState(roomState) {
   statClashState.room = roomState;
   statClashState.round = Number(roomState?.round) || 1;
   statClashState.totalRounds = Number(roomState?.totalRounds) || STAT_CLASH_ROUND_TOTAL;
-  statClashState.usedStatsBySide = roomState?.usedStatKeysBySide || { left: [], right: [] };
   statClashState.currentPokemon = roomState?.currentPokemon || null;
-  statClashState.reveal = roomState?.reveal || null;
   statClashState.revealStats = roomState?.revealStats || null;
   const localPlayer = roomState?.players?.find((player) => player.isSelf) || null;
   const opponent = roomState?.players?.find((player) => !player.isSelf) || null;
+  const mappedRoomSides = remapStatClashRoomSideData(roomState, localPlayer, opponent);
+  statClashState.usedStatsBySide = mappedRoomSides.usedStatsBySide;
+  statClashState.reveal = roomState?.reveal ? mappedRoomSides.reveal : null;
   statClashState.players.left = createStatClashPlayer("left", localPlayer?.nickname || statClashState.players.left.label || "Joueur 1");
   statClashState.players.right = createStatClashPlayer("right", opponent?.nickname || "Adversaire");
   statClashState.players.left.score = localPlayer?.score || 0;
