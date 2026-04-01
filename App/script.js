@@ -2776,9 +2776,17 @@ function createStatClashRoom() {
     setStatClashRoomFeedback("Connexion temps réel indisponible.", "error");
     return renderStatClashScreen();
   }
-  syncStatClashNickname();
-  const nickname = getStatClashRoomSubmittedNickname();
+  const nicknameInput = document.getElementById("stat-clash-nickname");
+  const nicknameDraft = String(nicknameInput?.value || statClashState.roomNameDraft || playerProfile.nickname || "").trim();
+  const nickname = nicknameDraft || "Joueur 1";
+  statClashState.roomNameDraft = nicknameDraft;
   statClashState.players.left.label = nickname;
+  if (statClashState.room?.code) {
+    socket.emit("stat-clash:leave-room");
+  }
+  statClashState.room = null;
+  statClashState.roomToken = "";
+  statClashState.phase = "idle";
   statClashState.roomPendingAction = "creating";
   setStatClashRoomFeedback("Création de la room…", "info");
   console.debug("[stat-clash][client][create-room] emit", { nickname, selectedGens: [...selectedGens].sort((a, b) => a - b) });
@@ -2801,27 +2809,31 @@ function createStatClashRoom() {
 
 function joinStatClashRoom() {
   if (!statClashState) return;
-  if (statClashState.room?.code) {
-    setStatClashRoomFeedback(`Tu es déjà dans la room ${statClashState.room.code}.`, "info");
-    return renderStatClashScreen();
-  }
   const socket = ensureMultiplayerSocket();
   if (!socket) {
     setStatClashRoomFeedback("Connexion temps réel indisponible.", "error");
     return renderStatClashScreen();
   }
-  syncStatClashNickname();
+  const nicknameInput = document.getElementById("stat-clash-nickname");
   const codeInput = document.getElementById("stat-clash-room-input");
+  const nicknameDraft = String(nicknameInput?.value || statClashState.roomNameDraft || playerProfile.nickname || "").trim();
   const liveCode = String(codeInput?.value || statClashState.roomCodeDraft || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  statClashState.roomNameDraft = nicknameDraft;
   statClashState.roomCodeDraft = liveCode;
   statClashState.roomJoinCode = liveCode;
   if (codeInput && codeInput.value !== liveCode) codeInput.value = liveCode;
-  const nickname = getStatClashRoomSubmittedNickname();
+  const nickname = nicknameDraft || "Joueur 1";
   statClashState.players.left.label = nickname;
   if (!liveCode) {
     setStatClashRoomFeedback("Entre un code room valide avant de rejoindre.", "error");
     return renderStatClashScreen();
   }
+  if (statClashState.room?.code) {
+    socket.emit("stat-clash:leave-room");
+  }
+  statClashState.room = null;
+  statClashState.roomToken = "";
+  statClashState.phase = "idle";
   statClashState.roomPendingAction = "joining";
   setStatClashRoomFeedback(`Connexion à ${liveCode}…`, "info");
   console.debug("[stat-clash][client][join-room] emit", { nickname, code: liveCode });
