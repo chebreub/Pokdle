@@ -157,7 +157,7 @@ const EXTRA_FORMS = [
   { id: 23001, name: "Caninos de Hisui", baseId: 58, gen: 8, type1: "Feu", type2: "Roche" },
   { id: 23002, name: "Arcanin de Hisui", baseId: 59, gen: 8, type1: "Feu", type2: "Roche" },
   { id: 23003, name: "Voltorbe de Hisui", baseId: 100, gen: 8, type1: "Électrik", type2: "Plante" },
-  { id: 23004, name: "Electrode de Hisui", baseId: 101, gen: 8, type1: "Électrik", type2: "Plante" },
+  { id: 23004, name: "Électrode de Hisui", baseId: 101, gen: 8, type1: "Électrik", type2: "Plante" },
   { id: 23005, name: "Qwilfish de Hisui", baseId: 211, gen: 8, type1: "Ténèbres", type2: "Poison" },
   { id: 23006, name: "Typhlosion de Hisui", baseId: 157, gen: 8, type1: "Feu", type2: "Spectre" },
   { id: 23007, name: "Clamiral de Hisui", baseId: 503, gen: 8, type1: "Eau", type2: "Ténèbres" },
@@ -165,9 +165,9 @@ const EXTRA_FORMS = [
   { id: 23009, name: "Zorua de Hisui", baseId: 570, gen: 8, type1: "Normal", type2: "Spectre", color: "Blanc / Rouge" },
   { id: 23010, name: "Zoroark de Hisui", baseId: 571, gen: 8, type1: "Normal", type2: "Spectre", color: "Blanc / Rouge" },
   { id: 23011, name: "Farfuret de Hisui", baseId: 215, gen: 8, type1: "Combat", type2: "Poison" },
-  { id: 23012, name: "Gueriaigle de Hisui", baseId: 628, gen: 8, type1: "Psy", type2: "Vol" },
+  { id: 23012, name: "Guériaigle de Hisui", baseId: 628, gen: 8, type1: "Psy", type2: "Vol" },
   { id: 23013, name: "Fragilady de Hisui", baseId: 549, gen: 8, type1: "Plante", type2: "Combat" },
-  { id: 23014, name: "Amovénus Forme Totémique", baseId: 641, gen: 5 },
+  { id: 23014, name: "Amovénus Forme Totémique", baseId: 905, gen: 8 },
   { id: 23015, name: "Muplodocus de Hisui", baseId: 706, gen: 8, type1: "Acier", type2: "Dragon" },
   { id: 23016, name: "Séracrawl de Hisui", baseId: 713, gen: 8, type1: "Glace", type2: "Roche" },
 
@@ -271,7 +271,7 @@ const FORM_API_NAME_BY_NAME = {
   "Caninos de Hisui": "growlithe-hisui",
   "Arcanin de Hisui": "arcanine-hisui",
   "Voltorbe de Hisui": "voltorb-hisui",
-  "Electrode de Hisui": "electrode-hisui",
+  "Électrode de Hisui": "electrode-hisui",
   "Qwilfish de Hisui": "qwilfish-hisui",
   "Typhlosion de Hisui": "typhlosion-hisui",
   "Clamiral de Hisui": "samurott-hisui",
@@ -279,7 +279,7 @@ const FORM_API_NAME_BY_NAME = {
   "Zorua de Hisui": "zorua-hisui",
   "Zoroark de Hisui": "zoroark-hisui",
   "Farfuret de Hisui": "sneasel-hisui",
-  "Gueriaigle de Hisui": "braviary-hisui",
+  "Guériaigle de Hisui": "braviary-hisui",
   "Fragilady de Hisui": "lilligant-hisui",
   "Amovénus Forme Totémique": "enamorus-therian",
   "Muplodocus de Hisui": "goodra-hisui",
@@ -320,6 +320,7 @@ function injectExtraForms() {
     const entry = {
       id: form.id,
       name: form.name,
+      baseId: form.baseId,
       type1: form.type1 || base.type1,
       type2: form.type2 !== undefined ? form.type2 : base.type2,
       gen,
@@ -331,6 +332,7 @@ function injectExtraForms() {
       weight: typeof form.weight === "number" ? form.weight : base.weight,
       spriteId,
       sprite: getSpriteUrl(spriteId),
+      formApiName: FORM_API_NAME_BY_NAME[form.name] || null,
       isAltForm: true,
     };
 
@@ -345,7 +347,7 @@ async function resolveExtraFormSprites() {
 
   await Promise.allSettled(
     forms.map(async (pokemon) => {
-      const apiName = FORM_API_NAME_BY_NAME[pokemon.name];
+      const apiName = pokemon.formApiName || FORM_API_NAME_BY_NAME[pokemon.name];
       if (!apiName) return;
 
       try {
@@ -354,9 +356,19 @@ async function resolveExtraFormSprites() {
 
         const data = await response.json();
         const sprite = data?.sprites?.front_default;
-        if (!sprite) return;
+        const apiTypes = Array.isArray(data?.types)
+          ? data.types
+              .slice()
+              .sort((a, b) => (a?.slot || 0) - (b?.slot || 0))
+              .map((entry) => typeLabelFrFromApiName(entry?.type?.name))
+              .filter(Boolean)
+          : [];
 
-        pokemon.sprite = sprite;
+        if (sprite) pokemon.sprite = sprite;
+        if (apiTypes[0]) pokemon.type1 = apiTypes[0];
+        pokemon.type2 = apiTypes[1] || null;
+        if (typeof data?.height === "number") pokemon.height = data.height / 10;
+        if (typeof data?.weight === "number") pokemon.weight = data.weight / 10;
       } catch (_err) {
         // keep base sprite fallback if API is unavailable
       }
