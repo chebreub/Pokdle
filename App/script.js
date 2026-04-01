@@ -1451,7 +1451,7 @@ function scrollToHomeCategory(category) {
   const targetMap = {
     play: "home-play",
     social: "home-social",
-    champions: "home-extras",
+    champions: "home-champions",
     collection: "home-collection",
     extras: "home-extras",
   };
@@ -5420,6 +5420,8 @@ function getTeamBuilderTeamSynthesis() {
   const offenseCounts = { physique: 0, speciale: 0, support: 0 };
   const roleCounts = new Map();
   let moveCount = 0;
+  let fastPressureCount = 0;
+  let offensivePressureCount = 0;
   const selectedMoveTypes = new Set();
 
   for (const slot of teamBuilderState) {
@@ -5441,6 +5443,8 @@ function getTeamBuilderTeamSynthesis() {
 
     const role = getTeamBuilderSlotRoleData(slot);
     roleCounts.set(role.primary, (roleCounts.get(role.primary) || 0) + 1);
+    if (["speed", "physical", "special", "breaker"].includes(role.bucket)) offensivePressureCount += 1;
+    if (["speed", "physical", "special"].includes(role.bucket)) fastPressureCount += 1;
 
     getTeamBuilderSlotSelectedMoveTypes(slot).forEach((type) => selectedMoveTypes.add(type));
   }
@@ -5510,6 +5514,8 @@ function getTeamBuilderTeamSynthesis() {
     distinctTypeCount: typeCounts.size,
     moveCount,
     offenseCounts,
+    fastPressureCount,
+    offensivePressureCount,
     weaknesses,
     coverage,
     duplicates,
@@ -5872,6 +5878,16 @@ function renderTeamBuilderSummary() {
       <small>${escapeHtml(meta)}</small>
     </span>
   `;
+  const defensiveCoverageScore = synthesis.coverage.reduce((sum, row) => sum + row.resistCount + (row.immuneCount * 2), 0);
+  const immunityTotal = synthesis.coverage.reduce((sum, row) => sum + row.immuneCount, 0);
+  const speedPressureLabel = synthesis.fastPressureCount >= 3 ? "Bonne pression vitesse" : synthesis.fastPressureCount >= 1 ? "Vitesse partielle" : "Vitesse limitée";
+  const offenseBalanceLabel = synthesis.offenseCounts.physique && synthesis.offenseCounts.speciale
+    ? "Mix physique / spécial"
+    : synthesis.offenseCounts.physique
+      ? "Orientation physique"
+      : synthesis.offenseCounts.speciale
+        ? "Orientation spéciale"
+        : "Support dominant";
 
   const threatsHtml = synthesis.weaknesses.length
     ? synthesis.weaknesses
@@ -5994,6 +6010,8 @@ function renderTeamBuilderSummary() {
       ${renderChip("Types présents", String(synthesis.distinctTypeCount))}
       ${renderChip("Attaques", `${synthesis.moveCount}/24`)}
       ${renderChip("Types offensifs", String(synthesis.selectedMoveTypeCount))}
+      ${renderChip("Immunités", String(immunityTotal))}
+      ${renderChip("Pression vitesse", speedPressureLabel)}
     </div>
     <div class="team-builder-synthesis-grid">
       <section class="team-builder-synthesis-card">
@@ -6008,12 +6026,32 @@ function renderTeamBuilderSummary() {
           <h5>Couvertures et faiblesses</h5>
           <p>Ce que la team encaisse déjà bien, et les types encore les plus dangereux.</p>
         </div>
+        <div class="team-builder-summary-mini-grid">
+          <div class="team-builder-summary-mini-stat">
+            <span>Faiblesses visibles</span>
+            <strong>${synthesis.weaknesses.length}</strong>
+          </div>
+          <div class="team-builder-summary-mini-stat">
+            <span>Résistances / immunités</span>
+            <strong>${defensiveCoverageScore}</strong>
+          </div>
+        </div>
         ${defensePanelHtml}
       </section>
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
           <h5>Rôles et angles morts</h5>
           <p>Répartition offensive actuelle, menaces bien pressées et points encore faibles.</p>
+        </div>
+        <div class="team-builder-summary-mini-grid">
+          <div class="team-builder-summary-mini-stat">
+            <span>Équilibre</span>
+            <strong>${escapeHtml(offenseBalanceLabel)}</strong>
+          </div>
+          <div class="team-builder-summary-mini-stat">
+            <span>Pression offensive</span>
+            <strong>${synthesis.offensivePressureCount}/6</strong>
+          </div>
         </div>
         ${offensePanelHtml}
       </section>

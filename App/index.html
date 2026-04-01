@@ -53,18 +53,18 @@
 
       <section class="home-hero card">
         <div class="home-hero-copy">
-          <div class="home-hero-kicker">Mini-jeux Pokémon</div>
-          <h2 class="home-hero-title">Joue vite, lance un défi et prépare tes combats.</h2>
-          <p class="home-hero-text">Mini-jeux, défis entre amis et premiers outils stratégiques sur une interface simple et rapide.</p>
+          <div class="home-hero-kicker">Pokdle 2026</div>
+          <h2 class="home-hero-title">Une porte d’entrée claire pour jouer, défier un ami et construire ta progression.</h2>
+          <p class="home-hero-text">L’accueil met l’essentiel en avant. Les autres modes, outils et écrans restent accessibles via les univers du site, sans te noyer dès la première vue.</p>
           <div class="home-hero-actions">
-            <button class="btn-red home-hero-cta" onclick="startPartyMode()">Lancer Party Pokémon</button>
-            <button class="btn-blue" type="button" onclick="scrollToHomeCategory('social')">Lancer un défi</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Explorer Champions Lab</button>
+            <button class="btn-red home-hero-cta" onclick="scrollToHomeCategory('play')">Jouer</button>
+            <button class="btn-blue" type="button" onclick="scrollToHomeCategory('social')">Défier un ami</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
           </div>
           <div class="home-hero-highlights">
-            <span class="hero-chip">Mini-jeux rapides</span>
-            <span class="hero-chip">Défis entre amis</span>
-            <span class="hero-chip">Champions Lab</span>
+            <span class="hero-chip">Jouer</span>
+            <span class="hero-chip">Social</span>
+            <span class="hero-chip">Progression</span>
           </div>
         </div>
         <div class="home-hero-visual" aria-hidden="true">
@@ -76,6 +76,62 @@
             <div class="hero-pokeball-core"></div>
             <div class="hero-pokeball-bottom"></div>
           </div>
+        </div>
+      </section>
+
+      <section class="home-priority-grid" aria-label="Entrées principales">
+        <article class="card home-priority-card home-priority-card-play">
+          <span class="home-priority-kicker">01</span>
+          <h3>Jouer</h3>
+          <p>Va droit au jeu principal ou ouvre un autre mode sans surcharger l’accueil.</p>
+          <div class="home-priority-actions">
+            <button class="btn-red" onclick="startNormalGame()">Pokémon mystère</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('play')">Voir plus</button>
+          </div>
+        </article>
+        <article class="card home-priority-card home-priority-card-social">
+          <span class="home-priority-kicker">02</span>
+          <h3>Défier un ami</h3>
+          <p>Crée un duel live, envoie un défi ou lance Stat Clash 1v1.</p>
+          <div class="home-priority-actions">
+            <button class="btn-blue" onclick="openMultiplayerMode()">Duel live 1v1</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('social')">Ouvrir Social</button>
+          </div>
+        </article>
+        <article class="card home-priority-card home-priority-card-lab">
+          <span class="home-priority-kicker">03</span>
+          <h3>Champions Lab</h3>
+          <p>Prépare une équipe, ouvre tes outils et avance vers les formats plus sérieux.</p>
+          <div class="home-priority-actions">
+            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Team Builder</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Explorer</button>
+          </div>
+        </article>
+        <article class="card home-priority-card home-priority-card-progress">
+          <span class="home-priority-kicker">04</span>
+          <h3>Continuer la progression</h3>
+          <p>Retrouve tes stats, tes succès et ton Pokédex sans changer de logique de navigation.</p>
+          <div class="home-priority-actions">
+            <button class="btn-blue" type="button" onclick="openProfileScreen()">Profil</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('collection')">Collection</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="card home-universes" aria-label="Univers Pokdle">
+        <div class="home-section-head">
+          <div>
+            <h2 class="card-title">Univers</h2>
+            <p class="card-desc">Six espaces clairs pour circuler dans Pokdle sans tout afficher en même temps.</p>
+          </div>
+        </div>
+        <div class="home-universes-grid">
+          <button class="home-universe-tile is-active" type="button" onclick="goToConfig()"><span>Accueil</span><strong>Vue d’ensemble</strong></button>
+          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('play')"><span>Jouer</span><strong>Mini-jeux & modes</strong></button>
+          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('social')"><span>Social</span><strong>Défis & rooms</strong></button>
+          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('champions')"><span>Champions Lab</span><strong>Builder & préparation</strong></button>
+          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('collection')"><span>Collection</span><strong>Profil, succès, Pokédex</strong></button>
+          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('extras')"><span>Extras</span><strong>Outils & bonus</strong></button>
         </div>
       </section>
 
@@ -131,18 +187,48 @@
           </div>
         </article>
 
+        <article id="home-champions" class="card home-category-card">
+          <div class="home-category-head">
+            <div>
+              <span class="home-category-icon">🧪</span>
+              <h2 class="card-title">Champions Lab</h2>
+            </div>
+            <p class="card-desc">Prépare une team, travaille tes outils et garde un accès net au laboratoire stratégique.</p>
+          </div>
+          <p class="home-category-note">Le cœur du lab reste ici, sans mélanger toute la boîte à outils à la home principale.</p>
+          <div class="mode-buttons home-mode-grid">
+            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Ouvrir le builder</button>
+            <button class="btn-ghost" type="button" onclick="openTeamsScreen()"><span class="btn-icon">📚</span>Mes teams</button>
+          </div>
+        </article>
+
+        <article id="home-collection" class="card home-category-card">
+          <div class="home-category-head">
+            <div>
+              <span class="home-category-icon">📚</span>
+              <h2 class="card-title">Collection</h2>
+            </div>
+            <p class="card-desc">Retrouve ton Pokédex, ton profil et tes succès dans un espace à part, plus calme.</p>
+          </div>
+          <div class="mode-buttons home-mode-grid">
+            <button class="btn-blue" type="button" onclick="openPokedexMode()"><span class="btn-icon">📖</span>Pokédex</button>
+            <button class="btn-ghost" type="button" onclick="openAchievementsScreen()"><span class="btn-icon">🏆</span>Succès</button>
+            <button class="btn-ghost" type="button" onclick="openProfileScreen()"><span class="btn-icon">👤</span>Profil</button>
+          </div>
+        </article>
+
         <article id="home-extras" class="card home-category-card">
           <div class="home-category-head">
             <div>
               <span class="home-category-icon">🛠️</span>
-              <h2 class="card-title">Champions Lab & Extras</h2>
+              <h2 class="card-title">Extras</h2>
             </div>
-            <p class="card-desc">Prépare une team, ouvre les outils utiles et garde un accès simple aux modules bonus.</p>
+            <p class="card-desc">Les modules bonus restent accessibles, mais sortent du premier plan pour garder une home nette.</p>
           </div>
-          <p class="home-category-note">Les outils détaillés et les écrans bonus restent accessibles ensuite, sans encombrer la home.</p>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Ouvrir le builder</button>
             <button class="btn-blue" onclick="openDraftArenaMode()"><span class="btn-icon">🎤</span>Draft Arènes</button>
+            <button class="btn-ghost" type="button" onclick="openOddOneOutMode()"><span class="btn-icon">🧩</span>Intrus Pokémon</button>
+            <button class="btn-ghost" type="button" onclick="openGamesRankingMode()"><span class="btn-icon">📈</span>Classements</button>
           </div>
         </article>
       </section>
@@ -666,7 +752,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </div>
         <p class="card-desc">Choisis une génération, drafte 6 Pokémon (6 choix aléatoires à chaque tour), puis vois quels badges ton équipe peut obtenir.</p>
 
-        <div class="draft-progress">
+        <div class="draft-progress draft-progress-shell">
           <span id="draft-gen-badge" class="tag-gen">Génération : -</span>
           <span id="draft-picks-badge" class="tag-tries">Équipe : 0 / 6</span>
           <span id="draft-shiny-badge" class="tag-tries">Shiny : 0</span>
@@ -676,23 +762,23 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <p id="draft-status" class="draft-status">Choisis une génération pour commencer le draft.</p>
         <div id="draft-run-bar" class="draft-run-bar"></div>
 
-        <section class="draft-panel">
+        <section class="draft-panel draft-panel-gen">
           <h3>1) Sélection de génération</h3>
           <div id="draft-gen-buttons" class="draft-gen-buttons"></div>
         </section>
 
-        <section class="draft-panel">
+        <section class="draft-panel draft-panel-picks">
           <h3>2) Draft</h3>
           <div id="draft-options" class="draft-options-grid"></div>
         </section>
 
-        <section class="draft-panel">
+        <section class="draft-panel draft-panel-team">
           <h3>Équipe actuelle</h3>
           <div id="draft-team" class="draft-team-grid"></div>
           <div id="draft-team-metrics" class="draft-team-metrics"></div>
         </section>
 
-        <section id="draft-result-wrap" class="draft-panel hidden">
+        <section id="draft-result-wrap" class="draft-panel draft-panel-results hidden">
           <h3>3) Résultats des arènes</h3>
           <div class="draft-result-actions">
             <button id="draft-detail-toggle" class="btn-ghost" type="button" onclick="toggleDraftDetailAnalysis()">Voir l'analyse détaillée</button>
