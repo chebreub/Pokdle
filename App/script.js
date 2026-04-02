@@ -8171,6 +8171,10 @@ function getDraftPowerCacheKey(pokemon) {
   return `${pokemon?.id || "?"}:${getPokemonSpriteId(pokemon)}`;
 }
 
+function getDraftPoolEntryKey(pokemon) {
+  return String(pokemon?.id ?? getPokemonSpriteId(pokemon) ?? "?");
+}
+
 function getDraftCachedPokemonPowerData(pokemon) {
   const key = getDraftPowerCacheKey(pokemon);
   return DRAFT_POWER_CACHE.get(key) || buildDraftPowerMetrics(pokemon, null);
@@ -9877,7 +9881,7 @@ function buildDraftSimpleBattleBotTeamEntries(playerEntries = []) {
     playerEntries
       .map((entry) => entry?.pokemon)
       .filter(Boolean)
-      .map((pokemon) => getPokemonSpriteId(pokemon))
+      .map((pokemon) => getDraftPoolEntryKey(pokemon))
   );
   const desiredCount = DRAFT_SIMPLE_BATTLE_TEAM_SIZE;
   const picks = [];
@@ -9892,7 +9896,7 @@ function buildDraftSimpleBattleBotTeamEntries(playerEntries = []) {
   const weightedOpponents = buildDraftWeightedWave(genPool || [], desiredCount, usedDexIds);
   weightedOpponents.forEach((pokemon) => {
     if (!pokemon) return;
-    usedDexIds.add(getPokemonSpriteId(pokemon));
+    usedDexIds.add(getDraftPoolEntryKey(pokemon));
     picks.push({ pokemon });
   });
 
@@ -9900,8 +9904,8 @@ function buildDraftSimpleBattleBotTeamEntries(playerEntries = []) {
   for (const id of fallbackIds) {
     if (picks.length >= desiredCount) break;
     const pokemon = getDraftSimpleBattleDevPokemon(id);
-    if (!pokemon || usedDexIds.has(getPokemonSpriteId(pokemon))) continue;
-    usedDexIds.add(getPokemonSpriteId(pokemon));
+    if (!pokemon || usedDexIds.has(getDraftPoolEntryKey(pokemon))) continue;
+    usedDexIds.add(getDraftPoolEntryKey(pokemon));
     picks.push({ pokemon });
   }
 
@@ -12219,16 +12223,11 @@ function getDraftPoolForGeneration(gen) {
   const cfg = DRAFT_GEN_OPTIONS.find((g) => g.gen === gen);
   if (!cfg) return [];
 
-  return POKEMON_LIST.filter((p) => {
-    if (!p || p.isAltForm) return false;
-    const dexId = getPokemonSpriteId(p);
-    if (!Number.isFinite(dexId)) return false;
-    return dexId >= cfg.min && dexId <= cfg.max;
-  });
+  return getPokemonUiList({ gens: [cfg.gen] }).filter(Boolean);
 }
 
 function pickRandomUniquePokemon(pool, count, excludeDexIds = new Set()) {
-  const source = pool.filter((p) => !excludeDexIds.has(getPokemonSpriteId(p)));
+  const source = pool.filter((p) => !excludeDexIds.has(getDraftPoolEntryKey(p)));
   const out = [];
 
   while (source.length && out.length < count) {
@@ -12268,7 +12267,7 @@ function getDraftWeightedChance(power) {
 function pickWeightedDraftPokemon(pool, excludeDexIds = new Set(), options = {}) {
   const heavyThreatCount = Number(options.heavyThreatCount) || 0;
   const source = pool
-    .filter((pokemon) => !excludeDexIds.has(getPokemonSpriteId(pokemon)))
+    .filter((pokemon) => !excludeDexIds.has(getDraftPoolEntryKey(pokemon)))
     .map((pokemon) => {
       const power = getDraftCachedPokemonPowerData(pokemon).power;
       let weight = getDraftWeightedChance(power);
@@ -12307,7 +12306,7 @@ function buildDraftWeightedWave(pool, count, excludeDexIds = new Set()) {
   while (picks.length < count) {
     const picked = pickWeightedDraftPokemon(pool, usedDexIds, { heavyThreatCount });
     if (!picked) break;
-    usedDexIds.add(getPokemonSpriteId(picked));
+    usedDexIds.add(getDraftPoolEntryKey(picked));
     picks.push(picked);
     if (getDraftCachedPokemonPowerData(picked).power >= 82) {
       heavyThreatCount += 1;
@@ -12343,7 +12342,7 @@ function fillDraftArenaOptions() {
   const pool = getDraftPoolForGeneration(draftArenaState.selectedGen);
   const excludeDexIds = new Set(draftArenaState.selectedDexIds);
   draftArenaState.options.forEach((option) => {
-    if (option?.pokemon) excludeDexIds.add(getPokemonSpriteId(option.pokemon));
+    if (option?.pokemon) excludeDexIds.add(getDraftPoolEntryKey(option.pokemon));
   });
 
   const missingCount = Math.max(0, DRAFT_PICK_COUNT - draftArenaState.options.length);
@@ -12366,7 +12365,7 @@ function replaceDraftArenaOption(optionIndex) {
   draftArenaState.options = draftArenaState.options.map((option, index) => {
     if (!option?.pokemon) return option;
     if (index === optionIndex) {
-      excludeDexIds.add(getPokemonSpriteId(option.pokemon));
+      excludeDexIds.add(getDraftPoolEntryKey(option.pokemon));
       return createDraftOptionEntry(option.pokemon, true, option.shiny);
     }
     return option;
@@ -12567,7 +12566,7 @@ function buildDraftArenaEnemyTeamEntries(arena, playerEntries = []) {
     playerEntries
       .map((entry) => entry?.pokemon)
       .filter(Boolean)
-      .map((pokemon) => getPokemonSpriteId(pokemon))
+      .map((pokemon) => getDraftPoolEntryKey(pokemon))
   );
   const genPool = getDraftPoolForGeneration(draftArenaState.selectedGen);
   const rawThemedPool = genPool.filter((pokemon) => pokemon?.type1 === arena.type || pokemon?.type2 === arena.type);
@@ -12583,7 +12582,7 @@ function buildDraftArenaEnemyTeamEntries(arena, playerEntries = []) {
     if (!pokemon) return;
     const metrics = getDraftCachedPokemonPowerData(pokemon);
     if (metrics.power > getDraftArenaEnemyPowerCap(arena) + 4) return;
-    const dexId = getPokemonSpriteId(pokemon);
+    const dexId = getDraftPoolEntryKey(pokemon);
     if (usedDexIds.has(dexId)) return;
     usedDexIds.add(dexId);
     picks.push({ pokemon });
@@ -12592,7 +12591,7 @@ function buildDraftArenaEnemyTeamEntries(arena, playerEntries = []) {
   const themedPicks = buildDraftWeightedWave(themedPool, DRAFT_SIMPLE_BATTLE_TEAM_SIZE - picks.length, usedDexIds);
   themedPicks.forEach((pokemon) => {
     if (!pokemon) return;
-    const dexId = getPokemonSpriteId(pokemon);
+    const dexId = getDraftPoolEntryKey(pokemon);
     if (usedDexIds.has(dexId)) return;
     usedDexIds.add(dexId);
     picks.push({ pokemon });
@@ -12602,7 +12601,7 @@ function buildDraftArenaEnemyTeamEntries(arena, playerEntries = []) {
     const fallbackPicks = buildDraftWeightedWave(fallbackPool, DRAFT_SIMPLE_BATTLE_TEAM_SIZE - picks.length, usedDexIds);
     fallbackPicks.forEach((pokemon) => {
       if (!pokemon) return;
-      const dexId = getPokemonSpriteId(pokemon);
+      const dexId = getDraftPoolEntryKey(pokemon);
       if (usedDexIds.has(dexId)) return;
       usedDexIds.add(dexId);
       picks.push({ pokemon });
@@ -12965,7 +12964,7 @@ async function pickDraftArenaOption(pokemonId) {
   const picked = optionIndex >= 0 ? draftArenaState.options[optionIndex] : null;
   if (!picked) return;
 
-  const dexId = getPokemonSpriteId(picked.pokemon);
+  const dexId = getDraftPoolEntryKey(picked.pokemon);
   if (draftArenaState.selectedDexIds.has(dexId)) return;
 
   draftArenaState.team.push({ pokemon: picked.pokemon, shiny: picked.shiny });
@@ -14142,7 +14141,11 @@ function renderProfileScreen() {
     favoriteInput.value = favorite?.name || "";
   }
   if (datalist && !datalist.dataset.ready) {
-    datalist.innerHTML = POKEMON_LIST.slice(0, 1025).map((pokemon) => `<option value="${escapeHtml(pokemon.name)}"></option>`).join("");
+    const names = [...new Set(getPokemonUiList()
+      .map((pokemon) => pokemon?.name)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "fr")))];
+    datalist.innerHTML = names.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("");
     datalist.dataset.ready = "1";
   }
 

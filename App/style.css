@@ -19077,3 +19077,171 @@ body.theme-dark #screen-draft-arena .draft-summary-card b {
     grid-template-columns: 1fr;
   }
 }
+
+/* Shared premium refresh */
+:root {
+  --ui-radius-xl: 24px;
+  --ui-radius-lg: 18px;
+  --ui-radius-md: 14px;
+  --ui-line-soft: rgba(160, 183, 220, 0.34);
+  --ui-shadow-card: 0 18px 42px rgba(18, 39, 72, 0.1);
+  --ui-shadow-card-hover: 0 24px 52px rgba(18, 39, 72, 0.14);
+  --ui-shadow-btn: 0 10px 22px rgba(24, 47, 87, 0.14);
+}
+
+body:not(.theme-dark) .card,
+body:not(.theme-dark) .home-category-card,
+body:not(.theme-dark) .home-priority-card,
+body:not(.theme-dark) .home-progress-card,
+body:not(.theme-dark) .home-generations-card,
+body:not(.theme-dark) .home-universes,
+body:not(.theme-dark) .team-builder-screen-card,
+body:not(.theme-dark) .team-builder-module > .home-builder-head,
+body:not(.theme-dark) .team-builder-module > .home-builder-summary,
+body:not(.theme-dark) .team-builder-module > .home-builder-grid,
+body:not(.theme-dark) .team-builder-module > .home-builder-editor,
+body:not(.theme-dark) .team-builder-module > .team-builder-export,
+body:not(.theme-dark) #screen-draft-arena .draft-panel,
+body:not(.theme-dark) #screen-draft-arena .draft-summary-card,
+body:not(.theme-dark) #screen-draft-arena .draft-option-card,
+body:not(.theme-dark) #screen-draft-arena .draft-team-card {
+  border-color: var(--ui-line-soft) !important;
+  box-shadow: var(--ui-shadow-card) !important;
+}
+
+body:not(.theme-dark) .card:hover,
+body:not(.theme-dark) .home-category-card:hover,
+body:not(.theme-dark) .home-priority-card:hover,
+body:not(.theme-dark) .team-builder-module > .home-builder-grid:hover,
+body:not(.theme-dark) .team-builder-module > .home-builder-editor:hover,
+body:not(.theme-dark) #screen-draft-arena .draft-option-card:hover,
+body:not(.theme-dark) #screen-draft-arena .draft-team-card:hover {
+  box-shadow: var(--ui-shadow-card-hover) !important;
+}
+
+body:not(.theme-dark) .card,
+body:not(.theme-dark) .home-category-card,
+body:not(.theme-dark) .home-priority-card,
+body:not(.theme-dark) .home-universes,
+body:not(.theme-dark) .team-builder-screen-card,
+body:not(.theme-dark) #screen-draft-arena .draft-card,
+body:not(.theme-dark) #screen-draft-arena .draft-panel {
+  border-radius: var(--ui-radius-xl) !important;
+}
+
+body:not(.theme-dark) .card-title,
+body:not(.theme-dark) .home-category-head .card-title,
+body:not(.theme-dark) .home-priority-card h3,
+body:not(.theme-dark) .team-builder-export-head h4,
+body:not(.theme-dark) #screen-draft-arena .draft-panel h3 {
+  color: #16385f !important;
+  letter-spacing: 0.01em;
+}
+
+body:not(.theme-dark) .card-desc,
+body:not(.theme-dark) .home-category-note,
+body:not(.theme-dark) .home-hero-text,
+body:not(.theme-dark) .home-priority-card p,
+body:not(.theme-dark) .team-builder-export-head p,
+body:not(.theme-dark) #screen-draft-arena .draft-card-meta {
+  color: #59718f !important;
+}
+
+body:not(.theme-dark) .ranking-head {
+  gap: 16px;
+  align-items: flex-start;
+}
+
+body:not(.theme-dark) .ranking-head-actions {
+  gap: 10px;
+}
+
+body:not(.theme-dark) .btn-red,
+body:not(.theme-dark) .btn-blue,
+body:not(.theme-dark) .btn-yellow,
+body:not(.theme-dark) .btn-ghost {
+  border-radius: 16px !important;
+  box-shadow: var(--ui-shadow-btn);
+  transition: transform 0.22s var(--ease-ui), box-shadow 0.22s var(--ease-ui), filter 0.22s var(--ease-ui), border-color 0.22s var(--ease-ui), background 0.22s var(--ease-ui);
+}
+
+body:not(.theme-dark) .btn-red:hover,
+body:not(.theme-dark) .btn-blue:hover,
+body:not(.theme-dark) .btn-yellow:hover,
+body:not(.theme-dark) .btn-ghost:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(24, 47, 87, 0.18);
+}
+
+body:not(.theme-dark) .btn-red:focus-visible,
+body:not(.theme-dark) .btn-blue:focus-visible,
+body:not(.theme-dark) .btn-yellow:focus-visible,
+body:not(.theme-dark) .btn-ghost:focus-visible,
+body:not(.theme-dark) button:focus-visible,
+body:not(.theme-dark) select:focus-visible,
+body:not(.theme-dark) input:focus-visible,
+body:not(.theme-dark) textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(67, 136, 255, 0.16), 0 14px 28px rgba(24, 47, 87, 0.16) !important;
+}
+
+body:not(.theme-dark) .btn-ghost {
+  border-color: rgba(173, 198, 236, 0.82) !important;
+  color: #355070 !important;
+}
+
+body:not(.theme-dark) .home-priority-card,
+body:not(.theme-dark) .home-universe-tile,
+body:not(.theme-dark) .home-category-card {
+  backdrop-filter: blur(10px);
+}
+
+body:not(.theme-dark) .home-universe-tile {
+  border-radius: 18px;
+  border: 1px solid rgba(168, 191, 227, 0.42);
+  box-shadow: 0 10px 24px rgba(19, 41, 76, 0.08);
+}
+
+body:not(.theme-dark) .home-universe-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(19, 41, 76, 0.12);
+}
+
+body:not(.theme-dark) .team-builder-export-output,
+body:not(.theme-dark) #team-builder-pokemon-search,
+body:not(.theme-dark) #team-builder-item,
+body:not(.theme-dark) #team-builder-gimmick,
+body:not(.theme-dark) #team-builder-move-1,
+body:not(.theme-dark) #team-builder-move-2,
+body:not(.theme-dark) #team-builder-move-3,
+body:not(.theme-dark) #team-builder-move-4 {
+  border-color: rgba(166, 191, 227, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+body:not(.theme-dark) #screen-team-builder .home-builder-head,
+body:not(.theme-dark) #screen-team-builder .home-builder-summary,
+body:not(.theme-dark) #screen-team-builder .home-builder-grid,
+body:not(.theme-dark) #screen-team-builder .home-builder-editor,
+body:not(.theme-dark) #screen-team-builder .team-builder-export {
+  border-radius: 22px;
+}
+
+body:not(.theme-dark) #screen-draft-arena .draft-progress-shell,
+body:not(.theme-dark) #screen-draft-arena .draft-status {
+  box-shadow: 0 10px 24px rgba(24, 47, 87, 0.08);
+}
+
+body.theme-dark .btn-red,
+body.theme-dark .btn-blue,
+body.theme-dark .btn-yellow,
+body.theme-dark .btn-ghost {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
+body.theme-dark .btn-red:hover,
+body.theme-dark .btn-blue:hover,
+body.theme-dark .btn-yellow:hover,
+body.theme-dark .btn-ghost:hover {
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.28);
+}
