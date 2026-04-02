@@ -6506,13 +6506,27 @@ select:focus-visible {
     rgba(8, 24, 46, 0.96);
   border: 1px solid var(--draft-arena-line);
   box-shadow:
-    0 26px 48px rgba(4, 14, 29, 0.28),
-    0 0 0 9999px rgba(5, 12, 23, 0.42);
+    0 32px 72px rgba(4, 14, 29, 0.38),
+    0 0 0 1px rgba(231, 240, 255, 0.06) inset,
+    0 0 0 9999px rgba(5, 12, 23, 0.5);
   overflow: auto;
+  backdrop-filter: blur(10px) saturate(1.02);
 }
 
 body.draft-battle-open {
   overflow: hidden;
+}
+
+body.draft-battle-open #screen-draft-arena .draft-progress-shell,
+body.draft-battle-open #screen-draft-arena .draft-status,
+body.draft-battle-open #screen-draft-arena .draft-run-summary,
+body.draft-battle-open #screen-draft-arena .draft-badge-grid,
+body.draft-battle-open #screen-draft-arena .draft-arena-list,
+body.draft-battle-open #screen-draft-arena > .card > .ranking-head,
+body.draft-battle-open #screen-draft-arena > .card > .card-desc {
+  opacity: 0.55;
+  filter: saturate(0.82) blur(1.4px);
+  transition: opacity 0.22s ease, filter 0.22s ease;
 }
 
 .draft-dev-battle-panel::before {
@@ -20631,6 +20645,158 @@ body.theme-dark #screen-draft-arena .draft-result-actions .btn-ghost {
 
   #screen-draft-arena .draft-panel {
     padding: 16px !important;
+  }
+}
+
+/* Draft battle area compact readability */
+.draft-dev-battle-panel {
+  inset: 16px;
+  border-radius: 24px;
+}
+
+#draft-dev-battle-body {
+  gap: 10px;
+  min-height: calc(100vh - 116px);
+}
+
+.draft-dev-battle-head {
+  gap: 10px;
+}
+
+.draft-dev-battle-intro {
+  gap: 14px;
+}
+
+.draft-dev-battle-arena-banner.is-intro,
+.draft-dev-battle-arena-banner.is-live {
+  margin-bottom: 6px;
+}
+
+.draft-dev-battle-fighters,
+.draft-dev-battle-meta {
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.draft-dev-battle-fighters {
+  gap: 6px 16px;
+}
+
+.draft-dev-battle-benches {
+  gap: 6px;
+  max-height: 182px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.draft-dev-battle-bench {
+  padding: 8px 9px;
+  border-radius: 16px;
+}
+
+.draft-dev-battle-log {
+  gap: 5px;
+  max-height: 88px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.draft-dev-battle-hp-meta {
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.draft-dev-battle-hp-track {
+  height: 9px;
+}
+
+.draft-dev-battle-actions {
+  margin-bottom: 0;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 16px;
+}
+
+.draft-dev-battle-meta .draft-summary-card {
+  min-height: 56px;
+  padding: 9px 10px;
+  border-radius: 14px;
+}
+
+.draft-dev-battle-move {
+  min-height: 64px;
+  gap: 4px;
+  padding: 9px 10px;
+  border-radius: 13px;
+}
+
+.draft-dev-battle-move-name {
+  font-size: 0.9rem;
+}
+
+.draft-dev-battle-move-meta {
+  gap: 5px;
+}
+
+.draft-dev-battle-move-type,
+.draft-dev-battle-move-power,
+.draft-dev-battle-move-effect {
+  font-size: 0.69rem;
+}
+
+.draft-dev-battle-result {
+  margin-bottom: 0;
+  padding: 9px 11px;
+  gap: 3px;
+  border-radius: 14px;
+  max-height: 118px;
+  overflow: auto;
+}
+
+.draft-dev-battle-switch {
+  max-height: 156px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+@media (max-width: 1100px) and (min-width: 941px) {
+  .draft-dev-battle-panel {
+    inset: 12px;
+  }
+
+  #draft-dev-battle-body {
+    min-height: calc(100vh - 96px);
+    gap: 8px;
+  }
+
+  .draft-dev-battle-fighters {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+  }
+
+  .draft-dev-battle-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .draft-dev-battle-benches {
+    max-height: 156px;
+  }
+
+  .draft-dev-battle-result {
+    max-height: 104px;
+  }
+
+  .draft-dev-battle-switch {
+    max-height: 144px;
+  }
+
+  .draft-dev-battle-actions {
+    padding: 8px 9px;
+  }
+
+  .draft-dev-battle-move {
+    min-height: 60px;
+    padding: 8px 9px;
   }
 }
 

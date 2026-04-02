@@ -8273,6 +8273,7 @@ let draftSimpleBattleDevUiState = null;
 let draftSimpleBattleIntroTimer = null;
 let draftSimpleBattleTurnTimer = null;
 let draftSimpleBattleReplayTimer = null;
+let draftSimpleBattleAutoScrollFrame = null;
 
 function clampDraftSimpleBattleHp(value) {
   return Math.max(1, Math.round(Number(value) || 1));
@@ -11320,10 +11321,27 @@ function ensureDraftSimpleBattleDevPanel() {
   return panel;
 }
 
+function scrollToDraftSimpleBattlePanel(panel) {
+  if (!panel) return;
+  if (draftSimpleBattleAutoScrollFrame) {
+    cancelAnimationFrame(draftSimpleBattleAutoScrollFrame);
+  }
+  draftSimpleBattleAutoScrollFrame = requestAnimationFrame(() => {
+    draftSimpleBattleAutoScrollFrame = null;
+    if (!panel.isConnected || panel.classList.contains("hidden")) return;
+    panel.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "nearest",
+    });
+  });
+}
+
 function renderDraftSimpleBattleDevPanel(state) {
   const panel = ensureDraftSimpleBattleDevPanel();
   const body = document.getElementById("draft-dev-battle-body");
   if (!panel || !body || !state) return;
+  const shouldAutoScroll = panel.classList.contains("hidden");
   document.body.classList.add("draft-battle-open");
   const heading = panel.querySelector(".draft-dev-battle-head h3");
   if (heading) heading.textContent = state.title || "Combat Draft";
@@ -11776,6 +11794,9 @@ function renderDraftSimpleBattleDevPanel(state) {
   `;
 
   panel.classList.remove("hidden");
+  if (shouldAutoScroll) {
+    scrollToDraftSimpleBattlePanel(panel);
+  }
 }
 
 function clearDraftSimpleBattleDevPanel() {
@@ -11786,6 +11807,10 @@ function clearDraftSimpleBattleDevPanel() {
   if (draftSimpleBattleTurnTimer) {
     clearTimeout(draftSimpleBattleTurnTimer);
     draftSimpleBattleTurnTimer = null;
+  }
+  if (draftSimpleBattleAutoScrollFrame) {
+    cancelAnimationFrame(draftSimpleBattleAutoScrollFrame);
+    draftSimpleBattleAutoScrollFrame = null;
   }
   clearDraftSimpleBattleReplay();
   if (draftSimpleBattleDevUiState) {
