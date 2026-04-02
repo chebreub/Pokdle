@@ -7567,12 +7567,13 @@ function renderPokedexGrid() {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "pokedex-card" + (p.id === pokedexSelectedId ? " selected" : "");
+    card.dataset.pokemonId = String(p.id);
 
     const dexId = getPokemonSpriteId(p);
     const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
 
     card.innerHTML = `
-      <img src="${sprite}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
+      <img src="${sprite}" alt="${p.name}" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
       <span class="pokedex-num">#${dexId}</span>
       <strong>${p.name}</strong>
     `;
@@ -7580,13 +7581,22 @@ function renderPokedexGrid() {
     card.addEventListener("click", () => {
       pokedexSelectedId = p.id;
       pokedexSelectedShiny = false;
-      renderPokedexGrid();
+      updatePokedexGridSelection();
+      renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || p);
     });
-
     grid.appendChild(card);
   }
 
   renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || list[0]);
+}
+
+function updatePokedexGridSelection() {
+  const grid = document.getElementById("pokedex-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".pokedex-card");
+  cards.forEach((card) => {
+    card.classList.toggle("selected", Number(card.dataset.pokemonId) === Number(pokedexSelectedId));
+  });
 }
 
 async function renderPokedexDetail(pokemon) {
@@ -10405,6 +10415,47 @@ function getDraftSimpleBattleNetworkTurnHint(state) {
   return "L’autre joueur est en train de choisir son action.";
 }
 
+function restoreDraftSimpleBattleInteractivePrompt(state) {
+  if (!state || state.phase === "finished" || state.turnState === "hotseat-transition" || state.visualReplay?.active) return state;
+
+  const isNetwork = isDraftSimpleBattleNetworkMode(state);
+  const localSide = getDraftSimpleBattleNetworkLocalSide(state);
+  const currentActionSide = getDraftSimpleBattleCurrentActionSide(state);
+  const network = getDraftSimpleBattleNetworkMeta(state);
+
+  if (state.pendingSwitch) {
+    const switchSide = state.pendingSwitchSide || "left";
+    state.sceneMessage = !isNetwork || switchSide === localSide
+      ? "Choisis le Pokémon à envoyer pour reprendre le combat."
+      : "En attente du choix de remplaçant de l’autre joueur.";
+    return state;
+  }
+
+  if (state.turnState === "resolving" || network.resolvingTurn) {
+    state.sceneMessage = "Résolution du tour en cours.";
+    return state;
+  }
+
+  if (network.waitingRemote) {
+    state.sceneMessage = "Action enregistrée. En attente de l’autre joueur.";
+    return state;
+  }
+
+  if (!currentActionSide) return state;
+
+  if (!isNetwork) {
+    state.sceneMessage = currentActionSide === "right"
+      ? "Joueur droite : choisis l’action suivante."
+      : "Joueur gauche : choisis l’action suivante.";
+    return state;
+  }
+
+  state.sceneMessage = currentActionSide === localSide
+    ? "À toi de jouer : choisis ton action."
+    : "L’autre joueur est en train de choisir son action.";
+  return state;
+}
+
 function submitDraftSimpleBattleNetworkAction(state, side, action, options = {}) {
   const socket = ensureMultiplayerSocket();
   const network = getDraftSimpleBattleNetworkMeta(state);
@@ -10508,6 +10559,9 @@ function handleDraftSimpleBattleNetworkRoomState(roomState) {
   nextState.title = roomState?.code ? `Draft Combat 1v1 • ${roomState.code}` : (nextState.title || "Draft Combat 1v1");
   draftSimpleBattleDevUiState = nextState;
   document.getElementById("draft-battle-close")?.classList.remove("hidden");
+  if (!((nextState.log?.length || 0) > previousLogLength)) {
+    restoreDraftSimpleBattleInteractivePrompt(nextState);
+  }
   renderDraftSimpleBattleDevPanel(nextState);
   if ((nextState.log?.length || 0) > previousLogLength) {
     startDraftSimpleBattleTurnReplay(nextState, nextState.log[nextState.log.length - 1]);
@@ -10541,6 +10595,9 @@ function handleDraftSimpleBattleNetworkBattleState(payload = {}) {
     ensureDraftSimpleBattleNetworkSession().room.resolvingReplacement = null;
   }
   draftSimpleBattleDevUiState = nextState;
+  if (!((nextState.log?.length || 0) > previousLogLength)) {
+    restoreDraftSimpleBattleInteractivePrompt(nextState);
+  }
   renderDraftSimpleBattleDevPanel(nextState);
   if ((nextState.log?.length || 0) > previousLogLength) {
     startDraftSimpleBattleTurnReplay(nextState, nextState.log[nextState.log.length - 1]);
@@ -10926,6 +10983,7 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
     renderDraftSimpleBattleDevPanel(state);
     if (nextCount >= turnEntry.actions.length) {
       state.visualReplay.active = false;
+      restoreDraftSimpleBattleInteractivePrompt(state);
       draftSimpleBattleReplayTimer = null;
       renderDraftSimpleBattleDevPanel(state);
       return;
