@@ -53,9 +53,9 @@
 
       <section class="home-hero card">
         <div class="home-hero-copy">
-          <div class="home-hero-kicker">Pokdle 2026</div>
+          <div class="home-hero-kicker">Pokédle 2026</div>
           <h2 class="home-hero-title">Une porte d’entrée claire pour jouer, défier un ami et construire ta progression.</h2>
-          <p class="home-hero-text">L’accueil met l’essentiel en avant. Les autres modes, outils et écrans restent accessibles via les univers du site, sans te noyer dès la première vue.</p>
+          <p class="home-hero-text">Va à l’essentiel dès l’accueil, puis retrouve les autres modes et outils via les univers du site.</p>
           <div class="home-hero-actions">
             <button class="btn-red home-hero-cta" onclick="scrollToHomeCategory('play')">Jouer</button>
             <button class="btn-blue" type="button" onclick="scrollToHomeCategory('social')">Défier un ami</button>
@@ -83,7 +83,7 @@
         <article class="card home-priority-card home-priority-card-play">
           <span class="home-priority-kicker">01</span>
           <h3>Jouer</h3>
-          <p>Va droit au jeu principal ou ouvre un autre mode sans surcharger l’accueil.</p>
+          <p>Lance une partie tout de suite ou ouvre un autre mode en un clic.</p>
           <div class="home-priority-actions">
             <button class="btn-red" onclick="startNormalGame()">Pokémon mystère</button>
             <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('play')">Voir plus</button>
@@ -92,25 +92,25 @@
         <article class="card home-priority-card home-priority-card-social">
           <span class="home-priority-kicker">02</span>
           <h3>Défier un ami</h3>
-          <p>Crée un duel live, envoie un défi ou lance Stat Clash 1v1.</p>
+          <p>Crée un duel, envoie un défi ou lance un face-à-face rapide.</p>
           <div class="home-priority-actions">
             <button class="btn-blue" onclick="openMultiplayerMode()">Duel live 1v1</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('social')">Ouvrir Social</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('social')">Social</button>
           </div>
         </article>
         <article class="card home-priority-card home-priority-card-lab">
           <span class="home-priority-kicker">03</span>
           <h3>Champions Lab</h3>
-          <p>Prépare une équipe, ouvre tes outils et avance vers les formats plus sérieux.</p>
+          <p>Prépare ta team et garde tes outils stratégiques à portée de main.</p>
           <div class="home-priority-actions">
             <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Team Builder</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Explorer</button>
+            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
           </div>
         </article>
         <article class="card home-priority-card home-priority-card-progress">
           <span class="home-priority-kicker">04</span>
           <h3>Continuer la progression</h3>
-          <p>Retrouve tes stats, tes succès et ton Pokédex sans changer de logique de navigation.</p>
+          <p>Retrouve ton profil, tes succès et ton Pokédex dans le même espace.</p>
           <div class="home-priority-actions">
             <button class="btn-blue" type="button" onclick="openProfileScreen()">Profil</button>
             <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('collection')">Collection</button>
@@ -118,11 +118,11 @@
         </article>
       </section>
 
-      <section class="card home-universes" aria-label="Univers Pokdle">
+      <section class="card home-universes" aria-label="Univers Pokédle">
         <div class="home-section-head">
           <div>
             <h2 class="card-title">Univers</h2>
-            <p class="card-desc">Six espaces clairs pour circuler dans Pokdle sans tout afficher en même temps.</p>
+            <p class="card-desc">Six univers clairs pour naviguer dans Pokédle sans surcharger l’accueil.</p>
           </div>
         </div>
         <div class="home-universes-grid">
@@ -181,7 +181,7 @@
           </div>
           <p class="home-category-note">Les mini-défis et variantes sociales restent accessibles ensuite, sans encombrer l’accueil.</p>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Créer un duel</button>
+            <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Duel live 1v1</button>
             <button class="btn-red" onclick="openStatClashMode()"><span class="btn-icon">📊</span>Stat Clash 1v1</button>
             <button class="btn-yellow" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
           </div>
@@ -197,7 +197,7 @@
           </div>
           <p class="home-category-note">Le cœur du lab reste ici, sans mélanger toute la boîte à outils à la home principale.</p>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Ouvrir le builder</button>
+            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Team Builder</button>
             <button class="btn-ghost" type="button" onclick="openTeamsScreen()"><span class="btn-icon">📚</span>Mes teams</button>
           </div>
         </article>
@@ -487,8 +487,8 @@
         <div class="home-coming-tile home-builder-v1 team-builder-module">
           <div class="home-builder-head">
             <div>
-              <span class="home-coming-title">Builder d’équipe v1</span>
-              <p class="home-builder-note">Pose ta team ici, un slot à la fois. C’est une base simple, prête à être enrichie ensuite.</p>
+              <span class="home-coming-title">Builder d’équipe</span>
+              <p class="home-builder-note">Pose ta team ici, un slot à la fois, avec une lecture claire et immédiate.</p>
             </div>
             <span class="home-coming-badge">Local</span>
           </div>
@@ -497,13 +497,13 @@
           <div class="home-builder-editor">
             <div class="home-builder-editor-head">
               <h4 id="team-builder-editor-title">Slot 1</h4>
-              <p id="team-builder-editor-sub">Clique un slot pour l’éditer.</p>
+              <p id="team-builder-editor-sub">Sélectionne un slot pour l’éditer.</p>
               <div id="team-builder-editor-identity" class="team-builder-editor-identity" aria-live="polite"></div>
             </div>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
                 <h5>Pokémon</h5>
-                <p>Choisis le Pokémon du slot et garde une lecture simple de sa base.</p>
+                <p>Choisis le Pokémon du slot en gardant une lecture claire de sa base.</p>
               </div>
               <div class="home-builder-fields team-builder-fields-single">
                 <div class="home-type-helper-label team-builder-pokemon-picker">
@@ -526,7 +526,7 @@
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
                 <h5>Set</h5>
-                <p>Objet, gimmick et attaques du slot, regroupés dans une seule zone claire.</p>
+                <p>Objet, gimmick et attaques réunis dans une seule zone claire.</p>
               </div>
               <div class="home-builder-fields">
                 <label class="home-type-helper-label" for="team-builder-item">
@@ -545,7 +545,7 @@
                     <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 0)">Vider</button>
                   </span>
                   <select id="team-builder-move-1"></select>
-                  <small class="team-builder-move-state" id="team-builder-move-state-1">Slot vide</small>
+                  <small class="team-builder-move-state" id="team-builder-move-state-1">Aucune attaque</small>
                 </label>
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-2" id="team-builder-move-field-2">
                   <span class="team-builder-move-label-row">
@@ -553,7 +553,7 @@
                     <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 1)">Vider</button>
                   </span>
                   <select id="team-builder-move-2"></select>
-                  <small class="team-builder-move-state" id="team-builder-move-state-2">Slot vide</small>
+                  <small class="team-builder-move-state" id="team-builder-move-state-2">Aucune attaque</small>
                 </label>
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-3" id="team-builder-move-field-3">
                   <span class="team-builder-move-label-row">
@@ -561,7 +561,7 @@
                     <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 2)">Vider</button>
                   </span>
                   <select id="team-builder-move-3"></select>
-                  <small class="team-builder-move-state" id="team-builder-move-state-3">Slot vide</small>
+                  <small class="team-builder-move-state" id="team-builder-move-state-3">Aucune attaque</small>
                 </label>
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-4" id="team-builder-move-field-4">
                   <span class="team-builder-move-label-row">
@@ -569,14 +569,14 @@
                     <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 3)">Vider</button>
                   </span>
                   <select id="team-builder-move-4"></select>
-                  <small class="team-builder-move-state" id="team-builder-move-state-4">Slot vide</small>
+                  <small class="team-builder-move-state" id="team-builder-move-state-4">Aucune attaque</small>
                 </label>
               </div>
             </section>
             <section class="team-builder-editor-section team-builder-strategic">
               <div class="team-builder-editor-section-head">
                 <h4>Réglages stratégiques</h4>
-                <p>Des réglages simples et guidés pour préparer le slot sans alourdir le builder.</p>
+                <p>Des réglages guidés pour préparer le slot sans l’alourdir.</p>
               </div>
               <div class="team-builder-strategic-grid">
                 <label class="home-type-helper-label" for="team-builder-nature">
@@ -612,16 +612,16 @@
                 <label class="home-type-helper-label" for="team-builder-iv-spd"><span>IV Déf. Spé.</span><input id="team-builder-iv-spd" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
                 <label class="home-type-helper-label" for="team-builder-iv-spe"><span>IV Vit.</span><input id="team-builder-iv-spe" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
               </div>
-              <p class="home-builder-footnote">EV guidés par presets, ou en custom si besoin. Les IV servent surtout à affiner un slot précis.</p>
+              <p class="home-builder-footnote">EV guidés par preset, ou en custom si besoin. Les IV servent surtout à affiner un slot précis.</p>
             </section>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
                 <h5>Stats finales</h5>
-                <p>Lecture rapide du résultat du slot avec sa nature, ses EV et ses IV.</p>
+                <p>Lecture rapide du slot final avec sa nature, ses EV et ses IV.</p>
               </div>
               <div id="team-builder-computed-stats" class="team-builder-computed-stats" aria-live="polite"></div>
             </section>
-            <p class="home-builder-footnote">Base simple, sauvegardée localement. Les attaques sont priorisées selon le Pokémon choisi, puis le builder pourra être enrichi ensuite avec de vrais movepools et des synergies.</p>
+            <p class="home-builder-footnote">Sauvegarde locale et édition fluide. Les attaques sont priorisées selon le Pokémon choisi pour garder une préparation rapide et lisible.</p>
           </div>
           <div class="team-builder-export">
             <div class="team-builder-export-head">
@@ -641,7 +641,7 @@
             <div class="team-builder-export-head">
               <div>
                 <h4>Import rapide</h4>
-                <p>Colle une team texte simple pour remplir automatiquement le builder.</p>
+                <p>Colle une team texte pour remplir le builder automatiquement.</p>
               </div>
               <span class="home-coming-badge">Texte</span>
             </div>
@@ -750,7 +750,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
             </div>
           </div>
-        <p class="card-desc">Choisis une génération, drafte 6 Pokémon (6 choix aléatoires à chaque tour), puis vois quels badges ton équipe peut obtenir.</p>
+        <p class="card-desc">Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut viser.</p>
 
         <div class="draft-progress draft-progress-shell">
           <span id="draft-gen-badge" class="tag-gen">Génération : -</span>
@@ -759,7 +759,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="draft-badge-count" class="tag-tries">Badges : 0 / 8</span>
         </div>
 
-        <p id="draft-status" class="draft-status">Choisis une génération pour commencer le draft.</p>
+        <p id="draft-status" class="draft-status">Choisis une génération pour lancer le draft.</p>
         <div id="draft-run-bar" class="draft-run-bar"></div>
 
         <section class="draft-panel draft-panel-gen">
@@ -781,7 +781,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <section id="draft-result-wrap" class="draft-panel draft-panel-results hidden">
           <h3>3) Résultats des arènes</h3>
           <div class="draft-result-actions">
-            <button id="draft-detail-toggle" class="btn-ghost" type="button" onclick="toggleDraftDetailAnalysis()">Voir l'analyse détaillée</button>
+            <button id="draft-detail-toggle" class="btn-ghost" type="button" onclick="toggleDraftDetailAnalysis()">Voir l’analyse détaillée</button>
           </div>
           <div id="draft-run-summary" class="draft-run-summary"></div>
           <div id="draft-badge-grid" class="draft-badge-grid"></div>
