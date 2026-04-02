@@ -7053,6 +7053,7 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 .draft-dev-battle-scene-note b {
   color: #f7fbff;
   font-size: 0.82rem;
+  letter-spacing: 0.01em;
 }
 
 .draft-dev-battle-scene-note span {
@@ -7068,14 +7069,24 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 
 .draft-dev-battle-scene-note.is-player {
   border-color: rgba(98, 158, 255, 0.32);
+  background:
+    radial-gradient(circle at left center, rgba(93, 161, 255, 0.14), transparent 42%),
+    rgba(20, 53, 101, 0.44);
+  box-shadow:
+    0 0 0 1px rgba(98, 158, 255, 0.14) inset,
+    0 12px 26px rgba(16, 48, 96, 0.18);
 }
 
 .draft-dev-battle-scene-note.is-enemy {
   border-color: rgba(255, 179, 99, 0.32);
+  background: rgba(57, 37, 17, 0.34);
 }
 
 .draft-dev-battle-scene-note.is-switch {
   border-color: rgba(255, 216, 116, 0.32);
+  background:
+    radial-gradient(circle at left center, rgba(255, 221, 118, 0.12), transparent 40%),
+    rgba(74, 56, 16, 0.34);
 }
 
 .draft-dev-battle-scene-note.is-finished {
@@ -7249,10 +7260,16 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   padding: 12px;
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
-    rgba(8, 24, 46, 0.34);
-  border: 1px solid rgba(168, 197, 239, 0.1);
-  box-shadow: 0 12px 24px rgba(8, 20, 36, 0.1);
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)),
+    rgba(8, 24, 46, 0.4);
+  border: 1px solid rgba(182, 208, 246, 0.16);
+  box-shadow: 0 14px 28px rgba(8, 20, 36, 0.13);
+}
+
+.draft-dev-battle-actions .card-desc {
+  grid-column: 1 / -1;
+  color: rgba(229, 240, 255, 0.88);
+  font-weight: 800;
 }
 
 .draft-dev-battle-meta {
@@ -7317,32 +7334,43 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   border-radius: 14px;
   padding: 11px 12px;
   background: linear-gradient(180deg, rgba(75, 137, 245, 0.96), rgba(48, 101, 214, 0.92));
-  border: 1px solid rgba(189, 215, 255, 0.14);
-  box-shadow: 0 10px 18px rgba(8, 20, 36, 0.08);
+  border: 1px solid rgba(210, 227, 255, 0.22);
+  box-shadow: 0 12px 22px rgba(8, 20, 36, 0.12);
   transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease, opacity 0.16s ease;
 }
 
 .draft-dev-battle-move:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(8, 20, 36, 0.16);
+  box-shadow: 0 16px 28px rgba(8, 20, 36, 0.18);
   filter: saturate(1.05);
+}
+
+.draft-dev-battle-move:focus-visible {
+  outline: none;
+  border-color: rgba(255, 230, 146, 0.92);
+  box-shadow:
+    0 0 0 3px rgba(255, 225, 116, 0.22),
+    0 18px 30px rgba(8, 20, 36, 0.2);
+  filter: saturate(1.08) brightness(1.02);
 }
 
 .draft-dev-battle-move-name {
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.97rem;
+  color: #f9fbff;
 }
 
 .draft-dev-battle-move-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  opacity: 0.95;
 }
 
 .draft-dev-battle-move-type,
 .draft-dev-battle-move-power {
   color: rgba(239, 246, 255, 0.92);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -7354,7 +7382,7 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 }
 
 .draft-dev-battle-move-effect {
-  font-size: 0.73rem;
+  font-size: 0.71rem;
   font-weight: 800;
   line-height: 1.1;
   opacity: 0.96;
@@ -7377,14 +7405,18 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 }
 
 .draft-dev-battle-move:disabled {
-  opacity: 0.44;
-  cursor: default;
+  opacity: 0.5;
+  cursor: not-allowed;
   box-shadow: none;
-  filter: grayscale(0.08);
+  filter: grayscale(0.14) saturate(0.88);
+  border-color: rgba(210, 227, 255, 0.08);
 }
 
 .draft-dev-battle-move:active:not(:disabled) {
-  transform: translateY(1px) scale(0.995);
+  transform: translateY(1px) scale(0.99);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    0 8px 16px rgba(8, 20, 36, 0.12);
 }
 
 .draft-dev-battle-result {
@@ -7400,11 +7432,13 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 
 .draft-dev-battle-result b {
   color: #f7fbff;
+  font-size: 0.92rem;
 }
 
 .draft-dev-battle-result span {
   color: #d9e9ff;
   font-weight: 600;
+  line-height: 1.35;
 }
 
 .draft-dev-battle-result.is-finished {
@@ -7467,21 +7501,34 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 .draft-dev-battle-status.is-player {
   border-color: rgba(98, 158, 255, 0.42);
   background: rgba(41, 99, 196, 0.32);
+  box-shadow: 0 0 0 1px rgba(98, 158, 255, 0.12) inset;
 }
 
 .draft-dev-battle-status.is-enemy {
   border-color: rgba(255, 179, 99, 0.42);
   background: rgba(174, 99, 31, 0.28);
+  opacity: 0.92;
 }
 
 .draft-dev-battle-status.is-switch {
   border-color: rgba(255, 216, 116, 0.42);
   background: rgba(170, 132, 34, 0.28);
+  box-shadow: 0 0 0 1px rgba(255, 216, 116, 0.12) inset;
 }
 
 .draft-dev-battle-status.is-finished {
   border-color: rgba(114, 220, 146, 0.42);
   background: rgba(35, 116, 67, 0.3);
+}
+
+.draft-dev-battle-status.is-player b,
+.draft-dev-battle-status.is-switch b {
+  color: #fdfefe;
+}
+
+.draft-dev-battle-status.is-enemy span,
+.draft-dev-battle-status.is-finished span {
+  opacity: 0.9;
 }
 
 .draft-dev-battle-switch {
@@ -7492,6 +7539,8 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   background: rgba(82, 61, 14, 0.22);
   display: grid;
   gap: 10px;
+  min-height: 78px;
+  align-content: start;
 }
 
 .draft-dev-battle-switch b {
@@ -7519,6 +7568,11 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   text-align: left;
 }
 
+.draft-dev-battle-switch-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 225, 116, 0.18);
+}
+
 .draft-dev-battle-switch-btn small {
   color: #d9e8ff;
   font-weight: 700;
@@ -7535,6 +7589,8 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   border: 1px solid rgba(157, 192, 245, 0.1);
   border-radius: 14px;
   padding: 9px 11px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  min-height: 78px;
 }
 
 .draft-dev-battle-turn-head {
@@ -7557,7 +7613,7 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 
 .draft-dev-battle-feed-list {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .draft-dev-battle-feed-item {
@@ -7565,25 +7621,28 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   gap: 5px;
   padding: 8px 10px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(168, 197, 239, 0.08);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(168, 197, 239, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .draft-dev-battle-feed-item.is-attack {
-  border-color: rgba(98, 158, 255, 0.14);
+  border-color: rgba(98, 158, 255, 0.18);
+  background: linear-gradient(180deg, rgba(77, 131, 216, 0.12), rgba(255,255,255,0.035));
 }
 
 .draft-dev-battle-feed-item.is-status,
 .draft-dev-battle-feed-item.is-residual {
-  border-color: rgba(255, 216, 116, 0.16);
+  border-color: rgba(255, 216, 116, 0.18);
 }
 
 .draft-dev-battle-feed-item.is-switch {
-  border-color: rgba(123, 213, 168, 0.16);
+  border-color: rgba(123, 213, 168, 0.2);
+  background: linear-gradient(180deg, rgba(88, 171, 129, 0.11), rgba(255,255,255,0.03));
 }
 
 .draft-dev-battle-feed-item.is-miss {
-  border-color: rgba(255, 173, 173, 0.16);
+  border-color: rgba(255, 173, 173, 0.2);
 }
 
 .draft-dev-battle-feed-head {
@@ -7595,7 +7654,7 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 
 .draft-dev-battle-feed-head strong {
   color: #f4f8ff;
-  font-size: 0.83rem;
+  font-size: 0.84rem;
 }
 
 .draft-dev-battle-feed-head span {
@@ -7609,7 +7668,7 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   color: #dce8fb;
   font-size: 0.82rem;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.42;
 }
 
 .draft-dev-battle-feed-tags {
@@ -20696,6 +20755,7 @@ body.theme-dark #screen-draft-arena .draft-result-actions .btn-ghost {
 
 .draft-dev-battle-log {
   gap: 5px;
+  min-height: 76px;
   max-height: 88px;
   overflow: auto;
   padding-right: 2px;
@@ -20715,6 +20775,8 @@ body.theme-dark #screen-draft-arena .draft-result-actions .btn-ghost {
   gap: 6px;
   padding: 9px 10px;
   border-radius: 16px;
+  min-height: 146px;
+  align-content: start;
 }
 
 .draft-dev-battle-meta .draft-summary-card {
@@ -20749,11 +20811,13 @@ body.theme-dark #screen-draft-arena .draft-result-actions .btn-ghost {
   padding: 9px 11px;
   gap: 3px;
   border-radius: 14px;
+  min-height: 86px;
   max-height: 118px;
   overflow: auto;
 }
 
 .draft-dev-battle-switch {
+  min-height: 74px;
   max-height: 156px;
   overflow: auto;
   padding-right: 4px;
@@ -20783,14 +20847,17 @@ body.theme-dark #screen-draft-arena .draft-result-actions .btn-ghost {
   }
 
   .draft-dev-battle-result {
+    min-height: 78px;
     max-height: 104px;
   }
 
   .draft-dev-battle-switch {
+    min-height: 70px;
     max-height: 144px;
   }
 
   .draft-dev-battle-actions {
+    min-height: 132px;
     padding: 8px 9px;
   }
 
