@@ -330,7 +330,7 @@
             <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Personnalise ton profil local et consulte ton résumé de progression.</p>
+        <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
 
         <div class="profile-layout">
           <section class="profile-panel">
@@ -341,7 +341,7 @@
             </label>
             <label class="profile-field">
               <span>Pokémon favori</span>
-              <input id="profile-favorite-input" type="text" list="profile-favorite-options" placeholder="Choisis un Pokémon..." autocomplete="off" />
+              <input id="profile-favorite-input" type="text" list="profile-favorite-options" placeholder="Choisis ton Pokémon favori..." autocomplete="off" />
               <datalist id="profile-favorite-options"></datalist>
             </label>
             <p id="profile-save-msg" class="card-desc hidden">Profil enregistré.</p>
@@ -389,7 +389,7 @@
             <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Débloque des objectifs en jouant et suis ta progression.</p>
+        <p class="card-desc">Débloque des objectifs en jouant et suis ta progression en un coup d’œil.</p>
         <div id="achievements-summary" class="achievements-summary"></div>
         <div id="achievements-list" class="achievements-list"></div>
       </div>
@@ -402,7 +402,7 @@
             <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Retrouve tes dernières parties avec le mode joué, le résultat, les essais et le Pokémon cible si disponible.</p>
+        <p class="card-desc">Retrouve tes dernières parties avec le mode, le résultat, les essais et le Pokémon cible quand il est disponible.</p>
         <div class="match-history-toolbar">
           <label for="match-history-filter">Filtrer par mode</label>
           <select id="match-history-filter"></select>
@@ -418,7 +418,7 @@
             <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Consulte tous les Pokémon disponibles, filtre par nom, génération et type.</p>
+        <p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p>
 
         <div class="pokedex-toolbar">
           <input id="pokedex-search" type="text" placeholder="Rechercher un Pokémon..." autocomplete="off" />
@@ -433,7 +433,7 @@
         <div class="pokedex-layout">
           <div id="pokedex-grid" class="pokedex-grid"></div>
           <aside id="pokedex-detail" class="pokedex-detail">
-            <p class="card-desc">Clique un Pokémon pour afficher sa fiche.</p>
+            <p class="card-desc">Sélectionne un Pokémon pour afficher sa fiche.</p>
           </aside>
         </div>
       </div>
@@ -483,12 +483,12 @@
             <button class="btn-ghost" type="button" onclick="goToConfig()">← Retour</button>
           </div>
         </div>
-        <p class="card-desc">Construis une base de team de 6, avec Pokémon, objet tenu, gimmick et 4 attaques par slot. Le tout est sauvegardé en local.</p>
+        <p class="card-desc">Compose une équipe de 6 avec Pokémon, objet tenu, gimmick et 4 attaques par slot. La sauvegarde reste locale.</p>
         <div class="home-coming-tile home-builder-v1 team-builder-module">
           <div class="home-builder-head">
             <div>
               <span class="home-coming-title">Builder d’équipe</span>
-              <p class="home-builder-note">Pose ta team ici, un slot à la fois, avec une lecture claire et immédiate.</p>
+              <p class="home-builder-note">Construis ta team un slot à la fois, avec une lecture claire et immédiate.</p>
             </div>
             <span class="home-coming-badge">Local</span>
           </div>
@@ -503,7 +503,7 @@
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
                 <h5>Pokémon</h5>
-                <p>Choisis le Pokémon du slot en gardant une lecture claire de sa base.</p>
+                <p>Choisis le Pokémon du slot avec une lecture simple de son profil.</p>
               </div>
               <div class="home-builder-fields team-builder-fields-single">
                 <div class="home-type-helper-label team-builder-pokemon-picker">
@@ -526,7 +526,7 @@
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
                 <h5>Set</h5>
-                <p>Objet, gimmick et attaques réunis dans une seule zone claire.</p>
+                <p>Objet, gimmick et attaques réunis dans une seule zone lisible.</p>
               </div>
               <div class="home-builder-fields">
                 <label class="home-type-helper-label" for="team-builder-item">
@@ -576,7 +576,7 @@
             <section class="team-builder-editor-section team-builder-strategic">
               <div class="team-builder-editor-section-head">
                 <h4>Réglages stratégiques</h4>
-                <p>Des réglages guidés pour préparer le slot sans l’alourdir.</p>
+                <p>Des réglages guidés pour préparer le slot sans alourdir l’édition.</p>
               </div>
               <div class="team-builder-strategic-grid">
                 <label class="home-type-helper-label" for="team-builder-nature">
@@ -612,7 +612,7 @@
                 <label class="home-type-helper-label" for="team-builder-iv-spd"><span>IV Déf. Spé.</span><input id="team-builder-iv-spd" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
                 <label class="home-type-helper-label" for="team-builder-iv-spe"><span>IV Vit.</span><input id="team-builder-iv-spe" type="number" min="0" max="31" step="1" inputmode="numeric" /></label>
               </div>
-              <p class="home-builder-footnote">EV guidés par preset, ou en custom si besoin. Les IV servent surtout à affiner un slot précis.</p>
+              <p class="home-builder-footnote">Choisis un preset EV, ou affine le slot en réglage manuel si besoin. Les IV servent à peaufiner un set précis.</p>
             </section>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
@@ -621,13 +621,13 @@
               </div>
               <div id="team-builder-computed-stats" class="team-builder-computed-stats" aria-live="polite"></div>
             </section>
-            <p class="home-builder-footnote">Sauvegarde locale et édition fluide. Les attaques sont priorisées selon le Pokémon choisi pour garder une préparation rapide et lisible.</p>
+            <p class="home-builder-footnote">Édition fluide et sauvegarde locale. Les attaques sont proposées en priorité selon le Pokémon choisi pour garder une préparation rapide et lisible.</p>
           </div>
           <div class="team-builder-export">
             <div class="team-builder-export-head">
               <div>
                 <h4>Export rapide</h4>
-                <p>Copie ta team au format texte pour la garder, la partager ou la retravailler ailleurs.</p>
+                <p>Copie ta team au format texte pour la partager ou la retravailler ailleurs.</p>
               </div>
               <span id="team-builder-export-meta" class="home-coming-badge">0 Pokémon</span>
             </div>
@@ -750,7 +750,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
             </div>
           </div>
-        <p class="card-desc">Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut viser.</p>
+        <p class="card-desc">Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser.</p>
 
         <div class="draft-progress draft-progress-shell">
           <span id="draft-gen-badge" class="tag-gen">Génération : -</span>
@@ -759,7 +759,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="draft-badge-count" class="tag-tries">Badges : 0 / 8</span>
         </div>
 
-        <p id="draft-status" class="draft-status">Choisis une génération pour lancer le draft.</p>
+        <p id="draft-status" class="draft-status">Choisis une génération pour commencer la draft.</p>
         <div id="draft-run-bar" class="draft-run-bar"></div>
 
         <section class="draft-panel draft-panel-gen">
@@ -1052,7 +1052,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <button class="btn-ghost" onclick="leaveMultiplayerRoom()">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Crée une room, partage le code et affronte un ami sur le même Pokémon mystère. Idéal pour un duel rapide ou un défi entre collègues.</p>
+        <p class="card-desc">Crée une room, partage le code et affronte un ami sur le même Pokémon mystère. Parfait pour un duel rapide et lisible.</p>
 
         <div class="multiplayer-status-row">
           <span id="multiplayer-connection-status" class="tag-gen">Hors ligne</span>
@@ -1065,7 +1065,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="multiplayer-gen-panel-head">
             <div>
               <h3>Générations de la room</h3>
-              <p id="multiplayer-help" class="card-desc">Choisis les générations directement ici. Si tu rejoues sans rien changer, la même sélection est conservée.</p>
+              <p id="multiplayer-help" class="card-desc">Choisis ici les générations de la room. Si tu relances sans rien changer, la sélection est conservée.</p>
             </div>
             <p id="multiplayer-gen-summary" class="card-desc">Générations actives : —</p>
           </div>
@@ -1075,7 +1075,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="multiplayer-shell">
           <section class="multiplayer-setup card-slim">
             <h3>Connexion</h3>
-            <p class="multiplayer-setup-intro">Entre un pseudo, puis crée une room ou rejoins-en une avec un code.</p>
+            <p class="multiplayer-setup-intro">Choisis un pseudo, puis crée une room ou rejoins-en une avec un code.</p>
             <label class="profile-field">
               <span>Pseudo</span>
               <input id="multiplayer-nickname" type="text" maxlength="24" placeholder="Ton pseudo..." autocomplete="off" />
@@ -1103,7 +1103,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
             <div id="multiplayer-waiting-box" class="multiplayer-panel">
               <h3>En attente</h3>
-              <p id="multiplayer-waiting-text">Crée une room ou rejoins-en une. La manche démarre automatiquement dès que les deux joueurs sont présents.</p>
+              <p id="multiplayer-waiting-text">Crée une room ou rejoins-en une. La manche démarre dès que les deux joueurs sont prêts.</p>
             </div>
 
             <div id="multiplayer-live-box" class="multiplayer-panel hidden">
@@ -1149,7 +1149,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <section class="multiplayer-panel multiplayer-opponent-panel">
                 <div class="multiplayer-attempts-head">
                   <h3>Tentatives adverses</h3>
-                  <p>Suivi simple de ses essais sans voler la priorité à tes propres indices.</p>
+                  <p>Suivi simple de ses essais, sans détourner l’attention de tes propres indices.</p>
                 </div>
                 <div id="multiplayer-opponent-attempts" class="multiplayer-opponent-attempts card-desc">Aucune tentative adverse pour l’instant.</div>
               </section>
