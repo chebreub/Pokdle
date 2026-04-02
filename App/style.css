@@ -21186,3 +21186,308 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
     gap: 12px;
   }
 }
+
+/* Social / Collection / Extras premium finish */
+#screen-multiplayer .multiplayer-screen-card,
+#screen-multiplayer .multiplayer-setup,
+#screen-multiplayer .multiplayer-panel,
+#screen-achievements .card,
+#screen-history .card,
+#screen-teams .teams-screen-card,
+.home-social-suite,
+.home-social-launch,
+.home-social-block,
+.home-social-note,
+.home-extras-block,
+.home-extras-toolbox,
+.weekly-featured,
+.seasonal-featured {
+  border-color: rgba(118, 156, 218, 0.18);
+  box-shadow: 0 20px 42px rgba(17, 40, 80, 0.08), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+#screen-multiplayer .multiplayer-panel,
+#screen-multiplayer .multiplayer-setup,
+#screen-teams .teams-screen-card,
+#screen-achievements .card,
+#screen-history .card {
+  border-radius: 24px;
+}
+
+#screen-multiplayer .multiplayer-setup-intro,
+#screen-multiplayer .multiplayer-panel .card-desc,
+#screen-achievements .card-desc,
+#screen-history .card-desc,
+#screen-teams .card-desc,
+.home-social-intro,
+.home-social-suite-head p,
+.home-social-suite-note,
+.home-social-launch-copy,
+.home-social-launch-note,
+.home-social-note p,
+.home-extras-intro,
+.home-extras-copy,
+.home-extras-toolbox-head p,
+.home-extras-toolbox-note {
+  color: #5c7398;
+}
+
+#screen-multiplayer #multiplayer-secret-select,
+#screen-multiplayer #multiplayer-nickname,
+#screen-multiplayer #multiplayer-guess-input {
+  min-height: 46px;
+  border-radius: 14px;
+  border-color: rgba(131, 166, 224, 0.24);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,255,0.96));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+#screen-multiplayer #multiplayer-secret-select:focus,
+#screen-multiplayer #multiplayer-nickname:focus,
+#screen-multiplayer #multiplayer-guess-input:focus {
+  border-color: rgba(92, 139, 223, 0.42);
+  box-shadow: 0 0 0 4px rgba(99, 145, 226, 0.12), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+#screen-multiplayer .multiplayer-player-card,
+#screen-multiplayer .multiplayer-target-card,
+#screen-multiplayer .multiplayer-result-summary,
+#screen-achievements .achievement-card,
+#screen-history .match-history-item,
+#screen-teams .team-card,
+.home-social-suite .home-mode-grid > button,
+.home-extras-focus-grid > button {
+  border-color: rgba(120, 159, 221, 0.18);
+  box-shadow: 0 16px 30px rgba(17, 40, 80, 0.08), inset 0 1px 0 rgba(255,255,255,0.48);
+}
+
+#screen-multiplayer .multiplayer-player-card:hover,
+#screen-achievements .achievement-card:hover,
+#screen-history .match-history-item:hover,
+#screen-teams .team-card:hover,
+.home-social-suite .home-mode-grid > button:hover,
+.home-extras-focus-grid > button:hover {
+  box-shadow: 0 22px 42px rgba(17, 40, 80, 0.12), inset 0 1px 0 rgba(255,255,255,0.56);
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-screen-card,
+body.theme-dark #screen-multiplayer .multiplayer-setup,
+body.theme-dark #screen-multiplayer .multiplayer-panel,
+body.theme-dark #screen-achievements .card,
+body.theme-dark #screen-history .card,
+body.theme-dark #screen-teams .teams-screen-card,
+body.theme-dark .home-social-suite,
+body.theme-dark .home-social-launch,
+body.theme-dark .home-social-block,
+body.theme-dark .home-social-note,
+body.theme-dark .home-extras-block,
+body.theme-dark .home-extras-toolbox,
+body.theme-dark .weekly-featured,
+body.theme-dark .seasonal-featured {
+  box-shadow: 0 20px 42px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Social / Collection / Extras interactive clarity */
+#screen-multiplayer .card-title,
+#screen-achievements .card-title,
+#screen-history .card-title,
+#screen-teams .card-title,
+.home-social-suite-head h4,
+.home-extras-toolbox-head h4,
+.weekly-featured-banner h3 {
+  color: #163457;
+}
+
+#screen-multiplayer .multiplayer-actions-grid > .btn-red,
+#screen-multiplayer .multiplayer-join-row > .btn-blue,
+.weekly-featured-btn,
+.home-social-launch .home-mode-grid > button:first-child,
+.home-extras-focus-grid > button {
+  box-shadow: 0 14px 28px rgba(17, 40, 80, 0.12);
+}
+
+#screen-multiplayer .multiplayer-actions-grid > .btn-red:hover,
+#screen-multiplayer .multiplayer-join-row > .btn-blue:hover,
+.weekly-featured-btn:hover,
+.home-social-launch .home-mode-grid > button:first-child:hover,
+.home-extras-focus-grid > button:hover {
+  box-shadow: 0 18px 34px rgba(17, 40, 80, 0.16);
+}
+
+#screen-multiplayer .multiplayer-player-card.is-self,
+#screen-multiplayer .multiplayer-player-card.is-winner,
+#screen-achievements .achievement-card.unlocked,
+.weekly-featured-status.is-complete {
+  box-shadow:
+    0 0 0 1px rgba(122, 193, 255, 0.12) inset,
+    0 18px 34px rgba(17, 40, 80, 0.12);
+}
+
+#screen-multiplayer .multiplayer-player-card.is-self {
+  border-color: rgba(96, 155, 235, 0.3);
+}
+
+#screen-multiplayer .multiplayer-player-card.is-winner,
+#screen-achievements .achievement-card.unlocked,
+.weekly-featured-status.is-complete {
+  border-color: rgba(239, 187, 74, 0.34);
+  background-image: linear-gradient(180deg, rgba(255, 245, 214, 0.12), rgba(255,255,255,0));
+}
+
+#screen-history .match-history-item,
+#screen-achievements .achievement-card,
+#screen-teams .team-card,
+#screen-multiplayer .multiplayer-player-card,
+#screen-multiplayer .multiplayer-target-card,
+#screen-multiplayer .multiplayer-result-summary {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+#screen-history .match-history-item.is-win,
+#screen-history .match-history-item.is-loss {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.08) inset,
+    0 16px 30px rgba(17, 40, 80, 0.1);
+}
+
+#screen-history .match-history-item p,
+#screen-achievements .achievement-card p,
+#screen-teams .card-desc,
+#screen-multiplayer .multiplayer-player-head span,
+#screen-multiplayer .multiplayer-player-stats,
+.home-social-launch-note,
+.home-extras-toolbox-note {
+  color: #6a82a7;
+}
+
+#screen-multiplayer .multiplayer-secret-card,
+.weekly-featured-status,
+.home-social-suite-note,
+.home-extras-focus-tag {
+  border-color: rgba(132, 166, 223, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+#screen-multiplayer .multiplayer-secret-card,
+#screen-multiplayer .multiplayer-target-card,
+#screen-teams .team-card,
+.home-social-suite .home-mode-grid > button,
+.home-extras-focus-grid > button,
+.weekly-featured-btn {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+#screen-multiplayer .multiplayer-secret-card:focus-within,
+#screen-multiplayer .multiplayer-target-card:hover,
+#screen-teams .team-card:hover,
+.weekly-featured-btn:focus-visible,
+.home-social-suite .home-mode-grid > button:focus-visible,
+.home-extras-focus-grid > button:focus-visible {
+  border-color: rgba(100, 145, 226, 0.3);
+  box-shadow:
+    0 0 0 3px rgba(99, 145, 226, 0.12),
+    0 20px 36px rgba(17, 40, 80, 0.12);
+}
+
+/* Social / Collection / Extras detail and empty-state polish */
+#screen-multiplayer .multiplayer-result-summary,
+#screen-multiplayer .multiplayer-target-card,
+#screen-multiplayer .multiplayer-secret-card,
+#screen-teams .teams-empty,
+.home-social-note,
+.home-extras-toolbox,
+.weekly-featured-banner {
+  display: grid;
+  gap: 12px;
+}
+
+#screen-multiplayer #multiplayer-waiting-text,
+#screen-multiplayer #multiplayer-result-box p,
+#screen-multiplayer .multiplayer-panel .card-desc,
+#screen-teams .teams-empty,
+.home-social-note p,
+.home-extras-toolbox-note,
+.weekly-featured-banner p {
+  color: #6a82a7;
+  line-height: 1.55;
+}
+
+#screen-multiplayer #multiplayer-live-box h3,
+#screen-multiplayer #multiplayer-waiting-box h3,
+#screen-multiplayer #multiplayer-result-box h3,
+#screen-teams .teams-screen-card .card-title,
+.home-social-note h3,
+.home-extras-toolbox-head h4,
+.weekly-featured-banner h3 {
+  margin-bottom: 2px;
+}
+
+#screen-multiplayer .multiplayer-result-summary,
+#screen-multiplayer .multiplayer-target-card,
+#screen-multiplayer .multiplayer-secret-card,
+#screen-teams .teams-empty,
+.home-social-note,
+.home-extras-toolbox,
+.weekly-featured-banner {
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(132, 166, 223, 0.16);
+  background: linear-gradient(180deg, rgba(247,250,255,0.92), rgba(239,245,255,0.88));
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-result-summary,
+body.theme-dark #screen-multiplayer .multiplayer-target-card,
+body.theme-dark #screen-multiplayer .multiplayer-secret-card,
+body.theme-dark #screen-teams .teams-empty,
+body.theme-dark .home-social-note,
+body.theme-dark .home-extras-toolbox,
+body.theme-dark .weekly-featured-banner {
+  background: linear-gradient(180deg, rgba(25, 43, 72, 0.84), rgba(19, 33, 58, 0.88));
+  border-color: rgba(132, 166, 223, 0.16);
+}
+
+@media (max-width: 1180px) and (min-width: 821px) {
+  #screen-multiplayer .multiplayer-screen-card,
+  #screen-achievements .card,
+  #screen-history .card,
+  #screen-teams .teams-screen-card {
+    padding: 18px;
+  }
+
+  #screen-multiplayer .multiplayer-shell,
+  #screen-multiplayer .multiplayer-players,
+  #screen-multiplayer .multiplayer-result-summary,
+  #screen-multiplayer .multiplayer-join-row,
+  #screen-multiplayer .multiplayer-guess-row {
+    gap: 12px;
+  }
+
+  #screen-multiplayer .multiplayer-player-card,
+  #screen-multiplayer .multiplayer-target-card,
+  #screen-multiplayer .multiplayer-result-summary,
+  #screen-multiplayer .multiplayer-secret-card,
+  #screen-teams .teams-empty,
+  .home-social-note,
+  .home-extras-toolbox,
+  .weekly-featured-banner {
+    padding: 14px 15px;
+    gap: 10px;
+  }
+
+  .home-social-suite,
+  .home-social-launch,
+  .home-social-block,
+  .home-extras-block,
+  .home-extras-toolbox,
+  .weekly-featured,
+  .seasonal-featured {
+    padding: 16px;
+  }
+
+  .home-social-block .home-mode-grid,
+  .home-extras-block .home-mode-grid,
+  .home-extras-coming-grid,
+  .home-extras-focus-grid {
+    gap: 10px;
+  }
+}
