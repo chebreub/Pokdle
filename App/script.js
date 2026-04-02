@@ -15257,12 +15257,108 @@ function createDefaultMultiplayerLiveState() {
     room: null,
     submittedGuessNames: new Set(),
     selectedGens: new Set([...selectedGens].sort((a, b) => a - b)),
+    lastGuessFocusKey: "",
+    pendingGuessSubmit: false,
   };
 }
 
 function ensureMultiplayerLiveState() {
   if (!multiplayerLiveState) multiplayerLiveState = createDefaultMultiplayerLiveState();
   return multiplayerLiveState;
+}
+
+function focusMultiplayerGuessInputIfReady() {
+  const state = ensureMultiplayerLiveState();
+  const room = state?.room;
+  if (!room || room.status !== "live") {
+    state.lastGuessFocusKey = "";
+    return;
+  }
+
+  const input = document.getElementById("multiplayer-guess-input");
+  if (!input || input.disabled) return;
+
+  const self = Array.isArray(room.players) ? room.players.find((player) => player.isSelf) || null : null;
+  const focusKey = [
+    room.code || "",
+    room.status || "",
+    Number(self?.attempts) || 0,
+    Array.isArray(self?.guessHistory) ? self.guessHistory.length : 0,
+    state.submittedGuessNames?.size || 0,
+  ].join(":");
+
+  if (state.lastGuessFocusKey === focusKey) return;
+
+  const active = document.activeElement;
+  const activeIsEditable = !!active && (
+    active.tagName === "INPUT" ||
+    active.tagName === "TEXTAREA" ||
+    active.isContentEditable
+  );
+
+  if (active === input) {
+    state.lastGuessFocusKey = focusKey;
+    return;
+  }
+
+  if (activeIsEditable) return;
+
+  state.lastGuessFocusKey = focusKey;
+  window.requestAnimationFrame(() => {
+    const latestInput = document.getElementById("multiplayer-guess-input");
+    if (!latestInput || latestInput.disabled) return;
+    const latestActive = document.activeElement;
+    const latestActiveIsEditable = !!latestActive && (
+      latestActive.tagName === "INPUT" ||
+      latestActive.tagName === "TEXTAREA" ||
+      latestActive.isContentEditable
+    );
+    if (latestActive === latestInput || latestActiveIsEditable) return;
+    latestInput.focus({ preventScroll: true });
+  });
+}
+
+function ensureMultiplayerGuessInputBindings() {
+  const input = document.getElementById("multiplayer-guess-input");
+  if (!input || input.dataset.enterBound === "true") return;
+  input.dataset.enterBound = "true";
+  input.addEventListener("input", () => {
+    updateMultiplayerGuessSubmitState();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+    const room = multiplayerLiveState?.room;
+    const button = document.querySelector("#multiplayer-live-box .btn-red");
+    if (!room || room.status !== "live" || input.disabled || button?.disabled) return;
+    event.preventDefault();
+    submitMultiplayerGuess();
+  });
+}
+
+function canSubmitMultiplayerGuess() {
+  const state = ensureMultiplayerLiveState();
+  const room = state?.room;
+  if (!room || room.status !== "live" || state.pendingGuessSubmit) return false;
+  const input = document.getElementById("multiplayer-guess-input");
+  const raw = String(input?.value || "").trim();
+  if (!raw) return false;
+  const picked = findPokemonGlobalByName(raw);
+  if (!picked) return false;
+  const pool = getMultiplayerRoomPool();
+  if (!pool.some((pokemon) => pokemon.id === picked.id)) return false;
+  if (state.submittedGuessNames.has(picked.name)) return false;
+  return true;
+}
+
+function updateMultiplayerGuessSubmitState() {
+  const input = document.getElementById("multiplayer-guess-input");
+  const button = document.querySelector("#multiplayer-live-box .btn-red");
+  if (!input || !button) return;
+  const state = ensureMultiplayerLiveState();
+  const room = state?.room;
+  const liveReady = Boolean(room && room.status === "live" && !state.pendingGuessSubmit);
+  input.disabled = !liveReady;
+  button.disabled = !canSubmitMultiplayerGuess();
 }
 
 function getMultiplayerRoomPool() {
@@ -15423,6 +15519,7 @@ function ensureMultiplayerSocket() {
     const state = ensureMultiplayerLiveState();
     const previousRoom = state.room;
     state.room = roomState;
+    state.pendingGuessSubmit = false;
     if (Array.isArray(roomState?.selectedGens) && roomState.selectedGens.length) {
       state.selectedGens = new Set(roomState.selectedGens.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value >= 1 && value <= 9));
     }
@@ -15438,6 +15535,7 @@ function ensureMultiplayerSocket() {
   multiplayerSocket.on("duel:finished", (roomState) => {
     const state = ensureMultiplayerLiveState();
     state.room = roomState;
+    state.pendingGuessSubmit = false;
     renderMultiplayerBotScreen();
   });
 
@@ -15773,6 +15871,7 @@ function renderMultiplayerBotResult() {
 
 function renderMultiplayerBotScreen() {
   ensureMultiplayerLiveState();
+  ensureMultiplayerGuessInputBindings();
 
   const waitingBox = document.getElementById("multiplayer-waiting-box");
   const liveBox = document.getElementById("multiplayer-live-box");
@@ -15807,6 +15906,8 @@ function renderMultiplayerBotScreen() {
   if (roomInput) roomInput.disabled = Boolean(isLive);
 
   if (isWaiting) {
+    ensureMultiplayerLiveState().lastGuessFocusKey = "";
+    ensureMultiplayerLiveState().pendingGuessSubmit = false;
     const resultHeading = resultBox?.querySelector("h3");
     if (resultHeading) resultHeading.textContent = "Résultat du duel";
     document.getElementById("screen-multiplayer")?.classList.remove("multiplayer-win-state");
@@ -15825,9 +15926,8 @@ function renderMultiplayerBotScreen() {
     resultBox?.classList.add("hidden");
     if (guessInput) {
       guessInput.value = "";
-      guessInput.disabled = true;
     }
-    if (guessButton) guessButton.disabled = true;
+    updateMultiplayerGuessSubmitState();
     return;
   }
 
@@ -15847,21 +15947,19 @@ function renderMultiplayerBotScreen() {
     waitingBox?.classList.add("hidden");
     liveBox?.classList.remove("hidden");
     resultBox?.classList.add("hidden");
-    if (guessInput) {
-      guessInput.disabled = false;
-      guessInput.focus();
-    }
-    if (guessButton) guessButton.disabled = false;
+    updateMultiplayerGuessSubmitState();
+    focusMultiplayerGuessInputIfReady();
     return;
   }
 
   if (isFinished) {
+    ensureMultiplayerLiveState().lastGuessFocusKey = "";
+    ensureMultiplayerLiveState().pendingGuessSubmit = false;
     if (roundStatus) roundStatus.textContent = "Terminé";
     waitingBox?.classList.add("hidden");
     liveBox?.classList.add("hidden");
     resultBox?.classList.remove("hidden");
-    if (guessInput) guessInput.disabled = true;
-    if (guessButton) guessButton.disabled = true;
+    updateMultiplayerGuessSubmitState();
     renderMultiplayerBotResult();
   }
 }
@@ -15952,8 +16050,10 @@ function joinMultiplayerRoom() {
 }
 
 function submitMultiplayerGuess() {
-  const room = multiplayerLiveState?.room;
+  const state = ensureMultiplayerLiveState();
+  const room = state?.room;
   if (!room || room.status !== "live") return;
+  if (state.pendingGuessSubmit) return;
 
   const socket = ensureMultiplayerSocket();
   const input = document.getElementById("multiplayer-guess-input");
@@ -15974,15 +16074,20 @@ function submitMultiplayerGuess() {
   if (!socket) return;
 
   setMultiplayerError("");
-  multiplayerLiveState.submittedGuessNames.add(picked.name);
+  state.pendingGuessSubmit = true;
+  state.submittedGuessNames.add(picked.name);
+  if (input) input.value = "";
+  document.getElementById("multiplayer-guess-ac")?.classList.add("hidden");
+  renderMultiplayerBotScreen();
   socket.emit("duel:submit-guess", { guess: picked.name }, (response = {}) => {
+    state.pendingGuessSubmit = false;
     if (!response.ok) {
-      multiplayerLiveState.submittedGuessNames.delete(picked.name);
+      state.submittedGuessNames.delete(picked.name);
+      if (input) input.value = raw;
       setMultiplayerError(response.error || "Impossible d'envoyer la tentative.");
+      renderMultiplayerBotScreen();
       return;
     }
-    if (input) input.value = "";
-    document.getElementById("multiplayer-guess-ac")?.classList.add("hidden");
     renderMultiplayerBotScreen();
   });
 }
