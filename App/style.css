@@ -19245,3 +19245,735 @@ body.theme-dark .btn-yellow:hover,
 body.theme-dark .btn-ghost:hover {
   box-shadow: 0 18px 30px rgba(0, 0, 0, 0.28);
 }
+
+/* Responsive corrective pass */
+body:not(.theme-dark) .card,
+body:not(.theme-dark) .team-builder-screen-card,
+body:not(.theme-dark) #screen-draft-arena .draft-card,
+body:not(.theme-dark) #screen-draft-arena .draft-panel {
+  overflow: hidden;
+}
+
+.ranking-head-actions,
+.home-hero-actions,
+.home-priority-actions,
+.team-builder-export-actions {
+  min-width: 0;
+}
+
+.home-hero-copy,
+.home-category-head,
+.home-priority-card,
+.home-universes,
+.team-builder-screen-card,
+#screen-draft-arena .draft-card {
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .home-priority-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-universes-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .team-builder-screen-card .team-builder-module {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.92fr);
+  }
+
+  .team-builder-screen-card .team-builder-module > .home-builder-summary {
+    max-width: none;
+  }
+}
+
+@media (max-width: 980px) {
+  body:not(.theme-dark) .card,
+  body:not(.theme-dark) .team-builder-screen-card,
+  body:not(.theme-dark) #screen-draft-arena .draft-card {
+    box-shadow: 0 14px 28px rgba(18, 39, 72, 0.1) !important;
+  }
+
+  .ranking-head {
+    align-items: stretch !important;
+  }
+
+  .ranking-head-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ranking-head-actions > * {
+    min-width: 0;
+  }
+
+  .home-hero-title {
+    max-width: none !important;
+  }
+
+  .home-hero-text {
+    max-width: none !important;
+  }
+
+  .home-priority-grid,
+  .home-universes-grid,
+  .home-categories {
+    gap: 14px !important;
+  }
+
+  .team-builder-screen-card {
+    padding: 18px 18px 20px !important;
+  }
+
+  .team-builder-screen-card .team-builder-module {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "head"
+      "summary"
+      "slots"
+      "editor"
+      "export1"
+      "export2" !important;
+  }
+
+  .team-builder-screen-card .team-builder-module > .home-builder-editor {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .team-builder-export-actions {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .team-builder-export-actions > * {
+    min-width: 0;
+  }
+
+  #screen-draft-arena .ranking-head-actions {
+    width: 100%;
+  }
+
+  #screen-draft-arena .ranking-head-actions > * {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  #screen-draft-arena .draft-option-card {
+    min-height: 188px;
+  }
+
+  #screen-draft-arena .draft-team-card {
+    min-height: 104px;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-hero {
+    padding: 22px 18px !important;
+    gap: 18px !important;
+  }
+
+  .home-hero-actions > .btn-red,
+  .home-hero-actions > .btn-blue,
+  .home-hero-actions > .btn-ghost,
+  .home-priority-actions .btn-red,
+  .home-priority-actions .btn-blue,
+  .home-priority-actions .btn-ghost {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .home-priority-grid,
+  .home-universes-grid,
+  .home-categories {
+    grid-template-columns: 1fr !important;
+  }
+
+  .home-mode-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .home-mode-grid > button {
+    min-height: 52px !important;
+    padding: 12px 14px !important;
+  }
+
+  .team-builder-screen-card {
+    padding: 16px !important;
+    gap: 14px !important;
+  }
+
+  .team-builder-screen-card .ranking-head-actions {
+    width: 100%;
+  }
+
+  .team-builder-screen-card .ranking-head-actions > * {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
+  .team-builder-export-output {
+    min-height: 160px !important;
+  }
+
+  #screen-draft-arena .draft-card {
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+
+  #screen-draft-arena .draft-panel {
+    padding: 14px !important;
+  }
+
+  #screen-draft-arena .draft-options-grid,
+  #screen-draft-arena .draft-team-grid,
+  #screen-draft-arena .draft-team-metrics,
+  #screen-draft-arena .draft-run-summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  #screen-draft-arena .draft-option-card {
+    min-height: 0;
+  }
+}
+
+/* Builder + Draft UX finish */
+#screen-team-builder .home-builder-slot,
+#screen-team-builder .team-builder-pokemon-trigger,
+#screen-team-builder .team-builder-pokemon-card,
+#screen-team-builder .team-builder-editor-section,
+#screen-draft-arena .draft-gen-btn,
+#screen-draft-arena .draft-option-card,
+#screen-draft-arena .draft-team-card,
+#screen-draft-arena .draft-run-node {
+  transition:
+    transform 0.2s var(--ease-ui),
+    box-shadow 0.2s var(--ease-ui),
+    border-color 0.2s var(--ease-ui),
+    background 0.2s var(--ease-ui),
+    filter 0.2s var(--ease-ui),
+    opacity 0.2s var(--ease-ui);
+}
+
+#screen-team-builder .home-builder-slot:hover,
+#screen-team-builder .team-builder-pokemon-trigger:hover,
+#screen-team-builder .team-builder-pokemon-card:hover,
+#screen-draft-arena .draft-gen-btn:hover:not(:disabled),
+#screen-draft-arena .draft-option-card:hover:not(.locked),
+#screen-draft-arena .draft-team-card:hover {
+  filter: saturate(1.02);
+}
+
+#screen-team-builder .home-builder-slot.is-active {
+  border-color: rgba(255, 122, 91, 0.48);
+  box-shadow:
+    0 16px 34px rgba(24, 48, 92, 0.12),
+    0 0 0 1px rgba(255, 146, 104, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+#screen-team-builder .home-builder-slot.is-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 132, 96, 0.1), transparent 46%);
+  opacity: 0.9;
+}
+
+#screen-team-builder .team-builder-pokemon-trigger:hover,
+#screen-team-builder .team-builder-pokemon-trigger:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(86, 127, 198, 0.54);
+  box-shadow:
+    0 16px 30px rgba(31, 60, 112, 0.14),
+    0 0 0 1px rgba(116, 159, 230, 0.12),
+    inset 0 1px 0 rgba(255,255,255,0.82);
+}
+
+#screen-team-builder .team-builder-pokemon-trigger:focus-visible,
+#screen-team-builder .team-builder-pokemon-card:focus-visible,
+#screen-team-builder .home-builder-slot:focus-visible,
+#screen-draft-arena .draft-gen-btn:focus-visible,
+#screen-draft-arena .draft-option-card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(79, 147, 255, 0.18),
+    0 18px 32px rgba(23, 48, 92, 0.16);
+}
+
+#screen-team-builder .team-builder-pokemon-trigger-cta {
+  transition:
+    transform 0.18s var(--ease-ui),
+    background 0.18s var(--ease-ui),
+    color 0.18s var(--ease-ui),
+    box-shadow 0.18s var(--ease-ui);
+}
+
+#screen-team-builder .team-builder-pokemon-trigger:hover .team-builder-pokemon-trigger-cta,
+#screen-team-builder .team-builder-pokemon-trigger:focus-visible .team-builder-pokemon-trigger-cta {
+  background: rgba(90, 132, 209, 0.18);
+  color: #234f88;
+  transform: translateX(1px);
+}
+
+#screen-team-builder .team-builder-pokemon-card:hover,
+#screen-team-builder .team-builder-pokemon-card.is-selected {
+  border-color: rgba(86, 127, 198, 0.52);
+  box-shadow:
+    0 16px 28px rgba(31, 60, 112, 0.14),
+    0 0 0 1px rgba(111, 156, 228, 0.14),
+    inset 0 1px 0 rgba(255,255,255,0.84);
+}
+
+#screen-team-builder .team-builder-pokemon-card.is-selected {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244, 249, 255, 0.96)),
+    radial-gradient(circle at top, rgba(108, 158, 255, 0.12), transparent 48%);
+}
+
+#screen-team-builder .team-builder-pokemon-card.is-selected img,
+#screen-team-builder .home-builder-slot.is-active .home-builder-slot-body img {
+  filter: drop-shadow(0 12px 20px rgba(26, 44, 80, 0.2));
+}
+
+#screen-team-builder .team-builder-editor-section:hover,
+#screen-team-builder .team-builder-editor-section:focus-within {
+  border-color: rgba(140, 171, 222, 0.44);
+  box-shadow:
+    0 16px 34px rgba(20, 43, 80, 0.08),
+    inset 0 1px 0 rgba(255,255,255,0.78);
+}
+
+#screen-team-builder .team-builder-editor-section:focus-within .team-builder-editor-section-head h5 {
+  color: #204b82;
+}
+
+#screen-draft-arena .draft-gen-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+#screen-draft-arena .draft-gen-btn.active {
+  box-shadow:
+    0 14px 28px rgba(195, 55, 40, 0.24),
+    0 0 0 1px rgba(255, 219, 158, 0.18);
+}
+
+#screen-draft-arena .draft-option-card {
+  overflow: hidden;
+}
+
+#screen-draft-arena .draft-option-card::before {
+  transition: opacity 0.2s var(--ease-ui);
+}
+
+#screen-draft-arena .draft-option-card:hover:not(.locked) {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 18px 34px rgba(16, 34, 60, 0.14),
+    0 0 0 1px rgba(255, 211, 113, 0.12);
+}
+
+#screen-draft-arena .draft-option-card:hover:not(.locked) img {
+  transform: translateY(-1px) scale(1.03);
+}
+
+#screen-draft-arena .draft-option-card img {
+  transition: transform 0.2s var(--ease-ui), filter 0.2s var(--ease-ui);
+}
+
+#screen-draft-arena .draft-option-card.picked {
+  box-shadow:
+    0 18px 36px rgba(41, 121, 61, 0.16),
+    0 0 0 1px rgba(102, 204, 122, 0.18);
+}
+
+#screen-draft-arena .draft-option-card.picked img {
+  filter: drop-shadow(0 14px 22px rgba(42, 98, 56, 0.18));
+}
+
+#screen-draft-arena .draft-option-card.locked {
+  opacity: 0.86;
+  filter: grayscale(0.06);
+}
+
+#screen-draft-arena .draft-team-card {
+  position: relative;
+}
+
+#screen-draft-arena .draft-team-card.is-latest {
+  box-shadow:
+    0 22px 38px rgba(32, 56, 93, 0.2),
+    0 0 0 1px rgba(235, 197, 111, 0.16);
+}
+
+#screen-draft-arena .draft-team-card.is-latest::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 214, 120, 0.1), transparent 42%);
+}
+
+#screen-draft-arena .draft-run-node {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.66);
+}
+
+#screen-draft-arena .draft-run-node.active,
+#screen-draft-arena .draft-run-node.is-active {
+  border-color: rgba(255, 170, 92, 0.42);
+  box-shadow:
+    0 12px 24px rgba(31, 60, 112, 0.12),
+    0 0 0 1px rgba(255, 173, 87, 0.14),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+body.theme-dark #screen-team-builder .home-builder-slot.is-active,
+body.theme-dark #screen-team-builder .team-builder-pokemon-card.is-selected,
+body.theme-dark #screen-draft-arena .draft-option-card.picked,
+body.theme-dark #screen-draft-arena .draft-team-card.is-latest,
+body.theme-dark #screen-draft-arena .draft-gen-btn.active {
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Builder + Draft information clarity */
+#screen-team-builder .home-builder-head p,
+#screen-team-builder .home-builder-editor-head p,
+#screen-team-builder .team-builder-editor-section-head p,
+#screen-team-builder .home-builder-footnote,
+#screen-draft-arena .card-desc,
+#screen-draft-arena .draft-status,
+#screen-draft-arena .draft-summary-card span,
+#screen-draft-arena .draft-option-card > span,
+#screen-draft-arena .draft-team-card span,
+#screen-draft-arena .draft-team-card small {
+  color: #5a7396;
+}
+
+#screen-team-builder .home-builder-head h3,
+#screen-team-builder .home-builder-editor-head h4,
+#screen-team-builder .team-builder-editor-section-head h5,
+#screen-team-builder .team-builder-strategic .team-builder-editor-section-head h4,
+#screen-team-builder .team-builder-export-head h4,
+#screen-draft-arena .draft-panel h3,
+#screen-draft-arena .draft-team-card b,
+#screen-draft-arena .draft-option-card strong {
+  color: #163a68;
+  letter-spacing: 0.01em;
+}
+
+#screen-team-builder .home-builder-summary,
+#screen-team-builder .team-builder-computed-stats,
+#screen-team-builder .team-builder-export,
+#screen-draft-arena .draft-status,
+#screen-draft-arena .draft-summary-card {
+  position: relative;
+  overflow: hidden;
+}
+
+#screen-team-builder .home-builder-summary::before,
+#screen-team-builder .team-builder-computed-stats::before,
+#screen-team-builder .team-builder-export::before,
+#screen-draft-arena .draft-status::before,
+#screen-draft-arena .draft-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(116, 154, 217, 0.36), rgba(116, 154, 217, 0));
+  pointer-events: none;
+}
+
+#screen-team-builder .home-builder-summary {
+  gap: 10px;
+}
+
+#screen-team-builder .home-builder-summary-chip,
+#screen-team-builder .team-builder-editor-slot-badge,
+#screen-team-builder .team-builder-editor-status-badge,
+#screen-draft-arena .draft-team-slot-label {
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+#screen-team-builder .home-builder-summary-chip {
+  min-height: 32px;
+  padding-inline: 12px;
+}
+
+#screen-team-builder .home-builder-summary-chip b {
+  font-size: 0.95rem;
+}
+
+#screen-team-builder .home-builder-slot-head small,
+#screen-team-builder .team-builder-editor-slot-badge,
+#screen-team-builder .team-builder-editor-status-badge {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+#screen-team-builder .home-builder-slot-empty,
+#screen-team-builder .team-builder-pokemon-trigger-placeholder {
+  color: #486789;
+  font-weight: 900;
+}
+
+#screen-team-builder .home-builder-slot-empty {
+  padding: 4px 0;
+  line-height: 1.45;
+}
+
+#screen-team-builder .home-builder-slot-info p,
+#screen-team-builder .home-builder-slot-info small {
+  line-height: 1.45;
+}
+
+#screen-team-builder .team-builder-editor-head {
+  gap: 8px;
+}
+
+#screen-team-builder .team-builder-editor-section-head,
+#screen-team-builder .team-builder-export-head {
+  gap: 6px;
+}
+
+#screen-team-builder .team-builder-editor-section-head p,
+#screen-team-builder .team-builder-export-head p,
+#screen-team-builder .home-builder-footnote {
+  font-size: 0.83rem;
+  line-height: 1.45;
+}
+
+#screen-team-builder .team-builder-computed-stats {
+  gap: 10px;
+}
+
+#screen-team-builder .team-builder-export-output {
+  line-height: 1.5;
+}
+
+#screen-draft-arena .draft-status {
+  display: grid;
+  gap: 4px;
+  line-height: 1.45;
+}
+
+#screen-draft-arena .draft-panel h3 {
+  margin-bottom: 8px;
+}
+
+#screen-draft-arena .draft-summary-card {
+  gap: 6px;
+  align-content: start;
+}
+
+#screen-draft-arena .draft-summary-card span {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#screen-draft-arena .draft-summary-card b {
+  font-size: 1.16rem;
+  line-height: 1.15;
+}
+
+#screen-draft-arena .draft-team-card.placeholder,
+#screen-team-builder .team-builder-pokemon-trigger.is-empty {
+  background-image:
+    linear-gradient(180deg, rgba(248, 251, 255, 0.94), rgba(239, 245, 253, 0.9)),
+    repeating-linear-gradient(135deg, rgba(135, 161, 202, 0.06) 0 10px, rgba(255,255,255,0) 10px 20px);
+}
+
+#screen-draft-arena .draft-team-card.placeholder small,
+#screen-draft-arena .draft-team-card.placeholder span,
+#screen-team-builder .team-builder-pokemon-trigger.is-empty .team-builder-pokemon-trigger-text {
+  color: #6780a5;
+}
+
+#screen-draft-arena .draft-team-card-body,
+#screen-draft-arena .draft-option-card {
+  align-content: start;
+}
+
+#screen-draft-arena .draft-card-meta,
+#screen-draft-arena .draft-team-card-types,
+#screen-team-builder .home-builder-slot-types {
+  row-gap: 6px;
+}
+
+body.theme-dark #screen-team-builder .home-builder-head p,
+body.theme-dark #screen-team-builder .home-builder-editor-head p,
+body.theme-dark #screen-team-builder .team-builder-editor-section-head p,
+body.theme-dark #screen-team-builder .home-builder-footnote,
+body.theme-dark #screen-draft-arena .card-desc,
+body.theme-dark #screen-draft-arena .draft-status,
+body.theme-dark #screen-draft-arena .draft-summary-card span,
+body.theme-dark #screen-draft-arena .draft-option-card > span,
+body.theme-dark #screen-draft-arena .draft-team-card span,
+body.theme-dark #screen-draft-arena .draft-team-card small {
+  color: #bfd1eb;
+}
+
+body.theme-dark #screen-team-builder .home-builder-head h3,
+body.theme-dark #screen-team-builder .home-builder-editor-head h4,
+body.theme-dark #screen-team-builder .team-builder-editor-section-head h5,
+body.theme-dark #screen-team-builder .team-builder-strategic .team-builder-editor-section-head h4,
+body.theme-dark #screen-team-builder .team-builder-export-head h4,
+body.theme-dark #screen-draft-arena .draft-panel h3,
+body.theme-dark #screen-draft-arena .draft-team-card b,
+body.theme-dark #screen-draft-arena .draft-option-card strong {
+  color: #edf5ff;
+}
+
+/* Builder + Draft action hierarchy */
+#screen-team-builder .ranking-head-actions,
+#screen-team-builder .team-builder-export-actions,
+#screen-draft-arena .ranking-head-actions {
+  align-items: center;
+}
+
+#screen-team-builder .ranking-head-actions .btn-blue,
+#screen-team-builder .team-builder-export-actions .btn-blue,
+#screen-draft-arena .ranking-head-actions .btn-blue,
+#screen-draft-arena .ranking-head-actions .btn-red {
+  position: relative;
+  z-index: 0;
+  box-shadow:
+    0 14px 28px rgba(30, 58, 108, 0.16),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+}
+
+#screen-team-builder .ranking-head-actions .btn-blue::after,
+#screen-team-builder .team-builder-export-actions .btn-blue::after,
+#screen-draft-arena .ranking-head-actions .btn-blue::after,
+#screen-draft-arena .ranking-head-actions .btn-red::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+#screen-team-builder .ranking-head-actions .btn-blue:hover,
+#screen-team-builder .team-builder-export-actions .btn-blue:hover,
+#screen-draft-arena .ranking-head-actions .btn-blue:hover,
+#screen-draft-arena .ranking-head-actions .btn-red:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 18px 34px rgba(30, 58, 108, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.24);
+}
+
+#screen-team-builder .ranking-head-actions .btn-yellow,
+#screen-team-builder .ranking-head-actions .btn-ghost,
+#screen-team-builder .team-builder-export-actions .card-desc,
+#screen-draft-arena .ranking-head-actions .btn-yellow,
+#screen-draft-arena .ranking-head-actions .btn-ghost {
+  opacity: 0.9;
+}
+
+#screen-team-builder .team-builder-export-actions {
+  gap: 10px;
+}
+
+#screen-team-builder .team-builder-export-actions .btn-blue {
+  min-width: 160px;
+}
+
+#screen-team-builder .team-builder-export-actions .card-desc {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(95, 132, 198, 0.08);
+  color: #47678e;
+  font-weight: 800;
+}
+
+#screen-team-builder .team-builder-export-head .home-coming-badge {
+  background: linear-gradient(135deg, rgba(90, 139, 218, 0.12), rgba(255, 204, 79, 0.16));
+  color: #29517f;
+  border-color: rgba(120, 156, 218, 0.18);
+}
+
+#screen-draft-arena .draft-progress-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+#screen-draft-arena .draft-progress-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255,255,255,0.18), transparent 34%, transparent 66%, rgba(255,255,255,0.1));
+}
+
+#screen-draft-arena .draft-status {
+  border-width: 1px;
+  font-weight: 800;
+}
+
+#screen-draft-arena .draft-status strong,
+#screen-draft-arena .draft-status b {
+  color: #163a68;
+}
+
+#screen-draft-arena .draft-panel-gen h3,
+#screen-draft-arena .draft-panel:nth-of-type(2) h3,
+#screen-draft-arena .draft-panel:nth-of-type(3) h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#screen-draft-arena .draft-panel-gen h3::before {
+  content: "1";
+}
+
+#screen-draft-arena .draft-panel:nth-of-type(2) h3::before {
+  content: "2";
+}
+
+#screen-draft-arena .draft-panel:nth-of-type(3) h3::before {
+  content: "3";
+}
+
+#screen-draft-arena .draft-panel-gen h3::before,
+#screen-draft-arena .draft-panel:nth-of-type(2) h3::before,
+#screen-draft-arena .draft-panel:nth-of-type(3) h3::before {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 123, 91, 0.16), rgba(255, 205, 92, 0.22));
+  color: #91442d;
+  font-size: 0.78rem;
+  font-weight: 900;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.78);
+}
+
+body.theme-dark #screen-team-builder .team-builder-export-actions .card-desc {
+  background: rgba(118, 162, 236, 0.12);
+  color: #d4e3fb;
+}
+
+body.theme-dark #screen-team-builder .team-builder-export-head .home-coming-badge,
+body.theme-dark #screen-draft-arena .draft-panel-gen h3::before,
+body.theme-dark #screen-draft-arena .draft-panel:nth-of-type(2) h3::before,
+body.theme-dark #screen-draft-arena .draft-panel:nth-of-type(3) h3::before {
+  color: #ffe1b3;
+}
+
+body.theme-dark #screen-draft-arena .draft-status strong,
+body.theme-dark #screen-draft-arena .draft-status b {
+  color: #edf5ff;
+}
