@@ -21556,6 +21556,32 @@ body.theme-dark .weekly-featured-banner {
   box-shadow: 0 22px 42px rgba(17, 40, 80, 0.1), inset 0 1px 0 rgba(255,255,255,0.54);
 }
 
+#screen-multiplayer #multiplayer-live-box .multiplayer-guess-row {
+  align-items: stretch;
+  min-height: 74px;
+  padding: 10px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(244,248,255,0.88));
+  border: 1px solid rgba(105, 150, 227, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+}
+
+#screen-multiplayer #multiplayer-live-box .multiplayer-guess-row > .btn-red {
+  min-width: 154px;
+  box-shadow: 0 18px 34px rgba(17, 40, 80, 0.16);
+}
+
+#screen-multiplayer #multiplayer-live-box #multiplayer-guess-input {
+  border-color: rgba(103, 149, 226, 0.26);
+  background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(246,249,255,0.98));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 14px 28px rgba(32, 65, 118, 0.1);
+}
+
+#screen-multiplayer #multiplayer-live-box #multiplayer-help {
+  color: #2f578f;
+  font-weight: 800;
+}
+
 #screen-multiplayer #multiplayer-result-box {
   border-color: rgba(123, 184, 122, 0.22);
   background:
@@ -21576,10 +21602,26 @@ body.theme-dark .weekly-featured-banner {
 
 #screen-multiplayer #multiplayer-live-text {
   color: #234f8e;
+  min-height: 68px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(243,248,255,0.9));
+  border: 1px solid rgba(108, 151, 224, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
 }
 
 #screen-multiplayer #multiplayer-waiting-text {
   color: #466384;
+}
+
+#screen-multiplayer #multiplayer-live-box #multiplayer-live-text strong,
+#screen-multiplayer #multiplayer-live-box #multiplayer-live-text b {
+  color: #133f78;
+}
+
+#screen-multiplayer #multiplayer-live-box #multiplayer-help {
+  padding: 8px 10px 0;
+  opacity: 0.96;
 }
 
 #screen-multiplayer #multiplayer-result-box p {
@@ -21589,6 +21631,65 @@ body.theme-dark .weekly-featured-banner {
 
 #screen-multiplayer .multiplayer-result-summary {
   align-items: start;
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child {
+  min-height: 228px;
+  border-color: rgba(117, 156, 223, 0.18);
+  background: linear-gradient(180deg, rgba(250,252,255,0.94), rgba(243,248,255,0.9));
+  box-shadow: 0 18px 34px rgba(17, 40, 80, 0.08), inset 0 1px 0 rgba(255,255,255,0.56);
+}
+
+#screen-multiplayer .multiplayer-attempts-head h3 {
+  color: #173d6f;
+}
+
+#screen-multiplayer #multiplayer-my-attempts-wrap {
+  min-height: 136px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(123, 156, 214, 0.16);
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table {
+  border-spacing: 0 8px;
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table thead th {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr {
+  opacity: 0.84;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:hover {
+  opacity: 1;
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:last-child {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:last-child td {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,249,255,0.96));
+  border-top-color: rgba(244, 203, 102, 0.34);
+  border-bottom-color: rgba(244, 203, 102, 0.34);
+  box-shadow: 0 10px 22px rgba(31, 70, 120, 0.08);
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:last-child td:first-child {
+  border-left-color: rgba(244, 203, 102, 0.42);
+  box-shadow: inset 3px 0 0 rgba(255, 189, 74, 0.78), 0 10px 22px rgba(31, 70, 120, 0.08);
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:not(:last-child) td {
+  filter: saturate(0.94);
+}
+
+#screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table td {
+  color: #18385f;
 }
 
 #screen-multiplayer .multiplayer-result-title {
@@ -21635,6 +21736,50 @@ body.theme-dark #screen-multiplayer #multiplayer-live-box {
   background:
     radial-gradient(circle at top right, rgba(93, 161, 255, 0.12), transparent 36%),
     linear-gradient(180deg, rgba(27, 46, 77, 0.9), rgba(20, 36, 62, 0.92));
+}
+
+body.theme-dark #screen-multiplayer #multiplayer-live-text {
+  color: #e7f1ff;
+  background: linear-gradient(180deg, rgba(18, 36, 62, 0.88), rgba(21, 41, 69, 0.92));
+  border-color: rgba(95, 135, 201, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+body.theme-dark #screen-multiplayer #multiplayer-live-box #multiplayer-live-text strong,
+body.theme-dark #screen-multiplayer #multiplayer-live-box #multiplayer-live-text b {
+  color: #ffffff;
+}
+
+body.theme-dark #screen-multiplayer #multiplayer-live-box .multiplayer-guess-row {
+  background: linear-gradient(180deg, rgba(14, 28, 48, 0.84), rgba(17, 33, 58, 0.88));
+  border-color: rgba(95, 135, 201, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+body.theme-dark #screen-multiplayer #multiplayer-live-box #multiplayer-help {
+  color: #d8e6ff;
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child {
+  border-color: rgba(94, 132, 194, 0.2);
+  background: linear-gradient(180deg, rgba(23, 39, 66, 0.88), rgba(19, 33, 57, 0.92));
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:last-child td {
+  background: linear-gradient(180deg, rgba(31, 54, 90, 0.94), rgba(23, 42, 72, 0.96));
+  border-top-color: rgba(244, 203, 102, 0.28);
+  border-bottom-color: rgba(244, 203, 102, 0.28);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table tbody tr:last-child td:first-child {
+  border-left-color: rgba(244, 203, 102, 0.34);
+  box-shadow: inset 3px 0 0 rgba(255, 208, 102, 0.8), 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-attempts-shell > .multiplayer-panel:first-child .multiplayer-results-table td {
+  color: #edf5ff;
 }
 
 body.theme-dark #screen-multiplayer #multiplayer-result-box {
