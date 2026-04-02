@@ -1113,6 +1113,7 @@ let draftArenaState = null;
 const POKEDEX_API_CACHE = new Map();
 const POKEDEX_SPECIES_CACHE = new Map();
 const POKEDEX_ABILITY_CACHE = new Map();
+const POKEDEX_EVOLUTION_CACHE = new Map();
 const TEAM_BUILDER_MOVE_POOL_CACHE = new Map();
 const TEAM_BUILDER_MOVE_POOL_PENDING = new Map();
 
@@ -7635,6 +7636,7 @@ async function renderPokedexDetail(pokemon) {
     <div class="pokedex-section"><h4>Talents</h4><p class="pokedex-muted">Chargement...</p></div>
     <div class="pokedex-section"><h4>Statistiques de base</h4><p class="pokedex-muted">Chargement...</p></div>
     <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
+    <div class="pokedex-section"><h4>Évolution</h4><p class="pokedex-muted">Chargement...</p></div>
     <div class="pokedex-section"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b>Chargement...</b></div><div><span>Genre</span><b>Chargement...</b></div><div><span>Groupes d'oeufs</span><b>Chargement...</b></div><div><span>Eclosion</span><b>Chargement...</b></div></div></div>
   `;
 
@@ -7651,6 +7653,7 @@ async function renderPokedexDetail(pokemon) {
   const description = flavorTextFr(speciesData);
   const abilities = await abilitiesHtml(pokeData);
   const stats = statsRowsHtml(pokeData);
+  const evolution = await pokedexEvolutionSummaryHtml(speciesData, pokeData);
   const captureRate = Number.isFinite(Number(speciesData?.capture_rate)) ? String(speciesData.capture_rate) : "Inconnu";
   const gender = formatGenderRate(speciesData);
   const eggs = formatEggGroups(speciesData);
@@ -7680,6 +7683,7 @@ async function renderPokedexDetail(pokemon) {
     <div class="pokedex-section"><h4>Talents</h4><div class="pokedex-abilities">${abilities}</div></div>
     <div class="pokedex-section"><h4>Statistiques de base</h4><div class="pokedex-stats-wrap">${stats}</div></div>
     <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
+    <div class="pokedex-section"><h4>Évolution</h4>${evolution}</div>
     <div class="pokedex-section"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b>${captureRate}</b></div><div><span>Genre</span><b>${escapeHtml(gender)}</b></div><div><span>Groupes d'oeufs</span><b>${escapeHtml(eggs)}</b></div><div><span>Eclosion</span><b>${escapeHtml(hatch)}</b></div></div></div>
   `;
 }
@@ -10566,6 +10570,96 @@ function handleDraftSimpleBattleNetworkRoomState(roomState) {
   if ((nextState.log?.length || 0) > previousLogLength) {
     startDraftSimpleBattleTurnReplay(nextState, nextState.log[nextState.log.length - 1]);
   }
+}
+
+async function fetchPokedexEvolutionChainData(url) {
+  if (typeof url !== "string" || !url) return null;
+  if (POKEDEX_EVOLUTION_CACHE.has(url)) return POKEDEX_EVOLUTION_CACHE.get(url);
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const data = await response.json();
+    POKEDEX_EVOLUTION_CACHE.set(url, data);
+    return data;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function formatPokedexApiLabel(value) {
+  if (typeof value !== "string" || !value) return "Inconnu";
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getPokedexEvolutionMethodText(detail) {
+  if (!detail || typeof detail !== "object") return "";
+  if (Number.isFinite(Number(detail.min_level)) && Number(detail.min_level) > 0) return `Niveau ${Number(detail.min_level)}`;
+  if (detail.item?.name) return `Pierre / objet : ${formatPokedexApiLabel(detail.item.name)}`;
+  if (detail.trigger?.name === "trade") return "Échange";
+  if (detail.trigger?.name === "use-item") return detail.item?.name ? `Objet : ${formatPokedexApiLabel(detail.item.name)}` : "Objet";
+  if (detail.min_happiness) return "Bonheur";
+  if (detail.time_of_day) return `Moment : ${formatPokedexApiLabel(detail.time_of_day)}`;
+  if (detail.held_item?.name) return `Objet tenu : ${formatPokedexApiLabel(detail.held_item.name)}`;
+  return detail.trigger?.name ? formatPokedexApiLabel(detail.trigger.name) : "";
+}
+
+function findPokedexEvolutionNode(chain, speciesName, parent = null) {
+  if (!chain || !speciesName) return null;
+  if (chain.species?.name === speciesName) {
+    return { node: chain, parent };
+  }
+  const nextNodes = Array.isArray(chain.evolves_to) ? chain.evolves_to : [];
+  for (const child of nextNodes) {
+    const found = findPokedexEvolutionNode(child, speciesName, chain);
+    if (found) return found;
+  }
+  return null;
+}
+
+async function pokedexEvolutionSummaryHtml(speciesData, pokeData) {
+  const chainUrl = speciesData?.evolution_chain?.url;
+  const speciesName = pokeData?.species?.name;
+  if (!chainUrl || !speciesName) return "<p class=\"pokedex-muted\">Infos d’évolution non disponibles.</p>";
+  const chainData = await fetchPokedexEvolutionChainData(chainUrl);
+  const match = findPokedexEvolutionNode(chainData?.chain, speciesName);
+  if (!match?.node) return "<p class=\"pokedex-muted\">Infos d’évolution non disponibles.</p>";
+
+  const previousNode = match.parent || null;
+  const nextNodes = Array.isArray(match.node.evolves_to) ? match.node.evolves_to : [];
+  const previousDetail = Array.isArray(match.node.evolution_details) ? match.node.evolution_details[0] : null;
+
+  const rows = [];
+  if (previousNode?.species?.name) {
+    rows.push(`
+      <div><span>Évolue depuis</span><b>${escapeHtml(formatPokedexApiLabel(previousNode.species.name))}</b></div>
+      <div><span>Méthode</span><b>${escapeHtml(getPokedexEvolutionMethodText(previousDetail) || "Non précisée")}</b></div>
+    `);
+  }
+
+  if (nextNodes.length) {
+    const nextLabels = nextNodes
+      .map((node) => formatPokedexApiLabel(node?.species?.name || ""))
+      .filter(Boolean)
+      .join(" • ");
+    const nextMethod = nextNodes
+      .map((node) => getPokedexEvolutionMethodText(Array.isArray(node?.evolution_details) ? node.evolution_details[0] : null))
+      .filter(Boolean)
+      .join(" • ");
+    rows.push(`
+      <div><span>Évolue vers</span><b>${escapeHtml(nextLabels || "—")}</b></div>
+      <div><span>Méthode</span><b>${escapeHtml(nextMethod || "Non précisée")}</b></div>
+    `);
+  }
+
+  if (!rows.length) {
+    return "<p class=\"pokedex-muted\">Aucune évolution liée connue pour ce Pokémon.</p>";
+  }
+
+  return `<div class="pokedex-detail-grid pokedex-extra-grid">${rows.join("")}</div>`;
 }
 
 function handleDraftSimpleBattleNetworkBattleState(payload = {}) {
