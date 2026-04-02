@@ -6513,6 +6513,18 @@ select:focus-visible {
   backdrop-filter: blur(10px) saturate(1.02);
 }
 
+body.draft-battle-open .draft-dev-battle-panel {
+  border-color: rgba(183, 214, 255, 0.34);
+  box-shadow:
+    0 46px 110px rgba(4, 14, 29, 0.52),
+    0 0 0 1px rgba(231, 240, 255, 0.09) inset,
+    0 0 0 9999px rgba(5, 12, 23, 0.62);
+}
+
+body.draft-battle-open .draft-dev-battle-panel::after {
+  opacity: 0.92;
+}
+
 body.draft-battle-open {
   overflow: hidden;
 }
@@ -6524,9 +6536,29 @@ body.draft-battle-open #screen-draft-arena .draft-badge-grid,
 body.draft-battle-open #screen-draft-arena .draft-arena-list,
 body.draft-battle-open #screen-draft-arena > .card > .ranking-head,
 body.draft-battle-open #screen-draft-arena > .card > .card-desc {
-  opacity: 0.55;
-  filter: saturate(0.82) blur(1.4px);
+  opacity: 0.38;
+  filter: saturate(0.72) blur(2px);
   transition: opacity 0.22s ease, filter 0.22s ease;
+}
+
+body.draft-battle-open #screen-draft-arena .draft-card > .draft-panel,
+body.draft-battle-open #screen-draft-arena .draft-team-metrics,
+body.draft-battle-open #screen-draft-arena .draft-panel-results {
+  opacity: 0.5;
+  filter: saturate(0.8) blur(1px);
+  transition: opacity 0.22s ease, filter 0.22s ease;
+}
+
+body.draft-battle-open #screen-draft-arena .draft-progress-shell,
+body.draft-battle-open #screen-draft-arena .draft-status,
+body.draft-battle-open #screen-draft-arena .draft-run-summary,
+body.draft-battle-open #screen-draft-arena .draft-badge-grid,
+body.draft-battle-open #screen-draft-arena .draft-arena-list,
+body.draft-battle-open #screen-draft-arena .draft-card > .draft-panel,
+body.draft-battle-open #screen-draft-arena .draft-team-metrics,
+body.draft-battle-open #screen-draft-arena .draft-panel-results {
+  transform: scale(0.985);
+  transform-origin: top center;
 }
 
 .draft-dev-battle-panel::before {
@@ -6646,6 +6678,85 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
 .draft-dev-battle-panel > * {
   position: relative;
   z-index: 1;
+}
+
+body.draft-battle-open .draft-dev-battle-network-card,
+body.draft-battle-open .draft-dev-battle-meta .draft-summary-card,
+body.draft-battle-open .draft-dev-battle-benches .draft-dev-battle-bench {
+  opacity: 0.76;
+}
+
+body.draft-battle-open .draft-dev-battle-meta .draft-summary-card,
+body.draft-battle-open .draft-dev-battle-benches .draft-dev-battle-bench,
+body.draft-battle-open .draft-dev-battle-network-card {
+  padding: 10px 12px;
+}
+
+body.draft-battle-open .draft-dev-battle-fighters,
+body.draft-battle-open .draft-dev-battle-actions,
+body.draft-battle-open .draft-dev-battle-result,
+body.draft-battle-open .draft-dev-battle-switch,
+body.draft-battle-open .draft-dev-battle-log {
+  position: relative;
+  z-index: 2;
+}
+
+body.draft-battle-open .draft-dev-battle-head,
+body.draft-battle-open .draft-dev-battle-arena-banner,
+body.draft-battle-open .draft-dev-battle-network-card,
+body.draft-battle-open .draft-dev-battle-scene-note,
+body.draft-battle-open .draft-dev-battle-actions,
+body.draft-battle-open .draft-dev-battle-result,
+body.draft-battle-open .draft-dev-battle-switch,
+body.draft-battle-open .draft-dev-battle-log,
+body.draft-battle-open .draft-dev-battle-benches,
+body.draft-battle-open .draft-dev-battle-meta {
+  border-radius: 20px;
+  border: 1px solid rgba(185, 213, 249, 0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+body.draft-battle-open .draft-dev-battle-head,
+body.draft-battle-open .draft-dev-battle-arena-banner,
+body.draft-battle-open .draft-dev-battle-network-card,
+body.draft-battle-open .draft-dev-battle-scene-note {
+  padding: 14px 16px;
+}
+
+body.draft-battle-open .draft-dev-battle-actions,
+body.draft-battle-open .draft-dev-battle-result,
+body.draft-battle-open .draft-dev-battle-switch,
+body.draft-battle-open .draft-dev-battle-log {
+  padding: 16px 18px;
+}
+
+body.draft-battle-open .draft-dev-battle-actions {
+  border-color: rgba(135, 181, 255, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(96, 162, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
+  box-shadow:
+    0 20px 40px rgba(9, 24, 48, 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+body.draft-battle-open .draft-dev-battle-log {
+  border-color: rgba(185, 213, 249, 0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.015));
+}
+
+body.draft-battle-open .draft-dev-battle-meta,
+body.draft-battle-open .draft-dev-battle-benches {
+  padding: 12px 14px;
+}
+
+body.draft-battle-open .draft-dev-battle-meta {
+  gap: 10px;
+}
+
+body.draft-battle-open .draft-dev-battle-benches {
+  gap: 12px;
 }
 
 #draft-dev-battle-body {
@@ -7819,6 +7930,34 @@ body.draft-battle-open #screen-draft-arena > .card > .card-desc {
   .draft-dev-battle-extra-action { grid-area: extra; }
   .draft-dev-battle-actions { grid-area: actions; }
   .draft-dev-battle-log { grid-area: log; }
+}
+
+@media (min-width: 1080px) {
+  body.draft-battle-open #draft-dev-battle-body {
+    grid-template-columns: minmax(0, 1fr) 192px;
+    grid-template-areas:
+      "banner network"
+      "fighters benches"
+      "actions benches"
+      "result meta"
+      "switch meta"
+      "extra meta"
+      "log meta";
+    column-gap: 16px;
+    row-gap: 10px;
+  }
+
+  body.draft-battle-open .draft-dev-battle-scene-note {
+    left: 30px;
+    right: 226px;
+    top: 132px;
+  }
+
+  body.draft-battle-open .draft-dev-battle-benches,
+  body.draft-battle-open .draft-dev-battle-meta,
+  body.draft-battle-open .draft-dev-battle-network-card {
+    align-self: start;
+  }
 }
 
 .draft-badge-item,

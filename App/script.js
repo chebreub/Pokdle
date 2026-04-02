@@ -389,6 +389,7 @@ let multiplayerBotState = null;
 let multiplayerLiveState = null;
 let multiplayerSocket = null;
 let draftBattleNetworkSession = null;
+let draftSimpleBattleActionFocusKey = "";
 
 let gameMode = "normal"; // normal | challenge | daily
 let winRegisteredForCurrentGame = false;
@@ -11797,6 +11798,74 @@ function renderDraftSimpleBattleDevPanel(state) {
   if (shouldAutoScroll) {
     scrollToDraftSimpleBattlePanel(panel);
   }
+  focusDraftSimpleBattlePrimaryActionIfReady(state, panel);
+}
+
+function focusDraftSimpleBattlePrimaryActionIfReady(state, panel = document.getElementById("draft-dev-battle-panel")) {
+  if (!state || !panel || panel.classList.contains("hidden")) {
+    draftSimpleBattleActionFocusKey = "";
+    return;
+  }
+
+  const network = state.network || {};
+  const localSide = network.localSide || "left";
+  const isPlayerTurn = state.phase === "battle" && (state.turnState === "left-action" || state.turnState === "right-action");
+  const currentActionSide = state.turnState === "right-action" ? "right" : "left";
+  const canLocalChooseAction = !isDraftSimpleBattleNetworkMode(state)
+    || (localSide === currentActionSide && !network.waitingRemote && !network.resolvingTurn);
+  const needsForcedSwitch = state.phase === "battle" && state.pendingSwitchSide && !state.pendingSwitchResolved;
+  const canFocusMove = Boolean(isPlayerTurn && canLocalChooseAction && !needsForcedSwitch);
+  const canFocusSwitch = Boolean(needsForcedSwitch && (!isDraftSimpleBattleNetworkMode(state) || localSide === state.pendingSwitchSide));
+  const canFocusStart = Boolean(state.phase === "preview");
+
+  let selector = "";
+  let focusKey = "";
+
+  if (canFocusSwitch) {
+    selector = ".draft-dev-battle-switch-option:not([disabled]), .draft-dev-battle-extra-action .btn-ghost:not([disabled])";
+    focusKey = `switch:${state.turn}:${state.pendingSwitchSide}:${state.pendingSwitchReason || ""}`;
+  } else if (canFocusMove) {
+    selector = ".draft-dev-battle-actions .draft-dev-battle-move:not([disabled]), .draft-dev-battle-extra-action .btn-ghost:not([disabled])";
+    const submitted = state.pendingTurn?.actions?.[currentActionSide];
+    focusKey = `action:${state.turn}:${currentActionSide}:${submitted ? "locked" : "open"}`;
+  } else if (canFocusStart) {
+    selector = ".draft-dev-battle-preview-cta:not([disabled])";
+    focusKey = `preview:${state.mode || "default"}`;
+  } else {
+    draftSimpleBattleActionFocusKey = "";
+    return;
+  }
+
+  if (draftSimpleBattleActionFocusKey === focusKey) return;
+
+  const active = document.activeElement;
+  const activeIsUseful = !!active && (
+    active === panel ||
+    panel.contains(active)
+  ) && (
+    active.tagName === "BUTTON" ||
+    active.tagName === "INPUT" ||
+    active.tagName === "SELECT" ||
+    active.tagName === "TEXTAREA" ||
+    active.isContentEditable
+  );
+  if (activeIsUseful) return;
+
+  draftSimpleBattleActionFocusKey = focusKey;
+  window.requestAnimationFrame(() => {
+    const target = panel.querySelector(selector);
+    if (!target || target.disabled) return;
+    const latestActive = document.activeElement;
+    const latestActiveIsUseful = !!latestActive && panel.contains(latestActive) && (
+      latestActive.tagName === "BUTTON" ||
+      latestActive.tagName === "INPUT" ||
+      latestActive.tagName === "SELECT" ||
+      latestActive.tagName === "TEXTAREA" ||
+      latestActive.isContentEditable
+    );
+    if (latestActiveIsUseful) return;
+    target.focus({ preventScroll: true });
+  });
 }
 
 function clearDraftSimpleBattleDevPanel() {
@@ -11823,6 +11892,7 @@ function clearDraftSimpleBattleDevPanel() {
   }
   draftBattleNetworkSession = null;
   draftSimpleBattleDevUiState = null;
+  draftSimpleBattleActionFocusKey = "";
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
