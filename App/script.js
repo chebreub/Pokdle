@@ -10595,6 +10595,18 @@ function formatPokedexApiLabel(value) {
     .join(" ");
 }
 
+function getPokedexFrenchSpeciesName(speciesRef) {
+  const speciesId = speciesIdFromUrl(speciesRef?.url);
+  if (Number.isInteger(speciesId)) {
+    const frenchMatch = POKEMON_LIST.find((pokemon) => {
+      if (pokemon?.isAltForm) return false;
+      return Number(getMysteryApiId(pokemon)) === speciesId;
+    });
+    if (frenchMatch?.name) return frenchMatch.name;
+  }
+  return formatPokedexApiLabel(speciesRef?.name || "");
+}
+
 function getPokedexEvolutionMethodText(detail) {
   if (!detail || typeof detail !== "object") return "";
   if (Number.isFinite(Number(detail.min_level)) && Number(detail.min_level) > 0) return `Niveau ${Number(detail.min_level)}`;
@@ -10635,14 +10647,14 @@ async function pokedexEvolutionSummaryHtml(speciesData, pokeData) {
   const rows = [];
   if (previousNode?.species?.name) {
     rows.push(`
-      <div><span>Évolue depuis</span><b>${escapeHtml(formatPokedexApiLabel(previousNode.species.name))}</b></div>
+      <div><span>Évolue depuis</span><b>${escapeHtml(getPokedexFrenchSpeciesName(previousNode.species))}</b></div>
       <div><span>Méthode</span><b>${escapeHtml(getPokedexEvolutionMethodText(previousDetail) || "Non précisée")}</b></div>
     `);
   }
 
   if (nextNodes.length) {
     const nextLabels = nextNodes
-      .map((node) => formatPokedexApiLabel(node?.species?.name || ""))
+      .map((node) => getPokedexFrenchSpeciesName(node?.species))
       .filter(Boolean)
       .join(" • ");
     const nextMethod = nextNodes

@@ -7394,16 +7394,18 @@ body.draft-battle-open .draft-dev-battle-benches {
   padding: 12px;
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)),
+    radial-gradient(circle at top right, rgba(118, 175, 255, 0.14), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
     rgba(8, 24, 46, 0.4);
-  border: 1px solid rgba(182, 208, 246, 0.16);
-  box-shadow: 0 14px 28px rgba(8, 20, 36, 0.13);
+  border: 1px solid rgba(182, 208, 246, 0.24);
+  box-shadow: 0 16px 32px rgba(8, 20, 36, 0.16);
 }
 
 .draft-dev-battle-actions .card-desc {
   grid-column: 1 / -1;
-  color: rgba(229, 240, 255, 0.88);
+  color: rgba(244, 248, 255, 0.96);
   font-weight: 800;
+  letter-spacing: 0.01em;
 }
 
 .draft-dev-battle-meta {
@@ -7473,6 +7475,13 @@ body.draft-battle-open .draft-dev-battle-benches {
   transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease, opacity 0.16s ease;
 }
 
+.draft-dev-battle-actions .draft-dev-battle-move:first-of-type:not(:disabled) {
+  border-color: rgba(255, 229, 150, 0.34);
+  box-shadow:
+    0 16px 30px rgba(8, 20, 36, 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
 .draft-dev-battle-move:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 16px 28px rgba(8, 20, 36, 0.18);
@@ -7539,11 +7548,11 @@ body.draft-battle-open .draft-dev-battle-benches {
 }
 
 .draft-dev-battle-move:disabled {
-  opacity: 0.5;
+  opacity: 0.42;
   cursor: not-allowed;
   box-shadow: none;
-  filter: grayscale(0.14) saturate(0.88);
-  border-color: rgba(210, 227, 255, 0.08);
+  filter: grayscale(0.2) saturate(0.72) brightness(0.92);
+  border-color: rgba(210, 227, 255, 0.06);
 }
 
 .draft-dev-battle-move:active:not(:disabled) {
