@@ -11730,6 +11730,8 @@ function renderDraftSimpleBattleDevPanel(state) {
   const leftStatusLabel = getDraftSimpleBattleStatusLabel(displayLeft.status);
   const rightStatusLabel = getDraftSimpleBattleStatusLabel(displayRight.status);
   const isFinished = state.phase === "finished";
+  panel.classList.toggle("is-finished-combat", isFinished);
+  body.classList.toggle("is-finished-combat", isFinished);
   const needsForcedSwitch = !isFinished && state.pendingSwitch;
   const isEnemyTurn = !isFinished && !needsForcedSwitch && state.turnState === "enemy";
   const isPlayerTurn = !isFinished && !needsForcedSwitch && !isEnemyTurn;
@@ -11891,7 +11893,13 @@ function renderDraftSimpleBattleDevPanel(state) {
     </div>
   `;
 
-  body.innerHTML = `
+  body.innerHTML = isFinished
+    ? `
+    <div class="draft-dev-battle-finish-screen">
+      ${resultHtml}
+    </div>
+  `
+    : `
     ${state.arena ? `
       <div class="draft-dev-battle-arena-banner is-live">
         <div class="draft-dev-battle-arena-badge">${getDraftBadgeMarkup(state.arena, isFinished ? "finished" : "live")}</div>

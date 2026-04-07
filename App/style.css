@@ -22966,14 +22966,41 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)):not(:has(.draft-dev-battle-result.is-finished)) .draft-dev-battle-fighters {
   display: grid !important;
   grid-template-columns: 1fr !important;
-  grid-template-rows: minmax(136px, auto) minmax(156px, auto) !important;
-  align-content: space-between !important;
-  min-height: 446px !important;
-  padding: 34px 30px 28px !important;
+  grid-template-rows: minmax(130px, auto) minmax(144px, auto) !important;
+  align-content: center !important;
+  row-gap: 10px !important;
+  min-height: 392px !important;
+  padding: 26px 30px 18px !important;
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell {
   position: relative;
+  padding-block: 4px 0;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell::before,
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell::before {
+  top: 80px;
+  right: 54px;
+  width: 180px;
+  height: 34px;
+  background: radial-gradient(ellipse at center, rgba(120, 163, 101, 0.3), rgba(120, 163, 101, 0.08) 68%, rgba(120, 163, 101, 0) 100%);
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell::after {
+  bottom: 18px;
+  left: 48px;
+  width: 220px;
+  height: 42px;
+  background: radial-gradient(ellipse at center, rgba(126, 174, 114, 0.34), rgba(126, 174, 114, 0.1) 70%, rgba(126, 174, 114, 0) 100%);
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-row {
@@ -23000,21 +23027,23 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
-  padding-right: 24px;
+  padding-right: 18px;
+  padding-top: 4px;
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot-sprite-player {
   display: flex;
   justify-content: flex-start;
   align-items: flex-end;
-  padding-left: 24px;
+  padding-left: 18px;
+  padding-bottom: 2px;
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-sprite {
   display: block;
   object-fit: contain;
   image-rendering: pixelated;
-  filter: drop-shadow(0 20px 26px rgba(5, 14, 28, 0.28));
+  filter: drop-shadow(0 16px 18px rgba(5, 14, 28, 0.24));
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)):not(:has(.draft-dev-battle-result.is-finished)) .draft-dev-battle-fighter {
@@ -23086,12 +23115,13 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-sprite-foe {
   width: 118px;
   height: 118px;
-  transform: scale(0.95);
+  transform: translateY(6px) scale(0.95);
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-sprite-player {
   width: 118px;
   height: 118px;
+  transform: translateY(-2px);
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)):not(:has(.draft-dev-battle-result.is-finished)) .draft-dev-battle-fighter span {
@@ -23204,4 +23234,47 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-battlebox-commands .draft-dev-battle-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat {
+  overflow: hidden;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat #draft-dev-battle-body {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 130px);
+  padding: 10px 0;
+  overflow: visible;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-battle-finish-screen {
+  width: min(100%, 780px);
+  margin: 0 auto;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-battle-result.is-finished {
+  margin: 0;
+  min-height: 0;
+  padding: 28px 30px;
+  border-radius: 28px;
+  gap: 10px;
+  overflow: visible;
+  box-shadow:
+    0 28px 54px rgba(8, 21, 43, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-battle-result.is-finished b {
+  font-size: 1.35rem;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-battle-result.is-finished span {
+  font-size: 0.98rem;
+}
+
+body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-battle-result-actions {
+  justify-content: center;
+  margin-top: 14px;
 }
