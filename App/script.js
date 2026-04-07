@@ -8288,6 +8288,7 @@ let draftSimpleBattleDevUiState = null;
 let draftSimpleBattleIntroTimer = null;
 let draftSimpleBattleTurnTimer = null;
 let draftSimpleBattleReplayTimer = null;
+let draftSimpleBattleReplayFrame = null;
 let draftSimpleBattleAutoScrollFrame = null;
 
 function clampDraftSimpleBattleHp(value) {
@@ -11028,8 +11029,15 @@ function clearDraftSimpleBattleReplay(state = draftSimpleBattleDevUiState) {
     clearTimeout(draftSimpleBattleReplayTimer);
     draftSimpleBattleReplayTimer = null;
   }
+  if (draftSimpleBattleReplayFrame) {
+    cancelAnimationFrame(draftSimpleBattleReplayFrame);
+    draftSimpleBattleReplayFrame = null;
+  }
   if (state?.visualReplay) {
     state.visualReplay.active = false;
+    state.visualReplay.currentAction = null;
+    state.visualReplay.phase = "";
+    state.visualReplay.hpDisplay = null;
   }
 }
 
@@ -11067,6 +11075,95 @@ function getDraftSimpleBattleReplayMessage(action) {
   return `${actor} utilise ${action.move?.name || "une attaque"} sur ${target}.`;
 }
 
+function waitDraftSimpleBattleReplay(ms = 120) {
+  return new Promise((resolve) => {
+    if (draftSimpleBattleReplayTimer) clearTimeout(draftSimpleBattleReplayTimer);
+    draftSimpleBattleReplayTimer = setTimeout(() => {
+      draftSimpleBattleReplayTimer = null;
+      resolve();
+    }, ms);
+  });
+}
+
+function getDraftSimpleBattleReplayBaseHp(state, turnEntry) {
+  const hp = {
+    left: Math.max(0, Number(state?.left?.currentHp) || 0),
+    right: Math.max(0, Number(state?.right?.currentHp) || 0),
+  };
+  const actions = Array.isArray(turnEntry?.actions) ? turnEntry.actions.slice().reverse() : [];
+  actions.forEach((action) => {
+    if (!action) return;
+    const actorSide = action.side === "right" ? "right" : "left";
+    const targetSide = actorSide === "left" ? "right" : "left";
+    if ((Number(action.recoil) || 0) > 0) hp[actorSide] += Number(action.recoil) || 0;
+    if ((Number(action.heal) || 0) > 0) hp[actorSide] -= Number(action.heal) || 0;
+    if ((Number(action.drain) || 0) > 0) hp[actorSide] -= Number(action.drain) || 0;
+    if ((Number(action.damage) || 0) > 0) hp[targetSide] += Number(action.damage) || 0;
+  });
+  return {
+    left: Math.max(0, Math.min(Number(state?.left?.maxHp) || hp.left, hp.left)),
+    right: Math.max(0, Math.min(Number(state?.right?.maxHp) || hp.right, hp.right)),
+  };
+}
+
+function getDraftSimpleBattleReplayAnnouncement(action) {
+  if (!action) return "";
+  if (action.event === "sendout") return `${action.pokemonName || "Pokémon"} entre au combat !`;
+  const actor = action.actorName || "Pokémon";
+  if (action.move?.category === "status") return `${actor} prépare ${action.move?.name || "sa capacité"} !`;
+  return `${actor} utilise ${action.move?.name || "son attaque"} !`;
+}
+
+function getDraftSimpleBattleReplayImpactMessage(action) {
+  if (!action || action.event === "sendout") return "";
+  const actor = action.actorName || "Pokémon";
+  const target = action.targetName || "la cible";
+  if (action.missed) return `${target} esquive l’attaque !`;
+  if ((Number(action.damage) || 0) > 0) return `${target} encaisse l’impact !`;
+  if ((Number(action.heal) || 0) > 0 || (Number(action.drain) || 0) > 0) return `${actor} récupère des PV.`;
+  if (action.statusApplied) return `${target} est affecté !`;
+  return "L’effet se déclenche.";
+}
+
+function animateDraftSimpleBattleReplayHp(state, updates = [], duration = 360) {
+  const validUpdates = updates.filter((entry) => entry && Number.isFinite(entry.to));
+  if (!state?.visualReplay?.active || !validUpdates.length) return Promise.resolve();
+  const startValues = {};
+  validUpdates.forEach((entry) => {
+    const currentValue = state.visualReplay?.hpDisplay?.[entry.side];
+    startValues[entry.side] = Math.max(0, Number.isFinite(currentValue) ? Number(currentValue) : 0);
+  });
+  return new Promise((resolve) => {
+    const startedAt = performance.now();
+    const step = (now) => {
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+        draftSimpleBattleReplayFrame = null;
+        resolve();
+        return;
+      }
+      const progress = Math.max(0, Math.min(1, (now - startedAt) / duration));
+      const eased = 1 - Math.pow(1 - progress, 3);
+      validUpdates.forEach((entry) => {
+        const from = startValues[entry.side];
+        const to = Math.max(0, Number(entry.to) || 0);
+        state.visualReplay.hpDisplay[entry.side] = Math.round(from + (to - from) * eased);
+      });
+      renderDraftSimpleBattleDevPanel(state);
+      if (progress >= 1) {
+        validUpdates.forEach((entry) => {
+          state.visualReplay.hpDisplay[entry.side] = Math.max(0, Number(entry.to) || 0);
+        });
+        draftSimpleBattleReplayFrame = null;
+        renderDraftSimpleBattleDevPanel(state);
+        resolve();
+        return;
+      }
+      draftSimpleBattleReplayFrame = requestAnimationFrame(step);
+    };
+    draftSimpleBattleReplayFrame = requestAnimationFrame(step);
+  });
+}
+
 function startDraftSimpleBattleTurnReplay(state, turnEntry) {
   if (!state || !turnEntry || !Array.isArray(turnEntry.actions) || !turnEntry.actions.length) return state;
   clearDraftSimpleBattleReplay(state);
@@ -11074,30 +11171,92 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
     active: true,
     turn: turnEntry.turn,
     visibleCount: 0,
+    phase: "announce",
+    currentAction: null,
+    hpDisplay: getDraftSimpleBattleReplayBaseHp(state, turnEntry),
   };
+  renderDraftSimpleBattleDevPanel(state);
 
-  const revealNext = () => {
+  const runReplay = async () => {
+    await waitDraftSimpleBattleReplay(120);
+    for (let index = 0; index < turnEntry.actions.length; index += 1) {
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+        clearDraftSimpleBattleReplay(state);
+        return;
+      }
+      const action = turnEntry.actions[index];
+      const actorSide = action?.side === "right" ? "right" : "left";
+      const targetSide = actorSide === "left" ? "right" : "left";
+
+      state.visualReplay.currentAction = action;
+      state.visualReplay.phase = "announce";
+      state.sceneMessage = getDraftSimpleBattleReplayAnnouncement(action) || state.sceneMessage;
+      renderDraftSimpleBattleDevPanel(state);
+      await waitDraftSimpleBattleReplay(action?.event === "sendout" ? 240 : 260);
+
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+        clearDraftSimpleBattleReplay(state);
+        return;
+      }
+
+      state.visualReplay.phase = "impact";
+      const impactMessage = getDraftSimpleBattleReplayImpactMessage(action);
+      if (impactMessage) state.sceneMessage = impactMessage;
+      renderDraftSimpleBattleDevPanel(state);
+      await waitDraftSimpleBattleReplay(action?.event === "sendout" ? 140 : 120);
+
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+        clearDraftSimpleBattleReplay(state);
+        return;
+      }
+
+      const hpUpdates = [];
+      if ((Number(action?.damage) || 0) > 0) {
+        const currentTargetHp = Math.max(0, Number(state.visualReplay.hpDisplay?.[targetSide]) || 0);
+        hpUpdates.push({ side: targetSide, to: Math.max(0, currentTargetHp - (Number(action.damage) || 0)) });
+      }
+      if ((Number(action?.recoil) || 0) > 0) {
+        const currentActorHp = Math.max(0, Number(state.visualReplay.hpDisplay?.[actorSide]) || 0);
+        hpUpdates.push({ side: actorSide, to: Math.max(0, currentActorHp - (Number(action.recoil) || 0)) });
+      }
+      if ((Number(action?.heal) || 0) > 0 || (Number(action?.drain) || 0) > 0) {
+        const gain = (Number(action?.heal) || 0) + (Number(action?.drain) || 0);
+        const currentActorHp = Math.max(0, Number(state.visualReplay.hpDisplay?.[actorSide]) || 0);
+        const maxActorHp = Number(actorSide === "left" ? state.left?.maxHp : state.right?.maxHp) || currentActorHp + gain;
+        hpUpdates.push({ side: actorSide, to: Math.min(maxActorHp, currentActorHp + gain) });
+      }
+      if (hpUpdates.length) {
+        state.visualReplay.phase = "hp";
+        await animateDraftSimpleBattleReplayHp(state, hpUpdates, 360);
+      }
+
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+        clearDraftSimpleBattleReplay(state);
+        return;
+      }
+
+      state.visualReplay.visibleCount = index + 1;
+      state.visualReplay.phase = "result";
+      const replayMessage = getDraftSimpleBattleReplayMessage(action);
+      if (replayMessage) state.sceneMessage = replayMessage;
+      renderDraftSimpleBattleDevPanel(state);
+      await waitDraftSimpleBattleReplay(getDraftSimpleBattleReplayActionDelay(action) + 120);
+    }
+
     if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
       clearDraftSimpleBattleReplay(state);
       return;
     }
-    const nextCount = (state.visualReplay.visibleCount || 0) + 1;
-    state.visualReplay.visibleCount = nextCount;
-    const currentAction = turnEntry.actions[nextCount - 1] || null;
-    const replayMessage = getDraftSimpleBattleReplayMessage(currentAction);
-    if (replayMessage) state.sceneMessage = replayMessage;
+    state.visualReplay.visibleCount = turnEntry.actions.length;
+    state.visualReplay.currentAction = null;
+    state.visualReplay.phase = "";
+    state.visualReplay.active = false;
+    state.visualReplay.hpDisplay = null;
+    restoreDraftSimpleBattleInteractivePrompt(state);
     renderDraftSimpleBattleDevPanel(state);
-    if (nextCount >= turnEntry.actions.length) {
-      state.visualReplay.active = false;
-      restoreDraftSimpleBattleInteractivePrompt(state);
-      draftSimpleBattleReplayTimer = null;
-      renderDraftSimpleBattleDevPanel(state);
-      return;
-    }
-    draftSimpleBattleReplayTimer = setTimeout(revealNext, getDraftSimpleBattleReplayActionDelay(currentAction));
   };
 
-  draftSimpleBattleReplayTimer = setTimeout(revealNext, 90);
+  runReplay();
   return state;
 }
 
@@ -11126,7 +11285,16 @@ function getDraftSimpleBattleDisplayBattler(state, side) {
   const team = side === "left" ? state?.leftTeam : state?.rightTeam;
   const active = side === "left" ? state?.left : state?.right;
   const activeIndex = side === "left" ? state?.leftActiveIndex : state?.rightActiveIndex;
-  if (active) return active;
+  if (active) {
+    const replayHp = state?.visualReplay?.active ? state?.visualReplay?.hpDisplay?.[side] : null;
+    if (Number.isFinite(replayHp)) {
+      return {
+        ...active,
+        currentHp: Math.max(0, Number(replayHp) || 0),
+      };
+    }
+    return active;
+  }
   if (!Array.isArray(team) || !team.length) return null;
   const safeIndex = Math.min(Math.max(Number(activeIndex) || 0, 0), team.length - 1);
   return team[safeIndex] || team[team.length - 1] || null;
@@ -11192,6 +11360,49 @@ function getDraftSimpleBattleSceneText(state) {
 }
 
 function getDraftSimpleBattleVisualFeedback(state) {
+  if (state?.visualReplay?.active && state.visualReplay.currentAction) {
+    const action = state.visualReplay.currentAction;
+    const feedback = {
+      leftClass: "",
+      rightClass: "",
+      badges: [],
+    };
+    const side = action.side === "right" ? "right" : "left";
+    const targetSide = side === "left" ? "right" : "left";
+    const phase = state.visualReplay.phase || "";
+    if (action.event === "sendout") {
+      feedback[`${side}Class`] = "is-switch-in";
+      feedback.badges.push(side === "left" ? "Entrée en jeu" : "Adversaire envoyé");
+      return feedback;
+    }
+    feedback[`${side}Class`] = "is-attacking";
+    if (phase !== "announce") {
+      if (action.knockout) {
+        feedback[`${targetSide}Class`] = "is-ko";
+        feedback.badges.push("KO");
+      } else if (action.missed) {
+        feedback[`${targetSide}Class`] = "is-dodged";
+      } else if ((Number(action.damage) || 0) > 0) {
+        feedback[`${targetSide}Class`] = "is-hit";
+      }
+      if (action.critical) feedback.badges.push("Coup critique");
+      if ((Number(action.effectiveness) || 1) > 1) feedback.badges.push("Super efficace");
+      if ((Number(action.effectiveness) || 1) > 0 && (Number(action.effectiveness) || 1) < 1) feedback.badges.push("Pas très efficace");
+      if (action.statusApplied) {
+        const label = {
+          paralysed: "Paralysie",
+          burned: "Brûlure",
+          poisoned: "Poison",
+          badly_poisoned: "Toxic",
+          asleep: "Sommeil",
+          frozen: "Gel",
+        }[action.inflictedStatus] || "Statut";
+        feedback.badges.push(label);
+      }
+    }
+    return feedback;
+  }
+
   const lastTurn = state?.log?.[state.log.length - 1];
   const actions = Array.isArray(lastTurn?.actions) ? lastTurn.actions : [];
   const feedback = {
@@ -11936,7 +12147,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <small>${escapeHtml(networkTurnHint)}</small>
       </div>
     ` : ""}
-    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
+    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isReplayingTurn && state.visualReplay?.phase === "impact" ? "is-enemy" : isReplayingTurn && state.visualReplay?.phase === "hp" ? "is-enemy" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
       <b>${isFinished ? "Fin du match" : "Scène de combat"}</b>
       <span>${escapeHtml(sceneText)}</span>
     </div>
