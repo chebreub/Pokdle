@@ -7223,6 +7223,11 @@ body.draft-battle-open .draft-dev-battle-benches {
     rgba(74, 56, 16, 0.34);
 }
 
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-fighter.is-ko .draft-dev-battle-hp-fill {
+  width: 0 !important;
+  box-shadow: none !important;
+}
+
 .draft-dev-battle-scene-note.is-finished {
   border-color: rgba(118, 224, 151, 0.34);
   background: rgba(18, 56, 36, 0.4);
@@ -7321,8 +7326,21 @@ body.draft-battle-open .draft-dev-battle-benches {
   animation: draftBattleSwitchIn 0.42s ease-out;
 }
 
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-fighter.is-switch-in .draft-dev-battle-hp-track {
+  box-shadow:
+    inset 0 1px 2px rgba(31, 54, 87, 0.12),
+    0 0 0 2px rgba(124, 205, 143, 0.12) !important;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot:has(.draft-dev-battle-fighter.is-switch-in) + .draft-dev-battle-slot img,
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot:has(+ .draft-dev-battle-slot .draft-dev-battle-fighter.is-switch-in) img {
+  filter: drop-shadow(0 0 18px rgba(150, 232, 171, 0.24)) drop-shadow(0 16px 18px rgba(5, 14, 28, 0.24));
+}
+
 .draft-dev-battle-fighter.is-ko {
   animation: draftBattleKoPulse 0.65s ease-out;
+  filter: saturate(0.82);
+  opacity: 0.86;
 }
 
 .draft-dev-battle-fighter-head {
@@ -22889,6 +22907,27 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
   padding: 8px 8px 6px !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 6px !important;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-battlebox-commands.is-resolving {
+  opacity: 0.92;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-battlebox-commands .draft-dev-battle-actions.is-resolving {
+  pointer-events: none;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-battlebox-commands .draft-dev-battle-actions.is-resolving .card-desc {
+  color: #f6e6ab !important;
+  letter-spacing: 0.08em !important;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-battlebox-commands .draft-dev-battle-actions.is-resolving .draft-dev-battle-move {
+  opacity: 0.42 !important;
+  filter: grayscale(0.18) saturate(0.72) brightness(0.88) !important;
+  transform: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04) !important;
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-battlebox-commands .draft-dev-battle-actions .card-desc {

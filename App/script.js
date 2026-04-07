@@ -11106,9 +11106,53 @@ function getDraftSimpleBattleReplayBaseHp(state, turnEntry) {
   };
 }
 
+function cloneDraftSimpleBattleReplayBattler(battler) {
+  if (!battler) return null;
+  return {
+    ...battler,
+    pokemon: battler.pokemon ? { ...battler.pokemon } : battler.pokemon,
+    moves: Array.isArray(battler.moves) ? battler.moves.map((move) => ({ ...move })) : battler.moves,
+    statusState: battler.statusState ? { ...battler.statusState } : battler.statusState,
+    volatileState: battler.volatileState ? { ...battler.volatileState } : battler.volatileState,
+  };
+}
+
+function getDraftSimpleBattleReplayBaseDisplayBattlers(state, turnEntry) {
+  const display = {
+    left: cloneDraftSimpleBattleReplayBattler(state?.left),
+    right: cloneDraftSimpleBattleReplayBattler(state?.right),
+  };
+  const actions = Array.isArray(turnEntry?.actions) ? turnEntry.actions : [];
+  actions.forEach((action, index) => {
+    if (action?.event !== "sendout") return;
+    const side = action.side === "right" ? "right" : "left";
+    const team = side === "right" ? state?.rightTeam : state?.leftTeam;
+    const previousKoAction = actions
+      .slice(0, index)
+      .reverse()
+      .find((entry) => {
+        if (!entry?.knockout) return false;
+        const targetSide = entry.side === "right" ? "left" : "right";
+        return targetSide === side;
+      });
+    const previousName = previousKoAction?.targetName || null;
+    if (!previousName || !Array.isArray(team)) return;
+    const previousBattler = team.find((member) => member?.pokemon?.name === previousName) || null;
+    if (!previousBattler) return;
+    const clone = cloneDraftSimpleBattleReplayBattler(previousBattler);
+    clone.currentHp = 0;
+    display[side] = clone;
+  });
+  return display;
+}
+
 function getDraftSimpleBattleReplayAnnouncement(action) {
   if (!action) return "";
-  if (action.event === "sendout") return `${action.pokemonName || "Pokémon"} entre au combat !`;
+  if (action.event === "sendout") {
+    return action.side === "right"
+      ? `L’adversaire envoie ${action.pokemonName || "un Pokémon"} !`
+      : `${action.pokemonName || "Un Pokémon"} entre au combat !`;
+  }
   const actor = action.actorName || "Pokémon";
   if (action.move?.category === "status") return `${actor} prépare ${action.move?.name || "sa capacité"} !`;
   return `${actor} utilise ${action.move?.name || "son attaque"} !`;
@@ -11123,6 +11167,17 @@ function getDraftSimpleBattleReplayImpactMessage(action) {
   if ((Number(action.heal) || 0) > 0 || (Number(action.drain) || 0) > 0) return `${actor} récupère des PV.`;
   if (action.statusApplied) return `${target} est affecté !`;
   return "L’effet se déclenche.";
+}
+
+function getDraftSimpleBattleReplayKoMessage(action) {
+  if (!action) return "";
+  if (action.knockout) {
+    return `${action.targetName || "Le Pokémon adverse"} est KO !`;
+  }
+  if (action.selfKnockout) {
+    return `${action.actorName || "Le Pokémon"} tombe KO !`;
+  }
+  return "";
 }
 
 function animateDraftSimpleBattleReplayHp(state, updates = [], duration = 360) {
@@ -11174,6 +11229,7 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
     phase: "announce",
     currentAction: null,
     hpDisplay: getDraftSimpleBattleReplayBaseHp(state, turnEntry),
+    displayBattlers: getDraftSimpleBattleReplayBaseDisplayBattlers(state, turnEntry),
   };
   renderDraftSimpleBattleDevPanel(state);
 
@@ -11202,6 +11258,9 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
       state.visualReplay.phase = "impact";
       const impactMessage = getDraftSimpleBattleReplayImpactMessage(action);
       if (impactMessage) state.sceneMessage = impactMessage;
+      if (action?.event === "sendout" && state.visualReplay.displayBattlers) {
+        state.visualReplay.displayBattlers[actorSide] = cloneDraftSimpleBattleReplayBattler(actorSide === "left" ? state.left : state.right);
+      }
       renderDraftSimpleBattleDevPanel(state);
       await waitDraftSimpleBattleReplay(action?.event === "sendout" ? 140 : 120);
 
@@ -11235,6 +11294,19 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
         return;
       }
 
+      if (action.knockout || action.selfKnockout) {
+        state.visualReplay.phase = "ko";
+        const koMessage = getDraftSimpleBattleReplayKoMessage(action);
+        if (koMessage) state.sceneMessage = koMessage;
+        renderDraftSimpleBattleDevPanel(state);
+        await waitDraftSimpleBattleReplay(320);
+      }
+
+      if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state || !state.visualReplay?.active) {
+        clearDraftSimpleBattleReplay(state);
+        return;
+      }
+
       state.visualReplay.visibleCount = index + 1;
       state.visualReplay.phase = "result";
       const replayMessage = getDraftSimpleBattleReplayMessage(action);
@@ -11252,6 +11324,7 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
     state.visualReplay.phase = "";
     state.visualReplay.active = false;
     state.visualReplay.hpDisplay = null;
+    state.visualReplay.displayBattlers = null;
     restoreDraftSimpleBattleInteractivePrompt(state);
     renderDraftSimpleBattleDevPanel(state);
   };
@@ -11282,18 +11355,20 @@ function isDraftSimpleBattlePlayerWin(state) {
 }
 
 function getDraftSimpleBattleDisplayBattler(state, side) {
+  const replayBattler = state?.visualReplay?.active ? state?.visualReplay?.displayBattlers?.[side] : null;
   const team = side === "left" ? state?.leftTeam : state?.rightTeam;
   const active = side === "left" ? state?.left : state?.right;
   const activeIndex = side === "left" ? state?.leftActiveIndex : state?.rightActiveIndex;
-  if (active) {
+  const sourceBattler = replayBattler || active;
+  if (sourceBattler) {
     const replayHp = state?.visualReplay?.active ? state?.visualReplay?.hpDisplay?.[side] : null;
     if (Number.isFinite(replayHp)) {
       return {
-        ...active,
+        ...sourceBattler,
         currentHp: Math.max(0, Number(replayHp) || 0),
       };
     }
-    return active;
+    return sourceBattler;
   }
   if (!Array.isArray(team) || !team.length) return null;
   const safeIndex = Math.min(Math.max(Number(activeIndex) || 0, 0), team.length - 1);
@@ -12147,7 +12222,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <small>${escapeHtml(networkTurnHint)}</small>
       </div>
     ` : ""}
-    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isReplayingTurn && state.visualReplay?.phase === "impact" ? "is-enemy" : isReplayingTurn && state.visualReplay?.phase === "hp" ? "is-enemy" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
+    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isReplayingTurn && state.visualReplay?.phase === "ko" ? "is-switch" : isReplayingTurn && state.visualReplay?.phase === "impact" ? "is-enemy" : isReplayingTurn && state.visualReplay?.phase === "hp" ? "is-enemy" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
       <b>${isFinished ? "Fin du match" : "Scène de combat"}</b>
       <span>${escapeHtml(sceneText)}</span>
     </div>
@@ -12192,7 +12267,7 @@ function renderDraftSimpleBattleDevPanel(state) {
       : ""}
     <div class="draft-dev-battle-battlebox">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
-      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands"><div class="draft-dev-battle-actions"><div class="card-desc">${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.</p>`}</div></div>` : ""}
+      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : `${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div></div>` : ""}
       <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
     </div>
   `;
