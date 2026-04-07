@@ -11853,6 +11853,44 @@ function renderDraftSimpleBattleDevPanel(state) {
     `
     : "";
 
+  const playerHudHtml = `
+    <div class="draft-dev-battle-fighter-head">
+      <div>
+        <span>Joueur</span>
+        <b>${escapeHtml(displayLeft.pokemon.name)}</b>
+        <small>PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayLeft)}${leftStatusLabel ? ` • ${leftStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
+        <div class="draft-dev-battle-hp">
+          <div class="draft-dev-battle-hp-meta">
+            <strong>PV</strong>
+            <span>${displayLeft.currentHp} / ${displayLeft.maxHp}</span>
+          </div>
+          <div class="draft-dev-battle-hp-track">
+            <span class="draft-dev-battle-hp-fill" style="width:${leftHpPercent}%"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const foeHudHtml = `
+    <div class="draft-dev-battle-fighter-head">
+      <div>
+        <span>Adversaire</span>
+        <b>${escapeHtml(displayRight.pokemon.name)}</b>
+        <small>PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayRight)}${rightStatusLabel ? ` • ${rightStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
+        <div class="draft-dev-battle-hp">
+          <div class="draft-dev-battle-hp-meta">
+            <strong>PV</strong>
+            <span>${displayRight.currentHp} / ${displayRight.maxHp}</span>
+          </div>
+          <div class="draft-dev-battle-hp-track">
+            <span class="draft-dev-battle-hp-fill" style="width:${rightHpPercent}%"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
   body.innerHTML = `
     ${state.arena ? `
       <div class="draft-dev-battle-arena-banner is-live">
@@ -11899,42 +11937,22 @@ function renderDraftSimpleBattleDevPanel(state) {
         ${visualFeedback.badges.map((label) => `<span class="draft-dev-battle-event-badge">${escapeHtml(label)}</span>`).join("")}
       </div>
     ` : ""}
-    <div class="draft-dev-battle-fighters">
-      <div class="draft-summary-card wide draft-dev-battle-fighter is-player ${visualFeedback.leftClass}">
-        <div class="draft-dev-battle-fighter-head">
-          <img src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
-          <div>
-            <span>Joueur</span>
-            <b>${escapeHtml(displayLeft.pokemon.name)}</b>
-            <small>PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayLeft)}${leftStatusLabel ? ` • ${leftStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
-            <div class="draft-dev-battle-hp">
-              <div class="draft-dev-battle-hp-meta">
-                <strong>PV</strong>
-                <span>${displayLeft.currentHp} / ${displayLeft.maxHp}</span>
-              </div>
-              <div class="draft-dev-battle-hp-track">
-                <span class="draft-dev-battle-hp-fill" style="width:${leftHpPercent}%"></span>
-              </div>
-            </div>
+    <div class="draft-dev-battle-stage">
+      <div class="draft-dev-battle-fighters draft-dev-battle-scene-shell">
+        <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-top">
+          <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-foe is-foe ${visualFeedback.rightClass}">
+            ${foeHudHtml}
+          </div>
+          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-foe">
+            <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-foe" src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
           </div>
         </div>
-      </div>
-      <div class="draft-summary-card wide draft-dev-battle-fighter is-foe ${visualFeedback.rightClass}">
-        <div class="draft-dev-battle-fighter-head">
-          <img src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
-          <div>
-            <span>Adversaire</span>
-            <b>${escapeHtml(displayRight.pokemon.name)}</b>
-            <small>PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayRight)}${rightStatusLabel ? ` • ${rightStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
-            <div class="draft-dev-battle-hp">
-              <div class="draft-dev-battle-hp-meta">
-                <strong>PV</strong>
-                <span>${displayRight.currentHp} / ${displayRight.maxHp}</span>
-              </div>
-              <div class="draft-dev-battle-hp-track">
-                <span class="draft-dev-battle-hp-fill" style="width:${rightHpPercent}%"></span>
-              </div>
-            </div>
+        <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-bottom">
+          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-player">
+            <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-player" src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
+          </div>
+          <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-player is-player ${visualFeedback.leftClass}">
+            ${playerHudHtml}
           </div>
         </div>
       </div>
@@ -11949,13 +11967,15 @@ function renderDraftSimpleBattleDevPanel(state) {
       <div class="draft-summary-card"><span>Tours</span><b>${state.log.length}</b></div>
       <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
     </div>
-    ${resultHtml}
     ${switchHtml}
     ${canLocalChooseAction && getDraftSimpleBattleAvailableSwitchIndexesForSide(state, currentActionSide).length
       ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch('${currentActionSide}')">Changer de Pokémon</button></div>`
       : ""}
-    ${isPlayerTurn ? `<div class="draft-dev-battle-actions"><div class="card-desc">${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.</p>`}</div>` : ""}
-    <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
+    <div class="draft-dev-battle-battlebox">
+      ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
+      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands"><div class="draft-dev-battle-actions"><div class="card-desc">${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.</p>`}</div></div>` : ""}
+      <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
+    </div>
   `;
 
   panel.classList.remove("hidden");
