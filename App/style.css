@@ -23145,7 +23145,7 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell::before {
   top: 80px;
-  right: 54px;
+  left: 54px;
   width: 180px;
   height: 34px;
   background: radial-gradient(ellipse at center, rgba(120, 163, 101, 0.3), rgba(120, 163, 101, 0.08) 68%, rgba(120, 163, 101, 0) 100%);
@@ -23153,7 +23153,7 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-shell::after {
   bottom: 18px;
-  left: 48px;
+  right: 48px;
   width: 220px;
   height: 42px;
   background: radial-gradient(ellipse at center, rgba(126, 174, 114, 0.34), rgba(126, 174, 114, 0.1) 70%, rgba(126, 174, 114, 0) 100%);
@@ -23166,11 +23166,11 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-row-top {
-  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-row-bottom {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 160px);
   align-items: end;
 }
 
@@ -23181,18 +23181,33 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot-sprite-foe {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: flex-start;
-  padding-right: 18px;
+  padding-left: 12px;
   padding-top: 4px;
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot-sprite-player {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: flex-end;
-  padding-left: 18px;
+  padding-right: 12px;
   padding-bottom: 2px;
+}
+
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot-sprite-foe::after,
+body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-slot-sprite-player::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 96px;
+  height: 4px;
+  background: radial-gradient(ellipse at center, rgba(190, 210, 240, 0.26), transparent 72%);
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-sprite {
@@ -23345,11 +23360,11 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
   }
 
   body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-row-top {
-    grid-template-columns: minmax(0, 1fr) 92px;
+    grid-template-columns: 92px minmax(0, 1fr);
   }
 
   body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-row-bottom {
-    grid-template-columns: 92px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 92px;
   }
 
   body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)) .draft-dev-battle-scene-sprite-foe,

@@ -1928,183 +1928,6 @@ async function pickStatClashRoundPokemon() {
   return null;
 }
 
-function renderStatClashScreen() {
-  const root = document.getElementById("stat-clash-root");
-  if (!root) return;
-
-  if (!statClashState) {
-    root.innerHTML = '<p class="card-desc">Mode en attente.</p>';
-    return;
-  }
-
-  const state = statClashState;
-  const current = state.randomizerPokemon || state.currentPokemon;
-  const currentSprite = current ? getPokemonSprite(current) : "";
-  const timerPct = Math.max(0, Math.min(100, (state.timerLeftMs / STAT_CLASH_PICK_TIME_MS) * 100));
-  const usedSet = new Set(state.usedStats);
-  const roundSet = new Set(
-    Object.values(state.players || {})
-      .map((player) => player?.pendingPick?.key)
-      .filter(Boolean)
-  );
-  const winnerKey = state.phase === "finished"
-    ? state.players.left.score === state.players.right.score
-      ? "tie"
-      : state.players.left.score > state.players.right.score
-        ? "left"
-        : "right"
-    : null;
-
-  const playerMarkup = ["left", "right"].map((side) => {
-    const player = state.players[side];
-    const pendingKey = player.pendingPick?.key || null;
-    const gain = state.reveal?.[side]?.value || 0;
-    const gainLabel = state.reveal?.[side]?.statLabel || "";
-    const historyHtml = player.history.length
-      ? player.history.map((entry) => `
-        <div class="stat-clash-history-item">
-          <span>Manche ${entry.round}</span>
-          <b>${escapeHtml(entry.statLabel)} +${entry.value}</b>
-          <small>${escapeHtml(entry.pokemonName)}</small>
-        </div>
-      `).join("")
-      : '<p class="card-desc stat-clash-empty">Aucun pick pour le moment.</p>';
-    const draftedHtml = player.history.length
-      ? player.history.map((entry) => `<span class="stat-clash-drafted-chip">${escapeHtml(entry.statLabel)}</span>`).join("")
-      : '<span class="stat-clash-drafted-chip is-empty">Rien de drafté</span>';
-
-    const buttonsHtml = STAT_CLASH_STATS.map((entry) => {
-      const isUsed = usedSet.has(entry.key);
-      const isTakenThisRound = roundSet.has(entry.key) && pendingKey !== entry.key;
-      const isSelected = pendingKey === entry.key;
-      const isDisabled = state.phase !== "picking" || Boolean(pendingKey) || isUsed || isTakenThisRound;
-      const value = state.currentStats ? getStatClashValue(entry.key, state.currentStats) : "—";
-      const classes = [
-        "stat-clash-stat-btn",
-        isSelected ? "is-selected" : "",
-        isUsed ? "is-used" : "",
-        isTakenThisRound ? "is-locked" : "",
-      ].filter(Boolean).join(" ");
-      return `
-        <button
-          type="button"
-          class="${classes}"
-          ${isDisabled ? "disabled" : ""}
-          onclick="pickStatClashStat('${side}', '${entry.key}')"
-        >
-          <span>${escapeHtml(entry.label)}</span>
-          <b>${value}</b>
-        </button>
-      `;
-    }).join("");
-
-    return `
-      <section class="stat-clash-player-card ${winnerKey === side ? "is-winner" : ""}">
-        <div class="stat-clash-player-head">
-          <div>
-            <p class="stat-clash-player-side">${side === "left" ? "Panneau gauche" : "Panneau droit"}</p>
-            <h3>${escapeHtml(player.label)}</h3>
-          </div>
-          <div class="stat-clash-score-box ${state.phase === "scoring" ? "is-animating" : ""}">
-            <span>Total</span>
-            <b>${Math.round(player.displayScore || 0)}</b>
-            ${state.reveal?.[side] ? `<small>${gainLabel ? `${escapeHtml(gainLabel)} +${gain}` : `+${gain}`}</small>` : ""}
-          </div>
-        </div>
-        <div class="stat-clash-player-copy">
-          <p class="stat-clash-player-status">
-            ${pendingKey ? `Choix verrouillé : ${escapeHtml(getStatClashStatDef(pendingKey).label)}` : state.phase === "picking" ? "Choisis une stat restante." : "En attente du reveal."}
-          </p>
-          <div class="stat-clash-drafted-row">${draftedHtml}</div>
-        </div>
-        <div class="stat-clash-stat-grid">${buttonsHtml}</div>
-        <div class="stat-clash-history-block">
-          <h4>Historique</h4>
-          <div class="stat-clash-history-list">${historyHtml}</div>
-        </div>
-      </section>
-    `;
-  }).join("");
-
-  const remainingHtml = STAT_CLASH_STATS.map((entry) => {
-    const isUsed = usedSet.has(entry.key);
-    const isRoundLocked = roundSet.has(entry.key) && !isUsed;
-    return `<span class="stat-clash-remaining-chip ${isUsed ? "is-used" : isRoundLocked ? "is-locked" : ""}">${escapeHtml(entry.label)}</span>`;
-  }).join("");
-
-  const resultHtml = state.phase === "finished"
-    ? `
-      <section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}">
-        <div class="stat-clash-final-head">
-          <p class="stat-clash-final-kicker">Résultat final</p>
-          <h3>${winnerKey === "tie" ? "Égalité parfaite" : `${escapeHtml(state.players[winnerKey].label)} remporte le duel`}</h3>
-          <p>${state.players.left.score} à ${state.players.right.score}</p>
-        </div>
-        <div class="stat-clash-final-grid">
-          <div class="stat-clash-final-score">
-            <span>${escapeHtml(state.players.left.label)}</span>
-            <b>${state.players.left.score}</b>
-          </div>
-          <div class="stat-clash-final-score">
-            <span>${escapeHtml(state.players.right.label)}</span>
-            <b>${state.players.right.score}</b>
-          </div>
-        </div>
-        <div class="stat-clash-final-actions">
-          <button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button>
-          <button class="btn-ghost" type="button" onclick="goToConfig()">Retour menu</button>
-        </div>
-      </section>
-    `
-    : "";
-
-  root.innerHTML = `
-    <div class="stat-clash-shell phase-${escapeHtml(state.phase)}">
-      <div class="stat-clash-topline">
-        <span class="tag-gen">Manche ${state.round} / ${state.totalRounds}</span>
-        <span class="tag-tries">Stats restantes : <b>${STAT_CLASH_STATS.length - state.usedStats.length}</b></span>
-        <span class="tag-gen stat-clash-rule-tag">Chaque stat ne peut être utilisée qu'une seule fois dans toute la partie.</span>
-      </div>
-      <div class="stat-clash-board">
-        ${playerMarkup}
-        <section class="stat-clash-center-card">
-          <div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : state.phase === "finished" ? "is-finished" : "is-ready"}">
-            <div class="stat-clash-randomizer-head">
-              <span>Randomizer Pokémon</span>
-              <strong>${state.phase === "picking" ? "Draft en cours" : state.phase === "scoring" ? "Scores en montée" : state.phase === "finished" ? "Match terminé" : "Tirage en cours"}</strong>
-            </div>
-            <div class="stat-clash-sprite-wrap">
-              ${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(current))}'" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}
-            </div>
-            <div class="stat-clash-pokemon-meta">
-              <h3>${escapeHtml(current?.name || "Chargement...")}</h3>
-              <p>${escapeHtml(state.statusText || "Préparation du duel...")}</p>
-            </div>
-            <div class="stat-clash-timer ${state.phase === "picking" ? "is-live" : ""}">
-              <div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div>
-              <div class="stat-clash-timer-track">
-                <span class="stat-clash-timer-fill" style="width:${timerPct}%"></span>
-              </div>
-              <small>${state.phase === "picking" ? "10 secondes pour verrouiller vos picks." : "Le timer démarre après l'arrêt du randomizer."}</small>
-            </div>
-            ${state.reveal ? `
-              <div class="stat-clash-reveal-row">
-                <div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left.statLabel)}</b><small>+${state.reveal.left.value}</small></div>
-                <div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right.statLabel)}</b><small>+${state.reveal.right.value}</small></div>
-              </div>
-            ` : ""}
-          </div>
-          <div class="stat-clash-remaining-block">
-            <h4>Draft global des stats</h4>
-            <div class="stat-clash-remaining-list">${remainingHtml}</div>
-          </div>
-          ${resultHtml}
-        </section>
-      </div>
-    </div>
-  `;
-}
-
 function autoPickStatClashStat(side) {
   const state = statClashState;
   if (!state || state.phase !== "picking") return;
@@ -12411,19 +12234,19 @@ function renderDraftSimpleBattleDevPanel(state) {
     <div class="draft-dev-battle-stage">
       <div class="draft-dev-battle-fighters draft-dev-battle-scene-shell">
         <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-top">
-          <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-foe is-foe ${visualFeedback.rightClass}">
-            ${foeHudHtml}
-          </div>
           <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-foe">
             <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-foe" src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
           </div>
+          <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-foe is-foe ${visualFeedback.rightClass}">
+            ${foeHudHtml}
+          </div>
         </div>
         <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-bottom">
-          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-player">
-            <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-player" src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
-          </div>
           <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-player is-player ${visualFeedback.leftClass}">
             ${playerHudHtml}
+          </div>
+          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-player">
+            <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-player" src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
           </div>
         </div>
       </div>
@@ -12444,7 +12267,7 @@ function renderDraftSimpleBattleDevPanel(state) {
       : ""}
     <div class="draft-dev-battle-battlebox">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
-      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : showActionResumeCue ? "À toi de jouer" : `${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div>${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer</button></div>` : ""}</div>` : ""}
+      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : showActionResumeCue ? "À toi de jouer" : `Tes attaques${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div>${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer</button></div>` : ""}</div>` : ""}
       <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
     </div>
   `;
