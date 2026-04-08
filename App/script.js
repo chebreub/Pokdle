@@ -8289,6 +8289,7 @@ let draftSimpleBattleIntroTimer = null;
 let draftSimpleBattleTurnTimer = null;
 let draftSimpleBattleReplayTimer = null;
 let draftSimpleBattleReplayFrame = null;
+let draftSimpleBattleActionResumeTimer = null;
 let draftSimpleBattleAutoScrollFrame = null;
 
 function clampDraftSimpleBattleHp(value) {
@@ -10449,14 +10450,18 @@ function restoreDraftSimpleBattleInteractivePrompt(state) {
   if (!currentActionSide) return state;
 
   if (!isNetwork) {
-    state.sceneMessage = currentActionSide === "right"
-      ? "Joueur droite : choisis l’action suivante."
-      : "Joueur gauche : choisis l’action suivante.";
+    state.sceneMessage = state.actionResumeCueActive
+      ? currentActionSide === "right"
+        ? "Joueur droite, à toi de jouer."
+        : "Joueur gauche, à toi de jouer."
+      : currentActionSide === "right"
+        ? "Joueur droite : choisis l’action suivante."
+        : "Joueur gauche : choisis l’action suivante.";
     return state;
   }
 
   state.sceneMessage = currentActionSide === localSide
-    ? "À toi de jouer : choisis ton action."
+    ? (state.actionResumeCueActive ? "Ton tour. Choisis une action." : "À toi de jouer : choisis ton action.")
     : "L’autre joueur est en train de choisir son action.";
   return state;
 }
@@ -11054,25 +11059,29 @@ function getDraftSimpleBattleReplayActionDelay(action) {
 function getDraftSimpleBattleReplayMessage(action) {
   if (!action) return "";
   if (action.event === "sendout") {
-    return `${action.pokemonName || "Pokémon"} rejoint le terrain.`;
+    return `${action.pokemonName || "Pokémon"} est en place.`;
   }
   const actor = action.actorName || "Pokémon";
   const target = action.targetName || "la cible";
   if (action.residual) {
-    return `${actor} subit ${action.supportText || "la fin de tour"}.`;
+    return `${actor} subit ${action.supportText || "les effets de fin de tour"}.`;
   }
   if (action.missed) {
-    return `${actor} lance ${action.move?.name || "une attaque"}, mais ${target} l'évite.`;
+    return `${target} évite l’attaque.`;
   }
   if (action.move?.category === "status") {
     return action.statusApplied
-      ? `${actor} applique ${getDraftSimpleBattleStatusLabel(action.inflictedStatus) || "un statut"} à ${target}.`
-      : `${actor} utilise ${action.move?.name || "une capacité de statut"}.`;
+      ? `${target} subit ${getDraftSimpleBattleStatusLabel(action.inflictedStatus) || "un statut"}.`
+      : `${action.move?.name || "La capacité"} n’a pas d’effet décisif.`;
   }
-  if (action.knockout) {
-    return `${actor} frappe ${target} et le met KO.`;
+  if ((Number(action.damage) || 0) > 0) {
+    let suffix = "";
+    if (action.critical) suffix = " Coup critique.";
+    else if ((Number(action.effectiveness) || 1) > 1) suffix = " C’est super efficace.";
+    else if ((Number(action.effectiveness) || 1) > 0 && (Number(action.effectiveness) || 1) < 1) suffix = " Ce n’est pas très efficace.";
+    return `${target} perd ${action.damage || 0} PV.${suffix}`;
   }
-  return `${actor} utilise ${action.move?.name || "une attaque"} sur ${target}.`;
+  return `${actor} termine son action.`;
 }
 
 function waitDraftSimpleBattleReplay(ms = 120) {
@@ -11083,6 +11092,21 @@ function waitDraftSimpleBattleReplay(ms = 120) {
       resolve();
     }, ms);
   });
+}
+
+function triggerDraftSimpleBattleActionResumeCue(state) {
+  if (!state) return;
+  state.actionResumeCueActive = true;
+  if (draftSimpleBattleActionResumeTimer) {
+    clearTimeout(draftSimpleBattleActionResumeTimer);
+    draftSimpleBattleActionResumeTimer = null;
+  }
+  draftSimpleBattleActionResumeTimer = setTimeout(() => {
+    draftSimpleBattleActionResumeTimer = null;
+    if (!draftSimpleBattleDevUiState || draftSimpleBattleDevUiState !== state) return;
+    state.actionResumeCueActive = false;
+    renderDraftSimpleBattleDevPanel(state);
+  }, 1400);
 }
 
 function getDraftSimpleBattleReplayBaseHp(state, turnEntry) {
@@ -11162,11 +11186,11 @@ function getDraftSimpleBattleReplayImpactMessage(action) {
   if (!action || action.event === "sendout") return "";
   const actor = action.actorName || "Pokémon";
   const target = action.targetName || "la cible";
-  if (action.missed) return `${target} esquive l’attaque !`;
-  if ((Number(action.damage) || 0) > 0) return `${target} encaisse l’impact !`;
-  if ((Number(action.heal) || 0) > 0 || (Number(action.drain) || 0) > 0) return `${actor} récupère des PV.`;
-  if (action.statusApplied) return `${target} est affecté !`;
-  return "L’effet se déclenche.";
+  if (action.missed) return `${target} esquive !`;
+  if ((Number(action.damage) || 0) > 0) return `${target} est touché !`;
+  if ((Number(action.heal) || 0) > 0 || (Number(action.drain) || 0) > 0) return `${actor} récupère de l’énergie.`;
+  if (action.statusApplied) return `${target} est affecté.`;
+  return "L’effet se produit.";
 }
 
 function getDraftSimpleBattleReplayKoMessage(action) {
@@ -11325,6 +11349,7 @@ function startDraftSimpleBattleTurnReplay(state, turnEntry) {
     state.visualReplay.active = false;
     state.visualReplay.hpDisplay = null;
     state.visualReplay.displayBattlers = null;
+    triggerDraftSimpleBattleActionResumeCue(state);
     restoreDraftSimpleBattleInteractivePrompt(state);
     renderDraftSimpleBattleDevPanel(state);
   };
@@ -12026,6 +12051,7 @@ function renderDraftSimpleBattleDevPanel(state) {
   const currentActionBattler = currentActionSide === "right" ? displayRight : displayLeft;
   const currentActionTarget = currentActionSide === "right" ? displayLeft : displayRight;
   const canLocalChooseAction = isPlayerTurn && !isReplayingTurn && (!isNetwork || currentActionSide === localSide) && !network.waitingRemote;
+  const showActionResumeCue = Boolean(state.actionResumeCueActive && canLocalChooseAction);
   const canLocalChooseReplacement = needsForcedSwitch && (!isNetwork || (state.pendingSwitchSide || "left") === localSide);
 
   const actionsHtml = state.log.map((entry) => {
@@ -12267,7 +12293,7 @@ function renderDraftSimpleBattleDevPanel(state) {
       : ""}
     <div class="draft-dev-battle-battlebox">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
-      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : `${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div></div>` : ""}
+      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : showActionResumeCue ? "À toi de jouer" : `${escapeHtml(currentActionSide === "right" ? "Actions joueur droite" : "Actions joueur gauche")}${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div></div>` : ""}
       <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
     </div>
   `;
