@@ -2954,11 +2954,9 @@ a:hover { color: #fff2bc; }
 }
 
 
-.pokedex-toolbar {
+#screen-pokedex .pokedex-toolbar {
 
   display: grid;
-
-  grid-template-columns: 1.4fr 1fr 1fr;
 
   gap: 10px;
 
@@ -2966,12 +2964,86 @@ a:hover { color: #fff2bc; }
 
 }
 
+#screen-pokedex .pokedex-toolbar-row {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  min-width: 0;
+
+}
+
+#screen-pokedex .pokedex-toolbar-row-top {
+
+  justify-content: flex-start;
+
+}
+
+#screen-pokedex .pokedex-toolbar-row-bottom {
+
+  justify-content: flex-start;
+
+}
+
+.pokedex-type-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 360px;
+  min-width: 320px;
+  padding: 5px 6px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(244, 248, 255, 0.92), rgba(234, 241, 252, 0.86));
+  border: 1px solid rgba(184, 201, 229, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+}
+
+.pokedex-type-filter-sep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-weight: 900;
+  color: #6f85a5;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+  background: rgba(223, 232, 246, 0.92);
+  border: 1px solid rgba(190, 205, 229, 0.72);
+}
+
+.pokedex-type-filter-group select {
+  flex: 1 1 138px;
+  min-width: 124px;
+  border-radius: 10px !important;
+}
+
+#screen-pokedex #pokedex-search {
+  flex: 1 1 420px;
+  min-width: 320px;
+}
+
+#screen-pokedex #pokedex-gen-filter {
+  flex: 0 0 220px;
+}
+
+#screen-pokedex #pokedex-sort-filter {
+  flex: 0 0 190px;
+  min-width: 190px;
+}
+
 
 #pokedex-search,
 
 #pokedex-gen-filter,
 
-#pokedex-type-filter {
+#pokedex-type-filter,
+
+#pokedex-type2-filter {
 
   width: 100%;
 
@@ -3000,7 +3072,9 @@ a:hover { color: #fff2bc; }
 
 #pokedex-gen-filter:focus,
 
-#pokedex-type-filter:focus {
+#pokedex-type-filter:focus,
+
+#pokedex-type2-filter:focus {
 
   outline: none;
 
@@ -3252,9 +3326,17 @@ a:hover { color: #fff2bc; }
 
 @media (max-width: 640px) {
 
-  .pokedex-toolbar {
+  #screen-pokedex .pokedex-toolbar {
 
-    grid-template-columns: 1fr;
+    gap: 12px;
+
+  }
+
+  #screen-pokedex .pokedex-toolbar-row {
+
+    flex-direction: column;
+
+    align-items: stretch;
 
   }
 
@@ -3429,7 +3511,9 @@ a:hover { color: #fff2bc; }
 
 #pokedex-gen-filter,
 
-#pokedex-type-filter {
+#pokedex-type-filter,
+
+#pokedex-type2-filter {
 
   color: #0f2744;
 
@@ -3447,7 +3531,9 @@ a:hover { color: #fff2bc; }
 
 #pokedex-gen-filter option,
 
-#pokedex-type-filter option {
+#pokedex-type-filter option,
+
+#pokedex-type2-filter option {
 
   color: #0f2744;
 
@@ -3694,7 +3780,9 @@ a:hover { color: #fff2bc; }
 
 #screen-pokedex #pokedex-gen-filter,
 
-#screen-pokedex #pokedex-type-filter {
+#screen-pokedex #pokedex-type-filter,
+
+#screen-pokedex #pokedex-type2-filter {
 
   background: #ffffff;
 
@@ -3714,7 +3802,9 @@ a:hover { color: #fff2bc; }
 
 #screen-pokedex #pokedex-gen-filter option,
 
-#screen-pokedex #pokedex-type-filter option {
+#screen-pokedex #pokedex-type-filter option,
+
+#screen-pokedex #pokedex-type2-filter option {
 
   color: #102846;
 
@@ -8327,6 +8417,8 @@ main {
 
 #pokedex-type-filter,
 
+#pokedex-type2-filter,
+
 #mode-select-pro {
 
   min-height: 46px;
@@ -8721,9 +8813,9 @@ main {
 
 /* --- Pokedex enhancements: sort + actions --- */
 
-.pokedex-toolbar {
+#screen-pokedex .pokedex-toolbar {
 
-  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  width: 100%;
 
 }
 
@@ -8749,6 +8841,8 @@ main {
   font-weight: 800;
 
   padding: 10px 12px;
+
+  text-align: left;
 
 }
 
@@ -8805,10 +8899,21 @@ main {
 
 @media (max-width: 900px) {
 
-  .pokedex-toolbar {
+  #screen-pokedex .pokedex-toolbar {
 
-    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 
+  }
+
+  #screen-pokedex .pokedex-toolbar-row {
+
+    flex-wrap: wrap;
+
+  }
+
+  .pokedex-type-filter-group {
+    flex: 1 1 100%;
+    min-width: 280px;
   }
 
 }
@@ -8816,10 +8921,19 @@ main {
 
 @media (max-width: 640px) {
 
-  .pokedex-toolbar {
+  #screen-pokedex .pokedex-toolbar {
 
-    grid-template-columns: 1fr;
+    gap: 10px;
 
+  }
+
+  #screen-pokedex #pokedex-search,
+  #screen-pokedex #pokedex-gen-filter,
+  #screen-pokedex #pokedex-sort-filter,
+  .pokedex-type-filter-group {
+    width: 100%;
+    min-width: 0;
+    flex-basis: auto;
   }
 
 
@@ -14474,7 +14588,8 @@ body.theme-dark .home-social-suite {
 
 #screen-pokedex #pokedex-search,
 #screen-pokedex #pokedex-gen-filter,
-#screen-pokedex #pokedex-type-filter {
+#screen-pokedex #pokedex-type-filter,
+#screen-pokedex #pokedex-type2-filter {
   min-height: 46px;
   border-radius: 14px;
   border-color: rgba(131, 166, 224, 0.24);
@@ -14484,7 +14599,8 @@ body.theme-dark .home-social-suite {
 
 #screen-pokedex #pokedex-search:focus,
 #screen-pokedex #pokedex-gen-filter:focus,
-#screen-pokedex #pokedex-type-filter:focus {
+#screen-pokedex #pokedex-type-filter:focus,
+#screen-pokedex #pokedex-type2-filter:focus {
   border-color: rgba(92, 139, 223, 0.42);
   box-shadow: 0 0 0 4px rgba(99, 145, 226, 0.12), inset 0 1px 0 rgba(255,255,255,0.7);
 }
@@ -16991,6 +17107,7 @@ body:not(.theme-dark) #mode-pro-hub #mode-select-pro {
 #mode-select-pro,
 #pokedex-gen-filter,
 #pokedex-type-filter,
+#pokedex-type2-filter,
 #pokedex-sort-filter,
 #type-chart-era,
 #type-chart-offense-filter,
@@ -22147,7 +22264,8 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
 
 #screen-pokedex #pokedex-search,
 #screen-pokedex #pokedex-gen-filter,
-#screen-pokedex #pokedex-type-filter {
+#screen-pokedex #pokedex-type-filter,
+#screen-pokedex #pokedex-type2-filter {
   font-weight: 800;
   color: #163457;
 }
@@ -23528,4 +23646,24 @@ body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-bat
 body.draft-battle-open .draft-dev-battle-panel.is-finished-combat .draft-dev-battle-result-actions .btn-ghost {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(198, 216, 245, 0.16);
+}
+.pokedex-card-types {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  row-gap: 5px;
+}
+
+.pokedex-card-types .type-badge {
+  font-size: 0.66rem;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,248,255,0.9));
+  border: 1px solid rgba(174, 194, 226, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.86),
+    0 3px 8px rgba(18, 35, 62, 0.06);
+  font-weight: 800;
 }

@@ -423,10 +423,18 @@
         <p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p>
 
         <div class="pokedex-toolbar">
-          <input id="pokedex-search" type="text" placeholder="Rechercher un Pokémon..." autocomplete="off" />
-          <select id="pokedex-gen-filter"></select>
-          <select id="pokedex-type-filter"></select>
-          <select id="pokedex-sort-filter"></select>
+          <div class="pokedex-toolbar-row pokedex-toolbar-row-top">
+            <input id="pokedex-search" type="text" placeholder="Rechercher un Pokémon..." autocomplete="off" />
+            <select id="pokedex-gen-filter"></select>
+          </div>
+          <div class="pokedex-toolbar-row pokedex-toolbar-row-bottom">
+            <div class="pokedex-type-filter-group">
+              <select id="pokedex-type-filter"></select>
+              <span class="pokedex-type-filter-sep">+</span>
+              <select id="pokedex-type2-filter"></select>
+            </div>
+            <select id="pokedex-sort-filter"></select>
+          </div>
         </div>
         <div class="pokedex-actions">
           <button id="pokedex-shiny-toggle" class="btn-yellow" type="button">Shiny : Non</button>

@@ -510,6 +510,8 @@ const QUIZ_QUESTION_COUNT = 15;
 let pokedexSearch = "";
 let pokedexGenFilter = "all";
 let pokedexTypeFilter = "all";
+let pokedexType2Filter = "all";
+let pokedexSortFilter = "dex";
 let pokedexGridUseShiny = false;
 let pokedexSelectedShiny = false;
 let typeChartEra = "gen6+";
@@ -7287,8 +7289,10 @@ function initPokedex() {
   const search = document.getElementById("pokedex-search");
   const gen = document.getElementById("pokedex-gen-filter");
   const type = document.getElementById("pokedex-type-filter");
+  const type2 = document.getElementById("pokedex-type2-filter");
+  const sort = document.getElementById("pokedex-sort-filter");
   const shinyToggle = document.getElementById("pokedex-shiny-toggle");
-  if (!search || !gen || !type) return;
+  if (!search || !gen || !type || !type2 || !sort) return;
 
   gen.innerHTML = '<option value="all">Toutes les générations</option>';
   for (const [num, data] of Object.entries(GENERATIONS)) {
@@ -7299,12 +7303,21 @@ function initPokedex() {
   }
 
   type.innerHTML = '<option value="all">Tous les types</option>';
+  type2.innerHTML = '<option value="all">Tous les types</option>';
   for (const t of getPokedexTypes()) {
     const opt = document.createElement("option");
     opt.value = t;
     opt.textContent = t;
     type.appendChild(opt);
+    type2.appendChild(opt.cloneNode(true));
   }
+
+  sort.innerHTML = `
+    <option value="dex">N° Pokédex</option>
+    <option value="name-asc">Nom A → Z</option>
+    <option value="name-desc">Nom Z → A</option>
+  `;
+  sort.value = pokedexSortFilter;
 
   search.addEventListener("input", () => {
     pokedexSearch = search.value.trim();
@@ -7318,6 +7331,16 @@ function initPokedex() {
 
   type.addEventListener("change", () => {
     pokedexTypeFilter = type.value;
+    renderPokedexGrid();
+  });
+
+  type2.addEventListener("change", () => {
+    pokedexType2Filter = type2.value;
+    renderPokedexGrid();
+  });
+
+  sort.addEventListener("change", () => {
+    pokedexSortFilter = sort.value;
     renderPokedexGrid();
   });
 
@@ -7345,9 +7368,13 @@ function openPokedexMode() {
   const search = document.getElementById("pokedex-search");
   const gen = document.getElementById("pokedex-gen-filter");
   const type = document.getElementById("pokedex-type-filter");
+  const type2 = document.getElementById("pokedex-type2-filter");
+  const sort = document.getElementById("pokedex-sort-filter");
   if (search) search.value = pokedexSearch;
   if (gen) gen.value = pokedexGenFilter;
   if (type) type.value = pokedexTypeFilter;
+  if (type2) type2.value = pokedexType2Filter;
+  if (sort) sort.value = pokedexSortFilter;
   updatePokedexShinyButton();
 
   renderPokedexGrid();
@@ -7355,15 +7382,34 @@ function openPokedexMode() {
 
 function getFilteredPokedexList() {
   const q = norm(pokedexSearch || "");
+  const type1Filter = pokedexTypeFilter || "all";
+  const type2Filter = pokedexType2Filter || "all";
 
   return POKEMON_LIST
     .filter((p) => {
       if (pokedexGenFilter !== "all" && String(p.gen) !== pokedexGenFilter) return false;
-      if (pokedexTypeFilter !== "all" && p.type1 !== pokedexTypeFilter && p.type2 !== pokedexTypeFilter) return false;
+      if (type1Filter === "all" && type2Filter === "all") {
+        // keep current behavior
+      } else if (type1Filter !== "all" && type2Filter !== "all" && type1Filter !== type2Filter) {
+        const pokemonTypes = [p.type1, p.type2].filter(Boolean).sort();
+        const expectedTypes = [type1Filter, type2Filter].sort();
+        if (pokemonTypes.length !== 2 || pokemonTypes[0] !== expectedTypes[0] || pokemonTypes[1] !== expectedTypes[1]) return false;
+      } else {
+        const singleType = type1Filter !== "all" ? type1Filter : type2Filter;
+        if (singleType !== "all" && p.type1 !== singleType && p.type2 !== singleType) return false;
+      }
       if (q && !norm(p.name).includes(q)) return false;
       return true;
     })
-    .sort((a, b) => getPokemonSpriteId(a) - getPokemonSpriteId(b) || a.name.localeCompare(b.name, "fr"));
+    .sort((a, b) => {
+      if (pokedexSortFilter === "name-asc") {
+        return a.name.localeCompare(b.name, "fr") || getPokemonSpriteId(a) - getPokemonSpriteId(b);
+      }
+      if (pokedexSortFilter === "name-desc") {
+        return b.name.localeCompare(a.name, "fr") || getPokemonSpriteId(a) - getPokemonSpriteId(b);
+      }
+      return getPokemonSpriteId(a) - getPokemonSpriteId(b) || a.name.localeCompare(b.name, "fr");
+    });
 }
 
 function renderPokedexGrid() {
@@ -7400,6 +7446,7 @@ function renderPokedexGrid() {
       <img src="${sprite}" alt="${p.name}" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
       <span class="pokedex-num">#${dexId}</span>
       <strong>${p.name}</strong>
+      <div class="pokedex-card-types">${typeBadgesHtml(p.type1, p.type2 || null)}</div>
     `;
 
     card.addEventListener("click", () => {
