@@ -2678,6 +2678,20 @@ function getStatClashRoomOpponent() {
   return statClashState?.room?.players?.find((player) => !player.isSelf) || null;
 }
 
+function renderStatClashRoomMeta(room) {
+  if (!room?.code) return "";
+  const leftPlayer = room.players?.find((player) => player.side === "left") || room.players?.[0] || null;
+  const rightPlayer = room.players?.find((player) => player.side === "right") || room.players?.[1] || null;
+  const leftName = leftPlayer?.nickname || "Joueur 1";
+  const rightName = rightPlayer?.nickname || "Joueur 2";
+  const leftWins = Number(room?.matchWinsBySide?.left) || 0;
+  const rightWins = Number(room?.matchWinsBySide?.right) || 0;
+  const recordScore = Number(room?.sessionRecord?.score) || 359;
+  const recordWinner = room?.sessionRecord?.winner || "Kayan";
+  const recordLoser = room?.sessionRecord?.loser || "MG";
+  return `<div class="stat-clash-room-meta"><div class="stat-clash-room-meta-card"><span>Score cumulé</span><b>${escapeHtml(leftName)} ${leftWins} - ${rightWins} ${escapeHtml(rightName)}</b></div><div class="stat-clash-room-meta-card"><span>Record d'écart</span><b>${recordScore} points</b><small>${escapeHtml(recordWinner)} contre ${escapeHtml(recordLoser)}</small></div></div>`;
+}
+
 function remapStatClashRoomSideData(roomState, localPlayer, opponent) {
   const localServerSide = localPlayer?.side || "left";
   const opponentServerSide = opponent?.side || (localServerSide === "left" ? "right" : "left");
@@ -3058,6 +3072,8 @@ function renderStatClashScreen() {
         .map((player, index) => `<div class="stat-clash-room-player ${player.connected ? "is-connected" : "is-disconnected"}"><div><strong>${escapeHtml(player.nickname || `Joueur ${index + 1}`)}</strong><small>${player.connected ? "Connecté" : "En attente"}</small></div><span class="stat-clash-room-player-badges">${player.isHost ? '<span class="stat-clash-room-badge is-host">Host</span>' : ""}${player.isSelf ? '<span class="stat-clash-room-badge is-self">Toi</span>' : '<span class="stat-clash-room-badge is-guest">Invité</span>'}</span></div>`).join("")
       : '<div class="stat-clash-room-player is-empty"><div><strong>Joueur 1</strong><small>En attente</small></div></div>')
     : "";
+  const roomMetaHtml = isRoom ? renderStatClashRoomMeta(room) : "";
+  const roomMetaPanelHtml = roomMetaHtml ? `<div class="stat-clash-room-meta-panel">${roomMetaHtml}</div>` : "";
   const current = roomHasStarted || !isRoom ? (state.randomizerPokemon || state.currentPokemon) : null;
   const currentSprite = current ? getPokemonSprite(current) : "";
   const timerDuration = Math.max(1, Number(state.timerDurationMs) || STAT_CLASH_PICK_TIME_MS);
@@ -3117,7 +3133,7 @@ function renderStatClashScreen() {
     ? `<div class="stat-clash-lobby-center"><div class="stat-clash-lobby-center-head"><span>Lobby Room 1v1</span><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(roomUi?.detail || "En attente de la room.")}</h3><p>${escapeHtml(selfRoomPlayer?.isHost ? "Partage le code puis lance la partie quand la room est complète." : room?.code ? `Connecté à ${room.code}. Attends le lancement par l’hôte.` : "Crée une room ou rejoins-en une avec un code.")}</p></div></div>`
     : `<div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>${state.phase === "starting-countdown" ? "Démarrage room" : "Pokémon tiré"}</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(current))}'" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (state.phase === "starting-countdown" ? "Prépare-toi…" : isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${["picking", "locked"].includes(state.phase) ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "starting-countdown" ? "Le match commence quand le countdown atteint 0." : state.phase === "rolling" ? "Le randomizer termine son arrêt avant l'ouverture des choix." : ["picking", "locked"].includes(state.phase) ? "10 secondes complètes pour choisir ta stat." : "Le reveal arrive juste après les choix."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div>`;
   const finalHtml = state.phase === "finished" ? `<section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}"><div class="stat-clash-final-head"><p class="stat-clash-final-kicker">Résultat final</p><h3>${winnerKey === "tie" ? "Égalité" : `${escapeHtml(state.players[winnerKey].label)} gagne`}</h3><p>${state.players.left.score} à ${state.players.right.score}</p></div><div class="stat-clash-final-actions"><button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button><button class="btn-ghost" type="button" onclick="goToConfig()">Retour menu</button></div></section>` : "";
-  root.innerHTML = `<div class="stat-clash-shell mode-${isRoom ? "room" : "bot"} phase-${escapeHtml(state.phase)} ${roomHasStarted ? "is-live-layout" : "is-lobby-layout"}"><div class="stat-clash-mode-switch"><button class="btn-${isRoom ? "ghost" : "red"}" type="button" data-stat-clash-action="switch-bot">Vs Bot</button><button class="btn-${isRoom ? "red" : "ghost"}" type="button" data-stat-clash-action="switch-room">Room 1v1</button></div>${roomControls}<div class="stat-clash-topline">${toplineHtml}</div><div class="stat-clash-board">${renderPlayerCard("left", state.players.left, false)}<section class="stat-clash-center-card">${lobbyCenterHtml}${(!isRoom || roomHasStarted) ? `<div class="stat-clash-remaining-block"><h4>Stats restantes pour toi</h4><div class="stat-clash-remaining-list">${remainingHtml}</div></div>` : ""}${finalHtml}</section>${renderPlayerCard("right", state.players.right, true)}</div></div>`;
+  root.innerHTML = `<div class="stat-clash-shell mode-${isRoom ? "room" : "bot"} phase-${escapeHtml(state.phase)} ${roomHasStarted ? "is-live-layout" : "is-lobby-layout"}"><div class="stat-clash-mode-switch"><button class="btn-${isRoom ? "ghost" : "red"}" type="button" data-stat-clash-action="switch-bot">Vs Bot</button><button class="btn-${isRoom ? "red" : "ghost"}" type="button" data-stat-clash-action="switch-room">Room 1v1</button></div>${roomControls}${roomMetaPanelHtml}<div class="stat-clash-topline">${toplineHtml}</div><div class="stat-clash-board">${renderPlayerCard("left", state.players.left, false)}<section class="stat-clash-center-card">${lobbyCenterHtml}${(!isRoom || roomHasStarted) ? `<div class="stat-clash-remaining-block"><h4>Stats restantes pour toi</h4><div class="stat-clash-remaining-list">${remainingHtml}</div></div>` : ""}${finalHtml}</section>${renderPlayerCard("right", state.players.right, true)}</div></div>`;
 }
 
 function openStatClashMode() {
@@ -7192,6 +7208,72 @@ function togglePokedexShiny() {
   renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || null);
 }
 
+let pokedexBuilderFeedbackTimer = null;
+let teamBuilderBridgeFeedbackTimer = null;
+let teamBuilderBridgeHighlightTimer = null;
+
+function showPokedexBuilderFeedback(message, tone = "info") {
+  const feedback = document.getElementById("pokedex-detail-builder-feedback");
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.className = `pokedex-detail-builder-feedback is-visible is-${tone}`;
+  window.clearTimeout(pokedexBuilderFeedbackTimer);
+  pokedexBuilderFeedbackTimer = window.setTimeout(() => {
+    feedback.className = "pokedex-detail-builder-feedback";
+    feedback.textContent = "";
+  }, 2200);
+}
+
+function showTeamBuilderBridgeFeedback(message, tone = "success") {
+  const screen = document.getElementById("screen-team-builder");
+  if (!screen) return;
+  let feedback = screen.querySelector(".team-builder-bridge-feedback");
+  if (!feedback) {
+    feedback = document.createElement("div");
+    feedback.className = "team-builder-bridge-feedback";
+    feedback.setAttribute("aria-live", "polite");
+    screen.appendChild(feedback);
+  }
+  feedback.textContent = message;
+  feedback.className = `team-builder-bridge-feedback is-visible is-${tone}`;
+  window.clearTimeout(teamBuilderBridgeFeedbackTimer);
+  teamBuilderBridgeFeedbackTimer = window.setTimeout(() => {
+    feedback.className = "team-builder-bridge-feedback";
+    feedback.textContent = "";
+  }, 2200);
+}
+
+function focusTeamBuilderActiveSlotVisual() {
+  window.requestAnimationFrame(() => {
+    const activeSlot = document.querySelector("#team-builder-grid .home-builder-slot.is-active");
+    if (!activeSlot) return;
+    activeSlot.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    activeSlot.classList.add("is-bridge-highlight");
+    window.clearTimeout(teamBuilderBridgeHighlightTimer);
+    teamBuilderBridgeHighlightTimer = window.setTimeout(() => {
+      activeSlot.classList.remove("is-bridge-highlight");
+    }, 1600);
+  });
+}
+
+function addSelectedPokedexPokemonToBuilder() {
+  const pokemon = POKEMON_BY_ID.get(Number(pokedexSelectedId));
+  if (!pokemon) return;
+  const emptySlotIndex = teamBuilderState.findIndex((slot) => !Number.isInteger(Number(slot?.pokemonId)));
+  if (emptySlotIndex === -1) {
+    showPokedexBuilderFeedback("Équipe complète", "full");
+    return;
+  }
+  teamBuilderActiveSlot = emptySlotIndex;
+  const nextSlot = createTeamBuilderEmptySlot();
+  nextSlot.pokemonId = pokemon.id;
+  teamBuilderState[emptySlotIndex] = nextSlot;
+  saveTeamBuilderState();
+  openTeamBuilderScreen();
+  focusTeamBuilderActiveSlotVisual();
+  showTeamBuilderBridgeFeedback(`${pokemon.name} ajouté à l'équipe`, "success");
+}
+
 function attackMultiplier(attackType, defenseType) {
   if (!defenseType) return 1;
   const m = TYPE_EFFECTIVENESS[attackType];
@@ -7470,6 +7552,36 @@ function updatePokedexGridSelection() {
   });
 }
 
+function getPokedexNavigationState() {
+  const list = getFilteredPokedexList();
+  const currentIndex = list.findIndex((pokemon) => Number(pokemon.id) === Number(pokedexSelectedId));
+  return {
+    list,
+    currentIndex,
+    previous: currentIndex > 0 ? list[currentIndex - 1] : null,
+    next: currentIndex >= 0 && currentIndex < list.length - 1 ? list[currentIndex + 1] : null,
+  };
+}
+
+function ensurePokedexSelectedCardVisible() {
+  const grid = document.getElementById("pokedex-grid");
+  if (!grid || !pokedexSelectedId) return;
+  const target = grid.querySelector(`.pokedex-card[data-pokemon-id="${pokedexSelectedId}"]`);
+  target?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+}
+
+function navigatePokedexDetail(direction) {
+  const { previous, next, currentIndex } = getPokedexNavigationState();
+  if (currentIndex < 0) return;
+  const target = direction === "prev" ? previous : next;
+  if (!target) return;
+  pokedexSelectedId = target.id;
+  pokedexSelectedShiny = false;
+  updatePokedexGridSelection();
+  renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || target);
+  ensurePokedexSelectedCardVisible();
+}
+
 async function renderPokedexDetail(pokemon) {
   const detail = document.getElementById("pokedex-detail");
   if (!detail) return;
@@ -7481,6 +7593,20 @@ async function renderPokedexDetail(pokemon) {
 
   const currentRequest = ++pokedexDetailRequestId;
   const dexId = getPokemonSpriteId(pokemon);
+  const navigation = getPokedexNavigationState();
+  const navigationHtml = `
+    <div class="pokedex-detail-nav">
+      <button type="button" class="btn-ghost pokedex-detail-nav-btn" onclick="navigatePokedexDetail('prev')" ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
+      <button type="button" class="btn-ghost pokedex-detail-nav-btn" onclick="navigatePokedexDetail('next')" ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
+    </div>
+  `;
+  const builderActionHtml = `
+    <div class="pokedex-detail-head-actions">
+      <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" onclick="togglePokedexShiny()">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
+      <button class="btn-ghost pokedex-detail-builder-btn" type="button" onclick="addSelectedPokedexPokemonToBuilder()">Ajouter au Builder</button>
+      <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
+    </div>
+  `;
 
   detail.innerHTML = `
     <div class="pokedex-detail-head">
@@ -7488,12 +7614,13 @@ async function renderPokedexDetail(pokemon) {
       <div>
         <div class="pokedex-detail-title-row">
           <h3>${pokemon.name}</h3>
-          <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" onclick="togglePokedexShiny()">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
+          ${builderActionHtml}
         </div>
         <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
         <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
       </div>
     </div>
+    ${navigationHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
@@ -7535,12 +7662,13 @@ async function renderPokedexDetail(pokemon) {
       <div>
         <div class="pokedex-detail-title-row">
           <h3>${pokemon.name}</h3>
-          <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" onclick="togglePokedexShiny()">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
+          ${builderActionHtml}
         </div>
         <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
         <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
       </div>
     </div>
+    ${navigationHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>

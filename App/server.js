@@ -41,6 +41,11 @@ const STAT_CLASH_ROLL_MS = 1800;
 const STAT_CLASH_START_DELAY_MS = 900;
 const STAT_CLASH_PICK_MS = 10000;
 const STAT_CLASH_REVEAL_MS = 1500;
+const STAT_CLASH_SESSION_RECORD_DEFAULT = Object.freeze({
+  score: 359,
+  winner: "Kayan",
+  loser: "MG",
+});
 const STAT_CLASH_STAT_KEYS = ["hp", "attack", "defense", "spAttack", "spDefense", "speed"];
 const STAT_CLASH_STAT_LABELS = {
   hp: "PV",
@@ -192,6 +197,8 @@ io.on("connection", (socket) => {
         selectedGens,
         round: 0,
         totalRounds: STAT_CLASH_TOTAL_ROUNDS,
+        matchWinsBySide: { left: 0, right: 0 },
+        sessionRecord: { ...STAT_CLASH_SESSION_RECORD_DEFAULT },
         usedStatKeysBySide: { left: [], right: [] },
         usedPokemonIds: [],
         currentPokemon: null,
@@ -726,6 +733,26 @@ function finalizeStatClashMatch(room) {
     : leftPlayer.score > rightPlayer.score
       ? leftPlayer.id
       : rightPlayer.id;
+  if (room.winnerId && leftPlayer && rightPlayer) {
+    const winnerSide = room.winnerId === leftPlayer.id ? "left" : "right";
+    room.matchWinsBySide[winnerSide] = (Number(room.matchWinsBySide?.[winnerSide]) || 0) + 1;
+  }
+  const scoreGap = Math.abs((Number(leftPlayer?.score) || 0) - (Number(rightPlayer?.score) || 0));
+  if (scoreGap > (Number(room.sessionRecord?.score) || 0)) {
+    const winner = !leftPlayer || !rightPlayer || leftPlayer.score === rightPlayer.score
+      ? null
+      : leftPlayer.score > rightPlayer.score
+        ? leftPlayer
+        : rightPlayer;
+    const loser = winner?.id === leftPlayer?.id ? rightPlayer : leftPlayer;
+    if (winner && loser) {
+      room.sessionRecord = {
+        score: scoreGap,
+        winner: winner.nickname || "Joueur 1",
+        loser: loser.nickname || "Joueur 2",
+      };
+    }
+  }
   room.endedReason = "completed";
   emitStatClashRoomState(room);
   emitStatClashFinished(room);
@@ -882,6 +909,15 @@ function publicStatClashRoomState(room, viewerId = null) {
     selectedGens: room.selectedGens,
     round: room.round,
     totalRounds: room.totalRounds,
+    matchWinsBySide: {
+      left: Number(room.matchWinsBySide?.left) || 0,
+      right: Number(room.matchWinsBySide?.right) || 0,
+    },
+    sessionRecord: {
+      score: Number(room.sessionRecord?.score) || STAT_CLASH_SESSION_RECORD_DEFAULT.score,
+      winner: room.sessionRecord?.winner || STAT_CLASH_SESSION_RECORD_DEFAULT.winner,
+      loser: room.sessionRecord?.loser || STAT_CLASH_SESSION_RECORD_DEFAULT.loser,
+    },
     usedStatKeysBySide: {
       left: (room.usedStatKeysBySide?.left || []).slice(),
       right: (room.usedStatKeysBySide?.right || []).slice(),
