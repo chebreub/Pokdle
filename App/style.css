@@ -22811,6 +22811,190 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
   color: #edf4ff;
 }
 
+/* Pokedex detail: denser, calmer right column after sticky removal */
+#screen-pokedex .pokedex-detail {
+  padding: 16px;
+  gap: 10px;
+}
+
+#screen-pokedex .pokedex-detail-head {
+  gap: 6px;
+  margin-bottom: 0;
+  padding-bottom: 8px;
+  border-bottom-color: rgba(132, 166, 223, 0.1);
+}
+
+#screen-pokedex .pokedex-detail-head-main {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+#screen-pokedex .pokedex-detail-head-main img {
+  width: 78px;
+  height: 78px;
+}
+
+#screen-pokedex .pokedex-detail-summary {
+  gap: 1px;
+}
+
+#screen-pokedex .pokedex-detail-head h3 {
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+#screen-pokedex .pokedex-detail-head p {
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+#screen-pokedex .pokedex-detail-nav {
+  gap: 8px;
+}
+
+#screen-pokedex .pokedex-detail-nav-btn,
+#screen-pokedex .pokedex-detail-shiny-btn,
+#screen-pokedex .pokedex-detail-builder-btn,
+#screen-pokedex .pokedex-detail-compare-btn {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+}
+
+#screen-pokedex .pokedex-detail-head-actions {
+  gap: 6px;
+}
+
+#screen-pokedex .pokedex-detail-builder-feedback,
+#screen-pokedex .pokedex-compare-feedback {
+  min-height: 16px;
+  font-size: 0.72rem;
+}
+
+#screen-pokedex .pokedex-recent-block,
+#screen-pokedex .pokedex-compare-block {
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: 14px;
+}
+
+#screen-pokedex .pokedex-recent-block h4,
+#screen-pokedex .pokedex-compare-head h4,
+#screen-pokedex .pokedex-section h4 {
+  font-size: 0.84rem;
+}
+
+#screen-pokedex .pokedex-recent-head,
+#screen-pokedex .pokedex-compare-head {
+  gap: 8px;
+}
+
+#screen-pokedex .pokedex-recent-item {
+  gap: 5px;
+  padding: 4px 7px;
+  font-size: 0.72rem;
+}
+
+#screen-pokedex .pokedex-recent-item img {
+  width: 20px;
+  height: 20px;
+}
+
+#screen-pokedex .pokedex-recent-item.is-active span::after {
+  margin-left: 5px;
+  padding: 1px 5px;
+}
+
+#screen-pokedex .pokedex-section {
+  margin-top: 0;
+  padding: 9px 10px;
+  border-radius: 14px;
+}
+
+#screen-pokedex .pokedex-section h4 {
+  margin: 0 0 7px;
+  color: #183d6c;
+  letter-spacing: 0.01em;
+}
+
+#screen-pokedex .pokedex-section p {
+  font-size: 0.86rem;
+  line-height: 1.42;
+}
+
+#screen-pokedex .pokedex-abilities,
+#screen-pokedex .pokedex-stats-wrap,
+#screen-pokedex .pokedex-compare-grid {
+  gap: 5px;
+}
+
+#screen-pokedex .pokedex-ability,
+#screen-pokedex .pokedex-compare-row {
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+#screen-pokedex .pokedex-ability b,
+#screen-pokedex .pokedex-compare-side strong {
+  font-size: 0.84rem;
+}
+
+#screen-pokedex .pokedex-ability em,
+#screen-pokedex .pokedex-compare-side small,
+#screen-pokedex .pokedex-compare-score span {
+  font-size: 0.7rem;
+}
+
+#screen-pokedex .pokedex-stat-row {
+  grid-template-columns: 108px 1fr 40px;
+  gap: 7px;
+}
+
+#screen-pokedex .pokedex-stat-row span {
+  font-size: 0.78rem;
+}
+
+#screen-pokedex .pokedex-stat-row b {
+  font-size: 0.8rem;
+}
+
+#screen-pokedex .pokedex-stat-track {
+  height: 8px;
+}
+
+#screen-pokedex .pokedex-match-section {
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 11px;
+  border-radius: 14px;
+}
+
+#screen-pokedex .pokedex-match-section > span {
+  font-size: 0.8rem;
+}
+
+#screen-pokedex .pokedex-match-list {
+  gap: 8px;
+}
+
+#screen-pokedex .pokedex-section .pokedex-extra-grid {
+  gap: 8px;
+}
+
+#screen-pokedex .pokedex-section .pokedex-extra-grid div {
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+#screen-pokedex .pokedex-section .pokedex-extra-grid span {
+  font-size: 0.76rem;
+}
+
+#screen-pokedex .pokedex-section .pokedex-extra-grid b {
+  font-size: 0.84rem;
+}
+
 @media (max-width: 1100px) and (min-width: 821px) {
   #screen-profile .profile-layout,
   #screen-profile .profile-summary-grid {

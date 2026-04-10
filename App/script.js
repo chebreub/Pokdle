@@ -7793,6 +7793,7 @@ async function renderPokedexDetail(pokemon) {
   if (!detail) return;
 
   if (!pokemon) {
+    pokedexDetailRequestId += 1;
     detail.innerHTML = '<p class="card-desc">Clique un Pokémon pour afficher sa fiche.</p>';
     return;
   }
