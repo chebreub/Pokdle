@@ -16680,19 +16680,30 @@ function renderMultiplayerPlayers() {
   const players = Array.isArray(room?.players) ? room.players : [];
   const self = players.find((player) => player.isSelf) || null;
   const opponent = players.find((player) => !player.isSelf) || null;
+  const canStartSoon = Boolean(room?.code && players.length >= 2);
 
   const renderPlayerCard = (player, fallbackLabel) => {
     const isWinner = player && room?.winnerId && player.id === room.winnerId;
     const name = player?.nickname || fallbackLabel;
-    const subtitle = player ? (player.isSelf ? "Toi" : "Adversaire") : "En attente";
+    const subtitle = player
+      ? (player.isSelf ? "Toi" : "Adversaire")
+      : "Slot libre";
+    const status = player
+      ? (room?.status === "waiting"
+        ? (canStartSoon ? "Prêt pour la manche" : "Présent dans la room")
+        : room?.status === "live"
+          ? "En duel"
+          : "Manche terminée")
+      : "En attente d'un joueur";
     const attempts = player?.attempts || 0;
     const lastGuess = player?.lastGuess || "—";
     return `
-      <article class="multiplayer-player-card ${player?.isSelf ? "is-self" : ""} ${isWinner ? "is-winner" : ""}">
+      <article class="multiplayer-player-card ${player?.isSelf ? "is-self" : ""} ${isWinner ? "is-winner" : ""} ${player ? "is-present" : "is-empty"}">
         <div class="multiplayer-player-head">
           <strong>${escapeHtml(name)}</strong>
           <span>${subtitle}</span>
         </div>
+        <div class="multiplayer-player-room-status">${escapeHtml(status)}</div>
         <div class="multiplayer-player-stats">
           <span>Essais : <b>${attempts}</b></span>
           <span>Dernière tentative : <b>${escapeHtml(lastGuess)}</b></span>
@@ -16935,6 +16946,9 @@ function renderMultiplayerBotScreen() {
   const isWaiting = !room || room.status === "waiting";
   const isLive = room?.status === "live";
   const isFinished = room?.status === "finished";
+  const playerCount = players.length;
+  const roomReady = Boolean(room?.code && playerCount >= 2);
+  const screen = document.getElementById("screen-multiplayer");
 
   if (connection) {
     connection.textContent = multiplayerLiveState.connectionStatus === "online"
@@ -16944,6 +16958,10 @@ function renderMultiplayerBotScreen() {
       : "Hors ligne";
   }
   if (code) code.textContent = room?.code ? `Code : ${room.code}` : "Code : —";
+  if (screen) {
+    screen.dataset.roomState = isLive ? "live" : isFinished ? "finished" : roomReady ? "ready" : room?.code ? "waiting" : "idle";
+  }
+  waitingBox?.setAttribute("data-room-state", roomReady ? "ready" : room?.code ? "waiting" : "idle");
   renderMultiplayerGenerationGrid();
   renderMultiplayerGenerationSummary();
   renderMultiplayerPlayers();
@@ -16959,13 +16977,13 @@ function renderMultiplayerBotScreen() {
     document.getElementById("screen-multiplayer")?.classList.remove("multiplayer-win-state");
     hideMultiplayerWinOverlay();
     resultBox?.classList.remove("is-win", "is-loss", "win-animate");
-    if (roundStatus) roundStatus.textContent = room?.code ? "En attente" : "Prêt";
+    if (roundStatus) roundStatus.textContent = roomReady ? "Room complète" : room?.code ? "En attente d’un joueur" : "Prêt";
     if (waitingText) {
       waitingText.textContent = room?.code
-        ? players.length >= 2
-          ? "Les deux joueurs sont là. La manche démarre..."
-          : "Room créée. Partage le code et attends ton adversaire."
-        : "Crée une room ou rejoins-en une. La manche démarre automatiquement dès que les deux joueurs sont présents.";
+        ? roomReady
+          ? "Les deux joueurs sont présents. La manche peut démarrer."
+          : "Room créée. Partage le code et attends le second joueur."
+        : "Choisis un pseudo, crée une room ou rejoins-en une pour lancer la manche.";
     }
     waitingBox?.classList.remove("hidden");
     liveBox?.classList.add("hidden");

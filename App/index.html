@@ -85,8 +85,8 @@
           <h3>Jouer</h3>
           <p>Lance une partie tout de suite ou ouvre un autre mode en un clic.</p>
           <div class="home-priority-actions">
-            <button class="btn-red" onclick="startNormalGame()">Pokémon mystère</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('play')">Voir plus</button>
+            <button class="btn-red home-primary-cta home-main-cta" onclick="startNormalGame()">Pokémon mystère du jour</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('play')">Voir plus</button>
           </div>
         </article>
         <article class="card home-priority-card home-priority-card-social">
@@ -94,8 +94,8 @@
           <h3>Défier un ami</h3>
           <p>Crée un duel, rejoins une room ou lance un face-à-face rapide.</p>
           <div class="home-priority-actions">
-            <button class="btn-blue" onclick="openMultiplayerMode()">Duel live 1v1</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('social')">Social</button>
+            <button class="btn-blue home-primary-cta" onclick="openMultiplayerMode()">Duel live 1v1</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('social')">Social</button>
           </div>
         </article>
         <article class="card home-priority-card home-priority-card-lab">
@@ -103,8 +103,8 @@
           <h3>Champions Lab</h3>
           <p>Prépare ta team et retrouve tes outils stratégiques au même endroit.</p>
           <div class="home-priority-actions">
-            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Team Builder</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
+            <button class="btn-blue home-primary-cta" type="button" onclick="openTeamBuilderScreen()">Team Builder</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
           </div>
         </article>
         <article class="card home-priority-card home-priority-card-progress">
@@ -112,8 +112,8 @@
           <h3>Continuer la progression</h3>
           <p>Retrouve ton profil, tes succès et ton Pokédex dans un même espace.</p>
           <div class="home-priority-actions">
-            <button class="btn-blue" type="button" onclick="openProfileScreen()">Profil</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('collection')">Collection</button>
+            <button class="btn-blue home-primary-cta" type="button" onclick="openProfileScreen()">Profil</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('collection')">Collection</button>
           </div>
         </article>
       </section>
@@ -157,8 +157,8 @@
           <p class="home-category-note">Le reste des variantes reste disponible dans le site, mais l’accueil garde ici l’essentiel.</p>
           <div class="mode-buttons home-mode-grid">
             <button class="btn-red" onclick="startPartyMode()"><span class="btn-icon">🎲</span>Party Pokémon</button>
-            <button class="btn-blue" onclick="startNormalGame()"><span class="btn-icon">🔎</span>Pokémon mystère</button>
-            <button class="btn-ghost" type="button" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
+            <button class="btn-blue home-primary-cta home-main-cta" onclick="startNormalGame()"><span class="btn-icon">🔎</span>Pokémon mystère du jour</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
           </div>
           <div id="mode-pro-hub" class="mode-pro-hub">
             <div class="mode-pro-head">
@@ -182,9 +182,9 @@
           </div>
           <p class="home-category-note">Les mini-défis et variantes sociales restent accessibles ensuite, sans encombrer l’accueil.</p>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Duel live 1v1</button>
+            <button class="btn-blue home-primary-cta" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Duel live 1v1</button>
             <button class="btn-red" onclick="openStatClashMode()"><span class="btn-icon">📊</span>Stat Clash 1v1</button>
-            <button class="btn-yellow" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
+            <button class="btn-yellow home-secondary-cta" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
           </div>
         </article>
 
@@ -198,8 +198,8 @@
           </div>
           <p class="home-category-note">Le cœur du lab reste ici, sans mélanger toute la boîte à outils à la home principale.</p>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Team Builder</button>
-            <button class="btn-ghost" type="button" onclick="openTeamsScreen()"><span class="btn-icon">📚</span>Mes teams</button>
+            <button class="btn-blue home-primary-cta" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Team Builder</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="openTeamsScreen()"><span class="btn-icon">📚</span>Mes teams</button>
           </div>
         </article>
 
@@ -212,9 +212,9 @@
             <p class="card-desc">Retrouve ton Pokédex, ton profil et tes succès dans un espace à part, plus calme.</p>
           </div>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" type="button" onclick="openPokedexMode()"><span class="btn-icon">📖</span>Pokédex</button>
-            <button class="btn-ghost" type="button" onclick="openAchievementsScreen()"><span class="btn-icon">🏆</span>Succès</button>
-            <button class="btn-ghost" type="button" onclick="openProfileScreen()"><span class="btn-icon">👤</span>Profil</button>
+            <button class="btn-blue home-primary-cta" type="button" onclick="openPokedexMode()"><span class="btn-icon">📖</span>Pokédex</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="openAchievementsScreen()"><span class="btn-icon">🏆</span>Succès</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="openProfileScreen()"><span class="btn-icon">👤</span>Profil</button>
           </div>
         </article>
 
@@ -227,10 +227,10 @@
             <p class="card-desc">Les modules bonus restent accessibles, mais sortent du premier plan pour garder une home nette.</p>
           </div>
           <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue" onclick="openDraftArenaMode()"><span class="btn-icon">🎤</span>Draft Arènes</button>
-            <button class="btn-ghost" type="button" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
-            <button class="btn-ghost" type="button" onclick="openOddOneOutMode()"><span class="btn-icon">🧩</span>Intrus Pokémon</button>
-            <button class="btn-ghost" type="button" onclick="openGamesRankingMode()"><span class="btn-icon">📈</span>Classements</button>
+            <button class="btn-blue home-primary-cta" onclick="openDraftArenaMode()"><span class="btn-icon">🎤</span>Draft Arènes</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="openOddOneOutMode()"><span class="btn-icon">🧩</span>Intrus Pokémon</button>
+            <button class="btn-ghost home-secondary-cta" type="button" onclick="openGamesRankingMode()"><span class="btn-icon">📈</span>Classements</button>
           </div>
         </article>
       </section>
