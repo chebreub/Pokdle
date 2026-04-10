@@ -1110,6 +1110,9 @@ function advancePartyRound() {
 }
 let pokedexSelectedId = null;
 let pokedexDetailRequestId = 0;
+let pokedexRecentIds = [];
+let pokedexRecentLoaded = false;
+let pokedexRecentSuppressOnce = false;
 let draftArenaState = null;
 
 const POKEDEX_API_CACHE = new Map();
@@ -1118,6 +1121,9 @@ const POKEDEX_ABILITY_CACHE = new Map();
 const POKEDEX_EVOLUTION_CACHE = new Map();
 const TEAM_BUILDER_MOVE_POOL_CACHE = new Map();
 const TEAM_BUILDER_MOVE_POOL_PENDING = new Map();
+
+const POKEDEX_RECENT_STORAGE_KEY = "pokedexRecentIds";
+const POKEDEX_RECENT_MAX = 6;
 
 const QUIZ_QUESTIONS = [
   { question: "Quel type est immunisé aux attaques Dragon ?", options: ["Acier", "Fée", "Glace", "Psy"], answer: 1 },
@@ -7552,6 +7558,75 @@ function updatePokedexGridSelection() {
   });
 }
 
+function loadPokedexRecentIds() {
+  if (pokedexRecentLoaded) return;
+  pokedexRecentLoaded = true;
+  try {
+    const raw = localStorage.getItem(POKEDEX_RECENT_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) {
+      pokedexRecentIds = parsed.map((id) => Number(id)).filter((id) => Number.isInteger(id));
+    }
+  } catch {
+    pokedexRecentIds = [];
+  }
+}
+
+function savePokedexRecentIds() {
+  try {
+    localStorage.setItem(POKEDEX_RECENT_STORAGE_KEY, JSON.stringify(pokedexRecentIds.slice(0, POKEDEX_RECENT_MAX)));
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function trackPokedexRecentId(pokemonId) {
+  const id = Number(pokemonId);
+  if (!Number.isInteger(id)) return;
+  loadPokedexRecentIds();
+  if (pokedexRecentIds[0] === id) return;
+  pokedexRecentIds = [id, ...pokedexRecentIds.filter((entry) => entry !== id)].slice(0, POKEDEX_RECENT_MAX);
+  savePokedexRecentIds();
+}
+
+function clearPokedexRecentHistory() {
+  loadPokedexRecentIds();
+  if (!pokedexRecentIds.length) {
+    renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || null);
+    return;
+  }
+  pokedexRecentIds = [];
+  savePokedexRecentIds();
+  pokedexRecentSuppressOnce = true;
+  renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || null);
+}
+
+function renderPokedexRecentBlock() {
+  loadPokedexRecentIds();
+  const recent = pokedexRecentIds
+    .map((id) => POKEMON_BY_ID.get(id))
+    .filter((pokemon) => Boolean(pokemon));
+  const items = recent.map((pokemon) => {
+    const dexId = getPokemonSpriteId(pokemon);
+    const sprite = getPokedexDisplaySprite(pokemon, false);
+    const isActive = Number(pokemon.id) === Number(pokedexSelectedId);
+    return `<button type="button" class="pokedex-recent-item${isActive ? " is-active" : ""}" onclick="openPokedexRecent(${pokemon.id})"><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" /><span>${escapeHtml(pokemon.name)}</span></button>`;
+  }).join("");
+  const clearDisabled = recent.length ? "" : "disabled";
+  return `<div class="pokedex-recent-block"><div class="pokedex-recent-head"><h4>Derniers consultés</h4><button type="button" class="btn-ghost pokedex-recent-clear" onclick="clearPokedexRecentHistory()" ${clearDisabled}>Effacer</button></div>${recent.length ? `<div class="pokedex-recent-list">${items}</div>` : '<p class="pokedex-recent-empty">Aucun Pokémon récent</p>'}</div>`;
+}
+
+function openPokedexRecent(pokemonId) {
+  const id = Number(pokemonId);
+  const pokemon = Number.isInteger(id) ? POKEMON_BY_ID.get(id) : null;
+  if (!pokemon) return;
+  pokedexSelectedId = id;
+  pokedexSelectedShiny = false;
+  updatePokedexGridSelection();
+  renderPokedexDetail(pokemon);
+  ensurePokedexSelectedCardVisible();
+}
+
 function getPokedexNavigationState() {
   const list = getFilteredPokedexList();
   const currentIndex = list.findIndex((pokemon) => Number(pokemon.id) === Number(pokedexSelectedId));
@@ -7591,9 +7666,15 @@ async function renderPokedexDetail(pokemon) {
     return;
   }
 
+  if (pokedexRecentSuppressOnce) {
+    pokedexRecentSuppressOnce = false;
+  } else {
+    trackPokedexRecentId(pokemon.id);
+  }
   const currentRequest = ++pokedexDetailRequestId;
   const dexId = getPokemonSpriteId(pokemon);
   const navigation = getPokedexNavigationState();
+  const recentHtml = renderPokedexRecentBlock();
   const navigationHtml = `
     <div class="pokedex-detail-nav">
       <button type="button" class="btn-ghost pokedex-detail-nav-btn" onclick="navigatePokedexDetail('prev')" ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
@@ -7621,6 +7702,7 @@ async function renderPokedexDetail(pokemon) {
       </div>
     </div>
     ${navigationHtml}
+    ${recentHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
@@ -7669,6 +7751,7 @@ async function renderPokedexDetail(pokemon) {
       </div>
     </div>
     ${navigationHtml}
+    ${recentHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
