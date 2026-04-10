@@ -6052,12 +6052,20 @@ function renderTeamBuilderGrid() {
   if (!grid) return;
 
   grid.innerHTML = "";
+  const nextEmptySlotIndex = teamBuilderState.findIndex((slot) => !Number.isInteger(Number(slot?.pokemonId)));
+  const activeSlotHasPokemon = Boolean(getTeamBuilderPokemon(teamBuilderState[teamBuilderActiveSlot]));
 
   teamBuilderState.forEach((slot, index) => {
     const pokemon = getTeamBuilderPokemon(slot);
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "home-builder-slot" + (index === teamBuilderActiveSlot ? " is-active" : "") + (pokemon ? " is-filled" : "");
+    const isActive = index === teamBuilderActiveSlot;
+    const isNextEmpty = !activeSlotHasPokemon && nextEmptySlotIndex !== -1 && index === nextEmptySlotIndex;
+    card.className =
+      "home-builder-slot" +
+      (isActive ? " is-active" : "") +
+      (pokemon ? " is-filled" : "") +
+      (isNextEmpty ? " is-next-empty" : "");
     card.addEventListener("click", () => {
       teamBuilderActiveSlot = index;
       renderTeamBuilderModule();
@@ -6065,7 +6073,10 @@ function renderTeamBuilderGrid() {
 
     const head = document.createElement("div");
     head.className = "home-builder-slot-head";
-    head.innerHTML = `<span>Slot ${index + 1}</span><small>${pokemon ? "Actif" : "Vide"}</small>`;
+    let slotStatus = pokemon ? "Actif" : "Vide";
+    if (isNextEmpty && !isActive) slotStatus = "Suivant";
+    if (isNextEmpty && isActive) slotStatus = "À remplir";
+    head.innerHTML = `<span>Slot ${index + 1}</span><small>${slotStatus}</small>`;
 
     const body = document.createElement("div");
     body.className = "home-builder-slot-body";
@@ -7377,6 +7388,71 @@ function getPokedexTypes() {
   }
   return [...set].sort((a, b) => a.localeCompare(b, "fr"));
 }
+
+function isPokedexToolbarDirty() {
+  return Boolean(
+    (pokedexSearch || "").trim() ||
+    pokedexGenFilter !== "all" ||
+    pokedexTypeFilter !== "all" ||
+    pokedexType2Filter !== "all" ||
+    pokedexSortFilter !== "dex"
+  );
+}
+
+function ensurePokedexToolbarMeta() {
+  let meta = document.getElementById("pokedex-toolbar-meta");
+  if (meta) return meta;
+  const row = document.querySelector("#screen-pokedex .pokedex-toolbar-row-bottom");
+  if (!row) return null;
+  meta = document.createElement("div");
+  meta.id = "pokedex-toolbar-meta";
+  meta.className = "pokedex-toolbar-meta";
+  meta.innerHTML = `
+    <span id="pokedex-results-count" class="pokedex-results-count" aria-live="polite"></span>
+    <button id="pokedex-reset-filters" class="btn-ghost pokedex-reset-filters" type="button">Réinitialiser</button>
+  `;
+  row.appendChild(meta);
+  meta.querySelector("#pokedex-reset-filters")?.addEventListener("click", resetPokedexToolbar);
+  return meta;
+}
+
+function updatePokedexToolbarMeta(resultCount) {
+  const meta = ensurePokedexToolbarMeta();
+  if (!meta) return;
+  const count = meta.querySelector("#pokedex-results-count");
+  const reset = meta.querySelector("#pokedex-reset-filters");
+  const total = POKEMON_LIST.length;
+  if (count) {
+    count.textContent = `${resultCount} / ${total} affichés`;
+  }
+  const isDirty = isPokedexToolbarDirty();
+  meta.classList.toggle("is-dirty", isDirty);
+  if (reset) {
+    reset.hidden = !isDirty;
+    reset.disabled = !isDirty;
+    reset.setAttribute("aria-hidden", isDirty ? "false" : "true");
+  }
+}
+
+function resetPokedexToolbar() {
+  pokedexSearch = "";
+  pokedexGenFilter = "all";
+  pokedexTypeFilter = "all";
+  pokedexType2Filter = "all";
+  pokedexSortFilter = "dex";
+  const search = document.getElementById("pokedex-search");
+  const gen = document.getElementById("pokedex-gen-filter");
+  const type = document.getElementById("pokedex-type-filter");
+  const type2 = document.getElementById("pokedex-type2-filter");
+  const sort = document.getElementById("pokedex-sort-filter");
+  if (search) search.value = "";
+  if (gen) gen.value = "all";
+  if (type) type.value = "all";
+  if (type2) type2.value = "all";
+  if (sort) sort.value = "dex";
+  renderPokedexGrid();
+}
+
 function initPokedex() {
   const search = document.getElementById("pokedex-search");
   const gen = document.getElementById("pokedex-gen-filter");
@@ -7410,6 +7486,7 @@ function initPokedex() {
     <option value="name-desc">Nom Z → A</option>
   `;
   sort.value = pokedexSortFilter;
+  ensurePokedexToolbarMeta();
 
   search.addEventListener("input", () => {
     pokedexSearch = search.value.trim();
@@ -7526,12 +7603,17 @@ function renderPokedexGrid() {
   if (!grid) return;
 
   const list = getFilteredPokedexList();
+  updatePokedexToolbarMeta(list.length);
   grid.innerHTML = "";
 
   if (!list.length) {
     const empty = document.createElement("div");
-    empty.className = "rank-empty-list";
-    empty.textContent = "Aucun Pokémon trouvé avec ces filtres.";
+    empty.className = "rank-empty-list pokedex-empty-state";
+    empty.innerHTML = `
+      <strong>Aucun Pokémon trouvé</strong>
+      <p>Essaie d’ajuster la recherche ou les filtres actuels.</p>
+      ${isPokedexToolbarDirty() ? '<button type="button" class="btn-ghost pokedex-empty-reset" onclick="resetPokedexToolbar()">Réinitialiser les filtres</button>' : ""}
+    `;
     grid.appendChild(empty);
     renderPokedexDetail(null);
     return;
