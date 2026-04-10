@@ -12525,6 +12525,22 @@ function renderDraftSimpleBattleDevPanel(state) {
   const canLocalChooseAction = isPlayerTurn && !isReplayingTurn && (!isNetwork || currentActionSide === localSide) && !network.waitingRemote;
   const showActionResumeCue = Boolean(state.actionResumeCueActive && canLocalChooseAction);
   const canLocalChooseReplacement = needsForcedSwitch && (!isNetwork || (state.pendingSwitchSide || "left") === localSide);
+  const replayPhase = state.visualReplay?.phase || "idle";
+  const combatUiState = isFinished
+    ? "finished"
+    : needsForcedSwitch
+      ? "switch"
+      : isReplayingTurn
+        ? "replay"
+        : canLocalChooseAction
+          ? "choice"
+          : isEnemyTurn
+            ? "enemy"
+            : "waiting";
+  panel.dataset.combatUi = combatUiState;
+  panel.dataset.replayPhase = replayPhase;
+  body.dataset.combatUi = combatUiState;
+  body.dataset.replayPhase = replayPhase;
 
   const actionsHtml = state.log.map((entry) => {
     const maxVisible = state.visualReplay?.active && Number(state.visualReplay.turn) === Number(entry.turn)
@@ -12566,7 +12582,7 @@ function renderDraftSimpleBattleDevPanel(state) {
     return `
     <button
       type="button"
-      class="btn-blue draft-dev-battle-move"
+      class="btn-blue draft-dev-battle-move ${moveEffectivenessClass} ${move?.category === "status" ? "is-status" : "is-attack"}"
       onclick="runDraftSimpleBattleDevTurn(${index}, '${currentActionSide}')"
       ${(state.phase === "finished" || !canLocalChooseAction || (Number(move?.ppCurrent) || 0) <= 0) ? "disabled" : ""}
     >
@@ -12596,8 +12612,23 @@ function renderDraftSimpleBattleDevPanel(state) {
   const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
   const sceneText = getDraftSimpleBattleSceneText(state);
+  const liveResultTone = needsForcedSwitch
+    ? "is-switch"
+    : isReplayingTurn
+      ? "is-resolving"
+      : canLocalChooseAction
+        ? "is-choice"
+        : "is-waiting";
+  const liveResultKicker = needsForcedSwitch
+    ? "Remplacement"
+    : isReplayingTurn
+      ? "Résolution"
+      : canLocalChooseAction
+        ? "Ton tour"
+        : "En attente";
   const resultHtml = isFinished
     ? `<div class="draft-dev-battle-result is-finished ${playerWin ? "is-win" : "is-loss"}">
+        <small class="draft-dev-battle-result-kicker">Fin de manche</small>
         <b>${playerWin ? "Victoire !" : "Défaite"}</b>
         <span>${playerWin ? "Ton équipe remporte le duel avec brio." : "Le duel t’échappe cette fois."}</span>
         <span>${escapeHtml(winner)} termine le match pour ${playerWin ? "ton équipe" : "l’adversaire"}.</span>
@@ -12609,9 +12640,9 @@ function renderDraftSimpleBattleDevPanel(state) {
         </div>
       </div>`
     : isEnemyTurn
-      ? `<div class="draft-dev-battle-result"><b>Duel en cours</b><span>L’adversaire prépare sa réponse.</span></div>`
+      ? `<div class="draft-dev-battle-result ${liveResultTone}"><small class="draft-dev-battle-result-kicker">${liveResultKicker}</small><b>Action adverse</b><span>L’adversaire prépare sa réponse.</span></div>`
       : isPlayerTurn
-        ? `<div class="draft-dev-battle-result"><b>${escapeHtml(isNetwork ? getDraftSimpleBattleNetworkRoomStatusText(state) : "Duel en cours")}</b><span>${escapeHtml(isNetwork ? networkTurnHint : (canLocalChooseAction ? "Choisis une attaque pour jouer le prochain tour." : "Action adverse en attente ou déjà verrouillée."))}</span></div>`
+        ? `<div class="draft-dev-battle-result ${liveResultTone}"><small class="draft-dev-battle-result-kicker">${liveResultKicker}</small><b>${escapeHtml(isReplayingTurn ? "Résolution du tour" : canLocalChooseAction ? `${currentActionBattler.pokemon.name} attend ton ordre` : isNetwork ? getDraftSimpleBattleNetworkRoomStatusText(state) : "Tour verrouillé")}</b><span>${escapeHtml(isNetwork ? networkTurnHint : (canLocalChooseAction ? "Choisis une attaque." : isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : "Action enregistrée ou en attente."))}</span></div>`
         : "";
 
   const switchHtml = needsForcedSwitch
@@ -12641,10 +12672,16 @@ function renderDraftSimpleBattleDevPanel(state) {
 
   const playerHudHtml = `
     <div class="draft-dev-battle-fighter-head">
-      <div>
-        <span>Joueur</span>
-        <b>${escapeHtml(displayLeft.pokemon.name)}</b>
-        <small>PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayLeft)}${leftStatusLabel ? ` • ${leftStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</small>
+      <div class="draft-dev-battle-hud">
+        <div class="draft-dev-battle-hud-top">
+          <span class="draft-dev-battle-hud-side">Joueur</span>
+          <span class="draft-dev-battle-hud-meta">Équipe ${getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex)} restant(s)</span>
+        </div>
+        <div class="draft-dev-battle-hud-main">
+          <b class="draft-dev-battle-hud-name">${escapeHtml(displayLeft.pokemon.name)}</b>
+          ${leftStatusLabel ? `<span class="draft-dev-battle-hud-status">${escapeHtml(leftStatusLabel)}</span>` : ""}
+        </div>
+        <small class="draft-dev-battle-hud-sub">PV ${displayLeft.currentHp} / ${displayLeft.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayLeft)}</small>
         <div class="draft-dev-battle-hp">
           <div class="draft-dev-battle-hp-meta">
             <strong>PV</strong>
@@ -12660,10 +12697,16 @@ function renderDraftSimpleBattleDevPanel(state) {
 
   const foeHudHtml = `
     <div class="draft-dev-battle-fighter-head">
-      <div>
-        <span>Adversaire</span>
-        <b>${escapeHtml(displayRight.pokemon.name)}</b>
-        <small>PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayRight)}${rightStatusLabel ? ` • ${rightStatusLabel}` : ""} • Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</small>
+      <div class="draft-dev-battle-hud">
+        <div class="draft-dev-battle-hud-top">
+          <span class="draft-dev-battle-hud-side">Adversaire</span>
+          <span class="draft-dev-battle-hud-meta">Équipe ${getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex)} restant(s)</span>
+        </div>
+        <div class="draft-dev-battle-hud-main">
+          <b class="draft-dev-battle-hud-name">${escapeHtml(displayRight.pokemon.name)}</b>
+          ${rightStatusLabel ? `<span class="draft-dev-battle-hud-status">${escapeHtml(rightStatusLabel)}</span>` : ""}
+        </div>
+        <small class="draft-dev-battle-hud-sub">PV ${displayRight.currentHp} / ${displayRight.maxHp} • Vitesse ${getDraftSimpleBattleCurrentSpeed(displayRight)}</small>
         <div class="draft-dev-battle-hp">
           <div class="draft-dev-battle-hp-meta">
             <strong>PV</strong>
@@ -12725,14 +12768,14 @@ function renderDraftSimpleBattleDevPanel(state) {
       <span>${escapeHtml(sceneText)}</span>
     </div>
     ${visualFeedback.badges.length ? `
-      <div class="draft-dev-battle-event-strip">
+      <div class="draft-dev-battle-event-strip ${isReplayingTurn ? "is-replay" : "is-resting"}">
         ${visualFeedback.badges.map((label) => `<span class="draft-dev-battle-event-badge">${escapeHtml(label)}</span>`).join("")}
       </div>
     ` : ""}
     <div class="draft-dev-battle-stage">
       <div class="draft-dev-battle-fighters draft-dev-battle-scene-shell">
         <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-top">
-          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-foe">
+          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-foe ${visualFeedback.rightClass}">
             <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-foe" src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
           </div>
           <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-foe is-foe ${visualFeedback.rightClass}">
@@ -12743,7 +12786,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-player is-player ${visualFeedback.leftClass}">
             ${playerHudHtml}
           </div>
-          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-player">
+          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-player ${visualFeedback.leftClass}">
             <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-player" src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
           </div>
         </div>
@@ -12763,9 +12806,9 @@ function renderDraftSimpleBattleDevPanel(state) {
     ${canLocalChooseAction && getDraftSimpleBattleAvailableSwitchIndexesForSide(state, currentActionSide).length
       ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch('${currentActionSide}')">Changer de Pokémon</button></div>`
       : ""}
-    <div class="draft-dev-battle-battlebox">
+    <div class="draft-dev-battle-battlebox" data-combat-ui="${combatUiState}" data-replay-phase="${replayPhase}">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
-      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : showActionResumeCue ? "À toi de jouer" : `Tes attaques${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div>${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer</button></div>` : ""}</div>` : ""}
+      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""} ${canLocalChooseAction ? "is-choice-open" : "is-choice-locked"}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""} ${canLocalChooseAction ? "is-choice-open" : "is-choice-locked"}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : showActionResumeCue ? "À toi de jouer" : `Tes attaques${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div>${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer</button></div>` : ""}</div>` : ""}
       <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
     </div>
   `;
@@ -13941,9 +13984,7 @@ function buildDraftArenaIndicators(result, runSummary) {
 }
 
 function toggleDraftDetailAnalysis() {
-  if (!draftArenaState || draftArenaState.phase !== "result") return;
-  draftArenaState.showDetailedAnalysis = !draftArenaState.showDetailedAnalysis;
-  renderDraftArena();
+  return;
 }
 
 async function resolveDraftArenaRun() {
@@ -14075,7 +14116,6 @@ function renderDraftArena() {
   const runSummary = document.getElementById("draft-run-summary");
   const badgeGrid = document.getElementById("draft-badge-grid");
   const arenaList = document.getElementById("draft-arena-list");
-  const detailToggle = document.getElementById("draft-detail-toggle");
   const battleLaunch = document.getElementById("draft-battle-launch");
   const battleClose = document.getElementById("draft-battle-close");
   const battlePokemonSelect = document.getElementById("draft-battle-pokemon");
@@ -14260,11 +14300,6 @@ function renderDraftArena() {
   if (resultWrap) {
     resultWrap.classList.toggle("hidden", draftArenaState.phase !== "result" && draftArenaState.phase !== "battle");
   }
-  if (detailToggle) {
-    detailToggle.textContent = draftArenaState.showDetailedAnalysis ? "Masquer l'analyse détaillée" : "Voir l'analyse détaillée";
-    detailToggle.classList.toggle("hidden", draftArenaState.phase !== "result" && draftArenaState.phase !== "battle");
-  }
-
   if (runSummary) {
     if (draftArenaState.phase !== "result" && draftArenaState.phase !== "battle") {
       runSummary.innerHTML = "";
@@ -14295,21 +14330,6 @@ function renderDraftArena() {
 
   if (arenaList) {
     arenaList.innerHTML = "";
-    for (const r of draftArenaState.badgeResults) {
-      const row = document.createElement("div");
-      row.className = "draft-arena-row " + r.status;
-      row.style.setProperty("--draft-delay", `${arenaList.children.length * 110}ms`);
-      const bestMembers = r.topMembers?.slice(0, 2).map((member) => member.pokemon.name).join(", ") || "-";
-      const indicators = buildDraftArenaIndicators(r, draftArenaState.runSummary);
-      row.innerHTML = `
-        <b>${escapeHtml(r.arena.name)} • ${escapeHtml(r.arena.type)}</b>
-        <span>${escapeHtml(indicators.join(" • "))}</span>
-        <span>${escapeHtml(r.explanation)}</span>
-        ${r.estimatedScore === null ? "" : `<span>MVP pressenti : ${escapeHtml(bestMembers)}</span>`}
-        ${draftArenaState.showDetailedAnalysis && r.estimatedScore !== null ? `<span>Analyse détaillée : score ${r.estimatedScore} / seuil ${r.threshold}</span>` : ""}
-      `;
-      arenaList.appendChild(row);
-    }
   }
 }
 const EMU_ROM_OPTIONS = [
@@ -16831,9 +16851,25 @@ function renderMultiplayerBotResult() {
   const players = Array.isArray(room?.players) ? room.players : [];
   const self = players.find((player) => player.isSelf) || null;
   const winner = players.find((player) => player.id === room?.winnerId) || null;
+  const opponent = players.find((player) => !player.isSelf) || null;
   const playerId = self?.id || multiplayerSocket?.id || null;
   const playerWon = Boolean(playerId && winner && playerId === winner.id);
   const target = room?.targetRevealed;
+  const bothPlayersPresent = players.length >= 2 && players.every((player) => player.connected !== false);
+  const scoreLeftLabel = self?.nickname || "Toi";
+  const scoreRightLabel = opponent?.nickname || "Adversaire";
+  const scoreLeftValue = winner && self && winner.id === self.id ? 1 : 0;
+  const scoreRightValue = winner && opponent && winner.id === opponent.id ? 1 : 0;
+  const nextActionText = !bothPlayersPresent
+    ? "En attente de l’autre joueur pour pouvoir relancer."
+    : self?.isHost
+    ? "Tu peux relancer la manche maintenant."
+    : "Tu peux rejouer maintenant ou attendre une relance avec d’autres générations.";
+  const waitStateText = !bothPlayersPresent
+    ? "Room incomplète"
+    : self?.isHost
+    ? "Action disponible"
+    : "Room prête";
   const reasonText = room?.endedReason === "disconnect"
     ? "La manche s'est terminée sur déconnexion."
     : playerWon
@@ -16841,13 +16877,35 @@ function renderMultiplayerBotResult() {
     : winner
     ? `${winner.nickname} a trouvé le Pokémon avant toi.`
     : "La manche est terminée.";
+  const resultTitle = playerWon ? "Félicitations, tu as gagné !" : "Défaite";
+  const resultSupportText = playerWon
+    ? "Belle manche. Tu remportes ce duel live avant ton adversaire."
+    : "La manche t’échappe cette fois.";
+
+  const postMatchMetaHtml = `
+    <div class="multiplayer-postmatch-meta">
+      <div class="multiplayer-postmatch-row">
+        <span class="multiplayer-postmatch-label">Vainqueur</span>
+        <strong class="multiplayer-postmatch-value">${escapeHtml(winner?.nickname || "Manche terminée")}</strong>
+      </div>
+      <div class="multiplayer-postmatch-row multiplayer-postmatch-score">
+        <span class="multiplayer-postmatch-label">Score de manche</span>
+        <strong class="multiplayer-postmatch-value">${escapeHtml(scoreLeftLabel)} ${scoreLeftValue} - ${scoreRightValue} ${escapeHtml(scoreRightLabel)}</strong>
+      </div>
+      <div class="multiplayer-postmatch-row">
+        <span class="multiplayer-postmatch-label">${escapeHtml(waitStateText)}</span>
+        <strong class="multiplayer-postmatch-value">${escapeHtml(nextActionText)}</strong>
+      </div>
+    </div>
+  `;
 
   content.innerHTML = `
     <div class="multiplayer-result-summary ${playerWon ? "is-win" : "is-loss"}">
       <div>
-        <p class="multiplayer-result-title">${playerWon ? "Félicitations, tu as gagné !" : "Défaite"}</p>
+        <p class="multiplayer-result-title">${resultTitle}</p>
         <p>${escapeHtml(reasonText)}</p>
-        <p>${playerWon ? "Belle manche. Tu remportes ce duel live avant ton adversaire." : "La manche t’échappe cette fois."}</p>
+        <p>${resultSupportText}</p>
+        ${postMatchMetaHtml}
       </div>
       ${target ? `
       <div class="multiplayer-target-card">
@@ -16864,6 +16922,7 @@ function renderMultiplayerBotResult() {
     if (resultHeading) resultHeading.textContent = playerWon ? "Victoire" : "Résultat du duel";
     resultBox.classList.toggle("is-win", playerWon);
     resultBox.classList.toggle("is-loss", !playerWon);
+    resultBox.setAttribute("data-postmatch-state", !bothPlayersPresent ? "waiting" : self?.isHost ? "host-ready" : "guest-ready");
     multiplayerScreen?.classList.toggle("multiplayer-win-state", playerWon);
     if (playerWon) {
       const overlay = ensureMultiplayerWinOverlay();
@@ -16873,9 +16932,10 @@ function renderMultiplayerBotResult() {
         overlayContent.innerHTML = `
           <div class="multiplayer-result-summary is-win">
             <div>
-              <p class="multiplayer-result-title">Félicitations, tu as gagné !</p>
+              <p class="multiplayer-result-title">${resultTitle}</p>
               <p>${escapeHtml(reasonText)}</p>
-              <p>La manche est remportée. Tu peux rejouer tout de suite ou revenir à l’accueil.</p>
+              <p>${resultSupportText}</p>
+              ${postMatchMetaHtml}
             </div>
             ${target ? `
             <div class="multiplayer-target-card">
@@ -16902,9 +16962,10 @@ function renderMultiplayerBotResult() {
         overlayContent.innerHTML = `
           <div class="multiplayer-result-summary is-loss">
             <div>
-              <p class="multiplayer-result-title">Défaite</p>
+              <p class="multiplayer-result-title">${resultTitle}</p>
               <p>${escapeHtml(reasonText)}</p>
-              <p>La manche t’échappe cette fois. Tu peux rejouer immédiatement ou revenir à l’accueil.</p>
+              <p>${resultSupportText}</p>
+              ${postMatchMetaHtml}
             </div>
             ${target ? `
             <div class="multiplayer-target-card">
