@@ -23227,7 +23227,6 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
   border-top-color: rgba(236, 182, 64, 0.34);
   border-bottom-color: rgba(236, 182, 64, 0.34);
   background: linear-gradient(180deg, rgba(255, 251, 241, 0.98), rgba(250, 244, 226, 0.94));
-  animation: main-game-last-attempt 0.42s ease-out;
 }
 
 #screen-game #results-table tbody tr:last-child td:first-child {
@@ -23268,7 +23267,8 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
 }
 
 #screen-game #results-table tbody tr {
-  animation: main-game-row-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: main-game-row-in 0.38s cubic-bezier(0.2, 0.82, 0.2, 1);
+  transform-origin: center bottom;
 }
 
 #screen-game #results-table tbody tr:last-child .c-ok,
@@ -23276,33 +23276,44 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
 #screen-game #results-table tbody tr:last-child .c-wrong {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.22),
-    inset 0 -1px 0 rgba(10, 20, 38, 0.08),
-    0 8px 18px rgba(21, 43, 79, 0.08);
+    inset 0 -1px 0 rgba(10, 20, 38, 0.08);
+}
+
+#screen-game #results-table tbody tr:last-child {
+  animation: main-game-row-latest 0.5s cubic-bezier(0.18, 0.84, 0.22, 1);
 }
 
 @keyframes main-game-row-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(10px);
+    filter: blur(3px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
   }
 }
 
-@keyframes main-game-last-attempt {
+@keyframes main-game-row-latest {
   0% {
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.52), 0 0 0 rgba(236, 182, 64, 0);
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(4px);
   }
 
-  45% {
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 22px rgba(236, 182, 64, 0.12);
+  55% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
 
   100% {
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.52), 0 0 0 rgba(236, 182, 64, 0);
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
 }
 
