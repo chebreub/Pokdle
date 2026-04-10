@@ -1113,6 +1113,9 @@ let pokedexDetailRequestId = 0;
 let pokedexRecentIds = [];
 let pokedexRecentLoaded = false;
 let pokedexRecentSuppressOnce = false;
+let pokedexCompareId = null;
+let pokedexCompareLoaded = false;
+let pokedexCompareToastTimer = null;
 let draftArenaState = null;
 
 const POKEDEX_API_CACHE = new Map();
@@ -1124,6 +1127,7 @@ const TEAM_BUILDER_MOVE_POOL_PENDING = new Map();
 
 const POKEDEX_RECENT_STORAGE_KEY = "pokedexRecentIds";
 const POKEDEX_RECENT_MAX = 6;
+const POKEDEX_COMPARE_STORAGE_KEY = "pokedexCompareId";
 
 const QUIZ_QUESTIONS = [
   { question: "Quel type est immunisé aux attaques Dragon ?", options: ["Acier", "Fée", "Glace", "Psy"], answer: 1 },
@@ -7435,6 +7439,23 @@ function initPokedex() {
   shinyToggle?.addEventListener("click", togglePokedexGridShiny);
 
   updatePokedexShinyButton();
+
+  if (!document.body.dataset.pokedexKeysBound) {
+    document.body.dataset.pokedexKeysBound = "1";
+    document.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const pokedexScreen = document.getElementById("screen-pokedex");
+      if (!pokedexScreen || pokedexScreen.classList.contains("hidden")) return;
+      if (!pokedexSelectedId) return;
+      const target = event.target;
+      if (target?.isContentEditable) return;
+      const tagName = String(target?.tagName || "").toLowerCase();
+      if (["input", "textarea", "select"].includes(tagName)) return;
+      event.preventDefault();
+      navigatePokedexDetail(event.key === "ArrowLeft" ? "prev" : "next");
+    });
+  }
 }
 
 function openPokedexMode() {
@@ -7616,6 +7637,116 @@ function renderPokedexRecentBlock() {
   return `<div class="pokedex-recent-block"><div class="pokedex-recent-head"><h4>Derniers consultés</h4><button type="button" class="btn-ghost pokedex-recent-clear" onclick="clearPokedexRecentHistory()" ${clearDisabled}>Effacer</button></div>${recent.length ? `<div class="pokedex-recent-list">${items}</div>` : '<p class="pokedex-recent-empty">Aucun Pokémon récent</p>'}</div>`;
 }
 
+function loadPokedexCompareId() {
+  if (pokedexCompareLoaded) return;
+  pokedexCompareLoaded = true;
+  try {
+    const raw = localStorage.getItem(POKEDEX_COMPARE_STORAGE_KEY);
+    const value = Number(raw);
+    pokedexCompareId = Number.isInteger(value) ? value : null;
+  } catch {
+    pokedexCompareId = null;
+  }
+}
+
+function savePokedexCompareId() {
+  try {
+    if (!Number.isInteger(Number(pokedexCompareId))) {
+      localStorage.removeItem(POKEDEX_COMPARE_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(POKEDEX_COMPARE_STORAGE_KEY, String(pokedexCompareId));
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function setPokedexCompareReference(pokemon) {
+  if (!pokemon) return;
+  pokedexCompareId = pokemon.id;
+  savePokedexCompareId();
+  showPokedexCompareFeedback(`${pokemon.name} défini comme référence`);
+  renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || pokemon);
+}
+
+function clearPokedexCompareReference() {
+  pokedexCompareId = null;
+  savePokedexCompareId();
+  renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || null);
+}
+
+function showPokedexCompareFeedback(message) {
+  const el = document.getElementById("pokedex-compare-feedback");
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add("is-visible");
+  window.clearTimeout(pokedexCompareToastTimer);
+  pokedexCompareToastTimer = window.setTimeout(() => {
+    el.classList.remove("is-visible");
+    el.textContent = "";
+  }, 1800);
+}
+
+function statsTotalsFromPokemonData(pokeData) {
+  if (!pokeData?.stats) return { total: 0, stats: {} };
+  const map = {
+    hp: statFromPokemonData(pokeData, "hp"),
+    atk: statFromPokemonData(pokeData, "attack"),
+    def: statFromPokemonData(pokeData, "defense"),
+    spa: statFromPokemonData(pokeData, "special-attack"),
+    spd: statFromPokemonData(pokeData, "special-defense"),
+    spe: statFromPokemonData(pokeData, "speed"),
+  };
+  const total = Object.values(map).reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
+  return { total, stats: map };
+}
+
+function renderPokedexCompareBlock(reference, current, referenceStats, currentStats) {
+  if (!reference || !current || reference.id === current.id) return "";
+  const totalDelta = (currentStats.total || 0) - (referenceStats.total || 0);
+  const deltaLabel = totalDelta === 0 ? "0" : totalDelta > 0 ? `+${totalDelta}` : String(totalDelta);
+  const lines = [
+    { key: "hp", label: "PV" },
+    { key: "atk", label: "Attaque" },
+    { key: "def", label: "Défense" },
+    { key: "spa", label: "Atk Spé" },
+    { key: "spd", label: "Def Spé" },
+    { key: "spe", label: "Vitesse" },
+  ];
+  const statsRows = lines.map((entry) => {
+    const leftVal = Number(referenceStats.stats?.[entry.key]) || 0;
+    const rightVal = Number(currentStats.stats?.[entry.key]) || 0;
+    const diff = rightVal - leftVal;
+    const diffLabel = diff === 0 ? "0" : diff > 0 ? `+${diff}` : String(diff);
+    return `<div class="pokedex-compare-row"><span>${entry.label}</span><b>${leftVal}</b><i>${diffLabel}</i><b>${rightVal}</b></div>`;
+  }).join("");
+  return `
+    <div class="pokedex-compare-block">
+      <div class="pokedex-compare-head">
+        <h4>Comparaison rapide</h4>
+        <button type="button" class="btn-ghost pokedex-compare-clear" onclick="clearPokedexCompareReference()">Effacer la comparaison</button>
+      </div>
+      <div class="pokedex-compare-top">
+        <div class="pokedex-compare-side">
+          <strong>${escapeHtml(reference.name)}</strong>
+          <small>#${getPokemonSpriteId(reference)} • ${typeBadgesHtml(reference.type1, reference.type2)}</small>
+        </div>
+        <div class="pokedex-compare-score">
+          <span>Total</span>
+          <b>${referenceStats.total}</b>
+          <i>${deltaLabel}</i>
+          <b>${currentStats.total}</b>
+        </div>
+        <div class="pokedex-compare-side">
+          <strong>${escapeHtml(current.name)}</strong>
+          <small>#${getPokemonSpriteId(current)} • ${typeBadgesHtml(current.type1, current.type2)}</small>
+        </div>
+      </div>
+      <div class="pokedex-compare-grid">${statsRows}</div>
+    </div>
+  `;
+}
+
 function openPokedexRecent(pokemonId) {
   const id = Number(pokemonId);
   const pokemon = Number.isInteger(id) ? POKEMON_BY_ID.get(id) : null;
@@ -7671,6 +7802,7 @@ async function renderPokedexDetail(pokemon) {
   } else {
     trackPokedexRecentId(pokemon.id);
   }
+  loadPokedexCompareId();
   const currentRequest = ++pokedexDetailRequestId;
   const dexId = getPokemonSpriteId(pokemon);
   const navigation = getPokedexNavigationState();
@@ -7685,24 +7817,33 @@ async function renderPokedexDetail(pokemon) {
     <div class="pokedex-detail-head-actions">
       <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" onclick="togglePokedexShiny()">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
       <button class="btn-ghost pokedex-detail-builder-btn" type="button" onclick="addSelectedPokedexPokemonToBuilder()">Ajouter au Builder</button>
+      <button class="btn-ghost pokedex-detail-compare-btn" type="button" onclick="setPokedexCompareReference(POKEMON_BY_ID.get(${pokemon.id}))">Comparer</button>
       <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
+      <span id="pokedex-compare-feedback" class="pokedex-compare-feedback" aria-live="polite"></span>
     </div>
   `;
+  const referencePokemon = Number.isInteger(Number(pokedexCompareId)) ? POKEMON_BY_ID.get(Number(pokedexCompareId)) : null;
+  const compareBlockHtml = referencePokemon && referencePokemon.id !== pokemon.id
+    ? `<div class="pokedex-section"><h4>Comparaison rapide</h4><p class="pokedex-muted">Chargement...</p></div>`
+    : "";
 
   detail.innerHTML = `
     <div class="pokedex-detail-head">
-      <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
-      <div>
-        <div class="pokedex-detail-title-row">
+      <div class="pokedex-detail-sticky">
+        <div class="pokedex-detail-summary">
           <h3>${pokemon.name}</h3>
-          ${builderActionHtml}
+          <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
+          <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
         </div>
-        <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
-        <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
+      </div>
+      <div class="pokedex-detail-head-main">
+        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
+        ${builderActionHtml}
       </div>
     </div>
     ${navigationHtml}
     ${recentHtml}
+    ${compareBlockHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
@@ -7737,21 +7878,37 @@ async function renderPokedexDetail(pokemon) {
   const gender = formatGenderRate(speciesData);
   const eggs = formatEggGroups(speciesData);
   const hatch = formatHatchCycles(speciesData);
+  const currentStats = statsTotalsFromPokemonData(pokeData);
+  const compareReference = Number.isInteger(Number(pokedexCompareId)) ? POKEMON_BY_ID.get(Number(pokedexCompareId)) : null;
+  let compareHtml = "";
+  if (compareReference && compareReference.id !== pokemon.id) {
+    try {
+      const refApiId = getMysteryApiId(compareReference);
+      const refData = refApiId ? await fetchPokedexPokemonData(refApiId) : null;
+      const referenceStats = statsTotalsFromPokemonData(refData);
+      compareHtml = renderPokedexCompareBlock(compareReference, pokemon, referenceStats, currentStats);
+    } catch {
+      compareHtml = "";
+    }
+  }
 
   detail.innerHTML = `
     <div class="pokedex-detail-head">
-      <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
-      <div>
-        <div class="pokedex-detail-title-row">
+      <div class="pokedex-detail-sticky">
+        <div class="pokedex-detail-summary">
           <h3>${pokemon.name}</h3>
-          ${builderActionHtml}
+          <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
+          <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
         </div>
-        <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
-        <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
+      </div>
+      <div class="pokedex-detail-head-main">
+        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
+        ${builderActionHtml}
       </div>
     </div>
     ${navigationHtml}
     ${recentHtml}
+    ${compareHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
