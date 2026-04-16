@@ -7373,6 +7373,23 @@ body.draft-battle-open .draft-dev-battle-benches {
   background: rgba(24, 56, 103, 0.26);
 }
 
+.draft-dev-battle-scene-note.is-waiting-remote {
+  border-color: rgba(116, 171, 255, 0.4);
+  animation: pokdle-pulse 2s ease-in-out infinite;
+}
+.draft-dev-battle-scene-note.is-waiting-remote::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(116, 171, 255, 0.25);
+  border-top-color: rgba(116, 171, 255, 0.85);
+  border-radius: 50%;
+  animation: pokdle-spinner 0.8s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
 .draft-dev-battle-scene-note.is-player {
   border-color: rgba(98, 158, 255, 0.32);
   background:
@@ -19693,6 +19710,20 @@ body.theme-dark #screen-config .home-category-card {
 
 .stat-clash-room-status.is-waiting {
   background: rgba(236, 242, 252, 0.9);
+  animation: pokdle-pulse 2.5s ease-in-out infinite;
+}
+.stat-clash-room-status.is-waiting::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(89, 133, 213, 0.3);
+  border-top-color: rgba(89, 133, 213, 0.9);
+  border-radius: 50%;
+  animation: pokdle-spinner 0.8s linear infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .stat-clash-room-status.is-pending,
@@ -19879,6 +19910,7 @@ body.theme-dark #screen-config .home-category-card {
   background: #fff6df;
   border-color: rgba(236, 184, 69, 0.54);
   color: #926100;
+  animation: pokdle-lock-glow 2s ease-in-out infinite;
 }
 
 .stat-clash-remaining-chip.is-used {
@@ -26433,4 +26465,20 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
   body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-preview-actions)):not(.is-finished-combat) .draft-dev-battle-battlebox {
     width: 100% !important;
   }
+}
+
+/* ── Multiplayer wait-state animations (lot 3) ── */
+
+@keyframes pokdle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes pokdle-spinner {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pokdle-lock-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 184, 69, 0); }
+  50% { box-shadow: 0 0 8px 2px rgba(236, 184, 69, 0.35); }
 }

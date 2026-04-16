@@ -12763,7 +12763,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <small>${escapeHtml(networkTurnHint)}</small>
       </div>
     ` : ""}
-    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : isReplayingTurn && state.visualReplay?.phase === "ko" ? "is-switch" : isReplayingTurn && state.visualReplay?.phase === "anticipation" ? "is-anticipation" : isReplayingTurn && state.visualReplay?.phase === "impact" ? "is-enemy" : isReplayingTurn && state.visualReplay?.phase === "hp" ? "is-enemy" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
+    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : (isNetwork && state.network?.waitingRemote) ? "is-waiting-remote" : isReplayingTurn && state.visualReplay?.phase === "ko" ? "is-switch" : isReplayingTurn && state.visualReplay?.phase === "anticipation" ? "is-anticipation" : isReplayingTurn && state.visualReplay?.phase === "impact" ? "is-enemy" : isReplayingTurn && state.visualReplay?.phase === "hp" ? "is-enemy" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
       <b>${isFinished ? "Fin du match" : "Scène de combat"}</b>
       <span>${escapeHtml(sceneText)}</span>
     </div>
