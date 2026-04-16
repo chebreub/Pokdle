@@ -12690,7 +12690,7 @@ function renderDraftSimpleBattleDevPanel(state) {
             <span>${displayLeft.currentHp} / ${displayLeft.maxHp}</span>
           </div>
           <div class="draft-dev-battle-hp-track">
-            <span class="draft-dev-battle-hp-fill" style="width:${leftHpPercent}%"></span>
+            <span class="draft-dev-battle-hp-fill${leftHpPercent <= 25 ? " is-low-hp" : ""}" style="width:${leftHpPercent}%"></span>
           </div>
         </div>
       </div>
@@ -12715,7 +12715,7 @@ function renderDraftSimpleBattleDevPanel(state) {
             <span>${displayRight.currentHp} / ${displayRight.maxHp}</span>
           </div>
           <div class="draft-dev-battle-hp-track">
-            <span class="draft-dev-battle-hp-fill" style="width:${rightHpPercent}%"></span>
+            <span class="draft-dev-battle-hp-fill${rightHpPercent <= 25 ? " is-low-hp" : ""}" style="width:${rightHpPercent}%"></span>
           </div>
         </div>
       </div>
