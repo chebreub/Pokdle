@@ -2988,6 +2988,8 @@ function restartStatClashRoom() {
   multiplayerSocket.emit("stat-clash:restart-round", { selectedGens: [...selectedGens].sort((a, b) => a - b) }, (response = {}) => {
     if (!response.ok) return alert(response.error || "Impossible de relancer la partie.");
     applyStatClashRoomState(response.room);
+    const self = response.room?.players?.find((p) => p.isSelf);
+    if (self?.isHost && response.room?.canStart) startStatClashRoomGame();
   });
 }
 
