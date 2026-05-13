@@ -2,6 +2,7 @@
 const path = require("path");
 const vm = require("vm");
 const express = require("express");
+const helmet = require("helmet");
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -18,22 +19,6 @@ const io = new Server(server, {
 const rooms = new Map();
 const statClashRooms = new Map();
 const draftBattleRooms = new Map();
-const NAME_OVERRIDES = {
-  "??lectrode": "Électrode",
-  "??lekid": "Élekid",
-  "??crémeuh": "Écrémeuh",
-  "??lecsprint": "Élecsprint",
-  "??crapince": "Écrapince",
-  "??oko": "Éoko",
-  "??tourmi": "Étourmi",
-  "??tourvol": "Étourvol",
-  "??touraptor": "Étouraptor",
-  "??cayon": "Écayon",
-  "??lekable": "Élekable",
-  "??caéd": "Écaïd",
-  "??kaéser": "Ékaïser",
-  "??thernatos": "Éthernatos",
-};
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
@@ -110,6 +95,14 @@ function isPayloadOversized(payload) {
     return true;
   }
 }
+
+// Security headers (CSP désactivé : on garde les onclick inline et les CDN externes).
+// Tu pourras réactiver une CSP plus stricte une fois les onclick remplacés par addEventListener.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 
 app.use(express.static(__dirname));
 
@@ -613,10 +606,7 @@ function loadPokemonList() {
   const raw = fs.readFileSync(filePath, "utf8");
   const match = raw.match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/);
   if (!match) throw new Error("POKEMON_LIST introuvable dans pokemon.js");
-  const list = JSON.parse(match[1]).map((pokemon) => {
-    if (pokemon && NAME_OVERRIDES[pokemon.name]) pokemon.name = NAME_OVERRIDES[pokemon.name];
-    return pokemon;
-  });
+  const list = JSON.parse(match[1]);
   injectStatClashExtraForms(list);
   return list;
 }

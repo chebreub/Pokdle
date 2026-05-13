@@ -56,22 +56,6 @@ const BOT_DUEL_MAX_SOLVE_TURN = 7;
 const BOT_DUEL_TURN_DELAY_MS = 2200;
 
 // Keep overrides limited to data that still contains corrupted accents.
-const NAME_OVERRIDES = {
-  "??lectrode": "Électrode",
-  "??lekid": "Élekid",
-  "??crémeuh": "Écrémeuh",
-  "??lecsprint": "Élecsprint",
-  "??crapince": "Écrapince",
-  "??oko": "Éoko",
-  "??tourmi": "Étourmi",
-  "??tourvol": "Étourvol",
-  "??touraptor": "Étouraptor",
-  "??cayon": "Écayon",
-  "??lekable": "Élekable",
-  "??caéd": "Écaïd",
-  "??kaéser": "Ékaïser",
-  "??thernatos": "Éthernatos",
-};
 const SPRITE_ID_OVERRIDES_BY_NAME = {};
 // Extra playable forms (regional, mega, special).
 // We keep base species sprites by default to avoid broken links.
@@ -1803,111 +1787,17 @@ async function fetchBattleStats(secret) {
   }
 }
 
-function getStatClashPool() {
-  return getPoolFromSelectedGens().filter((pokemon) => !pokemon?.isAltForm && Number.isInteger(getMysteryApiId(pokemon)));
-}
 
-function createStatClashPlayer(side, label) {
-  return {
-    side,
-    label,
-    score: 0,
-    displayScore: 0,
-    pendingPick: null,
-    history: [],
-  };
-}
 
-function createStatClashState() {
-  const leftLabel = String(playerProfile?.nickname || "").trim() || "Joueur 1";
-  return {
-    phase: "idle",
-    round: 1,
-    totalRounds: STAT_CLASH_ROUND_TOTAL,
-    timerLeftMs: STAT_CLASH_PICK_TIME_MS,
-    timerDurationMs: STAT_CLASH_PICK_TIME_MS,
-    statusText: "Préparation du duel...",
-    pool: getStatClashPool(),
-    currentPokemon: null,
-    currentStats: null,
-    randomizerPokemon: null,
-    usedPokemonIds: [],
-    usedStats: [],
-    reveal: null,
-    autoPickedSides: [],
-    transitionLocked: false,
-    players: {
-      left: createStatClashPlayer("left", leftLabel),
-      right: createStatClashPlayer("right", "Joueur 2"),
-    },
-  };
-}
 
-function resetStatClashRuntime() {
-  statClashRuntime.timeouts.forEach((id) => clearTimeout(id));
-  statClashRuntime.intervals.forEach((id) => clearInterval(id));
-  if (statClashRuntime.animationFrame !== null) {
-    cancelAnimationFrame(statClashRuntime.animationFrame);
-  }
-  statClashRuntime = {
-    timeouts: new Set(),
-    intervals: new Set(),
-    animationFrame: null,
-  };
-}
 
-function trackStatClashTimeout(callback, delay) {
-  const id = setTimeout(() => {
-    statClashRuntime.timeouts.delete(id);
-    callback();
-  }, delay);
-  statClashRuntime.timeouts.add(id);
-  return id;
-}
 
-function trackStatClashInterval(callback, delay) {
-  const id = setInterval(callback, delay);
-  statClashRuntime.intervals.add(id);
-  return id;
-}
 
-function clearTrackedStatClashInterval(id) {
-  if (!id) return;
-  clearInterval(id);
-  statClashRuntime.intervals.delete(id);
-}
 
-function setTrackedStatClashAnimationFrame(callback) {
-  if (statClashRuntime.animationFrame !== null) {
-    cancelAnimationFrame(statClashRuntime.animationFrame);
-  }
-  statClashRuntime.animationFrame = requestAnimationFrame((timestamp) => {
-    statClashRuntime.animationFrame = null;
-    callback(timestamp);
-  });
-}
 
-function cleanupStatClashMode() {
-  resetStatClashRuntime();
-  statClashState = null;
-}
 
-function restartStatClashGame() {
-  if (document.getElementById("screen-stat-clash")?.classList.contains("hidden")) {
-    openStatClashMode();
-    return;
-  }
-  openStatClashMode();
-}
 
-function getStatClashStatDef(statKey) {
-  return STAT_CLASH_STATS.find((entry) => entry.key === statKey) || STAT_CLASH_STATS[0];
-}
 
-function getStatClashValue(statKey, stats) {
-  const value = Number(stats?.[statKey]);
-  return Number.isFinite(value) ? value : 0;
-}
 
 function getStatClashAvailableStats(state = statClashState) {
   if (!state) return [];
@@ -1919,10 +1809,6 @@ function getStatClashAvailableStats(state = statClashState) {
   return STAT_CLASH_STATS.filter((entry) => !state.usedStats.includes(entry.key) && !roundLocked.has(entry.key));
 }
 
-function buildStatClashRandomizerSequence(finalPokemon, pool) {
-  const candidates = shuffleArray(pool.filter((pokemon) => pokemon.id !== finalPokemon.id)).slice(0, STAT_CLASH_RANDOMIZER_STEPS - 1);
-  return [...candidates, finalPokemon];
-}
 
 async function pickStatClashRoundPokemon() {
   const state = statClashState;
@@ -1967,45 +1853,6 @@ function finalizeStatClashGame() {
   renderStatClashScreen();
 }
 
-function animateStatClashScores(nextTotals) {
-  return new Promise((resolve) => {
-    const state = statClashState;
-    if (!state) {
-      resolve();
-      return;
-    }
-
-    const startValues = {
-      left: state.players.left.displayScore,
-      right: state.players.right.displayScore,
-    };
-    const startedAt = performance.now();
-    state.phase = "scoring";
-
-    const step = (now) => {
-      const liveState = statClashState;
-      if (!liveState) {
-        resolve();
-        return;
-      }
-      const progress = Math.max(0, Math.min(1, (now - startedAt) / STAT_CLASH_SCORE_ANIMATION_MS));
-      const eased = 1 - Math.pow(1 - progress, 3);
-      liveState.players.left.displayScore = startValues.left + (nextTotals.left - startValues.left) * eased;
-      liveState.players.right.displayScore = startValues.right + (nextTotals.right - startValues.right) * eased;
-      renderStatClashScreen();
-      if (progress < 1) {
-        setTrackedStatClashAnimationFrame(step);
-        return;
-      }
-      liveState.players.left.displayScore = nextTotals.left;
-      liveState.players.right.displayScore = nextTotals.right;
-      renderStatClashScreen();
-      resolve();
-    };
-
-    setTrackedStatClashAnimationFrame(step);
-  });
-}
 
 async function resolveStatClashRound() {
   const state = statClashState;
@@ -2056,26 +1903,6 @@ async function resolveStatClashRound() {
   trackStatClashTimeout(() => startStatClashRound(), STAT_CLASH_INTER_ROUND_DELAY_MS);
 }
 
-function pickStatClashStat(side, statKey, auto = false) {
-  const state = statClashState;
-  if (!state || state.phase !== "picking" || state.transitionLocked) return;
-  const player = state.players?.[side];
-  if (!player || player.pendingPick) return;
-
-  const available = getStatClashAvailableStats(state);
-  if (!available.some((entry) => entry.key === statKey)) return;
-
-  player.pendingPick = { key: statKey, auto };
-  if (auto) {
-    state.autoPickedSides = Array.from(new Set([...(state.autoPickedSides || []), side]));
-  }
-
-  renderStatClashScreen();
-
-  if (state.players.left.pendingPick && state.players.right.pendingPick) {
-    resolveStatClashRound();
-  }
-}
 
 function startStatClashTimer() {
   const state = statClashState;
@@ -2108,32 +1935,6 @@ function startStatClashTimer() {
   }, 120);
 }
 
-function runStatClashRandomizer(sequence, finalPokemon) {
-  const state = statClashState;
-  if (!state) return;
-
-  state.phase = "rolling";
-  state.statusText = "Le randomizer accélère puis ralentit...";
-  state.randomizerPokemon = sequence[0] || finalPokemon;
-  renderStatClashScreen();
-
-  let totalDelay = 0;
-  sequence.forEach((pokemon, index) => {
-    totalDelay += STAT_CLASH_RANDOMIZER_BASE_DELAY_MS + index * 18;
-    trackStatClashTimeout(() => {
-      const liveState = statClashState;
-      if (!liveState) return;
-      liveState.randomizerPokemon = pokemon;
-      liveState.statusText = index === sequence.length - 1
-        ? `${pokemon.name} entre dans l'arène.`
-        : "Le randomizer ralentit...";
-      renderStatClashScreen();
-      if (index === sequence.length - 1) {
-        startStatClashTimer();
-      }
-    }, totalDelay);
-  });
-}
 
 async function startStatClashRound() {
   const state = statClashState;
@@ -2165,27 +1966,6 @@ async function startStatClashRound() {
   runStatClashRandomizer(sequence, roundData.pokemon);
 }
 
-function openStatClashMode() {
-  const pool = getStatClashPool();
-  if (!pool.length) {
-    alert("Sélectionne au moins une génération jouable avec les formes standards.");
-    return;
-  }
-
-  goToConfig();
-  cleanupStatClashMode();
-  statClashState = createStatClashState();
-  statClashState.pool = pool;
-  gameMode = "stat-clash";
-  hideScreen("screen-config");
-  hideScreen("screen-team-builder");
-  hideScreen("screen-teams");
-  hideScreen("screen-multiplayer");
-  showScreen("screen-stat-clash");
-  setGlobalNavActive("social");
-  renderStatClashScreen();
-  startStatClashRound();
-}
 
 function getStatClashPool() {
   return getPokemonUiList().filter((pokemon) => Boolean(getMysteryApiId(pokemon)));
@@ -3731,27 +3511,6 @@ function highlightItems(items, index) {
   items.forEach((it, i) => it.classList.toggle("hl", i === index));
 }
 
-function filterMultiplayerGuessAC() {
-  const input = document.getElementById("multiplayer-guess-input");
-  const list = document.getElementById("multiplayer-guess-ac");
-  acIndex = -1;
-
-  const qNorm = norm(input?.value.trim());
-  if (!qNorm || !multiplayerBotState?.pool?.length) {
-    list?.classList.add("hidden");
-    return;
-  }
-
-  const excludedNames = new Set(
-    [...(multiplayerBotState.playerGuessIds || new Set())]
-      .map((id) => POKEMON_BY_ID.get(id)?.name)
-      .filter(Boolean)
-  );
-  const matches = multiplayerBotState.pool
-    .filter((pokemon) => norm(pokemon.name).includes(qNorm) && !excludedNames.has(pokemon.name))
-    .slice(0, AC_LIMIT);
-  renderMultiplayerGuessAC(matches);
-}
 
 function renderMultiplayerGuessAC(matches) {
   const list = document.getElementById("multiplayer-guess-ac");
@@ -8991,15 +8750,6 @@ function getDraftSimpleBattleStatusLabel(status) {
   return "";
 }
 
-function getDraftSimpleBattleStatusShortLabel(status) {
-  if (status === "paralysed") return "PAR";
-  if (status === "burned") return "BRN";
-  if (status === "poisoned") return "PSN";
-  if (status === "badly_poisoned") return "TOX";
-  if (status === "asleep") return "SLP";
-  if (status === "frozen") return "FRZ";
-  return "";
-}
 
 function clearDraftSimpleBattleMajorStatus(battler) {
   if (!battler) return;
@@ -15005,10 +14755,6 @@ function formatColorLabel(colorValue) {
 }
 function normalizePokemonData() {
   for (const pokemon of POKEMON_LIST) {
-    if (NAME_OVERRIDES[pokemon.name]) {
-      pokemon.name = NAME_OVERRIDES[pokemon.name];
-    }
-
     pokemon.gen = Number.isInteger(pokemon.gen) ? pokemon.gen : Number(pokemon.generation) || 1;
     pokemon.generation = pokemon.gen;
     pokemon.spriteId = Number.isInteger(pokemon.spriteId) ? pokemon.spriteId : (SPRITE_ID_OVERRIDES_BY_NAME[pokemon.name] || pokemon.id);
@@ -15960,39 +15706,6 @@ function clearMultiplayerBotTimer() {
   }
 }
 
-function renderMultiplayerPlayers() {
-  const wrap = document.getElementById("multiplayer-players");
-  if (!wrap) return;
-
-  const nicknameInput = document.getElementById("multiplayer-nickname");
-  const playerName = multiplayerBotState?.nickname || nicknameInput?.value?.trim() || playerProfile.nickname || "Dresseur";
-  const botName = multiplayerBotState?.botName || "Bot Café";
-  const playerWinner = multiplayerBotState?.winner === "player";
-  const botWinner = multiplayerBotState?.winner === "bot";
-
-  wrap.innerHTML = `
-    <article class="multiplayer-player-card is-self ${playerWinner ? "is-winner" : ""}">
-      <div class="multiplayer-player-head">
-        <strong>${escapeHtml(playerName)}</strong>
-        <span>Toi</span>
-      </div>
-      <div class="multiplayer-player-stats">
-        <span>Essais : <b>${multiplayerBotState?.playerAttempts || 0}</b></span>
-        <span>Dernière tentative : <b>${escapeHtml(multiplayerBotState?.playerLastGuess || "—")}</b></span>
-      </div>
-    </article>
-    <article class="multiplayer-player-card multiplayer-player-card-bot ${botWinner ? "is-winner" : ""}">
-      <div class="multiplayer-player-head">
-        <strong>${escapeHtml(botName)}</strong>
-        <span>Bot</span>
-      </div>
-      <div class="multiplayer-player-stats">
-        <span>Essais : <b>${multiplayerBotState?.botAttempts || 0}</b></span>
-        <span>Dernière tentative : <b>${escapeHtml(multiplayerBotState?.botLastGuess || "—")}</b></span>
-      </div>
-    </article>
-  `;
-}
 
 function populateMultiplayerPokemonLists(pool) {
   const secretSelect = document.getElementById("multiplayer-secret-select");
@@ -16032,16 +15745,6 @@ function renderMultiplayerSecretPreview() {
   `;
 }
 
-function renderMultiplayerGenerationSummary() {
-  const genSummary = document.getElementById("multiplayer-gen-summary");
-  if (!genSummary) return;
-  const gens = [...selectedGens].sort((a, b) => a - b);
-  genSummary.textContent = gens.length === 0
-    ? "Générations actives : aucune"
-    : gens.length === 1
-    ? `Génération active : Gen ${gens[0]}`
-    : `Générations actives : ${gens.map((gen) => `Gen ${gen}`).join(", ")}`;
-}
 
 function clearMultiplayerResultsTable() {
   const tbody = document.getElementById("multiplayer-results-body");
@@ -16057,91 +15760,7 @@ function addMultiplayerGuessRow(pokemon) {
   tbody.insertBefore(tr, tbody.firstChild);
 }
 
-function renderMultiplayerBotResult() {
-  const content = document.getElementById("multiplayer-result-content");
-  if (!content || !multiplayerBotState?.secret) return;
-  const playerWon = multiplayerBotState.winner === "player";
-  const target = multiplayerBotState.secret;
-  content.innerHTML = `
-    <div class="multiplayer-result-summary ${playerWon ? "is-win" : "is-loss"}">
-      <div>
-        <p class="multiplayer-result-title">${playerWon ? "Victoire" : "Défaite"}</p>
-        <p>${playerWon ? "Tu as trouvé le Pokémon avant le bot." : "Le bot a trouvé le Pokémon avant toi."}</p>
-        <p>Essais : toi ${multiplayerBotState.playerAttempts} • bot ${multiplayerBotState.botAttempts}</p>
-      </div>
-      <div class="multiplayer-target-card">
-        <div class="pokemon-mini-card">
-          <img src="${getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(target))}'" />
-          <strong>${escapeHtml(target.name)}</strong>
-          <div class="pokemon-card-types">${typeBadgesHtml(target.type1, target.type2)}</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
 
-function renderMultiplayerBotScreen() {
-  const waitingBox = document.getElementById("multiplayer-waiting-box");
-  const liveBox = document.getElementById("multiplayer-live-box");
-  const resultBox = document.getElementById("multiplayer-result-box");
-  const roundStatus = document.getElementById("multiplayer-round-status");
-  const connection = document.getElementById("multiplayer-connection-status");
-  const code = document.getElementById("multiplayer-room-code");
-  const liveText = document.getElementById("multiplayer-live-text");
-  const waitingText = document.getElementById("multiplayer-waiting-text");
-  const guessInput = document.getElementById("multiplayer-guess-input");
-  const guessButton = document.querySelector("#multiplayer-live-box .btn-red");
-  const error = document.getElementById("multiplayer-error");
-  const secretSelect = document.getElementById("multiplayer-secret-select");
-  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
-
-  if (connection) connection.textContent = "Mode local";
-  if (code) code.textContent = "Adversaire : Bot";
-  if (error && !multiplayerBotState) error.textContent = "";
-  renderMultiplayerGenerationSummary();
-  populateMultiplayerPokemonLists(pool);
-
-  renderMultiplayerPlayers();
-
-  if (!multiplayerBotState) {
-    if (roundStatus) roundStatus.textContent = "Prêt";
-    if (waitingText) waitingText.textContent = "Choisis un pseudo puis lance une partie. Le bot commencera à chercher le Pokémon mystère en même temps que toi.";
-    waitingBox?.classList.remove("hidden");
-    liveBox?.classList.add("hidden");
-    resultBox?.classList.add("hidden");
-    if (guessInput) guessInput.value = "";
-    if (secretSelect) secretSelect.value = "";
-    clearMultiplayerResultsTable();
-    renderMultiplayerSecretPreview();
-    return;
-  }
-
-  if (multiplayerBotState.status === "live") {
-    if (roundStatus) roundStatus.textContent = "En duel";
-    if (liveText) liveText.textContent = multiplayerBotState.botLastGuess
-      ? `Toi et le bot cherchez le même Pokémon mystère. Le bot vient de tenter ${multiplayerBotState.botLastGuess}.`
-      : "Toi et le bot cherchez le même Pokémon mystère. Trouve-le avant lui pour remporter la manche.";
-    waitingBox?.classList.add("hidden");
-    liveBox?.classList.remove("hidden");
-    resultBox?.classList.add("hidden");
-    if (secretSelect) {
-      const matched = multiplayerBotState.pool.find((pokemon) => pokemon.name === multiplayerBotState.chosenSecretName);
-      secretSelect.value = matched ? String(matched.id) : "";
-    }
-    renderMultiplayerSecretPreview();
-    if (guessInput) guessInput.disabled = false;
-    if (guessButton) guessButton.disabled = false;
-    return;
-  }
-
-  if (roundStatus) roundStatus.textContent = multiplayerBotState.winner === "player" ? "Victoire joueur" : "Victoire bot";
-  waitingBox?.classList.add("hidden");
-  liveBox?.classList.add("hidden");
-  resultBox?.classList.remove("hidden");
-  if (guessInput) guessInput.disabled = true;
-  if (guessButton) guessButton.disabled = true;
-  renderMultiplayerBotResult();
-}
 
 function scheduleBotTurn() {
   if (!multiplayerBotState || multiplayerBotState.status !== "live") return;
@@ -16177,47 +15796,7 @@ function runMultiplayerBotTurn() {
   scheduleBotTurn();
 }
 
-function createMultiplayerRoom() {
-  const input = document.getElementById("multiplayer-nickname");
-  const error = document.getElementById("multiplayer-error");
-  const guessInput = document.getElementById("multiplayer-guess-input");
-  const nickname = String(input?.value || playerProfile.nickname || "").trim() || "Dresseur";
-  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
-  const secretSelect = document.getElementById("multiplayer-secret-select");
-  const chosenSecretId = Number(secretSelect?.value || 0);
-  const chosenSecret = chosenSecretId ? POKEMON_BY_ID.get(chosenSecretId) : null;
 
-  if (input) input.value = nickname;
-  if (error) error.textContent = "";
-
-  if (pool.length < 10) {
-    if (error) error.textContent = "Sélectionne au moins une génération avec suffisamment de Pokémon pour lancer un duel.";
-    return;
-  }
-
-  if (chosenSecretId && (!chosenSecret || !pool.some((pokemon) => pokemon.id === chosenSecret.id))) {
-    if (error) error.textContent = "Choisis un Pokémon à faire deviner présent dans les générations actives.";
-    return;
-  }
-
-  const secret = chosenSecret || pool[Math.floor(Math.random() * pool.length)];
-  multiplayerBotState = createMultiplayerBotState(nickname, pool, secret);
-  populateMultiplayerPokemonLists(pool);
-  clearMultiplayerResultsTable();
-  if (guessInput) {
-    guessInput.value = "";
-    guessInput.disabled = false;
-    guessInput.focus();
-  }
-  document.getElementById("multiplayer-guess-ac")?.classList.add("hidden");
-
-  renderMultiplayerBotScreen();
-  scheduleBotTurn();
-}
-
-function joinMultiplayerRoom() {
-  createMultiplayerRoom();
-}
 
 function handleMultiplayerGuessKey(event) {
   const list = document.getElementById("multiplayer-guess-ac");
@@ -16246,78 +15825,9 @@ function handleMultiplayerGuessKey(event) {
   }
 }
 
-function submitMultiplayerGuess() {
-  if (!multiplayerBotState || multiplayerBotState.status !== "live") return;
 
-  const input = document.getElementById("multiplayer-guess-input");
-  const error = document.getElementById("multiplayer-error");
-  const raw = String(input?.value || "").trim();
-  if (!raw) return;
 
-  const picked = findPokemonGlobalByName(raw);
-  const inPool = picked && multiplayerBotState.pool.some((pokemon) => pokemon.id === picked.id);
-  if (!picked || !inPool) {
-    if (error) error.textContent = "Choisis un Pokémon présent dans les générations sélectionnées.";
-    return;
-  }
 
-  if (multiplayerBotState.playerGuessIds.has(picked.id)) {
-    if (error) error.textContent = "Tu as déjà tenté ce Pokémon.";
-    return;
-  }
-
-  if (error) error.textContent = "";
-  multiplayerBotState.playerGuessIds.add(picked.id);
-  multiplayerBotState.playerAttempts += 1;
-  multiplayerBotState.playerLastGuess = picked.name;
-  if (input) input.value = "";
-  document.getElementById("multiplayer-guess-ac")?.classList.add("hidden");
-  addMultiplayerGuessRow(picked);
-
-  if (picked.id === multiplayerBotState.secret.id) {
-    multiplayerBotState.winner = "player";
-    multiplayerBotState.status = "result";
-    clearMultiplayerBotTimer();
-    renderMultiplayerBotScreen();
-    return;
-  }
-
-  renderMultiplayerBotScreen();
-}
-
-function leaveMultiplayerRoom(resetOnly = false) {
-  clearMultiplayerBotTimer();
-  multiplayerBotState = null;
-  const error = document.getElementById("multiplayer-error");
-  const guessInput = document.getElementById("multiplayer-guess-input");
-  const secretSelect = document.getElementById("multiplayer-secret-select");
-  if (error) error.textContent = "";
-  if (guessInput) {
-    guessInput.value = "";
-    guessInput.disabled = false;
-  }
-  document.getElementById("multiplayer-guess-ac")?.classList.add("hidden");
-  if (secretSelect) secretSelect.value = "";
-  clearMultiplayerResultsTable();
-  renderMultiplayerBotScreen();
-  if (!resetOnly) goToConfig();
-}
-
-function copyMultiplayerRoomCode() {
-  const error = document.getElementById("multiplayer-error");
-  if (error) error.textContent = "Le duel contre le bot est local : aucun code à partager.";
-}
-
-function openMultiplayerMode() {
-  closeOverlayModal();
-  goToConfig();
-  hideScreen("screen-config");
-  hideScreen("screen-team-builder");
-  hideScreen("screen-teams");
-  showScreen("screen-multiplayer");
-  document.querySelector(".search-bar")?.classList.add("hidden");
-  renderMultiplayerBotScreen();
-}
 
 function createDefaultMultiplayerLiveState() {
   return {
