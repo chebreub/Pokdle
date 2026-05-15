@@ -12088,6 +12088,72 @@ function setGbaMenuView(view) {
   }
 }
 
+// === SFX combat GBA (Web Audio) ===
+let __gbaAudioCtx = null;
+function getGbaAudioCtx() {
+  if (__gbaAudioCtx) return __gbaAudioCtx;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    __gbaAudioCtx = new Ctx();
+    return __gbaAudioCtx;
+  } catch (e) {
+    return null;
+  }
+}
+function playGbaBeep(freq = 700, durationMs = 60, volume = 0.05, type = "square") {
+  const ctx = getGbaAudioCtx();
+  if (!ctx) return;
+  try {
+    if (ctx.state === "suspended") ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    const t0 = ctx.currentTime;
+    const tEnd = t0 + durationMs / 1000;
+    gain.gain.setValueAtTime(Math.max(0.0001, volume), t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, tEnd);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(tEnd);
+  } catch (e) { /* silent */ }
+}
+
+let __gbaLastSfxKey = "";
+function maybePlayPhaseSfx(state) {
+  const action = state?.visualReplay?.currentAction;
+  const phase = state?.visualReplay?.phase || "";
+  if (!action || !phase) { __gbaLastSfxKey = ""; return; }
+  const turnNum = Number(state.visualReplay?.turn) || 0;
+  const actionIdx = Number(state.visualReplay?.actionIndex) || 0;
+  const key = `${turnNum}:${actionIdx}:${phase}`;
+  if (key === __gbaLastSfxKey) return;
+  __gbaLastSfxKey = key;
+
+  if (phase === "anticipation") {
+    playGbaBeep(450, 60, 0.04, "square");
+  } else if (phase === "impact") {
+    if (action.missed) {
+      playGbaBeep(280, 80, 0.04, "square"); // whiff
+    } else if (action.critical) {
+      playGbaBeep(160, 60, 0.1, "square");
+      setTimeout(() => playGbaBeep(80, 220, 0.1, "sawtooth"), 50);
+    } else if (Number(action.effectiveness) > 1) {
+      playGbaBeep(240, 90, 0.08, "square");
+      setTimeout(() => playGbaBeep(140, 80, 0.07, "square"), 70);
+    } else if (Number(action.effectiveness) > 0 && Number(action.effectiveness) < 1) {
+      playGbaBeep(180, 80, 0.05, "triangle"); // muted "thud"
+    } else if (Number(action.damage) > 0) {
+      playGbaBeep(200, 70, 0.06, "square");
+    }
+  } else if (phase === "ko") {
+    playGbaBeep(180, 220, 0.08, "sawtooth");
+    setTimeout(() => playGbaBeep(90, 400, 0.06, "sawtooth"), 150);
+  }
+}
+
 function playBattleStartTransition() {
   document.querySelectorAll(".gba-battle-start-overlay").forEach((el) => el.remove());
   const overlay = document.createElement("div");
@@ -12148,6 +12214,10 @@ function refreshGbaTextbox(text) {
       __gbaTextboxTimer = null;
       box.textContent = target;
       return;
+    }
+    const ch = target.charAt(i);
+    if (i % 3 === 0 && /[A-Za-zÀ-ÿ0-9]/.test(ch)) {
+      playGbaBeep(720, 16, 0.022, "square");
     }
     box.textContent = target.slice(0, ++i);
   }, 22);
@@ -12745,6 +12815,7 @@ function renderDraftSimpleBattleDevPanel(state) {
   panel.classList.remove("hidden");
   refreshGbaTextbox(sceneText);
   refreshGbaHpBars(leftHpPercent, rightHpPercent);
+  maybePlayPhaseSfx(state);
   if (shouldAutoScroll) {
     scrollToDraftSimpleBattlePanel(panel);
   }
@@ -12847,6 +12918,7 @@ function clearDraftSimpleBattleDevPanel() {
   __gbaTextboxLastText = "";
   __gbaMenuView = "main";
   __gbaLastHpPercent = { left: 100, right: 100 };
+  __gbaLastSfxKey = "";
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
