@@ -9,6 +9,7 @@ const { Server } = require("socket.io");
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
 const app = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -60,26 +61,84 @@ const PAYLOAD_MAX_BYTES = 64_000;
 const DRAFT_BATTLE_MAX_TEAM_INDEX = 5;
 const rateLimitBuckets = new Map();
 
-function checkRateLimit(socketId, category) {
-  const cfg = RATE_LIMITS[category];
-  if (!cfg) return false;
-  const key = `${socketId}:${category}`;
-  const now = Date.now();
+function normalizeClientAddress(value) {
+  let address = String(value || "").trim();
+  if (!address) return "";
+  const bracketMatch = address.match(/^\[([^\]]+)\](?::\d+)?$/);
+  if (bracketMatch) address = bracketMatch[1];
+  if (address.startsWith("::ffff:")) address = address.slice(7);
+  const ipv4WithPort = address.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?$/);
+  if (ipv4WithPort) address = ipv4WithPort[1];
+  return address.toLowerCase();
+}
+
+function getClientAddress(socket) {
+  const forwarded = socket?.handshake?.headers?.["x-forwarded-for"];
+  const forwardedValue = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+  const forwardedAddress = String(forwardedValue || "").split(",")[0];
+  return normalizeClientAddress(forwardedAddress)
+    || normalizeClientAddress(socket?.handshake?.address)
+    || normalizeClientAddress(socket?.request?.socket?.remoteAddress)
+    || "unknown";
+}
+
+function getRateLimitBucket(key, windowMs) {
   let bucket = rateLimitBuckets.get(key);
   if (!bucket) {
-    bucket = [];
+    bucket = { hits: [], windowMs };
     rateLimitBuckets.set(key, bucket);
   }
-  const cutoff = now - cfg.windowMs;
-  while (bucket.length && bucket[0] <= cutoff) bucket.shift();
-  if (bucket.length >= cfg.max) return true;
-  bucket.push(now);
+  bucket.windowMs = windowMs;
+  return bucket;
+}
+
+function pruneBucket(bucket, now) {
+  const cutoff = now - bucket.windowMs;
+  while (bucket.hits.length && bucket.hits[0] <= cutoff) bucket.hits.shift();
+}
+
+function pruneRateLimitBuckets(now) {
+  if (rateLimitBuckets.size < 1000) return;
+  for (const [key, bucket] of rateLimitBuckets.entries()) {
+    pruneBucket(bucket, now);
+    if (!bucket.hits.length) rateLimitBuckets.delete(key);
+  }
+}
+
+function getRateLimitBucketSpecs(socket, category, cfg) {
+  const socketId = typeof socket === "string" ? socket : socket?.id;
+  const clientAddress = typeof socket === "string" ? "" : getClientAddress(socket);
+  const specs = [];
+  if (socketId) {
+    specs.push({ key: `socket:${socketId}:${category}`, max: cfg.max, windowMs: cfg.windowMs });
+  }
+  if (clientAddress && clientAddress !== "unknown") {
+    specs.push({ key: `ip:${clientAddress}:${category}`, max: cfg.ipMax || Math.max(cfg.max * 2, cfg.max + 2), windowMs: cfg.windowMs });
+  }
+  return specs;
+}
+
+function checkRateLimit(socket, category) {
+  const cfg = RATE_LIMITS[category];
+  if (!cfg) return false;
+  const now = Date.now();
+  pruneRateLimitBuckets(now);
+  const specs = getRateLimitBucketSpecs(socket, category, cfg);
+  if (!specs.length) return false;
+  const limited = specs.some((spec) => {
+    const bucket = getRateLimitBucket(spec.key, spec.windowMs);
+    pruneBucket(bucket, now);
+    return bucket.hits.length >= spec.max;
+  });
+  if (limited) return true;
+  specs.forEach((spec) => getRateLimitBucket(spec.key, spec.windowMs).hits.push(now));
   return false;
 }
 
 function cleanupRateLimitBuckets(socketId) {
+  const prefix = `socket:${socketId}:`;
   for (const key of rateLimitBuckets.keys()) {
-    if (key.startsWith(socketId + ":")) rateLimitBuckets.delete(key);
+    if (key.startsWith(prefix)) rateLimitBuckets.delete(key);
   }
 }
 
@@ -113,7 +172,7 @@ app.get("/api/multiplayer/health", (_req, res) => {
 io.on("connection", (socket) => {
   socket.on("duel:create-room", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const nickname = sanitizeNickname(payload.nickname);
       const selectedGens = normalizeSelectedGens(payload.selectedGens);
       if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
@@ -142,7 +201,7 @@ io.on("connection", (socket) => {
 
   socket.on("duel:join-room", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const code = sanitizeRoomCode(payload.code);
       const nickname = sanitizeNickname(payload.nickname);
       const room = rooms.get(code);
@@ -164,7 +223,7 @@ io.on("connection", (socket) => {
 
   socket.on("duel:submit-guess", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "guess")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "guess")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.status !== "live" || !room.secretPokemon) return respond(ack, { ok: false, error: "La manche n'est pas en cours." });
@@ -206,7 +265,7 @@ io.on("connection", (socket) => {
 
   socket.on("duel:update-gens", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "gen-update")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "gen-update")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul le créateur peut modifier les générations." });
@@ -222,7 +281,7 @@ io.on("connection", (socket) => {
 
   socket.on("duel:restart-round", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "restart")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "restart")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.status !== "finished") return respond(ack, { ok: false, error: "La manche n'est pas terminée." });
@@ -246,7 +305,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:create-room", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       console.log("[stat-clash][create-room] request");
       handleStatClashDisconnect(socket.id, true);
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
@@ -292,7 +351,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:join-room", async (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       console.log("[stat-clash][join-room] request");
       handleStatClashDisconnect(socket.id, true);
       const code = sanitizeRoomCode(payload.code);
@@ -318,7 +377,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:start-game", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "restart")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "restart")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findStatClashRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer la partie." });
@@ -350,7 +409,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:submit-pick", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "pick")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "pick")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findStatClashRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
       if (room.status !== "live" || room.roundPhase !== "picking") return respond(ack, { ok: false, error: "La manche n'est pas en phase de choix." });
@@ -378,7 +437,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:update-gens", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "gen-update")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "gen-update")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findStatClashRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul le créateur peut modifier les générations." });
@@ -394,7 +453,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:restart-round", async (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "restart")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "restart")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findStatClashRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
       if (room.status !== "finished") return respond(ack, { ok: false, error: "La partie n'est pas terminée." });
@@ -428,7 +487,7 @@ io.on("connection", (socket) => {
 
   socket.on("draft-battle:create-room", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       handleDraftBattleDisconnect(socket.id, true);
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
       const battleState = payload.battleState && typeof payload.battleState === "object" ? payload.battleState : null;
@@ -460,7 +519,7 @@ io.on("connection", (socket) => {
 
   socket.on("draft-battle:join-room", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       handleDraftBattleDisconnect(socket.id, true);
       const code = sanitizeRoomCode(payload.code);
       const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
@@ -483,7 +542,7 @@ io.on("connection", (socket) => {
 
   socket.on("draft-battle:submit-action", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findDraftBattleRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
       if (room.status !== "live") return respond(ack, { ok: false, error: "Le combat n'est pas prêt." });
@@ -525,7 +584,7 @@ io.on("connection", (socket) => {
 
   socket.on("draft-battle:submit-replacement", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findDraftBattleRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
       if (room.status === "finished") return respond(ack, { ok: false, error: "Le combat est terminé." });
@@ -560,7 +619,7 @@ io.on("connection", (socket) => {
 
   socket.on("draft-battle:commit-state", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket.id, "commit")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "commit")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findDraftBattleRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut valider l'état." });
