@@ -1216,6 +1216,30 @@ function toggleGen(gen, item) {
   }
 }
 
+function setSelectedGenerations(gens) {
+  const validGens = (Array.isArray(gens) ? gens : [])
+    .map((gen) => Number(gen))
+    .filter((gen) => Number.isInteger(gen) && GENERATIONS[gen]);
+
+  selectedGens = new Set(validGens.length ? validGens : [1]);
+  buildGenGrid();
+}
+
+function selectAllGenerations() {
+  setSelectedGenerations(Object.keys(GENERATIONS).map((gen) => Number(gen)));
+}
+
+function clearGenerationSelection() {
+  setSelectedGenerations([1]);
+}
+
+document.addEventListener("keydown", (event) => {
+  const target = event.target?.closest?.(".home-pillar[role='button']");
+  if (!target || !["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
+  target.click();
+});
+
 // ============================================================
 // GAME START / NAVIGATION
 // ============================================================
@@ -3864,6 +3888,10 @@ function shareResult() {
     document.getElementById("share-ok").classList.remove("hidden");
     setTimeout(() => document.getElementById("share-ok").classList.add("hidden"), 3000);
   });
+}
+
+function copyResult() {
+  shareResult();
 }
 
 // ============================================================
@@ -16867,6 +16895,4 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   initProfessionalModeMenu();
 });
-
-
 
