@@ -25304,3 +25304,33 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 .gba-textbox.is-super .gba-textbox-text {
   color: #185018;
 }
+
+
+/* ============================================================ */
+/* === BADGE DE STATUT GBA (PSN, BRN, PAR, SLP, FRZ, TOX) ===== */
+/* ============================================================ */
+
+.gba-status-badge {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 5px;
+  border: 1px solid rgba(0,0,0,0.35);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.25);
+  font-family: "Press Start 2P", system-ui, monospace;
+}
+.gba-status-badge.is-par { background: #d4a020; }
+.gba-status-badge.is-brn { background: #d04020; }
+.gba-status-badge.is-psn { background: #a040c0; }
+.gba-status-badge.is-tox { background: #7030a0; }
+.gba-status-badge.is-slp { background: #707070; }
+.gba-status-badge.is-frz { background: #40a0d0; }
+
+@media (max-width: 480px) {
+  .gba-status-badge { font-size: 7px; padding: 1px 4px; margin-left: 3px; }
+}

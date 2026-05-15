@@ -12162,6 +12162,21 @@ function playBattleStartTransition() {
   setTimeout(() => overlay.remove(), 900);
 }
 
+function getGbaStatusBadgeHtml(status) {
+  if (!status) return "";
+  const map = {
+    paralysed:      { abbr: "PAR", cls: "is-par" },
+    burned:         { abbr: "BRN", cls: "is-brn" },
+    poisoned:       { abbr: "PSN", cls: "is-psn" },
+    badly_poisoned: { abbr: "TOX", cls: "is-tox" },
+    asleep:         { abbr: "SLP", cls: "is-slp" },
+    frozen:         { abbr: "FRZ", cls: "is-frz" },
+  };
+  const cfg = map[status];
+  if (!cfg) return "";
+  return `<span class="gba-status-badge ${cfg.cls}">${cfg.abbr}</span>`;
+}
+
 function getGbaBattleLevel(battler) {
   if (!battler?.stats) return 50;
   const total = Object.values(battler.stats).reduce((s, v) => s + (Number(v) || 0), 0);
@@ -12751,7 +12766,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="gba-battle-bg"></div>
         <div class="gba-info-box gba-info-foe">
           <div class="gba-info-name-row">
-            <span class="gba-info-name">${escapeHtml(displayRight.pokemon.name)}</span>
+            <span class="gba-info-name">${escapeHtml(displayRight.pokemon.name)}${getGbaStatusBadgeHtml(displayRight.status)}</span>
             <span class="gba-info-level">N.${getGbaBattleLevel(displayRight)}</span>
           </div>
           <div class="gba-info-hp-row">
@@ -12771,7 +12786,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         </div>
         <div class="gba-info-box gba-info-player">
           <div class="gba-info-name-row">
-            <span class="gba-info-name">${escapeHtml(displayLeft.pokemon.name)}</span>
+            <span class="gba-info-name">${escapeHtml(displayLeft.pokemon.name)}${getGbaStatusBadgeHtml(displayLeft.status)}</span>
             <span class="gba-info-level">N.${getGbaBattleLevel(displayLeft)}</span>
           </div>
           <div class="gba-info-hp-row">
@@ -14006,10 +14021,6 @@ function buildDraftArenaIndicators(result, runSummary) {
   if (runSummary?.synergyLabel === "Excellente" || runSummary?.synergyLabel === "Bonne") indicators.push("Bonne synergie");
   if (!indicators.length) indicators.push(result.won ? "Match-up correct" : "Match-up difficile");
   return indicators.slice(0, 3);
-}
-
-function toggleDraftDetailAnalysis() {
-  return;
 }
 
 async function resolveDraftArenaRun() {
