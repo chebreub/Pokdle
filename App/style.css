@@ -908,7 +908,6 @@ main {
 }
 
 
-
 .search-bar {
 
   display: flex;
@@ -1409,8 +1408,6 @@ body:not(.theme-dark) .multiplayer-results-table td:first-child .poke-cell {
 }
 
 
-
-
 .ranking-head {
 
   display: flex;
@@ -1435,8 +1432,6 @@ body:not(.theme-dark) .multiplayer-results-table td:first-child .poke-cell {
   flex-wrap: wrap;
 
 }
-
-
 
 
 .games-ranking-wrap {
@@ -2275,15 +2270,13 @@ footer {
 }
 
 
-
-
 /* ============================================================
 
    DA REFRESH - POKE SKY / ARCADE
 
    ============================================================ */
 
-:root {
+body.theme-poke-sky {
 
   --bg: #5ea9db;
 
@@ -2330,8 +2323,6 @@ body {
     linear-gradient(180deg, #6bb2e0 0%, #7cc0e9 38%, #8bcae7 58%, #84c272 82%, #6faa57 100%);
 
 }
-
-
 
 
 body::after {
@@ -2930,44 +2921,6 @@ a:hover { color: #fff2bc; }
   }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /* ---------- Pokedex ---------- */
@@ -3708,8 +3661,6 @@ a:hover { color: #fff2bc; }
 
 
 #mystery-box .challenge-title { color: #d8eaff; }
-
-
 
 
 /* ---------- Pokedex contrast hard-fix ---------- */
@@ -4594,8 +4545,6 @@ a:hover { color: #fff2bc; }
   100% { transform: scale(1); }
 
 }
-
-
 
 
 /* ---------- Full-page win celebration ---------- */
@@ -8513,9 +8462,7 @@ main {
 
 #pokedex-type-filter,
 
-#pokedex-type2-filter,
-
-#mode-select-pro {
+#pokedex-type2-filter{
 
   min-height: 46px;
 
@@ -8652,51 +8599,6 @@ main {
 }
 
 
-.mode-pro-controls {
-
-  display: grid;
-
-  grid-template-columns: minmax(0, 1fr) auto;
-
-  gap: 10px;
-
-  align-items: center;
-
-}
-
-
-#mode-select-pro {
-
-  min-height: 52px;
-
-  width: 100%;
-
-  border-radius: 12px;
-
-  border: 1px solid #bfd3f5;
-
-  background: #ffffff;
-
-  color: #183864;
-
-  font-weight: 800;
-
-  font-size: 0.98rem;
-
-  padding: 0 42px 0 14px;
-
-}
-
-
-#mode-select-pro:focus {
-
-  outline: 2px solid #8eb9ff;
-
-  outline-offset: 1px;
-
-}
-
-
 #mode-launch-btn {
 
   min-height: 52px;
@@ -8707,12 +8609,6 @@ main {
 
 
 @media (max-width: 900px) {
-
-  .mode-pro-controls {
-
-    grid-template-columns: 1fr;
-
-  }
 
 
   #mode-launch-btn {
@@ -8757,55 +8653,6 @@ main {
 }
 
 
-.mode-pro-hub {
-
-  margin-top: 14px;
-
-  border: 1px solid #c7d8f5;
-
-  border-radius: 14px;
-
-  background: linear-gradient(180deg, #f7faff 0%, #edf4ff 100%);
-
-  padding: 12px;
-
-  box-shadow: 0 8px 18px rgba(26, 53, 98, 0.08);
-
-  display: grid;
-
-  gap: 10px;
-
-}
-
-
-.mode-pro-head {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 10px;
-
-  flex-wrap: wrap;
-
-}
-
-
-.mode-pro-head h3 {
-
-  margin: 0;
-
-  font-size: 0.98rem;
-
-  color: #1e3e6d;
-
-  font-weight: 900;
-
-}
-
-
 .mode-cat-filters {
 
   display: flex;
@@ -8817,86 +8664,7 @@ main {
 }
 
 
-.mode-cat-btn {
-
-  border: 1px solid #c0d3f4;
-
-  border-radius: 999px;
-
-  background: #f6f9ff;
-
-  color: #234472;
-
-  font-weight: 900;
-
-  font-size: 0.82rem;
-
-  padding: 7px 12px;
-
-  cursor: pointer;
-
-  transition: all 0.14s ease;
-
-}
-
-
-.mode-cat-btn:hover {
-
-  background: #eaf2ff;
-
-  border-color: #a9c3ee;
-
-}
-
-
-.mode-cat-btn.active {
-
-  color: #fff;
-
-  border-color: #1f4e91;
-
-  background: linear-gradient(180deg, #2f73d4, #245ca8);
-
-}
-
-
-#mode-select-pro {
-
-  appearance: none;
-
-  background-image: linear-gradient(45deg, transparent 50%, #345f9d 50%), linear-gradient(135deg, #345f9d 50%, transparent 50%);
-
-  background-position: calc(100% - 18px) calc(50% - 4px), calc(100% - 12px) calc(50% - 4px);
-
-  background-size: 6px 6px, 6px 6px;
-
-  background-repeat: no-repeat;
-
-  padding-right: 38px;
-
-}
-
-
-.mode-pro-desc {
-
-  margin: 0;
-
-  color: #4f6790;
-
-  font-size: 0.9rem;
-
-  font-weight: 700;
-
-}
-
-
 @media (max-width: 900px) {
-
-  .mode-pro-head {
-
-    align-items: flex-start;
-
-  }
 
 
   .mode-cat-filters {
@@ -9356,13 +9124,6 @@ main {
   }
 
 }
-
-
-
-
-
-
-
 
 
 .description-text {
@@ -9889,8 +9650,7 @@ main {
 .challenge-panel,
 .level-panel,
 .stat-item,
-.streak-item,
-.mode-pro-hub {
+.streak-item{
   border-radius: 18px;
 }
 
@@ -9927,11 +9687,6 @@ main {
   border-color: #ffcf58;
   background: linear-gradient(180deg, #fff8e3 0%, #fff2c8 100%);
   box-shadow: 0 10px 20px rgba(233, 166, 33, 0.14);
-}
-
-.mode-pro-hub {
-  border: 1px solid #cfe0ff;
-  background: linear-gradient(180deg, #fffdf6 0%, #f0f6ff 100%);
 }
 
 .app-settings-grid-rich {
@@ -10048,7 +9803,6 @@ main {
 
 #screen-config .card-desc,
 #screen-config .gen-sub,
-#screen-config .mode-pro-desc,
 #screen-ranking .card-desc,
 #screen-games-ranking .card-desc,
 #screen-pokedex .card-desc {
@@ -10140,7 +9894,6 @@ body.theme-dark .card strong {
 
 body.theme-dark .card-desc,
 body.theme-dark .gen-sub,
-body.theme-dark .mode-pro-desc,
 body.theme-dark .app-setting-item span,
 body.theme-dark .app-setting-item small {
   color: #d7e7fb;
@@ -10151,7 +9904,6 @@ body.theme-dark .app-setting-item,
 body.theme-dark .stat-item,
 body.theme-dark .streak-item,
 body.theme-dark .challenge-panel,
-body.theme-dark .mode-pro-hub,
 body.theme-dark .level-panel {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(246, 205, 106, 0.4);
@@ -10167,8 +9919,7 @@ body.theme-dark .app-setting-item input[type="checkbox"] {
   accent-color: #ffcc45;
 }
 
-body.theme-dark .app-setting-item-stack select,
-body.theme-dark .mode-pro-controls select {
+body.theme-dark .app-setting-item-stack select{
   background: rgba(12, 29, 52, 0.92);
   border-color: rgba(160, 188, 235, 0.38);
   color: #edf5ff;
@@ -10272,15 +10023,13 @@ body.theme-dark .card::before {
 body.theme-dark .card-title,
 body.theme-dark .app-settings-section h4,
 body.theme-dark .gen-name,
-body.theme-dark .card strong,
-body.theme-dark .mode-pro-head h3 {
+body.theme-dark .card strong{
   color: #f2f6ff;
   text-shadow: none;
 }
 
 body.theme-dark .card-desc,
 body.theme-dark .gen-sub,
-body.theme-dark .mode-pro-desc,
 body.theme-dark .app-setting-item span,
 body.theme-dark .app-setting-item small,
 body.theme-dark .tagline {
@@ -10292,7 +10041,6 @@ body.theme-dark .app-setting-item,
 body.theme-dark .stat-item,
 body.theme-dark .streak-item,
 body.theme-dark .challenge-panel,
-body.theme-dark .mode-pro-hub,
 body.theme-dark .level-panel,
 body.theme-dark .results-wrap {
   background: linear-gradient(180deg, rgba(20, 40, 69, 0.9), rgba(15, 31, 54, 0.9));
@@ -10328,8 +10076,7 @@ body.theme-dark .btn-yellow {
   color: #4f3300;
 }
 
-body.theme-dark .app-setting-item-stack select,
-body.theme-dark .mode-pro-controls select {
+body.theme-dark .app-setting-item-stack select{
   background: linear-gradient(180deg, rgba(10, 22, 40, 0.96), rgba(13, 28, 50, 0.96));
   border-color: rgba(95, 135, 201, 0.34);
   color: #edf5ff;
@@ -10399,14 +10146,12 @@ body.theme-dark .card-title,
 body.theme-dark .app-settings-section h4,
 body.theme-dark .gen-name,
 body.theme-dark .card strong,
-body.theme-dark .mode-pro-head h3,
 body.theme-dark .win-title {
   color: #f1f5fb;
 }
 
 body.theme-dark .card-desc,
 body.theme-dark .gen-sub,
-body.theme-dark .mode-pro-desc,
 body.theme-dark .app-setting-item span,
 body.theme-dark .app-setting-item small,
 body.theme-dark .tagline,
@@ -10419,7 +10164,6 @@ body.theme-dark .app-setting-item,
 body.theme-dark .stat-item,
 body.theme-dark .streak-item,
 body.theme-dark .challenge-panel,
-body.theme-dark .mode-pro-hub,
 body.theme-dark .level-panel,
 body.theme-dark .results-wrap,
 body.theme-dark .win-box {
@@ -10464,8 +10208,7 @@ body.theme-dark .btn-ghost {
   color: #dde6f4;
 }
 
-body.theme-dark .app-setting-item-stack select,
-body.theme-dark .mode-pro-controls select {
+body.theme-dark .app-setting-item-stack select{
   background: linear-gradient(180deg, rgba(17, 27, 40, 0.98), rgba(13, 21, 33, 0.98));
   border-color: rgba(77, 99, 129, 0.36);
   color: #e8f0fb;
@@ -11059,60 +10802,10 @@ body.theme-dark .mystery-bar {
   font-weight: 800;
 }
 
-.mode-pro-hub {
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(119, 146, 194, 0.24);
-  background: linear-gradient(135deg, rgba(47,118,255,0.08) 0%, rgba(255,204,51,0.12) 100%);
-  box-shadow: 0 18px 36px rgba(18, 31, 58, 0.08);
-}
-
-.mode-pro-head,
-.mode-pro-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.mode-pro-head h3 {
-  color: var(--text);
-}
-
 .mode-cat-filters {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.mode-cat-btn {
-  border: 1px solid rgba(74, 105, 159, 0.2);
-  background: rgba(255,255,255,0.86);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
-}
-
-.mode-cat-btn:hover,
-.mode-cat-btn.active {
-  background: linear-gradient(180deg, #2f76ff 0%, #225cd0 100%);
-  color: #fff;
-  transform: translateY(-1px);
-}
-
-#mode-select-pro {
-  min-width: min(360px, 100%);
-}
-
-.mode-pro-desc {
-  margin-top: 12px;
-  color: var(--text);
-  font-weight: 800;
 }
 
 #quiz-box {
@@ -11176,10 +10869,6 @@ body.theme-dark .mystery-bar {
   .party-odd-grid {
     grid-template-columns: 1fr;
   }
-
-  #mode-select-pro {
-    min-width: 100%;
-  }
 }
 .party-summary b {
   display: block;
@@ -11193,7 +10882,6 @@ body.theme-dark .mystery-bar {
   color: var(--muted);
   font-weight: 800;
 }
-
 
 
 /* Homepage architecture refresh */
@@ -11390,88 +11078,11 @@ body.theme-dark .mystery-bar {
   content: none;
 }
 
-.home-section-head,
-.home-category-head {
+.home-section-head{
   display: flex;
   justify-content: space-between;
   gap: 18px;
   align-items: flex-start;
-}
-
-.home-categories {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
-}
-
-.home-category-card {
-  display: grid;
-  gap: 18px;
-  align-content: start;
-}
-
-.home-category-head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.home-category-head > div {
-  min-width: 0;
-}
-
-.home-category-head .card-desc {
-  margin: 6px 0 0;
-}
-
-.home-category-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-bottom: 10px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(255, 107, 107, 0.14));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  font-size: 1.2rem;
-}
-
-.home-mode-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.home-mode-grid > button {
-  min-height: 72px;
-  justify-content: flex-start;
-  text-align: left;
-  box-shadow: 0 14px 26px rgba(17, 37, 69, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.home-primary-cta {
-  position: relative;
-  box-shadow: 0 16px 28px rgba(17, 37, 69, 0.1);
-}
-
-.home-secondary-cta {
-  border-color: rgba(138, 166, 214, 0.16) !important;
-  background: linear-gradient(180deg, rgba(251, 253, 255, 0.94), rgba(243, 247, 255, 0.9)) !important;
-  box-shadow: 0 8px 16px rgba(17, 37, 69, 0.05) !important;
-  color: #4d678c !important;
-}
-
-.home-secondary-cta:hover,
-.home-secondary-cta:focus-visible {
-  box-shadow: 0 12px 22px rgba(17, 37, 69, 0.08) !important;
-}
-
-.home-mode-grid > button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 32px rgba(17, 37, 69, 0.12);
 }
 
 .home-progress-card {
@@ -11512,10 +11123,6 @@ body.theme-dark .hero-chip {
   background: rgba(143, 177, 255, 0.1);
 }
 
-body.theme-dark .home-category-icon {
-  background: linear-gradient(135deg, rgba(123, 167, 255, 0.16), rgba(255, 133, 133, 0.12));
-}
-
 @media (max-width: 980px) {
   .home-hero {
     grid-template-columns: 1fr;
@@ -11525,21 +11132,15 @@ body.theme-dark .home-category-icon {
   .home-hero-visual {
     min-height: 220px;
   }
-
-  .home-categories {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 720px) {
-  .home-mode-grid,
   #screen-config .stats-panel,
   #screen-config .platform-stats-panel {
     grid-template-columns: 1fr;
   }
 
   .home-section-head,
-  .home-category-head,
   .home-hero-actions {
     flex-direction: column;
     align-items: stretch;
@@ -11787,7 +11388,6 @@ body.theme-dark .bg-pokeball {
 .challenge-preview,
 .results-wrap,
 .pokedex-detail,
-.mode-pro-hub,
 .level-panel,
 .challenge-panel,
 .win-box,
@@ -11799,8 +11399,6 @@ body.theme-dark .bg-pokeball {
 #quiz-options.mode-buttons > button {
   transition: transform 0.22s var(--ease-ui), box-shadow 0.22s var(--ease-ui), border-color 0.22s var(--ease-ui), background 0.22s var(--ease-ui), opacity 0.22s var(--ease-ui);
 }
-
-.home-category-card:hover,
 .pokedex-card:hover,
 .odd-card:hover,
 .versus-card:hover,
@@ -11974,7 +11572,6 @@ body.theme-dark .btn-ghost:hover {
 .reduce-motion .challenge-preview,
 .reduce-motion .results-wrap,
 .reduce-motion .pokedex-detail,
-.reduce-motion .mode-pro-hub,
 .reduce-motion .level-panel,
 .reduce-motion .challenge-panel,
 .reduce-motion .win-box,
@@ -13541,8 +13138,6 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
   max-width: 134px;
   font-size: 0.76rem;
 }
-
-.home-category-card,
 .profile-panel,
 .mode-stat-block,
 .stat-item,
@@ -13559,15 +13154,6 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
   border: 1px solid var(--card-border);
   box-shadow: 0 14px 30px rgba(17, 43, 86, 0.08);
 }
-
-.home-category-card {
-  position: relative;
-  overflow: hidden;
-  gap: 20px;
-  padding: 24px;
-}
-
-.home-category-card::before,
 .profile-panel::before,
 .mode-stat-block::before {
   content: "";
@@ -13577,8 +13163,6 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
   background: linear-gradient(90deg, #ff7b63, #ffd45c, #4b8dff);
   opacity: 0.95;
 }
-
-.home-category-card:hover,
 .profile-panel:hover,
 .mode-stat-block:hover,
 .profile-stat-card:hover,
@@ -13590,8 +13174,6 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
   box-shadow: var(--card-shadow-hover);
   border-color: var(--card-border-strong);
 }
-
-.home-category-head .card-desc,
 #screen-config .card-desc,
 #screen-profile .card-desc,
 #screen-achievements .card-desc,
@@ -13610,19 +13192,6 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
 .challenge-title + .card-desc {
   color: var(--soft-text);
 }
-
-.home-category-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 14px 28px rgba(61, 102, 175, 0.12);
-}
-
-.home-mode-grid {
-  gap: 16px;
-}
-
-.home-mode-grid > button,
 #quiz-options.mode-buttons > button {
   min-height: 78px;
   padding: 18px 18px;
@@ -13630,8 +13199,6 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
   border: 1px solid rgba(255,255,255,0.18);
   box-shadow: 0 14px 28px rgba(16, 39, 80, 0.12);
 }
-
-.home-mode-grid > button .btn-icon,
 #quiz-options.mode-buttons > button .btn-icon {
   width: 34px;
   height: 34px;
@@ -13701,15 +13268,13 @@ body:has(#screen-ranking:not(.hidden)) #screen-ranking .card {
 .profile-stat-card b,
 .profile-level-card b,
 .match-history-main strong,
-.home-section-head .card-title,
-.home-category-head .card-title {
+.home-section-head .card-title{
   color: var(--strong-text);
 }
 
 body:not(.theme-dark) .card-desc,
 body:not(.theme-dark) .gen-sub,
 body:not(.theme-dark) .ac-sub,
-body:not(.theme-dark) .mode-pro-desc,
 body:not(.theme-dark) .pokedex-card .pokedex-num,
 body:not(.theme-dark) .pokedex-detail-head p,
 body:not(.theme-dark) .profile-achievement-item small,
@@ -13726,7 +13291,6 @@ body:not(.theme-dark) .weekly-featured-copy p {
 }
 
 body:not(.theme-dark) .card-title,
-body:not(.theme-dark) .home-category-head .card-title,
 body:not(.theme-dark) .home-section-head .card-title,
 body:not(.theme-dark) .pokedex-card strong,
 body:not(.theme-dark) .odd-card-name,
@@ -14749,8 +14313,7 @@ body:not(.theme-dark) #quiz-options.mode-buttons > button {
 
 .profile-panel h3,
 .mode-stat-head,
-.home-section-head .card-title,
-.home-category-head .card-title {
+.home-section-head .card-title{
   color: var(--strong-text);
 }
 
@@ -14792,8 +14355,6 @@ body:not(.theme-dark) #quiz-options.mode-buttons > button {
 .results-wrap tbody tr:hover {
   background: rgba(80, 129, 214, 0.08);
 }
-
-body.theme-dark .home-category-card,
 body.theme-dark .profile-panel,
 body.theme-dark .mode-stat-block,
 body.theme-dark .stat-item,
@@ -14831,8 +14392,6 @@ body.theme-dark .profile-stat-card b,
 body.theme-dark #quiz-options.mode-buttons > button {
   color: #edf4ff;
 }
-
-body.theme-dark .home-category-head .card-desc,
 body.theme-dark #screen-config .card-desc,
 body.theme-dark #screen-profile .card-desc,
 body.theme-dark #screen-achievements .card-desc,
@@ -14876,41 +14435,12 @@ body.theme-dark .results-wrap th {
   display: block;
 }
 
-.home-mode-grid > button {
-  min-height: 62px;
-  padding: 14px 16px;
-  border-radius: 18px;
-}
-
-.home-mode-grid > button .btn-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-}
-
-#mode-select-pro {
-  min-height: 48px;
-  padding: 0 14px;
-  border-radius: 14px;
-  font-size: 0.95rem;
-}
-
-.mode-pro-controls {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-}
-
 .nav-pill {
   min-height: 50px;
   padding: 10px 18px;
 }
 
 @media (max-width: 720px) {
-  .home-mode-grid > button {
-    min-height: 56px;
-    padding: 12px 14px;
-  }
 
   .nav-pill {
     min-height: 46px;
@@ -14920,7 +14450,6 @@ body.theme-dark .results-wrap th {
 
 /* Safety pass - keep decorative layers from blocking clicks */
 .card::before,
-.home-category-card::before,
 .profile-panel::before,
 .mode-stat-block::before,
 .home-hero::before,
@@ -14949,10 +14478,6 @@ body.theme-dark .results-wrap th {
 .header-actions,
 .home-hero-copy,
 .home-hero-actions,
-.home-mode-grid,
-.mode-pro-hub,
-.mode-pro-head,
-.mode-pro-controls,
 .mode-cat-filters,
 .ranking-head-actions,
 .multiplayer-actions-grid,
@@ -14969,23 +14494,15 @@ body.theme-dark .results-wrap th {
   min-height: 44px;
   padding: 8px 14px;
 }
-
-.home-mode-grid > button,
 #quiz-options.mode-buttons > button {
   min-height: 60px;
   padding: 12px 14px;
   border-radius: 18px;
 }
-
-.home-mode-grid > button .btn-icon,
 #quiz-options.mode-buttons > button .btn-icon {
   width: 26px;
   height: 26px;
   border-radius: 9px;
-}
-
-#home-social {
-  gap: 16px;
 }
 
 .home-social-intro {
@@ -14994,67 +14511,6 @@ body.theme-dark .results-wrap th {
   font-size: 0.98rem;
   line-height: 1.55;
 }
-
-.home-social-suite {
-  display: grid;
-  gap: 16px;
-  padding: 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(120, 157, 214, 0.18);
-  background: linear-gradient(180deg, rgba(252,254,255,0.9), rgba(242,247,255,0.94));
-}
-
-.home-social-suite-head {
-  display: grid;
-  gap: 6px;
-}
-
-.home-social-suite-head h4 {
-  margin: 0;
-  color: var(--strong-text);
-  font-size: 1rem;
-}
-
-.home-social-suite-head p,
-.home-social-suite-note {
-  margin: 0;
-  color: var(--soft-text);
-  line-height: 1.6;
-}
-
-.home-social-suite-note {
-  font-size: 0.92rem;
-}
-
-.home-social-launch {
-  position: relative;
-  border: 1px solid rgba(106, 149, 222, 0.24);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 207, 92, 0.18), transparent 34%),
-    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(241,247,255,0.98));
-  box-shadow: 0 18px 36px rgba(34, 73, 138, 0.08), inset 0 1px 0 rgba(255,255,255,0.6);
-  padding: 22px;
-}
-
-.home-social-launch-copy {
-  margin: 0;
-  color: var(--soft-text);
-  line-height: 1.65;
-}
-
-.home-social-launch .home-mode-grid {
-  margin-top: 14px;
-}
-
-.home-social-launch-note {
-  margin: 14px 0 0;
-  color: #54709a;
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
-.home-social-block,
 .home-social-note {
   position: relative;
   border: 1px solid rgba(120, 157, 214, 0.18);
@@ -15073,11 +14529,6 @@ body.theme-dark .results-wrap th {
   text-transform: none;
 }
 
-#home-social > .home-social-block:first-of-type {
-  opacity: 0.92;
-  background: linear-gradient(180deg, rgba(250,252,255,0.76), rgba(243,248,255,0.88));
-}
-
 .home-social-note h3 {
   margin: 0 0 8px;
   color: var(--strong-text);
@@ -15089,29 +14540,10 @@ body.theme-dark .results-wrap th {
   color: var(--soft-text);
   line-height: 1.6;
 }
-
-body.theme-dark .home-social-block,
 body.theme-dark .home-social-note {
   border-color: rgba(145, 180, 235, 0.16);
   background: linear-gradient(180deg, rgba(28, 47, 79, 0.78), rgba(23, 39, 68, 0.88));
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-body.theme-dark .home-social-launch {
-  border-color: rgba(138, 176, 236, 0.2);
-  background:
-    radial-gradient(circle at top right, rgba(246, 200, 90, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(31, 52, 86, 0.92), rgba(24, 41, 69, 0.96));
-  box-shadow: 0 18px 36px rgba(7, 15, 28, 0.2), inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-body.theme-dark .home-social-launch-note {
-  color: #b8c9e5;
-}
-
-body.theme-dark .home-social-suite {
-  border-color: rgba(145, 180, 235, 0.16);
-  background: linear-gradient(180deg, rgba(29, 48, 80, 0.84), rgba(24, 40, 68, 0.9));
 }
 
 /* Profile / favorite + Pokedex premium finish */
@@ -15192,105 +14624,6 @@ body.theme-dark .home-social-suite {
 #screen-pokedex .pokedex-detail {
   padding: 20px;
   border-radius: 24px;
-}
-
-.home-extras-intro {
-  margin: -4px 0 2px;
-  color: var(--soft-text);
-  font-size: 0.98rem;
-  line-height: 1.55;
-}
-
-.home-extras-block {
-  position: relative;
-  border: 1px solid rgba(120, 157, 214, 0.18);
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(244,248,255,0.9));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-  padding: 18px;
-}
-
-.home-extras-subhead {
-  margin-bottom: 10px;
-  color: var(--strong-text);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.home-extras-copy {
-  margin: 0 0 14px;
-  color: var(--soft-text);
-  line-height: 1.6;
-}
-
-.home-extras-coming-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
-
-.home-extras-focus-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  width: fit-content;
-  margin-top: 2px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: rgba(73, 132, 240, 0.1);
-  color: #40639b;
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.home-extras-focus-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.home-extras-focus-grid > button {
-  min-height: 112px;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.home-extras-toolbox {
-  display: grid;
-  gap: 16px;
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(120, 157, 214, 0.18);
-  background: linear-gradient(180deg, rgba(252, 254, 255, 0.9), rgba(242, 247, 255, 0.94));
-}
-
-.home-extras-toolbox-head {
-  display: grid;
-  gap: 6px;
-}
-
-.home-extras-toolbox-head h4 {
-  margin: 0;
-  color: var(--strong-text);
-  font-size: 1rem;
-}
-
-.home-extras-toolbox-head p,
-.home-extras-toolbox-note {
-  margin: 0;
-  color: var(--soft-text);
-  line-height: 1.6;
-}
-
-.home-extras-toolbox-note {
-  font-size: 0.92rem;
-}
-
-.home-coming-tile-focus {
-  min-height: 112px;
 }
 
 .home-type-helper {
@@ -15406,58 +14739,10 @@ body.theme-dark .home-social-suite {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.74);
 }
 
-#screen-config .home-priority-grid {
-  gap: 18px !important;
-}
-
-#screen-config .home-priority-card {
-  padding: 22px 20px 18px !important;
-  border-radius: 24px !important;
-  box-shadow: 0 18px 36px rgba(19, 41, 76, 0.08) !important;
-}
-
-#screen-config .home-priority-card::before {
-  background: radial-gradient(circle at top right, rgba(255,255,255,0.48), transparent 36%);
-}
-
-#screen-config .home-priority-card h3 {
-  margin-bottom: 2px;
-}
-
-#screen-config .home-priority-card p {
-  line-height: 1.58;
-  max-width: 28ch;
-}
-
-#screen-config .home-priority-actions {
-  margin-top: 14px;
-  gap: 10px;
-}
-
-#screen-config .home-priority-actions .btn-red,
-#screen-config .home-priority-actions .btn-blue,
-#screen-config .home-priority-actions .btn-ghost {
-  min-height: 46px;
-  border-radius: 16px;
-}
-
-#screen-config .home-priority-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 24px 42px rgba(19, 41, 76, 0.12) !important;
-}
-
 @media (max-width: 980px) {
   #screen-config .home-hero {
     padding: 32px 30px !important;
     gap: 24px !important;
-  }
-
-  #screen-config .home-priority-grid {
-    gap: 14px !important;
-  }
-
-  #screen-config .home-priority-card {
-    padding: 20px 18px 17px !important;
   }
 }
 
@@ -15471,22 +14756,11 @@ body.theme-dark .home-social-suite {
     padding: 24px 20px !important;
     gap: 18px !important;
   }
-
-  #screen-config .home-priority-card {
-    padding: 18px 16px 16px !important;
-  }
 }
-
-/* Home secondary cards finish */
-#screen-config .home-universes,
-#screen-config .home-category-card,
 #screen-config .home-generations-card,
-#screen-config .home-progress-card,
-#screen-config #mode-pro-hub {
+#screen-config .home-progress-card{
   border-radius: 26px !important;
 }
-
-#screen-config .home-universes,
 #screen-config .home-generations-card,
 #screen-config .home-progress-card {
   padding: 22px 24px !important;
@@ -15498,152 +14772,25 @@ body.theme-dark .home-social-suite {
   margin-bottom: 2px;
 }
 
-#screen-config .home-section-head .card-desc,
-#screen-config .home-category-head .card-desc,
-#screen-config .home-category-note,
-#screen-config #mode-pro-desc {
+#screen-config .home-section-head .card-desc{
   line-height: 1.56;
 }
-
-#screen-config .home-universes-grid {
-  gap: 12px !important;
-}
-
-#screen-config .home-universe-tile {
-  min-height: 96px;
-  padding: 16px 16px 15px !important;
-  border-radius: 20px !important;
-  border-color: rgba(170, 194, 231, 0.42) !important;
-  box-shadow:
-    0 12px 24px rgba(22, 45, 84, 0.07),
-    inset 0 1px 0 rgba(255,255,255,0.72);
-}
-
-#screen-config .home-universe-tile:hover,
-#screen-config .home-universe-tile:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(82, 132, 220, 0.44) !important;
-  box-shadow:
-    0 18px 32px rgba(22, 45, 84, 0.1),
-    inset 0 1px 0 rgba(255,255,255,0.78);
-}
-
-#screen-config .home-universe-tile strong {
-  font-size: 0.92rem;
-  line-height: 1.3;
-}
-
-#screen-config .home-universe-tile span {
-  font-size: 0.71rem;
-  letter-spacing: 0.09em;
-}
-
-#screen-config .home-universe-tile.is-active {
-  box-shadow: 0 16px 30px rgba(17, 43, 83, 0.22) !important;
-}
-
-#screen-config .home-category-card {
-  padding: 24px 24px 20px !important;
-  gap: 16px !important;
-  box-shadow: 0 18px 38px rgba(19, 41, 76, 0.09) !important;
-}
-
-#screen-config .home-category-head {
-  gap: 14px !important;
-}
-
-#screen-config .home-category-head .card-title {
-  margin-bottom: 6px;
-}
-
-#screen-config .home-category-head .card-desc {
-  max-width: 50ch;
-}
-
-#screen-config .home-category-note {
-  margin-top: -2px;
-  max-width: 52ch;
-}
-
-#screen-config .home-category-card .home-mode-grid {
-  gap: 12px;
-}
-
-#screen-config .home-category-card .home-mode-grid > button:first-child {
-  box-shadow: 0 14px 28px rgba(17, 37, 69, 0.12);
-}
-
-#screen-config .home-category-card .home-mode-grid > button:not(:first-child) {
-  box-shadow: 0 8px 18px rgba(17, 37, 69, 0.06);
-}
-
-#screen-config #mode-pro-hub {
-  margin-top: 16px;
-  padding: 20px !important;
-  border-color: rgba(177, 201, 239, 0.38) !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.68), rgba(244,248,255,0.52)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.58),
-    0 12px 28px rgba(22, 45, 84, 0.06);
-}
-
-#screen-config .mode-pro-head {
-  margin-bottom: 2px;
-}
-
-#screen-config .mode-pro-controls {
-  gap: 12px;
-}
-
-body.theme-dark #screen-config .home-universes,
-body.theme-dark #screen-config .home-category-card,
 body.theme-dark #screen-config .home-generations-card,
-body.theme-dark #screen-config .home-progress-card,
-body.theme-dark #screen-config #mode-pro-hub {
+body.theme-dark #screen-config .home-progress-card{
   box-shadow: 0 20px 38px rgba(0, 0, 0, 0.24) !important;
 }
 
-body.theme-dark #screen-config .home-universe-tile {
-  border-color: rgba(106, 143, 207, 0.24) !important;
-  box-shadow:
-    0 12px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-body.theme-dark #screen-config .home-universe-tile:hover,
-body.theme-dark #screen-config .home-universe-tile:focus-visible {
-  border-color: rgba(142, 176, 236, 0.34) !important;
-  box-shadow:
-    0 16px 28px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255,255,255,0.05);
-}
-
 @media (max-width: 980px) {
-  #screen-config .home-universes,
   #screen-config .home-generations-card,
-  #screen-config .home-progress-card,
-  #screen-config .home-category-card {
+  #screen-config .home-progress-card{
     padding: 20px !important;
-  }
-
-  #screen-config .home-universe-tile {
-    min-height: 88px;
   }
 }
 
 @media (max-width: 720px) {
-  #screen-config .home-universes,
   #screen-config .home-generations-card,
-  #screen-config .home-progress-card,
-  #screen-config .home-category-card,
-  #screen-config #mode-pro-hub {
+  #screen-config .home-progress-card{
     padding: 18px !important;
-  }
-
-  #screen-config .home-universe-tile {
-    min-height: 0;
-    padding: 14px !important;
   }
 }
 
@@ -15786,22 +14933,6 @@ body.theme-dark #screen-config .home-universe-tile:focus-visible {
   background:
     linear-gradient(180deg, rgba(246, 249, 253, 0.98), rgba(236, 242, 250, 0.96));
   box-shadow: 0 14px 28px rgba(20, 40, 76, 0.05);
-}
-
-.home-builder-access,
-.home-teams-access {
-  opacity: 1;
-  align-content: start;
-  min-height: 0;
-  border-style: solid;
-}
-
-.home-builder-access-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
 }
 
 .teams-screen-card {
@@ -17001,26 +16132,10 @@ body.theme-dark .team-builder-pokemon-trigger.is-empty {
   }
 }
 
-body.theme-dark .home-extras-block {
-  border-color: rgba(145, 180, 235, 0.16);
-  background: linear-gradient(180deg, rgba(28, 47, 79, 0.78), rgba(23, 39, 68, 0.88));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
 body.theme-dark .home-coming-tile {
   border-color: rgba(122, 155, 215, 0.28);
   background: linear-gradient(180deg, rgba(31, 52, 86, 0.84), rgba(25, 42, 71, 0.92));
   color: #edf4ff;
-}
-
-body.theme-dark .home-builder-access {
-  border-color: rgba(122, 155, 215, 0.32);
-  background: linear-gradient(180deg, rgba(31, 52, 86, 0.9), rgba(25, 42, 71, 0.95));
-}
-
-body.theme-dark .home-teams-access {
-  border-color: rgba(122, 155, 215, 0.32);
-  background: linear-gradient(180deg, rgba(31, 52, 86, 0.9), rgba(25, 42, 71, 0.95));
 }
 
 body.theme-dark .teams-screen-card,
@@ -17064,16 +16179,6 @@ body.theme-dark .team-builder-pokemon-trigger-cta {
 body.theme-dark .home-coming-badge {
   background: rgba(246, 200, 90, 0.16);
   color: #ffd97a;
-}
-
-body.theme-dark .home-extras-focus-tag {
-  background: rgba(118, 162, 236, 0.14);
-  color: #cfe0ff;
-}
-
-body.theme-dark .home-extras-toolbox {
-  border-color: rgba(145, 180, 235, 0.16);
-  background: linear-gradient(180deg, rgba(29, 48, 80, 0.84), rgba(24, 40, 68, 0.9));
 }
 
 body.theme-dark .home-type-helper {
@@ -17320,9 +16425,7 @@ body.theme-dark .team-builder-move-state {
   .home-builder-moves,
   .home-builder-grid,
   .team-builder-synthesis-grid,
-  .team-builder-offense-grid,
-  .home-extras-focus-grid,
-  .home-extras-coming-grid {
+  .team-builder-offense-grid{
     grid-template-columns: 1fr;
   }
 
@@ -17492,51 +16595,12 @@ body.theme-dark .team-builder-screen-card .team-builder-module > .team-builder-e
 .home-generations-card {
   margin-top: 2px;
 }
-
-.home-categories {
-  gap: 26px;
-  margin-top: 4px;
-}
-
-.home-category-card {
-  gap: 22px;
-  padding: 26px;
-  border-color: rgba(181, 204, 240, 0.94);
-  box-shadow: 0 22px 40px rgba(24, 45, 82, 0.11), 0 6px 14px rgba(20, 36, 66, 0.05);
-}
-
-.home-category-head {
-  gap: 18px;
-}
-
-.home-category-head .card-title {
-  margin-bottom: 8px;
-  font-size: 0.88rem;
-}
-
-.home-category-head .card-desc,
 .home-social-intro,
-.home-extras-intro,
-.home-extras-copy,
 .home-social-note p {
   line-height: 1.65;
 }
-
-.home-mode-grid {
-  gap: 18px;
-}
-
-.home-social-block,
-.home-social-note,
-.home-extras-block,
-#mode-pro-hub {
+.home-social-note{
   padding: 20px;
-}
-
-.home-social-block .home-mode-grid,
-.home-extras-block .home-mode-grid,
-.home-extras-coming-grid {
-  margin-top: 12px;
 }
 
 .home-progress-card,
@@ -17605,10 +16669,6 @@ body.theme-dark .home-social-banner {
     gap: 26px;
     padding: 30px;
   }
-
-  .home-categories {
-    gap: 22px;
-  }
 }
 
 @media (max-width: 720px) {
@@ -17626,8 +16686,7 @@ body.theme-dark .home-social-banner {
     padding: 9px 14px;
   }
 
-  .home-hero,
-  .home-category-card {
+  .home-hero{
     padding: 22px;
   }
 
@@ -17637,49 +16696,7 @@ body.theme-dark .home-social-banner {
     width: 100%;
     min-width: 0;
   }
-
-  .home-categories,
-  .home-mode-grid {
-    gap: 16px;
-  }
 }
-
-#mode-select-pro {
-  min-height: 44px;
-  min-width: 0;
-  font-size: 0.92rem;
-}
-
-.mode-cat-btn {
-  min-height: 38px;
-  padding: 7px 11px;
-  font-size: 0.8rem;
-}
-
-body:not(.theme-dark) #mode-pro-hub .mode-pro-head h3,
-body:not(.theme-dark) #mode-pro-hub .mode-pro-desc,
-body:not(.theme-dark) #mode-pro-hub .mode-cat-btn,
-body:not(.theme-dark) #mode-pro-hub #mode-select-pro {
-  color: #163457 !important;
-}
-
-body:not(.theme-dark) #mode-pro-hub .mode-cat-btn {
-  background: #f6f9ff !important;
-  border-color: #bfd2f1 !important;
-}
-
-body:not(.theme-dark) #mode-pro-hub .mode-cat-btn.active,
-body:not(.theme-dark) #mode-pro-hub .mode-cat-btn:hover {
-  color: #ffffff !important;
-}
-
-body:not(.theme-dark) #mode-pro-hub #mode-select-pro {
-  background-color: #ffffff !important;
-  border-color: #bfd3f5 !important;
-}
-
-/* Unified app fields */
-#mode-select-pro,
 #pokedex-gen-filter,
 #pokedex-type-filter,
 #pokedex-type2-filter,
@@ -17722,8 +16739,6 @@ body:not(.theme-dark) #mode-pro-hub #mode-select-pro {
   padding: 0 42px 0 14px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 10px 22px rgba(32, 65, 118, 0.08);
 }
-
-#mode-select-pro,
 #pokedex-gen-filter,
 #pokedex-type-filter,
 #pokedex-sort-filter,
@@ -17759,8 +16774,6 @@ body:not(.theme-dark) #mode-pro-hub #mode-select-pro {
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 }
-
-#mode-select-pro:focus,
 #pokedex-gen-filter:focus,
 #pokedex-type-filter:focus,
 #pokedex-sort-filter:focus,
@@ -17802,8 +16815,6 @@ body:not(.theme-dark) #mode-pro-hub #mode-select-pro {
   color: #6480aa;
   font-weight: 700;
 }
-
-body.theme-dark #mode-select-pro,
 body.theme-dark #pokedex-gen-filter,
 body.theme-dark #pokedex-type-filter,
 body.theme-dark #pokedex-sort-filter,
@@ -17958,7 +16969,6 @@ body::before {
 }
 
 #screen-config .card,
-.home-category-card,
 .home-social-banner,
 .weekly-featured,
 .home-progress-card,
@@ -17984,7 +16994,6 @@ body.theme-dark {
 }
 
 body.theme-dark #screen-config .card,
-body.theme-dark .home-category-card,
 body.theme-dark .home-social-banner,
 body.theme-dark .weekly-featured,
 body.theme-dark .home-progress-card,
@@ -18027,7 +17036,6 @@ main::before {
 }
 
 #screen-config .card,
-.home-category-card,
 .home-progress-card,
 .home-generations-card,
 .weekly-featured,
@@ -18051,18 +17059,10 @@ main::before {
     radial-gradient(circle at 14% 22%, rgba(255, 107, 107, 0.16), transparent 24%),
     radial-gradient(circle at 88% 84%, rgba(59, 130, 246, 0.14), transparent 26%) !important;
 }
-
-.home-category-card::before,
 .profile-panel::before,
 .mode-stat-block::before {
   height: 5px !important;
   opacity: 0.9 !important;
-}
-
-.home-category-icon {
-  background: linear-gradient(135deg, rgba(255,255,255,0.76), rgba(226,238,255,0.78)) !important;
-  border: 1px solid rgba(181, 206, 245, 0.58);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 12px 24px rgba(35, 70, 126, 0.1) !important;
 }
 
 body.theme-dark main::before {
@@ -18073,7 +17073,6 @@ body.theme-dark main::before {
 }
 
 body.theme-dark #screen-config .card,
-body.theme-dark .home-category-card,
 body.theme-dark .home-progress-card,
 body.theme-dark .home-generations-card,
 body.theme-dark .weekly-featured,
@@ -18114,7 +17113,6 @@ body.theme-dark .home-hero {
 }
 
 #screen-config .card,
-#screen-config .home-category-card,
 #screen-config .home-social-banner,
 #screen-config .weekly-featured,
 #screen-config .seasonal-featured {
@@ -18128,8 +17126,7 @@ body.theme-dark .home-hero {
   backdrop-filter: blur(18px) saturate(1.08);
 }
 
-#screen-config .card::after,
-#screen-config .home-category-card::after {
+#screen-config .card::after{
   content: "";
   position: absolute;
   inset: 1px;
@@ -18212,141 +17209,14 @@ body.theme-dark .home-hero {
   color: #284a78 !important;
   border: 1px solid rgba(182, 203, 235, 0.4);
 }
-
-.home-categories {
-  gap: 28px !important;
-}
-
-.home-category-card {
-  padding: 28px !important;
-  gap: 18px !important;
-}
-
-#home-play {
-  grid-column: 1 / -1;
-  padding: 34px !important;
-}
-
-#home-play .card-title {
-  font-size: 1.14rem !important;
-}
-
-#home-play .card-desc {
-  max-width: 58ch;
-}
-
-.home-category-head .card-desc {
-  margin-top: 4px;
-  max-width: 48ch;
-  font-size: 0.96rem !important;
-  line-height: 1.5;
-}
-
-#home-play .home-mode-grid {
-  grid-template-columns: repeat(2, minmax(0, 280px));
-  justify-content: start;
-}
-
-#home-social,
-#home-extras {
-  align-self: start;
-}
-
-#home-social .card-title,
-#home-extras .card-title {
-  font-size: 1rem !important;
-}
-
-.home-category-head {
-  gap: 20px !important;
-}
-
-.home-category-icon {
-  width: 52px !important;
-  height: 52px !important;
-  border-radius: 16px !important;
-  margin-bottom: 12px !important;
-}
-
-.home-category-head .card-title {
-  font-size: 0.94rem !important;
-}
-
-.home-category-head .card-desc,
 .home-social-intro,
-.home-extras-intro,
-.home-extras-copy,
-.home-social-suite-head p,
-.home-social-suite-note,
-.home-social-launch-copy,
-.home-social-launch-note,
-.home-social-note p,
-.home-category-note {
+.home-social-note p{
   color: #4f6a8b !important;
 }
-
-.home-category-note {
-  margin: -2px 0 0;
-  max-width: 50ch;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  opacity: 0.9;
-}
-
-@media (max-width: 900px) {
-  .home-categories {
-    grid-template-columns: 1fr !important;
-  }
-
-  #home-play {
-    grid-column: auto;
-    padding: 30px !important;
-  }
-
-  #home-play .home-mode-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .home-category-card {
-    gap: 16px !important;
-  }
-
-  .home-category-note,
-  .home-category-head .card-desc {
-    max-width: none;
-  }
-}
-
-.home-social-suite,
-.home-extras-toolbox,
-.home-social-block,
-.home-social-note,
-.home-extras-block,
-#mode-pro-hub {
+.home-social-note{
   background: linear-gradient(180deg, rgba(255,255,255,0.54), rgba(244,248,255,0.42)) !important;
   border: 1px solid rgba(174, 201, 241, 0.38) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.34);
-}
-
-.home-mode-grid > button {
-  min-height: 68px !important;
-  border-radius: 18px !important;
-  padding: 14px 16px !important;
-  font-size: 0.98rem !important;
-  box-shadow: 0 10px 20px rgba(17, 37, 69, 0.08);
-}
-
-.home-category-card .home-mode-grid {
-  gap: 12px;
-}
-
-.home-category-card .home-mode-grid > button:first-child {
-  box-shadow: 0 14px 26px rgba(17, 37, 69, 0.12);
-}
-
-.home-category-card .home-mode-grid > button:last-child {
-  opacity: 0.96;
-  box-shadow: 0 8px 16px rgba(17, 37, 69, 0.06);
 }
 
 body.theme-dark #screen-config::before {
@@ -18357,7 +17227,6 @@ body.theme-dark #screen-config::before {
 }
 
 body.theme-dark #screen-config .card,
-body.theme-dark #screen-config .home-category-card,
 body.theme-dark #screen-config .home-social-banner,
 body.theme-dark #screen-config .weekly-featured,
 body.theme-dark #screen-config .seasonal-featured {
@@ -18370,14 +17239,7 @@ body.theme-dark .home-hero-title {
 }
 
 body.theme-dark .home-hero-text,
-body.theme-dark .home-category-head .card-desc,
 body.theme-dark .home-social-intro,
-body.theme-dark .home-extras-intro,
-body.theme-dark .home-extras-copy,
-body.theme-dark .home-social-suite-head p,
-body.theme-dark .home-social-suite-note,
-body.theme-dark .home-social-launch-copy,
-body.theme-dark .home-social-launch-note,
 body.theme-dark .home-social-note p {
   color: #b8c9e5 !important;
 }
@@ -18475,7 +17337,6 @@ body:not(.theme-dark) #screen-config {
 }
 
 body:not(.theme-dark) #screen-config .card,
-body:not(.theme-dark) #screen-config .home-category-card,
 body:not(.theme-dark) #screen-config .home-progress-card,
 body:not(.theme-dark) #screen-config .home-generations-card,
 body:not(.theme-dark) #screen-config .home-social-banner,
@@ -18491,8 +17352,7 @@ body:not(.theme-dark) #screen-config .seasonal-featured {
   backdrop-filter: blur(18px) saturate(1.06);
 }
 
-body:not(.theme-dark) #screen-config .card::before,
-body:not(.theme-dark) #screen-config .home-category-card::before {
+body:not(.theme-dark) #screen-config .card::before{
   height: 5px !important;
   background: linear-gradient(90deg, #ff7b63 0%, #ffd45f 34%, #58a7ff 68%, #2f76ff 100%) !important;
 }
@@ -18573,63 +17433,15 @@ body:not(.theme-dark) .hero-pokeball {
     0 34px 62px rgba(15, 34, 66, 0.18),
     inset 0 -18px 30px rgba(23, 52, 95, 0.08) !important;
 }
-
-body:not(.theme-dark) .home-categories {
-  gap: 28px !important;
-}
-
-body:not(.theme-dark) .home-category-card {
-  padding: 30px !important;
-  gap: 24px !important;
-}
-
-body:not(.theme-dark) .home-category-icon {
-  width: 52px !important;
-  height: 52px !important;
-  margin-bottom: 12px !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(176, 201, 240, 0.42);
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.88), rgba(227,238,255,0.84)) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 12px 24px rgba(28, 57, 103, 0.08) !important;
-}
-
-body:not(.theme-dark) .home-category-head .card-title {
-  font-size: 0.94rem !important;
-}
-
-body:not(.theme-dark) .home-category-head .card-desc,
 body:not(.theme-dark) .home-social-intro,
-body:not(.theme-dark) .home-extras-intro,
-body:not(.theme-dark) .home-extras-copy,
-body:not(.theme-dark) .home-social-suite-head p,
-body:not(.theme-dark) .home-social-suite-note,
-body:not(.theme-dark) .home-social-launch-copy,
-body:not(.theme-dark) .home-social-launch-note,
 body:not(.theme-dark) .home-social-note p {
   color: #4d6889 !important;
 }
-
-body:not(.theme-dark) .home-social-suite,
-body:not(.theme-dark) .home-social-block,
-body:not(.theme-dark) .home-social-note,
-body:not(.theme-dark) .home-extras-block,
-body:not(.theme-dark) .home-extras-toolbox,
-body:not(.theme-dark) #mode-pro-hub {
+body:not(.theme-dark) .home-social-note{
   border: 1px solid rgba(178, 204, 240, 0.34) !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.58), rgba(244,248,255,0.44)) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.34) !important;
-}
-
-body:not(.theme-dark) .home-mode-grid > button {
-  min-height: 74px !important;
-  border-radius: 20px !important;
-  box-shadow: 0 14px 28px rgba(18, 38, 70, 0.08) !important;
-}
-
-body:not(.theme-dark) .home-mode-grid > button:hover {
-  box-shadow: 0 18px 34px rgba(18, 38, 70, 0.12) !important;
 }
 
 body:not(.theme-dark) .home-social-banner {
@@ -18645,7 +17457,6 @@ body.theme-dark .global-nav {
 }
 
 body.theme-dark #screen-config .card,
-body.theme-dark #screen-config .home-category-card,
 body.theme-dark #screen-config .home-progress-card,
 body.theme-dark #screen-config .home-generations-card,
 body.theme-dark #screen-config .home-social-banner,
@@ -18708,7 +17519,6 @@ body:not(.theme-dark) .btn-ghost {
 
 /* Keep the background more visible without redesigning the controls */
 body:not(.theme-dark) #screen-config .card,
-body:not(.theme-dark) #screen-config .home-category-card,
 body:not(.theme-dark) #screen-config .home-progress-card,
 body:not(.theme-dark) #screen-config .home-generations-card,
 body:not(.theme-dark) #screen-config .home-social-banner,
@@ -18851,306 +17661,9 @@ body.theme-dark .team-builder-export-output {
   border-radius: 16px;
   font-weight: 900;
 }
-
-.home-priority-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.home-priority-card {
-  padding: 18px 18px 16px;
-  border-radius: 22px;
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  gap: 12px;
-  border: 1px solid rgba(154, 180, 221, 0.46);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,248,255,0.96));
-  box-shadow: 0 18px 34px rgba(17, 38, 72, 0.08);
-}
-
-.home-priority-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(255,255,255,0.42), transparent 34%);
-  pointer-events: none;
-}
-
-.home-priority-kicker {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  width: fit-content;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(18, 52, 99, 0.08);
-  color: #365887;
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.home-priority-card h3 {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  color: #13335d;
-  font-size: 1.12rem;
-}
-
-.home-priority-card p {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  color: #526887;
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.home-priority-actions {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.home-priority-actions .btn-red,
-.home-priority-actions .btn-blue,
-.home-priority-actions .btn-ghost {
-  min-height: 40px;
-  padding: 10px 14px;
-  border-radius: 14px;
-}
-
-.home-priority-actions .home-primary-cta {
-  min-width: 172px;
-}
-
-.home-priority-actions .home-secondary-cta {
-  min-width: 118px;
-}
-
-.home-priority-card-play {
-  background:
-    radial-gradient(circle at top right, rgba(255, 112, 81, 0.18), transparent 36%),
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,248,255,0.96));
-}
-
-.home-priority-card-social {
-  background:
-    radial-gradient(circle at top right, rgba(61, 132, 255, 0.18), transparent 36%),
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,248,255,0.96));
-}
-
-.home-priority-card-lab {
-  background:
-    radial-gradient(circle at top right, rgba(255, 203, 73, 0.18), transparent 36%),
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,248,255,0.96));
-}
-
-.home-priority-card-progress {
-  background:
-    radial-gradient(circle at top right, rgba(111, 201, 149, 0.18), transparent 36%),
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,248,255,0.96));
-}
-
-#screen-config .home-priority-card-play,
-#screen-config .home-priority-card-social {
-  border-color: rgba(112, 147, 210, 0.32);
-  box-shadow: 0 22px 38px rgba(17, 40, 80, 0.1), inset 0 1px 0 rgba(255,255,255,0.62);
-}
-
-#screen-config .home-priority-card-play h3,
-#screen-config .home-priority-card-social h3,
-#screen-config #home-play .card-title,
-#screen-config #home-social .card-title {
-  color: #102f58;
-}
-
-#screen-config .home-priority-card-play .home-priority-kicker,
-#screen-config .home-priority-card-social .home-priority-kicker {
-  background: rgba(20, 59, 113, 0.1);
-  color: #2f5588;
-}
-
-.home-universes {
-  padding: 18px 20px;
-  border-radius: 22px;
-}
-
-.home-universes-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.home-universe-tile {
-  border: 1px solid rgba(155, 179, 220, 0.48);
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border-radius: 18px;
-  padding: 14px 14px 13px;
-  text-align: left;
-  display: grid;
-  gap: 4px;
-  color: #15345d;
-  cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-}
-
-.home-universe-tile:hover {
-  transform: translateY(-2px);
-  border-color: rgba(73, 124, 218, 0.5);
-  box-shadow: 0 14px 22px rgba(27, 63, 122, 0.1);
-}
-
-.home-universe-tile span {
-  color: #5e7598;
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.home-universe-tile strong {
-  font-size: 0.88rem;
-  line-height: 1.25;
-}
-
-.home-universe-tile.is-active {
-  background: linear-gradient(180deg, #193c69 0%, #112847 100%);
-  border-color: rgba(14, 36, 67, 0.8);
-}
-
-.home-universe-tile.is-active span,
-.home-universe-tile.is-active strong {
-  color: #fff;
-}
-
-.home-categories {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.home-category-card {
-  padding: 18px 18px 16px;
-  border-radius: 22px;
-  gap: 12px;
-}
-
-#screen-config #home-play,
-#screen-config #home-social {
-  border-color: rgba(118, 156, 218, 0.26);
-  box-shadow: 0 20px 38px rgba(17, 40, 80, 0.1), inset 0 1px 0 rgba(255,255,255,0.58);
-}
-
-#screen-config #home-play {
-  background:
-    radial-gradient(circle at top right, rgba(255, 119, 87, 0.12), transparent 38%),
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247, 249, 255, 0.96));
-}
-
-#screen-config #home-social {
-  background:
-    radial-gradient(circle at top right, rgba(84, 142, 255, 0.12), transparent 38%),
-    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247, 249, 255, 0.96));
-}
-
-#screen-config #home-play .home-category-note,
-#screen-config #home-social .home-category-note {
-  color: #506887;
-}
-
-#screen-config #home-play .home-mode-grid > button:first-child,
-#screen-config #home-social .home-mode-grid > button:first-child {
-  box-shadow: 0 16px 28px rgba(17, 40, 80, 0.1);
-}
-
-#screen-config #home-play .home-mode-grid > .home-primary-cta,
-#screen-config #home-social .home-mode-grid > .home-primary-cta {
-  min-height: 78px;
-}
-
-#screen-config .home-main-cta {
-  box-shadow:
-    0 18px 30px rgba(17, 40, 80, 0.12),
-    0 0 0 1px rgba(255,255,255,0.22) inset;
-  transform: translateY(-1px);
-}
-
-#screen-config .home-main-cta:hover,
-#screen-config .home-main-cta:focus-visible {
-  box-shadow:
-    0 22px 34px rgba(17, 40, 80, 0.16),
-    0 0 0 1px rgba(255,255,255,0.28) inset;
-}
-
-#screen-config #home-play .home-mode-grid > .btn-red:not(.home-primary-cta) {
-  border-color: rgba(214, 150, 126, 0.2);
-  box-shadow: 0 10px 18px rgba(17, 40, 80, 0.06);
-  filter: saturate(0.94);
-}
-
-#screen-config #home-social .home-mode-grid > .home-primary-cta:not(.home-main-cta) {
-  box-shadow: 0 14px 24px rgba(17, 40, 80, 0.09);
-}
-
-#screen-config #home-champions .home-primary-cta,
-#screen-config #home-collection .home-primary-cta,
-#screen-config #home-extras .home-primary-cta {
-  min-height: 68px;
-}
-
-#screen-config #home-extras .home-secondary-cta {
-  opacity: 0.92;
-}
-
-#screen-config #home-champions,
-#screen-config #home-collection {
-  border-color: rgba(138, 169, 219, 0.16);
-  box-shadow: 0 14px 28px rgba(17, 40, 80, 0.07), inset 0 1px 0 rgba(255,255,255,0.54);
-}
-
-#screen-config #home-extras {
-  border-color: rgba(138, 169, 219, 0.12);
-  background: linear-gradient(180deg, rgba(252,253,255,0.96), rgba(246,249,255,0.92));
-  box-shadow: 0 10px 20px rgba(17, 40, 80, 0.05), inset 0 1px 0 rgba(255,255,255,0.56);
-}
-
-#screen-config #home-extras .card-title,
-#screen-config #home-extras .card-desc,
-#screen-config #home-extras .home-category-note {
-  opacity: 0.86;
-}
-
-#screen-config .home-priority-kicker,
-#screen-config .home-universe-tile span {
-  opacity: 0.72;
-}
-
-#screen-config .home-priority-card p,
-#screen-config .home-category-head .card-desc,
-#screen-config .home-category-note,
-#screen-config .home-universes .card-desc,
 #screen-config .home-generations-card .card-desc,
-#screen-config .home-progress-card .card-desc,
-#screen-config #mode-pro-desc {
+#screen-config .home-progress-card .card-desc{
   color: #6a82a4;
-}
-
-#screen-config .home-priority-card p,
-#screen-config .home-category-note,
-#screen-config #mode-pro-desc {
-  font-size: 0.85rem;
-  line-height: 1.42;
-}
-
-#screen-config .home-universe-tile strong {
-  color: #2a456c;
 }
 
 #screen-config .hero-chip {
@@ -19160,71 +17673,21 @@ body.theme-dark .team-builder-export-output {
 }
 
 #screen-config .home-generations-card,
-#screen-config .home-progress-card,
-#screen-config .home-universes,
-#screen-config #home-extras {
+#screen-config .home-progress-card{
   filter: saturate(0.96);
 }
-
-#screen-config .home-category-card:not(#home-play):not(#home-social) .home-category-icon,
-#screen-config .home-priority-card:not(.home-priority-card-play):not(.home-priority-card-social) .home-priority-kicker {
-  opacity: 0.84;
-}
-
-#screen-config .home-secondary-cta {
-  opacity: 0.9;
-}
-
-#screen-config .home-universes,
 #screen-config .home-generations-card,
 #screen-config .home-progress-card {
   border-color: rgba(138, 169, 219, 0.12);
   box-shadow: 0 12px 24px rgba(17, 40, 80, 0.06), inset 0 1px 0 rgba(255,255,255,0.52);
 }
-
-#screen-config .home-universes .card-title,
 #screen-config .home-generations-card .card-title,
 #screen-config .home-progress-card .card-title {
   font-size: 1.02rem;
 }
-
-#screen-config .home-universes .card-desc,
 #screen-config .home-generations-card .card-desc,
 #screen-config .home-progress-card .card-desc {
   color: #6780a3;
-}
-
-#screen-config .home-universe-tile {
-  opacity: 0.92;
-}
-
-#screen-config .home-universe-tile:not(.is-active) {
-  background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(246,249,255,0.92));
-}
-
-
-.home-category-head {
-  align-items: start;
-  gap: 12px;
-}
-
-.home-category-head .card-title {
-  font-size: 1.18rem;
-}
-
-.home-category-head .card-desc,
-.home-category-note {
-  max-width: 56ch;
-}
-
-.home-mode-grid {
-  gap: 10px;
-}
-
-.home-mode-grid > button {
-  min-height: 44px;
-  border-radius: 14px;
-  font-weight: 900;
 }
 
 .home-progress-card,
@@ -19232,46 +17695,13 @@ body.theme-dark .team-builder-export-output {
   border-radius: 22px;
 }
 
-body.theme-dark .home-priority-card,
-body.theme-dark .home-universes,
-body.theme-dark .home-universe-tile {
-  background: linear-gradient(180deg, rgba(16, 28, 49, 0.92), rgba(11, 23, 41, 0.88));
-  border-color: rgba(96, 131, 194, 0.24);
-}
-
-body.theme-dark .home-priority-card h3,
-body.theme-dark .home-universe-tile strong {
-  color: #edf4ff;
-}
-
-body.theme-dark .home-priority-card p,
-body.theme-dark .home-priority-kicker,
-body.theme-dark .home-universe-tile span {
-  color: #b8c9e5;
-}
-
-body.theme-dark .home-universe-tile.is-active {
-  background: linear-gradient(180deg, #264e84 0%, #16345a 100%);
-}
-
 @media (max-width: 1080px) {
   .home-hero {
     grid-template-columns: 1fr;
   }
-
-  .home-priority-grid,
-  .home-universes-grid,
-  .home-categories {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
-  .home-priority-grid,
-  .home-universes-grid,
-  .home-categories {
-    grid-template-columns: 1fr;
-  }
 
   .home-hero {
     padding: 22px 20px;
@@ -19283,71 +17713,36 @@ body.theme-dark .home-universe-tile.is-active {
   gap: 20px;
 }
 
-#screen-config > .card,
-#screen-config .home-category-card,
-#screen-config .home-priority-card,
-#screen-config .home-universes {
+#screen-config > .card{
   box-shadow: 0 16px 34px rgba(19, 41, 76, 0.08);
 }
 
 #screen-config .home-hero,
 #screen-config .home-generations-card,
-#screen-config .home-progress-card,
-#screen-config .home-universes,
-#screen-config .home-priority-card,
-#screen-config .home-category-card {
+#screen-config .home-progress-card{
   border-radius: 24px;
 }
 
-#screen-config .home-section-head,
-#screen-config .home-category-head {
+#screen-config .home-section-head{
   margin-bottom: 0;
 }
 
 #screen-config .home-generations-card,
-#screen-config .home-progress-card,
-#screen-config .home-universes {
+#screen-config .home-progress-card{
   padding: 18px 20px;
 }
-
-#screen-config .home-priority-grid,
-#screen-config .home-universes-grid,
-#screen-config .home-categories {
-  gap: 16px;
-}
-
-#screen-config .home-priority-card,
-#screen-config .home-category-card {
-  min-height: 100%;
-}
-
-#screen-config .home-mode-grid > button,
-#screen-config .home-priority-actions .btn-red,
-#screen-config .home-priority-actions .btn-blue,
-#screen-config .home-priority-actions .btn-ghost,
 #screen-config .home-hero-actions > .btn-red,
 #screen-config .home-hero-actions > .btn-blue,
 #screen-config .home-hero-actions > .btn-ghost {
   box-shadow: none;
 }
-
-#screen-config .home-mode-grid > button {
-  min-height: 46px;
-}
-
-#screen-config .home-priority-card p,
-#screen-config .home-category-head .card-desc,
-#screen-config .home-category-note,
 #screen-config .home-hero-text {
   color: #536986;
 }
 
 body.theme-dark #screen-config .home-hero,
 body.theme-dark #screen-config .home-generations-card,
-body.theme-dark #screen-config .home-progress-card,
-body.theme-dark #screen-config .home-universes,
-body.theme-dark #screen-config .home-priority-card,
-body.theme-dark #screen-config .home-category-card {
+body.theme-dark #screen-config .home-progress-card{
   box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
 }
 
@@ -20791,11 +19186,8 @@ body.theme-dark #screen-draft-arena .draft-summary-card b {
 }
 
 body:not(.theme-dark) .card,
-body:not(.theme-dark) .home-category-card,
-body:not(.theme-dark) .home-priority-card,
 body:not(.theme-dark) .home-progress-card,
 body:not(.theme-dark) .home-generations-card,
-body:not(.theme-dark) .home-universes,
 body:not(.theme-dark) .team-builder-screen-card,
 body:not(.theme-dark) .team-builder-module > .home-builder-head,
 body:not(.theme-dark) .team-builder-module > .home-builder-summary,
@@ -20811,8 +19203,6 @@ body:not(.theme-dark) #screen-draft-arena .draft-team-card {
 }
 
 body:not(.theme-dark) .card:hover,
-body:not(.theme-dark) .home-category-card:hover,
-body:not(.theme-dark) .home-priority-card:hover,
 body:not(.theme-dark) .team-builder-module > .home-builder-grid:hover,
 body:not(.theme-dark) .team-builder-module > .home-builder-editor:hover,
 body:not(.theme-dark) #screen-draft-arena .draft-option-card:hover,
@@ -20821,9 +19211,6 @@ body:not(.theme-dark) #screen-draft-arena .draft-team-card:hover {
 }
 
 body:not(.theme-dark) .card,
-body:not(.theme-dark) .home-category-card,
-body:not(.theme-dark) .home-priority-card,
-body:not(.theme-dark) .home-universes,
 body:not(.theme-dark) .team-builder-screen-card,
 body:not(.theme-dark) #screen-draft-arena .draft-card,
 body:not(.theme-dark) #screen-draft-arena .draft-panel {
@@ -20831,8 +19218,6 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel {
 }
 
 body:not(.theme-dark) .card-title,
-body:not(.theme-dark) .home-category-head .card-title,
-body:not(.theme-dark) .home-priority-card h3,
 body:not(.theme-dark) .team-builder-export-head h4,
 body:not(.theme-dark) #screen-draft-arena .draft-panel h3 {
   color: #16385f !important;
@@ -20840,9 +19225,7 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel h3 {
 }
 
 body:not(.theme-dark) .card-desc,
-body:not(.theme-dark) .home-category-note,
 body:not(.theme-dark) .home-hero-text,
-body:not(.theme-dark) .home-priority-card p,
 body:not(.theme-dark) .team-builder-export-head p,
 body:not(.theme-dark) #screen-draft-arena .draft-card-meta {
   color: #59718f !important;
@@ -20889,23 +19272,6 @@ body:not(.theme-dark) textarea:focus-visible {
 body:not(.theme-dark) .btn-ghost {
   border-color: rgba(173, 198, 236, 0.82) !important;
   color: #355070 !important;
-}
-
-body:not(.theme-dark) .home-priority-card,
-body:not(.theme-dark) .home-universe-tile,
-body:not(.theme-dark) .home-category-card {
-  backdrop-filter: blur(10px);
-}
-
-body:not(.theme-dark) .home-universe-tile {
-  border-radius: 18px;
-  border: 1px solid rgba(168, 191, 227, 0.42);
-  box-shadow: 0 10px 24px rgba(19, 41, 76, 0.08);
-}
-
-body:not(.theme-dark) .home-universe-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 32px rgba(19, 41, 76, 0.12);
 }
 
 body:not(.theme-dark) .team-builder-export-output,
@@ -20957,28 +19323,17 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel {
 
 .ranking-head-actions,
 .home-hero-actions,
-.home-priority-actions,
 .team-builder-export-actions {
   min-width: 0;
 }
 
 .home-hero-copy,
-.home-category-head,
-.home-priority-card,
-.home-universes,
 .team-builder-screen-card,
 #screen-draft-arena .draft-card {
   min-width: 0;
 }
 
 @media (max-width: 1180px) {
-  .home-priority-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .home-universes-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 
   .team-builder-screen-card .team-builder-module {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 0.92fr);
@@ -21015,12 +19370,6 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel {
 
   .home-hero-text {
     max-width: none !important;
-  }
-
-  .home-priority-grid,
-  .home-universes-grid,
-  .home-categories {
-    gap: 14px !important;
   }
 
   .team-builder-screen-card {
@@ -21078,27 +19427,9 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel {
 
   .home-hero-actions > .btn-red,
   .home-hero-actions > .btn-blue,
-  .home-hero-actions > .btn-ghost,
-  .home-priority-actions .btn-red,
-  .home-priority-actions .btn-blue,
-  .home-priority-actions .btn-ghost {
+  .home-hero-actions > .btn-ghost{
     width: 100%;
     min-width: 0 !important;
-  }
-
-  .home-priority-grid,
-  .home-universes-grid,
-  .home-categories {
-    grid-template-columns: 1fr !important;
-  }
-
-  .home-mode-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .home-mode-grid > button {
-    min-height: 52px !important;
-    padding: 12px 14px !important;
   }
 
   .team-builder-screen-card {
@@ -22810,15 +21141,6 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
   #screen-config {
     gap: 16px;
   }
-
-  #screen-config .home-priority-grid,
-  #screen-config .home-universes-grid,
-  #screen-config .home-categories {
-    gap: 14px !important;
-  }
-
-  #screen-config .home-category-card,
-  #screen-config .home-universes,
   #screen-config .home-generations-card,
   #screen-config .home-progress-card {
     padding: 20px 22px !important;
@@ -23016,21 +21338,9 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
   #screen-config {
     gap: 15px;
   }
-
-  #screen-config .home-universes,
   #screen-config .home-generations-card,
-  #screen-config .home-progress-card,
-  #screen-config .home-category-card {
+  #screen-config .home-progress-card{
     padding: 18px 19px !important;
-  }
-
-  #screen-config .home-universes-grid,
-  #screen-config .home-categories {
-    gap: 12px !important;
-  }
-
-  #screen-config .home-universe-tile {
-    padding: 14px 14px 13px !important;
   }
 
   #screen-team-builder .team-builder-screen-card {
@@ -23725,12 +22035,7 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
 #screen-achievements .card,
 #screen-history .card,
 #screen-teams .teams-screen-card,
-.home-social-suite,
-.home-social-launch,
-.home-social-block,
 .home-social-note,
-.home-extras-block,
-.home-extras-toolbox,
 .weekly-featured,
 .seasonal-featured {
   border-color: rgba(118, 156, 218, 0.18);
@@ -23751,15 +22056,7 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
 #screen-history .card-desc,
 #screen-teams .card-desc,
 .home-social-intro,
-.home-social-suite-head p,
-.home-social-suite-note,
-.home-social-launch-copy,
-.home-social-launch-note,
-.home-social-note p,
-.home-extras-intro,
-.home-extras-copy,
-.home-extras-toolbox-head p,
-.home-extras-toolbox-note {
+.home-social-note p{
   color: #5c7398;
 }
 
@@ -23785,9 +22082,7 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
 #screen-multiplayer .multiplayer-result-summary,
 #screen-achievements .achievement-card,
 #screen-history .match-history-item,
-#screen-teams .team-card,
-.home-social-suite .home-mode-grid > button,
-.home-extras-focus-grid > button {
+#screen-teams .team-card{
   border-color: rgba(120, 159, 221, 0.18);
   box-shadow: 0 16px 30px rgba(17, 40, 80, 0.08), inset 0 1px 0 rgba(255,255,255,0.48);
 }
@@ -23795,9 +22090,7 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
 #screen-multiplayer .multiplayer-player-card:hover,
 #screen-achievements .achievement-card:hover,
 #screen-history .match-history-item:hover,
-#screen-teams .team-card:hover,
-.home-social-suite .home-mode-grid > button:hover,
-.home-extras-focus-grid > button:hover {
+#screen-teams .team-card:hover{
   box-shadow: 0 22px 42px rgba(17, 40, 80, 0.12), inset 0 1px 0 rgba(255,255,255,0.56);
 }
 
@@ -23807,12 +22100,7 @@ body.theme-dark #screen-multiplayer .multiplayer-panel,
 body.theme-dark #screen-achievements .card,
 body.theme-dark #screen-history .card,
 body.theme-dark #screen-teams .teams-screen-card,
-body.theme-dark .home-social-suite,
-body.theme-dark .home-social-launch,
-body.theme-dark .home-social-block,
 body.theme-dark .home-social-note,
-body.theme-dark .home-extras-block,
-body.theme-dark .home-extras-toolbox,
 body.theme-dark .weekly-featured,
 body.theme-dark .seasonal-featured {
   box-shadow: 0 20px 42px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
@@ -23823,25 +22111,19 @@ body.theme-dark .seasonal-featured {
 #screen-achievements .card-title,
 #screen-history .card-title,
 #screen-teams .card-title,
-.home-social-suite-head h4,
-.home-extras-toolbox-head h4,
 .weekly-featured-banner h3 {
   color: #163457;
 }
 
 #screen-multiplayer .multiplayer-actions-grid > .btn-red,
 #screen-multiplayer .multiplayer-join-row > .btn-blue,
-.weekly-featured-btn,
-.home-social-launch .home-mode-grid > button:first-child,
-.home-extras-focus-grid > button {
+.weekly-featured-btn{
   box-shadow: 0 14px 28px rgba(17, 40, 80, 0.12);
 }
 
 #screen-multiplayer .multiplayer-actions-grid > .btn-red:hover,
 #screen-multiplayer .multiplayer-join-row > .btn-blue:hover,
-.weekly-featured-btn:hover,
-.home-social-launch .home-mode-grid > button:first-child:hover,
-.home-extras-focus-grid > button:hover {
+.weekly-featured-btn:hover{
   box-shadow: 0 18px 34px rgba(17, 40, 80, 0.16);
 }
 
@@ -23885,16 +22167,12 @@ body.theme-dark .seasonal-featured {
 #screen-achievements .achievement-card p,
 #screen-teams .card-desc,
 #screen-multiplayer .multiplayer-player-head span,
-#screen-multiplayer .multiplayer-player-stats,
-.home-social-launch-note,
-.home-extras-toolbox-note {
+#screen-multiplayer .multiplayer-player-stats{
   color: #6a82a7;
 }
 
 #screen-multiplayer .multiplayer-secret-card,
-.weekly-featured-status,
-.home-social-suite-note,
-.home-extras-focus-tag {
+.weekly-featured-status{
   border-color: rgba(132, 166, 223, 0.18);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
 }
@@ -23902,8 +22180,6 @@ body.theme-dark .seasonal-featured {
 #screen-multiplayer .multiplayer-secret-card,
 #screen-multiplayer .multiplayer-target-card,
 #screen-teams .team-card,
-.home-social-suite .home-mode-grid > button,
-.home-extras-focus-grid > button,
 .weekly-featured-btn {
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
@@ -23911,9 +22187,7 @@ body.theme-dark .seasonal-featured {
 #screen-multiplayer .multiplayer-secret-card:focus-within,
 #screen-multiplayer .multiplayer-target-card:hover,
 #screen-teams .team-card:hover,
-.weekly-featured-btn:focus-visible,
-.home-social-suite .home-mode-grid > button:focus-visible,
-.home-extras-focus-grid > button:focus-visible {
+.weekly-featured-btn:focus-visible{
   border-color: rgba(100, 145, 226, 0.3);
   box-shadow:
     0 0 0 3px rgba(99, 145, 226, 0.12),
@@ -23926,7 +22200,6 @@ body.theme-dark .seasonal-featured {
 #screen-multiplayer .multiplayer-secret-card,
 #screen-teams .teams-empty,
 .home-social-note,
-.home-extras-toolbox,
 .weekly-featured-banner {
   display: grid;
   gap: 12px;
@@ -23937,7 +22210,6 @@ body.theme-dark .seasonal-featured {
 #screen-multiplayer .multiplayer-panel .card-desc,
 #screen-teams .teams-empty,
 .home-social-note p,
-.home-extras-toolbox-note,
 .weekly-featured-banner p {
   color: #6a82a7;
   line-height: 1.55;
@@ -23948,7 +22220,6 @@ body.theme-dark .seasonal-featured {
 #screen-multiplayer #multiplayer-result-box h3,
 #screen-teams .teams-screen-card .card-title,
 .home-social-note h3,
-.home-extras-toolbox-head h4,
 .weekly-featured-banner h3 {
   margin-bottom: 2px;
 }
@@ -23958,7 +22229,6 @@ body.theme-dark .seasonal-featured {
 #screen-multiplayer .multiplayer-secret-card,
 #screen-teams .teams-empty,
 .home-social-note,
-.home-extras-toolbox,
 .weekly-featured-banner {
   padding: 16px 18px;
   border-radius: 20px;
@@ -23971,7 +22241,6 @@ body.theme-dark #screen-multiplayer .multiplayer-target-card,
 body.theme-dark #screen-multiplayer .multiplayer-secret-card,
 body.theme-dark #screen-teams .teams-empty,
 body.theme-dark .home-social-note,
-body.theme-dark .home-extras-toolbox,
 body.theme-dark .weekly-featured-banner {
   background: linear-gradient(180deg, rgba(25, 43, 72, 0.84), rgba(19, 33, 58, 0.88));
   border-color: rgba(132, 166, 223, 0.16);
@@ -24467,28 +22736,14 @@ body.theme-dark #multiplayer-win-content .multiplayer-postmatch-value {
   #screen-multiplayer .multiplayer-secret-card,
   #screen-teams .teams-empty,
   .home-social-note,
-  .home-extras-toolbox,
   .weekly-featured-banner {
     padding: 14px 15px;
     gap: 10px;
   }
-
-  .home-social-suite,
-  .home-social-launch,
-  .home-social-block,
-  .home-extras-block,
-  .home-extras-toolbox,
   .weekly-featured,
   .seasonal-featured {
     padding: 16px;
   }
-
-.home-social-block .home-mode-grid,
-.home-extras-block .home-mode-grid,
-.home-extras-coming-grid,
-.home-extras-focus-grid {
-  gap: 10px;
-}
 }
 
 /* Final Draft battle box polish */

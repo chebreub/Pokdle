@@ -16,13 +16,14 @@
   <meta name="twitter:description" content="Devine le Pokémon mystère du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='white'/%3E%3Cpath d='M2 32a30 30 0 0 1 60 0Z' fill='%23ef4438'/%3E%3Cpath d='M2 32h60' stroke='%231b315f' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='white' stroke='%231b315f' stroke-width='6'/%3E%3C/svg%3E">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="preconnect" href="https://pokeapi.co" crossorigin>
   <link rel="preconnect" href="https://cdn.emulatorjs.org" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="home.css">
 </head>
 <body>
 
@@ -52,30 +53,83 @@
 
   <main>
     <nav class="global-nav" id="global-nav" aria-label="Navigation principale">
-  <button id="nav-config" class="nav-pill active" onclick="goToConfig()">Accueil</button>
-  <button id="nav-game" class="nav-pill" onclick="scrollToHomeCategory('play')">Jouer</button>
-  <button id="nav-social" class="nav-pill" onclick="scrollToHomeCategory('social')">Social</button>
-  <button id="nav-champions" class="nav-pill" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
-  <button id="nav-collection" class="nav-pill" onclick="scrollToHomeCategory('collection')">Collection</button>
-  <button id="nav-extras" class="nav-pill" onclick="scrollToHomeCategory('extras')">Extras</button>
+  <button id="nav-config" class="nav-pill active" type="button" onclick="goToConfig()">Accueil</button>
+
+  <div class="nav-group">
+    <button id="nav-game" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Jouer</button>
+    <div class="nav-dropdown" role="menu">
+      <button type="button" onclick="startDailyGame()"><span class="nav-dd-ico">📅</span>Pokémon du jour</button>
+      <button type="button" onclick="startNormalGame()"><span class="nav-dd-ico">♾️</span>Mode classique illimité</button>
+      <button type="button" onclick="startPartyMode()"><span class="nav-dd-ico">🎲</span>Party Pokémon</button>
+      <button type="button" onclick="startSilhouetteGame()"><span class="nav-dd-ico">🕶️</span>Silhouette</button>
+      <button type="button" onclick="startPixelGame()"><span class="nav-dd-ico">🧩</span>Pixelisé</button>
+      <button type="button" onclick="startMysteryStatGame()"><span class="nav-dd-ico">🧠</span>Stat mystère</button>
+      <button type="button" onclick="startCryGame()"><span class="nav-dd-ico">🔊</span>Cri du Pokémon</button>
+      <button type="button" onclick="startDescriptionMode()"><span class="nav-dd-ico">📝</span>Description</button>
+      <button type="button" onclick="openOddOneOutMode()"><span class="nav-dd-ico">🔍</span>Intrus</button>
+      <button type="button" onclick="startQuizGame()"><span class="nav-dd-ico">❓</span>Quiz</button>
+      <button type="button" onclick="startWeightBattle()"><span class="nav-dd-ico">⚖️</span>Duel de poids</button>
+      <button type="button" onclick="startEvolutionChainGame()"><span class="nav-dd-ico">🔁</span>Évolution</button>
+      <button type="button" onclick="startPokedexOrderGame()"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <button id="nav-social" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Social</button>
+    <div class="nav-dropdown" role="menu">
+      <button type="button" onclick="openMultiplayerMode()"><span class="nav-dd-ico">🆚</span>Duel 1v1</button>
+      <button type="button" onclick="openStatClashMode()"><span class="nav-dd-ico">📊</span>Stat Clash 1v1</button>
+      <button type="button" onclick="showChallengePanel()"><span class="nav-dd-ico">🤝</span>Envoyer un défi</button>
+    </div>
+  </div>
+
+  <button id="nav-collection" class="nav-pill" type="button" onclick="openPokedexMode()">Pokédex</button>
+
+  <div class="nav-group">
+    <button id="nav-extras" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Outils</button>
+    <div class="nav-dropdown" role="menu">
+      <button type="button" onclick="openTeamBuilderScreen()"><span class="nav-dd-ico">🧱</span>Team Builder</button>
+      <button type="button" onclick="openTeamsScreen()"><span class="nav-dd-ico">🧩</span>Mes teams</button>
+      <button type="button" onclick="openDraftArenaMode()"><span class="nav-dd-ico">🎴</span>Draft Arènes</button>
+      <button type="button" onclick="openTypeChartScreen()"><span class="nav-dd-ico">🧮</span>Table des types</button>
+      <button type="button" onclick="openEmulatorMode()"><span class="nav-dd-ico">🕹️</span>Émulateur</button>
+      <button type="button" onclick="openGamesRankingMode()"><span class="nav-dd-ico">🏆</span>Classement jeux</button>
+      <button type="button" onclick="openRankingMode()"><span class="nav-dd-ico">📋</span>Mode classement</button>
+      <button type="button" onclick="openMatchHistoryScreen()"><span class="nav-dd-ico">🕘</span>Historique</button>
+    </div>
+  </div>
+
+  <button class="nav-pill" type="button" onclick="openAchievementsScreen()">Succès</button>
+  <button class="nav-pill" type="button" onclick="openProfileScreen()">Profil</button>
 </nav>
 
     <div id="screen-config">
 
+      <!-- Sélecteur de générations en tête de la home : active avant de jouer -->
+      <div class="card home-generations-card home-gens-card">
+        <div class="home-section-head">
+          <div>
+            <h2 class="card-title">🧬 Générations</h2>
+            <p class="card-desc">Choisis les générations à inclure dans les parties.</p>
+          </div>
+          <div class="home-gens-actions">
+            <button class="btn-ghost btn-tiny" type="button" onclick="selectAllGenerations()">Tout</button>
+            <button class="btn-ghost btn-tiny" type="button" onclick="clearGenerationSelection()">Aucune</button>
+          </div>
+        </div>
+        <div class="gen-grid" id="gen-grid"></div>
+      </div>
+
+      <!-- Hero focalisé sur le mode du jour -->
       <section class="home-hero card">
         <div class="home-hero-copy">
-          <div class="home-hero-kicker">Pokédle 2026</div>
-          <h2 class="home-hero-title">Une porte d’entrée claire pour jouer, défier un ami et faire progresser ton parcours.</h2>
-          <p class="home-hero-text">Va à l’essentiel dès l’accueil, puis retrouve les autres modes et outils dans les univers du site.</p>
+          <div class="home-hero-kicker">🔍 Pokémon mystère du jour</div>
+          <h2 class="home-hero-title">Devine la cible du jour avant tout le monde.</h2>
+          <p class="home-hero-text">Une seule cible quotidienne, identique pour tous les joueurs. Plus tu joues, plus ta série grimpe.</p>
           <div class="home-hero-actions">
-            <button class="btn-red home-hero-cta" onclick="scrollToHomeCategory('play')">Jouer</button>
-            <button class="btn-blue" type="button" onclick="scrollToHomeCategory('social')">Défier un ami</button>
-            <button class="btn-ghost" type="button" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
-          </div>
-          <div class="home-hero-highlights">
-            <span class="hero-chip">Jouer</span>
-            <span class="hero-chip">Social</span>
-            <span class="hero-chip">Progression</span>
+            <button class="btn-red home-hero-cta" onclick="startDailyGame()">▶ Jouer maintenant</button>
+            <button class="btn-blue" type="button" onclick="startPartyMode()">🎲 Party</button>
+            <button class="btn-ghost" type="button" onclick="openMultiplayerMode()">🆚 Duel 1v1</button>
           </div>
         </div>
         <div class="home-hero-visual" aria-hidden="true">
@@ -90,162 +144,91 @@
         </div>
       </section>
 
-      <section class="home-priority-grid" aria-label="Entrées principales">
-        <article class="card home-priority-card home-priority-card-play">
-          <span class="home-priority-kicker">01</span>
-          <h3>Jouer</h3>
-          <p>Lance une partie tout de suite ou ouvre un autre mode en un clic.</p>
-          <div class="home-priority-actions">
-            <button class="btn-red home-primary-cta home-main-cta" onclick="startNormalGame()">Pokémon mystère du jour</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('play')">Voir plus</button>
-          </div>
-        </article>
-        <article class="card home-priority-card home-priority-card-social">
-          <span class="home-priority-kicker">02</span>
-          <h3>Défier un ami</h3>
-          <p>Crée un duel, rejoins une room ou lance un face-à-face rapide.</p>
-          <div class="home-priority-actions">
-            <button class="btn-blue home-primary-cta" onclick="openMultiplayerMode()">Duel live 1v1</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('social')">Social</button>
-          </div>
-        </article>
-        <article class="card home-priority-card home-priority-card-lab">
-          <span class="home-priority-kicker">03</span>
-          <h3>Champions Lab</h3>
-          <p>Prépare ta team et retrouve tes outils stratégiques au même endroit.</p>
-          <div class="home-priority-actions">
-            <button class="btn-blue home-primary-cta" type="button" onclick="openTeamBuilderScreen()">Team Builder</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('champions')">Champions Lab</button>
-          </div>
-        </article>
-        <article class="card home-priority-card home-priority-card-progress">
-          <span class="home-priority-kicker">04</span>
-          <h3>Continuer la progression</h3>
-          <p>Retrouve ton profil, tes succès et ton Pokédex dans un même espace.</p>
-          <div class="home-priority-actions">
-            <button class="btn-blue home-primary-cta" type="button" onclick="openProfileScreen()">Profil</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="scrollToHomeCategory('collection')">Collection</button>
-          </div>
-        </article>
-      </section>
-
-      <section class="card home-universes" aria-label="Univers Pokédle">
+      <!-- Ligne 1 : Les jeux phares -->
+      <section class="home-section">
         <div class="home-section-head">
-          <div>
-            <h2 class="card-title">Univers</h2>
-            <p class="card-desc">Six univers pour naviguer dans Pokédle sans surcharger l’accueil.</p>
-          </div>
+          <h2 class="home-section-title">🎮 Les jeux phares</h2>
+          <p class="home-section-sub">Les modes principaux pour démarrer une partie.</p>
         </div>
-        <div class="home-universes-grid">
-          <button class="home-universe-tile is-active" type="button" onclick="goToConfig()"><span>Accueil</span><strong>Vue d’ensemble</strong></button>
-          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('play')"><span>Jouer</span><strong>Mini-jeux & modes</strong></button>
-          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('social')"><span>Social</span><strong>Défis & rooms</strong></button>
-          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('champions')"><span>Champions Lab</span><strong>Builder & préparation</strong></button>
-          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('collection')"><span>Collection</span><strong>Profil, succès, Pokédex</strong></button>
-          <button class="home-universe-tile" type="button" onclick="scrollToHomeCategory('extras')"><span>Extras</span><strong>Outils & bonus</strong></button>
+        <div class="home-pillars">
+          <article class="card home-pillar home-pillar-feature" onclick="startDailyGame()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-red">📅</div>
+            <h3>Pokémon du jour</h3>
+            <p>Le mode classique. Une cible quotidienne, des indices à chaque essai.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
+          </article>
+          <article class="card home-pillar" onclick="startPartyMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-yellow">🎲</div>
+            <h3>Party Pokémon</h3>
+            <p>Enchaîne 5 mini-jeux variés et grimpe ton score.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">5 rounds</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openMultiplayerMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-blue">🆚</div>
+            <h3>Duel 1v1</h3>
+            <p>Affronte un ami sur le même Pokémon mystère, en temps réel.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
+          </article>
         </div>
       </section>
 
-      <div class="card home-generations-card">
+      <!-- Ligne 2 : Univers Pokémon -->
+      <section class="home-section">
         <div class="home-section-head">
-          <div>
-            <h2 class="card-title">🧬 Générations</h2>
-            <p class="card-desc">Choisis les générations à inclure avant de lancer une partie.</p>
-          </div>
+          <h2 class="home-section-title">📚 Univers Pokémon</h2>
+          <p class="home-section-sub">Explore les Pokémon, les arènes, et joue aux jeux d'origine.</p>
         </div>
-        <div class="gen-grid" id="gen-grid"></div>
-      </div>
-
-      <section id="home-categories" class="home-categories">
-        <article id="home-play" class="card home-category-card">
-          <div class="home-category-head">
-            <div>
-              <span class="home-category-icon">🎮</span>
-              <h2 class="card-title">Jouer</h2>
-            </div>
-            <p class="card-desc">Lance une partie tout de suite, sans te perdre dans tous les modes dès l’accueil.</p>
-          </div>
-          <p class="home-category-note">Le reste des variantes reste disponible dans le site, mais l’accueil garde ici l’essentiel.</p>
-          <div class="mode-buttons home-mode-grid">
-            <button class="btn-red" onclick="startPartyMode()"><span class="btn-icon">🎲</span>Party Pokémon</button>
-            <button class="btn-blue home-primary-cta home-main-cta" onclick="startNormalGame()"><span class="btn-icon">🔎</span>Pokémon mystère du jour</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
-          </div>
-          <div id="mode-pro-hub" class="mode-pro-hub">
-            <div class="mode-pro-head">
-              <h3>Autres modes</h3>
-            </div>
-            <div class="mode-pro-controls">
-              <select id="mode-select-pro"></select>
-              <button class="btn-blue" id="mode-launch-btn" onclick="launchSelectedMode()">Ouvrir</button>
-            </div>
-            <p id="mode-pro-desc" class="mode-pro-desc">Retrouve ici les autres jeux et outils du site sans surcharger l’accueil.</p>
-          </div>
-        </article>
-
-        <article id="home-social" class="card home-category-card">
-          <div class="home-category-head">
-            <div>
-              <span class="home-category-icon">⚡</span>
-              <h2 class="card-title">Social</h2>
-            </div>
-            <p class="card-desc">Le point d’entrée rapide pour jouer à deux, lancer un défi et partager une partie courte.</p>
-          </div>
-          <p class="home-category-note">Les mini-défis et variantes sociales restent accessibles ensuite, sans encombrer l’accueil.</p>
-          <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue home-primary-cta" onclick="openMultiplayerMode()"><span class="btn-icon">🆚</span>Duel live 1v1</button>
-            <button class="btn-red" onclick="openStatClashMode()"><span class="btn-icon">📊</span>Stat Clash 1v1</button>
-            <button class="btn-yellow home-secondary-cta" onclick="showChallengePanel()"><span class="btn-icon">🤝</span>Envoyer un défi</button>
-          </div>
-        </article>
-
-        <article id="home-champions" class="card home-category-card">
-          <div class="home-category-head">
-            <div>
-              <span class="home-category-icon">🧪</span>
-              <h2 class="card-title">Champions Lab</h2>
-            </div>
-            <p class="card-desc">Prépare une team, travaille tes outils et garde un accès net au laboratoire stratégique.</p>
-          </div>
-          <p class="home-category-note">Le cœur du lab reste ici, sans mélanger toute la boîte à outils à la home principale.</p>
-          <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue home-primary-cta" type="button" onclick="openTeamBuilderScreen()"><span class="btn-icon">🧱</span>Team Builder</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="openTeamsScreen()"><span class="btn-icon">📚</span>Mes teams</button>
-          </div>
-        </article>
-
-        <article id="home-collection" class="card home-category-card">
-          <div class="home-category-head">
-            <div>
-              <span class="home-category-icon">📚</span>
-              <h2 class="card-title">Collection</h2>
-            </div>
-            <p class="card-desc">Retrouve ton Pokédex, ton profil et tes succès dans un espace à part, plus calme.</p>
-          </div>
-          <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue home-primary-cta" type="button" onclick="openPokedexMode()"><span class="btn-icon">📖</span>Pokédex</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="openAchievementsScreen()"><span class="btn-icon">🏆</span>Succès</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="openProfileScreen()"><span class="btn-icon">👤</span>Profil</button>
-          </div>
-        </article>
-
-        <article id="home-extras" class="card home-category-card">
-          <div class="home-category-head">
-            <div>
-              <span class="home-category-icon">🛠️</span>
-              <h2 class="card-title">Extras</h2>
-            </div>
-            <p class="card-desc">Les modules bonus restent accessibles, mais sortent du premier plan pour garder une home nette.</p>
-          </div>
-          <div class="mode-buttons home-mode-grid">
-            <button class="btn-blue home-primary-cta" onclick="openDraftArenaMode()"><span class="btn-icon">🎤</span>Draft Arènes</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="startCryGame()"><span class="btn-icon">🔊</span>Cri du Pokémon</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="openOddOneOutMode()"><span class="btn-icon">🧩</span>Intrus Pokémon</button>
-            <button class="btn-ghost home-secondary-cta" type="button" onclick="openGamesRankingMode()"><span class="btn-icon">📈</span>Classements</button>
-          </div>
-        </article>
+        <div class="home-pillars">
+          <article class="card home-pillar" onclick="openPokedexMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-teal">📖</div>
+            <h3>Pokédex</h3>
+            <p>1025 fiches complètes avec stats, talents, évolutions, comparateur.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">9 gens</span><span class="home-pillar-tag">Shiny</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openDraftArenaMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-coral">🏆</div>
+            <h3>Draft Arènes</h3>
+            <p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag">8 badges</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openEmulatorMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-purple">🕹️</div>
+            <h3>Émulateur</h3>
+            <p>Joue à Rouge Feu, Vert Feuille, Cristal, Platine ou charge ta ROM.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-unique">Unique</span><span class="home-pillar-tag">GBA · GBC · DS</span></div>
+          </article>
+        </div>
       </section>
 
+      <!-- Ligne 3 : Préparation stratégique + outils -->
+      <section class="home-section">
+        <div class="home-section-head">
+          <h2 class="home-section-title">🧪 Préparation stratégique</h2>
+          <p class="home-section-sub">Prépare ta team, analyse les types, garde un œil sur tes stats.</p>
+        </div>
+        <div class="home-pillars">
+          <article class="card home-pillar" onclick="openTeamBuilderScreen()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-blue">🧱</div>
+            <h3>Team Builder</h3>
+            <p>Compose une team de 6 : objet, gimmick, EV/IV, 4 attaques par slot.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Sauvegarde locale</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openStatClashMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-red">📊</div>
+            <h3>Stat Clash 1v1</h3>
+            <p>Choisissez chacun une stat, le meilleur cumul gagne. 6 rounds.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openTypeChartScreen()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-yellow">🧮</div>
+            <h3>Table des types</h3>
+            <p>Efficacité offensive et défensive par génération. Gen 1, 2-5, 6+.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Référence</span></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Send a challenge (préservé) -->
       <div id="challenge-panel" class="card challenge-panel hidden">
         <p class="challenge-title">🤝 Choisir un Pokémon et envoyer le lien :</p>
         <div class="ac-wrapper">
@@ -261,74 +244,36 @@
         <p id="challenge-copied" class="msg-ok hidden">✅ Lien copié dans le presse-papier !</p>
       </div>
 
+      <!-- Progression (préservée) -->
       <div class="card home-progress-card">
         <div class="home-section-head">
           <div>
             <h2 class="card-title">📊 Progression</h2>
-            <p class="card-desc">Retrouve tes statistiques, ta série quotidienne et ta progression en un coup d’œil.</p>
+            <p class="card-desc">Retrouve tes statistiques, ta série quotidienne et ta progression en un coup d'œil.</p>
           </div>
         </div>
         <div class="stats-panel" id="stats-panel">
-          <div class="stat-item">
-            <span class="stat-label">Parties jouées</span>
-            <b id="stat-played">0</b>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Victoires</span>
-            <b id="stat-wins">0</b>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Taux de victoire</span>
-            <b id="stat-rate">0%</b>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Moyenne d'essais</span>
-            <b id="stat-avg">0.0</b>
-          </div>
+          <div class="stat-item"><span class="stat-label">Parties jouées</span><b id="stat-played">0</b></div>
+          <div class="stat-item"><span class="stat-label">Victoires</span><b id="stat-wins">0</b></div>
+          <div class="stat-item"><span class="stat-label">Taux de victoire</span><b id="stat-rate">0%</b></div>
+          <div class="stat-item"><span class="stat-label">Moyenne d'essais</span><b id="stat-avg">0.0</b></div>
         </div>
-
         <div class="streak-panel" id="streak-panel">
-          <div class="streak-item">
-            <span class="streak-label">🔥 Série actuelle</span>
-            <b id="stat-daily-streak">0</b>
-          </div>
-          <div class="streak-item">
-            <span class="streak-label">🏆 Record</span>
-            <b id="stat-daily-best">0</b>
-          </div>
+          <div class="streak-item"><span class="streak-label">🔥 Série actuelle</span><b id="stat-daily-streak">0</b></div>
+          <div class="streak-item"><span class="streak-label">🏆 Record</span><b id="stat-daily-best">0</b></div>
         </div>
         <div class="level-panel" id="level-panel">
-          <div class="level-head">
-            <span class="level-label">Niveau joueur</span>
-            <b id="player-level-name">Débutant</b>
-          </div>
-          <div class="level-meta">
-            <span id="player-level-xp">XP : 0</span>
-            <span id="player-level-next">Prochain : Dresseur Novice</span>
-          </div>
-          <div class="level-progress" aria-label="Progression de niveau">
-            <div id="player-level-bar" class="level-progress-bar" style="width:0%"></div>
-          </div>
+          <div class="level-head"><span class="level-label">Niveau joueur</span><b id="player-level-name">Débutant</b></div>
+          <div class="level-meta"><span id="player-level-xp">XP : 0</span><span id="player-level-next">Prochain : Dresseur Novice</span></div>
+          <div class="level-progress" aria-label="Progression de niveau"><div id="player-level-bar" class="level-progress-bar" style="width:0%"></div></div>
         </div>
         <div class="platform-stats-panel" id="platform-stats-panel">
-          <div class="platform-stat-chip">
-            <span>Puzzles résolus</span>
-            <b id="stat-puzzles-solved">0</b>
-          </div>
-          <div class="platform-stat-chip">
-            <span>Meilleure série</span>
-            <b id="stat-best-streak">0</b>
-          </div>
-          <div class="platform-stat-chip">
-            <span>Précision</span>
-            <b id="stat-accuracy">0%</b>
-          </div>
+          <div class="platform-stat-chip"><span>Puzzles résolus</span><b id="stat-puzzles-solved">0</b></div>
+          <div class="platform-stat-chip"><span>Meilleure série</span><b id="stat-best-streak">0</b></div>
+          <div class="platform-stat-chip"><span>Précision</span><b id="stat-accuracy">0%</b></div>
         </div>
         <div class="mode-stat-block">
-          <div class="mode-stat-head">
-            <span>Stats par mode</span>
-            <b id="mode-stat-total">0 mode</b>
-          </div>
+          <div class="mode-stat-head"><span>Stats par mode</span><b id="mode-stat-total">0 mode</b></div>
           <div id="mode-stats-list" class="mode-stats-list"></div>
         </div>
       </div>
@@ -1221,11 +1166,6 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <script src="script.js" defer></script>
   </body>
   </html>
-
-
-
-
-
 
 
 
