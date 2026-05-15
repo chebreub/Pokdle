@@ -12080,6 +12080,14 @@ function scrollToDraftSimpleBattlePanel(panel) {
   });
 }
 
+let __gbaMenuView = "main";
+function setGbaMenuView(view) {
+  __gbaMenuView = view === "moves" ? "moves" : "main";
+  if (draftSimpleBattleDevUiState) {
+    renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+  }
+}
+
 let __gbaTextboxTimer = null;
 let __gbaTextboxLastText = "";
 function refreshGbaTextbox(text) {
@@ -12432,6 +12440,39 @@ function renderDraftSimpleBattleDevPanel(state) {
       </button>`
     : "";
 
+  // GBA action menu (B3) — only when player can act locally
+  const showGbaMenu = canLocalChooseAction && !isReplayingTurn;
+  const gbaMenuView = showGbaMenu ? __gbaMenuView : "main";
+  const gbaSwitchAvailable = showGbaMenu && getDraftSimpleBattleAvailableSwitchIndexesForSide(state, currentActionSide).length > 0;
+  let gbaMenuHtml = "";
+  if (showGbaMenu) {
+    if (gbaMenuView === "moves") {
+      const movesGba = struggleOnly
+        ? `<button type="button" class="gba-move-btn" onclick="runDraftSimpleBattleDevStruggle('${currentActionSide}')">
+            <span class="gba-move-name">Lutte</span>
+            <span class="gba-move-meta"><span>Normal</span><span>PP —</span></span>
+          </button>`
+        : (currentActionBattler.moves || []).map((move, i) => {
+            const noPp = (Number(move?.ppCurrent) || 0) <= 0;
+            return `<button type="button" class="gba-move-btn ${noPp ? "is-disabled" : ""}" onclick="runDraftSimpleBattleDevTurn(${i}, '${currentActionSide}')" ${noPp ? "disabled" : ""}>
+              <span class="gba-move-name">${escapeHtml(move.name)}</span>
+              <span class="gba-move-meta"><span>${escapeHtml(move.type)}</span><span>PP ${Number(move?.ppCurrent) || 0}/${Number(move?.ppMax) || 0}</span></span>
+            </button>`;
+          }).join("");
+      gbaMenuHtml = `<div class="gba-menu" data-view="moves">
+        ${movesGba}
+        <button type="button" class="gba-menu-back" onclick="setGbaMenuView('main')">◀ RETOUR</button>
+      </div>`;
+    } else {
+      gbaMenuHtml = `<div class="gba-menu" data-view="main">
+        <button type="button" class="gba-menu-btn" onclick="setGbaMenuView('moves')">ATTAQUE</button>
+        <button type="button" class="gba-menu-btn is-disabled" disabled title="Pas d'objets dans le Draft">SAC</button>
+        <button type="button" class="gba-menu-btn${gbaSwitchAvailable ? "" : " is-disabled"}" ${gbaSwitchAvailable ? `onclick="openDraftSimpleBattleManualSwitch('${currentActionSide}')"` : "disabled"}>POKÉMON</button>
+        <button type="button" class="gba-menu-btn is-disabled" disabled title="Impossible de fuir un combat d'arène">FUITE</button>
+      </div>`;
+    }
+  }
+
   const playerWin = isDraftSimpleBattlePlayerWin(state);
   const leftRemaining = getDraftSimpleBattleRemainingCount(state.leftTeam, state.leftActiveIndex);
   const rightRemaining = getDraftSimpleBattleRemainingCount(state.rightTeam, state.rightActiveIndex);
@@ -12632,9 +12673,12 @@ function renderDraftSimpleBattleDevPanel(state) {
           </div>
         </div>
       </div>
-      <div class="gba-textbox" role="status" aria-live="polite">
-        <span class="gba-textbox-text">${escapeHtml(sceneText)}</span>
-        <span class="gba-textbox-arrow" aria-hidden="true">▼</span>
+      <div class="gba-battle-bottom ${showGbaMenu ? "has-menu" : "no-menu"}">
+        <div class="gba-textbox" role="status" aria-live="polite">
+          <span class="gba-textbox-text">${escapeHtml(sceneText)}</span>
+          <span class="gba-textbox-arrow" aria-hidden="true">▼</span>
+        </div>
+        ${gbaMenuHtml}
       </div>
     </div>
     <div class="draft-dev-battle-benches">
@@ -12648,13 +12692,10 @@ function renderDraftSimpleBattleDevPanel(state) {
       <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
     </div>
     ${switchHtml}
-    ${canLocalChooseAction && getDraftSimpleBattleAvailableSwitchIndexesForSide(state, currentActionSide).length
-      ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="openDraftSimpleBattleManualSwitch('${currentActionSide}')">Changer de Pokémon</button></div>`
-      : ""}
     <div class="draft-dev-battle-battlebox" data-combat-ui="${combatUiState}" data-replay-phase="${replayPhase}">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
-      ${isPlayerTurn ? `<div class="draft-dev-battle-battlebox-commands ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""} ${canLocalChooseAction ? "is-choice-open" : "is-choice-locked"}"><div class="draft-dev-battle-actions ${isReplayingTurn ? "is-resolving" : ""} ${showActionResumeCue ? "is-ready" : ""} ${canLocalChooseAction ? "is-choice-open" : "is-choice-locked"}" aria-busy="${isReplayingTurn ? "true" : "false"}"><div class="card-desc">${isReplayingTurn ? "Résolution en cours" : showActionResumeCue ? "À toi de jouer" : `Tes attaques${isNetwork ? ` • ${escapeHtml(localSide === currentActionSide ? "à toi de jouer" : "en attente de l’autre joueur")}` : ""}`}</div>${canLocalChooseAction ? (struggleHtml || movesHtml) : `<p class="card-desc">${isReplayingTurn ? "Le tour se joue. Patiente jusqu’à la fin de la séquence." : `Action ${escapeHtml(currentActionSide === "right" ? "droite" : "gauche")} enregistrée ou en attente.`}</p>`}</div>${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer</button></div>` : ""}</div>` : ""}
-      <div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div>
+      ${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer la résolution</button></div>` : ""}
+      <details class="draft-dev-battle-log-details"><summary>Historique du combat</summary><div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div></details>
     </div>
   `;
 
@@ -12760,6 +12801,7 @@ function clearDraftSimpleBattleDevPanel() {
   draftSimpleBattleActionFocusKey = "";
   if (__gbaTextboxTimer) { clearInterval(__gbaTextboxTimer); __gbaTextboxTimer = null; }
   __gbaTextboxLastText = "";
+  __gbaMenuView = "main";
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
@@ -13009,6 +13051,7 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0, side = null) {
   if (isDraftSimpleBattleNetworkMode(state) && getDraftSimpleBattleNetworkLocalSide(state) !== actionSide) return null;
   const expectedTurnState = actionSide === "right" ? "right-action" : "left-action";
   if (state.turnState !== expectedTurnState) return null;
+  __gbaMenuView = "main";
   prepareDraftSimpleBattleQueuedTurn(state, {
     kind: "move",
     moveIndex,
@@ -13023,6 +13066,7 @@ function runDraftSimpleBattleDevStruggle(side = null) {
   if (isDraftSimpleBattleNetworkMode(state) && getDraftSimpleBattleNetworkLocalSide(state) !== actionSide) return null;
   const expectedTurnState = actionSide === "right" ? "right-action" : "left-action";
   if (state.turnState !== expectedTurnState) return null;
+  __gbaMenuView = "main";
   prepareDraftSimpleBattleQueuedTurn(state, { kind: "struggle" });
   return state.queuedTurn ? scheduleDraftSimpleBattleTurnResolution(state) : state;
 }
