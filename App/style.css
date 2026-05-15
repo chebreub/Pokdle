@@ -24734,3 +24734,303 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
   0%, 100% { filter: brightness(1);   box-shadow: inset 0 1px 0 rgba(255,255,255,0.18); }
   50%      { filter: brightness(1.12) saturate(1.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 6px 1px rgba(255,80,50,0.3); }
 }
+
+
+/* ============================================================ */
+/* === SCÈNE DE COMBAT GBA (Lot B1) — DA Rouge Feu/Vert Feuille */
+/* ============================================================ */
+
+.gba-battle {
+  margin: 14px auto 18px;
+  max-width: 880px;
+  width: 100%;
+  font-family: "Press Start 2P", "Pixelify Sans", monospace;
+}
+
+.gba-battle-scene {
+  position: relative;
+  aspect-ratio: 20 / 13.5;
+  background:
+    radial-gradient(circle at 78% 32%, #cfe6a2 0%, transparent 38%),
+    radial-gradient(circle at 22% 78%, #d8c97a 0%, transparent 42%),
+    linear-gradient(180deg, #cfeaf3 0%, #cfeaf3 32%, #cee4a4 52%, #d8c97a 100%);
+  border: 4px solid #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 0 rgba(0,0,0,0.28),
+    inset 0 0 0 2px rgba(255,255,255,0.45),
+    inset 0 -28px 36px rgba(80,110,40,0.18);
+}
+
+.gba-battle-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 18px 8px at 15% 50%, rgba(80,110,30,0.45) 0%, transparent 70%),
+    radial-gradient(ellipse 14px 6px at 88% 42%, rgba(80,110,30,0.4) 0%, transparent 70%),
+    radial-gradient(ellipse 12px 6px at 45% 22%, rgba(120,160,60,0.35) 0%, transparent 70%);
+  background-repeat: no-repeat;
+}
+
+/* Combattants */
+.gba-fighter {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.gba-fighter-foe {
+  top: 14%;
+  right: 8%;
+  width: 32%;
+  max-width: 220px;
+}
+.gba-fighter-player {
+  bottom: 19%;
+  left: 6%;
+  width: 36%;
+  max-width: 240px;
+}
+
+.gba-sprite {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,0.28));
+}
+.gba-sprite-foe {
+  width: 78%;
+  max-width: 144px;
+  transform: translateY(10px);
+}
+.gba-sprite-player {
+  width: 92%;
+  max-width: 192px;
+  transform: translateY(12px);
+}
+
+/* Plateformes ovales */
+.gba-platform {
+  width: 100%;
+  border-radius: 50%;
+  margin-top: -8px;
+}
+.gba-platform-foe {
+  height: 18px;
+  background:
+    radial-gradient(ellipse at center,
+      #b48652 0%,
+      #8a5e34 38%,
+      #6a4624 60%,
+      transparent 78%);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+}
+.gba-platform-player {
+  height: 26px;
+  background:
+    radial-gradient(ellipse at center,
+      #c8c870 0%,
+      #98a248 38%,
+      #6a7b30 60%,
+      transparent 78%);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.22);
+}
+
+/* Info boxes GBA */
+.gba-info-box {
+  position: absolute;
+  background: linear-gradient(180deg, #f9f9e0 0%, #ddddc0 100%);
+  border: 3px solid #1a1a1a;
+  border-radius: 9px;
+  padding: 8px 12px 8px 14px;
+  font-family: "Press Start 2P", system-ui, monospace;
+  font-size: 10px;
+  line-height: 1.55;
+  color: #181818;
+  box-shadow:
+    0 3px 0 rgba(0,0,0,0.3),
+    inset 1px 1px 0 rgba(255,255,255,0.55),
+    inset -1px -1px 0 rgba(0,0,0,0.12);
+  min-width: 180px;
+}
+.gba-info-foe {
+  top: 7%;
+  left: 4%;
+}
+.gba-info-player {
+  bottom: 6%;
+  right: 4%;
+  min-width: 200px;
+}
+
+.gba-info-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.gba-info-name {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #181818;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+.gba-info-level {
+  font-size: 9px;
+  color: #2a2a2a;
+}
+.gba-info-hp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.gba-info-hp-label {
+  color: #d49216;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.gba-info-hp-bar {
+  flex: 1;
+  height: 6px;
+  background: #383838;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.55);
+}
+.gba-info-hp-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #5cdc4e 0%, #38b830 100%);
+  transition: width 420ms linear, background 200ms linear;
+}
+.gba-info-hp-fill.is-medium {
+  background: linear-gradient(180deg, #f8d028 0%, #d8a020 100%);
+}
+.gba-info-hp-fill.is-low {
+  background: linear-gradient(180deg, #f04830 0%, #c02820 100%);
+}
+.gba-info-hp-numeric {
+  text-align: right;
+  font-size: 9px;
+  margin-top: 3px;
+  letter-spacing: 0.5px;
+  color: #1a1a1a;
+}
+.gba-info-exp-bar {
+  height: 3px;
+  background: #2c2c2c;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.gba-info-exp-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #58a8f0 0%, #2070c8 100%);
+}
+
+/* Hook visuel pour B4 (anims) — déjà câblé sur visualFeedback.left/rightClass */
+.gba-fighter.is-attacking .gba-sprite { transform: translateY(8px) translateX(4px); transition: transform 120ms ease-out; }
+.gba-fighter.is-hit .gba-sprite { filter: brightness(2.2) drop-shadow(0 2px 0 rgba(0,0,0,0.28)); }
+
+/* Responsive */
+@media (max-width: 720px) {
+  .gba-info-box {
+    font-size: 9px;
+    min-width: 140px;
+    padding: 6px 9px;
+  }
+  .gba-info-name { font-size: 10px; max-width: 100px; }
+  .gba-sprite-foe { max-width: 104px; }
+  .gba-sprite-player { max-width: 140px; }
+  .gba-info-player { min-width: 160px; }
+}
+@media (max-width: 480px) {
+  .gba-battle { margin: 10px auto 14px; }
+  .gba-info-box { font-size: 8px; min-width: 116px; padding: 5px 7px; }
+  .gba-info-name { font-size: 9px; max-width: 76px; }
+  .gba-info-hp-bar { height: 5px; }
+  .gba-info-foe { top: 5%; left: 3%; }
+  .gba-info-player { bottom: 4%; right: 3%; }
+}
+
+
+/* ============================================================ */
+/* === BOX TEXTE GBA (Lot B2) — système de messages style GBA */
+/* ============================================================ */
+
+.gba-textbox {
+  position: relative;
+  margin-top: 8px;
+  padding: 18px 32px 18px 22px;
+  font-family: "Press Start 2P", system-ui, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.5px;
+  color: #181818;
+  background: #f9f9e8;
+  border: 3px solid #1a1a1a;
+  border-radius: 6px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  box-shadow:
+    inset 0 0 0 4px #284390,
+    inset 0 0 0 8px #f9f9e8,
+    0 3px 0 rgba(0,0,0,0.3);
+}
+
+.gba-textbox-text {
+  flex: 1;
+  display: inline-block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 1.5em;
+  position: relative;
+  z-index: 2;
+}
+
+.gba-textbox-arrow {
+  position: absolute;
+  right: 14px;
+  bottom: 8px;
+  color: #284390;
+  font-size: 11px;
+  animation: gbaArrowBounce 0.85s ease-in-out infinite;
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes gbaArrowBounce {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50%      { transform: translateY(3px); opacity: 0.55; }
+}
+
+@media (max-width: 720px) {
+  .gba-textbox {
+    font-size: 10px;
+    padding: 14px 28px 14px 18px;
+    min-height: 56px;
+  }
+}
+@media (max-width: 480px) {
+  .gba-textbox {
+    font-size: 9px;
+    padding: 12px 24px 12px 14px;
+    min-height: 48px;
+    margin-top: 6px;
+  }
+  .gba-textbox-arrow { font-size: 9px; right: 10px; bottom: 6px; }
+}

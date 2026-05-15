@@ -709,8 +709,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="ranking-head">
             <h2 class="card-title">&#127924; Draft Arènes</h2>
             <div class="ranking-head-actions">
-              <select id="draft-battle-pokemon" class="mode-select" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
-              <button id="draft-battle-launch" class="btn-blue" type="button" onclick="runDraftSimpleBattleDraftConversionDevVisualTest()">Lancer le duel</button>
+              <select id="draft-battle-pokemon" class="mode-select hidden" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
+              <button id="draft-battle-launch" class="btn-blue" type="button" onclick="launchDraftArenaBattle()">Lancer le duel</button>
               <button id="draft-battle-close" class="btn-ghost hidden" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
               <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
               <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
@@ -735,6 +735,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
         <section class="draft-panel draft-panel-picks">
           <h3>2) Draft</h3>
+          <p class="card-desc">Choisis 1 des 4 propositions à chaque tour. Les options se renouvellent automatiquement. Tu ne peux pas reprendre un Pokémon déjà sélectionné.</p>
           <div id="draft-options" class="draft-options-grid"></div>
         </section>
 

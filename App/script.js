@@ -3161,6 +3161,20 @@ function playCrySound() {
   });
 }
 
+let __draftBattleCryAudio = null;
+function playPokemonCry(pokemon, volume = 0.55) {
+  if (!pokemon) return;
+  try {
+    const url = getPokemonCryUrl(pokemon);
+    if (__draftBattleCryAudio) {
+      try { __draftBattleCryAudio.pause(); } catch (e) { /* noop */ }
+    }
+    __draftBattleCryAudio = new Audio(url);
+    __draftBattleCryAudio.volume = volume;
+    __draftBattleCryAudio.play().catch(() => { /* silent fail (autoplay block / 404) */ });
+  } catch (e) { /* noop */ }
+}
+
 function updateCryPanel(reveal) {
   const box = document.getElementById("cry-box");
   const revealBox = document.getElementById("cry-reveal");
@@ -10127,6 +10141,7 @@ function executeDraftSimpleBattleSwitch(state, side, teamIndex, options = {}) {
   state[indexKey] = nextIndex;
   syncDraftSimpleBattleActiveBattlers(state);
   runDraftSimpleBattleSwitchHooks(state, side, battler, options);
+  playPokemonCry(battler?.pokemon);
   return battler;
 }
 
@@ -12065,6 +12080,35 @@ function scrollToDraftSimpleBattlePanel(panel) {
   });
 }
 
+let __gbaTextboxTimer = null;
+let __gbaTextboxLastText = "";
+function refreshGbaTextbox(text) {
+  const box = document.querySelector(".gba-battle .gba-textbox-text");
+  if (!box) {
+    __gbaTextboxLastText = "";
+    if (__gbaTextboxTimer) { clearInterval(__gbaTextboxTimer); __gbaTextboxTimer = null; }
+    return;
+  }
+  const target = String(text || "");
+  if (target === __gbaTextboxLastText) {
+    box.textContent = target;
+    return;
+  }
+  __gbaTextboxLastText = target;
+  if (__gbaTextboxTimer) { clearInterval(__gbaTextboxTimer); __gbaTextboxTimer = null; }
+  box.textContent = "";
+  let i = 0;
+  __gbaTextboxTimer = setInterval(() => {
+    if (i >= target.length) {
+      clearInterval(__gbaTextboxTimer);
+      __gbaTextboxTimer = null;
+      box.textContent = target;
+      return;
+    }
+    box.textContent = target.slice(0, ++i);
+  }, 22);
+}
+
 function renderDraftSimpleBattleDevPanel(state) {
   const panel = ensureDraftSimpleBattleDevPanel();
   const body = document.getElementById("draft-dev-battle-body");
@@ -12543,33 +12587,54 @@ function renderDraftSimpleBattleDevPanel(state) {
         <small>${escapeHtml(networkTurnHint)}</small>
       </div>
     ` : ""}
-    <div class="draft-dev-battle-scene-note ${isFinished ? "is-finished" : (isNetwork && state.network?.waitingRemote) ? "is-waiting-remote" : isReplayingTurn && state.visualReplay?.phase === "ko" ? "is-switch" : isReplayingTurn && state.visualReplay?.phase === "anticipation" ? "is-anticipation" : isReplayingTurn && state.visualReplay?.phase === "impact" ? "is-enemy" : isReplayingTurn && state.visualReplay?.phase === "hp" ? "is-enemy" : isEnemyTurn ? "is-enemy" : needsForcedSwitch ? "is-switch" : "is-player"}">
-      <b>${isFinished ? "Fin du match" : "Scène de combat"}</b>
-      <span>${escapeHtml(sceneText)}</span>
-    </div>
     ${visualFeedback.badges.length ? `
       <div class="draft-dev-battle-event-strip ${isReplayingTurn ? "is-replay" : "is-resting"}">
         ${visualFeedback.badges.map((label) => `<span class="draft-dev-battle-event-badge">${escapeHtml(label)}</span>`).join("")}
       </div>
     ` : ""}
-    <div class="draft-dev-battle-stage">
-      <div class="draft-dev-battle-fighters draft-dev-battle-scene-shell">
-        <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-top">
-          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-foe ${visualFeedback.rightClass}">
-            <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-foe" src="${escapeHtml(getPokemonSprite(displayRight.pokemon))}" alt="${escapeHtml(displayRight.pokemon.name)}">
+    <div class="gba-battle">
+      <div class="gba-battle-scene">
+        <div class="gba-battle-bg"></div>
+        <div class="gba-info-box gba-info-foe">
+          <div class="gba-info-name-row">
+            <span class="gba-info-name">${escapeHtml(displayRight.pokemon.name)}</span>
+            <span class="gba-info-level">N.50</span>
           </div>
-          <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-foe is-foe ${visualFeedback.rightClass}">
-            ${foeHudHtml}
-          </div>
-        </div>
-        <div class="draft-dev-battle-scene-row draft-dev-battle-scene-row-bottom">
-          <div class="draft-summary-card wide draft-dev-battle-fighter draft-dev-battle-slot draft-dev-battle-slot-hud-player is-player ${visualFeedback.leftClass}">
-            ${playerHudHtml}
-          </div>
-          <div class="draft-dev-battle-slot draft-dev-battle-slot-sprite-player ${visualFeedback.leftClass}">
-            <img class="draft-dev-battle-scene-sprite draft-dev-battle-scene-sprite-player" src="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}" alt="${escapeHtml(displayLeft.pokemon.name)}">
+          <div class="gba-info-hp-row">
+            <span class="gba-info-hp-label">PV</span>
+            <div class="gba-info-hp-bar">
+              <span class="gba-info-hp-fill ${rightHpPercent <= 25 ? "is-low" : rightHpPercent <= 50 ? "is-medium" : ""}" style="width:${rightHpPercent}%"></span>
+            </div>
           </div>
         </div>
+        <div class="gba-fighter gba-fighter-foe ${visualFeedback.rightClass}">
+          <img class="gba-sprite gba-sprite-foe" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${getPokemonSpriteId(displayRight.pokemon)}.png" alt="${escapeHtml(displayRight.pokemon.name)}" onerror="this.onerror=null;this.src='${escapeHtml(getPokemonSprite(displayRight.pokemon))}';">
+          <div class="gba-platform gba-platform-foe"></div>
+        </div>
+        <div class="gba-fighter gba-fighter-player ${visualFeedback.leftClass}">
+          <img class="gba-sprite gba-sprite-player" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${getPokemonSpriteId(displayLeft.pokemon)}.png" alt="${escapeHtml(displayLeft.pokemon.name)}" onerror="this.onerror=null;this.src='${escapeHtml(getPokemonSprite(displayLeft.pokemon))}';">
+          <div class="gba-platform gba-platform-player"></div>
+        </div>
+        <div class="gba-info-box gba-info-player">
+          <div class="gba-info-name-row">
+            <span class="gba-info-name">${escapeHtml(displayLeft.pokemon.name)}</span>
+            <span class="gba-info-level">N.50</span>
+          </div>
+          <div class="gba-info-hp-row">
+            <span class="gba-info-hp-label">PV</span>
+            <div class="gba-info-hp-bar">
+              <span class="gba-info-hp-fill ${leftHpPercent <= 25 ? "is-low" : leftHpPercent <= 50 ? "is-medium" : ""}" style="width:${leftHpPercent}%"></span>
+            </div>
+          </div>
+          <div class="gba-info-hp-numeric">${displayLeft.currentHp}/${displayLeft.maxHp}</div>
+          <div class="gba-info-exp-bar">
+            <span class="gba-info-exp-fill" style="width:50%"></span>
+          </div>
+        </div>
+      </div>
+      <div class="gba-textbox" role="status" aria-live="polite">
+        <span class="gba-textbox-text">${escapeHtml(sceneText)}</span>
+        <span class="gba-textbox-arrow" aria-hidden="true">▼</span>
       </div>
     </div>
     <div class="draft-dev-battle-benches">
@@ -12594,6 +12659,7 @@ function renderDraftSimpleBattleDevPanel(state) {
   `;
 
   panel.classList.remove("hidden");
+  refreshGbaTextbox(sceneText);
   if (shouldAutoScroll) {
     scrollToDraftSimpleBattlePanel(panel);
   }
@@ -12692,6 +12758,8 @@ function clearDraftSimpleBattleDevPanel() {
   draftBattleNetworkSession = null;
   draftSimpleBattleDevUiState = null;
   draftSimpleBattleActionFocusKey = "";
+  if (__gbaTextboxTimer) { clearInterval(__gbaTextboxTimer); __gbaTextboxTimer = null; }
+  __gbaTextboxLastText = "";
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
@@ -12714,6 +12782,8 @@ function startDraftSimpleBattlePreview() {
   draftSimpleBattleDevUiState.showIntro = true;
   draftSimpleBattleDevUiState.sceneMessage = `${draftSimpleBattleDevUiState.left?.pokemon?.name || "Ton Pokémon"} entre au combat face à ${draftSimpleBattleDevUiState.right?.pokemon?.name || "l’adversaire"} !`;
   renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
+  playPokemonCry(draftSimpleBattleDevUiState.right?.pokemon);
+  setTimeout(() => playPokemonCry(draftSimpleBattleDevUiState?.left?.pokemon), 650);
   if (draftSimpleBattleIntroTimer) clearTimeout(draftSimpleBattleIntroTimer);
   draftSimpleBattleIntroTimer = setTimeout(() => {
     if (!draftSimpleBattleDevUiState) return;
@@ -13833,7 +13903,7 @@ function openDraftArenaMode() {
   setQuizModeLayout(false);
   stopEmulatorSession();
   document.getElementById("screen-draft-arena").classList.remove("hidden");
-  setGlobalNavActive("draft");
+  setGlobalNavActive("extras");
 
   if (!draftArenaState) {
     restartDraftArenaRun();
@@ -13864,9 +13934,9 @@ async function pickDraftArenaOption(pokemonId) {
   if (picked.shiny) draftArenaState.shinyCount += 1;
 
   if (draftArenaState.team.length >= DRAFT_TEAM_SIZE) {
-    const prepared = await prepareDraftArenaBattleRun();
-    if (prepared) {
-      await launchDraftArenaBattle();
+    await prepareDraftArenaBattleRun();
+    if (draftArenaState) {
+      draftArenaState.message = `Équipe complète ! Clique "Lancer le duel" pour affronter la première arène.`;
     }
     return;
   } else {
