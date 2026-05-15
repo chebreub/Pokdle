@@ -25169,3 +25169,92 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
   .gba-battle-bottom.has-menu { grid-template-columns: 1fr; }
   .gba-menu { font-size: 9px; padding: 10px; }
 }
+
+
+/* ============================================================ */
+/* === ANIMATIONS COMBAT GBA (Lot B4) — lunge, flash, KO, HP   */
+/* ============================================================ */
+
+.gba-sprite-foe,
+.gba-sprite-player {
+  transition:
+    transform 220ms ease-out,
+    filter 100ms ease-out,
+    opacity 220ms ease-out;
+}
+
+/* === ATTAQUE : lunge vers la cible === */
+.gba-fighter-player.is-attacking .gba-sprite { transform: translateY(8px) translateX(26px); }
+.gba-fighter-foe.is-attacking .gba-sprite     { transform: translateY(8px) translateX(-26px); }
+
+/* === IMPACT : secousse + flash blanc === */
+@keyframes gbaSpriteShake {
+  0%, 100% { translate: 0 0; }
+  15%      { translate: -7px 0; }
+  35%      { translate: 7px 0; }
+  55%      { translate: -4px 0; }
+  75%      { translate: 4px 0; }
+}
+
+@keyframes gbaSpriteFlash {
+  0%, 100% { filter: brightness(1) drop-shadow(0 2px 0 rgba(0,0,0,0.28)); }
+  25%, 55% { filter: brightness(3) saturate(0) drop-shadow(0 2px 0 rgba(0,0,0,0.28)); }
+}
+
+.gba-fighter.is-hit .gba-sprite,
+.gba-fighter.is-taking-hit .gba-sprite {
+  animation:
+    gbaSpriteShake 380ms ease-out 1,
+    gbaSpriteFlash 380ms linear 1;
+}
+
+/* === ESQUIVÉ : recul léger, pas de flash === */
+.gba-fighter-player.is-dodged .gba-sprite { transform: translateY(10px) translateX(-16px); }
+.gba-fighter-foe.is-dodged .gba-sprite     { transform: translateY(10px) translateX(16px); }
+
+/* === K.O. : chute + fade === */
+@keyframes gbaSpriteKoPlayer {
+  0%   { opacity: 1; transform: translateY(12px) rotate(0deg); }
+  60%  { opacity: 1; transform: translateY(48px) rotate(-12deg); }
+  100% { opacity: 0; transform: translateY(72px) rotate(-18deg); }
+}
+@keyframes gbaSpriteKoFoe {
+  0%   { opacity: 1; transform: translateY(10px) rotate(0deg); }
+  60%  { opacity: 1; transform: translateY(46px) rotate(10deg); }
+  100% { opacity: 0; transform: translateY(70px) rotate(16deg); }
+}
+.gba-fighter-player.is-ko .gba-sprite {
+  animation: gbaSpriteKoPlayer 720ms ease-in forwards;
+}
+.gba-fighter-foe.is-ko .gba-sprite {
+  animation: gbaSpriteKoFoe 720ms ease-in forwards;
+}
+
+/* === SEND-IN : Pokémon arrive du haut === */
+@keyframes gbaSpriteSendInPlayer {
+  0%   { opacity: 0; transform: translateY(-40px) scale(0.55); }
+  60%  { opacity: 1; transform: translateY(14px) scale(1.08); }
+  100% { opacity: 1; transform: translateY(12px) scale(1); }
+}
+@keyframes gbaSpriteSendInFoe {
+  0%   { opacity: 0; transform: translateY(-40px) scale(0.55); }
+  60%  { opacity: 1; transform: translateY(12px) scale(1.06); }
+  100% { opacity: 1; transform: translateY(10px) scale(1); }
+}
+.gba-fighter-player.is-switch-in .gba-sprite {
+  animation: gbaSpriteSendInPlayer 520ms ease-out;
+}
+.gba-fighter-foe.is-switch-in .gba-sprite {
+  animation: gbaSpriteSendInFoe 520ms ease-out;
+}
+
+/* === HP bar : drain plus visible === */
+.gba-info-hp-fill {
+  transition: width 420ms linear, background 280ms linear;
+}
+
+/* Override des hooks B1 pour que les animations B4 puissent revenir à l'état neutre */
+.gba-fighter.is-hit .gba-sprite,
+.gba-fighter.is-taking-hit .gba-sprite {
+  filter: brightness(1) drop-shadow(0 2px 0 rgba(0,0,0,0.28));
+}

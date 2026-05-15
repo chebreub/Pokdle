@@ -12088,6 +12088,34 @@ function setGbaMenuView(view) {
   }
 }
 
+function getGbaBattleLevel(battler) {
+  if (!battler?.stats) return 50;
+  const total = Object.values(battler.stats).reduce((s, v) => s + (Number(v) || 0), 0);
+  if (!total) return 50;
+  return Math.max(15, Math.min(100, Math.round(total / 12)));
+}
+
+let __gbaLastHpPercent = { left: 100, right: 100 };
+function refreshGbaHpBars(leftTarget, rightTarget) {
+  const apply = (selector, target, key) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    const prev = Number(__gbaLastHpPercent[key]);
+    const next = Math.max(0, Math.min(100, Number(target) || 0));
+    if (!Number.isFinite(prev) || prev === next) {
+      el.style.width = next + "%";
+      __gbaLastHpPercent[key] = next;
+      return;
+    }
+    el.style.width = prev + "%";
+    void el.offsetHeight; // force reflow so transition runs
+    el.style.width = next + "%";
+    __gbaLastHpPercent[key] = next;
+  };
+  apply(".gba-battle .gba-info-player .gba-info-hp-fill", leftTarget, "left");
+  apply(".gba-battle .gba-info-foe .gba-info-hp-fill", rightTarget, "right");
+}
+
 let __gbaTextboxTimer = null;
 let __gbaTextboxLastText = "";
 function refreshGbaTextbox(text) {
@@ -12639,7 +12667,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="gba-info-box gba-info-foe">
           <div class="gba-info-name-row">
             <span class="gba-info-name">${escapeHtml(displayRight.pokemon.name)}</span>
-            <span class="gba-info-level">N.50</span>
+            <span class="gba-info-level">N.${getGbaBattleLevel(displayRight)}</span>
           </div>
           <div class="gba-info-hp-row">
             <span class="gba-info-hp-label">PV</span>
@@ -12659,7 +12687,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="gba-info-box gba-info-player">
           <div class="gba-info-name-row">
             <span class="gba-info-name">${escapeHtml(displayLeft.pokemon.name)}</span>
-            <span class="gba-info-level">N.50</span>
+            <span class="gba-info-level">N.${getGbaBattleLevel(displayLeft)}</span>
           </div>
           <div class="gba-info-hp-row">
             <span class="gba-info-hp-label">PV</span>
@@ -12701,6 +12729,7 @@ function renderDraftSimpleBattleDevPanel(state) {
 
   panel.classList.remove("hidden");
   refreshGbaTextbox(sceneText);
+  refreshGbaHpBars(leftHpPercent, rightHpPercent);
   if (shouldAutoScroll) {
     scrollToDraftSimpleBattlePanel(panel);
   }
@@ -12802,6 +12831,7 @@ function clearDraftSimpleBattleDevPanel() {
   if (__gbaTextboxTimer) { clearInterval(__gbaTextboxTimer); __gbaTextboxTimer = null; }
   __gbaTextboxLastText = "";
   __gbaMenuView = "main";
+  __gbaLastHpPercent = { left: 100, right: 100 };
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
