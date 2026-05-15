@@ -25258,3 +25258,49 @@ body.draft-battle-open .draft-dev-battle-panel:not(:has(.draft-dev-battle-previe
 .gba-fighter.is-taking-hit .gba-sprite {
   filter: brightness(1) drop-shadow(0 2px 0 rgba(0,0,0,0.28));
 }
+
+
+/* ============================================================ */
+/* === TRANSITION ENTRÉE (Lot B6) + EFFETS CRIT (Lot B7) ===== */
+/* ============================================================ */
+
+/* B6 — Overlay flash plein écran au lancement du combat */
+.gba-battle-start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: #000;
+  animation: gbaBattleStartFlash 820ms ease-out forwards;
+}
+@keyframes gbaBattleStartFlash {
+  0%   { opacity: 0;   background: #ffffff; }
+  6%   { opacity: 1;   background: #ffffff; }
+  18%  { opacity: 1;   background: #1a1a1a; }
+  30%  { opacity: 1;   background: #ffffff; }
+  42%  { opacity: 1;   background: #1a1a1a; }
+  54%  { opacity: 1;   background: #ffffff; }
+  68%  { opacity: 0.8; background: #1a1a1a; }
+  100% { opacity: 0;   background: #1a1a1a; }
+}
+
+/* B7 — Screen shake sur coup critique */
+@keyframes gbaSceneCritShake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  18%      { transform: translate3d(-5px, 2px, 0); }
+  36%      { transform: translate3d(5px, -2px, 0); }
+  54%      { transform: translate3d(-4px, 1px, 0); }
+  72%      { transform: translate3d(4px, -1px, 0); }
+}
+.gba-battle-scene.gba-scene-crit {
+  animation: gbaSceneCritShake 360ms ease-out;
+}
+
+/* B7 — Highlight textbox sur message de critique / super-efficace */
+.gba-textbox.is-crit .gba-textbox-text {
+  color: #c01818;
+  text-shadow: 0 0 1px rgba(192,24,24,0.4);
+}
+.gba-textbox.is-super .gba-textbox-text {
+  color: #185018;
+}

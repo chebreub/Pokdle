@@ -12088,6 +12088,14 @@ function setGbaMenuView(view) {
   }
 }
 
+function playBattleStartTransition() {
+  document.querySelectorAll(".gba-battle-start-overlay").forEach((el) => el.remove());
+  const overlay = document.createElement("div");
+  overlay.className = "gba-battle-start-overlay";
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 900);
+}
+
 function getGbaBattleLevel(battler) {
   if (!battler?.stats) return 50;
   const total = Object.values(battler.stats).reduce((s, v) => s + (Number(v) || 0), 0);
@@ -12368,6 +12376,13 @@ function renderDraftSimpleBattleDevPanel(state) {
   const networkOpponent = getDraftSimpleBattleNetworkOpponent(state);
   const networkTurnHint = getDraftSimpleBattleNetworkTurnHint(state);
   const visualFeedback = getDraftSimpleBattleVisualFeedback(state);
+  const replayAction = state?.visualReplay?.active ? state.visualReplay.currentAction : null;
+  const replayPhaseStr = state?.visualReplay?.phase || "";
+  const inImpactPhase = replayPhaseStr === "impact" || replayPhaseStr === "hp";
+  const isCriticalHit = Boolean(replayAction?.critical) && inImpactPhase;
+  const isSuperEffective = Number(replayAction?.effectiveness) > 1 && inImpactPhase && !isCriticalHit;
+  const gbaSceneExtraClass = isCriticalHit ? " gba-scene-crit" : "";
+  const gbaTextboxToneClass = isCriticalHit ? " is-crit" : isSuperEffective ? " is-super" : "";
   const statusText = getDraftSimpleBattleStatusText(state);
   const statusClass = getDraftSimpleBattleStatusClass(state);
   const leftStatusLabel = getDraftSimpleBattleStatusLabel(displayLeft.status);
@@ -12662,7 +12677,7 @@ function renderDraftSimpleBattleDevPanel(state) {
       </div>
     ` : ""}
     <div class="gba-battle">
-      <div class="gba-battle-scene">
+      <div class="gba-battle-scene${gbaSceneExtraClass}">
         <div class="gba-battle-bg"></div>
         <div class="gba-info-box gba-info-foe">
           <div class="gba-info-name-row">
@@ -12702,7 +12717,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         </div>
       </div>
       <div class="gba-battle-bottom ${showGbaMenu ? "has-menu" : "no-menu"}">
-        <div class="gba-textbox" role="status" aria-live="polite">
+        <div class="gba-textbox${gbaTextboxToneClass}" role="status" aria-live="polite">
           <span class="gba-textbox-text">${escapeHtml(sceneText)}</span>
           <span class="gba-textbox-arrow" aria-hidden="true">▼</span>
         </div>
@@ -12853,6 +12868,7 @@ function startDraftSimpleBattlePreview() {
   draftSimpleBattleDevUiState.showPreview = false;
   draftSimpleBattleDevUiState.showIntro = true;
   draftSimpleBattleDevUiState.sceneMessage = `${draftSimpleBattleDevUiState.left?.pokemon?.name || "Ton Pokémon"} entre au combat face à ${draftSimpleBattleDevUiState.right?.pokemon?.name || "l’adversaire"} !`;
+  playBattleStartTransition();
   renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
   playPokemonCry(draftSimpleBattleDevUiState.right?.pokemon);
   setTimeout(() => playPokemonCry(draftSimpleBattleDevUiState?.left?.pokemon), 650);
