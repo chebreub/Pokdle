@@ -13222,6 +13222,18 @@ function hostDraftSimpleBattleNetworkRoom() {
   return state;
 }
 
+async function openDraftFriendBattle() {
+  if (!draftArenaState || draftArenaState.team.length < DRAFT_TEAM_SIZE) {
+    alert("Drafte d'abord 6 Pokémon avant d'affronter un ami.");
+    return null;
+  }
+  // Ouvre la preview avec la team du joueur (mode arena-run, on bascule en network juste après)
+  await launchDraftArenaBattle();
+  if (!draftSimpleBattleDevUiState) return null;
+  // Bascule en mode network-pvp et crée la room
+  return hostDraftSimpleBattleNetworkRoom();
+}
+
 function joinDraftSimpleBattleNetworkRoom() {
   const socket = ensureMultiplayerSocket();
   if (!socket?.connected) return null;
@@ -13249,6 +13261,7 @@ window.runDraftSimpleBattleDraftConversionDevVisualTest = runDraftSimpleBattleDr
 window.runDraftSimpleBattleLocalPvpTest = runDraftSimpleBattleLocalPvpTest;
 window.hostDraftSimpleBattleNetworkRoom = hostDraftSimpleBattleNetworkRoom;
 window.joinDraftSimpleBattleNetworkRoom = joinDraftSimpleBattleNetworkRoom;
+window.openDraftFriendBattle = openDraftFriendBattle;
 window.continueDraftSimpleBattleHotseat = continueDraftSimpleBattleHotseat;
 window.launchDraftArenaBattle = launchDraftArenaBattle;
 window.continueDraftArenaBattleRun = continueDraftArenaBattleRun;
