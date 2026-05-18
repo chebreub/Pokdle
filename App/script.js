@@ -12083,6 +12083,7 @@ function scrollToDraftSimpleBattlePanel(panel) {
 let __gbaMenuView = "main";
 function setGbaMenuView(view) {
   __gbaMenuView = view === "moves" ? "moves" : "main";
+  playGbaMenuBlip();
   if (draftSimpleBattleDevUiState) {
     renderDraftSimpleBattleDevPanel(draftSimpleBattleDevUiState);
   }
@@ -12122,35 +12123,42 @@ function playGbaBeep(freq = 700, durationMs = 60, volume = 0.05, type = "square"
 }
 
 let __gbaLastSfxKey = "";
+let __gbaLastAnimKey = "";
+const __GBA_ONESHOT_ANIM_CLASSES = ["is-hit", "is-taking-hit", "is-ko", "is-switch-in"];
+function stripGbaOneShotAnims(classString) {
+  if (!classString) return "";
+  let out = String(classString);
+  __GBA_ONESHOT_ANIM_CLASSES.forEach((c) => {
+    out = out.replace(new RegExp("\\b" + c + "\\b", "g"), "");
+  });
+  return out.replace(/\s+/g, " ").trim();
+}
 function maybePlayPhaseSfx(state) {
   const action = state?.visualReplay?.currentAction;
   const phase = state?.visualReplay?.phase || "";
   if (!action || !phase) { __gbaLastSfxKey = ""; return; }
   const turnNum = Number(state.visualReplay?.turn) || 0;
-  const actionIdx = Number(state.visualReplay?.actionIndex) || 0;
-  const key = `${turnNum}:${actionIdx}:${phase}`;
+  const visibleCount = Number(state.visualReplay?.visibleCount) || 0;
+  const key = `${turnNum}:${visibleCount}:${action.side || ""}:${action.event || ""}:${action.move?.name || action.moveName || ""}:${phase}`;
   if (key === __gbaLastSfxKey) return;
   __gbaLastSfxKey = key;
 
-  if (phase === "anticipation") {
-    playGbaBeep(450, 60, 0.04, "square");
-  } else if (phase === "impact") {
+  if (phase === "impact") {
     if (action.missed) {
-      playGbaBeep(280, 80, 0.04, "square"); // whiff
+      playGbaBeep(320, 90, 0.025, "triangle"); // whiff doux
     } else if (action.critical) {
-      playGbaBeep(160, 60, 0.1, "square");
-      setTimeout(() => playGbaBeep(80, 220, 0.1, "sawtooth"), 50);
+      playGbaBeep(180, 90, 0.05, "triangle");
+      setTimeout(() => playGbaBeep(110, 220, 0.04, "sine"), 70);
     } else if (Number(action.effectiveness) > 1) {
-      playGbaBeep(240, 90, 0.08, "square");
-      setTimeout(() => playGbaBeep(140, 80, 0.07, "square"), 70);
+      playGbaBeep(260, 100, 0.04, "triangle");
     } else if (Number(action.effectiveness) > 0 && Number(action.effectiveness) < 1) {
-      playGbaBeep(180, 80, 0.05, "triangle"); // muted "thud"
+      playGbaBeep(200, 90, 0.025, "sine");
     } else if (Number(action.damage) > 0) {
-      playGbaBeep(200, 70, 0.06, "square");
+      playGbaBeep(220, 80, 0.03, "triangle");
     }
   } else if (phase === "ko") {
-    playGbaBeep(180, 220, 0.08, "sawtooth");
-    setTimeout(() => playGbaBeep(90, 400, 0.06, "sawtooth"), 150);
+    playGbaBeep(180, 260, 0.04, "sine");
+    setTimeout(() => playGbaBeep(95, 400, 0.035, "sine"), 180);
   }
 }
 
@@ -12177,6 +12185,22 @@ function getGbaStatusBadgeHtml(status) {
   return `<span class="gba-status-badge ${cfg.cls}">${cfg.abbr}</span>`;
 }
 
+function getGbaPokeballsHtml(team, activeIndex) {
+  const slots = Array.isArray(team) ? team.slice(0, 6) : [];
+  while (slots.length < 6) slots.push(null);
+  const balls = slots.map((slot, i) => {
+    if (!slot) return `<span class="gba-pokeball is-empty" aria-hidden="true"></span>`;
+    if (Number(slot.currentHp) <= 0) return `<span class="gba-pokeball is-fainted" aria-hidden="true"></span>`;
+    if (i === Number(activeIndex)) return `<span class="gba-pokeball is-active" aria-hidden="true"></span>`;
+    return `<span class="gba-pokeball" aria-hidden="true"></span>`;
+  }).join("");
+  return `<div class="gba-pokeballs">${balls}</div>`;
+}
+
+function playGbaMenuBlip() {
+  playGbaBeep(620, 35, 0.025, "triangle");
+}
+
 function getGbaBattleLevel(battler) {
   if (!battler?.stats) return 50;
   const total = Object.values(battler.stats).reduce((s, v) => s + (Number(v) || 0), 0);
@@ -12185,24 +12209,36 @@ function getGbaBattleLevel(battler) {
 }
 
 let __gbaLastHpPercent = { left: 100, right: 100 };
-function refreshGbaHpBars(leftTarget, rightTarget) {
-  const apply = (selector, target, key) => {
+let __gbaLastDisplayKey = { left: null, right: null };
+function refreshGbaHpBars(leftTarget, rightTarget, leftDisplayKey, rightDisplayKey) {
+  const apply = (selector, target, displayKey, side) => {
     const el = document.querySelector(selector);
     if (!el) return;
-    const prev = Number(__gbaLastHpPercent[key]);
     const next = Math.max(0, Math.min(100, Number(target) || 0));
+    const sameDisplay = __gbaLastDisplayKey[side] != null && __gbaLastDisplayKey[side] === displayKey;
+    if (!sameDisplay) {
+      // Nouveau Pokémon affiché (switch / KO / 1er render) → snap sans animation
+      el.style.transition = "none";
+      el.style.width = next + "%";
+      void el.offsetHeight;
+      el.style.transition = "";
+      __gbaLastHpPercent[side] = next;
+      __gbaLastDisplayKey[side] = displayKey;
+      return;
+    }
+    const prev = Number(__gbaLastHpPercent[side]);
     if (!Number.isFinite(prev) || prev === next) {
       el.style.width = next + "%";
-      __gbaLastHpPercent[key] = next;
+      __gbaLastHpPercent[side] = next;
       return;
     }
     el.style.width = prev + "%";
     void el.offsetHeight; // force reflow so transition runs
     el.style.width = next + "%";
-    __gbaLastHpPercent[key] = next;
+    __gbaLastHpPercent[side] = next;
   };
-  apply(".gba-battle .gba-info-player .gba-info-hp-fill", leftTarget, "left");
-  apply(".gba-battle .gba-info-foe .gba-info-hp-fill", rightTarget, "right");
+  apply(".gba-battle .gba-info-player .gba-info-hp-fill", leftTarget, leftDisplayKey, "left");
+  apply(".gba-battle .gba-info-foe .gba-info-hp-fill", rightTarget, rightDisplayKey, "right");
 }
 
 let __gbaTextboxTimer = null;
@@ -12230,12 +12266,8 @@ function refreshGbaTextbox(text) {
       box.textContent = target;
       return;
     }
-    const ch = target.charAt(i);
-    if (i % 3 === 0 && /[A-Za-zÀ-ÿ0-9]/.test(ch)) {
-      playGbaBeep(720, 16, 0.022, "square");
-    }
     box.textContent = target.slice(0, ++i);
-  }, 22);
+  }, 38);
 }
 
 function renderDraftSimpleBattleDevPanel(state) {
@@ -12468,6 +12500,20 @@ function renderDraftSimpleBattleDevPanel(state) {
   const isSuperEffective = Number(replayAction?.effectiveness) > 1 && inImpactPhase && !isCriticalHit;
   const gbaSceneExtraClass = isCriticalHit ? " gba-scene-crit" : "";
   const gbaTextboxToneClass = isCriticalHit ? " is-crit" : isSuperEffective ? " is-super" : "";
+  // Gating animations one-shot : ne re-déclenche pas les keyframes si la phase de replay n'a pas changé
+  // Inclut visibleCount + side + event pour différencier les actions successives du même tour
+  const animFp = state?.visualReplay?.active
+    ? `${state.visualReplay.turn || 0}:${state.visualReplay.visibleCount || 0}:${replayAction?.side || ""}:${replayAction?.event || ""}:${replayAction?.move?.name || replayAction?.moveName || ""}:${replayPhaseStr}`
+    : "";
+  const animFpChanged = animFp !== __gbaLastAnimKey;
+  __gbaLastAnimKey = animFp;
+  let leftFighterClass = animFpChanged ? visualFeedback.leftClass : stripGbaOneShotAnims(visualFeedback.leftClass);
+  let rightFighterClass = animFpChanged ? visualFeedback.rightClass : stripGbaOneShotAnims(visualFeedback.rightClass);
+  // F : sprite recule à la baseline dès la phase d'impact/hp/ko (au lieu de rester en lunge)
+  if (replayPhaseStr === "impact" || replayPhaseStr === "hp" || replayPhaseStr === "ko") {
+    leftFighterClass = leftFighterClass.replace(/\bis-attacking\b/g, "").replace(/\s+/g, " ").trim();
+    rightFighterClass = rightFighterClass.replace(/\bis-attacking\b/g, "").replace(/\s+/g, " ").trim();
+  }
   const statusText = getDraftSimpleBattleStatusText(state);
   const statusClass = getDraftSimpleBattleStatusClass(state);
   const leftStatusLabel = getDraftSimpleBattleStatusLabel(displayLeft.status);
@@ -12620,14 +12666,11 @@ function renderDraftSimpleBattleDevPanel(state) {
         ? "Ton tour"
         : "En attente";
   const resultHtml = isFinished
-    ? `<div class="draft-dev-battle-result is-finished ${playerWin ? "is-win" : "is-loss"}">
-        <small class="draft-dev-battle-result-kicker">Fin de manche</small>
-        <b>${playerWin ? "Victoire !" : "Défaite"}</b>
-        <span>${playerWin ? "Ton équipe remporte le duel avec brio." : "Le duel t’échappe cette fois."}</span>
-        <span>${escapeHtml(winner)} termine le match pour ${playerWin ? "ton équipe" : "l’adversaire"}.</span>
-        <span>${escapeHtml(getDraftSimpleBattleTeamWinnerLabel(state))} • Dernier Pokémon debout : ${escapeHtml(winner)}</span>
-        <span>Résumé : ${state.log.length} tours • ${leftRemaining} survivant(s) côté joueur • ${rightRemaining} survivant(s) côté adverse.</span>
-        <div class="draft-dev-battle-result-actions">
+    ? `<div class="gba-result ${playerWin ? "is-win" : "is-loss"}">
+        <h3 class="gba-result-title">${playerWin ? "VICTOIRE !" : "DÉFAITE"}</h3>
+        <p class="gba-result-text">${playerWin ? "Tu as gagné le combat&nbsp;!" : "Tous tes Pokémon sont K.O…"}</p>
+        <p class="gba-result-meta">${escapeHtml(winner)} clôture le match en ${state.log.length} tour${state.log.length > 1 ? "s" : ""} — ${leftRemaining} Pokémon restant${leftRemaining > 1 ? "s" : ""} côté joueur, ${rightRemaining} côté adverse.</p>
+        <div class="gba-result-actions">
           <button type="button" class="btn-blue" onclick="${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.action ? state.postBattleAction.action : "replayDraftSimpleBattleDevDuel")}()">${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.label ? state.postBattleAction.label : "Rejouer")}</button>
           <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
         </div>
@@ -12650,8 +12693,9 @@ function renderDraftSimpleBattleDevPanel(state) {
             const member = (state.pendingSwitchSide === "right" ? state.rightTeam : state.leftTeam)[index];
             return `
               <button type="button" class="btn-ghost draft-dev-battle-switch-btn" onclick="chooseDraftSimpleBattleReplacement(${index}, '${state.pendingSwitchSide || "left"}')" ${!canLocalChooseReplacement ? "disabled" : ""}>
-                <span>${escapeHtml(member.pokemon.name)}</span>
-                <small>PV ${member.currentHp} / ${member.maxHp}</small>
+                <img class="draft-switch-sprite" src="${escapeHtml(getPokemonSprite(member.pokemon))}" alt="${escapeHtml(member.pokemon.name)}" loading="lazy">
+                <span class="draft-switch-name">${escapeHtml(member.pokemon.name)}</span>
+                <small class="draft-switch-hp">PV ${member.currentHp} / ${member.maxHp}</small>
               </button>
             `;
           }).join("")}
@@ -12712,6 +12756,22 @@ function renderDraftSimpleBattleDevPanel(state) {
       </div>
     </div>
   `;
+
+  // LITE-RENDER : pendant une frame d'animation HP (ou autre re-render dans la même phase de replay),
+  // ne reconstruit pas body.innerHTML. On met juste à jour le texte et les barres HP — évite le flicker
+  // des sprites (recréés à chaque innerHTML).
+  const replayLiteKey = state?.visualReplay?.active
+    ? `${state.visualReplay.turn || 0}:${state.visualReplay.visibleCount || 0}:${replayPhaseStr}`
+    : "";
+  if (replayLiteKey && panel.dataset.gbaReplayLiteKey === replayLiteKey && !isFinished) {
+    panel.classList.remove("hidden");
+    refreshGbaTextbox(sceneText);
+    const liteLeftKey = `${state.leftActiveIndex || 0}:${displayLeft?.pokemon?.id || displayLeft?.pokemon?.name || ""}`;
+    const liteRightKey = `${state.rightActiveIndex || 0}:${displayRight?.pokemon?.id || displayRight?.pokemon?.name || ""}`;
+    refreshGbaHpBars(leftHpPercent, rightHpPercent, liteLeftKey, liteRightKey);
+    return;
+  }
+  panel.dataset.gbaReplayLiteKey = replayLiteKey;
 
   body.innerHTML = isFinished
     ? `
@@ -12775,12 +12835,13 @@ function renderDraftSimpleBattleDevPanel(state) {
               <span class="gba-info-hp-fill ${rightHpPercent <= 25 ? "is-low" : rightHpPercent <= 50 ? "is-medium" : ""}" style="width:${rightHpPercent}%"></span>
             </div>
           </div>
+          ${getGbaPokeballsHtml(state.rightTeam, state.rightActiveIndex)}
         </div>
-        <div class="gba-fighter gba-fighter-foe ${visualFeedback.rightClass}">
+        <div class="gba-fighter gba-fighter-foe ${rightFighterClass}">
           <img class="gba-sprite gba-sprite-foe" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${getPokemonSpriteId(displayRight.pokemon)}.png" alt="${escapeHtml(displayRight.pokemon.name)}" onerror="this.onerror=null;this.src='${escapeHtml(getPokemonSprite(displayRight.pokemon))}';">
           <div class="gba-platform gba-platform-foe"></div>
         </div>
-        <div class="gba-fighter gba-fighter-player ${visualFeedback.leftClass}">
+        <div class="gba-fighter gba-fighter-player ${leftFighterClass}">
           <img class="gba-sprite gba-sprite-player" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${getPokemonSpriteId(displayLeft.pokemon)}.png" alt="${escapeHtml(displayLeft.pokemon.name)}" onerror="this.onerror=null;this.src='${escapeHtml(getPokemonSprite(displayLeft.pokemon))}';">
           <div class="gba-platform gba-platform-player"></div>
         </div>
@@ -12799,6 +12860,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           <div class="gba-info-exp-bar">
             <span class="gba-info-exp-fill" style="width:50%"></span>
           </div>
+          ${getGbaPokeballsHtml(state.leftTeam, state.leftActiveIndex)}
         </div>
       </div>
       <div class="gba-battle-bottom ${showGbaMenu ? "has-menu" : "no-menu"}">
@@ -12809,16 +12871,19 @@ function renderDraftSimpleBattleDevPanel(state) {
         ${gbaMenuHtml}
       </div>
     </div>
-    <div class="draft-dev-battle-benches">
-      ${renderDraftSimpleBattleBench(state.leftTeam, state.leftActiveIndex, "Banc joueur")}
-      ${renderDraftSimpleBattleBench(state.rightTeam, state.rightActiveIndex, state.arena?.name ? `Banc de ${state.arena.name}` : "Banc adverse")}
-    </div>
-    <div class="draft-dev-battle-meta">
-      <div class="draft-summary-card draft-dev-battle-status ${statusClass}"><span>Statut</span><b>${escapeHtml(statusText)}</b></div>
-      <div class="draft-summary-card"><span>Ordre du tour</span><b>${escapeHtml(orderLabel)}</b><small>${escapeHtml(orderHint)}</small></div>
-      <div class="draft-summary-card"><span>Tours</span><b>${state.log.length}</b></div>
-      <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
-    </div>
+    <details class="draft-dev-battle-extras-details">
+      <summary>Détails du combat (bancs, statut, ordre, tours)</summary>
+      <div class="draft-dev-battle-benches">
+        ${renderDraftSimpleBattleBench(state.leftTeam, state.leftActiveIndex, "Banc joueur")}
+        ${renderDraftSimpleBattleBench(state.rightTeam, state.rightActiveIndex, state.arena?.name ? `Banc de ${state.arena.name}` : "Banc adverse")}
+      </div>
+      <div class="draft-dev-battle-meta">
+        <div class="draft-summary-card draft-dev-battle-status ${statusClass}"><span>Statut</span><b>${escapeHtml(statusText)}</b></div>
+        <div class="draft-summary-card"><span>Ordre du tour</span><b>${escapeHtml(orderLabel)}</b><small>${escapeHtml(orderHint)}</small></div>
+        <div class="draft-summary-card"><span>Tours</span><b>${state.log.length}</b></div>
+        <div class="draft-summary-card"><span>Vainqueur</span><b>${escapeHtml(winner)}</b></div>
+      </div>
+    </details>
     ${switchHtml}
     <div class="draft-dev-battle-battlebox" data-combat-ui="${combatUiState}" data-replay-phase="${replayPhase}">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
@@ -12829,7 +12894,9 @@ function renderDraftSimpleBattleDevPanel(state) {
 
   panel.classList.remove("hidden");
   refreshGbaTextbox(sceneText);
-  refreshGbaHpBars(leftHpPercent, rightHpPercent);
+  const leftDisplayKey = `${state.leftActiveIndex || 0}:${displayLeft?.pokemon?.id || displayLeft?.pokemon?.name || ""}`;
+  const rightDisplayKey = `${state.rightActiveIndex || 0}:${displayRight?.pokemon?.id || displayRight?.pokemon?.name || ""}`;
+  refreshGbaHpBars(leftHpPercent, rightHpPercent, leftDisplayKey, rightDisplayKey);
   maybePlayPhaseSfx(state);
   if (shouldAutoScroll) {
     scrollToDraftSimpleBattlePanel(panel);
@@ -12933,7 +13000,11 @@ function clearDraftSimpleBattleDevPanel() {
   __gbaTextboxLastText = "";
   __gbaMenuView = "main";
   __gbaLastHpPercent = { left: 100, right: 100 };
+  __gbaLastDisplayKey = { left: null, right: null };
   __gbaLastSfxKey = "";
+  __gbaLastAnimKey = "";
+  const __gbaPanelEl = document.getElementById("draft-dev-battle-panel");
+  if (__gbaPanelEl) delete __gbaPanelEl.dataset.gbaReplayLiteKey;
   document.body.classList.remove("draft-battle-open");
   document.getElementById("draft-dev-battle-panel")?.classList.add("hidden");
   document.getElementById("draft-battle-close")?.classList.add("hidden");
@@ -13056,6 +13127,7 @@ function chooseDraftSimpleBattleReplacement(teamIndex, side = null, options = {}
   const activeIndex = replacementSide === "right" ? state.rightActiveIndex : state.leftActiveIndex;
   const nextMember = team[nextIndex];
   if (!Number.isInteger(nextIndex) || !nextMember || nextMember.currentHp <= 0 || nextIndex === activeIndex) return null;
+  playGbaMenuBlip();
 
   const switchReason = state.pendingSwitchReason;
   state.pendingSwitch = false;
@@ -13081,27 +13153,18 @@ function chooseDraftSimpleBattleReplacement(teamIndex, side = null, options = {}
   }
 
   if (switchReason === "manual" && state.phase !== "finished") {
-    state.turnState = replacementSide === "left" ? "left-action" : "right-action";
-    submitDraftSimpleBattleTurnAction(state, replacementSide, {
-      kind: "switch",
-      teamIndex: nextIndex,
-      pokemonName: nextMember.pokemon.name,
-    }, {
-      source: "player",
+    // Règle : switch manuel = pas de tour adversaire auto. On exécute juste le switch
+    // et on rend la main au joueur (équivalent d'un swap "gratuit" comme dans certaines
+    // règles maison).
+    const switched = executeDraftSimpleBattleSwitch(state, replacementSide, nextIndex, {
+      reason: "manual-switch",
+      forced: false,
     });
-    const otherSide = replacementSide === "left" ? "right" : "left";
-    if (!isDraftSimpleBattleHumanControlled(state, otherSide)) {
-      const enemyAction = chooseDraftSimpleBattleEnemyAction(state);
-      submitDraftSimpleBattleTurnAction(state, otherSide, enemyAction, { source: "ai" });
-    } else {
-      state.turnState = otherSide === "left" ? "left-action" : "right-action";
-      state.sceneMessage = replacementSide === "left"
-        ? "Action gauche choisie. En attente action droite."
-        : "Action droite choisie. En attente action gauche.";
-      renderDraftSimpleBattleDevPanel(state);
-      return state;
-    }
-    return scheduleDraftSimpleBattleTurnResolution(state);
+    if (!switched) return null;
+    state.sceneMessage = `${switched.pokemon.name} entre au combat !`;
+    state.turnState = replacementSide === "left" ? "left-action" : "right-action";
+    renderDraftSimpleBattleDevPanel(state);
+    return state;
   }
 
   const switched = executeDraftSimpleBattleSwitch(state, replacementSide, nextIndex, {
@@ -13185,6 +13248,7 @@ function runDraftSimpleBattleDevTurn(moveIndex = 0, side = null) {
   const expectedTurnState = actionSide === "right" ? "right-action" : "left-action";
   if (state.turnState !== expectedTurnState) return null;
   __gbaMenuView = "main";
+  playGbaBeep(540, 50, 0.035, "triangle");
   prepareDraftSimpleBattleQueuedTurn(state, {
     kind: "move",
     moveIndex,
@@ -15534,12 +15598,124 @@ function onOverlayBackdropClick(event) {
   if (event.target && event.target.id === 'overlay-modal') closeOverlayModal();
 }
 
+const APP_SETTINGS_STORAGE_KEY = "pokedle_app_settings_v1";
+const DEFAULT_APP_SETTINGS = {
+  theme: "light",
+  density: "normal",
+  textScale: "normal",
+  highContrast: false,
+  reduceMotion: false,
+};
+
+function getStoredAppSettings() {
+  try {
+    const raw = localStorage.getItem(APP_SETTINGS_STORAGE_KEY);
+    return raw ? { ...DEFAULT_APP_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_APP_SETTINGS };
+  } catch (error) {
+    console.warn("Failed to read app settings:", error);
+    return { ...DEFAULT_APP_SETTINGS };
+  }
+}
+
+function saveAppSettings(settings) {
+  try {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.warn("Failed to save app settings:", error);
+  }
+}
+
+function applyAppSettings(settings = getStoredAppSettings()) {
+  document.body.classList.toggle("theme-dark", settings.theme === "dark");
+  document.body.classList.toggle("density-compact", settings.density === "compact");
+  document.body.classList.toggle("density-airy", settings.density === "airy");
+  document.body.classList.toggle("text-scale-small", settings.textScale === "small");
+  document.body.classList.toggle("text-scale-large", settings.textScale === "large");
+  document.body.classList.toggle("a11y-high-contrast", Boolean(settings.highContrast));
+  document.body.classList.toggle("reduce-motion", Boolean(settings.reduceMotion));
+}
+
+function updateAppSetting(key, value) {
+  const settings = getStoredAppSettings();
+  settings[key] = value;
+  saveAppSettings(settings);
+  applyAppSettings(settings);
+}
+
+function resetAppSettings() {
+  saveAppSettings({ ...DEFAULT_APP_SETTINGS });
+  applyAppSettings(DEFAULT_APP_SETTINGS);
+  openSettingsModal();
+}
+
 function openHelpModal() {
-  ensureOverlay('Aide', '<p class="card-desc">Les options avancées seront rétablies après stabilisation. Les modes solo de base restent prioritaires.</p>');
+  ensureOverlay('Aide', `
+    <div class="app-help-grid">
+      <section class="app-help-card">
+        <h4>Deviner</h4>
+        <p>Choisis les générations, lance un mode, puis utilise les indices après chaque tentative : génération, types, habitat, couleur, stade, taille et poids.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Modes rapides</h4>
+        <p>Pokémon du jour propose une cible quotidienne. Le mode classique relance une partie libre. Party Pokémon enchaîne plusieurs mini-jeux.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Multijoueur</h4>
+        <p>Crée une room, partage le code, puis affronte un ami sur le même Pokémon mystère. Le créateur peut relancer avec les générations choisies.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Outils</h4>
+        <p>Le Pokédex sert à filtrer, comparer et consulter les fiches. Le Team Builder aide à préparer une équipe et la table des types sert de référence.</p>
+      </section>
+    </div>
+    <p class="app-help-tip">Astuce : les boutons "Tout" et "Aucune" dans Générations changent le pool utilisé par la plupart des modes.</p>
+  `);
 }
 
 function openSettingsModal() {
-  ensureOverlay('Paramètres', '<p class="card-desc">Les paramètres avancés sont temporairement simplifiés pendant la remise en état du site.</p>');
+  const settings = getStoredAppSettings();
+  ensureOverlay('Paramètres', `
+    <div class="app-settings-grid app-settings-grid-rich">
+      <section class="app-settings-section">
+        <h4>Affichage</h4>
+        <label class="app-setting-item app-setting-item-stack">
+          <span><b>Thème</b><small>Basculer entre clair et sombre.</small></span>
+          <select onchange="updateAppSetting('theme', this.value)">
+            <option value="light" ${settings.theme === "light" ? "selected" : ""}>Clair</option>
+            <option value="dark" ${settings.theme === "dark" ? "selected" : ""}>Sombre</option>
+          </select>
+        </label>
+        <label class="app-setting-item app-setting-item-stack">
+          <span><b>Densité</b><small>Compact pour voir plus d'infos, aéré pour plus de confort.</small></span>
+          <select onchange="updateAppSetting('density', this.value)">
+            <option value="normal" ${settings.density === "normal" ? "selected" : ""}>Normale</option>
+            <option value="compact" ${settings.density === "compact" ? "selected" : ""}>Compacte</option>
+            <option value="airy" ${settings.density === "airy" ? "selected" : ""}>Aérée</option>
+          </select>
+        </label>
+        <label class="app-setting-item app-setting-item-stack">
+          <span><b>Taille du texte</b><small>Ajuste la lisibilité générale de l'interface.</small></span>
+          <select onchange="updateAppSetting('textScale', this.value)">
+            <option value="small" ${settings.textScale === "small" ? "selected" : ""}>Petite</option>
+            <option value="normal" ${settings.textScale === "normal" ? "selected" : ""}>Normale</option>
+            <option value="large" ${settings.textScale === "large" ? "selected" : ""}>Grande</option>
+          </select>
+        </label>
+      </section>
+      <section class="app-settings-section">
+        <h4>Accessibilité</h4>
+        <label class="app-setting-item">
+          <span><b>Contraste renforcé</b><small>Renforce les bordures et certains contrastes.</small></span>
+          <input type="checkbox" ${settings.highContrast ? "checked" : ""} onchange="updateAppSetting('highContrast', this.checked)" />
+        </label>
+        <label class="app-setting-item">
+          <span><b>Réduire les animations</b><small>Limite les transitions et animations décoratives.</small></span>
+          <input type="checkbox" ${settings.reduceMotion ? "checked" : ""} onchange="updateAppSetting('reduceMotion', this.checked)" />
+        </label>
+      </section>
+      <button class="btn-ghost app-settings-reset" type="button" onclick="resetAppSettings()">Réinitialiser les paramètres</button>
+    </div>
+  `);
 }
 
 function confirmResetProgression() {
@@ -17125,6 +17301,7 @@ function selectChallengePokemon(id) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  applyAppSettings();
   loadProfile();
   loadAchievementsState();
   loadMatchHistory();
@@ -17151,4 +17328,3 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   initProfessionalModeMenu();
 });
-
