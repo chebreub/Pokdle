@@ -15648,7 +15648,363 @@ function resetAppSettings() {
   openSettingsModal();
 }
 
+function getActiveScreenId() {
+  const screens = document.querySelectorAll('[id^="screen-"]');
+  for (const el of screens) {
+    if (!el.classList.contains('hidden')) return el.id;
+  }
+  return '';
+}
+
+function getHelpContentForGameMode(mode) {
+  switch (mode) {
+    case 'daily':
+      return {
+        title: 'Pokémon du jour',
+        body: `
+          <section class="app-help-card">
+            <h4>Une cible quotidienne</h4>
+            <p>Le Pokémon à deviner est <b>le même pour tous les joueurs</b>, et change à minuit (UTC). Tu peux tenter autant d'essais que tu veux dans la journée.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Indices après chaque essai</h4>
+            <p>Chaque ligne affiche un comparatif avec ton essai : <b>génération</b>, <b>types</b> (1 et 2), <b>habitat</b>, <b>couleur</b>, <b>stade</b> d'évolution, <b>taille</b> et <b>poids</b>. Vert = correct, jaune = proche, rouge = différent. Les flèches ▲/▼ t'indiquent si la vraie valeur est plus grande ou plus petite.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Série & record</h4>
+            <p>Gagner alimente ta <b>série actuelle</b> 🔥 et ton <b>record</b> 🏆 (visibles sur l'accueil). Une journée ratée remet la série à zéro.</p>
+          </section>
+        `,
+      };
+    case 'normal':
+      return {
+        title: 'Mode classique illimité',
+        body: `
+          <section class="app-help-card">
+            <h4>Partie libre, à volonté</h4>
+            <p>Devine un Pokémon mystère tiré <b>aléatoirement</b> dans les générations que tu as cochées sur l'accueil. Tu peux relancer autant que tu veux.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Indices après chaque essai</h4>
+            <p>Génération, types, habitat, couleur, stade, taille, poids — chaque colonne te dit si c'est correct, proche ou différent. Les flèches ▲/▼ pointent vers la vraie valeur.</p>
+          </section>
+        `,
+      };
+    case 'silhouette':
+      return {
+        title: 'Silhouette',
+        body: `
+          <section class="app-help-card">
+            <h4>Zoom progressif</h4>
+            <p>Le sprite est extrêmement <b>zoomé au départ</b> et se dézoome à chaque essai. Tu joues sur les générations cochées sur l'accueil.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Indices classiques en plus</h4>
+            <p>Les indices habituels (génération, types, habitat, etc.) s'ajoutent après chaque tentative, comme dans le mode classique.</p>
+          </section>
+        `,
+      };
+    case 'pixel':
+      return {
+        title: 'Mode pixelisé',
+        body: `
+          <section class="app-help-card">
+            <h4>Le sprite se révèle</h4>
+            <p>Le sprite est <b>très pixelisé</b> au départ. Le flou diminue à chaque essai pour rendre l'image de plus en plus lisible.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Indices classiques</h4>
+            <p>Tous les indices habituels (gen, types, habitat, couleur, etc.) s'affichent en parallèle après chaque essai.</p>
+          </section>
+        `,
+      };
+    case 'cry':
+      return {
+        title: 'Cri du Pokémon',
+        body: `
+          <section class="app-help-card">
+            <h4>Écoute le cri 🔊</h4>
+            <p>Le bouton lecture joue le <b>cri du Pokémon mystère</b>. Tu peux le rejouer autant de fois que tu veux. Devine à l'oreille.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Indices classiques</h4>
+            <p>Les comparatifs (gen, types, habitat, etc.) s'affichent à chaque essai pour t'aider à converger.</p>
+          </section>
+        `,
+      };
+    case 'mystery':
+      return {
+        title: 'Stat mystère',
+        body: `
+          <section class="app-help-card">
+            <h4>Devine via les stats</h4>
+            <p>Chaque essai te dévoile une <b>statistique de base</b> du Pokémon mystère (PV, Attaque, Défense, Atk Spé, Déf Spé, Vitesse). Compare avec ton essai pour resserrer le filet.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Indices classiques en plus</h4>
+            <p>Les indices habituels (gen, types, habitat…) restent dispos pour t'aider.</p>
+          </section>
+        `,
+      };
+    case 'quiz':
+      return {
+        title: 'Quiz Pokémon',
+        body: `
+          <section class="app-help-card">
+            <h4>Questions à choix multiples</h4>
+            <p>Une série de questions sur l'univers Pokémon (génération, type, stat dominante, signature, etc.). Choisis la bonne réponse parmi les 4 propositions.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Score final</h4>
+            <p>À la fin du quiz, tu vois ton score sur le total de questions. Aucun indice supplémentaire entre les questions.</p>
+          </section>
+        `,
+      };
+    case 'challenge':
+      return {
+        title: 'Défi personnalisé',
+        body: `
+          <section class="app-help-card">
+            <h4>Le Pokémon est imposé</h4>
+            <p>Quelqu'un t'a partagé un lien de défi qui choisit un Pokémon mystère pour toi. Devine-le avec les indices habituels.</p>
+          </section>
+        `,
+      };
+    default:
+      return null;
+  }
+}
+
+const HELP_BY_SCREEN = {
+  'screen-config': {
+    title: 'Accueil',
+    body: `
+      <section class="app-help-card">
+        <h4>Choisis tes générations</h4>
+        <p>La carte <b>🧬 Générations</b> en haut filtre le pool utilisé par les modes aléatoires (classique illimité, silhouette, pixelisé, cri, stat mystère…). Les boutons <b>Tout</b> et <b>Aucune</b> sélectionnent en masse. <b>Au moins une gen</b> doit rester cochée.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Pokémon du jour</h4>
+        <p>Le hero "▶ Jouer maintenant" et la pillar "Pokémon du jour" lancent le <b>mode daily</b> : une cible identique pour tous, qui change chaque jour. Indépendant des générations cochées.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Tous les modes via la nav</h4>
+        <p>Le menu <b>Jouer</b> liste tous les modes solo. <b>Social</b> contient Duel 1v1, Stat Clash, défis. <b>Outils</b> regroupe Team Builder, Draft Arènes, Table des types, Émulateur, etc.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Profil & succès</h4>
+        <p>Tes statistiques (série quotidienne, record, victoires) s'affichent en bas de l'accueil. Plus de détails via les boutons <b>Profil</b> et <b>Succès</b> dans la nav.</p>
+      </section>
+    `,
+  },
+  'screen-multiplayer': {
+    title: 'Duel 1v1 (multijoueur)',
+    body: `
+      <section class="app-help-card">
+        <h4>Créer ou rejoindre une room</h4>
+        <p><b>Créer</b> une room te donne un code à partager. <b>Rejoindre</b> demande ce code à ton ami. Quand vous êtes 2, le créateur lance la partie.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Même Pokémon, course à la victoire</h4>
+        <p>Vous devinez tous les deux le <b>même Pokémon mystère</b> en parallèle, chacun avec ses essais. Le premier à trouver gagne la manche.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Générations sélectionnées</h4>
+        <p>Le créateur choisit les générations utilisées. Tu peux les modifier avant de relancer.</p>
+      </section>
+    `,
+  },
+  'screen-stat-clash': {
+    title: 'Stat Clash 1v1',
+    body: `
+      <section class="app-help-card">
+        <h4>Le principe</h4>
+        <p>À chaque round, un Pokémon est tiré. Vous choisissez <b>chacun secrètement une stat</b> (Atk, Déf, Vit, etc.). Celui qui a la stat la plus haute marque le point.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>6 rounds, gestion de ressources</h4>
+        <p>Tu ne peux pas réutiliser une stat déjà jouée. Bien planifier les "manches faciles" et garder ses meilleures stats pour les Pokémon ambigus est la clé.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Solo ou 1v1 en ligne</h4>
+        <p>Joue contre un bot pour t'entraîner, ou crée/rejoins une room pour affronter un ami.</p>
+      </section>
+    `,
+  },
+  'screen-draft-arena': {
+    title: 'Draft Arènes',
+    body: `
+      <section class="app-help-card">
+        <h4>1) Choisis une génération</h4>
+        <p>La gen détermine les 8 arènes que tu vas affronter (chaque champion spécialiste d'un type) et le pool de Pokémon pour drafter.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>2) Drafte 6 Pokémon</h4>
+        <p>À chaque tour, 4 propositions aléatoires (pondérées par stats). Tu en choisis 1, les autres se renouvellent. Tu ne peux pas reprendre un Pokémon déjà sélectionné.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>3) Combat GBA-style</h4>
+        <p>Une fois l'équipe complète, lance le duel. Combat tour par tour façon Vert Feuille : menu <b>ATTAQUE</b> (4 attaques avec Type/PP), <b>POKÉMON</b> (changer de lead — switch manuel <b>ne consomme pas</b> ton tour), <b>SAC</b> et <b>FUITE</b> indisponibles en run arène.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>4) Affronter un ami</h4>
+        <p>Bouton <b>🆚 Combat ami</b> dans la barre du haut : crée une room avec ta team draftée, partage le code. <b>🔗 Rejoindre code</b> pour rejoindre une room existante.</p>
+      </section>
+    `,
+  },
+  'screen-pokedex': {
+    title: 'Pokédex',
+    body: `
+      <section class="app-help-card">
+        <h4>Filtrer & trier</h4>
+        <p>Recherche par nom, filtre par génération, par type principal et secondaire, et trie par numéro, nom, BST… Bouton <b>Shiny</b> pour basculer la grille en mode shiny.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Fiche détaillée</h4>
+        <p>Clique un Pokémon pour voir : sprite (normal/shiny toggle), types, talents (dont caché), stats avec barres, mensurations, formes alternatives (méga, alolan, gigamax…). Boutons <b>Comparer</b> et <b>Ajouter au Team Builder</b>.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Comparateur</h4>
+        <p>Ouvre une comparaison côte à côte entre 2 Pokémon. Utile pour choisir un draft, un duel ou un team builder.</p>
+      </section>
+    `,
+  },
+  'screen-team-builder': {
+    title: 'Team Builder',
+    body: `
+      <section class="app-help-card">
+        <h4>Composer une équipe de 6</h4>
+        <p>Pour chaque slot : choisis un Pokémon, son objet tenu, son gimmick (Dynamax, Tera, etc.), et 4 attaques. La sauvegarde reste <b>locale</b> dans ton navigateur.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>EV / IV</h4>
+        <p>Tu peux régler les EV et IV par stat. Le builder calcule les stats finales en N.100. Un panneau récap affiche la couverture de types offensive et défensive de l'équipe entière.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Mes teams</h4>
+        <p>Bouton <b>🧩 Bases d'équipes</b> pour sauvegarder et rappeler plusieurs teams. Tout reste en local.</p>
+      </section>
+    `,
+  },
+  'screen-teams': {
+    title: 'Mes teams',
+    body: `
+      <section class="app-help-card">
+        <h4>Tes équipes sauvegardées</h4>
+        <p>Liste de toutes les teams enregistrées localement. Clique une pour la rouvrir dans le Team Builder, ou supprime celles dont tu ne te sers plus.</p>
+      </section>
+    `,
+  },
+  'screen-emulator': {
+    title: 'Émulateur ROM',
+    body: `
+      <section class="app-help-card">
+        <h4>ROMs intégrées</h4>
+        <p>Sélectionne <b>Rouge Feu</b>, <b>Vert Feuille</b>, <b>Cristal</b> ou <b>Platine</b> dans le menu, puis clique ▶ Lancer.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Charger une ROM</h4>
+        <p>Bouton <b>📁 Charger une autre ROM</b> pour utiliser un fichier .gba / .gbc / .gb / .nds de ton disque dur.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Contrôles clavier</h4>
+        <p><b>Z</b> = A, <b>X</b> = B, <b>Entrée</b> = Start, <b>Shift</b> = Select, <b>A</b> = L, <b>S</b> = R, <b>Flèches</b> = direction. <b>Souris</b> = écran tactile (DS).</p>
+      </section>
+    `,
+  },
+  'screen-ranking': {
+    title: 'Mode classement',
+    body: `
+      <section class="app-help-card">
+        <h4>Tableau personnel</h4>
+        <p>Une grille où tu places ton Pokémon préféré <b>par génération et par type</b> (plus quelques catégories spéciales). Sauvegarde locale, à toi de jouer aux tier listes.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Clic = choix</h4>
+        <p>Clique une case pour ouvrir le sélecteur de Pokémon correspondant à la gen et au type de la case.</p>
+      </section>
+    `,
+  },
+  'screen-games-ranking': {
+    title: 'Classement des jeux',
+    body: `
+      <section class="app-help-card">
+        <h4>Ton podium personnel</h4>
+        <p>Classe les jeux Pokémon que tu as joués (par génération / version). Sauvegarde locale.</p>
+      </section>
+    `,
+  },
+  'screen-type-chart': {
+    title: 'Table des types',
+    body: `
+      <section class="app-help-card">
+        <h4>Référence d'efficacité</h4>
+        <p>La table classique attaquant × défenseur : ×2 super efficace, ×½ peu efficace, ×0 sans effet. Filtre par générations pour voir les évolutions historiques (Gen 1 sans Acier/Ténèbres/Fée, etc.).</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Mode duel</h4>
+        <p>Tu peux aussi voir l'efficacité d'un type contre 1 ou 2 types (idéal pour préparer une attaque ou une défense en double type).</p>
+      </section>
+    `,
+  },
+  'screen-profile': {
+    title: 'Profil joueur',
+    body: `
+      <section class="app-help-card">
+        <h4>Statistiques globales</h4>
+        <p>Ton pseudo, ton Pokémon favori, ta série quotidienne, ton record, total de victoires par mode. Tout est stocké en local — pas de compte distant.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Édition</h4>
+        <p>Change ton pseudo ou ton Pokémon favori. Le pseudo est utilisé en multijoueur (Duel 1v1, Stat Clash, Draft 1v1).</p>
+      </section>
+    `,
+  },
+  'screen-achievements': {
+    title: 'Succès',
+    body: `
+      <section class="app-help-card">
+        <h4>Objectifs débloqués</h4>
+        <p>Liste des accomplissements liés à tes parties (première victoire, séries, modes terminés, etc.). Plus tu joues, plus ça remplit.</p>
+      </section>
+    `,
+  },
+  'screen-match-history': {
+    title: 'Historique des parties',
+    body: `
+      <section class="app-help-card">
+        <h4>Tes 50 dernières parties</h4>
+        <p>Mode joué, résultat (gagné/perdu/abandonné), Pokémon mystère, nombre d'essais, durée. Filtre par mode si besoin.</p>
+      </section>
+    `,
+  },
+  'screen-odd-one-out': {
+    title: 'L\'intrus',
+    body: `
+      <section class="app-help-card">
+        <h4>Trouve l'intrus</h4>
+        <p>4 Pokémon sont affichés. Trois partagent une caractéristique commune (même type, même habitat, même gen, etc.), le quatrième est l'intrus. À toi de le repérer.</p>
+      </section>
+    `,
+  },
+};
+
 function openHelpModal() {
+  const activeScreenId = getActiveScreenId();
+  // Cas spécial : screen-game → branche sur le gameMode actif pour aide précise
+  if (activeScreenId === 'screen-game') {
+    const modeHelp = getHelpContentForGameMode(typeof gameMode !== 'undefined' ? gameMode : '');
+    if (modeHelp) {
+      ensureOverlay(`Aide — ${modeHelp.title}`, `<div class="app-help-grid">${modeHelp.body}</div>`);
+      return;
+    }
+  }
+  const cfg = HELP_BY_SCREEN[activeScreenId];
+  if (cfg) {
+    ensureOverlay(`Aide — ${cfg.title}`, `<div class="app-help-grid">${cfg.body}</div>`);
+    return;
+  }
+  // Fallback générique
   ensureOverlay('Aide', `
     <div class="app-help-grid">
       <section class="app-help-card">
@@ -15661,7 +16017,7 @@ function openHelpModal() {
       </section>
       <section class="app-help-card">
         <h4>Multijoueur</h4>
-        <p>Crée une room, partage le code, puis affronte un ami sur le même Pokémon mystère. Le créateur peut relancer avec les générations choisies.</p>
+        <p>Crée une room, partage le code, puis affronte un ami sur le même Pokémon mystère.</p>
       </section>
       <section class="app-help-card">
         <h4>Outils</h4>
