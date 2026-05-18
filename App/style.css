@@ -23047,3 +23047,244 @@ body.theme-dark .stat-clash-reveal-stat b { color: var(--sc-text-dark); }
   .stat-clash-pokemon-meta h3 { font-size: 18px !important; }
   .stat-clash-reveal-stats { grid-template-columns: 1fr 1fr !important; }
 }
+
+/* STAT CLASH - centrage et scene centrale */
+#screen-stat-clash .stat-clash-shell {
+  width: 100%;
+}
+
+#screen-stat-clash .stat-clash-board {
+  grid-template-columns: minmax(250px, 0.9fr) minmax(420px, 1.65fr) minmax(250px, 0.9fr) !important;
+  align-items: stretch;
+  gap: 20px !important;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+#screen-stat-clash .stat-clash-center-card {
+  min-width: 0;
+  min-height: 100%;
+  padding: 22px !important;
+  justify-content: stretch;
+}
+
+#screen-stat-clash .stat-clash-randomizer {
+  min-height: 430px;
+  justify-content: center;
+  gap: 16px !important;
+}
+
+#screen-stat-clash .stat-clash-sprite-wrap {
+  height: 220px !important;
+  min-height: 220px !important;
+  margin: 2px 0 0;
+}
+
+#screen-stat-clash .stat-clash-sprite-wrap img {
+  width: 168px !important;
+  height: 168px !important;
+  max-width: 168px !important;
+  max-height: 168px !important;
+}
+
+#screen-stat-clash .stat-clash-pokemon-meta h3 {
+  font-size: 24px !important;
+  letter-spacing: 0.6px !important;
+}
+
+#screen-stat-clash .stat-clash-pokemon-meta p {
+  max-width: 420px;
+  margin-inline: auto !important;
+  text-align: center;
+}
+
+#screen-stat-clash .stat-clash-reveal-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+#screen-stat-clash .stat-clash-reveal-stat {
+  min-height: 64px;
+}
+
+#screen-stat-clash .stat-clash-remaining-block {
+  margin-top: 0;
+}
+
+#screen-stat-clash .stat-clash-remaining-list {
+  justify-content: center;
+}
+
+#screen-stat-clash .stat-clash-player-card {
+  min-width: 0;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-randomizer,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-randomizer,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-randomizer {
+  justify-content: flex-start;
+  min-height: 0;
+  overflow: visible;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-center-card,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-center-card,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-center-card {
+  overflow: visible;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-remaining-block,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-remaining-block,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-remaining-block {
+  display: none !important;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-timer,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-timer,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-timer {
+  display: none !important;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-sprite-wrap,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-sprite-wrap,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-sprite-wrap {
+  height: 150px !important;
+  min-height: 150px !important;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-sprite-wrap img,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-sprite-wrap img,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-sprite-wrap img {
+  width: 118px !important;
+  height: 118px !important;
+  max-width: 118px !important;
+  max-height: 118px !important;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-reveal-row,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-reveal-row,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-reveal-row {
+  margin-top: 6px;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-reveal-stats,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-reveal-stats,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-reveal-stats {
+  display: grid !important;
+  margin-top: 10px;
+}
+
+#screen-stat-clash .stat-clash-shell.phase-reveal .stat-clash-reveal-stat,
+#screen-stat-clash .stat-clash-shell.phase-scoring .stat-clash-reveal-stat,
+#screen-stat-clash .stat-clash-shell.phase-finished .stat-clash-reveal-stat {
+  min-height: 58px;
+  padding: 7px 5px !important;
+}
+
+@media (max-width: 1180px) {
+  #screen-stat-clash .stat-clash-board {
+    grid-template-columns: minmax(220px, 0.85fr) minmax(360px, 1.45fr) minmax(220px, 0.85fr) !important;
+    gap: 14px !important;
+  }
+
+  #screen-stat-clash .stat-clash-sprite-wrap {
+    height: 190px !important;
+    min-height: 190px !important;
+  }
+
+  #screen-stat-clash .stat-clash-sprite-wrap img {
+    width: 148px !important;
+    height: 148px !important;
+    max-width: 148px !important;
+    max-height: 148px !important;
+  }
+}
+
+@media (max-width: 980px) {
+  #screen-stat-clash .stat-clash-board {
+    grid-template-columns: 1fr !important;
+    max-width: 720px;
+  }
+
+  #screen-stat-clash .stat-clash-center-card {
+    order: -1;
+  }
+
+  #screen-stat-clash .stat-clash-randomizer {
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 600px) {
+  #screen-stat-clash .stat-clash-center-card,
+  #screen-stat-clash .stat-clash-player-card {
+    padding: 16px !important;
+  }
+
+  #screen-stat-clash .stat-clash-randomizer {
+    min-height: 320px;
+    padding: 18px 14px !important;
+  }
+
+  #screen-stat-clash .stat-clash-sprite-wrap {
+    height: 160px !important;
+    min-height: 160px !important;
+  }
+
+  #screen-stat-clash .stat-clash-sprite-wrap img {
+    width: 120px !important;
+    height: 120px !important;
+    max-width: 120px !important;
+    max-height: 120px !important;
+  }
+
+  #screen-stat-clash .stat-clash-reveal-stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* STAT CLASH - plein ecran large */
+body:has(#screen-stat-clash:not(.hidden)) main {
+  max-width: min(96vw, 1560px);
+  padding: 14px clamp(12px, 2vw, 28px) 24px;
+}
+
+body:has(#screen-stat-clash:not(.hidden)) .global-nav {
+  margin-bottom: 14px;
+}
+
+#screen-stat-clash {
+  width: 100%;
+}
+
+#screen-stat-clash .stat-clash-screen-card {
+  min-height: min(860px, calc(100vh - 122px));
+  max-height: none;
+  padding: 16px 18px 14px;
+}
+
+#screen-stat-clash .stat-clash-board {
+  max-width: 1460px;
+  grid-template-columns: minmax(300px, 0.88fr) minmax(500px, 1.72fr) minmax(300px, 0.88fr) !important;
+}
+
+#screen-stat-clash .stat-clash-player-card {
+  min-height: 0;
+}
+
+@media (max-width: 1320px) {
+  #screen-stat-clash .stat-clash-board {
+    grid-template-columns: minmax(260px, 0.88fr) minmax(430px, 1.55fr) minmax(260px, 0.88fr) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  body:has(#screen-stat-clash:not(.hidden)) main {
+    max-width: 100%;
+    padding-inline: 12px;
+  }
+
+  #screen-stat-clash .stat-clash-screen-card {
+    min-height: auto;
+  }
+}

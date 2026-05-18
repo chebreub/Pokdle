@@ -287,10 +287,28 @@ const FORM_API_NAME_BY_NAME = {
   "Motisma Tonte": "rotom-mow",
   "Motisma Hélice": "rotom-fan",
 };
+const EXTRA_FORM_CACHE_KEY = "pokedle_form_sprites_v1";
+
+function loadCachedExtraFormData() {
+  try {
+    const raw = localStorage.getItem(EXTRA_FORM_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_err) {
+    return {};
+  }
+}
+
+function saveCachedExtraFormData(cache) {
+  try {
+    localStorage.setItem(EXTRA_FORM_CACHE_KEY, JSON.stringify(cache));
+  } catch (_err) { /* quota ou indisponible — silencieux */ }
+}
+
 function injectExtraForms() {
   const byId = new Set(POKEMON_LIST.map((p) => p.id));
   const byName = new Set(POKEMON_LIST.map((p) => p.name));
   const baseById = new Map(POKEMON_LIST.map((p) => [p.id, p]));
+  const cached = loadCachedExtraFormData();
 
   for (const form of EXTRA_FORMS) {
     if (byId.has(form.id) || byName.has(form.name)) continue;
@@ -300,22 +318,23 @@ function injectExtraForms() {
 
     const spriteId = Number.isInteger(form.spriteId) ? form.spriteId : base.id;
     const gen = Number.isInteger(form.gen) ? form.gen : base.gen;
+    const cachedForm = cached[form.name] || null;
 
     const entry = {
       id: form.id,
       name: form.name,
       baseId: form.baseId,
-      type1: form.type1 || base.type1,
-      type2: form.type2 !== undefined ? form.type2 : base.type2,
+      type1: cachedForm?.type1 || form.type1 || base.type1,
+      type2: cachedForm?.type2 !== undefined ? cachedForm.type2 : (form.type2 !== undefined ? form.type2 : base.type2),
       gen,
       generation: gen,
       habitat: form.habitat || base.habitat,
       color: form.color || base.color,
       stage: Number.isInteger(form.stage) ? form.stage : base.stage,
-      height: typeof form.height === "number" ? form.height : base.height,
-      weight: typeof form.weight === "number" ? form.weight : base.weight,
+      height: typeof cachedForm?.height === "number" ? cachedForm.height : (typeof form.height === "number" ? form.height : base.height),
+      weight: typeof cachedForm?.weight === "number" ? cachedForm.weight : (typeof form.weight === "number" ? form.weight : base.weight),
       spriteId,
-      sprite: getSpriteUrl(spriteId),
+      sprite: cachedForm?.sprite || getSpriteUrl(spriteId),
       formApiName: FORM_API_NAME_BY_NAME[form.name] || null,
       isAltForm: true,
     };
@@ -328,11 +347,16 @@ function injectExtraForms() {
 
 async function resolveExtraFormSprites() {
   const forms = POKEMON_LIST.filter((p) => p.id >= 20000);
+  const cache = loadCachedExtraFormData();
+  let dirty = false;
 
   await Promise.allSettled(
     forms.map(async (pokemon) => {
       const apiName = pokemon.formApiName || FORM_API_NAME_BY_NAME[pokemon.name];
       if (!apiName) return;
+      // Si déjà mis à jour depuis le cache (sprite ≠ base sprite par id), skip
+      const cachedEntry = cache[pokemon.name];
+      if (cachedEntry?.sprite && pokemon.sprite === cachedEntry.sprite) return;
 
       try {
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${apiName}`);
@@ -348,16 +372,34 @@ async function resolveExtraFormSprites() {
               .filter(Boolean)
           : [];
 
-        if (sprite) pokemon.sprite = sprite;
-        if (apiTypes[0]) pokemon.type1 = apiTypes[0];
+        const formCacheEntry = cache[pokemon.name] || {};
+        if (sprite) {
+          pokemon.sprite = sprite;
+          formCacheEntry.sprite = sprite;
+        }
+        if (apiTypes[0]) {
+          pokemon.type1 = apiTypes[0];
+          formCacheEntry.type1 = apiTypes[0];
+        }
         pokemon.type2 = apiTypes[1] || null;
-        if (typeof data?.height === "number") pokemon.height = data.height / 10;
-        if (typeof data?.weight === "number") pokemon.weight = data.weight / 10;
+        formCacheEntry.type2 = apiTypes[1] || null;
+        if (typeof data?.height === "number") {
+          pokemon.height = data.height / 10;
+          formCacheEntry.height = pokemon.height;
+        }
+        if (typeof data?.weight === "number") {
+          pokemon.weight = data.weight / 10;
+          formCacheEntry.weight = pokemon.weight;
+        }
+        cache[pokemon.name] = formCacheEntry;
+        dirty = true;
       } catch (_err) {
         // keep base sprite fallback if API is unavailable
       }
     })
   );
+
+  if (dirty) saveCachedExtraFormData(cache);
 }
 // ---------- game state ----------
 let selectedGens = new Set([1]);
@@ -1243,6 +1285,13 @@ document.addEventListener("keydown", (event) => {
 // ============================================================
 // GAME START / NAVIGATION
 // ============================================================
+// Pure random : chaque Pokémon du pool a la même probabilité (1/pool.length)
+// à chaque tirage, sans mémoire des choix précédents.
+function pickRandomPokemonFromPool(pool) {
+  if (!Array.isArray(pool) || !pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function startNormalGame(forcedPokemon = null) {
   if (forcedPokemon) {
     startChallengeGame(forcedPokemon);
@@ -1256,7 +1305,7 @@ function startNormalGame(forcedPokemon = null) {
   }
 
   gameMode = "normal";
-  const secret = pool[Math.floor(Math.random() * pool.length)];
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
 
@@ -1275,7 +1324,7 @@ function startSilhouetteGame() {
   }
 
   gameMode = "silhouette";
-  const secret = pool[Math.floor(Math.random() * pool.length)];
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
 
@@ -1287,7 +1336,7 @@ function startPixelGame() {
   }
 
   gameMode = "pixel";
-  const secret = pool[Math.floor(Math.random() * pool.length)];
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
 
@@ -1299,7 +1348,7 @@ function startCryGame() {
   }
 
   gameMode = "cry";
-  const secret = pool[Math.floor(Math.random() * pool.length)];
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
 
@@ -1356,7 +1405,7 @@ function startMysteryStatGame() {
   }
 
   gameMode = "mystery";
-  const secret = pool[Math.floor(Math.random() * pool.length)];
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
 function restartCurrentMode() {
@@ -16404,7 +16453,7 @@ function startDescriptionMode() {
     alert("Sélectionne au moins une génération !");
     return;
   }
-  const secret = pool[Math.floor(Math.random() * pool.length)];
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   descriptionState.text = `Ce Pokémon appartient à la génération ${secret.gen}, possède le type ${secret.type1}${secret.type2 ? ` / ${secret.type2}` : ""} et pèse ${secret.weight} kg.`;
   gameMode = "description";
   startGameWithSecret(secret, pool);
@@ -16441,9 +16490,9 @@ function startWeightBattle() {
     alert("Sélectionne au moins une génération avec suffisamment de Pokémon.");
     return;
   }
-  const left = pool[Math.floor(Math.random() * pool.length)];
+  const left = pickRandomPokemonFromPool(pool) || pool[0];
   const rightPool = pool.filter((pokemon) => pokemon.id !== left.id);
-  const right = rightPool[Math.floor(Math.random() * rightPool.length)];
+  const right = pickRandomPokemonFromPool(rightPool) || rightPool[0];
   weightBattleState = { left, right, revealed: false, selectedId: null };
   gameMode = "weight";
   secretPokemon = left.weight >= right.weight ? left : right;

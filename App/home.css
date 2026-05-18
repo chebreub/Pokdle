@@ -1,70 +1,4 @@
-/* =========================================================
-   REFONTE HOME 2026 - nav dropdowns, pillars, current home
-   High specificity to beat existing legacy overrides.
-   ========================================================= */
 
-/* Nav dropdowns ------------------------------------------- */
-.global-nav { position: relative; flex-wrap: wrap; overflow: visible; }
-.nav-group { position: relative; display: inline-flex; }
-.nav-pill-menu::after {
-  content: " \25BE";
-  font-size: 0.75em;
-  margin-left: 4px;
-  opacity: 0.7;
-}
-.nav-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  min-width: 230px;
-  background: #ffffff;
-  border: 1px solid #d7dfec;
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: 0 8px 24px rgba(12, 25, 48, 0.15), 0 2px 6px rgba(12, 25, 48, 0.08);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-6px);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
-  z-index: 100;
-}
-.nav-group:hover > .nav-dropdown,
-.nav-group:focus-within > .nav-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s;
-}
-.nav-dropdown button {
-  display: flex !important;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  background: transparent !important;
-  border: 0 !important;
-  padding: 9px 12px !important;
-  border-radius: 10px !important;
-  font: inherit;
-  font-size: 0.92em !important;
-  color: #0c1930 !important;
-  cursor: pointer;
-  transition: background 0.12s ease;
-  min-height: auto !important;
-  box-shadow: none !important;
-}
-.nav-dropdown button:hover,
-.nav-dropdown button:focus {
-  background: #e9eef7 !important;
-  outline: none;
-}
-.nav-dd-ico {
-  font-size: 1.05em;
-  width: 22px;
-  display: inline-flex;
-  justify-content: center;
-  flex-shrink: 0;
-}
 
 .home-gens-card .home-section-head {
   display: flex !important;
@@ -210,20 +144,9 @@
 /* Responsive : tablette / mobile -------------------------- */
 @media (max-width: 900px) {
   #screen-config .home-pillars { grid-template-columns: repeat(2, 1fr) !important; }
-  .nav-dropdown { min-width: 210px; }
 }
 @media (max-width: 640px) {
   #screen-config .home-pillars { grid-template-columns: 1fr !important; }
-  .global-nav { gap: 6px; }
-  .nav-dropdown {
-    left: 50%;
-    transform: translate(-50%, -6px);
-    min-width: 240px;
-  }
-  .nav-group:hover > .nav-dropdown,
-  .nav-group:focus-within > .nav-dropdown {
-    transform: translate(-50%, 0);
-  }
   .home-gens-card .home-section-head { flex-direction: column !important; }
   .home-gens-actions { align-self: flex-end; }
 }
