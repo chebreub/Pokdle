@@ -552,14 +552,15 @@ let statClashRuntime = {
 };
 
 const STAT_CLASH_ROUND_TOTAL = 6;
-const STAT_CLASH_PICK_TIME_MS = 10000;
-const STAT_CLASH_START_DELAY_MS = 900;
-const STAT_CLASH_ROLL_MS = 1800;
+const STAT_CLASH_PICK_TIME_MS = 12000;
+const STAT_CLASH_START_DELAY_MS = 1400;
+const STAT_CLASH_ROLL_MS = 2600;
 const STAT_CLASH_RANDOMIZER_BASE_DELAY_MS = 70;
 const STAT_CLASH_RANDOMIZER_STEPS = 15;
-const STAT_CLASH_POST_REVEAL_DELAY_MS = 1200;
-const STAT_CLASH_INTER_ROUND_DELAY_MS = 900;
-const STAT_CLASH_SCORE_ANIMATION_MS = 1200;
+const STAT_CLASH_LOCKED_REVEAL_DELAY_MS = 1000;
+const STAT_CLASH_POST_REVEAL_DELAY_MS = 2400;
+const STAT_CLASH_INTER_ROUND_DELAY_MS = 1800;
+const STAT_CLASH_SCORE_ANIMATION_MS = 1600;
 const STAT_CLASH_STATS = [
   { key: "hp", label: "PV", short: "PV" },
   { key: "attack", label: "Attack", short: "ATK" },
@@ -578,7 +579,7 @@ const STAT_CLASH_STAT_ICONS = {
   spDefense: "🌀",
   speed: "⚡",
 };
-const STAT_CLASH_PRESSURE_TIMER_MS = 5000;
+const STAT_CLASH_PRESSURE_TIMER_MS = 6500;
 const STAT_CLASH_FORMATS = {
   bo3: { rounds: 3, label: "Best of 3", suddenDeath: false },
   standard: { rounds: 6, label: "Standard (6 manches)", suddenDeath: false },
@@ -2264,6 +2265,7 @@ function createStatClashState() {
     announcerTone: "info",
     showVersusOverlay: false,
     pendingRoundResult: null,
+    resolvePending: false,
   };
 }
 
@@ -2334,6 +2336,42 @@ function restartStatClashGame() {
   startStatClashBotGame();
 }
 
+function prepareStatClashBotLobby() {
+  if (!statClashState) return;
+  resetStatClashRuntime();
+  const leftLabel = statClashState.players?.left?.label || String(playerProfile?.nickname || "").trim() || "Joueur 1";
+  statClashState.mode = "bot";
+  statClashState.phase = "idle";
+  statClashState.round = 1;
+  statClashState.pool = getStatClashPool();
+  statClashState.totalRounds = (STAT_CLASH_FORMATS[statClashState.format] || STAT_CLASH_FORMATS.standard).rounds;
+  statClashState.suddenDeath = Boolean((STAT_CLASH_FORMATS[statClashState.format] || STAT_CLASH_FORMATS.standard).suddenDeath);
+  statClashState.timerLeftMs = STAT_CLASH_PICK_TIME_MS;
+  statClashState.timerDurationMs = STAT_CLASH_PICK_TIME_MS;
+  statClashState.statusText = "Choisis ton mode, ton format, puis lance le duel.";
+  statClashState.usedStatsBySide = { left: [], right: [] };
+  statClashState.usedPokemonIds = [];
+  statClashState.currentPokemon = null;
+  statClashState.currentStats = null;
+  statClashState.randomizerPokemon = null;
+  statClashState.reveal = null;
+  statClashState.revealStats = null;
+  statClashState.room = null;
+  statClashState.roomToken = "";
+  statClashState.roomPendingAction = "";
+  statClashState.players.left = createStatClashPlayer("left", leftLabel);
+  statClashState.players.right = createStatClashPlayer("right", "Bot Clash");
+  statClashState.streakBySide = { left: 0, right: 0 };
+  statClashState.roundsWonBySide = { left: 0, right: 0 };
+  statClashState.jokersBySide = { left: buildStatClashJokers(), right: buildStatClashJokers() };
+  statClashState.announcerLine = "";
+  statClashState.announcerTone = "info";
+  statClashState.showVersusOverlay = false;
+  statClashState.pendingRoundResult = null;
+  statClashState.resolvePending = false;
+  statClashState.finalWinnerSide = null;
+}
+
 function bindStatClashInteractions() {
   const root = document.getElementById("stat-clash-root");
   if (!root || root.dataset.bound === "true") return;
@@ -2351,6 +2389,7 @@ function bindStatClashInteractions() {
     if (action === "copy-room") return copyStatClashRoomCode();
     if (action === "leave-room") return leaveStatClashRoom();
     if (action === "start-room") return startStatClashRoomGame();
+    if (action === "start-bot") return startStatClashBotGame();
     if (action === "switch-bot") return switchStatClashMode("bot");
     if (action === "switch-room") return switchStatClashMode("room");
   });
@@ -2495,7 +2534,20 @@ function maybeResolveLocalStatClashRound() {
   const state = statClashState;
   if (!state || state.mode !== "bot") return;
   if (!state.players.left.pendingPick || !state.players.right.pendingPick) return;
-  resolveLocalStatClashRound();
+  if (state.resolvePending) return;
+  state.resolvePending = true;
+  state.phase = "locked";
+  state.statusText = "Choix verrouillés. Révélation dans un instant.";
+  renderStatClashScreen();
+  trackStatClashTimeout(() => {
+    if (!statClashState || statClashState.mode !== "bot") return;
+    if (!statClashState.players.left.pendingPick || !statClashState.players.right.pendingPick) {
+      statClashState.resolvePending = false;
+      return;
+    }
+    statClashState.resolvePending = false;
+    resolveLocalStatClashRound();
+  }, STAT_CLASH_LOCKED_REVEAL_DELAY_MS);
 }
 
 async function resolveLocalStatClashRound() {
@@ -2660,6 +2712,7 @@ async function startStatClashBotRound() {
   state.players.right.lockedAt = null;
   state.jokersBySide.left.previewKey = null;
   state.jokersBySide.right.previewKey = null;
+  state.resolvePending = false;
   state.statusText = "Chargement du prochain Pokémon...";
   state.phase = "loading";
   renderStatClashScreen();
@@ -2736,6 +2789,7 @@ function startStatClashBotGame() {
   statClashState.doubleStatKey = null;
   statClashState.finalWinnerSide = null;
   statClashState.pendingRoundResult = null;
+  statClashState.resolvePending = false;
   // Apply format
   const fmt = STAT_CLASH_FORMATS[statClashState.format] || STAT_CLASH_FORMATS.standard;
   statClashState.totalRounds = fmt.rounds;
@@ -2872,12 +2926,17 @@ function setStatClashFormat(value) {
     });
   }
   statClashState.format = value;
+  if (statClashState.phase === "idle" && !statClashState.currentPokemon) {
+    prepareStatClashBotLobby();
+    return renderStatClashScreen();
+  }
   restartStatClashGame();
 }
 function setStatClashDifficulty(value) {
   if (!statClashState || statClashState.mode === "room") return;
   if (!STAT_CLASH_BOT_DIFFICULTIES[value]) return;
   statClashState.botDifficulty = value;
+  if (statClashState.phase === "idle" && !statClashState.currentPokemon) return renderStatClashScreen();
   restartStatClashGame();
 }
 function toggleStatClashHouseRule() {
@@ -2889,6 +2948,7 @@ function toggleStatClashHouseRule() {
     });
   }
   statClashState.houseRuleEnabled = !statClashState.houseRuleEnabled;
+  if (statClashState.phase === "idle" && !statClashState.currentPokemon) return renderStatClashScreen();
   restartStatClashGame();
 }
 
@@ -3319,7 +3379,7 @@ function leaveStatClashRoom(resetOnly = false) {
   statClashState.roomToken = "";
   statClashState.roomPendingAction = "";
   if (resetOnly) {
-    statClashState.mode = "bot";
+    prepareStatClashBotLobby();
     return renderStatClashScreen();
   }
   statClashState.mode = "room";
@@ -3416,6 +3476,7 @@ function pickStatClashStat(side, statKey, auto = false) {
 function switchStatClashMode(mode) {
   if (!statClashState || statClashState.mode === mode) return;
   if (mode === "room") {
+    resetStatClashRuntime();
     statClashState.mode = "room";
     statClashState.phase = "idle";
     statClashState.round = 1;
@@ -3423,9 +3484,13 @@ function switchStatClashMode(mode) {
     statClashState.room = null;
     statClashState.roomToken = "";
     statClashState.currentPokemon = null;
+    statClashState.currentStats = null;
     statClashState.randomizerPokemon = null;
     statClashState.reveal = null;
     statClashState.revealStats = null;
+    statClashState.resolvePending = false;
+    statClashState.timerLeftMs = STAT_CLASH_PICK_TIME_MS;
+    statClashState.timerDurationMs = STAT_CLASH_PICK_TIME_MS;
     statClashState.roomJoinCode = "";
     statClashState.roomCodeDraft = "";
     statClashState.players.left = createStatClashPlayer("left", statClashState.players.left.label || "Joueur 1");
@@ -3446,6 +3511,7 @@ function renderStatClashScreen() {
   const isRoom = state.mode === "room";
   const room = state.room;
   const roomUi = isRoom ? getStatClashRoomUiState(state) : null;
+  const isBotLobby = !isRoom && state.phase === "idle" && !state.currentPokemon && !state.randomizerPokemon;
   const roomBusy = Boolean(state.roomPendingAction);
   const roomIsLive = isRoom && room?.status === "live";
   const roomIsLobby = isRoom && (!room || room.status === "lobby");
@@ -3470,6 +3536,8 @@ function renderStatClashScreen() {
     : null;
   const toplineHtml = isRoom && roomIsLobby
     ? `<span class="tag-gen">Lobby Room 1v1</span><span class="tag-tries">Joueurs connectés : <b>${Number(room?.connectedCount || room?.players?.filter((player) => player.connected).length || 0)}/${Number(room?.maxPlayers || 2)}</b></span><span class="tag-gen stat-clash-rule-tag">${escapeHtml(roomUi?.detail || "En attente de la room.")}</span>`
+    : isBotLobby
+      ? `<span class="tag-gen">Stat Clash</span><span class="tag-tries">Mode : <b>Vs Bot</b></span><span class="tag-gen stat-clash-rule-tag">Choisis Bot ou Room avant de lancer.</span>`
     : `<span class="tag-gen">Manche ${state.round} / ${state.totalRounds}</span><span class="tag-tries">Tes stats restantes : <b>${state.suddenDeath ? STAT_CLASH_STATS.length : STAT_CLASH_STATS.length - state.usedStatsBySide.left.length}</b></span>${state.houseRule && state.houseRuleEnabled ? `<span class="tag-gen stat-clash-rule-tag is-house-rule" title="${escapeHtml(state.houseRule.desc || "")}">${state.houseRule.icon || "📜"} ${escapeHtml(state.houseRule.label)}${state.houseRule.id === "doubleStat" && state.doubleStatKey ? ` (${escapeHtml(getStatClashStatDef(state.doubleStatKey).label)})` : ""}</span>` : `<span class="tag-gen stat-clash-rule-tag">${state.suddenDeath ? "Sudden Death" : "Stats secrètes jusqu'au reveal."}</span>`}`;
   const remainingHtml = STAT_CLASH_STATS.map((entry) => `<span class="stat-clash-remaining-chip ${state.usedStatsBySide.left.includes(entry.key) ? "is-used" : ""}">${escapeHtml(entry.label)}</span>`).join("");
   const revealStatsHtml = state.revealStats
@@ -3561,7 +3629,9 @@ function renderStatClashScreen() {
         : `<section class="stat-clash-room-panel"><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div><div class="stat-clash-room-summary"><span><b>Room :</b> ${escapeHtml(room.code)}</span><span><b>Joueurs :</b> ${Number(room.connectedCount || room.players?.filter((player) => player.connected).length || 0)}/${Number(room.maxPlayers || 2)}</span><span><b>Statut :</b> ${escapeHtml(room.status === "starting" ? "Lancement..." : room.canStart ? "Prête" : "En attente")}</span></div><div class="stat-clash-room-presence">${roomPlayersHtml}</div><div class="stat-clash-room-actions"><button class="btn-ghost" type="button" data-stat-clash-action="copy-room">Copier</button><button class="btn-ghost" type="button" data-stat-clash-action="leave-room">Quitter</button>${selfRoomPlayer?.isHost ? `<button class="btn-red" type="button" data-stat-clash-action="start-room" ${roomBusy || !room?.canStart || room?.status === "live" || room?.status === "starting" ? "disabled" : ""}>${room?.status === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : ""}</div>${!selfRoomPlayer?.isHost && room?.canStart && room?.status === "lobby" ? '<p class="card-desc stat-clash-room-waiting">En attente du lancement par l’hôte.</p>' : ""}</section>`
       : `<section class="stat-clash-room-panel"><div class="stat-clash-room-toolbar"><div class="stat-clash-room-row"><input id="stat-clash-nickname" class="stat-clash-room-input" type="text" maxlength="24" value="${escapeHtml(state.roomNameDraft || "")}" placeholder="Ton pseudo" oninput="syncStatClashNickname()" ${roomBusy ? "disabled" : ""} /><button class="btn-blue" type="button" data-stat-clash-action="create-room" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "creating" ? "Création…" : "Créer"}</button></div><div class="stat-clash-room-row"><input id="stat-clash-room-input" class="stat-clash-room-input stat-clash-room-code-input" type="text" maxlength="6" value="${escapeHtml(state.roomCodeDraft || "")}" placeholder="Code de room" oninput="syncStatClashJoinCode()" ${roomBusy ? "disabled" : ""} /><button class="btn-ghost" type="button" data-stat-clash-action="join-room" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "joining" ? "Connexion…" : "Rejoindre"}</button></div></div><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div></section>`
     : "";
-  const lobbyCenterHtml = isRoom && roomIsLobby
+  const lobbyCenterHtml = isBotLobby
+    ? `<div class="stat-clash-lobby-center stat-clash-bot-lobby"><div class="stat-clash-lobby-center-head"><span>Vs Bot</span><strong>Prêt à jouer</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>Lance une partie ou passe en Room 1v1.</h3><p>Tu peux régler le format, la difficulté et la règle maison avant le départ.</p><button class="btn-red" type="button" data-stat-clash-action="start-bot">Lancer vs bot</button></div></div>`
+    : isRoom && roomIsLobby
     ? `<div class="stat-clash-lobby-center"><div class="stat-clash-lobby-center-head"><span>Lobby Room 1v1</span><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(roomUi?.detail || "En attente de la room.")}</h3><p>${escapeHtml(selfRoomPlayer?.isHost ? "Partage le code puis lance la partie quand la room est complète." : room?.code ? `Connecté à ${room.code}. Attends le lancement par l’hôte.` : "Crée une room ou rejoins-en une avec un code.")}</p></div></div>`
     : `<div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>${state.phase === "starting-countdown" ? "Démarrage room" : "Pokémon tiré"}</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(current))}'" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (state.phase === "starting-countdown" ? "Prépare-toi…" : isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${["picking", "locked"].includes(state.phase) ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "starting-countdown" ? "Le match commence quand le countdown atteint 0." : state.phase === "rolling" ? "Le randomizer termine son arrêt avant l'ouverture des choix." : ["picking", "locked"].includes(state.phase) ? "10 secondes complètes pour choisir ta stat." : "Le reveal arrive juste après les choix."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div>`;
   const finalHtml = state.phase === "finished" ? `<section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}"><div class="stat-clash-final-head"><p class="stat-clash-final-kicker">Résultat final</p><h3>${winnerKey === "tie" ? "Égalité" : `${escapeHtml(state.players[winnerKey].label)} gagne`}</h3><p>${state.players.left.score} à ${state.players.right.score}</p></div><div class="stat-clash-final-actions"><button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button><button class="btn-ghost" type="button" onclick="goToConfig()">Retour menu</button></div></section>` : "";
@@ -3574,7 +3644,7 @@ function renderStatClashScreen() {
     <label class="stat-clash-setting"><span>Format</span><select onchange="setStatClashFormat(this.value)" ${isRoom && !isRoomLobbyHost ? "disabled" : ""}>${Object.entries(STAT_CLASH_FORMATS).map(([key, def]) => `<option value="${key}" ${state.format === key ? "selected" : ""}>${escapeHtml(def.label)}</option>`).join("")}</select></label>
     ${!isRoom ? `<label class="stat-clash-setting"><span>Bot</span><select onchange="setStatClashDifficulty(this.value)">${Object.entries(STAT_CLASH_BOT_DIFFICULTIES).map(([key, def]) => `<option value="${key}" ${state.botDifficulty === key ? "selected" : ""}>${escapeHtml(def.label)}</option>`).join("")}</select></label>` : ""}
     <label class="stat-clash-setting stat-clash-setting-toggle"><input type="checkbox" ${state.houseRuleEnabled ? "checked" : ""} onchange="toggleStatClashHouseRule()" ${isRoom && !isRoomLobbyHost ? "disabled" : ""} /><span>Règle maison</span></label>
-    ${!isRoom ? `<button type="button" class="btn-ghost stat-clash-restart-btn" onclick="restartStatClashGame()">↻ Nouvelle partie</button>` : ""}
+    ${!isRoom ? `<button type="button" class="${isBotLobby ? "btn-red" : "btn-ghost"} stat-clash-restart-btn" data-stat-clash-action="start-bot">${isBotLobby ? "Lancer vs bot" : "↻ Nouvelle partie"}</button>` : ""}
   </div>`;
   // Versus overlay (game / round intro)
   const versusOverlay = (state.showVersusOverlay && !isRoom)
@@ -3596,7 +3666,7 @@ function renderStatClashScreen() {
     : "";
   // Urgent timer state
   const isUrgent = ["picking", "locked"].includes(state.phase) && state.timerLeftMs > 0 && state.timerLeftMs < 3000;
-  root.innerHTML = `<div class="stat-clash-shell mode-${isRoom ? "room" : "bot"} phase-${escapeHtml(state.phase)} ${roomHasStarted ? "is-live-layout" : "is-lobby-layout"} ${isUrgent ? "is-urgent" : ""}" style="--sc-type-color:${typeColor}">${versusOverlay}${confettiHtml}<div class="stat-clash-mode-switch"><button class="btn-${isRoom ? "ghost" : "red"}" type="button" data-stat-clash-action="switch-bot">Vs Bot</button><button class="btn-${isRoom ? "red" : "ghost"}" type="button" data-stat-clash-action="switch-room">Room 1v1</button></div>${settingsBarHtml}${roomControls}${roomMetaPanelHtml}<div class="stat-clash-topline">${toplineHtml}</div>${announcerHtml}<div class="stat-clash-board">${renderPlayerCard("left", state.players.left, false)}<section class="stat-clash-center-card">${lobbyCenterHtml}${(!isRoom || roomHasStarted) ? `<div class="stat-clash-remaining-block"><h4>Stats restantes pour toi</h4><div class="stat-clash-remaining-list">${remainingHtml}</div></div>` : ""}${finalHtml}</section>${renderPlayerCard("right", state.players.right, true)}</div></div>`;
+  root.innerHTML = `<div class="stat-clash-shell mode-${isRoom ? "room" : "bot"} phase-${escapeHtml(state.phase)} ${roomHasStarted ? "is-live-layout" : "is-lobby-layout"} ${isUrgent ? "is-urgent" : ""}" style="--sc-type-color:${typeColor}">${versusOverlay}${confettiHtml}<div class="stat-clash-mode-switch"><button class="btn-${isRoom ? "ghost" : "red"}" type="button" data-stat-clash-action="switch-bot">Vs Bot</button><button class="btn-${isRoom ? "red" : "ghost"}" type="button" data-stat-clash-action="switch-room">Room 1v1</button></div>${settingsBarHtml}${roomControls}${roomMetaPanelHtml}<div class="stat-clash-topline">${toplineHtml}</div>${announcerHtml}<div class="stat-clash-board">${renderPlayerCard("left", state.players.left, false)}<section class="stat-clash-center-card">${lobbyCenterHtml}${(!isRoom && !isBotLobby) || roomHasStarted ? `<div class="stat-clash-remaining-block"><h4>Stats restantes pour toi</h4><div class="stat-clash-remaining-list">${remainingHtml}</div></div>` : ""}${finalHtml}</section>${renderPlayerCard("right", state.players.right, true)}</div></div>`;
 }
 
 function openStatClashMode() {
@@ -3613,8 +3683,8 @@ function openStatClashMode() {
   hideScreen("screen-multiplayer");
   showScreen("screen-stat-clash");
   setGlobalNavActive("social");
+  prepareStatClashBotLobby();
   renderStatClashScreen();
-  startStatClashBotGame();
 }
 
 function buildMysteryBattleClues(secret, stats) {

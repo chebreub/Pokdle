@@ -26,10 +26,11 @@ const MAX_ROOM_SIZE = 2;
 const STAT_CLASH_TOTAL_ROUNDS = 6;
 const STAT_CLASH_MAX_PLAYERS = 2;
 const STAT_CLASH_PLAYER_SEATS = ["left", "right", "seat3", "seat4"];
-const STAT_CLASH_ROLL_MS = 1800;
-const STAT_CLASH_START_DELAY_MS = 900;
-const STAT_CLASH_PICK_MS = 10000;
-const STAT_CLASH_REVEAL_MS = 1500;
+const STAT_CLASH_ROLL_MS = 2600;
+const STAT_CLASH_START_DELAY_MS = 1400;
+const STAT_CLASH_PICK_MS = 12000;
+const STAT_CLASH_REVEAL_MS = 2600;
+const STAT_CLASH_LOCKED_REVEAL_MS = 1000;
 const STAT_CLASH_SESSION_RECORD_DEFAULT = Object.freeze({
   score: 359,
   winner: "Kayan",
@@ -46,8 +47,8 @@ const STAT_CLASH_STAT_LABELS = {
 };
 const STAT_CLASH_STATS_CACHE = new Map();
 const STAT_CLASH_STATS_CACHE_MAX = 1500;
-const STAT_CLASH_PRESSURE_PICK_MS = 5000;
-const STAT_CLASH_PREVIEW_DURATION_MS = 2400;
+const STAT_CLASH_PRESSURE_PICK_MS = 6500;
+const STAT_CLASH_PREVIEW_DURATION_MS = 3000;
 const STAT_CLASH_FORMATS = {
   bo3: { rounds: 3, suddenDeath: false, label: "Best of 3" },
   standard: { rounds: 6, suddenDeath: false, label: "Standard (6 manches)" },
@@ -522,7 +523,10 @@ io.on("connection", (socket) => {
       player.pendingSubmittedAt = Date.now();
       emitStatClashRoomState(room);
       if (getConnectedStatClashPlayers(room).every((entry) => entry.pendingPickKey)) {
-        resolveStatClashRound(room);
+        if (room.resolveTimer) clearTimeout(room.resolveTimer);
+        room.roundPhase = "locked";
+        emitStatClashRoomState(room);
+        room.resolveTimer = setTimeout(() => resolveStatClashRound(room), STAT_CLASH_LOCKED_REVEAL_MS);
       }
       respond(ack, { ok: true });
     } catch (_error) {
@@ -1102,8 +1106,9 @@ async function startStatClashRound(room) {
         player.pendingPickKey = candidates[Math.floor(Math.random() * candidates.length)];
         player.pendingSubmittedAt = Date.now();
       }
+      room.roundPhase = "locked";
       emitStatClashRoomState(room);
-      room.resolveTimer = setTimeout(() => resolveStatClashRound(room), 600);
+      room.resolveTimer = setTimeout(() => resolveStatClashRound(room), STAT_CLASH_LOCKED_REVEAL_MS);
       return;
     }
     const pickMs = getStatClashHouseRuleTimerMsRoom(room);
