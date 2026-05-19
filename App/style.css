@@ -23289,6 +23289,162 @@ body:has(#screen-stat-clash:not(.hidden)) .global-nav {
   }
 }
 
+/* STAT CLASH - lobby room compact */
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-panel:not(.is-compact) {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: 8px 10px;
+  gap: 8px 12px;
+  border-radius: 14px;
+  grid-template-columns: minmax(560px, 1fr) minmax(240px, 0.36fr);
+  align-items: center;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout {
+  gap: 8px;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-mode-switch {
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-board {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(620px, 1.7fr) minmax(300px, 0.82fr) !important;
+  gap: 22px !important;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-center-card,
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-player-card {
+  min-height: clamp(540px, 62vh, 680px);
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-center-card {
+  padding: 24px !important;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-lobby-center {
+  min-height: 100%;
+  padding: clamp(24px, 4vw, 44px);
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-lobby-center-head {
+  justify-content: center;
+  text-align: center;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-lobby-center-body {
+  gap: 12px;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-lobby-center-body h3 {
+  color: #ffffff !important;
+  font-size: clamp(1.1rem, 0.9rem + 0.55vw, 1.45rem);
+  line-height: 1.32;
+  max-width: 36ch;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-lobby-center-body p {
+  color: rgba(237, 245, 255, 0.9) !important;
+  max-width: 46ch;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-sprite-placeholder {
+  width: 74px;
+  height: 74px;
+  font-size: 2.7rem;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-row .btn-blue,
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-row .btn-ghost {
+  height: 40px;
+  min-width: 104px;
+  min-height: 40px;
+  padding-inline: 16px;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-status {
+  justify-content: center;
+  text-align: center;
+  padding: 6px 10px;
+  min-height: 40px;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-status strong {
+  font-size: 0.75rem;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-status small {
+  font-size: 0.66rem;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-status > div {
+  min-width: 0;
+}
+
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-status .stat-clash-room-feedback {
+  margin-left: 0;
+}
+
+@media (min-width: 981px) {
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-topline {
+    justify-content: center;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 1100px) {
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-panel:not(.is-compact) {
+    grid-template-columns: 1fr;
+    width: min(100%, 980px);
+  }
+}
+
+@media (max-width: 760px) {
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-board {
+    grid-template-columns: 1fr !important;
+  }
+
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-center-card,
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-player-card {
+    min-height: auto;
+  }
+
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-toolbar,
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-row {
+    grid-template-columns: 1fr;
+  }
+
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-row .btn-blue,
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-room-row .btn-ghost {
+    width: 100%;
+  }
+}
+
 /* ============================================================ */
 /* === STAT CLASH — DA & gameplay extensions (2026-05)          */
 /* === Icônes stats, jokers, règles maison, versus, confetti    */

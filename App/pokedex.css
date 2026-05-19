@@ -2195,6 +2195,39 @@ body.theme-dark #screen-pokedex .pokedex-detail-grid b {
   text-shadow: none !important;
 }
 
+#screen-pokedex .pokedex-detail .type-badge,
+#screen-pokedex .pokedex-recent-block .type-badge,
+#screen-pokedex .pokedex-compare-block .type-badge {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  min-width: 0;
+  min-height: 22px;
+  padding: 3px 7px;
+  gap: 4px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+#screen-pokedex .pokedex-detail .type-badge img,
+#screen-pokedex .pokedex-recent-block .type-badge img,
+#screen-pokedex .pokedex-compare-block .type-badge img {
+  width: 13px !important;
+  height: 13px !important;
+  max-width: 13px !important;
+  max-height: 13px !important;
+  flex: 0 0 13px;
+}
+
+#screen-pokedex .pokedex-detail .type-badge span,
+#screen-pokedex .pokedex-recent-block .type-badge span,
+#screen-pokedex .pokedex-compare-block .type-badge span {
+  font-size: 0.66rem;
+  line-height: 1;
+}
+
 
 /* ============================================================ */
 /* === DARK MODE — couverture complète du pokédex              */

@@ -46,6 +46,87 @@ const STAT_CLASH_STAT_LABELS = {
 };
 const STAT_CLASH_STATS_CACHE = new Map();
 const STAT_CLASH_STATS_CACHE_MAX = 1500;
+const STAT_CLASH_PRESSURE_PICK_MS = 5000;
+const STAT_CLASH_PREVIEW_DURATION_MS = 2400;
+const STAT_CLASH_FORMATS = {
+  bo3: { rounds: 3, suddenDeath: false, label: "Best of 3" },
+  standard: { rounds: 6, suddenDeath: false, label: "Standard (6 manches)" },
+  bo9: { rounds: 9, suddenDeath: false, label: "Best of 9" },
+  suddenDeath: { rounds: 6, suddenDeath: true, label: "Sudden Death" },
+};
+const STAT_CLASH_HOUSE_RULES = [
+  { id: "noSpeedEarly", label: "Vitesse interdite avant la manche 4", desc: "Le bouton Vitesse est verrouille pour les deux camps jusqu'a la M4 incluse." },
+  { id: "atkRound3", label: "Manche 3 : Attaque obligatoire", desc: "A la 3e manche, seul le bouton Attaque est jouable." },
+  { id: "noHpFinal", label: "Manche finale : pas de PV", desc: "Le bouton PV est verrouille a la derniere manche." },
+  { id: "weakStart", label: "Manche 1 : stat la plus faible imposee", desc: "A la M1, seule la stat la plus basse du Pokemon est selectionnable." },
+  { id: "pressureLate", label: "Pression : timer 5s aux manches 4-5-6", desc: "Le timer est divise par deux dans la seconde moitie de la partie." },
+  { id: "doubleStat", label: "Stat star vaut double", desc: "Une stat tiree au sort en debut de partie vaut deux fois ses points quand elle est jouee." },
+  { id: "blindRound5", label: "Manche 5 : choix aleatoire impose", desc: "Les deux camps recoivent un pick aleatoire en M5, aucune action humaine." },
+  { id: "mirrorRound4", label: "Manche 4 : stat imposee identique", desc: "A la M4, une stat est tiree au sort et imposee des deux cotes." },
+  { id: "comboBonus", label: "Combo : 3 victoires d'affilee = +2 pts", desc: "Un bonus de 2 pts est applique chaque fois qu'un camp atteint un streak de 3." },
+];
+function buildStatClashRoomJokers() {
+  return {
+    left: { reroll: 1, preview: 1, double: 1, previewKey: null, doubleArmed: false, previewExpiresAt: null },
+    right: { reroll: 1, preview: 1, double: 1, previewKey: null, doubleArmed: false, previewExpiresAt: null },
+  };
+}
+function pickRandomStatClashHouseRule() {
+  return STAT_CLASH_HOUSE_RULES[Math.floor(Math.random() * STAT_CLASH_HOUSE_RULES.length)];
+}
+function getStatClashLowestStatKey(stats) {
+  if (!stats) return null;
+  let best = null;
+  for (const k of STAT_CLASH_STAT_KEYS) {
+    const v = Number(stats[k]) || 0;
+    if (!best || v < best.value) best = { key: k, value: v };
+  }
+  return best ? best.key : null;
+}
+function getStatClashHouseRuleForcedStatsRoom(room) {
+  if (!room || !room.houseRule || !room.houseRuleEnabled) return null;
+  const id = room.houseRule.id;
+  const round = room.round;
+  const total = room.totalRounds || STAT_CLASH_TOTAL_ROUNDS;
+  if (id === "atkRound3" && round === 3) return ["attack"];
+  if (id === "noSpeedEarly" && round <= Math.min(3, total - 1)) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "speed");
+  if (id === "noHpFinal" && round === total) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "hp");
+  if (id === "weakStart" && round === 1) { const low = getStatClashLowestStatKey(room.currentStats); return low ? [low] : null; }
+  if (id === "mirrorRound4" && round === 4 && room.mirrorStatKey) return [room.mirrorStatKey];
+  return null;
+}
+function getStatClashAllowedStatsRoom(room, side) {
+  if (!room) return STAT_CLASH_STAT_KEYS.slice();
+  const used = new Set((room.usedStatKeysBySide && room.usedStatKeysBySide[side]) || []);
+  let pool = STAT_CLASH_STAT_KEYS.filter((k) => !used.has(k));
+  if (room.suddenDeath) pool = STAT_CLASH_STAT_KEYS.slice();
+  const forced = getStatClashHouseRuleForcedStatsRoom(room, side);
+  if (Array.isArray(forced) && forced.length) {
+    pool = pool.filter((k) => forced.includes(k));
+    if (!pool.length && forced.length) pool = forced.slice();
+  }
+  return pool;
+}
+function getStatClashHouseRuleTimerMsRoom(room) {
+  const base = STAT_CLASH_PICK_MS;
+  if (!room || !room.houseRule || !room.houseRuleEnabled) return base;
+  if (room.houseRule.id === "pressureLate" && room.round >= Math.ceil((room.totalRounds || STAT_CLASH_TOTAL_ROUNDS) / 2) + 1) return STAT_CLASH_PRESSURE_PICK_MS;
+  return base;
+}
+function applyStatClashDoubleStatRoom(room, statKey, value) {
+  let total = Number(value) || 0;
+  if (room && room.houseRule && room.houseRule.id === "doubleStat" && room.doubleStatKey === statKey && room.houseRuleEnabled) total *= 2;
+  return total;
+}
+function normalizeStatClashFormat(value) {
+  return STAT_CLASH_FORMATS[value] ? value : "standard";
+}
+function clearStatClashPreviewTimers(room) {
+  if (!room || !room.previewTimers) return;
+  for (const side of ["left", "right"]) {
+    if (room.previewTimers[side]) { clearTimeout(room.previewTimers[side]); room.previewTimers[side] = null; }
+  }
+}
 const FETCH_TIMEOUT_MS = 8000;
 const RATE_LIMIT_WINDOW_MS = 10_000;
 const RATE_LIMITS = {
@@ -337,6 +418,16 @@ io.on("connection", (socket) => {
         rollTimer: null,
         resolveTimer: null,
         nextRoundTimer: null,
+        previewTimers: { left: null, right: null },
+        format: normalizeStatClashFormat(payload.format),
+        houseRuleEnabled: payload.houseRuleEnabled !== false,
+        houseRule: null,
+        doubleStatKey: null,
+        mirrorStatKey: null,
+        suddenDeath: false,
+        streakBySide: { left: 0, right: 0 },
+        roundsWonBySide: { left: 0, right: 0 },
+        jokersBySide: buildStatClashRoomJokers(),
       };
       statClashRooms.set(code, room);
       joinPlayerToStatClashRoom(room, socket, nickname);
@@ -419,8 +510,12 @@ io.on("connection", (socket) => {
 
       const statKey = normalizeStatClashStatKey(payload.statKey);
       if (!statKey) return respond(ack, { ok: false, error: "Stat invalide." });
-      if ((room.usedStatKeysBySide?.[player.side] || []).includes(statKey)) {
+      if (!room.suddenDeath && (room.usedStatKeysBySide?.[player.side] || []).includes(statKey)) {
         return respond(ack, { ok: false, error: "Tu as déjà utilisé cette stat plus tôt." });
+      }
+      const allowed = getStatClashAllowedStatsRoom(room, player.side);
+      if (!allowed.includes(statKey)) {
+        return respond(ack, { ok: false, error: "Stat verrouillee par la regle maison cette manche." });
       }
 
       player.pendingPickKey = statKey;
@@ -471,6 +566,101 @@ io.on("connection", (socket) => {
       respond(ack, { ok: true, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
       respond(ack, { ok: false, error: "Erreur lors du redémarrage Stat Clash." });
+    }
+  });
+
+  socket.on("stat-clash:update-room-options", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "gen-update")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      const room = findStatClashRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul le createur peut modifier les options." });
+      if (room.status === "live" || room.status === "starting") return respond(ack, { ok: false, error: "Impossible de changer les options pendant une partie." });
+      if (typeof payload.format === "string") room.format = normalizeStatClashFormat(payload.format);
+      if (typeof payload.houseRuleEnabled === "boolean") room.houseRuleEnabled = payload.houseRuleEnabled;
+      emitStatClashRoomState(room);
+      respond(ack, { ok: true, room: publicStatClashRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Erreur lors de la mise a jour des options." });
+    }
+  });
+
+  socket.on("stat-clash:use-joker", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "pick")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      const room = findStatClashRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room Stat Clash active." });
+      if (room.status !== "live" || room.roundPhase !== "picking") return respond(ack, { ok: false, error: "Tu ne peux utiliser un joker que pendant la phase de choix." });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      if (player.pendingPickKey) return respond(ack, { ok: false, error: "Choix deja verrouille pour cette manche." });
+      const side = player.side;
+      const jokers = room.jokersBySide && room.jokersBySide[side];
+      if (!jokers) return respond(ack, { ok: false, error: "Aucun joker disponible." });
+      const type = String(payload.type || "");
+      if (type === "reroll") {
+        if (jokers.reroll <= 0) return respond(ack, { ok: false, error: "Joker Reroll deja consomme." });
+        jokers.reroll = 0;
+        for (const p of room.players) { p.pendingPickKey = null; p.pendingSubmittedAt = null; }
+        clearStatClashRoomTimers(room);
+        clearStatClashPreviewTimers(room);
+        const pool = getStatClashPoolForRoom(room);
+        const pokemon = pool[Math.floor(Math.random() * pool.length)] || null;
+        room.currentPokemon = pokemon;
+        room.reveal = null;
+        room.roundPhase = "rolling";
+        room.rollEndsAt = Date.now() + STAT_CLASH_ROLL_MS;
+        room.deadlineAt = null;
+        if (pokemon) room.usedPokemonIds.push(Number(pokemon.id));
+        if (room.houseRuleEnabled && room.houseRule && room.houseRule.id === "mirrorRound4" && room.round === 4) {
+          const cand = STAT_CLASH_STAT_KEYS.filter((k) => !room.usedStatKeysBySide.left.includes(k) && !room.usedStatKeysBySide.right.includes(k));
+          room.mirrorStatKey = cand[Math.floor(Math.random() * cand.length)] || STAT_CLASH_STAT_KEYS[0];
+        }
+        emitStatClashRoomState(room);
+        (async () => {
+          try { room.currentStats = pokemon ? await fetchStatClashPokemonStats(pokemon.apiId || pokemon.id) : null; } catch (_e) { room.currentStats = null; }
+          room.rollTimer = setTimeout(() => {
+            const pickMs = getStatClashHouseRuleTimerMsRoom(room);
+            room.roundPhase = "picking";
+            room.rollEndsAt = null;
+            room.deadlineAt = Date.now() + pickMs;
+            emitStatClashRoomState(room);
+            room.resolveTimer = setTimeout(() => resolveStatClashRound(room), pickMs);
+          }, STAT_CLASH_ROLL_MS);
+        })();
+        return respond(ack, { ok: true });
+      }
+      if (type === "preview") {
+        if (jokers.preview <= 0) return respond(ack, { ok: false, error: "Joker Apercu deja consomme." });
+        const allowed = getStatClashAllowedStatsRoom(room, side);
+        const candidates = allowed.length ? allowed : STAT_CLASH_STAT_KEYS;
+        jokers.preview = 0;
+        jokers.previewKey = candidates[Math.floor(Math.random() * candidates.length)];
+        jokers.previewExpiresAt = Date.now() + STAT_CLASH_PREVIEW_DURATION_MS;
+        emitStatClashRoomState(room);
+        if (!room.previewTimers) room.previewTimers = { left: null, right: null };
+        if (room.previewTimers[side]) clearTimeout(room.previewTimers[side]);
+        room.previewTimers[side] = setTimeout(() => {
+          if (room.jokersBySide && room.jokersBySide[side]) {
+            room.jokersBySide[side].previewKey = null;
+            room.jokersBySide[side].previewExpiresAt = null;
+            emitStatClashRoomState(room);
+          }
+          if (room.previewTimers) room.previewTimers[side] = null;
+        }, STAT_CLASH_PREVIEW_DURATION_MS);
+        return respond(ack, { ok: true });
+      }
+      if (type === "double") {
+        if (jokers.double <= 0) return respond(ack, { ok: false, error: "Joker Double deja consomme." });
+        if (jokers.doubleArmed) return respond(ack, { ok: false, error: "Joker Double deja arme." });
+        jokers.double = 0;
+        jokers.doubleArmed = true;
+        emitStatClashRoomState(room);
+        return respond(ack, { ok: true });
+      }
+      return respond(ack, { ok: false, error: "Type de joker inconnu." });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Erreur lors de l'utilisation du joker." });
     }
   });
 
@@ -831,6 +1021,14 @@ function resetStatClashRoomForNewMatch(room) {
     player.pendingPickKey = null;
     player.pendingSubmittedAt = null;
   }
+  room.houseRule = null;
+  room.doubleStatKey = null;
+  room.mirrorStatKey = null;
+  room.streakBySide = { left: 0, right: 0 };
+  room.roundsWonBySide = { left: 0, right: 0 };
+  room.jokersBySide = buildStatClashRoomJokers();
+  room.suddenDeath = false;
+  clearStatClashPreviewTimers(room);
 }
 
 function getConnectedStatClashPlayers(room) {
@@ -848,6 +1046,20 @@ function getStatClashPoolForRoom(room) {
 
 async function startStatClashMatch(room) {
   resetStatClashRoomForNewMatch(room);
+  const fmt = STAT_CLASH_FORMATS[normalizeStatClashFormat(room.format)] || STAT_CLASH_FORMATS.standard;
+  room.totalRounds = fmt.rounds;
+  room.suddenDeath = Boolean(fmt.suddenDeath);
+  if (room.houseRuleEnabled !== false) {
+    room.houseRule = pickRandomStatClashHouseRule();
+    if (room.houseRule.id === "doubleStat") {
+      room.doubleStatKey = STAT_CLASH_STAT_KEYS[Math.floor(Math.random() * STAT_CLASH_STAT_KEYS.length)];
+    }
+  } else {
+    room.houseRule = null;
+  }
+  room.jokersBySide = buildStatClashRoomJokers();
+  room.streakBySide = { left: 0, right: 0 };
+  room.roundsWonBySide = { left: 0, right: 0 };
   room.status = "live";
   room.round = 1;
   await startStatClashRound(room);
@@ -856,6 +1068,7 @@ async function startStatClashMatch(room) {
 async function startStatClashRound(room) {
   clearStatClashCleanup(room);
   clearStatClashRoomTimers(room);
+  clearStatClashPreviewTimers(room);
   const pool = getStatClashPoolForRoom(room);
   const pokemon = pool[Math.floor(Math.random() * pool.length)] || null;
   room.currentPokemon = pokemon;
@@ -869,15 +1082,36 @@ async function startStatClashRound(room) {
     player.pendingPickKey = null;
     player.pendingSubmittedAt = null;
   }
+  if (room.jokersBySide && room.jokersBySide.left) { room.jokersBySide.left.previewKey = null; room.jokersBySide.left.previewExpiresAt = null; }
+  if (room.jokersBySide && room.jokersBySide.right) { room.jokersBySide.right.previewKey = null; room.jokersBySide.right.previewExpiresAt = null; }
+  if (room.houseRuleEnabled && room.houseRule && room.houseRule.id === "mirrorRound4" && room.round === 4) {
+    const cand = STAT_CLASH_STAT_KEYS.filter((k) => !room.usedStatKeysBySide.left.includes(k) && !room.usedStatKeysBySide.right.includes(k));
+    room.mirrorStatKey = cand[Math.floor(Math.random() * cand.length)] || STAT_CLASH_STAT_KEYS[0];
+  } else {
+    room.mirrorStatKey = null;
+  }
   emitStatClashRoomState(room);
   room.rollTimer = setTimeout(() => {
+    if (room.houseRuleEnabled && room.houseRule && room.houseRule.id === "blindRound5" && room.round === 5) {
+      room.roundPhase = "picking";
+      room.rollEndsAt = null;
+      room.deadlineAt = Date.now() + 800;
+      for (const player of room.players) {
+        const allowed = getStatClashAllowedStatsRoom(room, player.side);
+        const candidates = allowed.length ? allowed : STAT_CLASH_STAT_KEYS;
+        player.pendingPickKey = candidates[Math.floor(Math.random() * candidates.length)];
+        player.pendingSubmittedAt = Date.now();
+      }
+      emitStatClashRoomState(room);
+      room.resolveTimer = setTimeout(() => resolveStatClashRound(room), 600);
+      return;
+    }
+    const pickMs = getStatClashHouseRuleTimerMsRoom(room);
     room.roundPhase = "picking";
     room.rollEndsAt = null;
-    room.deadlineAt = Date.now() + STAT_CLASH_PICK_MS;
+    room.deadlineAt = Date.now() + pickMs;
     emitStatClashRoomState(room);
-    room.resolveTimer = setTimeout(() => {
-      resolveStatClashRound(room);
-    }, STAT_CLASH_PICK_MS);
+    room.resolveTimer = setTimeout(() => resolveStatClashRound(room), pickMs);
   }, STAT_CLASH_ROLL_MS);
 }
 
@@ -910,11 +1144,17 @@ function finalizeStatClashMatch(room) {
   room.status = "finished";
   room.roundPhase = "finished";
   const [leftPlayer, rightPlayer] = room.players;
-  room.winnerId = !leftPlayer || !rightPlayer || leftPlayer.score === rightPlayer.score
-    ? null
-    : leftPlayer.score > rightPlayer.score
-      ? leftPlayer.id
-      : rightPlayer.id;
+  if (!leftPlayer || !rightPlayer) {
+    room.winnerId = null;
+  } else if (leftPlayer.score === rightPlayer.score) {
+    const wL = Number(room.roundsWonBySide && room.roundsWonBySide.left) || 0;
+    const wR = Number(room.roundsWonBySide && room.roundsWonBySide.right) || 0;
+    if (wL > wR) room.winnerId = leftPlayer.id;
+    else if (wR > wL) room.winnerId = rightPlayer.id;
+    else room.winnerId = null;
+  } else {
+    room.winnerId = leftPlayer.score > rightPlayer.score ? leftPlayer.id : rightPlayer.id;
+  }
   if (room.winnerId && leftPlayer && rightPlayer) {
     const winnerSide = room.winnerId === leftPlayer.id ? "left" : "right";
     room.matchWinsBySide[winnerSide] = (Number(room.matchWinsBySide?.[winnerSide]) || 0) + 1;
@@ -943,41 +1183,73 @@ function finalizeStatClashMatch(room) {
 async function resolveStatClashRound(room) {
   if (!room || room.status !== "live" || (room.roundPhase !== "picking" && room.roundPhase !== "rolling")) return;
   clearStatClashRoomTimers(room);
+  clearStatClashPreviewTimers(room);
   if (!room.currentPokemon || !room.currentStats) {
     finalizeStatClashMatch(room);
     return;
   }
 
   const resolved = resolveStatClashAssignedPicks(room);
+  const leftEntry = resolved.find((e) => e.player.side === "left");
+  const rightEntry = resolved.find((e) => e.player.side === "right");
+  const baseLeft = Number(leftEntry && leftEntry.value) || 0;
+  const baseRight = Number(rightEntry && rightEntry.value) || 0;
+  const leftWins = baseLeft > baseRight;
+  const rightWins = baseRight > baseLeft;
+  let adjLeft = applyStatClashDoubleStatRoom(room, leftEntry && leftEntry.key, baseLeft);
+  let adjRight = applyStatClashDoubleStatRoom(room, rightEntry && rightEntry.key, baseRight);
+  if (room.jokersBySide && room.jokersBySide.left && room.jokersBySide.left.doubleArmed) {
+    adjLeft = leftWins ? adjLeft * 2 : 0;
+    room.jokersBySide.left.doubleArmed = false;
+  }
+  if (room.jokersBySide && room.jokersBySide.right && room.jokersBySide.right.doubleArmed) {
+    adjRight = rightWins ? adjRight * 2 : 0;
+    room.jokersBySide.right.doubleArmed = false;
+  }
+  if (leftWins) { room.streakBySide.left += 1; room.streakBySide.right = 0; room.roundsWonBySide.left += 1; }
+  else if (rightWins) { room.streakBySide.right += 1; room.streakBySide.left = 0; room.roundsWonBySide.right += 1; }
+  else { room.streakBySide.left = 0; room.streakBySide.right = 0; }
+  if (room.houseRuleEnabled && room.houseRule && room.houseRule.id === "comboBonus") {
+    if (room.streakBySide.left === 3) adjLeft += 2;
+    if (room.streakBySide.right === 3) adjRight += 2;
+  }
+
   room.reveal = {};
   for (const entry of resolved) {
     if (!entry.key) continue;
-    room.usedStatKeysBySide[entry.player.side].push(entry.key);
-    entry.player.score += entry.value;
+    const adj = entry.player.side === "left" ? adjLeft : adjRight;
+    if (!room.suddenDeath) room.usedStatKeysBySide[entry.player.side].push(entry.key);
+    entry.player.score += adj;
     entry.player.history.push({
       round: room.round,
       statKey: entry.key,
       statLabel: STAT_CLASH_STAT_LABELS[entry.key] || entry.key,
-      value: entry.value,
+      value: adj,
       pokemonName: room.currentPokemon.name,
       auto: entry.auto,
     });
     room.reveal[entry.player.side] = {
       statKey: entry.key,
       statLabel: STAT_CLASH_STAT_LABELS[entry.key] || entry.key,
-      value: entry.value,
+      value: adj,
       auto: entry.auto,
     };
     entry.player.pendingPickKey = null;
     entry.player.pendingSubmittedAt = null;
   }
+  if (room.jokersBySide && room.jokersBySide.left) { room.jokersBySide.left.previewKey = null; room.jokersBySide.left.previewExpiresAt = null; }
+  if (room.jokersBySide && room.jokersBySide.right) { room.jokersBySide.right.previewKey = null; room.jokersBySide.right.previewExpiresAt = null; }
 
   room.roundPhase = "reveal";
   emitStatClashRoomState(room);
 
+  if (room.suddenDeath && (leftWins || rightWins)) {
+    room.nextRoundTimer = setTimeout(() => finalizeStatClashMatch(room), STAT_CLASH_REVEAL_MS);
+    return;
+  }
   room.nextRoundTimer = setTimeout(async () => {
-    const leftDone = (room.usedStatKeysBySide.left || []).length >= STAT_CLASH_STAT_KEYS.length;
-    const rightDone = (room.usedStatKeysBySide.right || []).length >= STAT_CLASH_STAT_KEYS.length;
+    const leftDone = !room.suddenDeath && (room.usedStatKeysBySide.left || []).length >= STAT_CLASH_STAT_KEYS.length;
+    const rightDone = !room.suddenDeath && (room.usedStatKeysBySide.right || []).length >= STAT_CLASH_STAT_KEYS.length;
     if (room.round >= room.totalRounds || leftDone || rightDone) {
       finalizeStatClashMatch(room);
       return;
@@ -1110,6 +1382,29 @@ function publicStatClashRoomState(room, viewerId = null) {
     currentPokemon: serializePokemon(room.currentPokemon),
     reveal: room.reveal,
     revealStats: room.roundPhase === "reveal" || room.status === "finished" ? room.currentStats : null,
+    format: room.format || "standard",
+    houseRuleEnabled: room.houseRuleEnabled !== false,
+    houseRule: room.houseRule || null,
+    doubleStatKey: room.doubleStatKey || null,
+    mirrorStatKey: room.mirrorStatKey || null,
+    suddenDeath: Boolean(room.suddenDeath),
+    streakBySide: { left: Number(room.streakBySide && room.streakBySide.left) || 0, right: Number(room.streakBySide && room.streakBySide.right) || 0 },
+    roundsWonBySide: { left: Number(room.roundsWonBySide && room.roundsWonBySide.left) || 0, right: Number(room.roundsWonBySide && room.roundsWonBySide.right) || 0 },
+    jokersBySide: (function () {
+      const viewerSide = (room.players.find((p) => p.id === viewerId) || {}).side || null;
+      const sj = (side) => {
+        const j = (room.jokersBySide && room.jokersBySide[side]) || {};
+        return {
+          reroll: Number(j.reroll) || 0,
+          preview: Number(j.preview) || 0,
+          double: Number(j.double) || 0,
+          doubleArmed: Boolean(j.doubleArmed),
+          previewKey: viewerSide === side ? (j.previewKey || null) : null,
+          previewExpiresAt: viewerSide === side ? (j.previewExpiresAt || null) : null,
+        };
+      };
+      return { left: sj("left"), right: sj("right") };
+    })(),
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
