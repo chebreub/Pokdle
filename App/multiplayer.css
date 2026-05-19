@@ -1444,6 +1444,437 @@ body.theme-dark #multiplayer-win-content .multiplayer-postmatch-value {
   color: #edf5ff;
 }
 
+/* DUEL LIVE 1V1 - Stat Clash inspired arena */
+#screen-multiplayer .multiplayer-screen-card {
+  width: min(100%, 1540px);
+  padding: clamp(18px, 2vw, 30px);
+  border-top: 6px solid transparent;
+  background:
+    linear-gradient(#f8fbff, #f8fbff) padding-box,
+    linear-gradient(90deg, #25a7ff, #ffc44d, #ff3f68) border-box;
+  overflow: visible;
+}
+
+#screen-multiplayer .ranking-head {
+  align-items: flex-start;
+  gap: 18px;
+}
+
+#screen-multiplayer .card-title {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.7rem, 1.2rem + 1.55vw, 3rem);
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: #153252;
+}
+
+#screen-multiplayer .ranking-head-actions {
+  align-items: center;
+}
+
+#screen-multiplayer .ranking-head-actions .btn-ghost,
+#screen-multiplayer .ranking-head-actions .btn-red {
+  min-height: 46px;
+  border-radius: 16px;
+  padding-inline: 20px;
+}
+
+#screen-multiplayer > .multiplayer-screen-card > .card-desc {
+  max-width: 820px;
+  margin-top: -12px;
+  color: #617798;
+  font-weight: 800;
+}
+
+#screen-multiplayer .multiplayer-status-row {
+  justify-content: center;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(238, 246, 255, 0.72);
+  border: 1px solid rgba(128, 167, 229, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 14px 28px rgba(26, 60, 106, 0.08);
+}
+
+#screen-multiplayer .multiplayer-status-row .btn-ghost {
+  margin-left: 0;
+}
+
+#screen-multiplayer .multiplayer-status-row .tag-gen,
+#screen-multiplayer .multiplayer-status-row .tag-tries {
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: linear-gradient(180deg, #f8fbff, #eaf2ff);
+  border: 1px solid rgba(117, 157, 224, 0.24);
+  color: #203a61;
+  font-weight: 900;
+}
+
+#screen-multiplayer .multiplayer-gen-panel {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+#screen-multiplayer .multiplayer-gen-panel-head {
+  align-items: center;
+}
+
+#screen-multiplayer .multiplayer-gen-panel-head h3 {
+  margin: 0;
+  color: #173457;
+}
+
+#screen-multiplayer #multiplayer-help {
+  margin: 0;
+}
+
+#screen-multiplayer #multiplayer-gen-grid {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+#screen-multiplayer #multiplayer-gen-grid .gen-item {
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+#screen-multiplayer #multiplayer-gen-grid .gen-check,
+#screen-multiplayer #multiplayer-gen-grid .gen-sub {
+  display: none;
+}
+
+#screen-multiplayer #multiplayer-gen-grid .gen-name {
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+#screen-multiplayer .multiplayer-setup.card-slim {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  grid-template-columns: minmax(260px, 1fr) auto minmax(260px, 1fr) auto;
+  align-items: center;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(238, 246, 255, 0.72);
+}
+
+#screen-multiplayer .multiplayer-setup.card-slim > h3,
+#screen-multiplayer .multiplayer-setup.card-slim > .multiplayer-setup-intro,
+#screen-multiplayer .multiplayer-setup.card-slim > .multiplayer-steps {
+  display: none;
+}
+
+#screen-multiplayer .multiplayer-setup.card-slim > #multiplayer-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+#screen-multiplayer .multiplayer-setup.card-slim .profile-field {
+  margin: 0;
+}
+
+#screen-multiplayer .multiplayer-setup.card-slim .profile-field > span {
+  display: none;
+}
+
+#screen-multiplayer .multiplayer-actions-grid {
+  min-width: 140px;
+}
+
+#screen-multiplayer .multiplayer-join-row {
+  display: contents;
+}
+
+#screen-multiplayer #multiplayer-nickname,
+#screen-multiplayer #multiplayer-room-input,
+#screen-multiplayer #multiplayer-guess-input {
+  min-height: 42px;
+  border-radius: 14px;
+}
+
+#screen-multiplayer .multiplayer-actions-grid > .btn-red,
+#screen-multiplayer .multiplayer-join-row > .btn-blue {
+  min-height: 42px;
+  border-radius: 14px;
+  padding-inline: 22px;
+}
+
+#screen-multiplayer .multiplayer-arena {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.75fr) minmax(420px, 1.45fr) minmax(240px, 0.75fr);
+  grid-template-areas:
+    "left center right"
+    "attempts attempts attempts"
+    "result result result";
+  gap: 18px;
+  align-items: stretch;
+  width: min(100%, 1380px);
+  margin: 0 auto;
+  padding: 18px;
+  border-radius: 24px;
+  background:
+    linear-gradient(90deg, rgba(37, 167, 255, 0.9), rgba(255, 196, 77, 0.9), rgba(255, 63, 104, 0.9)) top / min(220px, 28%) 5px no-repeat,
+    linear-gradient(180deg, rgba(238, 246, 255, 0.74), rgba(226, 239, 255, 0.6));
+  box-shadow: 0 24px 50px rgba(25, 58, 104, 0.12);
+}
+
+#screen-multiplayer .multiplayer-players {
+  display: contents;
+}
+
+#screen-multiplayer .multiplayer-player-card {
+  min-height: clamp(360px, 46vh, 560px);
+  display: grid;
+  align-content: start;
+  gap: 22px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,255,0.95));
+}
+
+#screen-multiplayer .multiplayer-player-card:first-child {
+  grid-area: left;
+  border-left: 5px solid #25a7ff;
+}
+
+#screen-multiplayer .multiplayer-player-card:last-child {
+  grid-area: right;
+  border-right: 5px solid #ff3f68;
+}
+
+#screen-multiplayer .multiplayer-player-head {
+  margin: 0;
+  align-items: flex-start;
+}
+
+#screen-multiplayer .multiplayer-player-head strong {
+  color: #141932;
+  font-size: clamp(1rem, 0.94rem + 0.25vw, 1.2rem);
+  line-height: 1.15;
+}
+
+#screen-multiplayer .multiplayer-player-head span {
+  display: block;
+  margin-top: 4px;
+  color: #7687a4;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+#screen-multiplayer .multiplayer-player-room-status {
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(37, 167, 255, 0.1);
+  color: #244d83;
+}
+
+#screen-multiplayer .multiplayer-player-stats {
+  margin-top: auto;
+  gap: 10px;
+  color: #607594;
+  font-weight: 800;
+}
+
+#screen-multiplayer .multiplayer-player-stats span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 34px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f3f7ff;
+  border: 1px solid rgba(130, 166, 224, 0.18);
+}
+
+#screen-multiplayer #multiplayer-waiting-box,
+#screen-multiplayer #multiplayer-live-box {
+  grid-area: center;
+  min-height: clamp(360px, 46vh, 560px);
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  border-radius: 18px;
+  padding: clamp(22px, 2.4vw, 34px);
+  background:
+    radial-gradient(circle at center 38%, rgba(255, 205, 76, 0.22), transparent 34%),
+    linear-gradient(180deg, #ffffff, #f4f8ff);
+  border: 1px solid rgba(107, 153, 229, 0.28);
+  box-shadow: 0 18px 32px rgba(26, 60, 106, 0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+#screen-multiplayer #multiplayer-waiting-box::before,
+#screen-multiplayer #multiplayer-live-box::before {
+  content: "?";
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  border: 4px dashed rgba(45, 74, 118, 0.18);
+  color: rgba(45, 74, 118, 0.42);
+  font-size: 3.6rem;
+  font-weight: 900;
+}
+
+#screen-multiplayer #multiplayer-live-box::before {
+  content: "!";
+  border-color: rgba(255, 63, 104, 0.28);
+  color: rgba(255, 63, 104, 0.58);
+}
+
+#screen-multiplayer #multiplayer-waiting-box h3,
+#screen-multiplayer #multiplayer-live-box h3 {
+  justify-content: center;
+  margin: 0;
+  color: #141932;
+  font-size: clamp(1.25rem, 0.95rem + 0.8vw, 2rem);
+}
+
+#screen-multiplayer #multiplayer-waiting-text,
+#screen-multiplayer #multiplayer-live-text {
+  max-width: 620px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #647895;
+  font-weight: 800;
+}
+
+#screen-multiplayer #multiplayer-live-box .multiplayer-guess-row {
+  width: min(100%, 620px);
+  min-height: 0;
+  margin-top: 8px;
+  padding: 10px;
+  align-items: stretch;
+  background: #eef5ff;
+  border-radius: 18px;
+}
+
+#screen-multiplayer #multiplayer-live-box .multiplayer-guess-row > .btn-red {
+  min-width: 132px;
+  border-radius: 14px;
+}
+
+#screen-multiplayer .multiplayer-attempts-shell {
+  grid-area: attempts;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+  gap: 18px;
+}
+
+#screen-multiplayer #multiplayer-result-box {
+  grid-area: result;
+}
+
+#screen-multiplayer .multiplayer-opponent-panel {
+  align-self: start;
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-screen-card {
+  background:
+    linear-gradient(#111f36, #111f36) padding-box,
+    linear-gradient(90deg, #25a7ff, #ffc44d, #ff3f68) border-box;
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-status-row,
+body.theme-dark #screen-multiplayer .multiplayer-setup.card-slim,
+body.theme-dark #screen-multiplayer .multiplayer-arena {
+  background: linear-gradient(180deg, rgba(18, 34, 58, 0.92), rgba(12, 25, 46, 0.9));
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-player-card,
+body.theme-dark #screen-multiplayer #multiplayer-waiting-box,
+body.theme-dark #screen-multiplayer #multiplayer-live-box {
+  background: linear-gradient(180deg, rgba(18, 31, 54, 0.96), rgba(11, 24, 46, 0.94));
+  border-color: rgba(116, 158, 241, 0.18);
+}
+
+body.theme-dark #screen-multiplayer .multiplayer-player-stats span {
+  background: rgba(96, 139, 221, 0.12);
+  border-color: rgba(120, 162, 241, 0.18);
+}
+
+@media (max-width: 1080px) {
+  #screen-multiplayer .multiplayer-setup.card-slim {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  #screen-multiplayer .multiplayer-join-row {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  #screen-multiplayer .multiplayer-arena {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "center center"
+      "left right"
+      "attempts attempts"
+      "result result";
+  }
+
+  #screen-multiplayer .multiplayer-player-card,
+  #screen-multiplayer #multiplayer-waiting-box,
+  #screen-multiplayer #multiplayer-live-box {
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 760px) {
+  #screen-multiplayer .multiplayer-screen-card {
+    padding: 14px;
+  }
+
+  #screen-multiplayer .ranking-head,
+  #screen-multiplayer .multiplayer-gen-panel-head {
+    flex-direction: column;
+  }
+
+  #screen-multiplayer .multiplayer-status-row {
+    justify-content: flex-start;
+  }
+
+  #screen-multiplayer .multiplayer-setup.card-slim,
+  #screen-multiplayer .multiplayer-join-row,
+  #screen-multiplayer .multiplayer-attempts-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #screen-multiplayer .multiplayer-actions-grid {
+    min-width: 0;
+  }
+
+  #screen-multiplayer .multiplayer-arena {
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "center"
+      "left"
+      "right"
+      "attempts"
+      "result";
+  }
+
+  #screen-multiplayer #multiplayer-live-box .multiplayer-guess-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 820px) {
   #screen-multiplayer .multiplayer-postmatch-row,
   #multiplayer-win-content .multiplayer-postmatch-row {

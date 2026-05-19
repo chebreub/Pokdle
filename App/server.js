@@ -525,6 +525,7 @@ io.on("connection", (socket) => {
       if (getConnectedStatClashPlayers(room).every((entry) => entry.pendingPickKey)) {
         if (room.resolveTimer) clearTimeout(room.resolveTimer);
         room.roundPhase = "locked";
+        room.lockedEndsAt = Date.now() + STAT_CLASH_LOCKED_REVEAL_MS;
         emitStatClashRoomState(room);
         room.resolveTimer = setTimeout(() => resolveStatClashRound(room), STAT_CLASH_LOCKED_REVEAL_MS);
       }
@@ -1081,6 +1082,7 @@ async function startStatClashRound(room) {
   room.reveal = null;
   room.roundPhase = "rolling";
   room.rollEndsAt = Date.now() + STAT_CLASH_ROLL_MS;
+  room.lockedEndsAt = null;
   room.deadlineAt = null;
   for (const player of room.players) {
     player.pendingPickKey = null;
@@ -1107,6 +1109,7 @@ async function startStatClashRound(room) {
         player.pendingSubmittedAt = Date.now();
       }
       room.roundPhase = "locked";
+      room.lockedEndsAt = Date.now() + STAT_CLASH_LOCKED_REVEAL_MS;
       emitStatClashRoomState(room);
       room.resolveTimer = setTimeout(() => resolveStatClashRound(room), STAT_CLASH_LOCKED_REVEAL_MS);
       return;
@@ -1186,9 +1189,10 @@ function finalizeStatClashMatch(room) {
 }
 
 async function resolveStatClashRound(room) {
-  if (!room || room.status !== "live" || (room.roundPhase !== "picking" && room.roundPhase !== "rolling")) return;
+  if (!room || room.status !== "live" || !["picking", "rolling", "locked"].includes(room.roundPhase)) return;
   clearStatClashRoomTimers(room);
   clearStatClashPreviewTimers(room);
+  room.lockedEndsAt = null;
   if (!room.currentPokemon || !room.currentStats) {
     finalizeStatClashMatch(room);
     return;
@@ -1365,6 +1369,7 @@ function publicStatClashRoomState(room, viewerId = null) {
     canStart: canStatClashRoomStart(room) && room.status !== "live" && room.status !== "starting",
     startedAt: room.startedAt || null,
     rollEndsAt: room.rollEndsAt || null,
+    lockedEndsAt: room.lockedEndsAt || null,
     selectedGens: room.selectedGens,
     round: room.round,
     totalRounds: room.totalRounds,
@@ -1421,7 +1426,7 @@ function publicStatClashRoomState(room, viewerId = null) {
       isSelf: player.id === viewerId,
       isHost: player.id === room.hostId,
       hasLockedPick: Boolean(player.pendingPickKey),
-      pendingPickKey: player.id === viewerId && room.roundPhase === "picking" ? player.pendingPickKey : null,
+      pendingPickKey: player.id === viewerId && ["picking", "locked"].includes(room.roundPhase) ? player.pendingPickKey : null,
     })),
   };
 }
