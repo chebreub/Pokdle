@@ -105,6 +105,32 @@ const EXTRA_FORMS = [
   { id: 20043, name: "Braségali Mega", baseId: 257, gen: 6 },
   { id: 20044, name: "Rayquaza Mega", baseId: 384, gen: 6 },
   { id: 20045, name: "Nanméouïe Mega", baseId: 531, gen: 6, type2: "Fée" },
+  { id: 20046, name: "Mélodelfe Mega", baseId: 36, gen: 6, type1: "Fée", type2: "Vol" },
+  { id: 20047, name: "Empiflor Mega", baseId: 71, gen: 6, type1: "Plante", type2: "Poison" },
+  { id: 20048, name: "Staross Mega", baseId: 121, gen: 6, type1: "Eau", type2: "Psy" },
+  { id: 20049, name: "Dracolosse Mega", baseId: 149, gen: 6, type1: "Dragon", type2: "Vol" },
+  { id: 20050, name: "Méganium Mega", baseId: 154, gen: 6, type1: "Plante", type2: "Fée" },
+  { id: 20051, name: "Aligatueur Mega", baseId: 160, gen: 6, type1: "Eau", type2: "Dragon" },
+  { id: 20052, name: "Airmure Mega", baseId: 227, gen: 6, type1: "Acier", type2: "Vol" },
+  { id: 20053, name: "Momartik Mega", baseId: 478, gen: 6, type1: "Glace", type2: "Spectre" },
+  { id: 20054, name: "Roitiflam Mega", baseId: 500, gen: 6, type1: "Feu", type2: "Combat" },
+  { id: 20055, name: "Minotaupe Mega", baseId: 530, gen: 6, type1: "Sol", type2: "Acier" },
+  { id: 20056, name: "Brutapode Mega", baseId: 545, gen: 6, type1: "Insecte", type2: "Poison" },
+  { id: 20057, name: "Baggaïd Mega", baseId: 560, gen: 6, type1: "Ténèbres", type2: "Combat" },
+  { id: 20058, name: "Ohmassacre Mega", baseId: 604, gen: 6, type1: "Électrik", type2: null },
+  { id: 20059, name: "Lugulabre Mega", baseId: 609, gen: 6, type1: "Spectre", type2: "Feu" },
+  { id: 20060, name: "Blindépique Mega", baseId: 652, gen: 6, type1: "Plante", type2: "Combat" },
+  { id: 20061, name: "Goupelin Mega", baseId: 655, gen: 6, type1: "Feu", type2: "Psy" },
+  { id: 20062, name: "Amphinobi Mega", baseId: 658, gen: 6, type1: "Eau", type2: "Ténèbres" },
+  { id: 20063, name: "Némélios Mega", baseId: 668, gen: 6, type1: "Feu", type2: "Normal" },
+  { id: 20064, name: "Floette Mega", baseId: 670, gen: 6, type1: "Fée", type2: null },
+  { id: 20065, name: "Sepiatroce Mega", baseId: 687, gen: 6, type1: "Ténèbres", type2: "Psy" },
+  { id: 20066, name: "Golgopathe Mega", baseId: 689, gen: 6, type1: "Roche", type2: "Combat" },
+  { id: 20067, name: "Kravarech Mega", baseId: 691, gen: 6, type1: "Poison", type2: "Dragon" },
+  { id: 20068, name: "Brutalibré Mega", baseId: 701, gen: 6, type1: "Combat", type2: "Vol" },
+  { id: 20069, name: "Zygarde Mega", baseId: 718, gen: 6, type1: "Dragon", type2: "Sol" },
+  { id: 20070, name: "Draïeul Mega", baseId: 780, gen: 6, type1: "Normal", type2: "Dragon" },
+  { id: 20071, name: "Hexadron Mega", baseId: 870, gen: 6, type1: "Combat", type2: null },
 
   { id: 21001, name: "Rattata d'Alola", baseId: 19, gen: 7, type2: "Ténèbres" },
   { id: 21002, name: "Rattatac d'Alola", baseId: 20, gen: 7, type2: "Ténèbres" },
@@ -229,6 +255,32 @@ const FORM_API_NAME_BY_NAME = {
   "Braségali Mega": "blaziken-mega",
   "Rayquaza Mega": "rayquaza-mega",
   "Nanméouïe Mega": "audino-mega",
+  "Mélodelfe Mega": "clefable-mega",
+  "Empiflor Mega": "victreebel-mega",
+  "Staross Mega": "starmie-mega",
+  "Dracolosse Mega": "dragonite-mega",
+  "Méganium Mega": "meganium-mega",
+  "Aligatueur Mega": "feraligatr-mega",
+  "Airmure Mega": "skarmory-mega",
+  "Momartik Mega": "froslass-mega",
+  "Roitiflam Mega": "emboar-mega",
+  "Minotaupe Mega": "excadrill-mega",
+  "Brutapode Mega": "scolipede-mega",
+  "Baggaïd Mega": "scrafty-mega",
+  "Ohmassacre Mega": "eelektross-mega",
+  "Lugulabre Mega": "chandelure-mega",
+  "Blindépique Mega": "chesnaught-mega",
+  "Goupelin Mega": "delphox-mega",
+  "Amphinobi Mega": "greninja-mega",
+  "Némélios Mega": "pyroar-mega",
+  "Floette Mega": "floette-mega",
+  "Sepiatroce Mega": "malamar-mega",
+  "Golgopathe Mega": "barbaracle-mega",
+  "Kravarech Mega": "dragalge-mega",
+  "Brutalibré Mega": "hawlucha-mega",
+  "Zygarde Mega": "zygarde-mega",
+  "Draïeul Mega": "drampa-mega",
+  "Hexadron Mega": "falinks-mega",
   "Rattata d'Alola": "rattata-alola",
   "Rattatac d'Alola": "raticate-alola",
   "Raichu d'Alola": "raichu-alola",
@@ -301,7 +353,7 @@ const FORM_API_NAME_BY_NAME = {
   "Motisma Tonte": "rotom-mow",
   "Motisma Hélice": "rotom-fan",
 };
-const EXTRA_FORM_CACHE_KEY = "pokedle_form_sprites_v1";
+const EXTRA_FORM_CACHE_KEY = "pokedle_form_sprites_v2";
 
 function loadCachedExtraFormData() {
   try {
@@ -377,7 +429,9 @@ async function resolveExtraFormSprites() {
         if (!response.ok) return;
 
         const data = await response.json();
-        const sprite = data?.sprites?.front_default;
+        const sprite = data?.sprites?.front_default
+          || data?.sprites?.other?.["official-artwork"]?.front_default
+          || data?.sprites?.other?.home?.front_default;
         const apiTypes = Array.isArray(data?.types)
           ? data.types
               .slice()
