@@ -60,7 +60,7 @@ const STAT_CLASH_HOUSE_RULES = [
   { id: "atkRound3", label: "Manches 3-4 : Attaque obligatoire", desc: "Aux 3e et 4e manches, seul le bouton Attaque est jouable." },
   { id: "noHpFinal", label: "2 dernieres manches : pas de PV", desc: "Le bouton PV est verrouille sur les deux dernieres manches." },
   { id: "weakStart", label: "Manches 1-2 : stat la plus faible imposee", desc: "Aux M1 et M2, seule la stat la plus basse du Pokemon est selectionnable." },
-  { id: "pressureLate", label: "Pression : timer 5s aux manches 4-5-6", desc: "Le timer est divise par deux dans la seconde moitie de la partie." },
+  { id: "pressureLate", label: "Pression : timer 5s a partir de la moitie", desc: "Des la moitie de la partie incluse, le timer est divise par deux (5s)." },
   { id: "doubleStat", label: "Stat star vaut double", desc: "Une stat tiree au sort en debut de partie vaut deux fois ses points quand elle est jouee." },
   { id: "blindRound5", label: "Manche 5 : choix aleatoire impose", desc: "Les deux camps recoivent un pick aleatoire en M5, aucune action humaine." },
   { id: "mirrorRound4", label: "Manche 4 : stat imposee identique", desc: "A la M4, une stat est tiree au sort et imposee des deux cotes." },
@@ -135,7 +135,7 @@ function getStatClashHouseRuleTimerMsRoom(room) {
   if (!room || !room.houseRuleEnabled) return base;
   const imposedRules = Object.values(room.houseRuleBySide || {});
   const hasPressure = imposedRules.some((rule) => rule?.id === "pressureLate") || (!room.houseRuleBySide && room.houseRule?.id === "pressureLate");
-  if (hasPressure && room.round >= Math.ceil((room.totalRounds || STAT_CLASH_TOTAL_ROUNDS) / 2) + 1) return STAT_CLASH_PRESSURE_PICK_MS;
+  if (hasPressure && room.round >= Math.ceil((room.totalRounds || STAT_CLASH_TOTAL_ROUNDS) / 2)) return STAT_CLASH_PRESSURE_PICK_MS;
   return base;
 }
 function applyStatClashDoubleStatRoom(room, statKey, value) {

@@ -687,8 +687,8 @@ const STAT_CLASH_HOUSE_RULES = [
   {
     id: "pressureLate",
     icon: "⏱️",
-    label: "Pression : timer 5s aux manches 4-5-6",
-    desc: "Le timer est divisé par deux dans la seconde moitié de la partie.",
+    label: "Pression : timer 5s à partir de la moitié",
+    desc: "Dès la moitié de la partie incluse, le timer est divisé par deux (5s).",
   },
   {
     id: "doubleStat",
@@ -796,7 +796,7 @@ function getStatClashHouseRuleTimerMs(state) {
   if (!state?.houseRuleEnabled) return base;
   const imposedRules = Object.values(state.houseRuleBySide || {});
   const hasPressure = imposedRules.some((rule) => rule?.id === "pressureLate") || (!state.houseRuleBySide && state.houseRule?.id === "pressureLate");
-  if (hasPressure && state.round >= Math.ceil((state.totalRounds || STAT_CLASH_ROUND_TOTAL) / 2) + 1) {
+  if (hasPressure && state.round >= Math.ceil((state.totalRounds || STAT_CLASH_ROUND_TOTAL) / 2)) {
     return STAT_CLASH_PRESSURE_TIMER_MS;
   }
   return base;
@@ -2702,7 +2702,8 @@ async function resolveLocalStatClashRound() {
 
   // Annonceur
   if (state.streakBySide.left === 3 || state.streakBySide.right === 3) {
-    state.announcerLine = pickStatClashAnnouncerLine("streak3");
+    const comboBonusActive = state.houseRuleEnabled && (state.houseRuleShared || state.houseRule)?.id === "comboBonus";
+    state.announcerLine = comboBonusActive ? pickStatClashAnnouncerLine("streak3") : "Triplé ! Streak en feu.";
     state.announcerTone = "fire";
   } else if (state.streakBySide.left === 2 || state.streakBySide.right === 2) {
     state.announcerLine = pickStatClashAnnouncerLine("streak2");
