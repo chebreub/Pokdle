@@ -669,20 +669,20 @@ const STAT_CLASH_HOUSE_RULES = [
   {
     id: "atkRound3",
     icon: "⚔️",
-    label: "Manche 3 : Attaque obligatoire",
-    desc: "À la 3e manche, seul le bouton Attaque est jouable.",
+    label: "Manches 3-4 : Attaque obligatoire",
+    desc: "Aux 3e et 4e manches, seul le bouton Attaque est jouable.",
   },
   {
     id: "noHpFinal",
     icon: "❤️‍🩹",
-    label: "Manche finale : pas de PV",
-    desc: "Le bouton PV est verrouillé à la dernière manche.",
+    label: "2 dernières manches : pas de PV",
+    desc: "Le bouton PV est verrouillé sur les deux dernières manches.",
   },
   {
     id: "weakStart",
     icon: "🪨",
-    label: "Manche 1 : stat la plus faible imposée",
-    desc: "À la M1, seule la stat la plus basse du Pokémon est sélectionnable.",
+    label: "Manches 1-2 : stat la plus faible imposée",
+    desc: "Aux M1 et M2, seule la stat la plus basse du Pokémon est sélectionnable.",
   },
   {
     id: "pressureLate",
@@ -763,14 +763,14 @@ function getStatClashHouseRuleForcedStats(state, side) {
   const target = legacyRule ? state.houseRuleTargetSide || null : null;
   const targetOnly = target && side && side !== target;
   if (legacyRule && (rule === "atkRound3" || rule === "weakStart") && targetOnly) return null;
-  if (rule === "atkRound3" && round === 3) return ["attack"];
+  if (rule === "atkRound3" && (round === 3 || round === 4)) return ["attack"];
   if (rule === "noSpeedEarly" && round <= Math.min(3, totalRounds - 1)) {
     return STAT_CLASH_STATS.map((s) => s.key).filter((k) => k !== "speed");
   }
-  if (rule === "noHpFinal" && round === totalRounds) {
+  if (rule === "noHpFinal" && (round === totalRounds || round === totalRounds - 1)) {
     return STAT_CLASH_STATS.map((s) => s.key).filter((k) => k !== "hp");
   }
-  if (rule === "weakStart" && round === 1) {
+  if (rule === "weakStart" && (round === 1 || round === 2)) {
     const low = getStatClashLowestStat(state.currentStats);
     return low ? [low] : null;
   }

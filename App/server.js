@@ -57,9 +57,9 @@ const STAT_CLASH_FORMATS = {
 };
 const STAT_CLASH_HOUSE_RULES = [
   { id: "noSpeedEarly", label: "Vitesse interdite avant la manche 4", desc: "Le bouton Vitesse est verrouille pour les deux camps jusqu'a la M4 incluse." },
-  { id: "atkRound3", label: "Manche 3 : Attaque obligatoire", desc: "A la 3e manche, seul le bouton Attaque est jouable." },
-  { id: "noHpFinal", label: "Manche finale : pas de PV", desc: "Le bouton PV est verrouille a la derniere manche." },
-  { id: "weakStart", label: "Manche 1 : stat la plus faible imposee", desc: "A la M1, seule la stat la plus basse du Pokemon est selectionnable." },
+  { id: "atkRound3", label: "Manches 3-4 : Attaque obligatoire", desc: "Aux 3e et 4e manches, seul le bouton Attaque est jouable." },
+  { id: "noHpFinal", label: "2 dernieres manches : pas de PV", desc: "Le bouton PV est verrouille sur les deux dernieres manches." },
+  { id: "weakStart", label: "Manches 1-2 : stat la plus faible imposee", desc: "Aux M1 et M2, seule la stat la plus basse du Pokemon est selectionnable." },
   { id: "pressureLate", label: "Pression : timer 5s aux manches 4-5-6", desc: "Le timer est divise par deux dans la seconde moitie de la partie." },
   { id: "doubleStat", label: "Stat star vaut double", desc: "Une stat tiree au sort en debut de partie vaut deux fois ses points quand elle est jouee." },
   { id: "blindRound5", label: "Manche 5 : choix aleatoire impose", desc: "Les deux camps recoivent un pick aleatoire en M5, aucune action humaine." },
@@ -108,10 +108,10 @@ function getStatClashHouseRuleForcedStatsRoom(room, side) {
   const target = legacyRule ? room.houseRuleTargetSide || null : null;
   const targetOnly = target && side && side !== target;
   if (legacyRule && (id === "atkRound3" || id === "weakStart") && targetOnly) return null;
-  if (id === "atkRound3" && round === 3) return ["attack"];
+  if (id === "atkRound3" && (round === 3 || round === 4)) return ["attack"];
   if (id === "noSpeedEarly" && round <= Math.min(3, total - 1)) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "speed");
-  if (id === "noHpFinal" && round === total) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "hp");
-  if (id === "weakStart" && round === 1) {
+  if (id === "noHpFinal" && (round === total || round === total - 1)) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "hp");
+  if (id === "weakStart" && (round === 1 || round === 2)) {
     const low = getStatClashLowestStatKey(room.currentStats);
     return low ? [low] : null;
   }
