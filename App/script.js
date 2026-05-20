@@ -2706,6 +2706,11 @@ async function resolveLocalStatClashRound() {
     if (state.streakBySide.left === 3) adjLeft += 2;
     if (state.streakBySide.right === 3) adjRight += 2;
   }
+  // Bonus comeback aveugle : +3 pts si tu gagnes la manche en subissant blindRound5
+  if (state.houseRuleEnabled) {
+    if (leftWins && Array.isArray(state.blindRound5OptionsBySide?.left) && state.blindRound5OptionsBySide.left.length) adjLeft += 3;
+    if (rightWins && Array.isArray(state.blindRound5OptionsBySide?.right) && state.blindRound5OptionsBySide.right.length) adjRight += 3;
+  }
 
   // Annonceur
   if (state.streakBySide.left === 3 || state.streakBySide.right === 3) {

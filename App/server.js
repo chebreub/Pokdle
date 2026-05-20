@@ -1316,6 +1316,11 @@ async function resolveStatClashRound(room) {
     if (room.streakBySide.left === 3) adjLeft += 2;
     if (room.streakBySide.right === 3) adjRight += 2;
   }
+  // Bonus comeback aveugle : +3 pts si tu gagnes la manche en subissant blindRound5
+  if (room.houseRuleEnabled) {
+    if (leftWins && Array.isArray(room.blindRound5OptionsBySide?.left) && room.blindRound5OptionsBySide.left.length) adjLeft += 3;
+    if (rightWins && Array.isArray(room.blindRound5OptionsBySide?.right) && room.blindRound5OptionsBySide.right.length) adjRight += 3;
+  }
 
   room.reveal = {};
   for (const entry of resolved) {
