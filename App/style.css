@@ -23883,3 +23883,64 @@ body.theme-dark .stat-clash-announcer { color: #eaf0fa; }
   .stat-clash-joker i { font-size: 15px; }
   .stat-clash-streak-badge { font-size: 9.5px; padding: 2px 6px; margin-left: 4px; }
 }
+
+/* ============================================================
+   Dark mode - Overlay d'aide (#overlay-modal et contenu app-help-*)
+   Cohérent avec la convention multiplayer.css (#edf5ff / rgba 18,31,54)
+   ============================================================ */
+body.theme-dark .overlay-card {
+  background: linear-gradient(180deg, rgba(18, 31, 54, 0.96), rgba(11, 24, 46, 0.92));
+  border-color: rgba(116, 158, 241, 0.16);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
+}
+
+body.theme-dark .overlay-head {
+  border-bottom-color: rgba(116, 158, 241, 0.12);
+  background: linear-gradient(135deg, rgba(237, 64, 54, 0.14) 0%, rgba(47, 118, 255, 0.14) 100%);
+}
+
+body.theme-dark .overlay-head h3 {
+  color: #edf5ff;
+}
+
+body.theme-dark .overlay-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: #edf5ff;
+}
+
+body.theme-dark .overlay-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+body.theme-dark .overlay-body {
+  color: #edf5ff;
+}
+
+body.theme-dark .app-help-mode {
+  color: #9bb5e2;
+}
+
+body.theme-dark .app-help-tip {
+  background: rgba(47, 118, 255, 0.18);
+  color: #cfe0ff;
+}
+
+body.theme-dark .app-help-card {
+  background: rgba(18, 31, 54, 0.7);
+  border-color: rgba(116, 158, 241, 0.14);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark .app-help-card h4 {
+  color: #edf5ff;
+}
+
+body.theme-dark .app-help-card p {
+  color: #a9bbd9;
+}
+
+body.theme-dark .app-setting-item {
+  background: rgba(18, 31, 54, 0.7);
+  border-color: rgba(116, 158, 241, 0.14);
+  color: #edf5ff;
+}
