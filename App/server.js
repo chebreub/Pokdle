@@ -62,7 +62,7 @@ const STAT_CLASH_HOUSE_RULES = [
   { id: "weakStart", label: "Manches 1-2 : stat la plus faible imposee", desc: "Aux M1 et M2, seule la stat la plus basse du Pokemon est selectionnable." },
   { id: "pressureLate", label: "Pression : timer 5s a partir de la moitie", desc: "Des la moitie de la partie incluse, le timer est divise par deux (5s)." },
   { id: "doubleStat", label: "Stat star vaut double", desc: "Une stat tiree au sort en debut de partie vaut deux fois ses points quand elle est jouee." },
-  { id: "blindRound5", label: "Manche 5 : choix aleatoire impose", desc: "Les deux camps recoivent un pick aleatoire en M5, aucune action humaine." },
+  { id: "blindRound5", label: "Manche 5 : choix impose entre 2 stats", desc: "A la M5, le camp qui subit choisit entre deux stats tirees au hasard parmi ses non utilisees." },
   { id: "mirrorRound4", label: "Manche 4 : stat imposee identique", desc: "A la M4, une stat est tiree au sort et imposee des deux cotes." },
   { id: "comboBonus", label: "Combo : 3 victoires d'affilee = +2 pts", desc: "Un bonus de 2 pts est applique chaque fois qu'un camp atteint un streak de 3." },
 ];
@@ -127,6 +127,11 @@ function getStatClashAllowedStatsRoom(room, side) {
   if (Array.isArray(forced) && forced.length) {
     pool = pool.filter((k) => forced.includes(k));
     if (!pool.length && forced.length) pool = forced.slice();
+  }
+  const blindOptions = room.blindRound5OptionsBySide?.[side];
+  if (Array.isArray(blindOptions) && blindOptions.length) {
+    const intersect = pool.filter((k) => blindOptions.includes(k));
+    pool = intersect.length ? intersect : blindOptions.slice();
   }
   return pool;
 }
@@ -454,6 +459,7 @@ io.on("connection", (socket) => {
         pendingImposedRuleBySide: { left: null, right: null },
         doubleStatKey: null,
         mirrorStatKey: null,
+        blindRound5OptionsBySide: { left: null, right: null },
         suddenDeath: false,
         streakBySide: { left: 0, right: 0 },
         roundsWonBySide: { left: 0, right: 0 },
@@ -1085,6 +1091,7 @@ function resetStatClashRoomForNewMatch(room) {
   room.houseRuleShared = null;
   room.doubleStatKey = null;
   room.mirrorStatKey = null;
+  room.blindRound5OptionsBySide = { left: null, right: null };
   room.streakBySide = { left: 0, right: 0 };
   room.roundsWonBySide = { left: 0, right: 0 };
   room.jokersBySide = buildStatClashRoomJokers();
@@ -1170,25 +1177,21 @@ async function startStatClashRound(room) {
   } else {
     room.mirrorStatKey = null;
   }
+  // Pre-tirage : pour chaque side subissant blindRound5 a M5, choisir 2 stats non utilisees parmi lesquelles le joueur devra choisir
+  room.blindRound5OptionsBySide = { left: null, right: null };
+  if (room.houseRuleEnabled && room.round === 5 && room.houseRuleBySide) {
+    for (const player of room.players) {
+      if (room.houseRuleBySide?.[player.side]?.id !== "blindRound5") continue;
+      const used = new Set((room.usedStatKeysBySide && room.usedStatKeysBySide[player.side]) || []);
+      const remaining = STAT_CLASH_STAT_KEYS.filter((k) => !used.has(k));
+      const pool = remaining.length ? remaining : STAT_CLASH_STAT_KEYS.slice();
+      const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+      room.blindRound5OptionsBySide[player.side] = shuffled.slice(0, Math.min(2, shuffled.length));
+    }
+  }
   emitStatClashRoomState(room);
   room.rollTimer = setTimeout(() => {
     const legacyBlindRound = !room.houseRuleBySide && room.houseRule?.id === "blindRound5";
-    if (room.houseRuleEnabled && !legacyBlindRound && room.round === 5 && room.players.some((player) => room.houseRuleBySide?.[player.side]?.id === "blindRound5") && !room.players.every((player) => room.houseRuleBySide?.[player.side]?.id === "blindRound5")) {
-      room.roundPhase = "picking";
-      room.rollEndsAt = null;
-      const pickMs = getStatClashHouseRuleTimerMsRoom(room);
-      room.deadlineAt = Date.now() + pickMs;
-      for (const player of room.players) {
-        if (room.houseRuleBySide?.[player.side]?.id !== "blindRound5") continue;
-        const allowed = getStatClashAllowedStatsRoom(room, player.side);
-        const candidates = allowed.length ? allowed : STAT_CLASH_STAT_KEYS;
-        player.pendingPickKey = candidates[Math.floor(Math.random() * candidates.length)];
-        player.pendingSubmittedAt = Date.now();
-      }
-      emitStatClashRoomState(room);
-      room.resolveTimer = setTimeout(() => resolveStatClashRound(room), pickMs);
-      return;
-    }
     if (room.houseRuleEnabled && room.round === 5 && (legacyBlindRound || room.players.every((player) => room.houseRuleBySide?.[player.side]?.id === "blindRound5"))) {
       room.roundPhase = "picking";
       room.rollEndsAt = null;
@@ -1498,6 +1501,10 @@ function publicStatClashRoomState(room, viewerId = null) {
     },
     doubleStatKey: room.doubleStatKey || null,
     mirrorStatKey: room.mirrorStatKey || null,
+    blindRound5OptionsBySide: {
+      left: Array.isArray(room.blindRound5OptionsBySide?.left) ? room.blindRound5OptionsBySide.left.slice() : null,
+      right: Array.isArray(room.blindRound5OptionsBySide?.right) ? room.blindRound5OptionsBySide.right.slice() : null,
+    },
     houseRuleTargetSide: room.houseRuleTargetSide || null,
     suddenDeath: Boolean(room.suddenDeath),
     streakBySide: { left: Number(room.streakBySide && room.streakBySide.left) || 0, right: Number(room.streakBySide && room.streakBySide.right) || 0 },
