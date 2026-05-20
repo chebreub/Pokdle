@@ -24037,6 +24037,32 @@ body.theme-dark .app-setting-item {
   background: linear-gradient(180deg, #eaf3ff, #dfeeff);
 }
 
+.stat-clash-rule-card.is-locked-by-opponent {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, #f3f5fa 0 8px, #eaedf3 8px 16px);
+  border-color: rgba(116, 158, 241, 0.18);
+  box-shadow: none;
+  transform: none;
+}
+
+.stat-clash-rule-card .stat-clash-rule-locked-note {
+  display: block;
+  margin-top: 4px;
+  font-weight: 700;
+  color: #b34540;
+}
+
+body.theme-dark .stat-clash-rule-card.is-locked-by-opponent {
+  background: repeating-linear-gradient(135deg, rgba(18,31,54,0.45) 0 8px, rgba(18,31,54,0.62) 8px 16px);
+  border-color: rgba(116, 158, 241, 0.16);
+}
+
+body.theme-dark .stat-clash-rule-card .stat-clash-rule-locked-note {
+  color: #ff9a8a;
+}
+
 .stat-clash-rule-summary {
   display: flex;
   flex-wrap: wrap;

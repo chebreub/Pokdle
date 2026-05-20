@@ -507,6 +507,9 @@ io.on("connection", (socket) => {
       const rule = getStatClashRuleById(String(payload.ruleId || ""));
       if (!rule || !STAT_CLASH_IMPOSABLE_RULE_IDS.has(rule.id)) return respond(ack, { ok: false, error: "Règle non disponible." });
       room.pendingImposedRuleBySide = room.pendingImposedRuleBySide || { left: null, right: null };
+      const opponentSide = getOppositeStatClashSide(player.side);
+      const opponentChoice = opponentSide ? room.pendingImposedRuleBySide[opponentSide] : null;
+      if (opponentChoice && opponentChoice === rule.id) return respond(ack, { ok: false, error: "L'adversaire a déjà choisi cette règle, prends-en une autre." });
       room.pendingImposedRuleBySide[player.side] = rule.id;
       emitStatClashRoomState(room);
       respond(ack, { ok: true, room: publicStatClashRoomState(room, socket.id) });

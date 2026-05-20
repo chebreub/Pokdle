@@ -2903,7 +2903,9 @@ function startStatClashBotGame() {
   // Pick house rule
   if (statClashState.houseRuleEnabled) {
     const playerRule = getStatClashRuleById(statClashState.pendingImposedRuleBySide.left);
-    const botRule = getRandomStatClashRuleFromSet(STAT_CLASH_IMPOSABLE_RULE_IDS);
+    const botPool = new Set(STAT_CLASH_IMPOSABLE_RULE_IDS);
+    if (playerRule?.id) botPool.delete(playerRule.id);
+    const botRule = getRandomStatClashRuleFromSet(botPool);
     statClashState.houseRuleBySide = { left: botRule, right: playerRule };
     statClashState.houseRuleShared = statClashState.houseRuleSharedEnabled ? getRandomStatClashRuleFromSet(STAT_CLASH_SHARED_RULE_IDS) : null;
     statClashState.houseRule = statClashState.houseRuleShared;
@@ -3722,7 +3724,13 @@ function renderStatClashScreen() {
   const renderImposedRulePicker = () => {
     if (!state.houseRuleEnabled) return "";
     const selected = isRoom ? imposedRuleId : state.pendingImposedRuleBySide?.left;
-    return `<section class="stat-clash-imposed-rules"><div class="stat-clash-imposed-rules-head"><div><strong>Règle à imposer</strong><small>${isRoom ? "Choisis le handicap que l'adversaire subira." : "Choisis le handicap du bot. Le bot t'en imposera un au hasard."}</small></div>${selected ? `<span>Choisie</span>` : `<span>À choisir</span>`}</div><div class="stat-clash-rule-grid">${STAT_CLASH_HOUSE_RULES.filter((rule) => STAT_CLASH_IMPOSABLE_RULE_IDS.has(rule.id)).map((rule) => `<button type="button" class="stat-clash-rule-card ${selected === rule.id ? "is-selected" : ""}" onclick="selectStatClashImposedRule('${rule.id}')"><b>${rule.icon || "📜"} ${escapeHtml(rule.label)}</b><small>${escapeHtml(rule.desc)}</small></button>`).join("")}</div>${isRoom ? `<div class="stat-clash-rule-summary"><span>Tu imposes : <b>${escapeHtml(imposedRule?.label || "à choisir")}</b></span><span>Tu subis : <b>${escapeHtml(sufferedRule?.label || "en attente")}</b></span></div>` : ""}</section>`;
+    const lockedByOpponentId = isRoom ? sufferedRuleId : null;
+    return `<section class="stat-clash-imposed-rules"><div class="stat-clash-imposed-rules-head"><div><strong>Règle à imposer</strong><small>${isRoom ? "Choisis le handicap que l'adversaire subira." : "Choisis le handicap du bot. Le bot t'en imposera un au hasard."}</small></div>${selected ? `<span>Choisie</span>` : `<span>À choisir</span>`}</div><div class="stat-clash-rule-grid">${STAT_CLASH_HOUSE_RULES.filter((rule) => STAT_CLASH_IMPOSABLE_RULE_IDS.has(rule.id)).map((rule) => {
+      const isLockedByOpponent = lockedByOpponentId && rule.id === lockedByOpponentId;
+      const cls = `stat-clash-rule-card ${selected === rule.id ? "is-selected" : ""} ${isLockedByOpponent ? "is-locked-by-opponent" : ""}`;
+      const lockedNote = isLockedByOpponent ? `<small class="stat-clash-rule-locked-note">🔒 prise par l'adversaire</small>` : "";
+      return `<button type="button" class="${cls}" ${isLockedByOpponent ? "disabled" : ""} onclick="selectStatClashImposedRule('${rule.id}')"><b>${rule.icon || "📜"} ${escapeHtml(rule.label)}</b><small>${escapeHtml(rule.desc)}</small>${lockedNote}</button>`;
+    }).join("")}</div>${isRoom ? `<div class="stat-clash-rule-summary"><span>Tu imposes : <b>${escapeHtml(imposedRule?.label || "à choisir")}</b></span><span>Tu subis : <b>${escapeHtml(sufferedRule?.label || "en attente")}</b></span></div>` : ""}</section>`;
   };
   const current = roomHasStarted || !isRoom ? (state.randomizerPokemon || state.currentPokemon) : null;
   const currentSprite = current ? getPokemonSprite(current) : "";
