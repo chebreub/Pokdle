@@ -745,7 +745,9 @@ function getStatClashHouseRuleForcedStats(state, side) {
   const rule = state.houseRule.id;
   const round = state.round;
   const totalRounds = state.totalRounds || STAT_CLASH_ROUND_TOTAL;
-  if (rule === "atkRound3" && round === 3) return ["attack"];
+  const target = state.houseRuleTargetSide || null;
+  const targetOnly = target && side && side !== target;
+  if (rule === "atkRound3" && round === 3) return targetOnly ? null : ["attack"];
   if (rule === "noSpeedEarly" && round <= Math.min(3, totalRounds - 1)) {
     return STAT_CLASH_STATS.map((s) => s.key).filter((k) => k !== "speed");
   }
@@ -753,6 +755,7 @@ function getStatClashHouseRuleForcedStats(state, side) {
     return STAT_CLASH_STATS.map((s) => s.key).filter((k) => k !== "hp");
   }
   if (rule === "weakStart" && round === 1) {
+    if (targetOnly) return null;
     const low = getStatClashLowestStat(state.currentStats);
     return low ? [low] : null;
   }
@@ -2772,6 +2775,8 @@ async function startStatClashBotRound() {
   const state = statClashState;
   if (!state || state.mode !== "bot") return;
   resetStatClashRuntime();
+  if (state.jokersBySide?.left) state.jokersBySide.left.doubleArmed = false;
+  if (state.jokersBySide?.right) state.jokersBySide.right.doubleArmed = false;
   state.reveal = null;
   state.revealStats = null;
   state.players.left.pendingPick = null;
@@ -2865,11 +2870,13 @@ function startStatClashBotGame() {
   // Pick house rule
   if (statClashState.houseRuleEnabled) {
     statClashState.houseRule = pickRandomStatClashHouseRule();
+    statClashState.houseRuleTargetSide = Math.random() < 0.5 ? "left" : "right";
     if (statClashState.houseRule.id === "doubleStat") {
       statClashState.doubleStatKey = STAT_CLASH_STATS[Math.floor(Math.random() * STAT_CLASH_STATS.length)].key;
     }
   } else {
     statClashState.houseRule = null;
+    statClashState.houseRuleTargetSide = null;
   }
   // Game intro overlay then start
   statClashState.showVersusOverlay = "game";
@@ -3283,6 +3290,7 @@ function applyStatClashRoomState(roomState) {
   statClashState.houseRuleEnabled = roomState?.houseRuleEnabled !== false;
   statClashState.doubleStatKey = roomState?.doubleStatKey || null;
   statClashState.mirrorStatKey = roomState?.mirrorStatKey || null;
+  statClashState.houseRuleTargetSide = roomState?.houseRuleTargetSide || null;
   statClashState.format = roomState?.format || "standard";
   statClashState.suddenDeath = Boolean(roomState?.suddenDeath);
   statClashState.currentStats = roomState?.revealStats || null;
@@ -3663,7 +3671,7 @@ function renderStatClashScreen() {
           const icon = STAT_CLASH_STAT_ICONS[entry.key] || "";
           let valueHtml = `<b>Secret</b>`;
           if (previewKey === entry.key) {
-            valueHtml = Number.isFinite(previewValue) ? `<b class="stat-preview-value">${previewValue}</b>` : `<b class="stat-preview-value">vu</b>`;
+            valueHtml = (Number.isFinite(previewValue) && previewValue > 0) ? `<b class="stat-preview-value">${previewValue}</b>` : `<b class="stat-preview-value">vu</b>`;
           }
           return `<button type="button" class="${cls.join(" ")}" data-stat-key="${entry.key}" ${disabled ? "disabled" : ""} onclick="pickStatClashStat('left','${entry.key}')"><span><i class="stat-icon">${icon}</i> ${escapeHtml(entry.label)}</span>${valueHtml}</button>`;
         }).join("");

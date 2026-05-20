@@ -84,15 +84,21 @@ function getStatClashLowestStatKey(stats) {
   }
   return best ? best.key : null;
 }
-function getStatClashHouseRuleForcedStatsRoom(room) {
+function getStatClashHouseRuleForcedStatsRoom(room, side) {
   if (!room || !room.houseRule || !room.houseRuleEnabled) return null;
   const id = room.houseRule.id;
   const round = room.round;
   const total = room.totalRounds || STAT_CLASH_TOTAL_ROUNDS;
-  if (id === "atkRound3" && round === 3) return ["attack"];
+  const target = room.houseRuleTargetSide || null;
+  const targetOnly = target && side && side !== target;
+  if (id === "atkRound3" && round === 3) return targetOnly ? null : ["attack"];
   if (id === "noSpeedEarly" && round <= Math.min(3, total - 1)) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "speed");
   if (id === "noHpFinal" && round === total) return STAT_CLASH_STAT_KEYS.filter((k) => k !== "hp");
-  if (id === "weakStart" && round === 1) { const low = getStatClashLowestStatKey(room.currentStats); return low ? [low] : null; }
+  if (id === "weakStart" && round === 1) {
+    if (targetOnly) return null;
+    const low = getStatClashLowestStatKey(room.currentStats);
+    return low ? [low] : null;
+  }
   if (id === "mirrorRound4" && round === 4 && room.mirrorStatKey) return [room.mirrorStatKey];
   return null;
 }
@@ -1056,11 +1062,13 @@ async function startStatClashMatch(room) {
   room.suddenDeath = Boolean(fmt.suddenDeath);
   if (room.houseRuleEnabled !== false) {
     room.houseRule = pickRandomStatClashHouseRule();
+    room.houseRuleTargetSide = Math.random() < 0.5 ? "left" : "right";
     if (room.houseRule.id === "doubleStat") {
       room.doubleStatKey = STAT_CLASH_STAT_KEYS[Math.floor(Math.random() * STAT_CLASH_STAT_KEYS.length)];
     }
   } else {
     room.houseRule = null;
+    room.houseRuleTargetSide = null;
   }
   room.jokersBySide = buildStatClashRoomJokers();
   room.streakBySide = { left: 0, right: 0 };
@@ -1074,6 +1082,8 @@ async function startStatClashRound(room) {
   clearStatClashCleanup(room);
   clearStatClashRoomTimers(room);
   clearStatClashPreviewTimers(room);
+  if (room.jokersBySide && room.jokersBySide.left) room.jokersBySide.left.doubleArmed = false;
+  if (room.jokersBySide && room.jokersBySide.right) room.jokersBySide.right.doubleArmed = false;
   const pool = getStatClashPoolForRoom(room);
   const pokemon = pool[Math.floor(Math.random() * pool.length)] || null;
   room.currentPokemon = pokemon;
@@ -1397,6 +1407,7 @@ function publicStatClashRoomState(room, viewerId = null) {
     houseRule: room.houseRule || null,
     doubleStatKey: room.doubleStatKey || null,
     mirrorStatKey: room.mirrorStatKey || null,
+    houseRuleTargetSide: room.houseRuleTargetSide || null,
     suddenDeath: Boolean(room.suddenDeath),
     streakBySide: { left: Number(room.streakBySide && room.streakBySide.left) || 0, right: Number(room.streakBySide && room.streakBySide.right) || 0 },
     roundsWonBySide: { left: Number(room.roundsWonBySide && room.roundsWonBySide.left) || 0, right: Number(room.roundsWonBySide && room.roundsWonBySide.right) || 0 },
