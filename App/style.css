@@ -3874,30 +3874,33 @@ body.win-page-celebrate {
 
 
 .draft-panel {
-
-  background: rgba(12, 43, 83, 0.72);
-
-  border: 1px solid rgba(139, 183, 255, 0.3);
-
-  border-radius: 14px;
-
-  padding: 14px;
-
-  box-shadow: 0 12px 28px rgba(10, 27, 50, 0.08);
-
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  border: 1px solid rgba(116, 158, 241, 0.22);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 12px 28px rgba(47, 118, 255, 0.08);
+  position: relative;
 }
 
+body.theme-dark .draft-panel {
+  background: linear-gradient(180deg, rgba(18,31,54,0.62) 0%, rgba(18,31,54,0.78) 100%);
+  border-color: rgba(116, 158, 241, 0.24);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.32);
+}
 
 .draft-panel h3 {
-
-  margin: 0 0 12px;
-
-  color: #ffe8a6;
-
-  font-size: 1rem;
-
+  margin: 0 0 14px;
+  color: #12213d;
+  font-size: 1.05rem;
+  font-weight: 800;
   letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
+body.theme-dark .draft-panel h3 {
+  color: #edf5ff;
 }
 
 
@@ -4572,111 +4575,33 @@ body.win-page-celebrate {
 }
 
 
-.draft-panel {
-
-  background: rgba(6, 30, 61, 0.66);
-
-  border-color: rgba(175, 211, 255, 0.35);
-
-}
-
 .draft-card > .draft-panel {
-
   position: relative;
-
   overflow: hidden;
-
 }
 
 .draft-card > .draft-panel::before {
-
   content: "";
-
   position: absolute;
-
   inset: 0 auto 0 0;
-
-  width: 5px;
-
-  border-radius: 14px 0 0 14px;
-
-  background: rgba(255, 221, 130, 0.24);
-
+  width: 4px;
+  border-radius: 18px 0 0 18px;
+  background: linear-gradient(180deg, #ffcc33, #2f76ff);
   pointer-events: none;
-
-}
-
-.draft-card > .draft-panel:nth-of-type(1) {
-
-  background: linear-gradient(180deg, rgba(86, 111, 145, 0.9), rgba(76, 98, 130, 0.9));
-
-  border-color: rgba(168, 196, 235, 0.34);
-
-}
-
-.draft-card > .draft-panel:nth-of-type(1)::before {
-
-  background: linear-gradient(180deg, rgba(255, 226, 154, 0.62), rgba(203, 221, 255, 0.24));
-
-}
-
-.draft-card > .draft-panel:nth-of-type(1) h3 {
-
-  color: #fff0bf;
-
-}
-
-.draft-card > .draft-panel:nth-of-type(2) {
-
-  background: linear-gradient(180deg, rgba(64, 86, 118, 0.94), rgba(51, 72, 103, 0.94));
-
-  border-color: rgba(255, 214, 118, 0.34);
-
-  box-shadow: 0 18px 36px rgba(16, 33, 58, 0.14), inset 0 1px 0 rgba(255, 241, 196, 0.08);
-
+  opacity: 0.65;
 }
 
 .draft-card > .draft-panel:nth-of-type(2)::before {
-
-  background: linear-gradient(180deg, rgba(255, 205, 96, 0.88), rgba(255, 152, 86, 0.36));
-
+  background: linear-gradient(180deg, #ffcc33, #e4382f);
+  opacity: 0.85;
+  width: 5px;
 }
 
 .draft-card > .draft-panel:nth-of-type(2) h3 {
-
-  color: #ffd66d;
-
-  font-size: 1.08rem;
-
+  font-size: 1.12rem;
 }
 
-.draft-card > .draft-panel:nth-of-type(3) {
-
-  background: linear-gradient(180deg, rgba(90, 110, 139, 0.82), rgba(80, 101, 131, 0.82));
-
-  border-color: rgba(172, 195, 227, 0.3);
-
-}
-
-.draft-card > .draft-panel:nth-of-type(3)::before {
-
-  background: linear-gradient(180deg, rgba(177, 202, 240, 0.54), rgba(150, 177, 215, 0.2));
-
-}
-
-.draft-card > .draft-panel:nth-of-type(3) h3 {
-
-  color: #ffe08b;
-
-}
-
-.draft-card > .draft-panel:nth-of-type(4) {
-
-  background: linear-gradient(180deg, rgba(12, 37, 72, 0.76), rgba(9, 28, 57, 0.76));
-
-  border-color: rgba(255, 210, 121, 0.28);
-
-}
+body.theme-dark .draft-card > .draft-panel::before { opacity: 0.45; }
 
 
 .draft-option-card {
@@ -24846,3 +24771,104 @@ body.theme-dark #draft-score-record-badge.is-new-record {
   color: #ffe19a;
   border-color: rgba(255, 178, 55, 0.6);
 }
+
+/* === DRAFT — Polish DA cards options === */
+.draft-option-card[data-rarity="legendary"] {
+  border-color: rgba(255, 178, 55, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(255, 178, 55, 0.32),
+    0 12px 28px rgba(255, 178, 55, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+.draft-option-card[data-rarity="legendary"]::after {
+  background:
+    radial-gradient(ellipse at top, rgba(255, 218, 121, 0.42), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 38%);
+}
+.draft-option-card[data-rarity="legendary"] strong {
+  color: #8a5a00;
+  text-shadow: 0 0 8px rgba(255, 178, 55, 0.32);
+}
+.draft-option-card[data-rarity="strong"] {
+  border-color: rgba(155, 175, 210, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(155, 175, 210, 0.3),
+    0 12px 24px rgba(99, 119, 158, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+.draft-option-card[data-rarity="strong"]::after {
+  background:
+    radial-gradient(ellipse at top, rgba(192, 208, 232, 0.38), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 38%);
+}
+
+/* Backdrop dégradé subtil selon le type1 */
+.draft-option-card[data-type1="Feu"]      { background: linear-gradient(180deg, #fff7f0 0%, #ffe1c8 100%); }
+.draft-option-card[data-type1="Eau"]      { background: linear-gradient(180deg, #f0f7ff 0%, #c8dfff 100%); }
+.draft-option-card[data-type1="Plante"]   { background: linear-gradient(180deg, #f3fff0 0%, #d0f0c8 100%); }
+.draft-option-card[data-type1="Électrik"] { background: linear-gradient(180deg, #fffdf0 0%, #fff2a8 100%); }
+.draft-option-card[data-type1="Glace"]    { background: linear-gradient(180deg, #f0fbff 0%, #c8eef5 100%); }
+.draft-option-card[data-type1="Combat"]   { background: linear-gradient(180deg, #fff3f0 0%, #ffd0c0 100%); }
+.draft-option-card[data-type1="Poison"]   { background: linear-gradient(180deg, #faf0ff 0%, #e0c0f0 100%); }
+.draft-option-card[data-type1="Sol"]      { background: linear-gradient(180deg, #fff8e8 0%, #f0d8a8 100%); }
+.draft-option-card[data-type1="Vol"]      { background: linear-gradient(180deg, #f3f5ff 0%, #c8d2ff 100%); }
+.draft-option-card[data-type1="Psy"]      { background: linear-gradient(180deg, #fff0f8 0%, #ffc8e0 100%); }
+.draft-option-card[data-type1="Insecte"]  { background: linear-gradient(180deg, #f8ffe8 0%, #d8e8a0 100%); }
+.draft-option-card[data-type1="Roche"]    { background: linear-gradient(180deg, #fffaee 0%, #e0c8a0 100%); }
+.draft-option-card[data-type1="Spectre"]  { background: linear-gradient(180deg, #f3f0fa 0%, #c8b0e0 100%); }
+.draft-option-card[data-type1="Dragon"]   { background: linear-gradient(180deg, #f0f3ff 0%, #b8a8ff 100%); }
+.draft-option-card[data-type1="Ténèbres"] { background: linear-gradient(180deg, #f5f0ee 0%, #c8b8a8 100%); }
+.draft-option-card[data-type1="Acier"]    { background: linear-gradient(180deg, #f5f7fa 0%, #c8d0d8 100%); }
+.draft-option-card[data-type1="Fée"]      { background: linear-gradient(180deg, #fff0f5 0%, #ffd0e0 100%); }
+.draft-option-card[data-type1="Normal"]   { background: linear-gradient(180deg, #fafafa 0%, #e0dac8 100%); }
+
+/* Hover smooth + ring coloré */
+.draft-option-card { transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease, border-color 0.18s ease; }
+.draft-option-card:hover {
+  transform: translateY(-5px) scale(1.025);
+  border-color: #2f76ff;
+  box-shadow:
+    0 0 0 3px rgba(47, 118, 255, 0.22),
+    0 22px 38px rgba(47, 118, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.draft-option-card[data-rarity="legendary"]:hover {
+  border-color: #ffb423;
+  box-shadow:
+    0 0 0 3px rgba(255, 178, 55, 0.42),
+    0 22px 40px rgba(255, 178, 55, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.draft-option-card[data-rarity="strong"]:hover {
+  border-color: #8aa0c4;
+  box-shadow:
+    0 0 0 3px rgba(155, 175, 210, 0.42),
+    0 22px 38px rgba(99, 119, 158, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Dark mode adaptations */
+body.theme-dark .draft-option-card { color: #edf5ff; }
+body.theme-dark .draft-option-card strong { color: #edf5ff; }
+body.theme-dark .draft-option-card > span,
+body.theme-dark .draft-option-card .draft-card-meta,
+body.theme-dark .draft-option-card .draft-bst-projection { color: #b8c8e4; }
+body.theme-dark .draft-option-card[data-type1="Feu"]      { background: linear-gradient(180deg, rgba(180,80,30,0.32) 0%, rgba(140,60,20,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Eau"]      { background: linear-gradient(180deg, rgba(40,90,180,0.32) 0%, rgba(30,60,140,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Plante"]   { background: linear-gradient(180deg, rgba(40,140,60,0.32) 0%, rgba(30,100,40,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Électrik"] { background: linear-gradient(180deg, rgba(180,160,40,0.32) 0%, rgba(140,120,20,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Glace"]    { background: linear-gradient(180deg, rgba(60,140,170,0.32) 0%, rgba(40,100,130,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Combat"]   { background: linear-gradient(180deg, rgba(180,60,30,0.32) 0%, rgba(140,40,20,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Poison"]   { background: linear-gradient(180deg, rgba(140,40,170,0.32) 0%, rgba(100,30,130,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Sol"]      { background: linear-gradient(180deg, rgba(180,140,40,0.32) 0%, rgba(140,100,20,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Vol"]      { background: linear-gradient(180deg, rgba(140,160,210,0.32) 0%, rgba(100,120,170,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Psy"]      { background: linear-gradient(180deg, rgba(220,90,140,0.32) 0%, rgba(180,60,110,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Insecte"]  { background: linear-gradient(180deg, rgba(160,180,60,0.32) 0%, rgba(120,140,40,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Roche"]    { background: linear-gradient(180deg, rgba(170,150,80,0.32) 0%, rgba(130,110,50,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Spectre"]  { background: linear-gradient(180deg, rgba(110,90,150,0.32) 0%, rgba(80,60,120,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Dragon"]   { background: linear-gradient(180deg, rgba(110,80,220,0.32) 0%, rgba(80,50,180,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Ténèbres"] { background: linear-gradient(180deg, rgba(100,80,60,0.32) 0%, rgba(70,55,40,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Acier"]    { background: linear-gradient(180deg, rgba(160,170,190,0.22) 0%, rgba(110,120,140,0.38) 100%); }
+body.theme-dark .draft-option-card[data-type1="Fée"]      { background: linear-gradient(180deg, rgba(220,140,180,0.32) 0%, rgba(180,100,140,0.45) 100%); }
+body.theme-dark .draft-option-card[data-type1="Normal"]   { background: linear-gradient(180deg, rgba(160,150,130,0.22) 0%, rgba(110,100,80,0.38) 100%); }
+body.theme-dark .draft-option-card[data-rarity="legendary"] strong { color: #ffd373; text-shadow: 0 0 10px rgba(255, 178, 55, 0.4); }

@@ -16759,6 +16759,10 @@ function renderDraftArena() {
         const projectedAverage = draftArenaState.team.length < DRAFT_TEAM_SIZE
           ? Math.round((bstMetrics.total + metrics.statGlobal) / Math.max(1, draftArenaState.team.length + 1))
           : bstMetrics.average;
+        const bstValue = Number(metrics.statGlobal) || 0;
+        const rarity = bstValue >= 600 ? "legendary" : bstValue >= 500 ? "strong" : bstValue >= 400 ? "decent" : "common";
+        card.dataset.rarity = rarity;
+        if (option.pokemon.type1) card.dataset.type1 = option.pokemon.type1;
         const isScoreAttack = draftArenaState.mode === "scoreAttack";
         const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0;
         const rerollBtn = canRerollOption
