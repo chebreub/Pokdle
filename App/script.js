@@ -16699,11 +16699,8 @@ function renderDraftArena() {
     scoreAttackToggle.textContent = isScoreMode ? "🏟️ Mode Arènes" : "🎯 Score Attack";
     scoreAttackToggle.classList.toggle("is-active-mode", isScoreMode);
   }
-  const screen = document.getElementById("screen-draft-arena");
-  if (screen) {
-    screen.classList.toggle("is-mode-score-attack", draftArenaState.mode === "scoreAttack");
-    screen.classList.toggle("is-mode-arena", draftArenaState.mode !== "scoreAttack");
-  }
+  screen.classList.toggle("is-mode-score-attack", draftArenaState.mode === "scoreAttack");
+  screen.classList.toggle("is-mode-arena", draftArenaState.mode !== "scoreAttack");
   if (scoreRerollButton) {
     const canReroll = draftArenaState.mode === "scoreAttack"
       && draftArenaState.phase === "draft"
