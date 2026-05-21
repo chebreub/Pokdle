@@ -24790,3 +24790,59 @@ body.theme-dark .stat-auction-final h3 { color: #edf5ff; }
   .stat-auction-stat-controls { justify-content: center; }
   .stat-auction-reveal-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* === DRAFT SCORE ATTACK — reroll individuel + record badge === */
+.draft-option-card { position: relative; }
+.draft-option-reroll {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #2f76ff, #1f5ad8);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(47, 118, 255, 0.32);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.draft-option-reroll:hover {
+  transform: rotate(180deg) scale(1.08);
+  box-shadow: 0 6px 14px rgba(47, 118, 255, 0.45);
+}
+.draft-option-reroll:active { transform: rotate(180deg) scale(0.95); }
+
+#draft-score-record-badge {
+  background: linear-gradient(180deg, #fff4d6, #ffe6a8);
+  color: #8a5a00;
+  border: 1px solid rgba(255, 178, 55, 0.4);
+  font-weight: 800;
+}
+#draft-score-record-badge.is-new-record {
+  animation: draftScoreNewRecordPulse 1.5s ease-out 2;
+  background: linear-gradient(180deg, #ffd97a, #ffb84a);
+  color: #5a3a00;
+  border-color: rgba(255, 153, 0, 0.6);
+}
+@keyframes draftScoreNewRecordPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 178, 55, 0); transform: scale(1); }
+  40%      { box-shadow: 0 0 0 12px rgba(255, 178, 55, 0.32); transform: scale(1.08); }
+}
+
+body.theme-dark .draft-option-reroll {
+  background: linear-gradient(180deg, #4a8aff, #2f76ff);
+}
+body.theme-dark #draft-score-record-badge {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.22), rgba(255, 178, 55, 0.10));
+  color: #ffd373;
+  border-color: rgba(255, 178, 55, 0.32);
+}
+body.theme-dark #draft-score-record-badge.is-new-record {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.42), rgba(255, 153, 0, 0.28));
+  color: #ffe19a;
+  border-color: rgba(255, 178, 55, 0.6);
+}

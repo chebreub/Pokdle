@@ -15754,6 +15754,54 @@ function rerollDraftScoreAttackWave() {
   renderDraftArena();
 }
 
+function rerollDraftScoreAttackOption(pokemonId) {
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft") return;
+  if (draftArenaState.scoreAttackRerollsLeft <= 0) {
+    draftArenaState.message = "Plus de relance disponible. Lance le mode classique pour reset.";
+    return renderDraftArena();
+  }
+  const optionIndex = draftArenaState.options.findIndex((option) => option.pokemon.id === pokemonId);
+  if (optionIndex < 0) return;
+  const pool = getDraftPoolForGeneration(draftArenaState.selectedGen);
+  const excludeDexIds = new Set(draftArenaState.selectedDexIds);
+  for (const option of draftArenaState.options) {
+    if (option && option.pokemon && option.pokemon.id !== pokemonId) {
+      excludeDexIds.add(getDraftPoolEntryKey(option.pokemon));
+    }
+  }
+  const replacement = buildDraftWeightedWave(pool, 1, excludeDexIds)[0];
+  if (!replacement) {
+    draftArenaState.message = "Pool épuisé pour reroll individuel.";
+    return renderDraftArena();
+  }
+  draftArenaState.options[optionIndex] = createDraftOptionEntry(replacement);
+  draftArenaState.scoreAttackRerollsLeft -= 1;
+  draftArenaState.message = `Option remplacée. Encore ${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}.`;
+  warmDraftPokemonMetrics([
+    ...draftArenaState.options.map((option) => option.pokemon),
+    ...draftArenaState.team.map((member) => member.pokemon),
+  ]);
+  renderDraftArena();
+}
+
+function getDraftScoreAttackRecord(gen) {
+  if (!playerProfile || !gen) return 0;
+  const records = playerProfile.draftScoreAttackRecords || {};
+  return Number(records[gen]) || 0;
+}
+
+function updateDraftScoreAttackRecord(gen, average) {
+  if (!playerProfile || !gen) return false;
+  playerProfile.draftScoreAttackRecords = playerProfile.draftScoreAttackRecords || {};
+  const prev = Number(playerProfile.draftScoreAttackRecords[gen]) || 0;
+  if (average > prev) {
+    playerProfile.draftScoreAttackRecords[gen] = average;
+    try { saveProfile(); } catch (_e) {}
+    return true;
+  }
+  return false;
+}
+
 function getDraftScoreAttackRoomSelf(room = draftArenaState?.scoreAttackRoom) {
   return room?.players?.find((player) => player.isSelf) || null;
 }
@@ -16496,15 +16544,21 @@ async function pickDraftArenaOption(pokemonId) {
       const metrics = getDraftTeamBstMetrics(draftArenaState.team);
       draftArenaState.phase = "result";
       draftArenaState.scoreAttackBestAverage = Math.max(Number(draftArenaState.scoreAttackBestAverage) || 0, metrics.average);
+      const previousRecord = getDraftScoreAttackRecord(draftArenaState.selectedGen);
+      const isNewRecord = updateDraftScoreAttackRecord(draftArenaState.selectedGen, metrics.average);
+      draftArenaState.scoreAttackNewRecord = isNewRecord;
+      draftArenaState.scoreAttackPreviousRecord = previousRecord;
       draftArenaState.runSummary = {
-        status: `${getDraftScoreAttackResultLabel(metrics.average)} • Moyenne ${metrics.average}`,
+        status: `${getDraftScoreAttackResultLabel(metrics.average)} • Moyenne ${metrics.average}${isNewRecord ? " 🏆 NOUVEAU RECORD !" : ""}`,
         mvpName: draftArenaState.team
           .slice()
           .sort((left, right) => (getDraftCachedPokemonPowerData(right.pokemon).statGlobal || 0) - (getDraftCachedPokemonPowerData(left.pokemon).statGlobal || 0))[0]?.pokemon?.name || "-",
         balanceLabel: `Total BST ${metrics.total}`,
-        offenseLabel: `${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""} restant${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}`,
+        offenseLabel: `${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""} restant${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}${previousRecord > 0 ? ` • Précédent record : ${previousRecord}` : ""}`,
       };
-      draftArenaState.message = `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
+      draftArenaState.message = isNewRecord
+        ? `🏆 NOUVEAU RECORD Gen ${draftArenaState.selectedGen} : moyenne BST ${metrics.average} ! (avant : ${previousRecord || 0})`
+        : `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
       submitDraftScoreAttackResult(metrics);
       renderDraftArena();
       return;
@@ -16561,6 +16615,20 @@ function renderDraftArena() {
   if (averageBadge) {
     averageBadge.textContent = `Moy. BST : ${bstMetrics.average || "-"}`;
     averageBadge.dataset.state = bstMetrics.average >= 550 ? "complete" : bstMetrics.average >= 500 ? "progress" : "empty";
+  }
+  const recordBadge = document.getElementById("draft-score-record-badge");
+  if (recordBadge) {
+    const isScoreAttack = draftArenaState.mode === "scoreAttack";
+    const record = isScoreAttack ? getDraftScoreAttackRecord(draftArenaState.selectedGen) : 0;
+    if (isScoreAttack && draftArenaState.selectedGen) {
+      recordBadge.classList.remove("hidden");
+      recordBadge.textContent = `🏆 Record Gen ${draftArenaState.selectedGen} : ${record || "-"}`;
+      if (draftArenaState.scoreAttackNewRecord) recordBadge.classList.add("is-new-record");
+      else recordBadge.classList.remove("is-new-record");
+    } else {
+      recordBadge.classList.add("hidden");
+      recordBadge.classList.remove("is-new-record");
+    }
   }
   const wonCount = draftArenaState.badgeResults.filter((result) => result.status === "won").length;
 
@@ -16691,7 +16759,13 @@ function renderDraftArena() {
         const projectedAverage = draftArenaState.team.length < DRAFT_TEAM_SIZE
           ? Math.round((bstMetrics.total + metrics.statGlobal) / Math.max(1, draftArenaState.team.length + 1))
           : bstMetrics.average;
+        const isScoreAttack = draftArenaState.mode === "scoreAttack";
+        const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0;
+        const rerollBtn = canRerollOption
+          ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Reroll cette option (1 jeton)">↻</button>`
+          : "";
         card.innerHTML = `
+          ${rerollBtn}
           <img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${normalSprite}'" />
           <strong>${escapeHtml(option.pokemon.name)}</strong>
           <span>#${spriteId}</span>
@@ -16702,12 +16776,21 @@ function renderDraftArena() {
         `;
         card.disabled = Boolean(option.locked);
         if (!option.locked) {
-          card.addEventListener("click", () => {
+          card.addEventListener("click", (event) => {
+            if (event.target?.closest(".draft-option-reroll")) return;
             card.classList.add("picked");
             setTimeout(() => {
               void pickDraftArenaOption(option.pokemon.id);
             }, 140);
           });
+          if (canRerollOption) {
+            const btn = card.querySelector(".draft-option-reroll");
+            if (btn) btn.addEventListener("click", (event) => {
+              event.stopPropagation();
+              event.preventDefault();
+              rerollDraftScoreAttackOption(option.pokemon.id);
+            });
+          }
         }
         options.appendChild(card);
       }
