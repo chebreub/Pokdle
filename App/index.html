@@ -721,6 +721,9 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <button id="draft-battle-join" class="btn-ghost" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
               <button id="draft-battle-close" class="btn-ghost hidden" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
               <button id="draft-score-attack-toggle" class="btn-blue" type="button" onclick="toggleDraftScoreAttackMode()">Score Attack</button>
+              <button id="draft-score-room-create" class="btn-blue hidden" type="button" onclick="createDraftScoreAttackRoom()">Créer 1v1 Score</button>
+              <button id="draft-score-room-join" class="btn-ghost hidden" type="button" onclick="joinDraftScoreAttackRoom()">Rejoindre 1v1</button>
+              <button id="draft-score-room-leave" class="btn-ghost hidden" type="button" onclick="leaveDraftScoreAttackRoom()">Quitter 1v1</button>
               <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
               <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
             </div>
@@ -749,6 +752,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="draft-score-attack-actions">
             <button id="draft-score-reroll" class="btn-blue hidden" type="button" onclick="rerollDraftScoreAttackWave()">Relancer la vague</button>
           </div>
+          <div id="draft-score-room-status" class="draft-score-room-status hidden"></div>
           <div id="draft-options" class="draft-options-grid"></div>
         </section>
 
@@ -1222,7 +1226,6 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <script src="script.js" defer></script>
   </body>
   </html>
-
 
 
 

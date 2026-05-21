@@ -10314,6 +10314,10 @@ function createDraftArenaState() {
     showDetailedAnalysis: false,
     scoreAttackRerollsLeft: DRAFT_SCORE_ATTACK_REROLLS,
     scoreAttackBestAverage: 0,
+    scoreAttackRoom: null,
+    scoreAttackSubmitted: false,
+    scoreAttackRoomPending: null,
+    scoreAttackRoomError: null,
     message: "Choisis une génération pour commencer le draft.",
   };
 }
@@ -15534,6 +15538,9 @@ window.runDraftSimpleBattleLocalPvpTest = runDraftSimpleBattleLocalPvpTest;
 window.hostDraftSimpleBattleNetworkRoom = hostDraftSimpleBattleNetworkRoom;
 window.joinDraftSimpleBattleNetworkRoom = joinDraftSimpleBattleNetworkRoom;
 window.openDraftFriendBattle = openDraftFriendBattle;
+window.createDraftScoreAttackRoom = createDraftScoreAttackRoom;
+window.joinDraftScoreAttackRoom = joinDraftScoreAttackRoom;
+window.leaveDraftScoreAttackRoom = leaveDraftScoreAttackRoom;
 window.continueDraftSimpleBattleHotseat = continueDraftSimpleBattleHotseat;
 window.launchDraftArenaBattle = launchDraftArenaBattle;
 window.continueDraftArenaBattleRun = continueDraftArenaBattleRun;
@@ -15747,6 +15754,140 @@ function rerollDraftScoreAttackWave() {
   renderDraftArena();
 }
 
+function getDraftScoreAttackRoomSelf(room = draftArenaState?.scoreAttackRoom) {
+  return room?.players?.find((player) => player.isSelf) || null;
+}
+
+function getDraftScoreAttackRoomOpponent(room = draftArenaState?.scoreAttackRoom) {
+  return room?.players?.find((player) => !player.isSelf) || null;
+}
+
+function applyDraftScoreAttackRoomState(roomState) {
+  if (!draftArenaState) return;
+  draftArenaState.scoreAttackRoom = roomState || null;
+  draftArenaState.scoreAttackRoomPending = null;
+  draftArenaState.scoreAttackRoomError = null;
+  const self = getDraftScoreAttackRoomSelf(roomState);
+  draftArenaState.scoreAttackSubmitted = Boolean(self?.hasSubmitted);
+  if (draftArenaState.mode === "scoreAttack") renderDraftArena();
+}
+
+function createDraftScoreAttackRoom() {
+  if (!draftArenaState) return;
+  draftArenaState.mode = "scoreAttack";
+  const socket = ensureMultiplayerSocket();
+  if (!socket?.connected) return;
+  const nickname = sanitizePlayerNickname(window.prompt("Pseudo pour la room Score Attack :", playerProfile.nickname || "Joueur 1") || "") || "Joueur 1";
+  draftArenaState.scoreAttackRoomPending = "create";
+  draftArenaState.scoreAttackRoomError = null;
+  renderDraftArena();
+  socket.emit("draft-score:create-room", { nickname }, (response = {}) => {
+    draftArenaState.scoreAttackRoomPending = null;
+    if (!response.ok) {
+      draftArenaState.scoreAttackRoomError = response.error || "Impossible de créer la room Score Attack.";
+      renderDraftArena();
+      return;
+    }
+    applyDraftScoreAttackRoomState(response.room);
+  });
+}
+
+function joinDraftScoreAttackRoom() {
+  if (!draftArenaState) return;
+  draftArenaState.mode = "scoreAttack";
+  const socket = ensureMultiplayerSocket();
+  if (!socket?.connected) return;
+  const code = String(window.prompt("Code de room Score Attack :", "") || "").trim().toUpperCase();
+  if (!code) return;
+  const nickname = sanitizePlayerNickname(window.prompt("Pseudo pour rejoindre le Score Attack :", playerProfile.nickname || "Joueur 2") || "") || "Joueur 2";
+  draftArenaState.scoreAttackRoomPending = "join";
+  draftArenaState.scoreAttackRoomError = null;
+  renderDraftArena();
+  socket.emit("draft-score:join-room", { code, nickname }, (response = {}) => {
+    draftArenaState.scoreAttackRoomPending = null;
+    if (!response.ok) {
+      draftArenaState.scoreAttackRoomError = response.error || "Impossible de rejoindre la room Score Attack.";
+      renderDraftArena();
+      return;
+    }
+    applyDraftScoreAttackRoomState(response.room);
+  });
+}
+
+function leaveDraftScoreAttackRoom() {
+  if (multiplayerSocket?.connected) multiplayerSocket.emit("draft-score:leave-room");
+  if (!draftArenaState) return;
+  draftArenaState.scoreAttackRoom = null;
+  draftArenaState.scoreAttackSubmitted = false;
+  draftArenaState.scoreAttackRoomPending = null;
+  draftArenaState.scoreAttackRoomError = null;
+  renderDraftArena();
+}
+
+function submitDraftScoreAttackResult(metrics = null) {
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || !draftArenaState.scoreAttackRoom || draftArenaState.scoreAttackSubmitted) return;
+  const socket = ensureMultiplayerSocket();
+  if (!socket?.connected) return;
+  const finalMetrics = metrics || getDraftTeamBstMetrics(draftArenaState.team);
+  const team = draftArenaState.team
+    .filter((entry) => entry?.pokemon)
+    .slice(0, DRAFT_TEAM_SIZE)
+    .map((entry) => ({
+      id: Number(entry.pokemon.id) || 0,
+      name: entry.pokemon.name,
+      bst: Number(getDraftCachedPokemonPowerData(entry.pokemon).statGlobal) || 0,
+    }));
+  if (team.length !== DRAFT_TEAM_SIZE || !finalMetrics.average) return;
+  draftArenaState.scoreAttackSubmitted = true;
+  socket.emit("draft-score:submit-result", {
+    average: finalMetrics.average,
+    total: finalMetrics.total,
+    selectedGen: draftArenaState.selectedGen,
+    label: getDraftScoreAttackResultLabel(finalMetrics.average),
+    team,
+  }, (response = {}) => {
+    if (!response.ok) {
+      draftArenaState.scoreAttackSubmitted = false;
+      draftArenaState.scoreAttackRoomError = response.error || "Impossible d'envoyer le score.";
+      renderDraftArena();
+      return;
+    }
+    applyDraftScoreAttackRoomState(response.room);
+  });
+}
+
+function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoom) {
+  if (!draftArenaState?.scoreAttackRoomError && !room) {
+    return `<b>Score Attack solo</b><span>Crée ou rejoins une room pour comparer ta moyenne BST avec un autre joueur.</span>`;
+  }
+  if (!room) {
+    return `<b>Score Attack 1v1</b><span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span>`;
+  }
+  const self = getDraftScoreAttackRoomSelf(room);
+  const opponent = getDraftScoreAttackRoomOpponent(room);
+  const winnerText = room.status === "finished"
+    ? room.winnerSide === "tie"
+      ? "Égalité parfaite"
+      : room.players?.find((player) => player.side === room.winnerSide)?.isSelf
+        ? "Victoire Score Attack"
+        : "Défaite Score Attack"
+    : opponent
+      ? "Room prête : draftez chacun votre meilleure équipe"
+      : "En attente d'un adversaire";
+  const playerRows = (room.players || []).map((player) => {
+    const result = player.result;
+    const score = result ? `Moy. ${result.average} • Total ${result.total}` : "Score en attente";
+    return `<span class="draft-score-room-player${player.isSelf ? " self" : ""}"><b>${escapeHtml(player.nickname || "Joueur")}</b><small>${escapeHtml(score)}</small></span>`;
+  }).join("");
+  return `
+    <div>
+      <b>Room ${escapeHtml(room.code || "-")} • ${escapeHtml(winnerText)}</b>
+      <span>${self?.hasSubmitted ? "Ton score est envoyé." : "Ton score sera envoyé automatiquement quand ton équipe sera complète."}</span>
+    </div>
+    <div class="draft-score-room-players">${playerRows}</div>
+  `;
+}
+
 function selectDraftGeneration(gen) {
   if (!draftArenaState) return;
 
@@ -15763,6 +15904,7 @@ function selectDraftGeneration(gen) {
   draftArenaState.evaluating = false;
   draftArenaState.scoreAttackRerollsLeft = DRAFT_SCORE_ATTACK_REROLLS;
   draftArenaState.scoreAttackBestAverage = 0;
+  draftArenaState.scoreAttackSubmitted = false;
   draftArenaState.message = draftArenaState.mode === "scoreAttack"
     ? `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`
     : `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`;
@@ -16308,8 +16450,13 @@ function openDraftArenaMode() {
 
 function restartDraftArenaRun() {
   const previousMode = draftArenaState?.mode || "arena";
+  const previousScoreRoom = draftArenaState?.scoreAttackRoom || null;
   draftArenaState = createDraftArenaState();
   draftArenaState.mode = previousMode;
+  if (previousMode === "scoreAttack") {
+    draftArenaState.scoreAttackRoom = previousScoreRoom;
+    draftArenaState.scoreAttackSubmitted = false;
+  }
   draftArenaState.message = previousMode === "scoreAttack"
     ? "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST."
     : "Choisis une génération pour commencer le draft.";
@@ -16317,6 +16464,9 @@ function restartDraftArenaRun() {
 }
 
 function toggleDraftScoreAttackMode() {
+  if (draftArenaState?.mode === "scoreAttack" && draftArenaState.scoreAttackRoom && multiplayerSocket?.connected) {
+    multiplayerSocket.emit("draft-score:leave-room");
+  }
   const nextMode = draftArenaState?.mode === "scoreAttack" ? "arena" : "scoreAttack";
   draftArenaState = createDraftArenaState();
   draftArenaState.mode = nextMode;
@@ -16355,6 +16505,7 @@ async function pickDraftArenaOption(pokemonId) {
         offenseLabel: `${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""} restant${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}`,
       };
       draftArenaState.message = `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
+      submitDraftScoreAttackResult(metrics);
       renderDraftArena();
       return;
     }
@@ -16396,6 +16547,10 @@ function renderDraftArena() {
   const battleClose = document.getElementById("draft-battle-close");
   const battlePokemonSelect = document.getElementById("draft-battle-pokemon");
   const scoreRerollButton = document.getElementById("draft-score-reroll");
+  const scoreRoomCreate = document.getElementById("draft-score-room-create");
+  const scoreRoomJoin = document.getElementById("draft-score-room-join");
+  const scoreRoomLeave = document.getElementById("draft-score-room-leave");
+  const scoreRoomStatus = document.getElementById("draft-score-room-status");
   const arenas = DRAFT_ARENAS_BY_GEN[draftArenaState.selectedGen] || [];
 
   if (status) status.textContent = draftArenaState.message;
@@ -16455,6 +16610,21 @@ function renderDraftArena() {
   }
   document.getElementById("draft-battle-friend")?.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
   document.getElementById("draft-battle-join")?.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
+  if (scoreRoomCreate) {
+    scoreRoomCreate.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || Boolean(draftArenaState.scoreAttackRoom));
+    scoreRoomCreate.disabled = Boolean(draftArenaState.scoreAttackRoomPending);
+  }
+  if (scoreRoomJoin) {
+    scoreRoomJoin.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || Boolean(draftArenaState.scoreAttackRoom));
+    scoreRoomJoin.disabled = Boolean(draftArenaState.scoreAttackRoomPending);
+  }
+  if (scoreRoomLeave) {
+    scoreRoomLeave.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || !draftArenaState.scoreAttackRoom);
+  }
+  if (scoreRoomStatus) {
+    scoreRoomStatus.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack");
+    scoreRoomStatus.innerHTML = renderDraftScoreAttackRoomStatus();
+  }
   const scoreAttackToggle = document.getElementById("draft-score-attack-toggle");
   if (scoreAttackToggle) {
     scoreAttackToggle.textContent = draftArenaState.mode === "scoreAttack" ? "Mode Arènes" : "Score Attack";
@@ -19203,8 +19373,25 @@ function ensureMultiplayerSocket() {
     handleDraftSimpleBattleNetworkRoomClosed(payload);
   });
 
+  multiplayerSocket.on("draft-score:room-state", (roomState) => {
+    applyDraftScoreAttackRoomState(roomState);
+  });
+
+  multiplayerSocket.on("draft-score:room-closed", (payload = {}) => {
+    if (!draftArenaState) return;
+    draftArenaState.scoreAttackRoom = null;
+    draftArenaState.scoreAttackSubmitted = false;
+    draftArenaState.scoreAttackRoomPending = null;
+    draftArenaState.scoreAttackRoomError = payload.reason || "La room Score Attack a été fermée.";
+    if (draftArenaState.mode === "scoreAttack") renderDraftArena();
+  });
+
   multiplayerSocket.on("higher-lower:room-state", (roomState) => {
     if (typeof applyHigherLowerRoomState === "function") applyHigherLowerRoomState(roomState);
+  });
+
+  multiplayerSocket.on("stat-auction:room-state", (roomState) => {
+    if (typeof applyStatAuctionRoomState === "function") applyStatAuctionRoomState(roomState);
   });
 
   return multiplayerSocket;

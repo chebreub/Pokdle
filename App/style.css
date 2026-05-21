@@ -16207,12 +16207,80 @@ body.theme-dark .stat-clash-room-feedback.error {
   font-weight: 900;
 }
 
+#screen-draft-arena .draft-score-room-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f3f7ff;
+  border: 1px solid #c9dcff;
+  color: #16345c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+#screen-draft-arena .draft-score-room-status > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+#screen-draft-arena .draft-score-room-status b {
+  color: #12213d;
+  font-size: 0.92rem;
+}
+
+#screen-draft-arena .draft-score-room-status span {
+  color: #526b90;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+#screen-draft-arena .draft-score-room-players {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#screen-draft-arena .draft-score-room-player {
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #d6e4ff;
+}
+
+#screen-draft-arena .draft-score-room-player.self {
+  border-color: #62adff;
+  box-shadow: 0 8px 18px rgba(47, 118, 255, 0.16);
+}
+
 #screen-draft-arena .draft-score-main small {
   display: block;
   margin-top: 4px;
   color: #526b90;
   font-size: 0.72rem;
   font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  #screen-draft-arena .draft-score-room-status {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #screen-draft-arena .draft-score-room-players {
+    justify-content: stretch;
+  }
+
+  #screen-draft-arena .draft-score-room-player {
+    min-width: 0;
+    flex: 1 1 160px;
+  }
 }
 
 #screen-draft-arena .draft-type-row {
@@ -24620,4 +24688,105 @@ body.theme-dark .poke-connections-final.is-lost h3 { color: #ff7d72; }
   .poke-connections-tile img { width: 48px; height: 48px; }
   .poke-connections-tile span { font-size: 10px; }
   .poke-connections-tile { min-height: 84px; }
+}
+
+/* === STAT AUCTION === */
+.stat-auction-card { padding: 22px 26px; }
+.stat-auction-root { margin-top: 14px; }
+.stat-auction-room { display: flex; flex-direction: column; gap: 18px; padding: 22px 18px; }
+.stat-auction-room h3 { margin: 0; font-size: 22px; color: #12213d; }
+body.theme-dark .stat-auction-room h3 { color: #edf5ff; }
+
+.stat-auction-board { display: flex; flex-direction: column; gap: 16px; }
+.stat-auction-status {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; background: rgba(47, 118, 255, 0.08); border-radius: 12px;
+  font-size: 13px; font-weight: 700; color: #4a5a78;
+}
+.stat-auction-status b { color: #12213d; }
+.stat-auction-status .is-ready { color: #1d6b3c; }
+body.theme-dark .stat-auction-status { background: rgba(99, 139, 207, 0.14); color: #b8c8e4; }
+body.theme-dark .stat-auction-status b { color: #edf5ff; }
+body.theme-dark .stat-auction-status .is-ready { color: #7adfa6; }
+
+.stat-auction-pokemon {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px; background: linear-gradient(180deg, #ffffff, #f5f8ff);
+  border: 1px solid rgba(116, 158, 241, 0.32); border-radius: 18px;
+  box-shadow: 0 12px 22px rgba(47, 118, 255, 0.08);
+}
+.stat-auction-pokemon h3 { margin: 0; font-size: 20px; color: #12213d; }
+.stat-auction-pokemon p { margin: 0; font-size: 13px; color: #4a5a78; text-align: center; }
+body.theme-dark .stat-auction-pokemon {
+  background: linear-gradient(180deg, rgba(18,31,54,0.62), rgba(18,31,54,0.78));
+  border-color: rgba(116, 158, 241, 0.24); box-shadow: 0 12px 22px rgba(0,0,0,0.32);
+}
+body.theme-dark .stat-auction-pokemon h3 { color: #edf5ff; }
+body.theme-dark .stat-auction-pokemon p { color: #b8c8e4; }
+
+.stat-auction-allocator { display: flex; flex-direction: column; gap: 10px; }
+.stat-auction-allocator.is-submitted { opacity: 0.55; pointer-events: none; }
+.stat-auction-row {
+  display: grid; grid-template-columns: minmax(140px, 1fr) auto; gap: 10px;
+  align-items: center; padding: 10px 12px;
+  background: rgba(47, 118, 255, 0.06); border-radius: 12px;
+}
+.stat-auction-stat-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #12213d; }
+.stat-auction-stat-label span { font-size: 18px; }
+.stat-auction-stat-controls { display: flex; align-items: center; gap: 6px; }
+.stat-auction-input {
+  width: 64px; padding: 8px 6px; text-align: center; font-size: 16px; font-weight: 800;
+  border-radius: 8px; border: 1px solid rgba(116, 158, 241, 0.4);
+  font-family: inherit;
+}
+.stat-auction-input:focus { outline: none; border-color: #2f76ff; box-shadow: 0 0 0 3px rgba(47, 118, 255, 0.18); }
+.stat-auction-step { padding: 6px 12px !important; font-size: 13px !important; font-weight: 800; }
+body.theme-dark .stat-auction-row { background: rgba(99, 139, 207, 0.12); }
+body.theme-dark .stat-auction-stat-label { color: #edf5ff; }
+body.theme-dark .stat-auction-input { background: rgba(18,31,54,0.55); color: #edf5ff; border-color: rgba(116, 158, 241, 0.32); }
+
+.stat-auction-totalbar {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 10px 14px; background: linear-gradient(180deg, #fff4d6, #ffe6a8);
+  border: 1px solid rgba(255, 178, 55, 0.4); border-radius: 12px;
+  font-size: 14px; font-weight: 700; color: #8a5a00;
+}
+.stat-auction-totalbar b { color: #5a3a00; }
+body.theme-dark .stat-auction-totalbar {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.18), rgba(255, 178, 55, 0.10));
+  color: #ffd373; border-color: rgba(255, 178, 55, 0.32);
+}
+body.theme-dark .stat-auction-totalbar b { color: #ffe19a; }
+
+.stat-auction-last-reveal {
+  margin-top: 8px; padding: 14px 16px;
+  background: rgba(47, 118, 255, 0.06); border: 1px solid rgba(116, 158, 241, 0.18);
+  border-radius: 14px;
+}
+.stat-auction-last-reveal h4 { margin: 0 0 8px; font-size: 14px; color: #12213d; font-weight: 800; }
+.stat-auction-reveal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; font-size: 11px; }
+.stat-auction-reveal-grid > div { padding: 6px 8px; background: rgba(255,255,255,0.6); border-radius: 8px; display: flex; flex-direction: column; gap: 2px; }
+.stat-auction-reveal-grid b { font-size: 12px; color: #12213d; }
+.stat-auction-reveal-grid span { font-size: 10px; color: #4a5a78; }
+.stat-auction-last-reveal p { margin: 10px 0 0; font-size: 13px; color: #4a5a78; text-align: center; }
+.stat-auction-last-reveal p b { color: #12213d; }
+body.theme-dark .stat-auction-last-reveal { background: rgba(99, 139, 207, 0.14); border-color: rgba(116, 158, 241, 0.22); }
+body.theme-dark .stat-auction-last-reveal h4,
+body.theme-dark .stat-auction-last-reveal p b { color: #edf5ff; }
+body.theme-dark .stat-auction-reveal-grid > div { background: rgba(18,31,54,0.55); }
+body.theme-dark .stat-auction-reveal-grid b { color: #edf5ff; }
+body.theme-dark .stat-auction-reveal-grid span,
+body.theme-dark .stat-auction-last-reveal p { color: #9aaecf; }
+
+.stat-auction-final {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 28px 18px;
+}
+.stat-auction-final h3 { margin: 0; font-size: 26px; color: #12213d; }
+body.theme-dark .stat-auction-final h3 { color: #edf5ff; }
+
+@media (max-width: 700px) {
+  .stat-auction-row { grid-template-columns: 1fr; }
+  .stat-auction-stat-controls { justify-content: center; }
+  .stat-auction-reveal-grid { grid-template-columns: minmax(0, 1fr); }
 }

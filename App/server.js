@@ -20,6 +20,7 @@ const io = new Server(server, {
 const rooms = new Map();
 const statClashRooms = new Map();
 const draftBattleRooms = new Map();
+const draftScoreRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
@@ -736,6 +737,7 @@ io.on("connection", (socket) => {
     try { handleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][duel] error", _error?.message || "unknown"); }
     try { handleStatClashDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-clash] error", _error?.message || "unknown"); }
     try { handleDraftBattleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-battle] error", _error?.message || "unknown"); }
+    try { handleDraftScoreDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-score] error", _error?.message || "unknown"); }
     try { handleHigherLowerDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][higher-lower] error", _error?.message || "unknown"); }
     try { handleStatAuctionDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-auction] error", _error?.message || "unknown"); }
     cleanupRateLimitBuckets(socket.id);
@@ -901,6 +903,74 @@ io.on("connection", (socket) => {
       respond(ack, { ok: true });
     } catch (_error) {
       respond(ack, { ok: false, error: "Erreur lors du commit d'état." });
+    }
+  });
+
+  socket.on("draft-score:create-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      handleDraftScoreDisconnect(socket.id, true);
+      const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
+      const code = generateDraftScoreRoomCode();
+      const room = {
+        code,
+        hostId: socket.id,
+        status: "lobby",
+        players: [{ id: socket.id, side: "left", nickname, connected: true, result: null }],
+        winnerSide: null,
+        createdAt: Date.now(),
+      };
+      draftScoreRooms.set(code, room);
+      socket.data.draftScoreRoomCode = code;
+      socket.join(code);
+      emitDraftScoreRoomState(room);
+      respond(ack, { ok: true, room: publicDraftScoreRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Impossible de créer la room Score Attack." });
+    }
+  });
+
+  socket.on("draft-score:join-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      handleDraftScoreDisconnect(socket.id, true);
+      const code = sanitizeRoomCode(payload.code);
+      const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
+      const room = draftScoreRooms.get(code);
+      if (!room) return respond(ack, { ok: false, error: "Room Score Attack introuvable." });
+      if (room.players.length >= MAX_ROOM_SIZE) return respond(ack, { ok: false, error: "La room est déjà complète." });
+      if (room.status === "finished") return respond(ack, { ok: false, error: "Cette room est terminée." });
+      room.players.push({ id: socket.id, side: "right", nickname, connected: true, result: null });
+      room.status = "live";
+      socket.data.draftScoreRoomCode = code;
+      socket.join(code);
+      emitDraftScoreRoomState(room);
+      respond(ack, { ok: true, room: publicDraftScoreRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Impossible de rejoindre la room Score Attack." });
+    }
+  });
+
+  socket.on("draft-score:leave-room", () => {
+    try { handleDraftScoreDisconnect(socket.id, true); } catch (_error) { console.error("[draft-score:leave-room] error", _error?.message || "unknown"); }
+  });
+
+  socket.on("draft-score:submit-result", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room Score Attack active." });
+      if (room.status === "finished") return respond(ack, { ok: false, error: "La room est déjà terminée." });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      const result = sanitizeDraftScoreResult(payload);
+      if (!result) return respond(ack, { ok: false, error: "Résultat Score Attack invalide." });
+      player.result = result;
+      if (room.players.length === MAX_ROOM_SIZE && room.players.every((entry) => entry.result)) finalizeDraftScoreRoom(room);
+      else emitDraftScoreRoomState(room);
+      respond(ack, { ok: true, room: publicDraftScoreRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Impossible d'envoyer le résultat Score Attack." });
     }
   });
 
@@ -1480,6 +1550,15 @@ function generateDraftBattleRoomCode() {
   do {
     code = `DB${Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("")}`;
   } while (draftBattleRooms.has(code));
+  return code;
+}
+
+function generateDraftScoreRoomCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  do {
+    code = `DS${Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("")}`;
+  } while (draftScoreRooms.has(code));
   return code;
 }
 
@@ -2193,6 +2272,100 @@ function handleDraftBattleDisconnect(socketId, voluntary, options = {}) {
     });
   }
   draftBattleRooms.delete(room.code);
+}
+
+function findDraftScoreRoomBySocket(socketId) {
+  const roomCode = io.sockets.sockets.get(socketId)?.data?.draftScoreRoomCode;
+  if (roomCode && draftScoreRooms.has(roomCode)) return draftScoreRooms.get(roomCode);
+  for (const room of draftScoreRooms.values()) {
+    if (room.players.some((player) => player.id === socketId)) return room;
+  }
+  return null;
+}
+
+function sanitizeDraftScoreResult(payload = {}) {
+  const average = Math.max(0, Math.min(900, Math.round(Number(payload.average) || 0)));
+  const total = Math.max(0, Math.min(5400, Math.round(Number(payload.total) || 0)));
+  const selectedGen = Number.isInteger(Number(payload.selectedGen)) ? Number(payload.selectedGen) : null;
+  const team = Array.isArray(payload.team)
+    ? payload.team.slice(0, 6).map((entry) => ({
+      id: Math.max(0, Math.round(Number(entry?.id) || 0)),
+      name: sanitizeNickname(entry?.name || "").slice(0, 32),
+      bst: Math.max(0, Math.min(900, Math.round(Number(entry?.bst) || 0))),
+    })).filter((entry) => entry.id && entry.name)
+    : [];
+  if (team.length !== 6 || average <= 0 || total <= 0) return null;
+  return {
+    average,
+    total,
+    selectedGen,
+    team,
+    label: sanitizeNickname(payload.label || "").slice(0, 32),
+    submittedAt: Date.now(),
+  };
+}
+
+function publicDraftScoreRoomState(room, viewerId = null) {
+  return {
+    code: room.code,
+    status: room.status,
+    maxPlayers: MAX_ROOM_SIZE,
+    connectedCount: room.players.filter((player) => player.connected).length,
+    winnerSide: room.winnerSide || null,
+    players: room.players.map((player) => ({
+      id: player.id,
+      nickname: player.nickname,
+      side: player.side,
+      connected: player.connected,
+      isSelf: player.id === viewerId,
+      isHost: player.id === room.hostId,
+      hasSubmitted: Boolean(player.result),
+      result: player.result || null,
+    })),
+  };
+}
+
+function emitDraftScoreRoomState(room) {
+  for (const player of room.players) {
+    if (!player.connected) continue;
+    io.to(player.id).emit("draft-score:room-state", publicDraftScoreRoomState(room, player.id));
+  }
+}
+
+function finalizeDraftScoreRoom(room) {
+  const left = room.players.find((player) => player.side === "left");
+  const right = room.players.find((player) => player.side === "right");
+  if (left?.result && right?.result) {
+    if (left.result.average > right.result.average) room.winnerSide = "left";
+    else if (right.result.average > left.result.average) room.winnerSide = "right";
+    else if (left.result.total > right.result.total) room.winnerSide = "left";
+    else if (right.result.total > left.result.total) room.winnerSide = "right";
+    else room.winnerSide = "tie";
+  }
+  room.status = "finished";
+  emitDraftScoreRoomState(room);
+}
+
+function handleDraftScoreDisconnect(socketId, voluntary) {
+  const room = findDraftScoreRoomBySocket(socketId);
+  if (!room) return;
+  const socket = io.sockets.sockets.get(socketId);
+  if (socket?.data) socket.data.draftScoreRoomCode = null;
+  const player = room.players.find((entry) => entry.id === socketId);
+  if (!player) return;
+  player.connected = false;
+
+  if (room.status !== "finished") {
+    io.to(room.code).emit("draft-score:room-closed", {
+      reason: voluntary ? `${player.nickname} a quitté le Score Attack.` : `${player.nickname} s'est déconnecté.`,
+    });
+    draftScoreRooms.delete(room.code);
+    return;
+  }
+
+  if (room.players.every((entry) => !entry.connected)) {
+    draftScoreRooms.delete(room.code);
+  }
 }
 
 function scheduleRoomCleanup(room) {
