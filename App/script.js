@@ -16747,10 +16747,13 @@ function renderDraftArena() {
       msg.textContent = "Aucune option disponible. Réinitialise le draft.";
       options.appendChild(msg);
     } else {
+      let optionIdx = 0;
       for (const option of draftArenaState.options) {
         const card = document.createElement("button");
         card.type = "button";
         card.className = "draft-option-card" + (option.shiny ? " is-shiny" : "") + (option.locked ? " picked locked" : "");
+        card.style.setProperty("--draft-i", String(optionIdx));
+        optionIdx += 1;
         const spriteId = getPokemonSpriteId(option.pokemon);
         const normalSprite = getPokemonSprite(option.pokemon);
         const shownSprite = option.shiny ? getPokemonShinySprite(option.pokemon) : normalSprite;
@@ -16809,10 +16812,10 @@ function renderDraftArena() {
         const empty = document.createElement("div");
         empty.className = "draft-team-card placeholder";
         empty.innerHTML = `
+          <div class="draft-team-empty-icon">?</div>
           <div class="draft-team-card-body">
             <small class="draft-team-slot-label">Slot ${index + 1}</small>
-            <b>En attente</b>
-            <span>Choisis un Pokémon pour compléter l’équipe.</span>
+            <b>Vide</b>
           </div>
         `;
         team.appendChild(empty);

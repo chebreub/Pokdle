@@ -24938,3 +24938,85 @@ body.theme-dark .draft-multi-menu {
 @media (max-width: 700px) {
   .draft-multi-menu { right: auto; left: 0; min-width: 200px; }
 }
+
+/* === DRAFT — Polish DA pass 3 (animations + placeholder + badges) === */
+@keyframes draftOptionCascade {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.draft-option-card {
+  animation: draftOptionCascade 0.42s cubic-bezier(0.25, 0.85, 0.3, 1) backwards;
+  animation-delay: calc(var(--draft-i, 0) * 0.07s);
+}
+
+@keyframes draftTeamSlotIn {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.draft-team-card.is-latest {
+  animation: draftTeamSlotIn 0.55s cubic-bezier(0.25, 1.4, 0.4, 1) backwards;
+  box-shadow:
+    0 0 0 3px rgba(47, 118, 255, 0.32),
+    0 12px 24px rgba(47, 118, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: #2f76ff;
+}
+
+.draft-team-card.placeholder {
+  border-style: dashed;
+  border-color: rgba(116, 158, 241, 0.42) !important;
+  background: linear-gradient(180deg, rgba(247, 250, 255, 0.6), rgba(235, 242, 255, 0.4)) !important;
+  opacity: 0.85;
+  justify-content: center;
+}
+.draft-team-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(116, 158, 241, 0.18), rgba(116, 158, 241, 0.08));
+  color: rgba(99, 119, 158, 0.6);
+  font-size: 22px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(116, 158, 241, 0.32);
+}
+body.theme-dark .draft-team-card.placeholder {
+  background: linear-gradient(180deg, rgba(18,31,54,0.4), rgba(18,31,54,0.55)) !important;
+  border-color: rgba(116, 158, 241, 0.32) !important;
+}
+body.theme-dark .draft-team-empty-icon {
+  background: linear-gradient(180deg, rgba(116, 158, 241, 0.18), rgba(116, 158, 241, 0.08));
+  color: rgba(155, 175, 210, 0.65);
+  border-color: rgba(116, 158, 241, 0.32);
+}
+
+/* Polish badge moyenne BST avec gradient palier */
+#draft-bst-average-badge {
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 800;
+}
+#draft-bst-average-badge[data-state="progress"] {
+  background: linear-gradient(180deg, #fff4d6, #ffe6a8);
+  color: #8a5a00;
+  border: 1px solid rgba(255, 178, 55, 0.42);
+}
+#draft-bst-average-badge[data-state="complete"] {
+  background: linear-gradient(180deg, #ffd97a, #ffb84a);
+  color: #5a3a00;
+  border: 1px solid rgba(255, 153, 0, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 178, 55, 0.22);
+  transform: scale(1.04);
+}
+body.theme-dark #draft-bst-average-badge[data-state="progress"] {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.22), rgba(255, 178, 55, 0.10));
+  color: #ffd373;
+  border-color: rgba(255, 178, 55, 0.32);
+}
+body.theme-dark #draft-bst-average-badge[data-state="complete"] {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.42), rgba(255, 153, 0, 0.28));
+  color: #ffe19a;
+  border-color: rgba(255, 178, 55, 0.6);
+}
