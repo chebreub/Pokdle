@@ -16695,8 +16695,14 @@ function renderDraftArena() {
   }
   const scoreAttackToggle = document.getElementById("draft-score-attack-toggle");
   if (scoreAttackToggle) {
-    scoreAttackToggle.textContent = draftArenaState.mode === "scoreAttack" ? "Mode Arènes" : "Score Attack";
-    scoreAttackToggle.classList.toggle("active", draftArenaState.mode === "scoreAttack");
+    const isScoreMode = draftArenaState.mode === "scoreAttack";
+    scoreAttackToggle.textContent = isScoreMode ? "🏟️ Mode Arènes" : "🎯 Score Attack";
+    scoreAttackToggle.classList.toggle("is-active-mode", isScoreMode);
+  }
+  const screen = document.getElementById("screen-draft-arena");
+  if (screen) {
+    screen.classList.toggle("is-mode-score-attack", draftArenaState.mode === "scoreAttack");
+    screen.classList.toggle("is-mode-arena", draftArenaState.mode !== "scoreAttack");
   }
   if (scoreRerollButton) {
     const canReroll = draftArenaState.mode === "scoreAttack"
@@ -16778,7 +16784,6 @@ function renderDraftArena() {
           <span>#${spriteId}</span>
           <span class="draft-card-meta">BST ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
           <span class="draft-bst-projection">Moy. après pick : ${projectedAverage}</span>
-          <div class="draft-type-row">${typeBadgesHtml(option.pokemon.type1, option.pokemon.type2)}</div>
           ${sparkle}
         `;
         card.disabled = Boolean(option.locked);

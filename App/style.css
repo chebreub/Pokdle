@@ -25007,3 +25007,42 @@ body.theme-dark #draft-bst-average-badge[data-state="complete"] {
   color: #ffe19a;
   border-color: rgba(255, 178, 55, 0.6);
 }
+
+/* === DRAFT — Toggle Score Attack actif + indication mode === */
+#draft-score-attack-toggle {
+  position: relative;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+#draft-score-attack-toggle.is-active-mode {
+  background: linear-gradient(180deg, #ffd97a, #ffb84a);
+  color: #5a3a00;
+  box-shadow: 0 0 0 3px rgba(255, 178, 55, 0.32), 0 8px 18px rgba(255, 153, 0, 0.22);
+  transform: scale(1.02);
+}
+body.theme-dark #draft-score-attack-toggle.is-active-mode {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.5), rgba(255, 153, 0, 0.32));
+  color: #ffe19a;
+  box-shadow: 0 0 0 3px rgba(255, 178, 55, 0.32), 0 8px 18px rgba(255, 153, 0, 0.22);
+}
+
+/* Bandeau mode actif au-dessus de la barre progress */
+#screen-draft-arena.is-mode-score-attack .draft-progress-shell::before {
+  content: "🎯 Mode Score Attack — vise la meilleure moyenne BST";
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, rgba(255, 178, 55, 0.18), rgba(255, 178, 55, 0.06));
+  border: 1px solid rgba(255, 178, 55, 0.42);
+  border-radius: 12px;
+  color: #8a5a00;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+body.theme-dark #screen-draft-arena.is-mode-score-attack .draft-progress-shell::before {
+  background: linear-gradient(90deg, rgba(255, 178, 55, 0.28), rgba(255, 178, 55, 0.10));
+  color: #ffd373;
+  border-color: rgba(255, 178, 55, 0.5);
+}
