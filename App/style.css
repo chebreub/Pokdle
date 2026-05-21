@@ -4138,40 +4138,31 @@ body.theme-dark .draft-panel h3 {
 
 
 .draft-team-grid {
-
   display: grid;
-
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
-
 }
 
-
 .draft-team-card {
-
   position: relative;
-
-  border: 1px solid #c6d8f3;
-
-  background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
-
-  border-radius: 14px;
-
-  padding: 10px 12px;
-
+  border: 1px solid rgba(116, 158, 241, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border-radius: 12px;
+  padding: 8px 6px;
   display: flex;
-
+  flex-direction: column;
   align-items: center;
+  gap: 4px;
+  min-height: 110px;
+  box-shadow: 0 8px 16px rgba(47, 118, 255, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
 
-  gap: 10px;
-
-  min-height: 92px;
-
-  box-shadow: 0 10px 22px rgba(14, 32, 58, 0.08);
-
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-
+@media (max-width: 720px) {
+  .draft-team-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .draft-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 
@@ -4214,38 +4205,66 @@ body.theme-dark .draft-panel h3 {
 
 
 .draft-team-card img {
-
-  width: 58px;
-
-  height: 58px;
-
+  width: 56px;
+  height: 56px;
   image-rendering: pixelated;
-
   flex: 0 0 auto;
-
 }
-
 
 .draft-team-card b {
-
   display: block;
-
   color: #173b63;
-
-  font-size: 0.98rem;
-
-  line-height: 1.15;
-
+  font-size: 0.82rem;
+  line-height: 1.1;
+  text-align: center;
+  font-weight: 700;
 }
-
 
 .draft-team-card span {
-
   color: #4f6b8f;
-
-  font-size: 0.78rem;
-
+  font-size: 0.7rem;
+  text-align: center;
 }
+
+.draft-team-card-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.draft-team-slot-label {
+  font-size: 0.6rem !important;
+  padding: 1px 5px !important;
+}
+
+.draft-team-card-types {
+  justify-content: center;
+  gap: 3px !important;
+}
+
+.draft-team-card-types .type-badge {
+  min-height: 16px !important;
+  padding: 1px 4px !important;
+}
+
+.draft-team-card-types .type-badge span {
+  font-size: 0.55rem !important;
+}
+
+.draft-team-card-types .type-badge img {
+  width: 9px !important;
+  height: 9px !important;
+}
+
+body.theme-dark .draft-team-card {
+  background: linear-gradient(180deg, rgba(18,31,54,0.62) 0%, rgba(18,31,54,0.78) 100%);
+  border-color: rgba(116, 158, 241, 0.24);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.32);
+}
+body.theme-dark .draft-team-card b { color: #edf5ff; }
+body.theme-dark .draft-team-card span { color: #b8c8e4; }
 
 .draft-team-card-types {
 
@@ -24872,3 +24891,50 @@ body.theme-dark .draft-option-card[data-type1="Acier"]    { background: linear-g
 body.theme-dark .draft-option-card[data-type1="Fée"]      { background: linear-gradient(180deg, rgba(220,140,180,0.32) 0%, rgba(180,100,140,0.45) 100%); }
 body.theme-dark .draft-option-card[data-type1="Normal"]   { background: linear-gradient(180deg, rgba(160,150,130,0.22) 0%, rgba(110,100,80,0.38) 100%); }
 body.theme-dark .draft-option-card[data-rarity="legendary"] strong { color: #ffd373; text-shadow: 0 0 10px rgba(255, 178, 55, 0.4); }
+
+/* === DRAFT — Dropdown Multi (header allégé) === */
+.draft-multi-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.draft-multi-toggle {
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.draft-multi-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: #ffffff;
+  border: 1px solid rgba(116, 158, 241, 0.32);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 18px 40px rgba(47, 118, 255, 0.22), 0 4px 10px rgba(10, 28, 52, 0.12);
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 200;
+}
+.draft-multi-dropdown:hover .draft-multi-menu,
+.draft-multi-dropdown:focus-within .draft-multi-menu {
+  display: flex;
+}
+.draft-multi-menu > button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px !important;
+  font-size: 13px;
+  border-radius: 10px;
+}
+.draft-multi-menu > button.hidden { display: none; }
+body.theme-dark .draft-multi-menu {
+  background: linear-gradient(180deg, rgba(18,31,54,0.96), rgba(18,31,54,0.98));
+  border-color: rgba(116, 158, 241, 0.24);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 700px) {
+  .draft-multi-menu { right: auto; left: 0; min-width: 200px; }
+}

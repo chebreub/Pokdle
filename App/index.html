@@ -717,13 +717,18 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <div class="ranking-head-actions">
               <select id="draft-battle-pokemon" class="mode-select hidden" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
               <button id="draft-battle-launch" class="btn-blue" type="button" onclick="launchDraftArenaBattle()">Lancer le duel</button>
-              <button id="draft-battle-friend" class="btn-blue" type="button" onclick="openDraftFriendBattle()" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
-              <button id="draft-battle-join" class="btn-ghost" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
               <button id="draft-battle-close" class="btn-ghost hidden" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
               <button id="draft-score-attack-toggle" class="btn-blue" type="button" onclick="toggleDraftScoreAttackMode()">Score Attack</button>
-              <button id="draft-score-room-create" class="btn-blue hidden" type="button" onclick="createDraftScoreAttackRoom()">Créer 1v1 Score</button>
-              <button id="draft-score-room-join" class="btn-ghost hidden" type="button" onclick="joinDraftScoreAttackRoom()">Rejoindre 1v1</button>
-              <button id="draft-score-room-leave" class="btn-ghost hidden" type="button" onclick="leaveDraftScoreAttackRoom()">Quitter 1v1</button>
+              <div class="draft-multi-dropdown">
+                <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">🆚 Multi ▾</button>
+                <div class="draft-multi-menu" role="menu">
+                  <button id="draft-battle-friend" class="btn-blue" type="button" onclick="openDraftFriendBattle()" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
+                  <button id="draft-battle-join" class="btn-ghost" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
+                  <button id="draft-score-room-create" class="btn-blue hidden" type="button" onclick="createDraftScoreAttackRoom()">💰 Créer 1v1 Score</button>
+                  <button id="draft-score-room-join" class="btn-ghost hidden" type="button" onclick="joinDraftScoreAttackRoom()">💰 Rejoindre 1v1</button>
+                  <button id="draft-score-room-leave" class="btn-ghost hidden" type="button" onclick="leaveDraftScoreAttackRoom()">Quitter 1v1</button>
+                </div>
+              </div>
               <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
               <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
             </div>
