@@ -3927,23 +3927,79 @@ const HIGHER_LOWER_STATS = [
 
 let higherLowerState = null;
 const higherLowerTimeouts = new Set();
+let higherLowerRushIntervalId = null;
+const HIGHER_LOWER_RUSH_MS = 60000;
+const HIGHER_LOWER_STAT_KEY_TO_API = { hp: "hp", attack: "attack", defense: "defense", spAttack: "spAttack", spDefense: "spDefense", speed: "speed" };
 
 function getHigherLowerPool() {
   return getPokemonUiList().filter((pokemon) => Boolean(getMysteryApiId(pokemon)));
 }
 
-function createHigherLowerState() {
+function createHigherLowerState(mode = "lobby") {
   return {
-    phase: "loading",
+    phase: mode === "lobby" ? "lobby" : "loading",
+    mode,
     left: null,
     right: null,
     statKey: null,
     score: 0,
     highScore: Number(playerProfile?.higherLowerHighScore) || 0,
+    rushHighScore: Number(playerProfile?.higherLower60sHighScore) || 0,
+    rushEndsAt: null,
+    rushLeftMs: HIGHER_LOWER_RUSH_MS,
     lastChoice: null,
     lastCorrect: null,
     isAnimating: false,
+    room: null,
+    roomDraftCode: "",
+    roomNicknameDraft: String(playerProfile?.nickname || "").trim(),
+    roomPairIndex: 0,
+    roomPendingAction: null,
+    roomError: null,
   };
+}
+
+function clearHigherLowerRushInterval() {
+  if (higherLowerRushIntervalId) {
+    clearInterval(higherLowerRushIntervalId);
+    higherLowerRushIntervalId = null;
+  }
+}
+
+function startHigherLowerRushTimer() {
+  if (!higherLowerState) return;
+  if (higherLowerState.mode !== "rush60" && higherLowerState.mode !== "versus") return;
+  clearHigherLowerRushInterval();
+  if (higherLowerState.mode === "rush60") {
+    higherLowerState.rushEndsAt = Date.now() + HIGHER_LOWER_RUSH_MS;
+    higherLowerState.rushLeftMs = HIGHER_LOWER_RUSH_MS;
+  } else if (higherLowerState.rushEndsAt) {
+    higherLowerState.rushLeftMs = Math.max(0, higherLowerState.rushEndsAt - Date.now());
+  }
+  higherLowerRushIntervalId = setInterval(() => {
+    if (!higherLowerState) return clearHigherLowerRushInterval();
+    if (higherLowerState.mode !== "rush60" && higherLowerState.mode !== "versus") return clearHigherLowerRushInterval();
+    higherLowerState.rushLeftMs = Math.max(0, (higherLowerState.rushEndsAt || 0) - Date.now());
+    const timerEl = document.getElementById("higher-lower-timer");
+    if (timerEl) timerEl.textContent = `${Math.ceil(higherLowerState.rushLeftMs / 1000)}s`;
+    if (higherLowerState.rushLeftMs <= 0) {
+      clearHigherLowerRushInterval();
+      if (higherLowerState.mode === "rush60") finalizeHigherLowerRush();
+    }
+  }, 100);
+}
+
+function finalizeHigherLowerRush() {
+  if (!higherLowerState) return;
+  if (higherLowerState.score > higherLowerState.rushHighScore) {
+    higherLowerState.rushHighScore = higherLowerState.score;
+    if (typeof playerProfile === "object" && playerProfile) {
+      playerProfile.higherLower60sHighScore = higherLowerState.rushHighScore;
+      try { saveProfile(); } catch (_e) {}
+    }
+  }
+  higherLowerState.phase = "gameover";
+  renderHigherLowerScreen();
 }
 
 function pickHigherLowerStat() {
@@ -3978,14 +4034,29 @@ function openHigherLowerMode() {
   if (!pool.length) return alert("Impossible de charger la base Pokémon pour Higher or Lower.");
   goToConfig();
   clearHigherLowerTimeouts();
+  clearHigherLowerRushInterval();
   hideExtraScreens();
   hideScreen("screen-config");
   hideScreen("screen-game");
   showScreen("screen-higher-lower");
   setGlobalNavActive("game");
   gameMode = "higher-lower";
-  higherLowerState = createHigherLowerState();
+  higherLowerState = createHigherLowerState("lobby");
   renderHigherLowerScreen();
+}
+
+function startHigherLowerMode(mode) {
+  if (!higherLowerState) higherLowerState = createHigherLowerState(mode);
+  higherLowerState.mode = mode === "rush60" ? "rush60" : "infinite";
+  higherLowerState.score = 0;
+  higherLowerState.left = null;
+  higherLowerState.right = null;
+  higherLowerState.lastChoice = null;
+  higherLowerState.lastCorrect = null;
+  higherLowerState.isAnimating = false;
+  higherLowerState.rushLeftMs = HIGHER_LOWER_RUSH_MS;
+  higherLowerState.rushEndsAt = null;
+  if (higherLowerState.mode === "rush60") startHigherLowerRushTimer();
   startHigherLowerRound();
 }
 
@@ -4030,6 +4101,17 @@ function answerHigherLower(choice) {
   trackHigherLowerTimeout(() => {
     if (!higherLowerState) return;
     higherLowerState.isAnimating = false;
+    if (higherLowerState.mode === "rush60") {
+      if (correct) {
+        higherLowerState.score += 1;
+      }
+      if (higherLowerState.rushLeftMs > 0) {
+        startHigherLowerRound();
+      } else {
+        finalizeHigherLowerRush();
+      }
+      return;
+    }
     if (correct) {
       higherLowerState.score += 1;
       if (higherLowerState.score > higherLowerState.highScore) {
@@ -4044,19 +4126,27 @@ function answerHigherLower(choice) {
       higherLowerState.phase = "gameover";
       renderHigherLowerScreen();
     }
-  }, 1800);
+  }, higherLowerState.mode === "rush60" ? 900 : 1800);
 }
 
 function restartHigherLowerGame() {
   if (!higherLowerState) return openHigherLowerMode();
+  if (higherLowerState.mode === "versus" && higherLowerState.room) {
+    return leaveHigherLowerRoom();
+  }
   clearHigherLowerTimeouts();
+  clearHigherLowerRushInterval();
+  higherLowerState.phase = "lobby";
+  higherLowerState.mode = "lobby";
   higherLowerState.score = 0;
   higherLowerState.left = null;
   higherLowerState.right = null;
   higherLowerState.lastChoice = null;
   higherLowerState.lastCorrect = null;
   higherLowerState.isAnimating = false;
-  startHigherLowerRound();
+  higherLowerState.rushLeftMs = HIGHER_LOWER_RUSH_MS;
+  higherLowerState.rushEndsAt = null;
+  renderHigherLowerScreen();
 }
 
 function renderHigherLowerScreen() {
@@ -4064,6 +4154,81 @@ function renderHigherLowerScreen() {
   if (!root) return;
   const state = higherLowerState;
   if (!state) { root.innerHTML = ""; return; }
+  if (state.phase === "lobby") {
+    root.innerHTML = `
+      <div class="higher-lower-lobby">
+        <h3>Choisis ton mode</h3>
+        <div class="higher-lower-modes">
+          <button class="higher-lower-mode-card" type="button" onclick="startHigherLowerMode('infinite')">
+            <div class="higher-lower-mode-icon">♾️</div>
+            <h4>Mode infini</h4>
+            <p>Enchaîne jusqu'à la première erreur. Combien de bonnes réponses d'affilée ?</p>
+            <div class="higher-lower-mode-record">Record : <b>${state.highScore}</b></div>
+          </button>
+          <button class="higher-lower-mode-card" type="button" onclick="startHigherLowerMode('rush60')">
+            <div class="higher-lower-mode-icon">⏱️</div>
+            <h4>Course 60s</h4>
+            <p>60 secondes pour faire le max de bonnes réponses. Les erreurs ne pénalisent pas, juste le temps presse.</p>
+            <div class="higher-lower-mode-record">Record : <b>${state.rushHighScore}</b></div>
+          </button>
+          <button class="higher-lower-mode-card" type="button" onclick="startHigherLowerVersusFromLobby()">
+            <div class="higher-lower-mode-icon">🆚</div>
+            <h4>Versus 1v1</h4>
+            <p>Course 60s en temps réel contre un ami. Mêmes Pokémon synchronisés, score adverse visible en live.</p>
+            <div class="higher-lower-mode-record">Multi temps réel</div>
+          </button>
+        </div>
+      </div>`;
+    return;
+  }
+  if (state.phase === "room") {
+    const room = state.room;
+    const code = room?.code || "";
+    const players = Array.isArray(room?.players) ? room.players : [];
+    const selfPlayer = players.find((p) => p.isSelf) || null;
+    const opponent = players.find((p) => !p.isSelf) || null;
+    const isHost = Boolean(selfPlayer?.isHost);
+    const canStart = Boolean(room?.canStart) && isHost;
+    const pending = state.roomPendingAction;
+    root.innerHTML = `
+      <div class="higher-lower-room">
+        ${!room ? `
+          <h3>Versus 1v1 — Room</h3>
+          <p class="card-desc">Crée une room et partage le code, ou rejoins une room existante.</p>
+          <div class="higher-lower-room-form">
+            <label>Ton pseudo
+              <input id="higher-lower-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" oninput="syncHigherLowerNickname()" />
+            </label>
+            <div class="higher-lower-room-actions">
+              <button class="btn-blue" type="button" onclick="createHigherLowerRoom()" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
+            </div>
+            <div class="higher-lower-room-join">
+              <label>Code de room
+                <input id="higher-lower-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" oninput="syncHigherLowerJoinCode()" />
+              </label>
+              <button class="btn-ghost" type="button" onclick="joinHigherLowerRoom()" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
+            </div>
+          </div>
+        ` : `
+          <h3>Versus 1v1 — Room ${escapeHtml(code)}</h3>
+          <div class="higher-lower-room-summary">
+            <span><b>Code :</b> ${escapeHtml(code)}</span>
+            <span><b>Joueurs :</b> ${room.connectedCount || 0}/${room.maxPlayers || 2}</span>
+            <span><b>Statut :</b> ${escapeHtml(room.status === "lobby" ? (canStart ? "Prête" : "En attente") : room.status)}</span>
+          </div>
+          <div class="higher-lower-room-players">
+            ${players.map((p) => `<div class="higher-lower-room-player ${p.connected ? "is-connected" : "is-disconnected"}"><b>${escapeHtml(p.nickname || "Joueur")}</b><span>${p.isHost ? "Hôte" : "Invité"}${p.isSelf ? " · Toi" : ""}</span></div>`).join("")}
+            ${players.length < 2 ? `<div class="higher-lower-room-player is-empty"><b>En attente…</b><span>Partage le code</span></div>` : ""}
+          </div>
+          <div class="higher-lower-room-actions">
+            ${isHost ? `<button class="btn-red" type="button" onclick="startHigherLowerRoomMatch()" ${canStart && !pending ? "" : "disabled"}>${pending === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : `<p class="card-desc">En attente du lancement par l'hôte.</p>`}
+            <button class="btn-ghost" type="button" onclick="leaveHigherLowerRoom()">Quitter</button>
+          </div>
+        `}
+        ${state.roomError ? `<p class="higher-lower-feedback is-wrong">${escapeHtml(state.roomError)}</p>` : ""}
+      </div>`;
+    return;
+  }
   if (state.phase === "loading" || !state.left || (state.phase !== "gameover" && !state.right)) {
     root.innerHTML = `<div class="higher-lower-loading"><div class="higher-lower-spinner"></div><p>Chargement des Pokémon…</p></div>`;
     return;
@@ -4072,13 +4237,40 @@ function renderHigherLowerScreen() {
   const leftSprite = getPokemonSprite(state.left.pokemon);
   const rightSprite = state.right ? getPokemonSprite(state.right.pokemon) : "";
   const isReveal = state.phase === "revealing" || state.phase === "gameover";
+  const isRush = state.mode === "rush60";
+  const isVersus = state.mode === "versus";
+  const versusSelf = isVersus ? state.room?.players?.find((p) => p.isSelf) : null;
+  const versusOpp = isVersus ? state.room?.players?.find((p) => !p.isSelf) : null;
+  const versusWinner = state.room?.winnerSide || null;
   if (state.phase === "gameover") {
-    const isRecord = state.score > 0 && state.score >= state.highScore;
+    if (isVersus) {
+      const selfSide = versusSelf?.side;
+      const selfWon = versusWinner === selfSide;
+      const tie = versusWinner === "tie";
+      const title = tie ? "🤝 Égalité" : selfWon ? "🏆 Victoire !" : "💀 Défaite";
+      const isHost = Boolean(versusSelf?.isHost);
+      root.innerHTML = `
+        <div class="higher-lower-gameover">
+          <h3>${title}</h3>
+          <p>Toi <b>${versusSelf?.score ?? state.score}</b> · ${escapeHtml(versusOpp?.nickname || "Adversaire")} <b>${versusOpp?.score ?? 0}</b></p>
+          <div class="higher-lower-room-actions">
+            ${isHost ? `<button class="btn-red" type="button" onclick="restartHigherLowerVersusMatch()">Relancer une partie</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
+            <button class="btn-ghost" type="button" onclick="leaveHigherLowerRoom()">Quitter la room</button>
+          </div>
+        </div>`;
+      return;
+    }
+    const refScore = isRush ? state.rushHighScore : state.highScore;
+    const isRecord = state.score > 0 && state.score >= refScore;
+    const title = isRush ? "⏱️ Temps écoulé" : "💥 Game over";
+    const desc = isRush
+      ? `Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} en 60 secondes.`
+      : `Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} d'affilée.`;
     root.innerHTML = `
       <div class="higher-lower-gameover">
-        <h3>💥 Game over</h3>
-        <p>Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} d'affilée.</p>
-        <p class="higher-lower-record">${isRecord ? "🏆 Nouveau record !" : `Record actuel : <b>${state.highScore}</b>`}</p>
+        <h3>${title}</h3>
+        <p>${desc}</p>
+        <p class="higher-lower-record">${isRecord ? "🏆 Nouveau record !" : `Record actuel : <b>${refScore}</b>`}</p>
         ${state.right ? `<div class="higher-lower-final-pair">
           <div class="higher-lower-card-mini"><img src="${escapeHtml(leftSprite)}" alt="${escapeHtml(state.left.pokemon.name)}" /><span>${escapeHtml(state.left.pokemon.name)}</span><b>${statMeta.icon} ${state.left.statValue}</b></div>
           <div class="higher-lower-final-vs">VS</div>
@@ -4088,9 +4280,17 @@ function renderHigherLowerScreen() {
       </div>`;
     return;
   }
+  let scoreHtml;
+  if (isVersus) {
+    scoreHtml = `<span>Toi : <b>${versusSelf?.score ?? state.score}</b></span><span>${escapeHtml(versusOpp?.nickname || "Adversaire")} : <b>${versusOpp?.score ?? 0}</b></span><span class="higher-lower-rush-timer">⏱️ <b id="higher-lower-timer">${Math.ceil((state.rushLeftMs || 0) / 1000)}s</b></span>`;
+  } else if (isRush) {
+    scoreHtml = `<span>Score : <b>${state.score}</b></span><span>Record : <b>${state.rushHighScore}</b></span><span class="higher-lower-rush-timer">⏱️ <b id="higher-lower-timer">${Math.ceil((state.rushLeftMs || 0) / 1000)}s</b></span>`;
+  } else {
+    scoreHtml = `<span>Score : <b>${state.score}</b></span><span>Record : <b>${state.highScore}</b></span>`;
+  }
   root.innerHTML = `
     <div class="higher-lower-board">
-      <div class="higher-lower-scoreline"><span>Score : <b>${state.score}</b></span><span>Record : <b>${state.highScore}</b></span></div>
+      <div class="higher-lower-scoreline">${scoreHtml}</div>
       <div class="higher-lower-stat-banner">Stat à comparer : <b>${statMeta.icon} ${escapeHtml(statMeta.label)}</b></div>
       <div class="higher-lower-pair">
         <div class="higher-lower-card-pokemon side-left">
@@ -4107,11 +4307,196 @@ function renderHigherLowerScreen() {
       </div>
       ${isReveal ? `<p class="higher-lower-feedback ${state.lastCorrect ? "is-correct" : "is-wrong"}">${state.lastCorrect ? "✅ Bien vu !" : "❌ Raté."} ${escapeHtml(state.right.pokemon.name)} a <b>${state.right.statValue}</b> en ${escapeHtml(statMeta.label)}.</p>` : `
         <div class="higher-lower-actions">
-          <button class="btn-red higher-lower-btn-higher" type="button" onclick="answerHigherLower('higher')">▲ Plus haut</button>
-          <button class="btn-blue higher-lower-btn-lower" type="button" onclick="answerHigherLower('lower')">▼ Plus bas</button>
+          <button class="btn-red higher-lower-btn-higher" type="button" onclick="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}('higher')">▲ Plus haut</button>
+          <button class="btn-blue higher-lower-btn-lower" type="button" onclick="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}('lower')">▼ Plus bas</button>
         </div>
       `}
     </div>`;
+}
+
+// === HIGHER OR LOWER — Versus 1v1 multi ===
+function startHigherLowerVersusFromLobby() {
+  if (!higherLowerState) higherLowerState = createHigherLowerState("lobby");
+  higherLowerState.mode = "versus";
+  higherLowerState.phase = "room";
+  higherLowerState.score = 0;
+  higherLowerState.roomPairIndex = 0;
+  higherLowerState.roomError = null;
+  higherLowerState.room = null;
+  ensureMultiplayerSocket();
+  renderHigherLowerScreen();
+}
+function syncHigherLowerNickname() {
+  const input = document.getElementById("higher-lower-nickname");
+  if (input && higherLowerState) higherLowerState.roomNicknameDraft = input.value || "";
+}
+function syncHigherLowerJoinCode() {
+  const input = document.getElementById("higher-lower-room-input");
+  if (input && higherLowerState) higherLowerState.roomDraftCode = (input.value || "").toUpperCase();
+}
+function createHigherLowerRoom() {
+  if (!higherLowerState) return;
+  const socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  const nickname = String(higherLowerState.roomNicknameDraft || playerProfile?.nickname || "").trim() || "Dresseur";
+  higherLowerState.roomPendingAction = "creating";
+  higherLowerState.roomError = null;
+  renderHigherLowerScreen();
+  socket.emit("higher-lower:create-room", { nickname, selectedGens: [...selectedGens] }, (response = {}) => {
+    higherLowerState.roomPendingAction = null;
+    if (!response.ok) higherLowerState.roomError = response.error || "Impossible de créer la room.";
+    else higherLowerState.room = response.room;
+    renderHigherLowerScreen();
+  });
+}
+function joinHigherLowerRoom() {
+  if (!higherLowerState) return;
+  const socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  const nickname = String(higherLowerState.roomNicknameDraft || playerProfile?.nickname || "").trim() || "Invité";
+  const code = String(higherLowerState.roomDraftCode || "").trim().toUpperCase();
+  if (!code) { higherLowerState.roomError = "Entre un code de room."; renderHigherLowerScreen(); return; }
+  higherLowerState.roomPendingAction = "joining";
+  higherLowerState.roomError = null;
+  renderHigherLowerScreen();
+  socket.emit("higher-lower:join-room", { nickname, code }, (response = {}) => {
+    higherLowerState.roomPendingAction = null;
+    if (!response.ok) higherLowerState.roomError = response.error || "Impossible de rejoindre.";
+    else higherLowerState.room = response.room;
+    renderHigherLowerScreen();
+  });
+}
+function leaveHigherLowerRoom() {
+  if (multiplayerSocket?.connected) multiplayerSocket.emit("higher-lower:leave-room");
+  if (!higherLowerState) return;
+  clearHigherLowerTimeouts();
+  higherLowerState.room = null;
+  higherLowerState.roomPendingAction = null;
+  higherLowerState.roomError = null;
+  higherLowerState.phase = "lobby";
+  higherLowerState.mode = "lobby";
+  higherLowerState.left = null;
+  higherLowerState.right = null;
+  renderHigherLowerScreen();
+}
+function startHigherLowerRoomMatch() {
+  const socket = ensureMultiplayerSocket();
+  if (!socket || !higherLowerState?.room) return;
+  higherLowerState.roomPendingAction = "starting";
+  renderHigherLowerScreen();
+  socket.emit("higher-lower:start-game", { selectedGens: [...selectedGens] }, (response = {}) => {
+    higherLowerState.roomPendingAction = null;
+    if (!response.ok) {
+      higherLowerState.roomError = response.error || "Lancement impossible.";
+      renderHigherLowerScreen();
+    }
+  });
+}
+function restartHigherLowerVersusMatch() {
+  const socket = ensureMultiplayerSocket();
+  if (!socket || !higherLowerState?.room) return;
+  socket.emit("higher-lower:restart-match", {}, (response = {}) => {
+    if (!response.ok) {
+      higherLowerState.roomError = response.error || "Restart impossible.";
+      renderHigherLowerScreen();
+    }
+  });
+}
+function findHigherLowerPokemonById(id) {
+  const list = Array.isArray(POKEMON_LIST) ? POKEMON_LIST : [];
+  return list.find((p) => Number(p.id) === Number(id));
+}
+async function loadHigherLowerVersusPair(index) {
+  if (!higherLowerState?.room?.sequence) return;
+  const pair = higherLowerState.room.sequence[index];
+  if (!pair) {
+    higherLowerState.phase = "loading";
+    renderHigherLowerScreen();
+    return;
+  }
+  const leftPokemon = findHigherLowerPokemonById(pair.leftId);
+  const rightPokemon = findHigherLowerPokemonById(pair.rightId);
+  if (!leftPokemon || !rightPokemon) {
+    higherLowerState.roomPairIndex = index + 1;
+    return loadHigherLowerVersusPair(higherLowerState.roomPairIndex);
+  }
+  higherLowerState.phase = "loading";
+  renderHigherLowerScreen();
+  const [leftStats, rightStats] = await Promise.all([
+    fetchBattleStats(leftPokemon),
+    fetchBattleStats(rightPokemon),
+  ]);
+  if (!higherLowerState || higherLowerState.roomPairIndex !== index) return;
+  if (!leftStats || !rightStats) {
+    higherLowerState.roomPairIndex = index + 1;
+    return loadHigherLowerVersusPair(higherLowerState.roomPairIndex);
+  }
+  higherLowerState.left = { pokemon: leftPokemon, stats: leftStats, statValue: Number(leftStats[pair.statKey]) || 0 };
+  higherLowerState.right = { pokemon: rightPokemon, stats: rightStats, statValue: Number(rightStats[pair.statKey]) || 0 };
+  higherLowerState.statKey = pair.statKey;
+  higherLowerState.phase = "playing";
+  higherLowerState.lastChoice = null;
+  higherLowerState.lastCorrect = null;
+  renderHigherLowerScreen();
+}
+function answerHigherLowerVersus(choice) {
+  if (!higherLowerState || higherLowerState.phase !== "playing" || higherLowerState.isAnimating) return;
+  const leftVal = Number(higherLowerState.left?.statValue) || 0;
+  const rightVal = Number(higherLowerState.right?.statValue) || 0;
+  let correct;
+  if (rightVal === leftVal) correct = true;
+  else if (rightVal > leftVal) correct = (choice === "higher");
+  else correct = (choice === "lower");
+  higherLowerState.lastChoice = choice;
+  higherLowerState.lastCorrect = correct;
+  higherLowerState.phase = "revealing";
+  higherLowerState.isAnimating = true;
+  if (correct) higherLowerState.score += 1;
+  if (multiplayerSocket?.connected) multiplayerSocket.emit("higher-lower:submit-answer", { correct });
+  renderHigherLowerScreen();
+  trackHigherLowerTimeout(() => {
+    if (!higherLowerState) return;
+    higherLowerState.isAnimating = false;
+    if (higherLowerState.room?.status !== "live") return;
+    higherLowerState.roomPairIndex += 1;
+    loadHigherLowerVersusPair(higherLowerState.roomPairIndex);
+  }, 900);
+}
+function applyHigherLowerRoomState(room) {
+  if (!higherLowerState) {
+    higherLowerState = createHigherLowerState("lobby");
+    higherLowerState.mode = "versus";
+  }
+  const previousStatus = higherLowerState.room?.status || null;
+  higherLowerState.room = room;
+  if (!room) return;
+  if (room.status === "live" && previousStatus !== "live") {
+    higherLowerState.mode = "versus";
+    higherLowerState.score = 0;
+    higherLowerState.roomPairIndex = 0;
+    higherLowerState.phase = "loading";
+    if (room.endsAt) {
+      higherLowerState.rushEndsAt = room.endsAt;
+      higherLowerState.rushLeftMs = Math.max(0, room.endsAt - Date.now());
+    }
+    loadHigherLowerVersusPair(0);
+    startHigherLowerRushTimer();
+    return;
+  }
+  if (room.status === "finished") {
+    higherLowerState.phase = "gameover";
+    clearHigherLowerRushInterval();
+    renderHigherLowerScreen();
+    return;
+  }
+  if (room.status === "lobby") {
+    higherLowerState.phase = "room";
+    higherLowerState.score = 0;
+    higherLowerState.roomPairIndex = 0;
+    higherLowerState.left = null;
+    higherLowerState.right = null;
+  }
+  renderHigherLowerScreen();
 }
 
 function buildMysteryBattleClues(secret, stats) {
@@ -18136,6 +18521,10 @@ function ensureMultiplayerSocket() {
 
   multiplayerSocket.on("draft-battle:room-closed", (payload = {}) => {
     handleDraftSimpleBattleNetworkRoomClosed(payload);
+  });
+
+  multiplayerSocket.on("higher-lower:room-state", (roomState) => {
+    if (typeof applyHigherLowerRoomState === "function") applyHigherLowerRoomState(roomState);
   });
 
   return multiplayerSocket;

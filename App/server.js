@@ -736,6 +736,7 @@ io.on("connection", (socket) => {
     try { handleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][duel] error", _error?.message || "unknown"); }
     try { handleStatClashDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-clash] error", _error?.message || "unknown"); }
     try { handleDraftBattleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-battle] error", _error?.message || "unknown"); }
+    try { handleHigherLowerDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][higher-lower] error", _error?.message || "unknown"); }
     cleanupRateLimitBuckets(socket.id);
   });
 
@@ -901,7 +902,232 @@ io.on("connection", (socket) => {
       respond(ack, { ok: false, error: "Erreur lors du commit d'état." });
     }
   });
+
+  // === HIGHER OR LOWER — multi 1v1 ===
+  socket.on("higher-lower:create-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie." });
+      handleHigherLowerDisconnect(socket.id, true);
+      const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
+      const code = generateHigherLowerRoomCode();
+      const room = {
+        code,
+        hostId: socket.id,
+        status: "lobby",
+        players: [{ id: socket.id, side: "left", nickname, score: 0, cursor: 0, connected: true }],
+        sequence: null,
+        startedAt: null,
+        endsAt: null,
+        endTimer: null,
+        winnerSide: null,
+        selectedGens: Array.isArray(payload.selectedGens) ? payload.selectedGens.map(Number).filter(Boolean) : [],
+      };
+      higherLowerRooms.set(code, room);
+      socket.data.higherLowerRoomCode = code;
+      emitHigherLowerRoomState(room);
+      respond(ack, { ok: true, room: publicHigherLowerRoomState(room, socket.id) });
+    } catch (_e) {
+      respond(ack, { ok: false, error: "Erreur lors de la création." });
+    }
+  });
+
+  socket.on("higher-lower:join-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie." });
+      handleHigherLowerDisconnect(socket.id, true);
+      const code = String(payload.code || "").trim().toUpperCase();
+      const nickname = sanitizeNickname(payload.nickname) || "Invité";
+      if (!higherLowerRooms.has(code)) return respond(ack, { ok: false, error: "Room introuvable." });
+      const room = higherLowerRooms.get(code);
+      if (room.players.length >= 2) return respond(ack, { ok: false, error: "Room pleine." });
+      if (room.status !== "lobby") return respond(ack, { ok: false, error: "Partie déjà lancée." });
+      room.players.push({ id: socket.id, side: "right", nickname, score: 0, cursor: 0, connected: true });
+      socket.data.higherLowerRoomCode = code;
+      emitHigherLowerRoomState(room);
+      respond(ack, { ok: true, room: publicHigherLowerRoomState(room, socket.id) });
+    } catch (_e) {
+      respond(ack, { ok: false, error: "Erreur lors du join." });
+    }
+  });
+
+  socket.on("higher-lower:leave-room", () => {
+    handleHigherLowerDisconnect(socket.id, true);
+  });
+
+  socket.on("higher-lower:start-game", (payload = {}, ack) => {
+    try {
+      const room = findHigherLowerRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer." });
+      if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
+      if (room.status !== "lobby") return respond(ack, { ok: false, error: "Déjà lancée." });
+      if (Array.isArray(payload.selectedGens) && payload.selectedGens.length) {
+        room.selectedGens = payload.selectedGens.map(Number).filter(Boolean);
+      }
+      const sequence = generateHigherLowerSequence(room.selectedGens);
+      if (!sequence?.length) return respond(ack, { ok: false, error: "Pool Pokémon insuffisant pour générer la séquence." });
+      room.sequence = sequence;
+      room.status = "live";
+      room.winnerSide = null;
+      for (const p of room.players) { p.score = 0; p.cursor = 0; }
+      startHigherLowerMatchTimer(room);
+      emitHigherLowerRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_e) {
+      respond(ack, { ok: false, error: "Erreur lors du lancement." });
+    }
+  });
+
+  socket.on("higher-lower:submit-answer", (payload = {}, ack) => {
+    try {
+      const room = findHigherLowerRoomBySocket(socket.id);
+      if (!room || room.status !== "live") return respond(ack, { ok: false, error: "Pas de partie en cours." });
+      const player = room.players.find((p) => p.id === socket.id);
+      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      const correct = Boolean(payload.correct);
+      if (correct) player.score += 1;
+      player.cursor += 1;
+      emitHigherLowerRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_e) {
+      respond(ack, { ok: false, error: "Erreur lors de la soumission." });
+    }
+  });
+
+  socket.on("higher-lower:restart-match", (payload = {}, ack) => {
+    try {
+      const room = findHigherLowerRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut relancer." });
+      if (room.endTimer) { clearTimeout(room.endTimer); room.endTimer = null; }
+      room.status = "lobby";
+      room.sequence = null;
+      room.startedAt = null;
+      room.endsAt = null;
+      room.winnerSide = null;
+      for (const p of room.players) { p.score = 0; p.cursor = 0; }
+      emitHigherLowerRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_e) {
+      respond(ack, { ok: false, error: "Erreur lors du restart." });
+    }
+  });
 });
+
+// === HIGHER OR LOWER — helpers serveur ===
+const higherLowerRooms = new Map();
+const HIGHER_LOWER_RUSH_MS_SERVER = 60000;
+const HIGHER_LOWER_STAT_KEYS_SERVER = ["hp", "attack", "defense", "spAttack", "spDefense", "speed"];
+const HIGHER_LOWER_SEQ_COUNT = 50;
+
+function generateHigherLowerRoomCode() {
+  let code;
+  do { code = Math.random().toString(36).slice(2, 6).toUpperCase(); } while (higherLowerRooms.has(code));
+  return code;
+}
+
+function generateHigherLowerSequence(selectedGens) {
+  const all = Array.isArray(POKEMON_LIST) ? POKEMON_LIST.filter((p) => Number(p.id) < 10000) : [];
+  const filtered = (Array.isArray(selectedGens) && selectedGens.length)
+    ? all.filter((p) => selectedGens.includes(Number(p.generation || p.gen)))
+    : all.slice();
+  if (filtered.length < 2) return null;
+  const shuffled = filtered.slice().sort(() => Math.random() - 0.5);
+  const seq = [];
+  for (let i = 0; i < HIGHER_LOWER_SEQ_COUNT && i + 1 < shuffled.length; i++) {
+    const stat = HIGHER_LOWER_STAT_KEYS_SERVER[Math.floor(Math.random() * HIGHER_LOWER_STAT_KEYS_SERVER.length)];
+    seq.push({ leftId: shuffled[i].id, rightId: shuffled[i + 1].id, statKey: stat });
+  }
+  return seq;
+}
+
+function findHigherLowerRoomBySocket(socketId) {
+  const code = io.sockets.sockets.get(socketId)?.data?.higherLowerRoomCode;
+  if (code && higherLowerRooms.has(code)) return higherLowerRooms.get(code);
+  for (const room of higherLowerRooms.values()) {
+    if (room.players.some((p) => p.id === socketId)) return room;
+  }
+  return null;
+}
+
+function publicHigherLowerRoomState(room, viewerId = null) {
+  return {
+    code: room.code,
+    status: room.status,
+    maxPlayers: 2,
+    connectedCount: room.players.filter((p) => p.connected).length,
+    canStart: room.players.length === 2 && room.players.every((p) => p.connected),
+    startedAt: room.startedAt || null,
+    endsAt: room.endsAt || null,
+    sequence: room.status === "live" || room.status === "finished" ? room.sequence : null,
+    selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens.slice() : [],
+    players: room.players.map((p) => ({
+      id: p.id,
+      side: p.side,
+      nickname: p.nickname,
+      score: p.score,
+      cursor: p.cursor,
+      connected: p.connected,
+      isHost: p.id === room.hostId,
+      isSelf: p.id === viewerId,
+    })),
+    winnerSide: room.winnerSide || null,
+  };
+}
+
+function emitHigherLowerRoomState(room) {
+  for (const p of room.players) {
+    if (!p.connected) continue;
+    io.to(p.id).emit("higher-lower:room-state", publicHigherLowerRoomState(room, p.id));
+  }
+}
+
+function finalizeHigherLowerMatch(room) {
+  if (!room || room.status === "finished") return;
+  room.status = "finished";
+  if (room.endTimer) { clearTimeout(room.endTimer); room.endTimer = null; }
+  const left = room.players.find((p) => p.side === "left");
+  const right = room.players.find((p) => p.side === "right");
+  if (left && right) {
+    if (left.score > right.score) room.winnerSide = "left";
+    else if (right.score > left.score) room.winnerSide = "right";
+    else room.winnerSide = "tie";
+  } else if (left || right) {
+    room.winnerSide = (left || right).side;
+  }
+  emitHigherLowerRoomState(room);
+}
+
+function startHigherLowerMatchTimer(room) {
+  if (room.endTimer) clearTimeout(room.endTimer);
+  room.startedAt = Date.now();
+  room.endsAt = room.startedAt + HIGHER_LOWER_RUSH_MS_SERVER;
+  room.endTimer = setTimeout(() => finalizeHigherLowerMatch(room), HIGHER_LOWER_RUSH_MS_SERVER);
+}
+
+function handleHigherLowerDisconnect(socketId, forceLeave) {
+  for (const room of Array.from(higherLowerRooms.values())) {
+    const player = room.players.find((p) => p.id === socketId);
+    if (!player) continue;
+    if (forceLeave) {
+      room.players = room.players.filter((p) => p.id !== socketId);
+    } else {
+      player.connected = false;
+    }
+    const sock = io.sockets.sockets.get(socketId);
+    if (sock?.data) sock.data.higherLowerRoomCode = null;
+    if (!room.players.length || room.players.every((p) => !p.connected)) {
+      if (room.endTimer) { clearTimeout(room.endTimer); room.endTimer = null; }
+      higherLowerRooms.delete(room.code);
+      continue;
+    }
+    if (room.hostId === socketId && room.players.length) {
+      room.hostId = room.players[0].id;
+      room.players[0].side = "left";
+    }
+    emitHigherLowerRoomState(room);
+  }
+}
 
 server.listen(PORT, () => {
   console.log(`Pokédle multiplayer server running on port ${PORT}`);
