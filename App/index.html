@@ -74,6 +74,7 @@
       <button type="button" onclick="startWeightBattle()"><span class="nav-dd-ico">⚖️</span>Duel de poids</button>
       <button type="button" onclick="startEvolutionChainGame()"><span class="nav-dd-ico">🔁</span>Évolution</button>
       <button type="button" onclick="startPokedexOrderGame()"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
+      <button type="button" onclick="openHigherLowerMode()"><span class="nav-dd-ico">📊</span>Higher or Lower</button>
     </div>
   </div>
 
@@ -1148,6 +1149,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <p class="card-desc">Choisissez chacun une stat réelle du Pokémon tiré. Chaque stat ne peut être utilisée qu'une seule fois dans toute la partie.</p>
         <div id="stat-clash-root" class="stat-clash-root"></div>
+      </div>
+    </div>
+
+    <div id="screen-higher-lower" class="hidden">
+      <div class="card higher-lower-card">
+        <div class="ranking-head">
+          <h2 class="card-title">📊 Higher or Lower</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Devine si la stat du Pokémon de droite est plus haute ou plus basse que celle de gauche. Bonne réponse → enchaîne. Mauvaise → game over.</p>
+        <div id="higher-lower-root" class="higher-lower-root"></div>
       </div>
     </div>
 

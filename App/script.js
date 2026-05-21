@@ -3915,6 +3915,205 @@ function openStatClashMode() {
   renderStatClashScreen();
 }
 
+// === HIGHER OR LOWER — mode solo ===
+const HIGHER_LOWER_STATS = [
+  { key: "hp", label: "PV", icon: "❤️" },
+  { key: "attack", label: "Attaque", icon: "⚔️" },
+  { key: "defense", label: "Défense", icon: "🛡️" },
+  { key: "spAttack", label: "Atk. Spé.", icon: "✨" },
+  { key: "spDefense", label: "Déf. Spé.", icon: "🪄" },
+  { key: "speed", label: "Vitesse", icon: "💨" },
+];
+
+let higherLowerState = null;
+const higherLowerTimeouts = new Set();
+
+function getHigherLowerPool() {
+  return getPokemonUiList().filter((pokemon) => Boolean(getMysteryApiId(pokemon)));
+}
+
+function createHigherLowerState() {
+  return {
+    phase: "loading",
+    left: null,
+    right: null,
+    statKey: null,
+    score: 0,
+    highScore: Number(playerProfile?.higherLowerHighScore) || 0,
+    lastChoice: null,
+    lastCorrect: null,
+    isAnimating: false,
+  };
+}
+
+function pickHigherLowerStat() {
+  return HIGHER_LOWER_STATS[Math.floor(Math.random() * HIGHER_LOWER_STATS.length)];
+}
+
+async function pickHigherLowerPokemonWithStats(excludeId) {
+  const pool = getHigherLowerPool();
+  if (!pool.length) return null;
+  const filtered = excludeId ? pool.filter((p) => p.id !== excludeId) : pool;
+  const shuffled = shuffleArray((filtered.length ? filtered : pool).slice());
+  for (const pokemon of shuffled.slice(0, 12)) {
+    const stats = await fetchBattleStats(pokemon);
+    if (stats) return { pokemon, stats };
+  }
+  return null;
+}
+
+function trackHigherLowerTimeout(fn, ms) {
+  const id = setTimeout(() => { higherLowerTimeouts.delete(id); fn(); }, ms);
+  higherLowerTimeouts.add(id);
+  return id;
+}
+
+function clearHigherLowerTimeouts() {
+  for (const id of higherLowerTimeouts) clearTimeout(id);
+  higherLowerTimeouts.clear();
+}
+
+function openHigherLowerMode() {
+  const pool = getHigherLowerPool();
+  if (!pool.length) return alert("Impossible de charger la base Pokémon pour Higher or Lower.");
+  goToConfig();
+  clearHigherLowerTimeouts();
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-higher-lower");
+  setGlobalNavActive("game");
+  gameMode = "higher-lower";
+  higherLowerState = createHigherLowerState();
+  renderHigherLowerScreen();
+  startHigherLowerRound();
+}
+
+async function startHigherLowerRound() {
+  if (!higherLowerState) return;
+  higherLowerState.phase = "loading";
+  higherLowerState.lastChoice = null;
+  higherLowerState.lastCorrect = null;
+  renderHigherLowerScreen();
+  if (!higherLowerState.left) {
+    higherLowerState.left = await pickHigherLowerPokemonWithStats(null);
+  } else if (higherLowerState.right) {
+    higherLowerState.left = higherLowerState.right;
+  }
+  if (!higherLowerState || !higherLowerState.left) return;
+  higherLowerState.right = await pickHigherLowerPokemonWithStats(higherLowerState.left.pokemon.id);
+  if (!higherLowerState || !higherLowerState.right) {
+    higherLowerState.phase = "gameover";
+    return renderHigherLowerScreen();
+  }
+  const statMeta = pickHigherLowerStat();
+  higherLowerState.statKey = statMeta.key;
+  higherLowerState.left.statValue = Number(higherLowerState.left.stats?.[statMeta.key]) || 0;
+  higherLowerState.right.statValue = Number(higherLowerState.right.stats?.[statMeta.key]) || 0;
+  higherLowerState.phase = "playing";
+  renderHigherLowerScreen();
+}
+
+function answerHigherLower(choice) {
+  if (!higherLowerState || higherLowerState.phase !== "playing" || higherLowerState.isAnimating) return;
+  const leftVal = Number(higherLowerState.left?.statValue) || 0;
+  const rightVal = Number(higherLowerState.right?.statValue) || 0;
+  let correct;
+  if (rightVal === leftVal) correct = true;
+  else if (rightVal > leftVal) correct = (choice === "higher");
+  else correct = (choice === "lower");
+  higherLowerState.lastChoice = choice;
+  higherLowerState.lastCorrect = correct;
+  higherLowerState.phase = "revealing";
+  higherLowerState.isAnimating = true;
+  renderHigherLowerScreen();
+  trackHigherLowerTimeout(() => {
+    if (!higherLowerState) return;
+    higherLowerState.isAnimating = false;
+    if (correct) {
+      higherLowerState.score += 1;
+      if (higherLowerState.score > higherLowerState.highScore) {
+        higherLowerState.highScore = higherLowerState.score;
+        if (typeof playerProfile === "object" && playerProfile) {
+          playerProfile.higherLowerHighScore = higherLowerState.highScore;
+          try { saveProfile(); } catch (_e) {}
+        }
+      }
+      startHigherLowerRound();
+    } else {
+      higherLowerState.phase = "gameover";
+      renderHigherLowerScreen();
+    }
+  }, 1800);
+}
+
+function restartHigherLowerGame() {
+  if (!higherLowerState) return openHigherLowerMode();
+  clearHigherLowerTimeouts();
+  higherLowerState.score = 0;
+  higherLowerState.left = null;
+  higherLowerState.right = null;
+  higherLowerState.lastChoice = null;
+  higherLowerState.lastCorrect = null;
+  higherLowerState.isAnimating = false;
+  startHigherLowerRound();
+}
+
+function renderHigherLowerScreen() {
+  const root = document.getElementById("higher-lower-root");
+  if (!root) return;
+  const state = higherLowerState;
+  if (!state) { root.innerHTML = ""; return; }
+  if (state.phase === "loading" || !state.left || (state.phase !== "gameover" && !state.right)) {
+    root.innerHTML = `<div class="higher-lower-loading"><div class="higher-lower-spinner"></div><p>Chargement des Pokémon…</p></div>`;
+    return;
+  }
+  const statMeta = HIGHER_LOWER_STATS.find((s) => s.key === state.statKey) || HIGHER_LOWER_STATS[0];
+  const leftSprite = getPokemonSprite(state.left.pokemon);
+  const rightSprite = state.right ? getPokemonSprite(state.right.pokemon) : "";
+  const isReveal = state.phase === "revealing" || state.phase === "gameover";
+  if (state.phase === "gameover") {
+    const isRecord = state.score > 0 && state.score >= state.highScore;
+    root.innerHTML = `
+      <div class="higher-lower-gameover">
+        <h3>💥 Game over</h3>
+        <p>Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} d'affilée.</p>
+        <p class="higher-lower-record">${isRecord ? "🏆 Nouveau record !" : `Record actuel : <b>${state.highScore}</b>`}</p>
+        ${state.right ? `<div class="higher-lower-final-pair">
+          <div class="higher-lower-card-mini"><img src="${escapeHtml(leftSprite)}" alt="${escapeHtml(state.left.pokemon.name)}" /><span>${escapeHtml(state.left.pokemon.name)}</span><b>${statMeta.icon} ${state.left.statValue}</b></div>
+          <div class="higher-lower-final-vs">VS</div>
+          <div class="higher-lower-card-mini ${state.lastCorrect ? "is-correct" : "is-wrong"}"><img src="${escapeHtml(rightSprite)}" alt="${escapeHtml(state.right.pokemon.name)}" /><span>${escapeHtml(state.right.pokemon.name)}</span><b>${statMeta.icon} ${state.right.statValue}</b></div>
+        </div>` : ""}
+        <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
+      </div>`;
+    return;
+  }
+  root.innerHTML = `
+    <div class="higher-lower-board">
+      <div class="higher-lower-scoreline"><span>Score : <b>${state.score}</b></span><span>Record : <b>${state.highScore}</b></span></div>
+      <div class="higher-lower-stat-banner">Stat à comparer : <b>${statMeta.icon} ${escapeHtml(statMeta.label)}</b></div>
+      <div class="higher-lower-pair">
+        <div class="higher-lower-card-pokemon side-left">
+          <img class="higher-lower-sprite" src="${escapeHtml(leftSprite)}" alt="${escapeHtml(state.left.pokemon.name)}" />
+          <h4>${escapeHtml(state.left.pokemon.name)}</h4>
+          <div class="higher-lower-stat-value"><span>${statMeta.icon} ${escapeHtml(statMeta.label)}</span><b>${state.left.statValue}</b></div>
+        </div>
+        <div class="higher-lower-vs">VS</div>
+        <div class="higher-lower-card-pokemon side-right ${isReveal && state.lastCorrect ? "is-correct" : ""} ${isReveal && state.lastCorrect === false ? "is-wrong" : ""}">
+          <img class="higher-lower-sprite" src="${escapeHtml(rightSprite)}" alt="${escapeHtml(state.right.pokemon.name)}" />
+          <h4>${escapeHtml(state.right.pokemon.name)}</h4>
+          <div class="higher-lower-stat-value"><span>${statMeta.icon} ${escapeHtml(statMeta.label)}</span><b>${isReveal ? state.right.statValue : "?"}</b></div>
+        </div>
+      </div>
+      ${isReveal ? `<p class="higher-lower-feedback ${state.lastCorrect ? "is-correct" : "is-wrong"}">${state.lastCorrect ? "✅ Bien vu !" : "❌ Raté."} ${escapeHtml(state.right.pokemon.name)} a <b>${state.right.statValue}</b> en ${escapeHtml(statMeta.label)}.</p>` : `
+        <div class="higher-lower-actions">
+          <button class="btn-red higher-lower-btn-higher" type="button" onclick="answerHigherLower('higher')">▲ Plus haut</button>
+          <button class="btn-blue higher-lower-btn-lower" type="button" onclick="answerHigherLower('lower')">▼ Plus bas</button>
+        </div>
+      `}
+    </div>`;
+}
+
 function buildMysteryBattleClues(secret, stats) {
   const hp = Number.isFinite(stats?.hp) ? stats.hp : null;
   const attack = Number.isFinite(stats?.attack) ? stats.attack : null;
@@ -16517,7 +16716,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower'].forEach(hideScreen);
 }
 
 function ensureOverlay(title, html) {
