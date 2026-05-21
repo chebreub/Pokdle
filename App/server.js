@@ -1312,20 +1312,24 @@ async function resolveStatClashRound(room) {
   if (leftWins) { room.streakBySide.left += 1; room.streakBySide.right = 0; room.roundsWonBySide.left += 1; }
   else if (rightWins) { room.streakBySide.right += 1; room.streakBySide.left = 0; room.roundsWonBySide.right += 1; }
   else { room.streakBySide.left = 0; room.streakBySide.right = 0; }
+  const comboBonusBySide = { left: 0, right: 0 };
   if (room.houseRuleEnabled && (room.houseRuleShared || room.houseRule)?.id === "comboBonus") {
-    if (room.streakBySide.left === 3) adjLeft += 2;
-    if (room.streakBySide.right === 3) adjRight += 2;
+    if (room.streakBySide.left === 3) { adjLeft += 2; comboBonusBySide.left = 2; }
+    if (room.streakBySide.right === 3) { adjRight += 2; comboBonusBySide.right = 2; }
   }
   // Bonus comeback aveugle : +3 pts si tu gagnes la manche en subissant blindRound5
+  const comebackBonusBySide = { left: 0, right: 0 };
   if (room.houseRuleEnabled) {
-    if (leftWins && Array.isArray(room.blindRound5OptionsBySide?.left) && room.blindRound5OptionsBySide.left.length) adjLeft += 3;
-    if (rightWins && Array.isArray(room.blindRound5OptionsBySide?.right) && room.blindRound5OptionsBySide.right.length) adjRight += 3;
+    if (leftWins && Array.isArray(room.blindRound5OptionsBySide?.left) && room.blindRound5OptionsBySide.left.length) { adjLeft += 3; comebackBonusBySide.left = 3; }
+    if (rightWins && Array.isArray(room.blindRound5OptionsBySide?.right) && room.blindRound5OptionsBySide.right.length) { adjRight += 3; comebackBonusBySide.right = 3; }
   }
 
   room.reveal = {};
   for (const entry of resolved) {
     if (!entry.key) continue;
     const adj = entry.player.side === "left" ? adjLeft : adjRight;
+    const comboBonus = comboBonusBySide[entry.player.side] || 0;
+    const comebackBonus = comebackBonusBySide[entry.player.side] || 0;
     if (!room.suddenDeath) room.usedStatKeysBySide[entry.player.side].push(entry.key);
     entry.player.score += adj;
     entry.player.history.push({
@@ -1335,12 +1339,16 @@ async function resolveStatClashRound(room) {
       value: adj,
       pokemonName: room.currentPokemon.name,
       auto: entry.auto,
+      comboBonus,
+      comebackBonus,
     });
     room.reveal[entry.player.side] = {
       statKey: entry.key,
       statLabel: STAT_CLASH_STAT_LABELS[entry.key] || entry.key,
       value: adj,
       auto: entry.auto,
+      comboBonus,
+      comebackBonus,
     };
     entry.player.pendingPickKey = null;
     entry.player.pendingSubmittedAt = null;

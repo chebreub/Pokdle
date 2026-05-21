@@ -22393,6 +22393,55 @@ body.theme-dark .stat-clash-history-item b { color: var(--sc-text-dark); }
 .stat-clash-history-item small { color: var(--sc-muted); font-size: 9px; }
 body.theme-dark .stat-clash-history-item small { color: var(--sc-muted-dark); }
 
+.stat-clash-bonus-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  width: 100%;
+}
+.stat-clash-bonus-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px !important;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.stat-clash-bonus-chip.is-combo {
+  background: linear-gradient(180deg, #fff1d6, #ffe4a8);
+  color: #8a5a00;
+  border-color: rgba(255,178,55,0.4);
+}
+.stat-clash-bonus-chip.is-comeback {
+  background: linear-gradient(180deg, #ffe1de, #ffcec9);
+  color: #8a2620;
+  border-color: rgba(255,80,72,0.4);
+}
+body.theme-dark .stat-clash-bonus-chip.is-combo {
+  background: linear-gradient(180deg, rgba(255,178,55,0.18), rgba(255,178,55,0.10));
+  color: #ffd373;
+  border-color: rgba(255,178,55,0.32);
+}
+body.theme-dark .stat-clash-bonus-chip.is-comeback {
+  background: linear-gradient(180deg, rgba(255,80,72,0.18), rgba(255,80,72,0.10));
+  color: #ff9a8a;
+  border-color: rgba(255,80,72,0.32);
+}
+
+@keyframes statClashBonusPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,178,55,0.55), 0 14px 26px rgba(0,0,0,0.12); }
+  40%  { box-shadow: 0 0 0 14px rgba(255,178,55,0.18), 0 18px 30px rgba(255,178,55,0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(255,178,55,0),    0 14px 26px rgba(0,0,0,0.12); }
+}
+.stat-clash-player-card.has-bonus-pulse {
+  animation: statClashBonusPulse 1.5s ease-out 1;
+}
+
 /* === FINAL CARD — écran de victoire dramatique === */
 .stat-clash-final-card {
   margin-top: 14px;

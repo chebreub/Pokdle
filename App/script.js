@@ -2702,15 +2702,18 @@ async function resolveLocalStatClashRound() {
   }
 
   // Combo bonus house rule: +2 pts à l'atteinte d'un streak de 3
+  const comboBonusBySide = { left: 0, right: 0 };
   if (state.houseRuleEnabled && (state.houseRuleShared || state.houseRule)?.id === "comboBonus") {
-    if (state.streakBySide.left === 3) adjLeft += 2;
-    if (state.streakBySide.right === 3) adjRight += 2;
+    if (state.streakBySide.left === 3) { adjLeft += 2; comboBonusBySide.left = 2; }
+    if (state.streakBySide.right === 3) { adjRight += 2; comboBonusBySide.right = 2; }
   }
   // Bonus comeback aveugle : +3 pts si tu gagnes la manche en subissant blindRound5
+  const comebackBonusBySide = { left: 0, right: 0 };
   if (state.houseRuleEnabled) {
-    if (leftWins && Array.isArray(state.blindRound5OptionsBySide?.left) && state.blindRound5OptionsBySide.left.length) adjLeft += 3;
-    if (rightWins && Array.isArray(state.blindRound5OptionsBySide?.right) && state.blindRound5OptionsBySide.right.length) adjRight += 3;
+    if (leftWins && Array.isArray(state.blindRound5OptionsBySide?.left) && state.blindRound5OptionsBySide.left.length) { adjLeft += 3; comebackBonusBySide.left = 3; }
+    if (rightWins && Array.isArray(state.blindRound5OptionsBySide?.right) && state.blindRound5OptionsBySide.right.length) { adjRight += 3; comebackBonusBySide.right = 3; }
   }
+  state.lastRoundBonusBySide = { left: { combo: comboBonusBySide.left, comeback: comebackBonusBySide.left }, right: { combo: comboBonusBySide.right, comeback: comebackBonusBySide.right } };
 
   // Annonceur
   if (state.streakBySide.left === 3 || state.streakBySide.right === 3) {
@@ -2744,8 +2747,8 @@ async function resolveLocalStatClashRound() {
   state.players.left.lockedAt = null;
   state.players.right.pendingPick = null;
   state.players.right.lockedAt = null;
-  if (reveal.left?.key) state.players.left.history.push({ round: state.round, statKey: reveal.left.key, statLabel: reveal.left.statLabel, value: adjLeft, pokemonName: state.currentPokemon?.name, auto: reveal.left.auto });
-  if (reveal.right?.key) state.players.right.history.push({ round: state.round, statKey: reveal.right.key, statLabel: reveal.right.statLabel, value: adjRight, pokemonName: state.currentPokemon?.name, auto: reveal.right.auto });
+  if (reveal.left?.key) state.players.left.history.push({ round: state.round, statKey: reveal.left.key, statLabel: reveal.left.statLabel, value: adjLeft, pokemonName: state.currentPokemon?.name, auto: reveal.left.auto, comboBonus: comboBonusBySide.left, comebackBonus: comebackBonusBySide.left });
+  if (reveal.right?.key) state.players.right.history.push({ round: state.round, statKey: reveal.right.key, statLabel: reveal.right.statLabel, value: adjRight, pokemonName: state.currentPokemon?.name, auto: reveal.right.auto, comboBonus: comboBonusBySide.right, comebackBonus: comebackBonusBySide.right });
 
   // Sudden Death: première manche décisive termine la game
   if (state.suddenDeath && (leftWins || rightWins)) {
@@ -3769,7 +3772,11 @@ function renderStatClashScreen() {
     : "";
   const renderPlayerCard = (side, player, isOpponent = false) => {
     const historyHtml = player.history.length
-      ? player.history.map((entry) => `<div class="stat-clash-history-item"><span>Manche ${entry.round}</span><b>${escapeHtml(entry.statLabel)} +${entry.value}</b><small>${escapeHtml(entry.pokemonName)}${entry.auto ? " • auto" : ""}</small></div>`).join("")
+      ? player.history.map((entry) => {
+          const comboChip = entry.comboBonus > 0 ? `<span class="stat-clash-bonus-chip is-combo">+${entry.comboBonus} combo</span>` : "";
+          const comebackChip = entry.comebackBonus > 0 ? `<span class="stat-clash-bonus-chip is-comeback">+${entry.comebackBonus} comeback</span>` : "";
+          return `<div class="stat-clash-history-item"><span>Manche ${entry.round}</span><b>${escapeHtml(entry.statLabel)} +${entry.value}</b><small>${escapeHtml(entry.pokemonName)}${entry.auto ? " • auto" : ""}</small>${comboChip || comebackChip ? `<div class="stat-clash-bonus-chips">${comboChip}${comebackChip}</div>` : ""}</div>`;
+        }).join("")
       : '<p class="card-desc stat-clash-empty">Aucun pick pour le moment.</p>';
     const allowedLeft = new Set(getStatClashAllowedStats(state, "left"));
     const forcedByHouseRule = getStatClashHouseRuleForcedStats(state, "left");
@@ -3837,7 +3844,9 @@ function renderStatClashScreen() {
           : isRoom
             ? "Lobby room prêt."
             : "En attente du prochain reveal.";
-    return `<section class="stat-clash-player-card side-${side} ${winnerKey === side ? "is-winner" : ""}"><div class="stat-clash-player-head"><div><p class="stat-clash-player-side">${isOpponent ? (isRoom ? "Room 1v1" : "Bot") : "Toi"}</p><h3>${escapeHtml(player.label)} ${streakBadge}</h3></div><div class="stat-clash-score-box ${state.phase === "scoring" ? "is-animating" : ""}"><span>Total</span><b>${Math.round(player.displayScore || 0)}</b>${state.reveal?.[side] ? `<small>${escapeHtml(state.reveal[side].statLabel)} +${state.reveal[side].value}</small>` : ""}</div></div><div class="stat-clash-player-copy"><p class="stat-clash-player-status">${statusText}</p></div>${buttonsHtml ? `<div class="stat-clash-stat-grid">${buttonsHtml}</div>` : ""}${jokersHtml}<div class="stat-clash-history-block"><h4>Historique</h4><div class="stat-clash-history-list">${historyHtml}</div></div></section>`;
+    const lastEntry = player.history.length ? player.history[player.history.length - 1] : null;
+    const hasBonusFlash = lastEntry && lastEntry.round === state.round && (lastEntry.comboBonus > 0 || lastEntry.comebackBonus > 0) && (state.phase === "scoring" || state.phase === "reveal" || state.phase === "post-reveal");
+    return `<section class="stat-clash-player-card side-${side} ${winnerKey === side ? "is-winner" : ""} ${hasBonusFlash ? "has-bonus-pulse" : ""}" data-bonus-round="${hasBonusFlash ? state.round : ""}"><div class="stat-clash-player-head"><div><p class="stat-clash-player-side">${isOpponent ? (isRoom ? "Room 1v1" : "Bot") : "Toi"}</p><h3>${escapeHtml(player.label)} ${streakBadge}</h3></div><div class="stat-clash-score-box ${state.phase === "scoring" ? "is-animating" : ""}"><span>Total</span><b>${Math.round(player.displayScore || 0)}</b>${state.reveal?.[side] ? `<small>${escapeHtml(state.reveal[side].statLabel)} +${state.reveal[side].value}</small>` : ""}</div></div><div class="stat-clash-player-copy"><p class="stat-clash-player-status">${statusText}</p></div>${buttonsHtml ? `<div class="stat-clash-stat-grid">${buttonsHtml}</div>` : ""}${jokersHtml}<div class="stat-clash-history-block"><h4>Historique</h4><div class="stat-clash-history-list">${historyHtml}</div></div></section>`;
   };
   const roomControls = isRoom
     ? room?.code
