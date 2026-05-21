@@ -16173,6 +16173,48 @@ body.theme-dark .stat-clash-room-feedback.error {
   line-height: 1.35;
 }
 
+#screen-draft-arena .draft-score-attack-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 12px;
+}
+
+#screen-draft-arena #draft-score-attack-toggle.active,
+#screen-draft-arena #draft-score-reroll {
+  background: linear-gradient(135deg, #ff3d4f, #ff8a2f);
+  border-color: rgba(255, 92, 58, 0.62);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(255, 76, 70, 0.22);
+}
+
+#screen-draft-arena #draft-score-reroll:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+#screen-draft-arena .draft-bst-projection {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eef5ff;
+  border: 1px solid #c8dcff;
+  color: #1f4f8f;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+#screen-draft-arena .draft-score-main small {
+  display: block;
+  margin-top: 4px;
+  color: #526b90;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 #screen-draft-arena .draft-type-row {
   gap: 6px;
   min-height: 30px;

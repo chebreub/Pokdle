@@ -737,6 +737,7 @@ io.on("connection", (socket) => {
     try { handleStatClashDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-clash] error", _error?.message || "unknown"); }
     try { handleDraftBattleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-battle] error", _error?.message || "unknown"); }
     try { handleHigherLowerDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][higher-lower] error", _error?.message || "unknown"); }
+    try { handleStatAuctionDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-auction] error", _error?.message || "unknown"); }
     cleanupRateLimitBuckets(socket.id);
   });
 
@@ -1012,6 +1013,134 @@ io.on("connection", (socket) => {
       respond(ack, { ok: false, error: "Erreur lors du restart." });
     }
   });
+
+  // === STAT AUCTION — multi 1v1 ===
+  socket.on("stat-auction:create-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes." });
+      handleStatAuctionDisconnect(socket.id, true);
+      const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
+      const code = generateStatAuctionRoomCode();
+      const room = {
+        code,
+        hostId: socket.id,
+        status: "lobby",
+        round: 0,
+        totalRounds: 5,
+        players: [{ id: socket.id, side: "left", nickname, score: 0, allocations: [], connected: true }],
+        sequence: null,
+        currentAllocations: { left: null, right: null },
+        history: [],
+        winnerSide: null,
+        selectedGens: Array.isArray(payload.selectedGens) ? payload.selectedGens.map(Number).filter(Boolean) : [],
+      };
+      statAuctionRooms.set(code, room);
+      socket.data.statAuctionRoomCode = code;
+      emitStatAuctionRoomState(room);
+      respond(ack, { ok: true, room: publicStatAuctionRoomState(room, socket.id) });
+    } catch (_e) { respond(ack, { ok: false, error: "Erreur création." }); }
+  });
+
+  socket.on("stat-auction:join-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes." });
+      handleStatAuctionDisconnect(socket.id, true);
+      const code = String(payload.code || "").trim().toUpperCase();
+      const nickname = sanitizeNickname(payload.nickname) || "Invité";
+      if (!statAuctionRooms.has(code)) return respond(ack, { ok: false, error: "Room introuvable." });
+      const room = statAuctionRooms.get(code);
+      if (room.players.length >= 2) return respond(ack, { ok: false, error: "Room pleine." });
+      if (room.status !== "lobby") return respond(ack, { ok: false, error: "Partie déjà lancée." });
+      room.players.push({ id: socket.id, side: "right", nickname, score: 0, allocations: [], connected: true });
+      socket.data.statAuctionRoomCode = code;
+      emitStatAuctionRoomState(room);
+      respond(ack, { ok: true, room: publicStatAuctionRoomState(room, socket.id) });
+    } catch (_e) { respond(ack, { ok: false, error: "Erreur join." }); }
+  });
+
+  socket.on("stat-auction:leave-room", () => { handleStatAuctionDisconnect(socket.id, true); });
+
+  socket.on("stat-auction:start-game", (payload = {}, ack) => {
+    try {
+      const room = findStatAuctionRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer." });
+      if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
+      if (room.status !== "lobby") return respond(ack, { ok: false, error: "Déjà lancée." });
+      if (Array.isArray(payload.selectedGens) && payload.selectedGens.length) {
+        room.selectedGens = payload.selectedGens.map(Number).filter(Boolean);
+      }
+      const sequence = generateStatAuctionSequence(room.selectedGens, room.totalRounds);
+      if (!sequence?.length) return respond(ack, { ok: false, error: "Pool Pokémon insuffisant." });
+      room.sequence = sequence;
+      room.status = "live";
+      room.round = 1;
+      room.currentAllocations = { left: null, right: null };
+      room.history = [];
+      room.winnerSide = null;
+      for (const p of room.players) { p.score = 0; p.allocations = []; }
+      emitStatAuctionRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_e) { respond(ack, { ok: false, error: "Erreur lancement." }); }
+  });
+
+  socket.on("stat-auction:submit-allocation", (payload = {}, ack) => {
+    try {
+      const room = findStatAuctionRoomBySocket(socket.id);
+      if (!room || room.status !== "live") return respond(ack, { ok: false, error: "Pas de partie." });
+      const player = room.players.find((p) => p.id === socket.id);
+      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      const allocation = sanitizeStatAuctionAllocation(payload.allocation);
+      if (!allocation) return respond(ack, { ok: false, error: "Allocation invalide (somme doit être 100)." });
+      const computedScore = Number(payload.computedScore);
+      const realStats = payload.realStats && typeof payload.realStats === "object" ? payload.realStats : null;
+      room.currentAllocations[player.side] = { allocation, computedScore: Number.isFinite(computedScore) ? computedScore : 0, realStats };
+      if (room.currentAllocations.left && room.currentAllocations.right) {
+        const leftEntry = room.currentAllocations.left;
+        const rightEntry = room.currentAllocations.right;
+        const leftPlayer = room.players.find((p) => p.side === "left");
+        const rightPlayer = room.players.find((p) => p.side === "right");
+        if (leftPlayer) { leftPlayer.score += leftEntry.computedScore; leftPlayer.allocations.push(leftEntry.allocation); }
+        if (rightPlayer) { rightPlayer.score += rightEntry.computedScore; rightPlayer.allocations.push(rightEntry.allocation); }
+        room.history.push({
+          round: room.round,
+          pokemonId: room.sequence[room.round - 1],
+          left: leftEntry,
+          right: rightEntry,
+        });
+        room.currentAllocations = { left: null, right: null };
+        if (room.round >= room.totalRounds) {
+          room.status = "finished";
+          if (leftPlayer && rightPlayer) {
+            if (leftPlayer.score > rightPlayer.score) room.winnerSide = "left";
+            else if (rightPlayer.score > leftPlayer.score) room.winnerSide = "right";
+            else room.winnerSide = "tie";
+          }
+        } else {
+          room.round += 1;
+        }
+      }
+      emitStatAuctionRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_e) { respond(ack, { ok: false, error: "Erreur submit." }); }
+  });
+
+  socket.on("stat-auction:restart-match", (payload = {}, ack) => {
+    try {
+      const room = findStatAuctionRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut relancer." });
+      room.status = "lobby";
+      room.round = 0;
+      room.sequence = null;
+      room.currentAllocations = { left: null, right: null };
+      room.history = [];
+      room.winnerSide = null;
+      for (const p of room.players) { p.score = 0; p.allocations = []; }
+      emitStatAuctionRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_e) { respond(ack, { ok: false, error: "Erreur restart." }); }
+  });
 });
 
 // === HIGHER OR LOWER — helpers serveur ===
@@ -1126,6 +1255,109 @@ function handleHigherLowerDisconnect(socketId, forceLeave) {
       room.players[0].side = "left";
     }
     emitHigherLowerRoomState(room);
+  }
+}
+
+// === STAT AUCTION — helpers serveur ===
+const statAuctionRooms = new Map();
+const STAT_AUCTION_STAT_KEYS = ["hp", "attack", "defense", "spAttack", "spDefense", "speed"];
+const STAT_AUCTION_TOTAL_POINTS = 100;
+const STAT_AUCTION_DEFAULT_ROUNDS = 5;
+
+function generateStatAuctionRoomCode() {
+  let code;
+  do { code = Math.random().toString(36).slice(2, 6).toUpperCase(); } while (statAuctionRooms.has(code));
+  return code;
+}
+
+function generateStatAuctionSequence(selectedGens, count) {
+  const all = Array.isArray(POKEMON_LIST) ? POKEMON_LIST.filter((p) => Number(p.id) < 10000) : [];
+  const filtered = (Array.isArray(selectedGens) && selectedGens.length)
+    ? all.filter((p) => selectedGens.includes(Number(p.generation || p.gen)))
+    : all.slice();
+  if (filtered.length < count) return null;
+  return filtered.slice().sort(() => Math.random() - 0.5).slice(0, count).map((p) => Number(p.id));
+}
+
+function sanitizeStatAuctionAllocation(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const out = {};
+  let total = 0;
+  for (const k of STAT_AUCTION_STAT_KEYS) {
+    const v = Math.max(0, Math.min(STAT_AUCTION_TOTAL_POINTS, Math.round(Number(raw[k]) || 0)));
+    out[k] = v;
+    total += v;
+  }
+  if (total !== STAT_AUCTION_TOTAL_POINTS) return null;
+  return out;
+}
+
+function findStatAuctionRoomBySocket(socketId) {
+  const code = io.sockets.sockets.get(socketId)?.data?.statAuctionRoomCode;
+  if (code && statAuctionRooms.has(code)) return statAuctionRooms.get(code);
+  for (const room of statAuctionRooms.values()) {
+    if (room.players.some((p) => p.id === socketId)) return room;
+  }
+  return null;
+}
+
+function publicStatAuctionRoomState(room, viewerId = null) {
+  return {
+    code: room.code,
+    status: room.status,
+    round: room.round,
+    totalRounds: room.totalRounds || STAT_AUCTION_DEFAULT_ROUNDS,
+    maxPlayers: 2,
+    connectedCount: room.players.filter((p) => p.connected).length,
+    canStart: room.players.length === 2 && room.players.every((p) => p.connected),
+    sequence: room.status === "live" || room.status === "finished" ? room.sequence : null,
+    selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens.slice() : [],
+    history: Array.isArray(room.history) ? room.history.slice() : [],
+    currentAllocations: {
+      left: room.currentAllocations?.left ? { submitted: true } : null,
+      right: room.currentAllocations?.right ? { submitted: true } : null,
+    },
+    players: room.players.map((p) => ({
+      id: p.id,
+      side: p.side,
+      nickname: p.nickname,
+      score: p.score,
+      submittedThisRound: Boolean(room.currentAllocations?.[p.side]),
+      connected: p.connected,
+      isHost: p.id === room.hostId,
+      isSelf: p.id === viewerId,
+    })),
+    winnerSide: room.winnerSide || null,
+  };
+}
+
+function emitStatAuctionRoomState(room) {
+  for (const p of room.players) {
+    if (!p.connected) continue;
+    io.to(p.id).emit("stat-auction:room-state", publicStatAuctionRoomState(room, p.id));
+  }
+}
+
+function handleStatAuctionDisconnect(socketId, forceLeave) {
+  for (const room of Array.from(statAuctionRooms.values())) {
+    const player = room.players.find((p) => p.id === socketId);
+    if (!player) continue;
+    if (forceLeave) {
+      room.players = room.players.filter((p) => p.id !== socketId);
+    } else {
+      player.connected = false;
+    }
+    const sock = io.sockets.sockets.get(socketId);
+    if (sock?.data) sock.data.statAuctionRoomCode = null;
+    if (!room.players.length || room.players.every((p) => !p.connected)) {
+      statAuctionRooms.delete(room.code);
+      continue;
+    }
+    if (room.hostId === socketId && room.players.length) {
+      room.hostId = room.players[0].id;
+      room.players[0].side = "left";
+    }
+    emitStatAuctionRoomState(room);
   }
 }
 

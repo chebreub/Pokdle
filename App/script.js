@@ -4719,6 +4719,354 @@ function renderPokeConnectionsScreen() {
     </div>`;
 }
 
+// === STAT AUCTION — 1v1 multi ===
+const STAT_AUCTION_STATS = [
+  { key: "hp", label: "PV", icon: "❤️" },
+  { key: "attack", label: "Attaque", icon: "⚔️" },
+  { key: "defense", label: "Défense", icon: "🛡️" },
+  { key: "spAttack", label: "Atk. Spé.", icon: "✨" },
+  { key: "spDefense", label: "Déf. Spé.", icon: "🪄" },
+  { key: "speed", label: "Vitesse", icon: "💨" },
+];
+const STAT_AUCTION_TOTAL = 100;
+let statAuctionState = null;
+
+function createStatAuctionState() {
+  return {
+    phase: "room",
+    room: null,
+    roomDraftCode: "",
+    roomNicknameDraft: String(playerProfile?.nickname || "").trim(),
+    roomPendingAction: null,
+    roomError: null,
+    allocation: STAT_AUCTION_STATS.reduce((acc, s) => { acc[s.key] = 0; return acc; }, {}),
+    currentPokemon: null,
+    currentStats: null,
+    submitted: false,
+    lastReveal: null,
+  };
+}
+
+function openStatAuctionMode() {
+  goToConfig();
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-stat-auction");
+  setGlobalNavActive("game");
+  gameMode = "stat-auction";
+  statAuctionState = createStatAuctionState();
+  ensureMultiplayerSocket();
+  renderStatAuctionScreen();
+}
+
+function syncStatAuctionNickname() {
+  const input = document.getElementById("stat-auction-nickname");
+  if (input && statAuctionState) statAuctionState.roomNicknameDraft = input.value || "";
+}
+function syncStatAuctionJoinCode() {
+  const input = document.getElementById("stat-auction-room-input");
+  if (input && statAuctionState) statAuctionState.roomDraftCode = (input.value || "").toUpperCase();
+}
+function createStatAuctionRoom() {
+  if (!statAuctionState) return;
+  const socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  const nickname = String(statAuctionState.roomNicknameDraft || playerProfile?.nickname || "").trim() || "Dresseur";
+  statAuctionState.roomPendingAction = "creating";
+  statAuctionState.roomError = null;
+  renderStatAuctionScreen();
+  socket.emit("stat-auction:create-room", { nickname, selectedGens: [...selectedGens] }, (response = {}) => {
+    statAuctionState.roomPendingAction = null;
+    if (!response.ok) statAuctionState.roomError = response.error || "Création impossible.";
+    else statAuctionState.room = response.room;
+    renderStatAuctionScreen();
+  });
+}
+function joinStatAuctionRoom() {
+  if (!statAuctionState) return;
+  const socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  const nickname = String(statAuctionState.roomNicknameDraft || playerProfile?.nickname || "").trim() || "Invité";
+  const code = String(statAuctionState.roomDraftCode || "").trim().toUpperCase();
+  if (!code) { statAuctionState.roomError = "Entre un code de room."; renderStatAuctionScreen(); return; }
+  statAuctionState.roomPendingAction = "joining";
+  statAuctionState.roomError = null;
+  renderStatAuctionScreen();
+  socket.emit("stat-auction:join-room", { nickname, code }, (response = {}) => {
+    statAuctionState.roomPendingAction = null;
+    if (!response.ok) statAuctionState.roomError = response.error || "Join impossible.";
+    else statAuctionState.room = response.room;
+    renderStatAuctionScreen();
+  });
+}
+function leaveStatAuctionRoom() {
+  if (multiplayerSocket?.connected) multiplayerSocket.emit("stat-auction:leave-room");
+  if (!statAuctionState) return;
+  statAuctionState.room = null;
+  statAuctionState.roomPendingAction = null;
+  statAuctionState.roomError = null;
+  statAuctionState.phase = "room";
+  statAuctionState.currentPokemon = null;
+  statAuctionState.currentStats = null;
+  statAuctionState.submitted = false;
+  renderStatAuctionScreen();
+}
+function startStatAuctionMatch() {
+  const socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  statAuctionState.roomPendingAction = "starting";
+  renderStatAuctionScreen();
+  socket.emit("stat-auction:start-game", { selectedGens: [...selectedGens] }, (response = {}) => {
+    statAuctionState.roomPendingAction = null;
+    if (!response.ok) {
+      statAuctionState.roomError = response.error || "Lancement impossible.";
+      renderStatAuctionScreen();
+    }
+  });
+}
+function restartStatAuctionMatch() {
+  const socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("stat-auction:restart-match", {}, (response = {}) => {
+    if (!response.ok) {
+      statAuctionState.roomError = response.error || "Restart impossible.";
+      renderStatAuctionScreen();
+    }
+  });
+}
+
+function changeStatAuctionAllocation(statKey, delta) {
+  if (!statAuctionState || statAuctionState.submitted) return;
+  const cur = Number(statAuctionState.allocation[statKey]) || 0;
+  const totalUsed = STAT_AUCTION_STATS.reduce((s, st) => s + (Number(statAuctionState.allocation[st.key]) || 0), 0);
+  const remaining = STAT_AUCTION_TOTAL - totalUsed;
+  let next = cur + delta;
+  if (next < 0) next = 0;
+  if (delta > 0 && delta > remaining) next = cur + remaining;
+  statAuctionState.allocation[statKey] = next;
+  renderStatAuctionScreen();
+}
+function setStatAuctionAllocation(statKey, value) {
+  if (!statAuctionState || statAuctionState.submitted) return;
+  const num = Math.max(0, Math.min(STAT_AUCTION_TOTAL, Math.round(Number(value) || 0)));
+  const others = STAT_AUCTION_STATS.reduce((s, st) => st.key === statKey ? s : s + (Number(statAuctionState.allocation[st.key]) || 0), 0);
+  const final = Math.min(num, STAT_AUCTION_TOTAL - others);
+  statAuctionState.allocation[statKey] = final;
+  renderStatAuctionScreen();
+}
+function autoBalanceStatAuctionAllocation() {
+  if (!statAuctionState || statAuctionState.submitted) return;
+  const base = Math.floor(STAT_AUCTION_TOTAL / STAT_AUCTION_STATS.length);
+  let remaining = STAT_AUCTION_TOTAL - base * STAT_AUCTION_STATS.length;
+  for (const s of STAT_AUCTION_STATS) {
+    statAuctionState.allocation[s.key] = base + (remaining > 0 ? 1 : 0);
+    if (remaining > 0) remaining -= 1;
+  }
+  renderStatAuctionScreen();
+}
+function clearStatAuctionAllocation() {
+  if (!statAuctionState || statAuctionState.submitted) return;
+  for (const s of STAT_AUCTION_STATS) statAuctionState.allocation[s.key] = 0;
+  renderStatAuctionScreen();
+}
+
+async function submitStatAuctionAllocation() {
+  if (!statAuctionState || !statAuctionState.room || statAuctionState.submitted) return;
+  const total = STAT_AUCTION_STATS.reduce((s, st) => s + (Number(statAuctionState.allocation[st.key]) || 0), 0);
+  if (total !== STAT_AUCTION_TOTAL) {
+    statAuctionState.roomError = `Tu dois répartir exactement ${STAT_AUCTION_TOTAL} pts (actuellement ${total}).`;
+    renderStatAuctionScreen();
+    return;
+  }
+  if (!statAuctionState.currentPokemon || !statAuctionState.currentStats) {
+    statAuctionState.roomError = "Pokémon non chargé.";
+    renderStatAuctionScreen();
+    return;
+  }
+  let computedScore = 0;
+  for (const s of STAT_AUCTION_STATS) {
+    const alloc = Number(statAuctionState.allocation[s.key]) || 0;
+    const val = Number(statAuctionState.currentStats[s.key]) || 0;
+    computedScore += alloc * val;
+  }
+  statAuctionState.submitted = true;
+  statAuctionState.roomError = null;
+  renderStatAuctionScreen();
+  if (multiplayerSocket?.connected) {
+    multiplayerSocket.emit("stat-auction:submit-allocation", {
+      allocation: { ...statAuctionState.allocation },
+      computedScore,
+      realStats: statAuctionState.currentStats,
+    }, (response = {}) => {
+      if (!response.ok) {
+        statAuctionState.submitted = false;
+        statAuctionState.roomError = response.error || "Submit échoué.";
+        renderStatAuctionScreen();
+      }
+    });
+  }
+}
+
+async function loadStatAuctionPokemonForRound(round) {
+  if (!statAuctionState?.room?.sequence) return;
+  const id = statAuctionState.room.sequence[round - 1];
+  if (!id) return;
+  const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(id));
+  if (!pokemon) return;
+  statAuctionState.currentPokemon = pokemon;
+  statAuctionState.currentStats = null;
+  for (const s of STAT_AUCTION_STATS) statAuctionState.allocation[s.key] = 0;
+  statAuctionState.submitted = false;
+  renderStatAuctionScreen();
+  const stats = await fetchBattleStats(pokemon);
+  if (!statAuctionState || statAuctionState.room?.round !== round) return;
+  statAuctionState.currentStats = stats || null;
+  renderStatAuctionScreen();
+}
+
+function applyStatAuctionRoomState(room) {
+  if (!statAuctionState) { statAuctionState = createStatAuctionState(); }
+  const prevRound = statAuctionState.room?.round || 0;
+  const prevStatus = statAuctionState.room?.status || null;
+  statAuctionState.room = room;
+  if (!room) return;
+  if (room.status === "lobby") {
+    statAuctionState.phase = "room";
+    statAuctionState.currentPokemon = null;
+    statAuctionState.currentStats = null;
+    statAuctionState.submitted = false;
+  } else if (room.status === "live") {
+    statAuctionState.phase = "allocating";
+    if (room.round !== prevRound || prevStatus !== "live") {
+      loadStatAuctionPokemonForRound(room.round);
+    }
+    const me = room.players?.find((p) => p.isSelf);
+    if (me?.submittedThisRound) statAuctionState.submitted = true;
+    else if (room.round !== prevRound) statAuctionState.submitted = false;
+  } else if (room.status === "finished") {
+    statAuctionState.phase = "finished";
+  }
+  renderStatAuctionScreen();
+}
+
+function renderStatAuctionScreen() {
+  const root = document.getElementById("stat-auction-root");
+  if (!root) return;
+  const state = statAuctionState;
+  if (!state) { root.innerHTML = ""; return; }
+  const room = state.room;
+  if (state.phase === "room" || !room) {
+    const pending = state.roomPendingAction;
+    root.innerHTML = `
+      <div class="stat-auction-room">
+        ${!room ? `
+          <h3>Stat Auction 1v1 — Room</h3>
+          <p class="card-desc">Crée une room ou rejoins-en une par code.</p>
+          <div class="higher-lower-room-form">
+            <label>Ton pseudo
+              <input id="stat-auction-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" oninput="syncStatAuctionNickname()" />
+            </label>
+            <div class="higher-lower-room-actions">
+              <button class="btn-blue" type="button" onclick="createStatAuctionRoom()" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
+            </div>
+            <div class="higher-lower-room-join">
+              <label>Code de room
+                <input id="stat-auction-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" oninput="syncStatAuctionJoinCode()" />
+              </label>
+              <button class="btn-ghost" type="button" onclick="joinStatAuctionRoom()" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
+            </div>
+          </div>
+        ` : `
+          <h3>Stat Auction — Room ${escapeHtml(room.code)}</h3>
+          <div class="higher-lower-room-summary">
+            <span><b>Code :</b> ${escapeHtml(room.code)}</span>
+            <span><b>Joueurs :</b> ${room.connectedCount || 0}/${room.maxPlayers || 2}</span>
+            <span><b>Manches :</b> ${room.totalRounds}</span>
+          </div>
+          <div class="higher-lower-room-players">
+            ${room.players.map((p) => `<div class="higher-lower-room-player ${p.connected ? "is-connected" : "is-disconnected"}"><b>${escapeHtml(p.nickname || "Joueur")}</b><span>${p.isHost ? "Hôte" : "Invité"}${p.isSelf ? " · Toi" : ""}</span></div>`).join("")}
+            ${room.players.length < 2 ? `<div class="higher-lower-room-player is-empty"><b>En attente…</b><span>Partage le code</span></div>` : ""}
+          </div>
+          <div class="higher-lower-room-actions">
+            ${room.players.find((p) => p.isSelf)?.isHost ? `<button class="btn-red" type="button" onclick="startStatAuctionMatch()" ${room.canStart && !pending ? "" : "disabled"}>${pending === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : `<p class="card-desc">En attente du lancement par l'hôte.</p>`}
+            <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
+          </div>
+        `}
+        ${state.roomError ? `<p class="higher-lower-feedback is-wrong">${escapeHtml(state.roomError)}</p>` : ""}
+      </div>`;
+    return;
+  }
+  if (state.phase === "finished") {
+    const self = room.players.find((p) => p.isSelf);
+    const opp = room.players.find((p) => !p.isSelf);
+    const selfWon = room.winnerSide === self?.side;
+    const tie = room.winnerSide === "tie";
+    const isHost = Boolean(self?.isHost);
+    const title = tie ? "🤝 Égalité" : selfWon ? "🏆 Victoire !" : "💀 Défaite";
+    root.innerHTML = `
+      <div class="stat-auction-final">
+        <h3>${title}</h3>
+        <p>Toi <b>${self?.score ?? 0}</b> · ${escapeHtml(opp?.nickname || "Adv.")} <b>${opp?.score ?? 0}</b></p>
+        <div class="higher-lower-room-actions">
+          ${isHost ? `<button class="btn-red" type="button" onclick="restartStatAuctionMatch()">Relancer</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
+          <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
+        </div>
+      </div>`;
+    return;
+  }
+  // Allocating phase
+  const pokemon = state.currentPokemon;
+  const me = room.players.find((p) => p.isSelf);
+  const opp = room.players.find((p) => !p.isSelf);
+  const totalUsed = STAT_AUCTION_STATS.reduce((s, st) => s + (Number(state.allocation[st.key]) || 0), 0);
+  const remaining = STAT_AUCTION_TOTAL - totalUsed;
+  const oppSubmitted = Boolean(opp?.submittedThisRound);
+  if (!pokemon) {
+    root.innerHTML = `<div class="higher-lower-loading"><div class="higher-lower-spinner"></div><p>Chargement du Pokémon…</p></div>`;
+    return;
+  }
+  const lastHist = Array.isArray(room.history) && room.history.length ? room.history[room.history.length - 1] : null;
+  const statsLoaded = Boolean(state.currentStats);
+  const allocatorHtml = STAT_AUCTION_STATS.map((s) => {
+    const cur = Number(state.allocation[s.key]) || 0;
+    return `<div class="stat-auction-row">
+      <div class="stat-auction-stat-label"><span>${s.icon}</span><b>${escapeHtml(s.label)}</b></div>
+      <div class="stat-auction-stat-controls">
+        <button type="button" class="btn-ghost stat-auction-step" ${cur <= 0 || state.submitted ? "disabled" : ""} onclick="changeStatAuctionAllocation('${s.key}', -5)">−5</button>
+        <input type="number" class="stat-auction-input" min="0" max="100" value="${cur}" ${state.submitted ? "disabled" : ""} oninput="setStatAuctionAllocation('${s.key}', this.value)" />
+        <button type="button" class="btn-ghost stat-auction-step" ${remaining <= 0 || state.submitted ? "disabled" : ""} onclick="changeStatAuctionAllocation('${s.key}', 5)">+5</button>
+      </div>
+    </div>`;
+  }).join("");
+  root.innerHTML = `
+    <div class="stat-auction-board">
+      <div class="stat-auction-status">
+        <span>Manche : <b>${room.round}/${room.totalRounds}</b></span>
+        <span>Toi : <b>${me?.score ?? 0}</b></span>
+        <span>${escapeHtml(opp?.nickname || "Adv.")} : <b>${opp?.score ?? 0}</b></span>
+        <span class="${oppSubmitted ? "is-ready" : ""}">${oppSubmitted ? "✅ Adv. prêt" : "⏳ Adv. en cours"}</span>
+      </div>
+      <div class="stat-auction-pokemon">
+        <img class="higher-lower-sprite" src="${escapeHtml(getPokemonSprite(pokemon))}" alt="${escapeHtml(pokemon.name)}" />
+        <h3>${escapeHtml(pokemon.name)}</h3>
+        <p class="card-desc">Répartis ${STAT_AUCTION_TOTAL} pts sur les 6 stats. ${statsLoaded ? "" : "(Chargement des vraies stats…)"}</p>
+      </div>
+      <div class="stat-auction-allocator ${state.submitted ? "is-submitted" : ""}">${allocatorHtml}</div>
+      <div class="stat-auction-totalbar">
+        <span>Total alloué : <b>${totalUsed}</b> / ${STAT_AUCTION_TOTAL}</span>
+        <span>Reste : <b>${remaining}</b></span>
+      </div>
+      <div class="higher-lower-room-actions">
+        <button type="button" class="btn-ghost" onclick="autoBalanceStatAuctionAllocation()" ${state.submitted ? "disabled" : ""}>Équilibrer</button>
+        <button type="button" class="btn-ghost" onclick="clearStatAuctionAllocation()" ${state.submitted ? "disabled" : ""}>Reset</button>
+        <button type="button" class="btn-red" onclick="submitStatAuctionAllocation()" ${state.submitted || totalUsed !== STAT_AUCTION_TOTAL || !statsLoaded ? "disabled" : ""}>${state.submitted ? "Soumis ✓" : "Valider"}</button>
+      </div>
+      ${state.roomError ? `<p class="higher-lower-feedback is-wrong">${escapeHtml(state.roomError)}</p>` : ""}
+      ${lastHist ? `<div class="stat-auction-last-reveal"><h4>Manche ${lastHist.round} — reveal</h4><div class="stat-auction-reveal-grid">${STAT_AUCTION_STATS.map((s) => `<div><b>${s.icon} ${escapeHtml(s.label)}</b><span>Toi ${lastHist[me?.side]?.allocation?.[s.key] || 0}pt × ${lastHist[me?.side]?.realStats?.[s.key] || "?"}</span><span>${escapeHtml(opp?.nickname || "Adv")} ${lastHist[opp?.side]?.allocation?.[s.key] || 0}pt × ${lastHist[opp?.side]?.realStats?.[s.key] || "?"}</span></div>`).join("")}</div><p>Score manche : Toi <b>${lastHist[me?.side]?.computedScore || 0}</b> · ${escapeHtml(opp?.nickname || "Adv.")} <b>${lastHist[opp?.side]?.computedScore || 0}</b></p></div>` : ""}
+    </div>`;
+}
+
 function buildMysteryBattleClues(secret, stats) {
   const hp = Number.isFinite(stats?.hp) ? stats.hp : null;
   const attack = Number.isFinite(stats?.attack) ? stats.attack : null;
@@ -9708,6 +10056,12 @@ function renderGamesRankingTable() {
 const DRAFT_TEAM_SIZE = 6;
 const DRAFT_PICK_COUNT = 6;
 const DRAFT_SHINY_CHANCE = 0.01;
+const DRAFT_SCORE_ATTACK_REROLLS = 5;
+const DRAFT_SCORE_ATTACK_TARGETS = [
+  { min: 600, label: "Master 600+" },
+  { min: 550, label: "Elite 550+" },
+  { min: 500, label: "Solide 500+" },
+];
 const DRAFT_POWER_CACHE = new Map();
 
 const DRAFT_GEN_OPTIONS = [
@@ -9941,6 +10295,7 @@ const DRAFT_ARENA_BACKGROUND_IMAGE_BY_NAME = Object.freeze(
 function createDraftArenaState() {
   return {
     phase: "gen", // gen | draft | battle | result
+    mode: "arena",
     selectedGen: null,
     team: [],
     selectedBattlePokemonId: null,
@@ -9957,6 +10312,8 @@ function createDraftArenaState() {
     runSummary: null,
     evaluating: false,
     showDetailedAnalysis: false,
+    scoreAttackRerollsLeft: DRAFT_SCORE_ATTACK_REROLLS,
+    scoreAttackBestAverage: 0,
     message: "Choisis une génération pour commencer le draft.",
   };
 }
@@ -10066,6 +10423,21 @@ function getDraftPoolEntryKey(pokemon) {
 function getDraftCachedPokemonPowerData(pokemon) {
   const key = getDraftPowerCacheKey(pokemon);
   return DRAFT_POWER_CACHE.get(key) || buildDraftPowerMetrics(pokemon, null);
+}
+
+function getDraftTeamBstMetrics(team = []) {
+  const members = (team || []).filter((entry) => entry?.pokemon);
+  const total = members.reduce((sum, member) => sum + (Number(getDraftCachedPokemonPowerData(member.pokemon).statGlobal) || 0), 0);
+  const average = members.length ? Math.round(total / members.length) : 0;
+  const fullAverage = members.length >= DRAFT_TEAM_SIZE ? average : 0;
+  const nextTarget = DRAFT_SCORE_ATTACK_TARGETS.slice().reverse().find((target) => average < target.min) || null;
+  const rank = DRAFT_SCORE_ATTACK_TARGETS.find((target) => average >= target.min) || null;
+  return { count: members.length, total, average, fullAverage, nextTarget, rank };
+}
+
+function getDraftScoreAttackResultLabel(average) {
+  const rank = DRAFT_SCORE_ATTACK_TARGETS.find((target) => average >= target.min);
+  return rank ? rank.label : "Run à améliorer";
 }
 
 // ============================================================
@@ -15357,6 +15729,24 @@ function replaceDraftArenaOption(optionIndex) {
   ]);
 }
 
+function rerollDraftScoreAttackWave() {
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft") return;
+  if (draftArenaState.scoreAttackRerollsLeft <= 0) {
+    draftArenaState.message = "Plus de relance disponible pour cette tentative Score Attack.";
+    return renderDraftArena();
+  }
+  const pool = getDraftPoolForGeneration(draftArenaState.selectedGen);
+  const excludeDexIds = new Set(draftArenaState.selectedDexIds);
+  draftArenaState.options = buildDraftWeightedWave(pool, DRAFT_PICK_COUNT, excludeDexIds).map((pokemon) => createDraftOptionEntry(pokemon));
+  draftArenaState.scoreAttackRerollsLeft -= 1;
+  draftArenaState.message = `Relance utilisée. Encore ${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}.`;
+  warmDraftPokemonMetrics([
+    ...draftArenaState.options.map((option) => option.pokemon),
+    ...draftArenaState.team.map((member) => member.pokemon),
+  ]);
+  renderDraftArena();
+}
+
 function selectDraftGeneration(gen) {
   if (!draftArenaState) return;
 
@@ -15371,7 +15761,11 @@ function selectDraftGeneration(gen) {
   draftArenaState.teamSynergy = 0;
   draftArenaState.runSummary = null;
   draftArenaState.evaluating = false;
-  draftArenaState.message = `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`;
+  draftArenaState.scoreAttackRerollsLeft = DRAFT_SCORE_ATTACK_REROLLS;
+  draftArenaState.scoreAttackBestAverage = 0;
+  draftArenaState.message = draftArenaState.mode === "scoreAttack"
+    ? `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`
+    : `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`;
 
   fillDraftArenaOptions();
   renderDraftArena();
@@ -15913,7 +16307,22 @@ function openDraftArenaMode() {
 }
 
 function restartDraftArenaRun() {
+  const previousMode = draftArenaState?.mode || "arena";
   draftArenaState = createDraftArenaState();
+  draftArenaState.mode = previousMode;
+  draftArenaState.message = previousMode === "scoreAttack"
+    ? "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST."
+    : "Choisis une génération pour commencer le draft.";
+  renderDraftArena();
+}
+
+function toggleDraftScoreAttackMode() {
+  const nextMode = draftArenaState?.mode === "scoreAttack" ? "arena" : "scoreAttack";
+  draftArenaState = createDraftArenaState();
+  draftArenaState.mode = nextMode;
+  draftArenaState.message = nextMode === "scoreAttack"
+    ? "Mode Score Attack activé : drafte 6 Pokémon et vise la meilleure moyenne BST."
+    : "Mode Arènes activé : drafte 6 Pokémon puis affronte les badges.";
   renderDraftArena();
 }
 
@@ -15933,6 +16342,22 @@ async function pickDraftArenaOption(pokemonId) {
   if (picked.shiny) draftArenaState.shinyCount += 1;
 
   if (draftArenaState.team.length >= DRAFT_TEAM_SIZE) {
+    if (draftArenaState.mode === "scoreAttack") {
+      const metrics = getDraftTeamBstMetrics(draftArenaState.team);
+      draftArenaState.phase = "result";
+      draftArenaState.scoreAttackBestAverage = Math.max(Number(draftArenaState.scoreAttackBestAverage) || 0, metrics.average);
+      draftArenaState.runSummary = {
+        status: `${getDraftScoreAttackResultLabel(metrics.average)} • Moyenne ${metrics.average}`,
+        mvpName: draftArenaState.team
+          .slice()
+          .sort((left, right) => (getDraftCachedPokemonPowerData(right.pokemon).statGlobal || 0) - (getDraftCachedPokemonPowerData(left.pokemon).statGlobal || 0))[0]?.pokemon?.name || "-",
+        balanceLabel: `Total BST ${metrics.total}`,
+        offenseLabel: `${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""} restant${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}`,
+      };
+      draftArenaState.message = `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
+      renderDraftArena();
+      return;
+    }
     await prepareDraftArenaBattleRun();
     if (draftArenaState) {
       draftArenaState.message = `Équipe complète ! Clique "Lancer le duel" pour affronter la première arène.`;
@@ -15955,6 +16380,7 @@ function renderDraftArena() {
   const genBadge = document.getElementById("draft-gen-badge");
   const picksBadge = document.getElementById("draft-picks-badge");
   const shinyBadge = document.getElementById("draft-shiny-badge");
+  const averageBadge = document.getElementById("draft-bst-average-badge");
   const badgeCount = document.getElementById("draft-badge-count");
   const genButtons = document.getElementById("draft-gen-buttons");
   const options = document.getElementById("draft-options");
@@ -15962,18 +16388,25 @@ function renderDraftArena() {
   const teamMetrics = document.getElementById("draft-team-metrics");
   const runBar = document.getElementById("draft-run-bar");
   const resultWrap = document.getElementById("draft-result-wrap");
+  const resultTitle = document.getElementById("draft-result-title");
   const runSummary = document.getElementById("draft-run-summary");
   const badgeGrid = document.getElementById("draft-badge-grid");
   const arenaList = document.getElementById("draft-arena-list");
   const battleLaunch = document.getElementById("draft-battle-launch");
   const battleClose = document.getElementById("draft-battle-close");
   const battlePokemonSelect = document.getElementById("draft-battle-pokemon");
+  const scoreRerollButton = document.getElementById("draft-score-reroll");
   const arenas = DRAFT_ARENAS_BY_GEN[draftArenaState.selectedGen] || [];
 
   if (status) status.textContent = draftArenaState.message;
   if (genBadge) genBadge.textContent = draftArenaState.selectedGen ? `Génération : ${draftGenLabel(draftArenaState.selectedGen)}` : "Génération : -";
   if (picksBadge) picksBadge.textContent = `Équipe : ${draftArenaState.team.length} / ${DRAFT_TEAM_SIZE}`;
   if (shinyBadge) shinyBadge.textContent = `Shiny : ${draftArenaState.shinyCount}`;
+  const bstMetrics = getDraftTeamBstMetrics(draftArenaState.team);
+  if (averageBadge) {
+    averageBadge.textContent = `Moy. BST : ${bstMetrics.average || "-"}`;
+    averageBadge.dataset.state = bstMetrics.average >= 550 ? "complete" : bstMetrics.average >= 500 ? "progress" : "empty";
+  }
   const wonCount = draftArenaState.badgeResults.filter((result) => result.status === "won").length;
 
   const progressRatio = Math.max(0, Math.min(1, (draftArenaState.team.length || 0) / DRAFT_TEAM_SIZE));
@@ -15985,7 +16418,9 @@ function renderDraftArena() {
   if (genBadge) genBadge.dataset.state = draftArenaState.selectedGen ? "selected" : "empty";
   if (picksBadge) picksBadge.dataset.state = draftArenaState.team.length >= DRAFT_TEAM_SIZE ? "complete" : draftArenaState.team.length > 0 ? "progress" : "empty";
   if (badgeCount) badgeCount.dataset.state = wonCount > 0 ? "active" : "empty";
-  if (badgeCount) badgeCount.textContent = `Badges : ${wonCount} / 8`;
+  if (badgeCount) badgeCount.textContent = draftArenaState.mode === "scoreAttack"
+    ? `Rerolls : ${draftArenaState.scoreAttackRerollsLeft}`
+    : `Badges : ${wonCount} / 8`;
 
   if (battlePokemonSelect) {
     const battleTeam = draftArenaState.team.filter((entry) => entry?.pokemon);
@@ -16015,7 +16450,24 @@ function renderDraftArena() {
     battleLaunch.disabled = battleMeta.disabled;
     battleLaunch.title = battleMeta.title;
     battleLaunch.textContent = battleMeta.label;
+    battleLaunch.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
     battleLaunch.dataset.state = battleMeta.disabled ? "locked" : draftArenaState.team.length >= DRAFT_TEAM_SIZE ? "ready" : "idle";
+  }
+  document.getElementById("draft-battle-friend")?.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
+  document.getElementById("draft-battle-join")?.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
+  const scoreAttackToggle = document.getElementById("draft-score-attack-toggle");
+  if (scoreAttackToggle) {
+    scoreAttackToggle.textContent = draftArenaState.mode === "scoreAttack" ? "Mode Arènes" : "Score Attack";
+    scoreAttackToggle.classList.toggle("active", draftArenaState.mode === "scoreAttack");
+  }
+  if (scoreRerollButton) {
+    const canReroll = draftArenaState.mode === "scoreAttack"
+      && draftArenaState.phase === "draft"
+      && Boolean(draftArenaState.selectedGen)
+      && draftArenaState.scoreAttackRerollsLeft > 0;
+    scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft");
+    scoreRerollButton.disabled = !canReroll;
+    scoreRerollButton.textContent = `Relancer la vague (${draftArenaState.scoreAttackRerollsLeft})`;
   }
   if (battleClose && (!draftSimpleBattleDevUiState || document.getElementById("draft-dev-battle-panel")?.classList.contains("hidden"))) {
     battleClose.classList.add("hidden");
@@ -16065,12 +16517,16 @@ function renderDraftArena() {
         const normalSprite = getPokemonSprite(option.pokemon);
         const shownSprite = option.shiny ? getPokemonShinySprite(option.pokemon) : normalSprite;
         const sparkle = option.shiny ? '<span class="draft-shiny-mark">&#10024; Shiny</span>' : "";
-        const metrics = getDraftCachedPokemonPowerData(option.pokemon);
+          const metrics = getDraftCachedPokemonPowerData(option.pokemon);
+        const projectedAverage = draftArenaState.team.length < DRAFT_TEAM_SIZE
+          ? Math.round((bstMetrics.total + metrics.statGlobal) / Math.max(1, draftArenaState.team.length + 1))
+          : bstMetrics.average;
         card.innerHTML = `
           <img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${normalSprite}'" />
           <strong>${escapeHtml(option.pokemon.name)}</strong>
           <span>#${spriteId}</span>
-          <span class="draft-card-meta">Stat global ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
+          <span class="draft-card-meta">BST ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
+          <span class="draft-bst-projection">Moy. après pick : ${projectedAverage}</span>
           <div class="draft-type-row">${typeBadgesHtml(option.pokemon.type1, option.pokemon.type2)}</div>
           ${sparkle}
         `;
@@ -16131,9 +16587,10 @@ function renderDraftArena() {
     const currentSynergy = draftArenaState.team.length ? getDraftTeamSynergy(draftArenaState.team.map((member) => ({ ...member, metrics: getDraftCachedPokemonPowerData(member.pokemon) }))) : null;
     teamMetrics.innerHTML = draftArenaState.team.length
       ? `
-        <div class="draft-summary-card"><span>Stat global total</span><b>${currentTeamStatGlobal}</b></div>
+        <div class="draft-summary-card draft-score-main"><span>Moyenne BST</span><b>${bstMetrics.average}</b><small>${bstMetrics.rank?.label || (bstMetrics.nextTarget ? `${bstMetrics.nextTarget.min - bstMetrics.average} pts avant ${bstMetrics.nextTarget.label}` : "Objectif libre")}</small></div>
+        <div class="draft-summary-card"><span>BST total</span><b>${currentTeamStatGlobal}</b></div>
         <div class="draft-summary-card"><span>Synergie</span><b>${draftArenaState.runSummary?.synergyLabel || currentSynergy?.label || "-"}</b></div>
-        <div class="draft-summary-card"><span>Région</span><b>${draftArenaState.selectedGen ? escapeHtml(draftGenLabel(draftArenaState.selectedGen)) : "-"}</b></div>
+        <div class="draft-summary-card"><span>${draftArenaState.mode === "scoreAttack" ? "Rerolls" : "Région"}</span><b>${draftArenaState.mode === "scoreAttack" ? draftArenaState.scoreAttackRerollsLeft : draftArenaState.selectedGen ? escapeHtml(draftGenLabel(draftArenaState.selectedGen)) : "-"}</b></div>
       `
       : "";
   }
@@ -16148,6 +16605,9 @@ function renderDraftArena() {
 
   if (resultWrap) {
     resultWrap.classList.toggle("hidden", draftArenaState.phase !== "result" && draftArenaState.phase !== "battle");
+  }
+  if (resultTitle) {
+    resultTitle.textContent = draftArenaState.mode === "scoreAttack" ? "3) Résultat Score Attack" : "3) Résultats des arènes";
   }
   if (runSummary) {
     if (draftArenaState.phase !== "result" && draftArenaState.phase !== "battle") {
@@ -17321,7 +17781,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction'].forEach(hideScreen);
 }
 
 function ensureOverlay(title, html) {

@@ -84,6 +84,7 @@
     <div class="nav-dropdown" role="menu">
       <button type="button" onclick="openMultiplayerMode()"><span class="nav-dd-ico">🆚</span>Duel 1v1</button>
       <button type="button" onclick="openStatClashMode()"><span class="nav-dd-ico">📊</span>Stat Clash 1v1</button>
+      <button type="button" onclick="openStatAuctionMode()"><span class="nav-dd-ico">💰</span>Stat Auction 1v1</button>
       <button type="button" onclick="showChallengePanel()"><span class="nav-dd-ico">🤝</span>Envoyer un défi</button>
     </div>
   </div>
@@ -719,6 +720,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <button id="draft-battle-friend" class="btn-blue" type="button" onclick="openDraftFriendBattle()" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
               <button id="draft-battle-join" class="btn-ghost" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
               <button id="draft-battle-close" class="btn-ghost hidden" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
+              <button id="draft-score-attack-toggle" class="btn-blue" type="button" onclick="toggleDraftScoreAttackMode()">Score Attack</button>
               <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
               <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
             </div>
@@ -728,6 +730,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="draft-progress draft-progress-shell">
           <span id="draft-gen-badge" class="tag-gen">Génération : -</span>
           <span id="draft-picks-badge" class="tag-tries">Équipe : 0 / 6</span>
+          <span id="draft-bst-average-badge" class="tag-tries">Moy. BST : -</span>
           <span id="draft-shiny-badge" class="tag-tries">Shiny : 0</span>
           <span id="draft-badge-count" class="tag-tries">Badges : 0 / 8</span>
         </div>
@@ -743,6 +746,9 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <section class="draft-panel draft-panel-picks">
           <h3>2) Draft</h3>
           <p class="card-desc">Choisis 1 des 4 propositions à chaque tour. Les options se renouvellent automatiquement. Tu ne peux pas reprendre un Pokémon déjà sélectionné.</p>
+          <div class="draft-score-attack-actions">
+            <button id="draft-score-reroll" class="btn-blue hidden" type="button" onclick="rerollDraftScoreAttackWave()">Relancer la vague</button>
+          </div>
           <div id="draft-options" class="draft-options-grid"></div>
         </section>
 
@@ -753,7 +759,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </section>
 
         <section id="draft-result-wrap" class="draft-panel draft-panel-results hidden">
-          <h3>3) Résultats des arènes</h3>
+          <h3 id="draft-result-title">3) Résultats des arènes</h3>
           <div id="draft-run-summary" class="draft-run-summary"></div>
           <div id="draft-badge-grid" class="draft-badge-grid"></div>
         </section>
@@ -1181,6 +1187,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
     </div>
 
+    <div id="screen-stat-auction" class="hidden">
+      <div class="card stat-auction-card">
+        <div class="ranking-head">
+          <h2 class="card-title">💰 Stat Auction 1v1</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Avant de voir les stats, répartis 100 pts sur les 6 stats du Pokémon affiché. Reveal des vraies stats, score = somme(allocation × stat). 5 manches, le meilleur total gagne.</p>
+        <div id="stat-auction-root" class="stat-auction-root"></div>
+      </div>
+    </div>
+
     <div id="overlay-modal" class="overlay-modal hidden" aria-hidden="true">
   <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
     <div class="overlay-head">
@@ -1202,9 +1222,6 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <script src="script.js" defer></script>
   </body>
   </html>
-
-
-
 
 
 
