@@ -24469,3 +24469,113 @@ body.theme-dark .higher-lower-room-player span { color: #9aaecf; }
   .higher-lower-modes { grid-template-columns: minmax(0, 1fr); }
   .higher-lower-room-players { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* === POKÉ-CONNECTIONS === */
+.poke-connections-card { padding: 22px 26px; }
+.poke-connections-root { margin-top: 14px; }
+.poke-connections-board { display: flex; flex-direction: column; gap: 14px; }
+.poke-connections-status {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  font-size: 14px; color: #4a5a78; font-weight: 700;
+}
+.poke-connections-status b { color: #12213d; }
+.poke-connections-mistake-dots { display: inline-flex; gap: 6px; margin-left: 8px; vertical-align: middle; }
+.poke-connections-mistake-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(116, 158, 241, 0.32);
+  transition: background 0.2s ease;
+}
+.poke-connections-mistake-dot.is-used { background: #e4382f; }
+
+.poke-connections-found { display: flex; flex-direction: column; gap: 6px; }
+.poke-connections-found-row {
+  padding: 12px 16px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 800;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.poke-connections-found-label { font-size: 14px; text-transform: uppercase; letter-spacing: 0.6px; }
+.poke-connections-found-list { font-size: 12px; font-weight: 600; opacity: 0.92; }
+.poke-connections-found-row.group-yellow { background: linear-gradient(180deg, #fff1c2, #ffe590); color: #6b4d00; }
+.poke-connections-found-row.group-green { background: linear-gradient(180deg, #c6f0c8, #9fdfa3); color: #1d5a23; }
+.poke-connections-found-row.group-blue { background: linear-gradient(180deg, #c8dfff, #9ec4ff); color: #143b7d; }
+.poke-connections-found-row.group-purple { background: linear-gradient(180deg, #ddc8ff, #b89eff); color: #44197d; }
+
+.poke-connections-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  transition: transform 0.1s ease;
+}
+.poke-connections-grid.is-shaking { animation: pokeConnectionsShake 0.4s ease-in-out 2; }
+@keyframes pokeConnectionsShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.poke-connections-tile {
+  background: linear-gradient(180deg, #ffffff, #f5f8ff);
+  border: 1px solid rgba(116, 158, 241, 0.32);
+  border-radius: 14px;
+  padding: 8px 4px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-shadow: 0 8px 16px rgba(47, 118, 255, 0.06);
+  min-height: 100px;
+}
+.poke-connections-tile img { width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; }
+.poke-connections-tile span { font-size: 11px; color: #12213d; font-weight: 700; text-align: center; line-height: 1.1; }
+.poke-connections-tile:hover {
+  border-color: rgba(47, 118, 255, 0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(47, 118, 255, 0.14);
+}
+.poke-connections-tile.is-selected {
+  background: linear-gradient(180deg, #1f3262, #12213d);
+  border-color: #ffcc33;
+  box-shadow: 0 0 0 3px rgba(255, 204, 51, 0.35);
+}
+.poke-connections-tile.is-selected span { color: #fff7d6; }
+
+.poke-connections-actions {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin-top: 6px;
+}
+.poke-connections-actions button { padding: 10px 18px; font-size: 14px; }
+
+.poke-connections-final {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 24px 18px;
+}
+.poke-connections-final h3 { margin: 0; font-size: 24px; }
+.poke-connections-final.is-won h3 { color: #1d6b3c; }
+.poke-connections-final.is-lost h3 { color: #e4382f; }
+.poke-connections-reveal-groups { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+
+body.theme-dark .poke-connections-status { color: #b8c8e4; }
+body.theme-dark .poke-connections-status b { color: #edf5ff; }
+body.theme-dark .poke-connections-mistake-dot { background: rgba(99, 139, 207, 0.24); }
+body.theme-dark .poke-connections-tile {
+  background: linear-gradient(180deg, rgba(18,31,54,0.62), rgba(18,31,54,0.78));
+  border-color: rgba(116, 158, 241, 0.24);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.32);
+}
+body.theme-dark .poke-connections-tile span { color: #edf5ff; }
+body.theme-dark .poke-connections-tile:hover { border-color: rgba(116, 158, 241, 0.55); }
+body.theme-dark .poke-connections-tile.is-selected {
+  background: linear-gradient(180deg, #2d4894, #1c2f5e);
+  border-color: #ffcc33;
+}
+body.theme-dark .poke-connections-final.is-won h3 { color: #7adfa6; }
+body.theme-dark .poke-connections-final.is-lost h3 { color: #ff7d72; }
+
+@media (max-width: 700px) {
+  .poke-connections-grid { gap: 6px; }
+  .poke-connections-tile img { width: 48px; height: 48px; }
+  .poke-connections-tile span { font-size: 10px; }
+  .poke-connections-tile { min-height: 84px; }
+}

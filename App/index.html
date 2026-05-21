@@ -75,6 +75,7 @@
       <button type="button" onclick="startEvolutionChainGame()"><span class="nav-dd-ico">🔁</span>Évolution</button>
       <button type="button" onclick="startPokedexOrderGame()"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
       <button type="button" onclick="openHigherLowerMode()"><span class="nav-dd-ico">📊</span>Higher or Lower</button>
+      <button type="button" onclick="openPokeConnectionsMode()"><span class="nav-dd-ico">🧩</span>Poké-Connections</button>
     </div>
   </div>
 
@@ -1163,6 +1164,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <p class="card-desc">Devine si la stat du Pokémon de droite est plus haute ou plus basse que celle de gauche. Bonne réponse → enchaîne. Mauvaise → game over.</p>
         <div id="higher-lower-root" class="higher-lower-root"></div>
+      </div>
+    </div>
+
+    <div id="screen-poke-connections" class="hidden">
+      <div class="card poke-connections-card">
+        <div class="ranking-head">
+          <h2 class="card-title">🧩 Poké-Connections</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">16 Pokémon répartis en 4 groupes de 4 selon un thème caché (type, génération, habitat, couleur, stade). Trouve les 4 groupes en 4 erreurs max.</p>
+        <div id="poke-connections-root" class="poke-connections-root"></div>
       </div>
     </div>
 

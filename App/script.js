@@ -4499,6 +4499,226 @@ function applyHigherLowerRoomState(room) {
   renderHigherLowerScreen();
 }
 
+// === POKÉ-CONNECTIONS — mode solo (style NYT Connections) ===
+const POKE_CONNECTIONS_CATEGORIES = ["type", "gen", "habitat", "color", "stage"];
+const POKE_CONNECTIONS_GROUP_COLORS = ["yellow", "green", "blue", "purple"];
+const POKE_CONNECTIONS_MAX_MISTAKES = 4;
+let pokeConnectionsState = null;
+
+function pokeConnectionsGetThemeLabel(category, value) {
+  if (category === "type") return `Type ${value}`;
+  if (category === "gen") {
+    const labelGen = (typeof GENERATIONS === "object" && GENERATIONS?.[value]?.label) ? ` (${GENERATIONS[value].label})` : "";
+    return `Génération ${value}${labelGen}`;
+  }
+  if (category === "habitat") return `Habitat : ${value}`;
+  if (category === "color") return `Couleur : ${value}`;
+  if (category === "stage") {
+    if (value === 1) return "Stade 1 (forme initiale)";
+    if (value === 2) return "Stade 2 (intermédiaire)";
+    if (value === 3) return "Stade 3 (forme finale)";
+    return `Stade ${value}`;
+  }
+  return `${category} : ${value}`;
+}
+
+function pokeConnectionsMatchValue(pokemon, category, value) {
+  if (category === "type") return pokemon.type1 === value || pokemon.type2 === value;
+  if (category === "gen") return Number(pokemon.gen || pokemon.generation) === Number(value);
+  if (category === "habitat") return pokemon.habitat === value;
+  if (category === "color") return pokemon.color === value;
+  if (category === "stage") return Number(pokemon.stage) === Number(value);
+  return false;
+}
+
+function pokeConnectionsCountValues(pool, category) {
+  const counts = new Map();
+  for (const p of pool) {
+    let values = [];
+    if (category === "type") {
+      if (p.type1) values.push(p.type1);
+      if (p.type2 && p.type2 !== p.type1) values.push(p.type2);
+    } else if (category === "gen") values.push(Number(p.gen || p.generation));
+    else if (category === "habitat" && p.habitat) values.push(p.habitat);
+    else if (category === "color" && p.color) values.push(p.color);
+    else if (category === "stage" && p.stage) values.push(Number(p.stage));
+    for (const v of values) {
+      if (v === undefined || v === null || v === "") continue;
+      counts.set(v, (counts.get(v) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+function generatePokeConnectionsPuzzle() {
+  const all = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000);
+  if (all.length < 16) return null;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const categories = shuffleArray(POKE_CONNECTIONS_CATEGORIES.slice()).slice(0, 4);
+    const groups = [];
+    const usedIds = new Set();
+    let ok = true;
+    for (const cat of categories) {
+      const counts = pokeConnectionsCountValues(all.filter((p) => !usedIds.has(p.id)), cat);
+      const candidates = [...counts.entries()].filter(([, c]) => c >= 4);
+      if (!candidates.length) { ok = false; break; }
+      const [value] = candidates[Math.floor(Math.random() * candidates.length)];
+      const pool = all.filter((p) => !usedIds.has(p.id) && pokeConnectionsMatchValue(p, cat, value));
+      if (pool.length < 4) { ok = false; break; }
+      const picks = shuffleArray(pool.slice()).slice(0, 4);
+      for (const p of picks) usedIds.add(p.id);
+      groups.push({ category: cat, value, label: pokeConnectionsGetThemeLabel(cat, value), pokemon: picks });
+    }
+    if (!ok || groups.length !== 4) continue;
+    const tiles = shuffleArray(groups.flatMap((g, idx) => g.pokemon.map((p) => ({ id: p.id, name: p.name, sprite: p.sprite, groupIdx: idx }))));
+    return { groups, tiles };
+  }
+  return null;
+}
+
+function openPokeConnectionsMode() {
+  const puzzle = generatePokeConnectionsPuzzle();
+  if (!puzzle) return alert("Impossible de générer un puzzle Poké-Connections.");
+  goToConfig();
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-poke-connections");
+  setGlobalNavActive("game");
+  gameMode = "poke-connections";
+  pokeConnectionsState = {
+    puzzle,
+    selected: new Set(),
+    foundGroupIdx: new Set(),
+    mistakes: 0,
+    phase: "playing",
+    lastShake: 0,
+  };
+  renderPokeConnectionsScreen();
+}
+
+function restartPokeConnectionsGame() {
+  openPokeConnectionsMode();
+}
+
+function togglePokeConnectionsTile(tileIndex) {
+  if (!pokeConnectionsState || pokeConnectionsState.phase !== "playing") return;
+  const tile = pokeConnectionsState.puzzle.tiles[tileIndex];
+  if (!tile || pokeConnectionsState.foundGroupIdx.has(tile.groupIdx)) return;
+  if (pokeConnectionsState.selected.has(tileIndex)) {
+    pokeConnectionsState.selected.delete(tileIndex);
+  } else {
+    if (pokeConnectionsState.selected.size >= 4) return;
+    pokeConnectionsState.selected.add(tileIndex);
+  }
+  renderPokeConnectionsScreen();
+}
+
+function shufflePokeConnectionsTiles() {
+  if (!pokeConnectionsState || pokeConnectionsState.phase !== "playing") return;
+  const unfound = pokeConnectionsState.puzzle.tiles
+    .map((t, idx) => ({ t, idx }))
+    .filter(({ t }) => !pokeConnectionsState.foundGroupIdx.has(t.groupIdx));
+  const shuffled = shuffleArray(unfound.slice());
+  const newTiles = pokeConnectionsState.puzzle.tiles.slice();
+  let si = 0;
+  for (let i = 0; i < newTiles.length; i++) {
+    if (!pokeConnectionsState.foundGroupIdx.has(newTiles[i].groupIdx)) {
+      newTiles[i] = shuffled[si].t;
+      si += 1;
+    }
+  }
+  pokeConnectionsState.puzzle.tiles = newTiles;
+  pokeConnectionsState.selected = new Set();
+  renderPokeConnectionsScreen();
+}
+
+function clearPokeConnectionsSelection() {
+  if (!pokeConnectionsState) return;
+  pokeConnectionsState.selected = new Set();
+  renderPokeConnectionsScreen();
+}
+
+function submitPokeConnectionsGuess() {
+  if (!pokeConnectionsState || pokeConnectionsState.phase !== "playing") return;
+  if (pokeConnectionsState.selected.size !== 4) return;
+  const tiles = pokeConnectionsState.puzzle.tiles;
+  const selectedIdxs = [...pokeConnectionsState.selected];
+  const groupIdxs = selectedIdxs.map((i) => tiles[i].groupIdx);
+  const allSame = groupIdxs.every((g) => g === groupIdxs[0]);
+  if (allSame) {
+    pokeConnectionsState.foundGroupIdx.add(groupIdxs[0]);
+    pokeConnectionsState.selected = new Set();
+    if (pokeConnectionsState.foundGroupIdx.size === 4) {
+      pokeConnectionsState.phase = "won";
+    }
+  } else {
+    pokeConnectionsState.mistakes += 1;
+    pokeConnectionsState.lastShake = Date.now();
+    if (pokeConnectionsState.mistakes >= POKE_CONNECTIONS_MAX_MISTAKES) {
+      pokeConnectionsState.phase = "lost";
+    }
+  }
+  renderPokeConnectionsScreen();
+}
+
+function renderPokeConnectionsScreen() {
+  const root = document.getElementById("poke-connections-root");
+  if (!root) return;
+  const state = pokeConnectionsState;
+  if (!state) { root.innerHTML = ""; return; }
+  const { puzzle, foundGroupIdx, selected, mistakes, phase } = state;
+  const foundGroupsHtml = [...foundGroupIdx]
+    .map((idx) => {
+      const g = puzzle.groups[idx];
+      const color = POKE_CONNECTIONS_GROUP_COLORS[idx];
+      return `<div class="poke-connections-found-row group-${color}">
+        <div class="poke-connections-found-label">${escapeHtml(g.label)}</div>
+        <div class="poke-connections-found-list">${g.pokemon.map((p) => escapeHtml(p.name)).join(" · ")}</div>
+      </div>`;
+    })
+    .join("");
+  const tilesHtml = puzzle.tiles
+    .map((t, idx) => {
+      if (foundGroupIdx.has(t.groupIdx)) return "";
+      const isSelected = selected.has(idx);
+      return `<button type="button" class="poke-connections-tile ${isSelected ? "is-selected" : ""}" onclick="togglePokeConnectionsTile(${idx})">
+        <img src="${escapeHtml(t.sprite || "")}" alt="${escapeHtml(t.name)}" loading="lazy" />
+        <span>${escapeHtml(t.name)}</span>
+      </button>`;
+    })
+    .join("");
+  const mistakeDots = Array.from({ length: POKE_CONNECTIONS_MAX_MISTAKES }, (_, i) => `<span class="poke-connections-mistake-dot ${i < mistakes ? "is-used" : ""}"></span>`).join("");
+  const shakeClass = (Date.now() - state.lastShake < 700) ? "is-shaking" : "";
+  let footer = "";
+  if (phase === "won") {
+    footer = `<div class="poke-connections-final is-won"><h3>🎉 Bravo !</h3><p>Tous les groupes trouvés en ${mistakes} erreur${mistakes > 1 ? "s" : ""}.</p><button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button></div>`;
+  } else if (phase === "lost") {
+    const remainingGroups = puzzle.groups
+      .map((g, idx) => ({ g, idx }))
+      .filter(({ idx }) => !foundGroupIdx.has(idx))
+      .map(({ g, idx }) => `<div class="poke-connections-found-row group-${POKE_CONNECTIONS_GROUP_COLORS[idx]}"><div class="poke-connections-found-label">${escapeHtml(g.label)}</div><div class="poke-connections-found-list">${g.pokemon.map((p) => escapeHtml(p.name)).join(" · ")}</div></div>`)
+      .join("");
+    footer = `<div class="poke-connections-final is-lost"><h3>💀 Perdu</h3><p>Tu as épuisé tes 4 erreurs.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button></div>`;
+  } else {
+    footer = `<div class="poke-connections-actions">
+      <button class="btn-ghost" type="button" onclick="shufflePokeConnectionsTiles()">🔀 Mélanger</button>
+      <button class="btn-ghost" type="button" onclick="clearPokeConnectionsSelection()" ${selected.size === 0 ? "disabled" : ""}>Désélectionner tout</button>
+      <button class="btn-red" type="button" onclick="submitPokeConnectionsGuess()" ${selected.size !== 4 ? "disabled" : ""}>Valider</button>
+    </div>`;
+  }
+  root.innerHTML = `
+    <div class="poke-connections-board">
+      <div class="poke-connections-status">
+        <span>Erreurs : <span class="poke-connections-mistake-dots">${mistakeDots}</span></span>
+        <span>Groupes trouvés : <b>${foundGroupIdx.size}/4</b></span>
+      </div>
+      ${foundGroupsHtml ? `<div class="poke-connections-found">${foundGroupsHtml}</div>` : ""}
+      <div class="poke-connections-grid ${shakeClass}">${tilesHtml}</div>
+      ${footer}
+    </div>`;
+}
+
 function buildMysteryBattleClues(secret, stats) {
   const hp = Number.isFinite(stats?.hp) ? stats.hp : null;
   const attack = Number.isFinite(stats?.attack) ? stats.attack : null;
@@ -17101,7 +17321,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections'].forEach(hideScreen);
 }
 
 function ensureOverlay(title, html) {
