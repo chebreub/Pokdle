@@ -2334,6 +2334,13 @@ function publicDraftScoreRoomState(room, viewerId = null) {
     maxPlayers: MAX_ROOM_SIZE,
     connectedCount: room.players.filter((player) => player.connected).length,
     winnerSide: room.winnerSide || null,
+    duel: room.duel ? {
+      gen: room.duel.gen,
+      currentWave: room.duel.currentWave || [],
+      waveIndex: room.duel.waveIndex || 0,
+      pendingSides: ["left", "right"].filter((side) => room.duel.pendingPicks?.[side]),
+      lastEvent: room.duel.lastEvent || null,
+    } : null,
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
@@ -2346,6 +2353,25 @@ function publicDraftScoreRoomState(room, viewerId = null) {
       progress: player.progress || null,
     })),
   };
+}
+
+function generateDraftDuelPool(gen) {
+  const list = Array.isArray(POKEMON_LIST) ? POKEMON_LIST.filter((p) => Number(p.id) < 10000) : [];
+  const filtered = gen ? list.filter((p) => Number(p.gen || p.generation) === Number(gen)) : list.slice();
+  return filtered.map((p) => ({ id: Number(p.id), name: String(p.name || ""), type1: p.type1, type2: p.type2 }));
+}
+
+function generateDraftDuelNextWave(room) {
+  const available = (room.duel.pool || []).filter((p) => !room.duel.draftedIds.has(p.id));
+  if (available.length < 1) return [];
+  const shuffled = available.slice().sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(4, shuffled.length)).map((p) => p.id);
+}
+
+function buildDuelPokemonEntry(pokemonId) {
+  const pokemon = POKEMON_LIST.find((p) => Number(p.id) === Number(pokemonId));
+  if (!pokemon) return null;
+  return { id: Number(pokemon.id), name: pokemon.name, type1: pokemon.type1 || null, type2: pokemon.type2 || null };
 }
 
 function emitDraftScoreRoomState(room) {

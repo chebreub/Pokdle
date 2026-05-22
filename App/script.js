@@ -15838,6 +15838,7 @@ function applyDraftScoreAttackRoomState(roomState) {
   const self = getDraftScoreAttackRoomSelf(roomState);
   draftArenaState.scoreAttackSubmitted = Boolean(self?.hasSubmitted);
   if (draftArenaState.mode === "scoreAttack") renderDraftArena();
+  maybeShowDraftScoreFinale(roomState);
 }
 
 function createDraftScoreAttackRoom() {
@@ -15922,6 +15923,77 @@ function submitDraftScoreAttackResult(metrics = null) {
     }
     applyDraftScoreAttackRoomState(response.room);
   });
+}
+
+let draftScoreFinaleShownFor = null;
+
+function maybeShowDraftScoreFinale(room) {
+  if (!room || room.status !== "finished") return;
+  const fingerprint = `${room.code}:${room.players?.map((p) => `${p.side}-${p.result?.average || 0}-${p.result?.total || 0}`).join("|")}`;
+  if (draftScoreFinaleShownFor === fingerprint) return;
+  draftScoreFinaleShownFor = fingerprint;
+  showDraftScoreFinaleOverlay(room);
+}
+
+function showDraftScoreFinaleOverlay(room) {
+  const existing = document.getElementById("draft-score-finale-overlay");
+  if (existing) existing.remove();
+  const self = room.players?.find((p) => p.isSelf);
+  const opp = room.players?.find((p) => !p.isSelf);
+  if (!self?.result || !opp?.result) return;
+  const selfWon = room.winnerSide === self.side;
+  const tie = room.winnerSide === "tie";
+  const title = tie ? "🤝 ÉGALITÉ !" : selfWon ? "🏆 VICTOIRE !" : "💀 DÉFAITE";
+  const titleClass = tie ? "is-tie" : selfWon ? "is-win" : "is-lose";
+  const buildTeamRow = (player, side) => {
+    const team = Array.isArray(player.result?.team) ? player.result.team : [];
+    return `<div class="dsf-team-side dsf-side-${side}">
+      <div class="dsf-team-head"><b>${escapeHtml(player.nickname || "Joueur")}</b><span class="dsf-side-label">${side === "left" ? "" : ""}${player.isSelf ? "TOI" : "ADVERSAIRE"}</span></div>
+      <div class="dsf-team-sprites">${team.map((entry, idx) => `<div class="dsf-pokemon-tile" style="--dsf-i:${idx}"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png" alt="${escapeHtml(entry.name)}" /><b>${entry.bst}</b><span>${escapeHtml(entry.name)}</span></div>`).join("")}</div>
+      <div class="dsf-team-score" data-target="${player.result?.average || 0}">0</div>
+      <div class="dsf-team-score-label">Moyenne BST</div>
+    </div>`;
+  };
+  const overlay = document.createElement("div");
+  overlay.id = "draft-score-finale-overlay";
+  overlay.className = "draft-score-finale-overlay";
+  overlay.innerHTML = `
+    <div class="dsf-backdrop"></div>
+    <div class="dsf-content">
+      <div class="dsf-title ${titleClass}">${title}</div>
+      <div class="dsf-versus">
+        ${buildTeamRow(self, "left")}
+        <div class="dsf-vs-center">VS</div>
+        ${buildTeamRow(opp, "right")}
+      </div>
+      <div class="dsf-actions">
+        <button class="btn-red" type="button" id="dsf-close">Continuer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  // Animate score counters
+  setTimeout(() => {
+    overlay.querySelectorAll(".dsf-team-score").forEach((el) => {
+      const target = Number(el.dataset.target) || 0;
+      const start = Date.now();
+      const duration = 1400;
+      const step = () => {
+        const elapsed = Date.now() - start;
+        const t = Math.min(1, elapsed / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * eased);
+        if (t < 1) requestAnimationFrame(step);
+        else el.textContent = target;
+      };
+      requestAnimationFrame(step);
+    });
+  }, 600);
+  document.getElementById("dsf-close")?.addEventListener("click", () => {
+    overlay.classList.add("is-closing");
+    setTimeout(() => overlay.remove(), 300);
+  });
+  // Auto-focus close button for keyboard accessibility
+  setTimeout(() => document.getElementById("dsf-close")?.focus(), 300);
 }
 
 function renderDraftScoreAttackPlayerCard(player, isSelf) {
