@@ -5346,6 +5346,43 @@ select:focus-visible {
   background: rgba(12, 38, 74, 0.38);
 }
 
+.draft-run-node.is-current {
+  border: 2px solid #ffcc33;
+  background: linear-gradient(160deg, rgba(47, 118, 255, 0.85), rgba(47, 118, 255, 0.55));
+  box-shadow:
+    0 0 0 3px rgba(255, 204, 51, 0.32),
+    0 16px 28px rgba(47, 118, 255, 0.32);
+  transform: scale(1.05);
+  z-index: 2;
+  position: relative;
+  animation: draftCurrentArenaPulse 2s ease-in-out infinite;
+}
+.draft-run-node.is-current small,
+.draft-run-node.is-current b,
+.draft-run-node.is-current span {
+  color: #fffced;
+}
+.draft-run-node.is-current::after {
+  content: "👈 À TOI";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #ffd97a, #ffb84a);
+  color: #5a3a00;
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 10px rgba(255, 178, 55, 0.4);
+  white-space: nowrap;
+}
+@keyframes draftCurrentArenaPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255, 204, 51, 0.32), 0 16px 28px rgba(47, 118, 255, 0.32); }
+  50%      { box-shadow: 0 0 0 6px rgba(255, 204, 51, 0.45), 0 20px 32px rgba(47, 118, 255, 0.42); }
+}
+
 .draft-card-meta {
   font-size: 0.78rem;
   font-weight: 800;

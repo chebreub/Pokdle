@@ -16861,7 +16861,9 @@ function renderDraftArena() {
     runBar.innerHTML = arenas.map((arena, index) => {
       const result = draftArenaState.badgeResults[index];
       const statusClass = result?.status || (draftArenaState.phase === "result" && draftArenaState.evaluating ? "pending" : "pending");
-      return `<div class="draft-run-node ${statusClass}" style="--draft-delay:${index * 80}ms">${getDraftBadgeMarkup(arena, statusClass)}<small>${index + 1}</small><b>${escapeHtml(arena.name)}</b><span>${escapeHtml(arena.type)}</span></div>`;
+      const isCurrent = draftArenaState.phase === "battle" && index === draftArenaState.currentArenaIndex && statusClass !== "won" && statusClass !== "blocked";
+      const currentClass = isCurrent ? " is-current" : "";
+      return `<div class="draft-run-node ${statusClass}${currentClass}" style="--draft-delay:${index * 80}ms">${getDraftBadgeMarkup(arena, statusClass)}<small>${index + 1}</small><b>${escapeHtml(arena.name)}</b><span>${escapeHtml(arena.type)}</span></div>`;
     }).join("");
   }
 
