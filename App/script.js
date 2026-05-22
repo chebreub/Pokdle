@@ -16020,7 +16020,34 @@ function maybeShowDraftScoreFinale(room) {
   const fingerprint = `${room.code}:${room.players?.map((p) => `${p.side}-${p.result?.average || 0}-${p.result?.total || 0}`).join("|")}`;
   if (draftScoreFinaleShownFor === fingerprint) return;
   draftScoreFinaleShownFor = fingerprint;
+  updateDraftScoreHeadToHead(room);
   showDraftScoreFinaleOverlay(room);
+}
+
+function getDraftScoreHeadToHead(opponentNickname) {
+  if (!playerProfile || !opponentNickname) return { wins: 0, losses: 0, draws: 0 };
+  const all = playerProfile.draftScoreHeadToHead || {};
+  const entry = all[String(opponentNickname).toLowerCase()] || { wins: 0, losses: 0, draws: 0 };
+  return {
+    wins: Math.max(0, Number(entry.wins) || 0),
+    losses: Math.max(0, Number(entry.losses) || 0),
+    draws: Math.max(0, Number(entry.draws) || 0),
+  };
+}
+
+function updateDraftScoreHeadToHead(room) {
+  if (!playerProfile || !room || room.status !== "finished") return;
+  const self = room.players?.find((p) => p.isSelf);
+  const opp = room.players?.find((p) => !p.isSelf);
+  if (!self || !opp || !opp.nickname) return;
+  const key = String(opp.nickname).toLowerCase();
+  playerProfile.draftScoreHeadToHead = playerProfile.draftScoreHeadToHead || {};
+  const cur = playerProfile.draftScoreHeadToHead[key] || { wins: 0, losses: 0, draws: 0 };
+  if (room.winnerSide === "tie") cur.draws = (Number(cur.draws) || 0) + 1;
+  else if (room.winnerSide === self.side) cur.wins = (Number(cur.wins) || 0) + 1;
+  else if (room.winnerSide === opp.side) cur.losses = (Number(cur.losses) || 0) + 1;
+  playerProfile.draftScoreHeadToHead[key] = cur;
+  try { saveProfile(); } catch (_e) {}
 }
 
 function showDraftScoreFinaleOverlay(room) {
@@ -16162,9 +16189,19 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
   const leadIndicator = (selfAvg > 0 || oppAvg > 0) && opponent
     ? `<div class="draft-score-vs-lead">${selfAvg > oppAvg ? "🔥 Tu mènes !" : oppAvg > selfAvg ? "⚠️ Tu es mené" : "⚖️ Égalité"} (${selfAvg} vs ${oppAvg})</div>`
     : "";
+  let headToHeadHtml = "";
+  if (opponent?.nickname) {
+    const h2h = getDraftScoreHeadToHead(opponent.nickname);
+    const total = h2h.wins + h2h.losses + h2h.draws;
+    if (total > 0) {
+      const ledTxt = h2h.wins > h2h.losses ? "🏆 Tu mènes" : h2h.losses > h2h.wins ? "💀 Tu es mené" : "⚖️ Vous êtes à égalité";
+      headToHeadHtml = `<div class="draft-score-vs-h2h"><span>${ledTxt} contre <b>${escapeHtml(opponent.nickname)}</b></span><span class="draft-score-h2h-numbers"><b class="is-win">${h2h.wins}V</b> · <b class="is-lose">${h2h.losses}D</b>${h2h.draws ? ` · <b class="is-tie">${h2h.draws}N</b>` : ""}</span></div>`;
+    }
+  }
   return `
     <div class="draft-score-vs-wrap">
       <div class="draft-score-vs-title">${headTitle}</div>
+      ${headToHeadHtml}
       ${leadIndicator}
       <div class="draft-score-vs-arena">
         ${selfCard}

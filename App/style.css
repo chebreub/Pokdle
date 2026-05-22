@@ -25093,6 +25093,28 @@ body.theme-dark .draft-score-vs-title { color: #edf5ff; }
   color: #8a5a00;
   align-self: center;
 }
+
+.draft-score-vs-h2h {
+  display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 8px 16px;
+  background: rgba(47, 118, 255, 0.10);
+  border: 1px solid rgba(116, 158, 241, 0.32);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a5a78;
+  align-self: center;
+}
+.draft-score-vs-h2h b { color: #12213d; }
+.draft-score-h2h-numbers { display: inline-flex; gap: 4px; font-size: 14px; }
+.draft-score-h2h-numbers .is-win { color: #1d6b3c; }
+.draft-score-h2h-numbers .is-lose { color: #b34540; }
+.draft-score-h2h-numbers .is-tie { color: #8a6010; }
+body.theme-dark .draft-score-vs-h2h { background: rgba(99, 139, 207, 0.16); border-color: rgba(116, 158, 241, 0.24); color: #b8c8e4; }
+body.theme-dark .draft-score-vs-h2h b { color: #edf5ff; }
+body.theme-dark .draft-score-h2h-numbers .is-win { color: #7adfa6; }
+body.theme-dark .draft-score-h2h-numbers .is-lose { color: #ff9a8a; }
+body.theme-dark .draft-score-h2h-numbers .is-tie { color: #ffd373; }
 body.theme-dark .draft-score-vs-lead {
   background: rgba(255, 178, 55, 0.22);
   color: #ffd373;
