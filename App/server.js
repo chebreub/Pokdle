@@ -2479,7 +2479,7 @@ function generateDraftDuelNextWave(room) {
   const available = (room.duel.pool || []).filter((p) => !room.duel.draftedIds.has(p.id));
   if (available.length < 1) return [];
   const shuffled = available.slice().sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(4, shuffled.length)).map((p) => p.id);
+  return shuffled.slice(0, Math.min(6, shuffled.length)).map((p) => p.id);
 }
 
 function buildDuelPokemonEntry(pokemonId) {

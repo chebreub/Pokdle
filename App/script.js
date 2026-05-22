@@ -15889,6 +15889,11 @@ function syncDraftDuelStateFromServer(roomState) {
   draftArenaState.duelPendingSelf = pendingSides.includes(selfSide);
   draftArenaState.duelWaveIndex = Number(roomState.duel.waveIndex) || 0;
   draftArenaState.duelPicksRemaining = roomState.duel.picksRemaining || { left: 6, right: 6 };
+  // Préchargement des vraies stats (PokéAPI) pour les options + l'équipe → évite BST fallback approximatif
+  warmDraftPokemonMetrics([
+    ...draftArenaState.options.filter(Boolean).map((opt) => opt.pokemon),
+    ...draftArenaState.team.map((member) => member.pokemon),
+  ]);
 }
 
 function startDraftScoreDuel(gen) {
@@ -16935,7 +16940,8 @@ function renderDraftArena() {
       && draftArenaState.phase === "draft"
       && Boolean(draftArenaState.selectedGen)
       && draftArenaState.scoreAttackRerollsLeft > 0;
-    scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft");
+    // Cacher le reroll en mode duel synchronisé (pool partagé serveur, reroll local invalide)
+    scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft" || Boolean(draftArenaState.duelMode));
     scoreRerollButton.disabled = !canReroll;
     scoreRerollButton.textContent = `Relancer la vague (${draftArenaState.scoreAttackRerollsLeft})`;
   }
@@ -17004,7 +17010,7 @@ function renderDraftArena() {
         card.dataset.rarity = rarity;
         if (option.pokemon.type1) card.dataset.type1 = option.pokemon.type1;
         const isScoreAttack = draftArenaState.mode === "scoreAttack";
-        const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0;
+        const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0 && !draftArenaState.duelMode;
         const rerollBtn = canRerollOption
           ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Reroll cette option (1 jeton)">↻</button>`
           : "";
