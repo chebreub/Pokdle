@@ -15837,8 +15837,66 @@ function applyDraftScoreAttackRoomState(roomState) {
   draftArenaState.scoreAttackRoomError = null;
   const self = getDraftScoreAttackRoomSelf(roomState);
   draftArenaState.scoreAttackSubmitted = Boolean(self?.hasSubmitted);
+  // Sync mode duel
+  if (roomState?.duel && draftArenaState.mode === "scoreAttack") {
+    syncDraftDuelStateFromServer(roomState);
+  } else {
+    draftArenaState.duelMode = false;
+  }
   if (draftArenaState.mode === "scoreAttack") renderDraftArena();
   maybeShowDraftScoreFinale(roomState);
+}
+
+function syncDraftDuelStateFromServer(roomState) {
+  if (!draftArenaState || !roomState?.duel) return;
+  draftArenaState.duelMode = true;
+  draftArenaState.selectedGen = Number(roomState.duel.gen) || draftArenaState.selectedGen;
+  draftArenaState.phase = roomState.status === "finished" ? "result" : "draft";
+  const self = getDraftScoreAttackRoomSelf(roomState);
+  const selfSide = self?.side || "left";
+  // Update team from server duel teams
+  const serverTeam = roomState.duel.teams?.[selfSide] || [];
+  draftArenaState.team = serverTeam.map((entry) => {
+    const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(entry.id));
+    return pokemon ? { pokemon, shiny: false } : null;
+  }).filter(Boolean);
+  draftArenaState.selectedDexIds = new Set(serverTeam.map((entry) => String(entry.id)));
+  // Update options from currentWave
+  const wave = roomState.duel.currentWave || [];
+  draftArenaState.options = wave.map((entry) => {
+    const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(entry.id));
+    return pokemon ? createDraftOptionEntry(pokemon, false, false) : null;
+  }).filter(Boolean);
+  // Has self picked this wave ?
+  const pendingSides = Array.isArray(roomState.duel.pendingSides) ? roomState.duel.pendingSides : [];
+  draftArenaState.duelPendingSelf = pendingSides.includes(selfSide);
+  draftArenaState.duelWaveIndex = Number(roomState.duel.waveIndex) || 0;
+  draftArenaState.duelPicksRemaining = roomState.duel.picksRemaining || { left: 6, right: 6 };
+}
+
+function startDraftScoreDuel(gen) {
+  const socket = ensureMultiplayerSocket();
+  if (!socket?.connected || !draftArenaState) return;
+  socket.emit("draft-score:start-duel", { gen: Number(gen) }, (response = {}) => {
+    if (!response.ok) {
+      draftArenaState.scoreAttackRoomError = response.error || "Impossible de lancer le duel.";
+      renderDraftArena();
+    }
+  });
+}
+
+function pickDraftScoreDuelOption(pokemonId) {
+  const socket = ensureMultiplayerSocket();
+  if (!socket?.connected || !draftArenaState) return;
+  const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(pokemonId));
+  if (!pokemon) return;
+  const bst = Number(getDraftCachedPokemonPowerData(pokemon).statGlobal) || 0;
+  socket.emit("draft-score:pick-option", { pokemonId: Number(pokemonId), bst }, (response = {}) => {
+    if (!response.ok) {
+      draftArenaState.scoreAttackRoomError = response.error || "Pick refusé.";
+      renderDraftArena();
+    }
+  });
 }
 
 function createDraftScoreAttackRoom() {
@@ -16074,6 +16132,15 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
 
 function selectDraftGeneration(gen) {
   if (!draftArenaState) return;
+  // Mode duel : l'hôte lance directement le duel via serveur
+  if (draftArenaState.mode === "scoreAttack" && draftArenaState.scoreAttackRoom?.status === "lobby" && (draftArenaState.scoreAttackRoom?.players || []).length === 2) {
+    const self = getDraftScoreAttackRoomSelf(draftArenaState.scoreAttackRoom);
+    if (self?.isHost) {
+      return startDraftScoreDuel(gen);
+    }
+    draftArenaState.message = "L'hôte va choisir la génération et lancer le duel.";
+    return renderDraftArena();
+  }
 
   draftArenaState.phase = "draft";
   draftArenaState.selectedGen = gen;
@@ -16662,6 +16729,11 @@ function toggleDraftScoreAttackMode() {
 
 async function pickDraftArenaOption(pokemonId) {
   if (!draftArenaState || draftArenaState.phase !== "draft") return;
+  // Route vers le serveur en mode duel synchronisé
+  if (draftArenaState.duelMode && draftArenaState.scoreAttackRoom) {
+    if (draftArenaState.duelPendingSelf) return;
+    return pickDraftScoreDuelOption(pokemonId);
+  }
   if (draftArenaState.team.length >= DRAFT_TEAM_SIZE) return;
 
   const optionIndex = draftArenaState.options.findIndex((option) => option.pokemon.id === pokemonId);
@@ -16866,6 +16938,7 @@ function renderDraftArena() {
 
   if (options) {
     options.innerHTML = "";
+    options.classList.toggle("duel-pending", Boolean(draftArenaState.duelMode && draftArenaState.duelPendingSelf));
 
     if (draftArenaState.phase === "gen") {
       const msg = document.createElement("p");

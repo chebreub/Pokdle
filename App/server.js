@@ -955,6 +955,109 @@ io.on("connection", (socket) => {
     try { handleDraftScoreDisconnect(socket.id, true); } catch (_error) { console.error("[draft-score:leave-room] error", _error?.message || "unknown"); }
   });
 
+  socket.on("draft-score:start-duel", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes." });
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer le duel." });
+      if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
+      if (room.duel && room.status === "live") return respond(ack, { ok: false, error: "Duel déjà en cours." });
+      const gen = Number(payload.gen);
+      if (!Number.isInteger(gen) || gen < 1 || gen > 9) return respond(ack, { ok: false, error: "Génération invalide." });
+      const pool = generateDraftDuelPool(gen);
+      if (!pool.length || pool.length < 12) return respond(ack, { ok: false, error: "Pool Pokémon insuffisant." });
+      room.duel = {
+        gen,
+        pool,
+        draftedIds: new Set(),
+        currentWave: [],
+        waveIndex: 0,
+        pendingPicks: { left: null, right: null },
+        teams: { left: [], right: [] },
+        picksRemaining: { left: 6, right: 6 },
+        lastEvent: { kind: "started", at: Date.now() },
+      };
+      room.duel.currentWave = generateDraftDuelNextWave(room);
+      room.status = "live";
+      room.winnerSide = null;
+      for (const p of room.players) { p.result = null; p.progress = null; }
+      emitDraftScoreRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Erreur lors du lancement du duel." });
+    }
+  });
+
+  socket.on("draft-score:pick-option", (payload = {}, ack) => {
+    try {
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room || !room.duel || room.status !== "live") return respond(ack, { ok: false, error: "Pas de duel actif." });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      const side = player.side;
+      if (room.duel.pendingPicks[side]) return respond(ack, { ok: false, error: "Tu as déjà choisi pour cette manche." });
+      if (room.duel.picksRemaining[side] <= 0) return respond(ack, { ok: false, error: "Plus de picks pour toi." });
+      const pokemonId = Number(payload.pokemonId);
+      if (!room.duel.currentWave.includes(pokemonId)) return respond(ack, { ok: false, error: "Pokémon hors de la wave courante." });
+      const bst = Math.max(0, Math.min(900, Math.round(Number(payload.bst) || 0)));
+      room.duel.pendingPicks[side] = { id: pokemonId, bst, timestamp: Date.now() };
+      room.duel.lastEvent = { kind: "pick", side, pokemonId, at: Date.now() };
+
+      const both = room.duel.pendingPicks.left && room.duel.pendingPicks.right;
+      if (both) {
+        const leftPick = room.duel.pendingPicks.left;
+        const rightPick = room.duel.pendingPicks.right;
+        const conflict = leftPick.id === rightPick.id;
+        if (conflict) {
+          const winnerSide = Math.random() < 0.5 ? "left" : "right";
+          const winnerEntry = buildDuelPokemonEntry(leftPick.id);
+          const winnerBst = (winnerSide === "left" ? leftPick.bst : rightPick.bst) || leftPick.bst || rightPick.bst || 0;
+          if (winnerEntry) {
+            room.duel.teams[winnerSide].push({ ...winnerEntry, bst: winnerBst });
+            room.duel.draftedIds.add(winnerEntry.id);
+            room.duel.picksRemaining[winnerSide] -= 1;
+          }
+          room.duel.pendingPicks = { left: null, right: null };
+          room.duel.lastEvent = { kind: "conflict", winnerSide, pokemonId: winnerEntry?.id || 0, at: Date.now() };
+        } else {
+          const leftEntry = buildDuelPokemonEntry(leftPick.id);
+          const rightEntry = buildDuelPokemonEntry(rightPick.id);
+          if (leftEntry) { room.duel.teams.left.push({ ...leftEntry, bst: leftPick.bst || 0 }); room.duel.draftedIds.add(leftEntry.id); room.duel.picksRemaining.left -= 1; }
+          if (rightEntry) { room.duel.teams.right.push({ ...rightEntry, bst: rightPick.bst || 0 }); room.duel.draftedIds.add(rightEntry.id); room.duel.picksRemaining.right -= 1; }
+          room.duel.pendingPicks = { left: null, right: null };
+          room.duel.lastEvent = { kind: "resolved", at: Date.now() };
+        }
+        const allDone = room.duel.picksRemaining.left <= 0 && room.duel.picksRemaining.right <= 0;
+        if (allDone) {
+          for (const p of room.players) {
+            const team = room.duel.teams[p.side] || [];
+            const bstSum = team.reduce((s, t) => s + (Number(t.bst) || 0), 0);
+            const avg = team.length ? Math.round(bstSum / team.length) : 0;
+            p.result = {
+              average: avg,
+              total: bstSum,
+              selectedGen: room.duel.gen,
+              team: team.map((entry) => ({ id: entry.id, name: entry.name, bst: Number(entry.bst) || 0 })),
+              label: avg >= 600 ? "Master 600+" : avg >= 550 ? "Elite 550+" : avg >= 500 ? "Solide 500+" : "Run à améliorer",
+              submittedAt: Date.now(),
+            };
+          }
+          finalizeDraftScoreRoom(room);
+        } else {
+          room.duel.waveIndex += 1;
+          room.duel.currentWave = generateDraftDuelNextWave(room);
+          emitDraftScoreRoomState(room);
+        }
+      } else {
+        emitDraftScoreRoomState(room);
+      }
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Erreur lors du pick." });
+    }
+  });
+
   socket.on("draft-score:pick-progress", (payload = {}, ack) => {
     try {
       const room = findDraftScoreRoomBySocket(socket.id);
@@ -2336,9 +2439,20 @@ function publicDraftScoreRoomState(room, viewerId = null) {
     winnerSide: room.winnerSide || null,
     duel: room.duel ? {
       gen: room.duel.gen,
-      currentWave: room.duel.currentWave || [],
+      currentWave: (room.duel.currentWave || []).map((id) => {
+        const p = POKEMON_LIST.find((entry) => Number(entry.id) === Number(id));
+        return p ? { id: Number(p.id), name: p.name, type1: p.type1 || null, type2: p.type2 || null } : null;
+      }).filter(Boolean),
       waveIndex: room.duel.waveIndex || 0,
       pendingSides: ["left", "right"].filter((side) => room.duel.pendingPicks?.[side]),
+      teams: {
+        left: (room.duel.teams?.left || []).map((e) => ({ id: e.id, name: e.name, bst: Number(e.bst) || 0 })),
+        right: (room.duel.teams?.right || []).map((e) => ({ id: e.id, name: e.name, bst: Number(e.bst) || 0 })),
+      },
+      picksRemaining: {
+        left: Math.max(0, Number(room.duel.picksRemaining?.left) || 0),
+        right: Math.max(0, Number(room.duel.picksRemaining?.right) || 0),
+      },
       lastEvent: room.duel.lastEvent || null,
     } : null,
     players: room.players.map((player) => ({
