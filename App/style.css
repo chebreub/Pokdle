@@ -25467,6 +25467,27 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-progress-
 }
 
 /* Draft Score Attack lives on its own screen but reuses the draft components. */
+#screen-draft-arena .scoreattack-only,
+#screen-draft-score-attack .arena-only,
+#screen-draft-score-attack .draft-run-bar,
+#screen-draft-score-attack .draft-panel-results,
+#screen-draft-score-attack #draft-badge-grid {
+  display: none !important;
+}
+
+#screen-draft-score-attack .scoreattack-only {
+  display: revert;
+}
+
+#screen-draft-score-attack button.scoreattack-only,
+#screen-draft-score-attack .draft-score-attack-actions.scoreattack-only {
+  display: flex;
+}
+
+#screen-draft-score-attack span.scoreattack-only {
+  display: inline-flex;
+}
+
 #screen-draft-score-attack .draft-card {
   gap: 16px;
   padding: 22px;
@@ -25485,6 +25506,11 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-progress-
   flex-wrap: wrap;
 }
 
+#screen-draft-score-attack .ranking-head .card-title {
+  color: #edf5ff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
 #screen-draft-score-attack .card-desc {
   margin: 0;
   max-width: 860px;
@@ -25501,10 +25527,19 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-progress-
 }
 
 #screen-draft-score-attack .draft-progress-shell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: -2px;
   padding: 8px 10px;
   border-radius: 18px;
   backdrop-filter: blur(10px);
+  overflow: visible;
+}
+
+#screen-draft-score-attack .draft-progress-shell::before {
+  order: -1;
 }
 
 #screen-draft-score-attack .draft-status {
@@ -25600,4 +25635,34 @@ body.theme-dark #screen-draft-score-attack .draft-summary-card {
   background: linear-gradient(180deg, rgba(16, 31, 54, 0.94), rgba(12, 24, 43, 0.92));
   border-color: rgba(98, 133, 194, 0.32);
   color: #e5efff;
+}
+
+/* Score Attack contrast fix: summary cards must stay readable on light panels. */
+body:not(.theme-dark) #screen-draft-score-attack .draft-summary-card {
+  background: linear-gradient(180deg, #ffffff, #eef5ff) !important;
+  border: 1px solid #c6d9f5 !important;
+  color: #12213d !important;
+}
+
+body:not(.theme-dark) #screen-draft-score-attack .draft-summary-card span {
+  color: #486389 !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+}
+
+body:not(.theme-dark) #screen-draft-score-attack .draft-summary-card b {
+  color: #12213d !important;
+  font-weight: 950 !important;
+  text-shadow: none !important;
+}
+
+body:not(.theme-dark) #screen-draft-score-attack .draft-summary-card small,
+body:not(.theme-dark) #screen-draft-score-attack .draft-score-main small {
+  color: #5a6f91 !important;
+  font-weight: 850 !important;
+  text-shadow: none !important;
+}
+
+body.theme-dark #screen-draft-score-attack .draft-summary-card b {
+  color: #edf5ff !important;
 }
