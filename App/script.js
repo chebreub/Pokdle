@@ -15844,6 +15844,16 @@ function applyDraftScoreAttackRoomState(roomState) {
   const prevStatus = prevRoom?.status || null;
   const prevDuelGen = prevRoom?.duel?.gen ?? null;
   const prevWaveIndex = Number(prevRoom?.duel?.waveIndex) || 0;
+  const prevLastEventAt = Number(prevRoom?.duel?.lastEvent?.at) || 0;
+  // Détecter un nouveau pick adverse → toast notification
+  const newEvent = roomState?.duel?.lastEvent;
+  if (newEvent && newEvent.kind === "pick" && Number(newEvent.at) > prevLastEventAt) {
+    const self = getDraftScoreAttackRoomSelf(roomState);
+    if (self && newEvent.side && newEvent.side !== self.side) {
+      const opp = roomState.players?.find((p) => !p.isSelf);
+      showDraftScoreOpponentToast(`⚡ ${opp?.nickname || "Adversaire"} a choisi !`);
+    }
+  }
   draftArenaState.scoreAttackRoom = roomState || null;
   draftArenaState.scoreAttackRoomPending = null;
   draftArenaState.scoreAttackRoomError = null;
@@ -16014,6 +16024,23 @@ function submitDraftScoreAttackResult(metrics = null) {
 }
 
 let draftScoreFinaleShownFor = null;
+let draftScoreOpponentToastTimer = null;
+
+function showDraftScoreOpponentToast(message) {
+  let toast = document.getElementById("draft-score-opp-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "draft-score-opp-toast";
+    toast.className = "draft-score-opp-toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add("is-visible");
+  if (draftScoreOpponentToastTimer) clearTimeout(draftScoreOpponentToastTimer);
+  draftScoreOpponentToastTimer = setTimeout(() => {
+    toast.classList.remove("is-visible");
+  }, 2400);
+}
 
 function maybeShowDraftScoreFinale(room) {
   if (!room || room.status !== "finished") return;
@@ -16069,6 +16096,12 @@ function showDraftScoreFinaleOverlay(room) {
       <div class="dsf-team-score-label">Moyenne BST</div>
     </div>`;
   };
+  // Head-to-head dans la finale
+  const h2h = opp.nickname ? getDraftScoreHeadToHead(opp.nickname) : null;
+  const h2hTotal = h2h ? (h2h.wins + h2h.losses + h2h.draws) : 0;
+  const h2hHtml = h2hTotal > 0
+    ? `<div class="dsf-h2h">Bilan contre <b>${escapeHtml(opp.nickname || "")}</b> : <b class="dsf-h2h-w">${h2h.wins}V</b> · <b class="dsf-h2h-l">${h2h.losses}D</b>${h2h.draws ? ` · <b class="dsf-h2h-t">${h2h.draws}N</b>` : ""}</div>`
+    : "";
   const overlay = document.createElement("div");
   overlay.id = "draft-score-finale-overlay";
   overlay.className = "draft-score-finale-overlay";
@@ -16076,6 +16109,7 @@ function showDraftScoreFinaleOverlay(room) {
     <div class="dsf-backdrop"></div>
     <div class="dsf-content">
       <div class="dsf-title ${titleClass}">${title}</div>
+      ${h2hHtml}
       <div class="dsf-versus">
         ${buildTeamRow(self, "left")}
         <div class="dsf-vs-center">VS</div>
@@ -16198,8 +16232,10 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
       headToHeadHtml = `<div class="draft-score-vs-h2h"><span>${ledTxt} contre <b>${escapeHtml(opponent.nickname)}</b></span><span class="draft-score-h2h-numbers"><b class="is-win">${h2h.wins}V</b> · <b class="is-lose">${h2h.losses}D</b>${h2h.draws ? ` · <b class="is-tie">${h2h.draws}N</b>` : ""}</span></div>`;
     }
   }
+  const leaveBtn = `<button class="draft-score-vs-leave" type="button" onclick="leaveDraftScoreAttackRoom()" title="Quitter la room">🚪 Quitter</button>`;
   return `
     <div class="draft-score-vs-wrap">
+      ${leaveBtn}
       <div class="draft-score-vs-title">${headTitle}</div>
       ${headToHeadHtml}
       ${leadIndicator}

@@ -25115,6 +25115,79 @@ body.theme-dark .draft-score-vs-h2h b { color: #edf5ff; }
 body.theme-dark .draft-score-h2h-numbers .is-win { color: #7adfa6; }
 body.theme-dark .draft-score-h2h-numbers .is-lose { color: #ff9a8a; }
 body.theme-dark .draft-score-h2h-numbers .is-tie { color: #ffd373; }
+
+/* Bouton Quitter sticky dans le panneau VS */
+.draft-score-vs-wrap { position: relative; }
+.draft-score-vs-leave {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(228, 56, 47, 0.32);
+  background: rgba(228, 56, 47, 0.10);
+  color: #b34540;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+  z-index: 2;
+}
+.draft-score-vs-leave:hover {
+  background: rgba(228, 56, 47, 0.22);
+  color: #8a2620;
+}
+body.theme-dark .draft-score-vs-leave {
+  background: rgba(228, 56, 47, 0.18);
+  color: #ff9a8a;
+  border-color: rgba(228, 56, 47, 0.32);
+}
+body.theme-dark .draft-score-vs-leave:hover {
+  background: rgba(228, 56, 47, 0.32);
+  color: #ffe1de;
+}
+
+/* Toast notification quand l'adversaire vient de pick */
+.draft-score-opp-toast {
+  position: fixed;
+  top: 28px;
+  right: 28px;
+  z-index: 9999;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(228, 56, 47, 0.95), rgba(180, 40, 30, 0.95));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 12px 28px rgba(228, 56, 47, 0.32), 0 4px 10px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+.draft-score-opp-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Head-to-head dans la finale dramatique */
+.dsf-h2h {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #c8d2ff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  align-self: center;
+  animation: dsfTitleZoom 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) 0.2s backwards;
+}
+.dsf-h2h b { color: #fff; }
+.dsf-h2h .dsf-h2h-w { color: #7adfa6; }
+.dsf-h2h .dsf-h2h-l { color: #ff9a8a; }
+.dsf-h2h .dsf-h2h-t { color: #ffd373; }
 body.theme-dark .draft-score-vs-lead {
   background: rgba(255, 178, 55, 0.22);
   color: #ffd373;
