@@ -16775,9 +16775,32 @@ function mountDraftModeCard(mode = "arena") {
   if (card.parentElement !== target) target.appendChild(card);
   arenaScreen.classList.toggle("is-mode-score-attack", false);
   scoreScreen.classList.toggle("is-mode-score-attack", mode === "scoreAttack");
+  // Adapter le titre + sous-titre selon le mode actif
+  const title = card.querySelector(".card-title");
+  if (title) title.innerHTML = mode === "scoreAttack" ? "🎯 Draft Score Attack" : "🏟️ Draft Arènes";
+  const desc = card.querySelector(".card-desc");
+  if (desc) desc.textContent = mode === "scoreAttack"
+    ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."
+    : "Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser.";
 }
 
 function restartDraftArenaRun() {
+  // En mode duel synchronisé : ne PAS reset local, demander au serveur de relancer en gardant la room
+  if (draftArenaState?.mode === "scoreAttack" && draftArenaState?.scoreAttackRoom && draftArenaState?.duelMode) {
+    const room = draftArenaState.scoreAttackRoom;
+    const self = getDraftScoreAttackRoomSelf(room);
+    if (!self?.isHost) {
+      draftArenaState.scoreAttackRoomError = "Seul l'hôte peut lancer une nouvelle partie. Tu peux changer la génération depuis chez l'hôte.";
+      return renderDraftArena();
+    }
+    const currentGen = Number(draftArenaState.selectedGen) || Number(room?.duel?.gen) || null;
+    if (currentGen) {
+      // Relance avec la même gen
+      return startDraftScoreDuel(currentGen);
+    }
+    draftArenaState.message = "Clique sur une génération pour lancer une nouvelle partie.";
+    return renderDraftArena();
+  }
   const previousMode = draftArenaState?.mode || "arena";
   const previousScoreRoom = draftArenaState?.scoreAttackRoom || null;
   draftArenaState = createDraftArenaState();
