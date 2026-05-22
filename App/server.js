@@ -1058,6 +1058,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("draft-score:reaction", (payload = {}, ack) => {
+    try {
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false });
+      const allowed = new Set(["🔥", "😱", "😈", "👍", "🤡", "💀", "👀", "🎯"]);
+      const emoji = String(payload.emoji || "").trim();
+      if (!allowed.has(emoji)) return respond(ack, { ok: false });
+      // Relay to other players in room
+      for (const other of room.players) {
+        if (other.id === socket.id || !other.connected) continue;
+        io.to(other.id).emit("draft-score:reaction-received", { emoji, fromSide: player.side, fromNickname: player.nickname || "Adversaire", at: Date.now() });
+      }
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false });
+    }
+  });
+
   socket.on("draft-score:pick-progress", (payload = {}, ack) => {
     try {
       const room = findDraftScoreRoomBySocket(socket.id);

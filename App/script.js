@@ -16026,6 +16026,30 @@ function submitDraftScoreAttackResult(metrics = null) {
 let draftScoreFinaleShownFor = null;
 let draftScoreOpponentToastTimer = null;
 
+function sendDraftScoreReaction(emoji) {
+  if (!multiplayerSocket?.connected || !draftArenaState?.scoreAttackRoom) return;
+  multiplayerSocket.emit("draft-score:reaction", { emoji });
+  // Animation locale immédiate (sur soi-même)
+  showDraftScoreReactionEmoji({ emoji, fromSide: "self", local: true });
+}
+
+function showDraftScoreReactionEmoji(payload = {}) {
+  const emoji = String(payload.emoji || "").trim();
+  if (!emoji) return;
+  const isLocal = Boolean(payload.local);
+  // Cibler la card du joueur qui envoie l'émoji (ou la card adverse si reçu)
+  const targetSel = isLocal ? ".draft-score-vs-player.is-self" : ".draft-score-vs-player.is-opponent";
+  const target = document.querySelector(targetSel);
+  if (!target) return;
+  const node = document.createElement("div");
+  node.className = "draft-score-reaction-emoji";
+  node.textContent = emoji;
+  // Position random horizontale dans la card
+  node.style.left = `${20 + Math.random() * 60}%`;
+  target.appendChild(node);
+  setTimeout(() => node.remove(), 2000);
+}
+
 function showDraftScoreOpponentToast(message) {
   let toast = document.getElementById("draft-score-opp-toast");
   if (!toast) {
@@ -16233,12 +16257,17 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
     }
   }
   const leaveBtn = `<button class="draft-score-vs-leave" type="button" onclick="leaveDraftScoreAttackRoom()" title="Quitter la room">🚪 Quitter</button>`;
+  const canReact = Boolean(opponent && room.status === "live");
+  const reactionBar = canReact
+    ? `<div class="draft-score-reaction-bar">${["🔥", "😱", "😈", "👍", "🤡", "💀", "👀", "🎯"].map((emoji) => `<button class="draft-score-reaction-btn" type="button" onclick="sendDraftScoreReaction('${emoji}')" title="Envoyer ${emoji}">${emoji}</button>`).join("")}</div>`
+    : "";
   return `
     <div class="draft-score-vs-wrap">
       ${leaveBtn}
       <div class="draft-score-vs-title">${headTitle}</div>
       ${headToHeadHtml}
       ${leadIndicator}
+      ${reactionBar}
       <div class="draft-score-vs-arena">
         ${selfCard}
         <div class="draft-score-vs-versus">VS</div>
@@ -19922,6 +19951,10 @@ function ensureMultiplayerSocket() {
 
   multiplayerSocket.on("higher-lower:room-state", (roomState) => {
     if (typeof applyHigherLowerRoomState === "function") applyHigherLowerRoomState(roomState);
+  });
+
+  multiplayerSocket.on("draft-score:reaction-received", (payload = {}) => {
+    if (typeof showDraftScoreReactionEmoji === "function") showDraftScoreReactionEmoji(payload);
   });
 
   multiplayerSocket.on("stat-auction:room-state", (roomState) => {
