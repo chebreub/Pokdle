@@ -16124,10 +16124,24 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
 
 function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoom) {
   if (!draftArenaState?.scoreAttackRoomError && !room) {
-    return `<div class="draft-score-vs-empty"><b>Score Attack solo</b><span>Crée ou rejoins une room pour défier un ami en duel live.</span></div>`;
+    return `<div class="draft-score-vs-empty">
+      <b>🎯 Score Attack solo</b>
+      <span>Drafte pour battre ton record perso, ou défie un ami en duel live ci-dessous.</span>
+      <div class="draft-score-vs-empty-actions">
+        <button class="btn-blue" type="button" onclick="createDraftScoreAttackRoom()">🆚 Créer une room 1v1</button>
+        <button class="btn-ghost" type="button" onclick="joinDraftScoreAttackRoom()">🔗 Rejoindre par code</button>
+      </div>
+    </div>`;
   }
   if (!room) {
-    return `<div class="draft-score-vs-empty"><b>Score Attack 1v1</b><span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span></div>`;
+    return `<div class="draft-score-vs-empty">
+      <b>Score Attack 1v1</b>
+      <span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span>
+      <div class="draft-score-vs-empty-actions">
+        <button class="btn-blue" type="button" onclick="createDraftScoreAttackRoom()">🆚 Créer une room</button>
+        <button class="btn-ghost" type="button" onclick="joinDraftScoreAttackRoom()">🔗 Rejoindre</button>
+      </div>
+    </div>`;
   }
   const self = getDraftScoreAttackRoomSelf(room);
   const opponent = getDraftScoreAttackRoomOpponent(room);
@@ -16928,6 +16942,20 @@ function renderDraftArena() {
   if (averageBadge) {
     averageBadge.textContent = `Moy. BST : ${bstMetrics.average || "-"}`;
     averageBadge.dataset.state = bstMetrics.average >= 550 ? "complete" : bstMetrics.average >= 500 ? "progress" : "empty";
+  }
+  const restartBtn = document.getElementById("draft-restart-btn");
+  if (restartBtn) {
+    const isDuel = Boolean(draftArenaState.duelMode && draftArenaState.scoreAttackRoom);
+    const room = draftArenaState.scoreAttackRoom;
+    const selfRoom = room ? getDraftScoreAttackRoomSelf(room) : null;
+    const isLiveDuel = isDuel && room?.status === "live";
+    if (isDuel) {
+      restartBtn.textContent = isLiveDuel ? "⏳ Partie en cours…" : (selfRoom?.isHost ? "🎮 Nouvelle partie" : "⏳ En attente de l'hôte");
+      restartBtn.disabled = isLiveDuel || !selfRoom?.isHost;
+    } else {
+      restartBtn.textContent = "🎲 Nouveau draft";
+      restartBtn.disabled = false;
+    }
   }
   const recordBadge = document.getElementById("draft-score-record-badge");
   if (recordBadge) {
