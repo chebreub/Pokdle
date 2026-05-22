@@ -955,6 +955,28 @@ io.on("connection", (socket) => {
     try { handleDraftScoreDisconnect(socket.id, true); } catch (_error) { console.error("[draft-score:leave-room] error", _error?.message || "unknown"); }
   });
 
+  socket.on("draft-score:pick-progress", (payload = {}, ack) => {
+    try {
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room || room.status === "finished") return respond(ack, { ok: false });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false });
+      const team = Array.isArray(payload.team) ? payload.team.slice(0, 6).map((entry) => ({
+        id: Number(entry?.id) || 0,
+        name: String(entry?.name || "").slice(0, 40),
+        bst: Math.max(0, Math.min(800, Math.round(Number(entry?.bst) || 0))),
+        shiny: Boolean(entry?.shiny),
+      })) : [];
+      const average = Math.max(0, Math.min(800, Math.round(Number(payload.average) || 0)));
+      const total = Math.max(0, Math.min(4800, Math.round(Number(payload.total) || 0)));
+      player.progress = { team, average, total, updatedAt: Date.now() };
+      emitDraftScoreRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false });
+    }
+  });
+
   socket.on("draft-score:submit-result", (payload = {}, ack) => {
     try {
       if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
@@ -2321,6 +2343,7 @@ function publicDraftScoreRoomState(room, viewerId = null) {
       isHost: player.id === room.hostId,
       hasSubmitted: Boolean(player.result),
       result: player.result || null,
+      progress: player.progress || null,
     })),
   };
 }

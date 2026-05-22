@@ -15806,6 +15806,26 @@ function getDraftScoreAttackRoomSelf(room = draftArenaState?.scoreAttackRoom) {
   return room?.players?.find((player) => player.isSelf) || null;
 }
 
+function emitDraftScoreAttackProgress() {
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || !draftArenaState.scoreAttackRoom) return;
+  if (!multiplayerSocket?.connected) return;
+  const team = draftArenaState.team
+    .filter((entry) => entry?.pokemon)
+    .slice(0, DRAFT_TEAM_SIZE)
+    .map((entry) => ({
+      id: Number(entry.pokemon.id) || 0,
+      name: entry.pokemon.name,
+      bst: Number(getDraftCachedPokemonPowerData(entry.pokemon).statGlobal) || 0,
+      shiny: Boolean(entry.shiny),
+    }));
+  const metrics = getDraftTeamBstMetrics(draftArenaState.team);
+  multiplayerSocket.emit("draft-score:pick-progress", {
+    team,
+    average: metrics.average || 0,
+    total: metrics.total || 0,
+  });
+}
+
 function getDraftScoreAttackRoomOpponent(room = draftArenaState?.scoreAttackRoom) {
   return room?.players?.find((player) => !player.isSelf) || null;
 }
@@ -15904,35 +15924,79 @@ function submitDraftScoreAttackResult(metrics = null) {
   });
 }
 
+function renderDraftScoreAttackPlayerCard(player, isSelf) {
+  const team = Array.isArray(player.progress?.team) ? player.progress.team : (Array.isArray(player.result?.team) ? player.result.team : []);
+  const average = player.result?.average ?? player.progress?.average ?? 0;
+  const total = player.result?.total ?? player.progress?.total ?? 0;
+  const filled = team.length;
+  const slotsHtml = Array.from({ length: DRAFT_TEAM_SIZE }, (_, i) => {
+    const entry = team[i];
+    if (!entry) {
+      return `<div class="draft-score-vs-slot is-empty"><span>?</span></div>`;
+    }
+    const sprite = entry.shiny
+      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${entry.id}.png`
+      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
+    const isLatest = i === filled - 1 && !player.hasSubmitted;
+    return `<div class="draft-score-vs-slot is-filled${isLatest ? " is-latest" : ""}${entry.shiny ? " is-shiny" : ""}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${sprite}" alt="${escapeHtml(entry.name)}" loading="lazy" /><b>${entry.bst}</b></div>`;
+  }).join("");
+  const status = player.hasSubmitted
+    ? "✅ Soumis"
+    : filled === 0
+      ? "⏳ Choisit ses Pokémon…"
+      : filled < DRAFT_TEAM_SIZE
+        ? `🔥 ${filled}/6 picks`
+        : "📤 Envoi du score…";
+  return `
+    <div class="draft-score-vs-player ${isSelf ? "is-self" : "is-opponent"} ${player.connected ? "" : "is-disconnected"}">
+      <div class="draft-score-vs-head">
+        <div class="draft-score-vs-name"><b>${escapeHtml(player.nickname || "Joueur")}</b>${isSelf ? "<span>TOI</span>" : ""}</div>
+        <div class="draft-score-vs-status">${status}</div>
+      </div>
+      <div class="draft-score-vs-slots">${slotsHtml}</div>
+      <div class="draft-score-vs-metrics">
+        <div class="draft-score-vs-metric"><span>Moyenne BST</span><b>${average || "-"}</b></div>
+        <div class="draft-score-vs-metric"><span>Total</span><b>${total || "-"}</b></div>
+      </div>
+    </div>`;
+}
+
 function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoom) {
   if (!draftArenaState?.scoreAttackRoomError && !room) {
-    return `<b>Score Attack solo</b><span>Crée ou rejoins une room pour comparer ta moyenne BST avec un autre joueur.</span>`;
+    return `<div class="draft-score-vs-empty"><b>Score Attack solo</b><span>Crée ou rejoins une room pour défier un ami en duel live.</span></div>`;
   }
   if (!room) {
-    return `<b>Score Attack 1v1</b><span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span>`;
+    return `<div class="draft-score-vs-empty"><b>Score Attack 1v1</b><span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span></div>`;
   }
   const self = getDraftScoreAttackRoomSelf(room);
   const opponent = getDraftScoreAttackRoomOpponent(room);
-  const winnerText = room.status === "finished"
-    ? room.winnerSide === "tie"
-      ? "Égalité parfaite"
-      : room.players?.find((player) => player.side === room.winnerSide)?.isSelf
-        ? "Victoire Score Attack"
-        : "Défaite Score Attack"
-    : opponent
-      ? "Room prête : draftez chacun votre meilleure équipe"
-      : "En attente d'un adversaire";
-  const playerRows = (room.players || []).map((player) => {
-    const result = player.result;
-    const score = result ? `Moy. ${result.average} • Total ${result.total}` : "Score en attente";
-    return `<span class="draft-score-room-player${player.isSelf ? " self" : ""}"><b>${escapeHtml(player.nickname || "Joueur")}</b><small>${escapeHtml(score)}</small></span>`;
-  }).join("");
+  let headTitle = "";
+  if (room.status === "finished") {
+    if (room.winnerSide === "tie") headTitle = "🤝 Égalité parfaite";
+    else if (self && room.winnerSide === self.side) headTitle = "🏆 VICTOIRE !";
+    else headTitle = "💀 Défaite";
+  } else if (!opponent) {
+    headTitle = `⏳ En attente d'un adversaire • Code : ${escapeHtml(room.code || "-")}`;
+  } else {
+    headTitle = `⚔️ DUEL EN COURS • Code ${escapeHtml(room.code || "-")}`;
+  }
+  const selfCard = self ? renderDraftScoreAttackPlayerCard(self, true) : "";
+  const oppCard = opponent ? renderDraftScoreAttackPlayerCard(opponent, false) : `<div class="draft-score-vs-player is-opponent is-waiting"><div class="draft-score-vs-head"><div class="draft-score-vs-name"><b>En attente…</b></div></div><div class="draft-score-vs-slots">${Array.from({ length: DRAFT_TEAM_SIZE }, () => `<div class="draft-score-vs-slot is-empty"><span>?</span></div>`).join("")}</div><div class="draft-score-vs-share">Partage le code <b>${escapeHtml(room.code || "")}</b> à ton ami pour le faire rejoindre.</div></div>`;
+  const selfAvg = self?.progress?.average || self?.result?.average || 0;
+  const oppAvg = opponent?.progress?.average || opponent?.result?.average || 0;
+  const leadIndicator = (selfAvg > 0 || oppAvg > 0) && opponent
+    ? `<div class="draft-score-vs-lead">${selfAvg > oppAvg ? "🔥 Tu mènes !" : oppAvg > selfAvg ? "⚠️ Tu es mené" : "⚖️ Égalité"} (${selfAvg} vs ${oppAvg})</div>`
+    : "";
   return `
-    <div>
-      <b>Room ${escapeHtml(room.code || "-")} • ${escapeHtml(winnerText)}</b>
-      <span>${self?.hasSubmitted ? "Ton score est envoyé." : "Ton score sera envoyé automatiquement quand ton équipe sera complète."}</span>
+    <div class="draft-score-vs-wrap">
+      <div class="draft-score-vs-title">${headTitle}</div>
+      ${leadIndicator}
+      <div class="draft-score-vs-arena">
+        ${selfCard}
+        <div class="draft-score-vs-versus">VS</div>
+        ${oppCard}
+      </div>
     </div>
-    <div class="draft-score-room-players">${playerRows}</div>
   `;
 }
 
@@ -16538,6 +16602,7 @@ async function pickDraftArenaOption(pokemonId) {
   draftArenaState.team.push({ pokemon: picked.pokemon, shiny: picked.shiny });
   draftArenaState.selectedDexIds.add(dexId);
   if (picked.shiny) draftArenaState.shinyCount += 1;
+  emitDraftScoreAttackProgress();
 
   if (draftArenaState.team.length >= DRAFT_TEAM_SIZE) {
     if (draftArenaState.mode === "scoreAttack") {
