@@ -25405,6 +25405,19 @@ body.theme-dark .draft-options-grid.duel-pending::after {
 .dsf-actions { display: flex; justify-content: center; }
 .dsf-actions button { padding: 14px 36px; font-size: 16px; font-weight: 800; }
 
+.dsf-rematch-hint {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd97a;
+  padding: 8px 18px;
+  background: rgba(255, 178, 55, 0.14);
+  border: 1px solid rgba(255, 178, 55, 0.32);
+  border-radius: 999px;
+  align-self: center;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 720px) {
   .dsf-content { padding: 20px; gap: 18px; }
   .dsf-versus { grid-template-columns: 1fr; }

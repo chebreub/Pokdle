@@ -15832,11 +15832,28 @@ function getDraftScoreAttackRoomOpponent(room = draftArenaState?.scoreAttackRoom
 
 function applyDraftScoreAttackRoomState(roomState) {
   if (!draftArenaState) return;
+  const prevRoom = draftArenaState.scoreAttackRoom;
+  const prevStatus = prevRoom?.status || null;
+  const prevDuelGen = prevRoom?.duel?.gen ?? null;
+  const prevWaveIndex = Number(prevRoom?.duel?.waveIndex) || 0;
   draftArenaState.scoreAttackRoom = roomState || null;
   draftArenaState.scoreAttackRoomPending = null;
   draftArenaState.scoreAttackRoomError = null;
   const self = getDraftScoreAttackRoomSelf(roomState);
   draftArenaState.scoreAttackSubmitted = Boolean(self?.hasSubmitted);
+  // Détection nouveau duel après une partie finie (relance) → fermer la finale + reset
+  const newGen = roomState?.duel?.gen ?? null;
+  const newStatus = roomState?.status || null;
+  const newWaveIndex = Number(roomState?.duel?.waveIndex) || 0;
+  const isFreshDuel = newStatus === "live" && (
+    prevStatus === "finished"
+    || (newGen !== null && prevDuelGen !== null && newGen !== prevDuelGen)
+    || (newWaveIndex === 0 && prevWaveIndex > 0)
+  );
+  if (isFreshDuel) {
+    document.getElementById("draft-score-finale-overlay")?.remove();
+    draftScoreFinaleShownFor = null;
+  }
   // Sync mode duel
   if (roomState?.duel && draftArenaState.mode === "scoreAttack") {
     syncDraftDuelStateFromServer(roomState);
@@ -16027,6 +16044,7 @@ function showDraftScoreFinaleOverlay(room) {
       <div class="dsf-actions">
         <button class="btn-red" type="button" id="dsf-close">Continuer</button>
       </div>
+      <div class="dsf-rematch-hint">${self.isHost ? "💡 Clique sur une génération en bas pour relancer un duel." : "💡 En attente de l'hôte pour choisir une nouvelle génération…"}</div>
     </div>`;
   document.body.appendChild(overlay);
   // Animate score counters
@@ -16132,9 +16150,11 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
 
 function selectDraftGeneration(gen) {
   if (!draftArenaState) return;
-  // Mode duel : l'hôte lance directement le duel via serveur
-  if (draftArenaState.mode === "scoreAttack" && draftArenaState.scoreAttackRoom?.status === "lobby" && (draftArenaState.scoreAttackRoom?.players || []).length === 2) {
-    const self = getDraftScoreAttackRoomSelf(draftArenaState.scoreAttackRoom);
+  // Mode duel : l'hôte lance directement le duel via serveur (en lobby OU après une partie finie pour relancer)
+  const room = draftArenaState.scoreAttackRoom;
+  const inDuelRoom = draftArenaState.mode === "scoreAttack" && room && (room.players || []).length === 2 && (room.status === "lobby" || room.status === "finished");
+  if (inDuelRoom) {
+    const self = getDraftScoreAttackRoomSelf(room);
     if (self?.isHost) {
       return startDraftScoreDuel(gen);
     }
@@ -16925,12 +16945,16 @@ function renderDraftArena() {
 
   if (genButtons) {
     genButtons.innerHTML = "";
+    const room = draftArenaState.scoreAttackRoom;
+    const selfRoom = room ? getDraftScoreAttackRoomSelf(room) : null;
+    const isDuelHost = Boolean(draftArenaState.mode === "scoreAttack" && room && selfRoom?.isHost);
+    const canHostRelaunch = isDuelHost && (room?.players?.length || 0) === 2 && (room?.status === "finished" || room?.status === "lobby");
     for (const cfg of DRAFT_GEN_OPTIONS) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "draft-gen-btn" + (draftArenaState.selectedGen === cfg.gen ? " active" : "");
       btn.textContent = cfg.label;
-      btn.disabled = draftArenaState.phase !== "gen";
+      btn.disabled = draftArenaState.phase !== "gen" && !canHostRelaunch;
       btn.addEventListener("click", () => selectDraftGeneration(cfg.gen));
       genButtons.appendChild(btn);
     }
