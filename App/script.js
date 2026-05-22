@@ -1860,6 +1860,7 @@ function openCurrentGameScreen() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   document.getElementById("screen-profile")?.classList.add("hidden");
@@ -1900,6 +1901,7 @@ function goToConfig() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   document.getElementById("screen-profile")?.classList.add("hidden");
@@ -6160,6 +6162,7 @@ function openRankingMode() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
@@ -6667,6 +6670,7 @@ const PROFESSIONAL_MODE_CONFIG = {
   openAchievementsScreen: { label: "Succès", description: "Consulte les objectifs débloqués et à venir.", category: "collection" },
   openRankingMode: { label: "Mode classement", description: "Organise les Pokémon dans des tableaux thématiques.", category: "collection" },
   openDraftArenaMode: { label: "Draft Arènes", description: "Compose une équipe et affronte une série d'arènes.", category: "tools" },
+  openDraftScoreAttackMode: { label: "Draft Score Attack", description: "Drafte la meilleure moyenne BST en solo ou en 1v1.", category: "tools" },
   openEmulatorMode: { label: "Émulateur", description: "Lance un jeu Pokémon directement depuis l'interface.", category: "tools" },
 };
 
@@ -6838,6 +6842,7 @@ function openTypeChartScreen() {
     "screen-games-ranking",
     "screen-pokedex",
     "screen-draft-arena",
+    "screen-draft-score-attack",
     "screen-profile",
     "screen-achievements",
     "screen-history",
@@ -9442,6 +9447,7 @@ function openPokedexMode() {
   document.getElementById("screen-games-ranking").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
@@ -9960,6 +9966,7 @@ function openGamesRankingMode() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
@@ -15674,7 +15681,8 @@ function warmDraftPokemonMetrics(pokemonList) {
   const snapshot = draftArenaState;
   Promise.all((pokemonList || []).map((pokemon) => getDraftPokemonPowerData(pokemon)))
     .then(() => {
-      if (snapshot && snapshot === draftArenaState && document.getElementById("screen-draft-arena") && !document.getElementById("screen-draft-arena").classList.contains("hidden")) {
+      const activeDraftScreen = document.getElementById(snapshot?.mode === "scoreAttack" ? "screen-draft-score-attack" : "screen-draft-arena");
+      if (snapshot && snapshot === draftArenaState && activeDraftScreen && !activeDraftScreen.classList.contains("hidden")) {
         renderDraftArena();
       }
     })
@@ -16701,6 +16709,9 @@ async function resolveDraftArenaRun() {
 }
 
 function openDraftArenaMode() {
+  if (draftArenaState?.mode === "scoreAttack" && draftArenaState.scoreAttackRoom && multiplayerSocket?.connected) {
+    multiplayerSocket.emit("draft-score:leave-room");
+  }
   document.getElementById("screen-config").classList.add("hidden");
   document.getElementById("screen-game").classList.add("hidden");
   document.getElementById("screen-ranking").classList.add("hidden");
@@ -16709,19 +16720,61 @@ function openDraftArenaMode() {
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   closeRankingPicker();
   stopCrySound();
   setQuizModeLayout(false);
   stopEmulatorSession();
+  mountDraftModeCard("arena");
   document.getElementById("screen-draft-arena").classList.remove("hidden");
   setGlobalNavActive("extras");
 
-  if (!draftArenaState) {
-    restartDraftArenaRun();
-    return;
+  if (!draftArenaState || draftArenaState.mode !== "arena") {
+    draftArenaState = createDraftArenaState();
+    draftArenaState.mode = "arena";
+    draftArenaState.message = "Choisis une génération pour commencer le draft.";
   }
 
   renderDraftArena();
+}
+
+function openDraftScoreAttackMode() {
+  document.getElementById("screen-config").classList.add("hidden");
+  document.getElementById("screen-game").classList.add("hidden");
+  document.getElementById("screen-ranking").classList.add("hidden");
+  document.getElementById("screen-games-ranking").classList.add("hidden");
+  document.getElementById("screen-pokedex").classList.add("hidden");
+  document.getElementById("screen-type-chart")?.classList.add("hidden");
+  document.getElementById("screen-team-builder")?.classList.add("hidden");
+  document.getElementById("screen-teams")?.classList.add("hidden");
+  document.getElementById("screen-draft-arena")?.classList.add("hidden");
+  closeRankingPicker();
+  stopCrySound();
+  setQuizModeLayout(false);
+  stopEmulatorSession();
+  clearDraftSimpleBattleDevPanel();
+  mountDraftModeCard("scoreAttack");
+  document.getElementById("screen-draft-score-attack")?.classList.remove("hidden");
+  setGlobalNavActive("extras");
+
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack") {
+    draftArenaState = createDraftArenaState();
+    draftArenaState.mode = "scoreAttack";
+    draftArenaState.message = "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.";
+  }
+
+  renderDraftArena();
+}
+
+function mountDraftModeCard(mode = "arena") {
+  const card = document.getElementById("draft-mode-card");
+  const arenaScreen = document.getElementById("screen-draft-arena");
+  const scoreScreen = document.getElementById("screen-draft-score-attack");
+  if (!card || !arenaScreen || !scoreScreen) return;
+  const target = mode === "scoreAttack" ? scoreScreen : arenaScreen;
+  if (card.parentElement !== target) target.appendChild(card);
+  arenaScreen.classList.toggle("is-mode-score-attack", false);
+  scoreScreen.classList.toggle("is-mode-score-attack", mode === "scoreAttack");
 }
 
 function restartDraftArenaRun() {
@@ -16740,16 +16793,8 @@ function restartDraftArenaRun() {
 }
 
 function toggleDraftScoreAttackMode() {
-  if (draftArenaState?.mode === "scoreAttack" && draftArenaState.scoreAttackRoom && multiplayerSocket?.connected) {
-    multiplayerSocket.emit("draft-score:leave-room");
-  }
-  const nextMode = draftArenaState?.mode === "scoreAttack" ? "arena" : "scoreAttack";
-  draftArenaState = createDraftArenaState();
-  draftArenaState.mode = nextMode;
-  draftArenaState.message = nextMode === "scoreAttack"
-    ? "Mode Score Attack activé : drafte 6 Pokémon et vise la meilleure moyenne BST."
-    : "Mode Arènes activé : drafte 6 Pokémon puis affronte les badges.";
-  renderDraftArena();
+  if (draftArenaState?.mode === "scoreAttack") openDraftArenaMode();
+  else openDraftScoreAttackMode();
 }
 
 async function pickDraftArenaOption(pokemonId) {
@@ -16812,8 +16857,9 @@ async function pickDraftArenaOption(pokemonId) {
 }
 
 function renderDraftArena() {
-  const screen = document.getElementById("screen-draft-arena");
+  const screen = document.getElementById(draftArenaState?.mode === "scoreAttack" ? "screen-draft-score-attack" : "screen-draft-arena");
   if (!screen || !draftArenaState) return;
+  mountDraftModeCard(draftArenaState.mode);
 
   const status = document.getElementById("draft-status");
   const genBadge = document.getElementById("draft-gen-badge");
@@ -16840,6 +16886,16 @@ function renderDraftArena() {
   const scoreRoomLeave = document.getElementById("draft-score-room-leave");
   const scoreRoomStatus = document.getElementById("draft-score-room-status");
   const arenas = DRAFT_ARENAS_BY_GEN[draftArenaState.selectedGen] || [];
+  const pageTitle = screen.querySelector(".ranking-head .card-title");
+  const pageDesc = screen.querySelector(".draft-card > .card-desc");
+  const isScoreAttackMode = draftArenaState.mode === "scoreAttack";
+
+  if (pageTitle) pageTitle.textContent = isScoreAttackMode ? "🎯 Draft Score Attack" : "🎴 Draft Arènes";
+  if (pageDesc) {
+    pageDesc.textContent = isScoreAttackMode
+      ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."
+      : "Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser.";
+  }
 
   if (status) status.textContent = draftArenaState.message;
   if (genBadge) genBadge.textContent = draftArenaState.selectedGen ? `Génération : ${draftGenLabel(draftArenaState.selectedGen)}` : "Génération : -";
@@ -17280,6 +17336,7 @@ function openEmulatorMode() {
   document.getElementById("screen-pokedex").classList.add("hidden");
   document.getElementById("screen-type-chart")?.classList.add("hidden");
   document.getElementById("screen-draft-arena").classList.add("hidden");
+  document.getElementById("screen-draft-score-attack")?.classList.add("hidden");
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   closeRankingPicker();
@@ -18285,7 +18342,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction','screen-draft-score-attack'].forEach(hideScreen);
 }
 
 function ensureOverlay(title, html) {
@@ -18562,6 +18619,23 @@ const HELP_BY_SCREEN = {
       <section class="app-help-card">
         <h4>4) Affronter un ami</h4>
         <p>Bouton <b>🆚 Combat ami</b> dans la barre du haut : crée une room avec ta team draftée, partage le code. <b>🔗 Rejoindre code</b> pour rejoindre une room existante.</p>
+      </section>
+    `,
+  },
+  'screen-draft-score-attack': {
+    title: 'Draft Score Attack',
+    body: `
+      <section class="app-help-card">
+        <h4>Objectif</h4>
+        <p>Drafte 6 Pokémon et vise la meilleure <b>moyenne BST</b> possible. Le total et la moyenne sont calculés en direct.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Relances</h4>
+        <p>Tu disposes d'un nombre limité de relances pour changer la vague de propositions avant de choisir.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>1v1 Score</h4>
+        <p>Crée ou rejoins une room : chaque joueur drafte sa team, puis la meilleure moyenne BST gagne.</p>
       </section>
     `,
   },
@@ -18849,6 +18923,7 @@ function showStandardGameScreen() {
   hideScreen("screen-games-ranking");
   hideScreen("screen-pokedex");
   hideScreen("screen-draft-arena");
+  hideScreen("screen-draft-score-attack");
   hideScreen("screen-team-builder");
   hideScreen("screen-teams");
   hideScreen("screen-profile");
@@ -19133,6 +19208,7 @@ function openOddOneOutMode() {
   hideScreen("screen-pokedex");
   hideScreen("screen-type-chart");
   hideScreen("screen-draft-arena");
+  hideScreen("screen-draft-score-attack");
   hideScreen("screen-team-builder");
   hideScreen("screen-teams");
   hideScreen("screen-profile");

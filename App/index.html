@@ -97,6 +97,7 @@
       <button type="button" onclick="openTeamBuilderScreen()"><span class="nav-dd-ico">🧱</span>Team Builder</button>
       <button type="button" onclick="openTeamsScreen()"><span class="nav-dd-ico">🧩</span>Mes teams</button>
       <button type="button" onclick="openDraftArenaMode()"><span class="nav-dd-ico">🎴</span>Draft Arènes</button>
+      <button type="button" onclick="openDraftScoreAttackMode()"><span class="nav-dd-ico">🎯</span>Draft Score Attack</button>
       <button type="button" onclick="openTypeChartScreen()"><span class="nav-dd-ico">🧮</span>Table des types</button>
       <button type="button" onclick="openEmulatorMode()"><span class="nav-dd-ico">🕹️</span>Émulateur</button>
       <button type="button" onclick="openGamesRankingMode()"><span class="nav-dd-ico">🏆</span>Classement jeux</button>
@@ -711,22 +712,22 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
     </div>
     <div id="screen-draft-arena" class="hidden">
-      <div class="card draft-card">
+      <div id="draft-mode-card" class="card draft-card">
           <div class="ranking-head">
             <h2 class="card-title">&#127924; Draft Arènes</h2>
             <div class="ranking-head-actions">
-              <select id="draft-battle-pokemon" class="mode-select hidden" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
-              <button id="draft-battle-launch" class="btn-blue" type="button" onclick="launchDraftArenaBattle()">Lancer le duel</button>
-              <button id="draft-battle-close" class="btn-ghost hidden" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
+              <select id="draft-battle-pokemon" class="mode-select hidden arena-only" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
+              <button id="draft-battle-launch" class="btn-blue arena-only" type="button" onclick="launchDraftArenaBattle()">Lancer le duel</button>
+              <button id="draft-battle-close" class="btn-ghost hidden arena-only" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
               <button id="draft-score-attack-toggle" class="btn-blue" type="button" onclick="toggleDraftScoreAttackMode()">Score Attack</button>
               <div class="draft-multi-dropdown">
                 <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">🆚 Multi ▾</button>
                 <div class="draft-multi-menu" role="menu">
-                  <button id="draft-battle-friend" class="btn-blue" type="button" onclick="openDraftFriendBattle()" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
-                  <button id="draft-battle-join" class="btn-ghost" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
-                  <button id="draft-score-room-create" class="btn-blue hidden" type="button" onclick="createDraftScoreAttackRoom()">💰 Créer 1v1 Score</button>
-                  <button id="draft-score-room-join" class="btn-ghost hidden" type="button" onclick="joinDraftScoreAttackRoom()">💰 Rejoindre 1v1</button>
-                  <button id="draft-score-room-leave" class="btn-ghost hidden" type="button" onclick="leaveDraftScoreAttackRoom()">Quitter 1v1</button>
+                  <button id="draft-battle-friend" class="btn-blue arena-only" type="button" onclick="openDraftFriendBattle()" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
+                  <button id="draft-battle-join" class="btn-ghost arena-only" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
+                  <button id="draft-score-room-create" class="btn-blue scoreattack-only" type="button" onclick="createDraftScoreAttackRoom()">💰 Créer 1v1 Score</button>
+                  <button id="draft-score-room-join" class="btn-ghost scoreattack-only" type="button" onclick="joinDraftScoreAttackRoom()">💰 Rejoindre 1v1</button>
+                  <button id="draft-score-room-leave" class="btn-ghost scoreattack-only" type="button" onclick="leaveDraftScoreAttackRoom()">Quitter 1v1</button>
                 </div>
               </div>
               <button class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
@@ -739,13 +740,13 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="draft-gen-badge" class="tag-gen">Génération : -</span>
           <span id="draft-picks-badge" class="tag-tries">Équipe : 0 / 6</span>
           <span id="draft-bst-average-badge" class="tag-tries">Moy. BST : -</span>
-          <span id="draft-score-record-badge" class="tag-tries hidden">🏆 Record : -</span>
+          <span id="draft-score-record-badge" class="tag-tries hidden scoreattack-only">🏆 Record : -</span>
           <span id="draft-shiny-badge" class="tag-tries">Shiny : 0</span>
-          <span id="draft-badge-count" class="tag-tries">Badges : 0 / 8</span>
+          <span id="draft-badge-count" class="tag-tries arena-only">Badges : 0 / 8</span>
         </div>
 
         <p id="draft-status" class="draft-status">Choisis une génération pour commencer la draft.</p>
-        <div id="draft-run-bar" class="draft-run-bar"></div>
+        <div id="draft-run-bar" class="draft-run-bar arena-only"></div>
 
         <section class="draft-panel draft-panel-gen">
           <h3>1) Sélection de génération</h3>
@@ -754,11 +755,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
         <section class="draft-panel draft-panel-picks">
           <h3>2) Draft</h3>
-          <p class="card-desc">Choisis 1 des 4 propositions à chaque tour. Les options se renouvellent automatiquement. Tu ne peux pas reprendre un Pokémon déjà sélectionné.</p>
-          <div class="draft-score-attack-actions">
+          <p class="card-desc">Choisis 1 des 6 propositions à chaque tour. Les options se renouvellent automatiquement. Tu ne peux pas reprendre un Pokémon déjà sélectionné.</p>
+          <div class="draft-score-attack-actions scoreattack-only">
             <button id="draft-score-reroll" class="btn-blue hidden" type="button" onclick="rerollDraftScoreAttackWave()">Relancer la vague</button>
           </div>
-          <div id="draft-score-room-status" class="draft-score-room-status hidden"></div>
+          <div id="draft-score-room-status" class="draft-score-room-status hidden scoreattack-only"></div>
           <div id="draft-options" class="draft-options-grid"></div>
         </section>
 
@@ -768,13 +769,14 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div id="draft-team-metrics" class="draft-team-metrics"></div>
         </section>
 
-        <section id="draft-result-wrap" class="draft-panel draft-panel-results hidden">
+        <section id="draft-result-wrap" class="draft-panel draft-panel-results hidden arena-only">
           <h3 id="draft-result-title">3) Résultats des arènes</h3>
           <div id="draft-run-summary" class="draft-run-summary"></div>
           <div id="draft-badge-grid" class="draft-badge-grid"></div>
         </section>
       </div>
     </div>
+    <div id="screen-draft-score-attack" class="hidden"></div>
     <div id="screen-emulator" class="hidden">
       <div class="card emulator-card">
         <div class="ranking-head">
@@ -1232,8 +1234,6 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <script src="script.js" defer></script>
   </body>
   </html>
-
-
 
 
 
