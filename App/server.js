@@ -976,6 +976,7 @@ io.on("connection", (socket) => {
         pendingPicks: { left: null, right: null },
         teams: { left: [], right: [] },
         picksRemaining: { left: 6, right: 6 },
+        rerollsLeft: 5,
         lastEvent: { kind: "started", at: Date.now() },
       };
       room.duel.currentWave = generateDraftDuelNextWave(room);
@@ -1055,6 +1056,26 @@ io.on("connection", (socket) => {
       respond(ack, { ok: true });
     } catch (_error) {
       respond(ack, { ok: false, error: "Erreur lors du pick." });
+    }
+  });
+
+  socket.on("draft-score:reroll-duel-wave", (payload = {}, ack) => {
+    try {
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room || !room.duel || room.status !== "live") return respond(ack, { ok: false, error: "Pas de duel actif." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut relancer la vague." });
+      // Bloquer si un joueur a déjà pick dans cette wave
+      if (room.duel.pendingPicks?.left || room.duel.pendingPicks?.right) return respond(ack, { ok: false, error: "Un joueur a déjà choisi pour cette manche." });
+      // Limiter les rerolls (5 max par duel)
+      room.duel.rerollsLeft = Math.max(0, Number(room.duel.rerollsLeft ?? 5));
+      if (room.duel.rerollsLeft <= 0) return respond(ack, { ok: false, error: "Plus de rerolls disponibles." });
+      room.duel.rerollsLeft -= 1;
+      room.duel.currentWave = generateDraftDuelNextWave(room);
+      room.duel.lastEvent = { kind: "reroll", at: Date.now() };
+      emitDraftScoreRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Erreur lors du reroll." });
     }
   });
 
@@ -2473,6 +2494,7 @@ function publicDraftScoreRoomState(room, viewerId = null) {
         left: Math.max(0, Number(room.duel.picksRemaining?.left) || 0),
         right: Math.max(0, Number(room.duel.picksRemaining?.right) || 0),
       },
+      rerollsLeft: Math.max(0, Number(room.duel.rerollsLeft ?? 0)),
       lastEvent: room.duel.lastEvent || null,
     } : null,
     players: room.players.map((player) => ({

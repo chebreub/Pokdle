@@ -15746,6 +15746,18 @@ function replaceDraftArenaOption(optionIndex) {
 
 function rerollDraftScoreAttackWave() {
   if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft") return;
+  // Mode duel synchronisé : router vers le serveur (host only)
+  if (draftArenaState.duelMode && draftArenaState.scoreAttackRoom) {
+    const socket = ensureMultiplayerSocket();
+    if (!socket?.connected) return;
+    socket.emit("draft-score:reroll-duel-wave", {}, (response = {}) => {
+      if (!response.ok && draftArenaState) {
+        draftArenaState.scoreAttackRoomError = response.error || "Reroll refusé.";
+        renderDraftArena();
+      }
+    });
+    return;
+  }
   if (draftArenaState.scoreAttackRerollsLeft <= 0) {
     draftArenaState.message = "Plus de relance disponible pour cette tentative Score Attack.";
     return renderDraftArena();
@@ -15925,14 +15937,21 @@ function startDraftScoreDuel(gen) {
   });
 }
 
-function pickDraftScoreDuelOption(pokemonId) {
+async function pickDraftScoreDuelOption(pokemonId) {
   const socket = ensureMultiplayerSocket();
   if (!socket?.connected || !draftArenaState) return;
   const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(pokemonId));
   if (!pokemon) return;
-  const bst = Number(getDraftCachedPokemonPowerData(pokemon).statGlobal) || 0;
+  // S'assurer d'avoir le vrai BST (PokéAPI) avant d'envoyer, sinon le serveur stockera un fallback approximatif
+  let bst = Number(getDraftCachedPokemonPowerData(pokemon).statGlobal) || 0;
+  if (bst < 200 || bst > 800) {
+    try {
+      const data = await getDraftPokemonPowerData(pokemon);
+      bst = Number(data?.statGlobal) || bst;
+    } catch (_e) { /* on continue avec le fallback */ }
+  }
   socket.emit("draft-score:pick-option", { pokemonId: Number(pokemonId), bst }, (response = {}) => {
-    if (!response.ok) {
+    if (!response.ok && draftArenaState) {
       draftArenaState.scoreAttackRoomError = response.error || "Pick refusé.";
       renderDraftArena();
     }
@@ -17149,10 +17168,21 @@ function renderDraftArena() {
       && draftArenaState.phase === "draft"
       && Boolean(draftArenaState.selectedGen)
       && draftArenaState.scoreAttackRerollsLeft > 0;
-    // Cacher le reroll en mode duel synchronisé (pool partagé serveur, reroll local invalide)
-    scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft" || Boolean(draftArenaState.duelMode));
-    scoreRerollButton.disabled = !canReroll;
-    scoreRerollButton.textContent = `Relancer la vague (${draftArenaState.scoreAttackRerollsLeft})`;
+    // En mode duel : visible uniquement pour l'host, désactivé si un joueur a déjà pick ou plus de rerolls
+    if (draftArenaState.duelMode && draftArenaState.scoreAttackRoom) {
+      const room = draftArenaState.scoreAttackRoom;
+      const selfRoom = getDraftScoreAttackRoomSelf(room);
+      const duelRerollsLeft = Number(room?.duel?.rerollsLeft ?? 0);
+      const someoneLocked = Boolean(room?.duel?.pendingSides?.length);
+      const canHostReroll = Boolean(selfRoom?.isHost) && room?.status === "live" && !someoneLocked && duelRerollsLeft > 0;
+      scoreRerollButton.classList.toggle("hidden", !selfRoom?.isHost || room?.status !== "live");
+      scoreRerollButton.disabled = !canHostReroll;
+      scoreRerollButton.textContent = `🔄 Relancer la vague duel (${duelRerollsLeft})`;
+    } else {
+      scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft");
+      scoreRerollButton.disabled = !canReroll;
+      scoreRerollButton.textContent = `Relancer la vague (${draftArenaState.scoreAttackRerollsLeft})`;
+    }
   }
   if (battleClose && (!draftSimpleBattleDevUiState || document.getElementById("draft-dev-battle-panel")?.classList.contains("hidden"))) {
     battleClose.classList.add("hidden");
