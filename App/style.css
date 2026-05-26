@@ -25498,6 +25498,416 @@ body.theme-dark #screen-draft-score-attack .draft-gen-btn {
   color: #8a5a00;
 }
 
+/* ============================================================ */
+/* === DRAFT SCORE ATTACK — REFONTE DA PROFESSIONNELLE === */
+/* ============================================================ */
+
+/* Header card propre */
+#screen-draft-score-attack .draft-card {
+  border: 1px solid rgba(116, 158, 241, 0.28);
+  background: #ffffff !important;
+  box-shadow: 0 24px 60px rgba(17, 31, 64, 0.10);
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* Header bandeau dégradé top */
+#screen-draft-score-attack .ranking-head {
+  background: linear-gradient(135deg, #ff7e3a 0%, #ff5a3a 100%);
+  padding: 24px 32px !important;
+  margin: 0 !important;
+  border-bottom: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+#screen-draft-score-attack .card-title {
+  font-family: 'Nunito', system-ui, sans-serif !important;
+  font-size: 1.75rem !important;
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: 0 2px 6px rgba(120, 30, 0, 0.25) !important;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#screen-draft-score-attack .ranking-head-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#screen-draft-score-attack .ranking-head-actions > button,
+#screen-draft-score-attack .ranking-head-actions .draft-multi-toggle {
+  background: rgba(255, 255, 255, 0.95);
+  color: #b3360c;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(120, 30, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+#screen-draft-score-attack .ranking-head-actions > button:hover,
+#screen-draft-score-attack .ranking-head-actions .draft-multi-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(120, 30, 0, 0.25);
+}
+
+/* Sous-titre */
+#screen-draft-score-attack .card-desc {
+  padding: 16px 32px 0 !important;
+  margin: 0 !important;
+  color: #4a5a78;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: none;
+}
+
+/* Progress shell */
+#screen-draft-score-attack .draft-progress-shell {
+  margin: 16px 32px 0 !important;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px !important;
+  background: linear-gradient(180deg, #fff7e8 0%, #ffead0 100%) !important;
+  border: 1px solid rgba(255, 153, 0, 0.32) !important;
+  border-radius: 14px !important;
+}
+
+#screen-draft-score-attack .tag-gen,
+#screen-draft-score-attack .tag-tries {
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+#screen-draft-score-attack .tag-gen {
+  background: linear-gradient(180deg, #ff7e3a, #ff5a3a);
+  color: #ffffff;
+}
+
+#screen-draft-score-attack .tag-tries {
+  background: rgba(255, 255, 255, 0.78);
+  color: #6b3e00;
+  border: 1px solid rgba(255, 153, 0, 0.24);
+}
+
+/* Status message */
+#screen-draft-score-attack #draft-status {
+  margin: 16px 32px 0 !important;
+  padding: 12px 18px;
+  background: rgba(47, 118, 255, 0.06);
+  border-radius: 10px;
+  color: #2f5a8a;
+  font-size: 13px;
+  font-weight: 600;
+  border-left: 3px solid #2f76ff;
+}
+
+/* Panels */
+#screen-draft-score-attack .draft-panel {
+  margin: 18px 32px 0 !important;
+  background: #ffffff !important;
+  border: 1px solid #e6eaf2 !important;
+  border-radius: 18px !important;
+  padding: 22px !important;
+  box-shadow: 0 4px 12px rgba(17, 31, 64, 0.04);
+}
+#screen-draft-score-attack .draft-panel:last-child {
+  margin-bottom: 32px !important;
+}
+
+#screen-draft-score-attack .draft-panel h3 {
+  color: #12213d !important;
+  font-size: 1.05rem !important;
+  font-weight: 800;
+  margin: 0 0 14px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#screen-draft-score-attack .draft-panel h3::before {
+  content: "";
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #ff7e3a, #ff5a3a);
+  border-radius: 2px;
+}
+
+#screen-draft-score-attack .draft-card > .draft-panel::before {
+  display: none !important;
+}
+
+/* Gen buttons grid */
+#screen-draft-score-attack .draft-gen-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+#screen-draft-score-attack .draft-gen-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #e6eaf2 !important;
+  color: #12213d !important;
+  font-weight: 700;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+#screen-draft-score-attack .draft-gen-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fff8ee, #ffead0) !important;
+  border-color: #ff7e3a !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 122, 50, 0.20);
+}
+#screen-draft-score-attack .draft-gen-btn.active {
+  background: linear-gradient(135deg, #ff7e3a, #ff5a3a) !important;
+  color: #ffffff !important;
+  border-color: #ff5a3a !important;
+  box-shadow: 0 8px 18px rgba(255, 90, 58, 0.32);
+}
+
+/* Options grid */
+#screen-draft-score-attack .draft-options-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+#screen-draft-score-attack .draft-option-card {
+  background: linear-gradient(180deg, #ffffff, #fbfdff) !important;
+  border: 1.5px solid #e6eaf2 !important;
+  min-height: 200px;
+  padding: 14px 10px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(17, 31, 64, 0.05);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#screen-draft-score-attack .draft-option-card:hover {
+  transform: translateY(-4px);
+  border-color: #ff7e3a !important;
+  box-shadow: 0 12px 24px rgba(255, 122, 50, 0.18);
+}
+#screen-draft-score-attack .draft-option-card[data-rarity="legendary"] {
+  border-color: rgba(255, 153, 0, 0.55) !important;
+  background: linear-gradient(180deg, #fff8ee, #ffead0) !important;
+}
+#screen-draft-score-attack .draft-option-card[data-rarity="legendary"]:hover {
+  border-color: #ff5a3a !important;
+  box-shadow: 0 16px 28px rgba(255, 90, 58, 0.32);
+}
+#screen-draft-score-attack .draft-option-card[data-rarity="strong"] {
+  border-color: rgba(99, 119, 158, 0.42) !important;
+}
+
+#screen-draft-score-attack .draft-option-card img {
+  width: 84px;
+  height: 84px;
+}
+#screen-draft-score-attack .draft-option-card strong {
+  color: #12213d !important;
+  font-size: 14px !important;
+  font-weight: 800;
+  margin-top: 4px;
+}
+#screen-draft-score-attack .draft-option-card .draft-card-meta {
+  color: #4a5a78 !important;
+  font-size: 12px;
+  font-weight: 700;
+}
+#screen-draft-score-attack .draft-option-card .draft-bst-projection {
+  background: rgba(255, 122, 50, 0.10);
+  color: #b3360c !important;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+#screen-draft-score-attack .draft-option-card[data-rarity="legendary"] .draft-bst-projection {
+  background: rgba(255, 122, 50, 0.22);
+}
+
+/* Team grid */
+#screen-draft-score-attack .draft-team-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+#screen-draft-score-attack .draft-team-card {
+  background: #ffffff !important;
+  border: 1px solid #e6eaf2 !important;
+  border-radius: 12px;
+  padding: 10px 6px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#screen-draft-score-attack .draft-team-card.placeholder {
+  background: #fafbfc !important;
+  border-style: dashed !important;
+}
+#screen-draft-score-attack .draft-team-empty-icon {
+  background: linear-gradient(180deg, rgba(255, 122, 50, 0.12), rgba(255, 90, 58, 0.06));
+  color: rgba(179, 54, 12, 0.42);
+  border-color: rgba(255, 122, 50, 0.28);
+}
+#screen-draft-score-attack .draft-team-card img {
+  width: 62px;
+  height: 62px;
+}
+#screen-draft-score-attack .draft-team-card b {
+  color: #12213d !important;
+  font-size: 12px;
+}
+
+/* Reroll button */
+#screen-draft-score-attack #draft-score-reroll {
+  background: linear-gradient(180deg, #ff7e3a, #ff5a3a) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 12px 22px !important;
+  font-weight: 800 !important;
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgba(255, 90, 58, 0.32);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+#screen-draft-score-attack #draft-score-reroll:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 90, 58, 0.42);
+}
+#screen-draft-score-attack #draft-score-reroll:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Score room status (panneau VS placeholder/live) */
+#screen-draft-score-attack .draft-score-room-status {
+  margin-top: 16px;
+}
+
+/* Team metrics summary cards */
+#screen-draft-score-attack .draft-team-metrics {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+#screen-draft-score-attack .draft-summary-card {
+  background: linear-gradient(180deg, #fff8ee, #ffead0);
+  border: 1px solid rgba(255, 153, 0, 0.28);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#screen-draft-score-attack .draft-summary-card span {
+  font-size: 10px;
+  color: #8a5a00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+#screen-draft-score-attack .draft-summary-card b {
+  font-size: 22px;
+  color: #b3360c;
+  font-weight: 900;
+}
+#screen-draft-score-attack .draft-summary-card.draft-score-main {
+  background: linear-gradient(135deg, #ff7e3a, #ff5a3a);
+  border-color: #ff5a3a;
+}
+#screen-draft-score-attack .draft-summary-card.draft-score-main span,
+#screen-draft-score-attack .draft-summary-card.draft-score-main small,
+#screen-draft-score-attack .draft-summary-card.draft-score-main b {
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  #screen-draft-score-attack .ranking-head { padding: 18px 18px !important; }
+  #screen-draft-score-attack .card-title { font-size: 1.3rem !important; }
+  #screen-draft-score-attack .card-desc,
+  #screen-draft-score-attack .draft-progress-shell,
+  #screen-draft-score-attack #draft-status,
+  #screen-draft-score-attack .draft-panel { margin-left: 16px !important; margin-right: 16px !important; }
+  #screen-draft-score-attack .draft-gen-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  #screen-draft-score-attack .draft-options-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  #screen-draft-score-attack .draft-team-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+
+/* Dark mode adaptations */
+body.theme-dark #screen-draft-score-attack .draft-card {
+  background: #1a2440 !important;
+  border-color: rgba(116, 158, 241, 0.18);
+}
+body.theme-dark #screen-draft-score-attack .draft-progress-shell {
+  background: linear-gradient(180deg, rgba(60, 40, 18, 0.55), rgba(40, 28, 14, 0.72)) !important;
+  border-color: rgba(255, 153, 0, 0.32) !important;
+}
+body.theme-dark #screen-draft-score-attack .tag-tries {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffd373;
+  border-color: rgba(255, 153, 0, 0.24);
+}
+body.theme-dark #screen-draft-score-attack #draft-status {
+  background: rgba(47, 118, 255, 0.12);
+  color: #b8c8e4;
+  border-left-color: #4f8df3;
+}
+body.theme-dark #screen-draft-score-attack .draft-panel {
+  background: #1f2c4d !important;
+  border-color: rgba(116, 158, 241, 0.18) !important;
+}
+body.theme-dark #screen-draft-score-attack .draft-panel h3 {
+  color: #edf5ff !important;
+}
+body.theme-dark #screen-draft-score-attack .draft-gen-btn {
+  background: #243355 !important;
+  border-color: rgba(116, 158, 241, 0.18) !important;
+  color: #edf5ff !important;
+}
+body.theme-dark #screen-draft-score-attack .draft-option-card {
+  background: linear-gradient(180deg, #243355, #1c2745) !important;
+  border-color: rgba(116, 158, 241, 0.18) !important;
+}
+body.theme-dark #screen-draft-score-attack .draft-option-card strong { color: #edf5ff !important; }
+body.theme-dark #screen-draft-score-attack .draft-option-card .draft-card-meta { color: #9aaecf !important; }
+body.theme-dark #screen-draft-score-attack .draft-team-card {
+  background: #243355 !important;
+  border-color: rgba(116, 158, 241, 0.18) !important;
+}
+body.theme-dark #screen-draft-score-attack .draft-team-card b { color: #edf5ff !important; }
+body.theme-dark #screen-draft-score-attack .draft-team-card.placeholder { background: #1c2745 !important; }
+body.theme-dark #screen-draft-score-attack .draft-summary-card {
+  background: linear-gradient(180deg, rgba(60, 40, 18, 0.55), rgba(40, 28, 14, 0.72));
+  border-color: rgba(255, 153, 0, 0.28);
+}
+body.theme-dark #screen-draft-score-attack .draft-summary-card span,
+body.theme-dark #screen-draft-score-attack .draft-summary-card b { color: #ffd373; }
+
 /* Mode duel — overlay "En attente de l'adversaire" sur les options */
 .draft-options-grid.duel-pending { position: relative; pointer-events: none; opacity: 0.65; }
 .draft-options-grid.duel-pending::after {
@@ -25705,25 +26115,9 @@ body.theme-dark #draft-score-attack-toggle.is-active-mode {
 }
 
 /* Bandeau mode actif au-dessus de la barre progress */
+/* Bandeau "Mode Score Attack" désactivé — remplacé par un vrai header dédié */
 #screen-draft-score-attack.is-mode-score-attack .draft-progress-shell::before {
-  content: "🎯 Mode Score Attack — vise la meilleure moyenne BST";
-  display: block;
-  width: 100%;
-  padding: 8px 16px;
-  margin-bottom: 12px;
-  background: linear-gradient(90deg, rgba(255, 178, 55, 0.18), rgba(255, 178, 55, 0.06));
-  border: 1px solid rgba(255, 178, 55, 0.42);
-  border-radius: 12px;
-  color: #8a5a00;
-  font-weight: 800;
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  text-align: center;
-}
-body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-progress-shell::before {
-  background: linear-gradient(90deg, rgba(255, 178, 55, 0.28), rgba(255, 178, 55, 0.10));
-  color: #ffd373;
-  border-color: rgba(255, 178, 55, 0.5);
+  display: none;
 }
 
 /* Draft Score Attack lives on its own screen but reuses the draft components. */
