@@ -16131,7 +16131,11 @@ function showDraftScoreFinaleOverlay(room) {
     const team = Array.isArray(player.result?.team) ? player.result.team : [];
     return `<div class="dsf-team-side dsf-side-${side}">
       <div class="dsf-team-head"><b>${escapeHtml(player.nickname || "Joueur")}</b><span class="dsf-side-label">${side === "left" ? "" : ""}${player.isSelf ? "TOI" : "ADVERSAIRE"}</span></div>
-      <div class="dsf-team-sprites">${team.map((entry, idx) => `<div class="dsf-pokemon-tile" style="--dsf-i:${idx}"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png" alt="${escapeHtml(entry.name)}" /><b>${entry.bst}</b><span>${escapeHtml(entry.name)}</span></div>`).join("")}</div>
+      <div class="dsf-team-sprites">${team.map((entry, idx) => {
+        const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(entry.id));
+        const sprite = pokemon ? getPokemonSprite(pokemon) : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
+        return `<div class="dsf-pokemon-tile" style="--dsf-i:${idx}"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" onerror="this.onerror=null;this.src='${pokemon?.sprite || ''}'" /><b>${entry.bst}</b><span>${escapeHtml(entry.name)}</span></div>`;
+      }).join("")}</div>
       <div class="dsf-team-score" data-target="${player.result?.average || 0}">0</div>
       <div class="dsf-team-score-label">Moyenne BST</div>
     </div>`;
@@ -16200,11 +16204,15 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
     if (!entry) {
       return `<div class="draft-score-vs-slot is-empty"><span>?</span></div>`;
     }
-    const sprite = entry.shiny
-      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${entry.id}.png`
-      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
-    // is-latest désactivé pour éviter l'animation infinie au re-render
-    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${sprite}" alt="${escapeHtml(entry.name)}" loading="lazy" /><b>${entry.bst}</b></div>`;
+    // Résoudre le sprite via getPokemonSprite (gère les Mega/Z-A formes spéciales)
+    const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(entry.id));
+    let sprite;
+    if (pokemon) {
+      sprite = entry.shiny && typeof getPokemonShinySprite === "function" ? getPokemonShinySprite(pokemon) : getPokemonSprite(pokemon);
+    } else {
+      sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
+    }
+    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" onerror="this.onerror=null;this.src='${pokemon?.sprite || ''}'" /><b>${entry.bst}</b></div>`;
   }).join("");
   const status = player.hasSubmitted
     ? "✅ Soumis"
