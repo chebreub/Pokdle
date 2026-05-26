@@ -25611,6 +25611,40 @@ body.theme-dark #screen-draft-score-attack .draft-gen-btn {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.20);
 }
 
+/* Force dropdown Multi caché par défaut dans le screen Score Attack */
+#screen-draft-score-attack .draft-multi-menu {
+  display: none !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(17, 31, 64, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px rgba(17, 31, 64, 0.22) !important;
+  padding: 8px !important;
+  z-index: 999;
+}
+#screen-draft-score-attack .draft-multi-dropdown:hover .draft-multi-menu,
+#screen-draft-score-attack .draft-multi-dropdown:focus-within .draft-multi-menu {
+  display: flex !important;
+}
+#screen-draft-score-attack .draft-multi-menu > button {
+  color: #1a1f36 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  transition: background 0.15s ease;
+}
+#screen-draft-score-attack .draft-multi-menu > button:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.10), rgba(255, 61, 127, 0.10)) !important;
+  color: #b3360c !important;
+  transform: none;
+}
+#screen-draft-score-attack .draft-multi-menu > button.hidden { display: none !important; }
+
 /* Sous-titre */
 #screen-draft-score-attack .card-desc {
   padding: 22px 40px 0 !important;
