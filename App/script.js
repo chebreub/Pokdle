@@ -15693,6 +15693,8 @@ function warmDraftPokemonMetrics(pokemonList) {
 
 function fillDraftArenaOptions() {
   if (!draftArenaState || draftArenaState.phase !== "draft") return;
+  // En mode duel synchronisé : les options sont fournies par le serveur, pas de génération locale
+  if (draftArenaState.mode === "scoreAttack" && draftArenaState.scoreAttackRoom?.duel) return;
   const pool = getDraftPoolForGeneration(draftArenaState.selectedGen);
   const excludeDexIds = new Set(draftArenaState.selectedDexIds);
   draftArenaState.options.forEach((option) => {
@@ -16212,8 +16214,8 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
     const sprite = entry.shiny
       ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${entry.id}.png`
       : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
-    const isLatest = i === filled - 1 && !player.hasSubmitted;
-    return `<div class="draft-score-vs-slot is-filled${isLatest ? " is-latest" : ""}${entry.shiny ? " is-shiny" : ""}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${sprite}" alt="${escapeHtml(entry.name)}" loading="lazy" /><b>${entry.bst}</b></div>`;
+    // is-latest désactivé pour éviter l'animation infinie au re-render
+    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${sprite}" alt="${escapeHtml(entry.name)}" loading="lazy" /><b>${entry.bst}</b></div>`;
   }).join("");
   const status = player.hasSubmitted
     ? "✅ Soumis"
