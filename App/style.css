@@ -25960,6 +25960,25 @@ body.theme-dark .dq-footer b { color: #ff8a72; }
   .dq-content { padding: 20px; }
 }
 
+.higher-lower-final-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.dq-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 8px 0 0;
+  border-top: 1px solid rgba(17, 31, 64, 0.06);
+}
+body.theme-dark .dq-actions { border-top-color: rgba(255, 255, 255, 0.08); }
+.dq-actions button { padding: 10px 18px; font-size: 13px; font-weight: 800; }
+
 /* Sous-titre */
 #screen-draft-score-attack .card-desc {
   padding: 22px 40px 0 !important;

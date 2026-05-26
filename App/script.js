@@ -184,7 +184,10 @@ function openDailyQuestsModal() {
           </div>`;
         }).join("")}
       </div>
-      <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b></p>
+      <div class="dq-actions">
+        <button class="btn-red" type="button" onclick="shareLevelBadge()">📋 Partager mon niveau</button>
+      </div>
+      <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b>${Number(playerProfile?.dailyLoginStreak) > 1 ? ` · 🔥 <b>${playerProfile.dailyLoginStreak}</b> jours d'affilée` : ""}</p>
     </div>`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add("is-visible"));
@@ -200,6 +203,79 @@ function closeDailyQuestsModal() {
 
 window.openDailyQuestsModal = openDailyQuestsModal;
 window.closeDailyQuestsModal = closeDailyQuestsModal;
+
+// === PARTAGE SOCIAL — copy text Wordle-style ===
+async function copyShareText(text, successMessage = "📋 Copié dans le presse-papier !") {
+  if (!text) return false;
+  let copied = false;
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+  } catch (_e) { copied = false; }
+  if (!copied) {
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      copied = document.execCommand("copy");
+      textarea.remove();
+    } catch (_e) { copied = false; }
+  }
+  if (copied) {
+    showXpToast(successMessage);
+  } else {
+    window.prompt("Copie ce texte :", text);
+  }
+  return copied;
+}
+
+function shareScoreAttackResult() {
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack") return;
+  const metrics = getDraftTeamBstMetrics(draftArenaState.team);
+  if (!metrics?.average) return;
+  const gen = draftArenaState.selectedGen ? `Gen ${draftArenaState.selectedGen}` : "Gen ?";
+  const rank = getDraftScoreAttackResultLabel(metrics.average);
+  const xp = Number(playerProfile?.xp) || 0;
+  const tier = getXpTier(xp);
+  const text = `🎯 Score Attack ${gen} : ${metrics.average} BST (${rank})
+${tier.emoji} Niveau ${tier.level} · ${tier.name}
+👉 https://pokdle.onrender.com`;
+  copyShareText(text);
+}
+
+function shareHigherLowerResult() {
+  if (!higherLowerState) return;
+  const score = higherLowerState.score || 0;
+  const record = higherLowerState.highScore || 0;
+  const xp = Number(playerProfile?.xp) || 0;
+  const tier = getXpTier(xp);
+  const newRecord = score > 0 && score >= record;
+  const text = `🎯 Higher or Lower : ${score} d'affilée${newRecord ? " 🏆 NOUVEAU RECORD !" : ""}
+${tier.emoji} Niveau ${tier.level} · ${tier.name}
+👉 https://pokdle.onrender.com`;
+  copyShareText(text);
+}
+
+function shareLevelBadge() {
+  if (!playerProfile) return;
+  const xp = Number(playerProfile.xp) || 0;
+  const tier = getXpTier(xp);
+  const prog = getXpProgress(xp);
+  const text = `${tier.emoji} Niveau ${tier.level} · ${tier.name}
+🎯 ${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · MAX"}
+🏆 ${Number(playerProfile.totalQuestsCompleted) || 0} quêtes réussies
+👉 https://pokdle.onrender.com`;
+  copyShareText(text);
+}
+
+window.shareScoreAttackResult = shareScoreAttackResult;
+window.shareHigherLowerResult = shareHigherLowerResult;
+window.shareLevelBadge = shareLevelBadge;
 
 function updateXpBadge() {
   const badge = document.getElementById("global-xp-badge");
@@ -4465,7 +4541,10 @@ function renderHigherLowerScreen() {
           <div class="higher-lower-final-vs">VS</div>
           <div class="higher-lower-card-mini ${state.lastCorrect ? "is-correct" : "is-wrong"}"><img src="${escapeHtml(rightSprite)}" alt="${escapeHtml(state.right.pokemon.name)}" /><span>${escapeHtml(state.right.pokemon.name)}</span><b>${statMeta.icon} ${state.right.statValue}</b></div>
         </div>` : ""}
-        <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
+        <div class="higher-lower-final-actions">
+          <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
+          <button class="btn-ghost" type="button" onclick="shareHigherLowerResult()">📋 Partager</button>
+        </div>
       </div>`;
     return;
   }
