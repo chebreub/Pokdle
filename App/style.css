@@ -27168,3 +27168,149 @@ body:not(.theme-dark) #screen-draft-score-attack .draft-score-main small {
 body.theme-dark #screen-draft-score-attack .draft-summary-card b {
   color: #edf5ff !important;
 }
+
+/* DRAFT MODES HARDENING 2026
+   Conservative guardrails only: keep Claude's working flows, prevent visual leaks. */
+#screen-draft-arena:not(.hidden) ~ #screen-draft-score-attack,
+#screen-draft-score-attack.hidden {
+  display: none !important;
+}
+
+#screen-draft-arena .scoreattack-only,
+#screen-draft-arena #draft-score-room-status,
+#screen-draft-score-attack .arena-only,
+#screen-draft-score-attack #draft-run-bar,
+#screen-draft-score-attack #draft-badge-grid,
+#screen-draft-score-attack .draft-panel-results {
+  display: none !important;
+}
+
+#screen-draft-score-attack .scoreattack-only:not(.hidden) {
+  display: revert !important;
+}
+
+#screen-draft-score-attack button.scoreattack-only:not(.hidden),
+#screen-draft-score-attack .draft-score-attack-actions.scoreattack-only:not(.hidden) {
+  display: inline-flex !important;
+}
+
+#screen-draft-score-attack .draft-progress-shell {
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 58px;
+  overflow: visible !important;
+}
+
+#screen-draft-score-attack .draft-progress-shell::before {
+  flex: 0 0 100%;
+  position: static !important;
+  height: auto !important;
+  margin: 0 0 2px !important;
+  box-sizing: border-box;
+}
+
+#screen-draft-score-attack .draft-progress-shell .tag-gen,
+#screen-draft-score-attack .draft-progress-shell .tag-tries {
+  min-height: 34px;
+  max-width: 100%;
+  white-space: normal;
+  color: #16345c;
+  line-height: 1.15;
+  text-shadow: none;
+}
+
+#screen-draft-score-attack #draft-gen-badge,
+#screen-draft-score-attack #draft-score-record-badge {
+  color: #5a3a00 !important;
+}
+
+#screen-draft-score-attack #draft-bst-average-badge,
+#screen-draft-score-attack #draft-picks-badge,
+#screen-draft-score-attack #draft-shiny-badge {
+  background: #ffffff !important;
+  border-color: #c9dcff !important;
+  color: #16345c !important;
+}
+
+#screen-draft-score-attack .draft-status {
+  color: #16345c !important;
+  text-shadow: none !important;
+}
+
+#screen-draft-score-attack .draft-panel h3,
+#screen-draft-score-attack .draft-team-card b,
+#screen-draft-score-attack .draft-option-card strong {
+  color: #12213d;
+  text-shadow: none;
+}
+
+#screen-draft-score-attack .draft-team-card span,
+#screen-draft-score-attack .draft-team-card small,
+#screen-draft-score-attack .draft-option-card > span,
+#screen-draft-score-attack .draft-card-meta {
+  color: #486389 !important;
+  text-shadow: none !important;
+}
+
+#screen-draft-score-attack .draft-summary-card {
+  background: linear-gradient(180deg, #ffffff, #f1f6ff) !important;
+  border-color: #c6d9f5 !important;
+}
+
+#screen-draft-score-attack .draft-summary-card span {
+  color: #486389 !important;
+}
+
+#screen-draft-score-attack .draft-summary-card b {
+  color: #12213d !important;
+}
+
+#screen-draft-score-attack .draft-score-vs-player,
+#screen-draft-score-attack .draft-score-room-status {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: #12213d !important;
+}
+
+#screen-draft-score-attack .draft-score-vs-name b,
+#screen-draft-score-attack .draft-score-vs-metric b,
+#screen-draft-score-attack .draft-score-room-status b {
+  color: #12213d !important;
+}
+
+#screen-draft-score-attack .draft-score-vs-status,
+#screen-draft-score-attack .draft-score-vs-metric span,
+#screen-draft-score-attack .draft-score-room-status span {
+  color: #486389 !important;
+}
+
+#screen-draft-arena .draft-multi-menu,
+#screen-draft-score-attack .draft-multi-menu {
+  min-width: 190px;
+}
+
+#screen-draft-arena .draft-multi-menu > button,
+#screen-draft-score-attack .draft-multi-menu > button {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+@media (max-width: 760px) {
+  #screen-draft-score-attack .ranking-head {
+    padding: 22px 18px !important;
+  }
+
+  #screen-draft-score-attack .card-title {
+    font-size: 1.45rem !important;
+  }
+
+  #screen-draft-score-attack .ranking-head-actions {
+    width: 100%;
+  }
+
+  #screen-draft-score-attack .ranking-head-actions > button,
+  #screen-draft-score-attack .ranking-head-actions .draft-multi-dropdown {
+    flex: 1 1 140px;
+  }
+}
