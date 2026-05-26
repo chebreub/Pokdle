@@ -248,6 +248,92 @@ ${tier.emoji} Niveau ${tier.level} · ${tier.name}
   copyShareText(text);
 }
 
+function generateScoreImagePng({ title, mainScore, mainLabel, subtitle, accentFrom = "#ff6b35", accentTo = "#ff3d7f" }) {
+  return new Promise((resolve) => {
+    const W = 1080, H = 1080;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    // Background dégradé
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, "#0a0e1e");
+    bg.addColorStop(1, "#1c2745");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    // Orbe lumineuse accent
+    const orb = ctx.createRadialGradient(W * 0.85, H * 0.15, 0, W * 0.85, H * 0.15, 600);
+    orb.addColorStop(0, accentFrom + "55");
+    orb.addColorStop(1, "transparent");
+    ctx.fillStyle = orb;
+    ctx.fillRect(0, 0, W, H);
+    const orb2 = ctx.createRadialGradient(W * 0.15, H * 0.85, 0, W * 0.15, H * 0.85, 500);
+    orb2.addColorStop(0, accentTo + "44");
+    orb2.addColorStop(1, "transparent");
+    ctx.fillStyle = orb2;
+    ctx.fillRect(0, 0, W, H);
+    // Logo header "Pokédle"
+    ctx.font = "900 56px Nunito, system-ui, sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.fillText("Pokédle", W / 2, 130);
+    // Title
+    ctx.font = "800 44px Nunito, system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(title, W / 2, 230);
+    // Score gradient
+    const scoreGrad = ctx.createLinearGradient(0, 350, 0, 700);
+    scoreGrad.addColorStop(0, accentFrom);
+    scoreGrad.addColorStop(1, accentTo);
+    ctx.fillStyle = scoreGrad;
+    ctx.font = "900 280px Nunito, system-ui, sans-serif";
+    ctx.fillText(String(mainScore), W / 2, 600);
+    // Label
+    ctx.font = "700 38px Nunito, system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    ctx.fillText(mainLabel, W / 2, 700);
+    // Subtitle (niveau)
+    ctx.font = "700 32px Nunito, system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.62)";
+    ctx.fillText(subtitle, W / 2, 870);
+    // URL bottom
+    ctx.font = "800 28px Nunito, system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.42)";
+    ctx.fillText("pokdle.onrender.com", W / 2, 1000);
+    canvas.toBlob((blob) => resolve(blob), "image/png");
+  });
+}
+
+async function downloadScoreImage(filename, options) {
+  try {
+    const blob = await generateScoreImagePng(options);
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "pokedle-score.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+    showXpToast("💾 Image sauvegardée");
+  } catch (_e) {
+    showXpToast("❌ Erreur lors de la génération");
+  }
+}
+
+function downloadHigherLowerImage() {
+  if (!higherLowerState) return;
+  const xp = Number(playerProfile?.xp) || 0;
+  const tier = getXpTier(xp);
+  downloadScoreImage(`pokedle-hl-${higherLowerState.score}.png`, {
+    title: "Higher or Lower",
+    mainScore: higherLowerState.score,
+    mainLabel: higherLowerState.mode === "rush60" ? "d'affilée en 60s" : "d'affilée",
+    subtitle: `${tier.emoji} Niv. ${tier.level} · ${tier.name}`,
+  });
+}
+window.downloadHigherLowerImage = downloadHigherLowerImage;
+
 function shareHigherLowerResult() {
   if (!higherLowerState) return;
   const score = higherLowerState.score || 0;
@@ -4543,7 +4629,8 @@ function renderHigherLowerScreen() {
         </div>` : ""}
         <div class="higher-lower-final-actions">
           <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
-          <button class="btn-ghost" type="button" onclick="shareHigherLowerResult()">📋 Partager</button>
+          <button class="btn-ghost" type="button" onclick="shareHigherLowerResult()">📋 Copier</button>
+          <button class="btn-ghost" type="button" onclick="downloadHigherLowerImage()">💾 Image</button>
         </div>
       </div>`;
     return;
@@ -4765,6 +4852,237 @@ function applyHigherLowerRoomState(room) {
     higherLowerState.right = null;
   }
   renderHigherLowerScreen();
+}
+
+// === SPEEDRUN POKÉDEX — devine le maximum de Pokémon en 60s ===
+const SPEEDRUN_DURATION_MS = 60000;
+let speedrunState = null;
+let speedrunTimerId = null;
+
+function createSpeedrunState() {
+  return {
+    phase: "lobby",
+    pool: [],
+    currentIndex: 0,
+    correct: 0,
+    skipped: 0,
+    streak: 0,
+    bestStreak: 0,
+    endsAt: 0,
+    leftMs: SPEEDRUN_DURATION_MS,
+    history: [],
+    highScore: Number(playerProfile?.speedrunHighScore) || 0,
+    currentInput: "",
+  };
+}
+
+function openSpeedrunMode() {
+  const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
+  if (pool.length < 30) return alert("Pool Pokémon insuffisant pour Speedrun.");
+  goToConfig();
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-speedrun");
+  setGlobalNavActive("game");
+  gameMode = "speedrun";
+  speedrunState = createSpeedrunState();
+  renderSpeedrunScreen();
+}
+
+function startSpeedrunGame() {
+  if (!speedrunState) return;
+  const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
+  speedrunState.pool = pool.slice().sort(() => Math.random() - 0.5);
+  speedrunState.currentIndex = 0;
+  speedrunState.correct = 0;
+  speedrunState.skipped = 0;
+  speedrunState.streak = 0;
+  speedrunState.bestStreak = 0;
+  speedrunState.history = [];
+  speedrunState.endsAt = Date.now() + SPEEDRUN_DURATION_MS;
+  speedrunState.leftMs = SPEEDRUN_DURATION_MS;
+  speedrunState.phase = "playing";
+  speedrunState.currentInput = "";
+  renderSpeedrunScreen();
+  if (speedrunTimerId) clearInterval(speedrunTimerId);
+  speedrunTimerId = setInterval(() => {
+    if (!speedrunState || speedrunState.phase !== "playing") return clearInterval(speedrunTimerId);
+    speedrunState.leftMs = Math.max(0, speedrunState.endsAt - Date.now());
+    const timerEl = document.getElementById("speedrun-timer");
+    if (timerEl) timerEl.textContent = `${Math.ceil(speedrunState.leftMs / 1000)}s`;
+    if (speedrunState.leftMs <= 0) {
+      clearInterval(speedrunTimerId);
+      finalizeSpeedrunGame();
+    }
+  }, 100);
+  // Focus l'input après render
+  setTimeout(() => document.getElementById("speedrun-input")?.focus(), 100);
+}
+
+function speedrunNormalize(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+function speedrunSubmitGuess() {
+  if (!speedrunState || speedrunState.phase !== "playing") return;
+  const input = document.getElementById("speedrun-input");
+  const guess = speedrunNormalize(input?.value || "");
+  if (!guess) return;
+  const target = speedrunState.pool[speedrunState.currentIndex];
+  if (!target) return;
+  const targetNorm = speedrunNormalize(target.name);
+  if (guess === targetNorm) {
+    speedrunState.correct += 1;
+    speedrunState.streak += 1;
+    if (speedrunState.streak > speedrunState.bestStreak) speedrunState.bestStreak = speedrunState.streak;
+    speedrunState.history.push({ id: target.id, name: target.name, correct: true });
+    awardXp(5, "Speedrun Pokédex");
+    speedrunState.currentIndex += 1;
+    if (input) input.value = "";
+    speedrunState.currentInput = "";
+    renderSpeedrunScreen();
+    setTimeout(() => document.getElementById("speedrun-input")?.focus(), 50);
+  } else {
+    // Wrong guess: flash input
+    if (input) {
+      input.classList.add("is-wrong");
+      setTimeout(() => input.classList.remove("is-wrong"), 280);
+    }
+    speedrunState.streak = 0;
+  }
+}
+
+function speedrunSkip() {
+  if (!speedrunState || speedrunState.phase !== "playing") return;
+  const target = speedrunState.pool[speedrunState.currentIndex];
+  if (target) speedrunState.history.push({ id: target.id, name: target.name, correct: false });
+  speedrunState.skipped += 1;
+  speedrunState.streak = 0;
+  speedrunState.currentIndex += 1;
+  const input = document.getElementById("speedrun-input");
+  if (input) input.value = "";
+  speedrunState.currentInput = "";
+  renderSpeedrunScreen();
+  setTimeout(() => document.getElementById("speedrun-input")?.focus(), 50);
+}
+
+function finalizeSpeedrunGame() {
+  if (!speedrunState) return;
+  speedrunState.phase = "gameover";
+  const isRecord = speedrunState.correct > speedrunState.highScore;
+  if (isRecord && playerProfile) {
+    playerProfile.speedrunHighScore = speedrunState.correct;
+    speedrunState.highScore = speedrunState.correct;
+    try { saveProfile(); } catch (_e) {}
+    awardXp(50, "Nouveau record Speedrun");
+  }
+  // XP global selon score
+  if (speedrunState.correct >= 10) awardXp(speedrunState.correct * 3, `Speedrun ${speedrunState.correct} Pokémon`);
+  renderSpeedrunScreen();
+}
+
+function restartSpeedrunGame() {
+  if (speedrunTimerId) clearInterval(speedrunTimerId);
+  speedrunState = createSpeedrunState();
+  renderSpeedrunScreen();
+}
+
+function shareSpeedrunResult() {
+  if (!speedrunState) return;
+  const xp = Number(playerProfile?.xp) || 0;
+  const tier = getXpTier(xp);
+  const text = `⚡ Speedrun Pokédex : ${speedrunState.correct} Pokémon en 60s (best streak ${speedrunState.bestStreak})
+${tier.emoji} Niveau ${tier.level} · ${tier.name}
+👉 https://pokdle.onrender.com`;
+  copyShareText(text);
+}
+
+function downloadSpeedrunImage() {
+  if (!speedrunState) return;
+  const xp = Number(playerProfile?.xp) || 0;
+  const tier = getXpTier(xp);
+  downloadScoreImage(`pokedle-speedrun-${speedrunState.correct}.png`, {
+    title: "Speedrun Pokédex 60s",
+    mainScore: speedrunState.correct,
+    mainLabel: `Pokémon devinés · best streak ${speedrunState.bestStreak}`,
+    subtitle: `${tier.emoji} Niv. ${tier.level} · ${tier.name}`,
+  });
+}
+
+window.openSpeedrunMode = openSpeedrunMode;
+window.startSpeedrunGame = startSpeedrunGame;
+window.speedrunSubmitGuess = speedrunSubmitGuess;
+window.speedrunSkip = speedrunSkip;
+window.restartSpeedrunGame = restartSpeedrunGame;
+window.shareSpeedrunResult = shareSpeedrunResult;
+window.downloadSpeedrunImage = downloadSpeedrunImage;
+
+function renderSpeedrunScreen() {
+  const root = document.getElementById("speedrun-root");
+  if (!root) return;
+  const state = speedrunState;
+  if (!state) { root.innerHTML = ""; return; }
+  if (state.phase === "lobby") {
+    root.innerHTML = `
+      <div class="speedrun-lobby">
+        <div class="speedrun-lobby-icon">⚡</div>
+        <h3>Prêt pour 60 secondes intenses ?</h3>
+        <p>Tu vois le sprite du Pokémon, tu tapes son nom (accent et casse ignorés). Si tu sèches, "Passer" (Entrée vide).</p>
+        <div class="speedrun-lobby-stats">
+          <div class="speedrun-lobby-stat"><span>Ton record</span><b>${state.highScore || 0}</b></div>
+          <div class="speedrun-lobby-stat"><span>Durée</span><b>60s</b></div>
+        </div>
+        <button class="btn-red speedrun-start-btn" type="button" onclick="startSpeedrunGame()">⚡ Démarrer</button>
+      </div>`;
+    return;
+  }
+  if (state.phase === "playing") {
+    const current = state.pool[state.currentIndex];
+    const sprite = current ? getPokemonSprite(current) : "";
+    root.innerHTML = `
+      <div class="speedrun-board">
+        <div class="speedrun-status">
+          <div class="speedrun-stat-chip"><span>Trouvés</span><b>${state.correct}</b></div>
+          <div class="speedrun-stat-chip is-streak"><span>Streak</span><b>${state.streak}</b></div>
+          <div class="speedrun-stat-chip"><span>Passés</span><b>${state.skipped}</b></div>
+          <div class="speedrun-stat-chip is-timer">⏱️ <b id="speedrun-timer">${Math.ceil(state.leftMs / 1000)}s</b></div>
+        </div>
+        <div class="speedrun-pokemon">
+          <img class="speedrun-sprite" src="${escapeHtml(sprite)}" alt="?" />
+        </div>
+        <form class="speedrun-form" onsubmit="event.preventDefault(); if (document.getElementById('speedrun-input').value.trim()) speedrunSubmitGuess(); else speedrunSkip();">
+          <input id="speedrun-input" class="speedrun-input" type="text" placeholder="Nom du Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" autofocus />
+          <div class="speedrun-actions">
+            <button class="btn-red" type="submit">Valider</button>
+            <button class="btn-ghost" type="button" onclick="speedrunSkip()">Passer ⏭</button>
+          </div>
+        </form>
+        <p class="speedrun-hint">💡 Astuce : Entrée pour valider, Entrée vide pour passer</p>
+      </div>`;
+    return;
+  }
+  if (state.phase === "gameover") {
+    const isRecord = state.correct > 0 && state.correct >= state.highScore;
+    root.innerHTML = `
+      <div class="speedrun-gameover">
+        <h3>⏱️ Temps écoulé</h3>
+        <div class="speedrun-final-score">${state.correct}</div>
+        <p class="speedrun-final-label">Pokémon devinés en 60s</p>
+        <div class="speedrun-final-stats">
+          <div><span>Meilleur streak</span><b>${state.bestStreak}</b></div>
+          <div><span>Passés</span><b>${state.skipped}</b></div>
+          <div><span>Record perso</span><b>${state.highScore}</b></div>
+        </div>
+        ${isRecord ? '<div class="speedrun-record-flash">🏆 NOUVEAU RECORD !</div>' : ""}
+        <div class="higher-lower-final-actions">
+          <button class="btn-red" type="button" onclick="restartSpeedrunGame()">Rejouer</button>
+          <button class="btn-ghost" type="button" onclick="shareSpeedrunResult()">📋 Copier</button>
+          <button class="btn-ghost" type="button" onclick="downloadSpeedrunImage()">💾 Image</button>
+        </div>
+      </div>`;
+    return;
+  }
 }
 
 // === POKÉ-CONNECTIONS — mode solo (style NYT Connections) ===
@@ -18854,7 +19172,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction','screen-draft-score-attack'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction','screen-draft-score-attack','screen-speedrun'].forEach(hideScreen);
 }
 
 function ensureOverlay(title, html) {

@@ -25979,6 +25979,241 @@ body.theme-dark .dq-footer b { color: #ff8a72; }
 body.theme-dark .dq-actions { border-top-color: rgba(255, 255, 255, 0.08); }
 .dq-actions button { padding: 10px 18px; font-size: 13px; font-weight: 800; }
 
+/* ============================================================ */
+/* === POLISH UX — Transitions fade entre screens === */
+/* ============================================================ */
+
+main > div[id^="screen-"] {
+  animation: screenFadeIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+main > div[id^="screen-"].hidden { animation: none; }
+
+@keyframes screenFadeIn {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton loader réutilisable */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(17, 31, 64, 0.04), rgba(17, 31, 64, 0.08), rgba(17, 31, 64, 0.04));
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+body.theme-dark .skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  background-size: 200% 100%;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Polish empty states */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #6b7c98;
+}
+.empty-state .empty-icon {
+  font-size: 56px;
+  opacity: 0.42;
+  filter: grayscale(0.3);
+}
+.empty-state .empty-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1f36;
+}
+.empty-state .empty-desc {
+  font-size: 13px;
+  color: #6b7c98;
+  max-width: 420px;
+  line-height: 1.55;
+}
+body.theme-dark .empty-state { color: #b8c8e4; }
+body.theme-dark .empty-state .empty-title { color: #edf5ff; }
+body.theme-dark .empty-state .empty-desc { color: #b8c8e4; }
+
+/* ============================================================ */
+/* === SPEEDRUN POKÉDEX — Mode 60s rapide === */
+/* ============================================================ */
+
+.speedrun-card { padding: 22px 26px; }
+.speedrun-root { margin-top: 14px; min-height: 480px; display: flex; flex-direction: column; }
+
+/* Lobby */
+.speedrun-lobby {
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  padding: 40px 24px;
+  text-align: center;
+}
+.speedrun-lobby-icon { font-size: 64px; line-height: 1; }
+.speedrun-lobby h3 { margin: 0; font-size: 24px; color: #12213d; font-weight: 900; letter-spacing: -0.01em; }
+.speedrun-lobby p { margin: 0; max-width: 480px; color: #4a5a78; font-size: 14px; line-height: 1.55; }
+.speedrun-lobby-stats { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; margin: 8px 0; }
+.speedrun-lobby-stat {
+  background: linear-gradient(180deg, #fff8ee, #ffead0);
+  border: 1px solid rgba(255, 153, 0, 0.32);
+  padding: 14px 22px;
+  border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 120px;
+}
+.speedrun-lobby-stat span { font-size: 11px; color: #8a5a00; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+.speedrun-lobby-stat b { font-size: 26px; color: #b3360c; font-weight: 900; }
+.speedrun-start-btn { padding: 16px 40px !important; font-size: 16px !important; font-weight: 800 !important; }
+body.theme-dark .speedrun-lobby h3 { color: #edf5ff; }
+body.theme-dark .speedrun-lobby p { color: #b8c8e4; }
+
+/* Playing */
+.speedrun-board { display: flex; flex-direction: column; gap: 18px; flex: 1; }
+.speedrun-status {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.speedrun-stat-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(47, 118, 255, 0.08);
+  font-size: 13px;
+}
+.speedrun-stat-chip span { color: #4a5a78; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+.speedrun-stat-chip b { color: #12213d; font-weight: 800; font-size: 16px; }
+.speedrun-stat-chip.is-streak { background: linear-gradient(135deg, rgba(255, 107, 53, 0.18), rgba(255, 61, 127, 0.10)); border: 1px solid rgba(255, 61, 127, 0.32); }
+.speedrun-stat-chip.is-streak b { color: #b3360c; }
+.speedrun-stat-chip.is-timer { background: linear-gradient(135deg, rgba(228, 56, 47, 0.18), rgba(228, 56, 47, 0.06)); border: 1px solid rgba(228, 56, 47, 0.42); font-weight: 800; color: #8a2620; }
+.speedrun-stat-chip.is-timer b { color: #5a1a16; font-size: 18px; }
+body.theme-dark .speedrun-stat-chip { background: rgba(99, 139, 207, 0.14); }
+body.theme-dark .speedrun-stat-chip span { color: #9aaecf; }
+body.theme-dark .speedrun-stat-chip b { color: #edf5ff; }
+
+.speedrun-pokemon {
+  display: flex; justify-content: center; align-items: center;
+  padding: 24px;
+  background: rgba(47, 118, 255, 0.04);
+  border-radius: 18px;
+  border: 1px solid rgba(116, 158, 241, 0.12);
+}
+.speedrun-sprite {
+  width: 200px; height: 200px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 8px 16px rgba(17, 31, 64, 0.18));
+}
+body.theme-dark .speedrun-pokemon { background: rgba(99, 139, 207, 0.08); border-color: rgba(116, 158, 241, 0.18); }
+
+.speedrun-form { display: flex; flex-direction: column; gap: 10px; }
+.speedrun-input {
+  width: 100%;
+  padding: 16px 22px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 14px;
+  border: 2px solid rgba(116, 158, 241, 0.32);
+  background: #ffffff;
+  font-family: inherit;
+  text-align: center;
+  letter-spacing: 0.01em;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.speedrun-input:focus {
+  outline: none;
+  border-color: #2f76ff;
+  box-shadow: 0 0 0 4px rgba(47, 118, 255, 0.22);
+}
+.speedrun-input.is-wrong {
+  border-color: #e4382f;
+  background: #ffe1de;
+  animation: speedrunInputShake 0.28s ease-in-out;
+}
+@keyframes speedrunInputShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+body.theme-dark .speedrun-input { background: rgba(18, 31, 54, 0.65); color: #edf5ff; border-color: rgba(116, 158, 241, 0.32); }
+body.theme-dark .speedrun-input.is-wrong { background: rgba(228, 56, 47, 0.22); }
+
+.speedrun-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.speedrun-actions button { padding: 14px; font-weight: 800; font-size: 15px; }
+
+.speedrun-hint { text-align: center; font-size: 12px; color: #6b7c98; margin: 4px 0 0; }
+body.theme-dark .speedrun-hint { color: #94a3b8; }
+
+/* Game over */
+.speedrun-gameover {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 40px 24px;
+  text-align: center;
+}
+.speedrun-gameover h3 { margin: 0; font-size: 22px; color: #e4382f; font-weight: 900; }
+.speedrun-final-score {
+  font-size: 96px;
+  font-weight: 900;
+  background: linear-gradient(180deg, #ff6b35, #ff3d7f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  animation: speedrunScorePop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes speedrunScorePop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.speedrun-final-label { margin: 0; color: #4a5a78; font-size: 15px; font-weight: 700; }
+.speedrun-final-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  margin: 12px 0;
+}
+.speedrun-final-stats > div {
+  background: rgba(47, 118, 255, 0.08);
+  padding: 14px 8px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.speedrun-final-stats span { font-size: 10px; color: #4a5a78; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+.speedrun-final-stats b { font-size: 22px; color: #12213d; font-weight: 900; }
+body.theme-dark .speedrun-final-stats > div { background: rgba(99, 139, 207, 0.14); }
+body.theme-dark .speedrun-final-stats span { color: #9aaecf; }
+body.theme-dark .speedrun-final-stats b { color: #edf5ff; }
+
+.speedrun-record-flash {
+  background: linear-gradient(135deg, #ffd97a, #ff9620);
+  color: #5a3a00;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 18px rgba(255, 178, 55, 0.42);
+  animation: xpLevelUpPulse 1.4s ease-in-out infinite;
+}
+body.theme-dark .speedrun-gameover h3 { color: #ff8a72; }
+body.theme-dark .speedrun-final-label { color: #b8c8e4; }
+
+@media (max-width: 640px) {
+  .speedrun-sprite { width: 150px; height: 150px; }
+  .speedrun-input { font-size: 16px; padding: 14px 18px; }
+  .speedrun-final-stats { grid-template-columns: 1fr; }
+  .speedrun-final-score { font-size: 72px; }
+}
+
 /* Sous-titre */
 #screen-draft-score-attack .card-desc {
   padding: 22px 40px 0 !important;

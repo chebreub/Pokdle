@@ -82,6 +82,7 @@
       <button type="button" onclick="startPokedexOrderGame()"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
       <button type="button" onclick="openHigherLowerMode()"><span class="nav-dd-ico">📊</span>Higher or Lower</button>
       <button type="button" onclick="openPokeConnectionsMode()"><span class="nav-dd-ico">🧩</span>Poké-Connections</button>
+      <button type="button" onclick="openSpeedrunMode()"><span class="nav-dd-ico">⚡</span>Speedrun Pokédex</button>
     </div>
   </div>
 
@@ -1201,6 +1202,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <p class="card-desc">16 Pokémon répartis en 4 groupes de 4 selon un thème caché (type, génération, habitat, couleur, stade). Trouve les 4 groupes en 4 erreurs max.</p>
         <div id="poke-connections-root" class="poke-connections-root"></div>
+      </div>
+    </div>
+
+    <div id="screen-speedrun" class="hidden">
+      <div class="card speedrun-card">
+        <div class="ranking-head">
+          <h2 class="card-title">⚡ Speedrun Pokédex</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-red" type="button" onclick="restartSpeedrunGame()">Rejouer</button>
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Devine le maximum de Pokémon en <b>60 secondes</b>. Tu vois le sprite, tu tapes le nom. Passe avec Entrée si tu sèches.</p>
+        <div id="speedrun-root" class="speedrun-root"></div>
       </div>
     </div>
 
