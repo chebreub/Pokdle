@@ -16314,18 +16314,13 @@ function selectDraftGeneration(gen) {
   const room = draftArenaState.scoreAttackRoom;
   if (draftArenaState.mode === "scoreAttack" && room) {
     const self = getDraftScoreAttackRoomSelf(room);
-    // Host peut relancer en lobby OU après une partie finie (status finished)
-    if (self?.isHost && (room.status === "lobby" || room.status === "finished")) {
+    if (self?.isHost) {
+      // L'host peut toujours (re)lancer un duel — serveur reset complet
       return startDraftScoreDuel(gen);
     }
-    if (self?.isHost && room.status === "live") {
-      draftArenaState.scoreAttackRoomError = "Une partie est déjà en cours — termine-la d'abord ou quitte la room.";
-      return renderDraftArena();
-    }
-    if (!self?.isHost) {
-      draftArenaState.message = "L'hôte va choisir la génération et lancer le duel.";
-      return renderDraftArena();
-    }
+    // Invité : juste message d'attente, jamais de reset local
+    draftArenaState.message = "L'hôte va choisir la génération et lancer le duel.";
+    return renderDraftArena();
   }
 
   draftArenaState.phase = "draft";
@@ -17212,7 +17207,8 @@ function renderDraftArena() {
     const room = draftArenaState.scoreAttackRoom;
     const selfRoom = room ? getDraftScoreAttackRoomSelf(room) : null;
     const isDuelHost = Boolean(draftArenaState.mode === "scoreAttack" && room && selfRoom?.isHost);
-    const canHostRelaunch = isDuelHost && (room?.players?.length || 0) === 2 && (room?.status === "finished" || room?.status === "lobby");
+    // L'host peut relancer à tout moment quand il y a 2 joueurs (live, lobby, finished)
+    const canHostRelaunch = isDuelHost && (room?.players?.length || 0) === 2;
     for (const cfg of DRAFT_GEN_OPTIONS) {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -17245,7 +17241,12 @@ function renderDraftArena() {
     } else if (!draftArenaState.options.length) {
       const msg = document.createElement("p");
       msg.className = "pokedex-muted";
-      msg.textContent = "Aucune option disponible. Réinitialise le draft.";
+      // En duel actif : message d'attente du serveur. Sinon : message reset.
+      if (draftArenaState.duelMode && draftArenaState.scoreAttackRoom?.duel) {
+        msg.textContent = "⏳ Chargement de la wave du duel… Si bloqué, l'hôte peut cliquer sur une génération pour relancer.";
+      } else {
+        msg.textContent = "Aucune option disponible. Réinitialise le draft.";
+      }
       options.appendChild(msg);
     } else {
       let optionIdx = 0;

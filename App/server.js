@@ -962,7 +962,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer le duel." });
       if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
-      if (room.duel && room.status === "live") return respond(ack, { ok: false, error: "Duel déjà en cours." });
+      // L'host peut toujours (re)lancer un duel — reset complet
       const gen = Number(payload.gen);
       if (!Number.isInteger(gen) || gen < 1 || gen > 9) return respond(ack, { ok: false, error: "Génération invalide." });
       const pool = generateDraftDuelPool(gen);
