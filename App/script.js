@@ -16190,9 +16190,19 @@ function showDraftScoreFinaleOverlay(room) {
 }
 
 function renderDraftScoreAttackPlayerCard(player, isSelf) {
-  const team = Array.isArray(player.progress?.team) ? player.progress.team : (Array.isArray(player.result?.team) ? player.result.team : []);
-  const average = player.result?.average ?? player.progress?.average ?? 0;
-  const total = player.result?.total ?? player.progress?.total ?? 0;
+  // En mode duel synchronisé : lire depuis room.duel.teams[side] (source de vérité serveur)
+  const room = draftArenaState?.scoreAttackRoom;
+  const duelTeam = Array.isArray(room?.duel?.teams?.[player.side]) ? room.duel.teams[player.side] : null;
+  const team = duelTeam && duelTeam.length
+    ? duelTeam
+    : (Array.isArray(player.progress?.team) ? player.progress.team : (Array.isArray(player.result?.team) ? player.result.team : []));
+  // Calculer moyenne live depuis duel team si en duel actif
+  let average = player.result?.average ?? player.progress?.average ?? 0;
+  let total = player.result?.total ?? player.progress?.total ?? 0;
+  if (duelTeam && duelTeam.length && !player.hasSubmitted) {
+    total = duelTeam.reduce((s, e) => s + (Number(e.bst) || 0), 0);
+    average = Math.round(total / duelTeam.length);
+  }
   const filled = team.length;
   const slotsHtml = Array.from({ length: DRAFT_TEAM_SIZE }, (_, i) => {
     const entry = team[i];
@@ -16298,16 +16308,22 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
 
 function selectDraftGeneration(gen) {
   if (!draftArenaState) return;
-  // Mode duel : l'hôte lance directement le duel via serveur (en lobby OU après une partie finie pour relancer)
+  // Si on est dans une room Score Attack : la gen est gérée par le serveur
   const room = draftArenaState.scoreAttackRoom;
-  const inDuelRoom = draftArenaState.mode === "scoreAttack" && room && (room.players || []).length === 2 && (room.status === "lobby" || room.status === "finished");
-  if (inDuelRoom) {
+  if (draftArenaState.mode === "scoreAttack" && room) {
     const self = getDraftScoreAttackRoomSelf(room);
-    if (self?.isHost) {
+    // Host peut relancer en lobby OU après une partie finie (status finished)
+    if (self?.isHost && (room.status === "lobby" || room.status === "finished")) {
       return startDraftScoreDuel(gen);
     }
-    draftArenaState.message = "L'hôte va choisir la génération et lancer le duel.";
-    return renderDraftArena();
+    if (self?.isHost && room.status === "live") {
+      draftArenaState.scoreAttackRoomError = "Une partie est déjà en cours — termine-la d'abord ou quitte la room.";
+      return renderDraftArena();
+    }
+    if (!self?.isHost) {
+      draftArenaState.message = "L'hôte va choisir la génération et lancer le duel.";
+      return renderDraftArena();
+    }
   }
 
   draftArenaState.phase = "draft";
@@ -16957,8 +16973,9 @@ function toggleDraftScoreAttackMode() {
 
 async function pickDraftArenaOption(pokemonId) {
   if (!draftArenaState || draftArenaState.phase !== "draft") return;
-  // Route vers le serveur en mode duel synchronisé
-  if (draftArenaState.duelMode && draftArenaState.scoreAttackRoom) {
+  // Si on est dans une room Score Attack : TOUJOURS passer par le serveur (peu importe duelMode)
+  // Évite que le client retombe en pick local pendant une transition de state
+  if (draftArenaState.mode === "scoreAttack" && draftArenaState.scoreAttackRoom) {
     if (draftArenaState.duelPendingSelf) return;
     return pickDraftScoreDuelOption(pokemonId);
   }
