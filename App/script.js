@@ -31,7 +31,183 @@ const DEFAULT_STATS = {
 const DEFAULT_PROFILE = {
   nickname: "",
   favoritePokemonId: null,
+  xp: 0,
+  dailyQuests: null,
+  dailyQuestsDate: null,
+  dailyLoginStreak: 0,
+  lastDailyLogin: null,
+  totalQuestsCompleted: 0,
 };
+
+// === ENGAGEMENT — XP + quêtes quotidiennes ===
+const XP_TIERS = [
+  { level: 1, name: "Recrue", emoji: "🥚", minXp: 0 },
+  { level: 2, name: "Novice", emoji: "🐣", minXp: 100 },
+  { level: 3, name: "Apprenti", emoji: "🌱", minXp: 300 },
+  { level: 4, name: "Dresseur", emoji: "🔥", minXp: 700 },
+  { level: 5, name: "Expert", emoji: "⚡", minXp: 1500 },
+  { level: 6, name: "Vétéran", emoji: "💎", minXp: 3000 },
+  { level: 7, name: "Champion", emoji: "🏆", minXp: 6000 },
+  { level: 8, name: "Maître", emoji: "👑", minXp: 12000 },
+  { level: 9, name: "Légende", emoji: "🌟", minXp: 25000 },
+  { level: 10, name: "Mythe Pokémon", emoji: "✨", minXp: 50000 },
+];
+
+const QUEST_POOL = [
+  { id: "win_daily", label: "Gagne le Pokédle du jour", target: 1, xp: 80 },
+  { id: "play_3_modes", label: "Joue à 3 modes différents aujourd'hui", target: 3, xp: 70 },
+  { id: "hl_streak_10", label: "Fais 10 bonnes réponses d'affilée en Higher or Lower", target: 10, xp: 90 },
+  { id: "score_attack_500", label: "Atteins 500+ de moyenne BST en Score Attack", target: 500, xp: 80, comparator: "gte" },
+  { id: "score_attack_600", label: "Atteins 600+ de moyenne BST en Score Attack (Master)", target: 600, xp: 150, comparator: "gte" },
+  { id: "stat_clash_win", label: "Gagne 1 Stat Clash", target: 1, xp: 70 },
+  { id: "connections_clear", label: "Résous un Poké-Connections", target: 1, xp: 100 },
+  { id: "stat_auction_win", label: "Gagne 1 Stat Auction", target: 1, xp: 80 },
+  { id: "draft_complete", label: "Termine un draft d'équipe (Arènes ou Score Attack)", target: 1, xp: 50 },
+  { id: "pokedex_browse", label: "Consulte le Pokédex aujourd'hui", target: 1, xp: 30 },
+];
+
+function getXpTier(xp = 0) {
+  let tier = XP_TIERS[0];
+  for (const t of XP_TIERS) if (xp >= t.minXp) tier = t;
+  return tier;
+}
+
+function getXpProgress(xp = 0) {
+  const cur = getXpTier(xp);
+  const next = XP_TIERS.find((t) => t.level > cur.level) || null;
+  if (!next) return { tier: cur, next: null, percent: 100, xpInTier: xp - cur.minXp, xpToNext: 0 };
+  const xpInTier = xp - cur.minXp;
+  const xpToNext = next.minXp - cur.minXp;
+  return { tier: cur, next, percent: Math.min(100, Math.round((xpInTier / xpToNext) * 100)), xpInTier, xpToNext };
+}
+
+function getDailyQuestKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function ensureDailyQuests() {
+  if (!playerProfile) return [];
+  const todayKey = getDailyQuestKey();
+  if (playerProfile.dailyQuestsDate === todayKey && Array.isArray(playerProfile.dailyQuests)) return playerProfile.dailyQuests;
+  // Génère 4 quêtes aléatoires depuis QUEST_POOL (seed basé sur la date pour stabilité dans la journée)
+  const seed = Date.parse(todayKey + "T00:00:00Z");
+  const rnd = (idx) => {
+    const x = Math.sin(seed + idx * 9301) * 233280;
+    return x - Math.floor(x);
+  };
+  const shuffled = QUEST_POOL.slice().map((q, i) => ({ q, r: rnd(i) })).sort((a, b) => a.r - b.r).map((entry) => entry.q);
+  const picked = shuffled.slice(0, 4).map((q) => ({ ...q, progress: 0, completed: false }));
+  playerProfile.dailyQuests = picked;
+  playerProfile.dailyQuestsDate = todayKey;
+  try { saveProfile(); } catch (_e) {}
+  return picked;
+}
+
+function awardXp(amount, source = "") {
+  if (!playerProfile || !Number.isFinite(amount) || amount <= 0) return;
+  const prevTier = getXpTier(playerProfile.xp || 0);
+  playerProfile.xp = Math.max(0, (Number(playerProfile.xp) || 0) + Math.round(amount));
+  const newTier = getXpTier(playerProfile.xp);
+  try { saveProfile(); } catch (_e) {}
+  showXpToast(`+${Math.round(amount)} XP${source ? ` · ${source}` : ""}`);
+  if (newTier.level > prevTier.level) {
+    setTimeout(() => showXpToast(`🎉 Niveau ${newTier.level} — ${newTier.name} ${newTier.emoji}`, "is-levelup"), 700);
+  }
+  updateXpBadge();
+}
+
+function progressQuest(questId, amount = 1) {
+  if (!playerProfile || !questId) return;
+  const quests = ensureDailyQuests();
+  const quest = quests.find((q) => q.id === questId);
+  if (!quest || quest.completed) return;
+  if (quest.comparator === "gte") {
+    quest.progress = Math.max(quest.progress || 0, Number(amount) || 0);
+  } else {
+    quest.progress = (quest.progress || 0) + (Number(amount) || 0);
+  }
+  if (quest.progress >= quest.target) {
+    quest.completed = true;
+    quest.completedAt = Date.now();
+    playerProfile.totalQuestsCompleted = (Number(playerProfile.totalQuestsCompleted) || 0) + 1;
+    awardXp(quest.xp, `Quête : ${quest.label}`);
+    try { saveProfile(); } catch (_e) {}
+  } else {
+    try { saveProfile(); } catch (_e) {}
+  }
+  updateXpBadge();
+}
+
+function showXpToast(message, extraClass = "") {
+  let toast = document.getElementById("xp-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "xp-toast";
+    toast.className = "xp-toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.className = `xp-toast is-visible ${extraClass}`;
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => toast.classList.remove("is-visible", "is-levelup"), 2400);
+}
+
+function openDailyQuestsModal() {
+  const quests = ensureDailyQuests();
+  const xp = Number(playerProfile?.xp) || 0;
+  const prog = getXpProgress(xp);
+  const completedCount = quests.filter((q) => q.completed).length;
+  let overlay = document.getElementById("daily-quests-overlay");
+  if (overlay) overlay.remove();
+  overlay = document.createElement("div");
+  overlay.id = "daily-quests-overlay";
+  overlay.className = "daily-quests-overlay";
+  overlay.innerHTML = `
+    <div class="dq-backdrop" onclick="closeDailyQuestsModal()"></div>
+    <div class="dq-content" role="dialog" aria-modal="true">
+      <button class="dq-close" type="button" onclick="closeDailyQuestsModal()" aria-label="Fermer">×</button>
+      <div class="dq-hero">
+        <div class="dq-hero-tier"><span class="dq-hero-emoji">${prog.tier.emoji}</span><div><b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : ""}</small></div></div>
+        <div class="dq-hero-bar"><div class="dq-hero-fill" style="width:${prog.percent}%"></div></div>
+      </div>
+      <div class="dq-header">
+        <h3>🎯 Quêtes du jour</h3>
+        <span class="dq-progress">${completedCount} / ${quests.length} terminée${completedCount > 1 ? "s" : ""}</span>
+      </div>
+      <div class="dq-list">
+        ${quests.map((q) => {
+          const pct = Math.min(100, Math.round(((q.progress || 0) / q.target) * 100));
+          return `<div class="dq-item ${q.completed ? "is-done" : ""}">
+            <div class="dq-item-head"><b>${escapeHtml(q.label)}</b><span class="dq-xp">+${q.xp} XP</span></div>
+            <div class="dq-item-bar"><div class="dq-item-fill" style="width:${pct}%"></div></div>
+            <div class="dq-item-meta"><span>${q.progress || 0} / ${q.target}</span>${q.completed ? '<span class="dq-done-tag">✅ Réussi</span>' : ""}</div>
+          </div>`;
+        }).join("")}
+      </div>
+      <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b></p>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("is-visible"));
+}
+
+function closeDailyQuestsModal() {
+  const overlay = document.getElementById("daily-quests-overlay");
+  if (overlay) {
+    overlay.classList.remove("is-visible");
+    setTimeout(() => overlay.remove(), 250);
+  }
+}
+
+window.openDailyQuestsModal = openDailyQuestsModal;
+window.closeDailyQuestsModal = closeDailyQuestsModal;
+
+function updateXpBadge() {
+  const badge = document.getElementById("global-xp-badge");
+  if (!badge || !playerProfile) return;
+  const xp = Number(playerProfile.xp) || 0;
+  const prog = getXpProgress(xp);
+  badge.innerHTML = `<span class="xp-badge-emoji">${prog.tier.emoji}</span><span class="xp-badge-info"><b>Niv. ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · Max"}</small></span><div class="xp-badge-bar"><div class="xp-badge-fill" style="width:${prog.percent}%"></div></div>`;
+}
 
 const ACHIEVEMENT_DEFS = [
   { id: "first_game", title: "Premier pas", desc: "Jouer une première partie.", target: 1, getValue: () => playerStats.played || 0 },
@@ -2962,6 +3138,15 @@ function finalizeStatClashBotGame() {
   s.announcerLine = pickStatClashAnnouncerLine("finish");
   s.announcerTone = "win";
   s.finalWinnerSide = winnerSide;
+  // XP + quête Stat Clash
+  if (winnerSide === "left") {
+    awardXp(70, "Victoire Stat Clash");
+    progressQuest("stat_clash_win", 1);
+  } else if (winnerSide === "right") {
+    awardXp(20, "Stat Clash (défaite)");
+  } else {
+    awardXp(35, "Stat Clash (égalité)");
+  }
   renderStatClashScreen();
 }
 
@@ -4116,6 +4301,8 @@ function answerHigherLower(choice) {
     }
     if (correct) {
       higherLowerState.score += 1;
+      awardXp(3, "Higher or Lower");
+      progressQuest("hl_streak_10", higherLowerState.score);
       if (higherLowerState.score > higherLowerState.highScore) {
         higherLowerState.highScore = higherLowerState.score;
         if (typeof playerProfile === "object" && playerProfile) {
@@ -4653,6 +4840,8 @@ function submitPokeConnectionsGuess() {
     pokeConnectionsState.selected = new Set();
     if (pokeConnectionsState.foundGroupIdx.size === 4) {
       pokeConnectionsState.phase = "won";
+      awardXp(100, "Poké-Connections résolu");
+      progressQuest("connections_clear", 1);
     }
   } else {
     pokeConnectionsState.mistakes += 1;
@@ -4947,7 +5136,19 @@ function applyStatAuctionRoomState(room) {
     if (me?.submittedThisRound) statAuctionState.submitted = true;
     else if (room.round !== prevRound) statAuctionState.submitted = false;
   } else if (room.status === "finished") {
+    const wasFinished = statAuctionState.phase === "finished";
     statAuctionState.phase = "finished";
+    if (!wasFinished) {
+      const self = room.players?.find((p) => p.isSelf);
+      if (self && room.winnerSide === self.side) {
+        awardXp(80, "Victoire Stat Auction");
+        progressQuest("stat_auction_win", 1);
+      } else if (room.winnerSide === "tie") {
+        awardXp(40, "Stat Auction (égalité)");
+      } else {
+        awardXp(25, "Stat Auction (défaite)");
+      }
+    }
   }
   renderStatAuctionScreen();
 }
@@ -16995,6 +17196,12 @@ async function pickDraftArenaOption(pokemonId) {
       draftArenaState.message = isNewRecord
         ? `🏆 NOUVEAU RECORD Gen ${draftArenaState.selectedGen} : moyenne BST ${metrics.average} ! (avant : ${previousRecord || 0})`
         : `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
+      // XP + quêtes Score Attack
+      awardXp(Math.round(metrics.average / 10), `Score Attack ${metrics.average} BST`);
+      if (isNewRecord) awardXp(50, "Nouveau record Score Attack");
+      progressQuest("score_attack_500", metrics.average);
+      progressQuest("score_attack_600", metrics.average);
+      progressQuest("draft_complete", 1);
       submitDraftScoreAttackResult(metrics);
       renderDraftArena();
       return;
@@ -17875,6 +18082,15 @@ function registerWin() {
 
   if (gameMode === "daily") {
     registerDailyWinStreak();
+    // XP + quête : gagner le Pokédle du jour
+    awardXp(80, "Pokédle du jour");
+    progressQuest("win_daily", 1);
+  } else if (gameMode === "normal" || gameMode === "challenge") {
+    // XP variable selon le nombre d'essais (moins = mieux)
+    const xpReward = Math.max(20, 80 - (attempts - 1) * 8);
+    awardXp(xpReward, "Pokédle classique");
+  } else {
+    awardXp(40, `Mode ${gameMode}`);
   }
 
   saveStats();
@@ -18162,7 +18378,36 @@ function loadProfile() {
   playerProfile = {
     nickname: typeof parsed?.nickname === "string" ? parsed.nickname : "",
     favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
+    // Engagement system
+    xp: Number(parsed?.xp) || 0,
+    dailyQuests: Array.isArray(parsed?.dailyQuests) ? parsed.dailyQuests : null,
+    dailyQuestsDate: typeof parsed?.dailyQuestsDate === "string" ? parsed.dailyQuestsDate : null,
+    dailyLoginStreak: Number(parsed?.dailyLoginStreak) || 0,
+    lastDailyLogin: typeof parsed?.lastDailyLogin === "string" ? parsed.lastDailyLogin : null,
+    totalQuestsCompleted: Number(parsed?.totalQuestsCompleted) || 0,
+    // Préserver les autres champs existants
+    higherLowerHighScore: Number(parsed?.higherLowerHighScore) || 0,
+    higherLower60sHighScore: Number(parsed?.higherLower60sHighScore) || 0,
+    draftScoreAttackRecords: parsed?.draftScoreAttackRecords || {},
+    draftScoreHeadToHead: parsed?.draftScoreHeadToHead || {},
   };
+  // Tracking login quotidien pour streak
+  const today = getDailyQuestKey();
+  if (playerProfile.lastDailyLogin !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (playerProfile.lastDailyLogin === yesterday) {
+      playerProfile.dailyLoginStreak = (playerProfile.dailyLoginStreak || 0) + 1;
+    } else {
+      playerProfile.dailyLoginStreak = 1;
+    }
+    playerProfile.lastDailyLogin = today;
+    try { saveProfile(); } catch (_e) {}
+  }
+  // Init quests + badge
+  ensureDailyQuests();
+  if (typeof updateXpBadge === "function") {
+    setTimeout(() => updateXpBadge(), 0);
+  }
 }
 
 function saveProfile() {
