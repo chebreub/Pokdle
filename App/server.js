@@ -1059,6 +1059,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("draft-score:reset-self", (payload = {}, ack) => {
+    try {
+      const room = findDraftScoreRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false });
+      player.result = null;
+      player.progress = null;
+      // Si tous les joueurs ont reset, la room repasse en live (relance possible)
+      if (room.players.every((p) => !p.result)) {
+        room.status = "live";
+        room.winnerSide = null;
+      }
+      emitDraftScoreRoomState(room);
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false });
+    }
+  });
+
   socket.on("draft-score:reroll-duel-wave", (payload = {}, ack) => {
     try {
       const room = findDraftScoreRoomBySocket(socket.id);

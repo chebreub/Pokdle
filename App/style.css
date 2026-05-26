@@ -25399,6 +25399,105 @@ body.theme-dark .draft-score-vs-share b { color: #ffe19a; }
   .draft-score-vs-versus { font-size: 22px; padding: 6px 0; }
 }
 
+/* === DRAFT SCORE ATTACK — DA dédiée (palette doré/orange, pour différencier du mode Arène bleu) === */
+#screen-draft-score-attack {
+  background:
+    radial-gradient(ellipse at top left, rgba(255, 178, 55, 0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(255, 100, 50, 0.08) 0%, transparent 50%);
+  min-height: 100vh;
+}
+
+#screen-draft-score-attack .draft-card {
+  border: 2px solid rgba(255, 178, 55, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #fff8e8 100%);
+  box-shadow: 0 24px 56px rgba(255, 153, 0, 0.18), 0 2px 8px rgba(255, 178, 55, 0.10);
+}
+body.theme-dark #screen-draft-score-attack .draft-card {
+  background: linear-gradient(180deg, rgba(40, 26, 12, 0.72) 0%, rgba(28, 18, 8, 0.86) 100%);
+  border-color: rgba(255, 178, 55, 0.32);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
+}
+
+#screen-draft-score-attack .ranking-head {
+  border-bottom: 2px solid rgba(255, 178, 55, 0.22);
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+}
+
+#screen-draft-score-attack .card-title {
+  font-size: 1.6rem !important;
+  background: linear-gradient(180deg, #ff9620, #e4382f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none !important;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+#screen-draft-score-attack .draft-progress-shell {
+  background: linear-gradient(180deg, rgba(255, 178, 55, 0.10), rgba(255, 178, 55, 0.04));
+  border: 1px solid rgba(255, 178, 55, 0.32);
+  padding: 12px 16px;
+  border-radius: 14px;
+}
+
+#screen-draft-score-attack .draft-panel {
+  border: 1px solid rgba(255, 178, 55, 0.20);
+  background: linear-gradient(180deg, #fffaee 0%, #fff4d6 100%);
+  box-shadow: 0 8px 18px rgba(255, 153, 0, 0.06);
+}
+#screen-draft-score-attack .draft-panel h3 {
+  color: #8a5a00;
+}
+body.theme-dark #screen-draft-score-attack .draft-panel {
+  background: linear-gradient(180deg, rgba(50, 32, 14, 0.55) 0%, rgba(35, 22, 10, 0.72) 100%);
+  border-color: rgba(255, 178, 55, 0.22);
+}
+body.theme-dark #screen-draft-score-attack .draft-panel h3 {
+  color: #ffd373;
+}
+
+#screen-draft-score-attack .draft-card > .draft-panel::before {
+  background: linear-gradient(180deg, #ffcc33, #ff5f1f);
+  opacity: 0.85;
+  width: 5px;
+}
+
+#screen-draft-score-attack .draft-gen-btn {
+  background: linear-gradient(180deg, #ffffff, #fff4d6);
+  border: 1px solid rgba(255, 178, 55, 0.32);
+  color: #8a5a00;
+  font-weight: 800;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+#screen-draft-score-attack .draft-gen-btn:hover:not(:disabled) {
+  border-color: rgba(255, 153, 0, 0.65);
+  background: linear-gradient(180deg, #fff4d6, #ffd97a);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(255, 153, 0, 0.22);
+}
+#screen-draft-score-attack .draft-gen-btn.active {
+  background: linear-gradient(180deg, #ffd97a, #ff9620);
+  color: #5a3a00;
+  border-color: rgba(255, 100, 30, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 178, 55, 0.42), 0 8px 18px rgba(255, 153, 0, 0.32);
+}
+body.theme-dark #screen-draft-score-attack .draft-gen-btn {
+  background: linear-gradient(180deg, rgba(50, 32, 14, 0.62), rgba(35, 22, 10, 0.78));
+  color: #ffd373;
+  border-color: rgba(255, 178, 55, 0.32);
+}
+
+#screen-draft-score-attack #draft-bst-average-badge {
+  background: linear-gradient(180deg, #fff4d6, #ffe6a8);
+}
+
+#screen-draft-score-attack .higher-lower-feedback,
+#screen-draft-score-attack .draft-card-meta {
+  color: #8a5a00;
+}
+
 /* Mode duel — overlay "En attente de l'adversaire" sur les options */
 .draft-options-grid.duel-pending { position: relative; pointer-events: none; opacity: 0.65; }
 .draft-options-grid.duel-pending::after {
