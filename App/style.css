@@ -27314,3 +27314,30 @@ body.theme-dark #screen-draft-score-attack .draft-summary-card b {
     flex: 1 1 140px;
   }
 }
+
+/* DRAFT ARENA CONTRAST FIX 2026
+   Keep arena layout intact, only restore readable text on dark panels. */
+#screen-draft-arena .ranking-head .card-title,
+#screen-draft-arena .ranking-head .card-title * {
+  color: #edf5ff !important;
+  -webkit-text-fill-color: #edf5ff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.28) !important;
+}
+
+#screen-draft-arena .draft-panel-team h3,
+#screen-draft-arena .draft-panel-team .draft-team-card b {
+  color: #edf5ff !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+}
+
+#screen-draft-arena .draft-panel-team .draft-team-card span,
+#screen-draft-arena .draft-panel-team .draft-team-card small,
+#screen-draft-arena .draft-panel-team .draft-team-empty-icon {
+  color: #d7e6fb !important;
+  text-shadow: none !important;
+}
+
+#screen-draft-arena .draft-panel-team .draft-team-card.placeholder {
+  background: rgba(238, 246, 255, 0.34) !important;
+  border-color: rgba(210, 228, 255, 0.42) !important;
+}
