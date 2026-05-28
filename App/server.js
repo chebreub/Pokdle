@@ -1235,17 +1235,30 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("higher-lower:submit-answer", (payload = {}, ack) => {
+  socket.on("higher-lower:submit-answer", async (payload = {}, ack) => {
     try {
       const room = findHigherLowerRoomBySocket(socket.id);
       if (!room || room.status !== "live") return respond(ack, { ok: false, error: "Pas de partie en cours." });
       const player = room.players.find((p) => p.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
-      const correct = Boolean(payload.correct);
+      const choice = String(payload.choice || "").toLowerCase();
+      if (choice !== "higher" && choice !== "lower") return respond(ack, { ok: false, error: "Choix invalide." });
+      // Le serveur recalcule lui-même si la réponse est correcte (no client trust)
+      const pair = Array.isArray(room.sequence) ? room.sequence[player.cursor] : null;
+      if (!pair) return respond(ack, { ok: false, error: "Paire courante introuvable." });
+      const leftStats = await fetchPokemonStatsServer(pair.leftId);
+      const rightStats = await fetchPokemonStatsServer(pair.rightId);
+      const statKey = pair.statKey || "hp";
+      const leftVal = Number(leftStats?.[statKey]) || 0;
+      const rightVal = Number(rightStats?.[statKey]) || 0;
+      let correct;
+      if (rightVal === leftVal) correct = true;
+      else if (rightVal > leftVal) correct = (choice === "higher");
+      else correct = (choice === "lower");
       if (correct) player.score += 1;
       player.cursor += 1;
       emitHigherLowerRoomState(room);
-      respond(ack, { ok: true });
+      respond(ack, { ok: true, correct, leftVal, rightVal });
     } catch (_e) {
       respond(ack, { ok: false, error: "Erreur lors de la soumission." });
     }
@@ -1340,7 +1353,7 @@ io.on("connection", (socket) => {
     } catch (_e) { respond(ack, { ok: false, error: "Erreur lancement." }); }
   });
 
-  socket.on("stat-auction:submit-allocation", (payload = {}, ack) => {
+  socket.on("stat-auction:submit-allocation", async (payload = {}, ack) => {
     try {
       const room = findStatAuctionRoomBySocket(socket.id);
       if (!room || room.status !== "live") return respond(ack, { ok: false, error: "Pas de partie." });
@@ -1348,9 +1361,18 @@ io.on("connection", (socket) => {
       if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
       const allocation = sanitizeStatAuctionAllocation(payload.allocation);
       if (!allocation) return respond(ack, { ok: false, error: "Allocation invalide (somme doit être 100)." });
-      const computedScore = Number(payload.computedScore);
-      const realStats = payload.realStats && typeof payload.realStats === "object" ? payload.realStats : null;
-      room.currentAllocations[player.side] = { allocation, computedScore: Number.isFinite(computedScore) ? computedScore : 0, realStats };
+      // Le serveur calcule le score lui-même depuis les vraies stats serveur (no client trust)
+      const pokemonId = Array.isArray(room.sequence) ? room.sequence[room.round - 1] : null;
+      const realStats = await fetchPokemonStatsServer(pokemonId);
+      let computedScore = 0;
+      if (realStats) {
+        for (const k of STAT_AUCTION_STAT_KEYS) {
+          const alloc = Number(allocation[k]) || 0;
+          const val = Number(realStats[k]) || 0;
+          computedScore += alloc * val;
+        }
+      }
+      room.currentAllocations[player.side] = { allocation, computedScore, realStats };
       if (room.currentAllocations.left && room.currentAllocations.right) {
         const leftEntry = room.currentAllocations.left;
         const rightEntry = room.currentAllocations.right;
@@ -1623,6 +1645,40 @@ server.listen(PORT, () => {
     console.warn("[security] ALLOWED_ORIGINS not set — CORS is open to all origins. Set ALLOWED_ORIGINS in production.");
   }
 });
+
+// === Cache stats Pokémon serveur (sécurité 1v1) ===
+const POKEMON_STATS_SERVER_CACHE = new Map();
+const POKEAPI_STAT_KEY_MAP = {
+  "hp": "hp",
+  "attack": "attack",
+  "defense": "defense",
+  "special-attack": "spAttack",
+  "special-defense": "spDefense",
+  "speed": "speed",
+};
+
+async function fetchPokemonStatsServer(pokemonId) {
+  const id = Number(pokemonId);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  if (POKEMON_STATS_SERVER_CACHE.has(id)) return POKEMON_STATS_SERVER_CACHE.get(id);
+  if (typeof fetch !== "function") return null;
+  try {
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, { headers: { "User-Agent": "pokdle-server/1.0" } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const statsRaw = Array.isArray(data?.stats) ? data.stats : [];
+    const stats = { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 };
+    for (const s of statsRaw) {
+      const key = POKEAPI_STAT_KEY_MAP[s?.stat?.name];
+      const value = Number(s?.base_stat) || 0;
+      if (key) stats[key] = value;
+    }
+    POKEMON_STATS_SERVER_CACHE.set(id, stats);
+    return stats;
+  } catch (_e) {
+    return null;
+  }
+}
 
 function respond(ack, payload) {
   if (typeof ack === "function") ack(payload);

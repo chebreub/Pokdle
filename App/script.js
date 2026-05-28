@@ -4857,7 +4857,7 @@ function answerHigherLowerVersus(choice) {
   higherLowerState.phase = "revealing";
   higherLowerState.isAnimating = true;
   if (correct) higherLowerState.score += 1;
-  if (multiplayerSocket?.connected) multiplayerSocket.emit("higher-lower:submit-answer", { correct });
+  if (multiplayerSocket?.connected) multiplayerSocket.emit("higher-lower:submit-answer", { choice });
   renderHigherLowerScreen();
   trackHigherLowerTimeout(() => {
     if (!higherLowerState) return;
