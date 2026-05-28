@@ -2206,14 +2206,19 @@ function setGlobalNavActive(key) {
   const map = {
     config: "nav-config",
     game: "nav-game",
+    social: "nav-social",
     pokedex: "nav-collection",
     types: "nav-collection",
+    extras: "nav-extras",
     draft: "nav-extras",
     emu: "nav-extras",
     rank: "nav-extras",
+    champions: "nav-extras",
   };
 
-  Object.values(map).forEach((id) => {
+  // Reset toutes les pills de nav (utiliser un Set pour éviter les doublons)
+  const ids = new Set(Object.values(map));
+  ids.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.classList.remove("active");
   });
@@ -17537,7 +17542,7 @@ function openDraftScoreAttackMode() {
   clearDraftSimpleBattleDevPanel();
   mountDraftModeCard("scoreAttack");
   document.getElementById("screen-draft-score-attack")?.classList.remove("hidden");
-  setGlobalNavActive("extras");
+  setGlobalNavActive("game");
 
   if (!draftArenaState || draftArenaState.mode !== "scoreAttack") {
     draftArenaState = createDraftArenaState();
@@ -19680,12 +19685,64 @@ const HELP_BY_SCREEN = {
       </section>
     `,
   },
-  'screen-match-history': {
+  'screen-history': {
     title: 'Historique des parties',
     body: `
       <section class="app-help-card">
         <h4>Tes 50 dernières parties</h4>
         <p>Mode joué, résultat (gagné/perdu/abandonné), Pokémon mystère, nombre d'essais, durée. Filtre par mode si besoin.</p>
+      </section>
+    `,
+  },
+  'screen-higher-lower': {
+    title: 'Higher or Lower',
+    body: `
+      <section class="app-help-card">
+        <h4>Devine si la stat est plus haute ou plus basse</h4>
+        <p>Tu vois 2 Pokémon côte à côte avec la valeur d'une stat (PV/Attaque/Vitesse...) sur le 1er. Devine si le 2e est plus haut ou plus bas. Bonne réponse = streak, mauvaise = game over.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Modes</h4>
+        <p><b>Mode infini</b> : enchaîne jusqu'à la première erreur, record perso sauvegardé.<br><b>Course 60s</b> : maximum de bonnes réponses en 60s, les erreurs ne game over pas.<br><b>Versus 1v1</b> : crée une room avec un ami, course 60s synchronisée avec score adverse live.</p>
+      </section>
+    `,
+  },
+  'screen-speedrun': {
+    title: 'Speedrun Pokédex',
+    body: `
+      <section class="app-help-card">
+        <h4>60 secondes pour deviner le max de Pokémon</h4>
+        <p>Tu vois le sprite, tape le nom (accents et casse ignorés). Entrée pour valider, Entrée vide pour passer. Best streak tracké. Record perso sauvegardé.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Astuces</h4>
+        <p>Tape vite, ne perds pas de temps sur ceux que tu connais pas. +5 XP par bonne réponse + bonus si nouveau record.</p>
+      </section>
+    `,
+  },
+  'screen-poke-connections': {
+    title: 'Poké-Connections',
+    body: `
+      <section class="app-help-card">
+        <h4>Regroupe les 16 Pokémon par 4</h4>
+        <p>Style NYT Connections : 16 Pokémon en grille. Trouve les 4 groupes de 4 selon un thème caché (type, génération, habitat, couleur, stade d'évolution). 4 erreurs max.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Astuces</h4>
+        <p>Commence par les groupes les plus évidents pour réduire l'incertitude sur les autres. Le bouton "Mélanger" rebrasse les tuiles non trouvées si tu sèches.</p>
+      </section>
+    `,
+  },
+  'screen-stat-auction': {
+    title: 'Stat Auction 1v1',
+    body: `
+      <section class="app-help-card">
+        <h4>Réparts 100 pts secrètement sur 6 stats</h4>
+        <p>Avant chaque manche, un Pokémon est révélé. Tu as 100 pts à mettre sur les 6 stats (PV/Atk/Def/AtkSp/DefSp/Vit). Score = somme (alloc × vraie_stat). Le total le plus haut gagne la manche. 5 manches en duel.</p>
+      </section>
+      <section class="app-help-card">
+        <h4>Stratégie</h4>
+        <p>Devine les stats fortes du Pokémon affiché. Un Pokémon physique = max Atk. Un mur = max Def/PV. Risk/reward : tout miser sur une stat ou répartir.</p>
       </section>
     `,
   },
