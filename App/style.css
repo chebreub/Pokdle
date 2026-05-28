@@ -26516,6 +26516,88 @@ body.theme-dark .home-engagement-card.is-newcomer {
   .hew-cta { justify-self: center; }
 }
 
+/* ============================================================ */
+/* === PROFIL — Records par mode + Bilans h2h === */
+/* ============================================================ */
+
+.profile-records-panel {
+  margin-top: 16px;
+}
+
+.profile-mode-records {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.profile-record-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(17, 31, 64, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.profile-record-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(17, 31, 64, 0.08);
+}
+.profile-record-card.is-blue {
+  background: linear-gradient(135deg, rgba(47, 118, 255, 0.10), rgba(124, 58, 237, 0.06));
+  border-color: rgba(47, 118, 255, 0.32);
+}
+.profile-record-card.is-orange {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.12), rgba(255, 61, 127, 0.08));
+  border-color: rgba(255, 107, 53, 0.32);
+}
+.profile-record-card.is-gold {
+  background: linear-gradient(135deg, rgba(255, 178, 55, 0.16), rgba(255, 153, 0, 0.08));
+  border-color: rgba(255, 153, 0, 0.32);
+}
+.profile-record-icon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.profile-record-card b { font-size: 13px; color: #12213d; font-weight: 800; display: block; }
+.profile-record-card span { font-size: 12px; color: #4a5a78; font-weight: 700; }
+body.theme-dark .profile-record-card { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.06); }
+body.theme-dark .profile-record-card b { color: #edf5ff; }
+body.theme-dark .profile-record-card span { color: #b8c8e4; }
+
+/* Head-to-head */
+.profile-h2h-records {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.profile-h2h-card {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(17, 31, 64, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 4px solid #94a3b8;
+}
+.profile-h2h-card.is-winning { border-left-color: #4ac781; background: linear-gradient(135deg, rgba(125, 220, 162, 0.10), rgba(99, 220, 145, 0.04)); }
+.profile-h2h-card.is-losing { border-left-color: #e4382f; background: linear-gradient(135deg, rgba(228, 56, 47, 0.10), rgba(180, 40, 30, 0.04)); }
+.profile-h2h-card.is-tied { border-left-color: #ffb423; }
+.profile-h2h-card b { font-size: 14px; color: #12213d; font-weight: 800; text-transform: capitalize; }
+.profile-h2h-stats { display: flex; gap: 8px; font-size: 16px; font-weight: 900; }
+.profile-h2h-stats .is-w { color: #1d6b3c; }
+.profile-h2h-stats .is-l { color: #b34540; }
+.profile-h2h-stats .is-t { color: #8a6010; }
+.profile-h2h-card small { font-size: 11px; color: #6b7c98; font-weight: 700; }
+body.theme-dark .profile-h2h-card { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.06); }
+body.theme-dark .profile-h2h-card b { color: #edf5ff; }
+body.theme-dark .profile-h2h-card small { color: #b8c8e4; }
+body.theme-dark .profile-h2h-stats .is-w { color: #7adfa6; }
+body.theme-dark .profile-h2h-stats .is-l { color: #ff9a8a; }
+body.theme-dark .profile-h2h-stats .is-t { color: #ffd373; }
+
 /* Sous-titre */
 #screen-draft-score-attack .card-desc {
   padding: 22px 40px 0 !important;

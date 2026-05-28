@@ -19016,6 +19016,55 @@ function renderProfileScreen() {
       : '<p class="card-desc">Aucun succès débloqué pour le moment.</p>';
   }
 
+  // Records par mode
+  const modeRecordsWrap = document.getElementById("profile-mode-records");
+  if (modeRecordsWrap) {
+    const records = [];
+    // Higher or Lower
+    const hlInf = Number(playerProfile.higherLowerHighScore) || 0;
+    const hl60 = Number(playerProfile.higherLower60sHighScore) || 0;
+    if (hlInf > 0 || hl60 > 0) {
+      records.push({ icon: "📊", label: "Higher or Lower", value: `${hlInf} infini · ${hl60} en 60s`, color: "blue" });
+    }
+    // Speedrun
+    const speedrun = Number(playerProfile.speedrunHighScore) || 0;
+    if (speedrun > 0) {
+      records.push({ icon: "⚡", label: "Speedrun Pokédex", value: `${speedrun} Pokémon en 60s`, color: "orange" });
+    }
+    // Score Attack par gen
+    const saRecords = playerProfile.draftScoreAttackRecords || {};
+    for (const gen of Object.keys(saRecords)) {
+      const val = Number(saRecords[gen]) || 0;
+      if (val > 0) {
+        records.push({ icon: "🎯", label: `Score Attack Gen ${gen}`, value: `${val} BST moyen`, color: "gold" });
+      }
+    }
+    if (records.length) {
+      modeRecordsWrap.innerHTML = records.map((r) => `<div class="profile-record-card is-${r.color}"><span class="profile-record-icon">${r.icon}</span><div><b>${escapeHtml(r.label)}</b><span>${escapeHtml(r.value)}</span></div></div>`).join("");
+    } else {
+      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record. Joue à Higher or Lower, Score Attack ou Speedrun pour battre tes premiers scores !</p>';
+    }
+  }
+
+  // Bilans head-to-head
+  const h2hWrap = document.getElementById("profile-h2h-records");
+  if (h2hWrap) {
+    const all = playerProfile.draftScoreHeadToHead || {};
+    const opponents = Object.entries(all)
+      .map(([nickname, stats]) => ({ nickname, wins: Number(stats.wins) || 0, losses: Number(stats.losses) || 0, draws: Number(stats.draws) || 0 }))
+      .filter((entry) => (entry.wins + entry.losses + entry.draws) > 0)
+      .sort((a, b) => (b.wins + b.losses + b.draws) - (a.wins + a.losses + a.draws));
+    if (opponents.length) {
+      h2hWrap.innerHTML = opponents.map((opp) => {
+        const total = opp.wins + opp.losses + opp.draws;
+        const lead = opp.wins > opp.losses ? "is-winning" : opp.losses > opp.wins ? "is-losing" : "is-tied";
+        return `<div class="profile-h2h-card ${lead}"><b>${escapeHtml(opp.nickname)}</b><span class="profile-h2h-stats"><b class="is-w">${opp.wins}V</b> · <b class="is-l">${opp.losses}D</b>${opp.draws ? ` · <b class="is-t">${opp.draws}N</b>` : ""}</span><small>${total} duel${total > 1 ? "s" : ""}</small></div>`;
+      }).join("");
+    } else {
+      h2hWrap.innerHTML = '<p class="card-desc">Aucun duel Score Attack 1v1 encore. Crée une room pour défier un ami.</p>';
+    }
+  }
+
   if (saveMsg) saveMsg.classList.add("hidden");
 }
 
