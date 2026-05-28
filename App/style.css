@@ -26650,6 +26650,236 @@ body.theme-dark .hew-quest-bar { background: rgba(255, 255, 255, 0.06); }
 }
 
 /* ============================================================ */
+/* === MOBILE RESPONSIVE — Pass complet sur tous les modes === */
+/* ============================================================ */
+
+@media (max-width: 720px) {
+  /* Header global plus compact sur mobile */
+  header .header-top { flex-wrap: wrap; gap: 8px; padding: 8px 0; }
+  header .header-actions { flex-wrap: wrap; gap: 6px; }
+  .xp-badge { min-width: 0; flex: 1 1 auto; padding: 6px 10px 6px 8px; }
+  .xp-badge-emoji { font-size: 20px; }
+  .xp-badge-info b { font-size: 10.5px; }
+  .xp-badge-info small { font-size: 9px; }
+  .header-action-btn { padding: 6px 10px; font-size: 12px; }
+
+  /* Cards globales — moins de padding sur mobile */
+  main > div[id^="screen-"] > .card,
+  main > div[id^="screen-"] .draft-card,
+  main > div[id^="screen-"] .higher-lower-card,
+  main > div[id^="screen-"] .poke-connections-card,
+  main > div[id^="screen-"] .stat-auction-card,
+  main > div[id^="screen-"] .speedrun-card,
+  main > div[id^="screen-"] .stat-clash-screen-card {
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  /* ranking-head (titre + actions) plus compact */
+  .ranking-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ranking-head-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+  .ranking-head-actions > button,
+  .ranking-head-actions > select {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+  .card-title { font-size: 1.2rem !important; }
+  .card-desc { font-size: 13px; }
+
+  /* Higher or Lower mobile */
+  .higher-lower-pair { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .higher-lower-vs { padding: 4px 0; font-size: 16px !important; }
+  .higher-lower-sprite { width: 96px !important; height: 96px !important; }
+  .higher-lower-card-pokemon { padding: 12px 10px !important; gap: 6px !important; }
+  .higher-lower-card-pokemon h4 { font-size: 15px !important; }
+  .higher-lower-stat-value b { font-size: 22px !important; }
+  .higher-lower-modes { grid-template-columns: 1fr !important; }
+  .higher-lower-actions { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .higher-lower-actions button { padding: 12px 10px !important; font-size: 13px !important; }
+  .higher-lower-room-players { grid-template-columns: 1fr !important; }
+  .higher-lower-final-actions { flex-direction: column !important; }
+  .higher-lower-final-actions button { width: 100%; }
+
+  /* Stat Clash mobile */
+  .stat-clash-versus-grid,
+  .stat-clash-grid,
+  .stat-clash-player-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .stat-clash-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+  .stat-clash-stat-btn {
+    padding: 10px 8px !important;
+    font-size: 13px !important;
+  }
+  .stat-clash-rule-grid { grid-template-columns: 1fr !important; }
+  .stat-clash-jokers { gap: 6px !important; }
+  .stat-clash-joker { padding: 8px !important; min-width: 0 !important; }
+  .stat-clash-history-list { max-height: 200px; overflow-y: auto; }
+
+  /* Stat Auction mobile */
+  .stat-auction-row { grid-template-columns: 1fr !important; gap: 8px !important; padding: 8px !important; }
+  .stat-auction-stat-controls { justify-content: stretch; }
+  .stat-auction-input { flex: 1; max-width: none !important; }
+  .stat-auction-totalbar { font-size: 12px !important; }
+  .stat-auction-reveal-grid { grid-template-columns: 1fr !important; }
+  .stat-auction-status { font-size: 11px !important; gap: 6px !important; }
+
+  /* Poké-Connections mobile */
+  .poke-connections-grid { gap: 5px !important; }
+  .poke-connections-tile { min-height: 76px !important; padding: 4px 2px !important; }
+  .poke-connections-tile img { width: 42px !important; height: 42px !important; }
+  .poke-connections-tile span { font-size: 9px !important; }
+  .poke-connections-found-label { font-size: 12px !important; }
+  .poke-connections-found-list { font-size: 10px !important; }
+  .poke-connections-actions { flex-direction: column; }
+  .poke-connections-actions button { width: 100%; }
+
+  /* Speedrun mobile */
+  .speedrun-sprite { width: 140px !important; height: 140px !important; }
+  .speedrun-input { font-size: 16px !important; padding: 12px 16px !important; }
+  .speedrun-status { gap: 6px !important; }
+  .speedrun-stat-chip { padding: 6px 10px !important; font-size: 11px !important; }
+  .speedrun-stat-chip b { font-size: 14px !important; }
+  .speedrun-actions { grid-template-columns: 1fr !important; }
+  .speedrun-final-stats { grid-template-columns: 1fr !important; }
+  .speedrun-final-score { font-size: 72px !important; }
+
+  /* Draft Score Attack mobile */
+  #screen-draft-score-attack .ranking-head { padding: 16px !important; }
+  #screen-draft-score-attack .card-title { font-size: 1.4rem !important; }
+  #screen-draft-score-attack .card-desc,
+  #screen-draft-score-attack .draft-progress-shell,
+  #screen-draft-score-attack #draft-status,
+  #screen-draft-score-attack .draft-panel { margin-left: 14px !important; margin-right: 14px !important; padding: 16px !important; }
+  #screen-draft-score-attack .draft-gen-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  #screen-draft-score-attack .draft-options-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  #screen-draft-score-attack .draft-option-card img { width: 64px; height: 64px; }
+  #screen-draft-score-attack .draft-option-card { min-height: 170px; padding: 10px 6px; }
+  #screen-draft-score-attack .draft-option-card strong { font-size: 12.5px !important; }
+  #screen-draft-score-attack .draft-team-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  #screen-draft-score-attack .draft-team-card img { width: 48px !important; height: 48px !important; }
+
+  /* Draft Score Attack — panneau VS Live mobile */
+  .draft-score-vs-arena { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .draft-score-vs-versus { font-size: 20px !important; padding: 4px 0; }
+  .draft-score-vs-slots { grid-template-columns: repeat(6, 1fr) !important; }
+  .draft-score-vs-slot img { width: 100%; height: 60%; }
+  .draft-score-vs-slot b { font-size: 8px !important; }
+  .draft-score-vs-metrics { grid-template-columns: 1fr 1fr !important; }
+  .draft-score-reaction-bar { gap: 4px !important; padding: 6px !important; }
+  .draft-score-reaction-btn { width: 32px !important; height: 32px !important; font-size: 15px !important; }
+  .draft-score-vs-leave { top: 8px !important; right: 8px !important; padding: 4px 10px !important; font-size: 10px !important; }
+  .draft-score-vs-title { font-size: 14px !important; padding-top: 4px; }
+
+  /* Finale dramatique Score Attack mobile */
+  .dsf-content { padding: 16px !important; gap: 14px !important; }
+  .dsf-title { font-size: 32px !important; }
+  .dsf-versus { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .dsf-vs-center { font-size: 24px !important; padding: 4px 0; }
+  .dsf-team-side { padding: 14px !important; }
+  .dsf-team-sprites { grid-template-columns: repeat(6, 1fr) !important; gap: 4px !important; }
+  .dsf-pokemon-tile img { width: 36px !important; height: 36px !important; }
+  .dsf-pokemon-tile span { display: none; }
+  .dsf-team-score { font-size: 38px !important; }
+  .dsf-h2h { font-size: 12px !important; padding: 6px 12px !important; }
+
+  /* Draft Arène — barre badges 8 arènes */
+  .draft-run-bar { grid-template-columns: repeat(4, 1fr) !important; gap: 5px; }
+  .draft-run-node { padding: 6px 4px !important; }
+  .draft-run-node b { font-size: 0.72rem !important; }
+  .draft-run-node span { font-size: 0.62rem !important; }
+  .draft-official-badge { width: 38px !important; height: 38px !important; }
+  .draft-official-badge img { width: 28px !important; height: 28px !important; }
+  .draft-run-node.is-current::after { font-size: 0.5rem !important; padding: 1px 6px !important; }
+
+  /* Pokédex mobile (grille de cards) */
+  .pokemon-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .pokemon-card { padding: 8px 6px !important; }
+  .pokemon-card img { width: 64px !important; height: 64px !important; }
+  .pokemon-card strong { font-size: 12px !important; }
+  .pokemon-card span { font-size: 10px !important; }
+
+  /* Profil mobile */
+  .profile-layout,
+  .profile-summary-grid,
+  .profile-stat-grid { grid-template-columns: 1fr !important; }
+  .profile-stat-grid { gap: 8px !important; }
+  .profile-stat-card { padding: 10px 14px !important; }
+  .profile-record-card { padding: 12px 14px !important; }
+  .profile-record-icon { font-size: 26px !important; }
+  .profile-mode-records,
+  .profile-h2h-records { grid-template-columns: 1fr !important; }
+
+  /* Modal quêtes mobile */
+  .dq-content { padding: 18px !important; gap: 14px !important; }
+  .dq-hero { padding: 14px 18px !important; }
+  .dq-hero-emoji { font-size: 32px !important; }
+  .dq-hero-tier b { font-size: 15px !important; }
+  .dq-item { padding: 12px 14px !important; }
+  .dq-item-head b { font-size: 12px !important; line-height: 1.35; }
+  .dq-xp { font-size: 10px !important; padding: 3px 8px !important; }
+
+  /* Nav globale mobile */
+  .global-nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .global-nav::-webkit-scrollbar { display: none; }
+  .nav-pill { flex-shrink: 0; padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+  .nav-dropdown { right: auto; left: 0; min-width: 200px; max-width: 90vw; }
+
+  /* Multiplayer mobile */
+  .stat-clash-room-panel,
+  .stat-clash-room-players,
+  .stat-clash-room-actions { flex-wrap: wrap; }
+  .stat-clash-room-actions button { flex: 1 1 auto; }
+
+  /* Boutons globaux mobile */
+  .btn-red, .btn-blue, .btn-yellow, .btn-ghost {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+
+  /* Forms mobile */
+  input[type="text"], input[type="number"], textarea, select {
+    font-size: 16px !important; /* Évite le zoom iOS sur focus */
+  }
+}
+
+/* Très petits écrans (< 420px) */
+@media (max-width: 420px) {
+  .card-title { font-size: 1.05rem !important; }
+  .ranking-head-actions > button { font-size: 11px !important; padding: 6px 10px !important; }
+  #screen-draft-score-attack .draft-options-grid { grid-template-columns: 1fr !important; }
+  #screen-draft-score-attack .draft-team-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .draft-score-vs-slots { grid-template-columns: repeat(3, 1fr) !important; }
+  .dsf-team-sprites { grid-template-columns: repeat(3, 1fr) !important; }
+  .speedrun-final-score { font-size: 56px !important; }
+  .higher-lower-modes { gap: 8px !important; }
+}
+
+/* ============================================================ */
 /* === PROFIL — Records par mode + Bilans h2h === */
 /* ============================================================ */
 
