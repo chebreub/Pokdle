@@ -54,16 +54,16 @@ const XP_TIERS = [
 ];
 
 const QUEST_POOL = [
-  { id: "win_daily", label: "Gagne le Pokédle du jour", target: 1, xp: 80 },
-  { id: "play_3_modes", label: "Joue à 3 modes différents aujourd'hui", target: 3, xp: 70 },
-  { id: "hl_streak_10", label: "Fais 10 bonnes réponses d'affilée en Higher or Lower", target: 10, xp: 90 },
-  { id: "score_attack_500", label: "Atteins 500+ de moyenne BST en Score Attack", target: 500, xp: 80, comparator: "gte" },
-  { id: "score_attack_600", label: "Atteins 600+ de moyenne BST en Score Attack (Master)", target: 600, xp: 150, comparator: "gte" },
-  { id: "stat_clash_win", label: "Gagne 1 Stat Clash", target: 1, xp: 70 },
-  { id: "connections_clear", label: "Résous un Poké-Connections", target: 1, xp: 100 },
-  { id: "stat_auction_win", label: "Gagne 1 Stat Auction", target: 1, xp: 80 },
-  { id: "draft_complete", label: "Termine un draft d'équipe (Arènes ou Score Attack)", target: 1, xp: 50 },
-  { id: "pokedex_browse", label: "Consulte le Pokédex aujourd'hui", target: 1, xp: 30 },
+  { id: "win_daily", icon: "📅", label: "Gagne le Pokédle du jour", target: 1, xp: 80 },
+  { id: "play_3_modes", icon: "🎲", label: "Joue à 3 modes différents", target: 3, xp: 70 },
+  { id: "hl_streak_10", icon: "📊", label: "10 d'affilée en Higher or Lower", target: 10, xp: 90 },
+  { id: "score_attack_500", icon: "🎯", label: "500+ de moyenne BST en Score Attack", target: 500, xp: 80, comparator: "gte" },
+  { id: "score_attack_600", icon: "👑", label: "600+ BST en Score Attack (Master)", target: 600, xp: 150, comparator: "gte" },
+  { id: "stat_clash_win", icon: "⚔️", label: "Gagne 1 Stat Clash", target: 1, xp: 70 },
+  { id: "connections_clear", icon: "🧩", label: "Résous un Poké-Connections", target: 1, xp: 100 },
+  { id: "stat_auction_win", icon: "💰", label: "Gagne 1 Stat Auction", target: 1, xp: 80 },
+  { id: "draft_complete", icon: "🏟️", label: "Termine un draft d'équipe", target: 1, xp: 50 },
+  { id: "pokedex_browse", icon: "📖", label: "Consulte le Pokédex aujourd'hui", target: 1, xp: 30 },
 ];
 
 function getXpTier(xp = 0) {
@@ -397,8 +397,12 @@ function renderHomeEngagementWidget() {
   const questsListHtml = quests.map((q) => {
     const pct = Math.min(100, Math.round(((q.progress || 0) / q.target) * 100));
     return `<div class="hew-quest ${q.completed ? "is-done" : ""}" title="${escapeHtml(q.label)}">
-      <div class="hew-quest-text"><b>${escapeHtml(q.label)}</b><span>+${q.xp} XP · ${q.progress || 0}/${q.target}</span></div>
-      <div class="hew-quest-bar"><div class="hew-quest-fill" style="width:${pct}%"></div></div>
+      <span class="hew-quest-icon">${q.icon || "🎯"}</span>
+      <div class="hew-quest-text">
+        <b>${escapeHtml(q.label)}</b>
+        <div class="hew-quest-meta"><span class="hew-quest-xp">+${q.xp} XP</span><span class="hew-quest-progress">${q.progress || 0}/${q.target}</span></div>
+        <div class="hew-quest-bar"><div class="hew-quest-fill" style="width:${pct}%"></div></div>
+      </div>
       ${q.completed ? '<div class="hew-quest-check">✅</div>' : ''}
     </div>`;
   }).join("");
