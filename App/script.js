@@ -394,22 +394,35 @@ function renderHomeEngagementWidget() {
       </div>`;
     return;
   }
+  const questsListHtml = quests.map((q) => {
+    const pct = Math.min(100, Math.round(((q.progress || 0) / q.target) * 100));
+    return `<div class="hew-quest ${q.completed ? "is-done" : ""}" title="${escapeHtml(q.label)}">
+      <div class="hew-quest-text"><b>${escapeHtml(q.label)}</b><span>+${q.xp} XP · ${q.progress || 0}/${q.target}</span></div>
+      <div class="hew-quest-bar"><div class="hew-quest-fill" style="width:${pct}%"></div></div>
+      ${q.completed ? '<div class="hew-quest-check">✅</div>' : ''}
+    </div>`;
+  }).join("");
   widget.innerHTML = `
-    <div class="home-engagement-card" onclick="openDailyQuestsModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDailyQuestsModal()">
-      <div class="hew-tier">
-        <div class="hew-tier-emoji">${prog.tier.emoji}</div>
-        <div class="hew-tier-info">
-          <b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b>
-          <span>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level} ${prog.next.emoji}` : " · MAX"}</span>
-          <div class="hew-bar"><div class="hew-bar-fill" style="width:${prog.percent}%"></div></div>
+    <div class="home-engagement-card">
+      <div class="hew-header" onclick="openDailyQuestsModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDailyQuestsModal()">
+        <div class="hew-tier">
+          <div class="hew-tier-emoji">${prog.tier.emoji}</div>
+          <div class="hew-tier-info">
+            <b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b>
+            <span>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level} ${prog.next.emoji}` : " · MAX"}</span>
+            <div class="hew-bar"><div class="hew-bar-fill" style="width:${prog.percent}%"></div></div>
+          </div>
+        </div>
+        <div class="hew-stats">
+          ${streak > 0 ? `<div class="hew-stat is-streak"><span>🔥</span><b>${streak}</b><small>jour${streak > 1 ? "s" : ""} d'affilée</small></div>` : ""}
+          <div class="hew-stat is-quests"><span>🎯</span><b>${completedToday}/${totalToday}</b><small>quêtes du jour</small></div>
+          ${totalQuests > 0 ? `<div class="hew-stat"><span>🏆</span><b>${totalQuests}</b><small>quêtes totales</small></div>` : ""}
         </div>
       </div>
-      <div class="hew-stats">
-        ${streak > 0 ? `<div class="hew-stat is-streak"><span>🔥</span><b>${streak}</b><small>jour${streak > 1 ? "s" : ""} d'affilée</small></div>` : ""}
-        <div class="hew-stat is-quests"><span>🎯</span><b>${completedToday}/${totalToday}</b><small>quêtes du jour</small></div>
-        ${totalQuests > 0 ? `<div class="hew-stat"><span>🏆</span><b>${totalQuests}</b><small>quêtes totales</small></div>` : ""}
+      <div class="hew-quests-list">
+        <div class="hew-quests-head"><b>🎯 Tes 4 quêtes du jour</b><button class="hew-quests-btn" type="button" onclick="openDailyQuestsModal()">Détails →</button></div>
+        ${questsListHtml}
       </div>
-      <div class="hew-cta">Voir mes quêtes →</div>
     </div>`;
 }
 window.renderHomeEngagementWidget = renderHomeEngagementWidget;
