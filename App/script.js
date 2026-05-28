@@ -369,7 +369,50 @@ function updateXpBadge() {
   const xp = Number(playerProfile.xp) || 0;
   const prog = getXpProgress(xp);
   badge.innerHTML = `<span class="xp-badge-emoji">${prog.tier.emoji}</span><span class="xp-badge-info"><b>Niv. ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · Max"}</small></span><div class="xp-badge-bar"><div class="xp-badge-fill" style="width:${prog.percent}%"></div></div>`;
+  renderHomeEngagementWidget();
 }
+
+function renderHomeEngagementWidget() {
+  const widget = document.getElementById("home-engagement-widget");
+  if (!widget || !playerProfile) return;
+  const xp = Number(playerProfile.xp) || 0;
+  const prog = getXpProgress(xp);
+  const streak = Number(playerProfile.dailyLoginStreak) || 0;
+  const totalQuests = Number(playerProfile.totalQuestsCompleted) || 0;
+  const quests = ensureDailyQuests();
+  const completedToday = quests.filter((q) => q.completed).length;
+  const totalToday = quests.length;
+  // Affichage seulement si l'utilisateur a déjà commencé (xp > 0 OU streak > 0)
+  if (xp === 0 && streak === 0 && totalQuests === 0) {
+    widget.innerHTML = `
+      <div class="home-engagement-card is-newcomer">
+        <div class="hew-icon">🥚</div>
+        <div class="hew-text">
+          <b>Bienvenue Dresseur !</b>
+          <span>Joue à n'importe quel mode pour gagner de l'XP, monter de niveau et débloquer des quêtes quotidiennes.</span>
+        </div>
+      </div>`;
+    return;
+  }
+  widget.innerHTML = `
+    <div class="home-engagement-card" onclick="openDailyQuestsModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDailyQuestsModal()">
+      <div class="hew-tier">
+        <div class="hew-tier-emoji">${prog.tier.emoji}</div>
+        <div class="hew-tier-info">
+          <b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b>
+          <span>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level} ${prog.next.emoji}` : " · MAX"}</span>
+          <div class="hew-bar"><div class="hew-bar-fill" style="width:${prog.percent}%"></div></div>
+        </div>
+      </div>
+      <div class="hew-stats">
+        ${streak > 0 ? `<div class="hew-stat is-streak"><span>🔥</span><b>${streak}</b><small>jour${streak > 1 ? "s" : ""} d'affilée</small></div>` : ""}
+        <div class="hew-stat is-quests"><span>🎯</span><b>${completedToday}/${totalToday}</b><small>quêtes du jour</small></div>
+        ${totalQuests > 0 ? `<div class="hew-stat"><span>🏆</span><b>${totalQuests}</b><small>quêtes totales</small></div>` : ""}
+      </div>
+      <div class="hew-cta">Voir mes quêtes →</div>
+    </div>`;
+}
+window.renderHomeEngagementWidget = renderHomeEngagementWidget;
 
 const ACHIEVEMENT_DEFS = [
   { id: "first_game", title: "Premier pas", desc: "Jouer une première partie.", target: 1, getValue: () => playerStats.played || 0 },
