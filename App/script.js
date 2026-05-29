@@ -37,6 +37,12 @@ const DEFAULT_PROFILE = {
   dailyLoginStreak: 0,
   lastDailyLogin: null,
   totalQuestsCompleted: 0,
+  // Records par mode (P4)
+  partyHighScore: 0,
+  quizHighScore: 0,
+  speedrunHighScore: 0,
+  oddOneOutHighScore: 0,
+  weightBattleHighScore: 0,
 };
 
 // === ENGAGEMENT — XP + quêtes quotidiennes ===
@@ -1756,8 +1762,40 @@ function finishPartyRound(didWin, scoreDelta = didWin ? 1 : 0) {
   }
   if (partySession.currentRound >= partySession.maxRounds) {
     partySession.completed = true;
+    finalizePartySession();
   }
   renderPartySessionUI();
+}
+
+function finalizePartySession() {
+  if (!partySession || partySession.xpAwarded) return;
+  partySession.xpAwarded = true;
+  const wins = Number(partySession.wins) || 0;
+  const losses = Number(partySession.losses) || 0;
+  const rounds = wins + losses;
+  if (rounds <= 0) return;
+  // XP par victoire (15) + bonus complétion + bonus score parfait
+  const baseXp = wins * 15;
+  const completionBonus = rounds >= Number(partySession.maxRounds || rounds) ? 25 : 0;
+  const perfectBonus = wins === rounds && wins >= 5 ? 50 : 0;
+  const totalXp = baseXp + completionBonus + perfectBonus;
+  if (totalXp > 0) awardXp(totalXp, `Party Pokémon ${wins}/${rounds}`);
+  // Record session party (meilleur nombre de victoires)
+  const prevRecord = Number(playerProfile?.partyHighScore) || 0;
+  if (playerProfile && wins > prevRecord) {
+    playerProfile.partyHighScore = wins;
+    try { saveProfile(); } catch (_e) {}
+    if (wins >= 5) awardXp(30, "Nouveau record Party");
+  }
+  // Historique de session (1 entrée par session, pas par mini-round)
+  try {
+    recordMatchHistory({
+      mode: "party",
+      result: wins >= losses ? "win" : "loss",
+      attempts: rounds,
+      targetName: `${wins} victoire${wins > 1 ? "s" : ""} / ${rounds}`,
+    });
+  } catch (_e) {}
 }
 
 function launchPartyRound() {
@@ -1766,6 +1804,7 @@ function launchPartyRound() {
   if (!mode) {
     partySession.completed = true;
     partySession.currentModeLabel = "Party Pokémon";
+    finalizePartySession();
     renderPartySessionUI();
     return;
   }
@@ -3359,6 +3398,15 @@ function finalizeStatClashBotGame() {
   } else {
     awardXp(35, "Stat Clash (égalité)");
   }
+  try {
+    const result = winnerSide === "left" ? "win" : winnerSide === "right" ? "loss" : "draw";
+    recordMatchHistory({
+      mode: "stat-clash",
+      result,
+      attempts: scoreLeft + scoreRight,
+      targetName: `vs Bot · ${scoreLeft}-${scoreRight}`,
+    });
+  } catch (_e) {}
   renderStatClashScreen();
 }
 
@@ -4398,6 +4446,9 @@ function finalizeHigherLowerRush() {
     }
   }
   higherLowerState.phase = "gameover";
+  try {
+    recordMatchHistory({ mode: "higher-lower-rush", result: higherLowerState.score >= 10 ? "win" : "loss", attempts: higherLowerState.score, targetName: `60s · ${higherLowerState.score} pts` });
+  } catch (_e) {}
   renderHigherLowerScreen();
 }
 
@@ -4525,6 +4576,9 @@ function answerHigherLower(choice) {
       startHigherLowerRound();
     } else {
       higherLowerState.phase = "gameover";
+      try {
+        recordMatchHistory({ mode: "higher-lower", result: higherLowerState.score >= 5 ? "win" : "loss", attempts: higherLowerState.score, targetName: `Score ${higherLowerState.score}` });
+      } catch (_e) {}
       renderHigherLowerScreen();
     }
   }, higherLowerState.mode === "rush60" ? 900 : 1800);
@@ -5029,6 +5083,14 @@ function finalizeSpeedrunGame() {
   }
   // XP global selon score
   if (speedrunState.correct >= 10) awardXp(speedrunState.correct * 3, `Speedrun ${speedrunState.correct} Pokémon`);
+  try {
+    recordMatchHistory({
+      mode: "speedrun",
+      result: speedrunState.correct >= 10 ? "win" : "loss",
+      attempts: speedrunState.correct,
+      targetName: `${speedrunState.correct} Pokémon`,
+    });
+  } catch (_e) {}
   renderSpeedrunScreen();
 }
 
@@ -5289,12 +5351,18 @@ function submitPokeConnectionsGuess() {
       pokeConnectionsState.phase = "won";
       awardXp(100, "Poké-Connections résolu");
       progressQuest("connections_clear", 1);
+      try {
+        recordMatchHistory({ mode: "poke-connections", result: "win", attempts: 4 - pokeConnectionsState.mistakes, targetName: `${pokeConnectionsState.mistakes} erreur${pokeConnectionsState.mistakes > 1 ? "s" : ""}` });
+      } catch (_e) {}
     }
   } else {
     pokeConnectionsState.mistakes += 1;
     pokeConnectionsState.lastShake = Date.now();
     if (pokeConnectionsState.mistakes >= POKE_CONNECTIONS_MAX_MISTAKES) {
       pokeConnectionsState.phase = "lost";
+      try {
+        recordMatchHistory({ mode: "poke-connections", result: "loss", attempts: pokeConnectionsState.foundGroupIdx.size, targetName: `${pokeConnectionsState.foundGroupIdx.size}/4 groupes` });
+      } catch (_e) {}
     }
   }
   renderPokeConnectionsScreen();
@@ -5587,14 +5655,26 @@ function applyStatAuctionRoomState(room) {
     statAuctionState.phase = "finished";
     if (!wasFinished) {
       const self = room.players?.find((p) => p.isSelf);
+      let result = "loss";
       if (self && room.winnerSide === self.side) {
         awardXp(80, "Victoire Stat Auction");
         progressQuest("stat_auction_win", 1);
+        result = "win";
       } else if (room.winnerSide === "tie") {
         awardXp(40, "Stat Auction (égalité)");
+        result = "draw";
       } else {
         awardXp(25, "Stat Auction (défaite)");
       }
+      try {
+        const opp = room.players?.find((p) => !p.isSelf);
+        recordMatchHistory({
+          mode: "stat-auction",
+          result,
+          attempts: room.round || 0,
+          targetName: opp?.nickname ? `vs ${opp.nickname}` : "Stat Auction",
+        });
+      } catch (_e) {}
     }
   }
   renderStatAuctionScreen();
@@ -6085,6 +6165,16 @@ function renderQuizQuestion() {
         attempts: quizQuestions.length,
         targetName: `Score ${quizScore}/${quizQuestions.length}`,
       });
+      // XP : 5 par bonne réponse + bonus si > 50%
+      const xpReward = quizScore * 5 + (quizScore >= Math.ceil(quizQuestions.length / 2) ? 30 : 0);
+      if (xpReward > 0) awardXp(xpReward, `Quiz ${quizScore}/${quizQuestions.length}`);
+      // Record perso
+      const prevRecord = Number(playerProfile?.quizHighScore) || 0;
+      if (playerProfile && quizScore > prevRecord) {
+        playerProfile.quizHighScore = quizScore;
+        try { saveProfile(); } catch (_e) {}
+        if (quizScore >= Math.ceil(quizQuestions.length / 2)) awardXp(20, "Nouveau record Quiz");
+      }
     }
     progress.textContent = `Quiz terminé • Score final : ${quizScore} / ${quizQuestions.length}`;
     questionEl.textContent = "Fin du quiz";
@@ -18837,6 +18927,12 @@ function loadProfile() {
     higherLower60sHighScore: Number(parsed?.higherLower60sHighScore) || 0,
     draftScoreAttackRecords: parsed?.draftScoreAttackRecords || {},
     draftScoreHeadToHead: parsed?.draftScoreHeadToHead || {},
+    // Records par mode (P4)
+    partyHighScore: Number(parsed?.partyHighScore) || 0,
+    quizHighScore: Number(parsed?.quizHighScore) || 0,
+    speedrunHighScore: Number(parsed?.speedrunHighScore) || 0,
+    oddOneOutHighScore: Number(parsed?.oddOneOutHighScore) || 0,
+    weightBattleHighScore: Number(parsed?.weightBattleHighScore) || 0,
   };
   // Tracking login quotidien pour streak
   const today = getDailyQuestKey();
@@ -18932,6 +19028,11 @@ function modeLabelFr(mode) {
     evolution: "Chaîne d'évolution",
     order: "Ordre Pokédex",
     "stat-clash": "Stat Clash 1v1",
+    "stat-auction": "Stat Auction 1v1",
+    "higher-lower": "Higher or Lower",
+    "higher-lower-rush": "Higher or Lower (60s)",
+    "poke-connections": "Poké-Connections",
+    speedrun: "Speedrun Pokédex",
     party: "Party Pokémon",
   };
   return map[mode] || mode || "Mode inconnu";
@@ -19038,6 +19139,25 @@ function renderProfileScreen() {
     if (speedrun > 0) {
       records.push({ icon: "⚡", label: "Speedrun Pokédex", value: `${speedrun} Pokémon en 60s`, color: "orange" });
     }
+    // Quiz
+    const quiz = Number(playerProfile.quizHighScore) || 0;
+    if (quiz > 0) {
+      records.push({ icon: "❓", label: "Quiz Pokémon", value: `${quiz} bonnes réponses`, color: "blue" });
+    }
+    // Party Pokémon
+    const party = Number(playerProfile.partyHighScore) || 0;
+    if (party > 0) {
+      records.push({ icon: "🎲", label: "Party Pokémon", value: `${party} victoires en une session`, color: "gold" });
+    }
+    // Intrus / Poids — meilleure série
+    const oddSerie = Number(playerProfile.oddOneOutHighScore) || 0;
+    if (oddSerie > 0) {
+      records.push({ icon: "🧩", label: "Intrus Pokémon", value: `${oddSerie} d'affilée`, color: "blue" });
+    }
+    const weightSerie = Number(playerProfile.weightBattleHighScore) || 0;
+    if (weightSerie > 0) {
+      records.push({ icon: "⚖️", label: "Duel de poids", value: `${weightSerie} d'affilée`, color: "blue" });
+    }
     // Score Attack par gen
     const saRecords = playerProfile.draftScoreAttackRecords || {};
     for (const gen of Object.keys(saRecords)) {
@@ -19049,7 +19169,7 @@ function renderProfileScreen() {
     if (records.length) {
       modeRecordsWrap.innerHTML = records.map((r) => `<div class="profile-record-card is-${r.color}"><span class="profile-record-icon">${r.icon}</span><div><b>${escapeHtml(r.label)}</b><span>${escapeHtml(r.value)}</span></div></div>`).join("");
     } else {
-      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record. Joue à Higher or Lower, Score Attack ou Speedrun pour battre tes premiers scores !</p>';
+      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record. Joue à Higher or Lower, Score Attack, Speedrun, Quiz ou Party Pokémon pour battre tes premiers scores !</p>';
     }
   }
 
@@ -19962,8 +20082,31 @@ function renderWeightBattlePanel() {
       weightBattleState.selectedId = pokemon.id;
       attempts = 1;
       gameOver = true;
+      const didWin = pokemon.id === secretPokemon?.id;
       renderWeightBattlePanel();
-      finishPartyRound(pokemon.id === secretPokemon?.id);
+      // Standalone (hors party) : XP léger + historique + record streak
+      if (!isPartySessionActive()) {
+        try {
+          recordMatchHistory({ mode: "weight", result: didWin ? "win" : "loss", attempts: 1, targetName: secretPokemon?.name || null });
+        } catch (_e) {}
+        if (didWin) {
+          awardXp(10, "Duel de poids");
+          if (playerProfile) {
+            const next = (Number(playerProfile.weightBattleStreak) || 0) + 1;
+            playerProfile.weightBattleStreak = next;
+            const prev = Number(playerProfile.weightBattleHighScore) || 0;
+            if (next > prev) {
+              playerProfile.weightBattleHighScore = next;
+              if (next >= 5) awardXp(20, "Nouveau record Poids");
+            }
+            try { saveProfile(); } catch (_e) {}
+          }
+        } else if (playerProfile) {
+          playerProfile.weightBattleStreak = 0;
+          try { saveProfile(); } catch (_e) {}
+        }
+      }
+      finishPartyRound(didWin);
     });
     grid.appendChild(btn);
   });
@@ -20124,7 +20267,30 @@ function submitOddOneOutChoice(pokemonId) {
   explanationBox?.classList.remove("hidden");
   if (explanationText) explanationText.textContent = oddOneOutState.explanation;
   renderOddOneOutPuzzle(pokemonId);
-  finishPartyRound(pokemonId === oddOneOutState.oddId);
+  const didWin = pokemonId === oddOneOutState.oddId;
+  // Standalone (hors party) : XP léger + historique + record streak
+  if (!isPartySessionActive()) {
+    try {
+      recordMatchHistory({ mode: "odd", result: didWin ? "win" : "loss", attempts: 1, targetName: odd?.name || null });
+    } catch (_e) {}
+    if (didWin) {
+      awardXp(10, "Intrus Pokémon");
+      if (playerProfile) {
+        const next = (Number(playerProfile.oddOneOutStreak) || 0) + 1;
+        playerProfile.oddOneOutStreak = next;
+        const prev = Number(playerProfile.oddOneOutHighScore) || 0;
+        if (next > prev) {
+          playerProfile.oddOneOutHighScore = next;
+          if (next >= 5) awardXp(20, "Nouveau record Intrus");
+        }
+        try { saveProfile(); } catch (_e) {}
+      }
+    } else if (playerProfile) {
+      playerProfile.oddOneOutStreak = 0;
+      try { saveProfile(); } catch (_e) {}
+    }
+  }
+  finishPartyRound(didWin);
   renderOddOneOutPuzzle(pokemonId);
 }
 
