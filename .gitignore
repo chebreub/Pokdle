@@ -13,3 +13,7 @@ npm-debug.log*
 
 Thumbs.db
 .DS_Store
+
+# Script habitat re-dérivation (cache + backup)
+.habitat-cache.json
+App/pokemon.js.bak
