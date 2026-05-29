@@ -6826,7 +6826,7 @@ function shareResult() {
 
   let header = "Pokédle";
   if (gameMode === "daily") header += " • Pokémon du jour";
-  if (gameMode === "challenge") header += " • Défi Ami";
+  if (gameMode === "challenge") header += " • Défi ami";
   if (gameMode === "pixel") header += " • Mode pixelisé";
   if (gameMode === "mystery") header += " • Stat Mystère";
   if (gameMode === "cry") header += " • Cri du Pokémon";
@@ -19146,7 +19146,7 @@ function getAchievementProgress(achievement) {
 function modeLabelFr(mode) {
   const map = {
     normal: "Solo",
-    challenge: "Défi Ami",
+    challenge: "Défi ami",
     daily: "Pokémon du jour",
     silhouette: "Mode zoom progressif",
     pixel: "Mode pixelisé",
@@ -19628,7 +19628,7 @@ function getHelpContentForGameMode(mode) {
       };
     case 'normal':
       return {
-        title: 'Mode classique illimité',
+        title: 'Mode illimité',
         body: `
           <section class="app-help-card">
             <h4>Partie libre, à volonté</h4>
@@ -19650,7 +19650,7 @@ function getHelpContentForGameMode(mode) {
           </section>
           <section class="app-help-card">
             <h4>Indices classiques en plus</h4>
-            <p>Les indices habituels (génération, types, habitat, etc.) s'ajoutent après chaque tentative, comme dans le mode classique.</p>
+            <p>Les indices habituels (génération, types, habitat, etc.) s'ajoutent après chaque tentative, comme en Mode illimité.</p>
           </section>
         `,
       };
@@ -19731,7 +19731,7 @@ const HELP_BY_SCREEN = {
     body: `
       <section class="app-help-card">
         <h4>Choisis tes générations</h4>
-        <p>La carte <b>🧬 Générations</b> en haut filtre le pool utilisé par les modes aléatoires (classique illimité, silhouette, pixelisé, cri, stat mystère…). Les boutons <b>Tout</b> et <b>Aucune</b> sélectionnent en masse. <b>Au moins une gen</b> doit rester cochée.</p>
+        <p>La carte <b>🧬 Générations</b> en haut filtre le pool utilisé par les modes aléatoires (mode illimité, silhouette, pixelisé, cri, stat mystère…). Les boutons <b>Tout</b> et <b>Aucune</b> sélectionnent en masse. <b>Au moins une gen</b> doit rester cochée.</p>
       </section>
       <section class="app-help-card">
         <h4>Pokémon du jour</h4>
@@ -20032,7 +20032,7 @@ function openHelpModal() {
       </section>
       <section class="app-help-card">
         <h4>Modes rapides</h4>
-        <p>Pokémon du jour propose une cible quotidienne. Le mode classique relance une partie libre. Party Pokémon enchaîne plusieurs mini-jeux.</p>
+        <p>Pokémon du jour propose une cible quotidienne. Le Mode illimité relance une partie libre. Party Pokémon enchaîne plusieurs mini-jeux.</p>
       </section>
       <section class="app-help-card">
         <h4>Multijoueur</h4>

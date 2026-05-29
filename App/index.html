@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pokédle - Devinez le Pokémon</title>
-  <meta name="description" content="Pokédle, le jeu type Wordle pour Pokémon : devine le Pokémon mystère du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
+  <meta name="description" content="Pokédle, le jeu type Wordle pour Pokémon : devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
   <meta name="theme-color" content="#2f76ff">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Pokédle - Devinez le Pokémon">
-  <meta property="og:description" content="Devine le Pokémon mystère du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
+  <meta property="og:description" content="Devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
   <meta property="og:image" content="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png">
   <meta property="og:locale" content="fr_FR">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Pokédle - Devinez le Pokémon">
-  <meta name="twitter:description" content="Devine le Pokémon mystère du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
+  <meta name="twitter:description" content="Devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='white'/%3E%3Cpath d='M2 32a30 30 0 0 1 60 0Z' fill='%23ef4438'/%3E%3Cpath d='M2 32h60' stroke='%231b315f' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='white' stroke='%231b315f' stroke-width='6'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,7 +68,7 @@
     <button id="nav-game" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Jouer</button>
     <div class="nav-dropdown" role="menu">
       <button type="button" onclick="startDailyGame()"><span class="nav-dd-ico">📅</span>Pokémon du jour</button>
-      <button type="button" onclick="startNormalGame()"><span class="nav-dd-ico">♾️</span>Mode classique illimité</button>
+      <button type="button" onclick="startNormalGame()"><span class="nav-dd-ico">♾️</span>Mode illimité</button>
       <button type="button" onclick="startPartyMode()"><span class="nav-dd-ico">🎲</span>Party Pokémon</button>
       <button type="button" onclick="openDraftScoreAttackMode()"><span class="nav-dd-ico">🎯</span>Draft Score Attack</button>
       <button type="button" onclick="startSilhouetteGame()"><span class="nav-dd-ico">🕶️</span>Silhouette</button>
@@ -137,7 +137,7 @@
       <!-- Hero focalisé sur le mode du jour -->
       <section class="home-hero card">
         <div class="home-hero-copy">
-          <div class="home-hero-kicker">🔍 Pokémon mystère du jour</div>
+          <div class="home-hero-kicker">🔍 Pokémon du jour</div>
           <h2 class="home-hero-title">Devine la cible du jour avant tout le monde.</h2>
           <p class="home-hero-text">Une seule cible quotidienne, identique pour tous les joueurs. Plus tu joues, plus ta série grimpe.</p>
           <div class="home-hero-actions">
@@ -171,7 +171,7 @@
           <article class="card home-pillar home-pillar-feature" onclick="startDailyGame()" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-red">📅</div>
             <h3>Pokémon du jour</h3>
-            <p>Le mode classique. Une cible quotidienne, des indices à chaque essai.</p>
+            <p>Le mode emblématique. Une cible quotidienne, des indices à chaque essai.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
           </article>
           <article class="card home-pillar" onclick="startPartyMode()" role="button" tabindex="0">
@@ -247,7 +247,7 @@
 
       <!-- Send a challenge (préservé) -->
       <div id="challenge-panel" class="card challenge-panel hidden">
-        <p class="challenge-title">🤝 Choisir un Pokémon et envoyer le lien :</p>
+        <p class="challenge-title">🤝 Défi ami — choisis un Pokémon et envoie le lien :</p>
         <div class="ac-wrapper">
           <input type="text" id="challenge-input" placeholder="Chercher un Pokémon..." autocomplete="off"
             oninput="filterChallengeAC()" onkeydown="handleChallengeKey(event)" />
@@ -1131,7 +1131,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <section class="multiplayer-panel">
                 <div class="multiplayer-attempts-head">
                   <h3>Mes tentatives</h3>
-                  <p>Retrouve tes indices comme dans le mode classique, essai après essai.</p>
+                  <p>Retrouve tes indices comme en Mode illimité, essai après essai.</p>
                 </div>
                 <div id="multiplayer-my-attempts-empty" class="card-desc">Aucune tentative pour l’instant.</div>
                 <div id="multiplayer-my-attempts-wrap" class="results-wrap hidden">
