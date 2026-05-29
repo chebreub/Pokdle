@@ -1957,6 +1957,7 @@ window.addEventListener("DOMContentLoaded", () => {
   resolveExtraFormSprites();
 
   if (checkChallengeURL()) return;
+  if (checkMultiplayerInviteURL()) return;
   goToConfig();
 });
 
@@ -20783,6 +20784,7 @@ function createDefaultMultiplayerLiveState() {
     selectedGens: new Set([...selectedGens].sort((a, b) => a - b)),
     lastGuessFocusKey: "",
     pendingGuessSubmit: false,
+    lastRoomClosedReason: "",
   };
 }
 
@@ -20994,8 +20996,14 @@ function handleMultiplayerGenerationChange(gen, item) {
 
 function resetMultiplayerLiveSession() {
   const preservedGens = getMultiplayerSelectedGens();
+  const preservedConnectionStatus = multiplayerSocket?.connected
+    ? "online"
+    : multiplayerLiveState?.connectionStatus === "connecting"
+      ? "connecting"
+      : "offline";
   multiplayerLiveState = createDefaultMultiplayerLiveState();
   multiplayerLiveState.selectedGens = new Set(preservedGens);
+  multiplayerLiveState.connectionStatus = preservedConnectionStatus;
   document.getElementById("multiplayer-room-input")?.value && (document.getElementById("multiplayer-room-input").value = "");
   document.getElementById("multiplayer-guess-input")?.value && (document.getElementById("multiplayer-guess-input").value = "");
   document.getElementById("multiplayer-guess-ac")?.classList.add("hidden");
@@ -21044,6 +21052,7 @@ function ensureMultiplayerSocket() {
     const previousRoom = state.room;
     state.room = roomState;
     state.pendingGuessSubmit = false;
+    state.lastRoomClosedReason = "";
     if (Array.isArray(roomState?.selectedGens) && roomState.selectedGens.length) {
       state.selectedGens = new Set(roomState.selectedGens.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value >= 1 && value <= 9));
     }
@@ -21064,8 +21073,10 @@ function ensureMultiplayerSocket() {
   });
 
   multiplayerSocket.on("duel:room-closed", (payload = {}) => {
+    const reason = payload.reason || "La room a été fermée.";
     resetMultiplayerLiveSession();
-    setMultiplayerError(payload.reason || "La room a été fermée.");
+    ensureMultiplayerLiveState().lastRoomClosedReason = reason;
+    setMultiplayerError(reason);
     renderMultiplayerBotScreen();
   });
 
@@ -21192,16 +21203,18 @@ function renderMultiplayerPlayers() {
       ? (player.isSelf ? "Toi" : "Adversaire")
       : "Slot libre";
     const status = player
-      ? (room?.status === "waiting"
-        ? (canStartSoon ? "Prêt pour la manche" : "Présent dans la room")
+      ? (player.connected === false
+        ? (player.isSelf ? "Déconnecté" : "Adversaire parti")
+        : room?.status === "waiting"
+        ? (canStartSoon ? "Adversaire connecté" : "Présent dans la room")
         : room?.status === "live"
-          ? "En duel"
+          ? "Partie lancée"
           : "Manche terminée")
       : "En attente d'un joueur";
     const attempts = player?.attempts || 0;
     const lastGuess = player?.lastGuess || "—";
     return `
-      <article class="multiplayer-player-card ${player?.isSelf ? "is-self" : ""} ${isWinner ? "is-winner" : ""} ${player ? "is-present" : "is-empty"}">
+      <article class="multiplayer-player-card ${player?.isSelf ? "is-self" : ""} ${isWinner ? "is-winner" : ""} ${player ? "is-present" : "is-empty"} ${player?.connected === false ? "is-disconnected" : ""}">
         <div class="multiplayer-player-head">
           <strong>${escapeHtml(name)}</strong>
           <span>${subtitle}</span>
@@ -21353,8 +21366,9 @@ function renderMultiplayerBotResult() {
     : self?.isHost
     ? "Action disponible"
     : "Room prête";
+  const disconnectedOpponent = players.find((player) => !player.isSelf && player.connected === false) || null;
   const reasonText = room?.endedReason === "disconnect"
-    ? "La manche s'est terminée sur déconnexion."
+    ? `${disconnectedOpponent?.nickname || "L'adversaire"} a quitté le duel. La manche est terminée.`
     : playerWon
     ? "Tu as trouvé le Pokémon avant ton adversaire."
     : winner
@@ -21480,6 +21494,8 @@ function renderMultiplayerBotScreen() {
   const roundStatus = document.getElementById("multiplayer-round-status");
   const connection = document.getElementById("multiplayer-connection-status");
   const code = document.getElementById("multiplayer-room-code");
+  const copyInviteButton = document.getElementById("multiplayer-copy-invite");
+  const presenceAlert = document.getElementById("multiplayer-presence-alert");
   const liveText = document.getElementById("multiplayer-live-text");
   const waitingText = document.getElementById("multiplayer-waiting-text");
   const guessInput = document.getElementById("multiplayer-guess-input");
@@ -21492,6 +21508,8 @@ function renderMultiplayerBotScreen() {
   const isFinished = room?.status === "finished";
   const playerCount = players.length;
   const roomReady = Boolean(room?.code && playerCount >= 2);
+  const opponent = players.find((player) => !player.isSelf) || null;
+  const opponentLeft = Boolean(opponent && opponent.connected === false);
   const screen = document.getElementById("screen-multiplayer");
 
   if (connection) {
@@ -21502,10 +21520,47 @@ function renderMultiplayerBotScreen() {
       : "Hors ligne";
   }
   if (code) code.textContent = room?.code ? `Code : ${room.code}` : "Code : —";
-  if (screen) {
-    screen.dataset.roomState = isLive ? "live" : isFinished ? "finished" : roomReady ? "ready" : room?.code ? "waiting" : "idle";
+  if (copyInviteButton) {
+    copyInviteButton.classList.toggle("hidden", !room?.code);
+    copyInviteButton.disabled = !room?.code;
   }
-  waitingBox?.setAttribute("data-room-state", roomReady ? "ready" : room?.code ? "waiting" : "idle");
+  if (presenceAlert) {
+    let presenceState = "offline";
+    let presenceText = "Hors ligne : lance l'app via le serveur pour créer une room.";
+    if (multiplayerLiveState.connectionStatus === "connecting") {
+      presenceState = "connecting";
+      presenceText = "Connexion au serveur Duel live...";
+    } else if (multiplayerLiveState.connectionStatus === "online") {
+      if (!room?.code) {
+        presenceState = "idle";
+        presenceText = "Connecté : crée une room ou rejoins un ami.";
+      } else if (opponentLeft) {
+        presenceState = "left";
+        presenceText = `${opponent?.nickname || "L'adversaire"} a quitté le duel.`;
+      } else if (isLive) {
+        presenceState = "live";
+        presenceText = "Partie lancée : les deux joueurs cherchent le même Pokémon.";
+      } else if (isFinished) {
+        presenceState = "finished";
+        presenceText = "Manche terminée.";
+      } else if (roomReady) {
+        presenceState = "ready";
+        presenceText = "Adversaire connecté : la room est complète.";
+      } else {
+        presenceState = "waiting";
+        presenceText = "En attente d'adversaire : partage le lien d'invitation.";
+      }
+    } else if (multiplayerLiveState.lastRoomClosedReason) {
+      presenceState = "left";
+      presenceText = multiplayerLiveState.lastRoomClosedReason;
+    }
+    presenceAlert.dataset.state = presenceState;
+    presenceAlert.textContent = presenceText;
+  }
+  if (screen) {
+    screen.dataset.roomState = opponentLeft ? "left" : isLive ? "live" : isFinished ? "finished" : roomReady ? "ready" : room?.code ? "waiting" : "idle";
+  }
+  waitingBox?.setAttribute("data-room-state", opponentLeft ? "left" : roomReady ? "ready" : room?.code ? "waiting" : "idle");
   renderMultiplayerGenerationGrid();
   renderMultiplayerGenerationSummary();
   renderMultiplayerPlayers();
@@ -21521,12 +21576,12 @@ function renderMultiplayerBotScreen() {
     document.getElementById("screen-multiplayer")?.classList.remove("multiplayer-win-state");
     hideMultiplayerWinOverlay();
     resultBox?.classList.remove("is-win", "is-loss", "win-animate");
-    if (roundStatus) roundStatus.textContent = roomReady ? "Room complète" : room?.code ? "En attente d’un joueur" : "Prêt";
+    if (roundStatus) roundStatus.textContent = roomReady ? "Adversaire connecté" : room?.code ? "En attente d'adversaire" : "Prêt";
     if (waitingText) {
       waitingText.textContent = room?.code
         ? roomReady
           ? "Les deux joueurs sont présents. La manche peut démarrer."
-          : "Room créée. Partage le code et attends le second joueur."
+          : "Room créée. Partage le lien d'invitation et attends le second joueur."
         : "Choisis un pseudo, crée une room ou rejoins-en une pour lancer la manche.";
     }
     waitingBox?.classList.remove("hidden");
@@ -21545,7 +21600,7 @@ function renderMultiplayerBotScreen() {
     document.getElementById("screen-multiplayer")?.classList.remove("multiplayer-win-state");
     hideMultiplayerWinOverlay();
     resultBox?.classList.remove("is-win", "is-loss", "win-animate");
-    if (roundStatus) roundStatus.textContent = "En duel";
+    if (roundStatus) roundStatus.textContent = "Partie lancée";
     if (liveText) {
       const opponent = players.find((player) => !player.isSelf);
       liveText.textContent = opponent?.lastGuess
@@ -21563,7 +21618,7 @@ function renderMultiplayerBotScreen() {
   if (isFinished) {
     ensureMultiplayerLiveState().lastGuessFocusKey = "";
     ensureMultiplayerLiveState().pendingGuessSubmit = false;
-    if (roundStatus) roundStatus.textContent = "Terminé";
+    if (roundStatus) roundStatus.textContent = opponentLeft ? "Adversaire parti" : "Terminé";
     waitingBox?.classList.add("hidden");
     liveBox?.classList.add("hidden");
     resultBox?.classList.remove("hidden");
@@ -21743,15 +21798,31 @@ function leaveMultiplayerRoom(resetOnly = false) {
   if (!resetOnly) goToConfig();
 }
 
+function getMultiplayerInviteLink(code) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("room", code);
+  return url.toString();
+}
+
 function copyMultiplayerRoomCode() {
   const code = multiplayerLiveState?.room?.code;
   if (!code) {
     setMultiplayerError("Aucune room active à copier.");
     return;
   }
-  navigator.clipboard?.writeText(code)
-    .then(() => setMultiplayerError("Code copié."))
-    .catch(() => setMultiplayerError(`Code de room : ${code}`));
+  const inviteLink = getMultiplayerInviteLink(code);
+  navigator.clipboard?.writeText(inviteLink)
+    .then(() => setMultiplayerError("Lien d'invitation copié."))
+    .catch(() => setMultiplayerError(`Lien d'invitation : ${inviteLink}`));
+}
+
+function checkMultiplayerInviteURL() {
+  const inviteCode = new URLSearchParams(window.location.search).get("room");
+  if (!inviteCode) return false;
+  openMultiplayerMode();
+  const roomInput = document.getElementById("multiplayer-room-input");
+  if (roomInput) roomInput.value = inviteCode.trim().toUpperCase().slice(0, 5);
+  return true;
 }
 
 function openMultiplayerMode() {
@@ -21765,6 +21836,11 @@ function openMultiplayerMode() {
   ensureMultiplayerLiveState();
   renderMultiplayerGenerationGrid();
   ensureMultiplayerSocket();
+  const inviteCode = new URLSearchParams(window.location.search).get("room");
+  const roomInput = document.getElementById("multiplayer-room-input");
+  if (inviteCode && roomInput && !multiplayerLiveState?.room?.code) {
+    roomInput.value = inviteCode.trim().toUpperCase().slice(0, 5);
+  }
   renderMultiplayerBotScreen();
 }
 

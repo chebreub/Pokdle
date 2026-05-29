@@ -1067,8 +1067,9 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="multiplayer-connection-status" class="tag-gen">Hors ligne</span>
           <span id="multiplayer-room-code" class="tag-tries">Code : —</span>
           <span id="multiplayer-round-status" class="tag-gen">Prêt</span>
-          <button class="btn-ghost" type="button" onclick="copyMultiplayerRoomCode()">Copier le code</button>
+          <button id="multiplayer-copy-invite" class="btn-ghost hidden" type="button" onclick="copyMultiplayerRoomCode()">Copier le lien d'invitation</button>
         </div>
+        <div id="multiplayer-presence-alert" class="multiplayer-presence-alert" data-state="offline">Hors ligne : lance l'app via le serveur pour créer une room.</div>
 
         <section class="multiplayer-gen-panel multiplayer-panel">
           <div class="multiplayer-gen-panel-head">
@@ -1090,7 +1091,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <input id="multiplayer-nickname" type="text" maxlength="24" placeholder="Ton pseudo..." autocomplete="off" />
             </label>
             <div class="multiplayer-actions-grid">
-              <button class="btn-red" type="button" onclick="createMultiplayerRoom()">Créer une room</button>
+              <button id="multiplayer-create-room" class="btn-red multiplayer-create-room-btn" type="button" onclick="createMultiplayerRoom()">Créer une room</button>
             </div>
             <div class="multiplayer-join-row">
               <input id="multiplayer-room-input" type="text" maxlength="5" placeholder="Code de room..." autocomplete="off" />
