@@ -10045,6 +10045,26 @@ body.theme-dark .bg-pokeball {
   transform: translateY(-2px) scale(1.04);
 }
 
+/* P5 — Cry mode loading/error feedback */
+.cry-status-text {
+  margin: 8px 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #2f76ff;
+  text-align: center;
+}
+.cry-status-text.is-loading { color: #2f76ff; }
+.cry-status-text.is-ready { color: #1f9b3f; }
+.cry-status-text.is-error { color: #e4382f; }
+#cry-play-btn.is-loading {
+  opacity: 0.7;
+  cursor: progress;
+}
+#cry-play-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .odd-card.is-correct,
 .odd-card.is-answer,
 .versus-card.is-correct,

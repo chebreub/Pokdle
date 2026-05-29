@@ -5968,8 +5968,28 @@ function getPokemonCryUrl(pokemon) {
 
 function stopCrySound() {
   if (!cryAudio) return;
-  cryAudio.pause();
-  cryAudio.currentTime = 0;
+  try { cryAudio.pause(); } catch (_e) {}
+  try { cryAudio.currentTime = 0; } catch (_e) {}
+  setCryUiStatus("idle", "");
+}
+
+function setCryUiStatus(state, message = "") {
+  const statusEl = document.getElementById("cry-status-text");
+  const btn = document.getElementById("cry-play-btn");
+  if (statusEl) {
+    statusEl.classList.remove("hidden", "is-loading", "is-error", "is-ready");
+    if (!message) {
+      statusEl.classList.add("hidden");
+      statusEl.textContent = "";
+    } else {
+      statusEl.classList.add(`is-${state}`);
+      statusEl.textContent = message;
+    }
+  }
+  if (btn) {
+    btn.disabled = state === "loading";
+    btn.classList.toggle("is-loading", state === "loading");
+  }
 }
 
 function playCrySound() {
@@ -5977,15 +5997,41 @@ function playCrySound() {
 
   const url = getPokemonCryUrl(secretPokemon);
 
+  // Nouveau cri : reset audio + UI
   if (!cryAudio || cryAudio.src !== url) {
-    cryAudio = new Audio(url);
+    if (cryAudio) {
+      try { cryAudio.pause(); } catch (_e) {}
+    }
+    cryAudio = new Audio();
     cryAudio.preload = "auto";
+    cryAudio.addEventListener("loadstart", () => {
+      if (cryAudio?.src === url) setCryUiStatus("loading", "Chargement du cri…");
+    });
+    cryAudio.addEventListener("canplay", () => {
+      if (cryAudio?.src === url) setCryUiStatus("ready", "");
+    });
+    cryAudio.addEventListener("error", () => {
+      if (cryAudio?.src === url) {
+        setCryUiStatus("error", "Cri indisponible pour ce Pokémon (réseau ou source). Réessaie ou abandonne.");
+      }
+    });
+    cryAudio.src = url;
   }
 
-  cryAudio.currentTime = 0;
-  cryAudio.play().catch(() => {
-    showErr("Impossible de lire le cri pour ce Pokémon.");
-  });
+  setCryUiStatus("loading", "Chargement du cri…");
+  try { cryAudio.currentTime = 0; } catch (_e) {}
+  const playPromise = cryAudio.play();
+  if (playPromise && typeof playPromise.then === "function") {
+    playPromise
+      .then(() => setCryUiStatus("ready", ""))
+      .catch((err) => {
+        const blocked = err?.name === "NotAllowedError";
+        setCryUiStatus("error", blocked
+          ? "Lecture audio bloquée par le navigateur — clique encore une fois pour autoriser."
+          : "Impossible de lire le cri (réseau ?). Réessaie."
+        );
+      });
+  }
 }
 
 let __draftBattleCryAudio = null;
@@ -18351,13 +18397,37 @@ function launchSelectedEmuRom() {
 
   emulatorRunning = true;
 
+  // Pré-check ROM (HEAD) — détecte ROM 404 / réseau pour message clair
+  if (rom.url && /^https?:\/\//i.test(rom.url)) {
+    fetch(rom.url, { method: "HEAD", mode: "cors" })
+      .then((res) => {
+        if (!res.ok) {
+          setEmuStatus(`ROM introuvable (${res.status}). Vérifie l'URL ou choisis-en une autre.`);
+        }
+      })
+      .catch(() => {
+        setEmuStatus("ROM injoignable. Vérifie ta connexion ou choisis une autre source.");
+      });
+  }
+
   const script = document.createElement("script");
   script.id = "emulatorjs-loader";
   script.src = `${window.EJS_pathtodata}loader.js?v=${Date.now()}`;
-  script.onload = () => setEmuStatus(`Emulateur ${rom.core.toUpperCase()} pret. Si l'ecran reste vide, recharge la page puis relance.`);
+  script.onload = () => {
+    setEmuStatus(`Emulateur ${rom.core.toUpperCase()} prêt. Si l'écran reste vide après 10s, recharge la page puis relance.`);
+    // Watchdog : si après 12s aucun canvas EmulatorJS n'est apparu, on signale
+    setTimeout(() => {
+      if (!emulatorRunning) return;
+      const playerNode = document.getElementById("emulator-player");
+      const hasCanvas = playerNode?.querySelector("canvas, video");
+      if (!hasCanvas) {
+        setEmuStatus(`Émulateur lancé mais aucun affichage détecté (${rom.core.toUpperCase()}). ROM corrompue ? CDN indisponible ? Essaie de recharger la page.`);
+      }
+    }, 12000);
+  };
   script.onerror = () => {
     emulatorRunning = false;
-    setEmuStatus(`Echec de chargement EmulatorJS (${rom.core.toUpperCase()}). Verifie ta connexion internet.`);
+    setEmuStatus(`Échec de chargement EmulatorJS (${rom.core.toUpperCase()}). CDN injoignable — vérifie ta connexion internet.`);
   };
   document.body.appendChild(script);
 }
@@ -20333,6 +20403,67 @@ function renderOddOneOutPuzzle(selectedId = null) {
   });
 }
 
+function pickPokedexFlavorText(speciesData, pokemonName) {
+  const entries = Array.isArray(speciesData?.flavor_text_entries) ? speciesData.flavor_text_entries : [];
+  if (!entries.length) return null;
+  // Priorité au français, fallback anglais
+  const french = entries.filter((entry) => entry?.language?.name === "fr");
+  const english = entries.filter((entry) => entry?.language?.name === "en");
+  const pool = french.length ? french : english;
+  if (!pool.length) return null;
+  // Picks aléatoire pour ne pas toujours retomber sur la même entrée Rouge/Bleu
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  let text = String(pick?.flavor_text || "").replace(/[\f\n\r\t]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!text) return null;
+  // Masquer le nom du Pokémon pour ne pas révéler la réponse
+  if (pokemonName) {
+    const safeName = String(pokemonName).replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    text = text.replace(new RegExp(safeName, "gi"), "ce Pokémon");
+  }
+  return text;
+}
+
+function buildDescriptionFallbackHint(secret) {
+  // Indice générique sans révéler nom ni types : silhouette par catégorie
+  if (!secret) return "Aucun indice disponible.";
+  const gen = secret.gen ? `de la génération ${secret.gen}` : "";
+  const stage = secret.stage ? `, stade d'évolution ${secret.stage}` : "";
+  const habitat = secret.habitat && secret.habitat !== "Rare" ? `, habitat ${secret.habitat}` : "";
+  return `Pokémon ${gen}${stage}${habitat}. (Description Pokédex indisponible, retombe sur indices génériques.)`.trim();
+}
+
+async function loadDescriptionFlavorText(secret) {
+  descriptionState.loading = true;
+  descriptionState.error = null;
+  descriptionState.text = "Chargement de l'entrée Pokédex…";
+  renderDescriptionMode();
+  try {
+    const speciesId = getPokemonSpeciesId(secret) || secret.id;
+    const species = await fetchPokedexSpeciesData(speciesId);
+    if (gameMode !== "description" || secretPokemon?.id !== secret.id) return; // mode quitté
+    const flavor = pickPokedexFlavorText(species, secret.name);
+    descriptionState.loading = false;
+    if (flavor) {
+      descriptionState.text = flavor;
+    } else {
+      descriptionState.error = "Aucune entrée Pokédex disponible.";
+      descriptionState.text = buildDescriptionFallbackHint(secret);
+    }
+  } catch (_e) {
+    descriptionState.loading = false;
+    descriptionState.error = "Erreur réseau.";
+    descriptionState.text = buildDescriptionFallbackHint(secret);
+  }
+  renderDescriptionMode();
+}
+
+function getPokemonSpeciesId(pokemon) {
+  if (!pokemon) return null;
+  // Les formes alternatives partagent souvent l'espèce de la forme de base
+  const baseId = Number(pokemon.baseId || pokemon.speciesId || pokemon.id);
+  return Number.isFinite(baseId) && baseId > 0 ? baseId : null;
+}
+
 function startDescriptionMode() {
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
@@ -20340,10 +20471,12 @@ function startDescriptionMode() {
     return;
   }
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
-  descriptionState.text = `Ce Pokémon appartient à la génération ${secret.gen}, possède le type ${secret.type1}${secret.type2 ? ` / ${secret.type2}` : ""} et pèse ${secret.weight} kg.`;
+  descriptionState = { text: "Chargement de l'entrée Pokédex…", loading: true, error: null };
   gameMode = "description";
   startGameWithSecret(secret, pool);
   renderDescriptionMode();
+  // Charge async la vraie description Pokédex
+  loadDescriptionFlavorText(secret);
 }
 
 function openOddOneOutMode() {
