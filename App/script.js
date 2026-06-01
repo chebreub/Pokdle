@@ -7847,7 +7847,13 @@ function partyStartGame() {
   if (!socket) return;
   socket.emit("party:start", {}, function (res) {
     res = res || {};
-    if (!res.ok) { setPartyStatus(res.error || "Impossible de lancer."); }
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de lancer."); return; }
+    if (res.room) {
+      partyRoomState.room = res.room;
+      partyRoomState.code = res.room.code || partyRoomState.code;
+      setPartyStatus("");
+      renderPartyRoom();
+    }
   });
 }
 
@@ -7870,6 +7876,7 @@ function partySubmitAnswer() {
   socket.emit("party:submit-answer", { guess: guess }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
     if (res.correct) { setPartyStatus("Bonne reponse ! +100"); if (input) input.value = ""; }
     else if (!res.already) { setPartyStatus("Reponse incorrecte, reessaie."); }
   });

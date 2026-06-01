@@ -358,14 +358,16 @@ function pickPartyTarget() {
 function startPartyRound(room) {
   room.status = "playing";
   room.target = pickPartyTarget();
+  room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
   for (const player of room.players) {
     player.correct = false;
   }
 }
 
 function checkPartyRoundFinished(room) {
-  const connected = room.players.filter((p) => p.connected);
-  if (connected.length > 0 && connected.every((p) => p.correct)) {
+  const roster = Array.isArray(room.roundPlayerIds) && room.roundPlayerIds.length ? room.roundPlayerIds : room.players.map((p) => p.id);
+  const active = room.players.filter((p) => p.connected && roster.includes(p.id));
+  if (active.length > 0 && active.every((p) => p.correct)) {
     room.status = "finished";
   }
 }
