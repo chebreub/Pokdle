@@ -58,6 +58,16 @@
 #screen-config .home-hero-secondary { display: flex; justify-content: center; margin-top: 14px; }
 @media (max-width: 1000px) { #screen-config .home-pillars-hero { grid-template-columns: repeat(2, 1fr) !important; } }
 @media (max-width: 560px) { #screen-config .home-pillars-hero { grid-template-columns: 1fr !important; } }
+
+/* Lot 3 - page Tous les modes */
+#screen-all-modes .all-modes-cat { margin-top: 20px; }
+#screen-all-modes .all-modes-cat-title { font-size: 1.05rem; margin: 0 0 10px; color: #1d2b4a; }
+#screen-all-modes .all-modes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+#screen-all-modes .all-modes-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; text-align: left; border: none; }
+#screen-all-modes .all-modes-card .am-emoji { font-size: 1.4rem; line-height: 1; }
+#screen-all-modes .all-modes-card b { color: #1d2b4a; font-size: 0.95rem; }
+@media (max-width: 900px) { #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; } }
 #screen-config .home-pillar {
   padding: 18px 18px 16px !important;
   cursor: pointer;
