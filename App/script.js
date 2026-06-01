@@ -2399,6 +2399,7 @@ function goToConfig() {
   document.getElementById("screen-multiplayer")?.classList.add("hidden");
   document.getElementById("screen-odd-one-out")?.classList.add("hidden");
   document.getElementById("screen-stat-clash")?.classList.add("hidden");
+  document.getElementById("screen-all-modes")?.classList.add("hidden");
   stopEmulatorSession();
   setQuizModeLayout(false);
   stopCrySound();
@@ -7678,6 +7679,33 @@ function initTypeChartScreen() {
     typeChartDefenseFilter = defenseSelect.value;
     renderTypeChartScreen();
   });
+}
+
+function openAllModesScreen() {
+  [
+    "screen-config",
+    "screen-game",
+    "screen-ranking",
+    "screen-games-ranking",
+    "screen-pokedex",
+    "screen-type-chart",
+    "screen-draft-arena",
+    "screen-draft-score-attack",
+    "screen-profile",
+    "screen-achievements",
+    "screen-history",
+    "screen-multiplayer",
+    "screen-odd-one-out",
+    "screen-team-builder",
+    "screen-teams",
+    "screen-emulator",
+  ].forEach(hideScreen);
+  stopEmulatorSession();
+  stopCrySound();
+  setQuizModeLayout(false);
+  closeRankingPicker();
+  showScreen("screen-all-modes");
+  window.scrollTo(0, 0);
 }
 
 function openTypeChartScreen() {

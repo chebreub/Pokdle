@@ -134,27 +134,40 @@
         <div class="gen-grid" id="gen-grid"></div>
       </div>
 
-      <!-- Hero focalisé sur le mode du jour -->
-      <section class="home-hero card">
-        <div class="home-hero-copy">
-          <div class="home-hero-kicker">🔍 Pokémon du jour</div>
-          <h2 class="home-hero-title">Devine la cible du jour avant tout le monde.</h2>
-          <p class="home-hero-text">Une seule cible quotidienne, identique pour tous les joueurs. Plus tu joues, plus ta série grimpe.</p>
-          <div class="home-hero-actions">
-            <button class="btn-red home-hero-cta" onclick="startDailyGame()">▶ Jouer maintenant</button>
-            <button class="btn-blue" type="button" onclick="startPartyMode()">🎲 Party</button>
-            <button class="btn-ghost" type="button" onclick="openMultiplayerMode()">🆚 Duel 1v1</button>
-          </div>
+      <!-- Hero : 4 modes piliers (Lot 2) -->
+      <section class="home-hero-choices">
+        <div class="home-section-head">
+          <h2 class="home-section-title">🎮 Quatre façons de jouer</h2>
+          <p class="home-section-sub">Les modes principaux. Tout le reste est rangé dans « Tous les modes ».</p>
         </div>
-        <div class="home-hero-visual" aria-hidden="true">
-          <div class="hero-orb hero-orb-red"></div>
-          <div class="hero-orb hero-orb-blue"></div>
-          <div class="hero-pokeball">
-            <div class="hero-pokeball-top"></div>
-            <div class="hero-pokeball-band"></div>
-            <div class="hero-pokeball-core"></div>
-            <div class="hero-pokeball-bottom"></div>
-          </div>
+        <div class="home-pillars home-pillars-hero">
+          <article class="card home-pillar home-pillar-feature" onclick="startDailyGame()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-red">📅</div>
+            <h3>Pokémon du jour</h3>
+            <p>La cible quotidienne, identique pour tous. Garde ta série.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
+          </article>
+          <article class="card home-pillar" onclick="startNormalGame()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-yellow">♾️</div>
+            <h3>Mode illimité</h3>
+            <p>Mêmes règles que le quotidien, rejouable sans limite.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Rejouable</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openMultiplayerMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-blue">🆚</div>
+            <h3>Duel 1v1</h3>
+            <p>Affronte un ami en temps réel sur la même cible.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
+          </article>
+          <article class="card home-pillar" onclick="openDraftArenaMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-coral">🏆</div>
+            <h3>Draft Arènes</h3>
+            <p>Drafte 6 Pokémon, défie les arènes et décroche tes badges.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag">Badges</span></div>
+          </article>
+        </div>
+        <div class="home-hero-secondary">
+          <button class="btn-ghost" type="button" onclick="openAllModesScreen()">📂 Tous les modes</button>
         </div>
       </section>
 
@@ -295,6 +308,18 @@
         </div>
       </div>
 
+    </div>
+
+    <div id="screen-all-modes" class="hidden">
+      <div class="card">
+        <div class="ranking-head">
+          <h2 class="card-title">📂 Tous les modes</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">La liste complète des modes, classés par catégorie, arrivera ici au prochain lot.</p>
+      </div>
     </div>
 
     <div id="screen-profile" class="hidden">

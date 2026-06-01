@@ -51,6 +51,13 @@
   grid-template-columns: repeat(3, 1fr) !important;
   gap: 14px !important;
 }
+
+/* Lot 2 - hero 4 piliers + bouton Tous les modes */
+#screen-config .home-hero-choices { margin: 18px 0 8px; }
+#screen-config .home-pillars-hero { grid-template-columns: repeat(4, 1fr) !important; }
+#screen-config .home-hero-secondary { display: flex; justify-content: center; margin-top: 14px; }
+@media (max-width: 1000px) { #screen-config .home-pillars-hero { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 560px) { #screen-config .home-pillars-hero { grid-template-columns: 1fr !important; } }
 #screen-config .home-pillar {
   padding: 18px 18px 16px !important;
   cursor: pointer;
