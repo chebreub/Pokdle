@@ -7928,9 +7928,9 @@ function renderPartyRoom() {
       : complete ? "Party terminee"
       : "En attente";
   }
-  var isHost = Boolean(room.hostId && selfId && room.hostId === selfId);
   var raw = room.players || [];
-  var me = raw.find(function (p) { return p.id === selfId; }) || null;
+  var me = raw.find(function (p) { return p.isSelf; }) || raw.find(function (p) { return p.id === selfId; }) || null;
+  var isHost = Boolean((me && me.isHost) || (room.hostId && selfId && room.hostId === selfId));
   var players = raw.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
   var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
   var listEl = document.getElementById("party-players");
