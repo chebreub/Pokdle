@@ -7892,6 +7892,16 @@ function partyRevealRound() {
   });
 }
 
+function partyNextRound() {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:next-round", {}, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de passer a la suite."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+  });
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -7908,17 +7918,27 @@ function renderPartyRoom() {
   if (codeEl) codeEl.textContent = room.code || "-";
   var playing = room.status === "playing";
   var finished = room.status === "finished";
+  var complete = room.status === "complete";
+  var roundNo = Number(room.roundNumber) || 0;
+  var total = Number(room.totalRounds) || 5;
   var statusEl = document.getElementById("party-room-status-badge");
-  if (statusEl) statusEl.textContent = playing ? "Manche en cours" : (finished ? "Manche terminee" : "En attente");
+  if (statusEl) {
+    statusEl.textContent = playing ? ("Manche " + roundNo + " / " + total)
+      : finished ? ("Manche " + roundNo + " / " + total + " terminee")
+      : complete ? "Party terminee"
+      : "En attente";
+  }
   var isHost = Boolean(room.hostId && selfId && room.hostId === selfId);
   var raw = room.players || [];
   var me = raw.find(function (p) { return p.id === selfId; }) || null;
   var players = raw.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+  var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
   var listEl = document.getElementById("party-players");
   if (listEl) {
     listEl.innerHTML = players.map(function (p, i) {
+      var rank = (complete && i < 3) ? medals[i] : (i + 1);
       return '<li class="party-player' + (p.connected ? '' : ' is-offline') + (p.correct ? ' is-correct' : '') + '">' +
-        '<span class="party-rank">' + (i + 1) + '</span>' +
+        '<span class="party-rank">' + rank + '</span>' +
         '<span class="party-player-name">' + escapeHtml(p.nickname) + '</span>' +
         (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
         (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
@@ -7937,7 +7957,7 @@ function renderPartyRoom() {
     if (hasRound && spriteEl) spriteEl.src = room.round.image;
     var answerEl = document.getElementById("party-round-answer");
     if (answerEl) {
-      if (finished && room.round && room.round.answer) {
+      if ((finished || complete) && room.round && room.round.answer) {
         answerEl.classList.remove("hidden");
         answerEl.textContent = "C'etait : " + room.round.answer;
       } else {
@@ -7950,10 +7970,12 @@ function renderPartyRoom() {
   }
   var startBtn = document.getElementById("party-start-btn");
   if (startBtn) {
-    startBtn.classList.toggle("hidden", !isHost || playing);
+    startBtn.classList.toggle("hidden", !(isHost && (room.status === "waiting" || complete)));
     startBtn.disabled = raw.length < (room.minPlayers || 2);
-    startBtn.textContent = finished ? "Relancer une manche" : "Lancer la partie";
+    startBtn.textContent = complete ? "Relancer une party" : "Lancer la party";
   }
+  var nextBtn = document.getElementById("party-next-btn");
+  if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished));
   var revealBtn = document.getElementById("party-reveal-btn");
   if (revealBtn) revealBtn.classList.toggle("hidden", !(isHost && playing));
 }
