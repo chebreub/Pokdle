@@ -7882,6 +7882,16 @@ function partySubmitAnswer() {
   });
 }
 
+function partyRevealRound() {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:reveal-round", {}, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de reveler."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+  });
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -7944,6 +7954,8 @@ function renderPartyRoom() {
     startBtn.disabled = raw.length < (room.minPlayers || 2);
     startBtn.textContent = finished ? "Relancer une manche" : "Lancer la partie";
   }
+  var revealBtn = document.getElementById("party-reveal-btn");
+  if (revealBtn) revealBtn.classList.toggle("hidden", !(isHost && playing));
 }
 
 function initPartyFromUrl() {

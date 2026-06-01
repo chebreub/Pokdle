@@ -1182,9 +1182,10 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <img id="party-round-sprite" class="party-round-sprite" src="" alt="Pokemon a deviner" />
             <p id="party-round-answer" class="party-round-answer hidden"></p>
             <div id="party-round-input" class="party-round-input">
-              <input id="party-guess" type="text" placeholder="Nom du Pokemon" autocomplete="off" />
+              <input id="party-guess" type="text" placeholder="Nom du Pokemon" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();partySubmitAnswer();}" />
               <button class="btn-blue" type="button" onclick="partySubmitAnswer()">Valider</button>
             </div>
+            <button id="party-reveal-btn" class="btn-ghost hidden" type="button" onclick="partyRevealRound()">Reveler / terminer la manche</button>
           </div>
         </div>
         <p id="party-status" class="party-status"></p>

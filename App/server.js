@@ -603,6 +603,20 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("party:reveal-round", (payload = {}, ack) => {
+    try {
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
+      if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
+      room.status = "finished";
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de reveler la manche." });
+    }
+  });
+
   socket.on("stat-clash:create-room", (payload = {}, ack) => {
     try {
       if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
