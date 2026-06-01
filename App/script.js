@@ -7710,6 +7710,68 @@ function openAllModesScreen() {
   window.scrollTo(0, 0);
 }
 
+/* Lot 9 - historique navigateur (bouton precedent) */
+(function () {
+  var OPENERS = {
+    allModes: "openAllModesScreen",
+    pokedex: "openPokedexMode",
+    multiplayer: "openMultiplayerMode",
+    teamBuilder: "openTeamBuilderScreen",
+    profile: "openProfileScreen",
+    achievements: "openAchievementsScreen",
+    history: "openMatchHistoryScreen",
+    typeChart: "openTypeChartScreen",
+    emulator: "openEmulatorMode",
+  };
+  var GAME_OPENERS = ["startDailyGame", "startNormalGame"];
+
+  function wrap(name, key) {
+    var orig = window[name];
+    if (typeof orig !== "function") return;
+    window[name] = function () {
+      var r = orig.apply(this, arguments);
+      if (!window.__screenHistorySuppress) {
+        try {
+          if (!(history.state && history.state.screen === key)) {
+            history.pushState({ screen: key }, "", "#" + key);
+          }
+        } catch (e) {}
+      }
+      return r;
+    };
+  }
+
+  function initScreenHistory() {
+    if (window.__screenHistoryInit) return;
+    window.__screenHistoryInit = true;
+    Object.keys(OPENERS).forEach(function (key) { wrap(OPENERS[key], key); });
+    GAME_OPENERS.forEach(function (name) { wrap(name, "game"); });
+    try {
+      history.replaceState({ screen: "config" }, "", location.pathname + location.search);
+    } catch (e) {}
+    window.addEventListener("popstate", function (ev) {
+      var key = (ev.state && ev.state.screen) || "config";
+      window.__screenHistorySuppress = true;
+      try {
+        if (key === "config" || key === "game") {
+          if (typeof goToConfig === "function") goToConfig();
+        } else {
+          var name = OPENERS[key];
+          if (name && typeof window[name] === "function") window[name]();
+        }
+      } finally {
+        window.__screenHistorySuppress = false;
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initScreenHistory);
+  } else {
+    initScreenHistory();
+  }
+})();
+
 function openTypeChartScreen() {
   [
     "screen-config",
