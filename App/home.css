@@ -75,6 +75,21 @@
 .team-builder-advanced > .team-builder-advanced-summary span { font-weight: 600; color: #5a6b8c; font-size: 0.85rem; }
 .team-builder-advanced[open] > .team-builder-advanced-summary { margin-bottom: 10px; }
 .team-builder-advanced-summary::-webkit-details-marker { display: none; }
+
+/* Lot 8 - polish responsive mobile */
+@media (max-width: 560px) {
+  #screen-config .home-pillars-hero .home-pillar { padding: 14px !important; }
+  #screen-config .home-pillars-hero .home-pillar p { font-size: 0.85rem; }
+  #screen-config .home-hero-secondary .btn-ghost { width: 100%; }
+  #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); }
+  #screen-all-modes .all-modes-card { padding: 10px 12px; }
+  #screen-all-modes .all-modes-card b { font-size: 0.85rem; }
+  #screen-all-modes .all-modes-card .am-emoji { font-size: 1.2rem; }
+  .team-builder-advanced > .team-builder-advanced-summary span { display: block; margin-top: 2px; }
+}
+@media (max-width: 380px) {
+  #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; }
+}
 #screen-config .home-pillar {
   padding: 18px 18px 16px !important;
   cursor: pointer;
