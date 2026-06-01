@@ -384,6 +384,7 @@ function renderHomeEngagementWidget() {
   const xp = Number(playerProfile.xp) || 0;
   const prog = getXpProgress(xp);
   const streak = Number(playerProfile.dailyLoginStreak) || 0;
+  const gameStreak = Number(playerStats?.dailyCurrentStreak) || 0;
   const totalQuests = Number(playerProfile.totalQuestsCompleted) || 0;
   const quests = ensureDailyQuests();
   const completedToday = quests.filter((q) => q.completed).length;
@@ -414,6 +415,7 @@ function renderHomeEngagementWidget() {
       </div>
       <div class="heb-bar"><div class="heb-bar-fill" style="width:${prog.percent}%"></div></div>
       <div class="heb-chips">
+        ${gameStreak > 0 ? `<span class="heb-chip is-streak" title="Série Pokémon du jour : ${gameStreak}">📅🔥 ${gameStreak}</span>` : ""}
         ${streak > 0 ? `<span class="heb-chip is-streak" title="${streak} jour${streak > 1 ? "s" : ""} d'affilée">🔥 ${streak}</span>` : ""}
         <span class="heb-chip is-quests" title="${completedToday} quête${completedToday !== 1 ? "s" : ""} terminée${completedToday !== 1 ? "s" : ""} sur ${totalToday}">🎯 ${completedToday}/${totalToday}</span>
       </div>
