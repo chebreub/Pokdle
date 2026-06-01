@@ -19611,7 +19611,15 @@ function hideScreen(id) {
   document.getElementById(id)?.classList.add('hidden');
 }
 
+function closeNavDropdowns() {
+  var a = document.activeElement;
+  if (a && typeof a.blur === 'function' && a.closest && a.closest('.nav-group')) {
+    a.blur();
+  }
+}
+
 function hideAllScreens() {
+  closeNavDropdowns();
   document.querySelectorAll('[id^="screen-"]').forEach(function (el) {
     el.classList.add('hidden');
   });
