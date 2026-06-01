@@ -17816,6 +17816,7 @@ function openDraftArenaMode() {
 }
 
 function openDraftScoreAttackMode() {
+  hideAllScreens();
   document.getElementById("screen-config").classList.add("hidden");
   document.getElementById("screen-game").classList.add("hidden");
   document.getElementById("screen-ranking").classList.add("hidden");
