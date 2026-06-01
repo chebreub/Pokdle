@@ -301,6 +301,11 @@ function joinPlayerToPartyRoom(room, socket, nickname) {
   room.players.push({ id: socket.id, nickname, connected: true, score: 0, correct: false });
 }
 
+function publicPartyGuessRoundState(room, revealed) {
+  if (!room.target) return null;
+  return { image: room.target.sprite || null, answer: revealed ? room.target.name : null, variant: room.variant || "normal" };
+}
+
 function publicPartyRoomState(room, viewerId = null) {
   const revealed = room.status === "finished" || room.status === "complete";
   return {
@@ -312,7 +317,7 @@ function publicPartyRoomState(room, viewerId = null) {
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: PARTY_TOTAL_ROUNDS,
     gameMode: room.gameMode || "guess",
-    round: room.target ? { image: room.target.sprite || null, answer: revealed ? room.target.name : null, variant: room.variant || "normal" } : null,
+    round: publicPartyGuessRoundState(room, revealed),
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
@@ -391,6 +396,11 @@ function partyPointsForRank(rank) {
 }
 
 function startPartyRound(room) {
+  // Dispatch selon le mode de la party (seul "guess" est jouable pour l'instant)
+  startPartyGuessRound(room);
+}
+
+function startPartyGuessRound(room) {
   room.status = "playing";
   room.target = pickPartyTarget();
   room.variant = pickPartyVariant();
@@ -400,6 +410,24 @@ function startPartyRound(room) {
     player.correct = false;
     player.lastGain = 0;
   }
+}
+
+function handlePartyGuessAnswer(room, player, guess) {
+  const guessName = normalizeName(guess);
+  const isCorrect = Boolean(guessName) && guessName === normalizeName(room.target.name);
+  let gained = 0;
+  let rank = 0;
+  if (isCorrect) {
+    rank = (Number(room.correctCount) || 0) + 1;
+    gained = partyPointsForRank(rank - 1);
+    room.correctCount = rank;
+    player.correct = true;
+    player.lastGain = gained;
+    player.score = (Number(player.score) || 0) + gained;
+    checkPartyRoundFinished(room);
+    emitPartyRoomState(room);
+  }
+  return { correct: isCorrect, gained: gained, rank: rank };
 }
 
 function checkPartyRoundFinished(room) {
@@ -627,21 +655,9 @@ io.on("connection", (socket) => {
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
       if (player.correct) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
-      const guessName = normalizeName(payload.guess);
-      const isCorrect = Boolean(guessName) && guessName === normalizeName(room.target.name);
-      let gained = 0;
-      let rank = 0;
-      if (isCorrect) {
-        rank = (Number(room.correctCount) || 0) + 1;
-        gained = partyPointsForRank(rank - 1);
-        room.correctCount = rank;
-        player.correct = true;
-        player.lastGain = gained;
-        player.score = (Number(player.score) || 0) + gained;
-        checkPartyRoundFinished(room);
-        emitPartyRoomState(room);
-      }
-      respond(ack, { ok: true, correct: isCorrect, gained: gained, rank: rank, room: publicPartyRoomState(room, socket.id) });
+      if ((room.gameMode || "guess") !== "guess") return respond(ack, { ok: false, error: "Mode non disponible." });
+      const result = handlePartyGuessAnswer(room, player, payload.guess);
+      respond(ack, { ok: true, correct: result.correct, gained: result.gained, rank: result.rank, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Erreur lors de la reponse." });
     }
