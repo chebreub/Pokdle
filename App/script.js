@@ -7772,6 +7772,154 @@ function openAllModesScreen() {
   }
 })();
 
+/* Party Room L1 - lobby multijoueur (2-8) */
+var partyRoomState = { code: null, room: null, listenersBound: false };
+
+function ensurePartyListeners() {
+  var socket = ensureMultiplayerSocket();
+  if (!socket || partyRoomState.listenersBound) return socket;
+  partyRoomState.listenersBound = true;
+  socket.on("party:room-state", function (room) {
+    partyRoomState.room = room;
+    partyRoomState.code = room && room.code;
+    renderPartyRoom();
+  });
+  return socket;
+}
+
+function openPartyRoomMode() {
+  ensurePartyListeners();
+  showScreen("screen-party-room");
+  renderPartyRoom();
+}
+
+function setPartyStatus(message) {
+  var el = document.getElementById("party-status");
+  if (el) el.textContent = message || "";
+}
+
+function partyCreateRoom() {
+  var socket = ensurePartyListeners();
+  if (!socket) { setPartyStatus("Serveur temps reel indisponible."); return; }
+  var input = document.getElementById("party-nickname");
+  var nickname = ((input && input.value) || "").trim();
+  if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
+  socket.emit("party:create-room", { nickname: nickname }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Erreur de creation."); return; }
+    partyRoomState.room = res.room;
+    partyRoomState.code = res.code;
+    setPartyStatus("");
+    renderPartyRoom();
+  });
+}
+
+function partyJoinRoom() {
+  var socket = ensurePartyListeners();
+  if (!socket) { setPartyStatus("Serveur temps reel indisponible."); return; }
+  var nickEl = document.getElementById("party-nickname");
+  var codeEl = document.getElementById("party-join-code");
+  var nickname = ((nickEl && nickEl.value) || "").trim();
+  var code = ((codeEl && codeEl.value) || "").trim();
+  if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
+  if (!code) { setPartyStatus("Entre un code de room."); return; }
+  socket.emit("party:join-room", { nickname: nickname, code: code }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de rejoindre."); return; }
+    partyRoomState.room = res.room;
+    partyRoomState.code = res.code;
+    setPartyStatus("");
+    renderPartyRoom();
+  });
+}
+
+function partyLeaveRoom() {
+  var socket = ensureMultiplayerSocket();
+  if (socket) socket.emit("party:leave-room");
+  partyRoomState.room = null;
+  partyRoomState.code = null;
+  setPartyStatus("Tu as quitte la room.");
+  renderPartyRoom();
+}
+
+function partyStartGame() {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:start", {}, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de lancer."); }
+  });
+}
+
+function partyCopyInviteLink() {
+  if (!partyRoomState.code) { setPartyStatus("Cree ou rejoins une room d'abord."); return; }
+  var url = location.origin + location.pathname + "?party=" + encodeURIComponent(partyRoomState.code);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function () { setPartyStatus("Lien copie !"); }, function () { setPartyStatus(url); });
+  } else {
+    setPartyStatus(url);
+  }
+}
+
+function renderPartyRoom() {
+  var lobby = document.getElementById("party-lobby");
+  var joined = document.getElementById("party-joined");
+  var room = partyRoomState.room;
+  var selfId = multiplayerSocket && multiplayerSocket.id;
+  if (!room) {
+    if (lobby) lobby.classList.remove("hidden");
+    if (joined) joined.classList.add("hidden");
+    return;
+  }
+  if (lobby) lobby.classList.add("hidden");
+  if (joined) joined.classList.remove("hidden");
+  var codeEl = document.getElementById("party-room-code");
+  if (codeEl) codeEl.textContent = room.code || "-";
+  var statusEl = document.getElementById("party-room-status-badge");
+  if (statusEl) statusEl.textContent = room.status === "started" ? "Lancee" : "En attente";
+  var isHost = Boolean(room.hostId && selfId && room.hostId === selfId);
+  var players = room.players || [];
+  var listEl = document.getElementById("party-players");
+  if (listEl) {
+    listEl.innerHTML = players.map(function (p) {
+      return '<li class="party-player' + (p.connected ? '' : ' is-offline') + '">' +
+        '<span class="party-player-name">' + escapeHtml(p.nickname) + '</span>' +
+        (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
+        (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
+        '</li>';
+    }).join("");
+  }
+  var countEl = document.getElementById("party-count");
+  if (countEl) countEl.textContent = players.length + " / " + (room.maxPlayers || 8);
+  var startBtn = document.getElementById("party-start-btn");
+  if (startBtn) {
+    startBtn.classList.toggle("hidden", !isHost);
+    startBtn.disabled = players.length < (room.minPlayers || 2) || room.status === "started";
+  }
+}
+
+function initPartyFromUrl() {
+  try {
+    var params = new URLSearchParams(location.search || "");
+    var raw = params.get("party");
+    if (!raw) return;
+    var code = String(raw).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    if (!code) return;
+    openPartyRoomMode();
+    var codeEl = document.getElementById("party-join-code");
+    if (codeEl) codeEl.value = code;
+    setPartyStatus("Room " + code + " prete : entre ton pseudo puis clique Rejoindre.");
+  } catch (e) {}
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () { setTimeout(initPartyFromUrl, 0); });
+} else {
+  setTimeout(initPartyFromUrl, 0);
+}
+
+window.openPartyRoomMode = openPartyRoomMode;
+
 function openTypeChartScreen() {
   [
     "screen-config",

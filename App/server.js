@@ -21,9 +21,12 @@ const rooms = new Map();
 const statClashRooms = new Map();
 const draftBattleRooms = new Map();
 const draftScoreRooms = new Map();
+const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
+const PARTY_MIN_PLAYERS = 2;
+const PARTY_MAX_PLAYERS = 8;
 const STAT_CLASH_TOTAL_ROUNDS = 6;
 const STAT_CLASH_MAX_PLAYERS = 2;
 const STAT_CLASH_PLAYER_SEATS = ["left", "right", "seat3", "seat4"];
@@ -282,6 +285,84 @@ app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
 });
 
+function generatePartyRoomCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  do {
+    code = Array.from({ length: 5 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+  } while (partyRooms.has(code));
+  return code;
+}
+
+function joinPlayerToPartyRoom(room, socket, nickname) {
+  socket.join(room.code);
+  socket.data.partyRoomCode = room.code;
+  room.players.push({ id: socket.id, nickname, connected: true });
+}
+
+function publicPartyRoomState(room, viewerId = null) {
+  return {
+    code: room.code,
+    status: room.status,
+    hostId: room.hostId,
+    minPlayers: PARTY_MIN_PLAYERS,
+    maxPlayers: PARTY_MAX_PLAYERS,
+    players: room.players.map((player) => ({
+      id: player.id,
+      nickname: player.nickname,
+      connected: player.connected,
+      isSelf: player.id === viewerId,
+      isHost: player.id === room.hostId,
+    })),
+  };
+}
+
+function emitPartyRoomState(room) {
+  for (const player of room.players) {
+    io.to(player.id).emit("party:room-state", publicPartyRoomState(room, player.id));
+  }
+}
+
+function findPartyRoomBySocket(socketId) {
+  const roomCode = io.sockets.sockets.get(socketId)?.data?.partyRoomCode;
+  if (roomCode && partyRooms.has(roomCode)) return partyRooms.get(roomCode);
+  for (const room of partyRooms.values()) {
+    if (room.players.some((player) => player.id === socketId)) return room;
+  }
+  return null;
+}
+
+function schedulePartyRoomCleanup(room) {
+  clearPartyRoomCleanup(room);
+  room.cleanupTimer = setTimeout(() => { partyRooms.delete(room.code); }, 60_000);
+}
+
+function clearPartyRoomCleanup(room) {
+  if (!room?.cleanupTimer) return;
+  clearTimeout(room.cleanupTimer);
+  room.cleanupTimer = null;
+}
+
+function handlePartyDisconnect(socketId, voluntary) {
+  const room = findPartyRoomBySocket(socketId);
+  if (!room) return;
+  const socket = io.sockets.sockets.get(socketId);
+  if (socket?.data) socket.data.partyRoomCode = null;
+  const index = room.players.findIndex((entry) => entry.id === socketId);
+  if (index === -1) return;
+  const wasHost = room.players[index].id === room.hostId;
+  room.players.splice(index, 1);
+  if (room.players.length === 0) {
+    schedulePartyRoomCleanup(room);
+    return;
+  }
+  if (wasHost) {
+    const next = room.players.find((entry) => entry.connected) || room.players[0];
+    room.hostId = next.id;
+  }
+  emitPartyRoomState(room);
+}
+
 io.on("connection", (socket) => {
   socket.on("duel:create-room", (payload = {}, ack) => {
     try {
@@ -413,6 +494,59 @@ io.on("connection", (socket) => {
       respond(ack, { ok: true, room: publicRoomState(room, socket.id) });
     } catch (_error) {
       respond(ack, { ok: false, error: "Erreur lors du redémarrage." });
+    }
+  });
+
+  socket.on("party:create-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      const nickname = sanitizeNickname(payload.nickname);
+      if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
+      const code = generatePartyRoomCode();
+      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null };
+      partyRooms.set(code, room);
+      joinPlayerToPartyRoom(room, socket, nickname);
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, code, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de creer la room." });
+    }
+  });
+
+  socket.on("party:join-room", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      const code = sanitizeRoomCode(payload.code);
+      const nickname = sanitizeNickname(payload.nickname);
+      const room = partyRooms.get(code);
+      if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
+      if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
+      if (room.players.length >= PARTY_MAX_PLAYERS) return respond(ack, { ok: false, error: "La room est deja complete (8 max)." });
+      if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
+      clearPartyRoomCleanup(room);
+      joinPlayerToPartyRoom(room, socket, nickname);
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, code, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de rejoindre la room." });
+    }
+  });
+
+  socket.on("party:leave-room", () => {
+    try { handlePartyDisconnect(socket.id, true); } catch (_error) { console.error("[party:leave-room] error", _error?.message || "unknown"); }
+  });
+
+  socket.on("party:start", (payload = {}, ack) => {
+    try {
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer." });
+      if (room.players.length < PARTY_MIN_PLAYERS) return respond(ack, { ok: false, error: "Il faut au moins 2 joueurs." });
+      room.status = "started";
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de lancer." });
     }
   });
 
@@ -740,6 +874,7 @@ io.on("connection", (socket) => {
     try { handleDraftScoreDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-score] error", _error?.message || "unknown"); }
     try { handleHigherLowerDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][higher-lower] error", _error?.message || "unknown"); }
     try { handleStatAuctionDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-auction] error", _error?.message || "unknown"); }
+    try { handlePartyDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][party] error", _error?.message || "unknown"); }
     cleanupRateLimitBuckets(socket.id);
   });
 

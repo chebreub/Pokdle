@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="pokedex.css">
   <link rel="stylesheet" href="multiplayer.css">
   <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="party-room.css">
   <link rel="stylesheet" href="profile.css">
 </head>
 <body>
@@ -365,6 +366,7 @@
               <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openStatClashMode()"><span class="am-emoji">📊</span><b>Stat Clash</b></button>
               <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openStatAuctionMode()"><span class="am-emoji">💰</span><b>Stat Auction</b></button>
               <button type="button" class="card all-modes-card" onclick="goToConfig(); showChallengePanel()"><span class="am-emoji">🤝</span><b>Défi ami</b></button>
+              <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openPartyRoomMode()"><span class="am-emoji">🎉</span><b>Party Room</b></button>
             </div>
           </section>
           <section class="all-modes-cat">
@@ -1143,6 +1145,41 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <p class="challenge-title">Explication :</p>
           <p id="odd-explanation-text"></p>
         </div>
+      </div>
+    </div>
+
+    <div id="screen-party-room" class="hidden">
+      <div class="card party-room-card">
+        <div class="ranking-head">
+          <h2 class="card-title">🎉 Party Room</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">Joue a plusieurs (2 a 8). Cree une room ou rejoins par code. Lobby uniquement pour l'instant, les jeux arrivent bientot.</p>
+        <div id="party-lobby" class="party-lobby">
+          <label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Pseudo" autocomplete="off" /></label>
+          <div class="party-lobby-actions">
+            <button class="btn-blue" type="button" onclick="partyCreateRoom()">Creer une room</button>
+          </div>
+          <div class="party-join-row">
+            <input id="party-join-code" type="text" maxlength="6" placeholder="Code de room" autocomplete="off" />
+            <button class="btn-ghost" type="button" onclick="partyJoinRoom()">Rejoindre</button>
+          </div>
+        </div>
+        <div id="party-joined" class="party-joined hidden">
+          <div class="party-room-head">
+            <div>Room <b id="party-room-code">-</b> <span id="party-room-status-badge" class="party-status-badge">En attente</span></div>
+            <div class="party-room-head-actions">
+              <button class="btn-ghost" type="button" onclick="partyCopyInviteLink()">📋 Copier le lien</button>
+              <button class="btn-ghost" type="button" onclick="partyLeaveRoom()">Quitter</button>
+            </div>
+          </div>
+          <p class="party-count">Joueurs : <b id="party-count">0 / 8</b></p>
+          <ul id="party-players" class="party-players"></ul>
+          <button id="party-start-btn" class="btn-red hidden" type="button" onclick="partyStartGame()">Lancer la partie</button>
+        </div>
+        <p id="party-status" class="party-status"></p>
       </div>
     </div>
 
