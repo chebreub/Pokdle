@@ -7794,7 +7794,7 @@ function openPartyRoomMode() {
 }
 
 function setPartyStatus(message) {
-  var el = document.getElementById("party-status");
+  var el = document.getElementById("party-room-msg");
   if (el) el.textContent = message || "";
 }
 
@@ -7984,8 +7984,8 @@ function renderPartyRoom() {
     startBtn.disabled = raw.length < (room.minPlayers || 2);
     startBtn.textContent = complete ? "Relancer une party" : "Lancer la party";
   }
-  var nextBtn = document.getElementById("party-next-btn");
-  if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished));
+  var nextBtn = document.getElementById("party-room-next-btn");
+  if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
   var revealBtn = document.getElementById("party-reveal-btn");
   if (revealBtn) revealBtn.classList.toggle("hidden", !(isHost && playing));
 }
