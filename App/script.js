@@ -7861,6 +7861,20 @@ function partyCopyInviteLink() {
   }
 }
 
+function partySubmitAnswer() {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  var input = document.getElementById("party-guess");
+  var guess = ((input && input.value) || "").trim();
+  if (!guess) { setPartyStatus("Tape un nom de Pokemon."); return; }
+  socket.emit("party:submit-answer", { guess: guess }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Erreur."); return; }
+    if (res.correct) { setPartyStatus("Bonne reponse ! +100"); if (input) input.value = ""; }
+    else if (!res.already) { setPartyStatus("Reponse incorrecte, reessaie."); }
+  });
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -7875,26 +7889,53 @@ function renderPartyRoom() {
   if (joined) joined.classList.remove("hidden");
   var codeEl = document.getElementById("party-room-code");
   if (codeEl) codeEl.textContent = room.code || "-";
+  var playing = room.status === "playing";
+  var finished = room.status === "finished";
   var statusEl = document.getElementById("party-room-status-badge");
-  if (statusEl) statusEl.textContent = room.status === "started" ? "Lancee" : "En attente";
+  if (statusEl) statusEl.textContent = playing ? "Manche en cours" : (finished ? "Manche terminee" : "En attente");
   var isHost = Boolean(room.hostId && selfId && room.hostId === selfId);
-  var players = room.players || [];
+  var raw = room.players || [];
+  var me = raw.find(function (p) { return p.id === selfId; }) || null;
+  var players = raw.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
   var listEl = document.getElementById("party-players");
   if (listEl) {
-    listEl.innerHTML = players.map(function (p) {
-      return '<li class="party-player' + (p.connected ? '' : ' is-offline') + '">' +
+    listEl.innerHTML = players.map(function (p, i) {
+      return '<li class="party-player' + (p.connected ? '' : ' is-offline') + (p.correct ? ' is-correct' : '') + '">' +
+        '<span class="party-rank">' + (i + 1) + '</span>' +
         '<span class="party-player-name">' + escapeHtml(p.nickname) + '</span>' +
         (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
         (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
+        (p.correct ? '<span class="party-check">OK</span>' : '') +
+        '<span class="party-score">' + (p.score || 0) + ' pts</span>' +
         '</li>';
     }).join("");
   }
   var countEl = document.getElementById("party-count");
-  if (countEl) countEl.textContent = players.length + " / " + (room.maxPlayers || 8);
+  if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
+  var roundEl = document.getElementById("party-round");
+  if (roundEl) {
+    var hasRound = Boolean(room.round && room.round.image);
+    roundEl.classList.toggle("hidden", !hasRound);
+    var spriteEl = document.getElementById("party-round-sprite");
+    if (hasRound && spriteEl) spriteEl.src = room.round.image;
+    var answerEl = document.getElementById("party-round-answer");
+    if (answerEl) {
+      if (finished && room.round && room.round.answer) {
+        answerEl.classList.remove("hidden");
+        answerEl.textContent = "C'etait : " + room.round.answer;
+      } else {
+        answerEl.classList.add("hidden");
+        answerEl.textContent = "";
+      }
+    }
+    var inputWrap = document.getElementById("party-round-input");
+    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && me && !me.correct));
+  }
   var startBtn = document.getElementById("party-start-btn");
   if (startBtn) {
-    startBtn.classList.toggle("hidden", !isHost);
-    startBtn.disabled = players.length < (room.minPlayers || 2) || room.status === "started";
+    startBtn.classList.toggle("hidden", !isHost || playing);
+    startBtn.disabled = raw.length < (room.minPlayers || 2);
+    startBtn.textContent = finished ? "Relancer une manche" : "Lancer la partie";
   }
 }
 

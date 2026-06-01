@@ -297,20 +297,24 @@ function generatePartyRoomCode() {
 function joinPlayerToPartyRoom(room, socket, nickname) {
   socket.join(room.code);
   socket.data.partyRoomCode = room.code;
-  room.players.push({ id: socket.id, nickname, connected: true });
+  room.players.push({ id: socket.id, nickname, connected: true, score: 0, correct: false });
 }
 
 function publicPartyRoomState(room, viewerId = null) {
+  const finished = room.status === "finished";
   return {
     code: room.code,
     status: room.status,
     hostId: room.hostId,
     minPlayers: PARTY_MIN_PLAYERS,
     maxPlayers: PARTY_MAX_PLAYERS,
+    round: room.target ? { image: room.target.sprite || null, answer: finished ? room.target.name : null } : null,
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
       connected: player.connected,
+      score: Number(player.score) || 0,
+      correct: Boolean(player.correct),
       isSelf: player.id === viewerId,
       isHost: player.id === room.hostId,
     })),
@@ -341,6 +345,29 @@ function clearPartyRoomCleanup(room) {
   if (!room?.cleanupTimer) return;
   clearTimeout(room.cleanupTimer);
   room.cleanupTimer = null;
+}
+
+const PARTY_COMMON_POOL_GENS = [1];
+
+function pickPartyTarget() {
+  const pool = POKEMON_LIST.filter((p) => PARTY_COMMON_POOL_GENS.includes(Number(p.gen || p.generation)) && !p.isAltForm && Number(p.id) < 20000);
+  const source = pool.length ? pool : POKEMON_LIST;
+  return source[Math.floor(Math.random() * source.length)] || null;
+}
+
+function startPartyRound(room) {
+  room.status = "playing";
+  room.target = pickPartyTarget();
+  for (const player of room.players) {
+    player.correct = false;
+  }
+}
+
+function checkPartyRoundFinished(room) {
+  const connected = room.players.filter((p) => p.connected);
+  if (connected.length > 0 && connected.every((p) => p.correct)) {
+    room.status = "finished";
+  }
 }
 
 function handlePartyDisconnect(socketId, voluntary) {
@@ -542,11 +569,35 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer." });
       if (room.players.length < PARTY_MIN_PLAYERS) return respond(ack, { ok: false, error: "Il faut au moins 2 joueurs." });
-      room.status = "started";
+      if (room.status === "playing") return respond(ack, { ok: false, error: "Une manche est deja en cours." });
+      startPartyRound(room);
+      if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de lancer." });
+    }
+  });
+
+  socket.on("party:submit-answer", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "party-guess")) return respond(ack, { ok: false, error: "Trop de requetes." });
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room || room.status !== "playing" || !room.target) return respond(ack, { ok: false, error: "Aucune manche en cours." });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
+      if (player.correct) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
+      const guessName = normalizeName(payload.guess);
+      const isCorrect = Boolean(guessName) && guessName === normalizeName(room.target.name);
+      if (isCorrect) {
+        player.correct = true;
+        player.score = (Number(player.score) || 0) + 100;
+        checkPartyRoundFinished(room);
+        emitPartyRoomState(room);
+      }
+      respond(ack, { ok: true, correct: isCorrect, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Erreur lors de la reponse." });
     }
   });
 
