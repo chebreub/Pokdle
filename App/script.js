@@ -7955,6 +7955,16 @@ function renderPartyRoom() {
     roundEl.classList.toggle("hidden", !hasRound);
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl) spriteEl.src = room.round.image;
+    var variant = (room.round && room.round.variant) || "normal";
+    var modeEl = document.getElementById("party-round-mode");
+    if (modeEl) modeEl.textContent = variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale");
+    if (spriteEl) {
+      spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
+      if (playing) {
+        if (variant === "silhouette") spriteEl.classList.add("party-sprite-silhouette");
+        else if (variant === "pixel") spriteEl.classList.add("party-sprite-pixel");
+      }
+    }
     var answerEl = document.getElementById("party-round-answer");
     if (answerEl) {
       if ((finished || complete) && room.round && room.round.answer) {

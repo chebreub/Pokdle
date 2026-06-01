@@ -27,3 +27,6 @@
 .party-rank { font-weight: 800; color: #5a6b8c; min-width: 18px; }
 .party-check { background: #36c26b; color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
 .party-score { margin-left: auto; font-weight: 800; color: #2f76ff; }
+.party-round-mode { font-weight: 800; color: #2f76ff; margin: 0; }
+.party-sprite-silhouette { filter: brightness(0); }
+.party-sprite-pixel { filter: blur(7px); }

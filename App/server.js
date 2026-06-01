@@ -311,7 +311,7 @@ function publicPartyRoomState(room, viewerId = null) {
     maxPlayers: PARTY_MAX_PLAYERS,
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: PARTY_TOTAL_ROUNDS,
-    round: room.target ? { image: room.target.sprite || null, answer: revealed ? room.target.name : null } : null,
+    round: room.target ? { image: room.target.sprite || null, answer: revealed ? room.target.name : null, variant: room.variant || "normal" } : null,
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
@@ -375,9 +375,16 @@ function endPartyRound(room) {
   }
 }
 
+const PARTY_VARIANTS = ["normal", "silhouette", "pixel"];
+
+function pickPartyVariant() {
+  return PARTY_VARIANTS[Math.floor(Math.random() * PARTY_VARIANTS.length)];
+}
+
 function startPartyRound(room) {
   room.status = "playing";
   room.target = pickPartyTarget();
+  room.variant = pickPartyVariant();
   room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
   for (const player of room.players) {
     player.correct = false;
