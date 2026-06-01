@@ -7877,7 +7877,7 @@ function partySubmitAnswer() {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur."); return; }
     if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
-    if (res.correct) { setPartyStatus("Bonne reponse ! +100"); if (input) input.value = ""; }
+    if (res.correct) { setPartyStatus("Bonne reponse ! +" + (res.gained || 0) + " (rang " + (res.rank || "?") + ")"); if (input) input.value = ""; }
     else if (!res.already) { setPartyStatus("Reponse incorrecte, reessaie."); }
   });
 }
@@ -7942,7 +7942,7 @@ function renderPartyRoom() {
         '<span class="party-player-name">' + escapeHtml(p.nickname) + '</span>' +
         (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
         (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
-        (p.correct ? '<span class="party-check">OK</span>' : '') +
+        (p.correct ? '<span class="party-check">+' + (p.lastGain || 0) + '</span>' : '') +
         '<span class="party-score">' + (p.score || 0) + ' pts</span>' +
         '</li>';
     }).join("");

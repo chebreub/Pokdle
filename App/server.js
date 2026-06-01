@@ -318,6 +318,7 @@ function publicPartyRoomState(room, viewerId = null) {
       connected: player.connected,
       score: Number(player.score) || 0,
       correct: Boolean(player.correct),
+      lastGain: Number(player.lastGain) || 0,
       isSelf: player.id === viewerId,
       isHost: player.id === room.hostId,
     })),
@@ -381,13 +382,22 @@ function pickPartyVariant() {
   return PARTY_VARIANTS[Math.floor(Math.random() * PARTY_VARIANTS.length)];
 }
 
+function partyPointsForRank(rank) {
+  if (rank === 0) return 100;
+  if (rank === 1) return 70;
+  if (rank === 2) return 50;
+  return 30;
+}
+
 function startPartyRound(room) {
   room.status = "playing";
   room.target = pickPartyTarget();
   room.variant = pickPartyVariant();
+  room.correctCount = 0;
   room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
   for (const player of room.players) {
     player.correct = false;
+    player.lastGain = 0;
   }
 }
 
@@ -618,13 +628,19 @@ io.on("connection", (socket) => {
       if (player.correct) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
       const guessName = normalizeName(payload.guess);
       const isCorrect = Boolean(guessName) && guessName === normalizeName(room.target.name);
+      let gained = 0;
+      let rank = 0;
       if (isCorrect) {
+        rank = (Number(room.correctCount) || 0) + 1;
+        gained = partyPointsForRank(rank - 1);
+        room.correctCount = rank;
         player.correct = true;
-        player.score = (Number(player.score) || 0) + 100;
+        player.lastGain = gained;
+        player.score = (Number(player.score) || 0) + gained;
         checkPartyRoundFinished(room);
         emitPartyRoomState(room);
       }
-      respond(ack, { ok: true, correct: isCorrect, room: publicPartyRoomState(room, socket.id) });
+      respond(ack, { ok: true, correct: isCorrect, gained: gained, rank: rank, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Erreur lors de la reponse." });
     }
