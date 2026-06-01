@@ -2139,7 +2139,7 @@ function startQuizGame() {
   setQuizModeLayout(true);
 
   document.getElementById("screen-config").classList.add("hidden");
-  document.getElementById("screen-game").classList.remove("hidden");
+  showScreen("screen-game");
   setGlobalNavActive("game");
 
   renderQuizQuestion();
@@ -2294,7 +2294,7 @@ function startGameWithSecret(secret, pool, options = {}) {
   setQuizModeLayout(false);
 
   document.getElementById("screen-config").classList.add("hidden");
-  document.getElementById("screen-game").classList.remove("hidden");
+  showScreen("screen-game");
   setGlobalNavActive("game");
 
   document.getElementById("guess-input").focus();
@@ -2359,7 +2359,7 @@ function openCurrentGameScreen() {
   document.getElementById("screen-history")?.classList.add("hidden");
   document.getElementById("screen-multiplayer")?.classList.add("hidden");
   document.getElementById("screen-odd-one-out")?.classList.add("hidden");
-  document.getElementById("screen-game").classList.remove("hidden");
+  showScreen("screen-game");
   document.querySelector(".search-bar")?.classList.remove("hidden");
   hideCustomModeSurfaces();
 
@@ -2408,7 +2408,7 @@ function goToConfig() {
   closeRankingPicker();
   document.querySelector(".search-bar")?.classList.remove("hidden");
   hideCustomModeSurfaces();
-  document.getElementById("screen-config").classList.remove("hidden");
+  showScreen("screen-config");
   setGlobalNavActive("config");
 }
 
@@ -7015,7 +7015,7 @@ function openRankingMode() {
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
-  document.getElementById("screen-ranking").classList.remove("hidden");
+  showScreen("screen-ranking");
   setGlobalNavActive("rank");
   closeRankingPicker();
   renderRankingGrid();
@@ -10389,7 +10389,7 @@ function openPokedexMode() {
   document.getElementById("screen-team-builder")?.classList.add("hidden");
   document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
-  document.getElementById("screen-pokedex").classList.remove("hidden");
+  showScreen("screen-pokedex");
   setGlobalNavActive("pokedex");
   setQuizModeLayout(false);
   stopCrySound();
@@ -10909,7 +10909,7 @@ function openGamesRankingMode() {
   document.getElementById("screen-teams")?.classList.add("hidden");
   stopEmulatorSession();
   closeRankingPicker();
-  document.getElementById("screen-games-ranking").classList.remove("hidden");
+  showScreen("screen-games-ranking");
   setGlobalNavActive("rank");
   renderGamesRankingTable();
 }
@@ -18977,7 +18977,7 @@ function restoreSavedGame() {
   setQuizModeLayout(false);
 
   document.getElementById("screen-config").classList.add("hidden");
-  document.getElementById("screen-game").classList.remove("hidden");
+  showScreen("screen-game");
   setGlobalNavActive("game");
 
   document.getElementById("guess-input").focus();
@@ -19610,7 +19610,14 @@ function hideScreen(id) {
   document.getElementById(id)?.classList.add('hidden');
 }
 
+function hideAllScreens() {
+  document.querySelectorAll('[id^="screen-"]').forEach(function (el) {
+    el.classList.add('hidden');
+  });
+}
+
 function showScreen(id) {
+  hideAllScreens();
   document.getElementById(id)?.classList.remove('hidden');
 }
 
