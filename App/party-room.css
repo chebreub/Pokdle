@@ -1,0 +1,20 @@
+/* Party Room L1 - lobby */
+.party-room-card .party-lobby,
+.party-room-card .party-joined { display: flex; flex-direction: column; gap: 14px; max-width: 520px; }
+.party-field { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: #1d2b4a; }
+.party-field input,
+.party-join-row input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid #d7dfec; padding: 0 14px; font-weight: 700; color: #1d2b4a; }
+.party-join-row { display: flex; gap: 10px; }
+.party-join-row input { flex: 1; }
+.party-room-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.party-room-head-actions { display: flex; gap: 8px; }
+.party-status-badge { background: #eef3ff; color: #2f76ff; border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: 0.8rem; }
+.party-players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.party-player { display: flex; align-items: center; gap: 8px; background: #f4f8fc; border: 1px solid #e1e8f2; border-radius: 12px; padding: 10px 14px; }
+.party-player.is-offline { opacity: 0.5; }
+.party-player-name { font-weight: 800; color: #1d2b4a; }
+.party-badge-host { background: #ffcc33; color: #1d2b4a; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
+.party-badge-self { background: #2f76ff; color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
+.party-count { color: #5a6b8c; font-weight: 700; }
+.party-status { min-height: 18px; color: #5a6b8c; font-weight: 700; }
+@media (max-width: 560px) { .party-join-row { flex-direction: column; } }
