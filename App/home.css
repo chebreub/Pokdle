@@ -68,6 +68,13 @@
 #screen-all-modes .all-modes-card b { color: #1d2b4a; font-size: 0.95rem; }
 @media (max-width: 900px) { #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; } }
+
+/* Lot 4 - Team Builder : reglages avances repliables */
+.team-builder-advanced { margin-top: 8px; }
+.team-builder-advanced > .team-builder-advanced-summary { cursor: pointer; font-weight: 800; color: #1d2b4a; padding: 10px 12px; border-radius: 10px; background: #eef3ff; }
+.team-builder-advanced > .team-builder-advanced-summary span { font-weight: 600; color: #5a6b8c; font-size: 0.85rem; }
+.team-builder-advanced[open] > .team-builder-advanced-summary { margin-bottom: 10px; }
+.team-builder-advanced-summary::-webkit-details-marker { display: none; }
 #screen-config .home-pillar {
   padding: 18px 18px 16px !important;
   cursor: pointer;

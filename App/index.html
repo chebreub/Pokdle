@@ -602,16 +602,12 @@
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
                 <h5>Set</h5>
-                <p>Objet, gimmick et attaques réunis dans une seule zone lisible.</p>
+                <p>Objet et attaques. Nature, talent, EV/IV et gimmick sont dans « Réglages avancés ».</p>
               </div>
               <div class="home-builder-fields">
                 <label class="home-type-helper-label" for="team-builder-item">
                   <span>Objet tenu</span>
                   <select id="team-builder-item"></select>
-                </label>
-                <label class="home-type-helper-label" for="team-builder-gimmick">
-                  <span>Gimmick / mécanique</span>
-                  <select id="team-builder-gimmick"></select>
                 </label>
               </div>
               <div class="home-builder-moves">
@@ -646,6 +642,20 @@
                   </span>
                   <select id="team-builder-move-4"></select>
                   <small class="team-builder-move-state" id="team-builder-move-state-4">Aucune attaque</small>
+                </label>
+              </div>
+            </section>
+            <details class="team-builder-advanced">
+              <summary class="team-builder-advanced-summary">⚙️ Réglages avancés <span>nature, talent, EV/IV, gimmick, stats finales</span></summary>
+            <section class="team-builder-editor-section">
+              <div class="team-builder-editor-section-head">
+                <h5>Mécanique de slot</h5>
+                <p>Gimmick : Téra, Méga, etc.</p>
+              </div>
+              <div class="home-builder-fields">
+                <label class="home-type-helper-label" for="team-builder-gimmick">
+                  <span>Gimmick / mécanique</span>
+                  <select id="team-builder-gimmick"></select>
                 </label>
               </div>
             </section>
@@ -697,6 +707,7 @@
               </div>
               <div id="team-builder-computed-stats" class="team-builder-computed-stats" aria-live="polite"></div>
             </section>
+            </details>
             <p class="home-builder-footnote">Édition fluide et sauvegarde locale. Les attaques sont proposées en priorité selon le Pokémon choisi pour garder une préparation rapide et lisible.</p>
           </div>
           <div class="team-builder-export">
