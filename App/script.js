@@ -7902,6 +7902,16 @@ function partyNextRound() {
   });
 }
 
+function partySetMode(mode) {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:set-mode", { mode: mode }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de changer de mode."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+  });
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -7983,6 +7993,13 @@ function renderPartyRoom() {
     startBtn.classList.toggle("hidden", !(isHost && (room.status === "waiting" || complete)));
     startBtn.disabled = raw.length < (room.minPlayers || 2);
     startBtn.textContent = complete ? "Relancer une party" : "Lancer la party";
+  }
+  var modeSel = document.getElementById("party-mode-select");
+  if (modeSel) modeSel.classList.toggle("hidden", room.status !== "waiting");
+  var guessBtn = document.getElementById("party-mode-guess");
+  if (guessBtn) {
+    guessBtn.classList.toggle("is-active", (room.gameMode || "guess") === "guess");
+    guessBtn.disabled = !isHost;
   }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));

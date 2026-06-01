@@ -30,3 +30,8 @@
 .party-round-mode { font-weight: 800; color: #2f76ff; margin: 0; }
 .party-sprite-silhouette { filter: brightness(0); }
 .party-sprite-pixel { filter: blur(7px); }
+.party-mode-select { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0; }
+.party-mode-label { font-weight: 800; color: #1d2b4a; }
+.party-mode-btn { border: 1px solid #d7dfec; background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 700; color: #1d2b4a; cursor: pointer; }
+.party-mode-btn.is-active { background: #2f76ff; color: #fff; border-color: #2f76ff; }
+.party-mode-btn:disabled, .party-mode-btn.party-mode-soon { opacity: 0.5; cursor: not-allowed; }

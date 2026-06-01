@@ -1177,6 +1177,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </div>
           <p class="party-count">Joueurs : <b id="party-count">0 / 8</b></p>
           <ul id="party-players" class="party-players"></ul>
+          <div id="party-mode-select" class="party-mode-select hidden">
+            <span class="party-mode-label">Mode :</span>
+            <button id="party-mode-guess" type="button" class="party-mode-btn" onclick="partySetMode('guess')">🏁 Course Pokémon</button>
+            <button type="button" class="party-mode-btn party-mode-soon" disabled>📊 Stat Clash (bientôt)</button>
+          </div>
           <button id="party-start-btn" class="btn-red hidden" type="button" onclick="partyStartGame()">Lancer la partie</button>
           <button id="party-room-next-btn" class="btn-blue hidden" type="button" onclick="partyNextRound()">Manche suivante</button>
           <div id="party-round" class="party-round hidden">

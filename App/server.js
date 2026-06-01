@@ -311,6 +311,7 @@ function publicPartyRoomState(room, viewerId = null) {
     maxPlayers: PARTY_MAX_PLAYERS,
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: PARTY_TOTAL_ROUNDS,
+    gameMode: room.gameMode || "guess",
     round: room.target ? { image: room.target.sprite || null, answer: revealed ? room.target.name : null, variant: room.variant || "normal" } : null,
     players: room.players.map((player) => ({
       id: player.id,
@@ -569,7 +570,7 @@ io.on("connection", (socket) => {
       const nickname = sanitizeNickname(payload.nickname);
       if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
       const code = generatePartyRoomCode();
-      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null };
+      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess" };
       partyRooms.set(code, room);
       joinPlayerToPartyRoom(room, socket, nickname);
       emitPartyRoomState(room);
@@ -674,6 +675,22 @@ io.on("connection", (socket) => {
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de passer a la manche suivante." });
+    }
+  });
+
+  socket.on("party:set-mode", (payload = {}, ack) => {
+    try {
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
+      if (room.status !== "waiting") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
+      const mode = String(payload.mode || "");
+      if (mode !== "guess") return respond(ack, { ok: false, error: "Ce mode n'est pas encore disponible." });
+      room.gameMode = mode;
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de changer le mode." });
     }
   });
 
