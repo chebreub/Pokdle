@@ -40,3 +40,4 @@
 .party-stat-reveal { display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 320px; }
 .party-stat-row { display: flex; justify-content: space-between; padding: 4px 10px; border-radius: 8px; }
 .party-stat-row.is-best { background: #36c26b; color: #fff; }
+.party-wait { color: #5a6b8c; font-size: 0.72rem; font-weight: 700; }
