@@ -42,3 +42,22 @@
 .party-stat-row.is-best { background: #36c26b; color: #fff; }
 .party-wait { color: #5a6b8c; font-size: 0.72rem; font-weight: 700; }
 .party-stat-btn.is-used { opacity: 0.4; cursor: not-allowed; border-color: #d7dfec; color: #5a6b8c; }
+
+/* ===== DA Lot 1 : lobby premium ===== */
+.party-room-card .party-lobby,
+.party-room-card .party-joined { max-width: 560px; gap: 16px; }
+.party-room-head { background: linear-gradient(135deg, #f4f8ff, #eef3ff); border: 1px solid #dbe6fb; border-radius: 16px; padding: 12px 16px; }
+#party-room-code { display: inline-block; font-size: 1.3rem; font-weight: 900; letter-spacing: 3px; color: #1d2b4a; background: #fff; border: 2px dashed #2f76ff; border-radius: 10px; padding: 4px 12px; margin: 0 4px; }
+.party-status-badge { background: #2f76ff; color: #fff; padding: 4px 12px; font-size: 0.78rem; box-shadow: 0 2px 8px rgba(47, 118, 255, 0.25); }
+.party-copy-btn { background: #2f76ff !important; color: #fff !important; border: none !important; font-weight: 800 !important; box-shadow: 0 4px 12px rgba(47, 118, 255, 0.3); }
+.party-copy-btn:hover { filter: brightness(1.06); }
+.party-mode-select { gap: 8px; padding: 6px; background: #f4f8fc; border: 1px solid #e1e8f2; border-radius: 999px; width: fit-content; }
+.party-mode-btn { transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease; }
+.party-mode-btn.is-active { background: linear-gradient(135deg, #2f76ff, #4f8bff); border-color: #2f76ff; box-shadow: 0 4px 12px rgba(47, 118, 255, 0.35); }
+.party-mode-btn:not(:disabled):hover { transform: translateY(-1px); }
+.party-players { gap: 10px; }
+.party-player { box-shadow: 0 2px 6px rgba(32, 65, 118, 0.05); transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.party-player:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(32, 65, 118, 0.1); }
+.party-room-card #party-start-btn { background: linear-gradient(135deg, #e4382f, #ff5a4d); border: none; min-height: 50px; font-size: 1.05rem; font-weight: 900; border-radius: 14px; box-shadow: 0 6px 16px rgba(228, 56, 47, 0.3); }
+.party-room-card #party-start-btn:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.04); }
+.party-room-card #party-start-btn:disabled { opacity: 0.5; box-shadow: none; }
