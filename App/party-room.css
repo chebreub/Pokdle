@@ -174,3 +174,15 @@
   color: #17345d;
   box-shadow: 0 8px 18px rgba(22, 44, 80, 0.06);
 }
+
+/* ===== DA Lot 7 : animations ===== */
+@keyframes party-score-pulse { 0% { transform: scale(1); } 30% { transform: scale(1.22); } 100% { transform: scale(1); } }
+.party-score.is-gain { animation: party-score-pulse 0.55s ease; }
+.party-room-card .party-stat-btn:not(:disabled):active { transform: translateY(1px) scale(0.97); }
+.party-round-input .btn-blue:active { transform: translateY(1px) scale(0.98); }
+@keyframes party-podium-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes party-podium-in-first { from { opacity: 0; transform: translateY(10px) scale(1.03); } to { opacity: 1; transform: translateY(0) scale(1.03); } }
+.party-players.is-podium .party-player { animation: party-podium-in 0.4s ease both; }
+.party-players.is-podium .party-player:nth-child(2) { animation-delay: 0.12s; }
+.party-players.is-podium .party-player:nth-child(3) { animation-delay: 0.19s; }
+.party-players.is-podium .party-player:nth-child(1) { animation: party-podium-in-first 0.4s ease 0.05s both; }

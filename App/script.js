@@ -7958,10 +7958,12 @@ function renderPartyRoom() {
   var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
   var listEl = document.getElementById("party-players");
   if (listEl) {
-    var scMode = Boolean(room.round && room.round.mode === "statclash");
+    var scMode = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
+    var prevScores = partyRoomState.prevScores || {};
     var revealed = finished || complete;
     listEl.innerHTML = players.map(function (p, i) {
       var rank = (complete && i < 3) ? medals[i] : (i + 1);
+      var gained = (p.score || 0) > (prevScores[p.id] || 0);
       var statusBadge = "";
       if (scMode && playing) {
         statusBadge = p.pickKey ? '<span class="party-check">a choisi</span>' : '<span class="party-wait">attend…</span>';
@@ -7977,10 +7979,12 @@ function renderPartyRoom() {
         (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
         (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
         statusBadge +
-        '<span class="party-score">' + (p.score || 0) + ' pts</span>' +
+        '<span class="party-score' + (gained ? ' is-gain' : '') + '">' + (p.score || 0) + ' pts</span>' +
         '</li>';
     }).join("");
     listEl.classList.toggle("is-podium", complete);
+    partyRoomState.prevScores = {};
+    raw.forEach(function (p) { partyRoomState.prevScores[p.id] = p.score || 0; });
   }
   var countEl = document.getElementById("party-count");
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
