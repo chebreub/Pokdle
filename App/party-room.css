@@ -61,3 +61,21 @@
 .party-room-card #party-start-btn { background: linear-gradient(135deg, #e4382f, #ff5a4d); border: none; min-height: 50px; font-size: 1.05rem; font-weight: 900; border-radius: 14px; box-shadow: 0 6px 16px rgba(228, 56, 47, 0.3); }
 .party-room-card #party-start-btn:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.04); }
 .party-room-card #party-start-btn:disabled { opacity: 0.5; box-shadow: none; }
+
+/* ===== DA Lot 2 : ecran de manche premium ===== */
+.party-round { background: linear-gradient(135deg, #ffffff, #f4f8ff); border: 1px solid #e1e8f2; border-radius: 18px; padding: 18px; gap: 14px; box-shadow: 0 8px 24px rgba(32, 65, 118, 0.08); width: 100%; max-width: 420px; margin: 12px auto 0; }
+.party-round-mode { font-size: 1.05rem; font-weight: 900; color: #2f76ff; text-align: center; }
+.party-round-sprite { width: 180px; height: 180px; image-rendering: pixelated; background: radial-gradient(circle at 50% 45%, rgba(47, 118, 255, 0.12), rgba(47, 118, 255, 0) 70%); border-radius: 50%; padding: 6px; filter: drop-shadow(0 6px 14px rgba(32, 65, 118, 0.18)); }
+.party-sprite-silhouette { filter: brightness(0) drop-shadow(0 6px 14px rgba(32, 65, 118, 0.18)); }
+.party-sprite-pixel { filter: blur(7px) drop-shadow(0 6px 14px rgba(32, 65, 118, 0.18)); }
+.party-round-input { max-width: 360px; }
+.party-round-input input { min-height: 48px; border: 2px solid #d7dfec; }
+.party-round-input input:focus { border-color: #2f76ff; outline: none; }
+.party-round-answer { background: #eef6ee; border: 1px solid #cdebd6; color: #1d2b4a; border-radius: 12px; padding: 10px 14px; text-align: center; width: 100%; max-width: 380px; }
+.party-stat-options { gap: 10px; }
+.party-stat-btn { min-height: 46px; padding: 10px 18px; transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease; box-shadow: 0 2px 6px rgba(47, 118, 255, 0.12); }
+.party-stat-btn:not(:disabled):hover { background: #2f76ff; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(47, 118, 255, 0.3); }
+.party-stat-reveal { gap: 6px; max-width: 360px; }
+.party-stat-row { background: #f4f8fc; border: 1px solid #e8eef6; padding: 8px 14px; font-weight: 700; color: #1d2b4a; }
+.party-stat-row.is-best { background: linear-gradient(135deg, #36c26b, #4fd17f); color: #fff; border-color: #36c26b; box-shadow: 0 4px 12px rgba(54, 194, 107, 0.3); }
+@media (max-width: 560px) { .party-round-sprite { width: 150px; height: 150px; } }
