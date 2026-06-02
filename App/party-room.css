@@ -79,3 +79,21 @@
 .party-stat-row { background: #f4f8fc; border: 1px solid #e8eef6; padding: 8px 14px; font-weight: 700; color: #1d2b4a; }
 .party-stat-row.is-best { background: linear-gradient(135deg, #36c26b, #4fd17f); color: #fff; border-color: #36c26b; box-shadow: 0 4px 12px rgba(54, 194, 107, 0.3); }
 @media (max-width: 560px) { .party-round-sprite { width: 150px; height: 150px; } }
+
+/* ===== DA Lot 3 : scoreboard live ===== */
+.party-players { gap: 8px; }
+.party-player { padding: 10px 14px; gap: 10px; border-radius: 14px; }
+.party-player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.party-rank { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; border-radius: 50%; background: #eef3ff; color: #2f76ff; font-weight: 900; font-size: 0.85rem; }
+.party-players .party-player:first-child { border-color: #ffcc33; box-shadow: 0 4px 14px rgba(255, 204, 51, 0.25); }
+.party-players .party-player:first-child .party-rank { background: #ffcc33; color: #1d2b4a; }
+.party-score { font-size: 0.95rem; background: #eef3ff; color: #2f76ff; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.party-check { background: #36c26b; }
+.party-wait { background: #eef0f4; color: #5a6b8c; border-radius: 999px; padding: 2px 8px; font-size: 0.72rem; }
+.party-player.is-correct { border-color: #36c26b; background: #f1faf4; }
+.party-player.is-offline { opacity: 0.45; }
+@media (max-width: 560px) {
+  .party-player { flex-wrap: wrap; padding: 8px 10px; }
+  .party-player-name { flex: 1 1 55%; }
+  .party-score { margin-left: auto; }
+}
