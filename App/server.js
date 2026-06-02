@@ -331,7 +331,7 @@ function publicPartyRoomState(room, viewerId = null) {
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     gameMode: room.gameMode || "guess",
-    genScope: room.genScope || "all",
+    selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: (room.gameMode === "statclash" || room.gameMode === "statclashparty") ? publicPartyStatClashRoundState(room, revealed) : publicPartyGuessRoundState(room, revealed),
     players: room.players.map((player) => ({
       id: player.id,
@@ -377,11 +377,10 @@ function clearPartyRoomCleanup(room) {
 const PARTY_COMMON_POOL_GENS = [1];
 
 function pickPartyTarget(room) {
-  const scope = (room && room.genScope) || "all";
+  const gens = Array.isArray(room && room.selectedGens) && room.selectedGens.length ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const pool = POKEMON_LIST.filter((p) => {
     if (p.isAltForm || Number(p.id) >= 20000) return false;
-    if (scope === "gen1") return Number(p.gen || p.generation) === 1;
-    return true;
+    return gens.includes(Number(p.gen || p.generation));
   });
   const source = pool.length ? pool : POKEMON_LIST;
   return source[Math.floor(Math.random() * source.length)] || null;
@@ -710,7 +709,7 @@ io.on("connection", (socket) => {
       const nickname = sanitizeNickname(payload.nickname);
       if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
       const code = generatePartyRoomCode();
-      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", genScope: "all" };
+      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
       joinPlayerToPartyRoom(room, socket, nickname);
       emitPartyRoomState(room);
@@ -850,9 +849,10 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer les generations." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer en cours de party." });
-      const scope = String(payload.scope || "");
-      if (scope !== "gen1" && scope !== "all") return respond(ack, { ok: false, error: "Choix invalide." });
-      room.genScope = scope;
+      let gens = Array.isArray(payload.gens) ? payload.gens.map(Number).filter((g) => Number.isInteger(g) && g >= 1 && g <= 9) : [];
+      gens = Array.from(new Set(gens)).sort((a, b) => a - b);
+      if (!gens.length) return respond(ack, { ok: false, error: "Choisis au moins une generation." });
+      room.selectedGens = gens;
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {

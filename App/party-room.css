@@ -35,6 +35,7 @@
 .party-mode-btn { border: 1px solid #d7dfec; background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 700; color: #1d2b4a; cursor: pointer; }
 .party-mode-btn.is-active { background: #2f76ff; color: #fff; border-color: #2f76ff; }
 .party-mode-btn:disabled, .party-mode-btn.party-mode-soon { opacity: 0.5; cursor: not-allowed; }
+.party-gen-btn { min-width: 38px; padding: 6px 10px; text-align: center; }
 .party-stat-options { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .party-stat-btn { border: 1px solid #2f76ff; background: #fff; color: #2f76ff; border-radius: 999px; padding: 8px 16px; font-weight: 800; cursor: pointer; }
 .party-stat-reveal { display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 320px; }

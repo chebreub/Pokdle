@@ -7923,14 +7923,31 @@ function partySubmitStat(statKey) {
   });
 }
 
-function partySetGens(scope) {
+function partySetGens(gens) {
   var socket = ensureMultiplayerSocket();
   if (!socket) return;
-  socket.emit("party:set-gens", { scope: scope }, function (res) {
+  socket.emit("party:set-gens", { gens: gens }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Impossible de changer les generations."); return; }
     if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
   });
+}
+
+function partyToggleGen(gen) {
+  var room = partyRoomState.room || {};
+  var current = Array.isArray(room.selectedGens) ? room.selectedGens.slice() : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  var idx = current.indexOf(gen);
+  if (idx >= 0) {
+    if (current.length <= 1) { setPartyStatus("Au moins une génération."); return; }
+    current.splice(idx, 1);
+  } else {
+    current.push(gen);
+  }
+  partySetGens(current);
+}
+
+function partyAllGens() {
+  partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
 function renderPartyRoom() {
@@ -8110,11 +8127,13 @@ function renderPartyRoom() {
     scpBtn.classList.toggle("is-active", room.gameMode === "statclashparty");
     scpBtn.disabled = !isHost;
   }
-  var genScope = room.genScope || "all";
+  var selGens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  for (var g = 1; g <= 9; g++) {
+    var gb = document.getElementById("party-gen-" + g);
+    if (gb) { gb.classList.toggle("is-active", selGens.indexOf(g) !== -1); gb.disabled = !isHost; }
+  }
   var genAllBtn = document.getElementById("party-gens-all");
-  if (genAllBtn) { genAllBtn.classList.toggle("is-active", genScope === "all"); genAllBtn.disabled = !isHost; }
-  var gen1Btn = document.getElementById("party-gens-gen1");
-  if (gen1Btn) { gen1Btn.classList.toggle("is-active", genScope === "gen1"); gen1Btn.disabled = !isHost; }
+  if (genAllBtn) { genAllBtn.classList.toggle("is-active", selGens.length === 9); genAllBtn.disabled = !isHost; }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
   var revealBtn = document.getElementById("party-reveal-btn");
