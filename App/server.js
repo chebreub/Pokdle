@@ -747,7 +747,7 @@ io.on("connection", (socket) => {
     try {
       if (checkRateLimit(socket, "party-guess")) return respond(ack, { ok: false, error: "Trop de requetes." });
       const room = findPartyRoomBySocket(socket.id);
-      if (!room || room.status !== "playing" || room.gameMode !== "statclash") return respond(ack, { ok: false, error: "Aucune manche Stat Clash en cours." });
+      if (!room || room.status !== "playing" || room.gameMode !== "statclash") return respond(ack, { ok: false, error: "Aucune manche Meilleure stat en cours." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
       if (player.pickKey) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });

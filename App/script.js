@@ -7990,7 +7990,7 @@ function renderPartyRoom() {
     var isStatClash = Boolean(room.round && room.round.mode === "statclash");
     var variant = (room.round && room.round.variant) || "normal";
     var modeEl = document.getElementById("party-round-mode");
-    if (modeEl) modeEl.textContent = isStatClash ? ("Stat Clash : " + (room.round.name || "?") + (playing ? " — choisis sa meilleure stat !" : "")) : (variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale"));
+    if (modeEl) modeEl.textContent = isStatClash ? ("Meilleure stat : " + (room.round.name || "?") + (playing ? " — choisis sa stat la plus élevée !" : "")) : (variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale"));
     if (spriteEl) {
       spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
       if (playing) {
