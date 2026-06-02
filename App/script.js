@@ -8008,9 +8008,13 @@ function renderPartyRoom() {
       if (isStatClash && (finished || complete) && room.round.stats) {
         var bestKey = room.round.bestStat;
         var labelsW = room.round.statLabels || {};
-        var winners = (room.players || []).filter(function (w) { return (w.lastGain || 0) > 0; }).map(function (w) { return w.nickname; });
         answerEl.classList.remove("hidden");
-        answerEl.textContent = "Stat gagnante : " + (labelsW[bestKey] || bestKey || "?") + " (" + (Number(room.round.stats[bestKey]) || 0) + ") — " + (winners.length ? ("Gagnant(s) : " + winners.join(", ") + " +100") : "Personne");
+        if (room.round.mode === "statclashparty") {
+          answerEl.textContent = "Meilleure valeur : " + (labelsW[bestKey] || bestKey || "?") + " (" + (Number(room.round.stats[bestKey]) || 0) + ") — chacun marque la valeur de sa stat.";
+        } else {
+          var winners = (room.players || []).filter(function (w) { return (w.lastGain || 0) > 0; }).map(function (w) { return w.nickname; });
+          answerEl.textContent = "Stat gagnante : " + (labelsW[bestKey] || bestKey || "?") + " (" + (Number(room.round.stats[bestKey]) || 0) + ") — " + (winners.length ? ("Gagnant(s) : " + winners.join(", ") + " +100") : "Personne");
+        }
       } else if ((finished || complete) && room.round && room.round.answer) {
         answerEl.classList.remove("hidden");
         answerEl.textContent = "C'etait : " + room.round.answer;
@@ -8060,7 +8064,7 @@ function renderPartyRoom() {
     startBtn.textContent = complete ? "Relancer une party" : "Lancer la party";
   }
   var modeSel = document.getElementById("party-mode-select");
-  if (modeSel) modeSel.classList.toggle("hidden", room.status !== "waiting");
+  if (modeSel) modeSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
   var guessBtn = document.getElementById("party-mode-guess");
   if (guessBtn) {
     guessBtn.classList.toggle("is-active", (room.gameMode || "guess") === "guess");

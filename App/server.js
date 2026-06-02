@@ -329,7 +329,7 @@ function publicPartyRoomState(room, viewerId = null) {
     minPlayers: PARTY_MIN_PLAYERS,
     maxPlayers: PARTY_MAX_PLAYERS,
     roundNumber: Number(room.roundNumber) || 0,
-    totalRounds: PARTY_TOTAL_ROUNDS,
+    totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     gameMode: room.gameMode || "guess",
     round: (room.gameMode === "statclash" || room.gameMode === "statclashparty") ? publicPartyStatClashRoundState(room, revealed) : publicPartyGuessRoundState(room, revealed),
     players: room.players.map((player) => ({
@@ -381,8 +381,13 @@ function pickPartyTarget() {
   return source[Math.floor(Math.random() * source.length)] || null;
 }
 
+function partyTotalRoundsForMode(mode) {
+  return mode === "statclashparty" ? 6 : 5;
+}
+
 async function startPartyGame(room) {
   room.roundNumber = 1;
+  room.totalRounds = partyTotalRoundsForMode(room.gameMode);
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
@@ -392,7 +397,7 @@ async function startPartyGame(room) {
 }
 
 function endPartyRound(room) {
-  if ((Number(room.roundNumber) || 1) >= PARTY_TOTAL_ROUNDS) {
+  if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) {
     room.status = "complete";
   } else {
     room.status = "finished";
@@ -490,9 +495,10 @@ function resolvePartyStatClashPartyRound(room) {
   }
   room.bestStatKey = bestKey;
   for (const player of room.players) {
-    if (player.pickKey && bestVal >= 0 && (Number(stats[player.pickKey]) || 0) === bestVal) {
-      player.lastGain = 100;
-      player.score = (Number(player.score) || 0) + 100;
+    if (player.pickKey) {
+      const value = Number(stats[player.pickKey]) || 0;
+      player.lastGain = value;
+      player.score = (Number(player.score) || 0) + value;
     } else {
       player.lastGain = 0;
     }
@@ -805,7 +811,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer la manche suivante." });
       if (room.status !== "finished") return respond(ack, { ok: false, error: "Termine la manche en cours d'abord." });
-      if ((Number(room.roundNumber) || 1) >= PARTY_TOTAL_ROUNDS) return respond(ack, { ok: false, error: "La party est terminee." });
+      if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) return respond(ack, { ok: false, error: "La party est terminee." });
       room.roundNumber = (Number(room.roundNumber) || 1) + 1;
       await startPartyRound(room);
       if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
@@ -821,7 +827,7 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
-      if (room.status !== "waiting") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
+      if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
       if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       room.gameMode = mode;
