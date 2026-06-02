@@ -28,6 +28,7 @@ const MAX_ROOM_SIZE = 2;
 const PARTY_MIN_PLAYERS = 2;
 const PARTY_MAX_PLAYERS = 8;
 const PARTY_TOTAL_ROUNDS = 5;
+const PARTY_ROUND_TIMER_MS = 20000;
 const PARTY_STAT_LABELS = { hp: "PV", attack: "Attaque", defense: "Defense", spAttack: "Att. Spe.", spDefense: "Def. Spe.", speed: "Vitesse" };
 const STAT_CLASH_TOTAL_ROUNDS = 6;
 const STAT_CLASH_MAX_PLAYERS = 2;
@@ -330,6 +331,7 @@ function publicPartyRoomState(room, viewerId = null) {
     maxPlayers: PARTY_MAX_PLAYERS,
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
+    deadlineAt: room.deadlineAt || null,
     gameMode: room.gameMode || "guess",
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: (room.gameMode === "statclash" || room.gameMode === "statclashparty") ? publicPartyStatClashRoundState(room, revealed) : publicPartyGuessRoundState(room, revealed),
@@ -402,6 +404,8 @@ async function startPartyGame(room) {
 }
 
 function endPartyRound(room) {
+  clearPartyRoundTimer(room);
+  room.deadlineAt = null;
   if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) {
     room.status = "complete";
   } else {
@@ -422,6 +426,26 @@ function partyPointsForRank(rank) {
   return 30;
 }
 
+function clearPartyRoundTimer(room) {
+  if (room && room.roundTimer) { clearTimeout(room.roundTimer); room.roundTimer = null; }
+}
+
+function forcePartyRoundEnd(room) {
+  if (!room || room.status !== "playing") return;
+  if (room.gameMode === "statclash" || room.gameMode === "statclashparty") {
+    resolvePartyStatRound(room);
+  } else {
+    endPartyRound(room);
+  }
+  emitPartyRoomState(room);
+}
+
+function armPartyRoundTimer(room) {
+  clearPartyRoundTimer(room);
+  room.deadlineAt = Date.now() + PARTY_ROUND_TIMER_MS;
+  room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, PARTY_ROUND_TIMER_MS);
+}
+
 async function startPartyRound(room) {
   // Dispatch selon le mode de la party
   if (room.gameMode === "statclash" || room.gameMode === "statclashparty") {
@@ -429,6 +453,7 @@ async function startPartyRound(room) {
   } else {
     startPartyGuessRound(room);
   }
+  armPartyRoundTimer(room);
 }
 
 async function startPartyStatClashRound(room) {
@@ -559,6 +584,8 @@ function handlePartyDisconnect(socketId, voluntary) {
   const wasHost = room.players[index].id === room.hostId;
   room.players.splice(index, 1);
   if (room.players.length === 0) {
+    clearPartyRoundTimer(room);
+    room.deadlineAt = null;
     schedulePartyRoomCleanup(room);
     return;
   }

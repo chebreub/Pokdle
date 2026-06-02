@@ -197,3 +197,6 @@
 .party-stat-row.is-best { animation: party-best-pop 0.5s ease; }
 @keyframes party-cta-glow { 0%, 100% { box-shadow: 0 6px 16px rgba(228, 56, 47, 0.3); } 50% { box-shadow: 0 10px 26px rgba(228, 56, 47, 0.5); } }
 .party-room-card #party-start-btn:not(:disabled) { animation: party-cta-glow 2.2s ease-in-out infinite; }
+.party-timer { font-weight: 900; font-size: 1.1rem; color: #2f76ff; background: #eef3ff; border-radius: 999px; padding: 4px 16px; align-self: center; }
+.party-timer.is-urgent { color: #fff; background: #e4382f; animation: party-timer-pulse 0.6s ease-in-out infinite; }
+@keyframes party-timer-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }

@@ -7950,6 +7950,22 @@ function partyAllGens() {
   partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
+function partyUpdateTimer() {
+  var el = document.getElementById("party-timer");
+  if (!el) return;
+  var room = partyRoomState.room;
+  if (!room || room.status !== "playing" || !room.deadlineAt) {
+    el.classList.add("hidden");
+    el.classList.remove("is-urgent");
+    el.textContent = "";
+    return;
+  }
+  var remaining = Math.max(0, Math.ceil((room.deadlineAt - Date.now()) / 1000));
+  el.classList.remove("hidden");
+  el.textContent = "\u23F1 " + remaining + " s";
+  el.classList.toggle("is-urgent", remaining <= 5);
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -8012,6 +8028,13 @@ function renderPartyRoom() {
     listEl.classList.toggle("is-podium", complete);
     partyRoomState.prevScores = {};
     raw.forEach(function (p) { partyRoomState.prevScores[p.id] = p.score || 0; });
+  }
+  if (room.status === "playing" && room.deadlineAt) {
+    partyUpdateTimer();
+    if (!partyRoomState.timerInterval) partyRoomState.timerInterval = setInterval(partyUpdateTimer, 250);
+  } else {
+    if (partyRoomState.timerInterval) { clearInterval(partyRoomState.timerInterval); partyRoomState.timerInterval = null; }
+    partyUpdateTimer();
   }
   var countEl = document.getElementById("party-count");
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
