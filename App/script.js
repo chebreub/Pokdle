@@ -7912,6 +7912,17 @@ function partySetMode(mode) {
   });
 }
 
+function partySubmitStat(statKey) {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:submit-stat", { statKey: statKey }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Erreur."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+    if (!res.already) { setPartyStatus("Stat choisie !"); }
+  });
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -7965,9 +7976,10 @@ function renderPartyRoom() {
     roundEl.classList.toggle("hidden", !hasRound);
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl) spriteEl.src = room.round.image;
+    var isStatClash = Boolean(room.round && room.round.mode === "statclash");
     var variant = (room.round && room.round.variant) || "normal";
     var modeEl = document.getElementById("party-round-mode");
-    if (modeEl) modeEl.textContent = variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale");
+    if (modeEl) modeEl.textContent = isStatClash ? ("Stat Clash : " + (room.round.name || "?")) : (variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale"));
     if (spriteEl) {
       spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
       if (playing) {
@@ -7986,7 +7998,35 @@ function renderPartyRoom() {
       }
     }
     var inputWrap = document.getElementById("party-round-input");
-    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && me && !me.correct));
+    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct));
+    var statOpts = document.getElementById("party-stat-options");
+    if (statOpts) {
+      var showOpts = isStatClash && playing && me && !me.pickKey;
+      statOpts.classList.toggle("hidden", !showOpts);
+      if (showOpts && room.round.statKeys) {
+        var labels = room.round.statLabels || {};
+        statOpts.innerHTML = room.round.statKeys.map(function (k) {
+          return '<button type="button" class="party-stat-btn" data-stat="' + k + '" onclick="partySubmitStat(this.dataset.stat)">' + escapeHtml(labels[k] || k) + '</button>';
+        }).join("");
+      } else if (!showOpts) {
+        statOpts.innerHTML = "";
+      }
+    }
+    var statReveal = document.getElementById("party-stat-reveal");
+    if (statReveal) {
+      var doReveal = isStatClash && (finished || complete) && room.round.stats;
+      statReveal.classList.toggle("hidden", !doReveal);
+      if (doReveal) {
+        var st = room.round.stats;
+        var labels2 = room.round.statLabels || {};
+        var best = room.round.bestStat;
+        statReveal.innerHTML = (room.round.statKeys || []).map(function (k) {
+          return '<div class="party-stat-row' + (k === best ? ' is-best' : '') + '"><span>' + escapeHtml(labels2[k] || k) + '</span><b>' + (Number(st[k]) || 0) + '</b></div>';
+        }).join("");
+      } else {
+        statReveal.innerHTML = "";
+      }
+    }
   }
   var startBtn = document.getElementById("party-start-btn");
   if (startBtn) {
@@ -8000,6 +8040,11 @@ function renderPartyRoom() {
   if (guessBtn) {
     guessBtn.classList.toggle("is-active", (room.gameMode || "guess") === "guess");
     guessBtn.disabled = !isHost;
+  }
+  var scBtn = document.getElementById("party-mode-statclash");
+  if (scBtn) {
+    scBtn.classList.toggle("is-active", room.gameMode === "statclash");
+    scBtn.disabled = !isHost;
   }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));

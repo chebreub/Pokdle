@@ -1180,7 +1180,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div id="party-mode-select" class="party-mode-select hidden">
             <span class="party-mode-label">Mode :</span>
             <button id="party-mode-guess" type="button" class="party-mode-btn" onclick="partySetMode('guess')">🏁 Course Pokémon</button>
-            <button type="button" class="party-mode-btn party-mode-soon" disabled>📊 Stat Clash (bientôt)</button>
+            <button id="party-mode-statclash" type="button" class="party-mode-btn" onclick="partySetMode('statclash')">📊 Stat Clash</button>
           </div>
           <button id="party-start-btn" class="btn-red hidden" type="button" onclick="partyStartGame()">Lancer la partie</button>
           <button id="party-room-next-btn" class="btn-blue hidden" type="button" onclick="partyNextRound()">Manche suivante</button>
@@ -1188,6 +1188,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <p id="party-round-mode" class="party-round-mode"></p>
             <img id="party-round-sprite" class="party-round-sprite" src="" alt="Pokemon a deviner" />
             <p id="party-round-answer" class="party-round-answer hidden"></p>
+            <div id="party-stat-options" class="party-stat-options hidden"></div>
+            <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
             <div id="party-round-input" class="party-round-input">
               <input id="party-guess" type="text" placeholder="Nom du Pokemon" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();partySubmitAnswer();}" />
               <button class="btn-blue" type="button" onclick="partySubmitAnswer()">Valider</button>
