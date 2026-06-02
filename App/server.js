@@ -310,7 +310,7 @@ function publicPartyGuessRoundState(room, revealed) {
 function publicPartyStatClashRoundState(room, revealed) {
   if (!room.target) return null;
   return {
-    mode: "statclash",
+    mode: room.gameMode || "statclash",
     image: room.target.sprite || null,
     name: room.target.name,
     statKeys: STAT_CLASH_STAT_KEYS,
@@ -331,7 +331,7 @@ function publicPartyRoomState(room, viewerId = null) {
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: PARTY_TOTAL_ROUNDS,
     gameMode: room.gameMode || "guess",
-    round: room.gameMode === "statclash" ? publicPartyStatClashRoundState(room, revealed) : publicPartyGuessRoundState(room, revealed),
+    round: (room.gameMode === "statclash" || room.gameMode === "statclashparty") ? publicPartyStatClashRoundState(room, revealed) : publicPartyGuessRoundState(room, revealed),
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
@@ -340,6 +340,7 @@ function publicPartyRoomState(room, viewerId = null) {
       correct: Boolean(player.correct),
       lastGain: Number(player.lastGain) || 0,
       pickKey: player.pickKey || null,
+      usedStatKeys: Array.isArray(player.usedStatKeys) ? player.usedStatKeys : [],
       isSelf: player.id === viewerId,
       isHost: player.id === room.hostId,
     })),
@@ -385,6 +386,7 @@ async function startPartyGame(room) {
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
+    player.usedStatKeys = [];
   }
   await startPartyRound(room);
 }
@@ -412,7 +414,7 @@ function partyPointsForRank(rank) {
 
 async function startPartyRound(room) {
   // Dispatch selon le mode de la party
-  if (room.gameMode === "statclash") {
+  if (room.gameMode === "statclash" || room.gameMode === "statclashparty") {
     await startPartyStatClashRound(room);
   } else {
     startPartyGuessRound(room);
@@ -462,8 +464,40 @@ function checkPartyStatClashAllPicked(room) {
   const roster = Array.isArray(room.roundPlayerIds) && room.roundPlayerIds.length ? room.roundPlayerIds : room.players.map((p) => p.id);
   const active = room.players.filter((p) => p.connected && roster.includes(p.id));
   if (active.length > 0 && active.every((p) => p.pickKey)) {
+    resolvePartyStatRound(room);
+  }
+}
+
+function resolvePartyStatRound(room) {
+  if (room.gameMode === "statclashparty") {
+    resolvePartyStatClashPartyRound(room);
+  } else {
     resolvePartyStatClashRound(room);
   }
+}
+
+function resolvePartyStatClashPartyRound(room) {
+  const stats = room.targetStats || {};
+  let bestVal = -1;
+  for (const player of room.players) {
+    if (!player.pickKey) continue;
+    const value = Number(stats[player.pickKey]) || 0;
+    if (value > bestVal) bestVal = value;
+  }
+  let bestKey = null;
+  for (const player of room.players) {
+    if (player.pickKey && (Number(stats[player.pickKey]) || 0) === bestVal) { bestKey = player.pickKey; break; }
+  }
+  room.bestStatKey = bestKey;
+  for (const player of room.players) {
+    if (player.pickKey && bestVal >= 0 && (Number(stats[player.pickKey]) || 0) === bestVal) {
+      player.lastGain = 100;
+      player.score = (Number(player.score) || 0) + 100;
+    } else {
+      player.lastGain = 0;
+    }
+  }
+  endPartyRound(room);
 }
 
 function startPartyGuessRound(room) {
@@ -735,7 +769,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
-      if (room.gameMode === "statclash") { resolvePartyStatClashRound(room); } else { endPartyRound(room); }
+      if (room.gameMode === "statclash" || room.gameMode === "statclashparty") { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -747,13 +781,15 @@ io.on("connection", (socket) => {
     try {
       if (checkRateLimit(socket, "party-guess")) return respond(ack, { ok: false, error: "Trop de requetes." });
       const room = findPartyRoomBySocket(socket.id);
-      if (!room || room.status !== "playing" || room.gameMode !== "statclash") return respond(ack, { ok: false, error: "Aucune manche Meilleure stat en cours." });
+      if (!room || room.status !== "playing" || (room.gameMode !== "statclash" && room.gameMode !== "statclashparty")) return respond(ack, { ok: false, error: "Aucune manche de stats en cours." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
       if (player.pickKey) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
       const statKey = String(payload.statKey || "");
       if (!STAT_CLASH_STAT_KEYS.includes(statKey)) return respond(ack, { ok: false, error: "Stat invalide." });
       player.pickKey = statKey;
+      if (!Array.isArray(player.usedStatKeys)) player.usedStatKeys = [];
+      if (!player.usedStatKeys.includes(statKey)) player.usedStatKeys.push(statKey);
       checkPartyStatClashAllPicked(room);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -786,7 +822,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       room.gameMode = mode;
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });

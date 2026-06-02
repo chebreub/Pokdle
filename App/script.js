@@ -7987,10 +7987,15 @@ function renderPartyRoom() {
     roundEl.classList.toggle("hidden", !hasRound);
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl) spriteEl.src = room.round.image;
-    var isStatClash = Boolean(room.round && room.round.mode === "statclash");
+    var isStatClash = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
     var variant = (room.round && room.round.variant) || "normal";
     var modeEl = document.getElementById("party-round-mode");
-    if (modeEl) modeEl.textContent = isStatClash ? ("Meilleure stat : " + (room.round.name || "?") + (playing ? " — choisis sa stat la plus élevée !" : "")) : (variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale"));
+    if (modeEl) {
+      var scParty = Boolean(room.round && room.round.mode === "statclashparty");
+      modeEl.textContent = isStatClash
+        ? ((scParty ? "Stat Clash : " : "Meilleure stat : ") + (room.round.name || "?") + (playing ? (scParty ? " — choisis la stat qui battra les autres !" : " — choisis sa stat la plus élevée !") : ""))
+        : (variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale"));
+    }
     if (spriteEl) {
       spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
       if (playing) {
@@ -8005,7 +8010,7 @@ function renderPartyRoom() {
         var labelsW = room.round.statLabels || {};
         var winners = (room.players || []).filter(function (w) { return (w.lastGain || 0) > 0; }).map(function (w) { return w.nickname; });
         answerEl.classList.remove("hidden");
-        answerEl.textContent = "Meilleure stat : " + (labelsW[bestKey] || bestKey || "?") + " (" + (Number(room.round.stats[bestKey]) || 0) + ") — " + (winners.length ? ("Gagnant(s) : " + winners.join(", ") + " +100") : "Personne");
+        answerEl.textContent = "Stat gagnante : " + (labelsW[bestKey] || bestKey || "?") + " (" + (Number(room.round.stats[bestKey]) || 0) + ") — " + (winners.length ? ("Gagnant(s) : " + winners.join(", ") + " +100") : "Personne");
       } else if ((finished || complete) && room.round && room.round.answer) {
         answerEl.classList.remove("hidden");
         answerEl.textContent = "C'etait : " + room.round.answer;
@@ -8062,6 +8067,11 @@ function renderPartyRoom() {
   if (scBtn) {
     scBtn.classList.toggle("is-active", room.gameMode === "statclash");
     scBtn.disabled = !isHost;
+  }
+  var scpBtn = document.getElementById("party-mode-statclashparty");
+  if (scpBtn) {
+    scpBtn.classList.toggle("is-active", room.gameMode === "statclashparty");
+    scpBtn.disabled = !isHost;
   }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
