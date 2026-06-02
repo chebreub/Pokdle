@@ -160,11 +160,11 @@
             <p>Affronte un ami en temps réel sur la même cible.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
           </article>
-          <article class="card home-pillar" onclick="openDraftArenaMode()" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-coral">🏆</div>
-            <h3>Draft Arènes</h3>
-            <p>Drafte 6 Pokémon, défie les arènes et décroche tes badges.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag">Badges</span></div>
+          <article class="card home-pillar" onclick="openPartyRoomMode()" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-coral">🎉</div>
+            <h3>Party Room</h3>
+            <p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Multi</span><span class="home-pillar-tag">2-8 joueurs</span><span class="home-pillar-tag">Podium</span></div>
           </article>
         </div>
         <div class="home-hero-secondary">
@@ -220,7 +220,7 @@
             <div class="home-pillar-icon home-pillar-icon-coral">🏆</div>
             <h3>Draft Arènes</h3>
             <p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag">8 badges</span></div>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag home-pillar-tag-exp">Expérimental</span></div>
           </article>
           <article class="card home-pillar" onclick="openEmulatorMode()" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-purple">🕹️</div>
@@ -354,7 +354,7 @@
           <section class="all-modes-cat">
             <h3 class="all-modes-cat-title">♟️ Stratégie</h3>
             <div class="all-modes-grid">
-              <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openDraftArenaMode()"><span class="am-emoji">🏆</span><b>Draft Arènes</b></button>
+              <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openDraftArenaMode()"><span class="am-emoji">🏆</span><b>Draft Arènes</b><span class="all-modes-badge">Expérimental</span></button>
               <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openTeamBuilderScreen()"><span class="am-emoji">🧱</span><b>Team Builder</b></button>
               <button type="button" class="card all-modes-card" onclick="hideScreen('screen-all-modes'); openTypeChartScreen()"><span class="am-emoji">🧮</span><b>Table des types</b></button>
             </div>
@@ -1156,7 +1156,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Joue a plusieurs (2 a 8). Cree une room ou rejoins par code. Lobby uniquement pour l'instant, les jeux arrivent bientot.</p>
+        <p class="card-desc">Crée une room, invite tes amis et joue en groupe sur plusieurs manches : Course Pokémon, Meilleure stat ou Stat Clash Party.</p>
         <div id="party-lobby" class="party-lobby">
           <label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Pseudo" autocomplete="off" /></label>
           <div class="party-lobby-actions">
@@ -1183,6 +1183,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <button id="party-mode-statclash" type="button" class="party-mode-btn" onclick="partySetMode('statclash')">📊 Meilleure stat</button>
             <button id="party-mode-statclashparty" type="button" class="party-mode-btn" onclick="partySetMode('statclashparty')">⚔️ Stat Clash</button>
           </div>
+          <p id="party-mode-hint" class="party-mode-hint"></p>
           <div id="party-gens-select" class="party-mode-select party-gens-select hidden">
             <span class="party-mode-label">Générations :</span>
             <button id="party-gens-all" type="button" class="party-mode-btn" onclick="partyAllGens()">🌍 Toutes</button>

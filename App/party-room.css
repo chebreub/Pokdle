@@ -200,3 +200,16 @@
 .party-timer { font-weight: 900; font-size: 1.1rem; color: #2f76ff; background: #eef3ff; border-radius: 999px; padding: 4px 16px; align-self: center; }
 .party-timer.is-urgent { color: #fff; background: #e4382f; animation: party-timer-pulse 0.6s ease-in-out infinite; }
 @keyframes party-timer-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+.party-mode-hint { text-align: center; color: #5a6f92; font-size: 0.85rem; max-width: 520px; margin: 4px auto 8px; }
+.all-modes-badge { display: inline-block; margin-left: 6px; background: #fff0d6; color: #8d5f00; border-radius: 999px; padding: 1px 8px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.home-pillar-tag-exp { background: #fff0d6 !important; color: #8d5f00 !important; }
+@media (max-width: 560px) {
+  .party-room-card .party-round-sprite { width: 130px; height: 130px; }
+  .party-room-card .party-stat-options { gap: 6px; }
+  .party-room-card .party-stat-btn { min-height: 42px; padding: 8px 12px; }
+  .party-room-card .party-round-input input { min-height: 46px; }
+  .party-room-card .party-score { font-size: 0.85rem; padding: 3px 8px; }
+  .party-room-card .party-player { padding: 8px 10px; gap: 6px; }
+  .party-room-card .party-player-name { font-size: 0.9rem; }
+  .party-room-card .party-mode-btn { font-size: 0.85rem; padding: 6px 10px; }
+}

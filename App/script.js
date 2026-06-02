@@ -8150,6 +8150,16 @@ function renderPartyRoom() {
     scpBtn.classList.toggle("is-active", room.gameMode === "statclashparty");
     scpBtn.disabled = !isHost;
   }
+  var modeHints = {
+    guess: "Course Pokémon : devine le Pokémon le plus vite possible. Les points dépendent du rang de bonne réponse.",
+    statclash: "Meilleure stat : choisis la stat la plus élevée du Pokémon. Les bons choix marquent des points.",
+    statclashparty: "Stat Clash : choisis une stat différente à chaque manche. Tu marques la valeur réelle de la stat choisie."
+  };
+  var hintEl = document.getElementById("party-mode-hint");
+  if (hintEl) {
+    hintEl.textContent = modeHints[room.gameMode] || modeHints.guess;
+    hintEl.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
+  }
   var selGens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   for (var g = 1; g <= 9; g++) {
     var gb = document.getElementById("party-gen-" + g);

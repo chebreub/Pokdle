@@ -175,6 +175,7 @@ const RATE_LIMITS = {
   "gen-update":  { max: 5,  windowMs: RATE_LIMIT_WINDOW_MS },
   "restart":     { max: 3,  windowMs: RATE_LIMIT_WINDOW_MS },
   "commit":      { max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
+  "party-guess": { max: 12, windowMs: RATE_LIMIT_WINDOW_MS },
 };
 const PAYLOAD_MAX_BYTES = 64_000;
 const DRAFT_BATTLE_MAX_TEAM_INDEX = 5;
