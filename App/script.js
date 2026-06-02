@@ -7923,6 +7923,16 @@ function partySubmitStat(statKey) {
   });
 }
 
+function partySetGens(scope) {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:set-gens", { scope: scope }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de changer les generations."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+  });
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -8032,6 +8042,10 @@ function renderPartyRoom() {
     }
     var inputWrap = document.getElementById("party-round-input");
     if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct));
+    if (playing && !isStatClash && me && !me.correct) {
+      var guessInput = document.getElementById("party-guess");
+      if (guessInput && document.activeElement !== guessInput) guessInput.focus();
+    }
     var statOpts = document.getElementById("party-stat-options");
     if (statOpts) {
       var showOpts = isStatClash && playing && me && !me.pickKey;
@@ -8072,6 +8086,8 @@ function renderPartyRoom() {
   }
   var modeSel = document.getElementById("party-mode-select");
   if (modeSel) modeSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
+  var gensSel = document.getElementById("party-gens-select");
+  if (gensSel) gensSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
   var guessBtn = document.getElementById("party-mode-guess");
   if (guessBtn) {
     guessBtn.classList.toggle("is-active", (room.gameMode || "guess") === "guess");
@@ -8087,6 +8103,11 @@ function renderPartyRoom() {
     scpBtn.classList.toggle("is-active", room.gameMode === "statclashparty");
     scpBtn.disabled = !isHost;
   }
+  var genScope = room.genScope || "all";
+  var genAllBtn = document.getElementById("party-gens-all");
+  if (genAllBtn) { genAllBtn.classList.toggle("is-active", genScope === "all"); genAllBtn.disabled = !isHost; }
+  var gen1Btn = document.getElementById("party-gens-gen1");
+  if (gen1Btn) { gen1Btn.classList.toggle("is-active", genScope === "gen1"); gen1Btn.disabled = !isHost; }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
   var revealBtn = document.getElementById("party-reveal-btn");
