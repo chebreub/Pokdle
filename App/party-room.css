@@ -123,3 +123,54 @@
 .party-room-card #party-start-btn,
 .party-room-card #party-room-next-btn { width: 100%; min-height: 54px; font-size: 1.1rem; }
 .party-round { max-width: 460px; }
+
+/* ===== DA Lot 6 : alignement visuel sur Stat Clash 1v1 ===== */
+.party-room-card .party-round,
+.party-room-card .party-room-head,
+.party-room-card .party-player {
+  border: 1px solid rgba(158, 182, 222, 0.48);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.95));
+  box-shadow: 0 14px 28px rgba(22, 44, 80, 0.08);
+  border-radius: 16px;
+}
+.party-room-card .party-round-mode,
+.party-room-card .party-player-name { color: #17345d; }
+.party-room-card .party-count,
+.party-room-card .party-status { color: #5a6f92; }
+.party-room-card .party-score {
+  background: linear-gradient(180deg, #153760 0%, #102c4c 100%);
+  color: #fff;
+  border-radius: 10px;
+  padding: 4px 12px;
+  font-weight: 900;
+}
+.party-room-card .party-badge-host { background: #ffe9b6; color: #8d5f00; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; }
+.party-room-card .party-badge-self { background: #e4f0ff; color: #2457ad; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; }
+.party-room-card .party-wait { background: #eef2fb; color: #546886; text-transform: uppercase; letter-spacing: 0.04em; }
+.party-room-card .party-check { text-transform: uppercase; letter-spacing: 0.04em; }
+.party-room-card .party-stat-btn {
+  min-height: 48px;
+  border: 1px solid rgba(143, 170, 212, 0.56);
+  background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+  color: #17345d;
+  border-radius: 12px;
+}
+.party-room-card .party-stat-btn:not(:disabled):hover {
+  background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+  border-color: rgba(69, 124, 219, 0.6);
+  box-shadow: 0 10px 18px rgba(31, 77, 150, 0.12);
+  color: #17345d;
+  transform: translateY(-1px);
+}
+.party-room-card .party-stat-btn.is-used {
+  background: linear-gradient(180deg, #ffe38a 0%, #ffc739 100%);
+  border-color: rgba(220, 161, 0, 0.74);
+  color: #4e3400;
+  opacity: 1;
+}
+.party-room-card .party-round-answer {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.95));
+  border: 1px solid rgba(158, 182, 222, 0.48);
+  color: #17345d;
+  box-shadow: 0 8px 18px rgba(22, 44, 80, 0.06);
+}
