@@ -8027,8 +8027,11 @@ function renderPartyRoom() {
       statOpts.classList.toggle("hidden", !showOpts);
       if (showOpts && room.round.statKeys) {
         var labels = room.round.statLabels || {};
+        var scPartyMode = room.round.mode === "statclashparty";
+        var usedKeys = (scPartyMode && me && Array.isArray(me.usedStatKeys)) ? me.usedStatKeys : [];
         statOpts.innerHTML = room.round.statKeys.map(function (k) {
-          return '<button type="button" class="party-stat-btn" data-stat="' + k + '" onclick="partySubmitStat(this.dataset.stat)">' + escapeHtml(labels[k] || k) + '</button>';
+          var isUsed = usedKeys.indexOf(k) !== -1;
+          return '<button type="button" class="party-stat-btn' + (isUsed ? ' is-used' : '') + '" data-stat="' + k + '"' + (isUsed ? ' disabled' : ' onclick="partySubmitStat(this.dataset.stat)"') + '>' + escapeHtml(labels[k] || k) + (isUsed ? ' ✓' : '') + '</button>';
         }).join("");
       } else if (!showOpts) {
         statOpts.innerHTML = "";

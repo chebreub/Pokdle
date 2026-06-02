@@ -787,6 +787,7 @@ io.on("connection", (socket) => {
       if (player.pickKey) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
       const statKey = String(payload.statKey || "");
       if (!STAT_CLASH_STAT_KEYS.includes(statKey)) return respond(ack, { ok: false, error: "Stat invalide." });
+      if (room.gameMode === "statclashparty" && Array.isArray(player.usedStatKeys) && player.usedStatKeys.includes(statKey)) return respond(ack, { ok: false, error: "Stat deja utilisee cette party." });
       player.pickKey = statKey;
       if (!Array.isArray(player.usedStatKeys)) player.usedStatKeys = [];
       if (!player.usedStatKeys.includes(statKey)) player.usedStatKeys.push(statKey);
