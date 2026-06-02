@@ -1799,7 +1799,7 @@ function renderPartySessionUI() {
   }
   if (stage) {
     if (showFinalSummary) {
-      stage.innerHTML = `<div class="party-summary"><b>Resultats de la session</b><span>Score total : ${partySession.score}</span><span>Rounds joues : ${roundsPlayed} / ${partySession.maxRounds}</span><span>Victoires : ${partySession.wins}</span><span>Defaites : ${partySession.losses}</span><span>Precision : ${accuracy}%</span></div>`;
+      stage.innerHTML = `<div class="party-summary"><b>Résultats de la session</b><span>Score total : ${partySession.score}</span><span>Rounds joués : ${roundsPlayed} / ${partySession.maxRounds}</span><span>Victoires : ${partySession.wins}</span><span>Défaites : ${partySession.losses}</span><span>Précision : ${accuracy}%</span></div>`;
     } else if (showInterRoundSummary) {
       stage.innerHTML = `<div class="party-summary"><b>${partySession.wins} victoire${partySession.wins > 1 ? "s" : ""} • ${partySession.losses} défaite${partySession.losses > 1 ? "s" : ""}</b></div>`;
     } else {
@@ -19165,8 +19165,14 @@ function getDailyPokemon() {
   const key = getUTCDateKey();
   const seed = hashString(`pokedle:${key}`);
   const rng = mulberry32(seed);
-  const index = Math.floor(rng() * POKEMON_LIST.length);
-  return POKEMON_LIST[index];
+  // Pool stable : on exclut les formes alternatives (id >= 20000) et on trie par id
+  // pour que le tirage daily reste reproductible si l'ordre d'injection change.
+  const pool = POKEMON_LIST
+    .filter((pokemon) => pokemon && !pokemon.isAltForm && Number(pokemon.id) < 20000)
+    .slice()
+    .sort((a, b) => Number(a.id) - Number(b.id));
+  const index = Math.floor(rng() * pool.length);
+  return pool[index];
 }
 
 function prevUTCDateKey(key) {
