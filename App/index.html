@@ -1160,7 +1160,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div id="party-lobby" class="party-lobby">
           <label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Pseudo" autocomplete="off" /></label>
           <div class="party-lobby-actions">
-            <button class="btn-blue" type="button" onclick="partyCreateRoom()">Creer une room</button>
+            <button class="btn-blue" type="button" onclick="partyCreateRoom()">Créer une room</button>
           </div>
           <div class="party-join-row">
             <input id="party-join-code" type="text" maxlength="6" placeholder="Code de room" autocomplete="off" />
@@ -1181,7 +1181,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <span class="party-mode-label">Mode :</span>
             <button id="party-mode-guess" type="button" class="party-mode-btn" onclick="partySetMode('guess')">🏁 Course Pokémon</button>
             <button id="party-mode-statclash" type="button" class="party-mode-btn" onclick="partySetMode('statclash')">📊 Meilleure stat</button>
-            <button id="party-mode-statclashparty" type="button" class="party-mode-btn" onclick="partySetMode('statclashparty')">⚔️ Stat Clash</button>
+            <button id="party-mode-statclashparty" type="button" class="party-mode-btn" onclick="partySetMode('statclashparty')">⚔️ Stat Clash Party</button>
           </div>
           <p id="party-mode-hint" class="party-mode-hint"></p>
           <div id="party-gens-select" class="party-mode-select party-gens-select hidden">
@@ -1202,15 +1202,15 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div id="party-round" class="party-round hidden">
             <p id="party-round-mode" class="party-round-mode"></p>
             <div id="party-timer" class="party-timer hidden"></div>
-            <img id="party-round-sprite" class="party-round-sprite" src="" alt="Pokemon a deviner" />
+            <img id="party-round-sprite" class="party-round-sprite" src="" alt="Pokémon à deviner" />
             <p id="party-round-answer" class="party-round-answer hidden"></p>
             <div id="party-stat-options" class="party-stat-options hidden"></div>
             <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
             <div id="party-round-input" class="party-round-input">
-              <input id="party-guess" type="text" placeholder="Nom du Pokemon" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();partySubmitAnswer();}" />
+              <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();partySubmitAnswer();}" />
               <button class="btn-blue" type="button" onclick="partySubmitAnswer()">Valider</button>
             </div>
-            <button id="party-reveal-btn" class="btn-ghost hidden" type="button" onclick="partyRevealRound()">Reveler / terminer la manche</button>
+            <button id="party-reveal-btn" class="btn-ghost hidden" type="button" onclick="partyRevealRound()">Révéler / terminer la manche</button>
           </div>
         </div>
         <p id="party-room-msg" class="party-status"></p>
