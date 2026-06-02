@@ -97,3 +97,15 @@
   .party-player-name { flex: 1 1 55%; }
   .party-score { margin-left: auto; }
 }
+
+/* ===== DA Lot 4 : podium / fin de partie ===== */
+.party-players.is-podium { gap: 10px; }
+.party-players.is-podium .party-player { border-width: 2px; }
+.party-players.is-podium .party-player:nth-child(1) { background: linear-gradient(135deg, #fff7e0, #ffffff); border-color: #ffcc33; box-shadow: 0 8px 22px rgba(255, 204, 51, 0.35); transform: scale(1.03); }
+.party-players.is-podium .party-player:nth-child(2) { background: linear-gradient(135deg, #f1f4f9, #ffffff); border-color: #c7d0dd; }
+.party-players.is-podium .party-player:nth-child(3) { background: linear-gradient(135deg, #fbf0e6, #ffffff); border-color: #e0b483; }
+.party-players.is-podium .party-player:nth-child(-n+3) .party-rank { background: transparent; font-size: 1.4rem; min-width: 32px; }
+.party-players.is-podium .party-player:nth-child(1) .party-player-name { font-size: 1.1rem; font-weight: 900; }
+.party-players.is-podium .party-player:nth-child(1) .party-score { background: #ffcc33; color: #1d2b4a; }
+.party-status-badge { white-space: nowrap; }
+@media (max-width: 560px) { .party-players.is-podium .party-player:nth-child(1) { transform: none; } }

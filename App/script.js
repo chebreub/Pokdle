@@ -7942,11 +7942,13 @@ function renderPartyRoom() {
   var complete = room.status === "complete";
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
+  var modeLabels = { guess: "Course Pokémon", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
     statusEl.textContent = playing ? ("Manche " + roundNo + " / " + total)
       : finished ? ("Manche " + roundNo + " / " + total + " terminee")
-      : complete ? "Party terminee"
+      : complete ? ("🏆 Party terminée" + (modeLabel ? " — " + modeLabel : ""))
       : "En attente";
   }
   var raw = room.players || [];
@@ -7978,6 +7980,7 @@ function renderPartyRoom() {
         '<span class="party-score">' + (p.score || 0) + ' pts</span>' +
         '</li>';
     }).join("");
+    listEl.classList.toggle("is-podium", complete);
   }
   var countEl = document.getElementById("party-count");
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
