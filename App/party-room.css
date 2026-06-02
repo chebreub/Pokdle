@@ -186,3 +186,13 @@
 .party-players.is-podium .party-player:nth-child(2) { animation-delay: 0.12s; }
 .party-players.is-podium .party-player:nth-child(3) { animation-delay: 0.19s; }
 .party-players.is-podium .party-player:nth-child(1) { animation: party-podium-in-first 0.4s ease 0.05s both; }
+
+/* ===== DA Lot 8 : dynamisme / wow ===== */
+@keyframes party-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.party-round-sprite { animation: party-float 3.2s ease-in-out infinite; }
+@keyframes party-round-pop { 0% { transform: scale(0.95); opacity: 0.3; } 60% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
+.party-round.is-entering { animation: party-round-pop 0.55s ease; }
+@keyframes party-best-pop { 0% { transform: scale(0.9); } 55% { transform: scale(1.06); } 100% { transform: scale(1); } }
+.party-stat-row.is-best { animation: party-best-pop 0.5s ease; }
+@keyframes party-cta-glow { 0%, 100% { box-shadow: 0 6px 16px rgba(228, 56, 47, 0.3); } 50% { box-shadow: 0 10px 26px rgba(228, 56, 47, 0.5); } }
+.party-room-card #party-start-btn:not(:disabled) { animation: party-cta-glow 2.2s ease-in-out infinite; }

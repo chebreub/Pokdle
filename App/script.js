@@ -8002,6 +8002,13 @@ function renderPartyRoom() {
   if (roundEl) {
     var hasRound = Boolean(room.round && room.round.image);
     roundEl.classList.toggle("hidden", !hasRound);
+    var roundKey = (room.status === "playing") ? (Number(room.roundNumber) || 0) : -1;
+    if (hasRound && roundKey > 0 && roundKey !== partyRoomState.lastRoundKey) {
+      roundEl.classList.remove("is-entering");
+      void roundEl.offsetWidth;
+      roundEl.classList.add("is-entering");
+    }
+    partyRoomState.lastRoundKey = roundKey;
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl) spriteEl.src = room.round.image;
     var isStatClash = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
