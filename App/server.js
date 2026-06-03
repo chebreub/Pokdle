@@ -325,12 +325,16 @@ function publicPartyStatClashRoundState(room, revealed) {
 function publicPartyTypeComboRoundState(room, revealed) {
   const combo = room.typeCombo;
   if (!combo) return null;
+  const tier = partyTypeComboTier(Number(combo.count) || 0);
   return {
     mode: "typecombo",
     types: combo.displayTypes || combo.types || [],
     count: Number(combo.count) || 0,
+    difficulty: { tier: tier.tier, label: tier.label },
+    points: tier.points,
     answer: revealed ? (room.typeComboWinnerAnswer || null) : null,
     answerSprite: revealed ? (room.typeComboWinnerSprite || null) : null,
+    winnerGain: revealed ? (Number(room.typeComboWinnerGain) || 0) : null,
     examples: revealed ? (combo.examples || []) : [],
   };
 }
@@ -419,6 +423,7 @@ function isPartyStatMode(room) {
 async function startPartyGame(room) {
   room.roundNumber = 1;
   room.totalRounds = partyTotalRoundsForMode(room.gameMode);
+  room.recentComboKeys = [];
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
@@ -467,6 +472,7 @@ function forcePartyRoundEnd(room) {
 function armPartyRoundTimer(room) {
   clearPartyRoundTimer(room);
   room.deadlineAt = Date.now() + PARTY_ROUND_TIMER_MS;
+  room.roundStartedAt = Date.now();
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, PARTY_ROUND_TIMER_MS);
 }
 
@@ -662,8 +668,12 @@ function pickPartyTypeCombo(room) {
     combos.get(key).matches.push(pokemon);
   }
   const available = Array.from(combos.values()).filter((combo) => combo.matches.length > 0);
-  const picked = available[Math.floor(Math.random() * available.length)] || null;
+  const recent = Array.isArray(room.recentComboKeys) ? room.recentComboKeys : [];
+  let candidates = available.filter((combo) => !recent.includes(combo.key));
+  if (!candidates.length) candidates = available;
+  const picked = candidates[Math.floor(Math.random() * candidates.length)] || null;
   if (!picked) return null;
+  room.recentComboKeys = [picked.key].concat(recent).slice(0, 6);
   const displayTypes = picked.types.slice();
   if (displayTypes[0] !== displayTypes[1] && Math.random() < 0.5) displayTypes.reverse();
   return {
@@ -693,6 +703,23 @@ function startPartyTypeComboRound(room) {
   }
 }
 
+function partyTypeComboTier(count) {
+  const n = Number(count) || 0;
+  if (n <= 2) return { tier: "legendaire", label: "Légendaire", points: 200 };
+  if (n <= 7) return { tier: "difficile", label: "Difficile", points: 140 };
+  if (n <= 19) return { tier: "moyen", label: "Moyen", points: 100 };
+  return { tier: "facile", label: "Facile", points: 80 };
+}
+
+function partyTypeComboSpeedBonus(room) {
+  const start = Number(room.roundStartedAt) || 0;
+  if (!start) return 0;
+  const elapsed = Date.now() - start;
+  if (elapsed <= 5000) return 30;
+  if (elapsed <= 10000) return 15;
+  return 0;
+}
+
 function handlePartyTypeComboAnswer(room, player, guess) {
   const pokemon = resolvePartyPokemonGuessFuzzy(room, guess);
   const gens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -707,12 +734,15 @@ function handlePartyTypeComboAnswer(room, player, guess) {
   room.typeComboUsedNames.push(resolvedName);
   const isCorrect = pokemonMatchesPartyTypeCombo(pokemon, room.typeCombo);
   if (!isCorrect) return { valid: true, correct: false, duplicate: false };
-  const gained = 100;
+  const tier = partyTypeComboTier(room.typeCombo && room.typeCombo.count);
+  const speed = partyTypeComboSpeedBonus(room);
+  const gained = tier.points + speed;
   player.correct = true;
   player.lastGain = gained;
   player.score = (Number(player.score) || 0) + gained;
   room.typeComboWinnerAnswer = pokemon.name;
   room.typeComboWinnerSprite = pokemon.sprite || null;
+  room.typeComboWinnerGain = gained;
   endPartyRound(room);
   emitPartyRoomState(room);
   return { valid: true, correct: true, gained, rank: 1, answer: pokemon.name };

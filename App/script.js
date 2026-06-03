@@ -8190,7 +8190,7 @@ function renderPartyRoom() {
       if (isTypeCombo && (finished || complete)) {
         answerEl.classList.remove("hidden");
         if (room.round.answer) {
-          answerEl.textContent = "Trouvé : " + room.round.answer + " (+100)";
+          answerEl.textContent = "Trouvé : " + room.round.answer + " (+" + (Number(room.round.winnerGain) || 0) + ")";
         } else {
           var exampleNames = Array.isArray(room.round.examples) ? room.round.examples.map(function (entry) { return entry && entry.name ? entry.name : entry; }).filter(Boolean) : [];
           var examples = exampleNames.length ? " Exemples : " + exampleNames.join(", ") + "." : "";
@@ -8258,9 +8258,12 @@ function renderPartyRoom() {
               return '<div class="party-typecombo-sprite-card' + (entry && entry.winner ? ' is-winner' : '') + '">' + sprite + '<span>' + escapeHtml((entry && entry.name) || "?") + '</span></div>';
             }).join("") + '</div>'
           : '';
+        var comboDiff = room.round.difficulty || null;
+        var comboPts = Number(room.round.points) || 0;
+        var diffBadge = comboDiff ? '<span class="party-combo-diff is-' + (comboDiff.tier || "") + '">' + escapeHtml(comboDiff.label || "") + '</span>' : '';
         statReveal.innerHTML = '<div class="party-typecombo-panel">' +
           '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>' +
-          '<p>' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</p>' +
+          '<div class="party-combo-meta">' + diffBadge + '<span class="party-combo-count">' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</span>' + (comboPts ? '<span class="party-combo-points">vaut ' + comboPts + ' pts</span>' : '') + '</div>' +
           spriteHtml +
           '</div>';
       } else if (doReveal) {
