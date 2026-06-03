@@ -322,8 +322,26 @@ function publicPartyStatClashRoundState(room, revealed) {
   };
 }
 
+function publicPartyTypeComboRoundState(room, revealed) {
+  const combo = room.typeCombo;
+  if (!combo) return null;
+  return {
+    mode: "typecombo",
+    types: combo.displayTypes || combo.types || [],
+    count: Number(combo.count) || 0,
+    answer: revealed ? (room.typeComboWinnerAnswer || null) : null,
+    examples: revealed ? (combo.examples || []) : [],
+  };
+}
+
 function publicPartyRoomState(room, viewerId = null) {
   const revealed = room.status === "finished" || room.status === "complete";
+  const gameMode = room.gameMode || "guess";
+  const roundState = gameMode === "typecombo"
+    ? publicPartyTypeComboRoundState(room, revealed)
+    : (gameMode === "statclash" || gameMode === "statclashparty")
+      ? publicPartyStatClashRoundState(room, revealed)
+      : publicPartyGuessRoundState(room, revealed);
   return {
     code: room.code,
     status: room.status,
@@ -333,9 +351,9 @@ function publicPartyRoomState(room, viewerId = null) {
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     deadlineAt: room.deadlineAt || null,
-    gameMode: room.gameMode || "guess",
+    gameMode,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
-    round: (room.gameMode === "statclash" || room.gameMode === "statclashparty") ? publicPartyStatClashRoundState(room, revealed) : publicPartyGuessRoundState(room, revealed),
+    round: roundState,
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
@@ -393,6 +411,10 @@ function partyTotalRoundsForMode(mode) {
   return mode === "statclashparty" ? 6 : 5;
 }
 
+function isPartyStatMode(room) {
+  return room && (room.gameMode === "statclash" || room.gameMode === "statclashparty");
+}
+
 async function startPartyGame(room) {
   room.roundNumber = 1;
   room.totalRounds = partyTotalRoundsForMode(room.gameMode);
@@ -433,7 +455,7 @@ function clearPartyRoundTimer(room) {
 
 function forcePartyRoundEnd(room) {
   if (!room || room.status !== "playing") return;
-  if (room.gameMode === "statclash" || room.gameMode === "statclashparty") {
+  if (isPartyStatMode(room)) {
     resolvePartyStatRound(room);
   } else {
     endPartyRound(room);
@@ -449,8 +471,10 @@ function armPartyRoundTimer(room) {
 
 async function startPartyRound(room) {
   // Dispatch selon le mode de la party
-  if (room.gameMode === "statclash" || room.gameMode === "statclashparty") {
+  if (isPartyStatMode(room)) {
     await startPartyStatClashRound(room);
+  } else if (room.gameMode === "typecombo") {
+    startPartyTypeComboRound(room);
   } else {
     startPartyGuessRound(room);
   }
@@ -461,6 +485,9 @@ async function startPartyStatClashRound(room) {
   room.status = "playing";
   room.target = pickPartyTarget(room);
   room.variant = null;
+  room.typeCombo = null;
+  room.typeComboWinnerAnswer = null;
+  room.typeComboUsedNames = [];
   room.bestStatKey = null;
   room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
   for (const player of room.players) {
@@ -540,6 +567,9 @@ function resolvePartyStatClashPartyRound(room) {
 function startPartyGuessRound(room) {
   room.status = "playing";
   room.target = pickPartyTarget(room);
+  room.typeCombo = null;
+  room.typeComboWinnerAnswer = null;
+  room.typeComboUsedNames = [];
   room.variant = pickPartyVariant();
   room.correctCount = 0;
   room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
@@ -547,6 +577,91 @@ function startPartyGuessRound(room) {
     player.correct = false;
     player.lastGain = 0;
   }
+}
+
+function getPartyPokemonPool(room) {
+  const gens = Array.isArray(room && room.selectedGens) && room.selectedGens.length ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const pool = POKEMON_LIST.filter((p) => {
+    if (p.isAltForm || Number(p.id) >= 20000) return false;
+    return gens.includes(Number(p.gen || p.generation));
+  });
+  return pool.length ? pool : POKEMON_LIST.filter((p) => !p.isAltForm && Number(p.id) < 20000);
+}
+
+function partyTypeComboKey(type1, type2) {
+  const first = String(type1 || "").trim();
+  const second = String(type2 || type1 || "").trim();
+  return [first, second].sort().join("|");
+}
+
+function pokemonMatchesPartyTypeCombo(pokemon, combo) {
+  if (!pokemon || !combo) return false;
+  return partyTypeComboKey(pokemon.type1, pokemon.type2 || pokemon.type1) === combo.key;
+}
+
+function pickPartyTypeCombo(room) {
+  const pool = getPartyPokemonPool(room);
+  const combos = new Map();
+  for (const pokemon of pool) {
+    if (!pokemon.type1) continue;
+    const type1 = pokemon.type1;
+    const type2 = pokemon.type2 || pokemon.type1;
+    const key = partyTypeComboKey(type1, type2);
+    if (!combos.has(key)) {
+      combos.set(key, { key, types: [type1, type2], matches: [] });
+    }
+    combos.get(key).matches.push(pokemon);
+  }
+  const available = Array.from(combos.values()).filter((combo) => combo.matches.length > 0);
+  const picked = available[Math.floor(Math.random() * available.length)] || null;
+  if (!picked) return null;
+  const displayTypes = picked.types.slice();
+  if (displayTypes[0] !== displayTypes[1] && Math.random() < 0.5) displayTypes.reverse();
+  return {
+    key: picked.key,
+    types: picked.types,
+    displayTypes,
+    count: picked.matches.length,
+    examples: picked.matches.slice(0, 8).map((pokemon) => pokemon.name),
+  };
+}
+
+function startPartyTypeComboRound(room) {
+  room.status = "playing";
+  room.target = { name: "Combo de types", sprite: null };
+  room.variant = null;
+  room.typeCombo = pickPartyTypeCombo(room);
+  room.typeComboWinnerAnswer = null;
+  room.typeComboUsedNames = [];
+  room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
+  for (const player of room.players) {
+    player.correct = false;
+    player.lastGain = 0;
+  }
+}
+
+function handlePartyTypeComboAnswer(room, player, guess) {
+  const guessName = normalizeName(guess);
+  const pokemon = POKEMON_BY_NORMALIZED_NAME.get(guessName);
+  const gens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  if (!pokemon || pokemon.isAltForm || Number(pokemon.id) >= 20000 || !gens.includes(Number(pokemon.gen || pokemon.generation))) {
+    return { valid: false, correct: false, error: "Pokémon invalide pour cette room." };
+  }
+  if (!Array.isArray(room.typeComboUsedNames)) room.typeComboUsedNames = [];
+  if (room.typeComboUsedNames.includes(guessName)) {
+    return { valid: true, correct: false, duplicate: true, error: "Ce Pokémon a déjà été proposé pendant cette manche." };
+  }
+  room.typeComboUsedNames.push(guessName);
+  const isCorrect = pokemonMatchesPartyTypeCombo(pokemon, room.typeCombo);
+  if (!isCorrect) return { valid: true, correct: false, duplicate: false };
+  const gained = 100;
+  player.correct = true;
+  player.lastGain = gained;
+  player.score = (Number(player.score) || 0) + gained;
+  room.typeComboWinnerAnswer = pokemon.name;
+  endPartyRound(room);
+  emitPartyRoomState(room);
+  return { valid: true, correct: true, gained, rank: 1, answer: pokemon.name };
 }
 
 function handlePartyGuessAnswer(room, player, guess) {
@@ -779,6 +894,7 @@ io.on("connection", (socket) => {
       if (room.status === "playing") return respond(ack, { ok: false, error: "Une manche est deja en cours." });
       await startPartyGame(room);
       if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -794,6 +910,11 @@ io.on("connection", (socket) => {
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
       if (player.correct) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
+      if (room.gameMode === "typecombo") {
+        const result = handlePartyTypeComboAnswer(room, player, payload.guess);
+        if (result.error) return respond(ack, { ok: false, correct: false, duplicate: Boolean(result.duplicate), error: result.error, room: publicPartyRoomState(room, socket.id) });
+        return respond(ack, { ok: true, correct: result.correct, gained: result.gained || 0, rank: result.rank || 0, answer: result.answer || null, room: publicPartyRoomState(room, socket.id) });
+      }
       if ((room.gameMode || "guess") !== "guess") return respond(ack, { ok: false, error: "Mode non disponible." });
       const result = handlePartyGuessAnswer(room, player, payload.guess);
       respond(ack, { ok: true, correct: result.correct, gained: result.gained, rank: result.rank, room: publicPartyRoomState(room, socket.id) });
@@ -808,7 +929,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
-      if (room.gameMode === "statclash" || room.gameMode === "statclashparty") { resolvePartyStatRound(room); } else { endPartyRound(room); }
+      if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -848,6 +969,7 @@ io.on("connection", (socket) => {
       room.roundNumber = (Number(room.roundNumber) || 1) + 1;
       await startPartyRound(room);
       if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -862,7 +984,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       room.gameMode = mode;
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });

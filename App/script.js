@@ -7985,7 +7985,7 @@ function renderPartyRoom() {
   var complete = room.status === "complete";
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
-  var modeLabels = { guess: "Course Pokémon", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabels = { guess: "Course Pokémon", typecombo: "Combo de types", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
   var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
@@ -8002,6 +8002,7 @@ function renderPartyRoom() {
   var listEl = document.getElementById("party-players");
   if (listEl) {
     var scMode = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
+    var typeComboMode = Boolean(room.round && room.round.mode === "typecombo");
     var prevScores = partyRoomState.prevScores || {};
     var revealed = finished || complete;
     listEl.innerHTML = players.map(function (p, i) {
@@ -8012,6 +8013,8 @@ function renderPartyRoom() {
         statusBadge = p.pickKey ? '<span class="party-check">a choisi</span>' : '<span class="party-wait">attend…</span>';
       } else if (scMode && revealed) {
         if ((p.lastGain || 0) > 0) statusBadge = '<span class="party-check">+' + p.lastGain + '</span>';
+      } else if (typeComboMode && playing) {
+        statusBadge = p.correct ? '<span class="party-check">trouvé</span>' : '<span class="party-wait">cherche</span>';
       } else if (p.correct) {
         statusBadge = '<span class="party-check">+' + (p.lastGain || 0) + '</span>';
       }
@@ -8040,7 +8043,7 @@ function renderPartyRoom() {
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
   var roundEl = document.getElementById("party-round");
   if (roundEl) {
-    var hasRound = Boolean(room.round && room.round.image);
+    var hasRound = Boolean(room.round && (room.round.image || room.round.mode === "typecombo"));
     roundEl.classList.toggle("hidden", !hasRound);
     var roundKey = (room.status === "playing") ? (Number(room.roundNumber) || 0) : -1;
     if (hasRound && roundKey > 0 && roundKey !== partyRoomState.lastRoundKey) {
@@ -8050,26 +8053,38 @@ function renderPartyRoom() {
     }
     partyRoomState.lastRoundKey = roundKey;
     var spriteEl = document.getElementById("party-round-sprite");
-    if (hasRound && spriteEl) spriteEl.src = room.round.image;
+    if (hasRound && spriteEl && room.round.image) spriteEl.src = room.round.image;
     var isStatClash = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
+    var isTypeCombo = Boolean(room.round && room.round.mode === "typecombo");
     var variant = (room.round && room.round.variant) || "normal";
     var modeEl = document.getElementById("party-round-mode");
     if (modeEl) {
       var scParty = Boolean(room.round && room.round.mode === "statclashparty");
-      modeEl.textContent = isStatClash
+      modeEl.textContent = isTypeCombo
+        ? "Combo de types : trouve un Pokémon qui possède ces types"
+        : isStatClash
         ? ((scParty ? "Stat Clash : " : "Meilleure stat : ") + (room.round.name || "?") + (playing ? (scParty ? " — choisis la stat qui battra les autres !" : " — choisis sa stat la plus élevée !") : ""))
         : (variant === "silhouette" ? "Silhouette" : (variant === "pixel" ? "Pixelise" : "Image normale"));
     }
     if (spriteEl) {
       spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
-      if (playing) {
+      spriteEl.classList.toggle("hidden", isTypeCombo);
+      if (playing && !isTypeCombo) {
         if (variant === "silhouette") spriteEl.classList.add("party-sprite-silhouette");
         else if (variant === "pixel") spriteEl.classList.add("party-sprite-pixel");
       }
     }
     var answerEl = document.getElementById("party-round-answer");
     if (answerEl) {
-      if (isStatClash && (finished || complete) && room.round.stats) {
+      if (isTypeCombo && (finished || complete)) {
+        answerEl.classList.remove("hidden");
+        if (room.round.answer) {
+          answerEl.textContent = "Trouvé : " + room.round.answer + " (+100)";
+        } else {
+          var examples = Array.isArray(room.round.examples) && room.round.examples.length ? " Exemples : " + room.round.examples.join(", ") + "." : "";
+          answerEl.textContent = "Personne n'a trouvé." + examples;
+        }
+      } else if (isStatClash && (finished || complete) && room.round.stats) {
         var bestKey = room.round.bestStat;
         var labelsW = room.round.statLabels || {};
         answerEl.classList.remove("hidden");
@@ -8091,6 +8106,7 @@ function renderPartyRoom() {
     if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct));
     if (playing && !isStatClash && me && !me.correct) {
       var guessInput = document.getElementById("party-guess");
+      if (guessInput) guessInput.placeholder = isTypeCombo ? "Un Pokémon avec ces types" : "Nom du Pokémon";
       if (guessInput && document.activeElement !== guessInput) guessInput.focus();
     }
     var statOpts = document.getElementById("party-stat-options");
@@ -8111,9 +8127,16 @@ function renderPartyRoom() {
     }
     var statReveal = document.getElementById("party-stat-reveal");
     if (statReveal) {
-      var doReveal = isStatClash && (finished || complete) && room.round.stats;
+      var doReveal = (isStatClash && (finished || complete) && room.round.stats) || isTypeCombo;
       statReveal.classList.toggle("hidden", !doReveal);
-      if (doReveal) {
+      if (isTypeCombo) {
+        var types = Array.isArray(room.round.types) ? room.round.types : [];
+        var count = Number(room.round.count) || 0;
+        statReveal.innerHTML = '<div class="party-typecombo-panel">' +
+          '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>' +
+          '<p>' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</p>' +
+          '</div>';
+      } else if (doReveal) {
         var st = room.round.stats;
         var labels2 = room.round.statLabels || {};
         var best = room.round.bestStat;
@@ -8150,8 +8173,14 @@ function renderPartyRoom() {
     scpBtn.classList.toggle("is-active", room.gameMode === "statclashparty");
     scpBtn.disabled = !isHost;
   }
+  var typeComboBtn = document.getElementById("party-mode-typecombo");
+  if (typeComboBtn) {
+    typeComboBtn.classList.toggle("is-active", room.gameMode === "typecombo");
+    typeComboBtn.disabled = !isHost;
+  }
   var modeHints = {
     guess: "Course Pokémon : devine le Pokémon le plus vite possible. Les points dépendent du rang de bonne réponse.",
+    typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque 100 points.",
     statclash: "Meilleure stat : choisis la stat la plus élevée du Pokémon. Les bons choix marquent des points.",
     statclashparty: "Stat Clash : choisis une stat différente à chaque manche. Tu marques la valeur réelle de la stat choisie."
   };
