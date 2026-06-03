@@ -7774,6 +7774,8 @@ function openAllModesScreen() {
 
 /* Party Room L1 - lobby multijoueur (2-8) */
 var partyRoomState = { code: null, room: null, listenersBound: false };
+var partyGuessCache = new Map();
+var partyAcIndex = -1;
 
 function ensurePartyListeners() {
   var socket = ensureMultiplayerSocket();
@@ -7870,6 +7872,8 @@ function partyCopyInviteLink() {
 function partySubmitAnswer() {
   var socket = ensureMultiplayerSocket();
   if (!socket) return;
+  var acList = document.getElementById("party-guess-ac");
+  if (acList) acList.classList.add("hidden");
   var input = document.getElementById("party-guess");
   var guess = ((input && input.value) || "").trim();
   if (!guess) { setPartyStatus("Tape un nom de Pokemon."); return; }
@@ -7880,6 +7884,104 @@ function partySubmitAnswer() {
     if (res.correct) { setPartyStatus("Bonne reponse ! +" + (res.gained || 0) + " (rang " + (res.rank || "?") + ")"); if (input) input.value = ""; }
     else if (!res.already) { setPartyStatus("Reponse incorrecte, reessaie."); }
   });
+}
+
+function getPartyGuessSearchIndex() {
+  var room = partyRoomState.room || {};
+  var gens = Array.isArray(room.selectedGens) && room.selectedGens.length ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  var selected = new Set(gens.map(function (gen) { return Number(gen); }));
+  var includeAltForms = room.gameMode === "typecombo";
+  return FULL_SEARCH_INDEX.filter(function (entry) {
+    var pokemon = entry && entry.pokemon;
+    if (!pokemon) return false;
+    if (!includeAltForms && pokemon.isAltForm) return false;
+    return selected.has(Number(pokemon.gen));
+  });
+}
+
+function filterPartyGuessAC() {
+  var input = document.getElementById("party-guess");
+  var list = document.getElementById("party-guess-ac");
+  if (!input || !list) return;
+  partyAcIndex = -1;
+  var qNorm = norm(input.value.trim());
+  if (!qNorm) {
+    list.classList.add("hidden");
+    return;
+  }
+  var matches = searchPokemonFast(qNorm, getPartyGuessSearchIndex(), partyGuessCache, null);
+  renderPartyGuessAC(matches);
+}
+
+function renderPartyGuessAC(matches) {
+  var list = document.getElementById("party-guess-ac");
+  if (!list) return;
+  if (!matches.length) {
+    list.classList.add("hidden");
+    return;
+  }
+  list.innerHTML = matches.map(function (pokemon) {
+    var fallbackSprite = getSpriteUrl(getPokemonSpriteId(pokemon));
+    return '<div class="ac-item" data-name="' + escapeHtml(pokemon.name) + '">' +
+      '<img src="' + escapeHtml(getPokemonSprite(pokemon)) + '" alt="' + escapeHtml(pokemon.name) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + escapeHtml(fallbackSprite) + '\'" />' +
+      '<div>' +
+        '<div class="ac-name">' + escapeHtml(pokemon.name) + '</div>' +
+        '<div class="ac-sub">' + escapeHtml(pokemon.type1 || "?") + (pokemon.type2 ? " / " + escapeHtml(pokemon.type2) : "") + ' • Gen ' + escapeHtml(pokemon.gen || "?") + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join("");
+  list.querySelectorAll(".ac-item").forEach(function (item) {
+    item.addEventListener("mousedown", function (event) {
+      event.preventDefault();
+      selectPartyGuessAC(item.dataset.name || item.querySelector(".ac-name")?.textContent || "");
+    });
+  });
+  list.classList.remove("hidden");
+}
+
+function selectPartyGuessAC(name) {
+  var input = document.getElementById("party-guess");
+  var list = document.getElementById("party-guess-ac");
+  if (input) input.value = name || "";
+  if (list) list.classList.add("hidden");
+  partyAcIndex = -1;
+  partySubmitAnswer();
+}
+
+function handlePartyGuessKey(event) {
+  var list = document.getElementById("party-guess-ac");
+  if (!list) {
+    if (event.key === "Enter") { event.preventDefault(); partySubmitAnswer(); }
+    return;
+  }
+  var items = list.querySelectorAll(".ac-item");
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    partyAcIndex = Math.min(partyAcIndex + 1, items.length - 1);
+    highlightItems(items, partyAcIndex);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    partyAcIndex = Math.max(partyAcIndex - 1, -1);
+    highlightItems(items, partyAcIndex);
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    if (partyAcIndex >= 0 && items[partyAcIndex]) {
+      selectPartyGuessAC(items[partyAcIndex].dataset.name || items[partyAcIndex].querySelector(".ac-name")?.textContent || "");
+    } else {
+      partySubmitAnswer();
+    }
+  } else if (event.key === "Escape") {
+    list.classList.add("hidden");
+  }
+}
+
+function clearPartyGuessInput() {
+  var input = document.getElementById("party-guess");
+  var list = document.getElementById("party-guess-ac");
+  if (input) input.value = "";
+  if (list) list.classList.add("hidden");
+  partyAcIndex = -1;
+  partyGuessCache.clear();
 }
 
 function partyRevealRound() {
@@ -8051,6 +8153,14 @@ function renderPartyRoom() {
       roundEl.classList.remove("is-entering");
       void roundEl.offsetWidth;
       roundEl.classList.add("is-entering");
+    }
+    var inputRoundKey = (room.code || "") + ":" + roundKey;
+    if (hasRound && playing && roundKey > 0 && inputRoundKey !== partyRoomState.lastGuessRoundKey) {
+      clearPartyGuessInput();
+      partyRoomState.lastGuessRoundKey = inputRoundKey;
+    } else if (!playing) {
+      var partyGuessAc = document.getElementById("party-guess-ac");
+      if (partyGuessAc) partyGuessAc.classList.add("hidden");
     }
     partyRoomState.lastRoundKey = roundKey;
     var spriteEl = document.getElementById("party-round-sprite");

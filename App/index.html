@@ -1208,7 +1208,10 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <div id="party-stat-options" class="party-stat-options hidden"></div>
             <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
             <div id="party-round-input" class="party-round-input">
-              <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();partySubmitAnswer();}" />
+              <div class="ac-wrapper party-ac-wrapper">
+                <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" oninput="filterPartyGuessAC()" onkeydown="handlePartyGuessKey(event)" />
+                <div id="party-guess-ac" class="ac-list hidden"></div>
+              </div>
               <button class="btn-blue" type="button" onclick="partySubmitAnswer()">Valider</button>
             </div>
             <button id="party-reveal-btn" class="btn-ghost hidden" type="button" onclick="partyRevealRound()">Révéler / terminer la manche</button>

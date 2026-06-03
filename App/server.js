@@ -585,10 +585,9 @@ function startPartyGuessRound(room) {
 function getPartyPokemonPool(room) {
   const gens = Array.isArray(room && room.selectedGens) && room.selectedGens.length ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const pool = POKEMON_LIST.filter((p) => {
-    if (p.isAltForm || Number(p.id) >= 20000) return false;
     return gens.includes(Number(p.gen || p.generation));
   });
-  return pool.length ? pool : POKEMON_LIST.filter((p) => !p.isAltForm && Number(p.id) < 20000);
+  return pool.length ? pool : POKEMON_LIST.slice();
 }
 
 function partyTypeComboKey(type1, type2) {
@@ -697,7 +696,7 @@ function startPartyTypeComboRound(room) {
 function handlePartyTypeComboAnswer(room, player, guess) {
   const pokemon = resolvePartyPokemonGuessFuzzy(room, guess);
   const gens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  if (!pokemon || pokemon.isAltForm || Number(pokemon.id) >= 20000 || !gens.includes(Number(pokemon.gen || pokemon.generation))) {
+  if (!pokemon || !gens.includes(Number(pokemon.gen || pokemon.generation))) {
     return { valid: false, correct: false, error: "Pokémon invalide pour cette room." };
   }
   const resolvedName = normalizeName(pokemon.name);
