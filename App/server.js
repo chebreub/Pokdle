@@ -28,7 +28,7 @@ const MAX_ROOM_SIZE = 2;
 const PARTY_MIN_PLAYERS = 2;
 const PARTY_MAX_PLAYERS = 8;
 const PARTY_TOTAL_ROUNDS = 5;
-const PARTY_ROUND_TIMER_MS = 20000;
+const PARTY_ROUND_TIMER_MS = 30000;
 const PARTY_STAT_LABELS = { hp: "PV", attack: "Attaque", defense: "Defense", spAttack: "Att. Spe.", spDefense: "Def. Spe.", speed: "Vitesse" };
 const STAT_CLASH_TOTAL_ROUNDS = 6;
 const STAT_CLASH_MAX_PLAYERS = 2;
@@ -330,6 +330,7 @@ function publicPartyTypeComboRoundState(room, revealed) {
     types: combo.displayTypes || combo.types || [],
     count: Number(combo.count) || 0,
     answer: revealed ? (room.typeComboWinnerAnswer || null) : null,
+    answerSprite: revealed ? (room.typeComboWinnerSprite || null) : null,
     examples: revealed ? (combo.examples || []) : [],
   };
 }
@@ -487,6 +488,7 @@ async function startPartyStatClashRound(room) {
   room.variant = null;
   room.typeCombo = null;
   room.typeComboWinnerAnswer = null;
+  room.typeComboWinnerSprite = null;
   room.typeComboUsedNames = [];
   room.bestStatKey = null;
   room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
@@ -569,6 +571,7 @@ function startPartyGuessRound(room) {
   room.target = pickPartyTarget(room);
   room.typeCombo = null;
   room.typeComboWinnerAnswer = null;
+  room.typeComboWinnerSprite = null;
   room.typeComboUsedNames = [];
   room.variant = pickPartyVariant();
   room.correctCount = 0;
@@ -599,6 +602,53 @@ function pokemonMatchesPartyTypeCombo(pokemon, combo) {
   return partyTypeComboKey(pokemon.type1, pokemon.type2 || pokemon.type1) === combo.key;
 }
 
+function partyNameEditDistance(a, b) {
+  const left = String(a || "");
+  const right = String(b || "");
+  if (left === right) return 0;
+  if (!left) return right.length;
+  if (!right) return left.length;
+  const prev = Array.from({ length: right.length + 1 }, (_, i) => i);
+  const curr = Array(right.length + 1).fill(0);
+  for (let i = 1; i <= left.length; i += 1) {
+    curr[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      curr[j] = Math.min(
+        curr[j - 1] + 1,
+        prev[j] + 1,
+        prev[j - 1] + cost
+      );
+    }
+    for (let j = 0; j <= right.length; j += 1) prev[j] = curr[j];
+  }
+  return prev[right.length];
+}
+
+function resolvePartyPokemonGuessFuzzy(room, guess) {
+  const normalizedGuess = normalizeName(guess);
+  if (!normalizedGuess) return null;
+  const gens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const pool = getPartyPokemonPool(room).filter((pokemon) => gens.includes(Number(pokemon.gen || pokemon.generation)));
+  const exact = pool.find((pokemon) => normalizeName(pokemon.name) === normalizedGuess);
+  if (exact) return exact;
+
+  let best = null;
+  for (const pokemon of pool) {
+    const normalizedName = normalizeName(pokemon.name);
+    if (!normalizedName) continue;
+    const maxLength = Math.max(normalizedGuess.length, normalizedName.length);
+    const maxDistance = Math.max(1, Math.floor(maxLength * 0.1));
+    const distance = partyNameEditDistance(normalizedGuess, normalizedName);
+    if (distance > maxDistance) continue;
+    const score = 1 - (distance / maxLength);
+    if (!best || score > best.score || (score === best.score && normalizedName.length < best.nameLength)) {
+      best = { pokemon, score, nameLength: normalizedName.length };
+    }
+  }
+  return best ? best.pokemon : null;
+}
+
 function pickPartyTypeCombo(room) {
   const pool = getPartyPokemonPool(room);
   const combos = new Map();
@@ -622,7 +672,10 @@ function pickPartyTypeCombo(room) {
     types: picked.types,
     displayTypes,
     count: picked.matches.length,
-    examples: picked.matches.slice(0, 8).map((pokemon) => pokemon.name),
+    examples: picked.matches.slice(0, 8).map((pokemon) => ({
+      name: pokemon.name,
+      sprite: pokemon.sprite || null,
+    })),
   };
 }
 
@@ -632,6 +685,7 @@ function startPartyTypeComboRound(room) {
   room.variant = null;
   room.typeCombo = pickPartyTypeCombo(room);
   room.typeComboWinnerAnswer = null;
+  room.typeComboWinnerSprite = null;
   room.typeComboUsedNames = [];
   room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
   for (const player of room.players) {
@@ -641,17 +695,17 @@ function startPartyTypeComboRound(room) {
 }
 
 function handlePartyTypeComboAnswer(room, player, guess) {
-  const guessName = normalizeName(guess);
-  const pokemon = POKEMON_BY_NORMALIZED_NAME.get(guessName);
+  const pokemon = resolvePartyPokemonGuessFuzzy(room, guess);
   const gens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   if (!pokemon || pokemon.isAltForm || Number(pokemon.id) >= 20000 || !gens.includes(Number(pokemon.gen || pokemon.generation))) {
     return { valid: false, correct: false, error: "Pokémon invalide pour cette room." };
   }
+  const resolvedName = normalizeName(pokemon.name);
   if (!Array.isArray(room.typeComboUsedNames)) room.typeComboUsedNames = [];
-  if (room.typeComboUsedNames.includes(guessName)) {
+  if (room.typeComboUsedNames.includes(resolvedName)) {
     return { valid: true, correct: false, duplicate: true, error: "Ce Pokémon a déjà été proposé pendant cette manche." };
   }
-  room.typeComboUsedNames.push(guessName);
+  room.typeComboUsedNames.push(resolvedName);
   const isCorrect = pokemonMatchesPartyTypeCombo(pokemon, room.typeCombo);
   if (!isCorrect) return { valid: true, correct: false, duplicate: false };
   const gained = 100;
@@ -659,6 +713,7 @@ function handlePartyTypeComboAnswer(room, player, guess) {
   player.lastGain = gained;
   player.score = (Number(player.score) || 0) + gained;
   room.typeComboWinnerAnswer = pokemon.name;
+  room.typeComboWinnerSprite = pokemon.sprite || null;
   endPartyRound(room);
   emitPartyRoomState(room);
   return { valid: true, correct: true, gained, rank: 1, answer: pokemon.name };

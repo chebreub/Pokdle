@@ -46,6 +46,11 @@
 .party-typecombo-panel { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #e1e8f2; border-radius: 14px; background: #f4f8fc; }
 .party-typecombo-types { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .party-typecombo-panel p { margin: 0; color: #17345d; font-weight: 900; text-align: center; }
+.party-typecombo-sprites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.party-typecombo-sprite-card { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 8px; border: 1px solid #e1e8f2; border-radius: 12px; background: #fff; }
+.party-typecombo-sprite-card img { width: 64px; height: 64px; image-rendering: pixelated; object-fit: contain; }
+.party-typecombo-sprite-card span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #17345d; font-size: 0.78rem; font-weight: 900; }
+.party-typecombo-sprite-card.is-winner { border-color: #36c26b; background: #f1faf4; }
 
 /* ===== DA Lot 1 : lobby premium ===== */
 .party-room-card .party-lobby,
@@ -83,6 +88,14 @@
 .party-stat-row { background: #f4f8fc; border: 1px solid #e8eef6; padding: 8px 14px; font-weight: 700; color: #1d2b4a; }
 .party-stat-row.is-best { background: linear-gradient(135deg, #36c26b, #4fd17f); color: #fff; border-color: #36c26b; box-shadow: 0 4px 12px rgba(54, 194, 107, 0.3); }
 .party-typecombo-panel { width: 100%; box-shadow: 0 4px 12px rgba(32, 65, 118, 0.06); }
+.party-round.party-round-typecombo { max-width: 620px; padding: 24px; gap: 18px; }
+.party-round-typecombo .party-round-mode { font-size: 1.25rem; max-width: 520px; }
+.party-round-typecombo .party-stat-reveal { max-width: 520px; }
+.party-round-typecombo .party-typecombo-panel { gap: 14px; padding: 18px; }
+.party-round-typecombo .party-typecombo-types { gap: 12px; }
+.party-round-typecombo .type-badge { min-height: 44px; padding: 8px 14px; font-size: 1rem; }
+.party-round-typecombo .type-badge img { width: 28px; height: 28px; }
+.party-round-typecombo .party-round-input { max-width: 460px; }
 @media (max-width: 560px) { .party-round-sprite { width: 150px; height: 150px; } }
 
 /* ===== DA Lot 3 : scoreboard live ===== */
@@ -216,4 +229,7 @@
   .party-room-card .party-player { padding: 8px 10px; gap: 6px; }
   .party-room-card .party-player-name { font-size: 0.9rem; }
   .party-room-card .party-mode-btn { font-size: 0.85rem; padding: 6px 10px; }
+  .party-round.party-round-typecombo { max-width: 100%; padding: 16px; }
+  .party-round-typecombo .party-round-mode { font-size: 1rem; }
+  .party-typecombo-sprites { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

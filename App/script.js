@@ -8044,6 +8044,7 @@ function renderPartyRoom() {
   var roundEl = document.getElementById("party-round");
   if (roundEl) {
     var hasRound = Boolean(room.round && (room.round.image || room.round.mode === "typecombo"));
+    roundEl.classList.toggle("party-round-typecombo", Boolean(room.round && room.round.mode === "typecombo"));
     roundEl.classList.toggle("hidden", !hasRound);
     var roundKey = (room.status === "playing") ? (Number(room.roundNumber) || 0) : -1;
     if (hasRound && roundKey > 0 && roundKey !== partyRoomState.lastRoundKey) {
@@ -8081,7 +8082,8 @@ function renderPartyRoom() {
         if (room.round.answer) {
           answerEl.textContent = "Trouvé : " + room.round.answer + " (+100)";
         } else {
-          var examples = Array.isArray(room.round.examples) && room.round.examples.length ? " Exemples : " + room.round.examples.join(", ") + "." : "";
+          var exampleNames = Array.isArray(room.round.examples) ? room.round.examples.map(function (entry) { return entry && entry.name ? entry.name : entry; }).filter(Boolean) : [];
+          var examples = exampleNames.length ? " Exemples : " + exampleNames.join(", ") + "." : "";
           answerEl.textContent = "Personne n'a trouvé." + examples;
         }
       } else if (isStatClash && (finished || complete) && room.round.stats) {
@@ -8132,9 +8134,24 @@ function renderPartyRoom() {
       if (isTypeCombo) {
         var types = Array.isArray(room.round.types) ? room.round.types : [];
         var count = Number(room.round.count) || 0;
+        var answerName = room.round.answer || "";
+        var answerSprite = room.round.answerSprite || "";
+        var examplesList = Array.isArray(room.round.examples) ? room.round.examples : [];
+        var spriteEntries = answerName
+          ? [{ name: answerName, sprite: answerSprite, winner: true }]
+          : examplesList.slice(0, 6).map(function (entry) {
+              return typeof entry === "string" ? { name: entry, sprite: "" } : entry;
+            });
+        var spriteHtml = (finished || complete) && spriteEntries.length
+          ? '<div class="party-typecombo-sprites">' + spriteEntries.map(function (entry) {
+              var sprite = entry && entry.sprite ? '<img src="' + escapeHtml(entry.sprite) + '" alt="' + escapeHtml(entry.name || "Pokémon") + '" loading="lazy" />' : '';
+              return '<div class="party-typecombo-sprite-card' + (entry && entry.winner ? ' is-winner' : '') + '">' + sprite + '<span>' + escapeHtml((entry && entry.name) || "?") + '</span></div>';
+            }).join("") + '</div>'
+          : '';
         statReveal.innerHTML = '<div class="party-typecombo-panel">' +
           '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>' +
           '<p>' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</p>' +
+          spriteHtml +
           '</div>';
       } else if (doReveal) {
         var st = room.round.stats;
