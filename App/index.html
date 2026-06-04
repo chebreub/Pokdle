@@ -316,7 +316,7 @@
         <div class="ranking-head">
           <h2 class="card-title">📂 Tous les modes</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Tous les modes du site, classés par catégorie.</p>
@@ -387,7 +387,7 @@
         <div class="ranking-head">
           <h2 class="card-title">👤 Profil joueur</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
@@ -456,7 +456,7 @@
         <div class="ranking-head">
           <h2 class="card-title">&#127941; Succès</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Débloque des objectifs en jouant et suis ta progression en un coup d’œil.</p>
@@ -469,7 +469,7 @@
         <div class="ranking-head">
           <h2 class="card-title">🕘 Historique des parties</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Retrouve tes dernières parties avec le mode, le résultat, les essais et le Pokémon cible quand il est disponible.</p>
@@ -485,7 +485,7 @@
         <div class="ranking-head">
           <h2 class="card-title">&#128216; Pokédex</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p>
@@ -522,7 +522,7 @@
           <h2 class="card-title">&#128203; Mode classement</h2>
           <div class="ranking-head-actions">
             <button class="btn-yellow" onclick="resetRankingChoices()">🧹 Réinitialiser</button>
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Chaque ligne = génération, colonnes = types + catégories spéciales. Clique une case pour afficher les choix possibles directement sur la grille.</p>
@@ -558,7 +558,7 @@
           <div class="ranking-head-actions">
             <button class="btn-blue" type="button" onclick="openTeamsScreen()">🧩 Bases d’équipes</button>
             <button class="btn-yellow" type="button" onclick="resetTeamBuilder()">🧹 Réinitialiser</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">← Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button>
           </div>
         </div>
         <p class="card-desc">Compose une équipe de 6 avec Pokémon, objet tenu, gimmick et 4 attaques par slot. La sauvegarde reste locale.</p>
@@ -760,7 +760,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="ranking-head-actions">
             <button class="btn-yellow" type="button" onclick="resetTeamLibraryFilters()">🧹 Réinitialiser</button>
             <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Ouvrir le builder</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">← Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button>
           </div>
         </div>
         <p class="card-desc">Quelques bases d’équipes prêtes à jouer pour partir d’un point solide, filtrables par génération, format et style.</p>
@@ -789,7 +789,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">&#127942; Classement des jeux Pokémon</h2>
           <div class="ranking-head-actions">
             <button class="btn-yellow" onclick="resetGamesRanking()">🧹 Réinitialiser</button>
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Note chaque jeu de 1 à 10 sur chaque critère. La note globale est calculée automatiquement.</p>
@@ -801,7 +801,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">🧮 Table des types</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Consulte l'efficacité des types selon les grandes périodes du jeu Pokémon.</p>
@@ -847,7 +847,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 </div>
               </div>
               <button id="draft-restart-btn" class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
-              <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+              <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
             </div>
           </div>
         <p class="card-desc">Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser.</p>
@@ -923,7 +923,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span class="tag-gen" id="tag-gen">Gen 1</span>
           <span class="tag-tries">Essais : <b id="try-count">0</b></span>
         </div>
-        <button class="btn-ghost" onclick="goToConfig()">&#8592; Changer</button>
+        <button class="btn-ghost" data-action="goToConfig">&#8592; Changer</button>
       </div>
 
       <div id="daily-banner" class="daily-banner hidden">
@@ -1119,7 +1119,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="ranking-head-actions">
             <button id="odd-new-puzzle-btn" class="btn-yellow" onclick="nextOddOneOutPuzzle()">🎲 Nouvelle énigme</button>
             <button id="odd-party-next-btn" class="btn-yellow hidden" onclick="advancePartyRound()">Round suivant</button>
-            <button class="btn-ghost" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">6 Pokémon apparaissent. 5 partagent un point commun, 1 est l'intrus. Clique sur la bonne carte puis lis l'explication.</p>
@@ -1153,7 +1153,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">🎉 Party Room</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Crée une room, invite tes amis et joue en groupe sur plusieurs manches : Course Pokémon, Combo de types, Meilleure stat ou Stat Clash Party.</p>
@@ -1340,7 +1340,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <div class="multiplayer-result-actions">
                 <button class="btn-red" type="button" onclick="restartMultiplayerRound('same')">Rejouer pareil</button>
                 <button class="btn-blue" type="button" onclick="restartMultiplayerRound('updated')">Relancer avec ces générations</button>
-                <button class="btn-ghost" type="button" onclick="goToConfig()">Retour accueil</button>
+                <button class="btn-ghost" type="button" data-action="goToConfig">Retour accueil</button>
               </div>
             </div>
           </section>
@@ -1354,7 +1354,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">📊 Stat Clash 1v1</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
                 </div>
         </div>
         <p class="card-desc">Choisissez chacun une stat réelle du Pokémon tiré. Chaque stat ne peut être utilisée qu'une seule fois dans toute la partie.</p>
@@ -1368,7 +1368,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">📊 Higher or Lower</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Devine si la stat du Pokémon de droite est plus haute ou plus basse que celle de gauche. Bonne réponse → enchaîne. Mauvaise → game over.</p>
@@ -1382,7 +1382,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">🧩 Poké-Connections</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">16 Pokémon répartis en 4 groupes de 4 selon un thème caché (type, génération, habitat, couleur, stade). Trouve les 4 groupes en 4 erreurs max.</p>
@@ -1396,7 +1396,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">⚡ Speedrun Pokédex</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" onclick="restartSpeedrunGame()">Rejouer</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Devine le maximum de Pokémon en <b>60 secondes</b>. Tu vois le sprite, tu tapes le nom. Passe avec Entrée si tu sèches.</p>
@@ -1410,7 +1410,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">💰 Stat Auction 1v1</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
-            <button class="btn-ghost" type="button" onclick="goToConfig()">&#8592; Retour</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Avant de voir les stats, répartis 100 pts sur les 6 stats du Pokémon affiché. Reveal des vraies stats, score = somme(allocation × stat). 5 manches, le meilleur total gagne.</p>
