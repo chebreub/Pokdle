@@ -263,8 +263,7 @@
       <div id="challenge-panel" class="card challenge-panel hidden">
         <p class="challenge-title">🤝 Défi ami — choisis un Pokémon et envoie le lien :</p>
         <div class="ac-wrapper">
-          <input type="text" id="challenge-input" placeholder="Chercher un Pokémon..." autocomplete="off"
-            oninput="filterChallengeAC()" onkeydown="handleChallengeKey(event)" />
+          <input type="text" id="challenge-input" placeholder="Chercher un Pokémon..." autocomplete="off" />
           <div id="challenge-ac" class="ac-list hidden"></div>
         </div>
         <div id="challenge-preview" class="challenge-preview hidden">
@@ -832,7 +831,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="ranking-head">
             <h2 class="card-title">&#127924; Draft Arènes</h2>
             <div class="ranking-head-actions">
-              <select id="draft-battle-pokemon" class="mode-select hidden arena-only" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
+              <select id="draft-battle-pokemon" class="mode-select hidden arena-only" aria-label="Choisir le Pokémon à envoyer au duel"></select>
               <button id="draft-battle-launch" class="btn-blue arena-only" type="button" data-action="launchDraftArenaBattle">Lancer le duel</button>
               <button id="draft-battle-close" class="btn-ghost hidden arena-only" type="button" data-action="clearDraftSimpleBattleDevPanel">Fermer le duel</button>
               <button id="draft-score-attack-toggle" class="btn-blue" type="button" data-action="toggleDraftScoreAttackMode">Score Attack</button>
@@ -1062,10 +1061,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
       <div class="search-bar">
         <div class="ac-wrapper">
-          <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..."
-            autocomplete="off"
-            oninput="filterGuessAC()"
-            onkeydown="handleGuessKey(event)" />
+          <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
           <div id="guess-ac" class="ac-list hidden"></div>
         </div>
         <button class="btn-red btn-submit" id="btn-submit" data-action="submitGuess">&#8629;</button>
@@ -1130,7 +1126,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="odd-puzzle-difficulty" class="tag-gen">Difficulté : Facile</span>
           <label class="odd-difficulty-picker" for="odd-difficulty-select">
             <span>Difficulté</span>
-            <select id="odd-difficulty-select" onchange="setOddDifficulty(this.value)">
+            <select id="odd-difficulty-select" >
               <option value="easy">Facile</option>
               <option value="medium">Moyen</option>
               <option value="hard">Difficile</option>
@@ -1209,7 +1205,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
             <div id="party-round-input" class="party-round-input">
               <div class="ac-wrapper party-ac-wrapper">
-                <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" oninput="filterPartyGuessAC()" onkeydown="handlePartyGuessKey(event)" />
+                <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" />
                 <div id="party-guess-ac" class="ac-list hidden"></div>
               </div>
               <button class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button>
@@ -1290,7 +1286,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <p id="multiplayer-live-text">Vous cherchez le même Pokémon mystère. Trouve-le avant l’autre pour remporter la manche.</p>
               <div class="multiplayer-guess-row">
                 <div class="ac-wrapper">
-                  <input id="multiplayer-guess-input" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" oninput="filterMultiplayerGuessAC()" onkeydown="handleMultiplayerGuessKey(event)" />
+                  <input id="multiplayer-guess-input" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
                   <div id="multiplayer-guess-ac" class="ac-list hidden"></div>
                 </div>
                 <button class="btn-red" type="button" data-action="submitMultiplayerGuess">Envoyer</button>

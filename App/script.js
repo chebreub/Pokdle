@@ -19731,6 +19731,31 @@ function openDefiAmiFromAllModes() {
 }
 window.openDefiAmiFromAllModes = openDefiAmiFromAllModes;
 
+(function () {
+  function bindEl(id, ev, fn) {
+    var el = document.getElementById(id);
+    if (el && typeof fn === "function") el.addEventListener(ev, fn);
+  }
+  function initInlineHandlerBindings() {
+    if (window.__inlineHandlerBindingsReady) return;
+    window.__inlineHandlerBindingsReady = true;
+    bindEl("challenge-input", "input", window.filterChallengeAC);
+    bindEl("challenge-input", "keydown", window.handleChallengeKey);
+    bindEl("guess-input", "input", window.filterGuessAC);
+    bindEl("guess-input", "keydown", window.handleGuessKey);
+    bindEl("party-guess", "input", window.filterPartyGuessAC);
+    bindEl("party-guess", "keydown", window.handlePartyGuessKey);
+    bindEl("multiplayer-guess-input", "input", window.filterMultiplayerGuessAC);
+    bindEl("multiplayer-guess-input", "keydown", window.handleMultiplayerGuessKey);
+    var draftSel = document.getElementById("draft-battle-pokemon");
+    if (draftSel) draftSel.addEventListener("change", function () { if (typeof selectDraftBattlePokemon === "function") selectDraftBattlePokemon(this.value); });
+    var oddSel = document.getElementById("odd-difficulty-select");
+    if (oddSel) oddSel.addEventListener("change", function () { if (typeof setOddDifficulty === "function") setOddDifficulty(this.value); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initInlineHandlerBindings);
+  else initInlineHandlerBindings();
+})();
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
