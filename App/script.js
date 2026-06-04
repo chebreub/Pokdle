@@ -19718,6 +19718,19 @@ var _appToastTimer = null;
   else initDataActionDelegation();
 })();
 
+function openFromAllModes(name) {
+  hideScreen("screen-all-modes");
+  var fn = window[name];
+  if (typeof fn === "function") fn();
+}
+window.openFromAllModes = openFromAllModes;
+
+function openDefiAmiFromAllModes() {
+  goToConfig();
+  showChallengePanel();
+}
+window.openDefiAmiFromAllModes = openDefiAmiFromAllModes;
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
