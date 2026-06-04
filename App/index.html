@@ -142,25 +142,25 @@
           <p class="home-section-sub">Les modes principaux. Tout le reste est rangé dans « Tous les modes ».</p>
         </div>
         <div class="home-pillars home-pillars-hero">
-          <article class="card home-pillar home-pillar-feature" onclick="startDailyGame()" role="button" tabindex="0">
+          <article class="card home-pillar home-pillar-feature" data-action="startDailyGame" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-red">📅</div>
             <h3>Pokémon du jour</h3>
             <p>La cible quotidienne, identique pour tous. Garde ta série.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
           </article>
-          <article class="card home-pillar" onclick="startNormalGame()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="startNormalGame" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-yellow">♾️</div>
             <h3>Mode illimité</h3>
             <p>Mêmes règles que le quotidien, rejouable sans limite.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Rejouable</span></div>
           </article>
-          <article class="card home-pillar" onclick="openMultiplayerMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openMultiplayerMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-blue">🆚</div>
             <h3>Duel 1v1</h3>
             <p>Affronte un ami en temps réel sur la même cible.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
           </article>
-          <article class="card home-pillar" onclick="openPartyRoomMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openPartyRoomMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-coral">🎉</div>
             <h3>Party Room</h3>
             <p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p>
@@ -168,7 +168,7 @@
           </article>
         </div>
         <div class="home-hero-secondary">
-          <button class="btn-ghost" type="button" onclick="openAllModesScreen()">📂 Tous les modes</button>
+          <button class="btn-ghost" type="button" data-action="openAllModesScreen">📂 Tous les modes</button>
         </div>
       </section>
 
@@ -182,19 +182,19 @@
           <p class="home-section-sub">Les modes principaux pour démarrer une partie.</p>
         </div>
         <div class="home-pillars">
-          <article class="card home-pillar home-pillar-feature" onclick="startDailyGame()" role="button" tabindex="0">
+          <article class="card home-pillar home-pillar-feature" data-action="startDailyGame" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-red">📅</div>
             <h3>Pokémon du jour</h3>
             <p>Le mode emblématique. Une cible quotidienne, des indices à chaque essai.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
           </article>
-          <article class="card home-pillar" onclick="startPartyMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="startPartyMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-yellow">🎲</div>
             <h3>Party Pokémon</h3>
             <p>Enchaîne 5 mini-jeux variés et grimpe ton score.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">5 rounds</span></div>
           </article>
-          <article class="card home-pillar" onclick="openMultiplayerMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openMultiplayerMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-blue">🆚</div>
             <h3>Duel 1v1</h3>
             <p>Affronte un ami sur le même Pokémon mystère, en temps réel.</p>
@@ -210,19 +210,19 @@
           <p class="home-section-sub">Explore les Pokémon, les arènes, et joue aux jeux d'origine.</p>
         </div>
         <div class="home-pillars">
-          <article class="card home-pillar" onclick="openPokedexMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openPokedexMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-teal">📖</div>
             <h3>Pokédex</h3>
             <p>1025 fiches complètes avec stats, talents, évolutions, comparateur.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">9 gens</span><span class="home-pillar-tag">Shiny</span></div>
           </article>
-          <article class="card home-pillar" onclick="openDraftArenaMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openDraftArenaMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-coral">🏆</div>
             <h3>Draft Arènes</h3>
             <p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag home-pillar-tag-exp">Expérimental</span></div>
           </article>
-          <article class="card home-pillar" onclick="openEmulatorMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openEmulatorMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-purple">🕹️</div>
             <h3>Émulateur</h3>
             <p>Joue à Rouge Feu, Vert Feuille, Cristal, Platine ou charge ta ROM.</p>
@@ -238,19 +238,19 @@
           <p class="home-section-sub">Prépare ta team, analyse les types, garde un œil sur tes stats.</p>
         </div>
         <div class="home-pillars">
-          <article class="card home-pillar" onclick="openTeamBuilderScreen()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openTeamBuilderScreen" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-blue">🧱</div>
             <h3>Team Builder</h3>
             <p>Compose une team de 6 : objet, gimmick, EV/IV, 4 attaques par slot.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Sauvegarde locale</span></div>
           </article>
-          <article class="card home-pillar" onclick="openStatClashMode()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openStatClashMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-red">📊</div>
             <h3>Stat Clash 1v1</h3>
             <p>Choisissez chacun une stat, le meilleur cumul gagne. 6 rounds.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span></div>
           </article>
-          <article class="card home-pillar" onclick="openTypeChartScreen()" role="button" tabindex="0">
+          <article class="card home-pillar" data-action="openTypeChartScreen" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-yellow">🧮</div>
             <h3>Table des types</h3>
             <p>Efficacité offensive et défensive par génération. Gen 1, 2-5, 6+.</p>
