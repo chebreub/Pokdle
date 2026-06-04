@@ -114,8 +114,8 @@
     </div>
   </div>
 
-  <button class="nav-pill" type="button" onclick="openAchievementsScreen()">Succès</button>
-  <button class="nav-pill" type="button" onclick="openProfileScreen()">Profil</button>
+  <button class="nav-pill" type="button" data-action="openAchievementsScreen">Succès</button>
+  <button class="nav-pill" type="button" data-action="openProfileScreen">Profil</button>
 </nav>
 
     <div id="screen-config">
@@ -128,8 +128,8 @@
             <p class="card-desc">Choisis les générations à inclure dans les parties.</p>
           </div>
           <div class="home-gens-actions">
-            <button class="btn-ghost btn-tiny" type="button" onclick="selectAllGenerations()">Tout</button>
-            <button class="btn-ghost btn-tiny" type="button" onclick="clearGenerationSelection()">Aucune</button>
+            <button class="btn-ghost btn-tiny" type="button" data-action="selectAllGenerations">Tout</button>
+            <button class="btn-ghost btn-tiny" type="button" data-action="clearGenerationSelection">Aucune</button>
           </div>
         </div>
         <div class="gen-grid" id="gen-grid"></div>
@@ -270,7 +270,7 @@
         <div id="challenge-preview" class="challenge-preview hidden">
           <img id="challenge-sprite" src="" alt="" />
           <strong id="challenge-name"></strong>
-          <button class="btn-blue" onclick="copyChallengeLink()">📋 Copier le lien</button>
+          <button class="btn-blue" data-action="copyChallengeLink">📋 Copier le lien</button>
         </div>
         <p id="challenge-copied" class="msg-ok hidden">✅ Lien copié dans le presse-papier !</p>
       </div>
@@ -521,7 +521,7 @@
         <div class="ranking-head">
           <h2 class="card-title">&#128203; Mode classement</h2>
           <div class="ranking-head-actions">
-            <button class="btn-yellow" onclick="resetRankingChoices()">🧹 Réinitialiser</button>
+            <button class="btn-yellow" data-action="resetRankingChoices">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -536,8 +536,8 @@
               <p id="rank-picker-sub" class="rank-picker-sub"></p>
             </div>
             <div class="rank-float-actions">
-              <button class="btn-yellow" onclick="clearRankingSelection()">&#129529; Vider</button>
-              <button class="btn-ghost" onclick="closeRankingPicker()">&#10005;</button>
+              <button class="btn-yellow" data-action="clearRankingSelection">&#129529; Vider</button>
+              <button class="btn-ghost" data-action="closeRankingPicker">&#10005;</button>
             </div>
           </div>
           <div id="rank-float-list" class="rank-float-list"></div>
@@ -556,8 +556,8 @@
         <div class="ranking-head">
           <h2 class="card-title">🧱 Builder d’équipe</h2>
           <div class="ranking-head-actions">
-            <button class="btn-blue" type="button" onclick="openTeamsScreen()">🧩 Bases d’équipes</button>
-            <button class="btn-yellow" type="button" onclick="resetTeamBuilder()">🧹 Réinitialiser</button>
+            <button class="btn-blue" type="button" data-action="openTeamsScreen">🧩 Bases d’équipes</button>
+            <button class="btn-yellow" type="button" data-action="resetTeamBuilder">🧹 Réinitialiser</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button>
           </div>
         </div>
@@ -586,7 +586,7 @@
               <div class="home-builder-fields team-builder-fields-single">
                 <div class="home-type-helper-label team-builder-pokemon-picker">
                   <span>Pokémon</span>
-                  <button id="team-builder-pokemon-trigger" class="team-builder-pokemon-trigger" type="button" aria-expanded="false" onclick="toggleTeamBuilderPokemonPicker()">
+                  <button id="team-builder-pokemon-trigger" class="team-builder-pokemon-trigger" type="button" aria-expanded="false" data-action="toggleTeamBuilderPokemonPicker">
                     <span class="team-builder-pokemon-trigger-preview" id="team-builder-pokemon-trigger-preview"></span>
                     <span class="team-builder-pokemon-trigger-text" id="team-builder-pokemon-trigger-text">Choisir un Pokémon</span>
                     <span class="team-builder-pokemon-trigger-cta" id="team-builder-pokemon-trigger-cta">Ouvrir</span>
@@ -722,7 +722,7 @@
             </div>
             <textarea id="team-builder-export-output" class="team-builder-export-output" readonly spellcheck="false" aria-label="Export texte de la team"></textarea>
             <div class="team-builder-export-actions">
-              <button class="btn-blue" type="button" onclick="copyTeamBuilderExport()">Copier l’export</button>
+              <button class="btn-blue" type="button" data-action="copyTeamBuilderExport">Copier l’export</button>
               <p id="team-builder-export-msg" class="card-desc hidden">Export copié.</p>
             </div>
           </div>
@@ -745,7 +745,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
 - Atterrissage
 - Danse-Lames"></textarea>
             <div class="team-builder-export-actions">
-              <button class="btn-blue" type="button" onclick="importTeamBuilderText()">Importer dans le builder</button>
+              <button class="btn-blue" type="button" data-action="importTeamBuilderText">Importer dans le builder</button>
               <p id="team-builder-import-msg" class="card-desc hidden">Import terminé.</p>
             </div>
           </div>
@@ -758,8 +758,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">🧩 Équipes / Teams</h2>
           <div class="ranking-head-actions">
-            <button class="btn-yellow" type="button" onclick="resetTeamLibraryFilters()">🧹 Réinitialiser</button>
-            <button class="btn-blue" type="button" onclick="openTeamBuilderScreen()">Ouvrir le builder</button>
+            <button class="btn-yellow" type="button" data-action="resetTeamLibraryFilters">🧹 Réinitialiser</button>
+            <button class="btn-blue" type="button" data-action="openTeamBuilderScreen">Ouvrir le builder</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button>
           </div>
         </div>
@@ -788,7 +788,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">&#127942; Classement des jeux Pokémon</h2>
           <div class="ranking-head-actions">
-            <button class="btn-yellow" onclick="resetGamesRanking()">🧹 Réinitialiser</button>
+            <button class="btn-yellow" data-action="resetGamesRanking">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -833,20 +833,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <h2 class="card-title">&#127924; Draft Arènes</h2>
             <div class="ranking-head-actions">
               <select id="draft-battle-pokemon" class="mode-select hidden arena-only" onchange="selectDraftBattlePokemon(this.value)" aria-label="Choisir le Pokémon à envoyer au duel"></select>
-              <button id="draft-battle-launch" class="btn-blue arena-only" type="button" onclick="launchDraftArenaBattle()">Lancer le duel</button>
-              <button id="draft-battle-close" class="btn-ghost hidden arena-only" type="button" onclick="clearDraftSimpleBattleDevPanel()">Fermer le duel</button>
-              <button id="draft-score-attack-toggle" class="btn-blue" type="button" onclick="toggleDraftScoreAttackMode()">Score Attack</button>
+              <button id="draft-battle-launch" class="btn-blue arena-only" type="button" data-action="launchDraftArenaBattle">Lancer le duel</button>
+              <button id="draft-battle-close" class="btn-ghost hidden arena-only" type="button" data-action="clearDraftSimpleBattleDevPanel">Fermer le duel</button>
+              <button id="draft-score-attack-toggle" class="btn-blue" type="button" data-action="toggleDraftScoreAttackMode">Score Attack</button>
               <div class="draft-multi-dropdown">
                 <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">🆚 Multi ▾</button>
                 <div class="draft-multi-menu" role="menu">
-                  <button id="draft-battle-friend" class="btn-blue arena-only" type="button" onclick="openDraftFriendBattle()" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
-                  <button id="draft-battle-join" class="btn-ghost arena-only" type="button" onclick="joinDraftSimpleBattleNetworkRoom()" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
-                  <button id="draft-score-room-create" class="btn-blue scoreattack-only" type="button" onclick="createDraftScoreAttackRoom()">💰 Créer 1v1 Score</button>
-                  <button id="draft-score-room-join" class="btn-ghost scoreattack-only" type="button" onclick="joinDraftScoreAttackRoom()">💰 Rejoindre 1v1</button>
-                  <button id="draft-score-room-leave" class="btn-ghost scoreattack-only" type="button" onclick="leaveDraftScoreAttackRoom()">Quitter 1v1</button>
+                  <button id="draft-battle-friend" class="btn-blue arena-only" type="button" data-action="openDraftFriendBattle" title="Crée une room et partage le code avec un ami">🆚 Combat ami</button>
+                  <button id="draft-battle-join" class="btn-ghost arena-only" type="button" data-action="joinDraftSimpleBattleNetworkRoom" title="Rejoindre une room avec un code">🔗 Rejoindre code</button>
+                  <button id="draft-score-room-create" class="btn-blue scoreattack-only" type="button" data-action="createDraftScoreAttackRoom">💰 Créer 1v1 Score</button>
+                  <button id="draft-score-room-join" class="btn-ghost scoreattack-only" type="button" data-action="joinDraftScoreAttackRoom">💰 Rejoindre 1v1</button>
+                  <button id="draft-score-room-leave" class="btn-ghost scoreattack-only" type="button" data-action="leaveDraftScoreAttackRoom">Quitter 1v1</button>
                 </div>
               </div>
-              <button id="draft-restart-btn" class="btn-yellow" onclick="restartDraftArenaRun()">🎲 Nouveau draft</button>
+              <button id="draft-restart-btn" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouveau draft</button>
               <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
             </div>
           </div>
@@ -873,7 +873,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h3>2) Draft</h3>
           <p class="card-desc">Choisis 1 des 6 propositions à chaque tour. Les options se renouvellent automatiquement. Tu ne peux pas reprendre un Pokémon déjà sélectionné.</p>
           <div class="draft-score-attack-actions scoreattack-only">
-            <button id="draft-score-reroll" class="btn-blue hidden" type="button" onclick="rerollDraftScoreAttackWave()">Relancer la vague</button>
+            <button id="draft-score-reroll" class="btn-blue hidden" type="button" data-action="rerollDraftScoreAttackWave">Relancer la vague</button>
           </div>
           <div id="draft-score-room-status" class="draft-score-room-status hidden scoreattack-only"></div>
           <div id="draft-options" class="draft-options-grid"></div>
@@ -898,14 +898,14 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">&#128377;&#65039; Émulateur GBA / GBC / DS</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" onclick="closeEmulatorMode()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="closeEmulatorMode">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Lance une ROM GBA, GBC ou DS locale. ROMs détectées : Rouge Feu, Vert Feuille, Platine (DS).</p>
 
         <div class="emulator-toolbar">
           <select id="emu-rom-select"></select>
-          <button class="btn-red" onclick="launchSelectedEmuRom()">&#9654; Lancer</button>
+          <button class="btn-red" data-action="launchSelectedEmuRom">&#9654; Lancer</button>
           <label class="btn-blue emu-upload-btn" for="emu-rom-file">&#128193; Charger une autre ROM</label>
           <input id="emu-rom-file" type="file" accept=".gba,.gbc,.gb,.nds" class="hidden" />
         </div>
@@ -978,7 +978,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
       <div id="cry-box" class="challenge-panel hidden">
         <p class="challenge-title">Indice sonore :</p>
-        <button id="cry-play-btn" class="btn-blue" onclick="playCrySound()">&#9654;&#65039; Jouer le cri</button>
+        <button id="cry-play-btn" class="btn-blue" data-action="playCrySound">&#9654;&#65039; Jouer le cri</button>
         <p id="cry-status-text" class="cry-status-text hidden"></p>
         <div id="cry-reveal" class="challenge-preview hidden">
           <img id="cry-sprite" src="" alt="Pokémon révélé" />
@@ -1037,8 +1037,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <p id="party-status" class="card-desc">Une nouvelle manche commence.</p>
         <div id="party-stage" class="party-stage"></div>
         <div class="party-actions">
-          <button id="party-next-btn" class="btn-yellow hidden" onclick="advancePartyRound()">Round suivant</button>
-          <button id="party-restart-btn" class="btn-red hidden" onclick="startPartyMode()">Nouvelle session</button>
+          <button id="party-next-btn" class="btn-yellow hidden" data-action="advancePartyRound">Round suivant</button>
+          <button id="party-restart-btn" class="btn-red hidden" data-action="startPartyMode">Nouvelle session</button>
         </div>
       </div>
       <div id="quiz-banner" class="daily-banner hidden">
@@ -1057,7 +1057,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <h3 id="quiz-question"></h3>
         <div id="quiz-options" class="mode-buttons"></div>
         <p id="quiz-feedback" class="err-msg"></p>
-        <button id="quiz-next-btn" class="btn-blue hidden" onclick="nextQuizQuestion()">Question suivante</button>
+        <button id="quiz-next-btn" class="btn-blue hidden" data-action="nextQuizQuestion">Question suivante</button>
         <div id="quiz-history" class="quiz-history"></div>
       </div>
       <div class="search-bar">
@@ -1068,8 +1068,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
             onkeydown="handleGuessKey(event)" />
           <div id="guess-ac" class="ac-list hidden"></div>
         </div>
-        <button class="btn-red btn-submit" id="btn-submit" onclick="submitGuess()">&#8629;</button>
-        <button class="btn-ghost" id="btn-surrender" onclick="surrenderGame()">Abandonner</button>
+        <button class="btn-red btn-submit" id="btn-submit" data-action="submitGuess">&#8629;</button>
+        <button class="btn-ghost" id="btn-surrender" data-action="surrenderGame">Abandonner</button>
       </div>
       <p id="err-msg" class="err-msg"></p>
 
@@ -1082,10 +1082,10 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </div>
         </div>
         <div class="win-btns">
-          <button class="btn-red" onclick="restartCurrentMode()">&#128260; Rejouer</button>
-          <button class="btn-yellow" id="btn-copy-result" onclick="copyResult()">📋 Copier résultat</button>
-          <button class="btn-blue" id="btn-share" onclick="shareResult()">📤 Partager</button>
-          <button class="btn-ghost" onclick="openSettingsModal()">&#9881;&#65039; Paramètres</button>
+          <button class="btn-red" data-action="restartCurrentMode">&#128260; Rejouer</button>
+          <button class="btn-yellow" id="btn-copy-result" data-action="copyResult">📋 Copier résultat</button>
+          <button class="btn-blue" id="btn-share" data-action="shareResult">📤 Partager</button>
+          <button class="btn-ghost" data-action="openSettingsModal">&#9881;&#65039; Paramètres</button>
         </div>
         <p id="share-ok" class="msg-ok hidden">✅ Résultat copié !</p>
       </div>
@@ -1117,8 +1117,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">&#128269; Intrus Pokémon</h2>
           <div class="ranking-head-actions">
-            <button id="odd-new-puzzle-btn" class="btn-yellow" onclick="nextOddOneOutPuzzle()">🎲 Nouvelle énigme</button>
-            <button id="odd-party-next-btn" class="btn-yellow hidden" onclick="advancePartyRound()">Round suivant</button>
+            <button id="odd-new-puzzle-btn" class="btn-yellow" data-action="nextOddOneOutPuzzle">🎲 Nouvelle énigme</button>
+            <button id="odd-party-next-btn" class="btn-yellow hidden" data-action="advancePartyRound">Round suivant</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1227,7 +1227,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <h2 class="card-title">🆚 Duel live 1v1</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" type="button" onclick="leaveMultiplayerRoom(true)">Réinitialiser</button>
-            <button class="btn-ghost" onclick="leaveMultiplayerRoom()">&#8592; Retour</button>
+            <button class="btn-ghost" data-action="leaveMultiplayerRoom">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Crée une room, partage le code et affronte un ami sur le même Pokémon mystère. Parfait pour un duel rapide et lisible.</p>
@@ -1236,7 +1236,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="multiplayer-connection-status" class="tag-gen">Hors ligne</span>
           <span id="multiplayer-room-code" class="tag-tries">Code : —</span>
           <span id="multiplayer-round-status" class="tag-gen">Prêt</span>
-          <button id="multiplayer-copy-invite" class="btn-ghost hidden" type="button" onclick="copyMultiplayerRoomCode()">Copier le lien d'invitation</button>
+          <button id="multiplayer-copy-invite" class="btn-ghost hidden" type="button" data-action="copyMultiplayerRoomCode">Copier le lien d'invitation</button>
         </div>
         <div id="multiplayer-presence-alert" class="multiplayer-presence-alert" data-state="offline">Hors ligne : lance l'app via le serveur pour créer une room.</div>
 
@@ -1260,11 +1260,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <input id="multiplayer-nickname" type="text" maxlength="24" placeholder="Ton pseudo..." autocomplete="off" />
             </label>
             <div class="multiplayer-actions-grid">
-              <button id="multiplayer-create-room" class="btn-red multiplayer-create-room-btn" type="button" onclick="createMultiplayerRoom()">Créer une room</button>
+              <button id="multiplayer-create-room" class="btn-red multiplayer-create-room-btn" type="button" data-action="createMultiplayerRoom">Créer une room</button>
             </div>
             <div class="multiplayer-join-row">
               <input id="multiplayer-room-input" type="text" maxlength="5" placeholder="Code de room..." autocomplete="off" />
-              <button class="btn-blue" type="button" onclick="joinMultiplayerRoom()">Rejoindre</button>
+              <button class="btn-blue" type="button" data-action="joinMultiplayerRoom">Rejoindre</button>
             </div>
             <div class="multiplayer-steps">
               <h4>3 étapes</h4>
@@ -1293,7 +1293,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                   <input id="multiplayer-guess-input" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" oninput="filterMultiplayerGuessAC()" onkeydown="handleMultiplayerGuessKey(event)" />
                   <div id="multiplayer-guess-ac" class="ac-list hidden"></div>
                 </div>
-                <button class="btn-red" type="button" onclick="submitMultiplayerGuess()">Envoyer</button>
+                <button class="btn-red" type="button" data-action="submitMultiplayerGuess">Envoyer</button>
               </div>
             </div>
 
@@ -1353,7 +1353,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">📊 Stat Clash 1v1</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button>
+            <button class="btn-red" type="button" data-action="restartStatClashGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
                 </div>
         </div>
@@ -1367,7 +1367,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">📊 Higher or Lower</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
+            <button class="btn-red" type="button" data-action="restartHigherLowerGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1381,7 +1381,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">🧩 Poké-Connections</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button>
+            <button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1395,7 +1395,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">⚡ Speedrun Pokédex</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" onclick="restartSpeedrunGame()">Rejouer</button>
+            <button class="btn-red" type="button" data-action="restartSpeedrunGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1409,7 +1409,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">💰 Stat Auction 1v1</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
+            <button class="btn-ghost" type="button" data-action="leaveStatAuctionRoom">Quitter</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1422,7 +1422,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
   <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
     <div class="overlay-head">
       <h3 id="overlay-title">Aide</h3>
-      <button class="overlay-close" type="button" onclick="closeOverlayModal()" aria-label="Fermer">×</button>
+      <button class="overlay-close" type="button" data-action="closeOverlayModal" aria-label="Fermer">×</button>
     </div>
     <div id="overlay-body" class="overlay-body"></div>
   </div>
