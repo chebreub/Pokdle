@@ -616,7 +616,7 @@
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-1" id="team-builder-move-field-1">
                   <span class="team-builder-move-label-row">
                     <span>Attaque 1</span>
-                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 0)">Vider</button>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" data-action="updateTeamBuilderField" data-args='["move", "", 0]'>Vider</button>
                   </span>
                   <select id="team-builder-move-1"></select>
                   <small class="team-builder-move-state" id="team-builder-move-state-1">Aucune attaque</small>
@@ -624,7 +624,7 @@
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-2" id="team-builder-move-field-2">
                   <span class="team-builder-move-label-row">
                     <span>Attaque 2</span>
-                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 1)">Vider</button>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" data-action="updateTeamBuilderField" data-args='["move", "", 1]'>Vider</button>
                   </span>
                   <select id="team-builder-move-2"></select>
                   <small class="team-builder-move-state" id="team-builder-move-state-2">Aucune attaque</small>
@@ -632,7 +632,7 @@
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-3" id="team-builder-move-field-3">
                   <span class="team-builder-move-label-row">
                     <span>Attaque 3</span>
-                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 2)">Vider</button>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" data-action="updateTeamBuilderField" data-args='["move", "", 2]'>Vider</button>
                   </span>
                   <select id="team-builder-move-3"></select>
                   <small class="team-builder-move-state" id="team-builder-move-state-3">Aucune attaque</small>
@@ -640,7 +640,7 @@
                 <label class="home-type-helper-label team-builder-move-field" for="team-builder-move-4" id="team-builder-move-field-4">
                   <span class="team-builder-move-label-row">
                     <span>Attaque 4</span>
-                    <button class="team-builder-move-clear btn-ghost hidden" type="button" onclick="updateTeamBuilderField('move', '', 3)">Vider</button>
+                    <button class="team-builder-move-clear btn-ghost hidden" type="button" data-action="updateTeamBuilderField" data-args='["move", "", 3]'>Vider</button>
                   </span>
                   <select id="team-builder-move-4"></select>
                   <small class="team-builder-move-state" id="team-builder-move-state-4">Aucune attaque</small>
@@ -1226,7 +1226,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">🆚 Duel live 1v1</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" type="button" onclick="leaveMultiplayerRoom(true)">Réinitialiser</button>
+            <button class="btn-ghost" type="button" data-action="leaveMultiplayerRoom" data-args='[true]'>Réinitialiser</button>
             <button class="btn-ghost" data-action="leaveMultiplayerRoom">&#8592; Retour</button>
           </div>
         </div>
@@ -1338,8 +1338,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <h3>Résultat du duel</h3>
               <div id="multiplayer-result-content"></div>
               <div class="multiplayer-result-actions">
-                <button class="btn-red" type="button" onclick="restartMultiplayerRound('same')">Rejouer pareil</button>
-                <button class="btn-blue" type="button" onclick="restartMultiplayerRound('updated')">Relancer avec ces générations</button>
+                <button class="btn-red" type="button" data-action="restartMultiplayerRound" data-args='["same"]'>Rejouer pareil</button>
+                <button class="btn-blue" type="button" data-action="restartMultiplayerRound" data-args='["updated"]'>Relancer avec ces générations</button>
                 <button class="btn-ghost" type="button" data-action="goToConfig">Retour accueil</button>
               </div>
             </div>
