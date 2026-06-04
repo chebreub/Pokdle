@@ -19697,6 +19697,27 @@ function findPokemon(name) {
 }
 
 var _appToastTimer = null;
+(function () {
+  function initDataActionDelegation() {
+    if (window.__dataActionDelegationReady) return;
+    window.__dataActionDelegationReady = true;
+    document.addEventListener("click", function (ev) {
+      var el = ev.target && ev.target.closest ? ev.target.closest("[data-action]") : null;
+      if (!el) return;
+      var name = el.getAttribute("data-action");
+      if (!name) return;
+      var fn = window[name];
+      if (typeof fn !== "function") return;
+      var args = [];
+      var raw = el.getAttribute("data-args");
+      if (raw) { try { var parsed = JSON.parse(raw); args = Array.isArray(parsed) ? parsed : [parsed]; } catch (e) { args = []; } }
+      fn.apply(el, args);
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initDataActionDelegation);
+  else initDataActionDelegation();
+})();
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }

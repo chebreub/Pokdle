@@ -48,13 +48,13 @@
         </div>
       </button>
       <div class="header-actions">
-        <button id="global-xp-badge" class="xp-badge" type="button" onclick="openDailyQuestsModal()" aria-label="Voir mes quêtes quotidiennes">
+        <button id="global-xp-badge" class="xp-badge" type="button" data-action="openDailyQuestsModal" aria-label="Voir mes quêtes quotidiennes">
           <span class="xp-badge-emoji">🥚</span>
           <span class="xp-badge-info"><b>Niv. 1 · Recrue</b><small>0 XP</small></span>
           <div class="xp-badge-bar"><div class="xp-badge-fill" style="width:0%"></div></div>
         </button>
-        <button class="btn-ghost header-action-btn" type="button" onclick="openHelpModal()">❔ Aide</button>
-        <button class="btn-ghost header-action-btn" type="button" onclick="openSettingsModal()">⚙️ Paramètres</button>
+        <button class="btn-ghost header-action-btn" type="button" data-action="openHelpModal">❔ Aide</button>
+        <button class="btn-ghost header-action-btn" type="button" data-action="openSettingsModal">⚙️ Paramètres</button>
       </div>
     </div>
     <p class="tagline">Devinez le Pokémon mystère !</p>
@@ -63,54 +63,54 @@
 
   <main>
     <nav class="global-nav" id="global-nav" aria-label="Navigation principale">
-  <button id="nav-config" class="nav-pill active" type="button" onclick="goToConfig()">Accueil</button>
+  <button id="nav-config" class="nav-pill active" type="button" data-action="goToConfig">Accueil</button>
 
   <div class="nav-group">
     <button id="nav-game" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Jouer</button>
     <div class="nav-dropdown" role="menu">
-      <button type="button" onclick="startDailyGame()"><span class="nav-dd-ico">📅</span>Pokémon du jour</button>
-      <button type="button" onclick="startNormalGame()"><span class="nav-dd-ico">♾️</span>Mode illimité</button>
-      <button type="button" onclick="startPartyMode()"><span class="nav-dd-ico">🎲</span>Party Pokémon</button>
-      <button type="button" onclick="openDraftScoreAttackMode()"><span class="nav-dd-ico">🎯</span>Draft Score Attack</button>
-      <button type="button" onclick="startSilhouetteGame()"><span class="nav-dd-ico">🕶️</span>Silhouette</button>
-      <button type="button" onclick="startPixelGame()"><span class="nav-dd-ico">🧩</span>Pixelisé</button>
-      <button type="button" onclick="startMysteryStatGame()"><span class="nav-dd-ico">🧠</span>Stat mystère</button>
-      <button type="button" onclick="startCryGame()"><span class="nav-dd-ico">🔊</span>Cri du Pokémon</button>
-      <button type="button" onclick="startDescriptionMode()"><span class="nav-dd-ico">📝</span>Description</button>
-      <button type="button" onclick="openOddOneOutMode()"><span class="nav-dd-ico">🔍</span>Intrus</button>
-      <button type="button" onclick="startQuizGame()"><span class="nav-dd-ico">❓</span>Quiz</button>
-      <button type="button" onclick="startWeightBattle()"><span class="nav-dd-ico">⚖️</span>Duel de poids</button>
-      <button type="button" onclick="startEvolutionChainGame()"><span class="nav-dd-ico">🔁</span>Évolution</button>
-      <button type="button" onclick="startPokedexOrderGame()"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
-      <button type="button" onclick="openHigherLowerMode()"><span class="nav-dd-ico">📊</span>Higher or Lower</button>
-      <button type="button" onclick="openPokeConnectionsMode()"><span class="nav-dd-ico">🧩</span>Poké-Connections</button>
-      <button type="button" onclick="openSpeedrunMode()"><span class="nav-dd-ico">⚡</span>Speedrun Pokédex</button>
+      <button type="button" data-action="startDailyGame"><span class="nav-dd-ico">📅</span>Pokémon du jour</button>
+      <button type="button" data-action="startNormalGame"><span class="nav-dd-ico">♾️</span>Mode illimité</button>
+      <button type="button" data-action="startPartyMode"><span class="nav-dd-ico">🎲</span>Party Pokémon</button>
+      <button type="button" data-action="openDraftScoreAttackMode"><span class="nav-dd-ico">🎯</span>Draft Score Attack</button>
+      <button type="button" data-action="startSilhouetteGame"><span class="nav-dd-ico">🕶️</span>Silhouette</button>
+      <button type="button" data-action="startPixelGame"><span class="nav-dd-ico">🧩</span>Pixelisé</button>
+      <button type="button" data-action="startMysteryStatGame"><span class="nav-dd-ico">🧠</span>Stat mystère</button>
+      <button type="button" data-action="startCryGame"><span class="nav-dd-ico">🔊</span>Cri du Pokémon</button>
+      <button type="button" data-action="startDescriptionMode"><span class="nav-dd-ico">📝</span>Description</button>
+      <button type="button" data-action="openOddOneOutMode"><span class="nav-dd-ico">🔍</span>Intrus</button>
+      <button type="button" data-action="startQuizGame"><span class="nav-dd-ico">❓</span>Quiz</button>
+      <button type="button" data-action="startWeightBattle"><span class="nav-dd-ico">⚖️</span>Duel de poids</button>
+      <button type="button" data-action="startEvolutionChainGame"><span class="nav-dd-ico">🔁</span>Évolution</button>
+      <button type="button" data-action="startPokedexOrderGame"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
+      <button type="button" data-action="openHigherLowerMode"><span class="nav-dd-ico">📊</span>Higher or Lower</button>
+      <button type="button" data-action="openPokeConnectionsMode"><span class="nav-dd-ico">🧩</span>Poké-Connections</button>
+      <button type="button" data-action="openSpeedrunMode"><span class="nav-dd-ico">⚡</span>Speedrun Pokédex</button>
     </div>
   </div>
 
   <div class="nav-group">
     <button id="nav-social" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Social</button>
     <div class="nav-dropdown" role="menu">
-      <button type="button" onclick="openMultiplayerMode()"><span class="nav-dd-ico">🆚</span>Duel 1v1</button>
-      <button type="button" onclick="openStatClashMode()"><span class="nav-dd-ico">📊</span>Stat Clash 1v1</button>
-      <button type="button" onclick="openStatAuctionMode()"><span class="nav-dd-ico">💰</span>Stat Auction 1v1</button>
-      <button type="button" onclick="showChallengePanel()"><span class="nav-dd-ico">🤝</span>Envoyer un défi</button>
+      <button type="button" data-action="openMultiplayerMode"><span class="nav-dd-ico">🆚</span>Duel 1v1</button>
+      <button type="button" data-action="openStatClashMode"><span class="nav-dd-ico">📊</span>Stat Clash 1v1</button>
+      <button type="button" data-action="openStatAuctionMode"><span class="nav-dd-ico">💰</span>Stat Auction 1v1</button>
+      <button type="button" data-action="showChallengePanel"><span class="nav-dd-ico">🤝</span>Envoyer un défi</button>
     </div>
   </div>
 
-  <button id="nav-collection" class="nav-pill" type="button" onclick="openPokedexMode()">Pokédex</button>
+  <button id="nav-collection" class="nav-pill" type="button" data-action="openPokedexMode">Pokédex</button>
 
   <div class="nav-group">
     <button id="nav-extras" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Outils</button>
     <div class="nav-dropdown" role="menu">
-      <button type="button" onclick="openTeamBuilderScreen()"><span class="nav-dd-ico">🧱</span>Team Builder</button>
-      <button type="button" onclick="openTeamsScreen()"><span class="nav-dd-ico">🧩</span>Mes teams</button>
-      <button type="button" onclick="openDraftArenaMode()"><span class="nav-dd-ico">🎴</span>Draft Arènes</button>
-      <button type="button" onclick="openTypeChartScreen()"><span class="nav-dd-ico">🧮</span>Table des types</button>
-      <button type="button" onclick="openEmulatorMode()"><span class="nav-dd-ico">🕹️</span>Émulateur</button>
-      <button type="button" onclick="openGamesRankingMode()"><span class="nav-dd-ico">🏆</span>Classement jeux</button>
-      <button type="button" onclick="openRankingMode()"><span class="nav-dd-ico">📋</span>Mode classement</button>
-      <button type="button" onclick="openMatchHistoryScreen()"><span class="nav-dd-ico">🕘</span>Historique</button>
+      <button type="button" data-action="openTeamBuilderScreen"><span class="nav-dd-ico">🧱</span>Team Builder</button>
+      <button type="button" data-action="openTeamsScreen"><span class="nav-dd-ico">🧩</span>Mes teams</button>
+      <button type="button" data-action="openDraftArenaMode"><span class="nav-dd-ico">🎴</span>Draft Arènes</button>
+      <button type="button" data-action="openTypeChartScreen"><span class="nav-dd-ico">🧮</span>Table des types</button>
+      <button type="button" data-action="openEmulatorMode"><span class="nav-dd-ico">🕹️</span>Émulateur</button>
+      <button type="button" data-action="openGamesRankingMode"><span class="nav-dd-ico">🏆</span>Classement jeux</button>
+      <button type="button" data-action="openRankingMode"><span class="nav-dd-ico">📋</span>Mode classement</button>
+      <button type="button" data-action="openMatchHistoryScreen"><span class="nav-dd-ico">🕘</span>Historique</button>
     </div>
   </div>
 
