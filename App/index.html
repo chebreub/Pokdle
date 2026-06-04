@@ -1160,46 +1160,46 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div id="party-lobby" class="party-lobby">
           <label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Pseudo" autocomplete="off" /></label>
           <div class="party-lobby-actions">
-            <button class="btn-blue" type="button" onclick="partyCreateRoom()">Créer une room</button>
+            <button class="btn-blue" type="button" data-action="partyCreateRoom">Créer une room</button>
           </div>
           <div class="party-join-row">
             <input id="party-join-code" type="text" maxlength="6" placeholder="Code de room" autocomplete="off" />
-            <button class="btn-ghost" type="button" onclick="partyJoinRoom()">Rejoindre</button>
+            <button class="btn-ghost" type="button" data-action="partyJoinRoom">Rejoindre</button>
           </div>
         </div>
         <div id="party-joined" class="party-joined hidden">
           <div class="party-room-head">
             <div>Room <b id="party-room-code">-</b> <span id="party-room-status-badge" class="party-status-badge">En attente</span></div>
             <div class="party-room-head-actions">
-              <button class="btn-ghost party-copy-btn" type="button" onclick="partyCopyInviteLink()">📋 Copier le lien</button>
-              <button class="btn-ghost" type="button" onclick="partyLeaveRoom()">Quitter</button>
+              <button class="btn-ghost party-copy-btn" type="button" data-action="partyCopyInviteLink">📋 Copier le lien</button>
+              <button class="btn-ghost" type="button" data-action="partyLeaveRoom">Quitter</button>
             </div>
           </div>
           <p class="party-count">Joueurs : <b id="party-count">0 / 8</b></p>
           <ul id="party-players" class="party-players"></ul>
           <div id="party-mode-select" class="party-mode-select hidden">
             <span class="party-mode-label">Mode :</span>
-            <button id="party-mode-guess" type="button" class="party-mode-btn" onclick="partySetMode('guess')">🏁 Course Pokémon</button>
-            <button id="party-mode-typecombo" type="button" class="party-mode-btn" onclick="partySetMode('typecombo')">🧬 Combo de types</button>
-            <button id="party-mode-statclash" type="button" class="party-mode-btn" onclick="partySetMode('statclash')">📊 Meilleure stat</button>
-            <button id="party-mode-statclashparty" type="button" class="party-mode-btn" onclick="partySetMode('statclashparty')">⚔️ Stat Clash Party</button>
+            <button id="party-mode-guess" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["guess"]'>🏁 Course Pokémon</button>
+            <button id="party-mode-typecombo" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["typecombo"]'>🧬 Combo de types</button>
+            <button id="party-mode-statclash" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["statclash"]'>📊 Meilleure stat</button>
+            <button id="party-mode-statclashparty" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["statclashparty"]'>⚔️ Stat Clash Party</button>
           </div>
           <p id="party-mode-hint" class="party-mode-hint"></p>
           <div id="party-gens-select" class="party-mode-select party-gens-select hidden">
             <span class="party-mode-label">Générations :</span>
-            <button id="party-gens-all" type="button" class="party-mode-btn" onclick="partyAllGens()">🌍 Toutes</button>
-            <button id="party-gen-1" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(1)">1</button>
-            <button id="party-gen-2" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(2)">2</button>
-            <button id="party-gen-3" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(3)">3</button>
-            <button id="party-gen-4" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(4)">4</button>
-            <button id="party-gen-5" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(5)">5</button>
-            <button id="party-gen-6" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(6)">6</button>
-            <button id="party-gen-7" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(7)">7</button>
-            <button id="party-gen-8" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(8)">8</button>
-            <button id="party-gen-9" type="button" class="party-mode-btn party-gen-btn" onclick="partyToggleGen(9)">9</button>
+            <button id="party-gens-all" type="button" class="party-mode-btn" data-action="partyAllGens">🌍 Toutes</button>
+            <button id="party-gen-1" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[1]'>1</button>
+            <button id="party-gen-2" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[2]'>2</button>
+            <button id="party-gen-3" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[3]'>3</button>
+            <button id="party-gen-4" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[4]'>4</button>
+            <button id="party-gen-5" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[5]'>5</button>
+            <button id="party-gen-6" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[6]'>6</button>
+            <button id="party-gen-7" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[7]'>7</button>
+            <button id="party-gen-8" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[8]'>8</button>
+            <button id="party-gen-9" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[9]'>9</button>
           </div>
-          <button id="party-start-btn" class="btn-red hidden" type="button" onclick="partyStartGame()">Lancer la partie</button>
-          <button id="party-room-next-btn" class="btn-blue hidden" type="button" onclick="partyNextRound()">Manche suivante</button>
+          <button id="party-start-btn" class="btn-red hidden" type="button" data-action="partyStartGame">Lancer la partie</button>
+          <button id="party-room-next-btn" class="btn-blue hidden" type="button" data-action="partyNextRound">Manche suivante</button>
           <div id="party-round" class="party-round hidden">
             <p id="party-round-mode" class="party-round-mode"></p>
             <div id="party-timer" class="party-timer hidden"></div>
@@ -1212,9 +1212,9 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" oninput="filterPartyGuessAC()" onkeydown="handlePartyGuessKey(event)" />
                 <div id="party-guess-ac" class="ac-list hidden"></div>
               </div>
-              <button class="btn-blue" type="button" onclick="partySubmitAnswer()">Valider</button>
+              <button class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button>
             </div>
-            <button id="party-reveal-btn" class="btn-ghost hidden" type="button" onclick="partyRevealRound()">Révéler / terminer la manche</button>
+            <button id="party-reveal-btn" class="btn-ghost hidden" type="button" data-action="partyRevealRound">Révéler / terminer la manche</button>
           </div>
         </div>
         <p id="party-room-msg" class="party-status"></p>
