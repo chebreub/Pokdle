@@ -2051,7 +2051,7 @@ function startNormalGame(forcedPokemon = null) {
 
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
-    alert("Sélectionne au moins une génération !");
+    showToast("Sélectionne au moins une génération !");
     return;
   }
 
@@ -2070,7 +2070,7 @@ function startDailyGame() {
 function startSilhouetteGame() {
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
-    alert("Sélectionne au moins une génération !");
+    showToast("Sélectionne au moins une génération !");
     return;
   }
 
@@ -2082,7 +2082,7 @@ function startSilhouetteGame() {
 function startPixelGame() {
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
-    alert("Sélectionne au moins une génération !");
+    showToast("Sélectionne au moins une génération !");
     return;
   }
 
@@ -2094,7 +2094,7 @@ function startPixelGame() {
 function startCryGame() {
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
-    alert("Sélectionne au moins une génération !");
+    showToast("Sélectionne au moins une génération !");
     return;
   }
 
@@ -2151,7 +2151,7 @@ function startQuizGame() {
 function startMysteryStatGame() {
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
-    alert("Sélectionne au moins une génération !");
+    showToast("Sélectionne au moins une génération !");
     return;
   }
 
@@ -3488,7 +3488,7 @@ function useStatClashJoker(side, type) {
     if (type === "preview" && jokers.preview <= 0) return;
     if (type === "double" && (jokers.double <= 0 || jokers.doubleArmed)) return;
     return multiplayerSocket?.emit("stat-clash:use-joker", { type }, (response = {}) => {
-      if (!response.ok && response.error) alert(response.error);
+      if (!response.ok && response.error) showToast(response.error);
     });
   }
   if (state.mode !== "bot") return;
@@ -3557,7 +3557,7 @@ function setStatClashFormat(value) {
   if (!STAT_CLASH_FORMATS[value]) return;
   if (statClashState.mode === "room") {
     return multiplayerSocket?.emit("stat-clash:update-room-options", { format: value }, (response = {}) => {
-      if (!response.ok && response.error) alert(response.error);
+      if (!response.ok && response.error) showToast(response.error);
     });
   }
   statClashState.format = value;
@@ -3599,7 +3599,7 @@ function toggleStatClashHouseRule() {
   if (statClashState.mode === "room") {
     const next = !(statClashState.room?.houseRuleEnabled !== false);
     return multiplayerSocket?.emit("stat-clash:update-room-options", { houseRuleEnabled: next }, (response = {}) => {
-      if (!response.ok && response.error) alert(response.error);
+      if (!response.ok && response.error) showToast(response.error);
     });
   }
   statClashState.houseRuleEnabled = !statClashState.houseRuleEnabled;
@@ -3612,7 +3612,7 @@ function toggleStatClashSharedHouseRule() {
   if (statClashState.mode === "room") {
     return multiplayerSocket?.emit("stat-clash:update-room-options", { houseRuleSharedEnabled: next }, (response = {}) => {
       if (!response.ok) {
-        if (response.error) alert(response.error);
+        if (response.error) showToast(response.error);
         return;
       }
       applyStatClashRoomState(response.room);
@@ -4120,7 +4120,7 @@ function copyStatClashRoomCode() {
 function restartStatClashRoom() {
   if (!statClashState?.room?.code || !multiplayerSocket?.connected) return;
   multiplayerSocket.emit("stat-clash:restart-round", { selectedGens: [...selectedGens].sort((a, b) => a - b) }, (response = {}) => {
-    if (!response.ok) return alert(response.error || "Impossible de relancer la partie.");
+    if (!response.ok) return showToast(response.error || "Impossible de relancer la partie.");
     applyStatClashRoomState(response.room);
     const self = response.room?.players?.find((p) => p.isSelf);
     if (self?.isHost && response.room?.canStart) startStatClashRoomGame();
@@ -4164,7 +4164,7 @@ function pickStatClashStat(side, statKey, auto = false) {
         statClashState.players.left.lockedAt = null;
         renderStatClashScreen();
       }
-      alert(response.error || "Impossible de verrouiller ce choix.");
+      showToast(response.error || "Impossible de verrouiller ce choix.");
     });
   }
   if (state.phase !== "picking" || state.players.left.pendingPick || state.usedStatsBySide.left.includes(statKey)) return;
@@ -4411,7 +4411,7 @@ function renderStatClashScreen() {
 
 function openStatClashMode() {
   const pool = getStatClashPool();
-  if (!pool.length) return alert("Impossible de charger la base Pokémon complète pour Stat Clash.");
+  if (!pool.length) return showToast("Impossible de charger la base Pokémon complète pour Stat Clash.");
   goToConfig();
   cleanupStatClashMode();
   statClashState = createStatClashState();
@@ -4546,7 +4546,7 @@ function clearHigherLowerTimeouts() {
 
 function openHigherLowerMode() {
   const pool = getHigherLowerPool();
-  if (!pool.length) return alert("Impossible de charger la base Pokémon pour Higher or Lower.");
+  if (!pool.length) return showToast("Impossible de charger la base Pokémon pour Higher or Lower.");
   goToConfig();
   clearHigherLowerTimeouts();
   clearHigherLowerRushInterval();
@@ -5047,7 +5047,7 @@ function createSpeedrunState() {
 
 function openSpeedrunMode() {
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
-  if (pool.length < 30) return alert("Pool Pokémon insuffisant pour Speedrun.");
+  if (pool.length < 30) return showToast("Pool Pokémon insuffisant pour Speedrun.");
   goToConfig();
   hideExtraScreens();
   hideScreen("screen-config");
@@ -5341,7 +5341,7 @@ function generatePokeConnectionsPuzzle() {
 
 function openPokeConnectionsMode() {
   const puzzle = generatePokeConnectionsPuzzle();
-  if (!puzzle) return alert("Impossible de générer un puzzle Poké-Connections.");
+  if (!puzzle) return showToast("Impossible de générer un puzzle Poké-Connections.");
   goToConfig();
   hideExtraScreens();
   hideScreen("screen-config");
@@ -17027,7 +17027,7 @@ function hostDraftSimpleBattleNetworkRoom() {
 
 async function openDraftFriendBattle() {
   if (!draftArenaState || draftArenaState.team.length < DRAFT_TEAM_SIZE) {
-    alert("Drafte d'abord 6 Pokémon avant d'affronter un ami.");
+    showToast("Drafte d'abord 6 Pokémon avant d'affronter un ami.");
     return null;
   }
   // Ouvre la preview avec la team du joueur (mode arena-run, on bascule en network juste après)
@@ -17052,7 +17052,7 @@ function joinDraftSimpleBattleNetworkRoom() {
     nickname,
   }, (response = {}) => {
     if (!response.ok) {
-      alert(response.error || "Impossible de rejoindre la room.");
+      showToast(response.error || "Impossible de rejoindre la room.");
     }
   });
   return true;
@@ -19696,6 +19696,17 @@ function findPokemon(name) {
   return activeNameMap.get(norm(name)) || null;
 }
 
+var _appToastTimer = null;
+function showToast(msg) {
+  var el = document.getElementById("app-toast");
+  if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
+  el.textContent = String(msg == null ? "" : msg);
+  el.classList.add("is-visible");
+  if (_appToastTimer) clearTimeout(_appToastTimer);
+  _appToastTimer = setTimeout(function () { el.classList.remove("is-visible"); }, 3200);
+}
+window.showToast = showToast;
+
 function showErr(msg) {
   document.getElementById("err-msg").textContent = msg;
 }
@@ -20227,7 +20238,7 @@ function ensureOverlay(title, html) {
   const titleEl = document.getElementById('overlay-title');
   const bodyEl = document.getElementById('overlay-body');
   if (!overlay || !titleEl || !bodyEl) {
-    alert(title);
+    showToast(title);
     return;
   }
   titleEl.textContent = title;
@@ -21225,7 +21236,7 @@ function getPokemonSpeciesId(pokemon) {
 function startDescriptionMode() {
   const pool = getPoolFromSelectedGens();
   if (!pool.length) {
-    alert("Sélectionne au moins une génération !");
+    showToast("Sélectionne au moins une génération !");
     return;
   }
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
@@ -21265,7 +21276,7 @@ function openOddOneOutMode() {
 function startWeightBattle() {
   const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
   if (pool.length < 2) {
-    alert("Sélectionne au moins une génération avec suffisamment de Pokémon.");
+    showToast("Sélectionne au moins une génération avec suffisamment de Pokémon.");
     return;
   }
   const left = pickRandomPokemonFromPool(pool) || pool[0];
@@ -21295,7 +21306,7 @@ function startEvolutionChainGame() {
     chain = source[Math.floor(Math.random() * source.length)];
   }
   if (!chain) {
-    alert("Aucune chaîne d'évolution à trois stades disponible.");
+    showToast("Aucune chaîne d'évolution à trois stades disponible.");
     return;
   }
   evolutionChainState = { chain, missingIndex: 1 };
@@ -21307,7 +21318,7 @@ function startEvolutionChainGame() {
 function startPokedexOrderGame() {
   const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm).sort((a, b) => a.id - b.id);
   if (pool.length < 3) {
-    alert("Il faut au moins trois Pokémon dans la sélection.");
+    showToast("Il faut au moins trois Pokémon dans la sélection.");
     return;
   }
   const middleIndex = 1 + Math.floor(Math.random() * (pool.length - 2));
