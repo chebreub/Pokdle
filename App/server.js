@@ -275,10 +275,59 @@ function isPayloadOversized(payload) {
   }
 }
 
-// Security headers (CSP désactivé : on garde les onclick inline et les CDN externes).
-// Tu pourras réactiver une CSP plus stricte une fois les onclick remplacés par addEventListener.
+// Security headers.
+// CSP en mode Report-Only : RIEN n'est bloqué, les violations sont seulement
+// signalées dans la console du navigateur (Content-Security-Policy-Report-Only).
+// Permet de mesurer sans casser le jeu. Pour durcir : migrer les handlers inline
+// générés (onerror/onclick dans les innerHTML de script.js) puis passer reportOnly à false.
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  scriptSrc: [
+    "'self'",
+    "https://cdn.emulatorjs.org",
+    "'wasm-unsafe-eval'",
+    "'unsafe-eval'",
+    "blob:",
+  ],
+  styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
+  fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+  imgSrc: [
+    "'self'",
+    "data:",
+    "blob:",
+    "https://raw.githubusercontent.com",
+    "https://pokeapi.co",
+    "https://archives.bulbagarden.net",
+    "https://cdn.emulatorjs.org",
+  ],
+  connectSrc: [
+    "'self'",
+    "https://pokeapi.co",
+    "https://raw.githubusercontent.com",
+    "https://archives.bulbagarden.net",
+    "https://cdn.emulatorjs.org",
+    "ws:",
+    "wss:",
+  ],
+  mediaSrc: [
+    "'self'",
+    "data:",
+    "blob:",
+    "https://raw.githubusercontent.com",
+    "https://cdn.emulatorjs.org",
+  ],
+  workerSrc: ["'self'", "blob:"],
+  objectSrc: ["'none'"],
+  baseUri: ["'self'"],
+  formAction: ["'self'"],
+};
+
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: cspDirectives,
+    reportOnly: true,
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
