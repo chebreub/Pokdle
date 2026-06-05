@@ -4826,8 +4826,8 @@ function renderHigherLowerScreen() {
       </div>
       ${isReveal ? `<p class="higher-lower-feedback ${state.lastCorrect ? "is-correct" : "is-wrong"}">${state.lastCorrect ? "✅ Bien vu !" : "❌ Raté."} ${escapeHtml(state.right.pokemon.name)} a <b>${state.right.statValue}</b> en ${escapeHtml(statMeta.label)}.</p>` : `
         <div class="higher-lower-actions">
-          <button class="btn-red higher-lower-btn-higher" type="button" onclick="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}('higher')">▲ Plus haut</button>
-          <button class="btn-blue higher-lower-btn-lower" type="button" onclick="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}('lower')">▼ Plus bas</button>
+          <button class="btn-red higher-lower-btn-higher" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["higher"]'>▲ Plus haut</button>
+          <button class="btn-blue higher-lower-btn-lower" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["lower"]'>▼ Plus bas</button>
         </div>
       `}
     </div>`;
@@ -8226,7 +8226,7 @@ function renderPartyRoom() {
         var usedKeys = (scPartyMode && me && Array.isArray(me.usedStatKeys)) ? me.usedStatKeys : [];
         statOpts.innerHTML = room.round.statKeys.map(function (k) {
           var isUsed = usedKeys.indexOf(k) !== -1;
-          return '<button type="button" class="party-stat-btn' + (isUsed ? ' is-used' : '') + '" data-stat="' + k + '"' + (isUsed ? ' disabled' : ' onclick="partySubmitStat(this.dataset.stat)"') + '>' + escapeHtml(labels[k] || k) + (isUsed ? ' ✓' : '') + '</button>';
+          return '<button type="button" class="party-stat-btn' + (isUsed ? ' is-used' : '') + '" data-stat="' + k + '"' + (isUsed ? ' disabled' : ' data-action="partySubmitStatFromEl"') + '>' + escapeHtml(labels[k] || k) + (isUsed ? ' ✓' : '') + '</button>';
         }).join("");
       } else if (!showOpts) {
         statOpts.innerHTML = "";
@@ -11321,7 +11321,7 @@ async function renderPokedexDetail(pokemon) {
     <div class="pokedex-detail-head-actions">
       <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" data-action="togglePokedexShiny">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
       <button class="btn-ghost pokedex-detail-builder-btn" type="button" data-action="addSelectedPokedexPokemonToBuilder">Ajouter au Builder</button>
-      <button class="btn-ghost pokedex-detail-compare-btn" type="button" onclick="setPokedexCompareReference(POKEMON_BY_ID.get(${pokemon.id}))">Comparer</button>
+      <button class="btn-ghost pokedex-detail-compare-btn" type="button" data-action="setPokedexCompareReferenceById" data-args='[${pokemon.id}]'>Comparer</button>
       <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
       <span id="pokedex-compare-feedback" class="pokedex-compare-feedback" aria-live="polite"></span>
     </div>
@@ -16318,7 +16318,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <p class="gba-result-text">${playerWin ? "Tu as gagné le combat&nbsp;!" : "Tous tes Pokémon sont K.O…"}</p>
         <p class="gba-result-meta">${escapeHtml(winner)} clôture le match en ${state.log.length} tour${state.log.length > 1 ? "s" : ""} — ${leftRemaining} Pokémon restant${leftRemaining > 1 ? "s" : ""} côté joueur, ${rightRemaining} côté adverse.</p>
         <div class="gba-result-actions">
-          <button type="button" class="btn-blue" onclick="${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.action ? state.postBattleAction.action : "replayDraftSimpleBattleDevDuel")}()">${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.label ? state.postBattleAction.label : "Rejouer")}</button>
+          <button type="button" class="btn-blue" data-action="${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.action ? state.postBattleAction.action : "replayDraftSimpleBattleDevDuel")}">${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.label ? state.postBattleAction.label : "Rejouer")}</button>
           <button type="button" class="btn-ghost" data-action="clearDraftSimpleBattleDevPanel">Retour au Draft</button>
         </div>
       </div>`
@@ -16339,7 +16339,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           ${getDraftSimpleBattleAvailableSwitchIndexesForSide(state, state.pendingSwitchSide || "left").map((index) => {
             const member = (state.pendingSwitchSide === "right" ? state.rightTeam : state.leftTeam)[index];
             return `
-              <button type="button" class="btn-ghost draft-dev-battle-switch-btn" onclick="chooseDraftSimpleBattleReplacement(${index}, '${state.pendingSwitchSide || "left"}')" ${!canLocalChooseReplacement ? "disabled" : ""}>
+              <button type="button" class="btn-ghost draft-dev-battle-switch-btn" data-action="chooseDraftSimpleBattleReplacement" data-args='[${index}, "${state.pendingSwitchSide || "left"}"]' ${!canLocalChooseReplacement ? "disabled" : ""}>
                 <img class="draft-switch-sprite" src="${escapeHtml(getPokemonSprite(member.pokemon))}" alt="${escapeHtml(member.pokemon.name)}" loading="lazy">
                 <span class="draft-switch-name">${escapeHtml(member.pokemon.name)}</span>
                 <small class="draft-switch-hp">PV ${member.currentHp} / ${member.maxHp}</small>
@@ -19770,6 +19770,28 @@ window.openDefiAmiFromAllModes = openDefiAmiFromAllModes;
   }, true);
 })();
 
+// Wrappers pour handlers inline composés / à contexte (migration CSP vague B3)
+window.partySubmitStatFromEl = function () {
+  if (typeof partySubmitStat === "function") partySubmitStat(this.dataset.stat);
+};
+window.setPokedexCompareReferenceById = function (id) {
+  if (typeof setPokedexCompareReference === "function" && typeof POKEMON_BY_ID !== "undefined") {
+    setPokedexCompareReference(POKEMON_BY_ID.get(Number(id)));
+  }
+};
+window.winOverlayRestartSame = function () {
+  if (typeof hideMultiplayerWinOverlay === "function") hideMultiplayerWinOverlay();
+  if (typeof restartMultiplayerRound === "function") restartMultiplayerRound("same");
+};
+window.winOverlayRestartUpdated = function () {
+  if (typeof hideMultiplayerWinOverlay === "function") hideMultiplayerWinOverlay();
+  if (typeof restartMultiplayerRound === "function") restartMultiplayerRound("updated");
+};
+window.winOverlayBackToConfig = function () {
+  if (typeof hideMultiplayerWinOverlay === "function") hideMultiplayerWinOverlay();
+  if (typeof goToConfig === "function") goToConfig();
+};
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
@@ -22103,9 +22125,9 @@ function ensureMultiplayerWinOverlay() {
       <button class="multiplayer-win-close" type="button" aria-label="Fermer" data-action="hideMultiplayerWinOverlay">×</button>
       <div id="multiplayer-win-content"></div>
       <div class="multiplayer-result-actions multiplayer-win-actions">
-        <button class="btn-red" type="button" onclick="hideMultiplayerWinOverlay(); restartMultiplayerRound('same')">Rejouer pareil</button>
-        <button class="btn-blue" type="button" onclick="hideMultiplayerWinOverlay(); restartMultiplayerRound('updated')">Relancer avec ces générations</button>
-        <button class="btn-ghost" type="button" onclick="hideMultiplayerWinOverlay(); goToConfig()">Retour accueil</button>
+        <button class="btn-red" type="button" data-action="winOverlayRestartSame">Rejouer pareil</button>
+        <button class="btn-blue" type="button" data-action="winOverlayRestartUpdated">Relancer avec ces générations</button>
+        <button class="btn-ghost" type="button" data-action="winOverlayBackToConfig">Retour accueil</button>
       </div>
     </div>
   `;
