@@ -4366,7 +4366,7 @@ function renderStatClashScreen() {
     ? `<div class="stat-clash-lobby-center stat-clash-bot-lobby"><div class="stat-clash-lobby-center-head"><span>Vs Bot</span><strong>Prêt à jouer</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(state.statusText || "Lance une partie ou passe en Room 1v1.")}</h3><p>Tu peux régler le format, la difficulté et la règle maison avant le départ.</p><button class="btn-red" type="button" data-stat-clash-action="start-bot">Lancer vs bot</button></div></div>`
     : isRoom && roomIsLobby
     ? `<div class="stat-clash-lobby-center"><div class="stat-clash-lobby-center-head"><span>Lobby Room 1v1</span><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(roomUi?.detail || "En attente de la room.")}</h3><p>${escapeHtml(selfRoomPlayer?.isHost ? "Partage le code puis lance la partie quand la room est complète." : room?.code ? `Connecté à ${room.code}. Attends le lancement par l’hôte.` : "Crée une room ou rejoins-en une avec un code.")}</p></div></div>`
-    : `<div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>${state.phase === "starting-countdown" ? "Démarrage room" : "Pokémon tiré"}</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(current))}'" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (state.phase === "starting-countdown" ? "Prépare-toi…" : isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${["picking", "locked"].includes(state.phase) ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "starting-countdown" ? "Le match commence quand le countdown atteint 0." : state.phase === "rolling" ? "Le randomizer termine son arrêt avant l'ouverture des choix." : ["picking", "locked"].includes(state.phase) ? "10 secondes complètes pour choisir ta stat." : "Le reveal arrive juste après les choix."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div>`;
+    : `<div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>${state.phase === "starting-countdown" ? "Démarrage room" : "Pokémon tiré"}</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" data-fallback="${getSpriteUrl(getPokemonSpriteId(current))}" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (state.phase === "starting-countdown" ? "Prépare-toi…" : isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${["picking", "locked"].includes(state.phase) ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "starting-countdown" ? "Le match commence quand le countdown atteint 0." : state.phase === "rolling" ? "Le randomizer termine son arrêt avant l'ouverture des choix." : ["picking", "locked"].includes(state.phase) ? "10 secondes complètes pour choisir ta stat." : "Le reveal arrive juste après les choix."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div>`;
   const finalHtml = state.phase === "finished" ? `<section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}"><div class="stat-clash-final-head"><p class="stat-clash-final-kicker">Résultat final</p><h3>${winnerKey === "tie" ? "Égalité" : `${escapeHtml(state.players[winnerKey].label)} gagne`}</h3><p>${state.players.left.score} à ${state.players.right.score}</p></div><div class="stat-clash-final-actions"><button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button><button class="btn-ghost" type="button" onclick="goToConfig()">Retour menu</button></div></section>` : "";
   const imposedRulePickerHtml = (isBotLobby || (isRoom && roomIsLobby && room?.code)) ? renderImposedRulePicker() : "";
   // Type color (basé sur le Pokémon affiché)
@@ -6439,7 +6439,7 @@ function renderGuessAC(matches) {
     const item = document.createElement("div");
     item.className = "ac-item";
     item.innerHTML = `
-      <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackSprite}'" />
+      <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" data-fallback="${fallbackSprite}" />
       <div>
         <div class="ac-name">${p.name}</div>
         <div class="ac-sub">${p.type1}${p.type2 ? ` / ${p.type2}` : ""} • Gen ${p.gen}</div>
@@ -6509,7 +6509,7 @@ function renderMultiplayerGuessAC(matches) {
     const item = document.createElement("div");
     item.className = "ac-item";
     item.innerHTML = `
-      <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackSprite}'" />
+      <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" data-fallback="${fallbackSprite}" />
       <div>
         <div class="ac-name">${p.name}</div>
         <div class="ac-sub">${p.type1}${p.type2 ? ` / ${p.type2}` : ""} • Gen ${p.gen}</div>
@@ -6673,7 +6673,7 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   return `
     <td>
       <div class="poke-cell">
-        <img src="${getPokemonSprite(pokemon)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackSprite}'" />
+        <img src="${getPokemonSprite(pokemon)}" alt="${pokemon.name}" loading="lazy" data-fallback="${fallbackSprite}" />
         ${pokemon.name}
       </div>
     </td>
@@ -7918,7 +7918,7 @@ function renderPartyGuessAC(matches) {
   list.innerHTML = matches.map(function (pokemon) {
     var fallbackSprite = getSpriteUrl(getPokemonSpriteId(pokemon));
     return '<div class="ac-item" data-name="' + escapeHtml(pokemon.name) + '">' +
-      '<img src="' + escapeHtml(getPokemonSprite(pokemon)) + '" alt="' + escapeHtml(pokemon.name) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + escapeHtml(fallbackSprite) + '\'" />' +
+      '<img src="' + escapeHtml(getPokemonSprite(pokemon)) + '" alt="' + escapeHtml(pokemon.name) + '" loading="lazy" data-fallback="' + escapeHtml(fallbackSprite) + '" />' +
       '<div>' +
         '<div class="ac-name">' + escapeHtml(pokemon.name) + '</div>' +
         '<div class="ac-sub">' + escapeHtml(pokemon.type1 || "?") + (pokemon.type2 ? " / " + escapeHtml(pokemon.type2) : "") + ' • Gen ' + escapeHtml(pokemon.gen || "?") + '</div>' +
@@ -11055,7 +11055,7 @@ function renderPokedexGrid() {
     const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
 
     card.innerHTML = `
-      <img src="${sprite}" alt="${p.name}" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
+      <img src="${sprite}" alt="${p.name}" data-fallback="${getSpriteUrl(dexId)}" />
       <span class="pokedex-num">#${dexId}</span>
       <strong>${p.name}</strong>
       <div class="pokedex-card-types">${typeBadgesHtml(p.type1, p.type2 || null)}</div>
@@ -11134,7 +11134,7 @@ function renderPokedexRecentBlock() {
     const dexId = getPokemonSpriteId(pokemon);
     const sprite = getPokedexDisplaySprite(pokemon, false);
     const isActive = Number(pokemon.id) === Number(pokedexSelectedId);
-    return `<button type="button" class="pokedex-recent-item${isActive ? " is-active" : ""}" onclick="openPokedexRecent(${pokemon.id})"><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" /><span>${escapeHtml(pokemon.name)}</span></button>`;
+    return `<button type="button" class="pokedex-recent-item${isActive ? " is-active" : ""}" onclick="openPokedexRecent(${pokemon.id})"><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" data-fallback="${getSpriteUrl(dexId)}" /><span>${escapeHtml(pokemon.name)}</span></button>`;
   }).join("");
   const clearDisabled = recent.length ? "" : "disabled";
   return `<div class="pokedex-recent-block"><div class="pokedex-recent-head"><h4>Derniers consultés</h4><button type="button" class="btn-ghost pokedex-recent-clear" onclick="clearPokedexRecentHistory()" ${clearDisabled}>Effacer</button></div>${recent.length ? `<div class="pokedex-recent-list">${items}</div>` : '<p class="pokedex-recent-empty">Aucun Pokémon récent</p>'}</div>`;
@@ -11341,7 +11341,7 @@ async function renderPokedexDetail(pokemon) {
         </div>
       </div>
       <div class="pokedex-detail-head-main">
-        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
+        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
         ${builderActionHtml}
       </div>
     </div>
@@ -11406,7 +11406,7 @@ async function renderPokedexDetail(pokemon) {
         </div>
       </div>
       <div class="pokedex-detail-head-main">
-        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(dexId)}'" />
+        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
         ${builderActionHtml}
       </div>
     </div>
@@ -16485,11 +16485,11 @@ function renderDraftSimpleBattleDevPanel(state) {
           ${getGbaPokeballsHtml(state.rightTeam, state.rightActiveIndex)}
         </div>
         <div class="gba-fighter gba-fighter-foe ${rightFighterClass}">
-          <img class="gba-sprite gba-sprite-foe" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${getPokemonSpriteId(displayRight.pokemon)}.png" alt="${escapeHtml(displayRight.pokemon.name)}" onerror="this.onerror=null;this.src='${escapeHtml(getPokemonSprite(displayRight.pokemon))}';">
+          <img class="gba-sprite gba-sprite-foe" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${getPokemonSpriteId(displayRight.pokemon)}.png" alt="${escapeHtml(displayRight.pokemon.name)}" data-fallback="${escapeHtml(getPokemonSprite(displayRight.pokemon))}">
           <div class="gba-platform gba-platform-foe"></div>
         </div>
         <div class="gba-fighter gba-fighter-player ${leftFighterClass}">
-          <img class="gba-sprite gba-sprite-player" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${getPokemonSpriteId(displayLeft.pokemon)}.png" alt="${escapeHtml(displayLeft.pokemon.name)}" onerror="this.onerror=null;this.src='${escapeHtml(getPokemonSprite(displayLeft.pokemon))}';">
+          <img class="gba-sprite gba-sprite-player" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${getPokemonSpriteId(displayLeft.pokemon)}.png" alt="${escapeHtml(displayLeft.pokemon.name)}" data-fallback="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}">
           <div class="gba-platform gba-platform-player"></div>
         </div>
         <div class="gba-info-box gba-info-player">
@@ -17649,7 +17649,7 @@ function showDraftScoreFinaleOverlay(room) {
       <div class="dsf-team-sprites">${team.map((entry, idx) => {
         const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(entry.id));
         const sprite = pokemon ? getPokemonSprite(pokemon) : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
-        return `<div class="dsf-pokemon-tile" style="--dsf-i:${idx}"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" onerror="this.onerror=null;this.src='${pokemon?.sprite || ''}'" /><b>${entry.bst}</b><span>${escapeHtml(entry.name)}</span></div>`;
+        return `<div class="dsf-pokemon-tile" style="--dsf-i:${idx}"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b><span>${escapeHtml(entry.name)}</span></div>`;
       }).join("")}</div>
       <div class="dsf-team-score" data-target="${player.result?.average || 0}">0</div>
       <div class="dsf-team-score-label">Moyenne BST</div>
@@ -17727,7 +17727,7 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
     } else {
       sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
     }
-    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" onerror="this.onerror=null;this.src='${pokemon?.sprite || ''}'" /><b>${entry.bst}</b></div>`;
+    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b></div>`;
   }).join("");
   const status = player.hasSubmitted
     ? "✅ Soumis"
@@ -18782,7 +18782,7 @@ function renderDraftArena() {
           : "";
         card.innerHTML = `
           ${rerollBtn}
-          <img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${normalSprite}'" />
+          <img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" />
           <strong>${escapeHtml(option.pokemon.name)}</strong>
           <span>#${spriteId}</span>
           <span class="draft-card-meta">BST ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
@@ -18838,7 +18838,7 @@ function renderDraftArena() {
       const typesHtml = [member.pokemon.type1, member.pokemon.type2].filter(Boolean).map((type) => typeBadgeHtml(type)).join("");
       item.className = "draft-team-card" + (member.shiny ? " is-shiny" : "") + (isLatest ? " is-latest" : " is-filled");
       item.innerHTML = `
-        <img src="${shownSprite}" alt="${escapeHtml(member.pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${normalSprite}'" />
+        <img src="${shownSprite}" alt="${escapeHtml(member.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" />
         <div class="draft-team-card-body">
           <small class="draft-team-slot-label">Slot ${index + 1}${isLatest ? " • Nouveau" : ""}</small>
           <b>${escapeHtml(member.pokemon.name)}</b>
@@ -19207,7 +19207,7 @@ function filterChallengeAC() {
     const item = document.createElement("div");
     item.className = "ac-item";
     item.innerHTML = `
-      <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackSprite}'" />
+      <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" data-fallback="${fallbackSprite}" />
       <div>
         <div class="ac-name">${p.name}</div>
         <div class="ac-sub">Gen ${p.gen} ? ${p.type1}${p.type2 ? ` / ${p.type2}` : ""}</div>
@@ -19755,6 +19755,21 @@ window.openDefiAmiFromAllModes = openDefiAmiFromAllModes;
   else initInlineHandlerBindings();
 })();
 
+(function () {
+  if (window.__imgFallbackReady) return;
+  window.__imgFallbackReady = true;
+  // Les images migrées portent data-fallback="<url de secours>".
+  // L'event "error" ne bouillonne pas -> on écoute en phase de capture.
+  document.addEventListener("error", function (e) {
+    var t = e.target;
+    if (!t || t.tagName !== "IMG") return;
+    var fb = t.getAttribute("data-fallback");
+    if (!fb || t.dataset.fallbackApplied === "1") return;
+    t.dataset.fallbackApplied = "1";
+    if (t.src !== fb) t.src = fb;
+  }, true);
+})();
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
@@ -19982,7 +19997,7 @@ function renderProfileScreen() {
     favoriteCard.innerHTML = "";
     const favorite = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
     if (favorite) {
-      favoriteCard.innerHTML = `<div class="pokemon-mini-card"><img src="${getPokemonSprite(favorite)}" alt="${escapeHtml(favorite.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(favorite))}'" /><strong>${escapeHtml(favorite.name)}</strong><div class="pokemon-card-types">${typeBadgesHtml(favorite.type1, favorite.type2)}</div></div>`;
+      favoriteCard.innerHTML = `<div class="pokemon-mini-card"><img src="${getPokemonSprite(favorite)}" alt="${escapeHtml(favorite.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(favorite))}" /><strong>${escapeHtml(favorite.name)}</strong><div class="pokemon-card-types">${typeBadgesHtml(favorite.type1, favorite.type2)}</div></div>`;
     } else {
       favoriteCard.innerHTML = '<p class="card-desc">Choisis un Pokémon favori pour l’afficher ici.</p>';
     }
@@ -20972,7 +20987,7 @@ function renderWeightBattlePanel() {
       btn.disabled = true;
       btn.classList.add(pokemon.id === secretPokemon?.id ? "is-correct" : "is-wrong");
     }
-    btn.innerHTML = `<div class="pokemon-mini-card is-silhouette"><img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(pokemon))}'" /><strong>${escapeHtml(pokemon.name)}</strong></div>`;
+    btn.innerHTML = `<div class="pokemon-mini-card is-silhouette"><img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(pokemon))}" /><strong>${escapeHtml(pokemon.name)}</strong></div>`;
     btn.addEventListener("click", () => {
       if (weightBattleState.revealed) return;
       weightBattleState.revealed = true;
@@ -21223,7 +21238,7 @@ function renderOddOneOutPuzzle(selectedId = null) {
       if (pokemon.id === selectedId && pokemon.id !== oddOneOutState.oddId) btn.classList.add("is-wrong");
       if (pokemon.id === selectedId && pokemon.id === oddOneOutState.oddId) btn.classList.add("is-correct");
     }
-    btn.innerHTML = `<img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(pokemon))}'" /><span class="odd-card-name">${escapeHtml(pokemon.name)}</span>`;
+    btn.innerHTML = `<img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(pokemon))}" /><span class="odd-card-name">${escapeHtml(pokemon.name)}</span>`;
     btn.disabled = oddOneOutState.revealed;
     btn.addEventListener("click", () => submitOddOneOutChoice(pokemon.id));
     grid.appendChild(btn);
@@ -21449,7 +21464,7 @@ function renderMultiplayerSecretPreview() {
   preview.classList.remove("hidden");
   preview.innerHTML = `
     <div class="pokemon-mini-card multiplayer-secret-card">
-      <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackSprite}'" />
+      <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${fallbackSprite}" />
       <strong>${escapeHtml(pokemon.name)}</strong>
       <span class="multiplayer-secret-card-meta">Gen ${pokemon.gen}</span>
       <div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
@@ -22005,7 +22020,7 @@ function buildMultiplayerComparisonRowHtml(entry) {
   return `
     <td>
       <div class="poke-cell">
-        <img src="${entry.sprite || getPokemonSprite(entry)}" alt="${escapeHtml(entry.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackSprite}'" />
+        <img src="${entry.sprite || getPokemonSprite(entry)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${fallbackSprite}" />
         ${escapeHtml(entry.name)}
       </div>
     </td>
@@ -22172,7 +22187,7 @@ function renderMultiplayerBotResult() {
       ${target ? `
       <div class="multiplayer-target-card">
         <div class="pokemon-mini-card">
-          <img src="${target.sprite || getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(target))}'" />
+          <img src="${target.sprite || getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(target))}" />
           <strong>${escapeHtml(target.name)}</strong>
           <div class="pokemon-card-types">${typeBadgesHtml(target.type1, target.type2)}</div>
         </div>
@@ -22202,7 +22217,7 @@ function renderMultiplayerBotResult() {
             ${target ? `
             <div class="multiplayer-target-card">
               <div class="pokemon-mini-card">
-                <img src="${target.sprite || getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(target))}'" />
+                <img src="${target.sprite || getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(target))}" />
                 <strong>${escapeHtml(target.name)}</strong>
                 <div class="pokemon-card-types">${typeBadgesHtml(target.type1, target.type2)}</div>
               </div>
@@ -22232,7 +22247,7 @@ function renderMultiplayerBotResult() {
             ${target ? `
             <div class="multiplayer-target-card">
               <div class="pokemon-mini-card">
-                <img src="${target.sprite || getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" onerror="this.onerror=null;this.src='${getSpriteUrl(getPokemonSpriteId(target))}'" />
+                <img src="${target.sprite || getPokemonSprite(target)}" alt="${escapeHtml(target.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(target))}" />
                 <strong>${escapeHtml(target.name)}</strong>
                 <div class="pokemon-card-types">${typeBadgesHtml(target.type1, target.type2)}</div>
               </div>
