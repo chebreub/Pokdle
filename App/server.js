@@ -279,14 +279,14 @@ function isPayloadOversized(payload) {
 // CSP en mode ENFORCE : les ressources non autorisées sont bloquées.
 // script-src ne contient PAS 'unsafe-inline' -> aucun handler inline (onclick/onerror/...)
 // ni <script> inline n'est autorisé. Tous ont été migrés vers data-action / délégation.
-// 'unsafe-eval' + 'wasm-unsafe-eval' sont conservés uniquement pour l'émulateur EmulatorJS.
+// 'wasm-unsafe-eval' est conservé pour les cores WebAssembly de l'émulateur EmulatorJS.
+// 'unsafe-eval' a été retiré (test) : si l'émulateur casse, le remettre dans scriptSrc.
 const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: [
     "'self'",
     "https://cdn.emulatorjs.org",
     "'wasm-unsafe-eval'",
-    "'unsafe-eval'",
     "blob:",
   ],
   styleSrc: ["'self'", "https://fonts.googleapis.com", "https://cdn.emulatorjs.org", "'unsafe-inline'"],
