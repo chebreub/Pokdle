@@ -405,7 +405,7 @@ function renderHomeEngagementWidget() {
   }
   // Widget compact : bandeau horizontal avec niveau + barre XP + chips quêtes/streak + CTA
   widget.innerHTML = `
-    <div class="home-engagement-bar" data-action="openDailyQuestsModal" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDailyQuestsModal()" aria-label="Voir mes quêtes quotidiennes">
+    <div class="home-engagement-bar" data-action="openDailyQuestsModal" role="button" tabindex="0" data-keydown-action="dailyQuestsKeydown" aria-label="Voir mes quêtes quotidiennes">
       <div class="heb-tier">
         <div class="heb-tier-emoji">${prog.tier.emoji}</div>
         <div class="heb-tier-info">
@@ -4360,7 +4360,7 @@ function renderStatClashScreen() {
       ? roomHasStarted
         ? `<section class="stat-clash-room-panel is-compact"><div class="stat-clash-room-summary"><span><b>Room :</b> ${escapeHtml(room.code)}</span><span><b>Joueurs :</b> ${Number(room.connectedCount || room.players?.filter((player) => player.connected).length || 0)}/${Number(room.maxPlayers || 2)}</span><span><b>Statut :</b> ${escapeHtml(room.status === "starting" ? "Countdown" : room.roundPhase === "rolling" ? "Préparation" : room.roundPhase === "picking" ? "Choix" : room.roundPhase === "locked" ? "Verrouillé" : room.roundPhase === "reveal" ? "Reveal" : room.status === "finished" ? "Terminé" : "Live")}</span></div><div class="stat-clash-room-presence is-compact">${roomPlayersHtml}</div><div class="stat-clash-room-actions"><button class="btn-ghost" type="button" data-stat-clash-action="copy-room">Copier</button><button class="btn-ghost" type="button" data-stat-clash-action="leave-room">Quitter</button></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</section>`
         : `<section class="stat-clash-room-panel"><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div><div class="stat-clash-room-summary"><span><b>Room :</b> ${escapeHtml(room.code)}</span><span><b>Joueurs :</b> ${Number(room.connectedCount || room.players?.filter((player) => player.connected).length || 0)}/${Number(room.maxPlayers || 2)}</span><span><b>Statut :</b> ${escapeHtml(room.status === "starting" ? "Lancement..." : room.canStart ? "Prête" : "En attente")}</span></div><div class="stat-clash-room-presence">${roomPlayersHtml}</div><div class="stat-clash-room-actions"><button class="btn-ghost" type="button" data-stat-clash-action="copy-room">Copier</button><button class="btn-ghost" type="button" data-stat-clash-action="leave-room">Quitter</button>${selfRoomPlayer?.isHost ? `<button class="btn-red" type="button" data-stat-clash-action="start-room" ${roomBusy || !room?.canStart || room?.status === "live" || room?.status === "starting" ? "disabled" : ""}>${room?.status === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : ""}</div>${!selfRoomPlayer?.isHost && room?.canStart && room?.status === "lobby" ? '<p class="card-desc stat-clash-room-waiting">En attente du lancement par l’hôte.</p>' : ""}</section>`
-      : `<section class="stat-clash-room-panel"><div class="stat-clash-room-toolbar"><div class="stat-clash-room-row"><input id="stat-clash-nickname" class="stat-clash-room-input" type="text" maxlength="24" value="${escapeHtml(state.roomNameDraft || "")}" placeholder="Ton pseudo" oninput="syncStatClashNickname()" ${roomBusy ? "disabled" : ""} /><button class="btn-blue" type="button" data-stat-clash-action="create-room" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "creating" ? "Création…" : "Créer"}</button></div><div class="stat-clash-room-row"><input id="stat-clash-room-input" class="stat-clash-room-input stat-clash-room-code-input" type="text" maxlength="6" value="${escapeHtml(state.roomCodeDraft || "")}" placeholder="Code de room" oninput="syncStatClashJoinCode()" ${roomBusy ? "disabled" : ""} /><button class="btn-ghost" type="button" data-stat-clash-action="join-room" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "joining" ? "Connexion…" : "Rejoindre"}</button></div></div><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div></section>`
+      : `<section class="stat-clash-room-panel"><div class="stat-clash-room-toolbar"><div class="stat-clash-room-row"><input id="stat-clash-nickname" class="stat-clash-room-input" type="text" maxlength="24" value="${escapeHtml(state.roomNameDraft || "")}" placeholder="Ton pseudo" data-input-action="syncStatClashNickname" ${roomBusy ? "disabled" : ""} /><button class="btn-blue" type="button" data-stat-clash-action="create-room" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "creating" ? "Création…" : "Créer"}</button></div><div class="stat-clash-room-row"><input id="stat-clash-room-input" class="stat-clash-room-input stat-clash-room-code-input" type="text" maxlength="6" value="${escapeHtml(state.roomCodeDraft || "")}" placeholder="Code de room" data-input-action="syncStatClashJoinCode" ${roomBusy ? "disabled" : ""} /><button class="btn-ghost" type="button" data-stat-clash-action="join-room" ${roomBusy ? "disabled" : ""}>${state.roomPendingAction === "joining" ? "Connexion…" : "Rejoindre"}</button></div></div><div class="stat-clash-room-status ${escapeHtml(roomUi?.tone || "is-idle")}"><div><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong><small>${escapeHtml(roomUi?.detail || "Crée une room pour inviter un autre joueur.")}</small></div>${state.roomFeedback ? `<span class="stat-clash-room-feedback ${escapeHtml(state.roomFeedbackTone || "info")}">${escapeHtml(state.roomFeedback)}</span>` : ""}</div></section>`
     : "";
   const lobbyCenterHtml = isBotLobby
     ? `<div class="stat-clash-lobby-center stat-clash-bot-lobby"><div class="stat-clash-lobby-center-head"><span>Vs Bot</span><strong>Prêt à jouer</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(state.statusText || "Lance une partie ou passe en Room 1v1.")}</h3><p>Tu peux régler le format, la difficulté et la règle maison avant le départ.</p><button class="btn-red" type="button" data-stat-clash-action="start-bot">Lancer vs bot</button></div></div>`
@@ -4375,10 +4375,10 @@ function renderStatClashScreen() {
   const isRoomLobbyHost = isRoom && roomIsLobby && Boolean(selfRoomPlayer?.isHost);
   const showSettingsBar = !isRoom || isRoomLobbyHost;
   const settingsBarHtml = !showSettingsBar ? "" : `<div class="stat-clash-settings-bar">
-    <label class="stat-clash-setting"><span>Format</span><select onchange="setStatClashFormat(this.value)" ${isRoom && !isRoomLobbyHost ? "disabled" : ""}>${Object.entries(STAT_CLASH_FORMATS).map(([key, def]) => `<option value="${key}" ${state.format === key ? "selected" : ""}>${escapeHtml(def.label)}</option>`).join("")}</select></label>
-    ${!isRoom ? `<label class="stat-clash-setting"><span>Bot</span><select onchange="setStatClashDifficulty(this.value)">${Object.entries(STAT_CLASH_BOT_DIFFICULTIES).map(([key, def]) => `<option value="${key}" ${state.botDifficulty === key ? "selected" : ""}>${escapeHtml(def.label)}</option>`).join("")}</select></label>` : ""}
-    <label class="stat-clash-setting stat-clash-setting-toggle"><input type="checkbox" ${state.houseRuleEnabled ? "checked" : ""} onchange="toggleStatClashHouseRule()" ${isRoom && !isRoomLobbyHost ? "disabled" : ""} /><span>Handicaps imposés</span></label>
-    <label class="stat-clash-setting stat-clash-setting-toggle"><input type="checkbox" ${state.houseRuleSharedEnabled ? "checked" : ""} onchange="toggleStatClashSharedHouseRule()" ${isRoom && !isRoomLobbyHost ? "disabled" : ""} /><span>Règle commune</span></label>
+    <label class="stat-clash-setting"><span>Format</span><select data-change-action="statClashFormatFromEl" ${isRoom && !isRoomLobbyHost ? "disabled" : ""}>${Object.entries(STAT_CLASH_FORMATS).map(([key, def]) => `<option value="${key}" ${state.format === key ? "selected" : ""}>${escapeHtml(def.label)}</option>`).join("")}</select></label>
+    ${!isRoom ? `<label class="stat-clash-setting"><span>Bot</span><select data-change-action="statClashDifficultyFromEl">${Object.entries(STAT_CLASH_BOT_DIFFICULTIES).map(([key, def]) => `<option value="${key}" ${state.botDifficulty === key ? "selected" : ""}>${escapeHtml(def.label)}</option>`).join("")}</select></label>` : ""}
+    <label class="stat-clash-setting stat-clash-setting-toggle"><input type="checkbox" ${state.houseRuleEnabled ? "checked" : ""} data-change-action="toggleStatClashHouseRule" ${isRoom && !isRoomLobbyHost ? "disabled" : ""} /><span>Handicaps imposés</span></label>
+    <label class="stat-clash-setting stat-clash-setting-toggle"><input type="checkbox" ${state.houseRuleSharedEnabled ? "checked" : ""} data-change-action="toggleStatClashSharedHouseRule" ${isRoom && !isRoomLobbyHost ? "disabled" : ""} /><span>Règle commune</span></label>
     ${!isRoom ? `<button type="button" class="${isBotLobby ? "btn-red" : "btn-ghost"} stat-clash-restart-btn" data-stat-clash-action="start-bot">${isBotLobby ? "Lancer vs bot" : "↻ Nouvelle partie"}</button>` : ""}
   </div>`;
   // Versus overlay (game / round intro)
@@ -4712,14 +4712,14 @@ function renderHigherLowerScreen() {
           <p class="card-desc">Crée une room et partage le code, ou rejoins une room existante.</p>
           <div class="higher-lower-room-form">
             <label>Ton pseudo
-              <input id="higher-lower-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" oninput="syncHigherLowerNickname()" />
+              <input id="higher-lower-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" data-input-action="syncHigherLowerNickname" />
             </label>
             <div class="higher-lower-room-actions">
               <button class="btn-blue" type="button" data-action="createHigherLowerRoom" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
             </div>
             <div class="higher-lower-room-join">
               <label>Code de room
-                <input id="higher-lower-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" oninput="syncHigherLowerJoinCode()" />
+                <input id="higher-lower-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" data-input-action="syncHigherLowerJoinCode" />
               </label>
               <button class="btn-ghost" type="button" data-action="joinHigherLowerRoom" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
             </div>
@@ -5223,7 +5223,7 @@ function renderSpeedrunScreen() {
         <div class="speedrun-pokemon">
           <img class="speedrun-sprite" src="${escapeHtml(sprite)}" alt="?" />
         </div>
-        <form class="speedrun-form" onsubmit="event.preventDefault(); if (document.getElementById('speedrun-input').value.trim()) speedrunSubmitGuess(); else speedrunSkip();">
+        <form class="speedrun-form" data-submit-action="speedrunFormSubmit">
           <input id="speedrun-input" class="speedrun-input" type="text" placeholder="Nom du Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" autofocus />
           <div class="speedrun-actions">
             <button class="btn-red" type="submit">Valider</button>
@@ -5755,14 +5755,14 @@ function renderStatAuctionScreen() {
           <p class="card-desc">Crée une room ou rejoins-en une par code.</p>
           <div class="higher-lower-room-form">
             <label>Ton pseudo
-              <input id="stat-auction-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" oninput="syncStatAuctionNickname()" />
+              <input id="stat-auction-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" data-input-action="syncStatAuctionNickname" />
             </label>
             <div class="higher-lower-room-actions">
               <button class="btn-blue" type="button" data-action="createStatAuctionRoom" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
             </div>
             <div class="higher-lower-room-join">
               <label>Code de room
-                <input id="stat-auction-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" oninput="syncStatAuctionJoinCode()" />
+                <input id="stat-auction-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" data-input-action="syncStatAuctionJoinCode" />
               </label>
               <button class="btn-ghost" type="button" data-action="joinStatAuctionRoom" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
             </div>
@@ -5824,7 +5824,7 @@ function renderStatAuctionScreen() {
       <div class="stat-auction-stat-label"><span>${s.icon}</span><b>${escapeHtml(s.label)}</b></div>
       <div class="stat-auction-stat-controls">
         <button type="button" class="btn-ghost stat-auction-step" ${cur <= 0 || state.submitted ? "disabled" : ""} data-action="changeStatAuctionAllocation" data-args='["${s.key}",-5]'>−5</button>
-        <input type="number" class="stat-auction-input" min="0" max="100" value="${cur}" ${state.submitted ? "disabled" : ""} oninput="setStatAuctionAllocation('${s.key}', this.value)" />
+        <input type="number" class="stat-auction-input" min="0" max="100" value="${cur}" ${state.submitted ? "disabled" : ""} data-input-action="statAuctionAllocationFromEl" data-stat-key="${s.key}" />
         <button type="button" class="btn-ghost stat-auction-step" ${remaining <= 0 || state.submitted ? "disabled" : ""} data-action="changeStatAuctionAllocation" data-args='["${s.key}",5]'>+5</button>
       </div>
     </div>`;
@@ -19792,6 +19792,39 @@ window.winOverlayBackToConfig = function () {
   if (typeof goToConfig === "function") goToConfig();
 };
 
+// Délégation des events input/change/keydown/submit (migration CSP vague C)
+(function () {
+  if (window.__valueDelegationReady) return;
+  window.__valueDelegationReady = true;
+  function parseArgs(node) {
+    var raw = node.getAttribute("data-args");
+    if (!raw) return [];
+    try { var p = JSON.parse(raw); return Array.isArray(p) ? p : [p]; } catch (e) { return []; }
+  }
+  function makeDelegator(eventName, attr, passEvent) {
+    document.addEventListener(eventName, function (ev) {
+      var t = ev.target;
+      if (!t || !t.closest) return;
+      var node = t.closest("[" + attr + "]");
+      if (!node) return;
+      var fn = window[node.getAttribute(attr)];
+      if (typeof fn !== "function") return;
+      if (passEvent) fn.call(node, ev);
+      else fn.apply(node, parseArgs(node));
+    }, false);
+  }
+  makeDelegator("input", "data-input-action", false);
+  makeDelegator("change", "data-change-action", false);
+  makeDelegator("keydown", "data-keydown-action", true);
+  makeDelegator("submit", "data-submit-action", true);
+})();
+window.statClashFormatFromEl = function () { if (typeof setStatClashFormat === "function") setStatClashFormat(this.value); };
+window.statClashDifficultyFromEl = function () { if (typeof setStatClashDifficulty === "function") setStatClashDifficulty(this.value); };
+window.statAuctionAllocationFromEl = function () { if (typeof setStatAuctionAllocation === "function") setStatAuctionAllocation(this.dataset.statKey, this.value); };
+window.appSettingFromEl = function () { if (typeof updateAppSetting === "function") updateAppSetting(this.dataset.setting, this.dataset.bool === "1" ? this.checked : this.value); };
+window.dailyQuestsKeydown = function (ev) { if (ev && ev.key === "Enter" && typeof openDailyQuestsModal === "function") openDailyQuestsModal(); };
+window.speedrunFormSubmit = function (ev) { if (ev) ev.preventDefault(); var i = document.getElementById("speedrun-input"); if (i && i.value.trim()) { if (typeof speedrunSubmitGuess === "function") speedrunSubmitGuess(); } else if (typeof speedrunSkip === "function") speedrunSkip(); };
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
@@ -20858,14 +20891,14 @@ function openSettingsModal() {
         <h4>Affichage</h4>
         <label class="app-setting-item app-setting-item-stack">
           <span><b>Thème</b><small>Basculer entre clair et sombre.</small></span>
-          <select onchange="updateAppSetting('theme', this.value)">
+          <select data-change-action="appSettingFromEl" data-setting="theme">
             <option value="light" ${settings.theme === "light" ? "selected" : ""}>Clair</option>
             <option value="dark" ${settings.theme === "dark" ? "selected" : ""}>Sombre</option>
           </select>
         </label>
         <label class="app-setting-item app-setting-item-stack">
           <span><b>Densité</b><small>Compact pour voir plus d'infos, aéré pour plus de confort.</small></span>
-          <select onchange="updateAppSetting('density', this.value)">
+          <select data-change-action="appSettingFromEl" data-setting="density">
             <option value="normal" ${settings.density === "normal" ? "selected" : ""}>Normale</option>
             <option value="compact" ${settings.density === "compact" ? "selected" : ""}>Compacte</option>
             <option value="airy" ${settings.density === "airy" ? "selected" : ""}>Aérée</option>
@@ -20873,7 +20906,7 @@ function openSettingsModal() {
         </label>
         <label class="app-setting-item app-setting-item-stack">
           <span><b>Taille du texte</b><small>Ajuste la lisibilité générale de l'interface.</small></span>
-          <select onchange="updateAppSetting('textScale', this.value)">
+          <select data-change-action="appSettingFromEl" data-setting="textScale">
             <option value="small" ${settings.textScale === "small" ? "selected" : ""}>Petite</option>
             <option value="normal" ${settings.textScale === "normal" ? "selected" : ""}>Normale</option>
             <option value="large" ${settings.textScale === "large" ? "selected" : ""}>Grande</option>
@@ -20884,11 +20917,11 @@ function openSettingsModal() {
         <h4>Accessibilité</h4>
         <label class="app-setting-item">
           <span><b>Contraste renforcé</b><small>Renforce les bordures et certains contrastes.</small></span>
-          <input type="checkbox" ${settings.highContrast ? "checked" : ""} onchange="updateAppSetting('highContrast', this.checked)" />
+          <input type="checkbox" ${settings.highContrast ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="highContrast" data-bool="1" />
         </label>
         <label class="app-setting-item">
           <span><b>Réduire les animations</b><small>Limite les transitions et animations décoratives.</small></span>
-          <input type="checkbox" ${settings.reduceMotion ? "checked" : ""} onchange="updateAppSetting('reduceMotion', this.checked)" />
+          <input type="checkbox" ${settings.reduceMotion ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="reduceMotion" data-bool="1" />
         </label>
       </section>
       <button class="btn-ghost app-settings-reset" type="button" data-action="resetAppSettings">Réinitialiser les paramètres</button>
