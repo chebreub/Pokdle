@@ -17,3 +17,6 @@ Thumbs.db
 # Script habitat re-dérivation (cache + backup)
 .habitat-cache.json
 App/pokemon.js.bak
+
+# Build minifié (chantier 3) — régénéré au déploiement via postinstall
+App/dist/
