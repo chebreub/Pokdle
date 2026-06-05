@@ -18929,12 +18929,16 @@ let emulatorRunning = false;
 function coreFromRomPath(pathOrName) {
   const src = String(pathOrName || "").toLowerCase();
   if (src.endsWith(".nds")) return "nds";
+  if (src.endsWith(".gbc") || src.endsWith(".gb")) return "gb";
   return "gba";
 }
 
 function controlsHintForCore(core) {
   if (core === "nds") {
     return '<b>Touches DS:</b> <span>Z = A</span> <span>X = B</span> <span>Entrée = Start</span> <span>Shift = Select</span> <span>A = L</span> <span>S = R</span> <span>Flèches = direction</span> <span>Souris = écran tactile</span>';
+  }
+  if (core === "gb") {
+    return '<b>Touches Game Boy:</b> <span>Z = A</span> <span>X = B</span> <span>Entrée = Start</span> <span>Shift = Select</span> <span>Flèches = direction</span>';
   }
   return '<b>Touches GBA:</b> <span>Z = A</span> <span>X = B</span> <span>Entrée = Start</span> <span>Shift = Select</span> <span>A = L</span> <span>S = R</span> <span>Flèches = direction</span>';
 }
@@ -18975,8 +18979,8 @@ function initEmulatorMode() {
     if (!file) return;
 
     const lower = file.name.toLowerCase();
-    if (!lower.endsWith(".gba") && !lower.endsWith(".nds")) {
-      setEmuStatus("Fichier invalide: choisis une ROM .gba ou .nds.");
+    if (!lower.endsWith(".gba") && !lower.endsWith(".nds") && !lower.endsWith(".gbc") && !lower.endsWith(".gb")) {
+      setEmuStatus("Fichier invalide: choisis une ROM .gba, .gbc, .gb ou .nds.");
       return;
     }
 
