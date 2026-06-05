@@ -792,10 +792,6 @@ const FORM_API_NAME_BY_NAME = {
   "Palkia Originel": "palkia-origin",
   "Zygarde 10%": "zygarde-10",
   "Zygarde Complet": "zygarde-complete",
-  "Genesect Module Aqua": "genesect-douse",
-  "Genesect Module Chaleur": "genesect-burn",
-  "Genesect Module Choc": "genesect-shock",
-  "Genesect Module Froid": "genesect-chill",
   "Floette Fleur Éternelle": "floette-eternal",
   "Amphinobi Ash": "greninja-ash",
   "Wimessir Femelle": "indeedee-female",
@@ -803,7 +799,6 @@ const FORM_API_NAME_BY_NAME = {
   "Morphéo Soleil": "castform-sunny",
   "Morphéo Pluie": "castform-rainy",
   "Morphéo Neige": "castform-snowy",
-  "Ceriflor Éveil": "cherrim-sunshine",
 };
 const EXTRA_FORM_CACHE_KEY = "pokedle_form_sprites_v2";
 
