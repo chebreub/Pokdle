@@ -169,9 +169,9 @@ function openDailyQuestsModal() {
   overlay.id = "daily-quests-overlay";
   overlay.className = "daily-quests-overlay";
   overlay.innerHTML = `
-    <div class="dq-backdrop" onclick="closeDailyQuestsModal()"></div>
+    <div class="dq-backdrop" data-action="closeDailyQuestsModal"></div>
     <div class="dq-content" role="dialog" aria-modal="true">
-      <button class="dq-close" type="button" onclick="closeDailyQuestsModal()" aria-label="Fermer">×</button>
+      <button class="dq-close" type="button" data-action="closeDailyQuestsModal" aria-label="Fermer">×</button>
       <div class="dq-hero">
         <div class="dq-hero-tier"><span class="dq-hero-emoji">${prog.tier.emoji}</span><div><b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : ""}</small></div></div>
         <div class="dq-hero-bar"><div class="dq-hero-fill" style="width:${prog.percent}%"></div></div>
@@ -191,7 +191,7 @@ function openDailyQuestsModal() {
         }).join("")}
       </div>
       <div class="dq-actions">
-        <button class="btn-red" type="button" onclick="shareLevelBadge()">📋 Partager mon niveau</button>
+        <button class="btn-red" type="button" data-action="shareLevelBadge">📋 Partager mon niveau</button>
       </div>
       <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b>${Number(playerProfile?.dailyLoginStreak) > 1 ? ` · 🔥 <b>${playerProfile.dailyLoginStreak}</b> jours d'affilée` : ""}</p>
     </div>`;
@@ -405,7 +405,7 @@ function renderHomeEngagementWidget() {
   }
   // Widget compact : bandeau horizontal avec niveau + barre XP + chips quêtes/streak + CTA
   widget.innerHTML = `
-    <div class="home-engagement-bar" onclick="openDailyQuestsModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDailyQuestsModal()" aria-label="Voir mes quêtes quotidiennes">
+    <div class="home-engagement-bar" data-action="openDailyQuestsModal" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDailyQuestsModal()" aria-label="Voir mes quêtes quotidiennes">
       <div class="heb-tier">
         <div class="heb-tier-emoji">${prog.tier.emoji}</div>
         <div class="heb-tier-info">
@@ -4367,7 +4367,7 @@ function renderStatClashScreen() {
     : isRoom && roomIsLobby
     ? `<div class="stat-clash-lobby-center"><div class="stat-clash-lobby-center-head"><span>Lobby Room 1v1</span><strong>${escapeHtml(roomUi?.title || "Room 1v1")}</strong></div><div class="stat-clash-lobby-center-body"><div class="stat-clash-sprite-placeholder">?</div><h3>${escapeHtml(roomUi?.detail || "En attente de la room.")}</h3><p>${escapeHtml(selfRoomPlayer?.isHost ? "Partage le code puis lance la partie quand la room est complète." : room?.code ? `Connecté à ${room.code}. Attends le lancement par l’hôte.` : "Crée une room ou rejoins-en une avec un code.")}</p></div></div>`
     : `<div class="stat-clash-randomizer ${state.phase === "rolling" ? "is-rolling" : ""}"><div class="stat-clash-randomizer-head"><span>${state.phase === "starting-countdown" ? "Démarrage room" : "Pokémon tiré"}</span><strong>${escapeHtml(state.statusText)}</strong></div><div class="stat-clash-sprite-wrap">${current ? `<img src="${currentSprite}" alt="${escapeHtml(current.name)}" data-fallback="${getSpriteUrl(getPokemonSpriteId(current))}" />` : '<div class="stat-clash-sprite-placeholder">?</div>'}</div><div class="stat-clash-pokemon-meta"><h3>${escapeHtml(current?.name || (state.phase === "starting-countdown" ? "Prépare-toi…" : isRoom ? "Room en attente..." : "Chargement..."))}</h3><p>Les valeurs des 6 stats restent secrètes jusqu'à la révélation.</p></div><div class="stat-clash-timer ${["picking", "locked"].includes(state.phase) ? "is-live" : ""}"><div class="stat-clash-timer-ring"><span>${Math.max(0, Math.ceil(state.timerLeftMs / 1000))}</span></div><div class="stat-clash-timer-track"><span class="stat-clash-timer-fill" style="width:${timerPct}%"></span></div><small>${state.phase === "starting-countdown" ? "Le match commence quand le countdown atteint 0." : state.phase === "rolling" ? "Le randomizer termine son arrêt avant l'ouverture des choix." : ["picking", "locked"].includes(state.phase) ? "10 secondes complètes pour choisir ta stat." : "Le reveal arrive juste après les choix."}</small></div>${state.reveal ? `<div class="stat-clash-reveal-row"><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.left.label)}</span><b>${escapeHtml(state.reveal.left?.statLabel || "—")}</b><small>+${state.reveal.left?.value || 0}</small></div><div class="stat-clash-reveal-card"><span>${escapeHtml(state.players.right.label)}</span><b>${escapeHtml(state.reveal.right?.statLabel || "—")}</b><small>+${state.reveal.right?.value || 0}</small></div></div>${revealStatsHtml}` : ""}</div>`;
-  const finalHtml = state.phase === "finished" ? `<section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}"><div class="stat-clash-final-head"><p class="stat-clash-final-kicker">Résultat final</p><h3>${winnerKey === "tie" ? "Égalité" : `${escapeHtml(state.players[winnerKey].label)} gagne`}</h3><p>${state.players.left.score} à ${state.players.right.score}</p></div><div class="stat-clash-final-actions"><button class="btn-red" type="button" onclick="restartStatClashGame()">Rejouer</button><button class="btn-ghost" type="button" onclick="goToConfig()">Retour menu</button></div></section>` : "";
+  const finalHtml = state.phase === "finished" ? `<section class="stat-clash-final-card ${winnerKey === "tie" ? "is-tie" : "is-win"}"><div class="stat-clash-final-head"><p class="stat-clash-final-kicker">Résultat final</p><h3>${winnerKey === "tie" ? "Égalité" : `${escapeHtml(state.players[winnerKey].label)} gagne`}</h3><p>${state.players.left.score} à ${state.players.right.score}</p></div><div class="stat-clash-final-actions"><button class="btn-red" type="button" data-action="restartStatClashGame">Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">Retour menu</button></div></section>` : "";
   const imposedRulePickerHtml = (isBotLobby || (isRoom && roomIsLobby && room?.code)) ? renderImposedRulePicker() : "";
   // Type color (basé sur le Pokémon affiché)
   const typeColor = current ? getStatClashPokemonTypeColor(current) : "#7c8db5";
@@ -4686,7 +4686,7 @@ function renderHigherLowerScreen() {
             <p>60 secondes pour faire le max de bonnes réponses. Les erreurs ne pénalisent pas, juste le temps presse.</p>
             <div class="higher-lower-mode-record">Record : <b>${state.rushHighScore}</b></div>
           </button>
-          <button class="higher-lower-mode-card" type="button" onclick="startHigherLowerVersusFromLobby()">
+          <button class="higher-lower-mode-card" type="button" data-action="startHigherLowerVersusFromLobby">
             <div class="higher-lower-mode-icon">🆚</div>
             <h4>Versus 1v1</h4>
             <p>Course 60s en temps réel contre un ami. Mêmes Pokémon synchronisés, score adverse visible en live.</p>
@@ -4715,13 +4715,13 @@ function renderHigherLowerScreen() {
               <input id="higher-lower-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" oninput="syncHigherLowerNickname()" />
             </label>
             <div class="higher-lower-room-actions">
-              <button class="btn-blue" type="button" onclick="createHigherLowerRoom()" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
+              <button class="btn-blue" type="button" data-action="createHigherLowerRoom" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
             </div>
             <div class="higher-lower-room-join">
               <label>Code de room
                 <input id="higher-lower-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" oninput="syncHigherLowerJoinCode()" />
               </label>
-              <button class="btn-ghost" type="button" onclick="joinHigherLowerRoom()" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
+              <button class="btn-ghost" type="button" data-action="joinHigherLowerRoom" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
             </div>
           </div>
         ` : `
@@ -4736,8 +4736,8 @@ function renderHigherLowerScreen() {
             ${players.length < 2 ? `<div class="higher-lower-room-player is-empty"><b>En attente…</b><span>Partage le code</span></div>` : ""}
           </div>
           <div class="higher-lower-room-actions">
-            ${isHost ? `<button class="btn-red" type="button" onclick="startHigherLowerRoomMatch()" ${canStart && !pending ? "" : "disabled"}>${pending === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : `<p class="card-desc">En attente du lancement par l'hôte.</p>`}
-            <button class="btn-ghost" type="button" onclick="leaveHigherLowerRoom()">Quitter</button>
+            ${isHost ? `<button class="btn-red" type="button" data-action="startHigherLowerRoomMatch" ${canStart && !pending ? "" : "disabled"}>${pending === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : `<p class="card-desc">En attente du lancement par l'hôte.</p>`}
+            <button class="btn-ghost" type="button" data-action="leaveHigherLowerRoom">Quitter</button>
           </div>
         `}
         ${state.roomError ? `<p class="higher-lower-feedback is-wrong">${escapeHtml(state.roomError)}</p>` : ""}
@@ -4769,8 +4769,8 @@ function renderHigherLowerScreen() {
           <h3>${title}</h3>
           <p>Toi <b>${versusSelf?.score ?? state.score}</b> · ${escapeHtml(versusOpp?.nickname || "Adversaire")} <b>${versusOpp?.score ?? 0}</b></p>
           <div class="higher-lower-room-actions">
-            ${isHost ? `<button class="btn-red" type="button" onclick="restartHigherLowerVersusMatch()">Relancer une partie</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
-            <button class="btn-ghost" type="button" onclick="leaveHigherLowerRoom()">Quitter la room</button>
+            ${isHost ? `<button class="btn-red" type="button" data-action="restartHigherLowerVersusMatch">Relancer une partie</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
+            <button class="btn-ghost" type="button" data-action="leaveHigherLowerRoom">Quitter la room</button>
           </div>
         </div>`;
       return;
@@ -4792,9 +4792,9 @@ function renderHigherLowerScreen() {
           <div class="higher-lower-card-mini ${state.lastCorrect ? "is-correct" : "is-wrong"}"><img src="${escapeHtml(rightSprite)}" alt="${escapeHtml(state.right.pokemon.name)}" /><span>${escapeHtml(state.right.pokemon.name)}</span><b>${statMeta.icon} ${state.right.statValue}</b></div>
         </div>` : ""}
         <div class="higher-lower-final-actions">
-          <button class="btn-red" type="button" onclick="restartHigherLowerGame()">Rejouer</button>
-          <button class="btn-ghost" type="button" onclick="shareHigherLowerResult()">📋 Copier</button>
-          <button class="btn-ghost" type="button" onclick="downloadHigherLowerImage()">💾 Image</button>
+          <button class="btn-red" type="button" data-action="restartHigherLowerGame">Rejouer</button>
+          <button class="btn-ghost" type="button" data-action="shareHigherLowerResult">📋 Copier</button>
+          <button class="btn-ghost" type="button" data-action="downloadHigherLowerImage">💾 Image</button>
         </div>
       </div>`;
     return;
@@ -5205,7 +5205,7 @@ function renderSpeedrunScreen() {
           <div class="speedrun-lobby-stat"><span>Ton record</span><b>${state.highScore || 0}</b></div>
           <div class="speedrun-lobby-stat"><span>Durée</span><b>60s</b></div>
         </div>
-        <button class="btn-red speedrun-start-btn" type="button" onclick="startSpeedrunGame()">⚡ Démarrer</button>
+        <button class="btn-red speedrun-start-btn" type="button" data-action="startSpeedrunGame">⚡ Démarrer</button>
       </div>`;
     return;
   }
@@ -5227,7 +5227,7 @@ function renderSpeedrunScreen() {
           <input id="speedrun-input" class="speedrun-input" type="text" placeholder="Nom du Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" autofocus />
           <div class="speedrun-actions">
             <button class="btn-red" type="submit">Valider</button>
-            <button class="btn-ghost" type="button" onclick="speedrunSkip()">Passer ⏭</button>
+            <button class="btn-ghost" type="button" data-action="speedrunSkip">Passer ⏭</button>
           </div>
         </form>
         <p class="speedrun-hint">💡 Astuce : Entrée pour valider, Entrée vide pour passer</p>
@@ -5248,9 +5248,9 @@ function renderSpeedrunScreen() {
         </div>
         ${isRecord ? '<div class="speedrun-record-flash">🏆 NOUVEAU RECORD !</div>' : ""}
         <div class="higher-lower-final-actions">
-          <button class="btn-red" type="button" onclick="restartSpeedrunGame()">Rejouer</button>
-          <button class="btn-ghost" type="button" onclick="shareSpeedrunResult()">📋 Copier</button>
-          <button class="btn-ghost" type="button" onclick="downloadSpeedrunImage()">💾 Image</button>
+          <button class="btn-red" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+          <button class="btn-ghost" type="button" data-action="shareSpeedrunResult">📋 Copier</button>
+          <button class="btn-ghost" type="button" data-action="downloadSpeedrunImage">💾 Image</button>
         </div>
       </div>`;
     return;
@@ -5458,19 +5458,19 @@ function renderPokeConnectionsScreen() {
   const shakeClass = (Date.now() - state.lastShake < 700) ? "is-shaking" : "";
   let footer = "";
   if (phase === "won") {
-    footer = `<div class="poke-connections-final is-won"><h3>🎉 Bravo !</h3><p>Tous les groupes trouvés en ${mistakes} erreur${mistakes > 1 ? "s" : ""}.</p><button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button></div>`;
+    footer = `<div class="poke-connections-final is-won"><h3>🎉 Bravo !</h3><p>Tous les groupes trouvés en ${mistakes} erreur${mistakes > 1 ? "s" : ""}.</p><button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button></div>`;
   } else if (phase === "lost") {
     const remainingGroups = puzzle.groups
       .map((g, idx) => ({ g, idx }))
       .filter(({ idx }) => !foundGroupIdx.has(idx))
       .map(({ g, idx }) => `<div class="poke-connections-found-row group-${POKE_CONNECTIONS_GROUP_COLORS[idx]}"><div class="poke-connections-found-label">${escapeHtml(g.label)}</div><div class="poke-connections-found-list">${g.pokemon.map((p) => escapeHtml(p.name)).join(" · ")}</div></div>`)
       .join("");
-    footer = `<div class="poke-connections-final is-lost"><h3>💀 Perdu</h3><p>Tu as épuisé tes 4 erreurs.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-red" type="button" onclick="restartPokeConnectionsGame()">Nouveau puzzle</button></div>`;
+    footer = `<div class="poke-connections-final is-lost"><h3>💀 Perdu</h3><p>Tu as épuisé tes 4 erreurs.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button></div>`;
   } else {
     footer = `<div class="poke-connections-actions">
-      <button class="btn-ghost" type="button" onclick="shufflePokeConnectionsTiles()">🔀 Mélanger</button>
-      <button class="btn-ghost" type="button" onclick="clearPokeConnectionsSelection()" ${selected.size === 0 ? "disabled" : ""}>Désélectionner tout</button>
-      <button class="btn-red" type="button" onclick="submitPokeConnectionsGuess()" ${selected.size !== 4 ? "disabled" : ""}>Valider</button>
+      <button class="btn-ghost" type="button" data-action="shufflePokeConnectionsTiles">🔀 Mélanger</button>
+      <button class="btn-ghost" type="button" data-action="clearPokeConnectionsSelection" ${selected.size === 0 ? "disabled" : ""}>Désélectionner tout</button>
+      <button class="btn-red" type="button" data-action="submitPokeConnectionsGuess" ${selected.size !== 4 ? "disabled" : ""}>Valider</button>
     </div>`;
   }
   root.innerHTML = `
@@ -5758,13 +5758,13 @@ function renderStatAuctionScreen() {
               <input id="stat-auction-nickname" type="text" maxlength="24" value="${escapeHtml(state.roomNicknameDraft || "")}" placeholder="Dresseur" oninput="syncStatAuctionNickname()" />
             </label>
             <div class="higher-lower-room-actions">
-              <button class="btn-blue" type="button" onclick="createStatAuctionRoom()" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
+              <button class="btn-blue" type="button" data-action="createStatAuctionRoom" ${pending ? "disabled" : ""}>${pending === "creating" ? "Création…" : "Créer une room"}</button>
             </div>
             <div class="higher-lower-room-join">
               <label>Code de room
                 <input id="stat-auction-room-input" type="text" maxlength="6" value="${escapeHtml(state.roomDraftCode || "")}" placeholder="ABCD" oninput="syncStatAuctionJoinCode()" />
               </label>
-              <button class="btn-ghost" type="button" onclick="joinStatAuctionRoom()" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
+              <button class="btn-ghost" type="button" data-action="joinStatAuctionRoom" ${pending ? "disabled" : ""}>${pending === "joining" ? "Connexion…" : "Rejoindre"}</button>
             </div>
           </div>
         ` : `
@@ -5779,8 +5779,8 @@ function renderStatAuctionScreen() {
             ${room.players.length < 2 ? `<div class="higher-lower-room-player is-empty"><b>En attente…</b><span>Partage le code</span></div>` : ""}
           </div>
           <div class="higher-lower-room-actions">
-            ${room.players.find((p) => p.isSelf)?.isHost ? `<button class="btn-red" type="button" onclick="startStatAuctionMatch()" ${room.canStart && !pending ? "" : "disabled"}>${pending === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : `<p class="card-desc">En attente du lancement par l'hôte.</p>`}
-            <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
+            ${room.players.find((p) => p.isSelf)?.isHost ? `<button class="btn-red" type="button" data-action="startStatAuctionMatch" ${room.canStart && !pending ? "" : "disabled"}>${pending === "starting" ? "Lancement…" : "Lancer la partie"}</button>` : `<p class="card-desc">En attente du lancement par l'hôte.</p>`}
+            <button class="btn-ghost" type="button" data-action="leaveStatAuctionRoom">Quitter</button>
           </div>
         `}
         ${state.roomError ? `<p class="higher-lower-feedback is-wrong">${escapeHtml(state.roomError)}</p>` : ""}
@@ -5799,8 +5799,8 @@ function renderStatAuctionScreen() {
         <h3>${title}</h3>
         <p>Toi <b>${self?.score ?? 0}</b> · ${escapeHtml(opp?.nickname || "Adv.")} <b>${opp?.score ?? 0}</b></p>
         <div class="higher-lower-room-actions">
-          ${isHost ? `<button class="btn-red" type="button" onclick="restartStatAuctionMatch()">Relancer</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
-          <button class="btn-ghost" type="button" onclick="leaveStatAuctionRoom()">Quitter</button>
+          ${isHost ? `<button class="btn-red" type="button" data-action="restartStatAuctionMatch">Relancer</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
+          <button class="btn-ghost" type="button" data-action="leaveStatAuctionRoom">Quitter</button>
         </div>
       </div>`;
     return;
@@ -5848,9 +5848,9 @@ function renderStatAuctionScreen() {
         <span>Reste : <b>${remaining}</b></span>
       </div>
       <div class="higher-lower-room-actions">
-        <button type="button" class="btn-ghost" onclick="autoBalanceStatAuctionAllocation()" ${state.submitted ? "disabled" : ""}>Équilibrer</button>
-        <button type="button" class="btn-ghost" onclick="clearStatAuctionAllocation()" ${state.submitted ? "disabled" : ""}>Reset</button>
-        <button type="button" class="btn-red" onclick="submitStatAuctionAllocation()" ${state.submitted || totalUsed !== STAT_AUCTION_TOTAL || !statsLoaded ? "disabled" : ""}>${state.submitted ? "Soumis ✓" : "Valider"}</button>
+        <button type="button" class="btn-ghost" data-action="autoBalanceStatAuctionAllocation" ${state.submitted ? "disabled" : ""}>Équilibrer</button>
+        <button type="button" class="btn-ghost" data-action="clearStatAuctionAllocation" ${state.submitted ? "disabled" : ""}>Reset</button>
+        <button type="button" class="btn-red" data-action="submitStatAuctionAllocation" ${state.submitted || totalUsed !== STAT_AUCTION_TOTAL || !statsLoaded ? "disabled" : ""}>${state.submitted ? "Soumis ✓" : "Valider"}</button>
       </div>
       ${state.roomError ? `<p class="higher-lower-feedback is-wrong">${escapeHtml(state.roomError)}</p>` : ""}
       ${lastHist ? `<div class="stat-auction-last-reveal"><h4>Manche ${lastHist.round} — reveal</h4><div class="stat-auction-reveal-grid">${STAT_AUCTION_STATS.map((s) => `<div><b>${s.icon} ${escapeHtml(s.label)}</b><span>Toi ${lastHist[me?.side]?.allocation?.[s.key] || 0}pt × ${lastHist[me?.side]?.realStats?.[s.key] || "?"}</span><span>${escapeHtml(opp?.nickname || "Adv")} ${lastHist[opp?.side]?.allocation?.[s.key] || 0}pt × ${lastHist[opp?.side]?.realStats?.[s.key] || "?"}</span></div>`).join("")}</div><p>Score manche : Toi <b>${lastHist[me?.side]?.computedScore || 0}</b> · ${escapeHtml(opp?.nickname || "Adv.")} <b>${lastHist[opp?.side]?.computedScore || 0}</b></p></div>` : ""}
@@ -11033,7 +11033,7 @@ function renderPokedexGrid() {
     empty.innerHTML = `
       <strong>Aucun Pokémon trouvé</strong>
       <p>Essaie d’ajuster la recherche ou les filtres actuels.</p>
-      ${isPokedexToolbarDirty() ? '<button type="button" class="btn-ghost pokedex-empty-reset" onclick="resetPokedexToolbar()">Réinitialiser les filtres</button>' : ""}
+      ${isPokedexToolbarDirty() ? '<button type="button" class="btn-ghost pokedex-empty-reset" data-action="resetPokedexToolbar">Réinitialiser les filtres</button>' : ""}
     `;
     grid.appendChild(empty);
     renderPokedexDetail(null);
@@ -11137,7 +11137,7 @@ function renderPokedexRecentBlock() {
     return `<button type="button" class="pokedex-recent-item${isActive ? " is-active" : ""}" onclick="openPokedexRecent(${pokemon.id})"><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" data-fallback="${getSpriteUrl(dexId)}" /><span>${escapeHtml(pokemon.name)}</span></button>`;
   }).join("");
   const clearDisabled = recent.length ? "" : "disabled";
-  return `<div class="pokedex-recent-block"><div class="pokedex-recent-head"><h4>Derniers consultés</h4><button type="button" class="btn-ghost pokedex-recent-clear" onclick="clearPokedexRecentHistory()" ${clearDisabled}>Effacer</button></div>${recent.length ? `<div class="pokedex-recent-list">${items}</div>` : '<p class="pokedex-recent-empty">Aucun Pokémon récent</p>'}</div>`;
+  return `<div class="pokedex-recent-block"><div class="pokedex-recent-head"><h4>Derniers consultés</h4><button type="button" class="btn-ghost pokedex-recent-clear" data-action="clearPokedexRecentHistory" ${clearDisabled}>Effacer</button></div>${recent.length ? `<div class="pokedex-recent-list">${items}</div>` : '<p class="pokedex-recent-empty">Aucun Pokémon récent</p>'}</div>`;
 }
 
 function loadPokedexCompareId() {
@@ -11227,7 +11227,7 @@ function renderPokedexCompareBlock(reference, current, referenceStats, currentSt
     <div class="pokedex-compare-block">
       <div class="pokedex-compare-head">
         <h4>Comparaison rapide</h4>
-        <button type="button" class="btn-ghost pokedex-compare-clear" onclick="clearPokedexCompareReference()">Effacer la comparaison</button>
+        <button type="button" class="btn-ghost pokedex-compare-clear" data-action="clearPokedexCompareReference">Effacer la comparaison</button>
       </div>
       <div class="pokedex-compare-top">
         <div class="pokedex-compare-side">
@@ -11319,8 +11319,8 @@ async function renderPokedexDetail(pokemon) {
   `;
   const builderActionHtml = `
     <div class="pokedex-detail-head-actions">
-      <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" onclick="togglePokedexShiny()">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
-      <button class="btn-ghost pokedex-detail-builder-btn" type="button" onclick="addSelectedPokedexPokemonToBuilder()">Ajouter au Builder</button>
+      <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" data-action="togglePokedexShiny">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
+      <button class="btn-ghost pokedex-detail-builder-btn" type="button" data-action="addSelectedPokedexPokemonToBuilder">Ajouter au Builder</button>
       <button class="btn-ghost pokedex-detail-compare-btn" type="button" onclick="setPokedexCompareReference(POKEMON_BY_ID.get(${pokemon.id}))">Comparer</button>
       <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
       <span id="pokedex-compare-feedback" class="pokedex-compare-feedback" aria-live="polite"></span>
@@ -15703,7 +15703,7 @@ function ensureDraftSimpleBattleDevPanel() {
   panel.innerHTML = `
     <div class="draft-dev-battle-head">
       <h3>Dev Battle Foundation</h3>
-      <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Fermer</button>
+      <button type="button" class="btn-ghost" data-action="clearDraftSimpleBattleDevPanel">Fermer</button>
     </div>
     <div id="draft-dev-battle-body"></div>
   `;
@@ -16046,11 +16046,11 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="draft-summary-card"><span>Équipe adverse</span><b>${state.rightTeam.length} Pokémon</b></div>
       </div>
       <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
-        <button type="button" class="btn-red draft-dev-battle-preview-cta" onclick="startDraftSimpleBattlePreview()" ${isNetwork && (!network.isHost || !roomReady) ? "disabled" : ""}>${isNetwork ? "Lancer le combat réseau" : "Commencer le duel"}</button>
-        <button type="button" class="btn-blue" onclick="runDraftSimpleBattleLocalPvpTest()">Mode local 1v1</button>
-        <button type="button" class="btn-blue" onclick="hostDraftSimpleBattleNetworkRoom()">${isNetwork ? `Room ${escapeHtml(network.roomCode || "réseau")}` : "Créer room 1v1"}</button>
-        <button type="button" class="btn-ghost" onclick="joinDraftSimpleBattleNetworkRoom()">Rejoindre room</button>
-        <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
+        <button type="button" class="btn-red draft-dev-battle-preview-cta" data-action="startDraftSimpleBattlePreview" ${isNetwork && (!network.isHost || !roomReady) ? "disabled" : ""}>${isNetwork ? "Lancer le combat réseau" : "Commencer le duel"}</button>
+        <button type="button" class="btn-blue" data-action="runDraftSimpleBattleLocalPvpTest">Mode local 1v1</button>
+        <button type="button" class="btn-blue" data-action="hostDraftSimpleBattleNetworkRoom">${isNetwork ? `Room ${escapeHtml(network.roomCode || "réseau")}` : "Créer room 1v1"}</button>
+        <button type="button" class="btn-ghost" data-action="joinDraftSimpleBattleNetworkRoom">Rejoindre room</button>
+        <button type="button" class="btn-ghost" data-action="clearDraftSimpleBattleDevPanel">Retour au Draft</button>
       </div>
       <div class="draft-dev-battle-log"><p class="card-desc">${escapeHtml(isNetwork
         ? (!network.roomCode
@@ -16114,7 +16114,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           : "Le joueur suivant va choisir son action sans voir celle de l’autre.")}</span>
       </div>
       <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
-        <button type="button" class="btn-red draft-dev-battle-preview-cta" onclick="continueDraftSimpleBattleHotseat()">Passer au joueur suivant</button>
+        <button type="button" class="btn-red draft-dev-battle-preview-cta" data-action="continueDraftSimpleBattleHotseat">Passer au joueur suivant</button>
       </div>
     `;
     panel.classList.remove("hidden");
@@ -16319,7 +16319,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <p class="gba-result-meta">${escapeHtml(winner)} clôture le match en ${state.log.length} tour${state.log.length > 1 ? "s" : ""} — ${leftRemaining} Pokémon restant${leftRemaining > 1 ? "s" : ""} côté joueur, ${rightRemaining} côté adverse.</p>
         <div class="gba-result-actions">
           <button type="button" class="btn-blue" onclick="${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.action ? state.postBattleAction.action : "replayDraftSimpleBattleDevDuel")}()">${escapeHtml(state.mode === "arena-run" && state.postBattleAction?.label ? state.postBattleAction.label : "Rejouer")}</button>
-          <button type="button" class="btn-ghost" onclick="clearDraftSimpleBattleDevPanel()">Retour au Draft</button>
+          <button type="button" class="btn-ghost" data-action="clearDraftSimpleBattleDevPanel">Retour au Draft</button>
         </div>
       </div>`
     : isEnemyTurn
@@ -16348,7 +16348,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           }).join("")}
         </div>
         ${state.pendingSwitchReason === "manual"
-          ? `<div class="draft-dev-battle-switch-cancel"><button type="button" class="btn-ghost" onclick="cancelDraftSimpleBattleManualSwitch()">Annuler</button></div>`
+          ? `<div class="draft-dev-battle-switch-cancel"><button type="button" class="btn-ghost" data-action="cancelDraftSimpleBattleManualSwitch">Annuler</button></div>`
           : ""}
       </div>
     `
@@ -16534,7 +16534,7 @@ function renderDraftSimpleBattleDevPanel(state) {
     ${switchHtml}
     <div class="draft-dev-battle-battlebox" data-combat-ui="${combatUiState}" data-replay-phase="${replayPhase}">
       ${resultHtml ? `<div class="draft-dev-battle-battlebox-message">${resultHtml}</div>` : ""}
-      ${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" onclick="requestDraftSimpleBattleReplaySkip()">Passer la résolution</button></div>` : ""}
+      ${isReplayingTurn ? `<div class="draft-dev-battle-extra-action"><button type="button" class="btn-ghost" data-action="requestDraftSimpleBattleReplaySkip">Passer la résolution</button></div>` : ""}
       <details class="draft-dev-battle-log-details"><summary>Historique du combat</summary><div class="draft-dev-battle-log">${actionsHtml || "<p class=\"card-desc\">Aucune action simulée.</p>"}</div></details>
     </div>
   `;
@@ -17756,8 +17756,8 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
       <b>🎯 Score Attack solo</b>
       <span>Drafte pour battre ton record perso, ou défie un ami en duel live ci-dessous.</span>
       <div class="draft-score-vs-empty-actions">
-        <button class="btn-blue" type="button" onclick="createDraftScoreAttackRoom()">🆚 Créer une room 1v1</button>
-        <button class="btn-ghost" type="button" onclick="joinDraftScoreAttackRoom()">🔗 Rejoindre par code</button>
+        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">🆚 Créer une room 1v1</button>
+        <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">🔗 Rejoindre par code</button>
       </div>
     </div>`;
   }
@@ -17766,8 +17766,8 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
       <b>Score Attack 1v1</b>
       <span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span>
       <div class="draft-score-vs-empty-actions">
-        <button class="btn-blue" type="button" onclick="createDraftScoreAttackRoom()">🆚 Créer une room</button>
-        <button class="btn-ghost" type="button" onclick="joinDraftScoreAttackRoom()">🔗 Rejoindre</button>
+        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">🆚 Créer une room</button>
+        <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">🔗 Rejoindre</button>
       </div>
     </div>`;
   }
@@ -17799,7 +17799,7 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
       headToHeadHtml = `<div class="draft-score-vs-h2h"><span>${ledTxt} contre <b>${escapeHtml(opponent.nickname)}</b></span><span class="draft-score-h2h-numbers"><b class="is-win">${h2h.wins}V</b> · <b class="is-lose">${h2h.losses}D</b>${h2h.draws ? ` · <b class="is-tie">${h2h.draws}N</b>` : ""}</span></div>`;
     }
   }
-  const leaveBtn = `<button class="draft-score-vs-leave" type="button" onclick="leaveDraftScoreAttackRoom()" title="Quitter la room">🚪 Quitter</button>`;
+  const leaveBtn = `<button class="draft-score-vs-leave" type="button" data-action="leaveDraftScoreAttackRoom" title="Quitter la room">🚪 Quitter</button>`;
   const canReact = Boolean(opponent && room.status === "live");
   const reactionBar = canReact
     ? `<div class="draft-score-reaction-bar">${["🔥", "😱", "😈", "👍", "🤡", "💀", "👀", "🎯"].map((emoji) => `<button class="draft-score-reaction-btn" type="button" onclick="sendDraftScoreReaction('${emoji}')" title="Envoyer ${emoji}">${emoji}</button>`).join("")}</div>`
@@ -20869,7 +20869,7 @@ function openSettingsModal() {
           <input type="checkbox" ${settings.reduceMotion ? "checked" : ""} onchange="updateAppSetting('reduceMotion', this.checked)" />
         </label>
       </section>
-      <button class="btn-ghost app-settings-reset" type="button" onclick="resetAppSettings()">Réinitialiser les paramètres</button>
+      <button class="btn-ghost app-settings-reset" type="button" data-action="resetAppSettings">Réinitialiser les paramètres</button>
     </div>
   `);
 }
@@ -22100,7 +22100,7 @@ function ensureMultiplayerWinOverlay() {
   overlay.className = "multiplayer-win-overlay hidden";
   overlay.innerHTML = `
     <div class="multiplayer-win-card">
-      <button class="multiplayer-win-close" type="button" aria-label="Fermer" onclick="hideMultiplayerWinOverlay()">×</button>
+      <button class="multiplayer-win-close" type="button" aria-label="Fermer" data-action="hideMultiplayerWinOverlay">×</button>
       <div id="multiplayer-win-content"></div>
       <div class="multiplayer-result-actions multiplayer-win-actions">
         <button class="btn-red" type="button" onclick="hideMultiplayerWinOverlay(); restartMultiplayerRound('same')">Rejouer pareil</button>
