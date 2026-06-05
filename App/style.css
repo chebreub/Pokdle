@@ -28086,4 +28086,17 @@ body.theme-dark #screen-draft-score-attack .draft-summary-card b {
 #screen-draft-arena .draft-panel-team h3,
 #screen-draft-arena .draft-panel-team .draft-team-card b {
   color: #edf5ff !important;
-  text-shadow: 0 1px 8px rgba(0, 0, 0
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+}
+
+#screen-draft-arena .draft-panel-team .draft-team-card span,
+#screen-draft-arena .draft-panel-team .draft-team-card small,
+#screen-draft-arena .draft-panel-team .draft-team-empty-icon {
+  color: #d7e6fb !important;
+  text-shadow: none !important;
+}
+
+#screen-draft-arena .draft-panel-team .draft-team-card.placeholder {
+  background: rgba(238, 246, 255, 0.34) !important;
+  border-color: rgba(210, 228, 255, 0.42) !important;
+}
