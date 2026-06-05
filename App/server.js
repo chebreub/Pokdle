@@ -276,10 +276,10 @@ function isPayloadOversized(payload) {
 }
 
 // Security headers.
-// CSP en mode Report-Only : RIEN n'est bloqué, les violations sont seulement
-// signalées dans la console du navigateur (Content-Security-Policy-Report-Only).
-// Permet de mesurer sans casser le jeu. Pour durcir : migrer les handlers inline
-// générés (onerror/onclick dans les innerHTML de script.js) puis passer reportOnly à false.
+// CSP en mode ENFORCE : les ressources non autorisées sont bloquées.
+// script-src ne contient PAS 'unsafe-inline' -> aucun handler inline (onclick/onerror/...)
+// ni <script> inline n'est autorisé. Tous ont été migrés vers data-action / délégation.
+// 'unsafe-eval' + 'wasm-unsafe-eval' sont conservés uniquement pour l'émulateur EmulatorJS.
 const cspDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: [
@@ -327,7 +327,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: false,
     directives: cspDirectives,
-    reportOnly: true,
+    reportOnly: false,
   },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
