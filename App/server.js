@@ -289,7 +289,7 @@ const cspDirectives = {
     "'unsafe-eval'",
     "blob:",
   ],
-  styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
+  styleSrc: ["'self'", "https://fonts.googleapis.com", "https://cdn.emulatorjs.org", "'unsafe-inline'"],
   fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
   imgSrc: [
     "'self'",
@@ -302,6 +302,7 @@ const cspDirectives = {
   ],
   connectSrc: [
     "'self'",
+    "blob:",
     "https://pokeapi.co",
     "https://raw.githubusercontent.com",
     "https://archives.bulbagarden.net",
