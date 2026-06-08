@@ -28128,3 +28128,36 @@ body.theme-dark #screen-draft-score-attack .draft-summary-card b {
   resize: vertical;
   margin-bottom: 12px;
 }
+
+/* Vague 5 — badges de type compacts & épurés dans les cartes d'équipe et les slots du builder */
+.team-template-pokemon .pokemon-card-types,
+.home-builder-slot-info .pokemon-card-types {
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.team-template-pokemon .pokemon-card-types .type-badge,
+.home-builder-slot-info .pokemon-card-types .type-badge {
+  min-height: 20px;
+  padding: 2px 7px;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(16, 35, 66, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.team-template-pokemon .pokemon-card-types .type-badge img,
+.home-builder-slot-info .pokemon-card-types .type-badge img {
+  width: 12px;
+  height: 12px;
+}
+.team-template-pokemon .pokemon-card-types .type-badge span,
+.home-builder-slot-info .pokemon-card-types .type-badge span {
+  font-size: 0.64rem;
+}
+/* Cartes Pokémon des bases d'équipe : un peu plus d'air, contenu centré */
+.team-template-pokemon {
+  gap: 6px;
+  padding: 10px 8px;
+  overflow: hidden;
+}
+.team-template-pokemon strong {
+  font-size: 0.82rem;
+}
