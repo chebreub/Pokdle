@@ -9702,9 +9702,9 @@ function renderTeamBuilderComputedStats() {
     <div class="team-builder-computed-stats-head">
       <div>
         <h5>Stats finales</h5>
-        <p>Calcul simple au niveau 100 selon base stats, nature, EV et IV.</p>
+        <p>Calcul au niveau 50 (standard VGC / Champions) selon base stats, nature, EV et IV.</p>
       </div>
-      <span class="home-coming-badge">Niv. 100</span>
+      <span class="home-coming-badge">Niv. 50</span>
     </div>
   `;
 
@@ -9722,7 +9722,7 @@ function renderTeamBuilderComputedStats() {
     const currentPokemon = getTeamBuilderPokemon(currentSlot);
     if (activeSlotIndex !== teamBuilderActiveSlot || !currentPokemon || currentPokemon.id !== activePokemonId) return;
 
-    const finalStats = computeTeamBuilderFinalStats(data, currentSlot, 100);
+    const finalStats = computeTeamBuilderFinalStats(data, currentSlot, 50);
     const hasStats = ["hp", "atk", "def", "spa", "spd", "spe"].some((key) => Number.isFinite(finalStats[key]));
     if (!hasStats) {
       renderTeamBuilderComputedStatsContent(`${header}<p class="team-builder-computed-stats-empty">Stats indisponibles pour ce Pokémon pour l’instant.</p>`);
@@ -9730,12 +9730,12 @@ function renderTeamBuilderComputedStats() {
     }
 
     const statsHtml = [
-      { key: "hp", label: "PV", max: 450 },
-      { key: "atk", label: "Attaque", max: 450 },
-      { key: "def", label: "Défense", max: 450 },
-      { key: "spa", label: "Att. Spé.", max: 450 },
-      { key: "spd", label: "Déf. Spé.", max: 450 },
-      { key: "spe", label: "Vitesse", max: 450 },
+      { key: "hp", label: "PV", max: 230 },
+      { key: "atk", label: "Attaque", max: 230 },
+      { key: "def", label: "Défense", max: 230 },
+      { key: "spa", label: "Att. Spé.", max: 230 },
+      { key: "spd", label: "Déf. Spé.", max: 230 },
+      { key: "spe", label: "Vitesse", max: 230 },
     ].map((entry) => {
       const value = Number.isFinite(finalStats[entry.key]) ? finalStats[entry.key] : "—";
       const ratio = Number.isFinite(finalStats[entry.key]) ? Math.max(0, Math.min(1, finalStats[entry.key] / entry.max)) : 0;
