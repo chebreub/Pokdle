@@ -9432,6 +9432,8 @@ function renderTeamBuilderSummary() {
         </div>
         ${overviewHtml}
       </section>
+      <details class="team-builder-analysis-more">
+        <summary class="team-builder-analysis-summary">🔎 Voir l'analyse détaillée</summary>
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
           <h5>Couvertures et faiblesses</h5>
@@ -9466,6 +9468,7 @@ function renderTeamBuilderSummary() {
         </div>
         ${offensePanelHtml}
       </section>
+      </details>
     </div>
   `;
 }

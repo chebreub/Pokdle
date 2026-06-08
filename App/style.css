@@ -28168,3 +28168,30 @@ body.theme-dark #screen-draft-score-attack .draft-summary-card b {
 
 /* Vague 6 — masque les modules export/import inline (remplacés par les boutons Exporter / Importer en modale) */
 .team-builder-screen-card .team-builder-module .team-builder-export { display: none !important; }
+
+/* Vague 8 — repli "Voir l'analyse détaillée" dans la colonne d'analyse du Team Builder */
+.team-builder-analysis-more {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.team-builder-analysis-summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(125, 149, 186, 0.10);
+  border: 1px solid rgba(125, 149, 186, 0.18);
+  font-weight: 800;
+  color: #2b3f63;
+  font-size: 0.9rem;
+}
+.team-builder-analysis-summary::-webkit-details-marker { display: none; }
+.team-builder-analysis-summary::before { content: "▸ "; }
+.team-builder-analysis-more[open] > .team-builder-analysis-summary::before { content: "▾ "; }
+body.theme-dark .team-builder-analysis-summary {
+  background: rgba(116, 158, 241, 0.12);
+  border-color: rgba(116, 158, 241, 0.24);
+  color: #cfe0ff;
+}
