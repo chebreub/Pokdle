@@ -13278,9 +13278,11 @@ body.theme-dark .team-builder-pokemon-trigger.is-empty {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .teams-toolbar,
-  .team-template-squad {
+  .teams-toolbar {
     grid-template-columns: 1fr;
+  }
+  .team-template-squad {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .team-template-actions {
