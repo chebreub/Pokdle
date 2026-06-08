@@ -1317,6 +1317,7 @@ const TEAM_BUILDER_GIMMICKS = [
   "Dynamax",
   "Autre mécanique",
 ];
+const TEAM_BUILDER_TERA_TYPES = ["Normal", "Feu", "Eau", "Plante", "Électrik", "Glace", "Combat", "Poison", "Sol", "Vol", "Psy", "Insecte", "Roche", "Spectre", "Dragon", "Ténèbres", "Acier", "Fée"];
 
 const TEAM_BUILDER_MOVE_LIBRARY = [
   { name: "Séisme", types: ["Sol"] },
@@ -8554,6 +8555,7 @@ function createTeamBuilderEmptySlot() {
     pokemonId: null,
     item: "",
     gimmick: "",
+    teraType: "",
     moves: ["", "", "", ""],
     nature: "Hardi",
     talent: "",
@@ -8594,6 +8596,7 @@ function normalizeTeamBuilderState(state) {
     })(),
     item: TEAM_BUILDER_ITEMS.includes(slot?.item) ? slot.item : "",
     gimmick: TEAM_BUILDER_GIMMICKS.includes(slot?.gimmick) ? slot.gimmick : "",
+    teraType: TEAM_BUILDER_TERA_TYPES.includes(slot?.teraType) ? slot.teraType : "",
     moves: Array.isArray(slot?.moves)
       ? slot.moves.slice(0, 4).map((move) => (typeof move === "string" ? move.trim() : ""))
       : ["", "", "", ""],
@@ -9534,6 +9537,7 @@ function renderTeamBuilderGrid() {
 function buildTeamBuilderOptions() {
   const itemSelect = document.getElementById("team-builder-item");
   const gimmickSelect = document.getElementById("team-builder-gimmick");
+  const teraSelect = document.getElementById("team-builder-tera-type");
 
   const fillSelect = (select, values, allowEmptyLabel) => {
     if (!select || select.dataset.ready) return;
@@ -9546,6 +9550,7 @@ function buildTeamBuilderOptions() {
 
   fillSelect(itemSelect, TEAM_BUILDER_ITEMS.filter((item) => item !== "Aucun"), "Aucun");
   fillSelect(gimmickSelect, TEAM_BUILDER_GIMMICKS.filter((gimmick) => gimmick !== "Aucun"), "Aucun");
+  fillSelect(teraSelect, TEAM_BUILDER_TERA_TYPES, "Aucun");
 }
 
 function setTeamBuilderPokemonSelection(pokemon) {
@@ -9870,6 +9875,8 @@ function updateTeamBuilderField(field, value, moveIndex = null) {
     slot.item = value || "Aucun";
   } else if (field === "gimmick") {
     slot.gimmick = value || "Aucun";
+  } else if (field === "teraType") {
+    slot.teraType = TEAM_BUILDER_TERA_TYPES.includes(value) ? value : "";
   } else if (field === "move" && Number.isInteger(moveIndex)) {
     const movePool = getTeamBuilderMovePool(slot);
     const allowed = new Set(movePool.map((move) => move.name));
@@ -9936,6 +9943,7 @@ function renderTeamBuilderEditor() {
   const identity = document.getElementById("team-builder-editor-identity");
   const itemSelect = document.getElementById("team-builder-item");
   const gimmickSelect = document.getElementById("team-builder-gimmick");
+  const teraSelect = document.getElementById("team-builder-tera-type");
   const moveSelects = [
     document.getElementById("team-builder-move-1"),
     document.getElementById("team-builder-move-2"),
@@ -9979,6 +9987,7 @@ function renderTeamBuilderEditor() {
   renderTeamBuilderComputedStats();
   if (itemSelect) itemSelect.value = slot.item || "";
   if (gimmickSelect) gimmickSelect.value = slot.gimmick || "";
+  if (teraSelect) teraSelect.value = slot.teraType || "";
   moveSelects.forEach((select, index) => {
     if (!select) return;
     const field = document.getElementById(`team-builder-move-field-${index + 1}`);
@@ -10092,6 +10101,7 @@ function initTeamBuilderModule() {
       if (!target?.id) return;
       if (target.id === "team-builder-item") updateTeamBuilderField("item", target.value);
       else if (target.id === "team-builder-gimmick") updateTeamBuilderField("gimmick", target.value);
+      else if (target.id === "team-builder-tera-type") updateTeamBuilderField("teraType", target.value);
       else if (target.id === "team-builder-nature") updateTeamBuilderStrategicField("nature", target.value);
       else if (target.id === "team-builder-talent") updateTeamBuilderStrategicField("talent", target.value);
       else if (target.id === "team-builder-ev-preset") updateTeamBuilderStrategicField("ev-preset", target.value);
@@ -19852,6 +19862,7 @@ function teamBuilderExportText() {
     if (slot.talent) lines.push("Talent : " + slot.talent);
     if (slot.nature) lines.push("Nature : " + slot.nature);
     if (slot.gimmick && slot.gimmick !== "Aucun") lines.push("Gimmick : " + slot.gimmick);
+    if (slot.teraType) lines.push("Tera : " + slot.teraType);
     lines.push("Niveau : 50");
     var ev = tbSpreadLine(slot.evs, 0);
     if (ev) lines.push("EVs : " + ev);
@@ -19937,7 +19948,7 @@ function teamBuilderImportConfirm() {
       if (key === "talent" || key === "ability") slot.talent = val;
       else if (key === "nature") slot.nature = tbMatchNature(val);
       else if (key === "gimmick") slot.gimmick = val;
-      else if (key === "tera" || key === "tera type" || key === "teracristal") slot.gimmick = "Téra";
+      else if (key === "tera" || key === "tera type" || key === "teracristal") { slot.gimmick = "Téra"; var tt = TEAM_BUILDER_TERA_TYPES.find(function (t) { return norm(t) === norm(val); }); if (tt) slot.teraType = tt; }
       else if (key === "evs" || key === "ev") { slot.evs = tbParseSpread(val, 0); slot.evPreset = "custom"; }
       else if (key === "ivs" || key === "iv") { slot.ivs = tbParseSpread(val, 31); slot.ivPreset = "custom"; }
     }
