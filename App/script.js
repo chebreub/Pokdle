@@ -9985,8 +9985,8 @@ function renderTeamBuilderEditor() {
   renderTeamBuilderPokemonPicker();
   renderTeamBuilderStrategicFields();
   renderTeamBuilderComputedStats();
-  if (itemSelect) itemSelect.value = slot.item || "";
-  if (gimmickSelect) gimmickSelect.value = slot.gimmick || "";
+  if (itemSelect) itemSelect.value = (slot.item && slot.item !== "Aucun") ? slot.item : "";
+  if (gimmickSelect) gimmickSelect.value = (slot.gimmick && slot.gimmick !== "Aucun") ? slot.gimmick : "";
   if (teraSelect) teraSelect.value = slot.teraType || "";
   moveSelects.forEach((select, index) => {
     if (!select) return;
