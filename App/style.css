@@ -28111,3 +28111,20 @@ body.theme-dark #screen-draft-score-attack .draft-summary-card b {
     padding: 9px 10px;
   }
 }
+
+/* Team Builder — zones de texte import/export (vague 2) */
+.tb-io-area {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 220px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  padding: 12px 14px;
+  border: 1px solid #d7dfec;
+  border-radius: 12px;
+  background: #fbfdff;
+  color: #1a2238;
+  resize: vertical;
+  margin-bottom: 12px;
+}

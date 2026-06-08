@@ -19825,6 +19825,139 @@ window.appSettingFromEl = function () { if (typeof updateAppSetting === "functio
 window.dailyQuestsKeydown = function (ev) { if (ev && ev.key === "Enter" && typeof openDailyQuestsModal === "function") openDailyQuestsModal(); };
 window.speedrunFormSubmit = function (ev) { if (ev) ev.preventDefault(); var i = document.getElementById("speedrun-input"); if (i && i.value.trim()) { if (typeof speedrunSubmitGuess === "function") speedrunSubmitGuess(); } else if (typeof speedrunSkip === "function") speedrunSkip(); };
 
+// ===== Team Builder : import / export texte (format façon Showdown, FR) =====
+var TB_STAT_FR = { hp: "PV", atk: "Atq", def: "Déf", spa: "Atq Spé", spd: "Déf Spé", spe: "Vit" };
+var TB_FR_STAT = { "pv": "hp", "atq": "atk", "def": "def", "atq spe": "spa", "def spe": "spd", "vit": "spe" };
+
+function tbSpreadLine(spread, skipValue) {
+  var order = ["hp", "atk", "def", "spa", "spd", "spe"];
+  var parts = [];
+  for (var i = 0; i < order.length; i++) {
+    var v = Number(spread && spread[order[i]]);
+    if (Number.isFinite(v) && v !== skipValue) parts.push(v + " " + TB_STAT_FR[order[i]]);
+  }
+  return parts.join(" / ");
+}
+
+function teamBuilderExportText() {
+  var blocks = [];
+  var state = teamBuilderState || [];
+  for (var s = 0; s < state.length; s++) {
+    var slot = state[s];
+    var poke = getTeamBuilderPokemon(slot);
+    if (!poke) continue;
+    var lines = [];
+    var item = slot.item && slot.item !== "Aucun" ? slot.item : "";
+    lines.push(item ? poke.name + " @ " + item : poke.name);
+    if (slot.talent) lines.push("Talent : " + slot.talent);
+    if (slot.nature) lines.push("Nature : " + slot.nature);
+    if (slot.gimmick && slot.gimmick !== "Aucun") lines.push("Gimmick : " + slot.gimmick);
+    lines.push("Niveau : 50");
+    var ev = tbSpreadLine(slot.evs, 0);
+    if (ev) lines.push("EVs : " + ev);
+    var iv = tbSpreadLine(slot.ivs, 31);
+    if (iv) lines.push("IVs : " + iv);
+    for (var m = 0; m < (slot.moves || []).length; m++) if (slot.moves[m]) lines.push("- " + slot.moves[m]);
+    blocks.push(lines.join("\n"));
+  }
+  return blocks.join("\n\n");
+}
+
+function openTeamBuilderExport() {
+  var text = teamBuilderExportText();
+  var body = text
+    ? '<p class="card-desc">Copie ce texte pour partager ton équipe (format façon Showdown, en français).</p>'
+      + '<textarea id="tb-export-area" class="tb-io-area" readonly rows="14">' + escapeHtml(text) + '</textarea>'
+      + '<button class="btn-blue" type="button" data-action="teamBuilderCopyExport">📋 Copier</button>'
+    : '<p class="card-desc">Ton équipe est vide : ajoute au moins un Pokémon avant d\'exporter.</p>';
+  ensureOverlay("Exporter l'équipe", body);
+}
+
+function teamBuilderCopyExport() {
+  var area = document.getElementById("tb-export-area");
+  if (!area) return;
+  area.select();
+  try { navigator.clipboard.writeText(area.value); } catch (e) { try { document.execCommand("copy"); } catch (e2) {} }
+  showToast("Équipe copiée ✅");
+}
+
+function openTeamBuilderImport() {
+  var ph = "Dracaufeu @ Lunettes Choix\nTalent : Brasier\nNature : Timide\nEVs : 252 Atq Spé / 252 Vit / 4 PV\n- Lance-Flammes\n- Danse Draco";
+  var body = '<p class="card-desc">Colle une équipe au format texte (façon Showdown, FR). Les noms de Pokémon doivent être en français.</p>'
+    + '<textarea id="tb-import-area" class="tb-io-area" rows="14" placeholder="' + escapeHtml(ph) + '"></textarea>'
+    + '<button class="btn-blue" type="button" data-action="teamBuilderImportConfirm">📥 Importer</button>';
+  ensureOverlay("Importer une équipe", body);
+}
+
+function tbParseSpread(str, defVal) {
+  var spread = { hp: defVal, atk: defVal, def: defVal, spa: defVal, spd: defVal, spe: defVal };
+  var parts = String(str).split("/");
+  for (var i = 0; i < parts.length; i++) {
+    var m = parts[i].trim().match(/^(\d+)\s+(.+)$/);
+    if (!m) continue;
+    var key = TB_FR_STAT[norm(m[2])];
+    if (key) spread[key] = Math.max(0, Math.min(defVal === 31 ? 31 : 252, Number(m[1])));
+  }
+  return spread;
+}
+
+function tbMatchNature(val) {
+  var match = TEAM_BUILDER_NATURES.find(function (n) { return norm(n.value) === norm(val); });
+  return match ? match.value : val;
+}
+
+function teamBuilderImportConfirm() {
+  var area = document.getElementById("tb-import-area");
+  var raw = area ? area.value : "";
+  if (!raw.trim()) { showToast("Colle d'abord une équipe."); return; }
+  var blocks = raw.replace(/\r/g, "").split(/\n\s*\n/).map(function (b) { return b.trim(); }).filter(Boolean);
+  var slots = [];
+  var imported = 0, skipped = 0;
+  for (var b = 0; b < blocks.length && slots.length < 6; b++) {
+    var lines = blocks[b].split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+    if (!lines.length) continue;
+    var at = lines[0].split("@");
+    var poke = findPokemonGlobalByName(at[0].trim());
+    if (!poke) { skipped++; continue; }
+    var slot = createTeamBuilderEmptySlot();
+    slot.pokemonId = poke.id;
+    if (at[1]) slot.item = at[1].trim();
+    var moves = [];
+    for (var i = 1; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.charAt(0) === "-") { if (moves.length < 4) moves.push(line.replace(/^-\s*/, "").trim()); continue; }
+      var ci = line.indexOf(":");
+      if (ci === -1) {
+        var mNat = line.match(/^(.+?)\s+Nature$/i);
+        if (mNat) slot.nature = tbMatchNature(mNat[1].trim());
+        continue;
+      }
+      var key = norm(line.slice(0, ci));
+      var val = line.slice(ci + 1).trim();
+      if (key === "talent" || key === "ability") slot.talent = val;
+      else if (key === "nature") slot.nature = tbMatchNature(val);
+      else if (key === "gimmick") slot.gimmick = val;
+      else if (key === "tera" || key === "tera type" || key === "teracristal") slot.gimmick = "Téra";
+      else if (key === "evs" || key === "ev") { slot.evs = tbParseSpread(val, 0); slot.evPreset = "custom"; }
+      else if (key === "ivs" || key === "iv") { slot.ivs = tbParseSpread(val, 31); slot.ivPreset = "custom"; }
+    }
+    while (moves.length < 4) moves.push("");
+    slot.moves = moves;
+    slots.push(slot);
+    imported++;
+  }
+  if (!imported) { showToast("Aucun Pokémon reconnu (vérifie les noms en français)."); return; }
+  while (slots.length < 6) slots.push(createTeamBuilderEmptySlot());
+  teamBuilderState = normalizeTeamBuilderState(slots);
+  saveTeamBuilderState();
+  teamBuilderActiveSlot = 0;
+  if (typeof renderTeamBuilderModule === "function") renderTeamBuilderModule();
+  var overlay = document.getElementById("overlay-modal");
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  showToast(imported + " Pokémon importé" + (imported > 1 ? "s" : "") + (skipped ? " · " + skipped + " ignoré" + (skipped > 1 ? "s" : "") : "") + " ✅");
+}
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
