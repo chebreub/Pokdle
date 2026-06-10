@@ -28468,9 +28468,9 @@ body:not(.theme-dark) .card::before {
   font-size: 0.8rem;
   color: #fff;
 }
-.legend-chip.c-ok { background: #43a047; }
-.legend-chip.c-close { background: #f0a829; }
-.legend-chip.c-wrong { background: #e05450; }
+.legend-chip.lc-ok { background: #43a047 !important; }
+.legend-chip.lc-close { background: #f0a829 !important; }
+.legend-chip.lc-wrong { background: #e05450 !important; }
 
 .results-legend {
   margin: 10px 2px 0;

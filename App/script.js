@@ -2436,16 +2436,16 @@ function openOnboardingModal() {
         <div>
           <h4>Lis les indices</h4>
           <p>
-            <span class="legend-chip c-ok">Vert</span> exact ·
-            <span class="legend-chip c-close">Jaune</span> proche ·
-            <span class="legend-chip c-wrong">Rouge</span> faux.
+            <span class="legend-chip lc-ok">Vert</span> exact ·
+            <span class="legend-chip lc-close">Jaune</span> proche ·
+            <span class="legend-chip lc-wrong">Rouge</span> faux.
             Les flèches indiquent si le mystère est plus grand/lourd (↑) ou plus petit/léger (↓).
           </p>
           <div class="onboarding-example" aria-hidden="true">
-            <span class="legend-chip c-ok">Gen 1</span>
-            <span class="legend-chip c-wrong">Feu</span>
-            <span class="legend-chip c-close">Forêt</span>
-            <span class="legend-chip c-wrong">0,4 m ↑</span>
+            <span class="legend-chip lc-ok">Gen 1</span>
+            <span class="legend-chip lc-wrong">Feu</span>
+            <span class="legend-chip lc-close">Forêt</span>
+            <span class="legend-chip lc-wrong">0,4 m ↑</span>
           </div>
         </div>
       </section>
