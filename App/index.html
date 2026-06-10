@@ -55,6 +55,23 @@
     <p class="app-splash-sub">Chargement du Pokédex…</p>
   </div>
 
+  <!-- Sprite d'icônes SVG (DA 2026 : remplace les emojis structurels) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-infinity" viewBox="0 0 24 24"><path d="M6.2 8.6c-4.3 0-4.3 6.8 0 6.8 4.2 0 7.4-6.8 11.6-6.8 4.3 0 4.3 6.8 0 6.8-4.2 0-7.4-6.8-11.6-6.8Z"/></symbol>
+    <symbol id="i-swords" viewBox="0 0 24 24"><path d="M4 4l13 13M4 4h4M4 4v4M20 20l-3.5-3.5M14 18l4 4M18 14l4 4"/><path d="M20 4 7 17M20 4h-4M20 4v4M4 20l3.5-3.5M10 18l-4 4M6 14l-4 4"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 19.6c.5-3.4 3-5.1 6.2-5.1s5.7 1.7 6.2 5.1"/><path d="M16.4 4.9a3.4 3.4 0 1 1-1.1 6.6M17.6 14.6c2.4.5 3.9 2 4.3 4.4"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 19.5A2.5 2.5 0 0 1 7.5 17H20V3H7.5A2.5 2.5 0 0 0 5 5.5v14Z"/><path d="M5 19.5A2.5 2.5 0 0 0 7.5 22H20v-5"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a3 3 0 0 0 3.2 4.6M16 5h3A3 3 0 0 1 15.8 9.6"/><path d="M12 14v3M8.5 20h7M10 17h4v3h-4z"/></symbol>
+    <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M7 7h10a5 5 0 0 1 5 5.5c-.2 2.6-1 5.5-3 5.5-1.6 0-2.3-1.3-3-2.5-.5-.9-1.2-1.5-2.2-1.5h-3.6c-1 0-1.7.6-2.2 1.5-.7 1.2-1.4 2.5-3 2.5-2 0-2.8-2.9-3-5.5A5 5 0 0 1 7 7Z"/><path d="M8 10.5v3M6.5 12h3M16 11h.01M18.5 13h.01"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20v-8M10 20V5M16 20v-5M3 20h18"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.8.3-1 .8-1 1.7"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+  </svg>
+
   <div class="bg-dots"></div>
 
   <header>
@@ -76,8 +93,8 @@
           <span class="xp-badge-info"><b>Niv. 1 · Recrue</b><small>0 XP</small></span>
           <div class="xp-badge-bar"><div class="xp-badge-fill" style="width:0%"></div></div>
         </button>
-        <button class="btn-ghost header-action-btn" type="button" data-action="openHelpModal">❔ Aide</button>
-        <button class="btn-ghost header-action-btn" type="button" data-action="openSettingsModal">⚙️ Paramètres</button>
+        <button class="btn-ghost header-action-btn" type="button" data-action="openHelpModal"><svg class="btn-ico" aria-hidden="true"><use href="#i-help"/></svg>Aide</button>
+        <button class="btn-ghost header-action-btn" type="button" data-action="openSettingsModal"><svg class="btn-ico" aria-hidden="true"><use href="#i-sliders"/></svg>Paramètres</button>
       </div>
     </div>
     <p class="tagline">Devinez le Pokémon mystère !</p>
@@ -91,33 +108,33 @@
   <div class="nav-group">
     <button id="nav-game" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Jouer</button>
     <div class="nav-dropdown" role="menu">
-      <button type="button" data-action="startDailyGame"><span class="nav-dd-ico">📅</span>Pokémon du jour</button>
-      <button type="button" data-action="startNormalGame"><span class="nav-dd-ico">♾️</span>Mode illimité</button>
-      <button type="button" data-action="startPartyMode"><span class="nav-dd-ico">🎲</span>Party Pokémon</button>
-      <button type="button" data-action="openDraftScoreAttackMode"><span class="nav-dd-ico">🎯</span>Draft Score Attack</button>
-      <button type="button" data-action="startSilhouetteGame"><span class="nav-dd-ico">🕶️</span>Silhouette</button>
-      <button type="button" data-action="startPixelGame"><span class="nav-dd-ico">🧩</span>Pixelisé</button>
-      <button type="button" data-action="startMysteryStatGame"><span class="nav-dd-ico">🧠</span>Stat mystère</button>
-      <button type="button" data-action="startCryGame"><span class="nav-dd-ico">🔊</span>Cri du Pokémon</button>
-      <button type="button" data-action="startDescriptionMode"><span class="nav-dd-ico">📝</span>Description</button>
-      <button type="button" data-action="openOddOneOutMode"><span class="nav-dd-ico">🔍</span>Intrus</button>
-      <button type="button" data-action="startQuizGame"><span class="nav-dd-ico">❓</span>Quiz</button>
-      <button type="button" data-action="startWeightBattle"><span class="nav-dd-ico">⚖️</span>Duel de poids</button>
-      <button type="button" data-action="startEvolutionChainGame"><span class="nav-dd-ico">🔁</span>Évolution</button>
-      <button type="button" data-action="startPokedexOrderGame"><span class="nav-dd-ico">🔢</span>Ordre Pokédex</button>
-      <button type="button" data-action="openHigherLowerMode"><span class="nav-dd-ico">📊</span>Higher or Lower</button>
-      <button type="button" data-action="openPokeConnectionsMode"><span class="nav-dd-ico">🧩</span>Poké-Connections</button>
-      <button type="button" data-action="openSpeedrunMode"><span class="nav-dd-ico">⚡</span>Speedrun Pokédex</button>
+      <button type="button" data-action="startDailyGame">Pokémon du jour</button>
+      <button type="button" data-action="startNormalGame">Mode illimité</button>
+      <button type="button" data-action="startPartyMode">Party Pokémon</button>
+      <button type="button" data-action="openDraftScoreAttackMode">Draft Score Attack</button>
+      <button type="button" data-action="startSilhouetteGame">Silhouette</button>
+      <button type="button" data-action="startPixelGame">Pixelisé</button>
+      <button type="button" data-action="startMysteryStatGame">Stat mystère</button>
+      <button type="button" data-action="startCryGame">Cri du Pokémon</button>
+      <button type="button" data-action="startDescriptionMode">Description</button>
+      <button type="button" data-action="openOddOneOutMode">Intrus</button>
+      <button type="button" data-action="startQuizGame">Quiz</button>
+      <button type="button" data-action="startWeightBattle">Duel de poids</button>
+      <button type="button" data-action="startEvolutionChainGame">Évolution</button>
+      <button type="button" data-action="startPokedexOrderGame">Ordre Pokédex</button>
+      <button type="button" data-action="openHigherLowerMode">Higher or Lower</button>
+      <button type="button" data-action="openPokeConnectionsMode">Poké-Connections</button>
+      <button type="button" data-action="openSpeedrunMode">Speedrun Pokédex</button>
     </div>
   </div>
 
   <div class="nav-group">
     <button id="nav-social" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Social</button>
     <div class="nav-dropdown" role="menu">
-      <button type="button" data-action="openMultiplayerMode"><span class="nav-dd-ico">🆚</span>Duel 1v1</button>
-      <button type="button" data-action="openStatClashMode"><span class="nav-dd-ico">📊</span>Stat Clash 1v1</button>
-      <button type="button" data-action="openStatAuctionMode"><span class="nav-dd-ico">💰</span>Stat Auction 1v1</button>
-      <button type="button" data-action="showChallengePanel"><span class="nav-dd-ico">🤝</span>Envoyer un défi</button>
+      <button type="button" data-action="openMultiplayerMode">Duel 1v1</button>
+      <button type="button" data-action="openStatClashMode">Stat Clash 1v1</button>
+      <button type="button" data-action="openStatAuctionMode">Stat Auction 1v1</button>
+      <button type="button" data-action="showChallengePanel">Envoyer un défi</button>
     </div>
   </div>
 
@@ -126,14 +143,14 @@
   <div class="nav-group">
     <button id="nav-extras" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Outils</button>
     <div class="nav-dropdown" role="menu">
-      <button type="button" data-action="openTeamBuilderScreen"><span class="nav-dd-ico">🧱</span>Team Builder</button>
-      <button type="button" data-action="openTeamsScreen"><span class="nav-dd-ico">🧩</span>Mes teams</button>
-      <button type="button" data-action="openDraftArenaMode"><span class="nav-dd-ico">🎴</span>Draft Arènes</button>
-      <button type="button" data-action="openTypeChartScreen"><span class="nav-dd-ico">🧮</span>Table des types</button>
-      <button type="button" data-action="openEmulatorMode"><span class="nav-dd-ico">🕹️</span>Émulateur</button>
-      <button type="button" data-action="openGamesRankingMode"><span class="nav-dd-ico">🏆</span>Classement jeux</button>
-      <button type="button" data-action="openRankingMode"><span class="nav-dd-ico">📋</span>Mode classement</button>
-      <button type="button" data-action="openMatchHistoryScreen"><span class="nav-dd-ico">🕘</span>Historique</button>
+      <button type="button" data-action="openTeamBuilderScreen">Team Builder</button>
+      <button type="button" data-action="openTeamsScreen">Mes teams</button>
+      <button type="button" data-action="openDraftArenaMode">Draft Arènes</button>
+      <button type="button" data-action="openTypeChartScreen">Table des types</button>
+      <button type="button" data-action="openEmulatorMode">Émulateur</button>
+      <button type="button" data-action="openGamesRankingMode">Classement jeux</button>
+      <button type="button" data-action="openRankingMode">Mode classement</button>
+      <button type="button" data-action="openMatchHistoryScreen">Historique</button>
     </div>
   </div>
 
@@ -146,7 +163,7 @@
       <!-- DA 2026 : hero "Pokémon du jour" — le jeu d'abord -->
       <section class="card daily-hero" id="daily-hero">
         <div class="daily-hero-main">
-          <div class="daily-hero-kicker">📅 Défi du jour · <span id="daily-hero-date">—</span></div>
+          <div class="daily-hero-kicker"><svg class="kicker-ico" aria-hidden="true"><use href="#i-calendar"/></svg>Défi du jour · <span id="daily-hero-date">—</span></div>
           <h2 class="daily-hero-title">Pokémon du jour</h2>
           <p class="daily-hero-sub">La même cible pour tous les joueurs, un indice à chaque essai. Garde ta série !</p>
           <div class="daily-hero-meta">
@@ -166,7 +183,7 @@
       <div class="card home-generations-card home-gens-card is-collapsed" id="home-gens-card">
         <div class="home-section-head">
           <div>
-            <h2 class="card-title">🧬 Générations</h2>
+            <h2 class="card-title">Générations</h2>
             <p class="card-desc" id="home-gens-summary">Choisis les générations à inclure dans les parties.</p>
           </div>
           <div class="home-gens-actions">
@@ -181,31 +198,31 @@
       <!-- Hero : 4 modes piliers (Lot 2) -->
       <section class="home-hero-choices">
         <div class="home-section-head">
-          <h2 class="home-section-title">🎮 Illimité, duel & party</h2>
+          <h2 class="home-section-title">Illimité, duel & party</h2>
           <p class="home-section-sub">Les autres façons de jouer. Tout le reste est rangé dans « Tous les modes ».</p>
         </div>
         <div class="home-pillars">
           <article class="card home-pillar" data-action="startNormalGame" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-yellow">♾️</div>
+            <div class="home-pillar-icon home-pillar-icon-yellow"><svg class="pi" aria-hidden="true"><use href="#i-infinity"/></svg></div>
             <h3>Mode illimité</h3>
             <p>Mêmes règles que le quotidien, rejouable sans limite.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Rejouable</span></div>
           </article>
           <article class="card home-pillar" data-action="openMultiplayerMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-blue">🆚</div>
+            <div class="home-pillar-icon home-pillar-icon-blue"><svg class="pi" aria-hidden="true"><use href="#i-swords"/></svg></div>
             <h3>Duel 1v1</h3>
             <p>Affronte un ami en temps réel sur la même cible.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
           </article>
           <article class="card home-pillar" data-action="openPartyRoomMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-coral">🎉</div>
+            <div class="home-pillar-icon home-pillar-icon-coral"><svg class="pi" aria-hidden="true"><use href="#i-users"/></svg></div>
             <h3>Party Room</h3>
             <p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Multi</span><span class="home-pillar-tag">2-8 joueurs</span><span class="home-pillar-tag">Podium</span></div>
           </article>
         </div>
         <div class="home-hero-secondary">
-          <button class="btn-ghost" type="button" data-action="openAllModesScreen">📂 Tous les modes</button>
+          <button class="btn-ghost" type="button" data-action="openAllModesScreen"><svg class="btn-ico" aria-hidden="true"><use href="#i-folder"/></svg>Tous les modes</button>
         </div>
       </section>
 
@@ -215,24 +232,24 @@
       <!-- Ligne 2 : Univers Pokémon -->
       <section class="home-section">
         <div class="home-section-head">
-          <h2 class="home-section-title">📚 Univers Pokémon</h2>
+          <h2 class="home-section-title">Univers Pokémon</h2>
           <p class="home-section-sub">Explore les Pokémon, les arènes, et joue aux jeux d'origine.</p>
         </div>
         <div class="home-pillars">
           <article class="card home-pillar" data-action="openPokedexMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-teal">📖</div>
+            <div class="home-pillar-icon home-pillar-icon-teal"><svg class="pi" aria-hidden="true"><use href="#i-book"/></svg></div>
             <h3>Pokédex</h3>
             <p>1025 fiches complètes avec stats, talents, évolutions, comparateur.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">9 gens</span><span class="home-pillar-tag">Shiny</span></div>
           </article>
           <article class="card home-pillar" data-action="openDraftArenaMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-coral">🏆</div>
+            <div class="home-pillar-icon home-pillar-icon-coral"><svg class="pi" aria-hidden="true"><use href="#i-trophy"/></svg></div>
             <h3>Draft Arènes</h3>
             <p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag home-pillar-tag-exp">Expérimental</span></div>
           </article>
           <article class="card home-pillar" data-action="openEmulatorMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-purple">🕹️</div>
+            <div class="home-pillar-icon home-pillar-icon-purple"><svg class="pi" aria-hidden="true"><use href="#i-gamepad"/></svg></div>
             <h3>Émulateur</h3>
             <p>Joue à Rouge Feu, Vert Feuille, Cristal, Platine ou charge ta ROM.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-unique">Unique</span><span class="home-pillar-tag">GBA · GBC · DS</span></div>
@@ -243,24 +260,24 @@
       <!-- Ligne 3 : Préparation stratégique + outils -->
       <section class="home-section">
         <div class="home-section-head">
-          <h2 class="home-section-title">🧪 Préparation stratégique</h2>
+          <h2 class="home-section-title">Préparation stratégique</h2>
           <p class="home-section-sub">Prépare ta team, analyse les types, garde un œil sur tes stats.</p>
         </div>
         <div class="home-pillars">
           <article class="card home-pillar" data-action="openTeamBuilderScreen" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-blue">🧱</div>
+            <div class="home-pillar-icon home-pillar-icon-blue"><svg class="pi" aria-hidden="true"><use href="#i-layers"/></svg></div>
             <h3>Team Builder</h3>
             <p>Compose une team de 6 : objet, gimmick, EV/IV, 4 attaques par slot.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Sauvegarde locale</span></div>
           </article>
           <article class="card home-pillar" data-action="openStatClashMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-red">📊</div>
+            <div class="home-pillar-icon home-pillar-icon-red"><svg class="pi" aria-hidden="true"><use href="#i-chart"/></svg></div>
             <h3>Stat Clash 1v1</h3>
             <p>Choisissez chacun une stat, le meilleur cumul gagne. 6 rounds.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span></div>
           </article>
           <article class="card home-pillar" data-action="openTypeChartScreen" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-yellow">🧮</div>
+            <div class="home-pillar-icon home-pillar-icon-yellow"><svg class="pi" aria-hidden="true"><use href="#i-grid"/></svg></div>
             <h3>Table des types</h3>
             <p>Efficacité offensive et défensive par génération. Gen 1, 2-5, 6+.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Référence</span></div>
@@ -287,7 +304,7 @@
       <div class="card home-progress-card">
         <div class="home-section-head">
           <div>
-            <h2 class="card-title">📊 Progression</h2>
+            <h2 class="card-title">Progression</h2>
             <p class="card-desc">Retrouve tes statistiques, ta série quotidienne et ta progression en un coup d'œil.</p>
           </div>
         </div>
@@ -322,7 +339,7 @@
     <div id="screen-all-modes" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">📂 Tous les modes</h2>
+          <h2 class="card-title"><svg class="btn-ico" aria-hidden="true"><use href="#i-folder"/></svg>Tous les modes</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -393,7 +410,7 @@
     <div id="screen-profile" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">👤 Profil joueur</h2>
+          <h2 class="card-title">Profil joueur</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -462,7 +479,7 @@
     <div id="screen-achievements" class="hidden"> 
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">&#127941; Succès</h2>
+          <h2 class="card-title">Succès</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -475,7 +492,7 @@
     <div id="screen-history" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">🕘 Historique des parties</h2>
+          <h2 class="card-title">Historique des parties</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -491,7 +508,7 @@
     <div id="screen-pokedex" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">&#128216; Pokédex</h2>
+          <h2 class="card-title">Pokédex</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -527,7 +544,7 @@
     <div id="screen-ranking" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">&#128203; Mode classement</h2>
+          <h2 class="card-title">Mode classement</h2>
           <div class="ranking-head-actions">
             <button class="btn-yellow" data-action="resetRankingChoices">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
@@ -553,7 +570,7 @@
       </div>
 
       <div class="card">
-        <h2 class="card-title">&#129513; Récap des choix</h2>
+        <h2 class="card-title">Récap des choix</h2>
         <p class="card-desc">Tous les Pokémon actuellement sélectionnés dans la grille.</p>
         <div id="ranking-picked-grid" class="ranking-picked-grid"></div>
       </div>
@@ -562,7 +579,7 @@
     <div id="screen-team-builder" class="hidden">
       <div class="card team-builder-screen-card">
         <div class="ranking-head">
-          <h2 class="card-title">🧱 Builder d’équipe</h2>
+          <h2 class="card-title">Builder d’équipe</h2>
           <div class="ranking-head-actions">
             <button class="btn-blue" type="button" data-action="openTeamsScreen">🧩 Bases d’équipes</button>
             <button class="btn-ghost" type="button" data-action="openTeamBuilderExport">📋 Exporter</button>
@@ -762,7 +779,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-teams" class="hidden">
       <div class="card teams-screen-card">
         <div class="ranking-head">
-          <h2 class="card-title">🧩 Équipes / Teams</h2>
+          <h2 class="card-title">Équipes / Teams</h2>
           <div class="ranking-head-actions">
             <button class="btn-yellow" type="button" data-action="resetTeamLibraryFilters">🧹 Réinitialiser</button>
             <button class="btn-blue" type="button" data-action="openTeamBuilderScreen">Ouvrir le builder</button>
@@ -792,7 +809,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-games-ranking" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">&#127942; Classement des jeux Pokémon</h2>
+          <h2 class="card-title">Classement des jeux Pokémon</h2>
           <div class="ranking-head-actions">
             <button class="btn-yellow" data-action="resetGamesRanking">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
@@ -805,7 +822,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-type-chart" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">🧮 Table des types</h2>
+          <h2 class="card-title">Table des types</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -836,7 +853,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-draft-arena" class="hidden">
       <div id="draft-mode-card" class="card draft-card">
           <div class="ranking-head">
-            <h2 class="card-title">&#127924; Draft Arènes</h2>
+            <h2 class="card-title">Draft Arènes</h2>
             <div class="ranking-head-actions">
               <select id="draft-battle-pokemon" class="mode-select hidden arena-only" aria-label="Choisir le Pokémon à envoyer au duel"></select>
               <button id="draft-battle-launch" class="btn-blue arena-only" type="button" data-action="launchDraftArenaBattle">Lancer le duel</button>
@@ -902,7 +919,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-emulator" class="hidden">
       <div class="card emulator-card">
         <div class="ranking-head">
-          <h2 class="card-title">&#128377;&#65039; Émulateur GBA / GBC / DS</h2>
+          <h2 class="card-title">Émulateur GBA / GBC / DS</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" data-action="closeEmulatorMode">&#8592; Retour</button>
           </div>
@@ -1122,7 +1139,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-odd-one-out" class="hidden">
       <div class="card odd-screen-card">
         <div class="ranking-head">
-          <h2 class="card-title">&#128269; Intrus Pokémon</h2>
+          <h2 class="card-title">Intrus Pokémon</h2>
           <div class="ranking-head-actions">
             <button id="odd-new-puzzle-btn" class="btn-yellow" data-action="nextOddOneOutPuzzle">🎲 Nouvelle énigme</button>
             <button id="odd-party-next-btn" class="btn-yellow hidden" data-action="advancePartyRound">Round suivant</button>
@@ -1158,7 +1175,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-party-room" class="hidden">
       <div class="card party-room-card">
         <div class="ranking-head">
-          <h2 class="card-title">🎉 Party Room</h2>
+          <h2 class="card-title">Party Room</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
@@ -1231,7 +1248,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-multiplayer" class="hidden">
       <div class="card multiplayer-screen-card">
         <div class="ranking-head">
-          <h2 class="card-title">🆚 Duel live 1v1</h2>
+          <h2 class="card-title">Duel live 1v1</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" type="button" data-action="leaveMultiplayerRoom" data-args='[true]'>Réinitialiser</button>
             <button class="btn-ghost" data-action="leaveMultiplayerRoom">&#8592; Retour</button>
@@ -1358,7 +1375,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-stat-clash" class="hidden">
       <div class="card stat-clash-screen-card">
         <div class="ranking-head">
-          <h2 class="card-title">📊 Stat Clash 1v1</h2>
+          <h2 class="card-title">Stat Clash 1v1</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" data-action="restartStatClashGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
@@ -1372,7 +1389,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-higher-lower" class="hidden">
       <div class="card higher-lower-card">
         <div class="ranking-head">
-          <h2 class="card-title">📊 Higher or Lower</h2>
+          <h2 class="card-title">Higher or Lower</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" data-action="restartHigherLowerGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
@@ -1386,7 +1403,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-poke-connections" class="hidden">
       <div class="card poke-connections-card">
         <div class="ranking-head">
-          <h2 class="card-title">🧩 Poké-Connections</h2>
+          <h2 class="card-title">Poké-Connections</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
@@ -1400,7 +1417,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-speedrun" class="hidden">
       <div class="card speedrun-card">
         <div class="ranking-head">
-          <h2 class="card-title">⚡ Speedrun Pokédex</h2>
+          <h2 class="card-title">Speedrun Pokédex</h2>
           <div class="ranking-head-actions">
             <button class="btn-red" type="button" data-action="restartSpeedrunGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
@@ -1414,7 +1431,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-stat-auction" class="hidden">
       <div class="card stat-auction-card">
         <div class="ranking-head">
-          <h2 class="card-title">💰 Stat Auction 1v1</h2>
+          <h2 class="card-title">Stat Auction 1v1</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost" type="button" data-action="leaveStatAuctionRoom">Quitter</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>

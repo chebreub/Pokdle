@@ -28514,3 +28514,145 @@ body:not(.theme-dark) .card::before {
   color: #6b4d00 !important;
   box-shadow: inset 0 0 0 1px rgba(232, 185, 62, 0.35) !important;
 }
+
+/* ============================================================
+   DA 2026 — Icônes SVG (remplacent les emojis structurels).
+   ============================================================ */
+svg.pi {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.home-pillar-icon-red { color: #dc3a30; }
+.home-pillar-icon-blue { color: #2f76ff; }
+.home-pillar-icon-yellow { color: #b8880a; }
+.home-pillar-icon-coral { color: #e4566b; }
+.home-pillar-icon-teal { color: #0f9d8f; }
+.home-pillar-icon-purple { color: #7c3aed; }
+
+svg.btn-ico {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-right: 7px;
+  vertical-align: -2px;
+}
+svg.kicker-ico {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+/* Menus épurés : un peu plus d'air sans les emojis */
+.nav-dropdown button { padding-left: 14px; }
+
+/* ============================================================
+   DA 2026 — Tableau de réponses "nouvelle génération" (desktop).
+   Rangées flottantes, cellules en chips dégradées, apparition en
+   cascade. Le rendu mobile (cartes empilées ≤640px) reste inchangé.
+   ============================================================ */
+@media (min-width: 641px) {
+  .results-wrap,
+  #multiplayer-my-attempts-wrap {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  #screen-game #results-table,
+  #results-table,
+  .multiplayer-results-table {
+    border-collapse: separate !important;
+    border-spacing: 5px 9px !important;
+    background: transparent !important;
+    width: 100%;
+  }
+  #screen-game #results-table thead th,
+  #results-table thead th,
+  .multiplayer-results-table thead th {
+    background: transparent !important;
+    color: #5a6f93 !important;
+    font-size: 0.67rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    border: none !important;
+    padding: 0 8px 2px !important;
+    text-align: center;
+  }
+  #screen-game #results-table td,
+  #results-table td,
+  .multiplayer-results-table td {
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 12px 10px !important;
+    font-weight: 800 !important;
+    text-align: center;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(12, 25, 48, 0.07);
+  }
+  #screen-game #results-table td:first-child,
+  #results-table td:first-child,
+  .multiplayer-results-table td:first-child {
+    background: #fff !important;
+    color: #0c1930 !important;
+    text-align: left;
+  }
+  /* Chips colorées : dégradés subtils + liseré interne (lisible et premium) */
+  #screen-game #results-table .c-ok,
+  #results-table .c-ok,
+  .multiplayer-results-table .c-ok {
+    background: linear-gradient(180deg, #41b757 0%, #2e9b43 100%) !important;
+    color: #fff !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(46, 155, 67, 0.28) !important;
+  }
+  #screen-game #results-table .c-close,
+  #results-table .c-close,
+  .multiplayer-results-table .c-close {
+    background: linear-gradient(180deg, #ffd25e 0%, #f3ab1f 100%) !important;
+    color: #4a3203 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 4px 12px rgba(243, 171, 31, 0.28) !important;
+  }
+  #screen-game #results-table .c-wrong,
+  #results-table .c-wrong,
+  .multiplayer-results-table .c-wrong {
+    background: linear-gradient(180deg, #ef625e 0%, #d94440 100%) !important;
+    color: #fff !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(217, 68, 64, 0.24) !important;
+  }
+  /* Apparition en cascade des cellules de chaque nouvel essai */
+  #results-table tbody td,
+  .multiplayer-results-table tbody td {
+    animation: cell-pop 0.42s cubic-bezier(0.2, 0.8, 0.3, 1.12) backwards;
+  }
+  #results-table tbody td:nth-child(2), .multiplayer-results-table tbody td:nth-child(2) { animation-delay: 0.04s; }
+  #results-table tbody td:nth-child(3), .multiplayer-results-table tbody td:nth-child(3) { animation-delay: 0.08s; }
+  #results-table tbody td:nth-child(4), .multiplayer-results-table tbody td:nth-child(4) { animation-delay: 0.12s; }
+  #results-table tbody td:nth-child(5), .multiplayer-results-table tbody td:nth-child(5) { animation-delay: 0.16s; }
+  #results-table tbody td:nth-child(6), .multiplayer-results-table tbody td:nth-child(6) { animation-delay: 0.20s; }
+  #results-table tbody td:nth-child(7), .multiplayer-results-table tbody td:nth-child(7) { animation-delay: 0.24s; }
+  #results-table tbody td:nth-child(8), .multiplayer-results-table tbody td:nth-child(8) { animation-delay: 0.28s; }
+  #results-table tbody td:nth-child(9), .multiplayer-results-table tbody td:nth-child(9) { animation-delay: 0.32s; }
+  #results-table tbody td:nth-child(10), .multiplayer-results-table tbody td:nth-child(10) { animation-delay: 0.36s; }
+}
+@keyframes cell-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+.reduce-motion #results-table tbody td,
+.reduce-motion .multiplayer-results-table tbody td { animation: none !important; }
+
+.results-legend { color: #44597e; }
