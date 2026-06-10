@@ -1,0 +1,175 @@
+--- a/App/script.js
++++ b/App/script.js
+@@ -4250,7 +4250,7 @@
+       const isLockedByOpponent = lockedByOpponentId && rule.id === lockedByOpponentId;
+       const cls = `stat-clash-rule-card ${selected === rule.id ? "is-selected" : ""} ${isLockedByOpponent ? "is-locked-by-opponent" : ""}`;
+       const lockedNote = isLockedByOpponent ? `<small class="stat-clash-rule-locked-note">🔒 prise par l'adversaire</small>` : "";
+-      return `<button type="button" class="${cls}" ${isLockedByOpponent ? "disabled" : ""} onclick="selectStatClashImposedRule('${rule.id}')"><b>${rule.icon || "📜"} ${escapeHtml(rule.label)}</b><small>${escapeHtml(rule.desc)}</small>${lockedNote}</button>`;
++      return `<button type="button" class="${cls}" ${isLockedByOpponent ? "disabled" : ""} data-action="selectStatClashImposedRule" data-args='["${rule.id}"]'><b>${rule.icon || "📜"} ${escapeHtml(rule.label)}</b><small>${escapeHtml(rule.desc)}</small>${lockedNote}</button>`;
+     }).join("")}</div>${isRoom ? `<div class="stat-clash-rule-summary"><span>Tu imposes : <b>${escapeHtml(imposedRule?.label || "à choisir")}</b></span><span>Tu subis : <b>${escapeHtml(sufferedRule?.label || "en attente")}</b></span></div>` : ""}</section>`;
+   };
+   const current = roomHasStarted || !isRoom ? (state.randomizerPokemon || state.currentPokemon) : null;
+@@ -4309,16 +4309,16 @@
+           if (previewKey === entry.key) {
+             valueHtml = (Number.isFinite(previewValue) && previewValue > 0) ? `<b class="stat-preview-value">${previewValue}</b>` : `<b class="stat-preview-value">vu</b>`;
+           }
+-          return `<button type="button" class="${cls.join(" ")}" data-stat-key="${entry.key}" ${disabled ? "disabled" : ""} onclick="pickStatClashStat('left','${entry.key}')"><span><i class="stat-icon">${icon}</i> ${escapeHtml(entry.label)}</span>${valueHtml}</button>`;
++          return `<button type="button" class="${cls.join(" ")}" data-stat-key="${entry.key}" ${disabled ? "disabled" : ""} data-action="pickStatClashStat" data-args='["left","${entry.key}"]'><span><i class="stat-icon">${icon}</i> ${escapeHtml(entry.label)}</span>${valueHtml}</button>`;
+         }).join("");
+     const jokersHtml = !isOpponent && state.phase === "picking"
+       ? (() => {
+           const j = state.jokersBySide?.left || { reroll: 0, preview: 0, double: 0, doubleArmed: false };
+           const disabledAttr = (n) => (n > 0 && !state.players.left.pendingPick) ? "" : "disabled";
+           return `<div class="stat-clash-jokers">
+-            <button type="button" class="stat-clash-joker ${j.reroll > 0 ? "" : "is-spent"}" ${disabledAttr(j.reroll)} onclick="useStatClashJoker('left','reroll')" title="Reroll : change le Pokémon"><i>🔄</i><span>Reroll</span><small>${j.reroll}</small></button>
+-            <button type="button" class="stat-clash-joker ${j.preview > 0 ? "" : "is-spent"}" ${disabledAttr(j.preview)} onclick="useStatClashJoker('left','preview')" title="Aperçu : révèle 1 stat aléatoire 2s"><i>👁</i><span>Aperçu</span><small>${j.preview}</small></button>
+-            <button type="button" class="stat-clash-joker ${j.doubleArmed ? "is-armed" : j.double > 0 ? "" : "is-spent"}" ${j.doubleArmed ? "disabled" : disabledAttr(j.double)} onclick="useStatClashJoker('left','double')" title="Double : x2 si tu gagnes la manche, 0 si tu perds"><i>×2</i><span>Double</span><small>${j.doubleArmed ? "ON" : j.double}</small></button>
++            <button type="button" class="stat-clash-joker ${j.reroll > 0 ? "" : "is-spent"}" ${disabledAttr(j.reroll)} data-action="useStatClashJoker" data-args='["left","reroll"]' title="Reroll : change le Pokémon"><i>🔄</i><span>Reroll</span><small>${j.reroll}</small></button>
++            <button type="button" class="stat-clash-joker ${j.preview > 0 ? "" : "is-spent"}" ${disabledAttr(j.preview)} data-action="useStatClashJoker" data-args='["left","preview"]' title="Aperçu : révèle 1 stat aléatoire 2s"><i>👁</i><span>Aperçu</span><small>${j.preview}</small></button>
++            <button type="button" class="stat-clash-joker ${j.doubleArmed ? "is-armed" : j.double > 0 ? "" : "is-spent"}" ${j.doubleArmed ? "disabled" : disabledAttr(j.double)} data-action="useStatClashJoker" data-args='["left","double"]' title="Double : x2 si tu gagnes la manche, 0 si tu perds"><i>×2</i><span>Double</span><small>${j.doubleArmed ? "ON" : j.double}</small></button>
+           </div>`;
+         })()
+       : "";
+@@ -4674,13 +4674,13 @@
+       <div class="higher-lower-lobby">
+         <h3>Choisis ton mode</h3>
+         <div class="higher-lower-modes">
+-          <button class="higher-lower-mode-card" type="button" onclick="startHigherLowerMode('infinite')">
++          <button class="higher-lower-mode-card" type="button" data-action="startHigherLowerMode" data-args='["infinite"]'>
+             <div class="higher-lower-mode-icon">♾️</div>
+             <h4>Mode infini</h4>
+             <p>Enchaîne jusqu'à la première erreur. Combien de bonnes réponses d'affilée ?</p>
+             <div class="higher-lower-mode-record">Record : <b>${state.highScore}</b></div>
+           </button>
+-          <button class="higher-lower-mode-card" type="button" onclick="startHigherLowerMode('rush60')">
++          <button class="higher-lower-mode-card" type="button" data-action="startHigherLowerMode" data-args='["rush60"]'>
+             <div class="higher-lower-mode-icon">⏱️</div>
+             <h4>Course 60s</h4>
+             <p>60 secondes pour faire le max de bonnes réponses. Les erreurs ne pénalisent pas, juste le temps presse.</p>
+@@ -5448,7 +5448,7 @@
+     .map((t, idx) => {
+       if (foundGroupIdx.has(t.groupIdx)) return "";
+       const isSelected = selected.has(idx);
+-      return `<button type="button" class="poke-connections-tile ${isSelected ? "is-selected" : ""}" onclick="togglePokeConnectionsTile(${idx})">
++      return `<button type="button" class="poke-connections-tile ${isSelected ? "is-selected" : ""}" data-action="togglePokeConnectionsTile" data-args='[${idx}]'>
+         <img src="${escapeHtml(t.sprite || "")}" alt="${escapeHtml(t.name)}" loading="lazy" />
+         <span>${escapeHtml(t.name)}</span>
+       </button>`;
+@@ -5823,9 +5823,9 @@
+     return `<div class="stat-auction-row">
+       <div class="stat-auction-stat-label"><span>${s.icon}</span><b>${escapeHtml(s.label)}</b></div>
+       <div class="stat-auction-stat-controls">
+-        <button type="button" class="btn-ghost stat-auction-step" ${cur <= 0 || state.submitted ? "disabled" : ""} onclick="changeStatAuctionAllocation('${s.key}', -5)">−5</button>
++        <button type="button" class="btn-ghost stat-auction-step" ${cur <= 0 || state.submitted ? "disabled" : ""} data-action="changeStatAuctionAllocation" data-args='["${s.key}",-5]'>−5</button>
+         <input type="number" class="stat-auction-input" min="0" max="100" value="${cur}" ${state.submitted ? "disabled" : ""} oninput="setStatAuctionAllocation('${s.key}', this.value)" />
+-        <button type="button" class="btn-ghost stat-auction-step" ${remaining <= 0 || state.submitted ? "disabled" : ""} onclick="changeStatAuctionAllocation('${s.key}', 5)">+5</button>
++        <button type="button" class="btn-ghost stat-auction-step" ${remaining <= 0 || state.submitted ? "disabled" : ""} data-action="changeStatAuctionAllocation" data-args='["${s.key}",5]'>+5</button>
+       </div>
+     </div>`;
+   }).join("");
+@@ -9628,7 +9628,7 @@
+   results.innerHTML = visible.map((entry) => {
+     const isSelected = pokemon?.id === entry.id;
+     return `
+-      <button type="button" class="team-builder-pokemon-card${isSelected ? " is-selected" : ""}" data-pokemon-id="${entry.id}" onclick="selectTeamBuilderPokemonById(${entry.id})">
++      <button type="button" class="team-builder-pokemon-card${isSelected ? " is-selected" : ""}" data-pokemon-id="${entry.id}" data-action="selectTeamBuilderPokemonById" data-args='[${entry.id}]'>
+         <img src="${getPokemonSprite(entry)}" alt="${escapeHtml(entry.name)}" loading="lazy" />
+         <strong>${escapeHtml(entry.name)}</strong>
+         <div class="pokemon-card-types">${typeBadgesHtml(entry.type1, entry.type2)}</div>
+@@ -10474,7 +10474,7 @@
+           ${roster}
+         </div>
+         <div class="team-template-actions">
+-          <button class="btn-blue" type="button" onclick="openTeamTemplateInBuilder('${escapeHtml(template.id)}')">Utiliser comme base</button>
++          <button class="btn-blue" type="button" data-action="openTeamTemplateInBuilder" data-args='["${escapeHtml(template.id)}"]'>Utiliser comme base</button>
+           <span>Ouvre le builder avec cette base déjà posée.</span>
+         </div>
+       </article>
+@@ -11134,7 +11134,7 @@
+     const dexId = getPokemonSpriteId(pokemon);
+     const sprite = getPokedexDisplaySprite(pokemon, false);
+     const isActive = Number(pokemon.id) === Number(pokedexSelectedId);
+-    return `<button type="button" class="pokedex-recent-item${isActive ? " is-active" : ""}" onclick="openPokedexRecent(${pokemon.id})"><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" data-fallback="${getSpriteUrl(dexId)}" /><span>${escapeHtml(pokemon.name)}</span></button>`;
++    return `<button type="button" class="pokedex-recent-item${isActive ? " is-active" : ""}" data-action="openPokedexRecent" data-args='[${pokemon.id}]'><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" data-fallback="${getSpriteUrl(dexId)}" /><span>${escapeHtml(pokemon.name)}</span></button>`;
+   }).join("");
+   const clearDisabled = recent.length ? "" : "disabled";
+   return `<div class="pokedex-recent-block"><div class="pokedex-recent-head"><h4>Derniers consultés</h4><button type="button" class="btn-ghost pokedex-recent-clear" data-action="clearPokedexRecentHistory" ${clearDisabled}>Effacer</button></div>${recent.length ? `<div class="pokedex-recent-list">${items}</div>` : '<p class="pokedex-recent-empty">Aucun Pokémon récent</p>'}</div>`;
+@@ -11313,8 +11313,8 @@
+   const recentHtml = renderPokedexRecentBlock();
+   const navigationHtml = `
+     <div class="pokedex-detail-nav">
+-      <button type="button" class="btn-ghost pokedex-detail-nav-btn" onclick="navigatePokedexDetail('prev')" ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
+-      <button type="button" class="btn-ghost pokedex-detail-nav-btn" onclick="navigatePokedexDetail('next')" ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
++      <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["prev"]' ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
++      <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["next"]' ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
+     </div>
+   `;
+   const builderActionHtml = `
+@@ -15638,7 +15638,7 @@
+     const isSelected = Boolean(options.selectedIndex === index);
+     const elementTag = isSelectable ? "button" : "div";
+     const actionAttrs = isSelectable
+-      ? `type="button" onclick="selectDraftSimpleBattlePreviewLead(${index})" aria-label="Choisir ${escapeHtml(member.pokemon.name)} comme Pokémon de départ"`
++      ? `type="button" data-action="selectDraftSimpleBattlePreviewLead" data-args='[${index}]' aria-label="Choisir ${escapeHtml(member.pokemon.name)} comme Pokémon de départ"`
+       : "";
+     return `
+       <${elementTag} class="draft-dev-battle-preview-member ${sideClass}${isSelected ? " is-selected" : ""}${isSelectable ? " is-selectable" : ""}" ${actionAttrs}>
+@@ -16236,7 +16236,7 @@
+     <button
+       type="button"
+       class="btn-blue draft-dev-battle-move ${moveEffectivenessClass} ${move?.category === "status" ? "is-status" : "is-attack"}"
+-      onclick="runDraftSimpleBattleDevTurn(${index}, '${currentActionSide}')"
++      data-action="runDraftSimpleBattleDevTurn" data-args='[${index},"${currentActionSide}"]'
+       ${(state.phase === "finished" || !canLocalChooseAction || (Number(move?.ppCurrent) || 0) <= 0) ? "disabled" : ""}
+     >
+       <span class="draft-dev-battle-move-name">${escapeHtml(move.name)}</span>
+@@ -16251,7 +16251,7 @@
+   }).join("");
+   const struggleOnly = !getDraftSimpleBattleUsableMoveIndexes(currentActionBattler).length;
+   const struggleHtml = struggleOnly
+-    ? `<button type="button" class="btn-blue draft-dev-battle-move" onclick="runDraftSimpleBattleDevStruggle('${currentActionSide}')" ${state.phase === "finished" || !canLocalChooseAction ? "disabled" : ""}>
++    ? `<button type="button" class="btn-blue draft-dev-battle-move" data-action="runDraftSimpleBattleDevStruggle" data-args='["${currentActionSide}"]' ${state.phase === "finished" || !canLocalChooseAction ? "disabled" : ""}>
+         <span class="draft-dev-battle-move-name">Struggle</span>
+         <span class="draft-dev-battle-move-meta">
+           <small class="draft-dev-battle-move-type">Normal</small>
+@@ -16269,26 +16269,26 @@
+   if (showGbaMenu) {
+     if (gbaMenuView === "moves") {
+       const movesGba = struggleOnly
+-        ? `<button type="button" class="gba-move-btn" onclick="runDraftSimpleBattleDevStruggle('${currentActionSide}')">
++        ? `<button type="button" class="gba-move-btn" data-action="runDraftSimpleBattleDevStruggle" data-args='["${currentActionSide}"]'>
+             <span class="gba-move-name">Lutte</span>
+             <span class="gba-move-meta"><span>Normal</span><span>PP —</span></span>
+           </button>`
+         : (currentActionBattler.moves || []).map((move, i) => {
+             const noPp = (Number(move?.ppCurrent) || 0) <= 0;
+-            return `<button type="button" class="gba-move-btn ${noPp ? "is-disabled" : ""}" onclick="runDraftSimpleBattleDevTurn(${i}, '${currentActionSide}')" ${noPp ? "disabled" : ""}>
++            return `<button type="button" class="gba-move-btn ${noPp ? "is-disabled" : ""}" data-action="runDraftSimpleBattleDevTurn" data-args='[${i},"${currentActionSide}"]' ${noPp ? "disabled" : ""}>
+               <span class="gba-move-name">${escapeHtml(move.name)}</span>
+               <span class="gba-move-meta"><span>${escapeHtml(move.type)}</span><span>PP ${Number(move?.ppCurrent) || 0}/${Number(move?.ppMax) || 0}</span></span>
+             </button>`;
+           }).join("");
+       gbaMenuHtml = `<div class="gba-menu" data-view="moves">
+         ${movesGba}
+-        <button type="button" class="gba-menu-back" onclick="setGbaMenuView('main')">◀ RETOUR</button>
++        <button type="button" class="gba-menu-back" data-action="setGbaMenuView" data-args='["main"]'>◀ RETOUR</button>
+       </div>`;
+     } else {
+       gbaMenuHtml = `<div class="gba-menu" data-view="main">
+-        <button type="button" class="gba-menu-btn" onclick="setGbaMenuView('moves')">ATTAQUE</button>
++        <button type="button" class="gba-menu-btn" data-action="setGbaMenuView" data-args='["moves"]'>ATTAQUE</button>
+         <button type="button" class="gba-menu-btn is-disabled" disabled title="Pas d'objets dans le Draft">SAC</button>
+-        <button type="button" class="gba-menu-btn${gbaSwitchAvailable ? "" : " is-disabled"}" ${gbaSwitchAvailable ? `onclick="openDraftSimpleBattleManualSwitch('${currentActionSide}')"` : "disabled"}>POKÉMON</button>
++        <button type="button" class="gba-menu-btn${gbaSwitchAvailable ? "" : " is-disabled"}" ${gbaSwitchAvailable ? `data-action="openDraftSimpleBattleManualSwitch" data-args='["${currentActionSide}"]'` : "disabled"}>POKÉMON</button>
+         <button type="button" class="gba-menu-btn is-disabled" disabled title="Impossible de fuir un combat d'arène">FUITE</button>
+       </div>`;
+     }
+@@ -17802,7 +17802,7 @@
+   const leaveBtn = `<button class="draft-score-vs-leave" type="button" data-action="leaveDraftScoreAttackRoom" title="Quitter la room">🚪 Quitter</button>`;
+   const canReact = Boolean(opponent && room.status === "live");
+   const reactionBar = canReact
+-    ? `<div class="draft-score-reaction-bar">${["🔥", "😱", "😈", "👍", "🤡", "💀", "👀", "🎯"].map((emoji) => `<button class="draft-score-reaction-btn" type="button" onclick="sendDraftScoreReaction('${emoji}')" title="Envoyer ${emoji}">${emoji}</button>`).join("")}</div>`
++    ? `<div class="draft-score-reaction-bar">${["🔥", "😱", "😈", "👍", "🤡", "💀", "👀", "🎯"].map((emoji) => `<button class="draft-score-reaction-btn" type="button" data-action="sendDraftScoreReaction" data-args='["${emoji}"]' title="Envoyer ${emoji}">${emoji}</button>`).join("")}</div>`
+     : "";
+   return `
+     <div class="draft-score-vs-wrap">

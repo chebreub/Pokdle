@@ -1,0 +1,20 @@
+--- a/App/style.css
++++ b/App/style.css
+@@ -28111,3 +28111,17 @@
+     padding: 9px 10px;
+   }
+ }
++
++/* Vague mobile 2 — titres de cartes en Nunito (au lieu de Press Start 2P, dur à lire) */
++.card-title {
++  font-family: 'Nunito', sans-serif !important;
++  font-size: 1.02rem !important;
++  font-weight: 800 !important;
++  letter-spacing: 0;
++}
++
++/* Vague mobile 2 — badge de niveau du header : pleine largeur sur mobile, plus de troncature */
++@media (max-width: 640px) {
++  header .header-actions { display: flex; flex-wrap: wrap; }
++  .xp-badge { flex: 1 1 100%; min-width: 0; }
++}

@@ -1,0 +1,17 @@
+--- a/App/style.css
++++ b/App/style.css
+@@ -28100,3 +28100,14 @@
+   background: rgba(238, 246, 255, 0.34) !important;
+   border-color: rgba(210, 228, 255, 0.42) !important;
+ }
++
++/* Mobile : sélecteur de générations en grille compacte au lieu d'une longue liste (vague mobile 1) */
++@media (max-width: 640px) {
++  .gen-grid {
++    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
++    gap: 8px;
++  }
++  .gen-item {
++    padding: 9px 10px;
++  }
++}
