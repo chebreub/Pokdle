@@ -1993,6 +1993,7 @@ window.addEventListener("DOMContentLoaded", () => {
   renderStats();
   initPokedex();
   initTypeChartScreen();
+  renderDailyHero();
   initHomeTypeHelper();
   initHomeDefenseTypeHelper();
   initHomeTeamSuggestionHelper();
@@ -2003,8 +2004,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (checkChallengeURL()) return;
   if (checkMultiplayerInviteURL()) return;
+  // Sur /emulateur, l'écran émulateur est ouvert par l'init dédié — ne pas
+  // rappeler goToConfig() ici (il re-routerait vers /).
+  if (window.location.pathname === "/emulateur") { removeAppSplash(); return; }
   goToConfig();
+  removeAppSplash();
 });
+
+// DA 2026 : splash de chargement (perçu pendant le parse JS / les données).
+function removeAppSplash() {
+  const splash = document.getElementById("app-splash");
+  if (!splash) return;
+  splash.classList.add("app-splash-done");
+  setTimeout(() => splash.remove(), 420);
+}
 
 // ============================================================
 // GENERATION GRID
@@ -2037,6 +2050,7 @@ function buildGenGrid() {
 
     grid.appendChild(item);
   });
+  updateHomeGensSummary();
 }
 
 function toggleGen(gen, item) {
@@ -2050,6 +2064,7 @@ function toggleGen(gen, item) {
     item.classList.add("on");
     item.querySelector(".gen-check").textContent = "OK";
   }
+  updateHomeGensSummary();
 }
 
 function setSelectedGenerations(gens) {
@@ -2059,6 +2074,78 @@ function setSelectedGenerations(gens) {
 
   selectedGens = new Set(validGens.length ? validGens : [1]);
   buildGenGrid();
+}
+
+// DA 2026 : résumé de la sélection dans l'en-tête de la carte repliable.
+function updateHomeGensSummary() {
+  const summary = document.getElementById("home-gens-summary");
+  if (!summary) return;
+  const gens = [...selectedGens].sort((a, b) => a - b);
+  const total = gens.reduce((acc, gen) => acc + getPokemonCountForGeneration(gen, { includeAltForms: false }), 0);
+  const label = gens.length === Object.keys(GENERATIONS).length
+    ? "Toutes les générations"
+    : gens.map((gen) => `Gen ${gen}`).join(" · ");
+  summary.textContent = `${label} — ${total} Pokémon dans le pool.`;
+}
+
+function toggleHomeGensCard() {
+  const card = document.getElementById("home-gens-card");
+  const toggle = document.getElementById("home-gens-toggle");
+  if (!card) return;
+  const collapsed = card.classList.toggle("is-collapsed");
+  if (toggle) {
+    toggle.textContent = collapsed ? "Modifier ▾" : "Fermer ▴";
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+  }
+}
+window.toggleHomeGensCard = toggleHomeGensCard;
+
+// DA 2026 : hero "Pokémon du jour" (statut du jour, série, compte à rebours UTC).
+let dailyHeroCountdownTimer = null;
+function renderDailyHero() {
+  const dateEl = document.getElementById("daily-hero-date");
+  const streakEl = document.getElementById("daily-hero-streak");
+  const statusEl = document.getElementById("daily-hero-status");
+  const ctaEl = document.getElementById("daily-hero-cta");
+  if (!dateEl && !streakEl) return;
+
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  }
+  if (streakEl) streakEl.textContent = `🔥 Série : ${Number(playerStats?.dailyCurrentStreak) || 0}`;
+
+  const today = getUTCDateKey();
+  const wonToday = playerStats?.lastDailyWinKey === today;
+  let inProgress = false;
+  try {
+    const save = readJson(STORAGE_KEYS.game, null);
+    inProgress = Boolean(save && save.mode === "daily" && save.dailyKey === today);
+  } catch (_err) { /* stockage indisponible */ }
+
+  if (statusEl) {
+    statusEl.classList.toggle("hidden", !wonToday && !inProgress);
+    if (wonToday) statusEl.textContent = "✅ Trouvé aujourd'hui !";
+    else if (inProgress) statusEl.textContent = "⏸ Partie en cours";
+  }
+  if (ctaEl) {
+    ctaEl.textContent = wonToday ? "🔁 Revoir le mode du jour" : (inProgress ? "▶ Reprendre ma partie" : "▶ Jouer au Pokémon du jour");
+  }
+
+  updateDailyHeroCountdown();
+  if (!dailyHeroCountdownTimer) {
+    dailyHeroCountdownTimer = setInterval(updateDailyHeroCountdown, 30000);
+  }
+}
+
+function updateDailyHeroCountdown() {
+  const countdownEl = document.getElementById("daily-hero-countdown");
+  if (!countdownEl) return;
+  const now = new Date();
+  const nextUtcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  const ms = Math.max(0, nextUtcMidnight - now.getTime());
+  const hours = Math.floor(ms / 3600000);
+  const minutes = Math.floor((ms % 3600000) / 60000);
+  countdownEl.textContent = `⏳ Prochain Pokémon dans ${hours} h ${String(minutes).padStart(2, "0")} min`;
 }
 
 function selectAllGenerations() {
@@ -2430,6 +2517,7 @@ function goToConfig() {
     window.location.assign("/");
     return;
   }
+  if (typeof renderDailyHero === "function") renderDailyHero();
   partySession = null;
   cleanupStatClashMode();
   teamBuilderPokemonPickerOpen = false;
@@ -6720,27 +6808,28 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   const wArrow = arrowFor(pokemon.weight, targetPokemon.weight);
   const fallbackSprite = getSpriteUrl(getPokemonSpriteId(pokemon));
 
+  // data-label : utilisés par le rendu "cartes empilées" sur mobile (≤640px).
   return `
-    <td>
+    <td data-label="Pokémon">
       <div class="poke-cell">
-        <img src="${getPokemonSprite(pokemon)}" alt="${pokemon.name}" loading="lazy" data-fallback="${fallbackSprite}" />
-        ${pokemon.name}
+        <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${fallbackSprite}" />
+        ${escapeHtml(pokemon.name)}
       </div>
     </td>
-    <td class="${cls(cmp.generation)}">Gen ${pokemon.gen}</td>
-    <td class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
-    <td class="${cls(cmp.type1)}">${pokemon.type1}</td>
-    <td class="${cls(cmp.type2)}">${pokemon.type2 || "Aucun"}</td>
-    <td class="${cls(cmp.habitat)}">${pokemon.habitat}</td>
-    <td class="${cls(cmp.color)}">${formatColorLabel(pokemon.color)}</td>
-    <td class="${cls(cmp.stage)}">${pokemon.stage}</td>
-    <td class="${cls(cmp.height)}">
+    <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${pokemon.gen}</td>
+    <td data-label="Forme" class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
+    <td data-label="Type 1" class="${cls(cmp.type1)}">${pokemon.type1}</td>
+    <td data-label="Type 2" class="${cls(cmp.type2)}">${pokemon.type2 || "Aucun"}</td>
+    <td data-label="Habitat" class="${cls(cmp.habitat)}">${pokemon.habitat}</td>
+    <td data-label="Couleur" class="${cls(cmp.color)}">${formatColorLabel(pokemon.color)}</td>
+    <td data-label="Stade" class="${cls(cmp.stage)}">${pokemon.stage}</td>
+    <td data-label="Hauteur" class="${cls(cmp.height)}">
       <div class="cell-num">
         ${pokemon.height}m
         ${cmp.height !== "ok" ? `<span class="${hArrow === "↑" ? "arrow-up" : "arrow-down"}">${hArrow}</span>` : ""}
       </div>
     </td>
-    <td class="${cls(cmp.weight)}">
+    <td data-label="Poids" class="${cls(cmp.weight)}">
       <div class="cell-num">
         ${pokemon.weight}kg
         ${cmp.weight !== "ok" ? `<span class="${wArrow === "↑" ? "arrow-up" : "arrow-down"}">${wArrow}</span>` : ""}
@@ -6847,6 +6936,24 @@ function showWin() {
   document.getElementById("win-text").textContent =
     `C'était ${secretPokemon.name} • trouvé en ${attempts} essai${attempts > 1 ? "s" : ""} !`;
 
+  // DA 2026 : rendez-vous quotidien — série + prochain Pokémon dans l'écran de fin.
+  const winNext = document.getElementById("win-next-daily");
+  if (winNext) {
+    if (gameMode === "daily") {
+      const now = new Date();
+      const nextUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      const ms = Math.max(0, nextUtc - now.getTime());
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      const streak = Number(playerStats?.dailyCurrentStreak) || 0;
+      winNext.textContent = `${streak > 1 ? `🔥 Série : ${streak} jours · ` : ""}⏳ Prochain Pokémon dans ${h} h ${String(m).padStart(2, "0")} min`;
+      winNext.classList.remove("hidden");
+    } else {
+      winNext.classList.add("hidden");
+    }
+  }
+  if (typeof renderDailyHero === "function") renderDailyHero();
+
   box.classList.remove("hidden");
   document.getElementById("share-ok").classList.add("hidden");
 
@@ -6882,19 +6989,36 @@ function shareResult() {
 
   let text = `${header}\n${attempts} essai${attempts > 1 ? "s" : ""}\n\n`;
 
-  resultHistory.forEach(({ pokemon, cmp }) => {
+  // DA 2026 : pas de noms de Pokémon dans le partage (façon Wordle, zéro spoil).
+  resultHistory.forEach(({ cmp }) => {
     const line = [cmp.generation, cmp.altForm, cmp.type1, cmp.type2, cmp.habitat, cmp.color, cmp.stage, cmp.height, cmp.weight]
       .map((r) => emojiMap[r])
       .join("");
-    text += `${pokemon.name}: ${line}\n`;
+    text += `${line}\n`;
   });
 
-  text += "\nJoue ici : " + window.location.href;
+  if (gameMode === "daily") {
+    const streak = Number(playerStats?.dailyCurrentStreak) || 0;
+    if (streak > 1) text += `\n🔥 Série : ${streak} jours`;
+  }
+  text += "\nJoue ici : " + window.location.origin;
 
-  navigator.clipboard.writeText(text).then(() => {
+  const confirmCopied = () => {
     document.getElementById("share-ok").classList.remove("hidden");
     setTimeout(() => document.getElementById("share-ok").classList.add("hidden"), 3000);
-  });
+  };
+  const copyToClipboard = () => {
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(confirmCopied).catch(() => {});
+  };
+
+  // Mobile : feuille de partage native ; sinon copie dans le presse-papier.
+  if (navigator.share) {
+    navigator.share({ text }).catch((err) => {
+      if (err?.name !== "AbortError") copyToClipboard();
+    });
+  } else {
+    copyToClipboard();
+  }
 }
 
 function copyResult() {
@@ -6924,8 +7048,8 @@ const LEGENDARY_IDS = new Set([
 
 
 // Lot B audit : WebP (-95 % de poids vs PNG), support universel des navigateurs modernes.
-const RANKING_TYPEBAR_URL = "typebar.webp";
-const RANKING_GENBAR_URL = "genbar.webp";
+const RANKING_TYPEBAR_URL = "/typebar.webp"; // chemin absolu : depuis une var CSS, un chemin relatif se résout contre /dist/
+const RANKING_GENBAR_URL = "/genbar.webp";
 const TYPEBAR_COL_COUNT = 22; // Normal..Favorite
 const GENBAR_ROW_COUNT = 10; // Pick your favorites + Gen I..IX
 const RANKING_SPECIAL_FORM_NAMES = new Set([
@@ -8429,7 +8553,7 @@ function openTypeChartScreen() {
 
 function getTypeIconPath(typeFr) {
   const file = TYPE_ICON_FILE_BY_FR[typeFr];
-  return file ? `types/${file}.png` : null;
+  return file ? `/types/${file}.png` : null;
 }
 
 function escapeHtml(str) {
@@ -18240,7 +18364,7 @@ function getDraftArenaTypeImageUrl(arena) {
   const arenaImage = DRAFT_ARENA_BACKGROUND_IMAGE_BY_NAME[arena?.name || ""];
   if (arenaImage) return arenaImage;
   const fileName = DRAFT_ARENA_TYPE_IMAGE_BY_TYPE[arena?.type];
-  return fileName ? `types/${fileName}` : "";
+  return fileName ? `/types/${fileName}` : "";
 }
 
 function chooseDraftSimpleBattleOpeningIndex(teamEntries = [], opponentEntries = []) {
@@ -19581,6 +19705,20 @@ function renderStats() {
   document.getElementById("stat-avg").textContent = avg.toFixed(1);
   document.getElementById("stat-daily-streak").textContent = String(playerStats.dailyCurrentStreak || 0);
   document.getElementById("stat-daily-best").textContent = String(playerStats.dailyBestStreak || 0);
+
+  // DA 2026 : carte "Niveau joueur" de la home alignée sur le système XP réel (header).
+  const homeLevelName = document.getElementById("player-level-name");
+  const homeLevelXp = document.getElementById("player-level-xp");
+  const homeLevelNext = document.getElementById("player-level-next");
+  const homeLevelBar = document.getElementById("player-level-bar");
+  if (homeLevelName || homeLevelXp || homeLevelBar) {
+    const homeXp = Number(playerProfile?.xp || 0);
+    const homeProg = getXpProgress(homeXp);
+    if (homeLevelName) homeLevelName.textContent = `Niv. ${homeProg.tier.level} · ${homeProg.tier.name}`;
+    if (homeLevelXp) homeLevelXp.textContent = `XP : ${homeXp}`;
+    if (homeLevelNext) homeLevelNext.textContent = homeProg.next ? `Prochain : ${homeProg.next.name} (${homeProg.next.minXp - homeXp} XP)` : "Niveau max !";
+    if (homeLevelBar) homeLevelBar.style.width = `${homeProg.percent}%`;
+  }
 }
 
 function registerGameStart() {
@@ -20341,10 +20479,12 @@ function renderProfileScreen() {
     datalist.dataset.ready = "1";
   }
 
-  const levelInfo = getPlayerLevelInfo();
-  if (levelName) levelName.textContent = levelInfo.current.name;
-  if (levelXp) levelXp.textContent = `XP : ${levelInfo.xp}`;
-  if (levelBar) levelBar.style.width = `${levelInfo.progress}%`;
+  // DA 2026 : un seul système de niveau partout (XP réel + XP_TIERS, comme le header).
+  const profileXp = Number(playerProfile.xp || 0);
+  const profileProg = getXpProgress(profileXp);
+  if (levelName) levelName.textContent = `Niv. ${profileProg.tier.level} · ${profileProg.tier.name}`;
+  if (levelXp) levelXp.textContent = `XP : ${profileXp}`;
+  if (levelBar) levelBar.style.width = `${profileProg.percent}%`;
   if (totalGames) totalGames.textContent = String(playerStats.played || 0);
   if (totalWins) totalWins.textContent = String(playerStats.wins || 0);
   if (currentStreak) currentStreak.textContent = String(playerStats.dailyCurrentStreak || 0);
@@ -23043,6 +23183,16 @@ function initNavDropdownToggles() {
     group.classList.toggle("open", open);
     const trigger = group.querySelector(".nav-pill-menu");
     if (trigger) trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    // Mobile : la nav défile horizontalement, le dropdown passe en position
+    // fixe juste sous son déclencheur pour ne pas être rogné par l'overflow.
+    const dropdown = group.querySelector(".nav-dropdown");
+    if (dropdown) {
+      if (open && window.matchMedia && window.matchMedia("(max-width: 640px)").matches && trigger) {
+        dropdown.style.top = `${Math.round(trigger.getBoundingClientRect().bottom + 8)}px`;
+      } else {
+        dropdown.style.top = "";
+      }
+    }
   };
   const closeAll = (except = null) => {
     for (const group of groups) {

@@ -9,12 +9,16 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Pokédle - Devinez le Pokémon">
   <meta property="og:description" content="Devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png">
+  <meta property="og:url" content="https://pokdle.onrender.com/">
+  <meta property="og:image" content="https://pokdle.onrender.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:locale" content="fr_FR">
-  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://pokdle.onrender.com/">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Pokédle - Devinez le Pokémon">
   <meta name="twitter:description" content="Devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png">
+  <meta name="twitter:image" content="https://pokdle.onrender.com/og-image.png">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='white'/%3E%3Cpath d='M2 32a30 30 0 0 1 60 0Z' fill='%23ef4438'/%3E%3Cpath d='M2 32h60' stroke='%231b315f' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='white' stroke='%231b315f' stroke-width='6'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,8 +33,27 @@
   <link rel="stylesheet" href="dist/home.min.css">
   <link rel="stylesheet" href="dist/party-room.min.css">
   <link rel="stylesheet" href="dist/profile.min.css">
+  <style>
+    /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
+    #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
+    #app-splash.app-splash-done { opacity: 0; pointer-events: none; }
+    .app-splash-ball { width: 74px; height: 74px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #fff 0 16%, #10203f 17% 24%, transparent 25%), linear-gradient(180deg, #ef4438 0 44%, #10203f 44% 56%, #fff 56% 100%); box-shadow: 0 12px 30px rgba(8, 16, 38, 0.45); animation: app-splash-bounce 1s ease-in-out infinite; }
+    .app-splash-text { color: #fff; font-family: "Nunito", system-ui, sans-serif; font-weight: 900; font-size: 1.6rem; letter-spacing: 0.4px; text-shadow: 0 2px 10px rgba(8, 16, 38, 0.45); }
+    .app-splash-sub { color: rgba(255, 255, 255, 0.85); font-family: "Nunito", system-ui, sans-serif; font-weight: 700; font-size: 0.95rem; margin-top: -10px; }
+    @keyframes app-splash-bounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-14px) } }
+    @media (prefers-reduced-motion: reduce) { .app-splash-ball { animation: none; } }
+    /* Filet de sécurité : si le JS ne démarre pas, le splash s'efface seul. */
+    @keyframes app-splash-autohide { to { opacity: 0; visibility: hidden; } }
+    #app-splash { animation: app-splash-autohide 0.4s ease 12s forwards; }
+  </style>
 </head>
 <body>
+
+  <div id="app-splash" aria-hidden="true">
+    <div class="app-splash-ball"></div>
+    <p class="app-splash-text">Pokédle</p>
+    <p class="app-splash-sub">Chargement du Pokédex…</p>
+  </div>
 
   <div class="bg-dots"></div>
 
@@ -120,16 +143,36 @@
 
     <div id="screen-config">
 
-      <!-- Sélecteur de générations en tête de la home : active avant de jouer -->
-      <div class="card home-generations-card home-gens-card">
+      <!-- DA 2026 : hero "Pokémon du jour" — le jeu d'abord -->
+      <section class="card daily-hero" id="daily-hero">
+        <div class="daily-hero-main">
+          <div class="daily-hero-kicker">📅 Défi du jour · <span id="daily-hero-date">—</span></div>
+          <h2 class="daily-hero-title">Pokémon du jour</h2>
+          <p class="daily-hero-sub">La même cible pour tous les joueurs, un indice à chaque essai. Garde ta série !</p>
+          <div class="daily-hero-meta">
+            <span class="daily-hero-chip" id="daily-hero-streak">🔥 Série : 0</span>
+            <span class="daily-hero-chip" id="daily-hero-countdown">⏳ —</span>
+            <span class="daily-hero-chip daily-hero-chip-status hidden" id="daily-hero-status"></span>
+          </div>
+          <button class="daily-hero-cta" type="button" data-action="startDailyGame" id="daily-hero-cta">▶ Jouer au Pokémon du jour</button>
+        </div>
+        <div class="daily-hero-visual" aria-hidden="true">
+          <div class="daily-hero-ball"></div>
+          <div class="daily-hero-mystery">?</div>
+        </div>
+      </section>
+
+      <!-- Sélecteur de générations : repliable, en tête, jamais en bas -->
+      <div class="card home-generations-card home-gens-card is-collapsed" id="home-gens-card">
         <div class="home-section-head">
           <div>
             <h2 class="card-title">🧬 Générations</h2>
-            <p class="card-desc">Choisis les générations à inclure dans les parties.</p>
+            <p class="card-desc" id="home-gens-summary">Choisis les générations à inclure dans les parties.</p>
           </div>
           <div class="home-gens-actions">
-            <button class="btn-ghost btn-tiny" type="button" data-action="selectAllGenerations">Tout</button>
-            <button class="btn-ghost btn-tiny" type="button" data-action="clearGenerationSelection">Aucune</button>
+            <button class="btn-ghost btn-tiny home-gens-edit-only" type="button" data-action="selectAllGenerations">Tout</button>
+            <button class="btn-ghost btn-tiny home-gens-edit-only" type="button" data-action="clearGenerationSelection">Aucune</button>
+            <button class="btn-ghost btn-tiny" type="button" data-action="toggleHomeGensCard" aria-expanded="false" id="home-gens-toggle">Modifier ▾</button>
           </div>
         </div>
         <div class="gen-grid" id="gen-grid"></div>
@@ -138,16 +181,10 @@
       <!-- Hero : 4 modes piliers (Lot 2) -->
       <section class="home-hero-choices">
         <div class="home-section-head">
-          <h2 class="home-section-title">🎮 Quatre façons de jouer</h2>
-          <p class="home-section-sub">Les modes principaux. Tout le reste est rangé dans « Tous les modes ».</p>
+          <h2 class="home-section-title">🎮 Illimité, duel & party</h2>
+          <p class="home-section-sub">Les autres façons de jouer. Tout le reste est rangé dans « Tous les modes ».</p>
         </div>
-        <div class="home-pillars home-pillars-hero">
-          <article class="card home-pillar home-pillar-feature" data-action="startDailyGame" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-red">📅</div>
-            <h3>Pokémon du jour</h3>
-            <p>La cible quotidienne, identique pour tous. Garde ta série.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
-          </article>
+        <div class="home-pillars">
           <article class="card home-pillar" data-action="startNormalGame" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-yellow">♾️</div>
             <h3>Mode illimité</h3>
@@ -174,34 +211,6 @@
 
       <!-- Widget engagement compact (XP + quêtes du jour) -->
       <div id="home-engagement-widget" class="home-engagement-widget"></div>
-
-      <!-- Ligne 1 : Les jeux phares -->
-      <section class="home-section">
-        <div class="home-section-head">
-          <h2 class="home-section-title">🎮 Les jeux phares</h2>
-          <p class="home-section-sub">Les modes principaux pour démarrer une partie.</p>
-        </div>
-        <div class="home-pillars">
-          <article class="card home-pillar home-pillar-feature" data-action="startDailyGame" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-red">📅</div>
-            <h3>Pokémon du jour</h3>
-            <p>Le mode emblématique. Une cible quotidienne, des indices à chaque essai.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Quotidien</span></div>
-          </article>
-          <article class="card home-pillar" data-action="startPartyMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-yellow">🎲</div>
-            <h3>Party Pokémon</h3>
-            <p>Enchaîne 5 mini-jeux variés et grimpe ton score.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">5 rounds</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openMultiplayerMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-blue">🆚</div>
-            <h3>Duel 1v1</h3>
-            <p>Affronte un ami sur le même Pokémon mystère, en temps réel.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
-          </article>
-        </div>
-      </section>
 
       <!-- Ligne 2 : Univers Pokémon -->
       <section class="home-section">
@@ -1081,6 +1090,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <button class="btn-blue" id="btn-share" data-action="shareResult">📤 Partager</button>
           <button class="btn-ghost" data-action="openSettingsModal">&#9881;&#65039; Paramètres</button>
         </div>
+        <p id="win-next-daily" class="win-next-daily hidden"></p>
         <p id="share-ok" class="msg-ok hidden">✅ Résultat copié !</p>
       </div>
 

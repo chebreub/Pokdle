@@ -370,6 +370,10 @@ app.use("/dist", express.static(DIST_DIR, { maxAge: "365d", immutable: true, fal
 for (const publicImage of ["genbar.png", "typebar.png", "genbar.webp", "typebar.webp"]) {
   app.get(`/${publicImage}`, (_req, res) => res.sendFile(path.join(__dirname, publicImage), { maxAge: "7d" }));
 }
+// Image Open Graph (aperçus de lien Discord/Twitter/WhatsApp).
+app.get("/og-image.png", (_req, res) => res.sendFile(path.join(__dirname, "og-image.png"), { maxAge: "7d" }));
+// Icônes de types (utilisées par les badges de types dans tous les modes).
+app.use("/types", express.static(path.join(__dirname, "types"), { maxAge: "7d", fallthrough: false }));
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
 // PokeAPI par nouveau visiteur.
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
