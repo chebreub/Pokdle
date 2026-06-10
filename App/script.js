@@ -2011,6 +2011,51 @@ window.addEventListener("DOMContentLoaded", () => {
   removeAppSplash();
 });
 
+// Distribution des essais du Pokémon du jour (stats anonymes, en mémoire serveur).
+const DAILY_REPORT_STORAGE_KEY = "pokedle_daily_reported_v1";
+
+async function reportAndRenderDailyDistribution(attemptCount) {
+  const box = document.getElementById("win-daily-distribution");
+  if (!box) return;
+  const todayKey = getUTCDateKey();
+  try {
+    let reported = null;
+    try { reported = localStorage.getItem(DAILY_REPORT_STORAGE_KEY); } catch (_e) { /* noop */ }
+    if (reported !== todayKey) {
+      await fetch("/api/daily-stats/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: todayKey, attempts: attemptCount }),
+      });
+      try { localStorage.setItem(DAILY_REPORT_STORAGE_KEY, todayKey); } catch (_e) { /* noop */ }
+    }
+    const response = await fetch(`/api/daily-stats/today`);
+    if (!response.ok) throw new Error("stats indisponibles");
+    const stats = await response.json();
+    renderDailyDistribution(box, stats, attemptCount);
+  } catch (_err) {
+    box.classList.add("hidden");
+  }
+}
+
+function renderDailyDistribution(box, stats, playerAttempts) {
+  const counts = stats?.counts || {};
+  const buckets = ["1", "2", "3", "4", "5", "6", "7plus"];
+  const total = buckets.reduce((acc, b) => acc + (Number(counts[b]) || 0), 0);
+  if (!total) { box.classList.add("hidden"); return; }
+  const max = Math.max(...buckets.map((b) => Number(counts[b]) || 0), 1);
+  const playerBucket = playerAttempts >= 7 ? "7plus" : String(playerAttempts);
+  const rows = buckets.map((bucket) => {
+    const value = Number(counts[bucket]) || 0;
+    const width = Math.max(4, Math.round((value / max) * 100));
+    const me = bucket === playerBucket ? " is-me" : "";
+    const label = bucket === "7plus" ? "7+" : bucket;
+    return `<div class="ddist-row${me}"><span class="ddist-label">${label}</span><div class="ddist-bar-wrap"><div class="ddist-bar" style="width:${width}%"></div></div><span class="ddist-value">${value}</span></div>`;
+  }).join("");
+  box.innerHTML = `<p class="ddist-title">📊 ${total} dresseur${total > 1 ? "s" : ""} aujourd'hui — répartition des essais</p>${rows}`;
+  box.classList.remove("hidden");
+}
+
 // DA 2026 : splash de chargement (perçu pendant le parse JS / les données).
 function removeAppSplash() {
   const splash = document.getElementById("app-splash");
@@ -2373,9 +2418,64 @@ function startChallengeGame(pokemon) {
   startGameWithSecret(pokemon, pool);
 }
 
+// Onboarding nouveau joueur : modale "Comment jouer ?" au premier jeu de devinette.
+const ONBOARDING_STORAGE_KEY = "pokedle_onboarding_v1";
+
+function openOnboardingModal() {
+  ensureOverlay("Comment jouer ?", `
+    <div class="onboarding-steps">
+      <section class="onboarding-step">
+        <div class="onboarding-step-num">1</div>
+        <div>
+          <h4>Tape un nom de Pokémon</h4>
+          <p>L'autocomplétion t'aide, accents facultatifs. Chaque essai compare ton Pokémon au Pokémon mystère.</p>
+        </div>
+      </section>
+      <section class="onboarding-step">
+        <div class="onboarding-step-num">2</div>
+        <div>
+          <h4>Lis les indices</h4>
+          <p>
+            <span class="legend-chip c-ok">Vert</span> exact ·
+            <span class="legend-chip c-close">Jaune</span> proche ·
+            <span class="legend-chip c-wrong">Rouge</span> faux.
+            Les flèches indiquent si le mystère est plus grand/lourd (↑) ou plus petit/léger (↓).
+          </p>
+          <div class="onboarding-example" aria-hidden="true">
+            <span class="legend-chip c-ok">Gen 1</span>
+            <span class="legend-chip c-wrong">Feu</span>
+            <span class="legend-chip c-close">Forêt</span>
+            <span class="legend-chip c-wrong">0,4 m ↑</span>
+          </div>
+        </div>
+      </section>
+      <section class="onboarding-step">
+        <div class="onboarding-step-num">3</div>
+        <div>
+          <h4>Trouve-le en un minimum d'essais</h4>
+          <p>Reviens chaque jour pour le Pokémon du jour : garde ta série 🔥 et partage ton résultat sans rien spoiler.</p>
+        </div>
+      </section>
+    </div>
+  `);
+}
+window.openOnboardingModal = openOnboardingModal;
+
+function maybeShowOnboarding() {
+  try {
+    if (localStorage.getItem(ONBOARDING_STORAGE_KEY)) return;
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, String(Date.now()));
+  } catch (_err) {
+    return;
+  }
+  openOnboardingModal();
+}
+
 function startGameWithSecret(secret, pool, options = {}) {
   secretPokemon = secret;
   activePool = pool;
+
+  if (["normal", "daily", "challenge"].includes(gameMode)) maybeShowOnboarding();
 
   attempts = 0;
   gameOver = false;
@@ -6935,6 +7035,10 @@ function showWin() {
 
   document.getElementById("win-text").textContent =
     `C'était ${secretPokemon.name} • trouvé en ${attempts} essai${attempts > 1 ? "s" : ""} !`;
+
+  // Distribution du jour : envoie le résultat puis affiche les barres d'essais.
+  if (gameMode === "daily") reportAndRenderDailyDistribution(attempts);
+  else document.getElementById("win-daily-distribution")?.classList.add("hidden");
 
   // DA 2026 : rendez-vous quotidien — série + prochain Pokémon dans l'écran de fin.
   const winNext = document.getElementById("win-next-daily");

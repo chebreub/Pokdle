@@ -381,6 +381,46 @@ app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "fo
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
 app.get("/sitemap.xml", (_req, res) => res.sendFile(path.join(__dirname, "sitemap.xml"), { maxAge: "1d" }));
 
+// --- Distribution des essais du Pokémon du jour (anonyme, en mémoire ;
+// remise à zéro à chaque redéploiement — acceptable pour un compteur de jour). ---
+const dailyStats = new Map(); // dateKey -> { "1".."6", "7plus" }
+const DAILY_STATS_BUCKETS = ["1", "2", "3", "4", "5", "6", "7plus"];
+
+function serverUTCDateKey() {
+  const now = new Date();
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+}
+
+function getDailyStatsEntry(key) {
+  if (!dailyStats.has(key)) {
+    // On ne garde que 2 jours en mémoire.
+    if (dailyStats.size > 2) {
+      for (const oldKey of [...dailyStats.keys()].slice(0, dailyStats.size - 1)) dailyStats.delete(oldKey);
+    }
+    dailyStats.set(key, Object.fromEntries(DAILY_STATS_BUCKETS.map((b) => [b, 0])));
+  }
+  return dailyStats.get(key);
+}
+
+app.get("/api/daily-stats/today", (_req, res) => {
+  const key = serverUTCDateKey();
+  res.set("Cache-Control", "no-store");
+  res.json({ key, counts: getDailyStatsEntry(key) });
+});
+
+app.post("/api/daily-stats/report", express.json({ limit: "1kb" }), (req, res) => {
+  const key = serverUTCDateKey();
+  if (req.body?.key !== key) return res.status(400).json({ ok: false, error: "Clé de jour invalide." });
+  const attempts = Number(req.body?.attempts);
+  if (!Number.isInteger(attempts) || attempts < 1 || attempts > 50) {
+    return res.status(400).json({ ok: false, error: "Nombre d'essais invalide." });
+  }
+  const bucket = attempts >= 7 ? "7plus" : String(attempts);
+  const entry = getDailyStatsEntry(key);
+  entry[bucket] += 1;
+  res.json({ ok: true });
+});
+
 app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
 });
