@@ -275,23 +275,33 @@ function isPayloadOversized(payload) {
   }
 }
 
-// Security headers.
-// CSP en mode ENFORCE : les ressources non autorisées sont bloquées.
-// script-src ne contient PAS 'unsafe-inline' -> aucun handler inline (onclick/onerror/...)
-// ni <script> inline n'est autorisé. Tous ont été migrés vers data-action / délégation.
-// 'unsafe-eval' + 'wasm-unsafe-eval' sont REQUIS par l'émulateur EmulatorJS (cores GBA/WASM).
-// Vérifié 2026-06-05 : retirer 'unsafe-eval' casse l'émulateur (écran noir). Ne pas retirer
-// sans isoler EmulatorJS dans un <iframe sandbox> ayant sa propre CSP.
-const cspDirectives = {
+// Security headers (lot D audit 2026-06-10).
+// Deux CSP, toutes deux en ENFORCE :
+//  - STRICTE pour tout le site : pas d'unsafe-eval, pas de blob: en script-src,
+//    websockets limités à la même origine (+ ALLOWED_ORIGINS) au lieu de ws:/wss: génériques.
+//  - PERMISSIVE uniquement pour /emulateur : EmulatorJS exige 'unsafe-eval' +
+//    'wasm-unsafe-eval' + blob: (cores GBA/WASM). Vérifié 2026-06-05 : retirer
+//    'unsafe-eval' casse l'émulateur (écran noir).
+// script-src ne contient jamais 'unsafe-inline' : tous les handlers inline ont
+// été migrés vers data-action / délégation.
+const SOCKET_ORIGINS = ALLOWED_ORIGINS.flatMap((origin) => {
+  try {
+    const url = new URL(origin);
+    return [`${url.protocol === "https:" ? "wss" : "ws"}://${url.host}`];
+  } catch (_err) {
+    return [];
+  }
+});
+if (!SOCKET_ORIGINS.length) {
+  // Dev local sans ALLOWED_ORIGINS : autorise les websockets locaux explicitement
+  // (certains navigateurs ne couvrent pas ws:// via 'self').
+  SOCKET_ORIGINS.push(`ws://localhost:${PORT}`, `ws://127.0.0.1:${PORT}`);
+}
+
+const strictCspDirectives = {
   defaultSrc: ["'self'"],
-  scriptSrc: [
-    "'self'",
-    "https://cdn.emulatorjs.org",
-    "'wasm-unsafe-eval'",
-    "'unsafe-eval'",
-    "blob:",
-  ],
-  styleSrc: ["'self'", "https://fonts.googleapis.com", "https://cdn.emulatorjs.org", "'unsafe-inline'"],
+  scriptSrc: ["'self'"],
+  styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
   fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
   imgSrc: [
     "'self'",
@@ -300,42 +310,72 @@ const cspDirectives = {
     "https://raw.githubusercontent.com",
     "https://pokeapi.co",
     "https://archives.bulbagarden.net",
-    "https://cdn.emulatorjs.org",
   ],
   connectSrc: [
     "'self'",
-    "blob:",
     "https://pokeapi.co",
     "https://raw.githubusercontent.com",
     "https://archives.bulbagarden.net",
-    "https://cdn.emulatorjs.org",
-    "ws:",
-    "wss:",
+    ...SOCKET_ORIGINS,
   ],
-  mediaSrc: [
-    "'self'",
-    "data:",
-    "blob:",
-    "https://raw.githubusercontent.com",
-    "https://cdn.emulatorjs.org",
-  ],
-  workerSrc: ["'self'", "blob:"],
+  mediaSrc: ["'self'", "data:", "blob:", "https://raw.githubusercontent.com"],
+  workerSrc: ["'self'"],
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
+  frameAncestors: ["'self'"],
 };
 
+const emulatorCspDirectives = {
+  ...strictCspDirectives,
+  scriptSrc: [...strictCspDirectives.scriptSrc, "https://cdn.emulatorjs.org", "'wasm-unsafe-eval'", "'unsafe-eval'", "blob:"],
+  styleSrc: [...strictCspDirectives.styleSrc, "https://cdn.emulatorjs.org"],
+  imgSrc: [...strictCspDirectives.imgSrc, "https://cdn.emulatorjs.org"],
+  connectSrc: [...strictCspDirectives.connectSrc, "blob:", "https://cdn.emulatorjs.org"],
+  mediaSrc: [...strictCspDirectives.mediaSrc, "https://cdn.emulatorjs.org"],
+  workerSrc: [...strictCspDirectives.workerSrc, "blob:"],
+};
+
+const strictCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: strictCspDirectives, reportOnly: false });
+const emulatorCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: emulatorCspDirectives, reportOnly: false });
+
 app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: false,
-    directives: cspDirectives,
-    reportOnly: false,
-  },
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
+app.use((req, res, next) => (req.path === "/emulateur" ? emulatorCsp(req, res, next) : strictCsp(req, res, next)));
 
-app.use(express.static(__dirname));
+// --- Service statique restreint (lot A audit 2026-06-10) ---
+// On ne sert plus __dirname entier (exposait server.js, package.json, node_modules/).
+// Seuls les assets réellement publics sont montés explicitement.
+const DIST_DIR = path.join(__dirname, "dist");
+const DIST_INDEX = path.join(DIST_DIR, "index.html");
+const SOURCE_INDEX = path.join(__dirname, "index.html");
+
+function sendIndex(res) {
+  // L'index n'est jamais mise en cache : c'est elle qui porte les URLs versionnées.
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX);
+}
+
+app.get(["/", "/index.html"], (_req, res) => sendIndex(res));
+// Page émulateur (lot D audit) : même SPA, mais servie sous /emulateur avec la
+// CSP permissive requise par EmulatorJS. Le client y ouvre l'écran émulateur.
+app.get("/emulateur", (_req, res) => sendIndex(res));
+// dist/* : noms stables, mais référencés en dist/x.min.js?v=<hash> depuis
+// dist/index.html (cf. build.mjs) -> cache long sans risque de stale.
+app.use("/dist", express.static(DIST_DIR, { maxAge: "365d", immutable: true, fallthrough: false }));
+// Images locales (partage de classement).
+for (const publicImage of ["genbar.png", "typebar.png", "genbar.webp", "typebar.webp"]) {
+  app.get(`/${publicImage}`, (_req, res) => res.sendFile(path.join(__dirname, publicImage), { maxAge: "7d" }));
+}
+// Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
+// PokeAPI par nouveau visiteur.
+app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
+// SEO.
+app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
+app.get("/sitemap.xml", (_req, res) => res.sendFile(path.join(__dirname, "sitemap.xml"), { maxAge: "1d" }));
 
 app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
@@ -2373,6 +2413,13 @@ function handleStatAuctionDisconnect(socketId, forceLeave) {
 server.listen(PORT, () => {
   console.log(`Pokédle multiplayer server running on port ${PORT}`);
   if (!ALLOWED_ORIGINS.length) {
+    // Lot D audit : en production, on refuse de démarrer sans ALLOWED_ORIGINS
+    // (sinon le CORS Socket.io serait ouvert à toutes les origines).
+    const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true" || Boolean(process.env.RENDER_EXTERNAL_URL);
+    if (isProduction) {
+      console.error("[security] ALLOWED_ORIGINS doit être défini en production (ex: https://pokdle.onrender.com). Arrêt.");
+      process.exit(1);
+    }
     console.warn("[security] ALLOWED_ORIGINS not set — CORS is open to all origins. Set ALLOWED_ORIGINS in production.");
   }
 });

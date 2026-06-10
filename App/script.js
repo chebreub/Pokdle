@@ -858,10 +858,60 @@ function injectExtraForms() {
   }
 }
 
+// Lot B audit : cache partagé (promesses) des requêtes PokeAPI. Dédoublonne les
+// appels identiques entre fonctionnalités (battle stats, Pokédex, Team Builder...)
+// et les appels concurrents vers la même URL.
+const POKEAPI_FETCH_CACHE = new Map();
+function fetchPokeApiJson(url) {
+  if (!POKEAPI_FETCH_CACHE.has(url)) {
+    const promise = fetch(url)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .catch((err) => {
+        POKEAPI_FETCH_CACHE.delete(url); // ne pas mémoriser les échecs
+        throw err;
+      });
+    POKEAPI_FETCH_CACHE.set(url, promise);
+  }
+  return POKEAPI_FETCH_CACHE.get(url);
+}
+
+// Lot B audit : applique les données de formes embarquées (forms-data.json,
+// servi par notre propre serveur) pour éviter ~170 appels PokeAPI au premier
+// chargement. Retourne l'objet (ou {} si indisponible -> fallback PokeAPI).
+async function loadBundledExtraFormData() {
+  try {
+    const response = await fetch("forms-data.json");
+    if (!response.ok) return {};
+    const data = await response.json();
+    return data && typeof data === "object" ? data : {};
+  } catch (_err) {
+    return {};
+  }
+}
+
 async function resolveExtraFormSprites() {
   const forms = POKEMON_LIST.filter((p) => p.id >= 20000);
   const cache = loadCachedExtraFormData();
   let dirty = false;
+
+  const bundled = await loadBundledExtraFormData();
+  for (const pokemon of forms) {
+    const entry = bundled[pokemon.name];
+    if (!entry || !entry.sprite) continue;
+    pokemon.sprite = entry.sprite;
+    if (entry.type1) pokemon.type1 = entry.type1;
+    pokemon.type2 = entry.type2 !== undefined ? entry.type2 : pokemon.type2;
+    if (typeof entry.height === "number") pokemon.height = entry.height;
+    if (typeof entry.weight === "number") pokemon.weight = entry.weight;
+    const cachedEntry = cache[pokemon.name];
+    if (!cachedEntry || cachedEntry.sprite !== entry.sprite) {
+      cache[pokemon.name] = { sprite: entry.sprite, type1: entry.type1, type2: entry.type2, height: entry.height, weight: entry.weight };
+      dirty = true;
+    }
+  }
 
   await Promise.allSettled(
     forms.map(async (pokemon) => {
@@ -872,10 +922,7 @@ async function resolveExtraFormSprites() {
       if (cachedEntry?.sprite && pokemon.sprite === cachedEntry.sprite) return;
 
       try {
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${apiName}`);
-        if (!response.ok) return;
-
-        const data = await response.json();
+        const data = await fetchPokeApiJson(`https://pokeapi.co/api/v2/pokemon/${apiName}`);
         const sprite = data?.sprites?.front_default
           || data?.sprites?.other?.["official-artwork"]?.front_default
           || data?.sprites?.other?.home?.front_default;
@@ -2378,6 +2425,11 @@ function openCurrentGameScreen() {
   setGlobalNavActive("game");
 }
 function goToConfig() {
+  // Lot D audit : quitter la page émulateur ramène sur la page principale (CSP stricte).
+  if (window.location.pathname === "/emulateur") {
+    window.location.assign("/");
+    return;
+  }
   partySession = null;
   cleanupStatClashMode();
   teamBuilderPokemonPickerOpen = false;
@@ -2593,10 +2645,7 @@ async function fetchBattleStats(secret) {
   }
 
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${apiId}`);
-    if (!response.ok) return null;
-
-    const data = await response.json();
+    const data = await fetchPokeApiJson(`https://pokeapi.co/api/v2/pokemon/${apiId}`);
     const stats = new Map((data?.stats || []).map((s) => [s.stat?.name, s.base_stat]));
 
     const parsed = {
@@ -6874,8 +6923,9 @@ const LEGENDARY_IDS = new Set([
 ]);
 
 
-const RANKING_TYPEBAR_URL = "typebar.png";
-const RANKING_GENBAR_URL = "genbar.png";
+// Lot B audit : WebP (-95 % de poids vs PNG), support universel des navigateurs modernes.
+const RANKING_TYPEBAR_URL = "typebar.webp";
+const RANKING_GENBAR_URL = "genbar.webp";
 const TYPEBAR_COL_COUNT = 22; // Normal..Favorite
 const GENBAR_ROW_COUNT = 10; // Pick your favorites + Gen I..IX
 const RANKING_SPECIAL_FORM_NAMES = new Set([
@@ -9010,9 +9060,7 @@ async function fetchTeamBuilderPokemonApiData(pokemon) {
   if (POKEDEX_API_CACHE.has(cacheKey)) return POKEDEX_API_CACHE.get(cacheKey);
 
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${key}`);
-    if (!response.ok) return null;
-    const data = await response.json();
+    const data = await fetchPokeApiJson(`https://pokeapi.co/api/v2/pokemon/${key}`);
     POKEDEX_API_CACHE.set(cacheKey, data);
     return data;
   } catch (_err) {
@@ -10336,15 +10384,21 @@ function importTeamBuilderText() {
     .map((block) => block.trim())
     .filter(Boolean);
 
-  const slots = blocks
-    .map((block) => parseTeamBuilderImportBlock(block))
-    .filter(Boolean)
-    .slice(0, 6);
+  // Lot E audit : récap d'import explicite (avant : blocs invalides ignorés en silence).
+  const parsedBlocks = blocks.map((block) => ({ block, slot: parseTeamBuilderImportBlock(block) }));
+  const validSlots = parsedBlocks.filter((entry) => entry.slot);
+  const slots = validSlots.map((entry) => entry.slot).slice(0, 6);
+  const ignoredNames = parsedBlocks
+    .filter((entry) => !entry.slot)
+    .map((entry) => String(entry.block.split(/\r?\n/)[0] || "?").trim().slice(0, 30));
+  const overflowCount = Math.max(0, validSlots.length - 6);
 
   if (!slots.length) {
-    msg.textContent = "Import impossible.";
+    msg.textContent = ignoredNames.length
+      ? `Import impossible — Pokémon non reconnu${ignoredNames.length > 1 ? "s" : ""} : ${ignoredNames.join(", ")}.`
+      : "Import impossible.";
     msg.classList.remove("hidden");
-    setTimeout(() => msg.classList.add("hidden"), 2200);
+    setTimeout(() => msg.classList.add("hidden"), 5200);
     return;
   }
 
@@ -10355,9 +10409,16 @@ function importTeamBuilderText() {
   saveTeamBuilderState();
   renderTeamBuilderModule();
 
-  msg.textContent = `${slots.length} slot${slots.length > 1 ? "s" : ""} importé${slots.length > 1 ? "s" : ""}.`;
+  let recap = `${slots.length} slot${slots.length > 1 ? "s" : ""} importé${slots.length > 1 ? "s" : ""}.`;
+  if (ignoredNames.length) {
+    recap += ` ${ignoredNames.length} bloc${ignoredNames.length > 1 ? "s" : ""} ignoré${ignoredNames.length > 1 ? "s" : ""} (Pokémon non reconnu) : ${ignoredNames.join(", ")}.`;
+  }
+  if (overflowCount) {
+    recap += ` ${overflowCount} au-delà de la limite de 6 non importé${overflowCount > 1 ? "s" : ""}.`;
+  }
+  msg.textContent = recap;
   msg.classList.remove("hidden");
-  setTimeout(() => msg.classList.add("hidden"), 2200);
+  setTimeout(() => msg.classList.add("hidden"), ignoredNames.length || overflowCount ? 6500 : 2200);
 }
 
 function getTeamLibraryTemplateById(id) {
@@ -10782,9 +10843,7 @@ async function fetchPokedexPokemonData(apiId) {
   if (POKEDEX_API_CACHE.has(apiId)) return POKEDEX_API_CACHE.get(apiId);
 
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${apiId}`);
-    if (!response.ok) return null;
-    const data = await response.json();
+    const data = await fetchPokeApiJson(`https://pokeapi.co/api/v2/pokemon/${apiId}`);
     POKEDEX_API_CACHE.set(apiId, data);
     return data;
   } catch (_err) {
@@ -10797,9 +10856,7 @@ async function fetchPokedexSpeciesData(speciesId) {
   if (POKEDEX_SPECIES_CACHE.has(speciesId)) return POKEDEX_SPECIES_CACHE.get(speciesId);
 
   try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${speciesId}`);
-    if (!response.ok) return null;
-    const data = await response.json();
+    const data = await fetchPokeApiJson(`https://pokeapi.co/api/v2/pokemon-species/${speciesId}`);
     POKEDEX_SPECIES_CACHE.set(speciesId, data);
     return data;
   } catch (_err) {
@@ -11038,6 +11095,7 @@ function renderPokedexGrid() {
 
   const list = getFilteredPokedexList();
   updatePokedexToolbarMeta(list.length);
+  if (pokedexGridObserver) { pokedexGridObserver.disconnect(); pokedexGridObserver = null; }
   grid.innerHTML = "";
 
   if (!list.length) {
@@ -11058,32 +11116,71 @@ function renderPokedexGrid() {
     pokedexSelectedId = list[0].id;
   }
 
-  for (const p of list) {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "pokedex-card" + (p.id === pokedexSelectedId ? " selected" : "");
-    card.dataset.pokemonId = String(p.id);
+  // Lot E audit : rendu par tranches + IntersectionObserver. Avant, les 1025+
+  // cartes étaient insérées d'un bloc (long tasks sensibles sur mobile).
+  let renderedCount = 0;
+  const appendChunk = (target) => {
+    const fragment = document.createDocumentFragment();
+    const slice = list.slice(renderedCount, renderedCount + POKEDEX_RENDER_CHUNK);
+    for (const p of slice) fragment.appendChild(createPokedexCard(p));
+    renderedCount += slice.length;
+    if (target) grid.insertBefore(fragment, target);
+    else grid.appendChild(fragment);
+  };
 
-    const dexId = getPokemonSpriteId(p);
-    const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
+  appendChunk(null);
 
-    card.innerHTML = `
-      <img src="${sprite}" alt="${p.name}" data-fallback="${getSpriteUrl(dexId)}" />
-      <span class="pokedex-num">#${dexId}</span>
-      <strong>${p.name}</strong>
-      <div class="pokedex-card-types">${typeBadgesHtml(p.type1, p.type2 || null)}</div>
-    `;
+  if (renderedCount < list.length) {
+    const sentinel = document.createElement("div");
+    sentinel.className = "pokedex-grid-sentinel";
+    sentinel.setAttribute("aria-hidden", "true");
+    grid.appendChild(sentinel);
 
-    card.addEventListener("click", () => {
-      pokedexSelectedId = p.id;
-      pokedexSelectedShiny = false;
-      updatePokedexGridSelection();
-      renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || p);
-    });
-    grid.appendChild(card);
+    if (typeof IntersectionObserver === "function") {
+      pokedexGridObserver = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        appendChunk(sentinel);
+        if (renderedCount >= list.length) {
+          if (pokedexGridObserver) { pokedexGridObserver.disconnect(); pokedexGridObserver = null; }
+          sentinel.remove();
+        }
+      }, { rootMargin: "600px" });
+      pokedexGridObserver.observe(sentinel);
+    } else {
+      while (renderedCount < list.length) appendChunk(sentinel);
+      sentinel.remove();
+    }
   }
 
   renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || list[0]);
+}
+
+const POKEDEX_RENDER_CHUNK = 120;
+let pokedexGridObserver = null;
+
+function createPokedexCard(p) {
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "pokedex-card" + (p.id === pokedexSelectedId ? " selected" : "");
+  card.dataset.pokemonId = String(p.id);
+
+  const dexId = getPokemonSpriteId(p);
+  const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
+
+  card.innerHTML = `
+    <img src="${sprite}" alt="${p.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
+    <span class="pokedex-num">#${dexId}</span>
+    <strong>${p.name}</strong>
+    <div class="pokedex-card-types">${typeBadgesHtml(p.type1, p.type2 || null)}</div>
+  `;
+
+  card.addEventListener("click", () => {
+    pokedexSelectedId = p.id;
+    pokedexSelectedShiny = false;
+    updatePokedexGridSelection();
+    renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || p);
+  });
+  return card;
 }
 
 function updatePokedexGridSelection() {
@@ -11826,6 +11923,49 @@ const DRAFT_ARENA_BACKGROUND_IMAGE_BY_NAME = Object.freeze(
       ])
   )
 );
+
+// Lot E audit : persistance de la run Draft Arènes (mode solo "arena") pour
+// survivre à un refresh — la progression et les badges étaient perdus avant.
+const DRAFT_ARENA_SAVE_KEY = "pokedle_draft_arena_run_v1";
+
+function saveDraftArenaProgress() {
+  try {
+    if (!draftArenaState || draftArenaState.mode !== "arena") return;
+    if (draftArenaState.phase === "gen") {
+      localStorage.removeItem(DRAFT_ARENA_SAVE_KEY);
+      return;
+    }
+    const snapshot = {
+      ...draftArenaState,
+      selectedDexIds: Array.from(draftArenaState.selectedDexIds || []),
+      evaluating: false,
+      scoreAttackRoom: null,
+      scoreAttackRoomPending: null,
+      scoreAttackRoomError: null,
+    };
+    localStorage.setItem(DRAFT_ARENA_SAVE_KEY, JSON.stringify(snapshot));
+  } catch (_err) {
+    /* quota plein ou état non sérialisable : la persistance est best-effort */
+  }
+}
+
+function loadDraftArenaProgress() {
+  try {
+    const raw = localStorage.getItem(DRAFT_ARENA_SAVE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (!saved || saved.mode !== "arena" || !saved.phase || saved.phase === "gen") return null;
+    saved.selectedDexIds = new Set(Array.isArray(saved.selectedDexIds) ? saved.selectedDexIds : []);
+    saved.evaluating = false;
+    return saved;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function clearDraftArenaProgress() {
+  try { localStorage.removeItem(DRAFT_ARENA_SAVE_KEY); } catch (_err) { /* noop */ }
+}
 
 function createDraftArenaState() {
   return {
@@ -18397,9 +18537,15 @@ function openDraftArenaMode() {
   setGlobalNavActive("extras");
 
   if (!draftArenaState || draftArenaState.mode !== "arena") {
-    draftArenaState = createDraftArenaState();
-    draftArenaState.mode = "arena";
-    draftArenaState.message = "Choisis une génération pour commencer le draft.";
+    const savedRun = loadDraftArenaProgress();
+    if (savedRun) {
+      draftArenaState = savedRun;
+      draftArenaState.message = "Run restaurée — tu peux reprendre là où tu t'étais arrêté.";
+    } else {
+      draftArenaState = createDraftArenaState();
+      draftArenaState.mode = "arena";
+      draftArenaState.message = "Choisis une génération pour commencer le draft.";
+    }
   }
 
   renderDraftArena();
@@ -18471,6 +18617,7 @@ function restartDraftArenaRun() {
   }
   const previousMode = draftArenaState?.mode || "arena";
   const previousScoreRoom = draftArenaState?.scoreAttackRoom || null;
+  clearDraftArenaProgress();
   draftArenaState = createDraftArenaState();
   draftArenaState.mode = previousMode;
   if (previousMode === "scoreAttack") {
@@ -18551,6 +18698,7 @@ async function pickDraftArenaOption(pokemonId) {
 function renderDraftArena() {
   const screen = document.getElementById(draftArenaState?.mode === "scoreAttack" ? "screen-draft-score-attack" : "screen-draft-arena");
   if (!screen || !draftArenaState) return;
+  saveDraftArenaProgress();
   mountDraftModeCard(draftArenaState.mode);
 
   const status = document.getElementById("draft-status");
@@ -19056,6 +19204,13 @@ function closeEmulatorMode() {
 }
 
 function openEmulatorMode() {
+  // Lot D audit : EmulatorJS exige une CSP permissive (unsafe-eval), servie
+  // uniquement sur /emulateur. Depuis la page principale (CSP stricte), on
+  // navigue en pleine page ; l'écran s'ouvre automatiquement à l'arrivée.
+  if (window.location.pathname !== "/emulateur") {
+    window.location.assign("/emulateur");
+    return;
+  }
   document.getElementById("screen-config").classList.add("hidden");
   document.getElementById("screen-game").classList.add("hidden");
   document.getElementById("screen-ranking").classList.add("hidden");
@@ -20541,12 +20696,20 @@ const DEFAULT_APP_SETTINGS = {
 };
 
 function getStoredAppSettings() {
+  // Lot C audit : on respecte @media (prefers-reduced-motion) par défaut,
+  // tant que l'utilisateur n'a pas fait de choix explicite dans les paramètres.
+  const defaults = { ...DEFAULT_APP_SETTINGS };
+  try {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      defaults.reduceMotion = true;
+    }
+  } catch (_err) { /* matchMedia indisponible */ }
   try {
     const raw = localStorage.getItem(APP_SETTINGS_STORAGE_KEY);
-    return raw ? { ...DEFAULT_APP_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_APP_SETTINGS };
+    return raw ? { ...defaults, ...JSON.parse(raw) } : { ...defaults };
   } catch (error) {
     console.warn("Failed to read app settings:", error);
-    return { ...DEFAULT_APP_SETTINGS };
+    return { ...defaults };
   }
 }
 
@@ -22869,13 +23032,56 @@ function selectChallengePokemon(id) {
   document.getElementById('challenge-ac')?.classList.add('hidden');
 }
 
+// Lot C audit : les dropdowns de nav s'ouvraient uniquement au :hover /
+// :focus-within (fragile au tactile, pas de fermeture Escape, aria-expanded
+// jamais mis à jour). Toggle explicite au clic + fermeture extérieure/Escape.
+function initNavDropdownToggles() {
+  const groups = Array.from(document.querySelectorAll(".nav-group"));
+  if (!groups.length) return;
+
+  const setOpen = (group, open) => {
+    group.classList.toggle("open", open);
+    const trigger = group.querySelector(".nav-pill-menu");
+    if (trigger) trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+  const closeAll = (except = null) => {
+    for (const group of groups) {
+      if (group !== except) setOpen(group, false);
+    }
+  };
+
+  for (const group of groups) {
+    const trigger = group.querySelector(".nav-pill-menu");
+    if (!trigger) continue;
+    trigger.addEventListener("click", () => {
+      const willOpen = !group.classList.contains("open");
+      closeAll(group);
+      setOpen(group, willOpen);
+    });
+    // Choisir une entrée du menu referme le dropdown.
+    group.querySelectorAll(".nav-dropdown button").forEach((item) => {
+      item.addEventListener("click", () => closeAll());
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest(".nav-group")) closeAll();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAll();
+  });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   applyAppSettings();
+  initNavDropdownToggles();
   loadProfile();
   loadAchievementsState();
   loadMatchHistory();
   evaluateAchievements();
   hideExtraScreens();
+  // Lot D audit : sur /emulateur (page à CSP permissive), ouvrir directement l'écran émulateur.
+  if (window.location.pathname === "/emulateur") openEmulatorMode();
   document.getElementById('logo-home')?.addEventListener('click', goToConfig);
   document.getElementById('overlay-modal')?.addEventListener('click', onOverlayBackdropClick);
   document.getElementById('match-history-filter')?.addEventListener('change', renderMatchHistoryScreen);

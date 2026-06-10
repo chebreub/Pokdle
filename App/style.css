@@ -2195,42 +2195,8 @@ footer {
 }
 
 
-/* ============================================================
-
-   DA REFRESH - POKE SKY / ARCADE
-
-   ============================================================ */
-
-body.theme-poke-sky {
-
-  --bg: #5ea9db;
-
-  --bg-soft: #8bc5ea;
-
-  --surface: rgba(18, 45, 84, 0.86);
-
-  --surface-2: rgba(255, 255, 255, 0.08);
-
-  --text: #eaf5ff;
-
-  --muted: #bdd0e8;
-
-  --line: rgba(242, 205, 117, 0.55);
-
-
-  --red: #f05b42;
-
-  --red-dark: #b93b2a;
-
-  --blue: #3f86ff;
-
-  --blue-dark: #2a61cb;
-
-  --yellow: #ffd34d;
-
-  --yellow-dark: #d3a928;
-
-}
+/* Lot C audit : thème "POKE SKY / ARCADE" supprimé (body.theme-poke-sky
+   n'était appliqué nulle part — code mort qui semait la confusion sur --text). */
 
 
 body {
@@ -28196,4 +28162,14 @@ body.theme-dark .team-builder-analysis-summary {
   background: rgba(116, 158, 241, 0.12);
   border-color: rgba(116, 158, 241, 0.24);
   color: #cfe0ff;
+}
+
+/* ============================================================
+   Lot C audit : focus clavier toujours visible (WCAG 2.4.7).
+   :where() garde la spécificité à zéro pour ne pas écraser les
+   indicateurs de focus personnalisés (box-shadow) existants.
+   ============================================================ */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid #2f76ff;
+  outline-offset: 2px;
 }

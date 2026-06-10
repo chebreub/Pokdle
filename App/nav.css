@@ -371,7 +371,8 @@ body:not(.theme-dark) .nav-pill.active {
   z-index: 100;
 }
 .nav-group:hover > .nav-dropdown,
-.nav-group:focus-within > .nav-dropdown {
+.nav-group:focus-within > .nav-dropdown,
+.nav-group.open > .nav-dropdown {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -419,7 +420,8 @@ body:not(.theme-dark) .nav-pill.active {
     min-width: 240px;
   }
   .nav-group:hover > .nav-dropdown,
-  .nav-group:focus-within > .nav-dropdown {
+  .nav-group:focus-within > .nav-dropdown,
+  .nav-group.open > .nav-dropdown {
     transform: translate(-50%, 0);
   }}
 
