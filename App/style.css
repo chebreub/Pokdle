@@ -28386,3 +28386,55 @@ h1 {
   padding: 8px 12px;
   display: inline-block;
 }
+
+/* ============================================================
+   DA 2026 — v2 (validée en prototype live).
+   1. Hero "Pokémon du jour" : le fond sombre était écrasé par la règle
+      body:not(.theme-dark) #screen-config .card { ... !important } -> on
+      reprend la même spécificité.
+   2. Header : dégradé fondu premium au lieu de la cassure dure 44%/45%.
+   3. Liserés de cartes unifiés aux couleurs Pokéball.
+   4. Badges de types : le texte hérite de la couleur du type (le blanc forcé
+      rendait les pastilles par défaut illisibles).
+   ============================================================ */
+body:not(.theme-dark) header {
+  background: linear-gradient(124deg, #ef4d3f 0%, #d92f33 34%, #8e2c54 49%, #24438f 63%, #2f76ff 100%) !important;
+}
+
+body:not(.theme-dark) #screen-config .card.daily-hero,
+.card.daily-hero {
+  background:
+    radial-gradient(640px 260px at 86% 16%, rgba(255, 255, 255, 0.16), transparent 70%),
+    linear-gradient(118deg, #142648 0%, #1d3d7c 44%, #b32b3c 78%, #e4382f 100%) !important;
+  border: none !important;
+  color: #fff;
+}
+.card.daily-hero::before { display: none !important; }
+.daily-hero-title { color: #fff !important; }
+.daily-hero-sub { color: rgba(255, 255, 255, 0.88) !important; }
+.daily-hero-kicker { color: #ffd34d !important; }
+.daily-hero-chip {
+  background: rgba(13, 27, 54, 0.42) !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
+  color: #fff !important;
+}
+.daily-hero-chip-status {
+  background: rgba(46, 125, 50, 0.55) !important;
+  border-color: rgba(186, 255, 190, 0.4) !important;
+}
+
+.home-section-title { font-size: 1.25rem; display: flex; align-items: center; gap: 10px; }
+.home-section-title::after {
+  content: "";
+  flex: 0 0 46px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e4382f, #2f76ff);
+}
+
+body:not(.theme-dark) .card::before {
+  background: linear-gradient(90deg, #e4382f 0%, #ffcc33 50%, #2f76ff 100%) !important;
+}
+
+.type-badge span { color: inherit !important; text-shadow: none !important; }
+.type-badge { border-color: rgba(12, 25, 48, 0.14) !important; }

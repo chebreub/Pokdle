@@ -8569,7 +8569,9 @@ function typeBadgeHtml(typeFr) {
   if (!typeFr) return "";
   const icon = getTypeIconPath(typeFr);
   const iconHtml = icon ? `<img src="${icon}" alt="${escapeHtml(typeFr)}" loading="lazy" />` : "";
-  return `<span class="type-badge">${iconHtml}<span>${escapeHtml(typeFr)}</span></span>`;
+  // DA 2026 v2 : pastille colorée officielle du type (classes .type-feu, .type-eau...).
+  const typeSlug = typeFr.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return `<span class="type-badge type-${typeSlug}">${iconHtml}<span>${escapeHtml(typeFr)}</span></span>`;
 }
 
 function renderHomeTypeHelper() {
@@ -20797,6 +20799,7 @@ function hideAllScreens() {
 function showScreen(id) {
   hideAllScreens();
   document.getElementById(id)?.classList.remove('hidden');
+  window.scrollTo(0, 0);
 }
 
 function hideExtraScreens() {
