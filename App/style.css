@@ -2199,21 +2199,7 @@ footer {
    n'était appliqué nulle part — code mort qui semait la confusion sur --text). */
 
 
-body {
-
-  color: var(--text);
-
-  background:
-
-    radial-gradient(1000px 420px at 50% -15%, rgba(255, 255, 255, 0.30), transparent 70%),
-
-    radial-gradient(700px 280px at 20% 35%, rgba(255, 255, 255, 0.18), transparent 68%),
-
-    radial-gradient(680px 260px at 80% 42%, rgba(255, 255, 255, 0.16), transparent 70%),
-
-    linear-gradient(180deg, #6bb2e0 0%, #7cc0e9 38%, #8bcae7 58%, #84c272 82%, #6faa57 100%);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2202) */
 
 
 body::after {
@@ -2293,35 +2279,13 @@ body::before {
 }
 
 
-header {
-
-  border-bottom: 2px solid rgba(250, 211, 92, 0.8);
-
-  background: linear-gradient(180deg, rgba(17, 45, 82, 0.88), rgba(16, 41, 75, 0.64));
-
-  box-shadow: 0 12px 36px rgba(8, 20, 42, 0.34);
-
-  backdrop-filter: blur(5px);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2296) */
 
 
-h1 {
-
-  color: #ffdb59;
-
-  text-shadow: 0 3px 0 #2554b1, 0 0 16px rgba(22, 78, 183, 0.6);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2309) */
 
 
-.tagline {
-
-  color: #dceeff;
-
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2318) */
 
 
 main {
@@ -2333,45 +2297,13 @@ main {
 }
 
 
-.card {
-
-  background: linear-gradient(180deg, rgba(16, 43, 78, 0.84), rgba(14, 36, 66, 0.88));
-
-  border: 2px solid rgba(246, 205, 106, 0.7);
-
-  box-shadow:
-
-    0 18px 38px rgba(11, 28, 52, 0.34),
-
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2336) */
 
 
-.card-title {
-
-  color: #ffe180;
-
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2351) */
 
 
-.card-desc,
-
-.gen-sub,
-
-.stat-label,
-
-.streak-label,
-
-.rank-picker-sub,
-
-.rank-candidate-sub {
-
-  color: #c7dcf2;
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2360) */
 
 
 .gen-item,
@@ -2389,13 +2321,7 @@ main {
 }
 
 
-.gen-item.on {
-
-  border-color: #ffd45f;
-
-  background: linear-gradient(180deg, rgba(255, 218, 97, 0.26), rgba(255, 198, 72, 0.14));
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2392) */
 
 
 .gen-name,
@@ -2605,13 +2531,7 @@ main {
 
 .games-ranking-wrap,
 
-#results-wrap {
-
-  background: rgba(8, 25, 48, 0.52);
-
-  border-color: rgba(244, 203, 102, 0.4);
-
-}
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2608) */
 
 
 .rank-slot,
@@ -2673,9 +2593,9 @@ footer {
 }
 
 
-a { color: #ffe28a; }
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2676) */
 
-a:hover { color: #fff2bc; }
+/* [purge thème orphelin 2026-06-11] règle morte/nocive supprimée (ex-ligne 2678) */
 
 @media (max-width: 900px) {
 
@@ -2691,7 +2611,7 @@ a:hover { color: #fff2bc; }
 
   .card { padding: 16px; }
 
-  #results-table { min-width: 900px; }
+  /* [purge 2026-06-11] min-width 900px supprimé (le tableau en chips se comprime) */
 
 }
 
@@ -28859,4 +28779,29 @@ body.theme-dark .win-box { background: radial-gradient(460px 200px at 50% 0%, #2
     padding: 0 !important;
   }
   #results-table tr, .multiplayer-results-table tr { background: #fff !important; }
+}
+
+/* ============================================================
+   Vague 10/10 — modales animées + header desktop compact.
+   ============================================================ */
+/* Modales : entrée animée + filet de marque */
+.overlay-modal:not(.hidden) { animation: overlay-fade 0.22s ease; }
+.overlay-modal:not(.hidden) .overlay-card { animation: overlay-pop 0.28s cubic-bezier(0.2, 0.85, 0.3, 1.08); }
+@keyframes overlay-fade { from { opacity: 0; } }
+@keyframes overlay-pop { from { opacity: 0; transform: translateY(14px) scale(0.97); } }
+.reduce-motion .overlay-modal:not(.hidden),
+.reduce-motion .overlay-modal:not(.hidden) .overlay-card { animation: none; }
+.overlay-card::before {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #e4382f 0%, #ffcc33 50%, #2f76ff 100%);
+}
+
+/* Header desktop compact : ~-50px avant le contenu */
+@media (min-width: 641px) {
+  header { padding: 12px 20px 10px !important; }
+  h1 { font-size: 1.7rem; }
+  .tagline { margin-top: 2px; font-size: 0.88rem; }
 }
