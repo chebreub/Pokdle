@@ -1760,6 +1760,9 @@ function getPartyModePool() {
 }
 
 const PARTY_SCREEN_MODE_KEYS = new Set(["higherlower", "connections", "speedrun"]);
+// Ces écrans (HL/Connections/Speedrun) appellent goToConfig() dans leur init,
+// ce qui détruirait la session Party : ce flag la protège pendant le lancement.
+let partyLaunchInProgress = false;
 
 // Fin de round Party pour les modes à écran dédié : marque le round, annonce le
 // résultat, puis enchaîne automatiquement (ou clôt la session).
@@ -1951,10 +1954,15 @@ function launchPartyRound() {
   partySession.currentModeLabel = mode.label;
   partySession.roundResolved = false;
   renderPartySessionUI();
-  mode.launch();
+  partyLaunchInProgress = true;
+  try {
+    mode.launch();
+  } finally {
+    partyLaunchInProgress = false;
+  }
   renderPartySessionUI();
   // Les modes à écran dédié n'affichent pas le bandeau Party : on annonce le round.
-  if (PARTY_SCREEN_MODE_KEYS.has(mode.key)) {
+  if (PARTY_SCREEN_MODE_KEYS.has(mode.key) && isPartySessionActive()) {
     showToast(`Round ${partySession.currentRound}/${partySession.maxRounds} : ${mode.label}`);
   }
 }
@@ -2662,7 +2670,7 @@ function goToConfig() {
     return;
   }
   if (typeof renderDailyHero === "function") renderDailyHero();
-  partySession = null;
+  if (!partyLaunchInProgress) partySession = null;
   cleanupStatClashMode();
   teamBuilderPokemonPickerOpen = false;
   teamBuilderPokemonSearch = "";
