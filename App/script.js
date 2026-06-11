@@ -2028,7 +2028,33 @@ window.addEventListener("beforeunload", () => {
 window.addEventListener("popstate", () => {
   stopEmulatorSession();
 });
+// --- Fréquentation anonyme (compteurs maison, lecture sur /admin/stats) ---
+function getUsageUid() {
+  try {
+    let uid = localStorage.getItem("pokedle_uid_v1");
+    if (!uid) {
+      uid = window.crypto && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem("pokedle_uid_v1", uid);
+    }
+    return uid;
+  } catch (_e) { return ""; }
+}
+function trackUsage(event) {
+  try {
+    // En session Party, les mini-jeux sont des manches, pas des lancements solo.
+    if (event.startsWith("solo:") && typeof isPartySessionActive === "function" && isPartySessionActive()) return;
+    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event, uid: getUsageUid() }), keepalive: true }).catch(() => {});
+  } catch (_e) {}
+}
+window.trackUsage = trackUsage;
+
 window.addEventListener("DOMContentLoaded", () => {
+  try {
+    if (!sessionStorage.getItem("pokedle_visit_v1")) {
+      sessionStorage.setItem("pokedle_visit_v1", "1");
+      trackUsage("visit");
+    }
+  } catch (_e) {}
   buildGenGrid();
   loadStats();
   loadRankingChoices();
@@ -2518,6 +2544,7 @@ function maybeShowOnboarding() {
 }
 
 function startGameWithSecret(secret, pool, options = {}) {
+  trackUsage("solo:" + gameMode);
   secretPokemon = secret;
   activePool = pool;
 
@@ -3280,6 +3307,7 @@ function bindStatClashInteractions() {
 // Audit DA : partie rapide — lance un duel vs bot avec les réglages par défaut,
 // sans passer par le panneau de configuration.
 function quickStatClashGame() {
+  trackUsage("solo:statclash");
   try { switchStatClashMode("bot"); } catch (_err) { /* déjà en mode bot */ }
   startStatClashBotGame();
 }
@@ -4854,6 +4882,7 @@ function openHigherLowerMode() {
 }
 
 function startHigherLowerMode(mode) {
+  trackUsage("solo:higherlower");
   if (!higherLowerState) higherLowerState = createHigherLowerState(mode);
   higherLowerState.mode = mode === "rush60" ? "rush60" : "infinite";
   higherLowerState.score = 0;
@@ -5354,6 +5383,7 @@ function openSpeedrunMode() {
 }
 
 function startSpeedrunGame() {
+  trackUsage("solo:speedrun");
   if (!speedrunState) return;
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
   speedrunState.pool = pool.slice().sort(() => Math.random() - 0.5);
@@ -5635,6 +5665,7 @@ function generatePokeConnectionsPuzzle() {
 }
 
 function openPokeConnectionsMode() {
+  trackUsage("solo:connections");
   const puzzle = generatePokeConnectionsPuzzle();
   if (!puzzle) return showToast("Impossible de générer un puzzle Poké-Connections.");
   goToConfig();
@@ -5881,6 +5912,7 @@ function leaveStatAuctionRoom() {
   renderStatAuctionScreen();
 }
 function startStatAuctionMatch() {
+  trackUsage("solo:statauction");
   const socket = ensureMultiplayerSocket();
   if (!socket) return;
   statAuctionState.roomPendingAction = "starting";
@@ -17920,6 +17952,7 @@ function syncDraftDuelStateFromServer(roomState) {
 }
 
 function startDraftScoreDuel(gen) {
+  trackUsage("solo:scoreattack");
   const socket = ensureMultiplayerSocket();
   if (!socket?.connected || !draftArenaState) return;
   socket.emit("draft-score:start-duel", { gen: Number(gen) }, (response = {}) => {
@@ -18848,6 +18881,7 @@ async function resolveDraftArenaRun() {
 }
 
 function openDraftArenaMode() {
+  trackUsage("solo:draft");
   if (draftArenaState?.mode === "scoreAttack" && draftArenaState.scoreAttackRoom && multiplayerSocket?.connected) {
     multiplayerSocket.emit("draft-score:leave-room");
   }
@@ -22113,6 +22147,7 @@ function startDescriptionMode() {
 }
 
 function openOddOneOutMode() {
+  trackUsage("solo:odd");
   hideCustomModeSurfaces();
   hideScreen("screen-config");
   hideScreen("screen-game");

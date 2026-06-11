@@ -363,7 +363,7 @@ function sendIndex(res) {
 app.get(["/", "/index.html"], (_req, res) => sendIndex(res));
 // Page émulateur (lot D audit) : même SPA, mais servie sous /emulateur avec la
 // CSP permissive requise par EmulatorJS. Le client y ouvre l'écran émulateur.
-app.get("/emulateur", (_req, res) => sendIndex(res));
+app.get("/emulateur", (_req, res) => { recordUsage("solo:emulator"); sendIndex(res); });
 // dist/* : noms stables, mais référencés en dist/x.min.js?v=<hash> depuis
 // dist/index.html (cf. build.mjs) -> cache long sans risque de stale.
 app.use("/dist", express.static(DIST_DIR, { maxAge: "365d", immutable: true, fallthrough: false }));
@@ -424,6 +424,96 @@ app.post("/api/daily-stats/report", express.json({ limit: "1kb" }), (req, res) =
 
 app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
+});
+
+// --- Stats de fréquentation (anonymes, en mémoire, 14 jours glissants).
+// Remise à zéro à chaque redémarrage de l'instance — un keep-alive type
+// UptimeRobot rend les compteurs quasi continus. Chaque événement est aussi
+// journalisé en une ligne dans les logs Render (préfixe [usage]) pour garder
+// une trace au-delà des redémarrages. Page de lecture : /admin/stats?key=...
+// (protégée par la variable d'environnement ADMIN_STATS_KEY). ---
+const USAGE_EVENTS = new Set([
+  "visit",
+  "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
+  "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd",
+  "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
+  "solo:draft", "solo:statclash", "solo:emulator",
+  "party:create", "party:join",
+  "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "duel:create", "statclash:create",
+]);
+const USAGE_LABELS = {
+  visit: "Visites", "solo:daily": "Pokémon du jour", "solo:normal": "Classique", "solo:challenge": "Challenge",
+  "solo:silhouette": "Silhouette", "solo:pixel": "Pixelisé", "solo:mystery": "Mystère", "solo:cry": "Cri",
+  "solo:quiz": "Quiz", "solo:description": "Description", "solo:weight": "Duel de poids", "solo:evolution": "Évolution",
+  "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:higherlower": "Higher or Lower",
+  "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
+  "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
+  "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
+  "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
+  "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
+  "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
+};
+const usageDays = new Map(); // dateKey -> { events: Map, uniques: Set }
+const USAGE_MAX_DAYS = 14;
+const USAGE_MAX_UNIQUES = 5000;
+const usageBootedAt = new Date();
+
+function getUsageDay(key) {
+  if (!usageDays.has(key)) {
+    while (usageDays.size >= USAGE_MAX_DAYS) usageDays.delete(usageDays.keys().next().value);
+    usageDays.set(key, { events: new Map(), uniques: new Set() });
+  }
+  return usageDays.get(key);
+}
+
+function recordUsage(event, uid) {
+  if (!USAGE_EVENTS.has(event)) return;
+  const key = serverUTCDateKey();
+  const day = getUsageDay(key);
+  day.events.set(event, (day.events.get(event) || 0) + 1);
+  if (typeof uid === "string" && /^[a-z0-9-]{8,40}$/i.test(uid) && day.uniques.size < USAGE_MAX_UNIQUES) day.uniques.add(uid);
+  console.log("[usage]", JSON.stringify({ d: key, e: event }));
+}
+
+// Garde-fou simple : 120 événements/minute par IP.
+const usageRate = new Map();
+function usageRateLimited(ip) {
+  const now = Date.now();
+  const entry = usageRate.get(ip);
+  if (!entry || now - entry.ts > 60000) { usageRate.set(ip, { ts: now, count: 1 }); if (usageRate.size > 2000) usageRate.clear(); return false; }
+  entry.count += 1;
+  return entry.count > 120;
+}
+
+app.post("/api/track", express.json({ limit: "1kb" }), (req, res) => {
+  const event = typeof req.body?.event === "string" ? req.body.event : "";
+  if (!USAGE_EVENTS.has(event)) return res.status(400).json({ ok: false });
+  if (usageRateLimited(req.ip || "?")) return res.status(429).json({ ok: false });
+  recordUsage(event, req.body?.uid);
+  res.json({ ok: true });
+});
+
+app.get("/admin/stats", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex");
+  const adminKey = process.env.ADMIN_STATS_KEY || "";
+  if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
+  if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
+  const dayKeys = [...usageDays.keys()].sort().slice(-7);
+  const events = [...USAGE_EVENTS].filter((e) => dayKeys.some((k) => usageDays.get(k).events.has(e)));
+  const cell = (v) => `<td>${v || ""}</td>`;
+  const rows = events.map((e) => {
+    const total = dayKeys.reduce((s, k) => s + (usageDays.get(k).events.get(e) || 0), 0);
+    return `<tr><th>${USAGE_LABELS[e] || e}</th>${dayKeys.map((k) => cell(usageDays.get(k).events.get(e))).join("")}<td class="t">${total}</td></tr>`;
+  }).join("");
+  const uniqueRow = `<tr><th>Visiteurs uniques</th>${dayKeys.map((k) => cell(usageDays.get(k).uniques.size)).join("")}<td class="t">—</td></tr>`;
+  res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
+<style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
+</head><body><h1>Pokédle — fréquentation</h1>
+<p>Compteurs en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (remis à zéro à chaque redémarrage de l'instance — les événements restent tracés dans les logs Render, préfixe <code>[usage]</code>).</p>
+<table><thead><tr><th>Événement</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${uniqueRow}${rows || ""}</tbody></table>
+${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);
 });
 
 function generatePartyRoomCode() {
@@ -1086,6 +1176,7 @@ io.on("connection", (socket) => {
       };
       rooms.set(code, room);
       joinPlayerToRoom(room, socket, nickname);
+      recordUsage("duel:create");
       emitRoomState(room);
       respond(ack, { ok: true, code, room: publicRoomState(room, socket.id) });
     } catch (error) {
@@ -1237,6 +1328,7 @@ io.on("connection", (socket) => {
       const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
       joinPlayerToPartyRoom(room, socket, nickname);
+      recordUsage("party:create");
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -1256,6 +1348,7 @@ io.on("connection", (socket) => {
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
       clearPartyRoomCleanup(room);
       joinPlayerToPartyRoom(room, socket, nickname);
+      recordUsage("party:join");
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -1277,6 +1370,7 @@ io.on("connection", (socket) => {
       await startPartyGame(room);
       if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
+      recordUsage("party:start:" + (room.gameMode || "guess"));
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -1467,6 +1561,7 @@ io.on("connection", (socket) => {
       statClashRooms.set(code, room);
       joinPlayerToStatClashRoom(room, socket, nickname);
       console.log("[stat-clash][create-room] created", { code: maskCode(code) });
+      recordUsage("statclash:create");
       emitStatClashRoomState(room);
       respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
