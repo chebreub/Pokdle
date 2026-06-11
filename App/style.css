@@ -28864,3 +28864,7 @@ body.theme-dark .site-footer-links a { color: #7da7ff !important; }
   body.theme-dark #results-table td:first-child,
   body.theme-dark .multiplayer-results-table td:first-child { color: #e8eefc !important; }
 }
+
+/* Audit modes 11/06 : noms lisibles dans la chaîne d'évolution. */
+.evolution-slot small { color: #44597e !important; font-weight: 800; font-size: 0.85rem; }
+body.theme-dark .evolution-slot small { color: #a7b8d8 !important; }

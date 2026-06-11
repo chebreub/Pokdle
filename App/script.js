@@ -11,6 +11,7 @@
 const STORAGE_KEYS = {
   stats: "pokedle_stats_v1",
   game: "pokedle_game_v1",
+  dailyGame: "pokedle_game_daily_v1",
   ranking: "pokedle_ranking_v1",
   teamBuilder: "pokedle_team_builder_v1",
   gamesRanking: "pokedle_games_ranking_v1",
@@ -1751,7 +1752,31 @@ function getPartyModePool() {
     { key: "order", label: "Ordre Pokédex", launch: startPokedexOrderGame, canLaunch: () => noAltPool.length >= 3 },
     { key: "description", label: "Description Pokédex", launch: startDescriptionMode, canLaunch: () => basePool.length > 0 },
     { key: "odd", label: "Intrus Pokémon", launch: openOddOneOutMode, canLaunch: () => true },
+    // Modes à écran dédié (résolus via notifyPartyRoundFromScreenMode à la fin de leur run).
+    { key: "higherlower", label: "Higher or Lower", launch: openHigherLowerMode, canLaunch: () => true },
+    { key: "connections", label: "Poké-Connections", launch: openPokeConnectionsMode, canLaunch: () => true },
+    { key: "speedrun", label: "Speedrun Pokédex", launch: openSpeedrunMode, canLaunch: () => true },
   ].filter((mode) => mode.canLaunch());
+}
+
+const PARTY_SCREEN_MODE_KEYS = new Set(["higherlower", "connections", "speedrun"]);
+
+// Fin de round Party pour les modes à écran dédié : marque le round, annonce le
+// résultat, puis enchaîne automatiquement (ou clôt la session).
+function notifyPartyRoundFromScreenMode(didWin, summary) {
+  if (!isPartySessionActive() || partySession.roundResolved) return;
+  const round = partySession.currentRound;
+  const max = partySession.maxRounds;
+  finishPartyRound(didWin);
+  showToast(`Round ${round}/${max} ${didWin ? "gagné" : "perdu"} — ${summary}`);
+  if (partySession.completed) {
+    setTimeout(() => {
+      showToast(`Party terminée : ${partySession.wins} victoire${partySession.wins > 1 ? "s" : ""} sur ${max} !`);
+      goToConfig();
+    }, 2000);
+  } else {
+    setTimeout(() => advancePartyRound(), 2000);
+  }
 }
 
 function pickPartyMode() {
@@ -1928,6 +1953,10 @@ function launchPartyRound() {
   renderPartySessionUI();
   mode.launch();
   renderPartySessionUI();
+  // Les modes à écran dédié n'affichent pas le bandeau Party : on annonce le round.
+  if (PARTY_SCREEN_MODE_KEYS.has(mode.key)) {
+    showToast(`Round ${partySession.currentRound}/${partySession.maxRounds} : ${mode.label}`);
+  }
 }
 
 function advancePartyRound() {
@@ -2171,7 +2200,7 @@ function renderDailyHero() {
   const wonToday = playerStats?.lastDailyWinKey === today;
   let inProgress = false;
   try {
-    const save = readJson(STORAGE_KEYS.game, null);
+    const save = readJson(STORAGE_KEYS.dailyGame, null) || readJson(STORAGE_KEYS.game, null);
     inProgress = Boolean(save && save.mode === "daily" && save.dailyKey === today);
   } catch (_err) { /* stockage indisponible */ }
 
@@ -2292,7 +2321,8 @@ function startQuizGame() {
   gameOver = false;
   winRegisteredForCurrentGame = false;
   quizSessionLogged = false;
-  quizQuestions = shuffleArray(buildQuizQuestionPool()).slice(0, QUIZ_QUESTION_COUNT);
+  // En Party, un round Quiz est raccourci pour rester équilibré avec les autres mini-jeux.
+  quizQuestions = shuffleArray(buildQuizQuestionPool()).slice(0, isPartySessionActive() ? 5 : QUIZ_QUESTION_COUNT);
   quizCurrentIndex = 0;
   quizScore = 0;
   quizAnswered = false;
@@ -4900,6 +4930,7 @@ function answerHigherLower(choice) {
         recordMatchHistory({ mode: "higher-lower", result: higherLowerState.score >= 5 ? "win" : "loss", attempts: higherLowerState.score, targetName: `Score ${higherLowerState.score}` });
       } catch (_e) {}
       renderHigherLowerScreen();
+      notifyPartyRoundFromScreenMode(higherLowerState.score >= 5, `score ${higherLowerState.score}`);
     }
   }, higherLowerState.mode === "rush60" ? 900 : 1800);
 }
@@ -5412,6 +5443,7 @@ function finalizeSpeedrunGame() {
     });
   } catch (_e) {}
   renderSpeedrunScreen();
+  notifyPartyRoundFromScreenMode(speedrunState.correct >= 10, `${speedrunState.correct} Pokémon en 60 s`);
 }
 
 function restartSpeedrunGame() {
@@ -5674,6 +5706,7 @@ function submitPokeConnectionsGuess() {
       try {
         recordMatchHistory({ mode: "poke-connections", result: "win", attempts: 4 - pokeConnectionsState.mistakes, targetName: `${pokeConnectionsState.mistakes} erreur${pokeConnectionsState.mistakes > 1 ? "s" : ""}` });
       } catch (_e) {}
+      notifyPartyRoundFromScreenMode(true, "puzzle résolu");
     }
   } else {
     pokeConnectionsState.mistakes += 1;
@@ -5683,6 +5716,7 @@ function submitPokeConnectionsGuess() {
       try {
         recordMatchHistory({ mode: "poke-connections", result: "loss", attempts: pokeConnectionsState.foundGroupIdx.size, targetName: `${pokeConnectionsState.foundGroupIdx.size}/4 groupes` });
       } catch (_e) {}
+      notifyPartyRoundFromScreenMode(false, `${pokeConnectionsState.foundGroupIdx.size}/4 groupes`);
     }
   }
   renderPokeConnectionsScreen();
@@ -19910,6 +19944,8 @@ function registerWin() {
 // ============================================================
 function saveCurrentGame(forcedDailyKey = null) {
   if (!secretPokemon || gameOver) return;
+  // Seuls les modes restaurables sont sauvegardés (cohérence avec VALID_MODES).
+  if (!VALID_MODES.has(gameMode)) return;
 
   const payload = {
     version: 1,
@@ -19923,28 +19959,43 @@ function saveCurrentGame(forcedDailyKey = null) {
     savedAt: Date.now(),
   };
 
-  writeJson(STORAGE_KEYS.game, payload);
+  // Le daily a son propre slot : une partie d'un autre mode ne l'écrase plus.
+  writeJson(gameMode === "daily" ? STORAGE_KEYS.dailyGame : STORAGE_KEYS.game, payload);
 }
 
-function clearSavedGame() {
+function clearSavedGame(targetMode = gameMode) {
   try {
-    localStorage.removeItem(STORAGE_KEYS.game);
+    localStorage.removeItem(targetMode === "daily" ? STORAGE_KEYS.dailyGame : STORAGE_KEYS.game);
   } catch (e) {
     console.warn("localStorage unavailable:", e);
   }
 }
 
 function restoreSavedGame() {
-  const save = readJson(STORAGE_KEYS.game, null);
+  // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
+  let save = readJson(STORAGE_KEYS.dailyGame, null);
+  if (save && (save.mode !== "daily" || save.dailyKey !== getUTCDateKey())) {
+    clearSavedGame("daily");
+    save = null;
+  }
+  if (!save) {
+    save = readJson(STORAGE_KEYS.game, null);
+    if (save && save.mode === "daily") {
+      // Migration : ancienne sauvegarde daily dans le slot commun.
+      if (save.dailyKey === getUTCDateKey()) writeJson(STORAGE_KEYS.dailyGame, save);
+      clearSavedGame("normal");
+      if (save.dailyKey !== getUTCDateKey()) save = null;
+    }
+  }
   if (!save) return false;
 
   if (!VALID_MODES.has(save.mode)) {
-    clearSavedGame();
+    clearSavedGame(save.mode);
     return false;
   }
 
   if (save.mode === "daily" && save.dailyKey !== getUTCDateKey()) {
-    clearSavedGame();
+    clearSavedGame("daily");
     return false;
   }
 
@@ -21047,6 +21098,42 @@ function getActiveScreenId() {
 
 function getHelpContentForGameMode(mode) {
   switch (mode) {
+    case 'description':
+      return {
+        title: 'Description Pokédex',
+        body: `
+          <section class="app-help-card">
+            <h4>Devine à partir du texte</h4>
+            <p>Une description officielle du Pokédex s'affiche. Tape le nom du Pokémon qu'elle décrit — l'autocomplétion t'aide, accents facultatifs.</p>
+          </section>`
+      };
+    case 'weight':
+      return {
+        title: 'Duel de poids',
+        body: `
+          <section class="app-help-card">
+            <h4>Plus lourd ou plus léger ?</h4>
+            <p>Deux Pokémon s'affrontent : choisis celui que tu penses être le plus lourd. Enchaîne les bonnes réponses pour faire grimper ta série.</p>
+          </section>`
+      };
+    case 'evolution':
+      return {
+        title: 'Chaîne d\'évolution',
+        body: `
+          <section class="app-help-card">
+            <h4>Le maillon manquant</h4>
+            <p>Une lignée d'évolution s'affiche avec un membre masqué. Retrouve le Pokémon manquant avec la barre de recherche.</p>
+          </section>`
+      };
+    case 'order':
+      return {
+        title: 'Ordre Pokédex',
+        body: `
+          <section class="app-help-card">
+            <h4>Entre deux numéros</h4>
+            <p>Deux entrées du Pokédex national s'affichent : trouve le Pokémon situé entre les deux numéros.</p>
+          </section>`
+      };
     case 'daily':
       return {
         title: 'Pokémon du jour',
