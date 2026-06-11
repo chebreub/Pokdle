@@ -8342,6 +8342,17 @@ function partyNextRound() {
   });
 }
 
+function partySetRounds(rounds) {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  socket.emit("party:set-rounds", { rounds: Number(rounds) }, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de changer le nombre de manches."); return; }
+    if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+  });
+}
+window.partySetRounds = partySetRounds;
+
 function partySetMode(mode) {
   var socket = ensureMultiplayerSocket();
   if (!socket) return;
@@ -8425,7 +8436,7 @@ function renderPartyRoom() {
   var complete = room.status === "complete";
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
-  var modeLabels = { guess: "Course Pokémon", typecombo: "Combo de types", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabels = { guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
   var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
@@ -8442,7 +8453,7 @@ function renderPartyRoom() {
   var listEl = document.getElementById("party-players");
   if (listEl) {
     var scMode = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
-    var typeComboMode = Boolean(room.round && room.round.mode === "typecombo");
+    var typeComboMode = Boolean(room.round && (room.round.mode === "typecombo" || room.round.mode === "duocriteria"));
     var prevScores = partyRoomState.prevScores || {};
     var revealed = finished || complete;
     listEl.innerHTML = players.map(function (p, i) {
@@ -8483,8 +8494,8 @@ function renderPartyRoom() {
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
   var roundEl = document.getElementById("party-round");
   if (roundEl) {
-    var hasRound = Boolean(room.round && (room.round.image || room.round.mode === "typecombo"));
-    roundEl.classList.toggle("party-round-typecombo", Boolean(room.round && room.round.mode === "typecombo"));
+    var hasRound = Boolean(room.round && (room.round.image || room.round.mode === "typecombo" || room.round.mode === "duocriteria"));
+    roundEl.classList.toggle("party-round-typecombo", Boolean(room.round && (room.round.mode === "typecombo" || room.round.mode === "duocriteria")));
     roundEl.classList.toggle("hidden", !hasRound);
     var roundKey = (room.status === "playing") ? (Number(room.roundNumber) || 0) : -1;
     if (hasRound && roundKey > 0 && roundKey !== partyRoomState.lastRoundKey) {
@@ -8504,12 +8515,15 @@ function renderPartyRoom() {
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl && room.round.image) spriteEl.src = room.round.image;
     var isStatClash = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
-    var isTypeCombo = Boolean(room.round && room.round.mode === "typecombo");
+    var isDuoCriteria = Boolean(room.round && room.round.mode === "duocriteria");
+    var isTypeCombo = Boolean(room.round && (room.round.mode === "typecombo" || isDuoCriteria));
     var variant = (room.round && room.round.variant) || "normal";
     var modeEl = document.getElementById("party-round-mode");
     if (modeEl) {
       var scParty = Boolean(room.round && room.round.mode === "statclashparty");
-      modeEl.textContent = isTypeCombo
+      modeEl.textContent = isDuoCriteria
+        ? "Duo de critères : trouve un Pokémon qui coche les deux cases"
+        : isTypeCombo
         ? "Combo de types : trouve un Pokémon qui possède ces types"
         : isStatClash
         ? ((scParty ? "Stat Clash : " : "Meilleure stat : ") + (room.round.name || "?") + (playing ? (scParty ? " — choisis la stat qui battra les autres !" : " — choisis sa stat la plus élevée !") : ""))
@@ -8556,7 +8570,7 @@ function renderPartyRoom() {
     if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct));
     if (playing && !isStatClash && me && !me.correct) {
       var guessInput = document.getElementById("party-guess");
-      if (guessInput) guessInput.placeholder = isTypeCombo ? "Un Pokémon avec ces types" : "Nom du Pokémon";
+      if (guessInput) guessInput.placeholder = isDuoCriteria ? "Un Pokémon qui coche les deux cases" : (isTypeCombo ? "Un Pokémon avec ces types" : "Nom du Pokémon");
       if (guessInput && document.activeElement !== guessInput) guessInput.focus();
     }
     var statOpts = document.getElementById("party-stat-options");
@@ -8581,6 +8595,7 @@ function renderPartyRoom() {
       statReveal.classList.toggle("hidden", !doReveal);
       if (isTypeCombo) {
         var types = Array.isArray(room.round.types) ? room.round.types : [];
+        var duoCriteriaList = Array.isArray(room.round.criteria) ? room.round.criteria : [];
         var count = Number(room.round.count) || 0;
         var answerName = room.round.answer || "";
         var answerSprite = room.round.answerSprite || "";
@@ -8599,8 +8614,13 @@ function renderPartyRoom() {
         var comboDiff = room.round.difficulty || null;
         var comboPts = Number(room.round.points) || 0;
         var diffBadge = comboDiff ? '<span class="party-combo-diff is-' + (comboDiff.tier || "") + '">' + escapeHtml(comboDiff.label || "") + '</span>' : '';
+        var criteriaHtml = isDuoCriteria
+          ? '<div class="party-duo-criteria">' + duoCriteriaList.map(function (criterion) {
+              return '<span class="party-duo-chip is-' + escapeHtml((criterion && criterion.kind) || "") + '">' + escapeHtml((criterion && criterion.label) || "?") + '</span>';
+            }).join('<span class="party-duo-plus">+</span>') + '</div>'
+          : '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>';
         statReveal.innerHTML = '<div class="party-typecombo-panel">' +
-          '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>' +
+          criteriaHtml +
           '<div class="party-combo-meta">' + diffBadge + '<span class="party-combo-count">' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</span>' + (comboPts ? '<span class="party-combo-points">vaut ' + comboPts + ' pts</span>' : '') + '</div>' +
           spriteHtml +
           '</div>';
@@ -8646,9 +8666,25 @@ function renderPartyRoom() {
     typeComboBtn.classList.toggle("is-active", room.gameMode === "typecombo");
     typeComboBtn.disabled = !isHost;
   }
+  var duoBtn = document.getElementById("party-mode-duocriteria");
+  if (duoBtn) {
+    duoBtn.classList.toggle("is-active", room.gameMode === "duocriteria");
+    duoBtn.disabled = !isHost;
+  }
+  // Sélecteur du nombre de manches (hôte uniquement)
+  var roundsSel = document.getElementById("party-rounds-select");
+  if (roundsSel) roundsSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
+  [5, 10, 15, 20].forEach(function (n) {
+    var rb = document.getElementById("party-rounds-" + n);
+    if (rb) {
+      rb.classList.toggle("is-active", (Number(room.totalRounds) || 5) === n);
+      rb.disabled = !isHost;
+    }
+  });
   var modeHints = {
     guess: "Course Pokémon : devine le Pokémon le plus vite possible. Les points dépendent du rang de bonne réponse.",
-    typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque 100 points.",
+    typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque la manche (plus le combo est rare, plus ça paie).",
+    duocriteria: "Duo de critères : type, couleur, habitat, génération ou stade — deux critères croisés, le premier Pokémon qui coche les deux cases gagne. Rapidité bonus !",
     statclash: "Meilleure stat : choisis la stat la plus élevée du Pokémon. Les bons choix marquent des points.",
     statclashparty: "Stat Clash : choisis une stat différente à chaque manche. Tu marques la valeur réelle de la stat choisie."
   };

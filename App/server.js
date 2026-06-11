@@ -481,6 +481,8 @@ function publicPartyRoomState(room, viewerId = null) {
   const gameMode = room.gameMode || "guess";
   const roundState = gameMode === "typecombo"
     ? publicPartyTypeComboRoundState(room, revealed)
+    : gameMode === "duocriteria"
+    ? publicPartyDuoRoundState(room, revealed)
     : (gameMode === "statclash" || gameMode === "statclashparty")
       ? publicPartyStatClashRoundState(room, revealed)
       : publicPartyGuessRoundState(room, revealed);
@@ -549,7 +551,11 @@ function pickPartyTarget(room) {
   return source[Math.floor(Math.random() * source.length)] || null;
 }
 
-function partyTotalRoundsForMode(mode) {
+function partyTotalRoundsForMode(mode, configured) {
+  // L'hôte peut configurer 5/10/15/20 manches ; Stat Clash Party garde 6 par
+  // défaut (une stat par manche) si rien n'est configuré.
+  const wanted = Number(configured);
+  if ([5, 10, 15, 20].includes(wanted)) return wanted;
   return mode === "statclashparty" ? 6 : 5;
 }
 
@@ -559,8 +565,9 @@ function isPartyStatMode(room) {
 
 async function startPartyGame(room) {
   room.roundNumber = 1;
-  room.totalRounds = partyTotalRoundsForMode(room.gameMode);
+  room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds);
   room.recentComboKeys = [];
+  room.recentDuoKeys = [];
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
@@ -619,6 +626,8 @@ async function startPartyRound(room) {
     await startPartyStatClashRound(room);
   } else if (room.gameMode === "typecombo") {
     startPartyTypeComboRound(room);
+  } else if (room.gameMode === "duocriteria") {
+    startPartyDuoRound(room);
   } else {
     startPartyGuessRound(room);
   }
@@ -883,6 +892,127 @@ function handlePartyTypeComboAnswer(room, player, guess) {
   endPartyRound(room);
   emitPartyRoomState(room);
   return { valid: true, correct: true, gained, rank: 1, answer: pokemon.name };
+}
+
+// ---- Mode "Duo de critères" : deux critères croisés (type, couleur, habitat,
+// génération, stade), premier Pokémon valide remporte la manche. Même moteur
+// de points que Combo de types (rareté + bonus vitesse). ----
+const PARTY_DUO_CRITERIA_KINDS = [
+  { kind: "type", label: (v) => `Type ${v}`, values: (p) => [p.type1, p.type2].filter(Boolean) },
+  { kind: "couleur", label: (v) => `Couleur ${v}`, values: (p) => [p.color].filter(Boolean) },
+  { kind: "habitat", label: (v) => `Habitat ${v}`, values: (p) => [p.habitat].filter(Boolean) },
+  { kind: "gen", label: (v) => `Génération ${v}`, values: (p) => [Number(p.gen || p.generation)].filter(Boolean) },
+  { kind: "stade", label: (v) => (Number(v) === 1 ? "Stade 1 (base)" : Number(v) === 2 ? "Stade 2" : "Stade final (3)"), values: (p) => [Number(p.stage)].filter(Boolean) },
+];
+
+function pokemonMatchesPartyDuoCriterion(pokemon, criterion) {
+  const def = PARTY_DUO_CRITERIA_KINDS.find((entry) => entry.kind === criterion.kind);
+  if (!def) return false;
+  return def.values(pokemon).some((value) => String(value) === String(criterion.value));
+}
+
+function pokemonMatchesPartyDuo(pokemon, duo) {
+  if (!pokemon || !duo || !Array.isArray(duo.criteria)) return false;
+  return duo.criteria.every((criterion) => pokemonMatchesPartyDuoCriterion(pokemon, criterion));
+}
+
+function pickPartyDuoCriteria(room) {
+  const pool = getPartyPokemonPool(room);
+  const recent = Array.isArray(room.recentDuoKeys) ? room.recentDuoKeys : [];
+  const candidates = [];
+  // 24 tirages aléatoires de paires de catégories distinctes, ancrés sur un
+  // Pokémon réel du pool pour garantir au moins une solution.
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const anchor = pool[Math.floor(Math.random() * pool.length)];
+    if (!anchor) continue;
+    const kinds = PARTY_DUO_CRITERIA_KINDS.slice().sort(() => Math.random() - 0.5).slice(0, 2);
+    const criteria = [];
+    for (const def of kinds) {
+      const values = def.values(anchor);
+      if (!values.length) break;
+      const value = values[Math.floor(Math.random() * values.length)];
+      criteria.push({ kind: def.kind, value, label: def.label(value) });
+    }
+    if (criteria.length !== 2) continue;
+    const key = criteria.map((c) => `${c.kind}:${c.value}`).sort().join("|");
+    if (recent.includes(key)) continue;
+    const duo = { key, criteria };
+    const matches = pool.filter((pokemon) => pokemonMatchesPartyDuo(pokemon, duo));
+    if (matches.length < 1) continue;
+    candidates.push({ key, criteria, matches });
+  }
+  if (!candidates.length) return null;
+  // Privilégie les duos intéressants (ni triviaux ni introuvables).
+  const sweetSpot = candidates.filter((c) => c.matches.length >= 3 && c.matches.length <= 60);
+  const picked = (sweetSpot.length ? sweetSpot : candidates)[Math.floor(Math.random() * (sweetSpot.length ? sweetSpot.length : candidates.length))];
+  room.recentDuoKeys = [picked.key].concat(recent).slice(0, 8);
+  return {
+    key: picked.key,
+    criteria: picked.criteria,
+    count: picked.matches.length,
+    examples: picked.matches.slice(0, 8).map((pokemon) => ({ name: pokemon.name, sprite: pokemon.sprite || null })),
+  };
+}
+
+function startPartyDuoRound(room) {
+  room.status = "playing";
+  room.target = { name: "Duo de critères", sprite: null };
+  room.variant = null;
+  room.duoCriteria = pickPartyDuoCriteria(room);
+  room.duoWinnerAnswer = null;
+  room.duoWinnerSprite = null;
+  room.duoWinnerGain = 0;
+  room.duoUsedNames = [];
+  room.roundPlayerIds = room.players.filter((player) => player.connected).map((player) => player.id);
+  for (const player of room.players) {
+    player.correct = false;
+    player.lastGain = 0;
+  }
+}
+
+function handlePartyDuoAnswer(room, player, guess) {
+  const pokemon = resolvePartyPokemonGuessFuzzy(room, guess);
+  const gens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  if (!pokemon || !gens.includes(Number(pokemon.gen || pokemon.generation))) {
+    return { valid: false, correct: false, error: "Pokémon invalide pour cette room." };
+  }
+  const resolvedName = normalizeName(pokemon.name);
+  if (!Array.isArray(room.duoUsedNames)) room.duoUsedNames = [];
+  if (room.duoUsedNames.includes(resolvedName)) {
+    return { valid: true, correct: false, duplicate: true, error: "Ce Pokémon a déjà été proposé pendant cette manche." };
+  }
+  room.duoUsedNames.push(resolvedName);
+  const isCorrect = pokemonMatchesPartyDuo(pokemon, room.duoCriteria);
+  if (!isCorrect) return { valid: true, correct: false, duplicate: false };
+  const tier = partyTypeComboTier(room.duoCriteria && room.duoCriteria.count);
+  const speed = partyTypeComboSpeedBonus(room);
+  const gained = tier.points + speed;
+  player.correct = true;
+  player.lastGain = gained;
+  player.score = (Number(player.score) || 0) + gained;
+  room.duoWinnerAnswer = pokemon.name;
+  room.duoWinnerSprite = pokemon.sprite || null;
+  room.duoWinnerGain = gained;
+  endPartyRound(room);
+  emitPartyRoomState(room);
+  return { valid: true, correct: true, gained, rank: 1, answer: pokemon.name };
+}
+
+function publicPartyDuoRoundState(room, revealed) {
+  const duo = room.duoCriteria;
+  if (!duo) return null;
+  const tier = partyTypeComboTier(Number(duo.count) || 0);
+  return {
+    mode: "duocriteria",
+    criteria: (duo.criteria || []).map((criterion) => ({ kind: criterion.kind, label: criterion.label })),
+    count: Number(duo.count) || 0,
+    difficulty: { tier: tier.tier, label: tier.label },
+    points: tier.points,
+    answer: revealed ? (room.duoWinnerAnswer || null) : null,
+    answerSprite: revealed ? (room.duoWinnerSprite || null) : null,
+    winnerGain: revealed ? (Number(room.duoWinnerGain) || 0) : null,
+    examples: revealed ? (duo.examples || []) : [],
+  };
 }
 
 function handlePartyGuessAnswer(room, player, guess) {
@@ -1167,6 +1297,11 @@ io.on("connection", (socket) => {
         if (result.error) return respond(ack, { ok: false, correct: false, duplicate: Boolean(result.duplicate), error: result.error, room: publicPartyRoomState(room, socket.id) });
         return respond(ack, { ok: true, correct: result.correct, gained: result.gained || 0, rank: result.rank || 0, answer: result.answer || null, room: publicPartyRoomState(room, socket.id) });
       }
+      if (room.gameMode === "duocriteria") {
+        const result = handlePartyDuoAnswer(room, player, payload.guess);
+        if (result.error) return respond(ack, { ok: false, correct: false, duplicate: Boolean(result.duplicate), error: result.error, room: publicPartyRoomState(room, socket.id) });
+        return respond(ack, { ok: true, correct: result.correct, gained: result.gained || 0, rank: result.rank || 0, answer: result.answer || null, room: publicPartyRoomState(room, socket.id) });
+      }
       if ((room.gameMode || "guess") !== "guess") return respond(ack, { ok: false, error: "Mode non disponible." });
       const result = handlePartyGuessAnswer(room, player, payload.guess);
       respond(ack, { ok: true, correct: result.correct, gained: result.gained, rank: result.rank, room: publicPartyRoomState(room, socket.id) });
@@ -1236,12 +1371,29 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       room.gameMode = mode;
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de changer le mode." });
+    }
+  });
+
+  socket.on("party:set-rounds", (payload = {}, ack) => {
+    try {
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le nombre de manches." });
+      if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer en cours de party." });
+      const rounds = Number(payload.rounds);
+      if (![5, 10, 15, 20].includes(rounds)) return respond(ack, { ok: false, error: "Choisis 5, 10, 15 ou 20 manches." });
+      room.totalRounds = rounds;
+      room.configuredRounds = rounds;
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de changer le nombre de manches." });
     }
   });
 

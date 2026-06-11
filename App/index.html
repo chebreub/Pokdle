@@ -1209,10 +1209,18 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <span class="party-mode-label">Mode :</span>
             <button id="party-mode-guess" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["guess"]'>🏁 Course Pokémon</button>
             <button id="party-mode-typecombo" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["typecombo"]'>🧬 Combo de types</button>
+            <button id="party-mode-duocriteria" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["duocriteria"]'>🎯 Duo de critères</button>
             <button id="party-mode-statclash" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["statclash"]'>📊 Meilleure stat</button>
             <button id="party-mode-statclashparty" type="button" class="party-mode-btn" data-action="partySetMode" data-args='["statclashparty"]'>⚔️ Stat Clash Party</button>
           </div>
           <p id="party-mode-hint" class="party-mode-hint"></p>
+          <div id="party-rounds-select" class="party-mode-select party-rounds-select hidden">
+            <span class="party-mode-label">Manches :</span>
+            <button id="party-rounds-5" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[5]'>5</button>
+            <button id="party-rounds-10" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[10]'>10</button>
+            <button id="party-rounds-15" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[15]'>15</button>
+            <button id="party-rounds-20" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[20]'>20</button>
+          </div>
           <div id="party-gens-select" class="party-mode-select party-gens-select hidden">
             <span class="party-mode-label">Générations :</span>
             <button id="party-gens-all" type="button" class="party-mode-btn" data-action="partyAllGens">🌍 Toutes</button>
