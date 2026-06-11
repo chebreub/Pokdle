@@ -25,6 +25,7 @@ const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
+const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
 const PARTY_MIN_PLAYERS = 2;
 const PARTY_MAX_PLAYERS = 8;
 const PARTY_TOTAL_ROUNDS = 5;
@@ -1024,6 +1025,37 @@ io.on("connection", (socket) => {
 
   socket.on("duel:leave-room", () => {
     try { handleDisconnect(socket.id, true); } catch (_error) { console.error("[duel:leave-room] error", _error?.message || "unknown"); }
+  });
+
+  socket.on("duel:resume", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      const code = sanitizeRoomCode(payload.code);
+      const nickname = sanitizeNickname(payload.nickname);
+      const room = rooms.get(code);
+      if (!room) return respond(ack, { ok: false, error: "Room introuvable ou expirée." });
+      if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
+      const player = room.players.find((entry) => !entry.connected && normalizeName(entry.nickname) === normalizeName(nickname));
+      if (!player) return respond(ack, { ok: false, error: "Aucune place à reprendre dans cette room." });
+
+      const previousId = player.id;
+      if (room.hostId === previousId) room.hostId = socket.id;
+      if (room.winnerId === previousId) room.winnerId = socket.id;
+      player.id = socket.id;
+      player.connected = true;
+      delete player.disconnectedAt;
+      socket.join(room.code);
+      socket.data.roomCode = room.code;
+      if (room.graceTimer) {
+        clearTimeout(room.graceTimer);
+        room.graceTimer = null;
+      }
+      io.to(room.code).emit("duel:opponent-connection", { nickname: player.nickname, connected: true });
+      emitRoomState(room);
+      respond(ack, { ok: true, code, room: publicRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Reprise impossible." });
+    }
   });
 
   socket.on("duel:update-gens", (payload = {}, ack) => {
@@ -3217,13 +3249,39 @@ function handleDisconnect(socketId, voluntary) {
   }
 
   if (room.status === "live") {
-    const opponent = room.players.find((entry) => entry.id !== socketId && entry.connected);
-    room.status = "finished";
-    room.winnerId = opponent?.id || null;
-    room.endedReason = "disconnect";
+    if (voluntary) {
+      // Départ volontaire : forfait immédiat (comportement historique).
+      const opponent = room.players.find((entry) => entry.id !== socketId && entry.connected);
+      room.status = "finished";
+      room.winnerId = opponent?.id || null;
+      room.endedReason = "disconnect";
+      emitRoomState(room);
+      emitRoomFinished(room);
+      scheduleRoomCleanup(room);
+      return;
+    }
+    // Coupure réseau / refresh : fenêtre de reconnexion avant de déclarer forfait.
+    player.disconnectedAt = Date.now();
+    io.to(room.code).emit("duel:opponent-connection", {
+      nickname: player.nickname,
+      connected: false,
+      graceMs: DUEL_RECONNECT_GRACE_MS,
+    });
     emitRoomState(room);
-    emitRoomFinished(room);
-    scheduleRoomCleanup(room);
+    if (room.graceTimer) clearTimeout(room.graceTimer);
+    room.graceTimer = setTimeout(() => {
+      room.graceTimer = null;
+      if (!rooms.has(room.code) || room.status !== "live") return;
+      const gonePlayer = room.players.find((entry) => !entry.connected);
+      if (!gonePlayer) return;
+      const opponent = room.players.find((entry) => entry.connected);
+      room.status = "finished";
+      room.winnerId = opponent?.id || null;
+      room.endedReason = "disconnect";
+      emitRoomState(room);
+      emitRoomFinished(room);
+      scheduleRoomCleanup(room);
+    }, DUEL_RECONNECT_GRACE_MS);
     return;
   }
 

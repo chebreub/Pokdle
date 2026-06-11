@@ -22402,6 +22402,46 @@ function resetMultiplayerLiveSession() {
   renderMultiplayerGenerationGrid();
 }
 
+// Grace period duel : session sauvegardée pour reprendre après coupure/refresh.
+const DUEL_SESSION_STORAGE_KEY = "pokedle_duel_session_v1";
+const DUEL_SESSION_TTL_MS = 10 * 60 * 1000;
+
+function saveDuelSession(code, nickname) {
+  try {
+    sessionStorage.setItem(DUEL_SESSION_STORAGE_KEY, JSON.stringify({ code, nickname, ts: Date.now() }));
+  } catch (_err) { /* stockage indisponible */ }
+}
+
+function clearDuelSession() {
+  try { sessionStorage.removeItem(DUEL_SESSION_STORAGE_KEY); } catch (_err) { /* noop */ }
+}
+
+function attemptDuelResume() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(DUEL_SESSION_STORAGE_KEY) || "null"); } catch (_err) { return; }
+  if (!saved?.code || !saved?.nickname) return;
+  if (Date.now() - (saved.ts || 0) > DUEL_SESSION_TTL_MS) { clearDuelSession(); return; }
+  if (!multiplayerSocket) return;
+
+  multiplayerSocket.emit("duel:resume", { code: saved.code, nickname: saved.nickname }, (response = {}) => {
+    if (!response.ok) {
+      clearDuelSession();
+      return;
+    }
+    const state = ensureMultiplayerLiveState();
+    state.room = response.room || null;
+    state.lastRoomClosedReason = "";
+    setMultiplayerError("");
+    saveDuelSession(saved.code, saved.nickname);
+    // Après un refresh, on ré-ouvre l'écran duel si la manche est en cours.
+    if (response.room?.status === "live" && document.getElementById("screen-multiplayer")?.classList.contains("hidden")) {
+      openMultiplayerMode();
+    }
+    renderMultiplayerBotScreen();
+    showToast(`Reconnecté à la room ${saved.code} !`);
+  });
+}
+
 function ensureMultiplayerSocket() {
   if (multiplayerSocket) return multiplayerSocket;
   if (typeof window.io !== "function") {
@@ -22415,6 +22455,7 @@ function ensureMultiplayerSocket() {
 
   multiplayerSocket.on("connect", () => {
     setMultiplayerConnectionStatus("online");
+    attemptDuelResume();
     renderMultiplayerBotScreen();
   });
 
@@ -22464,8 +22505,21 @@ function ensureMultiplayerSocket() {
     renderMultiplayerBotScreen();
   });
 
+  multiplayerSocket.on("duel:opponent-connection", (payload = {}) => {
+    const nickname = String(payload.nickname || "L'adversaire");
+    if (payload.connected) {
+      setMultiplayerError("");
+      showToast(`${nickname} est de retour !`);
+    } else {
+      const seconds = Math.round((Number(payload.graceMs) || 30000) / 1000);
+      setMultiplayerError(`⚠️ ${nickname} a perdu la connexion — il a ${seconds} s pour revenir, sinon victoire automatique.`);
+    }
+    renderMultiplayerBotScreen();
+  });
+
   multiplayerSocket.on("duel:room-closed", (payload = {}) => {
     const reason = payload.reason || "La room a été fermée.";
+    clearDuelSession();
     resetMultiplayerLiveSession();
     ensureMultiplayerLiveState().lastRoomClosedReason = reason;
     setMultiplayerError(reason);
@@ -23064,6 +23118,7 @@ function createMultiplayerRoom() {
     }
     ensureMultiplayerLiveState().room = response.room || null;
     ensureMultiplayerLiveState().selectedGens = new Set(selectedGensForRoom);
+    if (response.room?.code) saveDuelSession(response.room.code, nickname);
     renderMultiplayerBotScreen();
   });
 }
@@ -23100,6 +23155,7 @@ function joinMultiplayerRoom() {
       return;
     }
     ensureMultiplayerLiveState().room = response.room || null;
+    if (response.room?.code || code) saveDuelSession(response.room?.code || code, nickname);
     renderMultiplayerBotScreen();
   });
 }
@@ -23184,6 +23240,7 @@ function leaveMultiplayerRoom(resetOnly = false) {
   if (multiplayerSocket?.connected && multiplayerLiveState?.room?.code) {
     multiplayerSocket.emit("duel:leave-room");
   }
+  clearDuelSession();
   resetMultiplayerLiveSession();
   setMultiplayerError("");
   renderMultiplayerBotScreen();
