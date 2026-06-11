@@ -28805,3 +28805,62 @@ body.theme-dark .win-box { background: radial-gradient(460px 200px at 50% 0%, #2
   h1 { font-size: 1.7rem; }
   .tagline { margin-top: 2px; font-size: 0.88rem; }
 }
+
+/* ============================================================
+   Thème sombre — complétion (typo, composants récents, menus).
+   ============================================================ */
+body.theme-dark .nav-pill {
+  color: #c2d1ec !important;
+  background: linear-gradient(180deg, rgba(21, 42, 72, 0.96), rgba(16, 34, 60, 0.94)) !important;
+  border-color: rgba(126, 165, 235, 0.2) !important;
+}
+body.theme-dark .nav-pill.active {
+  color: #fff !important;
+  background: linear-gradient(135deg, #ff6d4a, #db4836) !important;
+  border-color: rgba(255, 131, 95, 0.4) !important;
+}
+body.theme-dark .card-title { color: #e8eefc !important; }
+body.theme-dark .home-section-title { color: #e3ebfa !important; }
+body.theme-dark .home-section-sub,
+body.theme-dark .card-desc { color: #93a7cc !important; }
+body.theme-dark .home-pillar h3 { color: #e8eefc !important; }
+body.theme-dark .home-pillar p { color: #a7b8d8 !important; }
+body.theme-dark .home-pillar-tag { background: rgba(255, 255, 255, 0.08) !important; color: #b9c8e4 !important; }
+body.theme-dark .stat-label,
+body.theme-dark .streak-label,
+body.theme-dark .gen-sub { color: #93a7cc !important; }
+
+body.theme-dark .nav-dropdown { background: #101c33 !important; border-color: #2c4470 !important; }
+body.theme-dark .nav-dropdown button { color: #c9d6ee !important; }
+body.theme-dark .nav-dropdown button:hover,
+body.theme-dark .nav-dropdown button:focus { background: rgba(255, 255, 255, 0.07) !important; }
+body.theme-dark .nav-dd-group { color: #7e93b8 !important; }
+body.theme-dark .nav-dd-group:not(:first-child) { border-top-color: rgba(255, 255, 255, 0.08) !important; }
+
+body.theme-dark .mode-stat-row { background: rgba(255, 255, 255, 0.05) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+body.theme-dark .mode-stat-row span { color: #93a7cc !important; }
+body.theme-dark .mode-stat-row b { color: #e8eefc !important; }
+
+body.theme-dark .win-next-daily { background: rgba(47, 118, 255, 0.14) !important; border-color: rgba(120, 160, 255, 0.3) !important; color: #cfe0ff !important; }
+body.theme-dark .win-daily-distribution { background: rgba(255, 255, 255, 0.05) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+body.theme-dark .ddist-title { color: #cfe0ff !important; }
+body.theme-dark .ddist-label,
+body.theme-dark .ddist-value { color: #93a7cc !important; }
+body.theme-dark .ddist-bar-wrap { background: rgba(255, 255, 255, 0.12) !important; }
+
+body.theme-dark .onboarding-step h4 { color: #e8eefc !important; }
+body.theme-dark .onboarding-step p { color: #a7b8d8 !important; }
+
+body.theme-dark .draft-gen-btn { background: #16243f !important; border-color: #2c4470 !important; color: #c9d6ee !important; }
+body.theme-dark .draft-gen-btn.active { background: linear-gradient(180deg, #3a3214, #4a3f17) !important; border-color: #8a6d1d !important; color: #ffd34d !important; }
+
+body.theme-dark .pokedex-card.selected { background: linear-gradient(180deg, #fff7df, #ffefb8) !important; }
+body.theme-dark #btn-surrender { color: #7e93b8 !important; }
+body.theme-dark .site-footer-links a { color: #7da7ff !important; }
+
+@media (max-width: 640px) {
+  body.theme-dark #results-table tr,
+  body.theme-dark .multiplayer-results-table tr { background: #16243f !important; }
+  body.theme-dark #results-table td:first-child,
+  body.theme-dark .multiplayer-results-table td:first-child { color: #e8eefc !important; }
+}
