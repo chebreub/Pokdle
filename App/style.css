@@ -28288,9 +28288,11 @@ h1 {
   justify-content: center;
   font-family: "Nunito", system-ui, sans-serif;
   font-weight: 900;
-  font-size: 3.2rem;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 3px 10px rgba(8, 16, 38, 0.6);
+  /* Le "?" vit DANS le bouton central blanc de la Pokéball : sombre et calibré
+     sur sa taille pour faire symbole voulu, pas accident. */
+  font-size: 1.5rem;
+  color: #10203f;
+  text-shadow: none;
   animation: daily-hero-float 5s ease-in-out infinite;
 }
 @keyframes daily-hero-float {
