@@ -430,6 +430,14 @@ const ACHIEVEMENT_DEFS = [
   { id: "ten_wins", title: "En forme", desc: "Atteindre 10 victoires.", target: 10, getValue: () => playerStats.wins || 0 },
   { id: "fifty_games", title: "Habitué", desc: "Jouer 50 parties.", target: 50, getValue: () => playerStats.played || 0 },
   { id: "daily_streak_3", title: "Régulier", desc: "Atteindre une série journalière de 3.", target: 3, getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "twentyfive_wins", title: "Sur la bonne voie", desc: "Atteindre 25 victoires.", target: 25, getValue: () => playerStats.wins || 0 },
+  { id: "fifty_wins", title: "Élite", desc: "Atteindre 50 victoires.", target: 50, getValue: () => playerStats.wins || 0 },
+  { id: "hundred_wins", title: "Maître de la devinette", desc: "Atteindre 100 victoires.", target: 100, getValue: () => playerStats.wins || 0 },
+  { id: "hundred_games", title: "Centurion", desc: "Jouer 100 parties.", target: 100, getValue: () => playerStats.played || 0 },
+  { id: "twofifty_games", title: "Marathonien", desc: "Jouer 250 parties.", target: 250, getValue: () => playerStats.played || 0 },
+  { id: "daily_streak_7", title: "Une semaine parfaite", desc: "Atteindre une série journalière de 7.", target: 7, getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "daily_streak_15", title: "Quinzaine en or", desc: "Atteindre une série journalière de 15.", target: 15, getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "daily_streak_30", title: "Inarrêtable", desc: "Atteindre une série journalière de 30.", target: 30, getValue: () => playerStats.dailyBestStreak || 0 },
 ];
 
 const PLAYER_LEVELS = [
@@ -3230,6 +3238,14 @@ function bindStatClashInteractions() {
     if (action === "switch-room") return switchStatClashMode("room");
   });
 }
+
+// Audit DA : partie rapide — lance un duel vs bot avec les réglages par défaut,
+// sans passer par le panneau de configuration.
+function quickStatClashGame() {
+  try { switchStatClashMode("bot"); } catch (_err) { /* déjà en mode bot */ }
+  startStatClashBotGame();
+}
+window.quickStatClashGame = quickStatClashGame;
 
 function getStatClashStatDef(statKey) {
   return STAT_CLASH_STATS.find((entry) => entry.key === statKey) || STAT_CLASH_STATS[0];
@@ -19817,6 +19833,30 @@ function renderStats() {
   document.getElementById("stat-avg").textContent = avg.toFixed(1);
   document.getElementById("stat-daily-streak").textContent = String(playerStats.dailyCurrentStreak || 0);
   document.getElementById("stat-daily-best").textContent = String(playerStats.dailyBestStreak || 0);
+
+  // Stats par mode : records remplis depuis le profil, bloc masqué tant qu'il est vide.
+  const modeStatBlock = document.querySelector(".mode-stat-block");
+  const modeStatsList = document.getElementById("mode-stats-list");
+  const modeStatTotal = document.getElementById("mode-stat-total");
+  if (modeStatBlock && modeStatsList && modeStatTotal) {
+    const records = [
+      ["Higher or Lower", Number(playerProfile?.higherLowerHighScore) || 0, "série record"],
+      ["Speedrun Pokédex", Number(playerProfile?.speedrunHighScore) || 0, "en 60 s"],
+      ["Quiz Pokémon", Number(playerProfile?.quizHighScore) || 0, "bonnes réponses"],
+      ["Party Pokémon", Number(playerProfile?.partyHighScore) || 0, "points record"],
+      ["Intrus", Number(playerProfile?.oddOneOutHighScore) || 0, "d'affilée"],
+      ["Duel de poids", Number(playerProfile?.weightBattleHighScore) || 0, "d'affilée"],
+    ].filter(([, value]) => value > 0);
+    if (!records.length) {
+      modeStatBlock.classList.add("hidden");
+    } else {
+      modeStatBlock.classList.remove("hidden");
+      modeStatTotal.textContent = `${records.length} mode${records.length > 1 ? "s" : ""}`;
+      modeStatsList.innerHTML = records
+        .map(([label, value, suffix]) => `<div class="mode-stat-row"><span>${label}</span><b>${value} ${suffix}</b></div>`)
+        .join("");
+    }
+  }
 
   // DA 2026 : carte "Niveau joueur" de la home alignée sur le système XP réel (header).
   const homeLevelName = document.getElementById("player-level-name");

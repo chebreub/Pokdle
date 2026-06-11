@@ -110,17 +110,21 @@
   <div class="nav-group">
     <button id="nav-game" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Jouer</button>
     <div class="nav-dropdown" role="menu">
+      <div class="nav-dd-group">Les classiques</div>
       <button type="button" data-action="startDailyGame">Pokémon du jour</button>
       <button type="button" data-action="startNormalGame">Mode illimité</button>
       <button type="button" data-action="startPartyMode">Party Pokémon</button>
       <button type="button" data-action="openDraftScoreAttackMode">Draft Score Attack</button>
+      <div class="nav-dd-group">Observation</div>
       <button type="button" data-action="startSilhouetteGame">Silhouette</button>
       <button type="button" data-action="startPixelGame">Pixelisé</button>
       <button type="button" data-action="startMysteryStatGame">Stat mystère</button>
+      <div class="nav-dd-group">Culture Pokédex</div>
       <button type="button" data-action="startCryGame">Cri du Pokémon</button>
       <button type="button" data-action="startDescriptionMode">Description</button>
       <button type="button" data-action="openOddOneOutMode">Intrus</button>
       <button type="button" data-action="startQuizGame">Quiz</button>
+      <div class="nav-dd-group">Arcade &amp; puzzles</div>
       <button type="button" data-action="startWeightBattle">Duel de poids</button>
       <button type="button" data-action="startEvolutionChainGame">Évolution</button>
       <button type="button" data-action="startPokedexOrderGame">Ordre Pokédex</button>
@@ -1091,7 +1095,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
           <div id="guess-ac" class="ac-list hidden"></div>
         </div>
-        <button class="btn-red btn-submit" id="btn-submit" data-action="submitGuess">&#8629;</button>
+        <button class="btn-red btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
         <button class="btn-ghost" id="btn-surrender" data-action="surrenderGame">Abandonner</button>
       </div>
       <p id="err-msg" class="err-msg"></p>
@@ -1379,7 +1383,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Stat Clash 1v1</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" data-action="restartStatClashGame">Rejouer</button>
+            <button class="btn-red" type="button" data-action="quickStatClashGame">⚡ Partie rapide</button>
+            <button class="btn-ghost" type="button" data-action="restartStatClashGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
                 </div>
         </div>

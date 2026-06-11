@@ -28790,3 +28790,59 @@ body.theme-dark .win-box { background: radial-gradient(460px 200px at 50% 0%, #2
   body { padding-bottom: 86px; }
   footer { padding-bottom: 10px; }
 }
+
+/* ============================================================
+   Audit DA — finitions finales : contrastes, hiérarchie, groupes de menu.
+   ============================================================ */
+/* 1. Libellés de stats lisibles (le thème orphelin les passait en bleu glace) */
+.stat-label,
+.streak-label,
+.gen-sub { color: #51668a !important; }
+
+/* 2. Records par mode (bloc home) */
+.mode-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #f4f8ff;
+  border: 1px solid #e0e9fa;
+  margin-top: 6px;
+  font-size: 0.86rem;
+}
+.mode-stat-row span { color: #51668a; font-weight: 700; }
+.mode-stat-row b { color: #1b3a66; font-weight: 900; }
+
+/* 3-4. Hiérarchie des actions de jeu : Deviner net, Abandonner discret */
+#btn-submit {
+  font-family: "Nunito", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  min-width: 110px;
+}
+#btn-surrender {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #8195b5 !important;
+  font-weight: 700 !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 8px 10px !important;
+}
+#btn-surrender:hover { color: #d94440 !important; }
+
+/* 7. Groupes du menu Jouer */
+.nav-dd-group {
+  padding: 10px 14px 4px;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8aa0c4;
+  pointer-events: none;
+}
+.nav-dd-group:not(:first-child) { border-top: 1px solid #edf2fa; margin-top: 4px; }
