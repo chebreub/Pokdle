@@ -357,3 +357,24 @@
   background: rgba(255, 255, 255, 0.95);
   border-radius: 10px;
 }
+
+/* Contraste Néo-Arène : noms et libellés du lobby */
+#screen-party-room .party-player-name { color: #e8eefc !important; }
+#screen-party-room .party-mode-hint { color: #93a7cc !important; }
+/* L'en-tête (code + actions) garde son fond clair : on assombrit sa pastille. */
+#screen-party-room .party-room-head {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(120, 160, 235, 0.22);
+  color: #c9d6ee;
+}
+#screen-party-room .party-status-badge { vertical-align: middle; }
+
+/* Panneau de manche : il restait sur fond clair avec textes clairs */
+#screen-party-room .party-round {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(120, 160, 235, 0.2) !important;
+  border-radius: 16px;
+}
+#screen-party-room .party-round-mode { color: #aecdff !important; }
+#screen-party-room .party-typecombo-panel { background: rgba(255, 255, 255, 0.04) !important; }
+#screen-party-room .party-combo-count, #screen-party-room .party-combo-points { color: #93a7cc !important; }
