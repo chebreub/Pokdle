@@ -28868,3 +28868,33 @@ body.theme-dark .site-footer-links a { color: #7da7ff !important; }
 /* Audit modes 11/06 : noms lisibles dans la chaîne d'évolution. */
 .evolution-slot small { color: #44597e !important; font-weight: 800; font-size: 0.85rem; }
 body.theme-dark .evolution-slot small { color: #a7b8d8 !important; }
+
+/* ============================================================
+   Chantier B — Draft : écran de préparation du duel lisible
+   (les cartes et bancs étaient en texte sombre sur overlay sombre).
+   ============================================================ */
+.draft-dev-battle-meta .draft-summary-card,
+.draft-dev-battle-preview-actions + .draft-dev-battle-log,
+.draft-dev-battle-log {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-radius: 12px;
+}
+.draft-dev-battle-meta .draft-summary-card span { color: #51668a !important; }
+.draft-dev-battle-meta .draft-summary-card b { color: #122a4d !important; }
+.draft-dev-battle-meta .draft-summary-card small { color: #51668a !important; }
+.draft-dev-battle-log .card-desc { color: #2c4470 !important; font-weight: 700; padding: 10px 14px; margin: 0; }
+
+.draft-dev-battle-preview-member {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(20, 40, 76, 0.18) !important;
+  border-radius: 12px;
+  color: #122a4d !important;
+}
+.draft-dev-battle-preview-member * { color: #122a4d !important; }
+.draft-dev-battle-preview-member.is-selected {
+  background: linear-gradient(180deg, #fff7df, #ffefb8) !important;
+  border-color: #e8b93e !important;
+  box-shadow: 0 0 0 2px rgba(232, 185, 62, 0.4);
+}
+.draft-dev-battle-preview-member.is-selectable { cursor: pointer; }
+.draft-dev-battle-preview-member.is-selectable:hover { border-color: #2f76ff !important; }

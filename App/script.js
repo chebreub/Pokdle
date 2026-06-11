@@ -12534,10 +12534,10 @@ function createDraftSimpleBattleStruggleMove() {
 }
 
 function getDraftSimpleBattleMaxHpFromBaseHp(baseHp) {
-  // Simple Draft-combat scaling:
-  // keep the real base HP as the source, then add a flat buffer so fights stay
-  // readable and slightly longer than a raw stat-for-stat conversion.
-  return clampDraftSimpleBattleHp((Number(baseHp) || 0) + 35);
+  // Équilibrage chantier B (2026-06-11) : l'ancien pool (base + 35) faisait des
+  // combats en 1-2 coups (ex. Kabuto 65 PV vs Séisme STAB x2 ≈ 70 dégâts).
+  // Nouveau pool : un STAB super-efficace ≈ 60-70 % des PV, un coup neutre ≈ 15-25 %.
+  return clampDraftSimpleBattleHp(Math.round((Number(baseHp) || 0) * 1.2) + 70);
 }
 
 function getDraftSimpleBattleFallbackStats(pokemon) {
@@ -13255,7 +13255,7 @@ function computeDraftSimpleBattleDamage(gen, attackerState, defenderState, move,
   const virtualLevelFactor = 12;
   const baseDamage = (((virtualLevelFactor * power * (safeAttack / safeDefense)) / 50) + 2);
   const critical = Boolean(options.critical);
-  const critMultiplier = critical ? 2 : 1;
+  const critMultiplier = critical ? 1.5 : 1;
   const modifiedDamage = baseDamage * critMultiplier * stab * effectiveness;
   const damage = effectiveness === 0 ? 0 : Math.max(1, Math.round(modifiedDamage));
   return {
@@ -13718,7 +13718,9 @@ function getDraftSimpleBattleMoveCategory(type) {
 function convertDraftMoveNameToSimpleBattleMove(moveName, pokemon) {
   const entry = getDraftSimpleBattleMoveLibraryEntry(moveName);
   const override = DRAFT_SIMPLE_BATTLE_MOVE_OVERRIDES[moveName] || null;
-  const moveType = override?.type || entry?.types?.[0] || pokemon?.type1 || "Normal";
+  // Chantier B : une capacité connue de la bibliothèque mais sans type (Attraction,
+  // Métronome, Abri...) est Normal — l'ancien fallback lui collait le type du Pokémon.
+  const moveType = override?.type || entry?.types?.[0] || (entry ? "Normal" : (pokemon?.type1 || "Normal"));
   // Fallback intentionally stays simple: if the project has no richer move data
   // for this move, we still keep a usable typed attack for dev simulations.
   return createDraftSimpleBattleMove(
@@ -16361,7 +16363,7 @@ function refreshGbaTextbox(text) {
       return;
     }
     box.textContent = target.slice(0, ++i);
-  }, 38);
+  }, 14);
 }
 
 function renderDraftSimpleBattleDevPanel(state) {
@@ -16493,17 +16495,10 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="draft-summary-card"><span>Équipe adverse</span><b>${state.rightTeam.length} Pokémon</b></div>
       </div>
       <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
-        <button type="button" class="btn-red draft-dev-battle-preview-cta" data-action="startDraftSimpleBattlePreview" ${isNetwork && (!network.isHost || !roomReady) ? "disabled" : ""}>${isNetwork ? "Lancer le combat réseau" : "Commencer le duel"}</button>
-        <button type="button" class="btn-blue" data-action="runDraftSimpleBattleLocalPvpTest">Mode local 1v1</button>
-        <button type="button" class="btn-blue" data-action="hostDraftSimpleBattleNetworkRoom">${isNetwork ? `Room ${escapeHtml(network.roomCode || "réseau")}` : "Créer room 1v1"}</button>
-        <button type="button" class="btn-ghost" data-action="joinDraftSimpleBattleNetworkRoom">Rejoindre room</button>
+        <button type="button" class="btn-red draft-dev-battle-preview-cta" data-action="startDraftSimpleBattlePreview">Commencer le duel</button>
         <button type="button" class="btn-ghost" data-action="clearDraftSimpleBattleDevPanel">Retour au Draft</button>
       </div>
-      <div class="draft-dev-battle-log"><p class="card-desc">${escapeHtml(isNetwork
-        ? (!network.roomCode
-          ? "Crée une room ou rejoins-en une pour activer le 1v1 réseau."
-          : launchHint)
-        : "Clique un Pokémon dans le banc joueur pour choisir ton lead, puis lance le duel.")}</p></div>
+      <div class="draft-dev-battle-log"><p class="card-desc">Clique un Pokémon dans le banc joueur ci-dessus pour choisir ton lead, puis lance le duel.</p></div>
     `;
     panel.classList.remove("hidden");
     return;
