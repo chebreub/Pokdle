@@ -28730,3 +28730,63 @@ body.theme-dark .results-legend { color: #93a7cc; }
 body.theme-dark .site-footer { color: #93a7cc; }
 body.theme-dark .site-footer-brand { color: #d6e2fa; }
 body.theme-dark .win-box { background: radial-gradient(460px 200px at 50% 0%, #2c2a18 0%, #141f36 62%) !important; border-color: #6b5a23 !important; }
+
+/* ============================================================
+   DA 2026 — Tab bar mobile : navigation basse au pouce ≤640px,
+   la nav haute (4 rangées de pills) disparaît sur téléphone.
+   ============================================================ */
+.mobile-tabbar { display: none; }
+
+@media (max-width: 640px) {
+  .global-nav { display: none !important; }
+
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
+    justify-content: space-around;
+    align-items: stretch;
+    background: rgba(13, 27, 54, 0.97);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -8px 24px rgba(8, 16, 38, 0.35);
+    padding: 7px max(8px, env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+  }
+  .mobile-tabbar button {
+    appearance: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9fb3d9;
+    font-family: "Nunito", system-ui, sans-serif;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    min-width: 58px;
+    transition: color 0.15s ease;
+  }
+  .mobile-tabbar button svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .mobile-tabbar button.active { color: #ffd34d; }
+  .mobile-tabbar button:active { transform: scale(0.94); }
+
+  /* Le contenu ne doit pas finir caché derrière la barre */
+  body { padding-bottom: 86px; }
+  footer { padding-bottom: 10px; }
+}

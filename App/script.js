@@ -2556,6 +2556,12 @@ function setGlobalNavActive(key) {
     if (el) el.classList.remove("active");
   });
 
+  // Tab bar mobile : état actif synchronisé sur les mêmes clés.
+  const tabByKey = { config: "home", game: "game", pokedex: "pokedex", types: "pokedex", social: "social", profile: "profile" };
+  document.querySelectorAll("#mobile-tabbar [data-tab]").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.tab === (tabByKey[key] || ""));
+  });
+
   const activeId = map[key] || map.config;
   const active = document.getElementById(activeId);
   if (active) active.classList.add("active");
@@ -23394,6 +23400,17 @@ window.addEventListener('DOMContentLoaded', () => {
   loadMatchHistory();
   evaluateAchievements();
   hideExtraScreens();
+  // Grace duel : après un refresh en pleine manche, reconnecter le socket
+  // (la reprise se fait dans le handler "connect" via attemptDuelResume).
+  try {
+    const rawDuelSession = sessionStorage.getItem(DUEL_SESSION_STORAGE_KEY);
+    if (rawDuelSession) {
+      const duelSession = JSON.parse(rawDuelSession);
+      if (duelSession?.code && Date.now() - (duelSession.ts || 0) <= DUEL_SESSION_TTL_MS) {
+        ensureMultiplayerSocket();
+      }
+    }
+  } catch (_err) { /* stockage indisponible */ }
   // Lot D audit : sur /emulateur (page à CSP permissive), ouvrir directement l'écran émulateur.
   if (window.location.pathname === "/emulateur") openEmulatorMode();
   document.getElementById('logo-home')?.addEventListener('click', goToConfig);

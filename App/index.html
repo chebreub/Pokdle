@@ -70,6 +70,8 @@
     <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
     <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></symbol>
     <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-3.8 3.4-5.8 7-5.8s6.4 2 7 5.8"/></symbol>
   </svg>
 
   <div class="bg-dots"></div>
@@ -1453,6 +1455,15 @@ EVs: 252 Atk / 4 Def / 252 Spe
 </div>
 
   </main>
+
+  <!-- Tab bar mobile (≤640px) : remplace la nav haute sur téléphone -->
+  <nav id="mobile-tabbar" class="mobile-tabbar" aria-label="Navigation principale">
+    <button type="button" data-action="goToConfig" data-tab="home"><svg aria-hidden="true"><use href="#i-home"/></svg><span>Accueil</span></button>
+    <button type="button" data-action="openAllModesScreen" data-tab="game"><svg aria-hidden="true"><use href="#i-gamepad"/></svg><span>Jouer</span></button>
+    <button type="button" data-action="openPokedexMode" data-tab="pokedex"><svg aria-hidden="true"><use href="#i-book"/></svg><span>Pokédex</span></button>
+    <button type="button" data-action="openMultiplayerMode" data-tab="social"><svg aria-hidden="true"><use href="#i-swords"/></svg><span>Duel</span></button>
+    <button type="button" data-action="openProfileScreen" data-tab="profile"><svg aria-hidden="true"><use href="#i-user"/></svg><span>Profil</span></button>
+  </nav>
 
   <footer>
   <div class="site-footer">
