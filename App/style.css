@@ -28848,3 +28848,15 @@ body.theme-dark .win-box { background: radial-gradient(460px 200px at 50% 0%, #2
   pointer-events: none;
 }
 .nav-dd-group:not(:first-child) { border-top: 1px solid #edf2fa; margin-top: 4px; }
+
+/* Fix re-audit 11/06 : le slab sombre #results-wrap (thème orphelin, sélecteur ID)
+   réapparaissait sous les cartes d'essai mobile. Neutralisé à toutes les tailles. */
+@media (max-width: 640px) {
+  #results-wrap, .results-wrap, #multiplayer-my-attempts-wrap {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  #results-table tr, .multiplayer-results-table tr { background: #fff !important; }
+}

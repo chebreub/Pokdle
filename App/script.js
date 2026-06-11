@@ -23436,6 +23436,9 @@ window.addEventListener('DOMContentLoaded', () => {
   applyAppSettings();
   initNavDropdownToggles();
   loadProfile();
+  // Le premier renderStats() tourne avant loadProfile() (autre listener) :
+  // on re-rend après chargement du profil pour que la carte Niveau soit juste.
+  if (typeof renderStats === "function") renderStats();
   loadAchievementsState();
   loadMatchHistory();
   evaluateAchievements();
