@@ -28779,6 +28779,18 @@ body.theme-dark .win-box { background: radial-gradient(460px 200px at 50% 0%, #2
     padding: 0 !important;
   }
   #results-table tr, .multiplayer-results-table tr { background: #fff !important; }
+  /* QA mobile 11/06 : la table gardait une largeur intrinsèque (~720px) qui
+     faisait déborder les cartes d'essai hors de l'écran. */
+  #results-table, .multiplayer-results-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border-spacing: 0 !important;
+  }
+  #results-table td, .multiplayer-results-table td { min-width: 0 !important; }
+  /* L'animation desktop (blur) ne doit pas jouer par-dessus les cartes mobiles */
+  #screen-game #results-table tbody tr,
+  #screen-game #results-table tbody tr:last-child { animation: none !important; filter: none !important; }
 }
 
 /* ============================================================
