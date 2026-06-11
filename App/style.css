@@ -28898,3 +28898,53 @@ body.theme-dark .evolution-slot small { color: #a7b8d8 !important; }
 }
 .draft-dev-battle-preview-member.is-selectable { cursor: pointer; }
 .draft-dev-battle-preview-member.is-selectable:hover { border-color: #2f76ff !important; }
+
+/* ============================================================
+   Vague motion (essentiel) — entrance du hero, reveals au scroll,
+   transitions d'écran, ressort des boutons. Tout est coupé en
+   reduced-motion.
+   ============================================================ */
+/* 1. Entrance séquencée du hero */
+.daily-hero-kicker, .daily-hero-title, .daily-hero-sub, .daily-hero-meta, .daily-hero-cta {
+  animation: hero-rise 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+.daily-hero-title { animation-delay: 0.08s; }
+.daily-hero-sub { animation-delay: 0.16s; }
+.daily-hero-meta { animation-delay: 0.24s; }
+.daily-hero-cta { animation-delay: 0.32s; }
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 2. Reveals au scroll (classes posées par initHomeScrollReveals) */
+.sr-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s cubic-bezier(0.2, 0.8, 0.3, 1), transform 0.55s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.sr-item.sr-in { opacity: 1; transform: none; }
+
+/* 3. Transition d'écran : fondu + montée à chaque affichage */
+main > div[id^="screen-"]:not(.hidden) {
+  animation: screen-in 0.26s ease;
+}
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 4. Ressort des boutons */
+.btn-red, .btn-blue, .btn-yellow, .btn-ghost, .nav-pill, .home-pillar, .daily-hero-cta, .mobile-tabbar button {
+  transition-property: transform, box-shadow, background, color, border-color, opacity;
+  transition-duration: 0.16s;
+  transition-timing-function: cubic-bezier(0.3, 0.7, 0.4, 1.2);
+}
+.btn-red:active, .btn-blue:active, .btn-yellow:active, .btn-ghost:active, .nav-pill:active, .daily-hero-cta:active { transform: scale(0.95); }
+.home-pillar:active { transform: scale(0.985); }
+
+/* Reduced motion : tout est neutralisé */
+.reduce-motion .daily-hero-kicker, .reduce-motion .daily-hero-title, .reduce-motion .daily-hero-sub,
+.reduce-motion .daily-hero-meta, .reduce-motion .daily-hero-cta { animation: none; }
+.reduce-motion .sr-item { opacity: 1 !important; transform: none !important; transition: none; }
+.reduce-motion main > div[id^="screen-"]:not(.hidden) { animation: none; }

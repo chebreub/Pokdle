@@ -11979,6 +11979,9 @@ function renderGamesRankingTable() {
   saveGamesRanking();
 }
 
+// Standby 2026-06-11 : le combat d'arène (SimpleBattle) est désactivé côté UI
+// en attendant une refonte du gameplay — repasser à true pour le réactiver.
+const DRAFT_BATTLE_ENABLED = false;
 const DRAFT_TEAM_SIZE = 6;
 const DRAFT_PICK_COUNT = 6;
 const DRAFT_SHINY_CHANCE = 0.01;
@@ -18699,6 +18702,10 @@ function updateDraftArenaRunAfterBattle(battleState) {
 }
 
 async function launchDraftArenaBattle() {
+  if (!DRAFT_BATTLE_ENABLED) {
+    showToast("Le combat d'arène est en pause le temps d'une refonte — le draft et les badges restent ouverts !");
+    return;
+  }
   if (!draftArenaState) return null;
   if (draftArenaState.team.length < DRAFT_TEAM_SIZE) return null;
 
@@ -19106,7 +19113,7 @@ function renderDraftArena() {
     battleLaunch.disabled = battleMeta.disabled;
     battleLaunch.title = battleMeta.title;
     battleLaunch.textContent = battleMeta.label;
-    battleLaunch.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
+    battleLaunch.classList.toggle("hidden", !DRAFT_BATTLE_ENABLED || draftArenaState.mode === "scoreAttack");
     battleLaunch.dataset.state = battleMeta.disabled ? "locked" : draftArenaState.team.length >= DRAFT_TEAM_SIZE ? "ready" : "idle";
   }
   document.getElementById("draft-battle-friend")?.classList.toggle("hidden", draftArenaState.mode === "scoreAttack");
@@ -23522,9 +23529,38 @@ function initNavDropdownToggles() {
   });
 }
 
+// Vague motion : les sections de la home se révèlent au scroll (stagger par rangée).
+function initHomeScrollReveals() {
+  if (typeof IntersectionObserver !== "function") return;
+  if (document.body.classList.contains("reduce-motion")) return;
+  try {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  } catch (_err) { /* matchMedia indisponible */ }
+
+  const targets = document.querySelectorAll(
+    "#screen-config .home-section-head, #screen-config .home-pillar, #screen-config .home-generations-card, #screen-config .home-progress-card, #screen-config .home-engagement-widget, #screen-config .mode-stat-block"
+  );
+  if (!targets.length) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add("sr-in");
+      observer.unobserve(entry.target);
+    }
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+
+  targets.forEach((el, index) => {
+    el.classList.add("sr-item");
+    el.style.transitionDelay = `${(index % 3) * 70}ms`;
+    observer.observe(el);
+  });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   applyAppSettings();
   initNavDropdownToggles();
+  initHomeScrollReveals();
   loadProfile();
   // Le premier renderStats() tourne avant loadProfile() (autre listener) :
   // on re-rend après chargement du profil pour que la carte Niveau soit juste.
