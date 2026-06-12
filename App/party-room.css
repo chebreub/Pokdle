@@ -426,3 +426,51 @@
   #party-timer.is-urgent { animation: none; }
   .party-players .party-player.is-correct { animation: none; }
 }
+
+
+/* ============================================================
+   Desktop ≥1024px : la room occupe toute la carte — tableau des
+   scores à gauche, scène de jeu à droite (disposition plateau).
+   ============================================================ */
+@media (min-width: 1024px) {
+  .party-room-card .party-joined {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    column-gap: 30px;
+    align-items: start;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+  #party-joined .party-room-head { grid-column: 1 / -1; }
+  #party-joined .party-count,
+  #party-joined #party-players { grid-column: 1; }
+  #party-joined #party-mode-select,
+  #party-joined #party-mode-hint,
+  #party-joined #party-rounds-select,
+  #party-joined #party-gens-select,
+  #party-joined #party-start-btn,
+  #party-joined #party-room-next-btn,
+  #party-joined #party-round { grid-column: 2; }
+  #party-joined #party-players { width: 100%; }
+  /* La scène de jeu respire et se centre verticalement */
+  #party-joined #party-round {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: none;
+    margin: 0;
+    min-height: 420px;
+    padding: 28px;
+  }
+  #party-joined .party-round.party-round-typecombo { max-width: none; }
+  #party-joined .party-typecombo-panel { width: 100%; max-width: 560px; }
+  #party-joined .party-round-input { max-width: 460px; }
+  #party-joined .party-round-answer { max-width: 540px; }
+  /* Le compteur reste en tête de colonne, la scène s'étale sur ses lignes */
+  #party-joined .party-count { text-align: left; margin: 0; }
+  #party-joined #party-round { grid-row: 2 / span 6; }
+  #party-joined #party-room-next-btn { grid-row: 8; }
+}
