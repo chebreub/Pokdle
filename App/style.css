@@ -10915,6 +10915,11 @@ body:not(.theme-dark) .weekly-featured-copy p {
   color: #314b72 !important;
 }
 
+/* La liste d'autocomplétion est sombre quel que soit le thème : sous-texte clair. */
+body:not(.theme-dark) .ac-list .ac-sub {
+  color: #9fb4d8 !important;
+}
+
 body:not(.theme-dark) .card-title,
 body:not(.theme-dark) .home-section-head .card-title,
 body:not(.theme-dark) .odd-card-name,

@@ -25,6 +25,13 @@
 .party-round-input input { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid #d7dfec; padding: 0 14px; font-weight: 700; color: #1d2b4a; }
 .party-round-input .party-ac-wrapper { flex: 1; min-width: 0; }
 .party-round-input .ac-list { z-index: 120; }
+/* L'input de réponse vit en bas d'une carte overflow:hidden : la liste
+   s'ouvre vers le haut pour rester entièrement visible. */
+#screen-party-room .party-ac-wrapper .ac-list {
+  top: auto;
+  bottom: calc(100% + 8px);
+  box-shadow: 0 -10px 26px rgba(24, 43, 76, 0.28);
+}
 .party-player.is-correct { border-color: #36c26b; }
 .party-rank { font-weight: 800; color: #5a6b8c; min-width: 18px; }
 .party-check { background: #36c26b; color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
@@ -346,3 +353,76 @@
 /* Sprites du reveal */
 .party-typecombo-sprite-card { background: #fff; border: 1px solid #dbe7fb; border-radius: 12px; color: #122a4d; }
 .party-typecombo-sprite-card.is-winner { background: linear-gradient(180deg, #fff7df, #ffefb8); box-shadow: 0 0 16px rgba(232, 185, 62, 0.45); border-color: #ecd27c; }
+
+
+/* ============================================================
+   Mise en scène "plateau TV" : annonce de manche, timer urgent,
+   réglages du lobby en panneaux, joueur qui trouve.
+   ============================================================ */
+#party-round { position: relative; }
+.party-round-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(228, 56, 47, 0.94), rgba(47, 118, 255, 0.94));
+  border-radius: 16px;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+}
+.party-round-banner b {
+  font-size: 2.3rem;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 12px rgba(16, 28, 51, 0.35);
+}
+.party-round-banner span { color: #ffe9b3; font-weight: 800; font-size: 1.05rem; }
+.party-round-banner.is-on { animation: party-banner 1.6s cubic-bezier(0.2, 0.9, 0.3, 1) forwards; }
+@keyframes party-banner {
+  0% { opacity: 0; transform: scale(0.9); }
+  14% { opacity: 1; transform: scale(1); }
+  78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.03); }
+}
+
+/* Timer : pièce maîtresse de la manche */
+#party-timer { font-size: 1.45rem; padding: 4px 20px; display: inline-block; }
+#party-timer.is-urgent {
+  background: #ffe6e4;
+  border-color: #f3a6a1;
+  color: #c22b23;
+  animation: party-timer-urgent 0.9s ease-in-out infinite;
+}
+@keyframes party-timer-urgent {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+/* Joueur qui trouve : flash de victoire sur sa ligne */
+.party-players .party-player.is-correct { animation: party-player-found 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+@keyframes party-player-found {
+  0% { transform: translateX(0); background: #eaf8ec; }
+  35% { transform: translateX(6px) scale(1.015); background: #d7f3dc; }
+  100% { transform: translateX(0) scale(1); }
+}
+
+/* Lobby : les réglages deviennent des panneaux nets */
+#screen-party-room .party-mode-select {
+  background: #f7faff;
+  border: 1px solid #dbe7fb;
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+#party-start-btn { box-shadow: 0 8px 22px rgba(228, 56, 47, 0.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .party-round-banner.is-on { animation: none; opacity: 0; }
+  #party-timer.is-urgent { animation: none; }
+  .party-players .party-player.is-correct { animation: none; }
+}

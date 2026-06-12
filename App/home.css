@@ -189,3 +189,43 @@
   .home-gens-card .home-section-head { flex-direction: column !important; }
   .home-gens-actions { align-self: flex-end; }
 }
+
+
+/* ============================================================
+   Tous les modes v2 : tuiles apaisées, la couleur code la
+   catégorie (au lieu d'un arc-en-ciel par tuile).
+   ============================================================ */
+#screen-all-modes .all-modes-cat { margin-top: 26px; }
+#screen-all-modes .all-modes-cat-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  padding-bottom: 6px;
+  border-bottom: 3px solid var(--am-accent, #2f76ff);
+}
+#screen-all-modes .all-modes-cat:nth-of-type(1) { --am-accent: #2f76ff; }
+#screen-all-modes .all-modes-cat:nth-of-type(2) { --am-accent: #8a3fd1; }
+#screen-all-modes .all-modes-cat:nth-of-type(3) { --am-accent: #e4622f; }
+#screen-all-modes .all-modes-cat:nth-of-type(4) { --am-accent: #1f8a37; }
+#screen-all-modes .all-modes-cat:nth-of-type(5) { --am-accent: #e4382f; }
+#screen-all-modes .all-modes-cat:nth-of-type(6) { --am-accent: #b8860b; }
+#screen-all-modes .all-modes-card {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3ebf8;
+  border-left: 5px solid var(--am-accent, #2f76ff);
+  border-left-color: var(--am-accent, #2f76ff) !important;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(29, 43, 74, 0.06);
+}
+#screen-all-modes .all-modes-card::before { display: none; }
+#screen-all-modes .all-modes-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--am-accent, #2f76ff);
+  border-left-width: 5px;
+  box-shadow: 0 8px 18px rgba(29, 43, 74, 0.14);
+}
+body.theme-dark #screen-all-modes .all-modes-card { background: #16223e; border-color: #2c3c63; border-left-color: var(--am-accent, #2f76ff); }
+body.theme-dark #screen-all-modes .all-modes-card b { color: #e8eefc; }

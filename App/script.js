@@ -8433,6 +8433,28 @@ function partyAllGens() {
   partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
+var PARTY_MODE_SHORT_LABELS = { guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
+function showPartyRoundBanner(room) {
+  var panel = document.getElementById("party-round");
+  if (!panel || !room) return;
+  var banner = document.getElementById("party-round-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "party-round-banner";
+    banner.className = "party-round-banner";
+    var bigEl = document.createElement("b");
+    var subEl = document.createElement("span");
+    banner.appendChild(bigEl);
+    banner.appendChild(subEl);
+    panel.appendChild(banner);
+  }
+  banner.firstChild.textContent = "Manche " + (Number(room.roundNumber) || 1);
+  banner.lastChild.textContent = PARTY_MODE_SHORT_LABELS[room.gameMode] || "";
+  banner.classList.remove("is-on");
+  void banner.offsetWidth;
+  banner.classList.add("is-on");
+}
+
 function partyUpdateTimer() {
   var el = document.getElementById("party-timer");
   if (!el) return;
@@ -8446,7 +8468,7 @@ function partyUpdateTimer() {
   var remaining = Math.max(0, Math.ceil((room.deadlineAt - Date.now()) / 1000));
   el.classList.remove("hidden");
   el.textContent = "\u23F1 " + remaining + " s";
-  el.classList.toggle("is-urgent", remaining <= 5);
+  el.classList.toggle("is-urgent", remaining <= 10);
 }
 
 function renderPartyRoom() {
@@ -8543,6 +8565,7 @@ function renderPartyRoom() {
       var partyGuessAc = document.getElementById("party-guess-ac");
       if (partyGuessAc) partyGuessAc.classList.add("hidden");
     }
+    if (playing && roundKey && roundKey !== partyRoomState.lastRoundKey) showPartyRoundBanner(room);
     partyRoomState.lastRoundKey = roundKey;
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl && room.round.image) spriteEl.src = room.round.image;
