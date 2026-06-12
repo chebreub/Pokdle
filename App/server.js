@@ -372,7 +372,103 @@ for (const publicImage of ["genbar.png", "typebar.png", "genbar.webp", "typebar.
   app.get(`/${publicImage}`, (_req, res) => res.sendFile(path.join(__dirname, publicImage), { maxAge: "7d" }));
 }
 // Image Open Graph (aperçus de lien Discord/Twitter/WhatsApp).
-app.get("/og-image.png", (_req, res) => res.sendFile(path.join(__dirname, "og-image.png"), { maxAge: "7d" }));
+// --- OG image dynamique : la silhouette du Pokémon du jour (sans spoiler).
+// Même tirage que le client (FNV-1a + mulberry32 sur "pokedle:<dateUTC>").
+// Fallback : l'og-image.png statique si sharp ou le réseau manquent. ---
+let sharp = null;
+try { sharp = require("sharp"); } catch (_e) { console.error("[og] sharp indisponible — OG statique servie"); }
+
+function getServerDailyPokemon() {
+  const key = serverUTCDateKey();
+  const seedSource = `pokedle:${key}`;
+  let h = 2166136261;
+  for (let i = 0; i < seedSource.length; i += 1) {
+    h ^= seedSource.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let seed = h >>> 0;
+  const rng = () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const pool = POKEMON_LIST
+    .filter((p) => p && !p.isAltForm && Number(p.id) < 20000)
+    .slice()
+    .sort((a, b) => Number(a.id) - Number(b.id));
+  return { key, pokemon: pool[Math.floor(rng() * pool.length)] };
+}
+
+const ogCache = { key: null, buffer: null, pending: null };
+
+async function buildDailyOgBuffer() {
+  const { key, pokemon } = getServerDailyPokemon();
+  const artworkUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
+  const resp = await fetch(artworkUrl, { signal: AbortSignal.timeout(8000) });
+  if (!resp.ok) throw new Error(`artwork HTTP ${resp.status}`);
+  const artwork = Buffer.from(await resp.arrayBuffer());
+  const resized = await sharp(artwork).resize(460, 460, { fit: "inside" }).ensureAlpha().png().toBuffer();
+  const meta = await sharp(resized).metadata();
+  const silhouette = await sharp({ create: { width: meta.width, height: meta.height, channels: 3, background: "#13224a" } })
+    .joinChannel(await sharp(resized).extractChannel(3).toBuffer())
+    .png()
+    .toBuffer();
+  const [, mo, da] = key.split("-");
+  const dateLabel = `${da}/${mo}/${key.slice(0, 4)}`;
+  const baseSvg = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e4382f"/>
+      <stop offset="0.55" stop-color="#7d4bd6"/>
+      <stop offset="1" stop-color="#2f76ff"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="0.75" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="885" cy="318" r="265" fill="url(#halo)"/>
+  <circle cx="885" cy="318" r="232" fill="#ffffff" fill-opacity="0.92"/>
+  <text x="80" y="178" font-family="sans-serif" font-weight="bold" font-size="92" fill="#ffffff">Pokédle</text>
+  <text x="84" y="248" font-family="sans-serif" font-weight="bold" font-size="38" fill="#ffe9b3">Devine le Pokémon du jour</text>
+  <rect x="84" y="296" rx="26" ry="26" width="280" height="52" fill="#ffcc33"/>
+  <text x="224" y="332" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="30" fill="#4a3203">${dateLabel}</text>
+  <text x="84" y="432" font-family="sans-serif" font-weight="bold" font-size="44" fill="#ffffff">Tu le reconnais ?</text>
+  <text x="84" y="560" font-family="sans-serif" font-size="28" fill="#dce9ff">pokdle.onrender.com</text>
+</svg>`;
+  const buffer = await sharp(Buffer.from(baseSvg))
+    .composite([{ input: silhouette, left: Math.round(885 - meta.width / 2), top: Math.round(318 - meta.height / 2) }])
+    .png()
+    .toBuffer();
+  return { key, buffer };
+}
+
+app.get("/og-image.png", async (_req, res) => {
+  const key = serverUTCDateKey();
+  try {
+    if (sharp) {
+      if (ogCache.key !== key) {
+        if (!ogCache.pending) {
+          ogCache.pending = buildDailyOgBuffer()
+            .then((result) => { ogCache.key = result.key; ogCache.buffer = result.buffer; ogCache.pending = null; })
+            .catch((error) => { ogCache.pending = null; throw error; });
+        }
+        await ogCache.pending;
+      }
+      if (ogCache.key === key && ogCache.buffer) {
+        res.set("Cache-Control", "public, max-age=3600");
+        res.type("png");
+        return res.send(ogCache.buffer);
+      }
+    }
+  } catch (error) {
+    console.error("[og] génération échouée :", error?.message || "unknown");
+  }
+  res.sendFile(path.join(__dirname, "og-image.png"), { maxAge: "1h" });
+});
 // Icônes de types (utilisées par les badges de types dans tous les modes).
 app.use("/types", express.static(path.join(__dirname, "types"), { maxAge: "7d", fallthrough: false }));
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
