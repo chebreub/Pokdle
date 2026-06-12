@@ -8513,6 +8513,11 @@ function renderPartyRoom() {
     listEl.innerHTML = players.map(function (p, i) {
       var rank = (complete && i < 3) ? medals[i] : (i + 1);
       var gained = (p.score || 0) > (prevScores[p.id] || 0);
+      var avName = String(p.nickname || "?");
+      var avatarInitial = avName.trim().charAt(0).toUpperCase() || "?";
+      var avatarTone = 0;
+      for (var avI = 0; avI < avName.length; avI += 1) avatarTone += avName.charCodeAt(avI);
+      avatarTone = avatarTone % 6;
       var statusBadge = "";
       if (scMode && playing) {
         statusBadge = p.pickKey ? '<span class="party-check">a choisi</span>' : '<span class="party-wait">attend…</span>';
@@ -8526,6 +8531,7 @@ function renderPartyRoom() {
       var highlight = (scMode && playing && p.pickKey) || (scMode && revealed && (p.lastGain || 0) > 0) || (!scMode && p.correct);
       return '<li class="party-player' + (p.connected ? '' : ' is-offline') + (highlight ? ' is-correct' : '') + '">' +
         '<span class="party-rank">' + rank + '</span>' +
+        '<span class="party-avatar av-' + avatarTone + '">' + escapeHtml(avatarInitial) + '</span>' +
         '<span class="party-player-name">' + escapeHtml(p.nickname) + '</span>' +
         (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
         (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
@@ -8673,7 +8679,9 @@ function renderPartyRoom() {
           ? '<div class="party-duo-criteria">' + duoCriteriaList.map(function (criterion) {
               return '<span class="party-duo-chip is-' + escapeHtml((criterion && criterion.kind) || "") + '">' + escapeHtml((criterion && criterion.label) || "?") + '</span>';
             }).join('<span class="party-duo-plus">+</span>') + '</div>'
-          : '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>';
+          : (types.length === 2 && types[0] === types[1]
+            ? '<div class="party-typecombo-types">' + typeBadgeHtml(types[0]) + '<span class="party-combo-pure">type pur</span></div>'
+            : '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>');
         statReveal.innerHTML = '<div class="party-typecombo-panel">' +
           criteriaHtml +
           '<div class="party-combo-meta">' + diffBadge + '<span class="party-combo-count">' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</span>' + (comboPts ? '<span class="party-combo-points">vaut ' + comboPts + ' pts</span>' : '') + '</div>' +

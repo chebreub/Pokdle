@@ -474,3 +474,97 @@
   #party-joined #party-round { grid-row: 2 / span 6; }
   #party-joined #party-room-next-btn { grid-row: 8; }
 }
+
+
+/* ============================================================
+   Finition pro : intro masquée en room, toolbar, avatars,
+   statuts en pastilles, hiérarchie de scène, hôte discret.
+   ============================================================ */
+/* L'intro ne sert plus une fois dans la room */
+#screen-party-room .party-room-card:has(#party-joined:not(.hidden)) > .card-desc { display: none; }
+
+/* En-tête en toolbar : code à gauche, actions à droite */
+#screen-party-room .party-room-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Avatars joueurs */
+.party-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #fff;
+  flex: none;
+  box-shadow: inset 0 -2px 0 rgba(16, 28, 51, 0.18);
+}
+.party-avatar.av-0 { background: linear-gradient(135deg, #4d9fff, #2f76ff); }
+.party-avatar.av-1 { background: linear-gradient(135deg, #b06ae8, #8a3fd1); }
+.party-avatar.av-2 { background: linear-gradient(135deg, #34b04a, #1f8a37); }
+.party-avatar.av-3 { background: linear-gradient(135deg, #ff8a3d, #e4622f); }
+.party-avatar.av-4 { background: linear-gradient(135deg, #ff6d6d, #e4382f); }
+.party-avatar.av-5 { background: linear-gradient(135deg, #ffd34d, #e8b93e); color: #4a3203; }
+
+/* Rangées joueurs plus généreuses, rang discret, leader doré */
+.party-players .party-player { padding: 11px 14px; gap: 10px; }
+.party-player .party-player-name { font-size: 1.02rem; }
+.party-player .party-rank { color: #8aa0c4; font-size: 0.78rem; min-width: 14px; }
+.party-players .party-player:first-child .party-rank { color: #b8860b; }
+
+/* Statuts en pastilles douces */
+.party-wait { background: #eef3fb; border-radius: 999px; padding: 3px 10px; font-size: 0.68rem; font-weight: 800; color: #5a6f96; text-transform: uppercase; letter-spacing: 0.4px; }
+.party-check { background: #e6f6e8; border-radius: 999px; padding: 3px 10px; font-size: 0.68rem; font-weight: 900; color: #1f8a37; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Scène : l'instruction murmure, les critères crient */
+.party-round-typecombo .party-round-mode { font-size: 0.95rem; font-weight: 800; color: #5a6f96; max-width: none; }
+
+/* Le contrôle d'hôte sort du flux de jeu */
+#party-reveal-btn {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  font-size: 0.76rem;
+  padding: 6px 12px;
+  opacity: 0.7;
+}
+#party-reveal-btn:hover { opacity: 1; }
+
+/* Saisie généreuse */
+.party-round-input input { min-height: 50px; font-size: 1.05rem; }
+
+@media (min-width: 1024px) {
+  /* Le tableau des scores devient un panneau qui remplit sa colonne */
+  #party-joined .party-count { text-transform: uppercase; letter-spacing: 0.8px; font-size: 0.72rem; font-weight: 900; color: #5a6f96; }
+  #party-joined #party-players {
+    grid-row: 3 / span 5;
+    align-self: stretch;
+    background: rgba(232, 241, 255, 0.55);
+    border: 1px solid #e3edfb;
+    border-radius: 14px;
+    padding: 10px;
+    align-content: start;
+  }
+  #party-joined .party-players .party-player { background: #fff; }
+}
+
+/* Combo mono-type : une seule pastille + mention "type pur" */
+.party-combo-pure {
+  background: #eef3fb;
+  border: 1px solid #d5e2f6;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  color: #5a6f96;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  align-self: center;
+}
