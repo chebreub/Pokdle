@@ -29033,3 +29033,47 @@ body.theme-dark #screen-profile #profile-level-name { background: linear-gradien
 .trainer-card-photo-action:hover { background: rgba(255,255,255,0.28); }
 .trainer-card-photo-action.is-remove { background: rgba(0,0,0,0.18); border-color: rgba(255,255,255,0.22); }
 @media (max-width: 640px) { .trainer-card-photo-actions { justify-content: center; } }
+
+/* Team Builder — uniformiser Nature/Talent/EV/IV avec Gimmick (pilule + chevron) */
+.team-builder-module #team-builder-nature,
+.team-builder-module #team-builder-talent,
+.team-builder-module #team-builder-ev-preset,
+.team-builder-module #team-builder-iv-preset {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1px solid #bfd3f5;
+  color: #173c6a;
+  font-weight: 800;
+  font-size: 0.97rem;
+  padding: 0 42px 0 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 10px 22px rgba(32, 65, 118, 0.08);
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #f6faff;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #345f9d 50%),
+    linear-gradient(135deg, #345f9d 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 4px), calc(100% - 12px) calc(50% - 4px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.team-builder-module #team-builder-nature:focus,
+.team-builder-module #team-builder-talent:focus,
+.team-builder-module #team-builder-ev-preset:focus,
+.team-builder-module #team-builder-iv-preset:focus {
+  outline: none;
+  border-color: #8fb3ee;
+  box-shadow: 0 0 0 3px rgba(47, 118, 255, 0.12);
+}
+body.theme-dark .team-builder-module #team-builder-nature,
+body.theme-dark .team-builder-module #team-builder-talent,
+body.theme-dark .team-builder-module #team-builder-ev-preset,
+body.theme-dark .team-builder-module #team-builder-iv-preset {
+  background-color: rgba(13, 28, 50, 0.96);
+  color: #edf5ff;
+  border-color: rgba(95, 135, 201, 0.34);
+  background-image:
+    linear-gradient(45deg, transparent 50%, #9fb6e0 50%),
+    linear-gradient(135deg, #9fb6e0 50%, transparent 50%);
+}

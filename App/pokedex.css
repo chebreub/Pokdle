@@ -2594,3 +2594,30 @@ body.theme-dark #screen-pokedex .type-badge span {
     font-size: 0.64rem !important;
   }
 }
+
+/* Menu Catégorie — même style pilule que les autres filtres */
+#screen-pokedex #pokedex-category-filter {
+  flex: 0 0 230px;
+  min-width: 200px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid #b9cce8;
+  background: #ffffff;
+  color: #102846;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+#screen-pokedex #pokedex-category-filter:focus {
+  outline: none;
+  border-color: #b8c8e7;
+  box-shadow: 0 0 0 3px rgba(47, 118, 255, 0.12);
+}
+#screen-pokedex #pokedex-category-filter option { color: #102846; background: #ffffff; }
+body.theme-dark #pokedex-category-filter {
+  border-color: rgba(95, 135, 201, 0.34);
+  background: linear-gradient(180deg, rgba(10, 22, 40, 0.96), rgba(13, 28, 50, 0.96));
+  color: #edf5ff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 24px rgba(0, 0, 0, 0.18);
+}
