@@ -20834,6 +20834,29 @@ function renderProfileScreen() {
       favoriteCard.innerHTML = '<p class="card-desc">Choisis un Pokémon favori pour l’afficher ici.</p>';
     }
   }
+  const trainerCard = document.getElementById("profile-trainer-card");
+  if (trainerCard) {
+    const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
+    const avatar = fav
+      ? `<img src="${getPokemonSprite(fav)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(fav))}" />`
+      : `<span class="trainer-card-avatar-empty">?</span>`;
+    const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
+    const badgesUnlocked = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
+    trainerCard.innerHTML = `
+      <div class="trainer-card-avatar">${avatar}</div>
+      <div class="trainer-card-main">
+        <span class="trainer-card-eyebrow">🎫 Carte de Dresseur</span>
+        <strong class="trainer-card-name">${pseudo}</strong>
+        <span class="trainer-card-title">Niv. ${profileProg.tier.level} · ${escapeHtml(profileProg.tier.name)}</span>
+        <div class="trainer-card-bar"><i style="width:${profileProg.percent}%"></i></div>
+        <div class="trainer-card-chips">
+          <span class="trainer-card-chip">🏆 ${playerStats.wins || 0} victoires</span>
+          <span class="trainer-card-chip">🎮 ${playerStats.played || 0} parties</span>
+          <span class="trainer-card-chip">🔥 ${playerStats.dailyBestStreak || 0} record série</span>
+          <span class="trainer-card-chip">🏅 ${badgesUnlocked}/${ACHIEVEMENT_DEFS.length} succès</span>
+        </div>
+      </div>`;
+  }
 
   if (achSummary) {
     const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;

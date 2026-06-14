@@ -29004,3 +29004,19 @@ body.theme-dark .achievement-medal { background: rgba(116,158,241,0.16); border-
   box-shadow: 0 2px 6px rgba(240, 198, 78, 0.3);
 }
 body.theme-dark #screen-profile #profile-level-name { background: linear-gradient(180deg,#5a4a18,#6e5a1d); color: #ffe9a8; border-color: #8a6f24; }
+
+/* DA dresseur — carte de dresseur (en-tete du profil) */
+.trainer-card { display: flex; gap: 18px; align-items: center; padding: 20px 22px; border-radius: 22px; margin-bottom: 18px; position: relative; overflow: hidden; color: #fff; background: linear-gradient(125deg, #ef4438 0%, #ef4438 36%, #2f4fd6 100%); box-shadow: 0 18px 36px rgba(20, 40, 76, 0.22); }
+.trainer-card::before { content: ""; position: absolute; right: -46px; top: -46px; width: 210px; height: 210px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.16) 0 38%, transparent 40%); pointer-events: none; }
+.trainer-card-avatar { flex-shrink: 0; width: 104px; height: 104px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff, #e9f0ff); border: 4px solid #ffd45f; box-shadow: 0 10px 22px rgba(0,0,0,0.22); display: grid; place-items: center; overflow: hidden; position: relative; z-index: 1; }
+.trainer-card-avatar img { width: 88px; height: 88px; object-fit: contain; image-rendering: auto; }
+.trainer-card-avatar-empty { font-size: 2rem; font-weight: 900; color: #9fb0d8; }
+.trainer-card-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1; }
+.trainer-card-eyebrow { font-size: 0.74rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.92; }
+.trainer-card-name { font-size: 1.5rem; font-weight: 900; line-height: 1.1; }
+.trainer-card-title { display: inline-block; align-self: flex-start; background: rgba(255,255,255,0.92); color: #7a5b00; font-weight: 900; font-size: 0.82rem; border-radius: 999px; padding: 2px 12px; border: 1px solid #ffd45f; }
+.trainer-card-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.25); overflow: hidden; max-width: 340px; }
+.trainer-card-bar i { display: block; height: 100%; background: linear-gradient(90deg, #ffd45f, #ffb12e); }
+.trainer-card-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.trainer-card-chip { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 4px 11px; font-size: 0.8rem; font-weight: 800; }
+@media (max-width: 640px) { .trainer-card { flex-direction: column; text-align: center; } .trainer-card-main { align-items: center; } .trainer-card-title { align-self: center; } .trainer-card-chips { justify-content: center; } }
