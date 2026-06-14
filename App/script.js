@@ -1130,6 +1130,26 @@ let pokedexGenFilter = "all";
 let pokedexTypeFilter = "all";
 let pokedexType2Filter = "all";
 let pokedexSortFilter = "dex";
+let pokedexCategoryFilter = "all";
+const POKEDEX_LEGENDARY_IDS = new Set([144,145,146,150,151,243,244,245,249,250,251,377,378,379,380,381,382,383,384,385,386,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,638,639,640,641,642,643,644,645,646,647,648,649,716,717,718,719,720,721,772,773,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804,805,806,807,808,809,888,889,890,891,892,893,894,895,896,897,898,905,1001,1002,1003,1004,1007,1008,1009,1010,1014,1015,1016,1017,1020,1021,1022,1023,1024,1025]);
+function pokedexMatchesCategory(p) {
+  const cat = pokedexCategoryFilter || "all";
+  if (cat === "all") return true;
+  const id = Number(p && p.id);
+  const isAlt = Boolean(p && p.isAltForm) || id >= 20000;
+  const name = (p && p.name) || "";
+  switch (cat) {
+    case "legendary": return POKEDEX_LEGENDARY_IDS.has(id) || (isAlt && POKEDEX_LEGENDARY_IDS.has(Number(p.baseId)));
+    case "alt": return isAlt;
+    case "mega": return / Mega(\s[XY])?$/i.test(name);
+    case "regional": return /d['\u2019]Alola|de Galar|de Hisui|de Paldea/i.test(name);
+    case "mono": return !(p && p.type2);
+    case "dual": return Boolean(p && p.type2);
+    case "base": return Number(p && p.stage) === 1;
+    case "evolved": return Number(p && p.stage) >= 2;
+    default: return true;
+  }
+}
 let pokedexGridUseShiny = false;
 let pokedexSelectedShiny = false;
 let typeChartEra = "gen6+";
@@ -11299,7 +11319,8 @@ function isPokedexToolbarDirty() {
     pokedexGenFilter !== "all" ||
     pokedexTypeFilter !== "all" ||
     pokedexType2Filter !== "all" ||
-    pokedexSortFilter !== "dex"
+    pokedexSortFilter !== "dex" ||
+    pokedexCategoryFilter !== "all"
   );
 }
 
@@ -11344,6 +11365,7 @@ function resetPokedexToolbar() {
   pokedexTypeFilter = "all";
   pokedexType2Filter = "all";
   pokedexSortFilter = "dex";
+  pokedexCategoryFilter = "all";
   const search = document.getElementById("pokedex-search");
   const gen = document.getElementById("pokedex-gen-filter");
   const type = document.getElementById("pokedex-type-filter");
@@ -11354,6 +11376,8 @@ function resetPokedexToolbar() {
   if (type) type.value = "all";
   if (type2) type2.value = "all";
   if (sort) sort.value = "dex";
+  const category = document.getElementById("pokedex-category-filter");
+  if (category) category.value = "all";
   renderPokedexGrid();
 }
 
@@ -11363,6 +11387,7 @@ function initPokedex() {
   const type = document.getElementById("pokedex-type-filter");
   const type2 = document.getElementById("pokedex-type2-filter");
   const sort = document.getElementById("pokedex-sort-filter");
+  const category = document.getElementById("pokedex-category-filter");
   const shinyToggle = document.getElementById("pokedex-shiny-toggle");
   if (!search || !gen || !type || !type2 || !sort) return;
 
@@ -11388,6 +11413,8 @@ function initPokedex() {
     <option value="dex">N° Pokédex</option>
     <option value="name-asc">Nom A → Z</option>
     <option value="name-desc">Nom Z → A</option>
+    <option value="weight">Poids (lourd → léger)</option>
+    <option value="height">Taille (grand → petit)</option>
   `;
   sort.value = pokedexSortFilter;
   ensurePokedexToolbarMeta();
@@ -11417,6 +11444,10 @@ function initPokedex() {
     renderPokedexGrid();
   });
 
+  category?.addEventListener("change", () => {
+    pokedexCategoryFilter = category.value;
+    renderPokedexGrid();
+  });
   shinyToggle?.addEventListener("click", togglePokedexGridShiny);
 
   updatePokedexShinyButton();
@@ -11466,6 +11497,8 @@ function openPokedexMode() {
   if (type) type.value = pokedexTypeFilter;
   if (type2) type2.value = pokedexType2Filter;
   if (sort) sort.value = pokedexSortFilter;
+  const pokedexCategorySel = document.getElementById("pokedex-category-filter");
+  if (pokedexCategorySel) pokedexCategorySel.value = pokedexCategoryFilter;
   updatePokedexShinyButton();
 
   renderPokedexGrid();
@@ -11479,6 +11512,7 @@ function getFilteredPokedexList() {
   return POKEMON_LIST
     .filter((p) => {
       if (pokedexGenFilter !== "all" && String(p.gen) !== pokedexGenFilter) return false;
+      if (!pokedexMatchesCategory(p)) return false;
       if (type1Filter === "all" && type2Filter === "all") {
         // keep current behavior
       } else if (type1Filter !== "all" && type2Filter !== "all" && type1Filter !== type2Filter) {
@@ -11493,6 +11527,8 @@ function getFilteredPokedexList() {
       return true;
     })
     .sort((a, b) => {
+      if (pokedexSortFilter === "weight") return (Number(b.weight) || 0) - (Number(a.weight) || 0) || getPokemonSpriteId(a) - getPokemonSpriteId(b);
+      if (pokedexSortFilter === "height") return (Number(b.height) || 0) - (Number(a.height) || 0) || getPokemonSpriteId(a) - getPokemonSpriteId(b);
       if (pokedexSortFilter === "name-asc") {
         return a.name.localeCompare(b.name, "fr") || getPokemonSpriteId(a) - getPokemonSpriteId(b);
       }
