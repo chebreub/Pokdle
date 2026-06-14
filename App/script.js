@@ -426,19 +426,40 @@ function renderHomeEngagementWidget() {
 window.renderHomeEngagementWidget = renderHomeEngagementWidget;
 
 const ACHIEVEMENT_DEFS = [
-  { id: "first_game", title: "Premier pas", desc: "Jouer une première partie.", target: 1, getValue: () => playerStats.played || 0 },
-  { id: "first_win", title: "Première victoire", desc: "Remporter une première partie.", target: 1, getValue: () => playerStats.wins || 0 },
-  { id: "ten_wins", title: "En forme", desc: "Atteindre 10 victoires.", target: 10, getValue: () => playerStats.wins || 0 },
-  { id: "fifty_games", title: "Habitué", desc: "Jouer 50 parties.", target: 50, getValue: () => playerStats.played || 0 },
-  { id: "daily_streak_3", title: "Régulier", desc: "Atteindre une série journalière de 3.", target: 3, getValue: () => playerStats.dailyBestStreak || 0 },
-  { id: "twentyfive_wins", title: "Sur la bonne voie", desc: "Atteindre 25 victoires.", target: 25, getValue: () => playerStats.wins || 0 },
-  { id: "fifty_wins", title: "Élite", desc: "Atteindre 50 victoires.", target: 50, getValue: () => playerStats.wins || 0 },
-  { id: "hundred_wins", title: "Maître de la devinette", desc: "Atteindre 100 victoires.", target: 100, getValue: () => playerStats.wins || 0 },
-  { id: "hundred_games", title: "Centurion", desc: "Jouer 100 parties.", target: 100, getValue: () => playerStats.played || 0 },
-  { id: "twofifty_games", title: "Marathonien", desc: "Jouer 250 parties.", target: 250, getValue: () => playerStats.played || 0 },
-  { id: "daily_streak_7", title: "Une semaine parfaite", desc: "Atteindre une série journalière de 7.", target: 7, getValue: () => playerStats.dailyBestStreak || 0 },
-  { id: "daily_streak_15", title: "Quinzaine en or", desc: "Atteindre une série journalière de 15.", target: 15, getValue: () => playerStats.dailyBestStreak || 0 },
-  { id: "daily_streak_30", title: "Inarrêtable", desc: "Atteindre une série journalière de 30.", target: 30, getValue: () => playerStats.dailyBestStreak || 0 },
+  // — Devinette (Pokédle / parties) —
+  { id: "first_game", title: "Premier pas", desc: "Jouer une première partie.", target: 1, category: "Devinette", getValue: () => playerStats.played || 0 },
+  { id: "first_win", title: "Première capture", desc: "Remporter une première partie.", target: 1, category: "Devinette", getValue: () => playerStats.wins || 0 },
+  { id: "ten_wins", title: "Apprenti dresseur", desc: "Atteindre 10 victoires.", target: 10, category: "Devinette", getValue: () => playerStats.wins || 0 },
+  { id: "twentyfive_wins", title: "Sur la bonne voie", desc: "Atteindre 25 victoires.", target: 25, category: "Devinette", getValue: () => playerStats.wins || 0 },
+  { id: "fifty_wins", title: "Dresseur confirmé", desc: "Atteindre 50 victoires.", target: 50, category: "Devinette", getValue: () => playerStats.wins || 0 },
+  { id: "hundred_wins", title: "Maître de la devinette", desc: "Atteindre 100 victoires.", target: 100, category: "Devinette", getValue: () => playerStats.wins || 0 },
+  { id: "fifty_games", title: "Habitué", desc: "Jouer 50 parties.", target: 50, category: "Devinette", getValue: () => playerStats.played || 0 },
+  { id: "hundred_games", title: "Centurion", desc: "Jouer 100 parties.", target: 100, category: "Devinette", getValue: () => playerStats.played || 0 },
+  { id: "twofifty_games", title: "Marathonien", desc: "Jouer 250 parties.", target: 250, category: "Devinette", getValue: () => playerStats.played || 0 },
+  // — Régularité —
+  { id: "daily_streak_3", title: "Régulier", desc: "Série journalière de 3.", target: 3, category: "Régularité", getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "daily_streak_7", title: "Une semaine parfaite", desc: "Série journalière de 7.", target: 7, category: "Régularité", getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "daily_streak_15", title: "Quinzaine en or", desc: "Série journalière de 15.", target: 15, category: "Régularité", getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "daily_streak_30", title: "Inarrêtable", desc: "Série journalière de 30.", target: 30, category: "Régularité", getValue: () => playerStats.dailyBestStreak || 0 },
+  { id: "login_7", title: "Fidèle", desc: "Se connecter 7 jours d'affilée.", target: 7, category: "Régularité", getValue: () => Number(playerProfile?.dailyLoginStreak) || 0 },
+  { id: "login_30", title: "Pilier de l'arène", desc: "Se connecter 30 jours d'affilée.", target: 30, category: "Régularité", getValue: () => Number(playerProfile?.dailyLoginStreak) || 0 },
+  { id: "quests_10", title: "Aventurier", desc: "Accomplir 10 quêtes du jour.", target: 10, category: "Régularité", getValue: () => Number(playerProfile?.totalQuestsCompleted) || 0 },
+  { id: "quests_50", title: "Quêteur acharné", desc: "Accomplir 50 quêtes du jour.", target: 50, category: "Régularité", getValue: () => Number(playerProfile?.totalQuestsCompleted) || 0 },
+  // — Progression —
+  { id: "xp_500", title: "Badge Roche", desc: "Atteindre 500 XP.", target: 500, category: "Progression", getValue: () => Number(playerProfile?.xp) || 0 },
+  { id: "xp_2500", title: "Badge Cascade", desc: "Atteindre 2 500 XP.", target: 2500, category: "Progression", getValue: () => Number(playerProfile?.xp) || 0 },
+  { id: "xp_10000", title: "Conseil 4", desc: "Atteindre 10 000 XP.", target: 10000, category: "Progression", getValue: () => Number(playerProfile?.xp) || 0 },
+  { id: "set_favorite", title: "Mon partenaire", desc: "Choisir un Pokémon favori.", target: 1, category: "Progression", getValue: () => (playerProfile?.favoritePokemonId ? 1 : 0) },
+  // — Mini-jeux —
+  { id: "quiz_5", title: "Quiz débutant", desc: "Marquer 5 au Quiz.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.quizHighScore) || 0 },
+  { id: "quiz_10", title: "Cerveau de Pierre", desc: "Marquer 10 au Quiz.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.quizHighScore) || 0 },
+  { id: "speedrun_10", title: "Vitesse Graine", desc: "Atteindre 10 au Speedrun.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.speedrunHighScore) || 0 },
+  { id: "party_5", title: "Esprit fête", desc: "Atteindre 5 en Party Pokémon.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.partyHighScore) || 0 },
+  { id: "odd_10", title: "Œil de lynx", desc: "Atteindre 10 à l'Intrus.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.oddOneOutHighScore) || 0 },
+  { id: "odd_streak_5", title: "Sans faute", desc: "Série de 5 à l'Intrus.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.oddOneOutStreak) || 0 },
+  { id: "weight_10", title: "Pèse-Pokémon", desc: "Atteindre 10 au Duel de poids.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.weightBattleHighScore) || 0 },
+  { id: "weight_streak_5", title: "Balance parfaite", desc: "Série de 5 au Duel de poids.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.weightBattleStreak) || 0 },
+  { id: "hl_10", title: "Plus haut, plus bas", desc: "Atteindre 10 à Higher or Lower.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.higherLowerHighScore) || 0 },
 ];
 
 const PLAYER_LEVELS = [
