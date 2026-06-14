@@ -29026,3 +29026,10 @@ body.theme-dark #screen-profile #profile-level-name { background: linear-gradien
 .trainer-card-photo-btn:hover { background: #2742b8; }
 .trainer-card-photo-remove { align-self: flex-start; margin-top: 6px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 999px; padding: 3px 11px; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
 .trainer-card-photo-remove:hover { background: rgba(255,255,255,0.26); }
+
+/* Carte de dresseur — actions photo (sous les stats) */
+.trainer-card-photo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.trainer-card-photo-action { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.32); color: #fff; border-radius: 999px; padding: 5px 13px; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+.trainer-card-photo-action:hover { background: rgba(255,255,255,0.28); }
+.trainer-card-photo-action.is-remove { background: rgba(0,0,0,0.18); border-color: rgba(255,255,255,0.22); }
+@media (max-width: 640px) { .trainer-card-photo-actions { justify-content: center; } }

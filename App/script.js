@@ -20883,7 +20883,7 @@ function renderProfileScreen() {
     const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
     const badgesUnlocked = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
     trainerCard.innerHTML = `
-      <div class="trainer-card-avatar">${avatar}<button type="button" class="trainer-card-photo-btn" data-action="triggerProfilePhoto" title="Changer la photo">📷</button></div>
+      <div class="trainer-card-avatar">${avatar}</div>
       <div class="trainer-card-main">
         <span class="trainer-card-eyebrow">🎫 Carte de Dresseur</span>
         <strong class="trainer-card-name">${pseudo}</strong>
@@ -20895,7 +20895,7 @@ function renderProfileScreen() {
           <span class="trainer-card-chip">🔥 ${playerStats.dailyBestStreak || 0} record série</span>
           <span class="trainer-card-chip">🏅 ${badgesUnlocked}/${ACHIEVEMENT_DEFS.length} succès</span>
         </div>
-        ${photo ? '<button type="button" class="trainer-card-photo-remove" data-action="removeProfilePhoto">Retirer la photo</button>' : ''}
+        <div class="trainer-card-photo-actions"><button type="button" class="trainer-card-photo-action" data-action="triggerProfilePhoto">📷 ${photo ? "Changer" : "Ajouter"} ma photo</button>${photo ? '<button type="button" class="trainer-card-photo-action is-remove" data-action="removeProfilePhoto">Retirer</button>' : ''}</div>
       </div>`;
   }
 
