@@ -20937,14 +20937,28 @@ function renderAchievementsScreen() {
     `;
   }
   if (list) {
-    list.innerHTML = ACHIEVEMENT_DEFS.map((achievement) => {
-      const progress = getAchievementProgress(achievement);
-      return `<article class="achievement-card ${progress.unlocked ? "unlocked" : ""}">
-        <div class="achievement-head"><strong>${escapeHtml(achievement.title)}</strong><span>${progress.unlocked ? "Débloqué" : "En cours"}</span></div>
-        <p>${escapeHtml(achievement.desc)}</p>
-        <div class="achievement-progress"><i style="width:${progress.pct}%"></i></div>
-        <small>${progress.current} / ${achievement.target}</small>
-      </article>`;
+    const CAT_ICONS = { "Devinette": "🎯", "Régularité": "📅", "Progression": "⭐", "Mini-jeux": "🎮" };
+    const cats = [];
+    ACHIEVEMENT_DEFS.forEach((a) => { const c = a.category || "Autres"; if (cats.indexOf(c) === -1) cats.push(c); });
+    list.innerHTML = cats.map((cat) => {
+      const defs = ACHIEVEMENT_DEFS.filter((a) => (a.category || "Autres") === cat);
+      const unlockedN = defs.filter((a) => unlockedAchievements[a.id]).length;
+      const cards = defs.map((achievement) => {
+        const progress = getAchievementProgress(achievement);
+        return `<article class="achievement-card ${progress.unlocked ? "unlocked" : ""}">
+          <span class="achievement-medal">${progress.unlocked ? "✓" : "🔒"}</span>
+          <div class="achievement-body">
+            <div class="achievement-head"><strong>${escapeHtml(achievement.title)}</strong><span>${progress.unlocked ? "Débloqué" : "En cours"}</span></div>
+            <p>${escapeHtml(achievement.desc)}</p>
+            <div class="achievement-progress"><i style="width:${progress.pct}%"></i></div>
+            <small>${progress.current} / ${achievement.target}</small>
+          </div>
+        </article>`;
+      }).join("");
+      return `<section class="achievement-category">
+        <header class="achievement-cat-head"><h3>${CAT_ICONS[cat] || "🏅"} ${escapeHtml(cat)}</h3><span class="achievement-cat-count">${unlockedN}/${defs.length}</span></header>
+        <div class="achievement-cat-grid">${cards}</div>
+      </section>`;
     }).join("");
   }
 }
