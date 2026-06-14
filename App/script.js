@@ -21766,7 +21766,18 @@ function openSettingsModal() {
 }
 
 function confirmResetProgression() {
-  ensureOverlay('Réinitialisation', '<p class="card-desc">La réinitialisation complète sera réactivée une fois le site stabilisé.</p>');
+  ensureOverlay('Recommencer à zéro', '<p class="card-desc">Cette action efface <b>définitivement</b> ton profil, ta progression, tes statistiques, tes succès, tes équipes et ton historique sur cet appareil. C\'est irréversible.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="closeResetOverlay">Annuler</button><button class="btn-red" type="button" data-action="doResetProfile">🗑️ Tout effacer</button></div>');
+}
+function closeResetOverlay() {
+  const overlay = document.getElementById('overlay-modal');
+  if (overlay) overlay.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+function doResetProfile() {
+  try {
+    Object.keys(STORAGE_KEYS).forEach((k) => { try { localStorage.removeItem(STORAGE_KEYS[k]); } catch (e) {} });
+  } catch (e) {}
+  try { location.reload(); } catch (e) {}
 }
 
 function openGamesRankingModeFallback() {
