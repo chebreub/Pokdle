@@ -29020,3 +29020,9 @@ body.theme-dark #screen-profile #profile-level-name { background: linear-gradien
 .trainer-card-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .trainer-card-chip { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 4px 11px; font-size: 0.8rem; font-weight: 800; }
 @media (max-width: 640px) { .trainer-card { flex-direction: column; text-align: center; } .trainer-card-main { align-items: center; } .trainer-card-title { align-self: center; } .trainer-card-chips { justify-content: center; } }
+
+/* Photo de profil (locale) sur la carte de dresseur */
+.trainer-card-photo-btn { position: absolute; bottom: -2px; right: -2px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background: #2f4fd6; color: #fff; font-size: 0.85rem; cursor: pointer; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.28); padding: 0; }
+.trainer-card-photo-btn:hover { background: #2742b8; }
+.trainer-card-photo-remove { align-self: flex-start; margin-top: 6px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 999px; padding: 3px 11px; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
+.trainer-card-photo-remove:hover { background: rgba(255,255,255,0.26); }

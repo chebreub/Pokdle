@@ -20600,6 +20600,42 @@ function teamBuilderImportConfirm() {
   showToast(imported + " Pokémon importé" + (imported > 1 ? "s" : "") + (skipped ? " · " + skipped + " ignoré" + (skipped > 1 ? "s" : "") : "") + " ✅");
 }
 
+function triggerProfilePhoto() {
+  const input = document.getElementById("profile-photo-input");
+  if (input) input.click();
+}
+function handleProfilePhotoFromEl() {
+  const file = this && this.files && this.files[0];
+  if (!file || !/^image\//.test(file.type)) { showToast("Choisis une image."); return; }
+  const reader = new FileReader();
+  reader.onload = function () {
+    const img = new Image();
+    img.onload = function () {
+      const size = 160;
+      const canvas = document.createElement("canvas");
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const scale = Math.max(size / img.width, size / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+      try {
+        playerProfile.avatarPhoto = canvas.toDataURL("image/jpeg", 0.82);
+        saveProfile();
+        if (typeof renderProfileScreen === "function") renderProfileScreen();
+        showToast("Photo de profil enregistrée ✅");
+      } catch (e) { showToast("Image trop lourde, réessaie."); }
+    };
+    img.onerror = function () { showToast("Image illisible."); };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeProfilePhoto() {
+  if (playerProfile) { playerProfile.avatarPhoto = ""; saveProfile(); }
+  if (typeof renderProfileScreen === "function") renderProfileScreen();
+  showToast("Photo retirée.");
+}
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
@@ -20642,6 +20678,7 @@ function loadProfile() {
   playerProfile = {
     nickname: typeof parsed?.nickname === "string" ? parsed.nickname : "",
     favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
+    avatarPhoto: typeof parsed?.avatarPhoto === "string" ? parsed.avatarPhoto : "",
     // Engagement system
     xp: Number(parsed?.xp) || 0,
     dailyQuests: Array.isArray(parsed?.dailyQuests) ? parsed.dailyQuests : null,
@@ -20837,13 +20874,16 @@ function renderProfileScreen() {
   const trainerCard = document.getElementById("profile-trainer-card");
   if (trainerCard) {
     const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
-    const avatar = fav
-      ? `<img src="${getPokemonSprite(fav)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(fav))}" />`
-      : `<span class="trainer-card-avatar-empty">?</span>`;
+    const photo = playerProfile.avatarPhoto || "";
+    const avatar = photo
+      ? `<img src="${photo}" alt="Photo de profil" />`
+      : (fav
+        ? `<img src="${getPokemonSprite(fav)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(fav))}" />`
+        : `<span class="trainer-card-avatar-empty">?</span>`);
     const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
     const badgesUnlocked = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
     trainerCard.innerHTML = `
-      <div class="trainer-card-avatar">${avatar}</div>
+      <div class="trainer-card-avatar">${avatar}<button type="button" class="trainer-card-photo-btn" data-action="triggerProfilePhoto" title="Changer la photo">📷</button></div>
       <div class="trainer-card-main">
         <span class="trainer-card-eyebrow">🎫 Carte de Dresseur</span>
         <strong class="trainer-card-name">${pseudo}</strong>
@@ -20855,6 +20895,7 @@ function renderProfileScreen() {
           <span class="trainer-card-chip">🔥 ${playerStats.dailyBestStreak || 0} record série</span>
           <span class="trainer-card-chip">🏅 ${badgesUnlocked}/${ACHIEVEMENT_DEFS.length} succès</span>
         </div>
+        ${photo ? '<button type="button" class="trainer-card-photo-remove" data-action="removeProfilePhoto">Retirer la photo</button>' : ''}
       </div>`;
   }
 
