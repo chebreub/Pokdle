@@ -18338,7 +18338,7 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
     } else {
       sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
     }
-    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b></div>`;
+    return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-rarity="${Number(entry.bst) >= 600 ? "legendary" : Number(entry.bst) >= 500 ? "strong" : Number(entry.bst) >= 400 ? "decent" : "common"}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b></div>`;
   }).join("");
   const status = player.hasSubmitted
     ? "✅ Soumis"
@@ -19479,6 +19479,7 @@ function renderDraftArena() {
       const isLatest = index === draftArenaState.team.length - 1;
       const typesHtml = [member.pokemon.type1, member.pokemon.type2].filter(Boolean).map((type) => typeBadgeHtml(type)).join("");
       item.className = "draft-team-card" + (member.shiny ? " is-shiny" : "") + (isLatest ? " is-latest" : " is-filled");
+      var __tb = Number(metrics.statGlobal) || 0; item.dataset.rarity = __tb >= 600 ? "legendary" : __tb >= 500 ? "strong" : __tb >= 400 ? "decent" : "common";
       item.innerHTML = `
         <img src="${shownSprite}" alt="${escapeHtml(member.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" />
         <div class="draft-team-card-body">
