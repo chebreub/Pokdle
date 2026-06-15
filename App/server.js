@@ -176,8 +176,10 @@ app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false });
   const scores = (req.body && req.body.scores && typeof req.body.scores === "object") ? req.body.scores : {};
+  const lbAllowed = (m) => LB_MODES.includes(m) || /^draft_(all|[1-9])$/.test(m);
   try {
-    for (const mode of LB_MODES) {
+    for (const mode of Object.keys(scores)) {
+      if (!lbAllowed(mode)) continue;
       let v = Number(scores[mode]);
       if (!Number.isFinite(v) || v <= 0) continue;
       v = Math.max(0, Math.min(100000, Math.floor(v)));
@@ -193,9 +195,9 @@ app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
 
 app.get("/api/leaderboard", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, top: [], me: null });
-  const mode = LB_MODES.includes(req.query.mode) ? req.query.mode : "quiz";
+  const mode = (LB_MODES.includes(req.query.mode) || /^draft_(all|[1-9])$/.test(req.query.mode)) ? req.query.mode : "quiz";
   try {
-    const top = await pgPool.query("SELECT username, avatar, score FROM scores WHERE mode = $1 ORDER BY score DESC, updated_at ASC LIMIT 20", [mode]);
+    const top = await pgPool.query("SELECT discord_id, username, avatar, score FROM scores WHERE mode = $1 ORDER BY score DESC, updated_at ASC LIMIT 20", [mode]);
     let me = null;
     const user = getSessionUser(req);
     if (user) {
@@ -206,7 +208,9 @@ app.get("/api/leaderboard", async (req, res) => {
         me = { rank: rankR.rows[0].c + 1, score: myScore };
       }
     }
-    res.json({ ok: true, mode, top: top.rows, me });
+    const meId = user ? user.id : null;
+    const topRows = top.rows.map((r) => ({ username: r.username, avatar: r.avatar, score: r.score, me: meId != null && r.discord_id === meId }));
+    res.json({ ok: true, mode, top: topRows, me });
   } catch (e) { console.error("[leaderboard] get:", e.message); res.json({ ok: false, top: [], me: null }); }
 });
 // ===== Fin auth Phase 1 =====

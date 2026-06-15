@@ -19478,6 +19478,29 @@ function renderDraftArena() {
       : "";
   }
 
+  const endActions = document.getElementById("draft-end-actions");
+  if (endActions) {
+    const draftFinished = draftArenaState.phase === "result" && draftArenaState.team.length >= DRAFT_TEAM_SIZE && !draftArenaState.evaluating;
+    const isDuelLive = Boolean(draftArenaState.duelMode && draftArenaState.scoreAttackRoom && draftArenaState.scoreAttackRoom.status === "live");
+    if (draftFinished && !isDuelLive) {
+      const isScore = draftArenaState.mode === "scoreAttack";
+      const lbMode = "draft_" + (draftArenaState.selectedGen || "all");
+      const headline = isScore
+        ? `🎯 Draft terminée — moyenne BST <b>${bstMetrics.average}</b>${draftArenaState.scoreAttackNewRecord ? " 🏆 Nouveau record !" : ""}`
+        : "🏆 Run terminée — relance une nouvelle draft quand tu veux";
+      endActions.innerHTML =
+        `<div class="draft-end-headline">${headline}</div>` +
+        `<div class="draft-end-buttons">` +
+          `<button type="button" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouvelle draft</button>` +
+          (isScore ? `<button type="button" class="btn-blue" data-action="openLeaderboard" data-args='["${lbMode}"]'>🏆 Voir le classement</button>` : "") +
+        `</div>`;
+      endActions.classList.remove("hidden");
+    } else {
+      endActions.classList.add("hidden");
+      endActions.innerHTML = "";
+    }
+  }
+
   if (runBar) {
     runBar.innerHTML = arenas.map((arena, index) => {
       const result = draftArenaState.badgeResults[index];
@@ -20774,22 +20797,33 @@ function removeProfilePhoto() {
   else initSync();
 })();
 
+function submitLeaderboardScores() {
+  if (!window.__pokedleAuthed) return;
+  if (typeof playerProfile === "undefined" || !playerProfile) return;
+  var scores = {
+    quiz: Number(playerProfile.quizHighScore) || 0,
+    speedrun: Number(playerProfile.speedrunHighScore) || 0,
+    party: Number(playerProfile.partyHighScore) || 0,
+    intrus: Number(playerProfile.oddOneOutHighScore) || 0,
+    poids: Number(playerProfile.weightBattleHighScore) || 0,
+    higherlower: Number(playerProfile.higherLowerHighScore) || 0
+  };
+  var draft = playerProfile.draftScoreAttackRecords || {};
+  Object.keys(draft).forEach(function (k) {
+    var dv = Number(draft[k]) || 0;
+    if (dv > 0) scores["draft_" + k] = dv;
+  });
+  try {
+    fetch("/api/scores", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ scores: scores }) }).catch(function () {});
+  } catch (e) {}
+}
+var __lbSubmitTimer = null;
+function queueLeaderboardSubmit() {
+  if (__lbSubmitTimer) clearTimeout(__lbSubmitTimer);
+  __lbSubmitTimer = setTimeout(submitLeaderboardScores, 2500);
+}
+window.queueLeaderboardSubmit = queueLeaderboardSubmit;
 (function () {
-  function submitLeaderboardScores() {
-    if (!window.__pokedleAuthed) return;
-    if (typeof playerProfile === "undefined" || !playerProfile) return;
-    var scores = {
-      quiz: Number(playerProfile.quizHighScore) || 0,
-      speedrun: Number(playerProfile.speedrunHighScore) || 0,
-      party: Number(playerProfile.partyHighScore) || 0,
-      intrus: Number(playerProfile.oddOneOutHighScore) || 0,
-      poids: Number(playerProfile.weightBattleHighScore) || 0,
-      higherlower: Number(playerProfile.higherLowerHighScore) || 0
-    };
-    try {
-      fetch("/api/scores", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ scores: scores }) }).catch(function () {});
-    } catch (e) {}
-  }
   setTimeout(submitLeaderboardScores, 8000);
   setInterval(submitLeaderboardScores, 60000);
 })();
@@ -20799,25 +20833,39 @@ function switchLeaderboard() {
   openLeaderboard(mode);
 }
 function openLeaderboard(mode) {
-  var MODES = [["quiz", "Quiz"], ["speedrun", "Speedrun"], ["party", "Party"], ["intrus", "Intrus"], ["poids", "Duel de poids"], ["higherlower", "Higher/Lower"]];
-  var current = MODES.some(function (m) { return m[0] === mode; }) ? mode : "quiz";
+  var MODES = [["quiz", "Quiz"], ["speedrun", "Speedrun"], ["party", "Party"], ["intrus", "Intrus"], ["poids", "Duel de poids"], ["higherlower", "Higher/Lower"], ["draft", "Draft Score"]];
+  var DRAFT_GENS = [["draft_all", "Tous"], ["draft_1", "G1"], ["draft_2", "G2"], ["draft_3", "G3"], ["draft_4", "G4"], ["draft_5", "G5"], ["draft_6", "G6"], ["draft_7", "G7"], ["draft_8", "G8"], ["draft_9", "G9"]];
+  var MEDALS = ["🥇", "🥈", "🥉"];
+  function isDraft(m) { return typeof m === "string" && m.indexOf("draft") === 0; }
+  var current = mode;
+  if (isDraft(current)) { if (current === "draft") current = "draft_all"; }
+  else if (!MODES.some(function (m) { return m[0] === current; })) current = "quiz";
   ensureOverlay("🏆 Classement", '<p class="card-desc">Chargement du classement...</p>');
   fetch("/api/leaderboard?mode=" + encodeURIComponent(current), { credentials: "same-origin" })
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var tabs = MODES.map(function (m) {
-        return '<button type="button" class="lb-tab' + (m[0] === current ? " is-active" : "") + '" data-action="switchLeaderboard" data-lb-mode="' + m[0] + '">' + escapeHtml(m[1]) + '</button>';
+        var act = (m[0] === "draft" ? isDraft(current) : m[0] === current);
+        var target = (m[0] === "draft" ? "draft_all" : m[0]);
+        return '<button type="button" class="lb-tab' + (act ? " is-active" : "") + '" data-action="switchLeaderboard" data-lb-mode="' + target + '">' + escapeHtml(m[1]) + '</button>';
       }).join("");
+      var genRow = "";
+      if (isDraft(current)) {
+        genRow = '<div class="lb-subtabs">' + DRAFT_GENS.map(function (g) {
+          return '<button type="button" class="lb-chip' + (g[0] === current ? " is-active" : "") + '" data-action="switchLeaderboard" data-lb-mode="' + g[0] + '">' + escapeHtml(g[1]) + '</button>';
+        }).join("") + '</div>';
+      }
       var list = ((data && data.top) || []).map(function (row, i) {
         var rankCls = i < 3 ? " lb-rank-top" : "";
+        var rankTxt = i < 3 ? MEDALS[i] : (i + 1);
         var av = row.avatar ? '<img class="lb-avatar" src="' + escapeHtml(row.avatar) + '" alt="" />' : '<span class="lb-avatar lb-avatar-empty"></span>';
-        return '<div class="lb-row"><span class="lb-rank' + rankCls + '">' + (i + 1) + '</span>' + av + '<span class="lb-name">' + escapeHtml(row.username || "Dresseur") + '</span><b class="lb-score">' + (Number(row.score) || 0) + '</b></div>';
+        return '<div class="lb-row' + (row.me ? " lb-row-me" : "") + '"><span class="lb-rank' + rankCls + '">' + rankTxt + '</span>' + av + '<span class="lb-name">' + escapeHtml(row.username || "Dresseur") + '</span><b class="lb-score">' + (Number(row.score) || 0) + '</b></div>';
       }).join("");
       if (!list) list = '<p class="card-desc">Aucun score pour ce mode pour le moment. Sois le premier !</p>';
       var me = "";
       if (data && data.me) me = '<div class="lb-me">Ta position : <b>#' + data.me.rank + '</b> — score <b>' + data.me.score + '</b></div>';
       else if (data && data.ok) me = '<div class="lb-me lb-me-empty">Connecte-toi avec Discord et joue pour apparaître ici.</div>';
-      ensureOverlay("🏆 Classement", '<div class="lb-tabs">' + tabs + '</div><div class="lb-list">' + list + '</div>' + me);
+      ensureOverlay("🏆 Classement", '<div class="lb-tabs">' + tabs + '</div>' + genRow + '<div class="lb-list">' + list + '</div>' + me);
     })
     .catch(function () { ensureOverlay("🏆 Classement", '<p class="card-desc">Classement indisponible pour le moment.</p>'); });
 }
@@ -20905,6 +20953,7 @@ function loadProfile() {
 
 function saveProfile() {
   writeJson(STORAGE_KEYS.profile, playerProfile);
+  try { if (typeof queueLeaderboardSubmit === "function") queueLeaderboardSubmit(); } catch (e) {}
 }
 
 function loadAchievementsState() {
