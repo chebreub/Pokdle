@@ -435,6 +435,7 @@ const strictCspDirectives = {
     "https://raw.githubusercontent.com",
     "https://pokeapi.co",
     "https://archives.bulbagarden.net",
+    "https://cdn.discordapp.com",
   ],
   connectSrc: [
     "'self'",

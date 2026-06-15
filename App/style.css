@@ -29077,3 +29077,12 @@ body.theme-dark .team-builder-module #team-builder-iv-preset {
     linear-gradient(45deg, transparent 50%, #9fb6e0 50%),
     linear-gradient(135deg, #9fb6e0 50%, transparent 50%);
 }
+
+/* Zone compte (connexion Discord) dans l'en-tete */
+.account-area { display: inline-flex; align-items: center; }
+.account-chip { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.30); border-radius: 999px; padding: 4px 8px 4px 4px; }
+.account-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #fff; flex-shrink: 0; }
+.account-name { color: #fff; font-weight: 800; font-size: 0.9rem; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-logout { color: #fff; text-decoration: none; font-weight: 900; line-height: 1; padding: 2px 6px; border-radius: 8px; }
+.account-logout:hover { background: rgba(255,255,255,0.22); }
+.account-login-ico { margin-right: 5px; }

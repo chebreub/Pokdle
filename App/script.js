@@ -20672,6 +20672,42 @@ function removeProfilePhoto() {
   showToast("Photo retirée.");
 }
 
+(function () {
+  function renderAccount(data) {
+    var el = document.getElementById("account-area");
+    if (!el) return;
+    if (!data || !data.auth) { el.innerHTML = ""; return; }
+    if (data.user) {
+      var av = data.user.avatar ? '<img class="account-avatar" src="' + escapeHtml(data.user.avatar) + '" alt="" />' : '';
+      el.innerHTML = '<span class="account-chip">' + av + '<span class="account-name">' + escapeHtml(data.user.username || "Dresseur") + '</span><a class="account-logout" href="/auth/logout" title="Déconnexion" aria-label="Déconnexion">⏻</a></span>';
+    } else {
+      el.innerHTML = '<a class="btn-ghost header-action-btn account-login" href="/auth/discord"><span class="account-login-ico">🎮</span>Connexion</a>';
+    }
+  }
+  function initAccount() {
+    try {
+      var p = new URLSearchParams(location.search);
+      var m = p.get("auth");
+      if (m) {
+        if (typeof showToast === "function") {
+          if (m === "ok") showToast("Connecté avec Discord ✅");
+          else if (m === "erreur") showToast("Échec de la connexion Discord.");
+          else if (m === "indispo") showToast("Connexion indisponible pour le moment.");
+        }
+        p.delete("auth");
+        var qs = p.toString();
+        history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+      }
+    } catch (e) {}
+    fetch("/api/me", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(renderAccount)
+      .catch(function () {});
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initAccount);
+  else initAccount();
+})();
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
