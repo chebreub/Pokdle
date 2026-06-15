@@ -29197,3 +29197,35 @@ body.theme-dark .lb-name { color: #eaf2ff; }
   .draft-score-hero .dsh-stats { width: 100%; }
   .draft-score-hero .dsh-chip { flex: 1; }
 }
+
+/* ===== Refonte Draft Score : correctif compactage (ecrase l'ancien calque !important) ===== */
+/* 1. L'ancienne rangee de badges fait doublon avec le bandeau -> on la masque */
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-progress,
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-progress-shell { display: none !important; }
+/* 2. Le bloc de stats sous l'equipe (BST/total/synergie/rerolls) double le bandeau -> masque */
+#screen-draft-score-attack.is-mode-score-attack #draft-team-metrics { display: none !important; }
+/* 3. Description longue de la draft : superflue dans le cockpit */
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks > .card-desc { display: none !important; }
+/* 4. Cartes de proposition : compactes */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card {
+  min-height: 0 !important;
+  padding: 9px 9px !important;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card img {
+  width: 52px !important;
+  height: 52px !important;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card strong { font-size: 0.86rem !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card > span { font-size: 0.72rem !important; }
+/* 5. Slots d'equipe : compacts (la colonne de droite respire) */
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card {
+  min-height: 0 !important;
+  padding: 8px 8px !important;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card img {
+  width: 46px !important;
+  height: 46px !important;
+}
+/* 6. Boite "Score Attack solo" (room 1v1) : plus compacte */
+#screen-draft-score-attack.is-mode-score-attack #draft-score-room-status,
+#screen-draft-score-attack.is-mode-score-attack .draft-score-attack-actions { margin: 6px 0 !important; }
