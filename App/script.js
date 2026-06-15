@@ -20745,6 +20745,7 @@ function removeProfilePhoto() {
     fetch("/api/me", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (me) {
       if (!me || !me.user) return;
       loggedIn = true;
+      window.__pokedleAuthed = true;
       fetch("/api/profile", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (resp) {
         var server = (resp && resp.data) || {};
         var serverAt = Number(server._savedAt) || 0;
@@ -20772,6 +20773,54 @@ function removeProfilePhoto() {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSync);
   else initSync();
 })();
+
+(function () {
+  function submitLeaderboardScores() {
+    if (!window.__pokedleAuthed) return;
+    if (typeof playerProfile === "undefined" || !playerProfile) return;
+    var scores = {
+      quiz: Number(playerProfile.quizHighScore) || 0,
+      speedrun: Number(playerProfile.speedrunHighScore) || 0,
+      party: Number(playerProfile.partyHighScore) || 0,
+      intrus: Number(playerProfile.oddOneOutHighScore) || 0,
+      poids: Number(playerProfile.weightBattleHighScore) || 0,
+      higherlower: Number(playerProfile.higherLowerHighScore) || 0
+    };
+    try {
+      fetch("/api/scores", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ scores: scores }) }).catch(function () {});
+    } catch (e) {}
+  }
+  setTimeout(submitLeaderboardScores, 8000);
+  setInterval(submitLeaderboardScores, 60000);
+})();
+
+function switchLeaderboard() {
+  var mode = this && this.dataset ? this.dataset.lbMode : "quiz";
+  openLeaderboard(mode);
+}
+function openLeaderboard(mode) {
+  var MODES = [["quiz", "Quiz"], ["speedrun", "Speedrun"], ["party", "Party"], ["intrus", "Intrus"], ["poids", "Duel de poids"], ["higherlower", "Higher/Lower"]];
+  var current = MODES.some(function (m) { return m[0] === mode; }) ? mode : "quiz";
+  ensureOverlay("🏆 Classement", '<p class="card-desc">Chargement du classement...</p>');
+  fetch("/api/leaderboard?mode=" + encodeURIComponent(current), { credentials: "same-origin" })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var tabs = MODES.map(function (m) {
+        return '<button type="button" class="lb-tab' + (m[0] === current ? " is-active" : "") + '" data-action="switchLeaderboard" data-lb-mode="' + m[0] + '">' + escapeHtml(m[1]) + '</button>';
+      }).join("");
+      var list = ((data && data.top) || []).map(function (row, i) {
+        var rankCls = i < 3 ? " lb-rank-top" : "";
+        var av = row.avatar ? '<img class="lb-avatar" src="' + escapeHtml(row.avatar) + '" alt="" />' : '<span class="lb-avatar lb-avatar-empty"></span>';
+        return '<div class="lb-row"><span class="lb-rank' + rankCls + '">' + (i + 1) + '</span>' + av + '<span class="lb-name">' + escapeHtml(row.username || "Dresseur") + '</span><b class="lb-score">' + (Number(row.score) || 0) + '</b></div>';
+      }).join("");
+      if (!list) list = '<p class="card-desc">Aucun score pour ce mode pour le moment. Sois le premier !</p>';
+      var me = "";
+      if (data && data.me) me = '<div class="lb-me">Ta position : <b>#' + data.me.rank + '</b> — score <b>' + data.me.score + '</b></div>';
+      else if (data && data.ok) me = '<div class="lb-me lb-me-empty">Connecte-toi avec Discord et joue pour apparaître ici.</div>';
+      ensureOverlay("🏆 Classement", '<div class="lb-tabs">' + tabs + '</div><div class="lb-list">' + list + '</div>' + me);
+    })
+    .catch(function () { ensureOverlay("🏆 Classement", '<p class="card-desc">Classement indisponible pour le moment.</p>'); });
+}
 
 function showToast(msg) {
   var el = document.getElementById("app-toast");

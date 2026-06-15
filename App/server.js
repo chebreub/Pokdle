@@ -53,7 +53,16 @@ async function initAuthDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       last_login TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
-    console.log("[auth] base prete (table users).");
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS scores (
+      discord_id TEXT NOT NULL,
+      mode TEXT NOT NULL,
+      score INTEGER NOT NULL DEFAULT 0,
+      username TEXT NOT NULL DEFAULT '',
+      avatar TEXT NOT NULL DEFAULT '',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (discord_id, mode)
+    )`);
+    console.log("[auth] base prete (tables users + scores).");
   } catch (e) { console.error("[auth] init base echouee:", e.message); }
 }
 initAuthDb();
@@ -159,6 +168,46 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
     await pgPool.query("UPDATE users SET data = $2 WHERE discord_id = $1", [user.id, JSON.stringify(data)]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
+});
+const LB_MODES = ["quiz", "speedrun", "party", "intrus", "poids", "higherlower"];
+
+app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
+  if (!authReady()) return res.json({ ok: false });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ ok: false });
+  const scores = (req.body && req.body.scores && typeof req.body.scores === "object") ? req.body.scores : {};
+  try {
+    for (const mode of LB_MODES) {
+      let v = Number(scores[mode]);
+      if (!Number.isFinite(v) || v <= 0) continue;
+      v = Math.max(0, Math.min(100000, Math.floor(v)));
+      await pgPool.query(
+        `INSERT INTO scores (discord_id, mode, score, username, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, now())
+         ON CONFLICT (discord_id, mode) DO UPDATE SET score = GREATEST(scores.score, EXCLUDED.score), username = EXCLUDED.username, avatar = EXCLUDED.avatar, updated_at = now()`,
+        [user.id, mode, v, user.username || "", user.avatar || ""]
+      );
+    }
+    res.json({ ok: true });
+  } catch (e) { console.error("[scores] post:", e.message); res.json({ ok: false }); }
+});
+
+app.get("/api/leaderboard", async (req, res) => {
+  if (!authReady()) return res.json({ ok: false, top: [], me: null });
+  const mode = LB_MODES.includes(req.query.mode) ? req.query.mode : "quiz";
+  try {
+    const top = await pgPool.query("SELECT username, avatar, score FROM scores WHERE mode = $1 ORDER BY score DESC, updated_at ASC LIMIT 20", [mode]);
+    let me = null;
+    const user = getSessionUser(req);
+    if (user) {
+      const mine = await pgPool.query("SELECT score FROM scores WHERE discord_id = $1 AND mode = $2", [user.id, mode]);
+      if (mine.rows[0]) {
+        const myScore = mine.rows[0].score;
+        const rankR = await pgPool.query("SELECT COUNT(*)::int AS c FROM scores WHERE mode = $1 AND score > $2", [mode, myScore]);
+        me = { rank: rankR.rows[0].c + 1, score: myScore };
+      }
+    }
+    res.json({ ok: true, mode, top: top.rows, me });
+  } catch (e) { console.error("[leaderboard] get:", e.message); res.json({ ok: false, top: [], me: null }); }
 });
 // ===== Fin auth Phase 1 =====
 
