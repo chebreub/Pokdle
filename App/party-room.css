@@ -568,3 +568,37 @@
   letter-spacing: 0.5px;
   align-self: center;
 }
+
+/* ===== Upgrade lobby : tuiles de mode + sièges libres ===== */
+#screen-party-room #party-mode-select {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  width: 100%;
+  align-items: stretch;
+}
+#screen-party-room #party-mode-select .party-mode-label { grid-column: 1 / -1; margin-bottom: 2px; }
+#screen-party-room .party-mode-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 10px 12px;
+  min-height: 56px;
+  border-radius: 14px;
+}
+#screen-party-room .party-mode-tile .pmt-emoji { font-size: 1.5rem; line-height: 1; flex: none; }
+#screen-party-room .party-mode-tile .pmt-text { display: flex; flex-direction: column; min-width: 0; }
+#screen-party-room .party-mode-tile .pmt-text b { font-size: 0.92rem; font-weight: 900; line-height: 1.15; }
+#screen-party-room .party-mode-tile .pmt-text small { font-size: 0.72rem; font-weight: 700; opacity: 0.82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#screen-party-room .party-mode-tile.is-active .pmt-text small { color: rgba(255, 255, 255, 0.92); opacity: 1; }
+
+.party-players .party-player.party-player-empty {
+  background: transparent !important;
+  border: 1px dashed rgba(143, 170, 212, 0.6) !important;
+  box-shadow: none !important;
+  opacity: 0.85;
+}
+.party-players .party-player.party-player-empty:hover { transform: none !important; box-shadow: none !important; }
+.party-player-empty .party-rank { color: #8aa0c4 !important; background: transparent !important; }
+.party-player-empty .party-seat-label { color: #8195b5; font-weight: 700; font-style: italic; }

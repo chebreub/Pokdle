@@ -8551,7 +8551,7 @@ function renderPartyRoom() {
     var typeComboMode = Boolean(room.round && (room.round.mode === "typecombo" || room.round.mode === "duocriteria"));
     var prevScores = partyRoomState.prevScores || {};
     var revealed = finished || complete;
-    listEl.innerHTML = players.map(function (p, i) {
+    var __partyRows = players.map(function (p, i) {
       var rank = (complete && i < 3) ? medals[i] : (i + 1);
       var gained = (p.score || 0) > (prevScores[p.id] || 0);
       var avName = String(p.nickname || "?");
@@ -8580,6 +8580,15 @@ function renderPartyRoom() {
         '<span class="party-score' + (gained ? ' is-gain' : '') + '">' + (p.score || 0) + ' pts</span>' +
         '</li>';
     }).join("");
+    var __partyMax = Number(room.maxPlayers) || 8;
+    var __partyEmpty = "";
+    if (!playing && !finished && !complete) {
+      var __freeSeats = Math.max(0, __partyMax - players.length);
+      for (var __s = 0; __s < __freeSeats; __s += 1) {
+        __partyEmpty += '<li class="party-player party-player-empty"><span class="party-rank">+</span><span class="party-player-name party-seat-label">Place libre \u00b7 partage le code</span></li>';
+      }
+    }
+    listEl.innerHTML = __partyRows + __partyEmpty;
     listEl.classList.toggle("is-podium", complete);
     partyRoomState.prevScores = {};
     raw.forEach(function (p) { partyRoomState.prevScores[p.id] = p.score || 0; });
