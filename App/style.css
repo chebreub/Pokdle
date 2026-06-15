@@ -29086,3 +29086,8 @@ body.theme-dark .team-builder-module #team-builder-iv-preset {
 .account-logout { color: #fff; text-decoration: none; font-weight: 900; line-height: 1; padding: 2px 6px; border-radius: 8px; }
 .account-logout:hover { background: rgba(255,255,255,0.22); }
 .account-login-ico { margin-right: 5px; }
+
+/* Bouton de connexion Discord — explicite (couleurs + logo Discord) */
+.account-login { display: inline-flex; align-items: center; gap: 8px; background: #5865F2; color: #fff; border: 1px solid #4854e0; border-radius: 12px; padding: 8px 14px; font-weight: 800; font-size: 0.92rem; text-decoration: none; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.35); white-space: nowrap; }
+.account-login:hover { background: #4752e6; }
+.account-login-logo { width: 20px; height: 20px; fill: #fff; flex-shrink: 0; }
