@@ -29235,3 +29235,23 @@ body.theme-dark .lb-name { color: #eaf2ff; }
 #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot { border-radius: 12px !important; }
 #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot img { height: 80% !important; }
 #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot b { font-size: 12px !important; }
+
+/* ===== Draft Score DUEL : picks XXL (sprite remplit le slot, BST en badge) + marges resserrees ===== */
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-wrap { padding: 12px 14px !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-arena { gap: 10px !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-versus { padding: 0 4px !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-player { padding: 10px !important; gap: 8px !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slots { gap: 6px !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot { padding: 0 !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot img { width: 100% !important; height: 100% !important; padding: 2px !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot b {
+  position: absolute !important;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 6px;
+  padding: 0 4px;
+  box-shadow: 0 1px 3px rgba(16, 35, 66, 0.18);
+}
+body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot b { background: rgba(18, 31, 54, 0.92); }
