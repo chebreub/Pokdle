@@ -29146,3 +29146,55 @@ body.theme-dark .lb-name { color: #eaf2ff; }
 #screen-draft-score-attack.is-mode-score-attack #draft-team-metrics { display: none !important; }
 /* Selecteur de generation masque pendant la draft */
 #screen-draft-score-attack.is-mode-score-attack.is-drafting #draft-mode-card > .draft-panel-gen { display: none !important; }
+
+/* ===== Draft Score Attack : cockpit 2 colonnes + cartes compactes (valide en live) ===== */
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: start;
+  background: linear-gradient(180deg, #ffffff, #f4f8ff) !important;
+  border: 1px solid rgba(158, 182, 222, 0.5) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 10px 30px rgba(31, 58, 99, 0.10) !important;
+  padding: 16px 18px !important;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > * { grid-column: 1 / -1; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-picks { grid-column: 1; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-team { grid-column: 2; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .card-desc { display: none !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks > .card-desc { display: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel {
+  background: #ffffff !important;
+  border: 1px solid rgba(158, 182, 222, 0.42) !important;
+  border-radius: 16px !important;
+  padding: 12px 14px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+/* Propositions : cartes compactes (sprite + nom + BST, on masque #id et projection) */
+#screen-draft-score-attack.is-mode-score-attack #draft-options { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important; gap: 8px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card { min-height: 0 !important; padding: 8px 6px !important; gap: 2px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card img { width: 46px !important; height: 46px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card strong { font-size: 0.8rem !important; margin: 0 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card .draft-card-meta { font-size: 0.66rem !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card > span:not(.draft-card-meta):not(.draft-bst-projection) { display: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-bst-projection { display: none !important; }
+/* Equipe : slots compacts (sprite + nom, on masque types + stat globale) */
+#screen-draft-score-attack.is-mode-score-attack #draft-team { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card { min-height: 0 !important; padding: 8px !important; gap: 4px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card img { width: 40px !important; height: 40px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card-types { display: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card-body > small:last-child { display: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card-body b { font-size: 0.82rem !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-slot-label { font-size: 0.58rem !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-empty-icon { width: 34px !important; height: 34px !important; font-size: 1rem !important; }
+/* Room 1v1 resserree */
+#screen-draft-score-attack.is-mode-score-attack #draft-score-room-status,
+#screen-draft-score-attack.is-mode-score-attack .draft-score-attack-actions { margin: 6px 0 !important; }
+/* Mobile : une colonne */
+@media (max-width: 900px) {
+  #screen-draft-score-attack.is-mode-score-attack #draft-mode-card { grid-template-columns: 1fr !important; }
+  #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-picks,
+  #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-team { grid-column: 1; }
+}
