@@ -1,0 +1,104 @@
+--- a/App/script.js
++++ b/App/script.js
+@@ -20600,6 +20600,42 @@
+   showToast(imported + " Pokémon importé" + (imported > 1 ? "s" : "") + (skipped ? " · " + skipped + " ignoré" + (skipped > 1 ? "s" : "") : "") + " ✅");
+ }
+ 
++function triggerProfilePhoto() {
++  const input = document.getElementById("profile-photo-input");
++  if (input) input.click();
++}
++function handleProfilePhotoFromEl() {
++  const file = this && this.files && this.files[0];
++  if (!file || !/^image\//.test(file.type)) { showToast("Choisis une image."); return; }
++  const reader = new FileReader();
++  reader.onload = function () {
++    const img = new Image();
++    img.onload = function () {
++      const size = 160;
++      const canvas = document.createElement("canvas");
++      canvas.width = size; canvas.height = size;
++      const ctx = canvas.getContext("2d");
++      const scale = Math.max(size / img.width, size / img.height);
++      const w = img.width * scale, h = img.height * scale;
++      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
++      try {
++        playerProfile.avatarPhoto = canvas.toDataURL("image/jpeg", 0.82);
++        saveProfile();
++        if (typeof renderProfileScreen === "function") renderProfileScreen();
++        showToast("Photo de profil enregistrée ✅");
++      } catch (e) { showToast("Image trop lourde, réessaie."); }
++    };
++    img.onerror = function () { showToast("Image illisible."); };
++    img.src = reader.result;
++  };
++  reader.readAsDataURL(file);
++}
++function removeProfilePhoto() {
++  if (playerProfile) { playerProfile.avatarPhoto = ""; saveProfile(); }
++  if (typeof renderProfileScreen === "function") renderProfileScreen();
++  showToast("Photo retirée.");
++}
++
+ function showToast(msg) {
+   var el = document.getElementById("app-toast");
+   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
+@@ -20642,6 +20678,7 @@
+   playerProfile = {
+     nickname: typeof parsed?.nickname === "string" ? parsed.nickname : "",
+     favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
++    avatarPhoto: typeof parsed?.avatarPhoto === "string" ? parsed.avatarPhoto : "",
+     // Engagement system
+     xp: Number(parsed?.xp) || 0,
+     dailyQuests: Array.isArray(parsed?.dailyQuests) ? parsed.dailyQuests : null,
+@@ -20837,13 +20874,16 @@
+   const trainerCard = document.getElementById("profile-trainer-card");
+   if (trainerCard) {
+     const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
+-    const avatar = fav
+-      ? `<img src="${getPokemonSprite(fav)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(fav))}" />`
+-      : `<span class="trainer-card-avatar-empty">?</span>`;
++    const photo = playerProfile.avatarPhoto || "";
++    const avatar = photo
++      ? `<img src="${photo}" alt="Photo de profil" />`
++      : (fav
++        ? `<img src="${getPokemonSprite(fav)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(fav))}" />`
++        : `<span class="trainer-card-avatar-empty">?</span>`);
+     const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
+     const badgesUnlocked = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
+     trainerCard.innerHTML = `
+-      <div class="trainer-card-avatar">${avatar}</div>
++      <div class="trainer-card-avatar">${avatar}<button type="button" class="trainer-card-photo-btn" data-action="triggerProfilePhoto" title="Changer la photo">📷</button></div>
+       <div class="trainer-card-main">
+         <span class="trainer-card-eyebrow">🎫 Carte de Dresseur</span>
+         <strong class="trainer-card-name">${pseudo}</strong>
+@@ -20855,6 +20895,7 @@
+           <span class="trainer-card-chip">🔥 ${playerStats.dailyBestStreak || 0} record série</span>
+           <span class="trainer-card-chip">🏅 ${badgesUnlocked}/${ACHIEVEMENT_DEFS.length} succès</span>
+         </div>
++        ${photo ? '<button type="button" class="trainer-card-photo-remove" data-action="removeProfilePhoto">Retirer la photo</button>' : ''}
+       </div>`;
+   }
+ 
+--- a/App/index.html
++++ b/App/index.html
+@@ -425,6 +425,7 @@
+         <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
+ 
+         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
++        <input id="profile-photo-input" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
+         <div class="profile-layout">
+           <section class="profile-panel">
+             <h3>Identité</h3>
+--- a/App/style.css
++++ b/App/style.css
+@@ -29020,3 +29020,9 @@
+ .trainer-card-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+ .trainer-card-chip { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 4px 11px; font-size: 0.8rem; font-weight: 800; }
+ @media (max-width: 640px) { .trainer-card { flex-direction: column; text-align: center; } .trainer-card-main { align-items: center; } .trainer-card-title { align-self: center; } .trainer-card-chips { justify-content: center; } }
++
++/* Photo de profil (locale) sur la carte de dresseur */
++.trainer-card-photo-btn { position: absolute; bottom: -2px; right: -2px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background: #2f4fd6; color: #fff; font-size: 0.85rem; cursor: pointer; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.28); padding: 0; }
++.trainer-card-photo-btn:hover { background: #2742b8; }
++.trainer-card-photo-remove { align-self: flex-start; margin-top: 6px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 999px; padding: 3px 11px; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
++.trainer-card-photo-remove:hover { background: rgba(255,255,255,0.26); }
