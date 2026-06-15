@@ -140,6 +140,26 @@ app.get("/api/me", (req, res) => {
   const user = getSessionUser(req);
   res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar } : null, auth: true });
 });
+app.get("/api/profile", async (req, res) => {
+  if (!authReady()) return res.json({ ok: false, data: null });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ ok: false, data: null });
+  try {
+    const r = await pgPool.query("SELECT data FROM users WHERE discord_id = $1", [user.id]);
+    res.json({ ok: true, data: (r.rows[0] && r.rows[0].data) || {} });
+  } catch (e) { console.error("[profile] get:", e.message); res.json({ ok: false, data: null }); }
+});
+
+app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
+  if (!authReady()) return res.json({ ok: false });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ ok: false });
+  const data = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
+  try {
+    await pgPool.query("UPDATE users SET data = $2 WHERE discord_id = $1", [user.id, JSON.stringify(data)]);
+    res.json({ ok: true });
+  } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
+});
 // ===== Fin auth Phase 1 =====
 
 const statClashRooms = new Map();

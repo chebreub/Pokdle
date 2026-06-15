@@ -20708,6 +20708,71 @@ function removeProfilePhoto() {
   else initAccount();
 })();
 
+(function () {
+  var SYNC_KEYS = ["profile", "stats", "achievements", "teamBuilder"];
+  var SYNC_AT = "pokedle_sync_at";
+  var loggedIn = false;
+  function storageKey(name) { return (typeof STORAGE_KEYS !== "undefined" && STORAGE_KEYS[name]) || null; }
+  function buildLocalBlob() {
+    var blob = { _savedAt: Date.now() };
+    SYNC_KEYS.forEach(function (k) {
+      var sk = storageKey(k); if (!sk) return;
+      var v = null; try { v = localStorage.getItem(sk); } catch (e) {}
+      if (v != null) blob[k] = v;
+    });
+    return blob;
+  }
+  function localSavedAt() { try { return Number(localStorage.getItem(SYNC_AT) || 0); } catch (e) { return 0; } }
+  function setLocalSavedAt(t) { try { localStorage.setItem(SYNC_AT, String(t)); } catch (e) {} }
+  function applyServerBlob(blob) {
+    SYNC_KEYS.forEach(function (k) {
+      var sk = storageKey(k); if (!sk) return;
+      if (typeof blob[k] === "string") { try { localStorage.setItem(sk, blob[k]); } catch (e) {} }
+    });
+    setLocalSavedAt(Number(blob._savedAt) || Date.now());
+  }
+  function pushSync() {
+    if (!loggedIn) return;
+    var blob = buildLocalBlob();
+    var hasContent = SYNC_KEYS.some(function (k) { return blob[k]; });
+    if (!hasContent) return; // garde-fou : ne jamais écraser le compte avec du vide
+    setLocalSavedAt(blob._savedAt);
+    try {
+      fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(blob) }).catch(function () {});
+    } catch (e) {}
+  }
+  function initSync() {
+    fetch("/api/me", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (me) {
+      if (!me || !me.user) return;
+      loggedIn = true;
+      fetch("/api/profile", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (resp) {
+        var server = (resp && resp.data) || {};
+        var serverAt = Number(server._savedAt) || 0;
+        var serverHas = SYNC_KEYS.some(function (k) { return typeof server[k] === "string"; });
+        if (serverHas && serverAt > localSavedAt() && sessionStorage.getItem("pokedle_synced") !== "1") {
+          applyServerBlob(server);
+          try { sessionStorage.setItem("pokedle_synced", "1"); } catch (e) {}
+          location.reload();
+          return;
+        }
+        pushSync();
+      }).catch(function () {});
+    }).catch(function () {});
+    setInterval(pushSync, 60000);
+    window.addEventListener("pagehide", function () {
+      if (!loggedIn) return;
+      try {
+        var blob = buildLocalBlob();
+        if (SYNC_KEYS.some(function (k) { return blob[k]; }) && navigator.sendBeacon) {
+          navigator.sendBeacon("/api/profile", new Blob([JSON.stringify(blob)], { type: "application/json" }));
+        }
+      } catch (e) {}
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSync);
+  else initSync();
+})();
+
 function showToast(msg) {
   var el = document.getElementById("app-toast");
   if (!el) { try { console.warn("toast:", msg); } catch (e) {} return; }
