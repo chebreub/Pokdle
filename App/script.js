@@ -19175,6 +19175,45 @@ function updateDraftRankChip(gen) {
     })
     .catch(function () {});
 }
+function animateDraftCount(el, target) {
+  if (!el) return;
+  target = Number(target) || 0;
+  var dur = 900, start = performance.now();
+  function tick(now) {
+    var t = Math.min(1, (now - start) / dur);
+    var eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(target * eased);
+    if (t < 1) requestAnimationFrame(tick); else el.textContent = target;
+  }
+  requestAnimationFrame(tick);
+}
+function launchDraftConfetti(container) {
+  if (!container) return;
+  var colors = ["#2f76ff", "#e4382f", "#ffcc33", "#7a2bd0", "#1f8a37"];
+  var layer = document.createElement("div");
+  layer.className = "dse-confetti";
+  for (var i = 0; i < 42; i++) {
+    var p = document.createElement("span");
+    p.style.left = (Math.random() * 100) + "%";
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = (Math.random() * 0.35) + "s";
+    layer.appendChild(p);
+  }
+  container.appendChild(layer);
+  setTimeout(function () { layer.remove(); }, 2800);
+}
+function shareDraftScore() {
+  try {
+    if (typeof draftArenaState === "undefined" || !draftArenaState) return;
+    var avg = getDraftTeamBstMetrics(draftArenaState.team).average;
+    var gen = draftArenaState.selectedGen;
+    var label = getDraftScoreAttackResultLabel(avg);
+    var txt = "\ud83c\udfaf Draft Score Attack \u2014 Gen " + gen + " : moyenne BST " + avg + " (" + label + ") sur Pok\u00e9dle ! https://pokdle.onrender.com";
+    if (navigator.share) { navigator.share({ text: txt }).catch(function () {}); }
+    else if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function () { if (typeof showToast === "function") showToast("R\u00e9sultat copi\u00e9 !"); }).catch(function () {}); }
+  } catch (e) {}
+}
+window.shareDraftScore = shareDraftScore;
 function renderDraftArena() {
   const screen = document.getElementById(draftArenaState?.mode === "scoreAttack" ? "screen-draft-score-attack" : "screen-draft-arena");
   if (!screen || !draftArenaState) return;
@@ -19542,19 +19581,45 @@ function renderDraftArena() {
     if (draftFinished && !isDuelLive) {
       const isScore = draftArenaState.mode === "scoreAttack";
       const lbMode = "draft_" + (draftArenaState.selectedGen || "all");
-      const headline = isScore
-        ? `🎯 Draft terminée — moyenne BST <b>${bstMetrics.average}</b>${draftArenaState.scoreAttackNewRecord ? " 🏆 Nouveau record !" : ""}`
-        : "🏆 Run terminée — relance une nouvelle draft quand tu veux";
-      endActions.innerHTML =
-        `<div class="draft-end-headline">${headline}</div>` +
-        `<div class="draft-end-buttons">` +
-          `<button type="button" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouvelle draft</button>` +
-          (isScore ? `<button type="button" class="btn-blue" data-action="openLeaderboard" data-args='["${lbMode}"]'>🏆 Voir le classement</button>` : "") +
-        `</div>`;
-      endActions.classList.remove("hidden");
+      if (isScore) {
+        const avg = bstMetrics.average || 0;
+        const rankLabel = getDraftScoreAttackResultLabel(avg);
+        const tier = avg >= 600 ? "master" : avg >= 550 ? "elite" : avg >= 500 ? "solide" : "rookie";
+        const medal = avg >= 600 ? "👑" : avg >= 550 ? "🏆" : avg >= 500 ? "🥇" : "🎯";
+        const isNew = Boolean(draftArenaState.scoreAttackNewRecord);
+        const rec = getDraftScoreAttackRecord(draftArenaState.selectedGen);
+        const recHtml = isNew
+          ? `<div class="dse-record is-new">🎉 Nouveau record !</div>`
+          : (rec ? `<div class="dse-record">Record Gen ${draftArenaState.selectedGen} : <b>${rec}</b></div>` : "");
+        endActions.innerHTML =
+          `<div class="dse-reveal" data-tier="${tier}">` +
+            `<div class="dse-badge">${medal}</div>` +
+            `<div class="dse-rank">${escapeHtml(rankLabel)}</div>` +
+            `<div class="dse-score"><b class="dse-num" data-target="${avg}">0</b><small>Moyenne BST finale</small></div>` +
+            recHtml +
+            `<div class="dse-buttons">` +
+              `<button type="button" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouvelle draft</button>` +
+              `<button type="button" class="btn-blue" data-action="openLeaderboard" data-args='["${lbMode}"]'>🏆 Classement</button>` +
+              `<button type="button" class="btn-ghost" data-action="shareDraftScore">📤 Partager</button>` +
+            `</div>` +
+          `</div>`;
+        endActions.classList.remove("hidden");
+        const revealKey = avg + "|" + (isNew ? "R" : "");
+        if (endActions.dataset.revealKey !== revealKey) {
+          endActions.dataset.revealKey = revealKey;
+          try { animateDraftCount(endActions.querySelector(".dse-num"), avg); } catch (e) {}
+          if (isNew) { try { launchDraftConfetti(endActions.querySelector(".dse-reveal")); } catch (e) {} }
+        }
+      } else {
+        endActions.innerHTML =
+          `<div class="draft-end-headline">🏆 Run terminée</div>` +
+          `<div class="draft-end-buttons"><button type="button" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouvelle draft</button></div>`;
+        endActions.classList.remove("hidden");
+      }
     } else {
       endActions.classList.add("hidden");
       endActions.innerHTML = "";
+      endActions.dataset.revealKey = "";
     }
   }
 
