@@ -19158,6 +19158,23 @@ async function pickDraftArenaOption(pokemonId) {
   renderDraftArena();
 }
 
+function updateDraftRankChip(gen) {
+  if (!window.__pokedleAuthed || !gen) return;
+  var el = document.getElementById("dsh-rank-val");
+  if (!el) return;
+  window.__draftRankCache = window.__draftRankCache || {};
+  var c = window.__draftRankCache[gen];
+  if (c && Date.now() - c.t < 15000) { el.textContent = c.rank ? "#" + c.rank : "\u2013"; return; }
+  fetch("/api/leaderboard?mode=draft_" + gen, { credentials: "same-origin" })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var rank = d && d.me ? d.me.rank : null;
+      window.__draftRankCache[gen] = { rank: rank, t: Date.now() };
+      var e = document.getElementById("dsh-rank-val");
+      if (e) e.textContent = rank ? "#" + rank : "\u2013";
+    })
+    .catch(function () {});
+}
 function renderDraftArena() {
   const screen = document.getElementById(draftArenaState?.mode === "scoreAttack" ? "screen-draft-score-attack" : "screen-draft-arena");
   if (!screen || !draftArenaState) return;
@@ -19506,10 +19523,12 @@ function renderDraftArena() {
         '</div>' +
         '<div class="dsh-stats">' +
           '<div class="dsh-chip"><span>\ud83c\udfc6 Record G' + draftArenaState.selectedGen + '</span><b>' + (rec || "\u2013") + '</b></div>' +
+          (window.__pokedleAuthed ? '<div class="dsh-chip dsh-chip-rank"><span>\ud83c\udfc5 Ton rang</span><b id="dsh-rank-val">\u2026</b></div>' : '') +
           '<div class="dsh-chip"><span>\ud83d\udd04 Rerolls</span><b>' + draftArenaState.scoreAttackRerollsLeft + '</b></div>' +
           '<div class="dsh-chip dsh-chip-team"><span>\ud83d\udc65 \u00c9quipe</span><b>' + draftArenaState.team.length + '/' + DRAFT_TEAM_SIZE + '</b></div>' +
         '</div>';
       scoreHero.classList.remove("hidden");
+      updateDraftRankChip(draftArenaState.selectedGen);
     } else {
       scoreHero.classList.add("hidden");
       scoreHero.innerHTML = "";

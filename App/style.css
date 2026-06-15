@@ -29198,3 +29198,30 @@ body.theme-dark .lb-name { color: #eaf2ff; }
   #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-picks,
   #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-team { grid-column: 1; }
 }
+
+/* ===== Draft Score Attack : embellissements + header compact + Relancer en-tete + chip rang ===== */
+/* Header compact, statut discret */
+#screen-draft-score-attack.is-mode-score-attack .ranking-head { padding: 9px 14px !important; border-radius: 16px !important; margin: 0 !important; }
+#screen-draft-score-attack.is-mode-score-attack .ranking-head .card-title { font-size: 1.22rem !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-status { font-size: 0.8rem !important; padding: 5px 12px !important; margin: 0 !important; }
+/* Propositions : halo, survol, BST en pastille */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card { background: linear-gradient(180deg, #ffffff, #f7faff) !important; border-radius: 14px !important; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card:hover { transform: translateY(-3px) !important; box-shadow: 0 10px 22px rgba(31, 58, 99, .16) !important; border-color: rgba(47, 118, 255, .5) !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card img { width: 64px !important; height: 64px !important; background: radial-gradient(circle at 50% 42%, rgba(47, 118, 255, .16), rgba(47, 118, 255, 0) 68%) !important; border-radius: 50% !important; padding: 3px !important; filter: drop-shadow(0 3px 6px rgba(31, 58, 99, .18)) !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .draft-option-card .draft-card-meta { display: inline-block !important; background: #eef3ff !important; color: #2457ad !important; border-radius: 999px !important; padding: 2px 8px !important; margin-top: 2px !important; font-weight: 800 !important; }
+/* Equipe : slots remplis colores, dernier en or, vides discrets, halo sprite */
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card { background: linear-gradient(180deg, #ffffff, #f4f8ff) !important; border-radius: 14px !important; transition: transform .14s ease, box-shadow .14s ease !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card:not(.placeholder) { border: 1px solid rgba(47, 118, 255, .32) !important; box-shadow: 0 4px 12px rgba(47, 118, 255, .10) !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card.is-latest { border: 1px solid #ffcc33 !important; box-shadow: 0 6px 16px rgba(255, 204, 51, .35) !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card.placeholder { background: transparent !important; border: 1px dashed rgba(143, 170, 212, .55) !important; box-shadow: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card img { width: 56px !important; height: 56px !important; background: radial-gradient(circle at 50% 42%, rgba(47, 118, 255, .16), rgba(47, 118, 255, 0) 70%) !important; border-radius: 50% !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-slot-label { color: #8aa0c4 !important; text-transform: uppercase !important; letter-spacing: .04em !important; font-weight: 800 !important; }
+/* Bouton Relancer : compact, dans l'en-tete du panneau propositions */
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks { position: relative !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks .draft-score-attack-actions { position: absolute !important; top: 10px; right: 12px; margin: 0 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-score-reroll { min-height: 0 !important; padding: 5px 12px !important; font-size: .78rem !important; border-radius: 999px !important; background: #eef3ff !important; color: #2457ad !important; border: 1px solid #cfe0fb !important; box-shadow: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-score-reroll:not(:disabled):hover { background: #dfeaff !important; }
+/* Room 1v1 plus douce */
+#screen-draft-score-attack.is-mode-score-attack #draft-score-room-status { background: linear-gradient(135deg, rgba(47, 118, 255, .06), rgba(228, 56, 47, .05)) !important; border: 1px solid rgba(158, 182, 222, .4) !important; border-radius: 14px !important; }
+/* Chip Ton rang */
+.draft-score-hero .dsh-chip.dsh-chip-rank b { color: #1f8a37; }
