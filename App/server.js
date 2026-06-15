@@ -400,10 +400,36 @@ function getServerDailyPokemon() {
   return { key, pokemon: pool[Math.floor(rng() * pool.length)] };
 }
 
+// Silhouette OG : un Pokémon ALÉATOIRE (jamais la réponse du jour) pour ne pas spoiler.
+// Stable sur la journée (graine "pokedle-og:<date>"), change chaque jour.
+function getOgSilhouettePokemon() {
+  const key = serverUTCDateKey();
+  const daily = getServerDailyPokemon().pokemon;
+  const seedSource = `pokedle-og:${key}`;
+  let h = 2166136261;
+  for (let i = 0; i < seedSource.length; i += 1) {
+    h ^= seedSource.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let seed = h >>> 0;
+  const rng = () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const pool = POKEMON_LIST.filter((p) => p && !p.isAltForm && Number(p.id) < 20000);
+  if (!pool.length) return daily;
+  let idx = Math.floor(rng() * pool.length);
+  if (daily && pool[idx] && pool[idx].id === daily.id) idx = (idx + 1) % pool.length;
+  return pool[idx];
+}
+
 const ogCache = { key: null, buffer: null, pending: null };
 
 async function buildDailyOgBuffer() {
-  const { key, pokemon } = getServerDailyPokemon();
+  const key = serverUTCDateKey();
+  const pokemon = getOgSilhouettePokemon();
   const artworkUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
   const resp = await fetch(artworkUrl, { signal: AbortSignal.timeout(8000) });
   if (!resp.ok) throw new Error(`artwork HTTP ${resp.status}`);
