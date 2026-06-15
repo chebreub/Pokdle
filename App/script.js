@@ -19298,6 +19298,7 @@ function renderDraftArena() {
     scoreAttackToggle.classList.toggle("is-active-mode", isScoreMode);
   }
   screen.classList.toggle("is-mode-score-attack", draftArenaState.mode === "scoreAttack");
+  screen.classList.toggle("is-drafting", draftArenaState.mode === "scoreAttack" && draftArenaState.phase !== "gen");
   screen.classList.toggle("is-mode-arena", draftArenaState.mode !== "scoreAttack");
   if (scoreRerollButton) {
     const canReroll = draftArenaState.mode === "scoreAttack"
@@ -19476,6 +19477,34 @@ function renderDraftArena() {
         <div class="draft-summary-card"><span>${draftArenaState.mode === "scoreAttack" ? "Rerolls" : "Région"}</span><b>${draftArenaState.mode === "scoreAttack" ? draftArenaState.scoreAttackRerollsLeft : draftArenaState.selectedGen ? escapeHtml(draftGenLabel(draftArenaState.selectedGen)) : "-"}</b></div>
       `
       : "";
+  }
+
+  const scoreHero = document.getElementById("draft-score-hero");
+  if (scoreHero) {
+    if (draftArenaState.mode === "scoreAttack" && draftArenaState.selectedGen) {
+      const avg = bstMetrics.average || 0;
+      const pct = avg ? Math.max(4, Math.min(100, Math.round((avg / 600) * 100))) : 0;
+      const rec = getDraftScoreAttackRecord(draftArenaState.selectedGen);
+      const sub = bstMetrics.nextTarget
+        ? (bstMetrics.nextTarget.min - avg) + " pts avant " + escapeHtml(bstMetrics.nextTarget.label)
+        : (bstMetrics.rank ? "Palier " + escapeHtml(bstMetrics.rank.label) + " atteint !" : "Commence \u00e0 drafter");
+      scoreHero.innerHTML =
+        '<div class="dsh-main">' +
+          '<div class="dsh-label">Moyenne BST</div>' +
+          '<div class="dsh-score">' + (avg || "\u2013") + '</div>' +
+          '<div class="dsh-gauge"><span style="width:' + pct + '%"></span></div>' +
+          '<div class="dsh-sub">' + sub + '</div>' +
+        '</div>' +
+        '<div class="dsh-stats">' +
+          '<div class="dsh-chip"><span>\ud83c\udfc6 Record G' + draftArenaState.selectedGen + '</span><b>' + (rec || "\u2013") + '</b></div>' +
+          '<div class="dsh-chip"><span>\ud83d\udd04 Rerolls</span><b>' + draftArenaState.scoreAttackRerollsLeft + '</b></div>' +
+          '<div class="dsh-chip dsh-chip-team"><span>\ud83d\udc65 \u00c9quipe</span><b>' + draftArenaState.team.length + '/' + DRAFT_TEAM_SIZE + '</b></div>' +
+        '</div>';
+      scoreHero.classList.remove("hidden");
+    } else {
+      scoreHero.classList.add("hidden");
+      scoreHero.innerHTML = "";
+    }
   }
 
   const endActions = document.getElementById("draft-end-actions");

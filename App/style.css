@@ -29125,3 +29125,75 @@ body.theme-dark .lb-name { color: #eaf2ff; }
 .draft-end-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .draft-end-buttons .btn-yellow, .draft-end-buttons .btn-blue { font-size: 1rem; padding: 11px 20px; }
 @keyframes draftEndPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ===== Refonte Draft Score Attack : cockpit (DA Stat Clash + couleurs site) ===== */
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: start;
+  background: linear-gradient(180deg, #ffffff, #f4f8ff);
+  border: 1px solid rgba(158, 182, 222, 0.5);
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(31, 58, 99, 0.10);
+  padding: 16px 18px;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > * { grid-column: 1 / -1; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .card-desc { display: none; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-progress { display: none; }
+#screen-draft-score-attack.is-mode-score-attack #draft-status { font-size: 0.84rem; margin: 0; opacity: 0.9; }
+#screen-draft-score-attack.is-mode-score-attack.is-drafting #draft-mode-card > .draft-panel-gen { display: none; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-picks { grid-column: 1; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-team { grid-column: 2; }
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel {
+  background: #ffffff;
+  border: 1px solid rgba(158, 182, 222, 0.42);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 0;
+  box-shadow: none;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel::before { display: none; }
+#screen-draft-score-attack.is-mode-score-attack .ranking-head-actions button {
+  min-height: 34px;
+  padding: 7px 14px;
+  border-radius: 16px;
+  font-size: 0.84rem;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-options {
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 8px;
+}
+#screen-draft-score-attack.is-mode-score-attack #draft-team {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+/* Bandeau score */
+.draft-score-hero {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(47, 118, 255, 0.10), rgba(228, 56, 47, 0.08));
+  border: 1px solid rgba(47, 118, 255, 0.22);
+  border-radius: 16px;
+  padding: 12px 16px;
+}
+.draft-score-hero .dsh-main { flex: 1.4; min-width: 190px; }
+.draft-score-hero .dsh-label { font-size: 0.74rem; color: #5c6b86; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.draft-score-hero .dsh-score { font-family: "Nunito", sans-serif; font-size: 2.5rem; font-weight: 900; line-height: 1; color: #1f3a63; }
+.draft-score-hero .dsh-gauge { height: 9px; border-radius: 99px; background: rgba(31, 58, 99, 0.14); margin: 7px 0 5px; overflow: hidden; }
+.draft-score-hero .dsh-gauge span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #2f76ff, #e4382f); transition: width 0.5s ease; }
+.draft-score-hero .dsh-sub { font-size: 0.8rem; color: #5c6b86; font-weight: 800; }
+.draft-score-hero .dsh-stats { display: flex; gap: 8px; align-items: stretch; }
+.draft-score-hero .dsh-chip { background: #fff; border: 1px solid rgba(158, 182, 222, 0.5); border-radius: 12px; padding: 8px 12px; text-align: center; min-width: 76px; }
+.draft-score-hero .dsh-chip span { display: block; font-size: 0.7rem; color: #5c6b86; font-weight: 800; white-space: nowrap; }
+.draft-score-hero .dsh-chip b { font-size: 1.15rem; color: #2f76ff; font-family: "Nunito", sans-serif; }
+.draft-score-hero .dsh-chip.dsh-chip-team b { color: #e4382f; }
+@media (max-width: 860px) {
+  #screen-draft-score-attack.is-mode-score-attack #draft-mode-card { grid-template-columns: 1fr; }
+  #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-picks,
+  #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-team { grid-column: 1; }
+  .draft-score-hero .dsh-stats { width: 100%; }
+  .draft-score-hero .dsh-chip { flex: 1; }
+}
