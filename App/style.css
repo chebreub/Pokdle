@@ -29277,3 +29277,47 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot[data-rarity="decent"] { border-color: rgba(47, 118, 255, .5) !important; }
 #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot[data-rarity="strong"] { border-color: rgba(138, 63, 209, .6) !important; background: linear-gradient(180deg, #ffffff, #f4ecff) !important; box-shadow: inset 0 0 0 1px rgba(138, 63, 209, .3) !important; }
 #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-slot[data-rarity="legendary"] { border-color: #e8b93e !important; background: linear-gradient(180deg, #fffdf5, #fff1c9) !important; box-shadow: inset 0 0 0 1px rgba(232, 185, 62, .55), 0 2px 10px rgba(232, 185, 62, .3) !important; }
+
+/* ===== Draft Score : REFONTE des cartes de draft (carte de jeu premium) ===== */
+#screen-draft-score-attack.is-mode-score-attack #draft-options { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)) !important; gap: 12px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 0 0 9px;
+  border-radius: 16px;
+  border: 2px solid #dbe7fb;
+  background: #ffffff;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(31, 58, 99, .08);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  --dsc-i: 0;
+  animation: dscIn .3s ease both;
+}
+@keyframes dscIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(31, 58, 99, .22); border-color: #2f76ff; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card:active { transform: translateY(-1px) scale(.98); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-top { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 5px 9px; background: #eef3ff; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-tier { font-size: .58rem; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: #5a6f96; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-bst { font-size: .82rem; font-weight: 900; color: #2457ad; background: #fff; border-radius: 999px; padding: 1px 8px; box-shadow: 0 1px 3px rgba(16, 35, 66, .12); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-art { padding: 8px 0 2px; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-art img { width: 78px; height: 78px; image-rendering: pixelated; object-fit: contain; filter: drop-shadow(0 5px 9px rgba(31, 58, 99, .24)); transition: transform .15s ease; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card:hover .dsc-art img { transform: scale(1.08); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-name { font-size: .9rem; font-weight: 800; color: #17345d; text-align: center; padding: 0 6px; line-height: 1.12; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-proj { font-size: .66rem; color: #5a6f96; font-weight: 700; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-proj b { color: #2457ad; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.picked { transform: scale(.9); opacity: .45; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.locked { opacity: .42; pointer-events: none; filter: grayscale(.4); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .draft-option-reroll { position: absolute; top: 6px; right: 6px; z-index: 3; min-height: 0; width: 26px; height: 26px; padding: 0; border-radius: 50%; font-size: .8rem; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .draft-shiny-mark { position: absolute; top: 7px; left: 7px; z-index: 3; font-size: .56rem; background: #fff3c9; color: #8a5a00; border-radius: 999px; padding: 1px 7px; font-weight: 900; }
+/* Cadres de rarete : plus le poke est puissant, plus la carte s'illumine */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="decent"] { border-color: #7fb0ef; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="decent"] .dsc-top { background: linear-gradient(90deg, #dcebff, #eef5ff); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="strong"] { border-color: #b07ce8; box-shadow: 0 4px 16px rgba(138, 63, 209, .22); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="strong"] .dsc-top { background: linear-gradient(90deg, #ecdcff, #f5ecff); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="strong"] .dsc-bst { color: #7a2bd0; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="legendary"] { border-color: #e8b93e; box-shadow: 0 6px 22px rgba(232, 185, 62, .42); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="legendary"] .dsc-top { background: linear-gradient(90deg, #ffe6a0, #fff4cf); }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="legendary"] .dsc-bst { color: #8a5a00; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="legendary"]::after { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 32%, rgba(255, 255, 255, .5) 50%, transparent 68%); transform: translateX(-130%); animation: dsShine 3.4s ease-in-out infinite; pointer-events: none; }
+@keyframes dsShine { 0%, 55% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }

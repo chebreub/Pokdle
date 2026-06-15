@@ -19402,7 +19402,7 @@ function renderDraftArena() {
       for (const option of draftArenaState.options) {
         const card = document.createElement("button");
         card.type = "button";
-        card.className = "draft-option-card" + (option.shiny ? " is-shiny" : "") + (option.locked ? " picked locked" : "");
+        card.className = "dsc-card" + (option.shiny ? " is-shiny" : "") + (option.locked ? " picked locked" : "");
         card.style.setProperty("--draft-i", String(optionIdx));
         optionIdx += 1;
         const spriteId = getPokemonSpriteId(option.pokemon);
@@ -19424,11 +19424,10 @@ function renderDraftArena() {
           : "";
         card.innerHTML = `
           ${rerollBtn}
-          <img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" />
-          <strong>${escapeHtml(option.pokemon.name)}</strong>
-          <span>#${spriteId}</span>
-          <span class="draft-card-meta">BST ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</span>
-          <span class="draft-bst-projection">Moy. après pick : ${projectedAverage}</span>
+          <div class="dsc-top"><span class="dsc-tier">${escapeHtml(metrics.rarityLabel)}</span><span class="dsc-bst">${metrics.statGlobal}</span></div>
+          <div class="dsc-art"><img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" /></div>
+          <strong class="dsc-name">${escapeHtml(option.pokemon.name)}</strong>
+          <div class="dsc-proj">Moy. <b>${projectedAverage}</b></div>
           ${sparkle}
         `;
         card.disabled = Boolean(option.locked);
