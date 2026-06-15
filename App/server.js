@@ -18,6 +18,130 @@ const io = new Server(server, {
 });
 
 const rooms = new Map();
+
+// ===== Auth Discord (OAuth) + base Postgres (Neon) — Phase 1, defensif =====
+let pgPool = null;
+let jwtLib = null;
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "";
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "";
+const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || "";
+const SESSION_SECRET = process.env.SESSION_SECRET || "";
+const AUTH_COOKIE = "pokdle_session";
+
+try {
+  if (process.env.DATABASE_URL) {
+    const { Pool } = require("pg");
+    pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 5 });
+    pgPool.on("error", (e) => console.error("[db] pool error:", e.message));
+  } else {
+    console.warn("[auth] DATABASE_URL absent - comptes desactives.");
+  }
+} catch (e) { console.error("[auth] pg indisponible:", e.message); pgPool = null; }
+
+try { jwtLib = require("jsonwebtoken"); } catch (e) { console.error("[auth] jsonwebtoken indisponible:", e.message); }
+
+const authReady = () => Boolean(pgPool && jwtLib && DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET && DISCORD_CALLBACK_URL && SESSION_SECRET);
+
+async function initAuthDb() {
+  if (!pgPool) return;
+  try {
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS users (
+      discord_id TEXT PRIMARY KEY,
+      username TEXT NOT NULL DEFAULT '',
+      avatar TEXT NOT NULL DEFAULT '',
+      data JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      last_login TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`);
+    console.log("[auth] base prete (table users).");
+  } catch (e) { console.error("[auth] init base echouee:", e.message); }
+}
+initAuthDb();
+
+function parseAuthCookies(req) {
+  const out = {};
+  const raw = (req.headers && req.headers.cookie) || "";
+  raw.split(";").forEach((part) => {
+    const i = part.indexOf("=");
+    if (i > -1) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+  });
+  return out;
+}
+function getSessionUser(req) {
+  if (!jwtLib || !SESSION_SECRET) return null;
+  const token = parseAuthCookies(req)[AUTH_COOKIE];
+  if (!token) return null;
+  try { return jwtLib.verify(token, SESSION_SECRET); } catch (e) { return null; }
+}
+function setSessionCookie(res, payload) {
+  const token = jwtLib.sign(payload, SESSION_SECRET, { expiresIn: "30d" });
+  res.cookie(AUTH_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 86400 * 1000, path: "/" });
+}
+
+app.get("/auth/discord", (req, res) => {
+  if (!authReady()) return res.redirect("/?auth=indispo");
+  const params = new URLSearchParams({
+    client_id: DISCORD_CLIENT_ID,
+    redirect_uri: DISCORD_CALLBACK_URL,
+    response_type: "code",
+    scope: "identify",
+  });
+  res.redirect(`https://discord.com/oauth2/authorize?${params.toString()}`);
+});
+
+app.get("/auth/discord/callback", async (req, res) => {
+  if (!authReady()) return res.redirect("/?auth=indispo");
+  const code = req.query && req.query.code;
+  if (!code) return res.redirect("/?auth=annule");
+  try {
+    const tokenResp = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code: String(code),
+        redirect_uri: DISCORD_CALLBACK_URL,
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!tokenResp.ok) throw new Error("token HTTP " + tokenResp.status);
+    const tok = await tokenResp.json();
+    const userResp = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tok.access_token}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!userResp.ok) throw new Error("user HTTP " + userResp.status);
+    const u = await userResp.json();
+    const discordId = String(u.id);
+    const username = String(u.global_name || u.username || "Dresseur").slice(0, 32);
+    const avatar = u.avatar ? `https://cdn.discordapp.com/avatars/${discordId}/${u.avatar}.png?size=128` : "";
+    await pgPool.query(
+      `INSERT INTO users (discord_id, username, avatar, last_login) VALUES ($1, $2, $3, now())
+       ON CONFLICT (discord_id) DO UPDATE SET username = EXCLUDED.username, avatar = EXCLUDED.avatar, last_login = now()`,
+      [discordId, username, avatar]
+    );
+    setSessionCookie(res, { id: discordId, username, avatar });
+    res.redirect("/?auth=ok");
+  } catch (e) {
+    console.error("[auth] callback echec:", e.message);
+    res.redirect("/?auth=erreur");
+  }
+});
+
+app.get("/auth/logout", (req, res) => {
+  res.clearCookie(AUTH_COOKIE, { path: "/" });
+  res.redirect("/");
+});
+
+app.get("/api/me", (req, res) => {
+  if (!authReady()) return res.json({ user: null, auth: false });
+  const user = getSessionUser(req);
+  res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar } : null, auth: true });
+});
+// ===== Fin auth Phase 1 =====
+
 const statClashRooms = new Map();
 const draftBattleRooms = new Map();
 const draftScoreRooms = new Map();
