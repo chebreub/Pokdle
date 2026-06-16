@@ -29390,3 +29390,14 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 /* ===== Draft : sprites plus grands dans les cases (coherence avec Pokedex) ===== */
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-art img { width: 90px !important; height: 90px !important; }
 #screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card img { width: 64px !important; height: 64px !important; }
+
+/* ===== Classements mobile : table large -> scroll horizontal (au lieu de casser la page) ===== */
+@media (max-width: 760px) {
+  #screen-ranking .ranking-table,
+  #screen-games-ranking .ranking-table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+}
