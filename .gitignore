@@ -20,3 +20,6 @@ App/pokemon.js.bak
 
 # Build minifié (chantier 3) — régénéré au déploiement via postinstall
 App/dist/
+
+# Fichiers de patch temporaires
+*.patch
