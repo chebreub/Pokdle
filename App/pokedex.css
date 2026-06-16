@@ -2636,3 +2636,12 @@ body.theme-dark #pokedex-category-filter {
 }
 /* Sprite du Pokemon selectionne : plus grand dans le panneau de detail */
 #screen-pokedex .pokedex-detail-head-main img { width: 112px !important; height: 112px !important; }
+
+/* ===== Pokedex mobile : barre de filtres propre (empilee, sans chevauchement) + grille en flux ===== */
+@media (max-width: 760px) {
+  #screen-pokedex .card-desc { display: none !important; }
+  #screen-pokedex .pokedex-toolbar-row { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+  #screen-pokedex .pokedex-toolbar-row > * { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+  #screen-pokedex .pokedex-type-filter-group { flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: 52px !important; gap: 6px !important; -webkit-overflow-scrolling: touch; }
+  #screen-pokedex .pokedex-grid { max-height: none !important; overflow: visible !important; }
+}
