@@ -3501,6 +3501,19 @@ function launchSelectedEmuRom() {
     return;
   }
 
+  // EmulatorJS ne supporte pas d'être relancé sur la même page (re-déclare EJS_STORAGE -> écran noir).
+  // Au 2e lancement, on recharge proprement la page et on reprend la ROM (presets en auto).
+  if (window.__emuLoadedOnce) {
+    if (emulatorCustomRomUrl) {
+      setEmuStatus("Pour relancer une ROM locale, recharge la page (F5) puis recharge ton fichier.");
+      return;
+    }
+    try { sessionStorage.setItem("emu_autostart", rom.url); } catch (e) {}
+    setEmuStatus("Redémarrage de l'émulateur…");
+    location.reload();
+    return;
+  }
+
   if (location.protocol === "file:") {
     setEmuStatus(`Mode file:// detecte. Lancement ${rom.core.toUpperCase()}: si echec, utilise le bouton fichier ou un serveur local.`);
   } else {
@@ -3564,6 +3577,7 @@ function launchSelectedEmuRom() {
   script.id = "emulatorjs-loader";
   script.src = `${window.EJS_pathtodata}loader.js?v=${Date.now()}`;
   script.onload = () => {
+    window.__emuLoadedOnce = true;
     setEmuStatus(`Emulateur ${rom.core.toUpperCase()} prêt. Si l'écran reste vide après 10s, recharge la page puis relance.`);
     // Watchdog : si après 12s aucun canvas EmulatorJS n'est apparu, on signale
     setTimeout(() => {
@@ -3581,4 +3595,21 @@ function launchSelectedEmuRom() {
   };
   document.body.appendChild(script);
 }
+
+// Reprise auto de l'émulateur après le reload de relance (presets uniquement).
+(function () {
+  function emuAutostart() {
+    let url = null;
+    try { url = sessionStorage.getItem("emu_autostart"); } catch (e) {}
+    if (!url) return;
+    try { sessionStorage.removeItem("emu_autostart"); } catch (e) {}
+    if (!EMU_ROM_OPTIONS.some((r) => r.url === url)) return;
+    if (typeof openEmulatorMode === "function") openEmulatorMode();
+    const select = document.getElementById("emu-rom-select");
+    if (select) select.value = url;
+    if (typeof launchSelectedEmuRom === "function") setTimeout(launchSelectedEmuRom, 60);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", emuAutostart);
+  else emuAutostart();
+})();
 // CHALLENGE MODE
