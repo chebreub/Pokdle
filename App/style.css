@@ -29470,3 +29470,6 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 /* ===== Combo de types : sprite dans les suggestions d'autocompletion ===== */
 .tc-ac-item { display: flex !important; align-items: center; gap: 10px; }
 .tc-ac-sprite { width: 36px; height: 36px; image-rendering: pixelated; object-fit: contain; flex: none; }
+
+/* ===== Combo de types : suggestion surlignée (navigation clavier) ===== */
+.tc-ac-item.is-active { background: #eef3ff; color: #2f76ff; }

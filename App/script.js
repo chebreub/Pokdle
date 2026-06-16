@@ -5541,6 +5541,7 @@ function typeComboSkip() {
   typeComboNextCombo();
 }
 function typeComboFormSubmit(ev) { if (ev && ev.preventDefault) ev.preventDefault(); typeComboSubmitGuess(); }
+let typeComboAcIndex = -1;
 function typeComboInput() {
   const st = typeComboState;
   const list = document.getElementById("type-combo-ac");
@@ -5558,8 +5559,34 @@ function typeComboInput() {
   }
   const matches = starts.concat(contains).slice(0, 8);
   if (!matches.length) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
-  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p.ref || p)) + '" alt="" loading="lazy" />' + escapeHtml(p.name) + '</button>').join("");
+  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-name="' + escapeHtml(String(p.name).replace(/"/g, "&quot;")) + '" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p.ref || p)) + '" alt="" loading="lazy" />' + escapeHtml(p.name) + '</button>').join("");
+  typeComboAcIndex = -1;
   list.classList.add("is-open");
+}
+function typeComboKeydown(e) {
+  const list = document.getElementById("type-combo-ac");
+  if (!list) return;
+  const items = list.querySelectorAll(".tc-ac-item");
+  if (e.key === "ArrowDown") {
+    if (!items.length) return;
+    e.preventDefault();
+    typeComboAcIndex = Math.min(typeComboAcIndex + 1, items.length - 1);
+    items.forEach((it, i) => { const on = i === typeComboAcIndex; it.classList.toggle("is-active", on); if (on) it.scrollIntoView({ block: "nearest" }); });
+  } else if (e.key === "ArrowUp") {
+    if (!items.length) return;
+    e.preventDefault();
+    typeComboAcIndex = Math.max(typeComboAcIndex - 1, -1);
+    items.forEach((it, i) => it.classList.toggle("is-active", i === typeComboAcIndex));
+  } else if (e.key === "Enter") {
+    if (typeComboAcIndex >= 0 && items[typeComboAcIndex]) {
+      e.preventDefault();
+      typeComboPick(items[typeComboAcIndex].getAttribute("data-name") || "");
+    }
+  } else if (e.key === "Escape") {
+    list.classList.remove("is-open");
+    list.innerHTML = "";
+    typeComboAcIndex = -1;
+  }
 }
 function typeComboPick(name) {
   const input = document.getElementById("type-combo-input");
@@ -5613,7 +5640,7 @@ function renderTypeComboScreen() {
           '<div class="tc-combo-tier tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</div>' +
         '</div>' +
         '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
-          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" data-input-action="typeComboInput" autofocus />' +
+          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" data-input-action="typeComboInput" data-keydown-action="typeComboKeydown" autofocus />' +
           '<div class="tc-ac" id="type-combo-ac"></div>' +
           '<div class="tc-actions"><button class="btn-red" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
         '</form>' +
