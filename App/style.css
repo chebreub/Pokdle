@@ -29386,3 +29386,7 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 #screen-draft-score-attack.is-mode-score-attack #draft-score-room-status .draft-score-vs-empty > span { font-size: .72rem !important; color: #5a6f96 !important; flex: 1 1 120px; min-width: 110px; }
 #screen-draft-score-attack.is-mode-score-attack #draft-score-room-status .draft-score-vs-empty-actions { display: flex !important; gap: 8px !important; margin: 0 !important; }
 #screen-draft-score-attack.is-mode-score-attack #draft-score-room-status .draft-score-vs-empty-actions button { min-height: 34px !important; padding: 6px 13px !important; font-size: .8rem !important; border-radius: 12px !important; }
+
+/* ===== Draft : sprites plus grands dans les cases (coherence avec Pokedex) ===== */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-art img { width: 90px !important; height: 90px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card img { width: 64px !important; height: 64px !important; }
