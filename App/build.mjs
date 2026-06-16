@@ -3,10 +3,24 @@
 // n'est renommé. Les fonctions globales (window[nom]) utilisées par la délégation
 // data-action restent donc intactes. Aucune transpilation (pas d'ES6 -> ES5).
 import { build } from "esbuild";
-import { mkdirSync, readFileSync, writeFileSync } from "fs";
+import { mkdirSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { createHash } from "crypto";
 
 mkdirSync("dist", { recursive: true });
+
+// === Recollage de script.js depuis ses morceaux source (App/src/script.NN.*.js) ===
+// script.js est un fichier GÉNÉRÉ : on édite les morceaux dans src/, jamais script.js.
+// Le serveur (server.js) et la minification lisent ce script.js recollé.
+try {
+  const parts = readdirSync("src").filter((f) => /^script\.\d+.*\.js$/.test(f)).sort();
+  if (parts.length) {
+    const merged = parts.map((f) => readFileSync(`src/${f}`, "utf8")).join("");
+    if (merged.length > 1000) {
+      writeFileSync("script.js", merged);
+      console.log(`[build] script.js recollé depuis ${parts.length} morceaux (${merged.length} octets).`);
+    }
+  }
+} catch (e) { console.error("[build] concat src ignoré:", e.message); }
 
 await build({
   entryPoints: ["script.js", "pokemon.js"],
