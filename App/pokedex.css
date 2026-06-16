@@ -2628,3 +2628,11 @@ body.theme-dark #pokedex-category-filter {
 #screen-pokedex .pokedex-card .pokedex-num { font-size: .66rem !important; }
 #screen-pokedex .pokedex-card strong { font-size: .82rem !important; line-height: 1.05 !important; }
 #screen-pokedex .pokedex-card .pokedex-card-types { gap: 3px !important; }
+
+/* ===== Pokedex : layout 1 colonne sous 760px (la liste etait ecrasee a 99px a cote du detail) ===== */
+@media (max-width: 760px) {
+  #screen-pokedex .pokedex-layout { grid-template-columns: 1fr !important; }
+  #screen-pokedex .pokedex-detail { grid-template-columns: 1fr !important; }
+}
+/* Sprite du Pokemon selectionne : plus grand dans le panneau de detail */
+#screen-pokedex .pokedex-detail-head-main img { width: 112px !important; height: 112px !important; }
