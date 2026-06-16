@@ -5,6 +5,7 @@ const express = require("express");
 const helmet = require("helmet");
 const http = require("http");
 const { Server } = require("socket.io");
+let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
 
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
@@ -538,6 +539,7 @@ const emulatorCspDirectives = {
 const strictCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: strictCspDirectives, reportOnly: false });
 const emulatorCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: emulatorCspDirectives, reportOnly: false });
 
+if (compression) app.use(compression());
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
