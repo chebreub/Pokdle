@@ -29456,3 +29456,9 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 .tc-ac-item { text-align: left; padding: 9px 14px; background: #fff; border: none; border-bottom: 1px solid #f0f4fa; font-weight: 700; color: #1d2b4a; cursor: pointer; font-size: .95rem; }
 .tc-ac-item:hover { background: #eef3ff; color: #2f76ff; }
 .tc-ac-item:last-child { border-bottom: none; }
+
+/* ===== Draft Score solo : retirer le bouton Multi (doublon + menu cassé), barre "Créer une room" sous les tuiles ===== */
+#screen-draft-score-attack.is-mode-score-attack .draft-multi-dropdown { display: none !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks { display: flex !important; flex-direction: column !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks #draft-options { order: 1 !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks #draft-score-room-status:has(.draft-score-vs-empty) { order: 9 !important; margin-top: 12px !important; }
