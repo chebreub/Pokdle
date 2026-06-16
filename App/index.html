@@ -116,29 +116,18 @@
       <button type="button" data-action="startNormalGame">Mode illimité</button>
       <button type="button" data-action="startPartyMode">Party Pokémon</button>
       <button type="button" data-action="openDraftScoreAttackMode">Draft Score Attack</button>
-      <div class="nav-dd-group">Observation</div>
-      <button type="button" data-action="startSilhouetteGame">Silhouette</button>
-      <button type="button" data-action="startPixelGame">Pixelisé</button>
-      <button type="button" data-action="startMysteryStatGame">Stat mystère</button>
-      <div class="nav-dd-group">Culture Pokédex</div>
-      <button type="button" data-action="startCryGame">Cri du Pokémon</button>
-      <button type="button" data-action="startDescriptionMode">Description</button>
-      <button type="button" data-action="openOddOneOutMode">Intrus</button>
-      <button type="button" data-action="startQuizGame">Quiz</button>
-      <div class="nav-dd-group">Arcade &amp; puzzles</div>
-      <button type="button" data-action="startWeightBattle">Duel de poids</button>
-      <button type="button" data-action="startEvolutionChainGame">Évolution</button>
-      <button type="button" data-action="startPokedexOrderGame">Ordre Pokédex</button>
-      <button type="button" data-action="openHigherLowerMode">Higher or Lower</button>
-      <button type="button" data-action="openPokeConnectionsMode">Poké-Connections</button>
-      <button type="button" data-action="openSpeedrunMode">Speedrun Pokédex</button>
+      <div class="nav-dd-group">Solo rapide</div>
       <button type="button" data-action="openTypeComboSolo">Combo de types</button>
+      <button type="button" data-action="openSpeedrunMode">Speedrun Pokédex</button>
+      <button type="button" data-action="openHigherLowerMode">Higher or Lower</button>
+      <button type="button" data-action="openAllModesScreen"><span class="nav-dd-ico">🎮</span>Tous les mini-jeux</button>
     </div>
   </div>
 
   <div class="nav-group">
     <button id="nav-social" class="nav-pill nav-pill-menu" type="button" aria-haspopup="true" aria-expanded="false">Social</button>
     <div class="nav-dropdown" role="menu">
+      <button type="button" data-action="openPartyRoomMode">Party Room</button>
       <button type="button" data-action="openMultiplayerMode">Duel 1v1</button>
       <button type="button" data-action="openStatClashMode">Stat Clash 1v1</button>
       <button type="button" data-action="openStatAuctionMode">Stat Auction 1v1</button>
@@ -157,9 +146,6 @@
       <button type="button" data-action="openDraftArenaMode">Draft Arènes</button>
       <button type="button" data-action="openTypeChartScreen">Table des types</button>
       <button type="button" data-action="openEmulatorMode">Émulateur</button>
-      <button type="button" data-action="openGamesRankingMode">Classement jeux</button>
-      <button type="button" data-action="openRankingMode">Mode classement</button>
-      <button type="button" data-action="openMatchHistoryScreen">Historique</button>
     </div>
   </div>
 
@@ -426,6 +412,11 @@
           </div>
         </div>
         <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
+        <div class="profile-stats-links">
+          <button class="btn-ghost" type="button" data-action="openMatchHistoryScreen">📜 Historique des parties</button>
+          <button class="btn-ghost" type="button" data-action="openGamesRankingMode">🎮 Classement des jeux</button>
+          <button class="btn-ghost" type="button" data-action="openRankingMode">📊 Mode classement</button>
+        </div>
 
         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
         <input id="profile-photo-input" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
