@@ -29370,3 +29370,12 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 #screen-draft-score-attack.is-mode-score-attack .draft-panel-team h3::before { content: "\1F465"; margin-right: 2px; }
 #screen-draft-score-attack.is-mode-score-attack #draft-status { border-radius: 12px !important; background: rgba(47, 118, 255, .06) !important; border: 1px solid rgba(47, 118, 255, .12) !important; }
 #screen-draft-score-attack.is-mode-score-attack .draft-panel-picks h3::before { content: "\1F0CF"; margin-right: 2px; }
+
+/* ===== Draft Score : correctif regressions (envol -> grise, stat de base visible, shiny compact) ===== */
+/* Plus d'envol : les cartes verrouillees (deja draftees) restent visibles, grisees */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.picked { animation: none !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.locked { opacity: .45 !important; filter: grayscale(.4); transform: none !important; }
+/* Stat de base de nouveau visible sur les slots d'equipe */
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card-body > small:last-child { display: block !important; font-size: .58rem !important; color: #5a6f96 !important; font-weight: 700 !important; margin-top: 1px; }
+/* Shiny : petit badge coin qui ne mange plus la place */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .draft-shiny-mark { font-size: .5rem !important; padding: 0 5px !important; top: 5px !important; left: 5px !important; }
