@@ -29449,3 +29449,10 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::before { top: 30px; left: 10px; }
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { right: 10px; bottom: 34px; animation-delay: .45s; }
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .draft-shiny-mark { background: #ffd45b !important; color: #5a3b00 !important; font-weight: 900 !important; }
+
+/* ===== Combo de types : autocompletion ===== */
+.tc-ac { display: none; flex-direction: column; gap: 0; width: 100%; max-width: 440px; background: #fff; border: 1px solid #d7dfec; border-radius: 12px; overflow: hidden; margin-top: -4px; box-shadow: 0 8px 18px rgba(31, 58, 99, .14); }
+.tc-ac.is-open { display: flex; }
+.tc-ac-item { text-align: left; padding: 9px 14px; background: #fff; border: none; border-bottom: 1px solid #f0f4fa; font-weight: 700; color: #1d2b4a; cursor: pointer; font-size: .95rem; }
+.tc-ac-item:hover { background: #eef3ff; color: #2f76ff; }
+.tc-ac-item:last-child { border-bottom: none; }

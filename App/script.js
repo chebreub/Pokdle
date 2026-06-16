@@ -5504,8 +5504,9 @@ function typeComboSubmitGuess() {
   if (!st || st.phase !== "playing" || !st.combo) return;
   const input = document.getElementById("type-combo-input");
   const guess = input ? String(input.value || "").trim() : "";
-  if (!guess) return;
-  const mon = typeComboFindMon(guess, st.pool);
+  if (!guess) { typeComboSkip(); return; }
+  let mon = typeComboFindMon(guess, st.pool);
+  if (!mon) { const __q = norm(guess); if (__q) mon = st.pool.find((p) => norm(p.name).indexOf(__q) === 0) || null; }
   const ok = mon && typeComboKey(mon.type1, mon.type2 || mon.type1) === st.combo.key;
   if (ok) {
     const pts = st.combo.tier.points;
@@ -5528,6 +5529,29 @@ function typeComboSkip() {
   typeComboNextCombo();
 }
 function typeComboFormSubmit(ev) { if (ev && ev.preventDefault) ev.preventDefault(); typeComboSubmitGuess(); }
+function typeComboInput() {
+  const st = typeComboState;
+  const list = document.getElementById("type-combo-ac");
+  const input = document.getElementById("type-combo-input");
+  if (!st || !list || !input) return;
+  const q = norm(String(input.value || "").trim());
+  if (!q) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
+  const seen = {}; const matches = [];
+  for (const p of st.pool) {
+    const n = norm(p.name);
+    if (n.indexOf(q) === 0 && !seen[n]) { seen[n] = 1; matches.push(p); if (matches.length >= 7) break; }
+  }
+  if (!matches.length) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
+  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'>' + escapeHtml(p.name) + '</button>').join("");
+  list.classList.add("is-open");
+}
+function typeComboPick(name) {
+  const input = document.getElementById("type-combo-input");
+  if (input) input.value = name;
+  const list = document.getElementById("type-combo-ac");
+  if (list) { list.innerHTML = ""; list.classList.remove("is-open"); }
+  typeComboSubmitGuess();
+}
 function finalizeTypeComboGame() {
   const st = typeComboState; if (!st) return;
   st.phase = "gameover";
@@ -5573,7 +5597,8 @@ function renderTypeComboScreen() {
           '<div class="tc-combo-tier tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</div>' +
         '</div>' +
         '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
-          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" autofocus />' +
+          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" data-input-action="typeComboInput" autofocus />' +
+          '<div class="tc-ac" id="type-combo-ac"></div>' +
           '<div class="tc-actions"><button class="btn-red" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
         '</form>' +
         '<p class="tc-feedback" id="type-combo-feedback"></p>' +
