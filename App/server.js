@@ -63,7 +63,11 @@ async function initAuthDb() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       PRIMARY KEY (discord_id, mode)
     )`);
-    console.log("[auth] base prete (tables users + scores).");
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS visits (
+      day DATE PRIMARY KEY,
+      hits INTEGER NOT NULL DEFAULT 0
+    )`);
+    console.log("[auth] base prete (tables users + scores + visits).");
   } catch (e) { console.error("[auth] init base echouee:", e.message); }
 }
 initAuthDb();
@@ -554,9 +558,14 @@ const DIST_DIR = path.join(__dirname, "dist");
 const DIST_INDEX = path.join(DIST_DIR, "index.html");
 const SOURCE_INDEX = path.join(__dirname, "index.html");
 
+function recordVisitDb() {
+  if (!pgPool) return;
+  pgPool.query("INSERT INTO visits (day, hits) VALUES (CURRENT_DATE, 1) ON CONFLICT (day) DO UPDATE SET hits = visits.hits + 1").catch(() => {});
+}
 function sendIndex(res) {
   // L'index n'est jamais mise en cache : c'est elle qui porte les URLs versionnées.
   res.set("Cache-Control", "no-cache");
+  recordVisitDb();
   res.sendFile(fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX);
 }
 
@@ -816,12 +825,20 @@ app.post("/api/track", express.json({ limit: "1kb" }), (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/admin/stats", (req, res) => {
+app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");
   res.set("X-Robots-Tag", "noindex");
   const adminKey = process.env.ADMIN_STATS_KEY || "";
   if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
+  let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
+  if (pgPool) {
+    try {
+      const vt = await pgPool.query("SELECT COALESCE(SUM(hits),0)::int AS total FROM visits");
+      const vd = await pgPool.query("SELECT to_char(day, 'DD/MM/YYYY') AS d, hits FROM visits ORDER BY day DESC LIMIT 14");
+      visitTotalHtml = `<h2 style="margin-top:24px">Visites (persistées en base — survivent aux redéploiements)</h2><p>Total cumulé : <b style="font-size:1.6rem;color:#2f76ff">${vt.rows[0].total}</b> chargements de page.</p><table><thead><tr><th>Jour</th><th>Visites</th></tr></thead><tbody>${vd.rows.map((r) => `<tr><th>${r.d}</th><td>${r.hits}</td></tr>`).join("")}</tbody></table>`;
+    } catch (e) { visitTotalHtml = "<p>(compteur persistant indisponible : " + e.message + ")</p>"; }
+  }
   const dayKeys = [...usageDays.keys()].sort().slice(-7);
   const events = [...USAGE_EVENTS].filter((e) => dayKeys.some((k) => usageDays.get(k).events.has(e)));
   const cell = (v) => `<td>${v || ""}</td>`;
@@ -832,7 +849,7 @@ app.get("/admin/stats", (req, res) => {
   const uniqueRow = `<tr><th>Visiteurs uniques</th>${dayKeys.map((k) => cell(usageDays.get(k).uniques.size)).join("")}<td class="t">—</td></tr>`;
   res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
 <style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
-</head><body><h1>Pokédle — fréquentation</h1>
+</head><body><h1>Pokédle — fréquentation</h1>${visitTotalHtml}
 <p>Compteurs en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (remis à zéro à chaque redémarrage de l'instance — les événements restent tracés dans les logs Render, préfixe <code>[usage]</code>).</p>
 <table><thead><tr><th>Événement</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${uniqueRow}${rows || ""}</tbody></table>
 ${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);
