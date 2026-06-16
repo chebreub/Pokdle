@@ -5425,7 +5425,19 @@ function typeComboKey(t1, t2) {
   return [a, b].sort().join("|");
 }
 function typeComboPool() {
-  return (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite && p.type1);
+  const list = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []);
+  const byId = new Map(list.map((p) => [Number(p.id), p]));
+  const out = [];
+  for (const p of list) {
+    const id = Number(p.id);
+    if (!((id > 0 && id < 10000) || id >= 20000)) continue;
+    const base = p.baseId ? byId.get(Number(p.baseId)) : null;
+    const t1 = p.type1 || (base && base.type1) || null;
+    const t2 = Object.prototype.hasOwnProperty.call(p, "type2") ? p.type2 : (base ? base.type2 : null);
+    if (!t1) continue;
+    out.push({ ref: p, name: p.name, type1: t1, type2: t2 || t1 });
+  }
+  return out;
 }
 function buildTypeComboMap(pool) {
   const map = new Map();
@@ -5506,7 +5518,7 @@ function typeComboSubmitGuess() {
   const guess = input ? String(input.value || "").trim() : "";
   if (!guess) { typeComboSkip(); return; }
   let mon = typeComboFindMon(guess, st.pool);
-  if (!mon) { const __q = norm(guess); if (__q) mon = st.pool.find((p) => norm(p.name).indexOf(__q) === 0) || null; }
+  if (!mon) { const __q = norm(guess); if (__q) mon = st.pool.find((p) => norm(p.name).indexOf(__q) === 0) || st.pool.find((p) => norm(p.name).indexOf(__q) >= 0) || null; }
   const ok = mon && typeComboKey(mon.type1, mon.type2 || mon.type1) === st.combo.key;
   if (ok) {
     const pts = st.combo.tier.points;
@@ -5536,13 +5548,17 @@ function typeComboInput() {
   if (!st || !list || !input) return;
   const q = norm(String(input.value || "").trim());
   if (!q) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
-  const seen = {}; const matches = [];
+  const seen = {}; const starts = []; const contains = [];
   for (const p of st.pool) {
     const n = norm(p.name);
-    if (n.indexOf(q) === 0 && !seen[n]) { seen[n] = 1; matches.push(p); if (matches.length >= 7) break; }
+    if (seen[n]) continue;
+    const i = n.indexOf(q);
+    if (i === 0) { seen[n] = 1; starts.push(p); }
+    else if (i > 0) { seen[n] = 1; contains.push(p); }
   }
+  const matches = starts.concat(contains).slice(0, 8);
   if (!matches.length) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
-  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p)) + '" alt="" loading="lazy" />' + escapeHtml(p.name) + '</button>').join("");
+  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p.ref || p)) + '" alt="" loading="lazy" />' + escapeHtml(p.name) + '</button>').join("");
   list.classList.add("is-open");
 }
 function typeComboPick(name) {
