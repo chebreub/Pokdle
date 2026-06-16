@@ -5542,7 +5542,7 @@ function typeComboInput() {
     if (n.indexOf(q) === 0 && !seen[n]) { seen[n] = 1; matches.push(p); if (matches.length >= 7) break; }
   }
   if (!matches.length) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
-  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'>' + escapeHtml(p.name) + '</button>').join("");
+  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p)) + '" alt="" loading="lazy" />' + escapeHtml(p.name) + '</button>').join("");
   list.classList.add("is-open");
 }
 function typeComboPick(name) {

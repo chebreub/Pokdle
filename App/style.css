@@ -29466,3 +29466,7 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 /* ===== Profil : rangée d'accès aux pages de stats (déplacées depuis Outils) ===== */
 .profile-stats-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
 .profile-stats-links .btn-ghost { font-size: 0.86rem; }
+
+/* ===== Combo de types : sprite dans les suggestions d'autocompletion ===== */
+.tc-ac-item { display: flex !important; align-items: center; gap: 10px; }
+.tc-ac-sprite { width: 36px; height: 36px; image-rendering: pixelated; object-fit: contain; flex: none; }
