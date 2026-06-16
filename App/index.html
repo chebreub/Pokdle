@@ -132,6 +132,7 @@
       <button type="button" data-action="openHigherLowerMode">Higher or Lower</button>
       <button type="button" data-action="openPokeConnectionsMode">Poké-Connections</button>
       <button type="button" data-action="openSpeedrunMode">Speedrun Pokédex</button>
+      <button type="button" data-action="openTypeComboSolo">Combo de types</button>
     </div>
   </div>
 
@@ -1456,6 +1457,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <p class="card-desc">Devine le maximum de Pokémon en <b>60 secondes</b>. Tu vois le sprite, tu tapes le nom. Passe avec Entrée si tu sèches.</p>
         <div id="speedrun-root" class="speedrun-root"></div>
+      </div>
+    </div>
+
+    <div id="screen-type-combo" class="hidden">
+      <div class="card type-combo-card">
+        <div class="ranking-head">
+          <h2 class="card-title">Combo de types</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-red" type="button" data-action="restartTypeComboGame">Rejouer</button>
+            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc">On t'affiche une paire de types. Nomme un Pokémon qui a <b>exactement</b> cette paire. Plus la paire est rare, plus elle rapporte. Enchaîne un max de combos en <b>60 secondes</b> !</p>
+        <div id="type-combo-root" class="type-combo-root"></div>
       </div>
     </div>
 

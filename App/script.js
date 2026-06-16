@@ -5409,6 +5409,190 @@ function createSpeedrunState() {
   };
 }
 
+const TYPE_COMBO_DURATION_MS = 60000;
+let typeComboState = null;
+let typeComboTimerId = null;
+
+function typeComboTier(count) {
+  const n = Number(count) || 0;
+  if (n <= 2) return { tier: "legendaire", label: "Légendaire", points: 200 };
+  if (n <= 7) return { tier: "difficile", label: "Difficile", points: 140 };
+  if (n <= 19) return { tier: "moyen", label: "Moyen", points: 100 };
+  return { tier: "facile", label: "Facile", points: 80 };
+}
+function typeComboKey(t1, t2) {
+  const a = String(t1 || "").trim(), b = String(t2 || t1 || "").trim();
+  return [a, b].sort().join("|");
+}
+function typeComboPool() {
+  return (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite && p.type1);
+}
+function buildTypeComboMap(pool) {
+  const map = new Map();
+  for (const p of pool) {
+    const key = typeComboKey(p.type1, p.type2 || p.type1);
+    if (!map.has(key)) map.set(key, { key, types: [p.type1, p.type2 || p.type1], matches: [] });
+    map.get(key).matches.push(p);
+  }
+  return Array.from(map.values()).filter((c) => c.matches.length > 0);
+}
+function typeComboFindMon(name, pool) {
+  const n = norm(name);
+  if (!n) return null;
+  return pool.find((p) => norm(p.name) === n) || null;
+}
+function createTypeComboState() {
+  return { phase: "lobby", score: 0, solved: 0, leftMs: TYPE_COMBO_DURATION_MS, endsAt: 0, combo: null, recent: [], pool: [], combos: [], highScore: Number(playerProfile?.typeComboHighScore) || 0, feedback: "", last: null };
+}
+function pickTypeComboSolo() {
+  const st = typeComboState;
+  if (!st || !st.combos.length) return null;
+  let cands = st.combos.filter((c) => !st.recent.includes(c.key));
+  if (!cands.length) cands = st.combos;
+  const picked = cands[Math.floor(Math.random() * cands.length)];
+  st.recent = [picked.key].concat(st.recent).slice(0, 8);
+  const displayTypes = picked.types.slice();
+  if (displayTypes[0] !== displayTypes[1] && Math.random() < 0.5) displayTypes.reverse();
+  return { key: picked.key, types: picked.types, displayTypes, count: picked.matches.length, tier: typeComboTier(picked.matches.length) };
+}
+function openTypeComboSolo() {
+  const pool = typeComboPool();
+  if (pool.length < 30) return showToast("Pool Pokémon insuffisant.");
+  goToConfig();
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-type-combo");
+  setGlobalNavActive("game");
+  gameMode = "typeCombo";
+  typeComboState = createTypeComboState();
+  renderTypeComboScreen();
+}
+function startTypeComboGame() {
+  try { trackUsage("solo:typecombo"); } catch (e) {}
+  if (!typeComboState) typeComboState = createTypeComboState();
+  const st = typeComboState;
+  st.pool = typeComboPool();
+  st.combos = buildTypeComboMap(st.pool);
+  st.score = 0; st.solved = 0; st.recent = []; st.feedback = ""; st.last = null;
+  st.endsAt = Date.now() + TYPE_COMBO_DURATION_MS;
+  st.leftMs = TYPE_COMBO_DURATION_MS;
+  st.phase = "playing";
+  st.combo = pickTypeComboSolo();
+  renderTypeComboScreen();
+  if (typeComboTimerId) clearInterval(typeComboTimerId);
+  typeComboTimerId = setInterval(() => {
+    if (!typeComboState || typeComboState.phase !== "playing") return clearInterval(typeComboTimerId);
+    typeComboState.leftMs = Math.max(0, typeComboState.endsAt - Date.now());
+    const t = document.getElementById("type-combo-timer");
+    if (t) t.textContent = Math.ceil(typeComboState.leftMs / 1000) + "s";
+    if (typeComboState.leftMs <= 0) { clearInterval(typeComboTimerId); finalizeTypeComboGame(); }
+  }, 100);
+  setTimeout(() => { const i = document.getElementById("type-combo-input"); if (i) i.focus(); }, 100);
+}
+function restartTypeComboGame() { typeComboState = createTypeComboState(); startTypeComboGame(); }
+function typeComboNextCombo() {
+  const st = typeComboState; if (!st) return;
+  st.combo = pickTypeComboSolo();
+  const input = document.getElementById("type-combo-input");
+  if (input) input.value = "";
+  renderTypeComboScreen();
+  setTimeout(() => { const i = document.getElementById("type-combo-input"); if (i) i.focus(); }, 40);
+}
+function typeComboSubmitGuess() {
+  const st = typeComboState;
+  if (!st || st.phase !== "playing" || !st.combo) return;
+  const input = document.getElementById("type-combo-input");
+  const guess = input ? String(input.value || "").trim() : "";
+  if (!guess) return;
+  const mon = typeComboFindMon(guess, st.pool);
+  const ok = mon && typeComboKey(mon.type1, mon.type2 || mon.type1) === st.combo.key;
+  if (ok) {
+    const pts = st.combo.tier.points;
+    st.score += pts;
+    st.solved += 1;
+    st.last = { name: mon.name, pts: pts, label: st.combo.tier.label };
+    st.feedback = "";
+    try { awardXp(6, "Combo de types"); } catch (e) {}
+    typeComboNextCombo();
+  } else {
+    st.feedback = mon ? (escapeHtml(mon.name) + " n'a pas cette paire de types") : "Pokémon inconnu";
+    if (input) { input.classList.add("is-wrong"); setTimeout(() => input.classList.remove("is-wrong"), 280); }
+    const fb = document.getElementById("type-combo-feedback");
+    if (fb) fb.textContent = st.feedback;
+  }
+}
+function typeComboSkip() {
+  const st = typeComboState; if (!st || st.phase !== "playing") return;
+  st.last = null; st.feedback = "";
+  typeComboNextCombo();
+}
+function typeComboFormSubmit(ev) { if (ev && ev.preventDefault) ev.preventDefault(); typeComboSubmitGuess(); }
+function finalizeTypeComboGame() {
+  const st = typeComboState; if (!st) return;
+  st.phase = "gameover";
+  const isRecord = st.score > 0 && st.score >= st.highScore;
+  if (isRecord && playerProfile) {
+    playerProfile.typeComboHighScore = st.score;
+    st.highScore = st.score;
+    try { saveProfile(); } catch (e) {}
+    try { awardXp(50, "Record Combo de types"); } catch (e) {}
+  }
+  renderTypeComboScreen();
+}
+function renderTypeComboScreen() {
+  const root = document.getElementById("type-combo-root");
+  if (!root) return;
+  const st = typeComboState;
+  if (!st) { root.innerHTML = ""; return; }
+  if (st.phase === "lobby") {
+    root.innerHTML =
+      '<div class="tc-lobby">' +
+        '<div class="tc-lobby-icon">🧬</div>' +
+        '<h3>Combo de types — 60 secondes</h3>' +
+        '<p>On t\'affiche une paire de types. Nomme un Pokémon qui a exactement cette paire pour marquer. Plus la paire est rare, plus ça rapporte. Enchaîne un max de combos !</p>' +
+        '<div class="tc-lobby-stats"><div class="tc-lobby-stat"><span>Ton record</span><b>' + (st.highScore || 0) + '</b></div><div class="tc-lobby-stat"><span>Durée</span><b>60s</b></div></div>' +
+        '<button class="btn-red tc-start-btn" type="button" data-action="startTypeComboGame">🧬 Démarrer</button>' +
+      '</div>';
+    return;
+  }
+  if (st.phase === "playing") {
+    const c = st.combo;
+    const badges = c ? c.displayTypes.map((t) => typeBadgeHtml(t)).join('<span class="tc-plus">+</span>') : "";
+    const lastHtml = st.last ? ('<div class="tc-last">✅ ' + escapeHtml(st.last.name) + ' <b>+' + st.last.pts + '</b> <small>' + escapeHtml(st.last.label) + '</small></div>') : "";
+    root.innerHTML =
+      '<div class="tc-board">' +
+        '<div class="tc-status">' +
+          '<div class="tc-chip"><span>Score</span><b>' + st.score + '</b></div>' +
+          '<div class="tc-chip"><span>Combos</span><b>' + st.solved + '</b></div>' +
+          '<div class="tc-chip is-timer">⏱️ <b id="type-combo-timer">' + Math.ceil(st.leftMs / 1000) + 's</b></div>' +
+        '</div>' +
+        '<div class="tc-combo">' +
+          '<div class="tc-combo-label">Trouve un Pokémon de type</div>' +
+          '<div class="tc-combo-types">' + badges + '</div>' +
+          '<div class="tc-combo-tier tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</div>' +
+        '</div>' +
+        '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
+          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" autofocus />' +
+          '<div class="tc-actions"><button class="btn-red" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
+        '</form>' +
+        '<p class="tc-feedback" id="type-combo-feedback"></p>' +
+        lastHtml +
+      '</div>';
+    return;
+  }
+  if (st.phase === "gameover") {
+    const isRecord = st.score > 0 && st.score >= st.highScore;
+    root.innerHTML =
+      '<div class="tc-gameover">' +
+        '<h3>⏱️ Temps écoulé</h3>' +
+        '<div class="tc-final-score">' + st.score + '</div>' +
+        '<p>' + st.solved + ' combos réussis' + (isRecord ? ' · <b>🏆 Nouveau record !</b>' : (' · record : ' + st.highScore)) + '</p>' +
+        '<div class="tc-actions"><button class="btn-red" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
+      '</div>';
+    return;
+  }
+}
 function openSpeedrunMode() {
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
   if (pool.length < 30) return showToast("Pool Pokémon insuffisant pour Speedrun.");
@@ -21053,6 +21237,7 @@ function loadProfile() {
     partyHighScore: Number(parsed?.partyHighScore) || 0,
     quizHighScore: Number(parsed?.quizHighScore) || 0,
     speedrunHighScore: Number(parsed?.speedrunHighScore) || 0,
+    typeComboHighScore: Number(parsed?.typeComboHighScore) || 0,
     oddOneOutHighScore: Number(parsed?.oddOneOutHighScore) || 0,
     weightBattleHighScore: Number(parsed?.weightBattleHighScore) || 0,
   };

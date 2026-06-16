@@ -29401,3 +29401,51 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ===== Combo de types (solo) ===== */
+#screen-type-combo .type-combo-root { display: block; }
+.tc-lobby, .tc-gameover { text-align: center; padding: 18px 14px; }
+.tc-lobby-icon { font-size: 2.6rem; }
+.tc-lobby h3, .tc-gameover h3 { color: #17345d; margin: 6px 0; }
+.tc-lobby p { color: #5a6f92; max-width: 480px; margin: 0 auto 12px; }
+.tc-lobby-stats { display: flex; gap: 12px; justify-content: center; margin: 12px 0; }
+.tc-lobby-stat { background: #f4f8ff; border: 1px solid #dbe7fb; border-radius: 12px; padding: 10px 16px; }
+.tc-lobby-stat span { display: block; font-size: .72rem; color: #5a6f92; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.tc-lobby-stat b { font-size: 1.4rem; color: #2f76ff; font-family: "Nunito", sans-serif; }
+.tc-start-btn { min-height: 50px; font-size: 1.05rem; font-weight: 900; border-radius: 14px; padding: 0 26px; }
+.tc-board { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.tc-status { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.tc-chip { background: #f4f8ff; border: 1px solid #dbe7fb; border-radius: 12px; padding: 7px 14px; text-align: center; min-width: 70px; }
+.tc-chip span { display: block; font-size: .68rem; color: #5a6f92; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.tc-chip b { font-size: 1.15rem; color: #2f76ff; font-family: "Nunito", sans-serif; }
+.tc-chip.is-timer { background: #fff3c9; border-color: #ecd27c; color: #8a6400; font-weight: 900; font-size: 1.05rem; display: flex; align-items: center; gap: 6px; }
+.tc-combo { width: 100%; max-width: 440px; text-align: center; background: linear-gradient(135deg, rgba(47,118,255,.07), rgba(228,56,47,.05)); border: 1px solid rgba(158,182,222,.4); border-radius: 18px; padding: 18px 16px; }
+.tc-combo-label { font-size: .82rem; color: #5a6f92; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.tc-combo-types { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.tc-combo-types .type-badge { min-height: 42px; padding: 8px 16px; font-size: 1rem; }
+.tc-plus { color: #5a6f92; font-weight: 900; font-size: 1.3rem; }
+.tc-combo-tier { display: inline-block; border-radius: 999px; padding: 4px 14px; font-weight: 900; font-size: .82rem; }
+.tc-tier-facile { background: #e6f6e8; color: #1f8a37; }
+.tc-tier-moyen { background: #e8f1ff; color: #1d4fd6; }
+.tc-tier-difficile { background: #fff0dd; color: #c05f00; }
+.tc-tier-legendaire { background: #f3e0ff; color: #7a2bd0; }
+.tc-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; }
+.tc-input { min-height: 50px; border-radius: 14px; border: 2px solid #d7dfec; padding: 0 16px; font-weight: 700; font-size: 1.05rem; color: #1d2b4a; }
+.tc-input:focus { border-color: #2f76ff; outline: none; }
+.tc-input.is-wrong { border-color: #e4382f; animation: tcShake .28s ease; }
+@keyframes tcShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);} }
+.tc-actions { display: flex; gap: 10px; justify-content: center; }
+.tc-feedback { min-height: 18px; color: #c22b23; font-weight: 800; font-size: .85rem; text-align: center; }
+.tc-last { color: #1f8a37; font-weight: 800; background: #eaf8ec; border: 1px solid #9fd9a8; border-radius: 12px; padding: 8px 14px; }
+.tc-last b { color: #1f8a37; }
+.tc-final-score { font-family: "Nunito", sans-serif; font-size: 3.2rem; font-weight: 900; color: #2f76ff; line-height: 1; margin: 6px 0; }
+
+/* ===== Draft Score : effet shiny qui claque sur les nouvelles cartes ===== */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny { border-color: #ffd45b !important; background: linear-gradient(180deg, #fffdf3, #fff2cf) !important; box-shadow: 0 0 0 2px rgba(255,221,120,.55), 0 10px 22px rgba(232,185,62,.4) !important; animation: draftShinyGlow 3.2s ease-in-out infinite; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .dsc-top { background: linear-gradient(90deg, #ffe9a8, #fff4cf) !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .dsc-bst { color: #8a5a00 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::before,
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { content: "\2726"; position: absolute; color: #ffd65d; font-size: 1rem; text-shadow: 0 0 12px rgba(255,214,93,.75); animation: draftSparkleFloat 2.8s ease-in-out infinite; z-index: 2; pointer-events: none; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::before { top: 30px; left: 10px; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { right: 10px; bottom: 34px; animation-delay: .45s; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .draft-shiny-mark { background: #ffd45b !important; color: #5a3b00 !important; font-weight: 900 !important; }
