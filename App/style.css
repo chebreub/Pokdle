@@ -29355,3 +29355,18 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 #draft-end-actions .dse-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 #draft-end-actions .dse-confetti span { position: absolute; top: -12px; width: 8px; height: 13px; border-radius: 2px; animation: dseFall 2.4s linear forwards; }
 @keyframes dseFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(440px) rotate(560deg); opacity: 0; } }
+
+/* ===== Draft Score : juice (pulse score, pop slot, envol carte) + finitions ===== */
+/* Pulse du score quand la moyenne monte */
+#screen-draft-score-attack.is-mode-score-attack .draft-score-hero .dsh-score.is-gain { animation: dshGain .6s ease; }
+@keyframes dshGain { 0% { transform: scale(1); } 32% { transform: scale(1.18); } 100% { transform: scale(1); } }
+/* Le slot d'equipe fraichement pick surgit */
+#screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card.is-latest { animation: dtLatestPop .5s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes dtLatestPop { 0% { transform: scale(.72); opacity: .25; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+/* La carte choisie s'envole vers l'equipe puis disparait */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.picked { animation: dscFly .32s ease forwards !important; pointer-events: none; }
+@keyframes dscFly { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(.6) translateY(-22px); opacity: 0; } }
+/* Finitions : en-tete d'equipe + statut + room */
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-team h3::before { content: "\1F465"; margin-right: 2px; }
+#screen-draft-score-attack.is-mode-score-attack #draft-status { border-radius: 12px !important; background: rgba(47, 118, 255, .06) !important; border: 1px solid rgba(47, 118, 255, .12) !important; }
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks h3::before { content: "\1F0CF"; margin-right: 2px; }

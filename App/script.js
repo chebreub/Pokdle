@@ -19568,6 +19568,8 @@ function renderDraftArena() {
         '</div>';
       scoreHero.classList.remove("hidden");
       updateDraftRankChip(draftArenaState.selectedGen);
+      if (window.__lastDraftAvg != null && avg > window.__lastDraftAvg) { var __sc = scoreHero.querySelector(".dsh-score"); if (__sc) { __sc.classList.remove("is-gain"); void __sc.offsetWidth; __sc.classList.add("is-gain"); } }
+      window.__lastDraftAvg = avg;
     } else {
       scoreHero.classList.add("hidden");
       scoreHero.innerHTML = "";
