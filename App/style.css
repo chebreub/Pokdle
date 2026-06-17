@@ -29512,3 +29512,34 @@ a:focus-visible,
 .draft-pro-reveal .dpr-verdict small { font-weight:700; color:#5a6f96; }
 .draft-pro-reveal .dpr-actions { text-align:center; }
 
+/* ===== Score Attack PRO — révélation inline (à la place des tuiles) ===== */
+.draft-pro-inline { display:block; }
+.draft-pro-inline .dpr-card { background:#fff; border:2px solid #e6eefb; border-radius:18px; padding:16px; box-shadow:0 6px 20px rgba(31,58,99,.1); }
+.draft-pro-inline .dpr-title { font-size:1.15rem; font-weight:900; color:#17345d; text-align:center; margin-bottom:14px; }
+.draft-pro-inline .dpr-rolls { display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
+.draft-pro-inline .dpr-roll { flex:1; max-width:230px; min-height:104px; background:#eef3ff; border:2px solid #e6eefb; border-radius:16px; padding:12px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; transition:transform .2s ease, border-color .2s ease; }
+.draft-pro-inline .dpr-roll.is-spinning { animation:dprShake .25s linear infinite; }
+@keyframes dprShake { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+.draft-pro-inline .dpr-roll.is-locked { transform:scale(1.05); border-color:#2f76ff; }
+.draft-pro-inline .dpr-roll.is-master { border-color:#ffcc33; background:linear-gradient(180deg,#fff8e1,#fff2c4); box-shadow:0 0 0 2px rgba(255,204,51,.5); }
+.draft-pro-inline .dpr-roll-emoji { font-size:2.2rem; line-height:1; }
+.draft-pro-inline .dpr-roll-label { font-weight:800; color:#17345d; font-size:.92rem; }
+.draft-pro-inline .dpr-roll-label small { display:block; font-weight:700; color:#5a6f96; font-size:.7rem; margin-top:1px; }
+.draft-pro-inline .dpr-trainer-avatar { width:48px; height:48px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:1.5rem; color:#fff; box-shadow:0 2px 6px rgba(16,35,66,.2); }
+.draft-pro-inline .dpr-trainer-sprite { width:64px; height:64px; object-fit:contain; }
+.draft-pro-inline .dpr-bonuses { list-style:none; margin:0 0 12px; padding:0; display:flex; flex-direction:column; gap:6px; }
+.draft-pro-inline .dpr-bonuses li { display:flex; justify-content:space-between; align-items:center; gap:8px; background:#f7faff; border-radius:10px; padding:7px 12px; font-size:.86rem; color:#17345d; opacity:0; transform:translateY(8px); transition:opacity .25s ease, transform .25s ease; }
+.draft-pro-inline .dpr-bonuses li.is-in { opacity:1; transform:none; }
+.draft-pro-inline .dpr-bonuses li em { color:#5a6f96; font-style:normal; font-size:.74rem; }
+.draft-pro-inline .dpr-bonuses li b { color:#1f9d57; font-weight:900; }
+.draft-pro-inline .dpr-score { display:flex; align-items:baseline; justify-content:center; gap:12px; margin:6px 0 8px; }
+.draft-pro-inline .dpr-score-base { color:#5a6f96; font-weight:700; }
+.draft-pro-inline .dpr-score-total { font-size:2.6rem; font-weight:900; color:#2f76ff; font-variant-numeric:tabular-nums; transition:transform .2s ease; }
+.draft-pro-inline .dpr-score-total.is-pop { transform:scale(1.12); }
+.draft-pro-inline .dpr-verdict { text-align:center; font-weight:900; font-size:1.05rem; min-height:1.2em; margin-bottom:12px; }
+.draft-pro-inline .dpr-verdict.is-record { color:#e4382f; }
+.draft-pro-inline .dpr-verdict.is-win { color:#1f9d57; }
+.draft-pro-inline .dpr-verdict.is-lose { color:#e4382f; }
+.draft-pro-inline .dpr-verdict small { font-weight:700; color:#5a6f96; }
+.draft-pro-inline .dpr-actions { text-align:center; }
+

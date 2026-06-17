@@ -2690,6 +2690,7 @@ function openDraftScoreAttackMode(pro) {
   }
 
   draftArenaState.scoreAttackPro = !!pro;
+  if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
 }
 
@@ -2730,16 +2731,19 @@ function restartDraftArenaRun() {
   }
   const previousMode = draftArenaState?.mode || "arena";
   const previousScoreRoom = draftArenaState?.scoreAttackRoom || null;
+  const previousPro = !!(draftArenaState && draftArenaState.scoreAttackPro);
   clearDraftArenaProgress();
   draftArenaState = createDraftArenaState();
   draftArenaState.mode = previousMode;
+  draftArenaState.scoreAttackPro = previousPro;
   if (previousMode === "scoreAttack") {
     draftArenaState.scoreAttackRoom = previousScoreRoom;
     draftArenaState.scoreAttackSubmitted = false;
   }
   draftArenaState.message = previousMode === "scoreAttack"
-    ? "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST."
+    ? (previousPro ? "🔥 Score Attack PRO prêt. Choisis une génération." : "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.")
     : "Choisis une génération pour commencer le draft.";
+  if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
 }
 

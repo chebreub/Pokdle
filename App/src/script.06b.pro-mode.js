@@ -1,5 +1,5 @@
 // ============================================================
-//  SCORE ATTACK PRO — moteur de bonus + données dresseurs + écran de révélation
+//  SCORE ATTACK PRO — moteur de bonus + données dresseurs + révélation inline
 //  Morceau autonome (globals). Branché depuis script.06 (fin de draft) et le serveur 1v1.
 //  Le mode Score Attack "de base" reste inchangé.
 // ============================================================
@@ -30,6 +30,14 @@ const PRO_LEAGUE_MASTERS = {
   6: { name: "Dianthéa",       type: "Fée",     aceId: 282, aceName: "Gardevoir" },
 };
 
+// Couleurs de types (vignette dresseur)
+const PRO_TYPE_COLORS = {
+  "Normal": "#9aa0a6", "Feu": "#ff7043", "Eau": "#4f8fef", "Plante": "#5cb85c", "Électrik": "#f2c037",
+  "Glace": "#69c9d0", "Combat": "#d94f4f", "Poison": "#a557c4", "Sol": "#d9a441", "Vol": "#7aa7ff",
+  "Psy": "#f25f9a", "Insecte": "#9bbe2e", "Roche": "#c9a23a", "Spectre": "#6b5ca5", "Dragon": "#5e54d6",
+  "Ténèbres": "#5a5566", "Acier": "#7aa0b5", "Fée": "#f29ad0",
+};
+
 // --- Barème (réglable) ---
 const PRO_TUNING = {
   weatherPerMon: 40,
@@ -39,6 +47,7 @@ const PRO_TUNING = {
 };
 
 function proMonTypes(m) { return [m.type1, m.type2].filter(Boolean); }
+function proTypeColor(t) { return PRO_TYPE_COLORS[t] || "#5a6f96"; }
 
 // Tire météo + dresseur pour une génération (rnd injectable pour tests / serveur)
 function rollProModifiers(gen, rnd) {
@@ -139,85 +148,100 @@ function updateDraftProRecord(gen, score) {
   return false;
 }
 
-// --- Écran de révélation animé ---
-// teamData : sortie de buildProTeamData ; mods : {weather, trainer} ; result : computeDraftProScore(...)
-// opts : { isNewRecord, previousRecord, onDone, opponent: {nickname,total}|null }
-function showDraftProRevealOverlay(teamData, mods, result, opts) {
+// Vignette dresseur (avatar type + nom + sous-titre)
+function proTrainerSlotHtml(tr, esc) {
+  const isMaster = tr.tier === "maitre";
+  const col = proTypeColor(tr.type);
+  const avatar = tr.sprite
+    ? `<img class="dpr-trainer-sprite" src="${esc(tr.sprite)}" alt="${esc(tr.name)}" />`
+    : `<span class="dpr-trainer-avatar" style="background:${col}">${isMaster ? "👑" : "🎽"}</span>`;
+  return `${avatar}<span class="dpr-roll-label">${esc(tr.name)}<small>${isMaster ? "Maître" : "Champion"} · ${esc(tr.type)}</small></span>`;
+}
+
+// --- Révélation INLINE (remplace les tuiles le temps de la séquence) ---
+// opts : { isNewRecord, previousRecord, onDone, opponent:{nickname,total}|null }
+function renderDraftProRevealInline(teamData, mods, result, opts) {
   opts = opts || {};
   const esc = (typeof escapeHtml === "function") ? escapeHtml : (s) => String(s);
-  const old = document.getElementById("draft-pro-reveal-overlay");
-  if (old) old.remove();
+  const mount = document.getElementById("draft-options");
+  if (!mount) { if (typeof opts.onDone === "function") opts.onDone(); return; }
 
+  const gen = (typeof draftArenaState !== "undefined" && draftArenaState && draftArenaState.selectedGen) || 1;
+  const gyms = PRO_GYM_LEADERS[gen] || PRO_GYM_LEADERS[1];
   const tr = mods.trainer || {};
   const isMaster = tr.tier === "maitre";
-  const overlay = document.createElement("div");
-  overlay.id = "draft-pro-reveal-overlay";
-  overlay.className = "draft-pro-reveal";
-  overlay.innerHTML = `
-    <div class="dpr-backdrop"></div>
-    <div class="dpr-card">
-      <div class="dpr-title">Révélation des bonus</div>
-      <div class="dpr-rolls">
-        <div class="dpr-roll" id="dpr-weather"><span class="dpr-roll-emoji">🌀</span><span class="dpr-roll-label">Météo…</span></div>
-        <div class="dpr-roll" id="dpr-trainer"><span class="dpr-roll-emoji">❓</span><span class="dpr-roll-label">Dresseur…</span></div>
-      </div>
-      <ul class="dpr-bonuses" id="dpr-bonuses"></ul>
-      <div class="dpr-score" id="dpr-score">
-        <span class="dpr-score-base">Base ${result.base}</span>
-        <span class="dpr-score-total" id="dpr-score-total">${result.base}</span>
-      </div>
-      <div class="dpr-verdict" id="dpr-verdict"></div>
-      <div class="dpr-actions"><button type="button" class="btn-red" id="dpr-close">Continuer</button></div>
-    </div>`;
-  document.body.appendChild(overlay);
 
-  const weatherEl = overlay.querySelector("#dpr-weather");
-  const trainerEl = overlay.querySelector("#dpr-trainer");
-  const bonusList = overlay.querySelector("#dpr-bonuses");
-  const scoreTotalEl = overlay.querySelector("#dpr-score-total");
-  const verdictEl = overlay.querySelector("#dpr-verdict");
+  mount.className = "draft-pro-inline";
+  mount.innerHTML =
+    '<div class="dpr-card">' +
+      '<div class="dpr-title">🎰 Bonus de fin de draft</div>' +
+      '<div class="dpr-rolls">' +
+        '<div class="dpr-roll is-spinning" id="dpr-weather"><span class="dpr-roll-emoji">🌀</span><span class="dpr-roll-label">Météo…</span></div>' +
+        '<div class="dpr-roll is-spinning" id="dpr-trainer"><span class="dpr-trainer-avatar" style="background:#cdd8ee">❓</span><span class="dpr-roll-label">Dresseur…</span></div>' +
+      '</div>' +
+      '<ul class="dpr-bonuses" id="dpr-bonuses"></ul>' +
+      '<div class="dpr-score"><span class="dpr-score-base">Base ' + result.base + '</span><span class="dpr-score-total" id="dpr-score-total">' + result.base + '</span></div>' +
+      '<div class="dpr-verdict" id="dpr-verdict"></div>' +
+      '<div class="dpr-actions"><button type="button" class="btn-red" id="dpr-close">Continuer</button></div>' +
+    '</div>';
+
+  const weatherEl = mount.querySelector("#dpr-weather");
+  const trainerEl = mount.querySelector("#dpr-trainer");
+  const bonusList = mount.querySelector("#dpr-bonuses");
+  const scoreTotalEl = mount.querySelector("#dpr-score-total");
+  const verdictEl = mount.querySelector("#dpr-verdict");
 
   // 1) Roue météo
-  let spins = 0;
+  let ws = 0;
   const wheel = setInterval(() => {
-    const w = PRO_WEATHERS[spins % PRO_WEATHERS.length];
+    const w = PRO_WEATHERS[ws % PRO_WEATHERS.length];
     weatherEl.querySelector(".dpr-roll-emoji").textContent = w.emoji;
     weatherEl.querySelector(".dpr-roll-label").textContent = w.label;
-    spins += 1;
-    if (spins > 9) {
+    ws += 1;
+    if (ws > 10) {
       clearInterval(wheel);
+      weatherEl.classList.remove("is-spinning");
       weatherEl.classList.add("is-locked");
       weatherEl.querySelector(".dpr-roll-emoji").textContent = mods.weather.emoji;
       weatherEl.querySelector(".dpr-roll-label").textContent = mods.weather.label;
-      setTimeout(revealTrainer, 450);
+      setTimeout(spinTrainer, 420);
     }
-  }, 110);
+  }, 105);
 
-  // 2) Dresseur
-  function revealTrainer() {
-    trainerEl.classList.add("is-locked", isMaster ? "is-master" : "is-gym");
-    trainerEl.querySelector(".dpr-roll-emoji").textContent = isMaster ? "👑" : "🎽";
-    trainerEl.querySelector(".dpr-roll-label").innerHTML = `${esc(tr.name || "")}<small>${isMaster ? "Maître" : "Champion"} · ${esc(tr.type || "")}</small>`;
-    setTimeout(revealBonuses, 500);
+  // 2) Roue dresseur
+  function spinTrainer() {
+    let ts = 0;
+    const reel = setInterval(() => {
+      const g = gyms[ts % gyms.length];
+      trainerEl.innerHTML = proTrainerSlotHtml({ name: g[0], type: g[1], tier: "arene" }, esc);
+      ts += 1;
+      if (ts > 11) {
+        clearInterval(reel);
+        trainerEl.classList.remove("is-spinning");
+        trainerEl.classList.add("is-locked", isMaster ? "is-master" : "is-gym");
+        trainerEl.innerHTML = proTrainerSlotHtml(tr, esc);
+        setTimeout(revealBonuses, 480);
+      }
+    }, 95);
   }
 
-  // 3) Bonus un par un + score qui monte
+  // 3) Bonus un par un
   function revealBonuses() {
     let i = 0;
     const step = () => {
-      if (i >= result.bonuses.length) { setTimeout(finishScore, 250); return; }
+      if (i >= result.bonuses.length) { setTimeout(finishScore, 220); return; }
       const b = result.bonuses[i];
       const li = document.createElement("li");
       li.innerHTML = `<span>${esc(b.label)}${b.detail ? ` <em>${esc(b.detail)}</em>` : ""}</span><b>+${b.points}</b>`;
       bonusList.appendChild(li);
       requestAnimationFrame(() => li.classList.add("is-in"));
       i += 1;
-      setTimeout(step, 360);
+      setTimeout(step, 340);
     };
     step();
   }
 
-  // 4) Score final animé + verdict
+  // 4) Score animé + verdict
   function finishScore() {
     const start = Date.now(), dur = 900, from = result.base, to = result.total;
     const tick = () => {
@@ -225,22 +249,16 @@ function showDraftProRevealOverlay(teamData, mods, result, opts) {
       const eased = 1 - Math.pow(1 - t, 3);
       scoreTotalEl.textContent = Math.round(from + (to - from) * eased);
       if (t < 1) requestAnimationFrame(tick);
-      else {
-        scoreTotalEl.textContent = to;
-        scoreTotalEl.classList.add("is-pop");
-        showVerdict();
-      }
+      else { scoreTotalEl.textContent = to; scoreTotalEl.classList.add("is-pop"); showVerdict(); }
     };
     requestAnimationFrame(tick);
   }
-
   function showVerdict() {
     if (opts.isNewRecord) {
       verdictEl.innerHTML = `🏆 NOUVEAU RECORD PRO ! <small>(avant : ${opts.previousRecord || 0})</small>`;
       verdictEl.classList.add("is-record");
     } else if (opts.opponent) {
-      const won = result.total > opts.opponent.total;
-      const tie = result.total === opts.opponent.total;
+      const won = result.total > opts.opponent.total, tie = result.total === opts.opponent.total;
       verdictEl.innerHTML = tie ? "🤝 Égalité !" : won ? "🏆 VICTOIRE !" : "💀 Défaite";
       verdictEl.classList.add(tie ? "is-tie" : won ? "is-win" : "is-lose");
     } else {
@@ -248,21 +266,30 @@ function showDraftProRevealOverlay(teamData, mods, result, opts) {
     }
   }
 
-  const close = () => { overlay.classList.add("is-closing"); setTimeout(() => { overlay.remove(); if (typeof opts.onDone === "function") opts.onDone(); }, 280); };
-  overlay.querySelector("#dpr-close").addEventListener("click", close);
-  setTimeout(() => overlay.querySelector("#dpr-close")?.focus(), 300);
+  const closeBtn = mount.querySelector("#dpr-close");
+  if (closeBtn) closeBtn.addEventListener("click", () => { if (typeof opts.onDone === "function") opts.onDone(); });
 }
 
-
-// --- Bascule Normal / PRO sur l'écran Score Attack ---
-function setScoreAttackProMode(pro) {
-  if (!draftArenaState) return;
-  draftArenaState.scoreAttackPro = !!pro;
-  var n = document.getElementById("dpa-mode-normal");
-  var p = document.getElementById("dpa-mode-pro");
+// Synchronise l'affichage (bascule + titre) avec le drapeau PRO courant
+function syncScoreAttackProUI() {
+  if (typeof draftArenaState === "undefined" || !draftArenaState) return;
+  const pro = !!draftArenaState.scoreAttackPro;
+  const n = document.getElementById("dpa-mode-normal");
+  const p = document.getElementById("dpa-mode-pro");
   if (n) n.classList.toggle("is-active", !pro);
-  if (p) p.classList.toggle("is-active", !!pro);
-  // Relance proprement si un draft est déjà en cours (le scoring de fin change)
+  if (p) p.classList.toggle("is-active", pro);
+  const card = document.getElementById("draft-mode-card");
+  const title = card && card.querySelector(".card-title");
+  if (title && draftArenaState.mode === "scoreAttack") {
+    title.innerHTML = pro ? '🔥 Draft Score Attack <b style="color:#e4382f">PRO</b>' : "🎯 Draft Score Attack";
+  }
+}
+
+// Bascule Normal / PRO (boutons segmentés)
+function setScoreAttackProMode(pro) {
+  if (typeof draftArenaState === "undefined" || !draftArenaState) return;
+  draftArenaState.scoreAttackPro = !!pro;
+  syncScoreAttackProUI();
   if (draftArenaState.mode === "scoreAttack" && draftArenaState.selectedGen && (draftArenaState.team || []).length > 0 && draftArenaState.phase === "draft" && typeof selectDraftGeneration === "function") {
     selectDraftGeneration(draftArenaState.selectedGen);
   } else if (typeof renderDraftArena === "function") {
@@ -270,32 +297,40 @@ function setScoreAttackProMode(pro) {
   }
 }
 
-// --- Finale PRO solo : tire météo+dresseur, calcule, révèle, enregistre le record PRO ---
+// Finale PRO solo : tire météo+dresseur, calcule, révèle (inline), enregistre le record
 function runDraftProFinale() {
-  if (!draftArenaState) return;
-  draftArenaState.phase = "result";
-  var teamData = buildProTeamData(draftArenaState.team);
-  var mods = rollProModifiers(draftArenaState.selectedGen);
-  var result = computeDraftProScore(teamData, mods);
-  var gen = draftArenaState.selectedGen;
-  var previousRecord = getDraftProRecord(gen);
-  var isNewRecord = updateDraftProRecord(gen, result.total);
-  var power = function (m) { return (typeof getDraftCachedPokemonPowerData === "function" ? Number(getDraftCachedPokemonPowerData(m.pokemon).statGlobal) : 0) || 0; };
-  var mvp = (draftArenaState.team || []).slice().sort(function (a, b) { return power(b) - power(a); })[0];
-  draftArenaState.runSummary = {
-    status: "Score PRO " + result.total + (isNewRecord ? " 🏆 NOUVEAU RECORD !" : ""),
-    mvpName: (mvp && mvp.pokemon && mvp.pokemon.name) || "-",
-    balanceLabel: "Base " + result.base + " · Bonus +" + result.bonusTotal,
-    offenseLabel: mods.weather.emoji + " " + mods.weather.label + " · " + (mods.trainer.tier === "maitre" ? "👑 " : "🎽 ") + mods.trainer.name,
-  };
-  draftArenaState.message = isNewRecord
-    ? ("🏆 NOUVEAU RECORD PRO Gen " + gen + " : " + result.total + " ! (avant : " + (previousRecord || 0) + ")")
-    : ("Score Attack PRO terminé : " + result.total + " points.");
+  if (typeof draftArenaState === "undefined" || !draftArenaState) return;
+  const teamData = buildProTeamData(draftArenaState.team);
+  const mods = rollProModifiers(draftArenaState.selectedGen);
+  const result = computeDraftProScore(teamData, mods);
+  const gen = draftArenaState.selectedGen;
+  const previousRecord = getDraftProRecord(gen);
+  const isNewRecord = updateDraftProRecord(gen, result.total);
   if (typeof awardXp === "function") awardXp(Math.round(result.total / 12), "Score Attack PRO " + result.total);
   if (typeof progressQuest === "function") { try { progressQuest("draft_complete", 1); } catch (e) {} }
+
+  // On reste en phase "draft" pendant la révélation (tuiles remplacées), bascule en "result" à "Continuer".
   if (typeof renderDraftArena === "function") renderDraftArena();
-  showDraftProRevealOverlay(teamData, mods, result, {
-    isNewRecord: isNewRecord, previousRecord: previousRecord,
-    onDone: function () { if (typeof renderDraftArena === "function") renderDraftArena(); },
+  renderDraftProRevealInline(teamData, mods, result, {
+    isNewRecord: isNewRecord,
+    previousRecord: previousRecord,
+    onDone: function () {
+      if (typeof draftArenaState === "undefined" || !draftArenaState) return;
+      const power = function (m) { return (typeof getDraftCachedPokemonPowerData === "function" ? Number(getDraftCachedPokemonPowerData(m.pokemon).statGlobal) : 0) || 0; };
+      const mvp = (draftArenaState.team || []).slice().sort(function (a, b) { return power(b) - power(a); })[0];
+      draftArenaState.phase = "result";
+      draftArenaState.runSummary = {
+        status: "Score PRO " + result.total + (isNewRecord ? " 🏆 NOUVEAU RECORD !" : ""),
+        mvpName: (mvp && mvp.pokemon && mvp.pokemon.name) || "-",
+        balanceLabel: "Base " + result.base + " · Bonus +" + result.bonusTotal,
+        offenseLabel: mods.weather.emoji + " " + mods.weather.label + " · " + (mods.trainer.tier === "maitre" ? "👑 " : "🎽 ") + mods.trainer.name,
+      };
+      draftArenaState.message = isNewRecord
+        ? ("🏆 NOUVEAU RECORD PRO Gen " + gen + " : " + result.total + " !")
+        : ("Score Attack PRO terminé : " + result.total + " points.");
+      const mount = document.getElementById("draft-options");
+      if (mount) mount.className = "draft-options-grid";
+      if (typeof renderDraftArena === "function") renderDraftArena();
+    },
   });
 }
