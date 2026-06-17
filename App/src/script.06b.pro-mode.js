@@ -30,6 +30,15 @@ const PRO_LEAGUE_MASTERS = {
   6: { name: "Dianthéa",       type: "Fée",     aceId: 282, aceName: "Gardevoir" },
 };
 
+// --- Conseil 4 (nom + type) — gen 1-5, vérifiés Poképédia (palier intermédiaire) ---
+const PRO_CONSEIL_4 = {
+  1: [["Olga","Glace","img/trainers/c4_1_olga.png"], ["Aldo","Combat","img/trainers/c4_1_aldo.png"], ["Agatha","Spectre","img/trainers/c4_1_agatha.png"], ["Peter","Dragon","img/trainers/c4_1_peter.png"]],
+  2: [["Clément","Psy","img/trainers/c4_2_clement.png"], ["Koga","Poison","img/trainers/c4_2_koga.png"], ["Aldo","Combat","img/trainers/c4_2_aldo.png"], ["Marion","Ténèbres","img/trainers/c4_2_marion.png"]],
+  3: [["Damien","Ténèbres","img/trainers/c4_3_damien.png"], ["Spectra","Spectre","img/trainers/c4_3_spectra.png"], ["Glacia","Glace","img/trainers/c4_3_glacia.png"], ["Aragon","Dragon","img/trainers/c4_3_aragon.png"]],
+  4: [["Aaron","Insecte","img/trainers/c4_4_aaron.png"], ["Terry","Sol","img/trainers/c4_4_terry.png"], ["Adrien","Feu","img/trainers/c4_4_adrien.png"], ["Lucio","Psy","img/trainers/c4_4_lucio.png"]],
+  5: [["Anis","Spectre","img/trainers/c4_5_anis.png"], ["Pieris","Ténèbres","img/trainers/c4_5_pieris.png"], ["Percila","Psy","img/trainers/c4_5_percila.png"], ["Kunz","Combat","img/trainers/c4_5_kunz.png"]],
+};
+
 // Couleurs de types (vignette dresseur)
 const PRO_TYPE_COLORS = {
   "Normal": "#9aa0a6", "Feu": "#ff7043", "Eau": "#4f8fef", "Plante": "#5cb85c", "Électrik": "#f2c037",
@@ -43,6 +52,7 @@ const PRO_TUNING = {
   weatherPerMon: 40,
   monoType: 250, rainbow: 180, colossusPerMon: 50, colorFamily: 80, finalEvoPerMon: 20,
   gymTypePerMon: 35,
+  conseilTypePerMon: 45,
   masterTypePerMon: 55, masterAce: 250,
 };
 
@@ -56,9 +66,14 @@ function rollProModifiers(gen, rnd) {
   const weather = PRO_WEATHERS[Math.floor(rnd() * PRO_WEATHERS.length)];
   const gyms = PRO_GYM_LEADERS[g] || PRO_GYM_LEADERS[1];
   const master = PRO_LEAGUE_MASTERS[g] || null;
+  const conseil = (typeof PRO_CONSEIL_4 !== "undefined" && PRO_CONSEIL_4[g]) || null;
   let trainer;
-  if (master && rnd() < 0.25) {
+  const r = rnd();
+  if (master && r < 0.18) {
     trainer = { name: master.name, type: master.type, tier: "maitre", aceId: master.aceId, aceName: master.aceName };
+  } else if (conseil && conseil.length && r < 0.45) {
+    const c = conseil[Math.floor(rnd() * conseil.length)];
+    trainer = { name: c[0], type: c[1], tier: "conseil", sprite: c[2] || "" };
   } else {
     const pick = gyms[Math.floor(rnd() * gyms.length)];
     trainer = { name: pick[0], type: pick[1], tier: "arene", sprite: pick[2] || "" };
@@ -102,9 +117,11 @@ function computeDraftProScore(team, mods, tuning) {
   if (mods.trainer) {
     const tr = mods.trainer;
     const isMaster = tr.tier === "maitre";
-    const per = isMaster ? tuning.masterTypePerMon : tuning.gymTypePerMon;
+    const isConseil = tr.tier === "conseil";
+    const per = isMaster ? tuning.masterTypePerMon : isConseil ? tuning.conseilTypePerMon : tuning.gymTypePerMon;
+    const label = isMaster ? "👑 Maître" : isConseil ? "⚔️ Conseil 4" : "🎽 Champion";
     const hits = team.filter((m) => proMonTypes(m).includes(tr.type));
-    add(`${isMaster ? "👑 Maître" : "🎽 Champion"} ${tr.name} (${tr.type})`, hits.length * per, `${hits.length} Pokémon ${tr.type}`);
+    add(`${label} ${tr.name} (${tr.type})`, hits.length * per, `${hits.length} Pokémon ${tr.type}`);
     if (isMaster && tr.aceId && team.some((m) => Number(m.id) === Number(tr.aceId))) {
       add(`🏆 JACKPOT : l'ace ${tr.aceName} !`, tuning.masterAce);
     }
@@ -150,12 +167,13 @@ function updateDraftProRecord(gen, score) {
 
 // Vignette dresseur (avatar type + nom + sous-titre)
 function proTrainerSlotHtml(tr, esc, useSprite) {
-  const isMaster = tr.tier === "maitre";
   const col = proTypeColor(tr.type);
+  const badge = tr.tier === "maitre" ? "👑" : tr.tier === "conseil" ? "⚔️" : "🎽";
+  const role = tr.tier === "maitre" ? "Maître" : tr.tier === "conseil" ? "Conseil 4" : "Champion";
   const avatar = (useSprite && tr.sprite)
     ? `<img class="dpr-trainer-sprite" src="${esc(tr.sprite)}" alt="${esc(tr.name)}" />`
-    : `<span class="dpr-trainer-avatar" style="background:${col}">${isMaster ? "👑" : "🎽"}</span>`;
-  return `${avatar}<span class="dpr-roll-label">${esc(tr.name)}<small>${isMaster ? "Maître" : "Champion"} · ${esc(tr.type)}</small></span>`;
+    : `<span class="dpr-trainer-avatar" style="background:${col}">${badge}</span>`;
+  return `${avatar}<span class="dpr-roll-label">${esc(tr.name)}<small>${role} · ${esc(tr.type)}</small></span>`;
 }
 
 // --- Révélation INLINE (remplace les tuiles le temps de la séquence) ---
