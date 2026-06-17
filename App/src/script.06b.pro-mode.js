@@ -14,10 +14,10 @@ const PRO_WEATHERS = [
 
 // --- Champions d'Arène (nom + type) — vérifiés Poképédia gen 1-4 ---
 const PRO_GYM_LEADERS = {
-  1: [["Pierre","Roche"],["Ondine","Eau"],["Major Bob","Électrik"],["Erika","Plante"],["Koga","Poison"],["Morgane","Psy"],["Auguste","Feu"],["Giovanni","Sol"]],
-  2: [["Albert","Vol"],["Hector","Insecte"],["Blanche","Normal"],["Mortimer","Spectre"],["Chuck","Combat"],["Jasmine","Acier"],["Frédo","Glace"],["Sandra","Dragon"]],
-  3: [["Roxanne","Roche"],["Bastien","Combat"],["Voltère","Électrik"],["Adriane","Feu"],["Norman","Normal"],["Alizée","Vol"],["Lévy & Tatia","Psy"],["Juan","Eau"]],
-  4: [["Pierrick","Roche"],["Flo","Plante"],["Mélina","Combat"],["Lovis","Eau"],["Kiméra","Spectre"],["Charles","Acier"],["Gladys","Glace"],["Tanguy","Électrik"]],
+  1: [["Pierre","Roche","img/trainers/pierre.png"], ["Ondine","Eau","img/trainers/ondine.png"], ["Major Bob","Électrik","img/trainers/major_bob.png"], ["Erika","Plante","img/trainers/erika.png"], ["Koga","Poison","img/trainers/koga.png"], ["Morgane","Psy","img/trainers/morgane.png"], ["Auguste","Feu","img/trainers/auguste.png"], ["Giovanni","Sol","img/trainers/giovanni.png"]],
+  2: [["Albert","Vol","img/trainers/albert.png"], ["Hector","Insecte","img/trainers/hector.png"], ["Blanche","Normal","img/trainers/blanche.png"], ["Mortimer","Spectre","img/trainers/mortimer.png"], ["Chuck","Combat","img/trainers/chuck.png"], ["Jasmine","Acier","img/trainers/jasmine.png"], ["Frédo","Glace","img/trainers/fredo.png"], ["Sandra","Dragon","img/trainers/sandra.png"]],
+  3: [["Roxanne","Roche","img/trainers/roxanne.png"], ["Bastien","Combat","img/trainers/bastien.png"], ["Voltère","Électrik","img/trainers/voltere.png"], ["Adriane","Feu","img/trainers/adriane.png"], ["Norman","Normal","img/trainers/norman.png"], ["Alizée","Vol","img/trainers/alizee.png"], ["Lévy & Tatia","Psy","img/trainers/levy_tatia.png"], ["Juan","Eau","img/trainers/juan.png"]],
+  4: [["Pierrick","Roche","img/trainers/pierrick.png"], ["Flo","Plante","img/trainers/flo.png"], ["Mélina","Combat","img/trainers/melina.png"], ["Lovis","Eau","img/trainers/lovis.png"], ["Kiméra","Spectre","img/trainers/kimera.png"], ["Charles","Acier","img/trainers/charles.png"], ["Gladys","Glace","img/trainers/gladys.png"], ["Tanguy","Électrik","img/trainers/tanguy.png"]],
 };
 
 // --- Maîtres de Ligue (type + ace) — gen 1-6, fiables ---
@@ -61,7 +61,7 @@ function rollProModifiers(gen, rnd) {
     trainer = { name: master.name, type: master.type, tier: "maitre", aceId: master.aceId, aceName: master.aceName };
   } else {
     const pick = gyms[Math.floor(rnd() * gyms.length)];
-    trainer = { name: pick[0], type: pick[1], tier: "arene" };
+    trainer = { name: pick[0], type: pick[1], tier: "arene", sprite: pick[2] || "" };
   }
   return { weather, trainer };
 }
@@ -149,10 +149,10 @@ function updateDraftProRecord(gen, score) {
 }
 
 // Vignette dresseur (avatar type + nom + sous-titre)
-function proTrainerSlotHtml(tr, esc) {
+function proTrainerSlotHtml(tr, esc, useSprite) {
   const isMaster = tr.tier === "maitre";
   const col = proTypeColor(tr.type);
-  const avatar = tr.sprite
+  const avatar = (useSprite && tr.sprite)
     ? `<img class="dpr-trainer-sprite" src="${esc(tr.sprite)}" alt="${esc(tr.name)}" />`
     : `<span class="dpr-trainer-avatar" style="background:${col}">${isMaster ? "👑" : "🎽"}</span>`;
   return `${avatar}<span class="dpr-roll-label">${esc(tr.name)}<small>${isMaster ? "Maître" : "Champion"} · ${esc(tr.type)}</small></span>`;
@@ -219,7 +219,9 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
         clearInterval(reel);
         trainerEl.classList.remove("is-spinning");
         trainerEl.classList.add("is-locked", isMaster ? "is-master" : "is-gym");
-        trainerEl.innerHTML = proTrainerSlotHtml(tr, esc);
+        trainerEl.innerHTML = proTrainerSlotHtml(tr, esc, true);
+        const sp = trainerEl.querySelector(".dpr-trainer-sprite");
+        if (sp) sp.addEventListener("error", function () { trainerEl.innerHTML = proTrainerSlotHtml(tr, esc, false); });
         setTimeout(revealBonuses, 480);
       }
     }, 95);

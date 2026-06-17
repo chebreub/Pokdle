@@ -516,6 +516,7 @@ const strictCspDirectives = {
     "https://pokeapi.co",
     "https://archives.bulbagarden.net",
     "https://cdn.discordapp.com",
+    "https://www.pokepedia.fr",
   ],
   connectSrc: [
     "'self'",
@@ -708,6 +709,7 @@ app.get("/og-image.png", async (_req, res) => {
 });
 // Icônes de types (utilisées par les badges de types dans tous les modes).
 app.use("/types", express.static(path.join(__dirname, "types"), { maxAge: "7d", fallthrough: false }));
+app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: "30d", fallthrough: false }));
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
 // PokeAPI par nouveau visiteur.
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
@@ -857,37 +859,37 @@ app.get("/admin/stats", async (req, res) => {
 ${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);
 });
 
-// Diagnostic protégé : teste directement le client_secret Discord via client_credentials.
-// Ne passe PAS par la fenêtre de connexion. 200 = secret valide, 401 = secret refusé, 429 = IP temporairement bloquée.
-app.get("/admin/discord-check", async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  res.set("X-Robots-Tag", "noindex");
-  const adminKey = process.env.ADMIN_STATS_KEY || "";
-  if (!adminKey) return res.status(503).type("text/plain").send("Configure ADMIN_STATS_KEY sur Render.");
-  if ((req.query.key || "") !== adminKey) return res.status(403).type("text/plain").send("Cle invalide.");
-  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
-    return res.type("text/plain").send("Manque DISCORD_CLIENT_ID ou DISCORD_CLIENT_SECRET cote serveur.");
-  }
-  try {
-    const basic = Buffer.from(DISCORD_CLIENT_ID + ":" + DISCORD_CLIENT_SECRET).toString("base64");
-    const r = await fetch(`${DISCORD_API_BASE}/api/oauth2/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: "Basic " + basic },
-      body: new URLSearchParams({ grant_type: "client_credentials", scope: "identify" }),
-      signal: AbortSignal.timeout(8000),
-    });
-    let verdict;
-    if (r.status === 200) verdict = "OK — le client_secret est VALIDE. Le probleme de connexion ne vient PAS du secret.";
-    else if (r.status === 401) verdict = "REFUSE (401) — le client_secret cote Render ne correspond pas. Re-colle le bon Client Secret (OAuth2).";
-    else if (r.status === 429) verdict = "429 — IP temporairement bloquee par Discord. Attends ~30-60 min sans aucune tentative, puis recommence.";
-    else verdict = "Statut inattendu " + r.status + ".";
-    const detail = r.status === 200 ? "" : ("\n\nReponse Discord : " + (await r.text()).slice(0, 300));
-    res.type("text/plain").send("HTTP " + r.status + "\n" + verdict + detail);
-  } catch (e) {
-    res.type("text/plain").send("Erreur reseau : " + e.message);
-  }
-});
-
+// Diagnostic protégé : teste directement le client_secret Discord via client_credentials.
+// Ne passe PAS par la fenêtre de connexion. 200 = secret valide, 401 = secret refusé, 429 = IP temporairement bloquée.
+app.get("/admin/discord-check", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex");
+  const adminKey = process.env.ADMIN_STATS_KEY || "";
+  if (!adminKey) return res.status(503).type("text/plain").send("Configure ADMIN_STATS_KEY sur Render.");
+  if ((req.query.key || "") !== adminKey) return res.status(403).type("text/plain").send("Cle invalide.");
+  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
+    return res.type("text/plain").send("Manque DISCORD_CLIENT_ID ou DISCORD_CLIENT_SECRET cote serveur.");
+  }
+  try {
+    const basic = Buffer.from(DISCORD_CLIENT_ID + ":" + DISCORD_CLIENT_SECRET).toString("base64");
+    const r = await fetch(`${DISCORD_API_BASE}/api/oauth2/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: "Basic " + basic },
+      body: new URLSearchParams({ grant_type: "client_credentials", scope: "identify" }),
+      signal: AbortSignal.timeout(8000),
+    });
+    let verdict;
+    if (r.status === 200) verdict = "OK — le client_secret est VALIDE. Le probleme de connexion ne vient PAS du secret.";
+    else if (r.status === 401) verdict = "REFUSE (401) — le client_secret cote Render ne correspond pas. Re-colle le bon Client Secret (OAuth2).";
+    else if (r.status === 429) verdict = "429 — IP temporairement bloquee par Discord. Attends ~30-60 min sans aucune tentative, puis recommence.";
+    else verdict = "Statut inattendu " + r.status + ".";
+    const detail = r.status === 200 ? "" : ("\n\nReponse Discord : " + (await r.text()).slice(0, 300));
+    res.type("text/plain").send("HTTP " + r.status + "\n" + verdict + detail);
+  } catch (e) {
+    res.type("text/plain").send("Erreur reseau : " + e.message);
+  }
+});
+
 function generatePartyRoomCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
