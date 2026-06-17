@@ -29542,4 +29542,5 @@ a:focus-visible,
 .draft-pro-inline .dpr-verdict.is-lose { color:#e4382f; }
 .draft-pro-inline .dpr-verdict small { font-weight:700; color:#5a6f96; }
 .draft-pro-inline .dpr-actions { text-align:center; }
-
+.draft-pro-inline .dpr-score-total.is-bump { animation: dprBump .25s ease; }
+@keyframes dprBump { 0%{transform:scale(1)} 40%{transform:scale(1.18); color:#1f9d57} 100%{transform:scale(1)} }

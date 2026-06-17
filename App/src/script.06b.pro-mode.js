@@ -245,33 +245,37 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
     }, 95);
   }
 
-  // 3) Bonus un par un
+  // 3) Bonus un par un — le score GRIMPE du montant de chaque bonus (effet d'addition)
   function revealBonuses() {
     let i = 0;
+    let running = result.base;
     const step = () => {
-      if (i >= result.bonuses.length) { setTimeout(finishScore, 220); return; }
+      if (i >= result.bonuses.length) {
+        scoreTotalEl.textContent = result.total;
+        scoreTotalEl.classList.add("is-pop");
+        setTimeout(showVerdict, 150);
+        return;
+      }
       const b = result.bonuses[i];
       const li = document.createElement("li");
       li.innerHTML = `<span>${esc(b.label)}${b.detail ? ` <em>${esc(b.detail)}</em>` : ""}</span><b>+${b.points}</b>`;
       bonusList.appendChild(li);
       requestAnimationFrame(() => li.classList.add("is-in"));
+      // le compteur saute de +b.points
+      const from = running, to = running + b.points; running = to;
+      const start = Date.now(), dur = 480;
+      const tick = () => {
+        const t = Math.min(1, (Date.now() - start) / dur);
+        const eased = 1 - Math.pow(1 - t, 3);
+        scoreTotalEl.textContent = Math.round(from + (to - from) * eased);
+        if (t < 1) requestAnimationFrame(tick); else scoreTotalEl.textContent = to;
+      };
+      requestAnimationFrame(tick);
+      scoreTotalEl.classList.remove("is-bump"); void scoreTotalEl.offsetWidth; scoreTotalEl.classList.add("is-bump");
       i += 1;
-      setTimeout(step, 340);
+      setTimeout(step, 640);
     };
     step();
-  }
-
-  // 4) Score animé + verdict
-  function finishScore() {
-    const start = Date.now(), dur = 900, from = result.base, to = result.total;
-    const tick = () => {
-      const t = Math.min(1, (Date.now() - start) / dur);
-      const eased = 1 - Math.pow(1 - t, 3);
-      scoreTotalEl.textContent = Math.round(from + (to - from) * eased);
-      if (t < 1) requestAnimationFrame(tick);
-      else { scoreTotalEl.textContent = to; scoreTotalEl.classList.add("is-pop"); showVerdict(); }
-    };
-    requestAnimationFrame(tick);
   }
   function showVerdict() {
     if (opts.isNewRecord) {
