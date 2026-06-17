@@ -26,6 +26,8 @@ let jwtLib = null;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "";
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "";
 const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || "";
+// Relais optionnel pour contourner un blocage d'IP (ex. Cloudflare Worker). Vide = appel direct a discord.com.
+const DISCORD_API_BASE = (process.env.DISCORD_API_BASE || "https://discord.com").replace(/\/+$/, "");
 const SESSION_SECRET = process.env.SESSION_SECRET || "";
 const AUTH_COOKIE = "pokdle_session";
 
@@ -108,7 +110,7 @@ app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query && req.query.code;
   if (!code) return res.redirect("/?auth=annule");
   try {
-    const tokenResp = await fetch("https://discord.com/api/oauth2/token", {
+    const tokenResp = await fetch(`${DISCORD_API_BASE}/api/oauth2/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
@@ -122,7 +124,7 @@ app.get("/auth/discord/callback", async (req, res) => {
     });
     if (!tokenResp.ok) throw new Error("token HTTP " + tokenResp.status);
     const tok = await tokenResp.json();
-    const userResp = await fetch("https://discord.com/api/users/@me", {
+    const userResp = await fetch(`${DISCORD_API_BASE}/api/users/@me`, {
       headers: { Authorization: `Bearer ${tok.access_token}` },
       signal: AbortSignal.timeout(8000),
     });
@@ -868,7 +870,7 @@ app.get("/admin/discord-check", async (req, res) => {
   }
   try {
     const basic = Buffer.from(DISCORD_CLIENT_ID + ":" + DISCORD_CLIENT_SECRET).toString("base64");
-    const r = await fetch("https://discord.com/api/oauth2/token", {
+    const r = await fetch(`${DISCORD_API_BASE}/api/oauth2/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: "Basic " + basic },
       body: new URLSearchParams({ grant_type: "client_credentials", scope: "identify" }),
