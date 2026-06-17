@@ -2566,7 +2566,8 @@ io.on("connection", (socket) => {
       })) : [];
       const average = Math.max(0, Math.min(800, Math.round(Number(payload.average) || 0)));
       const total = Math.max(0, Math.min(4800, Math.round(Number(payload.total) || 0)));
-      player.progress = { team, average, total, updatedAt: Date.now() };
+      const rerollsLeft = Math.max(0, Math.min(20, Math.round(Number(payload.rerollsLeft ?? 5))));
+      player.progress = { team, average, total, rerollsLeft, updatedAt: Date.now() };
       emitDraftScoreRoomState(room);
       respond(ack, { ok: true });
     } catch (_error) {

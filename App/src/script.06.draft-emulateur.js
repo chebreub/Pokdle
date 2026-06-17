@@ -1537,6 +1537,7 @@ function rerollDraftScoreAttackWave() {
   draftArenaState.options = buildDraftWeightedWave(pool, DRAFT_PICK_COUNT, excludeDexIds).map((pokemon) => createDraftOptionEntry(pokemon));
   draftArenaState.scoreAttackRerollsLeft -= 1;
   draftArenaState.message = `Relance utilisée. Encore ${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}.`;
+  emitDraftScoreAttackProgress();
   warmDraftPokemonMetrics([
     ...draftArenaState.options.map((option) => option.pokemon),
     ...draftArenaState.team.map((member) => member.pokemon),
@@ -1567,6 +1568,7 @@ function rerollDraftScoreAttackOption(pokemonId) {
   draftArenaState.options[optionIndex] = createDraftOptionEntry(replacement);
   draftArenaState.scoreAttackRerollsLeft -= 1;
   draftArenaState.message = `Option remplacée. Encore ${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}.`;
+  emitDraftScoreAttackProgress();
   warmDraftPokemonMetrics([
     ...draftArenaState.options.map((option) => option.pokemon),
     ...draftArenaState.team.map((member) => member.pokemon),
@@ -1613,6 +1615,7 @@ function emitDraftScoreAttackProgress() {
     team,
     average: metrics.average || 0,
     total: metrics.total || 0,
+    rerollsLeft: Math.max(0, Number(draftArenaState.scoreAttackRerollsLeft ?? DRAFT_SCORE_ATTACK_REROLLS)),
   });
 }
 
@@ -2002,6 +2005,7 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
       <div class="draft-score-vs-metrics">
         <div class="draft-score-vs-metric"><span>Moyenne BST</span><b>${average || "-"}</b></div>
         <div class="draft-score-vs-metric"><span>Total</span><b>${total || "-"}</b></div>
+        <div class="draft-score-vs-metric"><span>Relances</span><b>${player.progress?.rerollsLeft ?? DRAFT_SCORE_ATTACK_REROLLS}</b></div>
       </div>
     </div>`;
 }

@@ -29378,7 +29378,7 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 /* Stat de base de nouveau visible sur les slots d'equipe */
 #screen-draft-score-attack.is-mode-score-attack #draft-team .draft-team-card-body > small:last-child { display: block !important; font-size: .58rem !important; color: #5a6f96 !important; font-weight: 700 !important; margin-top: 1px; }
 /* Shiny : petit badge coin qui ne mange plus la place */
-#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .draft-shiny-mark { font-size: .5rem !important; padding: 0 5px !important; top: 5px !important; left: 5px !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .draft-shiny-mark { font-size: .46rem !important; padding: 1px 6px !important; top: auto !important; bottom: 6px !important; left: 6px !important; right: auto !important; z-index: 4 !important; line-height: 1.35; white-space: nowrap; }
 
 /* ===== Draft Score : boite "Score Attack solo" en bandeau fin horizontal ===== */
 #screen-draft-score-attack.is-mode-score-attack #draft-score-room-status .draft-score-vs-empty { display: flex !important; flex-direction: row !important; align-items: center !important; text-align: left !important; gap: 12px !important; flex-wrap: wrap; padding: 9px 14px !important; background: linear-gradient(135deg, rgba(47, 118, 255, .06), rgba(228, 56, 47, .05)) !important; border: 1px solid rgba(158, 182, 222, .4) !important; border-radius: 12px !important; }
@@ -29441,14 +29441,14 @@ body.theme-dark #screen-draft-score-attack.is-mode-score-attack .draft-score-vs-
 .tc-final-score { font-family: "Nunito", sans-serif; font-size: 3.2rem; font-weight: 900; color: #2f76ff; line-height: 1; margin: 6px 0; }
 
 /* ===== Draft Score : effet shiny qui claque sur les nouvelles cartes ===== */
-#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny { border-color: #ffd45b !important; background: linear-gradient(180deg, #fffdf3, #fff2cf) !important; box-shadow: 0 0 0 2px rgba(255,221,120,.55), 0 10px 22px rgba(232,185,62,.4) !important; animation: draftShinyGlow 3.2s ease-in-out infinite; }
-#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .dsc-top { background: linear-gradient(90deg, #ffe9a8, #fff4cf) !important; }
-#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .dsc-bst { color: #8a5a00 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny { border-color: #16c2d6 !important; background: linear-gradient(180deg, #f1feff, #e1fbff) !important; box-shadow: 0 0 0 2px rgba(22,194,214,.6), 0 10px 22px rgba(18,150,180,.42) !important; animation: dscShinyGlowCyan 3.2s ease-in-out infinite; }
+/* shiny ne surcharge plus le bandeau du haut : la couleur de puissance (rareté) reste visible */
+/* shiny ne surcharge plus la couleur du BST */
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::before,
-#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { content: "\2726"; position: absolute; color: #ffd65d; font-size: 1rem; text-shadow: 0 0 12px rgba(255,214,93,.75); animation: draftSparkleFloat 2.8s ease-in-out infinite; z-index: 2; pointer-events: none; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { content: "\2726"; position: absolute; color: #12c6da; font-size: 1rem; text-shadow: 0 0 12px rgba(20,200,224,.8); animation: draftSparkleFloat 2.8s ease-in-out infinite; z-index: 2; pointer-events: none; }
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::before { top: 30px; left: 10px; }
 #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { right: 10px; bottom: 34px; animation-delay: .45s; }
-#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .draft-shiny-mark { background: #ffd45b !important; color: #5a3b00 !important; font-weight: 900 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card.is-shiny .draft-shiny-mark { background: #15c2d6 !important; color: #053a42 !important; font-weight: 900 !important; }
 
 /* ===== Combo de types : autocompletion ===== */
 .tc-ac { display: none; flex-direction: column; gap: 0; width: 100%; max-width: 440px; background: #fff; border: 1px solid #d7dfec; border-radius: 12px; overflow: hidden; margin-top: -4px; box-shadow: 0 8px 18px rgba(31, 58, 99, .14); }
@@ -29470,3 +29470,8 @@ a:focus-visible,
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+@keyframes dscShinyGlowCyan {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(22,194,214,.5), 0 10px 20px rgba(11,33,63,.22); }
+  50% { box-shadow: 0 0 0 3px rgba(22,194,214,.72), 0 0 24px rgba(20,200,224,.34), 0 12px 24px rgba(11,33,63,.24); }
+}
