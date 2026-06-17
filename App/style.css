@@ -29474,4 +29474,41 @@ a:focus-visible,
 @keyframes dscShinyGlowCyan {
   0%, 100% { box-shadow: 0 0 0 2px rgba(22,194,214,.5), 0 10px 20px rgba(11,33,63,.22); }
   50% { box-shadow: 0 0 0 3px rgba(22,194,214,.72), 0 0 24px rgba(20,200,224,.34), 0 12px 24px rgba(11,33,63,.24); }
-}
+}
+
+/* ===== Score Attack PRO — bascule Normal/PRO + écran de révélation ===== */
+.draft-pro-switch { display:inline-flex; border:2px solid #e6eefb; border-radius:999px; overflow:hidden; background:#fff; vertical-align:middle; }
+.draft-pro-switch .dpa-seg { border:0; background:transparent; font-weight:800; font-size:.78rem; padding:4px 12px; color:#5a6f96; cursor:pointer; min-height:0; border-radius:999px; }
+.draft-pro-switch .dpa-seg.is-active { background:#2f76ff; color:#fff; }
+.draft-pro-switch #dpa-mode-pro.is-active { background:#e4382f; }
+
+.draft-pro-reveal { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:18px; }
+.draft-pro-reveal .dpr-backdrop { position:absolute; inset:0; background:rgba(11,24,48,.62); }
+.draft-pro-reveal .dpr-card { position:relative; z-index:1; width:min(560px,94vw); max-height:92vh; overflow:auto; background:#fff; border-radius:22px; padding:22px 22px 18px; box-shadow:0 24px 60px rgba(11,24,48,.4); animation:dprPop .35s ease; }
+@keyframes dprPop { from { transform:scale(.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+.draft-pro-reveal.is-closing .dpr-card { animation:dprOut .25s ease forwards; }
+@keyframes dprOut { to { transform:scale(.95); opacity:0; } }
+.draft-pro-reveal .dpr-title { font-size:1.3rem; font-weight:900; color:#17345d; text-align:center; margin-bottom:14px; }
+.draft-pro-reveal .dpr-rolls { display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
+.draft-pro-reveal .dpr-roll { flex:1; max-width:230px; background:#eef3ff; border:2px solid #e6eefb; border-radius:16px; padding:12px; text-align:center; transition:transform .2s ease, border-color .2s ease; }
+.draft-pro-reveal .dpr-roll.is-locked { transform:scale(1.04); border-color:#2f76ff; }
+.draft-pro-reveal .dpr-roll.is-master { border-color:#ffcc33; background:linear-gradient(180deg,#fff8e1,#fff2c4); box-shadow:0 0 0 2px rgba(255,204,51,.5); }
+.draft-pro-reveal .dpr-roll-emoji { display:block; font-size:2rem; line-height:1.1; }
+.draft-pro-reveal .dpr-roll-label { display:block; font-weight:800; color:#17345d; font-size:.92rem; margin-top:4px; }
+.draft-pro-reveal .dpr-roll-label small { display:block; font-weight:700; color:#5a6f96; font-size:.7rem; margin-top:1px; }
+.draft-pro-reveal .dpr-bonuses { list-style:none; margin:0 0 12px; padding:0; display:flex; flex-direction:column; gap:6px; }
+.draft-pro-reveal .dpr-bonuses li { display:flex; justify-content:space-between; align-items:center; gap:8px; background:#f7faff; border-radius:10px; padding:7px 12px; font-size:.86rem; color:#17345d; opacity:0; transform:translateY(8px); transition:opacity .25s ease, transform .25s ease; }
+.draft-pro-reveal .dpr-bonuses li.is-in { opacity:1; transform:none; }
+.draft-pro-reveal .dpr-bonuses li em { color:#5a6f96; font-style:normal; font-size:.74rem; }
+.draft-pro-reveal .dpr-bonuses li b { color:#1f9d57; font-weight:900; }
+.draft-pro-reveal .dpr-score { display:flex; align-items:baseline; justify-content:center; gap:12px; margin:6px 0 8px; }
+.draft-pro-reveal .dpr-score-base { color:#5a6f96; font-weight:700; }
+.draft-pro-reveal .dpr-score-total { font-size:2.6rem; font-weight:900; color:#2f76ff; font-variant-numeric:tabular-nums; transition:transform .2s ease; }
+.draft-pro-reveal .dpr-score-total.is-pop { transform:scale(1.12); }
+.draft-pro-reveal .dpr-verdict { text-align:center; font-weight:900; font-size:1.05rem; min-height:1.2em; margin-bottom:12px; }
+.draft-pro-reveal .dpr-verdict.is-record { color:#e4382f; }
+.draft-pro-reveal .dpr-verdict.is-win { color:#1f9d57; }
+.draft-pro-reveal .dpr-verdict.is-lose { color:#e4382f; }
+.draft-pro-reveal .dpr-verdict small { font-weight:700; color:#5a6f96; }
+.draft-pro-reveal .dpr-actions { text-align:center; }
+

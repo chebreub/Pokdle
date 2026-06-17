@@ -2663,7 +2663,7 @@ function openDraftArenaMode() {
   renderDraftArena();
 }
 
-function openDraftScoreAttackMode() {
+function openDraftScoreAttackMode(pro) {
   hideAllScreens();
   document.getElementById("screen-config").classList.add("hidden");
   document.getElementById("screen-game").classList.add("hidden");
@@ -2689,6 +2689,7 @@ function openDraftScoreAttackMode() {
     draftArenaState.message = "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.";
   }
 
+  draftArenaState.scoreAttackPro = !!pro;
   renderDraftArena();
 }
 
@@ -2765,6 +2766,7 @@ async function pickDraftArenaOption(pokemonId) {
 
   if (draftArenaState.team.length >= DRAFT_TEAM_SIZE) {
     if (draftArenaState.mode === "scoreAttack") {
+      if (draftArenaState.scoreAttackPro) { runDraftProFinale(); return; }
       const metrics = getDraftTeamBstMetrics(draftArenaState.team);
       draftArenaState.phase = "result";
       draftArenaState.scoreAttackBestAverage = Math.max(Number(draftArenaState.scoreAttackBestAverage) || 0, metrics.average);
