@@ -2899,10 +2899,12 @@ function renderDraftArena() {
   const scoreRoomJoin = document.getElementById("draft-score-room-join");
   const scoreRoomLeave = document.getElementById("draft-score-room-leave");
   const scoreRoomStatus = document.getElementById("draft-score-room-status");
+  const endActions = document.getElementById("draft-end-actions");
   const arenas = DRAFT_ARENAS_BY_GEN[draftArenaState.selectedGen] || [];
   const pageTitle = screen.querySelector(".ranking-head .card-title");
   const pageDesc = screen.querySelector(".draft-card > .card-desc");
   const isScoreAttackMode = draftArenaState.mode === "scoreAttack";
+  const draftFinished = draftArenaState.phase === "result" && draftArenaState.team.length >= DRAFT_TEAM_SIZE && !draftArenaState.evaluating;
 
   if (pageTitle) pageTitle.textContent = isScoreAttackMode ? "🎯 Draft Score Attack" : "🎴 Draft Arènes";
   if (pageDesc) {
@@ -2949,6 +2951,17 @@ function renderDraftArena() {
     }
   }
   const wonCount = draftArenaState.badgeResults.filter((result) => result.status === "won").length;
+  const prioritizeScoreResult = Boolean(isScoreAttackMode && draftFinished && !draftArenaState.scoreAttackRoom);
+  if (endActions) {
+    const picksPanel = screen.querySelector(".draft-panel-picks");
+    const teamPanel = screen.querySelector(".draft-panel-team");
+    if (prioritizeScoreResult && picksPanel && options && endActions.parentElement !== picksPanel) {
+      picksPanel.insertBefore(endActions, options);
+    } else if (!prioritizeScoreResult && teamPanel && endActions.parentElement !== teamPanel) {
+      teamPanel.appendChild(endActions);
+    }
+    endActions.classList.toggle("draft-end-actions-priority", prioritizeScoreResult);
+  }
 
   const progressRatio = Math.max(0, Math.min(1, (draftArenaState.team.length || 0) / DRAFT_TEAM_SIZE));
   const progressWrap = screen.querySelector(".draft-progress");
@@ -3008,8 +3021,10 @@ function renderDraftArena() {
     scoreRoomLeave.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || !draftArenaState.scoreAttackRoom);
   }
   if (scoreRoomStatus) {
-    scoreRoomStatus.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack");
-    scoreRoomStatus.innerHTML = renderDraftScoreAttackRoomStatus();
+    const shouldShowScoreRoom = draftArenaState.mode === "scoreAttack"
+      && (!draftFinished || Boolean(draftArenaState.scoreAttackRoom) || Boolean(draftArenaState.scoreAttackRoomError));
+    scoreRoomStatus.classList.toggle("hidden", !shouldShowScoreRoom);
+    scoreRoomStatus.innerHTML = shouldShowScoreRoom ? renderDraftScoreAttackRoomStatus() : "";
   }
   const scoreAttackToggle = document.getElementById("draft-score-attack-toggle");
   if (scoreAttackToggle) {
@@ -3114,7 +3129,7 @@ function renderDraftArena() {
         const isScoreAttack = draftArenaState.mode === "scoreAttack";
         const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0 && !draftArenaState.duelMode;
         const rerollBtn = canRerollOption
-          ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Reroll cette option (1 jeton)">↻</button>`
+          ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Reroll cette option (1 jeton)" aria-label="Reroll ${escapeHtml(option.pokemon.name)}">↻</button>`
           : "";
         card.innerHTML = `
           ${rerollBtn}
@@ -3231,9 +3246,7 @@ function renderDraftArena() {
     }
   }
 
-  const endActions = document.getElementById("draft-end-actions");
   if (endActions) {
-    const draftFinished = draftArenaState.phase === "result" && draftArenaState.team.length >= DRAFT_TEAM_SIZE && !draftArenaState.evaluating;
     const isDuelLive = Boolean(draftArenaState.duelMode && draftArenaState.scoreAttackRoom && draftArenaState.scoreAttackRoom.status === "live");
     if (draftFinished && !isDuelLive) {
       const isScore = draftArenaState.mode === "scoreAttack";

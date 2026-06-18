@@ -305,8 +305,12 @@ function syncScoreAttackProUI() {
   const card = document.getElementById("draft-mode-card");
   const title = card && card.querySelector(".card-title");
   if (title && draftArenaState.mode === "scoreAttack") {
-    title.innerHTML = pro ? '🔥 Draft Score Attack <b style="color:#e4382f">PRO</b>' : "🎯 Draft Score Attack";
+    title.innerHTML = pro
+      ? '<span class="dpa-pro-tag">🔥 SCORE ATTACK <b>PRO</b></span>'
+      : '🎯 Draft Score Attack';
   }
+  const screen = document.getElementById("screen-draft-score-attack");
+  if (screen) screen.classList.toggle("is-pro-mode", pro);
 }
 
 // Bascule Normal / PRO (boutons segmentés)

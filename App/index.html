@@ -197,7 +197,7 @@
           <h2 class="home-section-title">Illimité, duel & party</h2>
           <p class="home-section-sub">Les autres façons de jouer. Tout le reste est rangé dans « Tous les modes ».</p>
         </div>
-        <div class="home-pillars">
+        <div class="home-pillars home-pillars-hero">
           <article class="card home-pillar" data-action="startNormalGame" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-yellow"><svg class="pi" aria-hidden="true"><use href="#i-infinity"/></svg></div>
             <h3>Mode illimité</h3>
@@ -215,6 +215,12 @@
             <h3>Party Room</h3>
             <p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">Multi</span><span class="home-pillar-tag">2-8 joueurs</span><span class="home-pillar-tag">Podium</span></div>
+          </article>
+          <article class="card home-pillar" data-action="openDraftScoreAttackMode" data-args="[false]" role="button" tabindex="0">
+            <div class="home-pillar-icon home-pillar-icon-red"><svg class="pi" aria-hidden="true"><use href="#i-chart"/></svg></div>
+            <h3>Draft Score Attack</h3>
+            <p>Drafte 6 Pokémon et vise la meilleure moyenne BST par génération.</p>
+            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo score</span><span class="home-pillar-tag home-pillar-tag-live">1v1</span></div>
           </article>
         </div>
         <div class="home-hero-secondary">
@@ -376,6 +382,7 @@
             <h3 class="all-modes-cat-title">♟️ Stratégie</h3>
             <div class="all-modes-grid">
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["openDraftArenaMode"]'><span class="am-emoji">🏆</span><b>Draft Arènes</b><span class="all-modes-badge">Expérimental</span></button>
+              <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><span class="am-emoji">🎯</span><b>Draft Score Attack</b><span class="all-modes-badge">Score</span></button>
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["openTeamBuilderScreen"]'><span class="am-emoji">🧱</span><b>Team Builder</b></button>
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["openTypeChartScreen"]'><span class="am-emoji">🧮</span><b>Table des types</b></button>
             </div>

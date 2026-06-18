@@ -2,9 +2,10 @@
 // IMPORTANT : bundle:false + minifyIdentifiers:false -> aucun identifiant top-level
 // n'est renommé. Les fonctions globales (window[nom]) utilisées par la délégation
 // data-action restent donc intactes. Aucune transpilation (pas d'ES6 -> ES5).
-import { build } from "esbuild";
+import { transform } from "esbuild";
 import { mkdirSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { createHash } from "crypto";
+import { basename, extname } from "path";
 
 mkdirSync("dist", { recursive: true });
 
@@ -22,28 +23,30 @@ try {
   }
 } catch (e) { console.error("[build] concat src ignoré:", e.message); }
 
-await build({
-  entryPoints: ["script.js", "pokemon.js"],
-  outdir: "dist",
-  entryNames: "[name].min",
-  bundle: false,
-  minifyWhitespace: true,
-  minifySyntax: true,
-  minifyIdentifiers: false,
-  legalComments: "none",
-  charset: "utf8",
-  logLevel: "info",
-});
+async function minifyAsset(file, loader, options = {}) {
+  const ext = extname(file);
+  const name = basename(file, ext);
+  const source = readFileSync(file, "utf8");
+  const result = await transform(source, {
+    loader,
+    charset: "utf8",
+    legalComments: "none",
+    ...options,
+  });
+  writeFileSync(`dist/${name}.min${ext}`, result.code);
+}
 
-await build({
-  entryPoints: ["style.css", "nav.css", "pokedex.css", "multiplayer.css", "home.css", "party-room.css", "profile.css"],
-  outdir: "dist",
-  entryNames: "[name].min",
-  bundle: false,
-  minify: true,
-  charset: "utf8",
-  logLevel: "info",
-});
+for (const file of ["script.js", "pokemon.js"]) {
+  await minifyAsset(file, "js", {
+    minifyWhitespace: true,
+    minifySyntax: true,
+    minifyIdentifiers: false,
+  });
+}
+
+for (const file of ["style.css", "nav.css", "pokedex.css", "multiplayer.css", "home.css", "party-room.css", "profile.css"]) {
+  await minifyAsset(file, "css", { minify: true });
+}
 
 // Génère dist/index.html : mêmes contenus que index.html mais avec des URLs
 // versionnées (?v=<hash du contenu>) sur les assets dist/. Combiné au

@@ -29544,3 +29544,36 @@ a:focus-visible,
 .draft-pro-inline .dpr-actions { text-align:center; }
 .draft-pro-inline .dpr-score-total.is-bump { animation: dprBump .25s ease; }
 @keyframes dprBump { 0%{transform:scale(1)} 40%{transform:scale(1.18); color:#1f9d57} 100%{transform:scale(1)} }
+
+/* ===== Score Attack PRO — identite visuelle distincte du mode de base ===== */
+#screen-draft-score-attack.is-pro-mode { background: radial-gradient(120% 60% at 50% 0%, rgba(228,56,47,.10), rgba(255,204,51,.06) 40%, transparent 70%); border-radius: 22px; }
+#screen-draft-score-attack.is-pro-mode #draft-mode-card { border: 2px solid #e4382f !important; box-shadow: 0 14px 34px rgba(228,56,47,.22) !important; background: linear-gradient(180deg, #fffaf6, #fff3ea) !important; }
+.dpa-pro-tag { display: inline-block; background: linear-gradient(90deg, #e4382f, #ff7a3c, #ffcc33); color: #fff; padding: 6px 18px; border-radius: 999px; font-weight: 900; letter-spacing: .06em; box-shadow: 0 4px 14px rgba(228,56,47,.35); }
+.dpa-pro-tag b { font-weight: 900; }
+/* bascule plus visible */
+.draft-pro-switch { border-width: 2px; }
+#screen-draft-score-attack.is-pro-mode .draft-pro-switch { border-color: #e4382f; }
+/* accents rouges sur les badges et le sous-titre en mode PRO */
+#screen-draft-score-attack.is-pro-mode .card-desc { color: #b5341d; font-weight: 700; }
+#screen-draft-score-attack.is-pro-mode .draft-panel h3 { color: #c4392c; }
+
+/* ===== Draft Score Attack : résultat de run prioritaire ===== */
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks #draft-end-actions.draft-end-actions-priority {
+  order: 0 !important;
+  width: 100%;
+  margin: 0 0 12px !important;
+}
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks #draft-end-actions.draft-end-actions-priority + #draft-options {
+  order: 1 !important;
+}
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks #draft-end-actions.draft-end-actions-priority + #draft-options .pokedex-muted {
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  opacity: 0.72;
+  font-size: 0.82rem !important;
+}
+#screen-draft-score-attack.is-mode-score-attack .draft-panel-picks #draft-end-actions.draft-end-actions-priority .dse-reveal {
+  border-radius: 14px !important;
+  padding: 16px 14px !important;
+}
+

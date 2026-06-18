@@ -2458,7 +2458,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("draft-score:pick-option", (payload = {}, ack) => {
+  socket.on("draft-score:pick-option", async (payload = {}, ack) => {
     try {
       const room = findDraftScoreRoomBySocket(socket.id);
       if (!room || !room.duel || room.status !== "live") return respond(ack, { ok: false, error: "Pas de duel actif." });
@@ -2469,7 +2469,8 @@ io.on("connection", (socket) => {
       if (room.duel.picksRemaining[side] <= 0) return respond(ack, { ok: false, error: "Plus de picks pour toi." });
       const pokemonId = Number(payload.pokemonId);
       if (!room.duel.currentWave.includes(pokemonId)) return respond(ack, { ok: false, error: "Pokémon hors de la wave courante." });
-      const bst = Math.max(0, Math.min(900, Math.round(Number(payload.bst) || 0)));
+      const bst = await getDraftScoreServerBst(pokemonId);
+      if (!bst) return respond(ack, { ok: false, error: "Score Pokémon indisponible." });
       room.duel.pendingPicks[side] = { id: pokemonId, bst, timestamp: Date.now() };
       room.duel.lastEvent = { kind: "pick", side, pokemonId, at: Date.now() };
 
@@ -2481,9 +2482,8 @@ io.on("connection", (socket) => {
         if (conflict) {
           const winnerSide = Math.random() < 0.5 ? "left" : "right";
           const winnerEntry = buildDuelPokemonEntry(leftPick.id);
-          const winnerBst = (winnerSide === "left" ? leftPick.bst : rightPick.bst) || leftPick.bst || rightPick.bst || 0;
           if (winnerEntry) {
-            room.duel.teams[winnerSide].push({ ...winnerEntry, bst: winnerBst });
+            room.duel.teams[winnerSide].push({ ...winnerEntry, bst: Number(leftPick.bst) || Number(rightPick.bst) || 0 });
             room.duel.draftedIds.add(winnerEntry.id);
             room.duel.picksRemaining[winnerSide] -= 1;
           }
@@ -2508,7 +2508,7 @@ io.on("connection", (socket) => {
               total: bstSum,
               selectedGen: room.duel.gen,
               team: team.map((entry) => ({ id: entry.id, name: entry.name, bst: Number(entry.bst) || 0 })),
-              label: avg >= 600 ? "Master 600+" : avg >= 550 ? "Elite 550+" : avg >= 500 ? "Solide 500+" : "Run à améliorer",
+              label: getDraftScoreServerLabel(avg),
               submittedAt: Date.now(),
             };
           }
@@ -2610,7 +2610,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("draft-score:submit-result", (payload = {}, ack) => {
+  socket.on("draft-score:submit-result", async (payload = {}, ack) => {
     try {
       if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const room = findDraftScoreRoomBySocket(socket.id);
@@ -2618,7 +2618,7 @@ io.on("connection", (socket) => {
       if (room.status === "finished") return respond(ack, { ok: false, error: "La room est déjà terminée." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
-      const result = sanitizeDraftScoreResult(payload);
+      const result = await sanitizeDraftScoreResult(payload);
       if (!result) return respond(ack, { ok: false, error: "Résultat Score Attack invalide." });
       player.result = result;
       if (room.players.length === MAX_ROOM_SIZE && room.players.every((entry) => entry.result)) finalizeDraftScoreRoom(room);
@@ -3138,8 +3138,10 @@ async function fetchPokemonStatsServer(pokemonId) {
   if (!Number.isInteger(id) || id <= 0) return null;
   if (POKEMON_STATS_SERVER_CACHE.has(id)) return POKEMON_STATS_SERVER_CACHE.get(id);
   if (typeof fetch !== "function") return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, { headers: { "User-Agent": "pokdle-server/1.0" } });
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, { signal: controller.signal, headers: { "User-Agent": "pokdle-server/1.0" } });
     if (!res.ok) return null;
     const data = await res.json();
     const statsRaw = Array.isArray(data?.stats) ? data.stats : [];
@@ -3153,7 +3155,37 @@ async function fetchPokemonStatsServer(pokemonId) {
     return stats;
   } catch (_e) {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+function getDraftScoreFallbackStatTotal(pokemon) {
+  const stage = Number(pokemon?.stage) || 1;
+  const weightScore = Math.min(48, Math.round((Number(pokemon?.weight) || 0) / 4));
+  const heightScore = Math.min(24, Math.round((Number(pokemon?.height) || 0) * 8));
+  const dualTypeBonus = pokemon?.type2 ? 34 : 0;
+  const habitatBonus = pokemon?.habitat === "Rare" ? 48 : 0;
+  return Math.max(240, Math.min(680, 255 + stage * 52 + weightScore + heightScore + dualTypeBonus + habitatBonus));
+}
+
+async function getDraftScoreServerBst(pokemonId) {
+  const pokemon = POKEMON_LIST.find((entry) => Number(entry.id) === Number(pokemonId));
+  if (!pokemon) return 0;
+  const stats = await fetchPokemonStatsServer(Number(pokemon.id));
+  if (stats) {
+    const values = [stats.hp, stats.attack, stats.defense, stats.spAttack, stats.spDefense, stats.speed];
+    const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+    if (total > 0) return total;
+  }
+  return getDraftScoreFallbackStatTotal(pokemon);
+}
+
+function getDraftScoreServerLabel(average) {
+  if (average >= 600) return "Master 600+";
+  if (average >= 550) return "Elite 550+";
+  if (average >= 500) return "Solide 500+";
+  return "Run à améliorer";
 }
 
 function respond(ack, payload) {
@@ -4027,24 +4059,34 @@ function findDraftScoreRoomBySocket(socketId) {
   return null;
 }
 
-function sanitizeDraftScoreResult(payload = {}) {
-  const average = Math.max(0, Math.min(900, Math.round(Number(payload.average) || 0)));
-  const total = Math.max(0, Math.min(5400, Math.round(Number(payload.total) || 0)));
-  const selectedGen = Number.isInteger(Number(payload.selectedGen)) ? Number(payload.selectedGen) : null;
-  const team = Array.isArray(payload.team)
-    ? payload.team.slice(0, 6).map((entry) => ({
-      id: Math.max(0, Math.round(Number(entry?.id) || 0)),
-      name: sanitizeNickname(entry?.name || "").slice(0, 32),
-      bst: Math.max(0, Math.min(900, Math.round(Number(entry?.bst) || 0))),
-    })).filter((entry) => entry.id && entry.name)
-    : [];
-  if (team.length !== 6 || average <= 0 || total <= 0) return null;
+async function sanitizeDraftScoreResult(payload = {}) {
+  const selectedGenRaw = Number(payload.selectedGen);
+  const selectedGen = Number.isInteger(selectedGenRaw) && selectedGenRaw >= 1 && selectedGenRaw <= 9 ? selectedGenRaw : null;
+  const rawTeam = Array.isArray(payload.team) ? payload.team.slice(0, 6) : [];
+  const usedIds = new Set();
+  const team = [];
+  for (const entry of rawTeam) {
+    const id = Math.max(0, Math.round(Number(entry?.id) || 0));
+    if (!id || usedIds.has(id)) return null;
+    const pokemon = POKEMON_LIST.find((p) => Number(p.id) === id);
+    if (!pokemon) return null;
+    const pokemonGen = Number(pokemon.gen) || Number(pokemon.generation) || null;
+    if (selectedGen && pokemonGen && pokemonGen !== selectedGen) return null;
+    const bst = await getDraftScoreServerBst(id);
+    if (!bst) return null;
+    usedIds.add(id);
+    team.push({ id, name: pokemon.name, bst });
+  }
+  if (team.length !== 6) return null;
+  const total = team.reduce((sum, entry) => sum + (Number(entry.bst) || 0), 0);
+  const average = Math.round(total / team.length);
+  if (average <= 0 || total <= 0) return null;
   return {
     average,
     total,
     selectedGen,
     team,
-    label: sanitizeNickname(payload.label || "").slice(0, 32),
+    label: getDraftScoreServerLabel(average),
     submittedAt: Date.now(),
   };
 }
