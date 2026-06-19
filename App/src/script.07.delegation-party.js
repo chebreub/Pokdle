@@ -2873,6 +2873,7 @@ function addMultiplayerGuessRow(pokemon) {
   const tr = document.createElement("tr");
   tr.innerHTML = buildComparisonRowHtml(pokemon, compare(pokemon, multiplayerBotState.secret), multiplayerBotState.secret);
   tbody.insertBefore(tr, tbody.firstChild);
+  if (typeof hydrateComparisonRowEncounter === "function") hydrateComparisonRowEncounter(tr, pokemon);
 }
 
 

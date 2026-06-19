@@ -139,7 +139,10 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
     <td data-label="Forme" class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
     <td data-label="Type 1" class="${cls(cmp.type1)}">${pokemon.type1}</td>
     <td data-label="Type 2" class="${cls(cmp.type2)}">${pokemon.type2 || "Aucun"}</td>
-    <td data-label="Habitat" class="${cls(cmp.habitat)}">${pokemon.habitat}</td>
+    <td data-label="Habitat / lieux" class="${cls(cmp.habitat)}">
+      <span class="habitat-main">${escapeHtml(pokemon.habitat || "Inconnu")}</span>
+      <small class="habitat-encounter" data-encounter-summary>Chargement des lieux...</small>
+    </td>
     <td data-label="Couleur" class="${cls(cmp.color)}">${formatColorLabel(pokemon.color)}</td>
     <td data-label="Stade" class="${cls(cmp.stage)}">${pokemon.stage}</td>
     <td data-label="Hauteur" class="${cls(cmp.height)}">
@@ -162,6 +165,7 @@ function addRow(pokemon, cmp) {
   const tr = document.createElement("tr");
   tr.innerHTML = buildComparisonRowHtml(pokemon, cmp, secretPokemon);
   tbody.insertBefore(tr, tbody.firstChild);
+  hydrateComparisonRowEncounter(tr, pokemon);
 }
 
 function cls(result) {
@@ -4134,6 +4138,182 @@ function flavorTextFr(speciesData) {
   return chosen.flavor_text.replace(/[\n\f\r]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+const POKEAPI_HABITAT_LABELS = {
+  cave: "Grotte",
+  forest: "Foret",
+  grassland: "Prairie",
+  mountain: "Montagne",
+  rare: "Rare / special",
+  "rough-terrain": "Terrain accidenté",
+  sea: "Mer",
+  urban: "Urbain",
+  "waters-edge": "Bord de l'eau",
+};
+
+const POKEAPI_VERSION_LABELS = {
+  red: "Rouge",
+  blue: "Bleu",
+  yellow: "Jaune",
+  gold: "Or",
+  silver: "Argent",
+  crystal: "Cristal",
+  ruby: "Rubis",
+  sapphire: "Saphir",
+  emerald: "Emeraude",
+  firered: "Rouge Feu",
+  leafgreen: "Vert Feuille",
+  diamond: "Diamant",
+  pearl: "Perle",
+  platinum: "Platine",
+  heartgold: "HeartGold",
+  soulsilver: "SoulSilver",
+  black: "Noir",
+  white: "Blanc",
+  "black-2": "Noir 2",
+  "white-2": "Blanc 2",
+  x: "X",
+  y: "Y",
+  "omega-ruby": "Rubis Omega",
+  "alpha-sapphire": "Saphir Alpha",
+  sun: "Soleil",
+  moon: "Lune",
+  "ultra-sun": "Ultra-Soleil",
+  "ultra-moon": "Ultra-Lune",
+  "lets-go-pikachu": "Let's Go Pikachu",
+  "lets-go-eevee": "Let's Go Evoli",
+  sword: "Epée",
+  shield: "Bouclier",
+  "brilliant-diamond": "Diamant Etincelant",
+  "shining-pearl": "Perle Scintillante",
+  legends: "Legends",
+  scarlet: "Ecarlate",
+  violet: "Violet",
+};
+
+const POKEAPI_LOCATION_WORDS = {
+  area: "zone",
+  cave: "grotte",
+  city: "ville",
+  desert: "desert",
+  forest: "foret",
+  island: "ile",
+  lake: "lac",
+  meadow: "prairie",
+  mountain: "mont",
+  park: "parc",
+  path: "sentier",
+  road: "route",
+  route: "route",
+  sea: "mer",
+  tower: "tour",
+  town: "bourg",
+  trail: "piste",
+  tunnel: "tunnel",
+};
+
+function formatPokeApiPlainLabel(value) {
+  return String(value || "")
+    .split("-")
+    .filter(Boolean)
+    .map((part) => POKEAPI_LOCATION_WORDS[part] || part)
+    .join(" ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+}
+
+function formatPokeApiVersionLabel(value) {
+  const key = String(value || "").trim();
+  return POKEAPI_VERSION_LABELS[key] || formatPokeApiPlainLabel(key);
+}
+
+function formatPokeApiEncounterAreaName(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "Lieu inconnu";
+  return raw
+    .replace(/^(kanto|johto|hoenn|sinnoh|unova|kalos|alola|galar|hisui|paldea)-/, "")
+    .replace(/-area$/, "")
+    .split("-")
+    .filter(Boolean)
+    .map((part) => POKEAPI_LOCATION_WORDS[part] || part)
+    .join(" ")
+    .replace(/\b(route\s+)(\d+)/gi, "Route $2")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+}
+
+function formatPokemonSpeciesHabitat(speciesData, fallbackPokemon = null) {
+  const key = speciesData?.habitat?.name || "";
+  if (key && POKEAPI_HABITAT_LABELS[key]) return POKEAPI_HABITAT_LABELS[key];
+  if (key) return formatPokeApiPlainLabel(key);
+  return fallbackPokemon?.habitat || "Inconnu";
+}
+
+function summarizeEncounterAreas(rawAreas, limit = 8) {
+  if (!Array.isArray(rawAreas)) return null;
+  const seen = new Set();
+  const entries = [];
+  for (const area of rawAreas) {
+    const areaName = area?.location_area?.name || "";
+    const label = formatPokeApiEncounterAreaName(areaName);
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    const versions = Array.isArray(area?.version_details)
+      ? [...new Set(area.version_details.map((entry) => formatPokeApiVersionLabel(entry?.version?.name)).filter(Boolean))]
+      : [];
+    entries.push({ label, versions: versions.slice(0, 4) });
+    if (entries.length >= limit) break;
+  }
+  return entries;
+}
+
+async function fetchPokemonEncounterAreas(pokemon, pokeData = null) {
+  const apiId = getMysteryApiId(pokemon);
+  const url = pokeData?.location_area_encounters || (apiId ? `https://pokeapi.co/api/v2/pokemon/${apiId}/encounters` : "");
+  if (!url) return null;
+  const cacheKey = `encounters:${url}`;
+  if (POKEDEX_ENCOUNTER_CACHE.has(cacheKey)) return POKEDEX_ENCOUNTER_CACHE.get(cacheKey);
+  try {
+    const data = await fetchPokeApiJson(url);
+    const areas = Array.isArray(data) ? data : [];
+    POKEDEX_ENCOUNTER_CACHE.set(cacheKey, areas);
+    return areas;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function renderPokedexEncounterLocationsHtml(rawAreas) {
+  if (rawAreas === null) {
+    return '<p class="pokedex-muted">Lieux de rencontre indisponibles pour ce Pokémon.</p>';
+  }
+  const entries = summarizeEncounterAreas(rawAreas, 10);
+  if (!entries || !entries.length) {
+    return '<p class="pokedex-muted">Aucun lieu de rencontre sauvage listé par PokéAPI. Le Pokémon peut être obtenu par starter, échange, cadeau, évolution, événement ou méthode spéciale selon les jeux.</p>';
+  }
+  return `<div class="pokedex-encounter-list">${entries.map((entry) => `
+    <div class="pokedex-encounter-item">
+      <b>${escapeHtml(entry.label)}</b>
+      <span>${escapeHtml(entry.versions.length ? entry.versions.join(" / ") : "Versions variables")}</span>
+    </div>
+  `).join("")}</div>`;
+}
+
+async function hydrateComparisonRowEncounter(row, pokemon) {
+  if (!row || !pokemon) return;
+  const detail = row.querySelector("[data-encounter-summary]");
+  if (!detail) return;
+  const rawAreas = await fetchPokemonEncounterAreas(pokemon);
+  if (!row.isConnected) return;
+  const entries = summarizeEncounterAreas(rawAreas, 3);
+  if (entries && entries.length) {
+    detail.textContent = `Lieux : ${entries.map((entry) => entry.label).join(" / ")}`;
+  } else if (rawAreas === null) {
+    detail.textContent = "Lieux : indisponibles";
+  } else {
+    detail.textContent = "Lieux : obtention spéciale ou non listée";
+  }
+}
+
 function statFromPokemonData(pokeData, key) {
   if (!pokeData?.stats) return null;
   const entry = pokeData.stats.find((s) => s?.stat?.name === key);
@@ -5003,11 +5183,12 @@ async function renderPokedexDetail(pokemon) {
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
       <div><span>Poids</span><b>${pokemon.weight} kg</b></div>
-      <div><span>Habitat</span><b>${escapeHtml(pokemon.habitat || "Inconnu")}</b></div>
+      <div><span>Habitat local</span><b>${escapeHtml(pokemon.habitat || "Inconnu")}</b></div>
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>
     </div>
     <div class="pokedex-section"><h4>Entrée Pokédex</h4><p class="pokedex-muted">Chargement...</p></div>
+    <div class="pokedex-section"><h4>Lieux de rencontre</h4><p class="pokedex-muted">Chargement...</p></div>
     <div class="pokedex-section"><h4>Talents</h4><p class="pokedex-muted">Chargement...</p></div>
     <div class="pokedex-section"><h4>Statistiques de base</h4><p class="pokedex-muted">Chargement...</p></div>
     <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
@@ -5033,6 +5214,10 @@ async function renderPokedexDetail(pokemon) {
   const gender = formatGenderRate(speciesData);
   const eggs = formatEggGroups(speciesData);
   const hatch = formatHatchCycles(speciesData);
+  const officialHabitat = formatPokemonSpeciesHabitat(speciesData, pokemon);
+  const encounterAreas = await fetchPokemonEncounterAreas(pokemon, pokeData);
+  if (currentRequest !== pokedexDetailRequestId) return;
+  const encounterLocations = renderPokedexEncounterLocationsHtml(encounterAreas);
   const currentStats = statsTotalsFromPokemonData(pokeData);
   const compareReference = Number.isInteger(Number(pokedexCompareId)) ? POKEMON_BY_ID.get(Number(pokedexCompareId)) : null;
   let compareHtml = "";
@@ -5068,11 +5253,12 @@ async function renderPokedexDetail(pokemon) {
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokemon.height} m</b></div>
       <div><span>Poids</span><b>${pokemon.weight} kg</b></div>
-      <div><span>Habitat</span><b>${escapeHtml(pokemon.habitat || "Inconnu")}</b></div>
+      <div><span>Habitat officiel</span><b>${escapeHtml(officialHabitat)}</b></div>
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>
     </div>
     <div class="pokedex-section"><h4>Entrée Pokédex</h4><p>${escapeHtml(description)}</p></div>
+    <div class="pokedex-section"><h4>Lieux de rencontre</h4>${encounterLocations}</div>
     <div class="pokedex-section"><h4>Talents</h4><div class="pokedex-abilities">${abilities}</div></div>
     <div class="pokedex-section"><h4>Statistiques de base</h4><div class="pokedex-stats-wrap">${stats}</div></div>
     <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>

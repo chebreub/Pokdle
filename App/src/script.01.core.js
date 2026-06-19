@@ -2027,6 +2027,7 @@ const POKEDEX_API_CACHE = new Map();
 const POKEDEX_SPECIES_CACHE = new Map();
 const POKEDEX_ABILITY_CACHE = new Map();
 const POKEDEX_EVOLUTION_CACHE = new Map();
+const POKEDEX_ENCOUNTER_CACHE = new Map();
 const TEAM_BUILDER_MOVE_POOL_CACHE = new Map();
 const TEAM_BUILDER_MOVE_POOL_PENDING = new Map();
 

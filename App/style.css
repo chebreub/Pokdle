@@ -28653,6 +28653,54 @@ body.theme-dark #results-table td:first-child,
 body.theme-dark .multiplayer-results-table td:first-child { background: #16243f !important; color: #e8eefc !important; }
 body.theme-dark #results-table thead th,
 body.theme-dark .multiplayer-results-table thead th { color: #93a7cc !important; }
+
+.habitat-main {
+  display: block;
+  font-weight: 800;
+}
+
+.habitat-encounter {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  opacity: 0.9;
+}
+
+.pokedex-encounter-list {
+  display: grid;
+  gap: 8px;
+}
+
+.pokedex-encounter-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid rgba(91, 124, 153, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.pokedex-encounter-item b,
+.pokedex-encounter-item span {
+  min-width: 0;
+}
+
+.pokedex-encounter-item span {
+  color: #64748b;
+  font-size: 0.86rem;
+}
+
+body.theme-dark .pokedex-encounter-item {
+  background: rgba(22, 36, 63, 0.75);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+body.theme-dark .pokedex-encounter-item span {
+  color: #b6c2d8;
+}
 body.theme-dark .results-legend { color: #93a7cc; }
 body.theme-dark .site-footer { color: #93a7cc; }
 body.theme-dark .site-footer-brand { color: #d6e2fa; }
