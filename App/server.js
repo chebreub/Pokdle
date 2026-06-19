@@ -2469,7 +2469,7 @@ io.on("connection", (socket) => {
       if (room.duel.picksRemaining[side] <= 0) return respond(ack, { ok: false, error: "Plus de picks pour toi." });
       const pokemonId = Number(payload.pokemonId);
       if (!room.duel.currentWave.includes(pokemonId)) return respond(ack, { ok: false, error: "Pokémon hors de la wave courante." });
-      const bst = await getDraftScoreServerBst(pokemonId);
+      const bst = await getDraftScoreServerBst(pokemonId, payload.bst);
       if (!bst) return respond(ack, { ok: false, error: "Score Pokémon indisponible." });
       room.duel.pendingPicks[side] = { id: pokemonId, bst, timestamp: Date.now() };
       room.duel.lastEvent = { kind: "pick", side, pokemonId, at: Date.now() };
@@ -3133,15 +3133,38 @@ const POKEAPI_STAT_KEY_MAP = {
   "speed": "speed",
 };
 
-async function fetchPokemonStatsServer(pokemonId) {
-  const id = Number(pokemonId);
-  if (!Number.isInteger(id) || id <= 0) return null;
-  if (POKEMON_STATS_SERVER_CACHE.has(id)) return POKEMON_STATS_SERVER_CACHE.get(id);
+function getDraftScorePokemonApiId(pokemonOrId) {
+  if (pokemonOrId && typeof pokemonOrId === "object") {
+    const explicit = pokemonOrId.apiId || pokemonOrId.formApiName;
+    const baseId = Number(pokemonOrId.baseId);
+    if (explicit && !(pokemonOrId.isAltForm && Number.isInteger(baseId) && String(explicit) === String(baseId))) {
+      return String(explicit);
+    }
+    const spriteId = Number(pokemonOrId.spriteId);
+    if (Number.isInteger(spriteId) && spriteId > 0) return String(spriteId);
+    const id = Number(pokemonOrId.id);
+    if (Number.isInteger(id) && id > 0 && id <= 1025) return String(id);
+    if (Number.isInteger(baseId) && baseId > 0) return String(baseId);
+    return null;
+  }
+  const id = Number(pokemonOrId);
+  return Number.isInteger(id) && id > 0 ? String(id) : null;
+}
+
+function normalizeDraftScoreClientBst(value) {
+  const bst = Math.round(Number(value) || 0);
+  return bst >= 180 && bst <= 1200 ? bst : 0;
+}
+
+async function fetchPokemonStatsServer(pokemonOrId) {
+  const apiId = getDraftScorePokemonApiId(pokemonOrId);
+  if (!apiId) return null;
+  if (POKEMON_STATS_SERVER_CACHE.has(apiId)) return POKEMON_STATS_SERVER_CACHE.get(apiId);
   if (typeof fetch !== "function") return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, { signal: controller.signal, headers: { "User-Agent": "pokdle-server/1.0" } });
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(apiId)}`, { signal: controller.signal, headers: { "User-Agent": "pokdle-server/1.0" } });
     if (!res.ok) return null;
     const data = await res.json();
     const statsRaw = Array.isArray(data?.stats) ? data.stats : [];
@@ -3151,7 +3174,7 @@ async function fetchPokemonStatsServer(pokemonId) {
       const value = Number(s?.base_stat) || 0;
       if (key) stats[key] = value;
     }
-    POKEMON_STATS_SERVER_CACHE.set(id, stats);
+    POKEMON_STATS_SERVER_CACHE.set(apiId, stats);
     return stats;
   } catch (_e) {
     return null;
@@ -3169,15 +3192,17 @@ function getDraftScoreFallbackStatTotal(pokemon) {
   return Math.max(240, Math.min(680, 255 + stage * 52 + weightScore + heightScore + dualTypeBonus + habitatBonus));
 }
 
-async function getDraftScoreServerBst(pokemonId) {
+async function getDraftScoreServerBst(pokemonId, clientBst = 0) {
   const pokemon = POKEMON_LIST.find((entry) => Number(entry.id) === Number(pokemonId));
   if (!pokemon) return 0;
-  const stats = await fetchPokemonStatsServer(Number(pokemon.id));
+  const stats = await fetchPokemonStatsServer(pokemon);
   if (stats) {
     const values = [stats.hp, stats.attack, stats.defense, stats.spAttack, stats.spDefense, stats.speed];
     const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
     if (total > 0) return total;
   }
+  const clientTotal = normalizeDraftScoreClientBst(clientBst);
+  if (clientTotal) return clientTotal;
   return getDraftScoreFallbackStatTotal(pokemon);
 }
 
@@ -4072,7 +4097,7 @@ async function sanitizeDraftScoreResult(payload = {}) {
     if (!pokemon) return null;
     const pokemonGen = Number(pokemon.gen) || Number(pokemon.generation) || null;
     if (selectedGen && pokemonGen && pokemonGen !== selectedGen) return null;
-    const bst = await getDraftScoreServerBst(id);
+    const bst = await getDraftScoreServerBst(id, entry?.bst);
     if (!bst) return null;
     usedIds.add(id);
     team.push({ id, name: pokemon.name, bst });
