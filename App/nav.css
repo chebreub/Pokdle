@@ -401,6 +401,12 @@ body:not(.theme-dark) .nav-pill.active {
   background: #e9eef7 !important;
   outline: none;
 }
+
+.nav-pill:focus-visible,
+.nav-dropdown button:focus-visible {
+  outline: 3px solid #2f76ff !important;
+  outline-offset: 2px;
+}
 .nav-dd-ico {
   font-size: 1.05em;
   width: 22px;
