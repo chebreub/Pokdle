@@ -64,20 +64,20 @@ function rollProModifiers(gen, rnd) {
   rnd = typeof rnd === "function" ? rnd : Math.random;
   const g = Number(gen) || 1;
   const weather = PRO_WEATHERS[Math.floor(rnd() * PRO_WEATHERS.length)];
-  const gyms = PRO_GYM_LEADERS[g] || PRO_GYM_LEADERS[1];
+  const gyms = PRO_GYM_LEADERS[g] || [];
   const master = PRO_LEAGUE_MASTERS[g] || null;
   const conseil = (typeof PRO_CONSEIL_4 !== "undefined" && PRO_CONSEIL_4[g]) || null;
-  let trainer;
+  const pickGym = () => { const p = gyms[Math.floor(rnd() * gyms.length)]; return { name: p[0], type: p[1], tier: "arene", sprite: p[2] || "" }; };
+  const pickC4 = () => { const c = conseil[Math.floor(rnd() * conseil.length)]; return { name: c[0], type: c[1], tier: "conseil", sprite: c[2] || "" }; };
+  const pickMaster = () => ({ name: master.name, type: master.type, tier: "maitre", aceId: master.aceId, aceName: master.aceName });
+  let trainer = null;
   const r = rnd();
-  if (master && r < 0.18) {
-    trainer = { name: master.name, type: master.type, tier: "maitre", aceId: master.aceId, aceName: master.aceName };
-  } else if (conseil && conseil.length && r < 0.45) {
-    const c = conseil[Math.floor(rnd() * conseil.length)];
-    trainer = { name: c[0], type: c[1], tier: "conseil", sprite: c[2] || "" };
-  } else {
-    const pick = gyms[Math.floor(rnd() * gyms.length)];
-    trainer = { name: pick[0], type: pick[1], tier: "arene", sprite: pick[2] || "" };
-  }
+  // Strict par génération : aucun repli sur une autre gen. Si la gen n'a aucun dresseur, trainer reste null.
+  if (master && r < 0.18) trainer = pickMaster();
+  else if (conseil && conseil.length && r < 0.45) trainer = pickC4();
+  else if (gyms.length) trainer = pickGym();
+  else if (conseil && conseil.length) trainer = pickC4();
+  else if (master) trainer = pickMaster();
   return { weather, trainer };
 }
 
@@ -185,7 +185,7 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
   if (!mount) { if (typeof opts.onDone === "function") opts.onDone(); return; }
 
   const gen = (typeof draftArenaState !== "undefined" && draftArenaState && draftArenaState.selectedGen) || 1;
-  const gyms = PRO_GYM_LEADERS[gen] || PRO_GYM_LEADERS[1];
+  const gyms = PRO_GYM_LEADERS[gen] || [];
   const tr = mods.trainer || {};
   const isMaster = tr.tier === "maitre";
 
@@ -222,15 +222,22 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
       weatherEl.classList.add("is-locked");
       weatherEl.querySelector(".dpr-roll-emoji").textContent = mods.weather.emoji;
       weatherEl.querySelector(".dpr-roll-label").textContent = mods.weather.label;
-      setTimeout(spinTrainer, 420);
+      if (!mods.trainer) {
+        trainerEl.classList.remove("is-spinning");
+        trainerEl.innerHTML = '<span class="dpr-trainer-avatar" style="background:#cdd8ee">—</span><span class="dpr-roll-label">Pas de dresseur<small>gen pas encore couverte</small></span>';
+        setTimeout(revealBonuses, 320);
+      } else {
+        setTimeout(spinTrainer, 420);
+      }
     }
   }, 105);
 
   // 2) Roue dresseur
   function spinTrainer() {
     let ts = 0;
+    const reelPool = gyms.length ? gyms : [[tr.name, tr.type, tr.sprite || ""]];
     const reel = setInterval(() => {
-      const g = gyms[ts % gyms.length];
+      const g = reelPool[ts % reelPool.length];
       trainerEl.innerHTML = proTrainerSlotHtml({ name: g[0], type: g[1], tier: "arene" }, esc);
       ts += 1;
       if (ts > 11) {
