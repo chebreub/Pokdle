@@ -37,6 +37,7 @@ const PRO_CONSEIL_4 = {
   3: [["Damien","Ténèbres","img/trainers/c4_3_damien.png"], ["Spectra","Spectre","img/trainers/c4_3_spectra.png"], ["Glacia","Glace","img/trainers/c4_3_glacia.png"], ["Aragon","Dragon","img/trainers/c4_3_aragon.png"]],
   4: [["Aaron","Insecte","img/trainers/c4_4_aaron.png"], ["Terry","Sol","img/trainers/c4_4_terry.png"], ["Adrien","Feu","img/trainers/c4_4_adrien.png"], ["Lucio","Psy","img/trainers/c4_4_lucio.png"]],
   5: [["Anis","Spectre","img/trainers/c4_5_anis.png"], ["Pieris","Ténèbres","img/trainers/c4_5_pieris.png"], ["Percila","Psy","img/trainers/c4_5_percila.png"], ["Kunz","Combat","img/trainers/c4_5_kunz.png"]],
+  6: [["Malva","Feu",""], ["Narcisse","Eau",""], ["Thyméo","Acier",""], ["Dracéna","Dragon",""]],
 };
 
 // Couleurs de types (vignette dresseur)
@@ -189,8 +190,14 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
   const tr = mods.trainer || {};
   const isMaster = tr.tier === "maitre";
 
-  mount.className = "draft-pro-inline";
-  mount.innerHTML =
+  const oldHost = document.getElementById("draft-pro-reveal-host");
+  if (oldHost) oldHost.remove();
+  mount.style.display = "none";
+  const host = document.createElement("div");
+  host.id = "draft-pro-reveal-host";
+  host.className = "draft-pro-inline";
+  if (mount.parentNode) mount.parentNode.insertBefore(host, mount.nextSibling);
+  host.innerHTML =
     '<div class="dpr-card">' +
       '<div class="dpr-title">🎰 Bonus de fin de draft</div>' +
       '<div class="dpr-rolls">' +
@@ -203,11 +210,11 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
       '<div class="dpr-actions"><button type="button" class="btn-red" id="dpr-close">Continuer</button></div>' +
     '</div>';
 
-  const weatherEl = mount.querySelector("#dpr-weather");
-  const trainerEl = mount.querySelector("#dpr-trainer");
-  const bonusList = mount.querySelector("#dpr-bonuses");
-  const scoreTotalEl = mount.querySelector("#dpr-score-total");
-  const verdictEl = mount.querySelector("#dpr-verdict");
+  const weatherEl = host.querySelector("#dpr-weather");
+  const trainerEl = host.querySelector("#dpr-trainer");
+  const bonusList = host.querySelector("#dpr-bonuses");
+  const scoreTotalEl = host.querySelector("#dpr-score-total");
+  const verdictEl = host.querySelector("#dpr-verdict");
 
   // 1) Roue météo
   let ws = 0;
@@ -297,8 +304,12 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
     }
   }
 
-  const closeBtn = mount.querySelector("#dpr-close");
-  if (closeBtn) closeBtn.addEventListener("click", () => { if (typeof opts.onDone === "function") opts.onDone(); });
+  const closeBtn = host.querySelector("#dpr-close");
+  if (closeBtn) closeBtn.addEventListener("click", () => {
+    host.remove();
+    mount.style.display = "";
+    if (typeof opts.onDone === "function") opts.onDone();
+  });
 }
 
 // Synchronise l'affichage (bascule + titre) avec le drapeau PRO courant
@@ -363,8 +374,6 @@ function runDraftProFinale() {
       draftArenaState.message = isNewRecord
         ? ("🏆 NOUVEAU RECORD PRO Gen " + gen + " : " + result.total + " !")
         : ("Score Attack PRO terminé : " + result.total + " points.");
-      const mount = document.getElementById("draft-options");
-      if (mount) mount.className = "draft-options-grid";
       if (typeof renderDraftArena === "function") renderDraftArena();
     },
   });
