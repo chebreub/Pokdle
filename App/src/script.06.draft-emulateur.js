@@ -2683,13 +2683,17 @@ function openDraftScoreAttackMode(pro) {
   document.getElementById("screen-draft-score-attack")?.classList.remove("hidden");
   setGlobalNavActive("game");
 
-  if (!draftArenaState || draftArenaState.mode !== "scoreAttack") {
+  const wantPro = !!pro;
+  // Reset propre : on repart d'une partie fraîche si on (re)choisit un mode ou si on change de mode.
+  if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || draftArenaState.scoreAttackPro !== wantPro) {
     draftArenaState = createDraftArenaState();
     draftArenaState.mode = "scoreAttack";
-    draftArenaState.message = "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.";
+    draftArenaState.scoreAttackPro = wantPro;
+    draftArenaState.message = wantPro
+      ? "Score Attack PRO — choisis une génération pour lancer une run à bonus."
+      : "Score Attack — choisis une génération pour viser la meilleure moyenne BST.";
   }
-
-  draftArenaState.scoreAttackPro = !!pro;
+  draftArenaState.scoreAttackPro = wantPro;
   if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
 }
