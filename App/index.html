@@ -114,7 +114,7 @@
       <div class="nav-dd-group">Les classiques</div>
       <button type="button" data-action="startDailyGame">Pokémon du jour</button>
       <button type="button" data-action="startNormalGame">Mode illimité</button>
-      <button type="button" data-action="startPartyMode">Party Pokémon</button>
+      <button type="button" data-action="startPartyMode">Marathon mini-jeux</button>
       <button type="button" data-action="openDraftScoreAttackMode" data-args="[false]">Draft Score Attack</button>
       <button type="button" data-action="openDraftScoreAttackMode" data-args="[true]">🔥 Draft Score Attack PRO</button>
       <div class="nav-dd-group">Solo rapide</div>
@@ -241,7 +241,7 @@
           <article class="card home-pillar" data-action="openPokedexMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-teal"><svg class="pi" aria-hidden="true"><use href="#i-book"/></svg></div>
             <h3>Pokédex</h3>
-            <p>1025 fiches complètes avec stats, talents, évolutions, comparateur.</p>
+            <p>1025 Pokémon (+ formes alternatives), stats, talents, évolutions, comparateur.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag">9 gens</span><span class="home-pillar-tag">Shiny</span></div>
           </article>
           <article class="card home-pillar" data-action="openDraftArenaMode" role="button" tabindex="0">
@@ -253,7 +253,7 @@
           <article class="card home-pillar" data-action="openEmulatorMode" role="button" tabindex="0">
             <div class="home-pillar-icon home-pillar-icon-purple"><svg class="pi" aria-hidden="true"><use href="#i-gamepad"/></svg></div>
             <h3>Émulateur</h3>
-            <p>Joue à Rouge Feu, Vert Feuille, Cristal, Platine ou charge ta ROM.</p>
+            <p>Lance ta propre ROM GBA, GBC ou DS directement dans le navigateur.</p>
             <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-unique">Unique</span><span class="home-pillar-tag">GBA · GBC · DS</span></div>
           </article>
         </div>
@@ -946,12 +946,12 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <button class="btn-ghost" data-action="closeEmulatorMode">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Lance une ROM GBA, GBC ou DS locale. ROMs détectées : Rouge Feu, Vert Feuille, Platine (DS).</p>
+        <p class="card-desc">Lance une ROM GBA, GBC ou DS depuis ton appareil. Aucune ROM n'est fournie — charge la tienne (jeux que tu possèdes).</p>
 
         <div class="emulator-toolbar">
           <select id="emu-rom-select"></select>
           <button class="btn-red" data-action="launchSelectedEmuRom">&#9654; Lancer</button>
-          <label class="btn-blue emu-upload-btn" for="emu-rom-file">&#128193; Charger une autre ROM</label>
+          <label class="btn-blue emu-upload-btn" for="emu-rom-file">&#128193; Charger ma ROM</label>
           <input id="emu-rom-file" type="file" accept=".gba,.gbc,.gb,.nds" class="hidden" />
         </div>
 
@@ -1071,7 +1071,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
 
       <div id="party-banner" class="daily-banner hidden">
-        🎲 <b>Party Pokémon</b> • Enchaîne plusieurs mini-jeux et monte ton score.
+        🎲 <b>Marathon mini-jeux</b> • Enchaîne plusieurs mini-jeux et monte ton score.
       </div>
 
       <div id="party-box" class="challenge-panel hidden">

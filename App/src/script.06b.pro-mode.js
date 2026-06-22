@@ -356,6 +356,7 @@ function runDraftProFinale() {
   if (typeof progressQuest === "function") { try { progressQuest("draft_complete", 1); } catch (e) {} }
 
   // On reste en phase "draft" pendant la révélation (tuiles remplacées), bascule en "result" à "Continuer".
+  draftArenaState.message = "Équipe complète ! Révélation des bonus en cours…";
   if (typeof renderDraftArena === "function") renderDraftArena();
   renderDraftProRevealInline(teamData, mods, result, {
     isNewRecord: isNewRecord,

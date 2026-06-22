@@ -2103,11 +2103,14 @@ function selectDraftGeneration(gen) {
   draftArenaState.scoreAttackRerollsLeft = DRAFT_SCORE_ATTACK_REROLLS;
   draftArenaState.scoreAttackBestAverage = 0;
   draftArenaState.scoreAttackSubmitted = false;
-  draftArenaState.message = draftArenaState.mode === "scoreAttack"
-    ? `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`
-    : `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`;
+  draftArenaState.message = draftArenaState.mode !== "scoreAttack"
+    ? `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`
+    : draftArenaState.scoreAttackPro
+      ? `🔥 Score Attack PRO ${draftGenLabel(gen)}. Drafte 6 Pokémon — les bonus tombent à la fin !`
+      : `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`;
 
   fillDraftArenaOptions();
+  if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
 }
 
@@ -3345,11 +3348,8 @@ function renderDraftArena() {
     arenaList.innerHTML = "";
   }
 }
-const EMU_ROM_OPTIONS = [
-  { label: "Pokemon Rouge Feu (FR)", url: "roms/Pokemon - Version Rouge Feu (FR).gba", core: "gba" },
-  { label: "Pokemon Vert Feuille (FR)", url: "roms/Pokemon - Version Vert Feuille (FR).gba", core: "gba" },
-  { label: "Pokemon Platine (FR)", url: "roms/DS/Pokemon - Version Platine (France).nds", core: "nds" },
-];
+// Pas de ROMs par défaut hébergées (évite les 404 + souci de copyright) : seul le chargement local est proposé.
+const EMU_ROM_OPTIONS = [];
 
 let emulatorCustomRomUrl = "";
 let emulatorCustomRomName = "";
@@ -3394,6 +3394,11 @@ function initEmulatorMode() {
     opt.value = rom.url;
     opt.textContent = `${rom.label} (${rom.core.toUpperCase()})`;
     select.appendChild(opt);
+  }
+  if (!EMU_ROM_OPTIONS.length) {
+    const ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "— Charge ta ROM ci-dessous —"; ph.disabled = true; ph.selected = true;
+    select.appendChild(ph);
   }
 
   select.addEventListener("change", () => {
@@ -3524,7 +3529,7 @@ function getSelectedEmuRom() {
 function launchSelectedEmuRom() {
   const rom = getSelectedEmuRom();
   if (!rom?.url) {
-    setEmuStatus("Aucune ROM selectionnee.");
+    setEmuStatus("Charge d'abord ta ROM (.gba, .gbc, .gb ou .nds) via « Charger ma ROM » ci-dessous.");
     return;
   }
 
