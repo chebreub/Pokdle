@@ -1017,6 +1017,7 @@ const PROFESSIONAL_MODE_CONFIG = {
   openRankingMode: { label: "Mode classement", description: "Organise les Pokémon dans des tableaux thématiques.", category: "collection" },
   openDraftArenaMode: { label: "Draft Arènes", description: "Compose une équipe et affronte une série d'arènes.", category: "tools" },
   openDraftScoreAttackMode: { label: "Draft Score Attack", description: "Drafte la meilleure moyenne BST en solo ou en 1v1.", category: "challenge" },
+  openDraftScoreAttackProDuel: { label: "Duel 1v1 PRO", description: "Affronte un ami en draft à bonus (météo, dresseur, synergies) révélés après le lock.", category: "challenge" },
   openEmulatorMode: { label: "Émulateur", description: "Lance un jeu Pokémon directement depuis l'interface.", category: "tools" },
 };
 

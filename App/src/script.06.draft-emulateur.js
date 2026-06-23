@@ -1738,7 +1738,7 @@ function createDraftScoreAttackRoom() {
   draftArenaState.scoreAttackRoomPending = "create";
   draftArenaState.scoreAttackRoomError = null;
   renderDraftArena();
-  socket.emit("draft-score:create-room", { nickname }, (response = {}) => {
+  socket.emit("draft-score:create-room", { nickname, pro: !!(draftArenaState && draftArenaState.scoreAttackPro) }, (response = {}) => {
     draftArenaState.scoreAttackRoomPending = null;
     if (!response.ok) {
       draftArenaState.scoreAttackRoomError = response.error || "Impossible de créer la room Score Attack.";
@@ -1858,16 +1858,18 @@ function showDraftScoreOpponentToast(message) {
 
 function maybeShowDraftScoreFinale(room) {
   if (!room || room.status !== "finished") return;
-  const fingerprint = `${room.code}:${room.players?.map((p) => `${p.side}-${p.result?.average || 0}-${p.result?.total || 0}`).join("|")}`;
+  const isPro = !!room.pro;
+  const fingerprint = `${room.code}:${isPro ? "pro:" : ""}${room.players?.map((p) => `${p.side}-${p.result?.average || 0}-${p.result?.total || 0}-${p.result?.pro?.total || 0}`).join("|")}`;
   if (draftScoreFinaleShownFor === fingerprint) return;
   draftScoreFinaleShownFor = fingerprint;
-  updateDraftScoreHeadToHead(room);
-  showDraftScoreFinaleOverlay(room);
+  updateDraftScoreHeadToHead(room, isPro);
+  if (isPro) showDraftScoreProFinale(room);
+  else showDraftScoreFinaleOverlay(room);
 }
 
-function getDraftScoreHeadToHead(opponentNickname) {
+function getDraftScoreHeadToHead(opponentNickname, pro) {
   if (!playerProfile || !opponentNickname) return { wins: 0, losses: 0, draws: 0 };
-  const all = playerProfile.draftScoreHeadToHead || {};
+  const all = (pro ? playerProfile.draftScoreProHeadToHead : playerProfile.draftScoreHeadToHead) || {};
   const entry = all[String(opponentNickname).toLowerCase()] || { wins: 0, losses: 0, draws: 0 };
   return {
     wins: Math.max(0, Number(entry.wins) || 0),
@@ -1876,19 +1878,53 @@ function getDraftScoreHeadToHead(opponentNickname) {
   };
 }
 
-function updateDraftScoreHeadToHead(room) {
+function updateDraftScoreHeadToHead(room, pro) {
   if (!playerProfile || !room || room.status !== "finished") return;
   const self = room.players?.find((p) => p.isSelf);
   const opp = room.players?.find((p) => !p.isSelf);
   if (!self || !opp || !opp.nickname) return;
   const key = String(opp.nickname).toLowerCase();
-  playerProfile.draftScoreHeadToHead = playerProfile.draftScoreHeadToHead || {};
-  const cur = playerProfile.draftScoreHeadToHead[key] || { wins: 0, losses: 0, draws: 0 };
+  const storeKey = pro ? "draftScoreProHeadToHead" : "draftScoreHeadToHead";
+  playerProfile[storeKey] = playerProfile[storeKey] || {};
+  const cur = playerProfile[storeKey][key] || { wins: 0, losses: 0, draws: 0 };
   if (room.winnerSide === "tie") cur.draws = (Number(cur.draws) || 0) + 1;
   else if (room.winnerSide === self.side) cur.wins = (Number(cur.wins) || 0) + 1;
   else if (room.winnerSide === opp.side) cur.losses = (Number(cur.losses) || 0) + 1;
-  playerProfile.draftScoreHeadToHead[key] = cur;
+  playerProfile[storeKey][key] = cur;
   try { saveProfile(); } catch (_e) {}
+}
+
+// Finale 1v1 PRO : rejoue la séquence machine à sous (bonus du joueur → total) avec
+// le verdict Victoire/Défaite calculé sur le total PRO de l'adversaire (effet comeback).
+// Réutilise le moteur de révélation du solo (renderDraftProRevealInline). Repli sur
+// l'overlay BST normal si les données PRO manquent.
+function showDraftScoreProFinale(room) {
+  const self = room.players?.find((p) => p.isSelf);
+  const opp = room.players?.find((p) => !p.isSelf);
+  const mods = room?.duel?.proMods || null;
+  if (!self?.result?.pro || !opp?.result?.pro || !mods || typeof renderDraftProRevealInline !== "function") {
+    showDraftScoreFinaleOverlay(room);
+    return;
+  }
+  const selfPro = self.result.pro;
+  const result = {
+    base: Number(selfPro.base) || 0,
+    bonuses: Array.isArray(selfPro.bonuses) ? selfPro.bonuses : [],
+    bonusTotal: Number(selfPro.bonusTotal) || 0,
+    total: Number(selfPro.total) || 0,
+  };
+  // La roue dresseur lit draftArenaState.selectedGen (cosmétique) : on la cale sur la gen du duel.
+  if (draftArenaState && room?.duel?.gen) draftArenaState.selectedGen = Number(room.duel.gen) || draftArenaState.selectedGen;
+  renderDraftProRevealInline([], mods, result, {
+    opponent: { nickname: opp.nickname || "Adversaire", total: Number(opp.result.pro.total) || 0 },
+    onDone: function () {
+      if (draftArenaState && draftArenaState.mode === "scoreAttack") renderDraftArena();
+    },
+  });
+  // Amener la révélation dans le champ de vision (elle s'insère après #draft-options).
+  setTimeout(function () {
+    document.getElementById("draft-pro-reveal-host")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 60);
 }
 
 function showDraftScoreFinaleOverlay(room) {
@@ -2699,6 +2735,20 @@ function openDraftScoreAttackMode(pro) {
   draftArenaState.scoreAttackPro = wantPro;
   if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
+}
+
+// Entrée dédiée « Duel 1v1 PRO » : ouvre l'écran Score Attack en mode PRO et met
+// le lobby 1v1 en avant. Le solo PRO et le 1v1 PRO partagent le même écran ;
+// ici on signale l'intention duel et on amène les boutons de room dans le champ de vision.
+function openDraftScoreAttackProDuel() {
+  openDraftScoreAttackMode(true);
+  if (draftArenaState) draftArenaState.duelIntent = true;
+  setTimeout(function () {
+    var btn = document.querySelector('[data-action="createDraftScoreAttackRoom"]');
+    if (btn && typeof btn.scrollIntoView === "function") {
+      try { btn.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) { btn.scrollIntoView(); }
+    }
+  }, 120);
 }
 
 function mountDraftModeCard(mode = "arena") {
