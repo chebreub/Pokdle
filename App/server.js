@@ -6,6 +6,9 @@ const helmet = require("helmet");
 const http = require("http");
 const { Server } = require("socket.io");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
+// Moteur Score Attack PRO partagé avec le client (même barème PRO_TUNING + fonctions pures).
+// Fonctions utilisées côté serveur pour le 1v1 PRO : rollProModifiers(gen, rnd), computeDraftProScore(team, mods).
+let proEngine = null; try { proEngine = require("./src/script.06b.pro-mode.js"); } catch (e) { console.error("[pro] moteur PRO indisponible:", e.message); }
 
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
@@ -2384,6 +2387,7 @@ io.on("connection", (socket) => {
         code,
         hostId: socket.id,
         status: "lobby",
+        pro: !!payload.pro,
         players: [{ id: socket.id, side: "left", nickname, connected: true, result: null }],
         winnerSide: null,
         createdAt: Date.now(),
@@ -2448,6 +2452,14 @@ io.on("connection", (socket) => {
         lastEvent: { kind: "started", at: Date.now() },
       };
       room.duel.currentWave = generateDraftDuelNextWave(room);
+      // 1v1 PRO : tirer une seule fois les modificateurs partagés (météo + dresseur),
+      // tenus secrets jusqu'à la révélation finale (effet comeback).
+      if (room.pro && proEngine && typeof proEngine.rollProModifiers === "function") {
+        try { room.duel.proMods = proEngine.rollProModifiers(gen); }
+        catch (e) { console.error("[pro] rollProModifiers:", e.message); room.duel.proMods = null; }
+      } else {
+        room.duel.proMods = null;
+      }
       room.status = "live";
       room.winnerSide = null;
       for (const p of room.players) { p.result = null; p.progress = null; }
@@ -2511,6 +2523,18 @@ io.on("connection", (socket) => {
               label: getDraftScoreServerLabel(avg),
               submittedAt: Date.now(),
             };
+            // 1v1 PRO : score autoritaire (base BST + bonus partagés météo/dresseur/synergies).
+            if (room.pro && proEngine && room.duel.proMods && typeof proEngine.computeDraftProScore === "function") {
+              try {
+                const proResult = proEngine.computeDraftProScore(buildProServerTeam(team), room.duel.proMods);
+                p.result.pro = {
+                  base: proResult.base,
+                  bonuses: proResult.bonuses,
+                  bonusTotal: proResult.bonusTotal,
+                  total: proResult.total,
+                };
+              } catch (e) { console.error("[pro] computeDraftProScore:", e.message); }
+            }
           }
           finalizeDraftScoreRoom(room);
         } else {
@@ -4120,11 +4144,14 @@ function publicDraftScoreRoomState(room, viewerId = null) {
   return {
     code: room.code,
     status: room.status,
+    pro: !!room.pro,
     maxPlayers: MAX_ROOM_SIZE,
     connectedCount: room.players.filter((player) => player.connected).length,
     winnerSide: room.winnerSide || null,
     duel: room.duel ? {
       gen: room.duel.gen,
+      // Modificateurs PRO : tenus secrets pendant le draft, révélés seulement à "finished".
+      proMods: room.status === "finished" ? (room.duel.proMods || null) : null,
       currentWave: (room.duel.currentWave || []).map((id) => {
         const p = POKEMON_LIST.find((entry) => Number(entry.id) === Number(id));
         return p ? { id: Number(p.id), name: p.name, type1: p.type1 || null, type2: p.type2 || null } : null;
@@ -4175,6 +4202,23 @@ function buildDuelPokemonEntry(pokemonId) {
   return { id: Number(pokemon.id), name: pokemon.name, type1: pokemon.type1 || null, type2: pokemon.type2 || null };
 }
 
+// Construit l'entrée attendue par le moteur PRO (computeDraftProScore) à partir d'une
+// team de duel. Complète stage/color depuis POKEMON_LIST (absents de l'entrée de duel).
+function buildProServerTeam(team) {
+  return (Array.isArray(team) ? team : []).map((entry) => {
+    const p = POKEMON_LIST.find((x) => Number(x.id) === Number(entry.id)) || {};
+    return {
+      id: Number(entry.id) || 0,
+      name: entry.name,
+      type1: entry.type1 || p.type1 || null,
+      type2: entry.type2 || p.type2 || null,
+      stage: Number(p.stage) || 0,
+      color: p.color || null,
+      bst: Number(entry.bst) || 0,
+    };
+  });
+}
+
 function emitDraftScoreRoomState(room) {
   for (const player of room.players) {
     if (!player.connected) continue;
@@ -4186,7 +4230,14 @@ function finalizeDraftScoreRoom(room) {
   const left = room.players.find((player) => player.side === "left");
   const right = room.players.find((player) => player.side === "right");
   if (left?.result && right?.result) {
-    if (left.result.average > right.result.average) room.winnerSide = "left";
+    if (room.pro && left.result.pro && right.result.pro) {
+      // 1v1 PRO : vainqueur sur le total PRO (base + bonus), pas la moyenne BST.
+      const lt = Number(left.result.pro.total) || 0;
+      const rt = Number(right.result.pro.total) || 0;
+      if (lt > rt) room.winnerSide = "left";
+      else if (rt > lt) room.winnerSide = "right";
+      else room.winnerSide = "tie";
+    } else if (left.result.average > right.result.average) room.winnerSide = "left";
     else if (right.result.average > left.result.average) room.winnerSide = "right";
     else if (left.result.total > right.result.total) room.winnerSide = "left";
     else if (right.result.total > left.result.total) room.winnerSide = "right";

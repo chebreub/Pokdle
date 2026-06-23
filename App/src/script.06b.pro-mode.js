@@ -379,3 +379,21 @@ function runDraftProFinale() {
     },
   });
 }
+
+// ============================================================
+//  Export Node (serveur 1v1 PRO). Gardé : `module` n'existe pas dans le
+//  navigateur (script.js est un simple concat), donc ce bloc est ignoré côté client.
+//  Le serveur require ce fichier pour réutiliser le MÊME barème (PRO_TUNING)
+//  et les mêmes fonctions pures — une seule source de vérité.
+// ============================================================
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    rollProModifiers,
+    computeDraftProScore,
+    PRO_TUNING,
+    PRO_WEATHERS,
+    PRO_GYM_LEADERS,
+    PRO_LEAGUE_MASTERS,
+    PRO_CONSEIL_4,
+  };
+}
