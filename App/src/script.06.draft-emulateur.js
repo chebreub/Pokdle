@@ -3181,7 +3181,8 @@ function renderDraftArena() {
           : bstMetrics.average;
         const bstValue = Number(metrics.statGlobal) || 0;
         const rarity = bstValue >= 600 ? "legendary" : bstValue >= 500 ? "strong" : bstValue >= 400 ? "decent" : "common";
-        card.dataset.rarity = rarity;
+        const optLoading = !DRAFT_POWER_CACHE.has(getDraftPowerCacheKey(option.pokemon));
+        card.dataset.rarity = optLoading ? "loading" : rarity;
         if (option.pokemon.type1) card.dataset.type1 = option.pokemon.type1;
         const isScoreAttack = draftArenaState.mode === "scoreAttack";
         const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0 && !draftArenaState.duelMode;
@@ -3190,10 +3191,10 @@ function renderDraftArena() {
           : "";
         card.innerHTML = `
           ${rerollBtn}
-          <div class="dsc-top"><span class="dsc-tier">${escapeHtml(metrics.rarityLabel)}</span><span class="dsc-bst">${metrics.statGlobal}</span></div>
+          <div class="dsc-top"><span class="dsc-tier">${optLoading ? "\u2026" : escapeHtml(metrics.rarityLabel)}</span><span class="dsc-bst">${optLoading ? "\u2026" : metrics.statGlobal}</span></div>
           <div class="dsc-art"><img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" /></div>
           <strong class="dsc-name">${escapeHtml(option.pokemon.name)}</strong>
-          <div class="dsc-proj">Moy. <b>${projectedAverage}</b></div>
+          <div class="dsc-proj">Moy. <b>${optLoading ? "\u2026" : projectedAverage}</b></div>
           ${sparkle}
         `;
         card.disabled = Boolean(option.locked);

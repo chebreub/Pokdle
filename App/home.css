@@ -441,3 +441,13 @@ body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;co
 /* Header : logo+nav groupes a GAUCHE, actions (niveau/aide/param/compte) a DROITE, espacees */
 .header-inner .header-top #global-nav{flex:0 1 auto !important;}
 .header-inner .header-top .header-actions{margin-left:auto !important;gap:10px !important;}
+
+/* Draft Score Attack : carte en attente des vraies stats (PokeAPI) — neutre, pas de fausse rarete */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="loading"]{border-color:#d7dfec !important;box-shadow:none !important;animation:dsLoadingPulse 1.1s ease-in-out infinite;}
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="loading"] .dsc-top{background:#eef1f6 !important;}
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="loading"] .dsc-bst{color:#9aa6bd !important;}
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-rarity="loading"] .dsc-tier{color:#9aa6bd !important;}
+@keyframes dsLoadingPulse{0%,100%{opacity:1}50%{opacity:.82}}
+
+/* En-tete : contenu en pleine largeur (logo a gauche, compte a droite) — utiliser tout l'espace de la bande */
+body:not(.theme-dark) .header-inner{max-width:none !important;width:auto !important;margin:0 !important;padding-left:34px !important;padding-right:34px !important;}
