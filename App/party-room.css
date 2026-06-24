@@ -602,3 +602,8 @@
 .party-players .party-player.party-player-empty:hover { transform: none !important; box-shadow: none !important; }
 .party-player-empty .party-rank { color: #8aa0c4 !important; background: transparent !important; }
 .party-player-empty .party-seat-label { color: #8195b5; font-weight: 700; font-style: italic; }
+
+/* Mobile : le bouton hote "Reveler/terminer" repasse dans le flux (sinon il chevauche Valider) */
+@media (max-width:640px){
+  #party-reveal-btn{position:static !important;right:auto !important;bottom:auto !important;width:100% !important;margin-top:10px !important;opacity:1 !important;}
+}
