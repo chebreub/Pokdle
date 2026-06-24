@@ -2659,3 +2659,20 @@ body.theme-dark #pokedex-category-filter {
 #screen-pokedex .pokedex-detail-shiny-btn{border-color:rgba(240,183,67,.55) !important;background:linear-gradient(180deg,#fffdf2,#fff2cc) !important;color:#6a4700 !important;}
 #screen-pokedex .pokedex-detail-shiny-btn:hover{background:linear-gradient(180deg,#fff7da,#ffe9a6) !important;}
 #screen-pokedex .pokedex-detail-shiny-btn.active{border-color:rgba(240,183,67,.9) !important;background:linear-gradient(180deg,#ffefbc,#ffdf85) !important;color:#6a4700 !important;box-shadow:0 0 0 3px rgba(255,204,51,.28) !important;}
+
+/* =================================================================
+   MOBILE Pokedex : filtres compacts, empiles, hauteurs normales
+   ================================================================= */
+@media (max-width:640px){
+  #screen-pokedex .pokedex-toolbar-row{flex-direction:column !important;align-items:stretch !important;gap:8px !important;min-height:0 !important;height:auto !important;}
+  #screen-pokedex .pokedex-toolbar-row > *{flex:0 0 auto !important;}
+  #screen-pokedex select,#screen-pokedex input[type="text"],#screen-pokedex input:not([type]){height:44px !important;min-height:44px !important;max-height:44px !important;box-sizing:border-box !important;}
+  #screen-pokedex #pokedex-category-filter{flex:0 0 auto !important;height:44px !important;min-height:44px !important;max-height:44px !important;}
+  #screen-pokedex .pokedex-type-filter-group{display:flex !important;flex-wrap:nowrap !important;width:100% !important;max-width:100% !important;overflow:hidden !important;align-items:center !important;gap:6px !important;}
+  #screen-pokedex .pokedex-type-filter-group select{flex:1 1 0 !important;min-width:0 !important;width:auto !important;}
+  #screen-pokedex #pokedex-type-filter,
+  #screen-pokedex #pokedex-type2-filter{flex:1 1 0 !important;min-width:0 !important;width:auto !important;}
+  #screen-pokedex div.pokedex-type-filter-group{overflow:hidden !important;overflow-x:hidden !important;}
+  /* eviter tout debordement horizontal des filtres */
+  #screen-pokedex .pokedex-toolbar,#screen-pokedex .pokedex-toolbar-row{max-width:100% !important;overflow-x:hidden !important;}
+}

@@ -516,3 +516,24 @@ body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:cent
   #screen-config .pk-mode{position:relative !important;padding-right:36px !important;}
   #screen-config .pk-mode::after{content:"\203A";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#c2cad8;font-size:24px;font-weight:900;line-height:1;}
 }
+
+/* =================================================================
+   MOBILE — reproduction du feel maquette Direction 1 :
+   en-tete CLAIRE (pas de bande coloree) + fond clair => feel appli
+   ================================================================= */
+@media (max-width:640px){
+  body{background:radial-gradient(125% 78% at 50% -8%, #ffe2df 0%, #eaf0ff 46%, #f5f8ff 100%) !important;}
+  body:not(.theme-dark) header{background:transparent !important;box-shadow:none !important;border-bottom:none !important;}
+  body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{color:#0c1930 !important;}
+  body:not(.theme-dark) .header-actions .header-action-btn{background:#fff !important;color:#173a5e !important;border:1px solid rgba(12,25,48,.1) !important;box-shadow:0 2px 8px rgba(12,25,48,.06) !important;}
+  body:not(.theme-dark) .header-actions .header-action-btn svg{stroke:#173a5e !important;}
+  /* compte Discord (avatar) lisible sur fond clair si present */
+  body:not(.theme-dark) #account-area button{background:#fff !important;color:#173a5e !important;border:1px solid rgba(12,25,48,.1) !important;}
+}
+
+/* FIX mobile : empecher le defilement horizontal (chips de gen non bornees) */
+@media (max-width:640px){
+  html{overflow-x:hidden !important;}
+  #screen-config #home-gens-card{overflow:hidden !important;max-width:100% !important;}
+  #screen-config #home-gens-card #gen-grid{min-width:0 !important;width:100% !important;max-width:100% !important;}
+}
