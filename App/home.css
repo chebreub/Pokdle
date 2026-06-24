@@ -229,3 +229,211 @@
 }
 body.theme-dark #screen-all-modes .all-modes-card { background: #16223e; border-color: #2c3c63; border-left-color: var(--am-accent, #2f76ff); }
 body.theme-dark #screen-all-modes .all-modes-card b { color: #e8eefc; }
+
+/* =================================================================
+   DA 2026 — HOME (réécriture propre, classes pk-*) — BLOC DÉDIÉ
+   La home utilise des classes pk-* qui n'entrent pas en conflit avec
+   l'ancien CSS. Pour revenir : supprimer ce bloc + restaurer index.html.
+   ================================================================= */
+body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none;z-index:-1;}
+body::before{width:420px;height:420px;left:-140px;top:-120px;background:rgba(228,56,47,.26);}
+body::after{width:460px;height:460px;right:-160px;top:120px;background:rgba(47,118,255,.22);}
+#screen-config .pk-ico{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Hero */
+#screen-config .pk-hero{position:relative;overflow:hidden;border-radius:26px;padding:30px 32px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:24px;background:radial-gradient(620px 240px at 86% 22%,rgba(255,255,255,.14),transparent 70%),linear-gradient(105deg,#e4382f 0%,#b3263f 30%,#2a4ea0 60%,#2f76ff 100%);box-shadow:0 18px 38px rgba(47,118,255,.28);margin-bottom:18px;}
+#screen-config .pk-hero-main{position:relative;z-index:1;min-width:0;}
+#screen-config .pk-kicker{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:#ffd34d;}
+#screen-config .pk-kicker .pk-ico{width:13px;height:13px;}
+#screen-config .pk-hero-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(1.9rem,3.6vw,2.7rem);line-height:1;margin:12px 0 10px;letter-spacing:-.6px;text-shadow:0 2px 8px rgba(8,16,38,.25);color:#fff;}
+#screen-config .pk-hero-sub{font-size:.95rem;font-weight:700;color:rgba(255,255,255,.9);max-width:460px;line-height:1.4;margin:0;}
+#screen-config .pk-hero-chips{display:flex;gap:9px;margin-top:15px;flex-wrap:wrap;}
+#screen-config .pk-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 13px;font-size:.82rem;font-weight:900;}
+#screen-config .pk-chip-fire{background:rgba(255,204,51,.95);color:#0c1930;}
+#screen-config .pk-chip-time{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);color:#fff;}
+#screen-config .pk-chip-status{background:rgba(46,125,50,.55);border:1px solid rgba(186,255,190,.4);color:#fff;}
+#screen-config .pk-hero-cta-row{display:flex;gap:11px;margin-top:18px;flex-wrap:wrap;}
+#screen-config .pk-cta{border:none;cursor:pointer;background:#ffcc33;color:#0c1930;border-radius:14px;padding:13px 22px;font-family:inherit;font-weight:900;font-size:1rem;box-shadow:0 8px 18px rgba(0,0,0,.18);display:inline-flex;align-items:center;gap:8px;}
+#screen-config .pk-cta-ghost{cursor:pointer;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:13px 20px;font-family:inherit;font-weight:900;font-size:1rem;}
+#screen-config .pk-hero-visual{flex:0 0 auto;}
+#screen-config .pk-medallion{position:relative;width:210px;height:210px;border-radius:50%;border:2px dashed rgba(255,255,255,.4);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;}
+#screen-config .pk-silo-img{position:absolute;width:155px;height:155px;object-fit:contain;filter:brightness(0);opacity:.4;pointer-events:none;}
+#screen-config .pk-qm{position:relative;font-size:62px;font-weight:900;color:#ffcc33;text-shadow:0 3px 10px rgba(8,16,38,.45);line-height:1;}
+
+/* Barre de générations */
+#screen-config #home-gens-card{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);border:1px solid rgba(12,25,48,.06);border-radius:20px;padding:13px 16px;box-shadow:0 6px 16px rgba(12,25,48,.07);margin-bottom:18px;}
+#screen-config #home-gens-card::before{display:none;}
+#screen-config .pk-genbar-lab{flex:0 0 auto;}
+#screen-config .pk-genbar-lab b{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:900;color:#0c1930;}
+#screen-config .pk-genbar-lab b .pk-ico{width:15px;height:15px;color:#2f76ff;}
+#screen-config .pk-genbar-lab small{display:block;font-size:.7rem;font-weight:800;color:#6a7a99;margin-top:2px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#screen-config #home-gens-card #gen-grid{display:flex !important;flex-wrap:wrap;gap:8px;flex:1 1 auto;min-width:240px;}
+#screen-config #gen-grid .gen-item{flex:0 0 auto;min-height:0 !important;min-width:0 !important;cursor:pointer;border-radius:12px;padding:7px 13px;text-align:center;border:1.5px solid rgba(12,25,48,.1);background:#fff;box-shadow:0 2px 6px rgba(23,52,93,.05);display:block;}
+#screen-config #gen-grid .gen-item input,#screen-config #gen-grid .gen-item .gen-check{display:none !important;}
+#screen-config #gen-grid .gen-item .gen-name{font-size:13px;font-weight:900;line-height:1;color:#0c1930;}
+#screen-config #gen-grid .gen-item .gen-sub{font-size:10px;font-weight:700;opacity:.75;margin-top:3px;color:#0c1930;white-space:nowrap;}
+#screen-config #gen-grid .gen-item.on{background:#2f76ff;border-color:#2f76ff;}
+#screen-config #gen-grid .gen-item.on .gen-name,#screen-config #gen-grid .gen-item.on .gen-sub{color:#fff;}
+#screen-config .pk-genbar-acts{flex:0 0 auto;display:flex;gap:6px;align-items:center;margin-left:auto;}
+#screen-config .pk-gbtn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;border-radius:9px;padding:8px 13px;}
+#screen-config .pk-gbtn-tout{background:#eaf1ff;color:#2f76ff;}
+#screen-config .pk-gbtn-aucune{background:#f1f3f7;color:#8a93a6;}
+#screen-config #home-gens-toggle{display:none !important;}
+
+/* Sections + cartes de modes */
+#screen-config .pk-sec{margin-top:24px;}
+#screen-config .pk-sec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px;padding:0 2px;}
+#screen-config .pk-sec-title{display:flex;align-items:center;gap:10px;}
+#screen-config .pk-sec-title h2{font-family:'Nunito',sans-serif;font-size:1.25rem;font-weight:900;color:#0c1930;margin:0;text-shadow:none;}
+#screen-config .pk-bar{height:4px;width:40px;border-radius:4px;background:linear-gradient(90deg,#e4382f,#2f76ff);}
+#screen-config .pk-allmodes{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid rgba(12,25,48,.1);border-radius:999px;padding:9px 15px;font-family:inherit;font-weight:800;font-size:.8rem;color:#2f76ff;cursor:pointer;box-shadow:0 6px 16px rgba(12,25,48,.07);}
+#screen-config .pk-allmodes .pk-ico{width:15px;height:15px;}
+#screen-config .pk-sec-sub{font-size:.82rem;font-weight:700;color:#6a7a99;margin:4px 2px 14px;}
+#screen-config .pk-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+#screen-config .pk-card{background:#fff;border:1px solid rgba(12,25,48,.06);border-radius:18px;box-shadow:0 6px 16px rgba(12,25,48,.07);}
+#screen-config .pk-mode{padding:18px;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px;}
+#screen-config .pk-mode:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(47,118,255,.16);}
+#screen-config .pk-mode:focus-visible{outline:2px solid #2f76ff;outline-offset:2px;}
+#screen-config .pk-tile{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:2px;}
+#screen-config .pk-tile .pk-ico{width:25px;height:25px;}
+#screen-config .pk-tile-yellow{background:#fff4d1;color:#d99a00;}
+#screen-config .pk-tile-blue{background:#e3edff;color:#2f76ff;}
+#screen-config .pk-tile-red{background:#ffe3e1;color:#e4382f;}
+#screen-config .pk-tile-teal{background:#d8f3ee;color:#14a085;}
+#screen-config .pk-tile-purple{background:#ece4ff;color:#7c5cff;}
+#screen-config .pk-tile-green{background:#e7f6d9;color:#5a9e22;}
+#screen-config .pk-mode h4{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:900;color:#0c1930;margin:6px 0 0;display:flex;align-items:center;gap:8px;}
+#screen-config .pk-mode p{font-size:.82rem;font-weight:700;color:#6a7a99;margin:0;line-height:1.35;}
+#screen-config .pk-live{display:inline-flex;align-items:center;gap:4px;font-size:.56rem;font-weight:900;color:#e4382f;background:#ffe3e1;padding:2px 7px;border-radius:999px;}
+#screen-config .pk-live i{width:6px;height:6px;border-radius:50%;background:#e4382f;}
+#screen-config .pk-tag{font-size:.56rem;font-weight:900;padding:3px 8px;border-radius:999px;background:#ece4ff;color:#7c5cff;}
+
+/* Widget engagement + progression : un peu d'air, retirer le liseré */
+#screen-config #home-engagement-widget{margin-top:18px;}
+#screen-config .home-progress-card::before{display:none !important;}
+
+/* Nav : onglet actif en bleu */
+body:not(.theme-dark) .nav-pill.active,.nav-pill.active{background:#2f76ff !important;color:#fff !important;border-color:transparent !important;box-shadow:0 6px 16px rgba(47,118,255,.3) !important;}
+
+/* A11y : prefers-reduced-motion */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;}}
+
+/* Responsive */
+@media (max-width:860px){#screen-config .pk-hero{flex-direction:column;align-items:flex-start;}#screen-config .pk-hero-visual{align-self:center;}#screen-config #home-gens-card{flex-wrap:wrap;}#screen-config #home-gens-card #gen-grid{order:3;flex-basis:100%;}}
+@media (max-width:560px){#screen-config .pk-medallion{width:150px;height:150px;}#screen-config .pk-silo-img{width:104px;height:104px;}#screen-config .pk-qm{font-size:42px;}}
+
+/* =================================================================
+   DA 2026 — CADRE GLOBAL (en-tete + nav) en clair, comme la maquette
+   ================================================================= */
+body:not(.theme-dark) header{background:transparent !important;border-bottom:1px solid rgba(12,25,48,.07) !important;box-shadow:none !important;}
+body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{color:#0c1930 !important;text-shadow:none !important;}
+body:not(.theme-dark) .tagline{color:#6a7a99 !important;text-shadow:none !important;}
+body:not(.theme-dark) .global-nav{background:transparent !important;box-shadow:none !important;border:none !important;backdrop-filter:none !important;}
+/* halos un peu plus discrets sous l'en-tete clair */
+body::before{opacity:.42 !important;}
+body::after{opacity:.38 !important;}
+
+/* =================================================================
+   FIX LAYOUT — #screen-config est une grille CSS : empecher le
+   debordement horizontal (min-width:0 sur les enfants) et laisser
+   l'espacement au gap de la grille (sinon double marge / decalage).
+   ================================================================= */
+#screen-config{max-width:100%;}
+#screen-config>*{min-width:0;max-width:100%;}
+#screen-config .pk-hero{margin-bottom:0;}
+#screen-config #home-gens-card{margin-bottom:0;min-width:0;max-width:100%;overflow:hidden;}
+#screen-config .pk-sec{margin-top:0;}
+#screen-config #home-engagement-widget{margin-top:0;}
+#screen-config #home-gens-card #gen-grid{min-width:0;max-width:100%;}
+
+/* Polish : masquer la scrollbar des chips de generations (scroll possible) */
+#screen-config #home-gens-card #gen-grid{scrollbar-width:none;-ms-overflow-style:none;}
+#screen-config #home-gens-card #gen-grid::-webkit-scrollbar{display:none;}
+
+/* =================================================================
+   DA 2026 — EN-TETE UNE RANGEE (logo | nav | actions) facon modele
+   ================================================================= */
+
+.header-inner .header-top{flex-wrap:nowrap !important;justify-content:flex-start !important;gap:16px !important;}
+.header-top .logo-home-btn{flex:0 0 auto;}
+.header-top #global-nav{position:static !important;top:auto !important;flex:1 1 auto !important;display:flex !important;align-items:center !important;gap:5px !important;overflow:visible !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;margin:0 !important;}
+.header-top .header-actions{flex:0 0 auto;}
+.tagline{display:none !important;}
+body:not(.theme-dark) .nav-pill{min-height:0 !important;font:800 14px 'Nunito' !important;padding:9px 16px !important;border:1px solid rgba(12,25,48,.1) !important;background:#fff !important;color:#173a5e !important;box-shadow:0 3px 9px rgba(12,25,48,.06) !important;}
+body:not(.theme-dark) .nav-pill.active{background:#2f76ff !important;color:#fff !important;border-color:transparent !important;box-shadow:0 4px 11px rgba(47,118,255,.3) !important;}
+.nav-dropdown{z-index:300;}
+
+/* Menus de nav au-dessus du contenu (apres deplacement de la nav dans l'en-tete) */
+header{position:relative;z-index:1000;}
+.header-top #global-nav .nav-dropdown{z-index:50;}
+
+/* =================================================================
+   DA 2026 — Haut-droite compact + fond plus present
+   ================================================================= */
+/* Aide / Parametres en icones rondes (texte masque, accessible via aria) */
+.header-actions .header-action-btn{font-size:0 !important;width:40px;height:40px;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;border-radius:50% !important;gap:0 !important;}
+.header-actions .header-action-btn svg{width:18px !important;height:18px !important;}
+
+/* Fond : halos rouge/bleu plus marques (moins fade) */
+body::before{width:540px !important;height:540px !important;left:-150px !important;top:-130px !important;opacity:.6 !important;background:rgba(228,56,47,.32) !important;}
+body::after{width:580px !important;height:580px !important;right:-170px !important;top:90px !important;opacity:.55 !important;background:rgba(47,118,255,.3) !important;}
+
+/* Haut-droite : tout sur une ligne (niveau + icones) */
+.header-inner .header-actions{display:flex !important;flex-wrap:nowrap !important;align-items:center !important;gap:8px !important;}
+
+/* =================================================================
+   DA 2026 — barre du haut frostee (definition + perso) + boutons propres
+   ================================================================= */
+body:not(.theme-dark) header{position:sticky !important;top:0 !important;z-index:1000 !important;background:rgba(255,255,255,.72) !important;backdrop-filter:blur(12px) saturate(1.1) !important;-webkit-backdrop-filter:blur(12px) saturate(1.1) !important;border-bottom:1px solid rgba(12,25,48,.07) !important;box-shadow:0 4px 18px rgba(12,25,48,.06) !important;}
+
+/* Aide / Parametres : vrais boutons libelles (fini les icones croppees) */
+.header-actions .header-action-btn{font-size:13px !important;font-weight:800 !important;font-family:"Nunito",sans-serif !important;width:auto !important;height:auto !important;min-height:0 !important;padding:9px 15px !important;border-radius:999px !important;gap:7px !important;display:inline-flex !important;align-items:center !important;background:#fff !important;color:#173a5e !important;border:1px solid rgba(12,25,48,.1) !important;box-shadow:0 3px 9px rgba(12,25,48,.06) !important;}
+.header-actions .header-action-btn svg{width:16px !important;height:16px !important;flex:0 0 auto;}
+
+/* =================================================================
+   DA 2026 — RETOUR en-tete COLOREE (personnalite) + suppression halos
+   ================================================================= */
+body::before, body::after{display:none !important;}
+body:not(.theme-dark) header{position:sticky !important;top:0 !important;z-index:1000 !important;background:linear-gradient(115deg,#e4382f 0%,#c52f4e 38%,#2f63d6 100%) !important;border-bottom:none !important;box-shadow:0 8px 24px rgba(20,40,76,.22) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{color:#fff !important;}
+/* Onglets sur fond colore : translucides, actif blanc */
+body:not(.theme-dark) .header-top .nav-pill{background:rgba(255,255,255,.15) !important;color:#fff !important;border:1px solid rgba(255,255,255,.30) !important;box-shadow:none !important;}
+body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;color:#17345d !important;border-color:transparent !important;box-shadow:0 4px 12px rgba(8,16,38,.25) !important;}
+/* Aide / Parametres sur fond colore */
+body:not(.theme-dark) .header-actions .header-action-btn{background:rgba(255,255,255,.16) !important;color:#fff !important;border:1px solid rgba(255,255,255,.30) !important;box-shadow:none !important;}
+body:not(.theme-dark) .header-actions .header-action-btn svg{stroke:#fff !important;}
+
+/* Nav sur une seule ligne dans l'en-tete */
+body:not(.theme-dark) .header-top #global-nav{flex-wrap:nowrap !important;overflow:visible !important;}
+body:not(.theme-dark) .header-top .nav-pill{flex:0 0 auto !important;padding:8px 13px !important;font-size:13px !important;}
+
+/* Nav : rangee dediee, centree, pills claires (apres sortie de l'en-tete) */
+#global-nav{position:static !important;display:flex !important;flex-wrap:wrap !important;justify-content:center !important;align-items:center !important;gap:8px !important;max-width:1200px;margin:18px auto 0 !important;padding:0 24px !important;background:transparent !important;border:none !important;box-shadow:none !important;top:auto !important;}
+
+/* ============ FINAL — en-tete UNE rangee (logo|nav|actions), colore ============ */
+body:not(.theme-dark) .header-inner .header-top{display:flex !important;flex-wrap:nowrap !important;align-items:center !important;justify-content:flex-start !important;gap:16px !important;}
+.header-top .logo-home-btn{flex:0 0 auto !important;}
+body:not(.theme-dark) .header-top #global-nav{flex:1 1 auto !important;display:flex !important;flex-wrap:nowrap !important;justify-content:flex-start !important;align-items:center !important;gap:5px !important;margin:0 !important;padding:0 !important;max-width:none !important;overflow:visible !important;background:transparent !important;border:none !important;box-shadow:none !important;position:static !important;top:auto !important;}
+.header-top .header-actions{flex:0 0 auto !important;display:flex !important;flex-wrap:nowrap !important;align-items:center !important;gap:8px !important;}
+body:not(.theme-dark) .header-top .nav-pill{flex:0 0 auto !important;background:rgba(255,255,255,.15) !important;color:#fff !important;border:1px solid rgba(255,255,255,.3) !important;box-shadow:none !important;font:800 13px 'Nunito' !important;padding:8px 13px !important;min-height:0 !important;}
+body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;color:#17345d !important;border-color:transparent !important;box-shadow:0 4px 12px rgba(8,16,38,.22) !important;}
+/* Aide/Parametres : icones rondes propres */
+.header-actions .header-action-btn{font-size:0 !important;width:38px !important;height:38px !important;min-height:0 !important;padding:0 !important;gap:0 !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;border-radius:50% !important;overflow:visible !important;background:rgba(255,255,255,.15) !important;border:1px solid rgba(255,255,255,.3) !important;box-shadow:none !important;}
+.header-actions .header-action-btn svg{width:18px !important;height:18px !important;stroke:#fff !important;flex:0 0 auto !important;}
+
+/* =================================================================
+   Page plus large : reduire les grosses bordures laterales sur grand ecran
+   ================================================================= */
+
+
+
+/* Aide/Parametres : boutons libelles (place dispo grace a l'elargissement) */
+.header-actions .header-action-btn{font-size:13px !important;font-weight:800 !important;font-family:'Nunito',sans-serif !important;width:auto !important;height:auto !important;min-height:0 !important;padding:9px 15px !important;border-radius:999px !important;gap:7px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;background:rgba(255,255,255,.15) !important;color:#fff !important;border:1px solid rgba(255,255,255,.3) !important;box-shadow:none !important;}
+.header-actions .header-action-btn svg{width:16px !important;height:16px !important;stroke:#fff !important;flex:0 0 auto !important;}
+
+/* Largeur contenue (hero mieux equilibre) — retour aux bordures standard */
+
+
+
+/* Supprimer le pseudo-element decoratif (halo qui bave) sur les boutons en-tete */
+.header-actions .header-action-btn::after,.header-actions .header-action-btn::before{display:none !important;content:none !important;}

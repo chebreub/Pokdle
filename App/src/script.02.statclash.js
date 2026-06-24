@@ -17,8 +17,8 @@ function buildGenGrid() {
       <input type="checkbox" ${isOn ? "checked" : ""} />
       <div class="gen-check">${isOn ? "OK" : ""}</div>
       <div>
-        <div class="gen-name">Gen ${gen}</div>
-        <div class="gen-sub">${data.label} • ${count} Pokémon</div>
+        <div class="gen-name">Gén ${gen}</div>
+        <div class="gen-sub">${data.label}</div>
       </div>
     `;
 
@@ -64,7 +64,7 @@ function updateHomeGensSummary() {
   const label = gens.length === Object.keys(GENERATIONS).length
     ? "Toutes les générations"
     : gens.map((gen) => `Gen ${gen}`).join(" · ");
-  summary.textContent = `${label} — ${total} Pokémon dans le pool.`;
+  summary.textContent = `${gens.length}/${Object.keys(GENERATIONS).length} incluses dans tes parties`;
 }
 
 function toggleHomeGensCard() {

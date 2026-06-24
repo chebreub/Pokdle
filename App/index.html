@@ -89,23 +89,8 @@
           <h1>Pokédle</h1>
         </div>
       </button>
-      <div class="header-actions">
-        <button id="global-xp-badge" class="xp-badge" type="button" data-action="openDailyQuestsModal" aria-label="Voir mes quêtes quotidiennes">
-          <span class="xp-badge-emoji">🥚</span>
-          <span class="xp-badge-info"><b>Niv. 1 · Recrue</b><small>0 XP</small></span>
-          <div class="xp-badge-bar"><div class="xp-badge-fill" style="width:0%"></div></div>
-        </button>
-        <button class="btn-ghost header-action-btn" type="button" data-action="openHelpModal"><svg class="btn-ico" aria-hidden="true"><use href="#i-help"/></svg>Aide</button>
-        <button class="btn-ghost header-action-btn" type="button" data-action="openSettingsModal"><svg class="btn-ico" aria-hidden="true"><use href="#i-sliders"/></svg>Paramètres</button>
-        <div id="account-area" class="account-area" aria-live="polite"></div>
-      </div>
-    </div>
-    <p class="tagline">Devinez le Pokémon mystère !</p>
-  </div>
-</header>
-
-  <main>
-    <nav class="global-nav" id="global-nav" aria-label="Navigation principale">
+      
+      <nav class="global-nav" id="global-nav" aria-label="Navigation principale">
   <button id="nav-config" class="nav-pill active" type="button" data-action="goToConfig">Accueil</button>
 
   <div class="nav-group">
@@ -154,137 +139,87 @@
   <button class="nav-pill" type="button" data-action="openAchievementsScreen">Succès</button>
   <button class="nav-pill" type="button" data-action="openProfileScreen">Profil</button>
 </nav>
+      <div class="header-actions">
+        <button id="global-xp-badge" class="xp-badge" type="button" data-action="openDailyQuestsModal" aria-label="Voir mes quêtes quotidiennes">
+          <span class="xp-badge-emoji">🥚</span>
+          <span class="xp-badge-info"><b>Niv. 1 · Recrue</b><small>0 XP</small></span>
+          <div class="xp-badge-bar"><div class="xp-badge-fill" style="width:0%"></div></div>
+        </button>
+        <button class="btn-ghost header-action-btn" type="button" data-action="openHelpModal"><svg class="btn-ico" aria-hidden="true"><use href="#i-help"/></svg>Aide</button>
+        <button class="btn-ghost header-action-btn" type="button" data-action="openSettingsModal"><svg class="btn-ico" aria-hidden="true"><use href="#i-sliders"/></svg>Paramètres</button>
+        <div id="account-area" class="account-area" aria-live="polite"></div>
+      </div>
+    </div>
+    <p class="tagline">Devinez le Pokémon mystère !</p>
+  </div>
+</header>
+
+  <main>
+    
+
+    
 
     <div id="screen-config">
 
       <!-- DA 2026 : hero "Pokémon du jour" — le jeu d'abord -->
-      <section class="card daily-hero" id="daily-hero">
-        <div class="daily-hero-main">
-          <div class="daily-hero-kicker"><svg class="kicker-ico" aria-hidden="true"><use href="#i-calendar"/></svg>Défi du jour · <span id="daily-hero-date">—</span></div>
-          <h2 class="daily-hero-title">Pokémon du jour</h2>
-          <p class="daily-hero-sub">La même cible pour tous les joueurs, un indice à chaque essai. Garde ta série !</p>
-          <div class="daily-hero-meta">
-            <span class="daily-hero-chip" id="daily-hero-streak">🔥 Série : 0</span>
-            <span class="daily-hero-chip" id="daily-hero-countdown">⏳ —</span>
-            <span class="daily-hero-chip daily-hero-chip-status hidden" id="daily-hero-status"></span>
-          </div>
-          <button class="daily-hero-cta" type="button" data-action="startDailyGame" id="daily-hero-cta">▶ Jouer au Pokémon du jour</button>
-        </div>
-        <div class="daily-hero-visual" aria-hidden="true">
-          <div class="daily-hero-ball"></div>
-          <div class="daily-hero-mystery">?</div>
-        </div>
-      </section>
-
-      <!-- Sélecteur de générations : repliable, en tête, jamais en bas -->
-      <div class="card home-generations-card home-gens-card is-collapsed" id="home-gens-card">
-        <div class="home-section-head">
-          <div>
-            <h2 class="card-title">Générations</h2>
-            <p class="card-desc" id="home-gens-summary">Choisis les générations à inclure dans les parties.</p>
-          </div>
-          <div class="home-gens-actions">
-            <button class="btn-ghost btn-tiny home-gens-edit-only" type="button" data-action="selectAllGenerations">Tout</button>
-            <button class="btn-ghost btn-tiny home-gens-edit-only" type="button" data-action="clearGenerationSelection">Aucune</button>
-            <button class="btn-ghost btn-tiny" type="button" data-action="toggleHomeGensCard" aria-expanded="false" id="home-gens-toggle">Modifier ▾</button>
-          </div>
-        </div>
+      <div class="pk-genbar" id="home-gens-card">
+        <div class="pk-genbar-lab"><b><svg class="pk-ico"><use href="#i-layers"/></svg> Générations</b><small id="home-gens-summary">Choisis les générations à inclure.</small></div>
         <div class="gen-grid" id="gen-grid"></div>
+        <div class="pk-genbar-acts">
+          <button class="pk-gbtn pk-gbtn-tout" type="button" data-action="selectAllGenerations">Tout</button>
+          <button class="pk-gbtn pk-gbtn-aucune" type="button" data-action="clearGenerationSelection">Aucune</button>
+          <button class="hidden" type="button" data-action="toggleHomeGensCard" aria-expanded="true" id="home-gens-toggle">Modifier</button>
+        </div>
       </div>
 
-      <!-- Hero : 4 modes piliers (Lot 2) -->
-      <section class="home-hero-choices">
-        <div class="home-section-head">
-          <h2 class="home-section-title">Illimité, duel & party</h2>
-          <p class="home-section-sub">Les autres façons de jouer. Tout le reste est rangé dans « Tous les modes ».</p>
+      <section class="pk-hero" id="daily-hero">
+        <div class="pk-hero-main">
+          <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
+          <h2 class="pk-hero-title">Pokémon du jour</h2>
+          <p class="pk-hero-sub">La même cible mystère pour tous les joueurs. Un nouvel indice à chaque essai — devine-le et fais grimper ta série.</p>
+          <div class="pk-hero-chips">
+            <span class="pk-chip pk-chip-fire" id="daily-hero-streak">🔥 Série : 0</span>
+            <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
+            <span class="pk-chip pk-chip-status hidden" id="daily-hero-status"></span>
+          </div>
+          <div class="pk-hero-cta-row">
+            <button class="pk-cta" type="button" data-action="startDailyGame" id="daily-hero-cta">▶ Jouer au Pokémon du jour</button>
+            <button class="pk-cta-ghost" type="button" data-action="openHelpModal">Comment jouer ?</button>
+          </div>
         </div>
-        <div class="home-pillars home-pillars-hero">
-          <article class="card home-pillar" data-action="startNormalGame" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-yellow"><svg class="pi" aria-hidden="true"><use href="#i-infinity"/></svg></div>
-            <h3>Mode illimité</h3>
-            <p>Mêmes règles que le quotidien, rejouable sans limite.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo</span><span class="home-pillar-tag">Rejouable</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openMultiplayerMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-blue"><svg class="pi" aria-hidden="true"><use href="#i-swords"/></svg></div>
-            <h3>Duel 1v1</h3>
-            <p>Affronte un ami en temps réel sur la même cible.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span><span class="home-pillar-tag">Code de room</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openPartyRoomMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-coral"><svg class="pi" aria-hidden="true"><use href="#i-users"/></svg></div>
-            <h3>Party Room</h3>
-            <p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Multi</span><span class="home-pillar-tag">2-8 joueurs</span><span class="home-pillar-tag">Podium</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openDraftScoreAttackMode" data-args="[false]" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-red"><svg class="pi" aria-hidden="true"><use href="#i-chart"/></svg></div>
-            <h3>Draft Score Attack</h3>
-            <p>Drafte 6 Pokémon et vise la meilleure moyenne BST par génération.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Solo score</span><span class="home-pillar-tag home-pillar-tag-live">1v1</span></div>
-          </article>
-        </div>
-        <div class="home-hero-secondary">
-          <button class="btn-ghost" type="button" data-action="openAllModesScreen"><svg class="btn-ico" aria-hidden="true"><use href="#i-folder"/></svg>Tous les modes</button>
+        <div class="pk-hero-visual" aria-hidden="true"><div class="pk-medallion"><img class="pk-silo-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/149.png" alt="" loading="lazy" /><span class="pk-qm">?</span></div></div>
+      </section>
+
+      <section class="pk-sec">
+        <div class="pk-sec-h"><div class="pk-sec-title"><h2>Les jeux phares</h2><span class="pk-bar"></span></div><button class="pk-allmodes" type="button" data-action="openAllModesScreen"><svg class="pk-ico"><use href="#i-folder"/></svg>Tous les modes</button></div>
+        <p class="pk-sec-sub">Illimité, duels en temps réel et soirées entre amis.</p>
+        <div class="pk-modes">
+          <article class="pk-card pk-mode" data-action="startNormalGame" role="button" tabindex="0"><div class="pk-tile pk-tile-yellow"><svg class="pk-ico"><use href="#i-infinity"/></svg></div><h4>Mode illimité</h4><p>Mêmes règles que le quotidien, rejouable sans limite.</p></article>
+          <article class="pk-card pk-mode" data-action="openMultiplayerMode" role="button" tabindex="0"><div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-swords"/></svg></div><h4>Duel 1v1 <span class="pk-live"><i></i>LIVE</span></h4><p>Affronte un ami en temps réel sur la même cible.</p></article>
+          <article class="pk-card pk-mode" data-action="openPartyRoomMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-users"/></svg></div><h4>Party Room</h4><p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p></article>
+          <article class="pk-card pk-mode" data-action="openDraftScoreAttackMode" data-args="[false]" role="button" tabindex="0"><div class="pk-tile pk-tile-purple"><svg class="pk-ico"><use href="#i-chart"/></svg></div><h4>Draft Score Attack</h4><p>Drafte 6 Pokémon et vise la meilleure moyenne BST par génération.</p></article>
         </div>
       </section>
 
-      <!-- Widget engagement compact (XP + quêtes du jour) -->
       <div id="home-engagement-widget" class="home-engagement-widget"></div>
 
-      <!-- Ligne 2 : Univers Pokémon -->
-      <section class="home-section">
-        <div class="home-section-head">
-          <h2 class="home-section-title">Univers Pokémon</h2>
-          <p class="home-section-sub">Explore les Pokémon, les arènes, et joue aux jeux d'origine.</p>
-        </div>
-        <div class="home-pillars">
-          <article class="card home-pillar" data-action="openPokedexMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-teal"><svg class="pi" aria-hidden="true"><use href="#i-book"/></svg></div>
-            <h3>Pokédex</h3>
-            <p>1025 Pokémon (+ formes alternatives), stats, talents, évolutions, comparateur.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">9 gens</span><span class="home-pillar-tag">Shiny</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openDraftArenaMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-coral"><svg class="pi" aria-hidden="true"><use href="#i-trophy"/></svg></div>
-            <h3>Draft Arènes</h3>
-            <p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Stratégie</span><span class="home-pillar-tag home-pillar-tag-exp">Expérimental</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openEmulatorMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-purple"><svg class="pi" aria-hidden="true"><use href="#i-gamepad"/></svg></div>
-            <h3>Émulateur</h3>
-            <p>Lance ta propre ROM GBA, GBC ou DS directement dans le navigateur.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-unique">Unique</span><span class="home-pillar-tag">GBA · GBC · DS</span></div>
-          </article>
+      <section class="pk-sec">
+        <div class="pk-sec-h"><div class="pk-sec-title"><h2>Univers Pokémon</h2><span class="pk-bar"></span></div></div>
+        <p class="pk-sec-sub">Explore les Pokémon, les arènes, et joue aux jeux d'origine.</p>
+        <div class="pk-modes">
+          <article class="pk-card pk-mode" data-action="openPokedexMode" role="button" tabindex="0"><div class="pk-tile pk-tile-teal"><svg class="pk-ico"><use href="#i-book"/></svg></div><h4>Pokédex</h4><p>1025 Pokémon (+ formes), stats, talents, évolutions, comparateur.</p></article>
+          <article class="pk-card pk-mode" data-action="openDraftArenaMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-trophy"/></svg></div><h4>Draft Arènes</h4><p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p></article>
+          <article class="pk-card pk-mode" data-action="openEmulatorMode" role="button" tabindex="0"><div class="pk-tile pk-tile-purple"><svg class="pk-ico"><use href="#i-gamepad"/></svg></div><h4>Émulateur <span class="pk-tag">UNIQUE</span></h4><p>Lance ta propre ROM GBA, GBC ou DS directement dans le navigateur.</p></article>
         </div>
       </section>
 
-      <!-- Ligne 3 : Préparation stratégique + outils -->
-      <section class="home-section">
-        <div class="home-section-head">
-          <h2 class="home-section-title">Préparation stratégique</h2>
-          <p class="home-section-sub">Prépare ta team, analyse les types, garde un œil sur tes stats.</p>
-        </div>
-        <div class="home-pillars">
-          <article class="card home-pillar" data-action="openTeamBuilderScreen" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-blue"><svg class="pi" aria-hidden="true"><use href="#i-layers"/></svg></div>
-            <h3>Team Builder</h3>
-            <p>Compose une team de 6 : objet, gimmick, EV/IV, 4 attaques par slot.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Sauvegarde locale</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openStatClashMode" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-red"><svg class="pi" aria-hidden="true"><use href="#i-chart"/></svg></div>
-            <h3>Stat Clash 1v1</h3>
-            <p>Choisissez chacun une stat, le meilleur cumul gagne. 6 rounds.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag home-pillar-tag-live">Live</span></div>
-          </article>
-          <article class="card home-pillar" data-action="openTypeChartScreen" role="button" tabindex="0">
-            <div class="home-pillar-icon home-pillar-icon-yellow"><svg class="pi" aria-hidden="true"><use href="#i-grid"/></svg></div>
-            <h3>Table des types</h3>
-            <p>Efficacité offensive et défensive par génération. Gen 1, 2-5, 6+.</p>
-            <div class="home-pillar-tags"><span class="home-pillar-tag">Référence</span></div>
-          </article>
+      <section class="pk-sec">
+        <div class="pk-sec-h"><div class="pk-sec-title"><h2>Préparation stratégique</h2><span class="pk-bar"></span></div></div>
+        <p class="pk-sec-sub">Prépare ta team, analyse les types, garde un œil sur tes stats.</p>
+        <div class="pk-modes">
+          <article class="pk-card pk-mode" data-action="openTeamBuilderScreen" role="button" tabindex="0"><div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-layers"/></svg></div><h4>Team Builder</h4><p>Compose une team de 6 : objet, gimmick, EV/IV, 4 attaques par slot.</p></article>
+          <article class="pk-card pk-mode" data-action="openStatClashMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-chart"/></svg></div><h4>Stat Clash 1v1 <span class="pk-live"><i></i>LIVE</span></h4><p>Choisissez chacun une stat, le meilleur cumul gagne. 6 rounds.</p></article>
+          <article class="pk-card pk-mode" data-action="openTypeChartScreen" role="button" tabindex="0"><div class="pk-tile pk-tile-yellow"><svg class="pk-ico"><use href="#i-grid"/></svg></div><h4>Table des types</h4><p>Efficacité offensive et défensive par génération. Gen 1, 2-5, 6+.</p></article>
         </div>
       </section>
 

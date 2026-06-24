@@ -2654,3 +2654,8 @@ body.theme-dark #pokedex-category-filter {
   #screen-pokedex .pokedex-type-filter-group { flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: 52px !important; gap: 6px !important; -webkit-overflow-scrolling: touch; }
   #screen-pokedex .pokedex-grid { max-height: none !important; overflow: visible !important; }
 }
+
+/* Bouton shiny du detail Pokedex : jaune des l'etat Normal (montre qu'il est cliquable) */
+#screen-pokedex .pokedex-detail-shiny-btn{border-color:rgba(240,183,67,.55) !important;background:linear-gradient(180deg,#fffdf2,#fff2cc) !important;color:#6a4700 !important;}
+#screen-pokedex .pokedex-detail-shiny-btn:hover{background:linear-gradient(180deg,#fff7da,#ffe9a6) !important;}
+#screen-pokedex .pokedex-detail-shiny-btn.active{border-color:rgba(240,183,67,.9) !important;background:linear-gradient(180deg,#ffefbc,#ffdf85) !important;color:#6a4700 !important;box-shadow:0 0 0 3px rgba(255,204,51,.28) !important;}
