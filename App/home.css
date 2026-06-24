@@ -451,3 +451,12 @@ body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;co
 
 /* En-tete : contenu en pleine largeur (logo a gauche, compte a droite) — utiliser tout l'espace de la bande */
 body:not(.theme-dark) .header-inner{max-width:none !important;width:auto !important;margin:0 !important;padding-left:34px !important;padding-right:34px !important;}
+
+/* En-tete : onglets CENTRES au milieu (logo gauche, compte droite) */
+.header-inner .header-top #global-nav{flex:1 1 auto !important;justify-content:center !important;}
+
+/* Centrage onglets : selecteur fort pour battre le justify-content:flex-start precedent */
+body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:center !important;flex:1 1 auto !important;}
+
+/* Aide/Parametres : meme taille que les onglets de nav (36px, padding 8x13) */
+.header-inner .header-actions .header-action-btn{padding:8px 13px !important;}
