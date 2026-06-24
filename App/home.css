@@ -437,3 +437,7 @@ body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;co
 
 /* Supprimer le pseudo-element decoratif (halo qui bave) sur les boutons en-tete */
 .header-actions .header-action-btn::after,.header-actions .header-action-btn::before{display:none !important;content:none !important;}
+
+/* Header : logo+nav groupes a GAUCHE, actions (niveau/aide/param/compte) a DROITE, espacees */
+.header-inner .header-top #global-nav{flex:0 1 auto !important;}
+.header-inner .header-top .header-actions{margin-left:auto !important;gap:10px !important;}
