@@ -460,3 +460,59 @@ body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:cent
 
 /* Aide/Parametres : meme taille que les onglets de nav (36px, padding 8x13) */
 .header-inner .header-actions .header-action-btn{padding:8px 13px !important;}
+
+/* =================================================================
+   RESPONSIVE en-tete (apres deplacement nav dans header)
+   - <=980px : nav sur sa propre ligne (evite le debordement tablette)
+   - <=640px : nav cachee, la mobile-tabbar (bas) prend le relais
+   ================================================================= */
+@media (max-width:980px){
+  body:not(.theme-dark) .header-inner .header-top{flex-wrap:wrap !important;}
+  body:not(.theme-dark) .header-inner .header-top #global-nav{order:3 !important;flex:1 0 100% !important;justify-content:center !important;flex-wrap:wrap !important;}
+  .header-inner .header-top .header-actions{margin-left:auto !important;}
+}
+@media (max-width:640px){
+  body:not(.theme-dark) .header-inner .header-top #global-nav{display:none !important;}
+  body:not(.theme-dark) .header-inner{padding-left:12px !important;padding-right:12px !important;}
+  body:not(.theme-dark) .header-inner .header-top{flex-wrap:wrap !important;justify-content:space-between !important;gap:8px !important;}
+  .header-inner .header-top .header-actions{flex-wrap:wrap !important;gap:8px !important;justify-content:flex-end !important;}
+}
+
+/* =================================================================
+   MOBILE <=640 : en-tete resserree (1 ligne, Aide/Param en icones)
+   + cartes de modes en rangees compactes
+   ================================================================= */
+@media (max-width:640px){
+  body:not(.theme-dark) .header-inner .header-top{flex-wrap:nowrap !important;align-items:center !important;gap:8px !important;}
+  .header-inner .header-top .header-actions{flex-wrap:nowrap !important;gap:6px !important;flex:0 0 auto !important;align-items:center !important;}
+  .header-inner .header-actions .header-action-btn{font-size:0 !important;width:36px !important;height:36px !important;flex:0 0 auto !important;min-height:0 !important;padding:0 !important;border-radius:50% !important;gap:0 !important;justify-content:center !important;}
+  .header-inner .header-actions .header-action-btn svg{width:17px !important;height:17px !important;}
+  /* niveau compact : masquer la sous-ligne XP + la barre pour gagner de la place */
+  #global-xp-badge .xp-badge-bar,#global-xp-badge .xp-badge-info{display:none !important;}
+  #global-xp-badge{width:36px !important;height:36px !important;flex:0 0 auto !important;padding:0 !important;border-radius:50% !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:0 !important;}
+  #global-xp-badge .xp-badge-emoji{margin:0 !important;}
+  /* cartes de modes en rangees (icone gauche + texte) */
+  #screen-config .pk-mode{flex-direction:row !important;align-items:center !important;gap:12px !important;}
+  #screen-config .pk-mode .pk-tile{margin-bottom:0 !important;}
+  #screen-config .pk-mode h4{margin:0 0 2px !important;}
+}
+
+/* Mobile : en-tete minimale fiable = logo + Parametres + compte */
+@media (max-width:640px){
+  #global-xp-badge{display:none !important;}
+  .header-inner .header-actions .header-action-btn[data-action="openHelpModal"]{display:none !important;}
+  body:not(.theme-dark) .header-inner .header-top .header-actions{width:auto !important;flex:0 0 auto !important;}
+}
+
+/* =================================================================
+   MOBILE feel APP (inspire maquette Direction 1)
+   ================================================================= */
+@media (max-width:640px){
+  /* Generations : une seule rangee qui defile (pattern iOS) */
+  #screen-config #home-gens-card{flex-wrap:wrap !important;align-items:flex-start !important;}
+  #screen-config #home-gens-card #gen-grid{flex-wrap:nowrap !important;overflow-x:auto !important;order:3 !important;flex-basis:100% !important;-webkit-overflow-scrolling:touch;}
+  #screen-config .pk-genbar-acts{margin-left:auto !important;}
+  /* Cartes de modes facon liste d-app : chevron a droite */
+  #screen-config .pk-mode{position:relative !important;padding-right:36px !important;}
+  #screen-config .pk-mode::after{content:"\203A";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#c2cad8;font-size:24px;font-weight:900;line-height:1;}
+}
