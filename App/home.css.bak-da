@@ -1,0 +1,231 @@
+
+
+.home-gens-card .home-section-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+.home-gens-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.btn-tiny {
+  padding: 5px 12px !important;
+  font-size: 0.78em !important;
+  border-radius: 999px !important;
+  min-height: auto !important;
+}
+
+/* Home sections / section titles -------------------------- */
+#screen-config > .home-section {
+  margin-top: 22px !important;
+}
+#screen-config > .home-section > .home-section-head {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  margin-bottom: 12px !important;
+  padding: 0 4px !important;
+  align-items: flex-start !important;
+}
+#screen-config .home-section > .home-section-head > .home-section-title,
+#screen-config .home-section-title {
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  margin: 0 !important;
+  color: #0c1930 !important;
+  letter-spacing: 0.2px !important;
+  font-family: 'Nunito', sans-serif !important;
+  text-shadow: none !important;
+}
+#screen-config .home-section > .home-section-head > .home-section-sub,
+#screen-config .home-section-sub {
+  font-size: 0.92rem !important;
+  color: #465978 !important;
+  margin: 0 !important;
+  font-family: 'Nunito', sans-serif !important;
+}
+
+/* Pillar grid --------------------------------------------- */
+#screen-config .home-pillars {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+}
+
+/* Lot 2 - hero 4 piliers + bouton Tous les modes */
+#screen-config .home-hero-choices { margin: 18px 0 8px; }
+#screen-config .home-pillars-hero { grid-template-columns: repeat(4, 1fr) !important; }
+#screen-config .home-hero-secondary { display: flex; justify-content: center; margin-top: 14px; }
+@media (max-width: 1000px) { #screen-config .home-pillars-hero { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 560px) { #screen-config .home-pillars-hero { grid-template-columns: 1fr !important; } }
+
+/* Lot 3 - page Tous les modes */
+#screen-all-modes .all-modes-cat { margin-top: 20px; }
+#screen-all-modes .all-modes-cat-title { font-size: 1.05rem; margin: 0 0 10px; color: #1d2b4a; }
+#screen-all-modes .all-modes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+#screen-all-modes .all-modes-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; text-align: left; border: none; }
+#screen-all-modes .all-modes-card .am-emoji { font-size: 1.4rem; line-height: 1; }
+#screen-all-modes .all-modes-card b { color: #1d2b4a; font-size: 0.95rem; }
+@media (max-width: 900px) { #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; } }
+
+/* Lot 4 - Team Builder : reglages avances repliables */
+.team-builder-advanced { margin-top: 8px; }
+.team-builder-advanced > .team-builder-advanced-summary { cursor: pointer; font-weight: 800; color: #1d2b4a; padding: 10px 12px; border-radius: 10px; background: #eef3ff; }
+.team-builder-advanced > .team-builder-advanced-summary span { font-weight: 600; color: #5a6b8c; font-size: 0.85rem; }
+.team-builder-advanced[open] > .team-builder-advanced-summary { margin-bottom: 10px; }
+.team-builder-advanced-summary::-webkit-details-marker { display: none; }
+
+/* Lot 8 - polish responsive mobile */
+@media (max-width: 560px) {
+  #screen-config .home-pillars-hero .home-pillar { padding: 14px !important; }
+  #screen-config .home-pillars-hero .home-pillar p { font-size: 0.85rem; }
+  #screen-config .home-hero-secondary .btn-ghost { width: 100%; }
+  #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); }
+  #screen-all-modes .all-modes-card { padding: 10px 12px; }
+  #screen-all-modes .all-modes-card b { font-size: 0.85rem; }
+  #screen-all-modes .all-modes-card .am-emoji { font-size: 1.2rem; }
+  .team-builder-advanced > .team-builder-advanced-summary span { display: block; margin-top: 2px; }
+}
+@media (max-width: 380px) {
+  #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; }
+}
+#screen-config .home-pillar {
+  padding: 18px 18px 16px !important;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  position: relative;
+  background: #ffffff !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 18px !important;
+}
+#screen-config .home-pillar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(12, 25, 48, 0.14), 0 4px 8px rgba(12, 25, 48, 0.08);
+  border-color: #2f76ff !important;
+}
+#screen-config .home-pillar:focus { outline: 2px solid #2f76ff; outline-offset: 2px; }
+#screen-config .home-pillar.home-pillar-feature {
+  border: 2px solid #e4382f !important;
+}
+#screen-config .home-pillar-feature::before {
+  content: "\2605 Phare";
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: #e4382f;
+  color: #fff;
+  font-size: 0.7em;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  font-family: 'Nunito', sans-serif;
+}
+
+#screen-config .home-pillar .home-pillar-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.home-pillar-icon-red    { background: rgba(228, 56, 47, 0.12)  !important; color: #be2c25 !important; }
+.home-pillar-icon-blue   { background: rgba(47, 118, 255, 0.12) !important; color: #225cd0 !important; }
+.home-pillar-icon-yellow { background: rgba(255, 204, 51, 0.20) !important; color: #b48708 !important; }
+.home-pillar-icon-teal   { background: rgba(29, 158, 117, 0.14) !important; color: #0f6e56 !important; }
+.home-pillar-icon-coral  { background: rgba(216, 90, 48, 0.13)  !important; color: #993c1d !important; }
+.home-pillar-icon-purple { background: rgba(127, 119, 221, 0.16) !important; color: #534ab7 !important; }
+
+#screen-config .home-pillar h3 {
+  font-size: 1.1rem !important;
+  margin: 0 !important;
+  color: #0c1930 !important;
+  font-weight: 800 !important;
+  font-family: 'Nunito', sans-serif !important;
+  text-shadow: none !important;
+  line-height: 1.25 !important;
+}
+#screen-config .home-pillar p {
+  font-size: 0.9rem !important;
+  margin: 0 !important;
+  color: #465978 !important;
+  line-height: 1.45 !important;
+  font-family: 'Nunito', sans-serif !important;
+  flex: 1;
+}
+
+#screen-config .home-pillar-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+#screen-config .home-pillar-tag {
+  font-size: 0.7rem !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: #e9eef7 !important;
+  color: #465978 !important;
+  font-weight: 700 !important;
+  font-family: 'Nunito', sans-serif !important;
+  text-shadow: none !important;
+}
+#screen-config .home-pillar-tag-live   { background: rgba(228, 56, 47, 0.13) !important; color: #be2c25 !important; }
+#screen-config .home-pillar-tag-unique { background: rgba(55, 200, 120, 0.14) !important; color: #1f8f56 !important; }
+
+/* Responsive : tablette / mobile -------------------------- */
+@media (max-width: 900px) {
+  #screen-config .home-pillars { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 640px) {
+  #screen-config .home-pillars { grid-template-columns: 1fr !important; }
+  .home-gens-card .home-section-head { flex-direction: column !important; }
+  .home-gens-actions { align-self: flex-end; }
+}
+
+
+/* ============================================================
+   Tous les modes v2 : tuiles apaisées, la couleur code la
+   catégorie (au lieu d'un arc-en-ciel par tuile).
+   ============================================================ */
+#screen-all-modes .all-modes-cat { margin-top: 26px; }
+#screen-all-modes .all-modes-cat-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  padding-bottom: 6px;
+  border-bottom: 3px solid var(--am-accent, #2f76ff);
+}
+#screen-all-modes .all-modes-cat:nth-of-type(1) { --am-accent: #2f76ff; }
+#screen-all-modes .all-modes-cat:nth-of-type(2) { --am-accent: #8a3fd1; }
+#screen-all-modes .all-modes-cat:nth-of-type(3) { --am-accent: #e4622f; }
+#screen-all-modes .all-modes-cat:nth-of-type(4) { --am-accent: #1f8a37; }
+#screen-all-modes .all-modes-cat:nth-of-type(5) { --am-accent: #e4382f; }
+#screen-all-modes .all-modes-cat:nth-of-type(6) { --am-accent: #b8860b; }
+#screen-all-modes .all-modes-card {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3ebf8;
+  border-left: 5px solid var(--am-accent, #2f76ff);
+  border-left-color: var(--am-accent, #2f76ff) !important;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(29, 43, 74, 0.06);
+}
+#screen-all-modes .all-modes-card::before { display: none; }
+#screen-all-modes .all-modes-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--am-accent, #2f76ff);
+  border-left-width: 5px;
+  box-shadow: 0 8px 18px rgba(29, 43, 74, 0.14);
+}
+body.theme-dark #screen-all-modes .all-modes-card { background: #16223e; border-color: #2c3c63; border-left-color: var(--am-accent, #2f76ff); }
+body.theme-dark #screen-all-modes .all-modes-card b { color: #e8eefc; }

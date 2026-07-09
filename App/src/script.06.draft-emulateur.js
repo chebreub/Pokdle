@@ -740,11 +740,11 @@ function renderDraftSimpleBattleDevPanel(state) {
           ${getGbaPokeballsHtml(state.rightTeam, state.rightActiveIndex)}
         </div>
         <div class="gba-fighter gba-fighter-foe ${rightFighterClass}">
-          <img class="gba-sprite gba-sprite-foe" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${getPokemonSpriteId(displayRight.pokemon)}.png" alt="${escapeHtml(displayRight.pokemon.name)}" data-fallback="${escapeHtml(getPokemonSprite(displayRight.pokemon))}">
+          <img class="gba-sprite gba-sprite-foe" src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${getPokemonSpriteId(displayRight.pokemon)}.png" alt="${escapeHtml(displayRight.pokemon.name)}" data-fallback="${escapeHtml(getPokemonSprite(displayRight.pokemon))}">
           <div class="gba-platform gba-platform-foe"></div>
         </div>
         <div class="gba-fighter gba-fighter-player ${leftFighterClass}">
-          <img class="gba-sprite gba-sprite-player" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${getPokemonSpriteId(displayLeft.pokemon)}.png" alt="${escapeHtml(displayLeft.pokemon.name)}" data-fallback="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}">
+          <img class="gba-sprite gba-sprite-player" src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/back/${getPokemonSpriteId(displayLeft.pokemon)}.png" alt="${escapeHtml(displayLeft.pokemon.name)}" data-fallback="${escapeHtml(getPokemonSprite(displayLeft.pokemon))}">
           <div class="gba-platform gba-platform-player"></div>
         </div>
         <div class="gba-info-box gba-info-player">
@@ -1943,7 +1943,7 @@ function showDraftScoreFinaleOverlay(room) {
       <div class="dsf-team-head"><b>${escapeHtml(player.nickname || "Joueur")}</b><span class="dsf-side-label">${side === "left" ? "" : ""}${player.isSelf ? "TOI" : "ADVERSAIRE"}</span></div>
       <div class="dsf-team-sprites">${team.map((entry, idx) => {
         const pokemon = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).find((p) => Number(p.id) === Number(entry.id));
-        const sprite = pokemon ? getPokemonSprite(pokemon) : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
+        const sprite = pokemon ? getPokemonSprite(pokemon) : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${entry.id}.png`;
         return `<div class="dsf-pokemon-tile" style="--dsf-i:${idx}"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b><span>${escapeHtml(entry.name)}</span></div>`;
       }).join("")}</div>
       <div class="dsf-team-score" data-target="${player.result?.average || 0}">0</div>
@@ -2020,7 +2020,7 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
     if (pokemon) {
       sprite = entry.shiny && typeof getPokemonShinySprite === "function" ? getPokemonShinySprite(pokemon) : getPokemonSprite(pokemon);
     } else {
-      sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
+      sprite = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${entry.id}.png`;
     }
     return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-rarity="${Number(entry.bst) >= 600 ? "legendary" : Number(entry.bst) >= 500 ? "strong" : Number(entry.bst) >= 400 ? "decent" : "common"}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b></div>`;
   }).join("");

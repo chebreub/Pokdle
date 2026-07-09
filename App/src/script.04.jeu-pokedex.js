@@ -53,11 +53,23 @@ function surrenderGame() {
   if (gameOver || !secretPokemon || gameMode === "quiz") return;
 
   gameOver = true;
+  renderGameOverBox({ won: false });
+  stopCrySound();
+  recordMatchHistory({ mode: gameMode, result: "loss", attempts, targetName: secretPokemon.name });
+  saveDailyResult(false);
+  clearSavedGame();
+  finishPartyRound(false);
+}
+
+// Rendu partagé de l'écran de fin (victoire, abandon, grille-trophée du daily).
+// Ne comptabilise rien : les compteurs/streak/XP restent dans showWin/surrenderGame.
+function renderGameOverBox({ won, animate = true, celebrate = false }) {
   const box = document.getElementById("win-box");
   const winSprite = document.getElementById("win-sprite");
   const winTitle = document.getElementById("win-title");
   const shareBtn = document.getElementById("btn-share");
   const surrenderBtn = document.getElementById("btn-surrender");
+  const restartBtn = document.getElementById("btn-restart");
 
   winSprite.onerror = () => {
     winSprite.onerror = null;
@@ -65,26 +77,52 @@ function surrenderGame() {
   };
   winSprite.src = getPokemonSprite(secretPokemon);
 
-  if (winTitle) winTitle.textContent = "Abandon";
-  document.getElementById("win-text").textContent = `Tu as abandonné. Le Pokémon était ${secretPokemon.name}.`;
+  if (winTitle) winTitle.textContent = won ? "BRAVO !" : "Abandon";
+  document.getElementById("win-text").textContent = won
+    ? `C'était ${secretPokemon.name} • trouvé en ${attempts} essai${attempts > 1 ? "s" : ""} !`
+    : `Tu as abandonné. Le Pokémon était ${secretPokemon.name}.`;
 
-  if (shareBtn) shareBtn.classList.add("hidden");
+  if (shareBtn) shareBtn.classList.toggle("hidden", !won);
   if (surrenderBtn) surrenderBtn.classList.add("hidden");
   document.getElementById("share-ok").classList.add("hidden");
 
+  // Le daily du jour est unique : une fois terminé, "Rejouer" bascule sur l'illimité.
+  if (restartBtn) restartBtn.textContent = gameMode === "daily" ? "♾️ Rejouer en illimité" : "🔄 Rejouer";
+
+  // Distribution du jour : envoie le résultat puis affiche les barres d'essais.
+  if (gameMode === "daily" && won) reportAndRenderDailyDistribution(attempts);
+  else document.getElementById("win-daily-distribution")?.classList.add("hidden");
+
+  // DA 2026 : rendez-vous quotidien — série + prochain Pokémon dans l'écran de fin.
+  const winNext = document.getElementById("win-next-daily");
+  if (winNext) {
+    if (gameMode === "daily") {
+      const now = new Date();
+      const nextUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      const ms = Math.max(0, nextUtc - now.getTime());
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      const streak = Number(playerStats?.dailyCurrentStreak) || 0;
+      winNext.textContent = `${streak > 1 ? `🔥 Série : ${streak} jours · ` : ""}⏳ Prochain Pokémon dans ${h} h ${String(m).padStart(2, "0")} min`;
+      winNext.classList.remove("hidden");
+    } else {
+      winNext.classList.add("hidden");
+    }
+  }
+  if (typeof renderDailyHero === "function") renderDailyHero();
+
   box.classList.remove("hidden");
   box.classList.remove("win-animate");
-  void box.offsetWidth;
-  box.classList.add("win-animate");
+  if (animate) {
+    void box.offsetWidth;
+    box.classList.add("win-animate");
+  }
+  if (celebrate) triggerWinCelebration(box);
 
   updateSilhouettePanel(true);
   updatePixelPanel(true);
   updateMysteryPanel(true);
   updateCryPanel(true);
-  stopCrySound();
-  recordMatchHistory({ mode: gameMode, result: "loss", attempts, targetName: secretPokemon.name });
-  clearSavedGame();
-  finishPartyRound(false);
 
   box.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -240,66 +278,12 @@ function triggerWinCelebration(box) {
 }
 
 function showWin() {
-  const box = document.getElementById("win-box");
-  const winSprite = document.getElementById("win-sprite");
-  const winTitle = document.getElementById("win-title");
-  const shareBtn = document.getElementById("btn-share");
-  const surrenderBtn = document.getElementById("btn-surrender");
-
-  winSprite.onerror = () => {
-    winSprite.onerror = null;
-    winSprite.src = getSpriteUrl(getPokemonSpriteId(secretPokemon));
-  };
-  winSprite.src = getPokemonSprite(secretPokemon);
-
-  if (winTitle) winTitle.textContent = "BRAVO !";
-  if (shareBtn) shareBtn.classList.remove("hidden");
-  if (surrenderBtn) surrenderBtn.classList.add("hidden");
-
-  document.getElementById("win-text").textContent =
-    `C'était ${secretPokemon.name} • trouvé en ${attempts} essai${attempts > 1 ? "s" : ""} !`;
-
-  // Distribution du jour : envoie le résultat puis affiche les barres d'essais.
-  if (gameMode === "daily") reportAndRenderDailyDistribution(attempts);
-  else document.getElementById("win-daily-distribution")?.classList.add("hidden");
-
-  // DA 2026 : rendez-vous quotidien — série + prochain Pokémon dans l'écran de fin.
-  const winNext = document.getElementById("win-next-daily");
-  if (winNext) {
-    if (gameMode === "daily") {
-      const now = new Date();
-      const nextUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
-      const ms = Math.max(0, nextUtc - now.getTime());
-      const h = Math.floor(ms / 3600000);
-      const m = Math.floor((ms % 3600000) / 60000);
-      const streak = Number(playerStats?.dailyCurrentStreak) || 0;
-      winNext.textContent = `${streak > 1 ? `🔥 Série : ${streak} jours · ` : ""}⏳ Prochain Pokémon dans ${h} h ${String(m).padStart(2, "0")} min`;
-      winNext.classList.remove("hidden");
-    } else {
-      winNext.classList.add("hidden");
-    }
-  }
-  if (typeof renderDailyHero === "function") renderDailyHero();
-
-  box.classList.remove("hidden");
-  document.getElementById("share-ok").classList.add("hidden");
-
-  // restart animation cleanly
-  box.classList.remove("win-animate");
-  void box.offsetWidth;
-  box.classList.add("win-animate");
-  triggerWinCelebration(box);
-
-  updateSilhouettePanel(true);
-  updatePixelPanel(true);
-  updateMysteryPanel(true);
-  updateCryPanel(true);
+  renderGameOverBox({ won: true, celebrate: true });
   registerWin();
   recordMatchHistory({ mode: gameMode, result: "win", attempts, targetName: secretPokemon?.name || null });
+  saveDailyResult(true);
   clearSavedGame();
   finishPartyRound(true);
-
-  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function shareResult() {
@@ -5734,7 +5718,7 @@ function draftGenLabel(gen) {
 }
 
 function draftShinySpriteUrl(dexId) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${dexId}.png`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${dexId}.png`;
 }
 
 function getDraftBadgeImageUrl(arena) {

@@ -94,7 +94,9 @@ function renderDailyHero() {
   if (streakEl) streakEl.textContent = `🔥 Série : ${Number(playerStats?.dailyCurrentStreak) || 0}`;
 
   const today = getUTCDateKey();
-  const wonToday = playerStats?.lastDailyWinKey === today;
+  const todayResult = getTodayDailyResult();
+  const wonToday = playerStats?.lastDailyWinKey === today || Boolean(todayResult && todayResult.won);
+  const lostToday = Boolean(todayResult && !todayResult.won);
   let inProgress = false;
   try {
     const save = readJson(STORAGE_KEYS.dailyGame, null) || readJson(STORAGE_KEYS.game, null);
@@ -102,12 +104,15 @@ function renderDailyHero() {
   } catch (_err) { /* stockage indisponible */ }
 
   if (statusEl) {
-    statusEl.classList.toggle("hidden", !wonToday && !inProgress);
+    statusEl.classList.toggle("hidden", !wonToday && !lostToday && !inProgress);
     if (wonToday) statusEl.textContent = "✅ Trouvé aujourd'hui !";
+    else if (lostToday) statusEl.textContent = "❌ Manqué aujourd'hui…";
     else if (inProgress) statusEl.textContent = "⏸ Partie en cours";
   }
   if (ctaEl) {
-    ctaEl.textContent = wonToday ? "🔁 Revoir le mode du jour" : (inProgress ? "▶ Reprendre ma partie" : "▶ Jouer au Pokémon du jour");
+    ctaEl.textContent = (wonToday || lostToday)
+      ? "🔁 Revoir le mode du jour"
+      : (inProgress ? "▶ Reprendre ma partie" : "▶ Jouer au Pokémon du jour");
   }
 
   updateDailyHeroCountdown();
@@ -170,6 +175,13 @@ function startNormalGame(forcedPokemon = null) {
 }
 
 function startDailyGame() {
+  // Daily du jour déjà terminé → grille-trophée (le daily ne se rejoue pas le même jour).
+  if (showDailyCompletedView()) return;
+
+  // Partie du jour en cours (refresh, retour à l'accueil…) → reprendre où on en était.
+  const save = readJson(STORAGE_KEYS.dailyGame, null);
+  if (save && save.mode === "daily" && save.dailyKey === getUTCDateKey() && restoreSavedGame()) return;
+
   gameMode = "daily";
   const pool = POKEMON_LIST.slice();
   const secret = getDailyPokemon();
@@ -271,6 +283,11 @@ function startMysteryStatGame() {
 }
 function restartCurrentMode() {
   if (gameMode === "daily") {
+    // Le daily du jour est unique : une fois terminé, "Rejouer" bascule sur l'illimité.
+    if (getTodayDailyResult()) {
+      startNormalGame();
+      return;
+    }
     startDailyGame();
     return;
   }

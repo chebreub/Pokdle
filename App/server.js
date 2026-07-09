@@ -516,6 +516,7 @@ const strictCspDirectives = {
     "data:",
     "blob:",
     "https://raw.githubusercontent.com",
+    "https://cdn.jsdelivr.net",
     "https://pokeapi.co",
     "https://archives.bulbagarden.net",
     "https://cdn.discordapp.com",
@@ -525,10 +526,11 @@ const strictCspDirectives = {
     "'self'",
     "https://pokeapi.co",
     "https://raw.githubusercontent.com",
+    "https://cdn.jsdelivr.net",
     "https://archives.bulbagarden.net",
     ...SOCKET_ORIGINS,
   ],
-  mediaSrc: ["'self'", "data:", "blob:", "https://raw.githubusercontent.com"],
+  mediaSrc: ["'self'", "data:", "blob:", "https://raw.githubusercontent.com", "https://cdn.jsdelivr.net"],
   workerSrc: ["'self'"],
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
@@ -645,7 +647,7 @@ const ogCache = { key: null, buffer: null, pending: null };
 async function buildDailyOgBuffer() {
   const key = serverUTCDateKey();
   const pokemon = getOgSilhouettePokemon();
-  const artworkUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
+  const artworkUrl = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
   const resp = await fetch(artworkUrl, { signal: AbortSignal.timeout(8000) });
   if (!resp.ok) throw new Error(`artwork HTTP ${resp.status}`);
   const artwork = Buffer.from(await resp.arrayBuffer());
@@ -3268,7 +3270,7 @@ function loadStatClashExtraFormsConfig() {
 }
 
 function buildSpriteUrl(spriteId) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${spriteId}.png`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${spriteId}.png`;
 }
 
 function injectStatClashExtraForms(list) {

@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   stats: "pokedle_stats_v1",
   game: "pokedle_game_v1",
   dailyGame: "pokedle_game_daily_v1",
+  dailyResult: "pokedle_daily_result_v1",
   ranking: "pokedle_ranking_v1",
   teamBuilder: "pokedle_team_builder_v1",
   gamesRanking: "pokedle_games_ranking_v1",

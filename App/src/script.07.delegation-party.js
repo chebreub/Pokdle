@@ -298,10 +298,13 @@ function registerWin() {
   playerStats.totalAttempts += attempts;
 
   if (gameMode === "daily") {
+    // XP + quête uniquement pour la première victoire du jour (anti double-comptage).
+    const firstDailyWinToday = playerStats.lastDailyWinKey !== getUTCDateKey();
     registerDailyWinStreak();
-    // XP + quête : gagner le Pokédle du jour
-    awardXp(80, "Pokédle du jour");
-    progressQuest("win_daily", 1);
+    if (firstDailyWinToday) {
+      awardXp(80, "Pokédle du jour");
+      progressQuest("win_daily", 1);
+    }
   } else if (gameMode === "normal" || gameMode === "challenge") {
     // XP variable selon le nombre d'essais (moins = mieux)
     const xpReward = Math.max(20, 80 - (attempts - 1) * 8);
@@ -454,6 +457,79 @@ function restoreSavedGame() {
   setGlobalNavActive("game");
 
   document.getElementById("guess-input").focus();
+
+  return true;
+}
+
+// ============================================================
+// DAILY : RÉSULTAT DU JOUR (grille-trophée, anti-rejeu)
+// ============================================================
+// Le daily se joue une seule fois par jour : le résultat (gagné ou abandonné)
+// est conservé pour ré-afficher la grille terminée au lieu de relancer une partie.
+function saveDailyResult(won) {
+  if (gameMode !== "daily" || !secretPokemon) return;
+  writeJson(STORAGE_KEYS.dailyResult, {
+    version: 1,
+    dailyKey: getUTCDateKey(),
+    won: Boolean(won),
+    attempts,
+    secretId: secretPokemon.id,
+    historyIds: resultHistory.map((r) => r.pokemon.id),
+    finishedAt: Date.now(),
+  });
+}
+
+function getTodayDailyResult() {
+  const rec = readJson(STORAGE_KEYS.dailyResult, null);
+  if (!rec || rec.dailyKey !== getUTCDateKey()) return null;
+  if (!POKEMON_BY_ID.get(Number(rec.secretId))) return null;
+  return rec;
+}
+
+// Ré-affiche la partie du jour terminée (grille + écran de fin avec le vrai score).
+// Aucune stat/XP/distribution n'est re-comptée. Retourne false si rien à afficher.
+function showDailyCompletedView() {
+  const rec = getTodayDailyResult();
+  if (!rec) return false;
+
+  const secret = POKEMON_BY_ID.get(Number(rec.secretId));
+  gameMode = "daily";
+  secretPokemon = secret;
+  activePool = getPokemonUiList();
+  attempts = Math.max(0, Number(rec.attempts) || 0);
+  gameOver = true;
+  winRegisteredForCurrentGame = true; // déjà comptabilisé au moment de la partie
+
+  resultHistory = [];
+  document.getElementById("results-body").innerHTML = "";
+  const historyIds = Array.isArray(rec.historyIds) ? rec.historyIds : [];
+  for (const id of historyIds) {
+    const guessed = POKEMON_BY_ID.get(Number(id));
+    if (!guessed) continue;
+    const cmp = compare(guessed, secretPokemon);
+    resultHistory.push({ pokemon: guessed, cmp });
+    addRow(guessed, cmp);
+  }
+  guessedNames = resultHistory.map((r) => r.pokemon.name);
+  guessedSet = new Set(guessedNames);
+  rebuildActiveSearchIndex();
+
+  document.getElementById("try-count").textContent = String(attempts);
+  document.getElementById("err-msg").textContent = "";
+  document.getElementById("guess-input").value = "";
+  document.getElementById("guess-ac").classList.add("hidden");
+  document.getElementById("results-wrap").classList.toggle("hidden", resultHistory.length === 0);
+
+  updateTopTag();
+  updateModeBanners();
+  setQuizModeLayout(false);
+  hideCustomModeSurfaces();
+
+  renderGameOverBox({ won: rec.won, animate: false });
+
+  document.getElementById("screen-config").classList.add("hidden");
+  showScreen("screen-game");
+  setGlobalNavActive("game");
 
   return true;
 }

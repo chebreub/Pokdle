@@ -1859,7 +1859,7 @@ function getPokemonCryId(pokemon) {
 }
 
 function getPokemonCryUrl(pokemon) {
-  return `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${getPokemonCryId(pokemon)}.ogg`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/cries@main/cries/pokemon/latest/${getPokemonCryId(pokemon)}.ogg`;
 }
 
 function stopCrySound() {
