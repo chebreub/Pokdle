@@ -831,12 +831,36 @@ const FORM_API_NAME_BY_NAME = {
   "Morphéo Pluie": "castform-rainy",
   "Morphéo Neige": "castform-snowy",
 };
-const EXTRA_FORM_CACHE_KEY = "pokedle_form_sprites_v2";
+const EXTRA_FORM_CACHE_KEY = "pokedle_form_sprites_v3";
+
+// Réécrit toute URL héritée raw.githubusercontent.com vers jsDelivr. Les anciens
+// caches (et un éventuel futur cache) peuvent contenir des URLs raw.* qui se font
+// brider (HTTP 429) — on les migre systématiquement au chargement.
+function rewriteLegacyPokeApiUrl(url) {
+  if (typeof url !== "string") return url;
+  return url
+    .replace(
+      "raw.githubusercontent.com/PokeAPI/sprites/master",
+      "cdn.jsdelivr.net/gh/PokeAPI/sprites@master",
+    )
+    .replace(
+      "raw.githubusercontent.com/PokeAPI/cries/main",
+      "cdn.jsdelivr.net/gh/PokeAPI/cries@main",
+    );
+}
 
 function loadCachedExtraFormData() {
   try {
     const raw = localStorage.getItem(EXTRA_FORM_CACHE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const cache = raw ? JSON.parse(raw) : {};
+    if (cache && typeof cache === "object") {
+      for (const entry of Object.values(cache)) {
+        if (entry && typeof entry.sprite === "string") {
+          entry.sprite = rewriteLegacyPokeApiUrl(entry.sprite);
+        }
+      }
+    }
+    return cache;
   } catch (_err) {
     return {};
   }
