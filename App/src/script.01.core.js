@@ -1387,20 +1387,22 @@ function getStatClashScoreForPick(state, statKey, value) {
   if (sharedRule?.id === "doubleStat" && state.doubleStatKey === statKey && state.houseRuleEnabled) total *= 2;
   return total;
 }
+const POKEMON_TYPE_COLORS = {
+  normal: "#a8a878", feu: "#f08030", fire: "#f08030",
+  eau: "#6890f0", water: "#6890f0", plante: "#78c850", grass: "#78c850",
+  electrik: "#f8d030", electric: "#f8d030", glace: "#98d8d8", ice: "#98d8d8",
+  combat: "#c03028", fighting: "#c03028", poison: "#a040a0",
+  sol: "#e0c068", ground: "#e0c068", vol: "#a890f0", flying: "#a890f0",
+  psy: "#f85888", psychic: "#f85888", insecte: "#a8b820", bug: "#a8b820",
+  roche: "#b8a038", rock: "#b8a038", spectre: "#705898", ghost: "#705898",
+  dragon: "#7038f8", ténèbres: "#705848", tenebres: "#705848", dark: "#705848",
+  acier: "#b8b8d0", steel: "#b8b8d0", fée: "#ee99ac", fee: "#ee99ac", fairy: "#ee99ac",
+};
+function pokemonTypeColor(typeName) {
+  return POKEMON_TYPE_COLORS[String(typeName || "").toLowerCase()] || "#7c8db5";
+}
 function getStatClashPokemonTypeColor(pokemon) {
-  const TYPE_COLORS = {
-    normal: "#a8a878", feu: "#f08030", fire: "#f08030",
-    eau: "#6890f0", water: "#6890f0", plante: "#78c850", grass: "#78c850",
-    electrik: "#f8d030", electric: "#f8d030", glace: "#98d8d8", ice: "#98d8d8",
-    combat: "#c03028", fighting: "#c03028", poison: "#a040a0",
-    sol: "#e0c068", ground: "#e0c068", vol: "#a890f0", flying: "#a890f0",
-    psy: "#f85888", psychic: "#f85888", insecte: "#a8b820", bug: "#a8b820",
-    roche: "#b8a038", rock: "#b8a038", spectre: "#705898", ghost: "#705898",
-    dragon: "#7038f8", ténèbres: "#705848", tenebres: "#705848", dark: "#705848",
-    acier: "#b8b8d0", steel: "#b8b8d0", fée: "#ee99ac", fee: "#ee99ac", fairy: "#ee99ac",
-  };
-  const t = String(pokemon?.type1 || "").toLowerCase();
-  return TYPE_COLORS[t] || "#7c8db5";
+  return pokemonTypeColor(pokemon?.type1);
 }
 
 const TEAM_BUILDER_ITEMS = [

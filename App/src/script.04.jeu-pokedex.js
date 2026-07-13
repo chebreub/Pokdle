@@ -76,6 +76,7 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
     winSprite.src = getSpriteUrl(getPokemonSpriteId(secretPokemon));
   };
   winSprite.src = getPokemonSprite(secretPokemon);
+  winSprite.style.borderColor = pokemonTypeColor(secretPokemon.type1);
 
   if (winTitle) winTitle.textContent = won ? "BRAVO !" : "Abandon";
   document.getElementById("win-text").textContent = won
@@ -87,7 +88,10 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
   document.getElementById("share-ok").classList.add("hidden");
 
   // Le daily du jour est unique : une fois terminé, "Rejouer" bascule sur l'illimité.
-  if (restartBtn) restartBtn.textContent = gameMode === "daily" ? "♾️ Rejouer en illimité" : "🔄 Rejouer";
+  if (restartBtn) {
+    const toInfinite = gameMode === "daily";
+    restartBtn.innerHTML = `<svg class="btn-ico"><use href="#i-${toInfinite ? "infinity" : "repeat"}"/></svg>${toInfinite ? "Rejouer en illimité" : "Rejouer"}`;
+  }
 
   // Distribution du jour : envoie le résultat puis affiche les barres d'essais.
   if (gameMode === "daily" && won) reportAndRenderDailyDistribution(attempts);
@@ -165,18 +169,20 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   const wArrow = arrowFor(pokemon.weight, targetPokemon.weight);
   const fallbackSprite = getSpriteUrl(getPokemonSpriteId(pokemon));
 
+  const ringColor = pokemonTypeColor(pokemon.type1);
+
   // data-label : utilisés par le rendu "cartes empilées" sur mobile (≤640px).
   return `
     <td data-label="Pokémon">
       <div class="poke-cell">
-        <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${fallbackSprite}" />
+        <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${fallbackSprite}" style="border-color:${ringColor}" />
         ${escapeHtml(pokemon.name)}
       </div>
     </td>
     <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${pokemon.gen}</td>
     <td data-label="Forme" class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
-    <td data-label="Type 1" class="${cls(cmp.type1)}">${pokemon.type1}</td>
-    <td data-label="Type 2" class="${cls(cmp.type2)}">${pokemon.type2 || "Aucun"}</td>
+    <td data-label="Type 1" class="${cls(cmp.type1)}"><span class="type-dot" style="background:${pokemonTypeColor(pokemon.type1)}"></span>${pokemon.type1}</td>
+    <td data-label="Type 2" class="${cls(cmp.type2)}">${pokemon.type2 ? `<span class="type-dot" style="background:${pokemonTypeColor(pokemon.type2)}"></span>${pokemon.type2}` : "Aucun"}</td>
     <td data-label="Habitat / lieux" class="${cls(cmp.habitat)}">
       <span class="habitat-main">${escapeHtml(pokemon.habitat || "Inconnu")}</span>
       <small class="habitat-encounter" data-encounter-summary>Chargement des lieux...</small>

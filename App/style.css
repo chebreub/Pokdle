@@ -18571,6 +18571,11 @@ body.draft-battle-open .draft-dev-battle-panel:has(.draft-dev-battle-preview-act
   width: 34px;
   height: 34px;
   flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid #2f76ff;
+  background: #fff;
+  padding: 2px;
+  box-sizing: border-box;
 }
 
 #screen-game #results-table tbody tr:last-child td {
@@ -28487,6 +28492,36 @@ svg.kicker-ico {
 .nav-dropdown button { padding-left: 14px; }
 
 /* ============================================================
+   DA 2026 — Tuiles-icônes pastel réutilisables (Lot 1, refonte
+   des écrans de jeu). Mêmes classes que les cartes de la home
+   (jusque-là scopées à #screen-config .pk-tile) rendues ici
+   disponibles globalement pour les autres écrans : "Tous les
+   modes", bannières de #screen-game, Draft Arena, Party Room...
+   ============================================================ */
+.pk-tile { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pk-tile-sm { width: 38px; height: 38px; border-radius: 12px; }
+.pk-ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pk-tile .pk-ico { width: 25px; height: 25px; }
+.pk-tile-sm .pk-ico { width: 20px; height: 20px; }
+.pk-tile-yellow { background: #fff4d1; color: #d99a00; }
+.pk-tile-blue { background: #e3edff; color: #2f76ff; }
+.pk-tile-red { background: #ffe3e1; color: #e4382f; }
+.pk-tile-teal { background: #d8f3ee; color: #14a085; }
+.pk-tile-purple { background: #ece4ff; color: #7c5cff; }
+.pk-tile-green { background: #e7f6d9; color: #5a9e22; }
+
+/* Bannière de mode (remplace les .daily-banner/.challenge-banner
+   en texte + emoji par une carte avec tuile-icône). */
+.mode-banner { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid rgba(12, 25, 48, .08); border-radius: 16px; padding: 12px 14px; box-shadow: 0 6px 16px rgba(12, 25, 48, .07); margin-bottom: 14px; text-align: left; }
+.mode-banner b { color: #0c1930; font-weight: 800; }
+.mode-banner .mode-banner-desc { display: block; color: #465978; font-size: .85rem; margin-top: 1px; }
+@media (max-width: 560px) {
+  .mode-banner { padding: 10px 12px; gap: 10px; }
+  .mode-banner .pk-tile { width: 38px; height: 38px; border-radius: 12px; }
+  .mode-banner .pk-tile .pk-ico { width: 20px; height: 20px; }
+}
+
+/* ============================================================
    DA 2026 — Tableau de réponses "nouvelle génération" (desktop).
    Rangées flottantes, cellules en chips dégradées, apparition en
    cascade. Le rendu mobile (cartes empilées ≤640px) reste inchangé.
@@ -28582,7 +28617,42 @@ svg.kicker-ico {
 .reduce-motion #results-table tbody td,
 .reduce-motion .multiplayer-results-table tbody td { animation: none !important; }
 
-.results-legend { color: #44597e; }
+.results-legend { color: #44597e; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+
+/* ============================================================
+   DA 2026 — Vague 2 : le sprite réel en médaillon (au lieu d'une
+   icône générique) + pastille de couleur de type authentique,
+   pour renouer avec l'identité Pokémon plutôt qu'une grille abstraite.
+   ============================================================ */
+.poke-cell img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2.5px solid #2f76ff;
+  background: #fff;
+  padding: 2px;
+  box-sizing: border-box;
+}
+.type-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: -1px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .6) inset;
+}
+.win-sprite { border: 3px solid #ffcc33; box-sizing: border-box; }
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 2px;
+}
+.legend-dot.legend-ok { background: var(--ok); }
+.legend-dot.legend-close { background: var(--close); }
+.legend-dot.legend-wrong { background: var(--wrong); }
 
 /* ============================================================
    DA 2026 — Scènes de jeu : victoire premium, zones Silhouette /
@@ -29518,10 +29588,10 @@ a:focus-visible,
   outline-offset: 2px;
   border-radius: 8px;
 }
-
-@keyframes dscShinyGlowCyan {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(22,194,214,.5), 0 10px 20px rgba(11,33,63,.22); }
-  50% { box-shadow: 0 0 0 3px rgba(22,194,214,.72), 0 0 24px rgba(20,200,224,.34), 0 12px 24px rgba(11,33,63,.24); }
+
+@keyframes dscShinyGlowCyan {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(22,194,214,.5), 0 10px 20px rgba(11,33,63,.22); }
+  50% { box-shadow: 0 0 0 3px rgba(22,194,214,.72), 0 0 24px rgba(20,200,224,.34), 0 12px 24px rgba(11,33,63,.24); }
 }
 
 /* ===== Score Attack PRO — bascule Normal/PRO + écran de révélation ===== */
