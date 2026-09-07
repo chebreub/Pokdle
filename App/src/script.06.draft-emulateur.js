@@ -2735,6 +2735,7 @@ function openDraftScoreAttackMode(pro) {
   draftArenaState.scoreAttackPro = wantPro;
   if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
+  window.scrollTo(0, 0);
 }
 
 // Entrée dédiée « Duel 1v1 PRO » : ouvre l'écran Score Attack en mode PRO et met
@@ -2762,7 +2763,9 @@ function mountDraftModeCard(mode = "arena") {
   scoreScreen.classList.toggle("is-mode-score-attack", mode === "scoreAttack");
   // Adapter le titre + sous-titre selon le mode actif
   const title = card.querySelector(".card-title");
-  if (title) title.innerHTML = mode === "scoreAttack" ? "🎯 Draft Score Attack" : "🏟️ Draft Arènes";
+  if (title) title.textContent = mode === "scoreAttack"
+    ? (draftArenaState?.scoreAttackPro ? "🔥 Draft Score Attack PRO" : "🎯 Draft Score Attack")
+    : "🏟️ Draft Arènes";
   const desc = card.querySelector(".card-desc");
   if (desc) desc.textContent = mode === "scoreAttack"
     ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."
@@ -2963,7 +2966,9 @@ function renderDraftArena() {
   const isScoreAttackMode = draftArenaState.mode === "scoreAttack";
   const draftFinished = draftArenaState.phase === "result" && draftArenaState.team.length >= DRAFT_TEAM_SIZE && !draftArenaState.evaluating;
 
-  if (pageTitle) pageTitle.textContent = isScoreAttackMode ? "🎯 Draft Score Attack" : "🎴 Draft Arènes";
+  if (pageTitle) pageTitle.textContent = isScoreAttackMode
+    ? (draftArenaState.scoreAttackPro ? "🔥 Draft Score Attack PRO" : "🎯 Draft Score Attack")
+    : "🎴 Draft Arènes";
   if (pageDesc) {
     pageDesc.textContent = isScoreAttackMode
       ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."

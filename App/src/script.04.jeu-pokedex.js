@@ -1198,11 +1198,13 @@ function openAllModesScreen() {
   window.scrollTo(0, 0);
 }
 
-/* Lot 9 - historique navigateur (bouton precedent) */
+/* Screen history: restoring a game must never count or draw a new game. */
 (function () {
   var OPENERS = {
+    config: "goToConfig",
     allModes: "openAllModesScreen",
     pokedex: "openPokedexMode",
+    party: "openPartyRoomMode",
     multiplayer: "openMultiplayerMode",
     teamBuilder: "openTeamBuilderScreen",
     profile: "openProfileScreen",
@@ -1213,20 +1215,68 @@ function openAllModesScreen() {
   };
   var GAME_OPENERS = ["startDailyGame", "startNormalGame"];
 
+  function routeUrl(key) {
+    return location.pathname + location.search + (key === "config" ? "" : "#" + key);
+  }
+
   function wrap(name, key) {
     var orig = window[name];
     if (typeof orig !== "function") return;
     window[name] = function () {
-      var r = orig.apply(this, arguments);
-      if (!window.__screenHistorySuppress) {
+      var suppressed = window.__screenHistorySuppress;
+      window.__screenHistorySuppress = true;
+      var result;
+      try { result = orig.apply(this, arguments); }
+      finally { window.__screenHistorySuppress = suppressed; }
+      if (!suppressed) {
+        var state = { screen: key };
+        if (key === "game") {
+          var screen = document.getElementById("screen-game");
+          if (!screen || screen.classList.contains("hidden")) return result;
+          state.mode = gameMode;
+          state.secretId = secretPokemon && secretPokemon.id;
+        }
         try {
-          if (!(history.state && history.state.screen === key)) {
-            history.pushState({ screen: key }, "", "#" + key);
+          var previous = history.state || {};
+          if (previous.screen !== key || previous.mode !== state.mode || previous.secretId !== state.secretId) {
+            history.pushState(state, "", routeUrl(key));
           }
-        } catch (e) {}
+        } catch (_error) {}
       }
-      return r;
+      return result;
     };
+  }
+
+  function restoreScreen(state) {
+    var key = state.screen || "config";
+    window.__screenHistorySuppress = true;
+    try {
+      if (key === "game") {
+        // Keep the finished/current view in memory when it is still the same game.
+        if (secretPokemon && (!state.mode || state.mode === gameMode) &&
+            (!state.secretId || state.secretId === secretPokemon.id) &&
+            (gameMode === "normal" || gameMode === "daily")) {
+          showScreen("screen-game");
+          updateTopTag();
+          updateModeBanners();
+          setGlobalNavActive("game");
+          return;
+        }
+        if ((!state.mode || state.mode === "daily") && showDailyCompletedView()) return;
+        if (restoreSavedGame(state.mode || null)) return;
+        goToConfig();
+        history.replaceState({ screen: "config" }, "", routeUrl("config"));
+      } else {
+        var opener = OPENERS[key];
+        if (opener && typeof window[opener] === "function") window[opener]();
+        if (key === "party" && typeof state.inviteCode === "string") {
+          var input = document.getElementById("party-join-code");
+          if (input) input.value = state.inviteCode;
+        }
+      }
+    } finally {
+      window.__screenHistorySuppress = false;
+    }
   }
 
   function initScreenHistory() {
@@ -1234,22 +1284,17 @@ function openAllModesScreen() {
     window.__screenHistoryInit = true;
     Object.keys(OPENERS).forEach(function (key) { wrap(OPENERS[key], key); });
     GAME_OPENERS.forEach(function (name) { wrap(name, "game"); });
-    try {
-      history.replaceState({ screen: "config" }, "", location.pathname + location.search);
-    } catch (e) {}
-    window.addEventListener("popstate", function (ev) {
-      var key = (ev.state && ev.state.screen) || "config";
-      window.__screenHistorySuppress = true;
-      try {
-        if (key === "config" || key === "game") {
-          if (typeof goToConfig === "function") goToConfig();
-        } else {
-          var name = OPENERS[key];
-          if (name && typeof window[name] === "function") window[name]();
-        }
-      } finally {
-        window.__screenHistorySuppress = false;
-      }
+    var key = location.hash.slice(1);
+    if (key !== "game" && !Object.prototype.hasOwnProperty.call(OPENERS, key)) key = "config";
+    var state = history.state && history.state.screen === key ? history.state : { screen: key };
+    try { history.replaceState(state, "", routeUrl(key)); } catch (_error) {}
+    // Invitation handlers and the dedicated emulator page own their initial screen.
+    var params = new URLSearchParams(location.search);
+    if (location.pathname !== "/emulateur" && !params.has("party") && !params.has("room") && !params.has("defi") && key !== "config") {
+      setTimeout(function () { restoreScreen(state); }, 0);
+    }
+    window.addEventListener("popstate", function (event) {
+      restoreScreen(event.state || { screen: "config" });
     });
   }
 
@@ -1906,7 +1951,11 @@ function initPartyFromUrl() {
     openPartyRoomMode();
     var codeEl = document.getElementById("party-join-code");
     if (codeEl) codeEl.value = code;
-    setPartyStatus("Room " + code + " prete : entre ton pseudo puis clique Rejoindre.");
+    setPartyStatus("Code " + code + " prérempli : saisis ton pseudo puis clique sur Rejoindre.");
+    // Consume the invitation so it cannot reopen the lobby after navigating away.
+    params.delete("party");
+    var query = params.toString();
+    history.replaceState({ screen: "party", inviteCode: code }, "", location.pathname + (query ? "?" + query : "") + "#party");
   } catch (e) {}
 }
 
@@ -4586,6 +4635,23 @@ function isPokedexToolbarDirty() {
   );
 }
 
+function togglePokedexFilters() {
+  const toolbar = document.getElementById("pokedex-toolbar");
+  const button = document.getElementById("pokedex-filters-toggle");
+  if (!toolbar || !button) return;
+  const expanded = toolbar.classList.toggle("filters-expanded");
+  button.setAttribute("aria-expanded", String(expanded));
+  updatePokedexFilterToggle();
+}
+
+function updatePokedexFilterToggle() {
+  const button = document.getElementById("pokedex-filters-toggle");
+  if (!button) return;
+  const activeCount = [pokedexGenFilter, pokedexTypeFilter, pokedexType2Filter, pokedexCategoryFilter].filter(value => value !== "all").length + Number(pokedexSortFilter !== "dex");
+  const expanded = button.getAttribute("aria-expanded") === "true";
+  button.textContent = `${expanded ? "Fermer les filtres" : "Filtres et tri"}${activeCount ? ` (${activeCount})` : ""} ${expanded ? "▴" : "▾"}`;
+}
+
 function ensurePokedexToolbarMeta() {
   let meta = document.getElementById("pokedex-toolbar-meta");
   if (meta) return meta;
@@ -4604,6 +4670,7 @@ function ensurePokedexToolbarMeta() {
 }
 
 function updatePokedexToolbarMeta(resultCount) {
+  updatePokedexFilterToggle();
   const meta = ensurePokedexToolbarMeta();
   if (!meta) return;
   const count = meta.querySelector("#pokedex-results-count");
@@ -5839,4 +5906,3 @@ function getDraftScoreAttackResultLabel(average) {
   const rank = DRAFT_SCORE_ATTACK_TARGETS.find((target) => average >= target.min);
   return rank ? rank.label : "Run à améliorer";
 }
-

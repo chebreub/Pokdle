@@ -350,9 +350,9 @@ function clearSavedGame(targetMode = gameMode) {
   }
 }
 
-function restoreSavedGame() {
+function restoreSavedGame(preferredMode = null) {
   // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
-  let save = readJson(STORAGE_KEYS.dailyGame, null);
+  let save = preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null);
   if (save && (save.mode !== "daily" || save.dailyKey !== getUTCDateKey())) {
     clearSavedGame("daily");
     save = null;
@@ -366,7 +366,7 @@ function restoreSavedGame() {
       if (save.dailyKey !== getUTCDateKey()) save = null;
     }
   }
-  if (!save) return false;
+  if (!save || (preferredMode && save.mode !== preferredMode)) return false;
 
   if (!VALID_MODES.has(save.mode)) {
     clearSavedGame(save.mode);
@@ -965,7 +965,7 @@ function removeProfilePhoto() {
       var av = data.user.avatar ? '<img class="account-avatar" src="' + escapeHtml(data.user.avatar) + '" alt="" />' : '';
       el.innerHTML = '<span class="account-chip">' + av + '<span class="account-name">' + escapeHtml(data.user.username || "Dresseur") + '</span><a class="account-logout" href="/auth/logout" title="Déconnexion" aria-label="Déconnexion">⏻</a></span>';
     } else {
-      el.innerHTML = '<a class="account-login" href="/auth/discord"><svg class="account-login-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.077.077 0 0 0-.079-.036A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.291.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.339c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg>Connexion Discord</a>';
+      el.innerHTML = '<a class="account-login" href="/auth/discord" aria-label="Connexion Discord" title="Connexion Discord"><svg class="account-login-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.077.077 0 0 0-.079-.036A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.291.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.339c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg>Connexion Discord</a>';
     }
   }
   function initAccount() {
@@ -1690,6 +1690,15 @@ function hideScreen(id) {
   document.getElementById(id)?.classList.add('hidden');
 }
 
+function toggleMultiplayerGenerations() {
+  const panel = document.getElementById('multiplayer-gen-panel');
+  const button = document.getElementById('multiplayer-gen-toggle');
+  if (!panel || !button) return;
+  const collapsed = panel.classList.toggle('is-collapsed');
+  button.setAttribute('aria-expanded', String(!collapsed));
+  button.textContent = collapsed ? 'Modifier ▾' : 'Fermer ▴';
+}
+
 function closeNavDropdowns() {
   var a = document.activeElement;
   if (a && typeof a.blur === 'function' && a.closest && a.closest('.nav-group')) {
@@ -1714,6 +1723,7 @@ function hideExtraScreens() {
   ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction','screen-draft-score-attack','screen-speedrun'].forEach(hideScreen);
 }
 
+let overlayReturnFocus = null;
 function ensureOverlay(title, html) {
   const overlay = document.getElementById('overlay-modal');
   const titleEl = document.getElementById('overlay-title');
@@ -1722,15 +1732,25 @@ function ensureOverlay(title, html) {
     showToast(title);
     return;
   }
+  if (overlay.classList.contains('hidden')) overlayReturnFocus = document.activeElement;
+  // Escape main's stacking/containing context so the dialog covers footer and navigation.
+  if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
   titleEl.textContent = title;
   bodyEl.innerHTML = html;
   overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
   document.body.classList.add('modal-open');
+  overlay.querySelector('.overlay-close')?.focus({ preventScroll: true });
 }
 
 function closeOverlayModal() {
-  document.getElementById('overlay-modal')?.classList.add('hidden');
+  const overlay = document.getElementById('overlay-modal');
+  const wasOpen = overlay && !overlay.classList.contains('hidden');
+  overlay?.classList.add('hidden');
+  overlay?.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('modal-open');
+  if (wasOpen && overlayReturnFocus?.isConnected) overlayReturnFocus.focus({ preventScroll: true });
+  overlayReturnFocus = null;
 }
 
 function onOverlayBackdropClick(event) {
@@ -1964,15 +1984,15 @@ const HELP_BY_SCREEN = {
     body: `
       <section class="app-help-card">
         <h4>Choisis tes générations</h4>
-        <p>La carte <b>🧬 Générations</b> en haut filtre le pool utilisé par les modes aléatoires (mode illimité, silhouette, pixelisé, cri, stat mystère…). Les boutons <b>Tout</b> et <b>Aucune</b> sélectionnent en masse. <b>Au moins une gen</b> doit rester cochée.</p>
+        <p>Sur mobile, touche <b>Modifier</b> dans la carte Générations, puis coche celles que tu veux inclure dans les modes aléatoires. <b>Tout</b> sélectionne les neuf générations ; <b>Gen 1 seule</b> revient à Kanto. Au moins une génération reste sélectionnée.</p>
       </section>
       <section class="app-help-card">
         <h4>Pokémon du jour</h4>
-        <p>Le hero "▶ Jouer maintenant" et la pillar "Pokémon du jour" lancent le <b>mode daily</b> : une cible identique pour tous, qui change chaque jour. Indépendant des générations cochées.</p>
+        <p>Touche <b>Jouer au Pokémon du jour</b> pour trouver la même cible que les autres joueurs. Elle change chaque jour et ne dépend pas des générations cochées. Une partie commencée peut être reprise.</p>
       </section>
       <section class="app-help-card">
-        <h4>Tous les modes via la nav</h4>
-        <p>Le menu <b>Jouer</b> liste tous les modes solo. <b>Social</b> contient Duel 1v1, Stat Clash, défis. <b>Outils</b> regroupe Team Builder, Draft Arènes, Table des types, Émulateur, etc.</p>
+        <h4>Retrouver les jeux</h4>
+        <p>Sur mobile, utilise <b>Jouer</b> dans la barre du bas ou <b>Tous les modes</b> sur l'accueil. Les cartes de l'accueil donnent aussi accès à Party Room, au Draft et aux outils Pokémon.</p>
       </section>
       <section class="app-help-card">
         <h4>Profil & succès</h4>
@@ -3184,9 +3204,10 @@ function renderMultiplayerGenerationGrid() {
         <div class="gen-sub">${data.label} • ${count} Pokémon</div>
       </div>
     `;
-    item.addEventListener("click", (event) => {
-      event.preventDefault();
+    const checkbox = item.querySelector("input");
+    checkbox.addEventListener("change", () => {
       handleMultiplayerGenerationChange(gen, item);
+      checkbox.checked = new Set(getMultiplayerSelectedGens()).has(gen);
     });
     grid.appendChild(item);
   });
@@ -3197,6 +3218,7 @@ function renderMultiplayerGenerationGrid() {
   grid.querySelectorAll(".gen-item").forEach((item) => {
     if (disabled) item.classList.add("is-disabled");
     else item.classList.remove("is-disabled");
+    item.querySelector("input").disabled = disabled;
   });
 }
 
@@ -4310,6 +4332,16 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeOverlayModal();
+    if (event.key !== 'Tab') return;
+    const overlay = document.getElementById('overlay-modal');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+    const controls = [...overlay.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(el => el.getClientRects().length);
+    const first = controls[0], last = controls[controls.length - 1];
+    if (!first) return;
+    if (!overlay.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    }
   });
   initProfessionalModeMenu();
 });

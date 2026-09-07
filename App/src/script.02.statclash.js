@@ -22,9 +22,11 @@ function buildGenGrid() {
       </div>
     `;
 
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
+    const checkbox = item.querySelector("input");
+    checkbox.addEventListener("change", () => {
       toggleGen(gen, item);
+      // The final selected generation cannot be unchecked.
+      checkbox.checked = selectedGens.has(gen);
     });
 
     grid.appendChild(item);
@@ -64,7 +66,7 @@ function updateHomeGensSummary() {
   const label = gens.length === Object.keys(GENERATIONS).length
     ? "Toutes les générations"
     : gens.map((gen) => `Gen ${gen}`).join(" · ");
-  summary.textContent = `${gens.length}/${Object.keys(GENERATIONS).length} incluses dans tes parties`;
+  summary.textContent = `${gens.length <= 3 ? label : `${gens.length} générations`} · ${total} Pokémon`;
 }
 
 function toggleHomeGensCard() {
@@ -2627,4 +2629,3 @@ function openStatClashMode() {
   prepareStatClashBotLobby();
   renderStatClashScreen();
 }
-

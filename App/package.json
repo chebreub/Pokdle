@@ -5,7 +5,9 @@
   "description": "Pokédle avec module multijoueur 1v1 en temps réel",
   "main": "server.js",
   "scripts": {
+    "dev": "node tools/dev-server.js",
     "start": "node server.js",
+    "test": "node --test",
     "build": "node build.mjs",
     "postinstall": "node build.mjs"
   },

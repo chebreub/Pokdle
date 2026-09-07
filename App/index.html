@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="dist/home.min.css">
   <link rel="stylesheet" href="dist/party-room.min.css">
   <link rel="stylesheet" href="dist/profile.min.css">
+  <link rel="stylesheet" href="dist/mobile.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -179,13 +180,13 @@
     <div id="screen-config">
 
       <!-- DA 2026 : hero "Pokémon du jour" — le jeu d'abord -->
-      <div class="pk-genbar" id="home-gens-card">
+      <div class="pk-genbar is-collapsed" id="home-gens-card">
         <div class="pk-genbar-lab"><b><svg class="pk-ico"><use href="#i-layers"/></svg> Générations</b><small id="home-gens-summary">Choisis les générations à inclure.</small></div>
         <div class="gen-grid" id="gen-grid"></div>
         <div class="pk-genbar-acts">
-          <button class="pk-gbtn pk-gbtn-tout" type="button" data-action="selectAllGenerations">Tout</button>
-          <button class="pk-gbtn pk-gbtn-aucune" type="button" data-action="clearGenerationSelection">Aucune</button>
-          <button class="hidden" type="button" data-action="toggleHomeGensCard" aria-expanded="true" id="home-gens-toggle">Modifier</button>
+          <button class="pk-gbtn pk-gbtn-tout home-gens-edit-only" type="button" data-action="selectAllGenerations">Tout</button>
+          <button class="pk-gbtn pk-gbtn-aucune home-gens-edit-only" type="button" data-action="clearGenerationSelection">Gen 1 seule</button>
+          <button class="pk-gbtn" type="button" data-action="toggleHomeGensCard" aria-expanded="false" aria-controls="gen-grid" id="home-gens-toggle">Modifier ▾</button>
         </div>
       </div>
 
@@ -193,7 +194,7 @@
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
           <h2 class="pk-hero-title">Pokémon du jour</h2>
-          <p class="pk-hero-sub">La même cible mystère pour tous les joueurs. Un nouvel indice à chaque essai — devine-le et fais grimper ta série.</p>
+          <p class="pk-hero-sub">Un Pokémon à trouver chaque jour. Chaque essai te donne de nouveaux indices.</p>
           <div class="pk-hero-chips">
             <span class="pk-chip pk-chip-fire" id="daily-hero-streak">🔥 Série : 0</span>
             <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
@@ -479,10 +480,11 @@
         </div>
         <p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p>
 
-        <div class="pokedex-toolbar">
+        <div class="pokedex-toolbar" id="pokedex-toolbar">
           <div class="pokedex-toolbar-row pokedex-toolbar-row-top">
-            <input id="pokedex-search" type="text" placeholder="Rechercher un Pokémon..." autocomplete="off" />
-            <select id="pokedex-gen-filter"></select>
+            <input id="pokedex-search" type="search" placeholder="Rechercher un Pokémon..." autocomplete="off" />
+            <button id="pokedex-filters-toggle" class="btn-ghost" type="button" data-action="togglePokedexFilters" aria-expanded="false" aria-controls="pokedex-gen-filter pokedex-category-filter pokedex-extra-filters">Filtres et tri ▾</button>
+            <select id="pokedex-gen-filter" aria-label="Génération"></select>
             <select id="pokedex-category-filter" aria-label="Catégorie">
               <option value="all">Toutes les catégories</option>
               <option value="legendary">Légendaires & Mythiques</option>
@@ -495,13 +497,13 @@
               <option value="evolved">Évolués</option>
             </select>
           </div>
-          <div class="pokedex-toolbar-row pokedex-toolbar-row-bottom">
+          <div class="pokedex-toolbar-row pokedex-toolbar-row-bottom" id="pokedex-extra-filters">
             <div class="pokedex-type-filter-group">
-              <select id="pokedex-type-filter"></select>
+              <select id="pokedex-type-filter" aria-label="Premier type"></select>
               <span class="pokedex-type-filter-sep">+</span>
-              <select id="pokedex-type2-filter"></select>
+              <select id="pokedex-type2-filter" aria-label="Second type"></select>
             </div>
-            <select id="pokedex-sort-filter"></select>
+            <select id="pokedex-sort-filter" aria-label="Trier par"></select>
           </div>
         </div>
         <div class="pokedex-actions">
@@ -1259,10 +1261,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <div id="multiplayer-presence-alert" class="multiplayer-presence-alert" data-state="offline">Hors ligne : lance l'app via le serveur pour créer une room.</div>
 
-        <section class="multiplayer-gen-panel multiplayer-panel">
+        <section class="multiplayer-gen-panel multiplayer-panel is-collapsed" id="multiplayer-gen-panel">
           <div class="multiplayer-gen-panel-head">
             <div>
               <h3>Générations de la room</h3>
+              <button id="multiplayer-gen-toggle" class="btn-ghost" type="button" data-action="toggleMultiplayerGenerations" aria-expanded="false" aria-controls="multiplayer-gen-grid">Modifier ▾</button>
               <p id="multiplayer-help" class="card-desc">Choisis ici les générations de la room. Si tu relances sans rien changer, la sélection est conservée.</p>
             </div>
             <p id="multiplayer-gen-summary" class="card-desc">Générations actives : —</p>
