@@ -2473,9 +2473,12 @@ async function prepareDraftArenaBattleRun() {
   snapshot.runSummary = buildDraftArenaLiveSummary(teamData, snapshot.badgeResults, synergy, arenas[0] || null);
   snapshot.evaluating = false;
   snapshot.phase = "battle";
-  snapshot.message = arenas[0]
-    ? `Ton équipe est prête. Première arène : ${arenas[0].name} (${arenas[0].type}).`
-    : "Ton équipe est prête pour le duel.";
+  snapshot.message = !DRAFT_BATTLE_ENABLED
+    ? "Équipe analysée ! Les combats d’arène sont en préparation. Tu peux recommencer le draft ou jouer au Score Attack."
+    : arenas[0]
+      ? `Ton équipe est prête. Première arène : ${arenas[0].name} (${arenas[0].type}).`
+      : "Ton équipe est prête pour le duel.";
+  if (!DRAFT_BATTLE_ENABLED && snapshot.runSummary) snapshot.runSummary.status = "Équipe analysée · combats en préparation";
   renderDraftArena();
   return true;
 }
@@ -2769,7 +2772,9 @@ function mountDraftModeCard(mode = "arena") {
   const desc = card.querySelector(".card-desc");
   if (desc) desc.textContent = mode === "scoreAttack"
     ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."
-    : "Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser.";
+    : DRAFT_BATTLE_ENABLED
+        ? "Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser."
+        : "Drafte 6 Pokémon et analyse ton équipe. Les combats d’arène sont en préparation ; Score Attack est disponible pour jouer une partie complète.";
 }
 
 function restartDraftArenaRun() {
@@ -3155,7 +3160,7 @@ function renderDraftArena() {
       msg.textContent = draftArenaState.evaluating
         ? "Préparation de la run en cours..."
         : draftArenaState.phase === "battle"
-          ? "Ton équipe est prête. Lance ou poursuis l’arène en cours."
+          ? (DRAFT_BATTLE_ENABLED ? "Ton équipe est prête. Lance ou poursuis l’arène en cours." : "Draft terminé. Consulte l’analyse de ton équipe ci-dessous.")
           : "Draft terminé. Consulte la run ci-dessous.";
       options.appendChild(msg);
     } else if (!draftArenaState.options.length) {

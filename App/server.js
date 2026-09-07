@@ -1620,6 +1620,9 @@ io.on("connection", (socket) => {
       if (guess.length > 100) return respond(ack, { ok: false, error: "Nom trop long." });
       const guessedPokemon = resolveRoomPokemonGuess(room, guess);
       if (!guessedPokemon) return respond(ack, { ok: false, error: "Pokémon invalide pour cette room." });
+      if (player.guesses.some((entry) => entry.id === guessedPokemon.id)) {
+        return respond(ack, { ok: false, error: "Tu as déjà tenté ce Pokémon." });
+      }
 
       player.attempts += 1;
       player.lastGuess = guessedPokemon.name;
@@ -2455,7 +2458,7 @@ io.on("connection", (socket) => {
       const room = findDraftScoreRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer le duel." });
-      if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
+      if (room.players.length < 2 || room.players.some((p) => !p.connected)) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
       // L'host peut toujours (re)lancer un duel — reset complet
       const gen = Number(payload.gen);
       if (!Number.isInteger(gen) || gen < 1 || gen > 9) return respond(ack, { ok: false, error: "Génération invalide." });
@@ -2731,7 +2734,7 @@ io.on("connection", (socket) => {
       const room = findHigherLowerRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer." });
-      if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
+      if (room.players.length < 2 || room.players.some((p) => !p.connected)) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
       if (room.status !== "lobby") return respond(ack, { ok: false, error: "Déjà lancée." });
       if (Array.isArray(payload.selectedGens) && payload.selectedGens.length) {
         room.selectedGens = payload.selectedGens.map(Number).filter(Boolean);
@@ -2751,18 +2754,28 @@ io.on("connection", (socket) => {
   });
 
   socket.on("higher-lower:submit-answer", async (payload = {}, ack) => {
+    let pendingPlayer = null;
     try {
       const room = findHigherLowerRoomBySocket(socket.id);
       if (!room || room.status !== "live") return respond(ack, { ok: false, error: "Pas de partie en cours." });
       const player = room.players.find((p) => p.id === socket.id);
-      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      if (!player?.connected) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      if (player.answerPending) return respond(ack, { ok: false, error: "Réponse en cours de validation." });
+      if (payload.cursor != null && Number(payload.cursor) !== player.cursor) return respond(ack, { ok: false, error: "Cette paire n'est plus active." });
       const choice = String(payload.choice || "").toLowerCase();
       if (choice !== "higher" && choice !== "lower") return respond(ack, { ok: false, error: "Choix invalide." });
       // Le serveur recalcule lui-même si la réponse est correcte (no client trust)
       const pair = Array.isArray(room.sequence) ? room.sequence[player.cursor] : null;
       if (!pair) return respond(ack, { ok: false, error: "Paire courante introuvable." });
-      const leftStats = await fetchPokemonStatsServer(pair.leftId);
-      const rightStats = await fetchPokemonStatsServer(pair.rightId);
+      const cursor = player.cursor;
+      const sequence = room.sequence;
+      pendingPlayer = player;
+      player.answerPending = true;
+      const [leftStats, rightStats] = await Promise.all([fetchPokemonStatsServer(pair.leftId), fetchPokemonStatsServer(pair.rightId)]);
+      if (room.status !== "live" || room.sequence !== sequence || player.cursor !== cursor || !player.connected || Date.now() >= room.endsAt) {
+        return respond(ack, { ok: false, error: "Cette course est terminée." });
+      }
+      if (!leftStats || !rightStats) return respond(ack, { ok: false, error: "Statistiques indisponibles. Réessaie : aucun point n'a été compté." });
       const statKey = pair.statKey || "hp";
       const leftVal = Number(leftStats?.[statKey]) || 0;
       const rightVal = Number(rightStats?.[statKey]) || 0;
@@ -2773,10 +2786,10 @@ io.on("connection", (socket) => {
       if (correct) player.score += 1;
       player.cursor += 1;
       emitHigherLowerRoomState(room);
-      respond(ack, { ok: true, correct, leftVal, rightVal });
+      respond(ack, { ok: true, correct, leftVal, rightVal, cursor: player.cursor, score: player.score });
     } catch (_e) {
       respond(ack, { ok: false, error: "Erreur lors de la soumission." });
-    }
+    } finally { if (pendingPlayer) pendingPlayer.answerPending = false; }
   });
 
   socket.on("higher-lower:restart-match", (payload = {}, ack) => {
@@ -2784,7 +2797,11 @@ io.on("connection", (socket) => {
       const room = findHigherLowerRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut relancer." });
+      if (room.status !== "finished") return respond(ack, { ok: false, error: "La partie n'est pas terminée." });
       if (room.endTimer) { clearTimeout(room.endTimer); room.endTimer = null; }
+      room.players = room.players.filter((p) => p.connected);
+      room.players.forEach((p, index) => { p.side = index === 0 ? "left" : "right"; });
+      room.finishReason = null;
       room.status = "lobby";
       room.sequence = null;
       room.startedAt = null;
@@ -2849,7 +2866,7 @@ io.on("connection", (socket) => {
       const room = findStatAuctionRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut lancer." });
-      if (room.players.length < 2) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
+      if (room.players.length < 2 || room.players.some((p) => !p.connected)) return respond(ack, { ok: false, error: "En attente d'un adversaire." });
       if (room.status !== "lobby") return respond(ack, { ok: false, error: "Déjà lancée." });
       if (Array.isArray(payload.selectedGens) && payload.selectedGens.length) {
         room.selectedGens = payload.selectedGens.map(Number).filter(Boolean);
@@ -2869,16 +2886,30 @@ io.on("connection", (socket) => {
   });
 
   socket.on("stat-auction:submit-allocation", async (payload = {}, ack) => {
+    let pendingPlayer = null;
     try {
       const room = findStatAuctionRoomBySocket(socket.id);
       if (!room || room.status !== "live") return respond(ack, { ok: false, error: "Pas de partie." });
       const player = room.players.find((p) => p.id === socket.id);
-      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      if (!player?.connected) return respond(ack, { ok: false, error: "Joueur introuvable." });
+      if (player.allocationPending || room.currentAllocations[player.side]) {
+        return respond(ack, { ok: false, error: "Allocation déjà envoyée pour cette manche." });
+      }
       const allocation = sanitizeStatAuctionAllocation(payload.allocation);
       if (!allocation) return respond(ack, { ok: false, error: "Allocation invalide (somme doit être 100)." });
       // Le serveur calcule le score lui-même depuis les vraies stats serveur (no client trust)
       const pokemonId = Array.isArray(room.sequence) ? room.sequence[room.round - 1] : null;
+      const submittedRound = room.round;
+      const submittedSequence = room.sequence;
+      pendingPlayer = player;
+      player.allocationPending = true;
       const realStats = await fetchPokemonStatsServer(pokemonId);
+      if (room.status !== "live" || room.round !== submittedRound || room.sequence !== submittedSequence || !player.connected) {
+        return respond(ack, { ok: false, error: "Cette manche est terminée." });
+      }
+      if (!realStats) {
+        return respond(ack, { ok: false, error: "Statistiques indisponibles. Réessaie : aucun point n'a été compté." });
+      }
       let computedScore = 0;
       if (realStats) {
         for (const k of STAT_AUCTION_STAT_KEYS) {
@@ -2916,6 +2947,7 @@ io.on("connection", (socket) => {
       emitStatAuctionRoomState(room);
       respond(ack, { ok: true });
     } catch (_e) { respond(ack, { ok: false, error: "Erreur submit." }); }
+    finally { if (pendingPlayer) pendingPlayer.allocationPending = false; }
   });
 
   socket.on("stat-auction:restart-match", (payload = {}, ack) => {
@@ -2923,6 +2955,10 @@ io.on("connection", (socket) => {
       const room = findStatAuctionRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut relancer." });
+      if (room.status !== "finished") return respond(ack, { ok: false, error: "La partie n'est pas terminée." });
+      room.players = room.players.filter((p) => p.connected);
+      room.players.forEach((p, index) => { p.side = index === 0 ? "left" : "right"; });
+      room.finishReason = null;
       room.status = "lobby";
       room.round = 0;
       room.sequence = null;
@@ -2994,6 +3030,7 @@ function publicHigherLowerRoomState(room, viewerId = null) {
       isSelf: p.id === viewerId,
     })),
     winnerSide: room.winnerSide || null,
+    finishReason: room.finishReason || null,
   };
 }
 
@@ -3029,23 +3066,28 @@ function startHigherLowerMatchTimer(room) {
 
 function handleHigherLowerDisconnect(socketId, forceLeave) {
   for (const room of Array.from(higherLowerRooms.values())) {
-    const player = room.players.find((p) => p.id === socketId);
+    const player = room.players.find((p) => p.id === socketId && p.connected);
     if (!player) continue;
-    if (forceLeave) {
-      room.players = room.players.filter((p) => p.id !== socketId);
-    } else {
-      player.connected = false;
-    }
+    player.connected = false;
     const sock = io.sockets.sockets.get(socketId);
     if (sock?.data) sock.data.higherLowerRoomCode = null;
-    if (!room.players.length || room.players.every((p) => !p.connected)) {
+    const remaining = room.players.find((p) => p.connected);
+    if (!remaining) {
       if (room.endTimer) { clearTimeout(room.endTimer); room.endTimer = null; }
       higherLowerRooms.delete(room.code);
       continue;
     }
-    if (room.hostId === socketId && room.players.length) {
-      room.hostId = room.players[0].id;
-      room.players[0].side = "left";
+    if (room.status === "live") {
+      if (room.endTimer) { clearTimeout(room.endTimer); room.endTimer = null; }
+      room.status = "finished";
+      room.winnerSide = remaining.side;
+      room.finishReason = "disconnect";
+    }
+    if (room.hostId === socketId) room.hostId = remaining.id;
+    // Preserve the sides and scores of a finished match. Empty lobby seats can be reused.
+    if (room.status === "lobby") {
+      room.players = room.players.filter((p) => p.connected);
+      remaining.side = "left";
     }
     emitHigherLowerRoomState(room);
   }
@@ -3089,7 +3131,7 @@ function findStatAuctionRoomBySocket(socketId) {
   const code = io.sockets.sockets.get(socketId)?.data?.statAuctionRoomCode;
   if (code && statAuctionRooms.has(code)) return statAuctionRooms.get(code);
   for (const room of statAuctionRooms.values()) {
-    if (room.players.some((p) => p.id === socketId)) return room;
+    if (room.players.some((p) => p.id === socketId && p.connected)) return room;
   }
   return null;
 }
@@ -3121,6 +3163,7 @@ function publicStatAuctionRoomState(room, viewerId = null) {
       isSelf: p.id === viewerId,
     })),
     winnerSide: room.winnerSide || null,
+    finishReason: room.finishReason || null,
   };
 }
 
@@ -3133,22 +3176,26 @@ function emitStatAuctionRoomState(room) {
 
 function handleStatAuctionDisconnect(socketId, forceLeave) {
   for (const room of Array.from(statAuctionRooms.values())) {
-    const player = room.players.find((p) => p.id === socketId);
+    const player = room.players.find((p) => p.id === socketId && p.connected);
     if (!player) continue;
-    if (forceLeave) {
-      room.players = room.players.filter((p) => p.id !== socketId);
-    } else {
-      player.connected = false;
-    }
+    player.connected = false;
     const sock = io.sockets.sockets.get(socketId);
     if (sock?.data) sock.data.statAuctionRoomCode = null;
-    if (!room.players.length || room.players.every((p) => !p.connected)) {
+    const remaining = room.players.find((p) => p.connected);
+    if (!remaining) {
       statAuctionRooms.delete(room.code);
       continue;
     }
-    if (room.hostId === socketId && room.players.length) {
-      room.hostId = room.players[0].id;
-      room.players[0].side = "left";
+    if (room.status === "live") {
+      room.status = "finished";
+      room.winnerSide = remaining.side;
+      room.finishReason = "disconnect";
+    }
+    if (room.hostId === socketId) room.hostId = remaining.id;
+    // Preserve the sides and scores of a finished match. Empty lobby seats can be reused.
+    if (room.status === "lobby") {
+      room.players = room.players.filter((p) => p.connected);
+      remaining.side = "left";
     }
     emitStatAuctionRoomState(room);
   }
@@ -3475,6 +3522,7 @@ function getStatClashPoolForRoom(room) {
 }
 
 async function startStatClashMatch(room) {
+  room.notice = null;
   resetStatClashRoomForNewMatch(room);
   const fmt = STAT_CLASH_FORMATS[normalizeStatClashFormat(room.format)] || STAT_CLASH_FORMATS.standard;
   room.totalRounds = fmt.rounds;
@@ -3646,7 +3694,11 @@ async function resolveStatClashRound(room) {
   clearStatClashPreviewTimers(room);
   room.lockedEndsAt = null;
   if (!room.currentPokemon || !room.currentStats) {
-    finalizeStatClashMatch(room);
+    room.status = "lobby";
+    room.roundPhase = "waiting";
+    room.deadlineAt = null;
+    room.notice = "Statistiques indisponibles : partie interrompue sans résultat. L'hôte peut réessayer.";
+    emitStatClashRoomState(room);
     return;
   }
 
@@ -3854,6 +3906,7 @@ function publicStatClashRoomState(room, viewerId = null) {
     deadlineAt: room.deadlineAt,
     winnerId: room.winnerId,
     endedReason: room.endedReason,
+    notice: room.notice || null,
     currentPokemon: serializePokemon(room.currentPokemon),
     reveal: room.reveal,
     revealStats: room.roundPhase === "reveal" || room.status === "finished" ? room.currentStats : null,
@@ -3915,6 +3968,7 @@ function publicStatClashRoomState(room, viewerId = null) {
 
 function emitRoomState(room) {
   for (const player of room.players) {
+    if (!player.connected) continue;
     io.to(player.id).emit("duel:room-state", publicRoomState(room, player.id));
   }
 }
@@ -3934,6 +3988,7 @@ function emitStatClashFinished(room) {
 
 function emitRoomFinished(room) {
   for (const player of room.players) {
+    if (!player.connected) continue;
     io.to(player.id).emit("duel:finished", publicRoomState(room, player.id));
   }
 }
@@ -3942,7 +3997,7 @@ function findRoomBySocket(socketId) {
   const roomCode = io.sockets.sockets.get(socketId)?.data?.roomCode;
   if (roomCode && rooms.has(roomCode)) return rooms.get(roomCode);
   for (const room of rooms.values()) {
-    if (room.players.some((player) => player.id === socketId)) return room;
+    if (room.players.some((player) => player.id === socketId && player.connected)) return room;
   }
   return null;
 }
@@ -3964,6 +4019,11 @@ function handleDisconnect(socketId, voluntary) {
   if (!player) return;
 
   player.connected = false;
+  const leavingSocket = io.sockets.sockets.get(socketId);
+  if (leavingSocket) {
+    leavingSocket.leave(room.code);
+    leavingSocket.data.roomCode = null;
+  }
 
   if (room.status === "waiting") {
     io.to(room.code).emit("duel:room-closed", {

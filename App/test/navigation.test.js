@@ -20,6 +20,7 @@ function fixture(url = "https://example.test/") {
     document: { readyState: "complete", getElementById: (id) => id === "screen-game" ? screen : input },
     showScreen: (id) => { context.current = id.replace("screen-", ""); screen.hidden = id !== "screen-game"; },
     updateTopTag() {}, updateModeBanners() {}, setGlobalNavActive() {},
+    setQuizModeLayout: value => { context.quizVisible = value; },
     showDailyCompletedView: () => false,
     restoreSavedGame: (mode) => { context.restoredMode = mode; context.current = "game"; return true; },
     setPartyStatus: (message) => { context.message = message; },
@@ -27,12 +28,12 @@ function fixture(url = "https://example.test/") {
   for (const [name, key] of Object.entries({ goToConfig: "config", openPokedexMode: "pokedex", openPartyRoomMode: "party", openProfileScreen: "profile" })) {
     context[name] = () => context.showScreen("screen-" + key);
   }
-  for (const [name, mode] of Object.entries({ startDailyGame: "daily", startNormalGame: "normal" })) {
+  for (const [name, mode] of Object.entries({ startDailyGame: "daily", startNormalGame: "normal", startEvolutionChainGame: "evolution", startQuizGame: "quiz" })) {
     context[name] = () => {
       if (context.failStart) return;
       context.starts++;
       context.gameMode = mode;
-      context.secretPokemon = { id: mode === "daily" ? 25 : 6 };
+      context.secretPokemon = mode === "quiz" ? null : { id: mode === "daily" ? 25 : 6 };
       context.showScreen("screen-game");
     };
   }
@@ -102,3 +103,18 @@ test("an invitation is consumed, keeps its code on reload, and leaves other quer
   f.context.initPartyFromUrl();
   assert.equal(f.context.current, "config");
 });
+
+for (const name of ["startEvolutionChainGame", "startQuizGame"]) {
+  test(`${name}: browser Back restores the existing round without restarting it`, () => {
+    const f = fixture();
+    f.context[name]();
+    const state = f.context.history.state;
+    assert.equal(state.screen, "game");
+    f.context.openPokedexMode();
+    f.listeners.popstate({ state });
+    assert.equal(f.context.current, "game");
+    assert.equal(f.context.starts, 1);
+    assert.equal(f.context.restoredMode, null);
+    assert.equal(f.context.quizVisible, name === "startQuizGame");
+  });
+}

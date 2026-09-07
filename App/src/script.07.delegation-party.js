@@ -1714,6 +1714,7 @@ function hideAllScreens() {
 }
 
 function showScreen(id) {
+  if (id !== "screen-multiplayer") hideMultiplayerWinOverlay();
   hideAllScreens();
   document.getElementById(id)?.classList.remove('hidden');
   window.scrollTo(0, 0);
@@ -1895,7 +1896,7 @@ function getHelpContentForGameMode(mode) {
       };
     case 'silhouette':
       return {
-        title: 'Silhouette',
+        title: 'Zoom progressif',
         body: `
           <section class="app-help-card">
             <h4>Zoom progressif</h4>
@@ -2454,6 +2455,7 @@ function renderWeightBattlePanel() {
   document.getElementById("try-count").textContent = String(weightBattleState.revealed ? 1 : 0);
   const status = document.getElementById("weight-status");
   const grid = document.getElementById("weight-grid");
+  document.getElementById("weight-restart")?.classList.toggle("hidden", !weightBattleState.revealed || isPartySessionActive());
   if (status) {
     status.textContent = !weightBattleState.revealed
       ? "Quel Pokémon est le plus lourd ?"
@@ -2849,6 +2851,13 @@ function startWeightBattle() {
   guessedNames = [];
   guessedSet = new Set();
   resultHistory = [];
+  setQuizModeLayout(false);
+  updateTopTag();
+  updateModeBanners();
+  updateSilhouettePanel(false);
+  updatePixelPanel(false);
+  updateMysteryPanel(false);
+  updateCryPanel(false);
   showStandardGameScreen();
   renderWeightBattlePanel();
 }
@@ -3263,6 +3272,7 @@ function handleMultiplayerGenerationChange(gen, item) {
 }
 
 function resetMultiplayerLiveSession() {
+  hideMultiplayerWinOverlay();
   const preservedGens = getMultiplayerSelectedGens();
   const preservedConnectionStatus = multiplayerSocket?.connected
     ? "online"
@@ -3360,6 +3370,8 @@ function ensureMultiplayerSocket() {
     const state = ensureMultiplayerLiveState();
     const previousRoom = state.room;
     state.room = roomState;
+    const ownGuesses = roomState?.players?.find((player) => player.isSelf)?.guessHistory || [];
+    state.submittedGuessNames = new Set(ownGuesses.map((entry) => entry.name));
     state.pendingGuessSubmit = false;
     state.lastRoomClosedReason = "";
     if (Array.isArray(roomState?.selectedGens) && roomState.selectedGens.length) {
@@ -3665,6 +3677,10 @@ function renderMultiplayerBotResult() {
   const resultHeading = resultBox?.querySelector("h3");
   const multiplayerScreen = document.getElementById("screen-multiplayer");
   if (!content) return false;
+  if (!multiplayerScreen || multiplayerScreen.classList.contains("hidden")) {
+    hideMultiplayerWinOverlay();
+    return false;
+  }
   const room = multiplayerLiveState?.room;
   const players = Array.isArray(room?.players) ? room.players : [];
   const self = players.find((player) => player.isSelf) || null;
@@ -3698,7 +3714,7 @@ function renderMultiplayerBotResult() {
     : "La manche est terminée.";
   const resultTitle = playerWon ? "Félicitations, tu as gagné !" : "Défaite";
   const resultSupportText = playerWon
-    ? "Belle manche. Tu remportes ce duel live avant ton adversaire."
+    ? (room?.endedReason === "disconnect" ? "Tu remportes la manche par forfait." : "Belle manche. Tu remportes ce duel live avant ton adversaire.")
     : "La manche t’échappe cette fois.";
 
   const postMatchMetaHtml = `
@@ -3738,6 +3754,10 @@ function renderMultiplayerBotResult() {
   `;
 
   if (resultBox) {
+    const overlayActions = ensureMultiplayerWinOverlay();
+    overlayActions.querySelectorAll('[data-action="winOverlayRestartSame"], [data-action="winOverlayRestartUpdated"]').forEach((button) => {
+      button.disabled = !bothPlayersPresent || !self?.isHost;
+    });
     if (resultHeading) resultHeading.textContent = playerWon ? "Victoire" : "Résultat du duel";
     resultBox.classList.toggle("is-win", playerWon);
     resultBox.classList.toggle("is-loss", !playerWon);

@@ -2013,3 +2013,13 @@ body.theme-dark #screen-multiplayer .multiplayer-player-stats span {
     padding: 14px 15px;
     gap: 10px;
   }}
+
+/* Result overlay lives outside the app wrapper: keep its own sizing and contrast. */
+#multiplayer-win-overlay { z-index: 11000; padding: 12px; }
+#multiplayer-win-overlay .multiplayer-win-card { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+#multiplayer-win-content .multiplayer-result-summary { color: #17253d; }
+#multiplayer-win-content .pokemon-mini-card > img { width: 100px; height: 100px; object-fit: contain; }
+#multiplayer-win-content .pokemon-card-types { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+#multiplayer-win-content .type-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+#multiplayer-win-content .type-badge img { width: 16px; height: 16px; min-width: 16px; margin: 0; }
+body.theme-dark #multiplayer-win-content .multiplayer-result-summary { color: #edf5ff; }

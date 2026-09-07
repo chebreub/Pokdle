@@ -322,6 +322,10 @@ function renderHigherLowerScreen() {
       </div>`;
     return;
   }
+  if (state.phase === "load-error") {
+    root.innerHTML = `<p role="status">${escapeHtml(state.roomError || "Chargement impossible.")}</p><button type="button" class="btn-blue" data-action="loadHigherLowerVersusPair" data-args='[${state.roomPairIndex}]'>Réessayer</button>`;
+    return;
+  }
   if (state.phase === "loading" || !state.left || (state.phase !== "gameover" && !state.right)) {
     root.innerHTML = `<div class="higher-lower-loading"><div class="higher-lower-spinner"></div><p>Chargement des Pokémon…</p></div>`;
     return;
@@ -345,6 +349,7 @@ function renderHigherLowerScreen() {
       root.innerHTML = `
         <div class="higher-lower-gameover">
           <h3>${title}</h3>
+          ${state.room?.finishReason === "disconnect" ? `<p>Partie terminée par forfait : un joueur a quitté la room.</p>` : ""}
           <p>Toi <b>${versusSelf?.score ?? state.score}</b> · ${escapeHtml(versusOpp?.nickname || "Adversaire")} <b>${versusOpp?.score ?? 0}</b></p>
           <div class="higher-lower-room-actions">
             ${isHost ? `<button class="btn-red" type="button" data-action="restartHigherLowerVersusMatch">Relancer une partie</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
@@ -388,6 +393,8 @@ function renderHigherLowerScreen() {
   root.innerHTML = `
     <div class="higher-lower-board">
       <div class="higher-lower-scoreline">${scoreHtml}</div>
+      ${state.roomError ? `<p class="higher-lower-feedback is-wrong" role="status">${escapeHtml(state.roomError)}</p>` : ""}
+      ${isVersus && state.isAnimating && !isReveal ? `<p role="status">Validation de la réponse…</p>` : ""}
       <div class="higher-lower-stat-banner">Stat à comparer : <b>${statMeta.icon} ${escapeHtml(statMeta.label)}</b></div>
       <div class="higher-lower-pair">
         <div class="higher-lower-card-pokemon side-left">
@@ -404,8 +411,8 @@ function renderHigherLowerScreen() {
       </div>
       ${isReveal ? `<p class="higher-lower-feedback ${state.lastCorrect ? "is-correct" : "is-wrong"}">${state.lastCorrect ? "✅ Bien vu !" : "❌ Raté."} ${escapeHtml(state.right.pokemon.name)} a <b>${state.right.statValue}</b> en ${escapeHtml(statMeta.label)}.</p>` : `
         <div class="higher-lower-actions">
-          <button class="btn-red higher-lower-btn-higher" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["higher"]'>▲ Plus haut</button>
-          <button class="btn-blue higher-lower-btn-lower" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["lower"]'>▼ Plus bas</button>
+          <button class="btn-red higher-lower-btn-higher" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["higher"]' ${state.isAnimating ? "disabled" : ""}>▲ Plus haut</button>
+          <button class="btn-blue higher-lower-btn-lower" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["lower"]' ${state.isAnimating ? "disabled" : ""}>▼ Plus bas</button>
         </div>
       `}
     </div>`;
@@ -525,9 +532,12 @@ async function loadHigherLowerVersusPair(index) {
   ]);
   if (!higherLowerState || higherLowerState.roomPairIndex !== index) return;
   if (!leftStats || !rightStats) {
-    higherLowerState.roomPairIndex = index + 1;
-    return loadHigherLowerVersusPair(higherLowerState.roomPairIndex);
+    higherLowerState.phase = "load-error";
+    higherLowerState.roomError = "Impossible de charger les statistiques de cette paire.";
+    renderHigherLowerScreen();
+    return;
   }
+  higherLowerState.roomError = null;
   higherLowerState.left = { pokemon: leftPokemon, stats: leftStats, statValue: Number(leftStats[pair.statKey]) || 0 };
   higherLowerState.right = { pokemon: rightPokemon, stats: rightStats, statValue: Number(rightStats[pair.statKey]) || 0 };
   higherLowerState.statKey = pair.statKey;
@@ -537,27 +547,44 @@ async function loadHigherLowerVersusPair(index) {
   renderHigherLowerScreen();
 }
 function answerHigherLowerVersus(choice) {
-  if (!higherLowerState || higherLowerState.phase !== "playing" || higherLowerState.isAnimating) return;
-  const leftVal = Number(higherLowerState.left?.statValue) || 0;
-  const rightVal = Number(higherLowerState.right?.statValue) || 0;
-  let correct;
-  if (rightVal === leftVal) correct = true;
-  else if (rightVal > leftVal) correct = (choice === "higher");
-  else correct = (choice === "lower");
-  higherLowerState.lastChoice = choice;
-  higherLowerState.lastCorrect = correct;
-  higherLowerState.phase = "revealing";
-  higherLowerState.isAnimating = true;
-  if (correct) higherLowerState.score += 1;
-  if (multiplayerSocket?.connected) multiplayerSocket.emit("higher-lower:submit-answer", { choice });
+  const state = higherLowerState;
+  if (!state || state.phase !== "playing" || state.isAnimating) return;
+  if (!multiplayerSocket?.connected) {
+    state.roomError = "Connexion perdue. Reconnecte-toi pour continuer.";
+    renderHigherLowerScreen();
+    return;
+  }
+  state.isAnimating = true;
+  state.roomError = null;
   renderHigherLowerScreen();
-  trackHigherLowerTimeout(() => {
-    if (!higherLowerState) return;
-    higherLowerState.isAnimating = false;
-    if (higherLowerState.room?.status !== "live") return;
-    higherLowerState.roomPairIndex += 1;
-    loadHigherLowerVersusPair(higherLowerState.roomPairIndex);
-  }, 900);
+  multiplayerSocket.timeout(12000).emit("higher-lower:submit-answer", { choice, cursor: state.roomPairIndex }, (error, response = {}) => {
+    if (higherLowerState !== state || state.room?.status !== "live") return;
+    if (error || !response.ok) {
+      state.isAnimating = false;
+      const serverCursor = state.room?.players?.find((player) => player.isSelf)?.cursor;
+      if (Number.isInteger(serverCursor) && serverCursor > state.roomPairIndex) {
+        state.roomPairIndex = serverCursor;
+        loadHigherLowerVersusPair(serverCursor);
+        return;
+      }
+      state.roomError = response.error || "La réponse du serveur tarde. Réessaie.";
+      renderHigherLowerScreen();
+      return;
+    }
+    state.lastChoice = choice;
+    state.lastCorrect = response.correct;
+    state.left.statValue = response.leftVal;
+    state.right.statValue = response.rightVal;
+    state.score = response.score;
+    state.phase = "revealing";
+    renderHigherLowerScreen();
+    trackHigherLowerTimeout(() => {
+      if (higherLowerState !== state || state.room?.status !== "live") return;
+      state.isAnimating = false;
+      state.roomPairIndex = response.cursor;
+      loadHigherLowerVersusPair(state.roomPairIndex);
+    }, 900);
+  });
 }
 function applyHigherLowerRoomState(room) {
   if (!higherLowerState) {
@@ -1534,6 +1561,7 @@ function applyStatAuctionRoomState(room) {
   statAuctionState.room = room;
   if (!room) return;
   if (room.status === "lobby") {
+    if (prevStatus !== "lobby") statAuctionState.roomError = null;
     statAuctionState.phase = "room";
     statAuctionState.currentPokemon = null;
     statAuctionState.currentStats = null;
@@ -1633,6 +1661,7 @@ function renderStatAuctionScreen() {
     root.innerHTML = `
       <div class="stat-auction-final">
         <h3>${title}</h3>
+        ${room.finishReason === "disconnect" ? `<p>Partie terminée par forfait : un joueur a quitté la room.</p>` : ""}
         <p>Toi <b>${self?.score ?? 0}</b> · ${escapeHtml(opp?.nickname || "Adv.")} <b>${opp?.score ?? 0}</b></p>
         <div class="higher-lower-room-actions">
           ${isHost ? `<button class="btn-red" type="button" data-action="restartStatAuctionMatch">Relancer</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
@@ -1660,7 +1689,7 @@ function renderStatAuctionScreen() {
       <div class="stat-auction-stat-label"><span>${s.icon}</span><b>${escapeHtml(s.label)}</b></div>
       <div class="stat-auction-stat-controls">
         <button type="button" class="btn-ghost stat-auction-step" ${cur <= 0 || state.submitted ? "disabled" : ""} data-action="changeStatAuctionAllocation" data-args='["${s.key}",-5]'>−5</button>
-        <input type="number" class="stat-auction-input" min="0" max="100" value="${cur}" ${state.submitted ? "disabled" : ""} data-input-action="statAuctionAllocationFromEl" data-stat-key="${s.key}" />
+        <input type="number" class="stat-auction-input" aria-label="Points : ${escapeHtml(s.label)}" min="0" max="100" value="${cur}" ${state.submitted ? "disabled" : ""} data-input-action="statAuctionAllocationFromEl" data-stat-key="${s.key}" />
         <button type="button" class="btn-ghost stat-auction-step" ${remaining <= 0 || state.submitted ? "disabled" : ""} data-action="changeStatAuctionAllocation" data-args='["${s.key}",5]'>+5</button>
       </div>
     </div>`;
@@ -1779,7 +1808,8 @@ function updateMysteryPanel(reveal) {
     box.classList.add("hidden");
     revealBox.classList.add("hidden");
     list.innerHTML = "";
-    sprite.src = "";
+    sprite.onerror = null;
+    sprite.removeAttribute("src");
     name.textContent = "";
     return;
   }
@@ -1840,16 +1870,18 @@ function updateMysteryPanel(reveal) {
 
   if (reveal) {
     revealBox.classList.remove("hidden");
+    const fallbackSrc = getSpriteUrl(getPokemonSpriteId(secretPokemon));
     sprite.onerror = () => {
       sprite.onerror = null;
-      sprite.src = getSpriteUrl(getPokemonSpriteId(secretPokemon));
+      sprite.src = fallbackSrc;
     };
     sprite.src = getPokemonSprite(secretPokemon);
     sprite.alt = secretPokemon.name;
     name.textContent = secretPokemon.name;
   } else {
     revealBox.classList.add("hidden");
-    sprite.src = "";
+    sprite.onerror = null;
+    sprite.removeAttribute("src");
     name.textContent = "";
   }
 }
@@ -1955,7 +1987,8 @@ function updateCryPanel(reveal) {
   if (gameMode !== "cry" || !secretPokemon) {
     box.classList.add("hidden");
     revealBox.classList.add("hidden");
-    sprite.src = "";
+    sprite.onerror = null;
+    sprite.removeAttribute("src");
     name.textContent = "";
     stopCrySound();
     return;
@@ -1965,16 +1998,18 @@ function updateCryPanel(reveal) {
 
   if (reveal) {
     revealBox.classList.remove("hidden");
+    const fallbackSrc = getSpriteUrl(getPokemonSpriteId(secretPokemon));
     sprite.onerror = () => {
       sprite.onerror = null;
-      sprite.src = getSpriteUrl(getPokemonSpriteId(secretPokemon));
+      sprite.src = fallbackSrc;
     };
     sprite.src = getPokemonSprite(secretPokemon);
     sprite.alt = secretPokemon.name;
     name.textContent = secretPokemon.name;
   } else {
     revealBox.classList.add("hidden");
-    sprite.src = "";
+    sprite.onerror = null;
+    sprite.removeAttribute("src");
     name.textContent = "";
   }
 }
@@ -1994,7 +2029,7 @@ function setQuizModeLayout(isQuizMode) {
     return;
   }
 
-  if (searchBar) searchBar.classList.remove("hidden");
+  if (searchBar) searchBar.classList.toggle("hidden", gameOver);
   if (errMsg) errMsg.classList.remove("hidden");
   if (quizBox) quizBox.classList.add("hidden");
 }

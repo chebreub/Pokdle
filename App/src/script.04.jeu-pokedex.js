@@ -64,6 +64,9 @@ function surrenderGame() {
 // Rendu partagé de l'écran de fin (victoire, abandon, grille-trophée du daily).
 // Ne comptabilise rien : les compteurs/streak/XP restent dans showWin/surrenderGame.
 function renderGameOverBox({ won, animate = true, celebrate = false }) {
+  // The round is over: leave the result and replay actions, not an inert guess form.
+  document.querySelector(".search-bar")?.classList.add("hidden");
+  document.getElementById("guess-ac")?.classList.add("hidden");
   const box = document.getElementById("win-box");
   const winSprite = document.getElementById("win-sprite");
   const winTitle = document.getElementById("win-title");
@@ -71,9 +74,10 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
   const surrenderBtn = document.getElementById("btn-surrender");
   const restartBtn = document.getElementById("btn-restart");
 
+  const fallbackSrc = getSpriteUrl(getPokemonSpriteId(secretPokemon));
   winSprite.onerror = () => {
     winSprite.onerror = null;
-    winSprite.src = getSpriteUrl(getPokemonSpriteId(secretPokemon));
+    winSprite.src = fallbackSrc;
   };
   winSprite.src = getPokemonSprite(secretPokemon);
   winSprite.style.borderColor = pokemonTypeColor(secretPokemon.type1);
@@ -1213,7 +1217,9 @@ function openAllModesScreen() {
     typeChart: "openTypeChartScreen",
     emulator: "openEmulatorMode",
   };
-  var GAME_OPENERS = ["startDailyGame", "startNormalGame"];
+  var GAME_OPENERS = ["startDailyGame", "startNormalGame", "startSilhouetteGame", "startPixelGame",
+    "startCryGame", "startMysteryStatGame", "startQuizGame", "startDescriptionMode",
+    "startEvolutionChainGame", "startPokedexOrderGame", "startWeightBattle"];
 
   function routeUrl(key) {
     return location.pathname + location.search + (key === "config" ? "" : "#" + key);
@@ -1253,10 +1259,11 @@ function openAllModesScreen() {
     try {
       if (key === "game") {
         // Keep the finished/current view in memory when it is still the same game.
-        if (secretPokemon && (!state.mode || state.mode === gameMode) &&
-            (!state.secretId || state.secretId === secretPokemon.id) &&
-            (gameMode === "normal" || gameMode === "daily")) {
+        if ((secretPokemon || gameMode === "quiz") && (!state.mode || state.mode === gameMode) &&
+            (!state.secretId || state.secretId === secretPokemon?.id)) {
           showScreen("screen-game");
+          if (typeof setQuizModeLayout === "function") setQuizModeLayout(gameMode === "quiz");
+          if (gameMode === "weight" && typeof renderWeightBattlePanel === "function") renderWeightBattlePanel();
           updateTopTag();
           updateModeBanners();
           setGlobalNavActive("game");
@@ -1315,6 +1322,7 @@ function ensurePartyListeners() {
   if (!socket || partyRoomState.listenersBound) return socket;
   partyRoomState.listenersBound = true;
   socket.on("party:room-state", function (room) {
+    if (room?.round !== partyRoomState.room?.round) setPartyStatus("");
     partyRoomState.room = room;
     partyRoomState.code = room && room.code;
     renderPartyRoom();
@@ -4800,6 +4808,7 @@ function initPokedex() {
 }
 
 function openPokedexMode() {
+  document.getElementById("screen-pokedex")?.classList.remove("is-detail-open");
   document.getElementById("screen-config").classList.add("hidden");
   document.getElementById("screen-game").classList.add("hidden");
   document.getElementById("screen-ranking").classList.add("hidden");
@@ -4958,6 +4967,7 @@ function createPokedexCard(p) {
     pokedexSelectedShiny = false;
     updatePokedexGridSelection();
     renderPokedexDetail(POKEMON_BY_ID.get(pokedexSelectedId) || p);
+    showPokedexMobileDetail();
   });
   return card;
 }
@@ -5161,7 +5171,22 @@ function getPokedexNavigationState() {
   };
 }
 
+function showPokedexMobileDetail() {
+  if (!window.matchMedia("(max-width: 640px)").matches) return;
+  document.getElementById("screen-pokedex")?.classList.add("is-detail-open");
+  document.getElementById("pokedex-detail")?.scrollIntoView({ block: "start" });
+}
+
+function closePokedexMobileDetail() {
+  document.getElementById("screen-pokedex")?.classList.remove("is-detail-open");
+  ensurePokedexSelectedCardVisible();
+}
+
 function ensurePokedexSelectedCardVisible() {
+  if (window.matchMedia("(max-width: 640px)").matches && document.getElementById("screen-pokedex")?.classList.contains("is-detail-open")) {
+    document.getElementById("pokedex-detail")?.scrollIntoView({ block: "start" });
+    return;
+  }
   const grid = document.getElementById("pokedex-grid");
   if (!grid || !pokedexSelectedId) return;
   const target = grid.querySelector(`.pokedex-card[data-pokemon-id="${pokedexSelectedId}"]`);
@@ -5201,6 +5226,7 @@ async function renderPokedexDetail(pokemon) {
   const navigation = getPokedexNavigationState();
   const recentHtml = renderPokedexRecentBlock();
   const navigationHtml = `
+    <button type="button" class="btn-ghost pokedex-back-to-list" data-action="closePokedexMobileDetail">← Tous les Pokémon</button>
     <div class="pokedex-detail-nav">
       <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["prev"]' ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
       <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["next"]' ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
@@ -5225,7 +5251,7 @@ async function renderPokedexDetail(pokemon) {
       <div class="pokedex-detail-sticky">
         <div class="pokedex-detail-summary">
           <h3>${pokemon.name}</h3>
-          <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
+          <p>#${dexId}${pokemon.isAltForm ? " · Forme alternative" : ""}</p>
           <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
         </div>
       </div>
@@ -5295,7 +5321,7 @@ async function renderPokedexDetail(pokemon) {
       <div class="pokedex-detail-sticky">
         <div class="pokedex-detail-summary">
           <h3>${pokemon.name}</h3>
-          <p>#${dexId}${pokemon.isAltForm ? " ? Forme alternative" : ""}</p>
+          <p>#${dexId}${pokemon.isAltForm ? " · Forme alternative" : ""}</p>
           <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
         </div>
       </div>

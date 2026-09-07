@@ -1,6 +1,7 @@
 /* Mobile layout follows the actual game flow; desktop rules stay in their files. */
 #pokedex-filters-toggle { display: none; }
 #multiplayer-gen-toggle { display: none; }
+#screen-game .search-bar.hidden { display: none !important; }
 .overlay-modal { z-index: 10020; }
 .overlay-head { flex-shrink: 0; }
 .overlay-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
@@ -129,7 +130,7 @@
   #screen-draft-score-attack .draft-score-hero .dsh-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   #screen-draft-score-attack .draft-score-hero .dsh-chip { min-width: 0; padding: 8px 4px; }
   #screen-draft-score-attack .draft-score-hero .dsh-chip span { white-space: normal; font-size: .75rem; }
-  .draft-gen-buttons { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .draft-gen-buttons:not(.hidden) { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
   .draft-gen-buttons button { min-width: 0; min-height: 48px; padding: 8px 4px !important; font-size: .875rem; white-space: normal; }
   #screen-draft-score-attack #draft-gen-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   #screen-draft-score-attack.is-mode-score-attack #draft-options { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
@@ -176,4 +177,13 @@
   body.theme-dark #screen-party-room .party-field > span,
   body.theme-dark #screen-multiplayer .multiplayer-gen-panel h3 { color: #eff5ff !important; }
   body.theme-dark #screen-multiplayer .multiplayer-status-row :is(.tag-gen, .tag-tries) { background: #243752 !important; color: #eff5ff !important; }
+}
+
+/* On phones the selected entry is its own view, reachable without crossing the list. */
+.pokedex-back-to-list { display: none; }
+@media (max-width: 640px) {
+  #screen-pokedex:not(.is-detail-open) #pokedex-detail { display: none !important; }
+  #screen-pokedex.is-detail-open #pokedex-grid { display: none !important; }
+  #screen-pokedex .pokedex-back-to-list { display: block; width: 100%; min-height: 44px; margin: 12px 0; }
+  #screen-pokedex #pokedex-detail { scroll-margin-top: 12px; }
 }
