@@ -5,6 +5,7 @@ const express = require("express");
 const helmet = require("helmet");
 const http = require("http");
 const { Server } = require("socket.io");
+const { createOAuthStateStore } = require("./lib/oauth-state");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
 // Moteur Score Attack PRO partagé avec le client (même barème PRO_TUNING + fonctions pures).
 // Fonctions utilisées côté serveur pour le 1v1 PRO : rollProModifiers(gen, rnd), computeDraftProScore(team, mods).
@@ -21,6 +22,82 @@ const io = new Server(server, {
   },
 });
 
+// Security headers (lot D audit 2026-06-10).
+// Deux CSP, toutes deux en ENFORCE :
+//  - STRICTE pour tout le site : pas d'unsafe-eval, pas de blob: en script-src,
+//    websockets limités à la même origine (+ ALLOWED_ORIGINS) au lieu de ws:/wss: génériques.
+//  - PERMISSIVE uniquement pour /emulateur : EmulatorJS exige 'unsafe-eval' +
+//    'wasm-unsafe-eval' + blob: (cores GBA/WASM). Vérifié 2026-06-05 : retirer
+//    'unsafe-eval' casse l'émulateur (écran noir).
+// script-src ne contient jamais 'unsafe-inline' : tous les handlers inline ont
+// été migrés vers data-action / délégation.
+const SOCKET_ORIGINS = ALLOWED_ORIGINS.flatMap((origin) => {
+  try {
+    const url = new URL(origin);
+    return [`${url.protocol === "https:" ? "wss" : "ws"}://${url.host}`];
+  } catch (_err) {
+    return [];
+  }
+});
+if (!SOCKET_ORIGINS.length) {
+  // Dev local sans ALLOWED_ORIGINS : autorise les websockets locaux explicitement
+  // (certains navigateurs ne couvrent pas ws:// via 'self').
+  SOCKET_ORIGINS.push(`ws://localhost:${PORT}`, `ws://127.0.0.1:${PORT}`);
+}
+
+const strictCspDirectives = {
+  defaultSrc: ["'self'"],
+  scriptSrc: ["'self'"],
+  styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
+  fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+  imgSrc: [
+    "'self'",
+    "data:",
+    "blob:",
+    "https://raw.githubusercontent.com",
+    "https://cdn.jsdelivr.net",
+    "https://pokeapi.co",
+    "https://archives.bulbagarden.net",
+    "https://cdn.discordapp.com",
+    "https://www.pokepedia.fr",
+  ],
+  connectSrc: [
+    "'self'",
+    "https://pokeapi.co",
+    "https://raw.githubusercontent.com",
+    "https://cdn.jsdelivr.net",
+    "https://archives.bulbagarden.net",
+    ...SOCKET_ORIGINS,
+  ],
+  mediaSrc: ["'self'", "data:", "blob:", "https://raw.githubusercontent.com", "https://cdn.jsdelivr.net"],
+  workerSrc: ["'self'"],
+  objectSrc: ["'none'"],
+  baseUri: ["'self'"],
+  formAction: ["'self'"],
+  frameAncestors: ["'self'"],
+};
+
+const emulatorCspDirectives = {
+  ...strictCspDirectives,
+  scriptSrc: [...strictCspDirectives.scriptSrc, "https://cdn.emulatorjs.org", "'wasm-unsafe-eval'", "'unsafe-eval'", "blob:"],
+  styleSrc: [...strictCspDirectives.styleSrc, "https://cdn.emulatorjs.org"],
+  imgSrc: [...strictCspDirectives.imgSrc, "https://cdn.emulatorjs.org"],
+  connectSrc: [...strictCspDirectives.connectSrc, "blob:", "https://cdn.emulatorjs.org"],
+  mediaSrc: [...strictCspDirectives.mediaSrc, "https://cdn.emulatorjs.org"],
+  workerSrc: [...strictCspDirectives.workerSrc, "blob:"],
+};
+
+const strictCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: strictCspDirectives, reportOnly: false });
+const emulatorCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: emulatorCspDirectives, reportOnly: false });
+
+if (compression) app.use(compression());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
+app.use((req, res, next) => (req.path === "/emulateur" ? emulatorCsp(req, res, next) : strictCsp(req, res, next)));
+
 const rooms = new Map();
 
 // ===== Auth Discord (OAuth) + base Postgres (Neon) — Phase 1, defensif =====
@@ -33,6 +110,8 @@ const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || "";
 const DISCORD_API_BASE = (process.env.DISCORD_API_BASE || "https://discord.com").replace(/\/+$/, "");
 const SESSION_SECRET = process.env.SESSION_SECRET || "";
 const AUTH_COOKIE = "pokdle_session";
+const oauthStates = createOAuthStateStore();
+const oauthCookieOptions = { httpOnly: true, secure: true, sameSite: "lax", path: "/" };
 
 try {
   if (process.env.DATABASE_URL) {
@@ -78,11 +157,14 @@ async function initAuthDb() {
 initAuthDb();
 
 function parseAuthCookies(req) {
-  const out = {};
+  const out = Object.create(null);
   const raw = (req.headers && req.headers.cookie) || "";
   raw.split(";").forEach((part) => {
     const i = part.indexOf("=");
-    if (i > -1) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    if (i > -1) {
+      try { out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim()); }
+      catch (_error) { /* Ignore malformed cookies rather than failing the request. */ }
+    }
   });
   return out;
 }
@@ -99,7 +181,12 @@ function setSessionCookie(res, payload) {
 
 app.get("/auth/discord", (req, res) => {
   if (!authReady()) return res.redirect("/?auth=indispo");
+  const attempt = oauthStates.issue();
+  if (!attempt) return res.status(503).send("Connexion temporairement indisponible. Réessaie dans quelques minutes.");
+  res.cookie(attempt.cookieName, attempt.binding, { ...oauthCookieOptions, maxAge: attempt.maxAge });
+  res.set("Cache-Control", "no-store");
   const params = new URLSearchParams({
+    state: attempt.state,
     client_id: DISCORD_CLIENT_ID,
     redirect_uri: DISCORD_CALLBACK_URL,
     response_type: "code",
@@ -110,8 +197,12 @@ app.get("/auth/discord", (req, res) => {
 
 app.get("/auth/discord/callback", async (req, res) => {
   if (!authReady()) return res.redirect("/?auth=indispo");
+  res.set("Cache-Control", "no-store");
+  const state = req.query && req.query.state;
+  if (!oauthStates.consume(state, parseAuthCookies(req))) return res.redirect("/?auth=erreur");
+  res.clearCookie(oauthStates.cookieName(state), oauthCookieOptions);
   const code = req.query && req.query.code;
-  if (!code) return res.redirect("/?auth=annule");
+  if (typeof code !== "string" || !code) return res.redirect("/?auth=annule");
   try {
     const tokenResp = await fetch(`${DISCORD_API_BASE}/api/oauth2/token`, {
       method: "POST",
@@ -482,82 +573,6 @@ function isPayloadOversized(payload) {
     return true;
   }
 }
-
-// Security headers (lot D audit 2026-06-10).
-// Deux CSP, toutes deux en ENFORCE :
-//  - STRICTE pour tout le site : pas d'unsafe-eval, pas de blob: en script-src,
-//    websockets limités à la même origine (+ ALLOWED_ORIGINS) au lieu de ws:/wss: génériques.
-//  - PERMISSIVE uniquement pour /emulateur : EmulatorJS exige 'unsafe-eval' +
-//    'wasm-unsafe-eval' + blob: (cores GBA/WASM). Vérifié 2026-06-05 : retirer
-//    'unsafe-eval' casse l'émulateur (écran noir).
-// script-src ne contient jamais 'unsafe-inline' : tous les handlers inline ont
-// été migrés vers data-action / délégation.
-const SOCKET_ORIGINS = ALLOWED_ORIGINS.flatMap((origin) => {
-  try {
-    const url = new URL(origin);
-    return [`${url.protocol === "https:" ? "wss" : "ws"}://${url.host}`];
-  } catch (_err) {
-    return [];
-  }
-});
-if (!SOCKET_ORIGINS.length) {
-  // Dev local sans ALLOWED_ORIGINS : autorise les websockets locaux explicitement
-  // (certains navigateurs ne couvrent pas ws:// via 'self').
-  SOCKET_ORIGINS.push(`ws://localhost:${PORT}`, `ws://127.0.0.1:${PORT}`);
-}
-
-const strictCspDirectives = {
-  defaultSrc: ["'self'"],
-  scriptSrc: ["'self'"],
-  styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
-  fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-  imgSrc: [
-    "'self'",
-    "data:",
-    "blob:",
-    "https://raw.githubusercontent.com",
-    "https://cdn.jsdelivr.net",
-    "https://pokeapi.co",
-    "https://archives.bulbagarden.net",
-    "https://cdn.discordapp.com",
-    "https://www.pokepedia.fr",
-  ],
-  connectSrc: [
-    "'self'",
-    "https://pokeapi.co",
-    "https://raw.githubusercontent.com",
-    "https://cdn.jsdelivr.net",
-    "https://archives.bulbagarden.net",
-    ...SOCKET_ORIGINS,
-  ],
-  mediaSrc: ["'self'", "data:", "blob:", "https://raw.githubusercontent.com", "https://cdn.jsdelivr.net"],
-  workerSrc: ["'self'"],
-  objectSrc: ["'none'"],
-  baseUri: ["'self'"],
-  formAction: ["'self'"],
-  frameAncestors: ["'self'"],
-};
-
-const emulatorCspDirectives = {
-  ...strictCspDirectives,
-  scriptSrc: [...strictCspDirectives.scriptSrc, "https://cdn.emulatorjs.org", "'wasm-unsafe-eval'", "'unsafe-eval'", "blob:"],
-  styleSrc: [...strictCspDirectives.styleSrc, "https://cdn.emulatorjs.org"],
-  imgSrc: [...strictCspDirectives.imgSrc, "https://cdn.emulatorjs.org"],
-  connectSrc: [...strictCspDirectives.connectSrc, "blob:", "https://cdn.emulatorjs.org"],
-  mediaSrc: [...strictCspDirectives.mediaSrc, "https://cdn.emulatorjs.org"],
-  workerSrc: [...strictCspDirectives.workerSrc, "blob:"],
-};
-
-const strictCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: strictCspDirectives, reportOnly: false });
-const emulatorCsp = helmet.contentSecurityPolicy({ useDefaults: false, directives: emulatorCspDirectives, reportOnly: false });
-
-if (compression) app.use(compression());
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-}));
-app.use((req, res, next) => (req.path === "/emulateur" ? emulatorCsp(req, res, next) : strictCsp(req, res, next)));
 
 // --- Service statique restreint (lot A audit 2026-06-10) ---
 // On ne sert plus __dirname entier (exposait server.js, package.json, node_modules/).

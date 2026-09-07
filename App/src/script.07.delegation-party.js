@@ -350,9 +350,9 @@ function clearSavedGame(targetMode = gameMode) {
   }
 }
 
-function restoreSavedGame() {
+function restoreSavedGame(preferredMode = null) {
   // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
-  let save = readJson(STORAGE_KEYS.dailyGame, null);
+  let save = preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null);
   if (save && (save.mode !== "daily" || save.dailyKey !== getUTCDateKey())) {
     clearSavedGame("daily");
     save = null;
@@ -366,7 +366,7 @@ function restoreSavedGame() {
       if (save.dailyKey !== getUTCDateKey()) save = null;
     }
   }
-  if (!save) return false;
+  if (!save || (preferredMode && save.mode !== preferredMode)) return false;
 
   if (!VALID_MODES.has(save.mode)) {
     clearSavedGame(save.mode);

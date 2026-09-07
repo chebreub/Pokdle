@@ -22,9 +22,11 @@ function buildGenGrid() {
       </div>
     `;
 
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
+    const checkbox = item.querySelector("input");
+    checkbox.addEventListener("change", () => {
       toggleGen(gen, item);
+      // The final selected generation cannot be unchecked.
+      checkbox.checked = selectedGens.has(gen);
     });
 
     grid.appendChild(item);
