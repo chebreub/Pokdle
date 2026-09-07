@@ -227,7 +227,7 @@
         <p class="pk-sec-sub">Explore les Pokémon, les arènes, et joue aux jeux d'origine.</p>
         <div class="pk-modes">
           <article class="pk-card pk-mode" data-action="openPokedexMode" role="button" tabindex="0"><div class="pk-tile pk-tile-teal"><svg class="pk-ico"><use href="#i-book"/></svg></div><h4>Pokédex</h4><p>1025 Pokémon (+ formes), stats, talents, évolutions, comparateur.</p></article>
-          <article class="pk-card pk-mode" data-action="openDraftArenaMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-trophy"/></svg></div><h4>Draft Arènes</h4><p>Drafte 6 Pokémon, défie 8 arènes et décroche tes badges.</p></article>
+          <article class="pk-card pk-mode" data-action="openDraftArenaMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-trophy"/></svg></div><h4>Draft Arènes</h4><p>Drafte 6 Pokémon et analyse ton équipe. Combats en préparation.</p></article>
           <article class="pk-card pk-mode" data-action="openEmulatorMode" role="button" tabindex="0"><div class="pk-tile pk-tile-purple"><svg class="pk-ico"><use href="#i-gamepad"/></svg></div><h4>Émulateur <span class="pk-tag">UNIQUE</span></h4><p>Lance ta propre ROM GBA, GBC ou DS directement dans le navigateur.</p></article>
         </div>
       </section>
@@ -308,7 +308,7 @@
             <div class="all-modes-grid">
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startDailyGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-calendar"/></svg></div><b>Pokémon du jour</b></button>
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startNormalGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-infinity"/></svg></div><b>Mode illimité</b></button>
-              <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startSilhouetteGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-eye"/></svg></div><b>Silhouette</b></button>
+              <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startSilhouetteGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-eye"/></svg></div><b>Zoom progressif</b></button>
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startPixelGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-image"/></svg></div><b>Pixelisé</b></button>
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startDescriptionMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-file-text"/></svg></div><b>Description</b></button>
               <button type="button" class="card all-modes-card" data-action="openFromAllModes" data-args='["startCryGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-volume"/></svg></div><b>Cri</b></button>
@@ -1002,6 +1002,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
       <div id="weight-box" class="challenge-panel hidden">
         <p id="weight-status" class="challenge-title">Quel Pokémon est le plus lourd ?</p>
         <div id="weight-grid" class="versus-grid"></div>
+        <button type="button" id="weight-restart" class="btn-blue hidden" data-action="startWeightBattle">Nouvelle manche</button>
       </div>
 
       <div id="evolution-banner" class="mode-banner hidden">

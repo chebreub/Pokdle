@@ -711,7 +711,7 @@ function updateSilhouettePanel(reveal) {
 
   box.classList.remove("hidden");
   img.src = getPokemonSprite(secretPokemon);
-  img.alt = "Silhouette du Pokémon mystère";
+  img.alt = "Vue zoomée du Pokémon mystère";
   if (reveal) {
     img.style.transform = "translate(0px, 0px) scale(1)";
   } else {
@@ -2137,6 +2137,7 @@ function applyStatClashRoomState(roomState) {
               : roomState?.status === "live"
                 ? "Randomizer en cours."
               : "Lobby room en attente.";
+  if (roomState?.notice) statClashState.statusText = roomState.notice;
   if (roomState?.status === "starting") {
     statClashState.phase = "starting-countdown";
     statClashState.timerDurationMs = STAT_CLASH_START_DELAY_MS;
