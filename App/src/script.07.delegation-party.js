@@ -2373,6 +2373,7 @@ function openProfileScreen() {
   goToConfig();
   hideScreen('screen-config');
   showScreen('screen-profile');
+  setGlobalNavActive('profile');
   renderProfileScreen();
 }
 
