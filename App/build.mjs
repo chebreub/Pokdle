@@ -44,7 +44,7 @@ for (const file of ["script.js", "pokemon.js"]) {
   });
 }
 
-for (const file of ["style.css", "nav.css", "pokedex.css", "multiplayer.css", "home.css", "party-room.css", "profile.css", "mobile.css"]) {
+for (const file of ["style.css", "nav.css", "pokedex.css", "multiplayer.css", "home.css", "party-room.css", "profile.css", "mobile.css", "visual-refresh.css"]) {
   await minifyAsset(file, "css", { minify: true });
 }
 

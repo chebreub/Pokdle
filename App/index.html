@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="preconnect" href="https://pokeapi.co" crossorigin>
   <link rel="preconnect" href="https://cdn.emulatorjs.org" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dist/style.min.css">
   <link rel="stylesheet" href="dist/nav.min.css">
   <link rel="stylesheet" href="dist/pokedex.min.css">
@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="dist/party-room.min.css">
   <link rel="stylesheet" href="dist/profile.min.css">
   <link rel="stylesheet" href="dist/mobile.min.css">
+  <link rel="stylesheet" href="dist/visual-refresh.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -48,7 +49,7 @@
     #app-splash { animation: app-splash-autohide 0.4s ease 12s forwards; }
   </style>
 </head>
-<body>
+<body id="pokdle-app" class="design-refresh">
 
   <div id="app-splash" aria-hidden="true">
     <div class="app-splash-ball"></div>
@@ -1394,7 +1395,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Devine si la stat du Pokémon de droite est plus haute ou plus basse que celle de gauche. Bonne réponse → enchaîne. Mauvaise → game over.</p>
+        <p class="card-desc">Compare la statistique des deux Pokémon et choisis « Plus haut » ou « Plus bas ».</p>
         <div id="higher-lower-root" class="higher-lower-root"></div>
       </div>
     </div>
@@ -1408,7 +1409,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">16 Pokémon répartis en 4 groupes de 4 selon un thème caché (type, génération, habitat, couleur, stade). Trouve les 4 groupes en 4 erreurs max. Pioche dans toutes les générations, quel que soit ton filtre.</p>
+        <p class="card-desc">Trouve les 4 groupes de 4 Pokémon liés par un thème caché. Toutes les générations sont incluses ; tu as droit à 4 erreurs.</p>
         <div id="poke-connections-root" class="poke-connections-root"></div>
       </div>
     </div>

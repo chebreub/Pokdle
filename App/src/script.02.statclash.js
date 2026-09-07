@@ -496,6 +496,7 @@ function setGlobalNavActive(key) {
     game: "nav-game",
     social: "nav-social",
     pokedex: "nav-collection",
+    profile: "nav-collection",
     types: "nav-collection",
     extras: "nav-extras",
     draft: "nav-extras",
