@@ -1,15 +1,18 @@
-/* Pokémon arcade: a night-blue shell, colored game families and calm reading surfaces.
+/* Pokémon playground: colored game families and a shell that follows the theme.
    Loaded after legacy mode styles. Gameplay feedback keeps its own colors. */
 #pokdle-app.design-refresh {
-  --ui-bg: #101c34;
-  --ui-surface: #f1f5fd;
-  --ui-soft: #e3ebf8;
+  --ui-bg: #e3eff7;
+  --ui-surface: #f8fbff;
+  --ui-soft: #e5edf7;
   --ui-ink: #17253d;
   --ui-muted: #5d6c82;
   --ui-line: #c4d3eb;
   --ui-accent: #2864db;
   --ui-accent-soft: #eaf1ff;
-  --ui-shadow: 0 12px 28px rgb(3 10 28 / 16%);
+  --ui-shadow: 0 7px 20px rgb(39 75 107 / 9%);
+  --shell-glow: #cce5f4;
+  --header-bg: #f5faff;
+  --cover-tail: #f8fbff;
   --mode-color: #345fcc;
   --mode-wash: #dfe9ff;
   --bg: var(--ui-bg);
@@ -18,7 +21,7 @@
   --text: var(--ui-ink);
   --muted: var(--ui-muted);
   --line: var(--ui-line);
-  background: radial-gradient(ellipse at 0 0, #254873 0, transparent 55%), radial-gradient(ellipse at 100% 25%, #29284f 0, transparent 50%), var(--ui-bg) !important;
+  background: linear-gradient(180deg, var(--shell-glow), transparent 650px), var(--ui-bg) !important;
   background-attachment: fixed !important;
   color: var(--ui-ink) !important;
   font-family: Inter, system-ui, sans-serif;
@@ -35,6 +38,9 @@
   --ui-accent: #83acff;
   --ui-accent-soft: #233a60;
   --ui-shadow: 0 6px 24px rgb(0 0 0 / 12%);
+  --shell-glow: #1d3451;
+  --header-bg: #101b30;
+  --cover-tail: #172840;
   --mode-color: #97baff;
   --mode-wash: #223a5e;
 }
@@ -47,6 +53,9 @@
 #pokdle-app.design-refresh :is(button, input, select, textarea) { font-family: inherit !important; }
 #pokdle-app.design-refresh :is(h1, h2, h3, h4, h5) { font-family: Nunito, Inter, sans-serif !important; text-shadow: none !important; letter-spacing: -.02em; }
 #pokdle-app.design-refresh .card-title { font-size: clamp(1.35rem, 2.2vw, 1.8rem) !important; font-weight: 900 !important; line-height: 1.2; text-transform: none !important; color: var(--ui-ink) !important; }
+/* Old Draft rules used text-fill, which overrides color even on a pale header. */
+#pokdle-app.design-refresh .card-title,
+#pokdle-app.design-refresh .card-title * { color: var(--ui-ink) !important; -webkit-text-fill-color: currentColor !important; }
 #pokdle-app.design-refresh :is(.card-desc, .pokedex-muted, .app-help-card p, .profile-stat-card span) { color: var(--ui-muted) !important; font-size: .9375rem; font-weight: 400 !important; line-height: 1.6; }
 
 /* Reading surfaces stay quiet; colored title bars identify the game family. */
@@ -104,20 +113,20 @@
 #pokdle-app.design-refresh :is(.ac-sub, .rank-candidate-sub) { color: var(--ui-muted) !important; }
 #pokdle-app.design-refresh :is(.ac-item:hover, .ac-item.hl, .tc-ac-item:hover, .tc-ac-item:focus-visible, .rank-candidate:hover, .rank-candidate.hl) { background: var(--ui-accent-soft) !important; color: var(--ui-ink) !important; }
 
-/* The navigation belongs to the dark arcade shell in both reading themes. */
-#pokdle-app.design-refresh header { background: #101b30 !important; border-bottom: 1px solid #344967 !important; box-shadow: 0 6px 22px rgb(3 10 28 / 18%) !important; padding: 14px 0 !important; }
+/* Header, footer and mobile navigation use the same selected theme as the page. */
+#pokdle-app.design-refresh header { background: var(--header-bg) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: 0 3px 16px rgb(30 65 100 / 8%) !important; padding: 14px 0 !important; }
 #pokdle-app.design-refresh .header-inner { max-width: 1440px !important; margin: 0 auto !important; padding: 0 32px !important; width: 100% !important; }
-#pokdle-app.design-refresh header .logo-row h1 { color: #fff !important; font-size: 1.65rem !important; letter-spacing: -.04em; }
+#pokdle-app.design-refresh header .logo-row h1 { color: var(--ui-ink) !important; font-size: 1.65rem !important; letter-spacing: -.04em; }
 #pokdle-app.design-refresh .pokeball-icon { box-shadow: none !important; border: 1px solid #17253d; }
 #pokdle-app.design-refresh header .tagline { display: none !important; }
 #pokdle-app.design-refresh .header-top .nav-pill {
   background: transparent !important; border: 1px solid transparent !important;
-  color: #bdcce5 !important; box-shadow: none !important;
+  color: var(--ui-muted) !important; box-shadow: none !important;
   border-radius: 10px !important; font: 600 .875rem Inter, sans-serif !important;
   padding: 10px 12px !important; min-height: 42px !important;
 }
-#pokdle-app.design-refresh .header-top .nav-pill:is(:hover, .active) { background: #293d60 !important; color: #ffda70 !important; }
-#pokdle-app.design-refresh .header-actions .header-action-btn { color: #dae6fa !important; background: #20314d !important; border: 1px solid #344967 !important; box-shadow: none !important; }
+#pokdle-app.design-refresh .header-top .nav-pill:is(:hover, .active) { background: var(--ui-accent-soft) !important; color: var(--ui-accent) !important; }
+#pokdle-app.design-refresh .header-actions .header-action-btn { color: var(--ui-ink) !important; background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; }
 #pokdle-app.design-refresh .header-actions .header-action-btn svg { stroke: currentColor !important; }
 #pokdle-app.design-refresh #global-xp-badge { background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; color: var(--ui-ink) !important; border-radius: 12px !important; }
 #pokdle-app.design-refresh #account-area .account-login { background: #5865f2 !important; border: 1px solid #5865f2 !important; color: #fff !important; border-radius: 12px; box-shadow: none !important; }
@@ -150,10 +159,10 @@
 #pokdle-app.design-refresh #screen-config .pk-medallion { border: 1px solid rgb(255 255 255 / 14%); background: rgb(255 255 255 / 5%); width: 220px; height: 220px; }
 #pokdle-app.design-refresh #screen-config .pk-silo-img { width: 210px; height: 210px; filter: drop-shadow(0 16px 16px rgb(0 0 0 / 22%)); opacity: 1; }
 #pokdle-app.design-refresh #screen-config .pk-qm { position: absolute; right: 4px; bottom: 8px; font-size: 32px; background: #ffcc45; color: #17253d; border-radius: 14px; width: 48px; height: 48px; display: grid; place-items: center; text-shadow: none; transform: rotate(8deg); }
-#pokdle-app.design-refresh #screen-config .pk-sec-title h2 { color: #f3f7ff !important; font-size: 1.4rem; }
-#pokdle-app.design-refresh #screen-config .pk-sec-sub { color: #b7c8e3 !important; font-weight: 400; font-size: .9375rem; margin-top: 6px; }
+#pokdle-app.design-refresh #screen-config .pk-sec-title h2 { color: var(--ui-ink) !important; font-size: 1.4rem; }
+#pokdle-app.design-refresh #screen-config .pk-sec-sub { color: var(--ui-muted) !important; font-weight: 400; font-size: .9375rem; margin-top: 6px; }
 #pokdle-app.design-refresh #screen-config .pk-bar { display: none; }
-#pokdle-app.design-refresh #screen-config .pk-allmodes { color: #ffda70 !important; background: #283d5f !important; box-shadow: none !important; border: 1px solid #456084; font-weight: 600; border-radius: 10px; }
+#pokdle-app.design-refresh #screen-config .pk-allmodes { color: var(--ui-accent) !important; background: var(--ui-accent-soft) !important; box-shadow: none !important; border: 1px solid var(--ui-line); font-weight: 600; border-radius: 10px; }
 #pokdle-app.design-refresh #screen-config .pk-card { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; border-radius: 18px !important; box-shadow: none !important; }
 #pokdle-app.design-refresh #screen-config .pk-mode { padding: 22px; gap: 8px; }
 #pokdle-app.design-refresh #screen-config .pk-mode:hover { border-color: var(--ui-accent) !important; box-shadow: var(--ui-shadow) !important; transform: translateY(-3px); }
@@ -203,19 +212,27 @@
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; box-shadow: var(--ui-shadow) !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card > .ranking-head { background: var(--mode-wash) !important; border-left: 4px solid var(--mode-color) !important; border-bottom: 0 !important; border-radius: 12px !important; padding: 16px 18px !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card > .ranking-head .card-title { color: var(--ui-ink) !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card > .draft-panel { background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; border-radius: 16px !important; box-shadow: none !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card > .draft-panel { background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; border-radius: 16px !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card .draft-panel h3 { color: var(--ui-ink) !important; font-size: 1.125rem !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero { background: #142a50 !important; border: 0 !important; box-shadow: none !important; border-radius: 16px !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-score { background: none !important; color: #fff !important; -webkit-text-fill-color: #fff !important; font-family: Inter, sans-serif; font-weight: 800; }
-#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero :is(.dsh-label, .dsh-sub) { color: #bdd0ed !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-chip { background: rgb(255 255 255 / 8%) !important; border: 1px solid rgb(255 255 255 / 15%) !important; box-shadow: none !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-chip span { color: #c6d5ef !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-chip b { color: #ffda79 !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-panel h3::before { display: none !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero { background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; border-radius: 16px !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-score { background: none !important; color: var(--ui-accent) !important; -webkit-text-fill-color: currentColor !important; font-family: Inter, sans-serif; font-weight: 800; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero :is(.dsh-label, .dsh-sub) { color: var(--ui-muted) !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-chip { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-chip span { color: var(--ui-muted) !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero .dsh-chip b { color: var(--ui-ink) !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-status { background: var(--ui-soft) !important; color: var(--ui-muted) !important; border: 0 !important; }
-#pokdle-app.design-refresh #screen-draft-score-attack #draft-options .dsc-card { border-radius: 16px !important; box-shadow: 0 2px 4px rgb(10 24 50 / 4%) !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-options .dsc-card { background: var(--ui-surface); border-radius: 16px !important; box-shadow: 0 2px 4px rgb(10 24 50 / 4%) !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-options .dsc-name { color: var(--ui-ink); }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-options .dsc-proj { color: var(--ui-muted); }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-options .dsc-proj b { color: var(--ui-accent); }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-options .dsc-card:not(:disabled):hover { box-shadow: 0 6px 20px rgb(30 70 120 / 14%) !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-team .draft-team-card { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; border-radius: 14px !important; box-shadow: none !important; color: var(--ui-ink); }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-team .draft-team-card b { color: var(--ui-ink) !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-team .draft-team-card.placeholder { opacity: 1; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-team .draft-team-slot-label { color: var(--ui-muted) !important; background: var(--ui-soft) !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-team .draft-team-card.is-latest .draft-team-slot-label { color: #6b4800 !important; background: #ffebaf !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-team .draft-team-empty-icon { color: var(--ui-muted); background: var(--ui-soft); border-color: var(--ui-line); }
 #pokdle-app.design-refresh #screen-draft-score-attack .pokedex-muted { color: var(--ui-muted) !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-score-room-status .draft-score-vs-empty { background: var(--ui-surface) !important; border-color: var(--ui-line) !important; }
 #pokdle-app.design-refresh #screen-draft-score-attack #draft-score-room-status .draft-score-vs-empty > b { color: var(--ui-ink) !important; }
@@ -241,9 +258,9 @@
 #pokdle-app.design-refresh .overlay-head { background: var(--ui-soft) !important; border-bottom: 1px solid var(--ui-line) !important; color: var(--ui-ink) !important; }
 #pokdle-app.design-refresh .overlay-head h3 { color: var(--ui-ink) !important; font-size: 1.25rem; }
 #pokdle-app.design-refresh .overlay-close { color: var(--ui-ink) !important; background: var(--ui-surface) !important; }
-#pokdle-app.design-refresh .site-footer { border-top: 1px solid #344967; color: #b7c8e3 !important; max-width: 1376px; width: calc(100% - 48px); margin-top: 20px; padding: 24px 16px; text-shadow: none !important; }
-#pokdle-app.design-refresh .site-footer :is(p, a) { color: #b7c8e3 !important; text-shadow: none !important; }
-#pokdle-app.design-refresh .site-footer-brand { color: #f3f7ff !important; }
+#pokdle-app.design-refresh .site-footer { border-top: 1px solid var(--ui-line); color: var(--ui-muted) !important; max-width: 1376px; width: calc(100% - 48px); margin-top: 20px; padding: 24px 16px; text-shadow: none !important; }
+#pokdle-app.design-refresh .site-footer :is(p, a) { color: var(--ui-muted) !important; text-shadow: none !important; }
+#pokdle-app.design-refresh .site-footer-brand { color: var(--ui-ink) !important; }
 #pokdle-app.design-refresh .poke-connections-tile { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; border-radius: 14px !important; box-shadow: none !important; }
 #pokdle-app.design-refresh .poke-connections-tile span { color: var(--ui-ink) !important; font: 500 .875rem Inter, sans-serif !important; line-height: 1.3 !important; overflow-wrap: anywhere; }
 #pokdle-app.design-refresh .poke-connections-tile.is-selected { background: #2864db !important; border-color: #2864db !important; }
@@ -258,48 +275,54 @@
 #pokdle-app.design-refresh.theme-dark :is(#screen-poke-connections, #screen-draft-score-attack) { --mode-color: #c5a5ff; --mode-wash: #342c52; }
 #pokdle-app.design-refresh.theme-dark :is(#screen-pokedex, #screen-team-builder) { --mode-color: #7fe1c5; --mode-wash: #203f40; }
 #pokdle-app.design-refresh.theme-dark :is(#screen-multiplayer, #screen-party-room) { --mode-color: #ffb6c6; --mode-wash: #472c42; }
-#pokdle-app.design-refresh #screen-game .results-legend { color: #c0d0e8 !important; }
+#pokdle-app.design-refresh #screen-game .results-legend { color: var(--ui-muted) !important; }
 #pokdle-app.design-refresh :is(.higher-lower-stat-banner, .speedrun-timer-bar) { border-radius: 12px; }
 
 /* Home cards act as game covers; existing icons supply recognizable landmarks. */
 #pokdle-app.design-refresh #screen-config .pk-mode {
-  --cover-color: #8ab6ff; --cover-deep: #284b7d;
+  --cover-color: #3968b8; --cover-deep: #cde3fc;
   position: relative; overflow: hidden;
-  background: linear-gradient(130deg, var(--cover-deep), #172840 95%) !important;
-  border: 1px solid #47638b !important;
+  background: linear-gradient(130deg, var(--cover-deep), var(--cover-tail) 95%) !important;
+  border: 1px solid var(--ui-line) !important;
   border-top: 3px solid var(--cover-color) !important;
-  box-shadow: 0 9px 20px rgb(3 10 28 / 18%) !important;
+  box-shadow: var(--ui-shadow) !important;
   min-height: 200px;
 }
-#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-yellow) { --cover-color: #ffda70; --cover-deep: #514425; }
-#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-red) { --cover-color: #ff9da9; --cover-deep: #593247; }
-#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-purple) { --cover-color: #c0a2ff; --cover-deep: #443664; }
+#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-yellow) { --cover-color: #9d6410; --cover-deep: #ffe9ad; }
+#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-red) { --cover-color: #b23956; --cover-deep: #ffdce2; }
+#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-purple) { --cover-color: #7050b7; --cover-deep: #e5d7fc; }
 #pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-teal),
-#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-green) { --cover-color: #83e2cb; --cover-deep: #234e50; }
-#pokdle-app.design-refresh #screen-config .pk-mode h4 { color: #f4f7ff !important; font-size: 1.1875rem; }
-#pokdle-app.design-refresh #screen-config .pk-mode p { color: #c5d3e8 !important; }
-#pokdle-app.design-refresh #screen-config .pk-mode .pk-tile { background: rgb(255 255 255 / 10%); color: var(--cover-color); border: 1px solid rgb(255 255 255 / 20%); width: 54px; height: 54px; }
+#pokdle-app.design-refresh #screen-config .pk-mode:has(.pk-tile-green) { --cover-color: #186d5b; --cover-deep: #c6eee1; }
+#pokdle-app.design-refresh.theme-dark #screen-config .pk-mode { --cover-color: #8ab6ff; --cover-deep: #284b7d; }
+#pokdle-app.design-refresh.theme-dark #screen-config .pk-mode:has(.pk-tile-yellow) { --cover-color: #ffda70; --cover-deep: #514425; }
+#pokdle-app.design-refresh.theme-dark #screen-config .pk-mode:has(.pk-tile-red) { --cover-color: #ff9da9; --cover-deep: #593247; }
+#pokdle-app.design-refresh.theme-dark #screen-config .pk-mode:has(.pk-tile-purple) { --cover-color: #c0a2ff; --cover-deep: #443664; }
+#pokdle-app.design-refresh.theme-dark #screen-config .pk-mode:has(.pk-tile-teal),
+#pokdle-app.design-refresh.theme-dark #screen-config .pk-mode:has(.pk-tile-green) { --cover-color: #83e2cb; --cover-deep: #234e50; }
+#pokdle-app.design-refresh #screen-config .pk-mode h4 { color: var(--ui-ink) !important; font-size: 1.1875rem; }
+#pokdle-app.design-refresh #screen-config .pk-mode p { color: var(--ui-muted) !important; }
+#pokdle-app.design-refresh #screen-config .pk-mode .pk-tile { background: var(--ui-surface); color: var(--cover-color); border: 1px solid var(--ui-line); width: 54px; height: 54px; }
 #pokdle-app.design-refresh #screen-config .pk-mode:hover { border-color: var(--cover-color) !important; box-shadow: 0 14px 30px rgb(3 10 28 / 30%) !important; }
 #pokdle-app.design-refresh #screen-config .pk-mode::after { color: var(--cover-color) !important; }
 
 /* The full catalogue uses colored category surfaces, paired with readable text. */
-#pokdle-app.design-refresh #screen-all-modes > .card { background: #16253f !important; border-color: #3b5071 !important; }
-#pokdle-app.design-refresh #screen-all-modes > .card > .card-desc { color: #b7c8e3 !important; }
+#pokdle-app.design-refresh #screen-all-modes > .card { background: var(--ui-surface) !important; border-color: var(--ui-line) !important; }
+#pokdle-app.design-refresh #screen-all-modes > .card > .card-desc { color: var(--ui-muted) !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat { --category-bg: #dce8ff; --category-ink: #244ba0; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="reflection"] { --category-bg: #e6dffc; --category-ink: #623c9f; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="arcade"] { --category-bg: #ffedc0; --category-ink: #7c5011; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="strategy"] { --category-bg: #d4eee5; --category-ink: #176957; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="social"] { --category-bg: #f9dfe6; --category-ink: #a23150; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="collection"] { --category-bg: #d1edf5; --category-ink: #1c617c; }
-#pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title { color: #d7e4f8 !important; font-size: .875rem !important; }
+#pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title { color: var(--ui-ink) !important; font-size: .875rem !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card { background: var(--category-bg) !important; border-color: transparent !important; box-shadow: 0 4px 0 rgb(0 0 0 / 18%) !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card b { color: #17253d !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card .pk-tile { background: transparent !important; color: var(--category-ink) !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card:hover { border-color: var(--category-ink) !important; filter: brightness(1.04); }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-badge { color: #3e516d; background: rgb(255 255 255 / 50%); }
 
-/* Pokédex: a dark display shelf around each Pokémon card. */
-#pokdle-app.design-refresh #screen-pokedex .pokedex-grid { background: #1c304c !important; border-color: #3b587c !important; padding: 14px; gap: 12px; }
+/* The Pokémon provide the artwork; the catalogue frame follows the theme. */
+#pokdle-app.design-refresh #screen-pokedex .pokedex-grid { background: var(--ui-soft) !important; border-color: var(--ui-line) !important; padding: 14px; gap: 12px; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card { background: linear-gradient(150deg, #f1f6ff, #dce8f9) !important; border-color: #b4c8e4 !important; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card:has(.type-plante) { background: linear-gradient(150deg, #eaf9ee, #cce7dc) !important; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card:has(.type-feu) { background: linear-gradient(150deg, #fff2e3, #f4d5bd) !important; }
@@ -360,9 +383,9 @@
   #pokdle-app.design-refresh #screen-all-modes .all-modes-badge { position: static; margin: 0; }
   #pokdle-app.design-refresh #screen-game .search-bar { padding: 12px !important; }
   #pokdle-app.design-refresh #screen-game #results-table tr { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; border-radius: 16px !important; }
-  #pokdle-app.design-refresh .mobile-tabbar { background: #101b30 !important; border-top: 1px solid #344967 !important; box-shadow: 0 -4px 18px rgb(3 10 28 / 20%) !important; backdrop-filter: none; }
-  #pokdle-app.design-refresh .mobile-tabbar button { color: #bdcce5 !important; font-weight: 500; border-radius: 10px; font-size: .75rem; }
-  #pokdle-app.design-refresh .mobile-tabbar button.active { color: #ffda70 !important; background: #293d60 !important; }
+  #pokdle-app.design-refresh .mobile-tabbar { background: var(--header-bg) !important; border-top: 1px solid var(--ui-line) !important; box-shadow: 0 -4px 18px rgb(30 65 100 / 8%) !important; backdrop-filter: none; }
+  #pokdle-app.design-refresh .mobile-tabbar button { color: var(--ui-muted) !important; font-weight: 500; border-radius: 10px; font-size: .75rem; }
+  #pokdle-app.design-refresh .mobile-tabbar button.active { color: var(--ui-accent) !important; background: var(--ui-accent-soft) !important; }
   #pokdle-app.design-refresh .site-footer { width: calc(100% - 24px); font-size: .8125rem; }
   #pokdle-app.design-refresh .higher-lower-pair { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; position: relative; }
   #pokdle-app.design-refresh .higher-lower-card-pokemon { min-width: 0; padding: 14px 8px !important; }
