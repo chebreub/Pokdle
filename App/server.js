@@ -593,6 +593,11 @@ function sendIndex(res) {
 }
 
 app.get(["/", "/index.html"], (_req, res) => sendIndex(res));
+// Development-only responsive workbench; never served by npm start in production.
+if (process.env.NODE_ENV === "development") {
+  app.get("/__responsive", (_req, res) => res.sendFile(path.join(__dirname, "tools/responsive.html")));
+  app.get("/__responsive.js", (_req, res) => res.sendFile(path.join(__dirname, "tools/responsive.js")));
+}
 // Page émulateur (lot D audit) : même SPA, mais servie sous /emulateur avec la
 // CSP permissive requise par EmulatorJS. Le client y ouvre l'écran émulateur.
 app.get("/emulateur", (_req, res) => { recordUsage("solo:emulator"); sendIndex(res); });

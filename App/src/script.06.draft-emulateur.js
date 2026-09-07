@@ -2735,6 +2735,7 @@ function openDraftScoreAttackMode(pro) {
   draftArenaState.scoreAttackPro = wantPro;
   if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
+  window.scrollTo(0, 0);
 }
 
 // Entrée dédiée « Duel 1v1 PRO » : ouvre l'écran Score Attack en mode PRO et met

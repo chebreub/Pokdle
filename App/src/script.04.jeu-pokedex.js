@@ -4635,6 +4635,23 @@ function isPokedexToolbarDirty() {
   );
 }
 
+function togglePokedexFilters() {
+  const toolbar = document.getElementById("pokedex-toolbar");
+  const button = document.getElementById("pokedex-filters-toggle");
+  if (!toolbar || !button) return;
+  const expanded = toolbar.classList.toggle("filters-expanded");
+  button.setAttribute("aria-expanded", String(expanded));
+  updatePokedexFilterToggle();
+}
+
+function updatePokedexFilterToggle() {
+  const button = document.getElementById("pokedex-filters-toggle");
+  if (!button) return;
+  const activeCount = [pokedexGenFilter, pokedexTypeFilter, pokedexType2Filter, pokedexCategoryFilter].filter(value => value !== "all").length + Number(pokedexSortFilter !== "dex");
+  const expanded = button.getAttribute("aria-expanded") === "true";
+  button.textContent = `${expanded ? "Fermer les filtres" : "Filtres et tri"}${activeCount ? ` (${activeCount})` : ""} ${expanded ? "▴" : "▾"}`;
+}
+
 function ensurePokedexToolbarMeta() {
   let meta = document.getElementById("pokedex-toolbar-meta");
   if (meta) return meta;
@@ -4653,6 +4670,7 @@ function ensurePokedexToolbarMeta() {
 }
 
 function updatePokedexToolbarMeta(resultCount) {
+  updatePokedexFilterToggle();
   const meta = ensurePokedexToolbarMeta();
   if (!meta) return;
   const count = meta.querySelector("#pokedex-results-count");
@@ -5888,4 +5906,3 @@ function getDraftScoreAttackResultLabel(average) {
   const rank = DRAFT_SCORE_ATTACK_TARGETS.find((target) => average >= target.min);
   return rank ? rank.label : "Run à améliorer";
 }
-
