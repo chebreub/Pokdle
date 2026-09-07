@@ -90,6 +90,12 @@
 #pokdle-app.design-refresh textarea::placeholder { color: var(--ui-muted) !important; opacity: 1; font-weight: 400 !important; }
 #pokdle-app.design-refresh :is(.tag-gen, .tag-tries) { background: var(--ui-accent-soft) !important; border: 1px solid transparent !important; color: var(--ui-accent) !important; box-shadow: none !important; font-size: .8125rem; font-weight: 600; border-radius: 8px; }
 #pokdle-app.design-refresh :is(.ac-list, .nav-dropdown) { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; border-radius: 14px; box-shadow: 0 12px 32px rgb(10 24 50 / 15%) !important; color: var(--ui-ink) !important; }
+/* Autocomplete children had fixed pale text from the former always-dark list.
+   Keep every row, label and keyboard highlight on the same theme palette. */
+#pokdle-app.design-refresh :is(.ac-item, .tc-ac-item, .rank-candidate, .picked-card) { background: var(--ui-surface) !important; color: var(--ui-ink) !important; border-color: var(--ui-line) !important; }
+#pokdle-app.design-refresh :is(.ac-name, .rank-candidate-name, .picked-card span) { color: var(--ui-ink) !important; }
+#pokdle-app.design-refresh :is(.ac-sub, .rank-candidate-sub) { color: var(--ui-muted) !important; }
+#pokdle-app.design-refresh :is(.ac-item:hover, .ac-item.hl, .tc-ac-item:hover, .tc-ac-item:focus-visible, .rank-candidate:hover, .rank-candidate.hl) { background: var(--ui-accent-soft) !important; color: var(--ui-ink) !important; }
 
 /* Navigation: neutral chrome, one clear active destination. */
 #pokdle-app.design-refresh header { background: var(--ui-surface) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: none !important; padding: 14px 0 !important; }
