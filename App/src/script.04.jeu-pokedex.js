@@ -1175,7 +1175,7 @@ function initTypeChartScreen() {
   });
 }
 
-function openAllModesScreen() {
+function openAllModesScreen(category) {
   [
     "screen-config",
     "screen-game",
@@ -1199,6 +1199,7 @@ function openAllModesScreen() {
   setQuizModeLayout(false);
   closeRankingPicker();
   showScreen("screen-all-modes");
+  setModeCatalogCategory(category || modeCatalogCategory, false);
   window.scrollTo(0, 0);
 }
 
@@ -1236,6 +1237,7 @@ function openAllModesScreen() {
       finally { window.__screenHistorySuppress = suppressed; }
       if (!suppressed) {
         var state = { screen: key };
+        if (key === "allModes") { state.category = modeCatalogCategory; state.query = document.getElementById("mode-search")?.value || ""; }
         if (key === "game") {
           var screen = document.getElementById("screen-game");
           if (!screen || screen.classList.contains("hidden")) return result;
@@ -1244,7 +1246,7 @@ function openAllModesScreen() {
         }
         try {
           var previous = history.state || {};
-          if (previous.screen !== key || previous.mode !== state.mode || previous.secretId !== state.secretId) {
+          if (previous.screen !== key || previous.mode !== state.mode || previous.secretId !== state.secretId || previous.category !== state.category || previous.query !== state.query) {
             history.pushState(state, "", routeUrl(key));
           }
         } catch (_error) {}
@@ -1275,7 +1277,11 @@ function openAllModesScreen() {
         history.replaceState({ screen: "config" }, "", routeUrl("config"));
       } else {
         var opener = OPENERS[key];
-        if (opener && typeof window[opener] === "function") window[opener]();
+        if (opener && typeof window[opener] === "function") window[opener](key === "allModes" ? state.category : undefined);
+        if (key === "allModes" && state.query) {
+          document.getElementById("mode-search").value = state.query;
+          renderModeCatalog();
+        }
         if (key === "party" && typeof state.inviteCode === "string") {
           var input = document.getElementById("party-join-code");
           if (input) input.value = state.inviteCode;
@@ -1333,6 +1339,7 @@ function ensurePartyListeners() {
 function openPartyRoomMode() {
   ensurePartyListeners();
   showScreen("screen-party-room");
+  setGlobalNavActive("social");
   renderPartyRoom();
 }
 

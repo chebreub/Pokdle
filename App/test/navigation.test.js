@@ -14,6 +14,7 @@ function fixture(url = "https://example.test/") {
   const input = { value: "" };
   const context = {
     URLSearchParams, location: new URL(url), gameMode: "normal", secretPokemon: null,
+    modeCatalogCategory: "solo", renderModeCatalog() {},
     current: "config", starts: 0, restoredMode: null,
     setTimeout: (fn) => deferred.push(fn),
     addEventListener: (event, fn) => { listeners[event] = fn; },
@@ -37,6 +38,7 @@ function fixture(url = "https://example.test/") {
       context.showScreen("screen-game");
     };
   }
+  context.openAllModesScreen = (category) => { context.modeCatalogCategory = category || context.modeCatalogCategory; context.showScreen("screen-allModes"); };
   context.history = {
     state: null,
     replaceState(state, _, target) { this.state = state; context.location = new URL(target, context.location); },
@@ -118,3 +120,18 @@ for (const name of ["startEvolutionChainGame", "startQuizGame"]) {
     assert.equal(f.context.quizVisible, name === "startQuizGame");
   });
 }
+
+
+test("Back restores the catalog category and search without starting a game", () => {
+  const f = fixture();
+  f.context.openAllModesScreen("friends");
+  const friends = f.context.history.state;
+  f.context.openAllModesScreen("solo");
+  assert.equal(f.pushes.length, 2);
+  f.listeners.popstate({ state: friends });
+  assert.equal(f.context.modeCatalogCategory, "friends");
+  f.listeners.popstate({ state: { screen: "allModes", category: "all", query: "emulateur" } });
+  assert.equal(f.context.modeCatalogCategory, "all");
+  assert.equal(f.input.value, "emulateur");
+  assert.equal(f.context.starts, 0);
+});
