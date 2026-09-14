@@ -19,15 +19,18 @@ function saveModeCatalogState() {
 }
 function renderModeCatalog() {
   var query = document.getElementById('mode-search')?.value || '';
+  if (typeof renderCatalogPicks === "function") renderCatalogPicks(modeCatalogCategory, query);
   var count = 0;
   document.querySelectorAll('#screen-all-modes .all-modes-cat').forEach(section => {
     var visible = 0;
     section.querySelectorAll('.all-modes-card').forEach(card => {
-      card.hidden = !modeCatalogMatches(card.dataset.category, card.textContent, modeCatalogCategory, query);
+      const matches = modeCatalogMatches(card.dataset.category, card.textContent, modeCatalogCategory, query);
+      if (matches) count++;
+      card.hidden = !matches || (typeof isClubFeatured === 'function' && isClubFeatured(card, modeCatalogCategory, query));
       if (!card.hidden) visible++;
     });
     section.hidden = visible === 0;
-    count += visible;
+
   });
   document.querySelectorAll('[data-mode-category]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.modeCategory === modeCatalogCategory));

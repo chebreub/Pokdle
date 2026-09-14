@@ -3672,8 +3672,8 @@ function ensureMultiplayerWinOverlay() {
       <button class="multiplayer-win-close" type="button" aria-label="Fermer" data-action="hideMultiplayerWinOverlay">×</button>
       <div id="multiplayer-win-content"></div>
       <div class="multiplayer-result-actions multiplayer-win-actions">
-        <button class="btn-red" type="button" data-action="winOverlayRestartSame">Rejouer pareil</button>
-        <button class="btn-blue" type="button" data-action="winOverlayRestartUpdated">Relancer avec ces générations</button>
+        <button class="btn-red" type="button" data-action="winOverlayRestartSame">Revanche →</button>
+        <details class="club-replay-options"><summary>Changer les générations</summary><p>Modifie les générations dans le salon, puis relance.</p><button class="btn-ghost" type="button" data-action="winOverlayRestartUpdated">Relancer avec cette sélection</button></details>
         <button class="btn-ghost" type="button" data-action="winOverlayBackToConfig">Retour accueil</button>
       </div>
     </div>
