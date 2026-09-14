@@ -2054,3 +2054,8 @@ body.theme-dark #multiplayer-win-content .multiplayer-result-summary { color: #e
   #pokdle-app #screen-multiplayer .multiplayer-proximity { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
   #pokdle-app #screen-multiplayer .multiplayer-proximity-ring { grid-row: auto; }
 }
+
+#pokdle-app #screen-multiplayer .multiplayer-forfeit { margin-top: 14px; border-top: 1px solid var(--ui-line); padding-top: 6px; }
+#pokdle-app #screen-multiplayer .multiplayer-forfeit summary { cursor: pointer; min-height: 44px; align-content: center; color: var(--ui-muted); font-size: .85rem; font-weight: 800; }
+#pokdle-app #screen-multiplayer .multiplayer-forfeit p { color: var(--ui-muted) !important; font-size: .85rem; line-height: 1.6; margin: 4px 0 12px; }
+#pokdle-app #screen-multiplayer .multiplayer-forfeit button { min-height: 44px; white-space: normal; }

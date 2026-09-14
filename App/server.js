@@ -1647,9 +1647,7 @@ io.on("connection", (socket) => {
       player.attempts += 1;
       player.lastGuess = guessedPokemon.name;
       player.guesses.unshift(buildGuessFeedback(guessedPokemon, room.secretPokemon));
-      const normalizedGuess = normalizeName(guessedPokemon.name);
-      const normalizedSecret = normalizeName(room.secretPokemon.name);
-      const correct = normalizedGuess === normalizedSecret;
+      const correct = guessedPokemon.id === room.secretPokemon.id;
 
       if (correct) {
         room.status = "finished";
@@ -1668,6 +1666,27 @@ io.on("connection", (socket) => {
 
   socket.on("duel:leave-room", () => {
     try { handleDisconnect(socket.id, true); } catch (_error) { console.error("[duel:leave-room] error", _error?.message || "unknown"); }
+  });
+
+  socket.on("duel:forfeit", (payload = {}, ack) => {
+    try {
+      const room = findRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.status !== "live" || !room.secretPokemon) return respond(ack, { ok: false, error: "La manche n'est plus en cours." });
+      if (payload.code !== room.code || payload.roundSerial !== room.roundSerial) return respond(ack, { ok: false, error: "Cette manche a changé. Réessaie." });
+      const player = room.players.find((entry) => entry.id === socket.id && entry.connected);
+      const opponent = room.players.find((entry) => entry.id !== socket.id);
+      if (!player || !opponent) return respond(ack, { ok: false, error: "Duel incomplet." });
+      room.status = "finished";
+      room.winnerId = opponent.id;
+      room.endedReason = "forfeit";
+      if (room.graceTimer) { clearTimeout(room.graceTimer); room.graceTimer = null; }
+      emitRoomState(room);
+      emitRoomFinished(room);
+      respond(ack, { ok: true });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Impossible d'abandonner la manche." });
+    }
   });
 
   socket.on("duel:resume", (payload = {}, ack) => {
@@ -3863,9 +3882,9 @@ function joinPlayerToDraftBattleRoom(room, socket, nickname, side) {
 
 function startRoom(room) {
   clearRoomCleanup(room);
-  const pool = POKEMON_LIST.filter((pokemon) => room.selectedGens.includes(Number(pokemon.gen) || Number(pokemon.generation)));
-  const source = pool.length ? pool : POKEMON_LIST;
-  room.secretPokemon = source[Math.floor(Math.random() * source.length)] || null;
+  const pool = POKEMON_LIST.filter((pokemon) => isDuelPokemonAllowed(room, pokemon));
+  room.roundSerial = (room.roundSerial || 0) + 1;
+  room.secretPokemon = pool[Math.floor(Math.random() * pool.length)] || null;
   room.status = room.secretPokemon ? "live" : "waiting";
 }
 
@@ -3900,6 +3919,7 @@ function publicRoomState(room, viewerId = null) {
   return {
     code: room.code,
     status: room.status,
+    roundSerial: room.roundSerial,
     hostId: room.hostId,
     selectedGens: room.selectedGens,
     players,
@@ -4433,13 +4453,19 @@ function serializePokemon(pokemon) {
   };
 }
 
+function isDuelPokemonAllowed(room, pokemon) {
+  return Boolean(pokemon && !pokemon.isAltForm && Number(pokemon.id) < 20000
+    && room.selectedGens.includes(Number(pokemon.gen) || Number(pokemon.generation)));
+}
+
+function normalizeDuelPokemonName(name) {
+  return normalizeName(String(name || "").replace(/♀/g, "femelle").replace(/♂/g, "male"));
+}
+
 function resolveRoomPokemonGuess(room, guess) {
-  const pokemon = POKEMON_BY_NORMALIZED_NAME.get(normalizeName(guess));
-  if (!pokemon) return null;
-  const gen = Number(pokemon.gen || pokemon.generation);
-  if (!room.selectedGens.includes(gen)) return null;
-  if (pokemon.isAltForm || pokemon.id >= 20000) return null;
-  return pokemon;
+  const key = normalizeDuelPokemonName(guess);
+  const pokemon = POKEMON_LIST.find((entry) => normalizeDuelPokemonName(entry.name) === key);
+  return isDuelPokemonAllowed(room, pokemon) ? pokemon : null;
 }
 
 function buildGuessFeedback(guess, secret) {

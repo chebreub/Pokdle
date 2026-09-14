@@ -62,3 +62,13 @@ Navigateur, salon local L82MU, deux joueurs, cible #704 : clic sur Pikachu puis 
 - Présentation responsive de la jauge et correction du contraste des descriptions dans le thème sombre.
 
 Validation : 36 tests ciblés passent (Duel, sérialisation privée, Party nearest, sélection et régressions de jeu). Build et vérification syntaxique réussis. Deux sessions navigateur réelles : Pikachu puis Roucool donnent 39 % puis 44 % chez l'adversaire sans révéler leurs noms ; Ronflex reste visible uniquement dans l'historique de son joueur, avec 33 % partagé. Numéro #213 : propositions Pikachu/Ronflex, révélation Caratroc, puis disparition de la carte à la manche 2. Contrôles CSS aux largeurs 320 et 390 px, thème clair et sombre, sans débordement horizontal du document. Ce contrôle en fenêtre intégrée ne remplace pas un essai sur téléphone physique.
+
+## Duel : cibles jouables et abandon
+
+Cause du blocage : `startRoom` tirait aussi les formes alternatives injectées pour d'autres modes, tandis que la recherche du Duel et `resolveRoomPokemonGuess` les excluaient. Le tirage et la validation partagent désormais le même filtre (générations du salon, hors formes alternatives), sans repli sur le catalogue complet.
+
+Le contrôle exhaustif du catalogue a aussi identifié la collision de normalisation Nidoran♀/Nidoran♂. Le Duel préserve désormais leur distinction et compare les identifiants pour attribuer la victoire.
+
+Une action Abandonner, suivie d'une confirmation explicite, termine la manche, révèle la cible aux deux joueurs et attribue la victoire par forfait à l'adversaire. Les deux joueurs restent dans le salon pour rejouer. Le serveur vérifie l'appartenance, l'état du duel, le code et le numéro de manche ; les requêtes tardives ou répétées ne peuvent pas terminer une nouvelle manche. Le client bloque les doubles envois et récupère après expiration du délai.
+
+Validation : 27 tests ciblés passent, incluant chaque cible du catalogue réel pour les neuf générations, Nidoran et ses deux identifiants, abandon hôte/invité, requêtes invalides/tardives et relance. Build et syntaxe validés. Dans deux sessions navigateur (ordinateur et fenêtre mobile 390 px), les deux Nidoran ont été acceptés séparément ; l'abandon invité a révélé Magmar aux deux joueurs, l'hôte a relancé le même salon puis a pu abandonner à son tour. Fenêtre mobile intégrée, sans test sur téléphone physique.
