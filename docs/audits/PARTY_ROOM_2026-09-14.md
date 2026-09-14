@@ -43,3 +43,13 @@ Tests navigateur sur serveur local, deux onglets :
 ## Portée
 
 Les vérifications mobiles utilisent une fenêtre CSS intégrée à Chrome, pas des téléphones iOS/Android physiques. La couverture à huit joueurs est automatisée ; le parcours navigateur utilise deux joueurs. Les cinq autres modes ne font pas tous l'objet d'une partie complète dans cette livraison. Les limites générales du précédent audit (Discord, ROM, Draft Arènes) ne sont pas modifiées.
+
+## Correctif après retour utilisateur — validation des suggestions
+
+Un clic sur une suggestion dans Numéro mystère remplissait le champ sans soumettre, contrairement aux autres modes Party. Sans seconde validation, le serveur clôturait donc la manche sans proposition. La capture utilisateur est compatible avec ce parcours ; elle ne permet pas d'exclure un problème réseau distinct.
+
+La sélection soumet désormais immédiatement, par clic ou Entrée sur une suggestion surlignée. Le bouton reste disponible pour un nom tapé directement. Le texte de confirmation indique « réponse enregistrée » après confirmation serveur. Une saisie rejetée reste dans le champ.
+
+Quatre tests de régression ajoutés : sélection sans second clic, Entrée sur suggestion, saisie directe rejetée conservée, soumission en cours protégée et confirmation enregistrée. Les deux premiers échouaient avant correction. Vérification finale : 23 tests ciblés réussis (sélection, moteur Party et navigation), build réussi.
+
+Navigateur, salon local L82MU, deux joueurs, cible #704 : clic sur Pikachu puis clic sur Mew, sans cliquer sur le bouton de validation. Confirmation Pikachu visible avant la réponse adverse ; résultat avec les deux Pokémon, écarts 679 et 553, victoire de Mew +100 points.
