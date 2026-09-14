@@ -1305,6 +1305,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 </div>
                 <button class="btn-red" type="button" data-action="submitMultiplayerGuess">Envoyer</button>
               </div>
+              <details id="multiplayer-forfeit" class="multiplayer-forfeit">
+                <summary>Abandonner</summary>
+                <p>L’adversaire remporte cette manche. Le Pokémon sera révélé et vous pourrez rejouer ensemble.</p>
+                <button id="multiplayer-forfeit-confirm" class="btn-ghost" type="button" data-action="forfeitMultiplayerRound">Confirmer l’abandon</button>
+              </details>
             </div>
 
             <div id="multiplayer-attempts-shell" class="multiplayer-attempts-shell hidden">

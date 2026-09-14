@@ -3139,7 +3139,7 @@ function ensureMultiplayerGuessInputBindings() {
 function canSubmitMultiplayerGuess() {
   const state = ensureMultiplayerLiveState();
   const room = state?.room;
-  if (!room || room.status !== "live" || state.pendingGuessSubmit) return false;
+  if (!room || room.status !== "live" || state.pendingGuessSubmit || state.pendingForfeit) return false;
   const input = document.getElementById("multiplayer-guess-input");
   const raw = String(input?.value || "").trim();
   if (!raw) return false;
@@ -3157,9 +3157,11 @@ function updateMultiplayerGuessSubmitState() {
   if (!input || !button) return;
   const state = ensureMultiplayerLiveState();
   const room = state?.room;
-  const liveReady = Boolean(room && room.status === "live" && !state.pendingGuessSubmit);
+  const liveReady = Boolean(room && room.status === "live" && !state.pendingGuessSubmit && !state.pendingForfeit);
   input.disabled = !liveReady;
   button.disabled = !canSubmitMultiplayerGuess();
+  const forfeitButton = document.getElementById("multiplayer-forfeit-confirm");
+  if (forfeitButton) forfeitButton.disabled = !liveReady || !multiplayerSocket?.connected;
 }
 
 function getMultiplayerRoomPool() {
@@ -3717,7 +3719,9 @@ function renderMultiplayerBotResult() {
     ? "Action disponible"
     : "Room prête";
   const disconnectedOpponent = players.find((player) => !player.isSelf && player.connected === false) || null;
-  const reasonText = room?.endedReason === "disconnect"
+  const reasonText = room?.endedReason === "forfeit"
+    ? (playerWon ? "Ton adversaire a abandonné la manche." : "Tu as abandonné la manche. Voici le Pokémon à trouver.")
+    : room?.endedReason === "disconnect"
     ? `${disconnectedOpponent?.nickname || "L'adversaire"} a quitté le duel. La manche est terminée.`
     : playerWon
     ? "Tu as trouvé le Pokémon avant ton adversaire."
@@ -3726,7 +3730,7 @@ function renderMultiplayerBotResult() {
     : "La manche est terminée.";
   const resultTitle = playerWon ? "Félicitations, tu as gagné !" : "Défaite";
   const resultSupportText = playerWon
-    ? (room?.endedReason === "disconnect" ? "Tu remportes la manche par forfait." : "Belle manche. Tu remportes ce duel live avant ton adversaire.")
+    ? (["disconnect", "forfeit"].includes(room?.endedReason) ? "Tu remportes la manche par forfait." : "Belle manche. Tu remportes ce duel live avant ton adversaire.")
     : "La manche t’échappe cette fois.";
 
   const postMatchMetaHtml = `
@@ -3860,6 +3864,10 @@ function renderMultiplayerBotScreen() {
   const isWaiting = !room || room.status === "waiting";
   const isLive = room?.status === "live";
   const isFinished = room?.status === "finished";
+  if (!isLive) {
+    const forfeitDetails = document.getElementById("multiplayer-forfeit");
+    if (forfeitDetails) forfeitDetails.open = false;
+  }
   const playerCount = players.length;
   const roomReady = Boolean(room?.code && playerCount >= 2);
   const opponent = players.find((player) => !player.isSelf) || null;
@@ -4069,7 +4077,7 @@ function submitMultiplayerGuess() {
   const state = ensureMultiplayerLiveState();
   const room = state?.room;
   if (!room || room.status !== "live") return;
-  if (state.pendingGuessSubmit) return;
+  if (state.pendingGuessSubmit || state.pendingForfeit) return;
 
   const socket = ensureMultiplayerSocket();
   const input = document.getElementById("multiplayer-guess-input");
@@ -4105,6 +4113,26 @@ function submitMultiplayerGuess() {
       return;
     }
     renderMultiplayerBotScreen();
+  });
+}
+
+function forfeitMultiplayerRound() {
+  const state = ensureMultiplayerLiveState();
+  const room = state.room;
+  if (!room || room.status !== "live" || state.pendingForfeit || state.pendingGuessSubmit) return;
+  if (!multiplayerSocket?.connected) {
+    setMultiplayerError("Connexion perdue. Reconnecte-toi pour abandonner.");
+    return;
+  }
+  state.pendingForfeit = true;
+  setMultiplayerError("");
+  updateMultiplayerGuessSubmitState();
+  multiplayerSocket.timeout(8000).emit("duel:forfeit", { code: room.code, roundSerial: room.roundSerial }, (error, response = {}) => {
+    state.pendingForfeit = false;
+    if (state.room?.code === room.code && state.room?.roundSerial === room.roundSerial && state.room?.status === "live" && (error || !response.ok)) {
+      setMultiplayerError(error ? "Connexion lente : vérifie le résultat avant de réessayer." : response.error || "Impossible d'abandonner.");
+    }
+    updateMultiplayerGuessSubmitState();
   });
 }
 
