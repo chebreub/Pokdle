@@ -254,3 +254,36 @@
   #pokdle-app #screen-party-room .party-nearest-answer img { width: 64px; height: 64px; }
   #pokdle-app #screen-party-room .party-nearest-answer b { font-size: 1.05rem; }
 }
+
+/* Private deduction: compact rivals and readable personal clue cards. */
+#pokdle-app #screen-party-room .party-deduction { width: 100%; min-width: 0; text-align: left; display: grid; gap: 12px; }
+#pokdle-app #screen-party-room .party-deduction h4 { color: var(--ui-ink); margin: 8px 0 0; font-size: 1rem; }
+#pokdle-app #screen-party-room .party-deduction-muted,
+#pokdle-app #screen-party-room .party-deduction-forfeit p { color: var(--ui-muted) !important; font-size: .8rem; line-height: 1.6; margin: 0; }
+#pokdle-app #screen-party-room .party-deduction-rivals-panel { padding: 16px; border-radius: 16px; border: 1px solid var(--ui-line); background: var(--party-tint); display: grid; gap: 12px; }
+#pokdle-app #screen-party-room .party-deduction-rivals { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+#pokdle-app #screen-party-room .party-deduction-rival { min-width: 0; }
+#pokdle-app #screen-party-room .party-deduction-rival > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; font-size: .75rem; margin-bottom: 6px; }
+#pokdle-app #screen-party-room .party-deduction-rival b { color: var(--ui-ink); overflow-wrap: anywhere; }
+#pokdle-app #screen-party-room .party-deduction-rival span { color: var(--ui-muted); }
+#pokdle-app #screen-party-room .party-deduction-meter { height: 8px; border-radius: 20px; background: var(--ui-line); overflow: hidden; }
+#pokdle-app #screen-party-room .party-deduction-meter > span { display: block; height: 100%; background: var(--party-accent); border-radius: inherit; }
+#pokdle-app #screen-party-room .party-deduction-history { display: grid; gap: 12px; }
+#pokdle-app #screen-party-room .party-deduction-guess { border-radius: 16px; border: 1px solid var(--ui-line); background: var(--ui-surface); padding: 12px; min-width: 0; }
+#pokdle-app #screen-party-room .party-deduction-guess header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: var(--ui-ink); }
+#pokdle-app #screen-party-room .party-deduction-guess header b { overflow-wrap: anywhere; }
+#pokdle-app #screen-party-room .party-deduction-guess img { width: 48px; height: 48px; object-fit: contain; image-rendering: pixelated; }
+#pokdle-app #screen-party-room .party-deduction-clues { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+#pokdle-app #screen-party-room .party-clue { padding: 8px; min-width: 0; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-surface); }
+#pokdle-app #screen-party-room .party-clue.is-ok { background: rgba(34,197,94,.14); border-color: #259b59; }
+#pokdle-app #screen-party-room .party-clue.is-close { background: rgba(234,179,8,.15); border-color: #ac8310; }
+#pokdle-app #screen-party-room .party-clue small, #pokdle-app #screen-party-room .party-clue span { display: block; color: var(--ui-muted); font-size: .65rem; }
+#pokdle-app #screen-party-room .party-clue b { display: block; color: var(--ui-ink); font-size: .8rem; overflow-wrap: anywhere; padding: 4px 0; }
+#pokdle-app #screen-party-room .party-deduction-forfeit { width: 100%; text-align: left; color: var(--ui-muted); }
+#pokdle-app #screen-party-room .party-deduction-forfeit summary { cursor: pointer; min-height: 44px; align-content: center; font-size: .85rem; }
+#pokdle-app #screen-party-room .party-deduction-forfeit button { margin-top: 10px; min-height: 44px; }
+@media (max-width: 560px) {
+  #pokdle-app #screen-party-room .party-deduction-rivals { grid-template-columns: minmax(0,1fr); }
+  #pokdle-app #screen-party-room .party-deduction-rivals-panel { padding: 12px; }
+  #pokdle-app #screen-party-room .party-deduction-guess { padding: 8px; }
+}

@@ -37,7 +37,7 @@ test('every draw candidate in the real catalogue is selectable and accepted, for
   for (const random of [0, .25, .5, .75, .999999]) {
    c.Math = Object.create(Math); c.Math.random = () => random;
    c.startRoom(room); assert.ok(visibleIds.has(room.secretPokemon.id));
-   assert.equal(room.secretPokemon.isAltForm || false, false);
+   assert.equal(c.resolveRoomPokemonGuess(room, room.secretPokemon.name).id, room.secretPokemon.id);
   }
  }
 });

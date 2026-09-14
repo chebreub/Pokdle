@@ -3169,7 +3169,7 @@ function getMultiplayerRoomPool() {
   const gens = Array.isArray(room?.selectedGens) && room.selectedGens.length
     ? new Set(room.selectedGens.map((value) => Number(value)))
     : new Set(getMultiplayerSelectedGens());
-  return getPokemonUiList({ gens, includeAltForms: false });
+  return getPokemonUiList({ gens, includeAltForms: true });
 }
 
 function setMultiplayerError(message = "") {
