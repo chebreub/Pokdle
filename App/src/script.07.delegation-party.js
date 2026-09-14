@@ -678,10 +678,11 @@ var _appToastTimer = null;
   else initDataActionDelegation();
 })();
 
-function openFromAllModes(name) {
-  hideScreen("screen-all-modes");
+function openFromAllModes(name, ...args) {
   var fn = window[name];
-  if (typeof fn === "function") fn();
+  if (typeof fn !== "function") return;
+  hideScreen("screen-all-modes");
+  fn(...args);
 }
 window.openFromAllModes = openFromAllModes;
 
