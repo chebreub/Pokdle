@@ -287,3 +287,39 @@
   #pokdle-app #screen-party-room .party-deduction-rivals-panel { padding: 12px; }
   #pokdle-app #screen-party-room .party-deduction-guess { padding: 8px; }
 }
+
+
+/* Cooperative investigation and round recap. */
+#pokdle-app.design-refresh .party-coop { text-align: left; margin: 18px 0; color: var(--ui-ink); }
+#pokdle-app.design-refresh .coop-team-status { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: var(--ui-accent-soft); padding: 14px 16px; border: 1px solid var(--ui-line); border-radius: 14px; color: var(--ui-accent); }
+#pokdle-app.design-refresh .coop-team-status > span { font-size: .7rem; letter-spacing: .08em; font-weight: 800; }
+#pokdle-app.design-refresh .coop-team-status > b { font-size: .875rem; }
+#pokdle-app.design-refresh .coop-private { margin: 16px 0 24px; padding: 18px; background: var(--ui-surface); border: 1px solid var(--ui-line); border-left: 4px solid var(--ui-accent); border-radius: 16px; }
+#pokdle-app.design-refresh .party-coop h4 { margin: 0 0 8px; color: var(--ui-ink); font-size: 1rem; }
+#pokdle-app.design-refresh .coop-private > p { color: var(--ui-muted); font-size: .875rem; margin: 0 0 14px; line-height: 1.5; }
+#pokdle-app.design-refresh .coop-clues { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+#pokdle-app.design-refresh .coop-clue { display: flex; flex-direction: column; gap: 5px; padding: 12px; background: var(--ui-soft); border-radius: 10px; min-width: 0; }
+#pokdle-app.design-refresh .coop-clue small { color: var(--ui-muted); font-size: .75rem; }
+#pokdle-app.design-refresh .coop-clue b { color: var(--ui-ink); font-size: .875rem; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .coop-private > button { margin-top: 14px; min-height: 44px; }
+#pokdle-app.design-refresh .coop-shared { border: 1px solid var(--ui-line); border-radius: 14px; margin: 10px 0; padding: 14px; }
+#pokdle-app.design-refresh .coop-shared > b { display: block; margin-bottom: 10px; color: var(--ui-accent); font-size: .875rem; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .coop-attempts { margin-top: 18px; border-top: 1px solid var(--ui-line); padding-top: 12px; }
+#pokdle-app.design-refresh .coop-attempts summary { cursor: pointer; min-height: 44px; font-weight: 700; }
+#pokdle-app.design-refresh .coop-attempts p { color: var(--ui-muted); font-size: .875rem; border-bottom: 1px solid var(--ui-line); padding: 8px 0; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .party-round-recap { text-align: left; margin: 18px 0; padding: 22px; border: 1px solid var(--ui-line); border-top: 4px solid var(--ui-accent); border-radius: 18px; background: var(--ui-accent-soft); color: var(--ui-ink); }
+#pokdle-app.design-refresh .party-round-recap h3 { font: 900 clamp(1.3rem, 3vw, 1.8rem) Nunito, sans-serif; margin: 8px 0; color: var(--ui-ink); }
+#pokdle-app.design-refresh .party-round-recap p { color: var(--ui-muted); font-size: .875rem; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .club-result-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+#pokdle-app.design-refresh .club-result-stats > span { flex: 1 1 100px; background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 12px; padding: 12px; color: var(--ui-muted); font-size: .75rem; }
+#pokdle-app.design-refresh .club-result-stats b { display: block; margin-bottom: 4px; font: 900 1.4rem Nunito, sans-serif; color: var(--ui-accent); }
+#pokdle-app.design-refresh #party-mode-coop { --pmt-accent: #257f76; }
+#pokdle-app.design-refresh .club-result-enter { animation: club-result-arrive .3s ease-out; }
+@keyframes club-result-arrive { from { opacity: .5; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { #pokdle-app.design-refresh .club-result-enter { animation: none; } }
+#pokdle-app.design-refresh.reduce-motion .club-result-enter { animation: none; }
+@media (max-width: 520px) {
+  #pokdle-app.design-refresh .coop-private, #pokdle-app.design-refresh .party-round-recap { padding: 16px; }
+  #pokdle-app.design-refresh .coop-clues { grid-template-columns: 1fr; }
+  #pokdle-app.design-refresh .coop-private > button { width: 100%; }
+}

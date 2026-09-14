@@ -141,6 +141,7 @@
     <div id="screen-config">
 
       <!-- DA 2026 : hero "Pokémon du jour" — le jeu d'abord -->
+      <section id="home-return" class="home-return hidden" aria-label="Retrouver mes jeux"></section>
       <section class="pk-hero" id="daily-hero">
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
@@ -259,6 +260,7 @@
 
         <p class="mode-results" id="mode-results" role="status" aria-live="polite"></p>
         <div id="mode-empty" class="mode-empty" hidden><p>Aucun résultat. Essaie un autre nom ou explore tous les modes.</p><button class="btn-ghost" type="button" data-action="resetModeCatalog">Voir tous les modes</button></div>
+        <section id="catalog-picks" class="catalog-picks" aria-label="Nos incontournables"></section>
         <div class="all-modes-cats">
           <section class="all-modes-cat" data-family="guess">
             <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-eye"/></svg>Deviner</h3>
@@ -1130,7 +1132,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-party-room" class="hidden">
       <div class="card party-room-card">
         <div class="party-hero">
-          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>Les mêmes règles. Vos meilleurs coups. Un seul podium.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>7 mini-jeux</span><span>Entre amis</span></div></div>
+          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>En duel ou en équipe. Vos meilleurs coups, vos plus belles soirées.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>8 mini-jeux</span><span>Entre amis</span></div></div>
           <div class="party-hero-art" aria-hidden="true"><span>#025</span><b>VS</b><span>#151</span></div>
           <button class="btn-ghost party-back" type="button" data-action="goToConfig">← Retour</button>
         </div>
@@ -1147,6 +1149,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <h3 id="party-round-mode" class="party-round-mode"></h3>
                 <div id="party-nearest-target" class="party-nearest-target hidden"><span>NUMÉRO CIBLE</span><b id="party-target-number">#000</b><p>Quel Pokémon s’en rapproche le plus ?</p></div>
                 <img id="party-round-sprite" class="party-round-sprite" alt="Pokémon à deviner" />
+                <section id="party-round-recap" class="party-round-recap hidden" aria-live="polite"></section>
                 <p id="party-round-answer" class="party-round-answer hidden"></p>
                 <div id="party-stat-options" class="party-stat-options hidden"></div>
                 <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
@@ -1154,6 +1157,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <div id="party-nearest-results" class="party-nearest-results hidden"></div>
                 <p id="party-pick-status" class="party-pick-status hidden" role="status"></p>
                 <p id="party-answer-msg" class="party-answer-msg" role="status" aria-live="polite"></p>
+                <section id="party-coop" class="party-coop hidden" aria-label="Enquête en équipe"></section>
                 <div id="party-round-input" class="party-round-input"><div class="ac-wrapper party-ac-wrapper"><label class="party-input-label" for="party-guess">Ta proposition</label><input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" spellcheck="false" /><div id="party-guess-ac" class="ac-list hidden"></div></div><button id="party-submit-btn" class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button></div>
                 <details id="party-deduction-forfeit" class="party-deduction-forfeit hidden"><summary>Abandonner cette manche</summary><p>Tu restes spectateur jusqu’à la prochaine manche. Les autres peuvent continuer à chercher.</p><button id="party-deduction-forfeit-btn" class="btn-ghost" type="button" data-action="partyForfeitDeduction">Confirmer mon abandon</button></details>
                 <section id="party-deduction" class="party-deduction hidden"><p id="party-deduction-status" class="party-deduction-muted"></p><div class="party-deduction-rivals-panel"><h4>La course au mystère</h4><p class="party-deduction-muted">Meilleure proximité selon les 9 critères · Un indice partiel compte pour moitié · 100 % = Pokémon trouvé.</p><div id="party-deduction-rivals" class="party-deduction-rivals"></div></div><h4>Mes indices</h4><p class="party-deduction-muted">✓ Exact · ≈ Partiel · × Différent · Les flèches indiquent si la cible est plus grande ou plus lourde.</p><div id="party-deduction-history" class="party-deduction-history"></div></section>
@@ -1162,6 +1166,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               </div>
               <section id="party-setup" class="party-setup"><div class="party-section-head"><div><span class="party-eyebrow">VOTRE PROCHAIN DÉFI</span><h3>Choisissez votre terrain de jeu</h3></div><span id="party-host-note" class="party-host-note"></span></div>
                 <div id="party-mode-select" class="party-mode-select hidden" role="group" aria-label="Mode de jeu">
+                  <button id="party-mode-coop" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["coop"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Coopération · Nouveau</small><b>Enquête coop</b><span>Vos indices, une seule équipe</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-deduction" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["deduction"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">?</span><span class="pmt-text"><small class="pmt-tag">Nouveau · 2–8</small><b>Pokémon mystère</b><span>Le Duel, tous ensemble</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-nearest" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["nearest"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Nouveau</small><b>Numéro mystère</b><span>Vise le numéro le plus proche</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-guess" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["guess"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⚑</span><span class="pmt-text"><small class="pmt-tag">Rapidité</small><b>Course Pokémon</b><span>Reconnais-le avant tes amis</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>

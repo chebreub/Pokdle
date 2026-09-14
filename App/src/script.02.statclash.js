@@ -580,6 +580,7 @@ function goToConfig() {
     return;
   }
   if (typeof renderDailyHero === "function") renderDailyHero();
+  if (typeof renderHomeReturn === "function") renderHomeReturn();
   if (!partyLaunchInProgress) partySession = null;
   cleanupStatClashMode();
   teamBuilderPokemonPickerOpen = false;
