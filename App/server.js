@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const http = require("http");
 const { Server } = require("socket.io");
 const { createOAuthStateStore } = require("./lib/oauth-state");
+const nearestParty = require("./lib/party-nearest");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
 // Moteur Score Attack PRO partagé avec le client (même barème PRO_TUNING + fonctions pures).
 // Fonctions utilisées côté serveur pour le 1v1 PRO : rollProModifiers(gen, rnd), computeDraftProScore(team, mods).
@@ -799,7 +800,7 @@ const USAGE_EVENTS = new Set([
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
-  "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
   "duel:create", "statclash:create",
 ]);
 const USAGE_LABELS = {
@@ -810,7 +811,7 @@ const USAGE_LABELS = {
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
-  "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
+  "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
@@ -965,10 +966,20 @@ function publicPartyTypeComboRoundState(room, revealed) {
   };
 }
 
+function publicPartyNearestRoundState(room, revealed) {
+  return room.nearestTarget ? nearestParty.publicNearestRound(room, revealed) : null;
+}
+
+function resolvePartyNearestRound(room) {
+  if (nearestParty.scoreNearestRound(room)) endPartyRound(room);
+}
+
 function publicPartyRoomState(room, viewerId = null) {
   const revealed = room.status === "finished" || room.status === "complete";
   const gameMode = room.gameMode || "guess";
-  const roundState = gameMode === "typecombo"
+  const roundState = room.status === "waiting" ? null : gameMode === "nearest"
+    ? publicPartyNearestRoundState(room, revealed)
+    : gameMode === "typecombo"
     ? publicPartyTypeComboRoundState(room, revealed)
     : gameMode === "duocriteria"
     ? publicPartyDuoRoundState(room, revealed)
@@ -994,6 +1005,8 @@ function publicPartyRoomState(room, viewerId = null) {
       score: Number(player.score) || 0,
       correct: Boolean(player.correct),
       lastGain: Number(player.lastGain) || 0,
+      submitted: gameMode === "nearest" && Boolean(player.nearestPick),
+      proposal: gameMode === "nearest" && player.id === viewerId ? player.nearestPick?.name || null : null,
       pickKey: player.pickKey || null,
       usedStatKeys: Array.isArray(player.usedStatKeys) ? player.usedStatKeys : [],
       isSelf: player.id === viewerId,
@@ -1094,7 +1107,9 @@ function clearPartyRoundTimer(room) {
 
 function forcePartyRoundEnd(room) {
   if (!room || room.status !== "playing") return;
-  if (isPartyStatMode(room)) {
+  if (room.gameMode === "nearest") {
+    resolvePartyNearestRound(room);
+  } else if (isPartyStatMode(room)) {
     resolvePartyStatRound(room);
   } else {
     endPartyRound(room);
@@ -1111,7 +1126,9 @@ function armPartyRoundTimer(room) {
 
 async function startPartyRound(room) {
   // Dispatch selon le mode de la party
-  if (isPartyStatMode(room)) {
+  if (room.gameMode === "nearest") {
+    nearestParty.startNearestRound(room, POKEMON_LIST);
+  } else if (isPartyStatMode(room)) {
     await startPartyStatClashRound(room);
   } else if (room.gameMode === "typecombo") {
     startPartyTypeComboRound(room);
@@ -1535,6 +1552,7 @@ function handlePartyDisconnect(socketId, voluntary) {
   if (!room) return;
   const socket = io.sockets.sockets.get(socketId);
   if (socket?.data) socket.data.partyRoomCode = null;
+  if (socket) socket.leave(room.code);
   const index = room.players.findIndex((entry) => entry.id === socketId);
   if (index === -1) return;
   const wasHost = room.players[index].id === room.hostId;
@@ -1549,6 +1567,7 @@ function handlePartyDisconnect(socketId, voluntary) {
     const next = room.players.find((entry) => entry.connected) || room.players[0];
     room.hostId = next.id;
   }
+  if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
   emitPartyRoomState(room);
 }
 
@@ -1787,6 +1806,13 @@ io.on("connection", (socket) => {
       if (!room || room.status !== "playing" || !room.target) return respond(ack, { ok: false, error: "Aucune manche en cours." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
+      if (room.gameMode === "nearest") {
+        const result = nearestParty.submitNearest(room, player, payload.guess, payload.roundSerial, POKEMON_LIST, normalizeName);
+        if (result.error) return respond(ack, { ok: false, error: result.error, room: publicPartyRoomState(room, socket.id) });
+        if (nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
+        emitPartyRoomState(room);
+        return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
+      }
       if (player.correct) return respond(ack, { ok: true, already: true, room: publicPartyRoomState(room, socket.id) });
       if (room.gameMode === "typecombo") {
         const result = handlePartyTypeComboAnswer(room, player, payload.guess);
@@ -1812,7 +1838,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
-      if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
+      if (room.gameMode === "nearest") { resolvePartyNearestRound(room); } else if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -1867,7 +1893,14 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (room.gameMode !== mode && room.status === "complete") {
+        room.status = "waiting";
+        room.roundNumber = 0;
+        room.target = null;
+        room.nearestTarget = null;
+        for (const p of room.players) { p.correct = false; p.lastGain = 0; p.nearestPick = null; }
+      }
       room.gameMode = mode;
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });

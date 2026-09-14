@@ -1,0 +1,45 @@
+# Party Room — Numéro mystère et nouvelle interface
+
+## Livraison
+
+- Nouveau mode multijoueur `nearest`, nommé **Numéro mystère** dans le site.
+- Numéro national tiré au sort parmi les espèces des générations sélectionnées ; formes alternatives exclues.
+- Une proposition de Pokémon par joueur, verrouillée après validation. La sélection dans l'autocomplétion ne valide pas automatiquement ce mode.
+- Propositions adverses masquées jusqu'à la révélation. Numéros et écarts révélés ensemble.
+- Le plus petit écart gagne 100 points ; tous les ex æquo gagnent 100 points. Aucun bonus de rapidité. Absence de réponse : 0 point.
+- Fin de manche quand tous les joueurs présents ont répondu, après 30 secondes ou à la demande de l'hôte.
+- Scores calculés exclusivement sur le serveur, sans appel externe. Rejets des réponses tardives, des anciennes manches, des formes et générations non autorisées ; attribution des points une seule fois.
+- Départ : retrait du socket, transfert d'hôte, résolution si tous les joueurs restants ont répondu.
+
+## Interface
+
+Salon clair/sombre suivant les paramètres existants. Accueil avec création/invitation distinctes, six cartes de modes, paramètres regroupés, un bouton principal de lancement, classement séparé. Plateau de jeu placé avant le classement sur mobile. Proposition enregistrée explicitement affichée, résultats avec sprite/numéro/écart/points. Boutons tactiles, choix sélectionné accessible via `aria-pressed`, erreurs de proposition près du champ. L'ancien empilement de styles Party est remplacé par une feuille ciblée ; les badges du catalogue sont conservés.
+
+## Vérification
+
+Commande réussie :
+
+```sh
+node --test test/party-nearest.test.js test/gameplay-regressions.test.js test/navigation.test.js test/oauth-state.test.js
+node --check server.js
+node build.mjs
+```
+
+**38 tests réussis**, dont 12 nouveaux couvrant le moteur, la confidentialité de la sérialisation et les véritables gestionnaires Socket.IO : égalités, sélection exacte, double soumission, chronomètre, hôte, déconnexion, huit joueurs, remise à zéro, ancien numéro de manche et changement de mode après la fin.
+
+Tests navigateur sur serveur local, deux onglets :
+
+- Partie complète de cinq manches, salon J2SKD, Numéro mystère.
+- #952 : Pikachu #025 (écart 927) contre Mew #151 (écart 801), victoire de Mew, 100 points.
+- #313 : Pikachu des deux côtés, égalité et 100 points chacun.
+- Proposition inconnue refusée ; sélection d'une suggestion puis validation explicite.
+- #435 : seul Mew proposé ; expiration réelle des 30 secondes, 100 points au répondant, 0 à l'absent.
+- Manche sans proposition terminée par l'hôte : aucun point.
+- Cinquième manche, podium et cumul 300–200 ; relance à 0–0, manche 1/5.
+- Test du mode existant Combo de types après redémarrage du serveur et chargement de la nouvelle interface.
+- Vues claires et sombres ; salon mobile à 320 px et 390 px, ordinateur. Pas de débordement global mesuré : 305/305 et 375/375 px (largeur utile/largeur du contenu).
+- Correction puis contrôle visuel du bouton d'invitation à 320 px.
+
+## Portée
+
+Les vérifications mobiles utilisent une fenêtre CSS intégrée à Chrome, pas des téléphones iOS/Android physiques. La couverture à huit joueurs est automatisée ; le parcours navigateur utilise deux joueurs. Les cinq autres modes ne font pas tous l'objet d'une partie complète dans cette livraison. Les limites générales du précédent audit (Discord, ROM, Draft Arènes) ne sont pas modifiées.

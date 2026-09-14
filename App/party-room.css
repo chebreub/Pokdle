@@ -1,609 +1,244 @@
-/* Party Room L1 - lobby */
-.party-room-card .party-lobby,
-.party-room-card .party-joined { display: flex; flex-direction: column; gap: 14px; max-width: 520px; }
-.party-field { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: #1d2b4a; }
-.party-field input,
-.party-join-row input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid #d7dfec; padding: 0 14px; font-weight: 700; color: #1d2b4a; }
-.party-join-row { display: flex; gap: 10px; }
-.party-join-row input { flex: 1; }
-.party-room-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.party-room-head-actions { display: flex; gap: 8px; }
-.party-status-badge { background: #eef3ff; color: #2f76ff; border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: 0.8rem; }
-.party-players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.party-player { display: flex; align-items: center; gap: 8px; background: #f4f8fc; border: 1px solid #e1e8f2; border-radius: 12px; padding: 10px 14px; }
-.party-player.is-offline { opacity: 0.5; }
-.party-player-name { font-weight: 800; color: #1d2b4a; }
-.party-badge-host { background: #ffcc33; color: #1d2b4a; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
-.party-badge-self { background: #2f76ff; color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
-.party-count { color: #5a6b8c; font-weight: 700; }
-.party-status { min-height: 18px; color: #5a6b8c; font-weight: 700; }
-@media (max-width: 560px) { .party-join-row { flex-direction: column; } }
-.party-round { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 8px; }
-.party-round-sprite { width: 160px; height: 160px; image-rendering: pixelated; }
-.party-round-answer { font-weight: 800; color: #1d2b4a; }
-.party-round-input { display: flex; gap: 10px; width: 100%; max-width: 360px; }
-.party-round-input input { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid #d7dfec; padding: 0 14px; font-weight: 700; color: #1d2b4a; }
-.party-round-input .party-ac-wrapper { flex: 1; min-width: 0; }
-.party-round-input .ac-list { z-index: 120; }
-/* L'input de réponse vit en bas d'une carte overflow:hidden : la liste
-   s'ouvre vers le haut pour rester entièrement visible. */
-#screen-party-room .party-ac-wrapper .ac-list {
-  top: auto;
-  bottom: calc(100% + 8px);
-  box-shadow: 0 -10px 26px rgba(24, 43, 76, 0.28);
+/* Party Room: one scoped theme, shared by the lobby, arena and results. */
+#pokdle-app #screen-party-room {
+  --party-accent: #6241c8; --party-tint: #eee8ff; --party-mint: #d6f4e8;
+  --party-success: #176446; --party-success-bg: #e4f6ec;
+  --party-warm: #fff0cf; --party-warm-ink: #815609;
+  --party-hero: #e9e1ff;
 }
-.party-player.is-correct { border-color: #36c26b; }
-.party-rank { font-weight: 800; color: #5a6b8c; min-width: 18px; }
-.party-check { background: #36c26b; color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 0.72rem; font-weight: 800; }
-.party-score { margin-left: auto; font-weight: 800; color: #2f76ff; }
-.party-round-mode { font-weight: 800; color: #2f76ff; margin: 0; }
-.party-sprite-silhouette { filter: brightness(0); }
-.party-sprite-pixel { filter: blur(7px); }
-.party-mode-select { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0; }
-.party-mode-label { font-weight: 800; color: #1d2b4a; }
-.party-mode-btn { border: 1px solid #d7dfec; background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 700; color: #1d2b4a; cursor: pointer; }
-.party-mode-btn.is-active { background: #2f76ff; color: #fff; border-color: #2f76ff; }
-.party-mode-btn:disabled, .party-mode-btn.party-mode-soon { opacity: 0.5; cursor: not-allowed; }
-.party-gen-btn { min-width: 38px; padding: 6px 10px; text-align: center; }
-.party-stat-options { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.party-stat-btn { border: 1px solid #2f76ff; background: #fff; color: #2f76ff; border-radius: 999px; padding: 8px 16px; font-weight: 800; cursor: pointer; }
-.party-stat-reveal { display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 320px; }
-.party-stat-row { display: flex; justify-content: space-between; padding: 4px 10px; border-radius: 8px; }
-.party-stat-row.is-best { background: #36c26b; color: #fff; }
-.party-wait { color: #5a6b8c; font-size: 0.72rem; font-weight: 700; }
-.party-stat-btn.is-used { opacity: 0.4; cursor: not-allowed; border-color: #d7dfec; color: #5a6b8c; }
-.party-typecombo-panel { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #e1e8f2; border-radius: 14px; background: #f4f8fc; }
-.party-typecombo-types { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.party-typecombo-panel p { margin: 0; color: #17345d; font-weight: 900; text-align: center; }
-.party-typecombo-sprites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
-.party-typecombo-sprite-card { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 8px; border: 1px solid #e1e8f2; border-radius: 12px; background: #fff; }
-.party-typecombo-sprite-card img { width: 64px; height: 64px; image-rendering: pixelated; object-fit: contain; }
-.party-typecombo-sprite-card span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #17345d; font-size: 0.78rem; font-weight: 900; }
-.party-typecombo-sprite-card.is-winner { border-color: #36c26b; background: #f1faf4; }
-
-/* ===== DA Lot 1 : lobby premium ===== */
-.party-room-card .party-lobby,
-.party-room-card .party-joined { max-width: 560px; gap: 16px; }
-.party-room-head { background: linear-gradient(135deg, #f4f8ff, #eef3ff); border: 1px solid #dbe6fb; border-radius: 16px; padding: 12px 16px; }
-#party-room-code { display: inline-block; font-size: 1.3rem; font-weight: 900; letter-spacing: 3px; color: #1d2b4a; background: #fff; border: 2px dashed #2f76ff; border-radius: 10px; padding: 4px 12px; margin: 0 4px; }
-.party-status-badge { background: #2f76ff; color: #fff; padding: 4px 12px; font-size: 0.78rem; box-shadow: 0 2px 8px rgba(47, 118, 255, 0.25); }
-.party-copy-btn { background: #2f76ff !important; color: #fff !important; border: none !important; font-weight: 800 !important; box-shadow: 0 4px 12px rgba(47, 118, 255, 0.3); }
-.party-copy-btn:hover { filter: brightness(1.06); }
-.party-mode-select { gap: 8px; padding: 6px; background: #f4f8fc; border: 1px solid #e1e8f2; border-radius: 999px; width: fit-content; }
-.party-mode-btn { transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease; }
-.party-mode-btn.is-active { background: linear-gradient(135deg, #2f76ff, #4f8bff); border-color: #2f76ff; box-shadow: 0 4px 12px rgba(47, 118, 255, 0.35); }
-.party-mode-btn:not(:disabled):hover { transform: translateY(-1px); }
-.party-players { gap: 10px; }
-.party-player { box-shadow: 0 2px 6px rgba(32, 65, 118, 0.05); transition: transform 0.12s ease, box-shadow 0.12s ease; }
-.party-player:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(32, 65, 118, 0.1); }
-.party-room-card #party-start-btn { background: linear-gradient(135deg, #e4382f, #ff5a4d); border: none; min-height: 50px; font-size: 1.05rem; font-weight: 900; border-radius: 14px; box-shadow: 0 6px 16px rgba(228, 56, 47, 0.3); }
-.party-room-card #party-start-btn:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.04); }
-.party-room-card #party-start-btn:disabled { opacity: 0.5; box-shadow: none; }
-
-/* ===== DA Lot 2 : ecran de manche premium ===== */
-.party-round { background: linear-gradient(135deg, #ffffff, #f4f8ff); border: 1px solid #e1e8f2; border-radius: 18px; padding: 18px; gap: 14px; box-shadow: 0 8px 24px rgba(32, 65, 118, 0.08); width: 100%; max-width: 420px; margin: 12px auto 0; }
-.party-round-mode { font-size: 1.05rem; font-weight: 900; color: #2f76ff; text-align: center; }
-.party-round-sprite { width: 180px; height: 180px; image-rendering: pixelated; background: radial-gradient(circle at 50% 45%, rgba(47, 118, 255, 0.12), rgba(47, 118, 255, 0) 70%); border-radius: 50%; padding: 6px; filter: drop-shadow(0 6px 14px rgba(32, 65, 118, 0.18)); }
-.party-sprite-silhouette { filter: brightness(0) drop-shadow(0 6px 14px rgba(32, 65, 118, 0.18)); }
-.party-sprite-pixel { filter: blur(7px) drop-shadow(0 6px 14px rgba(32, 65, 118, 0.18)); }
-.party-round-input { max-width: 360px; }
-.party-round-input input { min-height: 48px; border: 2px solid #d7dfec; }
-.party-round-input input:focus { border-color: #2f76ff; outline: none; }
-.party-round-answer { background: #eef6ee; border: 1px solid #cdebd6; color: #1d2b4a; border-radius: 12px; padding: 10px 14px; text-align: center; width: 100%; max-width: 380px; }
-.party-stat-options { gap: 10px; }
-.party-stat-btn { min-height: 46px; padding: 10px 18px; transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease; box-shadow: 0 2px 6px rgba(47, 118, 255, 0.12); }
-.party-stat-btn:not(:disabled):hover { background: #2f76ff; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(47, 118, 255, 0.3); }
-.party-stat-reveal { gap: 6px; max-width: 360px; }
-.party-stat-row { background: #f4f8fc; border: 1px solid #e8eef6; padding: 8px 14px; font-weight: 700; color: #1d2b4a; }
-.party-stat-row.is-best { background: linear-gradient(135deg, #36c26b, #4fd17f); color: #fff; border-color: #36c26b; box-shadow: 0 4px 12px rgba(54, 194, 107, 0.3); }
-.party-typecombo-panel { width: 100%; box-shadow: 0 4px 12px rgba(32, 65, 118, 0.06); }
-.party-round.party-round-typecombo { max-width: 620px; padding: 24px; gap: 18px; }
-.party-combo-meta { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 0; }
-.party-combo-count { color: #17345d; font-weight: 900; }
-.party-combo-points { color: #2f76ff; font-weight: 900; }
-.party-combo-diff { border-radius: 999px; padding: 2px 10px; font-weight: 900; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.party-combo-diff.is-facile { background: #e3f6e8; color: #1f7a3d; }
-.party-combo-diff.is-moyen { background: #e4f0ff; color: #2457ad; }
-.party-combo-diff.is-difficile { background: #fff0d6; color: #8d5f00; }
-.party-combo-diff.is-legendaire { background: #f3e0ff; color: #7a2bd0; }
-@keyframes party-combo-roll { 0% { opacity: 0; transform: translateY(-12px) scale(0.8) rotate(-6deg); } 60% { transform: translateY(0) scale(1.1); } 100% { opacity: 1; transform: none; } }
-.party-round-typecombo.is-entering .party-typecombo-types { animation: party-combo-roll 0.7s ease; }
-.party-round-typecombo .party-typecombo-types { transform: scale(1.15); margin: 4px 0 8px; }
-.party-round-typecombo .party-round-mode { font-size: 1.25rem; max-width: 520px; }
-.party-round-typecombo .party-stat-reveal { max-width: 520px; }
-.party-round-typecombo .party-typecombo-panel { gap: 14px; padding: 18px; }
-.party-round-typecombo .party-typecombo-types { gap: 12px; }
-.party-round-typecombo .type-badge { min-height: 44px; padding: 8px 14px; font-size: 1rem; }
-.party-round-typecombo .type-badge img { width: 28px; height: 28px; }
-.party-round-typecombo .party-round-input { max-width: 460px; }
-@media (max-width: 560px) { .party-round-sprite { width: 150px; height: 150px; } }
-
-/* ===== DA Lot 3 : scoreboard live ===== */
-.party-players { gap: 8px; }
-.party-player { padding: 10px 14px; gap: 10px; border-radius: 14px; }
-.party-player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.party-rank { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; border-radius: 50%; background: #eef3ff; color: #2f76ff; font-weight: 900; font-size: 0.85rem; }
-.party-players .party-player:first-child { border-color: #ffcc33; box-shadow: 0 4px 14px rgba(255, 204, 51, 0.25); }
-.party-players .party-player:first-child .party-rank { background: #ffcc33; color: #1d2b4a; }
-.party-score { font-size: 0.95rem; background: #eef3ff; color: #2f76ff; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
-.party-check { background: #36c26b; }
-.party-wait { background: #eef0f4; color: #5a6b8c; border-radius: 999px; padding: 2px 8px; font-size: 0.72rem; }
-.party-player.is-correct { border-color: #36c26b; background: #f1faf4; }
-.party-player.is-offline { opacity: 0.45; }
+#pokdle-app.theme-dark #screen-party-room {
+  --party-accent: #bea7ff; --party-tint: #34294f; --party-mint: #21453f;
+  --party-success: #89e2b7; --party-success-bg: #203e36;
+  --party-warm: #44381f; --party-warm-ink: #f5d07b;
+  --party-hero: #34294f;
+}
+#pokdle-app #screen-party-room .party-room-card { padding: 0 !important; overflow: visible; }
+#pokdle-app #screen-party-room .hidden { display: none !important; }
+#pokdle-app #screen-party-room h3 { margin: 0; color: var(--ui-ink); font-size: 1.2rem; line-height: 1.3; }
+#pokdle-app #screen-party-room p { margin: 0; }
+#pokdle-app #screen-party-room button { cursor: pointer; touch-action: manipulation; }
+#pokdle-app #screen-party-room button:disabled { cursor: default; }
+#pokdle-app #screen-party-room .party-eyebrow { display: block; color: var(--party-accent); font-size: .66rem; font-weight: 800; letter-spacing: .13em; }
+#pokdle-app #screen-party-room .party-hero { position: relative; display: flex; align-items: center; gap: 24px; padding: 32px 36px; overflow: hidden; border-radius: 20px 20px 0 0; background: radial-gradient(ellipse at 75% 130%, var(--party-mint), transparent 58%), linear-gradient(110deg, var(--party-hero), var(--ui-surface)); border-bottom: 1px solid var(--ui-line); }
+#pokdle-app #screen-party-room .party-hero h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.06em; color: var(--ui-ink); margin: 4px 0 8px; line-height: 1.05; }
+#pokdle-app #screen-party-room .party-title-dot { color: var(--party-accent); }
+#pokdle-app #screen-party-room .party-hero p { color: var(--ui-muted); font-size: .9rem; }
+#pokdle-app #screen-party-room .party-hero-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+#pokdle-app #screen-party-room .party-hero-tags span { font-size: .72rem; font-weight: 700; padding: 4px 10px; border: 1px solid var(--ui-line); border-radius: 99px; background: var(--ui-surface); color: var(--ui-ink); }
+#pokdle-app #screen-party-room .party-hero-art { margin: auto 100px auto auto; display: flex; align-items: center; transform: rotate(-7deg); }
+#pokdle-app #screen-party-room .party-hero-art span { display: grid; place-items: center; width: 86px; height: 108px; background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 18px; font: 800 1.3rem ui-monospace, monospace; color: var(--party-accent); box-shadow: 7px 9px 0 var(--party-tint); }
+#pokdle-app #screen-party-room .party-hero-art span:last-child { transform: rotate(17deg) translateY(12px); color: var(--party-success); }
+#pokdle-app #screen-party-room .party-hero-art b { background: var(--party-accent); color: var(--ui-surface); border-radius: 50%; padding: 10px; z-index: 1; margin: 0 -12px; font-size: .85rem; }
+#pokdle-app #screen-party-room .party-back { position: absolute; top: 24px; right: 24px; }
+#pokdle-app #screen-party-room .party-lobby { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; padding: 36px; max-width: 1080px; margin: auto; }
+#pokdle-app #screen-party-room .party-welcome h3 { font-size: 1.8rem; margin: 10px 0; letter-spacing: -.04em; }
+#pokdle-app #screen-party-room .party-welcome > p { color: var(--ui-muted); max-width: 420px; font-size: .92rem; }
+#pokdle-app #screen-party-room .party-steps { display: grid; gap: 18px; margin: 28px 0; padding: 0; list-style: none; }
+#pokdle-app #screen-party-room .party-steps li { display: flex; align-items: center; gap: 14px; font-size: .9rem; font-weight: 700; }
+#pokdle-app #screen-party-room .party-steps li > b { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; color: var(--party-accent); background: var(--party-tint); font: 700 .85rem ui-monospace, monospace; }
+#pokdle-app #screen-party-room .party-steps small { display: block; color: var(--ui-muted); font-size: .8rem; font-weight: 400; margin-top: 2px; }
+#pokdle-app #screen-party-room .party-new-preview { display: flex; gap: 14px; padding: 16px; background: var(--party-mint); border-radius: 16px; color: var(--party-success); }
+#pokdle-app #screen-party-room .party-new-preview > span { font-size: 2rem; line-height: 1; }
+#pokdle-app #screen-party-room .party-new-preview b { font-size: .85rem; }
+#pokdle-app #screen-party-room .party-new-preview p { color: var(--party-success); font-size: .8rem; margin-top: 4px; }
+#pokdle-app #screen-party-room .party-entry-panel { align-self: start; padding: 28px; border: 1px solid var(--ui-line); border-radius: 20px; background: var(--ui-soft); display: grid; gap: 16px; }
+#pokdle-app #screen-party-room .party-entry-panel > p { color: var(--ui-muted); font-size: .85rem; }
+#pokdle-app #screen-party-room .party-field { display: flex; flex-direction: column; gap: 7px; }
+#pokdle-app #screen-party-room .party-field > span, #pokdle-app #screen-party-room .party-input-label { color: var(--ui-ink) !important; font-size: .82rem; font-weight: 700; }
+#pokdle-app #screen-party-room input { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; }
+#pokdle-app #screen-party-room .party-entry-panel > .btn-blue { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+#pokdle-app #screen-party-room .party-divider { display: flex; align-items: center; gap: 12px; color: var(--ui-muted); font-size: .74rem; margin: 8px 0; }
+#pokdle-app #screen-party-room .party-divider::before, #pokdle-app #screen-party-room .party-divider::after { content: ''; flex: 1; height: 1px; background: var(--ui-line); }
+#pokdle-app #screen-party-room .party-join-row { display: flex; gap: 8px; }
+#pokdle-app #screen-party-room #party-join-code { text-transform: uppercase; letter-spacing: .14em; }
+#pokdle-app #screen-party-room .party-entry-note { text-align: center; font-size: .74rem !important; }
+#pokdle-app #screen-party-room .party-joined { padding: 24px; }
+#pokdle-app #screen-party-room .party-room-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; border-radius: 16px; padding: 14px 18px; margin-bottom: 24px; }
+#pokdle-app #screen-party-room .party-code-group { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+#pokdle-app #screen-party-room #party-room-code { font: 800 1.3rem ui-monospace, monospace; letter-spacing: .17em; color: var(--ui-ink); }
+#pokdle-app #screen-party-room .party-status-badge { color: var(--party-success); background: var(--party-success-bg); border-radius: 99px; padding: 5px 10px; font-size: .72rem; font-weight: 700; }
+#pokdle-app #screen-party-room .party-room-head-actions { display: flex; gap: 8px; }
+#pokdle-app #screen-party-room .party-room-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+#pokdle-app #screen-party-room .party-play-area { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+#pokdle-app #screen-party-room .party-section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+#pokdle-app #screen-party-room .party-section-head h3 { margin-top: 4px; }
+#pokdle-app #screen-party-room .party-host-note { max-width: 160px; color: var(--ui-muted); font-size: .74rem; text-align: right; }
+#pokdle-app #screen-party-room .party-mode-select { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#pokdle-app #screen-party-room .party-mode-btn { color: var(--ui-ink); background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 10px; min-height: 44px; font-size: .85rem; font-weight: 700; transition: border-color .15s, background .15s; }
+#pokdle-app #screen-party-room .party-mode-btn.is-active { background: var(--party-tint); color: var(--party-accent); border-color: var(--party-accent); box-shadow: inset 0 0 0 1px var(--party-accent); }
+#pokdle-app #screen-party-room .party-mode-btn:hover:not(:disabled) { border-color: var(--party-accent); background: var(--party-tint); }
+#pokdle-app #screen-party-room .party-mode-tile { position: relative; display: flex; align-items: center; gap: 12px; text-align: left; padding: 16px 28px 16px 14px; min-height: 108px; border-radius: 16px; }
+#pokdle-app #screen-party-room .pmt-emoji { display: grid; place-items: center; width: 40px; height: 44px; flex: 0 0 40px; background: var(--ui-soft); color: var(--ui-accent); font-size: 1.6rem; border-radius: 12px; }
+#pokdle-app #screen-party-room #party-mode-nearest .pmt-emoji { background: var(--party-mint); color: var(--party-success); }
+#pokdle-app #screen-party-room #party-mode-typecombo .pmt-emoji, #pokdle-app #screen-party-room #party-mode-statclash .pmt-emoji { background: var(--party-warm); color: var(--party-warm-ink); }
+#pokdle-app #screen-party-room #party-mode-duocriteria .pmt-emoji, #pokdle-app #screen-party-room #party-mode-statclashparty .pmt-emoji { background: var(--party-tint); color: var(--party-accent); }
+#pokdle-app #screen-party-room .pmt-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+#pokdle-app #screen-party-room .pmt-text b { color: var(--ui-ink); font-size: .93rem; line-height: 1.3; }
+#pokdle-app #screen-party-room .pmt-text > span { color: var(--ui-muted); font-size: .73rem; font-weight: 400; line-height: 1.4; }
+#pokdle-app #screen-party-room .pmt-tag { font-size: .59rem; text-transform: uppercase; letter-spacing: .08em; color: var(--party-accent); }
+#pokdle-app #screen-party-room .pmt-check { position: absolute; right: 10px; top: 10px; color: var(--party-accent); opacity: 0; }
+#pokdle-app #screen-party-room .is-active .pmt-check { opacity: 1; }
+#pokdle-app #screen-party-room .party-mode-hint { max-width: none; text-align: left; margin: 14px 0 20px; padding: 12px 14px; background: var(--party-tint) !important; color: var(--ui-ink) !important; border-left: 3px solid var(--party-accent) !important; border-radius: 0 10px 10px 0; font-size: .8rem; line-height: 1.6; }
+#pokdle-app #screen-party-room .party-options { display: grid; gap: 16px; border-top: 1px solid var(--ui-line); padding-top: 18px; }
+#pokdle-app #screen-party-room .party-mode-label { display: block; margin-bottom: 7px; font-size: .75rem; font-weight: 700; color: var(--ui-muted); }
+#pokdle-app #screen-party-room .party-option-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+#pokdle-app #screen-party-room .party-option-buttons button { min-width: 44px; padding: 8px 12px; }
+#pokdle-app #screen-party-room .party-launch-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px; background: var(--ui-soft); border: 1px solid var(--ui-line); border-radius: 14px; }
+#pokdle-app #screen-party-room .party-launch-bar p { color: var(--ui-muted); font-size: .8rem; }
+#pokdle-app #screen-party-room .party-launch-bar button { flex-shrink: 0; padding: 12px 22px; }
+#pokdle-app #screen-party-room .party-launch-bar button:disabled { opacity: .55; box-shadow: none !important; }
+#pokdle-app #screen-party-room .party-roster { border: 1px solid var(--ui-line); border-radius: 18px; padding: 18px 14px; background: var(--ui-soft); }
+#pokdle-app #screen-party-room .party-roster h3 { font-size: 1rem; }
+#pokdle-app #screen-party-room .party-count { color: var(--ui-muted); font-size: .8rem; font-weight: 700; white-space: nowrap; }
+#pokdle-app #screen-party-room .party-players { padding: 0; margin: 0; list-style: none; display: grid; gap: 8px; }
+#pokdle-app #screen-party-room .party-player { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 12px 10px; background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; border-radius: 12px; }
+#pokdle-app #screen-party-room .party-player.is-correct { border-color: var(--party-success) !important; }
+#pokdle-app #screen-party-room .party-player.is-offline { opacity: .6; }
+#pokdle-app #screen-party-room .party-player-info { min-width: 0; }
+#pokdle-app #screen-party-room .party-player-name { display: block; color: var(--ui-ink); font-size: .83rem; font-weight: 700; overflow-wrap: anywhere; }
+#pokdle-app #screen-party-room .party-player-meta { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 3px; font-size: .62rem; }
+#pokdle-app #screen-party-room .party-badge-host, #pokdle-app #screen-party-room .party-badge-self, #pokdle-app #screen-party-room .party-wait { color: var(--ui-muted); }
+#pokdle-app #screen-party-room .party-check { color: var(--party-success); font-weight: 800; }
+#pokdle-app #screen-party-room .party-avatar { display: grid; place-items: center; width: 28px; height: 32px; border-radius: 10px; font-weight: 800; font-size: .8rem; background: var(--party-tint); color: var(--party-accent); }
+#pokdle-app #screen-party-room .av-1, #pokdle-app #screen-party-room .av-4 { background: var(--party-mint); color: var(--party-success); }
+#pokdle-app #screen-party-room .av-2, #pokdle-app #screen-party-room .av-5 { background: var(--party-warm); color: var(--party-warm-ink); }
+#pokdle-app #screen-party-room .party-score { text-align: right; font-size: .8rem; color: var(--ui-ink); font-weight: 800; white-space: nowrap; }
+#pokdle-app #screen-party-room .party-score small { display: block; font-size: .58rem; color: var(--ui-muted); font-weight: 400; }
+#pokdle-app #screen-party-room .party-player-empty { border-style: dashed !important; background: transparent !important; grid-template-columns: 28px 1fr; }
+#pokdle-app #screen-party-room .party-seat-label { font-size: .76rem; color: var(--ui-muted); font-weight: 400; }
+#pokdle-app #screen-party-room .party-rank { color: var(--party-accent); text-align: center; }
+#pokdle-app #screen-party-room .party-roster-tip { margin-top: 14px; text-align: center; color: var(--ui-muted); font-size: .7rem; }
+#pokdle-app #screen-party-room .is-podium .party-player:first-child { border-color: var(--party-warm-ink) !important; background: var(--party-warm) !important; }
+#pokdle-app #screen-party-room .party-round { position: relative; display: flex; align-items: center; flex-direction: column; gap: 18px; padding: 24px; background: radial-gradient(ellipse at 50% 0%, var(--party-tint), transparent 65%), var(--ui-surface); border: 1px solid var(--ui-line); border-radius: 20px; min-width: 0; }
+#pokdle-app #screen-party-room .party-stage-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; }
+#pokdle-app #screen-party-room .party-round-mode { font-size: 1.25rem; color: var(--ui-ink); text-align: center; max-width: 520px; }
+#pokdle-app #screen-party-room .party-timer { background: var(--party-warm); color: var(--party-warm-ink); border-radius: 99px; padding: 6px 12px; font: 700 .9rem ui-monospace, monospace; white-space: nowrap; }
+#pokdle-app #screen-party-room .party-timer.is-urgent { color: #ac2734; background: #ffe4e8; }
+#pokdle-app #screen-party-room .party-nearest-target { width: 100%; text-align: center; padding: 14px 0 22px; border-bottom: 1px solid var(--ui-line); }
+#pokdle-app #screen-party-room .party-nearest-target > span { color: var(--party-accent); letter-spacing: .16em; font-size: .67rem; font-weight: 800; }
+#pokdle-app #screen-party-room .party-nearest-target b { display: block; font: 900 clamp(3rem, 7vw, 5rem)/1.2 Nunito, sans-serif; color: var(--party-accent); letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+#pokdle-app #screen-party-room .party-nearest-target p { margin-top: 10px; font-size: .85rem; color: var(--ui-muted); }
+#pokdle-app #screen-party-room .party-round-sprite { width: 160px; height: 160px; image-rendering: pixelated; object-fit: contain; }
+#pokdle-app #screen-party-room .party-sprite-silhouette { filter: brightness(0); }
+#pokdle-app #screen-party-room .party-sprite-pixel { filter: blur(7px); }
+#pokdle-app #screen-party-room .party-round-input { display: flex; align-items: end; gap: 8px; width: 100%; max-width: 520px; }
+#pokdle-app #screen-party-room .party-ac-wrapper { min-width: 0; flex: 1; }
+#pokdle-app #screen-party-room .party-input-label { display: block; margin-bottom: 6px; }
+#pokdle-app #screen-party-room .party-round-input button { min-height: 48px; padding: 10px 18px; }
+#pokdle-app #screen-party-room .party-ac-wrapper .ac-list { top: auto; bottom: calc(100% + 8px); max-height: min(280px, 42dvh); overflow-y: auto; z-index: 120; }
+#pokdle-app #screen-party-room .party-ac-wrapper .ac-item { cursor: pointer; min-height: 48px; }
+#pokdle-app #screen-party-room .party-round-help { color: var(--ui-muted); font-size: .72rem; text-align: center; max-width: 460px; }
+#pokdle-app #screen-party-room .party-pick-status, #pokdle-app #screen-party-room .party-round-answer { width: 100%; border-radius: 12px; padding: 12px 14px; color: var(--party-success); background: var(--party-success-bg); font-size: .85rem; text-align: center; }
+#pokdle-app #screen-party-room #party-reveal-btn { background: transparent !important; border-color: transparent !important; color: var(--ui-muted) !important; font-size: .75rem !important; }
+#pokdle-app #screen-party-room .party-nearest-results { display: grid; gap: 8px; width: 100%; }
+#pokdle-app #screen-party-room .party-nearest-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--ui-line); background: var(--ui-surface); border-radius: 14px; }
+#pokdle-app #screen-party-room .party-nearest-row.is-winner { border-color: var(--party-success); background: var(--party-success-bg); }
+#pokdle-app #screen-party-room .party-nearest-row img { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; }
+#pokdle-app #screen-party-room .party-nearest-row b { display: block; font-size: .88rem; overflow-wrap: anywhere; }
+#pokdle-app #screen-party-room .party-nearest-row small { display: block; color: var(--ui-muted); font-size: .73rem; overflow-wrap: anywhere; }
+#pokdle-app #screen-party-room .party-nearest-distance { text-align: right; }
+#pokdle-app #screen-party-room .party-nearest-distance b { color: var(--party-accent); }
+#pokdle-app #screen-party-room .is-winner .party-nearest-distance b { color: var(--party-success); }
+#pokdle-app #screen-party-room .party-stat-options { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; width: 100%; }
+#pokdle-app #screen-party-room .party-stat-btn { border: 1px solid var(--ui-line); border-radius: 12px; min-height: 48px; padding: 10px; background: var(--ui-surface); color: var(--ui-ink); font-weight: 700; }
+#pokdle-app #screen-party-room .party-stat-btn:hover:not(:disabled) { background: var(--party-tint); border-color: var(--party-accent); }
+#pokdle-app #screen-party-room .party-stat-btn.is-used { opacity: .55; }
+#pokdle-app #screen-party-room .party-stat-reveal { width: 100%; display: grid; gap: 8px; }
+#pokdle-app #screen-party-room .party-stat-row { display: flex; justify-content: space-between; padding: 10px; border-radius: 10px; background: var(--ui-soft); color: var(--ui-ink); }
+#pokdle-app #screen-party-room .party-stat-row.is-best { background: var(--party-success-bg); color: var(--party-success); font-weight: 700; }
+#pokdle-app #screen-party-room .party-typecombo-panel { display: grid; justify-items: center; gap: 18px; padding: 20px 12px; }
+#pokdle-app #screen-party-room .party-typecombo-types, #pokdle-app #screen-party-room .party-duo-criteria, #pokdle-app #screen-party-room .party-combo-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+#pokdle-app #screen-party-room .party-duo-chip { padding: 10px 16px; border-radius: 12px; background: var(--party-tint); color: var(--party-accent); font-weight: 800; }
+#pokdle-app #screen-party-room .party-duo-plus { color: var(--ui-muted); }
+#pokdle-app #screen-party-room .party-combo-meta { color: var(--ui-muted); font-size: .78rem; }
+#pokdle-app #screen-party-room .party-combo-diff, #pokdle-app #screen-party-room .party-combo-pure { background: var(--party-warm); color: var(--party-warm-ink); padding: 3px 8px; border-radius: 8px; font-size: .75rem; }
+#pokdle-app #screen-party-room .party-typecombo-sprites { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+#pokdle-app #screen-party-room .party-typecombo-sprite-card { display: grid; justify-items: center; gap: 4px; padding: 12px; background: var(--ui-soft); color: var(--ui-ink); border-radius: 12px; font-size: .8rem; }
+#pokdle-app #screen-party-room .party-typecombo-sprite-card img { width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; }
+#pokdle-app #screen-party-room .party-round-banner { display: none; }
+#pokdle-app #screen-party-room .party-status { color: var(--ui-ink); overflow-wrap: anywhere; margin: 0 24px; font-size: .85rem; }
+#pokdle-app #screen-party-room .party-status:not(:empty) { padding: 14px; margin-bottom: 20px; background: var(--party-warm); color: var(--party-warm-ink); border-radius: 12px; }
+@keyframes party-number-in { from { opacity: .2; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+#pokdle-app #screen-party-room .is-entering .party-nearest-target b { animation: party-number-in .45s ease-out; }
+@media (max-width: 1050px) {
+  #pokdle-app #screen-party-room .party-room-layout { grid-template-columns: minmax(0,1fr) 260px; gap: 16px; }
+  #pokdle-app #screen-party-room .party-mode-tile { gap: 8px; padding-left: 10px; }
+  #pokdle-app #screen-party-room .pmt-emoji { width: 30px; flex-basis: 30px; font-size: 1.3rem; }
+  #pokdle-app #screen-party-room .party-hero-art { margin-right: 90px; }
+}
+@media (max-width: 800px) {
+  #pokdle-app #screen-party-room .party-room-layout { grid-template-columns: minmax(0, 1fr); }
+  #pokdle-app #screen-party-room .party-hero-art { display: none; }
+  #pokdle-app #screen-party-room .party-lobby { gap: 24px; padding: 24px; }
+  #pokdle-app #screen-party-room .party-roster .party-players { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  #pokdle-app #screen-party-room .party-section-head { align-items: start; }
+  #pokdle-app #screen-party-room .party-roster { order: 2; }
+}
 @media (max-width: 560px) {
-  .party-player { flex-wrap: wrap; padding: 8px 10px; }
-  .party-player-name { flex: 1 1 55%; }
-  .party-score { margin-left: auto; }
+  #pokdle-app #screen-party-room .party-hero { padding: 24px 18px; }
+  #pokdle-app #screen-party-room .party-hero > div:first-child { padding-top: 36px; }
+  #pokdle-app #screen-party-room .party-back { top: 12px; right: 12px; min-height: 44px; }
+  #pokdle-app #screen-party-room .party-hero h2 { font-size: 2.2rem; }
+  #pokdle-app #screen-party-room .party-hero p { font-size: .8rem; max-width: 260px; }
+  #pokdle-app #screen-party-room .party-hero-tags span { font-size: .65rem; }
+  #pokdle-app #screen-party-room .party-lobby { display: flex; flex-direction: column; padding: 16px; gap: 24px; }
+  #pokdle-app #screen-party-room .party-entry-panel { padding: 18px; width: 100%; order: -1; }
+  #pokdle-app #screen-party-room .party-welcome h3 { font-size: 1.5rem; }
+  #pokdle-app #screen-party-room .party-joined { padding: 12px; }
+  #pokdle-app #screen-party-room .party-room-head { padding: 12px; gap: 12px; margin-bottom: 20px; }
+  #pokdle-app #screen-party-room .party-code-group { gap: 8px; }
+  #pokdle-app #screen-party-room .party-code-group > .party-eyebrow { width: 100%; }
+  #pokdle-app #screen-party-room .party-room-head-actions { width: 100%; }
+  #pokdle-app #screen-party-room .party-copy-btn { flex: 1; }
+  #pokdle-app #screen-party-room .party-room-head-actions button { font-size: .8rem !important; padding: 8px 10px; }
+  #pokdle-app #screen-party-room .party-section-head h3 { font-size: 1.08rem; }
+  #pokdle-app #screen-party-room .party-host-note { max-width: 95px; font-size: .67rem; }
+  #pokdle-app #screen-party-room .party-mode-select { gap: 8px; }
+  #pokdle-app #screen-party-room .party-mode-tile { flex-direction: column; align-items: start; gap: 8px; padding: 12px 10px; min-height: 148px; }
+  #pokdle-app #screen-party-room .pmt-emoji { height: 32px; width: 34px; flex: 0 0 32px; font-size: 1.35rem; }
+  #pokdle-app #screen-party-room .pmt-text b { font-size: .8rem; }
+  #pokdle-app #screen-party-room .pmt-text > span { font-size: .67rem; }
+  #pokdle-app #screen-party-room .pmt-tag { font-size: .55rem; }
+  #pokdle-app #screen-party-room .party-options { gap: 14px; }
+  #pokdle-app #screen-party-room .party-option-buttons { gap: 5px; }
+  #pokdle-app #screen-party-room .party-option-buttons button { padding: 8px 10px; }
+  #pokdle-app #screen-party-room .party-launch-bar { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+  #pokdle-app #screen-party-room .party-launch-bar p { text-align: center; }
+  #pokdle-app #screen-party-room .party-round { padding: 16px 12px; gap: 14px; border-radius: 16px; }
+  #pokdle-app #screen-party-room .party-round-mode { font-size: 1.1rem; }
+  #pokdle-app #screen-party-room .party-stage-top .party-eyebrow { font-size: .58rem; letter-spacing: .07em; }
+  #pokdle-app #screen-party-room .party-round-input { flex-wrap: wrap; }
+  #pokdle-app #screen-party-room .party-round-input .party-ac-wrapper { flex-basis: 100%; }
+  #pokdle-app #screen-party-room .party-round-input button { width: 100%; }
+  #pokdle-app #screen-party-room .party-roster .party-players { grid-template-columns: minmax(0,1fr); }
+  #pokdle-app #screen-party-room .party-player { grid-template-columns: 32px minmax(0,1fr) auto; }
+  #pokdle-app #screen-party-room .party-stat-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #pokdle-app #screen-party-room .party-nearest-row { gap: 6px; padding: 10px 8px; grid-template-columns: 32px minmax(0,1fr) auto; }
+  #pokdle-app #screen-party-room .party-nearest-row img { width: 32px; height: 32px; }
+  #pokdle-app #screen-party-room .party-nearest-row b { font-size: .78rem; }
+  #pokdle-app #screen-party-room .party-nearest-row small { font-size: .65rem; }
+  #pokdle-app #screen-party-room .party-status { margin: 0 12px; }
 }
-
-/* ===== DA Lot 4 : podium / fin de partie ===== */
-.party-players.is-podium { gap: 10px; }
-.party-players.is-podium .party-player { border-width: 2px; }
-.party-players.is-podium .party-player:nth-child(1) { background: linear-gradient(135deg, #fff7e0, #ffffff); border-color: #ffcc33; box-shadow: 0 8px 22px rgba(255, 204, 51, 0.35); transform: scale(1.03); }
-.party-players.is-podium .party-player:nth-child(2) { background: linear-gradient(135deg, #f1f4f9, #ffffff); border-color: #c7d0dd; }
-.party-players.is-podium .party-player:nth-child(3) { background: linear-gradient(135deg, #fbf0e6, #ffffff); border-color: #e0b483; }
-.party-players.is-podium .party-player:nth-child(-n+3) .party-rank { background: transparent; font-size: 1.4rem; min-width: 32px; }
-.party-players.is-podium .party-player:nth-child(1) .party-player-name { font-size: 1.1rem; font-weight: 900; }
-.party-players.is-podium .party-player:nth-child(1) .party-score { background: #ffcc33; color: #1d2b4a; }
-.party-status-badge { white-space: nowrap; }
-@media (max-width: 560px) { .party-players.is-podium .party-player:nth-child(1) { transform: none; } }
-
-/* ===== DA Lot 5 : centrage + finition 2026 ===== */
-.party-room-card .party-lobby,
-.party-room-card .party-joined { margin: 0 auto; max-width: 600px; width: 100%; }
-.party-room-card .card-desc { text-align: center; max-width: 640px; margin: 0 auto 6px; }
-.party-room-head { justify-content: center; gap: 14px; padding: 14px 18px; border-radius: 18px; }
-#party-room-code { font-size: 1.45rem; padding: 6px 16px; }
-.party-count { text-align: center; font-size: 0.95rem; }
-.party-room-card .party-mode-select { margin: 8px auto; }
-.party-players { width: 100%; }
-.party-player { padding: 12px 16px; border-radius: 16px; }
-.party-room-card #party-start-btn,
-.party-room-card #party-room-next-btn { width: 100%; min-height: 54px; font-size: 1.1rem; }
-.party-round { max-width: 460px; }
-
-/* ===== DA Lot 6 : alignement visuel sur Stat Clash 1v1 ===== */
-.party-room-card .party-round,
-.party-room-card .party-room-head,
-.party-room-card .party-player {
-  border: 1px solid rgba(158, 182, 222, 0.48);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.95));
-  box-shadow: 0 14px 28px rgba(22, 44, 80, 0.08);
-  border-radius: 16px;
-}
-.party-room-card .party-round-mode,
-.party-room-card .party-player-name { color: #17345d; }
-.party-room-card .party-count,
-.party-room-card .party-status { color: #5a6f92; }
-.party-room-card .party-score {
-  background: linear-gradient(180deg, #153760 0%, #102c4c 100%);
-  color: #fff;
-  border-radius: 10px;
-  padding: 4px 12px;
-  font-weight: 900;
-}
-.party-room-card .party-badge-host { background: #ffe9b6; color: #8d5f00; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; }
-.party-room-card .party-badge-self { background: #e4f0ff; color: #2457ad; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; }
-.party-room-card .party-wait { background: #eef2fb; color: #546886; text-transform: uppercase; letter-spacing: 0.04em; }
-.party-room-card .party-check { text-transform: uppercase; letter-spacing: 0.04em; }
-.party-room-card .party-stat-btn {
-  min-height: 48px;
-  border: 1px solid rgba(143, 170, 212, 0.56);
-  background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
-  color: #17345d;
-  border-radius: 12px;
-}
-.party-room-card .party-stat-btn:not(:disabled):hover {
-  background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
-  border-color: rgba(69, 124, 219, 0.6);
-  box-shadow: 0 10px 18px rgba(31, 77, 150, 0.12);
-  color: #17345d;
-  transform: translateY(-1px);
-}
-.party-room-card .party-stat-btn.is-used {
-  background: linear-gradient(180deg, #ffe38a 0%, #ffc739 100%);
-  border-color: rgba(220, 161, 0, 0.74);
-  color: #4e3400;
-  opacity: 1;
-}
-.party-room-card .party-round-answer {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.95));
-  border: 1px solid rgba(158, 182, 222, 0.48);
-  color: #17345d;
-  box-shadow: 0 8px 18px rgba(22, 44, 80, 0.06);
-}
-
-/* ===== DA Lot 7 : animations ===== */
-@keyframes party-score-pulse { 0% { transform: scale(1); } 30% { transform: scale(1.22); } 100% { transform: scale(1); } }
-.party-score.is-gain { animation: party-score-pulse 0.55s ease; }
-.party-room-card .party-stat-btn:not(:disabled):active { transform: translateY(1px) scale(0.97); }
-.party-round-input .btn-blue:active { transform: translateY(1px) scale(0.98); }
-@keyframes party-podium-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes party-podium-in-first { from { opacity: 0; transform: translateY(10px) scale(1.03); } to { opacity: 1; transform: translateY(0) scale(1.03); } }
-.party-players.is-podium .party-player { animation: party-podium-in 0.4s ease both; }
-.party-players.is-podium .party-player:nth-child(2) { animation-delay: 0.12s; }
-.party-players.is-podium .party-player:nth-child(3) { animation-delay: 0.19s; }
-.party-players.is-podium .party-player:nth-child(1) { animation: party-podium-in-first 0.4s ease 0.05s both; }
-
-/* ===== DA Lot 8 : dynamisme / wow ===== */
-@keyframes party-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.party-round-sprite { animation: party-float 3.2s ease-in-out infinite; }
-@keyframes party-round-pop { 0% { transform: scale(0.95); opacity: 0.3; } 60% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
-.party-round.is-entering { animation: party-round-pop 0.55s ease; }
-@keyframes party-best-pop { 0% { transform: scale(0.9); } 55% { transform: scale(1.06); } 100% { transform: scale(1); } }
-.party-stat-row.is-best { animation: party-best-pop 0.5s ease; }
-@keyframes party-cta-glow { 0%, 100% { box-shadow: 0 6px 16px rgba(228, 56, 47, 0.3); } 50% { box-shadow: 0 10px 26px rgba(228, 56, 47, 0.5); } }
-.party-room-card #party-start-btn:not(:disabled) { animation: party-cta-glow 2.2s ease-in-out infinite; }
-.party-timer { font-weight: 900; font-size: 1.1rem; color: #2f76ff; background: #eef3ff; border-radius: 999px; padding: 4px 16px; align-self: center; }
-.party-timer.is-urgent { color: #fff; background: #e4382f; animation: party-timer-pulse 0.6s ease-in-out infinite; }
-@keyframes party-timer-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-.party-mode-hint { text-align: center; color: #5a6f92; font-size: 0.85rem; max-width: 520px; margin: 4px auto 8px; }
-.all-modes-badge { display: inline-block; margin-left: 6px; background: #fff0d6; color: #8d5f00; border-radius: 999px; padding: 1px 8px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
-.home-pillar-tag-exp { background: #fff0d6 !important; color: #8d5f00 !important; }
-@media (max-width: 560px) {
-  .party-room-card .party-round-sprite { width: 130px; height: 130px; }
-  .party-room-card .party-stat-options { gap: 6px; }
-  .party-room-card .party-stat-btn { min-height: 42px; padding: 8px 12px; }
-  .party-room-card .party-round-input input { min-height: 46px; }
-  .party-room-card .party-score { font-size: 0.85rem; padding: 3px 8px; }
-  .party-room-card .party-player { padding: 8px 10px; gap: 6px; }
-  .party-room-card .party-player-name { font-size: 0.9rem; }
-  .party-room-card .party-mode-btn { font-size: 0.85rem; padding: 6px 10px; }
-  .party-round.party-round-typecombo { max-width: 100%; padding: 16px; }
-  .party-round-typecombo .party-round-mode { font-size: 1rem; }
-  .party-typecombo-sprites { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .party-round-input { flex-direction: column; }
-}
-
-/* ============================================================
-   Party Room v2 — DA "Arène festive" : carte claire dans la DA
-   du site (comme Stat Clash), accents or/rouge/bleu marqués.
-   ============================================================ */
-/* Code de room : le partage est le coeur du mode */
-#screen-party-room .party-room-head { align-items: center; }
-#party-room-code {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 1.35rem;
-  letter-spacing: 0.22em;
-  color: #8a6400;
-  background: linear-gradient(180deg, #fff7df, #ffefb8);
-  border: 1px solid #ecd27c;
-  border-radius: 10px;
-  padding: 3px 12px;
-  box-shadow: 0 2px 8px rgba(232, 185, 62, 0.25);
-}
-.party-status-badge { background: #e8f1ff; border: 1px solid #bcd6ff; color: #1d4fd6; border-radius: 999px; padding: 3px 10px; font-size: 0.74rem; font-weight: 800; vertical-align: middle; }
-
-/* Joueurs : cartes claires, score qui pulse quand il grimpe */
-.party-players .party-player {
-  background: #f7faff;
-  border: 1px solid #dbe7fb;
-  border-radius: 12px;
-  color: #1d2b4a;
-}
-.party-players .party-player.is-self { border-color: #ffd34d; box-shadow: 0 2px 10px rgba(232, 185, 62, 0.25); }
-.party-players .party-player.is-correct {
-  background: #eaf8ec;
-  border-color: #9fd9a8;
-  box-shadow: 0 2px 12px rgba(67, 160, 71, 0.2);
-}
-.party-players .party-player.is-offline { opacity: 0.45; }
-.party-player .party-rank { color: #b8860b; font-weight: 900; }
-.party-player .party-score { color: #1d4fd6; font-weight: 900; }
-.party-player .party-score.is-gain { animation: party-score-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4); color: #1f8a37; }
-@keyframes party-score-pop { 0% { transform: scale(1); } 45% { transform: scale(1.35); } 100% { transform: scale(1); } }
-.party-badge-host, .party-badge-self { background: #eef3fb; border-radius: 999px; padding: 2px 8px; font-size: 0.66rem; color: #5a6f96; }
-.party-check { color: #1f8a37; font-weight: 900; }
-.party-wait { color: #8195b5; }
-
-/* Tuiles de mode + sélecteurs (manches, gens) */
-#screen-party-room .party-mode-btn {
-  background: #fff;
-  border: 1px solid #d5e2f6;
-  color: #3a4d75;
-  border-radius: 12px;
-  font-weight: 800;
-}
-#screen-party-room .party-mode-btn:hover:not(:disabled) { border-color: #2f76ff; color: #1d4fd6; }
-#screen-party-room .party-mode-btn.is-active {
-  background: linear-gradient(135deg, #e4382f, #ff6d4a);
-  border-color: #ff9678;
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(228, 56, 47, 0.3);
-}
-#screen-party-room .party-mode-btn:disabled { opacity: 0.55; cursor: default; }
-#screen-party-room .party-mode-label { color: #5a6f96; font-weight: 900; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.8px; }
-
-/* Manche : timer ambre + panneau duo/combo */
-#party-timer { color: #8a6400; background: #fff3c9; border: 1px solid #ecd27c; border-radius: 999px; padding: 2px 12px; font-weight: 900; }
-.party-round-mode { color: #1d4fd6; font-weight: 800; }
-.party-round-answer { color: #8a6400; font-weight: 900; }
-#screen-party-room .party-round {
-  background: #f7faff;
-  border: 1px solid #dbe7fb;
-  border-radius: 16px;
-}
-.party-typecombo-panel { background: #fff; border: 1px solid #dbe7fb; border-radius: 14px; padding: 14px; }
-.party-combo-count, .party-combo-points { color: #5a6f96; }
-.party-combo-diff { border-radius: 999px; padding: 2px 10px; font-weight: 900; font-size: 0.72rem; }
-.party-combo-diff.is-facile { background: #e6f6e8; color: #1f8a37; }
-.party-combo-diff.is-moyen { background: #e8f1ff; color: #1d4fd6; }
-.party-combo-diff.is-difficile { background: #fff0dd; color: #c05f00; }
-.party-combo-diff.is-legendaire { background: #ffe6e4; color: #c22b23; }
-
-/* Pastilles du Duo de critères */
-.party-duo-criteria { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.party-duo-chip {
-  font-family: "Nunito", system-ui, sans-serif;
-  font-weight: 900;
-  font-size: 1.05rem;
-  color: #fff;
-  padding: 9px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 4px 14px rgba(29, 43, 74, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  background: linear-gradient(135deg, #4d9fff, #2f76ff);
-}
-.party-duo-chip.is-couleur { background: linear-gradient(135deg, #b06ae8, #8a3fd1); }
-.party-duo-chip.is-habitat { background: linear-gradient(135deg, #34b04a, #1f8a37); }
-.party-duo-chip.is-gen { background: linear-gradient(135deg, #ff8a3d, #e4622f); }
-.party-duo-chip.is-stade { background: linear-gradient(135deg, #ffd34d, #e8b93e); color: #4a3203; }
-.party-duo-plus { color: #5a6f96; font-weight: 900; font-size: 1.2rem; }
-
-/* Sprites du reveal */
-.party-typecombo-sprite-card { background: #fff; border: 1px solid #dbe7fb; border-radius: 12px; color: #122a4d; }
-.party-typecombo-sprite-card.is-winner { background: linear-gradient(180deg, #fff7df, #ffefb8); box-shadow: 0 0 16px rgba(232, 185, 62, 0.45); border-color: #ecd27c; }
-
-
-/* ============================================================
-   Mise en scène "plateau TV" : annonce de manche, timer urgent,
-   réglages du lobby en panneaux, joueur qui trouve.
-   ============================================================ */
-#party-round { position: relative; }
-.party-round-banner {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  background: linear-gradient(135deg, rgba(228, 56, 47, 0.94), rgba(47, 118, 255, 0.94));
-  border-radius: 16px;
-  z-index: 30;
-  pointer-events: none;
-  opacity: 0;
-}
-.party-round-banner b {
-  font-size: 2.3rem;
-  color: #fff;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-shadow: 0 3px 12px rgba(16, 28, 51, 0.35);
-}
-.party-round-banner span { color: #ffe9b3; font-weight: 800; font-size: 1.05rem; }
-.party-round-banner.is-on { animation: party-banner 1.6s cubic-bezier(0.2, 0.9, 0.3, 1) forwards; }
-@keyframes party-banner {
-  0% { opacity: 0; transform: scale(0.9); }
-  14% { opacity: 1; transform: scale(1); }
-  78% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.03); }
-}
-
-/* Timer : pièce maîtresse de la manche */
-#party-timer { font-size: 1.45rem; padding: 4px 20px; display: inline-block; }
-#party-timer.is-urgent {
-  background: #ffe6e4;
-  border-color: #f3a6a1;
-  color: #c22b23;
-  animation: party-timer-urgent 0.9s ease-in-out infinite;
-}
-@keyframes party-timer-urgent {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.12); }
-}
-
-/* Joueur qui trouve : flash de victoire sur sa ligne */
-.party-players .party-player.is-correct { animation: party-player-found 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
-@keyframes party-player-found {
-  0% { transform: translateX(0); background: #eaf8ec; }
-  35% { transform: translateX(6px) scale(1.015); background: #d7f3dc; }
-  100% { transform: translateX(0) scale(1); }
-}
-
-/* Lobby : les réglages deviennent des panneaux nets */
-#screen-party-room .party-mode-select {
-  background: #f7faff;
-  border: 1px solid #dbe7fb;
-  border-radius: 14px;
-  padding: 12px 16px;
-}
-#party-start-btn { box-shadow: 0 8px 22px rgba(228, 56, 47, 0.3); }
-
 @media (prefers-reduced-motion: reduce) {
-  .party-round-banner.is-on { animation: none; opacity: 0; }
-  #party-timer.is-urgent { animation: none; }
-  .party-players .party-player.is-correct { animation: none; }
+  #pokdle-app #screen-party-room *, #pokdle-app #screen-party-room *::before, #pokdle-app #screen-party-room *::after { animation: none !important; transition: none !important; }
 }
 
-
-/* ============================================================
-   Desktop ≥1024px : la room occupe toute la carte — tableau des
-   scores à gauche, scène de jeu à droite (disposition plateau).
-   ============================================================ */
-@media (min-width: 1024px) {
-  .party-room-card .party-joined {
-    display: grid;
-    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
-    grid-auto-flow: row dense;
-    column-gap: 30px;
-    align-items: start;
-    max-width: none;
-    width: 100%;
-    margin: 0;
-  }
-  #party-joined .party-room-head { grid-column: 1 / -1; }
-  #party-joined .party-count,
-  #party-joined #party-players { grid-column: 1; }
-  #party-joined #party-mode-select,
-  #party-joined #party-mode-hint,
-  #party-joined #party-rounds-select,
-  #party-joined #party-gens-select,
-  #party-joined #party-start-btn,
-  #party-joined #party-room-next-btn,
-  #party-joined #party-round { grid-column: 2; }
-  #party-joined #party-players { width: 100%; }
-  /* La scène de jeu respire et se centre verticalement */
-  #party-joined #party-round {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    max-width: none;
-    margin: 0;
-    min-height: 420px;
-    padding: 28px;
-  }
-  #party-joined .party-round.party-round-typecombo { max-width: none; }
-  #party-joined .party-typecombo-panel { width: 100%; max-width: 560px; }
-  #party-joined .party-round-input { max-width: 460px; }
-  #party-joined .party-round-answer { max-width: 540px; }
-  /* Le compteur reste en tête de colonne, la scène s'étale sur ses lignes */
-  #party-joined .party-count { text-align: left; margin: 0; }
-  #party-joined #party-round { grid-row: 2 / span 6; }
-  #party-joined #party-room-next-btn { grid-row: 8; }
+/* Keep the arena above the fold once friends have joined. */
+#pokdle-app #screen-party-room .party-back { width: auto !important; }
+#pokdle-app #screen-party-room .party-room-card:has(#party-joined:not(.hidden)) .party-hero { padding: 22px 24px; }
+#pokdle-app #screen-party-room .party-room-card:has(#party-joined:not(.hidden)) .party-hero h2 { font-size: 2rem; margin: 0; }
+#pokdle-app #screen-party-room .party-room-card:has(#party-joined:not(.hidden)) .party-hero :is(p, .party-hero-tags, .party-hero-art, .party-eyebrow) { display: none; }
+#pokdle-app #screen-party-room .party-round { scroll-margin-top: 16px; }
+@media (max-width: 560px) {
+  #pokdle-app #screen-party-room .party-room-card:has(#party-joined:not(.hidden)) .party-hero { padding: 24px 18px; }
+  #pokdle-app #screen-party-room .party-room-card:has(#party-joined:not(.hidden)) .party-hero > div:first-child { padding-top: 0; }
+  #pokdle-app #screen-party-room .party-room-card:has(#party-joined:not(.hidden)) .party-hero h2 { font-size: 1.6rem; }
 }
+/* Global mobile button widths must not squeeze the invitation action. */
+#pokdle-app #screen-party-room .party-room-head-actions button { width: auto !important; min-width: 0; }
+#pokdle-app #screen-party-room .party-room-head-actions .party-copy-btn { flex: 1 1 auto; }
+#pokdle-app #screen-party-room .party-room-head-actions .btn-ghost { flex: 0 0 auto; }
+/* Existing badges shared with the game catalogue. */
+.all-modes-badge { display: inline-block; margin-left: 6px; background: #fff0d6; color: #8d5f00; border-radius: 999px; padding: 1px 8px; font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
 
-
-/* ============================================================
-   Finition pro : intro masquée en room, toolbar, avatars,
-   statuts en pastilles, hiérarchie de scène, hôte discret.
-   ============================================================ */
-/* L'intro ne sert plus une fois dans la room */
-#screen-party-room .party-room-card:has(#party-joined:not(.hidden)) > .card-desc { display: none; }
-
-/* En-tête en toolbar : code à gauche, actions à droite */
-#screen-party-room .party-room-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-/* Avatars joueurs */
-.party-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 0.95rem;
-  color: #fff;
-  flex: none;
-  box-shadow: inset 0 -2px 0 rgba(16, 28, 51, 0.18);
-}
-.party-avatar.av-0 { background: linear-gradient(135deg, #4d9fff, #2f76ff); }
-.party-avatar.av-1 { background: linear-gradient(135deg, #b06ae8, #8a3fd1); }
-.party-avatar.av-2 { background: linear-gradient(135deg, #34b04a, #1f8a37); }
-.party-avatar.av-3 { background: linear-gradient(135deg, #ff8a3d, #e4622f); }
-.party-avatar.av-4 { background: linear-gradient(135deg, #ff6d6d, #e4382f); }
-.party-avatar.av-5 { background: linear-gradient(135deg, #ffd34d, #e8b93e); color: #4a3203; }
-
-/* Rangées joueurs plus généreuses, rang discret, leader doré */
-.party-players .party-player { padding: 11px 14px; gap: 10px; }
-.party-player .party-player-name { font-size: 1.02rem; }
-.party-player .party-rank { color: #8aa0c4; font-size: 0.78rem; min-width: 14px; }
-.party-players .party-player:first-child .party-rank { color: #b8860b; }
-
-/* Statuts en pastilles douces */
-.party-wait { background: #eef3fb; border-radius: 999px; padding: 3px 10px; font-size: 0.68rem; font-weight: 800; color: #5a6f96; text-transform: uppercase; letter-spacing: 0.4px; }
-.party-check { background: #e6f6e8; border-radius: 999px; padding: 3px 10px; font-size: 0.68rem; font-weight: 900; color: #1f8a37; text-transform: uppercase; letter-spacing: 0.4px; }
-
-/* Scène : l'instruction murmure, les critères crient */
-.party-round-typecombo .party-round-mode { font-size: 0.95rem; font-weight: 800; color: #5a6f96; max-width: none; }
-
-/* Le contrôle d'hôte sort du flux de jeu */
-#party-reveal-btn {
-  position: absolute;
-  right: 14px;
-  bottom: 12px;
-  font-size: 0.76rem;
-  padding: 6px 12px;
-  opacity: 0.7;
-}
-#party-reveal-btn:hover { opacity: 1; }
-
-/* Saisie généreuse */
-.party-round-input input { min-height: 50px; font-size: 1.05rem; }
-
-@media (min-width: 1024px) {
-  /* Le tableau des scores devient un panneau qui remplit sa colonne */
-  #party-joined .party-count { text-transform: uppercase; letter-spacing: 0.8px; font-size: 0.72rem; font-weight: 900; color: #5a6f96; }
-  #party-joined #party-players {
-    grid-row: 3 / span 5;
-    align-self: stretch;
-    background: rgba(232, 241, 255, 0.55);
-    border: 1px solid #e3edfb;
-    border-radius: 14px;
-    padding: 10px;
-    align-content: start;
-  }
-  #party-joined .party-players .party-player { background: #fff; }
-}
-
-/* Combo mono-type : une seule pastille + mention "type pur" */
-.party-combo-pure {
-  background: #eef3fb;
-  border: 1px solid #d5e2f6;
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 0.74rem;
-  font-weight: 900;
-  color: #5a6f96;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  align-self: center;
-}
-
-/* ===== Upgrade lobby : tuiles de mode + sièges libres ===== */
-#screen-party-room #party-mode-select {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px;
-  width: 100%;
-  align-items: stretch;
-}
-#screen-party-room #party-mode-select .party-mode-label { grid-column: 1 / -1; margin-bottom: 2px; }
-#screen-party-room .party-mode-tile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-  padding: 10px 12px;
-  min-height: 56px;
-  border-radius: 14px;
-}
-#screen-party-room .party-mode-tile .pmt-emoji { font-size: 1.5rem; line-height: 1; flex: none; }
-#screen-party-room .party-mode-tile .pmt-text { display: flex; flex-direction: column; min-width: 0; }
-#screen-party-room .party-mode-tile .pmt-text b { font-size: 0.92rem; font-weight: 900; line-height: 1.15; }
-#screen-party-room .party-mode-tile .pmt-text small { font-size: 0.72rem; font-weight: 700; opacity: 0.82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#screen-party-room .party-mode-tile.is-active .pmt-text small { color: rgba(255, 255, 255, 0.92); opacity: 1; }
-
-.party-players .party-player.party-player-empty {
-  background: transparent !important;
-  border: 1px dashed rgba(143, 170, 212, 0.6) !important;
-  box-shadow: none !important;
-  opacity: 0.85;
-}
-.party-players .party-player.party-player-empty:hover { transform: none !important; box-shadow: none !important; }
-.party-player-empty .party-rank { color: #8aa0c4 !important; background: transparent !important; }
-.party-player-empty .party-seat-label { color: #8195b5; font-weight: 700; font-style: italic; }
-
-/* Mobile : le bouton hote "Reveler/terminer" repasse dans le flux (sinon il chevauche Valider) */
-@media (max-width:640px){
-  #party-reveal-btn{position:static !important;right:auto !important;bottom:auto !important;width:100% !important;margin-top:10px !important;opacity:1 !important;}
-}
+#pokdle-app #screen-party-room .party-answer-msg:empty { display: none; }
+#pokdle-app #screen-party-room .party-answer-msg:not(:empty) { color: var(--party-warm-ink); background: var(--party-warm); border-radius: 10px; padding: 10px 12px; width: 100%; font-size: .8rem; }
