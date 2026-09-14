@@ -1422,18 +1422,24 @@ function partySubmitAnswer() {
   var guess = ((input && input.value) || "").trim();
   if (!guess) { setPartyStatus("Tape un nom de Pokemon."); return; }
   var submittedRoom = partyRoomState.room;
-  if (!submittedRoom || submittedRoom.status !== "playing" || partyRoomState.submitting) return;
+  if (!submittedRoom || submittedRoom.status !== "playing" || partyRoomState.submitting || partyRoomState.forfeiting) return;
   partyRoomState.submitting = true;
   var submitBtn = document.getElementById("party-submit-btn");
   if (submitBtn) submitBtn.disabled = true;
   socket.timeout(10000).emit("party:submit-answer", { guess: guess, roundSerial: submittedRoom.round && submittedRoom.round.roundSerial }, function (error, res) {
     partyRoomState.submitting = false;
     if (submitBtn) submitBtn.disabled = false;
-    if (partyRoomState.room?.code !== submittedRoom.code || partyRoomState.room?.roundNumber !== submittedRoom.roundNumber || (submittedRoom.gameMode === "nearest" && partyRoomState.room?.round?.roundSerial !== submittedRoom.round?.roundSerial)) return;
+    if (partyRoomState.room?.code !== submittedRoom.code || partyRoomState.room?.roundNumber !== submittedRoom.roundNumber || (["nearest", "deduction"].includes(submittedRoom.gameMode) && partyRoomState.room?.round?.roundSerial !== submittedRoom.round?.roundSerial)) return;
     if (error) { setPartyStatus("Connexion lente : vérifie si ta proposition est enregistrée avant de réessayer."); return; }
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur."); return; }
     if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+    if (submittedRoom.gameMode === "deduction") {
+      if (input) input.value = "";
+      setPartyStatus(res.correct ? "Pokémon trouvé ! +100 points." : "Proposition enregistrée : consulte tes indices.");
+      renderPartyRoom();
+      return;
+    }
     if (submittedRoom.gameMode === "nearest") {
       setPartyStatus("");
       if (input) input.value = "";
@@ -1448,7 +1454,7 @@ function getPartyGuessSearchIndex() {
   var room = partyRoomState.room || {};
   var gens = Array.isArray(room.selectedGens) && room.selectedGens.length ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   var selected = new Set(gens.map(function (gen) { return Number(gen); }));
-  var includeAltForms = room.gameMode === "typecombo";
+  var includeAltForms = room.gameMode === "typecombo" || room.gameMode === "deduction";
   return FULL_SEARCH_INDEX.filter(function (entry) {
     var pokemon = entry && entry.pokemon;
     if (!pokemon) return false;
@@ -1624,7 +1630,7 @@ function partyAllGens() {
   partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
-var PARTY_MODE_SHORT_LABELS = { nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
+var PARTY_MODE_SHORT_LABELS = { deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
 function showPartyRoundBanner(room) {
   var panel = document.getElementById("party-round");
   if (!panel || !room) return;
@@ -1688,6 +1694,75 @@ function renderPartyNearest(room, me, enabled, playing) {
   }).join("");
 }
 
+
+function partyForfeitDeduction() {
+  var room = partyRoomState.room;
+  var socket = ensureMultiplayerSocket();
+  if (!socket?.connected || !room || room.gameMode !== "deduction" || room.status !== "playing" || partyRoomState.submitting || partyRoomState.forfeiting) return;
+  partyRoomState.forfeiting = true;
+  renderPartyRoom();
+  socket.timeout(8000).emit("party:forfeit-deduction", { code: room.code, roundSerial: room.round?.roundSerial }, function (error, res) {
+    partyRoomState.forfeiting = false;
+    if (partyRoomState.room?.code !== room.code || partyRoomState.room?.round?.roundSerial !== room.round?.roundSerial) return;
+    if (error || !res?.ok) {
+      if (partyRoomState.room?.status === "playing") setPartyStatus(error ? "Connexion lente : vérifie ton statut avant de réessayer." : res?.error || "Abandon impossible.");
+    } else if (res.room) {
+      partyRoomState.room = res.room;
+      setPartyStatus("");
+    }
+    renderPartyRoom();
+  });
+}
+
+function partyDeductionGuessHtml(entry) {
+  var feedback = entry.feedback || {};
+  var fields = [
+    ["generation", "Génération", "Gen " + entry.gen],
+    ["altForm", "Forme alternative", entry.isAltForm ? "Oui" : "Non"],
+    ["type1", "Type 1", entry.type1 || "Aucun"],
+    ["type2", "Type 2", entry.type2 || "Aucun"],
+    ["habitat", "Habitat", entry.habitat || "Inconnu"],
+    ["color", "Couleur", entry.color || "Inconnue"],
+    ["stage", "Stade", entry.stage ?? "—"],
+    ["height", "Taille", entry.height + " m " + (entry.heightArrow || "")],
+    ["weight", "Poids", entry.weight + " kg " + (entry.weightArrow || "")]
+  ];
+  return '<article class="party-deduction-guess"><header>' +
+    (entry.sprite ? '<img src="' + escapeHtml(entry.sprite) + '" alt="" loading="lazy" />' : '') +
+    '<b>' + escapeHtml(entry.name) + '</b></header><div class="party-deduction-clues">' +
+    fields.map(function (field) {
+      var kind = ["ok", "close"].includes(feedback[field[0]]) ? feedback[field[0]] : "wrong";
+      var state = kind === "ok" ? "Exact" : kind === "close" ? "Partiel" : "Différent";
+      return '<div class="party-clue is-' + kind + '"><small>' + field[1] + '</small><b>' + escapeHtml(String(field[2])) + '</b><span>' + (kind === "ok" ? "✓ " : kind === "close" ? "≈ " : "× ") + state + '</span></div>';
+    }).join("") + '</div></article>';
+}
+
+function renderPartyDeduction(room, me, enabled, playing) {
+  var panel = document.getElementById("party-deduction");
+  panel.classList.toggle("hidden", !enabled);
+  var surrender = document.getElementById("party-deduction-forfeit");
+  surrender.classList.toggle("hidden", !(enabled && playing && me && !me.gaveUp && !me.correct));
+  document.getElementById("party-deduction-forfeit-btn").disabled = Boolean(partyRoomState.forfeiting || partyRoomState.submitting);
+  if (!enabled || !playing || me?.gaveUp) surrender.open = false;
+  if (!enabled) {
+    document.getElementById("party-deduction-history").innerHTML = "";
+    document.getElementById("party-deduction-rivals").innerHTML = "";
+    return;
+  }
+  var history = me?.guessHistory || [];
+  document.getElementById("party-deduction-history").innerHTML = history.length
+    ? history.map(partyDeductionGuessHtml).join("")
+    : '<p class="party-deduction-muted">Propose un Pokémon pour découvrir tes premiers indices.</p>';
+  document.getElementById("party-deduction-status").textContent = playing
+    ? me?.gaveUp ? "Tu as abandonné cette manche. La réponse sera révélée à la fin ; tu rejoueras à la suivante." : "Formes alternatives incluses · Tes propositions et tes indices restent privés."
+    : "Manche terminée · Voici tes indices et les meilleures proximités.";
+  document.getElementById("party-deduction-rivals").innerHTML = room.players.filter(function (p) { return !p.isSelf; }).map(function (p) {
+    var percent = multiplayerProximityValue(p);
+    var label = p.gaveUp ? "Abandon" : p.correct ? "Trouvé !" : (Number(p.attempts) || 0) + " essai" + (p.attempts > 1 ? "s" : "");
+    return '<div class="party-deduction-rival"><div><b>' + escapeHtml(p.nickname) + '</b><span>' + label + ' · ' + percent + ' %</span></div><div class="party-deduction-meter" role="progressbar" aria-label="Proximité de ' + escapeHtml(p.nickname) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><span style="width:' + percent + '%"></span></div></div>';
+  }).join("");
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
@@ -1709,7 +1784,7 @@ function renderPartyRoom() {
   var complete = room.status === "complete";
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
-  var modeLabels = { nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabels = { deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
   var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
@@ -1739,7 +1814,9 @@ function renderPartyRoom() {
       for (var avI = 0; avI < avName.length; avI += 1) avatarTone += avName.charCodeAt(avI);
       avatarTone = avatarTone % 6;
       var statusBadge = "";
-      if (room.gameMode === "nearest" && playing) {
+      if (room.gameMode === "deduction" && playing) {
+        statusBadge = p.gaveUp ? '<span class="party-wait">Abandon</span>' : '<span class="party-check">' + multiplayerProximityValue(p) + ' %</span>';
+      } else if (room.gameMode === "nearest" && playing) {
         statusBadge = p.submitted ? '<span class="party-check">Prêt ✓</span>' : '<span class="party-wait">Réfléchit…</span>';
       } else if (scMode && playing) {
         statusBadge = p.pickKey ? '<span class="party-check">a choisi</span>' : '<span class="party-wait">attend…</span>';
@@ -1780,7 +1857,7 @@ function renderPartyRoom() {
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
   var roundEl = document.getElementById("party-round");
   if (roundEl) {
-    var hasRound = room.status !== "waiting" && Boolean(room.round && (room.round.image || room.round.mode === "typecombo" || room.round.mode === "duocriteria" || room.round.mode === "nearest"));
+    var hasRound = room.status !== "waiting" && Boolean(room.round && (room.round.image || room.round.mode === "typecombo" || room.round.mode === "duocriteria" || room.round.mode === "nearest" || room.round.mode === "deduction"));
     roundEl.classList.toggle("party-round-typecombo", Boolean(room.round && (room.round.mode === "typecombo" || room.round.mode === "duocriteria")));
     roundEl.classList.toggle("hidden", !hasRound);
     var roundKey = (room.status === "playing") ? (Number(room.roundNumber) || 0) : -1;
@@ -1802,6 +1879,8 @@ function renderPartyRoom() {
     partyRoomState.lastRoundKey = roundKey;
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl && room.round.image) spriteEl.src = room.round.image;
+    var isDeduction = Boolean(room.round && room.round.mode === "deduction");
+    renderPartyDeduction(room, me, isDeduction, playing);
     var isNearest = Boolean(room.round && room.round.mode === "nearest");
     renderPartyNearest(room, me, isNearest, playing);
     var isStatClash = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
@@ -1811,7 +1890,7 @@ function renderPartyRoom() {
     var modeEl = document.getElementById("party-round-mode");
     if (modeEl) {
       var scParty = Boolean(room.round && room.round.mode === "statclashparty");
-      modeEl.textContent = isNearest ? "Numéro mystère" : isDuoCriteria
+      modeEl.textContent = isDeduction ? "Pokémon mystère · Déduction" : isNearest ? "Numéro mystère" : isDuoCriteria
         ? "Duo de critères : trouve un Pokémon qui coche les deux cases"
         : isTypeCombo
         ? "Combo de types : trouve un Pokémon qui possède ces types"
@@ -1821,7 +1900,7 @@ function renderPartyRoom() {
     }
     if (spriteEl) {
       spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
-      spriteEl.classList.toggle("hidden", isTypeCombo || isNearest);
+      spriteEl.classList.toggle("hidden", isTypeCombo || isNearest || (isDeduction && playing));
       if (playing && !isTypeCombo) {
         if (variant === "silhouette") spriteEl.classList.add("party-sprite-silhouette");
         else if (variant === "pixel") spriteEl.classList.add("party-sprite-pixel");
@@ -1829,7 +1908,11 @@ function renderPartyRoom() {
     }
     var answerEl = document.getElementById("party-round-answer");
     if (answerEl) {
-      if (isNearest && (finished || complete)) {
+      if (isDeduction && (finished || complete)) {
+        var deductionWinner = raw.find(function (p) { return p.id === room.round.winnerId; });
+        answerEl.classList.remove("hidden");
+        answerEl.textContent = "C’était : " + room.round.answer + ". " + (deductionWinner ? deductionWinner.nickname + " gagne la manche ! +100 pts" : "Personne n’a trouvé. Aucun point attribué.");
+      } else if (isNearest && (finished || complete)) {
         var nearestWinners = (room.round.results || []).filter(function (r) { return r.winner; });
         answerEl.classList.remove("hidden");
         answerEl.textContent = nearestWinners.length ? nearestWinners.map(function (r) { return r.nickname; }).join(" & ") + (nearestWinners.length > 1 ? " remportent" : " remporte") + " la manche ! +100 pts" : "Aucune proposition cette manche. Aucun point attribué.";
@@ -1861,9 +1944,10 @@ function renderPartyRoom() {
       }
     }
     var inputWrap = document.getElementById("party-round-input");
-    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct && !(isNearest && me.submitted)));
-    if (playing && !isStatClash && me && !me.correct && !(isNearest && me.submitted)) {
+    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct && !(isNearest && me.submitted) && !(isDeduction && me.gaveUp)));
+    if (playing && !isStatClash && me && !me.correct && !(isNearest && me.submitted) && !(isDeduction && me.gaveUp)) {
       var guessInput = document.getElementById("party-guess");
+      if (guessInput) guessInput.disabled = Boolean(partyRoomState.forfeiting);
       if (guessInput) guessInput.placeholder = isDuoCriteria ? "Un Pokémon qui coche les deux cases" : (isTypeCombo ? "Un Pokémon avec ces types" : "Nom du Pokémon");
       // Do not summon the mobile keyboard or steal focus on every room update.
       if (guessInput && window.matchMedia("(min-width: 801px)").matches && document.activeElement === document.body) guessInput.focus({ preventScroll: true });
@@ -1963,6 +2047,7 @@ function renderPartyRoom() {
     }
   });
   var modeHints = {
+    deduction: "Le Duel jusqu’à 8 : formes alternatives incluses, indices privés et proximité adverse en %. Le premier à trouver gagne 100 points. 3 minutes par manche ; abandon individuel possible. La réponse est révélée à la fin.",
     nearest: "Un numéro du Pokédex est tiré au sort. Propose un Pokémon des générations choisies : le plus petit écart gagne 100 points. Une seule réponse, révélée à la fin. Les ex æquo gagnent ensemble, sans bonus de vitesse.",
     guess: "Course Pokémon : devine le Pokémon le plus vite possible. Les points dépendent du rang de bonne réponse.",
     typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque la manche (plus le combo est rare, plus ça paie).",
@@ -1990,7 +2075,7 @@ function renderPartyRoom() {
   document.getElementById("party-stage-progress").textContent = "MANCHE " + roundNo + " / " + total;
   document.getElementById("party-host-note").textContent = isHost ? "Tu règles la partie" : "L’hôte choisit les règles";
   document.getElementById("party-roster-title").textContent = complete ? "Le podium" : playing || finished ? "Classement" : "Dans le salon";
-  document.getElementById("party-launch-note").textContent = playing ? "La manche se termine quand tout le monde a répondu ou à la fin du chrono." : finished ? (isHost ? "Prêts pour la suite ?" : "L’hôte prépare la prochaine manche.") : !isHost ? "La partie commence quand l’hôte la lance." : raw.length < 2 ? "Invite au moins un ami pour commencer." : raw.length + " joueurs · " + total + " manches · " + modeLabel;
+  document.getElementById("party-launch-note").textContent = playing ? (room.gameMode === "deduction" ? "Le premier à trouver gagne · 3 minutes · Réponse révélée en fin de manche." : "La manche se termine quand tout le monde a répondu ou à la fin du chrono.") : finished ? (isHost ? "Prêts pour la suite ?" : "L’hôte prépare la prochaine manche.") : !isHost ? "La partie commence quand l’hôte la lance." : raw.length < 2 ? "Invite au moins un ami pour commencer." : raw.length + " joueurs · " + total + " manches · " + modeLabel;
 }
 
 function initPartyFromUrl() {
