@@ -59,6 +59,7 @@ function scoreNearestRound(room) {
 function publicNearestRound(room, revealed) {
   return {
     mode: "nearest", targetNumber: room.nearestTarget, roundSerial: room.roundSerial,
+    answer: revealed && room.target ? { id: Number(room.target.id), name: room.target.name, sprite: room.target.sprite || null } : null,
     results: revealed ? room.players.map(p => ({
       playerId: p.id, nickname: p.nickname, pokemon: p.nearestPick || null,
       distance: p.nearestPick ? Math.abs(p.nearestPick.id - room.nearestTarget) : null,

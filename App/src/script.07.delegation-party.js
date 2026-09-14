@@ -3520,6 +3520,23 @@ function renderMultiplayerGenerationSummary() {
   genSummary.textContent = `Générations choisies : ${plannedLabel}`;
 }
 
+function multiplayerProximityValue(player) {
+  return Math.max(0, Math.min(100, Math.round(Number(player?.proximity) || 0)));
+}
+
+function buildMultiplayerProximityHtml(player) {
+  const percent = multiplayerProximityValue(player);
+  const attempts = Number(player?.attempts) || 0;
+  const label = player?.correct ? "Pokémon trouvé !" : !attempts ? "Le duel ne fait que commencer" : percent >= 75 ? "Une piste très proche" : percent >= 50 ? "La piste se précise" : percent > 0 ? "Des critères en commun" : "Encore à la recherche d’une piste";
+  return `<div class="multiplayer-proximity">
+    <div class="multiplayer-proximity-ring" style="--proximity:${percent}%" role="progressbar" aria-label="Meilleure proximité adverse" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><strong>${percent}<small>%</small></strong></div>
+    <b class="multiplayer-proximity-label">${label}</b>
+    <span class="multiplayer-proximity-attempts">${attempts} essai${attempts > 1 ? "s" : ""} · Meilleure proximité</span>
+    <p>Ses propositions et ses indices restent privés.</p>
+    <details class="multiplayer-proximity-rules"><summary>Comment est calculée la jauge ?</summary><p>Le meilleur essai compte : génération, forme, deux types, habitat, couleur, stade, taille et poids ont le même poids. Un critère exact vaut un point, un critère partiel un demi-point. La jauge ne redescend pas. 100 % signifie que le Pokémon est trouvé ; ce n’est pas une probabilité de victoire.</p></details>
+  </div>`;
+}
+
 function renderMultiplayerPlayers() {
   const wrap = document.getElementById("multiplayer-players");
   if (!wrap) return;
@@ -3546,7 +3563,7 @@ function renderMultiplayerPlayers() {
           : "Manche terminée")
       : "En attente d'un joueur";
     const attempts = player?.attempts || 0;
-    const lastGuess = player?.lastGuess || "—";
+    const proximity = multiplayerProximityValue(player);
     return `
       <article class="multiplayer-player-card ${player?.isSelf ? "is-self" : ""} ${isWinner ? "is-winner" : ""} ${player ? "is-present" : "is-empty"} ${player?.connected === false ? "is-disconnected" : ""}">
         <div class="multiplayer-player-head">
@@ -3556,7 +3573,7 @@ function renderMultiplayerPlayers() {
         <div class="multiplayer-player-room-status">${escapeHtml(status)}</div>
         <div class="multiplayer-player-stats">
           <span>Essais : <b>${attempts}</b></span>
-          <span>Dernière tentative : <b>${escapeHtml(lastGuess)}</b></span>
+          <span>Meilleure proximité : <b>${proximity} %</b></span>
         </div>
       </article>
     `;
@@ -3614,7 +3631,7 @@ function renderMultiplayerAttempts() {
   const self = players.find((player) => player.isSelf) || null;
   const opponent = players.find((player) => !player.isSelf) || null;
   const myHistory = Array.isArray(self?.guessHistory) ? self.guessHistory : [];
-  const opponentNames = Array.isArray(opponent?.guessNames) ? opponent.guessNames : [];
+
 
   if (!room || (status !== "live" && status !== "finished")) {
     shell.classList.add("hidden");
@@ -3636,13 +3653,8 @@ function renderMultiplayerAttempts() {
     empty.classList.remove("hidden");
   }
 
-  opponentBox.innerHTML = opponentNames.length
-    ? `
-      <div class="multiplayer-opponent-attempt-list">
-        ${opponentNames.map((name, index) => `<span class="multiplayer-opponent-attempt-chip">#${opponentNames.length - index} ${escapeHtml(name)}</span>`).join("")}
-      </div>
-    `
-    : "Aucune tentative adverse pour l’instant.";
+  opponentBox.innerHTML = buildMultiplayerProximityHtml(opponent);
+
 }
 
 function ensureMultiplayerWinOverlay() {
@@ -3944,10 +3956,7 @@ function renderMultiplayerBotScreen() {
     resultBox?.classList.remove("is-win", "is-loss", "win-animate");
     if (roundStatus) roundStatus.textContent = "Partie lancée";
     if (liveText) {
-      const opponent = players.find((player) => !player.isSelf);
-      liveText.textContent = opponent?.lastGuess
-        ? `La manche est lancée. ${opponent.nickname} vient de tenter ${opponent.lastGuess}.`
-        : "La manche est lancée. Devine le Pokémon avant ton adversaire.";
+      liveText.textContent = "Devine le Pokémon avant ton adversaire. Vos propositions restent privées ; seule la meilleure proximité est partagée.";
     }
     waitingBox?.classList.add("hidden");
     liveBox?.classList.remove("hidden");

@@ -7,6 +7,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { createOAuthStateStore } = require("./lib/oauth-state");
 const nearestParty = require("./lib/party-nearest");
+const { bestDuelProximity } = require("./lib/duel-proximity");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
 // Moteur Score Attack PRO partagé avec le client (même barème PRO_TUNING + fonctions pures).
 // Fonctions utilisées côté serveur pour le 1v1 PRO : rollProModifiers(gen, rnd), computeDraftProScore(team, mods).
@@ -3888,12 +3889,13 @@ function publicRoomState(room, viewerId = null) {
     nickname: player.nickname,
     connected: player.connected,
     attempts: player.attempts,
-    lastGuess: player.lastGuess,
+    lastGuess: player.id === viewerId ? player.lastGuess : null,
+    proximity: bestDuelProximity(player),
     correct: player.correct,
     isSelf: player.id === viewerId,
     isHost: player.id === room.hostId,
     guessHistory: player.id === viewerId ? player.guesses : [],
-    guessNames: player.guesses.map((entry) => entry.name),
+    guessNames: player.id === viewerId ? player.guesses.map((entry) => entry.name) : [],
   }));
   return {
     code: room.code,

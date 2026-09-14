@@ -2023,3 +2023,34 @@ body.theme-dark #screen-multiplayer .multiplayer-player-stats span {
 #multiplayer-win-content .type-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
 #multiplayer-win-content .type-badge img { width: 16px; height: 16px; min-width: 16px; margin: 0; }
 body.theme-dark #multiplayer-win-content .multiplayer-result-summary { color: #edf5ff; }
+
+/* Rival pressure without revealing names or individual clues. */
+#pokdle-app #screen-multiplayer .multiplayer-opponent-panel { background: linear-gradient(155deg, var(--ui-accent-soft), var(--ui-surface)) !important; border: 1px solid var(--ui-line) !important; border-radius: 20px; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity { display: grid; justify-items: center; gap: 12px; padding-top: 12px; color: var(--ui-ink); text-align: center; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-ring { position: relative; display: grid; place-items: center; width: 144px; height: 144px; border-radius: 50%; background: conic-gradient(var(--ui-accent) var(--proximity), var(--ui-line) 0); }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-ring::before { content: ''; position: absolute; inset: 10px; border-radius: 50%; background: var(--ui-surface); }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-ring strong { position: relative; font: 900 2.8rem/1 Nunito, sans-serif; color: var(--ui-accent); font-variant-numeric: tabular-nums; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-ring small { font-size: 1.2rem; margin-left: 3px; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-label { color: var(--ui-ink); font-size: 1rem; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-attempts { font-size: .75rem; color: var(--ui-accent); font-weight: 700; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity p { font-size: .8rem; color: var(--ui-muted); line-height: 1.6; margin: 0; }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-rules { width: 100%; text-align: left; padding-top: 12px; border-top: 1px solid var(--ui-line); }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-rules summary { cursor: pointer; min-height: 44px; display: list-item; align-content: center; font-size: .76rem; font-weight: 700; color: var(--ui-ink); }
+#pokdle-app #screen-multiplayer .multiplayer-proximity-rules p { padding-top: 8px; }
+#pokdle-app #screen-multiplayer .multiplayer-player-stats { flex-wrap: wrap; gap: 8px; color: var(--ui-muted); }
+#pokdle-app #screen-multiplayer .multiplayer-player-stats b { color: var(--ui-accent); }
+@media (max-width: 820px) {
+  #pokdle-app #screen-multiplayer .multiplayer-opponent-panel { order: -1; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity { grid-template-columns: 84px minmax(0,1fr); gap: 8px 14px; text-align: left; justify-items: start; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity-ring { width: 84px; height: 84px; grid-row: 1 / span 3; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity-ring::before { inset: 7px; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity-ring strong { font-size: 1.65rem; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity-ring small { font-size: .8rem; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity-rules { grid-column: 1 / -1; }
+}
+#pokdle-app #screen-multiplayer .multiplayer-attempts-head p { color: var(--ui-muted) !important; }
+#pokdle-app #screen-multiplayer .multiplayer-player-stats b { white-space: nowrap; }
+@media (max-width: 360px) {
+  #pokdle-app #screen-multiplayer .multiplayer-proximity { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
+  #pokdle-app #screen-multiplayer .multiplayer-proximity-ring { grid-row: auto; }
+}
