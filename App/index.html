@@ -31,10 +31,10 @@
   <link rel="stylesheet" href="dist/pokedex.min.css">
   <link rel="stylesheet" href="dist/multiplayer.min.css">
   <link rel="stylesheet" href="dist/home.min.css">
-  <link rel="stylesheet" href="dist/party-room.min.css">
   <link rel="stylesheet" href="dist/profile.min.css">
   <link rel="stylesheet" href="dist/mobile.min.css">
   <link rel="stylesheet" href="dist/visual-refresh.min.css">
+  <link rel="stylesheet" href="dist/party-room.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -215,7 +215,7 @@
         <div class="pk-modes">
           <article class="pk-card pk-mode" data-action="startNormalGame" role="button" tabindex="0"><div class="pk-tile pk-tile-yellow"><svg class="pk-ico"><use href="#i-infinity"/></svg></div><h4>Mode illimité</h4><p>Mêmes règles que le quotidien, rejouable sans limite.</p></article>
           <article class="pk-card pk-mode" data-action="openMultiplayerMode" role="button" tabindex="0"><div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-swords"/></svg></div><h4>Duel 1v1 <span class="pk-live"><i></i>LIVE</span></h4><p>Affronte un ami en temps réel sur la même cible.</p></article>
-          <article class="pk-card pk-mode" data-action="openPartyRoomMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-users"/></svg></div><h4>Party Room</h4><p>Crée une room, invite tes amis et enchaîne des manches avec score cumulé.</p></article>
+          <article class="pk-card pk-mode" data-action="openPartyRoomMode" role="button" tabindex="0"><div class="pk-tile pk-tile-red"><svg class="pk-ico"><use href="#i-users"/></svg></div><h4>Party Room</h4><p>6 mini-jeux entre amis, dont Numéro mystère : vise le numéro de Pokédex le plus proche.</p></article>
           <article class="pk-card pk-mode" data-action="openDraftScoreAttackMode" data-args="[false]" role="button" tabindex="0"><div class="pk-tile pk-tile-purple"><svg class="pk-ico"><use href="#i-chart"/></svg></div><h4>Draft Score Attack</h4><p>Drafte 6 Pokémon et vise la meilleure moyenne BST par génération.</p></article>
         </div>
       </section>
@@ -1165,82 +1165,67 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
     <div id="screen-party-room" class="hidden">
       <div class="card party-room-card">
-        <div class="ranking-head">
-          <h2 class="card-title">Party Room</h2>
-          <div class="ranking-head-actions">
-            <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
-          </div>
+        <div class="party-hero">
+          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>Les mêmes règles. Vos meilleurs coups. Un seul podium.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>6 mini-jeux</span><span>Entre amis</span></div></div>
+          <div class="party-hero-art" aria-hidden="true"><span>#025</span><b>VS</b><span>#151</span></div>
+          <button class="btn-ghost party-back" type="button" data-action="goToConfig">← Retour</button>
         </div>
-        <p class="card-desc">Crée une room, invite tes amis et joue en groupe sur plusieurs manches : Course Pokémon, Combo de types, Duo de critères, Meilleure stat ou Stat Clash Party.</p>
         <div id="party-lobby" class="party-lobby">
-          <label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Pseudo" autocomplete="off" /></label>
-          <div class="party-lobby-actions">
-            <button class="btn-blue" type="button" data-action="partyCreateRoom">Créer une room</button>
-          </div>
-          <div class="party-join-row">
-            <input id="party-join-code" type="text" maxlength="6" placeholder="Code de room" autocomplete="off" />
-            <button class="btn-ghost" type="button" data-action="partyJoinRoom">Rejoindre</button>
-          </div>
+          <div class="party-welcome"><span class="party-eyebrow">LA SOIRÉE COMMENCE ICI</span><h3>Invite ta bande.<br>Défie votre Pokédex.</h3><p>Crée ton salon, partage le lien et change de mini-jeu entre deux parties.</p><ol class="party-steps"><li><b>01</b><span>Rassemble tes amis<small>Un lien suffit pour vous retrouver.</small></span></li><li><b>02</b><span>Choisis votre défi<small>Vitesse, déduction ou numéros du Pokédex.</small></span></li><li><b>03</b><span>Décroche la première place<small>Les points s’additionnent à chaque manche.</small></span></li></ol><div class="party-new-preview"><span aria-hidden="true">◎</span><div><b>Nouveau · Numéro mystère</b><p>Un numéro tiré au sort. Une proposition chacun. Le plus proche remporte la manche.</p></div></div></div>
+          <div class="party-entry-panel"><h3>À toi de jouer</h3><p>Choisis le pseudo que tes amis verront.</p><label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Ex. Dresseur Sacha" autocomplete="nickname" /></label><button class="btn-blue" type="button" data-action="partyCreateRoom">Créer mon salon <span aria-hidden="true">→</span></button><div class="party-divider"><span>ou rejoindre tes amis</span></div><label class="party-field" for="party-join-code"><span>Code du salon</span></label><div class="party-join-row"><input id="party-join-code" type="text" maxlength="6" placeholder="Ex. AB3DF" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button class="btn-ghost" type="button" data-action="partyJoinRoom">Rejoindre</button></div><p class="party-entry-note">Pas de compte nécessaire. Juste un pseudo.</p></div>
         </div>
         <div id="party-joined" class="party-joined hidden">
-          <div class="party-room-head">
-            <div>Room <b id="party-room-code">-</b> <span id="party-room-status-badge" class="party-status-badge">En attente</span></div>
-            <div class="party-room-head-actions">
-              <button class="btn-ghost party-copy-btn" type="button" data-action="partyCopyInviteLink">📋 Copier le lien</button>
-              <button class="btn-ghost" type="button" data-action="partyLeaveRoom">Quitter</button>
-            </div>
-          </div>
-          <p class="party-count">Joueurs : <b id="party-count">0 / 8</b></p>
-          <ul id="party-players" class="party-players"></ul>
-          <div id="party-mode-select" class="party-mode-select hidden">
-            <span class="party-mode-label">Mode :</span>
-            <button id="party-mode-guess" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["guess"]'><span class="pmt-emoji">🏁</span><span class="pmt-text"><b>Course Pokémon</b><small>Devine le plus vite</small></span></button>
-            <button id="party-mode-typecombo" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["typecombo"]'><span class="pmt-emoji">🧬</span><span class="pmt-text"><b>Combo de types</b><small>Enchaîne les types</small></span></button>
-            <button id="party-mode-duocriteria" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["duocriteria"]'><span class="pmt-emoji">🎯</span><span class="pmt-text"><b>Duo de critères</b><small>2 critères à combiner</small></span></button>
-            <button id="party-mode-statclash" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["statclash"]'><span class="pmt-emoji">📊</span><span class="pmt-text"><b>Meilleure stat</b><small>Choisis la stat gagnante</small></span></button>
-            <button id="party-mode-statclashparty" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["statclashparty"]'><span class="pmt-emoji">⚔️</span><span class="pmt-text"><b>Stat Clash Party</b><small>Duel de stats à plusieurs</small></span></button>
-          </div>
-          <p id="party-mode-hint" class="party-mode-hint"></p>
-          <div id="party-rounds-select" class="party-mode-select party-rounds-select hidden">
-            <span class="party-mode-label">Manches :</span>
-            <button id="party-rounds-5" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[5]'>5</button>
-            <button id="party-rounds-10" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[10]'>10</button>
-            <button id="party-rounds-15" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[15]'>15</button>
-            <button id="party-rounds-20" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[20]'>20</button>
-          </div>
-          <div id="party-gens-select" class="party-mode-select party-gens-select hidden">
-            <span class="party-mode-label">Générations :</span>
-            <button id="party-gens-all" type="button" class="party-mode-btn" data-action="partyAllGens">🌍 Toutes</button>
-            <button id="party-gen-1" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[1]'>1</button>
-            <button id="party-gen-2" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[2]'>2</button>
-            <button id="party-gen-3" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[3]'>3</button>
-            <button id="party-gen-4" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[4]'>4</button>
-            <button id="party-gen-5" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[5]'>5</button>
-            <button id="party-gen-6" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[6]'>6</button>
-            <button id="party-gen-7" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[7]'>7</button>
-            <button id="party-gen-8" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[8]'>8</button>
-            <button id="party-gen-9" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[9]'>9</button>
-          </div>
-          <button id="party-start-btn" class="btn-red hidden" type="button" data-action="partyStartGame">Lancer la partie</button>
-          <button id="party-room-next-btn" class="btn-blue hidden" type="button" data-action="partyNextRound">Manche suivante</button>
-          <div id="party-round" class="party-round hidden">
-            <p id="party-round-mode" class="party-round-mode"></p>
-            <div id="party-timer" class="party-timer hidden"></div>
-            <img id="party-round-sprite" class="party-round-sprite" src="" alt="Pokémon à deviner" />
-            <p id="party-round-answer" class="party-round-answer hidden"></p>
-            <div id="party-stat-options" class="party-stat-options hidden"></div>
-            <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
-            <div id="party-round-input" class="party-round-input">
-              <div class="ac-wrapper party-ac-wrapper">
-                <input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" />
-                <div id="party-guess-ac" class="ac-list hidden"></div>
+          <div class="party-room-head"><div class="party-code-group"><span class="party-eyebrow">CODE DU SALON</span><b id="party-room-code">—</b><span id="party-room-status-badge" class="party-status-badge">En attente</span></div><div class="party-room-head-actions"><button class="btn-blue party-copy-btn" type="button" data-action="partyCopyInviteLink">Copier l’invitation</button><button class="btn-ghost" type="button" data-action="partyLeaveRoom">Quitter</button></div></div>
+          <div class="party-room-layout">
+            <div class="party-play-area">
+              <div id="party-round" class="party-round hidden">
+                <div class="party-stage-top"><span id="party-stage-progress" class="party-eyebrow"></span><div id="party-timer" class="party-timer hidden"></div></div>
+                <h3 id="party-round-mode" class="party-round-mode"></h3>
+                <div id="party-nearest-target" class="party-nearest-target hidden"><span>NUMÉRO CIBLE</span><b id="party-target-number">#000</b><p>Quel Pokémon s’en rapproche le plus ?</p></div>
+                <img id="party-round-sprite" class="party-round-sprite" alt="Pokémon à deviner" />
+                <p id="party-round-answer" class="party-round-answer hidden"></p>
+                <div id="party-stat-options" class="party-stat-options hidden"></div>
+                <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
+                <div id="party-nearest-results" class="party-nearest-results hidden"></div>
+                <p id="party-pick-status" class="party-pick-status hidden" role="status"></p>
+                <p id="party-answer-msg" class="party-answer-msg" role="status" aria-live="polite"></p>
+                <div id="party-round-input" class="party-round-input"><div class="ac-wrapper party-ac-wrapper"><label class="party-input-label" for="party-guess">Ta proposition</label><input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" spellcheck="false" /><div id="party-guess-ac" class="ac-list hidden"></div></div><button id="party-submit-btn" class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button></div>
+                <p id="party-nearest-help" class="party-round-help hidden">Une seule proposition · Réponses cachées · +100 pts aux plus proches, ex æquo inclus</p>
+                <button id="party-reveal-btn" class="btn-ghost hidden" type="button" data-action="partyRevealRound">Terminer et révéler</button>
               </div>
-              <button class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button>
+              <section id="party-setup" class="party-setup"><div class="party-section-head"><div><span class="party-eyebrow">VOTRE PROCHAIN DÉFI</span><h3>Choisissez votre terrain de jeu</h3></div><span id="party-host-note" class="party-host-note"></span></div>
+                <div id="party-mode-select" class="party-mode-select hidden" role="group" aria-label="Mode de jeu">
+                  <button id="party-mode-nearest" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["nearest"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Nouveau</small><b>Numéro mystère</b><span>Vise le numéro le plus proche</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-guess" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["guess"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⚑</span><span class="pmt-text"><small class="pmt-tag">Rapidité</small><b>Course Pokémon</b><span>Reconnais-le avant tes amis</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-typecombo" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["typecombo"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">✦</span><span class="pmt-text"><small class="pmt-tag">Réflexes</small><b>Combo de types</b><span>Un Pokémon, deux types</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-duocriteria" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["duocriteria"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⊕</span><span class="pmt-text"><small class="pmt-tag">Déduction</small><b>Duo de critères</b><span>Trouve le point commun</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-statclash" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["statclash"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">▥</span><span class="pmt-text"><small class="pmt-tag">Instinct</small><b>Meilleure stat</b><span>Connais-tu ses points forts ?</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-statclashparty" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["statclashparty"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⚔</span><span class="pmt-text"><small class="pmt-tag">Stratégie</small><b>Stat Clash Party</b><span>Garde tes meilleures stats</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                </div>
+                <p id="party-mode-hint" class="party-mode-hint"></p>
+                <div class="party-options"><div id="party-rounds-select" class="party-rounds-select hidden" role="group" aria-label="Nombre de manches"><span class="party-mode-label">Manches</span><div class="party-option-buttons">
+                    <button id="party-rounds-5" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[5]' aria-pressed="false">5</button>
+                    <button id="party-rounds-10" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[10]' aria-pressed="false">10</button>
+                    <button id="party-rounds-15" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[15]' aria-pressed="false">15</button>
+                    <button id="party-rounds-20" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[20]' aria-pressed="false">20</button>
+                  </div></div><div id="party-gens-select" class="party-gens-select hidden" role="group" aria-label="Générations autorisées"><span class="party-mode-label">Générations</span><div class="party-option-buttons"><button id="party-gens-all" type="button" class="party-mode-btn" data-action="partyAllGens" aria-pressed="false">Toutes</button>
+                    <button id="party-gen-1" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[1]' aria-label="Génération 1" aria-pressed="false">1</button>
+                    <button id="party-gen-2" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[2]' aria-label="Génération 2" aria-pressed="false">2</button>
+                    <button id="party-gen-3" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[3]' aria-label="Génération 3" aria-pressed="false">3</button>
+                    <button id="party-gen-4" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[4]' aria-label="Génération 4" aria-pressed="false">4</button>
+                    <button id="party-gen-5" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[5]' aria-label="Génération 5" aria-pressed="false">5</button>
+                    <button id="party-gen-6" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[6]' aria-label="Génération 6" aria-pressed="false">6</button>
+                    <button id="party-gen-7" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[7]' aria-label="Génération 7" aria-pressed="false">7</button>
+                    <button id="party-gen-8" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[8]' aria-label="Génération 8" aria-pressed="false">8</button>
+                    <button id="party-gen-9" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[9]' aria-label="Génération 9" aria-pressed="false">9</button>
+                  </div></div></div>
+              </section>
+              <div class="party-launch-bar"><p id="party-launch-note"></p><button id="party-start-btn" class="btn-blue hidden" type="button" data-action="partyStartGame">Lancer la partie →</button><button id="party-room-next-btn" class="btn-blue hidden" type="button" data-action="partyNextRound">Manche suivante →</button></div>
             </div>
-            <button id="party-reveal-btn" class="btn-ghost hidden" type="button" data-action="partyRevealRound">Révéler / terminer la manche</button>
+            <aside class="party-roster"><div class="party-section-head"><h3 id="party-roster-title">Dans le salon</h3><span id="party-count" class="party-count">0 / 8</span></div><ul id="party-players" class="party-players"></ul><p class="party-roster-tip">Le podium se joue à chaque manche.</p></aside>
           </div>
         </div>
-        <p id="party-room-msg" class="party-status"></p>
+        <p id="party-room-msg" class="party-status" role="status" aria-live="polite"></p>
       </div>
     </div>
 

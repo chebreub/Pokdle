@@ -1322,7 +1322,7 @@ function ensurePartyListeners() {
   if (!socket || partyRoomState.listenersBound) return socket;
   partyRoomState.listenersBound = true;
   socket.on("party:room-state", function (room) {
-    if (room?.round !== partyRoomState.room?.round) setPartyStatus("");
+    if (room?.roundNumber !== partyRoomState.room?.roundNumber || room?.status !== partyRoomState.room?.status) setPartyStatus("");
     partyRoomState.room = room;
     partyRoomState.code = room && room.code;
     renderPartyRoom();
@@ -1338,7 +1338,10 @@ function openPartyRoomMode() {
 
 function setPartyStatus(message) {
   var el = document.getElementById("party-room-msg");
-  if (el) el.textContent = message || "";
+  var inline = document.getElementById("party-answer-msg");
+  var inRound = partyRoomState.room?.status === "playing";
+  if (el) el.textContent = inRound && inline ? "" : message || "";
+  if (inline) inline.textContent = inRound ? message || "" : "";
 }
 
 function partyCreateRoom() {
@@ -1418,10 +1421,24 @@ function partySubmitAnswer() {
   var input = document.getElementById("party-guess");
   var guess = ((input && input.value) || "").trim();
   if (!guess) { setPartyStatus("Tape un nom de Pokemon."); return; }
-  socket.emit("party:submit-answer", { guess: guess }, function (res) {
+  var submittedRoom = partyRoomState.room;
+  if (!submittedRoom || submittedRoom.status !== "playing" || partyRoomState.submitting) return;
+  partyRoomState.submitting = true;
+  var submitBtn = document.getElementById("party-submit-btn");
+  if (submitBtn) submitBtn.disabled = true;
+  socket.timeout(10000).emit("party:submit-answer", { guess: guess, roundSerial: submittedRoom.round && submittedRoom.round.roundSerial }, function (error, res) {
+    partyRoomState.submitting = false;
+    if (submitBtn) submitBtn.disabled = false;
+    if (partyRoomState.room?.code !== submittedRoom.code || partyRoomState.room?.roundNumber !== submittedRoom.roundNumber || (submittedRoom.gameMode === "nearest" && partyRoomState.room?.round?.roundSerial !== submittedRoom.round?.roundSerial)) return;
+    if (error) { setPartyStatus("Connexion lente : vérifie si ta proposition est enregistrée avant de réessayer."); return; }
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur."); return; }
     if (res.room) { partyRoomState.room = res.room; renderPartyRoom(); }
+    if (submittedRoom.gameMode === "nearest") {
+      setPartyStatus("");
+      if (input) input.value = "";
+      return;
+    }
     if (res.correct) { setPartyStatus("Bonne reponse ! +" + (res.gained || 0) + " (rang " + (res.rank || "?") + ")"); if (input) input.value = ""; }
     else if (!res.already) { setPartyStatus("Reponse incorrecte, reessaie."); }
   });
@@ -1450,6 +1467,8 @@ function filterPartyGuessAC() {
     list.classList.add("hidden");
     return;
   }
+  var cacheScope = JSON.stringify([partyRoomState.room?.gameMode, partyRoomState.room?.selectedGens]);
+  if (partyRoomState.searchScope !== cacheScope) { partyGuessCache.clear(); partyRoomState.searchScope = cacheScope; }
   var matches = searchPokemonFast(qNorm, getPartyGuessSearchIndex(), partyGuessCache, null);
   renderPartyGuessAC(matches);
 }
@@ -1486,7 +1505,8 @@ function selectPartyGuessAC(name) {
   if (input) input.value = name || "";
   if (list) list.classList.add("hidden");
   partyAcIndex = -1;
-  partySubmitAnswer();
+  if (partyRoomState.room?.gameMode !== "nearest") partySubmitAnswer();
+  else if (input) input.focus();
 }
 
 function handlePartyGuessKey(event) {
@@ -1604,7 +1624,7 @@ function partyAllGens() {
   partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
-var PARTY_MODE_SHORT_LABELS = { guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
+var PARTY_MODE_SHORT_LABELS = { nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
 function showPartyRoundBanner(room) {
   var panel = document.getElementById("party-round");
   if (!panel || !room) return;
@@ -1642,12 +1662,34 @@ function partyUpdateTimer() {
   el.classList.toggle("is-urgent", remaining <= 10);
 }
 
+function renderPartyNearest(room, me, enabled, playing) {
+  document.getElementById("party-nearest-target").classList.toggle("hidden", !enabled);
+  document.getElementById("party-nearest-help").classList.toggle("hidden", !enabled || !playing);
+  var status = document.getElementById("party-pick-status");
+  status.classList.toggle("hidden", !(enabled && playing && me?.submitted));
+  status.textContent = enabled && me?.submitted ? "✓ " + me.proposal + " — proposition verrouillée. En attente des autres joueurs…" : "";
+  document.getElementById("party-submit-btn").textContent = enabled ? "Verrouiller mon choix" : "Valider";
+  var results = document.getElementById("party-nearest-results");
+  results.classList.toggle("hidden", !enabled || playing);
+  if (!enabled) { results.innerHTML = ""; return; }
+  document.getElementById("party-target-number").textContent = "#" + String(room.round.targetNumber).padStart(3, "0");
+  results.innerHTML = playing ? "" : (room.round.results || []).map(function (r) {
+    var p = r.pokemon;
+    return '<div class="party-nearest-row' + (r.winner ? ' is-winner' : '') + '">' +
+      (p?.sprite ? '<img src="' + escapeHtml(p.sprite) + '" alt="" />' : '<span class="party-rank">—</span>') +
+      '<div><b>' + escapeHtml(r.nickname) + '</b><small>' + (p ? escapeHtml(p.name) + ' · #' + String(p.id).padStart(3, "0") : 'Pas de proposition') + '</small></div>' +
+      '<div class="party-nearest-distance"><b>' + (r.distance === null ? '—' : r.distance === 0 ? 'Pile !' : 'Écart ' + r.distance) + '</b><small>' + (r.winner ? '+100 pts' : '0 pt') + '</small></div></div>';
+  }).join("");
+}
+
 function renderPartyRoom() {
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
   var room = partyRoomState.room;
   var selfId = multiplayerSocket && multiplayerSocket.id;
   if (!room) {
+    if (partyRoomState.timerInterval) { clearInterval(partyRoomState.timerInterval); partyRoomState.timerInterval = null; }
+    partyRoomState.lastGuessRoundKey = null;
     if (lobby) lobby.classList.remove("hidden");
     if (joined) joined.classList.add("hidden");
     return;
@@ -1661,7 +1703,7 @@ function renderPartyRoom() {
   var complete = room.status === "complete";
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
-  var modeLabels = { guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabels = { nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
   var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
@@ -1682,7 +1724,8 @@ function renderPartyRoom() {
     var prevScores = partyRoomState.prevScores || {};
     var revealed = finished || complete;
     var __partyRows = players.map(function (p, i) {
-      var rank = (complete && i < 3) ? medals[i] : (i + 1);
+      var rankIndex = players.findIndex(function (entry) { return (entry.score || 0) === (p.score || 0); });
+      var rank = (complete && rankIndex < 3) ? medals[rankIndex] : (rankIndex + 1);
       var gained = (p.score || 0) > (prevScores[p.id] || 0);
       var avName = String(p.nickname || "?");
       var avatarInitial = avName.trim().charAt(0).toUpperCase() || "?";
@@ -1690,7 +1733,9 @@ function renderPartyRoom() {
       for (var avI = 0; avI < avName.length; avI += 1) avatarTone += avName.charCodeAt(avI);
       avatarTone = avatarTone % 6;
       var statusBadge = "";
-      if (scMode && playing) {
+      if (room.gameMode === "nearest" && playing) {
+        statusBadge = p.submitted ? '<span class="party-check">Prêt ✓</span>' : '<span class="party-wait">Réfléchit…</span>';
+      } else if (scMode && playing) {
         statusBadge = p.pickKey ? '<span class="party-check">a choisi</span>' : '<span class="party-wait">attend…</span>';
       } else if (scMode && revealed) {
         if ((p.lastGain || 0) > 0) statusBadge = '<span class="party-check">+' + p.lastGain + '</span>';
@@ -1701,22 +1746,17 @@ function renderPartyRoom() {
       }
       var highlight = (scMode && playing && p.pickKey) || (scMode && revealed && (p.lastGain || 0) > 0) || (!scMode && p.correct);
       return '<li class="party-player' + (p.connected ? '' : ' is-offline') + (highlight ? ' is-correct' : '') + '">' +
-        '<span class="party-rank">' + rank + '</span>' +
-        '<span class="party-avatar av-' + avatarTone + '">' + escapeHtml(avatarInitial) + '</span>' +
-        '<span class="party-player-name">' + escapeHtml(p.nickname) + '</span>' +
-        (p.isHost ? '<span class="party-badge-host">Hote</span>' : '') +
-        (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') +
-        statusBadge +
-        '<span class="party-score' + (gained ? ' is-gain' : '') + '">' + (p.score || 0) + ' pts</span>' +
-        '</li>';
+        '<span class="party-avatar av-' + avatarTone + '">' + (complete ? rank : escapeHtml(avatarInitial)) + '</span>' +
+        '<div class="party-player-info"><span class="party-player-name">' + escapeHtml(p.nickname) + '</span><span class="party-player-meta">' +
+        (p.isHost ? '<span class="party-badge-host">Hôte</span>' : '') +
+        (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') + statusBadge + '</span></div>' +
+        '<span class="party-score' + (gained ? ' is-gain' : '') + '">' + (p.score || 0) + '<small>POINTS</small></span></li>';
     }).join("");
     var __partyMax = Number(room.maxPlayers) || 8;
     var __partyEmpty = "";
     if (!playing && !finished && !complete) {
       var __freeSeats = Math.max(0, __partyMax - players.length);
-      for (var __s = 0; __s < __freeSeats; __s += 1) {
-        __partyEmpty += '<li class="party-player party-player-empty"><span class="party-rank">+</span><span class="party-player-name party-seat-label">Place libre \u00b7 partage le code</span></li>';
-      }
+      if (__freeSeats) __partyEmpty = '<li class="party-player party-player-empty"><span class="party-rank">+</span><span class="party-seat-label">' + __freeSeats + ' place' + (__freeSeats > 1 ? 's' : '') + ' libre' + (__freeSeats > 1 ? 's' : '') + ' · invite tes amis</span></li>';
     }
     listEl.innerHTML = __partyRows + __partyEmpty;
     listEl.classList.toggle("is-podium", complete);
@@ -1734,7 +1774,7 @@ function renderPartyRoom() {
   if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
   var roundEl = document.getElementById("party-round");
   if (roundEl) {
-    var hasRound = Boolean(room.round && (room.round.image || room.round.mode === "typecombo" || room.round.mode === "duocriteria"));
+    var hasRound = room.status !== "waiting" && Boolean(room.round && (room.round.image || room.round.mode === "typecombo" || room.round.mode === "duocriteria" || room.round.mode === "nearest"));
     roundEl.classList.toggle("party-round-typecombo", Boolean(room.round && (room.round.mode === "typecombo" || room.round.mode === "duocriteria")));
     roundEl.classList.toggle("hidden", !hasRound);
     var roundKey = (room.status === "playing") ? (Number(room.roundNumber) || 0) : -1;
@@ -1743,10 +1783,11 @@ function renderPartyRoom() {
       void roundEl.offsetWidth;
       roundEl.classList.add("is-entering");
     }
-    var inputRoundKey = (room.code || "") + ":" + roundKey;
+    var inputRoundKey = (room.code || "") + ":" + roundKey + ":" + (room.round?.roundSerial || 0);
     if (hasRound && playing && roundKey > 0 && inputRoundKey !== partyRoomState.lastGuessRoundKey) {
       clearPartyGuessInput();
       partyRoomState.lastGuessRoundKey = inputRoundKey;
+      if (!document.getElementById("screen-party-room").classList.contains("hidden")) roundEl.scrollIntoView({ block: "start", behavior: "instant" });
     } else if (!playing) {
       var partyGuessAc = document.getElementById("party-guess-ac");
       if (partyGuessAc) partyGuessAc.classList.add("hidden");
@@ -1755,6 +1796,8 @@ function renderPartyRoom() {
     partyRoomState.lastRoundKey = roundKey;
     var spriteEl = document.getElementById("party-round-sprite");
     if (hasRound && spriteEl && room.round.image) spriteEl.src = room.round.image;
+    var isNearest = Boolean(room.round && room.round.mode === "nearest");
+    renderPartyNearest(room, me, isNearest, playing);
     var isStatClash = Boolean(room.round && (room.round.mode === "statclash" || room.round.mode === "statclashparty"));
     var isDuoCriteria = Boolean(room.round && room.round.mode === "duocriteria");
     var isTypeCombo = Boolean(room.round && (room.round.mode === "typecombo" || isDuoCriteria));
@@ -1762,7 +1805,7 @@ function renderPartyRoom() {
     var modeEl = document.getElementById("party-round-mode");
     if (modeEl) {
       var scParty = Boolean(room.round && room.round.mode === "statclashparty");
-      modeEl.textContent = isDuoCriteria
+      modeEl.textContent = isNearest ? "Numéro mystère" : isDuoCriteria
         ? "Duo de critères : trouve un Pokémon qui coche les deux cases"
         : isTypeCombo
         ? "Combo de types : trouve un Pokémon qui possède ces types"
@@ -1772,7 +1815,7 @@ function renderPartyRoom() {
     }
     if (spriteEl) {
       spriteEl.classList.remove("party-sprite-silhouette", "party-sprite-pixel");
-      spriteEl.classList.toggle("hidden", isTypeCombo);
+      spriteEl.classList.toggle("hidden", isTypeCombo || isNearest);
       if (playing && !isTypeCombo) {
         if (variant === "silhouette") spriteEl.classList.add("party-sprite-silhouette");
         else if (variant === "pixel") spriteEl.classList.add("party-sprite-pixel");
@@ -1780,7 +1823,11 @@ function renderPartyRoom() {
     }
     var answerEl = document.getElementById("party-round-answer");
     if (answerEl) {
-      if (isTypeCombo && (finished || complete)) {
+      if (isNearest && (finished || complete)) {
+        var nearestWinners = (room.round.results || []).filter(function (r) { return r.winner; });
+        answerEl.classList.remove("hidden");
+        answerEl.textContent = nearestWinners.length ? nearestWinners.map(function (r) { return r.nickname; }).join(" & ") + (nearestWinners.length > 1 ? " remportent" : " remporte") + " la manche ! +100 pts" : "Aucune proposition cette manche. Aucun point attribué.";
+      } else if (isTypeCombo && (finished || complete)) {
         answerEl.classList.remove("hidden");
         if (room.round.answer) {
           answerEl.textContent = "Trouvé : " + room.round.answer + " (+" + (Number(room.round.winnerGain) || 0) + ")";
@@ -1808,11 +1855,12 @@ function renderPartyRoom() {
       }
     }
     var inputWrap = document.getElementById("party-round-input");
-    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct));
-    if (playing && !isStatClash && me && !me.correct) {
+    if (inputWrap) inputWrap.classList.toggle("hidden", !(playing && !isStatClash && me && !me.correct && !(isNearest && me.submitted)));
+    if (playing && !isStatClash && me && !me.correct && !(isNearest && me.submitted)) {
       var guessInput = document.getElementById("party-guess");
       if (guessInput) guessInput.placeholder = isDuoCriteria ? "Un Pokémon qui coche les deux cases" : (isTypeCombo ? "Un Pokémon avec ces types" : "Nom du Pokémon");
-      if (guessInput && document.activeElement !== guessInput) guessInput.focus();
+      // Do not summon the mobile keyboard or steal focus on every room update.
+      if (guessInput && window.matchMedia("(min-width: 801px)").matches && document.activeElement === document.body) guessInput.focus({ preventScroll: true });
     }
     var statOpts = document.getElementById("party-stat-options");
     if (statOpts) {
@@ -1883,37 +1931,20 @@ function renderPartyRoom() {
   if (startBtn) {
     startBtn.classList.toggle("hidden", !(isHost && (room.status === "waiting" || complete)));
     startBtn.disabled = raw.length < (room.minPlayers || 2);
-    startBtn.textContent = complete ? "Relancer une party" : "Lancer la party";
+    startBtn.textContent = complete ? "Rejouer →" : "Lancer la partie →";
   }
   var modeSel = document.getElementById("party-mode-select");
   if (modeSel) modeSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
   var gensSel = document.getElementById("party-gens-select");
   if (gensSel) gensSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
-  var guessBtn = document.getElementById("party-mode-guess");
-  if (guessBtn) {
-    guessBtn.classList.toggle("is-active", (room.gameMode || "guess") === "guess");
-    guessBtn.disabled = !isHost;
-  }
-  var scBtn = document.getElementById("party-mode-statclash");
-  if (scBtn) {
-    scBtn.classList.toggle("is-active", room.gameMode === "statclash");
-    scBtn.disabled = !isHost;
-  }
-  var scpBtn = document.getElementById("party-mode-statclashparty");
-  if (scpBtn) {
-    scpBtn.classList.toggle("is-active", room.gameMode === "statclashparty");
-    scpBtn.disabled = !isHost;
-  }
-  var typeComboBtn = document.getElementById("party-mode-typecombo");
-  if (typeComboBtn) {
-    typeComboBtn.classList.toggle("is-active", room.gameMode === "typecombo");
-    typeComboBtn.disabled = !isHost;
-  }
-  var duoBtn = document.getElementById("party-mode-duocriteria");
-  if (duoBtn) {
-    duoBtn.classList.toggle("is-active", room.gameMode === "duocriteria");
-    duoBtn.disabled = !isHost;
-  }
+  Object.keys(PARTY_MODE_SHORT_LABELS).forEach(function (key) {
+    var btn = document.getElementById("party-mode-" + key);
+    if (!btn) return;
+    var active = (room.gameMode || "guess") === key;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", String(active));
+    btn.disabled = !isHost;
+  });
   // Sélecteur du nombre de manches (hôte uniquement)
   var roundsSel = document.getElementById("party-rounds-select");
   if (roundsSel) roundsSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
@@ -1921,10 +1952,12 @@ function renderPartyRoom() {
     var rb = document.getElementById("party-rounds-" + n);
     if (rb) {
       rb.classList.toggle("is-active", (Number(room.totalRounds) || 5) === n);
+      rb.setAttribute("aria-pressed", String((Number(room.totalRounds) || 5) === n));
       rb.disabled = !isHost;
     }
   });
   var modeHints = {
+    nearest: "Un numéro du Pokédex est tiré au sort. Propose un Pokémon des générations choisies : le plus petit écart gagne 100 points. Une seule réponse, révélée à la fin. Les ex æquo gagnent ensemble, sans bonus de vitesse.",
     guess: "Course Pokémon : devine le Pokémon le plus vite possible. Les points dépendent du rang de bonne réponse.",
     typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque la manche (plus le combo est rare, plus ça paie).",
     duocriteria: "Duo de critères : type, couleur, habitat, génération ou stade — deux critères croisés, le premier Pokémon qui coche les deux cases gagne. Rapidité bonus !",
@@ -1939,14 +1972,19 @@ function renderPartyRoom() {
   var selGens = Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   for (var g = 1; g <= 9; g++) {
     var gb = document.getElementById("party-gen-" + g);
-    if (gb) { gb.classList.toggle("is-active", selGens.indexOf(g) !== -1); gb.disabled = !isHost; }
+    if (gb) { gb.classList.toggle("is-active", selGens.indexOf(g) !== -1); gb.setAttribute("aria-pressed", String(selGens.indexOf(g) !== -1)); gb.disabled = !isHost; }
   }
   var genAllBtn = document.getElementById("party-gens-all");
-  if (genAllBtn) { genAllBtn.classList.toggle("is-active", selGens.length === 9); genAllBtn.disabled = !isHost; }
+  if (genAllBtn) { genAllBtn.classList.toggle("is-active", selGens.length === 9); genAllBtn.setAttribute("aria-pressed", String(selGens.length === 9)); genAllBtn.disabled = !isHost; }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
   var revealBtn = document.getElementById("party-reveal-btn");
   if (revealBtn) revealBtn.classList.toggle("hidden", !(isHost && playing));
+  document.getElementById("party-setup")?.classList.toggle("hidden", playing || finished);
+  document.getElementById("party-stage-progress").textContent = "MANCHE " + roundNo + " / " + total;
+  document.getElementById("party-host-note").textContent = isHost ? "Tu règles la partie" : "L’hôte choisit les règles";
+  document.getElementById("party-roster-title").textContent = complete ? "Le podium" : playing || finished ? "Classement" : "Dans le salon";
+  document.getElementById("party-launch-note").textContent = playing ? "La manche se termine quand tout le monde a répondu ou à la fin du chrono." : finished ? (isHost ? "Prêts pour la suite ?" : "L’hôte prépare la prochaine manche.") : !isHost ? "La partie commence quand l’hôte la lance." : raw.length < 2 ? "Invite au moins un ami pour commencer." : raw.length + " joueurs · " + total + " manches · " + modeLabel;
 }
 
 function initPartyFromUrl() {
