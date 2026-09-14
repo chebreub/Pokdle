@@ -242,3 +242,15 @@
 
 #pokdle-app #screen-party-room .party-answer-msg:empty { display: none; }
 #pokdle-app #screen-party-room .party-answer-msg:not(:empty) { color: var(--party-warm-ink); background: var(--party-warm); border-radius: 10px; padding: 10px 12px; width: 100%; font-size: .8rem; }
+
+/* Exact National Pokédex answer is shown only after the round ends. */
+#pokdle-app #screen-party-room .party-nearest-answer { width: 100%; display: flex; align-items: center; justify-content: center; gap: 20px; padding: 18px; border: 1px solid var(--party-accent); border-radius: 16px; background: var(--party-tint); }
+#pokdle-app #screen-party-room .party-nearest-answer img { width: 96px; height: 96px; object-fit: contain; image-rendering: pixelated; flex-shrink: 0; }
+#pokdle-app #screen-party-room .party-nearest-answer span { display: block; font-size: .64rem; letter-spacing: .1em; color: var(--party-accent); font-weight: 800; }
+#pokdle-app #screen-party-room .party-nearest-answer b { display: block; font-size: 1.35rem; color: var(--ui-ink); margin: 4px 0; overflow-wrap: anywhere; }
+#pokdle-app #screen-party-room .party-nearest-answer p { font-size: .8rem; color: var(--ui-muted); }
+@media (max-width: 560px) {
+  #pokdle-app #screen-party-room .party-nearest-answer { gap: 12px; padding: 12px; }
+  #pokdle-app #screen-party-room .party-nearest-answer img { width: 64px; height: 64px; }
+  #pokdle-app #screen-party-room .party-nearest-answer b { font-size: 1.05rem; }
+}

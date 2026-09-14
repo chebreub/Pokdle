@@ -53,3 +53,12 @@ La sélection soumet désormais immédiatement, par clic ou Entrée sur une sugg
 Quatre tests de régression ajoutés : sélection sans second clic, Entrée sur suggestion, saisie directe rejetée conservée, soumission en cours protégée et confirmation enregistrée. Les deux premiers échouaient avant correction. Vérification finale : 23 tests ciblés réussis (sélection, moteur Party et navigation), build réussi.
 
 Navigateur, salon local L82MU, deux joueurs, cible #704 : clic sur Pikachu puis clic sur Mew, sans cliquer sur le bouton de validation. Confirmation Pikachu visible avant la réponse adverse ; résultat avec les deux Pokémon, écarts 679 et 553, victoire de Mew +100 points.
+
+## Duel privé et réponse exacte — 14 septembre 2026
+
+- Le serveur Duel ne transmet plus les noms, sprites ou indices des propositions adverses, pendant la partie comme après la fin. Chaque joueur conserve son propre historique.
+- La jauge partage la meilleure proximité d'un essai : neuf critères de même poids, correspondance partielle à demi-point. Elle ne redescend pas ; 100 % est réservé à la bonne espèce (99 % maximum sinon).
+- Numéro mystère révèle désormais le nom, le sprite et le numéro exacts à la fin de chaque manche, même sans réponse parfaite ou sans aucune proposition. La carte est masquée à la manche suivante.
+- Présentation responsive de la jauge et correction du contraste des descriptions dans le thème sombre.
+
+Validation : 36 tests ciblés passent (Duel, sérialisation privée, Party nearest, sélection et régressions de jeu). Build et vérification syntaxique réussis. Deux sessions navigateur réelles : Pikachu puis Roucool donnent 39 % puis 44 % chez l'adversaire sans révéler leurs noms ; Ronflex reste visible uniquement dans l'historique de son joueur, avec 33 % partagé. Numéro #213 : propositions Pikachu/Ronflex, révélation Caratroc, puis disparition de la carte à la manche 2. Contrôles CSS aux largeurs 320 et 390 px, thème clair et sombre, sans débordement horizontal du document. Ce contrôle en fenêtre intégrée ne remplace pas un essai sur téléphone physique.

@@ -1671,6 +1671,12 @@ function renderPartyNearest(room, me, enabled, playing) {
   document.getElementById("party-submit-btn").textContent = enabled ? "Valider ma réponse" : "Valider";
   var results = document.getElementById("party-nearest-results");
   results.classList.toggle("hidden", !enabled || playing);
+  var answerCard = document.getElementById("party-nearest-answer");
+  var exactAnswer = enabled && !playing ? room.round.answer : null;
+  answerCard.classList.toggle("hidden", !exactAnswer);
+  answerCard.innerHTML = exactAnswer ?
+    (exactAnswer.sprite ? '<img src="' + escapeHtml(exactAnswer.sprite) + '" alt="" />' : '') +
+    '<div><span>LA RÉPONSE EXACTE</span><b>' + escapeHtml(exactAnswer.name) + '</b><p>Pokédex national #' + String(exactAnswer.id).padStart(3, "0") + '</p></div>' : "";
   if (!enabled) { results.innerHTML = ""; return; }
   document.getElementById("party-target-number").textContent = "#" + String(room.round.targetNumber).padStart(3, "0");
   results.innerHTML = playing ? "" : (room.round.results || []).map(function (r) {

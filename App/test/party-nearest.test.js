@@ -170,3 +170,17 @@ test('changing mode after a completed game clears stale round data', () => {
   assert.equal(changed.ok, true); assert.equal(changed.room.status, 'waiting');
   assert.equal(changed.room.round, null); assert.equal(room.nearestTarget, null);
 });
+
+test('exact target identity is private during play and revealed even without a perfect proposal', () => {
+  const room = fixture();
+  assert.equal(nearest.publicNearestRound(room, false).answer, null);
+  submit(room, 0, 'Abo'); nearest.scoreNearestRound(room);
+  const reveal = nearest.publicNearestRound(room, true);
+  assert.equal(reveal.answer.id, 25);
+  assert.equal(reveal.answer.name, 'Pikachu');
+  assert.equal(reveal.results[0].pokemon.id, 23);
+  const empty = fixture(); nearest.scoreNearestRound(empty);
+  assert.equal(nearest.publicNearestRound(empty, true).answer.name, 'Pikachu');
+  nearest.startNearestRound(room, catalogue, () => 0);
+  assert.equal(nearest.publicNearestRound(room, false).answer, null);
+});

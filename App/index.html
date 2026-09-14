@@ -1186,6 +1186,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <p id="party-round-answer" class="party-round-answer hidden"></p>
                 <div id="party-stat-options" class="party-stat-options hidden"></div>
                 <div id="party-stat-reveal" class="party-stat-reveal hidden"></div>
+                <div id="party-nearest-answer" class="party-nearest-answer hidden"></div>
                 <div id="party-nearest-results" class="party-nearest-results hidden"></div>
                 <p id="party-pick-status" class="party-pick-status hidden" role="status"></p>
                 <p id="party-answer-msg" class="party-answer-msg" role="status" aria-live="polite"></p>
@@ -1299,7 +1300,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <p id="multiplayer-live-text">Vous cherchez le même Pokémon mystère. Trouve-le avant l’autre pour remporter la manche.</p>
               <div class="multiplayer-guess-row">
                 <div class="ac-wrapper">
-                  <input id="multiplayer-guess-input" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
+                  <input id="multiplayer-guess-input" aria-label="Ta proposition en duel" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
                   <div id="multiplayer-guess-ac" class="ac-list hidden"></div>
                 </div>
                 <button class="btn-red" type="button" data-action="submitMultiplayerGuess">Envoyer</button>
@@ -1336,8 +1337,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
               <section class="multiplayer-panel multiplayer-opponent-panel">
                 <div class="multiplayer-attempts-head">
-                  <h3>Tentatives adverses</h3>
-                  <p>Suivi simple de ses essais, sans détourner l’attention de tes propres indices.</p>
+                  <h3>Proximité adverse</h3>
+                  <p>Ses choix restent secrets. Suis sa meilleure proximité sans voir ses Pokémon.</p>
                 </div>
                 <div id="multiplayer-opponent-attempts" class="multiplayer-opponent-attempts card-desc">Aucune tentative adverse pour l’instant.</div>
               </section>
