@@ -1505,8 +1505,8 @@ function selectPartyGuessAC(name) {
   if (input) input.value = name || "";
   if (list) list.classList.add("hidden");
   partyAcIndex = -1;
-  if (partyRoomState.room?.gameMode !== "nearest") partySubmitAnswer();
-  else if (input) input.focus();
+  // A suggestion is a submitted answer in every Party mode.
+  partySubmitAnswer();
 }
 
 function handlePartyGuessKey(event) {
@@ -1667,8 +1667,8 @@ function renderPartyNearest(room, me, enabled, playing) {
   document.getElementById("party-nearest-help").classList.toggle("hidden", !enabled || !playing);
   var status = document.getElementById("party-pick-status");
   status.classList.toggle("hidden", !(enabled && playing && me?.submitted));
-  status.textContent = enabled && me?.submitted ? "✓ " + me.proposal + " — proposition verrouillée. En attente des autres joueurs…" : "";
-  document.getElementById("party-submit-btn").textContent = enabled ? "Verrouiller mon choix" : "Valider";
+  status.textContent = enabled && me?.submitted ? "✓ " + me.proposal + " — réponse enregistrée. En attente des autres joueurs…" : "";
+  document.getElementById("party-submit-btn").textContent = enabled ? "Valider ma réponse" : "Valider";
   var results = document.getElementById("party-nearest-results");
   results.classList.toggle("hidden", !enabled || playing);
   if (!enabled) { results.innerHTML = ""; return; }
