@@ -957,14 +957,30 @@ function removeProfilePhoto() {
   showToast("Photo retirée.");
 }
 
+let connectedAccountUser = null;
+function accountChipHtml(user) {
+  const name = escapeHtml(user.username || 'Dresseur');
+  const avatar = user.avatar ? `<img class="account-avatar" src="${escapeHtml(user.avatar)}" alt="" />` : `<span class="account-avatar account-avatar-fallback" aria-hidden="true">${escapeHtml((user.username || 'D').charAt(0).toUpperCase())}</span>`;
+  return `<button type="button" class="account-chip account-profile" data-action="openAccountMenu" aria-label="Ouvrir mon compte" aria-haspopup="dialog">${avatar}<span class="account-name">${name}</span><span class="account-chevron" aria-hidden="true">⌄</span></button>`;
+}
+function openAccountMenu() {
+  if (!connectedAccountUser) return;
+  ensureOverlay('Mon compte', `<div class="account-menu"><span class="adventure-eyebrow">CONNECTÉ AVEC DISCORD</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><button type="button" class="btn-ghost" data-action="accountNavigate" data-args='["profile"]'>Mon profil →</button><button type="button" class="btn-ghost" data-action="accountNavigate" data-args='["album"]'>Mon album →</button><button type="button" class="btn-ghost" data-action="accountNavigate" data-args='["settings"]'>Paramètres →</button><a class="account-menu-logout" href="/auth/logout">Se déconnecter</a></div>`);
+}
+function accountNavigate(destination) {
+  closeOverlayModal();
+  if (destination === 'album') openDiscoveryAlbum();
+  else if (destination === 'settings') openSettingsModal();
+  else { openProfileScreen(); switchProfileView('trainer'); }
+}
 (function () {
   function renderAccount(data) {
+    connectedAccountUser = data?.auth ? data.user || null : null;
     var el = document.getElementById("account-area");
     if (!el) return;
     if (!data || !data.auth) { el.innerHTML = ""; return; }
     if (data.user) {
-      var av = data.user.avatar ? '<img class="account-avatar" src="' + escapeHtml(data.user.avatar) + '" alt="" />' : '';
-      el.innerHTML = '<span class="account-chip">' + av + '<span class="account-name">' + escapeHtml(data.user.username || "Dresseur") + '</span><a class="account-logout" href="/auth/logout" title="Déconnexion" aria-label="Déconnexion">⏻</a></span>';
+      el.innerHTML = accountChipHtml(data.user);
     } else {
       el.innerHTML = '<a class="account-login" href="/auth/discord" aria-label="Connexion Discord" title="Connexion Discord"><svg class="account-login-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.077.077 0 0 0-.079-.036A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.291.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.339c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg>Connexion Discord</a>';
     }
@@ -1175,6 +1191,7 @@ function loadProfile() {
     nickname: typeof parsed?.nickname === "string" ? parsed.nickname : "",
     favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
     discoveries: normalizeDiscoveries(parsed?.discoveries),
+    secrets: normalizeSecretProgress(parsed?.secrets),
     avatarPhoto: typeof parsed?.avatarPhoto === "string" ? parsed.avatarPhoto : "",
     // Engagement system
     xp: Number(parsed?.xp) || 0,
@@ -1363,6 +1380,7 @@ function renderProfileScreen() {
 
   renderPartner();
   renderDiscoveryAlbum();
+  renderSecretMissions();
   const trainerCard = document.getElementById("profile-trainer-card");
   if (trainerCard) {
     const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;

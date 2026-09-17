@@ -174,10 +174,12 @@
         </article>
       </section>
       <div id="home-partner" class="partner-strip" aria-label="Mon aventure"></div>
+      <div id="secret-spot-companion" class="secret-spot hidden"></div>
       <nav class="home-explore" aria-label="Explorer l’univers Pokémon">
         <div><strong>Entre deux parties</strong><span>Explore, prépare ton équipe, suis tes progrès.</span></div>
         <button class="btn-ghost" type="button" data-action="openPokedexMode">Pokédex</button>
         <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["explore"]'>Outils et collection →</button>
+        <button type="button" class="secret-rune" data-rune="home" data-action="inspectSecretRune" data-args='["home"]' aria-label="Examiner la marque étoilée de l’accueil">✧</button>
       </nav>
 
       <!-- Send a challenge (préservé) -->
@@ -337,14 +339,14 @@
         <div class="ranking-head">
           <h2 class="card-title">Profil joueur</h2>
           <div class="ranking-head-actions">
-            <button class="btn-ghost" type="button" data-action="confirmResetProgression">🗑️ Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
         <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
         <div class="profile-view-switch" role="group" aria-label="Contenu du profil">
-          <button type="button" data-action="switchProfileView" data-args='["trainer"]' aria-pressed="true">Mon dresseur</button>
-          <button type="button" data-action="switchProfileView" data-args='["album"]' aria-pressed="false">Album de découvertes <span id="album-tab-count">0</span></button>
+          <button type="button" data-action="switchProfileView" data-args='["trainer"]' aria-pressed="true">Dresseur</button>
+          <button type="button" data-action="switchProfileView" data-args='["album"]' aria-pressed="false">Album <span id="album-tab-count">0</span></button>
+          <button type="button" data-action="switchProfileView" data-args='["secrets"]' aria-pressed="false">Secrets <span id="secrets-tab-count">0/3</span></button>
         </div>
         <div class="profile-stats-links">
           <button class="btn-ghost" type="button" data-action="openMatchHistoryScreen">📜 Historique des parties</button>
@@ -354,18 +356,26 @@
 
         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
         <input id="profile-photo-input" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
+        <section id="profile-secrets" class="hidden" aria-label="Carnet des secrets">
+          <div class="secrets-intro"><span class="adventure-eyebrow">IL SE PASSE QUELQUE CHOSE ICI</span><h3>Le carnet des secrets</h3><p>Des indices, trois petites missions et des Pokémon cachés dans le site. À toi de les débusquer.</p><small>Ces missions commencent maintenant : tes anciennes parties ne les accomplissent pas à ta place. Rien n’expire.</small></div>
+          <div id="secret-missions" class="secret-missions"></div>
+          <div id="secret-spot-runes" class="secret-spot hidden"></div>
+        </section>
+        <div id="profile-secret-rune" class="secret-rune-trail"><span>Un signe familier…</span><button type="button" class="secret-rune" data-rune="profile" data-action="inspectSecretRune" data-args='["profile"]' aria-label="Examiner la marque étoilée du profil">✧</button></div>
         <section id="profile-album" class="hidden" aria-label="Album de découvertes">
-          <div class="album-intro"><div><span class="adventure-eyebrow">CHAQUE MYSTÈRE LAISSE UNE TRACE</span><h3>Ton aventure prend forme.</h3><p>Retrouve les Pokémon trouvés dans les jeux de devinette. Les formes alternatives ont leur propre place.</p></div><div id="album-total" class="album-total"></div></div>
+          <div class="album-intro"><div><span class="adventure-eyebrow">CHAQUE MYSTÈRE LAISSE UNE TRACE</span><h3>Ton aventure prend forme.</h3><p>Tes Pokémon trouvés en jeu et tes rencontres secrètes. Chaque carte raconte son origine ; les formes alternatives ont leur propre place.</p></div><div id="album-total" class="album-total"></div></div>
+          <p id="album-origin-note" class="album-origin-note hidden"></p>
+          <button type="button" class="album-secret-link" data-action="openSecretJournal">✦ Des Pokémon se cachent aussi dans le site. Ouvrir le carnet des secrets →</button>
           <details class="album-region-disclosure"><summary>Explorer par génération</summary><div id="album-regions" class="album-regions" aria-label="Progression par génération"></div></details>
           <div class="album-filters">
             <label>Rechercher<input id="album-search" type="search" placeholder="Nom ou numéro…" autocomplete="off" /></label>
             <label>Génération<select id="album-generation"><option value="all">Toutes</option></select></label>
-            <label>Afficher<select id="album-status"><option value="found">Mes découvertes</option><option value="all">Tout l’album</option><option value="missing">À découvrir</option></select></label>
+            <label>Afficher<select id="album-status"><option value="found">Mes découvertes</option><option value="all">Tout l’album</option><option value="missing">À découvrir</option><option value="secrets">Secrets trouvés</option></select></label>
           </div>
           <p id="album-results-label" class="album-results-label" role="status"></p>
           <div id="album-grid" class="album-grid"></div>
           <div class="album-pagination"><button type="button" class="btn-ghost" id="album-prev" data-action="changeAlbumPage" data-args='[-1]'>← Précédent</button><span id="album-page"></span><button type="button" class="btn-ghost" id="album-next" data-action="changeAlbumPage" data-args='[1]'>Suivant →</button></div>
-          <p class="album-footnote">Une découverte par Pokémon, même si tu le retrouves plusieurs fois. Les victoires identifiables de ton historique sont récupérées. Un abandon ou une simple révélation ne remplit pas l’album.</p>
+          <p class="album-footnote">Une carte par Pokémon. Chaque carte indique son origine : jeu, historique ou rencontre secrète. Un abandon ou une simple révélation ne remplit pas l’album.</p>
         </section>
         <div class="profile-layout">
           <section class="profile-panel">
@@ -424,6 +434,7 @@
           <h3>⚔️ Bilans 1v1 contre tes amis</h3>
           <div id="profile-h2h-records" class="profile-h2h-records"></div>
         </section>
+        <details class="profile-records-panel profile-management"><summary>Gérer ma progression</summary><p>Effacer le profil et les données de jeu sur cet appareil.</p><button class="btn-ghost" type="button" data-action="confirmResetProgression">🗑️ Réinitialiser</button></details>
       </div>
     </div>
     <div id="screen-achievements" class="hidden"> 
@@ -463,7 +474,8 @@
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
-        <p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p>
+        <div class="secret-rune-trail"><p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p><button type="button" class="secret-rune" data-rune="dex" data-action="inspectSecretRune" data-args='["dex"]' aria-label="Examiner la marque étoilée du Pokédex">✧</button></div>
+        <div id="secret-spot-signal" class="secret-spot hidden"></div>
 
         <div class="pokedex-toolbar" id="pokedex-toolbar">
           <div class="pokedex-toolbar-row pokedex-toolbar-row-top">
