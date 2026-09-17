@@ -175,6 +175,7 @@
       </section>
       <div id="home-partner" class="partner-strip" aria-label="Mon aventure"></div>
       <div id="secret-spot-companion" class="secret-spot hidden"></div>
+          <div id="secret-extra-home"></div>
       <nav class="home-explore" aria-label="Explorer l’univers Pokémon">
         <div><strong>Entre deux parties</strong><span>Explore, prépare ton équipe, suis tes progrès.</span></div>
         <button class="btn-ghost" type="button" data-action="openPokedexMode">Pokédex</button>
@@ -346,7 +347,7 @@
         <div class="profile-view-switch" role="group" aria-label="Contenu du profil">
           <button type="button" data-action="switchProfileView" data-args='["trainer"]' aria-pressed="true">Dresseur</button>
           <button type="button" data-action="switchProfileView" data-args='["album"]' aria-pressed="false">Album <span id="album-tab-count">0</span></button>
-          <button type="button" data-action="switchProfileView" data-args='["secrets"]' aria-pressed="false">Secrets <span id="secrets-tab-count">0/3</span></button>
+          <button type="button" data-action="switchProfileView" data-args='["secrets"]' aria-pressed="false">Secrets <span id="secrets-tab-count">0/12</span></button>
         </div>
         <div class="profile-stats-links">
           <button class="btn-ghost" type="button" data-action="openMatchHistoryScreen">📜 Historique des parties</button>
@@ -357,9 +358,11 @@
         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
         <input id="profile-photo-input" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
         <section id="profile-secrets" class="hidden" aria-label="Carnet des secrets">
-          <div class="secrets-intro"><span class="adventure-eyebrow">IL SE PASSE QUELQUE CHOSE ICI</span><h3>Le carnet des secrets</h3><p>Des indices, trois petites missions et des Pokémon cachés dans le site. À toi de les débusquer.</p><small>Ces missions commencent maintenant : tes anciennes parties ne les accomplissent pas à ta place. Rien n’expire.</small></div>
+          <div class="secrets-intro"><span class="adventure-eyebrow">IL SE PASSE QUELQUE CHOSE ICI</span><h3>Le carnet des secrets</h3><p>Douze secrets, des énigmes et des Pokémon cachés dans le site. À toi de les débusquer.</p><small>Ces missions commencent maintenant : tes anciennes parties ne les accomplissent pas à ta place. Rien n’expire.</small></div>
+          <div class="secret-filters" role="group" aria-label="Filtrer les secrets"><button type="button" data-secret-filter="active" data-action="setSecretJournalFilter" data-args='["active"]' aria-pressed="true">À explorer <span>12</span></button><button type="button" data-secret-filter="ready" data-action="setSecretJournalFilter" data-args='["ready"]' aria-pressed="false">À rencontrer <span>0</span></button><button type="button" data-secret-filter="found" data-action="setSecretJournalFilter" data-args='["found"]' aria-pressed="false">Rencontrés <span>0</span></button></div>
           <div id="secret-missions" class="secret-missions"></div>
           <div id="secret-spot-runes" class="secret-spot hidden"></div>
+          <div id="secret-extra-journal"></div>
         </section>
         <div id="profile-secret-rune" class="secret-rune-trail"><span>Un signe familier…</span><button type="button" class="secret-rune" data-rune="profile" data-action="inspectSecretRune" data-args='["profile"]' aria-label="Examiner la marque étoilée du profil">✧</button></div>
         <section id="profile-album" class="hidden" aria-label="Album de découvertes">
@@ -476,6 +479,7 @@
         </div>
         <div class="secret-rune-trail"><p class="card-desc">Explore les Pokémon disponibles et filtre par nom, génération, type ou tri.</p><button type="button" class="secret-rune" data-rune="dex" data-action="inspectSecretRune" data-args='["dex"]' aria-label="Examiner la marque étoilée du Pokédex">✧</button></div>
         <div id="secret-spot-signal" class="secret-spot hidden"></div>
+          <div id="secret-extra-dex"></div>
 
         <div class="pokedex-toolbar" id="pokedex-toolbar">
           <div class="pokedex-toolbar-row pokedex-toolbar-row-top">
