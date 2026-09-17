@@ -9,14 +9,18 @@ function normalizeDiscoveries(raw) {
   for (const [key, entry] of Object.entries(raw)) {
     const id = Number(key), at = Number(entry?.at);
     if (!Number.isInteger(id) || !POKEMON_BY_ID.has(id) || !Number.isFinite(at) || at <= 0) continue;
-    clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal' };
+    clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal', source: ['game', 'history', 'secret'].includes(entry.source) ? entry.source : 'legacy' };
+    if (entry.secrets && typeof entry.secrets === 'object') {
+      clean[id].secrets = Object.fromEntries(Object.entries(entry.secrets).filter(([key, value]) => ['companion', 'signal', 'runes'].includes(key) && Number.isFinite(value) && value > 0).map(([key, value]) => [key, Math.min(value, Date.now())]));
+    }
+    if (Number.isFinite(entry.confirmed?.at) && entry.confirmed.at > 0 && typeof entry.confirmed.mode === 'string') clean[id].confirmed = { at: Math.min(entry.confirmed.at, Date.now()), mode: entry.confirmed.mode.slice(0, 30) };
   }
   return clean;
 }
-function addDiscovery(collection, pokemon, mode, at = Date.now()) {
+function addDiscovery(collection, pokemon, mode, at = Date.now(), source = 'game') {
   const id = Number(pokemon?.id);
   if (!Number.isInteger(id) || !POKEMON_BY_ID.has(id) || collection[id]) return false;
-  collection[id] = { at: Number.isFinite(Number(at)) && Number(at) > 0 ? Math.min(Number(at), Date.now()) : Date.now(), mode: String(mode || 'normal').slice(0, 30) };
+  collection[id] = { at: Number.isFinite(Number(at)) && Number(at) > 0 ? Math.min(Number(at), Date.now()) : Date.now(), mode: String(mode || 'normal').slice(0, 30), source };
   return true;
 }
 function historyDiscovery(entry) {
@@ -41,12 +45,37 @@ function partyDiscovery(room, me) {
 }
 function recordPokemonDiscovery(pokemon, mode, at) {
   playerProfile.discoveries ||= {};
+  if (typeof recordSecretWin === 'function') recordSecretWin(pokemon, mode);
+  const old = playerProfile.discoveries[pokemon?.id];
+  if (old && (!old.source || old.source === 'legacy' || old.source === 'history') && !old.confirmed) {
+    old.confirmed = { at: Date.now(), mode };
+    saveProfile();
+  }
   if (!addDiscovery(playerProfile.discoveries, pokemon, mode, at)) return false;
   saveProfile();
   renderPartner();
-  showToast(`${pokemon.name} rejoint ton album de découvertes !`);
+  showToast(`${pokemon.name} rejoint ton album · ${discoveryModeLabel(mode)}`);
   return true;
 }
+function discoveryModeLabel(mode) {
+  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète' };
+  return labels[mode] || modeLabelFr(mode);
+}
+function discoveryProofHtml(entry) {
+  const source = entry.source || 'legacy';
+  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Rencontre secrète', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
+  const mode = escapeHtml(discoveryModeLabel(entry.mode));
+  const explanations = {
+    game: `Bonne réponse enregistrée en ${mode}.`,
+    history: `Victoire en ${mode}, récupérée automatiquement depuis ton historique. Ce Pokémon n’a pas été rencontré à nouveau lors de l’import.`,
+    legacy: `Mode enregistré : ${mode}. Cette entrée date de l’ancienne version. Elle peut venir de l’historique importé ; l’origine exacte n’avait pas été conservée.`,
+    secret: 'Pokémon accueilli après avoir accompli une mission et découvert sa cachette.'
+  };
+  const confirmed = entry.confirmed ? `<p>Retrouvé en ${escapeHtml(discoveryModeLabel(entry.confirmed.mode))} le ${new Date(entry.confirmed.at).toLocaleDateString('fr-FR')}.</p>` : '';
+  const secrets = Object.entries(entry.secrets || {}).map(([key, at]) => `<p>✦ Mission « ${escapeHtml(({companion:'Une présence familière',signal:'Un drôle de signal',runes:'Les trois marques'})[key] || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`).join('');
+  return `<span class="album-origin">${label}</span><details class="album-proof"><summary>Comment obtenu ?</summary><p>${explanations[source] || explanations.legacy}</p>${confirmed}${secrets}</details>`;
+}
+
 function partnerMilestone(count) {
   const stages = [{ min: 0, name: 'Premiers pas', next: 10 }, { min: 10, name: 'Complices', next: 50 }, { min: 50, name: 'Inséparables', next: 150 }, { min: 150, name: 'Duo légendaire', next: null }];
   const stage = stages.filter(s => count >= s.min).at(-1);
@@ -75,6 +104,7 @@ function choosePartner(id) {
   saveProfile();
   document.getElementById('profile-favorite-input')?.removeAttribute('aria-invalid');
   renderProfileScreen();
+  if (typeof renderSecretMissions === 'function') renderSecretMissions();
   const msg = document.getElementById('profile-save-msg');
   if (msg) { msg.textContent = `${pokemon.name} est ton partenaire. Enregistré !`; msg.classList.remove('hidden'); }
 }
@@ -89,16 +119,19 @@ function openDiscoveryAlbum() {
   document.querySelector('.profile-view-switch')?.scrollIntoView({ block: 'start' });
 }
 function switchProfileView(view) {
-  const album = view === 'album';
-  document.querySelectorAll('.profile-view-switch button').forEach((button, index) => button.setAttribute('aria-pressed', String(album ? index === 1 : index === 0)));
-  document.querySelectorAll('#profile-trainer-card, #screen-profile .profile-stats-links, #screen-profile .profile-layout, #screen-profile .profile-summary-grid, #screen-profile .profile-records-panel').forEach(el => el.classList.toggle('hidden', album));
-  document.getElementById('profile-album')?.classList.toggle('hidden', !album);
-  if (album) renderDiscoveryAlbum();
+  const selected = ['trainer', 'album', 'secrets'].includes(view) ? view : 'trainer';
+  document.querySelectorAll('.profile-view-switch button').forEach(button => button.setAttribute('aria-pressed', String(JSON.parse(button.dataset.args || '[]')[0] === selected)));
+  document.querySelectorAll('#profile-trainer-card, #screen-profile .profile-stats-links, #screen-profile .profile-layout, #screen-profile .profile-summary-grid, #screen-profile .profile-records-panel, #profile-secret-rune').forEach(el => el.classList.toggle('hidden', selected !== 'trainer'));
+  document.getElementById('profile-album')?.classList.toggle('hidden', selected !== 'album');
+  document.getElementById('profile-secrets')?.classList.toggle('hidden', selected !== 'secrets');
+  if (selected === 'album') renderDiscoveryAlbum();
+  if (selected === 'secrets') renderSecretMissions();
 }
+
 function filterAlbum(list, discoveries, query, generation, status) {
   const q = norm(String(query || '').trim().replace(/^#/, ''));
   return list.filter(p => (generation === 'all' || Number(p.gen) === Number(generation)) &&
-    (status === 'all' || (status === 'missing' ? !discoveries[p.id] : Boolean(discoveries[p.id]))) &&
+    (status === 'all' || (status === 'missing' ? !discoveries[p.id] : status === 'secrets' ? Boolean(Object.keys(discoveries[p.id]?.secrets || {}).length) : Boolean(discoveries[p.id]))) &&
     (!q || norm(p.name).includes(q) || String(p.baseId || p.id).padStart(3, '0').includes(q)));
 }
 function renderDiscoveryAlbum() {
@@ -107,6 +140,12 @@ function renderDiscoveryAlbum() {
   const discoveries = playerProfile.discoveries || {};
   const catalogue = getPokemonUiList({ includeAltForms: true });
   const count = Object.keys(discoveries).length;
+  const oldCount = Object.values(discoveries).filter(e => !e.source || ['history', 'legacy'].includes(e.source)).length;
+  const note = document.getElementById('album-origin-note');
+  if (note) {
+    note.classList.toggle('hidden', !oldCount);
+    note.textContent = `${oldCount} ancienne(s) entrée(s) : l’album a pu récupérer tes victoires passées. Ouvre « Comment obtenu ? » sur une carte. Lorsque l’origine n’avait pas été enregistrée, nous le précisons.`;
+  }
   const total = document.getElementById('album-total');
   total.innerHTML = `<strong>${count}<small> / ${catalogue.length}</small></strong><span>Pokémon découverts</span><progress value="${count}" max="${catalogue.length}" aria-label="Pokémon découverts"></progress>`;
   const genSelect = document.getElementById('album-generation');
@@ -124,7 +163,7 @@ function renderDiscoveryAlbum() {
   document.getElementById('album-results-label').textContent = `${list.length} Pokémon ${list.length === 1 ? 'affiché' : 'affichés'}`;
   grid.innerHTML = list.slice((albumPage - 1) * ALBUM_PAGE_SIZE, albumPage * ALBUM_PAGE_SIZE).map(p => {
     const entry = discoveries[p.id];
-    return `<article class="album-card ${entry ? 'is-found' : 'is-missing'}"><div class="album-card-meta"><span>#${String(p.baseId || p.id).padStart(3, '0')}</span><span>${entry ? '✓ Trouvé' : 'À découvrir'}</span></div>${entry ? partnerImage(p) : '<span class="album-unknown" aria-hidden="true">?</span>'}<h4>${escapeHtml(p.name)}</h4><span class="album-form">${p.isAltForm ? 'Forme alternative' : 'Génération ' + p.gen}</span>${entry ? '<small class="album-date">Trouvé le ' + new Date(entry.at).toLocaleDateString('fr-FR') + '</small><button type="button" class="btn-ghost" data-action="choosePartner" data-args="[' + p.id + ']" aria-label="Choisir ' + escapeHtml(p.name) + ' comme partenaire"' + (playerProfile.favoritePokemonId === p.id ? ' disabled' : '') + '>' + (playerProfile.favoritePokemonId === p.id ? 'Ton partenaire ✓' : 'Choisir comme partenaire') + '</button>' : '<span class="album-date">Un prochain mystère…</span>'}</article>`;
+    return `<article class="album-card ${entry ? 'is-found' : 'is-missing'}"><div class="album-card-meta"><span>#${String(p.baseId || p.id).padStart(3, '0')}</span><span>${entry ? '✓ Trouvé' : 'À découvrir'}</span></div>${entry ? partnerImage(p) : '<span class="album-unknown" aria-hidden="true">?</span>'}<h4>${escapeHtml(p.name)}</h4><span class="album-form">${p.isAltForm ? 'Forme alternative' : 'Génération ' + p.gen}</span>${entry ? '<small class="album-date">Trouvé le ' + new Date(entry.at).toLocaleDateString('fr-FR') + '</small>' + discoveryProofHtml(entry) + '<button type="button" class="btn-ghost" data-action="choosePartner" data-args="[' + p.id + ']" aria-label="Choisir ' + escapeHtml(p.name) + ' comme partenaire"' + (playerProfile.favoritePokemonId === p.id ? ' disabled' : '') + '>' + (playerProfile.favoritePokemonId === p.id ? 'Ton partenaire ✓' : 'Choisir comme partenaire') + '</button>' : '<span class="album-date">Un prochain mystère…</span>'}</article>`;
   }).join('') || '<div class="album-empty"><span aria-hidden="true">✦</span><h4>' + (count ? 'Aucune découverte avec ces filtres' : 'La première page t’attend') + '</h4><p>' + (count ? 'Essaie une autre génération ou affiche tout l’album.' : 'Trouve un Pokémon dans un jeu de devinette : sa carte apparaîtra ici.') + '</p><button type="button" class="btn-blue" data-action="' + (count ? 'resetAlbumFilters' : 'startNormalGame') + '">' + (count ? 'Réinitialiser les filtres' : 'Jouer en illimité →') + '</button></div>';
   document.getElementById('album-page').textContent = `${albumPage} / ${pages}`;
   document.getElementById('album-prev').disabled = albumPage === 1;
@@ -161,7 +200,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Oldest first preserves the earliest known win; losses and score-only records do not qualify.
   for (const entry of [...matchHistory].sort((a, b) => Number(a.at) - Number(b.at))) {
     const pokemon = historyDiscovery(entry);
-    if (pokemon) migrated = addDiscovery(playerProfile.discoveries, pokemon, entry.mode, entry.at) || migrated;
+    if (pokemon) migrated = addDiscovery(playerProfile.discoveries, pokemon, entry.mode, entry.at, 'history') || migrated;
   }
   if (migrated) saveProfile();
   for (const id of ['album-search', 'album-generation', 'album-status']) document.getElementById(id)?.addEventListener(id === 'album-search' ? 'input' : 'change', () => { albumPage = 1; renderDiscoveryAlbum(); });

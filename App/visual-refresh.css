@@ -643,3 +643,112 @@
 #pokdle-app.design-refresh .multiplayer-results-table .poke-cell { color: var(--ui-ink) !important; font-size: .9rem; line-height: 1.4; }
 #pokdle-app.design-refresh #try-count { color: inherit !important; }
 #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) :is(.arrow-up, .arrow-down) { color: inherit !important; }
+
+/* Secrets: a small field journal, with quiet hints outside active games. */
+#pokdle-app.design-refresh #secrets-tab-count { color: var(--ui-muted); font-size: .72rem; margin-left: 4px; }
+#pokdle-app.design-refresh .album-origin-note { padding: 12px 16px; border-left: 3px solid var(--ui-accent); border-radius: 8px; color: var(--ui-muted); background: var(--ui-accent-soft); font-size: .8rem; line-height: 1.65; margin: 16px 0; }
+#pokdle-app.design-refresh .album-origin { color: var(--ui-accent); font-size: .69rem; font-weight: 750; margin-top: 8px; text-align: center; }
+#pokdle-app.design-refresh .album-proof { width: 100%; font-size: .75rem; color: var(--ui-muted); }
+#pokdle-app.design-refresh .album-proof summary { min-height: 44px; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; color: var(--ui-ink); font-weight: 700; }
+#pokdle-app.design-refresh .album-proof summary::before { content: '+'; margin-right: 6px; color: var(--ui-accent); }
+#pokdle-app.design-refresh .album-proof[open] summary::before { content: '−'; }
+#pokdle-app.design-refresh .album-proof p { padding: 8px; background: var(--ui-soft); border-radius: 8px; line-height: 1.65; margin-bottom: 6px; }
+#pokdle-app.design-refresh .album-secret-link { display: block; width: 100%; min-height: 48px; text-align: left; margin: 14px 0; padding: 12px 16px; background: var(--ui-soft); color: var(--ui-accent); border: 1px solid var(--ui-line); border-radius: 12px; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; line-height: 1.6; }
+#pokdle-app.design-refresh .secrets-intro { padding: 28px; border-radius: 20px; background: radial-gradient(ellipse at top right, var(--ui-accent-soft), var(--ui-surface) 75%); border: 1px solid var(--ui-line); }
+#pokdle-app.design-refresh .secrets-intro h3 { color: var(--ui-ink); font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -.04em; margin: 10px 0; }
+#pokdle-app.design-refresh .secrets-intro p { color: var(--ui-ink); font-size: .95rem; line-height: 1.6; max-width: 640px; }
+#pokdle-app.design-refresh .secrets-intro > small { display: block; color: var(--ui-muted); font-size: .78rem; margin-top: 14px; line-height: 1.6; }
+#pokdle-app.design-refresh .secret-missions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 22px 0; }
+#pokdle-app.design-refresh .secret-mission { display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--ui-line); background: var(--ui-surface); border-radius: 18px; padding: 20px; min-width: 0; }
+#pokdle-app.design-refresh .secret-mission.is-ready { border-color: var(--ui-accent); box-shadow: 0 0 0 3px var(--ui-accent-soft); }
+#pokdle-app.design-refresh .secret-mission.is-complete { background: linear-gradient(140deg, var(--ui-accent-soft), var(--ui-surface)); }
+#pokdle-app.design-refresh .secret-mission-top { display: flex; align-items: center; gap: 8px; color: var(--ui-accent); }
+#pokdle-app.design-refresh .secret-mission-icon { display: grid; place-items: center; flex: 0 0 36px; height: 36px; border-radius: 10px; background: var(--ui-accent-soft); font-size: 1.6rem; }
+#pokdle-app.design-refresh .secret-mission-top > span:nth-child(2) { font-size: .62rem; font-weight: 850; letter-spacing: .06em; flex: 1; }
+#pokdle-app.design-refresh .secret-mission-top b { font-size: .8rem; white-space: nowrap; }
+#pokdle-app.design-refresh .secret-mission h4 { color: var(--ui-ink); font-size: 1.05rem; margin: 4px 0 0; }
+#pokdle-app.design-refresh .secret-mission > p, #pokdle-app.design-refresh .secret-hint { color: var(--ui-muted); font-size: .83rem; line-height: 1.65; }
+#pokdle-app.design-refresh .secret-mission progress { display: block; width: 100%; height: 6px; accent-color: var(--ui-accent); border: 0; border-radius: 6px; overflow: hidden; background: var(--ui-soft); }
+#pokdle-app.design-refresh .secret-hint summary { min-height: 44px; padding: 10px 0; color: var(--ui-ink); font-weight: 700; cursor: pointer; }
+#pokdle-app.design-refresh .secret-hint ul { padding-left: 0; list-style: none; margin: 10px 0; color: var(--ui-ink); }
+#pokdle-app.design-refresh .secret-hint small { display: block; margin-top: 8px; }
+#pokdle-app.design-refresh .secret-mission-bottom { display: grid; gap: 10px; border-top: 1px solid var(--ui-line); padding-top: 14px; margin-top: auto; }
+#pokdle-app.design-refresh .secret-mission-bottom small { color: var(--ui-muted); font-size: .75rem; }
+#pokdle-app.design-refresh .secret-mission-bottom button { min-height: 44px; white-space: normal; }
+#pokdle-app.design-refresh .secret-found { display: grid; place-items: center; gap: 6px; }
+#pokdle-app.design-refresh .secret-found img { width: 80px; height: 80px; object-fit: contain; }
+#pokdle-app.design-refresh .secret-found strong { color: var(--ui-ink); }
+#pokdle-app.design-refresh .secret-found small { color: var(--ui-muted); font-size: .73rem; }
+#pokdle-app.design-refresh .secret-rune-trail { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 0; }
+#pokdle-app.design-refresh .secret-rune-trail > span { color: var(--ui-muted); font-size: .78rem; }
+#pokdle-app.design-refresh .secret-rune-trail p { margin: 0; }
+#pokdle-app.design-refresh .secret-rune { flex: 0 0 44px; width: 44px; min-height: 44px; padding: 0; border: 1px dashed var(--ui-line); border-radius: 50%; color: var(--ui-muted); background: transparent; font-size: 1.5rem; cursor: pointer; touch-action: manipulation; }
+#pokdle-app.design-refresh .secret-rune.is-found { color: var(--ui-accent); background: var(--ui-accent-soft); border-style: solid; }
+#pokdle-app.design-refresh .secret-rune:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+#pokdle-app.design-refresh .secret-spot { margin: 12px 0; }
+#pokdle-app.design-refresh .secret-encounter { width: 100%; display: flex; gap: 18px; align-items: center; padding: 20px; text-align: left; border: 1px solid var(--ui-accent); border-radius: 18px; background: linear-gradient(125deg, var(--ui-accent-soft), var(--ui-surface)); color: var(--ui-ink); font: inherit; cursor: pointer; }
+#pokdle-app.design-refresh .secret-shadow { flex: 0 0 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: var(--ui-accent); background: var(--ui-surface); border: 1px dashed var(--ui-accent); font-size: 2rem; }
+#pokdle-app.design-refresh .secret-encounter > span:last-child { display: grid; gap: 7px; }
+#pokdle-app.design-refresh .secret-encounter small { color: var(--ui-accent); font-size: .65rem; letter-spacing: .08em; font-weight: 850; }
+#pokdle-app.design-refresh .secret-encounter strong { color: var(--ui-ink); font-size: 1rem; }
+#pokdle-app.design-refresh .secret-encounter span span { color: var(--ui-muted); font-size: .8rem; }
+#pokdle-app.design-refresh :is(.secret-reveal, .secret-rune-reveal) { text-align: center; padding: 16px 4px; }
+#pokdle-app.design-refresh :is(.secret-reveal, .secret-rune-reveal) h4 { font-size: 1.35rem; color: var(--ui-ink); margin: 12px 0; }
+#pokdle-app.design-refresh :is(.secret-reveal, .secret-rune-reveal) p { font-size: .9rem; color: var(--ui-muted); line-height: 1.7; margin-bottom: 22px; }
+#pokdle-app.design-refresh :is(.secret-reveal, .secret-rune-reveal) button { white-space: normal; min-height: 48px; }
+#pokdle-app.design-refresh .secret-reveal-sprite { width: 160px; height: 160px; margin: 22px auto; display: grid; place-items: center; border: 1px solid var(--ui-line); border-radius: 50%; background: radial-gradient(circle, var(--ui-accent-soft), transparent 70%); }
+#pokdle-app.design-refresh .secret-reveal-sprite img { width: 130px; height: 130px; object-fit: contain; filter: drop-shadow(0 8px 8px #17325233); }
+#pokdle-app.design-refresh .secret-rune-reveal > span { display: block; color: var(--ui-accent); font-size: 4rem; }
+/* Account avatar is a real keyboard-accessible button, including at phone widths. */
+#pokdle-app.design-refresh .account-profile { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ui-line); background: var(--ui-surface); color: var(--ui-ink); border-radius: 12px; padding: 5px 10px 5px 5px; font: inherit; cursor: pointer; }
+#pokdle-app.design-refresh .account-profile .account-name { color: var(--ui-ink); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pokdle-app.design-refresh .account-profile:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+#pokdle-app.design-refresh .account-avatar-fallback { display: grid; place-items: center; color: var(--ui-accent); background: var(--ui-accent-soft); font-weight: 850; }
+#pokdle-app.design-refresh .account-menu { display: grid; gap: 12px; padding: 10px 0; }
+#pokdle-app.design-refresh .account-menu h4 { font-size: 1.3rem; color: var(--ui-ink); overflow-wrap: anywhere; margin-bottom: 8px; }
+#pokdle-app.design-refresh .account-menu button { min-height: 48px; justify-content: space-between; }
+#pokdle-app.design-refresh .account-menu-logout { color: var(--ui-muted); min-height: 44px; display: flex; align-items: center; justify-content: center; margin-top: 8px; border-top: 1px solid var(--ui-line); padding-top: 12px; text-decoration: underline; font-size: .85rem; }
+@media (max-width: 760px) {
+  #pokdle-app.design-refresh .secret-missions { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  #pokdle-app.design-refresh .secret-mission { padding: 18px; }
+  #pokdle-app.design-refresh .secrets-intro { padding: 20px; }
+}
+@media (max-width: 640px) {
+  #pokdle-app.design-refresh .profile-view-switch { gap: 2px; padding: 4px; }
+  #pokdle-app.design-refresh .profile-view-switch button { font-size: .78rem; padding: 10px 4px; }
+  #pokdle-app.design-refresh .account-profile { width: 44px; height: 44px; padding: 5px; justify-content: center; }
+  #pokdle-app.design-refresh .account-chevron { display: none; }
+  #pokdle-app.design-refresh .secret-encounter { padding: 16px; gap: 12px; }
+}
+/* Motion has a purpose: entering a view, responding to a hover, discovering a presence. */
+@keyframes adventure-arrive { from { opacity: .4; } to { opacity: 1; } }
+@keyframes companion-breathe { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(-3deg); } }
+@keyframes secret-arrive { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes secret-glow { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 6px var(--ui-accent-soft); } }
+@keyframes encounter-reveal { from { opacity: 0; transform: translateY(18px) scale(.8); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  #pokdle-app.design-refresh:not(.reduce-motion) [id^="screen-"]:not(.hidden) { animation: adventure-arrive .22s ease-out; }
+  #pokdle-app.design-refresh:not(.reduce-motion) :is(.partner-strip > img, .partner-card > img) { animation: companion-breathe 3s ease-in-out 3; }
+  #pokdle-app.design-refresh:not(.reduce-motion) :is(.album-card, .secret-mission) { animation: secret-arrive .24s ease-out; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .secret-spot:not(.hidden) { animation: secret-arrive .4s ease-out; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .secret-encounter { animation: secret-glow 2s ease-in-out 3; }
+  #pokdle-app.design-refresh:not(.reduce-motion) :is(.secret-reveal-sprite, .secret-rune-reveal > span) { animation: encounter-reveal .5s cubic-bezier(.2,.8,.2,1); }
+  #pokdle-app.design-refresh:not(.reduce-motion) .secret-rune { transition: transform .25s ease, background .25s ease; }
+  #pokdle-app.design-refresh:not(.reduce-motion) :is(.home-path, .club-pick, .all-modes-card, .account-profile) { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  @media (hover: hover) {
+    #pokdle-app.design-refresh:not(.reduce-motion) :is(.album-card, .secret-mission, .home-path, .club-pick, .all-modes-card):hover { transform: translateY(-3px); border-color: var(--ui-accent); box-shadow: 0 10px 24px #10243e14; }
+    #pokdle-app.design-refresh:not(.reduce-motion) .secret-rune:hover { transform: rotate(45deg); color: var(--ui-accent); }
+    #pokdle-app.design-refresh:not(.reduce-motion) .account-profile:hover { transform: translateY(-2px); }
+  }
+}
+/* Honor the in-app switch even when it is changed while a reveal is animating. */
+#pokdle-app.design-refresh.reduce-motion :is(.album-card, .secret-mission, .secret-spot, .secret-encounter, .secret-reveal-sprite, .secret-rune-reveal > span, .partner-strip > img, .partner-card > img, [id^="screen-"]) { animation: none !important; transition: none !important; }
+#pokdle-app.design-refresh .profile-management { margin-top: 20px; border-top: 1px solid var(--ui-line); padding-top: 12px; color: var(--ui-muted); font-size: .8rem; }
+#pokdle-app.design-refresh .profile-management summary { cursor: pointer; padding: 12px 0; min-height: 44px; }
+#pokdle-app.design-refresh .profile-management p { margin: 8px 0 12px; }
+@media (max-width: 640px) {
+  #pokdle-app.design-refresh #screen-profile .ranking-head { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; gap: 8px; padding: 12px !important; }
+  #pokdle-app.design-refresh #screen-profile .ranking-head .card-title { font-size: 1.1rem !important; margin: 0; }
+  #pokdle-app.design-refresh #screen-profile .ranking-head-actions { width: auto !important; margin: 0 !important; }
+  #pokdle-app.design-refresh #screen-profile .ranking-head-actions button { width: auto !important; min-height: 44px; padding: 8px 10px !important; font-size: .8rem; }
+}

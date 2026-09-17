@@ -5118,6 +5118,7 @@ function createPokedexCard(p) {
   `;
 
   card.addEventListener("click", () => {
+    trackSecretDexVisit(p);
     pokedexSelectedId = p.id;
     pokedexSelectedShiny = false;
     updatePokedexGridSelection();
@@ -5308,6 +5309,7 @@ function openPokedexRecent(pokemonId) {
   const id = Number(pokemonId);
   const pokemon = Number.isInteger(id) ? POKEMON_BY_ID.get(id) : null;
   if (!pokemon) return;
+  trackSecretDexVisit(pokemon);
   pokedexSelectedId = id;
   pokedexSelectedShiny = false;
   updatePokedexGridSelection();
@@ -5353,6 +5355,7 @@ function navigatePokedexDetail(direction) {
   if (currentIndex < 0) return;
   const target = direction === "prev" ? previous : next;
   if (!target) return;
+  trackSecretDexVisit(target);
   pokedexSelectedId = target.id;
   pokedexSelectedShiny = false;
   updatePokedexGridSelection();
