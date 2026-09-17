@@ -11,7 +11,7 @@ function normalizeDiscoveries(raw) {
     if (!Number.isInteger(id) || !POKEMON_BY_ID.has(id) || !Number.isFinite(at) || at <= 0) continue;
     clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal', source: ['game', 'history', 'secret'].includes(entry.source) ? entry.source : 'legacy' };
     if (entry.secrets && typeof entry.secrets === 'object') {
-      clean[id].secrets = Object.fromEntries(Object.entries(entry.secrets).filter(([key, value]) => ['companion', 'signal', 'runes'].includes(key) && Number.isFinite(value) && value > 0).map(([key, value]) => [key, Math.min(value, Date.now())]));
+      clean[id].secrets = Object.fromEntries(Object.entries(entry.secrets).filter(([key, value]) => (typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.some(m => m.id === key) : ['companion', 'signal', 'runes'].includes(key)) && Number.isFinite(value) && value > 0).map(([key, value]) => [key, Math.min(value, Date.now())]));
     }
     if (Number.isFinite(entry.confirmed?.at) && entry.confirmed.at > 0 && typeof entry.confirmed.mode === 'string') clean[id].confirmed = { at: Math.min(entry.confirmed.at, Date.now()), mode: entry.confirmed.mode.slice(0, 30) };
   }
@@ -72,7 +72,7 @@ function discoveryProofHtml(entry) {
     secret: 'Pokémon accueilli après avoir accompli une mission et découvert sa cachette.'
   };
   const confirmed = entry.confirmed ? `<p>Retrouvé en ${escapeHtml(discoveryModeLabel(entry.confirmed.mode))} le ${new Date(entry.confirmed.at).toLocaleDateString('fr-FR')}.</p>` : '';
-  const secrets = Object.entries(entry.secrets || {}).map(([key, at]) => `<p>✦ Mission « ${escapeHtml(({companion:'Une présence familière',signal:'Un drôle de signal',runes:'Les trois marques'})[key] || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`).join('');
+  const secrets = Object.entries(entry.secrets || {}).map(([key, at]) => `<p>✦ Mission « ${escapeHtml((typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.find(m => m.id === key)?.title : ({companion:'Une présence familière',signal:'Un drôle de signal',runes:'Les trois marques'})[key]) || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`).join('');
   return `<span class="album-origin">${label}</span><details class="album-proof"><summary>Comment obtenu ?</summary><p>${explanations[source] || explanations.legacy}</p>${confirmed}${secrets}</details>`;
 }
 

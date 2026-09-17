@@ -752,3 +752,76 @@
   #pokdle-app.design-refresh #screen-profile .ranking-head-actions { width: auto !important; margin: 0 !important; }
   #pokdle-app.design-refresh #screen-profile .ranking-head-actions button { width: auto !important; min-height: 44px; padding: 8px 10px !important; font-size: .8rem; }
 }
+
+/* Secret journal: progressive discovery without revealing the rewards. */
+#pokdle-app.design-refresh .secret-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+#pokdle-app.design-refresh .secret-filters button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface); color: var(--ui-muted); font: inherit; font-size: .8rem; cursor: pointer; }
+#pokdle-app.design-refresh .secret-filters button[aria-pressed="true"] { color: var(--ui-accent); background: var(--ui-accent-soft); border-color: var(--ui-accent); font-weight: 800; }
+#pokdle-app.design-refresh .secret-filters button span { font-size: .7rem; font-variant-numeric: tabular-nums; }
+#pokdle-app.design-refresh .secret-empty { grid-column: 1 / -1; color: var(--ui-muted); padding: 28px; border: 1px dashed var(--ui-line); border-radius: 16px; line-height: 1.7; }
+#pokdle-app.design-refresh .secret-replay { min-height: 44px; border: 0; background: transparent; color: var(--ui-accent); font: inherit; font-size: .78rem; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+#pokdle-app.design-refresh .secret-puzzle { text-align: center; padding: 12px 0; }
+#pokdle-app.design-refresh .secret-puzzle p { color: var(--ui-muted); line-height: 1.8; margin: 20px auto; max-width: 360px; }
+#pokdle-app.design-refresh .secret-puzzle-keys { display: flex; justify-content: center; gap: 12px; }
+#pokdle-app.design-refresh .secret-puzzle-keys button { display: grid; gap: 8px; place-items: center; padding: 16px; min-width: 70px; border: 1px solid var(--ui-line); border-radius: 16px; background: var(--ui-accent-soft); color: var(--ui-ink); font: inherit; font-size: .8rem; cursor: pointer; }
+#pokdle-app.design-refresh .secret-puzzle-keys button span { font-size: 2rem; color: var(--ui-accent); }
+#pokdle-app.design-refresh :is(.secret-puzzle-keys button, .secret-filters button, .secret-replay):focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+/* A contained illustration-led reveal, themed like the rest of the app. */
+#pokdle-app.design-refresh #overlay-modal:has(.encounter-scene) .overlay-card { width: min(540px, calc(100vw - 24px)); max-width: 540px; max-height: min(900px, calc(100dvh - 32px)); padding: 0; overflow: hidden; border: 1px solid var(--ui-line); border-radius: 24px; background: var(--ui-surface); box-shadow: 0 28px 100px #10243e40; }
+#pokdle-app.design-refresh #overlay-modal:has(.encounter-scene) .overlay-card::before { display: none; }
+#pokdle-app.design-refresh #overlay-modal:has(.encounter-scene) .overlay-head { padding: 16px 22px 0; margin: 0; border: 0; }
+#pokdle-app.design-refresh #overlay-modal:has(.encounter-scene) #overlay-title { font-size: .85rem; color: var(--ui-muted); font-weight: 600; }
+#pokdle-app.design-refresh #overlay-modal:has(.encounter-scene) #overlay-body { padding: 0; }
+#pokdle-app.design-refresh .encounter-scene { --encounter-tint: #7b69e0; text-align: center; padding: 18px 28px 26px; background: radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--encounter-tint) 12%, transparent), transparent 64%); }
+#pokdle-app.design-refresh .encounter-scene[data-encounter="signal"], #pokdle-app.design-refresh .encounter-scene[data-encounter="melody"] { --encounter-tint: #c99724; }
+#pokdle-app.design-refresh .encounter-scene[data-encounter="regions"], #pokdle-app.design-refresh .encounter-scene[data-encounter="starters"] { --encounter-tint: #329983; }
+#pokdle-app.design-refresh .encounter-scene[data-encounter="dragons"] { --encounter-tint: #438dce; }
+#pokdle-app.design-refresh .encounter-chapter { display: flex; justify-content: space-between; gap: 12px; font-size: .59rem; font-weight: 750; letter-spacing: .12em; color: var(--ui-muted); text-align: left; }
+#pokdle-app.design-refresh .encounter-chapter span:last-child { white-space: nowrap; }
+#pokdle-app.design-refresh .encounter-stage { position: relative; display: grid; place-items: center; isolation: isolate; width: min(100%, 320px); height: 280px; margin: 4px auto 12px; }
+#pokdle-app.design-refresh .encounter-stage::before { content: ''; position: absolute; inset: 16% 13%; border-radius: 50%; z-index: -1; background: radial-gradient(circle, color-mix(in srgb, var(--encounter-tint) 20%, var(--ui-surface)), transparent 72%); }
+#pokdle-app.design-refresh .encounter-stage::after { content: ''; position: absolute; bottom: 18px; width: 140px; height: 14px; background: var(--encounter-tint); opacity: .13; filter: blur(10px); border-radius: 50%; z-index: -1; }
+#pokdle-app.design-refresh .encounter-orbit { position: absolute; width: 230px; height: 230px; max-width: 85%; border: 1px solid color-mix(in srgb, var(--encounter-tint) 24%, transparent); border-radius: 50%; z-index: -1; }
+#pokdle-app.design-refresh .encounter-orbit::after { content: ''; position: absolute; inset: 13px; border: 1px dashed color-mix(in srgb, var(--encounter-tint) 17%, transparent); border-radius: inherit; }
+#pokdle-app.design-refresh .encounter-art { display: block; width: 260px; height: 260px; max-width: 95%; object-fit: contain; image-rendering: auto; filter: drop-shadow(0 14px 12px #10243e20); }
+#pokdle-app.design-refresh .encounter-seal { position: absolute; right: 24px; bottom: 18px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ui-surface); border: 1px solid var(--ui-line); box-shadow: 0 6px 20px #10243e12; color: var(--ui-accent); font-size: 1.25rem; }
+#pokdle-app.design-refresh .encounter-kicker { display: block; color: var(--ui-accent); font-size: .65rem; font-weight: 850; letter-spacing: .16em; }
+#pokdle-app.design-refresh .encounter-copy h4 { margin: 8px 0; color: var(--ui-ink); font-size: clamp(1.9rem, 6vw, 2.6rem); line-height: 1.15; letter-spacing: -.04em; }
+#pokdle-app.design-refresh .encounter-number { display: block; color: var(--ui-muted); font-size: .73rem; line-height: 1.6; }
+#pokdle-app.design-refresh .encounter-copy p { color: var(--ui-muted); font-size: .87rem; line-height: 1.7; max-width: 355px; margin: 16px auto 20px; }
+#pokdle-app.design-refresh .encounter-actions { display: grid; gap: 10px; }
+#pokdle-app.design-refresh .encounter-actions button { width: 100%; min-height: 48px; white-space: normal; justify-content: center; font-size: .9rem; line-height: 1.5; }
+#pokdle-app.design-refresh .encounter-actions small { font-size: .7rem; line-height: 1.6; color: var(--ui-muted); }
+#pokdle-app.design-refresh .encounter-saved { color: var(--ui-accent); font-size: .8rem; font-weight: 700; margin: 0 0 2px; }
+#pokdle-app.design-refresh .encounter-sparks { position: absolute; inset: 0; pointer-events: none; }
+#pokdle-app.design-refresh .encounter-sparks i { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; border-radius: 2px; background: var(--encounter-tint); opacity: .5; transform: rotate(var(--angle)) translateY(-125px) rotate(45deg); }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(1) { --angle: 15deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(2) { --angle: 60deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(3) { --angle: 105deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(4) { --angle: 150deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(5) { --angle: 195deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(6) { --angle: 240deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(7) { --angle: 285deg; }
+#pokdle-app.design-refresh .encounter-sparks i:nth-child(8) { --angle: 330deg; }
+@keyframes encounter-illustration { 0% { opacity: 0; transform: translateY(14px) scale(.84); filter: brightness(0) drop-shadow(0 0 18px #7b69e040); } 32% { opacity: 1; filter: brightness(0) drop-shadow(0 0 18px #7b69e040); } 75% { transform: translateY(-4px) scale(1.025); } 100% { opacity: 1; transform: none; filter: drop-shadow(0 14px 12px #10243e20); } }
+@keyframes encounter-ring { from { opacity: 0; transform: scale(.65) rotate(-30deg); } to { opacity: 1; transform: none; } }
+@keyframes encounter-particles { 0% { opacity: 0; transform: rotate(var(--angle)) translateY(-65px) rotate(45deg) scale(0); } 45% { opacity: .8; } 100% { opacity: .5; transform: rotate(var(--angle)) translateY(-125px) rotate(45deg) scale(1); } }
+@keyframes encounter-saved { 0% { transform: scale(.95); } 60% { transform: scale(1.03); } 100% { transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  #pokdle-app.design-refresh:not(.reduce-motion) .is-revealing .encounter-art { animation: encounter-illustration 1.3s cubic-bezier(.18,.7,.25,1) both; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .is-revealing .encounter-orbit { animation: encounter-ring 1.1s ease-out both; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .is-revealing :is(.encounter-copy, .encounter-actions) { animation: secret-arrive .5s .75s both; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .encounter-sparks i { animation: encounter-particles 1.5s .2s both; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .is-collected:not(.is-replaying) :is(.encounter-art, .encounter-seal) { animation: encounter-saved .6s ease-out; }
+  #pokdle-app.design-refresh:not(.reduce-motion) .is-collected .encounter-actions { animation: secret-arrive .4s ease-out; }
+}
+#pokdle-app.design-refresh.reduce-motion .encounter-scene * { animation: none !important; transition: none !important; }
+@media (max-width: 480px), (max-height: 740px) {
+  #pokdle-app.design-refresh .encounter-scene { padding: 14px 20px 20px; }
+  #pokdle-app.design-refresh .encounter-stage { height: 220px; margin-bottom: 6px; }
+  #pokdle-app.design-refresh .encounter-art { width: 210px; height: 210px; }
+  #pokdle-app.design-refresh .encounter-orbit { width: 185px; height: 185px; }
+  #pokdle-app.design-refresh .encounter-sparks { transform: scale(.8); }
+  #pokdle-app.design-refresh .encounter-copy p { margin: 12px auto 16px; }
+  #pokdle-app.design-refresh .encounter-chapter { font-size: .53rem; letter-spacing: .06em; }
+}
