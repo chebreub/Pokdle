@@ -1174,6 +1174,7 @@ function loadProfile() {
   playerProfile = {
     nickname: typeof parsed?.nickname === "string" ? parsed.nickname : "",
     favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
+    discoveries: normalizeDiscoveries(parsed?.discoveries),
     avatarPhoto: typeof parsed?.avatarPhoto === "string" ? parsed.avatarPhoto : "",
     // Engagement system
     xp: Number(parsed?.xp) || 0,
@@ -1316,6 +1317,7 @@ function recordMatchHistory(entry) {
   });
   matchHistory = matchHistory.slice(0, 120);
   saveMatchHistory();
+  discoverFromHistory(matchHistory[0]);
 }
 
 function renderProfileScreen() {
@@ -1324,7 +1326,6 @@ function renderProfileScreen() {
   const favoriteInput = document.getElementById("profile-favorite-input");
   const datalist = document.getElementById("profile-favorite-options");
   const saveMsg = document.getElementById("profile-save-msg");
-  const favoriteCard = document.getElementById("profile-favorite-card");
   const levelName = document.getElementById("profile-level-name");
   const levelXp = document.getElementById("profile-level-xp");
   const levelBar = document.getElementById("profile-level-bar");
@@ -1360,15 +1361,8 @@ function renderProfileScreen() {
   if (currentStreak) currentStreak.textContent = String(playerStats.dailyCurrentStreak || 0);
   if (bestStreak) bestStreak.textContent = String(playerStats.dailyBestStreak || 0);
 
-  if (favoriteCard) {
-    favoriteCard.innerHTML = "";
-    const favorite = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
-    if (favorite) {
-      favoriteCard.innerHTML = `<div class="pokemon-mini-card"><img src="${getPokemonSprite(favorite)}" alt="${escapeHtml(favorite.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(favorite))}" /><strong>${escapeHtml(favorite.name)}</strong><div class="pokemon-card-types">${typeBadgesHtml(favorite.type1, favorite.type2)}</div></div>`;
-    } else {
-      favoriteCard.innerHTML = '<p class="card-desc">Choisis un Pokémon favori pour l’afficher ici.</p>';
-    }
-  }
+  renderPartner();
+  renderDiscoveryAlbum();
   const trainerCard = document.getElementById("profile-trainer-card");
   if (trainerCard) {
     const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
@@ -3591,33 +3585,34 @@ function buildMultiplayerComparisonRowHtml(entry) {
   const heightArrow = entry.heightArrow || "";
   const weightArrow = entry.weightArrow || "";
 
-  return `
-    <td>
+  const rowHtml = `
+    <td data-label="Pokémon">
       <div class="poke-cell">
         <img src="${entry.sprite || getPokemonSprite(entry)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${fallbackSprite}" />
         ${escapeHtml(entry.name)}
       </div>
     </td>
-    <td class="${cls(cmp.generation)}">Gen ${entry.gen}</td>
-    <td class="${cls(cmp.altForm)}">${entry.isAltForm ? "Oui" : "Non"}</td>
-    <td class="${cls(cmp.type1)}">${escapeHtml(entry.type1 || "Aucun")}</td>
-    <td class="${cls(cmp.type2)}">${escapeHtml(entry.type2 || "Aucun")}</td>
-    <td class="${cls(cmp.habitat)}">${escapeHtml(entry.habitat || "Inconnu")}</td>
-    <td class="${cls(cmp.color)}">${escapeHtml(formatColorLabel(entry.color || "Inconnu"))}</td>
-    <td class="${cls(cmp.stage)}">${entry.stage ?? "—"}</td>
-    <td class="${cls(cmp.height)}">
+    <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${entry.gen}</td>
+    <td data-label="Forme" class="${cls(cmp.altForm)}">${entry.isAltForm ? "Oui" : "Non"}</td>
+    <td data-label="Type 1" class="${cls(cmp.type1)}">${escapeHtml(entry.type1 || "Aucun")}</td>
+    <td data-label="Type 2" class="${cls(cmp.type2)}">${escapeHtml(entry.type2 || "Aucun")}</td>
+    <td data-label="Habitat" class="${cls(cmp.habitat)}">${escapeHtml(entry.habitat || "Inconnu")}</td>
+    <td data-label="Couleur" class="${cls(cmp.color)}">${escapeHtml(formatColorLabel(entry.color || "Inconnu"))}</td>
+    <td data-label="Stade" class="${cls(cmp.stage)}">${entry.stage ?? "—"}</td>
+    <td data-label="Hauteur" class="${cls(cmp.height)}">
       <div class="cell-num">
         ${entry.height}m
         ${cmp.height !== "ok" && heightArrow ? `<span class="${heightArrow === "↑" ? "arrow-up" : "arrow-down"}">${heightArrow}</span>` : ""}
       </div>
     </td>
-    <td class="${cls(cmp.weight)}">
+    <td data-label="Poids" class="${cls(cmp.weight)}">
       <div class="cell-num">
         ${entry.weight}kg
         ${cmp.weight !== "ok" && weightArrow ? `<span class="${weightArrow === "↑" ? "arrow-up" : "arrow-down"}">${weightArrow}</span>` : ""}
       </div>
     </td>
   `;
+  return rowHtml.replace(/(<td data-label="[^"]+" class="c-(ok|close|wrong)">)/g, (_, cell, state) => cell + comparisonStatusHtml(state));
 }
 
 function renderMultiplayerAttempts() {
@@ -3704,6 +3699,8 @@ function renderMultiplayerBotResult() {
   const playerId = self?.id || multiplayerSocket?.id || null;
   const playerWon = Boolean(playerId && winner && playerId === winner.id);
   const target = room?.targetRevealed;
+  const discovery = duelDiscovery(room, self);
+  if (discovery) recordPokemonDiscovery(discovery, "duel");
   const bothPlayersPresent = players.length >= 2 && players.every((player) => player.connected !== false);
   const scoreLeftLabel = self?.nickname || "Toi";
   const scoreRightLabel = opponent?.nickname || "Adversaire";
@@ -4384,10 +4381,14 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('profile-favorite-input')?.addEventListener('change', (event) => {
     const picked = findPokemonGlobalByName(String(event.target.value || "").trim());
-    playerProfile.favoritePokemonId = picked ? picked.id : null;
-    saveProfile();
-    document.getElementById('profile-save-msg')?.classList.remove('hidden');
-    renderProfileScreen();
+    const message = document.getElementById("profile-save-msg");
+    if (!picked) {
+      event.target.setAttribute("aria-invalid", "true");
+      if (message) { message.textContent = "Choisis un Pokémon dans la liste. Ton partenaire actuel est conservé."; message.classList.remove("hidden"); }
+      return;
+    }
+    event.target.removeAttribute("aria-invalid");
+    choosePartner(picked.id);
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeOverlayModal();

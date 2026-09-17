@@ -33,6 +33,7 @@ const DEFAULT_STATS = {
 const DEFAULT_PROFILE = {
   nickname: "",
   favoritePokemonId: null,
+  discoveries: {},
   xp: 0,
   dailyQuests: null,
   dailyQuestsDate: null,

@@ -177,7 +177,7 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   const ringColor = pokemonTypeColor(pokemon.type1);
 
   // data-label : utilisés par le rendu "cartes empilées" sur mobile (≤640px).
-  return `
+  const rowHtml = `
     <td data-label="Pokémon">
       <div class="poke-cell">
         <img src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${fallbackSprite}" style="border-color:${ringColor}" />
@@ -190,7 +190,7 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
     <td data-label="Type 2" class="${cls(cmp.type2)}">${pokemon.type2 ? `<span class="type-dot" style="background:${pokemonTypeColor(pokemon.type2)}"></span>${pokemon.type2}` : "Aucun"}</td>
     <td data-label="Habitat / lieux" class="${cls(cmp.habitat)}">
       <span class="habitat-main">${escapeHtml(pokemon.habitat || "Inconnu")}</span>
-      <small class="habitat-encounter" data-encounter-summary>Chargement des lieux...</small>
+      <details class="guess-locations"><summary>Lieux de rencontre</summary><small class="habitat-encounter" data-encounter-summary>Chargement des lieux...</small></details>
     </td>
     <td data-label="Couleur" class="${cls(cmp.color)}">${formatColorLabel(pokemon.color)}</td>
     <td data-label="Stade" class="${cls(cmp.stage)}">${pokemon.stage}</td>
@@ -207,6 +207,7 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
       </div>
     </td>
   `;
+  return rowHtml.replace(/(<td data-label="[^"]+" class="c-(ok|close|wrong)">)/g, (_, cell, state) => cell + comparisonStatusHtml(state));
 }
 
 function addRow(pokemon, cmp) {
@@ -1809,6 +1810,8 @@ function renderPartyRoom() {
   }
   var raw = room.players || [];
   var me = raw.find(function (p) { return p.isSelf; }) || raw.find(function (p) { return p.id === selfId; }) || null;
+  var discovery = partyDiscovery(room, me);
+  if (discovery) recordPokemonDiscovery(discovery, room.gameMode);
   var isHost = Boolean((me && me.isHost) || (room.hostId && selfId && room.hostId === selfId));
   var players = raw.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
   var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];

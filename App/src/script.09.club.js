@@ -36,6 +36,7 @@ function clubLaunchRecent(key) {
   if (entry && typeof window[entry.name] === "function") window[entry.name](...entry.args);
 }
 function renderHomeReturn() {
+  if (typeof renderPartner === "function") renderPartner();
   const panel = document.getElementById("home-return");
   if (!panel) return;
   const save = getClubResumeSave();
@@ -132,7 +133,7 @@ function renderSoloClubResult(won) {
   let detail = document.getElementById("solo-club-result");
   if (!detail) { detail = document.createElement("div"); detail.id = "solo-club-result"; detail.className = "club-solo-result"; box.appendChild(detail); }
   detail.innerHTML = '<span>' + escapeHtml(secretPokemon.isAltForm ? 'Forme alternative' : 'Génération ' + secretPokemon.gen) + '</span><span>' + escapeHtml([secretPokemon.type1, secretPokemon.type2].filter(t => t && t !== "Aucun").join(" / ")) + '</span><p>' +
-    (gameMode === "daily" ? 'Ton rendez-vous de demain t’attend. Envie de continuer ? Essaie le mode illimité.' : won ? 'Un mystère de plus résolu. Prêt pour le prochain ?' : 'La réponse rejoint ton Pokédex de connaissances. Retente ta chance !') + '</p>';
+    (gameMode === "daily" ? 'Ton rendez-vous de demain t’attend. Envie de continuer ? Essaie le mode illimité.' : won ? 'Un mystère de plus résolu. Prêt pour le prochain ?' : 'Le mystère est révélé. Retente ta chance !') + '</p>' + (won ? '<button type="button" class="btn-ghost" data-action="openDiscoveryAlbum">Voir mon album →</button>' : '');
 }
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("#screen-all-modes .all-modes-card[data-action='openFromAllModes']").forEach(card => {
