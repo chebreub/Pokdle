@@ -526,3 +526,120 @@
   #pokdle-app.design-refresh .club-pick > :not(.club-pick-icon) { grid-column: 2; }
   #pokdle-app.design-refresh .club-resume { padding: 16px; }
 }
+
+/* Adventure: an integrated collection, with the current light/dark theme respected. */
+#pokdle-app.design-refresh .adventure-eyebrow { color: var(--ui-accent); font-size: .69rem; font-weight: 850; letter-spacing: .12em; }
+#pokdle-app.design-refresh .partner-strip { display: flex; align-items: center; gap: 16px; padding: 16px 22px; border: 1px solid var(--ui-line); border-radius: 20px; background: linear-gradient(110deg, var(--ui-accent-soft), var(--ui-surface) 65%); }
+#pokdle-app.design-refresh .partner-strip > img, #pokdle-app.design-refresh .partner-placeholder { width: 64px; height: 64px; object-fit: contain; flex-shrink: 0; }
+#pokdle-app.design-refresh .partner-placeholder { display: grid; place-items: center; border-radius: 50%; background: var(--ui-surface); color: var(--ui-accent); font-size: 2rem; }
+#pokdle-app.design-refresh .partner-strip-copy { display: grid; gap: 4px; flex: 1; min-width: 0; }
+#pokdle-app.design-refresh .partner-strip-copy strong { color: var(--ui-ink); font-size: 1rem; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .partner-strip-copy > span:last-child { color: var(--ui-muted); font-size: .82rem; }
+#pokdle-app.design-refresh .profile-view-switch { display: flex; gap: 6px; background: var(--ui-soft); padding: 6px; border-radius: 14px; margin: 22px 0; scroll-margin-top: 88px; }
+#pokdle-app.design-refresh .profile-view-switch button { flex: 1; border: 0; border-radius: 10px; background: transparent; color: var(--ui-muted); padding: 12px; min-height: 46px; font: inherit; font-weight: 750; cursor: pointer; }
+#pokdle-app.design-refresh .profile-view-switch button[aria-pressed="true"] { background: var(--ui-surface); color: var(--ui-ink); box-shadow: 0 2px 8px #12315b12; }
+#pokdle-app.design-refresh #album-tab-count { display: inline-block; min-width: 24px; padding: 2px 6px; border-radius: 6px; margin-left: 4px; background: var(--ui-accent-soft); color: var(--ui-accent); font-size: .8rem; }
+#pokdle-app.design-refresh .partner-card { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 18px; align-items: center; background: radial-gradient(ellipse at 0 0, var(--ui-accent-soft), var(--ui-surface) 75%); border: 1px solid var(--ui-line); border-radius: 18px; padding: 20px; }
+#pokdle-app.design-refresh .partner-card > img { width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 8px 9px #1d3a5d26); }
+#pokdle-app.design-refresh .partner-card h3 { margin: 8px 0; color: var(--ui-ink); overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .partner-bond { grid-column: 1 / -1; display: grid; gap: 7px; border-top: 1px solid var(--ui-line); padding-top: 14px; }
+#pokdle-app.design-refresh .partner-bond strong { color: var(--ui-ink); }
+#pokdle-app.design-refresh .partner-bond span, #pokdle-app.design-refresh .partner-bond small { color: var(--ui-muted); font-size: .8rem; }
+#pokdle-app.design-refresh :is(.partner-bond, .album-total, .album-regions) progress { display: block; width: 100%; height: 7px; border: 0; border-radius: 10px; overflow: hidden; background: var(--ui-soft); accent-color: var(--ui-accent); }
+#pokdle-app.design-refresh progress::-webkit-progress-bar { background: var(--ui-soft); }
+#pokdle-app.design-refresh progress::-webkit-progress-value { background: var(--ui-accent); border-radius: 10px; }
+#pokdle-app.design-refresh progress::-moz-progress-bar { background: var(--ui-accent); border-radius: 10px; }
+#pokdle-app.design-refresh .partner-empty { padding: 18px; border: 1px dashed var(--ui-line); border-radius: 16px; background: var(--ui-accent-soft); }
+#pokdle-app.design-refresh .partner-empty h3 { margin: 8px 0; color: var(--ui-ink); }
+#pokdle-app.design-refresh .partner-empty p { color: var(--ui-muted); font-size: .875rem; line-height: 1.6; }
+#pokdle-app.design-refresh .partner-starters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+#pokdle-app.design-refresh .partner-starters button { display: grid; place-items: center; gap: 4px; padding: 10px 4px; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface); color: var(--ui-ink); font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+#pokdle-app.design-refresh .partner-starters img { width: 56px; height: 56px; object-fit: contain; }
+#pokdle-app.design-refresh .album-intro { display: flex; gap: 30px; align-items: center; justify-content: space-between; padding: 24px; border: 1px solid var(--ui-line); border-radius: 20px; background: radial-gradient(ellipse at top right, var(--ui-accent-soft), var(--ui-surface) 75%); }
+#pokdle-app.design-refresh .album-intro h3 { color: var(--ui-ink); font-size: clamp(1.35rem, 3vw, 1.85rem); letter-spacing: -.04em; margin: 10px 0; }
+#pokdle-app.design-refresh .album-intro p { color: var(--ui-muted); font-size: .875rem; line-height: 1.65; max-width: 520px; }
+#pokdle-app.design-refresh .album-total { flex: 0 0 185px; display: grid; gap: 10px; }
+#pokdle-app.design-refresh .album-total > strong { font-size: 2.5rem; line-height: 1; color: var(--ui-accent); letter-spacing: -.04em; }
+#pokdle-app.design-refresh .album-total small { font-size: 1rem; color: var(--ui-muted); letter-spacing: normal; }
+#pokdle-app.design-refresh .album-total > span { color: var(--ui-muted); font-size: .8rem; }
+#pokdle-app.design-refresh .album-regions { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; margin: 18px 0 24px; }
+#pokdle-app.design-refresh .album-regions button { display: grid; text-align: left; gap: 8px; padding: 12px 10px; min-width: 0; border: 1px solid var(--ui-line); border-radius: 12px; background: var(--ui-surface); color: var(--ui-ink); font: inherit; cursor: pointer; }
+#pokdle-app.design-refresh .album-regions button[aria-pressed="true"] { outline: 2px solid var(--ui-accent); outline-offset: 1px; background: var(--ui-accent-soft); }
+#pokdle-app.design-refresh .album-regions span { font-size: .76rem; font-weight: 750; }
+#pokdle-app.design-refresh .album-regions b { font-size: .9rem; }
+#pokdle-app.design-refresh .album-regions small { font-size: .68rem; font-weight: 500; color: var(--ui-muted); }
+#pokdle-app.design-refresh .album-filters { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; }
+#pokdle-app.design-refresh .album-filters label { display: grid; gap: 7px; color: var(--ui-muted); font-size: .8rem; font-weight: 700; min-width: 0; }
+#pokdle-app.design-refresh .album-filters :is(input, select) { width: 100%; min-width: 0; min-height: 46px; border: 1px solid var(--ui-line); border-radius: 10px; padding: 10px 12px; color: var(--ui-ink); background: var(--ui-surface); font: inherit; font-size: .9rem; }
+#pokdle-app.design-refresh .album-results-label { color: var(--ui-muted); font-size: .8rem; margin: 18px 0 12px; scroll-margin-top: 88px; }
+#pokdle-app.design-refresh .album-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+#pokdle-app.design-refresh .album-card { display: flex; flex-direction: column; align-items: center; padding: 16px; min-width: 0; border: 1px solid var(--ui-line); border-radius: 16px; background: var(--ui-surface); position: relative; }
+#pokdle-app.design-refresh .album-card.is-found { background: radial-gradient(ellipse at 50% 30%, var(--ui-accent-soft), var(--ui-surface) 70%); }
+#pokdle-app.design-refresh .album-card-meta { width: 100%; display: flex; justify-content: space-between; gap: 4px; color: var(--ui-muted); font-size: .7rem; }
+#pokdle-app.design-refresh .is-found .album-card-meta span:last-child { color: var(--ui-accent); font-weight: 750; }
+#pokdle-app.design-refresh .album-card > img, #pokdle-app.design-refresh .album-unknown { width: 96px; height: 96px; object-fit: contain; margin: 12px 0; }
+#pokdle-app.design-refresh .album-unknown { display: grid; place-items: center; font-size: 3rem; border: 1px dashed var(--ui-line); border-radius: 50%; color: var(--ui-muted); opacity: .65; }
+#pokdle-app.design-refresh .album-card h4 { color: var(--ui-ink); margin: 0; font-size: .95rem; text-align: center; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh .album-form { color: var(--ui-accent); font-size: .73rem; margin: 6px 0 10px; }
+#pokdle-app.design-refresh .album-date { color: var(--ui-muted); font-size: .72rem; text-align: center; margin-top: auto; }
+#pokdle-app.design-refresh .album-card button { margin-top: 12px; width: 100%; min-height: 44px; white-space: normal; font-size: .75rem; padding: 8px; }
+#pokdle-app.design-refresh .album-card button:disabled { opacity: .8; cursor: default; }
+#pokdle-app.design-refresh .album-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 24px 0; color: var(--ui-muted); font-size: .85rem; }
+#pokdle-app.design-refresh .album-pagination button { min-height: 44px; }
+#pokdle-app.design-refresh .album-pagination button:disabled { opacity: .4; cursor: default; }
+#pokdle-app.design-refresh .album-footnote { font-size: .75rem; line-height: 1.7; color: var(--ui-muted); border-top: 1px solid var(--ui-line); margin-top: 24px; padding-top: 16px; }
+#pokdle-app.design-refresh .album-empty { grid-column: 1 / -1; text-align: center; border: 1px dashed var(--ui-line); border-radius: 18px; padding: 36px 20px; background: var(--ui-surface); }
+#pokdle-app.design-refresh .album-empty > span { color: var(--ui-accent); font-size: 2rem; }
+#pokdle-app.design-refresh .album-empty h4 { color: var(--ui-ink); font-size: 1.15rem; margin: 12px 0 8px; }
+#pokdle-app.design-refresh .album-empty p { color: var(--ui-muted); font-size: .875rem; line-height: 1.6; margin-bottom: 20px; }
+#pokdle-app.design-refresh :is(.profile-view-switch, .album-regions, .partner-starters) button:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 3px; }
+#pokdle-app.design-refresh .comparison-status { display: inline-block; font-weight: 900; font-size: .8rem; margin-right: 4px; }
+#pokdle-app.design-refresh .guess-locations { font-weight: 500; font-size: .72rem; }
+#pokdle-app.design-refresh .guess-locations summary { cursor: pointer; padding: 6px 0; list-style-position: inside; }
+#pokdle-app.design-refresh .guess-locations .habitat-encounter { white-space: normal; }
+@media (max-width: 900px) {
+  #pokdle-app.design-refresh .album-regions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #pokdle-app.design-refresh .album-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  #pokdle-app.design-refresh #screen-profile > .card { padding: 14px !important; }
+  #pokdle-app.design-refresh .partner-strip { gap: 10px; padding: 12px; flex-wrap: wrap; }
+  #pokdle-app.design-refresh .partner-strip > img, #pokdle-app.design-refresh .partner-placeholder { width: 52px; height: 52px; }
+  #pokdle-app.design-refresh .partner-strip-copy { flex-basis: calc(100% - 62px); }
+  #pokdle-app.design-refresh .partner-strip > button { width: 100%; min-height: 44px; }
+  #pokdle-app.design-refresh .profile-view-switch button { padding: 10px 6px; font-size: .82rem; }
+  #pokdle-app.design-refresh .album-intro { padding: 18px; flex-direction: column; align-items: stretch; gap: 20px; }
+  #pokdle-app.design-refresh .album-total { flex-basis: auto; }
+  #pokdle-app.design-refresh .album-total > strong { font-size: 2rem; }
+  #pokdle-app.design-refresh .album-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 8px; }
+  #pokdle-app.design-refresh .album-filters label:first-child { grid-column: 1 / -1; }
+  #pokdle-app.design-refresh .album-filters :is(input, select) { padding: 10px 6px; }
+  #pokdle-app.design-refresh .album-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #pokdle-app.design-refresh .album-card { padding: 10px 8px; border-radius: 12px; }
+  #pokdle-app.design-refresh .album-card-meta { font-size: .65rem; flex-wrap: wrap; }
+  #pokdle-app.design-refresh .album-card > img, #pokdle-app.design-refresh .album-unknown { width: 76px; height: 76px; }
+  #pokdle-app.design-refresh .album-card h4 { font-size: .85rem; }
+  #pokdle-app.design-refresh .partner-card { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; padding: 14px; }
+  #pokdle-app.design-refresh .partner-card > img { width: 76px; height: 76px; }
+  /* Three columns remain readable at 320px, including all nine criteria. */
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; padding: 10px; }
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) td { position: relative; font-size: .8rem !important; overflow-wrap: anywhere; gap: 5px; box-shadow: none !important; padding: 10px 5px !important; }
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) td::before { font-size: .65rem; letter-spacing: 0; opacity: 1; text-transform: none; }
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) .comparison-status { position: absolute; top: 1px; right: 3px; font-size: .65rem; margin: 0; }
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) .c-ok { background: #d9f4e7 !important; color: #135b3f !important; }
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) .c-close { background: #fff0c4 !important; color: #795009 !important; }
+  #pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) .c-wrong { background: #fbe4e7 !important; color: #913344 !important; }
+  #pokdle-app.design-refresh.theme-dark :is(#results-table, .multiplayer-results-table) .c-ok { background: #193d35 !important; color: #a1ebc6 !important; }
+  #pokdle-app.design-refresh.theme-dark :is(#results-table, .multiplayer-results-table) .c-close { background: #403922 !important; color: #ffdf8d !important; }
+  #pokdle-app.design-refresh.theme-dark :is(#results-table, .multiplayer-results-table) .c-wrong { background: #432938 !important; color: #ffb9c5 !important; }
+  #pokdle-app.design-refresh .guess-locations summary { font-size: .66rem; padding: 5px 0; min-height: 32px; }
+  #pokdle-app.design-refresh .guess-locations .habitat-encounter { font-size: .7rem; }
+}
+#pokdle-app.design-refresh .album-region-disclosure { border-bottom: 1px solid var(--ui-line); margin: 10px 0 20px; }
+#pokdle-app.design-refresh .album-region-disclosure > summary { color: var(--ui-muted); padding: 14px 0; font-size: .85rem; font-weight: 700; cursor: pointer; min-height: 44px; }
+#pokdle-app.design-refresh .album-region-disclosure .album-regions { margin: 0 0 16px; }
+/* Legacy child colors must follow the selected theme, including the attempt count. */
+#pokdle-app.design-refresh #screen-game #results-table .poke-cell,
+#pokdle-app.design-refresh .multiplayer-results-table .poke-cell { color: var(--ui-ink) !important; font-size: .9rem; line-height: 1.4; }
+#pokdle-app.design-refresh #try-count { color: inherit !important; }
+#pokdle-app.design-refresh :is(#results-table, .multiplayer-results-table) :is(.arrow-up, .arrow-down) { color: inherit !important; }

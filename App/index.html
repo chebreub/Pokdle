@@ -173,6 +173,7 @@
           <button class="home-text-link" type="button" data-action="openAllModesScreen" data-args='["friends"]'>Duels et autres jeux entre amis</button>
         </article>
       </section>
+      <div id="home-partner" class="partner-strip" aria-label="Mon aventure"></div>
       <nav class="home-explore" aria-label="Explorer l’univers Pokémon">
         <div><strong>Entre deux parties</strong><span>Explore, prépare ton équipe, suis tes progrès.</span></div>
         <button class="btn-ghost" type="button" data-action="openPokedexMode">Pokédex</button>
@@ -341,6 +342,10 @@
           </div>
         </div>
         <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
+        <div class="profile-view-switch" role="group" aria-label="Contenu du profil">
+          <button type="button" data-action="switchProfileView" data-args='["trainer"]' aria-pressed="true">Mon dresseur</button>
+          <button type="button" data-action="switchProfileView" data-args='["album"]' aria-pressed="false">Album de découvertes <span id="album-tab-count">0</span></button>
+        </div>
         <div class="profile-stats-links">
           <button class="btn-ghost" type="button" data-action="openMatchHistoryScreen">📜 Historique des parties</button>
           <button class="btn-ghost" type="button" data-action="openGamesRankingMode">🎮 Classement des jeux</button>
@@ -349,6 +354,19 @@
 
         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
         <input id="profile-photo-input" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
+        <section id="profile-album" class="hidden" aria-label="Album de découvertes">
+          <div class="album-intro"><div><span class="adventure-eyebrow">CHAQUE MYSTÈRE LAISSE UNE TRACE</span><h3>Ton aventure prend forme.</h3><p>Retrouve les Pokémon trouvés dans les jeux de devinette. Les formes alternatives ont leur propre place.</p></div><div id="album-total" class="album-total"></div></div>
+          <details class="album-region-disclosure"><summary>Explorer par génération</summary><div id="album-regions" class="album-regions" aria-label="Progression par génération"></div></details>
+          <div class="album-filters">
+            <label>Rechercher<input id="album-search" type="search" placeholder="Nom ou numéro…" autocomplete="off" /></label>
+            <label>Génération<select id="album-generation"><option value="all">Toutes</option></select></label>
+            <label>Afficher<select id="album-status"><option value="found">Mes découvertes</option><option value="all">Tout l’album</option><option value="missing">À découvrir</option></select></label>
+          </div>
+          <p id="album-results-label" class="album-results-label" role="status"></p>
+          <div id="album-grid" class="album-grid"></div>
+          <div class="album-pagination"><button type="button" class="btn-ghost" id="album-prev" data-action="changeAlbumPage" data-args='[-1]'>← Précédent</button><span id="album-page"></span><button type="button" class="btn-ghost" id="album-next" data-action="changeAlbumPage" data-args='[1]'>Suivant →</button></div>
+          <p class="album-footnote">Une découverte par Pokémon, même si tu le retrouves plusieurs fois. Les victoires identifiables de ton historique sont récupérées. Un abandon ou une simple révélation ne remplit pas l’album.</p>
+        </section>
         <div class="profile-layout">
           <section class="profile-panel">
             <h3>Identité</h3>
@@ -357,8 +375,8 @@
               <input id="profile-nickname" type="text" maxlength="24" placeholder="Entre ton pseudo..." autocomplete="off" />
             </label>
             <label class="profile-field">
-              <span>Pokémon favori</span>
-              <input id="profile-favorite-input" type="text" list="profile-favorite-options" placeholder="Choisis ton Pokémon favori..." autocomplete="off" />
+              <span>Mon partenaire</span>
+              <input id="profile-favorite-input" type="text" list="profile-favorite-options" placeholder="Cherche ton partenaire…" aria-describedby="profile-save-msg" autocomplete="off" />
               <datalist id="profile-favorite-options"></datalist>
             </label>
             <p id="profile-save-msg" class="card-desc hidden">Profil enregistré.</p>
@@ -1088,7 +1106,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </thead>
           <tbody id="results-body"></tbody>
         </table>
-        <p class="results-legend"><span class="legend-dot legend-ok"></span>Exact · <span class="legend-dot legend-close"></span>Proche · <span class="legend-dot legend-wrong"></span>Faux · ↑ le mystère est plus grand/lourd · ↓ plus petit/léger</p>
+        <p class="results-legend">✓ Correspond · ≈ Proche · × Différent<br />↑ Le mystère est plus grand/lourd · ↓ Plus petit/léger</p>
       </div>
 
     </div>
