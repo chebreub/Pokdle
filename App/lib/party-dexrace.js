@@ -27,7 +27,7 @@ function startRace(room, catalogue) {
   for (const p of room.players) { p.score = 0; p.correct = false; p.lastGain = 0; }
 }
 function submitRace(room, player, payload, now = Date.now()) {
-  if (!room.race || room.status !== 'playing' || now >= room.deadlineAt || payload.code !== room.code || payload.roundSerial !== room.roundSerial) return {error:'Cette course est terminée ou a changé.'};
+  if (!room.race || room.status !== 'playing' || (room.deadlineAt && now >= room.deadlineAt) || payload.code !== room.code || payload.roundSerial !== room.roundSerial) return {error:'Cette course est terminée ou a changé.'};
   const member = room.race.roster.find(p => p.id === player.id);
   if (!member || !player.connected) return {error:'Tu ne participes pas à cette course.'};
   const name = normalizeRaceName(payload.guess);
