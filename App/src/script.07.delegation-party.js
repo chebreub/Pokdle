@@ -1192,6 +1192,8 @@ function loadProfile() {
     favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
     discoveries: normalizeDiscoveries(parsed?.discoveries),
     secrets: normalizeSecretProgress(parsed?.secrets),
+    albumMissionClaims: typeof normalizeAlbumMissionClaims === 'function' ? normalizeAlbumMissionClaims(parsed?.albumMissionClaims) : (parsed?.albumMissionClaims || {}),
+    albumMissionStats: typeof normalizeAlbumMissionStats === 'function' ? normalizeAlbumMissionStats(parsed?.albumMissionStats) : (parsed?.albumMissionStats || null),
     avatarPhoto: typeof parsed?.avatarPhoto === "string" ? parsed.avatarPhoto : "",
     // Engagement system
     xp: Number(parsed?.xp) || 0,
