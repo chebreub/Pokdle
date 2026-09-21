@@ -122,3 +122,149 @@
     align-items: flex-start;
   }
 }
+
+
+/* ===== Album missions V1 ===== */
+.album-mission-panel {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: rgba(255,255,255,.72);
+}
+.album-mission-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.album-mission-head h3 { margin: 4px 0 6px; }
+.album-mission-head p { margin: 0; color: var(--muted); }
+.album-mission-summary {
+  min-width: 145px;
+  display: grid;
+  text-align: right;
+}
+.album-mission-summary strong { font-size: 1.5rem; }
+.album-mission-summary small { font-size: .8rem; color: var(--muted); }
+.album-mission-summary span { color: var(--muted); font-size: .82rem; }
+.album-mission-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.album-mission-filters label {
+  display: grid;
+  gap: 6px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.album-mission-filters select { width: 100%; }
+.album-mission-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.album-mission-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  background: rgba(255,255,255,.9);
+  display: grid;
+  gap: 10px;
+}
+.album-mission-card.is-ready {
+  outline: 2px solid rgba(45, 130, 255, .25);
+  box-shadow: 0 12px 28px rgba(34, 82, 160, .12);
+}
+.album-mission-card.is-claimed { opacity: .82; }
+.album-mission-card.tier-legendary::before,
+.album-mission-card.tier-secret::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: currentColor;
+  opacity: .35;
+}
+.album-mission-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: .74rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.album-mission-tier { color: var(--text); }
+.album-mission-reward {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+}
+.album-mission-sprite,
+.album-mission-mystery {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+}
+.album-mission-sprite { object-fit: contain; image-rendering: pixelated; }
+.album-mission-mystery {
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+  font-weight: 900;
+  background: rgba(24,34,58,.08);
+}
+.album-mission-reward div { min-width: 0; display: grid; gap: 2px; }
+.album-mission-reward small { font-size: .68rem; font-weight: 900; color: var(--muted); }
+.album-mission-reward h4 { margin: 0; font-size: 1.08rem; }
+.album-mission-reward span { color: var(--muted); font-size: .85rem; }
+.album-mission-card > p { margin: 0; color: var(--muted); font-size: .9rem; }
+.album-mission-card progress { width: 100%; }
+.album-mission-reqs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.album-mission-reqs li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: .8rem;
+  color: var(--muted);
+}
+.album-mission-reqs li.is-done { color: var(--text); }
+.album-mission-reqs b { white-space: nowrap; font-size: .75rem; }
+.album-mission-secret-copy {
+  font-style: italic;
+  color: var(--muted);
+}
+.album-mission-more { display: block; margin: 14px auto 0; }
+.album-mission-empty { grid-column: 1 / -1; text-align: center; }
+.album-mission-lock { display: block; font-weight: 800; }
+
+body.theme-dark .album-mission-panel,
+body.theme-dark .album-mission-card {
+  background: rgba(19,29,51,.88);
+}
+body.theme-dark .album-mission-mystery { background: rgba(255,255,255,.08); }
+
+@media (max-width: 1050px) {
+  .album-mission-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .album-mission-head { display: grid; }
+  .album-mission-summary { text-align: left; }
+  .album-mission-filters,
+  .album-mission-grid { grid-template-columns: 1fr; }
+}

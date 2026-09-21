@@ -92,6 +92,16 @@ function renderDexRaceArena() {
   const result = document.getElementById('dex-race-result'); result.classList.toggle('hidden',!ended);
   if (ended) {
     const tie = round.scores.blue === round.scores.coral, winner = round.scores.blue > round.scores.coral ? 'blue' : 'coral';
+    if (me && typeof recordAlbumMissionEvent === 'function') {
+      const winningRoster = round.roster.filter(p => p.team === winner);
+      recordAlbumMissionEvent('dexraceComplete', {
+        key,
+        score: me.score,
+        won: !tie && me.team === winner && round.endedReason !== 'departure',
+        format: round.format,
+        balanced: !tie && me.team === winner && winningRoster.length > 1 && winningRoster.every(p => Number(p.score) > 0)
+      });
+    }
     result.innerHTML = `<div><span class="race-eyebrow">${round.endedReason === 'full'?'GRILLE COMPLÈTE':round.endedReason === 'departure'?'PARTIE INTERROMPUE':'TEMPS ÉCOULÉ'}</span><h3>${round.endedReason === 'departure'?'Un camp a quitté la course':tie?'Égalité !':escapeHtml(dexRaceSideName(round,winner)) + ' remporte la course !'}</h3><p>${round.scores.blue} – ${round.scores.coral} · ${me ? 'Ta contribution : ' + me.score + ' Pokémon.' : ''} Les cases gardent le nom de leur auteur.</p></div><button type="button" class="btn-blue" data-action="returnFromDexRace">Retour au salon →</button>`;
     if (dexRaceTimer) { clearInterval(dexRaceTimer); dexRaceTimer = null; }
   } else if (!dexRaceTimer) dexRaceTimer = setInterval(updateDexRaceClock,200);

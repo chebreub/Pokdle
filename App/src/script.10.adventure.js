@@ -9,9 +9,13 @@ function normalizeDiscoveries(raw) {
   for (const [key, entry] of Object.entries(raw)) {
     const id = Number(key), at = Number(entry?.at);
     if (!Number.isInteger(id) || !POKEMON_BY_ID.has(id) || !Number.isFinite(at) || at <= 0) continue;
-    clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal', source: ['game', 'history', 'secret'].includes(entry.source) ? entry.source : 'legacy' };
+    clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal', source: ['game', 'history', 'secret', 'mission'].includes(entry.source) ? entry.source : 'legacy' };
     if (entry.secrets && typeof entry.secrets === 'object') {
       clean[id].secrets = Object.fromEntries(Object.entries(entry.secrets).filter(([key, value]) => (typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.some(m => m.id === key) : ['companion', 'signal', 'runes'].includes(key)) && Number.isFinite(value) && value > 0).map(([key, value]) => [key, Math.min(value, Date.now())]));
+    }
+    if (entry.missions && typeof entry.missions === 'object') {
+      const validMission = key => typeof ALBUM_MISSIONS !== 'undefined' && ALBUM_MISSIONS.some(m => m.id === key);
+      clean[id].missions = Object.fromEntries(Object.entries(entry.missions).filter(([key, value]) => validMission(key) && Number.isFinite(Number(value)) && Number(value) > 0).map(([key, value]) => [key, Math.min(Number(value), Date.now())]));
     }
     if (Number.isFinite(entry.confirmed?.at) && entry.confirmed.at > 0 && typeof entry.confirmed.mode === 'string') clean[id].confirmed = { at: Math.min(entry.confirmed.at, Date.now()), mode: entry.confirmed.mode.slice(0, 30) };
   }
@@ -20,6 +24,7 @@ function normalizeDiscoveries(raw) {
 function addDiscovery(collection, pokemon, mode, at = Date.now(), source = 'game') {
   const id = Number(pokemon?.id);
   if (!Number.isInteger(id) || !POKEMON_BY_ID.has(id) || collection[id]) return false;
+  if (['game', 'history'].includes(source) && typeof isAlbumMissionGated === 'function' && isAlbumMissionGated(id) && !isAlbumMissionClaimedForPokemon(id)) return false;
   collection[id] = { at: Number.isFinite(Number(at)) && Number(at) > 0 ? Math.min(Number(at), Date.now()) : Date.now(), mode: String(mode || 'normal').slice(0, 30), source };
   return true;
 }
@@ -58,22 +63,27 @@ function recordPokemonDiscovery(pokemon, mode, at) {
   return true;
 }
 function discoveryModeLabel(mode) {
-  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète' };
+  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète', mission: 'Mission de collection' };
   return labels[mode] || modeLabelFr(mode);
 }
 function discoveryProofHtml(entry) {
   const source = entry.source || 'legacy';
-  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Rencontre secrète', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
+  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Rencontre secrète', mission: 'Récompense de mission', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
   const mode = escapeHtml(discoveryModeLabel(entry.mode));
   const explanations = {
     game: `Bonne réponse enregistrée en ${mode}.`,
     history: `Victoire en ${mode}, récupérée automatiquement depuis ton historique. Ce Pokémon n’a pas été rencontré à nouveau lors de l’import.`,
     legacy: `Mode enregistré : ${mode}. Cette entrée date de l’ancienne version. Elle peut venir de l’historique importé ; l’origine exacte n’avait pas été conservée.`,
-    secret: 'Pokémon accueilli après avoir accompli une mission et découvert sa cachette.'
+    secret: 'Pokémon accueilli après avoir accompli une mission et découvert sa cachette.',
+    mission: 'Pokémon obtenu après validation d’une mission de collection.'
   };
   const confirmed = entry.confirmed ? `<p>Retrouvé en ${escapeHtml(discoveryModeLabel(entry.confirmed.mode))} le ${new Date(entry.confirmed.at).toLocaleDateString('fr-FR')}.</p>` : '';
   const secrets = Object.entries(entry.secrets || {}).map(([key, at]) => `<p>✦ Mission « ${escapeHtml((typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.find(m => m.id === key)?.title : ({companion:'Une présence familière',signal:'Un drôle de signal',runes:'Les trois marques'})[key]) || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`).join('');
-  return `<span class="album-origin">${label}</span><details class="album-proof"><summary>Comment obtenu ?</summary><p>${explanations[source] || explanations.legacy}</p>${confirmed}${secrets}</details>`;
+  const missions = Object.entries(entry.missions || {}).map(([key, at]) => {
+    const mission = typeof albumMissionById === 'function' ? albumMissionById(key) : null;
+    return `<p>★ Mission « ${escapeHtml(mission?.title || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`;
+  }).join('');
+  return `<span class="album-origin">${label}</span><details class="album-proof"><summary>Comment obtenu ?</summary><p>${explanations[source] || explanations.legacy}</p>${confirmed}${secrets}${missions}</details>`;
 }
 
 function partnerMilestone(count) {
@@ -124,7 +134,7 @@ function switchProfileView(view) {
   document.querySelectorAll('#profile-trainer-card, #screen-profile .profile-stats-links, #screen-profile .profile-layout, #screen-profile .profile-summary-grid, #screen-profile .profile-records-panel, #profile-secret-rune').forEach(el => el.classList.toggle('hidden', selected !== 'trainer'));
   document.getElementById('profile-album')?.classList.toggle('hidden', selected !== 'album');
   document.getElementById('profile-secrets')?.classList.toggle('hidden', selected !== 'secrets');
-  if (selected === 'album') renderDiscoveryAlbum();
+  if (selected === 'album') { renderDiscoveryAlbum(); if (typeof renderAlbumMissions === 'function') renderAlbumMissions(); }
   if (selected === 'secrets') renderSecretMissions();
 }
 
@@ -163,7 +173,7 @@ function renderDiscoveryAlbum() {
   document.getElementById('album-results-label').textContent = `${list.length} Pokémon ${list.length === 1 ? 'affiché' : 'affichés'}`;
   grid.innerHTML = list.slice((albumPage - 1) * ALBUM_PAGE_SIZE, albumPage * ALBUM_PAGE_SIZE).map(p => {
     const entry = discoveries[p.id];
-    return `<article class="album-card ${entry ? 'is-found' : 'is-missing'}"><div class="album-card-meta"><span>#${String(p.baseId || p.id).padStart(3, '0')}</span><span>${entry ? '✓ Trouvé' : 'À découvrir'}</span></div>${entry ? partnerImage(p) : '<span class="album-unknown" aria-hidden="true">?</span>'}<h4>${escapeHtml(p.name)}</h4><span class="album-form">${p.isAltForm ? 'Forme alternative' : 'Génération ' + p.gen}</span>${entry ? '<small class="album-date">Trouvé le ' + new Date(entry.at).toLocaleDateString('fr-FR') + '</small>' + discoveryProofHtml(entry) + '<button type="button" class="btn-ghost" data-action="choosePartner" data-args="[' + p.id + ']" aria-label="Choisir ' + escapeHtml(p.name) + ' comme partenaire"' + (playerProfile.favoritePokemonId === p.id ? ' disabled' : '') + '>' + (playerProfile.favoritePokemonId === p.id ? 'Ton partenaire ✓' : 'Choisir comme partenaire') + '</button>' : '<span class="album-date">Un prochain mystère…</span>'}</article>`;
+    return `<article class="album-card ${entry ? 'is-found' : 'is-missing'}"><div class="album-card-meta"><span>#${String(p.baseId || p.id).padStart(3, '0')}</span><span>${entry ? '✓ Trouvé' : 'À découvrir'}</span></div>${entry ? partnerImage(p) : '<span class="album-unknown" aria-hidden="true">?</span>'}<h4>${escapeHtml(p.name)}</h4><span class="album-form">${p.isAltForm ? 'Forme alternative' : 'Génération ' + p.gen}</span>${entry ? '<small class="album-date">Trouvé le ' + new Date(entry.at).toLocaleDateString('fr-FR') + '</small>' + discoveryProofHtml(entry) + '<button type="button" class="btn-ghost" data-action="choosePartner" data-args="[' + p.id + ']" aria-label="Choisir ' + escapeHtml(p.name) + ' comme partenaire"' + (playerProfile.favoritePokemonId === p.id ? ' disabled' : '') + '>' + (playerProfile.favoritePokemonId === p.id ? 'Ton partenaire ✓' : 'Choisir comme partenaire') + '</button>' : (typeof albumMissingHintHtml === 'function' ? albumMissingHintHtml(p) : '<span class="album-date">Un prochain mystère…</span>')}</article>`;
   }).join('') || '<div class="album-empty"><span aria-hidden="true">✦</span><h4>' + (count ? 'Aucune découverte avec ces filtres' : 'La première page t’attend') + '</h4><p>' + (count ? 'Essaie une autre génération ou affiche tout l’album.' : 'Trouve un Pokémon dans un jeu de devinette : sa carte apparaîtra ici.') + '</p><button type="button" class="btn-blue" data-action="' + (count ? 'resetAlbumFilters' : 'startNormalGame') + '">' + (count ? 'Réinitialiser les filtres' : 'Jouer en illimité →') + '</button></div>';
   document.getElementById('album-page').textContent = `${albumPage} / ${pages}`;
   document.getElementById('album-prev').disabled = albumPage === 1;
