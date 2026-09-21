@@ -45,8 +45,8 @@ test('fresh round resets claims and scores with a new serial; public board does 
 const source=fs.readFileSync(require.resolve('../server'),'utf8');
 function fn(name){const start=source.indexOf(`function ${name}(`);return source.slice(start,source.indexOf('\n}',start)+2);}
 function wired(room){
- const ctx={dexRace:race,Date,POKEMON_LIST:catalogue,PARTY_MIN_PLAYERS:2,PARTY_MAX_PLAYERS:8,PARTY_TOTAL_ROUNDS:5,checkRateLimit:()=>false,findPartyRoomBySocket:()=>room,respond:(ack,data)=>ack(data),clearPartyRoundTimer(){},emitPartyRoomState(){},isPartyStatMode:()=>false};
- vm.createContext(ctx);vm.runInContext(['publicPartyRoomState','endPartyRound','forcePartyRoundEnd'].map(fn).join('\n'),ctx);
+ const ctx={dexRace:race,Date,setTimeout,clearTimeout,POKEMON_LIST:catalogue,PARTY_MIN_PLAYERS:2,PARTY_MAX_PLAYERS:8,PARTY_TOTAL_ROUNDS:5,PARTY_ROUND_TIMER_MS:30000,checkRateLimit:()=>false,findPartyRoomBySocket:()=>room,respond:(ack,data)=>ack(data),emitPartyRoomState(){},isPartyStatMode:()=>false};
+ vm.createContext(ctx);vm.runInContext(['publicPartyRoomState','clearPartyRoundTimer','endPartyRound','forcePartyRoundEnd','armPartyRoundTimer'].map(fn).join('\n'),ctx);
  const event=(name,payload={},id='a')=>{
   let callback,response;ctx.socket={id,on:(_,handler)=>{callback=handler;}};
   const start=source.indexOf(`  socket.on("${name}"`),end=source.indexOf('\n  socket.on(',start+1);
@@ -69,7 +69,7 @@ test('server timer completes and scores ties without inventing a winner',()=>{
 test('production controls are host-only and locked during a race; team choice cannot move scores',()=>{
  const room=fixture(4,'teams'),w=wired(room);const settings={format:'teams',duration:300};
  assert.equal(w.event('party:dexrace-options',settings,'b').ok,false);assert.equal(w.event('party:dexrace-options',settings).ok,true);
- assert.equal(room.raceDuration,300);assert.equal(w.event('party:dexrace-team',{team:'coral'},'c').ok,true);assert.ok(race.raceStartError(room));
+ assert.equal(room.raceDuration,300);assert.equal(w.event('party:dexrace-options',{format:'teams',duration:0}).ok,true);assert.equal(room.raceDuration,0);assert.equal(w.event('party:dexrace-team',{team:'coral'},'c').ok,true);assert.ok(race.raceStartError(room));
  race.balanceRaceTeams(room);race.startRace(room,catalogue);room.deadlineAt=Date.now()+300000;
  assert.equal(w.event('party:dexrace-team',{team:'coral'}).ok,false);assert.equal(w.event('party:dexrace-options',settings).ok,false);
  assert.equal(w.event('party:set-gens',{gens:[2]}).ok,false);
@@ -79,5 +79,21 @@ test('board layout fits the largest generation on standard desktop and small lap
  vm.runInNewContext(script.slice(start,script.indexOf('\n}',start)+2),ctx);
  for(const [width,height] of [[1280,480],[960,350],[1800,780]]) for(const count of [72,100,151,156]) {
   const f=ctx.dexRaceLayout(width,height,count);assert.ok(f.size>=36);assert.ok(f.columns*f.size+(f.columns-1)*3<=width);assert.ok(f.rows*f.size+(f.rows-1)*3<=height);assert.ok(f.columns*f.rows>=count);
+ }
+});
+
+test('unlimited duration has no deadline and accepts answers until the grid is complete',()=>{
+ const room=fixture(2,'duel'),w=wired(room);
+ assert.equal(w.event('party:dexrace-options',{format:'duel',duration:0}).ok,true);
+ race.startRace(room,catalogue);
+ w.ctx.armPartyRoundTimer(room);
+ assert.equal(room.raceDuration,0);
+ assert.equal(room.deadlineAt,null);
+ assert.equal(room.roundTimer == null,true);
+ assert.equal(submit(room,'Pikachu').claimed,true);
+ for(const p of race.racePool(catalogue,1).filter(p=>p.name!=='Pikachu')) {
+   const id = p.name === 'Salamèche' ? 'b' : 'a';
+   const res=submit(room,p.name,id);
+   assert.equal(Boolean(res.claimed || res.duplicate),true);
  }
 });

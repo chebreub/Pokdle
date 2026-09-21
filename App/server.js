@@ -1007,7 +1007,7 @@ function publicPartyRoomState(room, viewerId = null) {
     deadlineAt: room.deadlineAt || null,
     gameMode,
     raceFormat: room.raceFormat || "duel",
-    raceDuration: room.raceDuration === 300 ? 300 : 180,
+    raceDuration: room.raceDuration === 0 ? 0 : room.raceDuration === 300 ? 300 : 180,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: roundState,
     players: room.players.map((player) => ({
@@ -1140,6 +1140,11 @@ function forcePartyRoundEnd(room) {
 function armPartyRoundTimer(room) {
   clearPartyRoundTimer(room);
   if (room.status !== "playing") return;
+  if (room.gameMode === "dexrace" && room.raceDuration === 0) {
+    room.deadlineAt = null;
+    room.roundStartedAt = Date.now();
+    return;
+  }
   const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
@@ -1941,7 +1946,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
-      if (room.gameMode === "dexrace") return respond(ack, { ok: false, error: "La course se termine au chrono ou quand la grille est complète." });
+      if (room.gameMode === "dexrace") return respond(ack, { ok: false, error: "La course se termine au chrono (s’il est activé) ou quand la grille est complète." });
       if (room.gameMode === "nearest") { resolvePartyNearestRound(room); } else if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -2053,7 +2058,7 @@ io.on("connection", (socket) => {
   socket.on("party:dexrace-options", (payload = {}, ack) => {
     const room = findPartyRoomBySocket(socket.id);
     if (!room || room.gameMode !== "dexrace" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status)) return respond(ack, {ok:false,error:"Seul l’hôte peut régler la prochaine course."});
-    if (!["duel","teams"].includes(payload.format) || ![180,300].includes(payload.duration)) return respond(ack, {ok:false,error:"Réglages invalides."});
+    if (!["duel","teams"].includes(payload.format) || ![0,180,300].includes(payload.duration)) return respond(ack, {ok:false,error:"Réglages invalides."});
     room.raceFormat = payload.format; room.raceDuration = payload.duration;
     if (room.status === "complete") room.status = "waiting";
     emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
