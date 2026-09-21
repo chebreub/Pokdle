@@ -825,3 +825,65 @@
   #pokdle-app.design-refresh .encounter-copy p { margin: 12px auto 16px; }
   #pokdle-app.design-refresh .encounter-chapter { font-size: .53rem; letter-spacing: .06em; }
 }
+
+/* Course au Pokédex — desktop board uses the available viewport, never a long list. */
+#pokdle-app.design-refresh .dex-race-setup { display:grid; gap:18px; margin-top:20px; padding:20px; border:1px solid var(--ui-line); border-radius:18px; background:var(--ui-soft); color:var(--ui-ink); }
+#pokdle-app.design-refresh .race-setting { display:flex; align-items:center; flex-wrap:wrap; gap:18px; }
+#pokdle-app.design-refresh .race-setting > strong { min-width:70px; }
+#pokdle-app.design-refresh .race-setting > div { display:flex; gap:8px; }
+#pokdle-app.design-refresh .dex-race-setup button[aria-pressed="true"] { border-color:var(--ui-accent); background:var(--ui-accent-soft); color:var(--ui-accent); }
+#pokdle-app.design-refresh .race-team-choice { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+#pokdle-app.design-refresh .race-team-choice p { margin:10px 0; line-height:1.5; }
+#pokdle-app.design-refresh .race-setup-note { color:var(--ui-muted); font-size:.83rem; margin:0; }
+#pokdle-app.design-refresh.race-active { overflow:hidden; }
+#pokdle-app.design-refresh #dex-race-arena { position:fixed; inset:0; z-index:1800; box-sizing:border-box; height:100dvh; display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:14px; padding:18px 24px 12px; overflow:hidden; color:var(--ui-ink); background:radial-gradient(ellipse at 0 0,var(--ui-accent-soft),transparent 65%),var(--ui-surface); }
+#pokdle-app.design-refresh #dex-race-arena * { box-sizing:border-box; }
+#pokdle-app.design-refresh .race-header { position:static; display:grid; grid-template-columns:minmax(185px,.7fr) minmax(300px,1.5fr) auto auto; align-items:center; gap:20px; padding:0; background:none; border:0; box-shadow:none; }
+#pokdle-app.design-refresh .race-eyebrow { display:block; color:var(--ui-muted); letter-spacing:.12em; font-size:.62rem; font-weight:800; }
+#pokdle-app.design-refresh .race-brand h2 { font-size:clamp(1.2rem,1.8vw,1.7rem); margin:6px 0 0; color:var(--ui-ink); letter-spacing:-.045em; }
+#pokdle-app.design-refresh .race-brand h2 > span { color:var(--ui-accent); }
+#pokdle-app.design-refresh .race-scoreboard { display:grid; grid-template-columns:1fr 1fr; gap:12px; min-width:0; }
+#pokdle-app.design-refresh .race-side { --race-team:#337be7; background:color-mix(in srgb,var(--race-team) 8%,var(--ui-surface)); border:1px solid color-mix(in srgb,var(--race-team) 38%,var(--ui-line)); border-radius:14px; padding:12px 16px; color:var(--ui-ink); }
+#pokdle-app.design-refresh .race-coral { --race-team:#d76147; }
+#pokdle-app.design-refresh .race-scoreboard .race-side { display:flex; justify-content:space-between; align-items:center; gap:12px; min-width:0; }
+#pokdle-app.design-refresh .race-side.is-mine { box-shadow:inset 0 -3px 0 var(--race-team); }
+#pokdle-app.design-refresh .race-side > div { min-width:0; }
+#pokdle-app.design-refresh .race-side strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.9rem; }
+#pokdle-app.design-refresh .race-side small { display:block; color:var(--ui-muted); font-size:.65rem; line-height:1.5; margin-top:4px; max-height:3em; overflow:hidden; }
+#pokdle-app.design-refresh .race-side > b { font-size:1.8rem; font-variant-numeric:tabular-nums; }
+#pokdle-app.design-refresh .race-clock-wrap { text-align:center; }
+#pokdle-app.design-refresh #dex-race-clock { display:block; font-size:2rem; font-variant-numeric:tabular-nums; letter-spacing:-.03em; line-height:1.3; color:var(--ui-ink); }
+#pokdle-app.design-refresh #dex-race-clock.is-urgent { color:#c74634; }
+#pokdle-app.design-refresh.theme-dark #dex-race-clock.is-urgent { color:#ffac95; }
+#pokdle-app.design-refresh .race-exit { min-height:40px; }
+#pokdle-app.design-refresh .race-board-panel { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; padding:12px 14px 14px; border:1px solid var(--ui-line); border-radius:18px; background:var(--ui-surface); box-shadow:0 8px 24px #14223d08; }
+#pokdle-app.design-refresh .race-board-caption { display:flex; justify-content:space-between; align-items:center; gap:16px; font-size:.75rem; color:var(--ui-muted); padding-bottom:10px; min-height:28px; }
+#pokdle-app.design-refresh #dex-race-progress { color:var(--ui-ink); font-weight:750; white-space:nowrap; }
+#pokdle-app.design-refresh #dex-race-cell-info { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#pokdle-app.design-refresh #dex-race-board-wrap { min-height:0; min-width:0; display:grid; place-items:center; overflow:hidden; }
+#pokdle-app.design-refresh #dex-race-board { display:grid; grid-template-columns:repeat(var(--race-cols),var(--race-cell)); grid-auto-rows:var(--race-cell); gap:3px; }
+#pokdle-app.design-refresh .race-cell { --race-team:#337be7; position:relative; width:var(--race-cell); height:var(--race-cell); min-height:0; padding:0; display:grid; place-items:center; background:var(--ui-soft); border:1px solid var(--ui-line); border-radius:6px; color:var(--ui-muted); cursor:default; font:inherit; font-size:clamp(.5rem,1vw,.7rem); overflow:hidden; }
+#pokdle-app.design-refresh .race-cell.race-coral { --race-team:#d76147; }
+#pokdle-app.design-refresh .race-cell.is-claimed { background:color-mix(in srgb,var(--race-team) 18%,var(--ui-surface)); border:2px solid var(--race-team); cursor:pointer; }
+#pokdle-app.design-refresh .race-cell img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+#pokdle-app.design-refresh .race-owner-mark { position:absolute; bottom:0; right:0; padding:0 3px; background:var(--race-team); color:#fff; font-size:8px; font-weight:900; border-top-left-radius:3px; }
+#pokdle-app.design-refresh .race-cell:focus-visible { outline:3px solid var(--ui-accent); outline-offset:-3px; }
+#pokdle-app.design-refresh .race-footer { padding:0; margin:0; background:none; border:0; }
+#pokdle-app.design-refresh .race-form { display:grid; grid-template-columns:auto minmax(200px,1fr) auto; align-items:center; gap:20px; max-width:960px; margin:0 auto; }
+#pokdle-app.design-refresh .race-form label { color:var(--ui-ink); font-size:.85rem; font-weight:800; margin:0; }
+#pokdle-app.design-refresh .race-form label span { display:block; color:var(--ui-muted); font-size:.69rem; font-weight:400; margin-top:4px; }
+#pokdle-app.design-refresh #dex-race-input { width:100%; min-width:0; height:50px; margin:0; padding:12px 16px; background:var(--ui-surface); border:2px solid var(--ui-line); border-radius:12px; color:var(--ui-ink); font:inherit; }
+#pokdle-app.design-refresh #dex-race-input:focus { border-color:var(--ui-accent); outline:2px solid var(--ui-accent-soft); }
+#pokdle-app.design-refresh #dex-race-message { color:var(--ui-ink); text-align:center; min-height:22px; margin:5px 0 0; font-size:.8rem; line-height:22px; }
+#pokdle-app.design-refresh .race-result { display:flex; justify-content:center; align-items:center; gap:28px; }
+#pokdle-app.design-refresh .race-result h3 { margin:4px 0; color:var(--ui-ink); font-size:1.25rem; }
+#pokdle-app.design-refresh .race-result p { color:var(--ui-muted); font-size:.8rem; margin:4px 0 0; }
+@keyframes race-claim { from { transform:scale(.65); opacity:.3; } to { transform:none; opacity:1; } }
+@media (prefers-reduced-motion:no-preference) { #pokdle-app.design-refresh:not(.reduce-motion) .race-cell.is-claimed img { animation:race-claim .22s ease-out; } }
+@media (max-height:700px), (max-width:1100px) {
+  #pokdle-app.design-refresh #dex-race-arena { gap:8px; padding:10px 14px 6px; }
+  #pokdle-app.design-refresh .race-header { gap:10px; grid-template-columns:180px minmax(260px,1fr) auto auto; }
+  #pokdle-app.design-refresh .race-side { padding:8px 10px; }
+  #pokdle-app.design-refresh .race-board-panel { padding:8px; }
+  #pokdle-app.design-refresh .race-form { gap:12px; }
+}

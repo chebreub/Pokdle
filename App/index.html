@@ -1166,7 +1166,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-party-room" class="hidden">
       <div class="card party-room-card">
         <div class="party-hero">
-          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>En duel ou en équipe. Vos meilleurs coups, vos plus belles soirées.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>8 mini-jeux</span><span>Entre amis</span></div></div>
+          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>En duel ou en équipe. Vos meilleurs coups, vos plus belles soirées.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>9 mini-jeux</span><span>Entre amis</span></div></div>
           <div class="party-hero-art" aria-hidden="true"><span>#025</span><b>VS</b><span>#151</span></div>
           <button class="btn-ghost party-back" type="button" data-action="goToConfig">← Retour</button>
         </div>
@@ -1200,6 +1200,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               </div>
               <section id="party-setup" class="party-setup"><div class="party-section-head"><div><span class="party-eyebrow">VOTRE PROCHAIN DÉFI</span><h3>Choisissez votre terrain de jeu</h3></div><span id="party-host-note" class="party-host-note"></span></div>
                 <div id="party-mode-select" class="party-mode-select hidden" role="group" aria-label="Mode de jeu">
+                  <button id="party-mode-dexrace" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["dexrace"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">▦</span><span class="pmt-text"><small class="pmt-tag">Nouveau · Ordinateur</small><b>Course au Pokédex</b><span>Une grille, le premier prend la case</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-coop" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["coop"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Coopération · Nouveau</small><b>Enquête coop</b><span>Vos indices, une seule équipe</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-deduction" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["deduction"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">?</span><span class="pmt-text"><small class="pmt-tag">Nouveau · 2–8</small><b>Pokémon mystère</b><span>Le Duel, tous ensemble</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-nearest" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["nearest"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Nouveau</small><b>Numéro mystère</b><span>Vise le numéro le plus proche</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>

@@ -1629,6 +1629,7 @@ function partySetGens(gens) {
 }
 
 function partyToggleGen(gen) {
+  if (partyRoomState.room?.gameMode === "dexrace") { partySetGens([Number(gen)]); return; }
   var room = partyRoomState.room || {};
   var current = Array.isArray(room.selectedGens) ? room.selectedGens.slice() : [1, 2, 3, 4, 5, 6, 7, 8, 9];
   var idx = current.indexOf(gen);
@@ -1645,7 +1646,7 @@ function partyAllGens() {
   partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
-var PARTY_MODE_SHORT_LABELS = { coop: "Enquête coop", deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
+var PARTY_MODE_SHORT_LABELS = { dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
 function showPartyRoundBanner(room) {
   var panel = document.getElementById("party-round");
   if (!panel || !room) return;
@@ -1779,6 +1780,7 @@ function renderPartyDeduction(room, me, enabled, playing) {
 }
 
 function renderPartyRoom() {
+  if (typeof renderDexRaceArena === "function" && renderDexRaceArena()) return;
   var lobby = document.getElementById("party-lobby");
   var joined = document.getElementById("party-joined");
   var room = partyRoomState.room;
@@ -1799,7 +1801,7 @@ function renderPartyRoom() {
   var complete = room.status === "complete";
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
-  var modeLabels = { coop: "Enquête coop", deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabels = { dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
   var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
@@ -2102,6 +2104,7 @@ function renderPartyRoom() {
   if (rosterTip) rosterTip.textContent = room.gameMode === "coop" ? "Une seule équipe : partagez vos indices pour gagner ensemble." : "Le podium se joue à chaque manche.";
   document.getElementById("party-roster-title").textContent = room.gameMode === "coop" ? "Votre équipe" : complete ? "Le podium" : playing || finished ? "Classement" : "Dans le salon";
   document.getElementById("party-launch-note").textContent = playing ? (room.gameMode === "coop" ? "12 essais communs · 3 minutes · Partagez vos indices." : room.gameMode === "deduction" ? "Le premier à trouver gagne · 3 minutes · Réponse révélée en fin de manche." : "La manche se termine quand tout le monde a répondu ou à la fin du chrono.") : finished ? (isHost ? "Prêts pour la suite ?" : "L’hôte prépare la prochaine manche.") : !isHost ? "La partie commence quand l’hôte la lance." : raw.length < 2 ? "Invite au moins un ami pour commencer." : raw.length + " joueurs · " + total + " manches · " + modeLabel;
+  if (typeof renderDexRaceSetup === "function") renderDexRaceSetup(room, me, isHost);
 }
 
 function initPartyFromUrl() {

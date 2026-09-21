@@ -7,6 +7,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { createOAuthStateStore } = require("./lib/oauth-state");
 const nearestParty = require("./lib/party-nearest");
+const dexRace = require("./lib/party-dexrace");
 const deductionParty = require("./lib/party-deduction");
 const coopParty = require("./lib/party-coop");
 const { bestDuelProximity } = require("./lib/duel-proximity");
@@ -803,7 +804,7 @@ const USAGE_EVENTS = new Set([
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
-  "party:start:coop", "party:start:deduction", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
   "duel:create", "statclash:create",
 ]);
 const USAGE_LABELS = {
@@ -814,7 +815,7 @@ const USAGE_LABELS = {
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
-  "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
+  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
@@ -931,7 +932,9 @@ function generatePartyRoomCode() {
 function joinPlayerToPartyRoom(room, socket, nickname) {
   socket.join(room.code);
   socket.data.partyRoomCode = room.code;
-  room.players.push({ id: socket.id, nickname, connected: true, score: 0, correct: false });
+  const blue = room.players.filter(p => p.raceTeam === 'blue').length;
+  const coral = room.players.filter(p => p.raceTeam === 'coral').length;
+  room.players.push({ id: socket.id, nickname, connected: true, score: 0, correct: false, raceTeam: blue <= coral ? 'blue' : 'coral' });
 }
 
 function publicPartyGuessRoundState(room, revealed) {
@@ -980,7 +983,7 @@ function resolvePartyNearestRound(room) {
 function publicPartyRoomState(room, viewerId = null) {
   const revealed = room.status === "finished" || room.status === "complete";
   const gameMode = room.gameMode || "guess";
-  const roundState = room.status === "waiting" ? null : gameMode === "coop"
+  const roundState = room.status === "waiting" ? null : gameMode === "dexrace" ? dexRace.publicRace(room) : gameMode === "coop"
     ? coopParty.publicCoopRound(room, viewerId, revealed)
     : gameMode === "deduction"
     ? deductionParty.publicDeductionRound(room, revealed)
@@ -1003,12 +1006,15 @@ function publicPartyRoomState(room, viewerId = null) {
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     deadlineAt: room.deadlineAt || null,
     gameMode,
+    raceFormat: room.raceFormat || "duel",
+    raceDuration: room.raceDuration === 300 ? 300 : 180,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: roundState,
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
       connected: player.connected,
+      raceTeam: player.raceTeam || "blue",
       score: Number(player.score) || 0,
       correct: Boolean(player.correct),
       lastGain: Number(player.lastGain) || 0,
@@ -1065,6 +1071,7 @@ function pickPartyTarget(room) {
 }
 
 function partyTotalRoundsForMode(mode, configured) {
+  if (mode === "dexrace") return 1;
   // L'hôte peut configurer 5/10/15/20 manches ; Stat Clash Party garde 6 par
   // défaut (une stat par manche) si rien n'est configuré.
   const wanted = Number(configured);
@@ -1118,7 +1125,9 @@ function clearPartyRoundTimer(room) {
 
 function forcePartyRoundEnd(room) {
   if (!room || room.status !== "playing") return;
-  if (room.gameMode === "nearest") {
+  if (room.gameMode === "dexrace") {
+    room.race.endedReason = "time"; endPartyRound(room);
+  } else if (room.gameMode === "nearest") {
     resolvePartyNearestRound(room);
   } else if (isPartyStatMode(room)) {
     resolvePartyStatRound(room);
@@ -1131,7 +1140,7 @@ function forcePartyRoundEnd(room) {
 function armPartyRoundTimer(room) {
   clearPartyRoundTimer(room);
   if (room.status !== "playing") return;
-  const duration = ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
+  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, duration);
@@ -1139,7 +1148,9 @@ function armPartyRoundTimer(room) {
 
 async function startPartyRound(room) {
   // Dispatch selon le mode de la party
-  if (room.gameMode === "coop") {
+  if (room.gameMode === "dexrace") {
+    dexRace.startRace(room, POKEMON_LIST);
+  } else if (room.gameMode === "coop") {
     coopParty.startCoopRound(room, POKEMON_LIST);
   } else if (room.gameMode === "deduction") {
     deductionParty.startDeductionRound(room, POKEMON_LIST);
@@ -1584,6 +1595,7 @@ function handlePartyDisconnect(socketId, voluntary) {
     const next = room.players.find((entry) => entry.connected) || room.players[0];
     room.hostId = next.id;
   }
+  if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
   if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
   if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
   emitPartyRoomState(room);
@@ -1853,8 +1865,12 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer." });
       if (room.players.length < PARTY_MIN_PLAYERS) return respond(ack, { ok: false, error: "Il faut au moins 2 joueurs." });
       if (room.status === "playing") return respond(ack, { ok: false, error: "Une manche est deja en cours." });
+      if (room.gameMode === "dexrace") {
+        const error = dexRace.raceStartError(room);
+        if (error) return respond(ack, { ok: false, error });
+      }
       await startPartyGame(room);
-      if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (!room.target && room.gameMode !== "dexrace") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       recordUsage("party:start:" + (room.gameMode || "guess"));
       emitPartyRoomState(room);
@@ -1868,9 +1884,16 @@ io.on("connection", (socket) => {
     try {
       if (checkRateLimit(socket, "party-guess")) return respond(ack, { ok: false, error: "Trop de requetes." });
       const room = findPartyRoomBySocket(socket.id);
-      if (!room || room.status !== "playing" || !room.target) return respond(ack, { ok: false, error: "Aucune manche en cours." });
+      if (!room || room.status !== "playing" || (!room.target && room.gameMode !== "dexrace")) return respond(ack, { ok: false, error: "Aucune manche en cours." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
+      if (room.gameMode === "dexrace") {
+        const result = dexRace.submitRace(room, player, payload);
+        if (result.error) return respond(ack, { ok: false, error: result.error });
+        if (result.full) { room.race.endedReason = "full"; endPartyRound(room); }
+        if (result.claimed) emitPartyRoomState(room);
+        return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
+      }
       if (room.gameMode === "coop") {
         if (payload.code !== room.code) return respond(ack, { ok: false, error: "Cette salle a changé." });
         const result = coopParty.submitCoop(room, player, payload.guess, payload.roundSerial, resolveRoomPokemonGuess);
@@ -1918,6 +1941,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
+      if (room.gameMode === "dexrace") return respond(ack, { ok: false, error: "La course se termine au chrono ou quand la grille est complète." });
       if (room.gameMode === "nearest") { resolvePartyNearestRound(room); } else if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -1957,7 +1981,7 @@ io.on("connection", (socket) => {
       if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) return respond(ack, { ok: false, error: "La party est terminee." });
       room.roundNumber = (Number(room.roundNumber) || 1) + 1;
       await startPartyRound(room);
-      if (!room.target) return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (!room.target && room.gameMode !== "dexrace") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -1973,7 +1997,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "coop") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
         room.roundNumber = 0;
@@ -1982,6 +2006,8 @@ io.on("connection", (socket) => {
         for (const p of room.players) { p.correct = false; p.lastGain = 0; p.nearestPick = null; }
       }
       room.gameMode = mode;
+      if (mode === "dexrace") { room.selectedGens = [room.selectedGens?.[0] || 1]; room.totalRounds = 1; dexRace.balanceRaceTeams(room); }
+      else if (room.totalRounds === 1) room.totalRounds = room.configuredRounds || (mode === "statclashparty" ? 6 : 5);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -2015,12 +2041,29 @@ io.on("connection", (socket) => {
       let gens = Array.isArray(payload.gens) ? payload.gens.map(Number).filter((g) => Number.isInteger(g) && g >= 1 && g <= 9) : [];
       gens = Array.from(new Set(gens)).sort((a, b) => a - b);
       if (!gens.length) return respond(ack, { ok: false, error: "Choisis au moins une generation." });
+      if (room.gameMode === "dexrace" && gens.length !== 1) return respond(ack, { ok: false, error: "Choisis une seule génération pour la grille." });
       room.selectedGens = gens;
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de changer les generations." });
     }
+  });
+
+  socket.on("party:dexrace-options", (payload = {}, ack) => {
+    const room = findPartyRoomBySocket(socket.id);
+    if (!room || room.gameMode !== "dexrace" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status)) return respond(ack, {ok:false,error:"Seul l’hôte peut régler la prochaine course."});
+    if (!["duel","teams"].includes(payload.format) || ![180,300].includes(payload.duration)) return respond(ack, {ok:false,error:"Réglages invalides."});
+    room.raceFormat = payload.format; room.raceDuration = payload.duration;
+    if (room.status === "complete") room.status = "waiting";
+    emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
+  });
+  socket.on("party:dexrace-team", (payload = {}, ack) => {
+    const room = findPartyRoomBySocket(socket.id);
+    const player = room?.players.find(p=>p.id===socket.id);
+    if (!player || room.gameMode !== "dexrace" || room.raceFormat !== "teams" || !["waiting","complete"].includes(room.status) || !["blue","coral"].includes(payload.team)) return respond(ack, {ok:false,error:"Les équipes se choisissent avant la course."});
+    player.raceTeam = payload.team;
+    emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
   });
 
   socket.on("stat-clash:create-room", (payload = {}, ack) => {
