@@ -69,7 +69,7 @@ test('server timer completes and scores ties without inventing a winner',()=>{
 test('production controls are host-only and locked during a race; team choice cannot move scores',()=>{
  const room=fixture(4,'teams'),w=wired(room);const settings={format:'teams',duration:300};
  assert.equal(w.event('party:dexrace-options',settings,'b').ok,false);assert.equal(w.event('party:dexrace-options',settings).ok,true);
- assert.equal(room.raceDuration,300);assert.equal(w.event('party:dexrace-team',{team:'coral'},'c').ok,true);assert.ok(race.raceStartError(room));
+ assert.equal(room.raceDuration,300);assert.equal(w.event('party:dexrace-options',{format:'teams',duration:0}).ok,true);assert.equal(room.raceDuration,0);assert.equal(w.event('party:dexrace-team',{team:'coral'},'c').ok,true);assert.ok(race.raceStartError(room));
  race.balanceRaceTeams(room);race.startRace(room,catalogue);room.deadlineAt=Date.now()+300000;
  assert.equal(w.event('party:dexrace-team',{team:'coral'}).ok,false);assert.equal(w.event('party:dexrace-options',settings).ok,false);
  assert.equal(w.event('party:set-gens',{gens:[2]}).ok,false);
@@ -79,5 +79,21 @@ test('board layout fits the largest generation on standard desktop and small lap
  vm.runInNewContext(script.slice(start,script.indexOf('\n}',start)+2),ctx);
  for(const [width,height] of [[1280,480],[960,350],[1800,780]]) for(const count of [72,100,151,156]) {
   const f=ctx.dexRaceLayout(width,height,count);assert.ok(f.size>=36);assert.ok(f.columns*f.size+(f.columns-1)*3<=width);assert.ok(f.rows*f.size+(f.rows-1)*3<=height);assert.ok(f.columns*f.rows>=count);
+ }
+});
+
+test('unlimited duration has no deadline and accepts answers until the grid is complete',()=>{
+ const room=fixture(2,'duel'),w=wired(room);
+ assert.equal(w.event('party:dexrace-options',{format:'duel',duration:0}).ok,true);
+ race.startRace(room,catalogue);
+ w.ctx.armPartyRoundTimer(room);
+ assert.equal(room.raceDuration,0);
+ assert.equal(room.deadlineAt,null);
+ assert.equal(room.roundTimer == null,true);
+ assert.equal(submit(room,'Pikachu').claimed,true);
+ for(const p of race.racePool(catalogue,1).filter(p=>p.name!=='Pikachu')) {
+   const id = p.name === 'Salamèche' ? 'b' : 'a';
+   const res=submit(room,p.name,id);
+   assert.equal(Boolean(res.claimed || res.duplicate),true);
  }
 });
