@@ -9,7 +9,7 @@ function dexRaceRequest(event, payload) {
     partyRoomState.room = res.room; setPartyStatus(''); renderPartyRoom();
   });
 }
-function setDexRaceFormat(format) { dexRaceRequest('party:dexrace-options', {format,duration:partyRoomState.room.raceDuration || 180}); }
+function setDexRaceFormat(format) { const duration = Number.isFinite(Number(partyRoomState.room.raceDuration)) ? Number(partyRoomState.room.raceDuration) : 180; dexRaceRequest('party:dexrace-options', {format,duration}); }
 function setDexRaceDuration(duration) { dexRaceRequest('party:dexrace-options', {format:partyRoomState.room.raceFormat || 'duel',duration}); }
 function chooseDexRaceTeam(team) { dexRaceRequest('party:dexrace-team', {team}); }
 function renderDexRaceSetup(room, me, isHost) {
@@ -22,11 +22,11 @@ function renderDexRaceSetup(room, me, isHost) {
   document.getElementById('party-rounds-select').classList.add('hidden');
   document.getElementById('party-round').classList.add('hidden');
   document.getElementById('party-mode-hint').textContent = 'Une génération, une grille commune. Tape les noms français : le premier prend la case et marque 1 point. Les doublons ne comptent pas. Espèces classiques, sans formes alternatives. Conçu pour ordinateur.';
-  document.getElementById('party-launch-note').textContent = `${room.raceFormat === 'teams' ? 'Deux équipes de même taille' : 'Duel · exactement 2 joueurs'} · ${room.raceDuration / 60} min · Gen ${room.selectedGens[0]}`;
+  document.getElementById('party-launch-note').textContent = `${room.raceFormat === 'teams' ? 'Deux équipes de même taille' : 'Duel · exactement 2 joueurs'} · ${room.raceDuration === 0 ? 'Temps illimité' : (room.raceDuration / 60) + ' min'} · Gen ${room.selectedGens[0]}`;
   document.getElementById('party-roster-title').textContent = 'Les participants';
   const disabled = isHost ? '' : ' disabled';
   const option = (action,value,label,selected) => `<button type="button" class="btn-ghost" data-action="${action}" data-args='[${JSON.stringify(value)}]' aria-pressed="${selected}"${disabled}>${label}</button>`;
-  setup.innerHTML = `<div class="race-setting"><strong>Format</strong><div>${option('setDexRaceFormat','duel','Duel 1 contre 1',room.raceFormat !== 'teams')}${option('setDexRaceFormat','teams','Deux équipes',room.raceFormat === 'teams')}</div></div><div class="race-setting"><strong>Durée</strong><div>${option('setDexRaceDuration',180,'3 minutes',room.raceDuration === 180)}${option('setDexRaceDuration',300,'5 minutes',room.raceDuration === 300)}</div></div>${room.raceFormat === 'teams' ? '<div class="race-team-choice">' + ['blue','coral'].map(team => `<div class="race-side race-${team}"><b>Équipe ${team === 'blue' ? 'Azur' : 'Corail'}</b><p>${room.players.filter(p=>p.raceTeam===team).map(p=>escapeHtml(p.nickname)).join(' · ') || 'Aucun joueur'}</p><button type="button" class="btn-ghost" data-action="chooseDexRaceTeam" data-args='["${team}"]' aria-pressed="${me?.raceTeam === team}">${me?.raceTeam === team ? 'Mon équipe ✓' : 'Rejoindre cette équipe'}</button></div>`).join('') + '</div>' : '<p class="race-setup-note">Une case gagnée ne peut plus être reprise. Les scores sont attribués par le serveur.</p>'}`;
+  setup.innerHTML = `<div class="race-setting"><strong>Format</strong><div>${option('setDexRaceFormat','duel','Duel 1 contre 1',room.raceFormat !== 'teams')}${option('setDexRaceFormat','teams','Deux équipes',room.raceFormat === 'teams')}</div></div><div class="race-setting"><strong>Durée</strong><div>${option('setDexRaceDuration',180,'3 minutes',room.raceDuration === 180)}${option('setDexRaceDuration',300,'5 minutes',room.raceDuration === 300)}${option('setDexRaceDuration',0,'Illimité',room.raceDuration === 0)}</div></div>${room.raceFormat === 'teams' ? '<div class="race-team-choice">' + ['blue','coral'].map(team => `<div class="race-side race-${team}"><b>Équipe ${team === 'blue' ? 'Azur' : 'Corail'}</b><p>${room.players.filter(p=>p.raceTeam===team).map(p=>escapeHtml(p.nickname)).join(' · ') || 'Aucun joueur'}</p><button type="button" class="btn-ghost" data-action="chooseDexRaceTeam" data-args='["${team}"]' aria-pressed="${me?.raceTeam === team}">${me?.raceTeam === team ? 'Mon équipe ✓' : 'Rejoindre cette équipe'}</button></div>`).join('') + '</div>' : '<p class="race-setup-note">Une case gagnée ne peut plus être reprise. Les scores sont attribués par le serveur.</p>'}`;
 }
 function dexRaceLayout(width, height, count) {
   let best = {columns:1,rows:count,size:0};
@@ -62,7 +62,7 @@ function renderDexRaceArena() {
   dexRaceClockOffset = Date.now() - round.serverNow;
   if (key !== dexRaceArenaKey) {
     dexRaceArenaKey = key; dexRacePending = false;
-    arena.innerHTML = `<header class="race-header"><div class="race-brand"><span class="race-eyebrow">PARTY ROOM · GEN ${round.generation}</span><h2>Course au Pokédex<span>.</span></h2></div><div id="dex-race-scoreboard" class="race-scoreboard"></div><div class="race-clock-wrap"><span class="race-eyebrow">TEMPS RESTANT</span><b id="dex-race-clock">—</b></div><button type="button" class="btn-ghost race-exit" data-action="confirmLeaveDexRace">Quitter</button></header><div class="race-board-panel"><div class="race-board-caption"><span id="dex-race-progress"></span><span id="dex-race-cell-info">Chaque Pokémon ne compte qu’une fois.</span></div><div id="dex-race-board-wrap"><div id="dex-race-board" role="group" aria-label="Grille commune"></div></div></div><footer class="race-footer"><form id="dex-race-form" class="race-form"><label for="dex-race-input">À toi de prendre une case<span>Noms français · Entrée pour valider</span></label><input id="dex-race-input" type="text" maxlength="100" placeholder="Nom du Pokémon…" autocomplete="off" spellcheck="false" autocorrect="off" /><button id="dex-race-submit" class="btn-blue" type="submit">Valider →</button></form><div id="dex-race-result" class="race-result hidden"></div><p id="dex-race-message" role="status" aria-live="polite"></p></footer>`;
+    arena.innerHTML = `<header class="race-header"><div class="race-brand"><span class="race-eyebrow">PARTY ROOM · GEN ${round.generation}</span><h2>Course au Pokédex<span>.</span></h2></div><div id="dex-race-scoreboard" class="race-scoreboard"></div><div class="race-clock-wrap"><span class="race-eyebrow" id="dex-race-clock-label">TEMPS RESTANT</span><b id="dex-race-clock">—</b></div><button type="button" class="btn-ghost race-exit" data-action="confirmLeaveDexRace">Quitter</button></header><div class="race-board-panel"><div class="race-board-caption"><span id="dex-race-progress"></span><span id="dex-race-cell-info">Chaque Pokémon ne compte qu’une fois.</span></div><div id="dex-race-board-wrap"><div id="dex-race-board" role="group" aria-label="Grille commune"></div></div></div><footer class="race-footer"><form id="dex-race-form" class="race-form"><label for="dex-race-input">À toi de prendre une case<span>Noms français · Entrée pour valider</span></label><input id="dex-race-input" type="text" maxlength="100" placeholder="Nom du Pokémon…" autocomplete="off" spellcheck="false" autocorrect="off" /><button id="dex-race-submit" class="btn-blue" type="submit">Valider →</button></form><div id="dex-race-result" class="race-result hidden"></div><p id="dex-race-message" role="status" aria-live="polite"></p></footer>`;
     const board = document.getElementById('dex-race-board');
     for (const id of round.ids) {
       const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'race-cell'; cell.dataset.id = id; cell.id = 'race-cell-' + id;
@@ -110,9 +110,18 @@ function renderDexRaceArena() {
 function updateDexRaceClock() {
   const room = partyRoomState.room, clock = document.getElementById('dex-race-clock');
   if (!clock || room?.gameMode !== 'dexrace') return;
-  const remaining = room.status === 'playing' ? Math.max(0,Math.ceil((room.deadlineAt - (Date.now()-dexRaceClockOffset))/1000)) : 0;
-  clock.textContent = Math.floor(remaining/60) + ':' + String(remaining%60).padStart(2,'0');
-  clock.classList.toggle('is-urgent',remaining<=15 && room.status==='playing');
+  const unlimited = room.raceDuration === 0 || !room.deadlineAt;
+  const label = document.getElementById('dex-race-clock-label');
+  if (unlimited) {
+    if (label) label.textContent = 'TEMPS';
+    clock.textContent = '∞';
+    clock.classList.remove('is-urgent');
+  } else {
+    if (label) label.textContent = 'TEMPS RESTANT';
+    const remaining = room.status === 'playing' ? Math.max(0,Math.ceil((room.deadlineAt - (Date.now()-dexRaceClockOffset))/1000)) : 0;
+    clock.textContent = Math.floor(remaining/60) + ':' + String(remaining%60).padStart(2,'0');
+    clock.classList.toggle('is-urgent',remaining<=15 && room.status==='playing');
+  }
   if (room.status==='playing' && !multiplayerSocket?.connected) {
     document.getElementById('dex-race-input').disabled = true;
     document.getElementById('dex-race-submit').disabled = true;
