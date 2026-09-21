@@ -45,8 +45,8 @@ test('fresh round resets claims and scores with a new serial; public board does 
 const source=fs.readFileSync(require.resolve('../server'),'utf8');
 function fn(name){const start=source.indexOf(`function ${name}(`);return source.slice(start,source.indexOf('\n}',start)+2);}
 function wired(room){
- const ctx={dexRace:race,Date,POKEMON_LIST:catalogue,PARTY_MIN_PLAYERS:2,PARTY_MAX_PLAYERS:8,PARTY_TOTAL_ROUNDS:5,checkRateLimit:()=>false,findPartyRoomBySocket:()=>room,respond:(ack,data)=>ack(data),clearPartyRoundTimer(){},emitPartyRoomState(){},isPartyStatMode:()=>false};
- vm.createContext(ctx);vm.runInContext(['publicPartyRoomState','endPartyRound','forcePartyRoundEnd'].map(fn).join('\n'),ctx);
+ const ctx={dexRace:race,Date,setTimeout,clearTimeout,POKEMON_LIST:catalogue,PARTY_MIN_PLAYERS:2,PARTY_MAX_PLAYERS:8,PARTY_TOTAL_ROUNDS:5,PARTY_ROUND_TIMER_MS:30000,checkRateLimit:()=>false,findPartyRoomBySocket:()=>room,respond:(ack,data)=>ack(data),emitPartyRoomState(){},isPartyStatMode:()=>false};
+ vm.createContext(ctx);vm.runInContext(['publicPartyRoomState','clearPartyRoundTimer','endPartyRound','forcePartyRoundEnd','armPartyRoundTimer'].map(fn).join('\n'),ctx);
  const event=(name,payload={},id='a')=>{
   let callback,response;ctx.socket={id,on:(_,handler)=>{callback=handler;}};
   const start=source.indexOf(`  socket.on("${name}"`),end=source.indexOf('\n  socket.on(',start+1);
