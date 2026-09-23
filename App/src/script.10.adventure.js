@@ -125,6 +125,10 @@ function openPartnerProfile() {
   document.getElementById('profile-favorite-input')?.focus();
 }
 function openDiscoveryAlbum() {
+  if (typeof openPokedexCollection === 'function') {
+    openPokedexCollection();
+    return;
+  }
   openProfileScreen();
   switchProfileView('album');
   document.querySelector('.profile-view-switch')?.scrollIntoView({ block: 'start' });
