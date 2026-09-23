@@ -2507,6 +2507,10 @@ function renderWeightBattlePanel() {
       gameOver = true;
       const didWin = pokemon.id === secretPokemon?.id;
       renderWeightBattlePanel();
+      if (typeof gameFeelAnswer === "function") {
+        const selectedCard = Array.from(document.querySelectorAll("#weight-grid .versus-card")).find(card => card.textContent.includes(pokemon.name)) || document.getElementById("weight-grid");
+        gameFeelAnswer(didWin, selectedCard, didWin ? "✓" : "×");
+      }
       // Standalone (hors party) : XP léger + historique + record streak
       if (!isPartySessionActive()) {
         try {
