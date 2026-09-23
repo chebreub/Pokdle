@@ -29873,3 +29873,346 @@ body.reduce-motion #screen-game .guess-result-cell::after {
   filter:none !important;
   opacity:1 !important;
 }
+
+
+/* ===== Global Pokédle game feel ===== */
+.gamefeel-layer {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 11900;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(18px) scale(.98);
+  transition: opacity .2s ease, transform .28s cubic-bezier(.2,.8,.2,1);
+}
+.gamefeel-layer.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.gamefeel-result-card {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  gap: 10px 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(76,110,168,.18);
+  border-radius: 20px;
+  color: #17365f;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 22px 60px rgba(17,43,84,.22);
+  backdrop-filter: blur(14px);
+}
+.gamefeel-result-card.is-win {
+  border-color: rgba(46,173,99,.28);
+  background: linear-gradient(180deg,rgba(249,255,251,.98),rgba(241,252,246,.98));
+}
+.gamefeel-result-card.is-loss {
+  border-color: rgba(224,73,67,.2);
+}
+.gamefeel-result-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  font-size: 1.35rem;
+  font-weight: 1000;
+  color: #fff;
+  background: #6f87ae;
+}
+.is-win .gamefeel-result-icon { background: linear-gradient(145deg,#3fc174,#249d59); }
+.is-loss .gamefeel-result-icon { background: linear-gradient(145deg,#f06d67,#d94a46); }
+.is-draw .gamefeel-result-icon { background: linear-gradient(145deg,#f1bd48,#d79a21); }
+.gamefeel-result-copy { min-width: 0; }
+.gamefeel-result-copy > span {
+  display: block;
+  margin-bottom: 1px;
+  font-size: .64rem;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: #7387a7;
+}
+.gamefeel-result-copy h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #19375f;
+}
+.gamefeel-result-copy p {
+  margin: 3px 0 0;
+  color: #667b9c;
+  font-size: .8rem;
+  font-weight: 700;
+}
+.gamefeel-mission-stack {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+.gamefeel-mission-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(111,82,190,.15);
+  border-radius: 13px;
+  background: rgba(113,83,189,.06);
+}
+.gamefeel-mission-progress > span {
+  grid-column: 1 / -1;
+  font-size: .59rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  color: #7654bd;
+}
+.gamefeel-mission-progress b {
+  font-size: .78rem;
+  color: #332456;
+}
+.gamefeel-mission-progress small {
+  color: #7c6c9b;
+  font-size: .7rem;
+  font-weight: 800;
+}
+.gamefeel-mission-progress.is-ready {
+  border-color: rgba(214,166,45,.28);
+  background: linear-gradient(180deg,rgba(255,249,229,.9),rgba(255,245,210,.8));
+}
+.gamefeel-mission-progress.is-ready > span { color: #a36c00; }
+.gamefeel-result-action {
+  grid-column: 1 / -1;
+  justify-self: end;
+  border: 0;
+  border-radius: 10px;
+  padding: 7px 10px;
+  color: #2d5a9e;
+  background: rgba(47,118,255,.08);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.gamefeel-floating-mark {
+  position: fixed;
+  z-index: 11850;
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+  font-weight: 1000;
+  font-size: 1.05rem;
+  text-shadow: 0 3px 12px rgba(0,0,0,.14);
+  animation: gf-floating .8s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.gamefeel-floating-mark.is-success { color: #24a45b; }
+.gamefeel-floating-mark.is-error { color: #df4d47; }
+.gf-action-success {
+  animation: gf-action-success .55s cubic-bezier(.2,.8,.2,1);
+}
+.gf-action-error {
+  animation: gf-action-error .42s ease;
+}
+.gf-counter-pop {
+  animation: gf-counter-pop .46s cubic-bezier(.18,.8,.2,1);
+}
+main.gf-pulse-success::after,
+main.gf-pulse-error::after,
+main.gf-pulse-record::after {
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: 11700;
+  pointer-events: none;
+  opacity: 0;
+  animation: gf-screen-pulse .46s ease-out;
+}
+main.gf-pulse-success::after { box-shadow: inset 0 0 0 5px rgba(54,185,102,.22); }
+main.gf-pulse-error::after { box-shadow: inset 0 0 0 5px rgba(228,75,68,.18); }
+main.gf-pulse-record::after { box-shadow: inset 0 0 0 5px rgba(241,185,54,.3); }
+
+.win-box {
+  position: relative;
+  overflow: hidden;
+}
+.win-box.is-win-result {
+  border-color: rgba(50,177,101,.26);
+  background:
+    radial-gradient(circle at 12% 0%,rgba(62,190,112,.1),transparent 28%),
+    linear-gradient(180deg,#fff,#f7fdf9);
+}
+.win-box.is-loss-result {
+  border-color: rgba(218,88,79,.16);
+  background: linear-gradient(180deg,#fff,#fff9f8);
+}
+.win-gamefeel-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid rgba(72,110,168,.12);
+  border-radius: 16px;
+  background: rgba(246,250,255,.82);
+}
+.win-grade {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 17px;
+  background: #eef3fb;
+  color: #597094;
+}
+.win-grade strong {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+.win-grade span {
+  margin-top: 2px;
+  font-size: .55rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+}
+.win-grade.is-win {
+  background: linear-gradient(145deg,#e7faef,#d8f5e5);
+  color: #19854d;
+}
+.win-result-facts {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 7px;
+}
+.win-result-facts span {
+  display: grid;
+  gap: 2px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.72);
+}
+.win-result-facts small {
+  color: #8090ab;
+  font-size: .61rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.win-result-facts b {
+  color: #243f68;
+  font-size: .76rem;
+}
+.win-result-types {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.higher-lower-card-pokemon.is-correct,
+.versus-card.is-correct,
+.odd-card.is-correct {
+  animation: gf-correct-card .52s cubic-bezier(.18,.8,.2,1);
+}
+.higher-lower-card-pokemon.is-wrong,
+.versus-card.is-wrong,
+.odd-card.is-wrong {
+  animation: gf-wrong-card .42s ease;
+}
+.speedrun-pokemon,
+.tc-combo {
+  position: relative;
+}
+
+@keyframes gf-floating {
+  0% { opacity:0; transform:translate(-50%,-35%) scale(.7); }
+  25% { opacity:1; transform:translate(-50%,-65%) scale(1.12); }
+  100% { opacity:0; transform:translate(-50%,-130%) scale(.96); }
+}
+@keyframes gf-action-success {
+  0% { transform:scale(1); filter:brightness(1); }
+  48% { transform:scale(1.03); filter:brightness(1.08); box-shadow:0 0 0 7px rgba(46,181,97,.12); }
+  100% { transform:scale(1); filter:none; box-shadow:none; }
+}
+@keyframes gf-action-error {
+  0%,100% { transform:translateX(0); }
+  25% { transform:translateX(-4px); }
+  55% { transform:translateX(4px); }
+  78% { transform:translateX(-2px); }
+}
+@keyframes gf-counter-pop {
+  0% { transform:scale(1); }
+  45% { transform:scale(1.22); color:#2bab62; }
+  100% { transform:scale(1); }
+}
+@keyframes gf-screen-pulse {
+  0% { opacity:0; }
+  35% { opacity:1; }
+  100% { opacity:0; }
+}
+@keyframes gf-correct-card {
+  0% { transform:scale(.97); opacity:.8; }
+  55% { transform:scale(1.025); box-shadow:0 0 0 8px rgba(48,181,97,.1); }
+  100% { transform:none; }
+}
+@keyframes gf-wrong-card {
+  0%,100% { transform:translateX(0); }
+  30% { transform:translateX(-5px); }
+  60% { transform:translateX(5px); }
+}
+
+body.theme-dark .gamefeel-result-card {
+  color: #eef5ff;
+  background: rgba(14,27,49,.96);
+  border-color: rgba(120,158,223,.18);
+}
+body.theme-dark .gamefeel-result-card.is-win {
+  background: linear-gradient(180deg,rgba(17,48,36,.97),rgba(12,31,31,.97));
+}
+body.theme-dark .gamefeel-result-copy h4,
+body.theme-dark .gamefeel-mission-progress b { color:#eef5ff; }
+body.theme-dark .gamefeel-result-copy p,
+body.theme-dark .gamefeel-result-copy > span { color:#adbfdd; }
+body.theme-dark .win-box.is-win-result,
+body.theme-dark .win-box.is-loss-result,
+body.theme-dark .win-gamefeel-summary {
+  background: rgba(17,31,53,.95);
+}
+body.theme-dark .win-result-facts span {
+  background: rgba(255,255,255,.05);
+}
+body.theme-dark .win-result-facts b { color:#eaf2ff; }
+
+@media (max-width:640px) {
+  .gamefeel-layer { left:12px; right:12px; bottom:82px; width:auto; }
+  .gamefeel-result-card { border-radius:16px; }
+  .win-gamefeel-summary { grid-template-columns:auto 1fr; }
+  .win-result-facts { grid-column:1/-1; }
+  .win-result-types { display:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gamefeel-layer,
+  .gamefeel-floating-mark,
+  .gf-action-success,
+  .gf-action-error,
+  .gf-counter-pop,
+  main.gf-pulse-success::after,
+  main.gf-pulse-error::after,
+  main.gf-pulse-record::after,
+  .higher-lower-card-pokemon.is-correct,
+  .higher-lower-card-pokemon.is-wrong,
+  .versus-card.is-correct,
+  .versus-card.is-wrong { animation:none !important; transition:none !important; transform:none !important; }
+}
+body.reduce-motion .gamefeel-layer,
+body.reduce-motion .gamefeel-floating-mark,
+body.reduce-motion .gf-action-success,
+body.reduce-motion .gf-action-error,
+body.reduce-motion .gf-counter-pop {
+  animation:none !important;
+  transition:none !important;
+  transform:none !important;
+}
