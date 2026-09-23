@@ -213,7 +213,18 @@ function claimSecretPokemon(key) {
   if (!claimSecretReward(state, playerProfile.discoveries, key, playerProfile.favoritePokemonId)) return;
   // Persist before any animation: closing, reloading or reduced motion never loses a reward.
   saveProfile(); renderPartner(); renderSecretMissions();
-  showSecretEncounter(mission, true, alreadyOwned);
+  const pokemon = POKEMON_BY_ID.get(mission.pokemonId);
+  if (pokemon && typeof showPokedexRegistration === 'function') {
+    closeOverlayModal();
+    showPokedexRegistration(pokemon, {
+      tier: 'secret',
+      missionLabel: '✦ SECRET',
+      missionTitle: mission.title,
+      autoClose: false
+    });
+  } else {
+    showSecretEncounter(mission, true, alreadyOwned);
+  }
 }
 
 function viewSecretAlbum(key) {

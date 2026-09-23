@@ -59,7 +59,8 @@ function recordPokemonDiscovery(pokemon, mode, at) {
   if (!addDiscovery(playerProfile.discoveries, pokemon, mode, at)) return false;
   saveProfile();
   renderPartner();
-  showToast(`${pokemon.name} rejoint ton album · ${discoveryModeLabel(mode)}`);
+  if (typeof celebrateStandardDiscovery === 'function') celebrateStandardDiscovery(pokemon, mode, at);
+  else showToast(`${pokemon.name} rejoint ton album · ${discoveryModeLabel(mode)}`);
   return true;
 }
 function discoveryModeLabel(mode) {
