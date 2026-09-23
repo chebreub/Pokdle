@@ -268,3 +268,216 @@ body.theme-dark .album-mission-mystery { background: rgba(255,255,255,.08); }
   .album-mission-filters,
   .album-mission-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ===== Pokédex registration ceremony ===== */
+body.pokedex-registration-open { overflow: hidden; }
+.pokedex-registration-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  font-family: "Nunito", system-ui, sans-serif;
+}
+.pokedex-registration-layer.hidden { display: none; }
+.pokedex-registration-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(73,137,255,.28), transparent 30%),
+    rgba(5,13,30,.88);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.pokedex-registration-shell {
+  --ceremony-accent: #5ea0ff;
+  position: relative;
+  width: min(680px, 100%);
+  min-height: 580px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 28px;
+  padding: 20px 22px 24px;
+  color: #f7fbff;
+  background:
+    linear-gradient(180deg, rgba(17,33,63,.94), rgba(8,18,39,.98)),
+    #0b1730;
+  box-shadow: 0 40px 100px rgba(0,0,0,.48);
+  transform: scale(.94) translateY(18px);
+  opacity: 0;
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .28s ease;
+}
+.pokedex-registration-layer.is-active .pokedex-registration-backdrop { opacity: 1; }
+.pokedex-registration-layer.is-active .pokedex-registration-shell { transform: scale(1) translateY(0); opacity: 1; }
+.pokedex-registration-layer.is-closing .pokedex-registration-backdrop,
+.pokedex-registration-layer.is-closing .pokedex-registration-shell { opacity: 0; }
+.pokedex-registration-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+  color: rgba(238,246,255,.72);
+}
+.pokedex-registration-stage {
+  position: relative;
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+}
+.pokedex-registration-stage img {
+  width: min(300px, 62vw);
+  height: min(300px, 62vw);
+  object-fit: contain;
+  position: relative;
+  z-index: 4;
+  opacity: 0;
+  transform: scale(.72);
+  filter: brightness(0) drop-shadow(0 18px 36px rgba(0,0,0,.4));
+  animation: pokedex-register-reveal .85s .52s cubic-bezier(.18,.8,.2,1) forwards;
+}
+.pokedex-registration-silhouette {
+  position: absolute;
+  z-index: 3;
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(255,255,255,.75);
+  border: 1px solid rgba(255,255,255,.18);
+  animation: pokedex-silhouette-out .6s .48s ease forwards;
+}
+.pokedex-registration-rings { position: absolute; inset: 0; display: grid; place-items: center; }
+.pokedex-registration-rings i {
+  position: absolute;
+  width: 180px; height: 180px;
+  border: 1px solid color-mix(in srgb, var(--ceremony-accent), transparent 30%);
+  border-radius: 50%;
+  opacity: .42;
+  animation: pokedex-ring 2.6s ease-out infinite;
+}
+.pokedex-registration-rings i:nth-child(2) { width: 240px; height: 240px; animation-delay: .45s; }
+.pokedex-registration-rings i:nth-child(3) { width: 310px; height: 310px; animation-delay: .9s; }
+.pokedex-registration-scan {
+  position: absolute;
+  z-index: 6;
+  left: 7%; right: 7%;
+  height: 2px;
+  top: 10%;
+  background: linear-gradient(90deg, transparent, var(--ceremony-accent), #fff, var(--ceremony-accent), transparent);
+  box-shadow: 0 0 18px var(--ceremony-accent);
+  opacity: .8;
+  animation: pokedex-scan 1.45s .15s ease-in-out forwards;
+  pointer-events: none;
+}
+.pokedex-registration-gridfx {
+  position: absolute; inset: 0; opacity: .11; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at center, #000, transparent 78%);
+}
+.pokedex-registration-particles { position: absolute; inset: 8% 10%; pointer-events: none; }
+.pokedex-registration-particles i {
+  --x: 50%; --y: 50%;
+  position: absolute;
+  left: calc(12% + (var(--n, 1) * 5%));
+  top: calc(16% + (var(--n, 1) * 3%));
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--ceremony-accent);
+  box-shadow: 0 0 12px var(--ceremony-accent);
+  opacity: 0;
+  animation: pokedex-particle 1.8s .7s ease-out infinite;
+}
+.pokedex-registration-particles i:nth-child(2n) { left: auto; right: 18%; top: 24%; animation-delay: .9s; }
+.pokedex-registration-particles i:nth-child(3n) { left: 22%; top: auto; bottom: 16%; animation-delay: 1.1s; }
+.pokedex-registration-particles i:nth-child(4n) { left: auto; right: 28%; top: auto; bottom: 22%; animation-delay: 1.3s; }
+.pokedex-registration-copy { text-align: center; display: grid; justify-items: center; gap: 7px; position: relative; z-index: 7; }
+.pokedex-registration-kicker {
+  font-size: .72rem; font-weight: 900; letter-spacing: .16em; color: var(--ceremony-accent);
+}
+.pokedex-registration-copy h2 {
+  margin: 0; font-size: clamp(2rem, 5vw, 3.2rem); line-height: .98; letter-spacing: -.035em; color: #fff;
+}
+.pokedex-registration-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.pokedex-registration-meta span {
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.78);
+}
+.pokedex-registration-types { display: flex; justify-content: center; gap: 6px; }
+.pokedex-registration-mission {
+  margin-top: 8px;
+  display: grid;
+  gap: 3px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ceremony-accent), transparent 88%);
+  border: 1px solid color-mix(in srgb, var(--ceremony-accent), transparent 62%);
+}
+.pokedex-registration-mission span { font-size: .64rem; font-weight: 900; letter-spacing: .14em; color: var(--ceremony-accent); }
+.pokedex-registration-mission strong { font-size: .95rem; }
+.pokedex-registration-actions {
+  margin-top: 16px; display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; position: relative; z-index: 7;
+}
+.pokedex-registration-layer.tier-prestige .pokedex-registration-shell { --ceremony-accent: #c699ff; }
+.pokedex-registration-layer.tier-legendary .pokedex-registration-shell {
+  --ceremony-accent: #ffd45a;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(255,208,67,.14), transparent 34%),
+    linear-gradient(180deg, rgba(45,34,18,.97), rgba(15,20,37,.99));
+  box-shadow: 0 40px 110px rgba(0,0,0,.55), 0 0 70px rgba(255,210,75,.12);
+}
+.pokedex-registration-layer.tier-secret .pokedex-registration-shell {
+  --ceremony-accent: #90f0dd;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(97,242,214,.13), transparent 34%),
+    linear-gradient(180deg, rgba(14,31,38,.98), rgba(10,14,29,.99));
+}
+.pokedex-registration-layer.is-special .pokedex-registration-stage img {
+  width: min(340px, 68vw); height: min(340px, 68vw);
+}
+@keyframes pokedex-register-reveal {
+  0% { opacity: 0; transform: scale(.72); filter: brightness(0) drop-shadow(0 18px 36px rgba(0,0,0,.4)); }
+  45% { opacity: 1; filter: brightness(0) drop-shadow(0 18px 36px rgba(0,0,0,.4)); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1) drop-shadow(0 22px 34px color-mix(in srgb, var(--ceremony-accent), transparent 70%)); }
+}
+@keyframes pokedex-silhouette-out { to { opacity: 0; transform: scale(1.25); filter: blur(8px); } }
+@keyframes pokedex-ring { 0% { transform: scale(.7); opacity: 0; } 25% { opacity: .48; } 100% { transform: scale(1.35); opacity: 0; } }
+@keyframes pokedex-scan { 0% { top: 12%; opacity: 0; } 10% { opacity: .9; } 100% { top: 76%; opacity: 0; } }
+@keyframes pokedex-particle { 0% { transform: translateY(16px) scale(.5); opacity: 0; } 30% { opacity: .9; } 100% { transform: translateY(-26px) scale(1.2); opacity: 0; } }
+
+@media (max-width: 640px) {
+  .pokedex-registration-layer { padding: 10px; }
+  .pokedex-registration-shell { min-height: min(680px, 94vh); border-radius: 22px; padding: 16px; }
+  .pokedex-registration-stage { min-height: 280px; }
+  .pokedex-registration-actions { display: grid; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pokedex-registration-layer *,
+  .pokedex-registration-layer *::before,
+  .pokedex-registration-layer *::after { animation: none !important; transition: none !important; }
+  .pokedex-registration-stage img { opacity: 1; transform: none; filter: none; }
+  .pokedex-registration-silhouette, .pokedex-registration-scan { display: none; }
+}
+body.reduce-motion .pokedex-registration-layer *,
+body.reduce-motion .pokedex-registration-layer *::before,
+body.reduce-motion .pokedex-registration-layer *::after { animation: none !important; transition: none !important; }
+body.reduce-motion .pokedex-registration-stage img { opacity: 1; transform: none; filter: none; }
+body.reduce-motion .pokedex-registration-silhouette,
+body.reduce-motion .pokedex-registration-scan { display: none; }
