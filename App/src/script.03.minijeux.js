@@ -185,6 +185,10 @@ function answerHigherLower(choice) {
   higherLowerState.phase = "revealing";
   higherLowerState.isAnimating = true;
   renderHigherLowerScreen();
+  if (typeof gameFeelAnswer === "function") {
+    const anchor = document.querySelector("#higher-lower-root .side-right") || document.getElementById("higher-lower-root");
+    gameFeelAnswer(correct, anchor, correct ? "✓" : "×");
+  }
   trackHigherLowerTimeout(() => {
     if (!higherLowerState) return;
     higherLowerState.isAnimating = false;
@@ -763,10 +767,12 @@ function typeComboSubmitGuess() {
     st.last = { name: mon.name, pts: pts, label: st.combo.tier.label };
     st.feedback = "";
     try { awardXp(6, "Combo de types"); } catch (e) {}
+    if (typeof gameFeelAnswer === "function") gameFeelAnswer(true, document.querySelector("#type-combo-root .tc-combo") || input, "+" + pts);
     typeComboNextCombo();
   } else {
     st.feedback = mon ? (escapeHtml(mon.name) + " n'a pas cette paire de types") : "Pokémon inconnu";
     if (input) { input.classList.add("is-wrong"); setTimeout(() => input.classList.remove("is-wrong"), 280); }
+    if (typeof gameFeelAnswer === "function") gameFeelAnswer(false, input, "×");
     const fb = document.getElementById("type-combo-feedback");
     if (fb) fb.textContent = st.feedback;
   }
@@ -842,6 +848,9 @@ function finalizeTypeComboGame() {
     try { awardXp(50, "Record Combo de types"); } catch (e) {}
   }
   renderTypeComboScreen();
+  if (typeof showGameFeelResult === "function") {
+    showGameFeelResult({ mode: "type-combo", result: st.solved >= 5 ? "win" : "loss", attempts: st.score, targetName: st.solved + " combos · " + st.score + " pts" }, []);
+  }
 }
 function renderTypeComboScreen() {
   const root = document.getElementById("type-combo-root");
@@ -964,6 +973,11 @@ function speedrunSubmitGuess() {
     if (input) input.value = "";
     speedrunState.currentInput = "";
     renderSpeedrunScreen();
+    if (typeof gameFeelAnswer === "function") {
+      const board = document.querySelector("#speedrun-root .speedrun-pokemon") || document.getElementById("speedrun-root");
+      gameFeelAnswer(true, board, "+1");
+      if (typeof gameFeelScorePop === "function") gameFeelScorePop(document.querySelector("#speedrun-root .speedrun-stat-chip b"), "+1", "success");
+    }
     setTimeout(() => document.getElementById("speedrun-input")?.focus(), 50);
   } else {
     // Wrong guess: flash input
@@ -971,6 +985,7 @@ function speedrunSubmitGuess() {
       input.classList.add("is-wrong");
       setTimeout(() => input.classList.remove("is-wrong"), 280);
     }
+    if (typeof gameFeelAnswer === "function") gameFeelAnswer(false, input, "×");
     speedrunState.streak = 0;
   }
 }
@@ -2211,6 +2226,12 @@ function submitQuizAnswer(choiceIndex) {
     if (feedbackEl) feedbackEl.textContent = "Bonne réponse !";
   } else if (feedbackEl) {
     feedbackEl.textContent = `Mauvaise réponse. Bonne réponse : ${current.options[current.answer]}`;
+  }
+  if (typeof gameFeelAnswer === "function") {
+    const chosenButton = optionButtons[choiceIndex] || feedbackEl;
+    gameFeelAnswer(ok, chosenButton, ok ? "+1" : "×");
+    const goodEl = document.getElementById("quiz-good");
+    if (ok && typeof gameFeelScorePop === "function") gameFeelScorePop(goodEl, "+1", "success");
   }
 
   quizHistory.push({
