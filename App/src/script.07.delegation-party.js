@@ -1780,6 +1780,8 @@ const DEFAULT_APP_SETTINGS = {
   textScale: "normal",
   highContrast: false,
   reduceMotion: false,
+  soundEffects: true,
+  pokemonCries: true,
 };
 
 function getStoredAppSettings() {
@@ -2347,7 +2349,15 @@ function openSettingsModal() {
         </label>
       </section>
       <section class="app-settings-section">
-        <h4>Accessibilité</h4>
+        <h4>Son & accessibilité</h4>
+        <label class="app-setting-item">
+          <span><b>Effets sonores</b><small>Feedbacks Pokédex et actions importantes.</small></span>
+          <input type="checkbox" ${settings.soundEffects !== false ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="soundEffects" data-bool="1" />
+        </label>
+        <label class="app-setting-item">
+          <span><b>Cris des Pokémon</b><small>Joue le cri lors des révélations et rencontres.</small></span>
+          <input type="checkbox" ${settings.pokemonCries !== false ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="pokemonCries" data-bool="1" />
+        </label>
         <label class="app-setting-item">
           <span><b>Contraste renforcé</b><small>Renforce les bordures et certains contrastes.</small></span>
           <input type="checkbox" ${settings.highContrast ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="highContrast" data-bool="1" />
