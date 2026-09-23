@@ -29704,3 +29704,172 @@ a:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+
+/* ===== Guess board game-feel refresh ===== */
+#screen-game .search-bar {
+  position: relative;
+  padding: 10px;
+  border: 1px solid rgba(62,102,166,.14);
+  border-radius: 20px;
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 14px 36px rgba(24,53,101,.08);
+  backdrop-filter: blur(10px);
+}
+#screen-game #guess-input {
+  min-height: 56px;
+  border-radius: 15px;
+  border: 1px solid rgba(64,105,174,.18);
+  background: linear-gradient(180deg,#fff,#f7faff);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+#screen-game #guess-input:focus {
+  border-color: rgba(47,118,255,.55);
+  box-shadow: 0 0 0 4px rgba(47,118,255,.1), 0 8px 18px rgba(47,118,255,.07);
+}
+#screen-game #btn-submit {
+  min-width: 104px;
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(39,102,215,.18);
+}
+#screen-game #btn-surrender {
+  border-radius: 13px;
+}
+#screen-game .results-wrap {
+  padding: 12px;
+  border: 1px solid rgba(68,104,166,.12);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg,rgba(248,251,255,.95),rgba(239,246,255,.9));
+  box-shadow: 0 18px 40px rgba(20,50,96,.08);
+}
+#screen-game #results-table {
+  border-spacing: 5px 10px;
+}
+#screen-game #results-table thead th {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: #60779d;
+  background: transparent;
+  font-size: .68rem;
+  letter-spacing: .08em;
+}
+#screen-game #results-table tbody tr {
+  animation: none;
+}
+#screen-game #results-table td {
+  position: relative;
+  overflow: hidden;
+  min-height: 70px;
+  border: 0;
+  border-radius: 14px !important;
+  padding: 12px 11px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.17),
+    0 8px 18px rgba(18,42,82,.08);
+}
+#screen-game #results-table td:first-child {
+  min-width: 190px;
+  color: #17375f !important;
+  background: linear-gradient(180deg,#fff,#f5f8fd) !important;
+  border: 1px solid rgba(61,98,155,.12);
+}
+#screen-game .guess-result-cell {
+  transform-origin: center;
+}
+#screen-game .guess-result-row.is-revealing .guess-result-cell:not(.guess-result-cell-static) {
+  animation: guess-cell-reveal .48s cubic-bezier(.2,.82,.22,1) both;
+  animation-delay: calc(var(--reveal-index, 0) * 70ms);
+}
+#screen-game .guess-result-row.is-revealing .guess-result-cell.c-ok:not(.guess-result-cell-static) {
+  animation-name: guess-cell-reveal-ok;
+}
+#screen-game .guess-result-row.is-revealing .guess-result-cell.c-close:not(.guess-result-cell-static) {
+  animation-name: guess-cell-reveal-close;
+}
+#screen-game .guess-result-row.is-revealing .guess-result-cell.c-wrong:not(.guess-result-cell-static) {
+  animation-name: guess-cell-reveal-wrong;
+}
+#screen-game .guess-result-cell.c-ok::after,
+#screen-game .guess-result-cell.c-close::after,
+#screen-game .guess-result-cell.c-wrong::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.22;
+  background: linear-gradient(120deg,transparent 24%,rgba(255,255,255,.75) 50%,transparent 76%);
+  transform: translateX(-120%);
+}
+#screen-game .guess-result-row.is-revealing .guess-result-cell::after {
+  animation: guess-cell-sheen .8s calc(var(--reveal-index, 0) * 70ms + 90ms) ease-out both;
+}
+#screen-game .c-ok {
+  background: linear-gradient(145deg,#38b85d,#259a4d) !important;
+}
+#screen-game .c-close {
+  background: linear-gradient(145deg,#ffc94d,#efad21) !important;
+}
+#screen-game .c-wrong {
+  background: linear-gradient(145deg,#f25a57,#dd4542) !important;
+}
+#screen-game .poke-cell img {
+  width: 44px;
+  height: 44px;
+  padding: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.8);
+  filter: drop-shadow(0 5px 8px rgba(17,39,72,.14));
+}
+#screen-game .comparison-status {
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.13));
+}
+@keyframes guess-cell-reveal {
+  0% { opacity:0; transform: translateY(12px) scale(.94); filter: blur(4px); }
+  60% { opacity:1; transform: translateY(-2px) scale(1.015); filter: blur(0); }
+  100% { opacity:1; transform:none; filter:none; }
+}
+@keyframes guess-cell-reveal-ok {
+  0% { opacity:0; transform: perspective(420px) rotateX(-62deg) scale(.94); filter: brightness(1.25); }
+  65% { opacity:1; transform: perspective(420px) rotateX(4deg) scale(1.025); filter: brightness(1.08); }
+  100% { opacity:1; transform:none; filter:none; }
+}
+@keyframes guess-cell-reveal-close {
+  0% { opacity:0; transform: translateY(12px) scale(.92); }
+  58% { opacity:1; transform: translateY(-3px) scale(1.025); }
+  100% { opacity:1; transform:none; }
+}
+@keyframes guess-cell-reveal-wrong {
+  0% { opacity:0; transform: translateX(-8px) scale(.95); }
+  45% { opacity:1; transform: translateX(3px) scale(1.01); }
+  70% { transform: translateX(-2px); }
+  100% { opacity:1; transform:none; }
+}
+@keyframes guess-cell-sheen {
+  0% { transform:translateX(-120%); opacity:0; }
+  30% { opacity:.25; }
+  100% { transform:translateX(120%); opacity:0; }
+}
+body.theme-dark #screen-game .search-bar,
+body.theme-dark #screen-game .results-wrap {
+  background: rgba(14,27,49,.9);
+}
+body.theme-dark #screen-game #guess-input {
+  background: linear-gradient(180deg,#152744,#102039);
+}
+body.theme-dark #screen-game #results-table td:first-child {
+  color:#e9f2ff !important;
+  background: linear-gradient(180deg,#182b48,#13243d) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #screen-game .guess-result-cell,
+  #screen-game .guess-result-cell::after { animation:none !important; transform:none !important; filter:none !important; opacity:1 !important; }
+}
+body.reduce-motion #screen-game .guess-result-cell,
+body.reduce-motion #screen-game .guess-result-cell::after {
+  animation:none !important;
+  transform:none !important;
+  filter:none !important;
+  opacity:1 !important;
+}

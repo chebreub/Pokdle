@@ -213,8 +213,30 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
 function addRow(pokemon, cmp) {
   const tbody = document.getElementById("results-body");
   const tr = document.createElement("tr");
+  tr.className = "guess-result-row";
   tr.innerHTML = buildComparisonRowHtml(pokemon, cmp, secretPokemon);
+  const reducedMotion = (() => {
+    try {
+      const settings = typeof getStoredAppSettings === "function" ? getStoredAppSettings() : null;
+      if (settings?.reduceMotion) return true;
+      return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    } catch (_e) { return false; }
+  })();
+  tr.querySelectorAll("td").forEach((cell, index) => {
+    cell.classList.add("guess-result-cell");
+    cell.style.setProperty("--reveal-index", String(index));
+    if (reducedMotion) cell.classList.add("guess-result-cell-static");
+  });
   tbody.insertBefore(tr, tbody.firstChild);
+  if (!reducedMotion) {
+    requestAnimationFrame(() => tr.classList.add("is-revealing"));
+    const states = [cmp.generation, cmp.altForm, cmp.type1, cmp.type2, cmp.habitat, cmp.color, cmp.stage, cmp.height, cmp.weight];
+    const hasOk = states.some(value => value === "ok");
+    const hasClose = states.some(value => value === "close");
+    if (typeof playPokedexUiSfx === "function") {
+      setTimeout(() => playPokedexUiSfx(hasOk ? "correct" : hasClose ? "register" : "error"), 140);
+    }
+  }
   hydrateComparisonRowEncounter(tr, pokemon);
 }
 
