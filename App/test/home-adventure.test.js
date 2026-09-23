@@ -5,7 +5,7 @@ const source=fs.readFileSync(path.join(__dirname,'../src/script.10f.home-adventu
 function fixture(){
   const mons=[
     {id:1,name:'Bulbizarre',gen:1},{id:4,name:'Salamèche',gen:1},
-    {id:152,name:'Germignon',gen:2},{id:155,name:'Héricendre',gen:2},
+    {id:152,name:'Germignon',gen:2},{id:155,name:'Héricendre',gen:2},{id:158,name:'Kaiminus',gen:2},
     {id:252,name:'Arcko',gen:3},{id:255,name:'Poussifeu',gen:3}
   ];
   const byId=new Map(mons.map(p=>[p.id,p]));
