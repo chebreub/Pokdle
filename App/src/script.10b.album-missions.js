@@ -320,7 +320,8 @@ function claimAlbumMission(id, now = Date.now()) {
   saveProfile();
   if (typeof renderPartner === 'function') renderPartner();
   if (typeof renderDiscoveryAlbum === 'function') renderDiscoveryAlbum();
-  if (typeof showToast === 'function') showToast(`${pokemon.name} rejoint ton album · mission « ${mission.title} »`);
+  if (typeof celebrateAlbumMission === 'function') celebrateAlbumMission(mission, pokemon);
+  else if (typeof showToast === 'function') showToast(`${pokemon.name} rejoint ton album · mission « ${mission.title} »`);
   return true;
 }
 function albumMissionTierLabel(mission) {
