@@ -127,6 +127,7 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
     box.classList.add("win-animate");
   }
   if (celebrate) triggerWinCelebration(box);
+  if (typeof enhanceGameOverBox === "function") enhanceGameOverBox({ won, pokemon: secretPokemon, attempts, mode: gameMode });
 
   updateSilhouettePanel(true);
   updatePixelPanel(true);
