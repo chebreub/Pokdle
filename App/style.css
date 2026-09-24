@@ -30866,3 +30866,190 @@ body.theme-dark .lbv2-scope-tabs {
 @media (prefers-reduced-motion: reduce) {
   .lbv2-loading span { animation:none !important; }
 }
+
+
+/* ===== Live rank HUD ===== */
+.live-rank-hud {
+  display:grid;
+  grid-template-columns:auto minmax(150px,1.25fr) minmax(110px,.8fr) minmax(110px,.8fr) minmax(180px,1.2fr) auto;
+  align-items:center;
+  gap:9px;
+  margin:10px 0 14px;
+  padding:9px 10px;
+  border:1px solid rgba(69,108,173,.14);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 0 0,rgba(47,118,255,.08),transparent 30%),
+    linear-gradient(180deg,rgba(255,255,255,.94),rgba(246,250,255,.94));
+  box-shadow:0 10px 24px rgba(27,56,103,.06);
+}
+.live-rank-mark {
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  color:#2f76ff;
+  background:#eaf2ff;
+}
+.live-rank-mark svg {
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+}
+.live-rank-primary,
+.live-rank-stat,
+.live-rank-goal {
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.live-rank-primary > span,
+.live-rank-stat > span,
+.live-rank-goal > span {
+  color:#7b8ea9;
+  font-size:.56rem;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+.live-rank-primary > div {
+  display:flex;
+  align-items:baseline;
+  gap:7px;
+}
+.live-rank-primary strong {
+  color:#214f8c;
+  font-size:1.2rem;
+  line-height:1;
+}
+.live-rank-primary b,
+.live-rank-stat strong {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#2d4a73;
+  font-size:.74rem;
+}
+.live-rank-goal {
+  padding:7px 9px;
+  border-radius:11px;
+  background:#f2f6fc;
+}
+.live-rank-goal b {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#556f95;
+  font-size:.7rem;
+}
+.live-rank-goal.is-hot {
+  background:#e8f8ef;
+}
+.live-rank-goal.is-hot b { color:#1d8750; }
+.live-rank-goal.is-leader {
+  background:#fff6d9;
+}
+.live-rank-goal.is-leader b { color:#9a6a00; }
+.live-rank-open {
+  border:0;
+  border-radius:10px;
+  padding:7px 9px;
+  white-space:nowrap;
+  color:#2f65ad;
+  background:#edf4ff;
+  font:inherit;
+  font-size:.69rem;
+  font-weight:900;
+  cursor:pointer;
+}
+.live-rank-open:hover {
+  background:#e1edff;
+}
+.live-rank-hud.is-goal-hit {
+  animation:live-rank-hit .8s cubic-bezier(.18,.8,.2,1);
+}
+@keyframes live-rank-hit {
+  0% { transform:scale(1); box-shadow:0 10px 24px rgba(27,56,103,.06); }
+  40% { transform:scale(1.012); box-shadow:0 0 0 6px rgba(44,174,98,.11),0 16px 30px rgba(27,56,103,.09); }
+  100% { transform:scale(1); box-shadow:0 10px 24px rgba(27,56,103,.06); }
+}
+body.theme-dark .live-rank-hud {
+  background:
+    radial-gradient(circle at 0 0,rgba(47,118,255,.12),transparent 30%),
+    linear-gradient(180deg,rgba(19,36,61,.96),rgba(14,27,48,.96));
+  border-color:rgba(117,156,220,.14);
+}
+body.theme-dark .live-rank-primary strong,
+body.theme-dark .live-rank-primary b,
+body.theme-dark .live-rank-stat strong {
+  color:#eef5ff;
+}
+body.theme-dark .live-rank-goal {
+  background:rgba(255,255,255,.05);
+}
+body.theme-dark .live-rank-goal b { color:#b7c7df; }
+body.theme-dark .live-rank-open {
+  color:#9fc2ff;
+  background:rgba(82,139,236,.1);
+}
+@media (max-width:900px) {
+  .live-rank-hud {
+    grid-template-columns:auto minmax(140px,1fr) 1fr 1fr auto;
+  }
+  .live-rank-goal {
+    grid-column:2 / -1;
+  }
+}
+@media (max-width:640px) {
+  .live-rank-hud {
+    grid-template-columns:auto minmax(0,1fr) auto;
+    gap:7px;
+    margin:8px 0 10px;
+    padding:8px;
+    border-radius:14px;
+  }
+  .live-rank-mark {
+    width:34px;
+    height:34px;
+    border-radius:10px;
+  }
+  .live-rank-primary {
+    min-width:0;
+  }
+  .live-rank-primary > span {
+    font-size:.52rem;
+  }
+  .live-rank-primary strong {
+    font-size:1.05rem;
+  }
+  .live-rank-primary b {
+    font-size:.68rem;
+  }
+  .live-rank-stat,
+  .live-rank-record {
+    grid-column:span 1;
+    padding:6px 7px;
+    border-radius:9px;
+    background:rgba(67,105,167,.05);
+  }
+  .live-rank-stat:nth-of-type(3) {
+    grid-column:1 / 2;
+  }
+  .live-rank-record {
+    grid-column:2 / 4;
+  }
+  .live-rank-goal {
+    grid-column:1 / -1;
+    padding:6px 8px;
+  }
+  .live-rank-open {
+    grid-column:1 / -1;
+    width:100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-rank-hud.is-goal-hit { animation:none !important; }
+}
+body.reduce-motion .live-rank-hud.is-goal-hit { animation:none !important; }
