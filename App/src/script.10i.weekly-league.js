@@ -191,8 +191,10 @@ function renderWeeklyLeagueHome() {
     card=document.createElement("section");
     card.id="weekly-league-home";
     card.className="weekly-league-home";
-    daily.insertAdjacentElement("afterend",card);
   }
+  if(daily.nextElementSibling!==card) daily.insertAdjacentElement("afterend",card);
+  const adventure=document.getElementById("home-partner");
+  if(adventure&&card.nextElementSibling!==adventure) card.insertAdjacentElement("afterend",adventure);
   const state=weeklyLeagueState();
   weeklyLeagueSyncScore(state);
   const next=state.disciplines.find(row=>!row.metric.complete)||state.disciplines[0];
