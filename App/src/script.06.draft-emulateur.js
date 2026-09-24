@@ -2861,6 +2861,10 @@ async function pickDraftArenaOption(pokemonId) {
       progressQuest("score_attack_600", metrics.average);
       progressQuest("draft_complete", 1);
       submitDraftScoreAttackResult(metrics);
+      if (typeof submitLeaderboardResult === "function") {
+        submitLeaderboardResult("draft_" + draftArenaState.selectedGen, metrics.average);
+        submitLeaderboardResult("draft_all", metrics.average);
+      }
       renderDraftArena();
       return;
     }

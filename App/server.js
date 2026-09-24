@@ -152,11 +152,19 @@ async function initAuthDb() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       PRIMARY KEY (discord_id, mode)
     )`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS leaderboard_events (
+      id BIGSERIAL PRIMARY KEY,
+      discord_id TEXT NOT NULL,
+      mode TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`);
+    await pgPool.query(`CREATE INDEX IF NOT EXISTS leaderboard_events_mode_created_idx ON leaderboard_events (mode, created_at DESC)`);
     await pgPool.query(`CREATE TABLE IF NOT EXISTS visits (
       day DATE PRIMARY KEY,
       hits INTEGER NOT NULL DEFAULT 0
     )`);
-    console.log("[auth] base prete (tables users + scores + visits).");
+    console.log("[auth] base prete (users + scores + leaderboard_events + visits).");
   } catch (e) { console.error("[auth] init base echouee:", e.message); }
 }
 initAuthDb();
@@ -275,23 +283,54 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
-const LB_MODES = ["quiz", "speedrun", "party", "intrus", "poids", "higherlower"];
+const LB_MODE_CONFIG = Object.freeze({
+  daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 100 },
+  quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 10 },
+  speedrun: { direction: "desc", label: "Speedrun", unit: "Pokémon", max: 100 },
+  party: { direction: "desc", label: "Party", unit: "victoires", max: 20 },
+  intrus: { direction: "desc", label: "Intrus", unit: "série", max: 1000 },
+  poids: { direction: "desc", label: "Duel de poids", unit: "série", max: 1000 },
+  higherlower: { direction: "desc", label: "Higher/Lower", unit: "série", max: 1000 },
+  higherlower60: { direction: "desc", label: "Higher/Lower 60s", unit: "points", max: 5000 },
+  typecombo: { direction: "desc", label: "Combo de types", unit: "points", max: 10000 }
+});
+const LB_MODES = Object.keys(LB_MODE_CONFIG);
+function leaderboardConfig(mode) {
+  if (/^draft_(all|[1-9])$/.test(mode)) return { direction: "desc", label: "Draft Score", unit: "BST", max: 1000 };
+  return LB_MODE_CONFIG[mode] || null;
+}
+function leaderboardAllowed(mode) {
+  return Boolean(leaderboardConfig(mode));
+}
+function clampLeaderboardScore(value, config) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const max = Math.max(1, Number(config?.max) || 100000);
+  if (n > max) return null;
+  return Math.max(1, Math.floor(n));
+}
+function leaderboardOrderSql(config) {
+  return config?.direction === "asc" ? "ASC" : "DESC";
+}
+function leaderboardBestSql(config) {
+  return config?.direction === "asc" ? "MIN" : "MAX";
+}
 
 app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
   if (!authReady()) return res.json({ ok: false });
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false });
   const scores = (req.body && req.body.scores && typeof req.body.scores === "object") ? req.body.scores : {};
-  const lbAllowed = (m) => LB_MODES.includes(m) || /^draft_(all|[1-9])$/.test(m);
   try {
     for (const mode of Object.keys(scores)) {
-      if (!lbAllowed(mode)) continue;
-      let v = Number(scores[mode]);
-      if (!Number.isFinite(v) || v <= 0) continue;
-      v = Math.max(0, Math.min(100000, Math.floor(v)));
+      const config = leaderboardConfig(mode);
+      if (!config || config.direction !== "desc") continue;
+      const v = clampLeaderboardScore(scores[mode], config);
+      if (v == null) continue;
       await pgPool.query(
         `INSERT INTO scores (discord_id, mode, score, username, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, now())
-         ON CONFLICT (discord_id, mode) DO UPDATE SET score = GREATEST(scores.score, EXCLUDED.score), username = EXCLUDED.username, avatar = EXCLUDED.avatar, updated_at = now()`,
+         ON CONFLICT (discord_id, mode) DO UPDATE SET score = GREATEST(scores.score, EXCLUDED.score), username = EXCLUDED.username, avatar = EXCLUDED.avatar,
+           updated_at = CASE WHEN EXCLUDED.score > scores.score THEN now() ELSE scores.updated_at END`,
         [user.id, mode, v, user.username || "", user.avatar || ""]
       );
     }
@@ -299,25 +338,119 @@ app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
   } catch (e) { console.error("[scores] post:", e.message); res.json({ ok: false }); }
 });
 
-app.get("/api/leaderboard", async (req, res) => {
-  if (!authReady()) return res.json({ ok: false, top: [], me: null });
-  const mode = (LB_MODES.includes(req.query.mode) || /^draft_(all|[1-9])$/.test(req.query.mode)) ? req.query.mode : "quiz";
+app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, res) => {
+  if (!authReady()) return res.json({ ok: false });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ ok: false });
+  const mode = String(req.body?.mode || "");
+  const config = leaderboardConfig(mode);
+  const score = clampLeaderboardScore(req.body?.score, config);
+  if (!config || score == null) return res.status(400).json({ ok: false });
   try {
-    const top = await pgPool.query("SELECT discord_id, username, avatar, score FROM scores WHERE mode = $1 ORDER BY score DESC, updated_at ASC LIMIT 20", [mode]);
+    await pgPool.query(
+      "INSERT INTO leaderboard_events (discord_id, mode, score, created_at) VALUES ($1, $2, $3, now())",
+      [user.id, mode, score]
+    );
+    const bestExpr = config.direction === "asc" ? "LEAST(scores.score, EXCLUDED.score)" : "GREATEST(scores.score, EXCLUDED.score)";
+    await pgPool.query(
+      `INSERT INTO scores (discord_id, mode, score, username, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, now())
+       ON CONFLICT (discord_id, mode) DO UPDATE SET score = ${bestExpr}, username = EXCLUDED.username, avatar = EXCLUDED.avatar,
+         updated_at = CASE WHEN EXCLUDED.score ${config.direction === "asc" ? "<" : ">"} scores.score THEN now() ELSE scores.updated_at END`,
+      [user.id, mode, score, user.username || "", user.avatar || ""]
+    );
+    res.json({ ok: true, mode, score });
+  } catch (e) {
+    console.error("[leaderboard] result:", e.message);
+    res.json({ ok: false });
+  }
+});
+
+app.get("/api/leaderboard", async (req, res) => {
+  if (!authReady()) return res.json({ ok: false, top: [], me: null, around: [], total: 0 });
+  const requestedMode = String(req.query.mode || "quiz");
+  const mode = leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
+  const config = leaderboardConfig(mode);
+  const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
+  const order = leaderboardOrderSql(config);
+  const best = leaderboardBestSql(config);
+  const user = getSessionUser(req);
+  const meId = user ? user.id : null;
+  try {
+    let rankedCte;
+    if (scope === "all") {
+      rankedCte = `
+        WITH ranked AS (
+          SELECT s.discord_id, s.username, s.avatar, s.score,
+            (RANK() OVER (ORDER BY s.score ${order}, s.updated_at ASC))::int AS rank
+          FROM scores s
+          WHERE s.mode = $1
+        )`;
+    } else {
+      const timePredicate = scope === "today"
+        ? "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')"
+        : "e.created_at >= now() - interval '7 days'";
+      rankedCte = `
+        WITH best AS (
+          SELECT e.discord_id, ${best}(e.score)::int AS score
+          FROM leaderboard_events e
+          WHERE e.mode = $1 AND ${timePredicate}
+          GROUP BY e.discord_id
+        ),
+        ranked AS (
+          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, COALESCE(u.avatar, '') AS avatar, b.score,
+            (RANK() OVER (ORDER BY b.score ${order}))::int AS rank
+          FROM best b
+          LEFT JOIN users u ON u.discord_id = b.discord_id
+        )`;
+    }
+
+    const top = await pgPool.query(
+      rankedCte + " SELECT discord_id, username, avatar, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
+      [mode]
+    );
+    const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", [mode]);
     let me = null;
-    const user = getSessionUser(req);
-    if (user) {
-      const mine = await pgPool.query("SELECT score FROM scores WHERE discord_id = $1 AND mode = $2", [user.id, mode]);
+    let aroundRows = [];
+    if (meId) {
+      const mine = await pgPool.query(
+        rankedCte + " SELECT discord_id, username, avatar, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
+        [mode, meId]
+      );
       if (mine.rows[0]) {
-        const myScore = mine.rows[0].score;
-        const rankR = await pgPool.query("SELECT COUNT(*)::int AS c FROM scores WHERE mode = $1 AND score > $2", [mode, myScore]);
-        me = { rank: rankR.rows[0].c + 1, score: myScore };
+        const row = mine.rows[0];
+        me = { rank: Number(row.rank), score: Number(row.score) };
+        const low = Math.max(1, Number(row.rank) - 2);
+        const high = Number(row.rank) + 2;
+        const around = await pgPool.query(
+          rankedCte + " SELECT discord_id, username, avatar, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
+          [mode, low, high]
+        );
+        aroundRows = around.rows;
       }
     }
-    const meId = user ? user.id : null;
-    const topRows = top.rows.map((r) => ({ username: r.username, avatar: r.avatar, score: r.score, me: meId != null && r.discord_id === meId }));
-    res.json({ ok: true, mode, top: topRows, me });
-  } catch (e) { console.error("[leaderboard] get:", e.message); res.json({ ok: false, top: [], me: null }); }
+    const mapRow = (row) => ({
+      rank: Number(row.rank),
+      username: row.username,
+      avatar: row.avatar,
+      score: Number(row.score),
+      me: meId != null && row.discord_id === meId
+    });
+    res.json({
+      ok: true,
+      mode,
+      scope,
+      direction: config.direction,
+      label: config.label,
+      unit: config.unit,
+      total: Number(totalR.rows[0]?.total) || 0,
+      top: top.rows.map(mapRow),
+      me,
+      around: aroundRows.map(mapRow)
+    });
+  } catch (e) {
+    console.error("[leaderboard] get:", e.message);
+    res.json({ ok: false, top: [], me: null, around: [], total: 0 });
+  }
 });
 // ===== Fin auth Phase 1 =====
 
