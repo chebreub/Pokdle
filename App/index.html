@@ -187,7 +187,7 @@
       <div id="challenge-panel" class="card challenge-panel hidden">
         <p class="challenge-title">🤝 Défi ami — choisis un Pokémon et envoie le lien :</p>
         <div class="ac-wrapper">
-          <input type="text" id="challenge-input" placeholder="Chercher un Pokémon..." autocomplete="off" />
+          <input type="text" id="challenge-input" placeholder="Chercher un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
           <div id="challenge-ac" class="ac-list hidden"></div>
         </div>
         <div id="challenge-preview" class="challenge-preview hidden">
@@ -1077,7 +1077,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
       <div class="search-bar">
         <div class="ac-wrapper">
-          <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
+          <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
           <div id="guess-ac" class="ac-list hidden"></div>
         </div>
         <button class="btn-red btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
@@ -1192,7 +1192,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <p id="party-pick-status" class="party-pick-status hidden" role="status"></p>
                 <p id="party-answer-msg" class="party-answer-msg" role="status" aria-live="polite"></p>
                 <section id="party-coop" class="party-coop hidden" aria-label="Enquête en équipe"></section>
-                <div id="party-round-input" class="party-round-input"><div class="ac-wrapper party-ac-wrapper"><label class="party-input-label" for="party-guess">Ta proposition</label><input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" spellcheck="false" /><div id="party-guess-ac" class="ac-list hidden"></div></div><button id="party-submit-btn" class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button></div>
+                <div id="party-round-input" class="party-round-input"><div class="ac-wrapper party-ac-wrapper"><label class="party-input-label" for="party-guess">Ta proposition</label><input id="party-guess" type="text" placeholder="Nom du Pokémon" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" /><div id="party-guess-ac" class="ac-list hidden"></div></div><button id="party-submit-btn" class="btn-blue" type="button" data-action="partySubmitAnswer">Valider</button></div>
                 <details id="party-deduction-forfeit" class="party-deduction-forfeit hidden"><summary>Abandonner cette manche</summary><p>Tu restes spectateur jusqu’à la prochaine manche. Les autres peuvent continuer à chercher.</p><button id="party-deduction-forfeit-btn" class="btn-ghost" type="button" data-action="partyForfeitDeduction">Confirmer mon abandon</button></details>
                 <section id="party-deduction" class="party-deduction hidden"><p id="party-deduction-status" class="party-deduction-muted"></p><div class="party-deduction-rivals-panel"><h4>La course au mystère</h4><p class="party-deduction-muted">Meilleure proximité selon les 9 critères · Un indice partiel compte pour moitié · 100 % = Pokémon trouvé.</p><div id="party-deduction-rivals" class="party-deduction-rivals"></div></div><h4>Mes indices</h4><p class="party-deduction-muted">✓ Exact · ≈ Partiel · × Différent · Les flèches indiquent si la cible est plus grande ou plus lourde.</p><div id="party-deduction-history" class="party-deduction-history"></div></section>
                 <p id="party-nearest-help" class="party-round-help hidden">Choisis un Pokémon dans la liste pour valider · Une seule réponse · +100 pts aux plus proches, ex æquo inclus</p>
@@ -1307,7 +1307,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <p id="multiplayer-live-text">Vous cherchez le même Pokémon mystère. Trouve-le avant l’autre pour remporter la manche.</p>
               <div class="multiplayer-guess-row">
                 <div class="ac-wrapper">
-                  <input id="multiplayer-guess-input" aria-label="Ta proposition en duel" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" />
+                  <input id="multiplayer-guess-input" aria-label="Ta proposition en duel" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
                   <div id="multiplayer-guess-ac" class="ac-list hidden"></div>
                 </div>
                 <button class="btn-red" type="button" data-action="submitMultiplayerGuess">Envoyer</button>

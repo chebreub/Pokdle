@@ -102,8 +102,8 @@ function renderHomeAdventureV2() {
   const daily = document.getElementById('daily-hero');
   if (!home || !screen || !daily) return;
 
-  if (home.previousElementSibling !== document.getElementById('home-return')) {
-    screen.insertBefore(home, daily);
+  if (daily.nextElementSibling !== home) {
+    daily.insertAdjacentElement('afterend', home);
   }
 
   const xp = Number(playerProfile?.xp) || 0;

@@ -187,3 +187,60 @@
   #screen-pokedex .pokedex-back-to-list { display: block; width: 100%; min-height: 44px; margin: 12px 0; }
   #screen-pokedex #pokedex-detail { scroll-margin-top: 12px; }
 }
+
+
+/* ===== Mobile Pokémon autocomplete repair ===== */
+@media (max-width: 640px) {
+  .ac-wrapper {
+    overflow: visible !important;
+  }
+  .ac-wrapper > .ac-list {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(34dvh, 238px) !important;
+    margin-top: 7px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 24px rgba(18,43,82,.12) !important;
+  }
+  .ac-wrapper > .ac-list.hidden {
+    display: none !important;
+  }
+  .ac-wrapper > .ac-list .ac-item {
+    min-height: 56px !important;
+    padding: 7px 10px !important;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ac-wrapper > .ac-list .ac-item img {
+    width: 40px !important;
+    height: 40px !important;
+    flex: 0 0 40px !important;
+  }
+  .ac-wrapper > .ac-list .ac-name {
+    font-size: .92rem !important;
+    line-height: 1.15;
+  }
+  .ac-wrapper > .ac-list .ac-sub {
+    font-size: .72rem !important;
+  }
+  #screen-game .search-bar {
+    overflow: visible !important;
+  }
+  #screen-game .search-bar:has(#guess-ac:not(.hidden)) {
+    align-items: start !important;
+  }
+  #screen-game #guess-input,
+  #multiplayer-guess-input,
+  #party-guess,
+  #challenge-input {
+    font-size: 16px !important; /* prevents iOS input zoom */
+  }
+}
