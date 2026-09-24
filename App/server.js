@@ -284,28 +284,30 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
 const LB_MODE_CONFIG = Object.freeze({
-  daily: { direction: "asc", label: "Pokémon du jour", unit: "essais" },
-  quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses" },
-  speedrun: { direction: "desc", label: "Speedrun", unit: "Pokémon" },
-  party: { direction: "desc", label: "Party", unit: "victoires" },
-  intrus: { direction: "desc", label: "Intrus", unit: "série" },
-  poids: { direction: "desc", label: "Duel de poids", unit: "série" },
-  higherlower: { direction: "desc", label: "Higher/Lower", unit: "série" },
-  higherlower60: { direction: "desc", label: "Higher/Lower 60s", unit: "points" },
-  typecombo: { direction: "desc", label: "Combo de types", unit: "points" }
+  daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 100 },
+  quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 10 },
+  speedrun: { direction: "desc", label: "Speedrun", unit: "Pokémon", max: 100 },
+  party: { direction: "desc", label: "Party", unit: "victoires", max: 20 },
+  intrus: { direction: "desc", label: "Intrus", unit: "série", max: 1000 },
+  poids: { direction: "desc", label: "Duel de poids", unit: "série", max: 1000 },
+  higherlower: { direction: "desc", label: "Higher/Lower", unit: "série", max: 1000 },
+  higherlower60: { direction: "desc", label: "Higher/Lower 60s", unit: "points", max: 5000 },
+  typecombo: { direction: "desc", label: "Combo de types", unit: "points", max: 10000 }
 });
 const LB_MODES = Object.keys(LB_MODE_CONFIG);
 function leaderboardConfig(mode) {
-  if (/^draft_(all|[1-9])$/.test(mode)) return { direction: "desc", label: "Draft Score", unit: "BST" };
+  if (/^draft_(all|[1-9])$/.test(mode)) return { direction: "desc", label: "Draft Score", unit: "BST", max: 1000 };
   return LB_MODE_CONFIG[mode] || null;
 }
 function leaderboardAllowed(mode) {
   return Boolean(leaderboardConfig(mode));
 }
-function clampLeaderboardScore(value) {
+function clampLeaderboardScore(value, config) {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return null;
-  return Math.max(1, Math.min(100000, Math.floor(n)));
+  const max = Math.max(1, Number(config?.max) || 100000);
+  if (n > max) return null;
+  return Math.max(1, Math.floor(n));
 }
 function leaderboardOrderSql(config) {
   return config?.direction === "asc" ? "ASC" : "DESC";
@@ -323,7 +325,7 @@ app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
     for (const mode of Object.keys(scores)) {
       const config = leaderboardConfig(mode);
       if (!config || config.direction !== "desc") continue;
-      const v = clampLeaderboardScore(scores[mode]);
+      const v = clampLeaderboardScore(scores[mode], config);
       if (v == null) continue;
       await pgPool.query(
         `INSERT INTO scores (discord_id, mode, score, username, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, now())
@@ -342,7 +344,7 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
   if (!user) return res.status(401).json({ ok: false });
   const mode = String(req.body?.mode || "");
   const config = leaderboardConfig(mode);
-  const score = clampLeaderboardScore(req.body?.score);
+  const score = clampLeaderboardScore(req.body?.score, config);
   if (!config || score == null) return res.status(400).json({ ok: false });
   try {
     await pgPool.query(
