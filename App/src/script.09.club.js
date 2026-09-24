@@ -131,9 +131,26 @@ function renderSoloClubResult(won) {
   const box = document.getElementById("win-box");
   if (!box || !secretPokemon) return;
   let detail = document.getElementById("solo-club-result");
-  if (!detail) { detail = document.createElement("div"); detail.id = "solo-club-result"; detail.className = "club-solo-result"; box.appendChild(detail); }
-  detail.innerHTML = '<span>' + escapeHtml(secretPokemon.isAltForm ? 'Forme alternative' : 'Génération ' + secretPokemon.gen) + '</span><span>' + escapeHtml([secretPokemon.type1, secretPokemon.type2].filter(t => t && t !== "Aucun").join(" / ")) + '</span><p>' +
-    (gameMode === "daily" ? 'Ton rendez-vous de demain t’attend. Envie de continuer ? Essaie le mode illimité.' : won ? 'Un mystère de plus résolu. Prêt pour le prochain ?' : 'Le mystère est révélé. Retente ta chance !') + '</p>' + (won ? '<button type="button" class="btn-ghost" data-action="openDiscoveryAlbum">Voir mon album →</button>' : '');
+  if (!detail) {
+    detail = document.createElement("div");
+    detail.id = "solo-club-result";
+    detail.className = "club-solo-result";
+    const actions = box.querySelector(".win-btns");
+    if (actions) box.insertBefore(detail, actions);
+    else box.appendChild(detail);
+  }
+  const typeLabel = [secretPokemon.type1, secretPokemon.type2].filter(t => t && t !== "Aucun").join(" / ");
+  const genLabel = secretPokemon.isAltForm ? "Forme alternative" : "Génération " + secretPokemon.gen;
+  const copy = gameMode === "daily"
+    ? "Défi quotidien terminé. Ton prochain Pokémon arrive demain."
+    : won ? "Mystère enregistré dans ton Pokédex." : "Le mystère est révélé.";
+  detail.innerHTML =
+    '<div class="club-result-meta">' +
+      '<span>' + escapeHtml(genLabel) + '</span>' +
+      '<span>' + escapeHtml(typeLabel) + '</span>' +
+    '</div>' +
+    '<p>' + escapeHtml(copy) + '</p>' +
+    (won ? '<button type="button" class="btn-ghost" data-action="openPokedexCollection">Voir le Pokédex →</button>' : '');
 }
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("#screen-all-modes .all-modes-card[data-action='openFromAllModes']").forEach(card => {
