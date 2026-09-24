@@ -107,47 +107,94 @@ function openLeaderboardV2(mode="daily",scope="all") {
   leaderboardV2Scope=LEADERBOARD_V2_SCOPES.some(([id])=>id===scope)?scope:"all";
   const meta=leaderboardV2ModeMeta(current);
 
-  ensureOverlay("Classements",'<div class="lbv2-shell"><div class="lbv2-loading"><span></span><p>Chargement du classement…</p></div></div>');
-  fetch("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(leaderboardV2Scope),{credentials:"same-origin"})
-    .then(r=>r.json())
-    .then(data=>{
-      const tabs=LEADERBOARD_V2_MODES.map(([id,label])=>{
-        const active=id==="draft"?leaderboardV2IsDraft(current):id===current;
-        const target=id==="draft"?"draft_all":id;
-        return '<button type="button" class="lbv2-mode-tab'+(active?' is-active':'')+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
-      }).join("");
-      const periods=LEADERBOARD_V2_SCOPES.map(([id,label])=>'<button type="button" class="lbv2-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>').join("");
-      const draft=leaderboardV2IsDraft(current)
-        ? '<div class="lbv2-draft-tabs">'+DRAFT_GENS.map(([id,label])=>'<button type="button" class="'+(id===current?'is-active':'')+'" data-action="switchLeaderboardV2" data-lb-mode="'+id+'">'+label+'</button>').join("")+'</div>'
-        : '';
-      const rows=Array.isArray(data?.top)?data.top:[];
-      const podium=rows.filter(row=>Number(row.rank)<=3);
-      const rest=rows.filter(row=>Number(row.rank)>3);
-      const podiumHtml=podium.length
-        ? '<div class="lbv2-podium">'+podium.map((row,i)=>leaderboardV2Row(row,i+1,current,data.unit||meta.unit)).join("")+'</div>'
-        : '';
-      const listHtml=rest.length
-        ? '<div class="lbv2-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+4,current,data.unit||meta.unit)).join("")+'</div>'
-        : (!podium.length?'<div class="lbv2-empty"><b>Le classement est encore vide.</b><span>Sois le premier à poser une performance.</span></div>':'');
-      const around=(Array.isArray(data?.around)?data.around:[]).filter(row=>!rows.some(top=>Number(top.rank)===Number(row.rank)&&top.username===row.username));
-      const aroundHtml=around.length
-        ? '<section class="lbv2-around"><div class="lbv2-section-title"><span>AUTOUR DE TOI</span></div>'+around.map(row=>leaderboardV2Row(row,row.rank,current,data.unit||meta.unit,true)).join("")+'</section>'
-        : '';
-      let meHtml='';
-      if (data?.me) {
-        meHtml='<div class="lbv2-me-card"><div><span>TA POSITION</span><strong>#'+Number(data.me.rank)+'</strong></div><div><span>TA PERFORMANCE</span><strong>'+escapeHtml(leaderboardV2FormatScore(data.me.score,current,data.unit||meta.unit))+'</strong></div></div>';
-      } else {
-        meHtml='<div class="lbv2-login-note">'+(window.__pokedleAuthed?'Joue à ce mode pour entrer dans ce classement.':'Connecte-toi avec Discord pour enregistrer tes performances.')+'</div>';
-      }
-      const total=Number(data?.total)||0;
-      const body='<div class="lbv2-shell">'+
-        '<header class="lbv2-hero"><div><span class="lbv2-eyebrow">ARÈNE DES DRESSEURS</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+' · '+total+' joueur'+(total>1?'s':'')+'</p></div><div class="lbv2-scope-tabs">'+periods+'</div></header>'+
-        '<div class="lbv2-mode-tabs">'+tabs+'</div>'+draft+
-        meHtml+podiumHtml+listHtml+aroundHtml+
-        '</div>';
-      ensureOverlay("Classements",body);
-    })
-    .catch(()=>ensureOverlay("Classements",'<div class="lbv2-shell"><div class="lbv2-empty"><b>Classement indisponible.</b><span>Réessaie dans quelques instants.</span></div></div>'));
+  const loading='<div class="lbv3-shell"><div class="lbv3-loading"><span></span><p>Synchronisation du classement…</p></div></div>';
+  ensureOverlay("Classements",loading);
+
+  const syncPromise=(leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function")
+    ? Promise.resolve(submitLeaderboardScores()).catch(()=>false)
+    : Promise.resolve(false);
+
+  syncPromise.then(()=>{
+    return fetch("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(leaderboardV2Scope),{credentials:"same-origin"});
+  }).then(r=>r.json()).then(data=>{
+    const modeTabs=LEADERBOARD_V2_MODES.map(([id,label])=>{
+      const active=id==="draft"?leaderboardV2IsDraft(current):id===current;
+      const target=id==="draft"?"draft_all":id;
+      return '<button type="button" class="lbv3-mode-tab'+(active?' is-active':'')+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
+    }).join("");
+
+    const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
+      '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
+    ).join("");
+
+    const genTabs=leaderboardV2IsDraft(current)
+      ? '<div class="lbv3-gen-tabs">'+DRAFT_GENS.map(([id,label])=>
+          '<button type="button" class="'+(id===current?'is-active':'')+'" data-action="switchLeaderboardV2" data-lb-mode="'+id+'">'+label+'</button>'
+        ).join("")+'</div>'
+      : '';
+
+    const rows=Array.isArray(data?.top)?data.top:[];
+    const topThree=rows.filter(row=>Number(row.rank)<=3);
+    const rest=rows.filter(row=>Number(row.rank)>3);
+
+    const podiumHtml=topThree.length
+      ? '<section class="lbv3-podium">'+topThree.map((row,i)=>{
+          const rank=Number(row.rank)||i+1;
+          const medal=rank===1?"🥇":rank===2?"🥈":"🥉";
+          return '<article class="lbv3-podium-card rank-'+rank+(row.me?' is-me':'')+'">'+
+            '<div class="lbv3-medal">'+medal+'</div>'+
+            leaderboardV2Avatar(row)+
+            '<div class="lbv3-podium-name"><b>'+escapeHtml(row.username||"Dresseur")+'</b>'+(row.me?'<small>TOI</small>':'')+'</div>'+
+            '<strong>'+escapeHtml(leaderboardV2FormatScore(row.score,current,data.unit||meta.unit))+'</strong>'+
+          '</article>';
+        }).join("")+'</section>'
+      : '';
+
+    const listHtml=rest.length
+      ? '<section class="lbv3-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+4,current,data.unit||meta.unit)).join("")+'</section>'
+      : '';
+
+    const around=(Array.isArray(data?.around)?data.around:[]).filter(row=>!rows.some(top=>Number(top.rank)===Number(row.rank)&&top.username===row.username));
+    const aroundHtml=around.length
+      ? '<section class="lbv3-around"><div class="lbv3-section-title">AUTOUR DE TOI</div>'+around.map(row=>leaderboardV2Row(row,row.rank,current,data.unit||meta.unit,true)).join("")+'</section>'
+      : '';
+
+    let personalHtml='';
+    if (data?.me) {
+      personalHtml='<section class="lbv3-personal">'+
+        '<div><span>TA POSITION</span><strong>#'+Number(data.me.rank)+'</strong></div>'+
+        '<div><span>TA PERFORMANCE</span><strong>'+escapeHtml(leaderboardV2FormatScore(data.me.score,current,data.unit||meta.unit))+'</strong></div>'+
+      '</section>';
+    }
+
+    const empty = !rows.length;
+    const emptyHtml = empty
+      ? '<section class="lbv3-empty"><div class="lbv3-empty-icon">🏆</div><h4>Pas encore de performance ici</h4><p>'+
+        (leaderboardV2Scope==="all"
+          ? (window.__pokedleAuthed?'Ton record sera synchronisé dès qu’il existe pour ce mode.':'Connecte-toi pour enregistrer tes records.')
+          : 'Cette période démarre avec les performances jouées depuis la mise en place des nouveaux classements.')+
+        '</p></section>'
+      : '';
+
+    const total=Number(data?.total)||0;
+    const body='<div class="lbv3-shell">'+
+      '<header class="lbv3-header">'+
+        '<div class="lbv3-title"><span>ARÈNE DES DRESSEURS</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+'</p></div>'+
+        '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
+      '</header>'+
+      '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-mode-grid">'+modeTabs+'</div></div>'+
+      genTabs+
+      personalHtml+
+      podiumHtml+
+      listHtml+
+      aroundHtml+
+      emptyHtml+
+    '</div>';
+
+    ensureOverlay("Classements",body);
+  }).catch(()=>{
+    ensureOverlay("Classements",'<div class="lbv3-shell"><section class="lbv3-empty"><div class="lbv3-empty-icon">!</div><h4>Classement indisponible</h4><p>Réessaie dans quelques instants.</p></section></div>');
+  });
 }
 function renderWinLeaderboardPreview(mode) {
   const box=document.getElementById("win-box");
