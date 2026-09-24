@@ -848,6 +848,7 @@ function finalizeTypeComboGame() {
     try { awardXp(50, "Record Combo de types"); } catch (e) {}
   }
   renderTypeComboScreen();
+  if (typeof submitLeaderboardResult === "function" && st.score > 0) submitLeaderboardResult("typecombo", st.score);
   if (typeof showGameFeelResult === "function") {
     showGameFeelResult({ mode: "type-combo", result: st.solved >= 5 ? "win" : "loss", attempts: st.score, targetName: st.solved + " combos · " + st.score + " pts" }, []);
   }
