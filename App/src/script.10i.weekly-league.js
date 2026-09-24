@@ -1,5 +1,6 @@
 
 // Weekly League V1 — recurring skill event shared by all players.
+const WEEKLY_LEAGUE_SYNCED = new Map();
 const WEEKLY_LEAGUE_TEMPLATES = Object.freeze([
   { id:"daily", label:"Précision", mode:"daily", icon:"◎", description:"Résous le Pokémon du jour avec le moins d'essais possible.", objective:"Réussir en 6 essais ou moins", action:"startDailyGame" },
   { id:"quiz", label:"Connaissance", mode:"quiz", icon:"?", description:"Fais parler ta culture Pokémon au Quiz.", objective:"Atteindre 8/10 au Quiz", action:"startQuizGame" },
@@ -104,9 +105,14 @@ function weeklyLeagueSyncScore(state=weeklyLeagueState()) {
   if(playerProfile?.weeklyLeagueScores) playerProfile.weeklyLeagueScores[state.info.id]=Math.max(previous,state.score);
   if(state.score>previous){
     try { saveProfile(); } catch(_e) {}
-    if(window.__pokedleAuthed && typeof submitLeaderboardResult==="function" && state.score>0){
-      submitLeaderboardResult(weeklyLeagueLeaderboardMode(state.info),state.score);
-    }
+  }
+  const mode=weeklyLeagueLeaderboardMode(state.info);
+  const synced=Number(WEEKLY_LEAGUE_SYNCED.get(mode))||0;
+  if(window.__pokedleAuthed && typeof submitLeaderboardResult==="function" && state.score>0 && state.score>synced){
+    WEEKLY_LEAGUE_SYNCED.set(mode,state.score);
+    submitLeaderboardResult(mode,state.score).then(ok=>{
+      if(!ok) WEEKLY_LEAGUE_SYNCED.delete(mode);
+    });
   }
 }
 function weeklyLeagueClaimBadge() {
