@@ -22,7 +22,7 @@ function fixture(){
     Date,Math,Map,Set,Array,Object,String,Number,Boolean,Promise
   };
   vm.createContext(context);
-  vm.runInContext(source+'\nthis.__week=weeklyLeagueIsoWeek;this.__disc=weeklyLeagueDisciplines;this.__metric=weeklyLeagueMetric;this.__mode=weeklyLeagueLeaderboardMode;',context);
+  vm.runInContext(source+'\nthis.__week=weeklyLeagueIsoWeek;this.__disc=weeklyLeagueDisciplines;this.__metric=weeklyLeagueMetric;this.__mode=weeklyLeagueLeaderboardMode;this.__templates=WEEKLY_LEAGUE_TEMPLATES;',context);
   return context;
 }
 
@@ -45,7 +45,7 @@ test('weekly League always selects three unique disciplines deterministically',(
 
 test('discipline metrics reward mastery and cap at 200 points',()=>{
   const f=fixture();
-  const templates=Array.from(f.WEEKLY_LEAGUE_TEMPLATES || []);
+  const templates=Array.from(f.__templates || []);
   const quiz=templates.find(x=>x.id==='quiz');
   const speed=templates.find(x=>x.id==='speedrun');
   const daily=templates.find(x=>x.id==='daily');
