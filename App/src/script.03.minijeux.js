@@ -885,7 +885,7 @@ function renderTypeComboScreen() {
           '<div class="tc-combo-tier tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</div>' +
         '</div>' +
         '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
-          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" data-input-action="typeComboInput" data-keydown-action="typeComboKeydown" autofocus />' +
+          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" data-input-action="typeComboInput" data-keydown-action="typeComboKeydown" autofocus />' +
           '<div class="tc-ac" id="type-combo-ac"></div>' +
           '<div class="tc-actions"><button class="btn-red" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
         '</form>' +
@@ -1098,7 +1098,7 @@ function renderSpeedrunScreen() {
           <img class="speedrun-sprite" src="${escapeHtml(sprite)}" alt="?" />
         </div>
         <form class="speedrun-form" data-submit-action="speedrunFormSubmit">
-          <input id="speedrun-input" class="speedrun-input" type="text" placeholder="Nom du Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" autofocus />
+          <input id="speedrun-input" class="speedrun-input" type="text" placeholder="Nom du Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" autofocus />
           <div class="speedrun-actions">
             <button class="btn-red" type="submit">Valider</button>
             <button class="btn-ghost" type="button" data-action="speedrunSkip">Passer ⏭</button>
@@ -2341,7 +2341,7 @@ function renderGuessAC(matches) {
       </div>
     `;
 
-    item.addEventListener("mousedown", (e) => {
+    item.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       selectGuessAC(p.name);
     });
@@ -2417,7 +2417,7 @@ function renderMultiplayerGuessAC(matches) {
       </div>
     `;
 
-    item.addEventListener("mousedown", (event) => {
+    item.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       selectMultiplayerGuessAC(p.name);
     });
