@@ -244,3 +244,143 @@
     font-size: 16px !important; /* prevents iOS input zoom */
   }
 }
+
+
+/* ===== Global polish V1 — mobile legacy modes & overlays ===== */
+@media (max-width: 640px) {
+  #screen-game .mode-banner {
+    margin-bottom: 9px;
+    padding: 9px 10px;
+    border-radius: 14px;
+  }
+  #screen-game .mode-banner-text b {
+    font-size: .82rem;
+  }
+  #screen-game .mode-banner-desc {
+    font-size: .72rem !important;
+    line-height: 1.3;
+  }
+
+  #quiz-box #quiz-options button {
+    min-height: 50px !important;
+    width: 100%;
+    justify-content: flex-start !important;
+    white-space: normal;
+  }
+  #quiz-box #quiz-next-btn {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+  }
+  #quiz-box .quiz-history {
+    max-height: 118px;
+  }
+
+  #evolution-chain.evolution-chain {
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto;
+    justify-content: flex-start !important;
+    padding: 3px 1px 7px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  #evolution-chain.evolution-chain::-webkit-scrollbar { display:none; }
+  #evolution-chain .evolution-slot {
+    flex: 0 0 108px;
+    scroll-snap-align: center;
+  }
+  #evolution-chain .evolution-arrow {
+    flex: 0 0 auto;
+    font-size: 1.1rem;
+  }
+
+  #order-box .order-clue-row {
+    gap: 7px !important;
+  }
+  #order-box .order-clue {
+    padding: 12px;
+  }
+  #order-box .order-clue-arrow {
+    transform: rotate(90deg);
+  }
+
+  #screen-odd-one-out .ranking-head {
+    display: grid;
+    gap: 8px;
+  }
+  #screen-odd-one-out .ranking-head-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 7px;
+  }
+  #screen-odd-one-out .ranking-head-actions .btn-yellow {
+    width: 100%;
+    justify-content: center;
+  }
+  #screen-odd-one-out .odd-meta-row {
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 6px !important;
+  }
+  #screen-odd-one-out .odd-meta-row > span,
+  #screen-odd-one-out .odd-difficulty-picker {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+  }
+  #screen-odd-one-out .odd-grid {
+    gap: 7px !important;
+  }
+  #screen-odd-one-out .odd-card {
+    padding: 8px 6px;
+    min-width: 0;
+  }
+  #screen-odd-one-out .odd-card-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .76rem;
+  }
+
+  #overlay-modal {
+    align-items: flex-end;
+    padding: 8px;
+  }
+  #overlay-modal .overlay-card {
+    width: 100% !important;
+    max-height: 90dvh !important;
+    border-radius: 20px 20px 14px 14px !important;
+  }
+  #overlay-modal .overlay-body {
+    max-height: calc(90dvh - 60px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  #overlay-modal .overlay-close {
+    width: 38px;
+    height: 38px;
+  }
+  #overlay-modal[data-kind="settings"] .app-setting-item {
+    min-height: 52px;
+  }
+  .account-menu-links button {
+    min-height: 50px;
+  }
+  .account-menu-logout {
+    min-height: 42px;
+    display: grid;
+    place-items: center;
+  }
+}
+
+@media (max-width: 390px) {
+  #screen-odd-one-out .odd-meta-row {
+    grid-template-columns: 1fr;
+  }
+  #screen-odd-one-out .odd-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
