@@ -297,6 +297,7 @@ const LB_MODE_CONFIG = Object.freeze({
 const LB_MODES = Object.keys(LB_MODE_CONFIG);
 function leaderboardConfig(mode) {
   if (/^draft_(all|[1-9])$/.test(mode)) return { direction: "desc", label: "Draft Score", unit: "BST", max: 1000 };
+  if (/^weekly_\d{4}-W\d{2}$/.test(mode)) return { direction: "desc", label: "Épreuve de Ligue", unit: "pts", max: 600 };
   return LB_MODE_CONFIG[mode] || null;
 }
 function leaderboardAllowed(mode) {
