@@ -2301,10 +2301,13 @@ function searchPokemonFast(qNorm, indexEntries, cache, excludedNames) {
   return out;
 }
 
+let guessInputComposing = false;
+
 function filterGuessAC() {
   const input = document.getElementById("guess-input");
   const list = document.getElementById("guess-ac");
   acIndex = -1;
+  if (!input || !list || guessInputComposing) return;
 
   const qNorm = norm(input.value.trim());
   if (!qNorm) {
@@ -2350,14 +2353,20 @@ function renderGuessAC(matches) {
 }
 
 function selectGuessAC(name) {
-  document.getElementById("guess-input").value = name;
-  document.getElementById("guess-ac").classList.add("hidden");
+  const input = document.getElementById("guess-input");
+  const list = document.getElementById("guess-ac");
+  if (!input || !list) return;
+  input.value = name;
+  list.classList.add("hidden");
   acIndex = -1;
+  input.focus({ preventScroll: true });
   submitGuess();
 }
 
 function handleGuessKey(e) {
   const list = document.getElementById("guess-ac");
+  if (!list) return;
+  if (e.isComposing || guessInputComposing || e.keyCode === 229) return;
   const items = list.querySelectorAll(".ac-item");
 
   if (e.key === "ArrowDown") {
@@ -2431,5 +2440,20 @@ window.addEventListener("click", (e) => {
   if (!e.target.closest(".ac-wrapper")) {
     document.querySelectorAll(".ac-list").forEach((l) => l.classList.add("hidden"));
   }
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("guess-input");
+  if (!input || input.dataset.compositionGuard === "1") return;
+  input.dataset.compositionGuard = "1";
+  input.addEventListener("compositionstart", () => {
+    guessInputComposing = true;
+    document.getElementById("guess-ac")?.classList.add("is-composing");
+  });
+  input.addEventListener("compositionend", () => {
+    guessInputComposing = false;
+    document.getElementById("guess-ac")?.classList.remove("is-composing");
+    setTimeout(filterGuessAC, 0);
+  });
 });
 
