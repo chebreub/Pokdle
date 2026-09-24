@@ -965,7 +965,28 @@ function accountChipHtml(user) {
 }
 function openAccountMenu() {
   if (!connectedAccountUser) return;
-  ensureOverlay('Mon compte', `<div class="account-menu"><span class="adventure-eyebrow">CONNECTÉ AVEC DISCORD</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><button type="button" class="btn-ghost" data-action="accountNavigate" data-args='["profile"]'>Mon profil →</button><button type="button" class="btn-ghost" data-action="accountNavigate" data-args='["album"]'>Mon album →</button><button type="button" class="btn-ghost" data-action="accountNavigate" data-args='["settings"]'>Paramètres →</button><a class="account-menu-logout" href="/auth/logout">Se déconnecter</a></div>`);
+  const avatar = connectedAccountUser.avatar
+    ? `<img src="${escapeHtml(connectedAccountUser.avatar)}" alt="" />`
+    : `<span class="account-menu-avatar-fallback">${escapeHtml((connectedAccountUser.username || 'D').charAt(0).toUpperCase())}</span>`;
+  const level = typeof getXpTier === 'function' ? getXpTier(Number(playerProfile?.xp) || 0) : { level: 1, name: 'Dresseur' };
+  const dex = typeof pokedexCollectionNationalStats === 'function' ? pokedexCollectionNationalStats() : { found: Object.keys(playerProfile?.discoveries || {}).length, total: 0 };
+  ensureOverlay('Mon compte', `
+    <div class="account-menu account-menu-v2">
+      <div class="account-menu-identity">
+        <div class="account-menu-avatar">${avatar}</div>
+        <div><span class="adventure-eyebrow">CONNECTÉ AVEC DISCORD</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}</small></div>
+      </div>
+      <div class="account-menu-stats">
+        <div><strong>${Number(playerProfile?.xp)||0}</strong><span>XP</span></div>
+        <div><strong>${Number(dex.found)||0}${dex.total ? '<small>/'+Number(dex.total)+'</small>' : ''}</strong><span>Pokédex</span></div>
+      </div>
+      <nav class="account-menu-links">
+        <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
+        <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Mon Pokédex</span><b>→</b></button>
+        <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
+      </nav>
+      <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
+    </div>`);
 }
 function accountNavigate(destination) {
   closeOverlayModal();
@@ -1768,6 +1789,13 @@ function ensureOverlay(title, html) {
   if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
   titleEl.textContent = title;
   bodyEl.innerHTML = html;
+  const overlayKind = /param/i.test(title) ? 'settings'
+    : /comment jouer|aide/i.test(title) ? 'help'
+    : /compte/i.test(title) ? 'account'
+    : /classement/i.test(title) ? 'ranking'
+    : /quitter|supprimer|confirmer/i.test(title) ? 'confirm'
+    : 'default';
+  overlay.dataset.kind = overlayKind;
   overlay.classList.remove('hidden');
   overlay.setAttribute('aria-hidden', 'false');
   document.body.classList.add('modal-open');
