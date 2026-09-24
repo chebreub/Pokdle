@@ -162,7 +162,7 @@ function renderWinLeaderboardPreview(mode) {
     else box.appendChild(panel);
   }
   if (mode!=="daily") {
-    panel.innerHTML='<div><span>CLASSEMENTS</span><b>Compare tes records sur les modes compétitifs.</b></div><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args='["daily","today"]'>Voir les classements →</button>';
+    panel.innerHTML='<div><span>CLASSEMENTS</span><b>Compare tes records sur les modes compétitifs.</b></div><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir les classements →</button>';
     return;
   }
   panel.innerHTML='<div class="win-rank-loading">Calcul de ta position du jour…</div>';
@@ -173,9 +173,9 @@ function renderWinLeaderboardPreview(mode) {
         if (!document.getElementById("win-ranking-preview")) return;
         if (data?.me) {
           panel.innerHTML='<div class="win-rank-position"><span>CLASSEMENT DU JOUR</span><strong>#'+Number(data.me.rank)+'</strong><small>'+escapeHtml(leaderboardV2FormatScore(data.me.score,"daily","essais"))+' · '+(Number(data.total)||0)+' classé'+(Number(data.total)>1?'s':'')+'</small></div>'+
-            '<button type="button" class="btn-blue" data-action="openLeaderboardV2" data-args='["daily","today"]'>Voir le classement →</button>';
+            '<button type="button" class="btn-blue" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir le classement →</button>';
         } else {
-          panel.innerHTML='<div><span>CLASSEMENT DU JOUR</span><b>Connecte-toi pour enregistrer ta position.</b></div><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args='["daily","today"]'>Voir le classement →</button>';
+          panel.innerHTML='<div><span>CLASSEMENT DU JOUR</span><b>Connecte-toi pour enregistrer ta position.</b></div><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir le classement →</button>';
         }
       }).catch(()=>{ panel.innerHTML=''; });
   },650);
