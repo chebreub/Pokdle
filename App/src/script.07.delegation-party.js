@@ -979,6 +979,7 @@ function openAccountMenu() {
       <div class="account-menu-stats">
         <div><strong>${Number(playerProfile?.xp)||0}</strong><span>XP</span></div>
         <div><strong>${Number(dex.found)||0}${dex.total ? '<small>/'+Number(dex.total)+'</small>' : ''}</strong><span>Pokédex</span></div>
+        <div><strong>${Object.keys(playerProfile?.weeklyLeagueBadges || {}).length}</strong><span>Badges Ligue</span></div>
       </div>
       <nav class="account-menu-links">
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>

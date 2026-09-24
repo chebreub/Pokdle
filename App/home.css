@@ -1068,3 +1068,452 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
     height: 110px;
   }
 }
+
+
+/* ===== Weekly League V1 ===== */
+.weekly-league-home {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) minmax(130px,190px) auto;
+  align-items:center;
+  gap:14px;
+  margin:14px 0 16px;
+  padding:14px 16px;
+  border:1px solid rgba(109,79,183,.18);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 0 0,rgba(112,78,193,.12),transparent 32%),
+    radial-gradient(circle at 100% 100%,rgba(47,118,255,.08),transparent 30%),
+    linear-gradient(180deg,#fbf9ff,#f7f8ff);
+  box-shadow:0 12px 28px rgba(48,39,94,.07);
+}
+.weekly-league-home-mark {
+  width:58px;
+  height:58px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  border-radius:17px;
+  color:#fff;
+  background:linear-gradient(145deg,#7e5bc6,#5d47a3);
+  box-shadow:0 10px 22px rgba(93,71,163,.2);
+}
+.weekly-league-home-mark > span {
+  font-size:1.05rem;
+  line-height:1;
+}
+.weekly-league-home-mark small {
+  margin-top:2px;
+  text-align:center;
+  font-size:.48rem;
+  line-height:1.05;
+  font-weight:1000;
+  letter-spacing:.05em;
+}
+.weekly-league-home-copy {
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.weekly-league-home-copy > span {
+  color:#7156ad;
+  font-size:.6rem;
+  font-weight:1000;
+  letter-spacing:.1em;
+}
+.weekly-league-home-copy h3 {
+  margin:0;
+  color:#293e68;
+  font-size:1rem;
+}
+.weekly-league-home-copy p {
+  margin:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#71819d;
+  font-size:.75rem;
+}
+.weekly-league-home-score {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:baseline;
+  gap:1px 4px;
+}
+.weekly-league-home-score strong {
+  color:#684caf;
+  font-size:1.35rem;
+  line-height:1;
+}
+.weekly-league-home-score small {
+  color:#8997ad;
+  font-size:.65rem;
+  font-weight:900;
+}
+.weekly-league-home-score progress {
+  grid-column:1 / -1;
+  width:100%;
+  height:6px;
+  accent-color:#7256ba;
+}
+.weekly-league-home > button {
+  min-height:40px;
+  border-radius:11px;
+  white-space:nowrap;
+}
+
+.weekly-league-modal {
+  display:grid;
+  gap:13px;
+}
+.weekly-league-modal-head {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  padding:15px 16px;
+  border:1px solid rgba(105,79,180,.15);
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 0 0,rgba(116,84,198,.12),transparent 34%),
+    linear-gradient(180deg,#fbfaff,#f7f6fd);
+}
+.weekly-league-modal-head span {
+  color:#7256b3;
+  font-size:.61rem;
+  font-weight:1000;
+  letter-spacing:.12em;
+}
+.weekly-league-modal-head h3 {
+  margin:2px 0 2px;
+  color:#273e67;
+  font-size:1.4rem;
+}
+.weekly-league-modal-head p {
+  margin:0;
+  color:#75839e;
+  font-size:.8rem;
+}
+.weekly-league-score {
+  display:flex;
+  align-items:baseline;
+  gap:4px;
+}
+.weekly-league-score strong {
+  color:#6548ab;
+  font-size:2rem;
+  line-height:1;
+}
+.weekly-league-score span {
+  color:#8c98ad;
+  font-size:.7rem;
+  font-weight:900;
+}
+.weekly-league-progress {
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:8px;
+}
+.weekly-league-progress progress {
+  width:100%;
+  height:8px;
+  accent-color:#7256ba;
+}
+.weekly-league-progress span {
+  color:#70809a;
+  font-size:.68rem;
+  font-weight:850;
+}
+.weekly-league-disciplines {
+  display:grid;
+  gap:8px;
+}
+.weekly-league-discipline {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) minmax(90px,130px) auto;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  border:1px solid rgba(79,111,166,.12);
+  border-radius:14px;
+  background:#f9fbff;
+}
+.weekly-league-discipline.is-complete {
+  border-color:rgba(39,165,96,.18);
+  background:linear-gradient(90deg,#f2fbf6,#f9fdfb);
+}
+.weekly-league-icon {
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  color:#6b4fb2;
+  background:#eee8ff;
+  font-size:1.05rem;
+  font-weight:1000;
+}
+.weekly-league-discipline.is-complete .weekly-league-icon {
+  color:#21854f;
+  background:#e5f7ed;
+}
+.weekly-league-discipline-copy {
+  min-width:0;
+}
+.weekly-league-discipline-copy span {
+  color:#7f8ca3;
+  font-size:.55rem;
+  font-weight:1000;
+  letter-spacing:.1em;
+}
+.weekly-league-discipline-copy h4 {
+  margin:1px 0 2px;
+  color:#29466e;
+  font-size:.86rem;
+}
+.weekly-league-discipline-copy p {
+  margin:0;
+  color:#7a89a1;
+  font-size:.7rem;
+}
+.weekly-league-performance {
+  display:grid;
+  gap:1px;
+  text-align:right;
+}
+.weekly-league-performance strong {
+  color:#325d95;
+  font-size:.8rem;
+}
+.weekly-league-performance small {
+  color:#8b98ad;
+  font-size:.62rem;
+}
+.weekly-league-discipline > button {
+  border:0;
+  border-radius:9px;
+  padding:7px 9px;
+  color:#2f66ad;
+  background:#edf4ff;
+  font:inherit;
+  font-size:.68rem;
+  font-weight:900;
+  cursor:pointer;
+}
+.weekly-league-claim {
+  justify-content:center;
+  min-height:44px;
+}
+.weekly-league-earned {
+  padding:10px 12px;
+  border:1px solid rgba(211,161,35,.23);
+  border-radius:12px;
+  color:#926600;
+  background:#fff8df;
+  text-align:center;
+  font-size:.72rem;
+  font-weight:1000;
+  letter-spacing:.07em;
+}
+.weekly-league-footer {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.weekly-league-footer small {
+  max-width:420px;
+  color:#7d8ba2;
+  font-size:.66rem;
+  line-height:1.4;
+  text-align:right;
+}
+.weekly-ranking {
+  display:grid;
+  gap:11px;
+}
+.weekly-ranking > header {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;
+  align-items:center;
+  padding:13px 14px;
+  border:1px solid rgba(102,77,178,.14);
+  border-radius:15px;
+  background:#f8f6ff;
+}
+.weekly-ranking header span {
+  color:#7256b3;
+  font-size:.57rem;
+  font-weight:1000;
+  letter-spacing:.1em;
+}
+.weekly-ranking header h3 {
+  margin:2px 0;
+  color:#29456d;
+}
+.weekly-ranking header p {
+  margin:0;
+  color:#78869d;
+  font-size:.72rem;
+}
+.weekly-ranking-me {
+  display:grid;
+  justify-items:end;
+}
+.weekly-ranking-me strong {
+  color:#6649ad;
+  font-size:1.35rem;
+}
+.weekly-ranking-me small {
+  color:#8795aa;
+  font-size:.65rem;
+  font-weight:850;
+}
+.weekly-ranking-list {
+  display:grid;
+  gap:5px;
+}
+.weekly-rank-row {
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  min-height:48px;
+  padding:7px 10px;
+  border:1px solid rgba(79,111,166,.11);
+  border-radius:11px;
+  background:#f9fbff;
+}
+.weekly-rank-row.is-me {
+  border-color:rgba(102,74,180,.3);
+  background:#f1edff;
+  box-shadow:inset 3px 0 0 #7256ba;
+}
+.weekly-rank-row span {
+  text-align:center;
+  color:#6f80a0;
+  font-weight:1000;
+}
+.weekly-rank-row b {
+  color:#2a4770;
+}
+.weekly-rank-row strong {
+  color:#6548ac;
+  font-size:.78rem;
+}
+.weekly-ranking-empty,
+.weekly-ranking-loading {
+  min-height:130px;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  border:1px dashed rgba(82,112,168,.18);
+  border-radius:14px;
+  color:#7a89a1;
+  background:#f9fbff;
+  text-align:center;
+}
+
+body.theme-dark .weekly-league-home,
+body.theme-dark .weekly-league-modal-head,
+body.theme-dark .weekly-league-discipline,
+body.theme-dark .weekly-ranking > header,
+body.theme-dark .weekly-rank-row,
+body.theme-dark .weekly-ranking-empty,
+body.theme-dark .weekly-ranking-loading {
+  background:#142640;
+  border-color:rgba(116,156,220,.14);
+}
+body.theme-dark .weekly-league-home-copy h3,
+body.theme-dark .weekly-league-modal-head h3,
+body.theme-dark .weekly-league-discipline-copy h4,
+body.theme-dark .weekly-ranking header h3,
+body.theme-dark .weekly-rank-row b {
+  color:#eef5ff;
+}
+body.theme-dark .weekly-league-home-copy p,
+body.theme-dark .weekly-league-modal-head p,
+body.theme-dark .weekly-league-discipline-copy p,
+body.theme-dark .weekly-ranking header p,
+body.theme-dark .weekly-ranking-empty,
+body.theme-dark .weekly-ranking-loading {
+  color:#aebfda;
+}
+
+@media (max-width:760px) {
+  .weekly-league-home {
+    grid-template-columns:auto minmax(0,1fr) auto;
+  }
+  .weekly-league-home-score {
+    grid-column:2 / 4;
+  }
+  .weekly-league-home > button {
+    grid-column:1 / -1;
+    width:100%;
+    justify-content:center;
+  }
+  .weekly-league-discipline {
+    grid-template-columns:auto minmax(0,1fr) auto;
+  }
+  .weekly-league-performance {
+    grid-column:2;
+    text-align:left;
+  }
+  .weekly-league-discipline > button {
+    grid-column:3;
+    grid-row:1 / span 2;
+  }
+}
+@media (max-width:520px) {
+  .weekly-league-home {
+    grid-template-columns:48px minmax(0,1fr);
+    gap:9px;
+    padding:11px;
+  }
+  .weekly-league-home-mark {
+    width:48px;
+    height:48px;
+    border-radius:14px;
+  }
+  .weekly-league-home-score {
+    grid-column:1 / -1;
+  }
+  .weekly-league-modal-head {
+    grid-template-columns:1fr;
+  }
+  .weekly-league-score {
+    justify-content:flex-start;
+  }
+  .weekly-league-progress {
+    grid-template-columns:1fr;
+  }
+  .weekly-league-discipline {
+    grid-template-columns:38px minmax(0,1fr);
+  }
+  .weekly-league-icon {
+    width:38px;
+    height:38px;
+  }
+  .weekly-league-performance,
+  .weekly-league-discipline > button {
+    grid-column:2;
+    grid-row:auto;
+  }
+  .weekly-league-discipline > button {
+    width:100%;
+  }
+  .weekly-league-footer {
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .weekly-league-footer small {
+    text-align:left;
+  }
+  .weekly-ranking > header {
+    grid-template-columns:1fr;
+  }
+  .weekly-ranking-me {
+    justify-items:start;
+  }
+}
