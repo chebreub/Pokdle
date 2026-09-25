@@ -30,6 +30,7 @@ test('featured picks hide duplicate entries only without a search and preserve t
  assert.equal(env.isClubFeatured(card(['startDailyGame']),'solo','daily'),false);
  assert.equal(env.isClubFeatured(card(['openPartyRoomMode']),'friends',''),true);
  assert.equal(env.isClubFeatured(card(['openPartyRoomMode']),'all',''),false);
+ assert.equal(env.isClubFeatured(card(['startDailyGame']),'solo','','hard'),false);
 });
 test('rank movement handles ties and no gain correctly',()=>{
  const env=fixture(),players=[{score:100,lastGain:0},{score:150,lastGain:100},{score:50,lastGain:0}];
