@@ -230,10 +230,12 @@ function claimSecretPokemon(key) {
 function viewSecretAlbum(key) {
   const mission = SECRET_MISSIONS.find(m => m.id === key);
   if (!mission) return;
-  closeOverlayModal(); openDiscoveryAlbum();
-  document.getElementById('album-search').value = POKEMON_BY_ID.get(mission.pokemonId)?.name || '';
-  document.getElementById('album-generation').value = 'all';
-  document.getElementById('album-status').value = 'secrets';
-  albumPage = 1; renderDiscoveryAlbum();
+  const pokemon = POKEMON_BY_ID.get(Number(mission.pokemonId));
+  closeOverlayModal();
+  if (pokemon && typeof openRegisteredPokemonInPokedex === 'function') {
+    openRegisteredPokemonInPokedex(pokemon.id);
+    return;
+  }
+  if (typeof openPokedexCollection === 'function') openPokedexCollection();
 }
 window.addEventListener('DOMContentLoaded', () => { renderSecretMissions(); });
