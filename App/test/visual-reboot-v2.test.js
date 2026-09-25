@@ -58,3 +58,8 @@ test('startup deep links always dismiss the splash screen',()=>{
   assert.match(core,/if \(checkChallengeURL\(\)\) \{ removeAppSplash\(\); return; \}/);
   assert.match(core,/if \(checkMultiplayerInviteURL\(\)\) \{ removeAppSplash\(\); return; \}/);
 });
+
+
+test('desktop gameplay keeps the full available width',()=>{
+  assert.match(style,/#screen-game\{[\s\S]*width:100%;[\s\S]*max-width:1180px;[\s\S]*align-self:stretch;/);
+});
