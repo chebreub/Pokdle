@@ -481,3 +481,87 @@ body.reduce-motion .pokedex-registration-layer *::after { animation: none !impor
 body.reduce-motion .pokedex-registration-stage img { opacity: 1; transform: none; filter: none; }
 body.reduce-motion .pokedex-registration-silhouette,
 body.reduce-motion .pokedex-registration-scan { display: none; }
+
+
+/* ===== Profile Missions V2 — collection now lives in the Pokédex ===== */
+#profile-album.profile-missions-view {
+  display:grid;
+  gap:12px;
+}
+#profile-album.profile-missions-view.hidden {
+  display:none;
+}
+.profile-mission-intro {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  margin:14px 0 0;
+  padding:18px 20px;
+  border:1px solid rgba(47,118,255,.12);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 100% 0,rgba(47,118,255,.08),transparent 28%),
+    linear-gradient(180deg,#fff,#f7f9fd);
+}
+.profile-mission-intro h3 {
+  margin:4px 0 5px;
+  color:#18385f;
+  font-size:1.35rem;
+  letter-spacing:-.025em;
+}
+.profile-mission-intro p {
+  max-width:720px;
+  margin:0;
+  color:#70829d;
+  line-height:1.5;
+}
+.profile-open-collection {
+  flex:0 0 auto;
+  min-height:42px;
+  white-space:nowrap;
+}
+#profile-album.profile-missions-view .album-mission-panel {
+  margin:0;
+}
+#profile-album.profile-missions-view .album-secret-link {
+  margin:0;
+}
+.profile-view-switch [data-args='["album"]'] span:empty {
+  display:none;
+}
+.profile-view-switch [data-args='["album"]'] span:not(:empty) {
+  display:inline-grid;
+  place-items:center;
+  min-width:19px;
+  min-height:19px;
+  margin-left:4px;
+  padding:1px 5px;
+  border-radius:999px;
+  background:#e9433e;
+  color:#fff;
+  font-size:.65rem;
+  font-weight:1000;
+}
+
+body.theme-dark .profile-mission-intro {
+  border-color:rgba(126,160,213,.13);
+  background:
+    radial-gradient(circle at 100% 0,rgba(47,118,255,.08),transparent 28%),
+    #132440;
+}
+body.theme-dark .profile-mission-intro h3 { color:#eef5ff; }
+body.theme-dark .profile-mission-intro p { color:#afc0da; }
+
+@media (max-width:720px) {
+  .profile-mission-intro {
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:14px;
+    border-radius:15px;
+  }
+  .profile-open-collection {
+    width:100%;
+    justify-content:center;
+  }
+}
