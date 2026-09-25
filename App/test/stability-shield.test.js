@@ -11,6 +11,7 @@ const index = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const style = fs.readFileSync(path.join(root, "style.css"), "utf8");
 const home = fs.readFileSync(path.join(root, "home.css"), "utf8");
 const mobile = fs.readFileSync(path.join(root, "mobile.css"), "utf8");
+const draftSource = fs.readFileSync(path.join(root, "src/script.06.draft-emulateur.js"), "utf8");
 const loadedCssFiles = [...index.matchAll(/href="dist\/([\w.-]+)\.min\.css"/g)].map((match) => match[1] + ".css");
 const loadedCss = loadedCssFiles.map((file) => fs.readFileSync(path.join(root, file), "utf8")).join("\n");
 
@@ -124,4 +125,18 @@ test("visual layers cannot directly force a bare screen visible with important",
   assert.deepEqual(forced, []);
   assert.match(style, /\.hidden\s*\{\s*display:\s*none\s*!important;?\s*\}/);
   assert.match(home, /#screen-config:not\(\.hidden\)\s*\{/);
+});
+
+
+test("dedicated draft screens reopen through the central visibility helper", () => {
+  const arenaStart = draftSource.indexOf("function openDraftArenaMode()");
+  const scoreStart = draftSource.indexOf("function openDraftScoreAttackMode(pro)");
+  const mountStart = draftSource.indexOf("function mountDraftModeCard", scoreStart);
+  assert.ok(arenaStart >= 0 && scoreStart > arenaStart && mountStart > scoreStart);
+  const arenaBlock = draftSource.slice(arenaStart, scoreStart);
+  const scoreBlock = draftSource.slice(scoreStart, mountStart);
+  assert.match(arenaBlock, /showScreen\("screen-draft-arena"\)/);
+  assert.match(scoreBlock, /showScreen\("screen-draft-score-attack"\)/);
+  assert.doesNotMatch(arenaBlock, /screen-draft-arena"\)\.classList\.remove\("hidden"\)/);
+  assert.doesNotMatch(scoreBlock, /screen-draft-score-attack"\)\?*\.classList\.remove\("hidden"\)/);
 });
