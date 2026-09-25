@@ -348,8 +348,9 @@ function ensureAlbumMissionPanel() {
     </div>
     <div id="album-mission-grid" class="album-mission-grid"></div>
     <button id="album-mission-more" type="button" class="btn-ghost album-mission-more hidden" data-action="showMoreAlbumMissions">Afficher plus</button>`;
-  const before = host.querySelector('.album-region-disclosure');
-  host.insertBefore(panel, before || host.firstChild);
+  const intro = host.querySelector('.profile-mission-intro, .album-intro');
+  if (intro) intro.insertAdjacentElement('afterend', panel);
+  else host.insertBefore(panel, host.firstChild);
   for (const id of ['album-mission-gen','album-mission-tier','album-mission-status']) document.getElementById(id)?.addEventListener('change', () => { albumMissionLimit = 12; renderAlbumMissions(); });
 }
 function albumMissionCard(mission) {
@@ -411,11 +412,11 @@ function focusAlbumMission(id) {
 function viewAlbumMissionReward(id) {
   const mission = albumMissionById(id), pokemon = mission ? POKEMON_BY_ID.get(mission.pokemonId) : null;
   if (!pokemon) return;
-  document.getElementById('album-search').value = pokemon.name;
-  document.getElementById('album-generation').value = 'all';
-  document.getElementById('album-status').value = 'found';
-  albumPage = 1; renderDiscoveryAlbum();
-  document.getElementById('album-results-label')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  if (typeof openRegisteredPokemonInPokedex === 'function') {
+    openRegisteredPokemonInPokedex(pokemon.id);
+    return;
+  }
+  if (typeof openPokedexCollection === 'function') openPokedexCollection();
 }
 if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('DOMContentLoaded', () => {
   playerProfile.albumMissionClaims = normalizeAlbumMissionClaims(playerProfile.albumMissionClaims);
