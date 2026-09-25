@@ -126,7 +126,22 @@
   padding: 10px 12px !important; min-height: 42px !important;
 }
 #pokdle-app.design-refresh .header-top .nav-pill:is(:hover, .active) { background: var(--ui-accent-soft) !important; color: var(--ui-accent) !important; }
-#pokdle-app.design-refresh .header-actions .header-action-btn { color: var(--ui-ink) !important; background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; }
+#pokdle-app.design-refresh .header-actions .header-action-btn {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  flex: 0 0 42px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  justify-content: center !important;
+  border-radius: 12px !important;
+  font-size: 0 !important;
+  color: var(--ui-ink) !important;
+  background: var(--ui-soft) !important;
+  border: 1px solid var(--ui-line) !important;
+  box-shadow: none !important;
+}
 #pokdle-app.design-refresh .header-actions .header-action-btn svg { stroke: currentColor !important; }
 #pokdle-app.design-refresh #global-xp-badge { background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; box-shadow: none !important; color: var(--ui-ink) !important; border-radius: 12px !important; }
 #pokdle-app.design-refresh #account-area .account-login { background: #5865f2 !important; border: 1px solid #5865f2 !important; color: #fff !important; border-radius: 12px; box-shadow: none !important; }

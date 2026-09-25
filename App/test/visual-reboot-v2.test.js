@@ -4,6 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const home=fs.readFileSync(path.join(__dirname,'../home.css'),'utf8');
 const style=fs.readFileSync(path.join(__dirname,'../style.css'),'utf8');
 const mobile=fs.readFileSync(path.join(__dirname,'../mobile.css'),'utf8');
+const visual=fs.readFileSync(path.join(__dirname,'../visual-refresh.css'),'utf8');
 const adventure=fs.readFileSync(path.join(__dirname,'../src/script.10f.home-adventure.js'),'utf8');
 const weekly=fs.readFileSync(path.join(__dirname,'../src/script.10i.weekly-league.js'),'utf8');
 const core=fs.readFileSync(path.join(__dirname,'../src/script.01.core.js'),'utf8');
@@ -57,4 +58,14 @@ test('visual reboot never forces the home screen visible while navigation hides 
 test('startup deep links always dismiss the splash screen',()=>{
   assert.match(core,/if \(checkChallengeURL\(\)\) \{ removeAppSplash\(\); return; \}/);
   assert.match(core,/if \(checkMultiplayerInviteURL\(\)\) \{ removeAppSplash\(\); return; \}/);
+});
+
+
+test('desktop gameplay keeps the full available width',()=>{
+  assert.match(style,/#screen-game\{[\s\S]*width:100%;[\s\S]*max-width:1180px;[\s\S]*align-self:stretch;/);
+});
+
+
+test('desktop header actions stay compact beside XP and profile',()=>{
+  assert.match(visual,/\.header-actions \.header-action-btn \{[\s\S]*width: 42px !important;[\s\S]*font-size: 0 !important;/);
 });

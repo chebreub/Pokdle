@@ -32051,6 +32051,8 @@ body.theme-dark .account-menu-identity small {
 #screen-poke-connections,
 #screen-stat-clash,
 #screen-stat-auction{
+  width:100%;
+  align-self:stretch;
   animation:vr-screen-in .22s ease both;
 }
 @keyframes vr-screen-in{
@@ -32063,7 +32065,9 @@ body.theme-dark .account-menu-identity small {
   border-radius:22px !important;
 }
 #screen-game{
+  width:100%;
   max-width:1180px;
+  align-self:stretch;
   margin:0 auto;
 }
 #screen-game .game-topbar{
