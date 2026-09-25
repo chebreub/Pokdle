@@ -1990,7 +1990,7 @@ body:not(.theme-dark) #global-xp-badge{
 }
 #screen-all-modes .mode-hub-controls{
   display:grid !important;
-  grid-template-columns:minmax(0,1fr) minmax(260px,360px) !important;
+  grid-template-columns:minmax(0,1fr) minmax(125px,160px) minmax(240px,320px) !important;
   gap:12px !important;
   align-items:end !important;
   padding:12px !important;
@@ -2027,6 +2027,48 @@ body:not(.theme-dark) #global-xp-badge{
   border:1px solid rgba(42,77,126,.14) !important;
   background:#fff !important;
 }
+#screen-all-modes .mode-difficulty{
+  display:grid;
+  gap:5px;
+  color:#7b8da8;
+  font-size:.62rem;
+  font-weight:900;
+}
+#screen-all-modes .mode-difficulty[hidden]{
+  display:none !important;
+}
+#screen-all-modes .mode-difficulty select{
+  width:100%;
+  min-height:40px;
+  padding:0 30px 0 10px;
+  border:1px solid rgba(42,77,126,.14);
+  border-radius:9px;
+  background:#fff;
+  color:#29466e;
+  font:inherit;
+  font-size:.78rem;
+  font-weight:850;
+  cursor:pointer;
+}
+#screen-all-modes .mode-difficulty-inline{
+  display:inline-flex;
+  align-items:center;
+  min-height:19px;
+  margin:0 5px 2px 0;
+  padding:2px 6px;
+  border-radius:999px;
+  color:#52657f;
+  background:#edf2f8;
+  font-size:.55rem;
+  font-weight:1000;
+  line-height:1;
+  letter-spacing:.025em;
+  vertical-align:middle;
+}
+#screen-all-modes .mode-difficulty-inline.is-easy{color:#22744d;background:#e6f7ee;}
+#screen-all-modes .mode-difficulty-inline.is-medium{color:#3561a4;background:#eaf1ff;}
+#screen-all-modes .mode-difficulty-inline.is-hard{color:#9a5b16;background:#fff1d9;}
+#screen-all-modes .mode-difficulty-inline.is-expert{color:#a13c4f;background:#ffe8ed;}
 #screen-all-modes #home-gens-card{
   margin:10px 0 0 !important;
   border-radius:13px !important;
@@ -2139,6 +2181,15 @@ body.theme-dark #screen-all-modes .mode-hub-controls,
 body.theme-dark #screen-all-modes #home-gens-card{
   background:#0f1e35 !important;
   border-color:rgba(127,160,213,.12) !important;
+}
+body.theme-dark #screen-all-modes .mode-difficulty select{
+  color:#eef5ff;
+  background:#142640;
+  border-color:rgba(127,160,213,.2);
+}
+body.theme-dark #screen-all-modes .mode-difficulty-inline{
+  color:#d7e3f6;
+  background:#263a58;
 }
 
 @media (max-width:1000px){
