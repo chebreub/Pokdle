@@ -11,6 +11,8 @@ const index = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const style = fs.readFileSync(path.join(root, "style.css"), "utf8");
 const home = fs.readFileSync(path.join(root, "home.css"), "utf8");
 const mobile = fs.readFileSync(path.join(root, "mobile.css"), "utf8");
+const loadedCssFiles = [...index.matchAll(/href="dist\/([\w.-]+)\.min\.css"/g)].map((match) => match[1] + ".css");
+const loadedCss = loadedCssFiles.map((file) => fs.readFileSync(path.join(root, file), "utf8")).join("\n");
 
 function visibilityFixture() {
   const start = screenSource.indexOf("function setScreenVisibility(");
@@ -116,8 +118,9 @@ test("desktop and mobile primary navigation stay wired to known entry points", (
 });
 
 test("visual layers cannot directly force a bare screen visible with important", () => {
-  const css = style + "\n" + home + "\n" + mobile;
-  const forced = [...css.matchAll(/#screen-[\w-]+\s*\{[^}]*display\s*:\s*[^;]+!important/gs)].map((m) => m[0]);
+  assert.ok(loadedCssFiles.length >= 8, "the shield must cover the complete stylesheet stack");
+  assert.equal(new Set(loadedCssFiles).size, loadedCssFiles.length, "stylesheet entries should be unique");
+  const forced = [...loadedCss.matchAll(/#screen-[\w-]+\s*\{[^}]*display\s*:\s*[^;]+!important/gs)].map((m) => m[0]);
   assert.deepEqual(forced, []);
   assert.match(style, /\.hidden\s*\{\s*display:\s*none\s*!important;?\s*\}/);
   assert.match(home, /#screen-config:not\(\.hidden\)\s*\{/);
