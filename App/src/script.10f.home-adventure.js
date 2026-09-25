@@ -102,8 +102,11 @@ function renderHomeAdventureV2() {
   const daily = document.getElementById('daily-hero');
   if (!home || !screen || !daily) return;
 
-  if (daily.nextElementSibling !== home) {
-    daily.insertAdjacentElement('afterend', home);
+  const pathways = screen.querySelector('.home-pathways');
+  const weekly = document.getElementById('weekly-league-home');
+  const anchor = pathways || weekly || daily;
+  if (anchor.nextElementSibling !== home) {
+    anchor.insertAdjacentElement('afterend', home);
   }
 
   const xp = Number(playerProfile?.xp) || 0;
