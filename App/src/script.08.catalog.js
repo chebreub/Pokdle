@@ -126,14 +126,14 @@ function saveModeCatalogState() {
 }
 function renderModeCatalog() {
   var query = document.getElementById('mode-search')?.value || '';
-  if (typeof renderCatalogPicks === "function") renderCatalogPicks(modeCatalogCategory, query);
+  if (typeof renderCatalogPicks === "function") renderCatalogPicks(modeCatalogCategory, query, modeCatalogDifficulty);
   var count = 0;
   document.querySelectorAll('#screen-all-modes .all-modes-cat').forEach(section => {
     var visible = 0;
     section.querySelectorAll('.all-modes-card').forEach(card => {
       const matches = modeCatalogMatches(card.dataset.category, card.dataset.difficulty || '', card.textContent, modeCatalogCategory, modeCatalogDifficulty, query);
       if (matches) count++;
-      card.hidden = !matches || (typeof isClubFeatured === 'function' && isClubFeatured(card, modeCatalogCategory, query));
+      card.hidden = !matches || (typeof isClubFeatured === 'function' && isClubFeatured(card, modeCatalogCategory, query, modeCatalogDifficulty));
       if (!card.hidden) visible++;
     });
     section.hidden = visible === 0;
