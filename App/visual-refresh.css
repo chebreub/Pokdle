@@ -1592,3 +1592,300 @@
     justify-content: center;
   }
 }
+
+
+/* =====================================================================
+   MODE CARD IDENTITY V2 — Pokémon becomes part of the game library
+   ===================================================================== */
+#screen-all-modes .all-modes-cat[data-family="guess"] { --mode-art-accent:#2f76ff; --mode-art-soft:#edf4ff; }
+#screen-all-modes .all-modes-cat[data-family="reflection"] { --mode-art-accent:#7657c8; --mode-art-soft:#f2effc; }
+#screen-all-modes .all-modes-cat[data-family="arcade"] { --mode-art-accent:#159e8a; --mode-art-soft:#eaf8f5; }
+#screen-all-modes .all-modes-cat[data-family="strategy"] { --mode-art-accent:#d99a00; --mode-art-soft:#fff8df; }
+#screen-all-modes .all-modes-cat[data-family="social"] { --mode-art-accent:#e9433e; --mode-art-soft:#fff0ef; }
+#screen-all-modes .all-modes-cat[data-family="collection"] { --mode-art-accent:#315d95; --mode-art-soft:#edf3fa; }
+
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art {
+  position:relative;
+  overflow:hidden;
+  padding-right:84px !important;
+  background:
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--mode-art-accent,#2f76ff) 10%,transparent),transparent 34%),
+    #fff !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art:hover {
+  background:
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--mode-art-accent,#2f76ff) 15%,transparent),transparent 38%),
+    #fff !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art {
+  --art-accent:var(--mode-art-accent,#2f76ff);
+  position:absolute;
+  right:5px;
+  bottom:5px;
+  z-index:0;
+  width:76px;
+  height:76px;
+  display:block;
+  overflow:hidden;
+  border-radius:18px;
+  color:var(--art-accent);
+  pointer-events:none;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card > :not(.mode-card-art) {
+  position:relative;
+  z-index:2;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art-orbit {
+  position:absolute;
+  right:-16px;
+  bottom:-20px;
+  width:84px;
+  height:84px;
+  border:1px solid color-mix(in srgb,var(--art-accent) 24%,transparent);
+  border-radius:50%;
+  background:color-mix(in srgb,var(--art-accent) 6%,transparent);
+  box-shadow:
+    0 0 0 12px color-mix(in srgb,var(--art-accent) 3%,transparent),
+    inset 0 0 0 1px rgba(255,255,255,.45);
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art img {
+  position:absolute;
+  z-index:2;
+  width:52px;
+  height:52px;
+  object-fit:contain;
+  right:8px;
+  bottom:4px;
+  image-rendering:auto;
+  filter:drop-shadow(0 7px 7px rgba(22,44,78,.13));
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(2) {
+  width:39px;
+  height:39px;
+  right:35px;
+  bottom:0;
+  opacity:.92;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(3) {
+  width:35px;
+  height:35px;
+  right:0;
+  bottom:0;
+  opacity:.86;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > b {
+  position:absolute;
+  z-index:3;
+  right:6px;
+  top:5px;
+  max-width:48px;
+  overflow:hidden;
+  color:var(--art-accent);
+  font-size:.62rem;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.02em;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  opacity:.68;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-mystery img {
+  filter:brightness(0) opacity(.48) drop-shadow(0 7px 7px rgba(22,44,78,.18));
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-pixel img {
+  image-rendering:pixelated;
+  filter:saturate(.82) contrast(1.08) drop-shadow(0 6px 5px rgba(22,44,78,.12));
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-scan::after {
+  content:"";
+  position:absolute;
+  z-index:4;
+  left:16px;
+  right:5px;
+  top:44px;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--art-accent),transparent);
+  box-shadow:0 0 8px var(--art-accent);
+  opacity:.55;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) img:nth-of-type(1) {
+  width:45px;
+  height:45px;
+  right:18px;
+  bottom:16px;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) img:nth-of-type(2) {
+  right:38px;
+  bottom:-1px;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) img:nth-of-type(3) {
+  right:0;
+  bottom:-1px;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-duel img:nth-of-type(1),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-versus img:nth-of-type(1),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-types img:nth-of-type(1) {
+  width:47px;
+  height:47px;
+  right:30px;
+  bottom:4px;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-duel img:nth-of-type(2),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-versus img:nth-of-type(2),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-types img:nth-of-type(2) {
+  width:43px;
+  height:43px;
+  right:0;
+  bottom:1px;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-audio::before {
+  content:"";
+  position:absolute;
+  z-index:1;
+  right:8px;
+  bottom:18px;
+  width:56px;
+  height:26px;
+  border-top:2px solid color-mix(in srgb,var(--art-accent) 32%,transparent);
+  border-bottom:2px solid color-mix(in srgb,var(--art-accent) 18%,transparent);
+  border-radius:50%;
+  transform:rotate(-8deg);
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-speed::after {
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:6px;
+  bottom:18px;
+  width:42px;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--art-accent));
+  box-shadow:0 -9px 0 color-mix(in srgb,var(--art-accent) 26%,transparent),0 9px 0 color-mix(in srgb,var(--art-accent) 18%,transparent);
+}
+
+/* Featured picks get a larger, editorial Pokémon scene. */
+#pokdle-app.design-refresh .club-pick.has-mode-art {
+  position:relative;
+  overflow:hidden;
+  min-height:190px;
+  padding-right:122px;
+  background:
+    radial-gradient(circle at 100% 18%,color-mix(in srgb,var(--club-mark) 10%,transparent),transparent 35%),
+    var(--ui-accent-soft);
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art {
+  --art-accent:var(--club-mark);
+  position:absolute;
+  right:8px;
+  top:18px;
+  width:108px;
+  height:112px;
+  display:block;
+  color:var(--art-accent);
+  pointer-events:none;
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art-orbit {
+  position:absolute;
+  right:-18px;
+  top:4px;
+  width:104px;
+  height:104px;
+  border:1px solid color-mix(in srgb,var(--art-accent) 20%,transparent);
+  border-radius:50%;
+  background:color-mix(in srgb,var(--art-accent) 5%,transparent);
+  box-shadow:0 0 0 15px color-mix(in srgb,var(--art-accent) 3%,transparent);
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art img {
+  position:absolute;
+  z-index:2;
+  right:8px;
+  top:20px;
+  width:82px;
+  height:82px;
+  object-fit:contain;
+  filter:drop-shadow(0 12px 10px rgba(21,43,76,.15));
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(2) {
+  width:56px;
+  height:56px;
+  right:52px;
+  top:58px;
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(3) {
+  width:52px;
+  height:52px;
+  right:0;
+  top:64px;
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art > b {
+  position:absolute;
+  z-index:3;
+  right:4px;
+  top:3px;
+  color:var(--art-accent);
+  font-size:.7rem;
+  font-weight:1000;
+  opacity:.62;
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art.art-mystery img {
+  filter:brightness(0) opacity(.5) drop-shadow(0 12px 10px rgba(21,43,76,.16));
+}
+
+/* Dark mode retains artwork without turning cards into bright panels. */
+#pokdle-app.design-refresh.theme-dark #screen-all-modes .all-modes-card.has-mode-art {
+  background:
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--mode-art-accent,#5d91e9) 10%,transparent),transparent 38%),
+    #132440 !important;
+}
+#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-card-art img,
+#pokdle-app.design-refresh.theme-dark .club-pick .mode-card-art img {
+  filter:drop-shadow(0 8px 8px rgba(0,0,0,.24));
+}
+#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-card-art.art-mystery img,
+#pokdle-app.design-refresh.theme-dark .club-pick .mode-card-art.art-mystery img {
+  filter:brightness(0) invert(.88) opacity(.38);
+}
+
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art {
+    min-height:96px !important;
+    padding-right:76px !important;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .mode-card-art {
+    right:3px;
+    bottom:3px;
+    width:66px;
+    height:66px;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .mode-card-art img {
+    width:45px;
+    height:45px;
+  }
+  #pokdle-app.design-refresh .club-pick.has-mode-art {
+    min-height:124px;
+    padding-right:88px !important;
+  }
+  #pokdle-app.design-refresh .club-pick .mode-card-art {
+    right:6px;
+    top:20px;
+    width:76px;
+    height:82px;
+  }
+  #pokdle-app.design-refresh .club-pick .mode-card-art-orbit {
+    width:74px;
+    height:74px;
+    right:-12px;
+  }
+  #pokdle-app.design-refresh .club-pick .mode-card-art img {
+    width:58px;
+    height:58px;
+    right:4px;
+    top:14px;
+  }
+  #pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(2),
+  #pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(3) {
+    width:38px;
+    height:38px;
+    top:48px;
+  }
+}
