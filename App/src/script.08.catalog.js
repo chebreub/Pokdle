@@ -1,6 +1,17 @@
 
 /* Game discovery: every destination stays available, without crowding the home. */
 var modeCatalogCategory = 'solo';
+var modeCatalogDifficulty = 'all';
+var MODE_CATALOG_DIFFICULTY_LABELS = Object.freeze({ all:'Toutes', easy:'Facile', medium:'Moyen', hard:'Difficile', expert:'Expert' });
+var MODE_CATALOG_DIFFICULTY = Object.freeze({
+  startDailyGame:'medium', startNormalGame:'medium', startSilhouetteGame:'easy', startPixelGame:'medium',
+  startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium',
+  startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
+  openTypeComboSolo:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
+  startPartyMode:'medium', openDraftArenaMode:'hard', openDraftScoreAttackMode:'hard', openPartyRoomMode:'medium',
+  openMultiplayerMode:'medium', openStatClashMode:'hard', openStatAuctionMode:'hard', openDefiAmiFromAllModes:'medium',
+  openDraftScoreAttackProDuel:'expert'
+});
 var MODE_CATALOG_ART = Object.freeze({
   startDailyGame:{ids:[149],effect:'mystery',glyph:'?'},
   startNormalGame:{ids:[133],effect:'mystery',glyph:'∞'},
@@ -59,8 +70,33 @@ function modeCatalogArtHtml(key, variant='card') {
     '<span class="mode-card-art-orbit"></span>'+images+
     '<b>'+spec.glyph+'</b></span>';
 }
+function modeCatalogDifficultyForCard(card) {
+  const key=modeCatalogActionKey(card);
+  if (!key) return '';
+  let level=MODE_CATALOG_DIFFICULTY[key] || '';
+  if (key === 'openDraftScoreAttackMode') {
+    try {
+      const args=JSON.parse(card.dataset.args || '[]');
+      if (args[1] === true) level='expert';
+    } catch (_e) {}
+  }
+  return level;
+}
+function modeCatalogDecorateDifficulty(card) {
+  if (!card || card.dataset.category === 'explore') return;
+  const level=modeCatalogDifficultyForCard(card);
+  if (!level) return;
+  card.dataset.difficulty=level;
+  card.dataset.difficultyLabel=MODE_CATALOG_DIFFICULTY_LABELS[level] || level;
+  const desc=card.querySelector('small');
+  if (desc && !desc.querySelector('.mode-difficulty-inline')) {
+    desc.insertAdjacentHTML('afterbegin','<span class="mode-difficulty-inline is-'+level+'">'+card.dataset.difficultyLabel+'</span>');
+  }
+}
+
 function decorateModeCatalogCards() {
   document.querySelectorAll('#screen-all-modes .all-modes-card').forEach(card=>{
+    modeCatalogDecorateDifficulty(card);
     if (card.querySelector('.mode-card-art')) return;
     const key=modeCatalogActionKey(card);
     const html=modeCatalogArtHtml(key,'card');
@@ -79,12 +115,14 @@ var modeCatalogCopy = {
 function normalizeModeSearch(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
-function modeCatalogMatches(cardCategory, text, category, query) {
-  return (category === 'all' || cardCategory === category) && normalizeModeSearch(query).split(/\s+/).every(word => normalizeModeSearch(text).includes(word));
+function modeCatalogMatches(cardCategory, cardDifficulty, text, category, difficulty, query) {
+  const categoryMatches = category === 'all' || cardCategory === category;
+  const difficultyMatches = category === 'explore' || difficulty === 'all' || cardDifficulty === difficulty;
+  return categoryMatches && difficultyMatches && normalizeModeSearch(query).split(/\s+/).every(word => normalizeModeSearch(text).includes(word));
 }
 function saveModeCatalogState() {
   if (history.state?.screen !== 'allModes') return;
-  history.replaceState({ ...history.state, category: modeCatalogCategory, query: document.getElementById('mode-search')?.value || '' }, '', location.href);
+  history.replaceState({ ...history.state, category: modeCatalogCategory, difficulty: modeCatalogDifficulty, query: document.getElementById('mode-search')?.value || '' }, '', location.href);
 }
 function renderModeCatalog() {
   var query = document.getElementById('mode-search')?.value || '';
@@ -93,7 +131,7 @@ function renderModeCatalog() {
   document.querySelectorAll('#screen-all-modes .all-modes-cat').forEach(section => {
     var visible = 0;
     section.querySelectorAll('.all-modes-card').forEach(card => {
-      const matches = modeCatalogMatches(card.dataset.category, card.textContent, modeCatalogCategory, query);
+      const matches = modeCatalogMatches(card.dataset.category, card.dataset.difficulty || '', card.textContent, modeCatalogCategory, modeCatalogDifficulty, query);
       if (matches) count++;
       card.hidden = !matches || (typeof isClubFeatured === 'function' && isClubFeatured(card, modeCatalogCategory, query));
       if (!card.hidden) visible++;
@@ -108,6 +146,10 @@ function renderModeCatalog() {
   document.getElementById('mode-results').textContent = `${count} ${count === 1 ? 'résultat' : 'résultats'}${query.trim() ? ' pour « ' + query.trim() + ' »' : ''}`;
   document.getElementById('mode-hub-description').textContent = modeCatalogCopy[modeCatalogCategory];
   document.getElementById('home-gens-card').hidden = modeCatalogCategory === 'explore' || Boolean(query.trim());
+  const difficultyField=document.getElementById('mode-difficulty-field');
+  if (difficultyField) difficultyField.hidden = modeCatalogCategory === 'explore';
+  const difficultySelect=document.getElementById('mode-difficulty');
+  if (difficultySelect && difficultySelect.value !== modeCatalogDifficulty) difficultySelect.value = modeCatalogDifficulty;
   setGlobalNavActive(modeCatalogCategory === 'friends' ? 'social' : modeCatalogCategory === 'explore' ? 'extras' : 'game');
 }
 function setModeCatalogCategory(category, save = true) {
@@ -117,7 +159,13 @@ function setModeCatalogCategory(category, save = true) {
   renderModeCatalog();
   if (save) saveModeCatalogState();
 }
+function setModeCatalogDifficulty(difficulty, save = true) {
+  modeCatalogDifficulty = Object.prototype.hasOwnProperty.call(MODE_CATALOG_DIFFICULTY_LABELS, difficulty) ? difficulty : 'all';
+  renderModeCatalog();
+  if (save) saveModeCatalogState();
+}
 function resetModeCatalog() {
+  modeCatalogDifficulty = 'all';
   setModeCatalogCategory('all');
   document.getElementById('mode-search')?.focus();
 }
@@ -128,5 +176,8 @@ document.addEventListener('DOMContentLoaded', function () {
     modeCatalogCategory = 'all';
     renderModeCatalog();
     saveModeCatalogState();
+  });
+  document.getElementById('mode-difficulty')?.addEventListener('change', function (event) {
+    setModeCatalogDifficulty(event.target.value);
   });
 });
