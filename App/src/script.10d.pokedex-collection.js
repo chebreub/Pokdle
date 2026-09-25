@@ -55,6 +55,14 @@ function pokedexCollectionBaseCatalogue() {
   if (typeof getPokemonUiList === 'function') return getPokemonUiList({ includeAltForms:false }).filter(p => !p.isAltForm);
   return POKEMON_LIST.filter(p => !p.isAltForm && Number(p.id) < 20000);
 }
+function pokedexCollectionFormStats() {
+  const list = typeof getPokemonUiList === 'function'
+    ? getPokemonUiList({ includeAltForms:true }).filter(p => p.isAltForm)
+    : POKEMON_LIST.filter(p => p.isAltForm);
+  const discoveries = pokedexCollectionDiscoveries();
+  const found = list.filter(p => discoveries[p.id]).length;
+  return { found, total:list.length };
+}
 function pokedexCollectionRegionStats(gen) {
   const group = pokedexCollectionBaseCatalogue().filter(p => Number(p.gen) === Number(gen));
   const discoveries = pokedexCollectionDiscoveries();
@@ -69,7 +77,8 @@ function pokedexCollectionNationalStats() {
     const state = pokedexCollectionState(p);
     return state.kind === 'mission' || state.kind === 'secret';
   }).length;
-  return { found, total:group.length, missions, percent:group.length ? Math.round(found / group.length * 100) : 0 };
+  const forms = pokedexCollectionFormStats();
+  return { found, total:group.length, missions, formsFound:forms.found, formsTotal:forms.total, percent:group.length ? Math.round(found / group.length * 100) : 0 };
 }
 function ensurePokedexCollectionHub() {
   const screen = document.getElementById('screen-pokedex');
@@ -83,23 +92,29 @@ function ensurePokedexCollectionHub() {
     <div class="pokedex-collection-console">
       <div class="pokedex-collection-identity">
         <span class="pokedex-console-kicker">POKÉDLE // TERMINAL DRESSEUR</span>
-        <h3>Ton Pokédex</h3>
-        <p>Chaque entrée enregistrée raconte une partie, une mission ou un secret.</p>
+        <h3>Ma collection</h3>
+        <p>Ici, seuls les Pokémon réellement gagnés en jouant sont enregistrés. L’encyclopédie reste disponible à côté, sans condition.</p>
       </div>
       <div id="pokedex-collection-national" class="pokedex-collection-national"></div>
     </div>
     <div class="pokedex-experience-switch" role="group" aria-label="Mode du Pokédex">
-      <button type="button" data-pokedex-view="collection" data-action="setPokedexExperienceView" data-args='["collection"]'>Collection</button>
-      <button type="button" data-pokedex-view="encyclopedia" data-action="setPokedexExperienceView" data-args='["encyclopedia"]'>Encyclopédie</button>
+      <button type="button" data-pokedex-view="collection" data-action="setPokedexExperienceView" data-args='["collection"]'>Ma collection</button>
+      <button type="button" data-pokedex-view="encyclopedia" data-action="setPokedexExperienceView" data-args='["encyclopedia"]'>Encyclopédie complète</button>
       <button type="button" class="pokedex-missions-link" data-action="openPokedexMissionHub">Missions <span id="pokedex-mission-ready-count"></span></button>
     </div>
     <div id="pokedex-region-progress" class="pokedex-region-progress" aria-label="Progression par région"></div>
     <div id="pokedex-collection-filters" class="pokedex-collection-filters" role="group" aria-label="État de collection">
       <button type="button" data-collection-filter="all" data-action="setPokedexCollectionFilter" data-args='["all"]'>Toutes</button>
-      <button type="button" data-collection-filter="registered" data-action="setPokedexCollectionFilter" data-args='["registered"]'>✓ Enregistrées</button>
-      <button type="button" data-collection-filter="mission" data-action="setPokedexCollectionFilter" data-args='["mission"]'>◆ Missions</button>
-      <button type="button" data-collection-filter="unknown" data-action="setPokedexCollectionFilter" data-args='["unknown"]'>? Inconnues</button>
+      <button type="button" data-collection-filter="registered" data-action="setPokedexCollectionFilter" data-args='["registered"]'>✓ Gagnées</button>
+      <button type="button" data-collection-filter="mission" data-action="setPokedexCollectionFilter" data-args='["mission"]'>◆ À mériter</button>
+      <button type="button" data-collection-filter="unknown" data-action="setPokedexCollectionFilter" data-args='["unknown"]'>? À trouver</button>
       <button type="button" data-collection-filter="secret" data-action="setPokedexCollectionFilter" data-args='["secret"]'>✦ Secrets</button>
+    </div>
+    <div id="pokedex-collection-legend" class="pokedex-collection-legend" aria-label="Légende de la collection">
+      <span class="is-registered"><b>✓</b> Gagné en jouant</span>
+      <span class="is-mission"><b>◆</b> Récompense de maîtrise</span>
+      <span class="is-unknown"><b>?</b> À rencontrer</span>
+      <span class="is-secret"><b>✦</b> Piste cachée</span>
     </div>`;
   toolbar.parentElement.insertBefore(hub, toolbar);
 }
@@ -113,9 +128,10 @@ function renderPokedexCollectionHub() {
   document.querySelectorAll('[data-collection-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.collectionFilter === pokedexCollectionFilter)));
   const national = document.getElementById('pokedex-collection-national');
   if (national) national.innerHTML = `
-    <div><strong>${stats.found}<small> / ${stats.total}</small></strong><span>entrées enregistrées</span></div>
-    <progress value="${stats.found}" max="${stats.total || 1}" aria-label="Progression du Pokédex national"></progress>
-    <small>${stats.percent}% complété · ${stats.missions} entrée(s) spéciale(s) encore à débloquer</small>`;
+    <div><strong>${stats.found}<small> / ${stats.total}</small></strong><span>espèces gagnées</span></div>
+    <progress value="${stats.found}" max="${stats.total || 1}" aria-label="Progression de la collection nationale"></progress>
+    <div class="pokedex-collection-substats"><span><b>${stats.formsFound}</b> / ${stats.formsTotal} formes</span><span><b>${stats.missions}</b> récompenses spéciales à débloquer</span></div>
+    <small>${stats.percent}% des espèces de base enregistrées</small>`;
   const regions = document.getElementById('pokedex-region-progress');
   if (regions) regions.innerHTML = POKEDEX_COLLECTION_REGIONS.map((name,index) => {
     const gen=index+1, data=pokedexCollectionRegionStats(gen);
@@ -132,6 +148,7 @@ function renderPokedexCollectionHub() {
   const readyEl=document.getElementById('pokedex-mission-ready-count');
   if (readyEl) readyEl.textContent = ready ? `· ${ready} prête${ready>1?'s':''}` : '';
   document.getElementById('pokedex-collection-filters')?.classList.toggle('hidden', pokedexExperienceView !== 'collection');
+  document.getElementById('pokedex-collection-legend')?.classList.toggle('hidden', pokedexExperienceView !== 'collection');
 }
 function setPokedexExperienceView(view) {
   pokedexExperienceView = view === 'encyclopedia' ? 'encyclopedia' : 'collection';
