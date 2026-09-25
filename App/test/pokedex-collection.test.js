@@ -5,12 +5,13 @@ const source=fs.readFileSync(path.join(__dirname,'../src/script.10d.pokedex-coll
 const gameSource=fs.readFileSync(path.join(__dirname,'../src/script.04.jeu-pokedex.js'),'utf8');
 
 function fixture(){
-  const discoveries={25:{at:1000,mode:'normal',source:'game'}};
+  const discoveries={25:{at:1000,mode:'normal',source:'game'},10094:{at:1200,mode:'normal',source:'game'}};
   const mons=[
     {id:25,name:'Pikachu',gen:1,type1:'Électrik',type2:null},
     {id:94,name:'Ectoplasma',gen:1,type1:'Spectre',type2:'Poison'},
     {id:150,name:'Mewtwo',gen:1,type1:'Psy',type2:null},
-    {id:151,name:'Mew',gen:1,type1:'Psy',type2:null}
+    {id:151,name:'Mew',gen:1,type1:'Psy',type2:null},
+    {id:10094,baseId:94,name:'Ectoplasma Mega',gen:1,type1:'Spectre',type2:'Poison',isAltForm:true}
   ];
   const byId=new Map(mons.map(p=>[p.id,p]));
   const context={
@@ -66,6 +67,8 @@ test('national collection progress is based on actual discoveries',()=>{
   assert.equal(stats.found,1);
   assert.equal(stats.total,4);
   assert.equal(stats.percent,25);
+  assert.equal(stats.formsFound,1);
+  assert.equal(stats.formsTotal,1);
 });
 
 test('guess results use staggered cell reveal and reduced-motion support',()=>{
