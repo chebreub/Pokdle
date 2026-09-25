@@ -2143,8 +2143,8 @@ window.addEventListener("DOMContentLoaded", () => {
   initEmulatorMode();
   resolveExtraFormSprites();
 
-  if (checkChallengeURL()) return;
-  if (checkMultiplayerInviteURL()) return;
+  if (checkChallengeURL()) { removeAppSplash(); return; }
+  if (checkMultiplayerInviteURL()) { removeAppSplash(); return; }
   // Sur /emulateur, l'écran émulateur est ouvert par l'init dédié — ne pas
   // rappeler goToConfig() ici (il re-routerait vers /).
   if (window.location.pathname === "/emulateur") { removeAppSplash(); return; }

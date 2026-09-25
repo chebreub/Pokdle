@@ -6,6 +6,7 @@ const style=fs.readFileSync(path.join(__dirname,'../style.css'),'utf8');
 const mobile=fs.readFileSync(path.join(__dirname,'../mobile.css'),'utf8');
 const adventure=fs.readFileSync(path.join(__dirname,'../src/script.10f.home-adventure.js'),'utf8');
 const weekly=fs.readFileSync(path.join(__dirname,'../src/script.10i.weekly-league.js'),'utf8');
+const core=fs.readFileSync(path.join(__dirname,'../src/script.01.core.js'),'utf8');
 
 test('visual reboot establishes a strong final design authority layer',()=>{
   assert.match(home,/VISUAL REBOOT V2 — final authority layer/);
@@ -45,4 +46,15 @@ test('dark mode and reduced motion remain covered',()=>{
   assert.match(home,/body\.theme-dark #screen-config \.pk-hero/);
   assert.match(style,/body\.theme-dark #screen-game \.game-topbar/);
   assert.match(style,/prefers-reduced-motion:reduce/);
+});
+
+test('visual reboot never forces the home screen visible while navigation hides it',()=>{
+  assert.match(home,/#screen-config:not\(\.hidden\)\{[\s\S]*display:grid !important/);
+  assert.match(home,/#screen-config\.hidden\{[\s\S]*display:none !important/);
+  assert.doesNotMatch(home,/\/\* Home spacing \*\/\s*#screen-config\{\s*display:grid !important/);
+});
+
+test('startup deep links always dismiss the splash screen',()=>{
+  assert.match(core,/if \(checkChallengeURL\(\)\) \{ removeAppSplash\(\); return; \}/);
+  assert.match(core,/if \(checkMultiplayerInviteURL\(\)\) \{ removeAppSplash\(\); return; \}/);
 });
