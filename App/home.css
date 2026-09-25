@@ -1622,9 +1622,12 @@ body:not(.theme-dark) #global-xp-badge{
 }
 
 /* Home spacing */
-#screen-config{
+#screen-config:not(.hidden){
   display:grid !important;
   gap:14px !important;
+}
+#screen-config.hidden{
+  display:none !important;
 }
 #screen-config .pk-hero{
   position:relative !important;
