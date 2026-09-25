@@ -346,7 +346,7 @@
         <p class="card-desc">Personnalise ton profil et retrouve un résumé clair de ta progression.</p>
         <div class="profile-view-switch" role="group" aria-label="Contenu du profil">
           <button type="button" data-action="switchProfileView" data-args='["trainer"]' aria-pressed="true">Dresseur</button>
-          <button type="button" data-action="switchProfileView" data-args='["album"]' aria-pressed="false">Album <span id="album-tab-count">0</span></button>
+          <button type="button" data-action="switchProfileView" data-args='["album"]' aria-pressed="false">Missions <span id="album-tab-count"></span></button>
           <button type="button" data-action="switchProfileView" data-args='["secrets"]' aria-pressed="false">Secrets <span id="secrets-tab-count">0/12</span></button>
         </div>
         <div class="profile-stats-links">
@@ -365,20 +365,12 @@
           <div id="secret-extra-journal"></div>
         </section>
         <div id="profile-secret-rune" class="secret-rune-trail"><span>Un signe familier…</span><button type="button" class="secret-rune" data-rune="profile" data-action="inspectSecretRune" data-args='["profile"]' aria-label="Examiner la marque étoilée du profil">✧</button></div>
-        <section id="profile-album" class="hidden" aria-label="Album de découvertes">
-          <div class="album-intro"><div><span class="adventure-eyebrow">CHAQUE MYSTÈRE LAISSE UNE TRACE</span><h3>Ton aventure prend forme.</h3><p>Tes Pokémon trouvés en jeu et tes rencontres secrètes. Chaque carte raconte son origine ; les formes alternatives ont leur propre place.</p></div><div id="album-total" class="album-total"></div></div>
-          <p id="album-origin-note" class="album-origin-note hidden"></p>
-          <button type="button" class="album-secret-link" data-action="openSecretJournal">✦ Des Pokémon se cachent aussi dans le site. Ouvrir le carnet des secrets →</button>
-          <details class="album-region-disclosure"><summary>Explorer par génération</summary><div id="album-regions" class="album-regions" aria-label="Progression par génération"></div></details>
-          <div class="album-filters">
-            <label>Rechercher<input id="album-search" type="search" placeholder="Nom ou numéro…" autocomplete="off" /></label>
-            <label>Génération<select id="album-generation"><option value="all">Toutes</option></select></label>
-            <label>Afficher<select id="album-status"><option value="found">Mes découvertes</option><option value="all">Tout l’album</option><option value="missing">À découvrir</option><option value="secrets">Secrets trouvés</option></select></label>
+        <section id="profile-album" class="hidden profile-missions-view" aria-label="Missions de collection">
+          <div class="album-intro profile-mission-intro">
+            <div><span class="adventure-eyebrow">MAÎTRISE & RÉCOMPENSES</span><h3>Les Pokémon trophées se méritent.</h3><p>Ta collection personnelle vit désormais dans le Pokédex. Ici, tu suis uniquement les missions qui demandent de maîtriser les différents modes de Pokédle.</p></div>
+            <button type="button" class="btn-blue profile-open-collection" data-action="openPokedexCollection">Ouvrir ma collection →</button>
           </div>
-          <p id="album-results-label" class="album-results-label" role="status"></p>
-          <div id="album-grid" class="album-grid"></div>
-          <div class="album-pagination"><button type="button" class="btn-ghost" id="album-prev" data-action="changeAlbumPage" data-args='[-1]'>← Précédent</button><span id="album-page"></span><button type="button" class="btn-ghost" id="album-next" data-action="changeAlbumPage" data-args='[1]'>Suivant →</button></div>
-          <p class="album-footnote">Une carte par Pokémon. Chaque carte indique son origine : jeu, historique ou rencontre secrète. Un abandon ou une simple révélation ne remplit pas l’album.</p>
+          <button type="button" class="album-secret-link" data-action="openSecretJournal">✦ Les rencontres secrètes ont leur propre carnet. Ouvrir les secrets →</button>
         </section>
         <div class="profile-layout">
           <section class="profile-panel">
