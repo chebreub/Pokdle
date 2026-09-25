@@ -32037,3 +32037,343 @@ body.theme-dark .account-menu-identity small {
     padding:12px;
   }
 }
+
+
+/* =====================================================================
+   VISUAL REBOOT V2 — gameplay authority layer
+   ===================================================================== */
+#screen-game,
+#screen-odd-one-out,
+#screen-speedrun,
+#screen-higher-lower,
+#screen-type-combo,
+#screen-draft-score-attack,
+#screen-poke-connections,
+#screen-stat-clash,
+#screen-stat-auction{
+  animation:vr-screen-in .22s ease both;
+}
+@keyframes vr-screen-in{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:none}
+}
+
+/* Universal page frame */
+[id^="screen-"] > .card{
+  border-radius:22px !important;
+}
+#screen-game{
+  max-width:1180px;
+  margin:0 auto;
+}
+#screen-game .game-topbar{
+  margin-bottom:10px;
+  padding:9px 10px;
+  border:1px solid rgba(40,74,122,.10);
+  border-radius:14px;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 7px 18px rgba(20,48,90,.05);
+}
+#screen-game .game-tags{
+  gap:7px;
+}
+#screen-game .tag-gen,
+#screen-game .tag-tries{
+  min-height:30px;
+  display:inline-flex;
+  align-items:center;
+  border-radius:8px;
+  padding:5px 9px;
+  font-size:.7rem;
+  font-weight:1000;
+}
+#screen-game .tag-gen{
+  background:#173b6d !important;
+}
+#screen-game .tag-tries{
+  border:1px solid rgba(42,76,124,.10);
+  background:#f5f8fc;
+  color:#607697;
+}
+
+/* Mode banner becomes a compact title bar */
+#screen-game .mode-banner{
+  min-height:62px;
+  margin:0 0 10px !important;
+  padding:10px 12px !important;
+  border:1px solid rgba(43,76,123,.10) !important;
+  border-radius:15px !important;
+  background:#fff !important;
+  box-shadow:0 8px 20px rgba(20,48,90,.05) !important;
+}
+#screen-game .mode-banner .pk-tile{
+  width:40px !important;
+  height:40px !important;
+  border-radius:11px !important;
+}
+#screen-game .mode-banner-text b{
+  color:#1c395f !important;
+  font-size:.88rem !important;
+}
+#screen-game .mode-banner-desc{
+  color:#7b8da8 !important;
+  font-size:.7rem !important;
+}
+
+/* Guess area */
+#screen-game .search-bar{
+  position:relative;
+  gap:7px !important;
+  margin:0 0 9px !important;
+  padding:9px !important;
+  border:1px solid rgba(40,75,123,.11);
+  border-radius:15px;
+  background:#fff;
+  box-shadow:0 10px 22px rgba(19,48,91,.06);
+}
+#screen-game #guess-input{
+  min-height:48px !important;
+  border:1px solid rgba(40,74,122,.13) !important;
+  border-radius:11px !important;
+  background:#f7f9fd !important;
+  box-shadow:none !important;
+}
+#screen-game #guess-input:focus{
+  border-color:#2f76ff !important;
+  background:#fff !important;
+  box-shadow:0 0 0 3px rgba(47,118,255,.09) !important;
+}
+#screen-game #btn-submit{
+  min-width:108px;
+  min-height:48px;
+  border-radius:11px !important;
+  background:#e9433e !important;
+  box-shadow:none !important;
+}
+#screen-game #btn-surrender{
+  min-height:48px;
+  border-radius:11px !important;
+  background:#f5f7fa !important;
+  color:#637796 !important;
+}
+
+/* Results grid lives on a quiet surface */
+#screen-game .results-wrap{
+  margin-top:10px !important;
+  padding:10px !important;
+  border:1px solid rgba(42,75,122,.09) !important;
+  border-radius:17px !important;
+  background:rgba(255,255,255,.68) !important;
+}
+@media (min-width:641px){
+  #screen-game #results-table{
+    border-spacing:5px 6px !important;
+  }
+  #screen-game #results-table thead th{
+    color:#788ba8 !important;
+    font-size:.59rem !important;
+    letter-spacing:.08em !important;
+  }
+  #screen-game #results-table td{
+    min-height:48px;
+    padding:9px 7px !important;
+    border-radius:9px !important;
+    box-shadow:none !important;
+  }
+  #screen-game #results-table td:first-child{
+    border:1px solid rgba(42,75,122,.08) !important;
+    background:#fff !important;
+  }
+  #screen-game #results-table .c-ok{
+    background:#2fa45a !important;
+    box-shadow:none !important;
+  }
+  #screen-game #results-table .c-close{
+    background:#f0b632 !important;
+    box-shadow:none !important;
+  }
+  #screen-game #results-table .c-wrong{
+    background:#d95752 !important;
+    box-shadow:none !important;
+  }
+}
+#screen-game .results-legend{
+  margin:7px 3px 0 !important;
+  color:#8291a8 !important;
+  font-size:.65rem !important;
+}
+
+/* End of game: one strong card, no floating fragments */
+#screen-game .win-box{
+  margin:12px 0 !important;
+  padding:15px !important;
+  border:1px solid rgba(40,76,124,.11) !important;
+  border-radius:19px !important;
+  background:
+    radial-gradient(circle at 100% 0,rgba(47,118,255,.06),transparent 28%),
+    linear-gradient(180deg,#fff,#f7f9fd) !important;
+  box-shadow:0 14px 32px rgba(20,48,90,.075) !important;
+}
+#screen-game .win-inner{
+  grid-template-columns:72px minmax(0,1fr) !important;
+}
+#screen-game .win-sprite{
+  width:70px !important;
+  height:70px !important;
+  border:0 !important;
+  border-radius:17px !important;
+  background:#eef4ff !important;
+}
+#screen-game .win-title{
+  color:#173b68 !important;
+  font-size:1.45rem !important;
+}
+#screen-game .win-text{
+  color:#7689a5 !important;
+}
+#screen-game .win-gamefeel-summary{
+  border:1px solid rgba(41,75,123,.08);
+  background:#f4f7fb !important;
+}
+#screen-game .win-ranking-preview{
+  border-color:rgba(47,118,255,.12) !important;
+  background:#f0f5ff !important;
+}
+
+/* Competitive/live HUD calmer and denser */
+.live-rank-hud{
+  gap:7px !important;
+  margin:7px 0 10px !important;
+  padding:8px 9px !important;
+  border-radius:13px !important;
+  background:#fff !important;
+  box-shadow:0 7px 18px rgba(20,48,90,.045) !important;
+}
+.live-rank-mark{
+  width:34px !important;
+  height:34px !important;
+  border-radius:9px !important;
+}
+.live-rank-goal{
+  border-radius:9px !important;
+}
+.live-rank-open{
+  border-radius:9px !important;
+}
+
+/* Dedicated mode cards use same hierarchy */
+#screen-odd-one-out .odd-screen-card,
+#screen-speedrun .speedrun-card,
+#screen-higher-lower .higher-lower-card,
+#screen-type-combo .type-combo-card,
+#screen-poke-connections .poke-connections-card,
+#screen-stat-auction .stat-auction-card{
+  padding:18px !important;
+  border:1px solid rgba(42,75,122,.10) !important;
+  background:
+    radial-gradient(circle at 100% 0,rgba(47,118,255,.045),transparent 25%),
+    #fff !important;
+  box-shadow:0 16px 36px rgba(20,48,90,.075) !important;
+}
+.ranking-head{
+  gap:12px;
+}
+.ranking-head .card-title{
+  color:#18385f;
+  letter-spacing:-.025em;
+}
+.ranking-head-actions{
+  gap:6px !important;
+}
+.ranking-head-actions .btn-ghost,
+.ranking-head-actions .btn-red,
+.ranking-head-actions .btn-yellow,
+.ranking-head-actions .btn-blue{
+  min-height:38px;
+  padding:8px 11px !important;
+  border-radius:9px !important;
+  font-size:.72rem !important;
+}
+.card-desc{
+  color:#7486a2;
+  line-height:1.5;
+}
+
+/* Button language */
+.btn-blue,
+.btn-red,
+.btn-yellow,
+.btn-ghost{
+  border-radius:10px !important;
+  box-shadow:none !important;
+}
+.btn-blue{
+  background:#2f76ff !important;
+}
+.btn-red{
+  background:#e9433e !important;
+}
+.btn-yellow{
+  background:#ffd34b !important;
+}
+.btn-ghost{
+  border:1px solid rgba(41,75,123,.11) !important;
+  background:#f7f9fc !important;
+  color:#536a8b !important;
+}
+.btn-blue:hover,
+.btn-red:hover,
+.btn-yellow:hover,
+.btn-ghost:hover{
+  filter:none !important;
+  transform:translateY(-1px) !important;
+}
+
+/* Dark mode */
+body.theme-dark #screen-game .game-topbar,
+body.theme-dark #screen-game .mode-banner,
+body.theme-dark #screen-game .search-bar,
+body.theme-dark #screen-game .results-wrap,
+body.theme-dark .live-rank-hud,
+body.theme-dark #screen-odd-one-out .odd-screen-card,
+body.theme-dark #screen-speedrun .speedrun-card,
+body.theme-dark #screen-higher-lower .higher-lower-card,
+body.theme-dark #screen-type-combo .type-combo-card,
+body.theme-dark #screen-poke-connections .poke-connections-card,
+body.theme-dark #screen-stat-auction .stat-auction-card{
+  background:#132440 !important;
+  border-color:rgba(126,160,213,.12) !important;
+}
+body.theme-dark #screen-game .mode-banner-text b,
+body.theme-dark .ranking-head .card-title{
+  color:#eef5ff !important;
+}
+body.theme-dark #screen-game .mode-banner-desc,
+body.theme-dark .card-desc{
+  color:#aebfda !important;
+}
+body.theme-dark #screen-game #guess-input{
+  background:#0d1d35 !important;
+  color:#eef5ff !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce){
+  #screen-game,
+  #screen-odd-one-out,
+  #screen-speedrun,
+  #screen-higher-lower,
+  #screen-type-combo,
+  #screen-draft-score-attack,
+  #screen-poke-connections,
+  #screen-stat-clash,
+  #screen-stat-auction{animation:none !important;}
+}
+body.reduce-motion #screen-game,
+body.reduce-motion #screen-odd-one-out,
+body.reduce-motion #screen-speedrun,
+body.reduce-motion #screen-higher-lower,
+body.reduce-motion #screen-type-combo,
+body.reduce-motion #screen-draft-score-attack{
+  animation:none !important;
+}
