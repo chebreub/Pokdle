@@ -58,7 +58,7 @@ test('server sanity-checks mode-specific score ceilings',()=>{
 
 test('result screen is compact and contains leaderboard preview styling',()=>{
   assert.match(club,/box\.insertBefore\(detail, actions\)/);
-  assert.match(club,/Voir le Pokédex/);
+  assert.match(club,/openRegisteredPokemonInPokedex/);\n  assert.match(club,/dans le Pokédex/);
   assert.match(style,/\.win-ranking-preview/);
   assert.match(style,/\.lbv2-podium/);
   assert.match(style,/\.lbv2-around/);
