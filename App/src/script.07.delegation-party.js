@@ -1738,8 +1738,25 @@ function renderMatchHistoryScreen() {
 // ============================================================
 // Compatibility layer for current homepage / screens
 // ============================================================
+function setScreenVisibility(element, visible) {
+  if (!element) return false;
+  if (visible) {
+    element.classList.remove('hidden');
+    element.removeAttribute('aria-hidden');
+    // A previous hide uses an inline !important so no stylesheet can keep a screen hidden.
+    element.style.removeProperty('display');
+  } else {
+    element.classList.add('hidden');
+    element.setAttribute('aria-hidden', 'true');
+    // Screen visibility is a navigation invariant, not a theme concern. Inline !important
+    // prevents later visual layers from accidentally overriding the hidden state.
+    element.style.setProperty('display', 'none', 'important');
+  }
+  return true;
+}
+
 function hideScreen(id) {
-  document.getElementById(id)?.classList.add('hidden');
+  return setScreenVisibility(document.getElementById(id), false);
 }
 
 function toggleMultiplayerGenerations() {
@@ -1761,15 +1778,22 @@ function closeNavDropdowns() {
 function hideAllScreens() {
   closeNavDropdowns();
   document.querySelectorAll('[id^="screen-"]').forEach(function (el) {
-    el.classList.add('hidden');
+    setScreenVisibility(el, false);
   });
 }
 
 function showScreen(id) {
+  const target = document.getElementById(id);
+  // Never blank the app because of a stale or mistyped navigation target.
+  if (!target) {
+    try { console.warn("Unknown Pokédle screen:", id); } catch (_e) {}
+    return false;
+  }
   if (id !== "screen-multiplayer") hideMultiplayerWinOverlay();
   hideAllScreens();
-  document.getElementById(id)?.classList.remove('hidden');
+  setScreenVisibility(target, true);
   window.scrollTo(0, 0);
+  return true;
 }
 
 function hideExtraScreens() {
