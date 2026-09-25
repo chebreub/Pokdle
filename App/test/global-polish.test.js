@@ -18,7 +18,7 @@ test('account menu exposes trainer identity and progression',()=>{
   assert.match(delegation,/getXpTier/);
   assert.match(delegation,/pokedexCollectionNationalStats/);
   assert.match(delegation,/Profil de dresseur/);
-  assert.match(delegation,/Mon Pokédex/);
+  assert.match(delegation,/Ma collection/);
 });
 
 test('legacy modes receive dedicated modern styling',()=>{
