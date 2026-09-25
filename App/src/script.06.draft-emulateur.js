@@ -2687,7 +2687,7 @@ function openDraftArenaMode() {
   setQuizModeLayout(false);
   stopEmulatorSession();
   mountDraftModeCard("arena");
-  document.getElementById("screen-draft-arena").classList.remove("hidden");
+  showScreen("screen-draft-arena");
   setGlobalNavActive("extras");
 
   if (!draftArenaState || draftArenaState.mode !== "arena") {
@@ -2722,7 +2722,7 @@ function openDraftScoreAttackMode(pro) {
   stopEmulatorSession();
   clearDraftSimpleBattleDevPanel();
   mountDraftModeCard("scoreAttack");
-  document.getElementById("screen-draft-score-attack")?.classList.remove("hidden");
+  showScreen("screen-draft-score-attack");
   setGlobalNavActive("game");
 
   const wantPro = !!pro;
