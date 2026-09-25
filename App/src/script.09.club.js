@@ -71,7 +71,7 @@ function renderCatalogPicks(category, query) {
     ["openDraftScoreAttackMode", "Le défi de score", "Draft Score Attack", "Compose une équipe de six et vise le record.", "chart"]
   ];
   panel.innerHTML = '<div class="club-section-head"><h3>Commence ici</h3><span>Trois incontournables</span></div><div class="club-picks-grid">' +
-    picks.map((p, i) => '<button type="button" class="club-pick club-pick-' + i + '" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([p[0]])) + '"><span class="club-pick-icon" aria-hidden="true"><svg><use href="#i-' + p[4] + '"/></svg></span>' + (typeof modeCatalogArtHtml === "function" ? modeCatalogArtHtml(p[0], "pick") : "") + '<small>' + p[1] + '</small><b>' + p[2] + '</b><span>' + p[3] + '</span><strong aria-hidden="true">Jouer →</strong></button>').join("") + '</div><p class="club-more-label">Ou explore les autres jeux ci-dessous</p>';
+    picks.map((p, i) => '<button type="button" class="club-pick club-pick-' + i + ' has-mode-art" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([p[0]])) + '"><span class="club-pick-icon" aria-hidden="true"><svg><use href="#i-' + p[4] + '"/></svg></span>' + (typeof modeCatalogArtHtml === "function" ? modeCatalogArtHtml(p[0], "pick") : "") + '<small>' + p[1] + '</small><b>' + p[2] + '</b><span>' + p[3] + '</span><strong aria-hidden="true">Jouer →</strong></button>').join("") + '</div><p class="club-more-label">Ou explore les autres jeux ci-dessous</p>';
 }
 function partyShareCoopClue() {
   const room = partyRoomState.room, socket = ensureMultiplayerSocket();
