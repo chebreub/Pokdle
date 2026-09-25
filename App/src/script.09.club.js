@@ -150,7 +150,7 @@ function renderSoloClubResult(won) {
       '<span>' + escapeHtml(typeLabel) + '</span>' +
     '</div>' +
     '<p>' + escapeHtml(copy) + '</p>' +
-    (won ? '<button type="button" class="btn-ghost" data-action="openPokedexCollection">Voir le Pokédex →</button>' : '');
+    (won ? '<button type="button" class="btn-ghost club-result-pokedex" data-action="openRegisteredPokemonInPokedex" data-args=\'[' + Number(secretPokemon.id) + ']\'>Voir ' + escapeHtml(secretPokemon.name) + ' dans le Pokédex →</button>' : '');
 }
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("#screen-all-modes .all-modes-card[data-action='openFromAllModes']").forEach(card => {
