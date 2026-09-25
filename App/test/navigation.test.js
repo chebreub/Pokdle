@@ -14,7 +14,7 @@ function fixture(url = "https://example.test/") {
   const input = { value: "" };
   const context = {
     URLSearchParams, location: new URL(url), gameMode: "normal", secretPokemon: null,
-    modeCatalogCategory: "solo", renderModeCatalog() {},
+    modeCatalogCategory: "solo", modeCatalogDifficulty: "all", renderModeCatalog() {}, setModeCatalogDifficulty(value) { context.modeCatalogDifficulty = value; },
     current: "config", starts: 0, restoredMode: null,
     setTimeout: (fn) => deferred.push(fn),
     addEventListener: (event, fn) => { listeners[event] = fn; },
@@ -147,8 +147,9 @@ test("Back restores the catalog category and search without starting a game", ()
   assert.equal(f.pushes.length, 2);
   f.listeners.popstate({ state: friends });
   assert.equal(f.context.modeCatalogCategory, "friends");
-  f.listeners.popstate({ state: { screen: "allModes", category: "all", query: "emulateur" } });
+  f.listeners.popstate({ state: { screen: "allModes", category: "all", difficulty: "hard", query: "emulateur" } });
   assert.equal(f.context.modeCatalogCategory, "all");
+  assert.equal(f.context.modeCatalogDifficulty, "hard");
   assert.equal(f.input.value, "emulateur");
   assert.equal(f.context.starts, 0);
 });
