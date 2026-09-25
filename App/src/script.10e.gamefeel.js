@@ -158,6 +158,83 @@ function gameFeelSoloGrade(won, attempts) {
   if (n<=5) return {grade:'B',label:'Solide'};
   return {grade:'C',label:'Trouvé'};
 }
+function gameFeelCollectionProgress(pokemon) {
+  const discoveries = playerProfile?.discoveries || {};
+  let national = null;
+  let region = null;
+  try {
+    national = typeof pokedexCollectionNationalStats === 'function'
+      ? pokedexCollectionNationalStats()
+      : null;
+    region = typeof pokedexCollectionRegionStats === 'function'
+      ? pokedexCollectionRegionStats(pokemon?.gen)
+      : null;
+  } catch (_e) {}
+  if (!national) {
+    const base = typeof getPokemonUiList === 'function'
+      ? getPokemonUiList({ includeAltForms:false }).filter(p=>!p.isAltForm)
+      : [];
+    national = {
+      found: base.filter(p=>discoveries[p.id]).length,
+      total: base.length,
+      percent: base.length ? Math.round(base.filter(p=>discoveries[p.id]).length/base.length*100) : 0
+    };
+  }
+  if (!region) {
+    const group = typeof getPokemonUiList === 'function'
+      ? getPokemonUiList({ includeAltForms:false }).filter(p=>!p.isAltForm && Number(p.gen)===Number(pokemon?.gen))
+      : [];
+    const found = group.filter(p=>discoveries[p.id]).length;
+    region = { found, total:group.length, percent:group.length ? Math.round(found/group.length*100) : 0 };
+  }
+  return { national, region };
+}
+function renderGameFeelResultProgress(entry, pokemon, missionChanges=[], wasDiscovered=false) {
+  const box=document.getElementById('win-box');
+  if (!box || !pokemon || !entry || box.classList.contains('hidden')) return;
+  let panel=document.getElementById('win-ceremony-progress');
+  if (!panel) {
+    panel=document.createElement('section');
+    panel.id='win-ceremony-progress';
+    panel.className='win-ceremony-progress';
+    const summary=document.getElementById('win-gamefeel-summary');
+    if (summary) summary.insertAdjacentElement('afterend',panel);
+    else {
+      const actions=box.querySelector('.win-btns');
+      if (actions) box.insertBefore(panel,actions);
+      else box.appendChild(panel);
+    }
+  }
+  const won=entry.result==='win';
+  const nowDiscovered=Boolean(playerProfile?.discoveries?.[pokemon.id]);
+  const newEntry=won && !wasDiscovered && nowDiscovered;
+  const alt=Boolean(pokemon.isAltForm);
+  const statusClass=!won?'is-loss':newEntry?'is-new':'is-known';
+  const statusLabel=!won
+    ? 'Album inchangé'
+    : newEntry
+      ? (alt?'Nouvelle forme enregistrée':'Nouvelle entrée enregistrée')
+      : 'Déjà enregistré';
+  const {national,region}=gameFeelCollectionProgress(pokemon);
+  const nationalPercent=Math.max(0,Math.min(100,Number(national?.percent)||0));
+  const regionPercent=Math.max(0,Math.min(100,Number(region?.percent)||0));
+  const mission=missionChanges[0] || null;
+  const missionHtml=mission ? '<div class="win-ceremony-mission '+(mission.becameReady?'is-ready':'')+'">'+
+      '<span>'+(mission.becameReady?'MISSION PRÊTE':'MISSION EN PROGRESSION')+'</span>'+
+      '<b>'+escapeHtml(mission.mission.title)+'</b>'+
+      '<small>'+Math.min(Number(mission.state.done)||0,Number(mission.state.total)||0)+' / '+(Number(mission.state.total)||0)+'</small>'+
+    '</div>' : '';
+  panel.innerHTML=
+    '<div class="win-ceremony-head">'+
+      '<div><span>PROGRESSION APRÈS LA PARTIE</span><b>'+escapeHtml(pokemon.name)+'</b></div>'+
+      '<strong class="win-progress-status '+statusClass+'">'+statusLabel+'</strong>'+
+    '</div>'+
+    '<div class="win-progress-grid">'+
+      '<div class="win-progress-card"><div><span>Pokédex national</span><b>'+Number(national?.found||0)+' <small>/ '+Number(national?.total||0)+'</small></b></div><div class="win-progress-track" aria-label="Progression Pokédex national"><i style="width:'+nationalPercent+'%"></i></div><small>'+nationalPercent+'%</small></div>'+
+      '<div class="win-progress-card"><div><span>Génération '+Number(pokemon.gen||0)+'</span><b>'+Number(region?.found||0)+' <small>/ '+Number(region?.total||0)+'</small></b></div><div class="win-progress-track" aria-label="Progression génération"><i style="width:'+regionPercent+'%"></i></div><small>'+regionPercent+'%</small></div>'+
+    '</div>'+
+    missionHtml;
+}
 function enhanceGameOverBox({won,pokemon,attempts,mode}) {
   const box=document.getElementById('win-box');
   const inner=box?.querySelector('.win-inner');
@@ -187,8 +264,11 @@ if (typeof recordMatchHistory==='function') {
   const recordMatchHistoryBeforeGameFeel=recordMatchHistory;
   recordMatchHistory=function(entry) {
     const before=gameFeelMissionSnapshot();
+    const pokemon=(typeof secretPokemon!=='undefined' && secretPokemon && entry?.targetName===secretPokemon.name) ? secretPokemon : null;
+    const wasDiscovered=Boolean(pokemon && playerProfile?.discoveries?.[pokemon.id]);
     const result=recordMatchHistoryBeforeGameFeel(entry);
     const changes=gameFeelMissionChanges(before);
+    if (pokemon) setTimeout(()=>renderGameFeelResultProgress(entry,pokemon,changes,wasDiscovered),0);
     setTimeout(()=>showGameFeelResult(entry,changes),260);
     return result;
   };
