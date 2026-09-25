@@ -250,6 +250,15 @@
             <button type="button" data-action="setModeCatalogCategory" data-args='["explore"]' data-mode-category="explore" aria-pressed="false">Explorer</button>
             <button type="button" data-action="setModeCatalogCategory" data-args='["all"]' data-mode-category="all" aria-pressed="false">Tout</button>
           </div>
+          <label class="mode-difficulty" id="mode-difficulty-field">Difficulté
+            <select id="mode-difficulty" aria-label="Filtrer les jeux par difficulté">
+              <option value="all">Toutes</option>
+              <option value="easy">Facile</option>
+              <option value="medium">Moyen</option>
+              <option value="hard">Difficile</option>
+              <option value="expert">Expert</option>
+            </select>
+          </label>
           <label class="mode-search">Rechercher dans le site<input id="mode-search" type="search" placeholder="Un jeu, un outil…" autocomplete="off" /></label>
         </div>
       <div class="pk-genbar is-collapsed" id="home-gens-card">

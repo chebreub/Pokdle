@@ -46,8 +46,8 @@ function renderHomeReturn() {
   panel.innerHTML = (save ? '<div class="club-resume"><div><span class="club-eyebrow">ON REPREND ?</span><strong>' + escapeHtml(modeNames[save.mode] || "Partie en cours") + '</strong><small>' + Math.max(0, Number(save.attempts) || 0) + ' essai(s) · Ta progression est conservée</small></div><button type="button" class="btn-blue" data-action="resumeClubGame">Reprendre →</button></div>' : '') +
     (recent.length ? '<div class="club-recent"><span>Derniers jeux</span>' + recent.map(key => '<button type="button" class="btn-ghost" data-action="clubLaunchRecent" data-args="' + escapeHtml(JSON.stringify([key])) + '">' + escapeHtml(clubLaunchers.get(key).label) + '</button>').join("") + '</div>' : '');
 }
-function isClubFeatured(card, category, query) {
-  if (String(query || "").trim() || !["solo", "friends"].includes(category)) return false;
+function isClubFeatured(card, category, query, difficulty = "all") {
+  if (String(query || "").trim() || difficulty !== "all" || !["solo", "friends"].includes(category)) return false;
   try {
     const [name, ...args] = JSON.parse(card.dataset.args || "[]");
     return args.length === 0 && (category === "solo"
@@ -55,10 +55,10 @@ function isClubFeatured(card, category, query) {
       : ["openPartyRoomMode", "openMultiplayerMode", "openStatClashMode"]).includes(name);
   } catch (_error) { return false; }
 }
-function renderCatalogPicks(category, query) {
+function renderCatalogPicks(category, query, difficulty = "all") {
   const panel = document.getElementById("catalog-picks");
   if (!panel) return;
-  const hide = Boolean(String(query || "").trim()) || category === "explore" || category === "all";
+  const hide = Boolean(String(query || "").trim()) || difficulty !== "all" || category === "explore" || category === "all";
   panel.classList.toggle("hidden", hide);
   if (hide) return;
   const picks = category === "friends" ? [
