@@ -1273,7 +1273,11 @@ function openAllModesScreen(category) {
       finally { window.__screenHistorySuppress = suppressed; }
       if (!suppressed) {
         var state = { screen: key };
-        if (key === "allModes") { state.category = modeCatalogCategory; state.query = document.getElementById("mode-search")?.value || ""; }
+        if (key === "allModes") {
+          state.category = modeCatalogCategory;
+          state.difficulty = typeof modeCatalogDifficulty !== "undefined" ? modeCatalogDifficulty : "all";
+          state.query = document.getElementById("mode-search")?.value || "";
+        }
         if (key === "draftScore") state.pro = Boolean(arguments[0]);
         if (key === "game") {
           var screen = document.getElementById("screen-game");
@@ -1283,7 +1287,7 @@ function openAllModesScreen(category) {
         }
         try {
           var previous = history.state || {};
-          if (previous.screen !== key || previous.mode !== state.mode || previous.secretId !== state.secretId || previous.category !== state.category || previous.query !== state.query) {
+          if (previous.screen !== key || previous.mode !== state.mode || previous.secretId !== state.secretId || previous.category !== state.category || previous.difficulty !== state.difficulty || previous.query !== state.query) {
             history.pushState(state, "", routeUrl(key));
           }
         } catch (_error) {}
@@ -1363,8 +1367,9 @@ function openAllModesScreen(category) {
           var arg = key === "allModes" ? state.category : key === "draftScore" ? Boolean(state.pro) : undefined;
           window[opener](arg);
         }
-        if (key === "allModes" && state.query) {
-          document.getElementById("mode-search").value = state.query;
+        if (key === "allModes") {
+          if (typeof setModeCatalogDifficulty === "function") setModeCatalogDifficulty(state.difficulty || "all", false);
+          if (state.query) document.getElementById("mode-search").value = state.query;
           renderModeCatalog();
         }
         if (key === "party" && typeof state.inviteCode === "string") {
