@@ -32063,7 +32063,9 @@ body.theme-dark .account-menu-identity small {
   border-radius:22px !important;
 }
 #screen-game{
+  width:100%;
   max-width:1180px;
+  align-self:stretch;
   margin:0 auto;
 }
 #screen-game .game-topbar{
