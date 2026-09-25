@@ -983,7 +983,7 @@ function openAccountMenu() {
       </div>
       <nav class="account-menu-links">
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Mon Pokédex</span><b>→</b></button>
+        <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
       </nav>
       <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
