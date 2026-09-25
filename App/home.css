@@ -1517,3 +1517,669 @@ body.theme-dark .weekly-ranking-loading {
     justify-items:start;
   }
 }
+
+
+/* =====================================================================
+   VISUAL REBOOT V2 — final authority layer
+   Goal: stronger hierarchy, denser product feel, clearer Pokémon identity.
+   ===================================================================== */
+:root{
+  --vr-navy:#0d2344;
+  --vr-navy-2:#173a68;
+  --vr-blue:#2f76ff;
+  --vr-red:#e9433e;
+  --vr-yellow:#ffd34b;
+  --vr-ink:#12233f;
+  --vr-muted:#6c7f9f;
+  --vr-line:rgba(30,63,111,.12);
+  --vr-surface:#ffffff;
+  --vr-soft:#f5f8fd;
+  --vr-shadow:0 12px 30px rgba(20,46,87,.09);
+}
+
+/* Global surface */
+body:not(.theme-dark){
+  background:
+    radial-gradient(circle at 8% 8%,rgba(233,67,62,.085),transparent 25%),
+    radial-gradient(circle at 92% 16%,rgba(47,118,255,.10),transparent 28%),
+    linear-gradient(180deg,#f7faff 0%,#f3f7fc 45%,#f8fafd 100%) !important;
+}
+body:not(.theme-dark) main{
+  background:transparent !important;
+}
+body:not(.theme-dark) .card{
+  border-color:var(--vr-line) !important;
+  box-shadow:var(--vr-shadow) !important;
+}
+
+/* Header becomes a real game header, not a document toolbar */
+body:not(.theme-dark) header{
+  position:sticky !important;
+  top:0 !important;
+  z-index:1000 !important;
+  background:rgba(12,32,62,.96) !important;
+  border-bottom:1px solid rgba(255,255,255,.08) !important;
+  box-shadow:0 10px 30px rgba(8,23,46,.20) !important;
+  backdrop-filter:blur(14px) saturate(1.1) !important;
+}
+body:not(.theme-dark) .header-inner{
+  max-width:1320px !important;
+}
+body:not(.theme-dark) header .logo-home-btn{
+  padding:5px 8px 5px 0 !important;
+}
+body:not(.theme-dark) header .logo-row h1,
+body:not(.theme-dark) header h1{
+  color:#fff !important;
+  letter-spacing:-.03em;
+}
+body:not(.theme-dark) .header-top #global-nav{
+  justify-content:center !important;
+  gap:4px !important;
+}
+body:not(.theme-dark) .header-top .nav-pill{
+  min-height:38px !important;
+  padding:8px 12px !important;
+  border:1px solid transparent !important;
+  border-radius:10px !important;
+  background:transparent !important;
+  color:rgba(238,245,255,.72) !important;
+  box-shadow:none !important;
+  font-weight:900 !important;
+  transition:background .15s ease,color .15s ease,transform .15s ease !important;
+}
+body:not(.theme-dark) .header-top .nav-pill:hover{
+  color:#fff !important;
+  background:rgba(255,255,255,.08) !important;
+}
+body:not(.theme-dark) .header-top .nav-pill.active{
+  color:#0d2344 !important;
+  background:#fff !important;
+  box-shadow:0 7px 18px rgba(0,0,0,.18) !important;
+}
+body:not(.theme-dark) .header-actions .header-action-btn{
+  width:38px !important;
+  height:38px !important;
+  min-height:38px !important;
+  padding:0 !important;
+  justify-content:center !important;
+  border-radius:11px !important;
+  border:1px solid rgba(255,255,255,.11) !important;
+  background:rgba(255,255,255,.07) !important;
+  color:#fff !important;
+  box-shadow:none !important;
+  font-size:0 !important;
+}
+body:not(.theme-dark) .header-actions .header-action-btn svg{
+  width:17px !important;
+  height:17px !important;
+  stroke:#fff !important;
+}
+body:not(.theme-dark) #global-xp-badge{
+  border-color:rgba(255,255,255,.12) !important;
+  background:rgba(255,255,255,.07) !important;
+  color:#fff !important;
+}
+
+/* Home spacing */
+#screen-config{
+  display:grid !important;
+  gap:14px !important;
+}
+#screen-config .pk-hero{
+  position:relative !important;
+  min-height:330px;
+  margin:14px 0 0 !important;
+  padding:34px 38px !important;
+  border:1px solid rgba(255,255,255,.09) !important;
+  border-radius:28px !important;
+  overflow:hidden !important;
+  color:#fff !important;
+  background:
+    radial-gradient(circle at 83% 34%,rgba(255,255,255,.12),transparent 24%),
+    radial-gradient(circle at 84% 35%,transparent 0 31%,rgba(255,255,255,.08) 31.4% 32%,transparent 32.4%),
+    linear-gradient(118deg,#d83c37 0%,#b82f45 34%,#173b73 67%,#235fc8 100%) !important;
+  box-shadow:0 24px 55px rgba(27,55,104,.22) !important;
+}
+#screen-config .pk-hero::before{
+  content:"POKÉDLE DAILY" !important;
+  position:absolute;
+  top:22px;
+  right:30px;
+  margin:0 !important;
+  color:rgba(255,255,255,.15) !important;
+  font-size:clamp(2rem,6vw,5.2rem) !important;
+  line-height:1 !important;
+  letter-spacing:-.04em !important;
+  font-weight:1000 !important;
+  pointer-events:none;
+}
+#screen-config .pk-hero::after{
+  content:"";
+  position:absolute;
+  right:-58px;
+  bottom:-110px;
+  width:360px;
+  height:360px;
+  border:44px solid rgba(255,255,255,.055);
+  border-radius:50%;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.07);
+  pointer-events:none;
+}
+#screen-config .pk-hero-main{
+  max-width:620px !important;
+}
+#screen-config .pk-kicker{
+  color:#ffdc68 !important;
+  font-size:.72rem !important;
+  letter-spacing:.12em !important;
+}
+#screen-config .pk-hero-title{
+  max-width:600px;
+  margin:13px 0 11px !important;
+  font-size:clamp(2.2rem,4.8vw,4rem) !important;
+  line-height:.94 !important;
+  letter-spacing:-.055em !important;
+  text-shadow:none !important;
+}
+#screen-config .pk-hero-sub{
+  max-width:520px !important;
+  color:rgba(255,255,255,.82) !important;
+  font-size:1rem !important;
+  line-height:1.55 !important;
+}
+#screen-config .pk-hero-chips{
+  gap:7px !important;
+  margin-top:17px !important;
+}
+#screen-config .pk-chip{
+  min-height:31px;
+  padding:6px 10px !important;
+  border-radius:9px !important;
+  font-size:.72rem !important;
+}
+#screen-config .pk-chip-fire{
+  background:var(--vr-yellow) !important;
+}
+#screen-config .pk-chip-time,
+#screen-config .pk-chip-status{
+  border:1px solid rgba(255,255,255,.16) !important;
+  background:rgba(4,19,42,.22) !important;
+}
+#screen-config .pk-hero-cta-row{
+  gap:8px !important;
+  margin-top:20px !important;
+}
+#screen-config .pk-cta{
+  min-height:48px;
+  padding:12px 18px !important;
+  border-radius:12px !important;
+  background:var(--vr-yellow) !important;
+  box-shadow:0 10px 24px rgba(17,27,52,.20) !important;
+}
+#screen-config .pk-cta:hover{
+  transform:translateY(-2px);
+}
+#screen-config .pk-cta-ghost{
+  min-height:48px;
+  padding:12px 16px !important;
+  border-radius:12px !important;
+  background:rgba(255,255,255,.08) !important;
+}
+#screen-config .pk-hero-visual{
+  position:relative;
+  z-index:2;
+}
+#screen-config .pk-medallion{
+  width:235px !important;
+  height:235px !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  background:
+    radial-gradient(circle,rgba(255,255,255,.12),rgba(255,255,255,.035) 62%,transparent 63%) !important;
+  box-shadow:
+    0 0 0 18px rgba(255,255,255,.03),
+    0 0 0 36px rgba(255,255,255,.018);
+}
+#screen-config .pk-silo-img{
+  width:175px !important;
+  height:175px !important;
+  opacity:.28 !important;
+}
+#screen-config .pk-qm{
+  font-size:72px !important;
+  color:#ffdc58 !important;
+}
+
+/* Weekly: a status strip, not a second hero */
+#screen-config .weekly-league-home{
+  margin:0 !important;
+  padding:11px 14px !important;
+  min-height:78px;
+  border:1px solid rgba(111,79,184,.15) !important;
+  border-radius:16px !important;
+  background:linear-gradient(100deg,#221b44 0%,#38286c 58%,#483587 100%) !important;
+  box-shadow:0 12px 24px rgba(43,35,90,.13) !important;
+}
+#screen-config .weekly-league-home-mark{
+  width:48px !important;
+  height:48px !important;
+  border-radius:13px !important;
+  background:rgba(255,255,255,.09) !important;
+  box-shadow:none !important;
+}
+#screen-config .weekly-league-home-copy > span,
+#screen-config .weekly-league-home-copy h3,
+#screen-config .weekly-league-home-copy p,
+#screen-config .weekly-league-home-score strong,
+#screen-config .weekly-league-home-score small{
+  color:#fff !important;
+}
+#screen-config .weekly-league-home-copy > span{opacity:.55;}
+#screen-config .weekly-league-home-copy p{opacity:.65;}
+#screen-config .weekly-league-home-score progress{accent-color:#cdbdff;}
+
+/* The two primary routes become expressive editorial panels */
+#screen-config .home-pathways{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px !important;
+  margin:0 !important;
+}
+#screen-config .home-path{
+  position:relative;
+  min-height:210px;
+  overflow:hidden;
+  padding:22px 23px !important;
+  border:1px solid var(--vr-line) !important;
+  border-radius:20px !important;
+  background:#fff !important;
+  box-shadow:0 12px 28px rgba(21,49,91,.07) !important;
+}
+#screen-config .home-path::after{
+  content:"";
+  position:absolute;
+  width:170px;
+  height:170px;
+  right:-65px;
+  bottom:-80px;
+  border-radius:50%;
+  pointer-events:none;
+}
+#screen-config .home-path-solo::after{
+  background:rgba(47,118,255,.08);
+  box-shadow:0 0 0 28px rgba(47,118,255,.035);
+}
+#screen-config .home-path-friends::after{
+  background:rgba(233,67,62,.08);
+  box-shadow:0 0 0 28px rgba(233,67,62,.035);
+}
+#screen-config .home-path-top{
+  position:relative;
+  z-index:1;
+}
+#screen-config .home-path-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  font-size:1rem;
+}
+#screen-config .home-path-solo .home-path-icon{
+  color:#245fc0;
+  background:#eaf2ff;
+}
+#screen-config .home-path-friends .home-path-icon{
+  color:#c3433e;
+  background:#fff0ef;
+}
+#screen-config .home-path-label{
+  color:#74849d !important;
+  font-size:.58rem !important;
+  letter-spacing:.11em !important;
+}
+#screen-config .home-path h2{
+  position:relative;
+  z-index:1;
+  margin:18px 0 6px !important;
+  color:#162d4d !important;
+  font-size:1.55rem !important;
+  letter-spacing:-.025em;
+}
+#screen-config .home-path p{
+  position:relative;
+  z-index:1;
+  max-width:440px;
+  margin:0 0 18px !important;
+  color:#6e809c !important;
+  font-size:.84rem !important;
+  line-height:1.5 !important;
+}
+#screen-config .home-path .btn-blue{
+  position:relative;
+  z-index:1;
+  min-height:42px;
+  padding:9px 13px !important;
+  border-radius:10px !important;
+}
+#screen-config .home-path-friends .btn-blue{
+  background:#e9433e !important;
+}
+#screen-config .home-text-link{
+  position:relative;
+  z-index:1;
+  color:#647a9b !important;
+  font-size:.72rem !important;
+}
+
+/* Adventure: dense dashboard, no longer competing with Daily */
+#screen-config .home-adventure-v2{
+  margin:0 !important;
+  border-radius:20px !important;
+  border:1px solid var(--vr-line) !important;
+  background:
+    radial-gradient(circle at 88% 14%,rgba(47,118,255,.08),transparent 24%),
+    linear-gradient(180deg,#fff,#f7f9fd) !important;
+  box-shadow:0 12px 28px rgba(21,49,91,.065) !important;
+}
+#screen-config .home-adventure-main{
+  grid-template-columns:minmax(0,1fr) 120px !important;
+  padding:17px 18px 8px !important;
+}
+#screen-config .home-adventure-copy h1{
+  font-size:1.65rem !important;
+  color:#17345b !important;
+}
+#screen-config .home-adventure-copy > p{
+  font-size:.78rem !important;
+}
+#screen-config .home-trainer-rank{
+  padding:7px 9px !important;
+  border-radius:11px !important;
+  background:#f6f9fe !important;
+}
+#screen-config .home-adventure-stats{
+  gap:6px !important;
+}
+#screen-config .home-adventure-stats button{
+  min-width:88px !important;
+  padding:6px 8px !important;
+  border-radius:10px !important;
+  background:#fff !important;
+}
+#screen-config .home-adventure-partner-art,
+#screen-config .home-adventure-partner-empty{
+  width:120px !important;
+  min-height:110px !important;
+}
+#screen-config .home-adventure-partner-art::before,
+#screen-config .home-adventure-partner-empty::before{
+  width:95px !important;
+  height:95px !important;
+  box-shadow:0 0 0 12px rgba(47,118,255,.035) !important;
+}
+#screen-config .home-adventure-partner-art img{
+  width:100px !important;
+  height:100px !important;
+}
+#screen-config .home-adventure-next,
+#screen-config .home-adventure-region{
+  border-radius:13px !important;
+  background:#fff !important;
+}
+
+/* Explore strip */
+#screen-config .home-explore{
+  margin:0 !important;
+  padding:11px 13px !important;
+  border:1px solid var(--vr-line) !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.72) !important;
+  box-shadow:none !important;
+}
+#screen-config .home-explore strong{
+  color:#223d65 !important;
+}
+#screen-config .home-explore span{
+  color:#7b8ca6 !important;
+}
+
+/* Progression: deliberately quiet */
+#screen-config .home-progress-card{
+  margin:0 !important;
+  border-radius:15px !important;
+  box-shadow:none !important;
+  background:rgba(255,255,255,.66) !important;
+}
+#screen-config .home-progress-card > summary{
+  min-height:48px;
+  color:#2c476e;
+}
+
+/* Mode hub: less spreadsheet, more game library */
+#screen-all-modes .mode-hub{
+  padding:22px !important;
+  border-radius:24px !important;
+  background:
+    radial-gradient(circle at 95% 0,rgba(47,118,255,.06),transparent 25%),
+    #fff !important;
+  box-shadow:0 20px 45px rgba(20,47,89,.09) !important;
+}
+#screen-all-modes .mode-hub > .ranking-head{
+  align-items:flex-end !important;
+  padding:0 0 14px !important;
+  border-bottom:1px solid var(--vr-line);
+}
+#screen-all-modes .hub-eyebrow{
+  color:#2f76ff !important;
+  font-size:.62rem !important;
+  letter-spacing:.12em !important;
+}
+#screen-all-modes #mode-hub-title{
+  margin-top:3px !important;
+  font-size:clamp(1.9rem,3vw,2.6rem) !important;
+  letter-spacing:-.04em;
+}
+#screen-all-modes #mode-hub-description{
+  max-width:650px;
+  margin:10px 0 17px !important;
+  color:#73839d !important;
+}
+#screen-all-modes .mode-hub-controls{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(260px,360px) !important;
+  gap:12px !important;
+  align-items:end !important;
+  padding:12px !important;
+  border:1px solid var(--vr-line);
+  border-radius:15px;
+  background:#f6f8fc;
+}
+#screen-all-modes .mode-filters{
+  display:flex !important;
+  gap:5px !important;
+  flex-wrap:wrap !important;
+}
+#screen-all-modes .mode-filters button{
+  min-height:38px;
+  border-radius:9px !important;
+  border:1px solid transparent !important;
+  background:#fff !important;
+  color:#5d7394 !important;
+}
+#screen-all-modes .mode-filters button[aria-pressed="true"]{
+  background:#173b6d !important;
+  color:#fff !important;
+  box-shadow:0 7px 16px rgba(19,51,94,.15) !important;
+}
+#screen-all-modes .mode-search{
+  gap:5px !important;
+  color:#7b8da8 !important;
+  font-size:.62rem !important;
+  font-weight:900 !important;
+}
+#screen-all-modes .mode-search input{
+  min-height:40px;
+  border-radius:9px !important;
+  border:1px solid rgba(42,77,126,.14) !important;
+  background:#fff !important;
+}
+#screen-all-modes #home-gens-card{
+  margin:10px 0 0 !important;
+  border-radius:13px !important;
+  box-shadow:none !important;
+  background:#f7f9fd !important;
+}
+
+/* Mode families */
+#screen-all-modes .all-modes-cats{
+  display:grid;
+  gap:22px;
+}
+#screen-all-modes .all-modes-cat{
+  margin-top:0 !important;
+}
+#screen-all-modes .all-modes-cat-title{
+  margin:0 0 9px !important;
+  padding:0 !important;
+  border:0 !important;
+  color:#2b456b;
+  font-size:.86rem !important;
+  letter-spacing:.02em;
+}
+#screen-all-modes .all-modes-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:9px !important;
+}
+#screen-all-modes .all-modes-card{
+  min-height:118px;
+  display:grid !important;
+  grid-template-columns:40px minmax(0,1fr) !important;
+  grid-template-rows:auto 1fr !important;
+  gap:3px 10px !important;
+  align-content:start;
+  padding:13px !important;
+  border:1px solid rgba(48,79,126,.10) !important;
+  border-left:1px solid rgba(48,79,126,.10) !important;
+  border-radius:14px !important;
+  background:#fff !important;
+  box-shadow:0 6px 14px rgba(22,50,91,.045) !important;
+}
+#screen-all-modes .all-modes-card::after{
+  content:"→";
+  position:absolute;
+  right:11px;
+  top:11px;
+  color:#a3b0c3;
+  font-weight:1000;
+  transition:transform .15s ease,color .15s ease;
+}
+#screen-all-modes .all-modes-card:hover{
+  transform:translateY(-2px) !important;
+  border-color:rgba(47,118,255,.24) !important;
+  box-shadow:0 11px 22px rgba(22,50,91,.08) !important;
+}
+#screen-all-modes .all-modes-card:hover::after{
+  transform:translateX(2px);
+  color:#2f76ff;
+}
+#screen-all-modes .all-modes-card .pk-tile{
+  grid-column:1 !important;
+  grid-row:1 / 3 !important;
+  width:40px !important;
+  height:40px !important;
+  margin:0 !important;
+  border-radius:11px !important;
+}
+#screen-all-modes .all-modes-card b{
+  grid-column:2;
+  align-self:end;
+  padding-right:20px;
+  color:#203a60 !important;
+  font-size:.84rem !important;
+}
+#screen-all-modes .all-modes-card small{
+  grid-column:2;
+  color:#8190a6 !important;
+  font-size:.67rem !important;
+  line-height:1.38;
+}
+
+/* Dark adaptation */
+body.theme-dark #screen-config .pk-hero{
+  background:
+    radial-gradient(circle at 82% 28%,rgba(255,255,255,.07),transparent 24%),
+    linear-gradient(118deg,#7e2928,#572a42 36%,#112948 70%,#1b4f9b) !important;
+}
+body.theme-dark #screen-config .home-path,
+body.theme-dark #screen-config .home-adventure-v2,
+body.theme-dark #screen-config .home-explore,
+body.theme-dark #screen-config .home-progress-card,
+body.theme-dark #screen-all-modes .mode-hub,
+body.theme-dark #screen-all-modes .all-modes-card{
+  background:#132440 !important;
+  border-color:rgba(127,160,213,.13) !important;
+}
+body.theme-dark #screen-config .home-path h2,
+body.theme-dark #screen-config .home-explore strong,
+body.theme-dark #screen-all-modes .all-modes-cat-title,
+body.theme-dark #screen-all-modes .all-modes-card b{
+  color:#eef5ff !important;
+}
+body.theme-dark #screen-config .home-path p,
+body.theme-dark #screen-config .home-explore span,
+body.theme-dark #screen-all-modes .all-modes-card small{
+  color:#aebfda !important;
+}
+body.theme-dark #screen-all-modes .mode-hub-controls,
+body.theme-dark #screen-all-modes #home-gens-card{
+  background:#0f1e35 !important;
+  border-color:rgba(127,160,213,.12) !important;
+}
+
+@media (max-width:1000px){
+  #screen-all-modes .all-modes-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+  #screen-config .pk-medallion{width:190px !important;height:190px !important;}
+  #screen-config .pk-silo-img{width:140px !important;height:140px !important;}
+}
+@media (max-width:760px){
+  #screen-config .home-pathways{grid-template-columns:1fr !important;}
+  #screen-all-modes .mode-hub-controls{grid-template-columns:1fr !important;}
+  #screen-all-modes .all-modes-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
+}
+@media (max-width:520px){
+  #screen-config{gap:10px !important;}
+  #screen-config .pk-hero{
+    min-height:0;
+    padding:20px 17px !important;
+    border-radius:20px !important;
+  }
+  #screen-config .pk-hero::before{display:none !important;}
+  #screen-config .pk-hero::after{width:210px;height:210px;right:-90px;bottom:-120px;border-width:26px;}
+  #screen-config .pk-hero-title{font-size:2rem !important;line-height:1 !important;}
+  #screen-config .pk-hero-sub{font-size:.82rem !important;line-height:1.45 !important;}
+  #screen-config .pk-hero-visual{display:none !important;}
+  #screen-config .pk-hero-cta-row{display:grid !important;grid-template-columns:1fr !important;}
+  #screen-config .pk-cta,
+  #screen-config .pk-cta-ghost{width:100% !important;justify-content:center !important;}
+  #screen-config .weekly-league-home{grid-template-columns:42px minmax(0,1fr) !important;}
+  #screen-config .weekly-league-home-mark{width:42px !important;height:42px !important;}
+  #screen-config .weekly-league-home-score{grid-column:1 / -1 !important;}
+  #screen-config .weekly-league-home > button{grid-column:1 / -1 !important;}
+  #screen-config .home-path{min-height:0;padding:17px !important;border-radius:16px !important;}
+  #screen-config .home-path h2{font-size:1.3rem !important;margin-top:13px !important;}
+  #screen-config .home-adventure-main{grid-template-columns:minmax(0,1fr) 82px !important;padding:14px 13px 7px !important;}
+  #screen-config .home-adventure-partner-art,
+  #screen-config .home-adventure-partner-empty{width:82px !important;min-height:82px !important;}
+  #screen-config .home-adventure-partner-art::before,
+  #screen-config .home-adventure-partner-empty::before{width:68px !important;height:68px !important;}
+  #screen-config .home-adventure-partner-art img{width:72px !important;height:72px !important;}
+  #screen-config .home-adventure-copy h1{font-size:1.35rem !important;}
+  #screen-config .home-adventure-copy > p{display:none;}
+  #screen-config .home-adventure-stats{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));}
+  #screen-config .home-adventure-stats button{min-width:0 !important;}
+  #screen-all-modes .mode-hub{padding:14px !important;border-radius:18px !important;}
+  #screen-all-modes #mode-hub-title{font-size:1.8rem !important;}
+  #screen-all-modes .all-modes-grid{grid-template-columns:1fr !important;}
+}
