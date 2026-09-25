@@ -1242,6 +1242,17 @@ function openAllModesScreen(category) {
     history: "openMatchHistoryScreen",
     typeChart: "openTypeChartScreen",
     emulator: "openEmulatorMode",
+    ranking: "openRankingMode",
+    gamesRanking: "openGamesRankingMode",
+    draftArena: "openDraftArenaMode",
+    draftScore: "openDraftScoreAttackMode",
+    odd: "openOddOneOutMode",
+    statClash: "openStatClashMode",
+    higherLower: "openHigherLowerMode",
+    connections: "openPokeConnectionsMode",
+    speedrun: "openSpeedrunMode",
+    typeCombo: "openTypeComboSolo",
+    statAuction: "openStatAuctionMode",
   };
   var GAME_OPENERS = ["startDailyGame", "startNormalGame", "startSilhouetteGame", "startPixelGame",
     "startCryGame", "startMysteryStatGame", "startQuizGame", "startDescriptionMode",
@@ -1263,6 +1274,7 @@ function openAllModesScreen(category) {
       if (!suppressed) {
         var state = { screen: key };
         if (key === "allModes") { state.category = modeCatalogCategory; state.query = document.getElementById("mode-search")?.value || ""; }
+        if (key === "draftScore") state.pro = Boolean(arguments[0]);
         if (key === "game") {
           var screen = document.getElementById("screen-game");
           if (!screen || screen.classList.contains("hidden")) return result;
@@ -1278,6 +1290,50 @@ function openAllModesScreen(category) {
       }
       return result;
     };
+  }
+
+  function restoreDedicatedScreen(key, state) {
+    var screenId = null, nav = "game", render = null, resumable = false;
+    if (key === "draftArena") {
+      resumable = typeof draftArenaState !== "undefined" && draftArenaState?.mode === "arena";
+      if (resumable) {
+        if (typeof mountDraftModeCard === "function") mountDraftModeCard("arena");
+        screenId = "screen-draft-arena"; nav = "extras"; render = typeof renderDraftArena === "function" ? renderDraftArena : null;
+      }
+    } else if (key === "draftScore") {
+      var wantPro = Boolean(state?.pro);
+      resumable = typeof draftArenaState !== "undefined" && draftArenaState?.mode === "scoreAttack" && Boolean(draftArenaState?.scoreAttackPro) === wantPro;
+      if (resumable) {
+        if (typeof mountDraftModeCard === "function") mountDraftModeCard("scoreAttack");
+        screenId = "screen-draft-score-attack"; render = typeof renderDraftArena === "function" ? renderDraftArena : null;
+      }
+    } else if (key === "odd") {
+      resumable = typeof oddOneOutState !== "undefined" && Array.isArray(oddOneOutState?.cards) && oddOneOutState.cards.length > 0;
+      if (resumable) { screenId = "screen-odd-one-out"; render = typeof renderOddOneOutPuzzle === "function" ? renderOddOneOutPuzzle : null; }
+    } else if (key === "statClash") {
+      resumable = typeof statClashState !== "undefined" && Boolean(statClashState);
+      if (resumable) { screenId = "screen-stat-clash"; nav = "social"; render = typeof renderStatClashScreen === "function" ? renderStatClashScreen : null; }
+    } else if (key === "higherLower") {
+      resumable = typeof higherLowerState !== "undefined" && Boolean(higherLowerState);
+      if (resumable) { screenId = "screen-higher-lower"; render = typeof renderHigherLowerScreen === "function" ? renderHigherLowerScreen : null; }
+    } else if (key === "connections") {
+      resumable = typeof pokeConnectionsState !== "undefined" && Boolean(pokeConnectionsState);
+      if (resumable) { screenId = "screen-poke-connections"; render = typeof renderPokeConnectionsScreen === "function" ? renderPokeConnectionsScreen : null; }
+    } else if (key === "speedrun") {
+      resumable = typeof speedrunState !== "undefined" && Boolean(speedrunState);
+      if (resumable) { screenId = "screen-speedrun"; render = typeof renderSpeedrunScreen === "function" ? renderSpeedrunScreen : null; }
+    } else if (key === "typeCombo") {
+      resumable = typeof typeComboState !== "undefined" && Boolean(typeComboState);
+      if (resumable) { screenId = "screen-type-combo"; render = typeof renderTypeComboScreen === "function" ? renderTypeComboScreen : null; }
+    } else if (key === "statAuction") {
+      resumable = typeof statAuctionState !== "undefined" && Boolean(statAuctionState);
+      if (resumable) { screenId = "screen-stat-auction"; render = typeof renderStatAuctionScreen === "function" ? renderStatAuctionScreen : null; }
+    }
+    if (!resumable || !screenId) return false;
+    showScreen(screenId);
+    setGlobalNavActive(nav);
+    if (render) render();
+    return true;
   }
 
   function restoreScreen(state) {
@@ -1301,8 +1357,12 @@ function openAllModesScreen(category) {
         goToConfig();
         history.replaceState({ screen: "config" }, "", routeUrl("config"));
       } else {
+        if (restoreDedicatedScreen(key, state)) return;
         var opener = OPENERS[key];
-        if (opener && typeof window[opener] === "function") window[opener](key === "allModes" ? state.category : undefined);
+        if (opener && typeof window[opener] === "function") {
+          var arg = key === "allModes" ? state.category : key === "draftScore" ? Boolean(state.pro) : undefined;
+          window[opener](arg);
+        }
         if (key === "allModes" && state.query) {
           document.getElementById("mode-search").value = state.query;
           renderModeCatalog();

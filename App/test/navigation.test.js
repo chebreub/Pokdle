@@ -25,6 +25,11 @@ function fixture(url = "https://example.test/") {
     showDailyCompletedView: () => false,
     restoreSavedGame: (mode) => { context.restoredMode = mode; context.current = "game"; return true; },
     setPartyStatus: (message) => { context.message = message; },
+    dedicatedStarts: 0, dedicatedRenders: 0,
+    speedrunState: null, draftArenaState: null,
+    renderSpeedrunScreen: () => { context.dedicatedRenders++; },
+    renderDraftArena: () => { context.dedicatedRenders++; },
+    mountDraftModeCard: (mode) => { context.mountedDraft = mode; },
   };
   for (const [name, key] of Object.entries({ goToConfig: "config", openPokedexMode: "pokedex", openPartyRoomMode: "party", openProfileScreen: "profile" })) {
     context[name] = () => context.showScreen("screen-" + key);
@@ -39,6 +44,18 @@ function fixture(url = "https://example.test/") {
     };
   }
   context.openAllModesScreen = (category) => { context.modeCatalogCategory = category || context.modeCatalogCategory; context.showScreen("screen-allModes"); };
+  context.openSpeedrunMode = () => {
+    context.dedicatedStarts++;
+    context.speedrunState = { phase: "playing" };
+    context.showScreen("screen-speedrun");
+  };
+  context.openDraftScoreAttackMode = (pro) => {
+    context.dedicatedStarts++;
+    context.draftArenaState = { mode: "scoreAttack", scoreAttackPro: Boolean(pro) };
+    context.showScreen("screen-draft-score-attack");
+  };
+  context.openRankingMode = () => context.showScreen("screen-ranking");
+  context.openGamesRankingMode = () => context.showScreen("screen-games-ranking");
   context.history = {
     state: null,
     replaceState(state, _, target) { this.state = state; context.location = new URL(target, context.location); },
@@ -134,4 +151,60 @@ test("Back restores the catalog category and search without starting a game", ()
   assert.equal(f.context.modeCatalogCategory, "all");
   assert.equal(f.input.value, "emulateur");
   assert.equal(f.context.starts, 0);
+});
+
+
+test("history registry covers every major standalone screen", () => {
+  for (const pair of [
+    ['ranking','openRankingMode'],
+    ['gamesRanking','openGamesRankingMode'],
+    ['draftArena','openDraftArenaMode'],
+    ['draftScore','openDraftScoreAttackMode'],
+    ['odd','openOddOneOutMode'],
+    ['statClash','openStatClashMode'],
+    ['higherLower','openHigherLowerMode'],
+    ['connections','openPokeConnectionsMode'],
+    ['speedrun','openSpeedrunMode'],
+    ['typeCombo','openTypeComboSolo'],
+    ['statAuction','openStatAuctionMode'],
+  ]) {
+    assert.match(routing, new RegExp(pair[0] + ': "' + pair[1] + '"'));
+  }
+});
+
+test("Back restores an in-memory Speedrun without creating a new run", () => {
+  const f = fixture();
+  f.context.openSpeedrunMode();
+  const speedrun = f.context.history.state;
+  assert.equal(speedrun.screen, "speedrun");
+  assert.equal(f.context.dedicatedStarts, 1);
+  f.context.openPokedexMode();
+  f.listeners.popstate({ state: speedrun });
+  assert.equal(f.context.current, "speedrun");
+  assert.equal(f.context.dedicatedStarts, 1);
+  assert.equal(f.context.dedicatedRenders, 1);
+});
+
+test("Draft Score history preserves PRO intent and resumes the same draft", () => {
+  const f = fixture();
+  f.context.openDraftScoreAttackMode(true);
+  const draft = f.context.history.state;
+  assert.equal(draft.screen, "draftScore");
+  assert.equal(draft.pro, true);
+  assert.equal(f.context.dedicatedStarts, 1);
+  f.context.openPokedexMode();
+  f.listeners.popstate({ state: draft });
+  assert.equal(f.context.current, "draft-score-attack");
+  assert.equal(f.context.mountedDraft, "scoreAttack");
+  assert.equal(f.context.dedicatedStarts, 1);
+});
+
+test("static ranking screens participate in browser history", () => {
+  const f = fixture();
+  f.context.openRankingMode();
+  assert.equal(f.context.history.state.screen, "ranking");
+  f.context.openGamesRankingMode();
+  assert.equal(f.context.history.state.screen, "gamesRanking");
+  f.listeners.popstate({ state: { screen: "ranking" } });
+  assert.equal(f.context.current, "ranking");
 });
