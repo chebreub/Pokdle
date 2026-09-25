@@ -53,7 +53,8 @@ test("Result Ceremony V2 has desktop, dark and mobile styling", () => {
   assert.match(css, /#screen-game \.win-progress-grid/);
   assert.match(css, /#screen-game \.win-ceremony-mission\.is-ready/);
   assert.match(css, /theme-dark #screen-game \.win-ceremony-progress/);
-  const mobile = css.slice(css.lastIndexOf("@media (max-width:640px)"));
+  const ceremony = css.slice(css.indexOf("RESULT CEREMONY V2"), css.indexOf("MODE CARD IDENTITY V2"));
+  const mobile = ceremony.slice(ceremony.indexOf("@media (max-width:640px)"));
   assert.match(mobile, /#screen-game \.win-progress-grid[\s\S]*grid-template-columns:\s*1fr/);
   assert.match(mobile, /#screen-game \.win-btns[\s\S]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/);
 });
