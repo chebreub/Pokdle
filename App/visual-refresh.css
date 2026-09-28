@@ -1488,3 +1488,68 @@
     top:48px;
   }
 }
+
+
+/* =====================================================================
+   CONSOLIDATION PASS V1 — fewer simultaneous destinations
+   Keep features intact while making each screen do one job.
+   ===================================================================== */
+@media (min-width:641px) {
+  #pokdle-app.design-refresh #global-nav #nav-extras {
+    display:none !important;
+  }
+}
+#pokdle-app.design-refresh #screen-config #home-partner,
+#pokdle-app.design-refresh #screen-config .home-progress-legacy {
+  display:none !important;
+}
+#pokdle-app.design-refresh #screen-config .home-tools-strip {
+  min-height:0;
+  padding:12px 16px !important;
+  gap:14px;
+  border-radius:14px !important;
+  background:transparent !important;
+  border:1px solid var(--ui-line) !important;
+  box-shadow:none !important;
+}
+#pokdle-app.design-refresh #screen-config .home-tools-strip > div {
+  flex:1 1 auto;
+  min-width:0;
+}
+#pokdle-app.design-refresh #screen-config .home-tools-strip strong {
+  font-size:.875rem;
+}
+#pokdle-app.design-refresh #screen-config .home-tools-strip span {
+  color:var(--ui-muted);
+  font-size:.8125rem;
+}
+#pokdle-app.design-refresh #screen-config .home-tools-strip .btn-ghost {
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-filters-redundant {
+  display:none !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-hub-controls {
+  grid-template-columns:minmax(140px,180px) minmax(260px,1fr) !important;
+  align-items:end !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-results:empty {
+  display:none !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-results {
+  margin:8px 0 0 !important;
+}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-config .home-tools-strip {
+    display:grid !important;
+    grid-template-columns:1fr auto !important;
+    padding:11px 12px !important;
+  }
+  #pokdle-app.design-refresh #screen-config .home-tools-strip > div {
+    grid-column:1 / -1;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .mode-hub-controls {
+    grid-template-columns:1fr !important;
+  }
+}

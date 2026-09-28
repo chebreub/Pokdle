@@ -8,7 +8,7 @@ const cards = [...html.matchAll(/<button[^>]*class="card all-modes-card"[\s\S]*?
  args:markup.match(/data-args='([^']+)'/)?.[1] || '[]'
 }, textContent:markup.replace(/<[^>]+>/g,' '), markup}));
 function fixture() {
- const elements = Object.fromEntries(['mode-search','mode-empty','mode-results','mode-hub-description','home-gens-card','mode-difficulty','mode-difficulty-field'].map(id => [id,{value:id==='mode-difficulty'?'all':'',hidden:false,focus(){}}]));
+ const elements = Object.fromEntries(['mode-search','mode-empty','mode-results','mode-hub-title','mode-hub-description','home-gens-card','mode-difficulty','mode-difficulty-field'].map(id => [id,{value:id==='mode-difficulty'?'all':'',hidden:false,focus(){}}]));
  const rows = cards.map(card => ({...card,dataset:{...card.dataset}}));
  const context = { document:{getElementById:id=>elements[id],querySelectorAll:selector=>selector.includes('.all-modes-cat')?[{querySelectorAll:()=>rows}]:[],addEventListener(){}},history:{state:{screen:'allModes'},replaceState(state){this.state=state;}},location:{href:'https://example.test/#allModes'},setGlobalNavActive:key=>{context.activeNav=key;}};
  vm.createContext(context);vm.runInContext(read('src/script.08.catalog.js'),context);
@@ -39,9 +39,15 @@ test('difficulty filter narrows playable modes and never hides Explore tools',()
  context.setModeCatalogCategory('explore');assert.equal(elements['mode-difficulty-field'].hidden,true);assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='explore'));
  context.setModeCatalogCategory('solo');context.setModeCatalogDifficulty('easy');assert.equal(elements['mode-difficulty-field'].hidden,false);assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.difficulty==='easy'));
 });
-test('reset clears difficulty as well as search/category',()=>{
- const {context,elements}=fixture();context.setModeCatalogDifficulty('hard');elements['mode-search'].value='cri';context.resetModeCatalog();
- assert.equal(context.modeCatalogDifficulty,'all');assert.equal(context.modeCatalogCategory,'all');assert.equal(elements['mode-search'].value,'');
+test('search and reset stay inside the destination the player opened',()=>{
+ const {context,elements,rows}=fixture();
+ context.setModeCatalogCategory('solo');
+ elements['mode-search'].value='cri';context.renderModeCatalog();
+ assert.equal(context.modeCatalogCategory,'solo');
+ assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='solo'));
+ context.setModeCatalogDifficulty('hard');context.resetModeCatalog();
+ assert.equal(context.modeCatalogDifficulty,'all');assert.equal(context.modeCatalogCategory,'solo');assert.equal(elements['mode-search'].value,'');
+ assert.equal(elements['mode-hub-title'].textContent,'Jouer');
 });
 test('launch forwards PRO arguments and missing launchers do not hide the catalog',()=>{
  const source=read('src/script.07.delegation-party.js');const launcher=source.slice(source.indexOf('function openFromAllModes('),source.indexOf('window.openFromAllModes'));let hidden=false,pro;

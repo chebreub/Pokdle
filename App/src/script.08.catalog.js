@@ -107,10 +107,16 @@ function decorateModeCatalogCards() {
   });
 }
 var modeCatalogCopy = {
-  solo: 'Choisis un défi et joue à ton rythme.',
-  friends: 'Une soirée à plusieurs ? Commence par la Party Room. Pour un face-à-face, choisis un duel.',
-  explore: 'Explore le Pokédex, prépare tes équipes et retrouve ta progression.',
+  solo: 'Choisis un jeu solo. Les filtres avancés restent disponibles sans prendre toute la place.',
+  friends: 'Party Room, duels et jeux à plusieurs sont regroupés ici.',
+  explore: 'Les outils utiles vivent ici, séparés des jeux.',
   all: 'Tous les jeux et outils, réunis au même endroit.'
+};
+var modeCatalogTitle = {
+  solo: 'Jouer',
+  friends: 'Entre amis',
+  explore: 'Outils Pokémon',
+  all: 'Tous les modes'
 };
 function normalizeModeSearch(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -143,7 +149,13 @@ function renderModeCatalog() {
     button.setAttribute('aria-pressed', String(button.dataset.modeCategory === modeCatalogCategory));
   });
   document.getElementById('mode-empty').hidden = count !== 0;
-  document.getElementById('mode-results').textContent = `${count} ${count === 1 ? 'résultat' : 'résultats'}${query.trim() ? ' pour « ' + query.trim() + ' »' : ''}`;
+  const resultLine = document.getElementById('mode-results');
+  const isFiltering = Boolean(query.trim()) || modeCatalogDifficulty !== 'all';
+  if (resultLine) resultLine.textContent = isFiltering
+    ? `${count} ${count === 1 ? 'résultat' : 'résultats'}${query.trim() ? ' pour « ' + query.trim() + ' »' : ''}`
+    : '';
+  const title = document.getElementById('mode-hub-title');
+  if (title) title.textContent = modeCatalogTitle[modeCatalogCategory] || modeCatalogTitle.solo;
   document.getElementById('mode-hub-description').textContent = modeCatalogCopy[modeCatalogCategory];
   document.getElementById('home-gens-card').hidden = modeCatalogCategory === 'explore' || Boolean(query.trim());
   const difficultyField=document.getElementById('mode-difficulty-field');
@@ -166,14 +178,16 @@ function setModeCatalogDifficulty(difficulty, save = true) {
 }
 function resetModeCatalog() {
   modeCatalogDifficulty = 'all';
-  setModeCatalogCategory('all');
-  document.getElementById('mode-search')?.focus();
+  const input = document.getElementById('mode-search');
+  if (input) input.value = '';
+  renderModeCatalog();
+  saveModeCatalogState();
+  input?.focus();
 }
 document.addEventListener('DOMContentLoaded', function () {
   decorateModeCatalogCards();
   document.getElementById('mode-search')?.addEventListener('input', function () {
-    // Search the whole catalog, including tools, regardless of the entry point.
-    modeCatalogCategory = 'all';
+    // Search stays inside the destination the player deliberately opened.
     renderModeCatalog();
     saveModeCatalogState();
   });

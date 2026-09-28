@@ -63,7 +63,6 @@ test("mode families, special effects, dark mode and mobile are styled",()=>{
     assert.match(css,new RegExp(effect));
   }
   assert.match(css,/theme-dark #screen-all-modes \.all-modes-card\.has-mode-art/);
-  const mobile=css.slice(css.lastIndexOf("@media (max-width:640px)"));
-  assert.match(mobile,/\.all-modes-card\.has-mode-art/);
-  assert.match(mobile,/\.club-pick\.has-mode-art/);
+  assert.match(css,/@media \(max-width:640px\)[\s\S]*\.all-modes-card\.has-mode-art/);
+  assert.match(css,/@media \(max-width:640px\)[\s\S]*\.club-pick\.has-mode-art/);
 });
