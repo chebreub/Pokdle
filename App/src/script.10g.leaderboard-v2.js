@@ -54,6 +54,40 @@ function submitLeaderboardResult(mode, score) {
     body:JSON.stringify({mode,score:n})
   }).then(r=>r.json()).then(data=>Boolean(data?.ok)).catch(()=>false);
 }
+const DAILY_LEADERBOARD_SYNC_PREFIX="pokedle_lb_daily_sync_";
+function leaderboardTodayKey() {
+  try { if (typeof getUTCDateKey==="function") return getUTCDateKey(); } catch (_e) {}
+  const d=new Date();
+  return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");
+}
+function pendingDailyLeaderboardScore() {
+  const history=Array.isArray(matchHistory)?matchHistory:[];
+  const now=new Date();
+  const start=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+  let best=0;
+  history.forEach(entry=>{
+    if (entry?.mode!=="daily" || entry?.result!=="win" || Number(entry?.at)<start) return;
+    const score=Math.floor(Number(entry?.attempts)||0);
+    if (score>0 && (!best || score<best)) best=score;
+  });
+  return best;
+}
+function syncPendingDailyLeaderboard() {
+  if (!window.__pokedleAuthed) return Promise.resolve(false);
+  const score=pendingDailyLeaderboardScore();
+  if (!score) return Promise.resolve(false);
+  const key=DAILY_LEADERBOARD_SYNC_PREFIX+leaderboardTodayKey();
+  try {
+    const synced=Number(localStorage.getItem(key))||0;
+    if (synced>0 && synced<=score) return Promise.resolve(true);
+  } catch (_e) {}
+  return submitLeaderboardResult("daily",score).then(ok=>{
+    if (ok) {
+      try { localStorage.setItem(key,String(score)); } catch (_e) {}
+    }
+    return ok;
+  });
+}
 function leaderboardResultFromHistory(entry) {
   if (!entry || entry.result === "draw") return null;
   const mode = String(entry.mode || "");
@@ -110,9 +144,10 @@ function openLeaderboardV2(mode="daily",scope="all") {
   const loading='<div class="lbv3-shell"><div class="lbv3-loading"><span></span><p>Synchronisation du classement…</p></div></div>';
   ensureOverlay("Classements",loading);
 
-  const syncPromise=(leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function")
-    ? Promise.resolve(submitLeaderboardScores()).catch(()=>false)
-    : Promise.resolve(false);
+  const syncTasks=[];
+  if (current==="daily") syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
+  if (leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function") syncTasks.push(Promise.resolve(submitLeaderboardScores()).catch(()=>false));
+  const syncPromise=syncTasks.length ? Promise.all(syncTasks) : Promise.resolve([]);
 
   syncPromise.then(()=>{
     return fetch("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(leaderboardV2Scope),{credentials:"same-origin"});
@@ -214,8 +249,9 @@ function renderWinLeaderboardPreview(mode) {
   }
   panel.innerHTML='<div class="win-rank-loading">Calcul de ta position du jour…</div>';
   setTimeout(()=>{
-    fetch("/api/leaderboard?mode=daily&scope=today",{credentials:"same-origin"})
-      .then(r=>r.json())
+    Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false).then(()=>
+      fetch("/api/leaderboard?mode=daily&scope=today",{credentials:"same-origin"})
+    ).then(r=>r.json())
       .then(data=>{
         if (!document.getElementById("win-ranking-preview")) return;
         if (data?.me) {
@@ -251,6 +287,11 @@ if (typeof enhanceGameOverBox === "function") {
 }
 
 window.submitLeaderboardResult=submitLeaderboardResult;
+window.syncPendingDailyLeaderboard=syncPendingDailyLeaderboard;
+try {
+  window.addEventListener("pokedle:auth-ready",()=>{ syncPendingDailyLeaderboard(); });
+  if (window.__pokedleAuthed) setTimeout(()=>syncPendingDailyLeaderboard(),0);
+} catch (_e) {}
 window.openLeaderboardV2=openLeaderboardV2;
 window.switchLeaderboardV2=switchLeaderboardV2;
 window.switchLeaderboardScopeV2=switchLeaderboardScopeV2;
