@@ -60,15 +60,64 @@ function modeCatalogActionKey(card) {
     return typeof args[0] === 'string' ? args[0] : '';
   } catch (_e) { return ''; }
 }
+function modeCatalogPreviewImage(id,index=0) {
+  return '<img src="'+modeCatalogSpriteUrl(id)+'" alt="" aria-hidden="true" loading="lazy" decoding="async" style="--art-index:'+index+'" />';
+}
+function modeCatalogPreviewBars(count=5) {
+  return '<span class="mode-preview-bars">'+Array.from({length:count},(_,i)=>'<i style="--bar:'+i+'"></i>').join('')+'</span>';
+}
+function modeCatalogPreviewHtml(spec) {
+  const ids=spec.ids.slice(0,3);
+  const images=ids.map((id,index)=>modeCatalogPreviewImage(id,index));
+  switch(spec.effect) {
+    case 'mystery':
+      return '<span class="mode-preview mode-preview-mystery">'+(images[0]||'')+'<i class="preview-question">?</i></span>';
+    case 'scan':
+      return '<span class="mode-preview mode-preview-scan"><i class="preview-scan-line"></i>'+(images[0]||'')+'</span>';
+    case 'pixel':
+      return '<span class="mode-preview mode-preview-pixel"><i class="preview-pixel-grid"></i>'+(images[0]||'')+'</span>';
+    case 'dossier':
+      return '<span class="mode-preview mode-preview-dossier"><i></i><i></i><i></i>'+(images[0]||'')+'</span>';
+    case 'audio':
+      return '<span class="mode-preview mode-preview-audio">'+modeCatalogPreviewBars(7)+(images[0]||'')+'</span>';
+    case 'stats':
+      return '<span class="mode-preview mode-preview-stats">'+modeCatalogPreviewBars(4)+(images[0]||'')+'</span>';
+    case 'group':
+      return '<span class="mode-preview mode-preview-group">'+images.join('')+'<i class="preview-odd-ring"></i></span>';
+    case 'quiz':
+      return '<span class="mode-preview mode-preview-quiz"><b>?</b><i></i><i></i><i></i><i></i></span>';
+    case 'evolution':
+      return '<span class="mode-preview mode-preview-evolution">'+images.map((img,i)=>img+(i<images.length-1?'<b>›</b>':'')).join('')+'</span>';
+    case 'order':
+      return '<span class="mode-preview mode-preview-order">'+images.map((img,i)=>'<i>'+(i+1)+'</i>'+img).join('')+'</span>';
+    case 'links':
+      return '<span class="mode-preview mode-preview-links"><i class="preview-link-line l1"></i><i class="preview-link-line l2"></i>'+images.join('')+'</span>';
+    case 'types':
+      return '<span class="mode-preview mode-preview-types"><i>TYPE</i><b>+</b><i>TYPE</i>'+(images[0]||'')+'</span>';
+    case 'versus':
+    case 'duel':
+      return '<span class="mode-preview mode-preview-versus">'+(images[0]||'')+'<b>VS</b>'+(images[1]||'')+'</span>';
+    case 'speed':
+      return '<span class="mode-preview mode-preview-speed"><i></i><i></i><i></i>'+(images[0]||'')+'</span>';
+    case 'team':
+      return '<span class="mode-preview mode-preview-team">'+images.map(img=>'<i>'+img+'</i>').join('')+'</span>';
+    case 'party':
+      return '<span class="mode-preview mode-preview-party">'+images.map(img=>'<i>'+img+'</i>').join('')+'</span>';
+    case 'auction':
+      return '<span class="mode-preview mode-preview-auction"><b>₽</b>'+(images[0]||'')+(images[1]||'')+'</span>';
+    case 'dex':
+      return '<span class="mode-preview mode-preview-dex">'+images.map(img=>'<i>'+img+'</i>').join('')+'</span>';
+    case 'podium':
+      return '<span class="mode-preview mode-preview-podium"><i>2</i><i>1</i><i>3</i>'+images.slice(0,3).join('')+'</span>';
+    default:
+      return '<span class="mode-preview mode-preview-generic">'+images.join('')+'</span>';
+  }
+}
 function modeCatalogArtHtml(key, variant='card') {
   const spec=MODE_CATALOG_ART[key];
   if (!spec) return '';
-  const images=spec.ids.slice(0,3).map((id,index)=>
-    '<img src="'+modeCatalogSpriteUrl(id)+'" alt="" aria-hidden="true" loading="lazy" decoding="async" style="--art-index:'+index+'" />'
-  ).join('');
   return '<span class="mode-card-art art-'+spec.effect+' is-'+variant+'" aria-hidden="true">'+
-    '<span class="mode-card-art-orbit"></span>'+images+
-    '<b>'+spec.glyph+'</b></span>';
+    modeCatalogPreviewHtml(spec)+'</span>';
 }
 function modeCatalogDifficultyForCard(card) {
   const key=modeCatalogActionKey(card);
