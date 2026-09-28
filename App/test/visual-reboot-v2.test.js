@@ -69,3 +69,11 @@ test('desktop gameplay keeps the full available width',()=>{
 test('desktop header actions stay compact beside XP and profile',()=>{
   assert.match(visual,/\.header-actions \.header-action-btn \{[\s\S]*width: 42px !important;[\s\S]*font-size: 0 !important;/);
 });
+
+
+test('consolidation pass removes duplicate primary destinations without deleting features',()=>{
+  assert.match(visual,/CONSOLIDATION PASS V1/);
+  assert.match(visual,/#global-nav #nav-extras[\s\S]*display:none !important/);
+  assert.match(visual,/#screen-config #home-partner,[\s\S]*home-progress-legacy[\s\S]*display:none !important/);
+  assert.match(visual,/mode-filters-redundant[\s\S]*display:none !important/);
+});
