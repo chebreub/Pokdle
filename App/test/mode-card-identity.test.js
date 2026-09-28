@@ -66,3 +66,17 @@ test("mode families, special effects, dark mode and mobile are styled",()=>{
   assert.match(css,/@media \(max-width:640px\)[\s\S]*\.all-modes-card\.has-mode-art/);
   assert.match(css,/@media \(max-width:640px\)[\s\S]*\.club-pick\.has-mode-art/);
 });
+
+
+test("mode art now communicates gameplay instead of only floating sprites",()=>{
+  const f=artFixture();
+  assert.match(f.__html("startPixelGame","card"),/mode-preview-pixel/);
+  assert.match(f.__html("startCryGame","card"),/mode-preview-audio/);
+  assert.match(f.__html("startQuizGame","card"),/mode-preview-quiz/);
+  assert.match(f.__html("startEvolutionChainGame","card"),/mode-preview-evolution/);
+  assert.match(f.__html("openTypeComboSolo","card"),/mode-preview-types/);
+  assert.match(css,/PROFESSIONAL PASS V2/);
+  assert.match(css,/mode-preview-audio/);
+  assert.match(css,/mode-preview-quiz/);
+  assert.match(css,/mode-preview-versus/);
+});
