@@ -42,7 +42,7 @@ function fixture(){
   context.renderPokedexGrid=()=>{};
   context.openPokedexMode=()=>{};
   vm.createContext(context);
-  vm.runInContext(source+'\nthis.__state=pokedexCollectionState;this.__stats=pokedexCollectionNationalStats;this.__visible=pokedexCollectionVisibleName;',context);
+  vm.runInContext(source+'\nthis.__state=pokedexCollectionState;this.__stats=pokedexCollectionNationalStats;this.__visible=pokedexCollectionVisibleName;this.__view=()=>pokedexExperienceView;',context);
   return context;
 }
 
@@ -76,4 +76,14 @@ test('guess results use staggered cell reveal and reduced-motion support',()=>{
   assert.match(gameSource,/--reveal-index/);
   assert.match(gameSource,/prefers-reduced-motion: reduce/);
   assert.match(gameSource,/playPokedexUiSfx/);
+});
+
+
+test('main Pokédex entry opens the encyclopedia while the collection remains explicit',()=>{
+  const f=fixture();
+  assert.equal(f.__view(),'encyclopedia');
+  f.openPokedexCollection();
+  assert.equal(f.__view(),'collection');
+  f.openPokedexMode();
+  assert.equal(f.__view(),'encyclopedia');
 });
