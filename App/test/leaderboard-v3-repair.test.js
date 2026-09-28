@@ -32,3 +32,15 @@ test('leaderboard v3 uses grids instead of horizontal mode scrolling',()=>{
   assert.match(style,/\.lbv3-gen-tabs \{[\s\S]*grid-template-columns:repeat\(10/);
   assert.match(style,/@media \(max-width:760px\)[\s\S]*\.lbv3-mode-grid \{[\s\S]*repeat\(2/);
 });
+
+
+test('account bootstrap exposes auth before leaderboard submission',()=>{
+  assert.match(delegation,/window\.__pokedleAuthed = Boolean\(data\?\.user\)/);
+  assert.match(delegation,/pokedle:auth-ready/);
+});
+
+test('daily leaderboard backfills a completed win after auth becomes ready',()=>{
+  assert.match(leaderboard,/function syncPendingDailyLeaderboard\(\)/);
+  assert.match(leaderboard,/pendingDailyLeaderboardScore/);
+  assert.match(leaderboard,/pokedle:auth-ready/);
+});
