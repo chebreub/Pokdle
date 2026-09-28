@@ -2,7 +2,7 @@
 // Unified Pokédex collection experience.
 // Collection mode turns the existing encyclopaedia into the player's progression hub
 // without removing the full reference view.
-let pokedexExperienceView = 'collection';
+let pokedexExperienceView = 'encyclopedia';
 let pokedexCollectionFilter = 'all';
 const POKEDEX_COLLECTION_REGIONS = ['Kanto','Johto','Hoenn','Sinnoh','Unys','Kalos','Alola','Galar','Paldea'];
 
@@ -98,8 +98,8 @@ function ensurePokedexCollectionHub() {
       <div id="pokedex-collection-national" class="pokedex-collection-national"></div>
     </div>
     <div class="pokedex-experience-switch" role="group" aria-label="Mode du Pokédex">
-      <button type="button" data-pokedex-view="collection" data-action="setPokedexExperienceView" data-args='["collection"]'>Ma collection</button>
       <button type="button" data-pokedex-view="encyclopedia" data-action="setPokedexExperienceView" data-args='["encyclopedia"]'>Encyclopédie complète</button>
+      <button type="button" data-pokedex-view="collection" data-action="setPokedexExperienceView" data-args='["collection"]'>Ma collection</button>
       <button type="button" class="pokedex-missions-link" data-action="openPokedexMissionHub">Missions <span id="pokedex-mission-ready-count"></span></button>
     </div>
     <div id="pokedex-region-progress" class="pokedex-region-progress" aria-label="Progression par région"></div>
@@ -177,7 +177,10 @@ function openPokedexMissionHub() {
 function openPokedexCollection() {
   pokedexExperienceView='collection';
   pokedexCollectionFilter='all';
-  openPokedexMode();
+  ensurePokedexCollectionHub();
+  const result=openPokedexModeBeforeCollection();
+  renderPokedexCollectionHub();
+  return result;
 }
 function playCollectionPokemonCry(pokemonId) {
   const pokemon=POKEMON_BY_ID.get(Number(pokemonId));
@@ -313,6 +316,9 @@ renderPokedexGrid = function () {
 
 const openPokedexModeBeforeCollection = openPokedexMode;
 openPokedexMode = function () {
+  // The main Pokédex entry always opens the complete encyclopaedia.
+  // "Ma collection" stays available as an explicit secondary experience.
+  pokedexExperienceView='encyclopedia';
   ensurePokedexCollectionHub();
   const result=openPokedexModeBeforeCollection();
   renderPokedexCollectionHub();
