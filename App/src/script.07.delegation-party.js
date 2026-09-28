@@ -998,6 +998,10 @@ function accountNavigate(destination) {
 (function () {
   function renderAccount(data) {
     connectedAccountUser = data?.auth ? data.user || null : null;
+    window.__pokedleAuthed = Boolean(data?.user);
+    if (window.__pokedleAuthed) {
+      try { window.dispatchEvent(new CustomEvent("pokedle:auth-ready", { detail: { user: data.user } })); } catch (_e) {}
+    }
     var el = document.getElementById("account-area");
     if (!el) return;
     if (!data || !data.auth) { el.innerHTML = ""; return; }

@@ -90,3 +90,8 @@ test('professional pass keeps discovery compact and semantically grouped',()=>{
   assert.match(club,/club-return-bar/);
   assert.match(visual,/mode-card-art-orbit,[\s\S]*display:none/);
 });
+
+
+test('desktop header stays in document flow on long gameplay pages',()=>{
+  assert.match(visual,/@media \(min-width:641px\)[\s\S]*#pokdle-app\.design-refresh > header[\s\S]*position:relative !important;[\s\S]*top:auto !important;/);
+});

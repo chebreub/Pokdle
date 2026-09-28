@@ -8,18 +8,21 @@ const style=fs.readFileSync(path.join(__dirname,'../style.css'),'utf8');
 
 function clientFixture(){
   const context={
-    window:{__pokedleAuthed:false},
+    window:{__pokedleAuthed:false,addEventListener(){}},
     playerProfile:{oddOneOutStreak:4,weightBattleStreak:7},
+    matchHistory:[],
     document:{getElementById(){return null;}},
     escapeHtml:s=>String(s),
     ensureOverlay(){},
     fetch(){return Promise.reject(new Error('offline'));},
     recordMatchHistory(){},
+    localStorage:{getItem(){return null;},setItem(){}},
+    getUTCDateKey(){return '2026-09-28';},
     setTimeout(){return 1;},clearTimeout(){},
     Date,Math,Map,Set,Array,Object,String,Number,Boolean,Promise
   };
   vm.createContext(context);
-  vm.runInContext(client+'\nthis.__map=leaderboardResultFromHistory;this.__format=leaderboardV2FormatScore;this.__meta=leaderboardV2ModeMeta;',context);
+  vm.runInContext(client+'\nthis.__map=leaderboardResultFromHistory;this.__format=leaderboardV2FormatScore;this.__meta=leaderboardV2ModeMeta;this.__pendingDaily=pendingDailyLeaderboardScore;',context);
   return context;
 }
 
@@ -63,4 +66,14 @@ test('result screen is compact and contains leaderboard preview styling',()=>{
   assert.match(style,/\.win-ranking-preview/);
   assert.match(style,/\.lbv2-podium/);
   assert.match(style,/\.lbv2-around/);
+});
+
+
+test('daily leaderboard can recover a win completed before auth initialization',()=>{
+  const f=clientFixture();
+  const now=Date.now();
+  f.matchHistory.push({mode:'daily',result:'win',attempts:6,at:now});
+  f.matchHistory.push({mode:'daily',result:'loss',attempts:3,at:now});
+  f.matchHistory.push({mode:'normal',result:'win',attempts:2,at:now});
+  assert.equal(f.__pendingDaily(),6);
 });
