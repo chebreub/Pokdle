@@ -2688,7 +2688,7 @@ function openDraftArenaMode() {
   stopEmulatorSession();
   mountDraftModeCard("arena");
   showScreen("screen-draft-arena");
-  setGlobalNavActive("extras");
+  setGlobalNavActive("game");
 
   if (!draftArenaState || draftArenaState.mode !== "arena") {
     const savedRun = loadDraftArenaProgress();
