@@ -1553,3 +1553,280 @@
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =====================================================================
+   PROFESSIONAL PASS V1 — clarity over decoration
+   Inspired by the strongest trait of mature game hubs: one toolbar,
+   consistent game cards, and a single compact return path.
+   ===================================================================== */
+
+/* Home return: one compact surface instead of two stacked blocks. */
+#pokdle-app.design-refresh .home-return{
+  display:block;
+}
+#pokdle-app.design-refresh .club-return-bar{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  min-height:64px;
+  padding:10px 12px 10px 16px;
+  border:1px solid var(--ui-line);
+  border-left:3px solid var(--ui-accent);
+  border-radius:15px;
+  background:var(--ui-surface);
+  box-shadow:0 8px 22px rgb(31 70 112 / 6%);
+}
+#pokdle-app.design-refresh .club-return-main{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+  flex:1 1 auto;
+}
+#pokdle-app.design-refresh .club-return-main .club-eyebrow{
+  flex:0 0 auto;
+  margin:0;
+}
+#pokdle-app.design-refresh .club-return-main > div{
+  min-width:0;
+}
+#pokdle-app.design-refresh .club-return-main strong{
+  display:block;
+  margin:0;
+  color:var(--ui-ink);
+  font-size:.9rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#pokdle-app.design-refresh .club-return-main small{
+  display:block;
+  margin-top:2px;
+  color:var(--ui-muted);
+  font-size:.72rem;
+}
+#pokdle-app.design-refresh .club-return-main .btn-blue{
+  min-height:38px;
+  margin-left:auto;
+  padding:7px 12px !important;
+  white-space:nowrap;
+}
+#pokdle-app.design-refresh .club-return-bar .club-recent{
+  flex:0 1 auto;
+  padding-left:14px;
+  border-left:1px solid var(--ui-line);
+  gap:6px;
+}
+#pokdle-app.design-refresh .club-return-bar .club-recent > span{
+  font-size:.7rem;
+}
+#pokdle-app.design-refresh .club-return-bar .club-recent button{
+  min-height:36px;
+  padding:6px 9px !important;
+  border-radius:9px !important;
+  font-size:.72rem !important;
+}
+
+/* Catalog toolbar: search + difficulty + generations on one line. */
+#pokdle-app.design-refresh #screen-all-modes .mode-hub-controls{
+  display:grid !important;
+  grid-template-columns:minmax(280px,1fr) 150px minmax(250px,320px) !important;
+  gap:10px !important;
+  margin:18px 0 20px !important;
+  padding:10px !important;
+  align-items:end !important;
+  border:1px solid var(--ui-line);
+  border-radius:14px;
+  background:var(--ui-soft);
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-search,
+#pokdle-app.design-refresh #screen-all-modes .mode-difficulty{
+  gap:5px;
+  color:var(--ui-muted);
+  font-size:.68rem;
+  font-weight:800;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-search input,
+#pokdle-app.design-refresh #screen-all-modes .mode-difficulty select{
+  min-height:42px;
+  border-radius:10px !important;
+  background:var(--ui-surface) !important;
+}
+#pokdle-app.design-refresh #screen-all-modes #home-gens-card{
+  min-height:42px;
+  margin:0 !important;
+  padding:7px 8px 7px 11px !important;
+  border:1px solid var(--ui-line) !important;
+  border-radius:10px !important;
+  background:var(--ui-surface) !important;
+  box-shadow:none !important;
+}
+#pokdle-app.design-refresh #screen-all-modes #home-gens-card:not(.is-collapsed){
+  grid-column:1 / -1;
+  padding:12px !important;
+}
+#pokdle-app.design-refresh #screen-all-modes #home-gens-card.is-collapsed .pk-genbar-lab small{
+  max-width:145px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#pokdle-app.design-refresh #screen-all-modes .catalog-picks{
+  margin-top:18px;
+}
+#pokdle-app.design-refresh #screen-all-modes .club-more-label{
+  margin:14px 0 20px;
+  color:var(--ui-muted);
+  font-size:.78rem;
+}
+
+/* Featured cards: editorial but restrained. */
+#pokdle-app.design-refresh .club-pick.has-mode-art{
+  min-height:160px;
+  padding:18px 106px 18px 18px !important;
+  border-radius:16px !important;
+  box-shadow:0 8px 24px rgb(25 56 94 / 7%) !important;
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art{
+  top:50%;
+  right:10px;
+  width:92px;
+  height:98px;
+  transform:translateY(-50%);
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art-orbit,
+#pokdle-app.design-refresh .club-pick .mode-card-art > b{
+  display:none;
+}
+#pokdle-app.design-refresh .club-pick .mode-card-art img{
+  top:10px;
+  right:5px;
+  width:78px;
+  height:78px;
+}
+
+/* Regular library cards: consistent cover system, no floating orbit/glyph clutter. */
+#pokdle-app.design-refresh #screen-all-modes .all-modes-cats{
+  display:grid;
+  gap:26px;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title{
+  margin:0 0 10px !important;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--ui-line);
+  font-size:.78rem !important;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-grid{
+  gap:10px !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art{
+  min-height:102px;
+  padding:14px 86px 14px 14px !important;
+  border:1px solid var(--ui-line) !important;
+  border-left:3px solid var(--mode-art-accent,#2f76ff) !important;
+  border-top:1px solid var(--ui-line) !important;
+  border-radius:14px !important;
+  background:var(--ui-surface) !important;
+  box-shadow:0 4px 14px rgb(24 54 92 / 6%) !important;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--mode-art-accent,#2f76ff) 45%,var(--ui-line)) !important;
+  box-shadow:0 10px 24px rgb(24 54 92 / 10%) !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card b{
+  font-size:.86rem;
+  line-height:1.25;
+}
+#pokdle-app.design-refresh #screen-all-modes .all-modes-card small{
+  font-size:.72rem;
+  line-height:1.38;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art{
+  top:50%;
+  right:9px;
+  bottom:auto;
+  width:70px;
+  height:72px;
+  transform:translateY(-50%);
+  overflow:visible;
+  border-radius:0;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art-orbit,
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > b{
+  display:none;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art img{
+  right:5px;
+  bottom:4px;
+  width:58px;
+  height:58px;
+  filter:drop-shadow(0 6px 7px rgb(22 44 78 / 12%));
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(2){
+  width:38px;
+  height:38px;
+  right:32px;
+  bottom:0;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(3){
+  width:35px;
+  height:35px;
+  right:0;
+  bottom:0;
+}
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-mystery img{
+  filter:brightness(0) opacity(.4) drop-shadow(0 6px 7px rgb(22 44 78 / 14%));
+}
+
+@media (max-width:1000px) and (min-width:641px){
+  #pokdle-app.design-refresh #screen-all-modes .mode-hub-controls{
+    grid-template-columns:minmax(220px,1fr) 140px !important;
+  }
+  #pokdle-app.design-refresh #screen-all-modes #home-gens-card{
+    grid-column:1 / -1;
+  }
+}
+@media (max-width:640px){
+  #pokdle-app.design-refresh .club-return-bar{
+    display:grid;
+    gap:8px;
+    padding:10px 11px;
+  }
+  #pokdle-app.design-refresh .club-return-main{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) auto;
+    gap:8px;
+  }
+  #pokdle-app.design-refresh .club-return-main small{
+    display:none;
+  }
+  #pokdle-app.design-refresh .club-return-bar .club-recent{
+    padding:8px 0 0;
+    border-left:0;
+    border-top:1px solid var(--ui-line);
+  }
+  #pokdle-app.design-refresh #screen-all-modes .mode-hub-controls{
+    grid-template-columns:1fr !important;
+    padding:9px !important;
+  }
+  #pokdle-app.design-refresh #screen-all-modes #home-gens-card{
+    grid-column:auto;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art{
+    min-height:94px !important;
+    padding-right:74px !important;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .mode-card-art{
+    width:62px;
+    height:64px;
+  }
+  #pokdle-app.design-refresh .club-pick.has-mode-art{
+    min-height:128px;
+    padding-right:82px !important;
+  }
+}

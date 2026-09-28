@@ -8,6 +8,8 @@ const visual=fs.readFileSync(path.join(__dirname,'../visual-refresh.css'),'utf8'
 const adventure=fs.readFileSync(path.join(__dirname,'../src/script.10f.home-adventure.js'),'utf8');
 const weekly=fs.readFileSync(path.join(__dirname,'../src/script.10i.weekly-league.js'),'utf8');
 const core=fs.readFileSync(path.join(__dirname,'../src/script.01.core.js'),'utf8');
+const club=fs.readFileSync(path.join(__dirname,'../src/script.09.club.js'),'utf8');
+const index=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 
 test('visual reboot establishes a strong final design authority layer',()=>{
   assert.match(home,/VISUAL REBOOT V2 — final authority layer/);
@@ -76,4 +78,15 @@ test('consolidation pass removes duplicate primary destinations without deleting
   assert.match(visual,/#global-nav #nav-extras[\s\S]*display:none !important/);
   assert.match(visual,/#screen-config #home-partner,[\s\S]*home-progress-legacy[\s\S]*display:none !important/);
   assert.match(visual,/mode-filters-redundant[\s\S]*display:none !important/);
+});
+
+
+test('professional pass keeps discovery compact and semantically grouped',()=>{
+  assert.match(visual,/PROFESSIONAL PASS V1/);
+  const controls=index.slice(index.indexOf('<div class="mode-hub-controls">'),index.indexOf('<p class="mode-results"'));
+  assert.match(controls,/id="mode-search"/);
+  assert.match(controls,/id="mode-difficulty"/);
+  assert.match(controls,/id="home-gens-card"/);
+  assert.match(club,/club-return-bar/);
+  assert.match(visual,/mode-card-art-orbit,[\s\S]*display:none/);
 });

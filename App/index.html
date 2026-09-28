@@ -249,6 +249,7 @@
             <button type="button" data-action="setModeCatalogCategory" data-args='["explore"]' data-mode-category="explore" aria-pressed="false">Explorer</button>
             <button type="button" data-action="setModeCatalogCategory" data-args='["all"]' data-mode-category="all" aria-pressed="false">Tout</button>
           </div>
+          <label class="mode-search">Rechercher<input id="mode-search" type="search" placeholder="Nom d’un mode…" autocomplete="off" /></label>
           <label class="mode-difficulty" id="mode-difficulty-field">Difficulté
             <select id="mode-difficulty" aria-label="Filtrer les jeux par difficulté">
               <option value="all">Toutes</option>
@@ -258,17 +259,16 @@
               <option value="expert">Expert</option>
             </select>
           </label>
-          <label class="mode-search">Rechercher dans le site<input id="mode-search" type="search" placeholder="Rechercher…" autocomplete="off" /></label>
+          <div class="pk-genbar is-collapsed" id="home-gens-card">
+            <div class="pk-genbar-lab"><b><svg class="pk-ico"><use href="#i-layers"/></svg> Générations</b><small id="home-gens-summary">Choisis les générations à inclure.</small></div>
+            <div class="gen-grid" id="gen-grid"></div>
+            <div class="pk-genbar-acts">
+              <button class="pk-gbtn pk-gbtn-tout home-gens-edit-only" type="button" data-action="selectAllGenerations">Tout</button>
+              <button class="pk-gbtn pk-gbtn-aucune home-gens-edit-only" type="button" data-action="clearGenerationSelection">Gen 1 seule</button>
+              <button class="pk-gbtn" type="button" data-action="toggleHomeGensCard" aria-expanded="false" aria-controls="gen-grid" id="home-gens-toggle">Modifier ▾</button>
+            </div>
+          </div>
         </div>
-      <div class="pk-genbar is-collapsed" id="home-gens-card">
-        <div class="pk-genbar-lab"><b><svg class="pk-ico"><use href="#i-layers"/></svg> Générations</b><small id="home-gens-summary">Choisis les générations à inclure.</small></div>
-        <div class="gen-grid" id="gen-grid"></div>
-        <div class="pk-genbar-acts">
-          <button class="pk-gbtn pk-gbtn-tout home-gens-edit-only" type="button" data-action="selectAllGenerations">Tout</button>
-          <button class="pk-gbtn pk-gbtn-aucune home-gens-edit-only" type="button" data-action="clearGenerationSelection">Gen 1 seule</button>
-          <button class="pk-gbtn" type="button" data-action="toggleHomeGensCard" aria-expanded="false" aria-controls="gen-grid" id="home-gens-toggle">Modifier ▾</button>
-        </div>
-      </div>
 
         <p class="mode-results" id="mode-results" role="status" aria-live="polite"></p>
         <div id="mode-empty" class="mode-empty" hidden><p>Aucun résultat. Essaie un autre nom ou explore tous les modes.</p><button class="btn-ghost" type="button" data-action="resetModeCatalog">Voir tous les modes</button></div>

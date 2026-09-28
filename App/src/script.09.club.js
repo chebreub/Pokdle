@@ -43,8 +43,13 @@ function renderHomeReturn() {
   const recent = readClubRecent();
   panel.classList.toggle("hidden", !save && !recent.length);
   const modeNames = { normal: "Mode illimité", daily: "Pokémon du jour", silhouette: "Zoom progressif", pixel: "Pixelisé", cry: "Cri", mystery: "Stat mystère", description: "Description", evolution: "Évolution", order: "Ordre Pokédex", weight: "Duel de poids" };
-  panel.innerHTML = (save ? '<div class="club-resume"><div><span class="club-eyebrow">ON REPREND ?</span><strong>' + escapeHtml(modeNames[save.mode] || "Partie en cours") + '</strong><small>' + Math.max(0, Number(save.attempts) || 0) + ' essai(s) · Ta progression est conservée</small></div><button type="button" class="btn-blue" data-action="resumeClubGame">Reprendre →</button></div>' : '') +
-    (recent.length ? '<div class="club-recent"><span>Derniers jeux</span>' + recent.map(key => '<button type="button" class="btn-ghost" data-action="clubLaunchRecent" data-args="' + escapeHtml(JSON.stringify([key])) + '">' + escapeHtml(clubLaunchers.get(key).label) + '</button>').join("") + '</div>' : '');
+  const resumeHtml = save
+    ? '<div class="club-return-main"><span class="club-eyebrow">REPRENDRE</span><div><strong>' + escapeHtml(modeNames[save.mode] || "Partie en cours") + '</strong><small>' + Math.max(0, Number(save.attempts) || 0) + ' essai(s) · progression conservée</small></div><button type="button" class="btn-blue" data-action="resumeClubGame">Reprendre →</button></div>'
+    : '';
+  const recentHtml = recent.length
+    ? '<div class="club-recent"><span>Récents</span>' + recent.map(key => '<button type="button" class="btn-ghost" data-action="clubLaunchRecent" data-args="' + escapeHtml(JSON.stringify([key])) + '">' + escapeHtml(clubLaunchers.get(key).label) + '</button>').join("") + '</div>'
+    : '';
+  panel.innerHTML = '<div class="club-return-bar">' + resumeHtml + recentHtml + '</div>';
 }
 function isClubFeatured(card, category, query, difficulty = "all") {
   if (String(query || "").trim() || difficulty !== "all" || !["solo", "friends"].includes(category)) return false;
