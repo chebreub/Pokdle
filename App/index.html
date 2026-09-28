@@ -115,7 +115,7 @@
   <button id="nav-game" class="nav-pill" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Jouer</button>
   <button id="nav-social" class="nav-pill" type="button" data-action="openAllModesScreen" data-args='["friends"]'>Entre amis</button>
   <button id="nav-collection" class="nav-pill" type="button" data-action="openPokedexMode">Pokédex</button>
-  <button id="nav-extras" class="nav-pill" type="button" data-action="openAllModesScreen" data-args='["explore"]'>Explorer</button>
+  <button id="nav-extras" class="nav-pill nav-utility-entry" type="button" data-action="openAllModesScreen" data-args='["explore"]'>Explorer</button>
   <button id="nav-profile" class="nav-pill" type="button" data-action="openProfileScreen">Profil</button>
 </nav>
       <div class="header-actions">
@@ -176,10 +176,9 @@
       <div id="home-partner" class="partner-strip" aria-label="Mon aventure"></div>
       <div id="secret-spot-companion" class="secret-spot hidden"></div>
           <div id="secret-extra-home"></div>
-      <nav class="home-explore" aria-label="Explorer l’univers Pokémon">
-        <div><strong>Entre deux parties</strong><span>Explore, prépare ton équipe, suis tes progrès.</span></div>
-        <button class="btn-ghost" type="button" data-action="openPokedexMode">Pokédex</button>
-        <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["explore"]'>Outils et collection →</button>
+      <nav class="home-explore home-tools-strip" aria-label="Outils Pokémon">
+        <div><strong>Besoin d’un outil ?</strong><span>Team Builder, table des types, historique et autres utilitaires.</span></div>
+        <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["explore"]'>Ouvrir les outils →</button>
         <button type="button" class="secret-rune" data-rune="home" data-action="inspectSecretRune" data-args='["home"]' aria-label="Examiner la marque étoilée de l’accueil">✧</button>
       </nav>
 
@@ -199,7 +198,7 @@
       </div>
 
       <!-- Progression (préservée) -->
-      <details class="card home-progress-card">
+      <details class="card home-progress-card home-progress-legacy">
         <summary>Ma progression <span>Statistiques, séries et objectifs</span></summary>
         <div id="home-engagement-widget" class="home-engagement-widget"></div>
         <div class="home-section-head">
@@ -244,7 +243,7 @@
         </div>
         <p class="card-desc" id="mode-hub-description">Choisis un défi et joue à ton rythme.</p>
         <div class="mode-hub-controls">
-          <div class="mode-filters" role="group" aria-label="Catégorie">
+          <div class="mode-filters mode-filters-redundant" role="group" aria-label="Catégorie">
             <button type="button" data-action="setModeCatalogCategory" data-args='["solo"]' data-mode-category="solo" aria-pressed="true">Solo</button>
             <button type="button" data-action="setModeCatalogCategory" data-args='["friends"]' data-mode-category="friends" aria-pressed="false">Entre amis</button>
             <button type="button" data-action="setModeCatalogCategory" data-args='["explore"]' data-mode-category="explore" aria-pressed="false">Explorer</button>
@@ -259,7 +258,7 @@
               <option value="expert">Expert</option>
             </select>
           </label>
-          <label class="mode-search">Rechercher dans le site<input id="mode-search" type="search" placeholder="Un jeu, un outil…" autocomplete="off" /></label>
+          <label class="mode-search">Rechercher dans le site<input id="mode-search" type="search" placeholder="Rechercher…" autocomplete="off" /></label>
         </div>
       <div class="pk-genbar is-collapsed" id="home-gens-card">
         <div class="pk-genbar-lab"><b><svg class="pk-ico"><use href="#i-layers"/></svg> Générations</b><small id="home-gens-summary">Choisis les générations à inclure.</small></div>
