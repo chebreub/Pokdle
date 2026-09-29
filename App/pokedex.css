@@ -3270,10 +3270,11 @@ body.theme-dark .pokedex-collection-legend > span {
     border-radius: 16px;
   }
   #screen-pokedex.is-detail-open .pokedex-back-to-list {
-    position: sticky;
-    top: 0;
-    z-index: 4;
+    position: static;
     margin: 0 0 12px;
     background: var(--card-surface, #fff);
+  }
+  #screen-pokedex.is-detail-open #pokedex-detail {
+    scroll-margin-top: 84px;
   }
 }
