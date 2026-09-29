@@ -53,3 +53,14 @@ test("collection identity has responsive and dark visual treatment",()=>{
   assert.match(profileCss,/body\.theme-dark \.profile-mission-intro/);
   assert.match(profileCss,/@media \(max-width:720px\)/);
 });
+
+
+test("encyclopedia view hides collection-only progression chrome",()=>{
+  assert.match(pokedexCss,/\.pokedex-collection-hub\.is-encyclopedia \.pokedex-collection-console,[\s\S]*\.pokedex-region-progress[\s\S]*display: none !important/);
+});
+
+test("mobile Pokédex detail becomes a dedicated view without nested sticky controls",()=>{
+  assert.match(pokedexCss,/@media \(max-width: 640px\)[\s\S]*#screen-pokedex\.is-detail-open > \.card > #pokedex-toolbar[\s\S]*display: none !important/);
+  assert.match(pokedexCss,/#screen-pokedex\.is-detail-open \.pokedex-back-to-list \{[\s\S]*position: static;/);
+  assert.match(pokedexCss,/#screen-pokedex\.is-detail-open #pokedex-detail \{[\s\S]*scroll-margin-top: 84px;/);
+});
