@@ -3206,3 +3206,74 @@ body.theme-dark .pokedex-collection-legend > span {
     font-size:.6rem;
   }
 }
+
+
+/* ============================================================
+   POKEDEX FINAL POLISH — encyclopedia first, clean mobile detail
+   ============================================================ */
+
+/* The encyclopedia is a reference view, not a progression dashboard.
+   Keep the collection console and region progress exclusive to Collection. */
+.pokedex-collection-hub.is-encyclopedia {
+  margin: 10px 0 14px;
+  gap: 0;
+}
+.pokedex-collection-hub.is-encyclopedia .pokedex-collection-console,
+.pokedex-collection-hub.is-encyclopedia .pokedex-region-progress {
+  display: none !important;
+}
+.pokedex-collection-hub.is-encyclopedia .pokedex-experience-switch {
+  margin: 0;
+}
+
+/* Collection keeps the richer progression hierarchy. */
+.pokedex-collection-hub:not(.is-encyclopedia) .pokedex-experience-switch {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  /* Stable two-choice switch; Missions stays secondary. */
+  .pokedex-experience-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 6px;
+  }
+  .pokedex-experience-switch button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 7px;
+    font-size: .72rem;
+    line-height: 1.15;
+  }
+  .pokedex-experience-switch .pokedex-missions-link {
+    grid-column: 1 / -1;
+  }
+
+  /* A selected Pokémon becomes a true detail view on phones.
+     The Back button inside the detail restores the catalogue state. */
+  #screen-pokedex.is-detail-open > .card > .ranking-head,
+  #screen-pokedex.is-detail-open > .card > .secret-rune-trail,
+  #screen-pokedex.is-detail-open > .card > #secret-spot-signal,
+  #screen-pokedex.is-detail-open > .card > #secret-extra-dex,
+  #screen-pokedex.is-detail-open > .card > #pokedex-collection-hub,
+  #screen-pokedex.is-detail-open > .card > #pokedex-toolbar,
+  #screen-pokedex.is-detail-open > .card > .pokedex-actions {
+    display: none !important;
+  }
+  #screen-pokedex.is-detail-open .pokedex-layout {
+    display: block !important;
+  }
+  #screen-pokedex.is-detail-open #pokedex-detail {
+    width: 100%;
+    margin: 0;
+    border-radius: 16px;
+  }
+  #screen-pokedex.is-detail-open .pokedex-back-to-list {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    margin: 0 0 12px;
+    background: var(--card-surface, #fff);
+  }
+}
