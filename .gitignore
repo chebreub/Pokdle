@@ -23,3 +23,7 @@ App/dist/
 
 # script.js est GENERE par build.mjs (recollage de App/src/script.*.js) — editer les morceaux
 App/script.js
+
+# Browser QA evidence is retained by CI, not mixed with application sources.
+quality-artifacts/
+__pycache__/
