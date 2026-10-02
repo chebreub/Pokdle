@@ -1907,10 +1907,20 @@ io.on("connection", (socket) => {
       if (!token) return respond(ack, { ok: false, error: "Session de reprise invalide." });
       const player = room.players.find((entry) => entry.reconnectToken === token);
       if (!player) return respond(ack, { ok: false, error: "Aucune place à reprendre dans cette room." });
-      if (player.connected) return respond(ack, { ok: false, error: "Cette session est déjà active." });
       if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Le délai de reconnexion est expiré." });
 
+      // A reload can connect the replacement socket before Socket.IO has emitted
+      // disconnect for the old one. The opaque token owns the seat, so transfer it
+      // atomically instead of rejecting a still-marked-connected player.
       const previousId = player.id;
+      if (player.connected && previousId === socket.id) {
+        return respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicRoomState(room, socket.id) });
+      }
+      const previousSocket = previousId && previousId !== socket.id ? io.sockets.sockets.get(previousId) : null;
+      if (previousSocket) {
+        previousSocket.leave(room.code);
+        if (previousSocket.data) previousSocket.data.roomCode = null;
+      }
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
       if (room.hostId === previousId) room.hostId = socket.id;
       if (room.winnerId === previousId) room.winnerId = socket.id;
@@ -1920,6 +1930,7 @@ io.on("connection", (socket) => {
       player.reconnectUntil = null;
       socket.join(room.code);
       socket.data.roomCode = room.code;
+      if (previousSocket?.connected) previousSocket.disconnect(true);
       if (room.status === "waiting" && room.players.length === MAX_ROOM_SIZE && room.players.every((entry) => entry.connected)) {
         startRoom(room);
       }
@@ -2612,9 +2623,17 @@ io.on("connection", (socket) => {
       const room = statClashRooms.get(code);
       if (!room || !token) return respond(ack, { ok: false, error: "Session Stat Clash introuvable." });
       const player = room.players.find((entry) => entry.reconnectToken === token);
-      if (!player || player.connected) return respond(ack, { ok: false, error: "Place Stat Clash indisponible." });
+      if (!player) return respond(ack, { ok: false, error: "Place Stat Clash indisponible." });
       if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Délai de reconnexion expiré." });
       const previousId = player.id;
+      if (player.connected && previousId === socket.id) {
+        return respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatClashRoomState(room, socket.id) });
+      }
+      const previousSocket = previousId && previousId !== socket.id ? io.sockets.sockets.get(previousId) : null;
+      if (previousSocket) {
+        previousSocket.leave(room.code);
+        if (previousSocket.data) previousSocket.data.statClashRoomCode = null;
+      }
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
       player.id = socket.id;
       player.connected = true;
@@ -2624,6 +2643,7 @@ io.on("connection", (socket) => {
       if (room.winnerId === previousId) room.winnerId = socket.id;
       socket.join(room.code);
       socket.data.statClashRoomCode = room.code;
+      if (previousSocket?.connected) previousSocket.disconnect(true);
       emitStatClashRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
@@ -3275,9 +3295,17 @@ io.on("connection", (socket) => {
       const room = statAuctionRooms.get(code);
       if (!room || !token) return respond(ack, { ok: false, error: "Session Stat Auction introuvable." });
       const player = room.players.find((entry) => entry.reconnectToken === token);
-      if (!player || player.connected) return respond(ack, { ok: false, error: "Place Stat Auction indisponible." });
+      if (!player) return respond(ack, { ok: false, error: "Place Stat Auction indisponible." });
       if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Délai de reconnexion expiré." });
       const previousId = player.id;
+      if (player.connected && previousId === socket.id) {
+        return respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatAuctionRoomState(room, socket.id) });
+      }
+      const previousSocket = previousId && previousId !== socket.id ? io.sockets.sockets.get(previousId) : null;
+      if (previousSocket) {
+        previousSocket.leave(room.code);
+        if (previousSocket.data) previousSocket.data.statAuctionRoomCode = null;
+      }
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
       player.id = socket.id;
       player.connected = true;
@@ -3286,6 +3314,7 @@ io.on("connection", (socket) => {
       if (room.hostId === previousId) room.hostId = socket.id;
       socket.join(room.code);
       socket.data.statAuctionRoomCode = room.code;
+      if (previousSocket?.connected) previousSocket.disconnect(true);
       emitStatAuctionRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatAuctionRoomState(room, socket.id) });
     } catch (_error) {
