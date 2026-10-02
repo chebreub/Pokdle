@@ -1394,12 +1394,30 @@ function getStoredStatAuctionSession() {
 function saveStatAuctionSession(code, nickname, resumeToken) {
   if (!code || !nickname || !resumeToken) return;
   try {
+    const normalizedCode = String(code).toUpperCase();
+    const previous = JSON.parse(sessionStorage.getItem(STAT_AUCTION_SESSION_STORAGE_KEY) || "null");
     sessionStorage.setItem(STAT_AUCTION_SESSION_STORAGE_KEY, JSON.stringify({
-      code: String(code).toUpperCase(),
+      code: normalizedCode,
       nickname: String(nickname),
       resumeToken: String(resumeToken),
+      resultRecorded: previous?.code === normalizedCode ? Boolean(previous.resultRecorded) : false,
       ts: Date.now(),
     }));
+  } catch (_error) { /* stockage indisponible */ }
+}
+
+function hasRecordedStatAuctionResult(code) {
+  const saved = getStoredStatAuctionSession();
+  return Boolean(saved && saved.code === String(code || "").toUpperCase() && saved.resultRecorded);
+}
+
+function markStatAuctionResultRecorded(code) {
+  try {
+    const saved = getStoredStatAuctionSession();
+    if (!saved || saved.code !== String(code || "").toUpperCase()) return;
+    saved.resultRecorded = true;
+    saved.ts = Date.now();
+    sessionStorage.setItem(STAT_AUCTION_SESSION_STORAGE_KEY, JSON.stringify(saved));
   } catch (_error) { /* stockage indisponible */ }
 }
 
@@ -1692,8 +1710,9 @@ function applyStatAuctionRoomState(room) {
     else if (room.round !== prevRound) statAuctionState.submitted = false;
   } else if (room.status === "finished") {
     const wasFinished = statAuctionState.phase === "finished";
+    const alreadyRecorded = hasRecordedStatAuctionResult(room.code);
     statAuctionState.phase = "finished";
-    if (!wasFinished) {
+    if (!wasFinished && !alreadyRecorded) {
       const self = room.players?.find((p) => p.isSelf);
       let result = "loss";
       if (self && room.winnerSide === self.side) {
@@ -1715,6 +1734,7 @@ function applyStatAuctionRoomState(room) {
           targetName: opp?.nickname ? `vs ${opp.nickname}` : "Stat Auction",
         });
       } catch (_e) {}
+      markStatAuctionResultRecorded(room.code);
     }
   }
   renderStatAuctionScreen();
