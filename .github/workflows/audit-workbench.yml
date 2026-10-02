@@ -2,7 +2,7 @@ name: Audit workbench
 on:
   push:
     branches: [work/audit-consolidation]
-    paths: ['.audit/**', 'tools/browser_quality.py', '.github/workflows/audit-workbench.yml']
+    paths: ['.audit/**', 'tools/browser_quality.py', 'tools/multiplayer_quality.py', '.github/workflows/audit-workbench.yml']
 permissions:
   contents: write
 concurrency:
@@ -20,56 +20,61 @@ jobs:
           POSTGRES_PASSWORD: qa-local-only
           POSTGRES_DB: pokdle_qa
         ports: ['5432:5432']
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s --health-timeout 5s --health-retries 10
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       QA_DATABASE_URL: postgresql://qa:qa-local-only@localhost:5432/pokdle_qa
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: work/audit-consolidation
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: App/package-lock.json
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install -q playwright==1.55.0 pillow
-      - run: python -m playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -80 /tmp/browser-install.log; exit 1; }
+      - run: python -m playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -60 /tmp/browser-install.log; exit 1; }
       - run: npm ci
         working-directory: App
-      - name: Reference screenshots and browser diagnostics
+      - name: Reference browser evidence
         run: python tools/browser_quality.py --output quality-artifacts/before --record-only
-      - name: Apply reviewed edits on this branch only
+      - name: Apply reviewed edits on work branch
         run: python .audit/apply.py
       - name: Build and unit/integration tests
         run: |
           mkdir -p ../quality-artifacts
           npm run build
-          npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -160 ../quality-artifacts/unit-tests.log; exit 1; }
+          npm test > ../quality-artifacts/unit-tests.log 2>&1 || { grep -B 3 -A 35 'not ok' ../quality-artifacts/unit-tests.log; tail -15 ../quality-artifacts/unit-tests.log; exit 1; }
           tail -12 ../quality-artifacts/unit-tests.log
         working-directory: App
-      - name: Candidate browser diagnostics
+      - name: Candidate browser evidence
         run: python tools/browser_quality.py --output quality-artifacts/after --record-only
+      - name: Two browser Party Room game
+        id: multi
+        continue-on-error: true
+        run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
       - name: Evidence and dependency report
         if: always()
         run: if [ -f .audit/evidence.py ]; then python .audit/evidence.py; fi
-      - name: Commit reviewed source edits and evidence to work branch
+      - name: Commit reviewed candidate and evidence to work branch
         run: |
           git add App tools docs
           if ! git diff --cached --quiet; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'Apply audited component and reliability improvements'
+            git commit -m 'Finalize audited candidate and browser evidence'
             git push origin HEAD:work/audit-consolidation
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: audit-evidence-${{ github.run_number }}
           path: quality-artifacts/
           retention-days: 14
+      - name: Report remaining candidate failures
+        run: |
+          python -c "import json; from pathlib import Path; q=Path('quality-artifacts'); a=json.loads((q/'after/report.json').read_text()); m=json.loads((q/'multiplayer/report.json').read_text()); assert a['failed']==0 and m['ok'], 'Candidate still has failing browser checks'"

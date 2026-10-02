@@ -1,23 +1,24 @@
-"""Temporary workbench evidence export. No production data is used."""
+"""Temporary workbench export; full-size captures remain in the CI artifact."""
 from pathlib import Path
-import base64,json,subprocess
+import base64,json,subprocess,textwrap
 from PIL import Image
 root=Path(__file__).resolve().parents[1];out=root/'quality-artifacts';doc=root/'docs/qa';doc.mkdir(parents=True,exist_ok=True)
-summary={}
-for phase in ['before','after']:
+summary={};compact={}
+for phase in ['before','after','multiplayer']:
  p=out/phase/'report.json'
- if p.exists():summary[phase]=json.loads(p.read_text())
-audit=subprocess.run(['npm','audit','--json'],cwd=root/'App',capture_output=True,text=True)
+ if p.exists():
+  data=json.loads(p.read_text());summary[phase]=data
+  compact[phase]={k:v for k,v in data.items() if k!='cases'}
+  if 'cases' in data:compact[phase]['failures']=[c for c in data['cases'] if not c['ok']]
+audit=subprocess.run(['npm','audit','--json'],cwd=root/'App',capture_output=True,text=True,timeout=60)
 try:
- raw=json.loads(audit.stdout);summary['dependencies']={'counts':raw.get('metadata',{}).get('vulnerabilities',{}),'findings':{k:{'severity':v.get('severity'),'range':v.get('range'),'fixAvailable':v.get('fixAvailable'),'via':[x if isinstance(x,str) else {'title':x.get('title'),'url':x.get('url'),'range':x.get('range')} for x in v.get('via',[])]} for k,v in raw.get('vulnerabilities',{}).items()}}
- (out/'dependency-audit.json').write_text(audit.stdout)
-except Exception:summary['dependencies']={'error':audit.stdout[:200]}
+ raw=json.loads(audit.stdout);summary['dependencies']=raw;compact['dependencies']=raw.get('metadata',{}).get('vulnerabilities',{});(out/'dependency-audit.json').write_text(audit.stdout)
+except Exception:compact['dependencies']={'error':audit.stdout[:200]}
 (doc/'workbench.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
+(doc/'summary.json').write_text(json.dumps(compact,indent=2),encoding='utf-8')
 for name in ['1366-home-completed','1366-catalog','390-collection-back']:
  p=out/'after'/(name+'.png')
  if not p.exists():continue
- image=Image.open(p).convert('RGB');image.thumbnail((560,720));target=out/(name+'-preview.jpg');image.save(target,quality=35,optimize=True)
- (doc/(name+'.b64')).write_text(base64.b64encode(target.read_bytes()).decode('ascii'))
-for phase in ['before','after']:
- if phase in summary:print('EVIDENCE',phase,summary[phase]['passed'],'passed',summary[phase]['failed'],'failed',flush=True)
-print('DEPENDENCIES',json.dumps(summary['dependencies']),flush=True)
+ image=Image.open(p).convert('RGB');image.thumbnail((360,600));target=out/(name+'-preview.jpg');image.save(target,quality=18,optimize=True)
+ (doc/(name+'.b64')).write_text('\n'.join(textwrap.wrap(base64.b64encode(target.read_bytes()).decode('ascii'),120)))
+print('EVIDENCE_SUMMARY '+json.dumps(compact,ensure_ascii=True),flush=True)
