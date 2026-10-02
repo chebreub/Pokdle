@@ -112,27 +112,6 @@ def main():
                 wait(guest,lambda:guest.evaluate('(args) => statClashState?.room?.code===args[0] && statClashState?.room?.players?.find(p=>p.isSelf)?.side===args[1]',[clash_code,clash_guest_side]),'Stat Clash live seat was not resumed')
                 guest.evaluate('() => leaveStatClashRoom()');host.evaluate('() => leaveStatClashRoom()')
 
-                # Stat Clash lobby host handoff must keep the room alive and reusable.
-                stage='clash-host-handoff'
-                for page in pages: page.evaluate('() => openStatClashMode()')
-                host.evaluate('() => { statClashState.roomNameDraft="QA Clash Transfer Host"; createStatClashRoom(); }')
-                wait(host,lambda:host.evaluate('() => Boolean(statClashState?.room?.code)'),'Transfer Stat Clash room was not created')
-                transfer_code=host.evaluate('() => statClashState.room.code')
-                guest.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Transfer Guest"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',transfer_code)
-                wait(host,lambda:host.evaluate('() => statClashState?.room?.players?.length===2'),'Transfer Stat Clash guest did not join')
-                host.evaluate('() => leaveStatClashRoom()')
-                wait(guest,lambda:guest.evaluate('(code) => statClashState?.room?.code===code && statClashState?.room?.status==="lobby"',transfer_code),'Stat Clash room closed when its host left')
-                wait(guest,lambda:guest.evaluate('() => Boolean(statClashState?.room?.players?.find(p=>p.isSelf)?.isHost)'),'Stat Clash host role did not transfer')
-                host.evaluate('() => openStatClashMode()')
-                host.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Replacement"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',transfer_code)
-                wait(guest,lambda:guest.evaluate('() => statClashState?.room?.players?.length===2'),'Replacement Stat Clash player could not join transferred room')
-                guest.evaluate('() => selectStatClashImposedRule("noSpeedEarly")')
-                host.evaluate('() => selectStatClashImposedRule("atkRound3")')
-                wait(guest,lambda:guest.evaluate('() => Boolean(statClashState?.room?.pendingImposedRuleBySide?.left && statClashState?.room?.pendingImposedRuleBySide?.right)'),'Transferred Stat Clash room could not collect fresh rule choices')
-                guest.evaluate('() => startStatClashRoomGame()')
-                wait(guest,lambda:guest.evaluate('() => ["starting","live"].includes(statClashState?.room?.status)'),'Transferred Stat Clash host could not start the game')
-                host.evaluate('() => leaveStatClashRoom()');guest.evaluate('() => leaveStatClashRoom()')
-
                 # Stat Auction: a live allocation match must survive a guest refresh on the same side.
                 stage='auction-open'
                 for page in pages: page.evaluate('() => openStatAuctionMode()')
@@ -149,39 +128,69 @@ def main():
                 wait(guest,lambda:guest.evaluate('(args) => statAuctionState?.room?.code===args[0] && statAuctionState?.room?.status==="live" && statAuctionState?.room?.players?.find(p=>p.isSelf)?.side===args[1]',[auction_code,auction_side]),'Stat Auction live seat was not resumed')
                 guest.evaluate('() => leaveStatAuctionRoom()');host.evaluate('() => leaveStatAuctionRoom()')
 
-                # Capacity + continuity: eight real browser clients play a round, then continue after host handoff.
+                # Isolated Stat Clash host-handoff scenario: fresh sockets avoid polluting production rate limits.
+                stage='clash-host-handoff'
+                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(2)]
+                transfer_pages=[context.new_page() for context in extra_contexts]
+                for page in transfer_pages:
+                    page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
+                    page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
+                    wait(page,lambda p=page:p.evaluate('() => typeof openStatClashMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Transfer Stat Clash client did not initialize')
+                    wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'Transfer Stat Clash splash stayed visible')
+                    page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openStatClashMode(); }')
+                transfer_host,transfer_guest=transfer_pages
+                transfer_host.evaluate('() => { statClashState.roomNameDraft="QA Clash Transfer Host"; createStatClashRoom(); }')
+                wait(transfer_host,lambda:transfer_host.evaluate('() => Boolean(statClashState?.room?.code)'),'Transfer Stat Clash room was not created')
+                transfer_code=transfer_host.evaluate('() => statClashState.room.code')
+                transfer_guest.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Transfer Guest"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',transfer_code)
+                wait(transfer_host,lambda:transfer_host.evaluate('() => statClashState?.room?.players?.length===2'),'Transfer Stat Clash guest did not join')
+                transfer_host.evaluate('() => leaveStatClashRoom()')
+                wait(transfer_guest,lambda:transfer_guest.evaluate('(code) => statClashState?.room?.code===code && statClashState?.room?.status==="lobby"',transfer_code),'Stat Clash room closed when its host left')
+                wait(transfer_guest,lambda:transfer_guest.evaluate('() => Boolean(statClashState?.room?.players?.find(p=>p.isSelf)?.isHost)'),'Stat Clash host role did not transfer')
+                transfer_host.evaluate('() => openStatClashMode()')
+                transfer_host.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Replacement"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',transfer_code)
+                wait(transfer_guest,lambda:transfer_guest.evaluate('() => statClashState?.room?.players?.length===2'),'Replacement Stat Clash player could not join transferred room')
+                transfer_guest.evaluate('() => selectStatClashImposedRule("noSpeedEarly")')
+                transfer_host.evaluate('() => selectStatClashImposedRule("atkRound3")')
+                wait(transfer_guest,lambda:transfer_guest.evaluate('() => Boolean(statClashState?.room?.pendingImposedRuleBySide?.left && statClashState?.room?.pendingImposedRuleBySide?.right)'),'Transferred Stat Clash room could not collect fresh rule choices')
+                transfer_guest.evaluate('() => startStatClashRoomGame()')
+                wait(transfer_guest,lambda:transfer_guest.evaluate('() => ["starting","live"].includes(statClashState?.room?.status)'),'Transferred Stat Clash host could not start the game')
+                transfer_host.evaluate('() => leaveStatClashRoom()');transfer_guest.evaluate('() => leaveStatClashRoom()')
+                for context in extra_contexts: context.close()
+                extra_contexts=[]
+
+                # Capacity + continuity: eight fresh browser clients play a round, then continue after host handoff.
                 stage='party-8p-boot'
-                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(6)]
-                extra_pages=[context.new_page() for context in extra_contexts]
-                crowd=[host,guest]+extra_pages
+                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(8)]
+                crowd=[context.new_page() for context in extra_contexts]
                 for page in crowd:
-                    if page in extra_pages:
-                        page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
-                        page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
-                        wait(page,lambda p=page:p.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'8p client did not initialize')
-                        wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'8p client splash stayed visible')
+                    page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
+                    page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
+                    wait(page,lambda p=page:p.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'8p client did not initialize')
+                    wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'8p client splash stayed visible')
                     page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openPartyRoomMode(); }')
-                host.locator('#party-nickname').fill('QA 8 Host');host.locator('[data-action="partyCreateRoom"]').click()
-                host.locator('#party-joined').wait_for(state='visible');crowd_code=host.locator('#party-room-code').inner_text().strip()
+                crowd_host=crowd[0]
+                crowd_host.locator('#party-nickname').fill('QA 8 Host');crowd_host.locator('[data-action="partyCreateRoom"]').click()
+                crowd_host.locator('#party-joined').wait_for(state='visible');crowd_code=crowd_host.locator('#party-room-code').inner_text().strip()
                 for idx,page in enumerate(crowd[1:],1):
                     page.locator('#party-nickname').fill(f'QA 8 Guest {idx}')
                     page.locator('#party-join-code').fill(crowd_code);page.locator('[data-action="partyJoinRoom"]').click()
                     page.locator('#party-joined').wait_for(state='visible')
-                wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==8,'Party Room did not reach eight players')
+                wait(crowd_host,lambda:crowd_host.locator('#party-players li:not(.party-player-empty)').count()==8,'Party Room did not reach eight players')
                 for page in crowd:
                     wait(page,lambda p=page:p.evaluate('() => partyRoomState.room?.players?.length===8'),'An 8p client did not receive the full roster')
-                stage='party-8p-round';host.locator('#party-mode-nearest').click()
-                wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','8p mode selection did not update')
-                host.locator('#party-start-btn').click()
+                stage='party-8p-round';crowd_host.locator('#party-mode-nearest').click()
+                wait(crowd_host,lambda:crowd_host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','8p mode selection did not update')
+                crowd_host.locator('#party-start-btn').click()
                 for page in crowd: page.locator('#party-round').wait_for(state='visible')
-                crowd_round=host.evaluate('() => partyRoomState.room?.roundNumber')
+                crowd_round=crowd_host.evaluate('() => partyRoomState.room?.roundNumber')
                 answers=['Pikachu','Raichu','Bulbizarre','Salamèche','Carapuce','Roucool','Rattata','Chenipan']
                 for page,name in zip(crowd,answers):
                     page.locator('#party-guess').fill(name)
                     page.locator('#party-guess-ac > *').first.wait_for(state='visible');page.locator('#party-guess-ac > *').first.click()
                 for page in crowd: page.locator('#party-nearest-results').wait_for(state='visible')
-                host.screenshot(path=str(out/'party-8p-result.png'))
-                stage='party-8p-host-handoff';host.locator('[data-action="partyLeaveRoom"]:visible').first.click()
+                crowd_host.screenshot(path=str(out/'party-8p-result.png'))
+                stage='party-8p-host-handoff';crowd_host.locator('[data-action="partyLeaveRoom"]:visible').first.click()
                 new_host=crowd[1]
                 wait(new_host,lambda:new_host.evaluate('() => partyRoomState.room?.players?.length===7'),'8p host did not leave')
                 wait(new_host,lambda:new_host.evaluate('() => Boolean(partyRoomState.room?.players?.find(p=>p.isSelf)?.isHost)'),'8p host role was not transferred')
@@ -192,7 +201,6 @@ def main():
                 for page in crowd[1:]: page.evaluate('() => { if (typeof partyLeaveRoom === "function") partyLeaveRoom(); }')
                 for context in extra_contexts: context.close()
                 extra_contexts=[]
-
 
                 assert not errors,repr(errors)
                 result['ok']=True;result['clients']=8;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party shared result','party voluntary host handoff','party eight-player roster','party eight-player shared result','party campaign continues after host handoff','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat clash lobby host handoff','stat clash transferred room restart','stat auction live guest refresh','explicit leave paths']
