@@ -1038,60 +1038,267 @@ function accountNavigate(destination) {
 (function () {
   var SYNC_KEYS = ["profile", "stats", "achievements", "teamBuilder"];
   var SYNC_AT = "pokedle_sync_at";
+  var SYNC_OWNER = "pokedle_sync_owner_v2";
+  var CACHE_PREFIX = "pokedle_sync_cache_v2:";
+  var ANON_CACHE = "pokedle_sync_cache_v2:anonymous";
+  var LEGACY_BACKUP = "pokedle_sync_legacy_backup_v2";
+  var CONFLICT_PREFIX = "pokedle_sync_conflict_v2:";
   var loggedIn = false;
+  var activeAccountId = "";
+
   function storageKey(name) { return (typeof STORAGE_KEYS !== "undefined" && STORAGE_KEYS[name]) || null; }
-  function buildLocalBlob() {
-    var blob = { _savedAt: Date.now() };
+  function readItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function writeItem(key, value) { try { localStorage.setItem(key, value); return true; } catch (e) { return false; } }
+  function removeItem(key) { try { localStorage.removeItem(key); } catch (e) {} }
+  function parseBlob(raw) {
+    if (!raw) return null;
+    try {
+      var value = JSON.parse(raw);
+      return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    } catch (e) { return null; }
+  }
+  function hasContent(blob) {
+    return Boolean(blob && SYNC_KEYS.some(function (k) { return typeof blob[k] === "string"; }));
+  }
+  function sameContent(a, b) {
+    return SYNC_KEYS.every(function (k) {
+      return (typeof a?.[k] === "string" ? a[k] : null) === (typeof b?.[k] === "string" ? b[k] : null);
+    });
+  }
+  function snapshotLocal(accountId, savedAt) {
+    var blob = { _savedAt: Math.max(0, Number(savedAt) || 0) };
+    if (accountId) blob._accountId = String(accountId);
     SYNC_KEYS.forEach(function (k) {
       var sk = storageKey(k); if (!sk) return;
-      var v = null; try { v = localStorage.getItem(sk); } catch (e) {}
-      if (v != null) blob[k] = v;
+      var value = readItem(sk);
+      if (value != null) blob[k] = value;
     });
     return blob;
   }
-  function localSavedAt() { try { return Number(localStorage.getItem(SYNC_AT) || 0); } catch (e) { return 0; } }
-  function setLocalSavedAt(t) { try { localStorage.setItem(SYNC_AT, String(t)); } catch (e) {} }
-  function applyServerBlob(blob) {
+  function buildLocalBlob(accountId) {
+    return snapshotLocal(accountId, Date.now());
+  }
+  function localSavedAt() { return Math.max(0, Number(readItem(SYNC_AT) || 0)); }
+  function setLocalSavedAt(value) { writeItem(SYNC_AT, String(Math.max(0, Number(value) || 0))); }
+  function localOwner() { return String(readItem(SYNC_OWNER) || ""); }
+  function setLocalOwner(accountId) {
+    if (accountId) writeItem(SYNC_OWNER, String(accountId));
+    else removeItem(SYNC_OWNER);
+  }
+  function cacheKey(accountId) { return CACHE_PREFIX + encodeURIComponent(String(accountId)); }
+  function readAccountCache(accountId) {
+    var blob = parseBlob(readItem(cacheKey(accountId)));
+    return blob && String(blob._accountId || "") === String(accountId) ? blob : null;
+  }
+  function saveAccountCache(accountId, blob) {
+    if (!accountId || !blob) return;
+    var copy = Object.assign({}, blob, { _accountId: String(accountId) });
+    writeItem(cacheKey(accountId), JSON.stringify(copy));
+  }
+  function saveAnonymousCache(blob) {
+    if (!hasContent(blob)) return;
+    var copy = Object.assign({}, blob);
+    delete copy._accountId;
+    writeItem(ANON_CACHE, JSON.stringify(copy));
+  }
+  function readAnonymousCache() { return parseBlob(readItem(ANON_CACHE)); }
+  function backupOnce(key, blob) {
+    if (!hasContent(blob) || readItem(key)) return;
+    writeItem(key, JSON.stringify(blob));
+  }
+  function backupLegacy(blob) { backupOnce(LEGACY_BACKUP, blob); }
+  function backupConflict(accountId, blob) {
+    if (!accountId || !hasContent(blob)) return;
+    writeItem(CONFLICT_PREFIX + encodeURIComponent(String(accountId)), JSON.stringify(blob));
+  }
+  function applySyncedKeys(blob) {
     SYNC_KEYS.forEach(function (k) {
       var sk = storageKey(k); if (!sk) return;
-      if (typeof blob[k] === "string") { try { localStorage.setItem(sk, blob[k]); } catch (e) {} }
+      if (typeof blob?.[k] === "string") writeItem(sk, blob[k]);
+      else removeItem(sk);
     });
-    setLocalSavedAt(Number(blob._savedAt) || Date.now());
+  }
+  function applyAccountBlob(blob, accountId) {
+    applySyncedKeys(blob || {});
+    setLocalOwner(accountId);
+    setLocalSavedAt(Number(blob?._savedAt) || 0);
+  }
+  function applyAnonymousBlob(blob) {
+    applySyncedKeys(blob || {});
+    setLocalOwner("");
+    setLocalSavedAt(0);
+  }
+  function reloadAfterStorageSwitch() {
+    try { location.reload(); } catch (e) {}
+    return true;
+  }
+  function cacheActiveOwner() {
+    var owner = localOwner();
+    if (!owner) return;
+    saveAccountCache(owner, snapshotLocal(owner, Date.now()));
+  }
+  function switchToAnonymousIfNeeded() {
+    var owner = localOwner();
+    if (!owner) return false;
+    saveAccountCache(owner, snapshotLocal(owner, Date.now()));
+    var anonymous = readAnonymousCache();
+    applyAnonymousBlob(anonymous || {});
+    return reloadAfterStorageSwitch();
+  }
+  function activateAccount(accountId, server) {
+    accountId = String(accountId || "");
+    if (!accountId || String(server?._accountId || "") !== accountId) return { reload: false, ready: false };
+
+    var owner = localOwner();
+    var localAt = localSavedAt();
+    var local = snapshotLocal(owner, localAt);
+    var serverAt = Math.max(0, Number(server?._savedAt) || 0);
+    var serverHas = hasContent(server);
+
+    if (owner && owner !== accountId) {
+      saveAccountCache(owner, snapshotLocal(owner, Date.now()));
+      var cachedForAccount = readAccountCache(accountId);
+      var cachedAt = Math.max(0, Number(cachedForAccount?._savedAt) || 0);
+      var chosen = cachedForAccount && hasContent(cachedForAccount) && (!serverHas || cachedAt > serverAt)
+        ? cachedForAccount
+        : (serverHas ? server : { _savedAt: 0, _accountId: accountId });
+      applyAccountBlob(chosen, accountId);
+      if (hasContent(chosen)) saveAccountCache(accountId, chosen);
+      return { reload: reloadAfterStorageSwitch(), ready: true };
+    }
+
+    if (owner === accountId) {
+      if (serverHas && sameContent(local, server)) {
+        var confirmedAt = Math.max(localAt, serverAt);
+        setLocalSavedAt(confirmedAt);
+        saveAccountCache(accountId, Object.assign({}, server, { _savedAt: confirmedAt, _accountId: accountId }));
+        return { reload: false, ready: true };
+      }
+      if (serverHas && (serverAt > localAt || !hasContent(local))) {
+        if (hasContent(local) && !sameContent(local, server)) {
+          backupConflict(accountId, snapshotLocal(accountId, Date.now()));
+        }
+        applyAccountBlob(server, accountId);
+        saveAccountCache(accountId, server);
+        return { reload: reloadAfterStorageSwitch(), ready: true };
+      }
+      return { reload: false, ready: true };
+    }
+
+    // No owner marker yet: migrate pre-v2 storage conservatively.
+    var legacy = snapshotLocal("", localAt);
+    var legacyHas = hasContent(legacy);
+    var cached = readAccountCache(accountId);
+    if (cached && hasContent(cached)) {
+      if (legacyHas) {
+        if (localAt === 0) saveAnonymousCache(Object.assign({}, legacy, { _savedAt: Date.now() }));
+        else backupLegacy(legacy);
+      }
+      var cachedSavedAt = Math.max(0, Number(cached._savedAt) || 0);
+      var selected = serverHas && serverAt >= cachedSavedAt ? server : cached;
+      if (sameContent(legacy, selected)) {
+        setLocalOwner(accountId);
+        setLocalSavedAt(Math.max(serverAt, cachedSavedAt));
+        saveAccountCache(accountId, selected);
+        return { reload: false, ready: true };
+      }
+      applyAccountBlob(selected, accountId);
+      saveAccountCache(accountId, selected);
+      return { reload: reloadAfterStorageSwitch(), ready: true };
+    }
+
+    if (serverHas) {
+      if (legacyHas && sameContent(legacy, server)) {
+        setLocalOwner(accountId);
+        setLocalSavedAt(serverAt);
+        saveAccountCache(accountId, server);
+        return { reload: false, ready: true };
+      }
+      if (legacyHas && localAt > 0 && serverAt > 0 && localAt === serverAt) {
+        // Same previous sync point: local values may simply contain newer, unsent progress.
+        setLocalOwner(accountId);
+        saveAccountCache(accountId, Object.assign({}, legacy, { _accountId: accountId }));
+        return { reload: false, ready: true };
+      }
+      if (legacyHas) {
+        if (localAt === 0) saveAnonymousCache(Object.assign({}, legacy, { _savedAt: Date.now() }));
+        else backupLegacy(legacy);
+      }
+      applyAccountBlob(server, accountId);
+      saveAccountCache(accountId, server);
+      return { reload: reloadAfterStorageSwitch(), ready: true };
+    }
+
+    if (legacyHas && localAt === 0) {
+      // First authenticated account on an anonymous browser may safely claim anonymous progress.
+      setLocalOwner(accountId);
+      setLocalSavedAt(0);
+      return { reload: false, ready: true };
+    }
+    if (legacyHas) {
+      // Legacy synced data with no owner is ambiguous: preserve it, never upload it to a new account.
+      backupLegacy(legacy);
+      applyAccountBlob({ _savedAt: 0, _accountId: accountId }, accountId);
+      return { reload: reloadAfterStorageSwitch(), ready: true };
+    }
+
+    setLocalOwner(accountId);
+    setLocalSavedAt(0);
+    return { reload: false, ready: true };
   }
   function pushSync() {
-    if (!loggedIn) return;
-    var blob = buildLocalBlob();
-    var hasContent = SYNC_KEYS.some(function (k) { return blob[k]; });
-    if (!hasContent) return; // garde-fou : ne jamais écraser le compte avec du vide
-    setLocalSavedAt(blob._savedAt);
+    var accountId = activeAccountId;
+    if (!loggedIn || !accountId || localOwner() !== accountId) return Promise.resolve(false);
+    var blob = buildLocalBlob(accountId);
+    if (!hasContent(blob)) return Promise.resolve(false);
     try {
-      fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(blob) }).catch(function () {});
-    } catch (e) {}
+      return fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(blob)
+      }).then(function (response) {
+        return response.json().catch(function () { return null; }).then(function (data) {
+          if (!response.ok || !data?.ok) return false;
+          if (!loggedIn || activeAccountId !== accountId || localOwner() !== accountId) return false;
+          setLocalSavedAt(blob._savedAt);
+          saveAccountCache(accountId, blob);
+          return true;
+        });
+      }).catch(function () { return false; });
+    } catch (e) { return Promise.resolve(false); }
   }
   function initSync() {
     fetch("/api/me", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (me) {
-      if (!me || !me.user) return;
+      if (!me || !me.user) {
+        loggedIn = false;
+        activeAccountId = "";
+        switchToAnonymousIfNeeded();
+        return;
+      }
+      activeAccountId = String(me.user.id || "");
+      if (!activeAccountId) return;
       loggedIn = true;
       window.__pokedleAuthed = true;
-      fetch("/api/profile", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (resp) {
-        var server = (resp && resp.data) || {};
-        var serverAt = Number(server._savedAt) || 0;
-        var serverHas = SYNC_KEYS.some(function (k) { return typeof server[k] === "string"; });
-        if (serverHas && serverAt > localSavedAt() && sessionStorage.getItem("pokedle_synced") !== "1") {
-          applyServerBlob(server);
-          try { sessionStorage.setItem("pokedle_synced", "1"); } catch (e) {}
-          location.reload();
-          return;
-        }
-        pushSync();
+      fetch("/api/profile", { credentials: "same-origin" }).then(function (response) {
+        return response.json().catch(function () { return null; }).then(function (resp) {
+          if (!response.ok || !resp?.ok || !resp.data) return;
+          var server = resp.data;
+          if (String(server._accountId || "") !== activeAccountId) return;
+          var activation = activateAccount(activeAccountId, server);
+          if (!activation.ready || activation.reload) return;
+          pushSync();
+        });
       }).catch(function () {});
     }).catch(function () {});
-    setInterval(pushSync, 60000);
+    setInterval(function () { pushSync(); }, 60000);
     window.addEventListener("pagehide", function () {
-      if (!loggedIn) return;
+      if (!loggedIn || !activeAccountId || localOwner() !== activeAccountId) return;
       try {
-        var blob = buildLocalBlob();
-        if (SYNC_KEYS.some(function (k) { return blob[k]; }) && navigator.sendBeacon) {
+        var blob = buildLocalBlob(activeAccountId);
+        if (!hasContent(blob)) return;
+        saveAccountCache(activeAccountId, blob);
+        if (navigator.sendBeacon) {
           navigator.sendBeacon("/api/profile", new Blob([JSON.stringify(blob)], { type: "application/json" }));
         }
       } catch (e) {}
@@ -1099,7 +1306,7 @@ function accountNavigate(destination) {
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSync);
   else initSync();
-})();
+});
 
 // Public leaderboards are event-driven. Historical local profile records are deliberately
 // not bulk-uploaded: localStorage/playerProfile is user-controlled and is not evidence of
