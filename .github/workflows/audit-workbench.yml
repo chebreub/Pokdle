@@ -1,0 +1,55 @@
+name: Audit workbench
+on:
+  push:
+    branches: [work/audit-consolidation]
+    paths: ['.audit/**', 'tools/browser_quality.py', '.github/workflows/audit-workbench.yml']
+permissions:
+  contents: write
+concurrency:
+  group: audit-workbench
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/audit-consolidation
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: App/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright==1.55.0
+      - run: python -m playwright install --with-deps chromium
+      - run: npm ci
+        working-directory: App
+      - name: Reference screenshots and browser diagnostics
+        run: python tools/browser_quality.py --output quality-artifacts/before --record-only
+      - name: Apply reviewed source edits on this branch only
+        run: |
+          if [ -f .audit/apply.py ]; then python .audit/apply.py; fi
+      - run: npm run build && npm test
+        working-directory: App
+      - name: Candidate screenshots and browser diagnostics
+        run: python tools/browser_quality.py --output quality-artifacts/after --record-only
+      - name: Commit generated source edits to the work branch
+        run: |
+          git add App tools docs
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Apply reviewed Pokdle audit corrections'
+            git push origin HEAD:work/audit-consolidation
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-evidence-${{ github.run_number }}
+          path: quality-artifacts/
+          retention-days: 14
