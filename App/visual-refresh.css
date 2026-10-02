@@ -114,7 +114,7 @@
 #pokdle-app.design-refresh :is(.ac-item:hover, .ac-item.hl, .tc-ac-item:hover, .tc-ac-item:focus-visible, .rank-candidate:hover, .rank-candidate.hl) { background: var(--ui-accent-soft) !important; color: var(--ui-ink) !important; }
 
 /* Header, footer and mobile navigation use the same selected theme as the page. */
-#pokdle-app.design-refresh header { background: var(--header-bg) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: 0 3px 16px rgb(30 65 100 / 8%) !important; padding: 14px 0 !important; }
+#pokdle-app.design-refresh > header { background: var(--header-bg) !important; border-bottom: 1px solid var(--ui-line) !important; box-shadow: 0 3px 16px rgb(30 65 100 / 8%) !important; padding: 14px 0 !important; }
 #pokdle-app.design-refresh .header-inner { max-width: 1440px !important; margin: 0 auto !important; padding: 0 32px !important; width: 100% !important; }
 #pokdle-app.design-refresh header .logo-row h1 { color: var(--ui-ink) !important; font-size: 1.65rem !important; letter-spacing: -.04em; }
 #pokdle-app.design-refresh .pokeball-icon { box-shadow: none !important; border: 1px solid #17253d; }
@@ -147,6 +147,13 @@
 #pokdle-app.design-refresh #account-area .account-login { background: #5865f2 !important; border: 1px solid #5865f2 !important; color: #fff !important; border-radius: 12px; box-shadow: none !important; }
 #pokdle-app.design-refresh .nav-dropdown button { color: var(--ui-ink) !important; font: 500 .875rem Inter, sans-serif !important; }
 #pokdle-app.design-refresh .nav-dropdown button:hover { background: var(--ui-accent-soft) !important; }
+
+/* Header layout is theme-independent; only its colors change. */
+@media (min-width:641px) and (max-width:1100px) {
+ #pokdle-app.design-refresh > header .header-top { display:flex !important; flex-wrap:wrap !important; align-items:center; gap:10px !important; min-width:0; }
+ #pokdle-app.design-refresh > header #global-nav { order:3; flex:1 0 100%; width:100%; min-width:0; justify-content:center; }
+ #pokdle-app.design-refresh > header .header-actions { margin-left:auto; min-width:0; max-width:100%; flex-wrap:wrap; }
+}
 
 /* Home: one featured daily challenge, then clearly separated game families. */
 #pokdle-app.design-refresh #screen-config { gap: 28px !important; background: transparent !important; }
@@ -1247,7 +1254,7 @@
     0 0 0 12px color-mix(in srgb,var(--art-accent) 3%,transparent),
     inset 0 0 0 1px rgba(255,255,255,.45);
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art img {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > img {
   position:absolute;
   z-index:2;
   width:52px;
@@ -1258,14 +1265,14 @@
   image-rendering:auto;
   filter:drop-shadow(0 7px 7px rgba(22,44,78,.13));
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(2) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > img:nth-of-type(2) {
   width:39px;
   height:39px;
   right:35px;
   bottom:0;
   opacity:.92;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(3) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > img:nth-of-type(3) {
   width:35px;
   height:35px;
   right:0;
@@ -1288,10 +1295,10 @@
   white-space:nowrap;
   opacity:.68;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-mystery img {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-mystery > img {
   filter:brightness(0) opacity(.48) drop-shadow(0 7px 7px rgba(22,44,78,.18));
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-pixel img {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-pixel > img {
   image-rendering:pixelated;
   filter:saturate(.82) contrast(1.08) drop-shadow(0 6px 5px rgba(22,44,78,.12));
 }
@@ -1307,31 +1314,31 @@
   box-shadow:0 0 8px var(--art-accent);
   opacity:.55;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) img:nth-of-type(1) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) > img:nth-of-type(1) {
   width:45px;
   height:45px;
   right:18px;
   bottom:16px;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) img:nth-of-type(2) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) > img:nth-of-type(2) {
   right:38px;
   bottom:-1px;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) img:nth-of-type(3) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art:is(.art-team,.art-party,.art-dex,.art-podium) > img:nth-of-type(3) {
   right:0;
   bottom:-1px;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-duel img:nth-of-type(1),
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-versus img:nth-of-type(1),
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-types img:nth-of-type(1) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-duel > img:nth-of-type(1),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-versus > img:nth-of-type(1),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-types > img:nth-of-type(1) {
   width:47px;
   height:47px;
   right:30px;
   bottom:4px;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-duel img:nth-of-type(2),
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-versus img:nth-of-type(2),
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-types img:nth-of-type(2) {
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-duel > img:nth-of-type(2),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-versus > img:nth-of-type(2),
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-types > img:nth-of-type(2) {
   width:43px;
   height:43px;
   right:0;
@@ -1394,7 +1401,7 @@
   background:color-mix(in srgb,var(--art-accent) 5%,transparent);
   box-shadow:0 0 0 15px color-mix(in srgb,var(--art-accent) 3%,transparent);
 }
-#pokdle-app.design-refresh .club-pick .mode-card-art img {
+#pokdle-app.design-refresh .club-pick .mode-card-art > img {
   position:absolute;
   z-index:2;
   right:8px;
@@ -1404,13 +1411,13 @@
   object-fit:contain;
   filter:drop-shadow(0 12px 10px rgba(21,43,76,.15));
 }
-#pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(2) {
+#pokdle-app.design-refresh .club-pick .mode-card-art > img:nth-of-type(2) {
   width:56px;
   height:56px;
   right:52px;
   top:58px;
 }
-#pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(3) {
+#pokdle-app.design-refresh .club-pick .mode-card-art > img:nth-of-type(3) {
   width:52px;
   height:52px;
   right:0;
@@ -1426,7 +1433,7 @@
   font-weight:1000;
   opacity:.62;
 }
-#pokdle-app.design-refresh .club-pick .mode-card-art.art-mystery img {
+#pokdle-app.design-refresh .club-pick .mode-card-art.art-mystery > img {
   filter:brightness(0) opacity(.5) drop-shadow(0 12px 10px rgba(21,43,76,.16));
 }
 
@@ -1436,12 +1443,12 @@
     radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--mode-art-accent,#5d91e9) 10%,transparent),transparent 38%),
     #132440 !important;
 }
-#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-card-art img,
-#pokdle-app.design-refresh.theme-dark .club-pick .mode-card-art img {
+#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-card-art > img,
+#pokdle-app.design-refresh.theme-dark .club-pick .mode-card-art > img {
   filter:drop-shadow(0 8px 8px rgba(0,0,0,.24));
 }
-#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-card-art.art-mystery img,
-#pokdle-app.design-refresh.theme-dark .club-pick .mode-card-art.art-mystery img {
+#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-card-art.art-mystery > img,
+#pokdle-app.design-refresh.theme-dark .club-pick .mode-card-art.art-mystery > img {
   filter:brightness(0) invert(.88) opacity(.38);
 }
 
@@ -1456,7 +1463,7 @@
     width:66px;
     height:66px;
   }
-  #pokdle-app.design-refresh #screen-all-modes .mode-card-art img {
+  #pokdle-app.design-refresh #screen-all-modes .mode-card-art > img {
     width:45px;
     height:45px;
   }
@@ -1475,14 +1482,14 @@
     height:74px;
     right:-12px;
   }
-  #pokdle-app.design-refresh .club-pick .mode-card-art img {
+  #pokdle-app.design-refresh .club-pick .mode-card-art > img {
     width:58px;
     height:58px;
     right:4px;
     top:14px;
   }
-  #pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(2),
-  #pokdle-app.design-refresh .club-pick .mode-card-art img:nth-of-type(3) {
+  #pokdle-app.design-refresh .club-pick .mode-card-art > img:nth-of-type(2),
+  #pokdle-app.design-refresh .club-pick .mode-card-art > img:nth-of-type(3) {
     width:38px;
     height:38px;
     top:48px;
@@ -1699,7 +1706,7 @@
 #pokdle-app.design-refresh .club-pick .mode-card-art > b{
   display:none;
 }
-#pokdle-app.design-refresh .club-pick .mode-card-art img{
+#pokdle-app.design-refresh .club-pick .mode-card-art > img{
   top:10px;
   right:5px;
   width:78px;
@@ -1760,26 +1767,26 @@
 #pokdle-app.design-refresh #screen-all-modes .mode-card-art > b{
   display:none;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art img{
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > img{
   right:5px;
   bottom:4px;
   width:58px;
   height:58px;
   filter:drop-shadow(0 6px 7px rgb(22 44 78 / 12%));
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(2){
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > img:nth-of-type(2){
   width:38px;
   height:38px;
   right:32px;
   bottom:0;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art img:nth-of-type(3){
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art > img:nth-of-type(3){
   width:35px;
   height:35px;
   right:0;
   bottom:0;
 }
-#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-mystery img{
+#pokdle-app.design-refresh #screen-all-modes .mode-card-art.art-mystery > img{
   filter:brightness(0) opacity(.4) drop-shadow(0 6px 7px rgb(22 44 78 / 14%));
 }
 

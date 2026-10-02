@@ -35,7 +35,9 @@ def main():
     def screen(expected):
      page.locator('#'+expected).wait_for(state='visible')
      state=page.evaluate('''() => ({visible:[...document.querySelectorAll('main > [id^="screen-"]')].filter(e=>getComputedStyle(e).display!=='none').map(e=>e.id),overflow:document.documentElement.scrollWidth-innerWidth})''')
-     expect(state['visible']==[expected],f'Unexpected visible screens: {state}');expect(state['overflow']<=2,f'Horizontal overflow: {state}');return state
+     expect(state['visible']==[expected],f'Unexpected visible screens: {state}')
+     if state['overflow']>2: state['offenders']=page.evaluate("[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().width && e.getBoundingClientRect().right>innerWidth+2).slice(0,8).map(e=>({tag:e.tagName,id:e.id,cls:String(e.className),right:e.getBoundingClientRect().right}))")
+     expect(state['overflow']<=2,f'Horizontal overflow: {state}');return state
     def nav(tab,expected):
      ids={'home':'#nav-config','game':'#nav-game','pokedex':'#nav-collection','profile':'#nav-profile','social':'#nav-social'}
      page.locator(f'#mobile-tabbar [data-tab="{tab}"]' if width<=640 else ids[tab]).click();return screen(expected)
@@ -114,7 +116,14 @@ def main():
      nav('home','screen-config');page.route('**/api/leaderboard?*',lambda r:r.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':False,'top':[],'me':None,'total':0})));page.evaluate('openLeaderboardV2("daily","today")');page.wait_for_timeout(800);text=page.locator('#overlay-body').inner_text();expect('indisponible' in text.lower(),'Failure rendered as an empty ranking: '+text[:180]);page.evaluate('closeOverlayModal()');page.unroute('**/api/leaderboard?*')
     check('ranking-error',ranking_error)
     def late():
-     page.unroute('**/api/leaderboard?*');page.route('**/api/leaderboard?*',lambda r:r.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':True,'top':[],'me':None,'total':0})));page.evaluate('openLeaderboardV2("daily","today"); closeOverlayModal();');page.wait_for_timeout(700);expect(not page.locator('#overlay-modal').is_visible(),'Late response reopened closed dialog');page.unroute('**/api/leaderboard?*')
+     page.unroute('**/api/leaderboard?*');pending=[]
+     page.route('**/api/leaderboard?*',lambda r:pending.append(r))
+     page.evaluate('void openLeaderboardV2("daily","today")');page.wait_for_timeout(200)
+     expect(bool(pending),'No request was started')
+     page.evaluate('closeOverlayModal()')
+     for route in pending:route.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':True,'top':[],'me':None,'total':0}))
+     page.wait_for_timeout(150);expect(not page.locator('#overlay-modal').is_visible(),'Late response reopened closed dialog')
+     page.unroute('**/api/leaderboard?*')
     check('ranking-closed',late)
     def dark():
      nav('home','screen-config');page.evaluate("document.body.classList.add('theme-dark')");return screen('screen-config')

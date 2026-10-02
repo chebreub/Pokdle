@@ -3,6 +3,17 @@
 const LIVE_RANK_CACHE = new Map();
 const LIVE_RANK_TTL = 12000;
 const LIVE_RANK_MILESTONES = new Set();
+let liveRankCurrentScope = "";
+function liveRankCacheScope() {
+  const account = typeof leaderboardAccountId === "function" ? leaderboardAccountId() : "";
+  const day = typeof leaderboardTodayKey === "function" ? leaderboardTodayKey() : new Date().toISOString().slice(0,10);
+  const scope = account+":"+day;
+  if (scope !== liveRankCurrentScope) {
+    LIVE_RANK_CACHE.clear(); LIVE_RANK_MILESTONES.clear(); liveRankCurrentScope=scope;
+  }
+  return scope;
+}
+
 
 function liveRankModeMeta(mode) {
   if (typeof leaderboardV2ModeMeta === "function") return leaderboardV2ModeMeta(mode);
@@ -14,21 +25,19 @@ function liveRankFormat(score, mode, unit) {
 }
 function liveRankFetch(mode, force=false) {
   if (!mode) return Promise.resolve(null);
-  const cached=LIVE_RANK_CACHE.get(mode);
-  const now=Date.now();
-  if (!force && cached?.data && now-cached.at<LIVE_RANK_TTL) return Promise.resolve(cached.data);
+  const scope=liveRankCacheScope(), cached=LIVE_RANK_CACHE.get(mode), now=Date.now();
   if (!force && cached?.promise) return cached.promise;
-  const promise=fetch("/api/leaderboard?mode="+encodeURIComponent(mode)+"&scope=today",{credentials:"same-origin"})
-    .then(r=>r.json())
-    .then(data=>{
-      const row={data:data?.ok?data:null,at:Date.now(),promise:null};
-      LIVE_RANK_CACHE.set(mode,row);
-      return row.data;
-    })
-    .catch(()=>{
-      LIVE_RANK_CACHE.set(mode,{data:cached?.data||null,at:cached?.at||0,promise:null});
-      return cached?.data||null;
-    });
+  if (!force && cached && now-cached.at<LIVE_RANK_TTL) return Promise.resolve(cached.data);
+  const url="/api/leaderboard?mode="+encodeURIComponent(mode)+"&scope=today";
+  const request=typeof leaderboardFetchJson === "function" ? leaderboardFetchJson(url)
+    : fetch(url,{credentials:"same-origin"}).then(r=>r.json()).then(d=>{if(!d?.ok)throw Error("unavailable");return d;});
+  const promise=request.then(data=>{
+    if (scope!==liveRankCacheScope()) return null;
+    LIVE_RANK_CACHE.set(mode,{data,at:Date.now(),promise:null});return data;
+  }).catch(()=>{
+    if (scope===liveRankCacheScope()) LIVE_RANK_CACHE.set(mode,{data:null,at:Date.now(),promise:null});
+    return null;
+  });
   LIVE_RANK_CACHE.set(mode,{data:cached?.data||null,at:cached?.at||0,promise});
   return promise;
 }
@@ -149,26 +158,28 @@ function renderLiveRankHud(screenId,mode,currentOverride=null) {
   const meta=liveRankModeMeta(mode);
   const current=currentOverride||liveRankCurrentContext(mode);
   const personal=liveRankPersonalBest(mode);
-  const cached=LIVE_RANK_CACHE.get(mode)?.data||null;
-  const paint=(data)=>{
-    if (!hud.isConnected||hud.dataset.mode!==mode) return;
+  const scope=liveRankCacheScope();
+  const cache=LIVE_RANK_CACHE.get(mode);
+  const cached=cache?.data||null;
+  const paint=(data,status="ready")=>{
+    if (!hud.isConnected||hud.dataset.mode!==mode||scope!==liveRankCacheScope()) return;
     const me=data?.me||null;
     const goalCopy=data ? liveRankGoalCopy(data,mode,current.score) : {tone:"muted",text:"Classement en attente de confirmation."};
     const rankText=me?"#"+Number(me.rank):"—";
-    const todayText=me?liveRankFormat(me.score,mode,data.unit||meta.unit):data?"Non classé":"Indisponible";
+    const todayText=me?liveRankFormat(me.score,mode,data.unit||meta.unit):data?"Non classé":status==="loading"?"Chargement…":"Indisponible";
     const currentText=current.score>0?liveRankFormat(current.score,mode,data?.unit||meta.unit):"—";
     const recordText=personal>0?liveRankFormat(personal,mode,data?.unit||meta.unit):"—";
     hud.innerHTML=
       '<div class="live-rank-mark"><svg aria-hidden="true"><use href="#i-trophy"/></svg></div>'+
       '<div class="live-rank-primary"><span>CLASSEMENT DU JOUR</span><div><strong>'+rankText+'</strong><b>'+escapeHtml(todayText)+'</b></div></div>'+
       '<div class="live-rank-stat"><span>'+escapeHtml(current.label)+'</span><strong>'+escapeHtml(currentText)+'</strong></div>'+
-      '<div class="live-rank-stat live-rank-record"><span>Record perso</span><strong>'+escapeHtml(recordText)+'</strong></div>'+
+      '<div class="live-rank-stat live-rank-record"><span>Record local</span><strong>'+escapeHtml(recordText)+'</strong></div>'+
       '<div class="live-rank-goal is-'+goalCopy.tone+'"><span>OBJECTIF</span><b>'+escapeHtml(goalCopy.text)+'</b></div>'+
       '<button type="button" class="live-rank-open" data-action="openLeaderboardV2" data-args=\'["'+escapeHtml(mode)+'","today"]\'>Classement →</button>';
     maybeCelebrateLiveRankGoal(mode,data,current.score);
   };
-  paint(cached);
-  liveRankFetch(mode).then(paint);
+  paint(cached,cache?"ready":"loading");
+  liveRankFetch(mode).then(data=>paint(data,data?"ready":"error"));
 }
 function refreshDailyLiveRank(force=false) {
   if (typeof gameMode==="undefined"||gameMode!=="daily") return;

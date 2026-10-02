@@ -44,13 +44,24 @@ test('empty successful boards remain a valid empty state',async()=>{
  const f=fixture();await f.env.openLeaderboardV2('daily','today');assert.match(f.html,/Pas encore de performance ici/);assert.doesNotMatch(f.html,/indisponible/);
 });
 test('a late successful response cannot reopen a closed dialog',async()=>{
- const f=fixture(),d=deferred();f.env.fetch=async()=>{await d.promise;return {ok:true,json:async()=>({ok:true,top:[]})};};
- const p=f.env.openLeaderboardV2('daily','today');await Promise.resolve();f.close();d.resolve();await p;assert.equal(f.overlay.hidden,true);
+ const f=fixture(),d=deferred(),started=deferred();f.env.fetch=async()=>{started.resolve();await d.promise;return {ok:true,json:async()=>({ok:true,top:[]})};};
+ const p=f.env.openLeaderboardV2('daily','today');await started.promise;f.close();d.resolve();await p;assert.equal(f.overlay.hidden,true);
 });
 test('a late error cannot replace a different modal',async()=>{
- const f=fixture(),d=deferred();f.env.fetch=async()=>{await d.promise;throw new Error('offline');};
- const p=f.env.openLeaderboardV2('daily','today');await Promise.resolve();f.replaceModal();d.resolve();await p;assert.equal(f.html,'other');
+ const f=fixture(),d=deferred(),started=deferred();f.env.fetch=async()=>{started.resolve();await d.promise;throw new Error('offline');};
+ const p=f.env.openLeaderboardV2('daily','today');await started.promise;f.replaceModal();d.resolve();await p;assert.equal(f.html,'other');
 });
 test('connected users without rank never receive the disconnected instruction',()=>{
  const f=fixture();assert.doesNotMatch(f.env.leaderboardUnrankedCopy(true,true),/Connecte-toi/);assert.match(f.env.leaderboardUnrankedCopy(false,false),/Connecte-toi/);
+});
+
+test('newer leaderboard requests own the final modal even when the older response arrives last',async()=>{
+ const f=fixture(),old=deferred(),started=deferred();
+ f.env.fetch=async(url)=>{
+  if(url.includes('mode=daily')){started.resolve();await old.promise;return {ok:true,json:async()=>({ok:true,label:'OLD DAILY',top:[]})};}
+  return {ok:true,json:async()=>({ok:true,label:'LATEST QUIZ',top:[]})};
+ };
+ const stale=f.env.openLeaderboardV2('daily','today');await started.promise;
+ await f.env.openLeaderboardV2('quiz','week');old.resolve();await stale;
+ assert.match(f.html,/LATEST QUIZ/);assert.doesNotMatch(f.html,/OLD DAILY/);
 });

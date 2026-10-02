@@ -60,6 +60,11 @@ async function leaderboardFetchJson(url, options = {}) {
     if (timer !== null) clearTimeout(timer);
   }
 }
+function leaderboardWaitForSync(promise) {
+  let timer;
+  return Promise.race([Promise.resolve(promise),new Promise(resolve=>{timer=setTimeout(()=>resolve(false),5000);})])
+    .finally(()=>clearTimeout(timer));
+}
 function leaderboardAccountId() {
   return typeof connectedAccountUser !== "undefined" && connectedAccountUser?.id
     ? String(connectedAccountUser.id) : "";
@@ -109,6 +114,7 @@ function syncPendingDailyLeaderboard() {
   if (dailyLeaderboardInFlight.has(key)) return dailyLeaderboardInFlight.get(key);
   const request = submitLeaderboardResult("daily",score,{dailyKey:day,resultId:"daily:"+day}).then(ok => {
     if (ok && leaderboardAccountId() === account && leaderboardTodayKey() === day) {
+      if (typeof LIVE_RANK_CACHE !== "undefined") LIVE_RANK_CACHE.delete("daily");
       try { localStorage.setItem(key,String(score)); } catch (_e) {}
     }
     return ok;
@@ -188,7 +194,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
 
   const syncTasks=[];
   if (current==="daily") syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
-  if (leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function") syncTasks.push(Promise.resolve(submitLeaderboardScores()).catch(()=>false));
+  if (leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function") syncTasks.push(leaderboardWaitForSync(submitLeaderboardScores()).catch(()=>false));
   const syncPromise=syncTasks.length ? Promise.all(syncTasks) : Promise.resolve([]);
 
   return syncPromise.then(()=>{
