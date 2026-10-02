@@ -607,6 +607,7 @@ const FETCH_TIMEOUT_MS = 8000;
 const RATE_LIMIT_WINDOW_MS = 10_000;
 const RATE_LIMITS = {
   "room-join":   { max: 5,  windowMs: 30_000 },
+  "resume":      { max: 8,  ipMax: 40, windowMs: RATE_LIMIT_WINDOW_MS },
   "guess":       { max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
   "pick":        { max: 6,  windowMs: RATE_LIMIT_WINDOW_MS },
   "action":      { max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
@@ -1899,7 +1900,7 @@ io.on("connection", (socket) => {
 
   socket.on("duel:resume", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "resume")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
       const code = sanitizeRoomCode(payload.code);
       const token = String(payload.resumeToken || "").trim().slice(0, 96);
       const room = rooms.get(code);
@@ -2049,7 +2050,7 @@ io.on("connection", (socket) => {
 
   socket.on("party:resume", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "resume")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
       const code = sanitizeRoomCode(payload.code);
       const token = String(payload.resumeToken || "").trim().slice(0, 96);
       const room = partyRooms.get(code);
@@ -2617,7 +2618,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-clash:resume", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes." });
+      if (checkRateLimit(socket, "resume")) return respond(ack, { ok: false, error: "Trop de requêtes." });
       const code = sanitizeRoomCode(payload.code);
       const token = String(payload.resumeToken || "").trim().slice(0, 96);
       const room = statClashRooms.get(code);
@@ -3289,7 +3290,7 @@ io.on("connection", (socket) => {
 
   socket.on("stat-auction:resume", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes." });
+      if (checkRateLimit(socket, "resume")) return respond(ack, { ok: false, error: "Trop de requêtes." });
       const code = sanitizeRoomCode(payload.code);
       const token = String(payload.resumeToken || "").trim().slice(0, 96);
       const room = statAuctionRooms.get(code);
