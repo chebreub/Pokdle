@@ -1042,11 +1042,15 @@ function getStoredStatClashSession() {
 function saveStatClashSession(code, nickname, resumeToken) {
   if (!code || !nickname || !resumeToken) return;
   try {
+    const normalizedCode = String(code).toUpperCase();
+    const normalizedToken = String(resumeToken);
+    const previous = JSON.parse(sessionStorage.getItem(STAT_CLASH_SESSION_STORAGE_KEY) || "null");
+    const sameSession = previous?.code === normalizedCode && previous?.resumeToken === normalizedToken;
     sessionStorage.setItem(STAT_CLASH_SESSION_STORAGE_KEY, JSON.stringify({
-      code: String(code).toUpperCase(),
+      code: normalizedCode,
       nickname: String(nickname),
-      resumeToken: String(resumeToken),
-      ts: Date.now(),
+      resumeToken: normalizedToken,
+      ts: sameSession ? (Number(previous.ts) || Date.now()) : Date.now(),
     }));
   } catch (_error) { /* stockage indisponible */ }
 }
