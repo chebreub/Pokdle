@@ -207,6 +207,7 @@ function startDailyGame() {
   const pool = POKEMON_LIST.slice();
   const secret = getDailyPokemon();
   startGameWithSecret(secret, pool, { dailyKey: getUTCDateKey() });
+  syncDailyObservedState();
 }
 
 function startSilhouetteGame() {

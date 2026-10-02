@@ -363,6 +363,28 @@ function serverDailyPokemon(day = dailyUtcKey()) {
   const rng = dailyMulberry32(dailyHashString("pokedle:" + day));
   return pool[Math.floor(rng() * pool.length)];
 }
+// Existing Daily rows store normalized names; new rows use stable Pokemon IDs.
+function dailyStoredPokemon(key) {
+  if (String(key).startsWith("id:")) {
+    const id = Number(String(key).slice(3));
+    return POKEMON_LIST.find((pokemon) => Number(pokemon?.id) === id) || null;
+  }
+  return POKEMON_BY_NORMALIZED_NAME.get(String(key)) || null;
+}
+function dailySessionSnapshot(row, user, day) {
+  const guessed = Array.isArray(row?.guessed) ? row.guessed.map(dailyStoredPokemon) : [];
+  const attempts = Number(row?.attempts);
+  if (!Number.isInteger(attempts) || attempts < 0 || guessed.length !== attempts || guessed.some((pokemon) => !pokemon)) throw new Error("Invalid stored Daily history");
+  const config = leaderboardConfig("daily");
+  return { day, accountId: String(user.id), attempts, guessed: guessed.map((pokemon) => pokemon.name),
+    finished: Boolean(row.finished), ranked: Boolean(row.finished) && Boolean(config) && attempts <= Number(config.max) };
+}
+function validateDailyContext(req, res, user, day) {
+  if (req.body?.day !== day) { res.status(409).json({ ok: false, error: "stale_daily" }); return false; }
+  if (req.body?.accountId !== String(user.id)) { res.status(409).json({ ok: false, error: "account_changed" }); return false; }
+  return true;
+}
+
 async function getOrCreateDailySession(userId, day) {
   await pgPool.query(
     `INSERT INTO daily_sessions (discord_id, day) VALUES ($1, $2)
@@ -373,7 +395,8 @@ async function getOrCreateDailySession(userId, day) {
     "SELECT attempts, guessed, finished FROM daily_sessions WHERE discord_id=$1 AND day=$2",
     [userId, day]
   );
-  return result.rows[0] || { attempts: 0, guessed: [], finished: false };
+  if (!result.rows[0]) throw new Error("Missing Daily session");
+  return result.rows[0];
 }
 
 app.post("/api/daily/session", express.json({ limit: "2kb" }), async (req, res) => {
@@ -381,9 +404,10 @@ app.post("/api/daily/session", express.json({ limit: "2kb" }), async (req, res) 
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "authentication_required" });
   const day = dailyUtcKey();
+  if (!validateDailyContext(req, res, user, day)) return;
   try {
     const state = await getOrCreateDailySession(user.id, day);
-    res.json({ ok: true, day, attempts: Number(state.attempts) || 0, finished: Boolean(state.finished) });
+    res.json({ ok: true, ...dailySessionSnapshot(state, user, day) });
   } catch (error) {
     console.error("[daily] session:", error.message);
     res.status(503).json({ ok: false, error: "storage_unavailable" });
@@ -395,16 +419,18 @@ app.post("/api/daily/guess", express.json({ limit: "2kb" }), async (req, res) =>
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "authentication_required" });
   const day = dailyUtcKey();
+  if (!validateDailyContext(req, res, user, day)) return;
   const rawName = typeof req.body?.name === "string" ? req.body.name.trim() : "";
   if (!rawName || rawName.length > 80) return res.status(400).json({ ok: false, error: "invalid_guess" });
   const normalized = normalizeName(rawName);
-  const pokemon = POKEMON_BY_NORMALIZED_NAME.get(normalized);
+  const pokemon = POKEMON_LIST.find((entry) => entry?.name === rawName) || POKEMON_BY_NORMALIZED_NAME.get(normalized);
   if (!pokemon || pokemon.isAltForm || Number(pokemon.id) >= 20000) {
     return res.status(400).json({ ok: false, error: "invalid_guess" });
   }
 
-  const client = await pgPool.connect();
+  let client;
   try {
+    client = await pgPool.connect();
     await client.query("BEGIN");
     await client.query(
       `INSERT INTO daily_sessions (discord_id, day) VALUES ($1, $2)
@@ -415,19 +441,24 @@ app.post("/api/daily/guess", express.json({ limit: "2kb" }), async (req, res) =>
       "SELECT attempts, guessed, finished FROM daily_sessions WHERE discord_id=$1 AND day=$2 FOR UPDATE",
       [user.id, day]
     );
-    const row = locked.rows[0] || { attempts: 0, guessed: [], finished: false };
+    if (day !== dailyUtcKey()) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ ok: false, error: "stale_daily" });
+    }
+    const row = locked.rows[0];
+    if (!row) throw new Error("Missing locked Daily session");
     const guessed = Array.isArray(row.guessed) ? row.guessed.map(String) : [];
     if (row.finished) {
       await client.query("ROLLBACK");
-      return res.status(409).json({ ok: false, error: "daily_finished", attempts: Number(row.attempts) || 0 });
+      return res.status(409).json({ ok: false, error: "daily_finished", ...dailySessionSnapshot(row, user, day) });
     }
-    if (guessed.includes(normalized)) {
+    if (guessed.some((key) => Number(dailyStoredPokemon(key)?.id) === Number(pokemon.id))) {
       await client.query("ROLLBACK");
-      return res.status(409).json({ ok: false, error: "duplicate_guess", attempts: Number(row.attempts) || 0 });
+      return res.status(409).json({ ok: false, error: "duplicate_guess", ...dailySessionSnapshot(row, user, day) });
     }
 
     const attempts = (Number(row.attempts) || 0) + 1;
-    guessed.push(normalized);
+    guessed.push("id:" + Number(pokemon.id));
     const correct = Number(pokemon.id) === Number(serverDailyPokemon(day).id);
     const config = leaderboardConfig("daily");
     if (!config) throw new Error("Daily leaderboard config unavailable");
@@ -439,14 +470,19 @@ app.post("/api/daily/guess", express.json({ limit: "2kb" }), async (req, res) =>
     if (ranked) {
       await recordLeaderboardResultInTransaction(client, user, "daily", attempts, config, "daily:" + day);
     }
+    if (day !== dailyUtcKey()) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ ok: false, error: "stale_daily" });
+    }
+    const snapshot = dailySessionSnapshot({ attempts, guessed, finished: correct }, user, day);
     await client.query("COMMIT");
-    res.json({ ok: true, day, attempts, correct, ranked });
+    res.json({ ok: true, ...snapshot, correct, ranked });
   } catch (error) {
-    try { await client.query("ROLLBACK"); } catch (_rollbackError) {}
+    if (client) { try { await client.query("ROLLBACK"); } catch (_rollbackError) {} }
     console.error("[daily] guess:", error.message);
     res.status(503).json({ ok: false, error: "storage_unavailable" });
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 
