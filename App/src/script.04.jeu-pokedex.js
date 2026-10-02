@@ -1411,7 +1411,78 @@ function openAllModesScreen(category) {
 })();
 
 /* Party Room L1 - lobby multijoueur (2-8) */
-var partyRoomState = { code: null, room: null, listenersBound: false };
+var partyRoomState = { code: null, room: null, listenersBound: false, resumeToken: null, nickname: "", reconnecting: false };
+var PARTY_SESSION_STORAGE_KEY = "pokedle_party_session_v1";
+var PARTY_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
+
+function getStoredPartySession() {
+  try {
+    var saved = JSON.parse(sessionStorage.getItem(PARTY_SESSION_STORAGE_KEY) || "null");
+    if (!saved || !saved.code || !saved.resumeToken || !saved.nickname) return null;
+    if (Date.now() - (Number(saved.ts) || 0) > PARTY_SESSION_TTL_MS) {
+      sessionStorage.removeItem(PARTY_SESSION_STORAGE_KEY);
+      return null;
+    }
+    return saved;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function savePartySession(code, nickname, resumeToken) {
+  if (!code || !nickname || !resumeToken) return;
+  partyRoomState.resumeToken = resumeToken;
+  partyRoomState.nickname = nickname;
+  try {
+    sessionStorage.setItem(PARTY_SESSION_STORAGE_KEY, JSON.stringify({ code: code, nickname: nickname, resumeToken: resumeToken, ts: Date.now() }));
+  } catch (_error) { /* stockage indisponible */ }
+}
+
+function clearPartySession() {
+  partyRoomState.resumeToken = null;
+  partyRoomState.nickname = "";
+  partyRoomState.reconnecting = false;
+  try { sessionStorage.removeItem(PARTY_SESSION_STORAGE_KEY); } catch (_error) { /* noop */ }
+}
+
+function attemptPartyResume() {
+  var saved = getStoredPartySession();
+  if (!saved || !multiplayerSocket?.connected) return;
+  ensurePartyListeners();
+  partyRoomState.reconnecting = true;
+  multiplayerSocket.emit("party:resume", { code: saved.code, resumeToken: saved.resumeToken }, function (res) {
+    res = res || {};
+    if (!res.ok) {
+      clearPartySession();
+      if (partyRoomState.code === saved.code) {
+        partyRoomState.room = null;
+        partyRoomState.code = null;
+        renderPartyRoom();
+      }
+      return;
+    }
+    partyRoomState.room = res.room || null;
+    partyRoomState.code = res.code || saved.code;
+    partyRoomState.reconnecting = false;
+    savePartySession(partyRoomState.code, saved.nickname, res.resumeToken || saved.resumeToken);
+    setPartyStatus("Reconnecté à la Party Room.");
+    if (document.getElementById("screen-party-room")?.classList.contains("hidden")) openPartyRoomMode();
+    renderPartyRoom();
+  });
+}
+
+function partyHandleSocketDisconnect() {
+  if (!partyRoomState.room || !partyRoomState.code) return;
+  partyRoomState.reconnecting = true;
+  var self = (partyRoomState.room.players || []).find(function (player) { return player.isSelf; });
+  if (self) {
+    self.connected = false;
+    self.reconnectUntil = Date.now() + (Number(partyRoomState.room.reconnectGraceMs) || 30000);
+  }
+  setPartyStatus("Connexion perdue · tentative de reconnexion…");
+  renderPartyRoom();
+}
+
 var partyGuessCache = new Map();
 var partyAcIndex = -1;
 
@@ -1423,6 +1494,9 @@ function ensurePartyListeners() {
     if (room?.roundNumber !== partyRoomState.room?.roundNumber || room?.status !== partyRoomState.room?.status) setPartyStatus("");
     partyRoomState.room = room;
     partyRoomState.code = room && room.code;
+    partyRoomState.reconnecting = false;
+    var saved = getStoredPartySession();
+    if (saved && room?.code === saved.code) savePartySession(saved.code, saved.nickname, saved.resumeToken);
     renderPartyRoom();
   });
   return socket;
@@ -1454,6 +1528,8 @@ function partyCreateRoom() {
     if (!res.ok) { setPartyStatus(res.error || "Erreur de creation."); return; }
     partyRoomState.room = res.room;
     partyRoomState.code = res.code;
+    partyRoomState.reconnecting = false;
+    savePartySession(res.code, nickname, res.resumeToken);
     setPartyStatus("");
     renderPartyRoom();
   });
@@ -1473,6 +1549,8 @@ function partyJoinRoom() {
     if (!res.ok) { setPartyStatus(res.error || "Impossible de rejoindre."); return; }
     partyRoomState.room = res.room;
     partyRoomState.code = res.code;
+    partyRoomState.reconnecting = false;
+    savePartySession(res.code, nickname, res.resumeToken);
     setPartyStatus("");
     renderPartyRoom();
   });
@@ -1481,9 +1559,10 @@ function partyJoinRoom() {
 function partyLeaveRoom() {
   var socket = ensureMultiplayerSocket();
   if (socket) socket.emit("party:leave-room");
+  clearPartySession();
   partyRoomState.room = null;
   partyRoomState.code = null;
-  setPartyStatus("Tu as quitte la room.");
+  setPartyStatus("Tu as quitté la room.");
   renderPartyRoom();
 }
 
@@ -1923,7 +2002,9 @@ function renderPartyRoom() {
       for (var avI = 0; avI < avName.length; avI += 1) avatarTone += avName.charCodeAt(avI);
       avatarTone = avatarTone % 6;
       var statusBadge = "";
-      if (room.gameMode === "deduction" && playing) {
+      if (!p.connected) {
+        statusBadge = '<span class="party-wait">Reconnexion…</span>';
+      } else if (room.gameMode === "deduction" && playing) {
         statusBadge = p.gaveUp ? '<span class="party-wait">Abandon</span>' : '<span class="party-check">' + multiplayerProximityValue(p) + ' %</span>';
       } else if (room.gameMode === "nearest" && playing) {
         statusBadge = p.submitted ? '<span class="party-check">Prêt ✓</span>' : '<span class="party-wait">Réfléchit…</span>';
@@ -1963,7 +2044,12 @@ function renderPartyRoom() {
     partyUpdateTimer();
   }
   var countEl = document.getElementById("party-count");
-  if (countEl) countEl.textContent = raw.length + " / " + (room.maxPlayers || 8);
+  if (countEl) {
+    var connectedCount = Number(room.connectedCount);
+    if (!Number.isFinite(connectedCount)) connectedCount = raw.filter(function (p) { return p.connected; }).length;
+    var reconnectingCount = raw.filter(function (p) { return !p.connected; }).length;
+    countEl.textContent = connectedCount + " / " + (room.maxPlayers || 8) + (reconnectingCount ? " · " + reconnectingCount + " reconnexion" : "");
+  }
   var roundEl = document.getElementById("party-round");
   if (roundEl) {
     var hasRound = room.status !== "waiting" && Boolean(room.round && (room.round.image || room.round.mode === "typecombo" || room.round.mode === "duocriteria" || room.round.mode === "nearest" || room.round.mode === "deduction" || room.round.mode === "coop"));

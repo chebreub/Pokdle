@@ -1,5 +1,6 @@
 const { ensureLeaderboardResultKeys, recordLeaderboardResult } = require("./lib/leaderboard-store");
 const fs = require("fs");
+const crypto = require("crypto");
 const path = require("path");
 const vm = require("vm");
 const express = require("express");
@@ -460,6 +461,7 @@ const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
+const PARTY_RECONNECT_GRACE_MS = 30000; // refresh/coupure : garde la place et l’hôte avant transfert
 const PARTY_MIN_PLAYERS = 2;
 const PARTY_MAX_PLAYERS = 8;
 const PARTY_TOTAL_ROUNDS = 5;
@@ -1065,7 +1067,19 @@ function joinPlayerToPartyRoom(room, socket, nickname) {
   socket.data.partyRoomCode = room.code;
   const blue = room.players.filter(p => p.raceTeam === 'blue').length;
   const coral = room.players.filter(p => p.raceTeam === 'coral').length;
-  room.players.push({ id: socket.id, nickname, connected: true, score: 0, correct: false, raceTeam: blue <= coral ? 'blue' : 'coral' });
+  const player = {
+    id: socket.id,
+    nickname,
+    connected: true,
+    score: 0,
+    correct: false,
+    raceTeam: blue <= coral ? 'blue' : 'coral',
+    reconnectToken: crypto.randomBytes(18).toString("hex"),
+    reconnectUntil: null,
+    reconnectTimer: null,
+  };
+  room.players.push(player);
+  return player;
 }
 
 function publicPartyGuessRoundState(room, revealed) {
@@ -1133,6 +1147,8 @@ function publicPartyRoomState(room, viewerId = null) {
     hostId: room.hostId,
     minPlayers: PARTY_MIN_PLAYERS,
     maxPlayers: PARTY_MAX_PLAYERS,
+    connectedCount: room.players.filter((player) => player.connected).length,
+    reconnectGraceMs: typeof PARTY_RECONNECT_GRACE_MS !== "undefined" ? PARTY_RECONNECT_GRACE_MS : 30000,
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     deadlineAt: room.deadlineAt || null,
@@ -1145,6 +1161,7 @@ function publicPartyRoomState(room, viewerId = null) {
       id: player.id,
       nickname: player.nickname,
       connected: player.connected,
+      reconnectUntil: player.connected ? null : (Number(player.reconnectUntil) || null),
       raceTeam: player.raceTeam || "blue",
       score: Number(player.score) || 0,
       correct: Boolean(player.correct),
@@ -1165,6 +1182,7 @@ function publicPartyRoomState(room, viewerId = null) {
 
 function emitPartyRoomState(room) {
   for (const player of room.players) {
+    if (!player.connected) continue;
     io.to(player.id).emit("party:room-state", publicPartyRoomState(room, player.id));
   }
 }
@@ -1717,24 +1735,48 @@ function handlePartyDisconnect(socketId, voluntary) {
   const socket = io.sockets.sockets.get(socketId);
   if (socket?.data) socket.data.partyRoomCode = null;
   if (socket) socket.leave(room.code);
-  const index = room.players.findIndex((entry) => entry.id === socketId);
-  if (index === -1) return;
-  const wasHost = room.players[index].id === room.hostId;
-  room.players.splice(index, 1);
-  if (room.players.length === 0) {
-    clearPartyRoundTimer(room);
-    room.deadlineAt = null;
-    schedulePartyRoomCleanup(room);
+  const player = room.players.find((entry) => entry.id === socketId);
+  if (!player) return;
+
+  const finalizeDeparture = () => {
+    if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
+    player.reconnectUntil = null;
+    const index = room.players.indexOf(player);
+    if (index === -1) return;
+    const wasHost = player.id === room.hostId;
+    room.players.splice(index, 1);
+    if (room.players.length === 0) {
+      clearPartyRoundTimer(room);
+      room.deadlineAt = null;
+      schedulePartyRoomCleanup(room);
+      return;
+    }
+    if (wasHost) {
+      const next = room.players.find((entry) => entry.connected) || room.players[0];
+      room.hostId = next.id;
+    }
+    if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
+    if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
+    if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
+    emitPartyRoomState(room);
+  };
+
+  if (voluntary) {
+    finalizeDeparture();
     return;
   }
-  if (wasHost) {
-    const next = room.players.find((entry) => entry.connected) || room.players[0];
-    room.hostId = next.id;
-  }
-  if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
-  if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
-  if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
+
+  // Refresh / coupure courte : la place, le score et le rôle d’hôte restent réservés.
+  player.connected = false;
+  player.disconnectedAt = Date.now();
+  player.reconnectUntil = Date.now() + PARTY_RECONNECT_GRACE_MS;
   emitPartyRoomState(room);
+  if (player.reconnectTimer) clearTimeout(player.reconnectTimer);
+  player.reconnectTimer = setTimeout(() => {
+    player.reconnectTimer = null;
+    if (!partyRooms.has(room.code) || player.connected || !room.players.includes(player)) return;
+    finalizeDeparture();
+  }, PARTY_RECONNECT_GRACE_MS);
 }
 
 io.on("connection", (socket) => {
@@ -1961,10 +2003,10 @@ io.on("connection", (socket) => {
       const code = generatePartyRoomCode();
       const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
-      joinPlayerToPartyRoom(room, socket, nickname);
+      const player = joinPlayerToPartyRoom(room, socket, nickname);
       recordUsage("party:create");
       emitPartyRoomState(room);
-      respond(ack, { ok: true, code, room: publicPartyRoomState(room, socket.id) });
+      respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de creer la room." });
     }
@@ -1981,12 +2023,52 @@ io.on("connection", (socket) => {
       if (room.players.length >= PARTY_MAX_PLAYERS) return respond(ack, { ok: false, error: "La room est deja complete (8 max)." });
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
       clearPartyRoomCleanup(room);
-      joinPlayerToPartyRoom(room, socket, nickname);
+      const player = joinPlayerToPartyRoom(room, socket, nickname);
       recordUsage("party:join");
       emitPartyRoomState(room);
-      respond(ack, { ok: true, code, room: publicPartyRoomState(room, socket.id) });
+      respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de rejoindre la room." });
+    }
+  });
+
+  socket.on("party:resume", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      const code = sanitizeRoomCode(payload.code);
+      const token = String(payload.resumeToken || "").trim().slice(0, 96);
+      const room = partyRooms.get(code);
+      if (!room) return respond(ack, { ok: false, error: "Party Room introuvable ou expiree." });
+      if (!token) return respond(ack, { ok: false, error: "Session de reprise invalide." });
+      const player = room.players.find((entry) => entry.reconnectToken === token);
+      if (!player) return respond(ack, { ok: false, error: "Cette place n'est plus disponible." });
+      if (player.connected) return respond(ack, { ok: false, error: "Cette session est deja active." });
+      if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Le delai de reconnexion est expire." });
+
+      const previousId = player.id;
+      if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
+      player.id = socket.id;
+      player.connected = true;
+      player.disconnectedAt = null;
+      player.reconnectUntil = null;
+      if (room.hostId === previousId) room.hostId = socket.id;
+      if (Array.isArray(room.roundPlayerIds)) room.roundPlayerIds = room.roundPlayerIds.map((id) => id === previousId ? socket.id : id);
+      if (room.deductionWinnerId === previousId) room.deductionWinnerId = socket.id;
+      if (room.race?.roster) room.race.roster.forEach((member) => { if (member.id === previousId) member.id = socket.id; });
+      if (room.race?.claims instanceof Map) {
+        for (const claim of room.race.claims.values()) if (claim.playerId === previousId) claim.playerId = socket.id;
+      }
+      if (room.coopClues && Object.prototype.hasOwnProperty.call(room.coopClues, previousId)) {
+        room.coopClues[socket.id] = room.coopClues[previousId];
+        delete room.coopClues[previousId];
+      }
+      socket.join(room.code);
+      socket.data.partyRoomCode = room.code;
+      clearPartyRoomCleanup(room);
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, code: room.code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Reconnexion Party Room impossible." });
     }
   });
 
@@ -1999,7 +2081,8 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer." });
-      if (room.players.length < PARTY_MIN_PLAYERS) return respond(ack, { ok: false, error: "Il faut au moins 2 joueurs." });
+      if (room.players.some((player) => !player.connected)) return respond(ack, { ok: false, error: "Attends la reconnexion d'un joueur ou la fin de son delai avant de lancer." });
+      if (room.players.filter((player) => player.connected).length < PARTY_MIN_PLAYERS) return respond(ack, { ok: false, error: "Il faut au moins 2 joueurs connectes." });
       if (room.status === "playing") return respond(ack, { ok: false, error: "Une manche est deja en cours." });
       if (room.gameMode === "dexrace") {
         const error = dexRace.raceStartError(room);
@@ -2114,6 +2197,7 @@ io.on("connection", (socket) => {
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer la manche suivante." });
       if (room.status !== "finished") return respond(ack, { ok: false, error: "Termine la manche en cours d'abord." });
+      if (room.players.some((player) => !player.connected)) return respond(ack, { ok: false, error: "Attends la reconnexion d'un joueur ou la fin de son delai avant la manche suivante." });
       if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) return respond(ack, { ok: false, error: "La party est terminee." });
       room.roundNumber = (Number(room.roundNumber) || 1) + 1;
       await startPartyRound(room);

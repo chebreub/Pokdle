@@ -36,9 +36,29 @@ def main():
                 stage='join';guest.locator('#party-nickname').fill('QA Guest');guest.locator('#party-join-code').fill(code);guest.locator('[data-action="partyJoinRoom"]').click()
                 guest.locator('#party-joined').wait_for(state='visible')
                 wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==2,'Host roster did not update')
+
+                # Host refresh must preserve ownership instead of transferring the room.
+                stage='host-refresh';host.reload(wait_until='domcontentloaded',timeout=45000)
+                wait(host,lambda:host.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Host app did not initialize after refresh')
+                wait(host,lambda:host.locator('#party-joined').is_visible(),'Host Party Room was not resumed after refresh')
+                wait(host,lambda:host.locator('#party-room-code').inner_text().strip()==code,'Host resumed the wrong room')
+                wait(host,lambda:host.evaluate('() => Boolean(partyRoomState.room?.players?.find(p=>p.isSelf)?.isHost)'),'Host ownership was not restored')
+                wait(guest,lambda:guest.locator('#party-players li:not(.party-player-empty)').count()==2,'Guest lost host during refresh grace')
+
                 stage='select';host.locator('#party-mode-nearest').click()
                 wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','Selected mode did not update')
                 stage='start';host.locator('#party-start-btn').click()
+                host.locator('#party-round').wait_for(state='visible');guest.locator('#party-round').wait_for(state='visible')
+                round_number=host.evaluate('() => partyRoomState.room?.roundNumber')
+
+                # Guest refresh in the middle of a live round must restore the same seat and round.
+                stage='guest-live-refresh';guest.reload(wait_until='domcontentloaded',timeout=45000)
+                wait(guest,lambda:guest.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Guest app did not initialize after refresh')
+                wait(guest,lambda:guest.locator('#party-joined').is_visible(),'Guest Party Room was not resumed after refresh')
+                wait(guest,lambda:guest.locator('#party-room-code').inner_text().strip()==code,'Guest resumed the wrong room')
+                wait(guest,lambda:guest.evaluate('(roundNumber) => partyRoomState.room?.status==="playing" && partyRoomState.room?.roundNumber===roundNumber',round_number),'Guest did not resume the live round')
+                wait(host,lambda:host.locator('#party-players li.is-offline').count()==0,'Guest stayed offline after reconnect')
+
                 for page,name in [(host,'Pikachu'),(guest,'Raichu')]:
                     stage='answer-'+name;page.locator('#party-round').wait_for(state='visible')
                     page.locator('#party-guess').fill(name)
@@ -48,7 +68,7 @@ def main():
                 stage='leave';guest.locator('[data-action="partyLeaveRoom"]:visible').first.click()
                 wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==1,'Guest did not leave roster')
                 assert not errors,repr(errors)
-                result['ok']=True;result['checks']=['create','join','two-player roster','host mode selection','start','both answers via autocomplete','shared result','explicit leave']
+                result['ok']=True;result['checks']=['create','join','two-player roster','host refresh resume','host ownership preserved','host mode selection','start','guest live-round refresh resume','both answers via autocomplete','shared result','explicit leave']
             except Exception:
                 for i,page in enumerate(pages):
                     try:page.screenshot(path=str(out/f'failure-{i}.png'))
