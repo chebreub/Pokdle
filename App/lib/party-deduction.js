@@ -51,8 +51,9 @@ function submitDeduction(room, player, raw, serial, resolvePokemon, buildFeedbac
   return { correct, gained: correct ? 100 : 0 };
 }
 
-function allDeductionPlayersGaveUp(room) {
-  return room.players.filter(p => p.connected && room.roundPlayerIds.includes(p.id)).every(p => p.gaveUp);
+function allDeductionPlayersGaveUp(room, now = Date.now()) {
+  const active = room.players.filter(p => room.roundPlayerIds.includes(p.id) && (p.connected || Number(p.reconnectUntil) > now));
+  return active.length > 0 && active.every(p => p.gaveUp);
 }
 
 function forfeitDeduction(room, player, serial) {
