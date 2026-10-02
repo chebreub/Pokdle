@@ -462,6 +462,8 @@ const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normal
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
 const PARTY_RECONNECT_GRACE_MS = 30000; // refresh/coupure : garde la place et l’hôte avant transfert
+const STAT_CLASH_RECONNECT_GRACE_MS = 30000;
+const STAT_AUCTION_RECONNECT_GRACE_MS = 30000;
 const PARTY_MIN_PLAYERS = 2;
 const PARTY_MAX_PLAYERS = 8;
 const PARTY_TOTAL_ROUNDS = 5;
@@ -2337,11 +2339,11 @@ io.on("connection", (socket) => {
         jokersBySide: buildStatClashRoomJokers(),
       };
       statClashRooms.set(code, room);
-      joinPlayerToStatClashRoom(room, socket, nickname);
+      const player = joinPlayerToStatClashRoom(room, socket, nickname);
       console.log("[stat-clash][create-room] created", { code: maskCode(code) });
       recordUsage("statclash:create");
       emitStatClashRoomState(room);
-      respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
+      respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
       console.error("[stat-clash][create-room] error", _error?.message || "unknown");
       respond(ack, { ok: false, error: "Impossible de créer la room Stat Clash." });
@@ -2363,11 +2365,11 @@ io.on("connection", (socket) => {
       if (room.players.length >= (room.maxPlayers || STAT_CLASH_MAX_PLAYERS)) return respond(ack, { ok: false, error: "La room est déjà complète." });
       if (room.status === "finished") return respond(ack, { ok: false, error: "Cette room est terminée." });
 
-      joinPlayerToStatClashRoom(room, socket, nickname);
+      const player = joinPlayerToStatClashRoom(room, socket, nickname);
       console.log("[stat-clash][join-room] joined", { code: maskCode(code), playerCount: room.players.length });
       emitStatClashRoomState(room);
       io.to(room.code).emit("stat-clash:room-presence", { code: room.code, connectedCount: getConnectedStatClashPlayers(room).length });
-      respond(ack, { ok: true, code, room: publicStatClashRoomState(room, socket.id) });
+      respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {
       console.error("[stat-clash][join-room] error", _error?.message || "unknown");
       respond(ack, { ok: false, error: "Impossible de rejoindre la room Stat Clash." });
@@ -2597,6 +2599,36 @@ io.on("connection", (socket) => {
       return respond(ack, { ok: false, error: "Type de joker inconnu." });
     } catch (_error) {
       respond(ack, { ok: false, error: "Erreur lors de l'utilisation du joker." });
+    }
+  });
+
+  socket.on("stat-clash:resume", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
+      const code = sanitizeRoomCode(payload.code);
+      const token = String(payload.resumeToken || "").trim().slice(0, 96);
+      const room = statClashRooms.get(code);
+      if (!room || !token) return respond(ack, { ok: false, error: "Session Stat Clash introuvable." });
+      const player = room.players.find((entry) => entry.reconnectToken === token);
+      if (!player) return respond(ack, { ok: false, error: "Cette place Stat Clash n'est plus disponible." });
+      if (player.connected) return respond(ack, { ok: false, error: "Cette session Stat Clash est déjà active." });
+      if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Le délai de reconnexion est expiré." });
+
+      const previousId = player.id;
+      if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
+      player.id = socket.id;
+      player.connected = true;
+      player.reconnectUntil = null;
+      if (room.hostId === previousId) room.hostId = socket.id;
+      if (room.winnerId === previousId) room.winnerId = socket.id;
+      socket.join(room.code);
+      socket.data.statClashRoomCode = room.code;
+      clearStatClashCleanup(room);
+      emitStatClashRoomState(room);
+      io.to(room.code).emit("stat-clash:room-presence", { code: room.code, connectedCount: getConnectedStatClashPlayers(room).length });
+      respond(ack, { ok: true, code: room.code, resumeToken: player.reconnectToken, room: publicStatClashRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Reconnexion Stat Clash impossible." });
     }
   });
 
@@ -4179,7 +4211,7 @@ function joinPlayerToStatClashRoom(room, socket, nickname, side) {
   socket.join(room.code);
   socket.data.statClashRoomCode = room.code;
   const assignedSide = side || STAT_CLASH_PLAYER_SEATS.find((seat) => !room.players.some((player) => player.side === seat)) || `seat${room.players.length + 1}`;
-  room.players.push({
+  const player = {
     id: socket.id,
     nickname,
     side: assignedSide,
@@ -4189,7 +4221,12 @@ function joinPlayerToStatClashRoom(room, socket, nickname, side) {
     history: [],
     pendingPickKey: null,
     pendingSubmittedAt: null,
-  });
+    reconnectToken: crypto.randomBytes(18).toString("hex"),
+    reconnectUntil: null,
+    reconnectTimer: null,
+  };
+  room.players.push(player);
+  return player;
 }
 
 function joinPlayerToDraftBattleRoom(room, socket, nickname, side) {
@@ -4261,6 +4298,7 @@ function publicStatClashRoomState(room, viewerId = null) {
     hostId: room.hostId,
     maxPlayers: room.maxPlayers || STAT_CLASH_MAX_PLAYERS,
     connectedCount,
+    reconnectGraceMs: typeof STAT_CLASH_RECONNECT_GRACE_MS !== "undefined" ? STAT_CLASH_RECONNECT_GRACE_MS : 30000,
     canStart: canStatClashRoomStart(room) && room.status !== "live" && room.status !== "starting",
     startedAt: room.startedAt || null,
     rollEndsAt: room.rollEndsAt || null,
@@ -4332,6 +4370,7 @@ function publicStatClashRoomState(room, viewerId = null) {
       side: player.side,
       seatIndex: Number(player.seatIndex) || 0,
       connected: player.connected,
+      reconnectUntil: player.connected ? null : (Number(player.reconnectUntil) || null),
       score: player.score,
       history: player.history,
       isSelf: player.id === viewerId,
@@ -4354,12 +4393,14 @@ function emitRoomState(room) {
 function emitStatClashRoomState(room) {
   console.log("[stat-clash][room-state] emit", { code: maskCode(room.code), status: room.status, roundPhase: room.roundPhase });
   for (const player of room.players) {
+    if (!player.connected) continue;
     io.to(player.id).emit("stat-clash:room-state", publicStatClashRoomState(room, player.id));
   }
 }
 
 function emitStatClashFinished(room) {
   for (const player of room.players) {
+    if (!player.connected) continue;
     io.to(player.id).emit("stat-clash:finished", publicStatClashRoomState(room, player.id));
   }
 }
@@ -4459,42 +4500,63 @@ function handleStatClashDisconnect(socketId, voluntary) {
 
   const socket = io.sockets.sockets.get(socketId);
   if (socket?.data) socket.data.statClashRoomCode = null;
+  if (socket) socket.leave(room.code);
   const player = room.players.find((entry) => entry.id === socketId);
   if (!player) return;
-  player.connected = false;
-  clearStatClashRoomTimers(room);
 
-  if (room.status === "lobby" || room.status === "starting") {
-    if (room.hostId === socketId) {
-      io.to(room.code).emit("stat-clash:room-closed", {
-        reason: voluntary ? "L'hôte a fermé la room." : `${player.nickname} s'est déconnecté.`,
-      });
-      statClashRooms.delete(room.code);
+  const finalizeDeparture = () => {
+    if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
+    player.reconnectUntil = null;
+    player.connected = false;
+    if (!statClashRooms.has(room.code) || !room.players.includes(player)) return;
+    clearStatClashRoomTimers(room);
+
+    if (room.status === "lobby" || room.status === "starting") {
+      if (room.hostId === player.id) {
+        io.to(room.code).emit("stat-clash:room-closed", {
+          reason: voluntary ? "L'hôte a fermé la room." : `${player.nickname} n'est pas revenu à temps.`,
+        });
+        statClashRooms.delete(room.code);
+        return;
+      }
+      room.players = room.players.filter((entry) => entry !== player);
+      room.status = "lobby";
+      room.roundPhase = "waiting";
+      room.startedAt = null;
+      emitStatClashRoomState(room);
       return;
     }
-    room.players = room.players.filter((entry) => entry.id !== socketId);
-    room.status = "lobby";
-    room.roundPhase = "waiting";
-    room.startedAt = null;
-    emitStatClashRoomState(room);
+
+    if (room.status === "live") {
+      const opponent = room.players.find((entry) => entry !== player && entry.connected);
+      room.status = "finished";
+      room.roundPhase = "finished";
+      room.winnerId = opponent?.id || null;
+      room.endedReason = "disconnect";
+      emitStatClashRoomState(room);
+      emitStatClashFinished(room);
+      scheduleStatClashRoomCleanup(room);
+      return;
+    }
+
+    if (room.status === "finished") scheduleStatClashRoomCleanup(room);
+  };
+
+  if (voluntary) {
+    finalizeDeparture();
     return;
   }
 
-  if (room.status === "live") {
-    const opponent = room.players.find((entry) => entry.id !== socketId && entry.connected);
-    room.status = "finished";
-    room.roundPhase = "finished";
-    room.winnerId = opponent?.id || null;
-    room.endedReason = "disconnect";
-    emitStatClashRoomState(room);
-    emitStatClashFinished(room);
-    scheduleStatClashRoomCleanup(room);
-    return;
-  }
-
-  if (room.status === "finished") {
-    scheduleStatClashRoomCleanup(room);
-  }
+  player.connected = false;
+  player.reconnectUntil = Date.now() + STAT_CLASH_RECONNECT_GRACE_MS;
+  emitStatClashRoomState(room);
+  io.to(room.code).emit("stat-clash:room-presence", { code: room.code, connectedCount: getConnectedStatClashPlayers(room).length });
+  if (player.reconnectTimer) clearTimeout(player.reconnectTimer);
+  player.reconnectTimer = setTimeout(() => {
+    player.reconnectTimer = null;
+    if (!statClashRooms.has(room.code) || player.connected || !room.players.includes(player)) return;
+    finalizeDeparture();
+  }, STAT_CLASH_RECONNECT_GRACE_MS);
 }
 
 function findDraftBattleRoomBySocket(socketId) {
