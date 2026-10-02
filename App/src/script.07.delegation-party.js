@@ -458,6 +458,7 @@ function restoreSavedGame(preferredMode = null) {
 
   document.getElementById("guess-input").focus();
 
+  if (gameMode === "daily") syncDailyObservedState();
   return true;
 }
 

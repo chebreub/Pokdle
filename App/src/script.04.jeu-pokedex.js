@@ -1,92 +1,115 @@
 // ============================================================
 // GAMEPLAY
 // ============================================================
+let dailyRequestInFlight = null;
+
+function dailyObservedAccountId() {
+  return typeof connectedAccountUser !== "undefined" && connectedAccountUser?.id ? String(connectedAccountUser.id) : "";
+}
+function applyDailyObservedState(data, { awardFreshWin = false } = {}) {
+  const names = data?.guessed, count = Number(data?.attempts);
+  if (!Array.isArray(names) || !Number.isInteger(count) || count < 0 || count !== names.length ||
+      new Set(names).size !== count || typeof data?.finished !== "boolean") throw new Error("daily_state_mismatch");
+  const pokemon = names.map((name) => POKEMON_LIST.find((entry) => entry?.name === name));
+  if (pokemon.some((entry) => !entry)) throw new Error("daily_state_mismatch");
+  const winning = pokemon.some((entry) => Number(entry.id) === Number(secretPokemon.id));
+  if (data.finished !== winning) throw new Error("daily_state_mismatch");
+  const rows = pokemon.map((entry) => ({ pokemon: entry, cmp: compare(entry, secretPokemon) }));
+  const isPrefix = resultHistory.length <= rows.length && resultHistory.every((row, index) => row.pokemon.name === names[index]);
+  const start = isPrefix ? resultHistory.length : 0;
+  if (!isPrefix) { document.getElementById("results-body").innerHTML = ""; resultHistory = []; }
+  attempts = count; guessedNames = names.slice(); guessedSet = new Set(names);
+  for (let index = start; index < rows.length; index += 1) { resultHistory.push(rows[index]); addRow(rows[index].pokemon, rows[index].cmp); }
+  document.getElementById("try-count").textContent = String(attempts);
+  document.getElementById("results-wrap").classList.toggle("hidden", count === 0);
+  guessCache.clear();
+  saveCurrentGame(data.day);
+  if (data.finished && !gameOver) {
+    gameOver = true;
+    if (typeof LIVE_RANK_CACHE !== "undefined") LIVE_RANK_CACHE.delete("daily");
+    const alreadyAwarded =
+      (typeof playerStats !== "undefined" && playerStats?.lastDailyWinKey === data.day) ||
+      (typeof getTodayDailyResult === "function" && Boolean(getTodayDailyResult()?.won));
+    if (awardFreshWin && !alreadyAwarded) showWin();
+    else {
+      winRegisteredForCurrentGame = true;
+      saveDailyResult(true);
+      clearSavedGame();
+      renderGameOverBox({ won: true, animate: false });
+    }
+  }
+}
+async function requestDailyObservedState(found = null, raw = "") {
+  if (gameMode !== "daily" || gameOver || !window.__pokedleAuthed) return false;
+  const accountId = dailyObservedAccountId();
+  if (dailyRequestInFlight?.history === resultHistory && dailyRequestInFlight.accountId === accountId) return false;
+  const day = readJson(STORAGE_KEYS.dailyGame, null)?.dailyKey;
+  if (!accountId || day !== getUTCDateKey()) { showErr("Le compte ou le Daily a changé. Recharge la page pour reprendre."); return false; }
+  const request = { history: resultHistory, target: secretPokemon, accountId, day };
+  const ownsResult = () => dailyRequestInFlight === request && gameMode === "daily" && !gameOver &&
+    window.__pokedleAuthed && dailyObservedAccountId() === accountId && getUTCDateKey() === day &&
+    resultHistory === request.history && secretPokemon === request.target &&
+    !document.getElementById("screen-game")?.classList.contains("hidden");
+  dailyRequestInFlight = request;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(found ? "/api/daily/guess" : "/api/daily/session", {
+      method: "POST", credentials: "same-origin", signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: found?.name, day, accountId }),
+    });
+    const data = await response.json();
+    if (!ownsResult()) return false;
+    const replay = response.status === 409 && ["duplicate_guess", "daily_finished"].includes(data?.error);
+    if ((!response.ok || !data?.ok) && !replay) throw new Error(data?.error || "daily_request_failed");
+    if (data.day !== day || String(data.accountId) !== accountId) throw new Error("daily_state_mismatch");
+    applyDailyObservedState(data, { awardFreshWin: Boolean(response.ok && data.correct) });
+    if (found && document.getElementById("guess-input").value.trim() === raw) document.getElementById("guess-input").value = "";
+    if (found && !gameOver) document.getElementById("guess-input").focus();
+    if (data.error === "duplicate_guess") showErr(`Tu as déjà proposé ${found.name} !`);
+    return true;
+  } catch (error) {
+    if (ownsResult()) showErr(["stale_daily", "account_changed", "daily_state_mismatch"].includes(error.message)
+      ? "Le compte ou le Daily a changé. Recharge la page pour reprendre."
+      : "Impossible de valider cet essai en ligne. Réessaie dans un instant.");
+    return false;
+  } finally {
+    clearTimeout(timeout);
+    if (dailyRequestInFlight === request) dailyRequestInFlight = null;
+  }
+}
+function syncDailyObservedState() {
+  if (gameMode === "daily" && !gameOver && window.__pokedleAuthed && dailyObservedAccountId()) return requestDailyObservedState();
+  return Promise.resolve(false);
+}
+window.addEventListener?.("pokedle:auth-ready", () => {
+  if (!document.getElementById("screen-game")?.classList.contains("hidden")) syncDailyObservedState();
+});
 async function submitGuess() {
   if (gameOver) return;
-
   document.getElementById("guess-ac").classList.add("hidden");
-
   const raw = document.getElementById("guess-input").value.trim();
-  if (!raw) {
-    showErr("Entre un nom de Pokémon !");
-    return;
-  }
-
+  if (!raw) { showErr("Entre un nom de Pokémon !"); return; }
   const found = findPokemon(raw);
-  if (!found) {
-    showErr(`"${raw}" introuvable dans le pool actif.`);
-    return;
-  }
-
-  if (guessedSet.has(found.name)) {
-    showErr(`Tu as déjà proposé ${found.name} !`);
-    return;
-  }
-
+  if (!found) { showErr(`"${raw}" introuvable dans le pool actif.`); return; }
+  if (gameMode === "daily" && window.__pokedleAuthed) { clearErr(); return requestDailyObservedState(found, raw); }
+  if (guessedSet.has(found.name)) { showErr(`Tu as déjà proposé ${found.name} !`); return; }
   clearErr();
-
-  // Authenticated Daily runs are counted by the server. This makes the public
-  // leaderboard depend on observed guesses instead of a browser-declared score.
-  let dailyServerResult = null;
-  if (gameMode === "daily" && window.__pokedleAuthed) {
-    try {
-      const response = await fetch("/api/daily/guess", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: found.name }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data?.ok) {
-        if (data?.error === "duplicate_guess") {
-          showErr(`Tu as déjà proposé ${found.name} !`);
-          return;
-        }
-        if (data?.error === "daily_finished") {
-          showErr("Ton Pokémon du jour est déjà terminé sur ce compte.");
-          return;
-        }
-        throw new Error(data?.error || "daily_guess_failed");
-      }
-      dailyServerResult = data;
-      attempts = Number(data.attempts) || (attempts + 1);
-    } catch (_error) {
-      showErr("Impossible de valider cet essai en ligne. Réessaie dans un instant.");
-      return;
-    }
-  } else {
-    attempts += 1;
-  }
-  document.getElementById("try-count").textContent = String(attempts);
-
-  guessedNames.push(found.name);
-  guessedSet.add(found.name);
-
-  const cmp = compare(found, secretPokemon);
-  resultHistory.push({ pokemon: found, cmp });
-
-  addRow(found, cmp);
+  attempts += 1; document.getElementById("try-count").textContent = String(attempts);
+  guessedNames.push(found.name); guessedSet.add(found.name);
+  const cmp = compare(found, secretPokemon); resultHistory.push({ pokemon: found, cmp }); addRow(found, cmp);
   document.getElementById("results-wrap").classList.remove("hidden");
-  document.getElementById("guess-input").value = "";
-  document.getElementById("guess-input").focus();
-
-  guessCache.clear();
-  updateSilhouettePanel(false);
-  updatePixelPanel(false);
-  saveCurrentGame();
-
-  const localCorrect = found.name === secretPokemon.name;
-  if (dailyServerResult && Boolean(dailyServerResult.correct) !== localCorrect) {
-    showErr("Le Daily local n’est plus synchronisé avec le serveur. Recharge la page.");
-    return;
-  }
-  if (localCorrect) {
-    gameOver = true;
-    showWin();
-  }
+  document.getElementById("guess-input").value = ""; document.getElementById("guess-input").focus();
+  guessCache.clear(); updateSilhouettePanel(false); updatePixelPanel(false); saveCurrentGame();
+  if (found.name === secretPokemon.name) { gameOver = true; showWin(); }
 }
 
 function surrenderGame() {
+  if (gameMode === "daily" && dailyRequestInFlight) {
+    showErr("Un essai Daily est en cours de validation. Réessaie dans un instant.");
+    return;
+  }
   if (gameOver || !secretPokemon || gameMode === "quiz") return;
 
   gameOver = true;
