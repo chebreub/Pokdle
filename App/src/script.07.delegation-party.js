@@ -3446,6 +3446,8 @@ function ensureMultiplayerSocket() {
     setMultiplayerConnectionStatus("online");
     attemptDuelResume();
     if (typeof attemptPartyResume === "function") attemptPartyResume();
+    if (typeof attemptStatClashResume === "function") attemptStatClashResume();
+    if (typeof attemptStatAuctionResume === "function") attemptStatAuctionResume();
     renderMultiplayerBotScreen();
   });
 
@@ -3453,22 +3455,16 @@ function ensureMultiplayerSocket() {
     setMultiplayerConnectionStatus("offline");
     setMultiplayerError("Impossible de joindre le serveur Duel live. Vérifie que server.js tourne.");
     if (typeof partyHandleSocketDisconnect === "function") partyHandleSocketDisconnect();
-    if (statClashState?.mode === "room") {
-      statClashState.roomPendingAction = "";
-      setStatClashRoomFeedback("Impossible de joindre le serveur Room 1v1.", "error");
-      renderStatClashScreen();
-    }
+    if (typeof statClashHandleSocketDisconnect === "function") statClashHandleSocketDisconnect();
+    if (typeof statAuctionHandleSocketDisconnect === "function") statAuctionHandleSocketDisconnect();
     renderMultiplayerBotScreen();
   });
 
   multiplayerSocket.on("disconnect", () => {
     setMultiplayerConnectionStatus("offline");
     if (typeof partyHandleSocketDisconnect === "function") partyHandleSocketDisconnect();
-    if (statClashState?.mode === "room") {
-      statClashState.roomPendingAction = "";
-      setStatClashRoomFeedback("Connexion room interrompue.", "error");
-      renderStatClashScreen();
-    }
+    if (typeof statClashHandleSocketDisconnect === "function") statClashHandleSocketDisconnect();
+    if (typeof statAuctionHandleSocketDisconnect === "function") statAuctionHandleSocketDisconnect();
     renderMultiplayerBotScreen();
   });
 
@@ -3523,6 +3519,7 @@ function ensureMultiplayerSocket() {
   multiplayerSocket.on("stat-clash:room-state", (roomState) => {
     if (!statClashState) return;
     console.debug("[stat-clash][client][room-state] recv", roomState);
+    if (typeof refreshStatClashStoredSession === "function") refreshStatClashStoredSession(roomState);
     applyStatClashRoomState(roomState);
   });
 
@@ -3541,6 +3538,7 @@ function ensureMultiplayerSocket() {
   });
 
   multiplayerSocket.on("stat-clash:room-closed", (payload = {}) => {
+    if (typeof clearStatClashSession === "function") clearStatClashSession();
     if (!statClashState) return;
     statClashState.room = null;
     statClashState.roomToken = "";
@@ -3597,6 +3595,7 @@ function ensureMultiplayerSocket() {
   });
 
   multiplayerSocket.on("stat-auction:room-state", (roomState) => {
+    if (typeof refreshStatAuctionStoredSession === "function") refreshStatAuctionStoredSession(roomState);
     if (typeof applyStatAuctionRoomState === "function") applyStatAuctionRoomState(roomState);
   });
 
@@ -4479,6 +4478,16 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch (_err) { /* stockage indisponible */ }
   try {
     if (typeof getStoredPartySession === "function" && getStoredPartySession()) {
+      ensureMultiplayerSocket();
+    }
+  } catch (_err) { /* stockage indisponible */ }
+  try {
+    if (typeof getStoredStatClashSession === "function" && getStoredStatClashSession()) {
+      ensureMultiplayerSocket();
+    }
+  } catch (_err) { /* stockage indisponible */ }
+  try {
+    if (typeof getStoredStatAuctionSession === "function" && getStoredStatAuctionSession()) {
       ensureMultiplayerSocket();
     }
   } catch (_err) { /* stockage indisponible */ }
