@@ -3405,12 +3405,17 @@ function clearDuelSession() {
   try { sessionStorage.removeItem(DUEL_SESSION_STORAGE_KEY); } catch (_err) { /* noop */ }
 }
 
-function attemptDuelResume() {
+function getStoredDuelSession() {
   let saved = null;
-  try { saved = JSON.parse(sessionStorage.getItem(DUEL_SESSION_STORAGE_KEY) || "null"); } catch (_err) { return; }
-  if (!saved?.code || !saved?.nickname) return;
-  if (Date.now() - (saved.ts || 0) > DUEL_SESSION_TTL_MS) { clearDuelSession(); return; }
-  if (!multiplayerSocket) return;
+  try { saved = JSON.parse(sessionStorage.getItem(DUEL_SESSION_STORAGE_KEY) || "null"); } catch (_err) { return null; }
+  if (!saved?.code || !saved?.nickname) return null;
+  if (Date.now() - (saved.ts || 0) > DUEL_SESSION_TTL_MS) { clearDuelSession(); return null; }
+  return saved;
+}
+
+function attemptDuelResume() {
+  const saved = getStoredDuelSession();
+  if (!saved || !multiplayerSocket) return;
 
   multiplayerSocket.emit("duel:resume", { code: saved.code, nickname: saved.nickname }, (response = {}) => {
     if (!response.ok) {
@@ -3431,6 +3436,30 @@ function attemptDuelResume() {
   });
 }
 
+function attemptPreferredRealtimeResume() {
+  const candidates = [];
+  const duel = getStoredDuelSession();
+  if (duel) candidates.push({ type: "duel", ts: Number(duel.ts) || 0 });
+  if (typeof getStoredPartySession === "function") {
+    const party = getStoredPartySession();
+    if (party) candidates.push({ type: "party", ts: Number(party.ts) || 0 });
+  }
+  if (typeof getStoredStatClashSession === "function") {
+    const clash = getStoredStatClashSession();
+    if (clash) candidates.push({ type: "stat-clash", ts: Number(clash.ts) || 0 });
+  }
+  if (typeof getStoredStatAuctionSession === "function") {
+    const auction = getStoredStatAuctionSession();
+    if (auction) candidates.push({ type: "stat-auction", ts: Number(auction.ts) || 0 });
+  }
+  candidates.sort((a, b) => b.ts - a.ts);
+  const preferred = candidates[0]?.type;
+  if (preferred === "duel") attemptDuelResume();
+  else if (preferred === "party" && typeof attemptPartyResume === "function") attemptPartyResume();
+  else if (preferred === "stat-clash" && typeof attemptStatClashResume === "function") attemptStatClashResume();
+  else if (preferred === "stat-auction" && typeof attemptStatAuctionResume === "function") attemptStatAuctionResume();
+}
+
 function ensureMultiplayerSocket() {
   if (multiplayerSocket) return multiplayerSocket;
   if (typeof window.io !== "function") {
@@ -3444,10 +3473,7 @@ function ensureMultiplayerSocket() {
 
   multiplayerSocket.on("connect", () => {
     setMultiplayerConnectionStatus("online");
-    attemptDuelResume();
-    if (typeof attemptPartyResume === "function") attemptPartyResume();
-    if (typeof attemptStatClashResume === "function") attemptStatClashResume();
-    if (typeof attemptStatAuctionResume === "function") attemptStatAuctionResume();
+    attemptPreferredRealtimeResume();
     renderMultiplayerBotScreen();
   });
 
