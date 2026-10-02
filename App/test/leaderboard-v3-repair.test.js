@@ -12,7 +12,7 @@ test('public leaderboard never bulk-uploads browser profile records',()=>{
 });
 
 test('leaderboard results remain event-driven',()=>{
-  assert.match(leaderboard,/fetchJson\("\/api\/leaderboard\/result"/);
+  assert.match(leaderboard,/leaderboardFetchJson\("\/api\/leaderboard\/result"/);
   assert.match(leaderboard,/resultId/);
   assert.match(leaderboard,/Synchronisation du classement/);
 });
