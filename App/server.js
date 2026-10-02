@@ -3645,6 +3645,7 @@ function handleStatAuctionDisconnect(socketId, forceLeave) {
     if (!player) continue;
     const sock = io.sockets.sockets.get(socketId);
     if (sock?.data) sock.data.statAuctionRoomCode = null;
+    if (forceLeave && typeof sock?.leave === "function") sock.leave(room.code);
 
     const finalize = () => {
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
@@ -4587,6 +4588,7 @@ function handleStatClashDisconnect(socketId, voluntary) {
 
   const socket = io.sockets.sockets.get(socketId);
   if (socket?.data) socket.data.statClashRoomCode = null;
+  if (voluntary && typeof socket?.leave === "function") socket.leave(room.code);
   const player = room.players.find((entry) => entry.id === socketId);
   if (!player) return;
 
@@ -4596,17 +4598,25 @@ function handleStatClashDisconnect(socketId, voluntary) {
     clearStatClashRoomTimers(room);
 
     if (room.status === "lobby" || room.status === "starting") {
-      if (room.hostId === player.id) {
-        io.to(room.code).emit("stat-clash:room-closed", {
-          reason: voluntary ? "L'hôte a fermé la room." : "L'hôte n'est pas revenu à temps.",
-        });
+      const wasHost = room.hostId === player.id;
+      const departedSide = player.side;
+      room.players = room.players.filter((entry) => entry !== player);
+      if (!room.players.length) {
         statClashRooms.delete(room.code);
         return;
       }
-      room.players = room.players.filter((entry) => entry !== player);
+      if (room.pendingImposedRuleBySide && departedSide) room.pendingImposedRuleBySide[departedSide] = null;
+      if (wasHost) {
+        const nextHost = room.players.find((entry) => entry.connected) || room.players[0];
+        room.hostId = nextHost.id;
+        room.notice = `${nextHost.nickname || "L'adversaire"} devient l'hôte du salon.`;
+      }
       room.status = "lobby";
       room.roundPhase = "waiting";
       room.startedAt = null;
+      room.rollEndsAt = null;
+      room.lockedEndsAt = null;
+      room.deadlineAt = null;
       emitStatClashRoomState(room);
       return;
     }
