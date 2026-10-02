@@ -38,8 +38,8 @@ function submitNearest(room, player, guess, roundSerial, catalogue, normalize, n
   return { submitted: true };
 }
 
-function allNearestSubmitted(room) {
-  const active = room.players.filter(p => p.connected && room.roundPlayerIds.includes(p.id));
+function allNearestSubmitted(room, now = Date.now()) {
+  const active = room.players.filter(p => room.roundPlayerIds.includes(p.id) && (p.connected || Number(p.reconnectUntil) > now));
   return active.length > 0 && active.every(p => p.nearestPick);
 }
 
