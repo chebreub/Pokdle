@@ -1,4 +1,5 @@
 const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
+const { profileForClient, profileForStorage } = require("./lib/profile-sync");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -281,7 +282,7 @@ app.get("/api/profile", async (req, res) => {
   if (!user) return res.status(401).json({ ok: false, data: null });
   try {
     const r = await pgPool.query("SELECT data FROM users WHERE discord_id = $1", [user.id]);
-    res.json({ ok: true, data: (r.rows[0] && r.rows[0].data) || {} });
+    res.json({ ok: true, data: profileForClient((r.rows[0] && r.rows[0].data) || {}, user.id) });
   } catch (e) { console.error("[profile] get:", e.message); res.json({ ok: false, data: null }); }
 });
 
@@ -289,9 +290,12 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   if (!authReady()) return res.json({ ok: false });
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false });
-  const data = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
+  const prepared = profileForStorage(req.body, user.id);
+  if (!prepared.ok) {
+    return res.status(prepared.error === "profile_owner_mismatch" ? 409 : 400).json({ ok: false, error: prepared.error });
+  }
   try {
-    await pgPool.query("UPDATE users SET data = $2 WHERE discord_id = $1", [user.id, JSON.stringify(data)]);
+    await pgPool.query("UPDATE users SET data = $2 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data)]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
