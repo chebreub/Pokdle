@@ -41,8 +41,21 @@ test('Auction completes five rounds using server totals and rejecting repeated a
 test('Auction locks in-flight submissions and ignores a response after forfeit',async()=>{
  let resolve;const f=auction(()=>new Promise(r=>{resolve=r;}));const first=f.submit({allocation});assert.equal((await f.submit({allocation})).ok,false);f.room.status='finished';resolve({hp:50});assert.equal((await first).ok,false);assert.equal(f.room.history.length,0);assert.equal(f.room.players[0].allocationPending,false);
 });
-test('Auction host disconnect ends the match, preserves sides and transfers host',()=>{
- const f=auction(),events=[];const c={statAuctionRooms:new Map([['TEST',f.room]]),io:{sockets:{sockets:new Map([['a',{data:{}}]])}},emitStatAuctionRoomState:r=>events.push(r)};vm.runInNewContext(func(server,'handleStatAuctionDisconnect'),c);c.handleStatAuctionDisconnect('a',false);assert.equal(f.room.status,'finished');assert.equal(f.room.winnerSide,'right');assert.equal(f.room.hostId,'b');assert.equal(f.room.players[1].side,'right');assert.equal(f.room.finishReason,'disconnect');assert.equal(events.length,1);
+test('Auction keeps a live seat during reconnect grace and resumes without forfeiting',()=>{
+ const f=auction(),events=[],timers=[];
+ const c={statAuctionRooms:new Map([['TEST',f.room]]),io:{sockets:{sockets:new Map([['a',{data:{}}]])}},emitStatAuctionRoomState:r=>events.push(r),STAT_AUCTION_RECONNECT_GRACE_MS:30000,Date,setTimeout:fn=>{timers.push(fn);return 1;},clearTimeout(){}};
+ vm.runInNewContext(func(server,'handleStatAuctionDisconnect'),c);
+ c.handleStatAuctionDisconnect('a',false);
+ assert.equal(f.room.status,'live');assert.equal(f.room.hostId,'a');assert.equal(f.room.players[0].connected,false);assert.ok(f.room.players[0].reconnectUntil>Date.now());assert.equal(timers.length,1);
+ f.room.players[0].connected=true;timers[0]();
+ assert.equal(f.room.status,'live');assert.equal(f.room.hostId,'a');assert.equal(f.room.players[1].side,'right');
+});
+test('Auction voluntary host departure ends the match, preserves sides and transfers host',()=>{
+ const f=auction(),events=[];
+ const c={statAuctionRooms:new Map([['TEST',f.room]]),io:{sockets:{sockets:new Map([['a',{data:{}}]])}},emitStatAuctionRoomState:r=>events.push(r),STAT_AUCTION_RECONNECT_GRACE_MS:30000,Date,setTimeout(){return 1;},clearTimeout(){}};
+ vm.runInNewContext(func(server,'handleStatAuctionDisconnect'),c);
+ c.handleStatAuctionDisconnect('a',true);
+ assert.equal(f.room.status,'finished');assert.equal(f.room.winnerSide,'right');assert.equal(f.room.hostId,'b');assert.equal(f.room.players[1].side,'right');assert.equal(f.room.finishReason,'disconnect');assert.equal(events.length,1);
 });
 test('Cry fallback survives switching to Quiz and is removed when panel closes',()=>{
  const els={};for(const id of ['cry-box','cry-reveal','cry-sprite','cry-name'])els[id]={classList:{add(){},remove(){}},removeAttribute(name){delete this[name];}};

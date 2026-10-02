@@ -1412,6 +1412,86 @@ function syncStatAuctionJoinCode() {
   const input = document.getElementById("stat-auction-room-input");
   if (input && statAuctionState) statAuctionState.roomDraftCode = (input.value || "").toUpperCase();
 }
+const STAT_AUCTION_SESSION_STORAGE_KEY = "pokedle_statauction_session_v1";
+const STAT_AUCTION_SESSION_TTL_MS = 10 * 60 * 1000;
+
+function getStoredStatAuctionSession() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(STAT_AUCTION_SESSION_STORAGE_KEY) || "null");
+    if (!saved?.code || !saved?.resumeToken) return null;
+    if (Date.now() - Number(saved.ts || 0) > STAT_AUCTION_SESSION_TTL_MS) {
+      sessionStorage.removeItem(STAT_AUCTION_SESSION_STORAGE_KEY);
+      return null;
+    }
+    return saved;
+  } catch (_err) {
+    return null;
+  }
+}
+function saveStatAuctionSession(code, resumeToken) {
+  if (!code || !resumeToken) return;
+  try { sessionStorage.setItem(STAT_AUCTION_SESSION_STORAGE_KEY, JSON.stringify({ code, resumeToken, ts: Date.now() })); } catch (_err) {}
+}
+function clearStatAuctionSession() {
+  try { sessionStorage.removeItem(STAT_AUCTION_SESSION_STORAGE_KEY); } catch (_err) {}
+}
+function showResumedStatAuctionRoom(roomState) {
+  if (!roomState) return;
+  if (!statAuctionState) statAuctionState = createStatAuctionState();
+  gameMode = "stat-auction";
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-stat-auction");
+  setGlobalNavActive("game");
+  applyStatAuctionRoomState(roomState);
+  renderStatAuctionScreen();
+}
+function attemptStatAuctionResume() {
+  const saved = getStoredStatAuctionSession();
+  if (!saved || !multiplayerSocket?.connected) return false;
+  multiplayerSocket.emit("stat-auction:resume", { code: saved.code, resumeToken: saved.resumeToken }, (response = {}) => {
+    if (!response.ok) {
+      clearStatAuctionSession();
+      if (statAuctionState && !statAuctionState.room) {
+        statAuctionState.roomPendingAction = null;
+        statAuctionState.roomDraftCode = saved.code;
+        statAuctionState.roomError = response.error || "La session Stat Auction n'est plus disponible. Rejoins la room avec son code.";
+        renderStatAuctionScreen();
+      }
+      return;
+    }
+    saveStatAuctionSession(response.code || saved.code, response.resumeToken || saved.resumeToken);
+    showResumedStatAuctionRoom(response.room);
+    if (statAuctionState) statAuctionState.roomError = "Room restaurée après reconnexion.";
+    renderStatAuctionScreen();
+  });
+  return true;
+}
+function restoreStatAuctionSessionView() {
+  const saved = getStoredStatAuctionSession();
+  if (!saved) return false;
+  if (!statAuctionState) statAuctionState = createStatAuctionState();
+  statAuctionState.phase = "room";
+  statAuctionState.room = null;
+  statAuctionState.roomDraftCode = saved.code;
+  statAuctionState.roomPendingAction = "resuming";
+  statAuctionState.roomError = "Reconnexion à la room…";
+  gameMode = "stat-auction";
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-stat-auction");
+  setGlobalNavActive("game");
+  renderStatAuctionScreen();
+  const socket = ensureMultiplayerSocket();
+  if (socket?.connected) attemptStatAuctionResume();
+  return true;
+}
+window.attemptStatAuctionResume = attemptStatAuctionResume;
+window.restoreStatAuctionSessionView = restoreStatAuctionSessionView;
+window.clearStatAuctionSession = clearStatAuctionSession;
+
 function createStatAuctionRoom() {
   if (!statAuctionState) return;
   const socket = ensureMultiplayerSocket();
@@ -1423,7 +1503,10 @@ function createStatAuctionRoom() {
   socket.emit("stat-auction:create-room", { nickname, selectedGens: [...selectedGens] }, (response = {}) => {
     statAuctionState.roomPendingAction = null;
     if (!response.ok) statAuctionState.roomError = response.error || "Création impossible.";
-    else statAuctionState.room = response.room;
+    else {
+      statAuctionState.room = response.room;
+      saveStatAuctionSession(response.room?.code || "", response.resumeToken);
+    }
     renderStatAuctionScreen();
   });
 }
@@ -1440,12 +1523,16 @@ function joinStatAuctionRoom() {
   socket.emit("stat-auction:join-room", { nickname, code }, (response = {}) => {
     statAuctionState.roomPendingAction = null;
     if (!response.ok) statAuctionState.roomError = response.error || "Join impossible.";
-    else statAuctionState.room = response.room;
+    else {
+      statAuctionState.room = response.room;
+      saveStatAuctionSession(response.room?.code || code, response.resumeToken);
+    }
     renderStatAuctionScreen();
   });
 }
 function leaveStatAuctionRoom() {
   if (multiplayerSocket?.connected) multiplayerSocket.emit("stat-auction:leave-room");
+  clearStatAuctionSession();
   if (!statAuctionState) return;
   statAuctionState.room = null;
   statAuctionState.roomPendingAction = null;

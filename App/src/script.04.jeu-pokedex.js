@@ -1318,7 +1318,11 @@ function openAllModesScreen(category) {
       if (resumable) { screenId = "screen-odd-one-out"; render = typeof renderOddOneOutPuzzle === "function" ? renderOddOneOutPuzzle : null; }
     } else if (key === "statClash") {
       resumable = typeof statClashState !== "undefined" && Boolean(statClashState);
-      if (resumable) { screenId = "screen-stat-clash"; nav = "social"; render = typeof renderStatClashScreen === "function" ? renderStatClashScreen : null; }
+      if (resumable) {
+        screenId = "screen-stat-clash"; nav = "social"; render = typeof renderStatClashScreen === "function" ? renderStatClashScreen : null;
+      } else if (typeof restoreStatClashSessionView === "function" && restoreStatClashSessionView()) {
+        return true;
+      }
     } else if (key === "higherLower") {
       resumable = typeof higherLowerState !== "undefined" && Boolean(higherLowerState);
       if (resumable) { screenId = "screen-higher-lower"; render = typeof renderHigherLowerScreen === "function" ? renderHigherLowerScreen : null; }
@@ -1333,7 +1337,11 @@ function openAllModesScreen(category) {
       if (resumable) { screenId = "screen-type-combo"; render = typeof renderTypeComboScreen === "function" ? renderTypeComboScreen : null; }
     } else if (key === "statAuction") {
       resumable = typeof statAuctionState !== "undefined" && Boolean(statAuctionState);
-      if (resumable) { screenId = "screen-stat-auction"; render = typeof renderStatAuctionScreen === "function" ? renderStatAuctionScreen : null; }
+      if (resumable) {
+        screenId = "screen-stat-auction"; render = typeof renderStatAuctionScreen === "function" ? renderStatAuctionScreen : null;
+      } else if (typeof restoreStatAuctionSessionView === "function" && restoreStatAuctionSessionView()) {
+        return true;
+      }
     }
     if (!resumable || !screenId) return false;
     showScreen(screenId);

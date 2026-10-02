@@ -3395,9 +3395,9 @@ function resetMultiplayerLiveSession() {
 const DUEL_SESSION_STORAGE_KEY = "pokedle_duel_session_v1";
 const DUEL_SESSION_TTL_MS = 10 * 60 * 1000;
 
-function saveDuelSession(code, nickname) {
+function saveDuelSession(code, nickname, resumeToken) {
   try {
-    sessionStorage.setItem(DUEL_SESSION_STORAGE_KEY, JSON.stringify({ code, nickname, ts: Date.now() }));
+    sessionStorage.setItem(DUEL_SESSION_STORAGE_KEY, JSON.stringify({ code, nickname, resumeToken, ts: Date.now() }));
   } catch (_err) { /* stockage indisponible */ }
 }
 
@@ -3408,11 +3408,11 @@ function clearDuelSession() {
 function attemptDuelResume() {
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem(DUEL_SESSION_STORAGE_KEY) || "null"); } catch (_err) { return; }
-  if (!saved?.code || !saved?.nickname) return;
+  if (!saved?.code || !saved?.resumeToken) return;
   if (Date.now() - (saved.ts || 0) > DUEL_SESSION_TTL_MS) { clearDuelSession(); return; }
   if (!multiplayerSocket) return;
 
-  multiplayerSocket.emit("duel:resume", { code: saved.code, nickname: saved.nickname }, (response = {}) => {
+  multiplayerSocket.emit("duel:resume", { code: saved.code, resumeToken: saved.resumeToken }, (response = {}) => {
     if (!response.ok) {
       clearDuelSession();
       return;
@@ -3421,7 +3421,7 @@ function attemptDuelResume() {
     state.room = response.room || null;
     state.lastRoomClosedReason = "";
     setMultiplayerError("");
-    saveDuelSession(saved.code, saved.nickname);
+    saveDuelSession(saved.code, saved.nickname || response.room?.players?.find((player) => player.isSelf)?.nickname || "", response.resumeToken || saved.resumeToken);
     // Après un refresh, on ré-ouvre l'écran duel si la manche est en cours.
     if (response.room?.status === "live" && document.getElementById("screen-multiplayer")?.classList.contains("hidden")) {
       openMultiplayerMode();
@@ -3446,6 +3446,8 @@ function ensureMultiplayerSocket() {
     setMultiplayerConnectionStatus("online");
     attemptDuelResume();
     if (typeof attemptPartyResume === "function") attemptPartyResume();
+    if (typeof attemptStatClashResume === "function") attemptStatClashResume();
+    if (typeof attemptStatAuctionResume === "function") attemptStatAuctionResume();
     renderMultiplayerBotScreen();
   });
 
@@ -3541,6 +3543,7 @@ function ensureMultiplayerSocket() {
   });
 
   multiplayerSocket.on("stat-clash:room-closed", (payload = {}) => {
+    if (typeof clearStatClashSession === "function") clearStatClashSession();
     if (!statClashState) return;
     statClashState.room = null;
     statClashState.roomToken = "";
@@ -4138,7 +4141,7 @@ function createMultiplayerRoom() {
     }
     ensureMultiplayerLiveState().room = response.room || null;
     ensureMultiplayerLiveState().selectedGens = new Set(selectedGensForRoom);
-    if (response.room?.code) saveDuelSession(response.room.code, nickname);
+    if (response.room?.code) saveDuelSession(response.room.code, nickname, response.resumeToken);
     renderMultiplayerBotScreen();
   });
 }
@@ -4175,7 +4178,7 @@ function joinMultiplayerRoom() {
       return;
     }
     ensureMultiplayerLiveState().room = response.room || null;
-    if (response.room?.code || code) saveDuelSession(response.room?.code || code, nickname);
+    if (response.room?.code || code) saveDuelSession(response.room?.code || code, nickname, response.resumeToken);
     renderMultiplayerBotScreen();
   });
 }
@@ -4479,6 +4482,11 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch (_err) { /* stockage indisponible */ }
   try {
     if (typeof getStoredPartySession === "function" && getStoredPartySession()) {
+      ensureMultiplayerSocket();
+    }
+  } catch (_err) { /* stockage indisponible */ }
+  try {
+    if (sessionStorage.getItem("pokedle_statclash_session_v1") || sessionStorage.getItem("pokedle_statauction_session_v1")) {
       ensureMultiplayerSocket();
     }
   } catch (_err) { /* stockage indisponible */ }
