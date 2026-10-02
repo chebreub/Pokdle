@@ -65,10 +65,65 @@ def main():
                     page.locator('#party-guess-ac > *').first.wait_for(state='visible');page.locator('#party-guess-ac > *').first.click()
                 stage='result';host.locator('#party-nearest-results').wait_for(state='visible');guest.locator('#party-nearest-results').wait_for(state='visible')
                 host.screenshot(path=str(out/'host-result.png'));guest.screenshot(path=str(out/'guest-result.png'))
-                stage='leave';guest.locator('[data-action="partyLeaveRoom"]:visible').first.click()
+                stage='party-leave';guest.locator('[data-action="partyLeaveRoom"]:visible').first.click()
                 wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==1,'Guest did not leave roster')
+                host.evaluate('() => { if (typeof partyLeaveRoom === "function") partyLeaveRoom(); }')
+
+                # Duel live 1v1: token-based refresh must restore the same live seat.
+                stage='duel-open'
+                for page in pages:
+                    page.evaluate('() => openMultiplayerMode()')
+                host.locator('#multiplayer-nickname').fill('QA Duel Host');host.locator('#multiplayer-create-room').click()
+                wait(host,lambda:host.evaluate('() => Boolean(multiplayerLiveState?.room?.code)'),'Duel room was not created')
+                duel_code=host.evaluate('() => multiplayerLiveState.room.code')
+                guest.locator('#multiplayer-nickname').fill('QA Duel Guest');guest.locator('#multiplayer-room-input').fill(duel_code);guest.evaluate('() => joinMultiplayerRoom()')
+                wait(host,lambda:host.evaluate('() => multiplayerLiveState?.room?.status==="live"'),'Duel did not start')
+                guest_side=guest.evaluate('() => multiplayerLiveState.room.players.find(p=>p.isSelf)?.id')
+                stage='duel-refresh';guest.reload(wait_until='domcontentloaded',timeout=45000)
+                wait(guest,lambda:guest.evaluate('() => typeof openMultiplayerMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Duel guest app did not initialize')
+                wait(guest,lambda:guest.evaluate('(code) => multiplayerLiveState?.room?.code===code && multiplayerLiveState?.room?.status==="live"',duel_code),'Duel live seat was not resumed')
+                wait(guest,lambda:guest.locator('#screen-multiplayer').is_visible(),'Duel screen did not reopen after refresh')
+                wait(host,lambda:host.evaluate('() => multiplayerLiveState?.room?.players?.every(p=>p.connected)'),'Duel opponent stayed offline')
+                guest.evaluate('() => leaveMultiplayerRoom(true)');host.evaluate('() => leaveMultiplayerRoom(true)')
+
+                # Stat Clash: host ownership and opponent side survive refresh, including a live match.
+                stage='clash-open'
+                for page in pages: page.evaluate('() => openStatClashMode()')
+                host.evaluate('() => { statClashState.roomNameDraft="QA Clash Host"; createStatClashRoom(); }')
+                wait(host,lambda:host.evaluate('() => Boolean(statClashState?.room?.code)'),'Stat Clash room was not created')
+                clash_code=host.evaluate('() => statClashState.room.code')
+                guest.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Guest"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',clash_code)
+                wait(host,lambda:host.evaluate('() => statClashState?.room?.players?.length===2'),'Stat Clash guest did not join')
+                stage='clash-host-refresh';host.reload(wait_until='domcontentloaded',timeout=45000)
+                wait(host,lambda:host.evaluate('() => typeof openStatClashMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Stat Clash host app did not initialize')
+                wait(host,lambda:host.evaluate('(code) => statClashState?.room?.code===code',clash_code),'Stat Clash host room was not resumed')
+                wait(host,lambda:host.evaluate('() => Boolean(statClashState?.room?.players?.find(p=>p.isSelf)?.isHost)'),'Stat Clash host ownership was lost')
+                host.evaluate('() => startStatClashRoomGame()')
+                wait(host,lambda:host.evaluate('() => ["starting","live"].includes(statClashState?.room?.status)'),'Stat Clash did not start')
+                clash_guest_side=guest.evaluate('() => statClashState.room.players.find(p=>p.isSelf)?.side')
+                stage='clash-guest-refresh';guest.reload(wait_until='domcontentloaded',timeout=45000)
+                wait(guest,lambda:guest.evaluate('() => typeof openStatClashMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Stat Clash guest app did not initialize')
+                wait(guest,lambda:guest.evaluate('(args) => statClashState?.room?.code===args[0] && statClashState?.room?.players?.find(p=>p.isSelf)?.side===args[1]',[clash_code,clash_guest_side]),'Stat Clash live seat was not resumed')
+                guest.evaluate('() => leaveStatClashRoom()');host.evaluate('() => leaveStatClashRoom()')
+
+                # Stat Auction: a live allocation match must survive a guest refresh on the same side.
+                stage='auction-open'
+                for page in pages: page.evaluate('() => openStatAuctionMode()')
+                host.evaluate('() => { statAuctionState.roomNicknameDraft="QA Auction Host"; createStatAuctionRoom(); }')
+                wait(host,lambda:host.evaluate('() => Boolean(statAuctionState?.room?.code)'),'Stat Auction room was not created')
+                auction_code=host.evaluate('() => statAuctionState.room.code')
+                guest.evaluate('(code) => { statAuctionState.roomNicknameDraft="QA Auction Guest"; statAuctionState.roomDraftCode=code; joinStatAuctionRoom(); }',auction_code)
+                wait(host,lambda:host.evaluate('() => statAuctionState?.room?.players?.length===2'),'Stat Auction guest did not join')
+                host.evaluate('() => startStatAuctionMatch()')
+                wait(host,lambda:host.evaluate('() => statAuctionState?.room?.status==="live"'),'Stat Auction did not start')
+                auction_side=guest.evaluate('() => statAuctionState.room.players.find(p=>p.isSelf)?.side')
+                stage='auction-guest-refresh';guest.reload(wait_until='domcontentloaded',timeout=45000)
+                wait(guest,lambda:guest.evaluate('() => typeof openStatAuctionMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Stat Auction guest app did not initialize')
+                wait(guest,lambda:guest.evaluate('(args) => statAuctionState?.room?.code===args[0] && statAuctionState?.room?.status==="live" && statAuctionState?.room?.players?.find(p=>p.isSelf)?.side===args[1]',[auction_code,auction_side]),'Stat Auction live seat was not resumed')
+                guest.evaluate('() => leaveStatAuctionRoom()');host.evaluate('() => leaveStatAuctionRoom()')
+
                 assert not errors,repr(errors)
-                result['ok']=True;result['checks']=['create','join','two-player roster','host refresh resume','host ownership preserved','host mode selection','start','guest live-round refresh resume','both answers via autocomplete','shared result','explicit leave']
+                result['ok']=True;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party shared result','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat auction live guest refresh','explicit leave paths']
             except Exception:
                 for i,page in enumerate(pages):
                     try:page.screenshot(path=str(out/f'failure-{i}.png'))
