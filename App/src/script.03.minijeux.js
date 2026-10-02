@@ -1401,7 +1401,9 @@ function saveStatAuctionSession(code, nickname, resumeToken) {
       nickname: String(nickname),
       resumeToken: String(resumeToken),
       resultRecorded: previous?.code === normalizedCode ? Boolean(previous.resultRecorded) : false,
-      ts: Date.now(),
+      ts: previous?.code === normalizedCode && previous?.resumeToken === String(resumeToken)
+        ? (Number(previous.ts) || Date.now())
+        : Date.now(),
     }));
   } catch (_error) { /* stockage indisponible */ }
 }
@@ -1416,7 +1418,6 @@ function markStatAuctionResultRecorded(code) {
     const saved = getStoredStatAuctionSession();
     if (!saved || saved.code !== String(code || "").toUpperCase()) return;
     saved.resultRecorded = true;
-    saved.ts = Date.now();
     sessionStorage.setItem(STAT_AUCTION_SESSION_STORAGE_KEY, JSON.stringify(saved));
   } catch (_error) { /* stockage indisponible */ }
 }
