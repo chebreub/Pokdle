@@ -12,6 +12,19 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qa
+          POSTGRES_PASSWORD: qa-local-only
+          POSTGRES_DB: pokdle_qa
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U qa -d pokdle_qa'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      QA_DATABASE_URL: postgresql://qa:qa-local-only@localhost:5432/pokdle_qa
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,26 +38,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install playwright==1.55.0
-      - run: python -m playwright install --with-deps chromium
+      - run: pip install -q playwright==1.55.0 pillow
+      - run: python -m playwright install --with-deps chromium > /tmp/browser-install.log 2>&1 || { tail -80 /tmp/browser-install.log; exit 1; }
       - run: npm ci
         working-directory: App
       - name: Reference screenshots and browser diagnostics
         run: python tools/browser_quality.py --output quality-artifacts/before --record-only
-      - name: Apply reviewed source edits on this branch only
+      - name: Apply reviewed edits on this branch only
+        run: python .audit/apply.py
+      - name: Build and unit/integration tests
         run: |
-          if [ -f .audit/apply.py ]; then python .audit/apply.py; fi
-      - run: npm run build && npm test
+          mkdir -p ../quality-artifacts
+          npm run build
+          npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -160 ../quality-artifacts/unit-tests.log; exit 1; }
+          tail -12 ../quality-artifacts/unit-tests.log
         working-directory: App
-      - name: Candidate screenshots and browser diagnostics
+      - name: Candidate browser diagnostics
         run: python tools/browser_quality.py --output quality-artifacts/after --record-only
-      - name: Commit generated source edits to the work branch
+      - name: Evidence and dependency report
+        if: always()
+        run: python .audit/evidence.py
+      - name: Commit reviewed source edits and evidence to work branch
         run: |
           git add App tools docs
           if ! git diff --cached --quiet; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'Apply reviewed Pokdle audit corrections'
+            git commit -m 'Apply audited component and reliability improvements'
             git push origin HEAD:work/audit-consolidation
           fi
       - uses: actions/upload-artifact@v4
