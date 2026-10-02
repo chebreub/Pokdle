@@ -1736,7 +1736,7 @@ function handlePartyDisconnect(socketId, voluntary) {
   if (!room) return;
   const socket = io.sockets.sockets.get(socketId);
   if (socket?.data) socket.data.partyRoomCode = null;
-  if (socket) socket.leave(room.code);
+  if (typeof socket?.leave === "function") socket.leave(room.code);
   const player = room.players.find((entry) => entry.id === socketId);
   if (!player) return;
 
@@ -3618,7 +3618,7 @@ function handleStatAuctionDisconnect(socketId, forceLeave) {
     if (!player) continue;
     const sock = io.sockets.sockets.get(socketId);
     if (sock?.data) sock.data.statAuctionRoomCode = null;
-    if (sock) sock.leave(room.code);
+    if (typeof sock?.leave === "function") sock.leave(room.code);
 
     const finalizeDeparture = () => {
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
