@@ -3236,7 +3236,7 @@ io.on("connection", (socket) => {
         status: "lobby",
         round: 0,
         totalRounds: 5,
-        players: [{ id: socket.id, side: "left", nickname, score: 0, allocations: [], connected: true }],
+        players: [{ id: socket.id, side: "left", nickname, score: 0, allocations: [], connected: true, reconnectToken: crypto.randomBytes(18).toString("hex"), reconnectUntil: null, reconnectTimer: null }],
         sequence: null,
         currentAllocations: { left: null, right: null },
         history: [],
@@ -3246,7 +3246,7 @@ io.on("connection", (socket) => {
       statAuctionRooms.set(code, room);
       socket.data.statAuctionRoomCode = code;
       emitStatAuctionRoomState(room);
-      respond(ack, { ok: true, room: publicStatAuctionRoomState(room, socket.id) });
+      respond(ack, { ok: true, code, resumeToken: room.players[0].reconnectToken, room: publicStatAuctionRoomState(room, socket.id) });
     } catch (_e) { respond(ack, { ok: false, error: "Erreur création." }); }
   });
 
@@ -3260,11 +3260,39 @@ io.on("connection", (socket) => {
       const room = statAuctionRooms.get(code);
       if (room.players.length >= 2) return respond(ack, { ok: false, error: "Room pleine." });
       if (room.status !== "lobby") return respond(ack, { ok: false, error: "Partie déjà lancée." });
-      room.players.push({ id: socket.id, side: "right", nickname, score: 0, allocations: [], connected: true });
+      const player = { id: socket.id, side: "right", nickname, score: 0, allocations: [], connected: true, reconnectToken: crypto.randomBytes(18).toString("hex"), reconnectUntil: null, reconnectTimer: null };
+      room.players.push(player);
       socket.data.statAuctionRoomCode = code;
       emitStatAuctionRoomState(room);
-      respond(ack, { ok: true, room: publicStatAuctionRoomState(room, socket.id) });
+      respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatAuctionRoomState(room, socket.id) });
     } catch (_e) { respond(ack, { ok: false, error: "Erreur join." }); }
+  });
+
+  socket.on("stat-auction:resume", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes." });
+      const code = sanitizeRoomCode(payload.code);
+      const token = String(payload.resumeToken || "").trim().slice(0, 96);
+      const room = statAuctionRooms.get(code);
+      if (!room || !token) return respond(ack, { ok: false, error: "Session Stat Auction introuvable." });
+      const player = room.players.find((p) => p.reconnectToken === token);
+      if (!player) return respond(ack, { ok: false, error: "Cette place Stat Auction n'est plus disponible." });
+      if (player.connected) return respond(ack, { ok: false, error: "Cette session Stat Auction est déjà active." });
+      if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Le délai de reconnexion est expiré." });
+
+      const previousId = player.id;
+      if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
+      player.id = socket.id;
+      player.connected = true;
+      player.reconnectUntil = null;
+      if (room.hostId === previousId) room.hostId = socket.id;
+      socket.join(room.code);
+      socket.data.statAuctionRoomCode = room.code;
+      emitStatAuctionRoomState(room);
+      respond(ack, { ok: true, code: room.code, resumeToken: player.reconnectToken, room: publicStatAuctionRoomState(room, socket.id) });
+    } catch (_error) {
+      respond(ack, { ok: false, error: "Reconnexion Stat Auction impossible." });
+    }
   });
 
   socket.on("stat-auction:leave-room", () => { handleStatAuctionDisconnect(socket.id, true); });
@@ -3552,6 +3580,7 @@ function publicStatAuctionRoomState(room, viewerId = null) {
     totalRounds: room.totalRounds || STAT_AUCTION_DEFAULT_ROUNDS,
     maxPlayers: 2,
     connectedCount: room.players.filter((p) => p.connected).length,
+    reconnectGraceMs: typeof STAT_AUCTION_RECONNECT_GRACE_MS !== "undefined" ? STAT_AUCTION_RECONNECT_GRACE_MS : 30000,
     canStart: room.players.length === 2 && room.players.every((p) => p.connected),
     sequence: room.status === "live" || room.status === "finished" ? room.sequence : null,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens.slice() : [],
@@ -3567,6 +3596,7 @@ function publicStatAuctionRoomState(room, viewerId = null) {
       score: p.score,
       submittedThisRound: Boolean(room.currentAllocations?.[p.side]),
       connected: p.connected,
+      reconnectUntil: p.connected ? null : (Number(p.reconnectUntil) || null),
       isHost: p.id === room.hostId,
       isSelf: p.id === viewerId,
     })),
@@ -3586,26 +3616,57 @@ function handleStatAuctionDisconnect(socketId, forceLeave) {
   for (const room of Array.from(statAuctionRooms.values())) {
     const player = room.players.find((p) => p.id === socketId && p.connected);
     if (!player) continue;
-    player.connected = false;
     const sock = io.sockets.sockets.get(socketId);
     if (sock?.data) sock.data.statAuctionRoomCode = null;
-    const remaining = room.players.find((p) => p.connected);
-    if (!remaining) {
-      statAuctionRooms.delete(room.code);
+    if (sock) sock.leave(room.code);
+
+    const finalizeDeparture = () => {
+      if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
+      player.reconnectUntil = null;
+      player.connected = false;
+      player.reconnectToken = null;
+      if (!statAuctionRooms.has(room.code)) return;
+
+      const other = room.players.find((p) => p !== player);
+      const otherCanReturn = Boolean(other && (other.connected || Number(other.reconnectUntil) > Date.now()));
+      if (!other) {
+        statAuctionRooms.delete(room.code);
+        return;
+      }
+
+      if (room.status === "live") {
+        room.status = "finished";
+        room.winnerSide = other.side;
+        room.finishReason = "disconnect";
+      }
+      if (room.hostId === player.id) room.hostId = other.id;
+
+      if (room.status === "lobby") {
+        room.players = room.players.filter((p) => p !== player);
+        other.side = "left";
+      }
+
+      if (!otherCanReturn && !other.connected) {
+        statAuctionRooms.delete(room.code);
+        return;
+      }
+      emitStatAuctionRoomState(room);
+    };
+
+    if (forceLeave) {
+      finalizeDeparture();
       continue;
     }
-    if (room.status === "live") {
-      room.status = "finished";
-      room.winnerSide = remaining.side;
-      room.finishReason = "disconnect";
-    }
-    if (room.hostId === socketId) room.hostId = remaining.id;
-    // Preserve the sides and scores of a finished match. Empty lobby seats can be reused.
-    if (room.status === "lobby") {
-      room.players = room.players.filter((p) => p.connected);
-      remaining.side = "left";
-    }
+
+    player.connected = false;
+    player.reconnectUntil = Date.now() + STAT_AUCTION_RECONNECT_GRACE_MS;
     emitStatAuctionRoomState(room);
+    if (player.reconnectTimer) clearTimeout(player.reconnectTimer);
+    player.reconnectTimer = setTimeout(() => {
+      player.reconnectTimer = null;
+      if (!statAuctionRooms.has(room.code) || player.connected || !room.players.includes(player)) return;
+      finalizeDeparture();
+    }, STAT_AUCTION_RECONNECT_GRACE_MS);
   }
 }
 
