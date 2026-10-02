@@ -78,7 +78,8 @@ function submitLeaderboardResult(mode, score, options = {}) {
   const n = Number(score);
   if (!mode || !Number.isInteger(n) || n <= 0) return Promise.resolve(false);
   const body = { mode, score:n, resultId:options.resultId || leaderboardResultId() };
-  if (mode === "daily") body.dailyKey = options.dailyKey || leaderboardTodayKey();
+  // Daily is recorded by /api/daily/guess after the server observes the winning guess.
+  if (mode === "daily") return Promise.resolve(false);
   return leaderboardFetchJson("/api/leaderboard/result", {
     method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)
   }).then(() => true).catch(() => false);
@@ -104,24 +105,11 @@ function pendingDailyLeaderboardScore() {
   return best;
 }
 function syncPendingDailyLeaderboard() {
-  const account = leaderboardAccountId(), day = leaderboardTodayKey();
-  if (!window.__pokedleAuthed || !account) return Promise.resolve(false);
-  const score = pendingDailyLeaderboardScore();
-  if (!score) return Promise.resolve(false);
-  // Old date-only markers are deliberately ignored: they belong to no known account.
-  const key = DAILY_LEADERBOARD_SYNC_PREFIX+encodeURIComponent(account)+":"+day;
-  try { if (Number(localStorage.getItem(key)) > 0) return Promise.resolve(true); } catch (_e) {}
-  if (dailyLeaderboardInFlight.has(key)) return dailyLeaderboardInFlight.get(key);
-  const request = submitLeaderboardResult("daily",score,{dailyKey:day,resultId:"daily:"+day}).then(ok => {
-    if (ok && leaderboardAccountId() === account && leaderboardTodayKey() === day) {
-      if (typeof LIVE_RANK_CACHE !== "undefined") LIVE_RANK_CACHE.delete("daily");
-      try { localStorage.setItem(key,String(score)); } catch (_e) {}
-    }
-    return ok;
-  }).finally(() => dailyLeaderboardInFlight.delete(key));
-  dailyLeaderboardInFlight.set(key,request);
-  return request;
+  // Retained as a no-op for callers/UI compatibility. Historical browser state is
+  // not trusted to backfill Daily rankings; new authenticated runs are server-owned.
+  return Promise.resolve(false);
 }
+
 let leaderboardViewRequest = 0;
 function leaderboardOwnsDialog(id) {
   const overlay = document.getElementById("overlay-modal");
