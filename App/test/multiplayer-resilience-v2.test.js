@@ -84,3 +84,15 @@ test("history restoration defers Stat Clash and Auction to persisted session res
   assert.match(historyClient,/key === "statClash"[\s\S]*restoreStatClashSessionView\(\)[\s\S]*return true/);
   assert.match(historyClient,/key === "statAuction"[\s\S]*restoreStatAuctionSessionView\(\)[\s\S]*return true/);
 });
+
+
+test("secure resume traffic has its own rate limit budget",()=>{
+  assert.match(server,/"resume":\s*\{\s*max:\s*8,\s*ipMax:\s*40/);
+  for (const event of ["duel:resume","party:resume","stat-clash:resume","stat-auction:resume"]) {
+    const start=server.indexOf('socket.on("'+event+'"');
+    const next=server.indexOf('socket.on("',start+20);
+    const section=server.slice(start,next<0?server.length:next);
+    assert.match(section,/checkRateLimit\(socket, "resume"\)/);
+    assert.doesNotMatch(section,/checkRateLimit\(socket, "room-join"\)/);
+  }
+});
