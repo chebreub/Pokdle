@@ -1823,7 +1823,7 @@ io.on("connection", (socket) => {
       if (room.status === "finished") return respond(ack, { ok: false, error: "Cette room est terminée." });
 
       const player = joinPlayerToRoom(room, socket, nickname);
-      if (room.players.length === MAX_ROOM_SIZE) {
+      if (room.players.length === MAX_ROOM_SIZE && room.players.every((entry) => entry.connected)) {
         startRoom(room);
       }
       emitRoomState(room);
@@ -1920,6 +1920,9 @@ io.on("connection", (socket) => {
       player.reconnectUntil = null;
       socket.join(room.code);
       socket.data.roomCode = room.code;
+      if (room.status === "waiting" && room.players.length === MAX_ROOM_SIZE && room.players.every((entry) => entry.connected)) {
+        startRoom(room);
+      }
       io.to(room.code).emit("duel:opponent-connection", { nickname: player.nickname, connected: true });
       emitRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicRoomState(room, socket.id) });
