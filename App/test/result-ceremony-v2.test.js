@@ -18,15 +18,18 @@ test("result ceremony reads collection state after the victory has been recorded
   assert.match(feel, /pokedexCollectionRegionStats/);
 });
 
-test("result ceremony distinguishes new, known and unchanged collection states", () => {
+test("result ceremony distinguishes new and known entries and stays out of losses", () => {
   assert.match(feel, /Nouvelle entrée enregistrée/);
   assert.match(feel, /Nouvelle forme enregistrée/);
   assert.match(feel, /Déjà enregistré/);
-  assert.match(feel, /Album inchangé/);
+  const start = feel.indexOf("function renderGameFeelResultProgress");
+  const end = feel.indexOf("function enhanceGameOverBox", start);
+  const section = feel.slice(start, end);
+  assert.match(section, /if \(!won\)[\s\S]*panel\?\.remove\(\)[\s\S]*return;/);
 });
 
 test("result ceremony exposes real Pokédex and mission progress", () => {
-  assert.match(feel, /PROGRESSION APRÈS LA PARTIE/);
+  assert.match(feel, /PROGRESSION POKÉDEX/);
   assert.match(feel, /Pokédex national/);
   assert.match(feel, /Génération /);
   assert.match(feel, /MISSION PRÊTE/);
@@ -57,4 +60,14 @@ test("Result Ceremony V2 has desktop, dark and mobile styling", () => {
   const mobile = ceremony.slice(ceremony.indexOf("@media (max-width:640px)"));
   assert.match(mobile, /#screen-game \.win-progress-grid[\s\S]*grid-template-columns:\s*1fr/);
   assert.match(mobile, /#screen-game \.win-btns[\s\S]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/);
+});
+
+
+test("secondary collection progress is collapsible and auto-opens only for meaningful rewards", () => {
+  assert.match(feel, /document\.createElement\('details'\)/);
+  assert.match(feel, /const important=Boolean\(newEntry \|\| mission\?\.becameReady\)/);
+  assert.match(feel, /panel\.open=important/);
+  assert.match(css, /GAMEPLAY \+ RESULTS PASS/);
+  assert.match(css, /#screen-game \.win-ceremony-summary/);
+  assert.match(css, /#screen-game \.win-ceremony-body/);
 });
