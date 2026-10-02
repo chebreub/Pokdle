@@ -65,3 +65,10 @@ test('newer leaderboard requests own the final modal even when the older respons
  await f.env.openLeaderboardV2('quiz','week');old.resolve();await stale;
  assert.match(f.html,/LATEST QUIZ/);assert.doesNotMatch(f.html,/OLD DAILY/);
 });
+
+test('query parser override preserves ordinary nested and array form data',()=>{
+ const qs=require('qs');
+ assert.deepEqual(qs.parse('room=ABCDE&gens[]=1&gens[]=9'),{room:'ABCDE',gens:['1','9']});
+ assert.deepEqual(qs.parse('profile[name]=QA'),{profile:{name:'QA'}});
+ assert.deepEqual(qs.parse(''),{});
+});

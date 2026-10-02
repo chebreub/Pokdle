@@ -67,6 +67,11 @@ def main():
      expect(all(e['position']=='static' and 12<=e['width']<=30 for e in sizes),str(sizes))
      return sizes
     check('preview-layout',preview_layout,False)
+    def icon_strokes():
+     styles=page.locator('.club-pick-icon svg:visible').evaluate_all('(els)=>els.map(e=>({fill:getComputedStyle(e).fill,stroke:getComputedStyle(e).stroke}))')
+     expect(len(styles)==3 and all(e['fill']=='none' and e['stroke']!='none' for e in styles),str(styles))
+     return styles
+    check('catalog-icons',icon_strokes,False)
     def start(action,target):
      nav('game','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["'+action+'"]\']:visible').first.click();page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen(target)
     def guess():
@@ -84,6 +89,7 @@ def main():
     def completed_home():
      nav('home','screen-config')
      expect(page.locator('#daily-hero').get_attribute('data-daily-state')=='complete','Daily summary did not update')
+     page.wait_for_timeout(3500)
      return screen('screen-config')
     check('home-completed',completed_home)
     check('pokedex',lambda:nav('pokedex','screen-pokedex'))

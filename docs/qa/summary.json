@@ -1,22 +1,15 @@
 {
   "before": {
-    "commit": "57f3bf4d42daf86b86a8de628ebf6359e8519085",
-    "record_only": true,
-    "passed": 124,
-    "failed": 1,
-    "failures": [
-      {
-        "viewport": 768,
-        "case": "home-dark",
-        "ok": false,
-        "error": "Horizontal overflow: {'visible': ['screen-config'], 'overflow': 265}"
-      }
-    ]
-  },
-  "after": {
-    "commit": "57f3bf4d42daf86b86a8de628ebf6359e8519085",
+    "commit": "555abda173d3552b66337d186dbe14c30931c61e",
     "record_only": true,
     "passed": 125,
+    "failed": 0,
+    "failures": []
+  },
+  "after": {
+    "commit": "555abda173d3552b66337d186dbe14c30931c61e",
+    "record_only": true,
+    "passed": 130,
     "failed": 0,
     "failures": []
   },
@@ -24,14 +17,15 @@
     "ok": false,
     "clients": 2,
     "scope": "local guest Party Room",
-    "error": "Page.wait_for_function: EvalError: Refused to evaluate a string as JavaScript because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self'\".\n\n    at eval (<anonymous>)\n    at predicate (eval at evaluate (:291:30), <anonymous>:4:56)\n    at next (eval at evaluate (:291:30), <anonymous>:29:29)"
+    "stage": "join",
+    "error": "Host roster did not update"
   },
   "dependencies": {
     "info": 0,
     "low": 0,
-    "moderate": 1,
+    "moderate": 0,
     "high": 0,
     "critical": 0,
-    "total": 1
+    "total": 0
   }
 }
