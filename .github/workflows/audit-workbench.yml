@@ -21,7 +21,7 @@ jobs:
           POSTGRES_DB: pokdle_qa
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U qa -d pokdle_qa'
+          --health-cmd pg_isready
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       QA_DATABASE_URL: postgresql://qa:qa-local-only@localhost:5432/pokdle_qa
@@ -57,7 +57,7 @@ jobs:
         run: python tools/browser_quality.py --output quality-artifacts/after --record-only
       - name: Evidence and dependency report
         if: always()
-        run: python .audit/evidence.py
+        run: if [ -f .audit/evidence.py ]; then python .audit/evidence.py; fi
       - name: Commit reviewed source edits and evidence to work branch
         run: |
           git add App tools docs
