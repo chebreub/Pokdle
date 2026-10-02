@@ -79,12 +79,21 @@ def main():
     check('normal-guess',guess)
     def finish():
      if page.locator('#btn-surrender').is_visible(): page.locator('#btn-surrender').click()
-     page.locator('#win-box').wait_for(state='visible');return screen('screen-game')
+     page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(350)
+     expect(page.locator('#btn-result-catalog').is_visible(),'Result has no route back to the catalog')
+     expect(page.locator('#btn-restart').inner_text().strip()=='Rejouer','Normal replay action is unclear')
+     expect(page.locator('#win-ceremony-progress').count()==0,'Loss should not show unchanged collection progress')
+     return screen('screen-game')
     check('normal-result',finish)
     def daily_finish():
      start('startDailyGame','screen-game')
      name=page.evaluate('secretPokemon.name');page.locator('#guess-input').fill(name);page.locator('#btn-submit').click()
-     page.locator('#win-box').wait_for(state='visible');return screen('screen-game')
+     page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
+     expect('Continuer en illimité' in page.locator('#btn-restart').inner_text(),'Daily result does not explain the next game')
+     expect(page.locator('#btn-result-catalog').is_visible(),'Daily result has no catalog exit')
+     progress=page.locator('#win-ceremony-progress')
+     expect(progress.count()==1 and progress.evaluate('(e)=>e.tagName')=='DETAILS','Collection progress is not a collapsible detail')
+     return screen('screen-game')
     check('daily-result',daily_finish)
     def completed_home():
      nav('home','screen-config')
@@ -114,6 +123,23 @@ def main():
      page.locator('button[data-action="openFromAllModes"][data-args=\'["openDraftScoreAttackMode", true]\']:visible').first.click()
      return screen('screen-draft-score-attack')
     check('draft-pro',draft_pro)
+    def gameplay_family_smoke():
+     matrix=[
+      ('startSilhouetteGame','screen-game'),('startDescriptionMode','screen-game'),('startMysteryStatGame','screen-game'),
+      ('startWeightBattle','screen-game'),('startEvolutionChainGame','screen-game'),('startPokedexOrderGame','screen-game'),
+      ('openOddOneOutMode','screen-odd-one-out'),('openHigherLowerMode','screen-higher-lower'),
+      ('openPokeConnectionsMode','screen-poke-connections'),('openSpeedrunMode','screen-speedrun'),
+      ('openTypeComboSolo','screen-type-combo'),('openDraftArenaMode','screen-draft-arena')
+     ]
+     opened=[]
+     for action,target in matrix:
+      page.evaluate('(name)=>window[name]()',action);page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()')
+      screen(target)
+      if target!='screen-game':
+       expect(page.locator('#'+target+' .gameplay-screen-card').count()==1,'Dedicated game is missing the common shell: '+action)
+      opened.append(action)
+     return opened
+    if width in (390,1366): check('gameplay-family-smoke',gameplay_family_smoke,False)
     def back_history():
      nav('game','screen-all-modes');page.locator('#mode-search').fill('cri');nav('pokedex','screen-pokedex')
      page.go_back();screen('screen-all-modes');expect(page.locator('#mode-search').input_value()=='cri','Back lost catalog search')
