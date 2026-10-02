@@ -60,3 +60,12 @@ test("Stat Clash keeps its existing round token separate from reconnect identity
   assert.ok(clash.includes("statClashState.roomToken = nextToken"));
   assert.ok(!clash.includes("roomToken: response.resumeToken"));
 });
+
+
+test("Stat Auction completion is idempotent across refresh recovery",()=>{
+  assert.ok(auction.includes("function hasRecordedStatAuctionResult"));
+  assert.ok(auction.includes("function markStatAuctionResultRecorded"));
+  assert.ok(auction.includes("const alreadyRecorded = hasRecordedStatAuctionResult(room.code)"));
+  assert.ok(auction.includes("if (!wasFinished && !alreadyRecorded)"));
+  assert.ok(auction.includes("markStatAuctionResultRecorded(room.code)"));
+});
