@@ -137,6 +137,7 @@ def main():
                     page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
                     wait(page,lambda p=page:p.evaluate('() => typeof openStatClashMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Transfer Stat Clash client did not initialize')
                     wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'Transfer Stat Clash splash stayed visible')
+                    wait(page,lambda p=page:p.evaluate('() => Boolean(ensureMultiplayerSocket()?.connected)'),'Transfer Stat Clash socket did not connect')
                     page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openStatClashMode(); }')
                 transfer_host,transfer_guest,transfer_replacement=transfer_pages
                 transfer_host.evaluate('() => { statClashState.roomNameDraft="QA Clash Transfer Host"; createStatClashRoom(); }')
@@ -167,6 +168,7 @@ def main():
                     page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
                     wait(page,lambda p=page:p.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'8p client did not initialize')
                     wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'8p client splash stayed visible')
+                    wait(page,lambda p=page:p.evaluate('() => Boolean(ensureMultiplayerSocket()?.connected)'),'8p client socket did not connect')
                     page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openPartyRoomMode(); }')
                 crowd_host=crowd[0]
                 crowd_host.locator('#party-nickname').fill('QA 8 Host');crowd_host.locator('[data-action="partyCreateRoom"]').click()
