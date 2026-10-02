@@ -1434,7 +1434,14 @@ function savePartySession(code, nickname, resumeToken) {
   partyRoomState.resumeToken = resumeToken;
   partyRoomState.nickname = nickname;
   try {
-    sessionStorage.setItem(PARTY_SESSION_STORAGE_KEY, JSON.stringify({ code: code, nickname: nickname, resumeToken: resumeToken, ts: Date.now() }));
+    var previous = JSON.parse(sessionStorage.getItem(PARTY_SESSION_STORAGE_KEY) || "null");
+    var sameSession = previous?.code === code && previous?.resumeToken === resumeToken;
+    sessionStorage.setItem(PARTY_SESSION_STORAGE_KEY, JSON.stringify({
+      code: code,
+      nickname: nickname,
+      resumeToken: resumeToken,
+      ts: sameSession ? (Number(previous.ts) || Date.now()) : Date.now(),
+    }));
   } catch (_error) { /* stockage indisponible */ }
 }
 
