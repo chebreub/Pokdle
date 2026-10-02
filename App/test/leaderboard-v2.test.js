@@ -77,3 +77,8 @@ test('daily leaderboard can recover a win completed before auth initialization',
   f.matchHistory.push({mode:'normal',result:'win',attempts:2,at:now});
   assert.equal(f.__pendingDaily(),6);
 });
+
+
+test('legacy bulk score endpoint is retired',()=>{
+  assert.match(server,/app\.post\("\/api\/scores"[\s\S]*status\(410\)[\s\S]*legacy_score_sync_retired/);
+});
