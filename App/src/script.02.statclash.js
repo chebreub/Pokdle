@@ -2209,7 +2209,21 @@ function applyStatClashRoomState(roomState) {
 const STAT_CLASH_SESSION_STORAGE_KEY = "pokedle_statclash_session_v1";
 const STAT_CLASH_SESSION_TTL_MS = 10 * 60 * 1000;
 
+function getStoredStatClashSession() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(STAT_CLASH_SESSION_STORAGE_KEY) || "null");
+    if (!saved?.code || !saved?.resumeToken) return null;
+    if (Date.now() - Number(saved.ts || 0) > STAT_CLASH_SESSION_TTL_MS) {
+      sessionStorage.removeItem(STAT_CLASH_SESSION_STORAGE_KEY);
+      return null;
+    }
+    return saved;
+  } catch (_err) {
+    return null;
+  }
+}
 function saveStatClashSession(code, resumeToken) {
+  if (!code || !resumeToken) return;
   try { sessionStorage.setItem(STAT_CLASH_SESSION_STORAGE_KEY, JSON.stringify({ code, resumeToken, ts: Date.now() })); } catch (_err) {}
 }
 function clearStatClashSession() {
@@ -2233,19 +2247,54 @@ function showResumedStatClashRoom(roomState) {
   renderStatClashScreen();
 }
 function attemptStatClashResume() {
-  let saved = null;
-  try { saved = JSON.parse(sessionStorage.getItem(STAT_CLASH_SESSION_STORAGE_KEY) || "null"); } catch (_err) { return; }
-  if (!saved?.code || !saved?.resumeToken || !multiplayerSocket?.connected) return;
-  if (Date.now() - Number(saved.ts || 0) > STAT_CLASH_SESSION_TTL_MS) { clearStatClashSession(); return; }
+  const saved = getStoredStatClashSession();
+  if (!saved || !multiplayerSocket?.connected) return false;
   multiplayerSocket.emit("stat-clash:resume", { code: saved.code, resumeToken: saved.resumeToken }, (response = {}) => {
-    if (!response.ok) { clearStatClashSession(); return; }
+    if (!response.ok) {
+      clearStatClashSession();
+      if (statClashState?.mode === "room" && !statClashState.room) {
+        statClashState.roomPendingAction = "";
+        statClashState.roomJoinCode = saved.code;
+        setStatClashRoomFeedback(response.error || "La session Stat Clash n'est plus disponible. Rejoins la room avec son code.", "error");
+        renderStatClashScreen();
+      }
+      return;
+    }
     saveStatClashSession(response.code || saved.code, response.resumeToken || saved.resumeToken);
     showResumedStatClashRoom(response.room);
     setStatClashRoomFeedback("Room restaurée après reconnexion.", "success");
     renderStatClashScreen();
   });
+  return true;
+}
+function restoreStatClashSessionView() {
+  const saved = getStoredStatClashSession();
+  if (!saved) return false;
+  const pool = getStatClashPool();
+  if (!pool.length) return false;
+  if (!statClashState) statClashState = createStatClashState();
+  statClashState.pool = pool;
+  statClashState.mode = "room";
+  statClashState.phase = "idle";
+  statClashState.room = null;
+  statClashState.roomJoinCode = saved.code;
+  statClashState.roomCodeDraft = saved.code;
+  statClashState.roomPendingAction = "resuming";
+  gameMode = "stat-clash";
+  hideExtraScreens();
+  hideScreen("screen-config");
+  hideScreen("screen-game");
+  showScreen("screen-stat-clash");
+  setGlobalNavActive("social");
+  bindStatClashInteractions();
+  setStatClashRoomFeedback("Reconnexion à la room…", "info");
+  renderStatClashScreen();
+  const socket = ensureMultiplayerSocket();
+  if (socket?.connected) attemptStatClashResume();
+  return true;
 }
 window.attemptStatClashResume = attemptStatClashResume;
+window.restoreStatClashSessionView = restoreStatClashSessionView;
 window.clearStatClashSession = clearStatClashSession;
 
 function createStatClashRoom() {
