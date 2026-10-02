@@ -1,7 +1,7 @@
 // ============================================================
 // GAMEPLAY
 // ============================================================
-function submitGuess() {
+async function submitGuess() {
   if (gameOver) return;
 
   document.getElementById("guess-ac").classList.add("hidden");
@@ -24,7 +24,39 @@ function submitGuess() {
   }
 
   clearErr();
-  attempts += 1;
+
+  // Authenticated Daily runs are counted by the server. This makes the public
+  // leaderboard depend on observed guesses instead of a browser-declared score.
+  let dailyServerResult = null;
+  if (gameMode === "daily" && window.__pokedleAuthed) {
+    try {
+      const response = await fetch("/api/daily/guess", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: found.name }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.ok) {
+        if (data?.error === "duplicate_guess") {
+          showErr(`Tu as déjà proposé ${found.name} !`);
+          return;
+        }
+        if (data?.error === "daily_finished") {
+          showErr("Ton Pokémon du jour est déjà terminé sur ce compte.");
+          return;
+        }
+        throw new Error(data?.error || "daily_guess_failed");
+      }
+      dailyServerResult = data;
+      attempts = Number(data.attempts) || (attempts + 1);
+    } catch (_error) {
+      showErr("Impossible de valider cet essai en ligne. Réessaie dans un instant.");
+      return;
+    }
+  } else {
+    attempts += 1;
+  }
   document.getElementById("try-count").textContent = String(attempts);
 
   guessedNames.push(found.name);
@@ -43,7 +75,12 @@ function submitGuess() {
   updatePixelPanel(false);
   saveCurrentGame();
 
-  if (found.name === secretPokemon.name) {
+  const localCorrect = found.name === secretPokemon.name;
+  if (dailyServerResult && Boolean(dailyServerResult.correct) !== localCorrect) {
+    showErr("Le Daily local n’est plus synchronisé avec le serveur. Recharge la page.");
+    return;
+  }
+  if (localCorrect) {
     gameOver = true;
     showWin();
   }
