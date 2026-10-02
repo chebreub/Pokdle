@@ -1084,7 +1084,6 @@ function accountNavigate(destination) {
           return;
         }
         pushSync();
-        setTimeout(function () { try { submitLeaderboardScores(); } catch (e) {} }, 50);
       }).catch(function () {});
     }).catch(function () {});
     setInterval(pushSync, 60000);
@@ -1102,51 +1101,9 @@ function accountNavigate(destination) {
   else initSync();
 })();
 
-function submitLeaderboardScores() {
-  if (!window.__pokedleAuthed) return Promise.resolve(false);
-  if (typeof playerProfile === "undefined" || !playerProfile) return Promise.resolve(false);
-  var scores = {
-    quiz: Number(playerProfile.quizHighScore) || 0,
-    speedrun: Number(playerProfile.speedrunHighScore) || 0,
-    party: Number(playerProfile.partyHighScore) || 0,
-    intrus: Number(playerProfile.oddOneOutHighScore) || 0,
-    poids: Number(playerProfile.weightBattleHighScore) || 0,
-    higherlower: Number(playerProfile.higherLowerHighScore) || 0,
-    higherlower60: Number(playerProfile.higherLower60sHighScore) || 0,
-    typecombo: Number(playerProfile.typeComboHighScore) || 0
-  };
-  var draft = playerProfile.draftScoreAttackRecords || {};
-  var draftAll = 0;
-  Object.keys(draft).forEach(function (k) {
-    var dv = Number(draft[k]) || 0;
-    if (dv > 0) {
-      scores["draft_" + k] = dv;
-      if (dv > draftAll) draftAll = dv;
-    }
-  });
-  if (draftAll > 0) scores.draft_all = draftAll;
-  try {
-    return fetch("/api/scores", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ scores: scores })
-    }).then(function (r) { return r.json(); }).then(function (data) { return Boolean(data && data.ok); }).catch(function () { return false; });
-  } catch (e) {
-    return Promise.resolve(false);
-  }
-}
-var __lbSubmitTimer = null;
-function queueLeaderboardSubmit() {
-  if (__lbSubmitTimer) clearTimeout(__lbSubmitTimer);
-  __lbSubmitTimer = setTimeout(submitLeaderboardScores, 2500);
-}
-window.queueLeaderboardSubmit = queueLeaderboardSubmit;
-(function () {
-  setTimeout(submitLeaderboardScores, 8000);
-  setInterval(submitLeaderboardScores, 60000);
-})();
-
+// Public leaderboards are event-driven. Historical local profile records are deliberately
+// not bulk-uploaded: localStorage/playerProfile is user-controlled and is not evidence of
+// a completed game. New performances flow through /api/leaderboard/result instead.
 function switchLeaderboard() {
   var mode = this && this.dataset ? this.dataset.lbMode : "quiz";
   openLeaderboard(mode);
