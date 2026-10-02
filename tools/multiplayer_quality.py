@@ -130,7 +130,7 @@ def main():
 
                 # Isolated Stat Clash host-handoff scenario: fresh sockets avoid polluting production rate limits.
                 stage='clash-host-handoff'
-                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(2)]
+                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(3)]
                 transfer_pages=[context.new_page() for context in extra_contexts]
                 for page in transfer_pages:
                     page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
@@ -138,7 +138,7 @@ def main():
                     wait(page,lambda p=page:p.evaluate('() => typeof openStatClashMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Transfer Stat Clash client did not initialize')
                     wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'Transfer Stat Clash splash stayed visible')
                     page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openStatClashMode(); }')
-                transfer_host,transfer_guest=transfer_pages
+                transfer_host,transfer_guest,transfer_replacement=transfer_pages
                 transfer_host.evaluate('() => { statClashState.roomNameDraft="QA Clash Transfer Host"; createStatClashRoom(); }')
                 wait(transfer_host,lambda:transfer_host.evaluate('() => Boolean(statClashState?.room?.code)'),'Transfer Stat Clash room was not created')
                 transfer_code=transfer_host.evaluate('() => statClashState.room.code')
@@ -147,15 +147,14 @@ def main():
                 transfer_host.evaluate('() => leaveStatClashRoom()')
                 wait(transfer_guest,lambda:transfer_guest.evaluate('(code) => statClashState?.room?.code===code && statClashState?.room?.status==="lobby"',transfer_code),'Stat Clash room closed when its host left')
                 wait(transfer_guest,lambda:transfer_guest.evaluate('() => Boolean(statClashState?.room?.players?.find(p=>p.isSelf)?.isHost)'),'Stat Clash host role did not transfer')
-                transfer_host.evaluate('() => openStatClashMode()')
-                transfer_host.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Replacement"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',transfer_code)
+                transfer_replacement.evaluate('(code) => { statClashState.roomNameDraft="QA Clash Replacement"; statClashState.roomCodeDraft=code; joinStatClashRoom(); }',transfer_code)
                 wait(transfer_guest,lambda:transfer_guest.evaluate('() => statClashState?.room?.players?.length===2'),'Replacement Stat Clash player could not join transferred room')
                 transfer_guest.evaluate('() => selectStatClashImposedRule("noSpeedEarly")')
-                transfer_host.evaluate('() => selectStatClashImposedRule("atkRound3")')
+                transfer_replacement.evaluate('() => selectStatClashImposedRule("atkRound3")')
                 wait(transfer_guest,lambda:transfer_guest.evaluate('() => Boolean(statClashState?.room?.pendingImposedRuleBySide?.left && statClashState?.room?.pendingImposedRuleBySide?.right)'),'Transferred Stat Clash room could not collect fresh rule choices')
                 transfer_guest.evaluate('() => startStatClashRoomGame()')
                 wait(transfer_guest,lambda:transfer_guest.evaluate('() => ["starting","live"].includes(statClashState?.room?.status)'),'Transferred Stat Clash host could not start the game')
-                transfer_host.evaluate('() => leaveStatClashRoom()');transfer_guest.evaluate('() => leaveStatClashRoom()')
+                transfer_replacement.evaluate('() => leaveStatClashRoom()');transfer_guest.evaluate('() => leaveStatClashRoom()')
                 for context in extra_contexts: context.close()
                 extra_contexts=[]
 
