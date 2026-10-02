@@ -1,4 +1,4 @@
-const { ensureLeaderboardResultKeys, recordLeaderboardResult } = require("./lib/leaderboard-store");
+const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -163,6 +163,15 @@ async function initAuthDb() {
     )`);
     await pgPool.query(`CREATE INDEX IF NOT EXISTS leaderboard_events_mode_created_idx ON leaderboard_events (mode, created_at DESC)`);
     await ensureLeaderboardResultKeys(pgPool);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS daily_sessions (
+      discord_id TEXT NOT NULL,
+      day DATE NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      guessed JSONB NOT NULL DEFAULT '[]'::jsonb,
+      finished BOOLEAN NOT NULL DEFAULT false,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (discord_id, day)
+    )`);
     await pgPool.query(`CREATE TABLE IF NOT EXISTS visits (
       day DATE PRIMARY KEY,
       hits INTEGER NOT NULL DEFAULT 0
@@ -320,6 +329,123 @@ function leaderboardBestSql(config) {
   return config?.direction === "asc" ? "MIN" : "MAX";
 }
 
+
+function dailyUtcKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+function dailyHashString(value) {
+  let h = 2166136261;
+  const text = String(value || "");
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function dailyMulberry32(seed) {
+  return function rng() {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function serverDailyPokemon(day = dailyUtcKey()) {
+  const pool = POKEMON_LIST
+    .filter((pokemon) => pokemon && !pokemon.isAltForm && Number(pokemon.id) < 20000)
+    .slice()
+    .sort((a, b) => Number(a.id) - Number(b.id));
+  if (!pool.length) throw new Error("Daily pool unavailable");
+  const rng = dailyMulberry32(dailyHashString("pokedle:" + day));
+  return pool[Math.floor(rng() * pool.length)];
+}
+async function getOrCreateDailySession(userId, day) {
+  await pgPool.query(
+    `INSERT INTO daily_sessions (discord_id, day) VALUES ($1, $2)
+     ON CONFLICT (discord_id, day) DO NOTHING`,
+    [userId, day]
+  );
+  const result = await pgPool.query(
+    "SELECT attempts, guessed, finished FROM daily_sessions WHERE discord_id=$1 AND day=$2",
+    [userId, day]
+  );
+  return result.rows[0] || { attempts: 0, guessed: [], finished: false };
+}
+
+app.post("/api/daily/session", express.json({ limit: "2kb" }), async (req, res) => {
+  if (!authReady()) return res.status(503).json({ ok: false, error: "unavailable" });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ ok: false, error: "authentication_required" });
+  const day = dailyUtcKey();
+  try {
+    const state = await getOrCreateDailySession(user.id, day);
+    res.json({ ok: true, day, attempts: Number(state.attempts) || 0, finished: Boolean(state.finished) });
+  } catch (error) {
+    console.error("[daily] session:", error.message);
+    res.status(503).json({ ok: false, error: "storage_unavailable" });
+  }
+});
+
+app.post("/api/daily/guess", express.json({ limit: "2kb" }), async (req, res) => {
+  if (!authReady()) return res.status(503).json({ ok: false, error: "unavailable" });
+  const user = getSessionUser(req);
+  if (!user) return res.status(401).json({ ok: false, error: "authentication_required" });
+  const day = dailyUtcKey();
+  const rawName = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  if (!rawName || rawName.length > 80) return res.status(400).json({ ok: false, error: "invalid_guess" });
+  const normalized = normalizeName(rawName);
+  const pokemon = POKEMON_BY_NORMALIZED_NAME.get(normalized);
+  if (!pokemon || pokemon.isAltForm || Number(pokemon.id) >= 20000) {
+    return res.status(400).json({ ok: false, error: "invalid_guess" });
+  }
+
+  const client = await pgPool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `INSERT INTO daily_sessions (discord_id, day) VALUES ($1, $2)
+       ON CONFLICT (discord_id, day) DO NOTHING`,
+      [user.id, day]
+    );
+    const locked = await client.query(
+      "SELECT attempts, guessed, finished FROM daily_sessions WHERE discord_id=$1 AND day=$2 FOR UPDATE",
+      [user.id, day]
+    );
+    const row = locked.rows[0] || { attempts: 0, guessed: [], finished: false };
+    const guessed = Array.isArray(row.guessed) ? row.guessed.map(String) : [];
+    if (row.finished) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ ok: false, error: "daily_finished", attempts: Number(row.attempts) || 0 });
+    }
+    if (guessed.includes(normalized)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ ok: false, error: "duplicate_guess", attempts: Number(row.attempts) || 0 });
+    }
+
+    const attempts = (Number(row.attempts) || 0) + 1;
+    guessed.push(normalized);
+    const correct = Number(pokemon.id) === Number(serverDailyPokemon(day).id);
+    const config = leaderboardConfig("daily");
+    if (!config) throw new Error("Daily leaderboard config unavailable");
+    const ranked = correct && attempts <= Number(config.max);
+    await client.query(
+      "UPDATE daily_sessions SET attempts=$3, guessed=$4::jsonb, finished=$5, updated_at=now() WHERE discord_id=$1 AND day=$2",
+      [user.id, day, attempts, JSON.stringify(guessed), correct]
+    );
+    if (ranked) {
+      await recordLeaderboardResultInTransaction(client, user, "daily", attempts, config, "daily:" + day);
+    }
+    await client.query("COMMIT");
+    res.json({ ok: true, day, attempts, correct, ranked });
+  } catch (error) {
+    try { await client.query("ROLLBACK"); } catch (_rollbackError) {}
+    console.error("[daily] guess:", error.message);
+    res.status(503).json({ ok: false, error: "storage_unavailable" });
+  } finally {
+    client.release();
+  }
+});
+
 // Legacy bulk score import is intentionally retired. Those values came from the browser's
 // local profile and therefore could not prove that a game had actually been completed.
 app.post("/api/scores", express.json({ limit: "4kb" }), (req, res) => {
@@ -332,6 +458,7 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
   const user=getSessionUser(req);
   if (!user) return res.status(401).json({ok:false,error:"authentication_required"});
   const mode=String(req.body?.mode||""), config=leaderboardConfig(mode);
+  if (mode==="daily") return res.status(409).json({ok:false,error:"daily_requires_server_session"});
   const score=clampLeaderboardScore(req.body?.score,config);
   if (!config || score==null) return res.status(400).json({ok:false,error:"invalid_score"});
   const today=new Date().toISOString().slice(0,10);

@@ -1,11 +1,22 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict"),crypto=require("node:crypto");
-const {ensureLeaderboardResultKeys,recordLeaderboardResult}=require("../lib/leaderboard-store");
+const {ensureLeaderboardResultKeys,recordLeaderboardResult,recordLeaderboardResultInTransaction}=require("../lib/leaderboard-store");
 test("a storage failure rolls back the event and always releases the connection",async()=>{
  const calls=[];let released=false;
  const client={query:async(sql)=>{calls.push(sql);if(sql.startsWith("INSERT INTO scores"))throw Error("write failed");return {rows:[{score:6}]};},release(){released=true;}};
  await assert.rejects(recordLeaderboardResult({connect:async()=>client},{id:"test"},"daily",6,{direction:"asc"},"daily:2026-10-02"),/write failed/);
  assert.equal(calls[0],"BEGIN");assert.equal(calls.at(-1),"ROLLBACK");assert.equal(released,true);assert.equal(calls.includes("COMMIT"),false);
+});
+test("an outer transaction can record a leaderboard result without opening another transaction",async()=>{
+ const calls=[];
+ const client={query:async(sql)=>{
+  calls.push(sql);
+  if(sql.startsWith("INSERT INTO leaderboard_events"))return {rows:[{score:3}]};
+  return {rows:[]};
+ }};
+ const stored=await recordLeaderboardResultInTransaction(client,{id:"A"},"daily",3,{direction:"asc"},"daily:2026-10-02");
+ assert.deepEqual(stored,{score:3,duplicate:false});
+ assert.equal(calls.includes("BEGIN"),false);assert.equal(calls.includes("COMMIT"),false);assert.equal(calls.includes("ROLLBACK"),false);
 });
 test("PostgreSQL migration preserves legacy records and concurrent retries count once",{skip:!process.env.QA_DATABASE_URL},async()=>{
  const {Pool}=require("pg"),url=process.env.QA_DATABASE_URL;

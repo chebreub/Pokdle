@@ -16,25 +16,17 @@ function fixture(){
 }
 function win(at=Date.now(),attempts=6){return {mode:"daily",result:"win",at,attempts};}
 function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};}
-test('daily recovery rejects missing/future/old times and noninteger scores',()=>{
- const f=fixture(),now=Date.now();f.env.matchHistory=[win(now-86400000,1),win(now+100000,1),win(undefined,2),win(now,1.2),win(now,101),win(now,6)];
- f.env.matchHistory[2].at=undefined;assert.equal(f.env.pendingDailyLeaderboardScore(),6);
+test('daily browser history is never backfilled into the public leaderboard',async()=>{
+ const f=fixture();f.env.matchHistory=[win()];
+ assert.equal(await f.env.syncPendingDailyLeaderboard(),false);
+ assert.equal(await f.env.submitLeaderboardResult("daily",1),false);
+ assert.equal(f.calls.length,0);assert.equal(f.store.size,0);
 });
-test('daily recovery coalesces concurrent requests and scopes markers by account',async()=>{
- const f=fixture();f.env.matchHistory=[win()];const d=deferred();let posts=0;
- f.env.fetch=async()=>{posts++;await d.promise;return {ok:true,json:async()=>({ok:true})};};
- const a=f.env.syncPendingDailyLeaderboard(),b=f.env.syncPendingDailyLeaderboard();assert.equal(a,b);d.resolve();await a;assert.equal(posts,1);
- await f.env.syncPendingDailyLeaderboard();assert.equal(posts,1);f.env.connectedAccountUser={id:"B"};await f.env.syncPendingDailyLeaderboard();assert.equal(posts,2);
- assert.equal(f.store.size,2);
-});
-test('failed submissions remain retryable and never create success markers',async()=>{
- const f=fixture();f.env.matchHistory=[win()];f.env.fetch=async()=>({ok:false,status:503,json:async()=>({ok:false})});
- assert.equal(await f.env.syncPendingDailyLeaderboard(),false);assert.equal(f.store.size,0);
- f.env.fetch=async()=>({ok:true,json:async()=>({ok:true})});assert.equal(await f.env.syncPendingDailyLeaderboard(),true);
-});
-test('account changes during submission do not write a success marker',async()=>{
- const f=fixture();f.env.matchHistory=[win()];const d=deferred();f.env.fetch=async()=>{await d.promise;return {ok:true,json:async()=>({ok:true})};};
- const p=f.env.syncPendingDailyLeaderboard();f.env.connectedAccountUser={id:"B"};d.resolve();await p;assert.equal(f.store.size,0);
+test('daily browser backfill stays disabled after an account change',async()=>{
+ const f=fixture();f.env.matchHistory=[win()];
+ await f.env.syncPendingDailyLeaderboard();f.env.connectedAccountUser={id:"B"};
+ assert.equal(await f.env.syncPendingDailyLeaderboard(),false);
+ assert.equal(f.calls.length,0);assert.equal(f.store.size,0);
 });
 test('an application error with HTTP200 is not an empty leaderboard',async()=>{
  const f=fixture();f.env.fetch=async()=>({ok:true,json:async()=>({ok:false,top:[]})});await f.env.openLeaderboardV2('daily','today');

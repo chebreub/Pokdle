@@ -69,15 +69,20 @@ test('result screen is compact and contains leaderboard preview styling',()=>{
 });
 
 
-test('daily leaderboard can recover a win completed before auth initialization',()=>{
-  const f=clientFixture();
-  const now=Date.now();
-  f.matchHistory.push({mode:'daily',result:'win',attempts:6,at:now});
-  f.matchHistory.push({mode:'daily',result:'loss',attempts:3,at:now});
-  f.matchHistory.push({mode:'normal',result:'win',attempts:2,at:now});
-  assert.equal(f.__pendingDaily(),6);
+test('historical daily wins are not trusted for leaderboard backfill',()=>{
+  assert.match(client,/function syncPendingDailyLeaderboard\(\)[\s\S]*return Promise\.resolve\(false\)/);
+  assert.match(client,/if \(mode === "daily"\) return Promise\.resolve\(false\)/);
 });
 
+test('daily leaderboard requires server-observed guesses and atomic completion',()=>{
+  assert.match(server,/CREATE TABLE IF NOT EXISTS daily_sessions/);
+  assert.match(server,/app\.post\("\/api\/daily\/guess"/);
+  assert.match(server,/SELECT attempts, guessed, finished FROM daily_sessions[\s\S]*FOR UPDATE/);
+  assert.match(server,/duplicate_guess/);
+  assert.match(server,/UPDATE daily_sessions[\s\S]*recordLeaderboardResultInTransaction\(client, user, "daily", attempts, config, "daily:" \+ day\)[\s\S]*await client\.query\("COMMIT"\)/);
+  assert.doesNotMatch(server,/recordLeaderboardResult\(pgPool, user, "daily"/);
+  assert.match(server,/mode==="daily"\) return res\.status\(409\)\.json\(\{ok:false,error:"daily_requires_server_session"\}\)/);
+});
 
 test('legacy bulk score endpoint is retired',()=>{
   assert.match(server,/app\.post\("\/api\/scores"[\s\S]*status\(410\)[\s\S]*legacy_score_sync_retired/);
