@@ -130,7 +130,7 @@ def main():
 
                 # Isolated Stat Clash host-handoff scenario: fresh sockets avoid polluting production rate limits.
                 stage='clash-host-handoff'
-                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(3)]
+                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce',extra_http_headers={'X-Forwarded-For':f'198.51.100.{idx}'}) for idx in range(31,34)]
                 transfer_pages=[context.new_page() for context in extra_contexts]
                 for page in transfer_pages:
                     page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
@@ -161,7 +161,7 @@ def main():
 
                 # Capacity + continuity: eight fresh browser clients play a round, then continue after host handoff.
                 stage='party-8p-boot'
-                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(8)]
+                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce',extra_http_headers={'X-Forwarded-For':f'198.51.100.{idx}'}) for idx in range(41,49)]
                 crowd=[context.new_page() for context in extra_contexts]
                 for page in crowd:
                     page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
