@@ -69,3 +69,14 @@ test("Stat Auction completion is idempotent across refresh recovery",()=>{
   assert.ok(auction.includes("if (!wasFinished && !alreadyRecorded)"));
   assert.ok(auction.includes("markStatAuctionResultRecorded(room.code)"));
 });
+
+
+test("socket reconnect resumes only the most recent realtime room",()=>{
+  assert.ok(socket.includes("function attemptPreferredRealtimeResume()"));
+  assert.ok(socket.includes("candidates.sort((a, b) => b.ts - a.ts)"));
+  const connectStart=socket.indexOf('multiplayerSocket.on("connect"');
+  const connectEnd=socket.indexOf('multiplayerSocket.on("connect_error"',connectStart);
+  const connectBlock=socket.slice(connectStart,connectEnd);
+  assert.ok(connectBlock.includes("attemptPreferredRealtimeResume()"));
+  assert.ok(!connectBlock.includes("attemptDuelResume();\n    if"));
+});
