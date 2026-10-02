@@ -2293,3 +2293,169 @@
  #pokdle-app.design-refresh #screen-config .home-path { min-height:170px !important; }
  #pokdle-app.design-refresh #screen-config .home-path-actions { align-items:flex-start; }
 }
+
+
+/* =====================================================================
+   GAMEPLAY + RESULTS PASS — one hierarchy, layouts adapted to each game
+   ===================================================================== */
+#pokdle-app.design-refresh #screen-game .game-topbar {
+  display:flex !important;
+  align-items:center;
+  gap:10px !important;
+  padding:8px 10px !important;
+  border:1px solid var(--ui-line) !important;
+  border-radius:14px !important;
+  background:var(--ui-surface) !important;
+}
+#pokdle-app.design-refresh #screen-game .game-topbar .game-tags {
+  margin-right:auto;
+}
+#pokdle-app.design-refresh #screen-game .win-box {
+  scroll-margin-top:24px;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-progress {
+  display:block;
+  gap:0;
+  padding:0;
+  overflow:hidden;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-summary {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  padding:10px 12px;
+  cursor:pointer;
+  list-style:none;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-summary::-webkit-details-marker {
+  display:none;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-summary > div {
+  min-width:0;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-summary > div > span {
+  display:block;
+  color:#8998ae;
+  font-size:.53rem;
+  font-weight:1000;
+  letter-spacing:.10em;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-summary > div > b {
+  display:block;
+  margin-top:2px;
+  overflow:hidden;
+  color:#1b3b64;
+  font-size:.84rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-toggle {
+  color:var(--ui-accent);
+  font-size:.65rem;
+  font-weight:800;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-progress[open] .win-ceremony-toggle {
+  font-size:0;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-progress[open] .win-ceremony-toggle::after {
+  content:"Masquer";
+  font-size:.65rem;
+}
+#pokdle-app.design-refresh #screen-game .win-ceremony-body {
+  display:grid;
+  gap:8px;
+  padding:0 12px 12px;
+}
+#pokdle-app.design-refresh #screen-game .win-btns {
+  display:flex !important;
+  flex-wrap:wrap;
+  align-items:center;
+}
+#pokdle-app.design-refresh #screen-game .win-btns .result-primary {
+  min-height:44px;
+  padding-inline:14px !important;
+}
+#pokdle-app.design-refresh #screen-game .win-btns :is(#btn-result-catalog,#btn-copy-result,#btn-share) {
+  box-shadow:none !important;
+}
+#pokdle-app.design-refresh .gameplay-screen-card {
+  width:100%;
+  min-width:0;
+}
+#pokdle-app.design-refresh .gameplay-screen-card > .ranking-head {
+  align-items:center;
+}
+#pokdle-app.design-refresh .gameplay-screen-card > .card-desc {
+  max-width:78ch;
+  margin:-2px 0 20px !important;
+}
+#pokdle-app.design-refresh .gameplay-screen-card > .ranking-head .ranking-head-actions {
+  margin-left:auto;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+/* Dark mode follows the same hierarchy instead of restoring the old ceremony colors. */
+#pokdle-app.design-refresh.theme-dark #screen-game .win-ceremony-summary > div > b {
+  color:#eef5ff !important;
+}
+#pokdle-app.design-refresh.theme-dark #screen-game .win-ceremony-summary > div > span {
+  color:#adbed8 !important;
+}
+
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-game .game-topbar {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    padding:8px !important;
+  }
+  #pokdle-app.design-refresh #screen-game .game-topbar .game-tags {
+    grid-column:1 / -1;
+    margin-right:0;
+  }
+  #pokdle-app.design-refresh #screen-game .win-box {
+    scroll-margin-top:76px;
+  }
+  #pokdle-app.design-refresh #screen-game .win-ceremony-summary {
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  #pokdle-app.design-refresh #screen-game .win-ceremony-summary .win-progress-status {
+    justify-self:end;
+  }
+  #pokdle-app.design-refresh #screen-game .win-ceremony-toggle {
+    grid-column:1 / -1;
+  }
+  #pokdle-app.design-refresh #screen-game .win-btns {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+  #pokdle-app.design-refresh #screen-game .win-btns .result-primary,
+  #pokdle-app.design-refresh #screen-game .win-btns #btn-result-catalog {
+    grid-column:1 / -1;
+    justify-content:center;
+  }
+  #pokdle-app.design-refresh #screen-game .win-btns > button {
+    width:100%;
+    justify-content:center;
+    min-height:44px;
+  }
+  #pokdle-app.design-refresh .gameplay-screen-card {
+    padding:12px !important;
+  }
+  #pokdle-app.design-refresh .gameplay-screen-card > .ranking-head {
+    align-items:flex-start !important;
+  }
+  #pokdle-app.design-refresh .gameplay-screen-card > .ranking-head .ranking-head-actions {
+    width:100%;
+    margin-left:0;
+    display:flex !important;
+    flex-wrap:wrap !important;
+  }
+  #pokdle-app.design-refresh .gameplay-screen-card > .ranking-head .ranking-head-actions > button {
+    flex:1 1 130px;
+    justify-content:center;
+  }
+}
