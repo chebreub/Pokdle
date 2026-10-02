@@ -92,11 +92,13 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
   if (surrenderBtn) surrenderBtn.classList.add("hidden");
   document.getElementById("share-ok").classList.add("hidden");
 
-  // Le daily du jour est unique : une fois terminé, "Rejouer" bascule sur l'illimité.
+  // Le daily du jour est unique : après le résultat, la continuité naturelle est l'illimité.
   if (restartBtn) {
     const toInfinite = gameMode === "daily";
-    restartBtn.innerHTML = `<svg class="btn-ico"><use href="#i-${toInfinite ? "infinity" : "repeat"}"/></svg>${toInfinite ? "Rejouer en illimité" : "Rejouer"}`;
+    restartBtn.innerHTML = `<svg class="btn-ico"><use href="#i-${toInfinite ? "infinity" : "repeat"}"/></svg>${toInfinite ? "Continuer en illimité" : "Rejouer"}`;
   }
+  box.dataset.resultMode = String(gameMode || "normal");
+  box.dataset.resultOutcome = won ? "win" : "loss";
 
   // Distribution du jour : envoie le résultat puis affiche les barres d'essais.
   if (gameMode === "daily" && won) reportAndRenderDailyDistribution(attempts);

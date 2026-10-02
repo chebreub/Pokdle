@@ -192,9 +192,24 @@ function gameFeelCollectionProgress(pokemon) {
 function renderGameFeelResultProgress(entry, pokemon, missionChanges=[], wasDiscovered=false) {
   const box=document.getElementById('win-box');
   if (!box || !pokemon || !entry || box.classList.contains('hidden')) return;
+  const won=entry.result==='win';
   let panel=document.getElementById('win-ceremony-progress');
+
+  // A defeat does not change the collection: keep the result focused on the reveal.
+  if (!won) {
+    panel?.remove();
+    return;
+  }
+
+  if (panel && panel.tagName!=='DETAILS') {
+    const replacement=document.createElement('details');
+    replacement.id='win-ceremony-progress';
+    replacement.className='win-ceremony-progress';
+    panel.replaceWith(replacement);
+    panel=replacement;
+  }
   if (!panel) {
-    panel=document.createElement('section');
+    panel=document.createElement('details');
     panel.id='win-ceremony-progress';
     panel.className='win-ceremony-progress';
     const summary=document.getElementById('win-gamefeel-summary');
@@ -205,35 +220,39 @@ function renderGameFeelResultProgress(entry, pokemon, missionChanges=[], wasDisc
       else box.appendChild(panel);
     }
   }
-  const won=entry.result==='win';
+
   const nowDiscovered=Boolean(playerProfile?.discoveries?.[pokemon.id]);
-  const newEntry=won && !wasDiscovered && nowDiscovered;
+  const newEntry=!wasDiscovered && nowDiscovered;
   const alt=Boolean(pokemon.isAltForm);
-  const statusClass=!won?'is-loss':newEntry?'is-new':'is-known';
-  const statusLabel=!won
-    ? 'Album inchangé'
-    : newEntry
-      ? (alt?'Nouvelle forme enregistrée':'Nouvelle entrée enregistrée')
-      : 'Déjà enregistré';
+  const statusClass=newEntry?'is-new':'is-known';
+  const statusLabel=newEntry
+    ? (alt?'Nouvelle forme enregistrée':'Nouvelle entrée enregistrée')
+    : 'Déjà enregistré';
   const {national,region}=gameFeelCollectionProgress(pokemon);
   const nationalPercent=Math.max(0,Math.min(100,Number(national?.percent)||0));
   const regionPercent=Math.max(0,Math.min(100,Number(region?.percent)||0));
   const mission=missionChanges[0] || null;
+  const important=Boolean(newEntry || mission?.becameReady);
   const missionHtml=mission ? '<div class="win-ceremony-mission '+(mission.becameReady?'is-ready':'')+'">'+
       '<span>'+(mission.becameReady?'MISSION PRÊTE':'MISSION EN PROGRESSION')+'</span>'+
       '<b>'+escapeHtml(mission.mission.title)+'</b>'+
       '<small>'+Math.min(Number(mission.state.done)||0,Number(mission.state.total)||0)+' / '+(Number(mission.state.total)||0)+'</small>'+
     '</div>' : '';
+
   panel.innerHTML=
-    '<div class="win-ceremony-head">'+
-      '<div><span>PROGRESSION APRÈS LA PARTIE</span><b>'+escapeHtml(pokemon.name)+'</b></div>'+
+    '<summary class="win-ceremony-summary">'+
+      '<div><span>PROGRESSION POKÉDEX</span><b>'+escapeHtml(pokemon.name)+'</b></div>'+
       '<strong class="win-progress-status '+statusClass+'">'+statusLabel+'</strong>'+
-    '</div>'+
-    '<div class="win-progress-grid">'+
-      '<div class="win-progress-card"><div><span>Pokédex national</span><b>'+Number(national?.found||0)+' <small>/ '+Number(national?.total||0)+'</small></b></div><div class="win-progress-track" aria-label="Progression Pokédex national"><i style="width:'+nationalPercent+'%"></i></div><small>'+nationalPercent+'%</small></div>'+
-      '<div class="win-progress-card"><div><span>Génération '+Number(pokemon.gen||0)+'</span><b>'+Number(region?.found||0)+' <small>/ '+Number(region?.total||0)+'</small></b></div><div class="win-progress-track" aria-label="Progression génération"><i style="width:'+regionPercent+'%"></i></div><small>'+regionPercent+'%</small></div>'+
-    '</div>'+
-    missionHtml;
+      '<span class="win-ceremony-toggle" aria-hidden="true">Détails</span>'+
+    '</summary>'+
+    '<div class="win-ceremony-body">'+
+      '<div class="win-progress-grid">'+
+        '<div class="win-progress-card"><div><span>Pokédex national</span><b>'+Number(national?.found||0)+' <small>/ '+Number(national?.total||0)+'</small></b></div><div class="win-progress-track" aria-label="Progression Pokédex national"><i style="width:'+nationalPercent+'%"></i></div><small>'+nationalPercent+'%</small></div>'+
+        '<div class="win-progress-card"><div><span>Génération '+Number(pokemon.gen||0)+'</span><b>'+Number(region?.found||0)+' <small>/ '+Number(region?.total||0)+'</small></b></div><div class="win-progress-track" aria-label="Progression génération"><i style="width:'+regionPercent+'%"></i></div><small>'+regionPercent+'%</small></div>'+
+      '</div>'+
+      missionHtml+
+    '</div>';
+  panel.open=important;
 }
 function enhanceGameOverBox({won,pokemon,attempts,mode}) {
   const box=document.getElementById('win-box');
