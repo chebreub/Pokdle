@@ -39,8 +39,8 @@ function submitRace(room, player, payload, now = Date.now()) {
   player.score = (Number(player.score) || 0) + 1;
   return {claimed:true,name:pokemon.name,full:room.race.claims.size === room.race.pool.length};
 }
-function raceMissingSide(room) {
-  return ['blue','coral'].some(team => !room.race?.roster.some(member => member.team === team && room.players.some(p => p.id === member.id && p.connected)));
+function raceMissingSide(room, now = Date.now()) {
+  return ['blue','coral'].some(team => !room.race?.roster.some(member => member.team === team && room.players.some(p => p.id === member.id && (p.connected || Number(p.reconnectUntil) > now))));
 }
 function publicRace(room) {
   if (!room.race) return null;
