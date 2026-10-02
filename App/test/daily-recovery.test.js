@@ -5,7 +5,7 @@ const full=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
 const start=full.indexOf("function dailyUtcKey() {"),end=full.indexOf("// Legacy bulk score import",start);
 assert.ok(start>=0&&end>start);const source=full.slice(start,end),DAY="2026-10-02";
 const catalog=[{id:1,name:"Bulbizarre"},{id:25,name:"Pikachu"},{id:29,name:"Nidoran♀"},{id:32,name:"Nidoran♂"},{id:20001,name:"Mega Test",isAltForm:true}];
-const normalize=value=>String(value||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^\\p{L}\\p{N}]+/gu,"").toLowerCase();
+const normalize=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\p{L}\p{N}]+/gu,"").toLowerCase();
 function memoryPool(){let state={sessions:new Map(),events:new Map(),scores:new Map()};const pool={active:0,connections:0,failConnect:false,failScore:false,state:()=>state};
  function run(sql,args=[]){const key=String(args[0])+":"+String(args[1]);
   if(sql.startsWith("INSERT INTO daily_sessions")){if(!state.sessions.has(key))state.sessions.set(key,{attempts:0,guessed:[],finished:false});return {rows:[]};}
