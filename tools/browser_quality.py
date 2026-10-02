@@ -134,6 +134,11 @@ def main():
     def dark():
      nav('home','screen-config');page.evaluate("document.body.classList.add('theme-dark')");return screen('screen-config')
     check('home-dark',dark)
+    def header_density():
+     rect=page.locator('body > header').bounding_box()
+     if width>640: expect(rect is not None and rect['height']<=180,f'Header takes too much space: {rect}')
+     return rect
+    check('header-density',header_density,False)
     page.evaluate("document.body.classList.remove('theme-dark')")
     check('javascript-errors',lambda:expect(not errors,repr(errors)),False);ctx.close()
    browser.close()

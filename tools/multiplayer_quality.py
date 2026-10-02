@@ -35,7 +35,7 @@ def main():
                 assert code and code!='—','No room code'
                 stage='join';guest.locator('#party-nickname').fill('QA Guest');guest.locator('#party-join-code').fill(code);guest.locator('[data-action="partyJoinRoom"]').click()
                 guest.locator('#party-joined').wait_for(state='visible')
-                wait(host,lambda:host.locator('#party-players li').count()==2,'Host roster did not update')
+                wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==2,'Host roster did not update')
                 stage='select';host.locator('#party-mode-nearest').click()
                 wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','Selected mode did not update')
                 stage='start';host.locator('#party-start-btn').click()
@@ -46,7 +46,7 @@ def main():
                 stage='result';host.locator('#party-nearest-results').wait_for(state='visible');guest.locator('#party-nearest-results').wait_for(state='visible')
                 host.screenshot(path=str(out/'host-result.png'));guest.screenshot(path=str(out/'guest-result.png'))
                 stage='leave';guest.locator('[data-action="partyLeaveRoom"]:visible').first.click()
-                wait(host,lambda:host.locator('#party-players li').count()==1,'Guest did not leave roster')
+                wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==1,'Guest did not leave roster')
                 assert not errors,repr(errors)
                 result['ok']=True;result['checks']=['create','join','two-player roster','host mode selection','start','both answers via autocomplete','shared result','explicit leave']
             except Exception:

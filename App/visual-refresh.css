@@ -151,8 +151,11 @@
 /* Header layout is theme-independent; only its colors change. */
 @media (min-width:641px) and (max-width:1100px) {
  #pokdle-app.design-refresh > header .header-top { display:flex !important; flex-wrap:wrap !important; align-items:center; gap:10px !important; min-width:0; }
- #pokdle-app.design-refresh > header #global-nav { order:3; flex:1 0 100%; width:100%; min-width:0; justify-content:center; }
- #pokdle-app.design-refresh > header .header-actions { margin-left:auto; min-width:0; max-width:100%; flex-wrap:wrap; }
+ #pokdle-app.design-refresh > header #global-nav { display:flex !important; flex-wrap:wrap; order:3; flex:1 0 100%; width:100%; min-width:0; justify-content:center; gap:4px; }
+ #pokdle-app.design-refresh > header #global-nav .nav-pill { width:auto !important; flex:0 0 auto !important; }
+ #pokdle-app.design-refresh > header .header-actions { width:auto !important; flex:0 1 auto !important; margin-left:auto; min-width:0; max-width:100%; flex-wrap:wrap; gap:8px !important; }
+ #pokdle-app.design-refresh > header #global-xp-badge { flex:0 1 220px !important; min-width:0 !important; max-width:220px !important; }
+
 }
 
 /* Home: one featured daily challenge, then clearly separated game families. */

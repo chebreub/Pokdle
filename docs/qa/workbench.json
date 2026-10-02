@@ -1,1324 +1,6 @@
 {
   "before": {
-    "commit": "555abda173d3552b66337d186dbe14c30931c61e",
-    "record_only": true,
-    "passed": 125,
-    "failed": 0,
-    "cases": [
-      {
-        "viewport": 360,
-        "case": "home",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "catalog",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "search",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "empty-search-reset",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "waveform",
-        "ok": true,
-        "detail": [
-          10,
-          18,
-          25,
-          30,
-          25,
-          18,
-          10
-        ]
-      },
-      {
-        "viewport": 360,
-        "case": "preview-layout",
-        "ok": true,
-        "detail": [
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          }
-        ]
-      },
-      {
-        "viewport": 360,
-        "case": "normal-guess",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "normal-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "daily-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "home-completed",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "pokedex",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "encyclopedia-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "collection-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "profile",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-profile"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "draft",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "party-entry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-party-room"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "pixel",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "cry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "quiz",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "draft-pro",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "browser-back",
-        "ok": true
-      },
-      {
-        "viewport": 360,
-        "case": "ranking-error",
-        "ok": true
-      },
-      {
-        "viewport": 360,
-        "case": "ranking-closed",
-        "ok": true
-      },
-      {
-        "viewport": 360,
-        "case": "home-dark",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 360,
-        "case": "javascript-errors",
-        "ok": true
-      },
-      {
-        "viewport": 390,
-        "case": "home",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "catalog",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "search",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "empty-search-reset",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "waveform",
-        "ok": true,
-        "detail": [
-          10,
-          18,
-          25,
-          30,
-          25,
-          18,
-          10
-        ]
-      },
-      {
-        "viewport": 390,
-        "case": "preview-layout",
-        "ok": true,
-        "detail": [
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          }
-        ]
-      },
-      {
-        "viewport": 390,
-        "case": "normal-guess",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "normal-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "daily-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "home-completed",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "pokedex",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "encyclopedia-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "collection-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "profile",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-profile"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "draft",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "party-entry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-party-room"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "pixel",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "cry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "quiz",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "draft-pro",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "browser-back",
-        "ok": true
-      },
-      {
-        "viewport": 390,
-        "case": "ranking-error",
-        "ok": true
-      },
-      {
-        "viewport": 390,
-        "case": "ranking-closed",
-        "ok": true
-      },
-      {
-        "viewport": 390,
-        "case": "home-dark",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 390,
-        "case": "javascript-errors",
-        "ok": true
-      },
-      {
-        "viewport": 768,
-        "case": "home",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "catalog",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "search",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "empty-search-reset",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "waveform",
-        "ok": true,
-        "detail": [
-          10,
-          18,
-          25,
-          30,
-          25,
-          18,
-          10
-        ]
-      },
-      {
-        "viewport": 768,
-        "case": "preview-layout",
-        "ok": true,
-        "detail": [
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          }
-        ]
-      },
-      {
-        "viewport": 768,
-        "case": "normal-guess",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "normal-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "daily-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "home-completed",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "pokedex",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "encyclopedia-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "collection-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "profile",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-profile"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "draft",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "party-entry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-party-room"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "pixel",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "cry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "quiz",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "draft-pro",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "browser-back",
-        "ok": true
-      },
-      {
-        "viewport": 768,
-        "case": "ranking-error",
-        "ok": true
-      },
-      {
-        "viewport": 768,
-        "case": "ranking-closed",
-        "ok": true
-      },
-      {
-        "viewport": 768,
-        "case": "home-dark",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 768,
-        "case": "javascript-errors",
-        "ok": true
-      },
-      {
-        "viewport": 1366,
-        "case": "home",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "catalog",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "search",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "empty-search-reset",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "waveform",
-        "ok": true,
-        "detail": [
-          10,
-          18,
-          25,
-          30,
-          25,
-          18,
-          10
-        ]
-      },
-      {
-        "viewport": 1366,
-        "case": "preview-layout",
-        "ok": true,
-        "detail": [
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          }
-        ]
-      },
-      {
-        "viewport": 1366,
-        "case": "normal-guess",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "normal-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "daily-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "home-completed",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "pokedex",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "encyclopedia-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "collection-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "profile",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-profile"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "draft",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "party-entry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-party-room"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "pixel",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "cry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "quiz",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "draft-pro",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "browser-back",
-        "ok": true
-      },
-      {
-        "viewport": 1366,
-        "case": "ranking-error",
-        "ok": true
-      },
-      {
-        "viewport": 1366,
-        "case": "ranking-closed",
-        "ok": true
-      },
-      {
-        "viewport": 1366,
-        "case": "home-dark",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1366,
-        "case": "javascript-errors",
-        "ok": true
-      },
-      {
-        "viewport": 1920,
-        "case": "home",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "catalog",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "search",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "empty-search-reset",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-all-modes"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "waveform",
-        "ok": true,
-        "detail": [
-          10,
-          18,
-          25,
-          30,
-          25,
-          18,
-          10
-        ]
-      },
-      {
-        "viewport": 1920,
-        "case": "preview-layout",
-        "ok": true,
-        "detail": [
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          },
-          {
-            "position": "static",
-            "width": 20
-          }
-        ]
-      },
-      {
-        "viewport": 1920,
-        "case": "normal-guess",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "normal-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "daily-result",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "home-completed",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "pokedex",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "encyclopedia-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "collection-back",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-pokedex"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "profile",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-profile"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "draft",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "party-entry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-party-room"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "pixel",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "cry",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "quiz",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-game"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "draft-pro",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-draft-score-attack"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "browser-back",
-        "ok": true
-      },
-      {
-        "viewport": 1920,
-        "case": "ranking-error",
-        "ok": true
-      },
-      {
-        "viewport": 1920,
-        "case": "ranking-closed",
-        "ok": true
-      },
-      {
-        "viewport": 1920,
-        "case": "home-dark",
-        "ok": true,
-        "detail": {
-          "visible": [
-            "screen-config"
-          ],
-          "overflow": 0
-        }
-      },
-      {
-        "viewport": 1920,
-        "case": "javascript-errors",
-        "ok": true
-      }
-    ]
-  },
-  "after": {
-    "commit": "555abda173d3552b66337d186dbe14c30931c61e",
+    "commit": "ee1db8210bca831976904e1c593660799e778a73",
     "record_only": true,
     "passed": 130,
     "failed": 0,
@@ -2730,12 +1412,1488 @@
       }
     ]
   },
+  "after": {
+    "commit": "ee1db8210bca831976904e1c593660799e778a73",
+    "record_only": true,
+    "passed": 135,
+    "failed": 0,
+    "cases": [
+      {
+        "viewport": 360,
+        "case": "home",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "catalog",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "search",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "empty-search-reset",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "waveform",
+        "ok": true,
+        "detail": [
+          10,
+          18,
+          25,
+          30,
+          25,
+          18,
+          10
+        ]
+      },
+      {
+        "viewport": 360,
+        "case": "preview-layout",
+        "ok": true,
+        "detail": [
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          }
+        ]
+      },
+      {
+        "viewport": 360,
+        "case": "catalog-icons",
+        "ok": true,
+        "detail": [
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          }
+        ]
+      },
+      {
+        "viewport": 360,
+        "case": "normal-guess",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "normal-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "daily-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "home-completed",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "pokedex",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "encyclopedia-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "collection-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "profile",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-profile"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "draft",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "party-entry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-party-room"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "pixel",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "cry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "quiz",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "draft-pro",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "browser-back",
+        "ok": true
+      },
+      {
+        "viewport": 360,
+        "case": "ranking-error",
+        "ok": true
+      },
+      {
+        "viewport": 360,
+        "case": "ranking-closed",
+        "ok": true
+      },
+      {
+        "viewport": 360,
+        "case": "home-dark",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "header-density",
+        "ok": true,
+        "detail": {
+          "x": 0,
+          "y": 0,
+          "width": 360,
+          "height": 89
+        }
+      },
+      {
+        "viewport": 360,
+        "case": "javascript-errors",
+        "ok": true
+      },
+      {
+        "viewport": 390,
+        "case": "home",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "catalog",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "search",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "empty-search-reset",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "waveform",
+        "ok": true,
+        "detail": [
+          10,
+          18,
+          25,
+          30,
+          25,
+          18,
+          10
+        ]
+      },
+      {
+        "viewport": 390,
+        "case": "preview-layout",
+        "ok": true,
+        "detail": [
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          }
+        ]
+      },
+      {
+        "viewport": 390,
+        "case": "catalog-icons",
+        "ok": true,
+        "detail": [
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          }
+        ]
+      },
+      {
+        "viewport": 390,
+        "case": "normal-guess",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "normal-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "daily-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "home-completed",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "pokedex",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "encyclopedia-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "collection-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "profile",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-profile"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "draft",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "party-entry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-party-room"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "pixel",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "cry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "quiz",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "draft-pro",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "browser-back",
+        "ok": true
+      },
+      {
+        "viewport": 390,
+        "case": "ranking-error",
+        "ok": true
+      },
+      {
+        "viewport": 390,
+        "case": "ranking-closed",
+        "ok": true
+      },
+      {
+        "viewport": 390,
+        "case": "home-dark",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "header-density",
+        "ok": true,
+        "detail": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 89
+        }
+      },
+      {
+        "viewport": 390,
+        "case": "javascript-errors",
+        "ok": true
+      },
+      {
+        "viewport": 768,
+        "case": "home",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "catalog",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "search",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "empty-search-reset",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "waveform",
+        "ok": true,
+        "detail": [
+          10,
+          18,
+          25,
+          30,
+          25,
+          18,
+          10
+        ]
+      },
+      {
+        "viewport": 768,
+        "case": "preview-layout",
+        "ok": true,
+        "detail": [
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          }
+        ]
+      },
+      {
+        "viewport": 768,
+        "case": "catalog-icons",
+        "ok": true,
+        "detail": [
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          }
+        ]
+      },
+      {
+        "viewport": 768,
+        "case": "normal-guess",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "normal-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "daily-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "home-completed",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "pokedex",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "encyclopedia-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "collection-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "profile",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-profile"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "draft",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "party-entry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-party-room"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "pixel",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "cry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "quiz",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "draft-pro",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "browser-back",
+        "ok": true
+      },
+      {
+        "viewport": 768,
+        "case": "ranking-error",
+        "ok": true
+      },
+      {
+        "viewport": 768,
+        "case": "ranking-closed",
+        "ok": true
+      },
+      {
+        "viewport": 768,
+        "case": "home-dark",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "header-density",
+        "ok": true,
+        "detail": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 143
+        }
+      },
+      {
+        "viewport": 768,
+        "case": "javascript-errors",
+        "ok": true
+      },
+      {
+        "viewport": 1366,
+        "case": "home",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "catalog",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "search",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "empty-search-reset",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "waveform",
+        "ok": true,
+        "detail": [
+          10,
+          18,
+          25,
+          30,
+          25,
+          18,
+          10
+        ]
+      },
+      {
+        "viewport": 1366,
+        "case": "preview-layout",
+        "ok": true,
+        "detail": [
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          }
+        ]
+      },
+      {
+        "viewport": 1366,
+        "case": "catalog-icons",
+        "ok": true,
+        "detail": [
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          }
+        ]
+      },
+      {
+        "viewport": 1366,
+        "case": "normal-guess",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "normal-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "daily-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "home-completed",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "pokedex",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "encyclopedia-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "collection-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "profile",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-profile"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "draft",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "party-entry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-party-room"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "pixel",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "cry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "quiz",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "draft-pro",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "browser-back",
+        "ok": true
+      },
+      {
+        "viewport": 1366,
+        "case": "ranking-error",
+        "ok": true
+      },
+      {
+        "viewport": 1366,
+        "case": "ranking-closed",
+        "ok": true
+      },
+      {
+        "viewport": 1366,
+        "case": "home-dark",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "header-density",
+        "ok": true,
+        "detail": {
+          "x": 0,
+          "y": 0,
+          "width": 1366,
+          "height": 91
+        }
+      },
+      {
+        "viewport": 1366,
+        "case": "javascript-errors",
+        "ok": true
+      },
+      {
+        "viewport": 1920,
+        "case": "home",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "catalog",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "search",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "empty-search-reset",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-all-modes"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "waveform",
+        "ok": true,
+        "detail": [
+          10,
+          18,
+          25,
+          30,
+          25,
+          18,
+          10
+        ]
+      },
+      {
+        "viewport": 1920,
+        "case": "preview-layout",
+        "ok": true,
+        "detail": [
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          },
+          {
+            "position": "static",
+            "width": 20
+          }
+        ]
+      },
+      {
+        "viewport": 1920,
+        "case": "catalog-icons",
+        "ok": true,
+        "detail": [
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          },
+          {
+            "fill": "none",
+            "stroke": "rgb(40, 100, 219)"
+          }
+        ]
+      },
+      {
+        "viewport": 1920,
+        "case": "normal-guess",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "normal-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "daily-result",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "home-completed",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "pokedex",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "encyclopedia-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "collection-back",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-pokedex"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "profile",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-profile"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "draft",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "party-entry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-party-room"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "pixel",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "cry",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "quiz",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-game"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "draft-pro",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-draft-score-attack"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "browser-back",
+        "ok": true
+      },
+      {
+        "viewport": 1920,
+        "case": "ranking-error",
+        "ok": true
+      },
+      {
+        "viewport": 1920,
+        "case": "ranking-closed",
+        "ok": true
+      },
+      {
+        "viewport": 1920,
+        "case": "home-dark",
+        "ok": true,
+        "detail": {
+          "visible": [
+            "screen-config"
+          ],
+          "overflow": 0
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "header-density",
+        "ok": true,
+        "detail": {
+          "x": 0,
+          "y": 0,
+          "width": 1920,
+          "height": 91
+        }
+      },
+      {
+        "viewport": 1920,
+        "case": "javascript-errors",
+        "ok": true
+      }
+    ]
+  },
   "multiplayer": {
-    "ok": false,
+    "ok": true,
     "clients": 2,
     "scope": "local guest Party Room",
-    "stage": "join",
-    "error": "Host roster did not update"
+    "checks": [
+      "create",
+      "join",
+      "two-player roster",
+      "host mode selection",
+      "start",
+      "both answers via autocomplete",
+      "shared result",
+      "explicit leave"
+    ]
   },
   "dependencies": {
     "auditReportVersion": 2,
