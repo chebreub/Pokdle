@@ -3445,12 +3445,14 @@ function ensureMultiplayerSocket() {
   multiplayerSocket.on("connect", () => {
     setMultiplayerConnectionStatus("online");
     attemptDuelResume();
+    if (typeof attemptPartyResume === "function") attemptPartyResume();
     renderMultiplayerBotScreen();
   });
 
   multiplayerSocket.on("connect_error", () => {
     setMultiplayerConnectionStatus("offline");
     setMultiplayerError("Impossible de joindre le serveur Duel live. Vérifie que server.js tourne.");
+    if (typeof partyHandleSocketDisconnect === "function") partyHandleSocketDisconnect();
     if (statClashState?.mode === "room") {
       statClashState.roomPendingAction = "";
       setStatClashRoomFeedback("Impossible de joindre le serveur Room 1v1.", "error");
@@ -3461,6 +3463,7 @@ function ensureMultiplayerSocket() {
 
   multiplayerSocket.on("disconnect", () => {
     setMultiplayerConnectionStatus("offline");
+    if (typeof partyHandleSocketDisconnect === "function") partyHandleSocketDisconnect();
     if (statClashState?.mode === "room") {
       statClashState.roomPendingAction = "";
       setStatClashRoomFeedback("Connexion room interrompue.", "error");
@@ -4472,6 +4475,11 @@ window.addEventListener('DOMContentLoaded', () => {
       if (duelSession?.code && Date.now() - (duelSession.ts || 0) <= DUEL_SESSION_TTL_MS) {
         ensureMultiplayerSocket();
       }
+    }
+  } catch (_err) { /* stockage indisponible */ }
+  try {
+    if (typeof getStoredPartySession === "function" && getStoredPartySession()) {
+      ensureMultiplayerSocket();
     }
   } catch (_err) { /* stockage indisponible */ }
   // Lot D audit : sur /emulateur (page à CSP permissive), ouvrir directement l'écran émulateur.
