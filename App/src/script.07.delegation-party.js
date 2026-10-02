@@ -1306,7 +1306,7 @@ function accountNavigate(destination) {
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSync);
   else initSync();
-});
+})();
 
 // Public leaderboards are event-driven. Historical local profile records are deliberately
 // not bulk-uploaded: localStorage/playerProfile is user-controlled and is not evidence of
