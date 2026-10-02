@@ -1,7 +1,7 @@
 # Pokédle — suivi du plan de consolidation
 
-État vérifié le 2 octobre 2026 sur `main` après les PR #48, #49, #50, #52, #53, #55, #56 et #57.
-Révision de référence : `8bdeccf685583e3057d34056865c1853ee698b04`.
+État vérifié le 2 octobre 2026 sur `main` après les PR #48, #49, #50, #52, #53, #55, #56, #57 et #59.
+Révision applicative de référence : `c2f473da285db76ec9918058f6c0c7a89425f52e`.
 
 Ce document suit la fin de consolidation issue des audits précédents. Il ne sert pas de prétexte à relancer un audit général ni une refonte du produit.
 
@@ -16,7 +16,7 @@ R8 et les nouveaux modes restent facultatifs. Ils ne bloquent pas la reprise du 
 | Lot | État estimé | Livré / vérifié | Reste réel |
 | --- | ---: | --- | --- |
 | R0 — Référence / production | ~85 % | QA Chromium reproductible à cinq largeurs, captures, tests Node/PostgreSQL et parcours multijoueur automatisés | Recette de la version réellement déployée sur Render, OAuth Discord réel, iPhone/Safari et autres appareils/réseaux réels |
-| R1 — Fiabilité / frontière de confiance | ~92 % | États classement vide/erreur séparés ; timeouts/retries ; réponses tardives neutralisées ; transaction PostgreSQL + `result_key` ; retrait de l'import legacy `/api/scores` (#55) ; Daily authentifié observé par le serveur et écriture atomique du résultat (#56) ; synchronisation profil isolée par propriétaire avec garde-fou serveur et migration conservatrice (#57) | Le secret du Daily reste dérivable côté navigateur ; bascule UTC pendant une manche à durcir si nécessaire ; les autres métriques compétitives clientes restent contrôlées par bornes mais ne prouvent pas à elles seules qu'une partie a été jouée |
+| R1 — Fiabilité / frontière de confiance | ~95 % | États classement vide/erreur séparés ; timeouts/retries ; réponses tardives neutralisées ; transaction PostgreSQL + `result_key` ; retrait de l'import legacy `/api/scores` (#55) ; Daily authentifié observé par le serveur et écriture atomique du résultat (#56) ; synchronisation profil isolée par propriétaire avec garde-fou serveur et migration conservatrice (#57) ; reprise autoritative après réponse Daily perdue, snapshots de session, rejet compte/jour obsolètes et rollback lors du passage UTC (#59) | Le secret du Daily reste dérivable côté navigateur ; les autres métriques compétitives clientes restent contrôlées par bornes mais ne prouvent pas à elles seules qu'une partie a été jouée |
 | R2 — Présentation | ~90 % | Barres audio, miniatures, icônes, navigation tablette, conflits CSS ciblés et contrôles de débordement | Dette CSS, contraste et clavier uniquement sur défaut reproduit ou revue dédiée |
 | R3 — Accueil / catalogue | ~90 % | Daily compact, accès aux autres jeux, recherche/filtres, distinction Solo/Entre amis, recommandations et catalogue clarifiés | Regroupements Standard/PRO uniquement s'ils conservent liens, historique et records |
 | R4 — Jeu / résultats / Pokédex | ~95 % | Passe résultats #49 : actions principales cohérentes, Daily vers illimité, progression Pokédex repliable, fin de partie et mobile harmonisés sans modifier les règles métier | Familles/variantes/animations uniquement sur défaut concret ou chantier produit distinct |
@@ -41,7 +41,7 @@ L'ancien chemin `POST /api/scores`, alimenté par des données locales contrôl�
 
 Le flux moderne reste événementiel via `/api/leaderboard/result` et `recordLeaderboardResult(...)`, avec transaction PostgreSQL et déduplication par `result_key`.
 
-Le mode Daily ne peut plus être déclaré directement par le navigateur via l'API générique. Pour un joueur authentifié, les propositions passent par `/api/daily/guess`, les essais sont comptés sous verrou transactionnel et la victoire Daily est enregistrée dans la même transaction que l'état de session.
+Le mode Daily ne peut plus être déclaré directement par le navigateur via l'API générique. Pour un joueur authentifié, les propositions passent par `/api/daily/guess`, les essais sont comptés sous verrou transactionnel et la victoire Daily est enregistrée dans la même transaction que l'état de session. Depuis #59, `/api/daily/session`, `duplicate_guess` et `daily_finished` renvoient aussi l'historique autoritatif permettant de reconstruire proprement une partie après réponse réseau perdue ou reprise sur un autre appareil. Les requêtes portent le jour UTC et le compte attendus ; une requête obsolète est rejetée et un passage UTC avant commit provoque un rollback.
 
 ### Identité des sauvegardes
 
