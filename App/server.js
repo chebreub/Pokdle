@@ -3645,7 +3645,7 @@ function handleStatAuctionDisconnect(socketId, forceLeave) {
     if (!player) continue;
     const sock = io.sockets.sockets.get(socketId);
     if (sock?.data) sock.data.statAuctionRoomCode = null;
-    if (forceLeave && sock) sock.leave(room.code);
+    if (forceLeave && typeof sock?.leave === "function") sock.leave(room.code);
 
     const finalize = () => {
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
@@ -4588,7 +4588,7 @@ function handleStatClashDisconnect(socketId, voluntary) {
 
   const socket = io.sockets.sockets.get(socketId);
   if (socket?.data) socket.data.statClashRoomCode = null;
-  if (voluntary && socket) socket.leave(room.code);
+  if (voluntary && typeof socket?.leave === "function") socket.leave(room.code);
   const player = room.players.find((entry) => entry.id === socketId);
   if (!player) return;
 
