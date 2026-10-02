@@ -3446,6 +3446,8 @@ function ensureMultiplayerSocket() {
     setMultiplayerConnectionStatus("online");
     attemptDuelResume();
     if (typeof attemptPartyResume === "function") attemptPartyResume();
+    if (typeof attemptStatClashResume === "function") attemptStatClashResume();
+    if (typeof attemptStatAuctionResume === "function") attemptStatAuctionResume();
     renderMultiplayerBotScreen();
   });
 
@@ -3541,6 +3543,7 @@ function ensureMultiplayerSocket() {
   });
 
   multiplayerSocket.on("stat-clash:room-closed", (payload = {}) => {
+    if (typeof clearStatClashSession === "function") clearStatClashSession();
     if (!statClashState) return;
     statClashState.room = null;
     statClashState.roomToken = "";
