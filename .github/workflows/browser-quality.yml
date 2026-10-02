@@ -1,0 +1,76 @@
+name: Browser and database quality
+on:
+  pull_request:
+    paths: ['App/**', 'tools/**', '.github/workflows/browser-quality.yml']
+  push:
+    branches: [main]
+    paths: ['App/**', 'tools/**', '.github/workflows/browser-quality.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: browser-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qa
+          POSTGRES_PASSWORD: qa-local-only
+          POSTGRES_DB: pokdle_qa
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      QA_DATABASE_URL: postgresql://qa:qa-local-only@localhost:5432/pokdle_qa
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: App/package-lock.json
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install browser QA dependencies
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+      - name: Install application dependencies
+        run: npm ci
+        working-directory: App
+      - name: Build and unit/database tests
+        run: |
+          mkdir -p ../quality-artifacts
+          git rev-parse HEAD > ../quality-artifacts/revision.txt
+          npm run build
+          npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }
+          tail -12 ../quality-artifacts/unit-tests.log
+        working-directory: App
+      - name: Verify browser journeys at five viewport widths
+        run: python tools/browser_quality.py --output quality-artifacts/browser
+      - name: Verify an actual two-browser Party Room game
+        run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
+      - name: Dependency audit
+        if: always()
+        working-directory: App
+        run: |
+          mkdir -p ../quality-artifacts
+          npm audit --audit-level=high --json > ../quality-artifacts/dependency-audit.json
+      - name: Ensure QA did not modify tracked source files
+        if: always()
+        run: git diff --exit-code && git diff --cached --exit-code
+      - name: Save reports and full-size screenshots
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: browser-quality-${{ github.run_id }}-${{ github.run_attempt }}
+          path: quality-artifacts/
+          retention-days: 14
+          if-no-files-found: error

@@ -17,7 +17,7 @@ let leaderboardV2Scope = "all";
 let leaderboardV2LastMode = "daily";
 
 function leaderboardV2IsDraft(mode) {
-  return typeof mode === "string" && mode.indexOf("draft") === 0;
+  return typeof mode === "string" && /^draft(?:_(?:all|[1-9]))?$/.test(mode);
 }
 function leaderboardV2ModeMeta(mode) {
   if (leaderboardV2IsDraft(mode)) return { label:"Draft Score", hint:"Moyenne BST", unit:"BST", direction:"desc" };
@@ -43,51 +43,97 @@ function leaderboardV2FormatScore(score, mode, unit) {
   if (mode === "higherlower60" || mode === "typecombo") return n + " pts";
   return n + (unit ? " " + unit : "");
 }
-function submitLeaderboardResult(mode, score) {
+// R1: validate both HTTP and application responses; a failed request is not an empty board.
+async function leaderboardFetchJson(url, options = {}) {
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), 10000) : null;
+  try {
+    const response = await fetch(url, { credentials:"same-origin", ...options, ...(controller ? { signal:controller.signal } : {}) });
+    const data = await response.json();
+    if (response.ok === false || !data || data.ok !== true) {
+      const error = new Error("Classement indisponible");
+      error.status = response.status || 0;
+      throw error;
+    }
+    return data;
+  } finally {
+    if (timer !== null) clearTimeout(timer);
+  }
+}
+function leaderboardWaitForSync(promise) {
+  let timer;
+  return Promise.race([Promise.resolve(promise),new Promise(resolve=>{timer=setTimeout(()=>resolve(false),5000);})])
+    .finally(()=>clearTimeout(timer));
+}
+function leaderboardAccountId() {
+  return typeof connectedAccountUser !== "undefined" && connectedAccountUser?.id
+    ? String(connectedAccountUser.id) : "";
+}
+function leaderboardResultId() {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID() : Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);
+}
+function submitLeaderboardResult(mode, score, options = {}) {
   if (!window.__pokedleAuthed) return Promise.resolve(false);
-  const n = Math.floor(Number(score));
-  if (!mode || !Number.isFinite(n) || n <= 0) return Promise.resolve(false);
-  return fetch("/api/leaderboard/result", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"same-origin",
-    body:JSON.stringify({mode,score:n})
-  }).then(r=>r.json()).then(data=>Boolean(data?.ok)).catch(()=>false);
+  const n = Number(score);
+  if (!mode || !Number.isInteger(n) || n <= 0) return Promise.resolve(false);
+  const body = { mode, score:n, resultId:options.resultId || leaderboardResultId() };
+  if (mode === "daily") body.dailyKey = options.dailyKey || leaderboardTodayKey();
+  return leaderboardFetchJson("/api/leaderboard/result", {
+    method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)
+  }).then(() => true).catch(() => false);
 }
 const DAILY_LEADERBOARD_SYNC_PREFIX="pokedle_lb_daily_sync_";
+const dailyLeaderboardInFlight = new Map();
 function leaderboardTodayKey() {
-  try { if (typeof getUTCDateKey==="function") return getUTCDateKey(); } catch (_e) {}
-  const d=new Date();
+  try { if (typeof getUTCDateKey === "function") return getUTCDateKey(); } catch (_e) {}
+  const d = new Date();
   return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");
 }
 function pendingDailyLeaderboardScore() {
-  const history=Array.isArray(matchHistory)?matchHistory:[];
-  const now=new Date();
-  const start=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
-  let best=0;
-  history.forEach(entry=>{
-    if (entry?.mode!=="daily" || entry?.result!=="win" || Number(entry?.at)<start) return;
-    const score=Math.floor(Number(entry?.attempts)||0);
-    if (score>0 && (!best || score<best)) best=score;
-  });
+  const entries = typeof matchHistory !== "undefined" && Array.isArray(matchHistory) ? matchHistory : [];
+  const now = Date.now(), d = new Date(now);
+  const start = Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  let best = 0;
+  for (const entry of entries) {
+    const at = Number(entry?.at), score = Number(entry?.attempts);
+    if (entry?.mode !== "daily" || entry?.result !== "win" || !Number.isFinite(at) || at < start || at > now) continue;
+    if (!Number.isInteger(score) || score < 1 || score > 100) continue;
+    if (!best || score < best) best = score;
+  }
   return best;
 }
 function syncPendingDailyLeaderboard() {
-  if (!window.__pokedleAuthed) return Promise.resolve(false);
-  const score=pendingDailyLeaderboardScore();
+  const account = leaderboardAccountId(), day = leaderboardTodayKey();
+  if (!window.__pokedleAuthed || !account) return Promise.resolve(false);
+  const score = pendingDailyLeaderboardScore();
   if (!score) return Promise.resolve(false);
-  const key=DAILY_LEADERBOARD_SYNC_PREFIX+leaderboardTodayKey();
-  try {
-    const synced=Number(localStorage.getItem(key))||0;
-    if (synced>0 && synced<=score) return Promise.resolve(true);
-  } catch (_e) {}
-  return submitLeaderboardResult("daily",score).then(ok=>{
-    if (ok) {
+  // Old date-only markers are deliberately ignored: they belong to no known account.
+  const key = DAILY_LEADERBOARD_SYNC_PREFIX+encodeURIComponent(account)+":"+day;
+  try { if (Number(localStorage.getItem(key)) > 0) return Promise.resolve(true); } catch (_e) {}
+  if (dailyLeaderboardInFlight.has(key)) return dailyLeaderboardInFlight.get(key);
+  const request = submitLeaderboardResult("daily",score,{dailyKey:day,resultId:"daily:"+day}).then(ok => {
+    if (ok && leaderboardAccountId() === account && leaderboardTodayKey() === day) {
+      if (typeof LIVE_RANK_CACHE !== "undefined") LIVE_RANK_CACHE.delete("daily");
       try { localStorage.setItem(key,String(score)); } catch (_e) {}
     }
     return ok;
-  });
+  }).finally(() => dailyLeaderboardInFlight.delete(key));
+  dailyLeaderboardInFlight.set(key,request);
+  return request;
 }
+let leaderboardViewRequest = 0;
+function leaderboardOwnsDialog(id) {
+  const overlay = document.getElementById("overlay-modal");
+  return id === leaderboardViewRequest && Boolean(overlay && !overlay.classList.contains("hidden") &&
+    document.querySelector('#overlay-body [data-lb-request="'+id+'"]'));
+}
+function leaderboardUnrankedCopy(authenticated, pending) {
+  if (!authenticated) return "Connecte-toi pour enregistrer ta position.";
+  return pending ? "Ton résultat n’est pas encore enregistré. Réessaie la synchronisation."
+    : "Aucune victoire enregistrée aujourd’hui pour ce compte.";
+}
+
 function leaderboardResultFromHistory(entry) {
   if (!entry || entry.result === "draw") return null;
   const mode = String(entry.mode || "");
@@ -140,18 +186,22 @@ function openLeaderboardV2(mode="daily",scope="all") {
   leaderboardV2LastMode=current;
   leaderboardV2Scope=LEADERBOARD_V2_SCOPES.some(([id])=>id===scope)?scope:"all";
   const meta=leaderboardV2ModeMeta(current);
+  const requestedScope=leaderboardV2Scope;
+  const requestId=++leaderboardViewRequest;
 
-  const loading='<div class="lbv3-shell"><div class="lbv3-loading"><span></span><p>Synchronisation du classement…</p></div></div>';
+  const loading='<div class="lbv3-shell" data-lb-request="'+requestId+'"><div class="lbv3-loading"><span></span><p>Synchronisation du classement…</p></div></div>';
   ensureOverlay("Classements",loading);
 
   const syncTasks=[];
   if (current==="daily") syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
-  if (leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function") syncTasks.push(Promise.resolve(submitLeaderboardScores()).catch(()=>false));
+  if (leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function") syncTasks.push(leaderboardWaitForSync(submitLeaderboardScores()).catch(()=>false));
   const syncPromise=syncTasks.length ? Promise.all(syncTasks) : Promise.resolve([]);
 
-  syncPromise.then(()=>{
-    return fetch("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(leaderboardV2Scope),{credentials:"same-origin"});
-  }).then(r=>r.json()).then(data=>{
+  return syncPromise.then(()=>{
+    if (!leaderboardOwnsDialog(requestId)) return null;
+    return leaderboardFetchJson("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(requestedScope));
+  }).then(data=>{
+    if (!data || !leaderboardOwnsDialog(requestId)) return;
     const modeTabs=LEADERBOARD_V2_MODES.map(([id,label])=>{
       const active=id==="draft"?leaderboardV2IsDraft(current):id===current;
       const target=id==="draft"?"draft_all":id;
@@ -205,9 +255,9 @@ function openLeaderboardV2(mode="daily",scope="all") {
     const empty = !rows.length;
     const emptyHtml = empty
       ? '<section class="lbv3-empty"><div class="lbv3-empty-icon">🏆</div><h4>Pas encore de performance ici</h4><p>'+
-        (leaderboardV2Scope==="all"
-          ? (window.__pokedleAuthed?'Ton record sera synchronisé dès qu’il existe pour ce mode.':'Connecte-toi pour enregistrer tes records.')
-          : 'Cette période démarre avec les performances jouées depuis la mise en place des nouveaux classements.')+
+        (requestedScope==="all"
+          ? (window.__pokedleAuthed?'Aucun record enregistré pour ce mode.':'Connecte-toi pour enregistrer tes records.')
+          : 'Aucune performance enregistrée sur cette période. Les records locaux antérieurs ne sont pas antidatés.')+
         '</p></section>'
       : '';
 
@@ -228,41 +278,44 @@ function openLeaderboardV2(mode="daily",scope="all") {
 
     ensureOverlay("Classements",body);
   }).catch(()=>{
-    ensureOverlay("Classements",'<div class="lbv3-shell"><section class="lbv3-empty"><div class="lbv3-empty-icon">!</div><h4>Classement indisponible</h4><p>Réessaie dans quelques instants.</p></section></div>');
+    if (!leaderboardOwnsDialog(requestId)) return;
+    const args=escapeHtml(JSON.stringify([current,requestedScope]));
+    ensureOverlay("Classements",'<div class="lbv3-shell"><section class="lbv3-empty" role="status"><div class="lbv3-empty-icon">!</div><h4>Classement indisponible</h4><p>Le serveur n’a pas confirmé le classement. Aucun résultat n’est effacé.</p><button type="button" class="btn-blue" data-action="openLeaderboardV2" data-args="'+args+'">Réessayer</button></section></div>');
   });
 }
+let leaderboardPreviewRequest = 0;
 function renderWinLeaderboardPreview(mode) {
+  const requestId = ++leaderboardPreviewRequest;
   const box=document.getElementById("win-box");
-  if (!box || !["daily","normal"].includes(mode)) return;
+  if (!box || !["daily","normal"].includes(mode)) return Promise.resolve();
   let panel=document.getElementById("win-ranking-preview");
   if (!panel) {
-    panel=document.createElement("section");
-    panel.id="win-ranking-preview";
-    panel.className="win-ranking-preview";
+    panel=document.createElement("section"); panel.id="win-ranking-preview"; panel.className="win-ranking-preview";
     const buttons=box.querySelector(".win-btns");
-    if (buttons) box.insertBefore(panel,buttons);
-    else box.appendChild(panel);
+    if (buttons) box.insertBefore(panel,buttons); else box.appendChild(panel);
   }
-  if (mode!=="daily") {
-    panel.innerHTML='<div><span>CLASSEMENTS</span><b>Compare tes records sur les modes compétitifs.</b></div><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir les classements →</button>';
-    return;
+  const link='<button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir le classement →</button>';
+  if (mode !== "daily") {
+    panel.innerHTML='<div><span>CLASSEMENTS</span><b>Compare tes records sur les modes compétitifs.</b></div>'+link;
+    return Promise.resolve();
   }
-  panel.innerHTML='<div class="win-rank-loading">Calcul de ta position du jour…</div>';
-  setTimeout(()=>{
-    Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false).then(()=>
-      fetch("/api/leaderboard?mode=daily&scope=today",{credentials:"same-origin"})
-    ).then(r=>r.json())
-      .then(data=>{
-        if (!document.getElementById("win-ranking-preview")) return;
-        if (data?.me) {
-          panel.innerHTML='<div class="win-rank-position"><span>CLASSEMENT DU JOUR</span><strong>#'+Number(data.me.rank)+'</strong><small>'+escapeHtml(leaderboardV2FormatScore(data.me.score,"daily","essais"))+' · '+(Number(data.total)||0)+' classé'+(Number(data.total)>1?'s':'')+'</small></div>'+
-            '<button type="button" class="btn-blue" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir le classement →</button>';
-        } else {
-          panel.innerHTML='<div><span>CLASSEMENT DU JOUR</span><b>Connecte-toi pour enregistrer ta position.</b></div><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args="[&quot;daily&quot;,&quot;today&quot;]">Voir le classement →</button>';
-        }
-      }).catch(()=>{ panel.innerHTML=''; });
-  },650);
+  const account=leaderboardAccountId();
+  const current=()=>requestId===leaderboardPreviewRequest && document.getElementById("win-ranking-preview")===panel &&
+    account===leaderboardAccountId() && (typeof gameMode === "undefined" || gameMode === mode);
+  panel.innerHTML='<div class="win-rank-loading" role="status">Chargement de ta position du jour…</div>';
+  return syncPendingDailyLeaderboard().then(()=>leaderboardFetchJson("/api/leaderboard?mode=daily&scope=today")).then(data=>{
+    if (!current()) return;
+    if (data.me) {
+      panel.innerHTML='<div class="win-rank-position"><span>CLASSEMENT DU JOUR</span><strong>#'+Number(data.me.rank)+'</strong><small>'+escapeHtml(leaderboardV2FormatScore(data.me.score,"daily","essais"))+' · '+(Number(data.total)||0)+' classés</small></div>'+link;
+    } else {
+      const authenticated = typeof data.authenticated === "boolean" ? data.authenticated : Boolean(window.__pokedleAuthed);
+      panel.innerHTML='<div><span>CLASSEMENT DU JOUR</span><b>'+leaderboardUnrankedCopy(authenticated,pendingDailyLeaderboardScore()>0)+'</b></div>'+link;
+    }
+  }).catch(()=>{
+    if (current()) panel.innerHTML='<div role="status"><span>CLASSEMENT DU JOUR</span><b>Classement indisponible. Ta partie reste sauvegardée sur cet appareil.</b></div>'+link;
+  });
 }
+
 
 if (typeof recordMatchHistory === "function") {
   const recordMatchHistoryBeforeLeaderboardV2=recordMatchHistory;
@@ -270,7 +323,8 @@ if (typeof recordMatchHistory === "function") {
     const performance=leaderboardResultFromHistory(entry);
     const result=recordMatchHistoryBeforeLeaderboardV2(entry);
     if (performance?.score>0) {
-      submitLeaderboardResult(performance.mode,performance.score).then(()=>{
+      const submission=entry.mode==="daily" ? syncPendingDailyLeaderboard() : submitLeaderboardResult(performance.mode,performance.score);
+      submission.then(()=>{
         if (entry.mode==="daily") renderWinLeaderboardPreview("daily");
       });
     }

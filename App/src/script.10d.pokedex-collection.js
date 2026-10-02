@@ -218,7 +218,10 @@ function renderPokedexCollectionLockedDetail(pokemon,state) {
       ? (state.mission?.hint || 'Certaines entrées ne se révèlent qu’en explorant Pokédle.')
       : (state.mission?.hint || 'Accomplis cette mission pour enregistrer cette entrée.');
   const sprite=getPokedexDisplaySprite(pokemon,false);
+  // Invalidate a pending encyclopedia fetch before rendering a locked entry.
+  if (typeof pokedexDetailRequestId !== 'undefined') pokedexDetailRequestId += 1;
   detail.innerHTML=`
+    <button type="button" class="btn-ghost pokedex-back-to-list" data-action="closePokedexMobileDetail">← Tous les Pokémon</button>
     <div class="pokedex-collection-lock state-${state.kind}">
       <div class="pokedex-collection-lock-head"><span>POKÉDEX DU DRESSEUR</span><span>#${dexId}</span></div>
       <div class="pokedex-collection-lock-stage">

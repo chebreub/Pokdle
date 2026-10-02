@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -164,13 +164,13 @@
         <article class="home-path home-path-solo">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">✦</span><span class="home-path-label">À TON RYTHME</span></div>
           <h2>Jouer seul</h2><p>Un Pokémon à deviner, un quiz ou un record à battre. Trouve ton prochain défi.</p>
-          <button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu <span aria-hidden="true">→</span></button>
+          <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu <span aria-hidden="true">→</span></button></div>
         </article>
         <article class="home-path home-path-friends">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">⚔</span><span class="home-path-label">DE 2 À 8 JOUEURS</span></div>
           <h2>Entre amis</h2><p>Retrouve ta bande en Party Room ou défie un ami en duel. Une salle, un code, c’est parti.</p>
-          <button class="btn-blue" type="button" data-action="openPartyRoomMode">Ouvrir la Party Room <span aria-hidden="true">→</span></button>
-          <button class="home-text-link" type="button" data-action="openAllModesScreen" data-args='["friends"]'>Duels et autres jeux entre amis</button>
+          <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openPartyRoomMode">Ouvrir la Party Room <span aria-hidden="true">→</span></button>
+          <button class="home-text-link" type="button" data-action="openAllModesScreen" data-args='["friends"]'>Duels et autres jeux entre amis</button></div>
         </article>
       </section>
       <div id="home-partner" class="partner-strip" aria-label="Mon aventure"></div>
@@ -271,7 +271,7 @@
         </div>
 
         <p class="mode-results" id="mode-results" role="status" aria-live="polite"></p>
-        <div id="mode-empty" class="mode-empty" hidden><p>Aucun résultat. Essaie un autre nom ou explore tous les modes.</p><button class="btn-ghost" type="button" data-action="resetModeCatalog">Voir tous les modes</button></div>
+        <div id="mode-empty" class="mode-empty" hidden><p>Aucun résultat dans cette rubrique. Essaie un autre nom ou efface les filtres.</p><button class="btn-ghost" type="button" data-action="resetModeCatalog">Effacer les filtres</button></div>
         <section id="catalog-picks" class="catalog-picks" aria-label="Nos incontournables"></section>
         <div class="all-modes-cats">
           <section class="all-modes-cat" data-family="guess">
@@ -483,7 +483,7 @@
 
         <div class="pokedex-toolbar" id="pokedex-toolbar">
           <div class="pokedex-toolbar-row pokedex-toolbar-row-top">
-            <input id="pokedex-search" type="search" placeholder="Rechercher un Pokémon..." autocomplete="off" />
+            <input id="pokedex-search" type="search" aria-label="Rechercher un Pokémon" placeholder="Rechercher un Pokémon..." autocomplete="off" autocorrect="off" spellcheck="false" />
             <button id="pokedex-filters-toggle" class="btn-ghost" type="button" data-action="togglePokedexFilters" aria-expanded="false" aria-controls="pokedex-gen-filter pokedex-category-filter pokedex-extra-filters">Filtres et tri ▾</button>
             <select id="pokedex-gen-filter" aria-label="Génération"></select>
             <select id="pokedex-category-filter" aria-label="Catégorie">
@@ -1097,7 +1097,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <button class="btn-red" id="btn-restart" data-action="restartCurrentMode"><svg class="btn-ico"><use href="#i-repeat"/></svg>Rejouer</button>
           <button class="btn-yellow" id="btn-copy-result" data-action="copyResult"><svg class="btn-ico"><use href="#i-copy"/></svg>Copier résultat</button>
           <button class="btn-blue" id="btn-share" data-action="shareResult"><svg class="btn-ico"><use href="#i-share"/></svg>Partager</button>
-          <button class="btn-ghost" data-action="openSettingsModal"><svg class="btn-ico"><use href="#i-sliders"/></svg>Paramètres</button>
+          <!-- Global display/audio settings remain available in the header. -->
         </div>
         <p id="win-next-daily" class="win-next-daily hidden"></p>
         <div id="win-daily-distribution" class="win-daily-distribution hidden"></div>
@@ -1171,8 +1171,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <button class="btn-ghost party-back" type="button" data-action="goToConfig">← Retour</button>
         </div>
         <div id="party-lobby" class="party-lobby">
-          <div class="party-welcome"><span class="party-eyebrow">LA SOIRÉE COMMENCE ICI</span><h3>Invite ta bande.<br>Défie votre Pokédex.</h3><p>Crée ton salon, partage le lien et change de mini-jeu entre deux parties.</p><ol class="party-steps"><li><b>01</b><span>Rassemble tes amis<small>Un lien suffit pour vous retrouver.</small></span></li><li><b>02</b><span>Choisis votre défi<small>Vitesse, déduction ou numéros du Pokédex.</small></span></li><li><b>03</b><span>Décroche la première place<small>Les points s’additionnent à chaque manche.</small></span></li></ol><div class="party-new-preview"><span aria-hidden="true">◎</span><div><b>Nouveau · Numéro mystère</b><p>Un numéro tiré au sort. Une proposition chacun. Le plus proche remporte la manche.</p></div></div></div>
           <div class="party-entry-panel"><h3>À toi de jouer</h3><p>Choisis le pseudo que tes amis verront.</p><label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Ex. Dresseur Sacha" autocomplete="nickname" /></label><button class="btn-blue" type="button" data-action="partyCreateRoom">Créer mon salon <span aria-hidden="true">→</span></button><div class="party-divider"><span>ou rejoindre tes amis</span></div><label class="party-field" for="party-join-code"><span>Code du salon</span></label><div class="party-join-row"><input id="party-join-code" type="text" maxlength="6" placeholder="Ex. AB3DF" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button class="btn-ghost" type="button" data-action="partyJoinRoom">Rejoindre</button></div><p class="party-entry-note">Pas de compte nécessaire. Juste un pseudo.</p></div>
+          <div class="party-welcome"><span class="party-eyebrow">LA SOIRÉE COMMENCE ICI</span><h3>Invite ta bande.<br>Défie votre Pokédex.</h3><p>Crée ton salon, partage le lien et change de mini-jeu entre deux parties.</p><ol class="party-steps"><li><b>01</b><span>Rassemble tes amis<small>Un lien suffit pour vous retrouver.</small></span></li><li><b>02</b><span>Choisis votre défi<small>Vitesse, déduction ou numéros du Pokédex.</small></span></li><li><b>03</b><span>Décroche la première place<small>Les points s’additionnent à chaque manche.</small></span></li></ol><div class="party-new-preview"><span aria-hidden="true">◎</span><div><b>Nouveau · Numéro mystère</b><p>Un numéro tiré au sort. Une proposition chacun. Le plus proche remporte la manche.</p></div></div></div>
         </div>
         <div id="party-joined" class="party-joined hidden">
           <div class="party-room-head"><div class="party-code-group"><span class="party-eyebrow">CODE DU SALON</span><b id="party-room-code">—</b><span id="party-room-status-badge" class="party-status-badge">En attente</span></div><div class="party-room-head-actions"><button class="btn-blue party-copy-btn" type="button" data-action="partyCopyInviteLink">Copier l’invitation</button><button class="btn-ghost" type="button" data-action="partyLeaveRoom">Quitter</button></div></div>

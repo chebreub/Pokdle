@@ -1,0 +1,39 @@
+{
+  "before": {
+    "commit": "ee1db8210bca831976904e1c593660799e778a73",
+    "record_only": true,
+    "passed": 130,
+    "failed": 0,
+    "failures": []
+  },
+  "after": {
+    "commit": "ee1db8210bca831976904e1c593660799e778a73",
+    "record_only": true,
+    "passed": 135,
+    "failed": 0,
+    "failures": []
+  },
+  "multiplayer": {
+    "ok": true,
+    "clients": 2,
+    "scope": "local guest Party Room",
+    "checks": [
+      "create",
+      "join",
+      "two-player roster",
+      "host mode selection",
+      "start",
+      "both answers via autocomplete",
+      "shared result",
+      "explicit leave"
+    ]
+  },
+  "dependencies": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  }
+}

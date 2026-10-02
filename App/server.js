@@ -1,4 +1,5 @@
-﻿const fs = require("fs");
+const { ensureLeaderboardResultKeys, recordLeaderboardResult } = require("./lib/leaderboard-store");
+const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 const express = require("express");
@@ -160,6 +161,7 @@ async function initAuthDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
     await pgPool.query(`CREATE INDEX IF NOT EXISTS leaderboard_events_mode_created_idx ON leaderboard_events (mode, created_at DESC)`);
+    await ensureLeaderboardResultKeys(pgPool);
     await pgPool.query(`CREATE TABLE IF NOT EXISTS visits (
       day DATE PRIMARY KEY,
       hits INTEGER NOT NULL DEFAULT 0
@@ -340,29 +342,23 @@ app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
 });
 
 app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, res) => {
-  if (!authReady()) return res.json({ ok: false });
-  const user = getSessionUser(req);
-  if (!user) return res.status(401).json({ ok: false });
-  const mode = String(req.body?.mode || "");
-  const config = leaderboardConfig(mode);
-  const score = clampLeaderboardScore(req.body?.score, config);
-  if (!config || score == null) return res.status(400).json({ ok: false });
+  if (!authReady()) return res.status(503).json({ok:false,error:"unavailable"});
+  const user=getSessionUser(req);
+  if (!user) return res.status(401).json({ok:false,error:"authentication_required"});
+  const mode=String(req.body?.mode||""), config=leaderboardConfig(mode);
+  const score=clampLeaderboardScore(req.body?.score,config);
+  if (!config || score==null) return res.status(400).json({ok:false,error:"invalid_score"});
+  const today=new Date().toISOString().slice(0,10);
+  if (mode==="daily" && req.body.dailyKey!=null && req.body.dailyKey!==today) return res.status(409).json({ok:false,error:"stale_daily"});
+  const id=req.body?.resultId;
+  if (id!=null && (typeof id!=="string" || !/^[A-Za-z0-9:_-]{1,100}$/.test(id))) return res.status(400).json({ok:false,error:"invalid_result_id"});
+  const key=mode==="daily"?"daily:"+today:id||null;
   try {
-    await pgPool.query(
-      "INSERT INTO leaderboard_events (discord_id, mode, score, created_at) VALUES ($1, $2, $3, now())",
-      [user.id, mode, score]
-    );
-    const bestExpr = config.direction === "asc" ? "LEAST(scores.score, EXCLUDED.score)" : "GREATEST(scores.score, EXCLUDED.score)";
-    await pgPool.query(
-      `INSERT INTO scores (discord_id, mode, score, username, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, now())
-       ON CONFLICT (discord_id, mode) DO UPDATE SET score = ${bestExpr}, username = EXCLUDED.username, avatar = EXCLUDED.avatar,
-         updated_at = CASE WHEN EXCLUDED.score ${config.direction === "asc" ? "<" : ">"} scores.score THEN now() ELSE scores.updated_at END`,
-      [user.id, mode, score, user.username || "", user.avatar || ""]
-    );
-    res.json({ ok: true, mode, score });
-  } catch (e) {
-    console.error("[leaderboard] result:", e.message);
-    res.json({ ok: false });
+    const stored=await recordLeaderboardResult(pgPool,user,mode,score,config,key);
+    res.json({ok:true,mode,...stored});
+  } catch (error) {
+    console.error("[leaderboard] result:",error.message);
+    res.status(503).json({ok:false,error:"storage_unavailable"});
   }
 });
 
@@ -440,6 +436,7 @@ app.get("/api/leaderboard", async (req, res) => {
       ok: true,
       mode,
       scope,
+      authenticated: Boolean(user),
       direction: config.direction,
       label: config.label,
       unit: config.unit,

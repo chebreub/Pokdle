@@ -91,7 +91,7 @@ function renderDailyHero() {
   if (!dateEl && !streakEl) return;
 
   if (dateEl) {
-    dateEl.textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    dateEl.textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
   }
   if (streakEl) streakEl.textContent = `🔥 Série : ${Number(playerStats?.dailyCurrentStreak) || 0}`;
 
@@ -99,6 +99,25 @@ function renderDailyHero() {
   const todayResult = getTodayDailyResult();
   const wonToday = playerStats?.lastDailyWinKey === today || Boolean(todayResult && todayResult.won);
   const lostToday = Boolean(todayResult && !todayResult.won);
+  const hero = document.getElementById("daily-hero");
+  if (hero) {
+    hero.dataset.dailyState = wonToday || lostToday ? "complete" : "available";
+    const subtitle = hero.querySelector(".pk-hero-sub");
+    if (subtitle) {
+      if (!subtitle.dataset.initialCopy) subtitle.dataset.initialCopy = subtitle.textContent;
+      const count = Number(todayResult?.attempts) || 0;
+      subtitle.textContent = wonToday ? (count > 0 ? `Trouvé en ${count} essai${count > 1 ? "s" : ""}. Continue en solo ou entre amis.` : "Défi réussi. Continue en solo ou entre amis.")
+        : lostToday ? "Défi terminé. Un nouveau Pokémon arrive au prochain rendez-vous." : subtitle.dataset.initialCopy;
+    }
+    const image = hero.querySelector(".pk-silo-img");
+    if (image) {
+      if (!image.dataset.initialSrc) image.dataset.initialSrc = image.getAttribute("src");
+      const completed = todayResult && (wonToday || lostToday) ? POKEMON_BY_ID.get(Number(todayResult.secretId)) : null;
+      image.src = completed ? image.dataset.initialSrc.replace(/\/\d+\.png$/, "/"+Number(completed.id)+".png") : image.dataset.initialSrc;
+    }
+    const date = hero.querySelector(".pk-kicker");
+    if (date) date.title = "Le défi est commun à tous et se renouvelle à minuit UTC.";
+  }
   let inProgress = false;
   try {
     const save = readJson(STORAGE_KEYS.dailyGame, null) || readJson(STORAGE_KEYS.game, null);
@@ -113,7 +132,7 @@ function renderDailyHero() {
   }
   if (ctaEl) {
     ctaEl.textContent = (wonToday || lostToday)
-      ? "🔁 Revoir le mode du jour"
+      ? "🔁 Revoir mon résultat"
       : (inProgress ? "▶ Reprendre ma partie" : "▶ Jouer au Pokémon du jour");
   }
 

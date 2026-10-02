@@ -2,7 +2,7 @@
   "name": "pokedle-multiplayer",
   "version": "1.0.0",
   "private": true,
-  "description": "Pokédle avec module multijoueur 1v1 en temps réel",
+  "description": "Pok\u00e9dle avec module multijoueur 1v1 en temps r\u00e9el",
   "main": "server.js",
   "scripts": {
     "dev": "node tools/dev-server.js",
@@ -27,5 +27,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "overrides": {
+    "qs": "6.16.0"
+  }
 }
