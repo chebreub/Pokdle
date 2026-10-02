@@ -153,9 +153,9 @@ function renderLiveRankHud(screenId,mode,currentOverride=null) {
   const paint=(data)=>{
     if (!hud.isConnected||hud.dataset.mode!==mode) return;
     const me=data?.me||null;
-    const goalCopy=liveRankGoalCopy(data,mode,current.score);
+    const goalCopy=data ? liveRankGoalCopy(data,mode,current.score) : {tone:"muted",text:"Classement en attente de confirmation."};
     const rankText=me?"#"+Number(me.rank):"—";
-    const todayText=me?liveRankFormat(me.score,mode,data.unit||meta.unit):"Non classé";
+    const todayText=me?liveRankFormat(me.score,mode,data.unit||meta.unit):data?"Non classé":"Indisponible";
     const currentText=current.score>0?liveRankFormat(current.score,mode,data?.unit||meta.unit):"—";
     const recordText=personal>0?liveRankFormat(personal,mode,data?.unit||meta.unit):"—";
     hud.innerHTML=
