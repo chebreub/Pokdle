@@ -56,3 +56,18 @@ test("socket bootstrap resumes every supported competitive session",()=>{
   assert.match(duelClient,/pokedle_statclash_session_v1/);
   assert.match(duelClient,/pokedle_statauction_session_v1/);
 });
+
+
+test("token resume can atomically replace a socket during the reload race",()=>{
+  for (const [start,end,dataKey] of [
+    ['socket.on("duel:resume"','socket.on("duel:update-gens"','roomCode'],
+    ['socket.on("stat-clash:resume"','socket.on("stat-clash:leave-room"','statClashRoomCode'],
+    ['socket.on("stat-auction:resume"','socket.on("stat-auction:leave-room"','statAuctionRoomCode'],
+  ]) {
+    const section=server.slice(server.indexOf(start),server.indexOf(end,server.indexOf(start)));
+    assert.doesNotMatch(section,/player\.connected\) return respond\(ack, \{ ok: false/);
+    assert.match(section,/const previousSocket = previousId && previousId !== socket\.id \? io\.sockets\.sockets\.get\(previousId\) : null/);
+    assert.match(section,new RegExp("previousSocket\\.data\\."+dataKey+" = null"));
+    assert.match(section,/previousSocket\?\.connected\) previousSocket\.disconnect\(true\)/);
+  }
+});
