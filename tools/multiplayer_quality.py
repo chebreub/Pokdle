@@ -71,50 +71,6 @@ def main():
                 wait(guest,lambda:guest.evaluate('() => Boolean(partyRoomState.room?.players?.find(p=>p.isSelf)?.isHost)'),'Party host role was not transferred')
                 guest.evaluate('() => { if (typeof partyLeaveRoom === "function") partyLeaveRoom(); }')
 
-                # Capacity + continuity: eight real browser clients play a round, then continue after host handoff.
-                stage='party-8p-boot'
-                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(6)]
-                extra_pages=[context.new_page() for context in extra_contexts]
-                crowd=[host,guest]+extra_pages
-                for page in crowd:
-                    if page in extra_pages:
-                        page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
-                        page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
-                        wait(page,lambda p=page:p.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'8p client did not initialize')
-                        wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'8p client splash stayed visible')
-                    page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openPartyRoomMode(); }')
-                host.locator('#party-nickname').fill('QA 8 Host');host.locator('[data-action="partyCreateRoom"]').click()
-                host.locator('#party-joined').wait_for(state='visible');crowd_code=host.locator('#party-room-code').inner_text().strip()
-                for idx,page in enumerate(crowd[1:],1):
-                    page.locator('#party-nickname').fill(f'QA 8 Guest {idx}')
-                    page.locator('#party-join-code').fill(crowd_code);page.locator('[data-action="partyJoinRoom"]').click()
-                    page.locator('#party-joined').wait_for(state='visible')
-                wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==8,'Party Room did not reach eight players')
-                for page in crowd:
-                    wait(page,lambda p=page:p.evaluate('() => partyRoomState.room?.players?.length===8'),'An 8p client did not receive the full roster')
-                stage='party-8p-round';host.locator('#party-mode-nearest').click()
-                wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','8p mode selection did not update')
-                host.locator('#party-start-btn').click()
-                for page in crowd: page.locator('#party-round').wait_for(state='visible')
-                crowd_round=host.evaluate('() => partyRoomState.room?.roundNumber')
-                answers=['Pikachu','Raichu','Bulbizarre','Salamèche','Carapuce','Roucool','Rattata','Chenipan']
-                for page,name in zip(crowd,answers):
-                    page.locator('#party-guess').fill(name)
-                    page.locator('#party-guess-ac > *').first.wait_for(state='visible');page.locator('#party-guess-ac > *').first.click()
-                for page in crowd: page.locator('#party-nearest-results').wait_for(state='visible')
-                host.screenshot(path=str(out/'party-8p-result.png'))
-                stage='party-8p-host-handoff';host.locator('[data-action="partyLeaveRoom"]:visible').first.click()
-                new_host=crowd[1]
-                wait(new_host,lambda:new_host.evaluate('() => partyRoomState.room?.players?.length===7'),'8p host did not leave')
-                wait(new_host,lambda:new_host.evaluate('() => Boolean(partyRoomState.room?.players?.find(p=>p.isSelf)?.isHost)'),'8p host role was not transferred')
-                new_host.evaluate('() => partyNextRound()')
-                wait(new_host,lambda:new_host.evaluate('(roundNumber)=>partyRoomState.room?.roundNumber>roundNumber',crowd_round),'New host could not continue the Party Room campaign')
-                for page in crowd[1:]:
-                    wait(page,lambda p=page,round_number=crowd_round:p.evaluate('(n)=>partyRoomState.room?.roundNumber>n',round_number),'A remaining 8p client did not receive the next round')
-                for page in crowd[1:]: page.evaluate('() => { if (typeof partyLeaveRoom === "function") partyLeaveRoom(); }')
-                for context in extra_contexts: context.close()
-                extra_contexts=[]
-
                 # Duel live 1v1: token-based refresh must restore the same live seat.
                 stage='duel-open'
                 for page in pages:
@@ -192,6 +148,51 @@ def main():
                 wait(guest,lambda:guest.evaluate('() => typeof openStatAuctionMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Stat Auction guest app did not initialize')
                 wait(guest,lambda:guest.evaluate('(args) => statAuctionState?.room?.code===args[0] && statAuctionState?.room?.status==="live" && statAuctionState?.room?.players?.find(p=>p.isSelf)?.side===args[1]',[auction_code,auction_side]),'Stat Auction live seat was not resumed')
                 guest.evaluate('() => leaveStatAuctionRoom()');host.evaluate('() => leaveStatAuctionRoom()')
+
+                # Capacity + continuity: eight real browser clients play a round, then continue after host handoff.
+                stage='party-8p-boot'
+                extra_contexts=[browser.new_context(viewport={'width':1280,'height':800},reduced_motion='reduce') for _ in range(6)]
+                extra_pages=[context.new_page() for context in extra_contexts]
+                crowd=[host,guest]+extra_pages
+                for page in crowd:
+                    if page in extra_pages:
+                        page.set_default_timeout(12000);page.on('pageerror',lambda e:errors.append(str(e)))
+                        page.goto('http://127.0.0.1:3188/',wait_until='domcontentloaded',timeout=45000)
+                        wait(page,lambda p=page:p.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'8p client did not initialize')
+                        wait(page,lambda p=page:p.evaluate('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"'),'8p client splash stayed visible')
+                    page.evaluate('() => { if (typeof closeOverlayModal === "function") closeOverlayModal(); openPartyRoomMode(); }')
+                host.locator('#party-nickname').fill('QA 8 Host');host.locator('[data-action="partyCreateRoom"]').click()
+                host.locator('#party-joined').wait_for(state='visible');crowd_code=host.locator('#party-room-code').inner_text().strip()
+                for idx,page in enumerate(crowd[1:],1):
+                    page.locator('#party-nickname').fill(f'QA 8 Guest {idx}')
+                    page.locator('#party-join-code').fill(crowd_code);page.locator('[data-action="partyJoinRoom"]').click()
+                    page.locator('#party-joined').wait_for(state='visible')
+                wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==8,'Party Room did not reach eight players')
+                for page in crowd:
+                    wait(page,lambda p=page:p.evaluate('() => partyRoomState.room?.players?.length===8'),'An 8p client did not receive the full roster')
+                stage='party-8p-round';host.locator('#party-mode-nearest').click()
+                wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','8p mode selection did not update')
+                host.locator('#party-start-btn').click()
+                for page in crowd: page.locator('#party-round').wait_for(state='visible')
+                crowd_round=host.evaluate('() => partyRoomState.room?.roundNumber')
+                answers=['Pikachu','Raichu','Bulbizarre','Salamèche','Carapuce','Roucool','Rattata','Chenipan']
+                for page,name in zip(crowd,answers):
+                    page.locator('#party-guess').fill(name)
+                    page.locator('#party-guess-ac > *').first.wait_for(state='visible');page.locator('#party-guess-ac > *').first.click()
+                for page in crowd: page.locator('#party-nearest-results').wait_for(state='visible')
+                host.screenshot(path=str(out/'party-8p-result.png'))
+                stage='party-8p-host-handoff';host.locator('[data-action="partyLeaveRoom"]:visible').first.click()
+                new_host=crowd[1]
+                wait(new_host,lambda:new_host.evaluate('() => partyRoomState.room?.players?.length===7'),'8p host did not leave')
+                wait(new_host,lambda:new_host.evaluate('() => Boolean(partyRoomState.room?.players?.find(p=>p.isSelf)?.isHost)'),'8p host role was not transferred')
+                new_host.evaluate('() => partyNextRound()')
+                wait(new_host,lambda:new_host.evaluate('(roundNumber)=>partyRoomState.room?.roundNumber>roundNumber',crowd_round),'New host could not continue the Party Room campaign')
+                for page in crowd[1:]:
+                    wait(page,lambda p=page,round_number=crowd_round:p.evaluate('(n)=>partyRoomState.room?.roundNumber>n',round_number),'A remaining 8p client did not receive the next round')
+                for page in crowd[1:]: page.evaluate('() => { if (typeof partyLeaveRoom === "function") partyLeaveRoom(); }')
+                for context in extra_contexts: context.close()
+                extra_contexts=[]
+
 
                 assert not errors,repr(errors)
                 result['ok']=True;result['clients']=8;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party shared result','party voluntary host handoff','party eight-player roster','party eight-player shared result','party campaign continues after host handoff','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat clash lobby host handoff','stat clash transferred room restart','stat auction live guest refresh','explicit leave paths']
