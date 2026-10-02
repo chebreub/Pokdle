@@ -1148,7 +1148,7 @@ function publicPartyRoomState(room, viewerId = null) {
     minPlayers: PARTY_MIN_PLAYERS,
     maxPlayers: PARTY_MAX_PLAYERS,
     connectedCount: room.players.filter((player) => player.connected).length,
-    reconnectGraceMs: PARTY_RECONNECT_GRACE_MS,
+    reconnectGraceMs: typeof PARTY_RECONNECT_GRACE_MS !== "undefined" ? PARTY_RECONNECT_GRACE_MS : 30000,
     roundNumber: Number(room.roundNumber) || 0,
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     deadlineAt: room.deadlineAt || null,
