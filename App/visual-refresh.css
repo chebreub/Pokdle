@@ -1987,7 +1987,7 @@
 }
 #pokdle-app.design-refresh .mode-preview-bars i{
   flex:1;
-  height:calc(7px + (var(--bar) % 4) * 5px);
+  height:var(--bar-height,14px);
   min-width:2px;
   border-radius:3px;
   background:var(--art-accent,var(--mode-art-accent,#2f76ff));

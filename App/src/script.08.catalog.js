@@ -22,7 +22,7 @@ var MODE_CATALOG_ART = Object.freeze({
   startMysteryStatGame:{ids:[376],effect:'stats',glyph:'Σ'},
   openOddOneOutMode:{ids:[132,25,133],effect:'group',glyph:'?'},
   startQuizGame:{ids:[65],effect:'quiz',glyph:'?'},
-  startEvolutionChainGame:{ids:[133,134,135],effect:'evolution',glyph:'↻'},
+  startEvolutionChainGame:{ids:[722,723,724],effect:'evolution',glyph:'↻'},
   startPokedexOrderGame:{ids:[152,155,158],effect:'order',glyph:'#'},
   openPokeConnectionsMode:{ids:[133,134,135],effect:'links',glyph:'↔'},
   openTypeComboSolo:{ids:[493,352],effect:'types',glyph:'+'},
@@ -64,7 +64,7 @@ function modeCatalogPreviewImage(id,index=0) {
   return '<img src="'+modeCatalogSpriteUrl(id)+'" alt="" aria-hidden="true" loading="lazy" decoding="async" style="--art-index:'+index+'" />';
 }
 function modeCatalogPreviewBars(count=5) {
-  return '<span class="mode-preview-bars">'+Array.from({length:count},(_,i)=>'<i style="--bar:'+i+'"></i>').join('')+'</span>';
+  return '<span class="mode-preview-bars">'+Array.from({length:count},(_,i)=>'<i style="--bar:'+i+';--bar-height:'+([10,18,25,30,25,18,10][i%7])+'px"></i>').join('')+'</span>';
 }
 function modeCatalogPreviewHtml(spec) {
   const ids=spec.ids.slice(0,3);
@@ -156,7 +156,7 @@ function decorateModeCatalogCards() {
   });
 }
 var modeCatalogCopy = {
-  solo: 'Choisis un jeu solo. Les filtres avancés restent disponibles sans prendre toute la place.',
+  solo: 'Déduction, connaissances ou rapidité : choisis ton prochain défi.',
   friends: 'Party Room, duels et jeux à plusieurs sont regroupés ici.',
   explore: 'Les outils utiles vivent ici, séparés des jeux.',
   all: 'Tous les jeux et outils, réunis au même endroit.'

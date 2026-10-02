@@ -1,4 +1,4 @@
-﻿const fs = require("fs");
+const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 const express = require("express");
@@ -440,6 +440,7 @@ app.get("/api/leaderboard", async (req, res) => {
       ok: true,
       mode,
       scope,
+      authenticated: Boolean(user),
       direction: config.direction,
       label: config.label,
       unit: config.unit,

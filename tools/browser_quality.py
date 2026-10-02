@@ -46,7 +46,7 @@ def main():
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
     check('home',boot);check('catalog',lambda:nav('game','screen-all-modes'))
     def search():
-     page.locator('#mode-search').fill('cri');page.wait_for_timeout(150);cards=page.locator('#screen-all-modes .all-modes-card:visible');expect(cards.count()>0,'No search result');expect('Cri' in cards.all_text_contents()[0],'Cri missing');page.locator('#mode-search').fill('');return screen('screen-all-modes')
+     page.locator('#mode-search').fill('cri');page.wait_for_timeout(150);cards=page.locator('#screen-all-modes .all-modes-card:visible');expect(cards.count()>0,'No search result');expect(any(t.strip()=='Cri' for t in page.locator('#screen-all-modes .all-modes-card:visible > b').all_text_contents()),'Cri missing');page.locator('#mode-search').fill('');return screen('screen-all-modes')
     check('search',search)
     def waveform():
      bars=page.locator('.mode-preview-audio .mode-preview-bars i');expect(bars.count()>0,'No waveform');heights=bars.evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)');expect(all(h>0 for h in heights),f'Collapsed bars: {heights}');return heights
