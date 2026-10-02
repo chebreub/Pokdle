@@ -4485,6 +4485,11 @@ window.addEventListener('DOMContentLoaded', () => {
       ensureMultiplayerSocket();
     }
   } catch (_err) { /* stockage indisponible */ }
+  try {
+    if (sessionStorage.getItem("pokedle_statclash_session_v1") || sessionStorage.getItem("pokedle_statauction_session_v1")) {
+      ensureMultiplayerSocket();
+    }
+  } catch (_err) { /* stockage indisponible */ }
   // Lot D audit : sur /emulateur (page à CSP permissive), ouvrir directement l'écran émulateur.
   if (window.location.pathname === "/emulateur") openEmulatorMode();
   document.getElementById('logo-home')?.addEventListener('click', goToConfig);
