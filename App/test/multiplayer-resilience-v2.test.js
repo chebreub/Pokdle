@@ -8,6 +8,7 @@ const server=fs.readFileSync(path.join(root,"server.js"),"utf8");
 const duelClient=fs.readFileSync(path.join(root,"src/script.07.delegation-party.js"),"utf8");
 const clashClient=fs.readFileSync(path.join(root,"src/script.02.statclash.js"),"utf8");
 const auctionClient=fs.readFileSync(path.join(root,"src/script.03.minijeux.js"),"utf8");
+const historyClient=fs.readFileSync(path.join(root,"src/script.04.jeu-pokedex.js"),"utf8");
 
 test("Duel 1v1 reconnect uses a server token instead of nickname matching",()=>{
   assert.match(server,/function joinPlayerToRoom[\s\S]*reconnectToken:\s*crypto\.randomBytes/);
@@ -70,4 +71,16 @@ test("token resume can atomically replace a socket during the reload race",()=>{
     assert.match(section,new RegExp("previousSocket\\.data\\."+dataKey+" = null"));
     assert.match(section,/previousSocket\?\.connected\) previousSocket\.disconnect\(true\)/);
   }
+});
+
+
+test("history restoration defers Stat Clash and Auction to persisted session resume",()=>{
+  assert.match(clashClient,/function getStoredStatClashSession\(\)/);
+  assert.match(clashClient,/function restoreStatClashSessionView\(\)/);
+  assert.match(clashClient,/roomPendingAction = "resuming"/);
+  assert.match(auctionClient,/function getStoredStatAuctionSession\(\)/);
+  assert.match(auctionClient,/function restoreStatAuctionSessionView\(\)/);
+  assert.match(auctionClient,/roomPendingAction = "resuming"/);
+  assert.match(historyClient,/key === "statClash"[\s\S]*restoreStatClashSessionView\(\)[\s\S]*return true/);
+  assert.match(historyClient,/key === "statAuction"[\s\S]*restoreStatAuctionSessionView\(\)[\s\S]*return true/);
 });
