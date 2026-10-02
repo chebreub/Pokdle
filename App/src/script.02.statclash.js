@@ -1997,11 +1997,14 @@ function getStatClashRoomUiState(state) {
   }
 
   if (room.status === "lobby") {
+    const reconnectingOpponent = Boolean(opponent && !opponentConnected);
     return {
       title: `Room créée : ${room.code}`,
-      detail: room?.canStart
-        ? "Joueur 2 a rejoint. La partie est prête."
-        : `En attente d'un autre joueur… ${connectedCount}/${maxPlayers}`,
+      detail: reconnectingOpponent
+        ? "Adversaire en reconnexion… sa place reste réservée."
+        : room?.canStart
+          ? "Joueur 2 a rejoint. La partie est prête."
+          : `En attente d'un autre joueur… ${connectedCount}/${maxPlayers}`,
       tone: room?.canStart ? "is-ready" : "is-waiting",
     };
   }
@@ -2549,7 +2552,7 @@ function renderStatClashScreen() {
       ? room.players
         .slice()
         .sort((left, right) => (Number(left.seatIndex) || 0) - (Number(right.seatIndex) || 0))
-        .map((player, index) => `<div class="stat-clash-room-player ${player.connected ? "is-connected" : "is-disconnected"}"><div><strong>${escapeHtml(player.nickname || `Joueur ${index + 1}`)}</strong><small>${player.connected ? "Connecté" : "En attente"}</small></div><span class="stat-clash-room-player-badges">${player.isHost ? '<span class="stat-clash-room-badge is-host">Host</span>' : ""}${player.isSelf ? '<span class="stat-clash-room-badge is-self">Toi</span>' : '<span class="stat-clash-room-badge is-guest">Invité</span>'}</span></div>`).join("")
+        .map((player, index) => `<div class="stat-clash-room-player ${player.connected ? "is-connected" : "is-disconnected"}"><div><strong>${escapeHtml(player.nickname || `Joueur ${index + 1}`)}</strong><small>${player.connected ? "Connecté" : "Reconnexion…"}</small></div><span class="stat-clash-room-player-badges">${player.isHost ? '<span class="stat-clash-room-badge is-host">Host</span>' : ""}${player.isSelf ? '<span class="stat-clash-room-badge is-self">Toi</span>' : '<span class="stat-clash-room-badge is-guest">Invité</span>'}</span></div>`).join("")
       : '<div class="stat-clash-room-player is-empty"><div><strong>Joueur 1</strong><small>En attente</small></div></div>')
     : "";
   const roomMetaHtml = isRoom ? renderStatClashRoomMeta(room) : "";
