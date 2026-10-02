@@ -829,7 +829,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
     </div>
     <div id="screen-draft-arena" class="hidden">
-      <div id="draft-mode-card" class="card draft-card">
+      <div id="draft-mode-card" class="card draft-card gameplay-screen-card">
           <div class="ranking-head">
             <h2 class="card-title">Draft Arènes</h2>
             <div class="ranking-head-actions">
@@ -1085,7 +1085,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
       <p id="err-msg" class="err-msg"></p>
 
-      <div id="win-box" class="win-box hidden">
+      <div id="win-box" class="win-box hidden" role="region" aria-live="polite" aria-label="Résultat de la partie">
         <div class="win-inner">
           <img id="win-sprite" src="" alt="" class="win-sprite" />
           <div>
@@ -1094,9 +1094,10 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </div>
         </div>
         <div class="win-btns">
-          <button class="btn-red" id="btn-restart" data-action="restartCurrentMode"><svg class="btn-ico"><use href="#i-repeat"/></svg>Rejouer</button>
-          <button class="btn-yellow" id="btn-copy-result" data-action="copyResult"><svg class="btn-ico"><use href="#i-copy"/></svg>Copier résultat</button>
-          <button class="btn-blue" id="btn-share" data-action="shareResult"><svg class="btn-ico"><use href="#i-share"/></svg>Partager</button>
+          <button class="btn-blue result-primary" id="btn-restart" data-action="restartCurrentMode"><svg class="btn-ico"><use href="#i-repeat"/></svg>Rejouer</button>
+          <button class="btn-ghost" id="btn-result-catalog" data-action="openAllModesScreen" data-args='["solo"]'><svg class="btn-ico"><use href="#i-gamepad"/></svg>Choisir un autre jeu</button>
+          <button class="btn-ghost" id="btn-copy-result" data-action="copyResult"><svg class="btn-ico"><use href="#i-copy"/></svg>Copier</button>
+          <button class="btn-ghost" id="btn-share" data-action="shareResult"><svg class="btn-ico"><use href="#i-share"/></svg>Partager</button>
           <!-- Global display/audio settings remain available in the header. -->
         </div>
         <p id="win-next-daily" class="win-next-daily hidden"></p>
@@ -1128,7 +1129,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-odd-one-out" class="hidden">
-      <div class="card odd-screen-card">
+      <div class="card odd-screen-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Intrus Pokémon</h2>
           <div class="ranking-head-actions">
@@ -1238,7 +1239,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-multiplayer" class="hidden">
-      <div class="card multiplayer-screen-card">
+      <div class="card multiplayer-screen-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Duel live 1v1</h2>
           <div class="ranking-head-actions">
@@ -1371,7 +1372,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-stat-clash" class="hidden">
-      <div class="card stat-clash-screen-card">
+      <div class="card stat-clash-screen-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Stat Clash 1v1</h2>
           <div class="ranking-head-actions">
@@ -1386,7 +1387,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-higher-lower" class="hidden">
-      <div class="card higher-lower-card">
+      <div class="card higher-lower-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Higher or Lower</h2>
           <div class="ranking-head-actions">
@@ -1400,7 +1401,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-poke-connections" class="hidden">
-      <div class="card poke-connections-card">
+      <div class="card poke-connections-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Poké-Connections</h2>
           <div class="ranking-head-actions">
@@ -1414,7 +1415,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-speedrun" class="hidden">
-      <div class="card speedrun-card">
+      <div class="card speedrun-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Speedrun Pokédex</h2>
           <div class="ranking-head-actions">
@@ -1428,7 +1429,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-type-combo" class="hidden">
-      <div class="card type-combo-card">
+      <div class="card type-combo-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Combo de types</h2>
           <div class="ranking-head-actions">
@@ -1442,7 +1443,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
 
     <div id="screen-stat-auction" class="hidden">
-      <div class="card stat-auction-card">
+      <div class="card stat-auction-card gameplay-screen-card">
         <div class="ranking-head">
           <h2 class="card-title">Stat Auction 1v1</h2>
           <div class="ranking-head-actions">
