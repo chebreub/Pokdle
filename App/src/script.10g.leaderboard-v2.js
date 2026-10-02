@@ -194,7 +194,6 @@ function openLeaderboardV2(mode="daily",scope="all") {
 
   const syncTasks=[];
   if (current==="daily") syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
-  if (leaderboardV2Scope==="all" && typeof submitLeaderboardScores==="function") syncTasks.push(leaderboardWaitForSync(submitLeaderboardScores()).catch(()=>false));
   const syncPromise=syncTasks.length ? Promise.all(syncTasks) : Promise.resolve([]);
 
   return syncPromise.then(()=>{

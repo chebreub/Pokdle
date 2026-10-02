@@ -5,19 +5,15 @@ const delegation=fs.readFileSync(path.join(__dirname,'../src/script.07.delegatio
 const leaderboard=fs.readFileSync(path.join(__dirname,'../src/script.10g.leaderboard-v2.js'),'utf8');
 const style=fs.readFileSync(path.join(__dirname,'../style.css'),'utf8');
 
-test('leaderboard sync includes all modern competitive records',()=>{
-  assert.match(delegation,/higherlower60:\s*Number\(playerProfile\.higherLower60sHighScore\)/);
-  assert.match(delegation,/typecombo:\s*Number\(playerProfile\.typeComboHighScore\)/);
-  assert.match(delegation,/scores\.draft_all = draftAll/);
+test('public leaderboard never bulk-uploads browser profile records',()=>{
+  assert.doesNotMatch(delegation,/function submitLeaderboardScores\(/);
+  assert.doesNotMatch(delegation,/fetch\("\/api\/scores"/);
+  assert.doesNotMatch(leaderboard,/submitLeaderboardScores/);
 });
 
-test('leaderboard sync runs immediately after authenticated profile sync',()=>{
-  assert.match(delegation,/setTimeout\(function \(\) \{ try \{ submitLeaderboardScores\(\); \}/);
-});
-
-test('opening all-time leaderboard syncs local records before fetching',()=>{
-  assert.match(leaderboard,/leaderboardV2Scope==="all"/);
-  assert.match(leaderboard,/submitLeaderboardScores/);
+test('leaderboard results remain event-driven',()=>{
+  assert.match(leaderboard,/leaderboardFetchJson\("\/api\/leaderboard\/result"/);
+  assert.match(leaderboard,/resultId/);
   assert.match(leaderboard,/Synchronisation du classement/);
 });
 

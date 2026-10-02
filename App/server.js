@@ -320,28 +320,13 @@ function leaderboardBestSql(config) {
   return config?.direction === "asc" ? "MIN" : "MAX";
 }
 
-app.post("/api/scores", express.json({ limit: "4kb" }), async (req, res) => {
-  if (!authReady()) return res.json({ ok: false });
-  const user = getSessionUser(req);
-  if (!user) return res.status(401).json({ ok: false });
-  const scores = (req.body && req.body.scores && typeof req.body.scores === "object") ? req.body.scores : {};
-  try {
-    for (const mode of Object.keys(scores)) {
-      const config = leaderboardConfig(mode);
-      if (!config || config.direction !== "desc") continue;
-      const v = clampLeaderboardScore(scores[mode], config);
-      if (v == null) continue;
-      await pgPool.query(
-        `INSERT INTO scores (discord_id, mode, score, username, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, now())
-         ON CONFLICT (discord_id, mode) DO UPDATE SET score = GREATEST(scores.score, EXCLUDED.score), username = EXCLUDED.username, avatar = EXCLUDED.avatar,
-           updated_at = CASE WHEN EXCLUDED.score > scores.score THEN now() ELSE scores.updated_at END`,
-        [user.id, mode, v, user.username || "", user.avatar || ""]
-      );
-    }
-    res.json({ ok: true });
-  } catch (e) { console.error("[scores] post:", e.message); res.json({ ok: false }); }
+// Legacy bulk score import is intentionally retired. Those values came from the browser's
+// local profile and therefore could not prove that a game had actually been completed.
+app.post("/api/scores", express.json({ limit: "4kb" }), (req, res) => {
+  if (!authReady()) return res.status(503).json({ ok: false, error: "unavailable" });
+  if (!getSessionUser(req)) return res.status(401).json({ ok: false, error: "authentication_required" });
+  return res.status(410).json({ ok: false, error: "legacy_score_sync_retired" });
 });
-
 app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, res) => {
   if (!authReady()) return res.status(503).json({ok:false,error:"unavailable"});
   const user=getSessionUser(req);
