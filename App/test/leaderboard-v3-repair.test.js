@@ -35,8 +35,7 @@ test('account bootstrap exposes auth before leaderboard submission',()=>{
   assert.match(delegation,/pokedle:auth-ready/);
 });
 
-test('daily leaderboard backfills a completed win after auth becomes ready',()=>{
-  assert.match(leaderboard,/function syncPendingDailyLeaderboard\(\)/);
-  assert.match(leaderboard,/pendingDailyLeaderboardScore/);
-  assert.match(leaderboard,/pokedle:auth-ready/);
+test('daily leaderboard never backfills a completed browser win after auth',()=>{
+  assert.match(leaderboard,/function syncPendingDailyLeaderboard\(\)[\s\S]*return Promise\.resolve\(false\)/);
+  assert.match(leaderboard,/if \(mode === "daily"\) return Promise\.resolve\(false\)/);
 });

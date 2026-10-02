@@ -1,4 +1,4 @@
-const { ensureLeaderboardResultKeys, recordLeaderboardResult } = require("./lib/leaderboard-store");
+const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -425,17 +425,18 @@ app.post("/api/daily/guess", express.json({ limit: "2kb" }), async (req, res) =>
     const attempts = (Number(row.attempts) || 0) + 1;
     guessed.push(normalized);
     const correct = Number(pokemon.id) === Number(serverDailyPokemon(day).id);
+    const config = leaderboardConfig("daily");
+    if (!config) throw new Error("Daily leaderboard config unavailable");
+    const ranked = correct && attempts <= Number(config.max);
     await client.query(
       "UPDATE daily_sessions SET attempts=$3, guessed=$4::jsonb, finished=$5, updated_at=now() WHERE discord_id=$1 AND day=$2",
       [user.id, day, attempts, JSON.stringify(guessed), correct]
     );
-    await client.query("COMMIT");
-
-    if (correct) {
-      const config = leaderboardConfig("daily");
-      await recordLeaderboardResult(pgPool, user, "daily", attempts, config, "daily:" + day);
+    if (ranked) {
+      await recordLeaderboardResultInTransaction(client, user, "daily", attempts, config, "daily:" + day);
     }
-    res.json({ ok: true, day, attempts, correct });
+    await client.query("COMMIT");
+    res.json({ ok: true, day, attempts, correct, ranked });
   } catch (error) {
     try { await client.query("ROLLBACK"); } catch (_rollbackError) {}
     console.error("[daily] guess:", error.message);
