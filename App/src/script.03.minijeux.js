@@ -1755,7 +1755,7 @@ function renderStatAuctionScreen() {
             <span><b>Manches :</b> ${room.totalRounds}</span>
           </div>
           <div class="higher-lower-room-players">
-            ${room.players.map((p) => `<div class="higher-lower-room-player ${p.connected ? "is-connected" : "is-disconnected"}"><b>${escapeHtml(p.nickname || "Joueur")}</b><span>${p.isHost ? "Hôte" : "Invité"}${p.isSelf ? " · Toi" : ""}</span></div>`).join("")}
+            ${room.players.map((p) => `<div class="higher-lower-room-player ${p.connected ? "is-connected" : "is-disconnected"}"><b>${escapeHtml(p.nickname || "Joueur")}</b><span>${p.isHost ? "Hôte" : "Invité"}${p.isSelf ? " · Toi" : ""} · ${p.connected ? "Connecté" : "Reconnexion…"}</span></div>`).join("")}
             ${room.players.length < 2 ? `<div class="higher-lower-room-player is-empty"><b>En attente…</b><span>Partage le code</span></div>` : ""}
           </div>
           <div class="higher-lower-room-actions">
@@ -1816,7 +1816,7 @@ function renderStatAuctionScreen() {
         <span>Manche : <b>${room.round}/${room.totalRounds}</b></span>
         <span>Toi : <b>${me?.score ?? 0}</b></span>
         <span>${escapeHtml(opp?.nickname || "Adv.")} : <b>${opp?.score ?? 0}</b></span>
-        <span class="${oppSubmitted ? "is-ready" : ""}">${oppSubmitted ? "✅ Adv. prêt" : "⏳ Adv. en cours"}</span>
+        <span class="${opp?.connected === false ? "" : oppSubmitted ? "is-ready" : ""}">${opp?.connected === false ? "↻ Adv. en reconnexion" : oppSubmitted ? "✅ Adv. prêt" : "⏳ Adv. en cours"}</span>
       </div>
       <div class="stat-auction-pokemon">
         <img class="higher-lower-sprite" src="${escapeHtml(getPokemonSprite(pokemon))}" alt="${escapeHtml(pokemon.name)}" />
