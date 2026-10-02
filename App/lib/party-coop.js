@@ -71,7 +71,7 @@ function publicCoopRound(room, viewerId, revealed) {
     solved: Boolean(room.coopSolved), maxAttempts: MAX_ATTEMPTS,
     attemptsLeft: Math.max(0, MAX_ATTEMPTS - (room.coopGuesses || []).length),
     myClues: mine?.clues || [], myCluesShared: Boolean(mine?.shared),
-    sharedClues: Object.entries(room.coopClues || {}).filter(([id, entry]) => entry.shared || revealed || !room.players.some(p => p.id === id && p.connected)).map(([id, entry]) => ({
+    sharedClues: Object.entries(room.coopClues || {}).filter(([id, entry]) => entry.shared || revealed || !room.players.some(p => p.id === id && (p.connected || Number(p.reconnectUntil) > Date.now()))).map(([id, entry]) => ({
       nickname: room.players.find(p => p.id === id)?.nickname || "Joueur parti", clues: entry.clues
     })),
     guesses: (room.coopGuesses || []).map(g => ({ name: g.name, nickname: g.nickname, correct: g.correct }))
