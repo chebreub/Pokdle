@@ -36,6 +36,9 @@ def main():
                 stage='join';guest.locator('#party-nickname').fill('QA Guest');guest.locator('#party-join-code').fill(code);guest.locator('[data-action="partyJoinRoom"]').click()
                 guest.locator('#party-joined').wait_for(state='visible')
                 wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==2,'Host roster did not update')
+                assert host.locator('#party-joined').get_attribute('data-party-phase')=='setup','Party lobby is missing the setup phase marker'
+                assert host.locator('#party-action-phase').inner_text().strip()=='PRÊT','Party lobby action dock has the wrong phase'
+                assert '5 manches' in host.locator('#party-options-summary').inner_text(),'Party lobby compact rule summary is missing'
 
                 # Host refresh must preserve ownership instead of transferring the room.
                 stage='host-refresh';host.reload(wait_until='domcontentloaded',timeout=45000)
@@ -49,6 +52,10 @@ def main():
                 wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','Selected mode did not update')
                 stage='start';host.locator('#party-start-btn').click()
                 host.locator('#party-round').wait_for(state='visible');guest.locator('#party-round').wait_for(state='visible')
+                wait(host,lambda:host.locator('#party-joined').get_attribute('data-party-phase')=='live','Party did not switch to the live visual phase')
+                assert host.locator('#party-action-phase').inner_text().strip()=='EN JEU','Live Party action dock has the wrong phase'
+                assert host.locator('#party-change-game-btn').is_visible(),'Host live management action is not available in the unified dock'
+                assert 'has-primary-action' in (host.locator('#party-action-dock').get_attribute('class') or ''),'Host Party dock is not marked actionable'
                 round_number=host.evaluate('() => partyRoomState.room?.roundNumber')
 
                 # Guest refresh in the middle of a live round must restore the same seat and round.
@@ -107,6 +114,10 @@ def main():
                     page.locator('#party-guess').fill(name)
                     page.locator('#party-guess-ac > *').first.wait_for(state='visible');page.locator('#party-guess-ac > *').first.click()
                 stage='result';host.locator('#party-nearest-results').wait_for(state='visible');guest.locator('#party-nearest-results').wait_for(state='visible')
+                wait(host,lambda:host.locator('#party-joined').get_attribute('data-party-phase')=='result','Party result did not expose the result visual phase')
+                assert host.locator('#party-action-phase').inner_text().strip()=='RÉSULTAT','Party result action dock has the wrong phase'
+                assert host.locator('#party-room-next-btn').is_visible(),'Party result primary next-round action is not visible'
+                assert host.locator('#party-change-game-btn').is_visible(),'Party result change-game action is not visible'
                 host.screenshot(path=str(out/'host-result.png'));guest.screenshot(path=str(out/'guest-result.png'))
                 # Voluntary host departure must hand the salon to the remaining player.
                 stage='party-host-handoff';host.locator('[data-action="partyLeaveRoom"]:visible').first.click()
