@@ -943,8 +943,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="mode-banner-text"><b>Mode Zoom progressif</b><span class="mode-banner-desc">Devine le Pokémon à partir d'une zone zoomée du sprite.</span></div>
       </div>
 
-      <div id="silhouette-box" class="zoom-box hidden">
-        <img id="silhouette-sprite" src="" alt="Zone zoomée du Pokémon mystère" class="zoom-sprite" />
+      <div id="silhouette-box" class="zoom-box visual-clue-box hidden">
+        <div class="visual-clue-head"><span>DÉTAIL VISUEL</span><b id="silhouette-level">Détail 1 / 7</b></div>
+        <div class="visual-clue-canvas visual-clue-canvas-zoom"><img id="silhouette-sprite" src="" alt="Zone zoomée du Pokémon mystère" class="zoom-sprite" /></div>
+        <div class="visual-clue-meter" aria-hidden="true"><span id="silhouette-meter-fill"></span></div>
+        <p id="silhouette-level-copy" class="visual-clue-copy">Chaque essai élargit progressivement la vue.</p>
       </div>
 
       <div id="pixel-banner" class="mode-banner hidden">
@@ -952,8 +955,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="mode-banner-text"><b>Mode Pixelisé</b><span class="mode-banner-desc">L'image devient plus nette à chaque essai.</span></div>
       </div>
 
-      <div id="pixel-box" class="pixel-box hidden">
-        <img id="pixel-sprite" src="" alt="Pokémon pixelisé" class="pixel-sprite" />
+      <div id="pixel-box" class="pixel-box visual-clue-box hidden">
+        <div class="visual-clue-head"><span>IMAGE MYSTÈRE</span><b id="pixel-level">Netteté 1 / 8</b></div>
+        <div class="visual-clue-canvas visual-clue-canvas-pixel"><img id="pixel-sprite" src="" alt="Pokémon pixelisé" class="pixel-sprite" /></div>
+        <div class="visual-clue-meter" aria-hidden="true"><span id="pixel-meter-fill"></span></div>
+        <p id="pixel-level-copy" class="visual-clue-copy">Chaque essai rend le Pokémon un peu plus net.</p>
       </div>
 
 
@@ -985,13 +991,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="mode-banner-text"><b>Mode Cri du Pokémon</b><span class="mode-banner-desc">Écoute le cri et devine lequel c'est.</span></div>
       </div>
 
-      <div id="cry-box" class="challenge-panel hidden">
-        <p class="challenge-title">Indice sonore :</p>
-        <button id="cry-play-btn" class="btn-blue" data-action="playCrySound">&#9654;&#65039; Jouer le cri</button>
-        <p id="cry-status-text" class="cry-status-text hidden"></p>
-        <div id="cry-reveal" class="challenge-preview hidden">
+      <div id="cry-box" class="challenge-panel cry-box hidden">
+        <div class="cry-player-card">
+          <div class="cry-player-copy">
+            <span class="cry-player-kicker">INDICE SONORE</span>
+            <h3>Écoute le cri.</h3>
+            <p>Rejoue-le autant de fois que nécessaire, puis donne ta réponse.</p>
+          </div>
+          <div class="cry-waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <button id="cry-play-btn" class="btn-blue cry-play-btn" data-action="playCrySound"><span class="cry-play-glyph" aria-hidden="true">▶</span><span class="cry-play-label">Jouer le cri</span></button>
+        </div>
+        <p id="cry-status-text" class="cry-status-text hidden" role="status" aria-live="polite"></p>
+        <div id="cry-reveal" class="challenge-preview cry-reveal hidden">
           <img id="cry-sprite" src="" alt="Pokémon révélé" />
-          <strong id="cry-name"></strong>
+          <div><span>LA RÉPONSE</span><strong id="cry-name"></strong></div>
         </div>
       </div>
       <div id="weight-banner" class="mode-banner hidden">
