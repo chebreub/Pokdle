@@ -119,6 +119,33 @@ def main():
      if width<=640: page.locator('#pokedex-detail .pokedex-back-to-list').first.click();page.locator('#pokedex-grid').wait_for(state='visible')
      return screen('screen-pokedex')
     check('collection-back',locked);check('profile',lambda:nav('profile','screen-profile'))
+    def d3_profile_density():
+     nav('profile','screen-profile')
+     page.evaluate("""() => {
+       playerProfile.speedrunHighScore=14;
+       playerProfile.quizHighScore=18;
+       playerProfile.higherLowerHighScore=9;
+       playerProfile.draftScoreAttackRecords={1:512,2:488,9:530};
+       renderProfileScreen();
+     }""")
+     disclosures=page.locator('#screen-profile [data-profile-mobile-collapse]')
+     expect(disclosures.count()>=4,'Profile disclosures missing')
+     if width<=640:
+      expect(all(not x for x in disclosures.evaluate_all('(els)=>els.map(e=>e.open)')),'Mobile profile disclosures should start collapsed')
+      cards=page.locator('#screen-profile .profile-stat-grid .profile-stat-card')
+      rects=cards.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
+      expect(len(rects)==4 and abs(rects[0]['y']-rects[1]['y'])<3 and rects[2]['y']>rects[0]['y'],'Mobile profile stats are not compact 2x2: '+repr(rects))
+     else:
+      expect(all(disclosures.evaluate_all('(els)=>els.map(e=>e.open)')),'Desktop profile disclosures should start open')
+     records_details=page.locator('#screen-profile .profile-records-panel.profile-disclosure').first
+     records_details.evaluate('(e)=>e.open=true')
+     expect(page.locator('#profile-mode-records .profile-record-card').count()==3,'Unexpected compact record-card count')
+     expect('Score Attack Gen' not in page.locator('#profile-mode-records').inner_text(),'Score Attack generations still render as separate cards')
+     expect(page.locator('#profile-score-attack-record .profile-score-attack-card').count()==1,'Score Attack single-record card missing')
+     page.locator('#profile-score-attack-gen').select_option('9')
+     expect('530' in page.locator('#profile-score-attack-record').inner_text(),'Score Attack generation selector did not update the visible record')
+     return screen('screen-profile')
+    check('d3-profile-density',d3_profile_density)
     def ranking_tool():
      page.evaluate('openRankingMode()');screen('screen-ranking')
      if width<=640:
