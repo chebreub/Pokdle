@@ -103,6 +103,25 @@ def main():
     def guess():
      start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
+    def pc1_classic_board():
+     if width<1280:
+      expect(page.locator('#classic-banner').is_hidden(),'PC1 desktop banner leaked below the desktop breakpoint')
+      return {'skipped':'desktop-only'}
+     expect(page.locator('#screen-game').get_attribute('data-game-mode')=='normal','Classic screen mode marker is missing')
+     expect(page.locator('#classic-banner').is_visible(),'Classic mystery identity banner is missing on desktop')
+     shell=page.locator('#screen-game .classic-game-shell')
+     style=shell.evaluate('(e)=>({display:getComputedStyle(e).display,cols:getComputedStyle(e).gridTemplateColumns})')
+     expect(style['display']=='grid','Classic desktop shell is not a grid: '+repr(style))
+     expect(len([x for x in style['cols'].split(' ') if x])==2,'Classic desktop shell does not expose two columns: '+repr(style))
+     command=page.locator('#screen-game .classic-game-command').bounding_box()
+     results=page.locator('#screen-game #results-wrap').bounding_box()
+     expect(command and results,'Classic desktop board regions are missing')
+     expect(results['x']>command['x']+command['width'],'Results are not placed to the right of the command panel: '+repr([command,results]))
+     expect(results['width']>command['width'],'Desktop clue board should be wider than the command rail: '+repr([command,results]))
+     screen_width=page.locator('#screen-game').bounding_box()['width']
+     expect(screen_width>(1500 if width>=1900 else 1240),'Classic game is still trapped in the old narrow desktop width: '+str(screen_width))
+     return screen('screen-game')
+    check('pc1-classic-board',pc1_classic_board)
     def finish():
      if page.locator('#btn-surrender').is_visible(): page.locator('#btn-surrender').click()
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(350)
@@ -117,6 +136,11 @@ def main():
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
      expect('Continuer en illimité' in page.locator('#btn-restart').inner_text(),'Daily result does not explain the next game')
      expect(page.locator('#btn-result-catalog').is_visible(),'Daily result has no catalog exit')
+     if width>=1280:
+      expect(page.locator('#screen-game').get_attribute('data-game-mode')=='daily','Daily screen mode marker is missing')
+      expect(page.locator('#daily-banner').is_visible() and page.locator('#classic-banner').is_hidden(),'Daily and classic identities overlap on desktop')
+      shell_style=page.locator('#screen-game .classic-game-shell').evaluate('(e)=>getComputedStyle(e).display')
+      expect(shell_style=='grid','Daily did not inherit the classic desktop board')
      progress=page.locator('#win-ceremony-progress')
      expect(progress.count()==1 and progress.evaluate('(e)=>e.tagName')=='DETAILS','Collection progress is not a collapsible detail')
      return screen('screen-game')
