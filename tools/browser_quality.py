@@ -91,6 +91,26 @@ def main():
      expect(len(styles)==3 and all(e['fill']=='none' and e['stroke']!='none' for e in styles),str(styles))
      return styles
     check('catalog-icons',icon_strokes,False)
+    def pc3_catalog_shelves():
+     if width<1280: return {'skipped':'desktop-only'}
+     nav('game','screen-all-modes')
+     section=page.locator('#screen-all-modes .all-modes-cat:visible').first
+     grid=section.locator('.all-modes-grid')
+     title=section.locator('.all-modes-cat-title')
+     layout=section.evaluate('(e)=>({display:getComputedStyle(e).display,cols:getComputedStyle(e).gridTemplateColumns})')
+     expect(layout['display']=='grid','PC3 catalog family is not a desktop shelf: '+repr(layout))
+     expect(len([x for x in layout['cols'].split(' ') if x])==2,'PC3 catalog shelf does not expose label + cards columns: '+repr(layout))
+     tb=title.bounding_box();gb=grid.bounding_box()
+     expect(tb and gb and gb['x']>tb['x']+tb['width'],'Catalog family label is not beside its card grid: '+repr([tb,gb]))
+     cols=grid.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+     expect(cols==3,'Desktop catalog shelf should retain three generous cards: '+str(cols))
+     picks=page.locator('#catalog-picks .club-pick:visible')
+     if picks.count()>=3:
+      rects=picks.evaluate_all('(els)=>els.slice(0,3).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
+      expect(abs(rects[0]['y']-rects[1]['y'])<3 and abs(rects[0]['y']-rects[2]['y'])<3,'Featured desktop picks are not a single row: '+repr(rects))
+      expect(min(r['h'] for r in rects)>=170,'Featured desktop picks are too small: '+repr(rects))
+     return screen('screen-all-modes')
+    check('pc3-catalog-shelves',pc3_catalog_shelves)
     def start(action,target):
      nav('game','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["'+action+'"]\']:visible').first.click();page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen(target)
     def standard_guess_shell():
@@ -318,6 +338,43 @@ def main():
     def d2_type_combo_shell():
      page.evaluate('openTypeComboSolo()');screen('screen-type-combo');start_btn=page.locator('.tc-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Type Combo start CTA is not primary blue');start_btn.click();expect(page.locator('.tc-combo').is_visible(),'Type Combo prompt stage missing');expect(page.locator('#type-combo-timer').is_visible(),'Type Combo timer missing');return screen('screen-type-combo')
     check('d2-type-combo-shell',d2_type_combo_shell)
+    def pc3_arcade_desktop():
+     if width<1280: return {'skipped':'desktop-only'}
+
+     page.evaluate('openOddOneOutMode()');screen('screen-odd-one-out')
+     odd=page.locator('#odd-grid .odd-card')
+     expect(odd.count()==6,'Intrus desktop did not render six candidates')
+     odd_rects=odd.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
+     expect(max(abs(r['y']-odd_rects[0]['y']) for r in odd_rects)<3,'Intrus candidates are not one desktop row: '+repr(odd_rects))
+     expect(min(r['h'] for r in odd_rects)>=200,'Intrus cards are undersized on desktop: '+repr(odd_rects))
+
+     page.evaluate('openPokeConnectionsMode()');screen('screen-poke-connections')
+     board=page.locator('.poke-connections-board')
+     cols=board.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+     expect(cols==2,'Connections is not using puzzle + rail desktop layout: '+str(cols))
+     tiles=page.locator('.poke-connections-grid').bounding_box();status=page.locator('.poke-connections-status').bounding_box()
+     expect(tiles and status and status['x']>tiles['x']+tiles['width'],'Connections status rail is not beside the puzzle: '+repr([tiles,status]))
+     expect(tiles['width']>status['width']*2,'Connections puzzle does not dominate the desktop board: '+repr([tiles,status]))
+
+     page.evaluate('openSpeedrunMode()');page.locator('.speedrun-start-btn').click();screen('screen-speedrun')
+     speed_card=page.locator('#screen-speedrun .gameplay-screen-card').bounding_box()
+     stage=page.locator('.speedrun-pokemon').bounding_box();speed_status=page.locator('.speedrun-status').bounding_box()
+     expect(speed_card and speed_card['width']>1100,'Speedrun desktop card is still too narrow: '+repr(speed_card))
+     expect(stage and speed_status and speed_status['x']>stage['x']+stage['width'],'Speedrun cockpit is not beside the Pokémon stage: '+repr([stage,speed_status]))
+     expect(stage['height']>=380,'Speedrun desktop stage is too small: '+repr(stage))
+
+     page.evaluate('openTypeComboSolo()');page.locator('.tc-start-btn').click();screen('screen-type-combo')
+     combo_card=page.locator('#screen-type-combo .gameplay-screen-card').bounding_box()
+     combo=page.locator('.tc-combo').bounding_box();tc_status=page.locator('.tc-status').bounding_box()
+     expect(combo_card and combo_card['width']>1100,'Type Combo desktop card is still too narrow: '+repr(combo_card))
+     expect(combo and tc_status and tc_status['x']>combo['x']+combo['width'],'Type Combo cockpit is not beside the prompt stage: '+repr([combo,tc_status]))
+     expect(combo['height']>=380,'Type Combo desktop prompt stage is too small: '+repr(combo))
+
+     start('startPixelGame','screen-game')
+     clue=page.locator('#pixel-box').bounding_box()
+     expect(clue and clue['width']>=680,'Pixel desktop visual stage did not grow: '+repr(clue))
+     return screen('screen-game')
+    check('pc3-arcade-desktop',pc3_arcade_desktop)
     check('quiz',lambda:start('startQuizGame','screen-game'))
     def draft_pro():
      nav('game','screen-all-modes')
