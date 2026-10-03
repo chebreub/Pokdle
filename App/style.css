@@ -30227,7 +30227,14 @@ body.reduce-motion .gf-counter-pop {
 #screen-game .ac-wrapper {
   position: relative;
   isolation: isolate;
+  z-index: 2;
   min-width: 0;
+  overflow: visible;
+}
+#screen-game .search-bar > #btn-submit,
+#screen-game .search-bar > #btn-surrender {
+  position: relative;
+  z-index: 1;
 }
 #screen-game #guess-ac.ac-list {
   top: calc(100% + 8px);
