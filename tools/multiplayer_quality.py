@@ -75,6 +75,33 @@ def main():
                 wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==2,'Host lost guest after old-link recovery')
                 wait(host,lambda:host.locator('#party-players li.is-offline').count()==0,'Guest stayed offline after old-link recovery')
 
+                # The room is the persistent object: the host can interrupt a live
+                # game, keep everyone in the salon, select another game and start it.
+                stage='party-change-game-live'
+                host.locator('#party-change-game-btn').click()
+                host.locator('[data-action="partyReturnToSetup"]:visible').click()
+                wait(host,lambda:host.evaluate('() => partyRoomState.room?.status==="waiting"'),'Host did not return to Party setup')
+                wait(guest,lambda:guest.evaluate('() => partyRoomState.room?.status==="waiting"'),'Guest did not follow host back to Party setup')
+                wait(host,lambda:host.locator('#party-room-code').inner_text().strip()==code,'Party code changed while changing game')
+                wait(guest,lambda:guest.locator('#party-room-code').inner_text().strip()==code,'Guest lost Party code while changing game')
+                wait(host,lambda:host.evaluate('() => partyRoomState.room?.players?.length===2 && partyRoomState.room.players.every(p=>p.score===0)'),'Campaign scores were not reset')
+                wait(host,lambda:host.locator('#party-setup').is_visible(),'Party setup did not reopen for host')
+                wait(guest,lambda:guest.locator('#party-setup').is_visible(),'Party setup did not reopen for guest')
+                host.locator('#party-mode-guess').click()
+                wait(guest,lambda:guest.evaluate('() => partyRoomState.room?.gameMode==="guess"'),'Guest did not receive the new Party mode')
+                host.locator('#party-start-btn').click()
+                wait(host,lambda:host.evaluate('() => partyRoomState.room?.status==="playing" && partyRoomState.room?.gameMode==="guess"'),'Replacement Party game did not start')
+                wait(guest,lambda:guest.evaluate('() => partyRoomState.room?.status==="playing" && partyRoomState.room?.gameMode==="guess"'),'Guest did not enter replacement Party game')
+                host.locator('#party-reveal-btn').click()
+                wait(host,lambda:host.evaluate('() => partyRoomState.room?.status==="finished"'),'Replacement Party round did not finish')
+                host.locator('#party-change-game-btn').click()
+                host.locator('[data-action="partyReturnToSetup"]:visible').click()
+                wait(host,lambda:host.evaluate('() => partyRoomState.room?.status==="waiting"'),'Party did not return to setup after replacement round')
+                host.locator('#party-mode-nearest').click()
+                wait(host,lambda:host.locator('#party-mode-nearest').get_attribute('aria-pressed')=='true','Nearest mode was not restored')
+                host.locator('#party-start-btn').click()
+                host.locator('#party-round').wait_for(state='visible');guest.locator('#party-round').wait_for(state='visible')
+
                 for page,name in [(host,'Pikachu'),(guest,'Raichu')]:
                     stage='answer-'+name;page.locator('#party-round').wait_for(state='visible')
                     page.locator('#party-guess').fill(name)
@@ -220,7 +247,7 @@ def main():
                 extra_contexts=[]
 
                 assert not errors,repr(errors)
-                result['ok']=True;result['clients']=8;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party old invite recovery','party shared result','party voluntary host handoff','party eight-player roster','party eight-player shared result','party campaign continues after host handoff','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat clash lobby host handoff','stat clash transferred room restart','stat auction live guest refresh','explicit leave paths']
+                result['ok']=True;result['clients']=8;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party old invite recovery','party live game switch without leaving room','party shared result','party voluntary host handoff','party eight-player roster','party eight-player shared result','party campaign continues after host handoff','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat clash lobby host handoff','stat clash transferred room restart','stat auction live guest refresh','explicit leave paths']
             except Exception:
                 for i,page in enumerate(pages):
                     try:page.screenshot(path=str(out/f'failure-{i}.png'))
