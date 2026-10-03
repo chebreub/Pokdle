@@ -1045,6 +1045,10 @@ function accountNavigate(destination) {
   var LEGACY_BACKUP = "pokedle_sync_legacy_backup_v2";
   var CONFLICT_PREFIX = "pokedle_sync_conflict_v2:";
   var loggedIn = false;
+  // Local/server ownership must be reconciled before this page is allowed to upload.
+  // This also prevents a restore-triggered reload from beaconing the restored blob back
+  // with a newer timestamp and creating a reload feedback loop on Safari.
+  var syncReady = false;
   var activeAccountId = "";
 
   function storageKey(name) { return (typeof STORAGE_KEYS !== "undefined" && STORAGE_KEYS[name]) || null; }
@@ -1130,6 +1134,10 @@ function accountNavigate(destination) {
     setLocalSavedAt(0);
   }
   function reloadAfterStorageSwitch() {
+    // Applying a server/cache snapshot is not a new local save. Disable all upload
+    // paths before requesting navigation because pagehide fires after reload() starts.
+    syncReady = false;
+    loggedIn = false;
     try { location.reload(); } catch (e) {}
     return true;
   }
@@ -1249,7 +1257,7 @@ function accountNavigate(destination) {
   }
   function pushSync() {
     var accountId = activeAccountId;
-    if (!loggedIn || !accountId || localOwner() !== accountId) return Promise.resolve(false);
+    if (!syncReady || !loggedIn || !accountId || localOwner() !== accountId) return Promise.resolve(false);
     var blob = buildLocalBlob(accountId);
     if (!hasContent(blob)) return Promise.resolve(false);
     try {
@@ -1261,7 +1269,7 @@ function accountNavigate(destination) {
       }).then(function (response) {
         return response.json().catch(function () { return null; }).then(function (data) {
           if (!response.ok || !data?.ok) return false;
-          if (!loggedIn || activeAccountId !== accountId || localOwner() !== accountId) return false;
+          if (!syncReady || !loggedIn || activeAccountId !== accountId || localOwner() !== accountId) return false;
           setLocalSavedAt(blob._savedAt);
           saveAccountCache(accountId, blob);
           return true;
@@ -1272,6 +1280,7 @@ function accountNavigate(destination) {
   function initSync() {
     fetch("/api/me", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (me) {
       if (!me || !me.user) {
+        syncReady = false;
         loggedIn = false;
         activeAccountId = "";
         switchToAnonymousIfNeeded();
@@ -1279,6 +1288,7 @@ function accountNavigate(destination) {
       }
       activeAccountId = String(me.user.id || "");
       if (!activeAccountId) return;
+      syncReady = false;
       loggedIn = true;
       window.__pokedleAuthed = true;
       fetch("/api/profile", { credentials: "same-origin" }).then(function (response) {
@@ -1288,13 +1298,14 @@ function accountNavigate(destination) {
           if (String(server._accountId || "") !== activeAccountId) return;
           var activation = activateAccount(activeAccountId, server);
           if (!activation.ready || activation.reload) return;
+          syncReady = true;
           pushSync();
         });
       }).catch(function () {});
     }).catch(function () {});
     setInterval(function () { pushSync(); }, 60000);
     window.addEventListener("pagehide", function () {
-      if (!loggedIn || !activeAccountId || localOwner() !== activeAccountId) return;
+      if (!syncReady || !loggedIn || !activeAccountId || localOwner() !== activeAccountId) return;
       try {
         var blob = buildLocalBlob(activeAccountId);
         if (!hasContent(blob)) return;
