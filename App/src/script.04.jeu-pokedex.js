@@ -2291,6 +2291,8 @@ function renderPartyRoom() {
   var playing = room.status === "playing";
   var finished = room.status === "finished";
   var complete = room.status === "complete";
+  var partyPhase = playing ? "live" : finished ? "result" : complete ? "complete" : "setup";
+  if (joined) joined.dataset.partyPhase = partyPhase;
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
   var modeLabels = { dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
@@ -2592,19 +2594,33 @@ function renderPartyRoom() {
   }
   var genAllBtn = document.getElementById("party-gens-all");
   if (genAllBtn) { genAllBtn.classList.toggle("is-active", selGens.length === 9); genAllBtn.setAttribute("aria-pressed", String(selGens.length === 9)); genAllBtn.disabled = !isHost; }
+  var optionsDisclosure = document.getElementById("party-options-disclosure");
+  if (optionsDisclosure && !optionsDisclosure.dataset.partyDisclosureReady) {
+    optionsDisclosure.open = window.matchMedia("(min-width: 801px)").matches;
+    optionsDisclosure.dataset.partyDisclosureReady = "1";
+  }
+  var optionsSummary = document.getElementById("party-options-summary");
+  if (optionsSummary) {
+    var gensSummary = selGens.length === 9 ? "Toutes les générations" : selGens.length === 1 ? ("Gen " + selGens[0]) : (selGens.length + " générations");
+    optionsSummary.textContent = total + " manches · " + gensSummary;
+  }
   var nextBtn = document.getElementById("party-room-next-btn");
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
   var revealBtn = document.getElementById("party-reveal-btn");
   if (revealBtn) revealBtn.classList.toggle("hidden", !(isHost && playing));
-  var liveActions = document.getElementById("party-live-actions");
-  if (liveActions) liveActions.classList.toggle("hidden", !(isHost && (playing || finished)));
+  var changeGameBtn = document.getElementById("party-change-game-btn");
+  if (changeGameBtn) changeGameBtn.classList.toggle("hidden", !(isHost && (playing || finished)));
   document.getElementById("party-setup")?.classList.toggle("hidden", playing || finished);
   document.getElementById("party-stage-progress").textContent = "MANCHE " + roundNo + " / " + total;
   document.getElementById("party-host-note").textContent = isHost ? "Tu règles la partie" : "L’hôte choisit les règles";
   var rosterTip = document.querySelector(".party-roster-tip");
   if (rosterTip) rosterTip.textContent = room.gameMode === "coop" ? "Une seule équipe : partagez vos indices pour gagner ensemble." : "Le podium se joue à chaque manche.";
   document.getElementById("party-roster-title").textContent = room.gameMode === "coop" ? "Votre équipe" : complete ? "Le podium" : playing || finished ? "Classement" : "Dans le salon";
-  document.getElementById("party-launch-note").textContent = playing ? (room.gameMode === "coop" ? "12 essais communs · 3 minutes · Partagez vos indices." : room.gameMode === "deduction" ? "Le premier à trouver gagne · 3 minutes · Réponse révélée en fin de manche." : "La manche se termine quand tout le monde a répondu ou à la fin du chrono.") : finished ? (isHost ? "Prêts pour la suite ?" : "L’hôte prépare la prochaine manche.") : !isHost ? "La partie commence quand l’hôte la lance." : raw.length < 2 ? "Invite au moins un ami pour commencer." : raw.length + " joueurs · " + total + " manches · " + modeLabel;
+  var actionPhase = document.getElementById("party-action-phase");
+  if (actionPhase) actionPhase.textContent = playing ? "EN JEU" : finished ? "RÉSULTAT" : complete ? "PARTY TERMINÉE" : "PRÊT";
+  var actionDock = document.getElementById("party-action-dock");
+  if (actionDock) actionDock.classList.toggle("has-primary-action", Boolean(isHost));
+  document.getElementById("party-launch-note").textContent = playing ? (room.gameMode === "coop" ? "12 essais communs · 3 minutes · Partagez vos indices." : room.gameMode === "deduction" ? "Le premier à trouver gagne · 3 minutes · Réponse révélée en fin de manche." : "Manche " + roundNo + " / " + total + " · " + modeLabel) : finished ? (isHost ? "Prêts pour la suite ?" : "L’hôte prépare la prochaine manche.") : complete ? (isHost ? "La Party est terminée. Relance le même jeu ou choisis-en un autre." : "La Party est terminée. L’hôte prépare la suite.") : !isHost ? "La partie commence quand l’hôte la lance." : raw.length < 2 ? "Invite au moins un ami pour commencer." : raw.length + " joueurs · " + total + " manches · " + modeLabel;
   if (typeof renderDexRaceSetup === "function") renderDexRaceSetup(room, me, isHost);
 }
 
