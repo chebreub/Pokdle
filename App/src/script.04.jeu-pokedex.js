@@ -1834,6 +1834,35 @@ function partyRevealRound() {
   });
 }
 
+function confirmPartyChangeGame() {
+  var room = partyRoomState.room;
+  var selfId = multiplayerSocket && multiplayerSocket.id;
+  var me = room && (room.players || []).find(function (player) { return player.isSelf || player.id === selfId; });
+  var isHost = Boolean(room && ((me && me.isHost) || (room.hostId && selfId && room.hostId === selfId)));
+  if (!room || !isHost) { setPartyStatus("Seul l’hôte peut changer de jeu."); return; }
+  if (room.status !== "playing" && room.status !== "finished") return;
+  ensureOverlay("Changer de jeu ?", '<p>La partie actuelle sera interrompue. Le code du salon et tous les joueurs restent dans la Party Room.</p><p class="card-desc">Les scores de cette campagne seront remis à zéro avant de choisir le prochain jeu.</p><div class="account-menu"><button type="button" class="btn-ghost" data-action="closeOverlayModal">Continuer la partie</button><button type="button" class="btn-blue" data-action="partyReturnToSetup">Changer de jeu →</button></div>');
+}
+
+function partyReturnToSetup() {
+  var socket = ensureMultiplayerSocket();
+  if (!socket) return;
+  closeOverlayModal();
+  socket.emit("party:return-to-setup", {}, function (res) {
+    res = res || {};
+    if (!res.ok) { setPartyStatus(res.error || "Impossible de changer de jeu."); return; }
+    if (res.room) {
+      partyRoomState.room = res.room;
+      partyRoomState.code = res.room.code || partyRoomState.code;
+      setPartyStatus("Choisis le prochain jeu : tout le monde reste dans le salon.");
+      renderPartyRoom();
+      setTimeout(function () {
+        document.getElementById("party-setup")?.scrollIntoView({ block: "start", behavior: "auto" });
+      }, 0);
+    }
+  });
+}
+
 function partyNextRound() {
   var socket = ensureMultiplayerSocket();
   if (!socket) return;
@@ -2362,6 +2391,8 @@ function renderPartyRoom() {
   if (nextBtn) nextBtn.classList.toggle("hidden", !(isHost && finished && (Number(room.roundNumber) || 0) < (Number(room.totalRounds) || 5)));
   var revealBtn = document.getElementById("party-reveal-btn");
   if (revealBtn) revealBtn.classList.toggle("hidden", !(isHost && playing));
+  var liveActions = document.getElementById("party-live-actions");
+  if (liveActions) liveActions.classList.toggle("hidden", !(isHost && (playing || finished)));
   document.getElementById("party-setup")?.classList.toggle("hidden", playing || finished);
   document.getElementById("party-stage-progress").textContent = "MANCHE " + roundNo + " / " + total;
   document.getElementById("party-host-note").textContent = isHost ? "Tu règles la partie" : "L’hôte choisit les règles";
