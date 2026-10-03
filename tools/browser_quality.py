@@ -59,7 +59,7 @@ def main():
      nav('game','screen-all-modes')
      grid=page.locator('#screen-all-modes .all-modes-grid').first
      cols=grid.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-     expect(cols==4,'Desktop catalog should keep four deliberate columns: '+str(cols))
+     expect(cols==3,'Desktop catalog should keep three generous columns: '+str(cols))
      cards=grid.locator('.all-modes-card:visible')
      if cards.count():
       widths=cards.evaluate_all('(els)=>els.slice(0,4).map(e=>e.getBoundingClientRect().width)')
