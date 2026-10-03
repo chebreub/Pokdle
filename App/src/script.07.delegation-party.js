@@ -3406,7 +3406,7 @@ function ensureMultiplayerGuessInputBindings() {
   input.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
     const room = multiplayerLiveState?.room;
-    const button = document.querySelector("#multiplayer-live-box .btn-red");
+    const button = document.querySelector('#multiplayer-live-box [data-action="submitMultiplayerGuess"]');
     if (!room || room.status !== "live" || input.disabled || button?.disabled) return;
     event.preventDefault();
     submitMultiplayerGuess();
@@ -3430,7 +3430,7 @@ function canSubmitMultiplayerGuess() {
 
 function updateMultiplayerGuessSubmitState() {
   const input = document.getElementById("multiplayer-guess-input");
-  const button = document.querySelector("#multiplayer-live-box .btn-red");
+  const button = document.querySelector('#multiplayer-live-box [data-action="submitMultiplayerGuess"]');
   if (!input || !button) return;
   const state = ensureMultiplayerLiveState();
   const room = state?.room;
@@ -4143,7 +4143,7 @@ function renderMultiplayerBotScreen() {
   const liveText = document.getElementById("multiplayer-live-text");
   const waitingText = document.getElementById("multiplayer-waiting-text");
   const guessInput = document.getElementById("multiplayer-guess-input");
-  const guessButton = document.querySelector("#multiplayer-live-box .btn-red");
+  const guessButton = document.querySelector('#multiplayer-live-box [data-action="submitMultiplayerGuess"]');
   const roomInput = document.getElementById("multiplayer-room-input");
   const room = multiplayerLiveState.room;
   const players = Array.isArray(room?.players) ? room.players : [];
