@@ -120,6 +120,27 @@ def main():
      rendered=' '.join(style.values())
      blue_tokens=('57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
      expect(any(token in rendered for token in blue_tokens),'Primary guess CTA is not using the D0 blue treatment: '+repr(style))
+    def autocomplete_overlay():
+     start('startNormalGame','screen-game');standard_guess_shell()
+     page.locator('#guess-input').fill('Bul')
+     first=page.locator('#guess-ac:not(.hidden) .ac-item').first
+     first.wait_for(state='visible')
+     item_box=first.bounding_box();button_box=page.locator('#btn-submit').bounding_box()
+     expect(item_box and button_box,'Autocomplete or Deviner geometry missing')
+     left=max(item_box['x'],button_box['x']);right=min(item_box['x']+item_box['width'],button_box['x']+button_box['width'])
+     top=max(item_box['y'],button_box['y']);bottom=min(item_box['y']+item_box['height'],button_box['y']+button_box['height'])
+     if right>left and bottom>top:
+      x=(left+right)/2;y=(top+bottom)/2
+      on_top=page.evaluate("""([x,y]) => {
+        const hit=document.elementFromPoint(x,y);
+        return Boolean(hit && hit.closest('#guess-ac .ac-item'));
+      }""",[x,y])
+      expect(on_top,'Deviner is painted above the first autocomplete suggestion')
+     wrapper_z=page.locator('#screen-game .ac-wrapper').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
+     submit_z=page.locator('#btn-submit').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
+     expect(wrapper_z>submit_z,'Autocomplete stacking context is not above Deviner: '+repr([wrapper_z,submit_z]))
+     return screen('screen-game')
+    check('autocomplete-overlay',autocomplete_overlay)
     def guess():
      start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
