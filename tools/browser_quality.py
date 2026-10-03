@@ -125,20 +125,18 @@ def main():
      page.locator('#guess-input').fill('Bul')
      first=page.locator('#guess-ac:not(.hidden) .ac-item').first
      first.wait_for(state='visible')
-     item_box=first.bounding_box();button_box=page.locator('#btn-submit').bounding_box()
-     expect(item_box and button_box,'Autocomplete or Deviner geometry missing')
-     left=max(item_box['x'],button_box['x']);right=min(item_box['x']+item_box['width'],button_box['x']+button_box['width'])
-     top=max(item_box['y'],button_box['y']);bottom=min(item_box['y']+item_box['height'],button_box['y']+button_box['height'])
-     if right>left and bottom>top:
-      x=(left+right)/2;y=(top+bottom)/2
-      on_top=page.evaluate("""([x,y]) => {
-        const hit=document.elementFromPoint(x,y);
-        return Boolean(hit && hit.closest('#guess-ac .ac-item'));
-      }""",[x,y])
-      expect(on_top,'Deviner is painted above the first autocomplete suggestion')
+     item_box=first.bounding_box();button_box=page.locator('#btn-submit').bounding_box();surrender_box=page.locator('#btn-surrender').bounding_box()
+     expect(item_box and button_box and surrender_box,'Autocomplete or action geometry missing')
+     def overlaps(a,b):
+      return min(a['x']+a['width'],b['x']+b['width'])>max(a['x'],b['x']) and min(a['y']+a['height'],b['y']+b['height'])>max(a['y'],b['y'])
+     expect(not overlaps(item_box,button_box),'First autocomplete suggestion overlaps Deviner: '+repr([item_box,button_box]))
+     expect(not overlaps(item_box,surrender_box),'First autocomplete suggestion overlaps Abandonner: '+repr([item_box,surrender_box]))
+     if width>=1280:
+      input_box=page.locator('#guess-input').bounding_box()
+      expect(abs(input_box['y']-button_box['y'])<3,'Desktop guess input and Deviner are not aligned on one row: '+repr([input_box,button_box]))
      wrapper_z=page.locator('#screen-game .ac-wrapper').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
      submit_z=page.locator('#btn-submit').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
-     expect(wrapper_z>submit_z,'Autocomplete stacking context is not above Deviner: '+repr([wrapper_z,submit_z]))
+     expect(wrapper_z>submit_z,'Autocomplete stacking context is not above surrounding content: '+repr([wrapper_z,submit_z]))
      page.locator('#guess-input').press('Escape')
      expect(page.locator('#guess-ac').is_hidden(),'Autocomplete cleanup failed after overlay QA')
      return screen('screen-game')
