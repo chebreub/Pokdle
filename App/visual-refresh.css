@@ -4411,3 +4411,390 @@
     gap:14px 22px;
   }
 }
+
+
+/* PC3 — desktop catalog shelves and arcade boards. */
+@media (min-width:1280px) {
+  /* Catalog: turn each family into a desktop shelf instead of a long stack
+     of mobile-like section titles followed by cards. */
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cats {
+    display:grid;
+    gap:8px;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat {
+    display:grid !important;
+    grid-template-columns:150px minmax(0,1fr);
+    gap:18px;
+    align-items:start;
+    padding:18px 0;
+    border-top:1px solid var(--ui-line);
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat:first-child {
+    border-top:0;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title {
+    margin:9px 0 0 !important;
+    padding:0 !important;
+    align-self:start;
+    color:var(--ui-muted);
+    font-size:.78rem !important;
+    letter-spacing:.02em;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title .pk-ico {
+    width:18px;
+    height:18px;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat > .all-modes-grid {
+    grid-column:2;
+    margin:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .club-picks-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .club-pick.has-mode-art {
+    min-height:178px;
+    padding:22px 118px 22px 22px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .club-pick > b {
+    font-size:1.08rem;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .club-pick > span:not(.club-pick-icon):not(.mode-card-art) {
+    max-width:32ch;
+    font-size:.78rem;
+    line-height:1.45;
+  }
+
+  /* Give dedicated arcade/reflection screens room to breathe. */
+  #pokdle-app.design-refresh :is(
+    #screen-odd-one-out,
+    #screen-higher-lower,
+    #screen-poke-connections,
+    #screen-speedrun,
+    #screen-type-combo
+  ) .gameplay-screen-card {
+    width:100%;
+    max-width:1320px !important;
+    margin-inline:auto;
+  }
+
+  #pokdle-app.design-refresh :is(
+    #screen-odd-one-out,
+    #screen-higher-lower,
+    #screen-poke-connections,
+    #screen-speedrun,
+    #screen-type-combo
+  ) .gameplay-screen-card > .card-desc {
+    max-width:92ch;
+  }
+
+  /* Intrus: six candidates belong on one visible desktop row. */
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-grid {
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-card {
+    min-height:218px;
+    padding:14px 8px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-card img {
+    width:132px !important;
+    height:132px !important;
+    max-width:100%;
+    object-fit:contain;
+  }
+
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-meta-row {
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-difficulty-picker {
+    margin-left:auto;
+  }
+
+  /* Connections: puzzle on the left, state/actions on a true desktop rail. */
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-card {
+    max-width:1320px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-board {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:12px 16px;
+    align-items:start;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-grid {
+    grid-column:1;
+    grid-row:1 / span 4;
+    gap:9px;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-status {
+    grid-column:2;
+    grid-row:1;
+    grid-template-columns:1fr !important;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-found {
+    grid-column:2;
+    grid-row:2;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-found-row {
+    grid-template-columns:1fr !important;
+    gap:9px;
+    padding:10px 11px;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-found-list {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-found-pokemon {
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-action-zone {
+    grid-column:2;
+    grid-row:3;
+    position:sticky;
+    top:92px;
+    padding:10px;
+    border:1px solid var(--ui-line);
+    border-radius:15px;
+    background:var(--ui-soft);
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-actions {
+    grid-template-columns:1fr !important;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-actions .btn-blue {
+    min-height:48px;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-final {
+    grid-column:2;
+    grid-row:2 / span 2;
+    align-self:start;
+  }
+
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-reveal-groups {
+    display:grid;
+    gap:7px;
+  }
+
+  /* Speedrun: make the Pokémon the stage, and the controls the cockpit. */
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-board {
+    display:grid;
+    grid-template-columns:minmax(360px,430px) minmax(0,1fr);
+    grid-template-rows:auto auto 1fr;
+    gap:12px 20px;
+    align-items:start;
+    padding:16px;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-pokemon {
+    grid-column:1;
+    grid-row:1 / span 3;
+    width:100% !important;
+    min-height:390px;
+    align-self:stretch;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-sprite {
+    width:330px !important;
+    height:330px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-status {
+    grid-column:2;
+    grid-row:1;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-form {
+    grid-column:2;
+    grid-row:2;
+    width:100% !important;
+    justify-self:stretch;
+    align-self:start;
+    padding:14px;
+    border:1px solid var(--ui-line);
+    border-radius:16px;
+    background:var(--ui-surface);
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-input {
+    min-height:54px;
+    font-size:1rem;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-hint {
+    grid-column:2;
+    grid-row:3;
+    justify-self:stretch;
+    align-self:start;
+    padding:10px 12px;
+    border-radius:11px;
+    background:var(--ui-soft);
+    text-align:left;
+  }
+
+  /* Type Combo: prompt stage left, scoring + answer cockpit right. */
+  #pokdle-app.design-refresh #screen-type-combo .tc-board {
+    display:grid;
+    grid-template-columns:minmax(360px,430px) minmax(0,1fr);
+    grid-template-rows:auto auto auto 1fr;
+    gap:12px 20px;
+    align-items:start;
+    padding:16px;
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-combo {
+    grid-column:1;
+    grid-row:1 / span 4;
+    width:100% !important;
+    min-height:390px;
+    align-self:stretch;
+    padding:28px;
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-combo-types {
+    transform:scale(1.18);
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-status {
+    grid-column:2;
+    grid-row:1;
+    gap:8px;
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-form {
+    grid-column:2;
+    grid-row:2;
+    width:100% !important;
+    justify-self:stretch;
+    padding:14px;
+    border:1px solid var(--ui-line);
+    border-radius:16px;
+    background:var(--ui-surface);
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-input {
+    min-height:54px;
+    font-size:1rem;
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-feedback {
+    grid-column:2;
+    grid-row:3;
+    margin:0;
+    min-height:28px;
+  }
+
+  #pokdle-app.design-refresh #screen-type-combo .tc-last {
+    grid-column:2;
+    grid-row:4;
+    align-self:start;
+  }
+
+  /* Higher / Lower: strengthen the versus board rather than leaving it
+     inside a narrow central card. */
+  #pokdle-app.design-refresh #screen-higher-lower .higher-lower-board {
+    width:min(100%,1120px);
+    margin-inline:auto;
+  }
+
+  #pokdle-app.design-refresh #screen-higher-lower .higher-lower-pair {
+    gap:18px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-higher-lower .higher-lower-card-pokemon {
+    min-height:330px;
+    padding:24px 18px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-higher-lower .higher-lower-card-pokemon .higher-lower-sprite {
+    width:190px !important;
+    height:190px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-higher-lower .higher-lower-card-pokemon h4 {
+    font-size:1.15rem !important;
+  }
+
+  #pokdle-app.design-refresh #screen-higher-lower .higher-lower-stat-value b {
+    font-size:1.6rem;
+  }
+
+  /* D2 clue modes also get a larger visual stage on desktop. */
+  #pokdle-app.design-refresh #screen-game .visual-clue-box:not(.hidden) {
+    width:min(100%,720px) !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game .visual-clue-canvas {
+    width:min(100%,360px);
+  }
+
+  #pokdle-app.design-refresh #screen-game .visual-clue-canvas :is(.zoom-sprite,.pixel-sprite) {
+    width:320px !important;
+    height:320px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game .cry-box:not(.hidden) {
+    width:min(100%,860px);
+  }
+
+  #pokdle-app.design-refresh #screen-game .cry-player-card {
+    grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);
+    padding:30px 32px;
+  }
+}
+
+@media (min-width:1680px) {
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat {
+    grid-template-columns:170px minmax(0,1fr);
+    gap:22px;
+  }
+
+  #pokdle-app.design-refresh :is(
+    #screen-odd-one-out,
+    #screen-higher-lower,
+    #screen-poke-connections,
+    #screen-speedrun,
+    #screen-type-combo
+  ) .gameplay-screen-card {
+    max-width:1400px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-board,
+  #pokdle-app.design-refresh #screen-type-combo .tc-board {
+    grid-template-columns:minmax(390px,460px) minmax(0,1fr);
+    gap:14px 24px;
+  }
+
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-pokemon,
+  #pokdle-app.design-refresh #screen-type-combo .tc-combo {
+    min-height:420px;
+  }
+}
