@@ -194,7 +194,7 @@ function openDailyQuestsModal() {
         }).join("")}
       </div>
       <div class="dq-actions">
-        <button class="btn-red" type="button" data-action="shareLevelBadge">📋 Partager mon niveau</button>
+        <button class="btn-blue" type="button" data-action="shareLevelBadge">📋 Partager mon niveau</button>
       </div>
       <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b>${Number(playerProfile?.dailyLoginStreak) > 1 ? ` · 🔥 <b>${playerProfile.dailyLoginStreak}</b> jours d'affilée` : ""}</p>
     </div>`;
