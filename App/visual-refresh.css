@@ -3941,3 +3941,209 @@
     padding-top:38px;
   }
 }
+
+
+/* PC1 — classic mystery games become a real desktop board. */
+#pokdle-app.design-refresh #classic-banner {
+  display:none !important;
+}
+
+@media (min-width:1280px) {
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) {
+    width:100% !important;
+    max-width:none !important;
+    margin-inline:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game[data-game-mode="normal"] > #classic-banner:not(.hidden) {
+    display:flex !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) > .mode-banner:not(.hidden) {
+    margin-bottom:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell {
+    position:relative;
+    display:grid;
+    grid-template-columns:minmax(360px,420px) minmax(0,1fr);
+    gap:20px;
+    align-items:start;
+    width:100%;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command {
+    display:grid;
+    gap:10px;
+    min-width:0;
+    align-self:start;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px !important;
+    width:100%;
+    margin:0 !important;
+    padding:10px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar .ac-wrapper {
+    grid-column:1 / -1;
+    width:100%;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar #btn-submit,
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar #btn-surrender {
+    width:auto !important;
+    min-width:0;
+    margin:0 !important;
+    justify-content:center;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar #btn-submit {
+    min-width:150px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > #err-msg {
+    min-height:20px;
+    margin:0 4px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > #err-msg:empty {
+    min-height:0;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > #win-box {
+    width:100%;
+    margin:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell > #results-wrap {
+    width:100%;
+    min-width:0;
+    margin:0 !important;
+    padding:10px !important;
+    align-self:start;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell > #results-wrap #results-table {
+    width:100%;
+    min-width:760px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #results-wrap.hidden):not(:has(#win-box:not(.hidden)))::after {
+    content:"Tes indices apparaîtront ici après ton premier essai.";
+    box-sizing:border-box;
+    display:grid;
+    place-items:center;
+    min-height:270px;
+    padding:32px;
+    border:1px dashed color-mix(in srgb,var(--ui-line) 78%,var(--ui-accent));
+    border-radius:18px;
+    background:
+      radial-gradient(circle at 84% 18%,color-mix(in srgb,var(--ui-accent-soft) 72%,transparent),transparent 34%),
+      var(--ui-surface);
+    color:var(--ui-muted);
+    font-size:.9rem;
+    font-weight:700;
+    text-align:center;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #results-wrap:not(.hidden))::after {
+    display:none;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .results-legend {
+    margin-top:8px !important;
+  }
+}
+
+@media (min-width:1680px) {
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell {
+    grid-template-columns:minmax(390px,440px) minmax(0,1fr);
+    gap:24px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #results-wrap.hidden):not(:has(#win-box:not(.hidden)))::after {
+    min-height:300px;
+  }
+}
