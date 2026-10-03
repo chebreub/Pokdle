@@ -2309,6 +2309,7 @@ function renderPartyRoom() {
   var discovery = partyDiscovery(room, me);
   if (discovery) recordPokemonDiscovery(discovery, room.gameMode);
   var isHost = Boolean((me && me.isHost) || (room.hostId && selfId && room.hostId === selfId));
+  if (joined) joined.classList.toggle("has-host-actions", isHost);
   var players = raw.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
   var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
   var listEl = document.getElementById("party-players");
