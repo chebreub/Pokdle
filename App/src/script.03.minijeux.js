@@ -356,7 +356,7 @@ function renderHigherLowerScreen() {
           ${state.room?.finishReason === "disconnect" ? `<p>Partie terminée par forfait : un joueur a quitté la room.</p>` : ""}
           <p>Toi <b>${versusSelf?.score ?? state.score}</b> · ${escapeHtml(versusOpp?.nickname || "Adversaire")} <b>${versusOpp?.score ?? 0}</b></p>
           <div class="higher-lower-room-actions">
-            ${isHost ? `<button class="btn-red" type="button" data-action="restartHigherLowerVersusMatch">Relancer une partie</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
+            ${isHost ? `<button class="btn-blue" type="button" data-action="restartHigherLowerVersusMatch">Relancer une partie</button>` : `<p class="card-desc">En attente du restart par l'hôte.</p>`}
             <button class="btn-ghost" type="button" data-action="leaveHigherLowerRoom">Quitter la room</button>
           </div>
         </div>`;
@@ -888,7 +888,7 @@ function renderTypeComboScreen() {
         '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
           '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" data-input-action="typeComboInput" data-keydown-action="typeComboKeydown" autofocus />' +
           '<div class="tc-ac" id="type-combo-ac"></div>' +
-          '<div class="tc-actions"><button class="btn-red" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
+          '<div class="tc-actions"><button class="btn-blue" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
         '</form>' +
         '<p class="tc-feedback" id="type-combo-feedback"></p>' +
         lastHtml +
@@ -1101,7 +1101,7 @@ function renderSpeedrunScreen() {
         <form class="speedrun-form" data-submit-action="speedrunFormSubmit">
           <input id="speedrun-input" class="speedrun-input" type="text" placeholder="Nom du Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" autofocus />
           <div class="speedrun-actions">
-            <button class="btn-red" type="submit">Valider</button>
+            <button class="btn-blue" type="submit">Valider</button>
             <button class="btn-ghost" type="button" data-action="speedrunSkip">Passer ⏭</button>
           </div>
         </form>
