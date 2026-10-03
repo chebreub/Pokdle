@@ -1426,6 +1426,54 @@ function clearPartyRoundTimer(room) {
   if (room && room.roundTimer) { clearTimeout(room.roundTimer); room.roundTimer = null; }
 }
 
+function resetPartyCampaign(room) {
+  if (!room) return;
+  clearPartyRoundTimer(room);
+  room.status = "waiting";
+  room.roundNumber = 0;
+  const configuredRounds = Number(room.configuredRounds);
+  room.totalRounds = room.gameMode === "dexrace"
+    ? 1
+    : ([5, 10, 15, 20].includes(configuredRounds) ? configuredRounds : (room.gameMode === "statclashparty" ? 6 : 5));
+  room.deadlineAt = null;
+  room.roundStartedAt = null;
+  room.target = null;
+  room.variant = null;
+  room.roundPlayerIds = [];
+  room.deductionWinnerId = null;
+  room.nearestTarget = null;
+  room.nearestResolved = false;
+  room.typeCombo = null;
+  room.typeComboWinnerAnswer = null;
+  room.typeComboWinnerSprite = null;
+  room.typeComboWinnerGain = 0;
+  room.typeComboUsedNames = [];
+  room.duoCriteria = null;
+  room.duoWinnerAnswer = null;
+  room.duoWinnerSprite = null;
+  room.duoWinnerGain = 0;
+  room.duoUsedNames = [];
+  room.targetStats = null;
+  room.bestStatKey = null;
+  room.coopGuesses = [];
+  room.coopSolved = false;
+  room.coopClues = {};
+  room.race = null;
+  room.recentComboKeys = [];
+  room.recentDuoKeys = [];
+  for (const player of room.players || []) {
+    player.score = 0;
+    player.correct = false;
+    player.lastGain = 0;
+    player.usedStatKeys = [];
+    player.pickKey = null;
+    player.nearestPick = null;
+    player.guesses = [];
+    player.attempts = 0;
+    player.gaveUp = false;
+  }
+}
+
 function forcePartyRoundEnd(room) {
   if (!room || room.status !== "playing") return;
   if (room.gameMode === "dexrace") {
@@ -2393,6 +2441,23 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("party:return-to-setup", (payload = {}, ack) => {
+    try {
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
+      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer de jeu." });
+      if (room.status !== "playing" && room.status !== "finished") {
+        return respond(ack, { ok: false, error: "Aucune partie en cours a interrompre." });
+      }
+      resetPartyCampaign(room);
+      recordUsage("party:return-to-setup");
+      emitPartyRoomState(room);
+      respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Impossible de revenir au choix des jeux." });
+    }
+  });
+
   socket.on("party:set-mode", (payload = {}, ack) => {
     try {
       const room = findPartyRoomBySocket(socket.id);
@@ -2409,8 +2474,14 @@ io.on("connection", (socket) => {
         for (const p of room.players) { p.correct = false; p.lastGain = 0; p.nearestPick = null; }
       }
       room.gameMode = mode;
-      if (mode === "dexrace") { room.selectedGens = [room.selectedGens?.[0] || 1]; room.totalRounds = 1; dexRace.balanceRaceTeams(room); }
-      else if (room.totalRounds === 1) room.totalRounds = room.configuredRounds || (mode === "statclashparty" ? 6 : 5);
+      if (mode === "dexrace") {
+        room.selectedGens = [room.selectedGens?.[0] || 1];
+        room.totalRounds = 1;
+        dexRace.balanceRaceTeams(room);
+      } else {
+        const configuredRounds = Number(room.configuredRounds);
+        room.totalRounds = [5, 10, 15, 20].includes(configuredRounds) ? configuredRounds : (mode === "statclashparty" ? 6 : 5);
+      }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {

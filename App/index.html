@@ -1199,6 +1199,9 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <p id="party-nearest-help" class="party-round-help hidden">Choisis un Pokémon dans la liste pour valider · Une seule réponse · +100 pts aux plus proches, ex æquo inclus</p>
                 <button id="party-reveal-btn" class="btn-ghost hidden" type="button" data-action="partyRevealRound">Terminer et révéler</button>
               </div>
+              <div id="party-live-actions" class="party-live-actions hidden" aria-label="Actions de la Party en cours">
+                <button id="party-change-game-btn" class="btn-ghost" type="button" data-action="confirmPartyChangeGame">← Changer de jeu</button>
+              </div>
               <section id="party-setup" class="party-setup"><div class="party-section-head"><div><span class="party-eyebrow">VOTRE PROCHAIN DÉFI</span><h3>Choisissez votre terrain de jeu</h3></div><span id="party-host-note" class="party-host-note"></span></div>
                 <div id="party-mode-select" class="party-mode-select hidden" role="group" aria-label="Mode de jeu">
                   <button id="party-mode-dexrace" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["dexrace"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">▦</span><span class="pmt-text"><small class="pmt-tag">Nouveau · Ordinateur</small><b>Course au Pokédex</b><span>Une grille, le premier prend la case</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>

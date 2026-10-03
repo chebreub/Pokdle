@@ -880,6 +880,8 @@
 #pokdle-app.design-refresh #dex-race-clock { display:block; font-size:2rem; font-variant-numeric:tabular-nums; letter-spacing:-.03em; line-height:1.3; color:var(--ui-ink); }
 #pokdle-app.design-refresh #dex-race-clock.is-urgent { color:#c74634; }
 #pokdle-app.design-refresh.theme-dark #dex-race-clock.is-urgent { color:#ffac95; }
+#pokdle-app.design-refresh .race-header-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+#pokdle-app.design-refresh .race-header-actions button { min-height:40px; white-space:nowrap; }
 #pokdle-app.design-refresh .race-exit { min-height:40px; }
 #pokdle-app.design-refresh .race-board-panel { display:grid; grid-template-rows:auto minmax(0,1fr); min-height:0; padding:12px 14px 14px; border:1px solid var(--ui-line); border-radius:18px; background:var(--ui-surface); box-shadow:0 8px 24px #14223d08; }
 #pokdle-app.design-refresh .race-board-caption { display:flex; justify-content:space-between; align-items:center; gap:16px; font-size:.75rem; color:var(--ui-muted); padding-bottom:10px; min-height:28px; }
