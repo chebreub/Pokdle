@@ -865,7 +865,7 @@ function renderTypeComboScreen() {
         '<h3>Combo de types — 60 secondes</h3>' +
         '<p>On t\'affiche une paire de types. Nomme un Pokémon qui a exactement cette paire pour marquer. Plus la paire est rare, plus ça rapporte. Enchaîne un max de combos !</p>' +
         '<div class="tc-lobby-stats"><div class="tc-lobby-stat"><span>Ton record</span><b>' + (st.highScore || 0) + '</b></div><div class="tc-lobby-stat"><span>Durée</span><b>60s</b></div></div>' +
-        '<button class="btn-red tc-start-btn" type="button" data-action="startTypeComboGame">🧬 Démarrer</button>' +
+        '<button class="btn-blue tc-start-btn" type="button" data-action="startTypeComboGame">🧬 Démarrer</button>' +
       '</div>';
     return;
   }
@@ -902,7 +902,7 @@ function renderTypeComboScreen() {
         '<h3>⏱️ Temps écoulé</h3>' +
         '<div class="tc-final-score">' + st.score + '</div>' +
         '<p>' + st.solved + ' combos réussis' + (isRecord ? ' · <b>🏆 Nouveau record !</b>' : (' · record : ' + st.highScore)) + '</p>' +
-        '<div class="tc-actions"><button class="btn-red" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
+        '<div class="tc-actions"><button class="btn-blue" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
       '</div>';
     return;
   }
@@ -1080,7 +1080,7 @@ function renderSpeedrunScreen() {
           <div class="speedrun-lobby-stat"><span>Ton record</span><b>${state.highScore || 0}</b></div>
           <div class="speedrun-lobby-stat"><span>Durée</span><b>60s</b></div>
         </div>
-        <button class="btn-red speedrun-start-btn" type="button" data-action="startSpeedrunGame">⚡ Démarrer</button>
+        <button class="btn-blue speedrun-start-btn" type="button" data-action="startSpeedrunGame">⚡ Démarrer</button>
       </div>`;
     return;
   }
@@ -1123,7 +1123,7 @@ function renderSpeedrunScreen() {
         </div>
         ${isRecord ? '<div class="speedrun-record-flash">🏆 NOUVEAU RECORD !</div>' : ""}
         <div class="higher-lower-final-actions">
-          <button class="btn-red" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+          <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Rejouer</button>
           <button class="btn-ghost" type="button" data-action="shareSpeedrunResult">📋 Copier</button>
           <button class="btn-ghost" type="button" data-action="downloadSpeedrunImage">💾 Image</button>
         </div>
