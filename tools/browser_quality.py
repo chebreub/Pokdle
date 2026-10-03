@@ -196,7 +196,8 @@ def main():
      disclosure=page.locator('#party-options-disclosure')
      if width<=800:
       expect(not disclosure.evaluate('(e)=>e.open'),'Party rules should start collapsed on tablet/mobile')
-      expect(page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')=='sticky','Party primary actions are not sticky on mobile/tablet')
+      action_position=page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')
+      expect(action_position==('fixed' if width<=560 else 'sticky'),'Party primary action dock has the wrong mobile/tablet positioning: '+action_position)
      else:
       expect(disclosure.evaluate('(e)=>e.open'),'Party rules should stay open on desktop')
       expect(page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')!='sticky','Party action dock should not be sticky on desktop')
