@@ -6081,9 +6081,96 @@ function resetGamesRanking() {
   renderGamesRankingTable();
 }
 
+const GAME_RATING_LABELS = {
+  story: "Histoire",
+  pokemon: "Pokémon",
+  region: "Région",
+  difficulty: "Difficulté",
+  nostalgia: "Nostalgie",
+};
+
+function renderGamesRankingCards(wrap) {
+  wrap.innerHTML = "";
+  const list = document.createElement("div");
+  list.className = "games-ranking-mobile-list";
+
+  for (const game of POKEMON_MAIN_GAMES) {
+    const entry = normalizeGameRatingEntry(gamesRanking[game.key]);
+    gamesRanking[game.key] = entry;
+
+    const card = document.createElement("article");
+    card.className = "games-ranking-mobile-card";
+
+    const head = document.createElement("div");
+    head.className = "games-ranking-mobile-head";
+    const titleWrap = document.createElement("div");
+    const kicker = document.createElement("span");
+    kicker.textContent = "TON AVIS";
+    const title = document.createElement("h3");
+    title.textContent = game.name;
+    titleWrap.append(kicker, title);
+
+    const global = document.createElement("div");
+    global.className = "games-ranking-mobile-global";
+    const avgValue = document.createElement("b");
+    avgValue.textContent = calcGameGlobalNote(entry).toFixed(1);
+    const outOf = document.createElement("small");
+    outOf.textContent = "/ 10";
+    global.append(avgValue, outOf);
+    head.append(titleWrap, global);
+
+    const fields = document.createElement("div");
+    fields.className = "games-ranking-mobile-fields";
+
+    for (const key of GAME_RATING_FIELDS) {
+      const field = document.createElement("label");
+      field.className = "games-ranking-mobile-field";
+      const label = document.createElement("span");
+      label.textContent = GAME_RATING_LABELS[key] || key;
+      const inputWrap = document.createElement("span");
+      inputWrap.className = "games-ranking-mobile-input";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.inputMode = "numeric";
+      input.min = "1";
+      input.max = "10";
+      input.step = "1";
+      input.value = String(entry[key]);
+      input.setAttribute("aria-label", (GAME_RATING_LABELS[key] || key) + " — " + game.name);
+      const suffix = document.createElement("small");
+      suffix.textContent = "/10";
+      inputWrap.append(input, suffix);
+      field.append(label, inputWrap);
+
+      const commit = () => {
+        const next = clampGameScore(input.value);
+        input.value = String(next);
+        entry[key] = next;
+        gamesRanking[game.key] = entry;
+        avgValue.textContent = calcGameGlobalNote(entry).toFixed(1);
+        saveGamesRanking();
+      };
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+      fields.appendChild(field);
+    }
+
+    card.append(head, fields);
+    list.appendChild(card);
+  }
+
+  wrap.appendChild(list);
+  saveGamesRanking();
+}
+
 function renderGamesRankingTable() {
   const wrap = document.getElementById("games-ranking-wrap");
   if (!wrap) return;
+
+  if (useCompactRankingLayout()) {
+    renderGamesRankingCards(wrap);
+    return;
+  }
 
   wrap.innerHTML = "";
 
@@ -6121,6 +6208,7 @@ function renderGamesRankingTable() {
       const td = document.createElement("td");
       const input = document.createElement("input");
       input.type = "number";
+      input.inputMode = "numeric";
       input.className = "games-score-input";
       input.min = "1";
       input.max = "10";
