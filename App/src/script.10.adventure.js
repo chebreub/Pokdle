@@ -144,7 +144,7 @@ function openDiscoveryAlbum() {
 function switchProfileView(view) {
   const selected = ['trainer', 'album', 'secrets'].includes(view) ? view : 'trainer';
   document.querySelectorAll('.profile-view-switch button').forEach(button => button.setAttribute('aria-pressed', String(JSON.parse(button.dataset.args || '[]')[0] === selected)));
-  document.querySelectorAll('#profile-trainer-card, #screen-profile .profile-stats-links, #screen-profile .profile-layout, #screen-profile .profile-summary-grid, #screen-profile .profile-records-panel, #profile-secret-rune').forEach(el => el.classList.toggle('hidden', selected !== 'trainer'));
+  document.querySelectorAll('#profile-trainer-card, #screen-profile .profile-stats-links, #screen-profile .profile-layout, #screen-profile .profile-achievements-panel, #screen-profile .profile-records-panel, #profile-secret-rune').forEach(el => el.classList.toggle('hidden', selected !== 'trainer'));
   document.getElementById('profile-album')?.classList.toggle('hidden', selected !== 'album');
   document.getElementById('profile-secrets')?.classList.toggle('hidden', selected !== 'secrets');
   if (selected === 'album') { renderDiscoveryAlbum(); if (typeof renderAlbumMissions === 'function') renderAlbumMissions(); }
