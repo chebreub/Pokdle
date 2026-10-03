@@ -3,6 +3,8 @@
 const LIVE_RANK_CACHE = new Map();
 const LIVE_RANK_TTL = 12000;
 const LIVE_RANK_MILESTONES = new Set();
+const LIVE_RANK_FETCH_SEQ = new Map();
+let liveRankRenderSeq = 0;
 let liveRankCurrentScope = "";
 function liveRankCacheScope() {
   const account = typeof leaderboardAccountId === "function" ? leaderboardAccountId() : "";
@@ -29,13 +31,17 @@ function liveRankFetch(mode, force=false) {
   if (!force && cached?.promise) return cached.promise;
   if (!force && cached && now-cached.at<LIVE_RANK_TTL) return Promise.resolve(cached.data);
   const url="/api/leaderboard?mode="+encodeURIComponent(mode)+"&scope=today";
+  const requestSeq=(LIVE_RANK_FETCH_SEQ.get(mode)||0)+1;
+  LIVE_RANK_FETCH_SEQ.set(mode,requestSeq);
   const request=typeof leaderboardFetchJson === "function" ? leaderboardFetchJson(url)
     : fetch(url,{credentials:"same-origin"}).then(r=>r.json()).then(d=>{if(!d?.ok)throw Error("unavailable");return d;});
   const promise=request.then(data=>{
-    if (scope!==liveRankCacheScope()) return null;
+    if (scope!==liveRankCacheScope()||LIVE_RANK_FETCH_SEQ.get(mode)!==requestSeq) return data;
     LIVE_RANK_CACHE.set(mode,{data,at:Date.now(),promise:null});return data;
   }).catch(()=>{
-    if (scope===liveRankCacheScope()) LIVE_RANK_CACHE.set(mode,{data:null,at:Date.now(),promise:null});
+    if (scope===liveRankCacheScope()&&LIVE_RANK_FETCH_SEQ.get(mode)===requestSeq) {
+      LIVE_RANK_CACHE.set(mode,{data:null,at:Date.now(),promise:null});
+    }
     return null;
   });
   LIVE_RANK_CACHE.set(mode,{data:cached?.data||null,at:cached?.at||0,promise});
@@ -66,7 +72,7 @@ function liveRankPersonalBest(mode) {
   return 0;
 }
 function liveRankCurrentContext(mode) {
-  if (mode==="daily") return { score:Number(attempts)||0, label:"Essais en cours" };
+  if (mode==="daily") return { score:Number(attempts)||0, label:(typeof gameOver!=="undefined"&&gameOver)?"Essais finaux":"Essais en cours" };
   if (mode==="quiz") return { score:Number(quizScore)||0, label:"Score en cours" };
   if (mode==="speedrun") return { score:Number(speedrunState?.correct)||0, label:"Score en cours" };
   if (mode==="higherlower") return { score:Number(higherLowerState?.score)||0, label:"Série en cours" };
@@ -102,10 +108,26 @@ function liveRankAnchor(screenId) {
   if (screenId==="screen-draft-score-attack") return screen.querySelector(".ranking-head") || screen.querySelector(".draft-card");
   return screen.querySelector(".ranking-head") || screen.querySelector(".card");
 }
+function liveRankHudForScreen(screenId) {
+  const screen=document.getElementById(screenId);
+  if (!screen) return null;
+  return screen.querySelector(":scope > .live-rank-hud, .card > .live-rank-hud, #draft-mode-card > .live-rank-hud");
+}
+function clearLiveRankHud(screenId,expectedMode=null) {
+  const hud=liveRankHudForScreen(screenId);
+  if (!hud||expectedMode&&hud.dataset.mode!==expectedMode) return;
+  hud.remove();
+}
+function liveRankSharedGameMode() {
+  if (typeof gameMode==="undefined") return null;
+  if (gameMode==="daily") return "daily";
+  if (gameMode==="quiz"&&!(typeof isPartySessionActive==="function"&&isPartySessionActive())) return "quiz";
+  return null;
+}
 function ensureLiveRankHud(screenId) {
   const screen=document.getElementById(screenId);
   if (!screen) return null;
-  let hud=screen.querySelector(":scope > .live-rank-hud, .card > .live-rank-hud, #draft-mode-card > .live-rank-hud");
+  let hud=liveRankHudForScreen(screenId);
   if (hud) return hud;
   const anchor=liveRankAnchor(screenId);
   if (!anchor) return null;
@@ -154,15 +176,23 @@ function maybeCelebrateLiveRankGoal(mode,data,currentScore) {
 function renderLiveRankHud(screenId,mode,currentOverride=null) {
   const hud=ensureLiveRankHud(screenId);
   if (!hud||!mode) return;
+  const renderSeq=++liveRankRenderSeq;
   hud.dataset.mode=mode;
+  hud.dataset.renderSeq=String(renderSeq);
   const meta=liveRankModeMeta(mode);
-  const current=currentOverride||liveRankCurrentContext(mode);
-  const personal=liveRankPersonalBest(mode);
   const scope=liveRankCacheScope();
   const cache=LIVE_RANK_CACHE.get(mode);
   const cached=cache?.data||null;
   const paint=(data,status="ready")=>{
-    if (!hud.isConnected||hud.dataset.mode!==mode||scope!==liveRankCacheScope()) return;
+    if (!hud.isConnected||hud.dataset.mode!==mode||hud.dataset.renderSeq!==String(renderSeq)||scope!==liveRankCacheScope()) return;
+    if (screenId==="screen-game"&&liveRankSharedGameMode()!==mode) {
+      clearLiveRankHud(screenId,mode);
+      return;
+    }
+    // Score/progress is deliberately read at paint time: the network response may
+    // arrive several guesses later than the request that opened the HUD.
+    const current=currentOverride||liveRankCurrentContext(mode);
+    const personal=liveRankPersonalBest(mode);
     const me=data?.me||null;
     const goalCopy=data ? liveRankGoalCopy(data,mode,current.score) : {tone:"muted",text:"Classement en attente de confirmation."};
     const rankText=me?"#"+Number(me.rank):"—";
@@ -182,14 +212,29 @@ function renderLiveRankHud(screenId,mode,currentOverride=null) {
   liveRankFetch(mode).then(data=>paint(data,data?"ready":"error"));
 }
 function refreshDailyLiveRank(force=false) {
-  if (typeof gameMode==="undefined"||gameMode!=="daily") return;
+  if (typeof gameMode==="undefined"||gameMode!=="daily") {
+    clearLiveRankHud("screen-game","daily");
+    return;
+  }
   if (force) LIVE_RANK_CACHE.delete("daily");
   renderLiveRankHud("screen-game","daily");
 }
 function refreshQuizLiveRank() {
-  if (typeof gameMode==="undefined"||gameMode!=="quiz") return;
-  if (typeof isPartySessionActive==="function"&&isPartySessionActive()) return;
+  if (typeof gameMode==="undefined"||gameMode!=="quiz"||
+      typeof isPartySessionActive==="function"&&isPartySessionActive()) {
+    clearLiveRankHud("screen-game","quiz");
+    return;
+  }
   renderLiveRankHud("screen-game","quiz");
+}
+function syncSharedGameLiveRank(forceDaily=false) {
+  const mode=liveRankSharedGameMode();
+  if (!mode) {
+    clearLiveRankHud("screen-game");
+    return;
+  }
+  if (mode==="daily") refreshDailyLiveRank(forceDaily);
+  else refreshQuizLiveRank();
 }
 function refreshSpeedrunLiveRank() {
   renderLiveRankHud("screen-speedrun","speedrun");
@@ -211,6 +256,14 @@ function refreshDraftLiveRank() {
 }
 
 // Wrap entry points and renderers so the HUD stays in sync with the actual live score.
+if (typeof updateTopTag==="function") {
+  const before=updateTopTag;
+  updateTopTag=function(){ const out=before.apply(this,arguments); setTimeout(syncSharedGameLiveRank,0); return out; };
+}
+if (typeof renderGameOverBox==="function") {
+  const before=renderGameOverBox;
+  renderGameOverBox=function(){ const out=before.apply(this,arguments); setTimeout(syncSharedGameLiveRank,0); return out; };
+}
 if (typeof startDailyGame==="function") {
   const before=startDailyGame;
   startDailyGame=function(){ const out=before.apply(this,arguments); setTimeout(()=>refreshDailyLiveRank(true),0); return out; };
