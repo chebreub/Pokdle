@@ -684,6 +684,8 @@ function updateTopTag() {
 }
 
 function updateModeBanners() {
+  const gameScreen = document.getElementById("screen-game");
+  if (gameScreen) gameScreen.dataset.gameMode = String(gameMode || "normal");
   const challengeBanner = document.getElementById("challenge-banner");
   const dailyBanner = document.getElementById("daily-banner");
   const silhouetteBanner = document.getElementById("silhouette-banner");
