@@ -3357,3 +3357,23 @@
     grid-column:1 / -1;
   }
 }
+
+
+/* D2 hotfix — keep mode-specific clue shells out of normal/daily gameplay. */
+/* The D2 shell forced display:grid!important, which outranked the global .hidden rule.
+   Make the visibility contract explicit for these mode-only panels. */
+#pokdle-app.design-refresh #screen-game .visual-clue-box.hidden {
+  display:none !important;
+}
+
+/* Legacy #screen-game #btn-submit used a red !important background with higher specificity
+   than the D0 .btn-blue token. Keep the primary guess action blue. */
+#pokdle-app.design-refresh #screen-game #btn-submit.btn-blue {
+  background:linear-gradient(180deg,#3976ec,#2458c9) !important;
+  border:1px solid #2864db !important;
+  color:#fff !important;
+  box-shadow:0 3px 0 #153b90 !important;
+}
+#pokdle-app.design-refresh #screen-game #btn-submit.btn-blue:not(:disabled):hover {
+  background:#1e52bc !important;
+}
