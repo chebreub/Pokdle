@@ -847,3 +847,370 @@
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
   }
 }
+
+
+/* =====================================================================
+   D1 — ranking tools become native mobile flows instead of compressed tables
+   ===================================================================== */
+@media (max-width:640px){
+  #screen-ranking > .card,
+  #screen-games-ranking > .card{
+    padding:12px !important;
+    border-radius:16px !important;
+  }
+  #screen-ranking > .card > .ranking-head,
+  #screen-games-ranking > .card > .ranking-head{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:8px !important;
+    align-items:start !important;
+  }
+  #screen-ranking > .card > .ranking-head .ranking-head-actions,
+  #screen-games-ranking > .card > .ranking-head .ranking-head-actions{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    width:100%;
+    gap:6px !important;
+  }
+  #screen-ranking > .card > .ranking-head .ranking-head-actions button,
+  #screen-games-ranking > .card > .ranking-head .ranking-head-actions button{
+    flex:1 1 130px;
+    min-height:40px !important;
+    font-size:.78rem !important;
+  }
+
+  #screen-ranking .ranking-grid-wrap{
+    overflow:visible !important;
+    border:0 !important;
+    background:transparent !important;
+  }
+  #screen-ranking .ranking-mobile-flow{
+    display:grid;
+    gap:11px;
+  }
+  #screen-ranking .ranking-mobile-controls{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  #screen-ranking .ranking-mobile-field{
+    display:grid;
+    gap:5px;
+    min-width:0;
+  }
+  #screen-ranking .ranking-mobile-field > span{
+    color:var(--ui-muted);
+    font-size:.66rem;
+    font-weight:800;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  #screen-ranking .ranking-mobile-field select{
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    padding:8px 10px !important;
+    font-size:.82rem !important;
+  }
+  #screen-ranking .ranking-mobile-progress{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 10px;
+    border:1px solid var(--ui-line);
+    border-radius:10px;
+    background:var(--ui-soft);
+    color:var(--ui-muted);
+    font-size:.72rem;
+  }
+  #screen-ranking .ranking-mobile-progress span{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  #screen-ranking .ranking-mobile-progress b{
+    color:var(--ui-ink);
+    white-space:nowrap;
+    font-size:.7rem;
+  }
+  #screen-ranking .ranking-mobile-slot{
+    width:100%;
+    min-height:112px;
+    display:grid;
+    grid-template-columns:72px minmax(0,1fr) auto;
+    align-items:center;
+    gap:12px;
+    padding:14px;
+    text-align:left;
+    border:1px dashed var(--ui-line);
+    border-radius:18px;
+    background:var(--ui-surface);
+    color:var(--ui-ink);
+    box-shadow:var(--ui-shadow);
+  }
+  #screen-ranking .ranking-mobile-slot.is-filled{
+    border-style:solid;
+    border-color:color-mix(in srgb,var(--ui-accent) 45%,var(--ui-line));
+    background:linear-gradient(135deg,var(--ui-accent-soft),var(--ui-surface) 70%);
+  }
+  #screen-ranking .ranking-mobile-slot > img{
+    width:68px;
+    height:68px;
+    object-fit:contain;
+    image-rendering:pixelated;
+  }
+  #screen-ranking .ranking-mobile-empty{
+    display:grid;
+    place-items:center;
+    width:62px;
+    height:62px;
+    border-radius:18px;
+    background:var(--ui-soft);
+    color:var(--ui-accent);
+    font:900 2rem/1 Nunito,sans-serif;
+  }
+  #screen-ranking .ranking-mobile-slot-copy{
+    display:grid;
+    gap:3px;
+    min-width:0;
+  }
+  #screen-ranking .ranking-mobile-slot-copy small{
+    color:var(--ui-accent);
+    font-size:.62rem;
+    font-weight:900;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  #screen-ranking .ranking-mobile-slot-copy strong{
+    overflow:hidden;
+    color:var(--ui-ink);
+    font:900 1rem/1.2 Nunito,sans-serif;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  #screen-ranking .ranking-mobile-slot-copy > span{
+    color:var(--ui-muted);
+    font-size:.7rem;
+    line-height:1.35;
+  }
+  #screen-ranking .ranking-mobile-edit{
+    color:var(--ui-accent);
+    font-size:.7rem;
+  }
+  #screen-ranking .ranking-mobile-navigation{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  #screen-ranking .ranking-mobile-navigation button{
+    width:100%;
+    min-height:44px;
+    font-size:.78rem !important;
+  }
+
+  #screen-ranking .rank-float-picker{
+    position:fixed !important;
+    z-index:4600 !important;
+    left:10px !important;
+    right:10px !important;
+    top:auto !important;
+    bottom:max(10px,env(safe-area-inset-bottom)) !important;
+    width:auto !important;
+    max-height:min(74dvh,640px) !important;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden !important;
+    padding:12px !important;
+    border:1px solid var(--ui-line) !important;
+    border-radius:22px !important;
+    background:var(--ui-surface) !important;
+    box-shadow:0 0 0 100vmax rgb(8 18 35 / 52%),0 18px 44px rgb(8 18 35 / 30%) !important;
+  }
+  #screen-ranking .rank-float-picker.hidden{
+    display:none !important;
+  }
+  #screen-ranking .rank-float-head{
+    flex:0 0 auto;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  #screen-ranking .rank-float-head h3{
+    margin:0;
+    color:var(--ui-ink);
+    font-size:1rem;
+  }
+  #screen-ranking .rank-picker-sub{
+    margin-top:3px;
+    color:var(--ui-muted);
+    font-size:.72rem;
+  }
+  #screen-ranking .rank-float-actions{
+    gap:5px;
+  }
+  #screen-ranking .rank-float-actions button{
+    min-height:40px !important;
+    padding:7px 9px !important;
+    font-size:.72rem !important;
+  }
+  #screen-ranking .rank-float-list{
+    min-height:0;
+    max-height:58dvh;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+    padding:2px;
+  }
+  #screen-ranking .rank-float-item{
+    min-height:100px;
+    padding:8px 5px;
+    border:1px solid var(--ui-line);
+    border-radius:13px;
+    background:var(--ui-soft);
+  }
+  #screen-ranking .rank-float-item img{
+    width:54px;
+    height:54px;
+  }
+  #screen-ranking .rank-float-item span{
+    color:var(--ui-ink);
+    font-size:.72rem;
+  }
+  #screen-ranking .ranking-picked-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+  }
+  #screen-ranking .picked-card{
+    min-width:0;
+    padding:7px;
+  }
+  #screen-ranking .picked-card span{
+    min-width:0;
+    overflow:hidden;
+    font-size:.7rem;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  #screen-games-ranking .games-ranking-wrap{
+    overflow:visible !important;
+    border:0 !important;
+    background:transparent !important;
+  }
+  #screen-games-ranking .games-ranking-mobile-list{
+    display:grid;
+    gap:10px;
+  }
+  #screen-games-ranking .games-ranking-mobile-card{
+    display:grid;
+    gap:11px;
+    padding:13px;
+    border:1px solid var(--ui-line);
+    border-radius:16px;
+    background:var(--ui-surface);
+    box-shadow:var(--ui-shadow);
+  }
+  #screen-games-ranking .games-ranking-mobile-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  #screen-games-ranking .games-ranking-mobile-head > div:first-child{
+    min-width:0;
+  }
+  #screen-games-ranking .games-ranking-mobile-head span{
+    display:block;
+    color:var(--ui-muted);
+    font-size:.56rem;
+    font-weight:900;
+    letter-spacing:.1em;
+  }
+  #screen-games-ranking .games-ranking-mobile-head h3{
+    margin:3px 0 0;
+    overflow:hidden;
+    color:var(--ui-ink);
+    font:900 1rem/1.2 Nunito,sans-serif;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  #screen-games-ranking .games-ranking-mobile-global{
+    flex:0 0 auto;
+    min-width:68px;
+    padding:8px 9px;
+    border-radius:12px;
+    background:var(--ui-accent-soft);
+    color:var(--ui-accent);
+    text-align:center;
+  }
+  #screen-games-ranking .games-ranking-mobile-global b{
+    display:block;
+    font:900 1.35rem/1 Nunito,sans-serif;
+  }
+  #screen-games-ranking .games-ranking-mobile-global small{
+    display:block;
+    margin-top:2px;
+    font-size:.58rem;
+    font-weight:800;
+  }
+  #screen-games-ranking .games-ranking-mobile-fields{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+  }
+  #screen-games-ranking .games-ranking-mobile-field{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:7px;
+    min-width:0;
+    padding:8px 9px;
+    border:1px solid var(--ui-line);
+    border-radius:11px;
+    background:var(--ui-soft);
+  }
+  #screen-games-ranking .games-ranking-mobile-field > span:first-child{
+    min-width:0;
+    overflow:hidden;
+    color:var(--ui-muted);
+    font-size:.68rem;
+    font-weight:700;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  #screen-games-ranking .games-ranking-mobile-input{
+    display:flex;
+    align-items:baseline;
+    gap:2px;
+    flex:0 0 auto;
+  }
+  #screen-games-ranking .games-ranking-mobile-input input{
+    width:44px !important;
+    min-height:38px !important;
+    padding:5px !important;
+    text-align:center;
+    font-size:.9rem !important;
+    font-weight:900 !important;
+  }
+  #screen-games-ranking .games-ranking-mobile-input small{
+    color:var(--ui-muted);
+    font-size:.58rem;
+    font-weight:700;
+  }
+}
+
+@media (max-width:390px){
+  #screen-ranking .ranking-mobile-controls,
+  #screen-games-ranking .games-ranking-mobile-fields{
+    grid-template-columns:minmax(0,1fr);
+  }
+  #screen-ranking .ranking-mobile-slot{
+    grid-template-columns:62px minmax(0,1fr);
+  }
+  #screen-ranking .ranking-mobile-edit{
+    display:none;
+  }
+}

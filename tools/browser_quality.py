@@ -111,7 +111,35 @@ def main():
      nav('pokedex','screen-pokedex');page.locator('[data-pokedex-view="collection"]').click();page.locator('#pokedex-grid .state-unknown').first.click()
      if width<=640: page.locator('#pokedex-detail .pokedex-back-to-list').first.click();page.locator('#pokedex-grid').wait_for(state='visible')
      return screen('screen-pokedex')
-    check('collection-back',locked);check('profile',lambda:nav('profile','screen-profile'));check('draft',lambda:start('openDraftScoreAttackMode','screen-draft-score-attack'))
+    check('collection-back',locked);check('profile',lambda:nav('profile','screen-profile'))
+    def ranking_tool():
+     page.evaluate('openRankingMode()');screen('screen-ranking')
+     if width<=640:
+      expect(page.locator('#ranking-grid .ranking-mobile-flow').is_visible(),'Mobile ranking flow missing')
+      expect(page.locator('#ranking-grid .ranking-table').count()==0,'Desktop ranking table leaked into mobile')
+      page.locator('.ranking-mobile-slot').click()
+      page.locator('#rank-float-picker').wait_for(state='visible')
+      expect(page.locator('#rank-float-list .rank-float-item').count()>0,'Mobile ranking picker has no candidates')
+      page.locator('#rank-float-list .rank-float-item').first.click()
+      expect('is-filled' in (page.locator('.ranking-mobile-slot').get_attribute('class') or ''),'Mobile ranking choice was not persisted')
+     else:
+      expect(page.locator('#ranking-grid .ranking-table').is_visible(),'Desktop ranking table missing')
+     return screen('screen-ranking')
+    check('ranking-responsive',ranking_tool)
+    def games_ranking_tool():
+     page.evaluate('openGamesRankingMode()');screen('screen-games-ranking')
+     if width<=640:
+      cards=page.locator('.games-ranking-mobile-card')
+      expect(cards.count()==10,f'Unexpected mobile game-card count: {cards.count()}')
+      expect(page.locator('.games-ranking-table').count()==0,'Desktop games table leaked into mobile')
+      field=cards.first.locator('input').first
+      field.fill('8');field.press('Tab')
+      expect(cards.first.locator('.games-ranking-mobile-global b').inner_text().strip()!='5.0','Mobile game average did not update')
+     else:
+      expect(page.locator('.games-ranking-table').is_visible(),'Desktop games table missing')
+     return screen('screen-games-ranking')
+    check('games-ranking-responsive',games_ranking_tool)
+    check('draft',lambda:start('openDraftScoreAttackMode','screen-draft-score-attack'))
     def party():
      nav('social','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["openPartyRoomMode"]\']:visible').first.click();return screen('screen-party-room')
     check('party-entry',party)
