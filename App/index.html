@@ -1232,9 +1232,6 @@ EVs: 252 Atk / 4 Def / 252 Spe
                 <p id="party-nearest-help" class="party-round-help hidden">Choisis un Pokémon dans la liste pour valider · Une seule réponse · +100 pts aux plus proches, ex æquo inclus</p>
                 <button id="party-reveal-btn" class="btn-ghost hidden" type="button" data-action="partyRevealRound">Terminer et révéler</button>
               </div>
-              <div id="party-live-actions" class="party-live-actions hidden" aria-label="Actions de la Party en cours">
-                <button id="party-change-game-btn" class="btn-ghost" type="button" data-action="confirmPartyChangeGame">← Changer de jeu</button>
-              </div>
               <section id="party-setup" class="party-setup"><div class="party-section-head"><div><span class="party-eyebrow">VOTRE PROCHAIN DÉFI</span><h3>Choisissez votre terrain de jeu</h3></div><span id="party-host-note" class="party-host-note"></span></div>
                 <div id="party-mode-select" class="party-mode-select hidden" role="group" aria-label="Mode de jeu">
                   <button id="party-mode-dexrace" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["dexrace"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">▦</span><span class="pmt-text"><small class="pmt-tag">Nouveau · Ordinateur</small><b>Course au Pokédex</b><span>Une grille, le premier prend la case</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
@@ -1248,7 +1245,9 @@ EVs: 252 Atk / 4 Def / 252 Spe
                   <button id="party-mode-statclashparty" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["statclashparty"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⚔</span><span class="pmt-text"><small class="pmt-tag">Stratégie</small><b>Stat Clash Party</b><span>Garde tes meilleures stats</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                 </div>
                 <p id="party-mode-hint" class="party-mode-hint"></p>
-                <div class="party-options"><div id="party-rounds-select" class="party-rounds-select hidden" role="group" aria-label="Nombre de manches"><span class="party-mode-label">Manches</span><div class="party-option-buttons">
+                <details id="party-options-disclosure" class="party-options-disclosure" open>
+                  <summary><span>Règles de la partie</span><b id="party-options-summary">5 manches · 9 générations</b></summary>
+                  <div class="party-options"><div id="party-rounds-select" class="party-rounds-select hidden" role="group" aria-label="Nombre de manches"><span class="party-mode-label">Manches</span><div class="party-option-buttons">
                     <button id="party-rounds-5" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[5]' aria-pressed="false">5</button>
                     <button id="party-rounds-10" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[10]' aria-pressed="false">10</button>
                     <button id="party-rounds-15" type="button" class="party-mode-btn" data-action="partySetRounds" data-args='[15]' aria-pressed="false">15</button>
@@ -1264,8 +1263,16 @@ EVs: 252 Atk / 4 Def / 252 Spe
                     <button id="party-gen-8" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[8]' aria-label="Génération 8" aria-pressed="false">8</button>
                     <button id="party-gen-9" type="button" class="party-mode-btn party-gen-btn" data-action="partyToggleGen" data-args='[9]' aria-label="Génération 9" aria-pressed="false">9</button>
                   </div></div></div>
+                </details>
               </section>
-              <div class="party-launch-bar"><p id="party-launch-note"></p><button id="party-start-btn" class="btn-blue hidden" type="button" data-action="partyStartGame">Lancer la partie →</button><button id="party-room-next-btn" class="btn-blue hidden" type="button" data-action="partyNextRound">Manche suivante →</button></div>
+              <div id="party-action-dock" class="party-launch-bar party-action-dock">
+                <div class="party-action-copy"><span id="party-action-phase" class="party-eyebrow">PRÊT</span><p id="party-launch-note"></p></div>
+                <div class="party-action-buttons">
+                  <button id="party-change-game-btn" class="btn-ghost hidden" type="button" data-action="confirmPartyChangeGame">← Changer de jeu</button>
+                  <button id="party-start-btn" class="btn-blue hidden" type="button" data-action="partyStartGame">Lancer la partie →</button>
+                  <button id="party-room-next-btn" class="btn-blue hidden" type="button" data-action="partyNextRound">Manche suivante →</button>
+                </div>
+              </div>
             </div>
             <aside class="party-roster"><div class="party-section-head"><h3 id="party-roster-title">Dans le salon</h3><span id="party-count" class="party-count">0 / 8</span></div><ul id="party-players" class="party-players"></ul><p class="party-roster-tip">Le podium se joue à chaque manche.</p></aside>
           </div>
