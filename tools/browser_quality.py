@@ -120,6 +120,27 @@ def main():
      rendered=' '.join(style.values())
      blue_tokens=('57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
      expect(any(token in rendered for token in blue_tokens),'Primary guess CTA is not using the D0 blue treatment: '+repr(style))
+    def autocomplete_overlay():
+     start('startNormalGame','screen-game');standard_guess_shell()
+     page.locator('#guess-input').fill('Bul')
+     first=page.locator('#guess-ac:not(.hidden) .ac-item').first
+     first.wait_for(state='visible')
+     item_box=first.bounding_box();button_box=page.locator('#btn-submit').bounding_box();surrender_box=page.locator('#btn-surrender').bounding_box()
+     expect(item_box and button_box and surrender_box,'Autocomplete or action geometry missing')
+     def overlaps(a,b):
+      return min(a['x']+a['width'],b['x']+b['width'])>max(a['x'],b['x']) and min(a['y']+a['height'],b['y']+b['height'])>max(a['y'],b['y'])
+     expect(not overlaps(item_box,button_box),'First autocomplete suggestion overlaps Deviner: '+repr([item_box,button_box]))
+     expect(not overlaps(item_box,surrender_box),'First autocomplete suggestion overlaps Abandonner: '+repr([item_box,surrender_box]))
+     if width>=1280:
+      input_box=page.locator('#guess-input').bounding_box()
+      expect(abs(input_box['y']-button_box['y'])<3,'Desktop guess input and Deviner are not aligned on one row: '+repr([input_box,button_box]))
+     wrapper_z=page.locator('#screen-game .ac-wrapper').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
+     submit_z=page.locator('#btn-submit').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
+     expect(wrapper_z>submit_z,'Autocomplete stacking context is not above surrounding content: '+repr([wrapper_z,submit_z]))
+     page.locator('#guess-input').press('Escape')
+     expect(page.locator('#guess-ac').is_hidden(),'Autocomplete cleanup failed after overlay QA')
+     return screen('screen-game')
+    check('autocomplete-overlay',autocomplete_overlay)
     def guess():
      start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)

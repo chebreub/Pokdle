@@ -4002,7 +4002,8 @@
     [data-game-mode="challenge"]
   ) .classic-game-command > .search-bar {
     display:grid !important;
-    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-columns:minmax(0,1fr) auto auto;
+    align-items:start;
     gap:8px !important;
     width:100%;
     margin:0 !important;
@@ -4014,9 +4015,24 @@
     [data-game-mode="daily"],
     [data-game-mode="challenge"]
   ) .classic-game-command > .search-bar .ac-wrapper {
-    grid-column:1 / -1;
+    grid-column:1;
+    grid-row:1;
     width:100%;
     min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar #btn-submit,
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar #btn-surrender {
+    grid-row:1;
+    align-self:stretch;
   }
 
   #pokdle-app.design-refresh #screen-game:is(
