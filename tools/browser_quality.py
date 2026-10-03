@@ -177,6 +177,37 @@ def main():
     def party():
      nav('social','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["openPartyRoomMode"]\']:visible').first.click();return screen('screen-party-room')
     check('party-entry',party)
+    def d4_party_polish():
+     page.evaluate("""() => {
+       partyRoomState.room={
+         code:'QA123',status:'waiting',gameMode:'guess',roundNumber:0,totalRounds:5,minPlayers:2,maxPlayers:8,
+         selectedGens:[1,2,3,4,5,6,7,8,9],
+         players:[
+           {id:'qa-host',nickname:'QA Host',score:0,isSelf:true,isHost:true,connected:true},
+           {id:'qa-guest',nickname:'QA Guest',score:0,isSelf:false,isHost:false,connected:true}
+         ]
+       };
+       renderPartyRoom();
+     }""")
+     joined=page.locator('#party-joined')
+     expect(joined.get_attribute('data-party-phase')=='setup','Party setup phase marker missing')
+     expect(page.locator('#party-action-phase').inner_text().strip()=='PRÊT','Party action dock phase is not ready')
+     expect('5 manches' in page.locator('#party-options-summary').inner_text(),'Compact Party rules summary missing')
+     disclosure=page.locator('#party-options-disclosure')
+     if width<=800:
+      expect(not disclosure.evaluate('(e)=>e.open'),'Party rules should start collapsed on tablet/mobile')
+      expect(page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')=='sticky','Party primary actions are not sticky on mobile/tablet')
+     else:
+      expect(disclosure.evaluate('(e)=>e.open'),'Party rules should stay open on desktop')
+      expect(page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')!='sticky','Party action dock should not be sticky on desktop')
+     if width<=560:
+      tiles=page.locator('#party-mode-select .party-mode-tile')
+      rects=tiles.evaluate_all('(els)=>els.slice(0,4).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
+      expect(len(rects)==4 and abs(rects[0]['y']-rects[1]['y'])<3 and abs(rects[0]['y']-rects[2]['y'])<3 and rects[3]['y']>rects[0]['y'],'Party game picker is not compact 3-column mobile grid: '+repr(rects))
+      expect(max(r['h'] for r in rects)<110,'Party mobile game tiles are still too tall: '+repr(rects))
+     page.evaluate('() => { partyRoomState.room=null; renderPartyRoom(); }')
+     return screen('screen-party-room')
+    check('d4-party-polish',d4_party_polish)
     check('pixel',lambda:start('startPixelGame','screen-game'))
     def d2_pixel_shell():
      start('startPixelGame','screen-game');box=page.locator('#pixel-box');expect(box.is_visible(),'Pixel shell missing');expect(page.locator('#pixel-box .visual-clue-canvas').is_visible(),'Pixel visual canvas missing');expect(page.locator('#pixel-level').inner_text().startswith('Netteté '),'Pixel progress label missing');return screen('screen-game')
