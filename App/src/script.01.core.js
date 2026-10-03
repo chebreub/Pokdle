@@ -194,7 +194,7 @@ function openDailyQuestsModal() {
         }).join("")}
       </div>
       <div class="dq-actions">
-        <button class="btn-red" type="button" data-action="shareLevelBadge">📋 Partager mon niveau</button>
+        <button class="btn-blue" type="button" data-action="shareLevelBadge">📋 Partager mon niveau</button>
       </div>
       <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b>${Number(playerProfile?.dailyLoginStreak) > 1 ? ` · 🔥 <b>${playerProfile.dailyLoginStreak}</b> jours d'affilée` : ""}</p>
     </div>`;
@@ -2118,7 +2118,26 @@ function trackUsage(event) {
 }
 window.trackUsage = trackUsage;
 
+const MOBILE_KEYBOARD_INPUT_SELECTOR = 'input[type="text"],input[type="search"],input[type="number"],input[type="email"],input[type="url"],input[type="tel"],input[type="password"],textarea';
+function syncMobileKeyboardViewportState() {
+  const body = document.body;
+  if (!body) return;
+  const viewport = window.visualViewport;
+  const active = document.activeElement;
+  const editableFocused = Boolean(active && active.matches && active.matches(MOBILE_KEYBOARD_INPUT_SELECTOR));
+  const keyboardInset = viewport ? Math.max(0, window.innerHeight - viewport.height) : 0;
+  body.classList.toggle("mobile-keyboard-open", window.innerWidth <= 640 && editableFocused && keyboardInset > 120);
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", syncMobileKeyboardViewportState);
+  window.visualViewport.addEventListener("scroll", syncMobileKeyboardViewportState);
+}
+window.addEventListener("resize", syncMobileKeyboardViewportState);
+document.addEventListener("focusin", syncMobileKeyboardViewportState);
+document.addEventListener("focusout", () => setTimeout(syncMobileKeyboardViewportState, 60));
+
 window.addEventListener("DOMContentLoaded", () => {
+  syncMobileKeyboardViewportState();
   try {
     if (!sessionStorage.getItem("pokedle_visit_v1")) {
       sessionStorage.setItem("pokedle_visit_v1", "1");

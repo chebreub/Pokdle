@@ -524,7 +524,7 @@
         <div class="ranking-head">
           <h2 class="card-title">Mode classement</h2>
           <div class="ranking-head-actions">
-            <button class="btn-yellow" data-action="resetRankingChoices">🧹 Réinitialiser</button>
+            <button class="btn-ghost btn-danger-ghost" data-action="resetRankingChoices">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -539,7 +539,7 @@
               <p id="rank-picker-sub" class="rank-picker-sub"></p>
             </div>
             <div class="rank-float-actions">
-              <button class="btn-yellow" data-action="clearRankingSelection">&#129529; Vider</button>
+              <button class="btn-ghost btn-danger-ghost" data-action="clearRankingSelection">&#129529; Vider</button>
               <button class="btn-ghost" data-action="closeRankingPicker">&#10005;</button>
             </div>
           </div>
@@ -562,7 +562,7 @@
             <button class="btn-blue" type="button" data-action="openTeamsScreen">🧩 Bases d’équipes</button>
             <button class="btn-ghost" type="button" data-action="openTeamBuilderExport">📋 Exporter</button>
             <button class="btn-ghost" type="button" data-action="openTeamBuilderImport">📥 Importer</button>
-            <button class="btn-yellow" type="button" data-action="resetTeamBuilder">🧹 Réinitialiser</button>
+            <button class="btn-ghost btn-danger-ghost" type="button" data-action="resetTeamBuilder">🧹 Réinitialiser</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button>
           </div>
         </div>
@@ -759,7 +759,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Équipes / Teams</h2>
           <div class="ranking-head-actions">
-            <button class="btn-yellow" type="button" data-action="resetTeamLibraryFilters">🧹 Réinitialiser</button>
+            <button class="btn-ghost" type="button" data-action="resetTeamLibraryFilters">🧹 Réinitialiser</button>
             <button class="btn-blue" type="button" data-action="openTeamBuilderScreen">Ouvrir le builder</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button>
           </div>
@@ -789,7 +789,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Classement des jeux Pokémon</h2>
           <div class="ranking-head-actions">
-            <button class="btn-yellow" data-action="resetGamesRanking">🧹 Réinitialiser</button>
+            <button class="btn-ghost btn-danger-ghost" data-action="resetGamesRanking">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -845,7 +845,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                   <button id="draft-score-room-leave" class="btn-ghost scoreattack-only" type="button" data-action="leaveDraftScoreAttackRoom">Quitter 1v1</button>
                 </div>
               </div>
-              <button id="draft-restart-btn" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouveau draft</button>
+              <button id="draft-restart-btn" class="btn-blue" data-action="restartDraftArenaRun">🎲 Nouveau draft</button>
               <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
             </div>
           </div>
@@ -906,7 +906,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
         <div class="emulator-toolbar">
           <select id="emu-rom-select"></select>
-          <button class="btn-red" data-action="launchSelectedEmuRom">&#9654; Lancer</button>
+          <button class="btn-blue" data-action="launchSelectedEmuRom">&#9654; Lancer</button>
           <label class="btn-blue emu-upload-btn" for="emu-rom-file">&#128193; Charger ma ROM</label>
           <input id="emu-rom-file" type="file" accept=".gba,.gbc,.gb,.nds" class="hidden" />
         </div>
@@ -1051,8 +1051,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <p id="party-status" class="card-desc">Une nouvelle manche commence.</p>
         <div id="party-stage" class="party-stage"></div>
         <div class="party-actions">
-          <button id="party-next-btn" class="btn-yellow hidden" data-action="advancePartyRound">Round suivant</button>
-          <button id="party-restart-btn" class="btn-red hidden" data-action="startPartyMode">Nouvelle session</button>
+          <button id="party-next-btn" class="btn-blue hidden" data-action="advancePartyRound">Round suivant</button>
+          <button id="party-restart-btn" class="btn-blue hidden" data-action="startPartyMode">Nouvelle session</button>
         </div>
       </div>
       <div id="quiz-banner" class="mode-banner hidden">
@@ -1080,8 +1080,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
           <div id="guess-ac" class="ac-list hidden"></div>
         </div>
-        <button class="btn-red btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
-        <button class="btn-ghost" id="btn-surrender" data-action="surrenderGame">Abandonner</button>
+        <button class="btn-blue btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
+        <button class="btn-ghost btn-danger-ghost" id="btn-surrender" data-action="surrenderGame">Abandonner</button>
       </div>
       <p id="err-msg" class="err-msg"></p>
 
@@ -1133,8 +1133,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Intrus Pokémon</h2>
           <div class="ranking-head-actions">
-            <button id="odd-new-puzzle-btn" class="btn-yellow" data-action="nextOddOneOutPuzzle">🎲 Nouvelle énigme</button>
-            <button id="odd-party-next-btn" class="btn-yellow hidden" data-action="advancePartyRound">Round suivant</button>
+            <button id="odd-new-puzzle-btn" class="btn-blue" data-action="nextOddOneOutPuzzle">🎲 Nouvelle énigme</button>
+            <button id="odd-party-next-btn" class="btn-blue hidden" data-action="advancePartyRound">Round suivant</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1314,7 +1314,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                   <input id="multiplayer-guess-input" aria-label="Ta proposition en duel" type="text" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
                   <div id="multiplayer-guess-ac" class="ac-list hidden"></div>
                 </div>
-                <button class="btn-red" type="button" data-action="submitMultiplayerGuess">Envoyer</button>
+                <button class="btn-blue" type="button" data-action="submitMultiplayerGuess">Envoyer</button>
               </div>
               <details id="multiplayer-forfeit" class="multiplayer-forfeit">
                 <summary>Abandonner</summary>
@@ -1379,7 +1379,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Stat Clash 1v1</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" data-action="quickStatClashGame">⚡ Partie rapide</button>
+            <button class="btn-blue" type="button" data-action="quickStatClashGame">⚡ Partie rapide</button>
             <button class="btn-ghost" type="button" data-action="restartStatClashGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
                 </div>
@@ -1394,7 +1394,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Higher or Lower</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" data-action="restartHigherLowerGame">Rejouer</button>
+            <button class="btn-blue" type="button" data-action="restartHigherLowerGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1408,7 +1408,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Poké-Connections</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button>
+            <button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1422,7 +1422,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Speedrun Pokédex</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+            <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1436,7 +1436,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Combo de types</h2>
           <div class="ranking-head-actions">
-            <button class="btn-red" type="button" data-action="restartTypeComboGame">Rejouer</button>
+            <button class="btn-blue" type="button" data-action="restartTypeComboGame">Rejouer</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>

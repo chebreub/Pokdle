@@ -91,11 +91,17 @@
   box-shadow: none !important;
   transition: background .16s ease, border-color .16s ease, transform .16s ease;
 }
-#pokdle-app.design-refresh :is(.btn-red, .btn-blue) { background: linear-gradient(180deg, #3976ec, #2458c9) !important; border: 1px solid #2864db !important; color: #fff !important; box-shadow: 0 3px 0 #153b90 !important; }
+#pokdle-app.design-refresh .btn-blue { background: linear-gradient(180deg, #3976ec, #2458c9) !important; border: 1px solid #2864db !important; color: #fff !important; box-shadow: 0 3px 0 #153b90 !important; }
+#pokdle-app.design-refresh .btn-red { background: linear-gradient(180deg, #e35a6d, #bd3047) !important; border: 1px solid #b52b40 !important; color: #fff !important; box-shadow: 0 3px 0 #7f2031 !important; }
 #pokdle-app.design-refresh .btn-yellow { background: linear-gradient(180deg, #ffdc70, #ffc43a) !important; border: 1px solid #f0bd37 !important; color: #17253d !important; box-shadow: 0 3px 0 #af771b !important; }
 #pokdle-app.design-refresh .btn-ghost { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; color: var(--ui-ink) !important; }
-#pokdle-app.design-refresh :is(.btn-red, .btn-blue):not(:disabled):hover { background: #1e52bc !important; transform: translateY(-1px); }
+#pokdle-app.design-refresh .btn-danger-ghost { background: var(--ui-surface) !important; border-color: #dca8b1 !important; color: #a72a40 !important; }
+#pokdle-app.design-refresh .btn-blue:not(:disabled):hover { background: #1e52bc !important; transform: translateY(-1px); }
+#pokdle-app.design-refresh .btn-red:not(:disabled):hover { background: #a9283d !important; transform: translateY(-1px); }
 #pokdle-app.design-refresh .btn-ghost:not(:disabled):hover { background: var(--ui-soft) !important; border-color: var(--ui-accent) !important; }
+#pokdle-app.design-refresh .btn-danger-ghost:not(:disabled):hover { background: #fff0f3 !important; border-color: #bd3047 !important; color: #8f2034 !important; }
+#pokdle-app.design-refresh.theme-dark .btn-danger-ghost { background: var(--ui-surface) !important; border-color: #82505b !important; color: #ff9dab !important; }
+#pokdle-app.design-refresh.theme-dark .btn-danger-ghost:not(:disabled):hover { background: #482c34 !important; border-color: #ff9dab !important; color: #ffd8de !important; }
 #pokdle-app.design-refresh :is(button, a, input, select, textarea, [role="button"]):focus-visible { outline: 3px solid var(--ui-accent) !important; outline-offset: 3px !important; }
 #pokdle-app.design-refresh :is(input[type="text"], input[type="search"], input[type="number"], select, textarea) {
   background: var(--ui-surface) !important; color: var(--ui-ink) !important;
