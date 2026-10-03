@@ -661,9 +661,206 @@ function getFavoriteRowPokemon(colKey) {
   return Number.isInteger(id) ? POKEMON_BY_ID.get(id) || null : null;
 }
 
+let rankingMobileScope = "gen|1";
+let rankingMobileColumnKey = RANKING_COLUMNS[0]?.key || "favorite";
+
+function useCompactRankingLayout() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 640px)").matches;
+}
+
+function rankingMobileCategories(scope) {
+  const items = RANKING_COLUMNS.map((col) => ({ key: col.key, label: col.label }));
+  items.push({
+    key: "favorite",
+    label: scope === "favrow" ? "Favori global" : "Préféré de la génération",
+  });
+  return items;
+}
+
+function rankingMobileScopeLabel(scope) {
+  if (scope === "favrow") return "Favoris par catégorie";
+  const gen = Number(String(scope).split("|")[1]) || 1;
+  return "Génération " + gen;
+}
+
+function rankingMobileCurrentPokemon(scope, colKey) {
+  if (scope === "favrow") return getFavoriteRowPokemon(colKey);
+  const gen = Number(String(scope).split("|")[1]) || 1;
+  return colKey === "favorite" ? getRowFavoritePokemon(gen) : getRankingChoicePokemon(gen, colKey);
+}
+
+function rankingMobileFilledCount(scope) {
+  const categories = rankingMobileCategories(scope);
+  return categories.reduce((count, item) => count + (rankingMobileCurrentPokemon(scope, item.key) ? 1 : 0), 0);
+}
+
+function openRankingMobileCurrentSlot(anchorEl) {
+  const scope = rankingMobileScope;
+  const colKey = rankingMobileColumnKey;
+  if (scope === "favrow") {
+    openRankingPickerForFavoriteRow(colKey, anchorEl);
+    return;
+  }
+  const gen = Number(String(scope).split("|")[1]) || 1;
+  if (colKey === "favorite") openRankingPickerForRowFavorite(gen, anchorEl);
+  else openRankingPickerForCell(gen, colKey, anchorEl);
+}
+
+function shiftRankingMobileCursor(delta) {
+  const scopes = Array.from({ length: 9 }, (_, index) => "gen|" + (index + 1)).concat("favrow");
+  const categories = rankingMobileCategories(rankingMobileScope);
+  let categoryIndex = Math.max(0, categories.findIndex((item) => item.key === rankingMobileColumnKey));
+  let scopeIndex = Math.max(0, scopes.indexOf(rankingMobileScope));
+  categoryIndex += delta;
+
+  if (categoryIndex >= categories.length) {
+    scopeIndex = (scopeIndex + 1) % scopes.length;
+    rankingMobileScope = scopes[scopeIndex];
+    rankingMobileColumnKey = rankingMobileCategories(rankingMobileScope)[0].key;
+  } else if (categoryIndex < 0) {
+    scopeIndex = (scopeIndex - 1 + scopes.length) % scopes.length;
+    rankingMobileScope = scopes[scopeIndex];
+    const previousCategories = rankingMobileCategories(rankingMobileScope);
+    rankingMobileColumnKey = previousCategories[previousCategories.length - 1].key;
+  } else {
+    rankingMobileColumnKey = categories[categoryIndex].key;
+  }
+
+  renderRankingGrid();
+}
+
+function renderRankingMobile(wrap) {
+  wrap.innerHTML = "";
+  const categories = rankingMobileCategories(rankingMobileScope);
+  if (!categories.some((item) => item.key === rankingMobileColumnKey)) rankingMobileColumnKey = categories[0].key;
+
+  const flow = document.createElement("section");
+  flow.className = "ranking-mobile-flow";
+
+  const controls = document.createElement("div");
+  controls.className = "ranking-mobile-controls";
+
+  const scopeField = document.createElement("label");
+  scopeField.className = "ranking-mobile-field";
+  const scopeLabel = document.createElement("span");
+  scopeLabel.textContent = "Vue";
+  const scopeSelect = document.createElement("select");
+  scopeSelect.id = "ranking-mobile-scope";
+  for (let gen = 1; gen <= 9; gen += 1) {
+    const option = document.createElement("option");
+    option.value = "gen|" + gen;
+    option.textContent = "Génération " + gen;
+    scopeSelect.appendChild(option);
+  }
+  const favoritesOption = document.createElement("option");
+  favoritesOption.value = "favrow";
+  favoritesOption.textContent = "Favoris par catégorie";
+  scopeSelect.appendChild(favoritesOption);
+  scopeSelect.value = rankingMobileScope;
+  scopeSelect.addEventListener("change", () => {
+    rankingMobileScope = scopeSelect.value;
+    const nextCategories = rankingMobileCategories(rankingMobileScope);
+    if (!nextCategories.some((item) => item.key === rankingMobileColumnKey)) rankingMobileColumnKey = nextCategories[0].key;
+    renderRankingGrid();
+  });
+  scopeField.append(scopeLabel, scopeSelect);
+
+  const categoryField = document.createElement("label");
+  categoryField.className = "ranking-mobile-field";
+  const categoryLabel = document.createElement("span");
+  categoryLabel.textContent = "Catégorie";
+  const categorySelect = document.createElement("select");
+  categorySelect.id = "ranking-mobile-category";
+  for (const item of categories) {
+    const option = document.createElement("option");
+    option.value = item.key;
+    option.textContent = item.label;
+    categorySelect.appendChild(option);
+  }
+  categorySelect.value = rankingMobileColumnKey;
+  categorySelect.addEventListener("change", () => {
+    rankingMobileColumnKey = categorySelect.value;
+    renderRankingGrid();
+  });
+  categoryField.append(categoryLabel, categorySelect);
+  controls.append(scopeField, categoryField);
+
+  const currentCategory = categories.find((item) => item.key === rankingMobileColumnKey) || categories[0];
+  const pokemon = rankingMobileCurrentPokemon(rankingMobileScope, rankingMobileColumnKey);
+  const progress = document.createElement("div");
+  progress.className = "ranking-mobile-progress";
+  const progressCopy = document.createElement("span");
+  progressCopy.textContent = rankingMobileScopeLabel(rankingMobileScope) + " · " + currentCategory.label;
+  const progressValue = document.createElement("b");
+  progressValue.textContent = rankingMobileFilledCount(rankingMobileScope) + " / " + categories.length + " remplis";
+  progress.append(progressCopy, progressValue);
+
+  const slot = document.createElement("button");
+  slot.type = "button";
+  slot.className = "ranking-mobile-slot" + (pokemon ? " is-filled" : "");
+  slot.setAttribute("aria-label", pokemon ? "Modifier " + pokemon.name : "Choisir un Pokémon pour " + currentCategory.label);
+  if (pokemon) {
+    const img = document.createElement("img");
+    img.src = getPokemonSprite(pokemon);
+    img.alt = pokemon.name;
+    img.loading = "lazy";
+    const copy = document.createElement("span");
+    copy.className = "ranking-mobile-slot-copy";
+    const eyebrow = document.createElement("small");
+    eyebrow.textContent = currentCategory.label;
+    const name = document.createElement("strong");
+    name.textContent = pokemon.name;
+    const meta = document.createElement("span");
+    meta.textContent = "Gen " + pokemon.gen + " · " + pokemon.type1 + (pokemon.type2 ? " / " + pokemon.type2 : "");
+    copy.append(eyebrow, name, meta);
+    const edit = document.createElement("b");
+    edit.className = "ranking-mobile-edit";
+    edit.textContent = "Modifier";
+    slot.append(img, copy, edit);
+  } else {
+    const plus = document.createElement("span");
+    plus.className = "ranking-mobile-empty";
+    plus.textContent = "+";
+    const copy = document.createElement("span");
+    copy.className = "ranking-mobile-slot-copy";
+    const eyebrow = document.createElement("small");
+    eyebrow.textContent = currentCategory.label;
+    const name = document.createElement("strong");
+    name.textContent = "Choisir un Pokémon";
+    const meta = document.createElement("span");
+    meta.textContent = rankingMobileScope === "favrow" ? "À choisir parmi tes sélections existantes" : rankingMobileScopeLabel(rankingMobileScope);
+    copy.append(eyebrow, name, meta);
+    slot.append(plus, copy);
+  }
+  slot.addEventListener("click", () => openRankingMobileCurrentSlot(slot));
+
+  const navigation = document.createElement("div");
+  navigation.className = "ranking-mobile-navigation";
+  const previous = document.createElement("button");
+  previous.type = "button";
+  previous.className = "btn-ghost";
+  previous.textContent = "← Précédent";
+  previous.addEventListener("click", () => shiftRankingMobileCursor(-1));
+  const next = document.createElement("button");
+  next.type = "button";
+  next.className = "btn-blue";
+  next.textContent = "Suivant →";
+  next.addEventListener("click", () => shiftRankingMobileCursor(1));
+  navigation.append(previous, next);
+
+  flow.append(controls, progress, slot, navigation);
+  wrap.appendChild(flow);
+  renderPickedSummary();
+}
+
 function renderRankingGrid() {
   const wrap = document.getElementById("ranking-grid");
   if (!wrap) return;
+
+  if (useCompactRankingLayout()) {
+    renderRankingMobile(wrap);
+    return;
+  }
 
   wrap.innerHTML = "";
 
@@ -908,6 +1105,14 @@ function showRankingFloatPicker(title, subtitle, candidates, anchorEl) {
   }
 
   picker.classList.remove("hidden");
+
+  if (useCompactRankingLayout()) {
+    picker.style.left = "";
+    picker.style.top = "";
+    picker.style.right = "";
+    picker.style.bottom = "";
+    return;
+  }
 
   const anchor = anchorEl ? anchorEl.getBoundingClientRect() : null;
   const pickerRect = picker.getBoundingClientRect();
