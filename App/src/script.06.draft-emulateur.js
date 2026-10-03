@@ -308,7 +308,7 @@ function renderDraftSimpleBattleDevPanel(state) {
         <div class="draft-summary-card"><span>Équipe adverse</span><b>${state.rightTeam.length} Pokémon</b></div>
       </div>
       <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
-        <button type="button" class="btn-red draft-dev-battle-preview-cta" data-action="startDraftSimpleBattlePreview">Commencer le duel</button>
+        <button type="button" class="btn-blue draft-dev-battle-preview-cta" data-action="startDraftSimpleBattlePreview">Commencer le duel</button>
         <button type="button" class="btn-ghost" data-action="clearDraftSimpleBattleDevPanel">Retour au Draft</button>
       </div>
       <div class="draft-dev-battle-log"><p class="card-desc">Clique un Pokémon dans le banc joueur ci-dessus pour choisir ton lead, puis lance le duel.</p></div>
@@ -369,7 +369,7 @@ function renderDraftSimpleBattleDevPanel(state) {
           : "Le joueur suivant va choisir son action sans voir celle de l’autre.")}</span>
       </div>
       <div class="draft-dev-battle-actions draft-dev-battle-preview-actions">
-        <button type="button" class="btn-red draft-dev-battle-preview-cta" data-action="continueDraftSimpleBattleHotseat">Passer au joueur suivant</button>
+        <button type="button" class="btn-blue draft-dev-battle-preview-cta" data-action="continueDraftSimpleBattleHotseat">Passer au joueur suivant</button>
       </div>
     `;
     panel.classList.remove("hidden");
