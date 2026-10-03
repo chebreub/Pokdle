@@ -327,3 +327,229 @@
   #pokdle-app.design-refresh .coop-clues { grid-template-columns: 1fr; }
   #pokdle-app.design-refresh .coop-private > button { width: 100%; }
 }
+
+
+/* D4 — compact Party controls, one action dock, phase coherence. */
+#pokdle-app #screen-party-room .party-options-disclosure {
+  margin-top: 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  background: var(--ui-soft);
+  overflow: hidden;
+}
+#pokdle-app #screen-party-room .party-options-disclosure > summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--ui-ink);
+}
+#pokdle-app #screen-party-room .party-options-disclosure > summary::-webkit-details-marker { display: none; }
+#pokdle-app #screen-party-room .party-options-disclosure > summary::after {
+  content: "+";
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--ui-surface);
+  color: var(--party-accent);
+  font-weight: 900;
+}
+#pokdle-app #screen-party-room .party-options-disclosure[open] > summary::after { content: "−"; }
+#pokdle-app #screen-party-room .party-options-disclosure > summary > span {
+  font-size: .78rem;
+  font-weight: 800;
+}
+#pokdle-app #screen-party-room .party-options-disclosure > summary > b {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: .7rem;
+  font-weight: 700;
+  text-align: right;
+}
+#pokdle-app #screen-party-room .party-options-disclosure .party-options {
+  gap: 12px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--ui-line);
+}
+#pokdle-app #screen-party-room .party-action-dock {
+  min-width: 0;
+  gap: 12px;
+}
+#pokdle-app #screen-party-room .party-action-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+#pokdle-app #screen-party-room .party-action-copy .party-eyebrow {
+  font-size: .58rem;
+  letter-spacing: .1em;
+}
+#pokdle-app #screen-party-room .party-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#pokdle-app #screen-party-room .party-action-buttons button {
+  min-height: 44px;
+}
+#pokdle-app #screen-party-room #party-joined[data-party-phase="result"] .party-action-dock,
+#pokdle-app #screen-party-room #party-joined[data-party-phase="complete"] .party-action-dock {
+  border-color: color-mix(in srgb, var(--party-accent) 40%, var(--ui-line));
+  background: color-mix(in srgb, var(--party-tint) 45%, var(--ui-surface));
+}
+
+@media (max-width: 800px) {
+  #pokdle-app #screen-party-room #party-joined[data-party-phase="setup"] .party-roster {
+    order: -1;
+  }
+  #pokdle-app #screen-party-room .party-action-dock.has-primary-action {
+    position: sticky;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    z-index: 55;
+    box-shadow: 0 12px 30px rgb(20 35 65 / 20%);
+    backdrop-filter: blur(10px);
+  }
+  body.mobile-keyboard-open #pokdle-app #screen-party-room .party-action-dock.has-primary-action {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 560px) {
+  #pokdle-app #screen-party-room .party-room-head {
+    margin-bottom: 10px;
+    padding: 10px;
+  }
+  #pokdle-app #screen-party-room .party-room-layout {
+    gap: 10px;
+  }
+  #pokdle-app #screen-party-room .party-play-area {
+    gap: 10px;
+  }
+  #pokdle-app #screen-party-room .party-roster {
+    padding: 11px 9px;
+    border-radius: 14px;
+  }
+  #pokdle-app #screen-party-room #party-joined[data-party-phase="setup"] .party-roster-tip {
+    display: none;
+  }
+  #pokdle-app #screen-party-room .party-mode-select {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  #pokdle-app #screen-party-room .party-mode-tile {
+    min-height: 86px;
+    padding: 8px 4px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    text-align: center;
+    border-radius: 12px;
+  }
+  #pokdle-app #screen-party-room .party-mode-tile .pmt-emoji {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    margin: 0 auto;
+    font-size: 1rem;
+    border-radius: 9px;
+  }
+  #pokdle-app #screen-party-room .party-mode-tile .pmt-text {
+    width: 100%;
+    align-items: center;
+  }
+  #pokdle-app #screen-party-room .party-mode-tile .pmt-text b {
+    font-size: .63rem;
+    line-height: 1.18;
+  }
+  #pokdle-app #screen-party-room .party-mode-tile .pmt-tag,
+  #pokdle-app #screen-party-room .party-mode-tile .pmt-text > span {
+    display: none;
+  }
+  #pokdle-app #screen-party-room .party-mode-tile .pmt-check {
+    right: 5px;
+    top: 4px;
+    font-size: .7rem;
+  }
+  #pokdle-app #screen-party-room .party-mode-hint {
+    margin: 8px 0 10px;
+    padding: 9px 10px;
+    font-size: .69rem;
+    line-height: 1.45;
+  }
+  #pokdle-app #screen-party-room .party-options-disclosure {
+    margin-top: 6px;
+    border-radius: 12px;
+  }
+  #pokdle-app #screen-party-room .party-options-disclosure > summary {
+    min-height: 46px;
+    padding: 8px 10px;
+    gap: 7px;
+  }
+  #pokdle-app #screen-party-room .party-options-disclosure > summary > span {
+    font-size: .7rem;
+  }
+  #pokdle-app #screen-party-room .party-options-disclosure > summary > b {
+    font-size: .6rem;
+  }
+  #pokdle-app #screen-party-room .party-options-disclosure > summary::after {
+    flex-basis: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  #pokdle-app #screen-party-room .party-options-disclosure .party-options {
+    padding: 9px 10px 10px;
+    gap: 10px;
+  }
+  #pokdle-app #screen-party-room .party-mode-label {
+    margin-bottom: 5px;
+    font-size: .66rem;
+  }
+  #pokdle-app #screen-party-room .party-option-buttons {
+    gap: 4px;
+  }
+  #pokdle-app #screen-party-room .party-option-buttons button {
+    min-height: 42px;
+    padding: 6px 9px;
+    font-size: .72rem;
+  }
+  #pokdle-app #screen-party-room .party-action-dock {
+    flex-direction: row;
+    align-items: center;
+    padding: 9px 10px;
+    gap: 8px;
+    border-radius: 13px;
+  }
+  #pokdle-app #screen-party-room .party-action-copy {
+    flex: 1;
+  }
+  #pokdle-app #screen-party-room .party-action-copy #party-launch-note {
+    text-align: left;
+    font-size: .65rem;
+    line-height: 1.3;
+  }
+  #pokdle-app #screen-party-room .party-action-buttons {
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+  #pokdle-app #screen-party-room .party-action-buttons button {
+    width: auto !important;
+    min-height: 44px;
+    padding: 8px 10px !important;
+    font-size: .68rem !important;
+    white-space: nowrap;
+  }
+  #pokdle-app #screen-party-room .party-action-buttons #party-change-game-btn:not(.hidden) + #party-room-next-btn:not(.hidden),
+  #pokdle-app #screen-party-room .party-action-buttons #party-change-game-btn:not(.hidden) ~ #party-room-next-btn:not(.hidden) {
+    min-width: 0;
+  }
+}
