@@ -3377,3 +3377,445 @@
 #pokdle-app.design-refresh #screen-game #btn-submit.btn-blue:not(:disabled):hover {
   background:#1e52bc !important;
 }
+
+
+/* =====================================================================
+   D3 — profile density: compact records and progressive disclosure
+   ===================================================================== */
+#pokdle-app.design-refresh #screen-profile > .card {
+  max-width:1120px;
+  margin-inline:auto;
+}
+#pokdle-app.design-refresh #screen-profile .profile-layout {
+  align-items:start;
+  gap:12px;
+  margin-top:12px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-panel {
+  border-color:var(--ui-line);
+  background:var(--ui-surface);
+  box-shadow:none;
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure {
+  margin-top:12px;
+  padding:0 !important;
+  overflow:hidden;
+}
+#pokdle-app.design-refresh #screen-profile .profile-layout .profile-disclosure {
+  margin-top:0;
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure > summary {
+  position:relative;
+  min-height:52px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px 14px;
+  padding:12px 42px 12px 15px;
+  list-style:none;
+  cursor:pointer;
+  color:var(--ui-ink);
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure > summary::-webkit-details-marker {
+  display:none;
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure > summary::after {
+  content:"+";
+  position:absolute;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:var(--ui-soft);
+  color:var(--ui-accent);
+  font-size:1rem;
+  font-weight:900;
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure[open] > summary::after {
+  content:"−";
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure > summary > span {
+  min-width:0;
+  font-size:.9rem;
+  font-weight:850;
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure > summary > small {
+  min-width:0;
+  color:var(--ui-muted);
+  font-size:.7rem;
+  font-weight:650;
+  text-align:right;
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure-body {
+  padding:14px 15px 15px;
+  border-top:1px solid var(--ui-line);
+}
+#pokdle-app.design-refresh #screen-profile .profile-disclosure-body.profile-summary-grid {
+  margin-top:0;
+  gap:12px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-summary-block {
+  min-width:0;
+}
+#pokdle-app.design-refresh #screen-profile .profile-summary-block > h3 {
+  margin:0 0 10px;
+  color:var(--ui-ink);
+  font-size:.78rem;
+  letter-spacing:.02em;
+}
+#pokdle-app.design-refresh #screen-profile .profile-achievements-summary {
+  margin-top:0;
+}
+#pokdle-app.design-refresh #screen-profile .profile-recent-achievements {
+  gap:7px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-achievement-item {
+  padding:9px 10px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-achievement-item strong {
+  font-size:.76rem;
+}
+#pokdle-app.design-refresh #screen-profile .profile-achievement-item :is(span,small) {
+  font-size:.68rem;
+}
+#pokdle-app.design-refresh #screen-profile .profile-mode-records {
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:7px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-record-card {
+  min-width:0;
+  gap:8px;
+  padding:9px 10px !important;
+  border-radius:11px;
+  box-shadow:none !important;
+}
+#pokdle-app.design-refresh #screen-profile .profile-record-card:hover {
+  transform:none;
+}
+#pokdle-app.design-refresh #screen-profile .profile-record-icon {
+  font-size:22px !important;
+}
+#pokdle-app.design-refresh #screen-profile .profile-record-card b {
+  color:var(--ui-ink);
+  font-size:.72rem;
+  line-height:1.25;
+}
+#pokdle-app.design-refresh #screen-profile .profile-record-card div > span {
+  color:var(--ui-muted);
+  font-size:.66rem;
+  line-height:1.25;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-shell {
+  display:grid;
+  gap:9px;
+  margin-top:10px;
+  padding:10px;
+  border:1px solid color-mix(in srgb,var(--ui-accent) 22%,var(--ui-line));
+  border-radius:13px;
+  background:var(--ui-accent-soft);
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-head > div {
+  min-width:0;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-head > div > span {
+  display:block;
+  color:var(--ui-ink);
+  font-size:.78rem;
+  font-weight:850;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-head > div > small {
+  display:block;
+  margin-top:2px;
+  color:var(--ui-muted);
+  font-size:.64rem;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-head label {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:var(--ui-muted);
+  font-size:.65rem;
+  font-weight:750;
+  white-space:nowrap;
+}
+#pokdle-app.design-refresh #screen-profile #profile-score-attack-gen {
+  min-height:40px;
+  padding:7px 30px 7px 9px;
+  border:1px solid var(--ui-line);
+  border-radius:9px;
+  background:var(--ui-surface);
+  color:var(--ui-ink);
+  font:inherit;
+  font-size:.72rem;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-card {
+  display:grid;
+  grid-template-columns:minmax(90px,1fr) auto auto auto;
+  align-items:center;
+  gap:8px 12px;
+  padding:9px 10px;
+  border:1px solid var(--ui-line);
+  border-radius:10px;
+  background:var(--ui-surface);
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-card > div span {
+  display:block;
+  color:var(--ui-ink);
+  font-size:.74rem;
+  font-weight:850;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-card > div small,
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-best-note {
+  display:block;
+  color:var(--ui-muted);
+  font-size:.62rem;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-card > strong {
+  color:var(--ui-accent);
+  font:900 1.35rem Nunito,sans-serif;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-unit {
+  color:var(--ui-muted);
+  font-size:.62rem;
+  font-weight:750;
+}
+#pokdle-app.design-refresh #screen-profile .profile-score-attack-best {
+  padding:4px 7px;
+  border-radius:99px;
+  background:#fff0c4;
+  color:#795009;
+  font-size:.58rem;
+  white-space:nowrap;
+}
+#pokdle-app.design-refresh.theme-dark #screen-profile .profile-score-attack-best {
+  background:#403922;
+  color:#ffdf8d;
+}
+#pokdle-app.design-refresh #screen-profile .profile-h2h-records {
+  gap:7px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-h2h-card {
+  padding:10px 12px;
+  border-radius:11px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-management {
+  margin-top:12px;
+}
+#pokdle-app.design-refresh #screen-profile .profile-management summary {
+  min-height:44px;
+}
+
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-profile > .card {
+    padding:10px !important;
+  }
+  #pokdle-app.design-refresh #screen-profile > .card > .card-desc {
+    margin:0 2px 10px !important;
+    font-size:.72rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-view-switch {
+    margin:10px 0 12px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-stats-links {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;
+    margin-bottom:10px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-stats-links button {
+    min-width:0;
+    min-height:42px;
+    padding:6px 4px !important;
+    font-size:.61rem !important;
+    line-height:1.2;
+    white-space:normal;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card {
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:10px !important;
+    margin-bottom:10px !important;
+    padding:12px !important;
+    border-radius:16px !important;
+    text-align:left !important;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-avatar {
+    width:68px;
+    height:68px;
+    border-width:3px;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-avatar img {
+    width:58px;
+    height:58px;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-main {
+    align-items:flex-start !important;
+    gap:4px;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-eyebrow {
+    font-size:.55rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-name {
+    font-size:1.08rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-title {
+    align-self:flex-start !important;
+    padding:2px 7px;
+    font-size:.62rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-bar {
+    width:100%;
+    height:6px;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-chips {
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:4px;
+    margin-top:1px;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-chip {
+    min-width:0;
+    padding:3px 5px;
+    font-size:.55rem;
+    line-height:1.2;
+    text-align:center;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-photo-actions {
+    width:100%;
+    justify-content:flex-start;
+    gap:4px;
+    margin-top:3px;
+  }
+  #pokdle-app.design-refresh #screen-profile .trainer-card-photo-action {
+    min-height:34px;
+    padding:4px 8px;
+    font-size:.58rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-layout {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:8px;
+    margin-top:8px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-panel {
+    padding:11px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure {
+    margin-top:8px;
+    padding:0 !important;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure > summary {
+    min-height:48px;
+    padding:9px 38px 9px 11px;
+    grid-template-columns:minmax(0,1fr);
+    gap:2px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure > summary::after {
+    right:10px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure > summary > span {
+    font-size:.78rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure > summary > small {
+    font-size:.61rem;
+    text-align:left;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure-body {
+    padding:10px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-progress-panel h3 {
+    margin-bottom:8px;
+    font-size:.82rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-level-card {
+    flex-direction:row !important;
+    align-items:center !important;
+    margin-bottom:8px;
+    font-size:.72rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-stat-grid,
+  #pokdle-app.design-refresh #screen-profile .profile-achievements-summary {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:6px !important;
+    margin-top:8px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card {
+    padding:7px 8px !important;
+    gap:2px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card span {
+    font-size:.62rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card b {
+    font-size:.88rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure-body.profile-summary-grid {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:12px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-mode-records {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:5px !important;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-record-card {
+    align-items:flex-start;
+    gap:6px;
+    padding:7px !important;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-record-icon {
+    font-size:18px !important;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-record-card b {
+    font-size:.63rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-record-card div > span {
+    font-size:.58rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-shell {
+    margin-top:7px;
+    padding:8px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-head {
+    gap:7px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-head > div > span {
+    font-size:.7rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-head > div > small {
+    font-size:.57rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-head label {
+    font-size:0;
+  }
+  #pokdle-app.design-refresh #screen-profile #profile-score-attack-gen {
+    min-height:42px;
+    font-size:.68rem;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-card {
+    grid-template-columns:minmax(76px,1fr) auto auto;
+    gap:5px 8px;
+    padding:7px 8px;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-best,
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-best-note {
+    grid-column:1 / -1;
+    justify-self:start;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-h2h-records {
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+  #pokdle-app.design-refresh #screen-profile .profile-management {
+    margin-top:8px;
+    padding-top:6px;
+  }
+}

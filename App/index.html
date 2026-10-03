@@ -381,22 +381,24 @@
           <button type="button" class="album-secret-link" data-action="openSecretJournal">✦ Les rencontres secrètes ont leur propre carnet. Ouvrir les secrets →</button>
         </section>
         <div class="profile-layout">
-          <section class="profile-panel">
-            <h3>Identité</h3>
-            <label class="profile-field">
-              <span>Pseudo</span>
-              <input id="profile-nickname" type="text" maxlength="24" placeholder="Entre ton pseudo..." autocomplete="off" />
-            </label>
-            <label class="profile-field">
-              <span>Mon partenaire</span>
-              <input id="profile-favorite-input" type="text" list="profile-favorite-options" placeholder="Cherche ton partenaire…" aria-describedby="profile-save-msg" autocomplete="off" />
-              <datalist id="profile-favorite-options"></datalist>
-            </label>
-            <p id="profile-save-msg" class="card-desc hidden">Profil enregistré.</p>
-            <div id="profile-favorite-card" class="profile-favorite-card"></div>
-          </section>
+          <details class="profile-panel profile-disclosure profile-identity-panel" data-profile-mobile-collapse>
+            <summary><span>Identité & partenaire</span><small>Modifier mon pseudo et mon Pokémon partenaire</small></summary>
+            <div class="profile-disclosure-body">
+              <label class="profile-field">
+                <span>Pseudo</span>
+                <input id="profile-nickname" type="text" maxlength="24" placeholder="Entre ton pseudo..." autocomplete="off" />
+              </label>
+              <label class="profile-field">
+                <span>Mon partenaire</span>
+                <input id="profile-favorite-input" type="text" list="profile-favorite-options" placeholder="Cherche ton partenaire…" aria-describedby="profile-save-msg" autocomplete="off" />
+                <datalist id="profile-favorite-options"></datalist>
+              </label>
+              <p id="profile-save-msg" class="card-desc hidden">Profil enregistré.</p>
+              <div id="profile-favorite-card" class="profile-favorite-card"></div>
+            </div>
+          </details>
 
-          <section class="profile-panel">
+          <section class="profile-panel profile-progress-panel">
             <h3>Progression</h3>
             <div class="profile-level-card">
               <div>
@@ -417,26 +419,44 @@
           </section>
         </div>
 
-        <div class="profile-summary-grid">
-          <section class="profile-panel">
-            <h3>Succès</h3>
-            <div id="profile-achievements-summary" class="profile-achievements-summary"></div>
-          </section>
-          <section class="profile-panel">
-            <h3>Derniers succès débloqués</h3>
-            <div id="profile-recent-achievements" class="profile-recent-achievements"></div>
-          </section>
-        </div>
+        <details class="profile-panel profile-disclosure profile-achievements-panel" data-profile-mobile-collapse>
+          <summary><span>🏅 Succès</span><small id="profile-achievements-summary-label">Progression et derniers déblocages</small></summary>
+          <div class="profile-disclosure-body profile-summary-grid">
+            <section class="profile-summary-block">
+              <h3>Vue d’ensemble</h3>
+              <div id="profile-achievements-summary" class="profile-achievements-summary"></div>
+            </section>
+            <section class="profile-summary-block">
+              <h3>Derniers succès débloqués</h3>
+              <div id="profile-recent-achievements" class="profile-recent-achievements"></div>
+            </section>
+          </div>
+        </details>
 
-        <section class="profile-panel profile-records-panel">
-          <h3>🏆 Records par mode</h3>
-          <div id="profile-mode-records" class="profile-mode-records"></div>
-        </section>
+        <details class="profile-panel profile-records-panel profile-disclosure" data-profile-mobile-collapse>
+          <summary><span>🏆 Records par mode</span><small id="profile-records-summary">Tes meilleurs scores</small></summary>
+          <div class="profile-disclosure-body">
+            <div id="profile-mode-records" class="profile-mode-records"></div>
+            <section class="profile-score-attack-shell" aria-label="Record Score Attack par génération">
+              <div class="profile-score-attack-head">
+                <div><span>🎯 Score Attack</span><small>Un seul record affiché à la fois</small></div>
+                <label>Génération
+                  <select id="profile-score-attack-gen" data-change-action="profileScoreAttackGenerationFromEl" aria-label="Génération du record Score Attack">
+                    <option value="1">Gen 1</option><option value="2">Gen 2</option><option value="3">Gen 3</option>
+                    <option value="4">Gen 4</option><option value="5">Gen 5</option><option value="6">Gen 6</option>
+                    <option value="7">Gen 7</option><option value="8">Gen 8</option><option value="9">Gen 9</option>
+                  </select>
+                </label>
+              </div>
+              <div id="profile-score-attack-record" class="profile-score-attack-record"></div>
+            </section>
+          </div>
+        </details>
 
-        <section class="profile-panel profile-records-panel">
-          <h3>⚔️ Bilans 1v1 contre tes amis</h3>
-          <div id="profile-h2h-records" class="profile-h2h-records"></div>
-        </section>
+        <details class="profile-panel profile-records-panel profile-disclosure" data-profile-mobile-collapse>
+          <summary><span>⚔️ Bilans 1v1 contre tes amis</span><small id="profile-h2h-summary">Tes duels Score Attack</small></summary>
+          <div class="profile-disclosure-body"><div id="profile-h2h-records" class="profile-h2h-records"></div></div>
+        </details>
         <details class="profile-records-panel profile-management"><summary>Gérer ma progression</summary><p>Effacer le profil et les données de jeu sur cet appareil.</p><button class="btn-ghost" type="button" data-action="confirmResetProgression">🗑️ Réinitialiser</button></details>
       </div>
     </div>

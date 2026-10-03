@@ -1556,6 +1556,56 @@ function recordMatchHistory(entry) {
   discoverFromHistory(matchHistory[0]);
 }
 
+let profileScoreAttackGeneration = 1;
+
+function renderProfileScoreAttackRecord() {
+  const select = document.getElementById("profile-score-attack-gen");
+  const wrap = document.getElementById("profile-score-attack-record");
+  if (!select || !wrap) return;
+
+  const records = playerProfile?.draftScoreAttackRecords || {};
+  const playedGenerations = Array.from({ length: 9 }, (_, i) => i + 1)
+    .filter((gen) => (Number(records[gen]) || 0) > 0);
+
+  if (!Number.isInteger(profileScoreAttackGeneration) || profileScoreAttackGeneration < 1 || profileScoreAttackGeneration > 9) {
+    profileScoreAttackGeneration = playedGenerations[0] || 1;
+  }
+  if (!playedGenerations.includes(profileScoreAttackGeneration) && playedGenerations.length && !select.dataset.userPicked) {
+    profileScoreAttackGeneration = playedGenerations[0];
+  }
+
+  select.value = String(profileScoreAttackGeneration);
+  const score = Number(records[profileScoreAttackGeneration]) || 0;
+  const bestScore = Math.max(0, ...Array.from({ length: 9 }, (_, i) => Number(records[i + 1]) || 0));
+  const bestGeneration = bestScore > 0
+    ? Array.from({ length: 9 }, (_, i) => i + 1).find((gen) => (Number(records[gen]) || 0) === bestScore)
+    : null;
+  const isBest = score > 0 && score === bestScore;
+
+  wrap.innerHTML = `
+    <article class="profile-score-attack-card${isBest ? " is-best" : ""}">
+      <div><span>Gen ${profileScoreAttackGeneration}</span><small>${score > 0 ? "Record personnel" : "Pas encore joué"}</small></div>
+      <strong>${score > 0 ? score : "—"}</strong>
+      <span class="profile-score-attack-unit">BST moyen</span>
+      ${isBest ? '<b class="profile-score-attack-best">Meilleur record</b>' : (bestGeneration ? `<small class="profile-score-attack-best-note">Meilleur : Gen ${bestGeneration} · ${bestScore}</small>` : "")}
+    </article>`;
+}
+
+window.profileScoreAttackGenerationFromEl = function () {
+  const next = Number(this.value);
+  if (Number.isInteger(next) && next >= 1 && next <= 9) profileScoreAttackGeneration = next;
+  this.dataset.userPicked = "1";
+  renderProfileScoreAttackRecord();
+};
+
+function initProfileDisclosureState() {
+  document.querySelectorAll("#screen-profile [data-profile-mobile-collapse]").forEach((details) => {
+    if (details.dataset.profileDisclosureReady) return;
+    details.open = window.innerWidth > 640;
+    details.dataset.profileDisclosureReady = "1";
+  });
+}
+
 function renderProfileScreen() {
   evaluateAchievements();
   const nicknameInput = document.getElementById("profile-nickname");
@@ -1634,6 +1684,8 @@ function renderProfileScreen() {
       <div class="profile-stat-card"><span>Débloqués</span><b>${unlockedCount}</b></div>
       <div class="profile-stat-card"><span>Total</span><b>${ACHIEVEMENT_DEFS.length}</b></div>
     `;
+    const achLabel = document.getElementById("profile-achievements-summary-label");
+    if (achLabel) achLabel.textContent = `${unlockedCount}/${ACHIEVEMENT_DEFS.length} débloqués`;
   }
 
   if (recentWrap) {
@@ -1680,19 +1732,19 @@ function renderProfileScreen() {
     if (weightSerie > 0) {
       records.push({ icon: "⚖️", label: "Duel de poids", value: `${weightSerie} d'affilée`, color: "blue" });
     }
-    // Score Attack par gen
     const saRecords = playerProfile.draftScoreAttackRecords || {};
-    for (const gen of Object.keys(saRecords)) {
-      const val = Number(saRecords[gen]) || 0;
-      if (val > 0) {
-        records.push({ icon: "🎯", label: `Score Attack Gen ${gen}`, value: `${val} BST moyen`, color: "gold" });
-      }
-    }
+    const scoreAttackCount = Array.from({ length: 9 }, (_, i) => Number(saRecords[i + 1]) || 0).filter((value) => value > 0).length;
     if (records.length) {
       modeRecordsWrap.innerHTML = records.map((r) => `<div class="profile-record-card is-${r.color}"><span class="profile-record-icon">${r.icon}</span><div><b>${escapeHtml(r.label)}</b><span>${escapeHtml(r.value)}</span></div></div>`).join("");
     } else {
-      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record. Joue à Higher or Lower, Score Attack, Speedrun, Quiz ou Party Pokémon pour battre tes premiers scores !</p>';
+      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record hors Score Attack. Joue à Higher or Lower, Speedrun, Quiz, Intrus, Duel de poids ou Party Pokémon.</p>';
     }
+    const recordsSummary = document.getElementById("profile-records-summary");
+    const recordCount = records.length + scoreAttackCount;
+    if (recordsSummary) recordsSummary.textContent = recordCount
+      ? `${recordCount} record${recordCount > 1 ? "s" : ""} · Score Attack par génération`
+      : "Tes meilleurs scores";
+    renderProfileScoreAttackRecord();
   }
 
   // Bilans head-to-head
@@ -1712,8 +1764,14 @@ function renderProfileScreen() {
     } else {
       h2hWrap.innerHTML = '<p class="card-desc">Aucun duel Score Attack 1v1 encore. Crée une room pour défier un ami.</p>';
     }
+    const h2hSummary = document.getElementById("profile-h2h-summary");
+    const duelCount = opponents.reduce((sum, opp) => sum + opp.wins + opp.losses + opp.draws, 0);
+    if (h2hSummary) h2hSummary.textContent = duelCount
+      ? `${duelCount} duel${duelCount > 1 ? "s" : ""} contre ${opponents.length} adversaire${opponents.length > 1 ? "s" : ""}`
+      : "Tes duels Score Attack";
   }
 
+  initProfileDisclosureState();
   if (saveMsg) saveMsg.classList.add("hidden");
 }
 
