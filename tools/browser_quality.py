@@ -267,6 +267,23 @@ def main():
      expect('530' in page.locator('#profile-score-attack-record').inner_text(),'Score Attack generation selector did not update the visible record')
      return screen('screen-profile')
     check('d3-profile-density',d3_profile_density)
+    def final_history_density():
+     if width<1280: return {'skipped':'desktop-only'}
+     page.evaluate("""() => {
+       openMatchHistoryScreen();
+       document.getElementById('match-history-list').innerHTML=Array.from({length:4},(_,i)=>
+         '<article class="match-history-item"><div class="match-history-main"><b>Partie '+(i+1)+'</b><span>Recette desktop</span></div></article>'
+       ).join('');
+     }""")
+     history=page.locator('#screen-history #match-history-list')
+     cols=history.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+     expect(cols==2,'Final desktop history is not using two columns: '+str(cols))
+     items=history.locator('.match-history-item')
+     rects=items.evaluate_all('(els)=>els.slice(0,4).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,w:e.getBoundingClientRect().width}))')
+     expect(len(rects)==4 and abs(rects[0]['y']-rects[1]['y'])<3 and rects[2]['y']>rects[0]['y'],'Desktop history is not a balanced two-column grid: '+repr(rects))
+     expect(rects[1]['x']>rects[0]['x']+rects[0]['w']-3,'Desktop history second column is not beside the first: '+repr(rects))
+     return screen('screen-history')
+    check('final-history-density',final_history_density)
     def ranking_tool():
      page.evaluate('openRankingMode()');screen('screen-ranking')
      if width<=640:
@@ -308,6 +325,16 @@ def main():
      expect(max(abs(r['y']-gen_rects[0]['y']) for r in gen_rects)<3,'Draft generations do not fit one desktop row: '+repr(gen_rects))
      gens.first.click()
      page.wait_for_timeout(150)
+     draft_options=page.locator('#screen-draft-score-attack #draft-options')
+     option_cols=draft_options.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+     expect(option_cols==(6 if width>=1680 else 3),'Final desktop Score Attack grid is unbalanced: '+str(option_cols))
+     option_cards=draft_options.locator('.draft-option-card:visible')
+     if option_cards.count()>=6:
+      option_rects=option_cards.evaluate_all('(els)=>els.slice(0,6).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
+      if width>=1680:
+       expect(max(abs(r['y']-option_rects[0]['y']) for r in option_rects)<3,'Six Score Attack options should share one row on wide desktop: '+repr(option_rects))
+      else:
+       expect(max(abs(r['y']-option_rects[0]['y']) for r in option_rects[:3])<3 and option_rects[3]['y']>option_rects[0]['y'],'Score Attack options should form a balanced 3x2 grid: '+repr(option_rects))
      picks=page.locator('#draft-mode-card > .draft-panel-picks').bounding_box()
      team=page.locator('#draft-mode-card > .draft-panel-team').bounding_box()
      expect(picks and team and team['x']>picks['x']+picks['width']-3,'Score Attack team is not beside the draft choices: '+repr([picks,team]))
