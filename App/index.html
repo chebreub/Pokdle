@@ -948,6 +948,11 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <button class="btn-ghost" data-action="goToConfig">&#8592; Changer</button>
       </div>
 
+      <div id="classic-banner" class="mode-banner classic-mode-banner hidden">
+        <div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-eye"/></svg></div>
+        <div class="mode-banner-text"><b>Pokémon mystère</b><span class="mode-banner-desc">Croise les indices et trouve la cible en un minimum d'essais.</span></div>
+      </div>
+
       <div id="daily-banner" class="mode-banner hidden">
         <div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-calendar"/></svg></div>
         <div class="mode-banner-text"><b>Pokémon du jour</b><span class="mode-banner-desc">Même cible pour tous les joueurs.</span></div>
@@ -1108,55 +1113,59 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <button id="quiz-next-btn" class="btn-blue hidden" data-action="nextQuizQuestion">Question suivante</button>
         <div id="quiz-history" class="quiz-history"></div>
       </div>
-      <div class="search-bar">
-        <div class="ac-wrapper">
-          <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
-          <div id="guess-ac" class="ac-list hidden"></div>
-        </div>
-        <button class="btn-blue btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
-        <button class="btn-ghost btn-danger-ghost" id="btn-surrender" data-action="surrenderGame">Abandonner</button>
-      </div>
-      <p id="err-msg" class="err-msg"></p>
+      <div class="classic-game-shell">
+        <div class="classic-game-command">
+          <div class="search-bar">
+            <div class="ac-wrapper">
+              <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
+              <div id="guess-ac" class="ac-list hidden"></div>
+            </div>
+            <button class="btn-blue btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
+            <button class="btn-ghost btn-danger-ghost" id="btn-surrender" data-action="surrenderGame">Abandonner</button>
+          </div>
+          <p id="err-msg" class="err-msg"></p>
 
-      <div id="win-box" class="win-box hidden" role="region" aria-live="polite" aria-label="Résultat de la partie">
-        <div class="win-inner">
-          <img id="win-sprite" src="" alt="" class="win-sprite" />
-          <div>
-            <p class="win-title" id="win-title">&#127881; BRAVO !</p>
-            <p id="win-text" class="win-text"></p>
+          <div id="win-box" class="win-box hidden" role="region" aria-live="polite" aria-label="Résultat de la partie">
+            <div class="win-inner">
+              <img id="win-sprite" src="" alt="" class="win-sprite" />
+              <div>
+                <p class="win-title" id="win-title">&#127881; BRAVO !</p>
+                <p id="win-text" class="win-text"></p>
+              </div>
+            </div>
+            <div class="win-btns">
+              <button class="btn-blue result-primary" id="btn-restart" data-action="restartCurrentMode"><svg class="btn-ico"><use href="#i-repeat"/></svg>Rejouer</button>
+              <button class="btn-ghost" id="btn-result-catalog" data-action="openAllModesScreen" data-args='["solo"]'><svg class="btn-ico"><use href="#i-gamepad"/></svg>Choisir un autre jeu</button>
+              <button class="btn-ghost" id="btn-copy-result" data-action="copyResult"><svg class="btn-ico"><use href="#i-copy"/></svg>Copier</button>
+              <button class="btn-ghost" id="btn-share" data-action="shareResult"><svg class="btn-ico"><use href="#i-share"/></svg>Partager</button>
+              <!-- Global display/audio settings remain available in the header. -->
+            </div>
+            <p id="win-next-daily" class="win-next-daily hidden"></p>
+            <div id="win-daily-distribution" class="win-daily-distribution hidden"></div>
+            <p id="share-ok" class="msg-ok hidden">Résultat copié !</p>
           </div>
         </div>
-        <div class="win-btns">
-          <button class="btn-blue result-primary" id="btn-restart" data-action="restartCurrentMode"><svg class="btn-ico"><use href="#i-repeat"/></svg>Rejouer</button>
-          <button class="btn-ghost" id="btn-result-catalog" data-action="openAllModesScreen" data-args='["solo"]'><svg class="btn-ico"><use href="#i-gamepad"/></svg>Choisir un autre jeu</button>
-          <button class="btn-ghost" id="btn-copy-result" data-action="copyResult"><svg class="btn-ico"><use href="#i-copy"/></svg>Copier</button>
-          <button class="btn-ghost" id="btn-share" data-action="shareResult"><svg class="btn-ico"><use href="#i-share"/></svg>Partager</button>
-          <!-- Global display/audio settings remain available in the header. -->
-        </div>
-        <p id="win-next-daily" class="win-next-daily hidden"></p>
-        <div id="win-daily-distribution" class="win-daily-distribution hidden"></div>
-        <p id="share-ok" class="msg-ok hidden">Résultat copié !</p>
-      </div>
 
-      <div id="results-wrap" class="results-wrap hidden">
-        <table id="results-table">
-          <thead>
-            <tr>
-              <th>Pokémon</th>
-              <th>Génération</th>
-              <th>Forme</th>
-              <th>Type 1</th>
-              <th>Type 2</th>
-              <th>Habitat / lieux</th>
-              <th>Couleur</th>
-              <th>Stade</th>
-              <th>Hauteur</th>
-              <th>Poids</th>
-            </tr>
-          </thead>
-          <tbody id="results-body"></tbody>
-        </table>
-        <p class="results-legend">✓ Correspond · ≈ Proche · × Différent<br />↑ Le mystère est plus grand/lourd · ↓ Plus petit/léger</p>
+        <div id="results-wrap" class="results-wrap hidden">
+          <table id="results-table">
+            <thead>
+              <tr>
+                <th>Pokémon</th>
+                <th>Génération</th>
+                <th>Forme</th>
+                <th>Type 1</th>
+                <th>Type 2</th>
+                <th>Habitat / lieux</th>
+                <th>Couleur</th>
+                <th>Stade</th>
+                <th>Hauteur</th>
+                <th>Poids</th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+          <p class="results-legend">✓ Correspond · ≈ Proche · × Différent<br />↑ Le mystère est plus grand/lourd · ↓ Plus petit/léger</p>
+        </div>
       </div>
 
     </div>
