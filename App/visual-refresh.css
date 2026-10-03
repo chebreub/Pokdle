@@ -4019,6 +4019,22 @@
     grid-row:1;
     width:100%;
     min-width:0;
+    position:static;
+    isolation:auto;
+    z-index:auto;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-command > .search-bar #guess-ac.ac-list {
+    left:10px;
+    right:10px;
+    top:calc(100% + 8px);
+    width:auto;
+    min-width:0;
+    max-height:min(360px,46vh);
   }
 
   #pokdle-app.design-refresh #screen-game:is(
