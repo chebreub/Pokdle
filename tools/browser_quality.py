@@ -74,8 +74,13 @@ def main():
     check('catalog-icons',icon_strokes,False)
     def start(action,target):
      nav('game','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["'+action+'"]\']:visible').first.click();page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen(target)
+    def standard_guess_shell():
+     expect(page.locator('#silhouette-box').is_hidden(),'Zoom clue shell leaked into standard gameplay')
+     expect(page.locator('#pixel-box').is_hidden(),'Pixel clue shell leaked into standard gameplay')
+     bg=page.locator('#btn-submit').evaluate('(e)=>getComputedStyle(e).backgroundImage')
+     expect('57, 118, 236' in bg or '57,118,236' in bg,'Primary guess CTA is not using the D0 blue treatment: '+bg)
     def guess():
-     start('startNormalGame','screen-game');page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
+     start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
     def finish():
      if page.locator('#btn-surrender').is_visible(): page.locator('#btn-surrender').click()
@@ -86,7 +91,7 @@ def main():
      return screen('screen-game')
     check('normal-result',finish)
     def daily_finish():
-     start('startDailyGame','screen-game')
+     start('startDailyGame','screen-game');standard_guess_shell()
      name=page.evaluate('secretPokemon.name');page.locator('#guess-input').fill(name);page.locator('#btn-submit').click()
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
      expect('Continuer en illimité' in page.locator('#btn-restart').inner_text(),'Daily result does not explain the next game')
