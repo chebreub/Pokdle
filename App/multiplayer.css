@@ -205,7 +205,7 @@ body:not(.theme-dark) .multiplayer-results-table td:first-child .poke-cell {
   gap: 10px;
 }
 
-.multiplayer-actions-grid > .btn-red,
+.multiplayer-actions-grid > .btn-blue,
 .multiplayer-join-row > .btn-blue {
   min-height: 52px;
   box-shadow: 0 16px 28px rgba(20, 45, 86, 0.12);
@@ -462,7 +462,7 @@ body.theme-dark #multiplayer-guess-input::placeholder {
   font-weight: 800;
 }
 
-.multiplayer-actions-grid > .btn-red,
+.multiplayer-actions-grid > .btn-blue,
 .multiplayer-join-row > .btn-blue {
   border-radius: 16px;
 }
