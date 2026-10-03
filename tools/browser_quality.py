@@ -17,7 +17,7 @@ def main():
   else: raise RuntimeError('QA server did not start')
   with sync_playwright() as pw:
    browser=pw.chromium.launch()
-   for width,height in [(360,800),(390,844),(768,1024),(1366,900),(1920,1080)]:
+   for width,height in [(360,800),(390,844),(768,1024),(1366,900),(1920,1080),(2560,1440)]:
     ctx=browser.new_context(viewport={'width':width,'height':height},reduced_motion='reduce');page=ctx.new_page();page.set_default_timeout(12000);errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     def expect(value,message):
@@ -47,6 +47,25 @@ def main():
      page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"',timeout=20000)
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
     check('home',boot);check('catalog',lambda:nav('game','screen-all-modes'))
+    def pc0_desktop_foundations():
+     if width<1101: return {'skipped':'desktop-only'}
+     page.evaluate("goToConfig()");screen('screen-config')
+     shell=page.locator('main').evaluate('(e)=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,padLeft:parseFloat(getComputedStyle(e).paddingLeft),padRight:parseFloat(getComputedStyle(e).paddingRight)}}')
+     header=page.locator('.header-inner').evaluate('(e)=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width}}')
+     expect(abs(shell['left']-(width-shell['right']))<3,'Desktop main shell is not centered: '+repr(shell))
+     expect(abs(header['left']-shell['left'])<3 and abs(header['right']-shell['right'])<3,'Header and main desktop shells are not aligned: '+repr([header,shell]))
+     if width>=1920: expect(shell['width']>=1550,'Desktop shell still too narrow at 1920+: '+repr(shell))
+     if width>=2200: expect(1700<=shell['width']<=1780,'Ultra-wide shell escaped its deliberate content cap: '+repr(shell))
+     nav('game','screen-all-modes')
+     grid=page.locator('#screen-all-modes .all-modes-grid').first
+     cols=grid.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+     expect(cols==4,'Desktop catalog should keep four deliberate columns: '+str(cols))
+     cards=grid.locator('.all-modes-card:visible')
+     if cards.count():
+      widths=cards.evaluate_all('(els)=>els.slice(0,4).map(e=>e.getBoundingClientRect().width)')
+      expect(min(widths)>=250,'Desktop catalog cards are still undersized: '+repr(widths))
+     return screen('screen-all-modes')
+    check('pc0-desktop-foundations',pc0_desktop_foundations)
     def search():
      page.locator('#mode-search').fill('cri');page.wait_for_timeout(150);cards=page.locator('#screen-all-modes .all-modes-card:visible');expect(cards.count()>0,'No search result');expect(any(t.strip()=='Cri' for t in page.locator('#screen-all-modes .all-modes-card:visible > b').all_text_contents()),'Cri missing');page.locator('#mode-search').fill('');return screen('screen-all-modes')
     check('search',search)
