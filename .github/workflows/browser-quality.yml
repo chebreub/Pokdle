@@ -53,7 +53,7 @@ jobs:
           npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }
           tail -12 ../quality-artifacts/unit-tests.log
         working-directory: App
-      - name: Verify browser journeys at five viewport widths
+      - name: Verify browser journeys at six viewport widths
         run: python tools/browser_quality.py --output quality-artifacts/browser
       - name: Verify an actual two-browser Party Room game
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer

@@ -3819,3 +3819,125 @@
     padding-top:6px;
   }
 }
+
+
+/* PC0 — desktop foundations: wider shell, aligned chrome, deliberate wide-screen density. */
+@media (min-width:1101px) {
+  #pokdle-app.design-refresh {
+    --desktop-shell-max: 1600px;
+    --desktop-shell-gutter: clamp(28px, 2.6vw, 44px);
+  }
+
+  #pokdle-app.design-refresh main {
+    width:100%;
+    max-width:var(--desktop-shell-max);
+    padding:30px var(--desktop-shell-gutter) 46px;
+    gap:24px;
+  }
+
+  #pokdle-app.design-refresh .header-inner {
+    width:100% !important;
+    max-width:var(--desktop-shell-max) !important;
+    padding-inline:var(--desktop-shell-gutter) !important;
+  }
+
+  #pokdle-app.design-refresh .site-footer {
+    width:calc(100% - (2 * var(--desktop-shell-gutter)));
+    max-width:calc(var(--desktop-shell-max) - (2 * var(--desktop-shell-gutter)));
+    margin-inline:auto;
+    padding-inline:18px;
+  }
+
+  #pokdle-app.design-refresh main > [id^="screen-"] {
+    width:100%;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh :is(
+    #screen-config,
+    #screen-all-modes,
+    #screen-game,
+    #screen-party-room,
+    #screen-profile,
+    #screen-draft-score-attack,
+    #screen-draft-arena,
+    #screen-poke-connections,
+    #screen-speedrun,
+    #screen-type-combo
+  ) {
+    width:100%;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .mode-hub {
+    padding:26px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:14px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art {
+    min-height:112px;
+    padding:16px 94px 16px 16px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .mode-card-art {
+    width:74px;
+    height:66px;
+    right:12px;
+  }
+
+  #pokdle-app.design-refresh .gameplay-screen-card > .card-desc {
+    max-width:88ch;
+  }
+}
+
+@media (min-width:1680px) {
+  #pokdle-app.design-refresh {
+    --desktop-shell-max: 1720px;
+    --desktop-shell-gutter: clamp(36px, 2.8vw, 52px);
+  }
+
+  #pokdle-app.design-refresh main {
+    padding-top:34px;
+    padding-bottom:52px;
+  }
+
+  #pokdle-app.design-refresh #screen-config {
+    gap:32px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-config .pk-hero {
+    padding:36px 46px;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-grid {
+    gap:16px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art {
+    min-height:118px;
+    padding-left:18px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-all-modes .mode-card-art {
+    width:80px;
+    height:70px;
+  }
+
+  #pokdle-app.design-refresh .ranking-head {
+    padding:18px 20px !important;
+  }
+}
+
+@media (min-width:2200px) {
+  #pokdle-app.design-refresh {
+    --desktop-shell-max: 1760px;
+  }
+
+  #pokdle-app.design-refresh main {
+    padding-top:38px;
+  }
+}
