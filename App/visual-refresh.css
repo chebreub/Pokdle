@@ -4798,3 +4798,306 @@
     min-height:420px;
   }
 }
+
+
+/* PC4 — desktop Draft, Party, Profile and final density pass. */
+@media (min-width:1280px) {
+  /* Draft — one desktop cockpit for Arena and Score Attack. */
+  #pokdle-app.design-refresh :is(
+    #screen-draft-arena,
+    #screen-draft-score-attack
+  ) #draft-mode-card {
+    width:100%;
+    max-width:1480px !important;
+    margin-inline:auto;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-mode-card {
+    display:grid !important;
+    grid-template-columns:minmax(0,1.65fr) minmax(330px,.82fr);
+    gap:12px 16px !important;
+    align-items:start;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-score-attack.is-mode-score-attack #draft-mode-card {
+    grid-template-columns:minmax(0,1.7fr) minmax(340px,.82fr) !important;
+    gap:12px 16px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-mode-card > * {
+    grid-column:1 / -1;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-mode-card > .draft-panel-picks,
+  #pokdle-app.design-refresh #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-picks {
+    grid-column:1;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-mode-card > .draft-panel-team,
+  #pokdle-app.design-refresh #screen-draft-score-attack.is-mode-score-attack #draft-mode-card > .draft-panel-team {
+    grid-column:2;
+    min-width:0;
+    align-self:start;
+    position:sticky;
+    top:92px;
+  }
+
+  #pokdle-app.design-refresh :is(
+    #screen-draft-arena,
+    #screen-draft-score-attack
+  ) .draft-panel-gen {
+    padding:12px 14px !important;
+  }
+
+  #pokdle-app.design-refresh :is(
+    #screen-draft-arena,
+    #screen-draft-score-attack
+  ) .draft-gen-buttons {
+    display:grid !important;
+    grid-template-columns:repeat(9,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+
+  #pokdle-app.design-refresh :is(
+    #screen-draft-arena,
+    #screen-draft-score-attack
+  ) .draft-gen-btn {
+    min-width:0;
+    min-height:42px;
+    padding:7px 4px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-options {
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-team,
+  #pokdle-app.design-refresh #screen-draft-score-attack.is-mode-score-attack #draft-team {
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena .draft-option-card {
+    min-height:188px;
+  }
+
+  #pokdle-app.design-refresh #screen-draft-arena #draft-result-wrap {
+    grid-column:1 / -1 !important;
+  }
+
+  /* Party Room — denser host setup without turning cards into tiny tiles. */
+  #pokdle-app.design-refresh #screen-party-room .party-room-card {
+    width:100%;
+    max-width:1500px;
+    margin-inline:auto;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-lobby {
+    max-width:1240px;
+    grid-template-columns:minmax(360px,.9fr) minmax(0,1.1fr);
+    gap:56px;
+    padding:38px 44px;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-joined {
+    padding:22px 26px 26px;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-room-layout {
+    grid-template-columns:minmax(0,1fr) 330px;
+    gap:20px;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-mode-select {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:9px;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-mode-tile {
+    min-height:94px;
+    padding:13px 28px 13px 12px;
+    gap:10px;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .pmt-emoji {
+    width:38px;
+    height:40px;
+    flex-basis:38px;
+    font-size:1.4rem;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .pmt-text b {
+    font-size:.86rem;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .pmt-text > span {
+    font-size:.68rem;
+    line-height:1.35;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-options-disclosure .party-options {
+    display:grid;
+    grid-template-columns:minmax(250px,.7fr) minmax(0,1.3fr);
+    gap:14px 20px;
+    align-items:start;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-roster {
+    position:sticky;
+    top:92px;
+    max-height:calc(100vh - 118px);
+    overflow:auto;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-round {
+    padding:24px 30px;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-round-sprite {
+    width:190px;
+    height:190px;
+  }
+
+  /* Profile — wide dashboard rather than a mobile-width stack on desktop. */
+  #pokdle-app.design-refresh #screen-profile > .card {
+    width:100%;
+    max-width:1360px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-stats-links {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    margin-bottom:14px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-stats-links button {
+    min-height:44px;
+    justify-content:center;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card {
+    min-height:178px;
+    gap:24px;
+    padding:22px 28px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-avatar {
+    width:116px;
+    height:116px;
+    flex:0 0 116px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-avatar img {
+    width:102px;
+    height:102px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-main {
+    gap:7px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-name {
+    font-size:1.65rem;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-bar {
+    max-width:none;
+    width:min(100%,620px);
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-chips {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    width:100%;
+    gap:7px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card-chip {
+    min-width:0;
+    text-align:center;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-layout {
+    grid-template-columns:minmax(330px,.82fr) minmax(0,1.18fr) !important;
+    gap:16px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-stat-grid {
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card {
+    min-width:0;
+    padding:12px 10px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure-body.profile-summary-grid {
+    grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);
+    gap:16px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-mode-records {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-h2h-records {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-shell {
+    grid-template-columns:minmax(240px,.75fr) minmax(0,1.25fr);
+    align-items:center;
+    gap:12px 18px;
+    padding:12px 14px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .profile-score-attack-head {
+    margin:0;
+  }
+
+  /* Final desktop consistency for secondary progression screens. */
+  #pokdle-app.design-refresh :is(#screen-achievements,#screen-history) > .card {
+    width:100%;
+    max-width:1360px;
+    margin-inline:auto;
+  }
+
+  #pokdle-app.design-refresh #screen-achievements .achievement-cat-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+  }
+
+  #pokdle-app.design-refresh #screen-history .match-history-list {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+}
+
+@media (min-width:1680px) {
+  #pokdle-app.design-refresh :is(
+    #screen-draft-arena,
+    #screen-draft-score-attack
+  ) #draft-mode-card {
+    max-width:1540px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-party-room .party-room-card {
+    max-width:1540px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile > .card,
+  #pokdle-app.design-refresh :is(#screen-achievements,#screen-history) > .card {
+    max-width:1420px;
+  }
+
+  #pokdle-app.design-refresh #screen-profile .trainer-card {
+    padding-inline:32px !important;
+  }
+}
