@@ -5,12 +5,12 @@ const fs=require("node:fs");
 const path=require("node:path");
 const server=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
 
-function extractFunction(name){
+function extractFunction(name,nextName){
   const start=server.indexOf("function "+name+"(");
   assert.ok(start>=0,name+" helper missing");
-  const end=server.indexOf("\n}",start);
+  const end=server.indexOf("\nfunction "+nextName+"(",start+1);
   assert.ok(end>start,name+" helper boundary missing");
-  return server.slice(start,end+2);
+  return server.slice(start,end);
 }
 function extractHandler(event,nextEvent){
   const start=server.indexOf('  socket.on("'+event+'"');
@@ -47,7 +47,7 @@ function fixture(status="playing"){
     recordUsage(value){usage.push(value);},
     clearTimeout(){cleared++;}
   };
-  new Function("env","with(env){"+extractFunction("clearPartyRoundTimer")+"\n"+extractFunction("resetPartyCampaign")+"\nthis.resetPartyCampaign=resetPartyCampaign;}")(context);
+  new Function("env","with(env){"+extractFunction("clearPartyRoundTimer","resetPartyCampaign")+"\n"+extractFunction("resetPartyCampaign","forcePartyRoundEnd")+"\nthis.resetPartyCampaign=resetPartyCampaign;}")(context);
   new Function("env","with(env){"+extractHandler("party:return-to-setup","party:set-mode")+"}")(context);
   function invoke(id="host"){
     socket.id=id;let result;
