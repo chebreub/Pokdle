@@ -59,6 +59,22 @@ def main():
                 wait(guest,lambda:guest.evaluate('(roundNumber) => partyRoomState.room?.status==="playing" && partyRoomState.room?.roundNumber===roundNumber',round_number),'Guest did not resume the live round')
                 wait(host,lambda:host.locator('#party-players li.is-offline').count()==0,'Guest stayed offline after reconnect')
 
+                # Closing the guest tab must not destroy the opaque recovery token.
+                # Reopening the original invite URL in the same browser profile must
+                # resume the reserved seat while the server grace window is active.
+                stage='guest-old-invite-reopen'
+                invite_url='http://127.0.0.1:3188/?party='+code
+                guest.close()
+                guest=contexts[1].new_page();pages[1]=guest
+                guest.set_default_timeout(12000);guest.on('pageerror',lambda e:errors.append(str(e)))
+                guest.goto(invite_url,wait_until='domcontentloaded',timeout=45000)
+                wait(guest,lambda:guest.evaluate('() => typeof openPartyRoomMode === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length>1000'),'Guest app did not initialize from old invite')
+                wait(guest,lambda:guest.locator('#party-joined').is_visible(),'Old invite did not recover the reserved Party seat')
+                wait(guest,lambda:guest.locator('#party-room-code').inner_text().strip()==code,'Old invite recovered the wrong Party Room')
+                wait(guest,lambda:guest.evaluate('(roundNumber) => partyRoomState.room?.status==="playing" && partyRoomState.room?.roundNumber===roundNumber',round_number),'Old invite did not restore the live round')
+                wait(host,lambda:host.locator('#party-players li:not(.party-player-empty)').count()==2,'Host lost guest after old-link recovery')
+                wait(host,lambda:host.locator('#party-players li.is-offline').count()==0,'Guest stayed offline after old-link recovery')
+
                 for page,name in [(host,'Pikachu'),(guest,'Raichu')]:
                     stage='answer-'+name;page.locator('#party-round').wait_for(state='visible')
                     page.locator('#party-guess').fill(name)
@@ -204,7 +220,7 @@ def main():
                 extra_contexts=[]
 
                 assert not errors,repr(errors)
-                result['ok']=True;result['clients']=8;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party shared result','party voluntary host handoff','party eight-player roster','party eight-player shared result','party campaign continues after host handoff','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat clash lobby host handoff','stat clash transferred room restart','stat auction live guest refresh','explicit leave paths']
+                result['ok']=True;result['clients']=8;result['checks']=['party create/join','party host refresh resume','party live-round guest refresh','party old invite recovery','party shared result','party voluntary host handoff','party eight-player roster','party eight-player shared result','party campaign continues after host handoff','duel token refresh resume','duel live seat preserved','stat clash host refresh','stat clash live guest refresh','stat clash lobby host handoff','stat clash transferred room restart','stat auction live guest refresh','explicit leave paths']
             except Exception:
                 for i,page in enumerate(pages):
                     try:page.screenshot(path=str(out/f'failure-{i}.png'))

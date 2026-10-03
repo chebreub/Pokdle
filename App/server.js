@@ -2202,18 +2202,31 @@ io.on("connection", (socket) => {
 
   socket.on("party:resume", (payload = {}, ack) => {
     try {
-      if (checkRateLimit(socket, "resume")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
+      if (checkRateLimit(socket, "resume")) return respond(ack, { ok: false, errorCode: "rate_limited", error: "Trop de requetes, reessaie dans quelques secondes." });
       const code = sanitizeRoomCode(payload.code);
       const token = String(payload.resumeToken || "").trim().slice(0, 96);
       const room = partyRooms.get(code);
-      if (!room) return respond(ack, { ok: false, error: "Party Room introuvable ou expiree." });
-      if (!token) return respond(ack, { ok: false, error: "Session de reprise invalide." });
+      if (!room) return respond(ack, { ok: false, errorCode: "room_missing", error: "Party Room introuvable ou expiree." });
+      if (!token) return respond(ack, { ok: false, errorCode: "resume_invalid", error: "Session de reprise invalide." });
       const player = room.players.find((entry) => entry.reconnectToken === token);
-      if (!player) return respond(ack, { ok: false, error: "Cette place n'est plus disponible." });
-      if (player.connected) return respond(ack, { ok: false, error: "Cette session est deja active." });
-      if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) return respond(ack, { ok: false, error: "Le delai de reconnexion est expire." });
+      if (!player) return respond(ack, { ok: false, errorCode: "resume_invalid", error: "Cette place n'est plus disponible." });
+      if (player.reconnectUntil && Date.now() > Number(player.reconnectUntil)) {
+        return respond(ack, { ok: false, errorCode: "resume_expired", error: "Le delai de reconnexion est expire." });
+      }
 
+      // Safari can establish the replacement socket before Socket.IO reports
+      // disconnect on the old page. The opaque token owns the seat: transfer it
+      // atomically instead of rejecting a player that is still marked connected.
       const previousId = player.id;
+      if (player.connected && previousId === socket.id) {
+        return respond(ack, { ok: true, code: room.code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
+      }
+      const previousSocket = previousId && previousId !== socket.id ? io.sockets.sockets.get(previousId) : null;
+      if (previousSocket) {
+        previousSocket.leave(room.code);
+        if (previousSocket.data) previousSocket.data.partyRoomCode = null;
+      }
+
       if (player.reconnectTimer) { clearTimeout(player.reconnectTimer); player.reconnectTimer = null; }
       player.id = socket.id;
       player.connected = true;
@@ -2230,13 +2243,15 @@ io.on("connection", (socket) => {
         room.coopClues[socket.id] = room.coopClues[previousId];
         delete room.coopClues[previousId];
       }
+
       socket.join(room.code);
       socket.data.partyRoomCode = room.code;
       clearPartyRoomCleanup(room);
+      if (previousSocket?.connected) previousSocket.disconnect(true);
       emitPartyRoomState(room);
       respond(ack, { ok: true, code: room.code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
     } catch (_error) {
-      respond(ack, { ok: false, error: "Reconnexion Party Room impossible." });
+      respond(ack, { ok: false, errorCode: "resume_failed", error: "Reconnexion Party Room impossible." });
     }
   });
 

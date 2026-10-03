@@ -1483,12 +1483,12 @@ var partyRoomState = { code: null, room: null, listenersBound: false, resumeToke
 var PARTY_SESSION_STORAGE_KEY = "pokedle_party_session_v1";
 var PARTY_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 
-function getStoredPartySession() {
+function readPartySessionStorage(storage) {
   try {
-    var saved = JSON.parse(sessionStorage.getItem(PARTY_SESSION_STORAGE_KEY) || "null");
+    var saved = JSON.parse(storage.getItem(PARTY_SESSION_STORAGE_KEY) || "null");
     if (!saved || !saved.code || !saved.resumeToken || !saved.nickname) return null;
     if (Date.now() - (Number(saved.ts) || 0) > PARTY_SESSION_TTL_MS) {
-      sessionStorage.removeItem(PARTY_SESSION_STORAGE_KEY);
+      storage.removeItem(PARTY_SESSION_STORAGE_KEY);
       return null;
     }
     return saved;
@@ -1497,13 +1497,25 @@ function getStoredPartySession() {
   }
 }
 
+function getStoredPartySession() {
+  // sessionStorage handles a normal refresh; localStorage is only the recovery
+  // copy needed when Safari closes the tab and the user reopens the old invite.
+  var tab = readPartySessionStorage(sessionStorage);
+  if (tab) return tab;
+  var persistent = readPartySessionStorage(localStorage);
+  if (persistent) {
+    try { sessionStorage.setItem(PARTY_SESSION_STORAGE_KEY, JSON.stringify(persistent)); } catch (_error) { /* noop */ }
+  }
+  return persistent;
+}
+
 function savePartySession(code, nickname, resumeToken) {
   if (!code || !nickname || !resumeToken) return;
   partyRoomState.resumeToken = resumeToken;
   partyRoomState.nickname = nickname;
-  try {
-    sessionStorage.setItem(PARTY_SESSION_STORAGE_KEY, JSON.stringify({ code: code, nickname: nickname, resumeToken: resumeToken, ts: Date.now() }));
-  } catch (_error) { /* stockage indisponible */ }
+  var value = JSON.stringify({ code: code, nickname: nickname, resumeToken: resumeToken, ts: Date.now() });
+  try { sessionStorage.setItem(PARTY_SESSION_STORAGE_KEY, value); } catch (_error) { /* stockage indisponible */ }
+  try { localStorage.setItem(PARTY_SESSION_STORAGE_KEY, value); } catch (_error) { /* stockage indisponible */ }
 }
 
 function clearPartySession() {
@@ -1511,6 +1523,11 @@ function clearPartySession() {
   partyRoomState.nickname = "";
   partyRoomState.reconnecting = false;
   try { sessionStorage.removeItem(PARTY_SESSION_STORAGE_KEY); } catch (_error) { /* noop */ }
+  try { localStorage.removeItem(PARTY_SESSION_STORAGE_KEY); } catch (_error) { /* noop */ }
+}
+
+function partyResumeErrorIsTerminal(res) {
+  return ["room_missing", "resume_invalid", "resume_expired"].includes(String(res?.errorCode || ""));
 }
 
 function attemptPartyResume() {
@@ -1521,12 +1538,16 @@ function attemptPartyResume() {
   multiplayerSocket.emit("party:resume", { code: saved.code, resumeToken: saved.resumeToken }, function (res) {
     res = res || {};
     if (!res.ok) {
-      clearPartySession();
-      if (partyRoomState.code === saved.code) {
-        partyRoomState.room = null;
-        partyRoomState.code = null;
-        renderPartyRoom();
+      partyRoomState.reconnecting = false;
+      if (partyResumeErrorIsTerminal(res)) {
+        clearPartySession();
+        if (partyRoomState.code === saved.code) {
+          partyRoomState.room = null;
+          partyRoomState.code = null;
+          renderPartyRoom();
+        }
       }
+      setPartyStatus(res.error || "Reconnexion Party Room impossible. Réessaie dans un instant.");
       return;
     }
     partyRoomState.room = res.room || null;
