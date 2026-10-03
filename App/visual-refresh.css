@@ -4147,3 +4147,267 @@
     min-height:300px;
   }
 }
+
+
+/* PC2 — desktop results dashboard and wide leaderboards. */
+@media (min-width:1280px) {
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #win-box:not(.hidden)) {
+    grid-template-columns:minmax(0,1fr);
+    gap:16px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #win-box:not(.hidden)) > .classic-game-command {
+    display:none;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) .classic-game-shell > #win-box:not(.hidden) {
+    grid-column:1 / -1;
+    width:100%;
+    display:grid !important;
+    grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);
+    gap:12px 18px;
+    align-items:start;
+    margin:0 !important;
+    padding:18px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game[data-game-mode="challenge"] .classic-game-shell > #win-box:not(.hidden) {
+    grid-column:1 / -1;
+    width:min(920px,100%);
+    justify-self:center;
+    margin:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box > :is(
+    .win-inner,
+    .win-gamefeel-summary,
+    .win-btns,
+    #win-next-daily,
+    #share-ok
+  ) {
+    grid-column:1;
+    min-width:0;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box > :is(
+    #win-ranking-preview,
+    #win-ceremony-progress,
+    #win-daily-distribution
+  ) {
+    grid-column:2;
+    min-width:0;
+    margin:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box > .win-inner {
+    min-height:104px;
+    grid-template-columns:92px minmax(0,1fr) !important;
+    align-items:center;
+    padding:4px 4px 8px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-sprite {
+    width:88px !important;
+    height:88px !important;
+    border-radius:22px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-title {
+    font-size:clamp(1.55rem,2vw,1.9rem) !important;
+    letter-spacing:-.025em;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-text {
+    max-width:52ch;
+    font-size:.88rem;
+    line-height:1.5;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-gamefeel-summary {
+    margin:0 !important;
+    padding:12px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-result-facts {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-btns {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px !important;
+    margin-top:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-btns > button {
+    width:100%;
+    min-height:44px;
+    justify-content:center;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box .win-btns .result-primary {
+    min-height:48px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box #win-ranking-preview {
+    min-height:82px;
+    align-self:start;
+    padding:13px 14px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) #win-box #win-ceremony-progress {
+    align-self:start;
+  }
+
+  #pokdle-app.design-refresh #screen-game[data-game-mode="daily"] #win-box #win-daily-distribution:not(.hidden) {
+    display:grid;
+    gap:3px;
+    align-self:start;
+    padding:13px 14px;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #win-box:not(.hidden)) > #results-wrap:not(.hidden) {
+    grid-column:1 / -1;
+    width:100%;
+    margin-top:0 !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell:has(> #win-box:not(.hidden))::after {
+    display:none !important;
+  }
+
+  .overlay-card:has(.lbv3-shell) {
+    width:min(1260px,calc(100vw - 72px)) !important;
+    max-width:1260px !important;
+    max-height:min(90vh,980px) !important;
+  }
+
+  .overlay-card:has(.lbv3-shell) .overlay-body {
+    padding:18px 20px 22px !important;
+  }
+
+  .lbv3-shell {
+    grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr);
+    gap:14px 16px !important;
+  }
+
+  .lbv3-shell > :is(
+    .lbv3-header,
+    .lbv3-controls,
+    .lbv3-gen-tabs,
+    .lbv3-personal,
+    .lbv3-empty,
+    .lbv3-loading
+  ) {
+    grid-column:1 / -1;
+  }
+
+  .lbv3-controls {
+    grid-template-columns:minmax(300px,360px) minmax(0,1fr);
+    align-items:start;
+    gap:10px 14px !important;
+  }
+
+  .lbv3-scope-tabs {
+    width:100% !important;
+  }
+
+  .lbv3-mode-grid {
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+
+  .lbv3-podium {
+    grid-column:1;
+    align-self:start;
+    gap:10px;
+  }
+
+  .lbv3-podium-card {
+    min-height:172px;
+    padding:16px 12px;
+  }
+
+  .lbv3-list {
+    grid-column:2;
+    align-self:start;
+  }
+
+  .lbv3-around {
+    grid-column:2;
+    align-self:start;
+  }
+}
+
+@media (min-width:1680px) {
+  .overlay-card:has(.lbv3-shell) {
+    width:min(1320px,calc(100vw - 96px)) !important;
+    max-width:1320px !important;
+  }
+
+  #pokdle-app.design-refresh #screen-game:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"]
+  ) .classic-game-shell > #win-box:not(.hidden) {
+    grid-template-columns:minmax(0,1.16fr) minmax(390px,.84fr);
+    padding:20px !important;
+    gap:14px 22px;
+  }
+}

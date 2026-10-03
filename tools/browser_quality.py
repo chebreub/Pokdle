@@ -128,6 +128,15 @@ def main():
      expect(page.locator('#btn-result-catalog').is_visible(),'Result has no route back to the catalog')
      expect(page.locator('#btn-restart').inner_text().strip()=='Rejouer','Normal replay action is unclear')
      expect(page.locator('#win-ceremony-progress').count()==0,'Loss should not show unchanged collection progress')
+     if width>=1280:
+      win=page.locator('#win-box').bounding_box();history=page.locator('#results-wrap').bounding_box()
+      expect(win and history and win['width']>1000,'PC2 result dashboard is still narrow: '+repr(win))
+      expect(abs(win['x']-history['x'])<3 and abs(win['width']-history['width'])<5,'Result dashboard and clue history do not share the desktop board width: '+repr([win,history]))
+      expect(page.locator('.classic-game-command').evaluate('(e)=>getComputedStyle(e).display')=='none','Finished desktop game still reserves the command rail')
+      cols=page.locator('#win-box').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+      expect(cols==2,'Normal desktop result is not a two-column dashboard: '+str(cols))
+      preview=page.locator('#win-ranking-preview')
+      expect(preview.count()==1 and preview.bounding_box()['x']>page.locator('#win-box .win-inner').bounding_box()['x'],'Ranking preview is not in the desktop stats rail')
      return screen('screen-game')
     check('normal-result',finish)
     def daily_finish():
@@ -143,8 +152,45 @@ def main():
       expect(shell_style=='grid','Daily did not inherit the classic desktop board')
      progress=page.locator('#win-ceremony-progress')
      expect(progress.count()==1 and progress.evaluate('(e)=>e.tagName')=='DETAILS','Collection progress is not a collapsible detail')
+     if width>=1280:
+      win=page.locator('#win-box').bounding_box()
+      expect(win and win['width']>1000,'Daily result dashboard is still narrow: '+repr(win))
+      expect(progress.bounding_box()['x']>page.locator('#win-box .win-inner').bounding_box()['x'],'Pokédex progress is not in the desktop stats rail')
      return screen('screen-game')
     check('daily-result',daily_finish)
+    def pc2_leaderboard_desktop():
+     if width<1280: return {'skipped':'desktop-only'}
+     page.evaluate("""async () => {
+       window.__qaLeaderboardFetch=leaderboardFetchJson;
+       leaderboardFetchJson=async()=>({
+         ok:true,label:'Pokémon du jour',unit:'essais',total:8,authenticated:true,
+         me:{rank:4,username:'QA',score:4,me:true},
+         top:[
+           {rank:1,username:'Red',score:2},
+           {rank:2,username:'Blue',score:3},
+           {rank:3,username:'Leaf',score:3},
+           {rank:4,username:'QA',score:4,me:true},
+           {rank:5,username:'Gold',score:5},
+           {rank:6,username:'Silver',score:6}
+         ],
+         around:[{rank:7,username:'Crystal',score:7}]
+       });
+       await openLeaderboardV2('daily','all');
+     }""")
+     page.locator('#overlay-body .lbv3-podium').wait_for(state='visible')
+     overlay=page.locator('.overlay-card:has(.lbv3-shell)').bounding_box()
+     expect(overlay and overlay['width']>1100,'Desktop leaderboard overlay is still narrow: '+repr(overlay))
+     shell=page.locator('.lbv3-shell')
+     cols=shell.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+     expect(cols==2,'Desktop leaderboard is not using the wide two-column layout: '+str(cols))
+     podium=page.locator('.lbv3-podium').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
+     expect(podium and listing and listing['x']>podium['x']+podium['width']-3,'Leaderboard list is not beside the podium: '+repr([podium,listing]))
+     page.evaluate("""() => {
+       if (window.__qaLeaderboardFetch) { leaderboardFetchJson=window.__qaLeaderboardFetch; delete window.__qaLeaderboardFetch; }
+       if (typeof closeOverlayModal==='function') closeOverlayModal();
+     }""")
+     return screen('screen-game')
+    check('pc2-leaderboard-desktop',pc2_leaderboard_desktop)
     def completed_home():
      nav('home','screen-config')
      expect(page.locator('#daily-hero').get_attribute('data-daily-state')=='complete','Daily summary did not update')
