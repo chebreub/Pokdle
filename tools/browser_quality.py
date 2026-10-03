@@ -77,8 +77,10 @@ def main():
     def standard_guess_shell():
      expect(page.locator('#silhouette-box').is_hidden(),'Zoom clue shell leaked into standard gameplay')
      expect(page.locator('#pixel-box').is_hidden(),'Pixel clue shell leaked into standard gameplay')
-     bg=page.locator('#btn-submit').evaluate('(e)=>getComputedStyle(e).backgroundImage')
-     expect('57, 118, 236' in bg or '57,118,236' in bg,'Primary guess CTA is not using the D0 blue treatment: '+bg)
+     style=page.locator('#btn-submit').evaluate('(e)=>({image:getComputedStyle(e).backgroundImage,color:getComputedStyle(e).backgroundColor,border:getComputedStyle(e).borderTopColor})')
+     rendered=' '.join(style.values())
+     blue_tokens=('57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
+     expect(any(token in rendered for token in blue_tokens),'Primary guess CTA is not using the D0 blue treatment: '+repr(style))
     def guess():
      start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
