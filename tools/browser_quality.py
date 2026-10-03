@@ -144,7 +144,25 @@ def main():
      nav('social','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["openPartyRoomMode"]\']:visible').first.click();return screen('screen-party-room')
     check('party-entry',party)
     check('pixel',lambda:start('startPixelGame','screen-game'))
+    def d2_pixel_shell():
+     start('startPixelGame','screen-game');box=page.locator('#pixel-box');expect(box.is_visible(),'Pixel shell missing');expect(page.locator('#pixel-box .visual-clue-canvas').is_visible(),'Pixel visual canvas missing');expect(page.locator('#pixel-level').inner_text().startswith('Netteté '),'Pixel progress label missing');return screen('screen-game')
+    check('d2-pixel-shell',d2_pixel_shell)
+    def d2_zoom_shell():
+     start('startSilhouetteGame','screen-game');box=page.locator('#silhouette-box');expect(box.is_visible(),'Zoom shell missing');expect(page.locator('#silhouette-box .visual-clue-canvas').is_visible(),'Zoom visual canvas missing');expect(page.locator('#silhouette-level').inner_text().startswith('Détail '),'Zoom progress label missing');return screen('screen-game')
+    check('d2-zoom-shell',d2_zoom_shell)
     check('cry',lambda:start('startCryGame','screen-game'))
+    def d2_cry_shell():
+     start('startCryGame','screen-game');expect(page.locator('#cry-box .cry-player-card').is_visible(),'Cry player card missing');expect(page.locator('#cry-box .cry-waveform i').count()>=8,'Cry waveform is incomplete');btn=page.locator('#cry-play-btn');expect('btn-blue' in (btn.get_attribute('class') or ''),'Cry play CTA is not primary blue');return screen('screen-game')
+    check('d2-cry-shell',d2_cry_shell)
+    def d2_connections_shell():
+     page.evaluate('openPokeConnectionsMode()');screen('screen-poke-connections');expect(page.locator('.poke-connections-grid .poke-connections-tile').count()==16,'Connections board does not contain 16 tiles');page.locator('.poke-connections-tile').first.click();expect(page.locator('.poke-connections-tile.is-selected').count()==1,'Connections selected state missing');expect(page.locator('.poke-connections-actions .btn-blue').count()==1,'Connections primary action missing');return screen('screen-poke-connections')
+    check('d2-connections-shell',d2_connections_shell)
+    def d2_speedrun_shell():
+     page.evaluate('openSpeedrunMode()');screen('screen-speedrun');start_btn=page.locator('.speedrun-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Speedrun start CTA is not primary blue');start_btn.click();expect(page.locator('.speedrun-pokemon').is_visible(),'Speedrun sprite stage missing');expect(page.locator('#speedrun-timer').is_visible(),'Speedrun timer missing');return screen('screen-speedrun')
+    check('d2-speedrun-shell',d2_speedrun_shell)
+    def d2_type_combo_shell():
+     page.evaluate('openTypeComboSolo()');screen('screen-type-combo');start_btn=page.locator('.tc-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Type Combo start CTA is not primary blue');start_btn.click();expect(page.locator('.tc-combo').is_visible(),'Type Combo prompt stage missing');expect(page.locator('#type-combo-timer').is_visible(),'Type Combo timer missing');return screen('screen-type-combo')
+    check('d2-type-combo-shell',d2_type_combo_shell)
     check('quiz',lambda:start('startQuizGame','screen-game'))
     def draft_pro():
      nav('game','screen-all-modes')

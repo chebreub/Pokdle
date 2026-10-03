@@ -865,7 +865,7 @@ function renderTypeComboScreen() {
         '<h3>Combo de types — 60 secondes</h3>' +
         '<p>On t\'affiche une paire de types. Nomme un Pokémon qui a exactement cette paire pour marquer. Plus la paire est rare, plus ça rapporte. Enchaîne un max de combos !</p>' +
         '<div class="tc-lobby-stats"><div class="tc-lobby-stat"><span>Ton record</span><b>' + (st.highScore || 0) + '</b></div><div class="tc-lobby-stat"><span>Durée</span><b>60s</b></div></div>' +
-        '<button class="btn-red tc-start-btn" type="button" data-action="startTypeComboGame">🧬 Démarrer</button>' +
+        '<button class="btn-blue tc-start-btn" type="button" data-action="startTypeComboGame">🧬 Démarrer</button>' +
       '</div>';
     return;
   }
@@ -902,7 +902,7 @@ function renderTypeComboScreen() {
         '<h3>⏱️ Temps écoulé</h3>' +
         '<div class="tc-final-score">' + st.score + '</div>' +
         '<p>' + st.solved + ' combos réussis' + (isRecord ? ' · <b>🏆 Nouveau record !</b>' : (' · record : ' + st.highScore)) + '</p>' +
-        '<div class="tc-actions"><button class="btn-red" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
+        '<div class="tc-actions"><button class="btn-blue" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
       '</div>';
     return;
   }
@@ -1080,7 +1080,7 @@ function renderSpeedrunScreen() {
           <div class="speedrun-lobby-stat"><span>Ton record</span><b>${state.highScore || 0}</b></div>
           <div class="speedrun-lobby-stat"><span>Durée</span><b>60s</b></div>
         </div>
-        <button class="btn-red speedrun-start-btn" type="button" data-action="startSpeedrunGame">⚡ Démarrer</button>
+        <button class="btn-blue speedrun-start-btn" type="button" data-action="startSpeedrunGame">⚡ Démarrer</button>
       </div>`;
     return;
   }
@@ -1123,7 +1123,7 @@ function renderSpeedrunScreen() {
         </div>
         ${isRecord ? '<div class="speedrun-record-flash">🏆 NOUVEAU RECORD !</div>' : ""}
         <div class="higher-lower-final-actions">
-          <button class="btn-red" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+          <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Rejouer</button>
           <button class="btn-ghost" type="button" data-action="shareSpeedrunResult">📋 Copier</button>
           <button class="btn-ghost" type="button" data-action="downloadSpeedrunImage">💾 Image</button>
         </div>
@@ -1312,50 +1312,61 @@ function renderPokeConnectionsScreen() {
   const state = pokeConnectionsState;
   if (!state) { root.innerHTML = ""; return; }
   const { puzzle, foundGroupIdx, selected, mistakes, phase } = state;
+
+  const renderFoundGroup = (g, idx, reveal = false) => {
+    const color = POKE_CONNECTIONS_GROUP_COLORS[idx];
+    const pokemon = g.pokemon.map((p) => `<span class="poke-connections-found-pokemon"><img src="${escapeHtml(p.sprite || "")}" alt="" loading="lazy" /><b>${escapeHtml(p.name)}</b></span>`).join("");
+    return `<article class="poke-connections-found-row group-${color}${reveal ? " is-reveal" : ""}">
+      <div class="poke-connections-found-label"><span>GROUPE ${idx + 1}</span><b>${escapeHtml(g.label)}</b></div>
+      <div class="poke-connections-found-list">${pokemon}</div>
+    </article>`;
+  };
+
   const foundGroupsHtml = [...foundGroupIdx]
-    .map((idx) => {
-      const g = puzzle.groups[idx];
-      const color = POKE_CONNECTIONS_GROUP_COLORS[idx];
-      return `<div class="poke-connections-found-row group-${color}">
-        <div class="poke-connections-found-label">${escapeHtml(g.label)}</div>
-        <div class="poke-connections-found-list">${g.pokemon.map((p) => escapeHtml(p.name)).join(" · ")}</div>
-      </div>`;
-    })
+    .map((idx) => renderFoundGroup(puzzle.groups[idx], idx))
     .join("");
+
   const tilesHtml = puzzle.tiles
     .map((t, idx) => {
       if (foundGroupIdx.has(t.groupIdx)) return "";
       const isSelected = selected.has(idx);
-      return `<button type="button" class="poke-connections-tile ${isSelected ? "is-selected" : ""}" data-action="togglePokeConnectionsTile" data-args='[${idx}]'>
-        <img src="${escapeHtml(t.sprite || "")}" alt="${escapeHtml(t.name)}" loading="lazy" />
+      return `<button type="button" class="poke-connections-tile ${isSelected ? "is-selected" : ""}" data-action="togglePokeConnectionsTile" data-args='[${idx}]' aria-pressed="${isSelected}">
+        <img src="${escapeHtml(t.sprite || "")}" alt="" loading="lazy" />
         <span>${escapeHtml(t.name)}</span>
       </button>`;
     })
     .join("");
+
   const mistakeDots = Array.from({ length: POKE_CONNECTIONS_MAX_MISTAKES }, (_, i) => `<span class="poke-connections-mistake-dot ${i < mistakes ? "is-used" : ""}"></span>`).join("");
   const shakeClass = (Date.now() - state.lastShake < 700) ? "is-shaking" : "";
+  const selectionCopy = selected.size === 4 ? "Groupe prêt à valider" : selected.size + " / 4 sélectionnés";
   let footer = "";
+
   if (phase === "won") {
-    footer = `<div class="poke-connections-final is-won"><h3>🎉 Bravo !</h3><p>Tous les groupes trouvés en ${mistakes} erreur${mistakes > 1 ? "s" : ""}.</p><button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button></div>`;
+    footer = `<div class="poke-connections-final is-won"><span class="poke-connections-final-kicker">PUZZLE RÉSOLU</span><h3>Les 4 connexions sont trouvées.</h3><p>${mistakes === 0 ? "Parfait, aucune erreur." : mistakes + " erreur" + (mistakes > 1 ? "s" : "") + " avant la solution."}</p><button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle →</button></div>`;
   } else if (phase === "lost") {
     const remainingGroups = puzzle.groups
       .map((g, idx) => ({ g, idx }))
       .filter(({ idx }) => !foundGroupIdx.has(idx))
-      .map(({ g, idx }) => `<div class="poke-connections-found-row group-${POKE_CONNECTIONS_GROUP_COLORS[idx]}"><div class="poke-connections-found-label">${escapeHtml(g.label)}</div><div class="poke-connections-found-list">${g.pokemon.map((p) => escapeHtml(p.name)).join(" · ")}</div></div>`)
+      .map(({ g, idx }) => renderFoundGroup(g, idx, true))
       .join("");
-    footer = `<div class="poke-connections-final is-lost"><h3>💀 Perdu</h3><p>Tu as épuisé tes 4 erreurs.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-red" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button></div>`;
+    footer = `<div class="poke-connections-final is-lost"><span class="poke-connections-final-kicker">PARTIE TERMINÉE</span><h3>Les 4 erreurs sont utilisées.</h3><p>Voici les connexions qui restaient à trouver.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle →</button></div>`;
   } else {
-    footer = `<div class="poke-connections-actions">
-      <button class="btn-ghost" type="button" data-action="shufflePokeConnectionsTiles">🔀 Mélanger</button>
-      <button class="btn-ghost" type="button" data-action="clearPokeConnectionsSelection" ${selected.size === 0 ? "disabled" : ""}>Désélectionner tout</button>
-      <button class="btn-red" type="button" data-action="submitPokeConnectionsGuess" ${selected.size !== 4 ? "disabled" : ""}>Valider</button>
+    footer = `<div class="poke-connections-action-zone">
+      <div class="poke-connections-selection-status"><span>${selectionCopy}</span><b>${selected.size}/4</b></div>
+      <div class="poke-connections-actions">
+        <button class="btn-ghost" type="button" data-action="shufflePokeConnectionsTiles">Mélanger</button>
+        <button class="btn-ghost" type="button" data-action="clearPokeConnectionsSelection" ${selected.size === 0 ? "disabled" : ""}>Tout désélectionner</button>
+        <button class="btn-blue" type="button" data-action="submitPokeConnectionsGuess" ${selected.size !== 4 ? "disabled" : ""}>Valider le groupe →</button>
+      </div>
     </div>`;
   }
+
   root.innerHTML = `
     <div class="poke-connections-board">
       <div class="poke-connections-status">
-        <span>Erreurs : <span class="poke-connections-mistake-dots">${mistakeDots}</span></span>
-        <span>Groupes trouvés : <b>${foundGroupIdx.size}/4</b></span>
+        <div><span class="poke-connections-status-label">ERREURS</span><span class="poke-connections-mistake-dots">${mistakeDots}</span></div>
+        <div><span class="poke-connections-status-label">PROGRESSION</span><b>${foundGroupIdx.size} / 4 groupes</b></div>
       </div>
       ${foundGroupsHtml ? `<div class="poke-connections-found">${foundGroupsHtml}</div>` : ""}
       <div class="poke-connections-grid ${shakeClass}">${tilesHtml}</div>
@@ -2007,8 +2018,10 @@ function stopCrySound() {
 function setCryUiStatus(state, message = "") {
   const statusEl = document.getElementById("cry-status-text");
   const btn = document.getElementById("cry-play-btn");
+  const box = document.getElementById("cry-box");
+  const label = btn?.querySelector(".cry-play-label");
   if (statusEl) {
-    statusEl.classList.remove("hidden", "is-loading", "is-error", "is-ready");
+    statusEl.classList.remove("hidden", "is-loading", "is-error", "is-ready", "is-playing");
     if (!message) {
       statusEl.classList.add("hidden");
       statusEl.textContent = "";
@@ -2017,9 +2030,16 @@ function setCryUiStatus(state, message = "") {
       statusEl.textContent = message;
     }
   }
+  if (box) {
+    box.classList.toggle("is-playing", state === "playing");
+    box.classList.toggle("is-loading", state === "loading");
+  }
   if (btn) {
     btn.disabled = state === "loading";
     btn.classList.toggle("is-loading", state === "loading");
+  }
+  if (label) {
+    label.textContent = state === "loading" ? "Chargement…" : state === "playing" ? "Lecture en cours…" : "Rejouer le cri";
   }
 }
 
@@ -2039,7 +2059,13 @@ function playCrySound() {
       if (cryAudio?.src === url) setCryUiStatus("loading", "Chargement du cri…");
     });
     cryAudio.addEventListener("canplay", () => {
-      if (cryAudio?.src === url) setCryUiStatus("ready", "");
+      if (cryAudio?.src === url && cryAudio.paused) setCryUiStatus("ready", "Prêt à être écouté.");
+    });
+    cryAudio.addEventListener("playing", () => {
+      if (cryAudio?.src === url) setCryUiStatus("playing", "Écoute bien…");
+    });
+    cryAudio.addEventListener("ended", () => {
+      if (cryAudio?.src === url) setCryUiStatus("ready", "Tu peux le rejouer autant de fois que nécessaire.");
     });
     cryAudio.addEventListener("error", () => {
       if (cryAudio?.src === url) {
@@ -2054,7 +2080,7 @@ function playCrySound() {
   const playPromise = cryAudio.play();
   if (playPromise && typeof playPromise.then === "function") {
     playPromise
-      .then(() => setCryUiStatus("ready", ""))
+      .then(() => setCryUiStatus("playing", "Écoute bien…"))
       .catch((err) => {
         const blocked = err?.name === "NotAllowedError";
         setCryUiStatus("error", blocked

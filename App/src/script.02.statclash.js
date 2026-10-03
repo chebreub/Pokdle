@@ -720,6 +720,9 @@ function updateModeBanners() {
 function updateSilhouettePanel(reveal) {
   const box = document.getElementById("silhouette-box");
   const img = document.getElementById("silhouette-sprite");
+  const levelEl = document.getElementById("silhouette-level");
+  const meterEl = document.getElementById("silhouette-meter-fill");
+  const copyEl = document.getElementById("silhouette-level-copy");
 
   if (!box || !img) return;
 
@@ -727,12 +730,20 @@ function updateSilhouettePanel(reveal) {
     box.classList.add("hidden");
     box.classList.remove("revealed");
     img.src = "";
+    if (meterEl) meterEl.style.width = "";
     return;
   }
 
+  const totalLevels = 7;
+  const level = reveal ? totalLevels : Math.min(totalLevels, attempts + 1);
+  const progress = Math.round((level / totalLevels) * 100);
   box.classList.remove("hidden");
   img.src = getPokemonSprite(secretPokemon);
   img.alt = "Vue zoomée du Pokémon mystère";
+  if (levelEl) levelEl.textContent = reveal ? "Révélé" : "Détail " + level + " / " + totalLevels;
+  if (meterEl) meterEl.style.width = progress + "%";
+  if (copyEl) copyEl.textContent = reveal ? "Le Pokémon est maintenant entièrement visible." : "Chaque essai élargit progressivement la vue.";
+
   if (reveal) {
     img.style.transform = "translate(0px, 0px) scale(1)";
   } else {
@@ -753,6 +764,9 @@ function getPixelBlurForAttempts(tries) {
 function updatePixelPanel(reveal) {
   const box = document.getElementById("pixel-box");
   const img = document.getElementById("pixel-sprite");
+  const levelEl = document.getElementById("pixel-level");
+  const meterEl = document.getElementById("pixel-meter-fill");
+  const copyEl = document.getElementById("pixel-level-copy");
 
   if (!box || !img) return;
 
@@ -761,12 +775,18 @@ function updatePixelPanel(reveal) {
     box.classList.remove("revealed");
     img.src = "";
     img.style.filter = "";
+    if (meterEl) meterEl.style.width = "";
     return;
   }
 
+  const totalLevels = 8;
+  const level = reveal ? totalLevels : Math.min(totalLevels, attempts + 1);
   box.classList.remove("hidden");
   img.src = getPokemonSprite(secretPokemon);
   img.alt = "Pokémon pixelisé";
+  if (levelEl) levelEl.textContent = reveal ? "Révélé" : "Netteté " + level + " / " + totalLevels;
+  if (meterEl) meterEl.style.width = Math.round((level / totalLevels) * 100) + "%";
+  if (copyEl) copyEl.textContent = reveal ? "Le Pokémon est maintenant net." : "Chaque essai rend le Pokémon un peu plus net.";
 
   if (reveal) {
     box.classList.add("revealed");
