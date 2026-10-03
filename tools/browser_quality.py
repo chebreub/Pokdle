@@ -139,6 +139,8 @@ def main():
      wrapper_z=page.locator('#screen-game .ac-wrapper').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
      submit_z=page.locator('#btn-submit').evaluate('(e)=>Number(getComputedStyle(e).zIndex)||0')
      expect(wrapper_z>submit_z,'Autocomplete stacking context is not above Deviner: '+repr([wrapper_z,submit_z]))
+     page.locator('#guess-input').press('Escape')
+     expect(page.locator('#guess-ac').is_hidden(),'Autocomplete cleanup failed after overlay QA')
      return screen('screen-game')
     check('autocomplete-overlay',autocomplete_overlay)
     def guess():
