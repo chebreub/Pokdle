@@ -2467,3 +2467,40 @@
     justify-content:center;
   }
 }
+
+
+/* D1 — contain the legacy wide ranking matrix inside its own scroller.
+   The older ranking refresh deliberately expanded #screen-ranking to 100vw
+   and made the grid overflow visible, which leaked the 1860px matrix into
+   the document at tablet/desktop widths. */
+@media (min-width:641px) {
+  #pokdle-app.design-refresh:has(#screen-ranking:not(.hidden)) main {
+    width:100% !important;
+    min-width:0 !important;
+  }
+  #pokdle-app.design-refresh #screen-ranking {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin-inline:0 !important;
+  }
+  #pokdle-app.design-refresh #screen-ranking > .card {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
+  #pokdle-app.design-refresh #screen-ranking .ranking-grid-wrap {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  #pokdle-app.design-refresh #screen-ranking .ranking-table {
+    width:1860px !important;
+    min-width:1860px !important;
+    max-width:none !important;
+  }
+}
