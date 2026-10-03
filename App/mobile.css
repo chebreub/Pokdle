@@ -390,8 +390,11 @@
    VISUAL REBOOT V2 — mobile authority layer
    ===================================================================== */
 @media (max-width:640px){
+  html{
+    scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom)) !important;
+  }
   body{
-    padding-bottom:76px !important;
+    padding-bottom:calc(88px + env(safe-area-inset-bottom)) !important;
   }
 
   /* Header */
@@ -435,10 +438,12 @@
   .mobile-tabbar{
     left:8px !important;
     right:8px !important;
-    bottom:8px !important;
+    bottom:max(8px, env(safe-area-inset-bottom)) !important;
     width:auto !important;
     min-height:60px !important;
     padding:6px !important;
+    transition:opacity .16s ease, transform .18s ease !important;
+    will-change:transform, opacity;
     border:1px solid rgba(255,255,255,.10) !important;
     border-radius:18px !important;
     background:rgba(13,35,68,.96) !important;
@@ -463,6 +468,20 @@
   .mobile-tabbar button[aria-current="page"]{
     background:rgba(255,255,255,.11) !important;
     color:#fff !important;
+  }
+
+  /* iPhone keyboard: free the lower viewport while text entry is active. */
+  body:has(input:is([type="text"],[type="search"],[type="number"],[type="email"],[type="url"],[type="tel"],[type="password"]):focus, textarea:focus) {
+    padding-bottom:14px !important;
+  }
+  body:has(input:is([type="text"],[type="search"],[type="number"],[type="email"],[type="url"],[type="tel"],[type="password"]):focus, textarea:focus) .mobile-tabbar {
+    opacity:0 !important;
+    transform:translateY(calc(100% + 28px)) !important;
+    pointer-events:none !important;
+  }
+  input:is([type="text"],[type="search"],[type="number"],[type="email"],[type="url"],[type="tel"],[type="password"]):focus,
+  textarea:focus {
+    scroll-margin-bottom:42dvh;
   }
 
   /* Home */
@@ -766,6 +785,31 @@
   }
 
   /* Gameplay */
+  .gameplay-screen-card > .ranking-head{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    align-items:start !important;
+    gap:8px !important;
+    margin-bottom:8px !important;
+  }
+  .gameplay-screen-card > .ranking-head .card-title{
+    margin:0 !important;
+    font-size:1.22rem !important;
+    line-height:1.2 !important;
+  }
+  .gameplay-screen-card > .ranking-head .ranking-head-actions{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:6px !important;
+    width:100% !important;
+  }
+  .gameplay-screen-card > .ranking-head .ranking-head-actions > button{
+    flex:1 1 128px;
+    width:auto !important;
+    min-height:42px !important;
+    padding:8px 10px !important;
+    font-size:.78rem !important;
+  }
   #screen-game{
     padding-top:4px;
   }
