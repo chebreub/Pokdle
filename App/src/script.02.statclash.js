@@ -686,6 +686,7 @@ function updateTopTag() {
 function updateModeBanners() {
   const gameScreen = document.getElementById("screen-game");
   if (gameScreen) gameScreen.dataset.gameMode = String(gameMode || "normal");
+  const classicBanner = document.getElementById("classic-banner");
   const challengeBanner = document.getElementById("challenge-banner");
   const dailyBanner = document.getElementById("daily-banner");
   const silhouetteBanner = document.getElementById("silhouette-banner");
@@ -694,6 +695,7 @@ function updateModeBanners() {
   const cryBanner = document.getElementById("cry-banner");
   const quizBanner = document.getElementById("quiz-banner");
 
+  if (classicBanner) classicBanner.classList.add("hidden");
   challengeBanner.classList.add("hidden");
   dailyBanner.classList.add("hidden");
   silhouetteBanner.classList.add("hidden");
@@ -702,7 +704,9 @@ function updateModeBanners() {
   if (cryBanner) cryBanner.classList.add("hidden");
   if (quizBanner) quizBanner.classList.add("hidden");
 
-  if (gameMode === "challenge") {
+  if (gameMode === "normal" && classicBanner) {
+    classicBanner.classList.remove("hidden");
+  } else if (gameMode === "challenge") {
     challengeBanner.classList.remove("hidden");
   } else if (gameMode === "daily") {
     dailyBanner.classList.remove("hidden");
