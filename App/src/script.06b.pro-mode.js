@@ -207,7 +207,7 @@ function renderDraftProRevealInline(teamData, mods, result, opts) {
       '<ul class="dpr-bonuses" id="dpr-bonuses"></ul>' +
       '<div class="dpr-score"><span class="dpr-score-base">Base ' + result.base + '</span><span class="dpr-score-total" id="dpr-score-total">' + result.base + '</span></div>' +
       '<div class="dpr-verdict" id="dpr-verdict"></div>' +
-      '<div class="dpr-actions"><button type="button" class="btn-red" id="dpr-close">Continuer</button></div>' +
+      '<div class="dpr-actions"><button type="button" class="btn-blue" id="dpr-close">Continuer</button></div>' +
     '</div>';
 
   const weatherEl = host.querySelector("#dpr-weather");
