@@ -1238,7 +1238,7 @@ function renderPickedSummary() {
 window.addEventListener("click", (e) => {
   const picker = document.getElementById("rank-float-picker");
   if (!picker || picker.classList.contains("hidden")) return;
-  if (e.target.closest("#rank-float-picker") || e.target.closest(".rank-slot")) return;
+  if (e.target.closest("#rank-float-picker") || e.target.closest(".rank-slot") || e.target.closest(".ranking-mobile-slot")) return;
   closeRankingPicker();
 });
 
