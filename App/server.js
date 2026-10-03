@@ -1431,6 +1431,7 @@ function resetPartyCampaign(room) {
   clearPartyRoundTimer(room);
   room.status = "waiting";
   room.roundNumber = 0;
+  room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds);
   room.deadlineAt = null;
   room.roundStartedAt = null;
   room.target = null;
@@ -2471,7 +2472,7 @@ io.on("connection", (socket) => {
       }
       room.gameMode = mode;
       if (mode === "dexrace") { room.selectedGens = [room.selectedGens?.[0] || 1]; room.totalRounds = 1; dexRace.balanceRaceTeams(room); }
-      else if (room.totalRounds === 1) room.totalRounds = room.configuredRounds || (mode === "statclashparty" ? 6 : 5);
+      else room.totalRounds = partyTotalRoundsForMode(mode, room.configuredRounds);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
