@@ -92,8 +92,8 @@ function ensurePokedexCollectionHub() {
     <div class="pokedex-collection-console">
       <div class="pokedex-collection-identity">
         <span class="pokedex-console-kicker">POKÉDLE // TERMINAL DRESSEUR</span>
-        <h3>Ma collection</h3>
-        <p>Ici, seuls les Pokémon réellement gagnés en jouant sont enregistrés. L’encyclopédie reste disponible à côté, sans condition.</p>
+        <h3>Tes découvertes</h3>
+        <p>Chaque victoire enrichit ta collection. Retrouve ici les Pokémon que tu as gagnés.</p>
       </div>
       <div id="pokedex-collection-national" class="pokedex-collection-national"></div>
     </div>
@@ -102,7 +102,16 @@ function ensurePokedexCollectionHub() {
       <button type="button" data-pokedex-view="collection" data-action="setPokedexExperienceView" data-args='["collection"]'>Ma collection</button>
       <button type="button" class="pokedex-missions-link" data-action="openPokedexMissionHub">Missions <span id="pokedex-mission-ready-count"></span></button>
     </div>
+    <div id="collection-next-step" class="collection-next-step hidden"></div>
+    <details class="pokedex-progress-details"><summary>Progression par région et légende</summary>
     <div id="pokedex-region-progress" class="pokedex-region-progress" aria-label="Progression par région"></div>
+    <div id="pokedex-collection-legend" class="pokedex-collection-legend" aria-label="Légende de la collection">
+      <span class="is-registered"><b>✓</b> Gagné en jouant</span>
+      <span class="is-mission"><b>◆</b> Récompense de maîtrise</span>
+      <span class="is-unknown"><b>?</b> À rencontrer</span>
+      <span class="is-secret"><b>✦</b> Piste cachée</span>
+    </div>
+    </details>
     <div id="pokedex-collection-filters" class="pokedex-collection-filters" role="group" aria-label="État de collection">
       <button type="button" data-collection-filter="all" data-action="setPokedexCollectionFilter" data-args='["all"]'>Toutes</button>
       <button type="button" data-collection-filter="registered" data-action="setPokedexCollectionFilter" data-args='["registered"]'>✓ Gagnées</button>
@@ -110,12 +119,7 @@ function ensurePokedexCollectionHub() {
       <button type="button" data-collection-filter="unknown" data-action="setPokedexCollectionFilter" data-args='["unknown"]'>? À trouver</button>
       <button type="button" data-collection-filter="secret" data-action="setPokedexCollectionFilter" data-args='["secret"]'>✦ Secrets</button>
     </div>
-    <div id="pokedex-collection-legend" class="pokedex-collection-legend" aria-label="Légende de la collection">
-      <span class="is-registered"><b>✓</b> Gagné en jouant</span>
-      <span class="is-mission"><b>◆</b> Récompense de maîtrise</span>
-      <span class="is-unknown"><b>?</b> À rencontrer</span>
-      <span class="is-secret"><b>✦</b> Piste cachée</span>
-    </div>`;
+`;
   toolbar.parentElement.insertBefore(hub, toolbar);
 }
 function renderPokedexCollectionHub() {
@@ -145,6 +149,14 @@ function renderPokedexCollectionHub() {
     const state=typeof albumMissionState === 'function' ? albumMissionState(m) : null;
     return state?.ready && !state.claimed;
   }).length;
+  const next = document.getElementById('collection-next-step');
+  if (next) {
+    const show = pokedexExperienceView === 'collection' && (ready > 0 || stats.found === 0);
+    next.classList.toggle('hidden', !show);
+    next.innerHTML = !show ? '' : ready > 0
+      ? `<div><strong>${ready} récompense${ready > 1 ? 's' : ''} prête${ready > 1 ? 's' : ''}</strong><span>Un objectif accompli mérite son Pokémon.</span></div><button class="btn-blue" type="button" data-action="openPokedexMissionHub">Réclamer mes récompenses →</button>`
+      : `<div><strong>Ta première découverte t’attend</strong><span>Gagne une partie pour ajouter un Pokémon à ta collection.</span></div><button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu →</button>`;
+  }
   const readyEl=document.getElementById('pokedex-mission-ready-count');
   if (readyEl) readyEl.textContent = ready ? `· ${ready} prête${ready>1?'s':''}` : '';
   document.getElementById('pokedex-collection-filters')?.classList.toggle('hidden', pokedexExperienceView !== 'collection');

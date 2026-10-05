@@ -2052,7 +2052,7 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
       <b>🎯 Score Attack solo</b>
       <span>Drafte pour battre ton record perso, ou défie un ami en duel live ci-dessous.</span>
       <div class="draft-score-vs-empty-actions">
-        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">🆚 Créer une room 1v1</button>
+        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">🆚 Créer un salon 1v1</button>
         <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">🔗 Rejoindre par code</button>
       </div>
     </div>`;
@@ -3297,7 +3297,7 @@ function renderDraftArena() {
         : (bstMetrics.rank ? "Palier " + escapeHtml(bstMetrics.rank.label) + " atteint !" : "Commence \u00e0 drafter");
       scoreHero.innerHTML =
         '<div class="dsh-main">' +
-          '<div class="dsh-label">Moyenne BST</div>' +
+          '<div class="dsh-label" title="BST : total des statistiques de base de chaque Pokémon">Puissance moyenne · BST</div>' +
           '<div class="dsh-score">' + (avg || "\u2013") + '</div>' +
           '<div class="dsh-gauge"><span style="width:' + pct + '%"></span></div>' +
           '<div class="dsh-sub">' + sub + '</div>' +
@@ -3305,7 +3305,7 @@ function renderDraftArena() {
         '<div class="dsh-stats">' +
           '<div class="dsh-chip"><span>\ud83c\udfc6 Record G' + draftArenaState.selectedGen + '</span><b>' + (rec || "\u2013") + '</b></div>' +
           (window.__pokedleAuthed ? '<div class="dsh-chip dsh-chip-rank"><span>\ud83c\udfc5 Ton rang</span><b id="dsh-rank-val">\u2026</b></div>' : '') +
-          '<div class="dsh-chip"><span>\ud83d\udd04 Rerolls</span><b>' + draftArenaState.scoreAttackRerollsLeft + '</b></div>' +
+          '<div class="dsh-chip"><span>\ud83d\udd04 Relances</span><b>' + draftArenaState.scoreAttackRerollsLeft + '</b></div>' +
           '<div class="dsh-chip dsh-chip-team"><span>\ud83d\udc65 \u00c9quipe</span><b>' + draftArenaState.team.length + '/' + DRAFT_TEAM_SIZE + '</b></div>' +
         '</div>';
       scoreHero.classList.remove("hidden");

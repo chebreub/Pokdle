@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="dist/profile.min.css">
   <link rel="stylesheet" href="dist/mobile.min.css">
   <link rel="stylesheet" href="dist/visual-refresh.min.css">
+  <link rel="stylesheet" href="dist/ergonomie.min.css">
   <link rel="stylesheet" href="dist/party-room.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
@@ -250,6 +251,9 @@
             <button type="button" data-action="setModeCatalogCategory" data-args='["all"]' data-mode-category="all" aria-pressed="false">Tout</button>
           </div>
           <label class="mode-search">Rechercher<input id="mode-search" type="search" placeholder="Nom d’un mode…" autocomplete="off" /></label>
+          <div class="mode-refinements" id="mode-refinements">
+          <button type="button" id="mode-refinements-toggle" class="btn-ghost" data-action="toggleModeRefinements" aria-expanded="false" aria-controls="mode-refinement-fields">Difficulté et générations ▾</button>
+          <div class="mode-refinement-fields" id="mode-refinement-fields">
           <label class="mode-difficulty" id="mode-difficulty-field">Difficulté
             <select id="mode-difficulty" aria-label="Filtrer les jeux par difficulté">
               <option value="all">Toutes</option>
@@ -268,8 +272,9 @@
               <button class="pk-gbtn" type="button" data-action="toggleHomeGensCard" aria-expanded="false" aria-controls="gen-grid" id="home-gens-toggle">Modifier ▾</button>
             </div>
           </div>
+          </div>
+          </div>
         </div>
-
         <p class="mode-results" id="mode-results" role="status" aria-live="polite"></p>
         <div id="mode-empty" class="mode-empty" hidden><p>Aucun résultat dans cette rubrique. Essaie un autre nom ou efface les filtres.</p><button class="btn-ghost" type="button" data-action="resetModeCatalog">Effacer les filtres</button></div>
         <section id="catalog-picks" class="catalog-picks" aria-label="Nos incontournables"></section>
@@ -359,8 +364,8 @@
         </div>
         <div class="profile-stats-links">
           <button class="btn-ghost" type="button" data-action="openMatchHistoryScreen">📜 Historique des parties</button>
-          <button class="btn-ghost" type="button" data-action="openGamesRankingMode">🎮 Classement des jeux</button>
-          <button class="btn-ghost" type="button" data-action="openRankingMode">📊 Mode classement</button>
+          <button class="btn-ghost" type="button" data-action="openGamesRankingMode">🎮 Mes notes des jeux Pokémon</button>
+          <button class="btn-ghost" type="button" data-action="openRankingMode">⭐ Mes Pokémon favoris</button>
         </div>
 
         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
@@ -375,8 +380,8 @@
         <div id="profile-secret-rune" class="secret-rune-trail"><span>Un signe familier…</span><button type="button" class="secret-rune" data-rune="profile" data-action="inspectSecretRune" data-args='["profile"]' aria-label="Examiner la marque étoilée du profil">✧</button></div>
         <section id="profile-album" class="hidden profile-missions-view" aria-label="Missions de collection">
           <div class="album-intro profile-mission-intro">
-            <div><span class="adventure-eyebrow">MAÎTRISE & RÉCOMPENSES</span><h3>Les Pokémon trophées se méritent.</h3><p>Ta collection personnelle vit désormais dans le Pokédex. Ici, tu suis uniquement les missions qui demandent de maîtriser les différents modes de Pokédle.</p></div>
-            <button type="button" class="btn-blue profile-open-collection" data-action="openPokedexCollection">Ouvrir ma collection →</button>
+            <p>Gagne des Pokémon en accomplissant des objectifs dans les neuf générations.</p>
+            <button type="button" class="btn-ghost profile-open-collection" data-action="openPokedexCollection">Ouvrir ma collection →</button>
           </div>
           <button type="button" class="album-secret-link" data-action="openSecretJournal">✦ Les rencontres secrètes ont leur propre carnet. Ouvrir les secrets →</button>
         </section>
@@ -542,7 +547,7 @@
     <div id="screen-ranking" class="hidden">
       <div class="card">
         <div class="ranking-head">
-          <h2 class="card-title">Mode classement</h2>
+          <h2 class="card-title">Mes Pokémon favoris</h2>
           <div class="ranking-head-actions">
             <button class="btn-ghost btn-danger-ghost" data-action="resetRankingChoices">🧹 Réinitialiser</button>
             <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
@@ -856,7 +861,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <select id="draft-battle-pokemon" class="mode-select hidden arena-only" aria-label="Choisir le Pokémon à envoyer au duel"></select>
               <button id="draft-battle-launch" class="btn-blue arena-only" type="button" data-action="launchDraftArenaBattle">Lancer le duel</button>
               <button id="draft-battle-close" class="btn-ghost hidden arena-only" type="button" data-action="clearDraftSimpleBattleDevPanel">Fermer le duel</button>
-              <button id="draft-score-attack-toggle" class="btn-blue" type="button" data-action="toggleDraftScoreAttackMode">Score Attack</button>
+              <button id="draft-score-attack-toggle" class="btn-ghost" type="button" data-action="toggleDraftScoreAttackMode">Score Attack</button>
               <div class="draft-multi-dropdown scoreattack-only">
                 <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">🆚 Multi ▾</button>
                 <div class="draft-multi-menu" role="menu">
@@ -865,7 +870,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
                   <button id="draft-score-room-leave" class="btn-ghost scoreattack-only" type="button" data-action="leaveDraftScoreAttackRoom">Quitter 1v1</button>
                 </div>
               </div>
-              <button id="draft-restart-btn" class="btn-blue" data-action="restartDraftArenaRun">🎲 Nouveau draft</button>
+              <button id="draft-restart-btn" class="btn-ghost" data-action="restartDraftArenaRun">🎲 Nouveau draft</button>
               <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
             </div>
           </div>
@@ -1117,7 +1122,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="classic-game-command">
           <div class="search-bar">
             <div class="ac-wrapper">
-              <input type="text" id="guess-input" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
+              <input type="text" id="guess-input" aria-label="Nom du Pokémon à proposer" placeholder="Tape un nom de Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
               <div id="guess-ac" class="ac-list hidden"></div>
             </div>
             <button class="btn-blue btn-submit" id="btn-submit" data-action="submitGuess">Deviner</button>
@@ -1457,7 +1462,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Poké-Connections</h2>
           <div class="ranking-head-actions">
-            <button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button>
+            <button class="btn-ghost" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>

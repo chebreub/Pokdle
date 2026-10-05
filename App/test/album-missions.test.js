@@ -49,6 +49,29 @@ test('mission progress never relies on random loot',()=>{
   assert.ok(hidden.length>=8);
   assert.ok(hidden.every(m=>m.tier==='secret'));
 });
+test('mission discovery puts ready rewards first, hidden spoilers last and closer goals before fresh ones',()=>{
+  const f=fixture();
+  const m=(id,tier='confirmed',hidden=false)=>({id,tier,hidden,generation:1});
+  const s=(value,ready=false,claimed=false)=>({ready,claimed,reqs:[{value,goal:10}]});
+  const rows=[[m('secret','secret',true),s(9)],[m('fresh'),s(0)],[m('closer','prestige'),s(8)],
+    [m('ready','legendary'),s(10,true)],[m('claimed','expert'),s(10,true,true)]];
+  rows.sort(f.compareAlbumMissionPriority);
+  assert.deepEqual(rows.map(([m])=>m.id),['ready','closer','fresh','secret','claimed']);
+  assert.equal(rows.length,5);
+});
+test('mission play action targets an unfinished objective, never a completed one or a reward claim',()=>{
+  const f=fixture();
+  const mission=f.albumMissionById('g1_alakazam');
+  const state={reqs:[{req:{type:'quick',mode:'normal'},done:true},{req:{type:'record',field:'quizHighScore'},done:false}]};
+  assert.equal(f.albumMissionNextAction(mission,state).action,'startQuizGame');
+  assert.equal(f.albumMissionNextAction(mission,{reqs:[{req:{type:'gen',generation:9},done:false}]}).action,'openAllModesScreen');
+  f.ensureAlbumMissionStats();
+  const before=JSON.stringify(f.playerProfile);
+  let opened=0;f.window.startWeightBattle=()=>opened++;
+  f.playAlbumMission('g1_snorlax');
+  assert.equal(opened,1);
+  assert.equal(JSON.stringify(f.playerProfile),before);
+});
 test('mission claim records provenance and cannot be claimed twice',()=>{
   const f=fixture(),mission=f.albumMissionById('g8_falinks');
   f.POKEMON_BY_ID.set(870,{id:870,name:'Hexadron',gen:8});

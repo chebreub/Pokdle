@@ -198,9 +198,9 @@ function renderWeeklyLeagueHome() {
     card.id="weekly-league-home";
     card.className="weekly-league-home";
   }
-  if(daily.nextElementSibling!==card) daily.insertAdjacentElement("afterend",card);
   const pathways=document.querySelector("#screen-config .home-pathways");
-  if(pathways&&card.nextElementSibling!==pathways) card.insertAdjacentElement("afterend",pathways);
+  const anchor=pathways||daily;
+  if(anchor.nextElementSibling!==card) anchor.insertAdjacentElement("afterend",card);
   const state=weeklyLeagueState();
   weeklyLeagueSyncScore(state);
   const next=state.disciplines.find(row=>!row.metric.complete)||state.disciplines[0];

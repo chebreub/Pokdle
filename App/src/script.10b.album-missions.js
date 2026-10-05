@@ -340,7 +340,7 @@ function ensureAlbumMissionPanel() {
   panel.id = 'album-mission-panel';
   panel.className = 'album-mission-panel';
   panel.innerHTML = `
-    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Les Pokémon trophées se méritent.</h3><p>108 missions, 12 par génération. Les anciennes cartes déjà acquises restent à toi.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
+    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine récompense</h3><p>Les récompenses prêtes et les objectifs les plus proches arrivent en premier. Explore les 108 missions avec les filtres.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
     <div class="album-mission-filters">
       <label>Génération<select id="album-mission-gen"><option value="all">Toutes</option>${ALBUM_REGIONS.map((r,i)=>`<option value="${i+1}">Gen ${i+1} · ${r}</option>`).join('')}</select></label>
       <label>Niveau<select id="album-mission-tier"><option value="all">Tous</option>${Object.entries(ALBUM_MISSION_TIERS).map(([id,t])=>`<option value="${id}">${t.label}</option>`).join('')}</select></label>
@@ -366,7 +366,7 @@ function albumMissionCard(mission) {
     ? `<button type="button" class="btn-ghost" data-action="viewAlbumMissionReward" data-args='["${mission.id}"]'>Voir dans l’album →</button>`
     : state.ready
       ? `<button type="button" class="btn-blue" data-action="claimAlbumMission" data-args='["${mission.id}"]'>Réclamer ${escapeHtml(pokemon.name)} →</button>`
-      : '';
+      : hidden ? '' : `<button type="button" class="btn-ghost" data-action="playAlbumMission" data-args='["${mission.id}"]'>${escapeHtml(albumMissionNextAction(mission, state).label)} →</button>`;
   return `<article id="album-mission-${mission.id}" class="album-mission-card tier-${mission.tier} ${state.ready ? 'is-ready' : ''} ${state.claimed ? 'is-claimed' : ''}">
     <div class="album-mission-top"><span class="album-mission-tier">${tier.icon} ${tier.label}</span><span>Gen ${mission.generation}</span></div>
     <div class="album-mission-reward">${reward}<div><small>${state.claimed ? 'OBTENU' : state.ready ? 'RÉCOMPENSE PRÊTE' : hidden ? 'POKÉMON SECRET' : 'RÉCOMPENSE'}</small><h4>${hidden ? '???' : escapeHtml(pokemon.name)}</h4><span>${escapeHtml(mission.title)}</span></div></div>
@@ -374,6 +374,44 @@ function albumMissionCard(mission) {
     <progress max="${state.total}" value="${state.done}" aria-label="Progression ${escapeHtml(mission.title)}"></progress>
     ${reqs}${action}
   </article>`;
+}
+// Presentation ordering only: rewards, requirements and claim rules are unchanged.
+function compareAlbumMissionPriority([a, sa], [b, sb]) {
+  const progress = s => s.reqs.reduce((sum, r) => sum + Math.min(r.value / r.goal, 1), 0) / Math.max(1, s.reqs.length);
+  return Number(sb.ready && !sb.claimed) - Number(sa.ready && !sa.claimed)
+    || Number(sa.claimed) - Number(sb.claimed)
+    || Number(a.hidden && !sa.ready && !sa.claimed) - Number(b.hidden && !sb.ready && !sb.claimed)
+    || progress(sb) - progress(sa)
+    || (ALBUM_MISSION_TIERS[a.tier]?.weight || 0) - (ALBUM_MISSION_TIERS[b.tier]?.weight || 0)
+    || a.generation - b.generation;
+}
+function albumMissionNextAction(mission, state = albumMissionState(mission)) {
+  const modeActions = {
+    normal:['startNormalGame','Jouer en illimité'], daily:['startDailyGame','Jouer au Pokémon du jour'],
+    silhouette:['startSilhouetteGame','Jouer au Zoom progressif'], pixel:['startPixelGame','Jouer au Pixelisé'],
+    cry:['startCryGame','Jouer au Cri'], quiz:['startQuizGame','Jouer au Quiz'],
+    odd:['openOddOneOutMode','Jouer à Intrus'], connections:['openPokeConnectionsMode','Jouer à Connections'],
+    higherlower:['openHigherLowerMode','Jouer à Higher or Lower'], speedrun:['openSpeedrunMode','Jouer au Speedrun'],
+    weight:['startWeightBattle','Jouer au Duel de poids']
+  };
+  const recordActions = {
+    quizHighScore:modeActions.quiz, weightBattleHighScore:modeActions.weight,
+    speedrunHighScore:modeActions.speedrun, higherLowerHighScore:modeActions.higherlower
+  };
+  for (const {req, done} of state.reqs) {
+    if (done) continue;
+    const match = req.type === 'draft' ? ['openDraftScoreAttackMode','Jouer au Draft Score Attack']
+      : req.type === 'record' ? recordActions[req.field]
+      : ['wins','quick'].includes(req.type) ? modeActions[req.mode] : null;
+    if (match) return { action:match[0], label:match[1] };
+  }
+  return { action:'openAllModesScreen', label:'Choisir un jeu' };
+}
+function playAlbumMission(id) {
+  const mission = albumMissionById(id);
+  if (!mission || mission.hidden) return;
+  const {action} = albumMissionNextAction(mission);
+  if (typeof window[action] === 'function') window[action](...(action === 'openAllModesScreen' ? ['solo'] : []));
 }
 function renderAlbumMissions() {
   const grid = document.getElementById('album-mission-grid');
@@ -393,7 +431,7 @@ function renderAlbumMissions() {
     (tier === 'all' || m.tier === tier) &&
     (status === 'all' || (status === 'claimed' ? s.claimed : status === 'ready' ? s.ready && !s.claimed : !s.claimed))
   );
-  list.sort((a,b) => Number(b[1].ready && !b[1].claimed) - Number(a[1].ready && !a[1].claimed) || (ALBUM_MISSION_TIERS[b[0].tier]?.weight || 0) - (ALBUM_MISSION_TIERS[a[0].tier]?.weight || 0) || a[0].generation - b[0].generation);
+  list.sort(compareAlbumMissionPriority);
   grid.innerHTML = list.slice(0, albumMissionLimit).map(([m]) => albumMissionCard(m)).join('') || '<p class="album-mission-empty">Aucune mission avec ces filtres.</p>';
   const more = document.getElementById('album-mission-more');
   if (more) more.classList.toggle('hidden', list.length <= albumMissionLimit);

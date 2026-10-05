@@ -181,6 +181,7 @@ function saveModeCatalogState() {
 }
 function renderModeCatalog() {
   var query = document.getElementById('mode-search')?.value || '';
+  document.getElementById('mode-refinements')?.classList.toggle('hidden', modeCatalogCategory === 'explore');
   if (typeof renderCatalogPicks === "function") renderCatalogPicks(modeCatalogCategory, query, modeCatalogDifficulty);
   var count = 0;
   document.querySelectorAll('#screen-all-modes .all-modes-cat').forEach(section => {
@@ -224,6 +225,15 @@ function setModeCatalogDifficulty(difficulty, save = true) {
   modeCatalogDifficulty = Object.prototype.hasOwnProperty.call(MODE_CATALOG_DIFFICULTY_LABELS, difficulty) ? difficulty : 'all';
   renderModeCatalog();
   if (save) saveModeCatalogState();
+}
+function toggleModeRefinements() {
+  const panel = document.getElementById("mode-refinements");
+  const expanded = panel?.classList.toggle("is-expanded") || false;
+  const button = document.getElementById("mode-refinements-toggle");
+  if (button) {
+    button.setAttribute("aria-expanded", String(expanded));
+    button.textContent = "Difficulté et générations " + (expanded ? "▴" : "▾");
+  }
 }
 function resetModeCatalog() {
   modeCatalogDifficulty = 'all';

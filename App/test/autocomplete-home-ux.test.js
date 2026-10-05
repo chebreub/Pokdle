@@ -39,6 +39,6 @@ test('mobile autocomplete participates in layout instead of covering the game bo
 });
 
 test('Pokémon du jour stays ahead of the adventure dashboard',()=>{
-  assert.match(home,/const anchor = pathways \|\| weekly \|\| daily/);
+  assert.match(home,/const anchor = weekly \|\| pathways \|\| daily/);
   assert.match(home,/anchor\.insertAdjacentElement\('afterend', home\)/);
 });
