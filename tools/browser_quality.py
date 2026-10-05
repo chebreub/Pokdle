@@ -29,7 +29,7 @@ def main():
       if result is not None: item['detail']=result
      except Exception as e: item['error']=str(e)[:1200]
      if capture:
-      try: page.screenshot(path=str(out/f'{width}-{name}.png'),animations='disabled')
+      try: page.screenshot(path=str(out/f'{width}-{name}.jpg'),quality=90,animations='disabled')
       except Exception as e: item['screenshot_error']=str(e)[:180]
      cases.append(item);print('QA '+json.dumps(item,ensure_ascii=True),flush=True)
     def screen(expected):
@@ -137,7 +137,7 @@ def main():
      if picks.count()>=3:
       rects=picks.evaluate_all('(els)=>els.slice(0,3).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
       expect(abs(rects[0]['y']-rects[1]['y'])<3 and abs(rects[0]['y']-rects[2]['y'])<3,'Featured desktop picks are not a single row: '+repr(rects))
-      expect(min(r['h'] for r in rects)>=170,'Featured desktop picks are too small: '+repr(rects))
+      expect(all(140<=r['h']<=180 for r in rects),'Featured desktop picks should remain readable and compact: '+repr(rects))
      return screen('screen-all-modes')
     check('pc3-catalog-shelves',pc3_catalog_shelves)
     def start(action,target):
@@ -309,6 +309,7 @@ def main():
      expect('???' not in first.inner_text(),'Mission onboarding still starts with a hidden reward')
      action=first.locator('button[data-action="playAlbumMission"]')
      expect(action.is_visible(),'First active mission has no route to a game')
+     page.screenshot(path=str(out/f'{width}-mission-list.jpg'),quality=90,animations='disabled')
      action.click()
      expect(page.locator('#profile-album').is_hidden(),'Mission game button left the player on the mission list')
      return {'first_mission_has_game_action':True}
@@ -316,6 +317,7 @@ def main():
     check('profile',lambda:nav('profile','screen-profile'))
     def d3_profile_density():
      nav('profile','screen-profile')
+     page.get_by_role('button',name='Dresseur',exact=True).click()
      page.evaluate("""() => {
        playerProfile.speedrunHighScore=14;
        playerProfile.quizHighScore=18;
@@ -531,7 +533,7 @@ def main():
      expect(page.locator('.poke-connections-final.is-won').is_visible(),'Connections win state missing')
      expect(page.locator('.poke-connections-tile').count()==0,'Solved tiles remain selectable')
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()')
-     page.screenshot(path=str(out/f'{width}-connections-win.png'),animations='disabled')
+     page.screenshot(path=str(out/f'{width}-connections-win.jpg'),quality=90,animations='disabled')
      page.locator('.poke-connections-final [data-action="restartPokeConnectionsGame"]').click()
      expect(page.locator('.poke-connections-tile').count()==16,'Restart did not restore 16 tiles')
      expect(page.locator('.poke-connections-mistake-dot.is-used').count()==0,'Restart kept old mistakes')
