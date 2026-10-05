@@ -48,6 +48,12 @@ var MODE_CATALOG_ART = Object.freeze({
   openEmulatorMode:{ids:[25],effect:'pixel',glyph:'8-BIT'},
   openLeaderboard:{ids:[150,25,448],effect:'podium',glyph:'1'}
 });
+// Illustration filenames are versioned because /img assets are cached for 30 days.
+var MODE_CATALOG_ILLUSTRATIONS = Object.freeze({
+  startDailyGame:'daily',
+  openPokeConnectionsMode:'connections',
+  openDraftScoreAttackMode:'draft'
+});
 function modeCatalogSpriteUrl(id) {
   try { if (typeof getSpriteUrl === 'function') return getSpriteUrl(Number(id)); } catch (_e) {}
   return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/'+Number(id)+'.png';
@@ -114,6 +120,12 @@ function modeCatalogPreviewHtml(spec) {
   }
 }
 function modeCatalogArtHtml(key, variant='card') {
+  const illustration=MODE_CATALOG_ILLUSTRATIONS[key];
+  if (illustration) {
+    const base='img/modes/'+illustration+'-v1-';
+    const sizes=variant === 'pick' ? '(max-width:760px) 112px, (max-width:1800px) 30vw, 550px' : '144px';
+    return '<span class="mode-illustration is-'+variant+'" aria-hidden="true"><img src="'+base+'480.webp" srcset="'+base+'480.webp 480w, '+base+'960.webp 960w" sizes="'+sizes+'" width="960" height="640" alt="" loading="lazy" decoding="async" /></span>';
+  }
   const spec=MODE_CATALOG_ART[key];
   if (!spec) return '';
   return '<span class="mode-card-art art-'+spec.effect+' is-'+variant+'" aria-hidden="true">'+
@@ -146,11 +158,11 @@ function modeCatalogDecorateDifficulty(card) {
 function decorateModeCatalogCards() {
   document.querySelectorAll('#screen-all-modes .all-modes-card').forEach(card=>{
     modeCatalogDecorateDifficulty(card);
-    if (card.querySelector('.mode-card-art')) return;
+    if (card.querySelector('.mode-card-art, .mode-illustration')) return;
     const key=modeCatalogActionKey(card);
     const html=modeCatalogArtHtml(key,'card');
     if (!html) return;
-    card.classList.add('has-mode-art');
+    card.classList.add(MODE_CATALOG_ILLUSTRATIONS[key] ? 'has-mode-illustration' : 'has-mode-art');
     card.dataset.modeArt=MODE_CATALOG_ART[key]?.effect || '';
     card.insertAdjacentHTML('beforeend',html);
   });

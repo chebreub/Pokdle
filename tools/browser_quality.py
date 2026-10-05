@@ -116,10 +116,48 @@ def main():
      return sizes
     check('preview-layout',preview_layout,False)
     def icon_strokes():
+     nav('social','screen-all-modes')
      styles=page.locator('.club-pick-icon svg:visible').evaluate_all('(els)=>els.map(e=>({fill:getComputedStyle(e).fill,stroke:getComputedStyle(e).stroke}))')
      expect(len(styles)==3 and all(e['fill']=='none' and e['stroke']!='none' for e in styles),str(styles))
+     nav('game','screen-all-modes')
      return styles
     check('catalog-icons',icon_strokes,False)
+    def illustrated_cards():
+     picks=page.locator('#catalog-picks .has-mode-illustration')
+     expect(picks.count()==3,'Expected three illustrated pilot cards')
+     for card in picks.all():
+      img=card.locator('.mode-illustration img')
+      img.scroll_into_view_if_needed()
+      img.evaluate('(e)=>e.decode()')
+      expect(img.evaluate('(e)=>e.complete && e.naturalWidth>0'),'Illustration asset failed to load')
+      picture=img.bounding_box();title=card.locator('b').bounding_box();box=card.bounding_box()
+      expect(picture['width']>=100,'Illustration is still a tiny thumbnail')
+      expect(title['x']>=box['x'] and title['x']+title['width']<=box['x']+box['width']+1,'Card title is clipped')
+      if width<=760:
+       expect(box['height']<=190,'Mobile illustrated card is too tall')
+       expect(title['x']>=picture['x']+picture['width'],'Mobile text should sit beside the illustration')
+      else:
+       expect(title['y']>=picture['y']+picture['height'],'Desktop text overlaps its illustration')
+       expect(abs(picture['width']-(box['width']-2))<3,'Desktop illustration should fill its card width')
+     expect(page.locator('.all-modes-card[data-args=\'["startNormalGame"]\']').is_visible(),'Unlimited mode disappeared from the catalog')
+     page.locator('#catalog-picks').scroll_into_view_if_needed()
+     page.screenshot(path=str(out/f'{width}-illustrated-selection.jpg'),quality=90,animations='disabled')
+     page.evaluate("document.body.classList.add('theme-dark')")
+     page.screenshot(path=str(out/f'{width}-illustrated-selection-dark.jpg'),quality=90,animations='disabled')
+     page.evaluate("document.body.classList.remove('theme-dark')")
+     page.locator('#mode-search').fill('connections')
+     result=page.locator('.all-modes-card.has-mode-illustration:visible')
+     expect(result.count()==1,'Connections search did not preserve the illustrated result')
+     result.locator('img').evaluate('(e)=>e.decode()')
+     title=result.locator('b').bounding_box();picture=result.locator('img').bounding_box()
+     expect(title['width']>=140,'Search title is still trapped in the old icon column: '+repr(title))
+     expect(title['x']+title['width']<=picture['x'],'Search image overlaps the text column')
+     expect(result.locator('small').evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=13,'Search description is too small')
+     expect(result.bounding_box()['height']<=220,'Search result is unnecessarily tall')
+     page.screenshot(path=str(out/f'{width}-illustrated-search.jpg'),quality=90,animations='disabled')
+     page.locator('#mode-search').fill('')
+     return screen('screen-all-modes')
+    check('illustrated-cards',illustrated_cards,False)
     def pc3_catalog_shelves():
      if width<1280: return {'skipped':'desktop-only'}
      nav('game','screen-all-modes')
@@ -137,7 +175,7 @@ def main():
      if picks.count()>=3:
       rects=picks.evaluate_all('(els)=>els.slice(0,3).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
       expect(abs(rects[0]['y']-rects[1]['y'])<3 and abs(rects[0]['y']-rects[2]['y'])<3,'Featured desktop picks are not a single row: '+repr(rects))
-      expect(all(140<=r['h']<=180 for r in rects),'Featured desktop picks should remain readable and compact: '+repr(rects))
+      expect(all(300<=r['h']<=520 for r in rects),'Illustrated desktop picks should fit a cover and readable copy: '+repr(rects))
      return screen('screen-all-modes')
     check('pc3-catalog-shelves',pc3_catalog_shelves)
     def start(action,target):

@@ -39,14 +39,14 @@ test("every visible catalog card has a Pokémon art identity",()=>{
   }
 });
 
-test("mode art is decorative, lazy and sprite based",()=>{
+test("existing mode art remains decorative, lazy and sprite based",()=>{
   const f=artFixture();
-  const out=f.__html("startDailyGame","card");
+  const out=f.__html("startNormalGame","card");
   assert.match(out,/mode-card-art art-mystery/);
   assert.match(out,/loading="lazy"/);
   assert.match(out,/decoding="async"/);
   assert.match(out,/aria-hidden="true"/);
-  assert.match(out,/sprite\/149/);
+  assert.match(out,/sprite\/133/);
 });
 
 test("featured picks reuse the same visual identity system",()=>{
