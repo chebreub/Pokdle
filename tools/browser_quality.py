@@ -440,6 +440,51 @@ def main():
     def d2_connections_shell():
      page.evaluate('openPokeConnectionsMode()');screen('screen-poke-connections');expect(page.locator('.poke-connections-grid .poke-connections-tile').count()==16,'Connections board does not contain 16 tiles');page.locator('.poke-connections-tile').first.click();expect(page.locator('.poke-connections-tile.is-selected').count()==1,'Connections selected state missing');expect(page.locator('.poke-connections-actions .btn-blue').count()==1,'Connections primary action missing');return screen('screen-poke-connections')
     check('d2-connections-shell',d2_connections_shell)
+    def connections_fairness_and_play():
+     page.evaluate('restartPokeConnectionsGame()');screen('screen-poke-connections')
+     fairness=page.evaluate('''() => {
+      const puzzle=pokeConnectionsState.puzzle,board=puzzle.groups.flatMap(g=>g.pokemon);
+      const key=ps=>ps.map(p=>Number(p.id)).sort((a,b)=>a-b).join(',');
+      const expected=new Set(puzzle.groups.map(g=>key(g.pokemon))),legal=new Set();
+      const values=(p,c)=>c==='type'?[p.type1,p.type2].filter(Boolean):c==='gen'?[Number(p.gen||p.generation)]:[p.color];
+      for(let a=0;a<13;a++)for(let b=a+1;b<14;b++)for(let c=b+1;c<15;c++)for(let d=c+1;d<16;d++) {
+       const quartet=[board[a],board[b],board[c],board[d]];
+       if(!['type','gen','color'].some(category=>values(quartet[0],category).some(value=>quartet.slice(1).every(p=>values(p,category).includes(value)))))continue;
+       const k=key(quartet);if(!expected.has(k))throw Error('Valid quartet would be refused: '+quartet.map(p=>p.name).join(', '));legal.add(k);
+      }
+      return {legalGroups:legal.size,uniquePokemon:new Set(board.map(p=>p.id)).size,themes:puzzle.groups.map(g=>g.label)};
+     }''')
+     expect(fairness['legalGroups']==4 and fairness['uniquePokemon']==16,'Ambiguous Connections board: '+repr(fairness))
+     def choose(indices):
+      for idx in indices: page.locator(f'.poke-connections-tile[data-args="[{idx}]"]').click()
+      page.locator('[data-action="submitPokeConnectionsGuess"]').click()
+     wrong=page.evaluate('[0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.findIndex(t=>t.groupIdx===g))')
+     choose(wrong)
+     expect(page.locator('.poke-connections-mistake-dot.is-used').count()==1,'Wrong quartet did not consume exactly one mistake')
+     page.locator('[data-action="clearPokeConnectionsSelection"]').click()
+     for group in range(4):
+      if group:
+       page.locator('[data-action="shufflePokeConnectionsTiles"]').click()
+       expect(page.locator('.poke-connections-tile.is-selected').count()==0,'Shuffle kept stale selection')
+      indices=page.evaluate('(g)=>pokeConnectionsState.puzzle.tiles.flatMap((t,i)=>t.groupIdx===g?[i]:[])',group)
+      choose(indices)
+      expect(page.locator('.poke-connections-found > .poke-connections-found-row').count()==group+1,'Valid group was refused')
+      expect(page.locator('.poke-connections-mistake-dot.is-used').count()==1,'Valid group consumed a mistake')
+     expect(page.locator('.poke-connections-final.is-won').is_visible(),'Connections win state missing')
+     expect(page.locator('.poke-connections-tile').count()==0,'Solved tiles remain selectable')
+     page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()')
+     page.screenshot(path=str(out/f'{width}-connections-win.png'),animations='disabled')
+     page.locator('.poke-connections-final [data-action="restartPokeConnectionsGame"]').click()
+     expect(page.locator('.poke-connections-tile').count()==16,'Restart did not restore 16 tiles')
+     expect(page.locator('.poke-connections-mistake-dot.is-used').count()==0,'Restart kept old mistakes')
+     wrong=page.evaluate('[0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.findIndex(t=>t.groupIdx===g))')
+     for attempt in range(4):
+      if attempt: page.locator('[data-action="clearPokeConnectionsSelection"]').click()
+      choose(wrong)
+     expect(page.locator('.poke-connections-final.is-lost').is_visible(),'Connections loss state missing')
+     expect(page.locator('.poke-connections-reveal-groups .is-reveal').count()==4,'Loss did not reveal four groups')
+     screen('screen-poke-connections');return fairness
+    check('connections-fairness-and-play',connections_fairness_and_play)
     def d2_speedrun_shell():
      page.evaluate('openSpeedrunMode()');screen('screen-speedrun');start_btn=page.locator('.speedrun-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Speedrun start CTA is not primary blue');start_btn.click();expect(page.locator('.speedrun-pokemon').is_visible(),'Speedrun sprite stage missing');expect(page.locator('#speedrun-timer').is_visible(),'Speedrun timer missing');return screen('screen-speedrun')
     check('d2-speedrun-shell',d2_speedrun_shell)
