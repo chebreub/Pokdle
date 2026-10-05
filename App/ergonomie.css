@@ -206,6 +206,7 @@
 #pokdle-app.design-refresh #screen-all-modes #catalog-picks.illustrated-selection .mode-illustration {
   grid-row:1;
   width:100%;
+  max-width:none;
   aspect-ratio:16 / 9;
 }
 #pokdle-app.design-refresh #screen-all-modes #catalog-picks.illustrated-selection .club-pick > small {

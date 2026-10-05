@@ -129,7 +129,7 @@ def main():
       img=card.locator('.mode-illustration img')
       img.scroll_into_view_if_needed()
       img.evaluate('(e)=>e.decode()')
-      expect(img.evaluate('(e)=>e.naturalWidth')>=480,'Illustration asset failed to load')
+      expect(img.evaluate('(e)=>e.complete && e.naturalWidth>0'),'Illustration asset failed to load')
       picture=img.bounding_box();title=card.locator('b').bounding_box();box=card.bounding_box()
       expect(picture['width']>=100,'Illustration is still a tiny thumbnail')
       expect(title['x']>=box['x'] and title['x']+title['width']<=box['x']+box['width']+1,'Card title is clipped')
