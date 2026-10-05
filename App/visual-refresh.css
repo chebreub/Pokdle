@@ -2983,6 +2983,8 @@
   #pokdle-app.design-refresh #screen-poke-connections .poke-connections-action-zone {
     position:sticky;
     bottom:calc(78px + env(safe-area-inset-bottom));
+    /* Réserve le décalage du dock dans la carte à overflow:hidden. */
+    margin-bottom:calc(78px + env(safe-area-inset-bottom));
     z-index:35;
     padding:8px;
     background:color-mix(in srgb,var(--ui-surface) 92%,transparent);

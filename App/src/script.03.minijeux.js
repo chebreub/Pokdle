@@ -1133,7 +1133,9 @@ function renderSpeedrunScreen() {
 }
 
 // === POKÉ-CONNECTIONS — mode solo (style NYT Connections) ===
-const POKE_CONNECTIONS_CATEGORIES = ["type", "gen", "habitat", "color", "stage"];
+// Les habitats sont incomplets et le stade 1 inclut les espèces sans évolution.
+// Ces attributs ne constituent donc pas des thèmes fiables pour ce mode.
+const POKE_CONNECTIONS_CATEGORIES = ["type", "gen", "color"];
 const POKE_CONNECTIONS_GROUP_COLORS = ["yellow", "green", "blue", "purple"];
 const POKE_CONNECTIONS_MAX_MISTAKES = 4;
 let pokeConnectionsState = null;
@@ -1144,23 +1146,14 @@ function pokeConnectionsGetThemeLabel(category, value) {
     const labelGen = (typeof GENERATIONS === "object" && GENERATIONS?.[value]?.label) ? ` (${GENERATIONS[value].label})` : "";
     return `Génération ${value}${labelGen}`;
   }
-  if (category === "habitat") return `Habitat : ${value}`;
   if (category === "color") return `Couleur : ${value}`;
-  if (category === "stage") {
-    if (value === 1) return "Stade 1 (forme initiale)";
-    if (value === 2) return "Stade 2 (intermédiaire)";
-    if (value === 3) return "Stade 3 (forme finale)";
-    return `Stade ${value}`;
-  }
   return `${category} : ${value}`;
 }
 
 function pokeConnectionsMatchValue(pokemon, category, value) {
   if (category === "type") return pokemon.type1 === value || pokemon.type2 === value;
   if (category === "gen") return Number(pokemon.gen || pokemon.generation) === Number(value);
-  if (category === "habitat") return pokemon.habitat === value;
   if (category === "color") return pokemon.color === value;
-  if (category === "stage") return Number(pokemon.stage) === Number(value);
   return false;
 }
 
@@ -1172,37 +1165,58 @@ function pokeConnectionsCountValues(pool, category) {
       if (p.type1) values.push(p.type1);
       if (p.type2 && p.type2 !== p.type1) values.push(p.type2);
     } else if (category === "gen") values.push(Number(p.gen || p.generation));
-    else if (category === "habitat" && p.habitat) values.push(p.habitat);
     else if (category === "color" && p.color) values.push(p.color);
-    else if (category === "stage" && p.stage) values.push(Number(p.stage));
     for (const v of values) {
       if (v === undefined || v === null || v === "") continue;
+      if (category === "gen" && !Number.isFinite(v)) continue;
       counts.set(v, (counts.get(v) || 0) + 1);
     }
   }
   return counts;
 }
 
-function generatePokeConnectionsPuzzle() {
-  const all = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000);
-  if (all.length < 16) return null;
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const categories = shuffleArray(POKE_CONNECTIONS_CATEGORIES.slice()).slice(0, 4);
-    const groups = [];
-    const usedIds = new Set();
-    let ok = true;
-    for (const cat of categories) {
-      const counts = pokeConnectionsCountValues(all.filter((p) => !usedIds.has(p.id)), cat);
-      const candidates = [...counts.entries()].filter(([, c]) => c >= 4);
-      if (!candidates.length) { ok = false; break; }
-      const [value] = candidates[Math.floor(Math.random() * candidates.length)];
-      const pool = all.filter((p) => !usedIds.has(p.id) && pokeConnectionsMatchValue(p, cat, value));
-      if (pool.length < 4) { ok = false; break; }
-      const picks = shuffleArray(pool.slice()).slice(0, 4);
-      for (const p of picks) usedIds.add(p.id);
-      groups.push({ category: cat, value, label: pokeConnectionsGetThemeLabel(cat, value), pokemon: picks });
+function pokeConnectionsHasUniqueGroups(groups) {
+  if (groups.length !== 4 || groups.some((g) =>
+    !POKE_CONNECTIONS_CATEGORIES.includes(g.category) || g.pokemon.length !== 4 ||
+    g.pokemon.some((p) => !pokeConnectionsMatchValue(p, g.category, g.value)))) return false;
+  const board = groups.flatMap((g) => g.pokemon);
+  const groupById = new Map(groups.flatMap((g, idx) => g.pokemon.map((p) => [Number(p.id), idx])));
+  if (groupById.size !== 16) return false;
+
+  // Vérifie tous les thèmes autorisés, pas seulement les quatre thèmes tirés.
+  // Toute sélection valable de quatre doit être un groupe accepté par le jeu.
+  for (const category of POKE_CONNECTIONS_CATEGORIES) {
+    for (const [value, count] of pokeConnectionsCountValues(board, category)) {
+      if (count < 4) continue;
+      if (count !== 4) return false;
+      const matching = board.filter((p) => pokeConnectionsMatchValue(p, category, value));
+      const groupIdx = groupById.get(Number(matching[0].id));
+      if (matching.some((p) => groupById.get(Number(p.id)) !== groupIdx)) return false;
     }
-    if (!ok || groups.length !== 4) continue;
+  }
+  return true;
+}
+
+function generatePokeConnectionsPuzzle() {
+  const all = [...new Map((Array.isArray(POKEMON_LIST) ? POKEMON_LIST : [])
+    .filter((p) => Number(p.id) > 0 && Number(p.id) < 10000)
+    .map((p) => [Number(p.id), p])).values()];
+  if (all.length < 16) return null;
+  const themes = POKE_CONNECTIONS_CATEGORIES.flatMap((category) =>
+    [...pokeConnectionsCountValues(all, category)]
+      .filter(([, count]) => count >= 4)
+      .map(([value]) => ({ category, value, pool: all.filter((p) => pokeConnectionsMatchValue(p, category, value)) })));
+  if (themes.length < 4) return null;
+  for (let attempt = 0; attempt < 128; attempt++) {
+    const chosen = shuffleArray(themes.slice()).slice(0, 4);
+    const pools = chosen.map((theme) => theme.pool.filter((p) =>
+      chosen.every((other) => other === theme || !pokeConnectionsMatchValue(p, other.category, other.value))));
+    if (pools.some((pool) => pool.length < 4)) continue;
+    const groups = chosen.map(({ category, value }, idx) => ({
+      category, value, label: pokeConnectionsGetThemeLabel(category, value),
+      pokemon: shuffleArray(pools[idx].slice()).slice(0, 4),
+    }));
+    if (!pokeConnectionsHasUniqueGroups(groups)) continue;
     const tiles = shuffleArray(groups.flatMap((g, idx) => g.pokemon.map((p) => ({ id: p.id, name: p.name, sprite: p.sprite, groupIdx: idx }))));
     return { groups, tiles };
   }

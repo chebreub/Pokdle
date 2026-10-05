@@ -2553,7 +2553,7 @@ const HELP_BY_SCREEN = {
     body: `
       <section class="app-help-card">
         <h4>Regroupe les 16 Pokémon par 4</h4>
-        <p>Style NYT Connections : 16 Pokémon en grille. Trouve les 4 groupes de 4 selon un thème caché (type, génération, habitat, couleur, stade d'évolution). 4 erreurs max.</p>
+        <p>16 Pokémon en grille. Trouve les 4 groupes de 4 selon un type, une génération ou une couleur en commun. Chaque thème correspond à exactement 4 Pokémon de la grille : aucun groupe valable n'est refusé au profit d'une répartition cachée. 4 erreurs max.</p>
       </section>
       <section class="app-help-card">
         <h4>Astuces</h4>
