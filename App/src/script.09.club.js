@@ -56,7 +56,7 @@ function isClubFeatured(card, category, query, difficulty = "all") {
   try {
     const [name, ...args] = JSON.parse(card.dataset.args || "[]");
     return args.length === 0 && (category === "solo"
-      ? ["startDailyGame", "startNormalGame", "openDraftScoreAttackMode"]
+      ? ["startDailyGame", "openPokeConnectionsMode", "openDraftScoreAttackMode"]
       : ["openPartyRoomMode", "openMultiplayerMode", "openStatClashMode"]).includes(name);
   } catch (_error) { return false; }
 }
@@ -65,6 +65,7 @@ function renderCatalogPicks(category, query, difficulty = "all") {
   if (!panel) return;
   const hide = Boolean(String(query || "").trim()) || difficulty !== "all" || category === "explore" || category === "all";
   panel.classList.toggle("hidden", hide);
+  panel.classList.toggle("illustrated-selection", category === "solo");
   if (hide) return;
   const picks = category === "friends" ? [
     ["openPartyRoomMode", "La soirée à plusieurs", "Party Room", "2–8 joueurs · Déduction, numéros et nouvelle enquête coop.", "users"],
@@ -72,11 +73,14 @@ function renderCatalogPicks(category, query, difficulty = "all") {
     ["openStatClashMode", "Le défi stratégique", "Stat Clash", "2 joueurs · Choisis les bonnes statistiques.", "chart"]
   ] : [
     ["startDailyGame", "Le rendez-vous", "Pokémon du jour", "Une cible par jour · Des indices à chaque essai.", "calendar"],
-    ["startNormalGame", "Le classique", "Mode illimité", "Sans limite · Idéal pour découvrir Pokédle.", "infinity"],
+    ["openPokeConnectionsMode", "Les liens cachés", "Poké-Connections", "16 Pokémon · À toi de retrouver les quatre groupes.", "link"],
     ["openDraftScoreAttackMode", "Le défi de score", "Draft Score Attack", "Compose une équipe de six et vise le record.", "chart"]
   ];
-  panel.innerHTML = '<div class="club-section-head"><h3>Commence ici</h3><span>Trois incontournables</span></div><div class="club-picks-grid">' +
-    picks.map((p, i) => '<button type="button" class="club-pick club-pick-' + i + ' has-mode-art" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([p[0]])) + '"><span class="club-pick-icon" aria-hidden="true"><svg><use href="#i-' + p[4] + '"/></svg></span>' + (typeof modeCatalogArtHtml === "function" ? modeCatalogArtHtml(p[0], "pick") : "") + '<small>' + p[1] + '</small><b>' + p[2] + '</b><span>' + p[3] + '</span><strong aria-hidden="true">Jouer →</strong></button>').join("") + '</div><p class="club-more-label">Ou explore les autres jeux ci-dessous</p>';
+  panel.innerHTML = '<div class="club-section-head"><h3>' + (category === "solo" ? 'Trois façons de jouer' : 'Commence ici') + '</h3><span>' + (category === "solo" ? 'Enquêter · Relier · Composer' : 'Trois incontournables') + '</span></div><div class="club-picks-grid">' +
+    picks.map((p, i) => {
+      const illustrated=typeof MODE_CATALOG_ILLUSTRATIONS !== "undefined" && Boolean(MODE_CATALOG_ILLUSTRATIONS[p[0]]);
+      return '<button type="button" class="club-pick club-pick-' + i + (illustrated ? ' has-mode-illustration' : ' has-mode-art') + '" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([p[0]])) + '">' + (illustrated ? '' : '<span class="club-pick-icon" aria-hidden="true"><svg><use href="#i-' + p[4] + '"/></svg></span>') + (typeof modeCatalogArtHtml === "function" ? modeCatalogArtHtml(p[0], "pick") : "") + '<small>' + p[1] + '</small><b>' + p[2] + '</b><span class="club-pick-description">' + p[3] + '</span><strong aria-hidden="true">Jouer <span>→</span></strong></button>';
+    }).join("") + '</div><p class="club-more-label">Ou explore les autres jeux ci-dessous</p>';
 }
 function partyShareCoopClue() {
   const room = partyRoomState.room, socket = ensureMultiplayerSocket();

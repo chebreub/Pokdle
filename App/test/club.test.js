@@ -26,6 +26,8 @@ test('featured picks hide duplicate entries only without a search and preserve t
  const env=fixture();
  const card=args=>({dataset:{args:JSON.stringify(args)}});
  assert.equal(env.isClubFeatured(card(['openDraftScoreAttackMode']),'solo',''),true);
+ assert.equal(env.isClubFeatured(card(['openPokeConnectionsMode']),'solo',''),true);
+ assert.equal(env.isClubFeatured(card(['startNormalGame']),'solo',''),false);
  assert.equal(env.isClubFeatured(card(['openDraftScoreAttackMode',true]),'solo',''),false);
  assert.equal(env.isClubFeatured(card(['startDailyGame']),'solo','daily'),false);
  assert.equal(env.isClubFeatured(card(['openPartyRoomMode']),'friends',''),true);
