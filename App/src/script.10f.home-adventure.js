@@ -104,7 +104,7 @@ function renderHomeAdventureV2() {
 
   const pathways = screen.querySelector('.home-pathways');
   const weekly = document.getElementById('weekly-league-home');
-  const anchor = pathways || weekly || daily;
+  const anchor = weekly || pathways || daily;
   if (anchor.nextElementSibling !== home) {
     anchor.insertAdjacentElement('afterend', home);
   }

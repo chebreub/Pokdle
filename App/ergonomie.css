@@ -1,0 +1,170 @@
+/* October design audit: readable controls, shorter routes to the games.
+   Loaded after the legacy theme; every override is scoped to an audited view. */
+#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[hidden] { display:none !important; }
+#pokdle-app.design-refresh #screen-config .pk-chip-fire {
+  background:#ffd34b !important;
+  color:#172b49 !important;
+  font-size:.8125rem;
+  font-weight:750;
+}
+#pokdle-app.design-refresh #screen-config .home-return { margin-bottom:16px !important; }
+#pokdle-app.design-refresh #screen-config .club-return-bar { padding:10px 16px !important; }
+#pokdle-app.design-refresh #screen-config .pk-hero { padding-block:28px !important; min-height:0 !important; }
+#pokdle-app.design-refresh #screen-config .pk-hero-title { font-size:clamp(1.8rem,3vw,2.7rem) !important; }
+
+/* Search stays visible; the optional controls fold into a single mobile button. */
+#pokdle-app.design-refresh #screen-all-modes .mode-hub-controls {
+  grid-template-columns:minmax(240px,1fr) minmax(430px,.9fr) !important;
+  margin:12px 0 16px !important;
+}
+#pokdle-app.design-refresh .mode-refinement-fields { display:grid; grid-template-columns:140px minmax(220px,1fr); align-items:end; gap:10px; }
+#pokdle-app.design-refresh #mode-refinements-toggle { display:none; }
+#pokdle-app.design-refresh #screen-all-modes .mode-search,
+#pokdle-app.design-refresh #screen-all-modes .mode-difficulty { font-size:.75rem; }
+#pokdle-app.design-refresh #screen-all-modes .ranking-head { margin-bottom:8px !important; padding-block:12px !important; }
+#pokdle-app.design-refresh #screen-all-modes .card-title { margin-block:4px !important; font-size:2rem !important; }
+#pokdle-app.design-refresh #screen-all-modes #mode-hub-description { margin:6px 0 12px !important; }
+#pokdle-app.design-refresh #screen-all-modes .catalog-picks { margin-top:12px; }
+#pokdle-app.design-refresh #screen-all-modes .club-section-head { margin-bottom:10px; }
+#pokdle-app.design-refresh #screen-all-modes .club-pick.has-mode-art {
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:4px 10px;
+  min-height:142px;
+  padding:14px 82px 14px 14px !important;
+  box-shadow:none !important;
+}
+#pokdle-app.design-refresh #screen-all-modes .club-pick-icon { grid-column:1; grid-row:1 / 5; width:34px; height:34px; }
+#pokdle-app.design-refresh #screen-all-modes .club-pick > :not(.club-pick-icon):not(.mode-card-art) { grid-column:2; }
+#pokdle-app.design-refresh #screen-all-modes .club-pick > small { font-size:.75rem; }
+#pokdle-app.design-refresh #screen-all-modes .club-pick > b { font-size:1.0625rem; }
+#pokdle-app.design-refresh #screen-all-modes .club-pick > strong { padding-top:2px; }
+#pokdle-app.design-refresh #screen-all-modes .club-pick .mode-card-art { width:66px; height:76px; right:8px; }
+#pokdle-app.design-refresh #screen-all-modes .club-more-label { margin:10px 0 8px; padding-top:10px; }
+
+/* The input owns the first row. Suggestions open below both action rows. */
+@media (min-width:1280px) {
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) .classic-game-command > .search-bar {
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) .classic-game-command > .search-bar .ac-wrapper { grid-column:1 / -1; grid-row:1; }
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) .classic-game-command > .search-bar :is(#btn-submit,#btn-surrender) { grid-row:2; min-height:44px; }
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) #results-table th { font-size:.75rem !important; line-height:1.3; letter-spacing:0; }
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) #results-table td { font-size:.875rem !important; }
+}
+@media (min-width:1280px) and (max-width:1679px) {
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) .classic-game-shell { grid-template-columns:minmax(0,1fr); gap:16px; }
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) .classic-game-command > .search-bar { max-width:680px; margin-inline:auto !important; }
+  #pokdle-app.design-refresh #screen-game:is([data-game-mode="normal"],[data-game-mode="daily"],[data-game-mode="challenge"]) .classic-game-shell:has(> #results-wrap.hidden):not(:has(#win-box:not(.hidden)))::after { min-height:150px; }
+}
+
+/* A single quiet command state, including hover and keyboard interaction. */
+#pokdle-app.design-refresh #screen-poke-connections button:disabled,
+#pokdle-app.design-refresh #poke-connections-root button:disabled {
+  background:var(--ui-soft) !important;
+  color:var(--ui-muted) !important;
+  border:1px solid var(--ui-line) !important;
+  box-shadow:none !important;
+  transform:none !important;
+  cursor:not-allowed !important;
+  opacity:.7;
+}
+#pokdle-app.design-refresh .poke-connections-selection-help { margin:0 0 10px; font-size:.8125rem; line-height:1.4; color:var(--ui-muted); }
+
+/* Collection: a concise summary, with optional regional detail. */
+#pokdle-app.design-refresh .pokedex-collection-hub { gap:10px; margin-block:12px; }
+#pokdle-app.design-refresh .pokedex-experience-switch { order:-1; margin:0 !important; }
+#pokdle-app.design-refresh .pokedex-collection-console { padding:14px 18px; border-radius:16px; grid-template-columns:minmax(0,1fr) minmax(210px,300px); gap:16px; }
+#pokdle-app.design-refresh .pokedex-collection-identity h3 { margin:0 0 4px; font-size:1.0625rem; }
+#pokdle-app.design-refresh .pokedex-collection-identity p { margin:0; font-size:.875rem; }
+#pokdle-app.design-refresh .pokedex-console-kicker { display:none; }
+#pokdle-app.design-refresh .pokedex-collection-national { gap:5px; }
+#pokdle-app.design-refresh .pokedex-collection-national strong { font-size:1.5rem; }
+#pokdle-app.design-refresh .pokedex-collection-national > small { display:none; }
+#pokdle-app.design-refresh .pokedex-collection-substats { gap:6px; }
+#pokdle-app.design-refresh .pokedex-progress-details { border:1px solid var(--ui-line); border-radius:12px; padding:0 12px; background:var(--ui-surface); }
+#pokdle-app.design-refresh .pokedex-progress-details summary { cursor:pointer; padding:12px 0; font-size:.875rem; font-weight:700; color:var(--ui-ink); }
+#pokdle-app.design-refresh .pokedex-progress-details .pokedex-region-progress { margin-block:0 12px; }
+#pokdle-app.design-refresh .pokedex-progress-details .pokedex-collection-legend { margin:0 0 12px; }
+#pokdle-app.design-refresh .pokedex-collection-hub.is-encyclopedia .pokedex-progress-details { display:none; }
+#pokdle-app.design-refresh .collection-next-step { display:flex; align-items:center; gap:12px; justify-content:space-between; padding:12px 16px; border-radius:12px; background:var(--ui-accent-soft); color:var(--ui-ink); }
+#pokdle-app.design-refresh .collection-next-step > div { display:grid; gap:4px; }
+#pokdle-app.design-refresh .collection-next-step strong { font-size:.9375rem; }
+#pokdle-app.design-refresh .collection-next-step span { font-size:.8125rem; color:var(--ui-muted); }
+#pokdle-app.design-refresh .collection-next-step button { flex-shrink:0; }
+#pokdle-app.design-refresh .pokedex-view-collection > .card > .ranking-head { padding-block:10px !important; margin-bottom:8px !important; }
+#pokdle-app.design-refresh .pokedex-view-collection > .card > .secret-rune-trail { margin-block:0; min-height:0; }
+#pokdle-app.design-refresh .pokedex-view-collection > .card > .secret-rune-trail > .card-desc { display:none; }
+#pokdle-app.design-refresh .pokedex-view-collection #pokedex-filters-toggle { display:inline-flex !important; align-items:center; justify-content:center; min-height:44px; }
+#pokdle-app.design-refresh .pokedex-view-collection .pokedex-toolbar-row-top { grid-template-columns:minmax(0,1fr) auto !important; }
+#pokdle-app.design-refresh .pokedex-view-collection #pokedex-toolbar:not(.filters-expanded) :is(#pokedex-gen-filter,#pokedex-category-filter,.pokedex-type-filter-group,#pokedex-sort-filter) { display:none !important; }
+#pokdle-app.design-refresh .pokedex-view-collection #pokedex-toolbar:not(.filters-expanded) .pokedex-toolbar-row-bottom { margin-top:0; padding-top:0; border:0; min-height:0; }
+#pokdle-app.design-refresh .pokedex-view-collection #pokedex-toolbar.filters-expanded .pokedex-toolbar-row-top { grid-template-columns:minmax(0,1fr) auto minmax(140px,.45fr) minmax(140px,.45fr) !important; }
+
+/* The mission list starts with attainable, explicit objectives. */
+#pokdle-app.design-refresh .profile-mission-intro { padding:12px 16px; gap:16px; border:0; background:transparent; box-shadow:none; }
+#pokdle-app.design-refresh .profile-mission-intro p { margin:0; font-size:.875rem; }
+#pokdle-app.design-refresh .album-mission-panel { margin-top:12px; padding:18px; border-radius:16px; }
+#pokdle-app.design-refresh .album-mission-head h3 { margin:4px 0 8px; font-size:1.25rem; }
+#pokdle-app.design-refresh .album-mission-head p { font-size:.875rem; margin:0; }
+#pokdle-app.design-refresh .album-mission-filters { gap:12px; margin-block:16px; }
+#pokdle-app.design-refresh .album-mission-filters label { display:grid; gap:6px; font-size:.8125rem; color:var(--ui-muted); }
+#pokdle-app.design-refresh .album-mission-filters select { width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--ui-line); border-radius:10px; color:var(--ui-ink); background:var(--ui-surface); font:inherit; font-size:.875rem; }
+#pokdle-app.design-refresh .album-mission-filter-details { margin:14px 0; border:1px solid var(--ui-line); border-radius:10px; padding:0 12px; background:var(--ui-surface); }
+#pokdle-app.design-refresh .album-mission-filter-details summary { padding:12px 0; cursor:pointer; font-size:.875rem; font-weight:700; color:var(--ui-ink); }
+#pokdle-app.design-refresh .album-mission-filter-details .album-mission-filters { margin-block:0 12px; }
+#pokdle-app.design-refresh .album-mission-card { display:flex; flex-direction:column; }
+#pokdle-app.design-refresh .album-mission-card > button { margin-top:auto; min-height:44px; }
+#pokdle-app.design-refresh .album-mission-reqs { flex:1; }
+#pokdle-app.design-refresh .profile-view-switch { margin-block:14px; }
+#pokdle-app.design-refresh .profile-stats-links { margin-block:10px 16px; }
+
+/* Score Attack: score and resources fit in one compact strip. */
+#pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero { padding:10px 14px !important; margin:0 !important; gap:16px; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-main { display:grid; grid-template-columns:auto minmax(100px,1fr); gap:4px 14px; align-items:center; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-score { grid-column:1; grid-row:1 / 4; font-size:2rem; min-width:54px; }
+#pokdle-app.design-refresh #screen-draft-score-attack :is(.dsh-label,.dsh-gauge,.dsh-sub) { grid-column:2; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-label { font-size:.75rem; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-gauge { margin:2px 0; height:5px; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-sub { font-size:.75rem; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-chip { padding:6px 10px; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-mode-card > .ranking-head { padding-block:12px !important; margin-bottom:0 !important; }
+#pokdle-app.design-refresh #screen-draft-score-attack #draft-status { margin:0 !important; padding-block:6px !important; }
+@media (min-width:1280px) {
+  #pokdle-app.design-refresh #screen-draft-score-attack #draft-options { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+  #pokdle-app.design-refresh #screen-draft-score-attack #draft-options .draft-option-card { min-height:132px !important; padding:10px !important; }
+  #pokdle-app.design-refresh #screen-draft-score-attack #draft-options .draft-option-card img { width:64px !important; height:64px !important; }
+  #pokdle-app.design-refresh #screen-draft-score-attack #draft-options .draft-option-card strong { font-size:.9375rem !important; }
+}
+@media (min-width:1680px) {
+  #pokdle-app.design-refresh #screen-draft-score-attack #draft-options { grid-template-columns:repeat(6,minmax(0,1fr)) !important; }
+}
+@media (max-width:1024px) {
+  #pokdle-app.design-refresh #screen-all-modes .mode-hub-controls { grid-template-columns:1fr !important; }
+}
+@media (max-width:760px) {
+  #pokdle-app.design-refresh #screen-all-modes .mode-hub-controls { grid-template-columns:1fr !important; padding:10px !important; }
+  #pokdle-app.design-refresh #mode-refinements-toggle { display:flex; justify-content:space-between; width:100%; min-height:44px; }
+  #pokdle-app.design-refresh .mode-refinement-fields { grid-template-columns:1fr; gap:10px; margin-top:10px; }
+  #pokdle-app.design-refresh .mode-refinements:not(.is-expanded) .mode-refinement-fields { display:none; }
+  #pokdle-app.design-refresh #screen-all-modes .club-pick.has-mode-art { min-height:112px; padding:12px 68px 12px 12px !important; gap:2px 8px; }
+  #pokdle-app.design-refresh #screen-all-modes .club-pick .mode-card-art { width:52px; height:58px; }
+  #pokdle-app.design-refresh #screen-all-modes .club-pick > small { display:none; }
+  #pokdle-app.design-refresh #screen-all-modes .club-pick > b { font-size:1rem; }
+  #pokdle-app.design-refresh #screen-all-modes .club-pick > span:not(.club-pick-icon):not(.mode-card-art) { font-size:.8125rem; line-height:1.35; }
+  #pokdle-app.design-refresh #screen-all-modes .club-section-head > span { display:none; }
+  #pokdle-app.design-refresh .pokedex-collection-console { grid-template-columns:1fr; gap:10px; }
+  #pokdle-app.design-refresh .pokedex-collection-national { width:100%; }
+  #pokdle-app.design-refresh .collection-next-step { align-items:stretch; flex-direction:column; }
+  #pokdle-app.design-refresh .pokedex-view-collection #pokedex-toolbar.filters-expanded .pokedex-toolbar-row-top { grid-template-columns:1fr !important; }
+  #pokdle-app.design-refresh .pokedex-view-collection .pokedex-toolbar-row-top { grid-template-columns:1fr !important; }
+  #pokdle-app.design-refresh .album-mission-panel { padding:12px; }
+  #pokdle-app.design-refresh .profile-mission-intro { flex-wrap:wrap; padding:8px 0; }
+  #pokdle-app.design-refresh #screen-profile:has(#profile-album:not(.hidden)) > .card > .card-desc,
+  #pokdle-app.design-refresh .profile-mission-intro > p { display:none; }
+  #pokdle-app.design-refresh .album-mission-head { gap:10px; }
+  #pokdle-app.design-refresh .album-mission-summary { display:flex; align-items:baseline; gap:8px; min-width:0; }
+  #pokdle-app.design-refresh .album-mission-summary strong { font-size:1rem; }
+  #pokdle-app.design-refresh #screen-draft-score-attack .draft-score-hero { gap:10px; }
+  #pokdle-app.design-refresh #screen-draft-score-attack .dsh-stats { width:100%; }
+}

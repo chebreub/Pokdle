@@ -1368,6 +1368,7 @@ function renderPokeConnectionsScreen() {
   } else {
     footer = `<div class="poke-connections-action-zone">
       <div class="poke-connections-selection-status"><span>${selectionCopy}</span><b>${selected.size}/4</b></div>
+      <p class="poke-connections-selection-help">${selected.size === 4 ? "Tu peux valider ce groupe." : "Sélectionne " + (4 - selected.size) + " Pokémon de plus."}</p>
       <div class="poke-connections-actions">
         <button class="btn-ghost" type="button" data-action="shufflePokeConnectionsTiles">Mélanger</button>
         <button class="btn-ghost" type="button" data-action="clearPokeConnectionsSelection" ${selected.size === 0 ? "disabled" : ""}>Tout désélectionner</button>

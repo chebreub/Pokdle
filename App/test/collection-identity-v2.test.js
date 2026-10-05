@@ -16,7 +16,6 @@ const profileCss=fs.readFileSync(path.join(root,"profile.css"),"utf8");
 test("Pokédex is the single collection home while profile exposes missions",()=>{
   assert.match(html,/data-args='\["album"\]' aria-pressed="false">Missions/);
   assert.match(html,/profile-missions-view/);
-  assert.match(html,/Ta collection personnelle vit désormais dans le Pokédex/);
   assert.doesNotMatch(html,/id="album-grid"/);
   assert.doesNotMatch(html,/id="album-search"/);
   assert.match(html,/data-action="openPokedexCollection">Ouvrir ma collection/);

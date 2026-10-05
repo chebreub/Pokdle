@@ -18,10 +18,10 @@ test('visual reboot establishes a strong final design authority layer',()=>{
   assert.match(home,/body:not\(\.theme-dark\) header\{[\s\S]*#0d2344/);
 });
 
-test('home hierarchy remains Daily then League then pathways then adventure',()=>{
-  assert.match(weekly,/daily\.nextElementSibling!==card/);
-  assert.match(weekly,/card\.nextElementSibling!==pathways/);
-  assert.match(adventure,/const anchor = pathways \|\| weekly \|\| daily/);
+test('home offers Daily and game pathways before optional League and adventure',()=>{
+  assert.match(weekly,/const anchor=pathways\|\|daily/);
+  assert.match(weekly,/anchor\.nextElementSibling!==card/);
+  assert.match(adventure,/const anchor = weekly \|\| pathways \|\| daily/);
   assert.match(adventure,/anchor\.nextElementSibling !== home/);
 });
 

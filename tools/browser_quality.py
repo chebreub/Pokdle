@@ -29,7 +29,7 @@ def main():
       if result is not None: item['detail']=result
      except Exception as e: item['error']=str(e)[:1200]
      if capture:
-      try: page.screenshot(path=str(out/f'{width}-{name}.png'),animations='disabled')
+      try: page.screenshot(path=str(out/f'{width}-{name}.jpg'),quality=90,animations='disabled')
       except Exception as e: item['screenshot_error']=str(e)[:180]
      cases.append(item);print('QA '+json.dumps(item,ensure_ascii=True),flush=True)
     def screen(expected):
@@ -46,7 +46,35 @@ def main():
      page.wait_for_function('typeof showScreen === "function" && typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length > 1000',timeout=45000)
      page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"',timeout=20000)
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
-    check('home',boot);check('catalog',lambda:nav('game','screen-all-modes'))
+    check('home',boot)
+    def audit_home_readability():
+     colors=page.locator('#daily-hero-streak').evaluate('(e)=>({fg:getComputedStyle(e).color,bg:getComputedStyle(e).backgroundColor})')
+     import re
+     def luminance(value):
+      rgb=[int(v)/255 for v in re.findall(r'\d+',value)[:3]]
+      linear=[v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in rgb]
+      return sum(a*b for a,b in zip(linear,[.2126,.7152,.0722]))
+     a,b=luminance(colors['fg']),luminance(colors['bg']);contrast=(max(a,b)+.05)/(min(a,b)+.05)
+     expect(contrast>=4.5,'Streak contrast is too low: '+repr(colors))
+     return {'contrast':round(contrast,2)}
+    check('audit-home-readability',audit_home_readability,False)
+    check('catalog',lambda:nav('game','screen-all-modes'))
+    def audit_catalog():
+     for category in ['game','social']:
+      nav(category,'screen-all-modes')
+      sections=page.locator('#screen-all-modes .all-modes-cat:visible')
+      for section in sections.all(): expect(section.locator('.all-modes-card:visible').count()>0,'Empty category still rendered')
+     nav('game','screen-all-modes')
+     if width<=760:
+      expect(page.locator('#mode-difficulty').is_hidden(),'Mobile filters should start collapsed')
+      page.locator('#mode-refinements-toggle').click()
+      expect(page.locator('#mode-difficulty').is_visible(),'Mobile filter button did not expose difficulty')
+      page.locator('#mode-difficulty').select_option('easy')
+      expect(page.locator('#screen-all-modes .all-modes-card:visible').count()>0,'Difficulty filter removed all easy games')
+      page.locator('#mode-difficulty').select_option('all')
+      page.locator('#mode-refinements-toggle').click()
+     return screen('screen-all-modes')
+    check('audit-catalog',audit_catalog)
     def pc0_desktop_foundations():
      if width<1101: return {'skipped':'desktop-only'}
      page.evaluate("goToConfig()");screen('screen-config')
@@ -73,6 +101,7 @@ def main():
      page.locator('#mode-search').fill('zzzznoresultzzzz');page.wait_for_timeout(100)
      expect(page.locator('#mode-empty').is_visible(),'Missing empty state')
      expect(page.locator('#screen-all-modes .all-modes-card:visible').count()==0,'Filtered cards remain visible')
+     expect(page.locator('#screen-all-modes .all-modes-cat:visible').count()==0,'Empty search still renders category headings')
      page.locator('#mode-empty button').click();expect(page.locator('#mode-search').input_value()=='','Search was not reset')
      return screen('screen-all-modes')
     check('empty-search-reset',empty_search)
@@ -108,7 +137,7 @@ def main():
      if picks.count()>=3:
       rects=picks.evaluate_all('(els)=>els.slice(0,3).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
       expect(abs(rects[0]['y']-rects[1]['y'])<3 and abs(rects[0]['y']-rects[2]['y'])<3,'Featured desktop picks are not a single row: '+repr(rects))
-      expect(min(r['h'] for r in rects)>=170,'Featured desktop picks are too small: '+repr(rects))
+      expect(all(140<=r['h']<=180 for r in rects),'Featured desktop picks should remain readable and compact: '+repr(rects))
      return screen('screen-all-modes')
     check('pc3-catalog-shelves',pc3_catalog_shelves)
     def start(action,target):
@@ -135,7 +164,8 @@ def main():
       input_box=page.locator('#guess-input').bounding_box()
       bar_box=page.locator('#screen-game .classic-game-command > .search-bar').bounding_box()
       list_box=page.locator('#guess-ac').bounding_box()
-      expect(abs(input_box['y']-button_box['y'])<3,'Desktop guess input and Deviner are not aligned on one row: '+repr([input_box,button_box]))
+      expect(input_box['width']>=360,'Desktop input remains too narrow for Pokemon names: '+repr(input_box))
+      expect(button_box['y']>=input_box['y']+input_box['height'],'Guess actions should sit below the full-width input: '+repr([input_box,button_box]))
       expect(bar_box and list_box,'Desktop autocomplete panel geometry missing')
       expect(list_box['y']>=bar_box['y']+bar_box['height']+4,'Autocomplete panel does not open below the whole command bar: '+repr([bar_box,list_box]))
       expect(list_box['width']>=bar_box['width']-24,'Autocomplete panel is still too narrow on desktop: '+repr([bar_box,list_box]))
@@ -160,12 +190,17 @@ def main():
      shell=page.locator('#screen-game .classic-game-shell')
      style=shell.evaluate('(e)=>({display:getComputedStyle(e).display,cols:getComputedStyle(e).gridTemplateColumns})')
      expect(style['display']=='grid','Classic desktop shell is not a grid: '+repr(style))
-     expect(len([x for x in style['cols'].split(' ') if x])==2,'Classic desktop shell does not expose two columns: '+repr(style))
+     expect(len([x for x in style['cols'].split(' ') if x])==(2 if width>=1680 else 1),'Classic desktop layout does not adapt to its available width: '+repr(style))
      command=page.locator('#screen-game .classic-game-command').bounding_box()
      results=page.locator('#screen-game #results-wrap').bounding_box()
      expect(command and results,'Classic desktop board regions are missing')
-     expect(results['x']>command['x']+command['width'],'Results are not placed to the right of the command panel: '+repr([command,results]))
-     expect(results['width']>command['width'],'Desktop clue board should be wider than the command rail: '+repr([command,results]))
+     if width>=1680:
+      expect(results['x']>command['x']+command['width'],'Wide desktop results should stay beside the command panel: '+repr([command,results]))
+      expect(results['width']>command['width'],'Wide desktop clue board should be wider than the command rail: '+repr([command,results]))
+     else:
+      expect(results['y']>=command['y']+command['height'],'Laptop clues should sit below the input: '+repr([command,results]))
+      expect(results['width']>=1200,'Laptop clue board is not using its available width: '+repr(results))
+     expect(page.locator('#results-table th').first.evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=12,'Clue column headers are too small')
      screen_width=page.locator('#screen-game').bounding_box()['width']
      expect(screen_width>(1500 if width>=1900 else 1240),'Classic game is still trapped in the old narrow desktop width: '+str(screen_width))
      return screen('screen-game')
@@ -255,9 +290,41 @@ def main():
      nav('pokedex','screen-pokedex');page.locator('[data-pokedex-view="collection"]').click();page.locator('#pokedex-grid .state-unknown').first.click()
      if width<=640: page.locator('#pokedex-detail .pokedex-back-to-list').first.click();page.locator('#pokedex-grid').wait_for(state='visible')
      return screen('screen-pokedex')
-    check('collection-back',locked);check('profile',lambda:nav('profile','screen-profile'))
+    check('collection-back',locked)
+    def audit_collection():
+     expect(page.locator('#pokedex-region-progress').is_hidden(),'Regional details should start folded')
+     page.locator('.pokedex-progress-details summary').click()
+     expect(page.locator('#pokedex-region-progress').is_visible(),'Regional detail disclosure did not open')
+     page.locator('.pokedex-progress-details summary').click()
+     page.locator('#pokedex-filters-toggle').click()
+     expect(page.locator('#pokedex-gen-filter').is_visible(),'Collection filters are unreachable')
+     page.locator('#pokedex-filters-toggle').click()
+     expect(page.locator('#pokedex-gen-filter').is_hidden(),'Collection filters did not fold')
+     return screen('screen-pokedex')
+    check('audit-collection',audit_collection)
+    def audit_missions():
+     page.locator('.pokedex-missions-link').click()
+     screen('screen-profile')
+     expect(page.locator('#album-mission-gen').is_hidden(),'Mission filters should leave room for the rewards')
+     page.locator('.album-mission-filter-details summary').click()
+     page.locator('#album-mission-gen').select_option('6')
+     expect(all('Gen 6' in t for t in page.locator('#album-mission-grid .album-mission-card').all_text_contents()),'Mission generation filter did not apply')
+     page.locator('#album-mission-gen').select_option('all')
+     page.locator('.album-mission-filter-details summary').click()
+     first=page.locator('#album-mission-grid .album-mission-card').first
+     expect('???' not in first.inner_text(),'Mission onboarding still starts with a hidden reward')
+     if width<=640: expect(first.bounding_box()['y']<=height-180,'Mobile mission rewards still start too far below the fold')
+     action=first.locator('button[data-action="playAlbumMission"]')
+     expect(action.is_visible(),'First active mission has no route to a game')
+     page.screenshot(path=str(out/f'{width}-mission-list.jpg'),quality=90,animations='disabled')
+     action.click()
+     expect(page.locator('#profile-album').is_hidden(),'Mission game button left the player on the mission list')
+     return {'first_mission_has_game_action':True}
+    check('audit-missions',audit_missions)
+    check('profile',lambda:nav('profile','screen-profile'))
     def d3_profile_density():
      nav('profile','screen-profile')
+     page.get_by_role('button',name='Dresseur',exact=True).click()
      page.evaluate("""() => {
        playerProfile.speedrunHighScore=14;
        playerProfile.quizHighScore=18;
@@ -473,7 +540,7 @@ def main():
      expect(page.locator('.poke-connections-final.is-won').is_visible(),'Connections win state missing')
      expect(page.locator('.poke-connections-tile').count()==0,'Solved tiles remain selectable')
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()')
-     page.screenshot(path=str(out/f'{width}-connections-win.png'),animations='disabled')
+     page.screenshot(path=str(out/f'{width}-connections-win.jpg'),quality=90,animations='disabled')
      page.locator('.poke-connections-final [data-action="restartPokeConnectionsGame"]').click()
      expect(page.locator('.poke-connections-tile').count()==16,'Restart did not restore 16 tiles')
      expect(page.locator('.poke-connections-mistake-dot.is-used').count()==0,'Restart kept old mistakes')
