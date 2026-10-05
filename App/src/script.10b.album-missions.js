@@ -340,12 +340,12 @@ function ensureAlbumMissionPanel() {
   panel.id = 'album-mission-panel';
   panel.className = 'album-mission-panel';
   panel.innerHTML = `
-    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine récompense</h3><p>Les récompenses prêtes et les objectifs les plus proches arrivent en premier. Explore les 108 missions avec les filtres.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
-    <div class="album-mission-filters">
+    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine récompense</h3><p>Les récompenses prêtes, puis tes objectifs les plus avancés.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
+    <details class="album-mission-filter-details"><summary id="album-mission-filter-label">Filtrer les missions</summary><div class="album-mission-filters">
       <label>Génération<select id="album-mission-gen"><option value="all">Toutes</option>${ALBUM_REGIONS.map((r,i)=>`<option value="${i+1}">Gen ${i+1} · ${r}</option>`).join('')}</select></label>
       <label>Niveau<select id="album-mission-tier"><option value="all">Tous</option>${Object.entries(ALBUM_MISSION_TIERS).map(([id,t])=>`<option value="${id}">${t.label}</option>`).join('')}</select></label>
       <label>État<select id="album-mission-status"><option value="active">À accomplir</option><option value="ready">À réclamer</option><option value="claimed">Obtenues</option><option value="all">Toutes</option></select></label>
-    </div>
+    </div></details>
     <div id="album-mission-grid" class="album-mission-grid"></div>
     <button id="album-mission-more" type="button" class="btn-ghost album-mission-more hidden" data-action="showMoreAlbumMissions">Afficher plus</button>`;
   const intro = host.querySelector('.profile-mission-intro, .album-intro');
@@ -421,6 +421,9 @@ function renderAlbumMissions() {
   const gen = document.getElementById('album-mission-gen')?.value || 'all';
   const tier = document.getElementById('album-mission-tier')?.value || 'all';
   const status = document.getElementById('album-mission-status')?.value || 'active';
+  const filterLabel = document.getElementById('album-mission-filter-label');
+  const activeFilters = Number(gen !== 'all') + Number(tier !== 'all') + Number(status !== 'active');
+  if (filterLabel) filterLabel.textContent = 'Filtrer les missions' + (activeFilters ? ` · ${activeFilters} filtre${activeFilters > 1 ? 's' : ''} actif${activeFilters > 1 ? 's' : ''}` : '');
   const allStates = ALBUM_MISSIONS.map(m => [m, albumMissionState(m)]);
   const readyCount = allStates.filter(([,s]) => s.ready && !s.claimed).length;
   const claimedCount = allStates.filter(([,s]) => s.claimed).length;

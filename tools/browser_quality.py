@@ -305,8 +305,15 @@ def main():
     def audit_missions():
      page.locator('.pokedex-missions-link').click()
      screen('screen-profile')
+     expect(page.locator('#album-mission-gen').is_hidden(),'Mission filters should leave room for the rewards')
+     page.locator('.album-mission-filter-details summary').click()
+     page.locator('#album-mission-gen').select_option('6')
+     expect(all('Gen 6' in t for t in page.locator('#album-mission-grid .album-mission-card').all_text_contents()),'Mission generation filter did not apply')
+     page.locator('#album-mission-gen').select_option('all')
+     page.locator('.album-mission-filter-details summary').click()
      first=page.locator('#album-mission-grid .album-mission-card').first
      expect('???' not in first.inner_text(),'Mission onboarding still starts with a hidden reward')
+     if width<=640: expect(first.bounding_box()['y']<=height-180,'Mobile mission rewards still start too far below the fold')
      action=first.locator('button[data-action="playAlbumMission"]')
      expect(action.is_visible(),'First active mission has no route to a game')
      page.screenshot(path=str(out/f'{width}-mission-list.jpg'),quality=90,animations='disabled')
