@@ -968,14 +968,14 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <button data-action="startDailyGame" id="shell-daily">Du jour</button>
           <button data-action="startNormalGame" id="shell-infinite">Illimité</button>
         </div>
-        <button id="game-generation-choice" class="generation-trigger hidden" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button>
+        <button id="game-generation-choice" class="generation-trigger hidden" type="button" aria-label="Choisir les générations" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button>
         <button class="btn-ghost btn-tiny shell-help" data-action="openOnboardingModal">Comment jouer</button>
       </div>
       <div id="shell-intro" class="shell-intro hidden"><p id="shell-kicker"></p><h1 id="shell-title"></h1><p id="shell-instruction"></p></div>
-      <section id="shell-notebook" class="shell-notebook hidden" aria-label="Carnet d’enquête">
-        <div class="notebook-heading"><span class="notebook-stamp" aria-hidden="true">◉</span><div><span>CARNET D’ENQUÊTE</span><h2>Ce que tu sais déjà</h2></div></div>
+      <details id="shell-notebook" class="shell-notebook hidden" aria-label="Carnet d’enquête" open>
+        <summary class="notebook-heading"><span class="notebook-stamp" aria-hidden="true">◉</span><div><span>CARNET D’ENQUÊTE</span><h2>Ce que tu sais déjà</h2></div></summary>
         <div id="shell-facts" aria-live="polite"></div><p id="shell-goal"></p>
-      </section>
+      </details>
 
       <div id="classic-banner" class="mode-banner classic-mode-banner hidden">
         <div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-eye"/></svg></div>

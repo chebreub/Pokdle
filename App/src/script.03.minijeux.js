@@ -2479,6 +2479,7 @@ function renderGuessAC(matches) {
   }
 
   list.classList.remove("hidden");
+  if (typeof scheduleMobileGuessSearch === "function") scheduleMobileGuessSearch();
 }
 
 function selectGuessAC(name) {
