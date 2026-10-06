@@ -36,7 +36,7 @@ function clubLaunchRecent(key) {
   if (entry && typeof window[entry.name] === "function") window[entry.name](...entry.args);
 }
 function renderHomeReturn() {
-  renderHomeDiscovery();
+  renderHomeDiscovery(true);
   if (typeof renderPartner === "function") renderPartner();
   const panel = document.getElementById("home-return");
   if (!panel) return;
@@ -54,19 +54,40 @@ function renderHomeReturn() {
     : '';
   panel.innerHTML = '<div class="club-return-bar">' + resumeHtml + recentHtml + '</div>';
 }
-function renderHomeDiscovery() {
+var homeGameFilter = "popular";
+function filterHomeGames(filter) {
+  homeGameFilter = ["popular", "guess", "think", "arcade", "strategy"].includes(filter) ? filter : "popular";
+  renderHomeDiscovery(true);
+  document.querySelectorAll("#home-game-filters button").forEach(button => button.setAttribute("aria-pressed", String(JSON.parse(button.dataset.args)[0] === homeGameFilter)));
+}
+function renderHomeDiscovery(force = false) {
   const grid = document.getElementById("home-games-grid");
-  if (!grid || grid.childElementCount) return;
+  if (!grid || (grid.childElementCount && !force)) return;
   const games = [
     ["startSilhouetteGame", "Zoom progressif", "Un détail, puis la révélation.", "Observer", "lavender", 352],
     ["startCryGame", "Qui pousse ce cri ?", "Écoute bien. Tu le reconnais ?", "Écouter", "pink", 441],
     ["openPokeConnectionsMode", "Poké-Connections", "16 Pokémon, quatre liens cachés.", "Réfléchir", "mint", 133],
     ["startQuizGame", "Quiz Pokémon", "Mets tes connaissances à l’épreuve.", "Apprendre", "blue", 65],
     ["openDraftScoreAttackMode", "Draft Score Attack", "Six choix pour une équipe de rêve.", "Composer", "peach", 445],
-    ["openHigherLowerMode", "Higher or Lower", "Plus fort, plus grand… à toi de voir.", "Comparer", "lavender", 248]
+    ["openHigherLowerMode", "Higher or Lower", "Plus fort, plus grand… à toi de voir.", "Comparer", "lavender", 248],
+    ["startNormalGame", "Pokémon mystère", "Neuf indices pour mener l’enquête.", "Deviner", "blue", 133],
+    ["startPixelGame", "Pokémon pixelisé", "Retrouve le Pokémon derrière les pixels.", "Observer", "mint", 137],
+    ["startMysteryStatGame", "Stat Mystère", "Les chiffres se révèlent progressivement.", "Déduire", "lavender", 376],
+    ["startDescriptionMode", "Description Pokédex", "Un portrait à lire, un Pokémon à trouver.", "Lire", "pink", 479],
+    ["openSpeedrunMode", "Speedrun", "60 secondes pour en reconnaître un maximum.", "Accélérer", "blue", 291],
+    ["openTypeComboSolo", "Combo de types", "Deux types, plusieurs bonnes réponses.", "Associer", "mint", 493],
+    ["openOddOneOutMode", "Intrus Pokémon", "Cinq points communs. Une exception.", "Réfléchir", "peach", 132],
+    ["startWeightBattle", "Duel de poids", "Qui fait pencher la balance ?", "Comparer", "pink", 143]
   ];
-  grid.innerHTML = games.map(([action, title, description, label, color, id]) => '<button type="button" class="home-game home-game-' + color + '" data-action="' + action + '">' +
-    '<span class="home-game-art" aria-hidden="true"><img class="home-game-pokemon" src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + id + '.png" data-fallback="' + modeCatalogSpriteUrl(id) + '" alt="" loading="lazy" decoding="async" width="160" height="160" /><span class="home-game-spark">✦</span></span><span class="home-game-copy"><small>' + label + '</small><b>' + title + '</b><span>' + description + '</span></span><span class="home-game-arrow" aria-hidden="true">Jouer →</span></button>').join('');
+  const families = { guess: ["startSilhouetteGame","startCryGame","startNormalGame","startPixelGame","startMysteryStatGame","startDescriptionMode"], think: ["openPokeConnectionsMode","startQuizGame","openOddOneOutMode"], arcade: ["openHigherLowerMode","openSpeedrunMode","openTypeComboSolo","startWeightBattle"], strategy: ["openDraftScoreAttackMode"] };
+  const selected = homeGameFilter === "popular" ? games.slice(0,6) : games.filter(game => families[homeGameFilter]?.includes(game[0]));
+  grid.innerHTML = selected.map(([action, title, description, label, color]) => '<button type="button" class="home-game home-game-' + color + '" data-action="' + action + '">' +
+    '<span class="home-game-art home-mechanic-art" aria-hidden="true">'+modeCatalogArtHtml(action,'home')+'</span><span class="home-game-copy"><small>' + label + '</small><b>' + title + '</b><span>' + description + '</span>'+homeGameRecordHtml(action)+'</span><span class="home-game-arrow" aria-hidden="true">Jouer →</span></button>').join('');
+}
+function homeGameRecordHtml(action) {
+  const records = { openHigherLowerMode:["higherLowerHighScore","de série"], startQuizGame:["quizHighScore","/ 10"], openSpeedrunMode:["speedrunHighScore","Pokémon"], openTypeComboSolo:["typeComboHighScore","pts"], openOddOneOutMode:["oddOneOutHighScore","de série"], startWeightBattle:["weightBattleHighScore","de série"] };
+  const spec = records[action], value = spec ? Number(playerProfile?.[spec[0]]) || 0 : 0;
+  return value > 0 ? '<small class="home-game-record">Ton record : '+value+' '+spec[1]+'</small>' : '';
 }
 function isClubFeatured(card, category, query, difficulty = "all") {
   if (String(query || "").trim() || difficulty !== "all" || !["solo", "friends"].includes(category)) return false;

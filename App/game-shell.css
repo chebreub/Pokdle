@@ -1,4 +1,39 @@
 /* Focused game shell. Loaded last; rules are scoped to the opted-in screens. */
+#pokdle-app.design-refresh #home-game-filters {display:flex;gap:8px;overflow-x:auto;padding:4px 0 16px;margin-bottom:8px;scrollbar-width:thin;}
+#pokdle-app.design-refresh #home-game-filters button {flex-shrink:0;min-height:44px;padding:10px 20px;border:1px solid #F0E2CF;border-radius:30px;background:#fff;color:#776B63;font:800 14px Nunito,sans-serif;cursor:pointer;}
+#pokdle-app.design-refresh #home-game-filters button[aria-pressed="true"] {color:#fff;background:#4069E0;border-color:#4069E0;box-shadow:0 3px 0 #2F51B8;}
+#pokdle-app.design-refresh .home-game .home-mechanic-art {display:flex!important;align-items:center;justify-content:center;height:166px!important;overflow:hidden!important;border-radius:20px!important;padding:0!important;}
+#pokdle-app.design-refresh .home-mechanic-art .mode-card-art {position:relative!important;inset:auto!important;width:190px!important;height:130px!important;transform:scale(1.3)!important;opacity:1!important;}
+#pokdle-app.design-refresh .home-mechanic-art .mode-illustration {position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:100%!important;}
+#pokdle-app.design-refresh .home-mechanic-art .mode-illustration img {width:100%!important;height:100%!important;object-fit:cover!important;border-radius:0!important;}
+#pokdle-app.design-refresh .home-path-solo {display:none!important;}
+#pokdle-app.design-refresh .home-pathways {grid-template-columns:1fr!important;}
+#pokdle-app.design-refresh .home-path-friends {background:#EFE8FF!important;border-color:#dfd2fa!important;}
+#pokdle-app.design-refresh .home-path-friends .btn-blue {background:#7C5BD6!important;box-shadow:0 4px 0 #5e40ad!important;}
+#pokdle-app.design-refresh .leaderboard-content {display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:22px;margin-top:20px;}
+.leaderboard-main {min-width:0;}.leaderboard-aside {display:flex;flex-direction:column;gap:18px;}
+#pokdle-app.design-refresh .leaderboard-aside section {border:1px solid #F0E2CF;border-radius:22px;padding:20px;background:#fff;}
+.leaderboard-aside h4 {font:500 30px Fredoka,sans-serif;margin:16px 0 8px;}.leaderboard-aside h4 small {font:700 14px Nunito,sans-serif;}
+.leaderboard-aside progress {width:100%;accent-color:#7C5BD6;}.leaderboard-aside p {font-size:14px;line-height:1.6;}
+.leaderboard-aside .btn-ghost,.leaderboard-aside .btn-blue {width:100%;margin-top:8px!important;white-space:normal!important;font-size:13px!important;min-height:44px!important;}
+.leaderboard-aside-position {display:flex;flex-direction:column;gap:6px;margin:14px 0;font-size:14px;}.leaderboard-aside-position b{font:500 28px Fredoka,sans-serif;}
+#pokdle-app.design-refresh .lbv3-mode-grid {display:flex!important;overflow-x:auto;gap:8px;padding-bottom:8px;}
+#pokdle-app.design-refresh .lbv3-mode-tab {flex-shrink:0;min-height:44px!important;white-space:nowrap;}
+#pokdle-app.design-refresh .lbv3-mode-tab[data-lb-mode="daily"].is-active {background:#FFD45C!important;color:#594309!important;}
+#pokdle-app.design-refresh .lbv3-mode-tab[data-lb-mode="party"].is-active {background:#7C5BD6!important;color:white!important;}
+#pokdle-app.design-refresh .lbv3-podium {align-items:end!important;}
+#pokdle-app.design-refresh .lbv3-podium .rank-1 {padding-top:30px!important;min-height:230px;}
+#pokdle-app.design-refresh #overlay-modal[data-kind="login"] .overlay-card {max-width:520px!important;}
+.login-welcome {text-align:center;display:flex;flex-direction:column;gap:16px;padding:8px 24px 28px;}
+.login-welcome-art {height:145px;display:flex;justify-content:center;align-items:center;background:radial-gradient(ellipse,#EFE8FF,transparent 65%);}
+.login-welcome-art img {width:140px;height:140px;image-rendering:auto;}.login-welcome-art span {color:#F0524A;font-size:26px;}
+.login-welcome h3 {font:500 32px Fredoka,sans-serif;margin:0;}.login-welcome p {font-size:16px;line-height:1.7;margin:0;}.login-welcome small{font-size:13px;line-height:1.6;color:#776B63;}
+#pokdle-app.design-refresh .login-welcome .btn-blue {display:block;min-height:48px;padding:14px!important;text-decoration:none;}
+#pokdle-app.design-refresh.theme-dark .leaderboard-aside section,#pokdle-app.design-refresh.theme-dark #home-game-filters button {background:#292633;color:#f6eeff;border-color:#494153;}
+#pokdle-app.design-refresh.theme-dark .home-path-friends {background:#352f49!important;border-color:#594975!important;}
+#pokdle-app.design-refresh.theme-dark .login-welcome small {color:#c4b9cd;}
+@media(max-width:760px){#pokdle-app.design-refresh .leaderboard-content {grid-template-columns:1fr;}.leaderboard-aside {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}.leaderboard-aside section{padding:14px!important;}.login-welcome{padding:4px 4px 18px;}.login-welcome h3{font-size:28px;}}
+@media(max-width:480px){.leaderboard-aside{grid-template-columns:1fr;}}
 #pokdle-app.design-refresh .focused-mode-screen {max-width:1000px!important;width:100%!important;margin:24px auto 56px!important;--shell-line:#F0E2CF;--shell-muted:#776B63;}
 #pokdle-app.design-refresh.theme-dark .focused-mode-screen {--shell-line:#494153;--shell-muted:#c4b9cd;}
 #pokdle-app.design-refresh .focused-mode-screen > .gameplay-screen-card {padding:24px!important;border-radius:28px!important;box-shadow:0 5px 0 #eadfd330!important;}
@@ -123,6 +158,11 @@
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-title {font-size:24px!important;}
  .shell-stats-grid {grid-template-columns:repeat(2,1fr);}.shell-stats-grid div:nth-child(-n+2){border-bottom:1px solid var(--shell-line);}.shell-stats-grid div:nth-child(2){border-right:0;}
 }
+
+/* IDs override the former desktop identity banners without hiding clue cards. */
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] :is(#classic-banner,#daily-banner,#challenge-banner,#silhouette-banner,#pixel-banner,#mystery-banner,#cry-banner,#description-banner,#quiz-banner,#weight-banner,#evolution-banner,#order-banner) {display:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .classic-game-command > .search-bar {width:100%!important;max-width:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .poke-cell img {width:44px!important;height:44px!important;padding:0!important;object-fit:contain!important;}
 
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] .visual-clue-box {transform:none!important;box-sizing:border-box!important;}
 #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {grid-column:1 / -1;}
