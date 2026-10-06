@@ -611,6 +611,7 @@ const draftScoreRooms = new Map();
 const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
+require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
 const PARTY_RECONNECT_GRACE_MS = 30000; // refresh/coupure : garde la place et l’hôte avant transfert

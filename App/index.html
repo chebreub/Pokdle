@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="dist/ergonomie.min.css">
   <link rel="stylesheet" href="dist/party-room.min.css">
   <link rel="stylesheet" href="dist/game-shell.min.css">
+  <link rel="stylesheet" href="dist/egg-mystery.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -176,6 +177,11 @@
       </section>
 
       <section class="home-pathways" aria-label="Choisir comment jouer">
+        <article class="home-path home-path-egg">
+          <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">◒</span><span class="home-path-label">L’ENQUÊTE COMMUNAUTAIRE</span></div>
+          <h2>Œuf mystère</h2><p>Un mystère pour la semaine. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
+          <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openEggGame">Ouvrir l’Œuf mystère →</button></div>
+        </article>
         <article class="home-path home-path-solo">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">✦</span><span class="home-path-label">À TON RYTHME</span></div>
           <h2>Jouer seul</h2><p>Un Pokémon à deviner, un quiz ou un record à battre. Trouve ton prochain défi.</p>
@@ -1197,6 +1203,23 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
       </div>
 
+    </div>
+
+    <div id="screen-egg" class="hidden" aria-label="Œuf mystère">
+      <div class="egg-toolbar"><button class="btn-ghost" data-action="goToConfig">← Jeux</button><span>COMMUNAUTÉ · HEBDOMADAIRE</span><button class="btn-ghost" data-action="loadEggState">Actualiser</button></div>
+      <div class="shell-intro"><p class="club-eyebrow">UNE ENQUÊTE À RÉSOUDRE ENSEMBLE</p><h1>L’Œuf mystère</h1><p>Chaque mauvaise piste est écartée pour tout le monde. La prochaine sera-t-elle la bonne ?</p></div>
+      <p id="egg-notice" role="status" aria-live="polite">Chargement du défi…</p>
+      <div id="egg-content" class="hidden">
+        <section class="egg-prize"><div class="egg-drawing" aria-hidden="true"><i></i><i></i><i></i></div><div><span class="club-eyebrow">LE PREMIER À TROUVER REMPORTE</span><h2 id="egg-reward-name"></h2><p>Un compagnon et l’insigne de cette enquête. Une autre récompense est choisie si tu possèdes déjà ce Pokémon.</p><small id="egg-reset"></small></div><img id="egg-reward-sprite" alt="" width="112" height="112"/></section>
+        <section class="egg-investigation"><div class="egg-progress"><strong id="egg-eliminated"></strong><span id="egg-remaining"></span></div><progress id="egg-progress-bar" max="1025" value="0" aria-label="Pokémon écartés"></progress><div id="egg-clues" class="egg-clues"></div><p id="egg-next-clue"></p></section>
+        <section id="egg-finish" class="egg-finish hidden" aria-live="polite"></section>
+        <form id="egg-form" class="egg-form" data-submit-action="submitEggGuess">
+          <label for="egg-input">Ta proposition du jour</label><div class="egg-input-row"><div class="egg-input-wrap"><input id="egg-input" placeholder="Cherche un Pokémon…" autocomplete="off" spellcheck="false" data-input-action="filterEggSuggestions" data-keydown-action="eggSuggestionKeydown" role="combobox" aria-autocomplete="list" aria-controls="egg-suggestions" aria-expanded="false"/><div id="egg-suggestions" class="hidden" role="listbox"></div></div><button id="egg-submit" class="btn-blue" type="submit">Proposer</button></div><p id="egg-quota"></p><button id="egg-login" class="btn-ghost hidden" type="button" data-action="openLoginWelcome">Se connecter pour une deuxième proposition</button>
+        </form>
+        <section class="egg-catalog"><div class="egg-catalog-head"><h2>Les pistes de l’enquête</h2><div><label><input id="egg-hide-eliminated" type="checkbox" checked data-change-action="renderEggCatalog"/> Masquer les Pokémon rayés</label><label><input id="egg-hide-incompatible" type="checkbox" checked data-change-action="renderEggCatalog"/> Masquer les incompatibles</label></div></div><div id="egg-grid"></div></section>
+        <section class="egg-feed"><h2>Les dernières propositions</h2><ol id="egg-feed-list"></ol></section>
+        <details class="shell-guide"><summary>Comment participer ?</summary><ol><li>Propose un Pokémon : une fois par jour en invité, deux avec un compte.</li><li>Chaque mauvaise réponse est rayée pour tous. Un indice commun apparaît toutes les 100 mauvaises propositions.</li><li>Le premier à trouver gagne le compagnon. Le défi suivant commence lundi à minuit, heure de Paris.</li></ol><p>Ce jeu est indépendant des classements. Le quota invité s’applique aussi à la connexion réseau partagée. Connecte-toi pour avoir ton quota personnel.</p></details>
+      </div>
     </div>
 
     <div id="screen-odd-one-out" class="hidden">
