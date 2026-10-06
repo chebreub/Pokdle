@@ -751,7 +751,7 @@ def main():
      if width<=800:
       expect(not disclosure.evaluate('(e)=>e.open'),'Party rules should start collapsed on tablet/mobile')
       action_position=page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')
-      expect(action_position==('fixed' if width<=560 else 'sticky'),'Party primary action dock has the wrong mobile/tablet positioning: '+action_position)
+      expect(action_position=='static','Party mobile actions must stay in the scroll flow: '+action_position)
      else:
       expect(disclosure.evaluate('(e)=>e.open'),'Party rules should stay open on desktop')
       expect(page.locator('#party-action-dock').evaluate('(e)=>getComputedStyle(e).position')!='sticky','Party action dock should not be sticky on desktop')

@@ -41,7 +41,7 @@ jobs:
       - name: Install browser QA dependencies
         run: |
           python -m pip install playwright==1.55.0
-          python -m playwright install --with-deps chromium
+          python -m playwright install --with-deps chromium webkit
       - name: Install application dependencies
         run: npm ci
         working-directory: App
@@ -53,6 +53,8 @@ jobs:
           npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }
           tail -12 ../quality-artifacts/unit-tests.log
         working-directory: App
+      - name: Verify Party mobile touch actions
+        run: python tools/party_mobile_quality.py
       - name: Verify browser journeys at six viewport widths
         run: python tools/browser_quality.py --output quality-artifacts/browser
       - name: Verify an actual two-browser Party Room game
