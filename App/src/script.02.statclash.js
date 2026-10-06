@@ -83,6 +83,24 @@ window.toggleHomeGensCard = toggleHomeGensCard;
 
 // DA 2026 : hero "Pokémon du jour" (statut du jour, série, compte à rebours UTC).
 let dailyHeroCountdownTimer = null;
+function renderDailyNotebook(record, complete) {
+  const panel = document.getElementById("daily-notebook");
+  if (!panel) return;
+  const target = record ? POKEMON_BY_ID.get(Number(record.secretId)) : null;
+  const guesses = target && Array.isArray(record.historyIds)
+    ? record.historyIds.map(id => POKEMON_BY_ID.get(Number(id))).filter(Boolean).slice(-3) : [];
+  const keys = ["generation", "altForm", "type1", "type2", "habitat", "color", "stage", "height", "weight"];
+  const rows = guesses.map(pokemon => {
+    const comparison = compare(pokemon, target);
+    return '<div class="notebook-row">' + keys.map(key => '<i class="notebook-cell is-' + comparison[key] + '">' + (comparison[key] === 'ok' ? '✓' : comparison[key] === 'close' ? '≈' : '×') + '</i>').join('') + '</div>';
+  }).join('');
+  const blanks = Array.from({length: Math.max(0, 3 - guesses.length)}, () => '<div class="notebook-row">' + keys.map(() => '<i class="notebook-cell"></i>').join('') + '</div>').join('');
+  const count = Math.max(0, Number(record?.attempts) || 0);
+  panel.innerHTML = '<div class="notebook-head"><span class="notebook-ball" aria-hidden="true"></span><b>' + (complete ? 'Ton enquête du jour' : count ? 'Ton enquête en cours' : 'À toi de mener l’enquête') + '</b><span aria-hidden="true">✦</span></div>' +
+    '<div class="notebook-grid" aria-hidden="true">' + rows + blanks + '</div>' +
+    '<p>' + (count ? count + ' essai' + (count > 1 ? 's' : '') + (complete ? ' · défi terminé' : ' · progression conservée') : '9 critères. Un seul Pokémon à trouver.') + '</p>' +
+    '<span class="notebook-stamp">' + (complete ? 'ENQUÊTE TERMINÉE' : 'RENDEZ-VOUS QUOTIDIEN') + '</span>';
+}
 function renderDailyHero() {
   const dateEl = document.getElementById("daily-hero-date");
   const streakEl = document.getElementById("daily-hero-streak");
@@ -119,9 +137,11 @@ function renderDailyHero() {
     if (date) date.title = "Le défi est commun à tous et se renouvelle à minuit UTC.";
   }
   let inProgress = false;
+  let dailySave = null;
   try {
     const save = readJson(STORAGE_KEYS.dailyGame, null) || readJson(STORAGE_KEYS.game, null);
     inProgress = Boolean(save && save.mode === "daily" && save.dailyKey === today);
+    if (inProgress) dailySave = save;
   } catch (_err) { /* stockage indisponible */ }
 
   if (statusEl) {
@@ -132,10 +152,11 @@ function renderDailyHero() {
   }
   if (ctaEl) {
     ctaEl.textContent = (wonToday || lostToday)
-      ? "🔁 Revoir mon résultat"
-      : (inProgress ? "▶ Reprendre ma partie" : "▶ Jouer au Pokémon du jour");
+      ? "Revoir mon résultat"
+      : (inProgress ? "Reprendre ma partie →" : "Jouer au Pokémon du jour →");
   }
 
+  renderDailyNotebook(todayResult || dailySave, wonToday || lostToday);
   updateDailyHeroCountdown();
   if (!dailyHeroCountdownTimer) {
     dailyHeroCountdownTimer = setInterval(updateDailyHeroCountdown, 30000);

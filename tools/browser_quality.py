@@ -58,6 +58,14 @@ def main():
      expect(contrast>=4.5,'Streak contrast is too low: '+repr(colors))
      return {'contrast':round(contrast,2)}
     check('audit-home-readability',audit_home_readability,False)
+    def cosy_home():
+     expect(page.locator('#daily-hero').count()==1,'Daily hero is duplicated')
+     expect(page.locator('#home-games-grid .home-game').count()==6,'Home discovery shortcuts are missing')
+     expect(page.locator('#daily-notebook .notebook-cell').count()==27,'Notebook must retain all nine criteria')
+     hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('.home-discovery').bounding_box();party=page.locator('.home-pathways').bounding_box()
+     expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
+     return screen('screen-config')
+    check('cosy-home',cosy_home)
     check('catalog',lambda:nav('game','screen-all-modes'))
     def audit_catalog():
      for category in ['game','social']:
@@ -185,7 +193,7 @@ def main():
      expect(page.locator('#pixel-box').is_hidden(),'Pixel clue shell leaked into standard gameplay')
      style=page.locator('#btn-submit').evaluate('(e)=>({image:getComputedStyle(e).backgroundImage,color:getComputedStyle(e).backgroundColor,border:getComputedStyle(e).borderTopColor})')
      rendered=' '.join(style.values())
-     blue_tokens=('57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
+     blue_tokens=('64, 105, 224','64,105,224','57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
      expect(any(token in rendered for token in blue_tokens),'Primary guess CTA is not using the D0 blue treatment: '+repr(style))
     def autocomplete_overlay():
      start('startNormalGame','screen-game');standard_guess_shell()
@@ -279,8 +287,7 @@ def main():
       expect(progress.bounding_box()['x']>page.locator('#win-box .win-inner').bounding_box()['x'],'Pokédex progress is not in the desktop stats rail')
      return screen('screen-game')
     check('daily-result',daily_finish)
-    def pc2_leaderboard_desktop():
-     if width<1280: return {'skipped':'desktop-only'}
+    def cosy_leaderboard():
      page.evaluate("""async () => {
        window.__qaLeaderboardFetch=leaderboardFetchJson;
        leaderboardFetchJson=async()=>({
@@ -300,18 +307,21 @@ def main():
      }""")
      page.locator('#overlay-body .lbv3-podium').wait_for(state='visible')
      overlay=page.locator('.overlay-card:has(.lbv3-shell)').bounding_box()
-     expect(overlay and overlay['width']>1100,'Desktop leaderboard overlay is still narrow: '+repr(overlay))
+     expect(overlay and overlay['width']<=width and (width<1280 or overlay['width']>1100),'Leaderboard does not fit its viewport: '+repr(overlay))
      shell=page.locator('.lbv3-shell')
      cols=shell.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-     expect(cols==2,'Desktop leaderboard is not using the wide two-column layout: '+str(cols))
+     expect(cols==1,'Leaderboard should present the podium before the full-width list: '+str(cols))
      podium=page.locator('.lbv3-podium').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
-     expect(podium and listing and listing['x']>podium['x']+podium['width']-3,'Leaderboard list is not beside the podium: '+repr([podium,listing]))
+     expect(podium and listing and listing['y']>=podium['y']+podium['height']-3,'Leaderboard list is not below the podium: '+repr([podium,listing]))
+     expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
+     expect(page.locator('.lbv3-mode-tab[aria-pressed="true"]').count()==1,'Selected game is not announced')
+     page.screenshot(path=str(out/f'{width}-cosy-leaderboard.jpg'),quality=90,animations='disabled')
      page.evaluate("""() => {
        if (window.__qaLeaderboardFetch) { leaderboardFetchJson=window.__qaLeaderboardFetch; delete window.__qaLeaderboardFetch; }
        if (typeof closeOverlayModal==='function') closeOverlayModal();
      }""")
      return screen('screen-game')
-    check('pc2-leaderboard-desktop',pc2_leaderboard_desktop)
+    check('cosy-leaderboard',cosy_leaderboard,False)
     def completed_home():
      nav('home','screen-config')
      expect(page.locator('#daily-hero').get_attribute('data-daily-state')=='complete','Daily summary did not update')

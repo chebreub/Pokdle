@@ -1,17 +1,17 @@
 /* Pokémon playground: colored game families and a shell that follows the theme.
    Loaded after legacy mode styles. Gameplay feedback keeps its own colors. */
 #pokdle-app.design-refresh {
-  --ui-bg: #e3eff7;
-  --ui-surface: #f8fbff;
-  --ui-soft: #e5edf7;
-  --ui-ink: #17253d;
-  --ui-muted: #5d6c82;
-  --ui-line: #c4d3eb;
-  --ui-accent: #2864db;
-  --ui-accent-soft: #eaf1ff;
-  --ui-shadow: 0 7px 20px rgb(39 75 107 / 9%);
-  --shell-glow: #cce5f4;
-  --header-bg: #f5faff;
+  --ui-bg: #FFF8EF;
+  --ui-surface: #FFFFFF;
+  --ui-soft: #F5EFE8;
+  --ui-ink: #2E2A33;
+  --ui-muted: #776B63;
+  --ui-line: #E9DFD4;
+  --ui-accent: #4069E0;
+  --ui-accent-soft: #ECF1FF;
+  --ui-shadow: 0 5px 0 rgb(100 71 45 / 4%), 0 12px 28px rgb(100 71 45 / 4%);
+  --shell-glow: #FFF8EF;
+  --header-bg: #FFF8EF;
   --cover-tail: #f8fbff;
   --mode-color: #345fcc;
   --mode-wash: #dfe9ff;
@@ -21,10 +21,10 @@
   --text: var(--ui-ink);
   --muted: var(--ui-muted);
   --line: var(--ui-line);
-  background: linear-gradient(180deg, var(--shell-glow), transparent 650px), var(--ui-bg) !important;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ui-muted) 13%, transparent) 1px, transparent 1.5px) 0 0 / 26px 26px, var(--ui-bg) !important;
   background-attachment: fixed !important;
   color: var(--ui-ink) !important;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: Nunito, system-ui, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -51,7 +51,7 @@
 #pokdle-app.design-refresh::after { display: none !important; }
 #pokdle-app.design-refresh main { width: 100%; max-width: 1440px; padding: 28px 32px 40px; background: transparent !important; }
 #pokdle-app.design-refresh :is(button, input, select, textarea) { font-family: inherit !important; }
-#pokdle-app.design-refresh :is(h1, h2, h3, h4, h5) { font-family: Nunito, Inter, sans-serif !important; text-shadow: none !important; letter-spacing: -.02em; }
+#pokdle-app.design-refresh :is(h1, h2, h3, h4, h5) { font-family: Fredoka, Nunito, sans-serif !important; text-shadow: none !important; letter-spacing: -.02em; }
 #pokdle-app.design-refresh .card-title { font-size: clamp(1.35rem, 2.2vw, 1.8rem) !important; font-weight: 900 !important; line-height: 1.2; text-transform: none !important; color: var(--ui-ink) !important; }
 /* Old Draft rules used text-fill, which overrides color even on a pale header. */
 #pokdle-app.design-refresh .card-title,
@@ -5156,3 +5156,148 @@
     grid-template-columns:repeat(6,minmax(0,1fr)) !important;
   }
 }
+
+/* Cosy Pokédle: shared tokens above; home, deduction and rankings share one
+   visual language. Keep the existing responsive gameplay and theme contracts. */
+#pokdle-app.design-refresh :is(.btn-blue,.btn-yellow,.btn-red,.btn-ghost,.pk-cta,.pk-cta-ghost) {
+  border-radius:999px !important; font-weight:800 !important; padding:11px 20px;
+}
+#pokdle-app.design-refresh .btn-blue { background:#4069E0 !important; border-color:#4069E0 !important; box-shadow:0 4px 0 #2E4DAB !important; }
+#pokdle-app.design-refresh .btn-yellow { background:#FFD45C !important; color:#2E2A33 !important; border-color:#FFD45C !important; box-shadow:0 4px 0 #D9AD39 !important; }
+#pokdle-app.design-refresh :is(.btn-blue,.btn-yellow,.btn-red,.pk-cta):not(:disabled):active { transform:translateY(3px); box-shadow:0 1px 0 currentColor !important; }
+#pokdle-app.design-refresh > header { background:var(--header-bg) !important; box-shadow:0 1px 0 var(--ui-line) !important; }
+#pokdle-app.design-refresh .logo-row h1 { color:var(--ui-ink) !important; font-size:30px !important; font-weight:600 !important; }
+#pokdle-app.design-refresh #screen-config { gap:28px !important; }
+#pokdle-app.design-refresh #screen-config #daily-hero {
+  display:grid !important; grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr); gap:36px;
+  padding:40px; margin:0; border:1px solid #DDDCEF !important; border-radius:32px !important;
+  background:linear-gradient(115deg,#EAF3FF 0%,#EFE8FF 60%,#FFE4EC 100%) !important;
+  box-shadow:0 6px 0 rgb(111 95 157 / 7%) !important; color:#2E2A33 !important; overflow:visible;
+}
+#pokdle-app.design-refresh #daily-hero::before,
+#pokdle-app.design-refresh #daily-hero::after { display:none !important; }
+#pokdle-app.design-refresh #daily-hero .pk-kicker { color:#57457C !important; font-size:13px !important; letter-spacing:.04em; text-transform:none; }
+#pokdle-app.design-refresh #daily-hero .pk-hero-title { font-family:Fredoka,Nunito,sans-serif !important; font-weight:600 !important; font-size:clamp(32px,3.5vw,52px) !important; line-height:1.08; color:#2E2A33 !important; margin:16px 0; max-width:none; }
+#pokdle-app.design-refresh #daily-hero .pk-hero-sub { color:#5E546B !important; font-size:16px !important; max-width:48ch; line-height:1.6; }
+#pokdle-app.design-refresh #daily-hero .pk-hero-chips { gap:8px; margin:20px 0; flex-wrap:wrap; }
+#pokdle-app.design-refresh #daily-hero .pk-chip { font-size:12px !important; font-weight:800; padding:6px 10px; border-radius:999px; background:#FFF9EE !important; color:#68512D !important; border:0 !important; }
+#pokdle-app.design-refresh #daily-hero .pk-chip-fire { background:#FFF0DC !important; color:#7A441C !important; }
+#pokdle-app.design-refresh #daily-hero .pk-cta { background:#FFD45C !important; color:#2E2A33 !important; border:0 !important; box-shadow:0 4px 0 #D9AD39 !important; min-height:48px; }
+#pokdle-app.design-refresh #daily-hero .pk-cta-ghost { background:transparent !important; color:#3557BA !important; border:0 !important; box-shadow:none !important; }
+.daily-notebook { position:relative; align-self:center; background:#FFFFFF; border:1px solid #E4DCEC; border-radius:24px; padding:24px; transform:rotate(2deg); box-shadow:0 8px 0 rgb(111 95 157 / 6%); min-width:0; }
+.notebook-head { display:flex; align-items:center; gap:10px; font-size:14px; color:#514864; margin-bottom:22px; }
+.notebook-head > span:last-child { color:#DCAC35; margin-left:auto; font-size:26px; }
+.notebook-ball { width:24px; height:24px; flex-shrink:0; border:2px solid #2E2A33; border-radius:50%; background:radial-gradient(circle,#FFF 0 16%,#2E2A33 18% 27%,transparent 29%),linear-gradient(#E45B61 44%,#2E2A33 44% 55%,#FFF 55%); }
+.notebook-grid { display:grid; gap:7px; }
+.notebook-row { display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); gap:5px; }
+.notebook-cell { display:grid; place-items:center; aspect-ratio:1; background:#F4F0F5; border-radius:7px; border:1px solid #E6DFEA; color:#5D5560; font-size:13px; font-style:normal; }
+.notebook-cell.is-ok { background:#8ED9A8; color:#0F4228; border-color:#8ED9A8; }
+.notebook-cell.is-close { background:repeating-linear-gradient(135deg,#FFD08A 0 6px,#FFDBA8 6px 12px); color:#6A4000; border-color:#FFD08A; }
+.notebook-cell.is-wrong { background:#E9E1E6; }
+.daily-notebook p { font-size:13px; color:#776B63; margin:16px 0 10px; }
+.notebook-stamp { font-size:10px; letter-spacing:.09em; font-weight:900; color:#786490; }
+.home-discovery { min-width:0; }
+.home-discovery-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:8px 0 24px; }
+.home-discovery-head h2 { color:var(--ui-ink); font-size:32px; font-weight:500; margin:4px 0; }
+.home-discovery-head p { color:var(--ui-muted); font-size:15px; margin:6px 0 0; }
+.home-games-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+.home-game { --game-wash:#EFE8FF; position:relative; display:flex; flex-direction:column; overflow:hidden; text-align:left; border:1px solid var(--ui-line); border-radius:24px; padding:0; background:var(--ui-surface); color:var(--ui-ink); box-shadow:var(--ui-shadow); cursor:pointer; transition:transform .18s ease,box-shadow .18s ease; min-width:0; }
+.home-game:hover { transform:translateY(-4px); box-shadow:0 10px 24px rgb(87 58 41 / 10%); }
+.home-game-pink { --game-wash:#FFE4EC; }.home-game-mint { --game-wash:#E1F4E9; }.home-game-blue { --game-wash:#E4EEFF; }.home-game-peach { --game-wash:#FFEBDD; }
+.home-game-art { display:block; height:130px; position:relative; background:var(--game-wash); overflow:hidden; }
+#pokdle-app.design-refresh .home-game-art .mode-card-art { width:116px; height:100px; inset:15px auto auto calc(50% - 58px); border:0; box-shadow:none; background:transparent; }
+#pokdle-app.design-refresh .home-game-art .mode-illustration { display:block; position:absolute; inset:0; width:100%; height:100%; border-radius:0; }
+#pokdle-app.design-refresh .home-game-art .mode-illustration img { width:100%; height:100%; object-fit:cover; }
+.home-game-copy { display:flex; flex-direction:column; gap:5px; padding:18px 44px 22px 20px; }
+.home-game-copy small { color:var(--ui-muted); font-size:12px; font-weight:800; }
+.home-game-copy b { font-family:Fredoka,Nunito,sans-serif; font-size:21px; font-weight:500; line-height:1.2; }
+.home-game-copy > span { font-size:14px; line-height:1.45; color:var(--ui-muted); }
+.home-game-arrow { position:absolute; right:16px; bottom:22px; color:var(--ui-accent); font-size:22px; }
+#pokdle-app.design-refresh .home-pathways .home-path { border-radius:26px !important; border:1px solid var(--ui-line) !important; box-shadow:none !important; }
+#pokdle-app.design-refresh:not(.theme-dark) .home-path-solo { background:#EEF2FF !important; }
+#pokdle-app.design-refresh:not(.theme-dark) .home-path-friends { background:#FFEAF0 !important; }
+#pokdle-app.design-refresh:not(.theme-dark) .home-path :is(h2,p,.home-path-label) { color:#514656 !important; }
+#pokdle-app.design-refresh #screen-game #daily-banner { background:#FFF1BE !important; border:1px solid #E8D390 !important; border-radius:24px !important; color:#5D4821 !important; }
+#pokdle-app.design-refresh #screen-game #daily-banner :is(b,span) { color:inherit !important; }
+#pokdle-app.design-refresh #screen-game #daily-banner .pk-tile { background:#FFD45C !important; color:#5D4821 !important; border-radius:16px !important; }
+#pokdle-app.design-refresh #screen-game .search-bar { border-radius:24px !important; background:var(--ui-surface) !important; }
+#pokdle-app.design-refresh #screen-game #guess-input { border-radius:999px !important; min-height:48px; font-weight:700 !important; }
+#pokdle-app.design-refresh #screen-game #btn-submit { background:#4069E0 !important; color:white !important; border-color:#4069E0 !important; box-shadow:0 4px 0 #2E4DAB !important; }
+#pokdle-app.design-refresh #results-table { border-collapse:separate; border-spacing:6px; }
+#pokdle-app.design-refresh #results-table :is(td,th) { font-family:Nunito,system-ui,sans-serif; }
+#pokdle-app.design-refresh #results-table th { color:var(--ui-muted) !important; font-size:12px; letter-spacing:0; text-transform:none; }
+#pokdle-app.design-refresh #results-table td { border-radius:14px !important; border:0 !important; font-weight:800; font-size:14px; }
+#pokdle-app.design-refresh #results-table .c-ok { background:#8ED9A8 !important; color:#0F4228 !important; }
+#pokdle-app.design-refresh #results-table .c-close { background:repeating-linear-gradient(135deg,#FFD08A 0 7px,#FFDBA8 7px 14px) !important; color:#6A4000 !important; }
+#pokdle-app.design-refresh #results-table .c-wrong { background:#E9E1E6 !important; color:#5D5560 !important; }
+.comparison-type { display:flex; flex-direction:column; align-items:center; gap:4px; line-height:1.2; }
+.comparison-type img,.type-none { width:28px; height:28px; flex-shrink:0; }
+.type-none { display:grid; place-items:center; border:1px dashed currentColor; border-radius:50%; }
+#pokdle-app.design-refresh #results-table .comparison-type > span { font-size:12px; }
+#pokdle-app.design-refresh .results-legend { font-size:13px; line-height:1.6; color:var(--ui-muted); padding:12px; text-align:left; }
+.results-legend summary { cursor:pointer; font-weight:800; }
+.results-legend p { max-width:85ch; margin:10px 0 0; }
+.legend-more { display:block; color:var(--ui-accent); font-size:12px; }
+#pokdle-app.design-refresh .overlay-card:has(.lbv3-shell) { border-radius:28px !important; }
+#pokdle-app.design-refresh .lbv3-shell { display:grid; grid-template-columns:1fr; gap:20px !important; }
+#pokdle-app.design-refresh .lbv3-shell > * { grid-column:1 / -1; min-width:0; }
+#pokdle-app.design-refresh .lbv3-header { border:0; border-radius:24px; padding:24px; background:var(--ui-accent-soft); color:var(--ui-ink); box-shadow:none; }
+#pokdle-app.design-refresh .lbv3-title h3 { color:var(--ui-ink); font-size:32px; font-weight:500; }
+#pokdle-app.design-refresh :is(.lbv3-title > span,.lbv3-title p,.lbv3-stats span,.lbv3-section-title) { color:var(--ui-muted); }
+#pokdle-app.design-refresh .lbv3-stats b { color:var(--ui-accent); }
+#pokdle-app.design-refresh .lbv3-controls { display:grid; grid-template-columns:1fr; gap:16px !important; }
+#pokdle-app.design-refresh .lbv3-scope-tabs { display:flex; flex-wrap:wrap; gap:5px; padding:6px; width:fit-content !important; border-radius:999px; background:var(--ui-soft); }
+#pokdle-app.design-refresh :is(.lbv3-scope-tab,.lbv3-mode-tab,.lbv3-gen-tabs button) { border:1px solid var(--ui-line); border-radius:999px; min-height:44px; padding:9px 16px; background:var(--ui-surface); color:var(--ui-muted); font-size:14px; font-weight:800; box-shadow:none; }
+#pokdle-app.design-refresh :is(.lbv3-scope-tab,.lbv3-mode-tab,.lbv3-gen-tabs button).is-active { background:var(--ui-accent); border-color:var(--ui-accent); color:#FFF; }
+#pokdle-app.design-refresh .lbv3-mode-tab[data-lb-mode="daily"].is-active { background:#FFD45C; border-color:#FFD45C; color:#2E2A33; }
+#pokdle-app.design-refresh .lbv3-mode-grid { display:flex; flex-wrap:wrap; gap:8px; }
+#pokdle-app.design-refresh .lbv3-podium { grid-column:1 / -1; display:flex; flex-wrap:wrap; justify-content:center; align-items:stretch; gap:14px; }
+#pokdle-app.design-refresh .lbv3-podium-card { flex:1 1 160px; max-width:340px; min-height:180px; border-radius:24px; border:1px solid var(--ui-line); background:var(--ui-surface); box-shadow:none; color:var(--ui-ink); }
+#pokdle-app.design-refresh .lbv3-podium-card.rank-1 { background:#FFF2C7; border-color:#E7CC78; color:#5D4821; }
+#pokdle-app.design-refresh .lbv3-podium-card.rank-2 { background:#EEE9FD; color:#504367; }
+#pokdle-app.design-refresh .lbv3-podium-card.rank-3 { background:#FFE8DD; color:#684B3D; }
+#pokdle-app.design-refresh .lbv3-podium-name b,#pokdle-app.design-refresh .lbv3-podium-card > strong { color:inherit; }
+#pokdle-app.design-refresh .lbv3-personal > div { background:var(--ui-accent-soft); border-color:var(--ui-line); border-radius:20px; color:var(--ui-ink); }
+#pokdle-app.design-refresh .lbv3-personal span { color:var(--ui-muted); }
+#pokdle-app.design-refresh .lbv2-row { background:var(--ui-surface); color:var(--ui-ink); border:1px solid var(--ui-line); border-radius:16px; padding:13px 16px; }
+#pokdle-app.design-refresh .lbv2-row:nth-child(even) { background:var(--ui-soft); }
+#pokdle-app.design-refresh .lbv2-row.is-me { background:var(--ui-accent-soft); border-color:var(--ui-accent); }
+#pokdle-app.design-refresh .lbv2-row :is(b,strong,.lbv2-rank) { color:inherit; }
+#pokdle-app.design-refresh :is(.lbv3-empty,.lbv3-loading) { background:var(--ui-soft); border-color:var(--ui-line); color:var(--ui-ink); border-radius:24px; }
+#pokdle-app.design-refresh :is(.lbv3-empty p,.lbv3-loading p) { color:var(--ui-muted); }
+#pokdle-app.design-refresh.theme-dark #screen-config #daily-hero { background:linear-gradient(115deg,#213751,#332D4E,#442C40) !important; border-color:#4C4264 !important; }
+#pokdle-app.design-refresh.theme-dark #daily-hero :is(.pk-hero-title,.pk-hero-sub,.pk-kicker,.pk-cta-ghost) { color:#F0EAF9 !important; }
+#pokdle-app.design-refresh.theme-dark .home-game-art { background:color-mix(in srgb,var(--game-wash) 18%,var(--ui-surface)); }
+@media (max-width:1000px) {
+  #pokdle-app.design-refresh #screen-config #daily-hero { padding:28px; gap:22px; }
+  .home-games-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-config #daily-hero { grid-template-columns:minmax(0,1fr); padding:24px 20px; gap:24px; border-radius:26px !important; }
+  #pokdle-app.design-refresh #daily-hero .pk-hero-title { font-size:36px !important; }
+  #pokdle-app.design-refresh #daily-hero .pk-hero-sub { font-size:15px !important; }
+  #pokdle-app.design-refresh #daily-hero .pk-hero-cta-row { flex-wrap:wrap; }
+  #pokdle-app.design-refresh #daily-hero .pk-cta { width:100%; }
+  .daily-notebook { transform:none; padding:18px; }
+  .notebook-head { margin-bottom:12px; }.notebook-cell { aspect-ratio:auto; min-height:22px; }
+  .home-discovery-head { align-items:flex-start; flex-direction:column; gap:12px; }
+  .home-discovery-head h2 { font-size:28px; }
+  .home-games-grid { gap:12px; }
+  .home-game { border-radius:20px; }
+  .home-game-art { height:104px; }
+  #pokdle-app.design-refresh .home-game-art .mode-card-art { height:80px; top:12px; }
+  .home-game-copy { padding:14px 12px 36px; gap:6px; }
+  .home-game-copy b { font-size:18px; }.home-game-copy > span { font-size:13px; }.home-game-arrow { bottom:10px; right:12px; }
+  #pokdle-app.design-refresh #results-table td::before { font-size:12px !important; letter-spacing:0 !important; opacity:1 !important; text-transform:none !important; }
+  #pokdle-app.design-refresh #results-table .guess-result-row { border-radius:24px !important; padding:12px !important; gap:6px !important; }
+  #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:20px; }
+  #pokdle-app.design-refresh .lbv3-title h3 { font-size:26px; }
+  #pokdle-app.design-refresh .lbv3-scope-tabs { border-radius:20px; }
+  #pokdle-app.design-refresh .lbv3-scope-tab { flex:1 1 auto; font-size:13px; padding-inline:10px; }
+  #pokdle-app.design-refresh .lbv3-podium { gap:8px; }
+  #pokdle-app.design-refresh .lbv3-podium-card { flex-basis:80px; min-width:0; min-height:160px; padding:12px 6px; }
+  #pokdle-app.design-refresh .lbv3-podium-name b { font-size:12px; overflow-wrap:anywhere; }
+  #pokdle-app.design-refresh .lbv3-podium-card > strong { font-size:16px; }
+  #pokdle-app.design-refresh .lbv2-row { padding:12px 10px; gap:8px; }
+}
+@media (prefers-reduced-motion:reduce) { .home-game { transition:none; }.home-game:hover { transform:none; } }

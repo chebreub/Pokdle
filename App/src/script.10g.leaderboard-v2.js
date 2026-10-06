@@ -12,7 +12,7 @@ const LEADERBOARD_V2_MODES = [
   ["typecombo","Combo types","Points"],
   ["draft","Draft Score","Moyenne BST"]
 ];
-const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 jours"],["all","Toujours"]];
+const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 derniers jours"],["all","Records historiques"]];
 let leaderboardV2Scope = "all";
 let leaderboardV2LastMode = "daily";
 
@@ -192,11 +192,11 @@ function openLeaderboardV2(mode="daily",scope="all") {
     const modeTabs=LEADERBOARD_V2_MODES.map(([id,label])=>{
       const active=id==="draft"?leaderboardV2IsDraft(current):id===current;
       const target=id==="draft"?"draft_all":id;
-      return '<button type="button" class="lbv3-mode-tab'+(active?' is-active':'')+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
+      return '<button type="button" class="lbv3-mode-tab'+(active?' is-active':'')+'" aria-pressed="'+active+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
     }).join("");
 
     const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
-      '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
+      '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" aria-pressed="'+(id===leaderboardV2Scope)+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
     ).join("");
 
     const genTabs=leaderboardV2IsDraft(current)
@@ -251,7 +251,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
     const total=Number(data?.total)||0;
     const body='<div class="lbv3-shell">'+
       '<header class="lbv3-header">'+
-        '<div class="lbv3-title"><span>ARÈNE DES DRESSEURS</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+'</p></div>'+
+        '<div class="lbv3-title"><span>À CHACUN SON RECORD</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+' · Meilleure performance par joueur.</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
       '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-mode-grid">'+modeTabs+'</div></div>'+
