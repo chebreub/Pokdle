@@ -5228,7 +5228,7 @@
 #pokdle-app.design-refresh #screen-game #btn-submit { background:#4069E0 !important; color:white !important; border-color:#4069E0 !important; box-shadow:0 4px 0 #2E4DAB !important; }
 #pokdle-app.design-refresh #results-table { border-collapse:separate; border-spacing:6px; }
 #pokdle-app.design-refresh #results-table :is(td,th) { font-family:Nunito,system-ui,sans-serif; }
-#pokdle-app.design-refresh #results-table th { color:var(--ui-muted) !important; font-size:12px; letter-spacing:0; text-transform:none; }
+#pokdle-app.design-refresh #results-table th { color:var(--ui-muted) !important; font-size:12px !important; letter-spacing:0 !important; text-transform:none; }
 #pokdle-app.design-refresh #results-table td { border-radius:14px !important; border:0 !important; font-weight:800; font-size:14px; }
 #pokdle-app.design-refresh #results-table .c-ok { background:#8ED9A8 !important; color:#0F4228 !important; }
 #pokdle-app.design-refresh #results-table .c-close { background:repeating-linear-gradient(135deg,#FFD08A 0 7px,#FFDBA8 7px 14px) !important; color:#6A4000 !important; }
@@ -5237,14 +5237,14 @@
 .comparison-type img,.type-none { width:28px; height:28px; flex-shrink:0; }
 .type-none { display:grid; place-items:center; border:1px dashed currentColor; border-radius:50%; }
 #pokdle-app.design-refresh #results-table .comparison-type > span { font-size:12px; }
-#pokdle-app.design-refresh .results-legend { font-size:13px; line-height:1.6; color:var(--ui-muted); padding:12px; text-align:left; }
+#pokdle-app.design-refresh .results-legend { font-size:13px !important; line-height:1.6; color:var(--ui-muted) !important; padding:12px; text-align:left; }
 .results-legend summary { cursor:pointer; font-weight:800; }
 .results-legend p { max-width:85ch; margin:10px 0 0; }
 .legend-more { display:block; color:var(--ui-accent); font-size:12px; }
 #pokdle-app.design-refresh .overlay-card:has(.lbv3-shell) { border-radius:28px !important; }
 #pokdle-app.design-refresh .lbv3-shell { display:grid; grid-template-columns:1fr; gap:20px !important; }
 #pokdle-app.design-refresh .lbv3-shell > * { grid-column:1 / -1; min-width:0; }
-#pokdle-app.design-refresh .lbv3-header { border:0; border-radius:24px; padding:24px; background:var(--ui-accent-soft); color:var(--ui-ink); box-shadow:none; }
+#pokdle-app.design-refresh .lbv3-header { border:0 !important; border-radius:24px; padding:24px !important; background:var(--ui-accent-soft) !important; color:var(--ui-ink); box-shadow:none !important; }
 #pokdle-app.design-refresh .lbv3-title h3 { color:var(--ui-ink); font-size:32px; font-weight:500; }
 #pokdle-app.design-refresh :is(.lbv3-title > span,.lbv3-title p,.lbv3-stats span,.lbv3-section-title) { color:var(--ui-muted); }
 #pokdle-app.design-refresh .lbv3-stats b { color:var(--ui-accent); }
@@ -5295,7 +5295,11 @@
   .home-game-copy b { font-size:18px; }.home-game-copy > span { font-size:13px; }.home-game-arrow { bottom:14px; left:14px; }
   #pokdle-app.design-refresh #results-table td::before { font-size:12px !important; letter-spacing:0 !important; opacity:1 !important; text-transform:none !important; }
   #pokdle-app.design-refresh #results-table .guess-result-row { border-radius:24px !important; padding:12px !important; gap:6px !important; }
-  #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:20px; }
+  #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:20px !important; }
+  #pokdle-app.design-refresh .lbv3-scope-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100% !important; border-radius:22px; }
+  #pokdle-app.design-refresh .lbv3-scope-tab { min-width:0; padding:8px 5px; font-size:12px; white-space:normal; }
+  #pokdle-app.design-refresh .lbv3-mode-grid { flex-wrap:nowrap; overflow-x:auto; max-width:100%; min-width:0; padding-bottom:6px; }
+  #pokdle-app.design-refresh .lbv3-mode-tab { flex-shrink:0; }
   #pokdle-app.design-refresh .lbv3-title h3 { font-size:26px; }
   #pokdle-app.design-refresh .lbv3-scope-tabs { border-radius:20px; }
   #pokdle-app.design-refresh .lbv3-scope-tab { flex:1 1 auto; font-size:13px; padding-inline:10px; }

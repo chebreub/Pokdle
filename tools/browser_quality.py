@@ -64,6 +64,11 @@ def main():
      expect(page.locator('#daily-notebook .notebook-cell').count()==27,'Notebook must retain all nine criteria')
      hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('.home-discovery').bounding_box();party=page.locator('.home-pathways').bounding_box()
      expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
+     for artwork in page.locator('#home-games-grid .home-game-pokemon').all():
+      artwork.scroll_into_view_if_needed()
+      page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=artwork.element_handle())
+     if width in (390,1366): page.locator('.home-discovery').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=90,animations='disabled')
+     page.evaluate('window.scrollTo(0,0)')
      return screen('screen-config')
     check('cosy-home',cosy_home)
     check('catalog',lambda:nav('game','screen-all-modes'))
@@ -323,6 +328,13 @@ def main():
      }""")
      page.locator('#overlay-body .lbv3-podium').wait_for(state='visible')
      expect(page.locator('#pokedex-registration-layer:not(.hidden)').count()==0,'Registration ceremony hides the ranking')
+     colors=page.locator('.lbv3-header').evaluate('(e)=>({bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color})')
+     import re
+     def luminance(value):
+      rgb=[int(v)/255 for v in re.findall(r'\d+',value)[:3]]
+      return sum(a*b for a,b in zip([v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in rgb],[.2126,.7152,.0722]))
+     a,b=luminance(colors['fg']),luminance(colors['bg'])
+     expect((max(a,b)+.05)/(min(a,b)+.05)>=4.5,'Ranking header text is unreadable: '+repr(colors))
      overlay=page.locator('.overlay-card:has(.lbv3-shell)').bounding_box()
      expect(overlay and overlay['width']<=width and (width<1280 or overlay['width']>1100),'Leaderboard does not fit its viewport: '+repr(overlay))
      shell=page.locator('.lbv3-shell')
@@ -332,6 +344,10 @@ def main():
      expect(podium and listing and listing['y']>=podium['y']+podium['height']-3,'Leaderboard list is not below the podium: '+repr([podium,listing]))
      expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
      expect(page.locator('.lbv3-mode-tab[aria-pressed="true"]').count()==1,'Selected game is not announced')
+     if width<=640:
+      controls=page.locator('.lbv3-controls').bounding_box()
+      expect(controls['height']<160,'Mobile filters push the podium too far down: '+repr(controls))
+     page.wait_for_function('!document.querySelector("#gamefeel-layer.is-visible")')
      page.screenshot(path=str(out/f'{width}-cosy-leaderboard.jpg'),quality=90,animations='disabled')
      page.evaluate("""() => {
        if (window.__qaLeaderboardFetch) { leaderboardFetchJson=window.__qaLeaderboardFetch; delete window.__qaLeaderboardFetch; }
