@@ -3,7 +3,7 @@
 #screen-egg .egg-toolbar {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;}
 #screen-egg .egg-toolbar>span {font:800 12px Nunito,sans-serif;padding:10px 14px;background:#EFE8FF;color:#57408a;border-radius:30px;}
 #screen-egg .shell-intro {text-align:center;margin-bottom:24px;}
-#screen-egg h1 {font:500 clamp(30px,5vw,44px)/1.2 Fredoka,sans-serif;margin:12px 0;}
+#pokdle-app.design-refresh #screen-egg h1 {font:500 clamp(30px,5vw,44px)/1.2 Fredoka,sans-serif;margin:12px 0;color:inherit;}
 #screen-egg h2 {font:500 24px Fredoka,sans-serif;margin:6px 0 12px;}
 #screen-egg .shell-intro>p:last-child {font-size:16px;line-height:1.6;max-width:650px;margin:0 auto;color:var(--egg-muted);}
 #egg-notice:empty {display:none;}
@@ -46,6 +46,9 @@
 #pokdle-app.design-refresh.theme-dark #egg-earned-rewards {background:#292633;border-color:#494153;color:#fff8ef;}
 #pokdle-app.design-refresh.theme-dark #egg-earned-rewards article>span {color:#c4b9cd;}
 @media(max-width:640px){
+ #pokdle-app.design-refresh #screen-egg .egg-toolbar {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+ #pokdle-app.design-refresh #screen-egg .egg-toolbar>button {width:100%!important;margin:0!important;}
+ #screen-egg .egg-toolbar>span {grid-column:1/-1;}
  #screen-egg .egg-prize,#screen-egg .egg-investigation,#screen-egg .egg-form,#screen-egg .egg-catalog,#screen-egg .egg-feed,#screen-egg .egg-finish,#screen-egg .shell-guide {padding:18px;border-radius:22px;}
  #screen-egg .egg-prize{grid-template-columns:1fr 80px;gap:12px;}.egg-drawing{display:none;}#egg-reward-sprite{width:80px;height:80px;}.egg-input-row{flex-direction:column;}.egg-input-wrap,#egg-submit{width:100%;}.egg-generation>summary span{display:block;margin:6px 0 0;}.egg-pokemon-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
  #screen-egg .egg-toolbar>span{font-size:12px;order:3;width:100%;text-align:center;}.egg-progress strong{font-size:22px;}

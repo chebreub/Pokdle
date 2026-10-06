@@ -75,6 +75,10 @@ def main():
      try:
       page.evaluate('openEggGame()');page.locator('#egg-content').wait_for(state='visible');screen('screen-egg')
       expect(page.locator('#egg-grid .egg-pokemon').count()==151,'Egg omits candidates')
+      expect(page.locator('#screen-egg h1').evaluate('(e)=>getComputedStyle(e).color')=='rgb(46, 42, 51)','Egg heading is unreadable on its cream background')
+      if width==390:
+       toolbar_buttons=page.locator('#screen-egg .egg-toolbar>button').all()
+       expect(abs(toolbar_buttons[0].bounding_box()['y']-toolbar_buttons[1].bounding_box()['y'])<2,'Egg mobile toolbar wastes two rows on navigation')
       page.screenshot(path=str(out/f'{width}-egg-start.jpg'),quality=85,animations='disabled')
       page.locator('#egg-input').fill('Bulbi');page.locator('#egg-suggestions button').first.click()
       page.locator('#egg-submit').click();page.wait_for_function('() => eggState?.quota.remaining === 0 && !eggBusy')
@@ -82,11 +86,13 @@ def main():
       expect(page.locator('#egg-grid .egg-pokemon').count()==150,'Rejected Pokemon remains selectable')
       page.locator('#egg-hide-eliminated').uncheck();expect(page.locator('#egg-grid .is-eliminated').count()==1,'Show eliminated toggle failed')
       page.screenshot(path=str(out/f'{width}-egg-quota.jpg'),quality=85,animations='disabled')
-      fixture['solved']=True;fixture['winner']={'name':'Dresseur QA','at':'2026-10-06T12:00:00Z','pokemon':{'id':25,'name':'Pikachu'},'me':False}
+      fixture['solved']=True;fixture['winner']={'name':'Dresseur QA','at':'2026-10-06T12:00:00Z','me':False}
+      fixture['feed'].insert(0,{'pokemon':{'id':25,'name':'Pikachu'},'name':'Dresseur QA','correct':True,'at':'2026-10-06T12:00:00Z'})
       page.evaluate('loadEggState()');page.locator('#egg-finish').wait_for(state='visible')
       expect(page.locator('#egg-form').is_hidden(),'Solved Egg still accepts guesses')
       page.screenshot(path=str(out/f'{width}-egg-solved.jpg'),quality=85,animations='disabled')
       page.evaluate('document.body.classList.add("theme-dark")');screen('screen-egg')
+      expect(page.locator('#screen-egg h1').evaluate('(e)=>getComputedStyle(e).color')=='rgb(255, 248, 239)','Egg heading is unreadable in dark mode')
       page.screenshot(path=str(out/f'{width}-egg-dark.jpg'),quality=85,animations='disabled')
      finally:
       page.evaluate('document.body.classList.remove("theme-dark");goToConfig()')
