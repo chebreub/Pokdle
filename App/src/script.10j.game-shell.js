@@ -7,7 +7,7 @@ const GAME_SHELL_MODES = {
   silhouette: { title: "Zoom progressif", instruction: "Observe le détail. Chaque essai élargit la vue.", kicker: "OUVRE L’ŒIL" },
   pixel: { title: "Pokémon pixelisé", instruction: "L’image devient plus nette à chaque proposition.", kicker: "UNE IMAGE À DÉCHIFFRER" },
   cry: { title: "Le cri mystère", instruction: "Écoute, reconnais, propose. Tu peux rejouer le cri à volonté.", kicker: "TENDS L’OREILLE" },
-  mystery: { title: "Stat Mystère", instruction: "Les statistiques se dévoilent progressivement. Croise-les avec les indices.", kicker: "DERRIÈRE LES CHIFFRES" },
+  mystery: { title: "Stat Mystère", instruction: "Observe les statistiques et croise-les avec les indices.", kicker: "DERRIÈRE LES CHIFFRES" },
   description: { title: "Description Pokédex", instruction: "Lis l’extrait du Pokédex pour retrouver son propriétaire.", kicker: "LE PORTRAIT MYSTÈRE" },
   quiz: { title: "Quiz Pokémon", instruction: "Choisis une réponse et découvre l’explication.", kicker: "À TOI DE JOUER", custom: true },
   weight: { title: "Duel de poids", instruction: "Quel Pokémon est le plus lourd ? Choisis ta réponse.", kicker: "FAIS PENCHER LA BALANCE", custom: true },
@@ -90,6 +90,13 @@ function renderGameShell() {
   document.getElementById("shell-facts").innerHTML = facts.length ? facts.map(text => `<span class="notebook-fact">✓ ${escapeHtml(text)}</span>`).join("") : '<p class="notebook-empty">Ton carnet est encore vierge. Chaque proposition t’aidera à le compléter.</p>';
   const best = Math.min(...(matchHistory || []).filter(row => row.mode === gameMode && row.result === "win" && row.attempts > 0).map(row => row.attempts));
   document.getElementById("shell-goal").textContent = Number.isFinite(best) && attempts === 0 ? `Ton record récent : ${best} essai${best > 1 ? "s" : ""}.` : Number.isFinite(best) && attempts + 1 < best ? `Objectif personnel : trouver en moins de ${best} essais.` : attempts ? `${attempts} essai${attempts > 1 ? "s" : ""} · Chaque indice compte. Continue à ton rythme.` : "Commence par un Pokémon que tu connais bien.";
+  if (gameMode === "daily" && !attempts && typeof liveRankFetch === "function") {
+    liveRankFetch("daily").then(data => {
+      if (gameMode !== "daily" || attempts || gameOver) return;
+      const record = Number(data?.top?.[0]?.score);
+      if (record > 0) document.getElementById("shell-goal").textContent = `Record du jour : ${record} essai${record > 1 ? "s" : ""}. À toi de commencer ton enquête.`;
+    }).catch(() => {});
+  }
 }
 
 function renderShellResult() {

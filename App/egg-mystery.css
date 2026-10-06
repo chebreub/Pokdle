@@ -1,0 +1,52 @@
+#pokdle-app.design-refresh #screen-egg {--egg-surface:#fff;--egg-line:#F0E2CF;--egg-muted:#776B63;max-width:1000px;width:100%;margin:24px auto 56px;color:#2E2A33;}
+#pokdle-app.design-refresh.theme-dark #screen-egg {--egg-surface:#292633;--egg-line:#494153;--egg-muted:#c4b9cd;color:#fff8ef;}
+#screen-egg .egg-toolbar {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;}
+#screen-egg .egg-toolbar>span {font:800 12px Nunito,sans-serif;padding:10px 14px;background:#EFE8FF;color:#57408a;border-radius:30px;}
+#screen-egg .shell-intro {text-align:center;margin-bottom:24px;}
+#screen-egg h1 {font:500 clamp(30px,5vw,44px)/1.2 Fredoka,sans-serif;margin:12px 0;}
+#screen-egg h2 {font:500 24px Fredoka,sans-serif;margin:6px 0 12px;}
+#screen-egg .shell-intro>p:last-child {font-size:16px;line-height:1.6;max-width:650px;margin:0 auto;color:var(--egg-muted);}
+#egg-notice:empty {display:none;}
+#egg-notice {background:#EFE8FF;border:1px solid #d9ccef;padding:16px 20px;border-radius:18px;font-size:15px;color:#57408a;}
+#egg-notice.is-error {background:#FFE4EC;color:#812641;border-color:#f3bac9;}
+#egg-content {display:flex;flex-direction:column;gap:22px;}
+#screen-egg .egg-prize,#screen-egg .egg-investigation,#screen-egg .egg-form,#screen-egg .egg-catalog,#screen-egg .egg-feed,#screen-egg .egg-finish,#screen-egg .shell-guide {padding:24px;background:var(--egg-surface);border:1px solid var(--egg-line);border-radius:26px;}
+#screen-egg .egg-prize {display:grid;grid-template-columns:90px 1fr 112px;gap:22px;align-items:center;background:linear-gradient(115deg,#f3edff,#fff0f5);}
+#screen-egg .egg-prize p {font-size:14px;line-height:1.6;color:var(--egg-muted);margin:0 0 10px;}
+#screen-egg .egg-prize small {font-size:12px;font-weight:800;color:var(--egg-muted);}
+.egg-drawing {position:relative;overflow:hidden;background:#fff8ef;border:3px solid #8b71bc;border-radius:55% 55% 48% 48% / 65% 65% 40% 40%;height:110px;width:86px;box-shadow:0 7px 0 #cbb9e530;transform:rotate(-9deg);}
+.egg-drawing i {position:absolute;width:22px;height:30px;background:#bda7e3;border-radius:50%;top:25px;left:9px;transform:rotate(-22deg);}.egg-drawing i:nth-child(2){top:65px;left:48px;width:28px;height:22px;}.egg-drawing i:nth-child(3){top:8px;left:62px;width:24px;height:24px;}
+.egg-progress {display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center;font-size:15px;}.egg-progress strong{font:500 24px Fredoka,sans-serif;}
+#egg-progress-bar {width:100%;height:10px;accent-color:#7C5BD6;margin:16px 0;}
+.egg-clues {display:flex;flex-wrap:wrap;gap:8px;}.egg-clues>span {background:#EFE8FF;color:#57408a;border-radius:12px;padding:10px 12px;font-size:14px;}
+#egg-next-clue,#egg-quota {font-size:14px;color:var(--egg-muted);margin:14px 0 0;}
+#screen-egg .egg-form {position:relative;z-index:3;}
+.egg-form>label {display:block;font-weight:800;font-size:16px;margin-bottom:12px;}
+.egg-input-row {display:flex;gap:12px;align-items:start;}.egg-input-wrap {position:relative;flex:1;min-width:0;}
+#pokdle-app.design-refresh #egg-input {width:100%;min-height:50px;border:1px solid var(--egg-line);border-radius:16px;background:var(--egg-surface);color:inherit;font:700 16px Nunito,sans-serif;padding:12px 16px;}
+#egg-submit {min-height:50px!important;}
+#egg-login {margin-top:12px;}
+#egg-suggestions {position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:10;background:var(--egg-surface);border:1px solid var(--egg-line);border-radius:18px;max-height:320px;overflow:auto;box-shadow:0 14px 40px #2e2a3325;}
+#egg-suggestions>button {display:flex;align-items:center;gap:10px;text-align:left;min-height:60px;width:100%;padding:10px 14px;border:0;border-bottom:1px solid var(--egg-line);background:transparent;color:inherit;font:700 15px Nunito,sans-serif;cursor:pointer;}
+#egg-suggestions>button:hover,#egg-suggestions>button[aria-selected="true"] {background:#EFE8FF;color:#57408a;}
+#egg-suggestions small {display:flex;gap:8px;margin-top:4px;font-size:12px;}.comparison-type{display:inline-flex;align-items:center;gap:4px;}#egg-suggestions .comparison-type img{height:18px;width:18px;}
+.egg-catalog-head {display:flex;gap:14px;justify-content:space-between;align-items:start;flex-wrap:wrap;margin-bottom:16px;}
+.egg-catalog-head>div {display:flex;flex-direction:column;gap:6px;}.egg-catalog-head label{display:flex;align-items:center;gap:8px;min-height:36px;font-size:13px;cursor:pointer;}.egg-catalog-head input{accent-color:#7C5BD6;width:18px;height:18px;}
+.egg-generation {margin-top:18px;}.egg-generation>summary{min-height:44px;padding:12px 16px;background:#EFE8FF;color:#57408a;border-radius:14px;font:800 15px Nunito,sans-serif;cursor:pointer;}.egg-generation:nth-child(3n+2)>summary{background:#FFE4EC;color:#754451;}.egg-generation:nth-child(3n)>summary{background:#e4f3ee;color:#2c6052;}.egg-generation>summary span{font-size:12px;font-weight:600;margin-left:10px;}
+.egg-pokemon-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;padding:14px 0;}
+#pokdle-app.design-refresh .egg-pokemon {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;min-width:44px;min-height:90px;padding:8px 3px;border:1px solid var(--egg-line);background:var(--egg-surface);color:inherit;border-radius:16px;cursor:pointer;font:700 12px Nunito,sans-serif;overflow-wrap:anywhere;}
+#pokdle-app.design-refresh .egg-pokemon:hover:not(:disabled) {background:#EFE8FF;color:#57408a;border-color:#a78cca;}
+.egg-pokemon.is-incompatible,.egg-pokemon.is-eliminated {opacity:.4;filter:grayscale(1);}.egg-pokemon.is-eliminated span{text-decoration:line-through;}.egg-pokemon i{position:absolute;top:4px;right:8px;font:800 20px Nunito,sans-serif;}
+.egg-feed ol {list-style:none;padding:0;margin:0;max-height:400px;overflow:auto;}.egg-feed li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--egg-line);font-size:14px;}.egg-feed li>span{display:flex;flex-direction:column;gap:4px;}.egg-feed li small{font-size:12px;color:var(--egg-muted);}.egg-feed li>strong{margin-left:auto;font-size:12px;}
+#screen-egg .egg-finish {text-align:center;background:#e4f3ee;color:#244c38;}.egg-finish>button{margin:8px!important;}
+#screen-egg .shell-guide {font-size:14px;line-height:1.7;color:var(--egg-muted);}
+#pokdle-app.design-refresh #egg-earned-rewards {margin-top:24px;padding:24px;border:1px solid #F0E2CF;border-radius:24px;background:#fff;}
+#egg-earned-rewards h3 {font:500 24px Fredoka,sans-serif;margin-top:0;}#egg-earned-rewards p{font-size:14px;}#egg-earned-rewards>div{display:flex;flex-wrap:wrap;gap:16px;}#egg-earned-rewards article{display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid #ddd1ed;border-radius:20px;padding:16px;max-width:220px;}#egg-earned-rewards article>span{font-size:12px;color:#776B63;}
+#pokdle-app.design-refresh.theme-dark #screen-egg .egg-prize {background:linear-gradient(115deg,#352f49,#43313d);}
+#pokdle-app.design-refresh.theme-dark #egg-earned-rewards {background:#292633;border-color:#494153;color:#fff8ef;}
+#pokdle-app.design-refresh.theme-dark #egg-earned-rewards article>span {color:#c4b9cd;}
+@media(max-width:640px){
+ #screen-egg .egg-prize,#screen-egg .egg-investigation,#screen-egg .egg-form,#screen-egg .egg-catalog,#screen-egg .egg-feed,#screen-egg .egg-finish,#screen-egg .shell-guide {padding:18px;border-radius:22px;}
+ #screen-egg .egg-prize{grid-template-columns:1fr 80px;gap:12px;}.egg-drawing{display:none;}#egg-reward-sprite{width:80px;height:80px;}.egg-input-row{flex-direction:column;}.egg-input-wrap,#egg-submit{width:100%;}.egg-generation>summary span{display:block;margin:6px 0 0;}.egg-pokemon-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+ #screen-egg .egg-toolbar>span{font-size:12px;order:3;width:100%;text-align:center;}.egg-progress strong{font-size:22px;}
+}

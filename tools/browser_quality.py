@@ -61,6 +61,38 @@ def main():
       page.evaluate('closeOverlayModal();filterHomeGames("popular")')
      return screen('screen-config')
     check('home-filters-login',home_filters_and_login,False)
+    def egg_states():
+     if width not in (390,1366): return {'skipped':'covered on mobile and desktop'}
+     fixture={'ok':True,'roundId':42,'weekStart':'2026-10-05','resetAt':'2026-10-11T22:00:00Z','quotaResetAt':'2026-10-06T22:00:00Z','reward':{'id':133,'name':'Évoli'},'candidateIds':list(range(1,152)),'eliminatedIds':[],'compatibleIds':list(range(1,152)),'remaining':151,'clues':[],'nextClueAt':100,'quota':{'remaining':1,'used':0,'limit':1},'authenticated':False,'solved':False,'winner':None,'canClaim':False,'feed':[]}
+     page.route('**/api/egg',lambda route:route.fulfill(status=200,content_type='application/json',body=json.dumps(fixture)))
+     def submit(route):
+      body=route.request.post_data_json
+      expect(body['roundId']==42 and body['pokemonId']==1,'Egg submits the selected candidate and current round')
+      fixture['eliminatedIds']=[1];fixture['remaining']=150;fixture['quota']={'remaining':0,'used':1,'limit':1}
+      fixture['feed']=[{'pokemon':{'id':1,'name':'Bulbizarre'},'name':'Anonyme','correct':False,'at':'2026-10-06T12:00:00Z'}]
+      route.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':True,'correct':False,'reward':None}))
+     page.route('**/api/egg/guess',submit)
+     try:
+      page.evaluate('openEggGame()');page.locator('#egg-content').wait_for(state='visible');screen('screen-egg')
+      expect(page.locator('#egg-grid .egg-pokemon').count()==151,'Egg omits candidates')
+      page.screenshot(path=str(out/f'{width}-egg-start.jpg'),quality=90,animations='disabled')
+      page.locator('#egg-input').fill('Bulbi');page.locator('#egg-suggestions button').first.click()
+      page.locator('#egg-submit').click();page.wait_for_function('() => document.getElementById("egg-input").disabled')
+      expect(page.locator('#egg-login').is_visible(),'Guest is not offered the second authenticated guess')
+      expect(page.locator('#egg-grid .egg-pokemon').count()==150,'Rejected Pokemon remains selectable')
+      page.locator('#egg-hide-eliminated').uncheck();expect(page.locator('#egg-grid .is-eliminated').count()==1,'Show eliminated toggle failed')
+      page.screenshot(path=str(out/f'{width}-egg-quota.jpg'),quality=90,animations='disabled')
+      fixture['solved']=True;fixture['winner']={'name':'Dresseur QA','at':'2026-10-06T12:00:00Z','pokemon':{'id':25,'name':'Pikachu'},'me':False}
+      page.evaluate('loadEggState()');page.locator('#egg-finish').wait_for(state='visible')
+      expect(page.locator('#egg-form').is_hidden(),'Solved Egg still accepts guesses')
+      page.screenshot(path=str(out/f'{width}-egg-solved.jpg'),quality=90,animations='disabled')
+      page.evaluate('document.body.classList.add("theme-dark")');screen('screen-egg')
+      page.screenshot(path=str(out/f'{width}-egg-dark.jpg'),quality=90,animations='disabled')
+     finally:
+      page.evaluate('document.body.classList.remove("theme-dark");goToConfig()')
+      page.unroute('**/api/egg');page.unroute('**/api/egg/guess')
+     return screen('screen-config')
+    check('egg-states',egg_states,False)
     def audit_home_readability():
      colors=page.locator('#daily-hero-streak').evaluate('(e)=>({fg:getComputedStyle(e).color,bg:getComputedStyle(e).backgroundColor})')
      import re

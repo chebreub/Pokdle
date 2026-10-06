@@ -72,7 +72,7 @@ function renderHomeDiscovery(force = false) {
     ["openHigherLowerMode", "Higher or Lower", "Plus fort, plus grand… à toi de voir.", "Comparer", "lavender", 248],
     ["startNormalGame", "Pokémon mystère", "Neuf indices pour mener l’enquête.", "Deviner", "blue", 133],
     ["startPixelGame", "Pokémon pixelisé", "Retrouve le Pokémon derrière les pixels.", "Observer", "mint", 137],
-    ["startMysteryStatGame", "Stat Mystère", "Les chiffres se révèlent progressivement.", "Déduire", "lavender", 376],
+    ["startMysteryStatGame", "Stat Mystère", "Un portrait à lire dans les statistiques.", "Déduire", "lavender", 376],
     ["startDescriptionMode", "Description Pokédex", "Un portrait à lire, un Pokémon à trouver.", "Lire", "pink", 479],
     ["openSpeedrunMode", "Speedrun", "60 secondes pour en reconnaître un maximum.", "Accélérer", "blue", 291],
     ["openTypeComboSolo", "Combo de types", "Deux types, plusieurs bonnes réponses.", "Associer", "mint", 493],

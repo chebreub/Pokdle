@@ -294,7 +294,8 @@ function renderWinLeaderboardPreview(mode) {
   return syncPendingDailyLeaderboard().then(()=>leaderboardFetchJson("/api/leaderboard?mode=daily&scope=today")).then(data=>{
     if (!current()) return;
     if (data.me) {
-      panel.innerHTML='<div class="win-rank-position"><span>CLASSEMENT DU JOUR</span><strong>#'+Number(data.me.rank)+'</strong><small>'+escapeHtml(leaderboardV2FormatScore(data.me.score,"daily","essais"))+' · '+(Number(data.total)||0)+' classés</small></div>'+link;
+      const neighbors=(Array.isArray(data.around)?data.around:[]).slice(0,7);
+      panel.innerHTML='<div class="win-rank-position"><span>CLASSEMENT DU JOUR</span><strong>#'+Number(data.me.rank)+'</strong><small>'+escapeHtml(leaderboardV2FormatScore(data.me.score,"daily","essais"))+' · '+(Number(data.total)||0)+' classés</small></div>'+(neighbors.length?'<div class="win-rank-neighbors" aria-label="Joueurs autour de toi">'+neighbors.map(row=>leaderboardV2Row(row,row.rank,"daily","essais",true)).join('')+'</div>':'')+link;
     } else {
       const authenticated = typeof data.authenticated === "boolean" ? data.authenticated : Boolean(window.__pokedleAuthed);
       panel.innerHTML='<div><span>CLASSEMENT DU JOUR</span><b>'+leaderboardUnrankedCopy(authenticated,pendingDailyLeaderboardScore()>0)+'</b></div>'+link;
