@@ -65,9 +65,9 @@ reste unique même pour un collectionneur ayant déjà toutes les espèces.
   l’artefact de chaque PR. Les fixtures UI n’exposent aucune solution serveur.
 - Référence avant refonte structurelle : PR 82, commit
   `a0e18dc32037cd62e83d7cd12230326ac4a544ca`, captures du workflow 37447499348.
-  Les anciennes captures desktop font 1366×900 ; les nouvelles utilisent la
-  hauteur de 768 demandée. Elles ne sont pas présentées comme des captures
-  strictement identiques.
+  Le workflow recapture aussi cette version dans un checkout temporaire, sans
+  accès aux comptes ni à la base, en 1366×768 et 390×844. L’artefact
+  `structure-before` contient ces captures aux dimensions identiques.
 
 Type icons © James Watkins, MIT. Les fichiers et la licence sont dans
 `App/img/type-icons/`.

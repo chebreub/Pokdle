@@ -57,6 +57,9 @@ jobs:
         run: python tools/browser_quality.py --output quality-artifacts/browser
       - name: Verify an actual two-browser Party Room game
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
+      - name: Capture original design at matching viewports
+        if: startsWith(github.head_ref, 'codex/structure-')
+        run: python tools/structure_before.py --output before-artifacts
       - name: Dependency audit
         if: always()
         working-directory: App
@@ -74,3 +77,11 @@ jobs:
           path: quality-artifacts/
           retention-days: 14
           if-no-files-found: error
+      - name: Save original design screenshots
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: structure-before-${{ github.run_id }}
+          path: before-artifacts/
+          retention-days: 14
+          if-no-files-found: ignore

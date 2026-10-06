@@ -29,7 +29,7 @@ def main():
       if result is not None: item['detail']=result
      except Exception as e: item['error']=str(e)[:1200]
      if capture:
-      try: page.screenshot(path=str(out/f'{width}-{name}.jpg'),quality=90,animations='disabled')
+      try: page.screenshot(path=str(out/f'{width}-{name}.jpg'),quality=85,animations='disabled')
       except Exception as e: item['screenshot_error']=str(e)[:180]
      cases.append(item);print('QA '+json.dumps(item,ensure_ascii=True),flush=True)
     def screen(expected):
@@ -56,7 +56,7 @@ def main():
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
-      if width in (390,1366): page.screenshot(path=str(out/f'{width}-login-welcome.jpg'),quality=90,animations='disabled')
+      if width in (390,1366): page.screenshot(path=str(out/f'{width}-login-welcome.jpg'),quality=85,animations='disabled')
      finally:
       page.evaluate('closeOverlayModal();filterHomeGames("popular")')
      return screen('screen-config')
@@ -75,19 +75,19 @@ def main():
      try:
       page.evaluate('openEggGame()');page.locator('#egg-content').wait_for(state='visible');screen('screen-egg')
       expect(page.locator('#egg-grid .egg-pokemon').count()==151,'Egg omits candidates')
-      page.screenshot(path=str(out/f'{width}-egg-start.jpg'),quality=90,animations='disabled')
+      page.screenshot(path=str(out/f'{width}-egg-start.jpg'),quality=85,animations='disabled')
       page.locator('#egg-input').fill('Bulbi');page.locator('#egg-suggestions button').first.click()
-      page.locator('#egg-submit').click();page.wait_for_function('() => document.getElementById("egg-input").disabled')
+      page.locator('#egg-submit').click();page.wait_for_function('() => eggState?.quota.remaining === 0 && !eggBusy')
       expect(page.locator('#egg-login').is_visible(),'Guest is not offered the second authenticated guess')
       expect(page.locator('#egg-grid .egg-pokemon').count()==150,'Rejected Pokemon remains selectable')
       page.locator('#egg-hide-eliminated').uncheck();expect(page.locator('#egg-grid .is-eliminated').count()==1,'Show eliminated toggle failed')
-      page.screenshot(path=str(out/f'{width}-egg-quota.jpg'),quality=90,animations='disabled')
+      page.screenshot(path=str(out/f'{width}-egg-quota.jpg'),quality=85,animations='disabled')
       fixture['solved']=True;fixture['winner']={'name':'Dresseur QA','at':'2026-10-06T12:00:00Z','pokemon':{'id':25,'name':'Pikachu'},'me':False}
       page.evaluate('loadEggState()');page.locator('#egg-finish').wait_for(state='visible')
       expect(page.locator('#egg-form').is_hidden(),'Solved Egg still accepts guesses')
-      page.screenshot(path=str(out/f'{width}-egg-solved.jpg'),quality=90,animations='disabled')
+      page.screenshot(path=str(out/f'{width}-egg-solved.jpg'),quality=85,animations='disabled')
       page.evaluate('document.body.classList.add("theme-dark")');screen('screen-egg')
-      page.screenshot(path=str(out/f'{width}-egg-dark.jpg'),quality=90,animations='disabled')
+      page.screenshot(path=str(out/f'{width}-egg-dark.jpg'),quality=85,animations='disabled')
      finally:
       page.evaluate('document.body.classList.remove("theme-dark");goToConfig()')
       page.unroute('**/api/egg');page.unroute('**/api/egg/guess')
@@ -113,7 +113,7 @@ def main():
      for artwork in page.locator('#home-games-grid .home-game-pokemon').all():
       artwork.scroll_into_view_if_needed()
       page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=artwork.element_handle())
-     if width in (390,1366): page.locator('.home-discovery').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=90,animations='disabled')
+     if width in (390,1366): page.locator('.home-discovery').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=85,animations='disabled')
      page.evaluate('window.scrollTo(0,0)')
      return screen('screen-config')
     check('cosy-home',cosy_home)
@@ -200,9 +200,9 @@ def main():
        expect(abs(picture['width']-(box['width']-2))<3,'Desktop illustration should fill its card width')
      expect(page.locator('.all-modes-card[data-args=\'["startNormalGame"]\']').is_visible(),'Unlimited mode disappeared from the catalog')
      page.locator('#catalog-picks').scroll_into_view_if_needed()
-     page.screenshot(path=str(out/f'{width}-illustrated-selection.jpg'),quality=90,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-illustrated-selection.jpg'),quality=85,animations='disabled')
      page.evaluate("document.body.classList.add('theme-dark')")
-     page.screenshot(path=str(out/f'{width}-illustrated-selection-dark.jpg'),quality=90,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-illustrated-selection-dark.jpg'),quality=85,animations='disabled')
      page.evaluate("document.body.classList.remove('theme-dark')")
      page.locator('#mode-search').fill('connections')
      result=page.locator('.all-modes-card.has-mode-illustration:visible')
@@ -213,7 +213,7 @@ def main():
      expect(title['x']+title['width']<=picture['x'],'Search image overlaps the text column')
      expect(result.locator('small').evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=13,'Search description is too small')
      expect(result.bounding_box()['height']<=220,'Search result is unnecessarily tall')
-     page.screenshot(path=str(out/f'{width}-illustrated-search.jpg'),quality=90,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-illustrated-search.jpg'),quality=85,animations='disabled')
      page.locator('#mode-search').fill('')
      return screen('screen-all-modes')
     check('illustrated-cards',illustrated_cards,False)
@@ -427,7 +427,7 @@ def main():
      if width<=640: expect(first.bounding_box()['y']<=height-180,'Mobile mission rewards still start too far below the fold')
      action=first.locator('button[data-action="playAlbumMission"]')
      expect(action.is_visible(),'First active mission has no route to a game')
-     page.screenshot(path=str(out/f'{width}-mission-list.jpg'),quality=90,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-mission-list.jpg'),quality=85,animations='disabled')
      action.click()
      expect(page.locator('#profile-album').is_hidden(),'Mission game button left the player on the mission list')
      return {'first_mission_has_game_action':True}
@@ -648,7 +648,7 @@ def main():
      expect(page.locator('.poke-connections-final.is-won').is_visible(),'Connections win state missing')
      expect(page.locator('.poke-connections-tile').count()==0,'Solved tiles remain selectable')
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()')
-     page.screenshot(path=str(out/f'{width}-connections-win.jpg'),quality=90,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-connections-win.jpg'),quality=85,animations='disabled')
      page.locator('.poke-connections-final [data-action="restartPokeConnectionsGame"]').click()
      expect(page.locator('.poke-connections-tile').count()==16,'Restart did not restore 16 tiles')
      expect(page.locator('.poke-connections-mistake-dot.is-used').count()==0,'Restart kept old mistakes')
