@@ -11,7 +11,7 @@ function fixture(){
     window:{addEventListener(){},__pokedleAuthed:false},
     document:{getElementById(){return null;}},
     playerProfile:{weeklyLeagueBadges:{},weeklyLeagueScores:{}},
-    matchHistory:[],
+    matchHistory:[],connectedAccountUser:{id:"A"},
     escapeHtml:s=>String(s),
     saveProfile(){},
     submitLeaderboardResult(){return Promise.resolve(true);},
@@ -55,7 +55,7 @@ test('discipline metrics reward mastery and cap at 200 points',()=>{
   metric=f.__metric(speed,[{mode:'speedrun',attempts:27,result:'win'}]);
   assert.equal(metric.complete,true);
   assert.equal(metric.score,200);
-  metric=f.__metric(daily,[{mode:'daily',attempts:4,result:'win'}]);
+  metric=f.__metric(daily,[{mode:'daily',attempts:4,result:'win',dailyAccountId:'A'}]);
   assert.equal(metric.complete,true);
   assert.equal(metric.score,170);
 });
@@ -77,4 +77,9 @@ test('League visual system includes home card, modal, ranking and mobile layouts
 test('permanent League badge count is exposed in account menu',()=>{
   assert.match(account,/weeklyLeagueBadges/);
   assert.match(account,/Badges Ligue/);
+});
+
+test('guest Daily history never contributes to League, including after login',()=>{
+ const f=fixture(),daily=Array.from(f.__templates).find(x=>x.id==='daily');
+ for(const dailyAccountId of [null,undefined,'B']){const metric=f.__metric(daily,[{mode:'daily',attempts:1,result:'win',dailyAccountId}]);assert.equal(metric.score,0);assert.equal(metric.complete,false);}
 });

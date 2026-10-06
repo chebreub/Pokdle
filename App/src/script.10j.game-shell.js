@@ -82,7 +82,7 @@ function renderGameShell() {
   document.getElementById("shell-instruction").textContent = meta.instruction;
   const guide = screen.querySelector(".shell-guide");
   if (guide) guide.classList.toggle("hidden", Boolean(meta.custom));
-  document.getElementById("shell-kicker").textContent = gameMode === "daily" ? new Date().toLocaleDateString("fr-FR", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }) : meta.kicker;
+  document.getElementById("shell-kicker").textContent = gameMode === "daily" ? `JOUR #${dailyServerState?.number || getDailyNumber()} · ` + new Date().toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" }) : meta.kicker;
   document.getElementById("shell-daily")?.setAttribute("aria-pressed", String(gameMode === "daily"));
   document.getElementById("shell-infinite")?.setAttribute("aria-pressed", String(gameMode === "normal"));
   const rows = Array.from(document.querySelectorAll("#results-body tr"));

@@ -180,7 +180,7 @@ async function initAuthDb() {
     console.log("[auth] base prete (users + scores + leaderboard_events + visits).");
   } catch (e) { console.error("[auth] init base echouee:", e.message); }
 }
-initAuthDb();
+const authDbReady = initAuthDb();
 
 function parseAuthCookies(req) {
   const out = Object.create(null);
@@ -300,7 +300,7 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
 const LB_MODE_CONFIG = Object.freeze({
-  daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 100 },
+  daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 1025 },
   quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 10 },
   speedrun: { direction: "desc", label: "Speedrun", unit: "Pokémon", max: 100 },
   party: { direction: "desc", label: "Party", unit: "victoires", max: 20 },
@@ -334,6 +334,7 @@ function leaderboardBestSql(config) {
 }
 
 
+function serverUTCDateKey() { return new Date().toISOString().slice(0,10); }
 function dailyUtcKey() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -363,129 +364,6 @@ function serverDailyPokemon(day = dailyUtcKey()) {
   const rng = dailyMulberry32(dailyHashString("pokedle:" + day));
   return pool[Math.floor(rng() * pool.length)];
 }
-// Existing Daily rows store normalized names; new rows use stable Pokemon IDs.
-function dailyStoredPokemon(key) {
-  if (String(key).startsWith("id:")) {
-    const id = Number(String(key).slice(3));
-    return POKEMON_LIST.find((pokemon) => Number(pokemon?.id) === id) || null;
-  }
-  return POKEMON_BY_NORMALIZED_NAME.get(String(key)) || null;
-}
-function dailySessionSnapshot(row, user, day) {
-  const guessed = Array.isArray(row?.guessed) ? row.guessed.map(dailyStoredPokemon) : [];
-  const attempts = Number(row?.attempts);
-  if (!Number.isInteger(attempts) || attempts < 0 || guessed.length !== attempts || guessed.some((pokemon) => !pokemon)) throw new Error("Invalid stored Daily history");
-  const config = leaderboardConfig("daily");
-  return { day, accountId: String(user.id), attempts, guessed: guessed.map((pokemon) => pokemon.name),
-    finished: Boolean(row.finished), ranked: Boolean(row.finished) && Boolean(config) && attempts <= Number(config.max) };
-}
-function validateDailyContext(req, res, user, day) {
-  if (req.body?.day !== day) { res.status(409).json({ ok: false, error: "stale_daily" }); return false; }
-  if (req.body?.accountId !== String(user.id)) { res.status(409).json({ ok: false, error: "account_changed" }); return false; }
-  return true;
-}
-
-async function getOrCreateDailySession(userId, day) {
-  await pgPool.query(
-    `INSERT INTO daily_sessions (discord_id, day) VALUES ($1, $2)
-     ON CONFLICT (discord_id, day) DO NOTHING`,
-    [userId, day]
-  );
-  const result = await pgPool.query(
-    "SELECT attempts, guessed, finished FROM daily_sessions WHERE discord_id=$1 AND day=$2",
-    [userId, day]
-  );
-  if (!result.rows[0]) throw new Error("Missing Daily session");
-  return result.rows[0];
-}
-
-app.post("/api/daily/session", express.json({ limit: "2kb" }), async (req, res) => {
-  if (!authReady()) return res.status(503).json({ ok: false, error: "unavailable" });
-  const user = getSessionUser(req);
-  if (!user) return res.status(401).json({ ok: false, error: "authentication_required" });
-  const day = dailyUtcKey();
-  if (!validateDailyContext(req, res, user, day)) return;
-  try {
-    const state = await getOrCreateDailySession(user.id, day);
-    res.json({ ok: true, ...dailySessionSnapshot(state, user, day) });
-  } catch (error) {
-    console.error("[daily] session:", error.message);
-    res.status(503).json({ ok: false, error: "storage_unavailable" });
-  }
-});
-
-app.post("/api/daily/guess", express.json({ limit: "2kb" }), async (req, res) => {
-  if (!authReady()) return res.status(503).json({ ok: false, error: "unavailable" });
-  const user = getSessionUser(req);
-  if (!user) return res.status(401).json({ ok: false, error: "authentication_required" });
-  const day = dailyUtcKey();
-  if (!validateDailyContext(req, res, user, day)) return;
-  const rawName = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-  if (!rawName || rawName.length > 80) return res.status(400).json({ ok: false, error: "invalid_guess" });
-  const normalized = normalizeName(rawName);
-  const pokemon = POKEMON_LIST.find((entry) => entry?.name === rawName) || POKEMON_BY_NORMALIZED_NAME.get(normalized);
-  if (!pokemon || pokemon.isAltForm || Number(pokemon.id) >= 20000) {
-    return res.status(400).json({ ok: false, error: "invalid_guess" });
-  }
-
-  let client;
-  try {
-    client = await pgPool.connect();
-    await client.query("BEGIN");
-    await client.query(
-      `INSERT INTO daily_sessions (discord_id, day) VALUES ($1, $2)
-       ON CONFLICT (discord_id, day) DO NOTHING`,
-      [user.id, day]
-    );
-    const locked = await client.query(
-      "SELECT attempts, guessed, finished FROM daily_sessions WHERE discord_id=$1 AND day=$2 FOR UPDATE",
-      [user.id, day]
-    );
-    if (day !== dailyUtcKey()) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ ok: false, error: "stale_daily" });
-    }
-    const row = locked.rows[0];
-    if (!row) throw new Error("Missing locked Daily session");
-    const guessed = Array.isArray(row.guessed) ? row.guessed.map(String) : [];
-    if (row.finished) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ ok: false, error: "daily_finished", ...dailySessionSnapshot(row, user, day) });
-    }
-    if (guessed.some((key) => Number(dailyStoredPokemon(key)?.id) === Number(pokemon.id))) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ ok: false, error: "duplicate_guess", ...dailySessionSnapshot(row, user, day) });
-    }
-
-    const attempts = (Number(row.attempts) || 0) + 1;
-    guessed.push("id:" + Number(pokemon.id));
-    const correct = Number(pokemon.id) === Number(serverDailyPokemon(day).id);
-    const config = leaderboardConfig("daily");
-    if (!config) throw new Error("Daily leaderboard config unavailable");
-    const ranked = correct && attempts <= Number(config.max);
-    await client.query(
-      "UPDATE daily_sessions SET attempts=$3, guessed=$4::jsonb, finished=$5, updated_at=now() WHERE discord_id=$1 AND day=$2",
-      [user.id, day, attempts, JSON.stringify(guessed), correct]
-    );
-    if (ranked) {
-      await recordLeaderboardResultInTransaction(client, user, "daily", attempts, config, "daily:" + day);
-    }
-    if (day !== dailyUtcKey()) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ ok: false, error: "stale_daily" });
-    }
-    const snapshot = dailySessionSnapshot({ attempts, guessed, finished: correct }, user, day);
-    await client.query("COMMIT");
-    res.json({ ok: true, ...snapshot, correct, ranked });
-  } catch (error) {
-    if (client) { try { await client.query("ROLLBACK"); } catch (_rollbackError) {} }
-    console.error("[daily] guess:", error.message);
-    res.status(503).json({ ok: false, error: "storage_unavailable" });
-  } finally {
-    if (client) client.release();
-  }
-});
-
 // Legacy bulk score import is intentionally retired. Those values came from the browser's
 // local profile and therefore could not prove that a game had actually been completed.
 app.post("/api/scores", express.json({ limit: "4kb" }), (req, res) => {
@@ -537,7 +415,7 @@ app.get("/api/leaderboard", async (req, res) => {
         )`;
     } else {
       const timePredicate = scope === "today"
-        ? "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')"
+        ? (mode === "daily" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')")
         : "e.created_at >= now() - interval '7 days'";
       rankedCte = `
         WITH best AS (
@@ -611,6 +489,7 @@ const draftScoreRooms = new Map();
 const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
+require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
@@ -902,8 +781,7 @@ for (const publicImage of ["genbar.png", "typebar.png", "genbar.webp", "typebar.
   app.get(`/${publicImage}`, (_req, res) => res.sendFile(path.join(__dirname, publicImage), { maxAge: "7d" }));
 }
 // Image Open Graph (aperçus de lien Discord/Twitter/WhatsApp).
-// --- OG image dynamique : la silhouette du Pokémon du jour (sans spoiler).
-// Même tirage que le client (FNV-1a + mulberry32 sur "pokedle:<dateUTC>").
+// --- OG image dynamique : illustration décorative, indépendante du Daily.
 // Fallback : l'og-image.png statique si sharp ou le réseau manquent. ---
 let sharp = null;
 try { sharp = require("sharp"); } catch (_e) { console.error("[og] sharp indisponible — OG statique servie"); }
@@ -933,7 +811,7 @@ function getServerDailyPokemon() {
 // Silhouette OG : un Pokémon ALÉATOIRE (jamais la réponse du jour) pour ne pas spoiler.
 // Stable sur la journée (graine "pokedle-og:<date>"), change chaque jour.
 function getOgSilhouettePokemon() {
-  const key = serverUTCDateKey();
+  const key = require("./lib/daily-game").dailyCalendar().day;
   const daily = getServerDailyPokemon().pokemon;
   const seedSource = `pokedle-og:${key}`;
   let h = 2166136261;
@@ -1034,46 +912,6 @@ app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "fo
 // SEO.
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
 app.get("/sitemap.xml", (_req, res) => res.sendFile(path.join(__dirname, "sitemap.xml"), { maxAge: "1d" }));
-
-// --- Distribution des essais du Pokémon du jour (anonyme, en mémoire ;
-// remise à zéro à chaque redéploiement — acceptable pour un compteur de jour). ---
-const dailyStats = new Map(); // dateKey -> { "1".."6", "7plus" }
-const DAILY_STATS_BUCKETS = ["1", "2", "3", "4", "5", "6", "7plus"];
-
-function serverUTCDateKey() {
-  const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
-}
-
-function getDailyStatsEntry(key) {
-  if (!dailyStats.has(key)) {
-    // On ne garde que 2 jours en mémoire.
-    if (dailyStats.size > 2) {
-      for (const oldKey of [...dailyStats.keys()].slice(0, dailyStats.size - 1)) dailyStats.delete(oldKey);
-    }
-    dailyStats.set(key, Object.fromEntries(DAILY_STATS_BUCKETS.map((b) => [b, 0])));
-  }
-  return dailyStats.get(key);
-}
-
-app.get("/api/daily-stats/today", (_req, res) => {
-  const key = serverUTCDateKey();
-  res.set("Cache-Control", "no-store");
-  res.json({ key, counts: getDailyStatsEntry(key) });
-});
-
-app.post("/api/daily-stats/report", express.json({ limit: "1kb" }), (req, res) => {
-  const key = serverUTCDateKey();
-  if (req.body?.key !== key) return res.status(400).json({ ok: false, error: "Clé de jour invalide." });
-  const attempts = Number(req.body?.attempts);
-  if (!Number.isInteger(attempts) || attempts < 1 || attempts > 50) {
-    return res.status(400).json({ ok: false, error: "Nombre d'essais invalide." });
-  }
-  const bucket = attempts >= 7 ? "7plus" : String(attempts);
-  const entry = getDailyStatsEntry(key);
-  entry[bucket] += 1;
-  res.json({ ok: true });
-});
 
 app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });

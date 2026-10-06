@@ -57,7 +57,7 @@ function weeklyLeagueQuizScore(entry) {
 }
 function weeklyLeagueMetric(template,entries=weeklyLeagueEntries()) {
   if(template.id==="daily"){
-    const wins=entries.filter(e=>e.mode==="daily"&&e.result==="win").map(e=>Number(e.attempts)||0).filter(Boolean);
+    const wins=entries.filter(e=>e.mode==="daily"&&e.result==="win"&&e.dailyAccountId&&e.dailyAccountId===String(connectedAccountUser?.id||"")).map(e=>Number(e.attempts)||0).filter(Boolean);
     const best=wins.length?Math.min(...wins):0;
     const score=!best?0:best<=3?200:best<=6?170:best<=10?120:80;
     return { value:best, display:best?best+" essai"+(best>1?"s":""):"—", complete:best>0&&best<=6, score };

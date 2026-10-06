@@ -87,19 +87,19 @@ function submitLeaderboardResult(mode, score, options = {}) {
 const DAILY_LEADERBOARD_SYNC_PREFIX="pokedle_lb_daily_sync_";
 const dailyLeaderboardInFlight = new Map();
 function leaderboardTodayKey() {
-  try { if (typeof getUTCDateKey === "function") return getUTCDateKey(); } catch (_e) {}
+  try { if (typeof getDailyDateKey === "function") return getDailyDateKey(); } catch (_e) {}
   const d = new Date();
   return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");
 }
 function pendingDailyLeaderboardScore() {
   const entries = typeof matchHistory !== "undefined" && Array.isArray(matchHistory) ? matchHistory : [];
   const now = Date.now(), d = new Date(now);
-  const start = Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  const today = leaderboardTodayKey();
   let best = 0;
   for (const entry of entries) {
     const at = Number(entry?.at), score = Number(entry?.attempts);
-    if (entry?.mode !== "daily" || entry?.result !== "win" || !Number.isFinite(at) || at < start || at > now) continue;
-    if (!Number.isInteger(score) || score < 1 || score > 100) continue;
+    if (entry?.mode !== "daily" || entry?.result !== "win" || !Number.isFinite(at) || at > now || (typeof getDailyDateKey === "function" ? getDailyDateKey(new Date(at)) : new Date(at).toISOString().slice(0,10)) !== today) continue;
+    if (!Number.isInteger(score) || score < 1 || score > 1025) continue;
     if (!best || score < best) best = score;
   }
   return best;
@@ -301,7 +301,7 @@ function renderWinLeaderboardPreview(mode) {
       panel.innerHTML='<div><span>CLASSEMENT DU JOUR</span><b>'+leaderboardUnrankedCopy(authenticated,pendingDailyLeaderboardScore()>0)+'</b></div>'+link;
     }
   }).catch(()=>{
-    if (current()) panel.innerHTML='<div role="status"><span>CLASSEMENT DU JOUR</span><b>Classement indisponible. Ta partie reste sauvegardée sur cet appareil.</b></div>'+link;
+    if (current()) panel.innerHTML='<div role="status"><span>CLASSEMENT DU JOUR</span><b>Classement indisponible. Tes essais validés restent sauvegardés.</b></div>'+link;
   });
 }
 

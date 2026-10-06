@@ -1,90 +1,81 @@
 // ============================================================
 // GAMEPLAY
 // ============================================================
-let dailyRequestInFlight = null;
-
+let dailyRequestInFlight = null, dailyServerState = null, dailyRequestSerial = 0;
 function dailyObservedAccountId() {
-  return typeof connectedAccountUser !== "undefined" && connectedAccountUser?.id ? String(connectedAccountUser.id) : "";
+  return typeof connectedAccountUser !== "undefined" && connectedAccountUser?.id ? String(connectedAccountUser.id) : null;
 }
-function applyDailyObservedState(data, { awardFreshWin = false } = {}) {
-  const names = data?.guessed, count = Number(data?.attempts);
-  if (!Array.isArray(names) || !Number.isInteger(count) || count < 0 || count !== names.length ||
-      new Set(names).size !== count || typeof data?.finished !== "boolean") throw new Error("daily_state_mismatch");
-  const pokemon = names.map((name) => POKEMON_LIST.find((entry) => entry?.name === name));
-  if (pokemon.some((entry) => !entry)) throw new Error("daily_state_mismatch");
-  const winning = pokemon.some((entry) => Number(entry.id) === Number(secretPokemon.id));
-  if (data.finished !== winning) throw new Error("daily_state_mismatch");
-  const rows = pokemon.map((entry) => ({ pokemon: entry, cmp: compare(entry, secretPokemon) }));
-  const isPrefix = resultHistory.length <= rows.length && resultHistory.every((row, index) => row.pokemon.name === names[index]);
-  const start = isPrefix ? resultHistory.length : 0;
-  if (!isPrefix) { document.getElementById("results-body").innerHTML = ""; resultHistory = []; }
-  attempts = count; guessedNames = names.slice(); guessedSet = new Set(names);
-  for (let index = start; index < rows.length; index += 1) { resultHistory.push(rows[index]); addRow(rows[index].pokemon, rows[index].cmp); }
-  document.getElementById("try-count").textContent = String(attempts);
-  document.getElementById("results-wrap").classList.toggle("hidden", count === 0);
+function dailyControls() {
+  if(gameMode!=="daily")return;
+  const disabled=Boolean(dailyRequestInFlight)||!dailyServerState||gameOver||dailyServerState.day!==getDailyDateKey();
+  for(const id of ["guess-input","btn-submit","btn-surrender"]) { const node=document.getElementById(id);if(node)node.disabled=disabled; }
+}
+function applyDailyObservedState(data,{awardFreshWin=false}={}) {
+  if(!Array.isArray(data?.rows)||data.rows.length!==data.attempts||!['playing','won','abandoned'].includes(data.status)||Boolean(data.finished)!==(data.status!=='playing'))throw Error('daily_state_mismatch');
+  const rows=data.rows.map(row=>({pokemon:POKEMON_BY_ID.get(Number(row.pokemonId)),cmp:row.cmp,heightDirection:row.heightDirection,weightDirection:row.weightDirection}));
+  if(rows.some(r=>!r.pokemon||!r.cmp)||new Set(rows.map(r=>r.pokemon.id)).size!==rows.length)throw Error('daily_state_mismatch');
+  const answer=data.finished?POKEMON_BY_ID.get(Number(data.answerId)):null;
+  if(data.finished&&!answer||!data.finished&&data.answerId!==undefined)throw Error('daily_state_mismatch');
+  const wasFinished=dailyServerState?.day===data.day&&dailyServerState?.finished;
+  dailyServerState=data;secretPokemon=answer;attempts=data.attempts;
+  gameOver=false;resultHistory=rows;guessedNames=rows.map(r=>r.pokemon.name);guessedSet=new Set(guessedNames);
+  document.getElementById('results-body').innerHTML='';
+  for(const row of rows)addRow(row.pokemon,row.cmp,row);
+  document.getElementById('try-count').textContent=String(attempts);
+  document.getElementById('results-wrap').classList.toggle('hidden',attempts===0);
   guessCache.clear();
-  saveCurrentGame(data.day);
-  if (data.finished && !gameOver) {
-    gameOver = true;
-    if (typeof LIVE_RANK_CACHE !== "undefined") LIVE_RANK_CACHE.delete("daily");
-    const alreadyAwarded =
-      (typeof playerStats !== "undefined" && playerStats?.lastDailyWinKey === data.day) ||
-      (typeof getTodayDailyResult === "function" && Boolean(getTodayDailyResult()?.won));
-    if (awardFreshWin && !alreadyAwarded) showWin();
-    else {
-      winRegisteredForCurrentGame = true;
-      saveDailyResult(true);
-      clearSavedGame();
-      renderGameOverBox({ won: true, animate: false });
-    }
+  if(data.authenticated){
+    playerStats.dailyCurrentStreak=Number(data.streak?.current)||0;playerStats.dailyBestStreak=Number(data.streak?.best)||0;playerStats.lastDailyWinKey=data.streak?.lastWin||null;saveStats();
   }
+  if(data.finished){
+    gameOver=true;
+    const previous=getTodayDailyResult();
+    if(awardFreshWin&&!wasFinished&&previous?.dailyKey!==data.day){
+      if(data.won)showWin();
+      else{recordMatchHistory({mode:'daily',result:'loss',attempts,targetName:answer.name,dailyAccountId:data.accountId});saveDailyResult(false);renderGameOverBox({won:false});}
+    }else{winRegisteredForCurrentGame=true;saveDailyResult(data.won);renderGameOverBox({won:data.won,animate:false});}
+    clearSavedGame('daily');
+    if(typeof LIVE_RANK_CACHE!=='undefined')LIVE_RANK_CACHE.delete('daily');
+  }else{saveCurrentGame(data.day);renderGameShell();}
+  renderDailyHero();dailyControls();
 }
-async function requestDailyObservedState(found = null, raw = "") {
-  if (gameMode !== "daily" || gameOver || !window.__pokedleAuthed) return false;
-  const accountId = dailyObservedAccountId();
-  if (dailyRequestInFlight?.history === resultHistory && dailyRequestInFlight.accountId === accountId) return false;
-  const day = readJson(STORAGE_KEYS.dailyGame, null)?.dailyKey;
-  if (!accountId || day !== getUTCDateKey()) { showErr("Le compte ou le Daily a changé. Recharge la page pour reprendre."); return false; }
-  const request = { history: resultHistory, target: secretPokemon, accountId, day };
-  const ownsResult = () => dailyRequestInFlight === request && gameMode === "daily" && !gameOver &&
-    window.__pokedleAuthed && dailyObservedAccountId() === accountId && getUTCDateKey() === day &&
-    resultHistory === request.history && secretPokemon === request.target &&
-    !document.getElementById("screen-game")?.classList.contains("hidden");
-  dailyRequestInFlight = request;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-  try {
-    const response = await fetch(found ? "/api/daily/guess" : "/api/daily/session", {
-      method: "POST", credentials: "same-origin", signal: controller.signal,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: found?.name, day, accountId }),
+async function requestDailyObservedState(found=null,raw='',abandon=false) {
+  if(gameMode!=='daily'||dailyRequestInFlight)return false;
+  const accountId=dailyObservedAccountId(), serial=++dailyRequestSerial;
+  const oldDay=dailyServerState?.day;
+  const ownsResult=()=>serial===dailyRequestSerial&&gameMode==='daily'&&dailyObservedAccountId()===accountId&&!document.getElementById('screen-game')?.classList.contains('hidden');
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+  dailyRequestInFlight={serial};dailyControls();
+  document.getElementById('daily-server-retry')?.classList.add('hidden');
+  try{
+    const mutation=Boolean(found||abandon);
+    if(mutation&&!oldDay)throw Error('unavailable');
+    const response=await fetch(mutation?(abandon?'/api/daily/abandon':'/api/daily/guess'):'/api/daily',{
+      credentials:'same-origin',cache:'no-store',signal:controller.signal,
+      ...(mutation?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:oldDay,accountId,pokemonId:found?.id})}:{})
     });
-    const data = await response.json();
-    if (!ownsResult()) return false;
-    const replay = response.status === 409 && ["duplicate_guess", "daily_finished"].includes(data?.error);
-    if ((!response.ok || !data?.ok) && !replay) throw new Error(data?.error || "daily_request_failed");
-    if (data.day !== day || String(data.accountId) !== accountId) throw new Error("daily_state_mismatch");
-    applyDailyObservedState(data, { awardFreshWin: Boolean(response.ok && data.correct) });
-    if (found && document.getElementById("guess-input").value.trim() === raw) document.getElementById("guess-input").value = "";
-    if (found && !gameOver) document.getElementById("guess-input").focus();
-    if (data.error === "duplicate_guess") showErr(`Tu as déjà proposé ${found.name} !`);
+    const data=await response.json();if(!ownsResult())return false;
+    if(!response.ok||!data.ok)throw Error(data.error||'unavailable');
+    if(data.day!==getDailyDateKey() || ((found||abandon)&&data.day!==oldDay))throw Error('stale_daily');
+    if((data.accountId||null)!==accountId)throw Error('account_changed');
+    clearErr();applyDailyObservedState(data,{awardFreshWin:Boolean(data.fresh)});
+    if(found&&document.getElementById('guess-input').value.trim()===raw)document.getElementById('guess-input').value='';
+    if(data.duplicate&&!gameOver)showErr('Ce Pokémon a déjà été proposé. Ton historique a été restauré.');
     return true;
-  } catch (error) {
-    if (ownsResult()) showErr(["stale_daily", "account_changed", "daily_state_mismatch"].includes(error.message)
-      ? "Le compte ou le Daily a changé. Recharge la page pour reprendre."
-      : "Impossible de valider cet essai en ligne. Réessaie dans un instant.");
+  }catch(error){
+    if(ownsResult()){
+      showErr(error.message==='rate_limited'?'Tu proposes trop vite. Patiente une minute.':error.message==='stale_daily'?'Un nouveau Pokémon est arrivé à minuit Paris. Recharge le défi.':error.message==='account_changed'?'Ton compte a changé. Recharge le défi.':'Le serveur du Daily est injoignable. Tes essais validés sont conservés. Réessaie pour reprendre.');
+      document.getElementById('daily-server-retry')?.classList.remove('hidden');
+      if(['stale_daily','account_changed'].includes(error.message))dailyServerState=null;
+    }
     return false;
-  } finally {
-    clearTimeout(timeout);
-    if (dailyRequestInFlight === request) dailyRequestInFlight = null;
-  }
+  }finally{clearTimeout(timeout);if(dailyRequestInFlight?.serial===serial){dailyRequestInFlight=null;dailyControls();}}
 }
-function syncDailyObservedState() {
-  if (gameMode === "daily" && !gameOver && window.__pokedleAuthed && dailyObservedAccountId()) return requestDailyObservedState();
-  return Promise.resolve(false);
-}
-window.addEventListener?.("pokedle:auth-ready", () => {
-  if (!document.getElementById("screen-game")?.classList.contains("hidden")) syncDailyObservedState();
+function syncDailyObservedState(){return requestDailyObservedState();}
+window.addEventListener?.('pokedle:auth-ready',()=>{
+  dailyRequestSerial++;dailyRequestInFlight=null;dailyServerState=null;
+  if(gameMode==='daily'&&!document.getElementById('screen-game')?.classList.contains('hidden'))startDailyGame();
+  else renderDailyHero();
 });
 async function submitGuess() {
   if (gameOver) return;
@@ -93,7 +84,7 @@ async function submitGuess() {
   if (!raw) { showErr("Entre un nom de Pokémon !"); return; }
   const found = findPokemon(raw);
   if (!found) { showErr(`"${raw}" introuvable dans le pool actif.`); return; }
-  if (gameMode === "daily" && window.__pokedleAuthed) { clearErr(); return requestDailyObservedState(found, raw); }
+  if (gameMode === "daily") { clearErr(); return requestDailyObservedState(found, raw); }
   if (guessedSet.has(found.name)) { showErr(`Tu as déjà proposé ${found.name} !`); return; }
   clearErr();
   attempts += 1; document.getElementById("try-count").textContent = String(attempts);
@@ -106,10 +97,7 @@ async function submitGuess() {
 }
 
 function surrenderGame() {
-  if (gameMode === "daily" && dailyRequestInFlight) {
-    showErr("Un essai Daily est en cours de validation. Réessaie dans un instant.");
-    return;
-  }
+  if (gameMode === "daily") { if (!gameOver) return requestDailyObservedState(null,"",true); return; }
   if (gameOver || !secretPokemon || gameMode === "quiz") return;
 
   gameOver = true;
@@ -149,6 +137,7 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
     : `Tu as abandonné. Le Pokémon était ${secretPokemon.name}.`;
 
   if (shareBtn) shareBtn.classList.toggle("hidden", !won);
+  document.querySelectorAll('[data-action="copyResult"]').forEach(node=>node.classList.toggle("hidden",!won));
   if (surrenderBtn) surrenderBtn.classList.add("hidden");
   document.getElementById("share-ok").classList.add("hidden");
 
@@ -160,8 +149,8 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
   box.dataset.resultMode = String(gameMode || "normal");
   box.dataset.resultOutcome = won ? "win" : "loss";
 
-  // Distribution du jour : envoie le résultat puis affiche les barres d'essais.
-  if (gameMode === "daily" && won) reportAndRenderDailyDistribution(attempts);
+  // Distribution du jour calculée sur les résultats déjà validés en base.
+  if (gameMode === "daily") reportAndRenderDailyDistribution(attempts);
   else document.getElementById("win-daily-distribution")?.classList.add("hidden");
 
   // DA 2026 : rendez-vous quotidien — série + prochain Pokémon dans l'écran de fin.
@@ -169,11 +158,11 @@ function renderGameOverBox({ won, animate = true, celebrate = false }) {
   if (winNext) {
     if (gameMode === "daily") {
       const now = new Date();
-      const nextUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      const nextUtc = getDailyResetAt(now);
       const ms = Math.max(0, nextUtc - now.getTime());
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
-      const streak = Number(playerStats?.dailyCurrentStreak) || 0;
+      const streak = dailyServerState?.authenticated ? Number(dailyServerState.streak?.current) || 0 : Number(playerStats?.dailyCurrentStreak) || 0;
       winNext.textContent = `${streak > 1 ? `🔥 Série : ${streak} jours · ` : ""}⏳ Prochain Pokémon dans ${h} h ${String(m).padStart(2, "0")} min`;
       winNext.classList.remove("hidden");
     } else {
@@ -238,9 +227,9 @@ function comparisonTypeHtml(type) {
   const icon = icons[type];
   return '<span class="comparison-type">' + (icon ? '<img src="img/type-icons/' + icon + '.svg" alt="" width="28" height="28" />' : '') + '<span>' + escapeHtml(type) + '</span></span>';
 }
-function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
-  const hArrow = arrowFor(pokemon.height, targetPokemon.height);
-  const wArrow = arrowFor(pokemon.weight, targetPokemon.weight);
+function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) {
+  const hArrow = directions ? directions.heightDirection : arrowFor(pokemon.height, targetPokemon.height);
+  const wArrow = directions ? directions.weightDirection : arrowFor(pokemon.weight, targetPokemon.weight);
   const fallbackSprite = getSpriteUrl(getPokemonSpriteId(pokemon));
 
   const ringColor = pokemonTypeColor(pokemon.type1);
@@ -279,11 +268,11 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   return rowHtml.replace(/(<td data-label="[^"]+" class="c-(ok|close|wrong)">)/g, (_, cell, state) => cell + comparisonStatusHtml(state));
 }
 
-function addRow(pokemon, cmp) {
+function addRow(pokemon, cmp, directions = null) {
   const tbody = document.getElementById("results-body");
   const tr = document.createElement("tr");
   tr.className = "guess-result-row";
-  tr.innerHTML = buildComparisonRowHtml(pokemon, cmp, secretPokemon);
+  tr.innerHTML = buildComparisonRowHtml(pokemon, cmp, secretPokemon, directions);
   const reducedMotion = (() => {
     try {
       const settings = typeof getStoredAppSettings === "function" ? getStoredAppSettings() : null;
@@ -296,8 +285,8 @@ function addRow(pokemon, cmp) {
     cell.style.setProperty("--reveal-index", String(index));
     if (reducedMotion) cell.classList.add("guess-result-cell-static");
   });
-  tr.dataset.heightDirection = arrowFor(pokemon.height, secretPokemon.height);
-  tr.dataset.weightDirection = arrowFor(pokemon.weight, secretPokemon.weight);
+  tr.dataset.heightDirection = directions ? directions.heightDirection : arrowFor(pokemon.height, secretPokemon.height);
+  tr.dataset.weightDirection = directions ? directions.weightDirection : arrowFor(pokemon.weight, secretPokemon.weight);
   tr.querySelector(".poke-cell")?.insertAdjacentHTML("beforeend", `<small class="guess-number">Essai ${tbody.children.length + 1}</small>`);
   tr.querySelector('[data-label="Hauteur"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.heightDirection === "↑" ? "grand" : "petit"}`);
   tr.querySelector('[data-label="Poids"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.weightDirection === "↑" ? "lourd" : "léger"}`);
@@ -387,21 +376,21 @@ function triggerWinCelebration(box) {
 }
 
 function showWin() {
-  renderGameOverBox({ won: true, celebrate: true });
   registerWin();
-  recordMatchHistory({ mode: gameMode, result: "win", attempts, targetName: secretPokemon?.name || null });
+  renderGameOverBox({ won: true, celebrate: true });
+  recordMatchHistory({ mode: gameMode, result: "win", attempts, targetName: secretPokemon?.name || null, dailyAccountId: gameMode === "daily" ? dailyServerState?.accountId : null });
   saveDailyResult(true);
   clearSavedGame();
   finishPartyRound(true);
 }
 
 function shareResult() {
-  if (!secretPokemon) return;
+  if (!secretPokemon || (gameMode === "daily" && !dailyServerState?.won)) return;
 
   const emojiMap = { ok: "🟩", close: "🟨", wrong: "⬜" };
 
   let header = "Pokédle";
-  if (gameMode === "daily") header += " • Pokémon du jour";
+  if (gameMode === "daily") header += ` #${dailyServerState?.number || getDailyNumber()} · ${dailyServerState?.day || getDailyDateKey()}`;
   if (gameMode === "challenge") header += " • Défi ami";
   if (gameMode === "pixel") header += " • Mode pixelisé";
   if (gameMode === "mystery") header += " • Stat Mystère";
@@ -418,7 +407,7 @@ function shareResult() {
   });
 
   if (gameMode === "daily") {
-    const streak = Number(playerStats?.dailyCurrentStreak) || 0;
+    const streak = dailyServerState?.authenticated ? Number(dailyServerState.streak?.current) || 0 : Number(playerStats?.dailyCurrentStreak) || 0;
     if (streak > 1) text += `\n🔥 Série : ${streak} jours`;
   }
   text += "\nJoue ici : " + window.location.origin;

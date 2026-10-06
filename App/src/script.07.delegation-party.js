@@ -149,25 +149,26 @@ function mulberry32(seed) {
   };
 }
 
-function getDailyPokemon() {
-  const key = getUTCDateKey();
-  const seed = hashString(`pokedle:${key}`);
-  const rng = mulberry32(seed);
-  // Pool stable : on exclut les formes alternatives (id >= 20000) et on trie par id
-  // pour que le tirage daily reste reproductible si l'ordre d'injection change.
-  const pool = POKEMON_LIST
-    .filter((pokemon) => pokemon && !pokemon.isAltForm && Number(pokemon.id) < 20000)
-    .slice()
-    .sort((a, b) => Number(a.id) - Number(b.id));
-  const index = Math.floor(rng() * pool.length);
-  return pool[index];
+function getDailyDateKey(date = new Date()) {
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date).map(p=>[p.type,p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function getDailyNumber(date = new Date()) { return Math.floor((Date.parse(getDailyDateKey(date))-Date.parse("2026-03-23"))/86400000)+1; }
+function getDailyResetAt(date = new Date()) {
+  const next=new Date(Date.parse(getDailyDateKey(date)+"T12:00:00Z")+86400000).toISOString().slice(0,10);
+  const nominal=Date.parse(next+"T00:00:00Z");let instant=nominal;
+  for(let i=0;i<3;i++){
+    const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date(instant)).map(p=>[p.type,p.value]));
+    instant=nominal-(Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)-instant);
+  }
+  return instant;
 }
 
 function prevUTCDateKey(key) {
   const [y, m, d] = key.split("-").map((v) => Number(v));
   const date = new Date(Date.UTC(y, m - 1, d));
   date.setUTCDate(date.getUTCDate() - 1);
-  return getUTCDateKey(date);
+  return getDailyDateKey(date);
 }
 
 function refreshDailyStreakStatus() {
@@ -177,7 +178,7 @@ function refreshDailyStreakStatus() {
     return;
   }
 
-  const today = getUTCDateKey();
+  const today = getDailyDateKey();
   const yesterday = prevUTCDateKey(today);
 
   if (last !== today && last !== yesterday) {
@@ -186,7 +187,8 @@ function refreshDailyStreakStatus() {
 }
 
 function registerDailyWinStreak() {
-  const today = getUTCDateKey();
+  if (dailyServerState?.authenticated) { playerStats.dailyCurrentStreak=dailyServerState.streak.current;playerStats.dailyBestStreak=dailyServerState.streak.best;playerStats.lastDailyWinKey=dailyServerState.streak.lastWin;return; }
+  const today = getDailyDateKey();
 
   // Already counted today.
   if (playerStats.lastDailyWinKey === today) return;
@@ -299,7 +301,7 @@ function registerWin() {
 
   if (gameMode === "daily") {
     // XP + quête uniquement pour la première victoire du jour (anti double-comptage).
-    const firstDailyWinToday = playerStats.lastDailyWinKey !== getUTCDateKey();
+    const firstDailyWinToday = dailyServerState ? dailyServerState.won : playerStats.lastDailyWinKey !== getDailyDateKey();
     registerDailyWinStreak();
     if (firstDailyWinToday) {
       awardXp(80, "Pokédle du jour");
@@ -322,6 +324,7 @@ function registerWin() {
 // AUTO-SAVE / RESTORE GAME
 // ============================================================
 function saveCurrentGame(forcedDailyKey = null) {
+  if(gameMode === "daily") { if(dailyServerState && !dailyServerState.finished) writeJson(STORAGE_KEYS.dailyGame,{version:2,mode:"daily",dailyKey:dailyServerState.day,accountId:dailyServerState.accountId,attempts,historyIds:resultHistory.map(r=>r.pokemon.id),rows:dailyServerState.rows,savedAt:Date.now()});return; }
   if (!secretPokemon || gameOver) return;
   // Seuls les modes restaurables sont sauvegardés (cohérence avec VALID_MODES).
   if (!VALID_MODES.has(gameMode)) return;
@@ -334,7 +337,7 @@ function saveCurrentGame(forcedDailyKey = null) {
     guessedNames: guessedNames.slice(),
     historyIds: resultHistory.map((r) => r.pokemon.id),
     selectedGens: [...selectedGens],
-    dailyKey: forcedDailyKey || (gameMode === "daily" ? getUTCDateKey() : null),
+    dailyKey: forcedDailyKey || (gameMode === "daily" ? getDailyDateKey() : null),
     savedAt: Date.now(),
   };
 
@@ -353,7 +356,7 @@ function clearSavedGame(targetMode = gameMode) {
 function restoreSavedGame(preferredMode = null) {
   // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
   let save = preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null);
-  if (save && (save.mode !== "daily" || save.dailyKey !== getUTCDateKey())) {
+  if (save && (save.mode !== "daily" || save.dailyKey !== getDailyDateKey())) {
     clearSavedGame("daily");
     save = null;
   }
@@ -361,9 +364,9 @@ function restoreSavedGame(preferredMode = null) {
     save = readJson(STORAGE_KEYS.game, null);
     if (save && save.mode === "daily") {
       // Migration : ancienne sauvegarde daily dans le slot commun.
-      if (save.dailyKey === getUTCDateKey()) writeJson(STORAGE_KEYS.dailyGame, save);
+      if (save.dailyKey === getDailyDateKey()) writeJson(STORAGE_KEYS.dailyGame, save);
       clearSavedGame("normal");
-      if (save.dailyKey !== getUTCDateKey()) save = null;
+      if (save.dailyKey !== getDailyDateKey()) save = null;
     }
   }
   if (!save || (preferredMode && save.mode !== preferredMode)) return false;
@@ -373,11 +376,12 @@ function restoreSavedGame(preferredMode = null) {
     return false;
   }
 
-  if (save.mode === "daily" && save.dailyKey !== getUTCDateKey()) {
+  if (save.mode === "daily" && save.dailyKey !== getDailyDateKey()) {
     clearSavedGame("daily");
     return false;
   }
 
+  if(save.mode === "daily") { startDailyGame();return true; }
   const secret = POKEMON_BY_ID.get(Number(save.secretId));
   if (!secret) {
     clearSavedGame();
@@ -468,72 +472,14 @@ function restoreSavedGame(preferredMode = null) {
 // Le daily se joue une seule fois par jour : le résultat (gagné ou abandonné)
 // est conservé pour ré-afficher la grille terminée au lieu de relancer une partie.
 function saveDailyResult(won) {
-  if (gameMode !== "daily" || !secretPokemon) return;
-  writeJson(STORAGE_KEYS.dailyResult, {
-    version: 1,
-    dailyKey: getUTCDateKey(),
-    won: Boolean(won),
-    attempts,
-    secretId: secretPokemon.id,
-    historyIds: resultHistory.map((r) => r.pokemon.id),
-    finishedAt: Date.now(),
-  });
+  if(gameMode !== "daily" || !dailyServerState?.finished)return;
+  writeJson(STORAGE_KEYS.dailyResult,{version:2,dailyKey:dailyServerState.day,number:dailyServerState.number,accountId:dailyServerState.accountId,won:Boolean(won),attempts,secretId:dailyServerState.answerId,historyIds:resultHistory.map(r=>r.pokemon.id),rows:dailyServerState.rows,finishedAt:Date.now()});
 }
-
 function getTodayDailyResult() {
-  const rec = readJson(STORAGE_KEYS.dailyResult, null);
-  if (!rec || rec.dailyKey !== getUTCDateKey()) return null;
-  if (!POKEMON_BY_ID.get(Number(rec.secretId))) return null;
-  return rec;
+  const rec=readJson(STORAGE_KEYS.dailyResult,null);
+  return rec?.version===2 && rec.dailyKey===getDailyDateKey() && rec.accountId===dailyObservedAccountId() ? rec : null;
 }
-
-// Ré-affiche la partie du jour terminée (grille + écran de fin avec le vrai score).
-// Aucune stat/XP/distribution n'est re-comptée. Retourne false si rien à afficher.
-function showDailyCompletedView() {
-  const rec = getTodayDailyResult();
-  if (!rec) return false;
-
-  const secret = POKEMON_BY_ID.get(Number(rec.secretId));
-  gameMode = "daily";
-  secretPokemon = secret;
-  activePool = getPokemonUiList();
-  attempts = Math.max(0, Number(rec.attempts) || 0);
-  gameOver = true;
-  winRegisteredForCurrentGame = true; // déjà comptabilisé au moment de la partie
-
-  resultHistory = [];
-  document.getElementById("results-body").innerHTML = "";
-  const historyIds = Array.isArray(rec.historyIds) ? rec.historyIds : [];
-  for (const id of historyIds) {
-    const guessed = POKEMON_BY_ID.get(Number(id));
-    if (!guessed) continue;
-    const cmp = compare(guessed, secretPokemon);
-    resultHistory.push({ pokemon: guessed, cmp });
-    addRow(guessed, cmp);
-  }
-  guessedNames = resultHistory.map((r) => r.pokemon.name);
-  guessedSet = new Set(guessedNames);
-  rebuildActiveSearchIndex();
-
-  document.getElementById("try-count").textContent = String(attempts);
-  document.getElementById("err-msg").textContent = "";
-  document.getElementById("guess-input").value = "";
-  document.getElementById("guess-ac").classList.add("hidden");
-  document.getElementById("results-wrap").classList.toggle("hidden", resultHistory.length === 0);
-
-  updateTopTag();
-  updateModeBanners();
-  setQuizModeLayout(false);
-  hideCustomModeSurfaces();
-
-  renderGameOverBox({ won: rec.won, animate: false });
-
-  document.getElementById("screen-config").classList.add("hidden");
-  showScreen("screen-game");
-  setGlobalNavActive("game");
-
-  return true;
-}
+function showDailyCompletedView() { if(!getTodayDailyResult())return false;startDailyGame();return true; }
 
 // ============================================================
 // UTILS
@@ -1549,6 +1495,7 @@ function recordMatchHistory(entry) {
     result: entry.result || "win",
     attempts: Number(entry.attempts) || 0,
     targetName: entry.targetName || null,
+    ...(entry.mode === "daily" ? {dailyAccountId:entry.dailyAccountId||null} : {}),
     at: Date.now(),
   });
   matchHistory = matchHistory.slice(0, 120);
@@ -2194,7 +2141,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Une cible quotidienne</h4>
-            <p>Le Pokémon à deviner est <b>le même pour tous les joueurs</b>, et change à minuit (UTC). Tu peux tenter autant d'essais que tu veux dans la journée.</p>
+            <p>Le Pokémon à deviner est <b>le même pour tous les joueurs</b>, et change à minuit, heure de Paris. Tu peux tenter autant d'essais que tu veux dans la journée.</p>
           </section>
           <section class="app-help-card">
             <h4>Indices après chaque essai</h4>

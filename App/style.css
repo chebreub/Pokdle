@@ -28420,7 +28420,7 @@ body:not(.theme-dark) .card::before {
 }
 .ddist-title { margin: 0 0 8px; font-weight: 800; color: #1b3a66; font-size: 0.9rem; }
 .ddist-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
-.ddist-label { flex: 0 0 22px; text-align: right; font-weight: 800; color: #51668a; font-size: 0.82rem; }
+.ddist-label { flex: 0 0 64px; text-align: right; font-weight: 800; color: #51668a; font-size: 0.82rem; }
 .ddist-bar-wrap { flex: 1; background: #e3ebf8; border-radius: 6px; height: 14px; overflow: hidden; }
 .ddist-bar { height: 100%; border-radius: 6px; background: #8fb1e8; transition: width 0.4s ease; }
 .ddist-row.is-me .ddist-bar { background: linear-gradient(90deg, #43a047, #5ec463); }

@@ -55,7 +55,7 @@ test('server stores dated events and exposes today week all scopes',()=>{
 
 test('server sanity-checks mode-specific score ceilings',()=>{
   assert.match(server,/Quiz", unit: "bonnes réponses", max: 10/);
-  assert.match(server,/Pokémon du jour", unit: "essais", max: 100/);
+  assert.match(server,/Pokémon du jour", unit: "essais", max: 1025/);
   assert.match(server,/if \(n > max\) return null/);
 });
 
@@ -74,14 +74,9 @@ test('historical daily wins are not trusted for leaderboard backfill',()=>{
   assert.match(client,/if \(mode === "daily"\) return Promise\.resolve\(false\)/);
 });
 
-test('daily leaderboard requires server-observed guesses and atomic completion',()=>{
-  assert.match(server,/CREATE TABLE IF NOT EXISTS daily_sessions/);
-  assert.match(server,/app\.post\("\/api\/daily\/guess"/);
-  assert.match(server,/SELECT attempts, guessed, finished FROM daily_sessions[\s\S]*FOR UPDATE/);
-  assert.match(server,/duplicate_guess/);
-  assert.match(server,/UPDATE daily_sessions[\s\S]*recordLeaderboardResultInTransaction\(client, user, "daily", attempts, config, "daily:" \+ day\)[\s\S]*await client\.query\("COMMIT"\)/);
-  assert.doesNotMatch(server,/recordLeaderboardResult\(pgPool, user, "daily"/);
+test('Daily rankings cannot be posted as client scores',()=>{
   assert.match(server,/mode==="daily"\) return res\.status\(409\)\.json\(\{ok:false,error:"daily_requires_server_session"\}\)/);
+  assert.match(server,/mountDailyRoutes/);
 });
 
 test('legacy bulk score endpoint is retired',()=>{
