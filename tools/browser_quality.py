@@ -28,6 +28,10 @@ def main():
       result=action();item['ok']=True
       if result is not None: item['detail']=result
      except Exception as e: item['error']=str(e)[:1200]
+     finally:
+      if name.startswith('generation-'):
+       # A failed picker assertion must not leave a modal blocking later journeys.
+       page.evaluate('closeOverlayModal();setSelectedGenerations([1]);writeJson(GENERATION_PREFERENCE_KEY,[1])')
      if capture:
       try: page.screenshot(path=str(out/f'{width}-{name}.jpg'),quality=85,animations='disabled')
       except Exception as e: item['screenshot_error']=str(e)[:180]
