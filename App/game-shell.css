@@ -127,3 +127,5 @@
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] .visual-clue-box {transform:none!important;box-sizing:border-box!important;}
 #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {grid-column:1 / -1;}
 @media(min-width:1280px){#pokdle-app.design-refresh .focused-mode-screen #draft-options {grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
+
+@media(min-width:1280px){#pokdle-app.design-refresh #screen-draft-score-attack.focused-mode-screen #draft-mode-card #draft-options, #pokdle-app.design-refresh #screen-draft-arena.focused-mode-screen #draft-mode-card #draft-options {grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
