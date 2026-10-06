@@ -81,18 +81,19 @@ function toggleHomeGensCard() {
 }
 window.toggleHomeGensCard = toggleHomeGensCard;
 
-// DA 2026 : hero "Pokémon du jour" (statut du jour, série, compte à rebours UTC).
-let dailyHeroCountdownTimer = null;
+// DA 2026 : hero "Pokémon du jour" (statut du jour, série, compte à rebours Paris).
+let dailyHeroCountdownTimer = null, dailyHeroDay = null;
 function renderDailyNotebook(record, complete) {
   const panel = document.getElementById("daily-notebook");
   if (!panel) return;
   const target = record ? POKEMON_BY_ID.get(Number(record.secretId)) : null;
-  const guesses = target && Array.isArray(record.historyIds)
+  const savedRows=Array.isArray(record?.rows)?record.rows:[];
+  const guesses = (target || savedRows.length) && Array.isArray(record.historyIds)
     ? record.historyIds.map(id => POKEMON_BY_ID.get(Number(id))).filter(Boolean).slice(-3) : [];
   panel.dataset.progress = guesses.length ? "started" : "empty";
   const keys = ["generation", "altForm", "type1", "type2", "habitat", "color", "stage", "height", "weight"];
   const rows = guesses.map(pokemon => {
-    const comparison = compare(pokemon, target);
+    const comparison = savedRows.find(r=>Number(r.pokemonId)===Number(pokemon.id))?.cmp || compare(pokemon, target);
     return '<div class="notebook-row">' + keys.map(key => '<i class="notebook-cell is-' + comparison[key] + '">' + (comparison[key] === 'ok' ? '✓' : comparison[key] === 'close' ? '≈' : '×') + '</i>').join('') + '</div>';
   }).join('');
   const blanks = Array.from({length: Math.max(0, 3 - guesses.length)}, () => '<div class="notebook-row">' + keys.map(() => '<i class="notebook-cell"></i>').join('') + '</div>').join('');
@@ -110,13 +111,16 @@ function renderDailyHero() {
   if (!dateEl && !streakEl) return;
 
   if (dateEl) {
-    dateEl.textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+    dateEl.textContent = `JOUR #${getDailyNumber()} · ` + new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" });
   }
   if (streakEl) streakEl.textContent = `🔥 Série : ${Number(playerStats?.dailyCurrentStreak) || 0}`;
 
-  const today = getUTCDateKey();
+  const today = getDailyDateKey();
+  dailyHeroDay = today;
+  refreshDailyStreakStatus();
+  if (streakEl) streakEl.textContent = `🔥 Série : ${Number(playerStats?.dailyCurrentStreak) || 0}`;
   const todayResult = getTodayDailyResult();
-  const wonToday = playerStats?.lastDailyWinKey === today || Boolean(todayResult && todayResult.won);
+  const wonToday = Boolean(todayResult && todayResult.won);
   const lostToday = Boolean(todayResult && !todayResult.won);
   const hero = document.getElementById("daily-hero");
   if (hero) {
@@ -135,14 +139,15 @@ function renderDailyHero() {
       image.src = completed ? image.dataset.initialSrc.replace(/\/\d+\.png$/, "/"+Number(completed.id)+".png") : image.dataset.initialSrc;
     }
     const date = hero.querySelector(".pk-kicker");
-    if (date) date.title = "Le défi est commun à tous et se renouvelle à minuit UTC.";
+    if (date) date.title = "Le défi est commun à tous et se renouvelle à minuit, heure de Paris.";
   }
   let inProgress = false;
   let dailySave = null;
   try {
     const save = readJson(STORAGE_KEYS.dailyGame, null) || readJson(STORAGE_KEYS.game, null);
     inProgress = Boolean(save && save.mode === "daily" && save.dailyKey === today);
-    if (inProgress) dailySave = save;
+    if (inProgress && save.accountId === dailyObservedAccountId()) dailySave = save;
+    else inProgress=false;
   } catch (_err) { /* stockage indisponible */ }
 
   if (statusEl) {
@@ -168,7 +173,9 @@ function updateDailyHeroCountdown() {
   const countdownEl = document.getElementById("daily-hero-countdown");
   if (!countdownEl) return;
   const now = new Date();
-  const nextUtcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  if (dailyServerState && dailyServerState.day !== getDailyDateKey(now) && !dailyRequestInFlight) { dailyServerState=null; if(gameMode === "daily" && !document.getElementById("screen-game")?.classList.contains("hidden")) startDailyGame(); else renderDailyHero(); }
+  if (dailyHeroDay !== getDailyDateKey(now)) renderDailyHero();
+  const nextUtcMidnight = getDailyResetAt(now);
   const ms = Math.max(0, nextUtcMidnight - now.getTime());
   const hours = Math.floor(ms / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
@@ -218,18 +225,13 @@ function startNormalGame(forcedPokemon = null) {
 }
 
 function startDailyGame() {
-  // Daily du jour déjà terminé → grille-trophée (le daily ne se rejoue pas le même jour).
-  if (showDailyCompletedView()) return;
-
-  // Partie du jour en cours (refresh, retour à l'accueil…) → reprendre où on en était.
-  const save = readJson(STORAGE_KEYS.dailyGame, null);
-  if (save && save.mode === "daily" && save.dailyKey === getUTCDateKey() && restoreSavedGame()) return;
-
-  gameMode = "daily";
-  const pool = POKEMON_LIST.slice();
-  const secret = getDailyPokemon();
-  startGameWithSecret(secret, pool, { dailyKey: getUTCDateKey() });
-  syncDailyObservedState();
+  dailyRequestSerial++;dailyRequestInFlight=null;dailyServerState=null;
+  gameMode="daily";
+  startGameWithSecret(null,POKEMON_LIST.filter(p=>!p.isAltForm&&p.id>0&&p.id<=1025));
+  let retry=document.getElementById("daily-server-retry");
+  if(!retry){retry=document.createElement("button");retry.id="daily-server-retry";retry.className="btn-ghost hidden";retry.dataset.action="syncDailyObservedState";retry.textContent="Recharger le défi";document.getElementById("err-msg").after(retry);}
+  retry.classList.add("hidden");showErr("Chargement du Pokémon du jour…");dailyControls();
+  return syncDailyObservedState();
 }
 
 function startSilhouetteGame() {
@@ -468,6 +470,8 @@ function maybeShowOnboarding() {
 }
 
 function startGameWithSecret(secret, pool, options = {}) {
+  for (const id of ["guess-input","btn-submit","btn-surrender"]) { const node=document.getElementById(id);if(node)node.disabled=false; }
+  document.getElementById("daily-server-retry")?.classList.add("hidden");
   trackUsage("solo:" + gameMode);
   secretPokemon = secret;
   activePool = pool;
@@ -567,7 +571,8 @@ function setGlobalNavActive(key) {
 }
 
 function openCurrentGameScreen() {
-  const canResumeGame = Boolean(secretPokemon) || gameMode === "quiz" || gameMode === "odd";
+  if (gameMode === "daily") return startDailyGame();
+  const canResumeGame = Boolean(secretPokemon) || gameMode === "daily" || gameMode === "quiz" || gameMode === "odd";
   if (!canResumeGame) {
     goToConfig();
     return;
@@ -692,7 +697,7 @@ function updateTopTag() {
   const tag = document.getElementById("tag-gen");
 
   if (gameMode === "daily") {
-    tag.textContent = `Jour ${formatUTCDateLabel(getUTCDateKey())}`;
+    tag.textContent = `Jour ${formatUTCDateLabel(getDailyDateKey())}`;
     return;
   }
   if (gameMode === "quiz") {

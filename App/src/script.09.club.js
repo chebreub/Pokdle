@@ -17,8 +17,8 @@ function rememberClubGame(key) {
 }
 function getClubResumeSave() {
   const saves = [readJson(STORAGE_KEYS.dailyGame, null), readJson(STORAGE_KEYS.game, null)];
-  return saves.filter(save => save && VALID_MODES.has(save.mode) && POKEMON_BY_ID.has(Number(save.secretId)) &&
-    (save.mode !== "daily" || save.dailyKey === getUTCDateKey()) && Number.isFinite(Number(save.savedAt)))
+  return saves.filter(save => save && VALID_MODES.has(save.mode) && (save.mode === "daily" ? save.version === 2 && save.accountId === dailyObservedAccountId() : POKEMON_BY_ID.has(Number(save.secretId))) &&
+    (save.mode !== "daily" || save.dailyKey === getDailyDateKey()) && Number.isFinite(Number(save.savedAt)))
     .sort((a, b) => Number(b.savedAt) - Number(a.savedAt))[0] || null;
 }
 function resumeClubGame() {

@@ -322,9 +322,72 @@ def main():
      expect(page.locator('#shell-result-stats .shell-stats-grid > div').count()==4,'Real result counters are missing')
      return screen('screen-game')
     check('normal-result',finish)
+    # Synthetic API replies exercise the UI; real persistence/locking is covered
+    # by daily-recovery.test.js against the workflow's PostgreSQL service.
+    daily_day=page.evaluate('getDailyDateKey()')
+    daily_fixture={'ok':True,'day':daily_day,'number':198,'accountId':None,'authenticated':False,'status':'playing','finished':False,'won':False,'attempts':0,'rows':[],'streak':{'current':0,'best':0,'lastWin':None}}
+    daily_online={'value':False}
+    def daily_state(route):
+     route.fulfill(status=200 if daily_online['value'] else 503,content_type='application/json',body=json.dumps(daily_fixture if daily_online['value'] else {'ok':False,'error':'unavailable'}))
+    def daily_guess(route):
+     body=route.request.post_data_json
+     expect(body['day']==daily_day and body['accountId'] is None,'Daily request omits the Paris day or guest identity')
+     pokemon_id=body['pokemonId'];won=pokemon_id==1
+     if not daily_fixture['finished'] and not any(r['pokemonId']==pokemon_id for r in daily_fixture['rows']):
+      keys=['generation','altForm','type1','type2','habitat','color','stage','height','weight']
+      cmp={key:'ok' if won or key in ['generation','altForm','stage'] else 'close' if key in ['height','weight'] else 'wrong' for key in keys}
+      daily_fixture['rows'].append({'pokemonId':pokemon_id,'cmp':cmp,'heightDirection':'' if won else '↑','weightDirection':'' if won else '↑'})
+      daily_fixture['attempts']=len(daily_fixture['rows'])
+      if won: daily_fixture.update(status='won',finished=True,won=True,answerId=1)
+     route.fulfill(status=200,content_type='application/json',body=json.dumps(dict(daily_fixture,fresh=won)))
+    def daily_abandon(route):
+     daily_fixture.update(status='abandoned',finished=True,won=False,answerId=1)
+     route.fulfill(status=200,content_type='application/json',body=json.dumps(dict(daily_fixture,fresh=True)))
+    page.route('**/api/daily',daily_state)
+    page.route('**/api/daily/guess',daily_guess)
+    page.route('**/api/daily/abandon',daily_abandon)
+    page.route('**/api/daily-stats/today',lambda r:r.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':True,'key':daily_day,'counts':{'1':0,'2':1,'3':0,'4':0,'5':0,'6':0,'7plus':0},'wins':1,'abandoned':1,'total':2})))
+    def daily_unavailable():
+     start('startDailyGame','screen-game')
+     page.locator('#daily-server-retry').wait_for(state='visible')
+     expect(page.evaluate('secretPokemon === null && attempts === 0'),'Offline Daily fell back to a local target')
+     expect(page.locator('#guess-input').is_disabled(),'Unavailable Daily still accepts guesses')
+     expect('serveur' in page.locator('#err-msg').inner_text().lower(),'Unavailable Daily has no explanation')
+     return screen('screen-game')
+    check('daily-unavailable',daily_unavailable)
+    def daily_private_start():
+     daily_online['value']=True;page.locator('#daily-server-retry').click()
+     page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
+     expect(page.evaluate('secretPokemon === null && typeof getDailyPokemon === "undefined"'),'Daily answer is computable in the browser')
+     expect(page.locator('#guess-input').is_enabled(),'Retry does not restore the form')
+     return screen('screen-game')
+    check('daily-private-start',daily_private_start)
+    def daily_resume():
+     page.locator('#guess-input').fill('Pikachu');page.locator('#btn-submit').click()
+     page.wait_for_function('() => attempts === 1 && !dailyRequestInFlight')
+     expect(page.evaluate('secretPokemon === null'),'Wrong guess reveals the answer')
+     page.evaluate('startDailyGame()')
+     expect(page.locator('#results-body tr').count()==1,'Resume does not restore the server history')
+     expect(page.evaluate('secretPokemon === null'),'Resume reveals the answer')
+     expect(page.locator('#results-body tr td').count()==10,'Server row lost a comparison criterion')
+     return screen('screen-game')
+    check('daily-resume',daily_resume)
+    def daily_abandoned():
+     page.locator('#btn-surrender').click();page.locator('#win-box').wait_for(state='visible')
+     expect(page.locator('#btn-share').is_hidden(),'Abandoned Daily can share a victory')
+     page.evaluate('startDailyGame()')
+     expect(page.evaluate('gameOver && dailyServerState.status === "abandoned"'),'Server abandonment does not survive resume')
+     expect(page.locator('#btn-surrender').is_hidden(),'Completed Daily can be abandoned again')
+     return screen('screen-game')
+    check('daily-abandoned',daily_abandoned)
+    # New synthetic identity for the independent victory case.
+    daily_fixture.update(status='playing',finished=False,won=False,attempts=0,rows=[])
+    daily_fixture.pop('answerId',None)
+    page.evaluate('localStorage.removeItem(STORAGE_KEYS.dailyResult)')
     def daily_finish():
      start('startDailyGame','screen-game');standard_guess_shell()
-     name=page.evaluate('secretPokemon.name');page.locator('#guess-input').fill(name);page.locator('#btn-submit').click()
+     page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
+     page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click()
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
      page.evaluate('typeof closePokedexRegistration === \"function\" && closePokedexRegistration()')
      expect('Continuer en illimité' in page.locator('#btn-restart').inner_text(),'Daily result does not explain the next game')

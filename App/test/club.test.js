@@ -10,16 +10,16 @@ test('recent shortcuts reject corrupted or unknown actions, remove duplicates an
  assert.deepEqual(Array.from(env.clubRecentEntries(['a','bad','a','b','c','d',{}],allowed)),['a','b','c']);
 });
 test('resume selects the newest valid save, excluding yesterday daily and unknown species',()=>{
- const saves={daily:{mode:'daily',dailyKey:'yesterday',secretId:25,savedAt:300},game:{mode:'normal',secretId:25,savedAt:100}};
- const env=fixture({readJson:key=>saves[key],STORAGE_KEYS:{dailyGame:'daily',game:'game'},VALID_MODES:new Set(['normal','daily']),POKEMON_BY_ID:new Map([[25,{}]]),getUTCDateKey:()=> 'today'});
+ const saves={daily:{version:2,mode:'daily',accountId:null,dailyKey:'yesterday',savedAt:300},game:{mode:'normal',secretId:25,savedAt:100}};
+ const env=fixture({readJson:key=>saves[key],STORAGE_KEYS:{dailyGame:'daily',game:'game'},VALID_MODES:new Set(['normal','daily']),POKEMON_BY_ID:new Map([[25,{}]]),getDailyDateKey:()=> 'today',dailyObservedAccountId:()=>null});
  assert.equal(env.getClubResumeSave().mode,'normal');
  saves.daily.dailyKey='today';assert.equal(env.getClubResumeSave().mode,'daily');
- saves.daily.secretId=99999;assert.equal(env.getClubResumeSave().mode,'normal');
+ saves.daily.accountId="another-account";assert.equal(env.getClubResumeSave().mode,'normal');
  saves.game=null;assert.equal(env.getClubResumeSave(),null);
 });
 test('resume restores without drawing another target or counting a new game',()=>{
  let mode, pushed;const save={mode:'normal',secretId:25,savedAt:1};
- const env=fixture({readJson:()=>save,STORAGE_KEYS:{},VALID_MODES:new Set(['normal']),POKEMON_BY_ID:new Map([[25,{}]]),getUTCDateKey:()=> 'today',restoreSavedGame:m=>{mode=m;return true;},history:{pushState:s=>{pushed=s;}},gameMode:'normal',secretPokemon:{id:25},location:{pathname:'/',search:''}});
+ const env=fixture({readJson:()=>save,STORAGE_KEYS:{},VALID_MODES:new Set(['normal']),POKEMON_BY_ID:new Map([[25,{}]]),getDailyDateKey:()=> 'today',dailyObservedAccountId:()=>null,restoreSavedGame:m=>{mode=m;return true;},history:{pushState:s=>{pushed=s;}},gameMode:'normal',secretPokemon:{id:25},location:{pathname:'/',search:''}});
  env.resumeClubGame();assert.equal(mode,'normal');assert.equal(pushed.secretId,25);assert.equal(pushed.screen,'game');
 });
 test('featured picks hide duplicate entries only without a search and preserve the PRO variant',()=>{

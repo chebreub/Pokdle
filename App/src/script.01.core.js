@@ -1,7 +1,7 @@
 ﻿// ============================================================
 // script.js - Pokedle V3 (enhanced)
 // Features:
-// - Daily Pokemon mode (deterministic by UTC date)
+// - Daily Pokemon mode (server-owned, Europe/Paris day)
 // - Persistent player stats (localStorage)
 // - Auto-save and auto-restore game in progress
 // - Optimized autocomplete (pre-index + cache)
@@ -2171,49 +2171,24 @@ window.addEventListener("DOMContentLoaded", () => {
   removeAppSplash();
 });
 
-// Distribution des essais du Pokémon du jour (stats anonymes, en mémoire serveur).
-const DAILY_REPORT_STORAGE_KEY = "pokedle_daily_reported_v1";
-
+// Distribution computed exclusively from server-validated, completed sessions.
 async function reportAndRenderDailyDistribution(attemptCount) {
-  const box = document.getElementById("win-daily-distribution");
-  if (!box) return;
-  const todayKey = getUTCDateKey();
+  const box=document.getElementById("win-daily-distribution");if(!box)return;
   try {
-    let reported = null;
-    try { reported = localStorage.getItem(DAILY_REPORT_STORAGE_KEY); } catch (_e) { /* noop */ }
-    if (reported !== todayKey) {
-      await fetch("/api/daily-stats/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: todayKey, attempts: attemptCount }),
-      });
-      try { localStorage.setItem(DAILY_REPORT_STORAGE_KEY, todayKey); } catch (_e) { /* noop */ }
-    }
-    const response = await fetch(`/api/daily-stats/today`);
-    if (!response.ok) throw new Error("stats indisponibles");
-    const stats = await response.json();
-    renderDailyDistribution(box, stats, attemptCount);
-  } catch (_err) {
-    box.classList.add("hidden");
-  }
+    const response=await fetch("/api/daily-stats/today",{credentials:"same-origin",cache:"no-store"});
+    if(!response.ok)throw Error("unavailable");const stats=await response.json();
+    if(!stats.ok||stats.key!==dailyServerState?.day)throw Error("stale_daily");
+    renderDailyDistribution(box,stats,attemptCount);
+  }catch(_error){box.classList.add("hidden");}
 }
-
-function renderDailyDistribution(box, stats, playerAttempts) {
-  const counts = stats?.counts || {};
-  const buckets = ["1", "2", "3", "4", "5", "6", "7plus"];
-  const total = buckets.reduce((acc, b) => acc + (Number(counts[b]) || 0), 0);
-  if (!total) { box.classList.add("hidden"); return; }
-  const max = Math.max(...buckets.map((b) => Number(counts[b]) || 0), 1);
-  const playerBucket = playerAttempts >= 7 ? "7plus" : String(playerAttempts);
-  const rows = buckets.map((bucket) => {
-    const value = Number(counts[bucket]) || 0;
-    const width = Math.max(4, Math.round((value / max) * 100));
-    const me = bucket === playerBucket ? " is-me" : "";
-    const label = bucket === "7plus" ? "7+" : bucket;
-    return `<div class="ddist-row${me}"><span class="ddist-label">${label}</span><div class="ddist-bar-wrap"><div class="ddist-bar" style="width:${width}%"></div></div><span class="ddist-value">${value}</span></div>`;
-  }).join("");
-  box.innerHTML = `<p class="ddist-title">📊 ${total} dresseur${total > 1 ? "s" : ""} aujourd'hui — répartition des essais</p>${rows}`;
-  box.classList.remove("hidden");
+function renderDailyDistribution(box,stats,playerAttempts) {
+  const counts=stats?.counts||{},total=Number(stats.total)||0;
+  if(!total){box.classList.add("hidden");return;}
+  const buckets=["1","2","3","4","5","6","7plus","abandoned"],values={...counts,abandoned:Number(stats.abandoned)||0};
+  const max=Math.max(...buckets.map(b=>Number(values[b])||0),1);
+  const playerBucket=dailyServerState?.won ? (playerAttempts>=7?"7plus":String(playerAttempts)) : "abandoned";
+  const rows=buckets.map(bucket=>{const value=Number(values[bucket])||0,width=Math.round(value/max*100),label=bucket==="abandoned"?"Abandon":bucket==="7plus"?"7+":bucket;return `<div class="ddist-row${bucket===playerBucket?' is-me':''}"><span class="ddist-label">${label}</span><div class="ddist-bar-wrap"><div class="ddist-bar" style="width:${width}%"></div></div><span class="ddist-value">${value}</span></div>`;}).join("");
+  box.innerHTML=`<p class="ddist-title">${total} partie${total>1?'s':''} terminée${total>1?'s':''} aujourd’hui · ${Number(stats.wins)||0} victoire${stats.wins>1?'s':''}</p>${rows}<p class="ddist-note">Résultats validés par le serveur, invités compris.</p>`;box.classList.remove("hidden");
 }
 
 // DA 2026 : splash de chargement (perçu pendant le parse JS / les données).
