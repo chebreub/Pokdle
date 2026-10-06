@@ -36,10 +36,13 @@ function clubLaunchRecent(key) {
   if (entry && typeof window[entry.name] === "function") window[entry.name](...entry.args);
 }
 function renderHomeReturn() {
+  renderHomeDiscovery();
   if (typeof renderPartner === "function") renderPartner();
   const panel = document.getElementById("home-return");
   if (!panel) return;
-  const save = getClubResumeSave();
+  const resume = getClubResumeSave();
+  // The daily already has its own resume action in the hero.
+  const save = resume?.mode === "daily" ? null : resume;
   const recent = readClubRecent();
   panel.classList.toggle("hidden", !save && !recent.length);
   const modeNames = { normal: "Mode illimité", daily: "Pokémon du jour", silhouette: "Zoom progressif", pixel: "Pixelisé", cry: "Cri", mystery: "Stat mystère", description: "Description", evolution: "Évolution", order: "Ordre Pokédex", weight: "Duel de poids" };
@@ -50,6 +53,20 @@ function renderHomeReturn() {
     ? '<div class="club-recent"><span>Récents</span>' + recent.map(key => '<button type="button" class="btn-ghost" data-action="clubLaunchRecent" data-args="' + escapeHtml(JSON.stringify([key])) + '">' + escapeHtml(clubLaunchers.get(key).label) + '</button>').join("") + '</div>'
     : '';
   panel.innerHTML = '<div class="club-return-bar">' + resumeHtml + recentHtml + '</div>';
+}
+function renderHomeDiscovery() {
+  const grid = document.getElementById("home-games-grid");
+  if (!grid || grid.childElementCount) return;
+  const games = [
+    ["startSilhouetteGame", "Zoom progressif", "Un détail, puis la révélation.", "Observer", "lavender", 352],
+    ["startCryGame", "Qui pousse ce cri ?", "Écoute bien. Tu le reconnais ?", "Écouter", "pink", 441],
+    ["openPokeConnectionsMode", "Poké-Connections", "16 Pokémon, quatre liens cachés.", "Réfléchir", "mint", 133],
+    ["startQuizGame", "Quiz Pokémon", "Mets tes connaissances à l’épreuve.", "Apprendre", "blue", 65],
+    ["openDraftScoreAttackMode", "Draft Score Attack", "Six choix pour une équipe de rêve.", "Composer", "peach", 445],
+    ["openHigherLowerMode", "Higher or Lower", "Plus fort, plus grand… à toi de voir.", "Comparer", "lavender", 248]
+  ];
+  grid.innerHTML = games.map(([action, title, description, label, color, id]) => '<button type="button" class="home-game home-game-' + color + '" data-action="' + action + '">' +
+    '<span class="home-game-art" aria-hidden="true"><img class="home-game-pokemon" src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + id + '.png" data-fallback="' + modeCatalogSpriteUrl(id) + '" alt="" loading="lazy" decoding="async" width="160" height="160" /><span class="home-game-spark">✦</span></span><span class="home-game-copy"><small>' + label + '</small><b>' + title + '</b><span>' + description + '</span></span><span class="home-game-arrow" aria-hidden="true">Jouer →</span></button>').join('');
 }
 function isClubFeatured(card, category, query, difficulty = "all") {
   if (String(query || "").trim() || difficulty !== "all" || !["solo", "friends"].includes(category)) return false;

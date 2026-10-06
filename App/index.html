@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pokédle - Devinez le Pokémon</title>
   <meta name="description" content="Pokédle, le jeu type Wordle pour Pokémon : devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
-  <meta name="theme-color" content="#2f76ff">
+  <meta name="theme-color" content="#FFF8EF">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Pokédle - Devinez le Pokémon">
   <meta property="og:description" content="Devine le Pokémon du jour, défie un ami en duel 1v1, prépare ta team et explore le Pokédex des 9 générations.">
@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
   <link rel="preconnect" href="https://pokeapi.co" crossorigin>
   <link rel="preconnect" href="https://cdn.emulatorjs.org" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dist/style.min.css">
   <link rel="stylesheet" href="dist/nav.min.css">
   <link rel="stylesheet" href="dist/pokedex.min.css">
@@ -114,6 +114,7 @@
   <button id="nav-config" class="nav-pill active" type="button" data-action="goToConfig">Accueil</button>
 
   <button id="nav-game" class="nav-pill" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Jouer</button>
+  <button id="nav-leaderboard" class="nav-pill" type="button" data-action="openLeaderboardV2" data-args='["daily","today"]'>Classement</button>
   <button id="nav-social" class="nav-pill" type="button" data-action="openAllModesScreen" data-args='["friends"]'>Entre amis</button>
   <button id="nav-collection" class="nav-pill" type="button" data-action="openPokedexMode">Pokédex</button>
   <button id="nav-extras" class="nav-pill nav-utility-entry" type="button" data-action="openAllModesScreen" data-args='["explore"]'>Explorer</button>
@@ -146,8 +147,8 @@
       <section class="pk-hero" id="daily-hero">
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
-          <h2 class="pk-hero-title">Pokémon du jour</h2>
-          <p class="pk-hero-sub">Un Pokémon à trouver chaque jour. Chaque essai te donne de nouveaux indices.</p>
+          <h2 class="pk-hero-title">Un jour.<br>Un Pokémon mystère.</h2>
+          <p class="pk-hero-sub">Le même défi pour tous. Croise les indices et mène ton enquête, un essai à la fois.</p>
           <div class="pk-hero-chips">
             <span class="pk-chip pk-chip-fire" id="daily-hero-streak">🔥 Série : 0</span>
             <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
@@ -155,10 +156,15 @@
           </div>
           <div class="pk-hero-cta-row">
             <button class="pk-cta" type="button" data-action="startDailyGame" id="daily-hero-cta">▶ Jouer au Pokémon du jour</button>
-            <button class="pk-cta-ghost" type="button" data-action="openHelpModal">Comment jouer ?</button>
+            <button class="pk-cta-ghost" type="button" data-action="openLeaderboardV2" data-args='["daily","today"]'>Classement du jour →</button>
           </div>
         </div>
-        <div class="pk-hero-visual" aria-hidden="true"><div class="pk-medallion"><img class="pk-silo-img" src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/149.png" alt="" loading="lazy" /><span class="pk-qm">?</span></div></div>
+        <div class="daily-notebook" id="daily-notebook" aria-label="Carnet du défi quotidien"></div>
+      </section>
+
+      <section class="home-discovery" aria-labelledby="home-discovery-title">
+        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">À quoi on joue ?</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div>
+        <div class="home-games-grid" id="home-games-grid"></div>
       </section>
 
       <section class="home-pathways" aria-label="Choisir comment jouer">
@@ -1169,7 +1175,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             </thead>
             <tbody id="results-body"></tbody>
           </table>
-          <p class="results-legend">✓ Correspond · ≈ Proche · × Différent<br />↑ Le mystère est plus grand/lourd · ↓ Plus petit/léger</p>
+          <details class="results-legend"><summary><span class="legend-exact">✓ Exact</span> · <span class="legend-partial">≈ Partiel / proche</span> · <span class="legend-different">× Différent</span> <span class="legend-more">Comprendre les indices</span></summary><p>L’orange indique un type à l’autre place, une couleur partiellement commune, une hauteur à 0,3 m près ou un poids à 15 kg près. Les flèches indiquent si le Pokémon recherché est plus grand/lourd (↑) ou plus petit/léger (↓). « Forme » compare la présence d’une forme alternative.</p></details>
         </div>
       </div>
 

@@ -58,6 +58,19 @@ def main():
      expect(contrast>=4.5,'Streak contrast is too low: '+repr(colors))
      return {'contrast':round(contrast,2)}
     check('audit-home-readability',audit_home_readability,False)
+    def cosy_home():
+     expect(page.locator('#daily-hero').count()==1,'Daily hero is duplicated')
+     expect(page.locator('#home-games-grid .home-game').count()==6,'Home discovery shortcuts are missing')
+     expect(page.locator('#daily-notebook .notebook-cell').count()==27,'Notebook must retain all nine criteria')
+     hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('.home-discovery').bounding_box();party=page.locator('.home-pathways').bounding_box()
+     expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
+     for artwork in page.locator('#home-games-grid .home-game-pokemon').all():
+      artwork.scroll_into_view_if_needed()
+      page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=artwork.element_handle())
+     if width in (390,1366): page.locator('.home-discovery').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=90,animations='disabled')
+     page.evaluate('window.scrollTo(0,0)')
+     return screen('screen-config')
+    check('cosy-home',cosy_home)
     check('catalog',lambda:nav('game','screen-all-modes'))
     def audit_catalog():
      for category in ['game','social']:
@@ -106,7 +119,7 @@ def main():
      return screen('screen-all-modes')
     check('empty-search-reset',empty_search)
     def waveform():
-     bars=page.locator('.mode-preview-audio .mode-preview-bars i');expect(bars.count()>0,'No waveform');heights=bars.evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)');expect(all(h>0 for h in heights),f'Collapsed bars: {heights}');return heights
+     bars=page.locator('#screen-all-modes .mode-preview-audio .mode-preview-bars i');expect(bars.count()>0,'No waveform');heights=bars.evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)');expect(all(h>0 for h in heights),f'Collapsed bars: {heights}');return heights
     check('waveform',waveform,False)
     def preview_layout():
      sample=page.locator('.mode-preview-evolution img')
@@ -185,7 +198,7 @@ def main():
      expect(page.locator('#pixel-box').is_hidden(),'Pixel clue shell leaked into standard gameplay')
      style=page.locator('#btn-submit').evaluate('(e)=>({image:getComputedStyle(e).backgroundImage,color:getComputedStyle(e).backgroundColor,border:getComputedStyle(e).borderTopColor})')
      rendered=' '.join(style.values())
-     blue_tokens=('57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
+     blue_tokens=('64, 105, 224','64,105,224','57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
      expect(any(token in rendered for token in blue_tokens),'Primary guess CTA is not using the D0 blue treatment: '+repr(style))
     def autocomplete_overlay():
      start('startNormalGame','screen-game');standard_guess_shell()
@@ -219,6 +232,20 @@ def main():
     def guess():
      start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
+    def cosy_clues():
+     row=page.locator('#results-body tr').first
+     expect(row.locator('td[data-label="Forme"]').count()==1,'Alternative form criterion was lost')
+     expect(row.locator('td').count()==10,'One of the nine comparison criteria was lost')
+     page.wait_for_function('Array.from(document.querySelectorAll("#results-body .comparison-type img")).every(img=>img.complete && img.naturalWidth>0)')
+     expect(row.locator('.comparison-type img').count()==2,'Both Bulbasaur types should have a local icon')
+     expect('Plante' in row.inner_text() and 'Poison' in row.inner_text(),'Type names must remain visible')
+     sheen=row.locator('.guess-result-cell.c-ok,.guess-result-cell.c-close,.guess-result-cell.c-wrong').first.evaluate('(e)=>getComputedStyle(e,"::after").display')
+     expect(sheen=='none','Reduced-motion mode leaves a white veil on clue cells')
+     if width<=640:
+      label=row.locator('td[data-label="Type 1"]').evaluate('(e)=>parseFloat(getComputedStyle(e,"::before").fontSize)')
+      expect(label>=12,'Mobile clue labels are too small: '+str(label))
+     return screen('screen-game')
+    check('cosy-clues',cosy_clues)
     def pc1_classic_board():
      if width<1280:
       expect(page.locator('#classic-banner').is_hidden(),'PC1 desktop banner leaked below the desktop breakpoint')
@@ -279,8 +306,9 @@ def main():
       expect(progress.bounding_box()['x']>page.locator('#win-box .win-inner').bounding_box()['x'],'Pokédex progress is not in the desktop stats rail')
      return screen('screen-game')
     check('daily-result',daily_finish)
-    def pc2_leaderboard_desktop():
-     if width<1280: return {'skipped':'desktop-only'}
+    def cosy_leaderboard():
+     celebration=page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
+     if celebration.is_visible(): celebration.click()
      page.evaluate("""async () => {
        window.__qaLeaderboardFetch=leaderboardFetchJson;
        leaderboardFetchJson=async()=>({
@@ -299,19 +327,40 @@ def main():
        await openLeaderboardV2('daily','all');
      }""")
      page.locator('#overlay-body .lbv3-podium').wait_for(state='visible')
+     expect(page.locator('#pokedex-registration-layer:not(.hidden)').count()==0,'Registration ceremony hides the ranking')
+     colors=page.locator('.lbv3-header').evaluate('(e)=>({bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color})')
+     import re
+     def luminance(value):
+      rgb=[int(v)/255 for v in re.findall(r'\d+',value)[:3]]
+      return sum(a*b for a,b in zip([v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in rgb],[.2126,.7152,.0722]))
+     a,b=luminance(colors['fg']),luminance(colors['bg'])
+     expect((max(a,b)+.05)/(min(a,b)+.05)>=4.5,'Ranking header text is unreadable: '+repr(colors))
      overlay=page.locator('.overlay-card:has(.lbv3-shell)').bounding_box()
-     expect(overlay and overlay['width']>1100,'Desktop leaderboard overlay is still narrow: '+repr(overlay))
+     expect(overlay and overlay['width']<=width and (width<1280 or overlay['width']>1100),'Leaderboard does not fit its viewport: '+repr(overlay))
      shell=page.locator('.lbv3-shell')
      cols=shell.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-     expect(cols==2,'Desktop leaderboard is not using the wide two-column layout: '+str(cols))
+     expect(cols==1,'Leaderboard should present the podium before the full-width list: '+str(cols))
      podium=page.locator('.lbv3-podium').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
-     expect(podium and listing and listing['x']>podium['x']+podium['width']-3,'Leaderboard list is not beside the podium: '+repr([podium,listing]))
-     page.evaluate("""() => {
+     expect(podium and listing and listing['y']>=podium['y']+podium['height']-3,'Leaderboard list is not below the podium: '+repr([podium,listing]))
+     expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
+     expect(page.locator('.lbv3-mode-tab[aria-pressed="true"]').count()==1,'Selected game is not announced')
+     for card in page.locator('.lbv3-podium-card').all():
+      bounds=card.bounding_box()
+      for content in card.locator('.lbv3-podium-name, :scope > strong').all():
+       box=content.bounding_box()
+       expect(box and box['width']>0 and box['x']>=bounds['x'] and box['x']+box['width']<=bounds['x']+bounds['width']+1,'Podium name or score is clipped')
+     if width<=640:
+      controls=page.locator('.lbv3-controls').bounding_box()
+      expect(controls['height']<160,'Mobile filters push the podium too far down: '+repr(controls))
+     page.locator('#gamefeel-layer.is-visible').wait_for(state='hidden')
+     return screen('screen-game')
+    check('cosy-leaderboard',cosy_leaderboard)
+    # Always close the fixture, including after a failed visual assertion.
+    # Otherwise one open modal causes unrelated journeys to time out in sequence.
+    page.evaluate("""() => {
        if (window.__qaLeaderboardFetch) { leaderboardFetchJson=window.__qaLeaderboardFetch; delete window.__qaLeaderboardFetch; }
        if (typeof closeOverlayModal==='function') closeOverlayModal();
      }""")
-     return screen('screen-game')
-    check('pc2-leaderboard-desktop',pc2_leaderboard_desktop)
     def completed_home():
      nav('home','screen-config')
      expect(page.locator('#daily-hero').get_attribute('data-daily-state')=='complete','Daily summary did not update')

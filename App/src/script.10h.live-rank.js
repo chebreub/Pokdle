@@ -139,6 +139,17 @@ function ensureLiveRankHud(screenId) {
 }
 function liveRankGoalCopy(data,mode,currentScore) {
   const meta=liveRankModeMeta(mode);
+  if (mode==="daily") {
+    const finished=typeof gameOver!=="undefined" && gameOver;
+    if (finished && data?.me) return {tone:Number(data.me.rank)===1?"leader":"muted",text:"Ton résultat aujourd’hui · #"+Number(data.me.rank)+" · "+liveRankFormat(data.me.score,mode,data.unit||meta.unit)};
+    const personal=liveRankPersonalBest(mode);
+    // currentScore counts guesses already submitted. Only propose a personal
+    // record if a future guess can still beat it; a one-guess record is unbeatable.
+    if (!finished && currentScore>0 && personal>currentScore+1) return {tone:"goal",text:"Objectif personnel · trouver en moins de "+personal+" essais."};
+    const first=Array.isArray(data?.top)?data.top[0]:null;
+    if (first) return {tone:"muted",text:"Record du jour · "+liveRankFormat(first.score,mode,data.unit||meta.unit)};
+    return {tone:"muted",text:finished?"Défi terminé · ton prochain rendez-vous est demain.":"Chaque indice te rapproche du Pokémon mystère."};
+  }
   if (!data?.me) {
     const leader=Array.isArray(data?.top)&&data.top[0]?data.top[0]:null;
     if (!leader) return {tone:"muted",text:"Sois le premier classé aujourd’hui."};
@@ -147,10 +158,6 @@ function liveRankGoalCopy(data,mode,currentScore) {
   if (Number(data.me.rank)===1) return {tone:"leader",text:"Tu es leader aujourd’hui."};
   const goal=liveRankGoal(data,mode);
   if (!goal) return {tone:"muted",text:"Continue pour gagner des places."};
-  if (mode==="daily") {
-    if (currentScore>0&&currentScore<=goal.score) return {tone:"hot",text:"Top #"+goal.rank+" possible si tu trouves maintenant."};
-    return {tone:"goal",text:"Pour dépasser #"+goal.rank+" · "+liveRankFormat(goal.score,mode,data.unit||meta.unit)};
-  }
   if (currentScore>0&&currentScore>=goal.score) {
     return {tone:"hot",text:"Objectif #"+goal.rank+" atteint provisoirement."};
   }

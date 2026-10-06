@@ -232,6 +232,12 @@ function cmpNum(gVal, sVal, tolerance) {
   return "wrong";
 }
 
+function comparisonTypeHtml(type) {
+  const icons = {Normal:"normal",Feu:"fire",Eau:"water",Plante:"grass",Électrik:"electric",Glace:"ice",Combat:"fighting",Poison:"poison",Sol:"ground",Vol:"flying",Psy:"psychic",Insecte:"bug",Roche:"rock",Spectre:"ghost",Dragon:"dragon",Ténèbres:"dark",Acier:"steel",Fée:"fairy"};
+  if (!type) return '<span class="comparison-type"><span class="type-none" aria-hidden="true">–</span><span>Aucun</span></span>';
+  const icon = icons[type];
+  return '<span class="comparison-type">' + (icon ? '<img src="img/type-icons/' + icon + '.svg" alt="" width="28" height="28" />' : '') + '<span>' + escapeHtml(type) + '</span></span>';
+}
 function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   const hArrow = arrowFor(pokemon.height, targetPokemon.height);
   const wArrow = arrowFor(pokemon.weight, targetPokemon.weight);
@@ -249,8 +255,8 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
     </td>
     <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${pokemon.gen}</td>
     <td data-label="Forme" class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
-    <td data-label="Type 1" class="${cls(cmp.type1)}"><span class="type-dot" style="background:${pokemonTypeColor(pokemon.type1)}"></span>${pokemon.type1}</td>
-    <td data-label="Type 2" class="${cls(cmp.type2)}">${pokemon.type2 ? `<span class="type-dot" style="background:${pokemonTypeColor(pokemon.type2)}"></span>${pokemon.type2}` : "Aucun"}</td>
+    <td data-label="Type 1" class="${cls(cmp.type1)}">${comparisonTypeHtml(pokemon.type1)}</td>
+    <td data-label="Type 2" class="${cls(cmp.type2)}">${comparisonTypeHtml(pokemon.type2)}</td>
     <td data-label="Habitat / lieux" class="${cls(cmp.habitat)}">
       <span class="habitat-main">${escapeHtml(pokemon.habitat || "Inconnu")}</span>
       <details class="guess-locations"><summary>Lieux de rencontre</summary><small class="habitat-encounter" data-encounter-summary>Chargement des lieux...</small></details>

@@ -97,3 +97,13 @@ test('live rank HUD has responsive and reduced-motion styling',()=>{
   assert.match(style,/@media \(max-width:640px\)[\s\S]*\.live-rank-hud/);
   assert.match(style,/prefers-reduced-motion/);
 });
+
+test('Daily does not ask a player to beat an impossible one-guess record',()=>{
+  const f=fixture();
+  const data={top:[{rank:1,score:1,username:'Leader'}],me:{rank:3,score:6},around:[]};
+  assert.match(f.__copy(data,'daily',0).text,/Record du jour/);
+  assert.match(f.__copy(data,'daily',1).text,/Objectif personnel/);
+  assert.match(f.__copy(data,'daily',3).text,/Record du jour/);
+  f.gameOver=true;
+  assert.match(f.__copy(data,'daily',6).text,/#3/);
+});
