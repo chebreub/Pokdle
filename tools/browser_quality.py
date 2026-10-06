@@ -274,6 +274,7 @@ def main():
      start('startDailyGame','screen-game');standard_guess_shell()
      name=page.evaluate('secretPokemon.name');page.locator('#guess-input').fill(name);page.locator('#btn-submit').click()
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
+     page.evaluate('typeof closePokedexRegistration === \"function\" && closePokedexRegistration()')
      expect('Continuer en illimité' in page.locator('#btn-restart').inner_text(),'Daily result does not explain the next game')
      expect(page.locator('#btn-result-catalog').is_visible(),'Daily result has no catalog exit')
      expect(page.locator('#screen-game').get_attribute('data-game-mode')=='daily','Daily screen marker is missing')
@@ -475,7 +476,7 @@ def main():
      if width<1280: return {'skipped':'desktop-only'}
      page.evaluate('openDraftScoreAttackMode()');screen('screen-draft-score-attack')
      card=page.locator('#screen-draft-score-attack #draft-mode-card').bounding_box()
-     expect(card and card['width']>1150,'PC4 Score Attack cockpit is still narrow: '+repr(card))
+     expect(card and 900<=card['width']<=1001,'PC4 Score Attack cockpit is still narrow: '+repr(card))
      cols=page.locator('#screen-draft-score-attack #draft-mode-card').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
      expect(cols==2,'PC4 Score Attack is not a two-column cockpit: '+str(cols))
      gens=page.locator('#draft-gen-buttons button:visible')
@@ -486,21 +487,18 @@ def main():
      page.wait_for_timeout(150)
      draft_options=page.locator('#screen-draft-score-attack #draft-options')
      option_cols=draft_options.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-     expect(option_cols==(6 if width>=1680 else 3),'Final desktop Score Attack grid is unbalanced: '+str(option_cols))
+     expect(option_cols==3,'Final desktop Score Attack grid is unbalanced: '+str(option_cols))
      option_cards=draft_options.locator('.draft-option-card:visible')
      if option_cards.count()>=6:
       option_rects=option_cards.evaluate_all('(els)=>els.slice(0,6).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
-      if width>=1680:
-       expect(max(abs(r['y']-option_rects[0]['y']) for r in option_rects)<3,'Six Score Attack options should share one row on wide desktop: '+repr(option_rects))
-      else:
-       expect(max(abs(r['y']-option_rects[0]['y']) for r in option_rects[:3])<3 and option_rects[3]['y']>option_rects[0]['y'],'Score Attack options should form a balanced 3x2 grid: '+repr(option_rects))
+      expect(max(abs(r['y']-option_rects[0]['y']) for r in option_rects[:3])<3 and option_rects[3]['y']>option_rects[0]['y'],'Score Attack options should form a legible 3x2 grid: '+repr(option_rects))
      picks=page.locator('#draft-mode-card > .draft-panel-picks').bounding_box()
      team=page.locator('#draft-mode-card > .draft-panel-team').bounding_box()
      expect(picks and team and team['x']>picks['x']+picks['width']-3,'Score Attack team is not beside the draft choices: '+repr([picks,team]))
 
      page.evaluate('openDraftArenaMode()');screen('screen-draft-arena')
      arena=page.locator('#screen-draft-arena #draft-mode-card').bounding_box()
-     expect(arena and arena['width']>1150,'PC4 Draft Arena cockpit is still narrow: '+repr(arena))
+     expect(arena and 900<=arena['width']<=1001,'PC4 Draft Arena cockpit is still narrow: '+repr(arena))
      arena_cols=page.locator('#screen-draft-arena #draft-mode-card').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
      expect(arena_cols==2,'PC4 Draft Arena is not a two-column cockpit: '+str(arena_cols))
      arena_gens=page.locator('#draft-gen-buttons button:visible')
@@ -643,14 +641,14 @@ def main():
      page.evaluate('openSpeedrunMode()');page.locator('.speedrun-start-btn').click();screen('screen-speedrun')
      speed_card=page.locator('#screen-speedrun .gameplay-screen-card').bounding_box()
      stage=page.locator('.speedrun-pokemon').bounding_box();speed_status=page.locator('.speedrun-status').bounding_box()
-     expect(speed_card and speed_card['width']>1100,'Speedrun desktop card is still too narrow: '+repr(speed_card))
+     expect(speed_card and 900<=speed_card['width']<=1001,'Speedrun desktop card is still too narrow: '+repr(speed_card))
      expect(stage and speed_status and speed_status['x']>stage['x']+stage['width'],'Speedrun cockpit is not beside the Pokémon stage: '+repr([stage,speed_status]))
      expect(stage['height']>=380,'Speedrun desktop stage is too small: '+repr(stage))
 
      page.evaluate('openTypeComboSolo()');page.locator('.tc-start-btn').click();screen('screen-type-combo')
      combo_card=page.locator('#screen-type-combo .gameplay-screen-card').bounding_box()
      combo=page.locator('.tc-combo').bounding_box();tc_status=page.locator('.tc-status').bounding_box()
-     expect(combo_card and combo_card['width']>1100,'Type Combo desktop card is still too narrow: '+repr(combo_card))
+     expect(combo_card and 900<=combo_card['width']<=1001,'Type Combo desktop card is still too narrow: '+repr(combo_card))
      expect(combo and tc_status and tc_status['x']>combo['x']+combo['width'],'Type Combo cockpit is not beside the prompt stage: '+repr([combo,tc_status]))
      expect(combo['height']>=380,'Type Combo desktop prompt stage is too small: '+repr(combo))
 

@@ -123,3 +123,7 @@
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-title {font-size:24px!important;}
  .shell-stats-grid {grid-template-columns:repeat(2,1fr);}.shell-stats-grid div:nth-child(-n+2){border-bottom:1px solid var(--shell-line);}.shell-stats-grid div:nth-child(2){border-right:0;}
 }
+
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .visual-clue-box {transform:none!important;box-sizing:border-box!important;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {grid-column:1 / -1;}
+@media(min-width:1280px){#pokdle-app.design-refresh .focused-mode-screen #draft-options {grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
