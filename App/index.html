@@ -164,7 +164,14 @@
       </section>
 
       <section class="home-discovery" aria-labelledby="home-discovery-title">
-        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">À quoi on joue ?</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div>
+        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton jeu</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div>
+        <div id="home-game-filters" class="home-game-filters" aria-label="Filtrer les jeux">
+          <button data-action="filterHomeGames" data-args='["popular"]' aria-pressed="true">Populaires</button>
+          <button data-action="filterHomeGames" data-args='["guess"]' aria-pressed="false">Deviner</button>
+          <button data-action="filterHomeGames" data-args='["think"]' aria-pressed="false">Réflexion</button>
+          <button data-action="filterHomeGames" data-args='["arcade"]' aria-pressed="false">Arcade</button>
+          <button data-action="filterHomeGames" data-args='["strategy"]' aria-pressed="false">Stratégie</button>
+        </div>
         <div class="home-games-grid" id="home-games-grid"></div>
       </section>
 

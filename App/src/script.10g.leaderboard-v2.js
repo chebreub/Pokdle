@@ -206,7 +206,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
       : '';
 
     const rows=Array.isArray(data?.top)?data.top:[];
-    const topThree=rows.filter(row=>Number(row.rank)<=3);
+    const topThree=rows.filter(row=>Number(row.rank)<=3).sort((a,b)=>[2,1,3].indexOf(Number(a.rank))-[2,1,3].indexOf(Number(b.rank)));
     const rest=rows.filter(row=>Number(row.rank)>3);
 
     const podiumHtml=topThree.length
@@ -254,13 +254,14 @@ function openLeaderboardV2(mode="daily",scope="all") {
         '<div class="lbv3-title"><span>À CHACUN SON RECORD</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+' · Meilleure performance par joueur.</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
-      '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-mode-grid">'+modeTabs+'</div></div>'+
+      '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-mode-grid">'+modeTabs+'<button type="button" class="lbv3-mode-tab" data-action="openWeeklyLeagueRanking">Ligue · 3 disciplines</button></div></div>'+
       genTabs+
+      '<div class="leaderboard-content"><div class="leaderboard-main">'+
       personalHtml+
       podiumHtml+
       listHtml+
       aroundHtml+
-      emptyHtml+
+      emptyHtml+'</div>'+(typeof leaderboardLeagueAside === "function" ? leaderboardLeagueAside(data,current,requestedScope) : '')+'</div>'+
     '</div>';
 
     ensureOverlay("Classements",body);

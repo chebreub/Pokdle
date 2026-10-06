@@ -47,6 +47,20 @@ def main():
      page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"',timeout=20000)
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
     check('home',boot)
+    def home_filters_and_login():
+     try:
+      page.locator('#home-game-filters button').filter(has_text='Deviner').click()
+      expect(page.locator('#home-games-grid [data-action="startPixelGame"]').is_visible(),'Guess filter omits Pixel')
+      page.locator('#home-game-filters button').filter(has_text='Stratégie').click()
+      expect(page.locator('#home-games-grid .home-game').count()==1,'Strategy filter includes unrelated modes')
+      page.evaluate('openLoginWelcome()')
+      expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
+      expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
+      if width in (390,1366): page.screenshot(path=str(out/f'{width}-login-welcome.jpg'),quality=90,animations='disabled')
+     finally:
+      page.evaluate('closeOverlayModal();filterHomeGames("popular")')
+     return screen('screen-config')
+    check('home-filters-login',home_filters_and_login,False)
     def audit_home_readability():
      colors=page.locator('#daily-hero-streak').evaluate('(e)=>({fg:getComputedStyle(e).color,bg:getComputedStyle(e).backgroundColor})')
      import re
