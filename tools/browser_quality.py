@@ -423,8 +423,8 @@ def main():
        page.set_viewport_size({'width':w,'height':h})
        for action,mode in [('startDailyGame','daily'),('startCryGame','cry'),('startMysteryStatGame','mystery')]:
         start(action,'screen-game')
-        if mode=='daily': page.wait_for_function('dailyServerState?.status === "playing" && !dailyRequestInFlight')
-        if mode=='mystery': page.wait_for_function('mysteryClues.length === 8 && mysteryClues[1].value !== "Chargement..."',timeout=15000)
+        if mode=='daily': page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
+        if mode=='mystery': page.wait_for_function('() => mysteryClues.length === 8 && mysteryClues[1].value !== "Chargement..."',timeout=15000)
         if w in (375,390,1366): page.screenshot(path=str(out/f'{w}-mobile-{mode}-start.jpg'),quality=85,animations='disabled')
         if w>640: continue
         field=page.locator('#guess-input').bounding_box();submit=page.locator('#btn-submit').bounding_box();nav_top=page.locator('#mobile-tabbar').bounding_box()['y']
@@ -461,7 +461,7 @@ def main():
      finally:
       page.set_viewport_size({'width':width,'height':height})
       page.evaluate('closeOverlayModal();startDailyGame()')
-      page.wait_for_function('dailyServerState?.status === "playing" && !dailyRequestInFlight')
+      page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
     check('mobile-guess-entry',mobile_guess_entry,False)
     def daily_resume():
      page.locator('#guess-input').fill('Pikachu');page.locator('#btn-submit').click()
