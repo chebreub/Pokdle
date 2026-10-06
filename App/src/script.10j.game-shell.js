@@ -4,6 +4,15 @@ const GAME_SHELL_MODES = {
   normal: { title: "Pokémon mystère", instruction: "Croise les indices pour retrouver le Pokémon.", kicker: "À TON RYTHME" },
   daily: { title: "Le Pokémon du jour", instruction: "Un même mystère pour tout le monde. À toi de mener l’enquête.", kicker: "RENDEZ-VOUS QUOTIDIEN" },
   challenge: { title: "Le défi de ton ami", instruction: "Ton ami a choisi un Pokémon. Retrouve-le grâce aux indices.", kicker: "DÉFI AMICAL" },
+  silhouette: { title: "Zoom progressif", instruction: "Observe le détail. Chaque essai élargit la vue.", kicker: "OUVRE L’ŒIL" },
+  pixel: { title: "Pokémon pixelisé", instruction: "L’image devient plus nette à chaque proposition.", kicker: "UNE IMAGE À DÉCHIFFRER" },
+  cry: { title: "Le cri mystère", instruction: "Écoute, reconnais, propose. Tu peux rejouer le cri à volonté.", kicker: "TENDS L’OREILLE" },
+  mystery: { title: "Stat Mystère", instruction: "Les statistiques se dévoilent progressivement. Croise-les avec les indices.", kicker: "DERRIÈRE LES CHIFFRES" },
+  description: { title: "Description Pokédex", instruction: "Lis l’extrait du Pokédex pour retrouver son propriétaire.", kicker: "LE PORTRAIT MYSTÈRE" },
+  quiz: { title: "Quiz Pokémon", instruction: "Choisis une réponse et découvre l’explication.", kicker: "À TOI DE JOUER", custom: true },
+  weight: { title: "Duel de poids", instruction: "Quel Pokémon est le plus lourd ? Choisis ta réponse.", kicker: "FAIS PENCHER LA BALANCE", custom: true },
+  evolution: { title: "Chaîne d’évolution", instruction: "Retrouve le Pokémon manquant dans la lignée.", kicker: "LE CHAÎNON MANQUANT", custom: true },
+  order: { title: "Ordre Pokédex", instruction: "Retrouve l’entrée qui complète cette suite.", kicker: "UNE PLACE À RETROUVER", custom: true },
 };
 
 function shellRecentStats(history, mode) {
@@ -66,10 +75,13 @@ function renderGameShell() {
   document.getElementById("shell-notebook")?.classList.toggle("hidden", !meta || !["daily", "normal", "challenge"].includes(gameMode) || gameOver);
   if (!meta) return;
   prepareGameShell();
+  screen.dataset.mechanic = meta.custom ? "custom" : "comparison";
   screen.dataset.finished = String(Boolean(gameOver));
   document.getElementById("shell-mode").textContent = meta.title;
   document.getElementById("shell-title").textContent = meta.title;
   document.getElementById("shell-instruction").textContent = meta.instruction;
+  const guide = screen.querySelector(".shell-guide");
+  if (guide) guide.classList.toggle("hidden", Boolean(meta.custom));
   document.getElementById("shell-kicker").textContent = gameMode === "daily" ? new Date().toLocaleDateString("fr-FR", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }) : meta.kicker;
   document.getElementById("shell-daily")?.setAttribute("aria-pressed", String(gameMode === "daily"));
   document.getElementById("shell-infinite")?.setAttribute("aria-pressed", String(gameMode === "normal"));
