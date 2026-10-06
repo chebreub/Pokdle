@@ -2159,7 +2159,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Partie libre, à volonté</h4>
-            <p>Devine un Pokémon mystère tiré <b>aléatoirement</b> dans les générations que tu as cochées sur l'accueil. Tu peux relancer autant que tu veux.</p>
+            <p>Devine un Pokémon mystère tiré <b>aléatoirement</b> dans les générations choisies avec le bouton Générations. Tu peux relancer autant que tu veux.</p>
           </section>
           <section class="app-help-card">
             <h4>Indices après chaque essai</h4>
@@ -2173,7 +2173,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Zoom progressif</h4>
-            <p>Le sprite est extrêmement <b>zoomé au départ</b> et se dézoome à chaque essai. Tu joues sur les générations cochées sur l'accueil.</p>
+            <p>Le sprite est extrêmement <b>zoomé au départ</b> et se dézoome à chaque essai. Tu joues sur les générations choisies avec le bouton Générations.</p>
           </section>
           <section class="app-help-card">
             <h4>Indices classiques en plus</h4>
@@ -2258,7 +2258,7 @@ const HELP_BY_SCREEN = {
     body: `
       <section class="app-help-card">
         <h4>Choisis tes générations</h4>
-        <p>Sur mobile, touche <b>Modifier</b> dans la carte Générations, puis coche celles que tu veux inclure dans les modes aléatoires. <b>Tout</b> sélectionne les neuf générations ; <b>Gen 1 seule</b> revient à Kanto. Au moins une génération reste sélectionnée.</p>
+        <p>Touche <b>Générations</b> sur l’accueil, dans le catalogue ou dans un mode compatible. Choisis tes régions, puis valide. En cours de jeu, <b>Appliquer et jouer</b> lance une nouvelle partie. Au moins une génération reste sélectionnée.</p>
       </section>
       <section class="app-help-card">
         <h4>Pokémon du jour</h4>
@@ -2570,7 +2570,7 @@ function openHelpModal() {
         <p>Le Pokédex sert à filtrer, comparer et consulter les fiches. Le Team Builder aide à préparer une équipe et la table des types sert de référence.</p>
       </section>
     </div>
-    <p class="app-help-tip">Astuce : les boutons "Tout" et "Aucune" dans Générations changent le pool utilisé par la plupart des modes.</p>
+    <p class="app-help-tip">Astuce : le bouton "Générations" permet de choisir les régions de tes prochaines parties dans les modes compatibles.</p>
   `);
 }
 

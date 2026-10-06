@@ -232,7 +232,7 @@ function renderModeCatalog() {
   const title = document.getElementById('mode-hub-title');
   if (title) title.textContent = modeCatalogTitle[modeCatalogCategory] || modeCatalogTitle.solo;
   document.getElementById('mode-hub-description').textContent = modeCatalogCopy[modeCatalogCategory];
-  document.getElementById('home-gens-card').hidden = modeCatalogCategory === 'explore' || Boolean(query.trim());
+  document.getElementById('home-gens-card').hidden = modeCatalogCategory === 'explore';
   const difficultyField=document.getElementById('mode-difficulty-field');
   if (difficultyField) difficultyField.hidden = modeCatalogCategory === 'explore';
   const difficultySelect=document.getElementById('mode-difficulty');
@@ -257,7 +257,7 @@ function toggleModeRefinements() {
   const button = document.getElementById("mode-refinements-toggle");
   if (button) {
     button.setAttribute("aria-expanded", String(expanded));
-    button.textContent = "Difficulté et générations " + (expanded ? "▴" : "▾");
+    button.textContent = "Filtrer par difficulté " + (expanded ? "▴" : "▾");
   }
 }
 function resetModeCatalog() {

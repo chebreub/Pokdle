@@ -69,6 +69,7 @@ function renderGameShell() {
   const screen = document.getElementById("screen-game");
   if (!screen) return;
   const meta = GAME_SHELL_MODES[gameMode];
+  if(typeof renderGameGenerationControl === "function")renderGameGenerationControl();
   screen.dataset.shell = meta ? "focused" : "";
   for (const id of ["shell-intro", "shell-mode"]) document.getElementById(id)?.classList.toggle("hidden", !meta);
   document.getElementById("shell-selector")?.classList.toggle("hidden", !["daily", "normal"].includes(gameMode));

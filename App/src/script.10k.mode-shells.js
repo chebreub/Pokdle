@@ -24,6 +24,9 @@ function prepareDedicatedShell(id) {
     toolbar.innerHTML = '<button class="btn-ghost" data-action="goToConfig">← Jeux</button><span class="shell-mode">'+escapeHtml(meta.label)+'</span><details class="dedicated-help"><summary>Comment jouer</summary><p>'+escapeHtml(meta.help)+'</p></details>';
     card.prepend(toolbar);
   }
+  if(id === "screen-odd-one-out" && !toolbar.querySelector(".generation-trigger")){
+    const button=document.createElement("button");button.className="generation-trigger";button.dataset.action="openGenerationPicker";button.dataset.args='["odd"]';button.textContent="Générations";toolbar.appendChild(button);
+  }
   const state = meta.state?.();
   const finished = ["gameover", "result", "finished"].includes(state?.phase);
   screen.dataset.finished = String(finished);
