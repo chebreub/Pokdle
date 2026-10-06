@@ -1,0 +1,97 @@
+/* Focused game shell. Loaded last; rules are scoped to the opted-in screens. */
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] {
+  --shell-surface:#fff; --shell-line:#F0E2CF; --shell-muted:#776B63; --shell-ink:#2E2A33;
+  width:100%!important; max-width:1000px!important; margin:24px auto 56px!important;
+  color:var(--shell-ink); display:block;
+}
+#pokdle-app.design-refresh.theme-dark #screen-game[data-shell="focused"] { --shell-surface:#292633;--shell-line:#494153;--shell-muted:#c4b9cd;--shell-ink:#fff8ef; }
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar { display:flex!important;flex-wrap:wrap;align-items:center;gap:12px;padding:0 0 20px!important;border:0!important;background:none!important;box-shadow:none!important; }
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-tags {margin-left:auto;order:3;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #tag-gen,
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] > .mode-banner,
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] > .live-rank-hud,
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-help {display:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-mode {font-weight:800;font-size:13px;padding:8px 12px;border-radius:50px;background:#EFE8FF;color:#57408a;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"][data-game-mode="daily"] .shell-mode {background:#FFD45C;color:#594309;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector {display:flex;padding:4px;border:1px solid var(--shell-line);border-radius:40px;gap:4px;margin-left:auto;background:var(--shell-surface);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector button {font:800 13px Nunito,sans-serif;min-height:40px;padding:6px 16px;border:0;border-radius:30px;background:transparent;color:var(--shell-muted);cursor:pointer;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector button[aria-pressed="true"] {background:#4069E0;color:#fff;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector #shell-daily[aria-pressed="true"] {background:#FFD45C;color:#594309;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-intro {text-align:center;margin:12px 0 24px;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #shell-kicker {font:800 12px Nunito,sans-serif;text-transform:uppercase;letter-spacing:.13em;color:var(--shell-muted);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #shell-title {font:500 clamp(28px,4vw,42px)/1.2 Fredoka,sans-serif;margin:10px 0;color:var(--shell-ink);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #shell-instruction {font-size:16px;line-height:1.6;color:var(--shell-muted);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-notebook {padding:24px;border:1px solid var(--shell-line);border-radius:26px;background:var(--shell-surface);margin:0 0 22px;box-shadow:0 5px 0 #eadfd330;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"][data-game-mode="daily"] .shell-notebook {background:linear-gradient(115deg,#eef5ff,#f5f0ff 60%,#fff0f5);}
+#pokdle-app.design-refresh.theme-dark #screen-game[data-shell="focused"][data-game-mode="daily"] .shell-notebook {background:linear-gradient(115deg,#29364c,#352f49 60%,#43313d);}
+.notebook-heading {display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.notebook-heading span:not(.notebook-stamp) {font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--shell-muted);}
+.notebook-heading h2 {font:500 23px Fredoka,sans-serif;margin:4px 0;}
+.notebook-stamp {display:grid;place-items:center;width:42px;height:42px;border:2px solid #F0524A;color:#F0524A;border-radius:50%;font-size:27px;transform:rotate(-12deg);}
+#shell-facts {display:flex;flex-wrap:wrap;gap:8px;}
+.notebook-fact {background:var(--shell-surface);border:1px solid var(--shell-line);border-radius:12px;padding:9px 12px;font-size:14px;}
+.notebook-empty,#shell-goal {color:var(--shell-muted);font-size:14px;line-height:1.6;margin:0;}
+#shell-goal {border-top:1px solid var(--shell-line);padding-top:14px;margin-top:16px;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .classic-game-shell {display:flex!important;flex-direction:column!important;gap:18px!important;align-items:stretch!important;grid-template-columns:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .classic-game-command {position:relative!important;top:auto!important;display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;order:0!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"][data-finished="true"] .classic-game-command {display:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-wrap {order:0!important;width:100%!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table {width:100%!important;min-width:0!important;table-layout:fixed;border-spacing:5px 8px!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table th {font:800 12px Nunito,sans-serif!important;color:var(--shell-muted)!important;padding:8px 2px!important;white-space:normal!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table th:first-child {width:125px!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table td {font-size:13px!important;padding:12px 4px!important;min-width:0!important;border-radius:14px!important;overflow-wrap:anywhere;box-shadow:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .poke-cell {display:flex;flex-direction:column;gap:3px;font:800 13px Nunito,sans-serif!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .guess-number {font:700 12px Nunito,sans-serif;color:var(--shell-muted);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .c-ok {background:#7ED3A0!important;color:#0E3F25!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .c-close {background:repeating-linear-gradient(135deg,#FFD66B,#FFD66B 6px,#ffdf87 6px,#ffdf87 10px)!important;color:#5C3D00!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .c-wrong {background:#CFC7BD!important;color:#2E2A33!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .comparison-type {display:flex;flex-direction:column;gap:4px;font-size:12px!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .search-bar {display:grid!important;grid-template-columns:1fr auto!important;gap:12px!important;padding:16px!important;margin:0!important;border:1px solid var(--shell-line)!important;border-radius:24px!important;background:var(--shell-surface)!important;box-shadow:0 4px 0 #eadfd330!important;position:relative!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .ac-wrapper {grid-column:1 / -1!important;position:static!important;z-index:30;min-width:0;width:100%!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-input {width:100%!important;min-height:52px!important;font:700 16px Nunito,sans-serif!important;padding:14px 16px!important;border:1px solid var(--shell-line)!important;border-radius:16px!important;background:var(--shell-surface)!important;color:var(--shell-ink)!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac {position:absolute!important;top:calc(100% + 8px)!important;left:10px!important;right:10px!important;width:auto!important;max-height:320px!important;border-radius:18px!important;border:1px solid var(--shell-line)!important;box-shadow:0 14px 40px #2e2a3325!important;background:var(--shell-surface)!important;z-index:100!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .btn-submit {min-height:46px!important;border-radius:30px!important;box-shadow:0 4px 0 #2F51B8!important;font:800 16px Nunito,sans-serif!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #btn-surrender {font-size:13px!important;min-height:44px!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .results-legend {order:0!important;text-align:center;font-size:13px!important;margin:0!important;border:0!important;background:none!important;padding:0!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .results-legend summary {min-height:44px;align-content:center;cursor:pointer;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-guide {order:10;padding:18px 22px;border:1px solid var(--shell-line);border-radius:22px;background:var(--shell-surface);color:var(--shell-muted);font-size:14px;line-height:1.7;}
+.shell-guide summary {font-weight:800;min-height:28px;cursor:pointer;}
+#pokdle-app.design-refresh #guess-ac .ac-types {display:flex;align-items:center;gap:10px;font-size:12px!important;}
+#pokdle-app.design-refresh #guess-ac .comparison-type {display:inline-flex;align-items:center;gap:4px;font-size:12px!important;}
+#pokdle-app.design-refresh #guess-ac .comparison-type img {width:18px!important;height:18px!important;padding:0!important;border:0!important;border-radius:50%;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box {display:flex!important;flex-direction:column!important;gap:20px!important;width:100%!important;max-width:none!important;order:0!important;padding:28px!important;border:1px solid var(--shell-line)!important;border-radius:28px!important;background:var(--shell-surface)!important;box-shadow:0 6px 0 #eadfd350!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box.hidden {display:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box > * {width:100%!important;min-width:0!important;margin:0!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box .win-inner {display:flex!important;justify-content:center;text-align:left;gap:20px!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-title {font:500 30px Fredoka,sans-serif!important;color:var(--shell-ink)!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-text {font-size:16px!important;line-height:1.6;}
+.shell-stats-caption {font-size:12px;color:var(--shell-muted);text-align:center;margin:0 0 10px;}
+.shell-stats-grid {display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--shell-line);border-radius:20px;overflow:hidden;}
+.shell-stats-grid div {text-align:center;padding:16px 8px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--shell-line);}
+.shell-stats-grid div:last-child {border:0;}
+.shell-stats-grid strong {font:500 28px Fredoka,sans-serif;}
+.shell-stats-grid span {font-size:12px;color:var(--shell-muted);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #solo-club-result {display:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box .win-btns {display:flex!important;flex-wrap:wrap;justify-content:center;gap:12px!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .hidden {display:none!important;}
+@media(max-width:640px){
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] {margin-top:12px!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar {gap:8px;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-mode {font-size:12px;padding:8px 10px;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector {margin-left:0;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector button {min-height:44px;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-notebook {padding:18px;border-radius:22px;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table,#pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-body {display:block!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table thead {display:none!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-body tr {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;padding:12px!important;margin:0 0 16px!important;border:1px solid var(--shell-line)!important;border-radius:22px!important;background:var(--shell-surface)!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table td {display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:5px;min-height:84px;padding:10px 5px!important;font-size:14px!important;border:0!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table td::before {font:800 12px Nunito,sans-serif!important;position:static!important;display:block!important;opacity:.8;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table td:first-child {grid-column:1 / -1;min-height:50px!important;background:none!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table td:first-child::before {display:none!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .poke-cell {flex-direction:row!important;gap:10px;font-size:16px!important;width:100%;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #results-table .poke-cell img {width:44px!important;height:44px!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .guess-number {margin-left:auto;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box {padding:20px!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-title {font-size:24px!important;}
+ .shell-stats-grid {grid-template-columns:repeat(2,1fr);}.shell-stats-grid div:nth-child(-n+2){border-bottom:1px solid var(--shell-line);}.shell-stats-grid div:nth-child(2){border-right:0;}
+}

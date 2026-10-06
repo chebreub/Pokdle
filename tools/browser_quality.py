@@ -17,7 +17,7 @@ def main():
   else: raise RuntimeError('QA server did not start')
   with sync_playwright() as pw:
    browser=pw.chromium.launch()
-   for width,height in [(360,800),(390,844),(768,1024),(1366,900),(1920,1080),(2560,1440)]:
+   for width,height in [(360,800),(390,844),(768,1024),(1366,768),(1920,1080),(2560,1440)]:
     ctx=browser.new_context(viewport={'width':width,'height':height},reduced_motion='reduce');page=ctx.new_page();page.set_default_timeout(12000);errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     def expect(value,message):
@@ -247,27 +247,14 @@ def main():
      return screen('screen-game')
     check('cosy-clues',cosy_clues)
     def pc1_classic_board():
-     if width<1280:
-      expect(page.locator('#classic-banner').is_hidden(),'PC1 desktop banner leaked below the desktop breakpoint')
-      return {'skipped':'desktop-only'}
-     expect(page.locator('#screen-game').get_attribute('data-game-mode')=='normal','Classic screen mode marker is missing')
-     expect(page.locator('#classic-banner').is_visible(),'Classic mystery identity banner is missing on desktop')
-     shell=page.locator('#screen-game .classic-game-shell')
-     style=shell.evaluate('(e)=>({display:getComputedStyle(e).display,cols:getComputedStyle(e).gridTemplateColumns})')
-     expect(style['display']=='grid','Classic desktop shell is not a grid: '+repr(style))
-     expect(len([x for x in style['cols'].split(' ') if x])==(2 if width>=1680 else 1),'Classic desktop layout does not adapt to its available width: '+repr(style))
+     expect(page.locator('#screen-game').get_attribute('data-shell')=='focused','Focused game shell is missing')
      command=page.locator('#screen-game .classic-game-command').bounding_box()
      results=page.locator('#screen-game #results-wrap').bounding_box()
-     expect(command and results,'Classic desktop board regions are missing')
-     if width>=1680:
-      expect(results['x']>command['x']+command['width'],'Wide desktop results should stay beside the command panel: '+repr([command,results]))
-      expect(results['width']>command['width'],'Wide desktop clue board should be wider than the command rail: '+repr([command,results]))
-     else:
-      expect(results['y']>=command['y']+command['height'],'Laptop clues should sit below the input: '+repr([command,results]))
-      expect(results['width']>=1200,'Laptop clue board is not using its available width: '+repr(results))
-     expect(page.locator('#results-table th').first.evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=12,'Clue column headers are too small')
-     screen_width=page.locator('#screen-game').bounding_box()['width']
-     expect(screen_width>(1500 if width>=1900 else 1240),'Classic game is still trapped in the old narrow desktop width: '+str(screen_width))
+     expect(command and results,'Game regions are missing')
+     expect(command['y']>=results['y']+results['height'],'Guess history must precede the next input')
+     expect(page.locator('#screen-game').bounding_box()['width']<=1001,'Game exceeds the focused reading width')
+     expect(page.locator('#shell-title').is_visible(),'Game title is missing')
+     expect(page.locator('#screen-game > .live-rank-hud').count()==0,'Ranking interrupts the active investigation')
      return screen('screen-game')
     check('pc1-classic-board',pc1_classic_board)
     def finish():
@@ -276,15 +263,11 @@ def main():
      expect(page.locator('#btn-result-catalog').is_visible(),'Result has no route back to the catalog')
      expect(page.locator('#btn-restart').inner_text().strip()=='Rejouer','Normal replay action is unclear')
      expect(page.locator('#win-ceremony-progress').count()==0,'Loss should not show unchanged collection progress')
-     if width>=1280:
-      win=page.locator('#win-box').bounding_box();history=page.locator('#results-wrap').bounding_box()
-      expect(win and history and win['width']>1000,'PC2 result dashboard is still narrow: '+repr(win))
-      expect(abs(win['x']-history['x'])<3 and abs(win['width']-history['width'])<5,'Result dashboard and clue history do not share the desktop board width: '+repr([win,history]))
-      expect(page.locator('.classic-game-command').evaluate('(e)=>getComputedStyle(e).display')=='none','Finished desktop game still reserves the command rail')
-      cols=page.locator('#win-box').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-      expect(cols==2,'Normal desktop result is not a two-column dashboard: '+str(cols))
-      preview=page.locator('#win-ranking-preview')
-      expect(preview.count()==1 and preview.bounding_box()['x']>page.locator('#win-box .win-inner').bounding_box()['x'],'Ranking preview is not in the desktop stats rail')
+     win=page.locator('#win-box').bounding_box();history=page.locator('#results-wrap').bounding_box()
+     expect(win and history and win['width']<=1001,'Result does not use the focused reading width')
+     expect(abs(win['x']-history['x'])<3,'Result and guess history are misaligned')
+     expect(page.locator('.classic-game-command').evaluate('(e)=>getComputedStyle(e).display')=='none','Completed game retains an inert input')
+     expect(page.locator('#shell-result-stats .shell-stats-grid > div').count()==4,'Real result counters are missing')
      return screen('screen-game')
     check('normal-result',finish)
     def daily_finish():
@@ -293,17 +276,11 @@ def main():
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
      expect('Continuer en illimité' in page.locator('#btn-restart').inner_text(),'Daily result does not explain the next game')
      expect(page.locator('#btn-result-catalog').is_visible(),'Daily result has no catalog exit')
-     if width>=1280:
-      expect(page.locator('#screen-game').get_attribute('data-game-mode')=='daily','Daily screen mode marker is missing')
-      expect(page.locator('#daily-banner').is_visible() and page.locator('#classic-banner').is_hidden(),'Daily and classic identities overlap on desktop')
-      shell_style=page.locator('#screen-game .classic-game-shell').evaluate('(e)=>getComputedStyle(e).display')
-      expect(shell_style=='grid','Daily did not inherit the classic desktop board')
+     expect(page.locator('#screen-game').get_attribute('data-game-mode')=='daily','Daily screen marker is missing')
+     expect(page.locator('#shell-title').inner_text()=='Le Pokémon du jour','Daily identity is missing')
      progress=page.locator('#win-ceremony-progress')
      expect(progress.count()==1 and progress.evaluate('(e)=>e.tagName')=='DETAILS','Collection progress is not a collapsible detail')
-     if width>=1280:
-      win=page.locator('#win-box').bounding_box()
-      expect(win and win['width']>1000,'Daily result dashboard is still narrow: '+repr(win))
-      expect(progress.bounding_box()['x']>page.locator('#win-box .win-inner').bounding_box()['x'],'Pokédex progress is not in the desktop stats rail')
+     expect(page.locator('#shell-result-stats .shell-stats-grid > div').count()==4,'Daily result counters are missing')
      return screen('screen-game')
     check('daily-result',daily_finish)
     def cosy_leaderboard():

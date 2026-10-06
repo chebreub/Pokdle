@@ -181,6 +181,12 @@ function maybeCelebrateLiveRankGoal(mode,data,currentScore) {
   if (typeof gameFeelFloatingMark==="function"&&hud) gameFeelFloatingMark(hud,"Rang en vue","success");
 }
 function renderLiveRankHud(screenId,mode,currentOverride=null) {
+  // The focused shell reserves ranking for the result screen. Keep the ranking
+  // service available to other screens without fetching a HUD on every guess.
+  if (document.getElementById(screenId)?.dataset?.shell === "focused") {
+    clearLiveRankHud(screenId);
+    return;
+  }
   const hud=ensureLiveRankHud(screenId);
   if (!hud||!mode) return;
   const renderSeq=++liveRankRenderSeq;
