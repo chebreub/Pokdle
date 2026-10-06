@@ -414,6 +414,59 @@ def main():
      expect(page.locator('#guess-input').is_enabled(),'Retry does not restore the form')
      return screen('screen-game')
     check('daily-private-start',daily_private_start)
+    def mobile_guess_entry():
+     if width not in (360,390,1366): return {'skipped':'targeted entry viewports'}
+     sizes=[(375,812),(390,844)] if width==390 else [(width,height)]
+     measured=[]
+     try:
+      for w,h in sizes:
+       page.set_viewport_size({'width':w,'height':h})
+       page.wait_for_function('() => !document.querySelector("#gamefeel-layer.is-visible")',timeout=8000)
+       for action,mode in [('startDailyGame','daily'),('startCryGame','cry'),('startMysteryStatGame','mystery')]:
+        start(action,'screen-game')
+        if mode=='daily': page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
+        if mode=='mystery': page.wait_for_function('() => mysteryClues.length === 8 && mysteryClues[1].value !== "Chargement..."',timeout=15000)
+        if w in (375,390,1366): page.screenshot(path=str(out/f'{w}-mobile-{mode}-start.jpg'),quality=85,animations='disabled')
+        if w>640: continue
+        field=page.locator('#guess-input').bounding_box();submit=page.locator('#btn-submit').bounding_box();nav_top=page.locator('#mobile-tabbar').bounding_box()['y']
+        measured.append({'width':w,'mode':mode,'input_top':round(field['y']),'submit_bottom':round(submit['y']+submit['height'])})
+        expect(page.evaluate('scrollY')<=2,'Opening '+mode+' scrolls the page before interaction')
+        expect(page.evaluate('document.activeElement.id !== "guess-input"'),'Opening '+mode+' forces the mobile keyboard')
+        expect(field['y']>=0 and submit['y']+submit['height']<=nav_top-4,'First action is below the mobile navigation: '+repr(measured[-1]))
+        expect(page.locator('#screen-game .game-topbar').bounding_box()['height']<=58,'Mobile commands occupy several lines')
+        commands=page.locator('#screen-game .game-topbar').evaluate('(bar)=>[...bar.children].map(e=>{const r=e.getBoundingClientRect();return {id:e.id||e.className,left:r.left,right:r.right,width:r.width}}).filter(r=>r.width>0).sort((a,b)=>a.left-b.left)')
+        expect(all(c['right']<=w and (i==0 or commands[i-1]['right']<=c['left']) for i,c in enumerate(commands)),'Mobile commands overlap: '+repr(commands))
+        if mode=='daily':
+         expect(not page.locator('#shell-notebook').evaluate('(e)=>e.open'),'Empty notebook is expanded on mobile')
+         page.locator('#shell-notebook > summary').click()
+         expect(page.locator('#shell-notebook').evaluate('(e)=>e.open'),'Notebook cannot be opened')
+         page.locator('#shell-notebook > summary').click()
+        page.locator('#guess-input').fill('p')
+        page.locator('#guess-ac .ac-item').nth(4).wait_for(state='visible')
+        page.wait_for_timeout(100)
+        if w in (375,390): page.screenshot(path=str(out/f'{w}-mobile-{mode}-suggestions.jpg'),quality=85,animations='disabled')
+        field=page.locator('#guess-input').bounding_box();items=page.locator('#guess-ac .ac-item').evaluate_all('(els)=>els.slice(0,5).map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom}})')
+        nav_top=page.locator('#mobile-tabbar').bounding_box()['y'];list_box=page.locator('#guess-ac').bounding_box()
+        expect(field['y']>=0 and len(items)==5 and items[-1]['bottom']<=min(nav_top-4,list_box['y']+list_box['height']),'Five suggestions are not visible with the input: '+repr([field,items,list_box,nav_top]))
+        expect(page.locator('#guess-ac .ac-item').evaluate_all('(els)=>els.slice(0,5).every(e=>{const r=e.getBoundingClientRect(),text=e.querySelector(".ac-name").parentElement.getBoundingClientRect();return text.top>=r.top && text.bottom<=r.bottom && text.right<=r.right})'),'Suggestion names or types overflow their row')
+        expect(page.locator('#guess-ac .ac-item').first.evaluate('(e)=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.left+20,r.top+r.height/2))}'),'First suggestion is covered by another control')
+        page.locator('#guess-input').press('Escape')
+        expect(page.locator('#guess-ac').is_hidden(),'Escape leaves mobile suggestions open')
+       if w<=640:
+        # A reduced visible area checks the adaptive list; real phone keyboards remain a device check.
+        page.set_viewport_size({'width':w,'height':430});page.locator('#guess-input').fill('p');page.wait_for_timeout(100)
+        field=page.locator('#guess-input').bounding_box();first=page.locator('#guess-ac .ac-item').first.bounding_box();nav_top=page.locator('#mobile-tabbar').bounding_box()['y']
+        expect(field['y']>=0 and first['y']+first['height']<=nav_top,'Compact viewport hides the input or first suggestion: '+repr([field,first,nav_top]))
+        if w==390: page.screenshot(path=str(out/'390-mobile-short-viewport.jpg'),quality=85,animations='disabled')
+        page.locator('#guess-ac .ac-item').first.click()
+        expect(page.evaluate('attempts === 1'),'Tapping a mobile suggestion does not submit exactly once')
+        page.evaluate('typeof closePokedexRegistration === "function" && closePokedexRegistration()')
+      return measured
+     finally:
+      page.set_viewport_size({'width':width,'height':height})
+      page.evaluate('closeOverlayModal();startDailyGame()')
+      page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
+    check('mobile-guess-entry',mobile_guess_entry,False)
     def daily_resume():
      page.locator('#guess-input').fill('Pikachu');page.locator('#btn-submit').click()
      page.wait_for_function('() => attempts === 1 && !dailyRequestInFlight')

@@ -530,7 +530,7 @@ function startGameWithSecret(secret, pool, options = {}) {
   showScreen("screen-game");
   setGlobalNavActive("game");
 
-  document.getElementById("guess-input").focus();
+  if (window.matchMedia("(min-width: 641px)").matches) document.getElementById("guess-input").focus({ preventScroll: true });
 
   registerGameStart();
   saveCurrentGame(options.dailyKey || null);
@@ -605,7 +605,7 @@ function openCurrentGameScreen() {
   hideCustomModeSurfaces();
 
   const input = document.getElementById("guess-input");
-  if (input && gameMode !== "quiz") input.focus();
+  if (input && gameMode !== "quiz" && window.matchMedia("(min-width: 641px)").matches) input.focus({ preventScroll: true });
 
   if (gameMode === "description") {
     renderDescriptionMode();

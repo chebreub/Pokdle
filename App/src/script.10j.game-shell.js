@@ -75,6 +75,11 @@ function renderGameShell() {
   document.getElementById("shell-selector")?.classList.toggle("hidden", !["daily", "normal"].includes(gameMode));
   document.getElementById("shell-notebook")?.classList.toggle("hidden", !meta || !["daily", "normal", "challenge"].includes(gameMode) || gameOver);
   if (!meta) return;
+  const notebook = document.getElementById("shell-notebook");
+  if (notebook && notebook.dataset.mode !== gameMode) {
+    notebook.open = !window.matchMedia("(max-width: 640px)").matches;
+    notebook.dataset.mode = gameMode;
+  }
   prepareGameShell();
   screen.dataset.mechanic = meta.custom ? "custom" : "comparison";
   screen.dataset.finished = String(Boolean(gameOver));
@@ -119,3 +124,35 @@ renderGameOverBox = function(options) {
   queueMicrotask(renderShellResult);
   return result;
 };
+
+// Keep the input and suggestions within the actual visible area, including iOS keyboards.
+// The mobile list stays in document flow, above the submit/abandon buttons.
+let mobileGuessSearchFrame = 0;
+function fitMobileGuessSearch() {
+  mobileGuessSearchFrame = 0;
+  const input = document.getElementById("guess-input"), list = document.getElementById("guess-ac");
+  if (!window.matchMedia("(max-width: 640px)").matches || document.activeElement !== input || !list || list.classList.contains("hidden")) return;
+  const bar = input.closest(".search-bar"), screen = document.getElementById("screen-game");
+  if (!bar || screen?.classList.contains("hidden") || screen?.dataset.shell !== "focused") return;
+  const viewport = window.visualViewport;
+  let top = (viewport?.offsetTop || 0) + 12, bottom = top + (viewport?.height || window.innerHeight) - 24;
+  const header = document.querySelector("body > header");
+  if (header && ["fixed", "sticky"].includes(getComputedStyle(header).position)) top = Math.max(top, header.getBoundingClientRect().bottom + 8);
+  const nav = document.getElementById("mobile-tabbar");
+  if (nav && !document.body.classList.contains("mobile-keyboard-open") && nav.getBoundingClientRect().top > top) bottom = Math.min(bottom, nav.getBoundingClientRect().top - 8);
+  const rowHeight = list.firstElementChild?.getBoundingClientRect().height || 52;
+  const controlsHeight = bar.getBoundingClientRect().height - list.getBoundingClientRect().height;
+  list.style.setProperty("--guess-list-height", Math.max(rowHeight, Math.min(rowHeight * 5 + 2, bottom - top - controlsHeight)) + "px");
+  const rect = bar.getBoundingClientRect();
+  const delta = rect.top < top ? rect.top - top : rect.bottom > bottom ? Math.min(rect.top - top, rect.bottom - bottom) : 0;
+  if (Math.abs(delta) > 1) window.scrollBy({ top: Math.round(delta), behavior: "instant" });
+}
+function scheduleMobileGuessSearch() {
+  if (mobileGuessSearchFrame) cancelAnimationFrame(mobileGuessSearchFrame);
+  mobileGuessSearchFrame = requestAnimationFrame(fitMobileGuessSearch);
+}
+if (typeof window !== "undefined") {
+  window.addEventListener("resize", scheduleMobileGuessSearch);
+  window.visualViewport?.addEventListener("resize", scheduleMobileGuessSearch);
+  window.visualViewport?.addEventListener("scroll", scheduleMobileGuessSearch);
+}
