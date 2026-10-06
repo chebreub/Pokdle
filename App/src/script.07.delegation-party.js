@@ -1554,6 +1554,7 @@ function recordMatchHistory(entry) {
   matchHistory = matchHistory.slice(0, 120);
   saveMatchHistory();
   discoverFromHistory(matchHistory[0]);
+  if (typeof renderShellResult === "function") renderShellResult();
 }
 
 let profileScoreAttackGeneration = 1;

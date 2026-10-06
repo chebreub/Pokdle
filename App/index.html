@@ -36,6 +36,7 @@
   <link rel="stylesheet" href="dist/visual-refresh.min.css">
   <link rel="stylesheet" href="dist/ergonomie.min.css">
   <link rel="stylesheet" href="dist/party-room.min.css">
+  <link rel="stylesheet" href="dist/game-shell.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -951,13 +952,23 @@ EVs: 252 Atk / 4 Def / 252 Spe
     </div>
     <div id="screen-game" class="hidden">
       <div class="game-topbar">
+        <button class="btn-ghost shell-back" data-action="goToConfig" aria-label="Retour aux jeux">← Jeux</button>
+        <span id="shell-mode" class="shell-mode hidden"></span>
         <div class="game-tags">
           <span class="tag-gen" id="tag-gen">Gen 1</span>
           <span class="tag-tries">Essais : <b id="try-count">0</b></span>
         </div>
-        <button class="btn-ghost btn-tiny" data-action="openOnboardingModal">&#10067; Comment jouer</button>
-        <button class="btn-ghost" data-action="goToConfig">&#8592; Changer</button>
+        <div id="shell-selector" class="shell-selector hidden" aria-label="Choisir le défi">
+          <button data-action="startDailyGame" id="shell-daily">Du jour</button>
+          <button data-action="startNormalGame" id="shell-infinite">Illimité</button>
+        </div>
+        <button class="btn-ghost btn-tiny shell-help" data-action="openOnboardingModal">Comment jouer</button>
       </div>
+      <div id="shell-intro" class="shell-intro hidden"><p id="shell-kicker"></p><h1 id="shell-title"></h1><p id="shell-instruction"></p></div>
+      <section id="shell-notebook" class="shell-notebook hidden" aria-label="Carnet d’enquête">
+        <div class="notebook-heading"><span class="notebook-stamp" aria-hidden="true">◉</span><div><span>CARNET D’ENQUÊTE</span><h2>Ce que tu sais déjà</h2></div></div>
+        <div id="shell-facts" aria-live="polite"></div><p id="shell-goal"></p>
+      </section>
 
       <div id="classic-banner" class="mode-banner classic-mode-banner hidden">
         <div class="pk-tile pk-tile-blue"><svg class="pk-ico"><use href="#i-eye"/></svg></div>

@@ -296,7 +296,13 @@ function addRow(pokemon, cmp) {
     cell.style.setProperty("--reveal-index", String(index));
     if (reducedMotion) cell.classList.add("guess-result-cell-static");
   });
-  tbody.insertBefore(tr, tbody.firstChild);
+  tr.dataset.heightDirection = arrowFor(pokemon.height, secretPokemon.height);
+  tr.dataset.weightDirection = arrowFor(pokemon.weight, secretPokemon.weight);
+  tr.querySelector(".poke-cell")?.insertAdjacentHTML("beforeend", `<small class="guess-number">Essai ${tbody.children.length + 1}</small>`);
+  tr.querySelector('[data-label="Hauteur"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.heightDirection === "↑" ? "grand" : "petit"}`);
+  tr.querySelector('[data-label="Poids"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.weightDirection === "↑" ? "lourd" : "léger"}`);
+  tbody.appendChild(tr);
+  if (typeof renderGameShell === "function") renderGameShell();
   if (!reducedMotion) {
     requestAnimationFrame(() => tr.classList.add("is-revealing"));
     const states = [cmp.generation, cmp.altForm, cmp.type1, cmp.type2, cmp.habitat, cmp.color, cmp.stage, cmp.height, cmp.weight];

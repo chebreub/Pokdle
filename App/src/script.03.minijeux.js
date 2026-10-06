@@ -2466,7 +2466,7 @@ function renderGuessAC(matches) {
       <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" data-fallback="${fallbackSprite}" />
       <div>
         <div class="ac-name">${p.name}</div>
-        <div class="ac-sub">${p.type1}${p.type2 ? ` / ${p.type2}` : ""} • Gen ${p.gen}</div>
+        <div class="ac-sub ac-types">${comparisonTypeHtml(p.type1)}${p.type2 ? comparisonTypeHtml(p.type2) : ""}<span>Gen ${p.gen}</span></div>
       </div>
     `;
 
@@ -2585,4 +2585,3 @@ window.addEventListener("DOMContentLoaded", () => {
     setTimeout(filterGuessAC, 0);
   });
 });
-

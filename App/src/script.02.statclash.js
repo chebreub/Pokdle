@@ -706,6 +706,7 @@ function updateTopTag() {
 }
 
 function updateModeBanners() {
+  if (typeof renderGameShell === "function") renderGameShell();
   const gameScreen = document.getElementById("screen-game");
   if (gameScreen) gameScreen.dataset.gameMode = String(gameMode || "normal");
   const classicBanner = document.getElementById("classic-banner");
