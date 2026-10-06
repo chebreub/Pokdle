@@ -2031,6 +2031,8 @@ function showScreen(id) {
   if (id !== "screen-multiplayer") hideMultiplayerWinOverlay();
   hideAllScreens();
   setScreenVisibility(target, true);
+  if (id === "screen-game" && typeof renderGameShell === "function") renderGameShell();
+  if (typeof prepareDedicatedShell === "function") prepareDedicatedShell(id);
   window.scrollTo(0, 0);
   return true;
 }

@@ -1,4 +1,32 @@
 /* Focused game shell. Loaded last; rules are scoped to the opted-in screens. */
+#pokdle-app.design-refresh .focused-mode-screen {max-width:1000px!important;width:100%!important;margin:24px auto 56px!important;--shell-line:#F0E2CF;--shell-muted:#776B63;}
+#pokdle-app.design-refresh.theme-dark .focused-mode-screen {--shell-line:#494153;--shell-muted:#c4b9cd;}
+#pokdle-app.design-refresh .focused-mode-screen > .gameplay-screen-card {padding:24px!important;border-radius:28px!important;box-shadow:0 5px 0 #eadfd330!important;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--shell-line);margin-bottom:24px;}
+#pokdle-app.design-refresh .focused-mode-screen .shell-mode {font:800 13px Nunito,sans-serif;padding:8px 12px;border-radius:30px;background:#EFE8FF;color:#57408a;}
+.dedicated-help {margin-left:auto;max-width:400px;color:var(--shell-muted);font-size:14px;line-height:1.6;}
+.dedicated-help summary {min-height:44px;align-content:center;cursor:pointer;font-weight:800;}
+#pokdle-app.design-refresh .focused-mode-screen .ranking-head {background:none!important;padding:0!important;border:0!important;box-shadow:none!important;}
+#pokdle-app.design-refresh .focused-mode-screen .card-title {font:500 30px Fredoka,sans-serif!important;}
+#pokdle-app.design-refresh .focused-mode-screen .card-desc {font:400 16px/1.6 Nunito,sans-serif!important;}
+#pokdle-app.design-refresh .focused-mode-screen .ranking-head [data-action="goToConfig"] {display:none!important;}
+#pokdle-app.design-refresh .focused-mode-screen[data-shell="focused"] .live-rank-hud {display:none!important;}
+.dedicated-result-footer {border-top:1px solid var(--shell-line);padding-top:24px;margin-top:24px;}
+.dedicated-result-actions {display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:20px;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] > :is(.challenge-panel,.visual-clue-box) {width:100%!important;max-width:none!important;margin:0 0 24px!important;padding:24px!important;background:var(--shell-surface)!important;border:1px solid var(--shell-line)!important;border-radius:26px!important;box-shadow:0 5px 0 #eadfd330!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .visual-clue-canvas {height:250px!important;max-height:35vh!important;background:none!important;border:0!important;box-shadow:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .cry-player-card {background:transparent!important;border:0!important;box-shadow:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #description-text {max-width:660px;margin:20px auto;font:500 20px/1.8 Nunito,sans-serif!important;text-align:center;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0;list-style:none;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list li {padding:16px;border:1px solid var(--shell-line);border-radius:16px;background:transparent;font-size:16px;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"][data-mechanic="custom"] .results-legend {display:none!important;}
+@media(max-width:640px){
+ #pokdle-app.design-refresh .focused-mode-screen > .gameplay-screen-card {padding:16px!important;border-radius:22px!important;}
+ #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {gap:8px;margin-bottom:16px;padding-bottom:12px;}
+ .dedicated-help {width:100%;margin:0;}.dedicated-help summary {min-height:40px;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] > :is(.challenge-panel,.visual-clue-box) {padding:18px!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list {grid-template-columns:1fr;}
+}
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] {
   --shell-surface:#fff; --shell-line:#F0E2CF; --shell-muted:#776B63; --shell-ink:#2E2A33;
   width:100%!important; max-width:1000px!important; margin:24px auto 56px!important;
