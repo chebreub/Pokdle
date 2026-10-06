@@ -421,6 +421,7 @@ def main():
      try:
       for w,h in sizes:
        page.set_viewport_size({'width':w,'height':h})
+       page.wait_for_function('() => !document.querySelector("#gamefeel-layer.is-visible")',timeout=8000)
        for action,mode in [('startDailyGame','daily'),('startCryGame','cry'),('startMysteryStatGame','mystery')]:
         start(action,'screen-game')
         if mode=='daily': page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
@@ -447,6 +448,7 @@ def main():
         field=page.locator('#guess-input').bounding_box();items=page.locator('#guess-ac .ac-item').evaluate_all('(els)=>els.slice(0,5).map(e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom}})')
         nav_top=page.locator('#mobile-tabbar').bounding_box()['y'];list_box=page.locator('#guess-ac').bounding_box()
         expect(field['y']>=0 and len(items)==5 and items[-1]['bottom']<=min(nav_top-4,list_box['y']+list_box['height']),'Five suggestions are not visible with the input: '+repr([field,items,list_box,nav_top]))
+        expect(page.locator('#guess-ac .ac-item').evaluate_all('(els)=>els.slice(0,5).every(e=>{const r=e.getBoundingClientRect(),text=e.querySelector(".ac-name").parentElement.getBoundingClientRect();return text.top>=r.top && text.bottom<=r.bottom && text.right<=r.right})'),'Suggestion names or types overflow their row')
         expect(page.locator('#guess-ac .ac-item').first.evaluate('(e)=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.left+20,r.top+r.height/2))}'),'First suggestion is covered by another control')
         page.locator('#guess-input').press('Escape')
         expect(page.locator('#guess-ac').is_hidden(),'Escape leaves mobile suggestions open')

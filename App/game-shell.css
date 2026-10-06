@@ -299,4 +299,6 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .ac-item > div {min-width:0;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .ac-name {font-size:14px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .ac-types {gap:5px!important;white-space:nowrap;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .comparison-type {flex-direction:row;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .comparison-type img {flex:0 0 18px!important;}
 }
