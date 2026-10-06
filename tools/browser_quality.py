@@ -433,6 +433,8 @@ def main():
         expect(page.evaluate('document.activeElement.id !== "guess-input"'),'Opening '+mode+' forces the mobile keyboard')
         expect(field['y']>=0 and submit['y']+submit['height']<=nav_top-4,'First action is below the mobile navigation: '+repr(measured[-1]))
         expect(page.locator('#screen-game .game-topbar').bounding_box()['height']<=58,'Mobile commands occupy several lines')
+        commands=page.locator('#screen-game .game-topbar').evaluate('(bar)=>[...bar.children].map(e=>{const r=e.getBoundingClientRect();return {id:e.id||e.className,left:r.left,right:r.right,width:r.width}}).filter(r=>r.width>0).sort((a,b)=>a.left-b.left)')
+        expect(all(c['right']<=w and (i==0 or commands[i-1]['right']<=c['left']) for i,c in enumerate(commands)),'Mobile commands overlap: '+repr(commands))
         if mode=='daily':
          expect(not page.locator('#shell-notebook').evaluate('(e)=>e.open'),'Empty notebook is expanded on mobile')
          page.locator('#shell-notebook > summary').click()

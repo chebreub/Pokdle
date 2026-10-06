@@ -255,9 +255,9 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar .shell-back {width:44px!important;height:44px;padding:0!important;font-size:0!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-back::before {content:"←";font:700 22px Nunito,sans-serif;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #shell-mode {display:none!important;}
- #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-tags {order:4;margin:0 0 0 auto!important;flex:0 0 auto;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-tags {order:4;width:auto!important;margin:0 0 0 auto!important;flex:0 0 auto;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .tag-tries {padding:6px!important;font-size:12px!important;white-space:nowrap;}
- #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector {min-width:0;margin:0!important;padding:3px;gap:2px;flex:0 1 auto;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector {min-width:0;margin:0!important;padding:3px;gap:2px;flex:0 0 auto;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector button {width:auto!important;padding:6px 9px!important;min-height:38px;font:800 12px Nunito,sans-serif!important;white-space:nowrap;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice {min-height:44px;width:52px!important;padding:6px!important;gap:3px;font-size:12px!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice > span {display:none;}
