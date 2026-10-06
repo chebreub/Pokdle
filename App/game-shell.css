@@ -190,3 +190,55 @@
 @media(min-width:1280px){#pokdle-app.design-refresh .focused-mode-screen #draft-options {grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
 
 @media(min-width:1280px){#pokdle-app.design-refresh #screen-draft-score-attack.focused-mode-screen #draft-mode-card #draft-options, #pokdle-app.design-refresh #screen-draft-arena.focused-mode-screen #draft-mode-card #draft-options {grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
+
+/* Generation preferences share the cosy game palette on every entry point. */
+#pokdle-app.design-refresh .generation-trigger {display:inline-flex!important;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:9px 16px!important;border:1px solid #dfd6ed!important;border-radius:24px!important;background:#f4effc!important;color:#594576!important;box-shadow:0 3px 0 #e7def1!important;font:800 14px/1.25 Nunito,sans-serif!important;cursor:pointer;text-align:left;}
+#pokdle-app.design-refresh .generation-trigger.hidden,#pokdle-app.design-refresh .generation-trigger[hidden] {display:none!important;}
+.generation-trigger .pk-ico {width:20px;height:20px;flex:0 0 20px;}
+.generation-trigger small {display:block;margin-top:2px;font:700 12px/1.3 Nunito,sans-serif;color:inherit;}
+.home-discovery-actions {display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+#pokdle-app.design-refresh #screen-all-modes .mode-hub-controls {grid-template-columns:minmax(220px,1fr) minmax(210px,260px) 160px!important;align-items:center!important;}
+#pokdle-app.design-refresh #screen-all-modes #home-gens-card {margin:0!important;min-height:60px;padding:10px 16px!important;border:1px solid #dfd6ed!important;border-radius:22px!important;background:#f4effc!important;color:#594576!important;box-shadow:0 3px 0 #e7def1!important;grid-column:auto!important;justify-content:space-between;}
+#pokdle-app.design-refresh .mode-refinement-fields {grid-template-columns:1fr;}
+#overlay-modal[data-kind="generations"] .overlay-card {width:min(720px,calc(100vw - 24px))!important;max-width:720px!important;max-height:calc(100dvh - 24px)!important;overflow:auto!important;padding:26px!important;border:1px solid #ebdfd1!important;border-radius:28px!important;background:#fff8ef!important;color:#2e2a33!important;box-shadow:0 12px 50px #38293426!important;}
+#overlay-modal[data-kind="generations"] #overlay-title {font:500 28px/1.2 Fredoka,sans-serif!important;color:#2e2a33!important;}
+.generation-picker {font-family:Nunito,sans-serif;color:#2e2a33;}
+.generation-picker-intro {margin:0 0 18px;color:#776b63;font-size:15px;line-height:1.55;}
+.generation-picker-presets {display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;}
+.generation-picker-presets button {min-height:40px;border:1px solid #e8ddcf;border-radius:22px;background:#fff;color:#594576;padding:8px 13px;font:800 13px Nunito,sans-serif;cursor:pointer;}
+#generation-picker-summary {margin-left:auto;font-size:13px;font-weight:800;color:#776b63;}
+.generation-picker-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+#overlay-modal .generation-choice {position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:105px;padding:16px!important;text-align:left;border:2px solid #eee5dc!important;border-radius:20px!important;background:#fff!important;color:#2e2a33!important;box-shadow:0 3px 0 #eadfd359!important;cursor:pointer;}
+#overlay-modal .generation-choice.is-selected {border-color:#4069e0!important;background:#edf2ff!important;box-shadow:0 3px 0 #c4d1f9!important;}
+.generation-choice-number {font:800 12px/1.5 Nunito,sans-serif;letter-spacing:.05em;color:#776b63;}
+.generation-choice strong {font:500 23px/1.15 Fredoka,sans-serif;color:#2e2a33;}
+.generation-choice small {font:600 13px/1.4 Nunito,sans-serif;color:#776b63;}
+.generation-choice-check {position:absolute;right:11px;top:11px;display:grid;place-items:center;width:21px;height:21px;border:1px solid #d9cfc5;border-radius:50%;background:#fff;color:transparent;font-size:13px;}
+.is-selected .generation-choice-check {border-color:#4069e0;background:#4069e0;color:#fff;}
+.generation-picker-note {margin:16px 0;color:#776b63;font:600 13px/1.5 Nunito,sans-serif;}
+.generation-picker-actions {display:flex;justify-content:flex-end;gap:10px;}
+#overlay-modal .generation-picker-actions button {width:auto!important;min-width:0!important;max-width:100%;min-height:48px;margin:0!important;border-radius:25px!important;padding:10px 20px!important;font:800 14px/1.35 Nunito,sans-serif!important;white-space:normal!important;}
+#overlay-modal .generation-picker-actions .btn-blue {background:#4069e0!important;color:#fff!important;box-shadow:0 4px 0 #2f51b8!important;}
+#overlay-modal .generation-picker-actions .btn-ghost {background:#fff!important;color:#776b63!important;border:1px solid #e8ddcf!important;}
+.generation-choice:focus-visible,.generation-trigger:focus-visible,.generation-picker button:focus-visible {outline:3px solid #4069e0!important;outline-offset:3px;}
+@media(max-width:760px){
+ #pokdle-app.design-refresh #screen-all-modes .mode-hub-controls {grid-template-columns:1fr!important;}
+ #pokdle-app.design-refresh #screen-all-modes #home-gens-card {width:100%;}
+ .home-discovery-actions {gap:8px;}
+ #overlay-modal[data-kind="generations"] .overlay-card {padding:20px!important;border-radius:24px!important;}
+ #overlay-modal[data-kind="generations"] #overlay-title {font-size:25px!important;}
+ .generation-picker-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+ #overlay-modal .generation-choice {min-height:87px;padding:12px!important;border-radius:17px!important;}
+ .generation-choice strong {font-size:21px;}
+ .generation-choice-number {font-size:12px;}
+ .generation-picker-intro {font-size:14px;margin-bottom:12px;}
+ #generation-picker-summary {width:100%;margin:3px 0 0;}
+ .generation-picker-actions {display:grid;grid-template-columns:auto minmax(0,1fr);position:sticky;bottom:-20px;padding:12px 0;background:#fff8ef;}
+ #overlay-modal .generation-picker-actions button {padding:10px 14px!important;}
+}
+body.theme-dark #overlay-modal[data-kind="generations"] .overlay-card {background:#292634!important;border-color:#514758!important;}
+body.theme-dark #overlay-modal[data-kind="generations"] #overlay-title,body.theme-dark .generation-choice strong {color:#fff8ef!important;}
+body.theme-dark #overlay-modal .generation-choice {background:#373140!important;border-color:#514758!important;}
+body.theme-dark #overlay-modal .generation-choice.is-selected {background:#353f68!important;border-color:#91a8f9!important;}
+body.theme-dark :is(.generation-picker-intro,.generation-choice-number,.generation-choice small,.generation-picker-note,#generation-picker-summary) {color:#d7cadf!important;}
+body.theme-dark .generation-picker-actions {background:#292634;}

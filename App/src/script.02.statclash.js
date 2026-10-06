@@ -3,6 +3,7 @@
 // ============================================================
 function buildGenGrid() {
   const grid = document.getElementById("gen-grid");
+  if(!grid){updateHomeGensSummary();return;}
   grid.innerHTML = "";
 
   Object.entries(GENERATIONS).forEach(([n, data]) => {
@@ -67,6 +68,7 @@ function updateHomeGensSummary() {
     ? "Toutes les générations"
     : gens.map((gen) => `Gen ${gen}`).join(" · ");
   summary.textContent = `${gens.length <= 3 ? label : `${gens.length} générations`} · ${total} Pokémon`;
+  if(typeof renderGenerationSummaries === "function")renderGenerationSummaries();
 }
 
 function toggleHomeGensCard() {

@@ -28,6 +28,10 @@ def main():
       result=action();item['ok']=True
       if result is not None: item['detail']=result
      except Exception as e: item['error']=str(e)[:1200]
+     finally:
+      if name.startswith('generation-'):
+       # A failed picker assertion must not leave a modal blocking later journeys.
+       page.evaluate('closeOverlayModal();setSelectedGenerations([1]);writeJson(GENERATION_PREFERENCE_KEY,[1])')
      if capture:
       try: page.screenshot(path=str(out/f'{width}-{name}.jpg'),quality=85,animations='disabled')
       except Exception as e: item['screenshot_error']=str(e)[:180]
@@ -47,6 +51,28 @@ def main():
      page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"',timeout=20000)
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
     check('home',boot)
+    def generation_home():
+     trigger=page.locator('#screen-config [data-action="openGenerationPicker"]')
+     expect(trigger.is_visible(),'Generation preferences are missing from home')
+     trigger.click();picker=page.locator('#overlay-modal[data-kind="generations"]')
+     expect(picker.locator('.generation-choice').count()==9,'Picker omits a generation')
+     expect(picker.locator('[data-generation="9"]').inner_text().find('Paldea')>=0,'Region labels are missing')
+     picker.locator('[data-generation="1"]').click()
+     expect(picker.locator('[data-generation="1"]').get_attribute('aria-pressed')=='true','Final selected region can be unchecked')
+     picker.locator('[data-generation="9"]').click();picker.locator('[data-generation="1"]').click()
+     expect(page.evaluate('[...selectedGens].join()')=='1','Editing the draft changes the game before confirmation')
+     palette=picker.locator('.overlay-card').evaluate('(e)=>({bg:getComputedStyle(e).backgroundColor,radius:parseFloat(getComputedStyle(e).borderRadius)})')
+     expect(palette['bg']=='rgb(255, 248, 239)' and palette['radius']>=22,'Generation picker does not use the cosy palette: '+repr(palette))
+     expect('Fredoka' in picker.locator('#overlay-title').evaluate('(e)=>getComputedStyle(e).fontFamily'),'Picker title has the old typography')
+     actions=picker.locator('.generation-picker-actions button').evaluate_all('(buttons)=>buttons.map(e=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width,overflow:e.scrollWidth-e.clientWidth}})')
+     expect(all(b['left']>=0 and b['right']<=width and b['overflow']<=1 for b in actions),'Generation actions are clipped: '+repr(actions))
+     expect(actions[1]['width']>=160,'Generation confirmation button is crushed: '+repr(actions))
+     expect(picker.locator('.generation-choice').evaluate_all('(cards)=>cards.every(e=>e.querySelector(".generation-choice-number").getBoundingClientRect().right < e.querySelector(".generation-choice-check").getBoundingClientRect().left)'),'Generation number overlaps its checkbox')
+     if width in (390,1366): page.screenshot(path=str(out/f'{width}-generation-picker.jpg'),quality=85,animations='disabled')
+     picker.locator('[data-action="closeOverlayModal"]').last.click()
+     expect(page.evaluate('[...selectedGens].join()')=='1','Cancel applied the generation selection')
+     return screen('screen-config')
+    check('generation-home',generation_home,False)
     def home_filters_and_login():
      try:
       page.locator('#home-game-filters button').filter(has_text='Deviner').click()
@@ -140,6 +166,14 @@ def main():
       page.locator('#mode-refinements-toggle').click()
      return screen('screen-all-modes')
     check('audit-catalog',audit_catalog)
+    def generation_catalog():
+     expect(page.locator('#home-gens-card').is_visible(),'Generation choice is hidden with difficulty filters')
+     page.locator('#mode-search').fill('cri')
+     expect(page.locator('#home-gens-card').is_visible(),'Searching for a mode hides its generation setting')
+     page.locator('#home-gens-card').click();page.locator('#overlay-modal .generation-choice').first.wait_for(state='visible')
+     page.keyboard.press('Escape');page.locator('#mode-search').fill('')
+     return screen('screen-all-modes')
+    check('generation-catalog',generation_catalog)
     def pc0_desktop_foundations():
      if width<1101: return {'skipped':'desktop-only'}
      page.evaluate("goToConfig()");screen('screen-config')
@@ -252,6 +286,23 @@ def main():
      rendered=' '.join(style.values())
      blue_tokens=('64, 105, 224','64,105,224','57, 118, 236','57,118,236','47, 118, 255','47,118,255','40, 100, 219','40,100,219','36, 88, 201','36,88,201')
      expect(any(token in rendered for token in blue_tokens),'Primary guess CTA is not using the D0 blue treatment: '+repr(style))
+    def generation_games():
+     for action in ['startSilhouetteGame','startPixelGame','startCryGame']:
+      start(action,'screen-game')
+      expect(page.locator('#game-generation-choice').is_visible(),action+' has no generation control')
+     page.locator('#game-generation-choice').click()
+     picker=page.locator('#overlay-modal[data-kind="generations"]')
+     picker.locator('[data-generation="9"]').click();picker.locator('[data-generation="1"]').click()
+     picker.locator('[data-action="applyGenerationChoices"]').click()
+     expect(page.evaluate('gameMode === "cry" && secretPokemon.gen === 9 && activePool.every(p=>p.gen===9)'),'Changing generations did not relaunch the same mode with the selected pool')
+     expect(page.evaluate('JSON.parse(localStorage.getItem(GENERATION_PREFERENCE_KEY)).join()')=='9','Selection was not remembered')
+     if width in (390,1366): page.screenshot(path=str(out/f'{width}-generation-cry.jpg'),quality=85,animations='disabled')
+     page.locator('#game-generation-choice').click()
+     picker.locator('[data-action="presetGenerationChoices"]').filter(has_text="Kanto").click()
+     picker.locator('[data-action="applyGenerationChoices"]').click()
+     expect(page.evaluate('secretPokemon.gen === 1'),'Kanto preset did not restore the pool')
+     return screen('screen-game')
+    check('generation-games',generation_games,False)
     def autocomplete_overlay():
      start('startNormalGame','screen-game');standard_guess_shell()
      page.locator('#guess-input').fill('Bul')
@@ -351,6 +402,7 @@ def main():
      start('startDailyGame','screen-game')
      page.locator('#daily-server-retry').wait_for(state='visible')
      expect(page.evaluate('secretPokemon === null && attempts === 0'),'Offline Daily fell back to a local target')
+     expect(page.locator('#game-generation-choice').is_hidden(),'Common Daily incorrectly allows changing its generations')
      expect(page.locator('#guess-input').is_disabled(),'Unavailable Daily still accepts guesses')
      expect('serveur' in page.locator('#err-msg').inner_text().lower(),'Unavailable Daily has no explanation')
      return screen('screen-game')

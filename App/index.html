@@ -165,7 +165,7 @@
       </section>
 
       <section class="home-discovery" aria-labelledby="home-discovery-title">
-        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton jeu</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div>
+        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton jeu</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><div class="home-discovery-actions"><button class="generation-trigger" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div></div>
         <div id="home-game-filters" class="home-game-filters" aria-label="Filtrer les jeux">
           <button data-action="filterHomeGames" data-args='["popular"]' aria-pressed="true">Populaires</button>
           <button data-action="filterHomeGames" data-args='["guess"]' aria-pressed="false">Deviner</button>
@@ -271,8 +271,9 @@
             <button type="button" data-action="setModeCatalogCategory" data-args='["all"]' data-mode-category="all" aria-pressed="false">Tout</button>
           </div>
           <label class="mode-search">Rechercher<input id="mode-search" type="search" placeholder="Nom d’un mode…" autocomplete="off" /></label>
+          <button id="home-gens-card" class="generation-trigger generation-trigger-catalog is-collapsed" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span><b>Générations</b><small id="home-gens-summary" data-generation-summary>Kanto</small></span><span aria-hidden="true">⌄</span></button>
           <div class="mode-refinements" id="mode-refinements">
-          <button type="button" id="mode-refinements-toggle" class="btn-ghost" data-action="toggleModeRefinements" aria-expanded="false" aria-controls="mode-refinement-fields">Difficulté et générations ▾</button>
+          <button type="button" id="mode-refinements-toggle" class="btn-ghost" data-action="toggleModeRefinements" aria-expanded="false" aria-controls="mode-refinement-fields">Filtrer par difficulté ▾</button>
           <div class="mode-refinement-fields" id="mode-refinement-fields">
           <label class="mode-difficulty" id="mode-difficulty-field">Difficulté
             <select id="mode-difficulty" aria-label="Filtrer les jeux par difficulté">
@@ -283,15 +284,7 @@
               <option value="expert">Expert</option>
             </select>
           </label>
-          <div class="pk-genbar is-collapsed" id="home-gens-card">
-            <div class="pk-genbar-lab"><b><svg class="pk-ico"><use href="#i-layers"/></svg> Générations</b><small id="home-gens-summary">Choisis les générations à inclure.</small></div>
-            <div class="gen-grid" id="gen-grid"></div>
-            <div class="pk-genbar-acts">
-              <button class="pk-gbtn pk-gbtn-tout home-gens-edit-only" type="button" data-action="selectAllGenerations">Tout</button>
-              <button class="pk-gbtn pk-gbtn-aucune home-gens-edit-only" type="button" data-action="clearGenerationSelection">Gen 1 seule</button>
-              <button class="pk-gbtn" type="button" data-action="toggleHomeGensCard" aria-expanded="false" aria-controls="gen-grid" id="home-gens-toggle">Modifier ▾</button>
-            </div>
-          </div>
+
           </div>
           </div>
         </div>
@@ -975,6 +968,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <button data-action="startDailyGame" id="shell-daily">Du jour</button>
           <button data-action="startNormalGame" id="shell-infinite">Illimité</button>
         </div>
+        <button id="game-generation-choice" class="generation-trigger hidden" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button>
         <button class="btn-ghost btn-tiny shell-help" data-action="openOnboardingModal">Comment jouer</button>
       </div>
       <div id="shell-intro" class="shell-intro hidden"><p id="shell-kicker"></p><h1 id="shell-title"></h1><p id="shell-instruction"></p></div>
