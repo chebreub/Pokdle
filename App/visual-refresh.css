@@ -5255,7 +5255,8 @@
 #pokdle-app.design-refresh .lbv3-mode-tab[data-lb-mode="daily"].is-active { background:#FFD45C; border-color:#FFD45C; color:#2E2A33; }
 #pokdle-app.design-refresh .lbv3-mode-grid { display:flex; flex-wrap:wrap; gap:8px; }
 #pokdle-app.design-refresh .lbv3-podium { grid-column:1 / -1; display:flex; flex-wrap:wrap; justify-content:center; align-items:stretch; gap:14px; }
-#pokdle-app.design-refresh .lbv3-podium-card { flex:1 1 160px; max-width:340px; min-height:180px; border-radius:24px; border:1px solid var(--ui-line); background:var(--ui-surface); box-shadow:none; color:var(--ui-ink); }
+#pokdle-app.design-refresh .lbv3-podium-card { flex:1 1 160px; max-width:340px; min-height:180px; grid-template-columns:minmax(0,1fr); justify-items:center; text-align:center; border-radius:24px; border:1px solid var(--ui-line); background:var(--ui-surface); box-shadow:none; color:var(--ui-ink); }
+#pokdle-app.design-refresh .lbv3-podium-name { justify-content:center; min-width:0; max-width:100%; }
 #pokdle-app.design-refresh .lbv3-podium-card.rank-1 { background:#FFF2C7; border-color:#E7CC78; color:#5D4821; }
 #pokdle-app.design-refresh .lbv3-podium-card.rank-2 { background:#EEE9FD; color:#504367; }
 #pokdle-app.design-refresh .lbv3-podium-card.rank-3 { background:#FFE8DD; color:#684B3D; }
@@ -5295,14 +5296,13 @@
   .home-game-copy b { font-size:18px; }.home-game-copy > span { font-size:13px; }.home-game-arrow { bottom:14px; left:14px; }
   #pokdle-app.design-refresh #results-table td::before { font-size:12px !important; letter-spacing:0 !important; opacity:1 !important; text-transform:none !important; }
   #pokdle-app.design-refresh #results-table .guess-result-row { border-radius:24px !important; padding:12px !important; gap:6px !important; }
-  #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:20px !important; }
+  #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:16px !important; }
   #pokdle-app.design-refresh .lbv3-scope-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100% !important; border-radius:22px; }
   #pokdle-app.design-refresh .lbv3-scope-tab { min-width:0; padding:8px 5px; font-size:12px; white-space:normal; }
   #pokdle-app.design-refresh .lbv3-mode-grid { flex-wrap:nowrap; overflow-x:auto; max-width:100%; min-width:0; padding-bottom:6px; }
   #pokdle-app.design-refresh .lbv3-mode-tab { flex-shrink:0; }
   #pokdle-app.design-refresh .lbv3-title h3 { font-size:26px; }
-  #pokdle-app.design-refresh .lbv3-scope-tabs { border-radius:20px; }
-  #pokdle-app.design-refresh .lbv3-scope-tab { flex:1 1 auto; font-size:13px; padding-inline:10px; }
+  #pokdle-app.design-refresh .lbv3-personal { grid-template-columns:repeat(2,minmax(0,1fr)); }
   #pokdle-app.design-refresh .lbv3-podium { gap:8px; }
   #pokdle-app.design-refresh .lbv3-podium-card { flex-basis:80px; min-width:0; min-height:160px; padding:12px 6px; }
   #pokdle-app.design-refresh .lbv3-podium-name b { font-size:12px; overflow-wrap:anywhere; }

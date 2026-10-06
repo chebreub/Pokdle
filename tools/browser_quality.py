@@ -344,10 +344,15 @@ def main():
      expect(podium and listing and listing['y']>=podium['y']+podium['height']-3,'Leaderboard list is not below the podium: '+repr([podium,listing]))
      expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
      expect(page.locator('.lbv3-mode-tab[aria-pressed="true"]').count()==1,'Selected game is not announced')
+     for card in page.locator('.lbv3-podium-card').all():
+      bounds=card.bounding_box()
+      for content in card.locator('.lbv3-podium-name, :scope > strong').all():
+       box=content.bounding_box()
+       expect(box and box['width']>0 and box['x']>=bounds['x'] and box['x']+box['width']<=bounds['x']+bounds['width']+1,'Podium name or score is clipped')
      if width<=640:
       controls=page.locator('.lbv3-controls').bounding_box()
       expect(controls['height']<160,'Mobile filters push the podium too far down: '+repr(controls))
-     page.wait_for_function('!document.querySelector("#gamefeel-layer.is-visible")')
+     page.locator('#gamefeel-layer.is-visible').wait_for(state='hidden')
      return screen('screen-game')
     check('cosy-leaderboard',cosy_leaderboard)
     # Always close the fixture, including after a failed visual assertion.
