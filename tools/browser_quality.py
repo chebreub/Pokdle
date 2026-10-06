@@ -348,13 +348,14 @@ def main():
       controls=page.locator('.lbv3-controls').bounding_box()
       expect(controls['height']<160,'Mobile filters push the podium too far down: '+repr(controls))
      page.wait_for_function('!document.querySelector("#gamefeel-layer.is-visible")')
-     page.screenshot(path=str(out/f'{width}-cosy-leaderboard.jpg'),quality=90,animations='disabled')
-     page.evaluate("""() => {
+     return screen('screen-game')
+    check('cosy-leaderboard',cosy_leaderboard)
+    # Always close the fixture, including after a failed visual assertion.
+    # Otherwise one open modal causes unrelated journeys to time out in sequence.
+    page.evaluate("""() => {
        if (window.__qaLeaderboardFetch) { leaderboardFetchJson=window.__qaLeaderboardFetch; delete window.__qaLeaderboardFetch; }
        if (typeof closeOverlayModal==='function') closeOverlayModal();
      }""")
-     return screen('screen-game')
-    check('cosy-leaderboard',cosy_leaderboard,False)
     def completed_home():
      nav('home','screen-config')
      expect(page.locator('#daily-hero').get_attribute('data-daily-state')=='complete','Daily summary did not update')
