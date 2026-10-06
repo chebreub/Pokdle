@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'quality-artifacts' / 'party-mobile'
 OUT.mkdir(parents=True, exist_ok=True)
 
-def tap(page, selector):
+def tap(page, selector, capture=None):
     button = page.locator(selector)
     button.scroll_into_view_if_needed()
     detail = button.evaluate('''e => {
@@ -21,6 +21,7 @@ def tap(page, selector):
         reachable:!!hit&&e.contains(hit),hit:hit?.outerHTML.slice(0,300),ancestors};
     }''')
     assert detail['reachable'], json.dumps(detail)
+    if capture: page.screenshot(path=str(OUT/capture))
     button.tap(timeout=5000)
 
 def ready(page, expression):
@@ -62,8 +63,7 @@ try:
                     ready(host,'partyRoomState.room?.players?.length===2')
                     stage='select';tap(host,'#party-mode-typecombo')
                     ready(host,'partyRoomState.room?.gameMode === "typecombo"')
-                    host.screenshot(path=str(OUT/f'{engine}-{width}-start.png'))
-                    stage='start';tap(host,'#party-start-btn')
+                    stage='start';tap(host,'#party-start-btn',f'{engine}-{width}-start.png')
                     for page in pages: ready(page,'partyRoomState.room?.status === "playing"')
                     stage='answer'
                     answer=host.evaluate('''() => {
@@ -78,9 +78,8 @@ try:
                     for page in pages: ready(page,'partyRoomState.room?.status === "finished"')
                     # Return from the input/keyboard before using the host actions.
                     host.evaluate('document.activeElement?.blur()')
-                    host.screenshot(path=str(OUT/f'{engine}-{width}-result.png'))
                     round_no=host.evaluate('partyRoomState.room.roundNumber')
-                    stage='next';tap(host,'#party-room-next-btn')
+                    stage='next';tap(host,'#party-room-next-btn',f'{engine}-{width}-result.png')
                     for page in pages: ready(page,f'partyRoomState.room?.status === "playing" && partyRoomState.room.roundNumber === {round_no+1}')
                     case['ok']=True
                 except Exception as error:
