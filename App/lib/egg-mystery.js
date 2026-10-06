@@ -56,6 +56,8 @@ async function initEggDb(db) {
     UNIQUE(round_id, pokemon_id)
   )`);
   await db.query("CREATE INDEX IF NOT EXISTS egg_quota_idx ON egg_guesses(day, player_id, anon_id)");
+  await db.query("ALTER TABLE egg_guesses ADD COLUMN IF NOT EXISTS credited_player_id TEXT");
+  await db.query("CREATE INDEX IF NOT EXISTS egg_credited_quota_idx ON egg_guesses(day, credited_player_id)");
   await db.query("CREATE INDEX IF NOT EXISTS egg_guest_ip_idx ON egg_guesses(day, ip_hash) WHERE player_id IS NULL");
   await db.query(`CREATE TABLE IF NOT EXISTS egg_rewards (
     round_id BIGINT PRIMARY KEY REFERENCES egg_rounds(id),
@@ -83,8 +85,12 @@ function createEggService({ db, pokemon, randomInt = crypto.randomInt, clock = (
     return (await client.query("SELECT * FROM egg_rounds WHERE week_start=$1" + (lock ? " FOR UPDATE" : ""), [week.start])).rows[0];
   }
   async function quota(client, identity, day) {
+    // Bind the guest attempt on first authenticated visit. Counting only the
+    // current cookie would otherwise give an extra attempt on another device.
+    // Keep player_id null so the original guest IP allowance stays consumed.
+    if (identity.playerId) await client.query("UPDATE egg_guesses SET credited_player_id=$1 WHERE day=$2 AND anon_id=$3 AND player_id IS NULL AND credited_player_id IS NULL", [identity.playerId,day,identity.anonId]);
     const result = await client.query(`SELECT count(*)::int AS used FROM egg_guesses WHERE day=$1 AND
-      ((player_id=$2 AND $2 IS NOT NULL) OR anon_id=$3 OR ($2 IS NULL AND player_id IS NULL AND ip_hash=$4))`, [day, identity.playerId || null, identity.anonId, identity.ipHash]);
+      (((player_id=$2 OR credited_player_id=$2) AND $2 IS NOT NULL) OR anon_id=$3 OR ($2 IS NULL AND player_id IS NULL AND ip_hash=$4))`, [day, identity.playerId || null, identity.anonId, identity.ipHash]);
     const limit = identity.playerId ? 2 : 1;
     return { limit, used: result.rows[0].used, remaining: Math.max(0, limit-result.rows[0].used) };
   }

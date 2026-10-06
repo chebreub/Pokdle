@@ -128,6 +128,19 @@ function modeCatalogArtHtml(key, variant='card') {
   }
   const spec=MODE_CATALOG_ART[key];
   if (!spec) return '';
+  if (variant === 'home') {
+    const artwork=spec.ids.slice(0,3).map(id=>'<img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/'+id+'.png" data-fallback="'+modeCatalogSpriteUrl(id)+'" alt="" loading="lazy" decoding="async" width="180" height="180"/>').join('');
+    const cue=spec.effect==='audio'?'<span class="cover-wave">'+[20,42,66,88,60,34,50,76,40].map(n=>'<i style="height:'+n+'px"></i>').join('')+'</span>'
+      :spec.effect==='quiz'?'<span class="cover-question">?</span><span class="cover-answers"><i>A</i><i>B</i><i>C</i></span>'
+      :spec.effect==='versus'?'<span class="cover-compare">↑<small>OU</small>↓</span>'
+      :spec.effect==='scan'?'<span class="cover-lens"></span>'
+      :spec.effect==='stats'?'<span class="cover-stats"><i></i><i></i><i></i><i></i></span>'
+      :spec.effect==='dossier'?'<span class="cover-page"><i></i><i></i><i></i></span>'
+      :spec.effect==='mystery'?'<span class="cover-question">?</span>'
+      :spec.effect==='speed'?'<span class="cover-question">60<small>secondes</small></span>'
+      :spec.effect==='types'?'<span class="cover-types"><img src="img/type-icons/fire.svg" alt=""/><b>+</b><img src="img/type-icons/flying.svg" alt=""/></span>':'';
+    return '<span class="home-cover cover-'+spec.effect+'" aria-hidden="true">'+artwork+cue+'</span>';
+  }
   return '<span class="mode-card-art art-'+spec.effect+' is-'+variant+'" aria-hidden="true">'+
     modeCatalogPreviewHtml(spec)+'</span>';
 }
