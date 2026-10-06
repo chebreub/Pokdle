@@ -457,7 +457,6 @@ def main():
         page.locator('#guess-ac .ac-item').first.click()
         expect(page.evaluate('attempts === 1'),'Tapping a mobile suggestion does not submit exactly once')
         page.evaluate('typeof closePokedexRegistration === "function" && closePokedexRegistration()')
-        page.locator('#guess-input').press('Escape')
       return measured
      finally:
       page.set_viewport_size({'width':width,'height':height})
