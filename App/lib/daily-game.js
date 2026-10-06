@@ -138,7 +138,16 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
   }
   async function distribution() {
     const day=parisDay(clock());
-    const results=(await db.query("SELECT status,jsonb_array_length(guessed)::int AS attempts,count(*)::int AS count FROM daily_plays WHERE day=$1 AND status <> 'playing' AND NOT excluded_stats GROUP BY status,jsonb_array_length(guessed)",[day])).rows;
+    const results=(await db.query(`SELECT status,attempts,count(*)::int AS count FROM (
+      SELECT status,jsonb_array_length(guessed)::int AS attempts FROM daily_plays
+      WHERE day=$1 AND status <> 'playing' AND NOT excluded_stats
+      UNION ALL
+      SELECT 'won',jsonb_array_length(s.guessed)::int FROM daily_sessions s
+      WHERE s.finished AND jsonb_array_length(s.guessed)>0
+      AND $1::date=(SELECT value::date FROM daily_settings WHERE key='transition_day')
+      AND s.day=(SELECT value::date FROM daily_settings WHERE key='legacy_day')
+      AND NOT EXISTS(SELECT 1 FROM daily_plays p WHERE p.identity='user:'||s.discord_id AND p.day=$1)
+    ) results GROUP BY status,attempts`,[day])).rows;
     const counts={"1":0,"2":0,"3":0,"4":0,"5":0,"6":0,"7plus":0};let abandoned=0,wins=0;
     for(const row of results){if(row.status==="abandoned")abandoned+=row.count;else {wins+=row.count;counts[row.attempts>=7?"7plus":String(row.attempts)]+=row.count;}}
     return {ok:true,key:day,counts,wins,abandoned,total:wins+abandoned};

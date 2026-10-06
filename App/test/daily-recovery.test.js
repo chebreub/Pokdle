@@ -47,7 +47,8 @@ test('real PostgreSQL: shared private target, recovery, migration, guests, atomi
   const B={key:'user:B',accountId:'B'};await game.state(B);const loss=await game.abandon(B,body(undefined,B));assert.equal(loss.status,'abandoned');assert.equal(loss.answerId,1);assert.equal((await game.guess(B,body(1,B))).status,'abandoned');
   assert.deepEqual(await game.distribution(),{ok:true,key:'2026-10-06',counts:{'1':0,'2':2,'3':0,'4':0,'5':0,'6':0,'7plus':0},wins:2,abandoned:1,total:3});
   await db.query("INSERT INTO daily_sessions(discord_id,day,attempts,guessed,finished) VALUES('M','2026-10-06',1,'[\"id:1\"]',true),('A','2026-10-05',1,'[\"id:1\"]',true)");
-  assert.equal((await game.state({key:'user:M',accountId:'M'})).won,true);assert.equal((await game.state(A)).streak.current,2);
+  assert.equal((await game.distribution()).total,4); // Existing verified win counts before its owner returns.
+  assert.equal((await game.state({key:'user:M',accountId:'M'})).won,true);assert.equal((await game.distribution()).total,4);assert.equal((await game.state(A)).streak.current,2);
   now=new Date('2026-10-06T22:00:00Z');await assert.rejects(game.guess(A,body(1,A)),{code:'stale_daily'});assert.equal((await game.state(A)).attempts,0);
   const secret=(await db.query("SELECT secret_id FROM daily_rounds WHERE day='2026-10-07'")).rows[0].secret_id;assert.notEqual(secret,1);
   await game.guess(A,body(secret,A,'2026-10-07'));assert.equal((await game.state(A)).streak.current,3);

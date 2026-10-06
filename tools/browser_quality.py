@@ -357,14 +357,14 @@ def main():
     check('daily-unavailable',daily_unavailable)
     def daily_private_start():
      daily_online['value']=True;page.locator('#daily-server-retry').click()
-     page.wait_for_function('dailyServerState?.status === "playing" && !dailyRequestInFlight')
+     page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
      expect(page.evaluate('secretPokemon === null && typeof getDailyPokemon === "undefined"'),'Daily answer is computable in the browser')
      expect(page.locator('#guess-input').is_enabled(),'Retry does not restore the form')
      return screen('screen-game')
     check('daily-private-start',daily_private_start)
     def daily_resume():
      page.locator('#guess-input').fill('Pikachu');page.locator('#btn-submit').click()
-     page.wait_for_function('attempts === 1 && !dailyRequestInFlight')
+     page.wait_for_function('() => attempts === 1 && !dailyRequestInFlight')
      expect(page.evaluate('secretPokemon === null'),'Wrong guess reveals the answer')
      page.evaluate('startDailyGame()')
      expect(page.locator('#results-body tr').count()==1,'Resume does not restore the server history')
@@ -386,7 +386,7 @@ def main():
     page.evaluate('localStorage.removeItem(STORAGE_KEYS.dailyResult)')
     def daily_finish():
      start('startDailyGame','screen-game');standard_guess_shell()
-     page.wait_for_function('dailyServerState?.status === "playing" && !dailyRequestInFlight')
+     page.wait_for_function('() => dailyServerState?.status === "playing" && !dailyRequestInFlight')
      page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click()
      page.locator('#win-box').wait_for(state='visible');page.wait_for_timeout(400)
      page.evaluate('typeof closePokedexRegistration === \"function\" && closePokedexRegistration()')

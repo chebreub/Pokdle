@@ -20,7 +20,7 @@ L'origine de la numérotation est le 23 mars 2026 : premier commit Git de mise e
 
 Les tables `daily_settings`, `daily_rounds` et `daily_plays` sont créées sans supprimer les anciens résultats. Le jour de bascule et le jour UTC de l'ancien tirage sont enregistrés une seule fois. La cible déjà publique de cette journée est conservée afin de reprendre les parties existantes ; sa confidentialité ne peut pas être rétablie rétroactivement. **Les tirages secrets commencent au minuit Paris suivant la bascule.** Ils utilisent l'aléatoire cryptographique du serveur, sans répétition sur une fenêtre de 365 jours à partir de cette bascule.
 
-Les sessions de comptes existantes sont reprises, les records en essais restent en place, les séries sont calculées depuis les victoires serveur. Les anciennes parties invitées uniquement locales ne peuvent pas être certifiées : l'interface recharge désormais l'état serveur.
+Les sessions de comptes existantes sont reprises, les records en essais restent en place, les séries sont calculées depuis les victoires serveur. Les victoires déjà validées le jour de bascule alimentent la distribution même si leurs propriétaires ne rouvrent pas le site ; leur migration ne les compte pas deux fois. Les anciennes parties invitées uniquement locales ne peuvent pas être certifiées : l'interface recharge désormais l'état serveur.
 
 Un cookie identifie un navigateur, pas une personne. Effacer le cookie crée une nouvelle identité invitée ; les limitations par IP réduisent les abus. Les invités restent exclus de la compétition. Les comptes conservent leur partie même après suppression du stockage local ou changement d'appareil.
 

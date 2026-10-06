@@ -836,7 +836,7 @@ function getOgSilhouettePokemon() {
 const ogCache = { key: null, buffer: null, pending: null };
 
 async function buildDailyOgBuffer() {
-  const key = serverUTCDateKey();
+  const key = require("./lib/daily-game").dailyCalendar().day;
   const pokemon = getOgSilhouettePokemon();
   const artworkUrl = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
   const resp = await fetch(artworkUrl, { signal: AbortSignal.timeout(8000) });
@@ -881,7 +881,7 @@ async function buildDailyOgBuffer() {
 }
 
 app.get("/og-image.png", async (_req, res) => {
-  const key = serverUTCDateKey();
+  const key = require("./lib/daily-game").dailyCalendar().day;
   try {
     if (sharp) {
       if (ogCache.key !== key) {
