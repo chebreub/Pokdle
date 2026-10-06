@@ -89,6 +89,7 @@ function renderDailyNotebook(record, complete) {
   const target = record ? POKEMON_BY_ID.get(Number(record.secretId)) : null;
   const guesses = target && Array.isArray(record.historyIds)
     ? record.historyIds.map(id => POKEMON_BY_ID.get(Number(id))).filter(Boolean).slice(-3) : [];
+  panel.dataset.progress = guesses.length ? "started" : "empty";
   const keys = ["generation", "altForm", "type1", "type2", "habitat", "color", "stage", "height", "weight"];
   const rows = guesses.map(pokemon => {
     const comparison = compare(pokemon, target);

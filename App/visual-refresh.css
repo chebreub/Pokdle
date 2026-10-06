@@ -5204,15 +5204,18 @@
 .home-game { --game-wash:#EFE8FF; position:relative; display:flex; flex-direction:column; overflow:hidden; text-align:left; border:1px solid var(--ui-line); border-radius:24px; padding:0; background:var(--ui-surface); color:var(--ui-ink); box-shadow:var(--ui-shadow); cursor:pointer; transition:transform .18s ease,box-shadow .18s ease; min-width:0; }
 .home-game:hover { transform:translateY(-4px); box-shadow:0 10px 24px rgb(87 58 41 / 10%); }
 .home-game-pink { --game-wash:#FFE4EC; }.home-game-mint { --game-wash:#E1F4E9; }.home-game-blue { --game-wash:#E4EEFF; }.home-game-peach { --game-wash:#FFEBDD; }
-.home-game-art { display:block; height:130px; position:relative; background:var(--game-wash); overflow:hidden; }
+.home-game-art { display:grid; place-items:center; height:160px; position:relative; background:linear-gradient(180deg,var(--game-wash),var(--ui-surface)); overflow:hidden; }
+.home-game-pokemon { display:block; position:relative; width:140px; height:140px; object-fit:contain; filter:drop-shadow(0 10px 8px rgb(60 42 57 / 12%)); transition:transform .2s ease; }
+.home-game:hover .home-game-pokemon { transform:translateY(-3px) rotate(-3deg); }
+.home-game-spark { position:absolute; top:26px; right:23%; color:#A593B6; font-size:20px; opacity:.7; }
 #pokdle-app.design-refresh .home-game-art .mode-card-art { width:116px; height:100px; inset:15px auto auto calc(50% - 58px); border:0; box-shadow:none; background:transparent; }
 #pokdle-app.design-refresh .home-game-art .mode-illustration { display:block; position:absolute; inset:0; width:100%; height:100%; border-radius:0; }
 #pokdle-app.design-refresh .home-game-art .mode-illustration img { width:100%; height:100%; object-fit:cover; }
-.home-game-copy { display:flex; flex-direction:column; gap:5px; padding:18px 44px 22px 20px; }
+.home-game-copy { display:flex; flex-direction:column; gap:7px; padding:10px 24px 54px; }
 .home-game-copy small { color:var(--ui-muted); font-size:12px; font-weight:800; }
-.home-game-copy b { font-family:Fredoka,Nunito,sans-serif; font-size:21px; font-weight:500; line-height:1.2; }
+.home-game-copy b { font-family:Fredoka,Nunito,sans-serif; font-size:23px; font-weight:600; line-height:1.2; }
 .home-game-copy > span { font-size:14px; line-height:1.45; color:var(--ui-muted); }
-.home-game-arrow { position:absolute; right:16px; bottom:22px; color:var(--ui-accent); font-size:22px; }
+.home-game-arrow { position:absolute; left:24px; bottom:18px; color:var(--ui-accent); font-size:14px; font-weight:900; }
 #pokdle-app.design-refresh .home-pathways .home-path { border-radius:26px !important; border:1px solid var(--ui-line) !important; box-shadow:none !important; }
 #pokdle-app.design-refresh:not(.theme-dark) .home-path-solo { background:#EEF2FF !important; }
 #pokdle-app.design-refresh:not(.theme-dark) .home-path-friends { background:#FFEAF0 !important; }
@@ -5284,10 +5287,12 @@
   .home-discovery-head h2 { font-size:28px; }
   .home-games-grid { gap:12px; }
   .home-game { border-radius:20px; }
-  .home-game-art { height:104px; }
+  .home-game-art { height:126px; }
+  .home-game-pokemon { width:112px; height:112px; }
+  .home-game-spark { right:12%; top:18px; font-size:15px; }
   #pokdle-app.design-refresh .home-game-art .mode-card-art { height:80px; top:12px; }
-  .home-game-copy { padding:14px 12px 36px; gap:6px; }
-  .home-game-copy b { font-size:18px; }.home-game-copy > span { font-size:13px; }.home-game-arrow { bottom:10px; right:12px; }
+  .home-game-copy { padding:10px 14px 42px; gap:6px; }
+  .home-game-copy b { font-size:18px; }.home-game-copy > span { font-size:13px; }.home-game-arrow { bottom:14px; left:14px; }
   #pokdle-app.design-refresh #results-table td::before { font-size:12px !important; letter-spacing:0 !important; opacity:1 !important; text-transform:none !important; }
   #pokdle-app.design-refresh #results-table .guess-result-row { border-radius:24px !important; padding:12px !important; gap:6px !important; }
   #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:20px; }
@@ -5300,4 +5305,28 @@
   #pokdle-app.design-refresh .lbv3-podium-card > strong { font-size:16px; }
   #pokdle-app.design-refresh .lbv2-row { padding:12px 10px; gap:8px; }
 }
-@media (prefers-reduced-motion:reduce) { .home-game { transition:none; }.home-game:hover { transform:none; } }
+@media (prefers-reduced-motion:reduce) { .home-game,.home-game-pokemon { transition:none; }.home-game:hover,.home-game:hover .home-game-pokemon { transform:none; } }
+#pokdle-app.design-refresh.reduce-motion .home-game,
+#pokdle-app.design-refresh.reduce-motion .home-game-pokemon { transition:none; transform:none; }
+
+/* Final interactions use the same palette, including registration celebrations. */
+#pokdle-app.design-refresh #screen-game .classic-game-command > .search-bar #btn-submit.btn-blue {
+  border-radius:999px !important; background:#4069E0 !important; color:#FFF !important; box-shadow:0 4px 0 #2E4DAB !important;
+}
+#pokdle-app.design-refresh #results-table td::before { color:inherit; }
+#pokdle-app.design-refresh.reduce-motion #results-table .guess-result-cell::after { display:none !important; }
+@media (prefers-reduced-motion:reduce) {
+  #pokdle-app.design-refresh #results-table .guess-result-cell::after { display:none !important; }
+}
+#pokdle-app.design-refresh:not(.theme-dark) .pokedex-registration-backdrop { background:rgb(56 45 64 / 35%); }
+#pokdle-app.design-refresh:not(.theme-dark) .pokedex-registration-shell { background:linear-gradient(155deg,#FFF8EF,#EFE8FF 65%,#FFE4EC); border-color:#E4D9E8; box-shadow:0 18px 65px rgb(56 45 64 / 18%); color:#2E2A33; }
+#pokdle-app.design-refresh:not(.theme-dark) :is(.pokedex-registration-copy h2,.pokedex-registration-head,.pokedex-registration-meta > span) { color:#51405F; }
+#pokdle-app.design-refresh:not(.theme-dark) .pokedex-registration-kicker { color:#4069E0; }
+#pokdle-app.design-refresh:not(.theme-dark) .pokedex-registration-meta > span { background:#FFFFFF; border-color:#E4D9E8; }
+#pokdle-app.design-refresh:not(.theme-dark) .pokedex-registration-mission { background:#FFFFFF; border-color:#D6DFF8; color:#51405F; }
+#pokdle-app.design-refresh:not(.theme-dark) .pokedex-registration-mission span { color:#4069E0; }
+@media (max-width:640px) {
+  .daily-notebook[data-progress="empty"] .notebook-row:not(:first-child),
+  .daily-notebook[data-progress="empty"] .notebook-stamp { display:none; }
+  .daily-notebook[data-progress="empty"] p { margin:10px 0 0; }
+}

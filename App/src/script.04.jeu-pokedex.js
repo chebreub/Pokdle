@@ -236,7 +236,7 @@ function comparisonTypeHtml(type) {
   const icons = {Normal:"normal",Feu:"fire",Eau:"water",Plante:"grass",Électrik:"electric",Glace:"ice",Combat:"fighting",Poison:"poison",Sol:"ground",Vol:"flying",Psy:"psychic",Insecte:"bug",Roche:"rock",Spectre:"ghost",Dragon:"dragon",Ténèbres:"dark",Acier:"steel",Fée:"fairy"};
   if (!type) return '<span class="comparison-type"><span class="type-none" aria-hidden="true">–</span><span>Aucun</span></span>';
   const icon = icons[type];
-  return '<span class="comparison-type">' + (icon ? '<img src="assets/type-icons/' + icon + '.svg" alt="" width="28" height="28" />' : '') + '<span>' + escapeHtml(type) + '</span></span>';
+  return '<span class="comparison-type">' + (icon ? '<img src="img/type-icons/' + icon + '.svg" alt="" width="28" height="28" />' : '') + '<span>' + escapeHtml(type) + '</span></span>';
 }
 function buildComparisonRowHtml(pokemon, cmp, targetPokemon) {
   const hArrow = arrowFor(pokemon.height, targetPokemon.height);

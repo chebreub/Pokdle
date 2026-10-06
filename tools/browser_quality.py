@@ -114,7 +114,7 @@ def main():
      return screen('screen-all-modes')
     check('empty-search-reset',empty_search)
     def waveform():
-     bars=page.locator('.mode-preview-audio .mode-preview-bars i');expect(bars.count()>0,'No waveform');heights=bars.evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)');expect(all(h>0 for h in heights),f'Collapsed bars: {heights}');return heights
+     bars=page.locator('#screen-all-modes .mode-preview-audio .mode-preview-bars i');expect(bars.count()>0,'No waveform');heights=bars.evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)');expect(all(h>0 for h in heights),f'Collapsed bars: {heights}');return heights
     check('waveform',waveform,False)
     def preview_layout():
      sample=page.locator('.mode-preview-evolution img')
@@ -227,6 +227,20 @@ def main():
     def guess():
      start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
+    def cosy_clues():
+     row=page.locator('#results-body tr').first
+     expect(row.locator('td[data-label="Forme"]').count()==1,'Alternative form criterion was lost')
+     expect(row.locator('td').count()==10,'One of the nine comparison criteria was lost')
+     page.wait_for_function('Array.from(document.querySelectorAll("#results-body .comparison-type img")).every(img=>img.complete && img.naturalWidth>0)')
+     expect(row.locator('.comparison-type img').count()==2,'Both Bulbasaur types should have a local icon')
+     expect('Plante' in row.inner_text() and 'Poison' in row.inner_text(),'Type names must remain visible')
+     sheen=row.locator('.guess-result-cell.c-ok,.guess-result-cell.c-close,.guess-result-cell.c-wrong').first.evaluate('(e)=>getComputedStyle(e,"::after").display')
+     expect(sheen=='none','Reduced-motion mode leaves a white veil on clue cells')
+     if width<=640:
+      label=row.locator('td[data-label="Type 1"]').evaluate('(e)=>parseFloat(getComputedStyle(e,"::before").fontSize)')
+      expect(label>=12,'Mobile clue labels are too small: '+str(label))
+     return screen('screen-game')
+    check('cosy-clues',cosy_clues)
     def pc1_classic_board():
      if width<1280:
       expect(page.locator('#classic-banner').is_hidden(),'PC1 desktop banner leaked below the desktop breakpoint')
@@ -288,6 +302,8 @@ def main():
      return screen('screen-game')
     check('daily-result',daily_finish)
     def cosy_leaderboard():
+     celebration=page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
+     if celebration.is_visible(): celebration.click()
      page.evaluate("""async () => {
        window.__qaLeaderboardFetch=leaderboardFetchJson;
        leaderboardFetchJson=async()=>({
@@ -306,6 +322,7 @@ def main():
        await openLeaderboardV2('daily','all');
      }""")
      page.locator('#overlay-body .lbv3-podium').wait_for(state='visible')
+     expect(page.locator('#pokedex-registration-layer:not(.hidden)').count()==0,'Registration ceremony hides the ranking')
      overlay=page.locator('.overlay-card:has(.lbv3-shell)').bounding_box()
      expect(overlay and overlay['width']<=width and (width<1280 or overlay['width']>1100),'Leaderboard does not fit its viewport: '+repr(overlay))
      shell=page.locator('.lbv3-shell')
