@@ -55,6 +55,8 @@ jobs:
         working-directory: App
       - name: Verify Party mobile touch actions
         run: python tools/party_mobile_quality.py
+      - name: Verify consecutive guesses on desktop and touch browsers
+        run: python tools/guess_flow_quality.py
       - name: Verify browser journeys at six viewport widths
         run: python tools/browser_quality.py --output quality-artifacts/browser
       - name: Verify an actual two-browser Party Room game

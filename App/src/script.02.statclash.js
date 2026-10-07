@@ -473,6 +473,8 @@ function maybeShowOnboarding() {
 
 function startGameWithSecret(secret, pool, options = {}) {
   for (const id of ["guess-input","btn-submit","btn-surrender"]) { const node=document.getElementById(id);if(node)node.disabled=false; }
+  const submitButton=document.getElementById('btn-submit');
+  if(submitButton){submitButton.textContent='Deviner';submitButton.removeAttribute('aria-busy');}
   document.getElementById("daily-server-retry")?.classList.add("hidden");
   trackUsage("solo:" + gameMode);
   secretPokemon = secret;

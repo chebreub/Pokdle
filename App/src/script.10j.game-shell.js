@@ -131,7 +131,7 @@ let mobileGuessSearchFrame = 0;
 function fitMobileGuessSearch() {
   mobileGuessSearchFrame = 0;
   const input = document.getElementById("guess-input"), list = document.getElementById("guess-ac");
-  if (!window.matchMedia("(max-width: 640px)").matches || document.activeElement !== input || !list || list.classList.contains("hidden")) return;
+  if (!window.matchMedia("(max-width: 640px)").matches || document.activeElement !== input || !list) return;
   const bar = input.closest(".search-bar"), screen = document.getElementById("screen-game");
   if (!bar || screen?.classList.contains("hidden") || screen?.dataset.shell !== "focused") return;
   const viewport = window.visualViewport;
@@ -140,9 +140,11 @@ function fitMobileGuessSearch() {
   if (header && ["fixed", "sticky"].includes(getComputedStyle(header).position)) top = Math.max(top, header.getBoundingClientRect().bottom + 8);
   const nav = document.getElementById("mobile-tabbar");
   if (nav && !document.body.classList.contains("mobile-keyboard-open") && nav.getBoundingClientRect().top > top) bottom = Math.min(bottom, nav.getBoundingClientRect().top - 8);
-  const rowHeight = list.firstElementChild?.getBoundingClientRect().height || 52;
-  const controlsHeight = bar.getBoundingClientRect().height - list.getBoundingClientRect().height;
-  list.style.setProperty("--guess-list-height", Math.max(rowHeight, Math.min(rowHeight * 5 + 2, bottom - top - controlsHeight)) + "px");
+  if (!list.classList.contains('hidden')) {
+    const rowHeight = list.firstElementChild?.getBoundingClientRect().height || 52;
+    const controlsHeight = bar.getBoundingClientRect().height - list.getBoundingClientRect().height;
+    list.style.setProperty("--guess-list-height", Math.max(rowHeight, Math.min(rowHeight * 5 + 2, bottom - top - controlsHeight)) + "px");
+  }
   const rect = bar.getBoundingClientRect();
   const delta = rect.top < top ? rect.top - top : rect.bottom > bottom ? Math.min(rect.top - top, rect.bottom - bottom) : 0;
   if (Math.abs(delta) > 1) window.scrollBy({ top: Math.round(delta), behavior: "instant" });
