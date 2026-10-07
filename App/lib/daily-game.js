@@ -2,6 +2,8 @@
 const crypto = require("node:crypto");
 const { parisDay, parisMidnight } = require("./egg-mystery");
 const { recordLeaderboardResultInTransaction } = require("./leaderboard-store");
+const bundledForms = Object.fromEntries(Object.entries(require('../forms-data.json')).map(([name, data]) =>
+  [name.replace(/^(.+) Mega( [XY])?$/, 'Méga-$1$2'), data]));
 // First deploy-ready Git revision containing getDailyPokemon: 30af7a7 (2026-03-23).
 const DAILY_ORIGIN = "2026-03-23";
 function nextDay(day, delta = 1) { return new Date(Date.parse(day + "T12:00:00Z") + delta * 86400000).toISOString().slice(0,10); }
@@ -43,7 +45,13 @@ async function initDailyDb(db, now = new Date()) {
 }
 function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(),randomInt=crypto.randomInt}) {
   const pool=pokemon.filter(p=>p&&!p.isAltForm&&Number(p.id)>0&&Number(p.id)<=1025).sort((a,b)=>a.id-b.id);
-  const byId=new Map(pool.map(p=>[Number(p.id),p]));
+  // Targets stay base species; proposals include every playable form. Use the
+  // same bundled form measurements as the client, never the base species' size.
+  const byId=new Map(pokemon.filter(p=>p&&Number(p.id)>0).map(p=>{
+    const form=p.isAltForm?bundledForms[p.name]:null;
+    return [Number(p.id),form?{...p,type1:form.type1||p.type1,type2:form.type2!==undefined?form.type2:p.type2,
+      height:typeof form.height==='number'?form.height:p.height,weight:typeof form.weight==='number'?form.weight:p.weight}:p];
+  }));
   async function transaction(action) {
     const day=parisDay(clock());
     const client=await db.connect();
