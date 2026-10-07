@@ -87,6 +87,7 @@ async def run():
                         await ready(page, f'attempts === {count} && !dailyRequestInFlight')
                         assert name in await page.locator('#results-body tr:last-child').inner_text()
                         assert await page.evaluate('secretPokemon === null'), 'Form guess exposed the Daily target'
+                        assert await field.evaluate('e => document.activeElement === e'), f'Tap on {name} lost focus'
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-forms.png'))
                     await page.keyboard.type('Bulbizarre')
                     await page.keyboard.press('Enter')
@@ -102,6 +103,8 @@ async def run():
                     case.update(ok=True, dailyRequests=requests, cells=cells)
                 except Exception as error:
                     case['error'] = str(error)
+                    case['state'] = await page.evaluate('''() => ({attempts, gameOver, pending:!!dailyRequestInFlight,
+                        active:document.activeElement?.outerHTML.slice(0,300),input:document.getElementById('guess-input')?.value})''')
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-failure.png'))
                 finally:
                     await context.close()

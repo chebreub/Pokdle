@@ -2472,6 +2472,11 @@ function renderGuessAC(matches) {
 
     item.addEventListener("pointerdown", (e) => {
       e.preventDefault();
+    });
+    // Keep focus on press, but change the layout only once the tap is complete.
+    // Otherwise WebKit can deliver the ensuing click to a control below the list.
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
       selectGuessAC(p.name);
     });
 
