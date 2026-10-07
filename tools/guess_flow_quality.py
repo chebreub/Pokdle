@@ -79,6 +79,16 @@ async def run():
                     if width < 640:
                         await ready(page, '''document.querySelector('.search-bar').getBoundingClientRect().bottom <= document.getElementById('mobile-tabbar').getBoundingClientRect().top - 7''')
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-consecutive.png'))
+                    for query, name, count in [('mega florizarre', 'Méga-Florizarre', 4), ('rattata', "Rattata d'Alola", 5)]:
+                        await field.fill(query)
+                        form = page.locator('#guess-ac .ac-item').filter(has=page.get_by_text(name, exact=True))
+                        if width < 640: await form.tap()
+                        else: await form.click()
+                        await ready(page, f'attempts === {count} && !dailyRequestInFlight')
+                        assert name in await page.locator('#results-body tr:last-child').inner_text()
+                        assert await page.evaluate('secretPokemon === null'), 'Form guess exposed the Daily target'
+                        assert await field.evaluate('e => document.activeElement === e'), f'Tap on {name} lost focus'
+                    await page.screenshot(path=str(OUT / f'{engine}-{width}-forms.png'))
                     await page.keyboard.type('Bulbizarre')
                     await page.keyboard.press('Enter')
                     await ready(page, 'gameOver && !dailyRequestInFlight')
@@ -89,10 +99,12 @@ async def run():
                     assert await field.evaluate('e => document.activeElement === e && e.value === ""')
                     await page.keyboard.type('Salamèche');await page.keyboard.press('Enter')
                     assert await page.evaluate('attempts === 2 && !gameOver')
-                    assert requests == [25, 4, 7, 1], requests
+                    assert requests == [25, 4, 7, 20001, 21001, 1], requests
                     case.update(ok=True, dailyRequests=requests, cells=cells)
                 except Exception as error:
                     case['error'] = str(error)
+                    case['state'] = await page.evaluate('''() => ({attempts, gameOver, pending:!!dailyRequestInFlight,
+                        active:document.activeElement?.outerHTML.slice(0,300),input:document.getElementById('guess-input')?.value})''')
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-failure.png'))
                 finally:
                     await context.close()

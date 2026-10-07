@@ -229,7 +229,7 @@ function startNormalGame(forcedPokemon = null) {
 function startDailyGame() {
   dailyRequestSerial++;dailyRequestInFlight=null;dailyServerState=null;
   gameMode="daily";
-  startGameWithSecret(null,POKEMON_LIST.filter(p=>!p.isAltForm&&p.id>0&&p.id<=1025));
+  startGameWithSecret(null,getPokemonUiList());
   let retry=document.getElementById("daily-server-retry");
   if(!retry){retry=document.createElement("button");retry.id="daily-server-retry";retry.className="btn-ghost hidden";retry.dataset.action="syncDailyObservedState";retry.textContent="Recharger le défi";document.getElementById("err-msg").after(retry);}
   retry.classList.add("hidden");showErr("Chargement du Pokémon du jour…");dailyControls();

@@ -5108,6 +5108,7 @@ function normalizeName(value) {
   return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^(.+?) mega( [xy])?$/i, "mega $1$2")
     .replace(/[^\p{L}\p{N}]+/gu, "")
     .toLowerCase();
 }

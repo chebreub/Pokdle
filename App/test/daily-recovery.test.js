@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {dailyCalendar,dailyGuest,issueDailyGuest,streakFromDays,initDailyDb,createDailyService}=require('../lib/daily-game');
 const {compareDaily}=require('../lib/daily-comparison');
 const base={gen:1,isAltForm:false,type1:'Plante',type2:'Poison',habitat:'Forêt',color:'Vert',stage:1,height:.7,weight:6.9};
-const catalog=[{...base,id:1,name:'Bulbizarre'},{...base,id:25,name:'Pikachu',type1:'Électrik',type2:null,height:.4,weight:6,color:'Jaune'},{...base,id:29,name:'Nidoran♀'},{...base,id:32,name:'Nidoran♂'},{...base,id:20001,isAltForm:true}];
+const catalog=[{...base,id:1,name:'Bulbizarre'},{...base,id:25,name:'Pikachu',type1:'Électrik',type2:null,height:.4,weight:6,color:'Jaune'},{...base,id:29,name:'Nidoran♀'},{...base,id:32,name:'Nidoran♂'},{...base,id:20001,name:'Méga-Florizarre',isAltForm:true},{...base,id:21001,name:"Rattata d’Alola",isAltForm:true}];
 test('Paris date, midnight and both DST transitions use the civil calendar',()=>{
  assert.equal(dailyCalendar(new Date('2026-10-06T21:59:59Z')).day,'2026-10-06');
  assert.equal(dailyCalendar(new Date('2026-10-06T22:00:00Z')).day,'2026-10-07');
@@ -35,9 +35,14 @@ test('real PostgreSQL: shared private target, recovery, migration, guests, atomi
   const service=()=>createDailyService({db,pokemon:catalog,compare:compareDaily,legacyTarget:()=>catalog[0],randomInt:()=>0,clock:()=>now});let game=service();
   const guest={key:'guest:x'},A={key:'user:A',accountId:'A',name:'A'},body=(id,who,day='2026-10-06')=>({day,accountId:who.accountId||null,pokemonId:id});
   for(const who of [guest,A]){const s=await game.state(who);assert.equal(s.answerId,undefined);assert.equal(s.attempts,0);assert.equal(s.number,198);assert.equal(JSON.stringify(s).includes('secret'),false);}
+  for(const who of [{key:'guest:forms'},{key:'user:forms',accountId:'forms'}]){
+   const mega=await game.guess(who,body(20001,who));assert.equal(mega.rows[0].pokemonId,20001);assert.equal(mega.rows[0].cmp.altForm,'wrong');assert.equal(mega.rows[0].heightDirection,'↓');assert.equal(mega.answerId,undefined);
+   assert.equal((await game.guess(who,body(20001,who))).attempts,1);
+   await game.guess(who,body(21001,who));const restored=await service().state(who);assert.deepEqual(restored.rows.map(r=>r.pokemonId),[20001,21001]);assert.equal(restored.status,'playing');
+  }
   const wrong=await game.guess(guest,body(25,guest));assert.equal(wrong.rows[0].heightDirection,'↑');assert.equal(wrong.rows[0].cmp.height,'close');assert.equal(wrong.answerId,undefined);
   assert.equal((await game.guess(guest,body(25,guest))).attempts,1);assert.equal((await service().state(guest)).attempts,1);
-  await assert.rejects(game.guess(A,body(20001,A)),{code:'invalid_guess'});await assert.rejects(game.guess(A,{...body(25,A),accountId:'B'}),{code:'account_changed'});
+  await assert.rejects(game.guess(A,body(999999,A)),{code:'invalid_guess'});await assert.rejects(game.guess(A,{...body(25,A),accountId:'B'}),{code:'account_changed'});
   await game.guess(guest,body(1,guest));assert.equal((await game.guess(guest,body(32,guest))).attempts,2);assert.equal((await db.query('SELECT * FROM leaderboard_events')).rowCount,0);
   const login={key:'user:G',accountId:'G',guestKey:guest.key};const restored=await game.state(login);assert.equal(restored.won,true);assert.equal(restored.ranked,false);assert.equal((await game.guess(login,body(1,login))).ranked,false);
   assert.equal((await game.distribution()).total,1);
@@ -50,7 +55,7 @@ test('real PostgreSQL: shared private target, recovery, migration, guests, atomi
   assert.equal((await game.distribution()).total,4); // Existing verified win counts before its owner returns.
   assert.equal((await game.state({key:'user:M',accountId:'M'})).won,true);assert.equal((await game.distribution()).total,4);assert.equal((await game.state(A)).streak.current,2);
   now=new Date('2026-10-06T22:00:00Z');await assert.rejects(game.guess(A,body(1,A)),{code:'stale_daily'});assert.equal((await game.state(A)).attempts,0);
-  const secret=(await db.query("SELECT secret_id FROM daily_rounds WHERE day='2026-10-07'")).rows[0].secret_id;assert.notEqual(secret,1);
+  const secret=(await db.query("SELECT secret_id FROM daily_rounds WHERE day='2026-10-07'")).rows[0].secret_id;assert.notEqual(secret,1);assert.ok(!catalog.find(p=>p.id===secret).isAltForm);
   await game.guess(A,body(secret,A,'2026-10-07'));assert.equal((await game.state(A)).streak.current,3);
   // Lock acquisition across midnight must roll back rather than charge tomorrow.
   now=new Date('2026-10-07T21:59:59Z');const blocked=await db.connect();await blocked.query('BEGIN');await blocked.query("SELECT * FROM daily_plays WHERE identity='user:A' AND day='2026-10-07' FOR UPDATE");

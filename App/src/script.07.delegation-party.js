@@ -407,7 +407,7 @@ function restoreSavedGame(preferredMode = null) {
   gameOver = false;
   winRegisteredForCurrentGame = false;
 
-  guessedNames = Array.isArray(save.guessedNames) ? save.guessedNames.filter((n) => typeof n === "string") : [];
+  guessedNames = Array.isArray(save.guessedNames) ? save.guessedNames.filter((n) => typeof n === "string").map(n => n.replace(/^(.+) Mega( [XY])?$/, "Méga-$1$2")) : [];
   guessedSet = new Set(guessedNames);
 
   resultHistory = [];
@@ -488,7 +488,9 @@ function norm(str) {
   return str
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^(.+?) mega( [xy])?$/, "mega $1$2")
+    .replace(/^mega[-\s]+/, "mega ");
 }
 
 
