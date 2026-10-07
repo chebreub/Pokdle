@@ -306,6 +306,7 @@ function addRow(pokemon, cmp, directions = null, {animate=true,renderShell=true}
   tr.querySelector('[data-label="Poids"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.weightDirection === "↑" ? "lourd" : "léger"}`);
   tbody.appendChild(tr);
   if (renderShell && typeof renderGameShell === "function") renderGameShell();
+  if (typeof scheduleMobileGuessSearch === 'function') scheduleMobileGuessSearch();
   if (animate && !reducedMotion) {
     requestAnimationFrame(() => tr.classList.add("is-revealing"));
     const states = [cmp.generation, cmp.altForm, cmp.type1, cmp.type2, cmp.habitat, cmp.color, cmp.stage, cmp.height, cmp.weight];

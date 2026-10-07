@@ -76,6 +76,8 @@ async def run():
                     else: await button.click()
                     await ready(page, 'attempts === 3 && !dailyRequestInFlight')
                     assert await field.evaluate('e => document.activeElement === e'), 'Submit button did not restore focus'
+                    if width < 640:
+                        await ready(page, '''document.querySelector('.search-bar').getBoundingClientRect().bottom <= document.getElementById('mobile-tabbar').getBoundingClientRect().top - 7''')
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-consecutive.png'))
                     await page.keyboard.type('Bulbizarre')
                     await page.keyboard.press('Enter')
