@@ -2483,6 +2483,7 @@ function renderGuessAC(matches) {
 }
 
 function selectGuessAC(name) {
+  if (gameMode === 'daily' && dailyRequestInFlight) return;
   const input = document.getElementById("guess-input");
   const list = document.getElementById("guess-ac");
   if (!input || !list) return;
@@ -2508,6 +2509,7 @@ function handleGuessKey(e) {
     acIndex = Math.max(acIndex - 1, -1);
     highlightItems(items, acIndex);
   } else if (e.key === "Enter") {
+    e.preventDefault();
     if (acIndex >= 0 && items[acIndex]) {
       const name = items[acIndex].querySelector(".ac-name").textContent;
       selectGuessAC(name);

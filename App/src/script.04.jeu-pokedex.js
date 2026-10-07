@@ -7,20 +7,30 @@ function dailyObservedAccountId() {
 }
 function dailyControls() {
   if(gameMode!=="daily")return;
-  const disabled=Boolean(dailyRequestInFlight)||!dailyServerState||gameOver||dailyServerState.day!==getDailyDateKey();
-  for(const id of ["guess-input","btn-submit","btn-surrender"]) { const node=document.getElementById(id);if(node)node.disabled=disabled; }
+  const pending=Boolean(dailyRequestInFlight);
+  const unavailable=!dailyServerState||gameOver||dailyServerState.day!==getDailyDateKey();
+  // Keep the input and the mobile keyboard alive while the server checks a guess.
+  const input=document.getElementById('guess-input');
+  if(input)input.disabled=unavailable;
+  for(const id of ['btn-submit','btn-surrender']) { const node=document.getElementById(id);if(node)node.disabled=unavailable||pending; }
+  const submit=document.getElementById('btn-submit');
+  if(submit){submit.textContent=pending?'Vérification…':'Deviner';submit.setAttribute('aria-busy',String(pending));}
 }
-function applyDailyObservedState(data,{awardFreshWin=false}={}) {
+function applyDailyObservedState(data,{awardFreshWin=false,animateLatest=false}={}) {
   if(!Array.isArray(data?.rows)||data.rows.length!==data.attempts||!['playing','won','abandoned'].includes(data.status)||Boolean(data.finished)!==(data.status!=='playing'))throw Error('daily_state_mismatch');
   const rows=data.rows.map(row=>({pokemon:POKEMON_BY_ID.get(Number(row.pokemonId)),cmp:row.cmp,heightDirection:row.heightDirection,weightDirection:row.weightDirection}));
   if(rows.some(r=>!r.pokemon||!r.cmp)||new Set(rows.map(r=>r.pokemon.id)).size!==rows.length)throw Error('daily_state_mismatch');
   const answer=data.finished?POKEMON_BY_ID.get(Number(data.answerId)):null;
   if(data.finished&&!answer||!data.finished&&data.answerId!==undefined)throw Error('daily_state_mismatch');
   const wasFinished=dailyServerState?.day===data.day&&dailyServerState?.finished;
+  const tbody=document.getElementById('results-body');
+  const keepRows=dailyServerState?.day===data.day&&tbody.children.length===resultHistory.length&&resultHistory.length<=rows.length&&resultHistory.every((row,i)=>
+    row.pokemon.id===rows[i].pokemon.id&&JSON.stringify(row.cmp)===JSON.stringify(rows[i].cmp)&&row.heightDirection===rows[i].heightDirection&&row.weightDirection===rows[i].weightDirection);
+  const firstNewRow=keepRows?resultHistory.length:0;
   dailyServerState=data;secretPokemon=answer;attempts=data.attempts;
   gameOver=false;resultHistory=rows;guessedNames=rows.map(r=>r.pokemon.name);guessedSet=new Set(guessedNames);
-  document.getElementById('results-body').innerHTML='';
-  for(const row of rows)addRow(row.pokemon,row.cmp,row);
+  if(!keepRows)tbody.innerHTML='';
+  for(let i=firstNewRow;i<rows.length;i++)addRow(rows[i].pokemon,rows[i].cmp,rows[i],{animate:animateLatest&&i===rows.length-1,renderShell:false});
   document.getElementById('try-count').textContent=String(attempts);
   document.getElementById('results-wrap').classList.toggle('hidden',attempts===0);
   guessCache.clear();
@@ -45,6 +55,9 @@ async function requestDailyObservedState(found=null,raw='',abandon=false) {
   const oldDay=dailyServerState?.day;
   const ownsResult=()=>serial===dailyRequestSerial&&gameMode==='daily'&&dailyObservedAccountId()===accountId&&!document.getElementById('screen-game')?.classList.contains('hidden');
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+  const input=document.getElementById('guess-input');
+  // Focus synchronously in the player's gesture, before the network await (iOS).
+  if(found){input.value='';input.focus({preventScroll:true});}
   dailyRequestInFlight={serial};dailyControls();
   document.getElementById('daily-server-retry')?.classList.add('hidden');
   try{
@@ -58,12 +71,12 @@ async function requestDailyObservedState(found=null,raw='',abandon=false) {
     if(!response.ok||!data.ok)throw Error(data.error||'unavailable');
     if(data.day!==getDailyDateKey() || ((found||abandon)&&data.day!==oldDay))throw Error('stale_daily');
     if((data.accountId||null)!==accountId)throw Error('account_changed');
-    clearErr();applyDailyObservedState(data,{awardFreshWin:Boolean(data.fresh)});
-    if(found&&document.getElementById('guess-input').value.trim()===raw)document.getElementById('guess-input').value='';
+    clearErr();applyDailyObservedState(data,{awardFreshWin:Boolean(data.fresh),animateLatest:Boolean(found&&!data.duplicate)});
     if(data.duplicate&&!gameOver)showErr('Ce Pokémon a déjà été proposé. Ton historique a été restauré.');
     return true;
   }catch(error){
     if(ownsResult()){
+      if(found&&!input.value)input.value=raw;
       showErr(error.message==='rate_limited'?'Tu proposes trop vite. Patiente une minute.':error.message==='stale_daily'?'Un nouveau Pokémon est arrivé à minuit Paris. Recharge le défi.':error.message==='account_changed'?'Ton compte a changé. Recharge le défi.':'Le serveur du Daily est injoignable. Tes essais validés sont conservés. Réessaie pour reprendre.');
       document.getElementById('daily-server-retry')?.classList.remove('hidden');
       if(['stale_daily','account_changed'].includes(error.message))dailyServerState=null;
@@ -78,7 +91,8 @@ window.addEventListener?.('pokedle:auth-ready',()=>{
   else renderDailyHero();
 });
 async function submitGuess() {
-  if (gameOver) return;
+  if (gameOver || (gameMode === 'daily' && dailyRequestInFlight)) return;
+  document.getElementById('guess-input').focus({preventScroll:true});
   document.getElementById("guess-ac").classList.add("hidden");
   const raw = document.getElementById("guess-input").value.trim();
   if (!raw) { showErr("Entre un nom de Pokémon !"); return; }
@@ -91,7 +105,7 @@ async function submitGuess() {
   guessedNames.push(found.name); guessedSet.add(found.name);
   const cmp = compare(found, secretPokemon); resultHistory.push({ pokemon: found, cmp }); addRow(found, cmp);
   document.getElementById("results-wrap").classList.remove("hidden");
-  document.getElementById("guess-input").value = ""; document.getElementById("guess-input").focus();
+  document.getElementById("guess-input").value = "";
   guessCache.clear(); updateSilhouettePanel(false); updatePixelPanel(false); saveCurrentGame();
   if (found.name === secretPokemon.name) { gameOver = true; showWin(); }
 }
@@ -268,7 +282,7 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) 
   return rowHtml.replace(/(<td data-label="[^"]+" class="c-(ok|close|wrong)">)/g, (_, cell, state) => cell + comparisonStatusHtml(state));
 }
 
-function addRow(pokemon, cmp, directions = null) {
+function addRow(pokemon, cmp, directions = null, {animate=true,renderShell=true} = {}) {
   const tbody = document.getElementById("results-body");
   const tr = document.createElement("tr");
   tr.className = "guess-result-row";
@@ -283,7 +297,7 @@ function addRow(pokemon, cmp, directions = null) {
   tr.querySelectorAll("td").forEach((cell, index) => {
     cell.classList.add("guess-result-cell");
     cell.style.setProperty("--reveal-index", String(index));
-    if (reducedMotion) cell.classList.add("guess-result-cell-static");
+    if (reducedMotion || !animate) cell.classList.add("guess-result-cell-static");
   });
   tr.dataset.heightDirection = directions ? directions.heightDirection : arrowFor(pokemon.height, secretPokemon.height);
   tr.dataset.weightDirection = directions ? directions.weightDirection : arrowFor(pokemon.weight, secretPokemon.weight);
@@ -291,8 +305,8 @@ function addRow(pokemon, cmp, directions = null) {
   tr.querySelector('[data-label="Hauteur"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.heightDirection === "↑" ? "grand" : "petit"}`);
   tr.querySelector('[data-label="Poids"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.weightDirection === "↑" ? "lourd" : "léger"}`);
   tbody.appendChild(tr);
-  if (typeof renderGameShell === "function") renderGameShell();
-  if (!reducedMotion) {
+  if (renderShell && typeof renderGameShell === "function") renderGameShell();
+  if (animate && !reducedMotion) {
     requestAnimationFrame(() => tr.classList.add("is-revealing"));
     const states = [cmp.generation, cmp.altForm, cmp.type1, cmp.type2, cmp.habitat, cmp.color, cmp.stage, cmp.height, cmp.weight];
     const hasOk = states.some(value => value === "ok");

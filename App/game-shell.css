@@ -302,3 +302,12 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .comparison-type {flex-direction:row;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .comparison-type img {flex:0 0 18px!important;}
 }
+/* Comparison feedback is readable immediately; only a short highlight animates. */
+#pokdle-app #screen-game .guess-result-row.is-revealing .guess-result-cell:not(.guess-result-cell-static) {
+  animation: guess-feedback 160ms ease-out;
+}
+#pokdle-app #screen-game .guess-result-row .guess-result-cell::after { display: none; }
+@keyframes guess-feedback {
+  from { filter: brightness(1.08); }
+  to { filter: brightness(1); }
+}
