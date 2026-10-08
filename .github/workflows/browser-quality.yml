@@ -30,6 +30,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -38,6 +39,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Select relevant QA scope
+        id: scope
+        env:
+          QA_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python tools/daily_scope.py
       - name: Install application dependencies
         run: npm ci
         working-directory: App
@@ -46,7 +52,7 @@ jobs:
           mkdir -p ../quality-artifacts
           git rev-parse HEAD > ../quality-artifacts/revision.txt
           npm run build
-          npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }
+          if [ '${{ steps.scope.outputs.focused }}' = 'true' ]; then node --test test/daily*.test.js > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }; else npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }; fi
           tail -12 ../quality-artifacts/unit-tests.log
         working-directory: App
       - name: Install browser QA dependencies
@@ -54,6 +60,7 @@ jobs:
           python -m pip install playwright==1.55.0
           python -m playwright install --with-deps chromium webkit
       - name: Verify Party mobile touch actions
+        if: steps.scope.outputs.focused != 'true'
         run: python tools/party_mobile_quality.py
       - name: Verify consecutive guesses on desktop and touch browsers
         run: python tools/guess_flow_quality.py
@@ -61,9 +68,14 @@ jobs:
         run: python tools/wordle_quality.py
       - name: Verify daily Dossier on desktop and touch browsers
         run: python tools/dossier_quality.py
+      - name: Verify daily recognition and journey summary
+        if: steps.scope.outputs.focused == 'true'
+        run: python tools/challenge_quality.py
       - name: Verify browser journeys at six viewport widths
+        if: steps.scope.outputs.focused != 'true'
         run: python tools/browser_quality.py --output quality-artifacts/browser
       - name: Verify an actual two-browser Party Room game
+        if: steps.scope.outputs.focused != 'true'
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
       - name: Capture original design at matching viewports
         if: startsWith(github.head_ref, 'codex/structure-')

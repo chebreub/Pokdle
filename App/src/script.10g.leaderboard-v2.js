@@ -1,6 +1,8 @@
 
 // Results & Leaderboards V2 — time-scoped performance leaderboards and result integration.
 const LEADERBOARD_V2_MODES = [
+  ["journey","Parcours du jour","Total des quatre épreuves"],
+  ["challenge","Défi du jour","Points, puis temps"],
   ["dossier","Dossier du jour","Points, puis temps"],
   ["wordle","Wordle du jour","Moins d’essais = mieux"],
   ["daily","Pokémon du jour","Moins d’essais = mieux"],
@@ -24,6 +26,8 @@ function leaderboardV2IsDraft(mode) {
 function leaderboardV2ModeMeta(mode) {
   if (leaderboardV2IsDraft(mode)) return { label:"Draft Score", hint:"Moyenne BST", unit:"BST", direction:"desc" };
   const rows = {
+    journey:{label:"Parcours du jour",hint:"Total des quatre épreuves",unit:"pts",direction:"desc"},
+    challenge:{label:"Défi du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     dossier:{label:"Dossier du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     wordle:{label:"Wordle du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
     daily:{label:"Pokémon du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
