@@ -76,8 +76,11 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
     return {secret_id:Number(target.id)};
   }
   async function play(client,who,day,r) {
-    await client.query("INSERT INTO daily_plays(identity,day,account_id,started_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",[who.key,day,who.accountId||null,clock()]);
     let row=(await client.query("SELECT * FROM daily_plays WHERE identity=$1 AND day=$2 FOR UPDATE",[who.key,day])).rows[0];
+    if(!row) {
+      await client.query("INSERT INTO daily_plays(identity,day,account_id,started_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",[who.key,day,who.accountId||null,clock()]);
+      row=(await client.query("SELECT * FROM daily_plays WHERE identity=$1 AND day=$2 FOR UPDATE",[who.key,day])).rows[0];
+    }
     if(who.accountId && !row.migrated){
       const config=await settings(client);
       let hasLegacy=false;
@@ -173,6 +176,7 @@ function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,com
     else {if(buckets.size>=20000)throw dailyError("rate_limited",429);buckets.set(key,{count:1,until:now+60000});}
   }
   const handle=action=>async(req,res)=>{
+    const started=performance.now();
     res.set("Cache-Control","no-store");
     if(!service||!await ready)return res.status(503).json({ok:false,error:"unavailable"});
     try{
@@ -186,7 +190,9 @@ function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,com
       if(!id){const issued=issueDailyGuest(secret);id=issued.id;res.cookie("pokdle_daily",issued.cookie,{httpOnly:true,secure:req.secure,sameSite:"lax",path:"/",maxAge:180*86400000});}
       const user=getUser(req),who={key:user?.id?"user:"+user.id:"guest:"+id,guestKey:"guest:"+id,accountId:user?.id?String(user.id):null,name:user?.username||"Dresseur",avatar:user?.avatar||""};
       rate("id:"+who.key+":"+req.method,req.method==="POST"?20:90,Date.now());
-      res.json(await action(who,req));
+      const data=await action(who,req);
+      res.set('Server-Timing','daily;dur='+(performance.now()-started).toFixed(1));
+      res.json(data);
     }catch(e){if(!e.status)console.error("[daily] request:",e.message);if(e.status===429)res.set("Retry-After","60");res.status(e.status||503).json({ok:false,error:e.status?e.code:"unavailable"});}
   };
   app.get("/api/daily",handle(who=>service.state(who)));

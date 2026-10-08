@@ -26,8 +26,10 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
   async function round(client,day,who) {
     const prior=(await client.query('SELECT status FROM wordle_plays WHERE identity=$1 AND day=$2',[who.key,day])).rows[0];
     if(!prior||prior.status==='playing')throw fail('wordle_required');
-    await client.query("SELECT pg_advisory_xact_lock(hashtext('pokedle-dossier:'||$1))",[day]);
     let r=(await client.query('SELECT * FROM dossier_rounds WHERE day=$1',[day])).rows[0];
+    if(r)return r;
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('pokedle-dossier:'||$1))",[day]);
+    r=(await client.query('SELECT * FROM dossier_rounds WHERE day=$1',[day])).rows[0];
     if(!r) {
       const daily=(await client.query('SELECT secret_id FROM daily_rounds WHERE day=$1',[day])).rows[0];
       if(!daily||!facts[daily.secret_id])throw fail('unavailable',503);
@@ -38,8 +40,11 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
   }
   async function play(client,calendar,who) {
     const day=calendar.day;
-    await client.query('INSERT INTO dossier_plays(identity,day,account_id,started_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[who.key,day,who.accountId||null,clock()]);
     let row=(await client.query('SELECT * FROM dossier_plays WHERE identity=$1 AND day=$2 FOR UPDATE',[who.key,day])).rows[0];
+    if(!row) {
+      await client.query('INSERT INTO dossier_plays(identity,day,account_id,started_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[who.key,day,who.accountId||null,clock()]);
+      row=(await client.query('SELECT * FROM dossier_plays WHERE identity=$1 AND day=$2 FOR UPDATE',[who.key,day])).rows[0];
+    }
     if(who.accountId&&!row.migrated) {
       if(who.guestKey) {
         const guest=(await client.query('SELECT * FROM dossier_plays WHERE identity=$1 AND day=$2 FOR UPDATE',[who.guestKey,day])).rows[0];
@@ -112,6 +117,7 @@ function mountDossierRoutes({app,express,db,secret,getUser,readCookies,daily,wor
     else{if(buckets.size>=20000)throw fail('rate_limited',429);buckets.set(key,{count:1,until:now+60000});}
   }
   const handle=action=>async(req,res)=>{
+    const started=performance.now();
     res.set('Cache-Control','no-store');
     if(!service||!daily||!wordle||!await ready||!await wordle.ready)return res.status(503).json({ok:false,error:'unavailable'});
     try {
@@ -124,8 +130,10 @@ function mountDossierRoutes({app,express,db,secret,getUser,readCookies,daily,wor
       if(!id){const guest=issueDailyGuest(secret);id=guest.id;res.cookie('pokdle_daily',guest.cookie,{httpOnly:true,secure:req.secure,sameSite:'lax',path:'/',maxAge:180*86400000});}
       const user=getUser(req),who={key:user?.id?'user:'+user.id:'guest:'+id,guestKey:'guest:'+id,accountId:user?.id?String(user.id):null,name:user?.username||'Dresseur',avatar:user?.avatar||''};
       rate('id:'+who.key,60);
-      await daily.state(who);await wordle.state(who);
-      res.json(await action(who,req));
+      if(req.method==='GET'){await daily.state(who);await wordle.state(who);}
+      const data=await action(who,req);
+      res.set('Server-Timing','dossier;dur='+(performance.now()-started).toFixed(1));
+      res.json(data);
     }catch(e){if(!e.status)console.error('[dossier] request:',e.message);if(e.status===429)res.set('Retry-After','60');res.status(e.status||503).json({ok:false,error:e.status?e.code:'unavailable'});}
   };
   app.get('/api/daily/dossier',handle(who=>service.state(who)));
