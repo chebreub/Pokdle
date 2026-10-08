@@ -63,6 +63,10 @@ async def run():
                     await ready(page,'dailyWordleState?.status === "playing" && !dailyWordleBusy')
                     assert 'answerName' not in await page.evaluate('dailyWordleState')
                     assert await page.locator('.wordle-mystery .wordle-cell').count()==10
+                    assert await page.locator('#screen-wordle').evaluate('e => e.getBoundingClientRect().width <= 781'), 'Wordle card stretched by legacy screen CSS'
+                    assert await page.locator('.wordle-heading').evaluate('e => getComputedStyle(e).backgroundColor === "rgba(0, 0, 0, 0)"'), 'Legacy header background leaked into Wordle'
+                    if width<640:
+                        assert await page.locator('#wordle-form').evaluate('e => e.getBoundingClientRect().bottom < document.getElementById("mobile-tabbar").getBoundingClientRect().top - 7'), 'Initial input hidden under mobile navigation'
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-start.png'))
                     field=page.locator('#wordle-input')
                     await field.fill('FAUXNOM');await page.locator('#wordle-submit').click()
@@ -80,6 +84,8 @@ async def run():
                     await page.keyboard.type('èche');await page.keyboard.press('Enter')
                     await ready(page,'dailyWordleState?.attempts === 2 && !dailyWordleBusy')
                     assert await field.evaluate('e => document.activeElement === e')
+                    if width<640:
+                        await ready(page,'document.getElementById("wordle-form").getBoundingClientRect().bottom < document.getElementById("mobile-tabbar").getBoundingClientRect().top - 7')
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-playing.png'))
                     assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'), 'Horizontal page overflow'
                     await field.fill('Pikachu');await page.keyboard.press('Enter');assert calls==[25,4]

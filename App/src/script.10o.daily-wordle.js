@@ -8,7 +8,7 @@ function ensureDailyWordleScreen() {
   const screen=document.createElement('section');screen.id='screen-wordle';screen.className='hidden wordle-screen';
   screen.innerHTML=`<div class="wordle-toolbar"><button class="btn-ghost" data-action="goToConfig">← Accueil</button><button class="btn-ghost" data-action="openLeaderboardV2" data-args='["wordle","today"]'>Classement</button></div>
     <article class="wordle-card"><nav class="wordle-journey" aria-label="Parcours du jour"><button data-action="startDailyGame">1 · Enquête</button><span aria-current="step">2 · Wordle</span></nav>
-    <header><p class="wordle-kicker" id="wordle-day">LE RENDEZ-VOUS DU JOUR</p><h1>Un nom à déchiffrer</h1><p>Un autre Pokémon. Six essais. Chaque lettre te rapproche du mystère.</p></header>
+    <div class="wordle-heading"><p class="wordle-kicker" id="wordle-day">LE RENDEZ-VOUS DU JOUR</p><h1>Un nom à déchiffrer</h1><p>Un autre Pokémon. Six essais. Chaque lettre te rapproche du mystère.</p></div>
     <div id="wordle-message" class="wordle-message" role="status" aria-live="polite"></div>
     <div id="wordle-board" class="wordle-board" aria-label="Grille du Wordle"></div>
     <div class="wordle-legend"><span><i class="exact">✓</i> Bien placée</span><span><i class="present">↔</i> Ailleurs</span><span><i class="absent">×</i> Absente</span></div>
@@ -109,7 +109,20 @@ function renderWordleSuggestions() {
     button.addEventListener('pointerdown',e=>e.preventDefault());
     button.addEventListener('click',()=>submitDailyWordle(p.id));list.appendChild(button);
   }
+  requestAnimationFrame(fitWordleInput);
 }
+function fitWordleInput() {
+  const input=document.getElementById('wordle-input'),form=document.getElementById('wordle-form');
+  if(innerWidth>640||document.activeElement!==input||!form||dailyWordleState?.finished||document.getElementById('screen-wordle')?.classList.contains('hidden'))return;
+  const viewport=window.visualViewport,top=viewport?.offsetTop||0,height=viewport?.height||innerHeight;
+  let bottom=top+height;const nav=document.getElementById('mobile-tabbar')?.getBoundingClientRect();
+  if(nav&&nav.top>top&&nav.top<bottom)bottom=nav.top;
+  document.getElementById('wordle-suggestions').style.maxHeight=Math.max(44,Math.min(210,bottom-top-120))+'px';
+  const rect=form.getBoundingClientRect();
+  if(rect.bottom>bottom-10)window.scrollBy({top:rect.bottom-bottom+12,behavior:'instant'});
+  else if(rect.top<top+10)window.scrollBy({top:rect.top-top-12,behavior:'instant'});
+}
+window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(fitWordleInput));
 async function submitDailyWordle(pokemonId=null) {
   if(dailyWordleBusy||!dailyWordleState||dailyWordleState.finished)return;
   if(dailyWordleState.accountId!==dailyObservedAccountId()){wordleMessage('Ton compte a changé. Recharge ta partie.');return;}
