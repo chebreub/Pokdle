@@ -2,6 +2,12 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {LIMIT,modeForDay,chooseTargets,initChallengeDb,createChallengeService,createMediaLoader}=require('../lib/daily-challenge');
 const pokemon=Array.from({length:30},(_,i)=>({id:i+1,name:'Pokémon '+(i+1),gen:1,type1:'Normal'}));
+test('daily challenge element IDs do not collide with existing friend challenge controls',()=>{
+  const fs=require('node:fs'),path=require('node:path');
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),source=fs.readFileSync(path.join(__dirname,'../src/script.10q.daily-challenge.js'),'utf8');
+  const ids=new Set([...html.matchAll(/id=["']([^"']+)["']/g)].map(m=>m[1]));
+  for(const match of source.matchAll(/id=["']([^"']+)["']/g))assert.ok(!ids.has(match[1]),match[1]);
+});
 test('recognition rotates through all three modes and draws ten distinct base species',()=>{
   assert.deepEqual(new Set(['2026-10-08','2026-10-09','2026-10-10'].map(modeForDay)),new Set(['zoom','cry','pixel']));
   assert.deepEqual(chooseTargets([...pokemon,{id:10001,isAltForm:true}],()=>0),[1,2,3,4,5,6,7,8,9,10]);
