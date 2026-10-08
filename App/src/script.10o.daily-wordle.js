@@ -85,7 +85,9 @@ async function wordleRequest(action='',pokemonId) {
     if(serial!==dailyWordleSerial||document.getElementById('screen-wordle')?.classList.contains('hidden'))return false;
     const messages={daily_required:'Termine d’abord l’Enquête du jour, même en révélant la réponse.',stale_daily:'Le jour a changé à Paris. Recharge l’épreuve du jour.',account_changed:'Ton compte a changé. Recharge ta partie.',rate_limited:'Trop de propositions rapprochées. Réessaie dans une minute.'};
     wordleMessage(messages[e.code]||'Le serveur est injoignable. Réessaie : tes propositions validées sont conservées.');
-    const retry=document.createElement('button');retry.className='btn-ghost';retry.dataset.action='startDailyWordle';retry.textContent='Recharger l’épreuve';document.getElementById('wordle-message').append(' ',retry);
+    const retry=document.createElement('button');retry.className='btn-ghost';
+    const nextDay=e.code==='daily_required'||e.code==='stale_daily';
+    retry.dataset.action=nextDay?'startDailyGame':'startDailyWordle';retry.textContent=nextDay?'Ouvrir l’Enquête du jour':'Recharger l’épreuve';document.getElementById('wordle-message').append(' ',retry);
     return false;
   } finally {clearTimeout(timer);if(serial===dailyWordleSerial){dailyWordleBusy=false;syncWordleControls();}}
 }
@@ -114,7 +116,7 @@ async function submitDailyWordle(pokemonId=null) {
   const input=document.getElementById('wordle-input'),draft=input.value;
   const p=pokemonId?POKEMON_BY_ID.get(Number(pokemonId)):getPokemonUiList().find(p=>wordleNormalize(p.name)===wordleNormalize(draft));
   if(!p){wordleMessage('Choisis un vrai nom de Pokémon dans les propositions. Aucun essai retiré.');return;}
-  if(dailyWordleState.rows.some(row=>row.pokemonId===p.id)){wordleMessage('Déjà proposé ! Choisis un autre Pokémon.');return;}
+  if(dailyWordleState.rows.some(row=>row.letters===wordleNormalize(p.name))){wordleMessage('Déjà proposé ! Choisis un autre Pokémon.');return;}
   input.value='';document.getElementById('wordle-suggestions').classList.add('hidden');input.setAttribute('aria-expanded','false');input.focus({preventScroll:true});
   const ok=await wordleRequest('/guess',p.id);
   if(!ok&&!input.value&&!dailyWordleState?.finished)input.value=draft;
@@ -145,9 +147,10 @@ renderGameOverBox=function() {
   const value=renderGameOverBeforeWordle.apply(this,arguments),restart=document.getElementById('btn-restart');
   let next=document.getElementById('daily-wordle-next');
   if(gameMode==='daily'&&restart) {
-    if(!next){next=document.createElement('button');next.id='daily-wordle-next';next.type='button';next.className='btn-blue';next.dataset.action='startDailyWordle';restart.before(next);}
+    if(!next){next=document.createElement('button');next.id='daily-wordle-next';next.type='button';next.className='btn-blue result-primary';next.dataset.action='startDailyWordle';restart.before(next);}
     next.textContent='Épreuve suivante : Wordle →';next.classList.remove('hidden');
   } else next?.classList.add('hidden');
+  if(restart){const daily=gameMode==='daily';restart.classList.toggle('btn-blue',!daily);restart.classList.toggle('result-primary',!daily);restart.classList.toggle('btn-ghost',daily);}
   return value;
 };
 const renderDailyHeroBeforeWordle=renderDailyHero;
@@ -163,3 +166,8 @@ renderDailyHero=function() {
   return value;
 };
 document.addEventListener('DOMContentLoaded',()=>renderDailyHero());
+function refreshWordleDay() {
+  if(dailyWordleState&&dailyWordleState.day!==getDailyDateKey()&&!document.getElementById('screen-wordle')?.classList.contains('hidden'))startDailyWordle();
+}
+setInterval(refreshWordleDay,30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshWordleDay();});

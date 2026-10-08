@@ -22,7 +22,7 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
       CREATE TABLE scores(discord_id TEXT,mode TEXT,score INTEGER,username TEXT,avatar TEXT,updated_at TIMESTAMPTZ,PRIMARY KEY(discord_id,mode));
       INSERT INTO daily_rounds VALUES('2026-10-08',1),('2026-10-09',1);`);
     await initWordleDb(db);await initWordleDb(db);
-    const pokemon=[{id:1,name:'Bulbizarre'},{id:25,name:'Pikachu'},{id:4,name:'Salamèche'},{id:7,name:'Carapuce'},{id:133,name:'Évoli'},{id:151,name:'Mew'},{id:2,name:'Herbizarre'},{id:3,name:'Florizarre'},{id:20001,name:'Méga-Florizarre',isAltForm:true}];
+    const pokemon=[{id:1,name:'Bulbizarre'},{id:25,name:'Pikachu'},{id:4,name:'Salamèche'},{id:7,name:'Carapuce'},{id:133,name:'Évoli'},{id:151,name:'Mew'},{id:2,name:'Herbizarre'},{id:3,name:'Florizarre'},{id:20001,name:'Méga-Florizarre',isAltForm:true},{id:137,name:'Porygon'},{id:233,name:'Porygon2'}];
     let now=new Date('2026-10-08T12:00:00Z');const service=()=>createWordleService({db,pokemon,clock:()=>now,randomInt:()=>0});let game=service();
     const guest={key:'guest:g'},A={key:'user:A',accountId:'A',name:'A'},body=(p,who,day='2026-10-08')=>({day,accountId:who.accountId||null,pokemonId:p});
     const unlock=who=>db.query("INSERT INTO daily_plays VALUES($1,$2,'abandoned')",[who.key,'2026-10-08']);
@@ -44,8 +44,10 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
     const D={key:'user:D',accountId:'D'};await unlock(D);assert.equal((await game.abandon(D,body(undefined,D))).status,'abandoned');assert.equal((await game.guess(D,body(25,D))).points,0);
     const ongoing={key:'guest:login'};await unlock(ongoing);await game.guess(ongoing,body(4,ongoing));const E={key:'user:E',accountId:'E',guestKey:ongoing.key};await unlock(E);assert.equal((await game.state(E)).attempts,1);assert.equal((await game.guess(E,body(25,E))).ranked,true);
     const F={key:'user:F',accountId:'F'};await unlock(F);await game.guess(F,body(4,F));await db.query('ALTER TABLE scores ADD CONSTRAINT bad CHECK(score<0)');await assert.rejects(game.guess(F,body(25,F)));assert.equal((await game.state(F)).attempts,1);await db.query('ALTER TABLE scores DROP CONSTRAINT bad');
+    const I={key:'guest:ambiguous'};await unlock(I);await game.guess(I,body(137,I));assert.equal((await game.guess(I,body(233,I))).duplicate,true);assert.equal((await game.state(I)).attempts,1);
     now=new Date('2026-10-08T21:59:59Z');const lock=await db.connect();await lock.query('BEGIN');await lock.query("SELECT * FROM wordle_plays WHERE identity='user:F' AND day='2026-10-08' FOR UPDATE");
     const pending=game.guess(F,body(25,F));await new Promise(r=>setTimeout(r,50));now=new Date('2026-10-08T22:00:00Z');await lock.query('COMMIT');lock.release();await assert.rejects(pending,{code:'stale_daily'});
     await assert.rejects(game.guess(A,body(25,A)),{code:'stale_daily'});await db.query("INSERT INTO daily_plays VALUES('user:A','2026-10-09','won')");const tomorrow=await game.state(A);assert.equal(tomorrow.attempts,0);assert.equal(tomorrow.day,'2026-10-09');assert.notEqual((await db.query("SELECT secret_id FROM wordle_rounds WHERE day='2026-10-09'")).rows[0].secret_id,25);
+    now=new Date('2026-10-10T12:00:00Z');await db.query("INSERT INTO daily_rounds VALUES('2026-10-10',1); INSERT INTO daily_plays VALUES('guest:letters','2026-10-10','won'); INSERT INTO wordle_rounds VALUES('2026-10-10',233)");const equivalent=await game.guess({key:'guest:letters'},{day:'2026-10-10',accountId:null,pokemonId:137});assert.equal(equivalent.won,true);assert.equal(equivalent.points,6);assert.ok(equivalent.rows[0].colors.every(c=>c==='exact'));
   } finally {if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
 });

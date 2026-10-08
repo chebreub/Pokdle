@@ -48,7 +48,8 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
     if(!r) {
       const deduction=(await client.query("SELECT secret_id FROM daily_rounds WHERE day=$1",[day])).rows[0];
       const recent=(await client.query("SELECT secret_id FROM wordle_rounds WHERE day>$1::date-30 AND day<$1",[day])).rows.map(r=>Number(r.secret_id));
-      const choices=pool.filter(p=>p.id!==Number(deduction?.secret_id)&&!recent.includes(p.id));
+      const deductionName=wordleLetters(byId.get(Number(deduction?.secret_id))?.name||'');
+      const choices=pool.filter(p=>wordleLetters(p.name)!==deductionName&&!recent.includes(p.id));
       if(!choices.length)throw error("unavailable",503);
       r={secret_id:choices[randomInt(choices.length)].id};
       await client.query("INSERT INTO wordle_rounds(day,secret_id) VALUES($1,$2)",[day,r.secret_id]);
@@ -88,9 +89,12 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
     return transaction(async(client,calendar)=>{
       const r=await round(client,calendar.day,who),row=await play(client,calendar.day,who);
       if(!body||row.status!=="playing")return snapshot(calendar,who,row,r);
-      if(!abandon&&row.guessed.includes(body.pokemonId))return {...snapshot(calendar,who,row,r),duplicate:true};
+      const proposed=abandon?null:wordleLetters(byId.get(body.pokemonId).name);
+      if(!abandon&&row.guessed.some(id=>wordleLetters(byId.get(Number(id)).name)===proposed))return {...snapshot(calendar,who,row,r),duplicate:true};
       const guessed=abandon?row.guessed:[...row.guessed,body.pokemonId];
-      const status=abandon?"abandoned":body.pokemonId===Number(r.secret_id)?"won":guessed.length>=MAX_TRIES?"lost":"playing";
+      // Names such as Porygon / Porygon2 share the same letter grid. A fully
+      // green proposal must win rather than penalize a spelling the grid accepts.
+      const status=abandon?"abandoned":proposed===wordleLetters(byId.get(Number(r.secret_id)).name)?"won":guessed.length>=MAX_TRIES?"lost":"playing";
       const finished=status!=="playing",now=clock(),elapsed=finished?Math.max(0,now-new Date(row.started_at)):null;
       await client.query("UPDATE wordle_plays SET guessed=$3::jsonb,status=$4,finished_at=$5,elapsed_ms=$6 WHERE identity=$1 AND day=$2",[who.key,calendar.day,JSON.stringify(guessed),status,finished?now:null,elapsed]);
       if(status==="won"&&row.account_id)await recordLeaderboardResultInTransaction(client,{id:who.accountId,username:who.name,avatar:who.avatar},"wordle",guessed.length,{direction:"asc"},"wordle:"+calendar.day);
