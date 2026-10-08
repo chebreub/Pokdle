@@ -34,8 +34,8 @@ async def run():
               await route.fulfill(json=snapshot())
             await page.route('**/api/daily/challenge',route_api);await page.route('**/api/daily/challenge/**',route_api)
             await page.evaluate('startDailyChallenge()');await ready(page,'dailyChallengeState?.status === "ready" && !dailyChallengeBusy');assert await page.locator('[data-action="beginDailyChallenge"]').is_visible();await page.screenshot(path=str(OUT/f'{engine}-{width}-ready.png'),full_page=True)
-            await page.locator('[data-action="beginDailyChallenge"]').click();await ready(page,'dailyChallengeState?.status === "playing" && !dailyChallengeBusy');assert await page.locator('#challenge-input').is_focused();await page.screenshot(path=str(OUT/f'{engine}-{width}-playing.png'),full_page=True)
-            await page.locator('#challenge-input').fill('Bulbizarre');await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await ready(page,'dailyChallengeState.guesses.length===1 && !dailyChallengeBusy');assert await page.locator('#challenge-input').is_focused()
+            await page.locator('[data-action="beginDailyChallenge"]').click();await ready(page,'dailyChallengeState?.status === "playing" && !dailyChallengeBusy');assert await page.evaluate('document.activeElement.id === "challenge-input"');await page.screenshot(path=str(OUT/f'{engine}-{width}-playing.png'),full_page=True)
+            await page.locator('#challenge-input').fill('Bulbizarre');await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await ready(page,'dailyChallengeState.guesses.length===1 && !dailyChallengeBusy');assert await page.evaluate('document.activeElement.id === "challenge-input"')
             await page.locator('#challenge-input').fill('Herbizarre');await page.locator('#challenge-submit').click();await ready(page,'dailyChallengeState.guesses.length===2 && !dailyChallengeBusy');assert 'Génération 1' in await page.locator('.challenge-hints').inner_text()
             # Type while a reply is pending: the draft and focus must survive.
             await page.locator('#challenge-input').fill('Florizarre');await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await page.locator('#challenge-input').fill('Méga');await ready(page,'dailyChallengeState.guesses.length===3 && !dailyChallengeBusy');assert await page.locator('#challenge-input').input_value()=='Méga'
@@ -43,7 +43,7 @@ async def run():
             await page.locator('#challenge-message [data-action="startDailyChallenge"]').click();await ready(page,'dailyChallengeState?.guesses.length===3 && !dailyChallengeBusy')
             await page.locator('#challenge-input').fill('Salamèche');await page.locator('#challenge-submit').click();await ready(page,'dailyChallengeState.guesses.length===4 && !dailyChallengeBusy');assert 'Électrik' in await page.locator('.challenge-hints').inner_text()
             await page.locator('#challenge-input').fill('Pikachu');await page.locator('#challenge-submit').click();await ready(page,'dailyChallengeState.index===1 && !dailyChallengeBusy');assert await page.locator('.challenge-correction').is_visible();assert state['points']==2;await page.screenshot(path=str(OUT/f'{engine}-{width}-correction.png'),full_page=True)
-            await page.locator('[data-action="nextChallengePokemon"]').click();assert await page.locator('#challenge-input').is_focused()
+            await page.locator('[data-action="nextChallengePokemon"]').click();assert await page.evaluate('document.activeElement.id === "challenge-input"')
             for name in ['Bulbizarre','Herbizarre','Florizarre','Salamèche','Reptincel','Dracaufeu']:
               await page.locator('#challenge-input').fill(name);await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await ready(page,'!dailyChallengeBusy')
             assert state['index']==2 and state['points']==2
