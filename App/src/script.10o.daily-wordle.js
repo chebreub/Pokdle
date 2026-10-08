@@ -118,7 +118,9 @@ async function submitDailyWordle(pokemonId=null) {
   if(!p){wordleMessage('Choisis un vrai nom de Pokémon dans les propositions. Aucun essai retiré.');return;}
   if(dailyWordleState.rows.some(row=>row.letters===wordleNormalize(p.name))){wordleMessage('Déjà proposé ! Choisis un autre Pokémon.');return;}
   input.value='';document.getElementById('wordle-suggestions').classList.add('hidden');input.setAttribute('aria-expanded','false');input.focus({preventScroll:true});
+  const serial=dailyWordleSerial+1,accountId=dailyObservedAccountId();
   const ok=await wordleRequest('/guess',p.id);
+  if(serial!==dailyWordleSerial||accountId!==dailyObservedAccountId()||document.getElementById('screen-wordle')?.classList.contains('hidden'))return;
   if(!ok&&!input.value&&!dailyWordleState?.finished)input.value=draft;
   renderWordleSuggestions();
 }

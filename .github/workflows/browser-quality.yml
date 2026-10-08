@@ -38,10 +38,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Install browser QA dependencies
-        run: |
-          python -m pip install playwright==1.55.0
-          python -m playwright install --with-deps chromium webkit
       - name: Install application dependencies
         run: npm ci
         working-directory: App
@@ -53,6 +49,10 @@ jobs:
           npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }
           tail -12 ../quality-artifacts/unit-tests.log
         working-directory: App
+      - name: Install browser QA dependencies
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium webkit
       - name: Verify Party mobile touch actions
         run: python tools/party_mobile_quality.py
       - name: Verify consecutive guesses on desktop and touch browsers
@@ -83,6 +83,14 @@ jobs:
           path: quality-artifacts/
           retention-days: 14
           if-no-files-found: error
+      - name: Save Wordle screenshots separately
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: wordle-quality-${{ github.run_id }}
+          path: quality-artifacts/wordle/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Save original design screenshots
         if: always()
         uses: actions/upload-artifact@v5
