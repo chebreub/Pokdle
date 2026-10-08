@@ -1,6 +1,7 @@
 
 // Results & Leaderboards V2 — time-scoped performance leaderboards and result integration.
 const LEADERBOARD_V2_MODES = [
+  ["dossier","Dossier du jour","Points, puis temps"],
   ["wordle","Wordle du jour","Moins d’essais = mieux"],
   ["daily","Pokémon du jour","Moins d’essais = mieux"],
   ["quiz","Quiz","Bonnes réponses"],
@@ -23,6 +24,7 @@ function leaderboardV2IsDraft(mode) {
 function leaderboardV2ModeMeta(mode) {
   if (leaderboardV2IsDraft(mode)) return { label:"Draft Score", hint:"Moyenne BST", unit:"BST", direction:"desc" };
   const rows = {
+    dossier:{label:"Dossier du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     wordle:{label:"Wordle du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
     daily:{label:"Pokémon du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
     quiz:{label:"Quiz",hint:"Bonnes réponses",unit:"bonnes réponses",direction:"desc"},
@@ -81,7 +83,7 @@ function submitLeaderboardResult(mode, score, options = {}) {
   if (!mode || !Number.isInteger(n) || n <= 0) return Promise.resolve(false);
   const body = { mode, score:n, resultId:options.resultId || leaderboardResultId() };
   // Daily is recorded by /api/daily/guess after the server observes the winning guess.
-  if (mode === "wordle") return Promise.resolve(false);
+  if (mode === "dossier" || mode === "wordle") return Promise.resolve(false);
   if (mode === "daily") return Promise.resolve(false);
   return leaderboardFetchJson("/api/leaderboard/result", {
     method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)

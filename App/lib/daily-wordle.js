@@ -134,6 +134,7 @@ function mountWordleRoutes({app,express,db,pokemon,secret,getUser,readCookies,da
   app.get("/api/daily/wordle",handle(who=>service.state(who)));
   app.post("/api/daily/wordle/guess",express.json({limit:"2kb"}),handle((who,req)=>service.guess(who,req.body||{})));
   app.post("/api/daily/wordle/abandon",express.json({limit:"2kb"}),handle((who,req)=>service.abandon(who,req.body||{})));
+  if(service)service.ready=ready;
   return service;
 }
 module.exports={MAX_TRIES,wordleLetters,compareLetters,initWordleDb,createWordleService,mountWordleRoutes};

@@ -59,6 +59,8 @@ jobs:
         run: python tools/guess_flow_quality.py
       - name: Verify daily Wordle on desktop and touch browsers
         run: python tools/wordle_quality.py
+      - name: Verify daily Dossier on desktop and touch browsers
+        run: python tools/dossier_quality.py
       - name: Verify browser journeys at six viewport widths
         run: python tools/browser_quality.py --output quality-artifacts/browser
       - name: Verify an actual two-browser Party Room game
@@ -89,6 +91,14 @@ jobs:
         with:
           name: wordle-quality-${{ github.run_id }}
           path: quality-artifacts/wordle/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Save Dossier screenshots separately
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: dossier-quality-${{ github.run_id }}
+          path: quality-artifacts/dossier/
           retention-days: 14
           if-no-files-found: ignore
       - name: Save original design screenshots
