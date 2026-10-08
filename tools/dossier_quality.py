@@ -50,6 +50,9 @@ async def run():
                     assert 'answer' not in (await page.evaluate('dailyDossierState'))['question']
                     assert await page.locator('#screen-dossier').evaluate('e=>e.getBoundingClientRect().width<=781')
                     assert await page.locator('.dossier-option').count()==4
+                    assert await page.locator('.dossier-heading h1').evaluate('e=>getComputedStyle(e).color === "rgb(46, 42, 51)"'), 'Legacy white h1 leaked into dossier'
+                    assert 'Vérification' not in await page.locator('#dossier-message').inner_text()
+                    await page.screenshot(path=str(OUT/f'{engine}-{width}-viewport.png'))
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-start.png'),full_page=True)
                     # Wrong response preserves play; double submissions cannot advance twice.
                     wrong=(bank[0]['answer']+1)%4
