@@ -300,6 +300,7 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
 const LB_MODE_CONFIG = Object.freeze({
+  wordle: { direction: "asc", label: "Wordle du jour", unit: "essais", max: 6 },
   daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 1025 },
   quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 10 },
   speedrun: { direction: "desc", label: "Speedrun", unit: "Pokémon", max: 100 },
@@ -376,6 +377,7 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
   const user=getSessionUser(req);
   if (!user) return res.status(401).json({ok:false,error:"authentication_required"});
   const mode=String(req.body?.mode||""), config=leaderboardConfig(mode);
+  if (mode==="wordle") return res.status(409).json({ok:false,error:"wordle_requires_server_session"});
   if (mode==="daily") return res.status(409).json({ok:false,error:"daily_requires_server_session"});
   const score=clampLeaderboardScore(req.body?.score,config);
   if (!config || score==null) return res.status(400).json({ok:false,error:"invalid_score"});
@@ -415,7 +417,7 @@ app.get("/api/leaderboard", async (req, res) => {
         )`;
     } else {
       const timePredicate = scope === "today"
-        ? (mode === "daily" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')")
+        ? (["daily","wordle"].includes(mode) ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')")
         : "e.created_at >= now() - interval '7 days'";
       rankedCte = `
         WITH best AS (
@@ -489,7 +491,8 @@ const draftScoreRooms = new Map();
 const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
-require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
+const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
+require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
