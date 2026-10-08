@@ -32,7 +32,7 @@ async def run():
                   pts=7-len(state['guesses']) if correct else 0;state['results'].append(dict(correct=correct,attempts=len(state['guesses']),points=pts,pokemonId=25,name='Pikachu'));state['index']+=1;state['points']+=pts;state['guesses']=[];feedback.update(pokemonId=25,name='Pikachu',points=pts)
                 await route.fulfill(json=dict(**snapshot(),feedback=feedback));return
               await route.fulfill(json=snapshot())
-            await page.route('**/api/daily/challenge**',route_api)
+            await page.route('**/api/daily/challenge',route_api);await page.route('**/api/daily/challenge/**',route_api)
             await page.evaluate('startDailyChallenge()');await ready(page,'dailyChallengeState?.status === "ready" && !dailyChallengeBusy');assert await page.locator('[data-action="beginDailyChallenge"]').is_visible();await page.screenshot(path=str(OUT/f'{engine}-{width}-ready.png'),full_page=True)
             await page.locator('[data-action="beginDailyChallenge"]').click();await ready(page,'dailyChallengeState?.status === "playing" && !dailyChallengeBusy');assert await page.locator('#challenge-input').is_focused();await page.screenshot(path=str(OUT/f'{engine}-{width}-playing.png'),full_page=True)
             await page.locator('#challenge-input').fill('Bulbizarre');await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await ready(page,'dailyChallengeState.guesses.length===1 && !dailyChallengeBusy');assert await page.locator('#challenge-input').is_focused()
