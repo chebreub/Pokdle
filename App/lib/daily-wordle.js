@@ -43,8 +43,11 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
   async function round(client,day,who) {
     const daily=(await client.query("SELECT status FROM daily_plays WHERE identity=$1 AND day=$2",[who.key,day])).rows[0];
     if(!daily||daily.status==="playing")throw error("daily_required");
-    await client.query("SELECT pg_advisory_xact_lock(hashtext('pokedle-wordle:'||$1))",[day]);
     let r=(await client.query("SELECT secret_id FROM wordle_rounds WHERE day=$1",[day])).rows[0];
+    if(r)return r;
+    // Only creating the shared draw needs the day-wide lock. Answers lock one player.
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('pokedle-wordle:'||$1))",[day]);
+    r=(await client.query("SELECT secret_id FROM wordle_rounds WHERE day=$1",[day])).rows[0];
     if(!r) {
       const deduction=(await client.query("SELECT secret_id FROM daily_rounds WHERE day=$1",[day])).rows[0];
       const recent=(await client.query("SELECT secret_id FROM wordle_rounds WHERE day>$1::date-30 AND day<$1",[day])).rows.map(r=>Number(r.secret_id));
@@ -57,8 +60,11 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
     return r;
   }
   async function play(client,day,who) {
-    await client.query("INSERT INTO wordle_plays(identity,day,account_id,started_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",[who.key,day,who.accountId||null,clock()]);
     let row=(await client.query("SELECT * FROM wordle_plays WHERE identity=$1 AND day=$2 FOR UPDATE",[who.key,day])).rows[0];
+    if(!row) {
+      await client.query("INSERT INTO wordle_plays(identity,day,account_id,started_at) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",[who.key,day,who.accountId||null,clock()]);
+      row=(await client.query("SELECT * FROM wordle_plays WHERE identity=$1 AND day=$2 FOR UPDATE",[who.key,day])).rows[0];
+    }
     if(who.accountId&&!row.migrated) {
       if(who.guestKey) {
         const guest=(await client.query("SELECT * FROM wordle_plays WHERE identity=$1 AND day=$2 FOR UPDATE",[who.guestKey,day])).rows[0];
@@ -114,6 +120,7 @@ function mountWordleRoutes({app,express,db,pokemon,secret,getUser,readCookies,da
     else{if(buckets.size>=20000)throw error("rate_limited",429);buckets.set(key,{count:1,until:now+60000});}
   }
   const handle=action=>async(req,res)=>{
+    const started=performance.now();
     res.set("Cache-Control","no-store");
     if(!service||!daily||!await ready)return res.status(503).json({ok:false,error:"unavailable"});
     try {
@@ -127,8 +134,10 @@ function mountWordleRoutes({app,express,db,pokemon,secret,getUser,readCookies,da
       const user=getUser(req),who={key:user?.id?"user:"+user.id:"guest:"+id,guestKey:"guest:"+id,accountId:user?.id?String(user.id):null,name:user?.username||"Dresseur",avatar:user?.avatar||""};
       rate("id:"+who.key,60);
       // This also restores the anonymous Daily on login before opening stage two.
-      await daily.state(who);
-      res.json(await action(who,req));
+      if(req.method==="GET")await daily.state(who);
+      const data=await action(who,req);
+      res.set('Server-Timing','wordle;dur='+(performance.now()-started).toFixed(1));
+      res.json(data);
     }catch(e){if(!e.status)console.error("[wordle] request:",e.message);if(e.status===429)res.set("Retry-After","60");res.status(e.status||503).json({ok:false,error:e.status?e.code:"unavailable"});}
   };
   app.get("/api/daily/wordle",handle(who=>service.state(who)));
