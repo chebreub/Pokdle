@@ -139,6 +139,6 @@ function mountDossierRoutes({app,express,db,secret,getUser,readCookies,daily,wor
   app.get('/api/daily/dossier',handle(who=>service.state(who)));
   app.post('/api/daily/dossier/answer',express.json({limit:'2kb'}),handle((who,req)=>service.answer(who,req.body||{})));
   app.post('/api/daily/dossier/abandon',express.json({limit:'2kb'}),handle((who,req)=>service.abandon(who,req.body||{})));
-  return {ready,async leaderboard(scope,accountId){if(!service||!await ready)throw fail('unavailable',503);return service.leaderboard(scope,accountId);}};
+  return {ready,async state(who){if(!service||!await ready)throw fail('unavailable',503);return service.state(who);},async leaderboard(scope,accountId){if(!service||!await ready)throw fail('unavailable',503);return service.leaderboard(scope,accountId);}};
 }
 module.exports={initDossierDb,createDossierService,mountDossierRoutes};

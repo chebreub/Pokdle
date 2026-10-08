@@ -42,7 +42,7 @@ async def run():
                     async def wordle(route):await route.fulfill(json=dict(ok=True,day=day,number=200,accountId=None,authenticated=False,status='lost',finished=True,won=False,maxTries=6,length=10,attempts=6,points=0,ranked=False,rows=[],answerId=1,answerName='Bulbizarre'))
                     await page.route('**/api/daily/dossier',get);await page.route('**/api/daily/dossier/answer',answer);await page.route('**/api/daily/dossier/abandon',abandon);await page.route('**/api/daily/wordle',wordle)
                     await page.evaluate('startDailyWordle();closeOverlayModal()');await ready(page,'dailyWordleState?.finished && !dailyWordleBusy')
-                    assert '2/3' in await page.locator('#wordle-day').inner_text()
+                    assert '2/4' in await page.locator('#wordle-day').inner_text()
                     next_button=page.locator('#wordle-dossier-next')
                     if width<640:await next_button.tap()
                     else:await next_button.click()
