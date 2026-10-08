@@ -300,6 +300,7 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
 const LB_MODE_CONFIG = Object.freeze({
+  dossier: { direction: "desc", label: "Dossier du jour", unit: "pts", max: 20 },
   wordle: { direction: "asc", label: "Wordle du jour", unit: "essais", max: 6 },
   daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 1025 },
   quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 10 },
@@ -377,6 +378,7 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
   const user=getSessionUser(req);
   if (!user) return res.status(401).json({ok:false,error:"authentication_required"});
   const mode=String(req.body?.mode||""), config=leaderboardConfig(mode);
+  if (mode==="dossier") return res.status(409).json({ok:false,error:"dossier_requires_server_session"});
   if (mode==="wordle") return res.status(409).json({ok:false,error:"wordle_requires_server_session"});
   if (mode==="daily") return res.status(409).json({ok:false,error:"daily_requires_server_session"});
   const score=clampLeaderboardScore(req.body?.score,config);
@@ -406,6 +408,7 @@ app.get("/api/leaderboard", async (req, res) => {
   const user = getSessionUser(req);
   const meId = user ? user.id : null;
   try {
+    if(mode === "dossier") return res.json(await dossierService.leaderboard(scope,meId));
     let rankedCte;
     if (scope === "all") {
       rankedCte = `
@@ -492,7 +495,8 @@ const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
-require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
+const wordleService = require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
+const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, wordle:wordleService, readyBefore:authDbReady });
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
