@@ -27,7 +27,7 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
     if(!row){await c.query('INSERT INTO challenge_plays(identity,day,account_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[who.key,day,who.accountId||null]);row=(await c.query('SELECT * FROM challenge_plays WHERE identity=$1 AND day=$2 FOR UPDATE',[who.key,day])).rows[0];}
     if(who.accountId&&!row.migrated){
       if(who.guestKey){const guest=(await c.query('SELECT * FROM challenge_plays WHERE identity=$1 AND day=$2 FOR UPDATE',[who.guestKey,day])).rows[0];if(guest&&guest.status!=='ready'){
-        await c.query('UPDATE challenge_plays SET answers=$3::jsonb,guessed=$4::jsonb,points=$5,status=$6,started_at=$7,finished_at=$8,elapsed_ms=$9,account_id=$10 WHERE identity=$1 AND day=$2',[who.key,day,JSON.stringify(guest.answers),JSON.stringify(guest.guessed),guest.points,guest.status,guest.started_at,guest.finished_at,guest.elapsed_ms,['completed','abandoned'].includes(guest.status)?null:who.accountId]);}}
+        await c.query('UPDATE challenge_plays SET answers=$3::jsonb,guessed=$4::jsonb,points=$5,status=$6,started_at=$7,finished_at=$8,elapsed_ms=$9,account_id=$10 WHERE identity=$1 AND day=$2',[who.key,day,JSON.stringify(guest.answers),JSON.stringify(guest.guessed),guest.points,guest.status,guest.started_at,guest.finished_at,guest.elapsed_ms,(['completed','abandoned'].includes(guest.status)||(guest.status==='playing'&&clock()-new Date(guest.started_at)>=LIMIT))?null:who.accountId]);}}
       await c.query('UPDATE challenge_plays SET migrated=true WHERE identity=$1 AND day=$2',[who.key,day]);row=(await c.query('SELECT * FROM challenge_plays WHERE identity=$1 AND day=$2',[who.key,day])).rows[0];
     }return row;
   }
