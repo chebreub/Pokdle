@@ -1331,7 +1331,15 @@ function showToast(msg) {
 window.showToast = showToast;
 
 function showErr(msg) {
-  document.getElementById("err-msg").textContent = msg;
+  const message = document.getElementById("err-msg");
+  message.textContent = msg;
+  // A refused name nudges the field, so the player notices it without reading.
+  [message, document.querySelector("#screen-game .search-bar")].forEach(node => {
+    if (!node) return;
+    node.classList.remove("is-nudged");
+    void node.offsetWidth;
+    node.classList.add("is-nudged");
+  });
 }
 
 function clearErr() {
