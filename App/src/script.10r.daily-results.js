@@ -47,6 +47,10 @@ renderDailyDossier=function(){
   compactDailyStage('screen-dossier','dossier-result',s?.finished);
   if(s?.finished){
     const result=document.getElementById('dossier-result'),sprite=document.querySelector('#dossier-pokemon img');
+    if(s.status==='abandoned'){
+      const breakdown=result.querySelector('.dossier-breakdown');
+      if(breakdown){const correct=s.results.filter(r=>r.correct).length;breakdown.textContent='Épreuve interrompue : 0 point attribué — '+correct+' bonne'+(correct===1?'':'s')+' réponse'+(correct===1?'':'s')+' avant l’arrêt.';}
+    }
     if(sprite){const small=sprite.cloneNode();small.className='daily-result-sprite';result.prepend(small);}
     const next=result.querySelector('[data-action="startDailyChallenge"]');if(next)next.textContent='Épreuve suivante : Défi →';
   }
@@ -65,9 +69,14 @@ renderGameOverBox=function(){
   const old=document.getElementById('daily-enquiry-result-details');
   if(old){[...old.children].filter(n=>n.tagName!=='SUMMARY').forEach(n=>old.before(n));old.remove();}
   const value=renderEnquiryBeforeCompactResults.apply(this,arguments);
+  document.getElementById('daily-enquiry-points')?.remove();
   box.classList.toggle('daily-result-card',gameMode==='daily');
   const actions=box.querySelector('.win-btns');actions?.classList.toggle('daily-result-actions',gameMode==='daily');
   if(gameMode==='daily'){
+    const score=document.createElement('p');score.id='daily-enquiry-points';score.className='wordle-score';
+    const points=Number(dailyServerState?.points)||0;
+    score.innerHTML='<strong>'+points+' <small>/ 10 pts</small></strong>';
+    box.querySelector('.win-inner').after(score);
     const details=dailyResultDetails(box,'Statistiques et autres options',[
       document.getElementById('win-gamefeel-summary'),document.getElementById('win-daily-distribution'),
       document.getElementById('win-next-daily')

@@ -11,6 +11,7 @@ for(const mode of ['wordle','dossier'])test(mode+': answers use one transaction;
   const questions=buildDossierQuestions(25,day);
   const query=async(sql,args)=>{
     queries.push(sql);
+    if(sql.startsWith('SELECT w.*,r.secret_id'))return {rows:[{...row,secret_id:25}]};
     if(sql.startsWith('SELECT status FROM'))return {rows:[{status:'won'}]};
     if(sql.startsWith('SELECT secret_id FROM wordle_rounds'))return {rows:[{secret_id:25}]};
     if(sql.startsWith('SELECT * FROM dossier_rounds'))return {rows:[{pokemon_id:25,questions}]};
@@ -33,7 +34,12 @@ for(const mode of ['wordle','dossier'])test(mode+': answers use one transaction;
   const body=mode==='wordle'?{day,accountId:null,pokemonId:4}:{day,accountId:null,index:0,choice:(questions[0].answer+1)%4};
   let res=await invoke('POST',body);assert.equal(res.statusCode,200);assert.equal(res.data.ok,true);assert.deepEqual(upstream,[]);assert.ok(queries.length<=6,'Warm answer exceeded six SQL calls: '+queries.length);
   assert.ok(!queries.some(s=>s.includes('pg_advisory_xact_lock')),'Existing rounds must not serialize every player');
-  assert.match(res.headers['Server-Timing'],new RegExp('^'+mode+';dur=\\d+(?:\\.\\d+)?$'));
+  if(mode==='wordle'){
+    assert.equal(queries.length,4,'An established Wordle answer uses BEGIN, one locked read, UPDATE, COMMIT');
+    assert.match(res.headers['Server-Timing'],/db_connect;dur=.*db;dur=.*sql;desc="4 queries"/);
+    assert.equal(JSON.parse(JSON.stringify(res.data)).timing,undefined,'Internal diagnostics do not enter the game payload');
+  }
+  assert.match(res.headers['Server-Timing'],new RegExp('^'+mode+';dur=\\d+(?:\\.\\d+)?'));
   assert.equal(mode==='wordle'?res.data.attempts:res.data.answered,1);
   res=await invoke('POST',body);assert.equal(mode==='wordle'?res.data.attempts:res.data.answered,1);assert.equal(res.data.duplicate,true);
 });

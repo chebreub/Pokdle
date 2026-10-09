@@ -33,11 +33,13 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
   const byId=new Map(pokemon.map(p=>[Number(p.id),p]));
   const pool=pokemon.filter(p=>!p.isAltForm&&p.id>0&&p.id<=1025&&wordleLetters(p.name).length<=15);
   async function transaction(action) {
-    const calendar=dailyCalendar(clock()), client=await db.connect();
+    const calendar=dailyCalendar(clock()),connectStart=performance.now(),client=await db.connect();
+    const timing={connect:performance.now()-connectStart,db:0,queries:0};
+    const measured={query:async(...args)=>{const start=performance.now();timing.queries++;try{return await client.query(...args);}finally{timing.db+=performance.now()-start;}}};
     try {
-      await client.query("BEGIN"); const value=await action(client,calendar);
+      await measured.query("BEGIN"); const value=await action(measured,calendar);
       if(dailyCalendar(clock()).day!==calendar.day)throw error("stale_daily");
-      await client.query("COMMIT");return value;
+      await measured.query("COMMIT");Object.defineProperty(value,'timing',{value:timing});return value;
     } catch(e) {await client.query("ROLLBACK");throw e;} finally {client.release();}
   }
   async function round(client,day,who) {
@@ -93,7 +95,14 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
       if(!abandon&&(!Number.isInteger(body.pokemonId)||!byId.has(body.pokemonId)))throw error("invalid_guess",400);
     }
     return transaction(async(client,calendar)=>{
-      const r=await round(client,calendar.day,who),row=await play(client,calendar.day,who);
+      // An established play already owns its round. Read prerequisites and lock
+      // that player's row together, avoiding two sequential database round trips.
+      const existing=body?(await client.query(`SELECT w.*,r.secret_id FROM wordle_plays w
+        JOIN wordle_rounds r ON r.day=w.day
+        JOIN daily_plays d ON d.identity=w.identity AND d.day=w.day AND d.status!='playing'
+        WHERE w.identity=$1 AND w.day=$2 AND ($3::boolean=false OR w.migrated=true)
+        FOR UPDATE OF w`,[who.key,calendar.day,Boolean(who.accountId)])).rows[0]:null;
+      const r=existing?{secret_id:existing.secret_id}:await round(client,calendar.day,who),row=existing||await play(client,calendar.day,who);
       if(!body||row.status!=="playing")return snapshot(calendar,who,row,r);
       const proposed=abandon?null:wordleLetters(byId.get(body.pokemonId).name);
       if(!abandon&&row.guessed.some(id=>wordleLetters(byId.get(Number(id)).name)===proposed))return {...snapshot(calendar,who,row,r),duplicate:true};
@@ -136,7 +145,8 @@ function mountWordleRoutes({app,express,db,pokemon,secret,getUser,readCookies,da
       // This also restores the anonymous Daily on login before opening stage two.
       if(req.method==="GET")await daily.state(who);
       const data=await action(who,req);
-      res.set('Server-Timing','wordle;dur='+(performance.now()-started).toFixed(1));
+      const timing=data.timing;
+      res.set('Server-Timing','wordle;dur='+(performance.now()-started).toFixed(1)+(timing?', db_connect;dur='+timing.connect.toFixed(1)+', db;dur='+timing.db.toFixed(1)+', sql;desc="'+timing.queries+' queries"':''));
       res.json(data);
     }catch(e){if(!e.status)console.error("[wordle] request:",e.message);if(e.status===429)res.set("Retry-After","60");res.status(e.status||503).json({ok:false,error:e.status?e.code:"unavailable"});}
   };

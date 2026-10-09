@@ -13,6 +13,7 @@ function fixture(accountId='A'){
  document:{getElementById:node},getDailyDateKey:()=>DAY,findPokemon:name=>env.POKEMON_LIST.find(p=>p.name===name),compare:()=>cmp,addRow:(p,c,d,options)=>{added.push([p,c,d,options]);node('results-body').children.push({});},saveCurrentGame(){},saveDailyResult(){},clearSavedGame(){},saveStats(){},renderGameShell(){},renderDailyHero(){},
  renderGameOverBox(){renders++;},getTodayDailyResult:()=>null,playerStats:{},winRegisteredForCurrentGame:false,guessCache:new Map(),LIVE_RANK_CACHE:new Map([['daily',{}]]),updateSilhouettePanel(){},updatePixelPanel(){},showErr:v=>{error=v;},clearErr:()=>{error='';},showWin:()=>{wins++;},recordMatchHistory(){},
  AbortController,setTimeout:fn=>{timeoutFn=fn;return 1;},clearTimeout:()=>{timeoutFn=null;},fetch:async()=>response(snapshot([25],'playing',accountId))};
+ env.registerGameStart=()=>{}; // Counter semantics are covered by daily-maintenance.test.js.
  env.POKEMON_BY_ID=new Map(env.POKEMON_LIST.map(p=>[p.id,p]));vm.createContext(env);vm.runInContext(source,env);vm.runInContext('dailyServerState='+JSON.stringify(snapshot([],'playing',accountId)),env);
  return {env,node,added,get wins(){return wins;},get renders(){return renders;},get error(){return error;},timeout(){timeoutFn?.();}};
 }

@@ -224,6 +224,7 @@ function loadStats() {
     dailyCurrentStreak: Number(parsed.dailyCurrentStreak) || 0,
     dailyBestStreak: Number(parsed.dailyBestStreak) || 0,
     lastDailyWinKey: typeof parsed.lastDailyWinKey === "string" ? parsed.lastDailyWinKey : null,
+    lastDailyStartedKey: typeof parsed.lastDailyStartedKey === "string" ? parsed.lastDailyStartedKey : null,
   };
 
   refreshDailyStreakStatus();
@@ -286,6 +287,12 @@ function renderStats() {
 }
 
 function registerGameStart() {
+  if(gameMode==='daily'){
+    if(!dailyServerState||dailyServerState.finished)return;
+    const key=String(dailyServerState.accountId||'guest')+':'+dailyServerState.day;
+    if(playerStats.lastDailyStartedKey===key)return;
+    playerStats.lastDailyStartedKey=key;
+  }
   playerStats.played += 1;
   saveStats();
   evaluateAchievements();
@@ -2147,7 +2154,7 @@ function getHelpContentForGameMode(mode) {
           </section>
           <section class="app-help-card">
             <h4>Indices après chaque essai</h4>
-            <p>Chaque ligne affiche un comparatif avec ton essai : <b>génération</b>, <b>types</b> (1 et 2), <b>habitat</b>, <b>couleur</b>, <b>stade</b> d'évolution, <b>taille</b> et <b>poids</b>. Vert = correct, jaune = proche, rouge = différent. Les flèches ▲/▼ t'indiquent si la vraie valeur est plus grande ou plus petite.</p>
+            <p>Chaque ligne compare la <b>génération</b>, la <b>forme</b>, les <b>types</b>, l’<b>habitat</b>, la <b>couleur</b>, le <b>stade</b>, la <b>taille</b> et le <b>poids</b>. <b>✓ Exact / ≈ Partiel ou proche / × Différent.</b> L’orange indique notamment un type à l’autre place, une couleur partiellement commune, une taille à 0,3 m près ou un poids à 15 kg près. ↑ signifie que le Pokémon recherché est plus grand ou plus lourd ; ↓ signifie plus petit ou plus léger.</p>
           </section>
           <section class="app-help-card">
             <h4>Série & record</h4>
@@ -2231,7 +2238,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Questions à choix multiples</h4>
-            <p>Une série de questions sur l'univers Pokémon (génération, type, stat dominante, signature, etc.). Choisis la bonne réponse parmi les 4 propositions.</p>
+            <p>15 questions en solo, 5 par manche en Party Room. Choisis la bonne réponse parmi les 4 propositions. L’objectif de Ligue est de réussir au moins 12 réponses sur 15.</p>
           </section>
           <section class="app-help-card">
             <h4>Score final</h4>

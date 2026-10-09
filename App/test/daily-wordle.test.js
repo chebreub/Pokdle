@@ -30,6 +30,9 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
     await unlock(guest);await unlock(A);
     for(const who of [guest,A]){const state=await game.state(who);assert.equal(state.length,7);assert.equal(state.answerId,undefined);assert.equal(state.answerName,undefined);assert.equal(state.rows.length,0);assert.equal(state.maxTries,6);}
     assert.equal((await db.query('SELECT secret_id FROM wordle_rounds')).rows[0].secret_id,25);
+    await db.query("UPDATE daily_plays SET status='playing' WHERE identity=$1",[guest.key]);
+    await assert.rejects(game.guess(guest,body(4,guest)),{code:'daily_required'});
+    await db.query("UPDATE daily_plays SET status='abandoned' WHERE identity=$1",[guest.key]);
     await assert.rejects(game.guess(A,body(9999,A)),{code:'invalid_guess'});await assert.rejects(game.guess(A,{...body(4,A),accountId:'B'}),{code:'account_changed'});
     await game.guess(guest,body(4,guest));assert.equal((await game.guess(guest,body(4,guest))).duplicate,true);assert.equal((await service().state(guest)).attempts,1);
     const won=await game.guess(guest,body(25,guest));assert.equal(won.won,true);assert.equal(won.points,5);assert.equal(won.answerName,'Pikachu');assert.equal(won.ranked,false);
