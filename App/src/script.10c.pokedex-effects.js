@@ -149,9 +149,34 @@ function celebrateAlbumMission(mission, pokemon) {
     autoClose: false
   });
 }
+// A win already opens its result screen: the new entry joins that screen instead of covering it.
+function pokedexResultScreenOpen() {
+  if (typeof document === 'undefined') return false;
+  const box = document.getElementById('win-box');
+  return Boolean(box && !box.classList.contains('hidden') && !document.getElementById('screen-game')?.classList.contains('hidden'));
+}
+function markResultDiscovery(pokemon) {
+  const box = document.getElementById('win-box');
+  if (!box) return false;
+  const dexId = Number(pokemon.baseId || pokemon.id);
+  document.getElementById('win-new-entry')?.remove();
+  const line = document.createElement('button');
+  line.type = 'button';
+  line.id = 'win-new-entry';
+  line.className = 'win-new-entry';
+  line.dataset.action = 'openRegisteredPokemonInPokedex';
+  line.dataset.args = JSON.stringify([Number(pokemon.id)]);
+  line.innerHTML = `<span>✦ Nouvelle entrée Pokédex</span><b>#${String(dexId).padStart(3,'0')} ${escapeHtml(pokemon.name)}</b><small>Voir la fiche →</small>`;
+  const anchor = box.querySelector('.win-inner');
+  if (anchor) anchor.after(line); else box.prepend(line);
+  playPokedexUiSfx(pokedexRegistrationTierMeta('standard').sfx);
+  playPokedexRegistrationCry(pokemon, 0.42);
+  return true;
+}
 function celebrateStandardDiscovery(pokemon, mode, at) {
   const timestamp = Number(at) || Date.now();
   if (Date.now() - timestamp > 12000) return false;
+  if (pokedexResultScreenOpen()) return markResultDiscovery(pokemon);
   return showPokedexRegistration(pokemon, {
     tier: 'standard',
     missionLabel: 'MODE',
