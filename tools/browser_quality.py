@@ -76,9 +76,10 @@ def main():
     def home_filters_and_login():
      try:
       page.locator('#home-game-filters button').filter(has_text='Deviner').click()
-      expect(page.locator('#home-games-grid [data-action="startPixelGame"]').is_visible(),'Guess filter omits Pixel')
+      expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
       page.locator('#home-game-filters button').filter(has_text='Stratégie').click()
-      expect(page.locator('#home-games-grid .home-game').count()==1,'Strategy filter includes unrelated modes')
+      strategy=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
+      expect(len(strategy)==2 and all('openDraftScoreAttackMode' in args for args in strategy),'Strategy filter includes unrelated modes: '+repr(strategy))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
@@ -138,11 +139,11 @@ def main():
     check('audit-home-readability',audit_home_readability,False)
     def cosy_home():
      expect(page.locator('#daily-hero').count()==1,'Daily hero is duplicated')
-     expect(page.locator('#home-games-grid .home-game').count()==6,'Home discovery shortcuts are missing')
+     expect(page.locator('#home-games-grid .mode-tile').count()==6,'Home discovery shortcuts are missing')
      expect(page.locator('#daily-notebook .notebook-cell').count()==27,'Notebook must retain all nine criteria')
      hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('.home-discovery').bounding_box();party=page.locator('.home-pathways').bounding_box()
      expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
-     for artwork in page.locator('#home-games-grid .home-game-pokemon').all():
+     for artwork in page.locator('#home-games-grid .mode-tile-sprite').all():
       artwork.scroll_into_view_if_needed()
       page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=artwork.element_handle())
      if width in (390,1366): page.locator('.home-discovery').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=85,animations='disabled')
@@ -167,11 +168,15 @@ def main():
      return screen('screen-all-modes')
     check('audit-catalog',audit_catalog)
     def generation_catalog():
-     expect(page.locator('#home-gens-card').is_visible(),'Generation choice is hidden with difficulty filters')
+     # Generations sit with difficulty in the single "Filtres" panel.
+     expect(page.locator('#home-gens-card').is_hidden(),'Filters should start collapsed')
+     page.locator('#mode-refinements-toggle').click()
+     expect(page.locator('#home-gens-card').is_visible(),'Generation choice is missing from the filters panel')
      page.locator('#mode-search').fill('cri')
      expect(page.locator('#home-gens-card').is_visible(),'Searching for a mode hides its generation setting')
      page.locator('#home-gens-card').click();page.locator('#overlay-modal .generation-choice').first.wait_for(state='visible')
      page.keyboard.press('Escape');page.locator('#mode-search').fill('')
+     page.locator('#mode-refinements-toggle').click()
      return screen('screen-all-modes')
     check('generation-catalog',generation_catalog)
     def pc0_desktop_foundations():
@@ -194,7 +199,7 @@ def main():
      return screen('screen-all-modes')
     check('pc0-desktop-foundations',pc0_desktop_foundations)
     def search():
-     page.locator('#mode-search').fill('cri');page.wait_for_timeout(150);cards=page.locator('#screen-all-modes .all-modes-card:visible');expect(cards.count()>0,'No search result');expect(any(t.strip()=='Cri' for t in page.locator('#screen-all-modes .all-modes-card:visible > b').all_text_contents()),'Cri missing');page.locator('#mode-search').fill('');return screen('screen-all-modes')
+     page.locator('#mode-search').fill('cri');page.wait_for_timeout(150);cards=page.locator('#screen-all-modes .all-modes-card:visible');expect(cards.count()>0,'No search result');expect(any(t.strip()=='Cri' for t in page.locator('#screen-all-modes .all-modes-card:visible .mode-tile-title').all_text_contents()),'Cri missing');expect(cards.count()==1,'Short search should match word starts only');page.locator('#mode-search').fill('');return screen('screen-all-modes')
     check('search',search)
     def empty_search():
      page.locator('#mode-search').fill('zzzznoresultzzzz');page.wait_for_timeout(100)
@@ -204,77 +209,81 @@ def main():
      page.locator('#mode-empty button').click();expect(page.locator('#mode-search').input_value()=='','Search was not reset')
      return screen('screen-all-modes')
     check('empty-search-reset',empty_search)
-    def waveform():
-     bars=page.locator('#screen-all-modes .mode-preview-audio .mode-preview-bars i');expect(bars.count()>0,'No waveform');heights=bars.evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)');expect(all(h>0 for h in heights),f'Collapsed bars: {heights}');return heights
-    check('waveform',waveform,False)
-    def preview_layout():
-     sample=page.locator('.mode-preview-evolution img')
-     sizes=sample.evaluate_all('(els)=>els.map(e=>({position:getComputedStyle(e).position,width:e.getBoundingClientRect().width}))')
-     expect(len(sizes)==3,'Evolution sequence missing')
-     expect(all(e['position']=='static' and 12<=e['width']<=30 for e in sizes),str(sizes))
-     return sizes
-    check('preview-layout',preview_layout,False)
-    def icon_strokes():
-     nav('social','screen-all-modes')
-     styles=page.locator('.club-pick-icon svg:visible').evaluate_all('(els)=>els.map(e=>({fill:getComputedStyle(e).fill,stroke:getComputedStyle(e).stroke}))')
-     expect(len(styles)==3 and all(e['fill']=='none' and e['stroke']!='none' for e in styles),str(styles))
-     nav('game','screen-all-modes')
-     return styles
-    check('catalog-icons',icon_strokes,False)
-    def illustrated_cards():
-     picks=page.locator('#catalog-picks .has-mode-illustration')
-     expect(picks.count()==3,'Expected three illustrated pilot cards')
-     for card in picks.all():
-      img=card.locator('.mode-illustration img')
-      img.scroll_into_view_if_needed()
-      img.evaluate('(e)=>e.decode()')
-      expect(img.evaluate('(e)=>e.complete && e.naturalWidth>0'),'Illustration asset failed to load')
-      picture=img.bounding_box();title=card.locator('b').bounding_box();box=card.bounding_box()
-      expect(picture['width']>=100,'Illustration is still a tiny thumbnail')
-      expect(title['x']>=box['x'] and title['x']+title['width']<=box['x']+box['width']+1,'Card title is clipped')
-      if width<=760:
-       expect(box['height']<=190,'Mobile illustrated card is too tall')
-       expect(title['x']>=picture['x']+picture['width'],'Mobile text should sit beside the illustration')
-      else:
-       expect(title['y']>=picture['y']+picture['height'],'Desktop text overlaps its illustration')
-       expect(abs(picture['width']-(box['width']-2))<3,'Desktop illustration should fill its card width')
-     expect(page.locator('.all-modes-card[data-args=\'["startNormalGame"]\']').is_visible(),'Unlimited mode disappeared from the catalog')
+    def tile_art():
+     # Every game card shows its mascot and a drawn object for its mechanic.
+     tiles=page.locator('#screen-all-modes .mode-tile:visible')
+     expect(tiles.count()==19,'Solo catalogue should list 19 games: '+str(tiles.count()))
+     cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
+     cry.scroll_into_view_if_needed()
+     sprite=cry.locator('.mode-tile-sprite').first
+     page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=sprite.element_handle())
+     art=cry.locator('.mode-tile-art').bounding_box();pic=sprite.bounding_box();prop=cry.locator('.mode-tile-prop svg').bounding_box()
+     expect(pic['width']>=80,'Mascot is a tiny thumbnail: '+repr(pic))
+     expect(prop and prop['width']>=18,'Mechanic object is missing: '+repr(prop))
+     expect(pic['x']>=art['x']-1 and pic['x']+pic['width']<=art['x']+art['width']+1,'Mascot escapes its scene')
+     return {'tiles':tiles.count(),'sprite':pic['width']}
+    check('tile-art',tile_art,False)
+    def tile_duo():
+     sprites=page.locator('#screen-all-modes .mode-tile[data-args=\'["startEvolutionChainGame"]\'] .mode-tile-sprite')
+     expect(sprites.count()==2,'Evolution card should show both stages')
+     return sprites.count()
+    check('tile-duo',tile_duo,False)
+    def family_chips():
+     chips=page.locator('#mode-family-filters button')
+     labels=[t.strip() for t in chips.all_inner_texts()]
+     expect(len(labels)==6 and labels[0].startswith('Tous') and labels[-1].startswith('Outils'),'Family chips are incomplete: '+repr(labels))
+     chips.filter(has_text='Arcade').click()
+     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==4,'Arcade chip does not narrow the list')
+     chips.filter(has_text='Outils').click()
+     expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openEmulatorMode"]\']').is_visible(),'Tools chip does not reach the emulator')
+     chips.filter(has_text='Tous').click()
+     return labels
+    check('family-chips',family_chips,False)
+    def featured_banner():
+     banner=page.locator('#catalog-picks .catalog-feature')
+     expect(banner.count()==1,'Expected one featured banner')
+     img=banner.locator('img')
+     img.scroll_into_view_if_needed()
+     img.evaluate('(e)=>e.decode()')
+     expect(img.evaluate('(e)=>e.complete && e.naturalWidth>0'),'Illustration asset failed to load')
+     picture=img.bounding_box();title=banner.locator('b').bounding_box();box=banner.bounding_box()
+     expect(title['x']>=box['x'] and title['x']+title['width']<=box['x']+box['width']+1,'Banner title is clipped')
+     if width<=900: expect(title['y']>=picture['y']+picture['height']-1,'Narrow banner text should sit below the illustration')
+     else: expect(title['x']>=picture['x']+picture['width']-1,'Wide banner text should sit beside the illustration')
+     expect(page.locator('#screen-all-modes .all-modes-card[data-args=\'["startNormalGame"]\']').is_visible(),'Unlimited mode disappeared from the catalog')
+     expect(page.locator('#screen-all-modes .all-modes-card[data-args=\'["openPokeConnectionsMode"]\']').is_visible(),'Featured game should stay in its family')
      page.locator('#catalog-picks').scroll_into_view_if_needed()
-     page.screenshot(path=str(out/f'{width}-illustrated-selection.jpg'),quality=85,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-featured-banner.jpg'),quality=85,animations='disabled')
      page.evaluate("document.body.classList.add('theme-dark')")
-     page.screenshot(path=str(out/f'{width}-illustrated-selection-dark.jpg'),quality=85,animations='disabled')
+     page.screenshot(path=str(out/f'{width}-featured-banner-dark.jpg'),quality=85,animations='disabled')
      page.evaluate("document.body.classList.remove('theme-dark')")
      page.locator('#mode-search').fill('connections')
-     result=page.locator('.all-modes-card.has-mode-illustration:visible')
-     expect(result.count()==1,'Connections search did not preserve the illustrated result')
-     result.locator('img').evaluate('(e)=>e.decode()')
-     title=result.locator('b').bounding_box();picture=result.locator('img').bounding_box()
-     expect(title['width']>=140,'Search title is still trapped in the old icon column: '+repr(title))
-     expect(title['x']+title['width']<=picture['x'],'Search image overlaps the text column')
-     expect(result.locator('small').evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=13,'Search description is too small')
-     expect(result.bounding_box()['height']<=220,'Search result is unnecessarily tall')
-     page.screenshot(path=str(out/f'{width}-illustrated-search.jpg'),quality=85,animations='disabled')
+     expect(banner.is_hidden(),'Banner should step aside during a search')
+     result=page.locator('.all-modes-card.mode-tile:visible')
+     expect(result.count()==1,'Connections search did not find its card')
+     title=result.locator('.mode-tile-title').bounding_box();art=result.locator('.mode-tile-art').bounding_box()
+     expect(title['y']>=art['y']+art['height']-1,'Card title overlaps its scene')
+     if width>640: expect(result.locator('.mode-tile-desc').evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=13,'Card description is too small')
+     page.screenshot(path=str(out/f'{width}-tile-search.jpg'),quality=85,animations='disabled')
      page.locator('#mode-search').fill('')
      return screen('screen-all-modes')
-    check('illustrated-cards',illustrated_cards,False)
+    check('featured-banner',featured_banner,False)
     def pc3_catalog_shelves():
      if width<1280: return {'skipped':'desktop-only'}
      nav('game','screen-all-modes')
      section=page.locator('#screen-all-modes .all-modes-cat:visible').first
      grid=section.locator('.all-modes-grid')
      title=section.locator('.all-modes-cat-title')
-     layout=section.evaluate('(e)=>({display:getComputedStyle(e).display,cols:getComputedStyle(e).gridTemplateColumns})')
-     expect(layout['display']=='grid','PC3 catalog family is not a desktop shelf: '+repr(layout))
-     expect(len([x for x in layout['cols'].split(' ') if x])==2,'PC3 catalog shelf does not expose label + cards columns: '+repr(layout))
+     # Families read as section titles above a full-width grid of three cards.
      tb=title.bounding_box();gb=grid.bounding_box()
-     expect(tb and gb and gb['x']>tb['x']+tb['width'],'Catalog family label is not beside its card grid: '+repr([tb,gb]))
+     expect(tb and gb and gb['y']>=tb['y']+tb['height']-1 and abs(gb['x']-tb['x'])<3,'Catalog family title is not above its card grid: '+repr([tb,gb]))
      cols=grid.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
      expect(cols==3,'Desktop catalog shelf should retain three generous cards: '+str(cols))
-     picks=page.locator('#catalog-picks .club-pick:visible')
-     if picks.count()>=3:
-      rects=picks.evaluate_all('(els)=>els.slice(0,3).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,h:e.getBoundingClientRect().height}))')
-      expect(abs(rects[0]['y']-rects[1]['y'])<3 and abs(rects[0]['y']-rects[2]['y'])<3,'Featured desktop picks are not a single row: '+repr(rects))
-      expect(all(300<=r['h']<=520 for r in rects),'Illustrated desktop picks should fit a cover and readable copy: '+repr(rects))
+     expect('jeu' in title.inner_text(),'Family title lost its game count')
+     banner=page.locator('#catalog-picks .catalog-feature:visible')
+     if banner.count():
+      h=banner.bounding_box()['height']
+      expect(200<=h<=320,'Featured banner should stay a compact strip on desktop: '+repr(h))
      return screen('screen-all-modes')
     check('pc3-catalog-shelves',pc3_catalog_shelves)
     def start(action,target):
