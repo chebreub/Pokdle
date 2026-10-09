@@ -35,10 +35,10 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
     await db.query("UPDATE daily_plays SET status='abandoned' WHERE identity=$1",[guest.key]);
     await assert.rejects(game.guess(A,body(9999,A)),{code:'invalid_guess'});await assert.rejects(game.guess(A,{...body(4,A),accountId:'B'}),{code:'account_changed'});
     await game.guess(guest,body(4,guest));assert.equal((await game.guess(guest,body(4,guest))).duplicate,true);assert.equal((await service().state(guest)).attempts,1);
-    const won=await game.guess(guest,body(25,guest));assert.equal(won.won,true);assert.equal(won.points,5);assert.equal(won.answerName,'Pikachu');assert.equal(won.ranked,false);
+    const won=await game.guess(guest,body(25,guest));assert.equal(won.won,true);assert.equal(won.points,8);assert.equal(won.maxPoints,10);assert.equal(won.answerName,'Pikachu');assert.equal(won.ranked,false);
     assert.equal((await db.query('SELECT * FROM leaderboard_events')).rowCount,0);
     const login={key:'user:G',accountId:'G',guestKey:guest.key};await unlock(login);assert.equal((await game.state(login)).won,true);assert.equal((await game.guess(login,body(25,login))).ranked,false);
-    const wins=await Promise.all([game.guess(A,body(25,A)),game.guess(A,body(25,A))]);assert.ok(wins.every(s=>s.points===6));assert.equal((await db.query('SELECT * FROM leaderboard_events')).rowCount,1);
+    const wins=await Promise.all([game.guess(A,body(25,A)),game.guess(A,body(25,A))]);assert.ok(wins.every(s=>s.points===10));assert.equal((await db.query('SELECT * FROM leaderboard_events')).rowCount,1);
     assert.equal((await game.guess(A,body(4,A))).attempts,1);
     const B={key:'user:B',accountId:'B'};await unlock(B);
     for(const id of [1,4,7,133,151,25])await game.guess(B,body(id,B));assert.equal((await game.state(B)).points,1);
@@ -51,6 +51,6 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
     now=new Date('2026-10-08T21:59:59Z');const lock=await db.connect();await lock.query('BEGIN');await lock.query("SELECT * FROM wordle_plays WHERE identity='user:F' AND day='2026-10-08' FOR UPDATE");
     const pending=game.guess(F,body(25,F));await new Promise(r=>setTimeout(r,50));now=new Date('2026-10-08T22:00:00Z');await lock.query('COMMIT');lock.release();await assert.rejects(pending,{code:'stale_daily'});
     await assert.rejects(game.guess(A,body(25,A)),{code:'stale_daily'});await db.query("INSERT INTO daily_plays VALUES('user:A','2026-10-09','won')");const tomorrow=await game.state(A);assert.equal(tomorrow.attempts,0);assert.equal(tomorrow.day,'2026-10-09');assert.notEqual((await db.query("SELECT secret_id FROM wordle_rounds WHERE day='2026-10-09'")).rows[0].secret_id,25);
-    now=new Date('2026-10-10T12:00:00Z');await db.query("INSERT INTO daily_rounds VALUES('2026-10-10',1); INSERT INTO daily_plays VALUES('guest:letters','2026-10-10','won'); INSERT INTO wordle_rounds VALUES('2026-10-10',233)");const equivalent=await game.guess({key:'guest:letters'},{day:'2026-10-10',accountId:null,pokemonId:137});assert.equal(equivalent.won,true);assert.equal(equivalent.points,6);assert.ok(equivalent.rows[0].colors.every(c=>c==='exact'));
+    now=new Date('2026-10-10T12:00:00Z');await db.query("INSERT INTO daily_rounds VALUES('2026-10-10',1); INSERT INTO daily_plays VALUES('guest:letters','2026-10-10','won'); INSERT INTO wordle_rounds VALUES('2026-10-10',233)");const equivalent=await game.guess({key:'guest:letters'},{day:'2026-10-10',accountId:null,pokemonId:137});assert.equal(equivalent.won,true);assert.equal(equivalent.points,10);assert.ok(equivalent.rows[0].colors.every(c=>c==='exact'));
   } finally {if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
 });

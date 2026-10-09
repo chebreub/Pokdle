@@ -19,17 +19,17 @@ async def run():
           await page.goto('http://127.0.0.1:3194/',wait_until='domcontentloaded')
           await ready(page,'typeof refreshDailyHomeSummary === "function" && POKEMON_LIST.length>1000')
           day=await page.evaluate('getDailyDateKey()')
-          summary=dict(ok=True,day=day,number=201,points=42,finished=False,ranked=False,stages=[])
+          summary=dict(ok=True,day=day,number=201,points=42,maxPoints=100,finished=False,ranked=False,stages=[])
           async def status(route):await route.fulfill(json=summary)
           await page.route('**/api/daily/challenge/summary',status)
           actions=['startDailyGame','startDailyWordle','startDailyDossier','startDailyChallenge','showDailyJourneySummary']
           for n in range(5):
-            summary.update(finished=n==4,stages=[dict(finished=i<n,points=0,max=[10,6,20,60][i]) for i in range(4)])
+            summary.update(finished=n==4,stages=[dict(finished=i<n,points=0,max=[40,10,20,30][i]) for i in range(4)])
             await page.evaluate('invalidateDailyHomeSummary();goToConfig();closeOverlayModal()')
             await ready(page,'document.getElementById("daily-hero-cta").dataset.action === '+json.dumps(actions[n])+' && dailyHomeSnapshot?.revision === dailyHomeRevision')
             assert await page.locator('#daily-wordle-home').is_hidden()
             if n in [2,4]:await page.screenshot(path=str(OUT/f'{engine}-{width}-home-{n}.png'),full_page=True)
-          assert '42 / 96' in await page.locator('#daily-hero-status').inner_text()
+          assert '42 / 100' in await page.locator('#daily-hero-status').inner_text()
           assert await page.locator('#daily-notebook').is_hidden(), 'Finished journey must not show an empty enquiry notebook'
           await page.reload(wait_until='domcontentloaded')
           await ready(page,'document.getElementById("daily-hero-status").textContent.includes("Journée terminée")')
@@ -52,9 +52,9 @@ async def run():
           count=await page.evaluate('playerStats.played')
           await page.evaluate('startDailyGame()');await ready(page,'dailyServerState && !dailyRequestInFlight')
           assert await page.evaluate('playerStats.played')==count
-          daily.update(status='won',finished=True,won=True,answerId=25,points=10,attempts=1,rows=[dict(pokemonId=25,cmp={key:'ok' for key in ['generation','altForm','type1','type2','habitat','color','stage','height','weight']},heightDirection='',weightDirection='')])
+          daily.update(status='won',finished=True,won=True,answerId=25,points=40,maxPoints=40,attempts=1,rows=[dict(pokemonId=25,cmp={key:'ok' for key in ['generation','altForm','type1','type2','habitat','color','stage','height','weight']},heightDirection='',weightDirection='')])
           await page.evaluate('startDailyGame()');await ready(page,'gameOver && !dailyRequestInFlight')
-          assert '10' in await page.locator('#daily-enquiry-points').inner_text()
+          assert '40 / 40' in await page.locator('#daily-enquiry-points').inner_text()
           assert await page.evaluate('playerStats.played')==count
           assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+2')
           await page.screenshot(path=str(OUT/f'{engine}-{width}-enquiry-points.png'),full_page=True)

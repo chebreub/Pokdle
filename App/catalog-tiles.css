@@ -423,7 +423,7 @@
 #pokdle-app.design-refresh.theme-dark #screen-all-modes .catalog-feature-copy > span:not(.catalog-feature-badge) { color:var(--tile-muted) !important; }
 #pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-search input,
 #pokdle-app.design-refresh.theme-dark #screen-all-modes #mode-refinements-toggle,
-#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-family-filters button,
+#pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-family-filters button:not([aria-pressed="true"]),
 #pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-refinements.is-expanded .mode-refinement-fields { background-color:var(--tile-surface) !important; }
 #pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-family-filters button span { background:rgba(255,255,255,.1); }
 #pokdle-app.design-refresh.theme-dark #screen-all-modes .mode-family-filters button[aria-pressed="true"] { background:var(--tile-text); color:#1E2233; }

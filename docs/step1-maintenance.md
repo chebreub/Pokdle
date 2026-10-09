@@ -23,8 +23,8 @@ Validation : PostgreSQL réel pour Wordle/Daily ; tests des compteurs, quête et
 
 Progression et Ligue indépendantes de l'historique local limité. Intégrer ou séquencer la fiche Pokédex, les XP et le résultat pour éviter leur superposition. Ne pas supprimer les récompenses attribuées.
 
-## Proposition de pondération — NON APPLIQUÉE
+## Pondération de la journée — appliquée (validée le 9/10/2026)
 
-Conserver 96 points : Enquête 40 (calcul actuel ×4), Wordle 12 (×2), Dossier 20, Défi 24 (score /60 ×0,4, arrondi à la fin). Le classement Enquête reste essais → indices → temps. Attendre validation utilisateur avant tout changement ou migration des anciens totaux.
+100 points entiers : Enquête 40, Défi 30, Dossier 20, Wordle 10, chaque épreuve comptée directement sur son maximum (détail dans docs/daily-challenge.md et lib/daily-points.js). Le classement Enquête reste essais → indices → temps ; le classement Wordle reste au nombre d’essais.
 
 Les périmètres détaillés PR 4/3/6/7/8 ne figurent pas dans le plan historique R0–R8 du dépôt : ne pas confondre ces deux plans ni inventer leur contenu. PR 11 : accès et noms du catalogue uniquement, sans fusion des moteurs, selon la consigne utilisateur.

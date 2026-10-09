@@ -2,17 +2,45 @@
    Chargé en dernier. Aucune animation ne bloque l'action suivante,
    et « réduire les animations » les coupe toutes (règles globales de visual-refresh). */
 
-/* Les cases d'un essai apparaissent une par une, la bonne case saute un peu plus fort. */
+/* Les cases d'un essai restent lisibles tout de suite (contrat de tools/guess_flow_quality.py :
+   opacité 1, aucun délai, 0,2 s au plus) : elles sautent ensemble, la bonne case un peu plus fort,
+   puis un reflet les parcourt une par une. */
 #pokdle-app.design-refresh #screen-game .guess-result-row.is-revealing .guess-result-cell:not(.guess-result-cell-static) {
-  animation:feel-cell-pop .22s cubic-bezier(.3,1.5,.5,1) both;
-  animation-delay:calc(var(--reveal-index, 0) * 55ms);
+  animation:feel-clue-pop .18s cubic-bezier(.3,1.5,.5,1);
 }
 #pokdle-app.design-refresh #screen-game .guess-result-row.is-revealing .guess-result-cell.c-ok:not(.guess-result-cell-static) {
-  animation-name:feel-cell-pop-ok;
-  animation-duration:.3s;
+  animation-name:feel-clue-pop-ok;
+  animation-duration:.2s;
+}
+@media (prefers-reduced-motion:no-preference) {
+  #pokdle-app.design-refresh:not(.reduce-motion) #screen-game .guess-result-row.is-revealing .guess-result-cell:not(.guess-result-cell-static)::after {
+    display:block;
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+    transform:translateX(-120%);
+    animation:feel-clue-sheen .55s ease-out both;
+    animation-delay:calc(.12s + var(--reveal-index, 0) * 45ms);
+  }
 }
 /* Les anciennes lignes ne tremblent plus toutes ensemble à chaque affichage. */
 #pokdle-app.design-refresh #screen-game .guess-result-row:not(.is-revealing) .guess-result-cell.c-wrong { animation:none; }
+@keyframes feel-clue-pop {
+  0% { transform:scale(.88); }
+  70% { transform:scale(1.05); }
+  100% { transform:none; }
+}
+@keyframes feel-clue-pop-ok {
+  0% { transform:scale(.88); box-shadow:0 0 0 0 rgba(56,184,93,.45); }
+  60% { transform:scale(1.1); box-shadow:0 0 0 6px rgba(56,184,93,.22); }
+  100% { transform:none; box-shadow:0 0 0 0 rgba(56,184,93,0); }
+}
+@keyframes feel-clue-sheen {
+  from { transform:translateX(-120%); }
+  to { transform:translateX(120%); }
+}
 @keyframes feel-cell-pop {
   0% { opacity:0; transform:scale(.6); }
   70% { opacity:1; transform:scale(1.07); }

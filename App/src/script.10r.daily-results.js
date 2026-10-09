@@ -75,7 +75,7 @@ renderGameOverBox=function(){
   if(gameMode==='daily'){
     const score=document.createElement('p');score.id='daily-enquiry-points';score.className='wordle-score';
     const points=Number(dailyServerState?.points)||0;
-    score.innerHTML='<strong>'+points+' <small>/ 10 pts</small></strong>';
+    score.innerHTML='<strong>'+points+' <small>/ '+(Number(dailyServerState?.maxPoints)||40)+' pts</small></strong>'+(points?'<span>40 au premier essai · −2 par essai en plus · −4 par indice</span>':'');
     box.querySelector('.win-inner').after(score);
     const details=dailyResultDetails(box,'Statistiques et autres options',[
       document.getElementById('win-gamefeel-summary'),document.getElementById('win-daily-distribution'),

@@ -82,7 +82,7 @@ function homeGameRecordHtml(action) {
 var CATALOG_FEATURES = [
   ["startDailyGame", "daily", "Le Pokémon du jour", "Le même mystère pour tout le monde. Enquête, puis Wordle, Dossier et Défi.", "Carnet d’enquête, loupe et Pokédex sur un sentier"],
   ["openPokeConnectionsMode", "connections", "Poké-Connections", "16 Pokémon, quatre liens cachés. À toi de retrouver les quatre groupes.", "Évoli et ses évolutions autour d’un puzzle"],
-  ["openDraftScoreAttackMode", "draft", "Draft Score Attack", "Six choix pour une équipe de rêve. Vise le meilleur total.", "Trois Pokémon prêts au combat dans une arène"]
+  ["openDraftScoreAttackMode", "draft", "Draft Score Attack", "Six choix pour une équipe de rêve. Vise le meilleur total.", "Gardevoir, Lucario et Corvaillus devant une arène"]
 ];
 function catalogFeatureOfWeek(now = Date.now()) {
   // 1 January 1970 was a Thursday: shifting by 3 days makes weeks start on Monday.
