@@ -70,3 +70,9 @@ test('launch forwards PRO arguments and missing launchers do not hide the catalo
  const context={hideScreen:()=>{hidden=true;},window:{openDraftScoreAttackMode:value=>{pro=value;}}};vm.createContext(context);vm.runInContext(launcher,context);
  context.openFromAllModes('missing');assert.equal(hidden,false);context.openFromAllModes('openDraftScoreAttackMode',true);assert.equal(pro,true);assert.equal(hidden,true);
 });
+test('the Outils chip opens the tools and any family chip brings back the games',()=>{
+ const {context,rows}=fixture();context.setModeCatalogCategory('explore');
+ assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='explore'));
+ context.setModeCatalogFamily('all');assert.equal(context.modeCatalogCategory,'solo');
+ assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='solo'));
+});
