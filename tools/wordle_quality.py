@@ -59,6 +59,7 @@ async def run():
                     await ready(page,'gameOver && !dailyRequestInFlight')
                     next_button=page.locator('#daily-wordle-next')
                     assert await page.locator('#win-box').evaluate('e=>e.classList.contains("daily-result-card")')
+                    assert await page.locator('#win-box').evaluate('e=>e.getBoundingClientRect().height < 480'), 'Enquiry result too tall'
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-enquiry-result.png'),full_page=True)
                     if width<640: await next_button.tap()
                     else: await next_button.click()

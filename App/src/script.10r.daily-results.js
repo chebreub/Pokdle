@@ -74,6 +74,13 @@ renderGameOverBox=function(){
     ]);
     if(details)details.id='daily-enquiry-result-details';
     document.getElementById('daily-wordle-next')?.classList.add('daily-result-next');
+    // The game shell inserts its recent-history panel in an earlier microtask.
+    queueMicrotask(()=>{
+      if(gameMode!=='daily'||!details?.isConnected)return;
+      for(const id of ['shell-result-stats','win-ranking-preview']){
+        const panel=document.getElementById(id);if(panel)details.append(panel);
+      }
+    });
   }
   return value;
 };
