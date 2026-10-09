@@ -62,30 +62,19 @@ function filterHomeGames(filter) {
 }
 function renderHomeDiscovery(force = false) {
   const grid = document.getElementById("home-games-grid");
-  if (!grid || (grid.childElementCount && !force)) return;
-  const games = [
-    ["startSilhouetteGame", "Zoom progressif", "Un détail, puis la révélation.", "Observer", "lavender", 352],
-    ["startCryGame", "Qui pousse ce cri ?", "Écoute bien. Tu le reconnais ?", "Écouter", "pink", 441],
-    ["openPokeConnectionsMode", "Poké-Connections", "16 Pokémon, quatre liens cachés.", "Réfléchir", "mint", 133],
-    ["startQuizGame", "Quiz Pokémon", "Mets tes connaissances à l’épreuve.", "Apprendre", "blue", 65],
-    ["openDraftScoreAttackMode", "Draft Score Attack", "Six choix pour une équipe de rêve.", "Composer", "peach", 445],
-    ["openHigherLowerMode", "Higher or Lower", "Plus fort, plus grand… à toi de voir.", "Comparer", "lavender", 248],
-    ["startNormalGame", "Pokémon mystère", "Neuf indices pour mener l’enquête.", "Deviner", "blue", 133],
-    ["startPixelGame", "Pokémon pixelisé", "Retrouve le Pokémon derrière les pixels.", "Observer", "mint", 137],
-    ["startMysteryStatGame", "Stat Mystère", "Un portrait à lire dans les statistiques.", "Déduire", "lavender", 376],
-    ["startDescriptionMode", "Description Pokédex", "Un portrait à lire, un Pokémon à trouver.", "Lire", "pink", 479],
-    ["openSpeedrunMode", "Speedrun", "60 secondes pour en reconnaître un maximum.", "Accélérer", "blue", 291],
-    ["openTypeComboSolo", "Combo de types", "Deux types, plusieurs bonnes réponses.", "Associer", "mint", 493],
-    ["openOddOneOutMode", "Intrus Pokémon", "Cinq points communs. Une exception.", "Réfléchir", "peach", 132],
-    ["startWeightBattle", "Duel de poids", "Qui fait pencher la balance ?", "Comparer", "pink", 143]
-  ];
-  const families = { guess: ["startSilhouetteGame","startCryGame","startNormalGame","startPixelGame","startMysteryStatGame","startDescriptionMode"], think: ["openPokeConnectionsMode","startQuizGame","openOddOneOutMode"], arcade: ["openHigherLowerMode","openSpeedrunMode","openTypeComboSolo","startWeightBattle"], strategy: ["openDraftScoreAttackMode"] };
-  const selected = homeGameFilter === "popular" ? games.slice(0,6) : games.filter(game => families[homeGameFilter]?.includes(game[0]));
-  grid.innerHTML = selected.map(([action, title, description, label, color]) => '<button type="button" class="home-game home-game-' + color + '" data-action="' + action + '">' +
-    '<span class="home-game-art home-mechanic-art" aria-hidden="true">'+modeCatalogArtHtml(action,'home')+'</span><span class="home-game-copy"><small>' + label + '</small><b>' + title + '</b><span>' + description + '</span>'+homeGameRecordHtml(action)+'</span><span class="home-game-arrow" aria-hidden="true">Jouer →</span></button>').join('');
+  if (!grid || (grid.childElementCount && !force) || typeof modeTileCloneForHome !== "function") return;
+  // Same families and order as the catalogue; the daily keeps its own block above.
+  const shelves = {
+    popular: ["startSilhouetteGame", "startCryGame", "openPokeConnectionsMode", "startQuizGame", "openDraftScoreAttackMode", "openHigherLowerMode"],
+    guess: ["startNormalGame", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
+    think: ["openPokeConnectionsMode", "openOddOneOutMode", "startQuizGame", "startEvolutionChainGame", "startPokedexOrderGame", "openTypeComboSolo"],
+    arcade: ["startWeightBattle", "openHigherLowerMode", "openSpeedrunMode", "startPartyMode"],
+    strategy: ["openDraftScoreAttackMode", ["openDraftScoreAttackMode", true]]
+  };
+  grid.replaceChildren(...(shelves[homeGameFilter] || shelves.popular).map(entry => [].concat(entry)).map(([key, pro]) => modeTileCloneForHome(key, Boolean(pro))).filter(Boolean));
 }
 function homeGameRecordHtml(action) {
-  const records = { openHigherLowerMode:["higherLowerHighScore","de série"], startQuizGame:["quizHighScore","/ 10"], openSpeedrunMode:["speedrunHighScore","Pokémon"], openTypeComboSolo:["typeComboHighScore","pts"], openOddOneOutMode:["oddOneOutHighScore","de série"], startWeightBattle:["weightBattleHighScore","de série"] };
+  const records = { openHigherLowerMode:["higherLowerHighScore","de série"], startQuizGame:["quizHighScore","/ " + (typeof QUIZ_QUESTION_COUNT === "number" ? QUIZ_QUESTION_COUNT : 15)], openSpeedrunMode:["speedrunHighScore","Pokémon"], openTypeComboSolo:["typeComboHighScore","pts"], openOddOneOutMode:["oddOneOutHighScore","de série"], startWeightBattle:["weightBattleHighScore","de série"] };
   const spec = records[action], value = spec ? Number(playerProfile?.[spec[0]]) || 0 : 0;
   return value > 0 ? '<small class="home-game-record">Ton record : '+value+' '+spec[1]+'</small>' : '';
 }
@@ -198,7 +187,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (card.dataset.category === "explore") return;
     try {
       const [name, ...args] = JSON.parse(card.dataset.args);
-      const label = card.querySelector("b")?.textContent || name;
+      // Catalogue cards may already be redrawn as tiles when this runs.
+      const label = card.querySelector(".mode-tile-title, b")?.textContent.trim() || name;
       clubLaunchers.set(JSON.stringify([name, ...args]), { name, args, label });
     } catch (_error) {}
   });

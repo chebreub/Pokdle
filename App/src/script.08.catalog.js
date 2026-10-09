@@ -298,6 +298,17 @@ function decorateModeCatalogCards() {
     title.insertAdjacentHTML('beforeend','<span class="all-modes-cat-count"></span><span class="all-modes-cat-desc">'+(MODE_CATALOG_FAMILY_COPY[section.dataset.family] || '')+'</span>');
   });
 }
+// The home shelf shows the catalogue tiles themselves, so a game looks the same everywhere.
+function modeTileCloneForHome(key, pro = false) {
+  decorateModeCatalogCards();
+  const source=[...document.querySelectorAll('#screen-all-modes .all-modes-card.mode-tile')].find(card=>modeCatalogActionKey(card) === key && modeCatalogIsPro(card) === pro);
+  if (!source) return null;
+  const tile=source.cloneNode(true);
+  tile.hidden=false;
+  tile.classList.remove('card');
+  modeTileRefreshRecord(tile);
+  return tile;
+}
 function renderModeCatalogFamilies() {
   const group=document.getElementById('mode-family-filters');
   if (!group) return;
