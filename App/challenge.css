@@ -49,3 +49,18 @@
   #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box.daily-result-card {padding:14px!important;border-radius:18px!important}
   #pokdle-app.design-refresh .daily-result-actions button {font-size:12px!important}
 }
+/* Bloc du jour : les quatre épreuves, leurs points et la prochaine à jouer. */
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 4px;padding:0;list-style:none}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:52px;padding:8px 10px;border:1px solid rgba(46,42,51,.08);border-radius:14px;background:rgba(255,255,255,.75);color:#2e2a33;font:700 12px Nunito,sans-serif;text-align:left;cursor:pointer}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps b{font:600 15px Fredoka,sans-serif}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-done button{background:#e1f4e9;border-color:#b8e3c6}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-done b{color:#1e6b45}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-next button{background:#fff;border:2px solid #4069e0;box-shadow:0 3px 0 #c9d6fb}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-next b{color:#2f51b8}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-locked button{opacity:.6;cursor:default}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-locked b{font:700 11px Nunito,sans-serif;color:#776b63}
+#pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps button{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:#f0eaf9}
+#pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps .is-done button{background:rgba(54,185,102,.18)}
+#pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps .is-done b{color:#9be3b4}
+#pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps .is-next b{color:#a9bdf7}
+@media(max-width:640px){#pokdle-app.design-refresh #daily-hero .daily-hero-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
