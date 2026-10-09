@@ -64,3 +64,37 @@
 #pokdle-app.design-refresh #screen-wordle .wordle-search.is-nudged { animation:feel-nudge .36s cubic-bezier(.36,.07,.19,.97); }
 #pokdle-app.design-refresh #wordle-message.is-nudged:not(:empty) { animation:feel-message-in .22s ease-out; }
 #pokdle-app.design-refresh #wordle-result.is-new .wordle-answer img { animation:feel-win-sprite .9s cubic-bezier(.3,1.4,.5,1) both; }
+
+/* Dossier : la question arrive, la pastille de progression saute, la correction monte. */
+#pokdle-app.design-refresh #dossier-question.is-entering { animation:feel-rise .26s ease-out; }
+#pokdle-app.design-refresh #dossier-progress .dossier-dots span.is-new { animation:feel-cell-pop .3s cubic-bezier(.3,1.5,.5,1); }
+#pokdle-app.design-refresh #dossier-question .dossier-feedback.is-new { animation:feel-rise .26s ease-out .1s both; }
+#pokdle-app.design-refresh #dossier-question .dossier-feedback.is-new ~ .dossier-bonus { animation:feel-score .6s cubic-bezier(.3,1.5,.5,1) .25s both; }
+#pokdle-app.design-refresh #dossier-result.is-new .dossier-score strong { display:inline-block; animation:feel-score .7s cubic-bezier(.3,1.5,.5,1) both; }
+
+/* Défi : nouvel indice et proposition ratée qui sautent, carte de correction, chrono qui bat. */
+#pokdle-app.design-refresh #challenge-content .challenge-media.is-entering { animation:feel-rise .28s ease-out; }
+#pokdle-app.design-refresh #challenge-content :is(.challenge-guesses, .challenge-hints) span.is-new { animation:feel-cell-pop .3s cubic-bezier(.3,1.5,.5,1); }
+#pokdle-app.design-refresh #challenge-content .challenge-correction.is-new { animation:feel-rise .26s ease-out; }
+#pokdle-app.design-refresh #challenge-content .challenge-correction.is-new.correct img { animation:feel-win-sprite .9s cubic-bezier(.3,1.4,.5,1) both; }
+#pokdle-app.design-refresh #challenge-clock.urgent { display:inline-block; animation:feel-clock 1s ease-in-out infinite; }
+#pokdle-app.design-refresh #challenge-result.is-new .challenge-score strong { display:inline-block; animation:feel-score .7s cubic-bezier(.3,1.5,.5,1) both; }
+#pokdle-app.design-refresh #screen-challenge .wordle-search.is-nudged { animation:feel-nudge .36s cubic-bezier(.36,.07,.19,.97); }
+#pokdle-app.design-refresh #challenge-message.is-nudged:not(:empty) { animation:feel-message-in .22s ease-out; }
+
+/* Bilan du jour : le total saute, puis les quatre épreuves arrivent une par une. */
+#pokdle-app.design-refresh #challenge-content.is-summary .journey-total strong { display:inline-block; animation:feel-score .7s cubic-bezier(.3,1.5,.5,1) both; }
+#pokdle-app.design-refresh #challenge-content.is-summary .journey-stages > * { animation:feel-rise .3s ease-out both; animation-delay:calc(.2s + var(--i, 0) * 90ms); }
+
+@keyframes feel-rise {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:none; }
+}
+@keyframes feel-score {
+  0% { opacity:0; transform:scale(.5); }
+  60% { opacity:1; transform:scale(1.15); }
+  100% { opacity:1; transform:none; }
+}
+@keyframes feel-clock {
+  50% { transform:scale(1.1); }
+}
