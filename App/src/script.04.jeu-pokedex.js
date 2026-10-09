@@ -309,7 +309,8 @@ function addRow(pokemon, cmp, directions = null, {animate=true,renderShell=true}
   if (renderShell && typeof renderGameShell === "function") renderGameShell();
   if (typeof scheduleMobileGuessSearch === 'function') scheduleMobileGuessSearch();
   if (animate && !reducedMotion) {
-    requestAnimationFrame(() => tr.classList.add("is-revealing"));
+    // Set before the next paint so the new row never flashes fully drawn before popping in.
+    tr.classList.add("is-revealing");
     const states = [cmp.generation, cmp.altForm, cmp.type1, cmp.type2, cmp.habitat, cmp.color, cmp.stage, cmp.height, cmp.weight];
     const hasOk = states.some(value => value === "ok");
     const hasClose = states.some(value => value === "close");

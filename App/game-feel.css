@@ -1,0 +1,52 @@
+/* Sensations de jeu : chaque action du joueur répond par un petit mouvement.
+   Chargé en dernier. Aucune animation ne bloque l'action suivante,
+   et « réduire les animations » les coupe toutes (règles globales de visual-refresh). */
+
+/* Les cases d'un essai apparaissent une par une, la bonne case saute un peu plus fort. */
+#pokdle-app.design-refresh #screen-game .guess-result-row.is-revealing .guess-result-cell:not(.guess-result-cell-static) {
+  animation:feel-cell-pop .22s cubic-bezier(.3,1.5,.5,1) both;
+  animation-delay:calc(var(--reveal-index, 0) * 55ms);
+}
+#pokdle-app.design-refresh #screen-game .guess-result-row.is-revealing .guess-result-cell.c-ok:not(.guess-result-cell-static) {
+  animation-name:feel-cell-pop-ok;
+  animation-duration:.3s;
+}
+/* Les anciennes lignes ne tremblent plus toutes ensemble à chaque affichage. */
+#pokdle-app.design-refresh #screen-game .guess-result-row:not(.is-revealing) .guess-result-cell.c-wrong { animation:none; }
+@keyframes feel-cell-pop {
+  0% { opacity:0; transform:scale(.6); }
+  70% { opacity:1; transform:scale(1.07); }
+  100% { opacity:1; transform:none; }
+}
+@keyframes feel-cell-pop-ok {
+  0% { opacity:0; transform:scale(.6); box-shadow:0 0 0 0 rgba(56,184,93,.45); }
+  60% { opacity:1; transform:scale(1.12); box-shadow:0 0 0 7px rgba(56,184,93,.22); }
+  100% { opacity:1; transform:none; box-shadow:0 0 0 0 rgba(56,184,93,0); }
+}
+
+/* Nom refusé : le champ tremble et le message apparaît. */
+#pokdle-app.design-refresh #screen-game .search-bar.is-nudged { animation:feel-nudge .36s cubic-bezier(.36,.07,.19,.97); }
+#pokdle-app.design-refresh #err-msg.is-nudged:not(:empty) { animation:feel-message-in .22s ease-out; }
+@keyframes feel-nudge {
+  15%, 85% { transform:translateX(-2px); }
+  30%, 70% { transform:translateX(4px); }
+  45%, 55% { transform:translateX(-6px); }
+  50% { transform:translateX(6px); }
+}
+@keyframes feel-message-in {
+  from { opacity:0; transform:translateY(-4px); }
+  to { opacity:1; transform:none; }
+}
+
+/* Victoire : le Pokémon trouvé saute dans l'écran de fin. */
+#pokdle-app.design-refresh .win-box.win-celebrate #win-sprite { animation:feel-win-sprite .9s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes feel-win-sprite {
+  0% { opacity:0; transform:scale(.4) rotate(-12deg); }
+  55% { opacity:1; transform:scale(1.12) rotate(4deg); }
+  75% { transform:scale(.97) rotate(-2deg); }
+  100% { opacity:1; transform:none; }
+}
+
+/* Zoom et Pixelisé : l'image s'élargit et se défloute en douceur à chaque essai. */
+#pokdle-app.design-refresh #screen-game .visual-clue-canvas .zoom-sprite { transition:transform .6s cubic-bezier(.2,.8,.2,1), filter .4s ease; }
+#pokdle-app.design-refresh #screen-game .visual-clue-canvas .pixel-sprite { transition:filter .6s ease-out; }
