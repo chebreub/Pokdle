@@ -5,8 +5,8 @@
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box.daily-result-card .win-btns>button {grid-column:auto!important;justify-content:center;text-align:center}
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box.daily-result-card .win-btns>.daily-result-next {grid-column:1/-1!important}
 #pokdle-app.design-refresh .daily-result-actions button {justify-content:center!important;text-align:center!important}
-#pokdle-app.design-refresh .daily-result-card,
-#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box.daily-result-card {
+#pokdle-app.design-refresh .daily-result-card:not(.hidden),
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #win-box.daily-result-card:not(.hidden) {
   box-sizing:border-box;display:block!important;width:100%!important;max-width:580px!important;
   margin:12px auto!important;padding:18px!important;border:1px solid #e5ddeb!important;
   border-radius:22px!important;background:linear-gradient(135deg,#f0f5ff,#f7f0fb)!important;

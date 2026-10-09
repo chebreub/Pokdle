@@ -123,6 +123,7 @@ async def run():
                     # Another isolated daily fixture covers all six misses and zero points.
                     state.update(status='playing',finished=False,won=False,points=0,attempts=0,rows=[]);state.pop('answerId');state.pop('answerName')
                     await page.evaluate('startDailyWordle()');await ready(page,'dailyWordleState?.status === "playing" && !dailyWordleBusy')
+                    assert await page.locator('#wordle-result').is_hidden(), 'Previous result must not leak into a new round'
                     for attempt,name in enumerate(['Pikachu','Salamèche','Carapuce','Évoli','Mew','Dracaufeu'],1):
                         await field.fill(name);await page.keyboard.press('Enter')
                         await ready(page,f'dailyWordleState?.attempts === {attempt} && !dailyWordleBusy')

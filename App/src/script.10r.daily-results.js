@@ -10,8 +10,8 @@ function compactDailyStage(screenId, resultId, finished) {
   const screen=document.getElementById(screenId),result=document.getElementById(resultId);
   if(!screen||!result)return;
   screen.classList.toggle('daily-result-complete',Boolean(finished));
+  result.classList.toggle('daily-result-card',Boolean(finished));
   if(!finished)return;
-  result.classList.add('daily-result-card');
   const actions=result.querySelector('.wordle-result-actions,.dossier-result-actions,.challenge-actions');
   if(actions){
     actions.classList.add('daily-result-actions');
