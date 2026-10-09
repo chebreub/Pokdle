@@ -15,6 +15,8 @@ function applyDailyHomeSummary(summary){
   const subtitle=hero.querySelector('.pk-hero-sub');
   if(subtitle)subtitle.textContent=complete?'Tes quatre épreuves sont terminées. Retrouve tes résultats et ton classement.':'Enquête, Wordle, Dossier, Défi : reprends ta journée à la prochaine épreuve.';
   hero.dataset.dailyState=complete?'complete':'available';
+  // The deduction notebook is useful during Enquête, not after moving on.
+  document.getElementById('daily-notebook')?.classList.toggle('hidden',next!==0);
   document.getElementById('daily-wordle-home')?.classList.add('hidden');
 }
 async function refreshDailyHomeSummary(){

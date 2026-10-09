@@ -30,6 +30,7 @@ async def run():
             assert await page.locator('#daily-wordle-home').is_hidden()
             if n in [2,4]:await page.screenshot(path=str(OUT/f'{engine}-{width}-home-{n}.png'),full_page=True)
           assert '42 / 96' in await page.locator('#daily-hero-status').inner_text()
+          assert await page.locator('#daily-notebook').is_hidden(), 'Finished journey must not show an empty enquiry notebook'
           await page.reload(wait_until='domcontentloaded')
           await ready(page,'document.getElementById("daily-hero-status").textContent.includes("Journée terminée")')
           assert await page.locator('#daily-hero-cta').get_attribute('data-action')=='showDailyJourneySummary'
@@ -51,7 +52,7 @@ async def run():
           count=await page.evaluate('playerStats.played')
           await page.evaluate('startDailyGame()');await ready(page,'dailyServerState && !dailyRequestInFlight')
           assert await page.evaluate('playerStats.played')==count
-          daily.update(status='won',finished=True,won=True,answerId=25,points=10)
+          daily.update(status='won',finished=True,won=True,answerId=25,points=10,attempts=1,rows=[dict(pokemonId=25,cmp={key:'ok' for key in ['generation','altForm','type1','type2','habitat','color','stage','height','weight']},heightDirection='',weightDirection='')])
           await page.evaluate('startDailyGame()');await ready(page,'gameOver && !dailyRequestInFlight')
           assert '10' in await page.locator('#daily-enquiry-points').inner_text()
           assert await page.evaluate('playerStats.played')==count
