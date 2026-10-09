@@ -49,6 +49,7 @@ async function dossierRequest(action='',payload={}) {
     if(!response.ok||!data.ok)throw Object.assign(new Error(data.error||'unavailable'),{code:data.error});
     if(data.accountId!==accountId)throw Object.assign(new Error('account_changed'),{code:'account_changed'});
     dailyDossierState=data;dailyDossierFeedback=Boolean(data.feedback&&!data.finished);renderDailyDossier();
+    if(action==='/answer')dossierAnswerFeel(data);
     if(action){const target=document.getElementById(data.finished?'dossier-result':'dossier-prompt');target?.focus({preventScroll:true});target?.scrollIntoView({block:'nearest'});}
     return true;
   }catch(e) {
@@ -57,6 +58,16 @@ async function dossierRequest(action='',payload={}) {
     dossierMessage(messages[e.code]||'Le serveur est injoignable. Tes réponses validées sont conservées. Recharge le dossier pour vérifier la dernière réponse.');
     const retry=document.createElement('button');retry.className='btn-ghost';retry.dataset.action=e.code==='stale_daily'||e.code==='daily_required'?'startDailyGame':e.code==='wordle_required'?'startDailyWordle':'startDailyDossier';retry.textContent='Reprendre';document.getElementById('dossier-message').append(' ',retry);return false;
   }finally{clearTimeout(timer);if(serial===dailyDossierSerial){dailyDossierBusy=false;syncDossierControls();}}
+}
+// Only what the last answer changed moves: the chosen option, its progress dot, the correction.
+function dossierAnswerFeel(s) {
+  if(typeof gameFeelReplay!=='function')return;
+  if(s.finished){gameFeelReplay(document.getElementById('dossier-result'),'is-new');return;}
+  const f=s.feedback;if(!f)return;
+  const chosen=document.querySelectorAll('#dossier-question .dossier-option')[f.choice];
+  if(chosen&&typeof gameFeelAnswer==='function')gameFeelAnswer(f.correct,chosen,f.correct?'+1':'×');
+  gameFeelReplay(document.querySelectorAll('#dossier-progress .dossier-dots span')[f.index],'is-new');
+  gameFeelReplay(document.querySelector('#dossier-question .dossier-feedback'),'is-new');
 }
 async function startDailyDossier() {
   ensureDailyDossierScreen();closeOverlayModal();showScreen('screen-dossier');setGlobalNavActive('game');dailyDossierState=null;dailyDossierFeedback=false;
@@ -71,7 +82,7 @@ async function answerDailyDossier(index,choice) {
 }
 function nextDossierQuestion() {
   if(dailyDossierBusy||!dailyDossierState||dailyDossierState.finished)return;
-  dailyDossierFeedback=false;renderDailyDossier();const prompt=document.getElementById('dossier-prompt');prompt?.focus({preventScroll:true});prompt?.scrollIntoView({block:'nearest'});
+  dailyDossierFeedback=false;renderDailyDossier();if(typeof gameFeelReplay==='function')gameFeelReplay(document.getElementById('dossier-question'),'is-entering');const prompt=document.getElementById('dossier-prompt');prompt?.focus({preventScroll:true});prompt?.scrollIntoView({block:'nearest'});
 }
 function confirmDossierAbandon() {
   if(dailyDossierBusy||!dailyDossierState||dailyDossierState.finished)return;

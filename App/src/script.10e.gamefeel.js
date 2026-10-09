@@ -8,6 +8,13 @@ function gameFeelSettings() {
   try { return typeof getStoredAppSettings === 'function' ? getStoredAppSettings() : {}; }
   catch (_e) { return {}; }
 }
+// Restarts a one-shot CSS animation class, so the same element can react again.
+function gameFeelReplay(node, cls) {
+  if (!node) return;
+  node.classList.remove(cls);
+  void node.offsetWidth;
+  node.classList.add(cls);
+}
 function gameFeelReducedMotion() {
   const settings = gameFeelSettings();
   if (settings.reduceMotion) return true;
