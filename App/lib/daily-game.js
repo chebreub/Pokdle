@@ -2,6 +2,7 @@
 const crypto = require("node:crypto");
 const { parisDay, parisMidnight } = require("./egg-mystery");
 const { recordLeaderboardResultInTransaction } = require("./leaderboard-store");
+const { DAILY_MAX, enquiryPoints } = require("./daily-points");
 const bundledForms = Object.fromEntries(Object.entries(require('../forms-data.json')).map(([name, data]) =>
   [name.replace(/^(.+) Mega( [XY])?$/, 'Méga-$1$2'), data]));
 // First deploy-ready Git revision containing getDailyPokemon: 30af7a7 (2026-03-23).
@@ -122,7 +123,7 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
     return {ok:true,...dailyCalendar(now),accountId:who.accountId||null,authenticated:Boolean(who.accountId),
       status:row.status,finished:row.status!=="playing",won:row.status==="won",attempts:ids.length,
       hintsUsed:Number(row.hints_used),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
-      points:row.status==='won'?Math.max(1,10-Math.max(0,ids.length-1)-Number(row.hints_used)):0,
+      points:enquiryPoints(row.status==='won',ids.length,row.hints_used),maxPoints:DAILY_MAX.enquiry,
       rows:ids.map(id=>{const p=byId.get(Number(id));return {pokemonId:p.id,cmp:compare(p,secret),heightDirection:direction(p.height,secret.height),weightDirection:direction(p.weight,secret.weight)};}),
       ...(row.status!=="playing"?{answerId:secret.id}:{}),
       streak:await streak(client,who,day,row.status),ranked:Boolean(who.accountId&&row.account_id&&row.status==="won")};

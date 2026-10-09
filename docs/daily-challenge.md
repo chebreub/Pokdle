@@ -5,11 +5,12 @@ progressif, Cri et Pixelisé. Dix espèces de base distinctes, tirées une fois 
 et communes aux comptes et aux invités. Les formes restent acceptées en proposition.
 
 Le bouton Commencer démarre trois minutes, contrôlées côté serveur. Six propositions
-maximum par Pokémon : 6 points au premier essai, puis 5, 4, 3, 2, 1. Six erreurs
+maximum par Pokémon : 3 points au premier essai, 2 au deuxième ou au troisième,
+puis 1 jusqu’au sixième. Six erreurs
 rapportent 0 et passent au Pokémon suivant. Génération après deux erreurs, types
 après quatre ; cadrage élargi ou pixels affinés à chaque erreur. Le chrono continue
 pendant les corrections et après fermeture. Les points déjà obtenus restent acquis
-à expiration, maximum 60. Abandon : 0 point pour cette épreuve.
+à expiration, maximum 30. Abandon : 0 point pour cette épreuve.
 
 Réponse et fichiers médias détenus par le serveur : le navigateur reçoit les
 images transformées ou le cri via une URL sans identifiant d’espèce, uniquement
@@ -23,12 +24,16 @@ ligne individuel, réponses idempotentes. Une réponse ne restaure pas les étap
 précédentes. Invités exclus des classements, y compris une partie invitée déjà finie
 avant connexion. Changement de jour Paris pendant une transaction : rollback.
 
-Le bilan présente les quatre scores sans changer la Ligue :
-- Enquête : max(1, 10 − essais supplémentaires − indices utilisés) si victoire, sinon 0.
-- Wordle : 6 à 1, sinon 0.
-- Dossier : bonnes réponses, jusqu’à 20.
-- Défi : jusqu’à 60.
-Maximum du bilan : 96 points. Le classement global exige quatre épreuves terminées
+Le bilan présente les quatre scores sans changer la Ligue. Barème sur 100 points
+entiers, défini une seule fois dans lib/daily-points.js (serveur et SQL) :
+- Enquête (40) : 40 au premier essai, −2 par essai supplémentaire, −4 par indice
+  consulté, au moins 4 si trouvé ; 0 sinon.
+- Wordle (10) : 10, 8, 6, 4, 2, 1 selon l’essai gagnant ; 0 sinon.
+- Dossier (20) : une par bonne réponse, bonus compris.
+- Défi (30) : 3, 2, 2, 1, 1, 1 selon l’essai, pour dix Pokémon.
+Maximum du bilan : 100 points. Au démarrage, les parties du Défi enregistrées sous
+l’ancien barème (6 à 1) sont recalculées depuis leurs réponses, ainsi que leurs
+records ; Enquête et Wordle sont calculés à la lecture. Le classement global exige quatre épreuves terminées
 et enregistrées au même compte. Un abandon conserve les points des autres épreuves.
 Invité ou résultat terminé avant connexion : bilan visible, hors classement global.
 

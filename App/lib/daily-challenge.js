@@ -2,6 +2,7 @@
 const crypto=require('node:crypto');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {recordLeaderboardResultInTransaction}=require('./leaderboard-store');
+const {DAILY_MAX,DAILY_TOTAL,challengePoints,enquiryPoints,sql:pointsSql}=require('./daily-points');
 const LIMIT=180000,COUNT=10,TRIES=6;
 const MODES=['zoom','cry','pixel'];
 const LABELS={zoom:'Zoom progressif',cry:'Cri Pokémon',pixel:'Pixelisé'};
@@ -12,6 +13,24 @@ async function initChallengeDb(db){
   await db.query('CREATE TABLE IF NOT EXISTS challenge_rounds(day DATE PRIMARY KEY,mode TEXT NOT NULL,targets JSONB NOT NULL)');
   await db.query(`CREATE TABLE IF NOT EXISTS challenge_plays(identity TEXT NOT NULL,day DATE NOT NULL REFERENCES challenge_rounds(day),account_id TEXT,answers JSONB NOT NULL DEFAULT '[]',guessed JSONB NOT NULL DEFAULT '[]',points INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'ready' CHECK(status IN ('ready','playing','completed','abandoned')),started_at TIMESTAMPTZ,finished_at TIMESTAMPTZ,elapsed_ms BIGINT,migrated BOOLEAN NOT NULL DEFAULT false,PRIMARY KEY(identity,day))`);
   await db.query('CREATE INDEX IF NOT EXISTS challenge_account ON challenge_plays(account_id,day)');
+  // A failed rescore must not take the Défi offline: new plays already use the current scale.
+  try{await rescoreChallengePlays(db);}catch(e){console.error('[challenge] rescore:',e.message);}
+}
+// Points follow the current scale from each stored answer (correct + attempts), so plays
+// recorded under an older scale stay comparable. Abandons keep 0. Idempotent at every start.
+async function rescoreChallengePlays(db){
+  await db.query(`UPDATE challenge_plays c SET answers=fixed.answers,points=fixed.points FROM (
+    SELECT p.identity,p.day,
+      COALESCE(jsonb_agg(a.value||jsonb_build_object('points',${pointsSql.challengeAnswer('a.value')}) ORDER BY a.n) FILTER (WHERE a.value IS NOT NULL),'[]'::jsonb) AS answers,
+      COALESCE(SUM(${pointsSql.challengeAnswer('a.value')}),0)::int AS points
+    FROM challenge_plays p LEFT JOIN LATERAL jsonb_array_elements(p.answers) WITH ORDINALITY a(value,n) ON true
+    GROUP BY p.identity,p.day) fixed
+    WHERE c.identity=fixed.identity AND c.day=fixed.day AND c.status<>'abandoned' AND (c.points<>fixed.points OR c.answers<>fixed.answers)`);
+  const tables=(await db.query("SELECT to_regclass('leaderboard_events') IS NOT NULL AS events,to_regclass('scores') IS NOT NULL AS scores")).rows[0];
+  if(tables.events)await db.query(`UPDATE leaderboard_events e SET score=c.points FROM challenge_plays c
+    WHERE e.mode='challenge' AND e.result_key='challenge:'||c.day::text AND e.discord_id=c.account_id AND c.status='completed' AND e.score<>c.points`);
+  if(tables.events&&tables.scores)await db.query(`UPDATE scores s SET score=b.best FROM (SELECT discord_id,MAX(score)::int AS best FROM leaderboard_events WHERE mode='challenge' GROUP BY discord_id) b
+    WHERE s.mode='challenge' AND s.discord_id=b.discord_id AND s.score<>b.best`);
 }
 function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypto.randomInt}){
   const byId=new Map(pokemon.map(p=>[Number(p.id),p]));
@@ -35,7 +54,7 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
   async function expire(c,cal,who,row){if(row.status==='playing'&&clock()-new Date(row.started_at)>=LIMIT){row={...row,status:'completed',finished_at:new Date(+new Date(row.started_at)+LIMIT),elapsed_ms:LIMIT};await save(c,cal,who,row);}return row;}
   function snapshot(cal,who,row,r){
     const index=row.answers.length,finished=['completed','abandoned'].includes(row.status),p=byId.get(Number(r.targets[index]));
-    return {ok:true,...cal,accountId:who.accountId||null,authenticated:Boolean(who.accountId),mode:r.mode,label:LABELS[r.mode],status:row.status,finished,index,total:COUNT,maxTries:TRIES,points:Number(row.points),ranked:row.status==='completed'&&Boolean(row.account_id),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),remainingMs:row.status==='ready'?LIMIT:Math.max(0,LIMIT-(clock()-new Date(row.started_at))),guesses:row.guessed.map(id=>({id,name:byId.get(id).name})),hints:!finished&&p?[...(row.guessed.length>=2?['Génération '+p.gen]:[]),...(row.guessed.length>=4?['Type : '+p.type1+(p.type2?' / '+p.type2:'')]:[])]:[],results:row.answers.map((a,i)=>({...a,pokemonId:r.targets[i],name:byId.get(r.targets[i]).name})),media:row.status==='playing'?'/api/daily/challenge/media?day='+cal.day+'&index='+index+'&attempt='+row.guessed.length:null};
+    return {ok:true,...cal,accountId:who.accountId||null,authenticated:Boolean(who.accountId),mode:r.mode,label:LABELS[r.mode],status:row.status,finished,index,total:COUNT,maxTries:TRIES,points:Number(row.points),maxPoints:DAILY_MAX.challenge,nextPoints:challengePoints(true,row.guessed.length+1),ranked:row.status==='completed'&&Boolean(row.account_id),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),remainingMs:row.status==='ready'?LIMIT:Math.max(0,LIMIT-(clock()-new Date(row.started_at))),guesses:row.guessed.map(id=>({id,name:byId.get(id).name})),hints:!finished&&p?[...(row.guessed.length>=2?['Génération '+p.gen]:[]),...(row.guessed.length>=4?['Type : '+p.type1+(p.type2?' / '+p.type2:'')]:[])]:[],results:row.answers.map((a,i)=>({...a,pokemonId:r.targets[i],name:byId.get(r.targets[i]).name})),media:row.status==='playing'?'/api/daily/challenge/media?day='+cal.day+'&index='+index+'&attempt='+row.guessed.length:null};
   }
   async function act(who,kind='state',body={}){
     if(kind!=='state'&&kind!=='media'){if(body.day!==dailyCalendar(clock()).day)throw fail('stale_daily');if((body.accountId||null)!==(who.accountId||null))throw fail('account_changed');}
@@ -49,7 +68,7 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
       if(body.index<row.answers.length||row.guessed.includes(body.pokemonId))return {...snapshot(cal,who,row,r),duplicate:true};
       if(body.index!==row.answers.length)throw fail('question_changed');
       const guessed=[...row.guessed,body.pokemonId],correct=body.pokemonId===Number(r.targets[body.index]),resolved=correct||guessed.length===TRIES;
-      const earned=correct?TRIES-guessed.length+1:0;
+      const earned=challengePoints(correct,guessed.length);
       row={...row,guessed:resolved?[]:guessed,answers:resolved?[...row.answers,{correct,attempts:guessed.length,points:earned}]:row.answers,points:row.points+earned};
       if(row.answers.length===COUNT)row={...row,status:'completed',finished_at:clock(),elapsed_ms:Math.min(LIMIT,Math.max(0,clock()-new Date(row.started_at)))};
       await save(c,cal,who,row);return {...snapshot(cal,who,row,r),feedback:{correct,resolved,...(resolved?{pokemonId:r.targets[body.index],name:byId.get(r.targets[body.index]).name,points:earned}:{})}};
@@ -58,14 +77,14 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
   async function board(mode,scope,accountId){
     const day=dailyCalendar(clock()).day,filter=scope==='today'?'AND c.day=$1::date':scope==='week'?'AND c.day>$1::date-7 AND c.day<=$1::date':'AND c.day<=$1::date';
     const global=mode==='journey';
-    const score=global?`c.points+(CASE WHEN w.status='won' THEN 7-jsonb_array_length(w.guessed) ELSE 0 END)+d.points+CASE WHEN e.status='won' THEN GREATEST(1,10-GREATEST(0,jsonb_array_length(e.guessed)-1)-e.hints_used) ELSE 0 END`:'c.points';
+    const score=global?`c.points+${pointsSql.wordle('w.status','w.guessed')}+d.points+${pointsSql.enquiry('e.status','e.guessed','e.hints_used')}`:'c.points';
     const elapsed=global?'c.elapsed_ms+COALESCE(w.elapsed_ms,0)+COALESCE(d.elapsed_ms,0)+COALESCE(e.elapsed_ms,0)':'c.elapsed_ms';
     const joins=global?`JOIN daily_plays e ON e.identity=c.identity AND e.day=c.day AND e.account_id=c.account_id AND e.status!='playing' JOIN wordle_plays w ON w.identity=c.identity AND w.day=c.day AND w.account_id=c.account_id AND w.status!='playing' JOIN dossier_plays d ON d.identity=c.identity AND d.day=c.day AND d.account_id=c.account_id AND d.status!='playing'`:'';
     const cte=`WITH candidates AS (SELECT c.account_id AS discord_id,${score} AS score,${elapsed} AS elapsed_ms,c.finished_at,ROW_NUMBER() OVER(PARTITION BY c.account_id ORDER BY ${score} DESC,${elapsed} ASC,c.finished_at ASC) AS attempt_rank FROM challenge_plays c ${joins} WHERE c.status IN ('completed'${global?",'abandoned'":''}) AND c.account_id IS NOT NULL ${filter}), ranked AS (SELECT a.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,a.score,(RANK() OVER(ORDER BY a.score DESC,a.elapsed_ms ASC))::int AS rank FROM candidates a LEFT JOIN users u ON u.discord_id=a.discord_id WHERE a.attempt_rank=1)`;
     const rows=(await db.query(cte+' SELECT * FROM ranked ORDER BY rank,username LIMIT 20',[day])).rows,total=Number((await db.query(cte+' SELECT COUNT(*)::int AS total FROM ranked',[day])).rows[0].total),mine=accountId?(await db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,accountId])).rows[0]:null,around=mine?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,mine.rank-2),mine.rank+2])).rows:[];
     const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,score:Number(r.score),me:r.discord_id===accountId});return {ok:true,mode,scope,authenticated:Boolean(accountId),direction:'desc',label:global?'Parcours du jour':'Défi du jour',unit:'pts',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score)}:null,around:around.map(map)};
   }
-  async function summary(who){return transaction(async(c,cal)=>{const rows=await c.query(`SELECT e.status AS enquiry_status,jsonb_array_length(e.guessed) AS attempts,e.hints_used,e.account_id AS enquiry_account,w.status AS wordle_status,(CASE WHEN w.status='won' THEN 7-jsonb_array_length(w.guessed) ELSE 0 END) AS wordle_points,w.account_id AS wordle_account,d.status AS dossier_status,d.points AS dossier_points,d.account_id AS dossier_account,c.status AS challenge_status,c.points AS challenge_points,c.account_id AS challenge_account FROM daily_plays e LEFT JOIN wordle_plays w ON w.identity=e.identity AND w.day=e.day LEFT JOIN dossier_plays d ON d.identity=e.identity AND d.day=e.day LEFT JOIN challenge_plays c ON c.identity=e.identity AND c.day=e.day WHERE e.identity=$1 AND e.day=$2`,[who.key,cal.day]);const r=rows.rows[0]||{},done=s=>s&&!['ready','playing'].includes(s);const stages=[{name:'Enquête',action:'startDailyGame',max:10,finished:done(r.enquiry_status),points:r.enquiry_status==='won'?Math.max(1,10-Math.max(0,r.attempts-1)-r.hints_used):0},{name:'Wordle',action:'startDailyWordle',max:6,finished:done(r.wordle_status),points:r.wordle_points||0},{name:'Dossier',action:'startDailyDossier',max:20,finished:done(r.dossier_status),points:r.dossier_points||0},{name:'Défi',action:'startDailyChallenge',max:60,finished:done(r.challenge_status),points:r.challenge_points||0}];return {ok:true,...cal,stages,points:stages.reduce((n,s)=>n+s.points,0),finished:stages.every(s=>s.finished),ranked:Boolean(who.accountId&&stages.every(s=>s.finished)&&[r.enquiry_account,r.wordle_account,r.dossier_account,r.challenge_account].every(id=>id===who.accountId))};});}
+  async function summary(who){return transaction(async(c,cal)=>{const rows=await c.query(`SELECT e.status AS enquiry_status,jsonb_array_length(e.guessed) AS attempts,e.hints_used,e.account_id AS enquiry_account,w.status AS wordle_status,${pointsSql.wordle('w.status','w.guessed')} AS wordle_points,w.account_id AS wordle_account,d.status AS dossier_status,d.points AS dossier_points,d.account_id AS dossier_account,c.status AS challenge_status,c.points AS challenge_points,c.account_id AS challenge_account FROM daily_plays e LEFT JOIN wordle_plays w ON w.identity=e.identity AND w.day=e.day LEFT JOIN dossier_plays d ON d.identity=e.identity AND d.day=e.day LEFT JOIN challenge_plays c ON c.identity=e.identity AND c.day=e.day WHERE e.identity=$1 AND e.day=$2`,[who.key,cal.day]);const r=rows.rows[0]||{},done=s=>s&&!['ready','playing'].includes(s);const stages=[{name:'Enquête',action:'startDailyGame',max:DAILY_MAX.enquiry,finished:done(r.enquiry_status),points:enquiryPoints(r.enquiry_status==='won',r.attempts,r.hints_used)},{name:'Wordle',action:'startDailyWordle',max:DAILY_MAX.wordle,finished:done(r.wordle_status),points:r.wordle_points||0},{name:'Dossier',action:'startDailyDossier',max:DAILY_MAX.dossier,finished:done(r.dossier_status),points:r.dossier_points||0},{name:'Défi',action:'startDailyChallenge',max:DAILY_MAX.challenge,finished:done(r.challenge_status),points:r.challenge_points||0}];return {ok:true,...cal,stages,maxPoints:DAILY_TOTAL,points:stages.reduce((n,s)=>n+s.points,0),finished:stages.every(s=>s.finished),ranked:Boolean(who.accountId&&stages.every(s=>s.finished)&&[r.enquiry_account,r.wordle_account,r.dossier_account,r.challenge_account].every(id=>id===who.accountId))};});}
   return {state:who=>act(who),start:(who,b)=>act(who,'start',b),guess:(who,b)=>act(who,'guess',b),abandon:(who,b)=>act(who,'abandon',b),media:(who,b)=>act(who,'media',b),leaderboard:board,summary};
 }
 function createMediaLoader({fetchAsset=fetch,sharp=require('sharp')}={}){

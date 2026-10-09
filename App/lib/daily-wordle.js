@@ -2,6 +2,7 @@
 const crypto = require("node:crypto");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { recordLeaderboardResultInTransaction } = require("./leaderboard-store");
+const { DAILY_MAX, wordlePoints } = require("./daily-points");
 const MAX_TRIES = 6;
 function wordleLetters(name) {
   return String(name).replace(/♀/g,"F").replace(/♂/g,"M").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g,"");
@@ -83,7 +84,7 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
     const target=byId.get(Number(r.secret_id)),answer=wordleLetters(target.name), finished=row.status!=="playing";
     return {ok:true,...calendar,accountId:who.accountId||null,authenticated:Boolean(who.accountId),
       status:row.status,finished,won:row.status==="won",maxTries:MAX_TRIES,length:answer.length,
-      attempts:row.guessed.length,points:row.status==="won"?MAX_TRIES+1-row.guessed.length:0,
+      attempts:row.guessed.length,points:wordlePoints(row.status==="won",row.guessed.length),maxPoints:DAILY_MAX.wordle,
       ranked:row.status==="won"&&Boolean(row.account_id),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
       rows:row.guessed.map(id=>{const p=byId.get(Number(id)),letters=wordleLetters(p.name);return {pokemonId:p.id,name:p.name,letters,colors:compareLetters(letters,answer)};}),
       ...(finished?{answerId:target.id,answerName:target.name}:{})};

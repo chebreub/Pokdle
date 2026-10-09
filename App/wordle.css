@@ -33,7 +33,7 @@
 #wordle-abandon{display:block;margin:14px auto 0;font-size:13px}
 .wordle-result{background:linear-gradient(135deg,#eff6ff,#f4efff,#fff0f4);border-radius:20px;padding:22px;margin-top:20px}
 .wordle-answer{display:flex;align-items:center;justify-content:center;gap:12px}.wordle-answer img{object-fit:contain}.wordle-answer h2{font:600 28px Fredoka,sans-serif;margin:0}.wordle-answer p{margin:5px 0;font-size:14px;color:#776b63}
-.wordle-score{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0}.wordle-score strong{font:600 40px Fredoka,sans-serif;color:#4069e0}.wordle-score small{font-size:20px}.wordle-score span{font-size:13px;color:#776b63}.wordle-result>p{text-align:center;font-size:13px}.wordle-result-actions{justify-content:center}
+.wordle-score{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 16px;margin:16px 0}.wordle-score strong{flex:none;white-space:nowrap}.wordle-score span{text-align:center}.wordle-score strong{font:600 40px Fredoka,sans-serif;color:#4069e0}.wordle-score small{font-size:20px}.wordle-score span{font-size:13px;color:#776b63}.wordle-result>p{text-align:center;font-size:13px}.wordle-result-actions{justify-content:center}
 .wordle-screen button:focus-visible{outline:3px solid #4069e0;outline-offset:3px}.wordle-screen button:disabled{opacity:.55;cursor:wait}
 @media(max-width:600px){#pokdle-app.design-refresh #screen-wordle{padding:12px 10px 100px}.wordle-card{padding:18px 12px;border-radius:22px}.wordle-toolbar{margin-bottom:12px}.wordle-board{gap:10px}.wordle-cell{height:34px;font-size:15px;border-radius:6px}.wordle-legend{gap:9px}.wordle-mystery{padding:12px 7px}.wordle-key-row button{min-height:44px}.wordle-result{padding:18px 12px}.wordle-answer h2{font-size:25px}}
 

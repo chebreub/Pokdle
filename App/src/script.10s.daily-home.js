@@ -11,7 +11,7 @@ function applyDailyHomeSummary(summary){
   cta.dataset.action=complete?'showDailyJourneySummary':actions[next];
   cta.textContent=complete?'Voir mon bilan du jour →':'Épreuve '+(next+1)+' : '+names[next]+' →';
   const status=document.getElementById('daily-hero-status');
-  if(status){status.classList.remove('hidden');status.textContent=complete?'Journée terminée · '+summary.points+' / 96 pts':summary.stages.filter(s=>s.finished).length+' / 4 épreuves terminées';}
+  if(status){status.classList.remove('hidden');status.textContent=complete?'Journée terminée · '+summary.points+' / '+(summary.maxPoints||100)+' pts':summary.stages.filter(s=>s.finished).length+' / 4 épreuves terminées';}
   const subtitle=hero.querySelector('.pk-hero-sub');
   if(subtitle)subtitle.textContent=complete?'Tes quatre épreuves sont terminées. Retrouve tes résultats et ton classement.':'Enquête, Wordle, Dossier, Défi : reprends ta journée à la prochaine épreuve.';
   hero.dataset.dailyState=complete?'complete':'available';
