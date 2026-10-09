@@ -58,6 +58,9 @@ async def run():
                     await page.evaluate('startDailyGame();closeOverlayModal()')
                     await ready(page,'gameOver && !dailyRequestInFlight')
                     next_button=page.locator('#daily-wordle-next')
+                    assert await page.locator('#win-box').evaluate('e=>e.classList.contains("daily-result-card")')
+                    assert await page.locator('#win-box').evaluate('e=>e.getBoundingClientRect().height < 480'), 'Enquiry result too tall'
+                    await page.screenshot(path=str(OUT/f'{engine}-{width}-enquiry-result.png'),full_page=True)
                     if width<640: await next_button.tap()
                     else: await next_button.click()
                     await ready(page,'dailyWordleState?.status === "playing" && !dailyWordleBusy')
@@ -108,12 +111,19 @@ async def run():
                     assert await page.locator('#wordle-result').is_visible()
                     assert await page.locator('#wordle-result h2').inner_text()=='Bulbizarre'
                     assert state['points']==3
+                    assert await page.locator('#wordle-result').evaluate('e=>e.getBoundingClientRect().height < 480'), 'Result card too tall'
+                    assert await page.locator('#daily-wordle-grid-review').evaluate('e=>!e.open'), 'Grid must start collapsed'
+                    await page.locator('#daily-wordle-grid-review summary').click()
+                    assert await page.locator('#wordle-board').is_visible()
+                    await page.locator('#daily-wordle-grid-review summary').click()
+                    await page.locator('#wordle-result').scroll_into_view_if_needed()
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-win.png'))
                     await page.evaluate('startDailyWordle()');await ready(page,'dailyWordleState?.won && !dailyWordleBusy')
                     assert calls==[25,4,151,1]
                     # Another isolated daily fixture covers all six misses and zero points.
                     state.update(status='playing',finished=False,won=False,points=0,attempts=0,rows=[]);state.pop('answerId');state.pop('answerName')
                     await page.evaluate('startDailyWordle()');await ready(page,'dailyWordleState?.status === "playing" && !dailyWordleBusy')
+                    assert await page.locator('#wordle-result').is_hidden(), 'Previous result must not leak into a new round'
                     for attempt,name in enumerate(['Pikachu','Salamèche','Carapuce','Évoli','Mew','Dracaufeu'],1):
                         await field.fill(name);await page.keyboard.press('Enter')
                         await ready(page,f'dailyWordleState?.attempts === {attempt} && !dailyWordleBusy')

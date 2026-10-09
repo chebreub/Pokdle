@@ -76,6 +76,9 @@ async def run():
                         if i<9:await page.locator('.dossier-continue').click()
                     assert state['finished'] and state['points']==9 and not state['bonusUnlocked']
                     assert await page.locator('#dossier-result').is_visible()
+                    assert await page.locator('#dossier-result').evaluate('e=>e.getBoundingClientRect().height < 580'), 'Result card too tall'
+                    assert await page.locator('#dossier-pokemon').is_hidden(), 'Duplicate large sprite in result'
+                    assert await page.locator('#dossier-result .daily-result-next').is_visible()
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-result.png'),full_page=True)
                     await page.locator('.dossier-review summary').click();assert await page.locator('.dossier-review li').count()==10
                     assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
