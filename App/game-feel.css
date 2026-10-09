@@ -126,3 +126,33 @@
 @keyframes feel-clock {
   50% { transform:scale(1.1); }
 }
+
+/* Nouvelle entrée Pokédex : une ligne dans l'écran de fin, plus une carte plein écran par-dessus. */
+#pokdle-app.design-refresh #win-box .win-new-entry {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:4px 10px;
+  width:100%;
+  margin:10px 0 0;
+  padding:10px 14px;
+  border:1px solid #f3dc8f;
+  border-radius:16px;
+  background:linear-gradient(135deg,#fff6d6,#fffdf5);
+  color:#2e2a33;
+  font:700 13px Nunito,sans-serif;
+  cursor:pointer;
+  animation:feel-rise .3s ease-out .25s both;
+}
+#pokdle-app.design-refresh #win-box .win-new-entry span { color:#8a5a00; font-weight:900; letter-spacing:.04em; }
+#pokdle-app.design-refresh #win-box .win-new-entry b { font:600 16px Fredoka,Nunito,sans-serif; }
+#pokdle-app.design-refresh #win-box .win-new-entry small { color:#2f51b8; font-weight:800; }
+#pokdle-app.design-refresh.theme-dark #win-box .win-new-entry { background:rgba(255,212,92,.12); border-color:rgba(255,212,92,.35); color:#f4eef8; }
+#pokdle-app.design-refresh.theme-dark #win-box .win-new-entry span { color:#ffd45c; }
+#pokdle-app.design-refresh.theme-dark #win-box .win-new-entry small { color:#a9bdf7; }
+#pokdle-app.design-refresh #win-box .win-new-entry.is-missions { border-color:#d9ccf6; background:linear-gradient(135deg,#f1ebff,#fdfbff); }
+#pokdle-app.design-refresh #win-box .win-new-entry.is-missions span { color:#5c3fb0; }
+#pokdle-app.design-refresh #win-box .win-new-entry.is-missions.is-ready { border-color:#f3dc8f; background:linear-gradient(135deg,#fff1c7,#fffdf5); }
+#pokdle-app.design-refresh.theme-dark #win-box .win-new-entry.is-missions { background:rgba(185,166,242,.12); border-color:rgba(185,166,242,.35); }
+#pokdle-app.design-refresh.theme-dark #win-box .win-new-entry.is-missions span { color:#c9b6f5; }

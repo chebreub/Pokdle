@@ -118,7 +118,7 @@ function awardXp(amount, source = "") {
   playerProfile.xp = Math.max(0, (Number(playerProfile.xp) || 0) + Math.round(amount));
   const newTier = getXpTier(playerProfile.xp);
   try { saveProfile(); } catch (_e) {}
-  showXpToast(`+${Math.round(amount)} XP${source ? ` · ${source}` : ""}`);
+  queueXpToast(Math.round(amount), source);
   if (newTier.level > prevTier.level) {
     setTimeout(() => showXpToast(`🎉 Niveau ${newTier.level} — ${newTier.name} ${newTier.emoji}`, "is-levelup"), 700);
   }
@@ -147,6 +147,26 @@ function progressQuest(questId, amount = 1) {
   updateXpBadge();
 }
 
+// XP earned by one action (a win and the quest it completes) shows as a single toast;
+// otherwise the second message replaced the first in the same instant.
+let xpToastBatch = null;
+function queueXpToast(amount, source) {
+  if (!xpToastBatch) {
+    xpToastBatch = { amount: 0, sources: [] };
+    setTimeout(flushXpToast, 0);
+  }
+  xpToastBatch.amount += amount;
+  if (source) xpToastBatch.sources.push(source);
+}
+function flushXpToast() {
+  const batch = xpToastBatch;
+  xpToastBatch = null;
+  if (!batch || batch.amount <= 0) return;
+  const quests = batch.sources.filter(source => source.startsWith("Quête")).length;
+  const main = batch.sources.filter(source => !source.startsWith("Quête"));
+  const label = [main.join(" + "), quests ? (quests > 1 ? `${quests} quêtes accomplies` : "quête accomplie") : ""].filter(Boolean).join(" · ") || batch.sources[0] || "";
+  showXpToast(`+${batch.amount} XP${label ? ` · ${label}` : ""}`);
+}
 function showXpToast(message, extraClass = "") {
   let toast = document.getElementById("xp-toast");
   if (!toast) {

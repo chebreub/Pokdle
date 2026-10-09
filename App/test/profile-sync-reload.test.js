@@ -106,7 +106,9 @@ test("pagehide and timers are inert while profile reconciliation is pending", as
 test("ordinary pagehide still saves real progress after successful reconciliation", async () => {
   const f = fixture(); f.remote.data = { _accountId: "A", _savedAt: 100, profile: f.state.get("profile") };
   const page = await f.load();
-  assert.equal(page.reloads, 0); assert.equal(page.posts.length, 1);
+  assert.equal(page.reloads, 0); assert.equal(page.posts.length, 0, "Content identical to the server is not re-sent");
+  page.events.pagehide({ persisted: false }); await flush();
+  assert.equal(page.beacons.length, 0, "Leaving without progress does not stamp old data as new");
   f.state.set("profile", json({ nickname: "Local", xp: 90 }));
   page.events.pagehide({ persisted: false }); await flush();
   assert.equal(page.beacons.length, 1); assert.equal(page.beacons[0].data._accountId, "A");
@@ -121,4 +123,17 @@ test("switch to B preserves A backup and never beacons during restore navigation
   assert.equal(f.state.get("pokedle_sync_owner_v2"), "B");
   assert.equal(JSON.parse(f.state.get("pokedle_sync_cache_v2:A")).profile, json({ nickname: "Local", xp: 10 }));
   assert.equal(JSON.parse(f.state.get("profile")).nickname, "Account B");
+});
+test("an idle tab never re-sends unchanged progress over a newer save from another device", async () => {
+  const f = fixture(); f.remote.data = { _accountId: "A", _savedAt: 100, profile: f.state.get("profile") };
+  const page = await f.load();
+  f.state.set("profile", json({ nickname: "Local", xp: 120 }));
+  for (const tick of page.intervals) tick(); await flush();
+  assert.equal(page.posts.length, 1); assert.equal(JSON.parse(f.remote.data.profile).xp, 120);
+  // Another device saves more progress; this tab has nothing new and must stay silent.
+  f.remote.data = { _accountId: "A", _savedAt: Date.now() + 1000, profile: json({ nickname: "Phone", xp: 300 }) };
+  for (let i = 0; i < 3; i++) { for (const tick of page.intervals) tick(); await flush(); }
+  page.events.pagehide({ persisted: false }); await flush();
+  assert.equal(page.posts.length, 1); assert.equal(page.beacons.length, 0);
+  assert.equal(JSON.parse(f.remote.data.profile).xp, 300);
 });

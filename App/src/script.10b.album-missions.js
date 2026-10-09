@@ -188,9 +188,12 @@ function normalizeAlbumMissionStats(raw) {
 function ensureAlbumMissionStats(seed = true) {
   if (!playerProfile.albumMissionStats) playerProfile.albumMissionStats = normalizeAlbumMissionStats(null);
   const stats = playerProfile.albumMissionStats;
-  if (seed && !stats.seeded) {
+  // Seed once from the shared log, only after the account is known and only with its own games.
+  const accountKnown = typeof window === 'undefined' || window.__pokedleAccountKnown === true;
+  if (seed && !stats.seeded && accountKnown) {
     stats.seeded = true;
-    for (const entry of Array.isArray(matchHistory) ? matchHistory : []) trackAlbumMissionHistoryEntry(entry, stats);
+    const owned = typeof matchHistoryBelongsToCurrent === 'function' ? matchHistoryBelongsToCurrent : () => true;
+    for (const entry of Array.isArray(matchHistory) ? matchHistory : []) if (owned(entry)) trackAlbumMissionHistoryEntry(entry, stats);
   }
   return stats;
 }

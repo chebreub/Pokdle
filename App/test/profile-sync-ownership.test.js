@@ -141,8 +141,11 @@ test("pagehide caches current account data and sends an owner-stamped beacon",as
  const state=storage({pokedle_sync_owner_v2:"A",pokedle_sync_at:"100",profile:j({nickname:"A"})});
  const run=await runSync({state,me:{id:"A"},server:{_accountId:"A",_savedAt:100,profile:j({nickname:"A"})}});
  run.listeners.pagehide();await flush();
+ assert.equal(run.beacons.length,0,"Unchanged progress is cached but not re-sent");
+ state.map.set("profile",j({nickname:"A",xp:5}));
+ run.listeners.pagehide();await flush();
  const cached=JSON.parse(state.map.get("pokedle_sync_cache_v2:A"));
- assert.equal(cached._accountId,"A");assert.equal(cached.profile,j({nickname:"A"}));
+ assert.equal(cached._accountId,"A");assert.equal(cached.profile,j({nickname:"A",xp:5}));
  assert.equal(run.beacons.length,1);
  assert.equal(run.beacons[0].url,"/api/profile");
  assert.match(String(run.beacons[0].blob.parts[0]),/"_accountId":"A"/);

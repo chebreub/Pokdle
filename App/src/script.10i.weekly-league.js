@@ -48,41 +48,88 @@ function weeklyLeagueEntries(info=weeklyLeagueIsoWeek()) {
   const end=weeklyLeagueEnd().getTime();
   return (Array.isArray(matchHistory)?matchHistory:[]).filter(row=>{
     const at=Number(row?.at)||0;
-    return at>=start&&at<end;
+    // The log is shared by every account used in this browser: never count another account's games.
+    return at>=start&&at<end&&(typeof matchHistoryBelongsToCurrent!=="function"||matchHistoryBelongsToCurrent(row));
   });
 }
 function weeklyLeagueQuizScore(entry) {
   const m=String(entry?.targetName||"").match(/Score\s+(\d+)\s*\/\s*(\d+)/i);
   return m&&Number(m[2])===15?Number(m[1])||0:0;
 }
-function weeklyLeagueMetric(template,entries=weeklyLeagueEntries()) {
+// Daily keeps the fewest attempts; every other discipline keeps the highest value.
+function weeklyLeagueLowerIsBetter(template) {
+  return template.id==="daily";
+}
+function weeklyLeagueEntryValue(template,e) {
+  if(template.id==="daily") return e.mode==="daily"&&e.result==="win"&&e.dailyAccountId&&e.dailyAccountId===String(connectedAccountUser?.id||"")?Number(e.attempts)||0:0;
+  if(template.id==="quiz") return e.mode==="quiz"?weeklyLeagueQuizScore(e):0;
+  if(template.id==="speedrun") return e.mode==="speedrun"?Number(e.attempts)||0:0;
+  if(template.id==="higherlower") return e.mode==="higher-lower"?Number(e.attempts)||0:0;
+  if(template.id==="odd"||template.id==="weight") return e.mode===template.mode&&e.result==="win"?1:0;
+  return 0;
+}
+function weeklyLeagueCountsWins(template) {
+  return template.id==="odd"||template.id==="weight";
+}
+function weeklyLeagueBetter(template,a,b) {
+  if(!a) return b||0;
+  if(!b) return a;
+  return weeklyLeagueLowerIsBetter(template)?Math.min(a,b):Math.max(a,b);
+}
+function weeklyLeagueLogValue(template,entries) {
+  const values=entries.map(e=>weeklyLeagueEntryValue(template,e)).filter(Boolean);
+  if(weeklyLeagueCountsWins(template)) return values.length;
+  return values.reduce((best,value)=>weeklyLeagueBetter(template,best,value),0);
+}
+function weeklyLeagueMetricFromValue(template,best) {
   if(template.id==="daily"){
-    const wins=entries.filter(e=>e.mode==="daily"&&e.result==="win"&&e.dailyAccountId&&e.dailyAccountId===String(connectedAccountUser?.id||"")).map(e=>Number(e.attempts)||0).filter(Boolean);
-    const best=wins.length?Math.min(...wins):0;
     const score=!best?0:best<=3?200:best<=6?170:best<=10?120:80;
     return { value:best, display:best?best+" essai"+(best>1?"s":""):"—", complete:best>0&&best<=6, score };
   }
-  if(template.id==="quiz"){
-    const best=Math.max(0,...entries.filter(e=>e.mode==="quiz").map(weeklyLeagueQuizScore));
-    return { value:best, display:best?best+"/15":"—", complete:best>=12, score:Math.min(200,Math.round(best*200/15)) };
-  }
-  if(template.id==="speedrun"){
-    const best=Math.max(0,...entries.filter(e=>e.mode==="speedrun").map(e=>Number(e.attempts)||0));
-    return { value:best, display:best?best+" trouvés":"—", complete:best>=12, score:Math.min(200,best*10) };
-  }
-  if(template.id==="higherlower"){
-    const best=Math.max(0,...entries.filter(e=>e.mode==="higher-lower").map(e=>Number(e.attempts)||0));
-    return { value:best, display:best?String(best):"—", complete:best>=8, score:Math.min(200,best*15) };
-  }
-  if(template.id==="odd"){
-    const wins=entries.filter(e=>e.mode==="odd"&&e.result==="win").length;
-    return { value:wins, display:wins?wins+" victoire"+(wins>1?"s":""):"—", complete:wins>=5, score:Math.min(200,wins*40) };
-  }
-  if(template.id==="weight"){
-    const wins=entries.filter(e=>e.mode==="weight"&&e.result==="win").length;
-    return { value:wins, display:wins?wins+" victoire"+(wins>1?"s":""):"—", complete:wins>=5, score:Math.min(200,wins*40) };
-  }
+  if(template.id==="quiz") return { value:best, display:best?best+"/15":"—", complete:best>=12, score:Math.min(200,Math.round(best*200/15)) };
+  if(template.id==="speedrun") return { value:best, display:best?best+" trouvés":"—", complete:best>=12, score:Math.min(200,best*10) };
+  if(template.id==="higherlower") return { value:best, display:best?String(best):"—", complete:best>=8, score:Math.min(200,best*15) };
+  if(weeklyLeagueCountsWins(template)) return { value:best, display:best?best+" victoire"+(best>1?"s":""):"—", complete:best>=5, score:Math.min(200,best*40) };
   return {value:0,display:"—",complete:false,score:0};
+}
+// The week's results live in the profile (synced with the account), not only in the 120-game log:
+// a long Intrus or Duel de poids session can push this week's games out of that log.
+function weeklyLeagueWeekStats(info=weeklyLeagueIsoWeek()) {
+  // Before the account is known, the shared log cannot be attributed: show it, store nothing.
+  if(!playerProfile||(typeof window!=="undefined"&&!window.__pokedleAccountKnown)) return null;
+  weeklyLeagueEnsureProfile();
+  const all=playerProfile.weeklyLeagueStats;
+  if(!all[info.id]||typeof all[info.id]!=="object"){
+    // First visit of the week: start from the games already in the log, then count each new one.
+    const entries=weeklyLeagueEntries(info),seeded={};
+    for(const template of WEEKLY_LEAGUE_TEMPLATES){const value=weeklyLeagueLogValue(template,entries);if(value)seeded[template.id]=value;}
+    all[info.id]=seeded;
+    for(const old of Object.keys(all).sort().slice(0,-12)) delete all[old];
+  }
+  return all[info.id];
+}
+function weeklyLeagueRecord(entry,info=weeklyLeagueIsoWeek()) {
+  if(!playerProfile||!entry||(typeof matchHistoryBelongsToCurrent==="function"&&!matchHistoryBelongsToCurrent(entry))) return false;
+  const existed=Boolean(playerProfile.weeklyLeagueStats?.[info.id]);
+  const stats=weeklyLeagueWeekStats(info);
+  if(!stats) return false;
+  if(!existed) return true; // the seed already includes this game
+  let changed=false;
+  for(const template of WEEKLY_LEAGUE_TEMPLATES){
+    const value=weeklyLeagueEntryValue(template,entry);
+    if(!value) continue;
+    const previous=Number(stats[template.id])||0;
+    const next=weeklyLeagueCountsWins(template)?previous+1:weeklyLeagueBetter(template,previous,value);
+    if(next!==previous){stats[template.id]=next;changed=true;}
+  }
+  return changed;
+}
+function weeklyLeagueMetric(template,entries) {
+  // Explicit entries: score exactly those games. Default: this week's log combined with the saved week.
+  if(entries) return weeklyLeagueMetricFromValue(template,weeklyLeagueLogValue(template,entries));
+  const logValue=weeklyLeagueLogValue(template,weeklyLeagueEntries());
+  const stored=Number(weeklyLeagueWeekStats()?.[template.id])||0;
+  return weeklyLeagueMetricFromValue(template,weeklyLeagueCountsWins(template)?Math.max(logValue,stored):weeklyLeagueBetter(template,logValue,stored));
 }
 function weeklyLeagueState(info=weeklyLeagueIsoWeek()) {
   const disciplines=weeklyLeagueDisciplines(info).map(template=>({template,metric:weeklyLeagueMetric(template)}));
@@ -98,6 +145,7 @@ function weeklyLeagueEnsureProfile() {
   if(!playerProfile) return;
   playerProfile.weeklyLeagueBadges ||= {};
   playerProfile.weeklyLeagueScores ||= {};
+  playerProfile.weeklyLeagueStats ||= {};
 }
 function weeklyLeagueSyncScore(state=weeklyLeagueState()) {
   weeklyLeagueEnsureProfile();
@@ -211,6 +259,7 @@ function renderWeeklyLeagueHome() {
     '<button type="button" class="'+(state.mastered&&!state.claimed?'btn-yellow':'btn-blue')+'" data-action="openWeeklyLeague">'+(state.mastered&&!state.claimed?'Badge prêt':'Voir l’épreuve')+' →</button>';
 }
 function weeklyLeagueAfterHistory(entry) {
+  if(weeklyLeagueRecord(entry)){try { saveProfile(); } catch(_e) {}}
   const state=weeklyLeagueState();
   weeklyLeagueSyncScore(state);
   renderWeeklyLeagueHome();
@@ -219,7 +268,9 @@ if(typeof recordMatchHistory==="function"){
   const recordMatchHistoryBeforeWeeklyLeague=recordMatchHistory;
   recordMatchHistory=function(entry){
     const result=recordMatchHistoryBeforeWeeklyLeague(entry);
-    setTimeout(()=>weeklyLeagueAfterHistory(entry),0);
+    // The stored row carries the resolved mode, date and account of this game.
+    const row=Array.isArray(matchHistory)&&matchHistory[0]?matchHistory[0]:entry;
+    setTimeout(()=>weeklyLeagueAfterHistory(row),0);
     return result;
   };
 }
@@ -233,6 +284,8 @@ if(typeof goToConfig==="function"){
 }
 if(typeof window!=="undefined"&&window.addEventListener){
   window.addEventListener("DOMContentLoaded",()=>setTimeout(renderWeeklyLeagueHome,0));
+  // The Daily discipline and the saved week depend on the account: redraw once it is known.
+  window.addEventListener("pokedle:account-known",()=>setTimeout(renderWeeklyLeagueHome,0));
 }
 window.openWeeklyLeague=openWeeklyLeague;
 window.openWeeklyLeagueRanking=openWeeklyLeagueRanking;

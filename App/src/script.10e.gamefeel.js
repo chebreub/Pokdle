@@ -130,8 +130,31 @@ function gameFeelResultDetail(entry) {
   if (Number.isFinite(attempts)) return attempts+' point'+(attempts>1?'s':'');
   return '';
 }
+function gameFeelResultMissionsLine(box, missionChanges, ready) {
+  document.getElementById('win-mission-progress')?.remove();
+  const line=document.createElement('button');
+  line.type='button';
+  line.id='win-mission-progress';
+  line.className='win-new-entry is-missions'+(ready?' is-ready':'');
+  line.dataset.action='openPokedexMissionHub';
+  const count=missionChanges.length, first=missionChanges[0].mission;
+  line.innerHTML='<span>◆ '+(ready?'Mission prête !':count+' mission'+(count>1?'s progressent':' progresse'))+'</span><b>'+escapeHtml(first.title)+(count>1?' +'+(count-1):'')+'</b><small>Voir les missions →</small>';
+  const anchor=document.getElementById('win-new-entry')||box.querySelector('.win-inner');
+  if (anchor) anchor.after(line); else box.prepend(line);
+}
 function showGameFeelResult(entry, missionChanges=[]) {
   if (!entry || typeof document==='undefined') return;
+  // The result screen already says it: mission progress joins that screen as one line
+  // instead of a floating card that covered half of it on phones.
+  const box=document.getElementById('win-box');
+  if (box && !box.classList.contains('hidden') && !document.getElementById('screen-game')?.classList.contains('hidden')) {
+    const ready=missionChanges.some(x=>x.becameReady);
+    if (missionChanges.length) gameFeelResultMissionsLine(box,missionChanges,ready);
+    // A new Pokédex entry already played its own sound and cry.
+    if (ready) gameFeelPlay('record');
+    else if (!document.getElementById('win-new-entry')) gameFeelPlay(entry.result==='win'?'win':entry.result==='draw'?'draw':'loss');
+    return;
+  }
   if (document.body.classList.contains('pokedex-registration-open')) {
     setTimeout(()=>showGameFeelResult(entry,missionChanges),2400);
     return;
@@ -284,6 +307,16 @@ function enhanceGameOverBox({won,pokemon,attempts,mode}) {
     '<div class="win-result-types">'+types+'</div>';
   box.classList.toggle('is-win-result',Boolean(won));
   box.classList.toggle('is-loss-result',!won);
+}
+
+// Lines added to a result belong to that round only: clear them before any result is drawn.
+if (typeof renderGameOverBox==='function') {
+  const renderGameOverBeforeResultLines=renderGameOverBox;
+  renderGameOverBox=function() {
+    document.getElementById('win-new-entry')?.remove();
+    document.getElementById('win-mission-progress')?.remove();
+    return renderGameOverBeforeResultLines.apply(this,arguments);
+  };
 }
 
 if (typeof recordMatchHistory==='function') {

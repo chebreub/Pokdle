@@ -222,6 +222,8 @@ window.addEventListener('DOMContentLoaded', () => {
   playerProfile.discoveries ||= {};
   // Oldest first preserves the earliest known win; losses and score-only records do not qualify.
   for (const entry of [...matchHistory].sort((a, b) => Number(a.at) - Number(b.at))) {
+    // Tagged games were already registered live for their own account; never copy them to another.
+    if (entry?.owner) continue;
     const pokemon = historyDiscovery(entry);
     if (pokemon) migrated = addDiscovery(playerProfile.discoveries, pokemon, entry.mode, entry.at, 'history') || migrated;
   }

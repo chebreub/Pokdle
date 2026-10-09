@@ -955,6 +955,11 @@ function accountNavigate(destination) {
   function renderAccount(data) {
     connectedAccountUser = data?.auth ? data.user || null : null;
     window.__pokedleAuthed = Boolean(data?.user);
+    // Guest or signed in, the account is now known: progress seeded from the shared log can start.
+    if (!window.__pokedleAccountKnown) {
+      window.__pokedleAccountKnown = true;
+      try { window.dispatchEvent(new CustomEvent("pokedle:account-known", { detail: { user: connectedAccountUser } })); } catch (_e) {}
+    }
     if (window.__pokedleAuthed) {
       try { window.dispatchEvent(new CustomEvent("pokedle:auth-ready", { detail: { user: data.user } })); } catch (_e) {}
     }
@@ -1210,11 +1215,18 @@ function accountNavigate(destination) {
     setLocalSavedAt(0);
     return { reload: false, ready: true };
   }
+  // Last content known to match the server (received, or sent successfully) in this page.
+  // An unchanged profile is never re-sent: an idle tab would otherwise stamp old data with a
+  // fresh time every minute and overwrite progress made meanwhile on another device.
+  var lastSyncedBlob = null;
+  function unchangedSinceSync(blob) {
+    return Boolean(lastSyncedBlob) && sameContent(blob, lastSyncedBlob);
+  }
   function pushSync() {
     var accountId = activeAccountId;
     if (!syncReady || !loggedIn || !accountId || localOwner() !== accountId) return Promise.resolve(false);
     var blob = buildLocalBlob(accountId);
-    if (!hasContent(blob)) return Promise.resolve(false);
+    if (!hasContent(blob) || unchangedSinceSync(blob)) return Promise.resolve(false);
     try {
       return fetch("/api/profile", {
         method: "POST",
@@ -1227,6 +1239,7 @@ function accountNavigate(destination) {
           if (!syncReady || !loggedIn || activeAccountId !== accountId || localOwner() !== accountId) return false;
           setLocalSavedAt(blob._savedAt);
           saveAccountCache(accountId, blob);
+          lastSyncedBlob = blob;
           return true;
         });
       }).catch(function () { return false; });
@@ -1253,6 +1266,7 @@ function accountNavigate(destination) {
           if (String(server._accountId || "") !== activeAccountId) return;
           var activation = activateAccount(activeAccountId, server);
           if (!activation.ready || activation.reload) return;
+          lastSyncedBlob = server;
           syncReady = true;
           pushSync();
         });
@@ -1265,6 +1279,7 @@ function accountNavigate(destination) {
         var blob = buildLocalBlob(activeAccountId);
         if (!hasContent(blob)) return;
         saveAccountCache(activeAccountId, blob);
+        if (unchangedSinceSync(blob)) return;
         if (navigator.sendBeacon) {
           navigator.sendBeacon("/api/profile", new Blob([JSON.stringify(blob)], { type: "application/json" }));
         }
@@ -1365,11 +1380,18 @@ function writeJson(key, value) {
   }
 }
 
+// Plain objects of records keyed by week, generation or opponent; anything else becomes empty.
+function profileRecordMap(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
 function loadProfile() {
   const parsed = readJson(STORAGE_KEYS.profile, null);
+  // Fields this function does not know yet are kept as saved: a reload must never drop progress.
+  const saved = profileRecordMap(parsed);
   playerProfile = {
+    ...saved,
     nickname: typeof parsed?.nickname === "string" ? parsed.nickname : "",
-    favoritePokemonId: Number.isInteger(Number(parsed?.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
+    favoritePokemonId: parsed?.favoritePokemonId != null && Number.isInteger(Number(parsed.favoritePokemonId)) ? Number(parsed.favoritePokemonId) : null,
     discoveries: normalizeDiscoveries(parsed?.discoveries),
     secrets: normalizeSecretProgress(parsed?.secrets),
     albumMissionClaims: typeof normalizeAlbumMissionClaims === 'function' ? normalizeAlbumMissionClaims(parsed?.albumMissionClaims) : (parsed?.albumMissionClaims || {}),
@@ -1394,6 +1416,14 @@ function loadProfile() {
     typeComboHighScore: Number(parsed?.typeComboHighScore) || 0,
     oddOneOutHighScore: Number(parsed?.oddOneOutHighScore) || 0,
     weightBattleHighScore: Number(parsed?.weightBattleHighScore) || 0,
+    // Formerly dropped on reload: League weeks and badges, Draft PRO records, current streaks.
+    oddOneOutStreak: Number(parsed?.oddOneOutStreak) || 0,
+    weightBattleStreak: Number(parsed?.weightBattleStreak) || 0,
+    draftScoreProRecords: profileRecordMap(parsed?.draftScoreProRecords),
+    draftScoreProHeadToHead: profileRecordMap(parsed?.draftScoreProHeadToHead),
+    weeklyLeagueScores: profileRecordMap(parsed?.weeklyLeagueScores),
+    weeklyLeagueBadges: profileRecordMap(parsed?.weeklyLeagueBadges),
+    weeklyLeagueStats: profileRecordMap(parsed?.weeklyLeagueStats),
   };
   // Tracking login quotidien pour streak
   const today = getDailyQuestKey();
@@ -1506,13 +1536,26 @@ function findPokemonGlobalByName(raw) {
   return POKEMON_LIST.find((pokemon) => norm(pokemon.name) === q) || null;
 }
 
+// The local game log is shared by every account used in this browser. Each game is tagged
+// with its account ("owner"), so one account's games never count for another one.
+// undefined: account not known yet; null: guest; otherwise the account id.
+function matchHistoryOwner() {
+  if (typeof window === "undefined" || !window.__pokedleAccountKnown) return undefined;
+  return connectedAccountUser?.id ? String(connectedAccountUser.id) : null;
+}
+function matchHistoryBelongsToCurrent(entry) {
+  // Untagged games (guest, older versions, or played before the account loaded) stay shared.
+  return !entry?.owner || entry.owner === matchHistoryOwner();
+}
 function recordMatchHistory(entry) {
+  const owner = matchHistoryOwner();
   matchHistory.unshift({
     mode: entry.mode || gameMode || "normal",
     result: entry.result || "win",
     attempts: Number(entry.attempts) || 0,
     targetName: entry.targetName || null,
     ...(entry.mode === "daily" ? {dailyAccountId:entry.dailyAccountId||null} : {}),
+    ...(owner ? { owner } : {}),
     at: Date.now(),
   });
   matchHistory = matchHistory.slice(0, 120);
