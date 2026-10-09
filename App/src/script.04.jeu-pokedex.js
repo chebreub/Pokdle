@@ -1661,6 +1661,7 @@ function openAllModesScreen(category) {
         }
         if (key === "allModes") {
           if (typeof setModeCatalogDifficulty === "function") setModeCatalogDifficulty(state.difficulty || "all", false);
+          if (typeof setModeCatalogFamily === "function") setModeCatalogFamily(state.family || "all", false);
           if (state.query) document.getElementById("mode-search").value = state.query;
           renderModeCatalog();
         }

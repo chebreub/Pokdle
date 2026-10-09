@@ -22,17 +22,15 @@ test('resume restores without drawing another target or counting a new game',()=
  const env=fixture({readJson:()=>save,STORAGE_KEYS:{},VALID_MODES:new Set(['normal']),POKEMON_BY_ID:new Map([[25,{}]]),getDailyDateKey:()=> 'today',dailyObservedAccountId:()=>null,restoreSavedGame:m=>{mode=m;return true;},history:{pushState:s=>{pushed=s;}},gameMode:'normal',secretPokemon:{id:25},location:{pathname:'/',search:''}});
  env.resumeClubGame();assert.equal(mode,'normal');assert.equal(pushed.secretId,25);assert.equal(pushed.screen,'game');
 });
-test('featured picks hide duplicate entries only without a search and preserve the PRO variant',()=>{
- const env=fixture();
- const card=args=>({dataset:{args:JSON.stringify(args)}});
- assert.equal(env.isClubFeatured(card(['openDraftScoreAttackMode']),'solo',''),true);
- assert.equal(env.isClubFeatured(card(['openPokeConnectionsMode']),'solo',''),true);
- assert.equal(env.isClubFeatured(card(['startNormalGame']),'solo',''),false);
- assert.equal(env.isClubFeatured(card(['openDraftScoreAttackMode',true]),'solo',''),false);
- assert.equal(env.isClubFeatured(card(['startDailyGame']),'solo','daily'),false);
- assert.equal(env.isClubFeatured(card(['openPartyRoomMode']),'friends',''),true);
- assert.equal(env.isClubFeatured(card(['openPartyRoomMode']),'all',''),false);
- assert.equal(env.isClubFeatured(card(['startDailyGame']),'solo','','hard'),false);
+test('the catalogue feature rotates every Monday and only leads the untouched solo list',()=>{
+ const panel={dataset:{},innerHTML:'',classList:{hidden:false,toggle(name,on){this.hidden=on;}}};
+ const env=fixture({document:{addEventListener(){},getElementById:id=>id==='catalog-picks'?panel:null},escapeHtml:value=>String(value)});
+ const monday=Date.UTC(2026,9,5,12), sunday=Date.UTC(2026,9,11,20), nextMonday=Date.UTC(2026,9,12,1);
+ assert.equal(env.catalogFeatureOfWeek(monday)[0],env.catalogFeatureOfWeek(sunday)[0]);
+ assert.notEqual(env.catalogFeatureOfWeek(sunday)[0],env.catalogFeatureOfWeek(nextMonday)[0]);
+ env.renderCatalogPicks('solo','','all','all');
+ assert.equal(panel.classList.hidden,false);assert.match(panel.innerHTML,/img\/modes\/(daily|connections|draft)-v1-960\.webp/);assert.match(panel.innerHTML,/alt="[^"]+"/);
+ for(const args of [['solo','cri','all','all'],['solo','','hard','all'],['solo','','all','guess'],['friends','','all','all'],['all','','all','all']]){env.renderCatalogPicks(...args);assert.equal(panel.classList.hidden,true,args.join(','));}
 });
 test('rank movement handles ties and no gain correctly',()=>{
  const env=fixture(),players=[{score:100,lastGain:0},{score:150,lastGain:100},{score:50,lastGain:0}];

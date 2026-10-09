@@ -89,36 +89,30 @@ function homeGameRecordHtml(action) {
   const spec = records[action], value = spec ? Number(playerProfile?.[spec[0]]) || 0 : 0;
   return value > 0 ? '<small class="home-game-record">Ton record : '+value+' '+spec[1]+'</small>' : '';
 }
-function isClubFeatured(card, category, query, difficulty = "all") {
-  if (String(query || "").trim() || difficulty !== "all" || !["solo", "friends"].includes(category)) return false;
-  try {
-    const [name, ...args] = JSON.parse(card.dataset.args || "[]");
-    return args.length === 0 && (category === "solo"
-      ? ["startDailyGame", "openPokeConnectionsMode", "openDraftScoreAttackMode"]
-      : ["openPartyRoomMode", "openMultiplayerMode", "openStatClashMode"]).includes(name);
-  } catch (_error) { return false; }
+// One painted illustration per week leads the catalogue; the games themselves stay in their family.
+var CATALOG_FEATURES = [
+  ["startDailyGame", "daily", "Le Pokémon du jour", "Le même mystère pour tout le monde. Enquête, puis Wordle, Dossier et Défi.", "Carnet d’enquête, loupe et Pokédex sur un sentier"],
+  ["openPokeConnectionsMode", "connections", "Poké-Connections", "16 Pokémon, quatre liens cachés. À toi de retrouver les quatre groupes.", "Évoli et ses évolutions autour d’un puzzle"],
+  ["openDraftScoreAttackMode", "draft", "Draft Score Attack", "Six choix pour une équipe de rêve. Vise le meilleur total.", "Trois Pokémon prêts au combat dans une arène"]
+];
+function catalogFeatureOfWeek(now = Date.now()) {
+  // 1 January 1970 was a Thursday: shifting by 3 days makes weeks start on Monday.
+  const week = Math.floor((Math.floor(now / 864e5) + 3) / 7);
+  return CATALOG_FEATURES[week % CATALOG_FEATURES.length];
 }
-function renderCatalogPicks(category, query, difficulty = "all") {
+function renderCatalogPicks(category, query, difficulty = "all", family = "all") {
   const panel = document.getElementById("catalog-picks");
   if (!panel) return;
-  const hide = Boolean(String(query || "").trim()) || difficulty !== "all" || category === "explore" || category === "all";
-  panel.classList.toggle("hidden", hide);
-  panel.classList.toggle("illustrated-selection", category === "solo");
-  if (hide) return;
-  const picks = category === "friends" ? [
-    ["openPartyRoomMode", "La soirée à plusieurs", "Party Room", "2–8 joueurs · Déduction, numéros et nouvelle enquête coop.", "users"],
-    ["openMultiplayerMode", "Le face-à-face", "Duel 1v1", "2 joueurs · Le même mystère, chacun ses indices.", "swords"],
-    ["openStatClashMode", "Le défi stratégique", "Stat Clash", "2 joueurs · Choisis les bonnes statistiques.", "chart"]
-  ] : [
-    ["startDailyGame", "Le rendez-vous", "Pokémon du jour", "Une cible par jour · Des indices à chaque essai.", "calendar"],
-    ["openPokeConnectionsMode", "Les liens cachés", "Poké-Connections", "16 Pokémon · À toi de retrouver les quatre groupes.", "link"],
-    ["openDraftScoreAttackMode", "Le défi de score", "Draft Score Attack", "Compose une équipe de six et vise le record.", "chart"]
-  ];
-  panel.innerHTML = '<div class="club-section-head"><h3>' + (category === "solo" ? 'Trois façons de jouer' : 'Commence ici') + '</h3><span>' + (category === "solo" ? 'Enquêter · Relier · Composer' : 'Trois incontournables') + '</span></div><div class="club-picks-grid">' +
-    picks.map((p, i) => {
-      const illustrated=typeof MODE_CATALOG_ILLUSTRATIONS !== "undefined" && Boolean(MODE_CATALOG_ILLUSTRATIONS[p[0]]);
-      return '<button type="button" class="club-pick club-pick-' + i + (illustrated ? ' has-mode-illustration' : ' has-mode-art') + '" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([p[0]])) + '">' + (illustrated ? '' : '<span class="club-pick-icon" aria-hidden="true"><svg><use href="#i-' + p[4] + '"/></svg></span>') + (typeof modeCatalogArtHtml === "function" ? modeCatalogArtHtml(p[0], "pick") : "") + '<small>' + p[1] + '</small><b>' + p[2] + '</b><span class="club-pick-description">' + p[3] + '</span><strong aria-hidden="true">Jouer <span>→</span></strong></button>';
-    }).join("") + '</div><p class="club-more-label">Ou explore les autres jeux ci-dessous</p>';
+  const show = category === "solo" && family === "all" && !String(query || "").trim() && difficulty === "all";
+  panel.classList.toggle("hidden", !show);
+  if (!show) return;
+  const [action, image, title, line, alt] = catalogFeatureOfWeek();
+  if (panel.dataset.feature === action) return;
+  const base = "img/modes/" + image + "-v1-";
+  panel.dataset.feature = action;
+  panel.innerHTML = '<button type="button" class="catalog-feature catalog-feature-' + image + '" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([action])) + '">' +
+    '<img src="' + base + '960.webp" srcset="' + base + '480.webp 480w, ' + base + '960.webp 960w" sizes="(max-width:760px) 100vw, 640px" width="960" height="640" alt="' + alt + '" loading="lazy" decoding="async" />' +
+    '<span class="catalog-feature-copy"><span class="catalog-feature-badge">À la une cette semaine</span><b>' + title + '</b><span>' + line + '</span><strong aria-hidden="true">Jouer →</strong></span></button>';
 }
 function partyShareCoopClue() {
   const room = partyRoomState.room, socket = ensureMultiplayerSocket();
