@@ -28,6 +28,20 @@ function ensureDailyWordleScreen() {
   keyboard.addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault();});
 }
 function wordleMessage(text) {const node=document.getElementById('wordle-message');if(node)node.textContent=text;}
+// A refused name nudges the field and its message, like the main guessing game.
+function wordleNudge() {
+  for(const node of [document.getElementById('wordle-message'),document.querySelector('#wordle-form .wordle-search')]) {
+    if(!node)continue;node.classList.remove('is-nudged');void node.offsetWidth;node.classList.add('is-nudged');
+  }
+}
+// Only the guess just played animates; the rest of the board is redrawn still.
+function wordleMarkNewRow() {
+  const rows=document.querySelectorAll('#wordle-board .wordle-guess:not(.wordle-next)'),row=rows[rows.length-1];
+  if(!row)return;
+  row.querySelectorAll('.wordle-cell').forEach((cell,i)=>cell.style.setProperty('--wordle-index',i));
+  row.classList.add('is-new');
+  if(dailyWordleState?.finished)document.getElementById('wordle-result')?.classList.add('is-new');
+}
 function wordleCells(letters,colors=[]) {
   const labels={exact:'bien placée',present:'présente ailleurs',absent:'absente'};
   return [...letters].map((letter,i)=>'<span class="wordle-cell '+(colors[i]||'empty')+'" aria-label="'+escapeHtml(letter==='?'?'Lettre inconnue':letter+(labels[colors[i]]?' : '+labels[colors[i]]:''))+'">'+escapeHtml(letter)+'</span>').join('');
@@ -81,7 +95,8 @@ async function wordleRequest(action='',pokemonId) {
     dailyWordleState=data;renderStarted=performance.now();renderDailyWordle();
     window.dailyWordleLastTiming={action:action||'open',networkMs:Math.round(networkFinished-requestStarted),renderMs:Math.round(performance.now()-renderStarted),serverTiming};
     if(action&&data.finished)document.getElementById('wordle-result').scrollIntoView({block:'nearest'});
-    if(data.duplicate)wordleMessage('Ce Pokémon a déjà été proposé. Aucun essai retiré.');
+    if(data.duplicate){wordleMessage('Ce Pokémon a déjà été proposé. Aucun essai retiré.');wordleNudge();}
+    else if(action==='/guess')wordleMarkNewRow();
     return true;
   } catch(e) {
     if(serial!==dailyWordleSerial||document.getElementById('screen-wordle')?.classList.contains('hidden'))return false;
@@ -130,8 +145,8 @@ async function submitDailyWordle(pokemonId=null) {
   if(dailyWordleState.accountId!==dailyObservedAccountId()){wordleMessage('Ton compte a changé. Recharge ta partie.');return;}
   const input=document.getElementById('wordle-input'),draft=input.value;
   const p=pokemonId?POKEMON_BY_ID.get(Number(pokemonId)):getPokemonUiList().find(p=>wordleNormalize(p.name)===wordleNormalize(draft));
-  if(!p){wordleMessage('Choisis un vrai nom de Pokémon dans les propositions. Aucun essai retiré.');return;}
-  if(dailyWordleState.rows.some(row=>row.letters===wordleNormalize(p.name))){wordleMessage('Déjà proposé ! Choisis un autre Pokémon.');return;}
+  if(!p){wordleMessage('Choisis un vrai nom de Pokémon dans les propositions. Aucun essai retiré.');wordleNudge();return;}
+  if(dailyWordleState.rows.some(row=>row.letters===wordleNormalize(p.name))){wordleMessage('Déjà proposé ! Choisis un autre Pokémon.');wordleNudge();return;}
   input.value='';document.getElementById('wordle-suggestions').classList.add('hidden');input.setAttribute('aria-expanded','false');input.focus({preventScroll:true});
   const serial=dailyWordleSerial+1,accountId=dailyObservedAccountId();
   const ok=await wordleRequest('/guess',p.id);

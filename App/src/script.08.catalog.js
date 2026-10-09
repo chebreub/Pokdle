@@ -124,6 +124,8 @@ var MODE_TILE_PROPS = Object.freeze({
 });
 var MODE_CATALOG_FAMILY_LABELS = Object.freeze({ guess:'Deviner', reflection:'Réflexion', arcade:'Arcade', strategy:'Stratégie', social:'Entre amis', collection:'Collection' });
 var MODE_CATALOG_FAMILY_COPY = Object.freeze({ guess:'retrouve le Pokémon mystère', reflection:'liens, logique et culture', arcade:'parties rapides et records', strategy:'compose ton équipe', social:'de 2 à 8 joueurs', collection:'tes outils de dresseur' });
+// In the tools view the same sections hold tools, so they get tool names.
+var MODE_CATALOG_TOOL_SECTIONS = Object.freeze({ strategy:['Préparer ses combats','équipes et types'], collection:['Ta collection','progrès, records et jeux'] });
 var MODE_CATALOG_LEVELS = Object.freeze({ easy:1, medium:2, hard:3, expert:4 });
 // Unfinished games stay reachable by their own links but are not advertised in the catalogue.
 var MODE_CATALOG_UNLISTED = Object.freeze(['openDraftArenaMode']);
@@ -295,7 +297,9 @@ function decorateModeCatalogCards() {
   document.querySelectorAll('#screen-all-modes .all-modes-cat').forEach(section=>{
     const title=section.querySelector('.all-modes-cat-title');
     if (!title || title.querySelector('.all-modes-cat-count')) return;
-    title.insertAdjacentHTML('beforeend','<span class="all-modes-cat-count"></span><span class="all-modes-cat-desc">'+(MODE_CATALOG_FAMILY_COPY[section.dataset.family] || '')+'</span>');
+    const name=[...title.childNodes].find(node=>node.nodeType === 3 && node.textContent.trim());
+    if (name) name.replaceWith(Object.assign(document.createElement('span'),{ className:'all-modes-cat-name', textContent:name.textContent.trim() }));
+    title.insertAdjacentHTML('beforeend','<span class="all-modes-cat-count"></span><span class="all-modes-cat-desc"></span>');
   });
 }
 // The home shelf shows the catalogue tiles themselves, so a game looks the same everywhere.
@@ -312,20 +316,22 @@ function modeTileCloneForHome(key, pro = false) {
 function renderModeCatalogFamilies() {
   const group=document.getElementById('mode-family-filters');
   if (!group) return;
-  group.hidden=modeCatalogCategory !== 'solo';
+  group.hidden=!['solo','explore'].includes(modeCatalogCategory);
   if (group.hidden) return;
-  const counts={ all:0 };
+  const counts={ all:0, tools:0 };
   document.querySelectorAll('#screen-all-modes .all-modes-cat').forEach(section=>{
     const family=section.dataset.family;
     section.querySelectorAll('.all-modes-card').forEach(card=>{
+      if (card.dataset.category === 'explore') { counts.tools++; return; }
       if (card.dataset.category !== 'solo' || modeCatalogIsUnlisted(card)) return;
       counts[family]=(counts[family] || 0)+1;
       counts.all++;
     });
   });
+  // Tools (Émulateur, Team Builder, Succès…) sit beside the game families, one click away.
   group.innerHTML=['all','guess','reflection','arcade','strategy'].filter(family=>counts[family]).map(family=>
-    '<button type="button" data-action="setModeCatalogFamily" data-args=\'["'+family+'"]\' aria-pressed="'+(family === modeCatalogFamily)+'">'+(family === 'all' ? 'Tous' : MODE_CATALOG_FAMILY_LABELS[family])+'<span>'+counts[family]+'</span></button>'
-  ).join('');
+    '<button type="button" data-action="setModeCatalogFamily" data-args=\'["'+family+'"]\' aria-pressed="'+(modeCatalogCategory === 'solo' && family === modeCatalogFamily)+'">'+(family === 'all' ? 'Tous' : MODE_CATALOG_FAMILY_LABELS[family])+'<span>'+counts[family]+'</span></button>'
+  ).join('')+(counts.tools ? '<button type="button" data-action="setModeCatalogCategory" data-args=\'["explore"]\' aria-pressed="'+(modeCatalogCategory === 'explore')+'">Outils<span>'+counts.tools+'</span></button>' : '');
 }
 var modeCatalogCopy = {
   solo: 'Déduction, connaissances ou rapidité : choisis ton prochain défi.',
@@ -369,8 +375,11 @@ function renderModeCatalog() {
       if (!card.hidden) { visible++; modeTileRefreshRecord(card); }
     });
     section.hidden = visible === 0;
-    const counter = section.querySelector?.('.all-modes-cat-count');
-    if (counter) counter.textContent = visible + (visible > 1 ? ' jeux' : ' jeu');
+    const family = section.dataset?.family, tools = modeCatalogCategory === 'explore' && MODE_CATALOG_TOOL_SECTIONS[family];
+    const name = section.querySelector?.('.all-modes-cat-name'), counter = section.querySelector?.('.all-modes-cat-count'), copy = section.querySelector?.('.all-modes-cat-desc');
+    if (name) name.textContent = tools ? tools[0] : (MODE_CATALOG_FAMILY_LABELS[family] || name.textContent);
+    if (copy) copy.textContent = tools ? tools[1] : (MODE_CATALOG_FAMILY_COPY[family] || '');
+    if (counter) counter.textContent = visible + (modeCatalogCategory === 'explore' ? (visible > 1 ? ' outils' : ' outil') : (visible > 1 ? ' jeux' : ' jeu'));
   });
   document.querySelectorAll('[data-mode-category]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.modeCategory === modeCatalogCategory));
@@ -405,6 +414,7 @@ function setModeCatalogDifficulty(difficulty, save = true) {
   if (save) saveModeCatalogState();
 }
 function setModeCatalogFamily(family, save = true) {
+  if (modeCatalogCategory === 'explore') modeCatalogCategory = 'solo';
   modeCatalogFamily = Object.prototype.hasOwnProperty.call(MODE_CATALOG_FAMILY_LABELS, family) ? family : 'all';
   renderModeCatalog();
   if (save) saveModeCatalogState();

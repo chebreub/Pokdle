@@ -50,3 +50,17 @@
 /* Zoom et Pixelisé : l'image s'élargit et se défloute en douceur à chaque essai. */
 #pokdle-app.design-refresh #screen-game .visual-clue-canvas .zoom-sprite { transition:transform .6s cubic-bezier(.2,.8,.2,1), filter .4s ease; }
 #pokdle-app.design-refresh #screen-game .visual-clue-canvas .pixel-sprite { transition:filter .6s ease-out; }
+
+/* Wordle : les lettres de l'essai joué se retournent une par une. */
+#pokdle-app.design-refresh #wordle-board .wordle-guess.is-new .wordle-cell {
+  animation:feel-letter-flip .34s ease-out both;
+  animation-delay:calc(var(--wordle-index, 0) * 70ms);
+}
+@keyframes feel-letter-flip {
+  0% { opacity:0; transform:perspective(300px) rotateX(-80deg); }
+  60% { opacity:1; transform:perspective(300px) rotateX(10deg); }
+  100% { opacity:1; transform:none; }
+}
+#pokdle-app.design-refresh #screen-wordle .wordle-search.is-nudged { animation:feel-nudge .36s cubic-bezier(.36,.07,.19,.97); }
+#pokdle-app.design-refresh #wordle-message.is-nudged:not(:empty) { animation:feel-message-in .22s ease-out; }
+#pokdle-app.design-refresh #wordle-result.is-new .wordle-answer img { animation:feel-win-sprite .9s cubic-bezier(.3,1.4,.5,1) both; }
