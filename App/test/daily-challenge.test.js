@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {LIMIT,modeForDay,chooseTargets,initChallengeDb,createChallengeService,createMediaLoader}=require('../lib/daily-challenge');
+const {initWordleDb}=require('../lib/daily-wordle');
 const pokemon=Array.from({length:30},(_,i)=>({id:i+1,name:'Pokémon '+(i+1),gen:1,type1:'Normal'}));
 test('daily challenge element IDs do not collide with existing friend challenge controls',()=>{
   const fs=require('node:fs'),path=require('node:path');
@@ -24,15 +25,15 @@ test('PostgreSQL: common targets, timer, hints, retries, migration, scores, glob
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='challenge_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
   try{await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:6});
     await db.query(`CREATE TABLE dossier_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,points INT,elapsed_ms BIGINT);
-      CREATE TABLE wordle_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,points INT,elapsed_ms BIGINT);
       CREATE TABLE daily_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,guessed JSONB,hints_used INT,elapsed_ms BIGINT);
       CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT);
       CREATE TABLE leaderboard_events(id BIGSERIAL PRIMARY KEY,discord_id TEXT,mode TEXT,score INT,created_at TIMESTAMPTZ,result_key TEXT);
       CREATE UNIQUE INDEX event_key ON leaderboard_events(discord_id,mode,result_key) WHERE result_key IS NOT NULL;
       CREATE TABLE scores(discord_id TEXT,mode TEXT,score INT,username TEXT,avatar TEXT,updated_at TIMESTAMPTZ,PRIMARY KEY(discord_id,mode));`);
+    await initWordleDb(db);
     await initChallengeDb(db);await initChallengeDb(db);let now=new Date('2026-10-08T12:00:00Z');const make=()=>createChallengeService({db,pokemon,clock:()=>now,randomInt:()=>0});let game=make();
     const A={key:'user:A',accountId:'A',name:'Alice'},B={key:'user:B',accountId:'B',name:'Bob'},G={key:'guest:G'};
-    const unlock=async(who,day='2026-10-08',status='completed')=>{await db.query('INSERT INTO dossier_plays VALUES($1,$2,$3,$4,9,20000);',[who.key,day,who.accountId||null,status]);await db.query("INSERT INTO wordle_plays VALUES($1,$2,$3,'won',6,10000)",[who.key,day,who.accountId||null]);await db.query("INSERT INTO daily_plays VALUES($1,$2,$3,'won','[1,2,3]',0,10000)",[who.key,day,who.accountId||null]);if(who.accountId)await db.query("INSERT INTO users VALUES($1,$2,'') ON CONFLICT DO NOTHING",[who.accountId,who.name||who.accountId]);};
+    const unlock=async(who,day='2026-10-08',status='completed')=>{await db.query('INSERT INTO dossier_plays VALUES($1,$2,$3,$4,9,20000);',[who.key,day,who.accountId||null,status]);await db.query('INSERT INTO wordle_rounds(day,secret_id) VALUES($1,1) ON CONFLICT DO NOTHING',[day]);await db.query("INSERT INTO wordle_plays(identity,day,account_id,status,guessed,started_at,elapsed_ms) VALUES($1,$2,$3,'won','[1]',NOW(),10000)",[who.key,day,who.accountId||null]);await db.query("INSERT INTO daily_plays VALUES($1,$2,$3,'won','[1,2,3]',0,10000)",[who.key,day,who.accountId||null]);if(who.accountId)await db.query("INSERT INTO users VALUES($1,$2,'') ON CONFLICT DO NOTHING",[who.accountId,who.name||who.accountId]);};
     const body=(who,index,pokemonId,day='2026-10-08')=>({day,accountId:who.accountId||null,index,pokemonId});
     await assert.rejects(game.state(A),{code:'dossier_required'});await unlock(A);await unlock(B);await unlock(G);
     const first=await Promise.all([game.state(A),game.state(B)]);assert.equal(first[0].status,'ready');assert.equal(first[0].media,null);assert.equal(first[0].targets,undefined);assert.equal(first[0].remainingMs,LIMIT);now=new Date(+now+60000);assert.equal((await game.state(A)).remainingMs,LIMIT);
@@ -47,6 +48,13 @@ test('PostgreSQL: common targets, timer, hints, retries, migration, scores, glob
     now=new Date(+now+LIMIT);state=await make().state(B);assert.equal(state.finished,true);assert.equal(state.points,0);assert.equal(state.elapsedMs,LIMIT);assert.equal((await game.guess(B,body(B,1,2))).points,0);
     const expiredGuest={key:'guest:expired'};await unlock(expiredGuest);await game.start(expiredGuest,body(expiredGuest));now=new Date(+now+LIMIT);const expiredLogin={key:'user:X',accountId:'X',guestKey:expiredGuest.key};await unlock(expiredLogin);assert.equal((await game.state(expiredLogin)).ranked,false);assert.equal((await game.leaderboard('challenge','today','X')).me,null);
     assert.equal((await game.leaderboard('challenge','today','A')).me.score,56);assert.equal((await game.leaderboard('journey','today','A')).me.score,79);const summary=await game.summary(A);assert.equal(summary.points,79);assert.equal(summary.finished,true);assert.equal(summary.ranked,true);
+    // Exercise the production Wordle schema: no stored points column, all terminal states.
+    for(const [status,guesses,points] of [['won',[1,2,3,4,5,6],1],['lost',[1,2,3,4,5,6],0],['abandoned',[1],0]]){
+      await db.query('UPDATE wordle_plays SET status=$1,guessed=$2::jsonb WHERE identity=$3',[status,JSON.stringify(guesses),A.key]);
+      assert.equal((await game.summary(A)).stages[1].points,points);
+      assert.equal((await game.leaderboard('journey','today','A')).me.score,73+points);
+    }
+    await db.query("UPDATE wordle_plays SET status='won',guessed='[1]' WHERE identity=$1",[A.key]);
     const late={key:'user:L',accountId:'L',guestKey:G.key};await unlock(late);assert.equal((await game.state(late)).finished,true);assert.equal((await game.state(late)).ranked,false);assert.equal((await game.leaderboard('challenge','today','L')).me,null);
     const ongoing={key:'guest:ongoing'};await unlock(ongoing);await game.start(ongoing,body(ongoing));await game.guess(ongoing,body(ongoing,0,30));const C={key:'user:C',accountId:'C',guestKey:ongoing.key};await unlock(C);assert.equal((await game.state(C)).guesses.length,1);assert.equal((await game.abandon(C,body(C))).points,0);assert.equal((await game.start(C,body(C))).status,'abandoned');assert.equal((await game.leaderboard('challenge','today','C')).me,null);assert.equal((await game.leaderboard('journey','today','C')).me.score,23);
     const E={key:'user:E',accountId:'E'};await unlock(E);await game.start(E,body(E));for(let i=0;i<9;i++)await game.guess(E,body(E,i,i+1));await db.query('ALTER TABLE scores ADD CONSTRAINT bad CHECK(score<0) NOT VALID');await assert.rejects(game.guess(E,body(E,9,10)));assert.equal((await game.state(E)).index,9);await db.query('ALTER TABLE scores DROP CONSTRAINT bad');
