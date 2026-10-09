@@ -49,9 +49,21 @@ test("existing mode art remains decorative, lazy and sprite based",()=>{
   assert.match(out,/sprite\/133/);
 });
 
-test("featured picks reuse the same visual identity system",()=>{
-  assert.match(club,/modeCatalogArtHtml\(p\[0\], "pick"\)/);
-  assert.match(club,/has-mode-art/);
+test("catalogue tiles give every card its own mascot, colour and drawn mechanic",()=>{
+  const f=artFixture();
+  vm.runInContext("this.__theme=MODE_TILE_THEME;this.__props=MODE_TILE_PROPS;",f);
+  const buttons=[...html.matchAll(/<button[^>]*class="card all-modes-card"[^>]*>/g)].map(m=>m[0]);
+  for(const tag of buttons){
+    const action=tag.match(/data-action="([^"]+)"/)?.[1] || "";
+    const key=action==="openFromAllModes" ? JSON.parse(tag.match(/data-args='([^']+)'/)?.[1] || "[]")[0] : action;
+    const theme=f.__theme[key];
+    assert.ok(theme,`missing tile theme for ${key}`);
+    assert.match(theme.tone,/^#[0-9A-F]{6}$/i);
+    assert.match(theme.ink,/^#[0-9A-F]{6}$/i);
+    assert.ok(theme.prop==="types" ? theme.types.length===2 : f.__props[theme.prop],`missing drawn mechanic for ${key}`);
+  }
+  assert.match(club,/catalogFeatureOfWeek/);
+  assert.doesNotMatch(club,/isClubFeatured/);
 });
 
 test("mode families, special effects, dark mode and mobile are styled",()=>{
