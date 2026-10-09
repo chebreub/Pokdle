@@ -49,9 +49,12 @@ test('discipline metrics reward mastery and cap at 200 points',()=>{
   const quiz=templates.find(x=>x.id==='quiz');
   const speed=templates.find(x=>x.id==='speedrun');
   const daily=templates.find(x=>x.id==='daily');
-  let metric=f.__metric(quiz,[{mode:'quiz',targetName:'Score 9/10',result:'win'}]);
+  let metric=f.__metric(quiz,[{mode:'quiz',targetName:'Score 12/15',result:'win'}]);
   assert.equal(metric.complete,true);
-  assert.equal(metric.score,180);
+  assert.equal(metric.score,160);
+  assert.equal(f.__metric(quiz,[{mode:'quiz',targetName:'Score 15/15'}]).score,200);
+  assert.equal(f.__metric(quiz,[{mode:'quiz',targetName:'Score 11/15'}]).complete,false);
+  assert.equal(f.__metric(quiz,[{mode:'quiz',targetName:'Score 5/5'}]).score,0);
   metric=f.__metric(speed,[{mode:'speedrun',attempts:27,result:'win'}]);
   assert.equal(metric.complete,true);
   assert.equal(metric.score,200);

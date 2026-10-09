@@ -67,17 +67,19 @@ function syncWordleControls() {
   document.getElementById('wordle-input').disabled=!dailyWordleState||dailyWordleState.finished;
 }
 async function wordleRequest(action='',pokemonId) {
+  const requestStarted=performance.now();let networkFinished=requestStarted,renderStarted=requestStarted,serverTiming=null;
   const serial=++dailyWordleSerial,accountId=dailyObservedAccountId();dailyWordleBusy=true;syncWordleControls();
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
   try {
     const response=await fetch('/api/daily/wordle'+action,{credentials:'same-origin',signal:controller.signal,
       ...(action?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:dailyWordleState?.day,accountId,pokemonId})}:{})});
-    const data=await response.json();
+    const data=await response.json();networkFinished=performance.now();serverTiming=response.headers.get('Server-Timing');
     const current=serial===dailyWordleSerial&&accountId===dailyObservedAccountId()&&!document.getElementById('screen-wordle')?.classList.contains('hidden');
     if(!current)return false;
     if(!response.ok||!data.ok)throw Object.assign(new Error(data.error||'unavailable'),{code:data.error});
     if(data.accountId!==accountId)throw Object.assign(new Error('account_changed'),{code:'account_changed'});
-    dailyWordleState=data;renderDailyWordle();
+    dailyWordleState=data;renderStarted=performance.now();renderDailyWordle();
+    window.dailyWordleLastTiming={action:action||'open',networkMs:Math.round(networkFinished-requestStarted),renderMs:Math.round(performance.now()-renderStarted),serverTiming};
     if(action&&data.finished)document.getElementById('wordle-result').scrollIntoView({block:'nearest'});
     if(data.duplicate)wordleMessage('Ce Pokémon a déjà été proposé. Aucun essai retiré.');
     return true;

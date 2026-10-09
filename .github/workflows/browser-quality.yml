@@ -69,8 +69,11 @@ jobs:
       - name: Verify daily Dossier on desktop and touch browsers
         run: python tools/dossier_quality.py
       - name: Verify daily recognition and journey summary
-        if: steps.scope.outputs.focused == 'true'
+        if: steps.scope.outputs.focused == 'true' && steps.scope.outputs.maintenance != 'true'
         run: python tools/challenge_quality.py
+      - name: Verify maintenance home, Quiz, League launch and Daily counter
+        if: steps.scope.outputs.maintenance == 'true'
+        run: python tools/daily_maintenance_quality.py
       - name: Verify browser journeys at six viewport widths
         if: steps.scope.outputs.focused != 'true'
         run: python tools/browser_quality.py --output quality-artifacts/browser

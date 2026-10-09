@@ -3,7 +3,7 @@
 const WEEKLY_LEAGUE_SYNCED = new Map();
 const WEEKLY_LEAGUE_TEMPLATES = Object.freeze([
   { id:"daily", label:"Précision", mode:"daily", icon:"◎", description:"Résous le Pokémon du jour avec le moins d'essais possible.", objective:"Réussir en 6 essais ou moins", action:"startDailyGame" },
-  { id:"quiz", label:"Connaissance", mode:"quiz", icon:"?", description:"Fais parler ta culture Pokémon au Quiz.", objective:"Atteindre 8/10 au Quiz", action:"startQuizGame" },
+  { id:"quiz", label:"Connaissance", mode:"quiz", icon:"?", description:"Fais parler ta culture Pokémon au Quiz.", objective:"Atteindre 12/15 au Quiz", action:"startQuizGame" },
   { id:"speedrun", label:"Réflexes", mode:"speedrun", icon:"⚡", description:"Enchaîne les Pokémon avant la fin du chrono.", objective:"Trouver 12 Pokémon au Speedrun", action:"startSpeedrunGame" },
   { id:"higherlower", label:"Instinct", mode:"higher-lower", icon:"↕", description:"Construis une série solide à Higher or Lower.", objective:"Atteindre une série de 8", action:"startHigherLowerMode" },
   { id:"odd", label:"Observation", mode:"odd", icon:"◇", description:"Repère les intrus sans te faire piéger.", objective:"Gagner 5 énigmes Intrus", action:"openOddOneOutMode" },
@@ -53,7 +53,7 @@ function weeklyLeagueEntries(info=weeklyLeagueIsoWeek()) {
 }
 function weeklyLeagueQuizScore(entry) {
   const m=String(entry?.targetName||"").match(/Score\s+(\d+)\s*\/\s*(\d+)/i);
-  return m?Number(m[1])||0:0;
+  return m&&Number(m[2])===15?Number(m[1])||0:0;
 }
 function weeklyLeagueMetric(template,entries=weeklyLeagueEntries()) {
   if(template.id==="daily"){
@@ -64,7 +64,7 @@ function weeklyLeagueMetric(template,entries=weeklyLeagueEntries()) {
   }
   if(template.id==="quiz"){
     const best=Math.max(0,...entries.filter(e=>e.mode==="quiz").map(weeklyLeagueQuizScore));
-    return { value:best, display:best?best+"/10":"—", complete:best>=8, score:Math.min(200,best*20) };
+    return { value:best, display:best?best+"/15":"—", complete:best>=12, score:Math.min(200,Math.round(best*200/15)) };
   }
   if(template.id==="speedrun"){
     const best=Math.max(0,...entries.filter(e=>e.mode==="speedrun").map(e=>Number(e.attempts)||0));
@@ -141,8 +141,8 @@ function weeklyLeagueLaunch(id) {
   closeOverlayModal?.();
   if(id==="daily") return startDailyGame();
   if(id==="quiz") return startQuizGame();
-  if(id==="speedrun") return startSpeedrunGame();
-  if(id==="higherlower") return startHigherLowerMode("infinite");
+  if(id==="speedrun") { openSpeedrunMode();return startSpeedrunGame(); }
+  if(id==="higherlower") { openHigherLowerMode();return startHigherLowerMode("infinite"); }
   if(id==="odd") return openOddOneOutMode();
   if(id==="weight") return startWeightBattle();
 }

@@ -28,6 +28,7 @@ function applyDailyObservedState(data,{awardFreshWin=false,animateLatest=false}=
     row.pokemon.id===rows[i].pokemon.id&&JSON.stringify(row.cmp)===JSON.stringify(rows[i].cmp)&&row.heightDirection===rows[i].heightDirection&&row.weightDirection===rows[i].weightDirection);
   const firstNewRow=keepRows?resultHistory.length:0;
   dailyServerState=data;secretPokemon=answer;attempts=data.attempts;
+  registerGameStart();
   gameOver=false;resultHistory=rows;guessedNames=rows.map(r=>r.pokemon.name);guessedSet=new Set(guessedNames);
   if(!keepRows)tbody.innerHTML='';
   for(let i=firstNewRow;i<rows.length;i++)addRow(rows[i].pokemon,rows[i].cmp,rows[i],{animate:animateLatest&&i===rows.length-1,renderShell:false});

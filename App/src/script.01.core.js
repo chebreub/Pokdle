@@ -65,7 +65,7 @@ const XP_TIERS = [
 const QUEST_POOL = [
   { id: "win_daily", icon: "📅", label: "Gagne le Pokédle du jour", target: 1, xp: 80 },
   { id: "play_3_modes", icon: "🎲", label: "Joue à 3 modes différents", target: 3, xp: 70 },
-  { id: "hl_streak_10", icon: "📊", label: "10 d'affilée en Higher or Lower", target: 10, xp: 90 },
+  { id: "hl_streak_10", icon: "📊", label: "10 d'affilée en Higher or Lower", target: 10, xp: 90, comparator: "gte" },
   { id: "score_attack_500", icon: "🎯", label: "500+ de moyenne BST en Score Attack", target: 500, xp: 80, comparator: "gte" },
   { id: "score_attack_600", icon: "👑", label: "600+ BST en Score Attack (Master)", target: 600, xp: 150, comparator: "gte" },
   { id: "stat_clash_win", icon: "⚔️", label: "Gagne 1 Stat Clash", target: 1, xp: 70 },
@@ -130,7 +130,7 @@ function progressQuest(questId, amount = 1) {
   const quests = ensureDailyQuests();
   const quest = quests.find((q) => q.id === questId);
   if (!quest || quest.completed) return;
-  if (quest.comparator === "gte") {
+  if (quest.comparator === "gte" || questId === "hl_streak_10") {
     quest.progress = Math.max(quest.progress || 0, Number(amount) || 0);
   } else {
     quest.progress = (quest.progress || 0) + (Number(amount) || 0);

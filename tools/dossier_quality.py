@@ -96,7 +96,10 @@ async def run():
                     assert state['points']==20 and state['finished'];await page.screenshot(path=str(OUT/f'{engine}-{width}-expert-result.png'),full_page=True)
                     await page.evaluate('startDailyDossier()');await ready(page,'dailyDossierState?.finished && !dailyDossierBusy');assert len(saved)==20
                     saved.clear();state['status']='playing';await page.evaluate('startDailyDossier()');await ready(page,'dailyDossierState?.answered===0 && !dailyDossierBusy')
+                    await page.locator('.dossier-option').nth(bank[0]['answer']).click();await ready(page,'dailyDossierState?.answered===1 && !dailyDossierBusy')
                     await page.locator('#dossier-abandon').click();await page.locator('[data-action="abandonDailyDossier"]').click();await ready(page,'dailyDossierState?.status==="abandoned" && !dailyDossierBusy');assert state['points']==0
+                    assert '0 point attribué — 1 bonne réponse avant l’arrêt' in await page.locator('.dossier-breakdown').inner_text()
+                    await page.screenshot(path=str(OUT/f'{engine}-{width}-interrupted.png'),full_page=True)
                     assert not errors,errors
                     await page.locator('#dossier-result [data-action="goToConfig"]').click();assert await page.locator('#screen-dossier').is_hidden()
                     case.update(ok=True,checks=['Wordle loss -> dossier','no answer leak','wrong continues','double click','reload','503 recovery','9/10 end','corrections','bonus unlock','20/20','abandon','mobile overflow','return home'])
