@@ -51,6 +51,14 @@ def main():
      page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"',timeout=20000)
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
     check('home',boot)
+    def news_ticker():
+     # Only real facts: without a database the League week and the release note remain.
+     page.locator('#news-ticker:not([hidden])').wait_for(state='visible',timeout=15000)
+     items=page.locator('#news-ticker .news-ticker-group:first-child .news-ticker-item')
+     expect(items.count()>=2,'News ticker shows fewer than two facts: '+str(items.count()))
+     expect(all(i.get_attribute('data-action') for i in items.all()),'A news item leads nowhere')
+     return screen('screen-config')
+    check('news-ticker',news_ticker)
     def generation_home():
      trigger=page.locator('#screen-config [data-action="openGenerationPicker"]')
      expect(trigger.is_visible(),'Generation preferences are missing from home')
