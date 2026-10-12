@@ -316,7 +316,7 @@
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openOddOneOutMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Intrus</b><small>Trouve celui qui ne suit pas la même règle.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startQuizGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-help"/></svg></div><b>Quiz</b><small>Quinze questions sur l’univers Pokémon.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startEvolutionChainGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-repeat"/></svg></div><b>Évolution</b><small>Complète la chaîne d’évolution.</small></button>
-              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startPokedexOrderGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-list-ordered"/></svg></div><b>Ordre Pokédex</b><small>Remets les Pokémon dans l’ordre du Pokédex.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startPokedexOrderGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-list-ordered"/></svg></div><b>Ordre Pokédex</b><small>Quel Pokémon se cache entre ces deux numéros du Pokédex ?</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openTypeComboSolo"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Combo de types</b><small>Retrouve le Pokémon qui correspond aux types.</small></button>
             </div>
           </section>
@@ -967,7 +967,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <span id="shell-mode" class="shell-mode hidden"></span>
         <div class="game-tags">
           <span class="tag-gen" id="tag-gen">Gen 1</span>
-          <span class="tag-tries">Essais : <b id="try-count">0</b></span>
+          <span class="tag-tries"><span id="try-label">Essais</span> : <b id="try-count">0</b></span>
         </div>
         <div id="shell-selector" class="shell-selector hidden" aria-label="Choisir le défi">
           <button data-action="startDailyGame" id="shell-daily">Du jour</button>

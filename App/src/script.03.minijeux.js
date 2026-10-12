@@ -2341,7 +2341,7 @@ function submitQuizAnswer(choiceIndex) {
 
   quizAnswered = true;
   attempts += 1;
-  document.getElementById("try-count").textContent = String(attempts);
+  setGameCounter(quizScore + (choiceIndex === current.answer ? 1 : 0), "Bonnes réponses");
 
   optionButtons.forEach((btn, idx) => {
     btn.disabled = true;

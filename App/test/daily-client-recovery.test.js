@@ -14,6 +14,7 @@ function fixture(accountId='A'){
  renderGameOverBox(){renders++;},getTodayDailyResult:()=>null,playerStats:{},winRegisteredForCurrentGame:false,guessCache:new Map(),LIVE_RANK_CACHE:new Map([['daily',{}]]),updateSilhouettePanel(){},updatePixelPanel(){},showErr:v=>{error=v;},clearErr:()=>{error='';},showWin:()=>{wins++;},recordMatchHistory(){},
  AbortController,setTimeout:fn=>{timeoutFn=fn;return 1;},clearTimeout:()=>{timeoutFn=null;},fetch:async()=>response(snapshot([25],'playing',accountId))};
  env.registerGameStart=()=>{}; // Counter semantics are covered by daily-maintenance.test.js.
+ env.setGameCounter=(value,label='Essais')=>{node('try-count').textContent=String(value);node('try-label').textContent=label;};
  env.POKEMON_BY_ID=new Map(env.POKEMON_LIST.map(p=>[p.id,p]));vm.createContext(env);vm.runInContext(source,env);vm.runInContext('dailyServerState='+JSON.stringify(snapshot([],'playing',accountId)),env);
  return {env,node,added,get wins(){return wins;},get renders(){return renders;},get error(){return error;},timeout(){timeoutFn?.();}};
 }

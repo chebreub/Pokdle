@@ -287,7 +287,7 @@ function startQuizGame() {
   secretPokemon = null;
   activePool = [];
 
-  document.getElementById("try-count").textContent = "0";
+  setGameCounter(0, "Bonnes réponses");
   document.getElementById("err-msg").textContent = "";
   document.getElementById("guess-input").value = "";
   document.getElementById("guess-ac").classList.add("hidden");
@@ -494,7 +494,7 @@ function startGameWithSecret(secret, pool, options = {}) {
   challengeCache.clear();
   rebuildActiveSearchIndex();
 
-  document.getElementById("try-count").textContent = "0";
+  setGameCounter(0);
   document.getElementById("err-msg").textContent = "";
   document.getElementById("results-body").innerHTML = "";
   document.getElementById("results-wrap").classList.add("hidden");
