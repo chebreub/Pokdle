@@ -108,14 +108,15 @@ test("all screen ids are unique and only home starts visible", () => {
 test("desktop and mobile primary navigation stay wired to known entry points", () => {
   const desktop = index.slice(index.indexOf('<nav class="global-nav"'), index.indexOf("</nav>", index.indexOf('<nav class="global-nav"')) + 6);
   const mobileNav = index.slice(index.indexOf('<nav id="mobile-tabbar"'), index.indexOf("</nav>", index.indexOf('<nav id="mobile-tabbar"')) + 6);
-  for (const action of ["goToConfig", "openAllModesScreen", "openPokedexMode", "openProfileScreen"]) {
+  for (const action of ["goToConfig", "openAllModesScreen", "openPartyRoomMode", "openPokedexMode", "openProfileScreen"]) {
     assert.match(screenSource + fs.readFileSync(path.join(root, "src/script.04.jeu-pokedex.js"), "utf8") + fs.readFileSync(path.join(root, "src/script.02.statclash.js"), "utf8"), new RegExp(`function ${action}\\b|window\\.${action}\\s*=`));
   }
   assert.match(desktop, /data-action="openAllModesScreen" data-args='\["solo"\]'/);
-  assert.match(desktop, /data-action="openAllModesScreen" data-args='\["friends"\]'/);
+  // Entre amis is a single door: it opens the Party Room directly.
+  assert.match(desktop, /id="nav-social"[^>]*data-action="openPartyRoomMode"/);
   assert.match(desktop, /data-action="openAllModesScreen" data-args='\["explore"\]'/);
   assert.match(mobileNav, /data-action="openAllModesScreen" data-args='\["solo"\]' data-tab="game"/);
-  assert.match(mobileNav, /data-action="openAllModesScreen" data-args='\["friends"\]' data-tab="social"/);
+  assert.match(mobileNav, /data-action="openPartyRoomMode" data-tab="social"/);
 });
 
 test("visual layers cannot directly force a bare screen visible with important", () => {
