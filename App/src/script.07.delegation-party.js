@@ -2044,6 +2044,8 @@ function showScreen(id) {
   if (id !== "screen-multiplayer") hideMultiplayerWinOverlay();
   hideAllScreens();
   setScreenVisibility(target, true);
+  // Lets styles know which screen is shown (the news ticker stays off during games).
+  if (document.body) document.body.dataset.screen = id;
   if (id === "screen-game" && typeof renderGameShell === "function") renderGameShell();
   if (typeof prepareDedicatedShell === "function") prepareDedicatedShell(id);
   window.scrollTo(0, 0);

@@ -57,6 +57,9 @@ def main():
      items=page.locator('#news-ticker .news-ticker-group:first-child .news-ticker-item')
      expect(items.count()>=2,'News ticker shows fewer than two facts: '+str(items.count()))
      expect(all(i.get_attribute('data-action') for i in items.all()),'A news item leads nowhere')
+     page.evaluate("document.body.dataset.screen='screen-game'")
+     expect(not page.locator('#news-ticker').is_visible(),'News ticker pushes a game down')
+     page.evaluate("document.body.dataset.screen='screen-config'")
      return screen('screen-config')
     check('news-ticker',news_ticker)
     def generation_home():

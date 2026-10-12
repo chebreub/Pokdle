@@ -5386,6 +5386,8 @@
 /* News ticker: real facts of the day, scrolling slowly under the header. */
 #pokdle-app.design-refresh .news-ticker { position:relative; box-sizing:border-box; width:100%; max-width:100%; min-width:0; contain:inline-size; overflow:hidden; border-bottom:1px solid var(--ui-line); background:linear-gradient(90deg,#FFF6D6,#EFE8FF 50%,#E1F4E9); }
 #pokdle-app.design-refresh .news-ticker[hidden] { display:none; }
+/* Only on the home, the catalogue and the leaderboard: never above a game, where it would push the input down. */
+#pokdle-app.design-refresh:not([data-screen="screen-config"]):not([data-screen="screen-all-modes"]):not([data-screen="screen-leaderboard"]) .news-ticker { display:none; }
 #pokdle-app.design-refresh .news-ticker-track { display:flex; width:max-content; animation:news-ticker-scroll var(--ticker-duration,36s) linear infinite; }
 #pokdle-app.design-refresh .news-ticker:hover .news-ticker-track, #pokdle-app.design-refresh .news-ticker:focus-within .news-ticker-track { animation-play-state:paused; }
 #pokdle-app.design-refresh .news-ticker-group { display:flex; flex-shrink:0; }
