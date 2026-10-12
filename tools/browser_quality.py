@@ -156,10 +156,11 @@ def main():
     check('cosy-home',cosy_home)
     check('catalog',lambda:nav('game','screen-all-modes'))
     def audit_catalog():
-     for category in ['game','social']:
-      nav(category,'screen-all-modes')
+     for opener in ["openAllModesScreen('solo')","openAllModesScreen('friends')"]:
+      page.evaluate(opener);screen('screen-all-modes')
       sections=page.locator('#screen-all-modes .all-modes-cat:visible')
       for section in sections.all(): expect(section.locator('.all-modes-card:visible').count()>0,'Empty category still rendered')
+     expect(page.locator('#screen-all-modes .all-modes-card:visible').count()==1,'Entre amis should be a single door to the Party Room')
      nav('game','screen-all-modes')
      if width<=760:
       expect(page.locator('#mode-difficulty').is_hidden(),'Mobile filters should start collapsed')
@@ -753,7 +754,9 @@ def main():
      return screen('screen-draft-arena')
     check('pc4-draft-desktop',pc4_draft_desktop)
     def party():
-     nav('social','screen-all-modes');page.locator('button[data-action="openFromAllModes"][data-args=\'["openPartyRoomMode"]\']:visible').first.click();return screen('screen-party-room')
+     state=nav('social','screen-party-room')
+     expect(page.locator('#party-lobby .party-duel-link:visible').count()==5,'Party Room lobby does not list the two-player games')
+     return state
     check('party-entry',party)
     def d4_party_polish():
      page.evaluate("""() => {
