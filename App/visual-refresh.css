@@ -5263,6 +5263,7 @@
 #pokdle-app.design-refresh .lbv3-podium-name b,#pokdle-app.design-refresh .lbv3-podium-card > strong { color:inherit; }
 #pokdle-app.design-refresh .lbv3-personal > div { background:var(--ui-accent-soft); border-color:var(--ui-line); border-radius:20px; color:var(--ui-ink); }
 #pokdle-app.design-refresh .lbv3-personal span { color:var(--ui-muted); }
+#pokdle-app.design-refresh .lbv3-invite { margin:0 0 14px; padding:12px 16px; border:1px dashed var(--ui-line); border-radius:16px; background:var(--ui-soft); color:var(--ui-ink); font-weight:700; text-align:center; }
 #pokdle-app.design-refresh .lbv2-row { background:var(--ui-surface); color:var(--ui-ink); border:1px solid var(--ui-line); border-radius:16px; padding:13px 16px; }
 #pokdle-app.design-refresh .lbv2-row:nth-child(even) { background:var(--ui-soft); }
 #pokdle-app.design-refresh .lbv2-row.is-me { background:var(--ui-accent-soft); border-color:var(--ui-accent); }
