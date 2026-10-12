@@ -559,6 +559,15 @@ def main():
      if width<=640:
       controls=page.locator('.lbv3-controls').bounding_box()
       expect(controls['height']<160,'Mobile filters push the podium too far down: '+repr(controls))
+     page.evaluate("""async () => {
+       leaderboardFetchJson=async()=>({ok:true,label:'Pokémon du jour',unit:'essais',total:2,authenticated:true,me:{rank:2,score:5},
+         top:[{rank:1,username:'Red',score:3},{rank:2,username:'QA',score:5,me:true}],around:[]});
+       await openLeaderboardV2('daily','today');
+     }""")
+     page.locator('#overlay-body .lbv3-invite').wait_for(state='visible')
+     expect(page.locator('#overlay-body .lbv3-podium').count()==0,'Small audience still shows an almost empty podium')
+     expect(page.locator('#overlay-body .lbv3-list .lbv2-row').count()==2,'Small audience list does not show every ranked player')
+     expect('encore 1 place' in page.locator('#overlay-body .lbv3-invite').inner_text(),'Small audience invite does not count the free podium places')
      page.locator('#gamefeel-layer.is-visible').wait_for(state='hidden')
      return screen('screen-game')
     check('cosy-leaderboard',cosy_leaderboard)

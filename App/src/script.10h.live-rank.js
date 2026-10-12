@@ -137,6 +137,32 @@ function ensureLiveRankHud(screenId) {
   anchor.insertAdjacentElement("afterend",hud);
   return hud;
 }
+function liveRankCached(mode) {
+  liveRankCacheScope();
+  return LIVE_RANK_CACHE.get(mode)?.data||null;
+}
+// Goal shown in the Daily card. The Daily ranks by guesses and ties share a rank,
+// so a final score of N guesses is ranked 1 + (players who needed fewer than N).
+// Only goals the next guesses can still reach are offered; null means "no goal".
+function liveRankDailyGoalText(data,attempts,authenticated) {
+  const done=Math.max(0,Number(attempts)||0);
+  const scores=(Array.isArray(data?.top)?data.top:[]).filter(row=>!row.me).map(row=>Number(row.score)).filter(score=>score>0).sort((a,b)=>a-b);
+  const essais=n=>n+" essai"+(n>1?"s":"");
+  if (!authenticated) return !done&&scores.length?"Record du jour : "+essais(scores[0])+". À toi de commencer ton enquête.":null;
+  if (!scores.length) return done?"Personne n’a encore trouvé aujourd’hui : trouve-le et prends la 1ʳᵉ place.":"Personne n’a encore trouvé aujourd’hui. Sois le premier classé !";
+  if (!done) {
+    if (scores.length<3) {
+      const free=3-scores.length;
+      return "Sois parmi les premiers : "+scores.length+" joueur"+(scores.length>1?"s":"")+" classé"+(scores.length>1?"s":"")+" aujourd’hui, le podium a encore "+free+" place"+(free>1?"s":"")+".";
+    }
+    return "Record du jour : "+essais(scores[0])+". À toi de commencer ton enquête.";
+  }
+  const ahead=scores.filter(score=>score<done+1).length;
+  if (!ahead) return "Ton objectif : "+essais(scores[0])+" ou moins pour la 1ʳᵉ place du jour.";
+  if (ahead<3) return scores.length<3?"Trouve-le pour monter sur le podium du jour.":"Ton objectif : "+essais(scores[2])+" ou moins pour le podium du jour.";
+  if (ahead<scores.length) return "Ton objectif : "+essais(scores[ahead])+" ou moins pour la "+(ahead+1)+"ᵉ place du jour.";
+  return null;
+}
 function liveRankGoalCopy(data,mode,currentScore) {
   const meta=liveRankModeMeta(mode);
   if (mode==="daily") {

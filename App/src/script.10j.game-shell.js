@@ -96,12 +96,18 @@ function renderGameShell() {
   document.getElementById("shell-facts").innerHTML = facts.length ? facts.map(text => `<span class="notebook-fact">✓ ${escapeHtml(text)}</span>`).join("") : '<p class="notebook-empty">Ton carnet est encore vierge. Chaque proposition t’aidera à le compléter.</p>';
   const best = Math.min(...(matchHistory || []).filter(row => row.mode === gameMode && row.result === "win" && row.attempts > 0).map(row => row.attempts));
   document.getElementById("shell-goal").textContent = Number.isFinite(best) && attempts === 0 ? `Ton record récent : ${best} essai${best > 1 ? "s" : ""}.` : Number.isFinite(best) && attempts + 1 < best ? `Objectif personnel : trouver en moins de ${best} essais.` : attempts ? `${attempts} essai${attempts > 1 ? "s" : ""} · Chaque indice compte. Continue à ton rythme.` : "Commence par un Pokémon que tu connais bien.";
-  if (gameMode === "daily" && !attempts && typeof liveRankFetch === "function") {
-    liveRankFetch("daily").then(data => {
-      if (gameMode !== "daily" || attempts || gameOver) return;
-      const record = Number(data?.top?.[0]?.score);
-      if (record > 0) document.getElementById("shell-goal").textContent = `Record du jour : ${record} essai${record > 1 ? "s" : ""}. À toi de commencer ton enquête.`;
-    }).catch(() => {});
+  if (gameMode === "daily" && !gameOver && typeof liveRankFetch === "function") {
+    // Ranked goal from the day's leaderboard; the last known ranking paints at once
+    // so the goal does not flicker on every guess while a fresh one loads.
+    const shownAttempts = attempts;
+    const showDailyGoal = data => {
+      if (!data || gameMode !== "daily" || attempts !== shownAttempts || gameOver) return;
+      const authenticated = typeof data.authenticated === "boolean" ? data.authenticated : Boolean(window.__pokedleAuthed);
+      const text = liveRankDailyGoalText(data, attempts, authenticated);
+      if (text) document.getElementById("shell-goal").textContent = text;
+    };
+    showDailyGoal(liveRankCached("daily"));
+    liveRankFetch("daily").then(showDailyGoal).catch(() => {});
   }
 }
 

@@ -37,7 +37,7 @@ function fixture(){
     setTimeout(){return 1;},clearTimeout(){}
   };
   vm.createContext(context);
-  vm.runInContext(source+'\nthis.__best=liveRankPersonalBest;this.__ctx=liveRankCurrentContext;this.__goal=liveRankGoal;this.__copy=liveRankGoalCopy;',context);
+  vm.runInContext(source+'\nthis.__best=liveRankPersonalBest;this.__ctx=liveRankCurrentContext;this.__goal=liveRankGoal;this.__copy=liveRankGoalCopy;this.__dailyGoal=liveRankDailyGoalText;',context);
   return context;
 }
 
@@ -106,4 +106,32 @@ test('Daily does not ask a player to beat an impossible one-guess record',()=>{
   assert.match(f.__copy(data,'daily',3).text,/Record du jour/);
   f.gameOver=true;
   assert.match(f.__copy(data,'daily',6).text,/#3/);
+});
+
+test('Daily goal only offers ranks the next guesses can still reach',()=>{
+  const f=fixture(),top=scores=>({top:scores.map((score,i)=>({rank:i+1,score,username:'P'+i}))});
+  const five=top([2,3,4,6,8]);
+  assert.match(f.__dailyGoal(five,0,true),/Record du jour : 2 essais/);
+  assert.match(f.__dailyGoal(five,1,true),/2 essais ou moins pour la 1ʳᵉ place/);
+  assert.match(f.__dailyGoal(five,2,true),/4 essais ou moins pour le podium/);
+  assert.match(f.__dailyGoal(five,5,true),/6 essais ou moins pour la 4ᵉ place/);
+  assert.equal(f.__dailyGoal(five,8,true),null);
+  const withMe={top:[...five.top,{rank:1,score:1,username:'QA',me:true}]};
+  assert.match(f.__dailyGoal(withMe,1,true),/1ʳᵉ place/);
+});
+
+test('Daily goal with fewer than three ranked players invites to the podium',()=>{
+  const f=fixture(),two={top:[{rank:1,score:3,username:'Red'},{rank:2,score:5,username:'Blue'}]};
+  assert.match(f.__dailyGoal({top:[]},0,true),/Sois le premier classé/);
+  assert.match(f.__dailyGoal({top:[]},2,true),/prends la 1ʳᵉ place/);
+  assert.match(f.__dailyGoal(two,0,true),/2 joueurs classés aujourd’hui, le podium a encore 1 place\./);
+  assert.match(f.__dailyGoal(two,1,true),/3 essais ou moins pour la 1ʳᵉ place/);
+  assert.match(f.__dailyGoal(two,4,true),/monter sur le podium/);
+});
+
+test('Daily goal keeps guests to the public record, outside the ranking',()=>{
+  const f=fixture(),data={top:[{rank:1,score:4,username:'Red'}]};
+  assert.match(f.__dailyGoal(data,0,false),/Record du jour : 4 essais/);
+  assert.equal(f.__dailyGoal(data,2,false),null);
+  assert.equal(f.__dailyGoal({top:[]},0,false),null);
 });

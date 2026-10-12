@@ -215,8 +215,11 @@ function openLeaderboardV2(mode="daily",scope="all") {
       : '';
 
     const rows=Array.isArray(data?.top)?data.top:[];
-    const topThree=rows.filter(row=>Number(row.rank)<=3).sort((a,b)=>[2,1,3].indexOf(Number(a.rank))-[2,1,3].indexOf(Number(b.rank)));
-    const rest=rows.filter(row=>Number(row.rank)>3);
+    // Below three ranked players a podium is mostly empty: show a plain list and
+    // invite the player to take one of the free places instead.
+    const smallAudience=rows.length>0&&rows.length<3;
+    const topThree=smallAudience?[]:rows.filter(row=>Number(row.rank)<=3).sort((a,b)=>[2,1,3].indexOf(Number(a.rank))-[2,1,3].indexOf(Number(b.rank)));
+    const rest=smallAudience?rows:rows.filter(row=>Number(row.rank)>3);
 
     const podiumHtml=topThree.length
       ? '<section class="lbv3-podium">'+topThree.map((row,i)=>{
@@ -232,7 +235,14 @@ function openLeaderboardV2(mode="daily",scope="all") {
       : '';
 
     const listHtml=rest.length
-      ? '<section class="lbv3-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+4,current,data.unit||meta.unit)).join("")+'</section>'
+      ? '<section class="lbv3-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+(smallAudience?1:4),current,data.unit||meta.unit)).join("")+'</section>'
+      : '';
+    const freePlaces=3-rows.length;
+    const period=requestedScope==="today"?" aujourd’hui":requestedScope==="week"?" sur 7 jours":"";
+    const inviteHtml=smallAudience
+      ? '<p class="lbv3-invite" role="status">'+(rows.some(row=>row.me)
+          ? 'Tu fais partie des premiers classés'+period+'. Le podium a encore '+freePlaces+' place'+(freePlaces>1?'s':'')+' : invite tes amis !'
+          : 'Sois parmi les premiers'+period+' : le podium a encore '+freePlaces+' place'+(freePlaces>1?'s':'')+'.')+'</p>'
       : '';
 
     const around=(Array.isArray(data?.around)?data.around:[]).filter(row=>!rows.some(top=>Number(top.rank)===Number(row.rank)&&top.username===row.username));
@@ -267,6 +277,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
       genTabs+
       '<div class="leaderboard-content"><div class="leaderboard-main">'+
       personalHtml+
+      inviteHtml+
       podiumHtml+
       listHtml+
       aroundHtml+
