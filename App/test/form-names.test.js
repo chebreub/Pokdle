@@ -50,3 +50,12 @@ test('forms added from PokeAPI can be told apart and keep their real data',()=>{
  const puits=extra.find(p=>p.name==='Ogerpon Masque du Puits');assert.deepEqual([puits.type1,puits.type2],['Plante','Eau']);
  assert.equal(new Set(extra.map(p=>p.id)).size,extra.length,'form ids are unique');assert.equal(new Set(extra.map(p=>p.name)).size,extra.length,'form names are unique');
 });
+
+test('the server catalogue gives each form its own measurements and sprite',()=>{
+ const context=vm.createContext({fs,path,vm,__dirname:root});
+ vm.runInContext(['loadPokemonList','loadStatClashExtraFormsConfig','injectStatClashExtraForms','buildSpriteUrl'].map(n=>extract(server,n)).join('\n'),context);
+ const list=context.loadPokemonList(),by=name=>list.find(p=>p.name===name);
+ const mega=by('Méga-Florizarre'),base=by('Florizarre');
+ assert.equal(mega.height,2.4);assert.equal(mega.weight,155.5);assert.notEqual(mega.height,base.height);assert.match(mega.sprite,/\/10033\.png$/);
+ assert.equal(by('Smogogo de Galar').height,3);assert.equal(by('Ogerpon Masque du Puits').type2,'Eau');assert.match(by('Méga-Raichu X').sprite,/\/10304\.png$/);
+});

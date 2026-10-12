@@ -3917,11 +3917,19 @@ function injectStatClashExtraForms(list) {
   const byId = new Set(list.map((pokemon) => pokemon.id));
   const byName = new Set(list.map((pokemon) => pokemon.name));
   const baseById = new Map(list.map((pokemon) => [pokemon.id, pokemon]));
+  // Same measured data as the client (forms-data.json): without it every form
+  // took its species' size, weight and sprite in server-side comparisons.
+  let measured = {};
+  try {
+    const raw = fs.readFileSync(path.join(__dirname, "forms-data.json"), "utf8").replace(/^\uFEFF/, "");
+    measured = Object.fromEntries(Object.entries(JSON.parse(raw)).map(([name, value]) => [name.replace(/^(.+) Mega( [XY])?$/, "Méga-$1$2"), value]));
+  } catch (_error) { measured = {}; }
 
   for (const form of extraForms) {
     if (!form || byId.has(form.id) || byName.has(form.name)) continue;
     const base = baseById.get(form.baseId);
     if (!base) continue;
+    const data = measured[form.name] || {};
 
     const spriteId = Number.isInteger(form.spriteId) ? form.spriteId : base.spriteId || base.id;
     const gen = Number(form.gen) || Number(base.gen) || Number(base.generation) || 1;
@@ -3931,17 +3939,17 @@ function injectStatClashExtraForms(list) {
       ...base,
       id: form.id,
       name: form.name,
-      type1: form.type1 || base.type1,
-      type2: form.type2 !== undefined ? form.type2 : (base.type2 || null),
+      type1: data.type1 || form.type1 || base.type1,
+      type2: data.type2 !== undefined ? data.type2 : (form.type2 !== undefined ? form.type2 : (base.type2 || null)),
       gen,
       generation: gen,
       color: form.color || base.color,
       habitat: form.habitat || base.habitat,
       stage: Number.isInteger(form.stage) ? form.stage : base.stage,
-      height: typeof form.height === "number" ? form.height : base.height,
-      weight: typeof form.weight === "number" ? form.weight : base.weight,
+      height: typeof data.height === "number" ? data.height : (typeof form.height === "number" ? form.height : base.height),
+      weight: typeof data.weight === "number" ? data.weight : (typeof form.weight === "number" ? form.weight : base.weight),
       spriteId,
-      sprite: form.sprite || base.sprite || buildSpriteUrl(spriteId),
+      sprite: data.sprite || form.sprite || (Number.isInteger(form.spriteId) ? buildSpriteUrl(form.spriteId) : base.sprite || buildSpriteUrl(spriteId)),
       isAltForm: true,
       baseId: form.baseId,
       apiId,
