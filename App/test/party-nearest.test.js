@@ -103,7 +103,7 @@ function wired(room) {
     findPartyRoomBySocket: () => room, checkRateLimit: () => false,
     respond: (ack, value) => ack(value),
   };
-  vm.runInNewContext(['endPartyRound', 'publicPartyNearestRoundState', 'resolvePartyNearestRound', 'publicPartyRoomState'].map(fn).join('\n'), context);
+  vm.runInNewContext(['endPartyRound', 'publicPartyNearestRoundState', 'resolvePartyNearestRound', 'publicPartyRoomState', 'partyTotalRoundsForMode'].map(fn).join('\n'), context);
   function event(name, next, payload, id = 'a') {
     let callback, response;
     context.socket = { id, on: (_, handler) => { callback = handler; } };
