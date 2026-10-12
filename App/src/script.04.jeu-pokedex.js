@@ -1538,6 +1538,7 @@ function openAllModesScreen(category) {
     speedrun: "openSpeedrunMode",
     typeCombo: "openTypeComboSolo",
     statAuction: "openStatAuctionMode",
+    classement: "openLeaderboardV2",
   };
   var GAME_OPENERS = ["startDailyGame", "startNormalGame", "startSilhouetteGame", "startPixelGame",
     "startCryGame", "startMysteryStatGame", "startQuizGame", "startDescriptionMode",
@@ -1564,6 +1565,7 @@ function openAllModesScreen(category) {
           state.query = document.getElementById("mode-search")?.value || "";
         }
         if (key === "draftScore") state.pro = Boolean(arguments[0]);
+        if (key === "classement") { state.mode = String(arguments[0] || "journey"); state.category = String(arguments[1] || "today"); }
         if (key === "game") {
           var screen = document.getElementById("screen-game");
           if (!screen || screen.classList.contains("hidden")) return result;
@@ -1656,6 +1658,10 @@ function openAllModesScreen(category) {
       } else {
         if (restoreDedicatedScreen(key, state)) return;
         var opener = OPENERS[key];
+        if (key === "classement" && typeof window[opener] === "function") {
+          window[opener](state.mode || "journey", state.category || "today");
+          return;
+        }
         if (opener && typeof window[opener] === "function") {
           var arg = key === "allModes" ? state.category : key === "draftScore" ? Boolean(state.pro) : undefined;
           window[opener](arg);

@@ -545,6 +545,7 @@ function setGlobalNavActive(key) {
     config: "nav-config",
     game: "nav-game",
     social: "nav-social",
+    leaderboard: "nav-leaderboard",
     pokedex: "nav-collection",
     profile: "nav-profile",
     types: "nav-extras",

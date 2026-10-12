@@ -5371,3 +5371,14 @@
   .daily-notebook[data-progress="empty"] .notebook-stamp { display:none; }
   .daily-notebook[data-progress="empty"] p { margin:10px 0 0; }
 }
+
+/* The leaderboard page. */
+#pokdle-app.design-refresh #screen-leaderboard { width:100%; max-width:1320px; margin:24px auto 56px; }
+#pokdle-app.design-refresh .leaderboard-page { padding:24px; border:1px solid var(--ui-line); border-radius:28px; background:var(--ui-surface); }
+#pokdle-app.design-refresh .leaderboard-page-bar { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+#pokdle-app.design-refresh .leaderboard-page-bar h1 { margin:0; font:500 clamp(26px,4vw,36px)/1.2 Fredoka,sans-serif; color:var(--ui-ink); }
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-leaderboard { margin:12px auto 96px; }
+  #pokdle-app.design-refresh .leaderboard-page { padding:14px; border-radius:22px; }
+  #pokdle-app.design-refresh .leaderboard-page-bar { margin-bottom:12px; }
+}
