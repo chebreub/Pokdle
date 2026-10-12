@@ -1956,6 +1956,7 @@ function getPartyGuessSearchIndex() {
     var pokemon = entry && entry.pokemon;
     if (!pokemon) return false;
     if (!includeAltForms && pokemon.isAltForm) return false;
+    if (pokemon.guessable === false) return false;
     return selected.has(Number(pokemon.gen));
   });
 }

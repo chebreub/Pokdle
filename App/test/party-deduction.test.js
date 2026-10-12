@@ -74,13 +74,15 @@ function socketHandler(env, room, event) {
 
 test('all species and alternative forms in every selected generation can be searched and submitted in Duel and Party', () => {
   const env = envFixture();
-  let forms = 0;
+  let forms = 0, lookAlikes = 0;
   for (let gen = 1; gen <= 9; gen++) {
     const room = { selectedGens: [gen], gameMode: 'deduction' };
     env.multiplayerLiveState = { room }; env.partyRoomState = { room };
     const duelIds = new Set(env.getMultiplayerRoomPool().map(p => p.id));
     const partyIds = new Set(env.getPartyGuessSearchIndex().map(e => e.pokemon.id));
     for (const p of env.POKEMON_LIST.filter(p => Number(p.gen || p.generation) === gen)) {
+      // Look-alike forms (same clues as another form) stay out of guessing games.
+      if (p.guessable === false) { assert.ok(!duelIds.has(p.id) && !partyIds.has(p.id), 'look-alike offered: ' + p.name); lookAlikes++; continue; }
       assert.ok(duelIds.has(p.id), 'Duel: ' + p.name); assert.ok(partyIds.has(p.id), 'Party: ' + p.name);
       assert.equal(env.resolveRoomPokemonGuess(room, p.name).id, p.id);
       assert.equal(env.findPokemonGlobalByName(p.name).id, p.id);
@@ -91,6 +93,7 @@ test('all species and alternative forms in every selected generation can be sear
     assert.ok(duelIds.has(room.secretPokemon.id));
   }
   assert.ok(forms > 50, 'actual alternative forms tested');
+  assert.equal(lookAlikes, 8, 'look-alike forms are skipped, not lost');
 });
 
 test('eight-player room hides the target and all rival guess identities while retaining own feedback', () => {
