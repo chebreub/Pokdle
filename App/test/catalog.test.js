@@ -16,8 +16,8 @@ function fixture() {
  return {context,elements,rows};
 }
 test('every former menu destination remains reachable and categorized',()=>{
- assert.equal(cards.length,35); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
- for(const action of ['startPartyMode','openTypeComboSolo','openDraftScoreAttackProDuel','openTeamsScreen','openEmulatorMode','openLeaderboard','openPartyRoomMode','openMultiplayerMode','openDefiAmiFromAllModes']) assert.ok(cards.some(card=>card.markup.includes(action)),action);
+ assert.equal(cards.length,36); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
+ for(const action of ['openEggGame','startPartyMode','openTypeComboSolo','openDraftScoreAttackProDuel','openTeamsScreen','openEmulatorMode','openLeaderboard','openPartyRoomMode','openMultiplayerMode','openDefiAmiFromAllModes']) assert.ok(cards.some(card=>card.markup.includes(action)),action);
 });
 test('friends filter isolates multiplayer games with Party Room first',()=>{
  const {context,rows}=fixture();context.setModeCatalogCategory('friends');const visible=rows.filter(card=>!card.hidden);
@@ -27,7 +27,7 @@ test('search ignores accents, matches unordered words and recovers from no resul
  const {context,rows,elements}=fixture();context.setModeCatalogCategory('all');elements['mode-search'].value='PRO draft';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,2);
  elements['mode-search'].value='emulateur';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='zzzznoresult';context.renderModeCatalog();assert.equal(elements['mode-empty'].hidden,false);
- context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,34);
+ context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,35);
  assert.ok(rows.find(card=>card.markup.includes('openDraftArenaMode')).hidden,'unfinished Draft Arènes is not advertised');
 });
 test('search matches the start of words so short queries stay precise',()=>{

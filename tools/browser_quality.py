@@ -90,7 +90,7 @@ def main():
     check('home-filters-login',home_filters_and_login,False)
     def egg_states():
      if width not in (390,1366): return {'skipped':'covered on mobile and desktop'}
-     fixture={'ok':True,'roundId':42,'weekStart':'2026-10-05','resetAt':'2026-10-11T22:00:00Z','quotaResetAt':'2026-10-06T22:00:00Z','reward':{'id':133,'name':'Évoli'},'candidateIds':list(range(1,152)),'eliminatedIds':[],'compatibleIds':list(range(1,152)),'remaining':151,'clues':[],'nextClueAt':100,'quota':{'remaining':1,'used':0,'limit':1},'authenticated':False,'solved':False,'winner':None,'canClaim':False,'feed':[]}
+     fixture={'ok':True,'roundId':42,'weekStart':'2026-10-05','resetAt':'2026-10-11T22:00:00Z','quotaResetAt':'2026-10-06T22:00:00Z','reward':{'id':133,'name':'Évoli'},'candidateIds':list(range(1,152)),'eliminatedIds':[],'compatibleIds':list(range(1,152)),'remaining':151,'clues':[{'key':'gen','label':'Génération','value':1,'unlockedAt':'2026-10-04T22:00:00.000Z','reason':'day'},{'key':'type1','label':'Premier type','value':'Plante','unlockedAt':'2026-10-05T22:00:00.000Z','reason':'day'}],'nextClueAt':300,'upcomingClues':[{'key':'color','label':'Couleur','at':'2026-10-06T22:00:00.000Z','atEliminated':300},{'key':'habitat','label':'Habitat','at':'2026-10-07T22:00:00.000Z','atEliminated':400},{'key':'stage','label':'Stade d’évolution','at':'2026-10-08T22:00:00.000Z','atEliminated':500}],'quota':{'remaining':1,'used':0,'limit':1},'authenticated':False,'solved':False,'winner':None,'canClaim':False,'feed':[]}
      page.route('**/api/egg',lambda route:route.fulfill(status=200,content_type='application/json',body=json.dumps(fixture)))
      def submit(route):
       body=route.request.post_data_json
@@ -102,6 +102,9 @@ def main():
      try:
       page.evaluate('openEggGame()');page.locator('#egg-content').wait_for(state='visible');screen('screen-egg')
       expect(page.locator('#egg-grid .egg-pokemon').count()==151,'Egg omits candidates')
+      expect(page.locator('#egg-clues .egg-clue:not(.is-locked)').count()==2 and page.locator('#egg-clues .egg-clue.is-locked').count()==3,'Egg does not show the unlocked and upcoming daily clues')
+      expect('demain' in page.locator('#egg-next-clue').inner_text(),'Egg does not announce the clue of tomorrow')
+      expect(page.locator('#egg-feed-list .egg-feed-clue time').count()==2,'Egg feed does not date the daily clues')
       expect(page.locator('#screen-egg h1').evaluate('(e)=>getComputedStyle(e).color')=='rgb(46, 42, 51)','Egg heading is unreadable on its cream background')
       if width==390:
        toolbar_buttons=page.locator('#screen-egg .egg-toolbar>button').all()
@@ -110,6 +113,7 @@ def main():
       page.locator('#egg-input').fill('Bulbi');page.locator('#egg-suggestions button').first.click()
       page.locator('#egg-submit').click();page.wait_for_function('() => eggState?.quota.remaining === 0 && !eggBusy')
       expect(page.locator('#egg-login').is_visible(),'Guest is not offered the second authenticated guess')
+      expect('mar.' in page.locator('#egg-feed-list li').first.locator('time').inner_text(),'Egg feed guesses are not dated with their day')
       expect(page.locator('#egg-grid .egg-pokemon').count()==150,'Rejected Pokemon remains selectable')
       page.locator('#egg-hide-eliminated').uncheck();expect(page.locator('#egg-grid .is-eliminated').count()==1,'Show eliminated toggle failed')
       page.screenshot(path=str(out/f'{width}-egg-quota.jpg'),quality=85,animations='disabled')
@@ -212,7 +216,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==19,'Solo catalogue should list 19 games: '+str(tiles.count()))
+     expect(tiles.count()==20,'Solo catalogue should list 20 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first

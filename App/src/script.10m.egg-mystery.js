@@ -36,6 +36,24 @@ function eggTimeLeft(date) {
   const ms = Math.max(0,new Date(date).getTime()-Date.now()), days = Math.floor(ms/86400000), hours = Math.floor(ms/3600000)%24, minutes=Math.floor(ms/60000)%60;
   return days ? `${days} j ${hours} h` : `${hours} h ${minutes} min`;
 }
+// The round lasts a week, so feed times always carry their day (Paris time).
+function eggStamp(date) {
+  return new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",weekday:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(date));
+}
+function eggDayName(date) {
+  if (eggState?.quotaResetAt && new Date(date).getTime() === new Date(eggState.quotaResetAt).getTime()) return "demain";
+  return new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",weekday:"long"}).format(new Date(date));
+}
+function eggCluesHtml(s) {
+  const unlocked = s.clues.map(c => `<span class="egg-clue">✓ ${escapeHtml(c.label)} : <b>${escapeHtml(String(c.value))}</b></span>`);
+  const upcoming = s.solved ? [] : (s.upcomingClues || []).map(c => `<span class="egg-clue is-locked">${escapeHtml(c.label)} <small>${escapeHtml(eggDayName(c.at))} ou à ${c.atEliminated} rayés</small></span>`);
+  return unlocked.concat(upcoming).join("");
+}
+function eggFeedHtml(s) {
+  const guesses = s.feed.map(row => ({ at: row.at, html: `<li><img src="${modeCatalogSpriteUrl(row.pokemon.id)}" alt="" loading="lazy" width="40" height="40"/><span><b>${escapeHtml(row.name)}</b><small>${escapeHtml(row.pokemon.name)}</small></span><span class="egg-feed-meta"><strong>${row.correct?"✓ Trouvé":"× Écarté"}</strong><time datetime="${escapeHtml(row.at)}">${escapeHtml(eggStamp(row.at))}</time></span></li>` }));
+  const clues = s.clues.filter(c => c.unlockedAt).map(c => ({ at: c.unlockedAt, html: `<li class="egg-feed-clue"><i aria-hidden="true">✦</i><span><b>${c.reason === "eliminated" ? "Indice débloqué par la communauté" : "Indice du jour"}</b><small>${escapeHtml(c.label)} : ${escapeHtml(String(c.value))}</small></span><span class="egg-feed-meta"><time datetime="${escapeHtml(c.unlockedAt)}">${escapeHtml(eggStamp(c.unlockedAt))}</time></span></li>` }));
+  return guesses.concat(clues).sort((a,b) => new Date(b.at) - new Date(a.at)).slice(0,20).map(row => row.html).join("");
+}
 function renderEggState() {
   const s = eggState; if (!s) return;
   document.getElementById("egg-content").classList.remove("hidden");
@@ -46,8 +64,9 @@ function renderEggState() {
   document.getElementById("egg-remaining").textContent = s.solved ? "Mystère résolu" : `1 chance sur ${s.remaining} pistes compatibles`;
   document.getElementById("egg-progress-bar").max = s.candidateIds.length;
   document.getElementById("egg-progress-bar").value = s.eliminatedIds.length;
-  document.getElementById("egg-clues").innerHTML = s.clues.map(c => `<span>✓ ${escapeHtml(c.label)} : <b>${escapeHtml(String(c.value))}</b></span>`).join("") || '<span>Le premier indice arrive après 100 Pokémon rayés.</span>';
-  document.getElementById("egg-next-clue").textContent = !s.solved && s.nextClueAt ? `${Math.max(0,s.nextClueAt-s.eliminatedIds.length)} nouvelles mauvaises pistes avant le prochain indice.` : "";
+  document.getElementById("egg-clues").innerHTML = eggCluesHtml(s);
+  const next = s.upcomingClues?.[0];
+  document.getElementById("egg-next-clue").textContent = !s.solved && next ? `Prochain indice ${eggDayName(next.at)} à 00 h, ou dès ${Math.max(0,next.atEliminated-s.eliminatedIds.length)} nouvelles pistes écartées.` : "";
   const form = document.getElementById("egg-form"); form.classList.toggle("hidden",s.solved);
   document.getElementById("egg-input").disabled = !s.quota.remaining || s.solved || eggBusy;
   document.getElementById("egg-submit").disabled = !s.quota.remaining || s.solved || eggBusy;
@@ -56,7 +75,7 @@ function renderEggState() {
   const finish = document.getElementById("egg-finish"); finish.classList.toggle("hidden",!s.solved);
   const found = s.feed.find(row => row.correct)?.pokemon;
   if (s.solved) finish.innerHTML = `<span class="club-eyebrow">L’ŒUF A ÉCLOS !</span><h2>${s.winner.me?"Tu as résolu le mystère !":escapeHtml(s.winner.name)+" a trouvé !"}</h2>${found?`<img src="${modeCatalogSpriteUrl(found.id)}" alt="" width="112" height="112"/><p>La bonne proposition était <b>${escapeHtml(found.name)}</b>.</p>`:"<p>L’enquête est terminée. Retrouve la prochaine lundi !</p>"}${s.canClaim?'<button class="btn-blue" data-action="claimEggReward">Récupérer mon compagnon</button>':s.winner.me&&!s.authenticated?'<p>Connecte-toi depuis ce navigateur pour recevoir ton compagnon.</p><button class="btn-blue" data-action="openLoginWelcome">Recevoir ma récompense</button>':''}<button class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu →</button>`;
-  document.getElementById("egg-feed-list").innerHTML = s.feed.length ? s.feed.map(row=>`<li><img src="${modeCatalogSpriteUrl(row.pokemon.id)}" alt="" loading="lazy" width="40" height="40"/><span><b>${escapeHtml(row.name)}</b><small>${escapeHtml(row.pokemon.name)}</small></span><strong>${row.correct?"✓ Trouvé":"× Écarté"}</strong></li>`).join("") : '<li>Aucune proposition pour le moment. L’enquête commence avec toi.</li>';
+  document.getElementById("egg-feed-list").innerHTML = eggFeedHtml(s) || '<li>Aucune proposition pour le moment. L’enquête commence avec toi.</li>';
   renderEggCatalog();
 }
 function renderEggCatalog() {

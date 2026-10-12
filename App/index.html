@@ -184,7 +184,7 @@
       <section class="home-pathways" aria-label="Choisir comment jouer">
         <article class="home-path home-path-egg">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">◒</span><span class="home-path-label">L’ENQUÊTE COMMUNAUTAIRE</span></div>
-          <h2>Œuf mystère</h2><p>Un mystère pour la semaine. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
+          <h2>Œuf mystère</h2><p>Un mystère pour la semaine, un nouvel indice chaque jour. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openEggGame">Ouvrir l’Œuf mystère →</button></div>
         </article>
         <article class="home-path home-path-solo">
@@ -301,6 +301,7 @@
             <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-eye"/></svg>Deviner</h3>
             <div class="all-modes-grid">
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startDailyGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-calendar"/></svg></div><b>Pokémon du jour</b><small>Le même mystère pour tout le monde, des indices à chaque essai.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openEggGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-users"/></svg></div><b>Œuf mystère</b><small>Un mystère pour toute la communauté, un indice de plus chaque jour.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startNormalGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-infinity"/></svg></div><b>Mode illimité</b><small>Le principe du Pokémon du jour, autant de parties que tu veux.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startSilhouetteGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-eye"/></svg></div><b>Zoom progressif</b><small>Un détail de l’image, qui s’élargit à chaque erreur.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startPixelGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-image"/></svg></div><b>Pixelisé</b><small>L’image devient plus nette à chaque proposition.</small></button>
@@ -1216,8 +1217,8 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <label for="egg-input">Ta proposition du jour</label><div class="egg-input-row"><div class="egg-input-wrap"><input id="egg-input" placeholder="Cherche un Pokémon…" autocomplete="off" spellcheck="false" data-input-action="filterEggSuggestions" data-keydown-action="eggSuggestionKeydown" role="combobox" aria-autocomplete="list" aria-controls="egg-suggestions" aria-expanded="false"/><div id="egg-suggestions" class="hidden" role="listbox"></div></div><button id="egg-submit" class="btn-blue" type="submit">Proposer</button></div><p id="egg-quota"></p><button id="egg-login" class="btn-ghost hidden" type="button" data-action="openLoginWelcome">Se connecter pour une deuxième proposition</button>
         </form>
         <section class="egg-catalog"><div class="egg-catalog-head"><h2>Les pistes de l’enquête</h2><div><label><input id="egg-hide-eliminated" type="checkbox" checked data-change-action="renderEggCatalog"/> Masquer les Pokémon rayés</label><label><input id="egg-hide-incompatible" type="checkbox" checked data-change-action="renderEggCatalog"/> Masquer les incompatibles</label></div></div><div id="egg-grid"></div></section>
-        <section class="egg-feed"><h2>Les dernières propositions</h2><ol id="egg-feed-list"></ol></section>
-        <details class="shell-guide"><summary>Comment participer ?</summary><ol><li>Propose un Pokémon : une fois par jour en invité, deux avec un compte.</li><li>Chaque mauvaise réponse est rayée pour tous. Un indice commun apparaît toutes les 100 mauvaises propositions.</li><li>Le premier à trouver gagne le compagnon. Le défi suivant commence lundi à minuit, heure de Paris.</li></ol><p>Ce jeu est indépendant des classements. Le quota invité s’applique aussi à la connexion réseau partagée. Connecte-toi pour avoir ton quota personnel.</p></details>
+        <section class="egg-feed"><h2>Le fil de l’enquête</h2><ol id="egg-feed-list"></ol></section>
+        <details class="shell-guide"><summary>Comment participer ?</summary><ol><li>Propose un Pokémon : une fois par jour en invité, deux avec un compte.</li><li>Chaque mauvaise réponse est rayée pour tous. Un indice commun s’ajoute chaque jour à 00 h (génération le lundi, puis premier type, couleur, habitat et stade), ou plus tôt toutes les 100 mauvaises propositions.</li><li>Le premier à trouver gagne le compagnon. Le défi suivant commence lundi à minuit, heure de Paris.</li></ol><p>Ce jeu est indépendant des classements. Le quota invité s’applique aussi à la connexion réseau partagée. Connecte-toi pour avoir ton quota personnel.</p></details>
       </div>
     </div>
 
