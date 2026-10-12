@@ -1226,8 +1226,10 @@ function pickPartyTarget(room) {
 
 function partyTotalRoundsForMode(mode, configured) {
   if (mode === "dexrace") return 1;
-  // L'hôte peut configurer 5/10/15/20 manches ; Stat Clash Party garde 6 par
-  // défaut (une stat par manche) si rien n'est configuré.
+  // Stat Clash Party : chaque statistique se joue une seule fois, donc exactement
+  // six manches, quel que soit le réglage de l'hôte (gardé pour les autres jeux).
+  if (mode === "statclashparty") return 6;
+  // L'hôte peut configurer 5/10/15/20 manches pour les autres jeux.
   const wanted = Number(configured);
   if ([5, 10, 15, 20].includes(wanted)) return wanted;
   return mode === "statclashparty" ? 6 : 5;
@@ -1283,9 +1285,7 @@ function resetPartyCampaign(room) {
   room.status = "waiting";
   room.roundNumber = 0;
   const configuredRounds = Number(room.configuredRounds);
-  room.totalRounds = room.gameMode === "dexrace"
-    ? 1
-    : ([5, 10, 15, 20].includes(configuredRounds) ? configuredRounds : (room.gameMode === "statclashparty" ? 6 : 5));
+  room.totalRounds = partyTotalRoundsForMode(room.gameMode, configuredRounds);
   room.deadlineAt = null;
   room.roundStartedAt = null;
   room.target = null;
@@ -2330,8 +2330,7 @@ io.on("connection", (socket) => {
         room.totalRounds = 1;
         dexRace.balanceRaceTeams(room);
       } else {
-        const configuredRounds = Number(room.configuredRounds);
-        room.totalRounds = [5, 10, 15, 20].includes(configuredRounds) ? configuredRounds : (mode === "statclashparty" ? 6 : 5);
+        room.totalRounds = partyTotalRoundsForMode(mode, room.configuredRounds);
       }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -2348,8 +2347,8 @@ io.on("connection", (socket) => {
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer en cours de party." });
       const rounds = Number(payload.rounds);
       if (![5, 10, 15, 20].includes(rounds)) return respond(ack, { ok: false, error: "Choisis 5, 10, 15 ou 20 manches." });
-      room.totalRounds = rounds;
       room.configuredRounds = rounds;
+      room.totalRounds = partyTotalRoundsForMode(room.gameMode, rounds);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {

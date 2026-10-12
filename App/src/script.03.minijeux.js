@@ -73,7 +73,8 @@ function startHigherLowerRushTimer() {
 }
 
 function finalizeHigherLowerRush() {
-  if (!higherLowerState) return;
+  // The clock and an answer still animating can both end the run: finish it once.
+  if (!higherLowerState || higherLowerState.phase === "gameover") return;
   if (higherLowerState.score > higherLowerState.rushHighScore) {
     higherLowerState.rushHighScore = higherLowerState.score;
     if (typeof playerProfile === "object" && playerProfile) {
@@ -86,6 +87,8 @@ function finalizeHigherLowerRush() {
     recordMatchHistory({ mode: "higher-lower-rush", result: higherLowerState.score >= 10 ? "win" : "loss", attempts: higherLowerState.score, targetName: `60s · ${higherLowerState.score} pts` });
   } catch (_e) {}
   renderHigherLowerScreen();
+  // In the Marathon, the 60-second run ends the round like the endless one (it used to stay stuck).
+  notifyPartyRoundFromScreenMode(higherLowerState.score >= 10, `${higherLowerState.score} en 60 s`);
 }
 
 function pickHigherLowerStat() {

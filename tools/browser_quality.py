@@ -710,6 +710,8 @@ def main():
      expect(cols==2,'PC4 Score Attack is not a two-column cockpit: '+str(cols))
      gens=page.locator('#draft-gen-buttons button:visible')
      expect(gens.count()>=9,'Draft generation selector is incomplete')
+     # A pointer left over a button lifts it on hover; measure the resting layout.
+     page.mouse.move(0,0)
      gen_rects=gens.evaluate_all('(els)=>els.slice(0,9).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
      expect(max(abs(r['y']-gen_rects[0]['y']) for r in gen_rects)<3,'Draft generations do not fit one desktop row: '+repr(gen_rects))
      gens.first.click()

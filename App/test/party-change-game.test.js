@@ -47,7 +47,7 @@ function fixture(status="playing"){
     recordUsage(value){usage.push(value);},
     clearTimeout(){cleared++;}
   };
-  new Function("env","with(env){"+extractFunction("clearPartyRoundTimer","resetPartyCampaign")+"\n"+extractFunction("resetPartyCampaign","forcePartyRoundEnd")+"\nthis.resetPartyCampaign=resetPartyCampaign;}")(context);
+  new Function("env","with(env){"+extractFunction("partyTotalRoundsForMode","isPartyStatMode")+"\n"+extractFunction("clearPartyRoundTimer","resetPartyCampaign")+"\n"+extractFunction("resetPartyCampaign","forcePartyRoundEnd")+"\nthis.resetPartyCampaign=resetPartyCampaign;this.partyTotalRoundsForMode=partyTotalRoundsForMode;}")(context);
   new Function("env","with(env){"+extractHandler("party:return-to-setup","party:set-mode")+"}")(context);
   function invoke(id="host"){
     socket.id=id;let result;

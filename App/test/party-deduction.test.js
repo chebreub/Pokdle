@@ -34,7 +34,7 @@ function envFixture() {
   const names = ['injectStatClashExtraForms', 'buildSpriteUrl', 'normalizeName', 'normalizeDuelPokemonName',
     'isDuelPokemonAllowed', 'resolveRoomPokemonGuess', 'startRoom', 'buildGuessFeedback', 'compareGuessToSecret',
     'arrowFor', 'publicPartyRoomState', 'endPartyRound', 'clearPartyRoundTimer', 'armPartyRoundTimer',
-    'forcePartyRoundEnd', 'isPartyStatMode', 'startPartyRound', 'handlePartyDisconnect'];
+    'forcePartyRoundEnd', 'isPartyStatMode', 'startPartyRound', 'handlePartyDisconnect', 'partyTotalRoundsForMode'];
   // Include comparison helpers from the real server, not a duplicate scoring implementation.
   const compareNames = ['compareColors', 'cmpNum', 'colorTokens'];
   for (const n of compareNames) if (server.includes('function ' + n + '(')) names.push(n);

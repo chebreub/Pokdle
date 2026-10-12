@@ -2583,7 +2583,9 @@ function renderPartyRoom() {
   });
   // Sélecteur du nombre de manches (hôte uniquement)
   var roundsSel = document.getElementById("party-rounds-select");
-  if (roundsSel) roundsSel.classList.toggle("hidden", !(room.status === "waiting" || room.status === "complete"));
+  // Stat Clash Party (one round per stat) and the Pokédex race have a fixed number of rounds.
+  var fixedRounds = room.gameMode === "statclashparty" || room.gameMode === "dexrace";
+  if (roundsSel) roundsSel.classList.toggle("hidden", fixedRounds || !(room.status === "waiting" || room.status === "complete"));
   [5, 10, 15, 20].forEach(function (n) {
     var rb = document.getElementById("party-rounds-" + n);
     if (rb) {
@@ -2600,7 +2602,7 @@ function renderPartyRoom() {
     typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque la manche (plus le combo est rare, plus ça paie).",
     duocriteria: "Duo de critères : type, couleur, habitat, génération ou stade — deux critères croisés, le premier Pokémon qui coche les deux cases gagne. Rapidité bonus !",
     statclash: "Meilleure stat : choisis la stat la plus élevée du Pokémon. Les bons choix marquent des points.",
-    statclashparty: "Stat Clash : choisis une stat différente à chaque manche. Tu marques la valeur réelle de la stat choisie."
+    statclashparty: "Stat Clash : six manches, une par statistique. Choisis une stat différente à chaque manche ; tu marques sa valeur réelle."
   };
   var hintEl = document.getElementById("party-mode-hint");
   if (hintEl) {
