@@ -220,7 +220,7 @@ function pokedexCollectionMissionRequirementsHtml(state) {
 function renderPokedexCollectionLockedDetail(pokemon,state) {
   const detail=document.getElementById('pokedex-detail');
   if (!detail || !pokemon) return;
-  const dexId=getPokemonSpriteId(pokemon);
+  const dexId=getPokemonSpriteId(pokemon),dexNumber=getPokemonDexNumber(pokemon);
   const visibleName=pokedexCollectionVisibleName(pokemon,state);
   const hidden=visibleName==='???';
   const missionTitle=state.mission?.title || (state.kind==='secret'?'Une piste reste à découvrir':'Entrée non enregistrée');
@@ -235,7 +235,7 @@ function renderPokedexCollectionLockedDetail(pokemon,state) {
   detail.innerHTML=`
     <button type="button" class="btn-ghost pokedex-back-to-list" data-action="closePokedexMobileDetail">← Tous les Pokémon</button>
     <div class="pokedex-collection-lock state-${state.kind}">
-      <div class="pokedex-collection-lock-head"><span>POKÉDEX DU DRESSEUR</span><span>#${dexId}</span></div>
+      <div class="pokedex-collection-lock-head"><span>POKÉDEX DU DRESSEUR</span><span>#${dexNumber}</span></div>
       <div class="pokedex-collection-lock-stage">
         <div class="pokedex-lock-radar" aria-hidden="true"></div>
         <img src="${sprite}" alt="" data-fallback="${getSpriteUrl(dexId)}" />

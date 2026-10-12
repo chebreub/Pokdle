@@ -859,9 +859,9 @@ function getMysteryClues(secret) {
 function getMysteryApiId(secret) {
   if (!secret) return null;
   if (FORM_API_NAME_BY_NAME[secret.name]) return FORM_API_NAME_BY_NAME[secret.name];
-  const spriteId = getPokemonSpriteId(secret);
-  if (Number.isInteger(spriteId) && spriteId > 0 && spriteId <= 1025) return spriteId;
-  if (Number.isInteger(secret.id) && secret.id > 0 && secret.id <= 1025) return secret.id;
+  // Forms without their own PokeAPI entry share their species' stats.
+  const dexNumber = getPokemonDexNumber(secret);
+  if (Number.isInteger(dexNumber) && dexNumber > 0 && dexNumber <= 1025) return dexNumber;
   return null;
 }
 

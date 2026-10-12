@@ -545,7 +545,8 @@ function normalizePokemonData() {
   for (const pokemon of POKEMON_LIST) {
     pokemon.gen = Number.isInteger(pokemon.gen) ? pokemon.gen : Number(pokemon.generation) || 1;
     pokemon.generation = pokemon.gen;
-    pokemon.spriteId = Number.isInteger(pokemon.spriteId) ? pokemon.spriteId : (SPRITE_ID_OVERRIDES_BY_NAME[pokemon.name] || pokemon.id);
+    // A form keeps its own PokeAPI sprite id (10033, or "649-douse" for form-only sprites).
+    pokemon.spriteId = pokemon.spriteId || SPRITE_ID_OVERRIDES_BY_NAME[pokemon.name] || pokemon.id;
     pokemon.sprite = getSpriteUrl(pokemon.spriteId);
     pokemon.type2 = pokemon.type2 ?? null;
     pokemon.isAltForm = Boolean(pokemon.isAltForm || pokemon.id >= 20000);
@@ -601,6 +602,12 @@ function cleanMojibake(value) {
 
 function getPokemonSpriteId(pokemon) {
   return pokemon.spriteId || pokemon.id;
+}
+
+// The National Pokédex number shown to players: a form keeps its species' number.
+function getPokemonDexNumber(pokemon) {
+  const base = Number(pokemon?.baseId);
+  return (pokemon?.isAltForm || Number(pokemon?.id) >= 20000) && base > 0 ? base : Number(pokemon?.id) || 0;
 }
 
 function getPokemonSprite(pokemon) {

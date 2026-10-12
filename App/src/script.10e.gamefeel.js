@@ -296,7 +296,7 @@ function enhanceGameOverBox({won,pokemon,attempts,mode}) {
     inner.insertAdjacentElement('afterend',summary);
   }
   const grade=gameFeelSoloGrade(won,attempts);
-  const dexId=typeof getPokemonSpriteId==='function'?getPokemonSpriteId(pokemon):pokemon.id;
+  const dexId=typeof getPokemonDexNumber==='function'?getPokemonDexNumber(pokemon):pokemon.id;
   const types=typeof typeBadgesHtml==='function'?typeBadgesHtml(pokemon.type1,pokemon.type2||null):'';
   summary.innerHTML='<div class="win-grade '+(won?'is-win':'is-loss')+'"><strong>'+grade.grade+'</strong><span>'+grade.label+'</span></div>'+
     '<div class="win-result-facts">'+
