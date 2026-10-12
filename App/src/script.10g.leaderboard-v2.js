@@ -183,10 +183,18 @@ function leaderboardV2ScoreHtml(row, mode, unit) {
   const detail = leaderboardV2Detail(row, mode);
   return escapeHtml(leaderboardV2FormatScore(row?.score, mode, unit)) + (detail ? '<small class="lbv2-detail">' + escapeHtml(detail) + "</small>" : "");
 }
+// The player's partner Pokémon first, then their account picture, then a Poké Ball.
+const LEADERBOARD_V2_DEFAULT_AVATAR = "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png";
 function leaderboardV2Avatar(row) {
+  const partner = row?.partnerId && typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(row.partnerId)) : null;
+  if (partner) return '<img class="lbv2-avatar is-partner" src="'+escapeHtml(getPokemonSprite(partner))+'" alt="" title="'+escapeHtml(partner.name)+'" loading="lazy" />';
   return row?.avatar
-    ? '<img class="lbv2-avatar" src="'+escapeHtml(row.avatar)+'" alt="" />'
-    : '<span class="lbv2-avatar lbv2-avatar-empty" aria-hidden="true">?</span>';
+    ? '<img class="lbv2-avatar" src="'+escapeHtml(row.avatar)+'" alt="" loading="lazy" />'
+    : '<img class="lbv2-avatar is-default" src="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" loading="lazy" />';
+}
+// Arcade boards with nobody ranked on the period are hidden; null keeps them all.
+function leaderboardV2ArcadeCounts(scope) {
+  return leaderboardFetchJson("/api/leaderboard/counts?scope="+encodeURIComponent(scope)).then(data=>data?.counts||null).catch(()=>null);
 }
 function leaderboardV2Row(row, fallbackRank, mode, unit, compact=false) {
   const rank=Number(row?.rank)||fallbackRank||0;
@@ -220,8 +228,12 @@ function openLeaderboardV2(mode="journey",scope="today") {
 
   return syncPromise.then(()=>{
     if (!leaderboardOwnsDialog(requestId)) return null;
-    return leaderboardFetchJson("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(requestedScope));
-  }).then(data=>{
+    return Promise.all([
+      leaderboardFetchJson("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(requestedScope)),
+      leaderboardV2ArcadeCounts(requestedScope)
+    ]);
+  }).then(result=>{
+    const [data,counts]=result||[];
     if (!data || !leaderboardOwnsDialog(requestId)) return;
     const isActive=id=>id==="draft"?leaderboardV2IsDraft(current):id===current;
     const modeTab=([id,label])=>{
@@ -230,8 +242,10 @@ function openLeaderboardV2(mode="journey",scope="today") {
     };
     const dayTabs=LEADERBOARD_V2_DAY_MODES.map(modeTab).join("");
     const otherOpen=LEADERBOARD_V2_OTHER_MODES.some(([id])=>isActive(id));
+    const otherModes=LEADERBOARD_V2_OTHER_MODES.filter(([id])=>!counts||isActive(id)||Number(counts[id])>0);
     const modeTabs='<details class="lbv3-other"'+(otherOpen?' open':'')+'><summary>Autres classements <small>records des jeux d’arcade</small></summary><div class="lbv3-mode-grid">'+
-      LEADERBOARD_V2_OTHER_MODES.map(modeTab).join("")+'<button type="button" class="lbv3-mode-tab" data-action="openWeeklyLeagueRanking">Ligue · 3 disciplines</button></div></details>';
+      otherModes.map(modeTab).join("")+'<button type="button" class="lbv3-mode-tab" data-action="openWeeklyLeagueRanking">Ligue · 3 disciplines</button></div>'+
+      (otherModes.length?'':'<p class="lbv3-other-empty">Aucun record d’arcade sur cette période.</p>')+'</details>';
 
     const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
       '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" aria-pressed="'+(id===leaderboardV2Scope)+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
@@ -314,6 +328,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
     '</div>';
 
     ensureOverlay("Classements",body);
+    if (typeof fillLeaderboardWeekTop === "function") fillLeaderboardWeekTop(()=>requestId===leaderboardViewRequest);
   }).catch(()=>{
     if (!leaderboardOwnsDialog(requestId)) return;
     const args=escapeHtml(JSON.stringify([current,requestedScope]));

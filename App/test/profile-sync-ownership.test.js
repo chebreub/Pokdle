@@ -150,3 +150,12 @@ test("pagehide caches current account data and sends an owner-stamped beacon",as
  assert.equal(run.beacons[0].url,"/api/profile");
  assert.match(String(run.beacons[0].blob.parts[0]),/"_accountId":"A"/);
 });
+
+test("the ranking avatar reads the partner from a stored profile, never fails on bad data", () => {
+  const { partnerIdFromProfileData } = require("../lib/profile-sync");
+  assert.equal(partnerIdFromProfileData({ profile: JSON.stringify({ favoritePokemonId: 25 }) }), 25);
+  assert.equal(partnerIdFromProfileData({ profile: { favoritePokemonId: 20075 } }), 20075);
+  for (const data of [{}, null, { profile: "{broken" }, { profile: JSON.stringify({ favoritePokemonId: -3 }) }, { profile: JSON.stringify({ favoritePokemonId: "x" }) }]) {
+    assert.equal(partnerIdFromProfileData(data), null);
+  }
+});
