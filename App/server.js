@@ -3931,7 +3931,7 @@ function injectStatClashExtraForms(list) {
     if (!base) continue;
     const data = measured[form.name] || {};
 
-    const spriteId = Number.isInteger(form.spriteId) ? form.spriteId : base.spriteId || base.id;
+    const spriteId = form.spriteId || base.spriteId || base.id;
     const gen = Number(form.gen) || Number(base.gen) || Number(base.generation) || 1;
     const apiId = apiNamesByName?.[form.name] || String(form.baseId || base.id);
 
@@ -3949,7 +3949,7 @@ function injectStatClashExtraForms(list) {
       height: typeof data.height === "number" ? data.height : (typeof form.height === "number" ? form.height : base.height),
       weight: typeof data.weight === "number" ? data.weight : (typeof form.weight === "number" ? form.weight : base.weight),
       spriteId,
-      sprite: data.sprite || form.sprite || (Number.isInteger(form.spriteId) ? buildSpriteUrl(form.spriteId) : base.sprite || buildSpriteUrl(spriteId)),
+      sprite: data.sprite || form.sprite || (form.spriteId ? buildSpriteUrl(form.spriteId) : base.sprite || buildSpriteUrl(spriteId)),
       isAltForm: true,
       baseId: form.baseId,
       apiId,

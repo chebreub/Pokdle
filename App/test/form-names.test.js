@@ -41,7 +41,9 @@ test('old form caches and bundled data keep their sprites and measurements after
 test('forms added from PokeAPI can be told apart and keep their real data',()=>{
  // Two forms of one species with the same types and size could not be told apart in the game.
  const seen=new Map();
- for(const p of extra.filter(p=>typeof p.height==='number')){
+ // Forms added on 2026-10-12; older look-alikes (Deoxys, Ash-Greninja) predate this rule.
+ const added=p=>(p.id>=20072&&p.id<21000)||p.id===22020||p.id===23017||p.id>=25044;
+ for(const p of extra.filter(added)){
   const key=[p.baseId,p.type1,p.type2,p.height,p.weight].join('|');
   assert.ok(!seen.has(key),p.name+' duplicates '+seen.get(key));seen.set(key,p.name);
   assert.ok(Number.isInteger(p.spriteId)&&p.spriteId>10000,p.name+' needs its own sprite');assert.ok(api[p.name],p.name+' needs its API name');
@@ -58,4 +60,11 @@ test('the server catalogue gives each form its own measurements and sprite',()=>
  const mega=by('Méga-Florizarre'),base=by('Florizarre');
  assert.equal(mega.height,2.4);assert.equal(mega.weight,155.5);assert.notEqual(mega.height,base.height);assert.match(mega.sprite,/\/10033\.png$/);
  assert.equal(by('Smogogo de Galar').height,3);assert.equal(by('Ogerpon Masque du Puits').type2,'Eau');assert.match(by('Méga-Raichu X').sprite,/\/10304\.png$/);
+});
+
+test('every form carries its own sprite and the number shown is its species number',()=>{
+ for(const p of extra){assert.ok(p.spriteId!==undefined&&String(p.spriteId)!==String(p.baseId),p.name+' would show its species sprite');}
+ const context=vm.createContext({});vm.runInContext(extract(client,'getPokemonDexNumber'),context);
+ assert.equal(context.getPokemonDexNumber({id:20075,baseId:26,isAltForm:true,spriteId:10304}),26);
+ assert.equal(context.getPokemonDexNumber({id:26,spriteId:26}),26);
 });

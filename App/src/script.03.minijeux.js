@@ -2019,7 +2019,9 @@ function updateMysteryPanel(reveal) {
 }
 
 function getPokemonCryId(pokemon) {
-  return getPokemonSpriteId(pokemon);
+  // Form cries exist for numbered PokeAPI forms; form-only sprites use the species' cry.
+  const id = getPokemonSpriteId(pokemon);
+  return Number.isInteger(id) ? id : getPokemonDexNumber(pokemon);
 }
 
 function getPokemonCryUrl(pokemon) {
@@ -2206,12 +2208,12 @@ function buildQuizQuestionPool() {
   const allGens = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   for (const p of sampled.slice(0, 40)) {
-    const correct = String(getPokemonSpriteId(p));
+    const correct = String(getPokemonDexNumber(p));
     const distractors = [
-      String(Math.max(1, getPokemonSpriteId(p) - 1)),
-      String(Math.min(1025, getPokemonSpriteId(p) + 1)),
-      String(Math.max(1, getPokemonSpriteId(p) + 10)),
-      String(Math.max(1, getPokemonSpriteId(p) - 10)),
+      String(Math.max(1, getPokemonDexNumber(p) - 1)),
+      String(Math.min(1025, getPokemonDexNumber(p) + 1)),
+      String(Math.max(1, getPokemonDexNumber(p) + 10)),
+      String(Math.max(1, getPokemonDexNumber(p) - 10)),
     ];
     const options = randomUniqueChoices([...new Set(distractors)], correct);
     pool.push({

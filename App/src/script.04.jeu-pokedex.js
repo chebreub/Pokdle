@@ -5562,15 +5562,15 @@ function getFilteredPokedexList() {
       return true;
     })
     .sort((a, b) => {
-      if (pokedexSortFilter === "weight") return (Number(b.weight) || 0) - (Number(a.weight) || 0) || getPokemonSpriteId(a) - getPokemonSpriteId(b);
-      if (pokedexSortFilter === "height") return (Number(b.height) || 0) - (Number(a.height) || 0) || getPokemonSpriteId(a) - getPokemonSpriteId(b);
+      if (pokedexSortFilter === "weight") return (Number(b.weight) || 0) - (Number(a.weight) || 0) || getPokemonDexNumber(a) - getPokemonDexNumber(b);
+      if (pokedexSortFilter === "height") return (Number(b.height) || 0) - (Number(a.height) || 0) || getPokemonDexNumber(a) - getPokemonDexNumber(b);
       if (pokedexSortFilter === "name-asc") {
-        return a.name.localeCompare(b.name, "fr") || getPokemonSpriteId(a) - getPokemonSpriteId(b);
+        return a.name.localeCompare(b.name, "fr") || getPokemonDexNumber(a) - getPokemonDexNumber(b);
       }
       if (pokedexSortFilter === "name-desc") {
-        return b.name.localeCompare(a.name, "fr") || getPokemonSpriteId(a) - getPokemonSpriteId(b);
+        return b.name.localeCompare(a.name, "fr") || getPokemonDexNumber(a) - getPokemonDexNumber(b);
       }
-      return getPokemonSpriteId(a) - getPokemonSpriteId(b) || a.name.localeCompare(b.name, "fr");
+      return getPokemonDexNumber(a) - getPokemonDexNumber(b) || Number(a.id) - Number(b.id) || a.name.localeCompare(b.name, "fr");
     });
 }
 
@@ -5649,12 +5649,12 @@ function createPokedexCard(p) {
   card.className = "pokedex-card" + (p.id === pokedexSelectedId ? " selected" : "");
   card.dataset.pokemonId = String(p.id);
 
-  const dexId = getPokemonSpriteId(p);
+  const dexId = getPokemonSpriteId(p), dexNumber = getPokemonDexNumber(p);
   const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
 
   card.innerHTML = `
     <img src="${sprite}" alt="${p.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
-    <span class="pokedex-num">#${dexId}</span>
+    <span class="pokedex-num">#${dexNumber}</span>
     <strong>${p.name}</strong>
     <div class="pokedex-card-types">${typeBadgesHtml(p.type1, p.type2 || null)}</div>
   `;
@@ -5829,7 +5829,7 @@ function renderPokedexCompareBlock(reference, current, referenceStats, currentSt
       <div class="pokedex-compare-top">
         <div class="pokedex-compare-side">
           <strong>${escapeHtml(reference.name)}</strong>
-          <small>#${getPokemonSpriteId(reference)} • ${typeBadgesHtml(reference.type1, reference.type2)}</small>
+          <small>#${getPokemonDexNumber(reference)} • ${typeBadgesHtml(reference.type1, reference.type2)}</small>
         </div>
         <div class="pokedex-compare-score">
           <span>Total</span>
@@ -5839,7 +5839,7 @@ function renderPokedexCompareBlock(reference, current, referenceStats, currentSt
         </div>
         <div class="pokedex-compare-side">
           <strong>${escapeHtml(current.name)}</strong>
-          <small>#${getPokemonSpriteId(current)} • ${typeBadgesHtml(current.type1, current.type2)}</small>
+          <small>#${getPokemonDexNumber(current)} • ${typeBadgesHtml(current.type1, current.type2)}</small>
         </div>
       </div>
       <div class="pokedex-compare-grid">${statsRows}</div>
@@ -5922,7 +5922,7 @@ async function renderPokedexDetail(pokemon) {
   }
   loadPokedexCompareId();
   const currentRequest = ++pokedexDetailRequestId;
-  const dexId = getPokemonSpriteId(pokemon);
+  const dexId = getPokemonSpriteId(pokemon), dexNumber = getPokemonDexNumber(pokemon);
   const navigation = getPokedexNavigationState();
   const recentHtml = renderPokedexRecentBlock();
   const navigationHtml = `
@@ -5951,7 +5951,7 @@ async function renderPokedexDetail(pokemon) {
       <div class="pokedex-detail-sticky">
         <div class="pokedex-detail-summary">
           <h3>${pokemon.name}</h3>
-          <p>#${dexId}${pokemon.isAltForm ? " · Forme alternative" : ""}</p>
+          <p>#${dexNumber}${pokemon.isAltForm ? " · Forme alternative" : ""}</p>
           <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
         </div>
       </div>
@@ -6021,7 +6021,7 @@ async function renderPokedexDetail(pokemon) {
       <div class="pokedex-detail-sticky">
         <div class="pokedex-detail-summary">
           <h3>${pokemon.name}</h3>
-          <p>#${dexId}${pokemon.isAltForm ? " · Forme alternative" : ""}</p>
+          <p>#${dexNumber}${pokemon.isAltForm ? " · Forme alternative" : ""}</p>
           <div class="pokedex-type-row">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div>
         </div>
       </div>
