@@ -439,7 +439,7 @@ function restoreSavedGame(preferredMode = null) {
 
   rebuildActiveSearchIndex();
 
-  document.getElementById("try-count").textContent = String(attempts);
+  setGameCounter(attempts);
   document.getElementById("err-msg").textContent = "";
   document.getElementById("guess-input").value = "";
   document.getElementById("guess-ac").classList.add("hidden");
@@ -2223,7 +2223,11 @@ function getHelpContentForGameMode(mode) {
           </section>
           <section class="app-help-card">
             <h4>Indices après chaque essai</h4>
-            <p>Génération, types, habitat, couleur, stade, taille, poids — chaque colonne te dit si c'est correct, proche ou différent. Les flèches ▲/▼ pointent vers la vraie valeur.</p>
+            <p>Génération, forme, types, habitat, couleur, stade, taille, poids — chaque colonne te dit si c'est correct (✓), proche (≈) ou différent (×). Les flèches ▲/▼ pointent vers la vraie valeur.</p>
+          </section>
+          <section class="app-help-card">
+            <h4>Formes alternatives incluses</h4>
+            <p>Le Pokémon mystère peut être une forme régionale ou Méga des générations choisies : la colonne <b>Forme</b> te dit s'il s'agit d'une forme alternative.</p>
           </section>
         `,
       };
@@ -2275,7 +2279,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Devine via les stats</h4>
-            <p>Chaque essai te dévoile une <b>statistique de base</b> du Pokémon mystère (PV, Attaque, Défense, Atk Spé, Déf Spé, Vitesse). Compare avec ton essai pour resserrer le filet.</p>
+            <p>Les types et les <b>six statistiques de base</b> du Pokémon mystère (PV, Attaque, Défense, Attaque Spé., Défense Spé., Vitesse) et leur total s’affichent dès le départ. Propose les Pokémon qui y correspondent.</p>
           </section>
           <section class="app-help-card">
             <h4>Indices classiques en plus</h4>
@@ -2793,7 +2797,7 @@ function renderWeightBattlePanel() {
   document.getElementById("results-wrap")?.classList.add("hidden");
   document.getElementById("btn-surrender")?.classList.add("hidden");
   document.getElementById("win-box")?.classList.add("hidden");
-  document.getElementById("try-count").textContent = String(weightBattleState.revealed ? 1 : 0);
+  setGameCounter(Number(playerProfile?.weightBattleStreak) || 0, "Série");
   const status = document.getElementById("weight-status");
   const grid = document.getElementById("weight-grid");
   document.getElementById("weight-restart")?.classList.toggle("hidden", !weightBattleState.revealed || isPartySessionActive());

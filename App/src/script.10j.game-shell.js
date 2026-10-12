@@ -9,7 +9,7 @@ const GAME_SHELL_MODES = {
   cry: { title: "Le cri mystère", instruction: "Écoute, reconnais, propose. Tu peux rejouer le cri à volonté.", kicker: "TENDS L’OREILLE" },
   mystery: { title: "Stat Mystère", instruction: "Observe les statistiques et croise-les avec les indices.", kicker: "DERRIÈRE LES CHIFFRES" },
   description: { title: "Description Pokédex", instruction: "Lis l’extrait du Pokédex pour retrouver son propriétaire.", kicker: "LE PORTRAIT MYSTÈRE" },
-  quiz: { title: "Quiz Pokémon", instruction: "Choisis une réponse et découvre l’explication.", kicker: "À TOI DE JOUER", custom: true },
+  quiz: { title: "Quiz Pokémon", instruction: "Choisis une réponse : la bonne s’affiche aussitôt.", kicker: "À TOI DE JOUER", custom: true },
   weight: { title: "Duel de poids", instruction: "Quel Pokémon est le plus lourd ? Choisis ta réponse.", kicker: "FAIS PENCHER LA BALANCE", custom: true },
   evolution: { title: "Chaîne d’évolution", instruction: "Retrouve le Pokémon manquant dans la lignée.", kicker: "LE CHAÎNON MANQUANT", custom: true },
   order: { title: "Ordre Pokédex", instruction: "Retrouve l’entrée qui complète cette suite.", kicker: "UNE PLACE À RETROUVER", custom: true },

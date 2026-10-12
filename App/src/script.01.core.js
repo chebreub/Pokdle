@@ -112,6 +112,14 @@ function ensureDailyQuests() {
   return picked;
 }
 
+// The game header counter says what it counts: guesses, right answers or the current streak.
+function setGameCounter(value, label = "Essais") {
+  const count = document.getElementById("try-count");
+  if (count) count.textContent = String(value);
+  const name = document.getElementById("try-label");
+  if (name) name.textContent = label;
+}
+
 function awardXp(amount, source = "") {
   if (!playerProfile || !Number.isFinite(amount) || amount <= 0) return;
   const prevTier = getXpTier(playerProfile.xp || 0);

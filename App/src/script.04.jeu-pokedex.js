@@ -32,7 +32,7 @@ function applyDailyObservedState(data,{awardFreshWin=false,animateLatest=false}=
   gameOver=false;resultHistory=rows;guessedNames=rows.map(r=>r.pokemon.name);guessedSet=new Set(guessedNames);
   if(!keepRows)tbody.innerHTML='';
   for(let i=firstNewRow;i<rows.length;i++)addRow(rows[i].pokemon,rows[i].cmp,rows[i],{animate:animateLatest&&i===rows.length-1,renderShell:false});
-  document.getElementById('try-count').textContent=String(attempts);
+  setGameCounter(attempts);
   document.getElementById('results-wrap').classList.toggle('hidden',attempts===0);
   guessCache.clear();
   if(data.authenticated){
@@ -102,7 +102,7 @@ async function submitGuess() {
   if (gameMode === "daily") { clearErr(); return requestDailyObservedState(found, raw); }
   if (guessedSet.has(found.name)) { showErr(`Tu as déjà proposé ${found.name} !`); return; }
   clearErr();
-  attempts += 1; document.getElementById("try-count").textContent = String(attempts);
+  attempts += 1; setGameCounter(attempts);
   guessedNames.push(found.name); guessedSet.add(found.name);
   const cmp = compare(found, secretPokemon); resultHistory.push({ pokemon: found, cmp }); addRow(found, cmp);
   document.getElementById("results-wrap").classList.remove("hidden");
