@@ -10,8 +10,23 @@ const WEEKLY_LEAGUE_TEMPLATES = Object.freeze([
   { id:"weight", label:"Mesure", mode:"weight", icon:"◆", description:"Compare les poids et enchaîne les bons choix.", objective:"Gagner 5 Duels de poids", action:"startWeightBattle" }
 ]);
 
+// The League week follows Paris time, like every other game of the day: it starts
+// on Monday at 00:00 in Paris, not at 00:00 UTC (22:00 or 23:00 on Sunday in Paris).
+function weeklyLeagueParisDate(date=new Date()) {
+  const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date).map(x=>[x.type,x.value]));
+  return new Date(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day)));
+}
+// Instant of 00:00 in Paris on the calendar day held (at 00:00 UTC) by day.
+function weeklyLeagueParisMidnight(day) {
+  const nominal=day.getTime();let instant=nominal;
+  for(let i=0;i<3;i++){
+    const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date(instant)).map(x=>[x.type,x.value]));
+    instant=nominal-(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),Number(p.hour),Number(p.minute),Number(p.second))-instant);
+  }
+  return new Date(instant);
+}
 function weeklyLeagueIsoWeek(date=new Date()) {
-  const d=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()));
+  const d=weeklyLeagueParisDate(date);
   const day=d.getUTCDay()||7;
   d.setUTCDate(d.getUTCDate()+4-day);
   const yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1));
@@ -19,14 +34,16 @@ function weeklyLeagueIsoWeek(date=new Date()) {
   return { year:d.getUTCFullYear(), week, id:d.getUTCFullYear()+"-W"+String(week).padStart(2,"0") };
 }
 function weeklyLeagueStart(date=new Date()) {
-  const d=new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()));
+  const d=weeklyLeagueParisDate(date);
   const day=d.getUTCDay()||7;
   d.setUTCDate(d.getUTCDate()-(day-1));
-  d.setUTCHours(0,0,0,0);
-  return d;
+  return weeklyLeagueParisMidnight(d);
 }
 function weeklyLeagueEnd(date=new Date()) {
-  return new Date(weeklyLeagueStart(date).getTime()+7*86400000);
+  const d=weeklyLeagueParisDate(date);
+  const day=d.getUTCDay()||7;
+  d.setUTCDate(d.getUTCDate()-(day-1)+7);
+  return weeklyLeagueParisMidnight(d);
 }
 function weeklyLeagueSeed(info=weeklyLeagueIsoWeek()) {
   return info.year*53+info.week;

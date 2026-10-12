@@ -1435,7 +1435,7 @@ function loadProfile() {
   // Tracking login quotidien pour streak
   const today = getDailyQuestKey();
   if (playerProfile.lastDailyLogin !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const yesterday = prevUTCDateKey(today);
     if (playerProfile.lastDailyLogin === yesterday) {
       playerProfile.dailyLoginStreak = (playerProfile.dailyLoginStreak || 0) + 1;
     } else {
@@ -1453,7 +1453,6 @@ function loadProfile() {
 
 function saveProfile() {
   writeJson(STORAGE_KEYS.profile, playerProfile);
-  try { if (typeof queueLeaderboardSubmit === "function") queueLeaderboardSubmit(); } catch (e) {}
 }
 
 function loadAchievementsState() {

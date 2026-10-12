@@ -90,8 +90,9 @@ function getXpProgress(xp = 0) {
   return { tier: cur, next, percent: Math.min(100, Math.round((xpInTier / xpToNext) * 100)), xpInTier, xpToNext };
 }
 
+// Quests and the login streak change at midnight in Paris, like the day's games.
 function getDailyQuestKey() {
-  return new Date().toISOString().slice(0, 10);
+  return getDailyDateKey();
 }
 
 function ensureDailyQuests() {
