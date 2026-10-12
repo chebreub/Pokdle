@@ -510,3 +510,13 @@
 #pokdle-app.design-refresh.theme-dark #home-game-filters button[aria-pressed="true"] { background:#F4EEF8; color:#1E2233; }
 #pokdle-app.design-refresh #home-game-filters { scrollbar-width:none; }
 #pokdle-app.design-refresh #home-game-filters::-webkit-scrollbar { display:none; }
+
+/* Draft : un seul écran, le mode Normal ou PRO se choisit ici. */
+#pokdle-app.design-refresh .dpa-mode-switch { display:inline-flex; gap:6px; margin:0 0 12px; padding:4px; border-radius:999px; background:#fbefe0; }
+#pokdle-app.design-refresh .dpa-mode-switch button { min-height:40px; padding:6px 16px; border:0; border-radius:999px; background:transparent; color:#2e2a33; font:800 14px Nunito,sans-serif; cursor:pointer; }
+#pokdle-app.design-refresh .dpa-mode-switch button small { font-weight:700; color:#776b63; }
+#pokdle-app.design-refresh .dpa-mode-switch button.is-active { background:#2e2a33; color:#fff; box-shadow:0 3px 0 #000; }
+#pokdle-app.design-refresh .dpa-mode-switch button.is-active small { color:#ffd45c; }
+#pokdle-app.design-refresh.theme-dark .dpa-mode-switch { background:rgba(255,255,255,.08); }
+#pokdle-app.design-refresh.theme-dark .dpa-mode-switch button { color:#f4eef8; }
+#pokdle-app.design-refresh.theme-dark .dpa-mode-switch button.is-active { background:#f4eef8; color:#1e2233; }

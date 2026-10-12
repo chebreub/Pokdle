@@ -27,7 +27,7 @@ test('search ignores accents, matches unordered words and recovers from no resul
  const {context,rows,elements}=fixture();context.setModeCatalogCategory('all');elements['mode-search'].value='PRO draft';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,2);
  elements['mode-search'].value='emulateur';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='zzzznoresult';context.renderModeCatalog();assert.equal(elements['mode-empty'].hidden,false);
- context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,34);
+ context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,33);
  assert.ok(rows.find(card=>card.markup.includes('openDraftArenaMode')).hidden,'unfinished Draft Arènes is not advertised');
 });
 test('search matches the start of words so short queries stay precise',()=>{
@@ -51,7 +51,7 @@ test('changing category clears stale searches and saves it for Back',()=>{
 test('difficulty filter narrows playable modes and never hides Explore tools',()=>{
  const {context,rows,elements}=fixture();
  context.setModeCatalogCategory('all');context.setModeCatalogDifficulty('expert');
- const expert=rows.filter(card=>!card.hidden);assert.equal(expert.length,2);assert.ok(expert.every(card=>card.textContent.includes('PRO')));
+ const expert=rows.filter(card=>!card.hidden);assert.equal(expert.length,1,'solo PRO lives inside the single Draft entry');assert.ok(expert.every(card=>card.textContent.includes('PRO')));
  context.setModeCatalogCategory('explore');assert.equal(elements['mode-difficulty-field'].hidden,true);assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='explore'));
  context.setModeCatalogCategory('solo');context.setModeCatalogDifficulty('easy');assert.equal(elements['mode-difficulty-field'].hidden,false);assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.difficulty==='easy'));
 });

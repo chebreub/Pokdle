@@ -79,7 +79,7 @@ def main():
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
       page.locator('#home-game-filters button').filter(has_text='Stratégie').click()
       strategy=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
-      expect(len(strategy)==2 and all('openDraftScoreAttackMode' in args for args in strategy),'Strategy filter includes unrelated modes: '+repr(strategy))
+      expect(len(strategy)==1 and all('openDraftScoreAttackMode' in args for args in strategy),'Strategy filter includes unrelated modes: '+repr(strategy))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
@@ -212,7 +212,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==19,'Solo catalogue should list 19 games: '+str(tiles.count()))
+     expect(tiles.count()==18,'Solo catalogue should list 18 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
@@ -891,7 +891,11 @@ def main():
     check('quiz',lambda:start('startQuizGame','screen-game'))
     def draft_pro():
      nav('game','screen-all-modes')
-     page.locator('button[data-action="openFromAllModes"][data-args=\'["openDraftScoreAttackMode", true]\']:visible').first.click()
+     # One Draft entry in the catalogue; PRO is chosen inside the Draft screen.
+     page.locator('#screen-all-modes button[data-action="openFromAllModes"][data-args=\'["openDraftScoreAttackMode"]\']:visible').first.click()
+     screen('screen-draft-score-attack')
+     page.locator('#dpa-mode-pro').click()
+     expect(page.evaluate('draftArenaState.scoreAttackPro === true'),'The PRO switch inside Draft does not enable PRO')
      return screen('screen-draft-score-attack')
     check('draft-pro',draft_pro)
     def gameplay_family_smoke():

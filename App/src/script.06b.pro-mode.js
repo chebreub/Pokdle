@@ -18,6 +18,12 @@ const PRO_GYM_LEADERS = {
   2: [["Albert","Vol","img/trainers/albert.png"], ["Hector","Insecte","img/trainers/hector.png"], ["Blanche","Normal","img/trainers/blanche.png"], ["Mortimer","Spectre","img/trainers/mortimer.png"], ["Chuck","Combat","img/trainers/chuck.png"], ["Jasmine","Acier","img/trainers/jasmine.png"], ["Frédo","Glace","img/trainers/fredo.png"], ["Sandra","Dragon","img/trainers/sandra.png"]],
   3: [["Roxanne","Roche","img/trainers/roxanne.png"], ["Bastien","Combat","img/trainers/bastien.png"], ["Voltère","Électrik","img/trainers/voltere.png"], ["Adriane","Feu","img/trainers/adriane.png"], ["Norman","Normal","img/trainers/norman.png"], ["Alizée","Vol","img/trainers/alizee.png"], ["Lévy & Tatia","Psy","img/trainers/levy_tatia.png"], ["Juan","Eau","img/trainers/juan.png"]],
   4: [["Pierrick","Roche","img/trainers/pierrick.png"], ["Flo","Plante","img/trainers/flo.png"], ["Mélina","Combat","img/trainers/melina.png"], ["Lovis","Eau","img/trainers/lovis.png"], ["Kiméra","Spectre","img/trainers/kimera.png"], ["Charles","Acier","img/trainers/charles.png"], ["Gladys","Glace","img/trainers/gladys.png"], ["Tanguy","Électrik","img/trainers/tanguy.png"]],
+  // Générations 5 à 9 : sans portrait (vignette au type). Alola n'a pas d'arènes : ses Doyens en tiennent lieu.
+  5: [["Rachid","Plante",""], ["Aloé","Normal",""], ["Artie","Insecte",""], ["Inezia","Électrik",""], ["Bardane","Sol",""], ["Carolina","Vol",""], ["Zhu","Glace",""], ["Watson","Dragon",""]],
+  6: [["Violette","Insecte",""], ["Lino","Roche",""], ["Cornélia","Combat",""], ["Amaro","Plante",""], ["Lem","Électrik",""], ["Valériane","Fée",""], ["Astera","Psy",""], ["Urup","Glace",""]],
+  7: [["Pectorius","Combat",""], ["Alyxia","Roche",""], ["Danh","Ténèbres",""]],
+  8: [["Percy","Plante",""], ["Donna","Eau",""], ["Kabu","Feu",""], ["Faïza","Combat",""], ["Sally","Fée",""], ["Chaz","Roche",""], ["Peterson","Ténèbres",""], ["Roy","Dragon",""]],
+  9: [["Colza","Plante",""], ["Mashynn","Électrik",""], ["Kombu","Eau",""], ["Okuba","Normal",""], ["Laïm","Spectre",""], ["Tully","Psy",""], ["Grusha","Glace",""]],
 };
 
 // --- Maîtres de Ligue (type + ace) — gen 1-6, fiables ---
@@ -28,6 +34,9 @@ const PRO_LEAGUE_MASTERS = {
   4: { name: "Cynthia",        type: "Dragon",  aceId: 445, aceName: "Carchacrok" },
   5: { name: "Goyah",          type: "Insecte", aceId: 637, aceName: "Pyrax" },
   6: { name: "Dianthéa",       type: "Fée",     aceId: 282, aceName: "Gardevoir" },
+  7: { name: "Euphorbe",       type: "Roche",   aceId: 745, aceName: "Lougaroc" },
+  8: { name: "Tarak",          type: "Feu",     aceId: 6,   aceName: "Dracaufeu" },
+  9: { name: "Alisma",         type: "Roche",   aceId: 970, aceName: "Floréclat" },
 };
 
 // --- Conseil 4 (nom + type) — gen 1-5, vérifiés Poképédia (palier intermédiaire) ---
@@ -38,6 +47,8 @@ const PRO_CONSEIL_4 = {
   4: [["Aaron","Insecte","img/trainers/c4_4_aaron.png"], ["Terry","Sol","img/trainers/c4_4_terry.png"], ["Adrien","Feu","img/trainers/c4_4_adrien.png"], ["Lucio","Psy","img/trainers/c4_4_lucio.png"]],
   5: [["Anis","Spectre","img/trainers/c4_5_anis.png"], ["Pieris","Ténèbres","img/trainers/c4_5_pieris.png"], ["Percila","Psy","img/trainers/c4_5_percila.png"], ["Kunz","Combat","img/trainers/c4_5_kunz.png"]],
   6: [["Malva","Feu",""], ["Narcisse","Eau",""], ["Thyméo","Acier",""], ["Dracéna","Dragon",""]],
+  7: [["Pectorius","Combat",""], ["Alyxia","Roche",""], ["Margie","Spectre",""], ["Kahili","Vol",""]],
+  9: [["Cayenn","Sol",""], ["Popi","Acier",""], ["Okuba","Vol",""], ["Hassa","Dragon",""]],
 };
 
 // Couleurs de types (vignette dresseur)
@@ -370,7 +381,8 @@ function runDraftProFinale() {
         status: "Score PRO " + result.total + (isNewRecord ? " 🏆 NOUVEAU RECORD !" : ""),
         mvpName: (mvp && mvp.pokemon && mvp.pokemon.name) || "-",
         balanceLabel: "Base " + result.base + " · Bonus +" + result.bonusTotal,
-        offenseLabel: mods.weather.emoji + " " + mods.weather.label + " · " + (mods.trainer.tier === "maitre" ? "👑 " : "🎽 ") + mods.trainer.name,
+        // Without a trainer this used to throw, leaving generations 7 to 9 stuck on the reveal.
+        offenseLabel: mods.weather.emoji + " " + mods.weather.label + " · " + (mods.trainer ? (mods.trainer.tier === "maitre" ? "👑 " : "🎽 ") + mods.trainer.name : "Pas de dresseur"),
       };
       draftArenaState.message = isNewRecord
         ? ("🏆 NOUVEAU RECORD PRO Gen " + gen + " : " + result.total + " !")

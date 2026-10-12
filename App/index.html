@@ -333,7 +333,7 @@
             <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-trophy"/></svg>Stratégie</h3>
             <div class="all-modes-grid">
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftArenaMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trophy"/></svg></div><b>Draft Arènes</b><span class="all-modes-badge">Expérimental</span><small>Compose ton équipe. Combats en préparation.</small></button>
-              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft Score Attack</b><span class="all-modes-badge">Score</span><small>Drafte six Pokémon pour maximiser ton score.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft</b><span class="all-modes-badge">Score</span><small>Six choix pour une équipe de rêve, en mode normal ou PRO.</small></button>
               <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTeamBuilderScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-layers"/></svg></div><b>Team Builder</b><small>Prépare une équipe, ses attaques et ses statistiques.</small></button>
               <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTypeChartScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Table des types</b><small>Vérifie les forces et les faiblesses de chaque type.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode", true]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft Score Attack PRO</b><small>Le draft avancé pour viser un nouveau record.</small></button>
@@ -908,6 +908,10 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div id="draft-run-bar" class="draft-run-bar arena-only"></div>
 
         <section class="draft-panel draft-panel-gen">
+          <div class="dpa-mode-switch scoreattack-only" role="group" aria-label="Mode de jeu">
+            <button type="button" id="dpa-mode-normal" data-action="setScoreAttackProMode" data-args="[false]">Normal</button>
+            <button type="button" id="dpa-mode-pro" data-action="setScoreAttackProMode" data-args="[true]">🔥 PRO <small>météo, dresseur, synergies</small></button>
+          </div>
           <h3>1) Sélection de génération</h3>
           <div id="draft-gen-buttons" class="draft-gen-buttons"></div>
         </section>

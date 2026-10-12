@@ -3102,6 +3102,8 @@ function renderDraftArena() {
     const isScoreMode = draftArenaState.mode === "scoreAttack";
     scoreAttackToggle.textContent = isScoreMode ? "🏟️ Mode Arènes" : "🎯 Score Attack";
     scoreAttackToggle.classList.toggle("is-active-mode", isScoreMode);
+    // Draft Arènes stays off public paths while its battles are disabled.
+    scoreAttackToggle.classList.toggle("hidden", isScoreMode);
   }
   screen.classList.toggle("is-mode-score-attack", draftArenaState.mode === "scoreAttack");
   screen.classList.toggle("is-drafting", draftArenaState.mode === "scoreAttack" && draftArenaState.phase !== "gen");

@@ -240,7 +240,9 @@ function modeCatalogDecorateDifficulty(card) {
   card.dataset.difficultyLabel=MODE_CATALOG_DIFFICULTY_LABELS[level] || level;
 }
 function modeCatalogIsUnlisted(card) {
-  return MODE_CATALOG_UNLISTED.includes(modeCatalogActionKey(card));
+  // The Draft screen already switches Normal / PRO: the catalogue keeps a single Draft entry.
+  const key = modeCatalogActionKey(card);
+  return MODE_CATALOG_UNLISTED.includes(key) || (key === 'openDraftScoreAttackMode' && modeCatalogIsPro(card));
 }
 function modeCatalogIsPro(card) {
   try { return JSON.parse(card.dataset.args || '[]')[1] === true; } catch (_e) { return false; }
