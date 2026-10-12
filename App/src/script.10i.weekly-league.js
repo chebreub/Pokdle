@@ -231,7 +231,7 @@ function openWeeklyLeagueRanking() {
       const rows=Array.isArray(data?.top)?data.top:[];
       const me=data?.me;
       ensureOverlay("Ligue · Classement",'<div class="weekly-ranking">'+
-        '<header><div><span>SEMAINE '+String(info.week).padStart(2,"0")+'</span><h3>Classement de Ligue</h3><p>Score cumulé des trois disciplines · maximum 600 pts.</p></div>'+(me?'<div class="weekly-ranking-me"><span>TA POSITION</span><strong>#'+Number(me.rank)+'</strong><small>'+Number(me.score)+' pts</small></div>':'')+'</header>'+
+        '<div class="weekly-ranking-head"><div><span>SEMAINE '+String(info.week).padStart(2,"0")+'</span><h3>Classement de Ligue</h3><p>Score cumulé des trois disciplines · maximum 600 pts.</p></div>'+(me?'<div class="weekly-ranking-me"><span>TA POSITION</span><strong>#'+Number(me.rank)+'</strong><small>'+Number(me.score)+' pts</small></div>':'')+'</div>'+
         (rows.length?'<div class="weekly-ranking-list">'+rows.map(weeklyLeagueRankRow).join("")+'</div>':'<div class="weekly-ranking-empty">Aucune performance enregistrée pour le moment.</div>')+
         '<button type="button" class="btn-ghost" data-action="openWeeklyLeague">← Retour à l’épreuve</button>'+
       '</div>');

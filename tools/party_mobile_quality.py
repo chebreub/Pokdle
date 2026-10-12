@@ -68,8 +68,10 @@ try:
                     stage='answer'
                     answer=host.evaluate('''() => {
                       const ts=partyRoomState.room.round.types;
-                      return POKEMON_LIST.find(p=>!p.isAltForm&&partyRoomState.room.selectedGens.includes(p.gen)&&
-                        [p.type1,p.type2||p.type1].sort().join('|')===[...ts].sort().join('|'))?.name;
+                      // Some type pairs exist only on an alternate form, which Type Combo accepts.
+                      const fits=POKEMON_LIST.filter(p=>p.guessable!==false&&partyRoomState.room.selectedGens.includes(p.gen)&&
+                        [p.type1,p.type2||p.type1].sort().join('|')===[...ts].sort().join('|'));
+                      return (fits.find(p=>!p.isAltForm)||fits[0])?.name;
                     }''')
                     assert answer,'No valid synthetic answer'
                     host.locator('#party-guess').fill(answer)

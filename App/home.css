@@ -1332,7 +1332,7 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
   display:grid;
   gap:11px;
 }
-.weekly-ranking > header {
+.weekly-ranking-head {
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
   gap:14px;
@@ -1342,17 +1342,17 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
   border-radius:15px;
   background:#f8f6ff;
 }
-.weekly-ranking header span {
+.weekly-ranking-head span {
   color:#7256b3;
   font-size:.57rem;
   font-weight:1000;
   letter-spacing:.1em;
 }
-.weekly-ranking header h3 {
+.weekly-ranking-head h3 {
   margin:2px 0;
   color:#29456d;
 }
-.weekly-ranking header p {
+.weekly-ranking-head p {
   margin:0;
   color:#78869d;
   font-size:.72rem;
@@ -1418,7 +1418,7 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
 body.theme-dark .weekly-league-home,
 body.theme-dark .weekly-league-modal-head,
 body.theme-dark .weekly-league-discipline,
-body.theme-dark .weekly-ranking > header,
+body.theme-dark .weekly-ranking-head,
 body.theme-dark .weekly-rank-row,
 body.theme-dark .weekly-ranking-empty,
 body.theme-dark .weekly-ranking-loading {
@@ -1428,14 +1428,14 @@ body.theme-dark .weekly-ranking-loading {
 body.theme-dark .weekly-league-home-copy h3,
 body.theme-dark .weekly-league-modal-head h3,
 body.theme-dark .weekly-league-discipline-copy h4,
-body.theme-dark .weekly-ranking header h3,
+body.theme-dark .weekly-ranking-head h3,
 body.theme-dark .weekly-rank-row b {
   color:#eef5ff;
 }
 body.theme-dark .weekly-league-home-copy p,
 body.theme-dark .weekly-league-modal-head p,
 body.theme-dark .weekly-league-discipline-copy p,
-body.theme-dark .weekly-ranking header p,
+body.theme-dark .weekly-ranking-head p,
 body.theme-dark .weekly-ranking-empty,
 body.theme-dark .weekly-ranking-loading {
   color:#aebfda;
@@ -1510,7 +1510,7 @@ body.theme-dark .weekly-ranking-loading {
   .weekly-league-footer small {
     text-align:left;
   }
-  .weekly-ranking > header {
+  .weekly-ranking-head {
     grid-template-columns:1fr;
   }
   .weekly-ranking-me {
