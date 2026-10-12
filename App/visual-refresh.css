@@ -5264,6 +5264,23 @@
 #pokdle-app.design-refresh .lbv3-other > summary { cursor:pointer; min-height:44px; display:flex; align-items:center; gap:8px; width:fit-content; font-weight:800; color:var(--ui-ink); }
 #pokdle-app.design-refresh .lbv3-other > summary small { color:var(--ui-muted); font-weight:600; }
 #pokdle-app.design-refresh .lbv3-other[open] > .lbv3-mode-grid { margin-top:8px; }
+#pokdle-app.design-refresh .lbv3-other-empty { margin:8px 0 0; color:var(--ui-muted); font-size:.85rem; }
+#pokdle-app.design-refresh .lbv2-avatar.is-partner, #pokdle-app.design-refresh .lbv2-avatar.is-default { object-fit:contain; image-rendering:pixelated; background:var(--ui-soft); border:1px solid var(--ui-line); }
+#pokdle-app.design-refresh .lbv2-avatar.is-default { padding:6px; image-rendering:auto; }
+#pokdle-app.design-refresh .leaderboard-prize { background:linear-gradient(135deg,#FFF6D6,#FFE9F1); border-color:#F2D58A !important; }
+#pokdle-app.design-refresh .leaderboard-prize h4 { font:500 20px Fredoka,sans-serif; margin:4px 0; color:#5D4821; }
+#pokdle-app.design-refresh .leaderboard-prize p { margin:0 0 10px; color:#6E5A3A; font-size:.85rem; }
+#pokdle-app.design-refresh .leaderboard-week-top { display:grid; gap:6px; }
+#pokdle-app.design-refresh .leaderboard-week-top small { color:#6E5A3A; font-weight:700; }
+#pokdle-app.design-refresh .leaderboard-week-row { display:grid; grid-template-columns:22px 32px minmax(0,1fr) auto; align-items:center; gap:8px; padding:6px 8px; border-radius:12px; background:rgba(255,255,255,.7); }
+#pokdle-app.design-refresh .leaderboard-week-row .lbv2-avatar { width:32px; height:32px; }
+#pokdle-app.design-refresh .leaderboard-week-row b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#2E2A33; }
+#pokdle-app.design-refresh .leaderboard-week-row strong { color:#5D4821; font-size:.85rem; }
+#pokdle-app.design-refresh .leaderboard-week-row.is-me { outline:2px solid var(--ui-accent); }
+#pokdle-app.design-refresh.theme-dark .leaderboard-prize { background:linear-gradient(135deg,#3b3326,#3b2a33); border-color:#6b5a35 !important; }
+#pokdle-app.design-refresh.theme-dark :is(.leaderboard-prize h4,.leaderboard-prize p,.leaderboard-week-top small,.leaderboard-week-row strong) { color:#f5e7c4; }
+#pokdle-app.design-refresh.theme-dark .leaderboard-week-row { background:rgba(255,255,255,.06); }
+#pokdle-app.design-refresh.theme-dark .leaderboard-week-row b { color:#fff8ef; }
 #pokdle-app.design-refresh :is(.lbv2-row,.lbv3-podium-card,.lbv3-personal) .lbv2-detail { display:block; margin-top:2px; font:600 12px Nunito,sans-serif; color:var(--ui-muted); }
 #pokdle-app.design-refresh.theme-dark .lbv3-mode-tab.is-day.is-active { color:#1f1830; }
 #pokdle-app.design-refresh .lbv3-podium { grid-column:1 / -1; display:flex; flex-wrap:wrap; justify-content:center; align-items:stretch; gap:14px; }

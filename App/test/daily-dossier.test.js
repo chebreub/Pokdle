@@ -26,7 +26,7 @@ test('PostgreSQL: sequential private questions, scoring, bonus, recovery, migrat
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:6});
     await db.query(`CREATE TABLE daily_rounds(day DATE PRIMARY KEY,secret_id INTEGER);
       CREATE TABLE wordle_plays(identity TEXT,day DATE,status TEXT);
-      CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT);
+      CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT);
       CREATE TABLE leaderboard_events(id BIGSERIAL PRIMARY KEY,discord_id TEXT,mode TEXT,score INTEGER,created_at TIMESTAMPTZ,result_key TEXT);
       CREATE UNIQUE INDEX event_key ON leaderboard_events(discord_id,mode,result_key) WHERE result_key IS NOT NULL;
       CREATE TABLE scores(discord_id TEXT,mode TEXT,score INTEGER,username TEXT,avatar TEXT,updated_at TIMESTAMPTZ,PRIMARY KEY(discord_id,mode));

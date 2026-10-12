@@ -95,14 +95,14 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
         ROW_NUMBER() OVER(PARTITION BY p.account_id ORDER BY p.points DESC,p.elapsed_ms ASC,p.finished_at ASC) AS attempt_rank
       FROM dossier_plays p WHERE p.status='completed' AND p.account_id IS NOT NULL ${predicate}
     ), ranked AS (
-      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,c.score,
+      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,u.partner_id,c.score,
         (RANK() OVER(ORDER BY c.score DESC,c.elapsed_ms ASC))::int AS rank
       FROM candidates c LEFT JOIN users u ON u.discord_id=c.discord_id WHERE c.attempt_rank=1)`;
     const rows=(await db.query(cte+' SELECT * FROM ranked ORDER BY rank,username LIMIT 20',[day])).rows;
     const total=Number((await db.query(cte+' SELECT COUNT(*)::int AS total FROM ranked',[day])).rows[0].total);
     const mine=accountId?(await db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,accountId])).rows[0]:null;
     const around=mine?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,mine.rank-2),mine.rank+2])).rows:[];
-    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,score:Number(r.score),me:r.discord_id===accountId});
+    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,score:Number(r.score),me:r.discord_id===accountId});
     return {ok:true,mode:'dossier',scope,authenticated:Boolean(accountId),direction:'desc',label:'Dossier du jour',unit:'pts',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score)}:null,around:around.map(map)};
   }
   return {state:who=>act(who),answer:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),leaderboard};

@@ -1,5 +1,5 @@
 const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
-const { profileForClient, profileForStorage } = require("./lib/profile-sync");
+const { profileForClient, profileForStorage, partnerIdFromProfileData } = require("./lib/profile-sync");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -146,6 +146,13 @@ async function initAuthDb() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       last_login TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
+    await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_id INTEGER");
+    // Profiles saved before partner_id existed: copy their partner once.
+    const missing = await pgPool.query("SELECT discord_id, data FROM users WHERE partner_id IS NULL AND data ? 'profile'");
+    for (const row of missing.rows) {
+      const partner = partnerIdFromProfileData(row.data);
+      if (partner) await pgPool.query("UPDATE users SET partner_id = $2 WHERE discord_id = $1", [row.discord_id, partner]);
+    }
     await pgPool.query(`CREATE TABLE IF NOT EXISTS scores (
       discord_id TEXT NOT NULL,
       mode TEXT NOT NULL,
@@ -295,7 +302,7 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
     return res.status(prepared.error === "profile_owner_mismatch" ? 409 : 400).json({ ok: false, error: prepared.error });
   }
   try {
-    await pgPool.query("UPDATE users SET data = $2 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data)]);
+    await pgPool.query("UPDATE users SET data = $2, partner_id = $3 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data)]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
@@ -400,6 +407,27 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
   }
 });
 
+// Players ranked per arcade board for a period, so empty boards can be hidden.
+const LB_ARCADE_MODES = ["quiz", "speedrun", "higherlower", "higherlower60", "intrus", "poids", "party", "typecombo", "draft_all"];
+app.get("/api/leaderboard/counts", async (req, res) => {
+  if (!authReady()) return res.json({ ok: false, counts: {} });
+  const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
+  try {
+    await authDbReady;
+    const sql = scope === "all"
+      ? "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY mode"
+      : "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE mode = ANY($1) AND " +
+        (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')" : "e.created_at >= now() - interval '7 days'") +
+        " GROUP BY mode";
+    const rows = (await pgPool.query(sql, [LB_ARCADE_MODES])).rows;
+    const counts = Object.fromEntries(LB_ARCADE_MODES.map((mode) => [mode === "draft_all" ? "draft" : mode, 0]));
+    for (const row of rows) counts[row.mode === "draft_all" ? "draft" : row.mode] = Number(row.n) || 0;
+    res.json({ ok: true, scope, counts });
+  } catch (e) {
+    console.error("[leaderboard] counts:", e.message);
+    res.json({ ok: false, counts: {} });
+  }
+});
 app.get("/api/leaderboard", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, top: [], me: null, around: [], total: 0 });
   const requestedMode = String(req.query.mode || "quiz");
@@ -413,15 +441,17 @@ app.get("/api/leaderboard", async (req, res) => {
   const user = getSessionUser(req);
   const meId = user ? user.id : null;
   try {
+    await authDbReady;
     if(playModes.includes(mode)) return res.json(await challengeService.leaderboard(mode,scope,meId));
     if(mode === "dossier") return res.json(await dossierService.leaderboard(scope,meId));
     let rankedCte;
     if (scope === "all") {
       rankedCte = `
         WITH ranked AS (
-          SELECT s.discord_id, s.username, s.avatar, s.score,
+          SELECT s.discord_id, s.username, s.avatar, u.partner_id, s.score,
             (RANK() OVER (ORDER BY s.score ${order}, s.updated_at ASC))::int AS rank
           FROM scores s
+          LEFT JOIN users u ON u.discord_id = s.discord_id
           WHERE s.mode = $1
         )`;
     } else {
@@ -436,7 +466,7 @@ app.get("/api/leaderboard", async (req, res) => {
           GROUP BY e.discord_id
         ),
         ranked AS (
-          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, COALESCE(u.avatar, '') AS avatar, b.score,
+          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, COALESCE(u.avatar, '') AS avatar, u.partner_id, b.score,
             (RANK() OVER (ORDER BY b.score ${order}))::int AS rank
           FROM best b
           LEFT JOIN users u ON u.discord_id = b.discord_id
@@ -444,7 +474,7 @@ app.get("/api/leaderboard", async (req, res) => {
     }
 
     const top = await pgPool.query(
-      rankedCte + " SELECT discord_id, username, avatar, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
+      rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
       [mode]
     );
     const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", [mode]);
@@ -452,7 +482,7 @@ app.get("/api/leaderboard", async (req, res) => {
     let aroundRows = [];
     if (meId) {
       const mine = await pgPool.query(
-        rankedCte + " SELECT discord_id, username, avatar, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
+        rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
         [mode, meId]
       );
       if (mine.rows[0]) {
@@ -461,7 +491,7 @@ app.get("/api/leaderboard", async (req, res) => {
         const low = Math.max(1, Number(row.rank) - 2);
         const high = Number(row.rank) + 2;
         const around = await pgPool.query(
-          rankedCte + " SELECT discord_id, username, avatar, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
+          rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
           [mode, low, high]
         );
         aroundRows = around.rows;
@@ -471,6 +501,7 @@ app.get("/api/leaderboard", async (req, res) => {
       rank: Number(row.rank),
       username: row.username,
       avatar: row.avatar,
+      partnerId: row.partner_id ? Number(row.partner_id) : null,
       score: Number(row.score),
       me: meId != null && row.discord_id === meId
     });

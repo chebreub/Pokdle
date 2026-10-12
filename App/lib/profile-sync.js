@@ -16,4 +16,16 @@ function profileForStorage(value, userId) {
   return { ok: true, data: profileForClient(value, userId) };
 }
 
-module.exports = { profileForClient, profileForStorage };
+// The partner Pokémon chosen in the profile; rankings show it as the player's avatar.
+function partnerIdFromProfileData(data) {
+  try {
+    const raw = data && data.profile;
+    const profile = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const id = Number(profile && profile.favoritePokemonId);
+    return Number.isInteger(id) && id > 0 && id < 30000 ? id : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+module.exports = { profileForClient, profileForStorage, partnerIdFromProfileData };
