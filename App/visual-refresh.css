@@ -5382,3 +5382,27 @@
   #pokdle-app.design-refresh .leaderboard-page { padding:14px; border-radius:22px; }
   #pokdle-app.design-refresh .leaderboard-page-bar { margin-bottom:12px; }
 }
+
+/* News ticker: real facts of the day, scrolling slowly under the header. */
+#pokdle-app.design-refresh .news-ticker { position:relative; box-sizing:border-box; width:100%; max-width:100%; min-width:0; contain:inline-size; overflow:hidden; border-bottom:1px solid var(--ui-line); background:linear-gradient(90deg,#FFF6D6,#EFE8FF 50%,#E1F4E9); }
+#pokdle-app.design-refresh .news-ticker[hidden] { display:none; }
+#pokdle-app.design-refresh .news-ticker-track { display:flex; width:max-content; animation:news-ticker-scroll var(--ticker-duration,36s) linear infinite; }
+#pokdle-app.design-refresh .news-ticker:hover .news-ticker-track, #pokdle-app.design-refresh .news-ticker:focus-within .news-ticker-track { animation-play-state:paused; }
+#pokdle-app.design-refresh .news-ticker-group { display:flex; flex-shrink:0; }
+#pokdle-app.design-refresh .news-ticker-item { display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 28px; border:0; background:none; color:#3d3550; font:700 13px Nunito,sans-serif; white-space:nowrap; cursor:pointer; }
+#pokdle-app.design-refresh .news-ticker-item span { color:#7a5cc0; }
+#pokdle-app.design-refresh .news-ticker-item:hover { color:var(--ui-accent); text-decoration:underline; }
+#pokdle-app.design-refresh .news-ticker-item:focus-visible { outline:2px solid var(--ui-accent); outline-offset:-4px; border-radius:8px; }
+@keyframes news-ticker-scroll { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+#pokdle-app.design-refresh.theme-dark .news-ticker { background:linear-gradient(90deg,#3b3326,#2f2a44 50%,#203a30); }
+#pokdle-app.design-refresh.theme-dark .news-ticker-item { color:#f0eaf9; }
+#pokdle-app.design-refresh.theme-dark .news-ticker-item span { color:#d9ccff; }
+/* Without motion the facts stay put and can be scrolled by hand. */
+@media (prefers-reduced-motion: reduce) {
+  #pokdle-app.design-refresh .news-ticker { overflow-x:auto; }
+  #pokdle-app.design-refresh .news-ticker-track { animation:none; }
+  #pokdle-app.design-refresh .news-ticker-group[aria-hidden="true"] { display:none; }
+}
+#pokdle-app.design-refresh.reduce-motion .news-ticker { overflow-x:auto; }
+#pokdle-app.design-refresh.reduce-motion .news-ticker-track { animation:none; }
+#pokdle-app.design-refresh.reduce-motion .news-ticker-group[aria-hidden="true"] { display:none; }
