@@ -2241,27 +2241,17 @@ function partyForfeitDeduction() {
   });
 }
 
-function partyDeductionGuessHtml(entry) {
-  var feedback = entry.feedback || {};
-  var fields = [
-    ["generation", "Génération", "Gen " + entry.gen],
-    ["altForm", "Forme alternative", entry.isAltForm ? "Oui" : "Non"],
-    ["type1", "Type 1", entry.type1 || "Aucun"],
-    ["type2", "Type 2", entry.type2 || "Aucun"],
-    ["habitat", "Habitat", entry.habitat || "Inconnu"],
-    ["color", "Couleur", entry.color || "Inconnue"],
-    ["stage", "Stade", entry.stage ?? "—"],
-    ["height", "Taille", entry.height + " m " + (entry.heightArrow || "")],
-    ["weight", "Poids", entry.weight + " kg " + (entry.weightArrow || "")]
-  ];
-  return '<article class="party-deduction-guess"><header>' +
-    (entry.sprite ? '<img src="' + escapeHtml(entry.sprite) + '" alt="" loading="lazy" />' : '') +
-    '<b>' + escapeHtml(entry.name) + '</b></header><div class="party-deduction-clues">' +
-    fields.map(function (field) {
-      var kind = ["ok", "close"].includes(feedback[field[0]]) ? feedback[field[0]] : "wrong";
-      var state = kind === "ok" ? "Exact" : kind === "close" ? "Partiel" : "Différent";
-      return '<div class="party-clue is-' + kind + '"><small>' + field[1] + '</small><b>' + escapeHtml(String(field[2])) + '</b><span>' + (kind === "ok" ? "✓ " : kind === "close" ? "≈ " : "× ") + state + '</span></div>';
-    }).join("") + '</div></article>';
+// Same row as the Pokémon du jour: the guess, then its nine clues with ✓ ≈ ×.
+var PARTY_GUESS_HEAD = ["Pokémon", "Génération", "Forme", "Type 1", "Type 2", "Habitat", "Couleur", "Stade", "Taille", "Poids"];
+function partyDeductionGuessHtml(entry, index) {
+  var pokemon = Object.assign({}, entry, { spriteId: entry.spriteId || entry.id });
+  var directions = { heightDirection: entry.heightArrow || "", weightDirection: entry.weightArrow || "" };
+  var row = buildComparisonRowHtml(pokemon, entry.feedback || {}, null, directions)
+    .replace(/<details class="guess-locations">[\s\S]*?<\/details>/, "")
+    .replace('data-label="Habitat / lieux"', 'data-label="Habitat"')
+    .replace('data-label="Hauteur"', 'data-label="Taille"')
+    .replace("</div>", '<small class="guess-number">Essai ' + ((Number(index) || 0) + 1) + "</small></div>");
+  return '<tr class="guess-result-row">' + row + "</tr>";
 }
 
 function renderPartyDeduction(room, me, enabled, playing) {
@@ -2278,7 +2268,9 @@ function renderPartyDeduction(room, me, enabled, playing) {
   }
   var history = me?.guessHistory || [];
   document.getElementById("party-deduction-history").innerHTML = history.length
-    ? history.map(partyDeductionGuessHtml).join("")
+    ? '<div class="party-guess-wrap"><table class="multiplayer-results-table party-guess-table"><thead><tr>' +
+      PARTY_GUESS_HEAD.map(function (label) { return "<th>" + label + "</th>"; }).join("") +
+      "</tr></thead><tbody>" + history.map(partyDeductionGuessHtml).join("") + "</tbody></table></div>"
     : '<p class="party-deduction-muted">Propose un Pokémon pour découvrir tes premiers indices.</p>';
   document.getElementById("party-deduction-status").textContent = playing
     ? me?.gaveUp ? "Tu as abandonné cette manche. La réponse sera révélée à la fin ; tu rejoueras à la suivante." : "Formes alternatives incluses · Tes propositions et tes indices restent privés."

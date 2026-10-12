@@ -282,23 +282,12 @@
 #pokdle-app #screen-party-room .party-deduction-meter { height: 8px; border-radius: 20px; background: var(--ui-line); overflow: hidden; }
 #pokdle-app #screen-party-room .party-deduction-meter > span { display: block; height: 100%; background: var(--party-accent); border-radius: inherit; }
 #pokdle-app #screen-party-room .party-deduction-history { display: grid; gap: 12px; }
-#pokdle-app #screen-party-room .party-deduction-guess { border-radius: 16px; border: 1px solid var(--ui-line); background: var(--ui-surface); padding: 12px; min-width: 0; }
-#pokdle-app #screen-party-room .party-deduction-guess header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: var(--ui-ink); }
-#pokdle-app #screen-party-room .party-deduction-guess header b { overflow-wrap: anywhere; }
-#pokdle-app #screen-party-room .party-deduction-guess img { width: 48px; height: 48px; object-fit: contain; image-rendering: pixelated; }
-#pokdle-app #screen-party-room .party-deduction-clues { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
-#pokdle-app #screen-party-room .party-clue { padding: 8px; min-width: 0; border: 1px solid var(--ui-line); border-radius: 9px; background: var(--ui-surface); }
-#pokdle-app #screen-party-room .party-clue.is-ok { background: rgba(34,197,94,.14); border-color: #259b59; }
-#pokdle-app #screen-party-room .party-clue.is-close { background: rgba(234,179,8,.15); border-color: #ac8310; }
-#pokdle-app #screen-party-room .party-clue small, #pokdle-app #screen-party-room .party-clue span { display: block; color: var(--ui-muted); font-size: .65rem; }
-#pokdle-app #screen-party-room .party-clue b { display: block; color: var(--ui-ink); font-size: .8rem; overflow-wrap: anywhere; padding: 4px 0; }
 #pokdle-app #screen-party-room .party-deduction-forfeit { width: 100%; text-align: left; color: var(--ui-muted); }
 #pokdle-app #screen-party-room .party-deduction-forfeit summary { cursor: pointer; min-height: 44px; align-content: center; font-size: .85rem; }
 #pokdle-app #screen-party-room .party-deduction-forfeit button { margin-top: 10px; min-height: 44px; }
 @media (max-width: 560px) {
   #pokdle-app #screen-party-room .party-deduction-rivals { grid-template-columns: minmax(0,1fr); }
   #pokdle-app #screen-party-room .party-deduction-rivals-panel { padding: 12px; }
-  #pokdle-app #screen-party-room .party-deduction-guess { padding: 8px; }
 }
 
 
@@ -560,4 +549,31 @@
   #pokdle-app #screen-party-room .party-action-buttons #party-change-game-btn:not(.hidden) ~ #party-room-next-btn:not(.hidden) {
     min-width: 0;
   }
+}
+
+/* Deduction guesses: the same rows and colours as the Pokémon du jour. */
+#pokdle-app.design-refresh #screen-party-room .party-guess-wrap { width: 100%; min-width: 0; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table { width: 100% !important; min-width: 0 !important; table-layout: fixed; border-collapse: separate !important; border-spacing: 5px 8px !important; background: transparent !important; box-shadow: none !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table thead th { background: transparent !important; border: 0 !important; color: var(--ui-muted) !important; font: 800 12px Nunito, sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; padding: 8px 2px !important; white-space: normal !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table thead th:first-child { width: 125px; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table tbody tr { animation: none; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table td { font-size: 13px !important; padding: 12px 4px !important; min-width: 0 !important; border: 0 !important; border-radius: 14px !important; box-shadow: none !important; overflow-wrap: anywhere; text-align: center; font-weight: 800; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table td:first-child { background: var(--ui-surface) !important; border: 1px solid var(--ui-line) !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .poke-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ui-ink) !important; font: 800 13px Nunito, sans-serif !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .poke-cell img { width: 44px !important; height: 44px !important; padding: 0 !important; object-fit: contain !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .guess-number { color: var(--ui-muted); font-size: 11px; font-weight: 700; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .c-ok { background: #7ED3A0 !important; color: #0E3F25 !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .c-close { background: repeating-linear-gradient(135deg, #FFD66B, #FFD66B 6px, #ffdf87 6px, #ffdf87 10px) !important; color: #5C3D00 !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .c-wrong { background: #CFC7BD !important; color: #2E2A33 !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table .comparison-type { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px !important; }
+#pokdle-app.design-refresh #screen-party-room .party-guess-table :is(.arrow-up, .arrow-down) { color: inherit !important; }
+/* During a round the actions sit above the clues instead of below a long list. */
+#pokdle-app.design-refresh #screen-party-room #party-joined:is([data-party-phase="live"], [data-party-phase="result"], [data-party-phase="complete"]) .party-action-dock { order: -1; }
+#pokdle-app.design-refresh #screen-party-room #party-action-dock #party-reveal-btn { background: transparent !important; border-color: var(--ui-line) !important; color: var(--ui-ink) !important; font-size: .8rem !important; }
+@media (max-width: 640px) {
+  #pokdle-app.design-refresh #screen-party-room .party-guess-table tbody tr { border: 1px solid var(--ui-line) !important; border-radius: 22px !important; background: var(--ui-surface) !important; padding: 12px !important; gap: 7px !important; }
+  #pokdle-app.design-refresh #screen-party-room .party-guess-table td { display: flex !important; flex-direction: column; justify-content: center; align-items: center; gap: 5px; min-height: 84px; padding: 10px 5px !important; font-size: 14px !important; }
+  #pokdle-app.design-refresh #screen-party-room .party-guess-table td:first-child { grid-column: 1 / -1; min-height: 50px; background: none !important; border: 0 !important; }
+  #pokdle-app.design-refresh #screen-party-room .party-guess-table .poke-cell { flex-direction: row !important; gap: 10px; font-size: 16px !important; width: 100%; }
+  #pokdle-app.design-refresh #screen-party-room .party-guess-table .guess-number { margin-left: auto; }
 }

@@ -802,6 +802,30 @@ def main():
      page.evaluate('() => { partyRoomState.room=null; renderPartyRoom(); }')
      return screen('screen-party-room')
     check('d4-party-polish',d4_party_polish)
+    def party_deduction_grid():
+     # Deduction guesses use the Pokémon du jour rows, and the round actions stay above them.
+     page.evaluate("""() => {
+       const make = (name, fb) => { const p = POKEMON_LIST.find(x => x.name === name); return { id: p.id, spriteId: p.spriteId, name: p.name, sprite: p.sprite, gen: p.gen, isAltForm: p.isAltForm, type1: p.type1, type2: p.type2, habitat: p.habitat, color: p.color, stage: p.stage, height: p.height, weight: p.weight, heightArrow: '↑', weightArrow: '↓', feedback: fb }; };
+       const history = [make('Tauros', {generation: 'wrong', altForm: 'ok', type1: 'ok'}), make('Méga-Raichu X', {color: 'close', stage: 'ok'})];
+       partyRoomState.room = { code: 'QA124', status: 'playing', gameMode: 'deduction', roundNumber: 4, totalRounds: 20, minPlayers: 2, maxPlayers: 8, selectedGens: [1,2,3,4,5,6,7,8,9],
+         round: { mode: 'deduction', roundSerial: 4, endsAt: Date.now() + 120000, startedAt: Date.now() },
+         players: [ { id: 'qa-host', nickname: 'QA Host', score: 0, isSelf: true, isHost: true, connected: true, attempts: 2, guessHistory: history },
+                    { id: 'qa-guest', nickname: 'QA Guest', score: 0, isSelf: false, isHost: false, connected: true, attempts: 1 } ] };
+       renderPartyRoom();
+     }""")
+     try:
+      rows=page.locator('#party-deduction-history .party-guess-table tbody tr')
+      expect(rows.count()==2,'Deduction guesses are not table rows: '+str(rows.count()))
+      expect(rows.first.locator('td').count()==10 and rows.first.locator('.c-ok').count()>=2,'Deduction row does not show the nine clues')
+      name=rows.first.locator('.poke-cell')
+      expect('Tauros' in name.inner_text() and name.is_visible(),'Deduction guess name is hidden')
+      dock=page.locator('#party-action-dock').bounding_box();clues=page.locator('#party-deduction').bounding_box()
+      expect(dock and clues and dock['y']<clues['y'],'Party round actions are still below the clues')
+      expect(page.locator('#party-action-dock #party-reveal-btn').is_visible(),'Host reveal action is not in the action dock')
+      return screen('screen-party-room')
+     finally:
+      page.evaluate('partyRoomState.room=null;renderPartyRoom()')
+    check('party-deduction-grid',party_deduction_grid)
     check('pixel',lambda:start('startPixelGame','screen-game'))
     def d2_pixel_shell():
      start('startPixelGame','screen-game');box=page.locator('#pixel-box');expect(box.is_visible(),'Pixel shell missing');expect(page.locator('#pixel-box .visual-clue-canvas').is_visible(),'Pixel visual canvas missing');expect(page.locator('#pixel-level').inner_text().startswith('Netteté '),'Pixel progress label missing');return screen('screen-game')
