@@ -538,7 +538,7 @@ def main():
        });
        await openLeaderboardV2('daily','all');
      }""")
-     page.locator('#overlay-body .lbv3-podium').wait_for(state='visible')
+     page.locator('#leaderboard-page-body .lbv3-podium').wait_for(state='visible')
      expect(page.locator('#pokedex-registration-layer:not(.hidden)').count()==0,'Registration ceremony hides the ranking')
      colors=page.locator('.lbv3-header').evaluate('(e)=>({bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color})')
      import re
@@ -547,7 +547,7 @@ def main():
       return sum(a*b for a,b in zip([v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in rgb],[.2126,.7152,.0722]))
      a,b=luminance(colors['fg']),luminance(colors['bg'])
      expect((max(a,b)+.05)/(min(a,b)+.05)>=4.5,'Ranking header text is unreadable: '+repr(colors))
-     overlay=page.locator('.overlay-card:has(.lbv3-shell)').bounding_box()
+     overlay=page.locator('#screen-leaderboard .leaderboard-page').bounding_box()
      expect(overlay and overlay['width']<=width and (width<1280 or overlay['width']>1100),'Leaderboard does not fit its viewport: '+repr(overlay))
      shell=page.locator('.lbv3-shell')
      cols=shell.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
@@ -569,12 +569,13 @@ def main():
          top:[{rank:1,username:'Red',score:3},{rank:2,username:'QA',score:5,me:true}],around:[]});
        await openLeaderboardV2('daily','today');
      }""")
-     page.locator('#overlay-body .lbv3-invite').wait_for(state='visible')
-     expect(page.locator('#overlay-body .lbv3-podium').count()==0,'Small audience still shows an almost empty podium')
-     expect(page.locator('#overlay-body .lbv3-list .lbv2-row').count()==2,'Small audience list does not show every ranked player')
-     expect('encore 1 place' in page.locator('#overlay-body .lbv3-invite').inner_text(),'Small audience invite does not count the free podium places')
+     page.locator('#leaderboard-page-body .lbv3-invite').wait_for(state='visible')
+     expect(page.locator('#leaderboard-page-body .lbv3-podium').count()==0,'Small audience still shows an almost empty podium')
+     expect(page.locator('#leaderboard-page-body .lbv3-list .lbv2-row').count()==2,'Small audience list does not show every ranked player')
+     expect('encore 1 place' in page.locator('#leaderboard-page-body .lbv3-invite').inner_text(),'Small audience invite does not count the free podium places')
+     expect(page.evaluate('location.hash')=='#classement','Leaderboard page has no address of its own')
      page.locator('#gamefeel-layer.is-visible').wait_for(state='hidden')
-     return screen('screen-game')
+     return screen('screen-leaderboard')
     check('cosy-leaderboard',cosy_leaderboard)
     # Always close the fixture, including after a failed visual assertion.
     # Otherwise one open modal causes unrelated journeys to time out in sequence.
@@ -956,16 +957,16 @@ def main():
      page.go_back();screen('screen-all-modes');expect(page.locator('#mode-search').input_value()=='cri','Back lost catalog search')
     check('browser-back',back_history)
     def ranking_error():
-     nav('home','screen-config');page.route('**/api/leaderboard?*',lambda r:r.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':False,'top':[],'me':None,'total':0})));page.evaluate('openLeaderboardV2("daily","today")');page.wait_for_timeout(800);text=page.locator('#overlay-body').inner_text();expect('indisponible' in text.lower(),'Failure rendered as an empty ranking: '+text[:180]);page.evaluate('closeOverlayModal()');page.unroute('**/api/leaderboard?*')
+     nav('home','screen-config');page.route('**/api/leaderboard?*',lambda r:r.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':False,'top':[],'me':None,'total':0})));page.evaluate('openLeaderboardV2("daily","today")');page.wait_for_timeout(800);text=page.locator('#leaderboard-page-body').inner_text();expect('indisponible' in text.lower(),'Failure rendered as an empty ranking: '+text[:180]);page.evaluate('goToConfig()');page.unroute('**/api/leaderboard?*')
     check('ranking-error',ranking_error)
     def late():
      page.unroute('**/api/leaderboard?*');pending=[]
      page.route('**/api/leaderboard?*',lambda r:pending.append(r))
      page.evaluate('void openLeaderboardV2("daily","today")');page.wait_for_timeout(200)
      expect(bool(pending),'No request was started')
-     page.evaluate('closeOverlayModal()')
+     page.evaluate('goToConfig()')
      for route in pending:route.fulfill(status=200,content_type='application/json',body=json.dumps({'ok':True,'top':[],'me':None,'total':0}))
-     page.wait_for_timeout(150);expect(not page.locator('#overlay-modal').is_visible(),'Late response reopened closed dialog')
+     page.wait_for_timeout(150);expect(not page.locator('#screen-leaderboard').is_visible() and not page.locator('#overlay-modal').is_visible(),'Late response reopened the leaderboard')
      page.unroute('**/api/leaderboard?*')
     check('ranking-closed',late)
     def dark():

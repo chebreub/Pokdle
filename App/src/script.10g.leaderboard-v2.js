@@ -131,7 +131,23 @@ function syncPendingDailyLeaderboard() {
 }
 
 let leaderboardViewRequest = 0;
+// The leaderboard is a page (#classement); the overlay only serves pages without it.
+function leaderboardV2Surface() {
+  const page = document.getElementById("screen-leaderboard"), body = document.getElementById("leaderboard-page-body");
+  return page && body ? { page, body } : null;
+}
+function leaderboardV2Show(html) {
+  const surface = leaderboardV2Surface();
+  if (!surface) return ensureOverlay("Classements", html);
+  const overlay = document.getElementById("overlay-modal");
+  if (overlay && !overlay.classList.contains("hidden") && typeof closeOverlayModal === "function") closeOverlayModal();
+  if (surface.page.classList.contains("hidden")) { showScreen("screen-leaderboard"); window.scrollTo(0, 0); }
+  if (typeof setGlobalNavActive === "function") setGlobalNavActive("leaderboard");
+  surface.body.innerHTML = html;
+}
 function leaderboardOwnsDialog(id) {
+  const surface = leaderboardV2Surface();
+  if (surface) return id === leaderboardViewRequest && !surface.page.classList.contains("hidden") && Boolean(surface.body.querySelector('[data-lb-request="'+id+'"]'));
   const overlay = document.getElementById("overlay-modal");
   return id === leaderboardViewRequest && Boolean(overlay && !overlay.classList.contains("hidden") &&
     document.querySelector('#overlay-body [data-lb-request="'+id+'"]'));
@@ -220,7 +236,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
   const requestId=++leaderboardViewRequest;
 
   const loading='<div class="lbv3-shell" data-lb-request="'+requestId+'"><div class="lbv3-loading"><span></span><p>Synchronisation du classement…</p></div></div>';
-  ensureOverlay("Classements",loading);
+  leaderboardV2Show(loading);
 
   const syncTasks=[];
   if (["enquete","journey"].includes(current)) syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
@@ -311,7 +327,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
       : '';
 
     const total=Number(data?.total)||0;
-    const body='<div class="lbv3-shell">'+
+    const body='<div class="lbv3-shell" data-lb-request="'+requestId+'">'+
       '<header class="lbv3-header">'+
         '<div class="lbv3-title"><span>À CHACUN SON RECORD</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+' · Meilleure performance par joueur.</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
@@ -327,12 +343,12 @@ function openLeaderboardV2(mode="journey",scope="today") {
       emptyHtml+'</div>'+(typeof leaderboardLeagueAside === "function" ? leaderboardLeagueAside(data,current,requestedScope) : '')+'</div>'+
     '</div>';
 
-    ensureOverlay("Classements",body);
+    leaderboardV2Show(body);
     if (typeof fillLeaderboardWeekTop === "function") fillLeaderboardWeekTop(()=>requestId===leaderboardViewRequest);
   }).catch(()=>{
     if (!leaderboardOwnsDialog(requestId)) return;
     const args=escapeHtml(JSON.stringify([current,requestedScope]));
-    ensureOverlay("Classements",'<div class="lbv3-shell"><section class="lbv3-empty" role="status"><div class="lbv3-empty-icon">!</div><h4>Classement indisponible</h4><p>Le serveur n’a pas confirmé le classement. Aucun résultat n’est effacé.</p><button type="button" class="btn-blue" data-action="openLeaderboardV2" data-args="'+args+'">Réessayer</button></section></div>');
+    leaderboardV2Show('<div class="lbv3-shell" data-lb-request="'+requestId+'"><section class="lbv3-empty" role="status"><div class="lbv3-empty-icon">!</div><h4>Classement indisponible</h4><p>Le serveur n’a pas confirmé le classement. Aucun résultat n’est effacé.</p><button type="button" class="btn-blue" data-action="openLeaderboardV2" data-args="'+args+'">Réessayer</button></section></div>');
   });
 }
 let leaderboardPreviewRequest = 0;
