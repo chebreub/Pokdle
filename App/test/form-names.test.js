@@ -68,3 +68,18 @@ test('every form carries its own sprite and the number shown is its species numb
  assert.equal(context.getPokemonDexNumber({id:20075,baseId:26,isAltForm:true,spriteId:10304}),26);
  assert.equal(context.getPokemonDexNumber({id:26,spriteId:26}),26);
 });
+
+test('look-alike forms stay in the Pokédex but never enter a guessing game',()=>{
+ const hidden=extra.filter(p=>p.guessable===false).map(p=>p.name).sort();
+ assert.equal(JSON.stringify(hidden),JSON.stringify(['Amphinobi Ash','Deoxys Attaque','Deoxys Défense','Deoxys Vitesse','Genesect Module Aqua','Genesect Module Chaleur','Genesect Module Choc','Genesect Module Froid']));
+ const context=vm.createContext({fs,path,vm,__dirname:root});
+ vm.runInContext(['loadPokemonList','loadStatClashExtraFormsConfig','injectStatClashExtraForms','buildSpriteUrl','isDuelPokemonAllowed'].map(n=>extract(server,n)).join('\n'),context);
+ const list=context.loadPokemonList(),room={selectedGens:[3,5,6],players:[]};
+ assert.equal(context.isDuelPokemonAllowed(room,list.find(p=>p.name==='Deoxys Attaque')),false);
+ assert.equal(context.isDuelPokemonAllowed(room,list.find(p=>p.name==='Méga-Amphinobi')),true);
+ const {startDeductionRound}=require('../lib/party-deduction');let i=0;
+ for(let n=0;n<600;n++){startDeductionRound(room,list,()=>(i++%600)/600);assert.notEqual(room.target.guessable,false,room.target.name);}
+ const ui=vm.createContext({getPokemonCatalog:()=>list});vm.runInContext(extract(core,'getPokemonUiList'),ui);
+ const pool=ui.getPokemonUiList({gens:[3,5,6]});
+ assert.ok(pool.some(p=>p.name==='Deoxys')&&!pool.some(p=>p.guessable===false),'solo pools skip look-alikes');
+});

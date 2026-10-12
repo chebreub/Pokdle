@@ -509,6 +509,8 @@ const BOT_DUEL_TURN_DELAY_MS = 2200;
 // Keep overrides limited to data that still contains corrupted accents.
 const SPRITE_ID_OVERRIDES_BY_NAME = {};
 // Extra playable forms (regional, mega, special).
+// guessable: false keeps a form in the Pokédex but out of guessing games, where it would
+// match another form of its species on every clue (Deoxys forms, Ash-Greninja, Genesect drives).
 // We keep base species sprites by default to avoid broken links.
 const EXTRA_FORMS = [
   { id: 20001, name: "Méga-Florizarre", baseId: 3, gen: 6, type1: "Plante", type2: "Poison", height: 2.4, weight: 155.5, spriteId: 10033 },
@@ -650,9 +652,9 @@ const EXTRA_FORMS = [
   { id: 25003, name: "Fulguris Forme Totémique", baseId: 642, gen: 5, type1: "Électrik", type2: "Vol", height: 3, weight: 61, spriteId: 10020 },
   { id: 25004, name: "Boréas Forme Totémique", baseId: 641, gen: 5, type1: "Vol", type2: null, height: 1.4, weight: 63, spriteId: 10019 },
   { id: 25005, name: "Démétéros Forme Totémique", baseId: 645, gen: 5, type1: "Sol", type2: "Vol", height: 1.3, weight: 68, spriteId: 10021 },
-  { id: 25006, name: "Deoxys Attaque", baseId: 386, gen: 3, type1: "Psy", type2: null, height: 1.7, weight: 60.8, spriteId: 10001 },
-  { id: 25007, name: "Deoxys Défense", baseId: 386, gen: 3, type1: "Psy", type2: null, height: 1.7, weight: 60.8, spriteId: 10002 },
-  { id: 25008, name: "Deoxys Vitesse", baseId: 386, gen: 3, type1: "Psy", type2: null, height: 1.7, weight: 60.8, spriteId: 10003 },
+  { id: 25006, name: "Deoxys Attaque", baseId: 386, gen: 3, type1: "Psy", type2: null, height: 1.7, weight: 60.8, spriteId: 10001, guessable: false },
+  { id: 25007, name: "Deoxys Défense", baseId: 386, gen: 3, type1: "Psy", type2: null, height: 1.7, weight: 60.8, spriteId: 10002, guessable: false },
+  { id: 25008, name: "Deoxys Vitesse", baseId: 386, gen: 3, type1: "Psy", type2: null, height: 1.7, weight: 60.8, spriteId: 10003, guessable: false },
   { id: 25009, name: "Motisma Chaleur", baseId: 479, gen: 4, type1: "Électrik", type2: "Feu", height: 0.3, weight: 0.3, spriteId: 10008 },
   { id: 25010, name: "Motisma Lavage", baseId: 479, gen: 4, type1: "Électrik", type2: "Eau", height: 0.3, weight: 0.3, spriteId: 10009 },
   { id: 25011, name: "Motisma Froid", baseId: 479, gen: 4, type1: "Électrik", type2: "Glace", height: 0.3, weight: 0.3, spriteId: 10010 },
@@ -677,12 +679,12 @@ const EXTRA_FORMS = [
   { id: 25029, name: "Palkia Originel", baseId: 484, gen: 4, type1: "Eau", type2: "Dragon", height: 6.3, weight: 659, spriteId: 10246 },
   { id: 25030, name: "Zygarde 10%", baseId: 718, gen: 6, type1: "Dragon", type2: "Sol", height: 1.2, weight: 33.5, spriteId: 10181 },
   { id: 25031, name: "Zygarde Complet", baseId: 718, gen: 6, type1: "Dragon", type2: "Sol", height: 4.5, weight: 610, spriteId: 10120 },
-  { id: 25032, name: "Genesect Module Aqua", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-douse" },
-  { id: 25033, name: "Genesect Module Chaleur", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-burn" },
-  { id: 25034, name: "Genesect Module Choc", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-shock" },
-  { id: 25035, name: "Genesect Module Froid", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-chill" },
+  { id: 25032, name: "Genesect Module Aqua", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-douse", guessable: false },
+  { id: 25033, name: "Genesect Module Chaleur", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-burn", guessable: false },
+  { id: 25034, name: "Genesect Module Choc", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-shock", guessable: false },
+  { id: 25035, name: "Genesect Module Froid", baseId: 649, gen: 5, type1: "Insecte", type2: "Acier", spriteId: "649-chill", guessable: false },
   { id: 25036, name: "Floette Fleur Éternelle", baseId: 670, gen: 6, type1: "Fée", type2: null, height: 0.2, weight: 0.9, spriteId: 10061 },
-  { id: 25037, name: "Amphinobi Ash", baseId: 658, gen: 6, type1: "Eau", type2: "Ténèbres", height: 1.5, weight: 40, spriteId: 10117 },
+  { id: 25037, name: "Amphinobi Ash", baseId: 658, gen: 6, type1: "Eau", type2: "Ténèbres", height: 1.5, weight: 40, spriteId: 10117, guessable: false },
   { id: 25038, name: "Wimessir Femelle", baseId: 876, gen: 8, type1: "Psy", type2: "Normal", height: 0.9, weight: 28, spriteId: 10186 },
   { id: 25039, name: "Mistigrix Femelle", baseId: 678, gen: 6, type1: "Psy", type2: null, height: 0.6, weight: 8.5, spriteId: 10025 },
   { id: 25040, name: "Morphéo Soleil", baseId: 351, gen: 3, type1: "Feu", type2: null, height: 0.3, weight: 0.8, spriteId: 10013 },
@@ -1035,6 +1037,7 @@ function injectExtraForms() {
       sprite: cachedForm?.sprite || getSpriteUrl(spriteId),
       formApiName: FORM_API_NAME_BY_NAME[form.name] || null,
       isAltForm: true,
+      ...(form.guessable === false ? { guessable: false } : {}),
     };
 
     POKEMON_LIST.push(entry);
@@ -1196,6 +1199,7 @@ function getPokemonUiList({ gens = null, includeAltForms = true } = {}) {
   return source.filter((pokemon) => {
     if (!pokemon) return false;
     if (!includeAltForms && pokemon.isAltForm) return false;
+    if (pokemon.guessable === false) return false;
     if (allowedGens && !allowedGens.has(Number(pokemon.gen))) return false;
     return true;
   });

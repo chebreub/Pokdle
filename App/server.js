@@ -3951,6 +3951,7 @@ function injectStatClashExtraForms(list) {
       spriteId,
       sprite: data.sprite || form.sprite || (form.spriteId ? buildSpriteUrl(form.spriteId) : base.sprite || buildSpriteUrl(spriteId)),
       isAltForm: true,
+      ...(form.guessable === false ? { guessable: false } : {}),
       baseId: form.baseId,
       apiId,
     });
@@ -5029,7 +5030,7 @@ function serializePokemon(pokemon) {
 }
 
 function isDuelPokemonAllowed(room, pokemon) {
-  return Boolean(pokemon && room.selectedGens.includes(Number(pokemon.gen) || Number(pokemon.generation)));
+  return Boolean(pokemon && pokemon.guessable !== false && room.selectedGens.includes(Number(pokemon.gen) || Number(pokemon.generation)));
 }
 
 function normalizeDuelPokemonName(name) {

@@ -1,7 +1,7 @@
 "use strict";
 
 function startDeductionRound(room, catalogue, random = Math.random) {
-  const pool = catalogue.filter(p => p && room.selectedGens.includes(Number(p.gen) || Number(p.generation)));
+  const pool = catalogue.filter(p => p && p.guessable !== false && room.selectedGens.includes(Number(p.gen) || Number(p.generation)));
   room.target = pool[Math.floor(random() * pool.length)] || null;
   room.status = room.target ? "playing" : "waiting";
   room.roundSerial = (room.roundSerial || 0) + 1;
