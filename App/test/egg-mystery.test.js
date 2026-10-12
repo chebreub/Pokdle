@@ -1,6 +1,6 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict"),crypto=require("node:crypto");
-const {eggWeek,parisDay,eggClues,compatibleWithClues,issueGuest,signedGuest,initEggDb,createEggService}=require("../lib/egg-mystery");
+const {eggWeek,eggDaysOpen,parisDay,eggClues,compatibleWithClues,issueGuest,signedGuest,initEggDb,createEggService}=require("../lib/egg-mystery");
 test("Egg resets at Paris midnight across both daylight saving changes",()=>{
   for(const [now,start,reset] of [
     ["2026-03-29T21:59:59Z","2026-03-23","2026-03-29T22:00:00.000Z"],
@@ -21,6 +21,9 @@ test("Clues unlock only at 100-guess thresholds and compatible candidates obey t
   assert.equal(compatibleWithClues({...p,gen:2},eggClues(p,100)),false);
   assert.equal(compatibleWithClues({...p,type1:"Feu"},eggClues(p,100)),true);
   assert.equal(compatibleWithClues({...p,type1:"Feu"},eggClues(p,200)),false);
+  assert.deepEqual([1,2,5,7].map(days=>eggClues(p,0,days).length),[1,2,5,5],"one clue is guaranteed per day of the round");
+  assert.equal(eggClues(p,250,1).length,2,"eliminations still unlock clues ahead of the calendar");
+  assert.deepEqual(["2026-10-12T10:00:00Z","2026-10-13T10:00:00Z","2026-10-18T21:00:00Z","2026-10-18T22:30:00Z"].map(at=>eggDaysOpen(eggWeek(new Date(at)))),[1,2,7,1]);
 });
 test("Egg PostgreSQL quotas, duplicate races, atomic winner/reward, rollback and weekly reset",{skip:!process.env.QA_DATABASE_URL},async()=>{
   const {Pool}=require("pg"),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});
@@ -36,7 +39,9 @@ test("Egg PostgreSQL quotas, duplicate races, atomic winner/reward, rollback and
     const guest={anonId:"guest-a",ipHash:"shared-ip"},account={...guest,playerId:"A",name:"Alice"};
     let state=await service.state(guest);const roundId=state.roundId;
     assert.equal(state.candidateIds.length,250);assert.equal(state.candidateIds.includes(10001),false);
-    assert.equal(state.winner,null);assert.equal("secret_id" in state,false);assert.equal("secretId" in state,false);assert.deepEqual(state.clues,[]);
+    assert.equal(state.winner,null);assert.equal("secret_id" in state,false);assert.equal("secretId" in state,false);
+    assert.deepEqual(state.clues.map(c=>[c.key,c.reason,c.unlockedAt]),[["gen","day","2026-10-04T22:00:00.000Z"],["type1","day","2026-10-05T22:00:00.000Z"]],"Tuesday shows the Monday and Tuesday clues");
+    assert.deepEqual(state.upcomingClues.map(c=>[c.key,c.at,c.atEliminated]),[["color","2026-10-06T22:00:00.000Z",300],["habitat","2026-10-07T22:00:00.000Z",400],["stage","2026-10-08T22:00:00.000Z",500]]);
     const secret=Number((await db.query("SELECT secret_id FROM egg_rounds WHERE id=$1",[roundId])).rows[0].secret_id);
     const wrong=pokemon.filter(p=>p.id!==secret&&p.id<1000).slice(0,6).map(p=>p.id);
     await service.guess(guest,roundId,wrong[0]);
@@ -76,5 +81,8 @@ test("Egg PostgreSQL quotas, duplicate races, atomic winner/reward, rollback and
     const ids=pokemon.filter(p=>p.id!==Number(r.secret_id)&&p.id<1000).slice(0,100).map(p=>p.id);
     await db.query("INSERT INTO egg_guesses(round_id,pokemon_id,anon_id,ip_hash,day,username) SELECT $1,unnest($2::int[]),'fixture','fixture','2026-10-19','Anonyme'",[state.roundId,ids]);
     state=await service.state(guest);assert.equal(state.clues.length,1);assert.equal(state.eliminatedIds.length,100);assert.equal(state.feed.length,20);assert.equal(state.compatibleIds.includes(Number(r.secret_id)),true);
+    const more=pokemon.filter(p=>p.id!==Number(r.secret_id)&&p.id<1000).slice(100,200).map(p=>p.id);
+    await db.query("INSERT INTO egg_guesses(round_id,pokemon_id,anon_id,ip_hash,day,username) SELECT $1,unnest($2::int[]),'fixture','fixture','2026-10-19','Anonyme'",[state.roundId,more]);
+    state=await service.state(guest);assert.equal(state.clues.length,2,"200 eliminations unlock Tuesday's clue on Monday");assert.equal(state.clues[1].reason,"eliminated");
   }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS "'+schema+'" CASCADE');await admin.end();}
 });

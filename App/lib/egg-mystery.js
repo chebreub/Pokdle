@@ -22,9 +22,21 @@ function eggWeek(now = new Date()) {
   date.setUTCDate(date.getUTCDate() + 7);
   return { start, day, resetAt: parisMidnight(date.toISOString().slice(0,10)).toISOString() };
 }
+function addDays(day, count) {
+  const date = new Date(day + "T00:00:00Z");
+  date.setUTCDate(date.getUTCDate() + count);
+  return date.toISOString().slice(0,10);
+}
+// Monday is day 1 of the round; Sunday is day 7.
+function eggDaysOpen(week) {
+  return Math.round((Date.parse(week.day + "T00:00:00Z") - Date.parse(week.start + "T00:00:00Z")) / 86400000) + 1;
+}
 const CLUES = [["gen", "Génération"], ["type1", "Premier type"], ["color", "Couleur"], ["habitat", "Habitat"], ["stage", "Stade d’évolution"]];
-function eggClues(secret, eliminated) {
-  return CLUES.slice(0, Math.min(5, Math.floor(eliminated/100))).map(([key,label]) => ({ key, label, value: secret[key] }));
+// One clue is guaranteed per day of the round (Monday: generation, Tuesday:
+// first type…), and every 100 eliminated Pokémon can unlock the next one sooner.
+function eggClues(secret, eliminated, daysOpen = 0) {
+  const count = Math.min(CLUES.length, Math.max(Math.floor(eliminated/100), Math.max(0, Math.floor(daysOpen))));
+  return CLUES.slice(0, count).map(([key,label]) => ({ key, label, value: secret[key] }));
 }
 function compatibleWithClues(pokemon, clues) {
   return clues.every(clue => JSON.stringify(pokemon[clue.key]) === JSON.stringify(clue.value));
@@ -113,18 +125,25 @@ function createEggService({ db, pokemon, randomInt = crypto.randomInt, clock = (
       const now = clock();
       const r = await round(client, now, true);
       const guesses = (await client.query("SELECT pokemon_id, username, correct, created_at FROM egg_guesses WHERE round_id=$1 ORDER BY id", [r.id])).rows;
-      const eliminated = guesses.filter(g => !g.correct).map(g => Number(g.pokemon_id));
-      const clues = eggClues(byId.get(Number(r.secret_id)), eliminated.length);
+      const wrong = guesses.filter(g => !g.correct), eliminated = wrong.map(g => Number(g.pokemon_id));
+      const week = eggWeek(now);
+      // Date each clue by whichever came first: its day of the round or its
+      // 100-elimination milestone, so the feed can tell when it appeared.
+      const clues = eggClues(byId.get(Number(r.secret_id)), eliminated.length, eggDaysOpen(week)).map((clue, index) => {
+        const byDay = parisMidnight(addDays(week.start, index)), milestone = wrong[(index+1)*100-1];
+        const byGuesses = milestone ? new Date(milestone.created_at) : null, early = Boolean(byGuesses && byGuesses < byDay);
+        return { ...clue, unlockedAt: (early ? byGuesses : byDay).toISOString(), reason: early ? "eliminated" : "day" };
+      });
       const eliminatedSet = new Set(eliminated);
       const compatibleIds = pool.filter(p => compatibleWithClues(p, clues)).map(p => Number(p.id));
-      const nextDay = new Date(eggWeek(now).day + "T00:00:00Z"); nextDay.setUTCDate(nextDay.getUTCDate()+1);
       return {
-        ok: true, roundId: Number(r.id), weekStart: eggWeek(now).start, resetAt: eggWeek(now).resetAt,
-        quotaResetAt: parisMidnight(nextDay.toISOString().slice(0,10)).toISOString(),
+        ok: true, roundId: Number(r.id), weekStart: week.start, resetAt: week.resetAt,
+        quotaResetAt: parisMidnight(addDays(week.day, 1)).toISOString(),
         reward: display(r.reward_id), candidateIds: pool.map(p => Number(p.id)), eliminatedIds: eliminated,
         compatibleIds, remaining: compatibleIds.filter(id => !eliminatedSet.has(id)).length, clues,
         nextClueAt: clues.length < 5 ? (clues.length+1)*100 : null,
-        quota: await quota(client, identity, eggWeek(now).day), authenticated: Boolean(identity.playerId),
+        upcomingClues: CLUES.slice(clues.length).map(([key,label], index) => ({ key, label, at: parisMidnight(addDays(week.start, clues.length+index)).toISOString(), atEliminated: (clues.length+index+1)*100 })),
+        quota: await quota(client, identity, week.day), authenticated: Boolean(identity.playerId),
         solved: Boolean(r.found_at), winner: r.found_at ? { name: r.winner_name || "Anonyme", at: r.found_at, me: r.found_by === (identity.playerId ? "user:"+identity.playerId : "guest:"+identity.anonId) } : null,
         canClaim: Boolean(identity.playerId && r.found_by === "guest:"+identity.anonId),
         feed: guesses.slice(-20).reverse().map(g => ({ pokemon: display(g.pokemon_id), name: g.username, correct: g.correct, at: g.created_at }))
@@ -200,4 +219,4 @@ function mountEggRoutes({ app, express, db, pokemon, secret, getUser, readCookie
   app.post("/api/egg/guess",express.json({limit:"2kb"}),handle((who,req) => service.guess(who,Number(req.body?.roundId),req.body?.pokemonId)));
   app.post("/api/egg/claim",express.json({limit:"2kb"}),handle((who,req) => service.claim(who,Number(req.body?.roundId))));
 }
-module.exports = { parisDay, parisMidnight, eggWeek, eggClues, compatibleWithClues, signedGuest, issueGuest, initEggDb, createEggService, mountEggRoutes };
+module.exports = { parisDay, parisMidnight, eggWeek, eggDaysOpen, eggClues, compatibleWithClues, signedGuest, issueGuest, initEggDb, createEggService, mountEggRoutes };

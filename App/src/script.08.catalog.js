@@ -4,7 +4,7 @@ var modeCatalogCategory = 'solo';
 var modeCatalogDifficulty = 'all';
 var MODE_CATALOG_DIFFICULTY_LABELS = Object.freeze({ all:'Toutes', easy:'Facile', medium:'Moyen', hard:'Difficile', expert:'Expert' });
 var MODE_CATALOG_DIFFICULTY = Object.freeze({
-  startDailyGame:'medium', startNormalGame:'medium', startSilhouetteGame:'easy', startPixelGame:'medium',
+  startDailyGame:'medium', openEggGame:'easy', startNormalGame:'medium', startSilhouetteGame:'easy', startPixelGame:'medium',
   startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium',
   startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
   openTypeComboSolo:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
@@ -14,6 +14,7 @@ var MODE_CATALOG_DIFFICULTY = Object.freeze({
 });
 var MODE_CATALOG_ART = Object.freeze({
   startDailyGame:{ids:[149],effect:'mystery',glyph:'?'},
+  openEggGame:{ids:[175],effect:'mystery',glyph:'◒'},
   startNormalGame:{ids:[133],effect:'mystery',glyph:'∞'},
   startSilhouetteGame:{ids:[352],effect:'scan',glyph:'◐'},
   startPixelGame:{ids:[137],effect:'pixel',glyph:'▦'},
@@ -58,6 +59,7 @@ var MODE_CATALOG_ILLUSTRATIONS = Object.freeze({
 // so a game is recognised at a glance before its title is read.
 var MODE_TILE_THEME = Object.freeze({
   startDailyGame:{ids:[149],tone:'#FFD45C',ink:'#7A5700',prop:'question',silhouette:true,badge:'Du jour'},
+  openEggGame:{ids:[175],tone:'#F3DFA8',ink:'#6E5600',prop:'egg',badge:'De la semaine'},
   startNormalGame:{ids:[132],tone:'#C9B98E',ink:'#6B5A2E',prop:'infinity'},
   startSilhouetteGame:{ids:[352],tone:'#FF8FB5',ink:'#A3285A',prop:'loupe'},
   startPixelGame:{ids:[137],tone:'#8FC8FF',ink:'#245F96',prop:'pixels'},
@@ -93,6 +95,7 @@ var MODE_TILE_THEME = Object.freeze({
   openLeaderboard:{ids:[384],tone:'#C4D66A',ink:'#4E5E00',prop:'podium'}
 });
 var MODE_TILE_PROPS = Object.freeze({
+  egg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c-3.9 0-7 6.3-7 11.2a7 7 0 0 0 14 0C19 8.8 15.9 2.5 12 2.5z"/><path d="M6.5 13l2.7 2 2.3-2.6 2.4 2.6 2.6-2"/></svg>',
   question:'<svg viewBox="0 0 24 24" fill="currentColor"><text x="12" y="18.5" text-anchor="middle" font-family="Fredoka, Nunito, sans-serif" font-weight="700" font-size="19">?</text></svg>',
   infinity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 12c-2-3-4-4.5-6-4.5S2.5 9.5 2.5 12 4 16.5 6 16.5s4-1.5 6-4.5 4-4.5 6-4.5 3.5 2 3.5 4.5-1.5 4.5-3.5 4.5-4-1.5-6-4.5z"/></svg>',
   loupe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5 20 20M8.5 8.5a2 2 0 0 1 2.5-.5"/></svg>',
