@@ -94,7 +94,8 @@ function homeAdventurePartnerVisual(pokemon) {
   if (!pokemon) return '<div class="home-adventure-partner-empty"><span>?</span><small>Choisis ton partenaire</small></div>';
   const sprite = typeof getPokemonSprite === 'function' ? getPokemonSprite(pokemon) : '';
   const fallback = typeof getSpriteUrl === 'function' && typeof getPokemonSpriteId === 'function' ? getSpriteUrl(getPokemonSpriteId(pokemon)) : sprite;
-  return `<div class="home-adventure-partner-art"><span class="home-adventure-dexno">#${String(Number(pokemon.baseId || pokemon.id)).padStart(3,'0')}</span><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" data-fallback="${fallback}" /><small>PARTENAIRE · ${escapeHtml(pokemon.name)}</small></div>`;
+  const rare = typeof pokemonIsRare === 'function' && pokemonIsRare(pokemon) ? ' is-rare' : '';
+  return `<div class="home-adventure-partner-art${rare}"><span class="home-adventure-dexno">#${String(Number(pokemon.baseId || pokemon.id)).padStart(3,'0')}</span><img src="${sprite}" alt="${escapeHtml(pokemon.name)}" data-fallback="${fallback}" /><small>PARTENAIRE · ${escapeHtml(pokemon.name)}</small></div>`;
 }
 function renderHomeAdventureV2() {
   const home = document.getElementById('home-partner');

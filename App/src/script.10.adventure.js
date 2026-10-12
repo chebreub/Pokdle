@@ -93,7 +93,8 @@ function partnerMilestone(count) {
   return { ...stage, percent: stage.next ? Math.min(100, Math.round((count - stage.min) / (stage.next - stage.min) * 100)) : 100 };
 }
 function partnerImage(pokemon, className = '') {
-  return `<img class="${className}" src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(pokemon))}" />`;
+  const classes = [className, typeof pokemonIsRare === 'function' && pokemonIsRare(pokemon) ? 'is-rare' : ''].filter(Boolean).join(' ');
+  return `<img class="${classes}" src="${getPokemonSprite(pokemon)}" alt="${escapeHtml(pokemon.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(pokemon))}" />`;
 }
 function renderPartner() {
   const pokemon = POKEMON_BY_ID.get(Number(playerProfile.favoritePokemonId));

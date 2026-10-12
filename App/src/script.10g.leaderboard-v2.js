@@ -203,7 +203,7 @@ function leaderboardV2ScoreHtml(row, mode, unit) {
 const LEADERBOARD_V2_DEFAULT_AVATAR = "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png";
 function leaderboardV2Avatar(row) {
   const partner = row?.partnerId && typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(row.partnerId)) : null;
-  if (partner) return '<img class="lbv2-avatar is-partner" src="'+escapeHtml(getPokemonSprite(partner))+'" alt="" title="'+escapeHtml(partner.name)+'" loading="lazy" />';
+  if (partner) return '<img class="lbv2-avatar is-partner'+(typeof pokemonIsRare === "function" && pokemonIsRare(partner)?' is-rare':'')+'" src="'+escapeHtml(getPokemonSprite(partner))+'" alt="" title="'+escapeHtml(partner.name)+'" loading="lazy" />';
   return row?.avatar
     ? '<img class="lbv2-avatar" src="'+escapeHtml(row.avatar)+'" alt="" loading="lazy" />'
     : '<img class="lbv2-avatar is-default" src="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" loading="lazy" />';
