@@ -496,7 +496,7 @@ function norm(str) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/^(.+?) mega( [xy])?$/, "mega $1$2")
+    .replace(/^(.+?) mega( [xyz])?$/, "mega $1$2")
     .replace(/^mega[-\s]+/, "mega ");
 }
 
@@ -2227,7 +2227,7 @@ function getHelpContentForGameMode(mode) {
           </section>
           <section class="app-help-card">
             <h4>Formes alternatives incluses</h4>
-            <p>Le Pokémon mystère peut être une forme régionale ou Méga des générations choisies : la colonne <b>Forme</b> te dit s'il s'agit d'une forme alternative.</p>
+            <p>Le Pokémon mystère peut être une forme régionale, une Méga ou une autre forme (masques d’Ogerpon, styles de Plumeline…) des générations choisies : la colonne <b>Forme</b> te dit s'il s'agit d'une forme alternative.</p>
           </section>
         `,
       };
