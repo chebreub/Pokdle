@@ -5406,3 +5406,17 @@
 #pokdle-app.design-refresh.reduce-motion .news-ticker { overflow-x:auto; }
 #pokdle-app.design-refresh.reduce-motion .news-ticker-track { animation:none; }
 #pokdle-app.design-refresh.reduce-motion .news-ticker-group[aria-hidden="true"] { display:none; }
+
+/* Rarity aura: legendary and mythical companions glow; the shiny view shines gold. */
+#pokdle-app.design-refresh .home-adventure-partner-art.is-rare::before { border-color:rgba(160,120,255,.45); background:radial-gradient(circle,rgba(200,170,255,.28),transparent 68%); box-shadow:0 0 34px 8px rgba(170,130,255,.28),0 0 0 26px rgba(160,120,255,.05); animation:rarity-halo 3.2s ease-in-out infinite; }
+#pokdle-app.design-refresh .home-adventure-partner-art.is-rare::after { content:""; position:absolute; z-index:1; width:236px; height:236px; border-radius:50%; background:conic-gradient(from 0deg,transparent,rgba(255,214,107,.8),transparent 28%,rgba(180,140,255,.8),transparent 58%,rgba(126,211,160,.7),transparent 86%); -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px)); mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px)); animation:rarity-spin 7s linear infinite; pointer-events:none; }
+#pokdle-app.design-refresh .lbv2-avatar.is-rare { box-shadow:0 0 0 2px var(--ui-surface),0 0 0 5px #a77bff,0 0 18px 6px rgba(167,123,255,.6) !important; animation:rarity-ring 2.6s ease-in-out infinite; }
+#pokdle-app.design-refresh :is(.partner-card,.partner-strip) > img.is-rare, #pokdle-app.design-refresh #screen-pokedex img.is-rare { filter:drop-shadow(0 0 8px rgba(180,140,255,.75)) drop-shadow(0 0 2px rgba(255,214,107,.6)); }
+#pokdle-app.design-refresh #screen-pokedex img.is-shiny-view { filter:drop-shadow(0 0 9px rgba(255,200,70,.85)) drop-shadow(0 0 2px rgba(255,255,255,.9)); }
+@keyframes rarity-halo { 0%, 100% { opacity:.75; transform:scale(1); } 50% { opacity:1; transform:scale(1.04); } }
+@keyframes rarity-spin { to { transform:rotate(360deg); } }
+@keyframes rarity-ring { 0%, 100% { box-shadow:0 0 0 2px var(--ui-surface),0 0 0 5px #a77bff,0 0 12px 4px rgba(167,123,255,.5); } 50% { box-shadow:0 0 0 2px var(--ui-surface),0 0 0 5px #f5b82e,0 0 22px 8px rgba(245,184,46,.55); } }
+@media (prefers-reduced-motion: reduce) {
+  #pokdle-app.design-refresh .home-adventure-partner-art.is-rare::before, #pokdle-app.design-refresh .home-adventure-partner-art.is-rare::after, #pokdle-app.design-refresh .lbv2-avatar.is-rare { animation:none; }
+}
+#pokdle-app.design-refresh.reduce-motion .home-adventure-partner-art.is-rare::before, #pokdle-app.design-refresh.reduce-motion .home-adventure-partner-art.is-rare::after, #pokdle-app.design-refresh.reduce-motion .lbv2-avatar.is-rare { animation:none; }

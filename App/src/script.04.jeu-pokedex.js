@@ -5652,7 +5652,7 @@ function createPokedexCard(p) {
   const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
 
   card.innerHTML = `
-    <img src="${sprite}" alt="${p.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
+    <img${pokemonIsRare(p) ? ' class="is-rare"' : ""} src="${sprite}" alt="${p.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
     <span class="pokedex-num">#${dexNumber}</span>
     <strong>${p.name}</strong>
     <div class="pokedex-card-types">${typeBadgesHtml(p.type1, p.type2 || null)}</div>
@@ -5955,7 +5955,7 @@ async function renderPokedexDetail(pokemon) {
         </div>
       </div>
       <div class="pokedex-detail-head-main">
-        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
+        <img class="${[pokemonIsRare(pokemon) ? "is-rare" : "", pokedexSelectedShiny ? "is-shiny-view" : ""].filter(Boolean).join(" ")}" src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
         ${builderActionHtml}
       </div>
     </div>
@@ -6025,7 +6025,7 @@ async function renderPokedexDetail(pokemon) {
         </div>
       </div>
       <div class="pokedex-detail-head-main">
-        <img src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
+        <img class="${[pokemonIsRare(pokemon) ? "is-rare" : "", pokedexSelectedShiny ? "is-shiny-view" : ""].filter(Boolean).join(" ")}" src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
         ${builderActionHtml}
       </div>
     </div>
