@@ -403,7 +403,9 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
 app.get("/api/leaderboard", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, top: [], me: null, around: [], total: 0 });
   const requestedMode = String(req.query.mode || "quiz");
-  const mode = leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
+  // Day boards computed from the plays themselves; they never accept client scores.
+  const playModes = ["challenge", "journey", "enquete", "wordlepts"];
+  const mode = playModes.includes(requestedMode) || leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
   const config = leaderboardConfig(mode);
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   const order = leaderboardOrderSql(config);
@@ -411,7 +413,7 @@ app.get("/api/leaderboard", async (req, res) => {
   const user = getSessionUser(req);
   const meId = user ? user.id : null;
   try {
-    if(["challenge","journey"].includes(mode)) return res.json(await challengeService.leaderboard(mode,scope,meId));
+    if(playModes.includes(mode)) return res.json(await challengeService.leaderboard(mode,scope,meId));
     if(mode === "dossier") return res.json(await dossierService.leaderboard(scope,meId));
     let rankedCte;
     if (scope === "all") {

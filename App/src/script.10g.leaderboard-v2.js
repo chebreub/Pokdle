@@ -1,11 +1,15 @@
 
 // Results & Leaderboards V2 — time-scoped performance leaderboards and result integration.
-const LEADERBOARD_V2_MODES = [
-  ["journey","Parcours du jour","Total des quatre épreuves"],
-  ["challenge","Défi du jour","Points, puis temps"],
-  ["dossier","Dossier du jour","Points, puis temps"],
-  ["wordle","Wordle du jour","Moins d’essais = mieux"],
-  ["daily","Pokémon du jour","Moins d’essais = mieux"],
+// The day's boards come first, in the order of the day and all in points.
+const LEADERBOARD_V2_DAY_MODES = [
+  ["journey","Global du jour","Total de tes 4 épreuves du jour"],
+  ["enquete","Enquête","Points"],
+  ["wordlepts","Wordle","Points"],
+  ["dossier","Dossier","Points, puis temps"],
+  ["challenge","Défi","Points, puis temps"]
+];
+// Arcade games keep their own record and unit, under "Autres classements".
+const LEADERBOARD_V2_OTHER_MODES = [
   ["quiz","Quiz","Bonnes réponses"],
   ["speedrun","Speedrun","Pokémon trouvés"],
   ["higherlower","Higher / Lower","Meilleure série"],
@@ -16,6 +20,11 @@ const LEADERBOARD_V2_MODES = [
   ["typecombo","Combo types","Points"],
   ["draft","Draft Score","Moyenne BST"]
 ];
+const LEADERBOARD_V2_MODES = LEADERBOARD_V2_DAY_MODES.concat(LEADERBOARD_V2_OTHER_MODES);
+// Old links to the attempt boards open the same stage in points.
+const LEADERBOARD_V2_ALIASES = { daily:"enquete", wordle:"wordlepts" };
+// One colour per stage of the day (background, ink).
+const LEADERBOARD_V2_TONES = { journey:["#C9B6F5","#4B3291"], enquete:["#FFD45C","#6B4C00"], wordlepts:["#8FC8FF","#1F5288"], dossier:["#F7A8C8","#8E1F4D"], challenge:["#86D9B0","#17583A"] };
 const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 derniers jours"],["all","Records historiques"]];
 let leaderboardV2Scope = "all";
 let leaderboardV2LastMode = "daily";
@@ -26,7 +35,9 @@ function leaderboardV2IsDraft(mode) {
 function leaderboardV2ModeMeta(mode) {
   if (leaderboardV2IsDraft(mode)) return { label:"Draft Score", hint:"Moyenne BST", unit:"BST", direction:"desc" };
   const rows = {
-    journey:{label:"Parcours du jour",hint:"Total des quatre épreuves",unit:"pts",direction:"desc"},
+    journey:{label:"Global du jour",hint:"Total de tes 4 épreuves du jour : Enquête + Wordle + Dossier + Défi",unit:"pts",direction:"desc"},
+    enquete:{label:"Enquête du jour",hint:"Moins d’essais, puis moins d’indices, puis le temps",unit:"pts",direction:"desc"},
+    wordlepts:{label:"Wordle du jour",hint:"Moins d’essais, puis le temps",unit:"pts",direction:"desc"},
     challenge:{label:"Défi du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     dossier:{label:"Dossier du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     wordle:{label:"Wordle du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
@@ -159,6 +170,19 @@ function switchLeaderboardScopeV2() {
   const scope=this?.dataset?.lbScope || "all";
   openLeaderboardV2(leaderboardV2LastMode,scope);
 }
+// Points come first; the detail behind them follows ("3 essais · 1 indice", "2/6").
+function leaderboardV2Detail(row, mode) {
+  const attempts = Number(row?.attempts);
+  if (!(attempts > 0)) return "";
+  if (mode === "wordlepts") return attempts + "/6";
+  if (mode !== "enquete") return "";
+  const hints = Number(row?.hints) || 0;
+  return attempts + " essai" + (attempts > 1 ? "s" : "") + (hints ? " · " + hints + " indice" + (hints > 1 ? "s" : "") : "");
+}
+function leaderboardV2ScoreHtml(row, mode, unit) {
+  const detail = leaderboardV2Detail(row, mode);
+  return escapeHtml(leaderboardV2FormatScore(row?.score, mode, unit)) + (detail ? '<small class="lbv2-detail">' + escapeHtml(detail) + "</small>" : "");
+}
 function leaderboardV2Avatar(row) {
   return row?.avatar
     ? '<img class="lbv2-avatar" src="'+escapeHtml(row.avatar)+'" alt="" />'
@@ -171,17 +195,18 @@ function leaderboardV2Row(row, fallbackRank, mode, unit, compact=false) {
     '<span class="lbv2-rank">'+medal+'</span>'+
     leaderboardV2Avatar(row)+
     '<span class="lbv2-player"><b>'+escapeHtml(row?.username||"Dresseur")+'</b>'+(row?.me?'<small>TOI</small>':'')+'</span>'+
-    '<strong>'+escapeHtml(leaderboardV2FormatScore(row?.score,mode,unit))+'</strong>'+
+    '<strong>'+leaderboardV2ScoreHtml(row,mode,unit)+'</strong>'+
     '</div>';
 }
-function openLeaderboardV2(mode="daily",scope="all") {
+function openLeaderboardV2(mode="journey",scope="today") {
   const DRAFT_GENS=[["draft_all","Tous"],["draft_1","G1"],["draft_2","G2"],["draft_3","G3"],["draft_4","G4"],["draft_5","G5"],["draft_6","G6"],["draft_7","G7"],["draft_8","G8"],["draft_9","G9"]];
-  let current=String(mode||"daily");
+  let current=String(mode||"journey");
+  if (LEADERBOARD_V2_ALIASES[current]) current=LEADERBOARD_V2_ALIASES[current];
   if (current==="draft") current="draft_all";
   const valid=LEADERBOARD_V2_MODES.some(([id])=>id===current || (id==="draft"&&leaderboardV2IsDraft(current)));
-  if (!valid) current="daily";
+  if (!valid) current="journey";
   leaderboardV2LastMode=current;
-  leaderboardV2Scope=LEADERBOARD_V2_SCOPES.some(([id])=>id===scope)?scope:"all";
+  leaderboardV2Scope=LEADERBOARD_V2_SCOPES.some(([id])=>id===scope)?scope:"today";
   const meta=leaderboardV2ModeMeta(current);
   const requestedScope=leaderboardV2Scope;
   const requestId=++leaderboardViewRequest;
@@ -190,7 +215,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
   ensureOverlay("Classements",loading);
 
   const syncTasks=[];
-  if (current==="daily") syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
+  if (["enquete","journey"].includes(current)) syncTasks.push(Promise.resolve(syncPendingDailyLeaderboard()).catch(()=>false));
   const syncPromise=syncTasks.length ? Promise.all(syncTasks) : Promise.resolve([]);
 
   return syncPromise.then(()=>{
@@ -198,11 +223,15 @@ function openLeaderboardV2(mode="daily",scope="all") {
     return leaderboardFetchJson("/api/leaderboard?mode="+encodeURIComponent(current)+"&scope="+encodeURIComponent(requestedScope));
   }).then(data=>{
     if (!data || !leaderboardOwnsDialog(requestId)) return;
-    const modeTabs=LEADERBOARD_V2_MODES.map(([id,label])=>{
-      const active=id==="draft"?leaderboardV2IsDraft(current):id===current;
-      const target=id==="draft"?"draft_all":id;
-      return '<button type="button" class="lbv3-mode-tab'+(active?' is-active':'')+'" aria-pressed="'+active+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
-    }).join("");
+    const isActive=id=>id==="draft"?leaderboardV2IsDraft(current):id===current;
+    const modeTab=([id,label])=>{
+      const active=isActive(id),target=id==="draft"?"draft_all":id,tone=LEADERBOARD_V2_TONES[id];
+      return '<button type="button" class="lbv3-mode-tab'+(tone?' is-day':'')+(active?' is-active':'')+'"'+(tone?' style="--lb-tone:'+tone[0]+';--lb-ink:'+tone[1]+'"':'')+' aria-pressed="'+active+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
+    };
+    const dayTabs=LEADERBOARD_V2_DAY_MODES.map(modeTab).join("");
+    const otherOpen=LEADERBOARD_V2_OTHER_MODES.some(([id])=>isActive(id));
+    const modeTabs='<details class="lbv3-other"'+(otherOpen?' open':'')+'><summary>Autres classements <small>records des jeux d’arcade</small></summary><div class="lbv3-mode-grid">'+
+      LEADERBOARD_V2_OTHER_MODES.map(modeTab).join("")+'<button type="button" class="lbv3-mode-tab" data-action="openWeeklyLeagueRanking">Ligue · 3 disciplines</button></div></details>';
 
     const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
       '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" aria-pressed="'+(id===leaderboardV2Scope)+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
@@ -229,7 +258,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
             '<div class="lbv3-medal">'+medal+'</div>'+
             leaderboardV2Avatar(row)+
             '<div class="lbv3-podium-name"><b>'+escapeHtml(row.username||"Dresseur")+'</b>'+(row.me?'<small>TOI</small>':'')+'</div>'+
-            '<strong>'+escapeHtml(leaderboardV2FormatScore(row.score,current,data.unit||meta.unit))+'</strong>'+
+            '<strong>'+leaderboardV2ScoreHtml(row,current,data.unit||meta.unit)+'</strong>'+
           '</article>';
         }).join("")+'</section>'
       : '';
@@ -254,7 +283,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
     if (data?.me) {
       personalHtml='<section class="lbv3-personal">'+
         '<div><span>TA POSITION</span><strong>#'+Number(data.me.rank)+'</strong></div>'+
-        '<div><span>TA PERFORMANCE</span><strong>'+escapeHtml(leaderboardV2FormatScore(data.me.score,current,data.unit||meta.unit))+'</strong></div>'+
+        '<div><span>TA PERFORMANCE</span><strong>'+leaderboardV2ScoreHtml(data.me,current,data.unit||meta.unit)+'</strong></div>'+
       '</section>';
     }
 
@@ -273,7 +302,7 @@ function openLeaderboardV2(mode="daily",scope="all") {
         '<div class="lbv3-title"><span>À CHACUN SON RECORD</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+' · Meilleure performance par joueur.</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
-      '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-mode-grid">'+modeTabs+'<button type="button" class="lbv3-mode-tab" data-action="openWeeklyLeagueRanking">Ligue · 3 disciplines</button></div></div>'+
+      '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-day-tabs" role="group" aria-label="Classements de la journée">'+dayTabs+'</div>'+modeTabs+'</div>'+
       genTabs+
       '<div class="leaderboard-content"><div class="leaderboard-main">'+
       personalHtml+

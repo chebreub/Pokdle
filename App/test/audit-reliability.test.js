@@ -50,7 +50,8 @@ test('connected users without rank never receive the disconnected instruction',(
 test('newer leaderboard requests own the final modal even when the older response arrives last',async()=>{
  const f=fixture(),old=deferred(),started=deferred();
  f.env.fetch=async(url)=>{
-  if(url.includes('mode=daily')){started.resolve();await old.promise;return {ok:true,json:async()=>({ok:true,label:'OLD DAILY',top:[]})};}
+  // 'daily' links now open the Enquête board in points.
+  if(url.includes('mode=enquete')){started.resolve();await old.promise;return {ok:true,json:async()=>({ok:true,label:'OLD DAILY',top:[]})};}
   return {ok:true,json:async()=>({ok:true,label:'LATEST QUIZ',top:[]})};
  };
  const stale=f.env.openLeaderboardV2('daily','today');await started.promise;

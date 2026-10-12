@@ -74,7 +74,19 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
       await save(c,cal,who,row);return {...snapshot(cal,who,row,r),feedback:{correct,resolved,...(resolved?{pokemonId:r.targets[body.index],name:byId.get(r.targets[body.index]).name,points:earned}:{})}};
     });
   }
+  // Enquête and Wordle in points. The order stays the validated one (guesses,
+  // then hints for the Enquête, then time); the points follow from it.
+  async function playBoard(mode,scope,accountId,day){
+    const enquete=mode==='enquete',table=enquete?'daily_plays':'wordle_plays',filter=scope==='today'?'AND p.day=$1::date':scope==='week'?'AND p.day>$1::date-7 AND p.day<=$1::date':'AND p.day<=$1::date';
+    const score=enquete?pointsSql.enquiry('p.status','p.guessed','p.hints_used'):pointsSql.wordle('p.status','p.guessed'),hints=enquete?'p.hints_used':'0';
+    const best=enquete?'jsonb_array_length(p.guessed) ASC,p.hints_used ASC,COALESCE(p.elapsed_ms,0) ASC':'jsonb_array_length(p.guessed) ASC,COALESCE(p.elapsed_ms,0) ASC',order=enquete?'a.attempts ASC,a.hints ASC,a.elapsed_ms ASC':'a.attempts ASC,a.elapsed_ms ASC';
+    const cte=`WITH candidates AS (SELECT p.account_id AS discord_id,${score} AS score,jsonb_array_length(p.guessed) AS attempts,${hints} AS hints,COALESCE(p.elapsed_ms,0) AS elapsed_ms,ROW_NUMBER() OVER(PARTITION BY p.account_id ORDER BY ${best}) AS attempt_rank FROM ${table} p WHERE p.status='won' AND p.account_id IS NOT NULL ${filter}), ranked AS (SELECT a.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,a.score,a.attempts,a.hints,(RANK() OVER(ORDER BY ${order}))::int AS rank FROM candidates a LEFT JOIN users u ON u.discord_id=a.discord_id WHERE a.attempt_rank=1)`;
+    const rows=(await db.query(cte+' SELECT * FROM ranked ORDER BY rank,username LIMIT 20',[day])).rows,total=Number((await db.query(cte+' SELECT COUNT(*)::int AS total FROM ranked',[day])).rows[0].total),mine=accountId?(await db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,accountId])).rows[0]:null,around=mine?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,mine.rank-2),mine.rank+2])).rows:[];
+    const detail=r=>({attempts:Number(r.attempts),hints:Number(r.hints)}),map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,score:Number(r.score),...detail(r),me:r.discord_id===accountId});
+    return {ok:true,mode,scope,authenticated:Boolean(accountId),direction:'desc',label:enquete?'Enquête du jour':'Wordle du jour',unit:'pts',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score),...detail(mine)}:null,around:around.map(map)};
+  }
   async function board(mode,scope,accountId){
+    if(mode==='enquete'||mode==='wordlepts')return playBoard(mode,scope,accountId,dailyCalendar(clock()).day);
     const day=dailyCalendar(clock()).day,filter=scope==='today'?'AND c.day=$1::date':scope==='week'?'AND c.day>$1::date-7 AND c.day<=$1::date':'AND c.day<=$1::date';
     const global=mode==='journey';
     const score=global?`c.points+${pointsSql.wordle('w.status','w.guessed')}+d.points+${pointsSql.enquiry('e.status','e.guessed','e.hints_used')}`:'c.points';
