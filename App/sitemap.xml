@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://pokdle.onrender.com/confidentialite</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
     <loc>https://pokdle.onrender.com/emulateur</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

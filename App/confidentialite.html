@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confidentialité · Pokédle</title>
+  <meta name="description" content="Quelles données Pokédle garde, pourquoi, et comment les supprimer.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='white'/%3E%3Cpath d='M2 32a30 30 0 0 1 60 0Z' fill='%23ef4438'/%3E%3Cpath d='M2 32h60' stroke='%231b315f' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='white' stroke='%231b315f' stroke-width='6'/%3E%3C/svg%3E">
+  <style>
+    :root { --ink: #2e2a33; --muted: #776b63; --line: #e9dfd4; --soft: #f5efe8; --bg: #fdf8f2; --accent: #2f51b8; }
+    @media (prefers-color-scheme: dark) { :root { --ink: #edf3fe; --muted: #a5b5ce; --line: #30415c; --soft: #1e2c43; --bg: #142033; --accent: #a9bdf7; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 Nunito, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+    a { color: var(--accent); }
+    h1 { margin: 8px 0 4px; font: 600 2rem/1.2 Fredoka, Nunito, system-ui, sans-serif; }
+    h2 { margin: 32px 0 8px; font: 600 1.2rem/1.3 Fredoka, Nunito, system-ui, sans-serif; }
+    .lead { color: var(--muted); margin: 0 0 24px; }
+    .card { padding: 16px 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--soft); }
+    ul { padding-left: 1.2em; }
+    li { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .back { display: inline-block; margin-bottom: 8px; font-weight: 700; text-decoration: none; }
+    footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="/">← Retour au jeu</a>
+  <h1>Confidentialité</h1>
+  <p class="lead">Pokédle est un jeu de fans, gratuit et sans publicité. Voici, en clair, ce qu’il garde sur toi et comment l’effacer. Dernière mise à jour : 13 octobre 2026.</p>
+
+  <div class="card">
+    <b>En bref :</b> sans compte, ta progression reste sur ton appareil. Avec un compte Discord ou Google, Pokédle garde ton pseudo, ta photo de profil et ta progression pour la retrouver partout et t’afficher dans les classements. Rien n’est vendu, rien n’est utilisé pour de la publicité.
+  </div>
+
+  <h2>Sans compte</h2>
+  <ul>
+    <li>Ta progression (Pokédex, records, succès, réglages) est enregistrée dans le stockage de ton navigateur, sur ton appareil. Pokédle ne la reçoit pas.</li>
+    <li>Pour les défis du jour (Pokémon du jour, Wordle, Dossier, Défi, Œuf mystère), un identifiant invité anonyme est gardé dans un cookie, afin de retrouver ta partie du jour. Il ne contient aucune information sur toi.</li>
+  </ul>
+
+  <h2>Avec un compte Discord ou Google</h2>
+  <p>Quand tu te connectes, Pokédle reçoit de Discord ou de Google, et garde :</p>
+  <ul>
+    <li>l’identifiant technique de ton compte Discord ou Google, pour te reconnaître ;</li>
+    <li>ton pseudo Discord, ou ton prénom Google, affiché dans les classements ;</li>
+    <li>l’adresse de ta photo de profil ;</li>
+    <li>ta progression synchronisée, tes résultats aux défis du jour et aux classements, et la date de ta dernière connexion.</li>
+  </ul>
+  <p>Pokédle ne demande ni ne garde ton adresse email, ton mot de passe ou tes contacts.</p>
+
+  <h2>Pourquoi</h2>
+  <ul>
+    <li>Te permettre de retrouver ta progression sur tous tes appareils.</li>
+    <li>Afficher les classements, la Ligue de la semaine et les défis partagés.</li>
+    <li>Protéger le jeu contre la triche et les abus (limites de requêtes).</li>
+  </ul>
+  <p>La base légale est l’exécution du service que tu demandes en créant un compte.</p>
+
+  <h2>Cookies</h2>
+  <table>
+    <tr><th>Cookie</th><th>Rôle</th><th>Durée</th></tr>
+    <tr><td>pokdle_session</td><td>Te garder connecté</td><td>30 jours</td></tr>
+    <tr><td>Cookie de connexion temporaire</td><td>Sécuriser la connexion avec Discord ou Google</td><td>10 minutes</td></tr>
+    <tr><td>pokdle_daily</td><td>Retrouver ta partie du jour en invité</td><td>6 mois</td></tr>
+  </table>
+  <p>Aucun cookie publicitaire ni de mesure d’audience tierce n’est utilisé.</p>
+
+  <h2>Où sont les données</h2>
+  <p>Le site est hébergé par Render et la base de données par Neon. Les données ne sont partagées avec personne d’autre.</p>
+
+  <h2>Durée et suppression</h2>
+  <p>Les données de ton compte sont gardées tant que tu l’utilises. Tu peux demander à tout moment à voir, corriger ou supprimer tes données : écris à <a href="mailto:chebreub@gmail.com">chebreub@gmail.com</a>. La suppression efface ton compte, ta progression synchronisée et tes résultats des classements.</p>
+  <p>Tu peux aussi retirer l’accès de Pokédle depuis les réglages de ton compte Discord ou Google.</p>
+
+  <h2>Contact</h2>
+  <p id="contact">Pour toute question sur tes données : <a href="mailto:chebreub@gmail.com">chebreub@gmail.com</a>. Réponse sous 30 jours au plus.</p>
+
+  <footer>Pokémon et les noms des Pokémon sont des marques de Nintendo, Game Freak et The Pokémon Company. Pokédle est un projet de fans non officiel.</footer>
+</main>
+</body>
+</html>

@@ -64,6 +64,7 @@ const strictCspDirectives = {
     "https://pokeapi.co",
     "https://archives.bulbagarden.net",
     "https://cdn.discordapp.com",
+    "https://*.googleusercontent.com",
     "https://www.pokepedia.fr",
   ],
   connectSrc: [
@@ -113,6 +114,9 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "";
 const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || "";
 // Relais optionnel pour contourner un blocage d'IP (ex. Cloudflare Worker). Vide = appel direct a discord.com.
 const DISCORD_API_BASE = (process.env.DISCORD_API_BASE || "https://discord.com").replace(/\/+$/, "");
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
+const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || "";
 const SESSION_SECRET = process.env.SESSION_SECRET || "";
 const AUTH_COOKIE = "pokdle_session";
 const oauthStates = createOAuthStateStore();
@@ -132,7 +136,11 @@ try {
 
 try { jwtLib = require("jsonwebtoken"); } catch (e) { console.error("[auth] jsonwebtoken indisponible:", e.message); }
 
-const authReady = () => Boolean(pgPool && jwtLib && DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET && DISCORD_CALLBACK_URL && SESSION_SECRET);
+const accountsBaseReady = () => Boolean(pgPool && jwtLib && SESSION_SECRET);
+const discordReady = () => accountsBaseReady() && Boolean(DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET && DISCORD_CALLBACK_URL);
+const googleReady = () => accountsBaseReady() && Boolean(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_CALLBACK_URL);
+// Accounts exist as soon as one sign-in provider is configured.
+const authReady = () => discordReady() || googleReady();
 
 async function initAuthDb() {
   if (!pgPool) return;
@@ -146,6 +154,19 @@ async function initAuthDb() {
       last_login TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
     await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_id INTEGER");
+    // An account id is users.discord_id: Discord accounts keep their Discord id, a
+    // Google-only account gets "google:<sub>" (never digits only, so no collision).
+    // Each row here is one way to sign in to an account.
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS account_identities (
+      provider TEXT NOT NULL,
+      provider_user_id TEXT NOT NULL,
+      account_id TEXT NOT NULL REFERENCES users(discord_id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (provider, provider_user_id)
+    )`);
+    await pgPool.query("CREATE INDEX IF NOT EXISTS account_identities_account ON account_identities(account_id)");
+    await pgPool.query(`INSERT INTO account_identities(provider, provider_user_id, account_id)
+      SELECT 'discord', discord_id, discord_id FROM users WHERE discord_id ~ '^[0-9]+$' ON CONFLICT DO NOTHING`);
     // Profiles saved before partner_id existed: copy their partner once.
     const missing = await pgPool.query("SELECT discord_id, data FROM users WHERE partner_id IS NULL AND data ? 'profile'");
     for (const row of missing.rows) {
@@ -210,9 +231,40 @@ function setSessionCookie(res, payload) {
   const token = jwtLib.sign(payload, SESSION_SECRET, { expiresIn: "30d" });
   res.cookie(AUTH_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 86400 * 1000, path: "/" });
 }
+// One sign-in, whatever the provider. A known identity opens its account. A new one
+// opens the account already signed in on this browser (linking), else its own new
+// account (nativeId). A Discord user who already has records is never linked away.
+async function signInWithIdentity(req, res, { provider, providerUserId, nativeId, username, avatar }) {
+  const known = (await pgPool.query("SELECT account_id FROM account_identities WHERE provider = $1 AND provider_user_id = $2", [provider, providerUserId])).rows[0];
+  let accountId = known?.account_id || "";
+  let linked = false;
+  if (!accountId) {
+    const ownsAccount = (await pgPool.query("SELECT 1 FROM users WHERE discord_id = $1", [nativeId])).rowCount > 0;
+    const current = getSessionUser(req);
+    linked = Boolean(current?.id) && !ownsAccount && String(current.id) !== nativeId;
+    accountId = linked ? String(current.id) : nativeId;
+  }
+  if (accountId === nativeId) {
+    await pgPool.query(
+      `INSERT INTO users (discord_id, username, avatar, last_login) VALUES ($1, $2, $3, now())
+       ON CONFLICT (discord_id) DO UPDATE SET username = EXCLUDED.username, avatar = EXCLUDED.avatar, last_login = now()`,
+      [accountId, username, avatar]
+    );
+  } else {
+    // Another way into an existing account: keep its name, fill a missing avatar.
+    await pgPool.query("UPDATE users SET last_login = now(), avatar = CASE WHEN avatar = '' THEN $2 ELSE avatar END WHERE discord_id = $1", [accountId, avatar]);
+  }
+  if (!known) {
+    await pgPool.query("INSERT INTO account_identities(provider, provider_user_id, account_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", [provider, providerUserId, accountId]);
+  }
+  const row = (await pgPool.query("SELECT username, avatar FROM users WHERE discord_id = $1", [accountId])).rows[0];
+  const session = { id: accountId, username: row?.username || username, avatar: row?.avatar ?? avatar, via: provider };
+  setSessionCookie(res, session);
+  return { ...session, linked };
+}
 
 app.get("/auth/discord", (req, res) => {
-  if (!authReady()) return res.redirect("/?auth=indispo");
+  if (!discordReady()) return res.redirect("/?auth=indispo");
   const attempt = oauthStates.issue();
   if (!attempt) return res.status(503).send("Connexion temporairement indisponible. Réessaie dans quelques minutes.");
   res.cookie(attempt.cookieName, attempt.binding, { ...oauthCookieOptions, maxAge: attempt.maxAge });
@@ -228,7 +280,7 @@ app.get("/auth/discord", (req, res) => {
 });
 
 app.get("/auth/discord/callback", async (req, res) => {
-  if (!authReady()) return res.redirect("/?auth=indispo");
+  if (!discordReady()) return res.redirect("/?auth=indispo");
   res.set("Cache-Control", "no-store");
   const state = req.query && req.query.state;
   if (!oauthStates.consume(state, parseAuthCookies(req))) return res.redirect("/?auth=erreur");
@@ -259,16 +311,72 @@ app.get("/auth/discord/callback", async (req, res) => {
     const discordId = String(u.id);
     const username = String(u.global_name || u.username || "Dresseur").slice(0, 32);
     const avatar = u.avatar ? `https://cdn.discordapp.com/avatars/${discordId}/${u.avatar}.png?size=128` : "";
-    await pgPool.query(
-      `INSERT INTO users (discord_id, username, avatar, last_login) VALUES ($1, $2, $3, now())
-       ON CONFLICT (discord_id) DO UPDATE SET username = EXCLUDED.username, avatar = EXCLUDED.avatar, last_login = now()`,
-      [discordId, username, avatar]
-    );
-    setSessionCookie(res, { id: discordId, username, avatar });
-    res.redirect("/?auth=ok");
+    const session = await signInWithIdentity(req, res, { provider: "discord", providerUserId: discordId, nativeId: discordId, username, avatar });
+    res.redirect(session.linked ? "/?auth=linked&via=discord" : "/?auth=ok");
   } catch (e) {
     console.error("[auth] callback echec:", e.message);
     res.redirect("/?auth=erreur");
+  }
+});
+
+// ===== Google (OpenID Connect, profile only: no email is requested or stored) =====
+app.get("/auth/google", (req, res) => {
+  if (!googleReady()) return res.redirect("/?auth=indispo");
+  const attempt = oauthStates.issue();
+  if (!attempt) return res.status(503).send("Connexion temporairement indisponible. Réessaie dans quelques minutes.");
+  res.cookie(attempt.cookieName, attempt.binding, { ...oauthCookieOptions, maxAge: attempt.maxAge });
+  res.set("Cache-Control", "no-store");
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: GOOGLE_CALLBACK_URL,
+    response_type: "code",
+    scope: "openid profile",
+    state: attempt.state,
+    prompt: "select_account",
+  });
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+app.get("/auth/google/callback", async (req, res) => {
+  if (!googleReady()) return res.redirect("/?auth=indispo");
+  res.set("Cache-Control", "no-store");
+  const state = req.query && req.query.state;
+  if (!oauthStates.consume(state, parseAuthCookies(req))) return res.redirect("/?auth=erreur&via=google");
+  res.clearCookie(oauthStates.cookieName(state), oauthCookieOptions);
+  const code = req.query && req.query.code;
+  if (typeof code !== "string" || !code) return res.redirect("/?auth=annule");
+  try {
+    const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code: String(code),
+        redirect_uri: GOOGLE_CALLBACK_URL,
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!tokenResp.ok) throw new Error("google token HTTP " + tokenResp.status);
+    const tok = await tokenResp.json();
+    const infoResp = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: `Bearer ${tok.access_token}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!infoResp.ok) throw new Error("google userinfo HTTP " + infoResp.status);
+    const info = await infoResp.json();
+    const sub = String(info.sub || "");
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(sub)) throw new Error("google sub invalide");
+    // First name only: the public leaderboards show this name.
+    const username = String(info.given_name || info.name || "Dresseur").trim().slice(0, 32) || "Dresseur";
+    const picture = String(info.picture || "");
+    const avatar = /^https:\/\/[a-z0-9.-]+\.googleusercontent\.com\//i.test(picture) ? picture.slice(0, 500) : "";
+    const session = await signInWithIdentity(req, res, { provider: "google", providerUserId: sub, nativeId: "google:" + sub, username, avatar });
+    res.redirect(session.linked ? "/?auth=linked&via=google" : "/?auth=ok&via=google");
+  } catch (e) {
+    console.error("[auth] google callback echec:", e.message);
+    res.redirect("/?auth=erreur&via=google");
   }
 });
 
@@ -278,9 +386,20 @@ app.get("/auth/logout", (req, res) => {
 });
 
 app.get("/api/me", (req, res) => {
-  if (!authReady()) return res.json({ user: null, auth: false });
+  const providers = { discord: discordReady(), google: googleReady() };
+  if (!authReady()) return res.json({ user: null, auth: false, providers });
   const user = getSessionUser(req);
-  res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar } : null, auth: true });
+  res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar, via: user.via || "discord" } : null, auth: true, providers });
+});
+// Which sign-ins open the current account (for "Relier Google / Discord").
+app.get("/api/account/identities", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const user = authReady() ? getSessionUser(req) : null;
+  if (!user) return res.json({ ok: false, identities: [] });
+  try {
+    const rows = (await pgPool.query("SELECT provider FROM account_identities WHERE account_id = $1 ORDER BY provider", [String(user.id)])).rows;
+    res.json({ ok: true, identities: rows.map((row) => row.provider) });
+  } catch (e) { res.status(503).json({ ok: false, identities: [] }); }
 });
 app.get("/api/profile", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, data: null });
@@ -955,6 +1074,7 @@ app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: "30d", fal
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
 // SEO.
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
+app.get("/confidentialite", (_req, res) => res.sendFile(path.join(__dirname, "confidentialite.html"), { maxAge: "1h" }));
 app.get("/sitemap.xml", (_req, res) => res.sendFile(path.join(__dirname, "sitemap.xml"), { maxAge: "1d" }));
 
 app.get("/api/multiplayer/health", (_req, res) => {

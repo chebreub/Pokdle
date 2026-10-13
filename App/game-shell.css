@@ -28,6 +28,15 @@
 .login-welcome-art img {width:140px;height:140px;image-rendering:auto;}.login-welcome-art span {color:#F0524A;font-size:26px;}
 .login-welcome h3 {font:500 32px Fredoka,sans-serif;margin:0;}.login-welcome p {font-size:16px;line-height:1.7;margin:0;}.login-welcome small{font-size:13px;line-height:1.6;color:#776B63;}
 #pokdle-app.design-refresh .login-welcome .btn-blue {display:block;min-height:48px;padding:14px!important;text-decoration:none;}
+#pokdle-app.design-refresh .login-welcome .login-google {display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:12px!important;text-decoration:none;background:#fff!important;color:#2e2a33!important;border:1px solid #dadce0!important;border-radius:14px;font-weight:800;}
+#pokdle-app.design-refresh .login-welcome .login-discord {background:#5865f2!important;border-color:#5865f2!important;color:#fff!important;}
+#pokdle-app.design-refresh .login-welcome small a, #pokdle-app.design-refresh .account-menu-privacy {color:inherit;font-weight:700;}
+#pokdle-app.design-refresh .account-menu-linked {display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.8rem;color:var(--ui-muted);}
+#pokdle-app.design-refresh .account-menu-linked:empty {display:none;}
+#pokdle-app.design-refresh .account-menu-linked span {flex:1 1 100%;}
+#pokdle-app.design-refresh.theme-dark #account-area .account-login {background:#edf3fe!important;border-color:#edf3fe!important;color:#1e2c43!important;}
+#pokdle-app.design-refresh.theme-dark #account-area .account-login-logo {fill:#1e2c43;}
+#pokdle-app.design-refresh .account-menu-privacy {display:block;margin-top:8px;text-align:center;font-size:.78rem;color:var(--ui-muted);}
 #pokdle-app.design-refresh.theme-dark .leaderboard-aside section,#pokdle-app.design-refresh.theme-dark #home-game-filters button {background:#292633;color:#f6eeff;border-color:#494153;}
 #pokdle-app.design-refresh.theme-dark .home-path-friends {background:#352f49!important;border-color:#594975!important;}
 #pokdle-app.design-refresh.theme-dark .login-welcome small {color:#c4b9cd;}
