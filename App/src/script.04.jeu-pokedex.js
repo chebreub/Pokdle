@@ -1510,6 +1510,7 @@ function openAllModesScreen(category) {
     draftArena: "openDraftArenaMode",
     draftScore: "openDraftScoreAttackMode",
     odd: "openOddOneOutMode",
+    quiEstCe: "openQuiEstCeMode",
     statClash: "openStatClashMode",
     higherLower: "openHigherLowerMode",
     connections: "openPokeConnectionsMode",
@@ -1579,6 +1580,9 @@ function openAllModesScreen(category) {
     } else if (key === "odd") {
       resumable = typeof oddOneOutState !== "undefined" && Array.isArray(oddOneOutState?.cards) && oddOneOutState.cards.length > 0;
       if (resumable) { screenId = "screen-odd-one-out"; render = typeof renderOddOneOutPuzzle === "function" ? renderOddOneOutPuzzle : null; }
+    } else if (key === "quiEstCe") {
+      resumable = typeof quiEstCeState !== "undefined" && quiEstCeState?.phase === "playing";
+      if (resumable) { screenId = "screen-qui-est-ce"; render = typeof renderQuiEstCe === "function" ? () => renderQuiEstCe() : null; }
     } else if (key === "statClash") {
       resumable = typeof statClashState !== "undefined" && Boolean(statClashState);
       if (resumable) {

@@ -1,6 +1,6 @@
 
 // Discoveries live in the existing profile, so account sync and reset include them.
-const DISCOVERY_MODES = new Set(['normal', 'daily', 'challenge', 'silhouette', 'pixel', 'cry', 'mystery', 'description', 'evolution', 'order', 'weight', 'odd']);
+const DISCOVERY_MODES = new Set(['normal', 'daily', 'challenge', 'silhouette', 'pixel', 'cry', 'mystery', 'description', 'evolution', 'order', 'weight', 'odd', 'quiestce']);
 let albumPage = 1;
 const ALBUM_PAGE_SIZE = 24;
 function normalizeDiscoveries(raw) {

@@ -5,7 +5,7 @@ var modeCatalogDifficulty = 'all';
 var MODE_CATALOG_DIFFICULTY_LABELS = Object.freeze({ all:'Toutes', easy:'Facile', medium:'Moyen', hard:'Difficile', expert:'Expert' });
 var MODE_CATALOG_DIFFICULTY = Object.freeze({
   startDailyGame:'medium', openEggGame:'easy', startNormalGame:'medium', startSilhouetteGame:'easy', startPixelGame:'medium',
-  startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium',
+  startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium', openQuiEstCeMode:'easy',
   startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
   openTypeComboSolo:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
   startPartyMode:'medium', openDraftScoreAttackMode:'hard', openPartyRoomMode:'medium',
@@ -24,6 +24,7 @@ var MODE_TILE_THEME = Object.freeze({
   startMysteryStatGame:{ids:[68],tone:'#F59A86',ink:'#9A2E22',prop:'bars'},
   openPokeConnectionsMode:{ids:[133,700],tone:'#F7A8C8',ink:'#A3285A',prop:'grid'},
   openOddOneOutMode:{ids:[570],tone:'#B9A3C9',ink:'#5A3F6E',prop:'odd'},
+  openQuiEstCeMode:{ids:[132,25],tone:'#F2B8C6',ink:'#8C2F4E',prop:'grid'},
   startQuizGame:{ids:[65],tone:'#B9A6F2',ink:'#5C3FB0',prop:'abc'},
   startEvolutionChainGame:{ids:[130,129],tone:'#8FB2FF',ink:'#2F51B8',prop:'chain'},
   startPokedexOrderGame:{ids:[1],tone:'#9ADB7E',ink:'#2F7A1F',prop:'numbers'},
