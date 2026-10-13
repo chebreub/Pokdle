@@ -94,6 +94,14 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
       if(body.day!==dailyCalendar(clock()).day)throw error("stale_daily");
       if((body.accountId||null)!==(who.accountId||null))throw error("account_changed");
       if(!abandon&&(!Number.isInteger(body.pokemonId)||!byId.has(body.pokemonId)))throw error("invalid_guess",400);
+    } else {
+      // Reopening an established game only reads: one query, no transaction or lock.
+      const calendar=dailyCalendar(clock());
+      const existing=(await db.query(`SELECT w.*,r.secret_id FROM wordle_plays w
+        JOIN wordle_rounds r ON r.day=w.day
+        JOIN daily_plays d ON d.identity=w.identity AND d.day=w.day AND d.status!='playing'
+        WHERE w.identity=$1 AND w.day=$2 AND ($3::boolean=false OR w.migrated=true)`,[who.key,calendar.day,Boolean(who.accountId)])).rows[0];
+      if(existing&&dailyCalendar(clock()).day===calendar.day)return snapshot(calendar,who,existing,{secret_id:existing.secret_id});
     }
     return transaction(async(client,calendar)=>{
       // An established play already owns its round. Read prerequisites and lock

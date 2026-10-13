@@ -88,9 +88,9 @@ def main():
      try:
       page.locator('#home-game-filters button').filter(has_text='Deviner').click()
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
-      page.locator('#home-game-filters button').filter(has_text='Stratégie').click()
-      strategy=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
-      expect(len(strategy)==1 and all('openDraftScoreAttackMode' in args for args in strategy),'Strategy filter should only offer the Draft (PRO and Arènes removed): '+repr(strategy))
+      page.locator('#home-game-filters button').filter(has_text='Jouer').click()
+      play=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
+      expect(len(play)==9 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
@@ -247,9 +247,9 @@ def main():
     def family_chips():
      chips=page.locator('#mode-family-filters button')
      labels=[t.strip() for t in chips.all_inner_texts()]
-     expect(len(labels)==6 and labels[0].startswith('Tous') and labels[-1].startswith('Outils'),'Family chips are incomplete: '+repr(labels))
-     chips.filter(has_text='Arcade').click()
-     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==4,'Arcade chip does not narrow the list')
+     expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Jouer') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
+     chips.filter(has_text='Jouer').click()
+     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==11,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
      expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openEmulatorMode"]\']').is_visible(),'Tools chip does not reach the emulator')
      chips.filter(has_text='Tous').click()

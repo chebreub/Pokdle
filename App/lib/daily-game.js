@@ -60,9 +60,15 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
     catch(e){await client.query("ROLLBACK");throw e;} finally{client.release();}
   }
   async function settings(client) { return Object.fromEntries((await client.query("SELECT key,value FROM daily_settings")).rows.map(r=>[r.key,r.value])); }
+  // A drawn round never changes: once read back from the database it is kept in
+  // memory, so opening the game does not pay a round trip for the secret. Rounds
+  // created inside a transaction are only cached once read again (it may roll back).
+  const roundCache=new Map();
+  function rememberRound(day,r){if(!roundCache.has(day)){roundCache.clear();roundCache.set(day,{secret_id:Number(r.secret_id)});}return roundCache.get(day);}
   async function round(client, day) {
+    if(roundCache.has(day))return roundCache.get(day);
     let r=(await client.query("SELECT secret_id FROM daily_rounds WHERE day=$1",[day])).rows[0];
-    if(r)return r;
+    if(r)return rememberRound(day,r);
     await client.query("SELECT pg_advisory_xact_lock(hashtext('pokedle-daily-round'))");
     r=(await client.query("SELECT secret_id FROM daily_rounds WHERE day=$1",[day])).rows[0]; if(r)return r;
     const config=await settings(client);
@@ -109,14 +115,17 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
     }
     return row;
   }
-  async function streak(client,who,day,status) {
-    if(!who.accountId)return {current:0,best:0,lastWin:null};
-    const rows=(await client.query(`SELECT day::text FROM daily_plays WHERE account_id=$1 AND status='won'
+  async function streakDays(client,who) {
+    if(!who.accountId)return null;
+    return (await client.query(`SELECT day::text FROM daily_plays WHERE account_id=$1 AND status='won'
       UNION SELECT day::text FROM daily_sessions WHERE discord_id=$1 AND finished=true
-      AND NOT EXISTS(SELECT 1 FROM daily_plays p WHERE p.account_id=$1 AND p.day=daily_sessions.day)`,[who.accountId])).rows;
-    return streakFromDays(rows.map(r=>r.day).filter(d=>d<=day),day,status==="abandoned");
+      AND NOT EXISTS(SELECT 1 FROM daily_plays p WHERE p.account_id=$1 AND p.day=daily_sessions.day)`,[who.accountId])).rows.map(r=>r.day);
   }
-  async function snapshot(client,who,row,r,now) {
+  function streakOf(days,day,status) {
+    if(!days)return {current:0,best:0,lastWin:null};
+    return streakFromDays(days.filter(d=>d<=day),day,status==="abandoned");
+  }
+  async function snapshot(client,who,row,r,now,days) {
     const secret=byId.get(Number(r.secret_id)); if(!secret)throw dailyError("unavailable",503);
     const ids=row.guessed||[], day=parisDay(now);
     const direction=(a,b)=>a===b?"":a<b?"↑":"↓";
@@ -126,9 +135,19 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
       points:enquiryPoints(row.status==='won',ids.length,row.hints_used),maxPoints:DAILY_MAX.enquiry,
       rows:ids.map(id=>{const p=byId.get(Number(id));return {pokemonId:p.id,cmp:compare(p,secret),heightDirection:direction(p.height,secret.height),weightDirection:direction(p.weight,secret.weight)};}),
       ...(row.status!=="playing"?{answerId:secret.id}:{}),
-      streak:await streak(client,who,day,row.status),ranked:Boolean(who.accountId&&row.account_id&&row.status==="won")};
+      streak:streakOf(days!==undefined?days:await streakDays(client,who),day,row.status),ranked:Boolean(who.accountId&&row.account_id&&row.status==="won")};
   }
   async function state(who) {
+    // A returning player only reads: the round, the play and the streak arrive in
+    // parallel, without a transaction or a row lock. First visits, logins to migrate
+    // and new rounds still go through the locked path below.
+    const now=clock(),day=parisDay(now);
+    const [cached,row,days]=await Promise.all([
+      roundCache.has(day)?roundCache.get(day):db.query("SELECT secret_id FROM daily_rounds WHERE day=$1",[day]).then(res=>res.rows[0]||null),
+      db.query("SELECT * FROM daily_plays WHERE identity=$1 AND day=$2",[who.key,day]).then(res=>res.rows[0]||null),
+      streakDays(db,who)
+    ]);
+    if(cached&&row&&(!who.accountId||row.migrated)&&parisDay(clock())===day)return snapshot(db,who,row,rememberRound(day,cached),now,days);
     return transaction(async client=>{const now=clock(),day=parisDay(now),r=await round(client,day),row=await play(client,who,day,r);return snapshot(client,who,row,r,now);});
   }
   async function act(who,{day,accountId,pokemonId},abandon=false) {

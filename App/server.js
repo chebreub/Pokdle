@@ -124,7 +124,9 @@ const oauthCookieOptions = { httpOnly: true, secure: true, sameSite: "lax", path
 try {
   if (process.env.DATABASE_URL) {
     const { Pool } = require("pg");
-    pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 5 });
+    // Keep warm connections for two minutes instead of pg's 10 s default: a new
+    // TLS connection to the database costs more than most daily requests.
+    pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 5, idleTimeoutMillis: 120000, keepAlive: true });
     pgPool.on("error", (e) => console.error("[db] pool error:", e.message));
   } else {
     console.warn("[auth] DATABASE_URL absent - comptes desactives.");

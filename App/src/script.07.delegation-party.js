@@ -1150,6 +1150,7 @@ function accountNavigate(destination) {
       }
       if (serverHas && (serverAt > localAt || !hasContent(local))) {
         if (hasContent(local) && !sameContent(local, server)) {
+          captureRestorePoint("server");
           backupConflict(accountId, snapshotLocal(accountId, Date.now()));
         }
         applyAccountBlob(server, accountId);
@@ -1250,7 +1251,76 @@ function accountNavigate(destination) {
       }).catch(function () { return false; });
     } catch (e) { return Promise.resolve(false); }
   }
+  // Restore points: dated copies of this device's progress. One a day, plus one
+  // before a reset, before the online copy replaces local progress and before a
+  // restore (so a restore can be undone). Only the current owner's copies are offered.
+  var RESTORE_POINTS = "pokedle_restore_points_v1";
+  var RESTORE_KEYS = SYNC_KEYS.concat(["history"]);
+  var RESTORE_LIMIT = 5;
+  function parisDayOf(ms) {
+    try { return new Date(ms).toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" }); }
+    catch (e) { return new Date(ms).toISOString().slice(0, 10); }
+  }
+  function readRestorePoints() {
+    try {
+      var list = JSON.parse(readItem(RESTORE_POINTS) || "[]");
+      return Array.isArray(list) ? list.filter(function (p) { return p && typeof p.id === "string" && p.data && typeof p.data === "object"; }) : [];
+    } catch (e) { return []; }
+  }
+  function writeRestorePoints(list) {
+    list = list.slice(0, RESTORE_LIMIT);
+    // Storage full: give up the oldest copies rather than the newest one.
+    while (list.length) { if (writeItem(RESTORE_POINTS, JSON.stringify(list))) return true; list.pop(); }
+    removeItem(RESTORE_POINTS);
+    return false;
+  }
+  function currentRestoreData() {
+    var data = {};
+    RESTORE_KEYS.forEach(function (k) {
+      var sk = storageKey(k); if (!sk) return;
+      var value = readItem(sk);
+      if (value != null) data[k] = value;
+    });
+    return data;
+  }
+  function sameRestoreData(a, b) {
+    return RESTORE_KEYS.every(function (k) { return (typeof a?.[k] === "string" ? a[k] : null) === (typeof b?.[k] === "string" ? b[k] : null); });
+  }
+  function captureRestorePoint(reason) {
+    var data = currentRestoreData();
+    if (!hasContent(data)) return false;
+    var owner = localOwner(), now = Date.now(), list = readRestorePoints();
+    var mine = list.filter(function (p) { return String(p.owner || "") === owner; });
+    if (mine.length && sameRestoreData(mine[0].data, data)) return false;
+    if (reason === "daily" && mine.some(function (p) { return p.reason === "daily" && parisDayOf(p.at) === parisDayOf(now); })) return false;
+    list.unshift({ id: now.toString(36) + Math.random().toString(36).slice(2, 6), at: now, reason: String(reason || "daily"), owner: owner, data: data });
+    return writeRestorePoints(list);
+  }
+  function restorePointsForOwner() {
+    var owner = localOwner();
+    var list = readRestorePoints().filter(function (p) { return String(p.owner || "") === owner; });
+    // Copies kept by the older conflict backup are offered too.
+    var conflict = owner ? parseBlob(readItem(CONFLICT_PREFIX + encodeURIComponent(owner))) : null;
+    if (conflict && hasContent(conflict) && !list.some(function (p) { return sameContent(p.data, conflict); })) {
+      list.push({ id: "conflict", at: Math.max(0, Number(conflict._savedAt) || 0), reason: "server", owner: owner, data: conflict });
+    }
+    return list.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
+  }
+  function restorePointById(id) {
+    var point = restorePointsForOwner().find(function (p) { return p.id === id; });
+    if (!point || !hasContent(point.data)) return false;
+    captureRestorePoint("before-restore");
+    applySyncedKeys(point.data);
+    var historyKey = storageKey("history");
+    if (historyKey && typeof point.data.history === "string") writeItem(historyKey, point.data.history);
+    // For an account, the restored copy is the newest progress: the next load keeps
+    // it and uploads it instead of the older online copy. Guests keep no sync stamp,
+    // so a first login can still claim their progress.
+    if (localOwner()) setLocalSavedAt(Date.now());
+    return reloadAfterStorageSwitch();
+  }
   function initSync() {
+    captureRestorePoint("daily");
     fetch("/api/me", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (me) {
       if (!me || !me.user) {
         syncReady = false;
@@ -1291,6 +1361,7 @@ function accountNavigate(destination) {
       } catch (e) {}
     });
   }
+  window.pokedleRestorePoints = { list: restorePointsForOwner, capture: captureRestorePoint, restore: restorePointById };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSync);
   else initSync();
 })();
@@ -2709,7 +2780,7 @@ function openSettingsModal() {
 }
 
 function confirmResetProgression() {
-  ensureOverlay('Recommencer à zéro', '<p class="card-desc">Cette action efface <b>définitivement</b> ton profil, ta progression, tes statistiques, tes succès, tes équipes et ton historique sur cet appareil. C\'est irréversible.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="closeResetOverlay">Annuler</button><button class="btn-red" type="button" data-action="doResetProfile">🗑️ Tout effacer</button></div>');
+  ensureOverlay('Recommencer à zéro', '<p class="card-desc">Cette action efface ton profil, ta progression, tes statistiques, tes succès, tes équipes et ton historique sur cet appareil. Une copie est gardée : tu pourras la retrouver dans « Restaurer une copie ».</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="closeResetOverlay">Annuler</button><button class="btn-red" type="button" data-action="doResetProfile">🗑️ Tout effacer</button></div>');
 }
 function closeResetOverlay() {
   const overlay = document.getElementById('overlay-modal');
@@ -2717,10 +2788,50 @@ function closeResetOverlay() {
   document.body.classList.remove('modal-open');
 }
 function doResetProfile() {
+  try { window.pokedleRestorePoints?.capture('reset'); } catch (e) {}
   try {
     Object.keys(STORAGE_KEYS).forEach((k) => { try { localStorage.removeItem(STORAGE_KEYS[k]); } catch (e) {} });
   } catch (e) {}
   try { location.reload(); } catch (e) {}
+}
+
+const RESTORE_POINT_REASONS = {
+  daily: 'Copie du jour',
+  reset: 'Avant une réinitialisation',
+  server: 'Remplacée par ta sauvegarde en ligne',
+  'before-restore': 'Avant une restauration'
+};
+function restorePointDate(at) {
+  try {
+    const text = new Date(Number(at) || 0).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  } catch (e) { return ''; }
+}
+function restorePointSummary(data) {
+  const read = (raw) => { try { return JSON.parse(raw || 'null') || {}; } catch (e) { return {}; } };
+  const profile = read(data?.profile), stats = read(data?.stats);
+  const seen = profile.discoveries && typeof profile.discoveries === 'object' ? Object.keys(profile.discoveries).length : 0;
+  const number = (n) => Math.max(0, Math.round(Number(n) || 0)).toLocaleString('fr-FR');
+  return [seen + ' Pokémon découvert' + (seen > 1 ? 's' : ''), number(profile.xp) + ' XP', number(stats.wins) + ' victoire' + ((Number(stats.wins) || 0) > 1 ? 's' : '')].join(' · ');
+}
+function openRestoreProgress() {
+  const points = window.pokedleRestorePoints ? window.pokedleRestorePoints.list() : [];
+  if (!points.length) {
+    ensureOverlay('Restaurer une copie', '<p class="card-desc">Aucune copie pour l’instant. Pokédle en garde une par jour sur cet appareil, et une avant chaque réinitialisation.</p>');
+    return;
+  }
+  const rows = points.map(p => '<li class="restore-point"><div><b>' + escapeHtml(restorePointDate(p.at)) + '</b><span>' + escapeHtml(RESTORE_POINT_REASONS[p.reason] || 'Copie') + '</span><small>' + escapeHtml(restorePointSummary(p.data)) + '</small></div>' +
+    '<button class="btn-ghost" type="button" data-action="confirmRestoreProgress" data-args=\'' + escapeHtml(JSON.stringify([p.id])) + '\'>Restaurer</button></li>').join('');
+  ensureOverlay('Restaurer une copie', '<p class="card-desc">Pokédle garde sur cet appareil une copie par jour de ta progression, et une avant chaque réinitialisation. Ta progression actuelle sera gardée elle aussi.</p><ol class="restore-points">' + rows + '</ol>');
+}
+function confirmRestoreProgress(id) {
+  const point = (window.pokedleRestorePoints ? window.pokedleRestorePoints.list() : []).find(p => p.id === id);
+  if (!point) return openRestoreProgress();
+  ensureOverlay('Restaurer cette copie ?', '<p class="card-desc">Ta progression va revenir à celle du <b>' + escapeHtml(restorePointDate(point.at).toLowerCase()) + '</b> (' + escapeHtml(restorePointSummary(point.data)) + '). Ta progression actuelle reste dans la liste : tu pourras y revenir.</p>' +
+    '<div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="openRestoreProgress">Retour</button><button class="btn-blue" type="button" data-action="doRestoreProgress" data-args=\'' + escapeHtml(JSON.stringify([point.id])) + '\'>Restaurer</button></div>');
+}
+function doRestoreProgress(id) {
+  if (!window.pokedleRestorePoints || !window.pokedleRestorePoints.restore(id)) showToast('Cette copie n’est plus disponible.');
 }
 
 function openGamesRankingModeFallback() {
