@@ -1402,8 +1402,7 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
   color:#6548ac;
   font-size:.78rem;
 }
-.weekly-ranking-empty,
-.weekly-ranking-loading {
+.weekly-ranking-empty {
   min-height:130px;
   display:grid;
   place-items:center;
@@ -1420,8 +1419,7 @@ body.theme-dark .weekly-league-modal-head,
 body.theme-dark .weekly-league-discipline,
 body.theme-dark .weekly-ranking-head,
 body.theme-dark .weekly-rank-row,
-body.theme-dark .weekly-ranking-empty,
-body.theme-dark .weekly-ranking-loading {
+body.theme-dark .weekly-ranking-empty {
   background:#142640;
   border-color:rgba(116,156,220,.14);
 }
@@ -1436,8 +1434,7 @@ body.theme-dark .weekly-league-home-copy p,
 body.theme-dark .weekly-league-modal-head p,
 body.theme-dark .weekly-league-discipline-copy p,
 body.theme-dark .weekly-ranking-head p,
-body.theme-dark .weekly-ranking-empty,
-body.theme-dark .weekly-ranking-loading {
+body.theme-dark .weekly-ranking-empty {
   color:#aebfda;
 }
 

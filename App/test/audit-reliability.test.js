@@ -8,6 +8,7 @@ function fixture(){
  document:{getElementById(id){return id==="overlay-modal"?overlay:null;},querySelector(sel){return !overlay.hidden && token && sel.includes('"'+token+'"') ? {}:null;}},
  ensureOverlay(title,html){markup=html;token=html.match(/data-lb-request="(\d+)"/)?.[1]||"";overlay.hidden=false;},
  escapeHtml:s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;"),
+ skeletonHtml:label=>'<div class="pk-skel" role="status">'+label+'</div>',
  localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},
  fetch:async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({ok:true,top:[],around:[],total:0})};},
  setTimeout(){return 1;},clearTimeout(){},Date,Math,Map,Set,Array,Object,String,Number,Boolean,Promise,JSON};

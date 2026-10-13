@@ -1302,28 +1302,6 @@ const TYPE_EFFECTIVENESS = {
   "Fée": { super: ["Combat", "Dragon", "Ténèbres"], not: ["Feu", "Poison", "Acier"], no: [] },
 };
 
-const PROFESSIONAL_MODE_CONFIG = {
-  startNormalGame: { label: "Solo classique", description: "Le mode principal pour deviner le Pokémon mystère.", category: "classic" },
-  startDailyGame: { label: "Pokémon du jour", description: "Une partie quotidienne avec un Pokémon fixe selon la date.", category: "classic" },
-  startSilhouetteGame: { label: "Zoom progressif", description: "Découvre progressivement le sprite en zoomant sur l'image.", category: "classic" },
-  startPixelGame: { label: "Mode pixelisé", description: "Le sprite se révèle au fil des essais.", category: "classic" },
-  startQuizGame: { label: "Quiz Pokémon", description: "Réponds à une série de questions sur l'univers Pokémon.", category: "challenge" },
-  startMysteryStatGame: { label: "Stat Mystère", description: "Retrouve le Pokémon grâce à ses statistiques.", category: "challenge" },
-  startWeightBattle: { label: "Duel de poids", description: "Choisis le Pokémon le plus lourd entre deux propositions.", category: "challenge" },
-  startEvolutionChainGame: { label: "Chaîne d'évolution", description: "Complète la lignée d'évolution manquante.", category: "challenge" },
-  startPokedexOrderGame: { label: "Ordre Pokédex", description: "Trouve le Pokémon placé entre deux numéros.", category: "challenge" },
-  openStatClashMode: { label: "Stat Clash 1v1", description: "Draft de stats en 3 manches sur de vraies base stats Pokémon.", category: "challenge" },
-  startPartyMode: { label: "Party Pokémon", description: "Enchaîne plusieurs mini-jeux dans une même session.", category: "challenge" },
-  openPokedexMode: { label: "Pokédex", description: "Consulte les fiches détaillées des Pokémon disponibles.", category: "collection" },
-  openTypeChartScreen: { label: "Table des types", description: "Affiche les tableaux d'efficacité des types selon les générations.", category: "collection" },
-  openProfileScreen: { label: "Profil joueur", description: "Retrouve ton profil local et ta progression.", category: "collection" },
-  openAchievementsScreen: { label: "Succès", description: "Consulte les objectifs débloqués et à venir.", category: "collection" },
-  openRankingMode: { label: "Mode classement", description: "Organise les Pokémon dans des tableaux thématiques.", category: "collection" },
-  openDraftArenaMode: { label: "Draft Arènes", description: "Compose une équipe et affronte une série d'arènes.", category: "tools" },
-  openDraftScoreAttackMode: { label: "Draft Score Attack", description: "Drafte la meilleure moyenne BST en solo ou en 1v1.", category: "challenge" },
-  openDraftScoreAttackProDuel: { label: "Duel 1v1 PRO", description: "Affronte un ami en draft à bonus (météo, dresseur, synergies) révélés après le lock.", category: "challenge" },
-  openEmulatorMode: { label: "Émulateur", description: "Lance un jeu Pokémon directement depuis l'interface.", category: "tools" },
-};
 
 const TYPE_CHART_CONFIG = {
   gen1: {
@@ -5942,7 +5920,7 @@ async function renderPokedexDetail(pokemon) {
   `;
   const referencePokemon = Number.isInteger(Number(pokedexCompareId)) ? POKEMON_BY_ID.get(Number(pokedexCompareId)) : null;
   const compareBlockHtml = referencePokemon && referencePokemon.id !== pokemon.id
-    ? `<div class="pokedex-section"><h4>Comparaison rapide</h4><p class="pokedex-muted">Chargement...</p></div>`
+    ? `<div class="pokedex-section"><h4>Comparaison rapide</h4>${skeletonHtml("", "lines", 2)}</div>`
     : "";
 
   detail.innerHTML = `
@@ -5970,13 +5948,13 @@ async function renderPokedexDetail(pokemon) {
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>
     </div>
-    <div class="pokedex-section"><h4>Entrée Pokédex</h4><p class="pokedex-muted">Chargement...</p></div>
-    <div class="pokedex-section"><h4>Lieux de rencontre</h4><p class="pokedex-muted">Chargement...</p></div>
-    <div class="pokedex-section"><h4>Talents</h4><p class="pokedex-muted">Chargement...</p></div>
-    <div class="pokedex-section"><h4>Statistiques de base</h4><p class="pokedex-muted">Chargement...</p></div>
+    <div class="pokedex-section"><h4>Entrée Pokédex</h4>${skeletonHtml("Chargement de la fiche…", "lines", 3)}</div>
+    <div class="pokedex-section"><h4>Lieux de rencontre</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section"><h4>Talents</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section"><h4>Statistiques de base</h4>${skeletonHtml("", "lines", 2)}</div>
     <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
-    <div class="pokedex-section"><h4>Évolution</h4><p class="pokedex-muted">Chargement...</p></div>
-    <div class="pokedex-section"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b>Chargement...</b></div><div><span>Genre</span><b>Chargement...</b></div><div><span>Groupes d'oeufs</span><b>Chargement...</b></div><div><span>Eclosion</span><b>Chargement...</b></div></div></div>
+    <div class="pokedex-section"><h4>Évolution</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Genre</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Groupes d'oeufs</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Eclosion</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div></div></div>
   `;
 
   const apiId = getMysteryApiId(pokemon);
@@ -6309,222 +6287,6 @@ const DRAFT_GEN_OPTIONS = [
   { gen: 9, label: "Gen 9 (Paldea)", min: 906, max: 99999 },
 ];
 
-const DRAFT_ARENAS_BY_GEN = {
-  1: [
-    { name: "Pierre", type: "Roche", badgeName: "Boulder Badge", badgeFile: "Boulder_Badge.png" },
-    { name: "Ondine", type: "Eau", badgeName: "Cascade Badge", badgeFile: "Cascade_Badge.png" },
-    { name: "Major Bob", type: "Électrik", badgeName: "Thunder Badge", badgeFile: "Thunder_Badge.png" },
-    { name: "Erika", type: "Plante", badgeName: "Rainbow Badge", badgeFile: "Rainbow_Badge.png" },
-    { name: "Koga", type: "Poison", badgeName: "Soul Badge", badgeFile: "Soul_Badge.png" },
-    { name: "Sabrina", type: "Psy", badgeName: "Marsh Badge", badgeFile: "Marsh_Badge.png" },
-    { name: "Blaine", type: "Feu", badgeName: "Volcano Badge", badgeFile: "Volcano_Badge.png" },
-    { name: "Giovanni", type: "Sol", badgeName: "Earth Badge", badgeFile: "Earth_Badge.png" },
-  ],
-  2: [
-    { name: "Falkner", type: "Vol", badgeName: "Zephyr Badge", badgeFile: "Zephyr_Badge.png" },
-    { name: "Bugsy", type: "Insecte", badgeName: "Hive Badge", badgeFile: "Hive_Badge.png" },
-    { name: "Whitney", type: "Normal", badgeName: "Plain Badge", badgeFile: "Plain_Badge.png" },
-    { name: "Morty", type: "Spectre", badgeName: "Fog Badge", badgeFile: "Fog_Badge.png" },
-    { name: "Chuck", type: "Combat", badgeName: "Storm Badge", badgeFile: "Storm_Badge.png" },
-    { name: "Jasmine", type: "Acier", badgeName: "Mineral Badge", badgeFile: "Mineral_Badge.png" },
-    { name: "Pryce", type: "Glace", badgeName: "Glacier Badge", badgeFile: "Glacier_Badge.png" },
-    { name: "Clair", type: "Dragon", badgeName: "Rising Badge", badgeFile: "Rising_Badge.png" },
-  ],
-  3: [
-    { name: "Roxanne", type: "Roche", badgeName: "Stone Badge", badgeFile: "Stone_Badge.png" },
-    { name: "Brawly", type: "Combat", badgeName: "Knuckle Badge", badgeFile: "Knuckle_Badge.png" },
-    { name: "Wattson", type: "Électrik", badgeName: "Dynamo Badge", badgeFile: "Dynamo_Badge.png" },
-    { name: "Flannery", type: "Feu", badgeName: "Heat Badge", badgeFile: "Heat_Badge.png" },
-    { name: "Norman", type: "Normal", badgeName: "Balance Badge", badgeFile: "Balance_Badge.png" },
-    { name: "Winona", type: "Vol", badgeName: "Feather Badge", badgeFile: "Feather_Badge.png" },
-    { name: "Tate & Liza", type: "Psy", badgeName: "Mind Badge", badgeFile: "Mind_Badge.png" },
-    { name: "Wallace", type: "Eau", badgeName: "Rain Badge", badgeFile: "Rain_Badge.png" },
-  ],
-  4: [
-    { name: "Roark", type: "Roche", badgeName: "Coal Badge", badgeFile: "Coal_Badge.png" },
-    { name: "Gardenia", type: "Plante", badgeName: "Forest Badge", badgeFile: "Forest_Badge.png" },
-    { name: "Maylene", type: "Combat", badgeName: "Cobble Badge", badgeFile: "Cobble_Badge.png" },
-    { name: "Crasher Wake", type: "Eau", badgeName: "Fen Badge", badgeFile: "Fen_Badge.png" },
-    { name: "Fantina", type: "Spectre", badgeName: "Relic Badge", badgeFile: "Relic_Badge.png" },
-    { name: "Byron", type: "Acier", badgeName: "Mine Badge", badgeFile: "Mine_Badge.png" },
-    { name: "Candice", type: "Glace", badgeName: "Icicle Badge", badgeFile: "Icicle_Badge.png" },
-    { name: "Volkner", type: "Électrik", badgeName: "Beacon Badge", badgeFile: "Beacon_Badge.png" },
-  ],
-  5: [
-    { name: "Aloé", type: "Normal", badgeName: "Basic Badge", badgeFile: "Basic_Badge.png" },
-    { name: "Artie", type: "Insecte", badgeName: "Insect Badge", badgeFile: "Insect_Badge.png" },
-    { name: "Iris", type: "Dragon", badgeName: "Legend Badge", badgeFile: "Legend_Badge.png" },
-    { name: "Parsemille", type: "Sol", badgeName: "Quake Badge", badgeFile: "Quake_Badge.png" },
-    { name: "Bardane", type: "Plante", badgeName: "Plant Badge", badgeFile: "Plant_Badge.png" },
-    { name: "Inezia", type: "Électrik", badgeName: "Bolt Badge", badgeFile: "Bolt_Badge.png" },
-    { name: "Anis", type: "Spectre", badgeName: "Toxic Badge", badgeFile: "Toxic_Badge.png" },
-    { name: "Lino", type: "Eau", badgeName: "Wave Badge", badgeFile: "Wave_Badge.png" },
-  ],
-  6: [
-    { name: "Violette", type: "Insecte", badgeName: "Bug Badge", badgeFile: "Bug_Badge.png" },
-    { name: "Ramos", type: "Plante", badgeName: "Plant Badge", badgeFile: "Plant_Badge.png" },
-    { name: "Korrina", type: "Combat", badgeName: "Rumble Badge", badgeFile: "Rumble_Badge.png" },
-    { name: "Amaro", type: "Plante", badgeName: "Plant Badge", badgeFile: "Plant_Badge.png" },
-    { name: "Lem", type: "Électrik", badgeName: "Voltage Badge", badgeFile: "Voltage_Badge.png" },
-    { name: "Valériane", type: "Fée", badgeName: "Fairy Badge", badgeFile: "Fairy_Badge.png" },
-    { name: "Olympia", type: "Psy", badgeName: "Psychic Badge", badgeFile: "Psychic_Badge.png" },
-    { name: "Glacia", type: "Glace", badgeName: "Iceberg Badge", badgeFile: "Iceberg_Badge.png" },
-  ],
-  7: [
-    { name: "Ilima", type: "Normal", badgeName: "Normalium Z" },
-    { name: "Néphie", type: "Eau", badgeName: "Waterium Z" },
-    { name: "Barbara", type: "Poison", badgeName: "Poisonium Z" },
-    { name: "Kiawe", type: "Feu", badgeName: "Firium Z" },
-    { name: "Margie", type: "Spectre", badgeName: "Ghostium Z" },
-    { name: "Pectorius", type: "Combat", badgeName: "Fightinium Z" },
-    { name: "Kahili", type: "Vol", badgeName: "Flyinium Z" },
-    { name: "Alyxia", type: "Roche", badgeName: "Rockium Z" },
-  ],
-  8: [
-    { name: "Donna", type: "Plante", badgeName: "Grass Badge", badgeFile: "Grass_Badge.png" },
-    { name: "Nabil", type: "Eau", badgeName: "Water Badge", badgeFile: "Water_Badge.png" },
-    { name: "Savell", type: "Feu", badgeName: "Fire Badge", badgeFile: "Fire_Badge.png" },
-    { name: "Faïza", type: "Combat", badgeName: "Fighting Badge", badgeFile: "Fighting_Badge.png" },
-    { name: "Sally", type: "Fée", badgeName: "Fairy Badge", badgeFile: "Fairy_Badge.png" },
-    { name: "Chaz", type: "Roche", badgeName: "Rock Badge", badgeFile: "Rock_Badge.png" },
-    { name: "Alistair", type: "Spectre", badgeName: "Ghost Badge", badgeFile: "Ghost_Badge.png" },
-    { name: "Roy", type: "Dragon", badgeName: "Dragon Badge", badgeFile: "Dragon_Badge.png" },
-  ],
-  9: [
-    { name: "Katy", type: "Insecte", badgeName: "Badge Insecte" },
-    { name: "Mashynn", type: "Électrik", badgeName: "Badge Électrik" },
-    { name: "Kofu", type: "Eau", badgeName: "Badge Eau" },
-    { name: "Larry", type: "Normal", badgeName: "Badge Normal" },
-    { name: "Ryme", type: "Spectre", badgeName: "Badge Spectre" },
-    { name: "Tulip", type: "Psy", badgeName: "Badge Psy" },
-    { name: "Grusha", type: "Glace", badgeName: "Badge Glace" },
-    { name: "Alisma", type: "Sol", badgeName: "Badge Sol" },
-  ],
-};
-
-const DRAFT_ARENA_SIGNATURES_BY_GEN = {
-  1: {
-    "Pierre": ["Racaillou", "Onix"],
-    "Ondine": ["Stari", "Staross"],
-    "Major Bob": ["Voltorbe", "Raichu"],
-    "Erika": ["Saquedeneu", "Rafflesia"],
-    "Koga": ["Smogo", "Smogogo", "Nosferalto"],
-    "Sabrina": ["Kadabra", "Alakazam"],
-    "Blaine": ["Caninos", "Arcanin", "Galopa"],
-    "Giovanni": ["Nidoqueen", "Nidoking", "Rhinoféros"],
-  },
-  2: {
-    "Falkner": ["Roucoups"],
-    "Bugsy": ["Coconfort", "Insécateur"],
-    "Whitney": ["Mélofée", "Écrémeuh"],
-    "Morty": ["Spectrum", "Ectoplasma"],
-    "Chuck": ["Colossinge", "Mackogneur"],
-    "Jasmine": ["Magnéti", "Steelix"],
-    "Pryce": ["Marcacrin", "Cochignon"],
-    "Clair": ["Hypocéan", "Hyporoi"],
-  },
-  3: {
-    "Roxanne": ["Racaillou", "Tarinor"],
-    "Brawly": ["Makuhita", "Hariyama"],
-    "Wattson": ["Magnéton", "Élecsprint"],
-    "Flannery": ["Limagma", "Chartor"],
-    "Norman": ["Vigoroth", "Monaflèmit"],
-    "Winona": ["Airmure", "Altaria"],
-    "Tate & Liza": ["Solaroc", "Séléroc"],
-    "Wallace": ["Lovdisc", "Milobellus"],
-  },
-  4: {
-    "Roark": ["Cranidos", "Onix"],
-    "Gardenia": ["Ceribou", "Roserade"],
-    "Maylene": ["Méditikka", "Lucario"],
-    "Crasher Wake": ["Mustébouée", "Musteflott"],
-    "Fantina": ["Magirêve", "Spectrum"],
-    "Byron": ["Steelix", "Bastiodon"],
-    "Candice": ["Blizzi", "Blizzaroi"],
-    "Volkner": ["Luxray", "Raichu"],
-  },
-  5: {
-    "Aloé": ["Ponchiot", "Miradar"],
-    "Artie": ["Crabicoque", "Manternel"],
-    "Iris": ["Drakkarmin", "Tranchodon"],
-    "Parsemille": ["Minotaupe", "Crocorible"],
-    "Bardane": ["Haydaim", "Fragilady"],
-    "Inezia": ["Zeblitz"],
-    "Anis": ["Tutankafer", "Moyade"],
-    "Lino": ["Moyade"],
-  },
-  6: {
-    "Violette": ["Prismillon"],
-    "Ramos": ["Chevroum"],
-    "Korrina": ["Lucario"],
-    "Lem": ["Iguolta"],
-    "Valériane": ["Nymphali", "Mysdibule"],
-    "Olympia": ["Mistigrix"],
-    "Glacia": ["Blizzaroi"],
-  },
-  7: {
-    "Ilima": ["Manglouton"],
-    "Néphie": ["Araqua", "Tarenbulle"],
-    "Barbara": ["Smogogo", "Grotadmorv"],
-    "Kiawe": ["Tritox", "Malamandre"],
-    "Margie": ["Mimiqui"],
-    "Pectorius": ["Mackogneur"],
-    "Kahili": ["Bazoucan"],
-    "Alyxia": ["Lougaroc"],
-  },
-  8: {
-    "Donna": ["Tournicoton", "Blancoton"],
-    "Nabil": ["Khélocrok"],
-    "Savell": ["Grillepattes", "Scolocendre"],
-    "Faïza": ["Mackogneur"],
-    "Sally": ["Charmilly"],
-    "Chaz": ["Monthracite"],
-    "Alistair": ["Ectoplasma"],
-    "Roy": ["Duralugon"],
-  },
-  9: {
-    "Katy": ["Tissenboule", "Filentrappe"],
-    "Larry": ["Étouraptor"],
-    "Ryme": ["Téraclope", "Noctunoir"],
-    "Tulip": ["Florges", "Gardevoir"],
-    "Grusha": ["Altaria"],
-    "Alisma": ["Terraiste"],
-  },
-};
-
-const DRAFT_ARENA_TYPE_IMAGE_BY_TYPE = {
-  "Normal": "Normal.png",
-  "Feu": "Fire.png",
-  "Eau": "Water.png",
-  "Plante": "Grass.png",
-  "Électrik": "Electric.png",
-  "Glace": "Ice.png",
-  "Combat": "Fighting.png",
-  "Poison": "Poison.png",
-  "Sol": "Ground.png",
-  "Vol": "Flying.png",
-  "Psy": "Psychic.png",
-  "Insecte": "Bug.png",
-  "Roche": "Rock.png",
-  "Spectre": "Ghost.png",
-  "Dragon": "Dragon.png",
-  "Ténèbres": "Dark.png",
-  "Acier": "Steel.png",
-  "Fée": "Fairy.png",
-};
-
-const DRAFT_ARENA_BACKGROUND_IMAGE_BY_NAME = Object.freeze(
-  Object.fromEntries(
-    Object.values(DRAFT_ARENAS_BY_GEN)
-      .flat()
-      .filter((arena) => arena?.name && arena?.badgeFile)
-      .map((arena) => [
-        arena.name,
-        `https://archives.bulbagarden.net/wiki/Special:Redirect/file/${arena.badgeFile}`,
-      ])
-  )
-);
-
 // Lot E audit : persistance de la run Draft Arènes (mode solo "arena") pour
 // survivre à un refresh — la progression et les badges étaient perdus avant.
 const DRAFT_ARENA_SAVE_KEY = "pokedle_draft_arena_run_v1";
@@ -6550,19 +6312,6 @@ function saveDraftArenaProgress() {
   }
 }
 
-function loadDraftArenaProgress() {
-  try {
-    const raw = localStorage.getItem(DRAFT_ARENA_SAVE_KEY);
-    if (!raw) return null;
-    const saved = JSON.parse(raw);
-    if (!saved || saved.mode !== "arena" || !saved.phase || saved.phase === "gen") return null;
-    saved.selectedDexIds = new Set(Array.isArray(saved.selectedDexIds) ? saved.selectedDexIds : []);
-    saved.evaluating = false;
-    return saved;
-  } catch (_err) {
-    return null;
-  }
-}
 
 function clearDraftArenaProgress() {
   try { localStorage.removeItem(DRAFT_ARENA_SAVE_KEY); } catch (_err) { /* noop */ }
@@ -6612,14 +6361,6 @@ function getDraftBadgeImageUrl(arena) {
   return `https://archives.bulbagarden.net/wiki/Special:Redirect/file/${arena.badgeFile}`;
 }
 
-function getDraftBadgeMarkup(arena, statusClass = "") {
-  const badgeName = arena?.badgeName || `${arena?.type || "Badge"}`;
-  const imageUrl = getDraftBadgeImageUrl(arena);
-  if (imageUrl) {
-    return `<span class="draft-official-badge ${statusClass}"><img src="${imageUrl}" alt="${escapeHtml(badgeName)}" loading="lazy" /></span>`;
-  }
-  return `<span class="draft-official-badge draft-official-badge-fallback ${statusClass}">${typeBadgeHtml(arena?.type || "Normal")}<small>${escapeHtml(badgeName)}</small></span>`;
-}
 
 function clampDraftValue(value, min, max) {
   return Math.max(min, Math.min(max, value));

@@ -15,6 +15,26 @@ function gameFeelReplay(node, cls) {
   void node.offsetWidth;
   node.classList.add(cls);
 }
+// Loading placeholders: the shape of what is coming (lines, ranking rows, a duel)
+// shimmers instead of a bare « Chargement… ». The label stays for screen readers;
+// without a label the block is decorative (several sections loading at once).
+function skeletonHtml(label, kind = 'lines', count = 3, extraClass = '') {
+  const widths = [92, 68, 84, 56, 76, 62];
+  const n = Math.max(1, Number(count) || 1);
+  const bone = (cls, width) => '<i class="pk-skel-bone ' + cls + '"' + (width ? ' style="--w:' + width + '%"' : '') + '></i>';
+  let body = '';
+  if (kind === 'rows') {
+    body = Array.from({ length: n }, (_, i) => '<span class="pk-skel-row">' + bone('is-dot') + bone('is-avatar') + bone('is-line', widths[i % widths.length] - 24) + bone('is-pill') + '</span>').join('');
+  } else if (kind === 'duel' || kind === 'card') {
+    const card = '<span class="pk-skel-card">' + bone('is-sprite') + bone('is-line') + bone('is-line') + '</span>';
+    body = kind === 'duel' ? card + '<span class="pk-skel-vs" aria-hidden="true">VS</span>' + card : card;
+  } else {
+    body = Array.from({ length: n }, (_, i) => bone('is-line', widths[i % widths.length])).join('');
+  }
+  const a11y = label ? ' role="status" aria-live="polite"' : ' aria-hidden="true"';
+  return '<div class="pk-skel is-' + kind + (extraClass ? ' ' + extraClass : '') + '"' + a11y + '>' +
+    (label ? '<span class="pk-skel-label">' + escapeHtml(label) + '</span>' : '') + body + '</div>';
+}
 function gameFeelReducedMotion() {
   const settings = gameFeelSettings();
   if (settings.reduceMotion) return true;

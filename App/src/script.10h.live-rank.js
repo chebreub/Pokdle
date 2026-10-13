@@ -240,7 +240,7 @@ function renderLiveRankHud(screenId,mode,currentOverride=null) {
     const recordText=personal>0?liveRankFormat(personal,mode,data?.unit||meta.unit):"—";
     hud.innerHTML=
       '<div class="live-rank-mark"><svg aria-hidden="true"><use href="#i-trophy"/></svg></div>'+
-      '<div class="live-rank-primary"><span>CLASSEMENT DU JOUR</span><div><strong>'+rankText+'</strong><b>'+escapeHtml(todayText)+'</b></div></div>'+
+      '<div class="live-rank-primary"><span>CLASSEMENT DU JOUR</span><div><strong>'+rankText+'</strong><b'+(!me&&!data&&status==="loading"?' class="pk-skel-text"':'')+'>'+escapeHtml(todayText)+'</b></div></div>'+
       '<div class="live-rank-stat"><span>'+escapeHtml(current.label)+'</span><strong>'+escapeHtml(currentText)+'</strong></div>'+
       '<div class="live-rank-stat live-rank-record"><span>Record local</span><strong>'+escapeHtml(recordText)+'</strong></div>'+
       '<div class="live-rank-goal is-'+goalCopy.tone+'"><span>OBJECTIF</span><b>'+escapeHtml(goalCopy.text)+'</b></div>'+

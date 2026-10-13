@@ -242,7 +242,7 @@ function weeklyLeagueRankRow(row,index) {
 function openWeeklyLeagueRanking() {
   const info=weeklyLeagueIsoWeek();
   const mode=weeklyLeagueLeaderboardMode(info);
-  ensureOverlay("Ligue · Classement",'<div class="weekly-ranking-loading">Chargement du classement…</div>');
+  ensureOverlay("Ligue · Classement",skeletonHtml('Chargement du classement…','rows',5));
   fetch("/api/leaderboard?mode="+encodeURIComponent(mode)+"&scope=all",{credentials:"same-origin"})
     .then(r=>r.json()).then(data=>{
       const rows=Array.isArray(data?.top)?data.top:[];

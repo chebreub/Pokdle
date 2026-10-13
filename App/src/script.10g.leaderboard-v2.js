@@ -235,7 +235,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
   const requestedScope=leaderboardV2Scope;
   const requestId=++leaderboardViewRequest;
 
-  const loading='<div class="lbv3-shell" data-lb-request="'+requestId+'"><div class="lbv3-loading"><span></span><p>Synchronisation du classement…</p></div></div>';
+  const loading='<div class="lbv3-shell" data-lb-request="'+requestId+'">'+skeletonHtml('Synchronisation du classement…','rows',6,'lbv3-skeleton')+'</div>';
   leaderboardV2Show(loading);
 
   const syncTasks=[];
@@ -370,7 +370,7 @@ function renderWinLeaderboardPreview(mode) {
   const account=leaderboardAccountId();
   const current=()=>requestId===leaderboardPreviewRequest && document.getElementById("win-ranking-preview")===panel &&
     account===leaderboardAccountId() && (typeof gameMode === "undefined" || gameMode === mode);
-  panel.innerHTML='<div class="win-rank-loading" role="status">Chargement de ta position du jour…</div>';
+  panel.innerHTML=skeletonHtml('Chargement de ta position du jour…','rows',3,'win-rank-loading');
   return syncPendingDailyLeaderboard().then(()=>leaderboardFetchJson("/api/leaderboard?mode=daily&scope=today")).then(data=>{
     if (!current()) return;
     if (data.me) {
