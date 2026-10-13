@@ -12,6 +12,7 @@ const { createOAuthStateStore } = require("./lib/oauth-state");
 const nearestParty = require("./lib/party-nearest");
 const dexRace = require("./lib/party-dexrace");
 const deductionParty = require("./lib/party-deduction");
+const quiEstCeParty = require("./lib/party-quiestce");
 const coopParty = require("./lib/party-coop");
 const { bestDuelProximity } = require("./lib/duel-proximity");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
@@ -241,7 +242,10 @@ async function signInWithIdentity(req, res, { provider, providerUserId, nativeId
   if (!accountId) {
     const ownsAccount = (await pgPool.query("SELECT 1 FROM users WHERE discord_id = $1", [nativeId])).rowCount > 0;
     const current = getSessionUser(req);
-    linked = Boolean(current?.id) && !ownsAccount && String(current.id) !== nativeId;
+    // A session can outlive its account (deleted elsewhere): only link into a live one.
+    const currentAlive = Boolean(current?.id) && String(current.id) !== nativeId
+      && (await pgPool.query("SELECT 1 FROM users WHERE discord_id = $1", [String(current.id)])).rowCount > 0;
+    linked = currentAlive && !ownsAccount;
     accountId = linked ? String(current.id) : nativeId;
   }
   if (accountId === nativeId) {
@@ -390,6 +394,44 @@ app.get("/api/me", (req, res) => {
   if (!authReady()) return res.json({ user: null, auth: false, providers });
   const user = getSessionUser(req);
   res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar, via: user.via || "discord" } : null, auth: true, providers });
+});
+// Delete my account: every row tied to it, in one transaction, then the session.
+// Public egg feed entries are kept but anonymised so the shared investigation stays whole.
+app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const origin = req.get("origin");
+  if (origin && new URL(origin).host !== req.get("host")) return res.status(403).json({ ok: false, error: "origin_denied" });
+  const user = authReady() ? getSessionUser(req) : null;
+  if (!user) return res.status(401).json({ ok: false, error: "not_signed_in" });
+  if (!req.body || req.body.confirm !== "SUPPRIMER") return res.status(400).json({ ok: false, error: "confirm_required" });
+  const id = String(user.id), key = "user:" + id;
+  const steps = [
+    ["scores", "DELETE FROM scores WHERE discord_id = $1", [id]],
+    ["leaderboard_events", "DELETE FROM leaderboard_events WHERE discord_id = $1", [id]],
+    ["daily_sessions", "DELETE FROM daily_sessions WHERE discord_id = $1", [id]],
+    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
+    ["egg_rewards", "DELETE FROM egg_rewards WHERE player_id = $1", [id]],
+    ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
+    ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
+    ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
+  ];
+  let client = null;
+  try {
+    client = await pgPool.connect();
+    await client.query("BEGIN");
+    for (const [table, sql, params] of steps) {
+      // A deployment may not have created every game table yet.
+      const exists = (await client.query("SELECT to_regclass($1) AS t", [table])).rows[0]?.t;
+      if (exists) await client.query(sql, params);
+    }
+    await client.query("COMMIT");
+  } catch (e) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+    console.error("[account] delete failed:", e.message);
+    return res.status(503).json({ ok: false, error: "unavailable" });
+  } finally { if (client) client.release(); }
+  res.clearCookie(AUTH_COOKIE, { path: "/" });
+  res.json({ ok: true });
 });
 // Which sign-ins open the current account (for "Relier Google / Discord").
 app.get("/api/account/identities", async (req, res) => {
@@ -1094,7 +1136,7 @@ const USAGE_EVENTS = new Set([
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
-  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
   "duel:create", "statclash:create",
 ]);
 const USAGE_LABELS = {
@@ -1105,7 +1147,7 @@ const USAGE_LABELS = {
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
-  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
+  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce": "Party — Qui est-ce ?", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
@@ -1289,6 +1331,8 @@ function publicPartyRoomState(room, viewerId = null) {
     ? coopParty.publicCoopRound(room, viewerId, revealed)
     : gameMode === "deduction"
     ? deductionParty.publicDeductionRound(room, revealed)
+    : gameMode === "quiestce"
+    ? quiEstCeParty.publicQuiEstCeRound(room, viewerId, revealed)
     : gameMode === "nearest"
     ? publicPartyNearestRoundState(room, revealed)
     : gameMode === "typecombo"
@@ -1323,9 +1367,10 @@ function publicPartyRoomState(room, viewerId = null) {
       score: Number(player.score) || 0,
       correct: Boolean(player.correct),
       lastGain: Number(player.lastGain) || 0,
-      attempts: gameMode === "deduction" ? Number(player.attempts) || 0 : 0,
+      attempts: gameMode === "deduction" || gameMode === "quiestce" ? Number(player.attempts) || 0 : 0,
       proximity: gameMode === "deduction" ? bestDuelProximity(player) : 0,
-      gaveUp: gameMode === "deduction" && Boolean(player.gaveUp),
+      gaveUp: (gameMode === "deduction" || gameMode === "quiestce") && Boolean(player.gaveUp),
+      quiRemaining: gameMode === "quiestce" ? quiEstCeParty.quiEstCeRemainingCount(room, player) : 0,
       guessHistory: gameMode === "deduction" && player.id === viewerId ? player.guesses || [] : [],
       submitted: gameMode === "nearest" && Boolean(player.nearestPick),
       proposal: gameMode === "nearest" && player.id === viewerId ? player.nearestPick?.name || null : null,
@@ -1444,6 +1489,9 @@ function resetPartyCampaign(room) {
   room.variant = null;
   room.roundPlayerIds = [];
   room.deductionWinnerId = null;
+  room.quiWinnerId = null;
+  room.quiCards = null;
+  room.quiPokemon = null;
   room.nearestTarget = null;
   room.nearestResolved = false;
   room.typeCombo = null;
@@ -1499,7 +1547,7 @@ function armPartyRoundTimer(room) {
     room.roundStartedAt = Date.now();
     return;
   }
-  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
+  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : ["deduction", "coop", "quiestce"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, duration);
@@ -1513,6 +1561,8 @@ async function startPartyRound(room) {
     coopParty.startCoopRound(room, POKEMON_LIST);
   } else if (room.gameMode === "deduction") {
     deductionParty.startDeductionRound(room, POKEMON_LIST);
+  } else if (room.gameMode === "quiestce") {
+    quiEstCeParty.startQuiEstCeRound(room, POKEMON_LIST);
   } else if (room.gameMode === "nearest") {
     nearestParty.startNearestRound(room, POKEMON_LIST);
   } else if (isPartyStatMode(room)) {
@@ -1962,6 +2012,7 @@ function handlePartyDisconnect(socketId, voluntary) {
     }
     if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
     if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
+    if (room.status === "playing" && room.gameMode === "quiestce" && quiEstCeParty.allQuiEstCePlayersGaveUp(room)) endPartyRound(room);
     if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
     emitPartyRoomState(room);
   };
@@ -2204,9 +2255,10 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room || payload.code !== room.code) return respond(ack, { ok: false, error: "Salon introuvable." });
       const player = room.players.find(p => p.id === socket.id);
-      const result = deductionParty.forfeitDeduction(room, player, payload.roundSerial);
+      const qui = room.gameMode === "quiestce";
+      const result = qui ? quiEstCeParty.forfeitQuiEstCe(room, player, payload.roundSerial) : deductionParty.forfeitDeduction(room, player, payload.roundSerial);
       if (result.error) return respond(ack, { ok: false, error: result.error });
-      if (deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
+      if (qui ? quiEstCeParty.allQuiEstCePlayersGaveUp(room) : deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (_error) {
@@ -2286,6 +2338,7 @@ io.on("connection", (socket) => {
       if (room.hostId === previousId) room.hostId = socket.id;
       if (Array.isArray(room.roundPlayerIds)) room.roundPlayerIds = room.roundPlayerIds.map((id) => id === previousId ? socket.id : id);
       if (room.deductionWinnerId === previousId) room.deductionWinnerId = socket.id;
+      if (room.quiWinnerId === previousId) room.quiWinnerId = socket.id;
       if (room.race?.roster) room.race.roster.forEach((member) => { if (member.id === previousId) member.id = socket.id; });
       if (room.race?.claims instanceof Map) {
         for (const claim of room.race.claims.values()) if (claim.playerId === previousId) claim.playerId = socket.id;
@@ -2358,6 +2411,16 @@ io.on("connection", (socket) => {
       if (room.gameMode === "deduction") {
         const result = deductionParty.submitDeduction(room, player, payload.guess, payload.roundSerial, resolveRoomPokemonGuess, buildGuessFeedback);
         if (result.error) return respond(ack, { ok: false, error: result.error });
+        if (result.correct) endPartyRound(room);
+        emitPartyRoomState(room);
+        return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
+      }
+      if (room.gameMode === "quiestce") {
+        if (payload.code !== room.code) return respond(ack, { ok: false, error: "Cette salle a changé." });
+        const result = payload.quiAction === "propose"
+          ? quiEstCeParty.proposeQuiEstCe(room, player, payload.pokemonId, payload.roundSerial)
+          : quiEstCeParty.askQuiEstCe(room, player, payload.questionId, payload.roundSerial);
+        if (result.error) return respond(ack, { ok: false, error: result.error, room: publicPartyRoomState(room, socket.id) });
         if (result.correct) endPartyRound(room);
         emitPartyRoomState(room);
         return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
@@ -2468,7 +2531,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
         room.roundNumber = 0;

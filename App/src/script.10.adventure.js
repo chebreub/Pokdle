@@ -41,7 +41,7 @@ function duelDiscovery(room, self) {
 }
 function partyDiscovery(room, me) {
   if (!me || !['finished', 'complete'].includes(room?.status)) return null;
-  if (['guess', 'deduction', 'coop'].includes(room.gameMode) && me.correct) return findPokemonGlobalByName(room.round?.answer);
+  if (['guess', 'deduction', 'coop', 'quiestce'].includes(room.gameMode) && me.correct) return findPokemonGlobalByName(room.round?.answer);
   if (room.gameMode === 'nearest') {
     const exact = room.round?.results?.find(p => p.playerId === me.id && p.pokemon && p.distance === 0);
     if (exact) return POKEMON_BY_ID.get(Number(exact.pokemon.id)) || null;

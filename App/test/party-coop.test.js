@@ -26,7 +26,7 @@ function envFixture() {
   const catalogue = JSON.parse(data.match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
   const extraForms = new Function('return ' + core.match(/const EXTRA_FORMS =\s*(\[[\s\S]*?\]);/)[1])();
   const env = {
-    POKEMON_LIST: catalogue, deductionParty: deduction, coopParty: coop, bestDuelProximity,
+    POKEMON_LIST: catalogue, deductionParty: deduction, coopParty: coop, quiEstCeParty: require('../lib/party-quiestce'), bestDuelProximity,
     loadStatClashExtraFormsConfig: () => ({ extraForms, apiNamesByName: {} }),
     PARTY_TOTAL_ROUNDS: 5, PARTY_MIN_PLAYERS: 2, PARTY_MAX_PLAYERS: 8, PARTY_ROUND_TIMER_MS: 30000,
     clearRoomCleanup() {}, clearTimeout() {}, setTimeout(fn, duration) { env.timer = { fn, duration }; return 1; },

@@ -950,6 +950,7 @@ function openAccountMenu() {
       <div class="account-menu-linked" id="account-menu-linked" aria-live="polite"></div>
       <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
       <a class="account-menu-privacy" href="/confidentialite">Confidentialité</a>
+      <button type="button" class="account-menu-delete" data-action="confirmDeleteAccount">Supprimer mon compte</button>
     </div>`);
   renderAccountLinkedProviders();
 }
@@ -967,6 +968,28 @@ function renderAccountLinkedProviders() {
     box.innerHTML = '<span>Connexion avec : ' + escapeHtml(linked.map(id => names[id]).join(' et ') || '—') + '</span>' +
       missing.map(id => '<a class="btn-ghost account-link-provider" href="/auth/' + id + '">Relier ' + names[id] + '</a>').join('');
   }).catch(() => {});
+}
+function confirmDeleteAccount() {
+  if (!connectedAccountUser) return;
+  ensureOverlay('Supprimer mon compte ?', '<p class="card-desc">Ton compte, ta progression en ligne et tes résultats des classements seront <b>effacés pour de bon</b>. Les connexions Discord et Google reliées à ce compte disparaissent aussi.</p><p class="card-desc">Ta progression reste sur cet appareil, comme pour un invité.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="openAccountMenu">Annuler</button><button class="btn-red" type="button" data-action="doDeleteAccount">Supprimer définitivement</button></div>');
+}
+function doDeleteAccount() {
+  const accountId = connectedAccountUser ? String(connectedAccountUser.id) : '';
+  if (!accountId) return;
+  fetch('/api/account/delete', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirm: 'SUPPRIMER' }) })
+    .then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok && data.ok })))
+    .then(({ ok }) => {
+      if (!ok) { showToast('Suppression impossible pour le moment. Réessaie.'); return; }
+      // The account is gone: forget its copies on this device, keep playing as a guest.
+      try {
+        const encoded = encodeURIComponent(accountId);
+        ['pokedle_sync_cache_v2:' + encoded, 'pokedle_sync_conflict_v2:' + encoded, 'pokedle_sync_owner_v2', 'pokedle_sync_at'].forEach(key => localStorage.removeItem(key));
+        const points = JSON.parse(localStorage.getItem('pokedle_restore_points_v1') || '[]');
+        if (Array.isArray(points)) localStorage.setItem('pokedle_restore_points_v1', JSON.stringify(points.filter(p => String(p?.owner || '') !== accountId)));
+      } catch (_e) {}
+      location.href = '/?auth=deleted';
+    })
+    .catch(() => showToast('Suppression impossible pour le moment. Réessaie.'));
 }
 function accountNavigate(destination) {
   closeOverlayModal();
@@ -1005,6 +1028,7 @@ function accountNavigate(destination) {
           var via = p.get("via") === "google" ? "Google" : "Discord";
           if (m === "ok") showToast("Connecté avec " + via + " ✅");
           else if (m === "linked") showToast(via + " est maintenant relié à ton compte ✅");
+          else if (m === "deleted") showToast("Ton compte a été supprimé.");
           else if (m === "erreur") showToast("Échec de la connexion " + via + ".");
           else if (m === "indispo") showToast("Connexion indisponible pour le moment.");
         }

@@ -152,11 +152,11 @@ function openQuiEstCeMode() {
   if (!quiEstCeState || quiEstCeState.phase !== 'playing') quiEstCeState = newQuiEstCeState();
   renderQuiEstCe();
 }
-function quiCardHtml(state, id, flipped) {
+function quiCardHtml(state, id, flipped, action = 'selectQuiEstCeCard', locked = false) {
   const p = quiPokemon(id) || { name: '?' };
   const out = state.out.includes(id), finished = state.phase === 'finished';
   const classes = ['qui-card', out ? 'is-out' : '', flipped.includes(id) ? 'is-flipping' : '', state.selected === id ? 'is-selected' : '', finished && id === state.secretId ? 'is-secret' : ''].filter(Boolean).join(' ');
-  return '<button type="button" class="' + classes + '" data-action="selectQuiEstCeCard" data-args="[' + Number(id) + ']" aria-pressed="' + (state.selected === id) + '"' + (out || finished ? ' disabled' : '') + ' aria-label="' + escapeHtml(p.name + (out ? ' (écarté)' : '')) + '">' +
+  return '<button type="button" class="' + classes + '" data-action="' + action + '" data-args="[' + Number(id) + ']" aria-pressed="' + (state.selected === id) + '"' + (out || finished || locked ? ' disabled' : '') + ' aria-label="' + escapeHtml(p.name + (out ? ' (écarté)' : '')) + '">' +
     '<img src="' + escapeHtml(getPokemonSprite(p)) + '" alt="" loading="lazy" decoding="async" width="96" height="96"><span>' + escapeHtml(p.name) + '</span></button>';
 }
 function quiLogHtml(state) {

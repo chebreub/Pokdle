@@ -36,6 +36,8 @@
 #pokdle-app.design-refresh .account-menu-linked span {flex:1 1 100%;}
 #pokdle-app.design-refresh.theme-dark #account-area .account-login {background:#edf3fe!important;border-color:#edf3fe!important;color:#1e2c43!important;}
 #pokdle-app.design-refresh.theme-dark #account-area .account-login-logo {fill:#1e2c43;}
+#pokdle-app.design-refresh .account-menu-delete {display:block;margin:6px auto 0;padding:6px 10px;border:0;background:none;color:#b42318;font:700 .78rem Nunito,sans-serif;cursor:pointer;text-decoration:underline;}
+#pokdle-app.design-refresh.theme-dark .account-menu-delete {color:#f3aaaa;}
 #pokdle-app.design-refresh .account-menu-privacy {display:block;margin-top:8px;text-align:center;font-size:.78rem;color:var(--ui-muted);}
 #pokdle-app.design-refresh.theme-dark .leaderboard-aside section,#pokdle-app.design-refresh.theme-dark #home-game-filters button {background:#292633;color:#f6eeff;border-color:#494153;}
 #pokdle-app.design-refresh.theme-dark .home-path-friends {background:#352f49!important;border-color:#594975!important;}
