@@ -2668,7 +2668,12 @@ async function resolveDraftArenaRun() {
   renderDraftArena();
 }
 
+// Draft Arènes and Draft PRO were removed on 13 October 2026: old links, saved
+// runs and history entries open the normal Draft instead.
 function openDraftArenaMode() {
+  return openDraftScoreAttackMode();
+}
+function openDraftArenaModeRemoved() {
   trackUsage("solo:draft");
   if (draftArenaState?.mode === "scoreAttack" && draftArenaState.scoreAttackRoom && multiplayerSocket?.connected) {
     multiplayerSocket.emit("draft-score:leave-room");
@@ -2725,7 +2730,7 @@ function openDraftScoreAttackMode(pro) {
   showScreen("screen-draft-score-attack");
   setGlobalNavActive("game");
 
-  const wantPro = !!pro;
+  const wantPro = false;
   // Reset propre : on repart d'une partie fraîche si on (re)choisit un mode ou si on change de mode.
   if (!draftArenaState || draftArenaState.mode !== "scoreAttack" || draftArenaState.scoreAttackPro !== wantPro) {
     draftArenaState = createDraftArenaState();
@@ -2745,7 +2750,7 @@ function openDraftScoreAttackMode(pro) {
 // le lobby 1v1 en avant. Le solo PRO et le 1v1 PRO partagent le même écran ;
 // ici on signale l'intention duel et on amène les boutons de room dans le champ de vision.
 function openDraftScoreAttackProDuel() {
-  openDraftScoreAttackMode(true);
+  openDraftScoreAttackMode();
   if (draftArenaState) draftArenaState.duelIntent = true;
   setTimeout(function () {
     var btn = document.querySelector('[data-action="createDraftScoreAttackRoom"]');
@@ -2813,8 +2818,7 @@ function restartDraftArenaRun() {
 }
 
 function toggleDraftScoreAttackMode() {
-  if (draftArenaState?.mode === "scoreAttack") openDraftArenaMode();
-  else openDraftScoreAttackMode();
+  openDraftScoreAttackMode();
 }
 
 async function pickDraftArenaOption(pokemonId) {

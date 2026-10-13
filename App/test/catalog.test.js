@@ -17,22 +17,24 @@ function fixture() {
  return {context,elements,rows};
 }
 test('every former menu destination remains reachable and categorized',()=>{
- assert.equal(cards.length,31); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
+ assert.equal(cards.length,29); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
  for(const action of ['openEggGame','startPartyMode','openTypeComboSolo','openTeamsScreen','openEmulatorMode','openLeaderboard','openPartyRoomMode']) assert.ok(cards.some(card=>card.markup.includes(action)),action);
  // Entre amis is one door: the two-player games live in the Party Room lobby.
  const lobby=html.slice(html.indexOf('id="party-lobby"'),html.indexOf('id="party-joined"'));
- for(const action of ['openMultiplayerMode','openStatClashMode','openStatAuctionMode','openDefiAmiFromAllModes','openDraftScoreAttackProDuel']) assert.ok(lobby.includes('data-action="'+action+'"'),action);
+ for(const action of ['openMultiplayerMode','openStatClashMode','openStatAuctionMode','openDefiAmiFromAllModes']) assert.ok(lobby.includes('data-action="'+action+'"'),action);
+ // Draft Arènes and Draft PRO were removed: nothing on the page leads to them.
+ for(const gone of ['openDraftScoreAttackProDuel','"openDraftArenaMode"','"openDraftScoreAttackMode", true']) assert.ok(!html.includes(gone),gone);
 });
 test('friends filter is a single door to the Party Room',()=>{
  const {context,rows}=fixture();context.setModeCatalogCategory('friends');const visible=rows.filter(card=>!card.hidden);
  assert.equal(visible.length,1);assert.ok(visible.every(card=>card.dataset.category==='friends'));assert.ok(visible[0].markup.includes('openPartyRoomMode'));assert.equal(context.activeNav,'social');
 });
 test('search ignores accents, matches unordered words and recovers from no results',()=>{
- const {context,rows,elements}=fixture();context.setModeCatalogCategory('all');elements['mode-search'].value='PRO draft';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,2);
+ const {context,rows,elements}=fixture();context.setModeCatalogCategory('all');elements['mode-search'].value='attack draft';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='emulateur';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='zzzznoresult';context.renderModeCatalog();assert.equal(elements['mode-empty'].hidden,false);
- context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,30);
- assert.ok(rows.find(card=>card.markup.includes('openDraftArenaMode')).hidden,'unfinished Draft Arènes is not advertised');
+ context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,29);
+ assert.ok(!rows.some(card=>card.markup.includes('openDraftArenaMode')),'Draft Arènes was removed');
 });
 test('search matches the start of words so short queries stay precise',()=>{
  const {context,rows,elements}=fixture();context.setModeCatalogCategory('solo');
@@ -55,7 +57,7 @@ test('changing category clears stale searches and saves it for Back',()=>{
 test('difficulty filter narrows playable modes and never hides Explore tools',()=>{
  const {context,rows,elements}=fixture();
  context.setModeCatalogCategory('all');context.setModeCatalogDifficulty('expert');
- const expert=rows.filter(card=>!card.hidden);assert.equal(expert.length,1,'the PRO duel now lives in the Party Room');assert.ok(expert.every(card=>card.textContent.includes('PRO')));
+ const expert=rows.filter(card=>!card.hidden);assert.equal(expert.length,0,'no expert game left since Draft PRO was removed');
  context.setModeCatalogCategory('explore');assert.equal(elements['mode-difficulty-field'].hidden,true);assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='explore'));
  context.setModeCatalogCategory('solo');context.setModeCatalogDifficulty('easy');assert.equal(elements['mode-difficulty-field'].hidden,false);assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.difficulty==='easy'));
 });
