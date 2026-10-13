@@ -25,9 +25,15 @@ function fillLeaderboardWeekTop(isCurrent) {
   });
 }
 
+// Discord is always offered (its link also works without JavaScript); Google only once configured.
+function loginProviderButtonsHtml() {
+  const providers = window.__pokedleProviders || { google: false };
+  return (providers.google ? '<a class="btn-ghost login-google" href="/auth/google"><svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path fill="#4285F4" d="M21.6 12.23c0-.68-.06-1.36-.18-2.02H12v3.83h5.4a4.62 4.62 0 0 1-2 3.03v2.5h3.24c1.9-1.75 2.96-4.32 2.96-7.34z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.63-2.43l-3.24-2.5c-.9.6-2.04.96-3.39.96-2.6 0-4.81-1.76-5.6-4.12H3.06v2.58A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 13.91a6 6 0 0 1 0-3.82V7.51H3.06a10 10 0 0 0 0 8.98z"/><path fill="#EA4335" d="M12 5.97c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.94 5.51L6.4 10.1C7.19 7.73 9.4 5.97 12 5.97z"/></svg>Continuer avec Google</a>' : '') +
+    '<a class="btn-blue login-discord" href="/auth/discord">Continuer avec Discord</a>';
+}
 function openLoginWelcome() {
   if (connectedAccountUser) return openAccountMenu();
-  ensureOverlay("Bienvenue sur Pokédle", '<div class="login-welcome"><div class="login-welcome-art" aria-hidden="true"><img src="'+modeCatalogSpriteUrl(133)+'" alt="" width="128" height="128"/><span>✦</span></div><span class="club-eyebrow">TON PETIT RENDEZ-VOUS POKÉMON</span><h3>Une aventure à retrouver.</h3><p>Connecte-toi pour synchroniser ta progression et retrouver tes classements.</p><a class="btn-blue login-discord" href="/auth/discord">Continuer avec Discord</a><button class="btn-ghost" data-action="closeOverlayModal">Continuer en invité</button><small>Tu peux jouer sans compte. Ta progression invitée reste sur cet appareil.</small></div>');
+  ensureOverlay("Bienvenue sur Pokédle", '<div class="login-welcome"><div class="login-welcome-art" aria-hidden="true"><img src="'+modeCatalogSpriteUrl(133)+'" alt="" width="128" height="128"/><span>✦</span></div><span class="club-eyebrow">TON PETIT RENDEZ-VOUS POKÉMON</span><h3>Une aventure à retrouver.</h3><p>Connecte-toi pour synchroniser ta progression et retrouver tes classements.</p>'+loginProviderButtonsHtml()+'<button class="btn-ghost" data-action="closeOverlayModal">Continuer en invité</button><small>Tu peux jouer sans compte. Ta progression invitée reste sur cet appareil. <a href="/confidentialite">Confidentialité</a></small></div>');
   document.getElementById("overlay-modal").dataset.kind = "login";
 }
 // Existing Discord links remain functional with JavaScript disabled. Delegation

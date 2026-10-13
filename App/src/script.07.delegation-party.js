@@ -935,7 +935,7 @@ function openAccountMenu() {
     <div class="account-menu account-menu-v2">
       <div class="account-menu-identity">
         <div class="account-menu-avatar">${avatar}</div>
-        <div><span class="adventure-eyebrow">CONNECTÉ AVEC DISCORD</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}</small></div>
+        <div><span class="adventure-eyebrow">CONNECTÉ AVEC ${connectedAccountUser.via === 'google' ? 'GOOGLE' : 'DISCORD'}</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}</small></div>
       </div>
       <div class="account-menu-stats">
         <div><strong>${Number(playerProfile?.xp)||0}</strong><span>XP</span></div>
@@ -947,8 +947,26 @@ function openAccountMenu() {
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
       </nav>
+      <div class="account-menu-linked" id="account-menu-linked" aria-live="polite"></div>
       <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
+      <a class="account-menu-privacy" href="/confidentialite">Confidentialité</a>
     </div>`);
+  renderAccountLinkedProviders();
+}
+// "Relier Google / Discord": the missing sign-ins of this account, one tap away.
+// Signing in with them while connected adds them to this account.
+function renderAccountLinkedProviders() {
+  const box = document.getElementById('account-menu-linked');
+  if (!box || !connectedAccountUser) return;
+  const providers = window.__pokedleProviders || {};
+  fetch('/api/account/identities', { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json()).then(data => {
+    if (!data?.ok || !document.getElementById('account-menu-linked')) return;
+    const names = { discord: 'Discord', google: 'Google' };
+    const linked = data.identities.filter(id => names[id]);
+    const missing = Object.keys(names).filter(id => providers[id] && !linked.includes(id));
+    box.innerHTML = '<span>Connexion avec : ' + escapeHtml(linked.map(id => names[id]).join(' et ') || '—') + '</span>' +
+      missing.map(id => '<a class="btn-ghost account-link-provider" href="/auth/' + id + '">Relier ' + names[id] + '</a>').join('');
+  }).catch(() => {});
 }
 function accountNavigate(destination) {
   closeOverlayModal();
@@ -959,6 +977,7 @@ function accountNavigate(destination) {
 (function () {
   function renderAccount(data) {
     connectedAccountUser = data?.auth ? data.user || null : null;
+    window.__pokedleProviders = data?.providers || { discord: Boolean(data?.auth), google: false };
     window.__pokedleAuthed = Boolean(data?.user);
     // Guest or signed in, the account is now known: progress seeded from the shared log can start.
     if (!window.__pokedleAccountKnown) {
@@ -974,7 +993,7 @@ function accountNavigate(destination) {
     if (data.user) {
       el.innerHTML = accountChipHtml(data.user);
     } else {
-      el.innerHTML = '<a class="account-login" href="/auth/discord" aria-label="Connexion Discord" title="Connexion Discord"><svg class="account-login-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.077.077 0 0 0-.079-.036A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.291.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03ZM8.02 15.339c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z"/></svg>Connexion Discord</a>';
+      el.innerHTML = '<a class="account-login" href="/auth/discord" aria-label="Se connecter" title="Se connecter"><svg class="account-login-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.24-8 5v1.5h16V19c0-2.76-3.6-5-8-5Z"/></svg>Se connecter</a>';
     }
   }
   function initAccount() {
@@ -983,11 +1002,14 @@ function accountNavigate(destination) {
       var m = p.get("auth");
       if (m) {
         if (typeof showToast === "function") {
-          if (m === "ok") showToast("Connecté avec Discord ✅");
-          else if (m === "erreur") showToast("Échec de la connexion Discord.");
+          var via = p.get("via") === "google" ? "Google" : "Discord";
+          if (m === "ok") showToast("Connecté avec " + via + " ✅");
+          else if (m === "linked") showToast(via + " est maintenant relié à ton compte ✅");
+          else if (m === "erreur") showToast("Échec de la connexion " + via + ".");
           else if (m === "indispo") showToast("Connexion indisponible pour le moment.");
         }
         p.delete("auth");
+        p.delete("via");
         var qs = p.toString();
         history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
       }
