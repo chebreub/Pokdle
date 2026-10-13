@@ -358,7 +358,11 @@ def main():
      return screen('screen-game')
     check('autocomplete-overlay',autocomplete_overlay)
     def guess():
-     start('startNormalGame','screen-game');standard_guess_shell();page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
+     start('startNormalGame','screen-game');standard_guess_shell()
+     # The next checks need a wrong first guess: never let the random secret be Bulbizarre.
+     page.evaluate('()=>{for(let i=0;i<30&&secretPokemon&&secretPokemon.name==="Bulbizarre";i++)startNormalGame();}')
+     expect(page.evaluate('secretPokemon && secretPokemon.name !== "Bulbizarre"'),'Could not draw a secret other than Bulbizarre')
+     page.locator('#guess-input').fill('Bulbizarre');page.locator('#btn-submit').click();expect(page.locator('#results-body tr').count()>0,'Guess missing');return screen('screen-game')
     check('normal-guess',guess)
     def cosy_clues():
      row=page.locator('#results-body tr').first

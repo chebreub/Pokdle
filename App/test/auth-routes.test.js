@@ -18,6 +18,7 @@ async function fixture(t, db = null, people = {}) {
       if (name === "pg") return { Pool: class {
         on() {}
         async query(sql, params) { return db ? db(sql, params || []) : { rows: [] }; }
+        async connect() { return { query: (sql, params) => this.query(sql, params), release() {} }; }
       } };
       return appRequire(name);
     },
@@ -46,6 +47,9 @@ async function fixture(t, db = null, people = {}) {
   const base = `http://127.0.0.1:${server.address().port}`;
   return { calls, get: (url, cookie) => fetch(base + url, {
     redirect: "manual", headers: cookie ? { Cookie: cookie } : {}
+  }), post: (url, cookie, body) => fetch(base + url, {
+    method: "POST", redirect: "manual", body: JSON.stringify(body || {}),
+    headers: { "Content-Type": "application/json", ...(cookie ? { Cookie: cookie } : {}) }
   }) };
 }
 
@@ -111,6 +115,12 @@ function accountsDb() {
     if (/UPDATE users SET last_login/.test(sql)) { const u = users.get(p[0]); if (u && !u.avatar) u.avatar = p[1]; return { rows: [], rowCount: u ? 1 : 0 }; }
     if (/INSERT INTO account_identities\(provider, provider_user_id, account_id\) VALUES/.test(sql)) { const key = p[0] + "|" + p[1]; if (!identities.has(key)) identities.set(key, p[2]); return { rows: [], rowCount: 1 }; }
     if (/SELECT username, avatar FROM users/.test(sql)) { const u = users.get(p[0]); return { rows: u ? [u] : [], rowCount: u ? 1 : 0 }; }
+    if (/SELECT to_regclass/.test(sql)) return { rows: [{ t: p[0] === "users" ? "users" : null }], rowCount: 1 };
+    if (/DELETE FROM users WHERE discord_id/.test(sql)) {
+      users.delete(p[0]);
+      for (const [key, account] of identities) if (account === p[0]) identities.delete(key);
+      return { rows: [], rowCount: 1 };
+    }
     return { rows: [], rowCount: 0 };
   };
   return { db, users, identities };
@@ -148,6 +158,22 @@ test("an existing Discord account with its own records is never linked into anot
   assert.equal(discord.location, "/?auth=ok");
   assert.equal(discord.session.id, "555", "the Discord sign-in opens its own account");
   assert.equal(store.identities.get("discord|555"), "555");
+});
+
+test("deleting an account removes it and its sign-ins, then signs out", async (t) => {
+  const store = accountsDb(), people = { discordId: "777" };
+  const f = await fixture(t, store.db, people);
+  const discord = await signIn(f, "discord");
+  assert.equal((await f.post("/api/account/delete", null, { confirm: "SUPPRIMER" })).status, 401);
+  assert.equal((await f.post("/api/account/delete", discord.cookie, {})).status, 400, "an explicit confirmation is required");
+  assert.ok(store.users.has("777"));
+  const done = await f.post("/api/account/delete", discord.cookie, { confirm: "SUPPRIMER" });
+  assert.equal(done.status, 200);
+  assert.match(done.headers.get("set-cookie"), /pokdle_session=;/);
+  assert.equal(store.users.has("777"), false);
+  assert.equal([...store.identities.values()].includes("777"), false);
+  const again = await signIn(f, "google", discord.cookie);
+  assert.equal(again.session.id, "google:109876543210987654321", "a stale session cannot link into a deleted account");
 });
 
 test("Google avatars are allowed by the image policy", async (t) => {
