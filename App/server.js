@@ -417,7 +417,7 @@ app.get("/api/leaderboard/counts", async (req, res) => {
     const sql = scope === "all"
       ? "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY mode"
       : "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE mode = ANY($1) AND " +
-        (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')" : "e.created_at >= now() - interval '7 days'") +
+        (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= now() - interval '7 days'") +
         " GROUP BY mode";
     const rows = (await pgPool.query(sql, [LB_ARCADE_MODES])).rows;
     const counts = Object.fromEntries(LB_ARCADE_MODES.map((mode) => [mode === "draft_all" ? "draft" : mode, 0]));
@@ -456,7 +456,8 @@ app.get("/api/leaderboard", async (req, res) => {
         )`;
     } else {
       const timePredicate = scope === "today"
-        ? (["daily","wordle"].includes(mode) ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= (date_trunc('day', timezone('UTC', now())) AT TIME ZONE 'UTC')")
+        // Every "today" board resets at midnight in Paris.
+        ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')"
         : "e.created_at >= now() - interval '7 days'";
       rankedCte = `
         WITH best AS (

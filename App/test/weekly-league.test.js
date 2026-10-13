@@ -22,7 +22,7 @@ function fixture(){
     Date,Math,Map,Set,Array,Object,String,Number,Boolean,Promise
   };
   vm.createContext(context);
-  vm.runInContext(source+'\nthis.__week=weeklyLeagueIsoWeek;this.__disc=weeklyLeagueDisciplines;this.__metric=weeklyLeagueMetric;this.__mode=weeklyLeagueLeaderboardMode;this.__templates=WEEKLY_LEAGUE_TEMPLATES;',context);
+  vm.runInContext(source+'\nthis.__week=weeklyLeagueIsoWeek;this.__start=weeklyLeagueStart;this.__end=weeklyLeagueEnd;this.__disc=weeklyLeagueDisciplines;this.__metric=weeklyLeagueMetric;this.__mode=weeklyLeagueLeaderboardMode;this.__templates=WEEKLY_LEAGUE_TEMPLATES;',context);
   return context;
 }
 
@@ -85,4 +85,13 @@ test('permanent League badge count is exposed in account menu',()=>{
 test('guest Daily history never contributes to League, including after login',()=>{
  const f=fixture(),daily=Array.from(f.__templates).find(x=>x.id==='daily');
  for(const dailyAccountId of [null,undefined,'B']){const metric=f.__metric(daily,[{mode:'daily',attempts:1,result:'win',dailyAccountId}]);assert.equal(metric.score,0);assert.equal(metric.complete,false);}
+});
+
+test('the League week starts and ends at midnight in Paris, across the clock change',()=>{
+  const f=fixture();
+  assert.equal(f.__week(new Date('2026-10-11T21:59:00Z')).week,41,'Sunday 23:59 in Paris is still week 41');
+  assert.equal(f.__week(new Date('2026-10-11T22:00:00Z')).week,42,'Monday 00:00 in Paris opens week 42');
+  assert.equal(f.__start(new Date('2026-10-14T12:00:00Z')).toISOString(),'2026-10-11T22:00:00.000Z');
+  assert.equal(f.__end(new Date('2026-10-14T12:00:00Z')).toISOString(),'2026-10-18T22:00:00.000Z');
+  assert.equal(f.__end(new Date('2026-10-21T12:00:00Z')).toISOString(),'2026-10-25T23:00:00.000Z','winter time after 25 October');
 });

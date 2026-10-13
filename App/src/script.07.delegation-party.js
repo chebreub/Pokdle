@@ -1435,7 +1435,7 @@ function loadProfile() {
   // Tracking login quotidien pour streak
   const today = getDailyQuestKey();
   if (playerProfile.lastDailyLogin !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const yesterday = prevUTCDateKey(today);
     if (playerProfile.lastDailyLogin === yesterday) {
       playerProfile.dailyLoginStreak = (playerProfile.dailyLoginStreak || 0) + 1;
     } else {
@@ -1453,7 +1453,6 @@ function loadProfile() {
 
 function saveProfile() {
   writeJson(STORAGE_KEYS.profile, playerProfile);
-  try { if (typeof queueLeaderboardSubmit === "function") queueLeaderboardSubmit(); } catch (e) {}
 }
 
 function loadAchievementsState() {
@@ -2045,6 +2044,8 @@ function showScreen(id) {
   if (id !== "screen-multiplayer") hideMultiplayerWinOverlay();
   hideAllScreens();
   setScreenVisibility(target, true);
+  // Lets styles know which screen is shown (the news ticker stays off during games).
+  if (document.body) document.body.dataset.screen = id;
   if (id === "screen-game" && typeof renderGameShell === "function") renderGameShell();
   if (typeof prepareDedicatedShell === "function") prepareDedicatedShell(id);
   window.scrollTo(0, 0);
