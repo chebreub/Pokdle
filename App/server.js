@@ -1136,7 +1136,7 @@ const USAGE_EVENTS = new Set([
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
-  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
   "duel:create", "statclash:create",
 ]);
 const USAGE_LABELS = {
@@ -1147,7 +1147,7 @@ const USAGE_LABELS = {
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
-  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce": "Party — Qui est-ce ?", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
+  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
@@ -1331,8 +1331,8 @@ function publicPartyRoomState(room, viewerId = null) {
     ? coopParty.publicCoopRound(room, viewerId, revealed)
     : gameMode === "deduction"
     ? deductionParty.publicDeductionRound(room, revealed)
-    : gameMode === "quiestce"
-    ? quiEstCeParty.publicQuiEstCeRound(room, viewerId, revealed)
+    : gameMode === "quiestce1v1"
+    ? quiEstCeParty.publicQuiEstCeDuel(room, viewerId, revealed)
     : gameMode === "nearest"
     ? publicPartyNearestRoundState(room, revealed)
     : gameMode === "typecombo"
@@ -1367,10 +1367,10 @@ function publicPartyRoomState(room, viewerId = null) {
       score: Number(player.score) || 0,
       correct: Boolean(player.correct),
       lastGain: Number(player.lastGain) || 0,
-      attempts: gameMode === "deduction" || gameMode === "quiestce" ? Number(player.attempts) || 0 : 0,
+      attempts: gameMode === "deduction" || gameMode === "quiestce1v1" ? Number(player.attempts) || 0 : 0,
       proximity: gameMode === "deduction" ? bestDuelProximity(player) : 0,
-      gaveUp: (gameMode === "deduction" || gameMode === "quiestce") && Boolean(player.gaveUp),
-      quiRemaining: gameMode === "quiestce" ? quiEstCeParty.quiEstCeRemainingCount(room, player) : 0,
+      gaveUp: (gameMode === "deduction" || gameMode === "quiestce1v1") && Boolean(player.gaveUp),
+      quiRemaining: gameMode === "quiestce1v1" ? quiEstCeParty.quiEstCeRemainingCount(room, player) : 0,
       guessHistory: gameMode === "deduction" && player.id === viewerId ? player.guesses || [] : [],
       submitted: gameMode === "nearest" && Boolean(player.nearestPick),
       proposal: gameMode === "nearest" && player.id === viewerId ? player.nearestPick?.name || null : null,
@@ -1492,6 +1492,7 @@ function resetPartyCampaign(room) {
   room.quiWinnerId = null;
   room.quiCards = null;
   room.quiPokemon = null;
+  room.quiTurnId = null;
   room.nearestTarget = null;
   room.nearestResolved = false;
   room.typeCombo = null;
@@ -1547,7 +1548,8 @@ function armPartyRoundTimer(room) {
     room.roundStartedAt = Date.now();
     return;
   }
-  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : ["deduction", "coop", "quiestce"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
+  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : // Qui est-ce ? waits for human answers: a long safety limit only.
+    room.gameMode === "quiestce1v1" ? 1200000 : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, duration);
@@ -1561,8 +1563,8 @@ async function startPartyRound(room) {
     coopParty.startCoopRound(room, POKEMON_LIST);
   } else if (room.gameMode === "deduction") {
     deductionParty.startDeductionRound(room, POKEMON_LIST);
-  } else if (room.gameMode === "quiestce") {
-    quiEstCeParty.startQuiEstCeRound(room, POKEMON_LIST);
+  } else if (room.gameMode === "quiestce1v1") {
+    quiEstCeParty.startQuiEstCeDuel(room, POKEMON_LIST);
   } else if (room.gameMode === "nearest") {
     nearestParty.startNearestRound(room, POKEMON_LIST);
   } else if (isPartyStatMode(room)) {
@@ -2012,7 +2014,6 @@ function handlePartyDisconnect(socketId, voluntary) {
     }
     if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
     if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
-    if (room.status === "playing" && room.gameMode === "quiestce" && quiEstCeParty.allQuiEstCePlayersGaveUp(room)) endPartyRound(room);
     if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
     emitPartyRoomState(room);
   };
@@ -2255,10 +2256,10 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room || payload.code !== room.code) return respond(ack, { ok: false, error: "Salon introuvable." });
       const player = room.players.find(p => p.id === socket.id);
-      const qui = room.gameMode === "quiestce";
-      const result = qui ? quiEstCeParty.forfeitQuiEstCe(room, player, payload.roundSerial) : deductionParty.forfeitDeduction(room, player, payload.roundSerial);
+      const duel = room.gameMode === "quiestce1v1";
+      const result = duel ? quiEstCeParty.forfeitDuel(room, player, payload.roundSerial) : deductionParty.forfeitDeduction(room, player, payload.roundSerial);
       if (result.error) return respond(ack, { ok: false, error: result.error });
-      if (qui ? quiEstCeParty.allQuiEstCePlayersGaveUp(room) : deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
+      if (duel || deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (_error) {
@@ -2339,6 +2340,9 @@ io.on("connection", (socket) => {
       if (Array.isArray(room.roundPlayerIds)) room.roundPlayerIds = room.roundPlayerIds.map((id) => id === previousId ? socket.id : id);
       if (room.deductionWinnerId === previousId) room.deductionWinnerId = socket.id;
       if (room.quiWinnerId === previousId) room.quiWinnerId = socket.id;
+      if (room.quiTurnId === previousId) room.quiTurnId = socket.id;
+      if (room.quiPending && room.quiPending.askerId === previousId) room.quiPending.askerId = socket.id;
+      if (Array.isArray(room.quiLog)) room.quiLog.forEach((entry) => { if (entry.by === previousId) entry.by = socket.id; });
       if (room.race?.roster) room.race.roster.forEach((member) => { if (member.id === previousId) member.id = socket.id; });
       if (room.race?.claims instanceof Map) {
         for (const claim of room.race.claims.values()) if (claim.playerId === previousId) claim.playerId = socket.id;
@@ -2375,6 +2379,7 @@ io.on("connection", (socket) => {
         const error = dexRace.raceStartError(room);
         if (error) return respond(ack, { ok: false, error });
       }
+      if (room.gameMode === "quiestce1v1" && room.players.filter((player) => player.connected).length !== 2) return respond(ack, { ok: false, error: "Qui est-ce ? se joue à deux exactement." });
       await startPartyGame(room);
       if (!room.target && room.gameMode !== "dexrace") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
@@ -2415,13 +2420,19 @@ io.on("connection", (socket) => {
         emitPartyRoomState(room);
         return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
       }
-      if (room.gameMode === "quiestce") {
+      if (room.gameMode === "quiestce1v1") {
         if (payload.code !== room.code) return respond(ack, { ok: false, error: "Cette salle a changé." });
-        const result = payload.quiAction === "propose"
-          ? quiEstCeParty.proposeQuiEstCe(room, player, payload.pokemonId, payload.roundSerial)
-          : quiEstCeParty.askQuiEstCe(room, player, payload.questionId, payload.roundSerial);
+        const serial = payload.roundSerial, action = String(payload.quiAction || "");
+        const result = action === "choose" ? quiEstCeParty.chooseSecret(room, player, payload.pokemonId, serial)
+          : action === "ask" ? quiEstCeParty.askQuestion(room, player, payload, serial)
+          : action === "answer" ? quiEstCeParty.answerQuestion(room, player, payload.answer, serial)
+          : action === "flip" ? quiEstCeParty.flipCard(room, player, payload.pokemonId, serial)
+          : action === "guess" ? quiEstCeParty.guessSecret(room, player, payload.pokemonId, serial)
+          : { error: "Action inconnue." };
         if (result.error) return respond(ack, { ok: false, error: result.error, room: publicPartyRoomState(room, socket.id) });
         if (result.correct) endPartyRound(room);
+        // A private flip only changes this player's board.
+        if (action === "flip") return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
         emitPartyRoomState(room);
         return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
       }
@@ -2531,7 +2542,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
         room.roundNumber = 0;
