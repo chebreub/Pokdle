@@ -347,7 +347,7 @@ function createDraftScoreAttackRoom() {
   draftArenaState.scoreAttackRoomPending = "create";
   draftArenaState.scoreAttackRoomError = null;
   renderDraftArena();
-  socket.emit("draft-score:create-room", { nickname, pro: !!(draftArenaState && draftArenaState.scoreAttackPro) }, (response = {}) => {
+  socket.emit("draft-score:create-room", { nickname }, (response = {}) => {
     draftArenaState.scoreAttackRoomPending = null;
     if (!response.ok) {
       draftArenaState.scoreAttackRoomError = response.error || "Impossible de créer la room Score Attack.";
@@ -467,13 +467,11 @@ function showDraftScoreOpponentToast(message) {
 
 function maybeShowDraftScoreFinale(room) {
   if (!room || room.status !== "finished") return;
-  const isPro = !!room.pro;
-  const fingerprint = `${room.code}:${isPro ? "pro:" : ""}${room.players?.map((p) => `${p.side}-${p.result?.average || 0}-${p.result?.total || 0}-${p.result?.pro?.total || 0}`).join("|")}`;
+  const fingerprint = `${room.code}:${room.players?.map((p) => `${p.side}-${p.result?.average || 0}-${p.result?.total || 0}`).join("|")}`;
   if (draftScoreFinaleShownFor === fingerprint) return;
   draftScoreFinaleShownFor = fingerprint;
-  updateDraftScoreHeadToHead(room, isPro);
-  if (isPro) showDraftScoreProFinale(room);
-  else showDraftScoreFinaleOverlay(room);
+  updateDraftScoreHeadToHead(room, false);
+  showDraftScoreFinaleOverlay(room);
 }
 
 function getDraftScoreHeadToHead(opponentNickname, pro) {
@@ -501,39 +499,6 @@ function updateDraftScoreHeadToHead(room, pro) {
   else if (room.winnerSide === opp.side) cur.losses = (Number(cur.losses) || 0) + 1;
   playerProfile[storeKey][key] = cur;
   try { saveProfile(); } catch (_e) {}
-}
-
-// Finale 1v1 PRO : rejoue la séquence machine à sous (bonus du joueur → total) avec
-// le verdict Victoire/Défaite calculé sur le total PRO de l'adversaire (effet comeback).
-// Réutilise le moteur de révélation du solo (renderDraftProRevealInline). Repli sur
-// l'overlay BST normal si les données PRO manquent.
-function showDraftScoreProFinale(room) {
-  const self = room.players?.find((p) => p.isSelf);
-  const opp = room.players?.find((p) => !p.isSelf);
-  const mods = room?.duel?.proMods || null;
-  if (!self?.result?.pro || !opp?.result?.pro || !mods || typeof renderDraftProRevealInline !== "function") {
-    showDraftScoreFinaleOverlay(room);
-    return;
-  }
-  const selfPro = self.result.pro;
-  const result = {
-    base: Number(selfPro.base) || 0,
-    bonuses: Array.isArray(selfPro.bonuses) ? selfPro.bonuses : [],
-    bonusTotal: Number(selfPro.bonusTotal) || 0,
-    total: Number(selfPro.total) || 0,
-  };
-  // La roue dresseur lit draftArenaState.selectedGen (cosmétique) : on la cale sur la gen du duel.
-  if (draftArenaState && room?.duel?.gen) draftArenaState.selectedGen = Number(room.duel.gen) || draftArenaState.selectedGen;
-  renderDraftProRevealInline([], mods, result, {
-    opponent: { nickname: opp.nickname || "Adversaire", total: Number(opp.result.pro.total) || 0 },
-    onDone: function () {
-      if (draftArenaState && draftArenaState.mode === "scoreAttack") renderDraftArena();
-    },
-  });
-  // Amener la révélation dans le champ de vision (elle s'insère après #draft-options).
-  setTimeout(function () {
-    document.getElementById("draft-pro-reveal-host")?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 60);
 }
 
 function showDraftScoreFinaleOverlay(room) {
@@ -755,7 +720,6 @@ function selectDraftGeneration(gen) {
       : `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`;
 
   fillDraftArenaOptions();
-  if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
 }
 
@@ -820,7 +784,6 @@ function openDraftScoreAttackMode(pro) {
       : "Score Attack — choisis une génération pour viser la meilleure moyenne BST.";
   }
   draftArenaState.scoreAttackPro = wantPro;
-  if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
   window.scrollTo(0, 0);
 }
@@ -879,7 +842,6 @@ function restartDraftArenaRun() {
   draftArenaState.message = previousMode === "scoreAttack"
     ? (previousPro ? "🔥 Score Attack PRO prêt. Choisis une génération." : "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.")
     : "Choisis une génération pour commencer le draft.";
-  if (typeof syncScoreAttackProUI === "function") syncScoreAttackProUI();
   renderDraftArena();
 }
 

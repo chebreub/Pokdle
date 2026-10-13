@@ -15,9 +15,6 @@ const deductionParty = require("./lib/party-deduction");
 const coopParty = require("./lib/party-coop");
 const { bestDuelProximity } = require("./lib/duel-proximity");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
-// Moteur Score Attack PRO partagé avec le client (même barème PRO_TUNING + fonctions pures).
-// Fonctions utilisées côté serveur pour le 1v1 PRO : rollProModifiers(gen, rnd), computeDraftProScore(team, mods).
-let proEngine = null; try { proEngine = require("./src/script.06b.pro-mode.js"); } catch (e) { console.error("[pro] moteur PRO indisponible:", e.message); }
 
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
@@ -529,7 +526,6 @@ app.get("/api/leaderboard", async (req, res) => {
 // ===== Fin auth Phase 1 =====
 
 const statClashRooms = new Map();
-const draftBattleRooms = new Map();
 const draftScoreRooms = new Map();
 const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
@@ -2783,175 +2779,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     try { handleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][duel] error", _error?.message || "unknown"); }
     try { handleStatClashDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-clash] error", _error?.message || "unknown"); }
-    try { handleDraftBattleDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-battle] error", _error?.message || "unknown"); }
     try { handleDraftScoreDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][draft-score] error", _error?.message || "unknown"); }
     try { handleHigherLowerDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][higher-lower] error", _error?.message || "unknown"); }
     try { handleStatAuctionDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][stat-auction] error", _error?.message || "unknown"); }
     try { handlePartyDisconnect(socket.id, false); } catch (_error) { console.error("[disconnect][party] error", _error?.message || "unknown"); }
     cleanupRateLimitBuckets(socket.id);
-  });
-
-  socket.on("draft-battle:create-room", (payload = {}, ack) => {
-    try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
-      handleDraftBattleDisconnect(socket.id, true);
-      const nickname = sanitizeNickname(payload.nickname) || "Joueur 1";
-      const battleState = payload.battleState && typeof payload.battleState === "object" ? payload.battleState : null;
-      if (!battleState) return respond(ack, { ok: false, error: "État de combat invalide." });
-      if (isPayloadOversized(battleState)) return respond(ack, { ok: false, error: "Payload trop volumineux." });
-
-      const code = generateDraftBattleRoomCode();
-      const room = {
-        code,
-        status: "waiting",
-        hostId: socket.id,
-        players: [],
-        battleState,
-        pendingTurn: null,
-        pendingReplacement: null,
-        resolvingTurn: null,
-        resolvingReplacement: null,
-        version: 1,
-        cleanupTimer: null,
-      };
-      draftBattleRooms.set(code, room);
-      joinPlayerToDraftBattleRoom(room, socket, nickname, "left");
-      emitDraftBattleRoomState(room);
-      respond(ack, { ok: true, code, room: publicDraftBattleRoomState(room, socket.id) });
-    } catch (_error) {
-      respond(ack, { ok: false, error: "Impossible de créer la room Draft Combat." });
-    }
-  });
-
-  socket.on("draft-battle:join-room", (payload = {}, ack) => {
-    try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
-      handleDraftBattleDisconnect(socket.id, true);
-      const code = sanitizeRoomCode(payload.code);
-      const nickname = sanitizeNickname(payload.nickname) || "Joueur 2";
-      const room = draftBattleRooms.get(code);
-      if (!room) return respond(ack, { ok: false, error: "Room Draft Combat introuvable." });
-      if (room.players.length >= MAX_ROOM_SIZE) return respond(ack, { ok: false, error: "La room est déjà complète." });
-
-      joinPlayerToDraftBattleRoom(room, socket, nickname, "right");
-      room.status = room.players.length === MAX_ROOM_SIZE ? "live" : "waiting";
-      emitDraftBattleRoomState(room);
-      respond(ack, { ok: true, code, room: publicDraftBattleRoomState(room, socket.id) });
-    } catch (_error) {
-      respond(ack, { ok: false, error: "Impossible de rejoindre la room Draft Combat." });
-    }
-  });
-
-  socket.on("draft-battle:leave-room", () => {
-    try { handleDraftBattleDisconnect(socket.id, true); } catch (_error) { console.error("[draft-battle:leave-room] error", _error?.message || "unknown"); }
-  });
-
-  socket.on("draft-battle:submit-action", (payload = {}, ack) => {
-    try {
-      if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
-      const room = findDraftBattleRoomBySocket(socket.id);
-      if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
-      if (room.status !== "live") return respond(ack, { ok: false, error: "Le combat n'est pas prêt." });
-      if (room.resolvingTurn) return respond(ack, { ok: false, error: "La résolution du tour est déjà en cours." });
-      const player = room.players.find((entry) => entry.id === socket.id);
-      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
-      const expectedTurn = Number(room.battleState?.turn) || 1;
-      const requestedTurn = Number(payload.turn) || expectedTurn;
-      if (requestedTurn !== expectedTurn) return respond(ack, { ok: false, error: "Tour réseau obsolète." });
-
-      if (!room.pendingTurn || Number(room.pendingTurn.turn) !== requestedTurn) {
-        room.pendingTurn = {
-          turn: requestedTurn,
-          actions: { left: null, right: null },
-        };
-      }
-      if (room.pendingTurn.actions[player.side]) {
-        return respond(ack, { ok: false, error: "Action déjà enregistrée pour ce tour." });
-      }
-      if (payload.submittedAction && isPayloadOversized(payload.submittedAction)) {
-        return respond(ack, { ok: false, error: "Payload trop volumineux." });
-      }
-      room.pendingTurn.actions[player.side] = payload.submittedAction || null;
-      emitDraftBattleRoomState(room);
-
-      if (room.pendingTurn.actions.left && room.pendingTurn.actions.right) {
-        room.resolvingTurn = room.pendingTurn.turn;
-        io.to(room.hostId).emit("draft-battle:resolve-turn", {
-          code: room.code,
-          turn: room.pendingTurn.turn,
-          pendingTurn: room.pendingTurn,
-        });
-      }
-      respond(ack, { ok: true });
-    } catch (_error) {
-      respond(ack, { ok: false, error: "Erreur lors de la soumission d'action." });
-    }
-  });
-
-  socket.on("draft-battle:submit-replacement", (payload = {}, ack) => {
-    try {
-      if (checkRateLimit(socket, "action")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
-      const room = findDraftBattleRoomBySocket(socket.id);
-      if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
-      if (room.status === "finished") return respond(ack, { ok: false, error: "Le combat est terminé." });
-      const player = room.players.find((entry) => entry.id === socket.id);
-      if (!player) return respond(ack, { ok: false, error: "Joueur introuvable." });
-      if (!room.battleState?.pendingSwitch || room.battleState?.pendingSwitchSide !== player.side) {
-        return respond(ack, { ok: false, error: "Aucun remplacement forcé attendu pour ce camp." });
-      }
-      if (room.resolvingReplacement || room.pendingReplacement?.side === player.side) {
-        return respond(ack, { ok: false, error: "Remplaçant déjà envoyé." });
-      }
-
-      const teamIndex = Number(payload.teamIndex);
-      if (!Number.isInteger(teamIndex) || teamIndex < 0 || teamIndex > DRAFT_BATTLE_MAX_TEAM_INDEX) {
-        return respond(ack, { ok: false, error: "Index de remplacement invalide." });
-      }
-      room.pendingReplacement = {
-        side: player.side,
-        teamIndex,
-      };
-      room.resolvingReplacement = room.pendingReplacement;
-      emitDraftBattleRoomState(room);
-      io.to(room.hostId).emit("draft-battle:resolve-replacement", {
-        code: room.code,
-        replacement: room.pendingReplacement,
-      });
-      respond(ack, { ok: true });
-    } catch (_error) {
-      respond(ack, { ok: false, error: "Erreur lors du remplacement." });
-    }
-  });
-
-  socket.on("draft-battle:commit-state", (payload = {}, ack) => {
-    try {
-      if (checkRateLimit(socket, "commit")) return respond(ack, { ok: false, error: "Trop de requêtes, réessaie dans quelques secondes." });
-      const room = findDraftBattleRoomBySocket(socket.id);
-      if (!room) return respond(ack, { ok: false, error: "Aucune room Draft Combat active." });
-      if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hôte peut valider l'état." });
-      if (!payload.battleState || typeof payload.battleState !== "object") {
-        return respond(ack, { ok: false, error: "État de combat invalide." });
-      }
-      if (isPayloadOversized(payload.battleState)) {
-        return respond(ack, { ok: false, error: "Payload trop volumineux." });
-      }
-      if (!room.resolvingTurn && !room.resolvingReplacement) {
-        return respond(ack, { ok: false, error: "Aucune résolution en attente." });
-      }
-
-      room.battleState = payload.battleState;
-      room.pendingTurn = null;
-      room.pendingReplacement = null;
-      room.resolvingTurn = null;
-      room.resolvingReplacement = null;
-      room.version += 1;
-      room.status = payload.battleState?.phase === "finished" ? "finished" : "live";
-      emitDraftBattleState(room);
-      emitDraftBattleRoomState(room);
-      respond(ack, { ok: true });
-    } catch (_error) {
-      respond(ack, { ok: false, error: "Erreur lors du commit d'état." });
-    }
   });
 
   socket.on("draft-score:create-room", (payload = {}, ack) => {
@@ -2964,7 +2796,6 @@ io.on("connection", (socket) => {
         code,
         hostId: socket.id,
         status: "lobby",
-        pro: !!payload.pro,
         players: [{ id: socket.id, side: "left", nickname, connected: true, result: null }],
         winnerSide: null,
         createdAt: Date.now(),
@@ -3029,14 +2860,6 @@ io.on("connection", (socket) => {
         lastEvent: { kind: "started", at: Date.now() },
       };
       room.duel.currentWave = generateDraftDuelNextWave(room);
-      // 1v1 PRO : tirer une seule fois les modificateurs partagés (météo + dresseur),
-      // tenus secrets jusqu'à la révélation finale (effet comeback).
-      if (room.pro && proEngine && typeof proEngine.rollProModifiers === "function") {
-        try { room.duel.proMods = proEngine.rollProModifiers(gen); }
-        catch (e) { console.error("[pro] rollProModifiers:", e.message); room.duel.proMods = null; }
-      } else {
-        room.duel.proMods = null;
-      }
       room.status = "live";
       room.winnerSide = null;
       for (const p of room.players) { p.result = null; p.progress = null; }
@@ -3100,18 +2923,6 @@ io.on("connection", (socket) => {
               label: getDraftScoreServerLabel(avg),
               submittedAt: Date.now(),
             };
-            // 1v1 PRO : score autoritaire (base BST + bonus partagés météo/dresseur/synergies).
-            if (room.pro && proEngine && room.duel.proMods && typeof proEngine.computeDraftProScore === "function") {
-              try {
-                const proResult = proEngine.computeDraftProScore(buildProServerTeam(team), room.duel.proMods);
-                p.result.pro = {
-                  base: proResult.base,
-                  bonuses: proResult.bonuses,
-                  bonusTotal: proResult.bonusTotal,
-                  total: proResult.total,
-                };
-              } catch (e) { console.error("[pro] computeDraftProScore:", e.message); }
-            }
           }
           finalizeDraftScoreRoom(room);
         } else {
@@ -4029,15 +3840,6 @@ function generateStatClashRoomCode() {
   return code;
 }
 
-function generateDraftBattleRoomCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  do {
-    code = `DB${Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("")}`;
-  } while (draftBattleRooms.has(code));
-  return code;
-}
-
 function generateDraftScoreRoomCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
@@ -4443,17 +4245,6 @@ function joinPlayerToStatClashRoom(room, socket, nickname, side) {
   return player;
 }
 
-function joinPlayerToDraftBattleRoom(room, socket, nickname, side) {
-  socket.join(room.code);
-  socket.data.draftBattleRoomCode = room.code;
-  room.players.push({
-    id: socket.id,
-    nickname,
-    side,
-    connected: true,
-  });
-}
-
 function startRoom(room) {
   clearRoomCleanup(room);
   const pool = POKEMON_LIST.filter((pokemon) => isDuelPokemonAllowed(room, pokemon));
@@ -4786,68 +4577,6 @@ function handleStatClashDisconnect(socketId, voluntary) {
   }, STAT_CLASH_RECONNECT_GRACE_MS);
 }
 
-function findDraftBattleRoomBySocket(socketId) {
-  const roomCode = io.sockets.sockets.get(socketId)?.data?.draftBattleRoomCode;
-  if (roomCode && draftBattleRooms.has(roomCode)) return draftBattleRooms.get(roomCode);
-  for (const room of draftBattleRooms.values()) {
-    if (room.players.some((player) => player.id === socketId)) return room;
-  }
-  return null;
-}
-
-function publicDraftBattleRoomState(room, viewerId = null) {
-  return {
-    code: room.code,
-    status: room.status,
-    hostId: room.hostId,
-    players: room.players.map((player) => ({
-      id: player.id,
-      nickname: player.nickname,
-      side: player.side,
-      connected: player.connected,
-      isSelf: player.id === viewerId,
-      isHost: player.id === room.hostId,
-    })),
-    pendingTurn: room.pendingTurn,
-    pendingReplacement: room.pendingReplacement,
-    resolvingTurn: room.resolvingTurn,
-    resolvingReplacement: room.resolvingReplacement,
-    version: room.version,
-    battleState: room.battleState,
-  };
-}
-
-function emitDraftBattleRoomState(room) {
-  for (const player of room.players) {
-    io.to(player.id).emit("draft-battle:room-state", publicDraftBattleRoomState(room, player.id));
-  }
-}
-
-function emitDraftBattleState(room) {
-  io.to(room.code).emit("draft-battle:state", {
-    code: room.code,
-    battleState: room.battleState,
-    status: room.status,
-  });
-}
-
-function handleDraftBattleDisconnect(socketId, voluntary, options = {}) {
-  const room = findDraftBattleRoomBySocket(socketId);
-  if (!room) return;
-  const socket = io.sockets.sockets.get(socketId);
-  if (socket?.data) socket.data.draftBattleRoomCode = null;
-  const player = room.players.find((entry) => entry.id === socketId);
-  if (!player) return;
-  player.connected = false;
-
-  if (!options.silent) {
-    io.to(room.code).emit("draft-battle:room-closed", {
-      reason: voluntary ? `${player.nickname} a quitté le combat.` : `${player.nickname} s'est déconnecté.`,
-    });
-  }
-  draftBattleRooms.delete(room.code);
-}
-
 function findDraftScoreRoomBySocket(socketId) {
   const roomCode = io.sockets.sockets.get(socketId)?.data?.draftScoreRoomCode;
   if (roomCode && draftScoreRooms.has(roomCode)) return draftScoreRooms.get(roomCode);
@@ -4893,14 +4622,11 @@ function publicDraftScoreRoomState(room, viewerId = null) {
   return {
     code: room.code,
     status: room.status,
-    pro: !!room.pro,
     maxPlayers: MAX_ROOM_SIZE,
     connectedCount: room.players.filter((player) => player.connected).length,
     winnerSide: room.winnerSide || null,
     duel: room.duel ? {
       gen: room.duel.gen,
-      // Modificateurs PRO : tenus secrets pendant le draft, révélés seulement à "finished".
-      proMods: room.status === "finished" ? (room.duel.proMods || null) : null,
       currentWave: (room.duel.currentWave || []).map((id) => {
         const p = POKEMON_LIST.find((entry) => Number(entry.id) === Number(id));
         return p ? { id: Number(p.id), name: p.name, type1: p.type1 || null, type2: p.type2 || null } : null;
@@ -4951,23 +4677,6 @@ function buildDuelPokemonEntry(pokemonId) {
   return { id: Number(pokemon.id), name: pokemon.name, type1: pokemon.type1 || null, type2: pokemon.type2 || null };
 }
 
-// Construit l'entrée attendue par le moteur PRO (computeDraftProScore) à partir d'une
-// team de duel. Complète stage/color depuis POKEMON_LIST (absents de l'entrée de duel).
-function buildProServerTeam(team) {
-  return (Array.isArray(team) ? team : []).map((entry) => {
-    const p = POKEMON_LIST.find((x) => Number(x.id) === Number(entry.id)) || {};
-    return {
-      id: Number(entry.id) || 0,
-      name: entry.name,
-      type1: entry.type1 || p.type1 || null,
-      type2: entry.type2 || p.type2 || null,
-      stage: Number(p.stage) || 0,
-      color: p.color || null,
-      bst: Number(entry.bst) || 0,
-    };
-  });
-}
-
 function emitDraftScoreRoomState(room) {
   for (const player of room.players) {
     if (!player.connected) continue;
@@ -4979,14 +4688,7 @@ function finalizeDraftScoreRoom(room) {
   const left = room.players.find((player) => player.side === "left");
   const right = room.players.find((player) => player.side === "right");
   if (left?.result && right?.result) {
-    if (room.pro && left.result.pro && right.result.pro) {
-      // 1v1 PRO : vainqueur sur le total PRO (base + bonus), pas la moyenne BST.
-      const lt = Number(left.result.pro.total) || 0;
-      const rt = Number(right.result.pro.total) || 0;
-      if (lt > rt) room.winnerSide = "left";
-      else if (rt > lt) room.winnerSide = "right";
-      else room.winnerSide = "tie";
-    } else if (left.result.average > right.result.average) room.winnerSide = "left";
+    if (left.result.average > right.result.average) room.winnerSide = "left";
     else if (right.result.average > left.result.average) room.winnerSide = "right";
     else if (left.result.total > right.result.total) room.winnerSide = "left";
     else if (right.result.total > left.result.total) room.winnerSide = "right";

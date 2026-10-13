@@ -1165,8 +1165,6 @@ let acIndex = -1;
 let multiplayerBotState = null;
 let multiplayerLiveState = null;
 let multiplayerSocket = null;
-let draftBattleNetworkSession = null;
-let draftSimpleBattleActionFocusKey = "";
 
 let gameMode = "normal"; // normal | challenge | daily
 let winRegisteredForCurrentGame = false;

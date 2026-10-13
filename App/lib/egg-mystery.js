@@ -119,35 +119,47 @@ function createEggService({ db, pokemon, randomInt = crypto.randomInt, clock = (
     await client.query("INSERT INTO egg_rewards(round_id,player_id,pokemon_id) VALUES($1,$2,$3)", [r.id, playerId, rewardId]);
     return display(rewardId);
   }
+  // What the page shows of a round, whichever path read it.
+  function snapshot(identity, r, guesses, q, now) {
+    const wrong = guesses.filter(g => !g.correct), eliminated = wrong.map(g => Number(g.pokemon_id));
+    const week = eggWeek(now);
+    // Date each clue by whichever came first: its day of the round or its
+    // 100-elimination milestone, so the feed can tell when it appeared.
+    const clues = eggClues(byId.get(Number(r.secret_id)), eliminated.length, eggDaysOpen(week)).map((clue, index) => {
+      const byDay = parisMidnight(addDays(week.start, index)), milestone = wrong[(index+1)*100-1];
+      const byGuesses = milestone ? new Date(milestone.created_at) : null, early = Boolean(byGuesses && byGuesses < byDay);
+      return { ...clue, unlockedAt: (early ? byGuesses : byDay).toISOString(), reason: early ? "eliminated" : "day" };
+    });
+    const eliminatedSet = new Set(eliminated);
+    const compatibleIds = pool.filter(p => compatibleWithClues(p, clues)).map(p => Number(p.id));
+    return {
+      ok: true, roundId: Number(r.id), weekStart: week.start, resetAt: week.resetAt,
+      quotaResetAt: parisMidnight(addDays(week.day, 1)).toISOString(),
+      reward: display(r.reward_id), candidateIds: pool.map(p => Number(p.id)), eliminatedIds: eliminated,
+      compatibleIds, remaining: compatibleIds.filter(id => !eliminatedSet.has(id)).length, clues,
+      nextClueAt: clues.length < 5 ? (clues.length+1)*100 : null,
+      upcomingClues: CLUES.slice(clues.length).map(([key,label], index) => ({ key, label, at: parisMidnight(addDays(week.start, clues.length+index)).toISOString(), atEliminated: (clues.length+index+1)*100 })),
+      quota: q, authenticated: Boolean(identity.playerId),
+      solved: Boolean(r.found_at), winner: r.found_at ? { name: r.winner_name || "Anonyme", at: r.found_at, me: r.found_by === (identity.playerId ? "user:"+identity.playerId : "guest:"+identity.anonId) } : null,
+      canClaim: Boolean(identity.playerId && r.found_by === "guest:"+identity.anonId),
+      feed: guesses.slice(-20).reverse().map(g => ({ pokemon: display(g.pokemon_id), name: g.username, correct: g.correct, at: g.created_at }))
+    };
+  }
   async function state(identity) {
-    // A consistent snapshot prevents a guess appearing before its solved status.
+    // Opening the egg only reads. The round and its guesses come from one statement,
+    // so a guess never appears before its solved status, and the quota is counted in
+    // parallel. Only the first visit of a week creates the round, under the lock below.
+    const now = clock(), week = eggWeek(now);
+    const [row, q] = await Promise.all([
+      db.query(`SELECT r.*, COALESCE((SELECT json_agg(json_build_object('pokemon_id',g.pokemon_id,'username',g.username,'correct',g.correct,'created_at',g.created_at) ORDER BY g.id)
+        FROM egg_guesses g WHERE g.round_id=r.id),'[]'::json) AS guess_list FROM egg_rounds r WHERE r.week_start=$1`, [week.start]).then(result => result.rows[0] || null),
+      quota(db, identity, week.day)
+    ]);
+    if (row) return snapshot(identity, row, row.guess_list.map(g => ({ ...g, pokemon_id: Number(g.pokemon_id), created_at: new Date(g.created_at) })), q, now);
     return transaction(async client => {
-      const now = clock();
       const r = await round(client, now, true);
       const guesses = (await client.query("SELECT pokemon_id, username, correct, created_at FROM egg_guesses WHERE round_id=$1 ORDER BY id", [r.id])).rows;
-      const wrong = guesses.filter(g => !g.correct), eliminated = wrong.map(g => Number(g.pokemon_id));
-      const week = eggWeek(now);
-      // Date each clue by whichever came first: its day of the round or its
-      // 100-elimination milestone, so the feed can tell when it appeared.
-      const clues = eggClues(byId.get(Number(r.secret_id)), eliminated.length, eggDaysOpen(week)).map((clue, index) => {
-        const byDay = parisMidnight(addDays(week.start, index)), milestone = wrong[(index+1)*100-1];
-        const byGuesses = milestone ? new Date(milestone.created_at) : null, early = Boolean(byGuesses && byGuesses < byDay);
-        return { ...clue, unlockedAt: (early ? byGuesses : byDay).toISOString(), reason: early ? "eliminated" : "day" };
-      });
-      const eliminatedSet = new Set(eliminated);
-      const compatibleIds = pool.filter(p => compatibleWithClues(p, clues)).map(p => Number(p.id));
-      return {
-        ok: true, roundId: Number(r.id), weekStart: week.start, resetAt: week.resetAt,
-        quotaResetAt: parisMidnight(addDays(week.day, 1)).toISOString(),
-        reward: display(r.reward_id), candidateIds: pool.map(p => Number(p.id)), eliminatedIds: eliminated,
-        compatibleIds, remaining: compatibleIds.filter(id => !eliminatedSet.has(id)).length, clues,
-        nextClueAt: clues.length < 5 ? (clues.length+1)*100 : null,
-        upcomingClues: CLUES.slice(clues.length).map(([key,label], index) => ({ key, label, at: parisMidnight(addDays(week.start, clues.length+index)).toISOString(), atEliminated: (clues.length+index+1)*100 })),
-        quota: await quota(client, identity, week.day), authenticated: Boolean(identity.playerId),
-        solved: Boolean(r.found_at), winner: r.found_at ? { name: r.winner_name || "Anonyme", at: r.found_at, me: r.found_by === (identity.playerId ? "user:"+identity.playerId : "guest:"+identity.anonId) } : null,
-        canClaim: Boolean(identity.playerId && r.found_by === "guest:"+identity.anonId),
-        feed: guesses.slice(-20).reverse().map(g => ({ pokemon: display(g.pokemon_id), name: g.username, correct: g.correct, at: g.created_at }))
-      };
+      return snapshot(identity, r, guesses, await quota(client, identity, week.day), now);
     });
   }
   async function guess(identity, roundId, pokemonId) {
