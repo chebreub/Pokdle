@@ -81,3 +81,31 @@
   50% { transform: scale(1.12); }
   100% { transform: scale(1); }
 }
+
+/* Party Room duel: your own secret, whose turn it is, and both secrets at the end. */
+#pokdle-app .qui-secret { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 16px; background: var(--ui-surface, #fffdf9); border: 1px dashed var(--ui-line, #e9dfd4); }
+#pokdle-app .qui-secret img { width: 56px; height: 56px; image-rendering: pixelated; }
+#pokdle-app .qui-secret span { display: grid; font-size: .74rem; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-secret b { font: 600 1rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); }
+#pokdle-app .qui-turn { margin: 0; padding: 8px 12px; border-radius: 999px; background: var(--ui-surface, #fffdf9); font-weight: 800; text-align: center; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-turn.is-mine { background: #2f76ff; color: #fff; }
+#pokdle-app .qui-reveal { display: grid; gap: 6px; }
+#pokdle-app .qui-reveal span { display: flex; align-items: center; gap: 8px; font-size: .84rem; }
+#pokdle-app .qui-reveal img { width: 40px; height: 40px; image-rendering: pixelated; }
+
+/* Party Room duel: choosing, answering the rival, written and spoken questions, the shared log. */
+#pokdle-app .qui-grid.is-choosing .qui-card:not(:disabled):hover, #pokdle-app .qui-grid.is-guessing .qui-card:not(:disabled):hover { border-color: #2f76ff; }
+#pokdle-app .qui-tabs button.is-used { opacity: .55; text-decoration: line-through; }
+#pokdle-app .qui-free { display: flex; gap: 6px; }
+#pokdle-app .qui-free input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 12px; background: var(--ui-surface, #fffdf9); color: var(--ui-ink, #2e2a33); font: 600 .85rem Nunito, sans-serif; }
+#pokdle-app .qui-oral, #pokdle-app .qui-guess-btn { justify-self: start; font-size: .8rem; }
+#pokdle-app .qui-answer-box { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: #fff6d6; border: 1px solid #f3dc8f; text-align: center; }
+#pokdle-app .qui-answer-box p { margin: 0; font-weight: 700; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-answer-box b { font: 600 1.05rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); }
+#pokdle-app .qui-answer-actions { display: flex; justify-content: center; gap: 10px; }
+#pokdle-app .qui-answer-actions .btn-blue { min-width: 96px; }
+#pokdle-app.theme-dark .qui-answer-box { background: rgba(255, 212, 92, .12); border-color: rgba(255, 212, 92, .35); }
+#pokdle-app .qui-duel-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 200px; overflow: auto; }
+#pokdle-app .qui-duel-log li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: var(--ui-surface, #fffdf9); font-size: .78rem; font-weight: 700; }
+#pokdle-app .qui-panel b.is-wait { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .72rem; background: var(--ui-soft, #f5efe8); color: var(--ui-muted, #776b63); }
+#pokdle-app .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
