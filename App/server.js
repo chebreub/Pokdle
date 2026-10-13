@@ -1116,6 +1116,7 @@ app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: "30d", fal
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
 // SEO.
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
+app.get("/googled8d0a3d4583f5db3.html", (_req, res) => res.sendFile(path.join(__dirname, "googled8d0a3d4583f5db3.html")));
 app.get("/confidentialite", (_req, res) => res.sendFile(path.join(__dirname, "confidentialite.html"), { maxAge: "1h" }));
 app.get("/sitemap.xml", (_req, res) => res.sendFile(path.join(__dirname, "sitemap.xml"), { maxAge: "1d" }));
 
