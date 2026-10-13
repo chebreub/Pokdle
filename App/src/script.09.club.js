@@ -69,7 +69,7 @@ function renderHomeDiscovery(force = false) {
     guess: ["startNormalGame", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
     think: ["openPokeConnectionsMode", "openOddOneOutMode", "startQuizGame", "startEvolutionChainGame", "startPokedexOrderGame", "openTypeComboSolo"],
     arcade: ["startWeightBattle", "openHigherLowerMode", "openSpeedrunMode", "startPartyMode"],
-    strategy: ["openDraftScoreAttackMode", ["openDraftScoreAttackMode", true]]
+    strategy: ["openDraftScoreAttackMode"]
   };
   grid.replaceChildren(...(shelves[homeGameFilter] || shelves.popular).map(entry => [].concat(entry)).map(([key, pro]) => modeTileCloneForHome(key, Boolean(pro))).filter(Boolean));
 }

@@ -27,7 +27,7 @@ function artFixture(){
 test("every visible catalog card has a Pokémon art identity",()=>{
   const f=artFixture();
   const buttons=[...html.matchAll(/<button[^>]*class="card all-modes-card"[^>]*>/g)].map(m=>m[0]);
-  assert.ok(buttons.length>=30,"expected the complete mode library");
+  assert.ok(buttons.length>=29,"expected the complete mode library (Draft Arènes and PRO removed on 13/10)");
   for(const tag of buttons){
     const action=tag.match(/data-action="([^"]+)"/)?.[1] || "";
     let key=action;

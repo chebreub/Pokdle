@@ -90,7 +90,7 @@ def main():
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
       page.locator('#home-game-filters button').filter(has_text='Stratégie').click()
       strategy=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
-      expect(len(strategy)==2 and all('openDraftScoreAttackMode' in args for args in strategy),'Strategy filter includes unrelated modes: '+repr(strategy))
+      expect(len(strategy)==1 and all('openDraftScoreAttackMode' in args for args in strategy),'Strategy filter should only offer the Draft (PRO and Arènes removed): '+repr(strategy))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
@@ -228,7 +228,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==20,'Solo catalogue should list 20 games: '+str(tiles.count()))
+     expect(tiles.count()==19,'Solo catalogue should list 19 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
@@ -753,21 +753,14 @@ def main():
      team=page.locator('#draft-mode-card > .draft-panel-team').bounding_box()
      expect(picks and team and team['x']>picks['x']+picks['width']-3,'Score Attack team is not beside the draft choices: '+repr([picks,team]))
 
-     page.evaluate('openDraftArenaMode()');screen('screen-draft-arena')
-     arena=page.locator('#screen-draft-arena #draft-mode-card').bounding_box()
-     expect(arena and 900<=arena['width']<=1001,'PC4 Draft Arena cockpit is still narrow: '+repr(arena))
-     arena_cols=page.locator('#screen-draft-arena #draft-mode-card').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-     expect(arena_cols==2,'PC4 Draft Arena is not a two-column cockpit: '+str(arena_cols))
-     arena_gens=page.locator('#draft-gen-buttons button:visible')
-     if arena_gens.count(): arena_gens.first.click();page.wait_for_timeout(150)
-     arena_picks=page.locator('#screen-draft-arena #draft-mode-card > .draft-panel-picks').bounding_box()
-     arena_team=page.locator('#screen-draft-arena #draft-mode-card > .draft-panel-team').bounding_box()
-     expect(arena_picks and arena_team and arena_team['x']>arena_picks['x']+arena_picks['width']-3,'Draft Arena team is not beside the choices: '+repr([arena_picks,arena_team]))
-     return screen('screen-draft-arena')
+     # Draft Arènes was removed: its old entry point opens the normal Draft.
+     page.evaluate('openDraftArenaMode()');state=screen('screen-draft-score-attack')
+     expect(page.locator('#draft-score-attack-toggle').is_hidden(),'The Draft still offers the Arènes switch')
+     return state
     check('pc4-draft-desktop',pc4_draft_desktop)
     def party():
      state=nav('social','screen-party-room')
-     expect(page.locator('#party-lobby .party-duel-link:visible').count()==5,'Party Room lobby does not list the two-player games')
+     expect(page.locator('#party-lobby .party-duel-link:visible').count()==4,'Party Room lobby does not list the two-player games')
      return state
     check('party-entry',party)
     def d4_party_polish():
@@ -943,7 +936,9 @@ def main():
     check('quiz',lambda:start('startQuizGame','screen-game'))
     def draft_pro():
      nav('game','screen-all-modes')
-     page.locator('button[data-action="openFromAllModes"][data-args=\'["openDraftScoreAttackMode", true]\']:visible').first.click()
+     expect(page.locator('button[data-args*="openDraftScoreAttackMode"][data-args*="true"]').count()==0,'A Draft PRO card is still offered')
+     page.locator('button[data-action="openFromAllModes"][data-args=\'["openDraftScoreAttackMode"]\']:visible').first.click()
+     expect('PRO' not in page.locator('#draft-mode-card .card-title').inner_text(),'The Draft opened in PRO mode')
      return screen('screen-draft-score-attack')
     check('draft-pro',draft_pro)
     def gameplay_family_smoke():
@@ -952,7 +947,7 @@ def main():
       ('startWeightBattle','screen-game'),('startEvolutionChainGame','screen-game'),('startPokedexOrderGame','screen-game'),
       ('openOddOneOutMode','screen-odd-one-out'),('openHigherLowerMode','screen-higher-lower'),
       ('openPokeConnectionsMode','screen-poke-connections'),('openSpeedrunMode','screen-speedrun'),
-      ('openTypeComboSolo','screen-type-combo'),('openDraftArenaMode','screen-draft-arena')
+      ('openTypeComboSolo','screen-type-combo'),('openDraftArenaMode','screen-draft-score-attack')
      ]
      opened=[]
      for action,target in matrix:

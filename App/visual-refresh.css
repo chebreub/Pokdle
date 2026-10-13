@@ -5422,3 +5422,6 @@
   #pokdle-app.design-refresh .home-adventure-partner-art.is-rare::before, #pokdle-app.design-refresh .home-adventure-partner-art.is-rare::after, #pokdle-app.design-refresh .lbv2-avatar.is-rare { animation:none; }
 }
 #pokdle-app.design-refresh.reduce-motion .home-adventure-partner-art.is-rare::before, #pokdle-app.design-refresh.reduce-motion .home-adventure-partner-art.is-rare::after, #pokdle-app.design-refresh.reduce-motion .lbv2-avatar.is-rare { animation:none; }
+
+/* Draft Arènes removed: the Draft screen no longer offers the switch. */
+#pokdle-app #draft-score-attack-toggle { display:none !important; }
