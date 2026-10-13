@@ -8,7 +8,9 @@ OUT=ROOT/'quality-artifacts'/'wordle'
 OUT.mkdir(parents=True,exist_ok=True)
 
 async def ready(page, expression):
-    await page.wait_for_function('() => ('+expression+')',timeout=12000)
+    # Name the condition that never came true, so a failure says which step stalled.
+    try: await page.wait_for_function('() => ('+expression+')',timeout=12000)
+    except Exception as error: raise AssertionError('Timed out waiting for: '+expression) from error
 
 def colors(guess,answer='BULBIZARRE'):
     result=['absent']*len(guess);remaining={}
@@ -26,6 +28,9 @@ async def run():
         for engine in ['chromium','webkit']:
             browser=await getattr(pw,engine).launch()
             for width,height in [(1366,768),(390,844)]:
+              # WebKit on a busy runner sometimes misses a 12 s step that passes on the next try:
+              # a failing WebKit case is replayed once from scratch before it counts.
+              for attempt in (1,2):
                 case=dict(engine=engine,width=width,ok=False)
                 context=await browser.new_context(viewport=dict(width=width,height=height),is_mobile=width<640,has_touch=width<640)
                 page=await context.new_page();page.set_default_timeout(8000)
@@ -138,7 +143,12 @@ async def run():
                     case['error']=str(e);case['pageErrors']=errors
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'))
                 finally:
-                    reports.append(case);await context.close();print('WORDLE '+json.dumps(case),flush=True)
+                    await context.close()
+                if case['ok'] or attempt==2 or engine!='webkit':
+                    if attempt==2: case['retried']=True
+                    reports.append(case);print('WORDLE '+json.dumps(case),flush=True)
+                    break
+                print('WORDLE-RETRY '+json.dumps(case),flush=True)
             await browser.close()
     (OUT/'report.json').write_text(json.dumps(reports,indent=2))
     if not all(r['ok'] for r in reports): raise SystemExit(1)

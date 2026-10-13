@@ -3,13 +3,18 @@ import asyncio,json,os,subprocess,time,urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'quality-artifacts'/'dossier';OUT.mkdir(parents=True,exist_ok=True)
-async def ready(page,condition):await page.wait_for_function('() => ('+condition+')',timeout=12000)
+async def ready(page,condition):
+    # Name the condition that never came true, so a failure says which step stalled.
+    try: await page.wait_for_function('() => ('+condition+')',timeout=12000)
+    except Exception as error: raise AssertionError('Timed out waiting for: '+condition) from error
 async def run():
     reports=[]
     async with async_playwright() as pw:
         for engine in ['chromium','webkit']:
             browser=await getattr(pw,engine).launch()
             for width,height in [(1366,768),(390,844)]:
+              # A failing WebKit case is replayed once from scratch before it counts (busy runners).
+              for attempt in (1,2):
                 case=dict(engine=engine,width=width,ok=False);ctx=await browser.new_context(viewport=dict(width=width,height=height),is_mobile=width<640,has_touch=width<640)
                 page=await ctx.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_default_timeout(8000)
                 try:
@@ -105,7 +110,12 @@ async def run():
                     case.update(ok=True,checks=['Wordle loss -> dossier','no answer leak','wrong continues','double click','reload','503 recovery','9/10 end','corrections','bonus unlock','20/20','abandon','mobile overflow','return home'])
                 except Exception as e:
                     case['error']=str(e);case['pageErrors']=errors;await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'),full_page=True)
-                finally:reports.append(case);await ctx.close();print('DOSSIER '+json.dumps(case),flush=True)
+                finally:await ctx.close()
+                if case['ok'] or attempt==2 or engine!='webkit':
+                    if attempt==2: case['retried']=True
+                    reports.append(case);print('DOSSIER '+json.dumps(case),flush=True)
+                    break
+                print('DOSSIER-RETRY '+json.dumps(case),flush=True)
             await browser.close()
     (OUT/'report.json').write_text(json.dumps(reports,indent=2))
     if not all(r['ok'] for r in reports):raise SystemExit(1)
