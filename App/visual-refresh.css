@@ -340,11 +340,9 @@
 #pokdle-app.design-refresh #screen-all-modes > .card { background: var(--ui-surface) !important; border-color: var(--ui-line) !important; }
 #pokdle-app.design-refresh #screen-all-modes > .card > .card-desc { color: var(--ui-muted) !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat { --category-bg: #dce8ff; --category-ink: #244ba0; }
-#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="reflection"] { --category-bg: #e6dffc; --category-ink: #623c9f; }
-#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="arcade"] { --category-bg: #ffedc0; --category-ink: #7c5011; }
-#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="strategy"] { --category-bg: #d4eee5; --category-ink: #176957; }
+#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="play"] { --category-bg: #e6dffc; --category-ink: #623c9f; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="social"] { --category-bg: #f9dfe6; --category-ink: #a23150; }
-#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="collection"] { --category-bg: #d1edf5; --category-ink: #1c617c; }
+#pokdle-app.design-refresh #screen-all-modes .all-modes-cat[data-family="tools"] { --category-bg: #d1edf5; --category-ink: #1c617c; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title { color: var(--ui-ink) !important; font-size: .875rem !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card { background: var(--category-bg) !important; border-color: transparent !important; box-shadow: 0 4px 0 rgb(0 0 0 / 18%) !important; }
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card b { color: #17253d !important; }
@@ -1215,11 +1213,9 @@
    MODE CARD IDENTITY V2 — Pokémon becomes part of the game library
    ===================================================================== */
 #screen-all-modes .all-modes-cat[data-family="guess"] { --mode-art-accent:#2f76ff; --mode-art-soft:#edf4ff; }
-#screen-all-modes .all-modes-cat[data-family="reflection"] { --mode-art-accent:#7657c8; --mode-art-soft:#f2effc; }
-#screen-all-modes .all-modes-cat[data-family="arcade"] { --mode-art-accent:#159e8a; --mode-art-soft:#eaf8f5; }
-#screen-all-modes .all-modes-cat[data-family="strategy"] { --mode-art-accent:#d99a00; --mode-art-soft:#fff8df; }
+#screen-all-modes .all-modes-cat[data-family="play"] { --mode-art-accent:#7657c8; --mode-art-soft:#f2effc; }
 #screen-all-modes .all-modes-cat[data-family="social"] { --mode-art-accent:#e9433e; --mode-art-soft:#fff0ef; }
-#screen-all-modes .all-modes-cat[data-family="collection"] { --mode-art-accent:#315d95; --mode-art-soft:#edf3fa; }
+#screen-all-modes .all-modes-cat[data-family="tools"] { --mode-art-accent:#315d95; --mode-art-soft:#edf3fa; }
 
 #pokdle-app.design-refresh #screen-all-modes .all-modes-card.has-mode-art {
   position:relative;

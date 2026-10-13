@@ -565,3 +565,16 @@ body.theme-dark .profile-mission-intro p { color:#afc0da; }
     justify-content:center;
   }
 }
+
+/* Restaurer une copie : copies datées de la progression, dans « Gérer ma progression » */
+#pokdle-app .profile-management-actions { display:flex; flex-wrap:wrap; gap:8px; }
+#pokdle-app .restore-points { list-style:none; margin:14px 0 0; padding:0; display:grid; gap:10px; }
+#pokdle-app .restore-point { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--ui-line,#e9dfd4); border-radius:16px; background:var(--ui-soft,#f5efe8); }
+#pokdle-app .restore-point div { display:grid; gap:2px; min-width:0; }
+#pokdle-app .restore-point b { font:600 15px Fredoka,Nunito,sans-serif; color:var(--ui-ink,#2e2a33); }
+#pokdle-app .restore-point span { font-size:.78rem; font-weight:800; color:var(--ui-muted,#776b63); }
+#pokdle-app .restore-point small { font-size:.78rem; color:var(--ui-muted,#776b63); }
+#pokdle-app .restore-point .btn-ghost { flex:none; }
+@media (max-width:520px) {
+  #pokdle-app .restore-point { flex-direction:column; align-items:stretch; }
+}

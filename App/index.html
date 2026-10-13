@@ -175,9 +175,7 @@
         <div id="home-game-filters" class="home-game-filters" aria-label="Filtrer les jeux">
           <button data-action="filterHomeGames" data-args='["popular"]' aria-pressed="true">Populaires</button>
           <button data-action="filterHomeGames" data-args='["guess"]' aria-pressed="false">Deviner</button>
-          <button data-action="filterHomeGames" data-args='["think"]' aria-pressed="false">Réflexion</button>
-          <button data-action="filterHomeGames" data-args='["arcade"]' aria-pressed="false">Arcade</button>
-          <button data-action="filterHomeGames" data-args='["strategy"]' aria-pressed="false">Stratégie</button>
+          <button data-action="filterHomeGames" data-args='["play"]' aria-pressed="false">Jouer</button>
         </div>
         <div class="home-games-grid" id="home-games-grid"></div>
       </section>
@@ -310,32 +308,20 @@
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startMysteryStatGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-brain"/></svg></div><b>Stat mystère</b><small>Six statistiques de base, un seul Pokémon possible.</small></button>
             </div>
           </section>
-          <section class="all-modes-cat" data-family="reflection">
-            <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-brain"/></svg>Réflexion</h3>
+          <section class="all-modes-cat" data-family="play">
+            <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-gamepad"/></svg>Jouer</h3>
             <div class="all-modes-grid">
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openPokeConnectionsMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-link"/></svg></div><b>Poké-Connections</b><small>16 Pokémon, quatre liens cachés à retrouver.</small></button>
-              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openOddOneOutMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Intrus</b><small>Trouve celui qui ne suit pas la même règle.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startQuizGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-help"/></svg></div><b>Quiz</b><small>Quinze questions sur l’univers Pokémon.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openHigherLowerMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trending"/></svg></div><b>Higher or Lower</b><small>Compare les statistiques et prolonge ta série.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft Score Attack</b><span class="all-modes-badge">Score</span><small>Drafte six Pokémon pour maximiser ton score.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openOddOneOutMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Intrus</b><small>Trouve celui qui ne suit pas la même règle.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startEvolutionChainGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-repeat"/></svg></div><b>Évolution</b><small>Complète la chaîne d’évolution.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startPokedexOrderGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-list-ordered"/></svg></div><b>Ordre Pokédex</b><small>Quel Pokémon se cache entre ces deux numéros du Pokédex ?</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openTypeComboSolo"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Combo de types</b><small>Retrouve le Pokémon qui correspond aux types.</small></button>
-            </div>
-          </section>
-          <section class="all-modes-cat" data-family="arcade">
-            <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-gamepad"/></svg>Arcade</h3>
-            <div class="all-modes-grid">
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startWeightBattle"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-dumbbell"/></svg></div><b>Duel de poids</b><small>Lequel de ces deux Pokémon est le plus lourd ?</small></button>
-              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openHigherLowerMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trending"/></svg></div><b>Higher or Lower</b><small>Compare les statistiques et prolonge ta série.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openSpeedrunMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-timer"/></svg></div><b>Speedrun Pokédex</b><small>Retrouve les Pokémon le plus vite possible.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startPartyMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-gamepad"/></svg></div><b>Marathon mini-jeux</b><small>Enchaîne plusieurs défis dans une même session.</small></button>
-            </div>
-          </section>
-          <section class="all-modes-cat" data-family="strategy">
-            <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-trophy"/></svg>Stratégie</h3>
-            <div class="all-modes-grid">
-              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft Score Attack</b><span class="all-modes-badge">Score</span><small>Drafte six Pokémon pour maximiser ton score.</small></button>
-              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTeamBuilderScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-layers"/></svg></div><b>Team Builder</b><small>Prépare une équipe, ses attaques et ses statistiques.</small></button>
-              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTypeChartScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Table des types</b><small>Vérifie les forces et les faiblesses de chaque type.</small></button>
             </div>
           </section>
           <section class="all-modes-cat" data-family="social">
@@ -344,16 +330,16 @@
               <button type="button" class="card all-modes-card" data-category="friends" data-action="openFromAllModes" data-args='["openPartyRoomMode"]' data-search="Party Room salon amis duel 1v1 stat clash stat auction enchères défi ami"><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-users"/></svg></div><b>Party Room</b><small>De 2 à 8 : neuf mini-jeux, plus les duels à deux.</small></button>
             </div>
           </section>
-          <section class="all-modes-cat" data-family="collection">
-            <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-book"/></svg>Collection</h3>
+          <section class="all-modes-cat" data-family="tools">
+            <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-book"/></svg>Outils</h3>
             <div class="all-modes-grid">
-              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openPokedexMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-book"/></svg></div><b>Pokédex</b><small>Fiches, formes, évolutions et comparaison des Pokémon.</small></button>
-              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openProfileScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-user"/></svg></div><b>Profil</b><small>Ton niveau, tes records et ta progression.</small></button>
+              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTeamBuilderScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-layers"/></svg></div><b>Team Builder</b><small>Prépare une équipe, ses attaques et ses statistiques.</small></button>
+              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTypeChartScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Table des types</b><small>Vérifie les forces et les faiblesses de chaque type.</small></button>
               <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openAchievementsScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trophy"/></svg></div><b>Succès</b><small>Retrouve tes trophées et tes prochains objectifs.</small></button>
               <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openMatchHistoryScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-history"/></svg></div><b>Historique</b><small>Reviens sur tes dernières parties.</small></button>
               <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openTeamsScreen"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-layers"/></svg></div><b>Mes équipes</b><small>Retrouve et gère tes équipes enregistrées.</small></button>
-              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openEmulatorMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-gamepad"/></svg></div><b>Émulateur</b><small>Joue avec ta propre ROM GBA, GBC ou DS.</small></button>
               <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openLeaderboard"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trophy"/></svg></div><b>Classements</b><small>Compare les scores et découvre les meilleurs joueurs.</small></button>
+              <button type="button" class="card all-modes-card" data-category="explore" data-action="openFromAllModes" data-args='["openEmulatorMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-gamepad"/></svg></div><b>Émulateur</b><small>Joue avec ta propre ROM GBA, GBC ou DS.</small></button>
             </div>
           </section>
         </div>
@@ -474,7 +460,7 @@
           <summary><span>⚔️ Bilans 1v1 contre tes amis</span><small id="profile-h2h-summary">Tes duels Score Attack</small></summary>
           <div class="profile-disclosure-body"><div id="profile-h2h-records" class="profile-h2h-records"></div></div>
         </details>
-        <details class="profile-records-panel profile-management"><summary>Gérer ma progression</summary><p>Effacer le profil et les données de jeu sur cet appareil.</p><button class="btn-ghost" type="button" data-action="confirmResetProgression">🗑️ Réinitialiser</button></details>
+        <details class="profile-records-panel profile-management"><summary>Gérer ma progression</summary><p>Retrouver une copie de ta progression, ou tout effacer sur cet appareil.</p><div class="profile-management-actions"><button class="btn-ghost" type="button" data-action="openRestoreProgress">↩️ Restaurer une copie</button><button class="btn-ghost" type="button" data-action="confirmResetProgression">🗑️ Réinitialiser</button></div></details>
       </div>
     </div>
     <div id="screen-achievements" class="hidden"> 

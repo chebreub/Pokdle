@@ -56,7 +56,7 @@ function renderHomeReturn() {
 }
 var homeGameFilter = "popular";
 function filterHomeGames(filter) {
-  homeGameFilter = ["popular", "guess", "think", "arcade", "strategy"].includes(filter) ? filter : "popular";
+  homeGameFilter = ["popular", "guess", "play"].includes(filter) ? filter : "popular";
   renderHomeDiscovery(true);
   document.querySelectorAll("#home-game-filters button").forEach(button => button.setAttribute("aria-pressed", String(JSON.parse(button.dataset.args)[0] === homeGameFilter)));
 }
@@ -67,9 +67,7 @@ function renderHomeDiscovery(force = false) {
   const shelves = {
     popular: ["startSilhouetteGame", "startCryGame", "openPokeConnectionsMode", "startQuizGame", "openDraftScoreAttackMode", "openHigherLowerMode"],
     guess: ["startNormalGame", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
-    think: ["openPokeConnectionsMode", "openOddOneOutMode", "startQuizGame", "startEvolutionChainGame", "startPokedexOrderGame", "openTypeComboSolo"],
-    arcade: ["startWeightBattle", "openHigherLowerMode", "openSpeedrunMode", "startPartyMode"],
-    strategy: ["openDraftScoreAttackMode"]
+    play: ["openPokeConnectionsMode", "startQuizGame", "openHigherLowerMode", "openDraftScoreAttackMode", "openOddOneOutMode", "openTypeComboSolo", "openSpeedrunMode", "startWeightBattle", "startEvolutionChainGame"]
   };
   grid.replaceChildren(...(shelves[homeGameFilter] || shelves.popular).map(entry => [].concat(entry)).map(([key, pro]) => modeTileCloneForHome(key, Boolean(pro))).filter(Boolean));
 }

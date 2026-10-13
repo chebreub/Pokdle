@@ -79,10 +79,11 @@ var MODE_TILE_PROPS = Object.freeze({
   gamepad:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="16" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13.5" r="1" fill="currentColor"/></svg>',
   podium:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M9 20V8h6v12M3 20v-7h6M15 20v-9h6v9M2 20h20"/></svg>'
 });
-var MODE_CATALOG_FAMILY_LABELS = Object.freeze({ guess:'Deviner', reflection:'Réflexion', arcade:'Arcade', strategy:'Stratégie', social:'Entre amis', collection:'Collection' });
-var MODE_CATALOG_FAMILY_COPY = Object.freeze({ guess:'retrouve le Pokémon mystère', reflection:'liens, logique et culture', arcade:'parties rapides et records', strategy:'compose ton équipe', social:'de 2 à 8 joueurs', collection:'tes outils de dresseur' });
-// In the tools view the same sections hold tools, so they get tool names.
-var MODE_CATALOG_TOOL_SECTIONS = Object.freeze({ strategy:['Préparer ses combats','équipes et types'], collection:['Ta collection','progrès, records et jeux'] });
+// Three game families (decided 13/10/2026), plus the tools kept apart from the games.
+var MODE_CATALOG_FAMILY_LABELS = Object.freeze({ guess:'Deviner', play:'Jouer', social:'Entre amis', tools:'Outils' });
+var MODE_CATALOG_FAMILY_COPY = Object.freeze({ guess:'retrouve le Pokémon mystère', play:'quiz, logique, records et draft', social:'de 2 à 8 joueurs', tools:'équipes, types, succès et records' });
+// In the tools view the tools section gets a tool name.
+var MODE_CATALOG_TOOL_SECTIONS = Object.freeze({ tools:['Outils du dresseur','équipes, types, succès et records'] });
 var MODE_CATALOG_LEVELS = Object.freeze({ easy:1, medium:2, hard:3, expert:4 });
 // Unfinished games stay reachable by their own links but are not advertised in the catalogue.
 var MODE_CATALOG_UNLISTED = Object.freeze(['openDraftArenaMode']);
@@ -144,7 +145,7 @@ function modeTileHtml(card) {
   const description=card.querySelector('small')?.textContent.trim() || '';
   const isTool=card.dataset.category === 'explore';
   const family=card.closest?.('.all-modes-cat')?.dataset.family || '';
-  const familyLabel=isTool && family !== 'collection' ? 'Outil' : (MODE_CATALOG_FAMILY_LABELS[family] || '');
+  const familyLabel=isTool ? 'Outil' : (MODE_CATALOG_FAMILY_LABELS[family] || '');
   const badge=modeCatalogIsPro(card) ? 'PRO' : theme.badge;
   const level=MODE_CATALOG_LEVELS[card.dataset.difficulty] || 0;
   const levelHtml=level ? '<span class="mode-tile-level" title="Difficulté : '+card.dataset.difficultyLabel+'">'+[1,2,3,4].map(i=>'<i'+(i <= level ? ' class="is-on"' : '')+'></i>').join('')+'<span>'+card.dataset.difficultyLabel+'</span></span>' : '<span></span>';
@@ -208,7 +209,7 @@ function renderModeCatalogFamilies() {
     });
   });
   // Tools (Émulateur, Team Builder, Succès…) sit beside the game families, one click away.
-  group.innerHTML=['all','guess','reflection','arcade','strategy'].filter(family=>counts[family]).map(family=>
+  group.innerHTML=['all','guess','play'].filter(family=>counts[family]).map(family=>
     '<button type="button" data-action="setModeCatalogFamily" data-args=\'["'+family+'"]\' aria-pressed="'+(modeCatalogCategory === 'solo' && family === modeCatalogFamily)+'">'+(family === 'all' ? 'Tous' : MODE_CATALOG_FAMILY_LABELS[family])+'<span>'+counts[family]+'</span></button>'
   ).join('')+(counts.tools ? '<button type="button" data-action="setModeCatalogCategory" data-args=\'["explore"]\' aria-pressed="'+(modeCatalogCategory === 'explore')+'">Outils<span>'+counts.tools+'</span></button>' : '');
 }

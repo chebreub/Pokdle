@@ -27,7 +27,7 @@ function tileFixture(){
 test("catalogue tiles give every card its own mascot, colour and drawn mechanic",()=>{
   const f=tileFixture();
   const buttons=[...html.matchAll(/<button[^>]*class="card all-modes-card"[^>]*>/g)].map(m=>m[0]);
-  assert.ok(buttons.length>=29,"expected the complete mode library (Draft Arènes and PRO removed on 13/10)");
+  assert.ok(buttons.length>=27,"expected the complete mode library (3 families since 13/10, Pokédex and Profil in the menu)");
   for(const tag of buttons){
     const action=tag.match(/data-action="([^"]+)"/)?.[1] || "";
     const key=action==="openFromAllModes" ? JSON.parse(tag.match(/data-args='([^']+)'/)?.[1] || "[]")[0] : action;
@@ -43,7 +43,7 @@ test("catalogue tiles give every card its own mascot, colour and drawn mechanic"
 
 test("mode families, special effects, dark mode and mobile are styled",()=>{
   assert.match(css,/MODE CARD IDENTITY V2/);
-  for(const family of ["guess","reflection","arcade","strategy","social","collection"]){
+  for(const family of ["guess","play","social","tools"]){
     assert.match(css,new RegExp(`data-family="${family}"`));
   }
   for(const effect of ["art-mystery","art-pixel","art-scan","art-audio","art-duel","art-team"]){
