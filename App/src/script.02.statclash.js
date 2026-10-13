@@ -232,7 +232,7 @@ function startDailyGame() {
   startGameWithSecret(null,getPokemonUiList());
   let retry=document.getElementById("daily-server-retry");
   if(!retry){retry=document.createElement("button");retry.id="daily-server-retry";retry.className="btn-ghost hidden";retry.dataset.action="syncDailyObservedState";retry.textContent="Recharger le défi";document.getElementById("err-msg").after(retry);}
-  retry.classList.add("hidden");showErr("Chargement du Pokémon du jour…");dailyControls();
+  retry.classList.add("hidden");showLoadingNotice("Chargement du Pokémon du jour…");dailyControls();
   return syncDailyObservedState();
 }
 

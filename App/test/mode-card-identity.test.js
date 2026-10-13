@@ -11,7 +11,7 @@ const club=fs.readFileSync(path.join(root,"src/script.09.club.js"),"utf8");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const css=fs.readFileSync(path.join(root,"visual-refresh.css"),"utf8");
 
-function artFixture(){
+function tileFixture(){
   const context={
     document:{addEventListener(){},querySelectorAll(){return[];},getElementById(){return null;}},
     history:{state:null,replaceState(){}},
@@ -20,39 +20,14 @@ function artFixture(){
     String,Number,Object,Array,JSON
   };
   vm.createContext(context);
-  vm.runInContext(source+"\nthis.__art=MODE_CATALOG_ART;this.__html=modeCatalogArtHtml;",context);
+  vm.runInContext(source+"\nthis.__theme=MODE_TILE_THEME;this.__props=MODE_TILE_PROPS;",context);
   return context;
 }
 
-test("every visible catalog card has a Pokémon art identity",()=>{
-  const f=artFixture();
+test("catalogue tiles give every card its own mascot, colour and drawn mechanic",()=>{
+  const f=tileFixture();
   const buttons=[...html.matchAll(/<button[^>]*class="card all-modes-card"[^>]*>/g)].map(m=>m[0]);
   assert.ok(buttons.length>=29,"expected the complete mode library (Draft Arènes and PRO removed on 13/10)");
-  for(const tag of buttons){
-    const action=tag.match(/data-action="([^"]+)"/)?.[1] || "";
-    let key=action;
-    if(action==="openFromAllModes"){
-      const raw=tag.match(/data-args='([^']+)'/)?.[1] || "[]";
-      key=JSON.parse(raw)[0];
-    }
-    assert.ok(f.__art[key],`missing artwork mapping for ${key}`);
-  }
-});
-
-test("existing mode art remains decorative, lazy and sprite based",()=>{
-  const f=artFixture();
-  const out=f.__html("startNormalGame","card");
-  assert.match(out,/mode-card-art art-mystery/);
-  assert.match(out,/loading="lazy"/);
-  assert.match(out,/decoding="async"/);
-  assert.match(out,/aria-hidden="true"/);
-  assert.match(out,/sprite\/133/);
-});
-
-test("catalogue tiles give every card its own mascot, colour and drawn mechanic",()=>{
-  const f=artFixture();
-  vm.runInContext("this.__theme=MODE_TILE_THEME;this.__props=MODE_TILE_PROPS;",f);
-  const buttons=[...html.matchAll(/<button[^>]*class="card all-modes-card"[^>]*>/g)].map(m=>m[0]);
   for(const tag of buttons){
     const action=tag.match(/data-action="([^"]+)"/)?.[1] || "";
     const key=action==="openFromAllModes" ? JSON.parse(tag.match(/data-args='([^']+)'/)?.[1] || "[]")[0] : action;
@@ -80,15 +55,6 @@ test("mode families, special effects, dark mode and mobile are styled",()=>{
 });
 
 
-test("mode art now communicates gameplay instead of only floating sprites",()=>{
-  const f=artFixture();
-  assert.match(f.__html("startPixelGame","card"),/mode-preview-pixel/);
-  assert.match(f.__html("startCryGame","card"),/mode-preview-audio/);
-  assert.match(f.__html("startQuizGame","card"),/mode-preview-quiz/);
-  assert.match(f.__html("startEvolutionChainGame","card"),/mode-preview-evolution/);
-  assert.match(f.__html("openTypeComboSolo","card"),/mode-preview-types/);
-  assert.match(css,/PROFESSIONAL PASS V2/);
-  assert.match(css,/mode-preview-audio/);
-  assert.match(css,/mode-preview-quiz/);
-  assert.match(css,/mode-preview-versus/);
+test("the old catalogue art generator stays removed",()=>{
+  assert.doesNotMatch(source,/MODE_CATALOG_ART|modeCatalogArtHtml|modeCatalogPreviewHtml/);
 });

@@ -870,10 +870,6 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <div class="ranking-head">
             <h2 class="card-title">Draft Arènes</h2>
             <div class="ranking-head-actions">
-              <select id="draft-battle-pokemon" class="mode-select hidden arena-only" aria-label="Choisir le Pokémon à envoyer au duel"></select>
-              <button id="draft-battle-launch" class="btn-blue arena-only" type="button" data-action="launchDraftArenaBattle">Lancer le duel</button>
-              <button id="draft-battle-close" class="btn-ghost hidden arena-only" type="button" data-action="clearDraftSimpleBattleDevPanel">Fermer le duel</button>
-              <button id="draft-score-attack-toggle" class="btn-ghost" type="button" data-action="toggleDraftScoreAttackMode" hidden>Score Attack</button>
               <div class="draft-multi-dropdown scoreattack-only">
                 <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">🆚 Multi ▾</button>
                 <div class="draft-multi-menu" role="menu">
@@ -1208,7 +1204,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-egg" class="hidden" aria-label="Œuf mystère">
       <div class="egg-toolbar"><button class="btn-ghost" data-action="goToConfig">← Jeux</button><span>COMMUNAUTÉ · HEBDOMADAIRE</span><button class="btn-ghost" data-action="loadEggState">Actualiser</button></div>
       <div class="shell-intro"><p class="club-eyebrow">UNE ENQUÊTE À RÉSOUDRE ENSEMBLE</p><h1>L’Œuf mystère</h1><p>Chaque mauvaise piste est écartée pour tout le monde. La prochaine sera-t-elle la bonne ?</p></div>
-      <p id="egg-notice" role="status" aria-live="polite">Chargement du défi…</p>
+      <p id="egg-notice" class="pk-skel-text" role="status" aria-live="polite">Chargement du défi…</p>
       <div id="egg-content" class="hidden">
         <section class="egg-prize"><div class="egg-drawing" aria-hidden="true"><i></i><i></i><i></i></div><div><span class="club-eyebrow">LE PREMIER À TROUVER REMPORTE</span><h2 id="egg-reward-name"></h2><p>Un compagnon et l’insigne de cette enquête. Une autre récompense est choisie si tu possèdes déjà ce Pokémon.</p><small id="egg-reset"></small></div><img id="egg-reward-sprite" alt="" width="112" height="112"/></section>
         <section class="egg-investigation"><div class="egg-progress"><strong id="egg-eliminated"></strong><span id="egg-remaining"></span></div><progress id="egg-progress-bar" max="1025" value="0" aria-label="Pokémon écartés"></progress><div id="egg-clues" class="egg-clues"></div><p id="egg-next-clue"></p></section>

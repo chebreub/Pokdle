@@ -136,7 +136,8 @@ test("dedicated draft screens reopen through the central visibility helper", () 
   assert.ok(arenaStart >= 0 && scoreStart > arenaStart && mountStart > scoreStart);
   const arenaBlock = draftSource.slice(arenaStart, scoreStart);
   const scoreBlock = draftSource.slice(scoreStart, mountStart);
-  assert.match(arenaBlock, /showScreen\("screen-draft-arena"\)/);
+  assert.match(arenaBlock, /return openDraftScoreAttackMode\(\);/);
+  assert.doesNotMatch(draftSource, /openDraftArenaModeRemoved|launchDraftArenaBattle/);
   assert.match(scoreBlock, /showScreen\("screen-draft-score-attack"\)/);
   assert.doesNotMatch(arenaBlock, /screen-draft-arena"\)\.classList\.remove\("hidden"\)/);
   assert.doesNotMatch(scoreBlock, /screen-draft-score-attack"\)\?*\.classList\.remove\("hidden"\)/);

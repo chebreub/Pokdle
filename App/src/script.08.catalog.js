@@ -8,52 +8,8 @@ var MODE_CATALOG_DIFFICULTY = Object.freeze({
   startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium',
   startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
   openTypeComboSolo:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
-  startPartyMode:'medium', openDraftArenaMode:'hard', openDraftScoreAttackMode:'hard', openPartyRoomMode:'medium',
-  openMultiplayerMode:'medium', openStatClashMode:'hard', openStatAuctionMode:'hard', openDefiAmiFromAllModes:'medium',
-  openDraftScoreAttackProDuel:'expert'
-});
-var MODE_CATALOG_ART = Object.freeze({
-  startDailyGame:{ids:[149],effect:'mystery',glyph:'?'},
-  openEggGame:{ids:[175],effect:'mystery',glyph:'◒'},
-  startNormalGame:{ids:[133],effect:'mystery',glyph:'∞'},
-  startSilhouetteGame:{ids:[352],effect:'scan',glyph:'◐'},
-  startPixelGame:{ids:[137],effect:'pixel',glyph:'▦'},
-  startDescriptionMode:{ids:[479],effect:'dossier',glyph:'≡'},
-  startCryGame:{ids:[441],effect:'audio',glyph:'♪'},
-  startMysteryStatGame:{ids:[376],effect:'stats',glyph:'Σ'},
-  openOddOneOutMode:{ids:[132,25,133],effect:'group',glyph:'?'},
-  startQuizGame:{ids:[65],effect:'quiz',glyph:'?'},
-  startEvolutionChainGame:{ids:[722,723,724],effect:'evolution',glyph:'↻'},
-  startPokedexOrderGame:{ids:[152,155,158],effect:'order',glyph:'#'},
-  openPokeConnectionsMode:{ids:[133,134,135],effect:'links',glyph:'↔'},
-  openTypeComboSolo:{ids:[493,352],effect:'types',glyph:'+'},
-  startWeightBattle:{ids:[143,50],effect:'versus',glyph:'↕'},
-  openHigherLowerMode:{ids:[248,10],effect:'versus',glyph:'↕'},
-  openSpeedrunMode:{ids:[291],effect:'speed',glyph:'⚡'},
-  startPartyMode:{ids:[25,133,448],effect:'party',glyph:'✦'},
-  openDraftArenaMode:{ids:[6,9,3],effect:'team',glyph:'III'},
-  openDraftScoreAttackMode:{ids:[248,376,445],effect:'team',glyph:'6'},
-  openTeamBuilderScreen:{ids:[6,9,3],effect:'team',glyph:'+'},
-  openTypeChartScreen:{ids:[6,130],effect:'types',glyph:'×'},
-  openPartyRoomMode:{ids:[25,133,448],effect:'party',glyph:'●'},
-  openMultiplayerMode:{ids:[6,9],effect:'duel',glyph:'VS'},
-  openStatClashMode:{ids:[68,65],effect:'duel',glyph:'Σ'},
-  openStatAuctionMode:{ids:[52,197],effect:'auction',glyph:'$'},
-  openDefiAmiFromAllModes:{ids:[25,133],effect:'duel',glyph:'↗'},
-  openDraftScoreAttackProDuel:{ids:[248,445],effect:'duel',glyph:'PRO'},
-  openPokedexMode:{ids:[1,4,7],effect:'dex',glyph:'#'},
-  openProfileScreen:{ids:[25],effect:'trainer',glyph:'★'},
-  openAchievementsScreen:{ids:[150],effect:'trophy',glyph:'◆'},
-  openMatchHistoryScreen:{ids:[251],effect:'history',glyph:'↶'},
-  openTeamsScreen:{ids:[6,9,3],effect:'team',glyph:'6'},
-  openEmulatorMode:{ids:[25],effect:'pixel',glyph:'8-BIT'},
-  openLeaderboard:{ids:[150,25,448],effect:'podium',glyph:'1'}
-});
-// Illustration filenames are versioned because /img assets are cached for 30 days.
-var MODE_CATALOG_ILLUSTRATIONS = Object.freeze({
-  startDailyGame:'daily',
-  openPokeConnectionsMode:'connections',
-  openDraftScoreAttackMode:'draft'
+  startPartyMode:'medium', openDraftScoreAttackMode:'hard', openPartyRoomMode:'medium',
+  openMultiplayerMode:'medium', openStatClashMode:'hard', openStatAuctionMode:'hard', openDefiAmiFromAllModes:'medium'
 });
 // Catalogue tiles: one mascot, one pastel colour and one drawn mechanic per game,
 // so a game is recognised at a glance before its title is read.
@@ -76,14 +32,12 @@ var MODE_TILE_THEME = Object.freeze({
   openHigherLowerMode:{ids:[248,10],tone:'#A9DB8A',ink:'#2F6A1F',prop:'updown'},
   openSpeedrunMode:{ids:[291],tone:'#C4D66A',ink:'#4E5E00',prop:'timer'},
   startPartyMode:{ids:[128],tone:'#FFB27A',ink:'#8A3F0E',prop:'flag'},
-  openDraftArenaMode:{ids:[448],tone:'#9FB4D6',ink:'#2F4A70',prop:'slots'},
   openDraftScoreAttackMode:{ids:[448],tone:'#9FB4D6',ink:'#2F4A70',prop:'slots'},
   openPartyRoomMode:{ids:[25,39],tone:'#C9B6F5',ink:'#5C3FB0',prop:'party',badge:'2 à 8 joueurs'},
   openMultiplayerMode:{ids:[6,9],tone:'#FFB27A',ink:'#8A3F0E',prop:'versus'},
   openStatClashMode:{ids:[107,106],tone:'#F59A86',ink:'#9A2E22',prop:'bars'},
   openStatAuctionMode:{ids:[52],tone:'#F5D96B',ink:'#6E5600',prop:'coin'},
   openDefiAmiFromAllModes:{ids:[54],tone:'#86D9B0',ink:'#1E6B45',prop:'link'},
-  openDraftScoreAttackProDuel:{ids:[445,448],tone:'#9FB4D6',ink:'#2F4A70',prop:'slots',badge:'PRO'},
   openTeamBuilderScreen:{ids:[3],tone:'#9ADB7E',ink:'#2F7A1F',prop:'plus'},
   openTypeChartScreen:{ids:[493],tone:'#8FDCD8',ink:'#1F6E6A',prop:'types',types:['fire','water']},
   openPokedexMode:{ids:[4],tone:'#F59A86',ink:'#9A2E22',prop:'book'},
@@ -144,84 +98,6 @@ function modeCatalogActionKey(card) {
     const args=JSON.parse(card.dataset.args || '[]');
     return typeof args[0] === 'string' ? args[0] : '';
   } catch (_e) { return ''; }
-}
-function modeCatalogPreviewImage(id,index=0) {
-  return '<img src="'+modeCatalogSpriteUrl(id)+'" alt="" aria-hidden="true" loading="lazy" decoding="async" style="--art-index:'+index+'" />';
-}
-function modeCatalogPreviewBars(count=5) {
-  return '<span class="mode-preview-bars">'+Array.from({length:count},(_,i)=>'<i style="--bar:'+i+';--bar-height:'+([10,18,25,30,25,18,10][i%7])+'px"></i>').join('')+'</span>';
-}
-function modeCatalogPreviewHtml(spec) {
-  const ids=spec.ids.slice(0,3);
-  const images=ids.map((id,index)=>modeCatalogPreviewImage(id,index));
-  switch(spec.effect) {
-    case 'mystery':
-      return '<span class="mode-preview mode-preview-mystery">'+(images[0]||'')+'<i class="preview-question">?</i></span>';
-    case 'scan':
-      return '<span class="mode-preview mode-preview-scan"><i class="preview-scan-line"></i>'+(images[0]||'')+'</span>';
-    case 'pixel':
-      return '<span class="mode-preview mode-preview-pixel"><i class="preview-pixel-grid"></i>'+(images[0]||'')+'</span>';
-    case 'dossier':
-      return '<span class="mode-preview mode-preview-dossier"><i></i><i></i><i></i>'+(images[0]||'')+'</span>';
-    case 'audio':
-      return '<span class="mode-preview mode-preview-audio">'+modeCatalogPreviewBars(7)+(images[0]||'')+'</span>';
-    case 'stats':
-      return '<span class="mode-preview mode-preview-stats">'+modeCatalogPreviewBars(4)+(images[0]||'')+'</span>';
-    case 'group':
-      return '<span class="mode-preview mode-preview-group">'+images.join('')+'<i class="preview-odd-ring"></i></span>';
-    case 'quiz':
-      return '<span class="mode-preview mode-preview-quiz"><b>?</b><i></i><i></i><i></i><i></i></span>';
-    case 'evolution':
-      return '<span class="mode-preview mode-preview-evolution">'+images.map((img,i)=>img+(i<images.length-1?'<b>›</b>':'')).join('')+'</span>';
-    case 'order':
-      return '<span class="mode-preview mode-preview-order">'+images.map((img,i)=>'<i>'+(i+1)+'</i>'+img).join('')+'</span>';
-    case 'links':
-      return '<span class="mode-preview mode-preview-links"><i class="preview-link-line l1"></i><i class="preview-link-line l2"></i>'+images.join('')+'</span>';
-    case 'types':
-      return '<span class="mode-preview mode-preview-types"><i>TYPE</i><b>+</b><i>TYPE</i>'+(images[0]||'')+'</span>';
-    case 'versus':
-    case 'duel':
-      return '<span class="mode-preview mode-preview-versus">'+(images[0]||'')+'<b>VS</b>'+(images[1]||'')+'</span>';
-    case 'speed':
-      return '<span class="mode-preview mode-preview-speed"><i></i><i></i><i></i>'+(images[0]||'')+'</span>';
-    case 'team':
-      return '<span class="mode-preview mode-preview-team">'+images.map(img=>'<i>'+img+'</i>').join('')+'</span>';
-    case 'party':
-      return '<span class="mode-preview mode-preview-party">'+images.map(img=>'<i>'+img+'</i>').join('')+'</span>';
-    case 'auction':
-      return '<span class="mode-preview mode-preview-auction"><b>₽</b>'+(images[0]||'')+(images[1]||'')+'</span>';
-    case 'dex':
-      return '<span class="mode-preview mode-preview-dex">'+images.map(img=>'<i>'+img+'</i>').join('')+'</span>';
-    case 'podium':
-      return '<span class="mode-preview mode-preview-podium"><i>2</i><i>1</i><i>3</i>'+images.slice(0,3).join('')+'</span>';
-    default:
-      return '<span class="mode-preview mode-preview-generic">'+images.join('')+'</span>';
-  }
-}
-function modeCatalogArtHtml(key, variant='card') {
-  const illustration=MODE_CATALOG_ILLUSTRATIONS[key];
-  if (illustration) {
-    const base='img/modes/'+illustration+'-v1-';
-    const sizes=variant === 'pick' ? '(max-width:760px) 112px, (max-width:1800px) 30vw, 550px' : '144px';
-    return '<span class="mode-illustration is-'+variant+'" aria-hidden="true"><img src="'+base+'480.webp" srcset="'+base+'480.webp 480w, '+base+'960.webp 960w" sizes="'+sizes+'" width="960" height="640" alt="" loading="lazy" decoding="async" /></span>';
-  }
-  const spec=MODE_CATALOG_ART[key];
-  if (!spec) return '';
-  if (variant === 'home') {
-    const artwork=spec.ids.slice(0,3).map(id=>'<img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/'+id+'.png" data-fallback="'+modeCatalogSpriteUrl(id)+'" alt="" loading="lazy" decoding="async" width="180" height="180"/>').join('');
-    const cue=spec.effect==='audio'?'<span class="cover-wave">'+[20,42,66,88,60,34,50,76,40].map(n=>'<i style="height:'+n+'px"></i>').join('')+'</span>'
-      :spec.effect==='quiz'?'<span class="cover-question">?</span><span class="cover-answers"><i>A</i><i>B</i><i>C</i></span>'
-      :spec.effect==='versus'?'<span class="cover-compare">↑<small>OU</small>↓</span>'
-      :spec.effect==='scan'?'<span class="cover-lens"></span>'
-      :spec.effect==='stats'?'<span class="cover-stats"><i></i><i></i><i></i><i></i></span>'
-      :spec.effect==='dossier'?'<span class="cover-page"><i></i><i></i><i></i></span>'
-      :spec.effect==='mystery'?'<span class="cover-question">?</span>'
-      :spec.effect==='speed'?'<span class="cover-question">60<small>secondes</small></span>'
-      :spec.effect==='types'?'<span class="cover-types"><img src="img/type-icons/fire.svg" alt=""/><b>+</b><img src="img/type-icons/flying.svg" alt=""/></span>':'';
-    return '<span class="home-cover cover-'+spec.effect+'" aria-hidden="true">'+artwork+cue+'</span>';
-  }
-  return '<span class="mode-card-art art-'+spec.effect+' is-'+variant+'" aria-hidden="true">'+
-    modeCatalogPreviewHtml(spec)+'</span>';
 }
 function modeCatalogDifficultyForCard(card) {
   const key=modeCatalogActionKey(card);

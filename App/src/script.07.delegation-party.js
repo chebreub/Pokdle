@@ -671,8 +671,6 @@ window.openDefiAmiFromAllModes = openDefiAmiFromAllModes;
     bindEl("party-guess", "keydown", window.handlePartyGuessKey);
     bindEl("multiplayer-guess-input", "input", window.filterMultiplayerGuessAC);
     bindEl("multiplayer-guess-input", "keydown", window.handleMultiplayerGuessKey);
-    var draftSel = document.getElementById("draft-battle-pokemon");
-    if (draftSel) draftSel.addEventListener("change", function () { if (typeof selectDraftBattlePokemon === "function") selectDraftBattlePokemon(this.value); });
     var oddSel = document.getElementById("odd-difficulty-select");
     if (oddSel) oddSel.addEventListener("change", function () { if (typeof setOddDifficulty === "function") setOddDifficulty(this.value); });
   }
@@ -1355,6 +1353,7 @@ window.showToast = showToast;
 function showErr(msg) {
   const message = document.getElementById("err-msg");
   message.textContent = msg;
+  message.classList.remove("pk-skel-text");
   // A refused name nudges the field, so the player notices it without reading.
   [message, document.querySelector("#screen-game .search-bar")].forEach(node => {
     if (!node) return;
@@ -1364,8 +1363,17 @@ function showErr(msg) {
   });
 }
 
+// A waiting message, not a mistake: it shimmers and leaves the field still.
+function showLoadingNotice(msg) {
+  const message = document.getElementById("err-msg");
+  message.textContent = msg;
+  message.classList.add("pk-skel-text");
+}
+
 function clearErr() {
-  document.getElementById("err-msg").textContent = "";
+  const message = document.getElementById("err-msg");
+  message.textContent = "";
+  message.classList.remove("pk-skel-text");
 }
 
 function readJson(key, fallbackValue) {
@@ -3814,26 +3822,6 @@ function ensureMultiplayerSocket() {
     renderStatClashScreen();
   });
 
-  multiplayerSocket.on("draft-battle:room-state", (roomState) => {
-    handleDraftSimpleBattleNetworkRoomState(roomState);
-  });
-
-  multiplayerSocket.on("draft-battle:state", (payload = {}) => {
-    handleDraftSimpleBattleNetworkBattleState(payload);
-  });
-
-  multiplayerSocket.on("draft-battle:resolve-turn", (payload = {}) => {
-    handleDraftSimpleBattleNetworkResolveTurn(payload);
-  });
-
-  multiplayerSocket.on("draft-battle:resolve-replacement", (payload = {}) => {
-    handleDraftSimpleBattleNetworkResolveReplacement(payload);
-  });
-
-  multiplayerSocket.on("draft-battle:room-closed", (payload = {}) => {
-    handleDraftSimpleBattleNetworkRoomClosed(payload);
-  });
-
   multiplayerSocket.on("draft-score:room-state", (roomState) => {
     applyDraftScoreAttackRoomState(roomState);
   });
@@ -4592,34 +4580,7 @@ function openMultiplayerMode() {
   renderMultiplayerBotScreen();
 }
 
-function initProfessionalModeMenu() {
-  const select = document.getElementById('mode-select-pro');
-  const desc = document.getElementById('mode-pro-desc');
-  if (!select || !desc || typeof PROFESSIONAL_MODE_CONFIG === 'undefined') return;
-  select.innerHTML = Object.entries(PROFESSIONAL_MODE_CONFIG).map(([fn, cfg]) => `<option value="${fn}">${cfg.label}</option>`).join('');
-  const sync = () => {
-    const cfg = PROFESSIONAL_MODE_CONFIG[select.value];
-    desc.textContent = cfg?.description || 'Choisis un mode et lance immédiatement.';
-  };
-  select.addEventListener('change', sync);
-  document.querySelectorAll('#mode-cat-filters .mode-cat-btn').forEach((button) => {
-    button.addEventListener('click', () => {
-      document.querySelectorAll('#mode-cat-filters .mode-cat-btn').forEach((entry) => entry.classList.remove('active'));
-      button.classList.add('active');
-      const cat = button.dataset.cat || 'all';
-      const entries = Object.entries(PROFESSIONAL_MODE_CONFIG).filter(([, cfg]) => cat === 'all' || cfg.category === cat);
-      select.innerHTML = entries.map(([fn, cfg]) => `<option value="${fn}">${cfg.label}</option>`).join('');
-      sync();
-    });
-  });
-  sync();
-}
 
-function launchSelectedMode() {
-  const select = document.getElementById('mode-select-pro');
-  const fn = select?.value;
-  if (fn && typeof window[fn] === 'function') window[fn]();
-}
 
 function selectChallengePokemon(id) {
   const pokemon = POKEMON_BY_ID.get(Number(id));
@@ -4781,5 +4742,4 @@ window.addEventListener('DOMContentLoaded', () => {
       (event.shiftKey ? last : first).focus();
     }
   });
-  initProfessionalModeMenu();
 });

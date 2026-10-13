@@ -334,7 +334,7 @@ function renderHigherLowerScreen() {
     return;
   }
   if (state.phase === "loading" || !state.left || (state.phase !== "gameover" && !state.right)) {
-    root.innerHTML = `<div class="higher-lower-loading"><div class="higher-lower-spinner"></div><p>Chargement des Pokémon…</p></div>`;
+    root.innerHTML = skeletonHtml("Chargement des Pokémon…", "duel");
     return;
   }
   const statMeta = HIGHER_LOWER_STATS.find((s) => s.key === state.statKey) || HIGHER_LOWER_STATS[0];
@@ -1810,7 +1810,7 @@ function renderStatAuctionScreen() {
   const remaining = STAT_AUCTION_TOTAL - totalUsed;
   const oppSubmitted = Boolean(opp?.submittedThisRound);
   if (!pokemon) {
-    root.innerHTML = `<div class="higher-lower-loading"><div class="higher-lower-spinner"></div><p>Chargement du Pokémon…</p></div>`;
+    root.innerHTML = skeletonHtml("Chargement du Pokémon…", "card");
     return;
   }
   const lastHist = Array.isArray(room.history) && room.history.length ? room.history[room.history.length - 1] : null;
@@ -2060,6 +2060,7 @@ function setCryUiStatus(state, message = "") {
   }
   if (label) {
     label.textContent = state === "loading" ? "Chargement…" : state === "playing" ? "Lecture en cours…" : "Rejouer le cri";
+    label.classList.toggle("pk-skel-text", state === "loading");
   }
 }
 

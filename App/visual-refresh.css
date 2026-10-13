@@ -4389,7 +4389,7 @@
     .lbv3-gen-tabs,
     .lbv3-personal,
     .lbv3-empty,
-    .lbv3-loading
+    .lbv3-skeleton
   ) {
     grid-column:1 / -1;
   }
@@ -5201,21 +5201,6 @@
 .home-discovery-head h2 { color:var(--ui-ink); font-size:32px; font-weight:500; margin:4px 0; }
 .home-discovery-head p { color:var(--ui-muted); font-size:15px; margin:6px 0 0; }
 .home-games-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
-.home-game { --game-wash:#EFE8FF; position:relative; display:flex; flex-direction:column; overflow:hidden; text-align:left; border:1px solid var(--ui-line); border-radius:24px; padding:0; background:var(--ui-surface); color:var(--ui-ink); box-shadow:var(--ui-shadow); cursor:pointer; transition:transform .18s ease,box-shadow .18s ease; min-width:0; }
-.home-game:hover { transform:translateY(-4px); box-shadow:0 10px 24px rgb(87 58 41 / 10%); }
-.home-game-pink { --game-wash:#FFE4EC; }.home-game-mint { --game-wash:#E1F4E9; }.home-game-blue { --game-wash:#E4EEFF; }.home-game-peach { --game-wash:#FFEBDD; }
-.home-game-art { display:grid; place-items:center; height:160px; position:relative; background:linear-gradient(180deg,var(--game-wash),var(--ui-surface)); overflow:hidden; }
-.home-game-pokemon { display:block; position:relative; width:140px; height:140px; object-fit:contain; filter:drop-shadow(0 10px 8px rgb(60 42 57 / 12%)); transition:transform .2s ease; }
-.home-game:hover .home-game-pokemon { transform:translateY(-3px) rotate(-3deg); }
-.home-game-spark { position:absolute; top:26px; right:23%; color:#A593B6; font-size:20px; opacity:.7; }
-#pokdle-app.design-refresh .home-game-art .mode-card-art { width:116px; height:100px; inset:15px auto auto calc(50% - 58px); border:0; box-shadow:none; background:transparent; }
-#pokdle-app.design-refresh .home-game-art .mode-illustration { display:block; position:absolute; inset:0; width:100%; height:100%; border-radius:0; }
-#pokdle-app.design-refresh .home-game-art .mode-illustration img { width:100%; height:100%; object-fit:cover; }
-.home-game-copy { display:flex; flex-direction:column; gap:7px; padding:10px 24px 54px; }
-.home-game-copy small { color:var(--ui-muted); font-size:12px; font-weight:800; }
-.home-game-copy b { font-family:Fredoka,Nunito,sans-serif; font-size:23px; font-weight:600; line-height:1.2; }
-.home-game-copy > span { font-size:14px; line-height:1.45; color:var(--ui-muted); }
-.home-game-arrow { position:absolute; left:24px; bottom:18px; color:var(--ui-accent); font-size:14px; font-weight:900; }
 #pokdle-app.design-refresh .home-pathways .home-path { border-radius:26px !important; border:1px solid var(--ui-line) !important; box-shadow:none !important; }
 #pokdle-app.design-refresh:not(.theme-dark) .home-path-solo { background:#EEF2FF !important; }
 #pokdle-app.design-refresh:not(.theme-dark) .home-path-friends { background:#FFEAF0 !important; }
@@ -5297,11 +5282,10 @@
 #pokdle-app.design-refresh .lbv2-row:nth-child(even) { background:var(--ui-soft); }
 #pokdle-app.design-refresh .lbv2-row.is-me { background:var(--ui-accent-soft); border-color:var(--ui-accent); }
 #pokdle-app.design-refresh .lbv2-row :is(b,strong,.lbv2-rank) { color:inherit; }
-#pokdle-app.design-refresh :is(.lbv3-empty,.lbv3-loading) { background:var(--ui-soft); border-color:var(--ui-line); color:var(--ui-ink); border-radius:24px; }
-#pokdle-app.design-refresh :is(.lbv3-empty p,.lbv3-loading p) { color:var(--ui-muted); }
+#pokdle-app.design-refresh .lbv3-empty { background:var(--ui-soft); border-color:var(--ui-line); color:var(--ui-ink); border-radius:24px; }
+#pokdle-app.design-refresh .lbv3-empty p { color:var(--ui-muted); }
 #pokdle-app.design-refresh.theme-dark #screen-config #daily-hero { background:linear-gradient(115deg,#213751,#332D4E,#442C40) !important; border-color:#4C4264 !important; }
 #pokdle-app.design-refresh.theme-dark #daily-hero :is(.pk-hero-title,.pk-hero-sub,.pk-kicker,.pk-cta-ghost) { color:#F0EAF9 !important; }
-#pokdle-app.design-refresh.theme-dark .home-game-art { background:color-mix(in srgb,var(--game-wash) 18%,var(--ui-surface)); }
 @media (max-width:1000px) {
   #pokdle-app.design-refresh #screen-config #daily-hero { padding:28px; gap:22px; }
   .home-games-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -5317,13 +5301,6 @@
   .home-discovery-head { align-items:flex-start; flex-direction:column; gap:12px; }
   .home-discovery-head h2 { font-size:28px; }
   .home-games-grid { gap:12px; }
-  .home-game { border-radius:20px; }
-  .home-game-art { height:126px; }
-  .home-game-pokemon { width:112px; height:112px; }
-  .home-game-spark { right:12%; top:18px; font-size:15px; }
-  #pokdle-app.design-refresh .home-game-art .mode-card-art { height:80px; top:12px; }
-  .home-game-copy { padding:10px 14px 42px; gap:6px; }
-  .home-game-copy b { font-size:18px; }.home-game-copy > span { font-size:13px; }.home-game-arrow { bottom:14px; left:14px; }
   #pokdle-app.design-refresh #results-table td::before { font-size:12px !important; letter-spacing:0 !important; opacity:1 !important; text-transform:none !important; }
   #pokdle-app.design-refresh #results-table .guess-result-row { border-radius:24px !important; padding:12px !important; gap:6px !important; }
   #pokdle-app.design-refresh .lbv3-header { flex-direction:column; align-items:flex-start; gap:12px; padding:16px !important; }
@@ -5346,9 +5323,6 @@
   #pokdle-app.design-refresh .lbv3-podium-card > strong { font-size:16px; }
   #pokdle-app.design-refresh .lbv2-row { padding:12px 10px; gap:8px; }
 }
-@media (prefers-reduced-motion:reduce) { .home-game,.home-game-pokemon { transition:none; }.home-game:hover,.home-game:hover .home-game-pokemon { transform:none; } }
-#pokdle-app.design-refresh.reduce-motion .home-game,
-#pokdle-app.design-refresh.reduce-motion .home-game-pokemon { transition:none; transform:none; }
 
 /* Final interactions use the same palette, including registration celebrations. */
 #pokdle-app.design-refresh #screen-game .classic-game-command > .search-bar #btn-submit.btn-blue {

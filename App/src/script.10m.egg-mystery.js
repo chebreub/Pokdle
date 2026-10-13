@@ -2,9 +2,9 @@
 let eggState = null, eggBusy = false, eggPoll = null, eggSelected = null, eggSuggestionIndex = -1, eggRequestSerial = 0;
 let eggOwnedRewards = [];
 const EGG_ERRORS = { unavailable:"Le défi communautaire est indisponible pour le moment. Réessaie dans un instant.", quota_reached:"Tu as utilisé tes propositions du jour.", already_guessed:"Quelqu’un vient déjà de rayer ce Pokémon. Ta proposition n’a pas été consommée.", already_solved:"L’Œuf vient d’être trouvé !", round_changed:"Une nouvelle enquête vient de commencer. Vérifie les indices avant de proposer.", invalid_pokemon:"Choisis un Pokémon dans la liste.", rate_limited:"Trop de requêtes rapprochées. Réessaie dans une minute.", not_winner:"Cette récompense appartient au gagnant de l’enquête." };
-function eggNotice(message, error = false) {
+function eggNotice(message, error = false, loading = false) {
   const node = document.getElementById("egg-notice"); if (!node) return;
-  node.textContent = message; node.classList.toggle("is-error",error);
+  node.textContent = message; node.classList.toggle("is-error",error); node.classList.toggle("pk-skel-text",loading);
 }
 async function eggRequest(path, body) {
   const response = await fetch(path, { credentials:"same-origin", cache:"no-store", ...(body ? {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)} : {}) });
@@ -21,7 +21,7 @@ function openEggGame() {
 }
 async function loadEggState(quiet = false) {
   const serial = ++eggRequestSerial;
-  if (!quiet && !eggState) eggNotice("Chargement du défi…");
+  if (!quiet && !eggState) eggNotice("Chargement du défi…",false,true);
   try {
     const data = await eggRequest("/api/egg");
     if (serial !== eggRequestSerial) return;
