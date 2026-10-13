@@ -43,6 +43,7 @@
   <link rel="stylesheet" href="dist/challenge.min.css">
   <link rel="stylesheet" href="dist/catalog-tiles.min.css">
   <link rel="stylesheet" href="dist/game-feel.min.css">
+  <link rel="stylesheet" href="dist/qui-est-ce.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -316,6 +317,7 @@
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openHigherLowerMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trending"/></svg></div><b>Higher or Lower</b><small>Compare les statistiques et prolonge ta série.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft Score Attack</b><span class="all-modes-badge">Score</span><small>Drafte six Pokémon pour maximiser ton score.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openOddOneOutMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Intrus</b><small>Trouve celui qui ne suit pas la même règle.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openQuiEstCeMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-help"/></svg></div><b>Qui est-ce ?</b><small>24 Pokémon, des questions oui/non : démasque le bon.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startEvolutionChainGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-repeat"/></svg></div><b>Évolution</b><small>Complète la chaîne d’évolution.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startPokedexOrderGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-list-ordered"/></svg></div><b>Ordre Pokédex</b><small>Quel Pokémon se cache entre ces deux numéros du Pokédex ?</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openTypeComboSolo"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Combo de types</b><small>Retrouve le Pokémon qui correspond aux types.</small></button>
@@ -1201,6 +1203,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <section class="egg-catalog"><div class="egg-catalog-head"><h2>Les pistes de l’enquête</h2><div><label><input id="egg-hide-eliminated" type="checkbox" checked data-change-action="renderEggCatalog"/> Masquer les Pokémon rayés</label><label><input id="egg-hide-incompatible" type="checkbox" checked data-change-action="renderEggCatalog"/> Masquer les incompatibles</label></div></div><div id="egg-grid"></div></section>
         <section class="egg-feed"><h2>Le fil de l’enquête</h2><ol id="egg-feed-list"></ol></section>
         <details class="shell-guide"><summary>Comment participer ?</summary><ol><li>Propose un Pokémon : une fois par jour en invité, deux avec un compte.</li><li>Chaque mauvaise réponse est rayée pour tous. Un indice commun s’ajoute chaque jour à 00 h (génération le lundi, puis premier type, couleur, habitat et stade), ou plus tôt toutes les 100 mauvaises propositions.</li><li>Le premier à trouver gagne le compagnon. Le défi suivant commence lundi à minuit, heure de Paris.</li></ol><p>Ce jeu est indépendant des classements. Le quota invité s’applique aussi à la connexion réseau partagée. Connecte-toi pour avoir ton quota personnel.</p></details>
+      </div>
+    </div>
+
+    <div id="screen-qui-est-ce" class="hidden">
+      <div class="card qui-screen-card gameplay-screen-card">
+        <div class="ranking-head">
+          <h2 class="card-title">Qui est-ce ? Pokémon</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-blue" data-action="restartQuiEstCe">🎲 Nouvelle grille</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc qui-intro">L’ordinateur a choisi un des 24 Pokémon. Pose des questions oui ou non : les cartes qui ne collent plus se retournent. Trouve-le en un minimum de questions.</p>
+        <div id="qui-root"></div>
       </div>
     </div>
 

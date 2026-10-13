@@ -970,7 +970,7 @@ app.get("/api/multiplayer/health", (_req, res) => {
 const USAGE_EVENTS = new Set([
   "visit",
   "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
-  "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd",
+  "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce",
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
@@ -981,7 +981,7 @@ const USAGE_LABELS = {
   visit: "Visites", "solo:daily": "Pokémon du jour", "solo:normal": "Classique", "solo:challenge": "Challenge",
   "solo:silhouette": "Silhouette", "solo:pixel": "Pixelisé", "solo:mystery": "Mystère", "solo:cry": "Cri",
   "solo:quiz": "Quiz", "solo:description": "Description", "solo:weight": "Duel de poids", "solo:evolution": "Évolution",
-  "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:higherlower": "Higher or Lower",
+  "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:quiestce": "Qui est-ce ?", "solo:higherlower": "Higher or Lower",
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",

@@ -1601,6 +1601,7 @@ function modeLabelFr(mode) {
     quiz: "Quiz Pokémon",
     description: "Description Pokédex",
     odd: "Intrus Pokémon",
+    quiestce: "Qui est-ce ?",
     weight: "Duel de poids",
     evolution: "Chaîne d'évolution",
     order: "Ordre Pokédex",
@@ -2132,7 +2133,7 @@ function showScreen(id) {
 }
 
 function hideExtraScreens() {
-  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction','screen-draft-score-attack','screen-speedrun'].forEach(hideScreen);
+  ['screen-profile','screen-achievements','screen-history','screen-odd-one-out','screen-qui-est-ce','screen-multiplayer','screen-games-ranking','screen-type-chart','screen-team-builder','screen-teams','screen-stat-clash','screen-higher-lower','screen-poke-connections','screen-stat-auction','screen-draft-score-attack','screen-speedrun'].forEach(hideScreen);
 }
 
 let overlayReturnFocus = null;

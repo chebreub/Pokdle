@@ -1,0 +1,83 @@
+/* Qui est-ce ? Pokémon : grille de cartes à gauche, questions à droite.
+   Les cartes écartées se couchent comme dans le vrai jeu ; le mouvement ne joue
+   que si les animations sont permises et ne retarde jamais l'action suivante. */
+#pokdle-app #screen-qui-est-ce .qui-intro { margin: 0 0 14px; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 18px; align-items: start; }
+#pokdle-app .qui-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+#pokdle-app .qui-card {
+  display: grid; justify-items: center; gap: 2px; min-width: 0; padding: 8px 4px 6px;
+  border: 1px solid var(--ui-line, #e9dfd4); border-radius: 16px; background: var(--ui-surface, #fffdf9);
+  color: var(--ui-ink, #2e2a33); font: 700 .72rem Nunito, sans-serif; cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+#pokdle-app .qui-card img { width: 100%; max-width: 72px; height: auto; aspect-ratio: 1; image-rendering: pixelated; }
+#pokdle-app .qui-card span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#pokdle-app .qui-card:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(46, 42, 51, .1); }
+#pokdle-app .qui-card.is-selected { border-color: #2f76ff; box-shadow: 0 0 0 3px rgba(47, 118, 255, .25); }
+#pokdle-app .qui-card.is-out {
+  cursor: default; color: var(--ui-muted, #776b63);
+  background: repeating-linear-gradient(135deg, var(--ui-soft, #f5efe8) 0 8px, var(--ui-line, #e9dfd4) 8px 9px);
+}
+#pokdle-app .qui-card.is-out img { opacity: .2; filter: grayscale(1); }
+#pokdle-app .qui-card.is-secret { border-color: #f0b429; box-shadow: 0 0 0 3px rgba(240, 180, 41, .35); }
+#pokdle-app .qui-panel { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 22px; background: var(--ui-soft, #f5efe8); }
+#pokdle-app .qui-status { margin: 0; font: 600 1rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); }
+#pokdle-app .qui-feedback { margin: 0; min-height: 1.2em; font-weight: 800; color: #2f51b8; }
+#pokdle-app .qui-hint { margin: 0; font-size: .8rem; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-propose-btn { width: 100%; }
+#pokdle-app .qui-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+#pokdle-app .qui-tabs button {
+  padding: 6px 12px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 999px; background: var(--ui-surface, #fffdf9);
+  color: var(--ui-ink, #2e2a33); font: 800 .78rem Nunito, sans-serif; cursor: pointer;
+}
+#pokdle-app .qui-tabs button[aria-pressed="true"] { background: #2e2a33; border-color: #2e2a33; color: #fff; }
+#pokdle-app .qui-questions { display: grid; gap: 6px; max-height: 320px; overflow: auto; padding-right: 2px; }
+#pokdle-app .qui-question {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px; text-align: left;
+  border: 1px solid var(--ui-line, #e9dfd4); border-radius: 14px; background: var(--ui-surface, #fffdf9);
+  color: var(--ui-ink, #2e2a33); font: 700 .82rem Nunito, sans-serif; cursor: pointer;
+}
+#pokdle-app .qui-question:not(:disabled):hover { border-color: #2f76ff; }
+#pokdle-app .qui-question:disabled { cursor: default; opacity: .55; }
+#pokdle-app .qui-question.is-asked { opacity: .8; }
+#pokdle-app .qui-panel b.is-yes, #pokdle-app .qui-panel b.is-no { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .72rem; }
+#pokdle-app .qui-panel b.is-yes { background: #d9f2e3; color: #1d6b3f; }
+#pokdle-app .qui-panel b.is-no { background: #fbe0e0; color: #9b2c2c; }
+#pokdle-app .qui-log { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+#pokdle-app .qui-log li { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--ui-surface, #fffdf9); font-size: .74rem; font-weight: 700; }
+#pokdle-app .qui-giveup { justify-self: start; font-size: .78rem; }
+#pokdle-app .qui-result { display: grid; justify-items: center; gap: 6px; text-align: center; }
+#pokdle-app .qui-result img { width: 120px; height: 120px; image-rendering: pixelated; }
+#pokdle-app .qui-result h3 { margin: 0; font: 600 1.3rem Fredoka, Nunito, sans-serif; }
+#pokdle-app .qui-result p { margin: 0 0 6px; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-result.is-won h3 { color: #1d6b3f; }
+#pokdle-app.theme-dark .qui-tabs button[aria-pressed="true"] { background: #edf3fe; border-color: #edf3fe; color: #1e2c43; }
+#pokdle-app.theme-dark .qui-feedback { color: #a9bdf7; }
+#pokdle-app.theme-dark .qui-panel b.is-yes { background: rgba(80, 200, 120, .18); color: #9be3b5; }
+#pokdle-app.theme-dark .qui-panel b.is-no { background: rgba(230, 90, 90, .18); color: #f3aaaa; }
+@media (max-width: 860px) {
+  #pokdle-app .qui-layout { grid-template-columns: 1fr; gap: 12px; }
+}
+/* Phone: six compact columns keep the whole grid and the questions on one screen. */
+@media (max-width: 560px) {
+  #pokdle-app #screen-qui-est-ce .qui-intro { display: none; }
+  #pokdle-app .qui-grid { gap: 4px; }
+  #pokdle-app .qui-card { padding: 3px 1px 2px; gap: 0; font-size: .54rem; border-radius: 10px; }
+  #pokdle-app .qui-card img { max-width: 48px; }
+  #pokdle-app .qui-panel { padding: 12px; gap: 10px; border-radius: 18px; }
+  #pokdle-app .qui-questions { max-height: 230px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #pokdle-app:not(.reduce-motion) .qui-card.is-flipping { animation: qui-flip .32s ease-out; }
+  #pokdle-app:not(.reduce-motion) .qui-card.is-secret { animation: qui-found .5s cubic-bezier(.3, 1.5, .5, 1); }
+}
+@keyframes qui-flip {
+  0% { transform: perspective(500px) rotateX(0); }
+  50% { transform: perspective(500px) rotateX(70deg); }
+  100% { transform: perspective(500px) rotateX(0); }
+}
+@keyframes qui-found {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}

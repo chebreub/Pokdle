@@ -162,6 +162,7 @@ test("history registry covers every major standalone screen", () => {
     ['draftArena','openDraftArenaMode'],
     ['draftScore','openDraftScoreAttackMode'],
     ['odd','openOddOneOutMode'],
+    ['quiEstCe','openQuiEstCeMode'],
     ['statClash','openStatClashMode'],
     ['higherLower','openHigherLowerMode'],
     ['connections','openPokeConnectionsMode'],
