@@ -109,3 +109,10 @@
 #pokdle-app .qui-duel-log li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: var(--ui-surface, #fffdf9); font-size: .78rem; font-weight: 700; }
 #pokdle-app .qui-panel b.is-wait { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .72rem; background: var(--ui-soft, #f5efe8); color: var(--ui-muted, #776b63); }
 #pokdle-app .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* What a click on a card does, always visible above the duel grid. */
+#pokdle-app .qui-click-mode { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: .82rem; font-weight: 800; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-click-mode button { padding: 6px 14px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 999px; background: var(--ui-surface, #fffdf9); color: var(--ui-ink, #2e2a33); font: 800 .8rem Nunito, sans-serif; cursor: pointer; }
+#pokdle-app .qui-click-mode button[aria-pressed="true"] { background: #2f76ff; border-color: #2f76ff; color: #fff; }
+#pokdle-app .qui-click-note { margin: 0 0 8px; font-size: .78rem; color: var(--ui-muted, #776b63); }
+#pokdle-app .qui-grid.is-guessing .qui-card:not(:disabled) { border-style: dashed; border-color: #2f76ff; }

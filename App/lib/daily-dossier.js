@@ -3,6 +3,7 @@ const crypto=require('node:crypto');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {buildDossierQuestions,facts}=require('./dossier-questions');
 const {recordLeaderboardResultInTransaction}=require('./leaderboard-store');
+const {DAILY_MAX,dossierPoints,sql:pointsSql}=require('./daily-points');
 const fail=(code,status=409)=>Object.assign(new Error(code),{code,status});
 async function initDossierDb(db) {
   await db.query(`CREATE TABLE IF NOT EXISTS dossier_rounds(day DATE PRIMARY KEY,pokemon_id INTEGER NOT NULL,questions JSONB NOT NULL)`);
@@ -13,6 +14,14 @@ async function initDossierDb(db) {
     started_at TIMESTAMPTZ NOT NULL,finished_at TIMESTAMPTZ,elapsed_ms BIGINT,
     migrated BOOLEAN NOT NULL DEFAULT false,PRIMARY KEY(identity,day))`);
   await db.query('CREATE INDEX IF NOT EXISTS dossier_plays_account ON dossier_plays(account_id,day)');
+  // Scoring moved to 2 points per answer on the ten questions (14/10/2026): rescore every
+  // stored play and its leaderboard results once, so old and new days compare fairly.
+  await db.query(`UPDATE dossier_plays SET points=${pointsSql.dossier('answers')} WHERE status<>'abandoned' AND points<>${pointsSql.dossier('answers')}`);
+  const tables=(await db.query("SELECT to_regclass('leaderboard_events') IS NOT NULL AS events,to_regclass('scores') IS NOT NULL AS scores")).rows[0]||{};
+  if(tables.events)await db.query(`UPDATE leaderboard_events e SET score=p.points FROM dossier_plays p
+    WHERE e.mode='dossier' AND e.result_key='dossier:'||p.day::text AND e.discord_id=p.account_id AND p.status='completed' AND e.score<>p.points`);
+  if(tables.events&&tables.scores)await db.query(`UPDATE scores s SET score=b.best FROM (SELECT discord_id,MAX(score)::int AS best FROM leaderboard_events WHERE mode='dossier' GROUP BY discord_id) b
+    WHERE s.mode='dossier' AND s.discord_id=b.discord_id AND s.score<>b.best`);
 }
 function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossierQuestions}) {
   async function transaction(action) {
@@ -61,7 +70,7 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
     const last=answered?row.answers[answered-1]:null,lastQuestion=last?r.questions[answered-1]:null;
     return {ok:true,...calendar,accountId:who.accountId||null,authenticated:Boolean(who.accountId),
       pokemonId:Number(r.pokemon_id),pokemonName:facts[r.pokemon_id].name,status:row.status,finished,
-      answered,points:Number(row.points),baseCorrect,bonusUnlocked:bonus,total:bonus?20:10,
+      answered,points:Number(row.points),maxPoints:DAILY_MAX.dossier,baseCorrect,bonusUnlocked:bonus,total:bonus?20:10,
       ranked:row.status==='completed'&&Boolean(row.account_id),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
       question:q?{index:answered,category:q.category,prompt:q.prompt,options:q.options}:null,
       feedback:last?{index:answered-1,choice:last.choice,correct:last.correct,answer:lastQuestion.answer,prompt:lastQuestion.prompt,options:lastQuestion.options,explanation:lastQuestion.explanation}:null,
@@ -79,9 +88,9 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
       if(!abandon&&body.index<row.answers.length)return {...snapshot(calendar,who,row,r),duplicate:true};
       if(!abandon&&body.index!==row.answers.length)throw fail('question_changed');
       const answers=abandon?row.answers:[...row.answers,{choice:body.choice,correct:body.choice===r.questions[body.index].answer}];
-      const correct=answers.filter(a=>a.correct).length,bonus=answers.length>=10&&answers.slice(0,10).every(a=>a.correct);
+      const bonus=answers.length>=10&&answers.slice(0,10).every(a=>a.correct);
       const status=abandon?'abandoned':answers.length===(bonus?20:10)?'completed':'playing';
-      const points=abandon?0:correct,finished=status!=='playing',now=clock(),elapsed=finished?Math.max(0,now-new Date(row.started_at)):null;
+      const points=dossierPoints(answers,abandon),finished=status!=='playing',now=clock(),elapsed=finished?Math.max(0,now-new Date(row.started_at)):null;
       await client.query('UPDATE dossier_plays SET answers=$3::jsonb,points=$4,status=$5,finished_at=$6,elapsed_ms=$7 WHERE identity=$1 AND day=$2',[who.key,calendar.day,JSON.stringify(answers),points,status,finished?now:null,elapsed]);
       if(status==='completed'&&row.account_id)await recordLeaderboardResultInTransaction(client,{id:who.accountId,username:who.name,avatar:who.avatar},'dossier',points,{direction:'desc'},'dossier:'+calendar.day);
       return snapshot(calendar,who,{...row,answers,points,status,elapsed_ms:elapsed},r);

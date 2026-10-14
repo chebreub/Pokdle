@@ -132,3 +132,23 @@ test("every preset question of the solo game exists on the server, in the same c
   }
   assert.deepEqual(Array.from(vm.runInContext("QUI_GROUPS.map(([key]) => key)", context)), party.CATEGORIES);
 });
+
+test("a written guess the rival confirms ends the game; a denied one turns that card down", () => {
+  const r = duel();
+  const [asker, rival] = started(r);
+  const wrongName = catalogue[r.quiCards.find(id => id !== rival.quiSecretId) - 1].name;
+  const wrongId = r.quiCards.find(id => id !== rival.quiSecretId);
+  party.askQuestion(r, asker, { category: "type", text: "C'est " + wrongName + " ?" }, r.roundSerial);
+  const denied = party.answerQuestion(r, rival, "non", r.roundSerial);
+  assert.deepEqual(denied.flipped, [wrongId]);
+  assert.equal(r.status, "playing");
+  party.askQuestion(r, rival, { category: "type", text: "Est-ce " + catalogue[r.quiCards[2] - 1].name + " ou " + catalogue[r.quiCards[3] - 1].name + " ?" }, r.roundSerial);
+  assert.deepEqual(party.answerQuestion(r, asker, "oui", r.roundSerial).flipped, [], "two names: nothing is decided for the asker");
+  const secretName = catalogue[rival.quiSecretId - 1].name;
+  party.askQuestion(r, asker, { category: "gen", text: "Ton Pokémon, c'est " + secretName.toUpperCase() + " ?" }, r.roundSerial);
+  const win = party.answerQuestion(r, rival, "oui", r.roundSerial);
+  assert.equal(win.correct, true);
+  assert.equal(r.quiWinnerId, asker.id);
+  assert.equal(asker.score, 100);
+  assert.equal(r.quiLog.filter(entry => entry.win).length, 1);
+});
