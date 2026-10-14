@@ -30,6 +30,7 @@ function partyQuiLogHtml(room, me) {
       const p = quiPokemon(entry.pokemonId);
       return '<li><span>' + who(entry.by) + ' : c’est ' + escapeHtml(p?.name || '?') + ' ?</span><b class="' + (entry.correct ? 'is-yes' : 'is-no') + '">' + (entry.correct ? 'Trouvé !' : 'Raté') + '</b></li>';
     }
+    if (entry.win) return '<li><span>' + who(entry.by) + ' : ' + escapeHtml(partyQuiQuestionText(entry)) + '</span><b class="is-yes">Trouvé !</b></li>';
     if (entry.kind === 'oral') return '<li><span>' + who(entry.by) + ' : question à l’oral · ' + escapeHtml(groupLabel(entry.category)) + '</span></li>';
     const answer = entry.answer === 'oui' ? '<b class="is-yes">Oui</b>' : entry.answer === 'non' ? '<b class="is-no">Non</b>' : '<b class="is-wait">…</b>';
     return '<li><span>' + who(entry.by) + ' : ' + escapeHtml(partyQuiQuestionText(entry)) + '</span>' + answer + '</li>';
@@ -79,7 +80,12 @@ function renderPartyQuiEstCe(room, me, enabled, playing) {
   let action = 'partyQuiFlip', locked = !inGame || !playing;
   if (choosing) { action = 'partyQuiChoose'; locked = !inGame || round.mySecretId != null; }
   else if (partyQuiGuessing && myTurn && !pending) action = 'partyQuiPick';
-  const grid = '<div class="qui-grid' + (choosing && round.mySecretId == null ? ' is-choosing' : '') + (partyQuiGuessing && myTurn ? ' is-guessing' : '') + '">' + state.cards.map(id => quiCardHtml(state, id, flipped, action, locked)).join('') + '</div>';
+  // What a click on a card does is always written above the grid.
+  const canGuess = inGame && myTurn && !pending;
+  const clickMode = choosing ? '' : !inGame || !playing ? ''
+    : canGuess ? '<div class="qui-click-mode" role="group" aria-label="Au clic sur une carte"><span>Au clic :</span><button type="button" data-action="setPartyQuiClickMode" data-args=\'["flip"]\' aria-pressed="' + !partyQuiGuessing + '">Retourner</button><button type="button" data-action="setPartyQuiClickMode" data-args=\'["guess"]\' aria-pressed="' + partyQuiGuessing + '">Deviner</button></div>'
+    : '<p class="qui-click-note">Au clic : retourner une carte (ou la relever)</p>';
+  const grid = clickMode + '<div class="qui-grid' + (choosing && round.mySecretId == null ? ' is-choosing' : '') + (partyQuiGuessing && myTurn ? ' is-guessing' : '') + '">' + state.cards.map(id => quiCardHtml(state, id, flipped, action, locked)).join('') + '</div>';
   let side = '';
   if (!inGame) {
     side = '<p class="qui-status">Tu regardes cette partie.</p><p class="qui-hint">' + escapeHtml(partyQuiName(room, round.duelistIds?.[0])) + ' contre ' + escapeHtml(partyQuiName(room, round.duelistIds?.[1])) + '. Tu joueras à la prochaine manche.</p>' + partyQuiLogHtml(room, me);
@@ -99,9 +105,12 @@ function renderPartyQuiEstCe(room, me, enabled, playing) {
       turn = '<p class="qui-turn">En attente de la réponse de ' + escapeHtml(partyQuiName(room, rivalId)) + '…</p>';
     } else if (myTurn) {
       const selected = partyQuiSelected != null ? quiPokemon(partyQuiSelected) : null;
-      turn = '<p class="qui-turn is-mine">À toi ! Pose une question ou devine.</p>' + (partyQuiGuessing
-        ? '<p class="qui-hint">Clique la carte que tu crois être la sienne. Une erreur te fait perdre ton tour.</p>' + (selected ? '<button class="btn-blue qui-propose-btn" type="button" data-action="partyQuiGuess"' + (partyQuiBusy ? ' disabled' : '') + '>C’est ' + escapeHtml(selected.name) + ' ?</button>' : '') + '<button class="btn-ghost" type="button" data-action="partyQuiToggleGuess">Revenir aux questions</button>'
-        : partyQuiAskHtml(round) + '<button class="btn-ghost qui-guess-btn" type="button" data-action="partyQuiToggleGuess">Je veux deviner</button>');
+      const standing = state.cards.filter(id => !out.includes(id));
+      const lastOne = standing.length === 1 ? quiPokemon(standing[0]) : null;
+      const shortcut = lastOne ? '<button class="btn-blue qui-propose-btn" type="button" data-action="partyQuiGuessCard" data-args="[' + Number(standing[0]) + ']"' + (partyQuiBusy ? ' disabled' : '') + '>Il ne reste que ' + escapeHtml(lastOne.name) + ' : c’est lui ?</button>' : '';
+      turn = '<p class="qui-turn is-mine">À toi ! Pose une question ou devine.</p>' + shortcut + (partyQuiGuessing
+        ? '<p class="qui-hint">Clique la carte que tu crois être la sienne, puis confirme. Une erreur te fait perdre ton tour.</p>' + (selected ? '<button class="btn-blue qui-propose-btn" type="button" data-action="partyQuiGuess"' + (partyQuiBusy ? ' disabled' : '') + '>C’est ' + escapeHtml(selected.name) + ' ?</button>' : '')
+        : partyQuiAskHtml(round) + '<button class="btn-ghost qui-guess-btn" type="button" data-action="setPartyQuiClickMode" data-args=\'["guess"]\'>Je veux deviner</button>');
     } else {
       turn = '<p class="qui-turn">Tour de ' + escapeHtml(partyQuiName(room, round.turnId)) + '…</p>';
     }
@@ -144,10 +153,14 @@ function partyQuiAskText(event) {
   partyQuiSend({ quiAction: 'ask', category: partyQuiGroup, text }, res => { if (res.ok && input) input.value = ''; });
 }
 function partyQuiAnswer(answer) { partyQuiSend({ quiAction: 'answer', answer }); }
-function partyQuiToggleGuess() {
-  partyQuiGuessing = !partyQuiGuessing;
+function setPartyQuiClickMode(mode) {
+  partyQuiGuessing = mode === 'guess';
   partyQuiSelected = null;
   renderPartyRoom();
+}
+function partyQuiGuessCard(id) {
+  partyQuiSelected = Number(id);
+  partyQuiGuess();
 }
 function partyQuiPick(id) {
   id = Number(id);

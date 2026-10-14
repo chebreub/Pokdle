@@ -44,6 +44,22 @@ function rivalOf(room, player) { return duelists(room).find(p => p.id !== player
 function cleanText(value) { return String(value || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, TEXT_MAX); }
 function log(room, entry) { room.quiLog.push(entry); if (room.quiLog.length > LOG_MAX) room.quiLog.shift(); }
 function passTurn(room, player) { const rival = rivalOf(room, player); room.quiTurnId = rival ? rival.id : null; }
+const words = value => " " + norm(value).replace(/[^a-z0-9]+/g, " ").trim() + " ";
+// The one grid Pokémon a written question names ("C'est Pikachu ?"), if exactly one.
+function namedCard(room, text) {
+  const haystack = words(text);
+  const named = room.quiCards.filter(id => { const name = words(room.quiPokemon.get(id)?.name || "").trim(); return name && haystack.includes(" " + name + " "); });
+  return named.length === 1 ? named[0] : null;
+}
+function winRound(room, player) {
+  player.correct = true;
+  player.lastGain = WIN_POINTS;
+  player.score = (Number(player.score) || 0) + WIN_POINTS;
+  room.quiWinnerId = player.id;
+  room.quiEndReason = "found";
+  room.quiTurnId = null;
+  room.quiPending = null;
+}
 
 function startQuiEstCeDuel(room, catalogue, random = Math.random) {
   const gens = Array.isArray(room.selectedGens) && room.selectedGens.length ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -146,6 +162,16 @@ function answerQuestion(room, player, answer, serial) {
   const entry = [...room.quiLog].reverse().find(item => item.kind === "ask" && item.by === pending.askerId && item.answer === null);
   if (entry) entry.answer = answer;
   let flipped = [];
+  const named = !pending.questionId && pending.text ? namedCard(room, pending.text) : null;
+  if (asker && named != null) {
+    // A written guess: confirmed and right, it wins; denied, that card goes down.
+    if (answer === "oui" && named === Number(player.quiSecretId)) {
+      if (entry) entry.win = true;
+      winRound(room, asker);
+      return { answered: true, flipped: [], correct: true, gained: WIN_POINTS, winnerId: asker.id };
+    }
+    if (answer === "non" && !asker.quiOut.includes(named)) { asker.quiOut.push(named); flipped = [named]; }
+  }
   if (asker && pending.questionId && QUESTIONS.has(pending.questionId)) {
     // Preset question: turn down the asker's cards that no longer match the answer.
     const test = QUESTIONS.get(pending.questionId), yes = answer === "oui";
@@ -176,12 +202,7 @@ function guessSecret(room, player, pokemonId, serial) {
   const correct = Boolean(rival) && id === Number(rival.quiSecretId);
   log(room, { by: player.id, kind: "guess", pokemonId: id, correct });
   if (correct) {
-    player.correct = true;
-    player.lastGain = WIN_POINTS;
-    player.score = (Number(player.score) || 0) + WIN_POINTS;
-    room.quiWinnerId = player.id;
-    room.quiEndReason = "found";
-    room.quiTurnId = null;
+    winRound(room, player);
     return { correct: true, gained: WIN_POINTS };
   }
   // A wrong guess only costs the turn; that card goes down.

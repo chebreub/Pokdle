@@ -42,19 +42,19 @@ test('PostgreSQL: sequential private questions, scoring, bonus, recovery, migrat
     await unlock(A);await unlock(B,'won');
     const initial=await game.state(A),shared=await game.state(guest);assert.deepEqual(initial.question,shared.question);assert.equal(initial.pokemonName,'Pikachu');assert.equal(initial.question.answer,undefined);assert.equal(initial.question.explanation,undefined);assert.equal(initial.questions,undefined);assert.equal(initial.results.length,0);
     await assert.rejects(game.answer(A,body(A,1,0)),{code:'question_changed'});await assert.rejects(game.answer(A,body(A,0,4)),{code:'invalid_answer'});await assert.rejects(game.answer(A,{...body(A,0,0),accountId:'B'}),{code:'account_changed'});
-    const replies=await Promise.all([answer(A,0),answer(A,0)]);assert.ok(replies.every(s=>s.points===1));assert.equal((await game.state(A)).answered,1);assert.equal((await game.answer(A,body(A,0,0))).duplicate,true);
+    const replies=await Promise.all([answer(A,0),answer(A,0)]);assert.ok(replies.every(s=>s.points===2));assert.equal((await game.state(A)).answered,1);assert.equal((await game.answer(A,body(A,0,0))).duplicate,true);
     for(let i=1;i<10;i++)await answer(A,i);
     let state=await service().state(A);assert.equal(state.bonusUnlocked,true);assert.equal(state.finished,false);assert.equal(state.total,20);assert.equal(state.question.index,10);assert.equal(state.feedback.answer,questions[9].answer);assert.equal(state.results[0].prompt,undefined);
     for(let i=10;i<20;i++)await answer(A,i);
     state=await game.state(A);assert.equal(state.finished,true);assert.equal(state.points,20);assert.equal(state.ranked,true);assert.equal(state.question,null);assert.equal(state.results.length,20);assert.ok(state.results[0].explanation);
     assert.equal((await answer(A,19,false)).points,20);assert.equal((await db.query("SELECT * FROM leaderboard_events WHERE discord_id='A'")).rowCount,1);
-    for(let i=0;i<10;i++)state=await answer(B,i,i!==0);assert.equal(state.finished,true);assert.equal(state.points,9);assert.equal(state.bonusUnlocked,false);assert.equal(state.total,10);
+    for(let i=0;i<10;i++)state=await answer(B,i,i!==0);assert.equal(state.finished,true);assert.equal(state.points,18);assert.equal(state.bonusUnlocked,false);assert.equal(state.total,10);
     for(let i=0;i<10;i++)state=await answer(guest,i,false);assert.equal(state.points,0);assert.equal(state.ranked,false);
     const login={key:'user:G',accountId:'G',guestKey:guest.key};await unlock(login);assert.equal((await game.state(login)).finished,true);assert.equal((await game.state(login)).ranked,false);
     const ongoing={key:'guest:ongoing'};await unlock(ongoing);await answer(ongoing,0);
     const C={key:'user:C',accountId:'C',guestKey:ongoing.key};await unlock(C);assert.equal((await game.state(C)).answered,1);for(let i=1;i<10;i++)state=await answer(C,i,i!==1);assert.equal(state.ranked,true);
     const D={key:'user:D',accountId:'D'};await unlock(D);await answer(D,0);assert.equal((await game.abandon(D,body(D))).points,0);assert.equal((await answer(D,1)).status,'abandoned');
-    let ranking=await game.leaderboard('today','B');assert.equal(ranking.total,3);assert.equal(ranking.top[0].score,20);assert.equal(ranking.me.score,9);assert.ok(ranking.around.length);assert.ok(ranking.top.every(r=>r.username!=='G'));
+    let ranking=await game.leaderboard('today','B');assert.equal(ranking.total,3);assert.equal(ranking.top[0].score,20);assert.equal(ranking.me.score,18);assert.ok(ranking.around.length);assert.ok(ranking.top.every(r=>r.username!=='G'));
     // A completed zero-score account still sees its performance in the list.
     const Z={key:'user:Z',accountId:'Z'};await unlock(Z);for(let i=0;i<10;i++)await answer(Z,i,false);assert.equal((await game.leaderboard('today','Z')).me.score,0);
     const E={key:'user:E',accountId:'E'};await unlock(E);for(let i=0;i<9;i++)await answer(E,i,false);

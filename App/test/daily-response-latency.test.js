@@ -17,7 +17,8 @@ for(const mode of ['wordle','dossier'])test(mode+': answers use one transaction;
     if(sql.startsWith('SELECT * FROM dossier_rounds'))return {rows:[{pokemon_id:25,questions}]};
     if(sql.includes('FOR UPDATE'))return {rows:[row]};
     if(sql.startsWith('UPDATE wordle_plays'))row={...row,guessed:JSON.parse(args[2]),status:args[3]};
-    if(sql.startsWith('UPDATE dossier_plays'))row={...row,answers:JSON.parse(args[2]),points:args[3],status:args[4]};
+    // The boot-time rescore runs without parameters; only answers carry a row.
+    if(sql.startsWith('UPDATE dossier_plays')&&args)row={...row,answers:JSON.parse(args[2]),points:args[3],status:args[4]};
     return {rows:[]};
   };
   const db={query,connect:async()=>({query,release(){}})},app={get:(path,handler)=>routes.set('GET '+path,handler),post:(path,_middleware,handler)=>routes.set('POST '+path,handler)};

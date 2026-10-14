@@ -28,7 +28,7 @@ async def run():
                     def snapshot():
                         n=len(saved);correct=sum(a['correct'] for a in saved);base=sum(a['correct'] for a in saved[:10]);bonus=n>=10 and base==10
                         finished=n==(20 if bonus else 10) or state['status']=='abandoned'
-                        state.update(answered=n,points=0 if state['status']=='abandoned' else correct,baseCorrect=base,bonusUnlocked=bonus,total=20 if bonus else 10,finished=finished,elapsedMs=42000 if finished else None)
+                        state.update(answered=n,points=0 if state['status']=='abandoned' else 2*base,maxPoints=20,baseCorrect=base,bonusUnlocked=bonus,total=20 if bonus else 10,finished=finished,elapsedMs=42000 if finished else None)
                         if finished and state['status']!='abandoned':state['status']='completed'
                         if not finished:state['question']={k:bank[n][k] for k in ['category','prompt','options']};state['question']['index']=n
                         else:state['question']=None
@@ -79,7 +79,7 @@ async def run():
                     for i in range(1,10):
                         await page.locator('.dossier-option').nth(bank[i]['answer']).click();await ready(page,f'dailyDossierState?.answered==={i+1} && !dailyDossierBusy')
                         if i<9:await page.locator('.dossier-continue').click()
-                    assert state['finished'] and state['points']==9 and not state['bonusUnlocked']
+                    assert state['finished'] and state['points']==18 and not state['bonusUnlocked']
                     assert await page.locator('#dossier-result').is_visible()
                     assert await page.locator('#dossier-result').evaluate('e=>e.getBoundingClientRect().height < 580'), 'Result card too tall'
                     assert await page.locator('#dossier-pokemon').is_hidden(), 'Duplicate large sprite in result'

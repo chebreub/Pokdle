@@ -23,3 +23,12 @@ test('Wordle and Défi use fixed integer tables',()=>{
   assert.deepEqual([1,2,3,4,5,6].map(n=>challengePoints(true,n)),[3,2,2,1,1,1]);
   assert.equal(challengePoints(false,6),0);
 });
+
+test("the Dossier is worth 2 points per right answer on its ten questions; bonus answers and abandons add nothing", () => {
+  const { dossierPoints } = require("../lib/daily-points");
+  const answers = n => Array.from({ length: 10 }, (_, i) => ({ correct: i < n }));
+  assert.equal(dossierPoints(answers(7)), 14);
+  assert.equal(dossierPoints(answers(10)), 20);
+  assert.equal(dossierPoints([...answers(10), ...Array.from({ length: 10 }, () => ({ correct: true }))]), 20);
+  assert.equal(dossierPoints(answers(10), true), 0);
+});
