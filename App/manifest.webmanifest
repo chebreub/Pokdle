@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Pokédle",
+  "short_name": "Pokédle",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF8EF",
+  "theme_color": "#FFF8EF",
+  "icons": [
+    { "src": "/img/app-icons/pokedle-192-v1.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/img/app-icons/pokedle-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1111,6 +1111,12 @@ app.get("/og-image.png", async (_req, res) => {
 // Icônes de types (utilisées par les badges de types dans tous les modes).
 app.use("/types", express.static(path.join(__dirname, "types"), { maxAge: "7d", fallthrough: false }));
 app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: "30d", fallthrough: false }));
+// Installation sur l'écran d'accueil (iOS et Android).
+app.get("/manifest.webmanifest", (_req, res) => {
+  res.type("application/manifest+json");
+  res.sendFile(path.join(__dirname, "manifest.webmanifest"), { maxAge: "1h" });
+});
+app.get("/apple-touch-icon.png", (_req, res) => res.sendFile(path.join(__dirname, "img/app-icons/pokedle-180-v1.png"), { maxAge: "1d" }));
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
 // PokeAPI par nouveau visiteur.
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
