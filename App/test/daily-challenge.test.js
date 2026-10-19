@@ -9,17 +9,17 @@ test('daily challenge element IDs do not collide with existing friend challenge 
   const ids=new Set([...html.matchAll(/id=["']([^"']+)["']/g)].map(m=>m[1]));
   for(const match of source.matchAll(/id=["']([^"']+)["']/g))assert.ok(!ids.has(match[1]),match[1]);
 });
-test('recognition rotates through all three modes and draws ten distinct base species',()=>{
-  assert.deepEqual(new Set(['2026-10-08','2026-10-09','2026-10-10'].map(modeForDay)),new Set(['zoom','cry','pixel']));
+test('every day is pixelated and draws ten distinct base species',()=>{
+  assert.deepEqual(['2026-10-08','2026-10-09','2026-10-10'].map(modeForDay),['pixel','pixel','pixel']);
   assert.deepEqual(chooseTargets([...pokemon,{id:10001,isAltForm:true}],()=>0),[1,2,3,4,5,6,7,8,9,10]);
   assert.throws(()=>chooseTargets(pokemon.slice(0,9)),{code:'unavailable'});
 });
 test('media is transformed on the server, never redirected to a filename containing the answer',async()=>{
   const sharp=require('sharp'),raw=await sharp({create:{width:96,height:96,channels:4,background:'#4069e0'}}).png().toBuffer();let calls=0;
   const load=createMediaLoader({fetchAsset:async()=>{calls++;return {ok:true,arrayBuffer:async()=>raw};}});
-  for(const mode of ['zoom','pixel'])for(const attempt of [0,5]){const asset=await load({id:25,mode,attempt});assert.equal(asset.type,'image/png');const meta=await sharp(asset.buffer).metadata();assert.equal(meta.width,288);assert.equal(meta.height,288);assert.equal(meta.exif,undefined);assert.equal(asset.url,undefined);}
+  for(const attempt of [0,5]){const asset=await load({id:25,mode:'pixel',attempt});assert.equal(asset.type,'image/png');const meta=await sharp(asset.buffer).metadata();assert.equal(meta.width,288);assert.equal(meta.height,288);assert.equal(meta.exif,undefined);assert.equal(asset.url,undefined);}
   await load({id:25,mode:'pixel',attempt:5});assert.equal(calls,1);
-  let attempts=0;const retry=createMediaLoader({fetchAsset:async()=>{attempts++;return {ok:attempts>1,arrayBuffer:async()=>raw};}});await assert.rejects(retry({id:1,mode:'cry',attempt:0}),{code:'media_unavailable'});assert.equal((await retry({id:1,mode:'cry',attempt:0})).type,'audio/ogg');
+  let attempts=0;const retry=createMediaLoader({fetchAsset:async()=>{attempts++;return {ok:attempts>1,arrayBuffer:async()=>raw};}});await assert.rejects(retry({id:1,mode:'pixel',attempt:0}),{code:'media_unavailable'});assert.equal((await retry({id:1,mode:'pixel',attempt:0})).type,'image/png');
 });
 test('PostgreSQL: common targets, timer, hints, retries, migration, scores, global board and Paris rollover',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='challenge_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;

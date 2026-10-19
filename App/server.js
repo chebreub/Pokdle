@@ -409,7 +409,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["scores", "DELETE FROM scores WHERE discord_id = $1", [id]],
     ["leaderboard_events", "DELETE FROM leaderboard_events WHERE discord_id = $1", [id]],
     ["daily_sessions", "DELETE FROM daily_sessions WHERE discord_id = $1", [id]],
-    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
+    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays", "grid_plays"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
     ["egg_rewards", "DELETE FROM egg_rewards WHERE player_id = $1", [id]],
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
@@ -593,7 +593,7 @@ app.get("/api/leaderboard", async (req, res) => {
   const requestedMode = String(req.query.mode || "quiz");
   // Day boards computed from the plays themselves; they never accept client scores.
   const playModes = ["challenge", "journey", "enquete", "wordlepts"];
-  const mode = playModes.includes(requestedMode) || leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
+  const mode = playModes.includes(requestedMode) || requestedMode === "grid" || leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
   const config = leaderboardConfig(mode);
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   const order = leaderboardOrderSql(config);
@@ -604,6 +604,7 @@ app.get("/api/leaderboard", async (req, res) => {
     await authDbReady;
     if(playModes.includes(mode)) return res.json(await challengeService.leaderboard(mode,scope,meId));
     if(mode === "dossier") return res.json(await dossierService.leaderboard(scope,meId));
+    if(mode === "grid") return res.json(await gridService.leaderboard(scope,meId));
     let rankedCte;
     if (scope === "all") {
       rankedCte = `
@@ -695,6 +696,8 @@ const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express
 const wordleService = require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
 const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, wordle:wordleService, readyBefore:authDbReady });
 const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,daily:dailyService,wordle:wordleService,dossier:dossierService,readyBefore:authDbReady});
+// Grille du jour: the bonus of the day, beside the 100-point journey.
+const gridService = require("./lib/daily-grid").mountGridRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
