@@ -90,7 +90,7 @@ def main():
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
       page.locator('#home-game-filters button').filter(has_text='Jouer').click()
       play=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
-      expect(len(play)==9 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
+      expect(len(play)==10 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')

@@ -701,6 +701,9 @@ const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({
 petitBacParty.mountPetitBacSolo({ app, express, pokemon: POKEMON_LIST });
 // Grille du jour: the bonus of the day, beside the 100-point journey.
 const gridService = require("./lib/daily-grid").mountGridRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
+// The old Neon data (blocked by its free quota on 19/10/2026) comes back on its own once
+// OLD_DATABASE_URL answers again; it never overwrites what was played since the move.
+require("./lib/db-import").scheduleLegacyImport({ db: pgPool, oldUrl: process.env.OLD_DATABASE_URL, ascModes: Object.keys(LB_MODE_CONFIG).filter((mode) => LB_MODE_CONFIG[mode].direction === "asc"), readyBefore: authDbReady.then(() => new Promise((resolve) => setTimeout(resolve, 20000))) });
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
