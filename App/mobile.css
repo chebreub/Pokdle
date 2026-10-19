@@ -161,7 +161,7 @@
   body.theme-dark #screen-pokedex :is(input, select, .btn-ghost) { background: #142139 !important; color: #eff5ff !important; border-color: #496081 !important; }
   body.theme-dark #screen-pokedex input::placeholder { color: #b8c8e4 !important; }
   body.theme-dark #screen-pokedex .pokedex-results-count { background: #243752 !important; color: #eff5ff !important; }
-  body.theme-dark #screen-pokedex #pokedex-shiny-toggle { background: #ffcc33 !important; color: #142139 !important; }
+  body.theme-dark #screen-pokedex #pokedex-shiny-toggle[aria-pressed="true"] { background: #ffcc33 !important; color: #142139 !important; }
 
   /* Room setup stays ahead of optional generation choices. */
   #screen-multiplayer .ranking-head-actions { flex-direction: row !important; gap: 8px; }

@@ -2852,6 +2852,9 @@ body.theme-dark #pokedex-category-filter {
   grid-template-columns:1fr auto;
 }
 .pokedex-view-collection #pokedex-shiny-toggle { display:none; }
+/* A quiet switch: yellow only while shiny sprites are shown. */
+#pokdle-app #pokedex-shiny-toggle.pokedex-shiny-switch { width: auto; min-height: 38px; padding: 6px 14px; border-radius: 999px; font-size: .85rem; }
+#pokdle-app #pokedex-shiny-toggle.pokedex-shiny-switch[aria-pressed="true"] { background: #ffcc33; border-color: #e0b100; color: #142139; }
 .pokedex-card.collection-card {
   min-height:188px !important;
 }

@@ -1947,7 +1947,7 @@ function renderAchievementsScreen() {
         </article>`;
       }).join("");
       return `<section class="achievement-category">
-        <header class="achievement-cat-head"><h3>${CAT_ICONS[cat] || "🏅"} ${escapeHtml(cat)}</h3><span class="achievement-cat-count">${unlockedN}/${defs.length}</span></header>
+        <div class="achievement-cat-head"><h3>${CAT_ICONS[cat] || "🏅"} ${escapeHtml(cat)}</h3><span class="achievement-cat-count">${unlockedN}/${defs.length}</span></div>
         <div class="achievement-cat-grid">${cards}</div>
       </section>`;
     }).join("");
