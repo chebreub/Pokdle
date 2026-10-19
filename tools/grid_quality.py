@@ -87,8 +87,9 @@ async def run():
 
             # Home: the bonus sits under the four stages with today's result.
             await page.evaluate('goToConfig()');await ready(page,'document.getElementById("daily-hero-bonus")?.textContent.includes("20 / 100")')
-            assert await page.locator('#daily-hero-bonus button').is_visible();await no_overflow(page)
-            await page.locator('#daily-hero-bonus button').click();await ready(page,'!document.getElementById("screen-grid").classList.contains("hidden") && dailyGridState?.finished && !dailyGridBusy')
+            # The bonus line holds the Grille and the Petit Bac du jour.
+            assert await page.locator('#daily-hero-bonus [data-action="startDailyGrid"]').is_visible();assert await page.locator('#daily-hero-bonus [data-action="openDailyPetitBac"]').is_visible();await no_overflow(page)
+            await page.locator('#daily-hero-bonus [data-action="startDailyGrid"]').click();await ready(page,'!document.getElementById("screen-grid").classList.contains("hidden") && dailyGridState?.finished && !dailyGridBusy')
             assert not errors,errors
             case.update(ok=True,checks=['ready grid','miss keeps cell open','PP','typed exact name','rarity badge','used Pokémon excluded','503 recovery','stop and reveal','share','home bonus','mobile overflow'])
           except Exception as e:case['error']=str(e);await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'),full_page=True)
