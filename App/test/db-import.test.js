@@ -15,7 +15,8 @@ CREATE TABLE daily_rounds(day DATE PRIMARY KEY,secret_id INTEGER NOT NULL,create
 CREATE TABLE daily_plays(identity TEXT NOT NULL,day DATE NOT NULL REFERENCES daily_rounds(day),account_id TEXT,guessed JSONB NOT NULL DEFAULT '[]'::jsonb,status TEXT NOT NULL DEFAULT 'playing',started_at TIMESTAMPTZ NOT NULL DEFAULT now(),finished_at TIMESTAMPTZ,elapsed_ms BIGINT,hints_used INTEGER NOT NULL DEFAULT 0,migrated BOOLEAN NOT NULL DEFAULT false,PRIMARY KEY(identity,day));
 CREATE TABLE egg_rounds(id BIGSERIAL PRIMARY KEY,week_start DATE NOT NULL UNIQUE,secret_id INTEGER NOT NULL,reward_id INTEGER NOT NULL,found_by TEXT,found_at TIMESTAMPTZ,winner_name TEXT);
 CREATE TABLE egg_guesses(id BIGSERIAL PRIMARY KEY,round_id BIGINT NOT NULL REFERENCES egg_rounds(id),pokemon_id INTEGER NOT NULL,player_id TEXT,anon_id TEXT NOT NULL,ip_hash TEXT NOT NULL,day DATE NOT NULL,username TEXT NOT NULL,correct BOOLEAN NOT NULL DEFAULT false,created_at TIMESTAMPTZ NOT NULL DEFAULT now(),credited_player_id TEXT,UNIQUE(round_id,pokemon_id));
-CREATE TABLE egg_rewards(round_id BIGINT PRIMARY KEY REFERENCES egg_rounds(id),player_id TEXT NOT NULL,pokemon_id INTEGER NOT NULL,granted_at TIMESTAMPTZ NOT NULL DEFAULT now());`;
+CREATE TABLE egg_rewards(round_id BIGINT PRIMARY KEY REFERENCES egg_rounds(id),player_id TEXT NOT NULL,pokemon_id INTEGER NOT NULL,granted_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE deleted_accounts(id TEXT PRIMARY KEY,deleted_at TIMESTAMPTZ NOT NULL DEFAULT now());`;
 
 test('PostgreSQL: the old database comes back once, without overwriting what was played since',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),suffix=randomUUID().replaceAll('-','').slice(0,12);
@@ -28,19 +29,20 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
     await old.query(SCHEMA);await db.query(SCHEMA);
     // Before the move: Alice has a long history, Bob played once, an egg was found.
     await old.query(`INSERT INTO users(discord_id,username,data,created_at,partner_id) VALUES
-      ('A','Alice','{"profile":{"xp":900,"album":[1,2,3,4,5,6,7,8]}}','2026-06-01T10:00:00Z',25),('B','Bob','{"profile":{"xp":50}}','2026-07-01T10:00:00Z',NULL);
+      ('A','Alice','{"profile":{"xp":900,"album":[1,2,3,4,5,6,7,8]}}','2026-06-01T10:00:00Z',25),('B','Bob','{"profile":{"xp":50}}','2026-07-01T10:00:00Z',NULL),('D','Dan','{"profile":{"xp":5}}','2026-08-01T10:00:00Z',NULL);
       INSERT INTO account_identities(provider,provider_user_id,account_id) VALUES('discord','A','A'),('google','g-b','B');
-      INSERT INTO scores(discord_id,mode,score) VALUES('A','quiz',10),('A','wordle',3),('B','quiz',4);
+      INSERT INTO scores(discord_id,mode,score) VALUES('A','quiz',10),('A','wordle',3),('B','quiz',4),('D','quiz',99);
       INSERT INTO leaderboard_events(discord_id,mode,score,result_key,created_at) VALUES('A','dossier',18,'dossier:2026-10-17','2026-10-17T12:00:00Z'),('A','quiz',10,NULL,'2026-10-10T12:00:00Z');
       INSERT INTO daily_sessions(discord_id,day,attempts) VALUES('A','2026-09-01',4);
       INSERT INTO visits(day,hits) VALUES('2026-10-18',120),('2026-10-19',7);
       INSERT INTO daily_rounds(day,secret_id) VALUES('2026-10-17',25),('2026-10-18',6),('2026-10-19',150);
-      INSERT INTO daily_plays(identity,day,account_id,guessed,status) VALUES('user:A','2026-10-17','A','[1,25]','won'),('user:A','2026-10-18','A','[6]','won'),('user:B','2026-10-19','B','[150]','won');
+      INSERT INTO daily_plays(identity,day,account_id,guessed,status) VALUES('user:A','2026-10-17','A','[1,25]','won'),('user:A','2026-10-18','A','[6]','won'),('user:B','2026-10-19','B','[150]','won'),('user:D','2026-10-17','D','[2]','won');
       INSERT INTO egg_rounds(week_start,secret_id,reward_id,found_by,found_at,winner_name) VALUES('2026-10-12',7,8,'user:A','2026-10-13T09:00:00Z','Alice');
-      INSERT INTO egg_guesses(round_id,pokemon_id,player_id,anon_id,ip_hash,day,username,correct) VALUES(1,4,'A','x','h','2026-10-13','Alice',false),(1,7,'A','x','h','2026-10-13','Alice',true);
+      INSERT INTO egg_guesses(round_id,pokemon_id,player_id,anon_id,ip_hash,day,username,correct) VALUES(1,4,'A','x','h','2026-10-13','Alice',false),(1,7,'A','x','h','2026-10-13','Alice',true),(1,9,'D','y','h2','2026-10-14','Dan',false);
       INSERT INTO egg_rewards(round_id,player_id,pokemon_id) VALUES(1,'A',8);`);
-    // Since the move: Alice came back on a new browser, Chloé is new, today's games exist already.
-    await db.query(`INSERT INTO users(discord_id,username,data) VALUES('A','Alice','{"profile":{"xp":20}}'),('C','Chloé','{"profile":{"xp":70}}');
+    // Since the move: Alice came back on a new browser, Chloé is new, Dan deleted his account, today's games exist already.
+    await db.query(`INSERT INTO deleted_accounts(id) VALUES('D');
+      INSERT INTO users(discord_id,username,data) VALUES('A','Alice','{"profile":{"xp":20}}'),('C','Chloé','{"profile":{"xp":70}}');
       INSERT INTO account_identities(provider,provider_user_id,account_id) VALUES('discord','A','A');
       INSERT INTO scores(discord_id,mode,score) VALUES('A','quiz',12),('A','wordle',5);
       INSERT INTO leaderboard_events(discord_id,mode,score,result_key) VALUES('A','dossier',20,'dossier:2026-10-17');
@@ -55,6 +57,7 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
     const users=Object.fromEntries((await db.query('SELECT discord_id,data,partner_id,created_at FROM users')).rows.map(r=>[r.discord_id,r]));
     assert.equal(users.A.data.profile.xp,900);assert.equal(users.A.partner_id,25);assert.equal(users.A.created_at.toISOString(),'2026-06-01T10:00:00.000Z');
     assert.equal(users.C.data.profile.xp,70,'new players are untouched');
+    assert.equal(users.D,undefined,'an account deleted since the move does not come back');
     assert.equal((await db.query("SELECT account_id FROM account_identities WHERE provider='google'")).rows[0].account_id,'B');
     const scores=Object.fromEntries((await db.query("SELECT discord_id||':'||mode AS k,score FROM scores")).rows.map(r=>[r.k,r.score]));
     assert.deepEqual(scores,{'A:quiz':12,'A:wordle':3,'B:quiz':4},'the best of both sides, lower is better for the Wordle');
@@ -68,7 +71,8 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
     assert.deepEqual((await db.query('SELECT guessed FROM daily_plays WHERE identity=$1 AND day=$2',['user:A','2026-10-17'])).rows[0].guessed,[1,25]);
     const eggs=(await db.query('SELECT id,week_start,found_by FROM egg_rounds ORDER BY week_start')).rows;
     assert.equal(eggs.length,2);assert.equal(eggs[0].found_by,'user:A');
-    assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM egg_guesses WHERE round_id=$1',[eggs[0].id])).rows[0].n,2,'guesses follow their round under its new id');
+    assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM egg_guesses WHERE round_id=$1',[eggs[0].id])).rows[0].n,3,'guesses follow their round under its new id');
+    assert.deepEqual((await db.query('SELECT player_id,username FROM egg_guesses WHERE pokemon_id=9')).rows[0],{player_id:null,username:'Anonyme'},"a deleted player's guess stays, anonymised");
     assert.equal((await db.query('SELECT pokemon_id FROM egg_rewards WHERE round_id=$1',[eggs[0].id])).rows[0].pokemon_id,8);
 
     // The scheduler records the import and never runs it twice.

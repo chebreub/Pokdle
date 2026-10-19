@@ -198,3 +198,47 @@ test("security headers cover account JSON and OAuth redirects; malformed cookies
     assert.match(response.headers.get("content-security-policy"), /script-src 'self'/);
   }
 });
+
+test("a session from before the database move gets its account row back, a deleted account never", async (t) => {
+  const queries = [], deleted = new Set(["99999"]), users = new Map();
+  const db = (sql, p) => {
+    queries.push([sql.replace(/\s+/g, " ").trim(), p]);
+    if (/^\s*INSERT INTO users\(discord_id, username, avatar\) SELECT/.test(sql)) {
+      if (deleted.has(p[0]) || users.has(p[0])) return { rows: [], rowCount: 0 };
+      users.set(p[0], { username: p[1], avatar: p[2], data: {} }); return { rows: [], rowCount: 1 };
+    }
+    if (/SELECT data FROM users/.test(sql)) { const u = users.get(p[0]); return { rows: u ? [{ data: u.data }] : [], rowCount: u ? 1 : 0 }; }
+    if (/UPDATE users SET data/.test(sql)) { const u = users.get(p[0]); if (u) u.data = JSON.parse(p[1]); return { rows: [], rowCount: u ? 1 : 0 }; }
+    return { rows: [], rowCount: 0 };
+  };
+  const f = await fixture(t, db);
+  const jwt = require("../node_modules/jsonwebtoken");
+  const secret = "synthetic-session-secret-for-tests-only", before = Math.floor(Date.parse("2026-10-10T12:00:00Z") / 1000);
+  const cookie = payload => "pokdle_session=" + jwt.sign(payload, secret);
+  const rebuilt = q => q.filter(([sql]) => sql.startsWith("INSERT INTO users(discord_id, username, avatar) SELECT"));
+
+  await f.get("/api/me", cookie({ id: "1234567890", username: "Sacha", avatar: "abc", via: "discord", iat: before }));
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.deepEqual(users.get("1234567890"), { username: "Sacha", avatar: "abc", data: {} }, "the ranking name comes back from the session");
+  assert.ok(queries.some(([sql, p]) => sql.includes("account_identities") && p[0] === "1234567890"), "the Discord sign-in link comes back too");
+
+  queries.length = 0;
+  await f.get("/api/me", cookie({ id: "1234567890", username: "Sacha", avatar: "abc", via: "discord", iat: before }));
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(rebuilt(queries).length, 0, "checked once per account");
+
+  await f.get("/api/me", cookie({ id: "99999", username: "Parti", avatar: "", via: "discord", iat: before }));
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(users.has("99999"), false, "a deleted account stays deleted");
+
+  queries.length = 0;
+  await f.get("/api/me", cookie({ id: "555", username: "Nouveau", avatar: "", via: "discord" }));
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(rebuilt(queries).length, 0, "sessions opened since the move already have their row");
+
+  const google = cookie({ id: "google:42", username: "Ondine", avatar: "", via: "google", iat: before });
+  const saved = await f.post("/api/profile", google, { _accountId: "google:42", profile: { xp: 12 } });
+  assert.deepEqual(await saved.json(), { ok: true });
+  assert.deepEqual(users.get("google:42").data, { _accountId: "google:42", profile: { xp: 12 } }, "a profile save no longer lands nowhere");
+  assert.ok(queries.some(([sql, p]) => sql.includes("'google'") && p[0] === "42" && p[1] === "google:42"));
+});
