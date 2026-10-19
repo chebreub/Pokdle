@@ -13,6 +13,7 @@ const nearestParty = require("./lib/party-nearest");
 const dexRace = require("./lib/party-dexrace");
 const deductionParty = require("./lib/party-deduction");
 const quiEstCeParty = require("./lib/party-quiestce");
+const petitBacParty = require("./lib/party-petitbac");
 const coopParty = require("./lib/party-coop");
 const { bestDuelProximity } = require("./lib/duel-proximity");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
@@ -696,6 +697,8 @@ const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express
 const wordleService = require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
 const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, wordle:wordleService, readyBefore:authDbReady });
 const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,daily:dailyService,wordle:wordleService,dossier:dossierService,readyBefore:authDbReady});
+// Petit Bac solo: a sheet drawn and checked by the server, nothing stored.
+petitBacParty.mountPetitBacSolo({ app, express, pokemon: POKEMON_LIST });
 // Grille du jour: the bonus of the day, beside the 100-point journey.
 const gridService = require("./lib/daily-grid").mountGridRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
@@ -1142,22 +1145,22 @@ app.get("/api/multiplayer/health", (_req, res) => {
 const USAGE_EVENTS = new Set([
   "visit",
   "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
-  "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce",
+  "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce", "solo:petitbac",
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
-  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:petitbac", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
   "duel:create", "statclash:create",
 ]);
 const USAGE_LABELS = {
   visit: "Visites", "solo:daily": "Pokémon du jour", "solo:normal": "Classique", "solo:challenge": "Challenge",
   "solo:silhouette": "Silhouette", "solo:pixel": "Pixelisé", "solo:mystery": "Mystère", "solo:cry": "Cri",
   "solo:quiz": "Quiz", "solo:description": "Description", "solo:weight": "Duel de poids", "solo:evolution": "Évolution",
-  "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:quiestce": "Qui est-ce ?", "solo:higherlower": "Higher or Lower",
+  "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:quiestce": "Qui est-ce ?", "solo:petitbac": "Petit Bac", "solo:higherlower": "Higher or Lower",
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
-  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
+  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:petitbac": "Party — Petit Bac", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
@@ -1343,6 +1346,8 @@ function publicPartyRoomState(room, viewerId = null) {
     ? deductionParty.publicDeductionRound(room, revealed)
     : gameMode === "quiestce1v1"
     ? quiEstCeParty.publicQuiEstCeDuel(room, viewerId, revealed)
+    : gameMode === "petitbac"
+    ? petitBacParty.publicPetitBac(room, viewerId)
     : gameMode === "nearest"
     ? publicPartyNearestRoundState(room, revealed)
     : gameMode === "typecombo"
@@ -1365,6 +1370,7 @@ function publicPartyRoomState(room, viewerId = null) {
     deadlineAt: room.deadlineAt || null,
     gameMode,
     raceFormat: room.raceFormat || "duel",
+    bacFree: Boolean(room.bacFree),
     raceDuration: room.raceDuration === 0 ? 0 : room.raceDuration === 300 ? 300 : 180,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: roundState,
@@ -1436,6 +1442,8 @@ function partyTotalRoundsForMode(mode, configured) {
   // Stat Clash Party : chaque statistique se joue une seule fois, donc exactement
   // six manches, quel que soit le réglage de l'hôte (gardé pour les autres jeux).
   if (mode === "statclashparty") return 6;
+  // Petit Bac: three letters make a full game.
+  if (mode === "petitbac") return 3;
   // L'hôte peut configurer 5/10/15/20 manches pour les autres jeux.
   const wanted = Number(configured);
   if ([5, 10, 15, 20].includes(wanted)) return wanted;
@@ -1451,6 +1459,7 @@ async function startPartyGame(room) {
   room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds);
   room.recentComboKeys = [];
   room.recentDuoKeys = [];
+  room.bacUsedLetters = [];
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
@@ -1523,6 +1532,8 @@ function resetPartyCampaign(room) {
   room.race = null;
   room.recentComboKeys = [];
   room.recentDuoKeys = [];
+  room.bac = null;
+  room.bacUsedLetters = [];
   for (const player of room.players || []) {
     player.score = 0;
     player.correct = false;
@@ -1533,6 +1544,8 @@ function resetPartyCampaign(room) {
     player.guesses = [];
     player.attempts = 0;
     player.gaveUp = false;
+    player.bacAnswers = null;
+    player.bacResults = null;
   }
 }
 
@@ -1542,12 +1555,26 @@ function forcePartyRoundEnd(room) {
     room.race.endedReason = "time"; endPartyRound(room);
   } else if (room.gameMode === "nearest") {
     resolvePartyNearestRound(room);
+  } else if (room.gameMode === "petitbac") {
+    advancePartyPetitBac(room);
   } else if (isPartyStatMode(room)) {
     resolvePartyStatRound(room);
   } else {
     endPartyRound(room);
   }
   emitPartyRoomState(room);
+}
+
+// Petit Bac phases (writing, the last 10 seconds after STOP, the vote) each get their own clock.
+function armPartyPhaseTimer(room, ms) {
+  clearPartyRoundTimer(room);
+  room.deadlineAt = Date.now() + ms;
+  room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, ms);
+}
+
+function advancePartyPetitBac(room) {
+  if (petitBacParty.advancePetitBac(room, POKEMON_LIST) === "vote") armPartyPhaseTimer(room, petitBacParty.VOTE_MS);
+  else endPartyRound(room);
 }
 
 function armPartyRoundTimer(room) {
@@ -1559,7 +1586,7 @@ function armPartyRoundTimer(room) {
     return;
   }
   const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : // Qui est-ce ? waits for human answers: a long safety limit only.
-    room.gameMode === "quiestce1v1" ? 1200000 : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
+    room.gameMode === "quiestce1v1" ? 1200000 : room.gameMode === "petitbac" ? petitBacParty.WRITE_MS : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, duration);
@@ -1575,6 +1602,8 @@ async function startPartyRound(room) {
     deductionParty.startDeductionRound(room, POKEMON_LIST);
   } else if (room.gameMode === "quiestce1v1") {
     quiEstCeParty.startQuiEstCeDuel(room, POKEMON_LIST);
+  } else if (room.gameMode === "petitbac") {
+    petitBacParty.startPetitBacRound(room, POKEMON_LIST);
   } else if (room.gameMode === "nearest") {
     nearestParty.startNearestRound(room, POKEMON_LIST);
   } else if (isPartyStatMode(room)) {
@@ -2353,6 +2382,7 @@ io.on("connection", (socket) => {
       if (room.quiTurnId === previousId) room.quiTurnId = socket.id;
       if (room.quiPending && room.quiPending.askerId === previousId) room.quiPending.askerId = socket.id;
       if (Array.isArray(room.quiLog)) room.quiLog.forEach((entry) => { if (entry.by === previousId) entry.by = socket.id; });
+      petitBacParty.rekeyPetitBac(room, previousId, socket.id);
       if (room.race?.roster) room.race.roster.forEach((member) => { if (member.id === previousId) member.id = socket.id; });
       if (room.race?.claims instanceof Map) {
         for (const claim of room.race.claims.values()) if (claim.playerId === previousId) claim.playerId = socket.id;
@@ -2446,6 +2476,22 @@ io.on("connection", (socket) => {
         emitPartyRoomState(room);
         return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
       }
+      if (room.gameMode === "petitbac") {
+        if (payload.code !== room.code) return respond(ack, { ok: false, error: "Cette salle a changé." });
+        const serial = payload.roundSerial, action = String(payload.bacAction || "");
+        const result = action === "write" ? petitBacParty.writeAnswers(room, player, payload.answers, serial)
+          : action === "stop" ? petitBacParty.stopRound(room, player, serial)
+          : action === "vote" ? petitBacParty.voteAnswer(room, player, String(payload.author || ""), Number(payload.index), payload.valid, serial)
+          : action === "done-vote" ? petitBacParty.finishVoting(room, player, serial)
+          : { error: "Action inconnue." };
+        if (result.error) return respond(ack, { ok: false, error: result.error, room: publicPartyRoomState(room, socket.id) });
+        // STOP leaves everyone ten seconds, unless the clock was already closer.
+        if (result.stopped && (!room.deadlineAt || room.deadlineAt - Date.now() > petitBacParty.STOP_MS)) armPartyPhaseTimer(room, petitBacParty.STOP_MS);
+        if (result.allDone) advancePartyPetitBac(room);
+        // Typing only reaches the others when a column is filled or emptied.
+        if (action !== "write" || result.changed) emitPartyRoomState(room);
+        return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
+      }
       if (room.gameMode === "nearest") {
         const result = nearestParty.submitNearest(room, player, payload.guess, payload.roundSerial, POKEMON_LIST, normalizeName);
         if (result.error) return respond(ack, { ok: false, error: result.error, room: publicPartyRoomState(room, socket.id) });
@@ -2479,7 +2525,8 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
       if (room.gameMode === "dexrace") return respond(ack, { ok: false, error: "La course se termine au chrono (s’il est activé) ou quand la grille est complète." });
-      if (room.gameMode === "nearest") { resolvePartyNearestRound(room); } else if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
+      // Petit Bac: the host moves on to the next phase (vote, then the score).
+      if (room.gameMode === "nearest") { resolvePartyNearestRound(room); } else if (room.gameMode === "petitbac") { advancePartyPetitBac(room); } else if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -2552,7 +2599,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "petitbac" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
         room.roundNumber = 0;
@@ -2610,6 +2657,12 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("party:petitbac-options", (payload = {}, ack) => {
+    const room = findPartyRoomBySocket(socket.id);
+    if (!room || room.gameMode !== "petitbac" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status)) return respond(ack, {ok:false,error:"Seul l’hôte règle la prochaine partie."});
+    room.bacFree = Boolean(payload.free);
+    emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
+  });
   socket.on("party:dexrace-options", (payload = {}, ack) => {
     const room = findPartyRoomBySocket(socket.id);
     if (!room || room.gameMode !== "dexrace" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status)) return respond(ack, {ok:false,error:"Seul l’hôte peut régler la prochaine course."});

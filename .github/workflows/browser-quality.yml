@@ -83,6 +83,9 @@ jobs:
       - name: Verify an actual two-browser Party Room game
         if: steps.scope.outputs.focused != 'true'
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
+      - name: Verify a two-browser Petit Bac round and the solo sheet
+        if: steps.scope.outputs.focused != 'true'
+        run: python tools/petitbac_quality.py
       - name: Capture original design at matching viewports
         if: startsWith(github.head_ref, 'codex/structure-')
         run: python tools/structure_before.py --output before-artifacts
