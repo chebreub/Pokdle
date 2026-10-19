@@ -62,8 +62,13 @@
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] .visual-clue-canvas {height:250px!important;max-height:35vh!important;background:none!important;border:0!important;box-shadow:none!important;}
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] .cry-player-card {background:transparent!important;border:0!important;box-shadow:none!important;}
 #pokdle-app.design-refresh #screen-game[data-shell="focused"] #description-text {max-width:660px;margin:20px auto;font:500 20px/1.8 Nunito,sans-serif!important;text-align:center;}
-#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0;list-style:none;}
-#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list li {padding:16px;border:1px solid var(--shell-line);border-radius:16px;background:transparent;font-size:16px;}
+/* Stat Mystère: one row per stat (name, bar, value), never two narrow columns that hide the values. */
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list {display:grid;grid-template-columns:1fr;gap:8px;padding:0;list-style:none;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list li {grid-template-columns:minmax(120px,190px) minmax(0,1fr) 64px;padding:12px 16px;border:1px solid var(--shell-line);border-radius:16px;background:transparent;font-size:16px;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-head {padding:2px 16px;border:0;font-size:12px;color:var(--shell-muted);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-item-type {grid-template-columns:minmax(120px,190px) minmax(0,1fr);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-label {color:var(--shell-muted);}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-value {color:var(--shell-ink)!important;min-width:0;white-space:nowrap;}
 #pokdle-app.design-refresh #screen-game[data-shell="focused"][data-mechanic="custom"] .results-legend {display:none!important;}
 @media(max-width:640px){
  #pokdle-app.design-refresh .focused-mode-screen > .gameplay-screen-card {padding:16px!important;border-radius:22px!important;}
