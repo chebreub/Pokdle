@@ -90,7 +90,7 @@ def main():
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
       page.locator('#home-game-filters button').filter(has_text='Jouer').click()
       play=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
-      expect(len(play)==9 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
+      expect(len(play)==10 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
@@ -228,7 +228,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==20,'Solo catalogue should list 20 games: '+str(tiles.count()))
+     expect(tiles.count()==21,'Solo catalogue should list 21 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
@@ -249,7 +249,7 @@ def main():
      labels=[t.strip() for t in chips.all_inner_texts()]
      expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Jouer') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
      chips.filter(has_text='Jouer').click()
-     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==12,'Jouer chip does not narrow the list')
+     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==13,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
      expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openEmulatorMode"]\']').is_visible(),'Tools chip does not reach the emulator')
      chips.filter(has_text='Tous').click()
@@ -949,7 +949,7 @@ def main():
      matrix=[
       ('startSilhouetteGame','screen-game'),('startDescriptionMode','screen-game'),('startMysteryStatGame','screen-game'),
       ('startWeightBattle','screen-game'),('startEvolutionChainGame','screen-game'),('startPokedexOrderGame','screen-game'),
-      ('openOddOneOutMode','screen-odd-one-out'),('openQuiEstCeMode','screen-qui-est-ce'),('openHigherLowerMode','screen-higher-lower'),
+      ('openOddOneOutMode','screen-odd-one-out'),('openQuiEstCeMode','screen-qui-est-ce'),('openPetitBacMode','screen-petit-bac'),('openHigherLowerMode','screen-higher-lower'),
       ('openPokeConnectionsMode','screen-poke-connections'),('openSpeedrunMode','screen-speedrun'),
       ('openTypeComboSolo','screen-type-combo'),('openDraftArenaMode','screen-draft-score-attack')
      ]
