@@ -71,6 +71,9 @@ jobs:
       - name: Verify daily recognition and journey summary
         if: steps.scope.outputs.focused == 'true' && steps.scope.outputs.maintenance != 'true'
         run: python tools/challenge_quality.py
+      - name: Verify the Grille du jour bonus
+        if: steps.scope.outputs.maintenance != 'true'
+        run: python tools/grid_quality.py
       - name: Verify maintenance home, Quiz, League launch and Daily counter
         if: steps.scope.outputs.maintenance == 'true'
         run: python tools/daily_maintenance_quality.py

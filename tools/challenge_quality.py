@@ -13,7 +13,7 @@ async def run():
           case=dict(engine=engine,width=width,ok=False);ctx=await browser.new_context(viewport=dict(width=width,height=height),is_mobile=width<640,has_touch=width<640);page=await ctx.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_default_timeout(8000)
           try:
             await page.goto('http://127.0.0.1:3193/',wait_until='domcontentloaded');await ready(page,'typeof startDailyChallenge === "function" && POKEMON_LIST.length > 1000');await ready(page,'!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"');day=await page.evaluate('getDailyDateKey()')
-            state=dict(ok=True,day=day,number=200,accountId=None,authenticated=False,mode='zoom',label='Zoom progressif',status='ready',finished=False,index=0,total=10,maxTries=6,points=0,ranked=False,elapsedMs=None,remainingMs=180000,guesses=[],hints=[],results=[],media=None);fail_next=False;calls=[]
+            state=dict(ok=True,day=day,number=200,accountId=None,authenticated=False,mode='pixel',label='Pixelisé',status='ready',finished=False,index=0,total=10,maxTries=6,points=0,ranked=False,elapsedMs=None,remainingMs=180000,guesses=[],hints=[],results=[],media=None);fail_next=False;calls=[]
             def snapshot():
               state['hints']=(['Génération 1'] if len(state['guesses'])>=2 else [])+(['Type : Électrik'] if len(state['guesses'])>=4 else [])
               state['media']=f'/api/daily/challenge/media?day={day}&index={state["index"]}&attempt={len(state["guesses"])}' if state['status']=='playing' else None
@@ -47,7 +47,7 @@ async def run():
             for name in ['Bulbizarre','Herbizarre','Florizarre','Salamèche','Reptincel','Dracaufeu']:
               await page.locator('#daily-challenge-input').fill(name);await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await ready(page,'!dailyChallengeBusy')
             assert state['index']==2 and state['points']==2
-            state.update(mode='cry',label='Cri Pokémon');await page.locator('[data-action="nextChallengePokemon"]').click();await page.evaluate('dailyChallengeState.mode="cry";renderDailyChallenge()');assert await page.locator('audio').is_visible()
+            await page.locator('[data-action="nextChallengePokemon"]').click();assert await page.locator('.challenge-media img[alt="Pokémon mystère pixelisé"]').is_visible();assert await page.locator('audio').count()==0
             state.update(mode='pixel',label='Pixelisé');await page.evaluate('startDailyChallenge()');await ready(page,'dailyChallengeState?.mode === "pixel" && !dailyChallengeBusy');assert await page.locator('.challenge-media img').is_visible()
             assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth+2')
             state.update(status='completed',finished=True,elapsedMs=180000,remainingMs=0);await page.evaluate('startDailyChallenge()');await ready(page,'dailyChallengeState?.finished && !dailyChallengeBusy');assert await page.locator('#challenge-result').is_visible();await page.screenshot(path=str(OUT/f'{engine}-{width}-result.png'),full_page=True)

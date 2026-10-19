@@ -4,15 +4,19 @@ const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {recordLeaderboardResultInTransaction}=require('./leaderboard-store');
 const {DAILY_MAX,DAILY_TOTAL,challengePoints,enquiryPoints,sql:pointsSql}=require('./daily-points');
 const LIMIT=180000,COUNT=10,TRIES=6;
-const MODES=['zoom','cry','pixel'];
-const LABELS={zoom:'Zoom progressif',cry:'Cri Pokémon',pixel:'Pixelisé'};
+// Only the pixelated picture stays in the daily Défi (decided 19/10/2026): the cry was too
+// hard to answer and the centred zoom too easy. Zoom and Cri remain as free modes.
+const LABELS={pixel:'Pixelisé'};
 const fail=(code,status=409)=>Object.assign(new Error(code),{code,status});
-function modeForDay(day){return MODES[Math.floor(Date.parse(day+'T12:00:00Z')/86400000)%MODES.length];}
+function modeForDay(){return 'pixel';}
 function chooseTargets(pokemon,randomInt=crypto.randomInt){const pool=pokemon.filter(p=>!p.isAltForm&&p.id>=1&&p.id<=1025).map(p=>p.id);if(pool.length<COUNT)throw fail('unavailable',503);const out=[];while(out.length<COUNT)out.push(pool.splice(randomInt(pool.length),1)[0]);return out;}
 async function initChallengeDb(db){
   await db.query('CREATE TABLE IF NOT EXISTS challenge_rounds(day DATE PRIMARY KEY,mode TEXT NOT NULL,targets JSONB NOT NULL)');
   await db.query(`CREATE TABLE IF NOT EXISTS challenge_plays(identity TEXT NOT NULL,day DATE NOT NULL REFERENCES challenge_rounds(day),account_id TEXT,answers JSONB NOT NULL DEFAULT '[]',guessed JSONB NOT NULL DEFAULT '[]',points INTEGER NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'ready' CHECK(status IN ('ready','playing','completed','abandoned')),started_at TIMESTAMPTZ,finished_at TIMESTAMPTZ,elapsed_ms BIGINT,migrated BOOLEAN NOT NULL DEFAULT false,PRIMARY KEY(identity,day))`);
   await db.query('CREATE INDEX IF NOT EXISTS challenge_account ON challenge_plays(account_id,day)');
+  // Days drawn as Zoom or Cri before the change (today included) switch to Pixelisé: same
+  // targets and attempts, only the picture changes.
+  await db.query("UPDATE challenge_rounds SET mode='pixel' WHERE mode<>'pixel'");
   // A failed rescore must not take the Défi offline: new plays already use the current scale.
   try{await rescoreChallengePlays(db);}catch(e){console.error('[challenge] rescore:',e.message);}
 }
@@ -102,8 +106,8 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
 function createMediaLoader({fetchAsset=fetch,sharp=require('sharp')}={}){
   const cache=new Map(),sources=new Map();return async({id,mode,attempt})=>{
     const key=id+':'+mode+':'+attempt;if(cache.has(key))return cache.get(key);
-    const promise=(async()=>{const url=mode==='cry'?`https://cdn.jsdelivr.net/gh/PokeAPI/cries@main/cries/pokemon/latest/${id}.ogg`:`https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${id}.png`;const sourceKey=id+':'+(mode==='cry'?'audio':'image');if(!sources.has(sourceKey)){const pending=(async()=>{const response=await fetchAsset(url,{signal:AbortSignal.timeout(7000)});if(!response.ok)throw fail('media_unavailable',503);const data=Buffer.from(await response.arrayBuffer());if(data.length>2000000)throw fail('media_unavailable',503);return data;})();sources.set(sourceKey,pending);if(sources.size>100)sources.delete(sources.keys().next().value);pending.catch(()=>sources.delete(sourceKey));}const raw=await sources.get(sourceKey);if(mode==='cry')return {buffer:raw,type:'audio/ogg'};
-      let img=sharp(raw);if(mode==='zoom'){const size=[22,30,42,56,72,96][attempt];img=img.extract({left:Math.floor((96-size)/2),top:Math.floor((96-size)/2),width:size,height:size}).resize(288,288,{kernel:'nearest'});}else img=img.resize([8,12,18,26,40,64][attempt],[8,12,18,26,40,64][attempt],{kernel:'nearest'}).png();const small=await img.png().toBuffer();return {buffer:mode==='pixel'?await sharp(small).resize(288,288,{kernel:'nearest'}).png().toBuffer():small,type:'image/png'};
+    const promise=(async()=>{const url=`https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${id}.png`;const sourceKey=id+':image';if(!sources.has(sourceKey)){const pending=(async()=>{const response=await fetchAsset(url,{signal:AbortSignal.timeout(7000)});if(!response.ok)throw fail('media_unavailable',503);const data=Buffer.from(await response.arrayBuffer());if(data.length>2000000)throw fail('media_unavailable',503);return data;})();sources.set(sourceKey,pending);if(sources.size>100)sources.delete(sources.keys().next().value);pending.catch(()=>sources.delete(sourceKey));}const raw=await sources.get(sourceKey);
+      const side=[8,12,18,26,40,64][attempt],small=await sharp(raw).resize(side,side,{kernel:'nearest'}).png().toBuffer();return {buffer:await sharp(small).resize(288,288,{kernel:'nearest'}).png().toBuffer(),type:'image/png'};
     })();cache.set(key,promise);if(cache.size>180)cache.delete(cache.keys().next().value);try{return await promise;}catch(e){cache.delete(key);throw e;}
   };
 }

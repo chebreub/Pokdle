@@ -1,0 +1,89 @@
+/* Grille du jour : critères en tête de lignes et de colonnes, neuf cases carrées,
+   la rareté de chaque réponse en pastille. Même carte crème que les épreuves du jour. */
+#pokdle-app.design-refresh #screen-grid { width: min(100%, 780px); margin: auto; padding: 20px 16px 100px; color: #2e2a33; font-family: Nunito, sans-serif; }
+#pokdle-app .grid-card { background: #fff; border: 1px solid #eadfd3; border-radius: 28px; padding: 24px; box-shadow: 0 6px 0 #f1e5d8; }
+#pokdle-app .grid-heading { text-align: center; }
+#pokdle-app .grid-heading h1 { font: 600 clamp(28px, 5vw, 38px) Fredoka, sans-serif; color: #2e2a33; margin: 0 0 8px; }
+#pokdle-app .grid-lead { margin: 0 auto 6px; max-width: 520px; color: #776b63; font-size: 14px; line-height: 1.5; }
+#pokdle-app .grid-hud { display: flex; justify-content: space-between; align-items: center; gap: 8px 14px; flex-wrap: wrap; background: #f4efff; border-radius: 14px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: #534943; }
+#pokdle-app .grid-hud:empty { display: none; }
+#pokdle-app .grid-hud strong { font: 600 18px Fredoka, sans-serif; color: #2e2a33; }
+#pokdle-app .grid-pp { display: inline-flex; align-items: center; gap: 4px; }
+#pokdle-app .grid-pp i { width: 10px; height: 10px; border-radius: 50%; background: #dcd3ea; }
+#pokdle-app .grid-pp i.is-full { background: #4069e0; box-shadow: 0 0 0 2px #dce5ff; }
+#pokdle-app .grid-pp b { margin-left: 6px; font: 800 13px Nunito, sans-serif; color: #574783; }
+
+#pokdle-app .grid-board { display: grid; grid-template-columns: minmax(70px, .8fr) repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; max-width: 580px; margin: 0 auto; }
+#pokdle-app .grid-board > .pk-skel { grid-column: 1 / -1; }
+#pokdle-app .grid-corner { display: grid; place-content: center; justify-items: center; border-radius: 18px; background: linear-gradient(135deg, #eff6ff, #f4efff); color: #4069e0; }
+#pokdle-app .grid-corner strong { font: 600 30px/1 Fredoka, sans-serif; }
+#pokdle-app .grid-corner span { font: 900 11px Nunito, sans-serif; letter-spacing: 1px; color: #574783; }
+#pokdle-app .grid-head { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; padding: 6px 4px; text-align: center; border-radius: 14px; background: #fff8ef; }
+#pokdle-app .grid-head b { font: 600 14px/1.15 Fredoka, sans-serif; color: #2e2a33; overflow-wrap: break-word; hyphens: auto; }
+#pokdle-app .grid-head small { font-size: 11px; font-weight: 700; color: #776b63; line-height: 1.2; }
+#pokdle-app .grid-head .type-badge { min-height: 0; padding: 5px 10px; font-size: 13px; gap: 5px; }
+#pokdle-app .grid-head .type-badge img { width: 18px; height: 18px; }
+#pokdle-app .grid-cell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; min-height: 0; overflow: hidden; aspect-ratio: 1; padding: 6px; border: 2px dashed #e2d5c8; border-radius: 18px; background: #fffaf4; color: #776b63; font: 700 12px Nunito, sans-serif; }
+#pokdle-app button.grid-cell { cursor: pointer; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+#pokdle-app button.grid-cell:not(:disabled):hover { transform: translateY(-2px); border-color: #4069e0; }
+#pokdle-app button.grid-cell:focus-visible { outline: 3px solid #dce5ff; outline-offset: 2px; }
+#pokdle-app .grid-cell.is-selected { border: 2px solid #4069e0; background: #fff; box-shadow: 0 0 0 4px #dce5ff; }
+#pokdle-app .grid-plus { font: 600 30px/1 Fredoka, sans-serif; color: #c9b9a8; }
+#pokdle-app .grid-cell.is-selected .grid-plus { color: #4069e0; }
+#pokdle-app .grid-possible { font-size: 11px; color: #8a7d73; }
+#pokdle-app .grid-tried { font-size: 10px; font-weight: 800; color: #a44340; }
+#pokdle-app .grid-cell img { width: auto; height: auto; max-width: 80%; max-height: 64%; aspect-ratio: 1; object-fit: contain; image-rendering: pixelated; }
+#pokdle-app .grid-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 12px Nunito, sans-serif; color: #2e2a33; }
+#pokdle-app .grid-cell.is-filled { border: 2px solid #b8e3c6; background: linear-gradient(160deg, #f1fbf4, #e1f4e9); }
+#pokdle-app .grid-rarity { position: absolute; top: 6px; right: 6px; padding: 2px 7px; border-radius: 99px; background: #efe8ff; color: #574783; font: 900 11px Nunito, sans-serif; }
+#pokdle-app .grid-rarity.is-rare { background: #fff1c2; color: #8a5a00; box-shadow: 0 0 0 1px #f3dc8f; }
+#pokdle-app .grid-cell.is-missed { gap: 0; border-style: solid; background: #f6f1ec; }
+#pokdle-app .grid-cell.is-missed img { max-height: 48%; opacity: .45; filter: grayscale(.6); }
+#pokdle-app .grid-cell.is-missed .grid-name { color: #776b63; font-weight: 700; }
+
+#pokdle-app .grid-message { text-align: center; font-size: 14px; color: #574783; min-height: 22px; margin: 12px 0; }
+#pokdle-app .grid-picker { display: grid; gap: 8px; max-width: 580px; margin: 0 auto; padding: 14px; border-radius: 18px; background: #fff8ef; border: 1px solid #eadfd3; }
+#pokdle-app .grid-picker-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 4px 6px; margin: 0; font-size: 14px; color: #534943; text-align: center; }
+#pokdle-app .grid-picker-title b { font: 600 16px Fredoka, sans-serif; color: #2e2a33; }
+#pokdle-app .grid-picker-title span { flex-basis: 100%; font-size: 12px; color: #776b63; }
+#pokdle-app .grid-picker-tried { margin: 0; font-size: 12px; color: #a44340; text-align: center; }
+#pokdle-app .grid-picker-tried:empty { display: none; }
+#pokdle-app .grid-picker-close { justify-self: center; font-size: 13px; }
+#pokdle-app .grid-actions { display: flex; justify-content: center; margin-top: 12px; }
+#pokdle-app .grid-result { text-align: center; background: linear-gradient(135deg, #eff6ff, #f4efff, #fff0f4); border-radius: 20px; padding: 22px 16px; margin-top: 14px; }
+#pokdle-app .grid-result h2 { font: 600 24px Fredoka, sans-serif; color: #2e2a33; margin: 0; }
+#pokdle-app .grid-result p { margin: 6px 0; color: #534943; }
+#pokdle-app .grid-result .grid-result-line { font-weight: 800; color: #2e2a33; }
+#pokdle-app .grid-result .grid-result-hint { font-size: 12px; color: #776b63; }
+#pokdle-app .grid-bonus-link { text-align: center; margin: 16px 0 0; }
+
+/* Accueil : le bonus sous les quatre épreuves. */
+#pokdle-app.design-refresh #daily-hero .daily-hero-bonus { margin: 6px 0 4px; }
+#pokdle-app.design-refresh #daily-hero .daily-hero-bonus button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px dashed #e0b45c; border-radius: 14px; background: #fff7e2; color: #6b4c00; font: 800 13px Nunito, sans-serif; cursor: pointer; }
+#pokdle-app.design-refresh #daily-hero .daily-hero-bonus b { font: 600 15px Fredoka, sans-serif; }
+#pokdle-app.design-refresh #daily-hero .daily-hero-bonus button.is-done { border-style: solid; border-color: #b8e3c6; background: #e1f4e9; color: #1e6b45; }
+#pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-bonus button { background: rgba(255, 212, 92, .1); border-color: rgba(255, 212, 92, .4); color: #ffe39a; }
+#pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-bonus button.is-done { background: rgba(54, 185, 102, .18); border-color: rgba(54, 185, 102, .4); color: #9be3b4; }
+
+@media (max-width: 600px) {
+  #pokdle-app.design-refresh #screen-grid { padding: 12px 10px 100px; }
+  #pokdle-app .grid-card { padding: 16px 10px; border-radius: 22px; }
+  #pokdle-app .grid-lead { font-size: 13px; }
+  #pokdle-app .grid-board { grid-template-columns: minmax(58px, .75fr) repeat(3, minmax(0, 1fr)); gap: 5px; }
+  #pokdle-app .grid-head { padding: 4px 2px; border-radius: 10px; }
+  #pokdle-app .grid-head b { font-size: 11.5px; }
+  #pokdle-app .grid-head small { font-size: 9.5px; }
+  #pokdle-app .grid-head .type-badge { padding: 3px 6px; font-size: 11px; gap: 3px; }
+  #pokdle-app .grid-head .type-badge img { width: 14px; height: 14px; }
+  #pokdle-app .grid-corner strong { font-size: 24px; }
+  #pokdle-app .grid-cell { padding: 3px; border-radius: 12px; }
+  #pokdle-app .grid-name { font-size: 10px; }
+  #pokdle-app .grid-possible { font-size: 9.5px; }
+  #pokdle-app .grid-rarity { top: 3px; right: 3px; padding: 1px 5px; font-size: 9.5px; }
+  #pokdle-app .grid-hud { padding: 8px 10px; font-size: 12px; }
+  #pokdle-app .grid-pp i { width: 8px; height: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #pokdle-app:not(.reduce-motion) .grid-cell.is-new { animation: grid-pop .35s cubic-bezier(.3, 1.5, .5, 1); }
+}
+@keyframes grid-pop { 0% { transform: scale(.85); } 100% { transform: scale(1); } }
