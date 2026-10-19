@@ -7,8 +7,8 @@
 // answer earns 2 points when nobody else gave it, 1 point when shared.
 const {buildCriteria,speciesOf}=require('./daily-grid');
 const STOP_MS=10000,REVIEW_MS=90000,MAX_ANSWER=40,MIN_THEMES=3,MAX_THEMES=10,SOLO_COLUMNS=6,MIN_SOLO_ANSWERS=2;
-const TIMES=[60,300,0],DEFAULT_TIME=300;
-const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const TIMES=[60,300,0],DEFAULT_TIME=300,ROUNDS=[3,5,10],DEFAULT_ROUNDS=3;
+const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),HARD_LETTERS=['Q','W','X','Y','Z'];
 const STARTER_IDS=new Set([1,2,3,4,5,6,7,8,9,152,153,154,155,156,157,158,159,160,252,253,254,255,256,257,258,259,260,387,388,389,390,391,392,393,394,395,495,496,497,498,499,500,501,502,503,650,651,652,653,654,655,656,657,658,722,723,724,725,726,727,728,729,730,810,811,812,813,814,815,816,817,818,906,907,908,909,910,911,912,913,914]);
 // Themes the players judge themselves (no data to check them against).
 const FREE=[
@@ -72,9 +72,9 @@ function poolFor(cat,gens){
   return cat.species.filter(s=>allowed.includes(Number(s.p.gen||s.p.generation)));
 }
 // Letters where every Pokémon theme has at least one answer in the chosen generations.
-function playableLetters(catalogue,gens,themes){
+function playableLetters(catalogue,gens,themes,hard=false){
   const cat=catalogFor(catalogue),pool=poolFor(cat,gens),tests=themes.map(k=>cat.byKey.get(k)).filter(c=>c&&c.family!=='free');
-  return LETTERS.filter(letter=>{const starting=pool.filter(s=>s.initial===letter);return starting.length>0&&tests.every(c=>starting.some(s=>c.test(s.p)));});
+  return LETTERS.filter(letter=>(hard||!HARD_LETTERS.includes(letter))&&(()=>{const starting=pool.filter(s=>s.initial===letter);return starting.length>0&&tests.every(c=>starting.some(s=>c.test(s.p)));})());
 }
 // A typed name finds its Pokémon even with a small mistake (never on the first letter).
 function matchPokemon(text,pool){
@@ -101,16 +101,16 @@ function examplesFor(letter,category,catalogue,gens){
   return poolFor(cat,gens).filter(s=>s.initial===letter&&c.test(s.p)).slice(0,3).map(s=>Number(s.p.id));
 }
 // Solo sheets: six Pokémon columns, each with at least two answers for the letter.
-function drawSoloSheet({catalogue,gens,used=[],random=Math.random}){
+function drawSoloSheet({catalogue,gens,used=[],random=Math.random,columns=SOLO_COLUMNS}){
   const cat=catalogFor(catalogue),pool=poolFor(cat,gens),single=new Set(pool.map(s=>Number(s.p.gen||s.p.generation))).size===1;
   const themes=[...cat.byKey.values()].filter(c=>c.family!=='free'&&c.family!=='any'&&!(single&&c.family==='gen'));
   const order=[...shuffled(LETTERS.filter(l=>!used.includes(l)),random),...shuffled(LETTERS.filter(l=>used.includes(l)),random)];
   for(const letter of order){
     const starting=pool.filter(s=>s.initial===letter);
-    if(starting.length<SOLO_COLUMNS*MIN_SOLO_ANSWERS)continue;
+    if(starting.length<columns*MIN_SOLO_ANSWERS)continue;
     const usable=shuffled(themes.filter(c=>starting.filter(s=>c.test(s.p)).length>=MIN_SOLO_ANSWERS),random),picked=[],count={};
-    for(const c of usable){if(picked.length>=SOLO_COLUMNS)break;if((count[c.family]||0)>=FAMILY_LIMIT[c.family])continue;picked.push(c);count[c.family]=(count[c.family]||0)+1;}
-    if(picked.length===SOLO_COLUMNS)return {letter,categories:picked.map(describe)};
+    for(const c of usable){if(picked.length>=columns)break;if((count[c.family]||0)>=FAMILY_LIMIT[c.family])continue;picked.push(c);count[c.family]=(count[c.family]||0)+1;}
+    if(picked.length===columns)return {letter,categories:picked.map(describe)};
   }
   return null;
 }
@@ -119,7 +119,7 @@ function drawSoloSheet({catalogue,gens,used=[],random=Math.random}){
 function petitBacOptions(room,catalogue){
   const cat=catalogFor(catalogue);
   const themes=Array.isArray(room.bacThemes)&&room.bacThemes.length>=MIN_THEMES&&room.bacThemes.every(k=>cat.byKey.has(k))?room.bacThemes:DEFAULT_THEMES;
-  return {themes,time:TIMES.includes(room.bacTime)?room.bacTime:DEFAULT_TIME};
+  return {themes,time:TIMES.includes(room.bacTime)?room.bacTime:DEFAULT_TIME,rounds:ROUNDS.includes(room.bacRounds)?room.bacRounds:DEFAULT_ROUNDS,hard:room.bacHard===true};
 }
 // A varied random set: any Pokémon, three Pokémon themes of different kinds, two free
 // themes, kept only when at least eight letters can be played with it.
@@ -128,7 +128,7 @@ function randomThemes(catalogue,gens,random=Math.random){
   for(let attempt=0;attempt<60;attempt++){
     const kinds=shuffled(['type','gen','color','pokemon'],random).slice(0,3);
     const themes=['any',...kinds.map(group=>pick(all.filter(c=>c.group===group&&c.key!=='any')).key),...shuffled(FREE,random).slice(0,2).map(f=>f.key)];
-    if(playableLetters(catalogue,gens,themes).length>=8)return themes;
+    if(playableLetters(catalogue,gens,themes,false).length>=8)return themes;
   }
   return DEFAULT_THEMES;
 }
@@ -142,13 +142,15 @@ function setPetitBacOptions(room,payload,catalogue,random=Math.random){
     next.themes=themes;
   }
   if(payload.time!==undefined){if(!TIMES.includes(Number(payload.time)))return fail('Durée inconnue.');next.time=Number(payload.time);}
-  room.bacThemes=next.themes;room.bacTime=next.time;
+  if(payload.rounds!==undefined){if(!ROUNDS.includes(Number(payload.rounds)))return fail('Nombre de lettres inconnu.');next.rounds=Number(payload.rounds);}
+  if(payload.hard!==undefined)next.hard=payload.hard===true;
+  room.bacThemes=next.themes;room.bacTime=next.time;room.bacRounds=next.rounds;room.bacHard=next.hard;
   return {saved:true};
 }
 // What the room shows about the next game; the full list of themes only while setting up.
 function publicOptions(room,catalogue){
   const options=petitBacOptions(room,catalogue),setup=room.status==='waiting'||room.status==='complete';
-  return {...options,letters:playableLetters(catalogue,room.selectedGens,options.themes).length,catalog:setup?catalogFor(catalogue).list:null,groups:setup?GROUPS:null,minThemes:MIN_THEMES,maxThemes:MAX_THEMES};
+  return {...options,letters:playableLetters(catalogue,room.selectedGens,options.themes,options.hard).length,catalog:setup?catalogFor(catalogue).list:null,groups:setup?GROUPS:null,minThemes:MIN_THEMES,maxThemes:MAX_THEMES};
 }
 function roundPlayers(room,now=Date.now()){return room.players.filter(p=>(room.roundPlayerIds||[]).includes(p.id)&&(p.connected||Number(p.reconnectUntil)>now));}
 function filledCount(player){return (player.bacAnswers||[]).filter(Boolean).length;}
@@ -161,7 +163,7 @@ function check(room,player,serial,phases){
 }
 function startPetitBacRound(room,catalogue,random=Math.random){
   const options=petitBacOptions(room,catalogue),cat=catalogFor(catalogue);
-  const letters=playableLetters(catalogue,room.selectedGens,options.themes);
+  const letters=playableLetters(catalogue,room.selectedGens,options.themes,options.hard);
   if(!letters.length)throw new Error('Aucune lettre ne convient à ces thèmes.');
   const fresh=letters.filter(l=>!(room.bacUsedLetters||[]).includes(l)),from=fresh.length?fresh:letters,letter=from[Math.floor(random()*from.length)];
   room.bacUsedLetters=[...(room.bacUsedLetters||[]),letter].slice(-26);
@@ -241,10 +243,16 @@ function scorePetitBac(room,catalogue){
     const entries=sheets.map((sheet,k)=>({k,pokemonId:sheet[i].pokemonId,norm:normalize(sheet[i].text),valid:sheet[i].valid})).filter(e=>e.valid);
     for(const group of sameAnswerGroups(entries))for(const e of group){sheets[e.k][i].points=group.length>1?1:2;if(group.length>1)sheets[e.k][i].shared=true;}
   });
+  room.bacStats=room.bacStats||{};
   for(const p of room.players){
     const index=players.indexOf(p),sheet=index>=0?sheets[index]:null;
     p.bacResults=sheet?sheet.map(({pokemonId,...rest})=>rest):null;p.lastGain=sheet?sheet.reduce((sum,r)=>sum+r.points,0):0;
     p.score=(Number(p.score)||0)+p.lastGain;p.correct=p.lastGain>0;
+    if(!sheet)continue;
+    // Running totals for the end-of-game recap.
+    const stats=room.bacStats[p.id]||(room.bacStats[p.id]={points:0,unique:0,shared:0,refused:0,stops:0,rounds:0});
+    stats.points+=p.lastGain;stats.rounds+=1;stats.unique+=sheet.filter(r=>r.points===2).length;stats.shared+=sheet.filter(r=>r.points===1).length;
+    stats.refused+=sheet.filter(r=>r.text&&!r.valid).length;if(bac.stopBy===p.id)stats.stops+=1;
   }
   bac.examples=bac.categories.map(c=>examplesFor(bac.letter,c,catalogue,room.selectedGens));
   bac.phase='done';
@@ -270,7 +278,18 @@ function publicPetitBac(room,viewerId){
     })):null,
     results:bac.phase==='done'?players.map(p=>({playerId:p.id,nickname:p.nickname,answers:p.bacResults||[],gained:Number(p.lastGain)||0})).sort((a,b)=>b.gained-a.gained):null,
     examples:bac.phase==='done'?bac.examples:null,
+    recap:room.status==='complete'&&bac.phase==='done'?gameRecap(room):null,
   };
+}
+// End of the game: everyone's totals and three titles.
+function gameRecap(room){
+  const rows=room.players.filter(p=>room.bacStats?.[p.id]).map(p=>({playerId:p.id,nickname:p.nickname,...room.bacStats[p.id]})).sort((a,b)=>b.points-a.points||b.unique-a.unique);
+  const best=(field,min=1)=>{const top=Math.max(0,...rows.map(r=>r[field]));return top>=min?rows.filter(r=>r[field]===top).map(r=>r.nickname):[];};
+  return {rows,titles:[
+    {key:'champion',label:'Champion',players:best('points',0),value:Math.max(0,...rows.map(r=>r.points)),unit:'points'},
+    {key:'original',label:'Le plus original',players:best('unique'),value:Math.max(0,...rows.map(r=>r.unique)),unit:'réponses uniques'},
+    {key:'stopper',label:'Roi du STOP',players:best('stops'),value:Math.max(0,...rows.map(r=>r.stops)),unit:'STOP'},
+  ].filter(t=>t.players.length)};
 }
 // A reconnecting player keeps their sheet, their verdicts and their votes.
 function rekeyPetitBac(room,previousId,nextId){
@@ -279,10 +298,19 @@ function rekeyPetitBac(room,previousId,nextId){
   for(const v of bac.votes){if(v.voter===previousId)v.voter=nextId;if(v.author===previousId)v.author=nextId;}
   bac.votersDone=bac.votersDone.map(id=>id===previousId?nextId:id);
   if(bac.verdicts&&Object.prototype.hasOwnProperty.call(bac.verdicts,previousId)){bac.verdicts[nextId]=bac.verdicts[previousId];delete bac.verdicts[previousId];}
+  if(room.bacStats&&Object.prototype.hasOwnProperty.call(room.bacStats,previousId)){room.bacStats[nextId]=room.bacStats[previousId];delete room.bacStats[previousId];}
 }
 
 /* ---------- Solo against the clock: the server draws and corrects, nothing is stored ---------- */
-const SOLO_SECONDS=75;
+const SOLO_SECONDS=75,SOLO_MAX_THEMES=8;
+// About 12 seconds per theme: 75 seconds for six.
+function soloSeconds(columns){return 45+5*columns;}
+function soloSheetFor(catalogue,gens,themes,used=[],random=Math.random){
+  const letters=playableLetters(catalogue,gens,themes),fresh=letters.filter(l=>!used.includes(l)),from=fresh.length?fresh:letters;
+  if(!from.length)return null;
+  const cat=catalogFor(catalogue);
+  return {letter:from[Math.floor(random()*from.length)],categories:themes.map(k=>describe(cat.byKey.get(k)))};
+}
 function parseGens(value){
   const gens=String(value||'').split(',').map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=9);
   return gens.length?[...new Set(gens)]:[1,2,3,4,5,6,7,8,9];
@@ -298,20 +326,24 @@ function mountPetitBacSolo({app,express,pokemon}){
   app.get('/api/petitbac/solo',(req,res)=>{
     res.set('Cache-Control','no-store');
     if(limited(req))return res.status(429).json({ok:false,error:'rate_limited'});
-    const used=String(req.query.exclude||'').toUpperCase().split('').filter(l=>LETTERS.includes(l));
-    const sheet=drawSoloSheet({catalogue:pokemon,gens:parseGens(req.query.gens),used});
+    const used=String(req.query.exclude||'').toUpperCase().split('').filter(l=>LETTERS.includes(l)),gens=parseGens(req.query.gens);
+    const chosen=req.query.themes?[...new Set(String(req.query.themes).split(',').filter(Boolean))]:null;
+    if(chosen&&(chosen.length<MIN_THEMES||chosen.length>SOLO_MAX_THEMES||chosen.some(k=>!cat.byKey.has(k)||cat.byKey.get(k).family==='free')))return res.status(400).json({ok:false,error:'invalid_themes'});
+    const sheet=chosen?soloSheetFor(pokemon,gens,chosen,used):drawSoloSheet({catalogue:pokemon,gens,used});
     if(!sheet)return res.status(409).json({ok:false,error:'no_letter'});
-    res.json({ok:true,...sheet,seconds:SOLO_SECONDS});
+    res.json({ok:true,...sheet,seconds:soloSeconds(sheet.categories.length)});
   });
+  // The themes a solo player can pick (the Pokémon ones, checked by the data).
+  app.get('/api/petitbac/themes',(req,res)=>{res.set('Cache-Control','public, max-age=3600');res.json({ok:true,themes:cat.list.filter(c=>c.family!=='free'&&c.family!=='any'),groups:GROUPS.filter(([g])=>g!=='free'),min:MIN_THEMES,max:SOLO_MAX_THEMES});});
   app.post('/api/petitbac/solo/check',express.json({limit:'4kb'}),(req,res)=>{
     res.set('Cache-Control','no-store');
     if(limited(req))return res.status(429).json({ok:false,error:'rate_limited'});
     const body=req.body||{},letter=String(body.letter||''),keys=Array.isArray(body.keys)?body.keys.map(String):[],answers=Array.isArray(body.answers)?body.answers:[];
-    if(!/^[A-Z]$/.test(letter)||!keys.length||keys.length>8||answers.length!==keys.length||keys.some(k=>!cat.byKey.has(k)||cat.byKey.get(k).family==='free'))return res.status(400).json({ok:false,error:'invalid_sheet'});
+    if(!/^[A-Z]$/.test(letter)||!keys.length||keys.length>SOLO_MAX_THEMES||answers.length!==keys.length||keys.some(k=>!cat.byKey.has(k)||cat.byKey.get(k).family==='free'))return res.status(400).json({ok:false,error:'invalid_sheet'});
     const gens=parseGens(body.gens);
     res.json({ok:true,results:keys.map((key,i)=>checkPokemonAnswer(answers[i],letter,{key},pokemon,gens)),examples:keys.map(key=>examplesFor(letter,{key},pokemon,gens))});
   });
 }
 
-module.exports={STOP_MS,REVIEW_MS,TIMES,DEFAULT_THEMES,FREE,SOLO_SECONDS,normalize,initialOf,distance,catalogFor,playableLetters,matchPokemon,checkPokemonAnswer,examplesFor,drawSoloSheet,
+module.exports={soloSheetFor,soloSeconds,STOP_MS,REVIEW_MS,TIMES,ROUNDS,HARD_LETTERS,DEFAULT_THEMES,FREE,SOLO_SECONDS,normalize,initialOf,distance,catalogFor,playableLetters,matchPokemon,checkPokemonAnswer,examplesFor,drawSoloSheet,
   petitBacOptions,setPetitBacOptions,randomThemes,publicOptions,startPetitBacRound,writeAnswers,stopRound,voteAnswer,finishVoting,advancePetitBac,scorePetitBac,publicPetitBac,rekeyPetitBac,mountPetitBacSolo};

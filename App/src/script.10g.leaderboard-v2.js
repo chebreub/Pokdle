@@ -7,7 +7,8 @@ const LEADERBOARD_V2_DAY_MODES = [
   ["wordlepts","Wordle","Points"],
   ["dossier","Dossier","Points, puis temps"],
   ["challenge","Défi","Points, puis temps"],
-  ["grid","Grille","Cases, puis originalité"]
+  ["grid","Grille","Cases, puis originalité"],
+  ["petitbacday","Petit Bac","Bonnes réponses, puis originalité"]
 ];
 // Arcade games keep their own record and unit, under "Autres classements".
 const LEADERBOARD_V2_OTHER_MODES = [
@@ -25,7 +26,7 @@ const LEADERBOARD_V2_MODES = LEADERBOARD_V2_DAY_MODES.concat(LEADERBOARD_V2_OTHE
 // Old links to the attempt boards open the same stage in points.
 const LEADERBOARD_V2_ALIASES = { daily:"enquete", wordle:"wordlepts" };
 // One colour per stage of the day (background, ink).
-const LEADERBOARD_V2_TONES = { journey:["#C9B6F5","#4B3291"], enquete:["#FFD45C","#6B4C00"], wordlepts:["#8FC8FF","#1F5288"], dossier:["#F7A8C8","#8E1F4D"], challenge:["#86D9B0","#17583A"], grid:["#FFC48C","#7A3E00"] };
+const LEADERBOARD_V2_TONES = { journey:["#C9B6F5","#4B3291"], enquete:["#FFD45C","#6B4C00"], wordlepts:["#8FC8FF","#1F5288"], dossier:["#F7A8C8","#8E1F4D"], challenge:["#86D9B0","#17583A"], grid:["#FFC48C","#7A3E00"], petitbacday:["#9FD8CB","#1F6B5E"] };
 const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 derniers jours"],["all","Records historiques"]];
 let leaderboardV2Scope = "all";
 let leaderboardV2LastMode = "daily";
@@ -41,6 +42,7 @@ function leaderboardV2ModeMeta(mode) {
     wordlepts:{label:"Wordle du jour",hint:"Moins d’essais, puis le temps",unit:"pts",direction:"desc"},
     challenge:{label:"Défi du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     grid:{label:"Grille du jour",hint:"Bonus du jour : cases trouvées, puis originalité, puis temps",unit:"pts",direction:"desc"},
+    petitbacday:{label:"Petit Bac du jour",hint:"Bonus du jour : bonnes réponses, puis originalité, puis temps",unit:"pts",direction:"desc"},
     dossier:{label:"Dossier du jour",hint:"Points, puis temps",unit:"pts",direction:"desc"},
     wordle:{label:"Wordle du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
     daily:{label:"Pokémon du jour",hint:"Moins d’essais = mieux",unit:"essais",direction:"asc"},
@@ -100,7 +102,7 @@ function submitLeaderboardResult(mode, score, options = {}) {
   if (!mode || !Number.isInteger(n) || n <= 0) return Promise.resolve(false);
   const body = { mode, score:n, resultId:options.resultId || leaderboardResultId() };
   // Daily is recorded by /api/daily/guess after the server observes the winning guess.
-  if (mode === "dossier" || mode === "wordle" || mode === "grid") return Promise.resolve(false);
+  if (mode === "dossier" || mode === "wordle" || mode === "grid" || mode === "petitbacday") return Promise.resolve(false);
   if (mode === "daily") return Promise.resolve(false);
   return leaderboardFetchJson("/api/leaderboard/result", {
     method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)

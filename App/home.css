@@ -2234,3 +2234,12 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
   #screen-all-modes #mode-hub-title{font-size:1.8rem !important;}
   #screen-all-modes .all-modes-grid{grid-template-columns:1fr !important;}
 }
+/* Profil : la vitrine des badges de Ligue, un par semaine réussie. */
+#pokdle-app .league-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+#pokdle-app .league-badge { display: grid; justify-items: center; gap: 2px; padding: 14px 10px; border-radius: 18px; background: linear-gradient(160deg, #fff7e2, #fde7f0); border: 1px solid #f3dc8f; text-align: center; }
+#pokdle-app .league-badge-gem { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f0b429, #e46a9a); color: #fff; font-size: 22px; box-shadow: 0 4px 0 rgba(138, 90, 0, .2); }
+#pokdle-app .league-badge b { font: 600 1rem Fredoka, Nunito, sans-serif; color: #2e2a33; }
+#pokdle-app .league-badge small { font-size: .74rem; color: #776b63; font-weight: 700; }
+#pokdle-app .league-badges-empty { margin: 0 0 10px; color: #776b63; }
+#pokdle-app.theme-dark .league-badge { background: rgba(255, 212, 92, .1); border-color: rgba(255, 212, 92, .3); }
+#pokdle-app.theme-dark .league-badge b { color: #f0eaf9; }

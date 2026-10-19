@@ -73,6 +73,23 @@
 #pokdle-app .bac-results .bac-total { font: 600 1rem Fredoka, Nunito, sans-serif; color: #2f51b8; white-space: nowrap; }
 #pokdle-app .bac-results tfoot td, #pokdle-app .bac-results tfoot th { color: var(--ui-muted, #776b63); font-size: .74rem; border-bottom: 0; }
 
+/* Récap de fin de partie. */
+#pokdle-app .bac-recap { display: grid; gap: 10px; margin-bottom: 16px; padding: 14px; border-radius: 18px; background: linear-gradient(135deg, #eff6ff, #f4efff, #fff0f4); }
+#pokdle-app .bac-recap h3 { margin: 0; font: 600 1.2rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); text-align: center; }
+#pokdle-app .bac-titles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+#pokdle-app .bac-title { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: var(--ui-surface, #fffdf9); text-align: center; }
+#pokdle-app .bac-title span { font-size: .72rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; color: var(--ui-muted, #776b63); }
+#pokdle-app .bac-title b { font: 600 1.05rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); overflow-wrap: anywhere; }
+#pokdle-app .bac-title small { color: #2f51b8; font-weight: 800; }
+#pokdle-app .bac-title.is-champion { box-shadow: 0 0 0 2px #f0b429; }
+#pokdle-app .bac-recap-table td { font-weight: 800; color: var(--ui-ink, #2e2a33); }
+/* Petit Bac du jour et thèmes du solo. */
+#pokdle-app .bac-rarity { padding: 1px 7px; border-radius: 999px; background: #efe8ff; color: #574783 !important; font-weight: 900; }
+#pokdle-app .bac-day-letter { margin-top: 16px; }
+#pokdle-app .bac-solo-mode { justify-content: center; }
+#pokdle-app .bac-solo-themes { width: 100%; max-width: 620px; text-align: left; }
+#pokdle-app.design-refresh #screen-petitbac-day { width: min(100%, 780px); margin: auto; padding: 20px 16px 100px; color: #2e2a33; font-family: Nunito, sans-serif; }
+@media (max-width: 600px) { #pokdle-app.design-refresh #screen-petitbac-day { padding: 12px 10px 100px; } }
 /* Réglage de l'hôte. */
 #pokdle-app .petit-bac-setup { display: grid; gap: 8px; margin-top: 12px; }
 #pokdle-app .bac-theme-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }

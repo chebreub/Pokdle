@@ -438,7 +438,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["scores", "DELETE FROM scores WHERE discord_id = $1", [id]],
     ["leaderboard_events", "DELETE FROM leaderboard_events WHERE discord_id = $1", [id]],
     ["daily_sessions", "DELETE FROM daily_sessions WHERE discord_id = $1", [id]],
-    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays", "grid_plays"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
+    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays", "grid_plays", "petitbac_daily_plays"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
     ["egg_rewards", "DELETE FROM egg_rewards WHERE player_id = $1", [id]],
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
@@ -625,7 +625,7 @@ app.get("/api/leaderboard", async (req, res) => {
   const requestedMode = String(req.query.mode || "quiz");
   // Day boards computed from the plays themselves; they never accept client scores.
   const playModes = ["challenge", "journey", "enquete", "wordlepts"];
-  const mode = playModes.includes(requestedMode) || requestedMode === "grid" || leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
+  const mode = playModes.includes(requestedMode) || requestedMode === "grid" || requestedMode === "petitbacday" || leaderboardAllowed(requestedMode) ? requestedMode : "quiz";
   const config = leaderboardConfig(mode);
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   const order = leaderboardOrderSql(config);
@@ -637,6 +637,7 @@ app.get("/api/leaderboard", async (req, res) => {
     if(playModes.includes(mode)) return res.json(await challengeService.leaderboard(mode,scope,meId));
     if(mode === "dossier") return res.json(await dossierService.leaderboard(scope,meId));
     if(mode === "grid") return res.json(await gridService.leaderboard(scope,meId));
+    if(mode === "petitbacday") return res.json(await dailyBacService.leaderboard(scope,meId));
     let rankedCte;
     if (scope === "all") {
       rankedCte = `
@@ -730,6 +731,8 @@ const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, 
 const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,daily:dailyService,wordle:wordleService,dossier:dossierService,readyBefore:authDbReady});
 // Petit Bac solo: a sheet drawn and checked by the server, nothing stored.
 petitBacParty.mountPetitBacSolo({ app, express, pokemon: POKEMON_LIST });
+// Petit Bac du jour: same letter and themes for everyone, another bonus of the day.
+const dailyBacService = require("./lib/daily-petitbac").mountDailyPetitBacRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
 // Grille du jour: the bonus of the day, beside the 100-point journey.
 const gridService = require("./lib/daily-grid").mountGridRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
 // The old Neon data (blocked by its free quota on 19/10/2026) comes back on its own once
@@ -1471,13 +1474,13 @@ function pickPartyTarget(room) {
   return source[Math.floor(Math.random() * source.length)] || null;
 }
 
-function partyTotalRoundsForMode(mode, configured) {
+function partyTotalRoundsForMode(mode, configured, bacRounds) {
   if (mode === "dexrace") return 1;
   // Stat Clash Party : chaque statistique se joue une seule fois, donc exactement
   // six manches, quel que soit le réglage de l'hôte (gardé pour les autres jeux).
   if (mode === "statclashparty") return 6;
-  // Petit Bac: three letters make a full game.
-  if (mode === "petitbac") return 3;
+  // Petit Bac: 3, 5 or 10 letters, chosen by the host (3 by default).
+  if (mode === "petitbac") return petitBacParty.ROUNDS.includes(Number(bacRounds)) ? Number(bacRounds) : 3;
   // L'hôte peut configurer 5/10/15/20 manches pour les autres jeux.
   const wanted = Number(configured);
   if ([5, 10, 15, 20].includes(wanted)) return wanted;
@@ -1490,10 +1493,11 @@ function isPartyStatMode(room) {
 
 async function startPartyGame(room) {
   room.roundNumber = 1;
-  room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds);
+  room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds, room.bacRounds);
   room.recentComboKeys = [];
   room.recentDuoKeys = [];
   room.bacUsedLetters = [];
+  room.bacStats = {};
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
@@ -1535,7 +1539,7 @@ function resetPartyCampaign(room) {
   room.status = "waiting";
   room.roundNumber = 0;
   const configuredRounds = Number(room.configuredRounds);
-  room.totalRounds = partyTotalRoundsForMode(room.gameMode, configuredRounds);
+  room.totalRounds = partyTotalRoundsForMode(room.gameMode, configuredRounds, room.bacRounds);
   room.deadlineAt = null;
   room.roundStartedAt = null;
   room.target = null;
@@ -1568,6 +1572,7 @@ function resetPartyCampaign(room) {
   room.recentDuoKeys = [];
   room.bac = null;
   room.bacUsedLetters = [];
+  room.bacStats = {};
   for (const player of room.players || []) {
     player.score = 0;
     player.correct = false;
@@ -2651,7 +2656,7 @@ io.on("connection", (socket) => {
         room.totalRounds = 1;
         dexRace.balanceRaceTeams(room);
       } else {
-        room.totalRounds = partyTotalRoundsForMode(mode, room.configuredRounds);
+        room.totalRounds = partyTotalRoundsForMode(mode, room.configuredRounds, room.bacRounds);
       }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -2669,7 +2674,7 @@ io.on("connection", (socket) => {
       const rounds = Number(payload.rounds);
       if (![5, 10, 15, 20].includes(rounds)) return respond(ack, { ok: false, error: "Choisis 5, 10, 15 ou 20 manches." });
       room.configuredRounds = rounds;
-      room.totalRounds = partyTotalRoundsForMode(room.gameMode, rounds);
+      room.totalRounds = partyTotalRoundsForMode(room.gameMode, rounds, room.bacRounds);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -2698,8 +2703,9 @@ io.on("connection", (socket) => {
   socket.on("party:petitbac-options", (payload = {}, ack) => {
     const room = findPartyRoomBySocket(socket.id);
     if (!room || room.gameMode !== "petitbac" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status)) return respond(ack, {ok:false,error:"Seul l’hôte règle la prochaine partie."});
-    const result = petitBacParty.setPetitBacOptions(room, { themes: payload.themes, time: payload.time, random: payload.random === true }, POKEMON_LIST);
+    const result = petitBacParty.setPetitBacOptions(room, { themes: payload.themes, time: payload.time, rounds: payload.rounds, hard: payload.hard, random: payload.random === true }, POKEMON_LIST);
     if (result.error) return respond(ack, {ok:false,error:result.error,room:publicPartyRoomState(room,socket.id)});
+    room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds, room.bacRounds);
     emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
   });
   socket.on("party:dexrace-options", (payload = {}, ack) => {

@@ -72,7 +72,7 @@ function renderHomeDiscovery(force = false) {
   grid.replaceChildren(...(shelves[homeGameFilter] || shelves.popular).map(entry => [].concat(entry)).map(([key, pro]) => modeTileCloneForHome(key, Boolean(pro))).filter(Boolean));
 }
 function homeGameRecordHtml(action) {
-  const records = { openQuiEstCeMode:["quiEstCeBest","questions"], openPetitBacMode:["petitBacBest","/ 6"], openHigherLowerMode:["higherLowerHighScore","de série"], startQuizGame:["quizHighScore","/ " + (typeof QUIZ_QUESTION_COUNT === "number" ? QUIZ_QUESTION_COUNT : 15)], openSpeedrunMode:["speedrunHighScore","Pokémon"], openTypeComboSolo:["typeComboHighScore","pts"], openOddOneOutMode:["oddOneOutHighScore","de série"], startWeightBattle:["weightBattleHighScore","de série"] };
+  const records = { openQuiEstCeMode:["quiEstCeBest","questions"], openPetitBacMode:["petitBacBest","bonnes réponses"], openHigherLowerMode:["higherLowerHighScore","de série"], startQuizGame:["quizHighScore","/ " + (typeof QUIZ_QUESTION_COUNT === "number" ? QUIZ_QUESTION_COUNT : 15)], openSpeedrunMode:["speedrunHighScore","Pokémon"], openTypeComboSolo:["typeComboHighScore","pts"], openOddOneOutMode:["oddOneOutHighScore","de série"], startWeightBattle:["weightBattleHighScore","de série"] };
   const spec = records[action], value = spec ? Number(playerProfile?.[spec[0]]) || 0 : 0;
   return value > 0 ? '<small class="home-game-record">Ton record : '+value+' '+spec[1]+'</small>' : '';
 }
