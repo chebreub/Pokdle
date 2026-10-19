@@ -1404,7 +1404,7 @@ function publicPartyRoomState(room, viewerId = null) {
     deadlineAt: room.deadlineAt || null,
     gameMode,
     raceFormat: room.raceFormat || "duel",
-    bacFree: Boolean(room.bacFree),
+    bacOptions: gameMode === "petitbac" ? petitBacParty.publicOptions(room, POKEMON_LIST) : null,
     raceDuration: room.raceDuration === 0 ? 0 : room.raceDuration === 300 ? 300 : 180,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: roundState,
@@ -1607,20 +1607,23 @@ function armPartyPhaseTimer(room, ms) {
 }
 
 function advancePartyPetitBac(room) {
-  if (petitBacParty.advancePetitBac(room, POKEMON_LIST) === "vote") armPartyPhaseTimer(room, petitBacParty.VOTE_MS);
-  else endPartyRound(room);
+  if (petitBacParty.advancePetitBac(room, POKEMON_LIST) !== "review") { endPartyRound(room); return; }
+  // The review keeps the game's pace: 90 seconds, or no clock in an untimed game.
+  if (room.bac.time) armPartyPhaseTimer(room, petitBacParty.REVIEW_MS);
+  else { clearPartyRoundTimer(room); room.deadlineAt = null; }
 }
 
 function armPartyRoundTimer(room) {
   clearPartyRoundTimer(room);
   if (room.status !== "playing") return;
-  if (room.gameMode === "dexrace" && room.raceDuration === 0) {
+  // Untimed games: no clock, the round ends with STOP or the host.
+  if ((room.gameMode === "dexrace" && room.raceDuration === 0) || (room.gameMode === "petitbac" && !room.bac?.time)) {
     room.deadlineAt = null;
     room.roundStartedAt = Date.now();
     return;
   }
   const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : // Qui est-ce ? waits for human answers: a long safety limit only.
-    room.gameMode === "quiestce1v1" ? 1200000 : room.gameMode === "petitbac" ? petitBacParty.WRITE_MS : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
+    room.gameMode === "quiestce1v1" ? 1200000 : room.gameMode === "petitbac" ? room.bac.time * 1000 : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, duration);
@@ -2453,6 +2456,7 @@ io.on("connection", (socket) => {
         const error = dexRace.raceStartError(room);
         if (error) return respond(ack, { ok: false, error });
       }
+      if (room.gameMode === "petitbac" && !petitBacParty.publicOptions(room, POKEMON_LIST).letters) return respond(ack, { ok: false, error: "Aucune lettre ne convient à ces thèmes : change un thème ou les générations." });
       if (room.gameMode === "quiestce1v1" && room.players.filter((player) => player.connected).length !== 2) return respond(ack, { ok: false, error: "Qui est-ce ? se joue à deux exactement." });
       await startPartyGame(room);
       if (!room.target && room.gameMode !== "dexrace") return respond(ack, { ok: false, error: "Aucune cible disponible." });
@@ -2694,7 +2698,8 @@ io.on("connection", (socket) => {
   socket.on("party:petitbac-options", (payload = {}, ack) => {
     const room = findPartyRoomBySocket(socket.id);
     if (!room || room.gameMode !== "petitbac" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status)) return respond(ack, {ok:false,error:"Seul l’hôte règle la prochaine partie."});
-    room.bacFree = Boolean(payload.free);
+    const result = petitBacParty.setPetitBacOptions(room, { themes: payload.themes, time: payload.time, random: payload.random === true }, POKEMON_LIST);
+    if (result.error) return respond(ack, {ok:false,error:result.error,room:publicPartyRoomState(room,socket.id)});
     emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
   });
   socket.on("party:dexrace-options", (payload = {}, ack) => {
