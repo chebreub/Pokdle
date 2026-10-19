@@ -206,6 +206,16 @@ async function initAuthDb() {
       day DATE PRIMARY KEY,
       hits INTEGER NOT NULL DEFAULT 0
     )`);
+    // Deleted accounts stay deleted: no rebuilt row, no import from the old database.
+    await pgPool.query("CREATE TABLE IF NOT EXISTS deleted_accounts (id TEXT PRIMARY KEY, deleted_at TIMESTAMPTZ NOT NULL DEFAULT now())");
+    // Players who recorded a score since the move get their name back in every ranking.
+    await pgPool.query(`INSERT INTO users(discord_id, username, avatar)
+      SELECT DISTINCT ON (s.discord_id) s.discord_id, s.username, s.avatar FROM scores s
+      WHERE s.username <> '' AND NOT EXISTS (SELECT 1 FROM deleted_accounts d WHERE d.id = s.discord_id)
+      ORDER BY s.discord_id, s.updated_at DESC ON CONFLICT (discord_id) DO NOTHING`);
+    await pgPool.query(`INSERT INTO account_identities(provider, provider_user_id, account_id)
+      SELECT 'discord', discord_id, discord_id FROM users WHERE discord_id ~ '^[0-9]+$'
+      UNION ALL SELECT 'google', substr(discord_id, 8), discord_id FROM users WHERE discord_id LIKE 'google:%' ON CONFLICT DO NOTHING`);
     console.log("[auth] base prete (users + scores + leaderboard_events + visits).");
   } catch (e) { console.error("[auth] init base echouee:", e.message); }
 }
@@ -232,6 +242,23 @@ function getSessionUser(req) {
 function setSessionCookie(res, payload) {
   const token = jwtLib.sign(payload, SESSION_SECRET, { expiresIn: "30d" });
   res.cookie(AUTH_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 30 * 86400 * 1000, path: "/" });
+}
+// Sessions opened before the move to the new database (19/10/2026) can point to an
+// account that database has never seen: rankings then showed "Dresseur" and profile
+// saves found no row. The row is rebuilt from the session, never for a deleted account.
+const ACCOUNT_ROWS_CUTOFF = Date.parse("2026-10-19T08:30:00Z") / 1000;
+const ensuredAccountRows = new Set();
+async function ensureAccountRow(user) {
+  const id = String(user?.id || "");
+  if (!pgPool || !id || !(Number(user.iat) < ACCOUNT_ROWS_CUTOFF) || ensuredAccountRows.has(id)) return;
+  ensuredAccountRows.add(id);
+  if (ensuredAccountRows.size > 50000) ensuredAccountRows.clear();
+  try {
+    const created = await pgPool.query(`INSERT INTO users(discord_id, username, avatar) SELECT $1, $2, $3
+      WHERE NOT EXISTS (SELECT 1 FROM deleted_accounts WHERE id = $1) ON CONFLICT (discord_id) DO NOTHING`, [id, String(user.username || "").slice(0, 64), String(user.avatar || "").slice(0, 500)]);
+    if (created.rowCount && /^[0-9]+$/.test(id)) await pgPool.query("INSERT INTO account_identities(provider, provider_user_id, account_id) VALUES('discord', $1, $1) ON CONFLICT DO NOTHING", [id]);
+    if (created.rowCount && id.startsWith("google:")) await pgPool.query("INSERT INTO account_identities(provider, provider_user_id, account_id) VALUES('google', $1, $2) ON CONFLICT DO NOTHING", [id.slice(7), id]);
+  } catch (e) { ensuredAccountRows.delete(id); console.error("[auth] account row:", e.message); }
 }
 // One sign-in, whatever the provider. A known identity opens its account. A new one
 // opens the account already signed in on this browser (linking), else its own new
@@ -394,6 +421,7 @@ app.get("/api/me", (req, res) => {
   const providers = { discord: discordReady(), google: googleReady() };
   if (!authReady()) return res.json({ user: null, auth: false, providers });
   const user = getSessionUser(req);
+  if (user) ensureAccountRow(user);
   res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar, via: user.via || "discord" } : null, auth: true, providers });
 });
 // Delete my account: every row tied to it, in one transaction, then the session.
@@ -414,6 +442,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["egg_rewards", "DELETE FROM egg_rewards WHERE player_id = $1", [id]],
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
+    ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
     ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
   ];
   let client = null;
@@ -449,6 +478,7 @@ app.get("/api/profile", async (req, res) => {
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, data: null });
   try {
+    await ensureAccountRow(user);
     const r = await pgPool.query("SELECT data FROM users WHERE discord_id = $1", [user.id]);
     res.json({ ok: true, data: profileForClient((r.rows[0] && r.rows[0].data) || {}, user.id) });
   } catch (e) { console.error("[profile] get:", e.message); res.json({ ok: false, data: null }); }
@@ -463,6 +493,7 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
     return res.status(prepared.error === "profile_owner_mismatch" ? 409 : 400).json({ ok: false, error: prepared.error });
   }
   try {
+    await ensureAccountRow(user);
     await pgPool.query("UPDATE users SET data = $2, partner_id = $3 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data)]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }

@@ -48,8 +48,10 @@ const profileSize = data => JSON.stringify(data || {}).length;
 
 async function importLegacy({ db, old, ascModes = [] }) {
   const report = {};
+  const deleted = new Set((await tableExists(db, "deleted_accounts")) ? (await db.query("SELECT id FROM deleted_accounts")).rows.map(r => r.id) : []);
+  const kept = (rows, field) => rows.filter(r => !deleted.has(String(r[field] ?? "")));
   // Accounts: a profile kept since the move wins, unless the old one holds more progress.
-  const users = await oldRows(old, "users");
+  const users = kept(await oldRows(old, "users"), "discord_id");
   for (const user of users) {
     const current = (await db.query("SELECT data FROM users WHERE discord_id=$1", [user.discord_id])).rows[0];
     if (!current) { report.users = (report.users || 0) + await insertRows(db, "users", [user]); continue; }
@@ -60,15 +62,15 @@ async function importLegacy({ db, old, ascModes = [] }) {
       await db.query("UPDATE users SET partner_id=COALESCE(partner_id,$2), created_at=LEAST(created_at,$3) WHERE discord_id=$1", [user.discord_id, user.partner_id ?? null, user.created_at]);
     }
   }
-  report.identities = await insertRows(db, "account_identities", await oldRows(old, "account_identities"));
+  report.identities = await insertRows(db, "account_identities", kept(await oldRows(old, "account_identities"), "account_id"));
   // Records: the best of both sides, in each board's direction.
-  const scores = await oldRows(old, "scores");
+  const scores = kept(await oldRows(old, "scores"), "discord_id");
   const asc = "'{" + ascModes.map(m => String(m).replace(/[^a-z0-9_]/gi, "")).join(",") + "}'::text[]";
   report.scores = await insertRows(db, "scores", scores, { conflict: `ON CONFLICT (discord_id, mode) DO UPDATE SET
     score = CASE WHEN EXCLUDED.mode = ANY(${asc}) THEN LEAST(scores.score, EXCLUDED.score) ELSE GREATEST(scores.score, EXCLUDED.score) END,
     updated_at = GREATEST(scores.updated_at, EXCLUDED.updated_at)` });
-  report.events = await insertRows(db, "leaderboard_events", await oldRows(old, "leaderboard_events"), { skip: ["id"] });
-  report.sessions = await insertRows(db, "daily_sessions", await oldRows(old, "daily_sessions"));
+  report.events = await insertRows(db, "leaderboard_events", kept(await oldRows(old, "leaderboard_events"), "discord_id"), { skip: ["id"] });
+  report.sessions = await insertRows(db, "daily_sessions", kept(await oldRows(old, "daily_sessions"), "discord_id"));
   report.visits = await insertRows(db, "visits", await oldRows(old, "visits"), { conflict: "ON CONFLICT (day) DO UPDATE SET hits = visits.hits + EXCLUDED.hits" });
   // Daily stages: only the days the current database has not drawn itself.
   for (const [roundTable, playTable] of DAILY_TABLES) {
@@ -77,7 +79,7 @@ async function importLegacy({ db, old, ascModes = [] }) {
     const rounds = (await oldRows(old, roundTable, "ORDER BY day")).filter(r => !taken.has(dayKey(r.day)));
     report[roundTable] = await insertRows(db, roundTable, rounds);
     const days = rounds.map(r => dayKey(r.day));
-    report[playTable] = days.length ? await insertRows(db, playTable, await oldRows(old, playTable, "WHERE day::text = ANY($1)", [days])) : 0;
+    report[playTable] = days.length ? await insertRows(db, playTable, kept(await oldRows(old, playTable, "WHERE day::text = ANY($1)", [days]), "account_id")) : 0;
   }
   // Egg of the week: rounds get new ids, guesses and rewards follow them.
   if (await tableExists(db, "egg_rounds")) {
@@ -92,8 +94,10 @@ async function importLegacy({ db, old, ascModes = [] }) {
     }
     report.egg_rounds = ids.size;
     const mapped = rows => rows.filter(r => ids.has(String(r.round_id))).map(r => ({ ...r, round_id: ids.get(String(r.round_id)) }));
-    report.egg_guesses = await insertRows(db, "egg_guesses", mapped(await oldRows(old, "egg_guesses")), { skip: ["id"] });
-    report.egg_rewards = await insertRows(db, "egg_rewards", mapped(await oldRows(old, "egg_rewards")));
+    // A deleted player's guesses stay in the shared investigation, anonymised.
+    const guesses = mapped(await oldRows(old, "egg_guesses")).map(g => deleted.has(String(g.player_id ?? "")) || deleted.has(String(g.credited_player_id ?? "")) ? { ...g, player_id: null, credited_player_id: null, username: "Anonyme" } : g);
+    report.egg_guesses = await insertRows(db, "egg_guesses", guesses, { skip: ["id"] });
+    report.egg_rewards = await insertRows(db, "egg_rewards", kept(mapped(await oldRows(old, "egg_rewards")), "player_id"));
   }
   return report;
 }
