@@ -49,6 +49,7 @@ function openPetitBacMode() {
   if (typeof setGlobalNavActive === 'function') setGlobalNavActive('game');
   if (!petitBacState || petitBacState.phase === 'loading') petitBacState = { phase: 'ready', recent: petitBacState?.recent || [] };
   renderPetitBac();
+  if (petitBacSoloPrefs().mode === 'custom' && !petitBacThemeList) setPetitBacSoloMode('custom');
 }
 function petitBacRemaining() { return Math.max(0, Math.ceil(((petitBacState?.deadline || 0) - Date.now()) / 1000)); }
 function petitBacTick() {
@@ -63,8 +64,11 @@ function renderPetitBac() {
   if (!root || !s) return;
   const best = Number(playerProfile?.petitBacBest) || 0;
   if (s.phase === 'ready' || s.phase === 'loading') {
-    root.innerHTML = '<div class="bac-intro"><span class="bac-letter is-big" aria-hidden="true">?</span><p>Une lettre est tirée au sort. Pour chacun des six thèmes, trouve un Pokémon qui <b>commence par cette lettre</b> et qui coche le thème : un type, une région, une couleur…</p>' +
-      '<p class="bac-rules">75 secondes · 1 point par bonne réponse · petites fautes pardonnées' + (best ? ' · Ton record : ' + best + ' / 6' : '') + '</p>' +
+    const custom = petitBacSoloPrefs().mode === 'custom';
+    root.innerHTML = '<div class="bac-intro"><span class="bac-letter is-big" aria-hidden="true">?</span><p>Une lettre est tirée au sort. Pour chaque thème, trouve un Pokémon qui <b>commence par cette lettre</b> et qui coche le thème : un type, une région, une couleur…</p>' +
+      '<p class="bac-rules">' + (custom ? petitBacSoloPrefs().themes.length + ' thèmes à ton choix' : '6 thèmes au hasard') + ' · 1 point par bonne réponse · petites fautes pardonnées' + (best ? ' · Ton record : ' + best + ' bonne' + (best > 1 ? 's' : '') + ' réponse' + (best > 1 ? 's' : '') : '') + '</p>' +
+      '<div class="bac-setup-options bac-solo-mode" role="group" aria-label="Thèmes"><button type="button" class="party-mode-btn' + (custom ? '' : ' is-active') + '" aria-pressed="' + !custom + '" data-action="setPetitBacSoloMode" data-args=\'["random"]\'>Thèmes au hasard</button><button type="button" class="party-mode-btn' + (custom ? ' is-active' : '') + '" aria-pressed="' + custom + '" data-action="setPetitBacSoloMode" data-args=\'["custom"]\'>Je choisis mes thèmes</button></div>' +
+      (custom ? '<div id="petitbac-solo-themes" class="petit-bac-setup bac-solo-themes">' + petitBacSoloThemesHtml() + '</div>' : '') +
       (s.error ? '<p class="bac-error" role="alert">' + escapeHtml(s.error) + '</p>' : '') +
       '<button class="btn-blue" type="button" data-action="startPetitBacRound"' + (s.phase === 'loading' ? ' disabled' : '') + '>' + (s.phase === 'loading' ? 'Tirage…' : 'Tirer une lettre →') + '</button></div>';
   } else if (s.phase === 'playing' || s.phase === 'checking') {
@@ -83,7 +87,7 @@ function renderPetitBac() {
     if (s.error) { let error = root.querySelector('.bac-error'); if (!error) { error = document.createElement('p'); error.className = 'bac-error'; error.setAttribute('role', 'alert'); root.appendChild(error); } error.innerHTML = escapeHtml(s.error) + ' <button class="btn-ghost" type="button" data-action="submitPetitBac">Réessayer</button>'; }
   } else if (s.phase === 'finished') {
     delete root.dataset.sheet;
-    root.innerHTML = '<div class="bac-head"><span class="bac-letter is-big" aria-hidden="true">' + s.letter + '</span><div><b>' + s.score + ' / ' + s.categories.length + ' bonnes réponses</b><p>' + (s.newRecord ? 'Nouveau record !' : best ? 'Ton record : ' + best + ' / 6' : 'Retente ta chance avec une nouvelle lettre.') + ' · ' + Math.round(s.elapsedMs / 1000) + ' s</p></div></div>' +
+    root.innerHTML = '<div class="bac-head"><span class="bac-letter is-big" aria-hidden="true">' + s.letter + '</span><div><b>' + s.score + ' / ' + s.categories.length + ' bonnes réponses</b><p>' + (s.newRecord ? 'Nouveau record !' : best ? 'Ton record : ' + best + ' bonne' + (best > 1 ? 's' : '') + ' réponse' + (best > 1 ? 's' : '') : 'Retente ta chance avec une nouvelle lettre.') + ' · ' + Math.round(s.elapsedMs / 1000) + ' s</p></div></div>' +
       '<ul class="bac-review">' + s.categories.map((c, i) => {
         const r = s.results[i] || {}, examples = (s.examples[i] || []).map(petitBacPokemonName).filter(Boolean);
         return '<li class="' + (r.valid ? 'is-valid' : 'is-wrong') + '">' + petitBacColumnHtml(c) + '<span class="bac-answer"><b>' + petitBacAnswerText(r) + '</b>' + (r.valid ? '<i>+1</i>' : '<small>' + (PETITBAC_REASONS[r.reason] || '') + '</small>') + '</span>' +
@@ -98,7 +102,8 @@ async function startPetitBacRound() {
   petitBacState = { phase: 'loading', recent };
   renderPetitBac();
   try {
-    const response = await fetch('/api/petitbac/solo?exclude=' + encodeURIComponent(recent.join('')), { credentials: 'same-origin', cache: 'no-store' });
+    const prefs = petitBacSoloPrefs(), themes = prefs.mode === 'custom' ? '&themes=' + encodeURIComponent(prefs.themes.join(',')) : '';
+    const response = await fetch('/api/petitbac/solo?exclude=' + encodeURIComponent(recent.join('')) + themes, { credentials: 'same-origin', cache: 'no-store' });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.error || 'unavailable');
     petitBacState = { phase: 'playing', letter: data.letter, categories: data.categories, answers: data.categories.map(() => ''), drawnAt: Date.now(), deadline: Date.now() + data.seconds * 1000, recent: recent.concat(data.letter).slice(-10) };
@@ -106,7 +111,7 @@ async function startPetitBacRound() {
     document.querySelector('#petitbac-sheet input')?.focus({ preventScroll: true });
     clearInterval(petitBacClock); petitBacClock = setInterval(petitBacTick, 250);
   } catch (_e) {
-    petitBacState = { phase: 'ready', recent, error: 'Tirage impossible pour le moment. Réessaie dans un instant.' };
+    petitBacState = { phase: 'ready', recent, error: petitBacSoloPrefs().mode === 'custom' ? 'Aucune lettre ne marche avec tous ces thèmes, ou le serveur ne répond pas : change un thème ou réessaie.' : 'Tirage impossible pour le moment. Réessaie dans un instant.' };
     renderPetitBac();
   }
 }
@@ -133,6 +138,41 @@ async function submitPetitBac(event) {
     s.error = 'Correction impossible pour le moment. Tes réponses sont gardées.';
     renderPetitBac();
   }
+}
+
+// The solo player's own themes, kept on this device only.
+let petitBacThemeList = null;
+const PETITBAC_SOLO_DEFAULT = ['type:Feu', 'type:Eau', 'type:Plante', 'gen:1', 'special:legendary', 'stage:3'];
+function petitBacSoloPrefs() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('pokedle_petitbac_solo') || 'null'); } catch (_e) { saved = null; }
+  const themes = Array.isArray(saved?.themes) && saved.themes.length >= 3 && saved.themes.length <= 8 ? saved.themes.map(String) : PETITBAC_SOLO_DEFAULT;
+  return { mode: saved?.mode === 'custom' ? 'custom' : 'random', themes };
+}
+function savePetitBacSoloPrefs(prefs) { try { localStorage.setItem('pokedle_petitbac_solo', JSON.stringify(prefs)); } catch (_e) {} }
+function petitBacSoloThemesHtml() {
+  if (!petitBacThemeList) return '<p class="bac-watch">Chargement des thèmes…</p>';
+  const prefs = petitBacSoloPrefs(), chosen = new Set(prefs.themes), list = petitBacThemeList;
+  const chip = c => { const on = chosen.has(c.key), locked = (!on && chosen.size >= list.max) || (on && chosen.size <= list.min); return '<button type="button" class="bac-theme' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" data-action="togglePetitBacSoloTheme" data-args=\'' + escapeHtml(JSON.stringify([c.key])) + '\'' + (locked ? ' disabled' : '') + '>' + escapeHtml(c.label.replace(/^Type /, '').replace(/^Couleur : /, '')) + '</button>'; };
+  return '<span class="party-mode-label">Thèmes · ' + chosen.size + ' / ' + list.max + '</span>' + list.groups.map(([group, label]) => {
+    const items = list.themes.filter(c => c.group === group);
+    return '<details class="bac-theme-group"' + (items.some(c => chosen.has(c.key)) ? ' open' : '') + '><summary>' + escapeHtml(label) + ' <small>' + items.filter(c => chosen.has(c.key)).length + '</small></summary><div class="bac-theme-list">' + items.map(chip).join('') + '</div></details>';
+  }).join('');
+}
+async function setPetitBacSoloMode(mode) {
+  savePetitBacSoloPrefs({ ...petitBacSoloPrefs(), mode: mode === 'custom' ? 'custom' : 'random' });
+  renderPetitBac();
+  if (mode === 'custom' && !petitBacThemeList) {
+    try { const response = await fetch('/api/petitbac/themes', { credentials: 'same-origin' }), data = await response.json(); if (response.ok && data.ok) petitBacThemeList = data; } catch (_e) {}
+    renderPetitBac();
+  }
+}
+function togglePetitBacSoloTheme(key) {
+  const prefs = petitBacSoloPrefs(), themes = prefs.themes.slice(), at = themes.indexOf(key);
+  if (at >= 0) themes.splice(at, 1); else themes.push(key);
+  if (themes.length < 3 || themes.length > 8) return;
+  savePetitBacSoloPrefs({ mode: 'custom', themes });
+  renderPetitBac();
 }
 
 /* ---------- Party Room ---------- */
@@ -209,10 +249,18 @@ function partyBacResultsHtml(room, round) {
     return '<td class="' + cls + '"><span>' + petitBacAnswerText(r) + '</span><b>' + (pts ? '+' + pts + (r.accepted ? ' · accepté au vote' : '') : (r?.text ? escapeHtml(PETITBAC_REASONS[r.reason] || '0') : '0')) + '</b></td>';
   };
   const examples = (round.examples || []).map(list => (list || []).map(petitBacPokemonName).filter(Boolean));
-  return '<div class="bac-head"><span class="bac-letter is-big" aria-hidden="true">' + round.letter + '</span><div><b>Résultats · lettre ' + round.letter + '</b><p>2 points pour une réponse que personne d’autre n’a donnée, 1 point si elle est partagée.</p></div></div>' +
+  return partyBacRecapHtml(round.recap) + '<div class="bac-head"><span class="bac-letter is-big" aria-hidden="true">' + round.letter + '</span><div><b>Résultats · lettre ' + round.letter + '</b><p>2 points pour une réponse que personne d’autre n’a donnée, 1 point si elle est partagée.</p></div></div>' +
     '<div class="bac-results-wrap"><table class="bac-results"><thead><tr><th scope="col">Joueur</th>' + cats.map(c => '<th scope="col">' + escapeHtml(c.label) + '</th>').join('') + '<th scope="col">Manche</th></tr></thead><tbody>' +
     rows.map(row => '<tr><th scope="row">' + escapeHtml(row.nickname) + '</th>' + cats.map((_c, i) => cell(row.answers[i])).join('') + '<td class="bac-total">+' + row.gained + '</td></tr>').join('') +
     '</tbody><tfoot><tr><th scope="row">Exemples</th>' + cats.map((c, i) => '<td>' + (c.family === 'free' ? '—' : examples[i]?.map(escapeHtml).join(', ') || '—') + '</td>').join('') + '<td></td></tr></tfoot></table></div>';
+}
+// End of the game: three titles and everyone's totals over all the letters.
+function partyBacRecapHtml(recap) {
+  if (!recap) return '';
+  const titles = recap.titles.map(t => '<li class="bac-title is-' + t.key + '"><span>' + escapeHtml(t.label) + '</span><b>' + t.players.map(escapeHtml).join(' & ') + '</b><small>' + t.value + ' ' + escapeHtml(t.unit) + '</small></li>').join('');
+  const rows = recap.rows.map(r => '<tr><th scope="row">' + escapeHtml(r.nickname) + '</th><td>' + r.points + '</td><td>' + r.unique + '</td><td>' + r.shared + '</td><td>' + r.refused + '</td><td>' + r.stops + '</td></tr>').join('');
+  return '<section class="bac-recap" aria-label="Récapitulatif de la partie"><h3>Récap de la partie</h3><ul class="bac-titles">' + titles + '</ul>' +
+    '<div class="bac-results-wrap"><table class="bac-results bac-recap-table"><thead><tr><th scope="col">Joueur</th><th scope="col">Points</th><th scope="col">Uniques</th><th scope="col">Partagées</th><th scope="col">Refusées</th><th scope="col">STOP</th></tr></thead><tbody>' + rows + '</tbody></table></div></section>';
 }
 function renderPartyPetitBac(room, me, enabled, playing) {
   const panel = document.getElementById('party-petitbac');
@@ -268,7 +316,7 @@ function renderPetitBacSetup(room, me, isHost) {
   const options = room.bacOptions, active = room.gameMode === 'petitbac' && Boolean(options?.catalog);
   setup.classList.toggle('hidden', !active);
   if (!active) return;
-  const key = JSON.stringify([options.themes, options.time, options.letters, isHost]);
+  const key = JSON.stringify([options.themes, options.time, options.rounds, options.hard, options.letters, isHost]);
   if (setup.dataset.key === key) return;
   setup.dataset.key = key;
   const chosen = new Set(options.themes), full = options.themes.length >= options.maxThemes;
@@ -282,7 +330,10 @@ function renderPetitBacSetup(room, me, isHost) {
     return '<details class="bac-theme-group"' + (items.some(c => chosen.has(c.key)) || group === 'pokemon' ? ' open' : '') + '><summary>' + escapeHtml(label) + ' <small>' + items.filter(c => chosen.has(c.key)).length + '</small></summary><div class="bac-theme-list">' + items.map(chip).join('') + '</div></details>';
   }).join('');
   const letters = options.letters;
+  const choice = (action, value, label, active) => '<button type="button" class="party-mode-btn' + (active ? ' is-active' : '') + '" aria-pressed="' + active + '" data-action="' + action + '" data-args="[' + value + ']"' + (isHost ? '' : ' disabled') + '>' + label + '</button>';
   setup.innerHTML = '<span class="party-mode-label">Durée d’une manche</span><div class="bac-setup-options" role="group" aria-label="Durée d’une manche">' + timeButton(60) + timeButton(300) + timeButton(0) + '</div>' +
+    '<span class="party-mode-label">Nombre de lettres</span><div class="bac-setup-options" role="group" aria-label="Nombre de lettres">' + [3, 5, 10].map(n => choice('partyBacSetRounds', n, n + ' lettres', options.rounds === n)).join('') + '</div>' +
+    '<span class="party-mode-label">Lettres difficiles (Q, W, X, Y, Z)</span><div class="bac-setup-options" role="group" aria-label="Lettres difficiles">' + choice('partyBacSetHard', false, 'Retirées', !options.hard) + choice('partyBacSetHard', true, 'Gardées', options.hard) + '</div>' +
     '<div class="bac-theme-head"><span class="party-mode-label">Thèmes · ' + options.themes.length + ' / ' + options.maxThemes + '</span>' + (isHost ? '<button type="button" class="btn-ghost bac-random" data-action="partyBacRandomThemes">Au hasard</button>' : '') + '</div>' +
     '<p class="bac-chosen">' + options.themes.map(k => escapeHtml(options.catalog.find(c => c.key === k)?.label || k)).join(' · ') + '</p>' +
     groups +
@@ -298,6 +349,8 @@ function partyBacSendOptions(payload) {
   });
 }
 function partyBacSetTime(seconds) { partyBacSendOptions({ time: Number(seconds) }); }
+function partyBacSetRounds(rounds) { partyBacSendOptions({ rounds: Number(rounds) }); }
+function partyBacSetHard(hard) { partyBacSendOptions({ hard: hard === true }); }
 function partyBacToggleTheme(key) {
   const themes = (partyRoomState?.room?.bacOptions?.themes || []).slice(), at = themes.indexOf(key);
   if (at >= 0) themes.splice(at, 1); else themes.push(key);
@@ -305,3 +358,133 @@ function partyBacToggleTheme(key) {
 }
 // The server draws a varied set that still leaves plenty of letters.
 function partyBacRandomThemes() { partyBacSendOptions({ random: true }); }
+
+/* ---------- Petit Bac du jour : même lettre et mêmes thèmes pour tous, un essai ---------- */
+let dailyBacState = null, dailyBacBusy = false, dailyBacSerial = 0, dailyBacClock = null, dailyBacSaveTimer = null, dailyBacPeek = null;
+function ensureDailyBacScreen() {
+  if (document.getElementById('screen-petitbac-day')) return;
+  const screen = document.createElement('section');
+  screen.id = 'screen-petitbac-day'; screen.className = 'hidden grid-screen';
+  screen.innerHTML = '<div class="challenge-toolbar"><button class="btn-ghost" data-action="goToConfig">← Accueil</button><button class="btn-ghost" data-action="openLeaderboardV2" data-args=\'["petitbacday","today"]\'>Classement</button></div>' +
+    '<article class="grid-card"><div class="grid-heading"><p class="challenge-kicker" id="bacday-day">BONUS DU JOUR</p><h1>Petit Bac du jour</h1><p class="grid-lead">La même lettre et les mêmes thèmes pour tout le monde. Un seul essai !</p></div><div id="bacday-root"></div><p id="bacday-message" class="grid-message" role="status" aria-live="polite"></p></article>';
+  document.getElementById('screen-game').parentElement.appendChild(screen);
+}
+function dailyBacMessage(text) { const node = document.getElementById('bacday-message'); if (node) node.textContent = text; }
+function dailyBacIsCurrent(s) { return Boolean(s && s.day === getDailyDateKey() && s.accountId === (dailyObservedAccountId() || null)); }
+async function dailyBacRequest(action = '', payload = {}) {
+  const serial = ++dailyBacSerial, accountId = dailyObservedAccountId() || null; dailyBacBusy = true;
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('/api/daily/petitbac' + action, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal, ...(action ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ day: dailyBacState?.day || getDailyDateKey(), accountId, ...payload }) } : {}) });
+    const data = await response.json().catch(() => ({}));
+    if (serial !== dailyBacSerial) return null;
+    if (!response.ok || !data.ok) throw Object.assign(new Error(data.error || 'unavailable'), { code: data.error || 'unavailable' });
+    dailyBacState = { ...data, receivedAt: performance.now() }; return data;
+  } catch (e) {
+    if (serial !== dailyBacSerial) return null;
+    const messages = { stale_daily: 'Un nouveau Petit Bac du jour est arrivé. On recharge…', account_changed: 'Ton compte a changé. On recharge…', rate_limited: 'Doucement ! Réessaie dans un instant.' };
+    dailyBacMessage(messages[e.code] || 'Petit Bac du jour momentanément indisponible. Tes réponses sont gardées, réessaie.');
+    if (e.code === 'stale_daily' || e.code === 'account_changed') setTimeout(openDailyPetitBac, 900);
+    return null;
+  } finally { clearTimeout(timer); if (serial === dailyBacSerial) dailyBacBusy = false; }
+}
+async function openDailyPetitBac() {
+  ensureDailyBacScreen(); closeOverlayModal(); showScreen('screen-petitbac-day'); setGlobalNavActive('game');
+  const root = document.getElementById('bacday-root');
+  if (dailyBacIsCurrent(dailyBacState)) renderDailyPetitBac();
+  else { dailyBacState = null; root.innerHTML = typeof skeletonHtml === 'function' ? skeletonHtml('Chargement du Petit Bac du jour', 'card') : ''; delete root.dataset.sheet; }
+  dailyBacMessage('');
+  if (await dailyBacRequest()) renderDailyPetitBac();
+  else if (!dailyBacState) root.innerHTML = '<div class="bac-actions"><button class="btn-ghost" type="button" data-action="openDailyPetitBac">Réessayer</button></div>';
+}
+function dailyBacRemaining() { const s = dailyBacState; return s?.status === 'playing' ? Math.max(0, Math.ceil((s.remainingMs - (performance.now() - s.receivedAt)) / 1000)) : 0; }
+function dailyBacTick() {
+  const s = dailyBacState, node = document.getElementById('bacday-clock');
+  if (!s || s.status !== 'playing') { clearInterval(dailyBacClock); dailyBacClock = null; return; }
+  const left = dailyBacRemaining();
+  if (node) { node.textContent = left + ' s'; node.classList.toggle('is-urgent', left <= 10); }
+  if (left <= 0) submitDailyPetitBac();
+}
+function dailyBacAnswers() { return [...document.querySelectorAll('#bacday-sheet [data-bacday-index]')].map(input => input.value); }
+function renderDailyPetitBac() {
+  const s = dailyBacState, root = document.getElementById('bacday-root');
+  if (!s || !root) return;
+  document.getElementById('bacday-day').textContent = 'BONUS DU JOUR · JOUR #' + s.number;
+  if (s.status === 'ready') {
+    delete root.dataset.sheet;
+    root.innerHTML = '<div class="bac-intro"><span class="bac-letter is-big" aria-hidden="true">?</span><p>Une lettre et ' + s.columns + ' thèmes Pokémon, les mêmes pour tout le monde aujourd’hui. Tu as <b>' + s.seconds + ' secondes</b> et <b>un seul essai</b> : le chrono démarre dès que tu commences.</p>' +
+      '<p class="bac-rules">10 points par bonne réponse · 20 de bonus pour un sans-faute · petites fautes pardonnées' + (s.players ? ' · ' + s.players + ' joueur' + (s.players > 1 ? 's' : '') + ' aujourd’hui' : '') + '</p>' +
+      '<button class="btn-blue" type="button" data-action="startDailyPetitBac">Commencer →</button></div>';
+  } else if (s.status === 'playing') {
+    if (root.dataset.sheet !== s.day + ':' + s.letter) {
+      root.dataset.sheet = s.day + ':' + s.letter;
+      root.innerHTML = '<div class="bac-head"><span class="bac-letter is-big" aria-label="Lettre ' + s.letter + '">' + s.letter + '</span><div><b>Lettre ' + s.letter + '</b><p>Un Pokémon qui commence par ' + s.letter + ' pour chaque thème.</p></div><span id="bacday-clock" class="bac-clock" aria-label="Temps restant">' + dailyBacRemaining() + ' s</span></div>' +
+        '<form id="bacday-sheet" class="bac-sheet" autocomplete="off" data-submit-action="submitDailyPetitBac">' +
+        s.categories.map((c, i) => '<label class="bac-row">' + petitBacColumnHtml(c) + petitBacInputHtml('data-bacday-index', i, s.letter, (s.answers || [])[i]) + '</label>').join('') +
+        '<button class="btn-blue bac-submit" type="submit">J’ai fini !</button></form>';
+      root.querySelectorAll('[data-bacday-index]').forEach(input => { petitBacNextOnEnter(input); input.addEventListener('input', () => { clearTimeout(dailyBacSaveTimer); dailyBacSaveTimer = setTimeout(saveDailyPetitBac, 1500); }); });
+    }
+    clearInterval(dailyBacClock); dailyBacClock = setInterval(dailyBacTick, 250);
+  } else {
+    delete root.dataset.sheet; clearInterval(dailyBacClock); dailyBacClock = null;
+    const right = (s.results || []).filter(r => r.valid).length, original = s.originality != null && s.players >= 3;
+    const rank = s.rank ? 'Tu es ' + (s.rank.rank === 1 ? '1er' : s.rank.rank + 'e') + ' sur ' + s.rank.total + ' aujourd’hui.' : s.authenticated ? 'Résultat enregistré au classement.' : 'Connecte-toi pour entrer au classement : ta feuille te suit.';
+    root.innerHTML = '<div class="grid-result"><p class="challenge-kicker">' + (s.late ? 'FEUILLE ARRIVÉE TROP TARD' : 'PETIT BAC TERMINÉ') + '</p><h2>' + (right === s.columns ? 'Sans-faute !' : right >= 6 ? 'Très belle feuille !' : right >= 3 ? 'Pas mal du tout !' : 'Ce sera mieux demain !') + '</h2><div class="challenge-score"><strong>' + s.points + '</strong><span>/ ' + s.maxPoints + ' points</span></div>' +
+      '<p class="grid-result-line">' + right + ' / ' + s.columns + ' bonnes réponses' + (original ? ' · originalité ' + s.originality + ' %' : '') + ' · ' + s.players + ' joueur' + (s.players > 1 ? 's' : '') + '</p><p>' + rank + '</p>' +
+      '<div class="challenge-actions"><button type="button" class="btn-blue" data-action="shareDailyPetitBac">Partager</button><button type="button" class="btn-ghost" data-action="openLeaderboardV2" data-args=\'["petitbacday","today"]\'>Classement</button><button type="button" class="btn-ghost" data-action="goToConfig">Accueil</button></div></div>' +
+      '<div class="bac-head bac-day-letter"><span class="bac-letter" aria-hidden="true">' + s.letter + '</span><div><b>Lettre ' + s.letter + '</b><p>Le % indique la part des joueurs qui ont donné le même Pokémon.</p></div></div>' +
+      '<ul class="bac-review">' + s.categories.map((c, i) => {
+        const r = (s.results || [])[i] || {}, examples = (s.examples?.[i] || []).map(petitBacPokemonName).filter(Boolean);
+        return '<li class="' + (r.valid ? 'is-valid' : 'is-wrong') + '">' + petitBacColumnHtml(c) + '<span class="bac-answer"><b>' + petitBacAnswerText(r) + '</b>' + (r.valid ? '<i>+10</i>' + (r.rarity ? '<small class="bac-rarity">' + r.rarity + ' %</small>' : '') : '<small>' + (s.late && r.text ? 'Trop tard' : PETITBAC_REASONS[r.reason] || '') + '</small>') + '</span>' +
+          (!r.valid && examples.length ? '<small class="bac-examples">Par exemple : ' + examples.map(escapeHtml).join(', ') + '</small>' : '') + '</li>';
+      }).join('') + '</ul>';
+  }
+}
+async function startDailyPetitBac() {
+  if (dailyBacBusy || dailyBacState?.status !== 'ready') return;
+  if (await dailyBacRequest('/start')) { renderDailyPetitBac(); document.querySelector('#bacday-sheet input')?.focus({ preventScroll: true }); }
+}
+async function saveDailyPetitBac() {
+  if (dailyBacBusy || dailyBacState?.status !== 'playing') return;
+  try { await fetch('/api/daily/petitbac/save', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ day: dailyBacState.day, accountId: dailyObservedAccountId() || null, answers: dailyBacAnswers() }) }); } catch (_e) {}
+}
+async function submitDailyPetitBac(event) {
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  if (dailyBacBusy || dailyBacState?.status !== 'playing') return;
+  clearTimeout(dailyBacSaveTimer); clearInterval(dailyBacClock); dailyBacClock = null;
+  const answers = dailyBacAnswers(), submit = document.querySelector('#bacday-sheet .bac-submit');
+  if (submit) { submit.disabled = true; submit.textContent = 'Correction…'; }
+  if (await dailyBacRequest('/submit', { answers })) {
+    renderDailyPetitBac(); if (typeof paintDailyGridBonus === 'function') paintDailyGridBonus();
+    if (typeof gameFeelReplay === 'function') gameFeelReplay(document.querySelector('#bacday-root .grid-result'), 'is-new');
+  } else if (submit) { submit.disabled = false; submit.textContent = 'Réessayer d’envoyer'; }
+}
+async function shareDailyPetitBac() {
+  const s = dailyBacState; if (!s?.finished) return;
+  const row = (s.results || []).map(r => r.valid ? (r.rarity && r.rarity <= 10 ? '🟪' : '🟩') : '⬜').join('');
+  const text = 'Pokédle · Petit Bac du jour #' + s.number + ' · lettre ' + s.letter + '\n' + row + '\n' + s.points + ' pts' + (s.originality != null && s.players >= 3 ? ' · originalité ' + s.originality + ' %' : '') + '\nhttps://pokdle.onrender.com';
+  try { if (navigator.share) { await navigator.share({ text }); return; } await navigator.clipboard.writeText(text); if (typeof showToast === 'function') showToast('Résultat copié !'); }
+  catch (e) { if (e?.name !== 'AbortError' && typeof showToast === 'function') showToast('Partage impossible sur cet appareil.'); }
+}
+// Home: the Petit Bac du jour sits next to the Grille in the bonus line.
+async function peekDailyPetitBac() {
+  const key = dailyHomeKey(); if (dailyBacPeek?.key === key && Date.now() - dailyBacPeek.at < 30000) return;
+  dailyBacPeek = { key, at: Date.now() };
+  try { const response = await fetch('/api/daily/petitbac', { credentials: 'same-origin', cache: 'no-store' }), data = await response.json();
+    if (response.ok && data.ok && key === dailyHomeKey() && !dailyBacBusy && dailyBacIsCurrent(data)) { dailyBacState = { ...data, receivedAt: performance.now() }; paintDailyGridBonus(); } } catch (_e) {}
+}
+if (typeof paintDailyGridBonus === 'function') {
+  const paintGridBonusOnly = paintDailyGridBonus;
+  paintDailyGridBonus = function () {
+    const value = paintGridBonusOnly.apply(this, arguments), bonus = document.getElementById('daily-hero-bonus');
+    if (!bonus) return value;
+    const s = dailyBacIsCurrent(dailyBacState) ? dailyBacState : null;
+    const label = s?.finished ? s.points + ' / 100 pts' : s?.status === 'playing' ? 'En cours' : 'À jouer';
+    const button = document.createElement('button');
+    button.type = 'button'; button.dataset.action = 'openDailyPetitBac'; if (s?.finished) button.className = 'is-done';
+    button.innerHTML = '<span>★ Bonus · Petit Bac du jour</span><b>' + label + '</b>';
+    bonus.appendChild(button);
+    peekDailyPetitBac();
+    return value;
+  };
+}

@@ -54,7 +54,7 @@ function gameFeelModeLabel(mode) {
     'higher-lower':'Higher or Lower', 'higher-lower-rush':'Higher or Lower 60s',
     typeCombo:'Combo de types', 'type-combo':'Combo de types',
     party:'Party Room', 'stat-clash':'Stat Clash', draft:'Draft Score Attack',
-    connections:'Poké-Connections', odd:'Intrus Pokémon', quiestce:'Qui est-ce ?'
+    connections:'Poké-Connections', odd:'Intrus Pokémon', quiestce:'Qui est-ce ?', petitbac:'Petit Bac'
   };
   if (typeof modeLabelFr === 'function') {
     try { return modeLabelFr(mode) || labels[mode] || mode; } catch (_e) {}

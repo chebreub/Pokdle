@@ -46,6 +46,9 @@ def play(browser, engine):
         a.locator('#petit-bac-setup button', has_text='Illimité').click()
         a.evaluate("partyBacSendOptions({themes: ['any', 'type:Eau', 'free:move', 'free:place', 'free:berry']})")
         for page in (a, b): wait(page, "partyRoomState.room.bacOptions.time === 0 && partyRoomState.room.bacOptions.themes.length === 5")
+        a.locator('#petit-bac-setup button', has_text='5 lettres').click()
+        for page in (a, b): wait(page, 'partyRoomState.room.bacOptions.rounds === 5 && partyRoomState.room.totalRounds === 5')
+        expect(a.locator('#petit-bac-setup button', has_text='Retirées').get_attribute('aria-pressed') == 'true', 'hard letters are left out by default')
         a.locator('#petit-bac-setup .bac-theme', has_text='Feu').first.click()
         for page in (a, b): wait(page, "partyRoomState.room.bacOptions.themes.length === 6 && partyRoomState.room.bacOptions.themes.includes('type:Feu')")
         wait(b, "(document.querySelector('#petit-bac-setup .bac-chosen')?.textContent || '').includes('Type Feu')")
@@ -101,15 +104,24 @@ def play(browser, engine):
         expect(a.evaluate("[...document.querySelectorAll('#party-bac-sheet [data-bac-index]')].every(i => !i.value)"), 'the new sheet starts empty')
 
         b.evaluate('openPetitBacMode()'); wait(b, "document.querySelector('[data-action=startPetitBacRound]')")
+        # Solo with the player's own themes: seven of them, then a sheet with seven columns.
+        b.locator('[data-action=setPetitBacSoloMode]', has_text='Je choisis').click()
+        wait(b, "document.querySelectorAll('#petitbac-solo-themes .bac-theme').length >= 40")
+        b.locator('#petitbac-solo-themes .bac-theme:not(.is-on)', has_text='Psy').first.click()
+        wait(b, "petitBacSoloPrefs().themes.length === 7")
         b.locator('[data-action=startPetitBacRound]').click(); wait(b, "petitBacState && petitBacState.phase === 'playing'")
         solo_letter = b.evaluate('petitBacState.letter')
-        expect(b.locator('#petitbac-sheet input').count() == 6, 'solo sheet needs six columns')
+        expect(b.locator('#petitbac-sheet input').count() == 7, 'the solo sheet follows the chosen themes')
+        expect(b.evaluate("petitBacState.categories.some(c => c.key === 'type:Psy')"), 'the chosen theme is in the sheet')
         b.locator('#petitbac-sheet input').first.fill(b.evaluate("petitBacNames('" + solo_letter + "')[0]"))
         b.locator('.bac-submit').click(); wait(b, "petitBacState.phase === 'finished'")
-        expect(b.locator('.bac-review li').count() == 6, 'solo review needs six rows')
+        expect(b.locator('.bac-review li').count() == 7, 'solo review needs one row per theme')
         expect(b.locator('#screen-petit-bac .dedicated-toolbar').count() == 1, 'solo screen lost its game frame')
         expect(b.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'solo overflows the phone screen')
         b.screenshot(path=str(OUT / f'{engine}-solo-mobile.png'), full_page=True)
+        b.evaluate("savePetitBacSoloPrefs({mode: 'random', themes: []})")
+        daily_flow(b, engine)
+        badge_showcase(a, engine)
         expect(not errors, errors)
         return dict(engine=engine, ok=True)
     except Exception as e:
@@ -119,6 +131,54 @@ def play(browser, engine):
         return dict(engine=engine, ok=False, error=str(e)[:600], pageErrors=errors)
     finally:
         a_ctx.close(); b_ctx.close()
+
+
+def daily_flow(page, engine):
+    """Petit Bac du jour with controlled replies: start, the timed sheet, the corrected results."""
+    day = page.evaluate('getDailyDateKey()')
+    themes = [dict(key='type:Feu', family='type', label='Type Feu', value='Feu'), dict(key='type:Eau', family='type', label='Type Eau', value='Eau'),
+              dict(key='gen:1', family='gen', label='Kanto (gén. 1)', value=1), dict(key='shape:dual', family='shape', label='Deux types'),
+              dict(key='color:Rouge', family='color', label='Couleur : rouge'), dict(key='stage:3', family='stage', label='Évolué deux fois'),
+              dict(key='special:legendary', family='special', label='Légendaire ou fabuleux'), dict(key='size:light', family='size', label='Pèse moins de 10 kg')]
+    state = dict(status='ready'); calls = []
+    def snapshot():
+        out = dict(ok=True, day=day, number=211, accountId=None, authenticated=False, mode='petitbacday', label='Petit Bac du jour', status=state['status'],
+                   finished=state['status'] == 'completed', columns=8, seconds=90, maxPoints=100, players=12)
+        if state['status'] != 'ready': out.update(letter='S', categories=themes, remainingMs=85000, answers=state.get('answers', [''] * 8))
+        if state['status'] == 'completed':
+            out.update(results=[dict(text='Salamèche', valid=True, pokemonId=4, rarity=40), dict(text='Stari', valid=True, pokemonId=120, rarity=8)] + [dict(text='', valid=False, reason='empty')] * 6,
+                       points=20, originality=76, examples=[[4, 5]] * 8, ranked=False, rank=None, late=False)
+        return out
+    def route(r):
+        url = r.request.url.split('/api/daily/petitbac')[1].split('?')[0]
+        if url == '/start': state['status'] = 'playing'
+        if url in ('/save', '/submit'): calls.append(url); state['answers'] = r.request.post_data_json['answers']
+        if url == '/submit': state['status'] = 'completed'
+        r.fulfill(json=snapshot())
+    page.route('**/api/daily/petitbac', route); page.route('**/api/daily/petitbac/**', route)
+    page.evaluate('openDailyPetitBac()')
+    wait(page, "dailyBacState?.status === 'ready' && document.querySelector('[data-action=startDailyPetitBac]')")
+    expect('un seul essai' in page.locator('#bacday-root').inner_text(), 'the one-try rule is said before starting')
+    page.locator('[data-action=startDailyPetitBac]').click()
+    wait(page, "dailyBacState?.status === 'playing' && document.querySelectorAll('#bacday-sheet input').length === 8")
+    expect(page.evaluate("document.querySelectorAll('#bacday-root datalist, #bacday-sheet input[list]').length") == 0, 'no list may pop up under the answers')
+    page.locator('#bacday-sheet input').nth(0).fill('Salameche'); page.locator('#bacday-sheet input').nth(1).fill('Stari')
+    page.locator('#bacday-sheet .bac-submit').click()
+    wait(page, "dailyBacState?.finished && document.querySelectorAll('#bacday-root .bac-review li').length === 8")
+    expect(calls[-1] == '/submit' and state['answers'][0] == 'Salameche', 'the sheet is sent as typed')
+    text = page.locator('#bacday-root').inner_text()
+    expect('20' in text and '40 %' in text and 'originalité 76' in text, 'score, rarity and originality are shown')
+    expect(page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'the daily results overflow the phone')
+    page.screenshot(path=str(OUT / f'{engine}-daily-mobile.png'), full_page=True)
+
+
+def badge_showcase(page, engine):
+    """Profile: one badge per mastered week of the League."""
+    page.evaluate("playerProfile.weeklyLeagueBadges = {'2026-W42': {at: Date.parse('2026-10-18T10:00:00Z'), score: 540, title: 'Maître de Ligue'}, '2026-W40': {at: Date.parse('2026-10-04T10:00:00Z'), score: 600}}; openProfileScreen()")
+    wait(page, "document.querySelectorAll('#profile-league-badges .league-badge').length === 2")
+    first = page.locator('#profile-league-badges .league-badge').first.inner_text()
+    expect('Semaine 42' in first and '540' in first, 'the newest badge comes first with its score')
+    page.locator('#profile-league-badges').screenshot(path=str(OUT / f'{engine}-badges-desktop.png'))
 
 
 def run():

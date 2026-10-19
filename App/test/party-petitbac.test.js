@@ -24,7 +24,8 @@ test("a large catalogue of themes, and letters drawn only when every Pokémon th
   for (const key of ["any", "type:Feu", "gen:1", "color:Rouge", "special:starter", "special:legendary", "size:light", "free:move", "free:berry", "free:nickname"]) assert.ok(cat.byKey.has(key), key);
   assert.deepEqual([...new Set(cat.list.map(c => c.group))].sort(), ["color", "free", "gen", "pokemon", "type"]);
   assert.ok(bac.playableLetters(catalogue, ALL, bac.DEFAULT_THEMES).length >= 12, "the default game has plenty of letters");
-  assert.equal(bac.playableLetters(catalogue, ALL, ["any", "free:move", "free:place"]).length, 26, "free themes never block a letter");
+  assert.equal(bac.playableLetters(catalogue, ALL, ["any", "free:move", "free:place"], true).length, 26, "free themes never block a letter");
+  assert.equal(bac.playableLetters(catalogue, ALL, ["any", "free:move", "free:place"]).length, 21, "the five hard letters are left out by default");
   const fire = bac.playableLetters(catalogue, ALL, ["type:Feu", "special:legendary", "color:Rose"]);
   for (const letter of fire) {
     const starting = catalogue.filter(p => !p.isAltForm && p.id <= 1025 && bac.initialOf(p.name) === letter);
@@ -70,12 +71,12 @@ test("solo sheets: six Pokémon themes, each with at least two answers for the l
 
 test("the host sets 3 to 10 known themes and 1 min, 5 min or untimed rounds", () => {
   const r = room();
-  assert.deepEqual(bac.petitBacOptions(r, catalogue), { themes: bac.DEFAULT_THEMES, time: 300 });
+  assert.deepEqual(bac.petitBacOptions(r, catalogue), { themes: bac.DEFAULT_THEMES, time: 300, rounds: 3, hard: false });
   assert.equal(bac.setPetitBacOptions(r, { themes: ["any", "type:Feu"] }, catalogue).error, "Choisis entre 3 et 10 thèmes.");
   assert.equal(bac.setPetitBacOptions(r, { themes: ["any", "type:Feu", "nope"] }, catalogue).error, "Thème inconnu.");
   assert.equal(bac.setPetitBacOptions(r, { time: 120 }, catalogue).error, "Durée inconnue.");
   assert.deepEqual(bac.setPetitBacOptions(r, { themes: ["any", "type:Feu", "free:move", "free:move"], time: 0 }, catalogue), { saved: true });
-  assert.deepEqual(bac.petitBacOptions(r, catalogue), { themes: ["any", "type:Feu", "free:move"], time: 0 });
+  assert.deepEqual(bac.petitBacOptions(r, catalogue), { themes: ["any", "type:Feu", "free:move"], time: 0, rounds: 3, hard: false });
   assert.deepEqual(bac.setPetitBacOptions(r, { random: true }, catalogue, seeded(2)), { saved: true });
   assert.equal(r.bacThemes.length, 6, "a random set of six themes");
   const shown = bac.publicOptions(r, catalogue);
@@ -164,4 +165,43 @@ test("no answer skips the review; spectators watch; a reconnecting player keeps 
   assert.equal(bac.finishVoting(v, v.players[1], v.roundSerial).allDone, true);
   bac.advancePetitBac(v, catalogue);
   assert.equal(v.players[0].bacResults[1].reason, "vote", "with two players, one vote is the majority");
+});
+
+test("the host picks 3, 5 or 10 letters; hard letters stay out unless asked; solo players pick themes", () => {
+  const r = room();
+  assert.equal(bac.petitBacOptions(r, catalogue).rounds, 3);
+  assert.equal(bac.setPetitBacOptions(r, { rounds: 4 }, catalogue).error, "Nombre de lettres inconnu.");
+  bac.setPetitBacOptions(r, { rounds: 10, themes: ["any", "free:move", "free:place"] }, catalogue);
+  assert.equal(bac.petitBacOptions(r, catalogue).rounds, 10);
+  const soft = bac.playableLetters(catalogue, ALL, r.bacThemes), hard = bac.playableLetters(catalogue, ALL, r.bacThemes, true);
+  assert.equal(soft.some(l => bac.HARD_LETTERS.includes(l)), false, "Q, W, X, Y and Z are left out by default");
+  assert.equal(hard.length, 26);
+  bac.setPetitBacOptions(r, { hard: true }, catalogue);
+  assert.equal(bac.publicOptions(r, catalogue).letters, 26);
+  const sheet = bac.soloSheetFor(catalogue, ALL, ["type:Feu", "type:Eau", "special:starter"], ["S"], () => 0);
+  assert.deepEqual(sheet.categories.map(c => c.key), ["type:Feu", "type:Eau", "special:starter"]);
+  assert.ok(bac.playableLetters(catalogue, ALL, ["type:Feu", "type:Eau", "special:starter"]).includes(sheet.letter));
+  assert.notEqual(sheet.letter, "S", "a letter just played is avoided");
+  assert.equal(bac.soloSheetFor(catalogue, [1], ["type:Fée", "gen:9", "special:legendary"]), null, "no letter fits impossible themes");
+  assert.equal(bac.soloSeconds(6), 75);
+});
+
+test("the end-of-game recap adds up every letter and names the champion, the most original and the STOP king", () => {
+  const r = room(2);
+  bac.setPetitBacOptions(r, { themes: ["type:Feu", "any", "free:move"] }, catalogue);
+  const play = (letter, sheets, stopper) => {
+    bac.startPetitBacRound(r, catalogue, () => 0);
+    r.bac.letter = letter;
+    sheets.forEach((s, i) => bac.writeAnswers(r, r.players[i], s, r.roundSerial));
+    if (stopper !== undefined) bac.stopRound(r, r.players[stopper], r.roundSerial);
+    bac.advancePetitBac(r, catalogue); bac.advancePetitBac(r, catalogue);
+  };
+  play("S", [["Salamèche", "Sabelette", "Surf"], ["Salamèche", "Smogo", ""]], 0);
+  play("P", [["Ponyta", "Pikachu", "Psyko"], ["Pyroli", "Pikachu", "Picpic"]], 1);
+  r.status = "complete";
+  const recap = bac.publicPetitBac(r, "p0").recap;
+  assert.deepEqual(recap.rows.map(x => [x.nickname, x.points, x.unique, x.shared, x.stops]), [["J0", 10, 4, 2, 1], ["J1", 8, 3, 2, 1]]);
+  assert.deepEqual(recap.titles.map(t => [t.key, t.players]), [["champion", ["J0"]], ["original", ["J0"]], ["stopper", ["J0", "J1"]]]);
+  r.status = "finished";
+  assert.equal(bac.publicPetitBac(r, "p0").recap, null, "only once the game is over");
 });

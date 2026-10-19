@@ -304,6 +304,32 @@ if(typeof window!=="undefined"&&window.addEventListener){
   // The Daily discipline and the saved week depend on the account: redraw once it is known.
   window.addEventListener("pokedle:account-known",()=>setTimeout(renderWeeklyLeagueHome,0));
 }
+// Profile showcase: one badge per mastered week, newest first, with its date and score.
+function leagueBadgeShowcaseHtml() {
+  const badges=Object.entries(playerProfile?.weeklyLeagueBadges||{}).filter(([,b])=>b&&typeof b==="object").sort((a,b)=>(Number(b[1].at)||0)-(Number(a[1].at)||0));
+  if(!badges.length) return '<p class="league-badges-empty">Aucun badge pour l’instant. Remplis les 3 épreuves de la Ligue de la semaine pour gagner le premier.</p><button type="button" class="btn-blue" data-action="openWeeklyLeague">Voir la Ligue de la semaine →</button>';
+  return '<ul class="league-badges">'+badges.map(([id,badge])=>{
+    const [year,week]=String(id).split("-W"),at=Number(badge.at)?new Date(Number(badge.at)).toLocaleDateString("fr-FR",{day:"numeric",month:"long"}):"";
+    return '<li class="league-badge"><span class="league-badge-gem" aria-hidden="true">◆</span><b>Semaine '+escapeHtml(String(Number(week)||week||"?"))+'</b><small>'+escapeHtml(year||"")+(Number(badge.score)?' · '+Number(badge.score)+' / 600 pts':'')+'</small>'+(at?'<small>obtenu le '+escapeHtml(at)+'</small>':'')+'</li>';
+  }).join('')+'</ul>';
+}
+function renderLeagueBadgeShowcase() {
+  const records=document.querySelector("#screen-profile .profile-records-panel");
+  if(!records) return;
+  let panel=document.getElementById("profile-league-badges");
+  if(!panel){
+    panel=document.createElement("details");panel.id="profile-league-badges";panel.className="profile-panel profile-disclosure league-badges-panel";panel.open=true;
+    panel.innerHTML='<summary><span>◆ Badges de Ligue</span><small id="profile-league-badges-count"></small></summary><div class="profile-disclosure-body" id="profile-league-badges-body"></div>';
+    records.parentNode.insertBefore(panel,records);
+  }
+  const count=Object.keys(playerProfile?.weeklyLeagueBadges||{}).length;
+  document.getElementById("profile-league-badges-count").textContent=count?count+" badge"+(count>1?"s":"")+" de maîtrise":"Tes semaines de Ligue réussies";
+  document.getElementById("profile-league-badges-body").innerHTML=leagueBadgeShowcaseHtml();
+}
+if(typeof renderProfileScreen==="function"){
+  const renderProfileBeforeBadges=renderProfileScreen;
+  renderProfileScreen=function(){const value=renderProfileBeforeBadges.apply(this,arguments);renderLeagueBadgeShowcase();return value;};
+}
 window.openWeeklyLeague=openWeeklyLeague;
 window.openWeeklyLeagueRanking=openWeeklyLeagueRanking;
 window.weeklyLeagueLaunch=weeklyLeagueLaunch;
