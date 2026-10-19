@@ -1,5 +1,6 @@
-"""Petit Bac QA: two real browsers play a Party Room round (setup, private sheets, STOP,
-vote, results, next letter), then the solo mode against the clock. No database needed."""
+"""Petit Bac QA: two real browsers play a Party Room round (themes and time chosen by the
+host, private sheets without a pop-up list, STOP, review vote, results, next letter), then
+the solo mode against the clock. No database needed."""
 import json, os, subprocess, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -36,23 +37,35 @@ def play(browser, engine):
         a.locator('#party-mode-petitbac').click()
         # Each screen updates on its own message: wait for both before looking.
         for page in (a, b): wait(page, "partyRoomState.room.gameMode === 'petitbac' && document.querySelector('#petit-bac-setup:not(.hidden) button')")
-        expect(a.locator('#petit-bac-setup').is_visible(), 'host setting for free columns missing')
-        expect(b.locator('#petit-bac-setup button').first.is_disabled(), 'a guest can change the host setting')
+        expect(a.locator('#petit-bac-setup').is_visible(), 'host settings for themes and time missing')
+        expect(b.locator('#petit-bac-setup button').first.is_disabled(), 'a guest can change the host settings')
+        expect(b.locator('#petit-bac-setup .bac-theme').first.is_disabled(), 'a guest can change the themes')
         expect(a.evaluate('partyRoomState.room.totalRounds') == 3, 'a Petit Bac game is three letters')
-        a.locator('#petit-bac-setup button', has_text='au vote').click()
-        for page in (a, b): wait(page, 'partyRoomState.room.bacFree === true')
+        expect(a.locator('#petit-bac-setup .bac-theme').count() >= 55, 'a large list of themes to choose from')
+        # The host picks an untimed game and its themes: two by script, one by tapping its chip.
+        a.locator('#petit-bac-setup button', has_text='Illimité').click()
+        a.evaluate("partyBacSendOptions({themes: ['any', 'type:Eau', 'free:move', 'free:place', 'free:berry']})")
+        for page in (a, b): wait(page, "partyRoomState.room.bacOptions.time === 0 && partyRoomState.room.bacOptions.themes.length === 5")
+        a.locator('#petit-bac-setup .bac-theme', has_text='Feu').first.click()
+        for page in (a, b): wait(page, "partyRoomState.room.bacOptions.themes.length === 6 && partyRoomState.room.bacOptions.themes.includes('type:Feu')")
+        wait(b, "(document.querySelector('#petit-bac-setup .bac-chosen')?.textContent || '').includes('Type Feu')")
+        expect('lettre' in a.locator('#petit-bac-setup .bac-letters').inner_text(), 'playable letters are shown')
+        a.screenshot(path=str(OUT / f'{engine}-setup-desktop.png'), full_page=True)
 
         a.evaluate('partyStartGame()')
         for page in (a, b): wait(page, "partyRoomState.room.status === 'playing' && " + ROUND + ".phase === 'write' && document.querySelectorAll('#party-bac-sheet [data-bac-index]').length === 6")
         letter = a.evaluate(ROUND + '.letter'); cats = a.evaluate(ROUND + '.categories')
-        expect(sum(1 for c in cats if c['family'] == 'free') == 2, 'two voted columns expected')
+        expect(sum(1 for c in cats if c['family'] == 'free') == 3, 'the chosen free themes are the columns')
+        expect(a.evaluate('partyRoomState.room.deadlineAt') is None, 'an untimed round has no clock')
+        expect(a.evaluate("document.querySelectorAll('#party-petitbac datalist, #party-bac-sheet input[list]').length") == 0, 'no list may pop up under the answers')
         expect(('Lettre ' + letter) in a.locator('#party-round-mode').inner_text(), 'round title shows the letter')
         expect(a.locator('#party-round-input').is_hidden(), 'the generic guess field must stay hidden')
         names = a.evaluate("petitBacNames('" + letter + "')")
-        expect(len(names) >= 8, 'too few names for the drawn letter')
+        expect(len(names) >= 1, 'no name for the drawn letter')
         for i, c in enumerate(cats):
-            a.locator("#party-bac-sheet [data-bac-index='%d']" % i).fill((letter + 'uper truc') if c['family'] == 'free' else names[i])
-        rival = [names[-1], names[-2], names[-3]]
+            a.locator("#party-bac-sheet [data-bac-index='%d']" % i).fill((letter + 'uper truc') if c['family'] == 'free' else names[i % len(names)])
+        # Ondine's words are unique markers, whatever the letter drawn.
+        rival = [letter + 'ondinea', letter + 'ondineb', letter + 'ondinec']
         for i in range(3): b.locator("#party-bac-sheet [data-bac-index='%d']" % i).fill(rival[i])
         b.locator("#party-bac-sheet [data-bac-index='0']").press('Enter')
         expect(b.evaluate('document.activeElement && document.activeElement.dataset.bacIndex') == '1', 'Enter should move to the next column')
@@ -64,13 +77,17 @@ def play(browser, engine):
 
         a.locator('#party-bac-stop').click()
         for page in (a, b): wait(page, ROUND + ".phase === 'stopping' && (document.getElementById('party-bac-banner')?.textContent || '').includes('STOP')")
-        b.locator("#party-bac-sheet [data-bac-index='3']").fill(names[-4])
-        for page in (a, b): wait(page, ROUND + ".phase === 'vote'", 16000)
-        wait(b, "document.querySelectorAll('#party-bac-ballot .bac-vote-buttons').length >= 1")
+        b.locator("#party-bac-sheet [data-bac-index='3']").fill(letter + 'ondined')
+        for page in (a, b): wait(page, ROUND + ".phase === 'review'", 16000)
+        wait(b, "document.querySelectorAll('#party-bac-ballot .bac-vote').length >= 1")
         wait(a, "(document.getElementById('party-bac-ballot')?.innerText || '').includes('ta réponse')")
-        b.locator('#party-bac-ballot .bac-vote-buttons button', has_text='✗').first.click()
-        wait(b, 'partyRoomState.room.round.ballot.some(e => e.myVote === false)')
-        b.screenshot(path=str(OUT / f'{engine}-vote-mobile.png'), full_page=True)
+        expect(a.evaluate('partyRoomState.room.deadlineAt') is None, 'an untimed review has no clock')
+        # Free answers arrive right: one tap says no, and with two players that is the majority.
+        free_vote = b.locator('#party-bac-ballot li', has_text=letter + 'uper truc').first.locator('.bac-vote')
+        expect('Pas juste' in free_vote.inner_text(), 'free answers should be right by default')
+        free_vote.click()
+        wait(b, 'partyRoomState.room.round.ballot.some(e => e.myVote === false && e.suggested === true && e.valid === false)')
+        b.screenshot(path=str(OUT / f'{engine}-review-mobile.png'), full_page=True)
         a.locator('#party-bac-done').click(); b.locator('#party-bac-done').click()
         for page in (a, b): wait(page, "partyRoomState.room.status === 'finished' && " + ROUND + ".phase === 'done' && document.querySelectorAll('.bac-results tbody tr').length === 2")
         expect(b.locator('.bac-results tbody tr').count() == 2, 'one result row per player')

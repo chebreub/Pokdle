@@ -17,7 +17,6 @@
 #pokdle-app .bac-col { display: grid; gap: 1px; min-width: 0; }
 #pokdle-app .bac-col b { font: 600 .98rem/1.2 Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); }
 #pokdle-app .bac-col small { font-size: .72rem; color: var(--ui-muted, #776b63); }
-#pokdle-app .bac-col .bac-vote-tag { justify-self: start; margin-top: 2px; padding: 1px 7px; border-radius: 999px; background: #fff1c2; color: #8a5a00; font-weight: 800; }
 #pokdle-app .bac-row input { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #d8cbc0; border-radius: 12px; background: #fff8ef; color: #2e2a33; font: 700 16px Nunito, sans-serif; }
 #pokdle-app .bac-row input:focus { outline: 3px solid #dce5ff; border-color: #4069e0; }
 #pokdle-app .bac-row input:disabled { opacity: .65; }
@@ -44,12 +43,18 @@
 #pokdle-app .bac-ballot-group h4 { margin: 0 0 6px; font: 600 1rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); }
 #pokdle-app .bac-ballot-group ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 #pokdle-app .bac-ballot-group li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--ui-surface, #fffdf9); font-size: .9rem; }
-#pokdle-app .bac-ballot-group li.is-rejected b { text-decoration: line-through; color: #a44340; }
+#pokdle-app .bac-ballot-group li.is-rejected .bac-ballot-answer > b { text-decoration: line-through; color: #a44340; }
 #pokdle-app .bac-ballot-group li small { color: var(--ui-muted, #776b63); font-weight: 700; }
-#pokdle-app .bac-vote-buttons { display: inline-flex; gap: 6px; flex: none; }
-#pokdle-app .bac-vote-buttons button { min-width: 44px; min-height: 40px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 12px; background: var(--ui-surface, #fffdf9); font: 900 1rem Nunito, sans-serif; color: var(--ui-muted, #776b63); cursor: pointer; }
-#pokdle-app .bac-vote-buttons button:first-child[aria-pressed="true"] { background: #d9f2e3; border-color: #9fd6b3; color: #1d6b3f; }
-#pokdle-app .bac-vote-buttons button:last-child[aria-pressed="true"] { background: #fbe0e0; border-color: #f0b4b4; color: #9b2c2c; }
+#pokdle-app .bac-ballot-group li { flex-wrap: wrap; }
+#pokdle-app .bac-ballot-answer { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+#pokdle-app .bac-ballot-side { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+#pokdle-app .bac-status { padding: 3px 9px; border-radius: 999px; font-size: .74rem; font-weight: 900; white-space: nowrap; }
+#pokdle-app .bac-status.is-valid { background: #d9f2e3; color: #1d6b3f; }
+#pokdle-app .bac-status.is-wrong { background: #fbe0e0; color: #9b2c2c; }
+#pokdle-app .bac-vote { min-height: 40px; padding: 6px 12px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 12px; background: var(--ui-surface, #fffdf9); color: var(--ui-ink, #2e2a33); font: 800 .8rem Nunito, sans-serif; cursor: pointer; }
+#pokdle-app .bac-vote.is-pressed { background: #2e2a33; border-color: #2e2a33; color: #fff; }
+#pokdle-app .bac-fixed { color: #2f51b8; font-weight: 800; }
+#pokdle-app .bac-against { color: #a44340; font-weight: 800; }
 
 /* Party Room : le tableau des points, qui défile seul sur téléphone. */
 #pokdle-app .bac-results-wrap { max-width: 100%; overflow-x: auto; border-radius: 16px; border: 1px solid var(--ui-line, #e9dfd4); background: var(--ui-surface, #fffdf9); }
@@ -69,9 +74,23 @@
 #pokdle-app .bac-results tfoot td, #pokdle-app .bac-results tfoot th { color: var(--ui-muted, #776b63); font-size: .74rem; border-bottom: 0; }
 
 /* Réglage de l'hôte. */
-#pokdle-app .petit-bac-setup { display: grid; gap: 6px; margin-top: 10px; }
+#pokdle-app .petit-bac-setup { display: grid; gap: 8px; margin-top: 12px; }
+#pokdle-app .bac-theme-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+#pokdle-app .bac-random { min-height: 36px; padding: 6px 12px; font-size: .8rem; }
+#pokdle-app .petit-bac-setup .bac-chosen { font-weight: 800; color: var(--ui-ink, #2e2a33); }
+#pokdle-app .bac-theme-group { border: 1px solid var(--ui-line, #e9dfd4); border-radius: 14px; background: var(--ui-surface, #fffdf9); padding: 6px 10px; }
+#pokdle-app .bac-theme-group summary { cursor: pointer; font: 600 .92rem Fredoka, Nunito, sans-serif; color: var(--ui-ink, #2e2a33); min-height: 32px; display: flex; align-items: center; gap: 6px; }
+#pokdle-app .bac-theme-group summary small { padding: 0 7px; border-radius: 999px; background: #eef3ff; color: #2f51b8; font: 900 .72rem Nunito, sans-serif; }
+#pokdle-app .bac-theme-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0 4px; }
+#pokdle-app .bac-theme { min-height: 36px; padding: 6px 11px; border: 1px solid var(--ui-line, #e9dfd4); border-radius: 999px; background: var(--ui-soft, #f5efe8); color: var(--ui-ink, #2e2a33); font: 800 .8rem Nunito, sans-serif; cursor: pointer; }
+#pokdle-app .bac-theme.is-on { background: #9fd8cb; border-color: #5fb8a5; color: #12463b; }
+#pokdle-app .bac-theme:disabled { cursor: default; opacity: .55; }
+#pokdle-app .bac-theme.is-on:disabled { opacity: .9; }
+#pokdle-app .petit-bac-setup .bac-letters { font-weight: 700; }
+#pokdle-app .petit-bac-setup .bac-letters.is-low { color: #a44340; }
 #pokdle-app .petit-bac-setup p { margin: 0; font-size: .8rem; color: var(--ui-muted, #776b63); }
 #pokdle-app .bac-setup-options { display: flex; flex-wrap: wrap; gap: 6px; }
+#pokdle-app .petit-bac-setup .bac-setup-options .party-mode-btn { width: auto; min-width: 88px; min-height: 40px; padding: 8px 14px; white-space: nowrap; }
 
 #pokdle-app.theme-dark .bac-row input { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .16); color: #f0eaf9; }
 #pokdle-app.theme-dark .bac-review li.is-valid, #pokdle-app.theme-dark .bac-results td.is-2 { background: rgba(54, 185, 102, .16); }
