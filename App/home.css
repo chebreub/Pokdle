@@ -2260,3 +2260,15 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
 }
 @keyframes league-holo { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
 @keyframes league-shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+
+/* Soutenir Pokédle : un bouton café, discret mais chaleureux (pied de page, paramètres, bilan du jour). */
+#pokdle-app .support-kofi-btn, #pokdle-app.design-refresh .site-footer a.support-kofi-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 18px; border: 1px solid #f0c9a0; border-radius: 999px; background: #fff1e0; color: #7a4210 !important; font: 800 .9rem Nunito, sans-serif; text-decoration: none; text-shadow: none !important; box-shadow: 0 4px 12px rgba(122,66,16,.12); transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+#pokdle-app .support-kofi-btn:hover, #pokdle-app .support-kofi-btn:focus-visible { background: #ffe4c4; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(122,66,16,.18); }
+#pokdle-app .site-footer-support { margin: 6px 0 10px; }
+#pokdle-app .app-settings-support .card-desc { margin: 0 0 10px; }
+#pokdle-app .journey-support { display: grid; justify-items: center; gap: 10px; margin: 18px auto 0; max-width: 520px; padding: 14px 16px; border: 1px dashed #f0c9a0; border-radius: 18px; background: #fffaf3; text-align: center; }
+#pokdle-app .journey-support p { margin: 0; color: #6b5a4e; font-weight: 700; }
+#pokdle-app .journey-support-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+#pokdle-app.theme-dark .support-kofi-btn, #pokdle-app.theme-dark .site-footer a.support-kofi-btn { background: #3a2a1c; border-color: #6b4a2c; color: #ffd9a8 !important; }
+#pokdle-app.theme-dark .journey-support { background: #241c16; border-color: #6b4a2c; }
+#pokdle-app.theme-dark .journey-support p { color: #e8d6c4; }
