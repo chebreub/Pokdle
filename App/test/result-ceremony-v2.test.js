@@ -59,7 +59,8 @@ test("Result Ceremony V2 has desktop, dark and mobile styling", () => {
   const ceremony = css.slice(css.indexOf("RESULT CEREMONY V2"), css.indexOf("MODE CARD IDENTITY V2"));
   const mobile = ceremony.slice(ceremony.indexOf("@media (max-width:640px)"));
   assert.match(mobile, /#screen-game \.win-progress-grid[\s\S]*grid-template-columns:\s*1fr/);
-  assert.match(mobile, /#screen-game \.win-btns[\s\S]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/);
+  // The two-column result buttons on phones live in the later mobile block (the copy that used to sit here was always overridden).
+  assert.match(css, /@media \(max-width:640px\)[\s\S]*#screen-game \.win-btns[\s\S]*grid-template-columns:\s*repeat\(2,minmax\(0,1fr\)\)/);
 });
 
 

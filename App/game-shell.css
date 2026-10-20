@@ -333,5 +333,8 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .game-tags {order:7;margin-left:auto!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-back, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > [data-action="goToConfig"], #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-help, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help > summary {min-height:40px;padding:6px 12px!important;font-size:13px!important;}
  #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {flex-wrap:wrap;}
+ /* The name now sits in the header: no second big title on phones, only the one-line instruction. */
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-intro :is(#shell-kicker,#shell-title) {display:none!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-intro {margin:4px 0 12px!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar #shell-mode, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar .shell-mode {flex:1 1 0;}
 }
