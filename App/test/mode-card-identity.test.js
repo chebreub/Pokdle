@@ -46,12 +46,8 @@ test("mode families, special effects, dark mode and mobile are styled",()=>{
   for(const family of ["guess","play","social","tools"]){
     assert.match(css,new RegExp(`data-family="${family}"`));
   }
-  for(const effect of ["art-mystery","art-pixel","art-scan","art-audio","art-duel","art-team"]){
-    assert.match(css,new RegExp(effect));
-  }
-  assert.match(css,/theme-dark #screen-all-modes \.all-modes-card\.has-mode-art/);
-  assert.match(css,/@media \(max-width:640px\)[\s\S]*\.all-modes-card\.has-mode-art/);
-  assert.match(css,/@media \(max-width:640px\)[\s\S]*\.club-pick\.has-mode-art/);
+  // The drawn tiles replaced the old card art (20/10/2026): its styles left with its generator.
+  assert.doesNotMatch(css,/has-mode-art|art-mystery/);
 });
 
 

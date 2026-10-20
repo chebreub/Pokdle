@@ -3257,10 +3257,8 @@ function renderOddOneOutPuzzle(selectedId = null) {
 function pickPokedexFlavorText(speciesData, pokemonName) {
   const entries = Array.isArray(speciesData?.flavor_text_entries) ? speciesData.flavor_text_entries : [];
   if (!entries.length) return null;
-  // Priorité au français, fallback anglais
-  const french = entries.filter((entry) => entry?.language?.name === "fr");
-  const english = entries.filter((entry) => entry?.language?.name === "en");
-  const pool = french.length ? french : english;
+  // French entries only: an English text would break the game for French players.
+  const pool = entries.filter((entry) => entry?.language?.name === "fr");
   if (!pool.length) return null;
   // Picks aléatoire pour ne pas toujours retomber sur la même entrée Rouge/Bleu
   const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -3315,10 +3313,13 @@ function getPokemonSpeciesId(pokemon) {
   return Number.isFinite(baseId) && baseId > 0 ? baseId : null;
 }
 
+// PokeAPI has French Pokédex entries up to #898; Hisui and Paldea (#899+) only have English.
+const DESCRIPTION_LAST_FRENCH_SPECIES = 898;
 function startDescriptionMode() {
-  const pool = getPoolFromSelectedGens();
+  const selected = getPoolFromSelectedGens();
+  const pool = selected.filter((pokemon) => (getPokemonSpeciesId(pokemon) || 0) <= DESCRIPTION_LAST_FRENCH_SPECIES);
   if (!pool.length) {
-    showToast("Sélectionne au moins une génération !");
+    showToast(selected.length ? "Pas encore de descriptions en français pour ces Pokémon : ajoute une autre génération." : "Sélectionne au moins une génération !");
     return;
   }
   const secret = pickRandomPokemonFromPool(pool) || pool[0];

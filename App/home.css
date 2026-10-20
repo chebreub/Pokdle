@@ -7,7 +7,7 @@
   gap: 12px !important;
   margin-bottom: 10px !important;
 }
-.home-gens-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
 .btn-tiny {
   padding: 5px 12px !important;
   font-size: 0.78em !important;
@@ -16,57 +16,29 @@
 }
 
 /* Home sections / section titles -------------------------- */
-#screen-config > .home-section {
-  margin-top: 22px !important;
-}
-#screen-config > .home-section > .home-section-head {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  margin-bottom: 12px !important;
-  padding: 0 4px !important;
-  align-items: flex-start !important;
-}
-#screen-config .home-section > .home-section-head > .home-section-title,
-#screen-config .home-section-title {
-  font-size: 1.15rem !important;
-  font-weight: 800 !important;
-  margin: 0 !important;
-  color: #0c1930 !important;
-  letter-spacing: 0.2px !important;
-  font-family: 'Nunito', sans-serif !important;
-  text-shadow: none !important;
-}
-#screen-config .home-section > .home-section-head > .home-section-sub,
-#screen-config .home-section-sub {
-  font-size: 0.92rem !important;
-  color: #465978 !important;
-  margin: 0 !important;
-  font-family: 'Nunito', sans-serif !important;
-}
+
+
+
+
 
 /* Pillar grid --------------------------------------------- */
-#screen-config .home-pillars {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 14px !important;
-}
+
 
 /* Lot 2 - hero 4 piliers + bouton Tous les modes */
-#screen-config .home-hero-choices { margin: 18px 0 8px; }
-#screen-config .home-pillars-hero { grid-template-columns: repeat(4, 1fr) !important; }
-#screen-config .home-hero-secondary { display: flex; justify-content: center; margin-top: 14px; }
-@media (max-width: 1000px) { #screen-config .home-pillars-hero { grid-template-columns: repeat(2, 1fr) !important; } }
-@media (max-width: 560px) { #screen-config .home-pillars-hero { grid-template-columns: 1fr !important; } }
+
+
+
+
+
 
 /* Lot 3 - page Tous les modes */
-#screen-all-modes .all-modes-cat { margin-top: 20px; }
-#screen-all-modes .all-modes-cat-title { font-size: 1.05rem; margin: 0 0 10px; color: #1d2b4a; }
-#screen-all-modes .all-modes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-#screen-all-modes .all-modes-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; text-align: left; border: none; }
-#screen-all-modes .all-modes-card b { color: #1d2b4a; font-size: 0.95rem; }
-@media (max-width: 900px) { #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; } }
+
+
+
+#screen-all-modes .all-modes-card { align-items: center; cursor: pointer; text-align: left; }
+
+@media (max-width: 900px) {  }
+@media (max-width: 560px) {  }
 
 /* Lot 4 - Team Builder : reglages avances repliables */
 .team-builder-advanced { margin-top: 8px; }
@@ -77,16 +49,16 @@
 
 /* Lot 8 - polish responsive mobile */
 @media (max-width: 560px) {
-  #screen-config .home-pillars-hero .home-pillar { padding: 14px !important; }
-  #screen-config .home-pillars-hero .home-pillar p { font-size: 0.85rem; }
-  #screen-config .home-hero-secondary .btn-ghost { width: 100%; }
-  #screen-all-modes .all-modes-grid { grid-template-columns: repeat(2, 1fr); }
-  #screen-all-modes .all-modes-card { padding: 10px 12px; }
-  #screen-all-modes .all-modes-card b { font-size: 0.85rem; }
+  
+  
+  
+  
+  
+  
   .team-builder-advanced > .team-builder-advanced-summary span { display: block; margin-top: 2px; }
 }
 @media (max-width: 380px) {
-  #screen-all-modes .all-modes-grid { grid-template-columns: 1fr; }
+  
 }
 #screen-config .home-pillar {
   padding: 18px 18px 16px !important;
@@ -106,40 +78,16 @@
   border-color: #2f76ff !important;
 }
 #screen-config .home-pillar:focus { outline: 2px solid #2f76ff; outline-offset: 2px; }
-#screen-config .home-pillar.home-pillar-feature {
-  border: 2px solid #e4382f !important;
-}
-#screen-config .home-pillar-feature::before {
-  content: "\2605 Phare";
-  position: absolute;
-  top: -10px;
-  left: 14px;
-  background: #e4382f;
-  color: #fff;
-  font-size: 0.7em;
-  font-weight: 800;
-  padding: 3px 10px;
-  border-radius: 999px;
-  letter-spacing: 0.5px;
-  font-family: 'Nunito', sans-serif;
-}
 
-#screen-config .home-pillar .home-pillar-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  flex-shrink: 0;
-}
-.home-pillar-icon-red    { background: rgba(228, 56, 47, 0.12)  !important; color: #be2c25 !important; }
-.home-pillar-icon-blue   { background: rgba(47, 118, 255, 0.12) !important; color: #225cd0 !important; }
-.home-pillar-icon-yellow { background: rgba(255, 204, 51, 0.20) !important; color: #b48708 !important; }
-.home-pillar-icon-teal   { background: rgba(29, 158, 117, 0.14) !important; color: #0f6e56 !important; }
-.home-pillar-icon-coral  { background: rgba(216, 90, 48, 0.13)  !important; color: #993c1d !important; }
-.home-pillar-icon-purple { background: rgba(127, 119, 221, 0.16) !important; color: #534ab7 !important; }
+
+
+
+
+
+
+
+
+
 
 #screen-config .home-pillar h3 {
   font-size: 1.1rem !important;
@@ -159,33 +107,17 @@
   flex: 1;
 }
 
-#screen-config .home-pillar-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-#screen-config .home-pillar-tag {
-  font-size: 0.7rem !important;
-  padding: 3px 10px !important;
-  border-radius: 999px !important;
-  background: #e9eef7 !important;
-  color: #465978 !important;
-  font-weight: 700 !important;
-  font-family: 'Nunito', sans-serif !important;
-  text-shadow: none !important;
-}
-#screen-config .home-pillar-tag-live   { background: rgba(228, 56, 47, 0.13) !important; color: #be2c25 !important; }
-#screen-config .home-pillar-tag-unique { background: rgba(55, 200, 120, 0.14) !important; color: #1f8f56 !important; }
+
+
+
+
 
 /* Responsive : tablette / mobile -------------------------- */
-@media (max-width: 900px) {
-  #screen-config .home-pillars { grid-template-columns: repeat(2, 1fr) !important; }
-}
+
 @media (max-width: 640px) {
-  #screen-config .home-pillars { grid-template-columns: 1fr !important; }
+  
   .home-gens-card .home-section-head { flex-direction: column !important; }
-  .home-gens-actions { align-self: flex-end; }
+  
 }
 
 
@@ -193,12 +125,11 @@
    Tous les modes v2 : tuiles apaisées, la couleur code la
    catégorie (au lieu d'un arc-en-ciel par tuile).
    ============================================================ */
-#screen-all-modes .all-modes-cat { margin-top: 26px; }
+
 #screen-all-modes .all-modes-cat-title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
   padding-bottom: 6px;
   border-bottom: 3px solid var(--am-accent, #2f76ff);
 }
@@ -212,23 +143,15 @@
 #screen-all-modes .all-modes-card {
   position: relative;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #e3ebf8;
-  border-left: 5px solid var(--am-accent, #2f76ff);
   border-left-color: var(--am-accent, #2f76ff) !important;
-  border-radius: 18px;
-  box-shadow: 0 6px 16px rgba(12, 25, 48, .07);
 }
 #screen-all-modes .all-modes-card::before { display: none; }
 #screen-all-modes .all-modes-card .pk-tile { background: var(--am-accent-soft, #e3edff); color: var(--am-accent, #2f76ff); }
 #screen-all-modes .all-modes-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--am-accent, #2f76ff);
   border-left-width: 5px;
-  box-shadow: 0 10px 22px rgba(12, 25, 48, .12);
 }
 @media (prefers-reduced-motion: reduce) {
-  #screen-all-modes .all-modes-card:hover { transform: none; }
+  
 }
 #screen-all-modes .all-modes-card:focus-visible { outline: 2px solid var(--am-accent, #2f76ff); outline-offset: 2px; }
 body.theme-dark #screen-all-modes .all-modes-card { background: #16223e; border-color: #2c3c63; border-left-color: var(--am-accent, #2f76ff); }
@@ -240,64 +163,64 @@ body.theme-dark #screen-all-modes .all-modes-card b { color: #e8eefc; }
    l'ancien CSS. Pour revenir : supprimer ce bloc + restaurer index.html.
    ================================================================= */
 body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none;z-index:-1;}
-body::before{width:420px;height:420px;left:-140px;top:-120px;background:rgba(228,56,47,.26);}
-body::after{width:460px;height:460px;right:-160px;top:120px;background:rgba(47,118,255,.22);}
+
+
 #screen-config .pk-ico{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
 /* Hero */
-#screen-config .pk-hero{position:relative;overflow:hidden;border-radius:26px;padding:30px 32px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:24px;background:radial-gradient(620px 240px at 86% 22%,rgba(255,255,255,.14),transparent 70%),linear-gradient(105deg,#e4382f 0%,#b3263f 30%,#2a4ea0 60%,#2f76ff 100%);box-shadow:0 18px 38px rgba(47,118,255,.28);margin-bottom:18px;}
+#screen-config .pk-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;}
 #screen-config .pk-hero-main{position:relative;z-index:1;min-width:0;}
-#screen-config .pk-kicker{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:#ffd34d;}
+#screen-config .pk-kicker{display:inline-flex;align-items:center;gap:6px;font-weight:900;text-transform:uppercase;}
 #screen-config .pk-kicker .pk-ico{width:13px;height:13px;}
-#screen-config .pk-hero-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(1.9rem,3.6vw,2.7rem);line-height:1;margin:12px 0 10px;letter-spacing:-.6px;text-shadow:0 2px 8px rgba(8,16,38,.25);color:#fff;}
-#screen-config .pk-hero-sub{font-size:.95rem;font-weight:700;color:rgba(255,255,255,.9);max-width:460px;line-height:1.4;margin:0;}
-#screen-config .pk-hero-chips{display:flex;gap:9px;margin-top:15px;flex-wrap:wrap;}
-#screen-config .pk-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 13px;font-size:.82rem;font-weight:900;}
-#screen-config .pk-chip-fire{background:rgba(255,204,51,.95);color:#0c1930;}
+#screen-config .pk-hero-title{font-family:'Nunito',sans-serif;font-weight:900;color:#fff;}
+#screen-config .pk-hero-sub{font-weight:700;margin:0;}
+#screen-config .pk-hero-chips{display:flex;flex-wrap:wrap;}
+#screen-config .pk-chip{display:inline-flex;align-items:center;gap:6px;font-weight:900;}
+#screen-config .pk-chip-fire{color:#0c1930;}
 #screen-config .pk-chip-time{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);color:#fff;}
 #screen-config .pk-chip-status{background:rgba(46,125,50,.55);border:1px solid rgba(186,255,190,.4);color:#fff;}
-#screen-config .pk-hero-cta-row{display:flex;gap:11px;margin-top:18px;flex-wrap:wrap;}
-#screen-config .pk-cta{border:none;cursor:pointer;background:#ffcc33;color:#0c1930;border-radius:14px;padding:13px 22px;font-family:inherit;font-weight:900;font-size:1rem;box-shadow:0 8px 18px rgba(0,0,0,.18);display:inline-flex;align-items:center;gap:8px;}
-#screen-config .pk-cta-ghost{cursor:pointer;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:13px 20px;font-family:inherit;font-weight:900;font-size:1rem;}
-#screen-config .pk-hero-visual{flex:0 0 auto;}
-#screen-config .pk-medallion{position:relative;width:210px;height:210px;border-radius:50%;border:2px dashed rgba(255,255,255,.4);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;}
-#screen-config .pk-silo-img{position:absolute;width:155px;height:155px;object-fit:contain;filter:brightness(0);opacity:.4;pointer-events:none;}
-#screen-config .pk-qm{position:relative;font-size:62px;font-weight:900;color:#ffcc33;text-shadow:0 3px 10px rgba(8,16,38,.45);line-height:1;}
+#screen-config .pk-hero-cta-row{display:flex;flex-wrap:wrap;}
+#screen-config .pk-cta{border:none;cursor:pointer;color:#0c1930;font-family:inherit;font-weight:900;font-size:1rem;display:inline-flex;align-items:center;gap:8px;}
+#screen-config .pk-cta-ghost{cursor:pointer;color:#fff;border:1px solid rgba(255,255,255,.28);font-family:inherit;font-weight:900;font-size:1rem;}
+
+
+#screen-config .pk-silo-img{position:absolute;object-fit:contain;filter:brightness(0);pointer-events:none;}
+
 
 /* Barre de générations */
-#screen-config #home-gens-card{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);border:1px solid rgba(12,25,48,.06);border-radius:20px;padding:13px 16px;box-shadow:0 6px 16px rgba(12,25,48,.07);margin-bottom:18px;}
+#screen-config #home-gens-card{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);border:1px solid rgba(12,25,48,.06);border-radius:20px;padding:13px 16px;box-shadow:0 6px 16px rgba(12,25,48,.07);}
 #screen-config #home-gens-card::before{display:none;}
-#screen-config .pk-genbar-lab{flex:0 0 auto;}
-#screen-config .pk-genbar-lab b{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:900;color:#0c1930;}
-#screen-config .pk-genbar-lab b .pk-ico{width:15px;height:15px;color:#2f76ff;}
-#screen-config .pk-genbar-lab small{display:block;font-size:.7rem;font-weight:800;color:#6a7a99;margin-top:2px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#screen-config #home-gens-card #gen-grid{display:flex !important;flex-wrap:wrap;gap:8px;flex:1 1 auto;min-width:240px;}
+
+
+
+
+#screen-config #home-gens-card #gen-grid{display:flex !important;flex-wrap:wrap;gap:8px;flex:1 1 auto;}
 #screen-config #gen-grid .gen-item{flex:0 0 auto;min-height:0 !important;min-width:0 !important;cursor:pointer;border-radius:12px;padding:7px 13px;text-align:center;border:1.5px solid rgba(12,25,48,.1);background:#fff;box-shadow:0 2px 6px rgba(23,52,93,.05);display:block;}
 #screen-config #gen-grid .gen-item .gen-check{display:none !important;}
 #screen-config #gen-grid .gen-item .gen-name{font-size:13px;font-weight:900;line-height:1;color:#0c1930;}
 #screen-config #gen-grid .gen-item .gen-sub{font-size:10px;font-weight:700;opacity:.75;margin-top:3px;color:#0c1930;white-space:nowrap;}
 #screen-config #gen-grid .gen-item.on{background:#2f76ff;border-color:#2f76ff;}
 #screen-config #gen-grid .gen-item.on .gen-name,#screen-config #gen-grid .gen-item.on .gen-sub{color:#fff;}
-#screen-config .pk-genbar-acts{flex:0 0 auto;display:flex;gap:6px;align-items:center;margin-left:auto;}
-#screen-config .pk-gbtn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;border-radius:9px;padding:8px 13px;}
-#screen-config .pk-gbtn-tout{background:#eaf1ff;color:#2f76ff;}
-#screen-config .pk-gbtn-aucune{background:#f1f3f7;color:#8a93a6;}
+
+
+
+
 #screen-config #home-gens-toggle{display:none !important;}
 
 /* Sections + cartes de modes */
-#screen-config .pk-sec{margin-top:24px;}
-#screen-config .pk-sec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px;padding:0 2px;}
-#screen-config .pk-sec-title{display:flex;align-items:center;gap:10px;}
-#screen-config .pk-sec-title h2{font-family:'Nunito',sans-serif;font-size:1.25rem;font-weight:900;color:#0c1930;margin:0;text-shadow:none;}
-#screen-config .pk-bar{height:4px;width:40px;border-radius:4px;background:linear-gradient(90deg,#e4382f,#2f76ff);}
-#screen-config .pk-allmodes{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid rgba(12,25,48,.1);border-radius:999px;padding:9px 15px;font-family:inherit;font-weight:800;font-size:.8rem;color:#2f76ff;cursor:pointer;box-shadow:0 6px 16px rgba(12,25,48,.07);}
-#screen-config .pk-allmodes .pk-ico{width:15px;height:15px;}
-#screen-config .pk-sec-sub{font-size:.82rem;font-weight:700;color:#6a7a99;margin:4px 2px 14px;}
-#screen-config .pk-modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
-#screen-config .pk-card{background:#fff;border:1px solid rgba(12,25,48,.06);border-radius:18px;box-shadow:0 6px 16px rgba(12,25,48,.07);}
-#screen-config .pk-mode{padding:18px;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:6px;}
-#screen-config .pk-mode:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(47,118,255,.16);}
-#screen-config .pk-mode:focus-visible{outline:2px solid #2f76ff;outline-offset:2px;}
+
+
+
+
+
+
+
+
+
+
+
+
+
 #screen-config .pk-tile{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:2px;}
 #screen-config .pk-tile .pk-ico{width:25px;height:25px;}
 #screen-config .pk-tile-yellow{background:#fff4d1;color:#d99a00;}
@@ -305,15 +228,15 @@ body::after{width:460px;height:460px;right:-160px;top:120px;background:rgba(47,1
 #screen-config .pk-tile-red{background:#ffe3e1;color:#e4382f;}
 #screen-config .pk-tile-teal{background:#d8f3ee;color:#14a085;}
 #screen-config .pk-tile-purple{background:#ece4ff;color:#7c5cff;}
-#screen-config .pk-tile-green{background:#e7f6d9;color:#5a9e22;}
-#screen-config .pk-mode h4{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:900;color:#0c1930;margin:6px 0 0;display:flex;align-items:center;gap:8px;}
-#screen-config .pk-mode p{font-size:.82rem;font-weight:700;color:#6a7a99;margin:0;line-height:1.35;}
-#screen-config .pk-live{display:inline-flex;align-items:center;gap:4px;font-size:.56rem;font-weight:900;color:#e4382f;background:#ffe3e1;padding:2px 7px;border-radius:999px;}
-#screen-config .pk-live i{width:6px;height:6px;border-radius:50%;background:#e4382f;}
-#screen-config .pk-tag{font-size:.56rem;font-weight:900;padding:3px 8px;border-radius:999px;background:#ece4ff;color:#7c5cff;}
+
+
+
+
+
+
 
 /* Widget engagement + progression : un peu d'air, retirer le liseré */
-#screen-config #home-engagement-widget{margin-top:18px;}
+
 #screen-config .home-progress-card::before{display:none !important;}
 
 /* Nav : onglet actif en bleu */
@@ -323,19 +246,19 @@ body:not(.theme-dark) .nav-pill.active,.nav-pill.active{background:#2f76ff !impo
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;}}
 
 /* Responsive */
-@media (max-width:860px){#screen-config .pk-hero{flex-direction:column;align-items:flex-start;}#screen-config .pk-hero-visual{align-self:center;}#screen-config #home-gens-card{flex-wrap:wrap;}#screen-config #home-gens-card #gen-grid{order:3;flex-basis:100%;}}
-@media (max-width:560px){#screen-config .pk-medallion{width:150px;height:150px;}#screen-config .pk-silo-img{width:104px;height:104px;}#screen-config .pk-qm{font-size:42px;}}
+@media (max-width:860px){#screen-config .pk-hero{flex-direction:column;align-items:flex-start;}#screen-config #home-gens-card{flex-wrap:wrap;}#screen-config #home-gens-card #gen-grid{order:3;flex-basis:100%;}}
+@media (max-width:560px){}
 
 /* =================================================================
    DA 2026 — CADRE GLOBAL (en-tete + nav) en clair, comme la maquette
    ================================================================= */
-body:not(.theme-dark) header{background:transparent !important;border-bottom:1px solid rgba(12,25,48,.07) !important;box-shadow:none !important;}
-body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{color:#0c1930 !important;text-shadow:none !important;}
+
+body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{text-shadow:none !important;}
 body:not(.theme-dark) .tagline{color:#6a7a99 !important;text-shadow:none !important;}
 body:not(.theme-dark) .global-nav{background:transparent !important;box-shadow:none !important;border:none !important;backdrop-filter:none !important;}
 /* halos un peu plus discrets sous l'en-tete clair */
-body::before{opacity:.42 !important;}
-body::after{opacity:.38 !important;}
+
+
 
 /* =================================================================
    FIX LAYOUT — #screen-config est une grille CSS : empecher le
@@ -346,7 +269,7 @@ body::after{opacity:.38 !important;}
 #screen-config>*{min-width:0;max-width:100%;}
 #screen-config .pk-hero{margin-bottom:0;}
 #screen-config #home-gens-card{margin-bottom:0;min-width:0;max-width:100%;overflow:hidden;}
-#screen-config .pk-sec{margin-top:0;}
+
 #screen-config #home-engagement-widget{margin-top:0;}
 #screen-config #home-gens-card #gen-grid{min-width:0;max-width:100%;}
 
@@ -359,9 +282,9 @@ body::after{opacity:.38 !important;}
    ================================================================= */
 
 .header-inner .header-top{flex-wrap:nowrap !important;justify-content:flex-start !important;gap:16px !important;}
-.header-top .logo-home-btn{flex:0 0 auto;}
+
 .header-top #global-nav{position:static !important;top:auto !important;flex:1 1 auto !important;display:flex !important;align-items:center !important;gap:5px !important;overflow:visible !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;margin:0 !important;}
-.header-top .header-actions{flex:0 0 auto;}
+
 .tagline{display:none !important;}
 body:not(.theme-dark) .nav-pill{min-height:0 !important;font:800 14px 'Nunito' !important;padding:9px 16px !important;border:1px solid rgba(12,25,48,.1) !important;background:#fff !important;color:#173a5e !important;box-shadow:0 3px 9px rgba(12,25,48,.06) !important;}
 body:not(.theme-dark) .nav-pill.active{background:#2f76ff !important;color:#fff !important;border-color:transparent !important;box-shadow:0 4px 11px rgba(47,118,255,.3) !important;}
@@ -375,8 +298,8 @@ header{position:relative;z-index:1000;}
    DA 2026 — Haut-droite compact + fond plus present
    ================================================================= */
 /* Aide / Parametres en icones rondes (texte masque, accessible via aria) */
-.header-actions .header-action-btn{font-size:0 !important;width:40px;height:40px;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;border-radius:50% !important;gap:0 !important;}
-.header-actions .header-action-btn svg{width:18px !important;height:18px !important;}
+
+
 
 /* Fond : halos rouge/bleu plus marques (moins fade) */
 body::before{width:540px !important;height:540px !important;left:-150px !important;top:-130px !important;opacity:.6 !important;background:rgba(228,56,47,.32) !important;}
@@ -388,28 +311,28 @@ body::after{width:580px !important;height:580px !important;right:-170px !importa
 /* =================================================================
    DA 2026 — barre du haut frostee (definition + perso) + boutons propres
    ================================================================= */
-body:not(.theme-dark) header{position:sticky !important;top:0 !important;z-index:1000 !important;background:rgba(255,255,255,.72) !important;backdrop-filter:blur(12px) saturate(1.1) !important;-webkit-backdrop-filter:blur(12px) saturate(1.1) !important;border-bottom:1px solid rgba(12,25,48,.07) !important;box-shadow:0 4px 18px rgba(12,25,48,.06) !important;}
+
 
 /* Aide / Parametres : vrais boutons libelles (fini les icones croppees) */
-.header-actions .header-action-btn{font-size:13px !important;font-weight:800 !important;font-family:"Nunito",sans-serif !important;width:auto !important;height:auto !important;min-height:0 !important;padding:9px 15px !important;border-radius:999px !important;gap:7px !important;display:inline-flex !important;align-items:center !important;background:#fff !important;color:#173a5e !important;border:1px solid rgba(12,25,48,.1) !important;box-shadow:0 3px 9px rgba(12,25,48,.06) !important;}
-.header-actions .header-action-btn svg{width:16px !important;height:16px !important;flex:0 0 auto;}
+
+
 
 /* =================================================================
    DA 2026 — RETOUR en-tete COLOREE (personnalite) + suppression halos
    ================================================================= */
 body::before, body::after{display:none !important;}
-body:not(.theme-dark) header{position:sticky !important;top:0 !important;z-index:1000 !important;background:linear-gradient(115deg,#e4382f 0%,#c52f4e 38%,#2f63d6 100%) !important;border-bottom:none !important;box-shadow:0 8px 24px rgba(20,40,76,.22) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
-body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{color:#fff !important;}
+body:not(.theme-dark) header{-webkit-backdrop-filter:none !important;}
+
 /* Onglets sur fond colore : translucides, actif blanc */
-body:not(.theme-dark) .header-top .nav-pill{background:rgba(255,255,255,.15) !important;color:#fff !important;border:1px solid rgba(255,255,255,.30) !important;box-shadow:none !important;}
-body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;color:#17345d !important;border-color:transparent !important;box-shadow:0 4px 12px rgba(8,16,38,.25) !important;}
+
+
 /* Aide / Parametres sur fond colore */
-body:not(.theme-dark) .header-actions .header-action-btn{background:rgba(255,255,255,.16) !important;color:#fff !important;border:1px solid rgba(255,255,255,.30) !important;box-shadow:none !important;}
-body:not(.theme-dark) .header-actions .header-action-btn svg{stroke:#fff !important;}
+
+
 
 /* Nav sur une seule ligne dans l'en-tete */
-body:not(.theme-dark) .header-top #global-nav{flex-wrap:nowrap !important;overflow:visible !important;}
-body:not(.theme-dark) .header-top .nav-pill{flex:0 0 auto !important;padding:8px 13px !important;font-size:13px !important;}
+
+body:not(.theme-dark) .header-top .nav-pill{font-size:13px !important;}
 
 /* Nav : rangee dediee, centree, pills claires (apres sortie de l'en-tete) */
 #global-nav{position:static !important;display:flex !important;flex-wrap:wrap !important;justify-content:center !important;align-items:center !important;gap:8px !important;max-width:1200px;margin:18px auto 0 !important;padding:0 24px !important;background:transparent !important;border:none !important;box-shadow:none !important;top:auto !important;}
@@ -417,13 +340,13 @@ body:not(.theme-dark) .header-top .nav-pill{flex:0 0 auto !important;padding:8px
 /* ============ FINAL — en-tete UNE rangee (logo|nav|actions), colore ============ */
 body:not(.theme-dark) .header-inner .header-top{display:flex !important;flex-wrap:nowrap !important;align-items:center !important;justify-content:flex-start !important;gap:16px !important;}
 .header-top .logo-home-btn{flex:0 0 auto !important;}
-body:not(.theme-dark) .header-top #global-nav{flex:1 1 auto !important;display:flex !important;flex-wrap:nowrap !important;justify-content:flex-start !important;align-items:center !important;gap:5px !important;margin:0 !important;padding:0 !important;max-width:none !important;overflow:visible !important;background:transparent !important;border:none !important;box-shadow:none !important;position:static !important;top:auto !important;}
+body:not(.theme-dark) .header-top #global-nav{flex:1 1 auto !important;display:flex !important;flex-wrap:nowrap !important;align-items:center !important;margin:0 !important;padding:0 !important;max-width:none !important;overflow:visible !important;background:transparent !important;border:none !important;box-shadow:none !important;position:static !important;top:auto !important;}
 .header-top .header-actions{flex:0 0 auto !important;display:flex !important;flex-wrap:nowrap !important;align-items:center !important;gap:8px !important;}
-body:not(.theme-dark) .header-top .nav-pill{flex:0 0 auto !important;background:rgba(255,255,255,.15) !important;color:#fff !important;border:1px solid rgba(255,255,255,.3) !important;box-shadow:none !important;font:800 13px 'Nunito' !important;padding:8px 13px !important;min-height:0 !important;}
-body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;color:#17345d !important;border-color:transparent !important;box-shadow:0 4px 12px rgba(8,16,38,.22) !important;}
+body:not(.theme-dark) .header-top .nav-pill{flex:0 0 auto !important;font:800 13px 'Nunito' !important;}
+body:not(.theme-dark) .header-top .nav-pill.active{border-color:transparent !important;}
 /* Aide/Parametres : icones rondes propres */
-.header-actions .header-action-btn{font-size:0 !important;width:38px !important;height:38px !important;min-height:0 !important;padding:0 !important;gap:0 !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;border-radius:50% !important;overflow:visible !important;background:rgba(255,255,255,.15) !important;border:1px solid rgba(255,255,255,.3) !important;box-shadow:none !important;}
-.header-actions .header-action-btn svg{width:18px !important;height:18px !important;stroke:#fff !important;flex:0 0 auto !important;}
+.header-actions .header-action-btn{overflow:visible !important;}
+
 
 /* =================================================================
    Page plus large : reduire les grosses bordures laterales sur grand ecran
@@ -443,7 +366,7 @@ body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;co
 .header-actions .header-action-btn::after,.header-actions .header-action-btn::before{display:none !important;content:none !important;}
 
 /* Header : logo+nav groupes a GAUCHE, actions (niveau/aide/param/compte) a DROITE, espacees */
-.header-inner .header-top #global-nav{flex:0 1 auto !important;}
+
 .header-inner .header-top .header-actions{margin-left:auto !important;gap:10px !important;}
 
 /* Draft Score Attack : carte en attente des vraies stats (PokeAPI) — neutre, pas de fausse rarete */
@@ -454,7 +377,7 @@ body:not(.theme-dark) .header-top .nav-pill.active{background:#fff !important;co
 @keyframes dsLoadingPulse{0%,100%{opacity:1}50%{opacity:.82}}
 
 /* En-tete : contenu en pleine largeur (logo a gauche, compte a droite) — utiliser tout l'espace de la bande */
-body:not(.theme-dark) .header-inner{max-width:none !important;width:auto !important;margin:0 !important;padding-left:34px !important;padding-right:34px !important;}
+body:not(.theme-dark) .header-inner{width:auto !important;margin:0 !important;padding-left:34px !important;padding-right:34px !important;}
 
 /* En-tete : onglets CENTRES au milieu (logo gauche, compte droite) */
 .header-inner .header-top #global-nav{flex:1 1 auto !important;justify-content:center !important;}
@@ -478,8 +401,8 @@ body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:cent
 @media (max-width:640px){
   body:not(.theme-dark) .header-inner .header-top #global-nav{display:none !important;}
   body:not(.theme-dark) .header-inner{padding-left:12px !important;padding-right:12px !important;}
-  body:not(.theme-dark) .header-inner .header-top{flex-wrap:wrap !important;justify-content:space-between !important;gap:8px !important;}
-  .header-inner .header-top .header-actions{flex-wrap:wrap !important;gap:8px !important;justify-content:flex-end !important;}
+  body:not(.theme-dark) .header-inner .header-top{justify-content:space-between !important;}
+  .header-inner .header-top .header-actions{justify-content:flex-end !important;}
 }
 
 /* =================================================================
@@ -493,12 +416,12 @@ body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:cent
   .header-inner .header-actions .header-action-btn svg{width:17px !important;height:17px !important;}
   /* niveau compact : masquer la sous-ligne XP + la barre pour gagner de la place */
   #global-xp-badge .xp-badge-bar,#global-xp-badge .xp-badge-info{display:none !important;}
-  #global-xp-badge{width:36px !important;height:36px !important;flex:0 0 auto !important;padding:0 !important;border-radius:50% !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;gap:0 !important;}
+  #global-xp-badge{flex:0 0 auto !important;padding:0 !important;align-items:center !important;justify-content:center !important;gap:0 !important;}
   #global-xp-badge .xp-badge-emoji{margin:0 !important;}
   /* cartes de modes en rangees (icone gauche + texte) */
-  #screen-config .pk-mode{flex-direction:row !important;align-items:center !important;gap:12px !important;}
-  #screen-config .pk-mode .pk-tile{margin-bottom:0 !important;}
-  #screen-config .pk-mode h4{margin:0 0 2px !important;}
+  
+  
+  
 }
 
 /* Mobile : en-tete minimale fiable = logo + Parametres + compte */
@@ -515,10 +438,10 @@ body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:cent
   /* Generations : une seule rangee qui defile (pattern iOS) */
   #screen-config #home-gens-card{flex-wrap:wrap !important;align-items:flex-start !important;}
   #screen-config #home-gens-card #gen-grid{flex-wrap:nowrap !important;overflow-x:auto !important;order:3 !important;flex-basis:100% !important;-webkit-overflow-scrolling:touch;}
-  #screen-config .pk-genbar-acts{margin-left:auto !important;}
+  
   /* Cartes de modes facon liste d-app : chevron a droite */
-  #screen-config .pk-mode{position:relative !important;padding-right:36px !important;}
-  #screen-config .pk-mode::after{content:"\203A";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#c2cad8;font-size:24px;font-weight:900;line-height:1;}
+  
+  
 }
 
 /* =================================================================
@@ -527,10 +450,10 @@ body:not(.theme-dark) .header-inner .header-top #global-nav{justify-content:cent
    ================================================================= */
 @media (max-width:640px){
   body{background:radial-gradient(125% 78% at 50% -8%, #ffe2df 0%, #eaf0ff 46%, #f5f8ff 100%) !important;}
-  body:not(.theme-dark) header{background:transparent !important;box-shadow:none !important;border-bottom:none !important;}
-  body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{color:#0c1930 !important;}
-  body:not(.theme-dark) .header-actions .header-action-btn{background:#fff !important;color:#173a5e !important;border:1px solid rgba(12,25,48,.1) !important;box-shadow:0 2px 8px rgba(12,25,48,.06) !important;}
-  body:not(.theme-dark) .header-actions .header-action-btn svg{stroke:#173a5e !important;}
+  
+  
+  
+  
   /* compte Discord (avatar) lisible sur fond clair si present */
   body:not(.theme-dark) #account-area button{background:#fff !important;color:#173a5e !important;border:1px solid rgba(12,25,48,.1) !important;}
 }
@@ -911,13 +834,8 @@ body.theme-dark .gen-item:focus-within { outline-color: #ffcc33; }
   margin-top:18px;
 }
 #screen-config .pk-hero::before {
-  content:"RENDEZ-VOUS DU JOUR";
   display:block;
   margin-bottom:7px;
-  font-size:.62rem;
-  font-weight:1000;
-  letter-spacing:.13em;
-  color:rgba(255,255,255,.58);
 }
 @keyframes home-partner-float {
   0%,100% { transform:translateY(0); }
@@ -982,53 +900,28 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
 
 
 /* ===== Home balance repair: Daily first, Adventure secondary ===== */
-#screen-config .home-adventure-v2 {
-  margin: 16px 0 18px;
-  border-radius: 22px;
-  box-shadow: 0 14px 34px rgba(28,61,113,.07);
-}
+
 #screen-config .home-adventure-main {
-  grid-template-columns: minmax(0,1fr) 150px;
   gap: 14px;
-  padding: 18px 20px 10px;
 }
 #screen-config .home-adventure-copy {
   gap: 8px;
 }
 #screen-config .home-adventure-copy h1 {
-  font-size: clamp(1.55rem,3vw,2.15rem);
   line-height: 1.02;
 }
-#screen-config .home-adventure-copy > p {
-  font-size: .86rem;
-}
+
 #screen-config .home-trainer-rank {
   max-width: 500px;
-  padding: 8px 10px;
 }
 #screen-config .home-rank-icon {
   width: 36px;
   height: 36px;
 }
-#screen-config .home-adventure-stats button {
-  min-width: 94px;
-  padding: 7px 9px;
-}
-#screen-config .home-adventure-partner-art,
-#screen-config .home-adventure-partner-empty {
-  width: 150px;
-  min-height: 145px;
-}
-#screen-config .home-adventure-partner-art::before,
-#screen-config .home-adventure-partner-empty::before {
-  width: 120px;
-  height: 120px;
-  box-shadow: 0 0 0 16px rgba(64,128,231,.035);
-}
-#screen-config .home-adventure-partner-art img {
-  width: 128px;
-  height: 128px;
-}
+
+
+
+
 #screen-config .home-adventure-dexno {
   top: 6px;
   right: 0;
@@ -1055,18 +948,9 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
   padding: 10px 12px;
 }
 @media (max-width:860px) {
-  #screen-config .home-adventure-main {
-    grid-template-columns: minmax(0,1fr) 120px;
-  }
-  #screen-config .home-adventure-partner-art,
-  #screen-config .home-adventure-partner-empty {
-    min-height: 120px;
-    width: 120px;
-  }
-  #screen-config .home-adventure-partner-art img {
-    width: 110px;
-    height: 110px;
-  }
+  
+  
+  
 }
 
 
@@ -1726,29 +1610,14 @@ body:not(.theme-dark) #global-xp-badge{
   border-radius:12px !important;
   background:rgba(255,255,255,.08) !important;
 }
-#screen-config .pk-hero-visual{
-  position:relative;
-  z-index:2;
-}
-#screen-config .pk-medallion{
-  width:235px !important;
-  height:235px !important;
-  border:1px solid rgba(255,255,255,.16) !important;
-  background:
-    radial-gradient(circle,rgba(255,255,255,.12),rgba(255,255,255,.035) 62%,transparent 63%) !important;
-  box-shadow:
-    0 0 0 18px rgba(255,255,255,.03),
-    0 0 0 36px rgba(255,255,255,.018);
-}
+
+
 #screen-config .pk-silo-img{
   width:175px !important;
   height:175px !important;
   opacity:.28 !important;
 }
-#screen-config .pk-qm{
-  font-size:72px !important;
-  color:#ffdc58 !important;
-}
+
 
 /* Weekly: a status strip, not a second hero */
 #screen-config .weekly-league-home{
@@ -1865,12 +1734,7 @@ body:not(.theme-dark) #global-xp-badge{
 #screen-config .home-path-friends .btn-blue{
   background:#e9433e !important;
 }
-#screen-config .home-text-link{
-  position:relative;
-  z-index:1;
-  color:#647a9b !important;
-  font-size:.72rem !important;
-}
+
 
 /* Adventure: dense dashboard, no longer competing with Daily */
 #screen-config .home-adventure-v2{
@@ -2191,7 +2055,7 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
 
 @media (max-width:1000px){
   #screen-all-modes .all-modes-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
-  #screen-config .pk-medallion{width:190px !important;height:190px !important;}
+  
   #screen-config .pk-silo-img{width:140px !important;height:140px !important;}
 }
 @media (max-width:760px){
@@ -2210,7 +2074,7 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
   #screen-config .pk-hero::after{width:210px;height:210px;right:-90px;bottom:-120px;border-width:26px;}
   #screen-config .pk-hero-title{font-size:2rem !important;line-height:1 !important;}
   #screen-config .pk-hero-sub{font-size:.82rem !important;line-height:1.45 !important;}
-  #screen-config .pk-hero-visual{display:none !important;}
+  
   #screen-config .pk-hero-cta-row{display:grid !important;grid-template-columns:1fr !important;}
   #screen-config .pk-cta,
   #screen-config .pk-cta-ghost{width:100% !important;justify-content:center !important;}

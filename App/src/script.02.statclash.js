@@ -800,6 +800,30 @@ function getPixelBlurForAttempts(tries) {
   return Math.max(0, startBlur - tries * step);
 }
 
+// Same ladder as the daily Défi (lib/daily-challenge.js), one more step, then the picture.
+const PIXEL_SIDES = [8, 12, 18, 26, 40, 64, 96];
+let pixelSource = { url: "", image: null, failed: false };
+function pixelatedSprite(url, side, done) {
+  const draw = () => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = side;
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(pixelSource.image, 0, 0, side, side);
+      done(canvas.toDataURL("image/png"));
+    } catch (_e) { pixelSource.failed = true; done(null); }
+  };
+  if (pixelSource.url === url && pixelSource.image?.complete && pixelSource.image.naturalWidth) return draw();
+  if (pixelSource.url === url && pixelSource.failed) return done(null);
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  pixelSource = { url, image, failed: false };
+  image.onload = () => { if (pixelSource.image === image) draw(); };
+  image.onerror = () => { if (pixelSource.image === image) { pixelSource.failed = true; done(null); } };
+  image.src = url;
+}
+
 function updatePixelPanel(reveal) {
   const box = document.getElementById("pixel-box");
   const img = document.getElementById("pixel-sprite");
@@ -818,22 +842,28 @@ function updatePixelPanel(reveal) {
     return;
   }
 
-  const totalLevels = 8;
+  const totalLevels = PIXEL_SIDES.length + 1;
   const level = reveal ? totalLevels : Math.min(totalLevels, attempts + 1);
   box.classList.remove("hidden");
-  img.src = getPokemonSprite(secretPokemon);
+  const spriteUrl = getPokemonSprite(secretPokemon);
+  const side = reveal ? 0 : PIXEL_SIDES[attempts] || 0;
   img.alt = "Pokémon pixelisé";
   if (levelEl) levelEl.textContent = reveal ? "Révélé" : "Netteté " + level + " / " + totalLevels;
   if (meterEl) meterEl.style.width = Math.round((level / totalLevels) * 100) + "%";
   if (copyEl) copyEl.textContent = reveal ? "Le Pokémon est maintenant net." : "Chaque essai rend le Pokémon un peu plus net.";
 
-  if (reveal) {
-    box.classList.add("revealed");
-    img.style.filter = "none";
-  } else {
-    box.classList.remove("revealed");
-    img.style.filter = `blur(${getPixelBlurForAttempts(attempts)}px)`;
-  }
+  box.classList.toggle("revealed", Boolean(reveal));
+  img.style.imageRendering = "pixelated";
+  if (!side) { img.src = spriteUrl; img.style.filter = "none"; return; }
+  // Hide the sharp picture until its pixelated copy is ready.
+  img.style.filter = "blur(18px)";
+  const token = secretPokemon.id + ":" + attempts;
+  img.dataset.pixelToken = token;
+  pixelatedSprite(spriteUrl, side, (dataUrl) => {
+    if (img.dataset.pixelToken !== token) return;
+    if (dataUrl) { img.src = dataUrl; img.style.filter = "none"; }
+    else { img.src = spriteUrl; img.style.filter = `blur(${getPixelBlurForAttempts(attempts)}px)`; }
+  });
 }
 
 // ============================================================

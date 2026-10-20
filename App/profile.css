@@ -47,9 +47,7 @@
   align-items: center;
 }
 
-.profile-favorite-preview .pokemon-mini-card {
-  max-width: 260px;
-}
+
 
 .profile-level-card {
   display: flex;
