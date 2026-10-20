@@ -386,6 +386,8 @@ body.theme-dark .generation-picker-actions {background:#292634;}
 #pokdle-app.design-refresh .lbv4 .lbv2-row.rank-3 .lbv2-rank {color:#b06a2b!important;}
 #pokdle-app.design-refresh .lbv4 .lbv2-avatar {width:40px!important;height:40px!important;object-fit:contain;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;padding:0!important;}
 #pokdle-app.design-refresh .lbv4 .lbv2-avatar.is-rare {filter:drop-shadow(0 0 5px rgb(150 120 255 / 70%));}
+/* Account pictures (no partner Pokémon yet) become small round badges next to the sprites. */
+#pokdle-app.design-refresh .lbv4 .lbv2-avatar:not(.is-partner):not(.is-default) {border-radius:50%!important;object-fit:cover;box-shadow:0 0 0 2px var(--ui-surface),0 0 0 3px var(--ui-line)!important;}
 #pokdle-app.design-refresh .lbv4 .lbv2-player {min-width:0;display:flex;align-items:center;gap:8px;}
 #pokdle-app.design-refresh .lbv4 .lbv2-player b {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 1rem Nunito,sans-serif;color:var(--ui-ink);}
 #pokdle-app.design-refresh .lbv4 .lbv2-player small {padding:2px 8px;border-radius:999px;background:var(--ui-accent);color:#fff;font:900 .65rem Nunito,sans-serif;}
