@@ -2,12 +2,12 @@
 // Common frame for different mechanics. The boards, timers, scoring and replay
 // actions stay owned by their existing controllers.
 const DEDICATED_SHELLS = {
-  "screen-higher-lower": { label: "Higher / Lower", mode: "higher-lower", ranking: "higherlower", help: "Observe la statistique du Pokémon de gauche. Compare avec celui de droite, puis choisis plus ou moins.", state: () => higherLowerState },
+  "screen-higher-lower": { label: "Higher or Lower", mode: "higher-lower", ranking: "higherlower", help: "Observe la statistique du Pokémon de gauche. Compare avec celui de droite, puis choisis plus ou moins.", state: () => higherLowerState },
   "screen-type-combo": { label: "Combo de types", mode: "type-combo", ranking: "typecombo", help: "Lis les deux types. Propose un Pokémon qui possède cette combinaison. Enchaîne les combos pendant 60 secondes.", state: () => typeComboState },
-  "screen-speedrun": { label: "Speedrun", mode: "speedrun", help: "Observe le sprite. Tape son nom ou passe si tu hésites. Retrouve le maximum de Pokémon en 60 secondes.", state: () => speedrunState },
-  "screen-poke-connections": { label: "Connexions Pokémon", mode: "poke-connections", help: "Sélectionne quatre Pokémon ayant un lien commun. Valide le groupe et découvre les quatre familles.", state: () => pokeConnectionsState },
+  "screen-speedrun": { label: "Speedrun Pokédex", mode: "speedrun", help: "Observe le sprite. Tape son nom ou passe si tu hésites. Retrouve le maximum de Pokémon en 60 secondes.", state: () => speedrunState },
+  "screen-poke-connections": { label: "Poké-Connections", mode: "poke-connections", help: "Sélectionne quatre Pokémon ayant un lien commun. Valide le groupe et découvre les quatre familles.", state: () => pokeConnectionsState },
   "screen-qui-est-ce": { label: "Qui est-ce ?", mode: "quiestce", help: "Pose des questions oui ou non sur le Pokémon secret. Les cartes qui ne collent plus se retournent. Clique une carte pour la proposer : une erreur coûte 2 questions.", state: () => quiEstCeState },
-  "screen-odd-one-out": { label: "Intrus Pokémon", mode: "odd", ranking: "intrus", help: "Observe les six Pokémon. Cinq ont un point commun : choisis l’intrus, puis lis l’explication." },
+  "screen-odd-one-out": { label: "Intrus", mode: "odd", ranking: "intrus", help: "Observe les six Pokémon. Cinq ont un point commun : choisis l’intrus, puis lis l’explication." },
   "screen-draft-arena": { label: "Draft Pokémon", mode: "draft-arena", help: "Construis ton équipe avec les choix proposés. Compare les types et les statistiques, puis lance les combats.", state: () => draftArenaState },
   "screen-draft-score-attack": { label: "Draft Score Attack", mode: "draft-score-attack", ranking: "draft", help: "Construis une équipe de six Pokémon. Recherche les synergies pour améliorer ton score.", state: () => draftArenaState },
   "screen-stat-clash": { label: "Clash de stats", mode: "stat-clash", help: "Compare les Pokémon en main. Choisis une statistique disponible et découvre le résultat du duel." },

@@ -305,3 +305,33 @@ body.theme-dark .generation-picker-actions {background:#292634;}
   from { filter: brightness(1.08); }
   to { filter: brightness(1); }
 }
+
+/* One header for every game (20/10/2026): « ← Jeux », the game's name, « Comment jouer ».
+   Guessing games add their own controls (Du jour / Illimité, générations, essais) after it. */
+.shell-topbar-break {display:none;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-back, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > [data-action="goToConfig"] {display:inline-flex!important;align-items:center;justify-content:center;width:auto!important;height:auto!important;min-height:40px;padding:8px 14px!important;font:800 14px Nunito,sans-serif!important;flex:0 0 auto;margin:0!important;order:1;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-back::before {content:none!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar #shell-mode, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar .shell-mode {display:block!important;order:2;flex:1 1 auto;min-width:0;padding:0!important;border-radius:0!important;background:none!important;font:800 15px/1.3 Nunito,sans-serif!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar #shell-mode {color:var(--shell-ink)!important;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar .shell-mode {color:inherit!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-selector {order:3;margin-left:0!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > #game-generation-choice {order:4;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .game-tags {order:5;margin-left:0!important;}
+#pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-help {display:inline-flex!important;align-items:center;order:6;width:auto!important;height:auto!important;min-height:40px!important;padding:8px 14px!important;font:800 14px Nunito,sans-serif!important;margin:0!important;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help {order:3;width:auto!important;max-width:none;margin:0!important;text-align:right;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help > summary {display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border:1px solid var(--shell-line);border-radius:999px;font:800 14px Nunito,sans-serif;list-style:none;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help > summary::-webkit-details-marker {display:none;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help[open] {flex-basis:100%;text-align:left;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help[open] > summary {display:flex;width:max-content;margin-left:auto;}
+#pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .generation-trigger {order:4;}
+@media(max-width:640px){
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar {flex-wrap:wrap!important;row-gap:10px!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-help {order:3;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-topbar-break {display:block;order:4;flex-basis:100%;height:0;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-selector {order:5;margin-left:0!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > #game-generation-choice {order:6;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .game-tags {order:7;margin-left:auto!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-back, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > [data-action="goToConfig"], #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar > .shell-help, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar > .dedicated-help > summary {min-height:40px;padding:6px 12px!important;font-size:13px!important;}
+ #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar {flex-wrap:wrap;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] .game-topbar #shell-mode, #pokdle-app.design-refresh .focused-mode-screen .dedicated-toolbar .shell-mode {flex:1 1 0;}
+}
