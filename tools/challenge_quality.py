@@ -26,6 +26,9 @@ async def run():
               if fail_next and url=='/guess':fail_next=False;await route.fulfill(status=503,json=dict(ok=False,error='unavailable'));return
               if url=='/start':state.update(status='playing')
               if url=='/abandon':state.update(status='abandoned',finished=True,points=0)
+              if url=='/skip':
+                calls.append(body);state['results'].append(dict(correct=False,attempts=len(state['guesses']),points=0,skipped=True,pokemonId=25,name='Pikachu'));state['index']+=1;state['guesses']=[]
+                await route.fulfill(json=dict(**snapshot(),feedback=dict(correct=False,resolved=True,skipped=True,pokemonId=25,name='Pikachu',points=0)));return
               if url=='/guess':
                 calls.append(body);await asyncio.sleep(.12);pid=body['pokemonId'];guess=await page.evaluate('(id)=>({id,name:POKEMON_BY_ID.get(id).name})',pid);state['guesses'].append(guess);correct=pid==25;resolved=correct or len(state['guesses'])==6;feedback=dict(correct=correct,resolved=resolved)
                 if resolved:
@@ -48,12 +51,15 @@ async def run():
               await page.locator('#daily-challenge-input').fill(name);await page.locator('#challenge-form').evaluate('(f)=>f.requestSubmit()');await ready(page,'!dailyChallengeBusy')
             assert state['index']==2 and state['points']==2
             await page.locator('[data-action="nextChallengePokemon"]').click();assert await page.locator('.challenge-media img[alt="Pokémon mystère pixelisé"]').is_visible();assert await page.locator('audio').count()==0
+            # « Passer » : the unknown Pokémon is missed at once and the next one comes.
+            await page.locator('[data-action="skipChallengePokemon"]').click();await ready(page,'dailyChallengeState.index===3 && !dailyChallengeBusy');assert 'Passé' in await page.locator('.challenge-correction').inner_text();assert state['points']==2 and calls[-1]['index']==2
+            await page.locator('[data-action="nextChallengePokemon"]').click();assert await page.locator('.challenge-media img').is_visible()
             state.update(mode='pixel',label='Pixelisé');await page.evaluate('startDailyChallenge()');await ready(page,'dailyChallengeState?.mode === "pixel" && !dailyChallengeBusy');assert await page.locator('.challenge-media img').is_visible()
             assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth+2')
             state.update(status='completed',finished=True,elapsedMs=180000,remainingMs=0);await page.evaluate('startDailyChallenge()');await ready(page,'dailyChallengeState?.finished && !dailyChallengeBusy');assert await page.locator('#challenge-result').is_visible();await page.screenshot(path=str(OUT/f'{engine}-{width}-result.png'),full_page=True)
             await page.locator('[data-action="showDailyJourneySummary"]').click();await ready(page,'document.querySelectorAll(".journey-stages button").length===4');assert await page.locator('.journey-total strong').inner_text()=='42';assert await page.locator('.challenge-actions [data-action="openLeaderboardV2"][data-args=\'["journey","today"]\']').is_visible();await page.screenshot(path=str(OUT/f'{engine}-{width}-summary.png'),full_page=True)
             assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth+2');assert not errors,errors
-            case.update(ok=True,checks=['explicit timer start','focus','type ahead','503 recovery','reload','progressive hints','points','six-errors continue','three media variants','timeout result','four-stage summary','mobile overflow'])
+            case.update(ok=True,checks=['explicit timer start','focus','type ahead','503 recovery','reload','progressive hints','points','six-errors continue','skip','three media variants','timeout result','four-stage summary','mobile overflow'])
           except Exception as e:case['error']=str(e);await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'),full_page=True)
           finally:reports.append(case);await ctx.close()
         await browser.close()

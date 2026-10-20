@@ -63,12 +63,22 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
   async function act(who,kind='state',body={}){
     if(kind!=='state'&&kind!=='media'){if(body.day!==dailyCalendar(clock()).day)throw fail('stale_daily');if((body.accountId||null)!==(who.accountId||null))throw fail('account_changed');}
     if(kind==='guess'&&(!Number.isInteger(body.pokemonId)||!byId.has(body.pokemonId)||!Number.isInteger(body.index)))throw fail('invalid_guess',400);
+    if(kind==='skip'&&!Number.isInteger(body.index))throw fail('invalid_guess',400);
     return transaction(async(c,cal)=>{const r=await round(c,cal.day,who);let row=await expire(c,cal,who,await play(c,cal.day,who));
       if(kind==='media'){if(body.day!==cal.day||row.status!=='playing'||Number(body.index)!==row.answers.length||Number(body.attempt)!==row.guessed.length)throw fail('question_changed');return {id:r.targets[row.answers.length],mode:r.mode,attempt:row.guessed.length};}
       if(kind==='state'||['completed','abandoned'].includes(row.status))return snapshot(cal,who,row,r);
       if(kind==='start'){if(row.status==='ready'){row={...row,status:'playing',started_at:clock()};await save(c,cal,who,row);}return snapshot(cal,who,row,r);}
       if(kind==='abandon'){row={...row,status:'abandoned',points:0,finished_at:clock(),elapsed_ms:row.started_at?Math.min(LIMIT,Math.max(0,clock()-new Date(row.started_at))):0};await save(c,cal,who,row);return snapshot(cal,who,row,r);}
       if(row.status!=='playing')throw fail('not_started');
+      // « Passer » : the Pokémon counts as missed (0 point) and the next one comes at once,
+      // so a player who does not know it keeps the clock for the others.
+      if(kind==='skip'){
+        if(body.index<row.answers.length)return {...snapshot(cal,who,row,r),duplicate:true};
+        if(body.index!==row.answers.length)throw fail('question_changed');
+        row={...row,guessed:[],answers:[...row.answers,{correct:false,attempts:row.guessed.length,points:0,skipped:true}]};
+        if(row.answers.length===COUNT)row={...row,status:'completed',finished_at:clock(),elapsed_ms:Math.min(LIMIT,Math.max(0,clock()-new Date(row.started_at)))};
+        await save(c,cal,who,row);return {...snapshot(cal,who,row,r),feedback:{correct:false,resolved:true,skipped:true,pokemonId:r.targets[body.index],name:byId.get(r.targets[body.index]).name,points:0}};
+      }
       if(body.index<row.answers.length||row.guessed.includes(body.pokemonId))return {...snapshot(cal,who,row,r),duplicate:true};
       if(body.index!==row.answers.length)throw fail('question_changed');
       const guessed=[...row.guessed,body.pokemonId],correct=body.pokemonId===Number(r.targets[body.index]),resolved=correct||guessed.length===TRIES;
@@ -101,7 +111,7 @@ function createChallengeService({db,pokemon,clock=()=>new Date(),randomInt=crypt
     const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,score:Number(r.score),me:r.discord_id===accountId});return {ok:true,mode,scope,authenticated:Boolean(accountId),direction:'desc',label:global?'Parcours du jour':'Défi du jour',unit:'pts',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score)}:null,around:around.map(map)};
   }
   async function summary(who){return transaction(async(c,cal)=>{const rows=await c.query(`SELECT e.status AS enquiry_status,jsonb_array_length(e.guessed) AS attempts,e.hints_used,e.account_id AS enquiry_account,w.status AS wordle_status,${pointsSql.wordle('w.status','w.guessed')} AS wordle_points,w.account_id AS wordle_account,d.status AS dossier_status,d.points AS dossier_points,d.account_id AS dossier_account,c.status AS challenge_status,c.points AS challenge_points,c.account_id AS challenge_account FROM daily_plays e LEFT JOIN wordle_plays w ON w.identity=e.identity AND w.day=e.day LEFT JOIN dossier_plays d ON d.identity=e.identity AND d.day=e.day LEFT JOIN challenge_plays c ON c.identity=e.identity AND c.day=e.day WHERE e.identity=$1 AND e.day=$2`,[who.key,cal.day]);const r=rows.rows[0]||{},done=s=>s&&!['ready','playing'].includes(s);const stages=[{name:'Enquête',action:'startDailyGame',max:DAILY_MAX.enquiry,finished:done(r.enquiry_status),points:enquiryPoints(r.enquiry_status==='won',r.attempts,r.hints_used)},{name:'Wordle',action:'startDailyWordle',max:DAILY_MAX.wordle,finished:done(r.wordle_status),points:r.wordle_points||0},{name:'Dossier',action:'startDailyDossier',max:DAILY_MAX.dossier,finished:done(r.dossier_status),points:r.dossier_points||0},{name:'Défi',action:'startDailyChallenge',max:DAILY_MAX.challenge,finished:done(r.challenge_status),points:r.challenge_points||0}];return {ok:true,...cal,stages,maxPoints:DAILY_TOTAL,points:stages.reduce((n,s)=>n+s.points,0),finished:stages.every(s=>s.finished),ranked:Boolean(who.accountId&&stages.every(s=>s.finished)&&[r.enquiry_account,r.wordle_account,r.dossier_account,r.challenge_account].every(id=>id===who.accountId))};});}
-  return {state:who=>act(who),start:(who,b)=>act(who,'start',b),guess:(who,b)=>act(who,'guess',b),abandon:(who,b)=>act(who,'abandon',b),media:(who,b)=>act(who,'media',b),leaderboard:board,summary};
+  return {state:who=>act(who),start:(who,b)=>act(who,'start',b),guess:(who,b)=>act(who,'guess',b),skip:(who,b)=>act(who,'skip',b),abandon:(who,b)=>act(who,'abandon',b),media:(who,b)=>act(who,'media',b),leaderboard:board,summary};
 }
 function createMediaLoader({fetchAsset=fetch,sharp=require('sharp')}={}){
   const cache=new Map(),sources=new Map();return async({id,mode,attempt})=>{
@@ -121,7 +131,7 @@ function mountChallengeRoutes({app,express,db,pokemon,secret,getUser,readCookies
     if(req.method==='GET'&&!req.path.endsWith('/media')&&!req.path.endsWith('/summary')){await daily.state(who);await wordle.state(who);await dossier.state(who);}
     const data=await action(who,req);res.set('Server-Timing','challenge;dur='+(performance.now()-started).toFixed(1));if(data.buffer)res.type(data.type).send(data.buffer);else res.json(data);
   }catch(e){if(!e.status)console.error('[challenge]',e.message);if(e.status===429)res.set('Retry-After','60');res.status(e.status||503).json({ok:false,error:e.status?e.code:'unavailable'});}};
-  app.get('/api/daily/challenge',handle(who=>service.state(who)));for(const action of ['start','guess','abandon'])app.post('/api/daily/challenge/'+action,express.json({limit:'2kb'}),handle((who,req)=>service[action](who,req.body||{})));
+  app.get('/api/daily/challenge',handle(who=>service.state(who)));for(const action of ['start','guess','skip','abandon'])app.post('/api/daily/challenge/'+action,express.json({limit:'2kb'}),handle((who,req)=>service[action](who,req.body||{})));
   app.get('/api/daily/challenge/media',handle(async(who,req)=>loadMedia(await service.media(who,req.query))));app.get('/api/daily/challenge/summary',handle(who=>service.summary(who)));
   return {ready,async leaderboard(mode,scope,accountId){if(!service||!await ready)throw fail('unavailable',503);return service.leaderboard(mode,scope,accountId);}};
 }
