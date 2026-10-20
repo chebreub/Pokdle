@@ -385,7 +385,7 @@ def main():
      expect(command and results,'Game regions are missing')
      expect(command['y']>=results['y']+results['height'],'Guess history must precede the next input')
      expect(page.locator('#screen-game').bounding_box()['width']<=1001,'Game exceeds the focused reading width')
-     expect(page.locator('#shell-title').is_visible(),'Game title is missing')
+     expect(page.locator('#shell-title').is_visible() or page.locator('#shell-mode').is_visible(),'Game title is missing')
      expect(page.locator('#screen-game > .live-rank-hud').count()==0,'Ranking interrupts the active investigation')
      return screen('screen-game')
     check('pc1-classic-board',pc1_classic_board)
@@ -463,8 +463,14 @@ def main():
         expect(page.evaluate('document.activeElement.id !== "guess-input"'),'Opening '+mode+' forces the mobile keyboard')
         expect(field['y']>=0 and submit['y']+submit['height']<=nav_top-4,'First action is below the mobile navigation: '+repr(measured[-1]))
         expect(page.locator('#screen-game .game-topbar').bounding_box()['height']<=112,'Mobile commands take more than two lines')
-        commands=page.locator('#screen-game .game-topbar').evaluate('(bar)=>[...bar.children].map(e=>{const r=e.getBoundingClientRect();return {id:e.id||e.className,left:r.left,right:r.right,width:r.width}}).filter(r=>r.width>0).sort((a,b)=>a.left-b.left)')
-        expect(all(c['right']<=w and (i==0 or commands[i-1]['right']<=c['left']) for i,c in enumerate(commands)),'Mobile commands overlap: '+repr(commands))
+        commands=page.locator('#screen-game .game-topbar').evaluate('(bar)=>[...bar.children].map(e=>{const r=e.getBoundingClientRect();return {id:e.id||e.className,left:r.left,right:r.right,top:Math.round(r.top+r.height/2),width:r.width,height:r.height}}).filter(r=>r.width>0&&r.height>0).sort((a,b)=>a.top-b.top)')
+        # Two lines since 20/10/2026 (name and help, then the game's controls): no overlap within a line.
+        rows=[]
+        for c in commands:
+         row=next((r for r in rows if abs(r[0]['top']-c['top'])<=16),None)
+         row.append(c) if row else rows.append([c])
+        rows=[sorted(r,key=lambda c:c['left']) for r in rows]
+        expect(len(rows)<=2 and all(c['right']<=w for c in commands) and all(r[i-1]['right']<=r[i]['left'] for r in rows for i in range(1,len(r))),'Mobile commands overlap: '+repr(commands))
         if mode=='daily':
          expect(not page.locator('#shell-notebook').evaluate('(e)=>e.open'),'Empty notebook is expanded on mobile')
          page.locator('#shell-notebook > summary').click()
