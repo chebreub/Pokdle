@@ -561,7 +561,8 @@ def main():
      }""")
      page.locator('#leaderboard-page-body .lbv3-list').wait_for(state='visible')
      expect(page.locator('#pokedex-registration-layer:not(.hidden)').count()==0,'Registration ceremony hides the ranking')
-     colors=page.locator('.lbv3-header').evaluate('(e)=>({bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color})')
+     # The heading has no fill of its own since 20/10/2026: measure against the first painted ancestor.
+     colors=page.locator('.lbv3-header').evaluate('(e)=>{let n=e,bg="rgb(255, 255, 255)";while(n){const c=getComputedStyle(n).backgroundColor;if(c&&c!=="transparent"&&!/rgba\\([^)]*, 0\\)$/.test(c)){bg=c;break;}n=n.parentElement;}return {bg,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color};}')
      import re
      def luminance(value):
       rgb=[int(v)/255 for v in re.findall(r'\d+',value)[:3]]
