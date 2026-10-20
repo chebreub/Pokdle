@@ -2385,7 +2385,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Le sprite se révèle</h4>
-            <p>Le sprite est <b>très pixelisé</b> au départ. Le flou diminue à chaque essai pour rendre l'image de plus en plus lisible.</p>
+            <p>L'image est <b>très floue</b> au départ. Le flou diminue à chaque essai pour rendre l'image de plus en plus lisible.</p>
           </section>
           <section class="app-help-card">
             <h4>Indices classiques</h4>

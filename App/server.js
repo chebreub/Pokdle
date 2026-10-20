@@ -1167,7 +1167,8 @@ app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "fo
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
 app.get("/googled8d0a3d4583f5db3.html", (_req, res) => res.sendFile(path.join(__dirname, "googled8d0a3d4583f5db3.html")));
 app.get("/confidentialite", (_req, res) => res.sendFile(path.join(__dirname, "confidentialite.html"), { maxAge: "1h" }));
-app.get("/sitemap.xml", (_req, res) => res.sendFile(path.join(__dirname, "sitemap.xml"), { maxAge: "1d" }));
+// One page per game (/jeux, /jeux/<slug>) and the sitemap that lists them.
+require("./lib/seo-render").mountSeoPages(app);
 
 app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
