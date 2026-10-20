@@ -27,7 +27,7 @@ const LEADERBOARD_V2_MODES = LEADERBOARD_V2_DAY_MODES.concat(LEADERBOARD_V2_OTHE
 const LEADERBOARD_V2_ALIASES = { daily:"enquete", wordle:"wordlepts" };
 // One colour per stage of the day (background, ink).
 const LEADERBOARD_V2_TONES = { journey:["#C9B6F5","#4B3291"], enquete:["#FFD45C","#6B4C00"], wordlepts:["#8FC8FF","#1F5288"], dossier:["#F7A8C8","#8E1F4D"], challenge:["#86D9B0","#17583A"], grid:["#FFC48C","#7A3E00"], petitbacday:["#9FD8CB","#1F6B5E"] };
-const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 derniers jours"],["all","Records historiques"]];
+const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 jours"],["all","Records"]];
 let leaderboardV2Scope = "all";
 let leaderboardV2LastMode = "daily";
 
@@ -218,13 +218,29 @@ function leaderboardV2ArcadeCounts(scope) {
 }
 function leaderboardV2Row(row, fallbackRank, mode, unit, compact=false) {
   const rank=Number(row?.rank)||fallbackRank||0;
-  const medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;
-  return '<div class="lbv2-row'+(row?.me?' is-me':'')+(rank<=3?' is-podium':'')+(compact?' is-compact':'')+'">'+
-    '<span class="lbv2-rank">'+medal+'</span>'+
+  return '<div class="lbv2-row'+(row?.me?' is-me':'')+(rank<=3?' is-podium rank-'+rank:'')+(compact?' is-compact':'')+'">'+
+    '<span class="lbv2-rank">#'+rank+'</span>'+
     leaderboardV2Avatar(row)+
     '<span class="lbv2-player"><b>'+escapeHtml(row?.username||"Dresseur")+'</b>'+(row?.me?'<small>TOI</small>':'')+'</span>'+
     '<strong>'+leaderboardV2ScoreHtml(row,mode,unit)+'</strong>'+
     '</div>';
+}
+// The week's card, as on Pokequizz: the League prize and the time left on one side,
+// the week's top three on the other (filled by fillLeaderboardWeekTop).
+function leaderboardWeekHero() {
+  if (typeof weeklyLeagueIsoWeek !== "function") return "";
+  const info = weeklyLeagueIsoWeek(), league = typeof weeklyLeagueState === "function" ? weeklyLeagueState(info) : null;
+  const medal = typeof leagueMedalSvg === "function" ? leagueMedalSvg("master", info.week, "lbhero") : "";
+  return '<section class="lbv4-hero"><button type="button" class="lbv4-prize" data-action="openWeeklyLeague">'+medal+
+    '<span class="lbv4-prize-text"><small>Ligue · semaine '+escapeHtml(String(info.week))+'</small><b>'+escapeHtml(typeof weeklyLeagueTimeLeft === "function" ? weeklyLeagueTimeLeft() : "")+'</b><small>avant le reset</small>'+
+    (league ? '<em>Toi : '+Number(league.score)+' / 600 pts</em>' : '')+'</span></button>'+
+    '<div id="leaderboard-week-top" class="leaderboard-week-top"><small>Top 3 de la semaine</small></div></section>';
+}
+function switchLeaderboardSelect() {
+  const value = this?.value || "";
+  if (!value) return;
+  if (value === "__league") { this.value = ""; return typeof openWeeklyLeagueRanking === "function" ? openWeeklyLeagueRanking() : null; }
+  openLeaderboardV2(value, leaderboardV2Scope);
 }
 function openLeaderboardV2(mode="journey",scope="today") {
   const DRAFT_GENS=[["draft_all","Tous"],["draft_1","G1"],["draft_2","G2"],["draft_3","G3"],["draft_4","G4"],["draft_5","G5"],["draft_6","G6"],["draft_7","G7"],["draft_8","G8"],["draft_9","G9"]];
@@ -261,11 +277,12 @@ function openLeaderboardV2(mode="journey",scope="today") {
       return '<button type="button" class="lbv3-mode-tab'+(tone?' is-day':'')+(active?' is-active':'')+'"'+(tone?' style="--lb-tone:'+tone[0]+';--lb-ink:'+tone[1]+'"':'')+' aria-pressed="'+active+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
     };
     const dayTabs=LEADERBOARD_V2_DAY_MODES.map(modeTab).join("");
-    const otherOpen=LEADERBOARD_V2_OTHER_MODES.some(([id])=>isActive(id));
+    const otherActive=LEADERBOARD_V2_OTHER_MODES.some(([id])=>isActive(id));
     const otherModes=LEADERBOARD_V2_OTHER_MODES.filter(([id])=>!counts||isActive(id)||Number(counts[id])>0);
-    const modeTabs='<details class="lbv3-other"'+(otherOpen?' open':'')+'><summary>Autres classements <small>records des jeux d’arcade</small></summary><div class="lbv3-mode-grid">'+
-      otherModes.map(modeTab).join("")+'<button type="button" class="lbv3-mode-tab" data-action="openWeeklyLeagueRanking">Ligue · 3 disciplines</button></div>'+
-      (otherModes.length?'':'<p class="lbv3-other-empty">Aucun record d’arcade sur cette période.</p>')+'</details>';
+    const modeTabs='<label class="lbv4-arcade'+(otherActive?' is-active':'')+'"><span>Jeux d’arcade</span><select data-change-action="switchLeaderboardSelect" aria-label="Classement d’un jeu d’arcade">'+
+      '<option value=""'+(otherActive?'':' selected')+'>'+(otherModes.length?'Choisir un jeu…':'Aucun record sur cette période')+'</option>'+
+      otherModes.map(([id,label])=>'<option value="'+(id==="draft"?"draft_all":id)+'"'+(isActive(id)?' selected':'')+'>'+escapeHtml(label)+'</option>').join("")+
+      '<option value="__league">Ligue · 3 disciplines</option></select></label>';
 
     const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
       '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" aria-pressed="'+(id===leaderboardV2Scope)+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
@@ -281,24 +298,10 @@ function openLeaderboardV2(mode="journey",scope="today") {
     // Below three ranked players a podium is mostly empty: show a plain list and
     // invite the player to take one of the free places instead.
     const smallAudience=rows.length>0&&rows.length<3;
-    const topThree=smallAudience?[]:rows.filter(row=>Number(row.rank)<=3).sort((a,b)=>[2,1,3].indexOf(Number(a.rank))-[2,1,3].indexOf(Number(b.rank)));
-    const rest=smallAudience?rows:rows.filter(row=>Number(row.rank)>3);
-
-    const podiumHtml=topThree.length
-      ? '<section class="lbv3-podium">'+topThree.map((row,i)=>{
-          const rank=Number(row.rank)||i+1;
-          const medal=rank===1?"🥇":rank===2?"🥈":"🥉";
-          return '<article class="lbv3-podium-card rank-'+rank+(row.me?' is-me':'')+'">'+
-            '<div class="lbv3-medal">'+medal+'</div>'+
-            leaderboardV2Avatar(row)+
-            '<div class="lbv3-podium-name"><b>'+escapeHtml(row.username||"Dresseur")+'</b>'+(row.me?'<small>TOI</small>':'')+'</div>'+
-            '<strong>'+leaderboardV2ScoreHtml(row,current,data.unit||meta.unit)+'</strong>'+
-          '</article>';
-        }).join("")+'</section>'
-      : '';
+    const rest=rows;
 
     const listHtml=rest.length
-      ? '<section class="lbv3-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+(smallAudience?1:4),current,data.unit||meta.unit)).join("")+'</section>'
+      ? '<section class="lbv3-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+1,current,data.unit||meta.unit)).join("")+'</section>'
       : '';
     const freePlaces=3-rows.length;
     const period=requestedScope==="today"?" aujourd’hui":requestedScope==="week"?" sur 7 jours":"";
@@ -315,10 +318,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
 
     let personalHtml='';
     if (data?.me) {
-      personalHtml='<section class="lbv3-personal">'+
-        '<div><span>TA POSITION</span><strong>#'+Number(data.me.rank)+'</strong></div>'+
-        '<div><span>TA PERFORMANCE</span><strong>'+leaderboardV2ScoreHtml(data.me,current,data.unit||meta.unit)+'</strong></div>'+
-      '</section>';
+      personalHtml='<section class="lbv3-personal"><span>Ta position</span><strong>#'+Number(data.me.rank)+'</strong><span>·</span><b>'+leaderboardV2ScoreHtml(data.me,current,data.unit||meta.unit)+'</b></section>';
     }
 
     const empty = !rows.length;
@@ -331,20 +331,20 @@ function openLeaderboardV2(mode="journey",scope="today") {
       : '';
 
     const total=Number(data?.total)||0;
-    const body='<div class="lbv3-shell" data-lb-request="'+requestId+'">'+
-      '<header class="lbv3-header">'+
-        '<div class="lbv3-title"><span>À CHACUN SON RECORD</span><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+' · Meilleure performance par joueur.</p></div>'+
+    const body='<div class="lbv3-shell lbv4" data-lb-request="'+requestId+'">'+
+      leaderboardWeekHero()+
+      '<div class="lbv3-controls"><div class="lbv3-day-tabs" role="group" aria-label="Classements de la journée">'+dayTabs+'</div>'+
+        '<div class="lbv4-filters"><div class="lbv3-scope-tabs">'+scopeTabs+'</div>'+modeTabs+'</div></div>'+
+      genTabs+
+      '<header class="lbv3-header lbv4-board-head">'+
+        '<div class="lbv3-title"><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+'</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
-      '<div class="lbv3-controls"><div class="lbv3-scope-tabs">'+scopeTabs+'</div><div class="lbv3-day-tabs" role="group" aria-label="Classements de la journée">'+dayTabs+'</div>'+modeTabs+'</div>'+
-      genTabs+
-      '<div class="leaderboard-content"><div class="leaderboard-main">'+
       personalHtml+
       inviteHtml+
-      podiumHtml+
       listHtml+
       aroundHtml+
-      emptyHtml+'</div>'+(typeof leaderboardLeagueAside === "function" ? leaderboardLeagueAside(data,current,requestedScope) : '')+'</div>'+
+      emptyHtml+
     '</div>';
 
     leaderboardV2Show(body);
@@ -422,6 +422,7 @@ try {
 window.openLeaderboardV2=openLeaderboardV2;
 window.switchLeaderboardV2=switchLeaderboardV2;
 window.switchLeaderboardScopeV2=switchLeaderboardScopeV2;
+window.switchLeaderboardSelect=switchLeaderboardSelect;
 window.openLeaderboard=openLeaderboardV2;
 window.switchLeaderboard=switchLeaderboardV2;
 try { openLeaderboard=openLeaderboardV2; switchLeaderboard=switchLeaderboardV2; } catch (_e) {}

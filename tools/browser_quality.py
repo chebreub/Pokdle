@@ -559,9 +559,10 @@ def main():
        });
        await openLeaderboardV2('daily','all');
      }""")
-     page.locator('#leaderboard-page-body .lbv3-podium').wait_for(state='visible')
+     page.locator('#leaderboard-page-body .lbv3-list').wait_for(state='visible')
      expect(page.locator('#pokedex-registration-layer:not(.hidden)').count()==0,'Registration ceremony hides the ranking')
-     colors=page.locator('.lbv3-header').evaluate('(e)=>({bg:getComputedStyle(e).backgroundColor,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color})')
+     # The heading has no fill of its own since 20/10/2026: measure against the first painted ancestor.
+     colors=page.locator('.lbv3-header').evaluate('(e)=>{let n=e,bg="rgb(255, 255, 255)";while(n){const c=getComputedStyle(n).backgroundColor;if(c&&c!=="transparent"&&!/rgba\\([^)]*, 0\\)$/.test(c)){bg=c;break;}n=n.parentElement;}return {bg,fg:getComputedStyle(e.querySelector(".lbv3-title p")).color};}')
      import re
      def luminance(value):
       rgb=[int(v)/255 for v in re.findall(r'\d+',value)[:3]]
@@ -572,19 +573,21 @@ def main():
      expect(overlay and overlay['width']<=width and (width<1280 or overlay['width']>1100),'Leaderboard does not fit its viewport: '+repr(overlay))
      shell=page.locator('.lbv3-shell')
      cols=shell.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
-     expect(cols==1,'Leaderboard should present the podium before the full-width list: '+str(cols))
-     podium=page.locator('.lbv3-podium').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
-     expect(podium and listing and listing['y']>=podium['y']+podium['height']-3,'Leaderboard list is not below the podium: '+repr([podium,listing]))
+     expect(cols==1,'Leaderboard should be one column: '+str(cols))
+     # Since 20/10/2026 (Pokequizz style): the week's card on top, then one list with every ranked player.
+     hero=page.locator('.lbv4-hero').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
+     expect(hero and listing and listing['y']>=hero['y']+hero['height']-3,'Leaderboard list is not below the week card: '+repr([hero,listing]))
+     expect(page.locator('.lbv3-list .lbv2-row').count()==6 and page.locator('.lbv3-list .lbv2-row').first.locator('.lbv2-rank').inner_text().strip()=='#1','The list does not start with the first player')
      expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
      expect(page.locator('.lbv3-mode-tab[aria-pressed="true"]').count()==1,'Selected game is not announced')
-     for card in page.locator('.lbv3-podium-card').all():
+     for card in page.locator('.lbv3-list .lbv2-row').all():
       bounds=card.bounding_box()
-      for content in card.locator('.lbv3-podium-name, :scope > strong').all():
+      for content in card.locator('.lbv2-player b, :scope > strong').all():
        box=content.bounding_box()
-       expect(box and box['width']>0 and box['x']>=bounds['x'] and box['x']+box['width']<=bounds['x']+bounds['width']+1,'Podium name or score is clipped')
+       expect(box and box['width']>0 and box['x']>=bounds['x'] and box['x']+box['width']<=bounds['x']+bounds['width']+1,'Ranking name or score is clipped')
      if width<=640:
       controls=page.locator('.lbv3-controls').bounding_box()
-      expect(controls['height']<160,'Mobile filters push the podium too far down: '+repr(controls))
+      expect(controls['height']<160,'Mobile filters push the list too far down: '+repr(controls))
      page.evaluate("""async () => {
        leaderboardFetchJson=async()=>({ok:true,label:'Pokémon du jour',unit:'essais',total:2,authenticated:true,me:{rank:2,score:5},
          top:[{rank:1,username:'Red',score:3},{rank:2,username:'QA',score:5,me:true}],around:[]});
