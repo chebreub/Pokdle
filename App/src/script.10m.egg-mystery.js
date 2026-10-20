@@ -45,13 +45,13 @@ function eggDayName(date) {
   return new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",weekday:"long"}).format(new Date(date));
 }
 function eggCluesHtml(s) {
-  const unlocked = s.clues.map(c => `<span class="egg-clue">✓ ${escapeHtml(c.label)} : <b>${escapeHtml(String(c.value))}</b></span>`);
+  const unlocked = s.clues.map(c => `<span class="egg-clue">✓ ${escapeHtml(c.label)} : <b>${escapeHtml(String(c.display ?? c.value))}</b></span>`);
   const upcoming = s.solved ? [] : (s.upcomingClues || []).map(c => `<span class="egg-clue is-locked">${escapeHtml(c.label)} <small>${escapeHtml(eggDayName(c.at))} ou à ${c.atEliminated} rayés</small></span>`);
   return unlocked.concat(upcoming).join("");
 }
 function eggFeedHtml(s) {
   const guesses = s.feed.map(row => ({ at: row.at, html: `<li><img src="${modeCatalogSpriteUrl(row.pokemon.id)}" alt="" loading="lazy" width="40" height="40"/><span><b>${escapeHtml(row.name)}</b><small>${escapeHtml(row.pokemon.name)}</small></span><span class="egg-feed-meta"><strong>${row.correct?"✓ Trouvé":"× Écarté"}</strong><time datetime="${escapeHtml(row.at)}">${escapeHtml(eggStamp(row.at))}</time></span></li>` }));
-  const clues = s.clues.filter(c => c.unlockedAt).map(c => ({ at: c.unlockedAt, html: `<li class="egg-feed-clue"><i aria-hidden="true">✦</i><span><b>${c.reason === "eliminated" ? "Indice débloqué par la communauté" : "Indice du jour"}</b><small>${escapeHtml(c.label)} : ${escapeHtml(String(c.value))}</small></span><span class="egg-feed-meta"><time datetime="${escapeHtml(c.unlockedAt)}">${escapeHtml(eggStamp(c.unlockedAt))}</time></span></li>` }));
+  const clues = s.clues.filter(c => c.unlockedAt).map(c => ({ at: c.unlockedAt, html: `<li class="egg-feed-clue"><i aria-hidden="true">✦</i><span><b>${c.reason === "eliminated" ? "Indice débloqué par la communauté" : "Indice du jour"}</b><small>${escapeHtml(c.label)} : ${escapeHtml(String(c.display ?? c.value))}</small></span><span class="egg-feed-meta"><time datetime="${escapeHtml(c.unlockedAt)}">${escapeHtml(eggStamp(c.unlockedAt))}</time></span></li>` }));
   return guesses.concat(clues).sort((a,b) => new Date(b.at) - new Date(a.at)).slice(0,20).map(row => row.html).join("");
 }
 function renderEggState() {
