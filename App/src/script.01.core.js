@@ -464,9 +464,9 @@ const ACHIEVEMENT_DEFS = [
   { id: "twentyfive_wins", title: "Sur la bonne voie", desc: "Atteindre 25 victoires.", target: 25, category: "Devinette", getValue: () => playerStats.wins || 0 },
   { id: "fifty_wins", title: "Dresseur confirmé", desc: "Atteindre 50 victoires.", target: 50, category: "Devinette", getValue: () => playerStats.wins || 0 },
   { id: "hundred_wins", title: "Maître de la devinette", desc: "Atteindre 100 victoires.", target: 100, category: "Devinette", getValue: () => playerStats.wins || 0 },
-  { id: "fifty_games", title: "Habitué", desc: "Jouer 50 parties.", target: 50, category: "Devinette", getValue: () => playerStats.played || 0 },
-  { id: "hundred_games", title: "Centurion", desc: "Jouer 100 parties.", target: 100, category: "Devinette", getValue: () => playerStats.played || 0 },
-  { id: "twofifty_games", title: "Marathonien", desc: "Jouer 250 parties.", target: 250, category: "Devinette", getValue: () => playerStats.played || 0 },
+  { id: "fifty_games", title: "Habitué", desc: "Lancer 50 parties.", target: 50, category: "Devinette", getValue: () => playerStats.played || 0 },
+  { id: "hundred_games", title: "Centurion", desc: "Lancer 100 parties.", target: 100, category: "Devinette", getValue: () => playerStats.played || 0 },
+  { id: "twofifty_games", title: "Marathonien", desc: "Lancer 250 parties.", target: 250, category: "Devinette", getValue: () => playerStats.played || 0 },
   // — Régularité —
   { id: "daily_streak_3", title: "Régulier", desc: "Série journalière de 3.", target: 3, category: "Régularité", getValue: () => playerStats.dailyBestStreak || 0 },
   { id: "daily_streak_7", title: "Une semaine parfaite", desc: "Série journalière de 7.", target: 7, category: "Régularité", getValue: () => playerStats.dailyBestStreak || 0 },

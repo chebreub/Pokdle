@@ -2234,12 +2234,29 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
   #screen-all-modes #mode-hub-title{font-size:1.8rem !important;}
   #screen-all-modes .all-modes-grid{grid-template-columns:1fr !important;}
 }
-/* Profil : la vitrine des badges de Ligue, un par semaine réussie. */
-#pokdle-app .league-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
-#pokdle-app .league-badge { display: grid; justify-items: center; gap: 2px; padding: 14px 10px; border-radius: 18px; background: linear-gradient(160deg, #fff7e2, #fde7f0); border: 1px solid #f3dc8f; text-align: center; }
-#pokdle-app .league-badge-gem { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f0b429, #e46a9a); color: #fff; font-size: 22px; box-shadow: 0 4px 0 rgba(138, 90, 0, .2); }
-#pokdle-app .league-badge b { font: 600 1rem Fredoka, Nunito, sans-serif; color: #2e2a33; }
+/* Profil : la vitrine des badges de Ligue, de vraies médailles par rang (Bronze, Argent, Or, Maître). */
+#pokdle-app .league-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+#pokdle-app .league-badge { position: relative; overflow: hidden; display: grid; justify-items: center; gap: 3px; padding: 16px 12px 14px; border-radius: 22px; text-align: center; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 8px 22px rgba(46,42,51,.08); transition: transform .2s ease, box-shadow .2s ease; }
+#pokdle-app .league-badge:hover { transform: translateY(-3px); box-shadow: 0 14px 28px rgba(46,42,51,.14); }
+#pokdle-app .league-badge.tier-bronze { background: linear-gradient(160deg, #fff6ee, #f3dcc6); }
+#pokdle-app .league-badge.tier-silver { background: linear-gradient(160deg, #ffffff, #e3e9f1); }
+#pokdle-app .league-badge.tier-gold { background: linear-gradient(160deg, #fffbe8, #ffe7a1); border-color: #f0c23a; box-shadow: 0 8px 26px rgba(224,165,20,.28); }
+#pokdle-app .league-badge.tier-master { background: linear-gradient(135deg, #fff1fb, #eef0ff, #e6fbff, #fffbe6); background-size: 220% 220%; border-color: #c8b6ff; box-shadow: 0 10px 30px rgba(123,92,255,.28); }
+#pokdle-app .league-medal { width: 104px; height: auto; filter: drop-shadow(0 6px 8px rgba(46,42,51,.18)); }
+#pokdle-app .league-badge-rank { padding: 2px 10px; border-radius: 999px; background: rgba(255,255,255,.75); font: 900 .7rem Nunito, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #6b5a4e; }
+#pokdle-app .league-badge.tier-gold .league-badge-rank { background: #c98a0b; color: #fff; }
+#pokdle-app .league-badge.tier-master .league-badge-rank { background: linear-gradient(90deg, #7b5cff, #ff6fb1); color: #fff; }
+#pokdle-app .league-badge b { font: 600 1.05rem Fredoka, Nunito, sans-serif; color: #2e2a33; }
 #pokdle-app .league-badge small { font-size: .74rem; color: #776b63; font-weight: 700; }
+#pokdle-app .league-badge .league-badge-score { color: #2e2a33; font-weight: 900; }
 #pokdle-app .league-badges-empty { margin: 0 0 10px; color: #776b63; }
-#pokdle-app.theme-dark .league-badge { background: rgba(255, 212, 92, .1); border-color: rgba(255, 212, 92, .3); }
-#pokdle-app.theme-dark .league-badge b { color: #f0eaf9; }
+#pokdle-app .weekly-league-earned { display: inline-flex; align-items: center; gap: 10px; }
+#pokdle-app .weekly-league-earned .league-medal { width: 54px; }
+#pokdle-app.theme-dark .league-badge { border-color: rgba(255,255,255,.12); }
+#pokdle-app.theme-dark .league-badge b { color: #2e2a33; }
+@media (prefers-reduced-motion: no-preference) {
+  #pokdle-app:not(.reduce-motion) .league-badge.tier-master { animation: league-holo 6s ease-in-out infinite alternate; }
+  #pokdle-app:not(.reduce-motion) .league-badge.tier-gold::after, #pokdle-app:not(.reduce-motion) .league-badge.tier-master::after { content: ""; position: absolute; inset: -40% auto -40% -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.7), transparent); transform: rotate(18deg); animation: league-shine 4.5s ease-in-out infinite; pointer-events: none; }
+}
+@keyframes league-holo { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+@keyframes league-shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }

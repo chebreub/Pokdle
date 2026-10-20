@@ -23,6 +23,14 @@ test("Clues unlock only at 100-guess thresholds and compatible candidates obey t
   assert.equal(compatibleWithClues({...p,type1:"Feu"},eggClues(p,200)),false);
   assert.deepEqual([1,2,5,7].map(days=>eggClues(p,0,days).length),[1,2,5,5],"one clue is guaranteed per day of the round");
   assert.equal(eggClues(p,250,1).length,2,"eliminations still unlock clues ahead of the calendar");
+  // From the round of 26/10/2026: weak clues first, the generation last, no habitat.
+  const {CLUES,CLUES_V2,cluesFor}=require("../lib/egg-mystery");
+  assert.equal(cluesFor("2026-10-19"),CLUES,"the round in progress keeps its clues");
+  assert.deepEqual(cluesFor("2026-10-26").map(([key])=>key),["stage","shape","color","type1","gen"]);
+  const v2=eggClues({...p,stage:2,type2:null},999,0,CLUES_V2);
+  assert.deepEqual(v2.slice(0,2).map(c=>[c.key,c.value,c.display]),[["stage",2,"1re évolution"],["shape",1,"Un seul type"]]);
+  assert.equal(compatibleWithClues({...p,stage:2,type2:"Vol"},v2.slice(0,2)),false,"the number of types is checked like any clue");
+  assert.equal(compatibleWithClues({...p,stage:2,type2:null},v2.slice(0,2)),true);
   assert.deepEqual(["2026-10-12T10:00:00Z","2026-10-13T10:00:00Z","2026-10-18T21:00:00Z","2026-10-18T22:30:00Z"].map(at=>eggDaysOpen(eggWeek(new Date(at)))),[1,2,7,1]);
 });
 test("Egg PostgreSQL quotas, duplicate races, atomic winner/reward, rollback and weekly reset",{skip:!process.env.QA_DATABASE_URL},async()=>{
@@ -79,10 +87,10 @@ test("Egg PostgreSQL quotas, duplicate races, atomic winner/reward, rollback and
     assert.equal((await service.rewards(account)).rewards.length,1);
     now=new Date("2026-10-18T22:00:00Z");state=await service.state(guest);r=(await db.query("SELECT * FROM egg_rounds WHERE id=$1",[state.roundId])).rows[0];
     const ids=pokemon.filter(p=>p.id!==Number(r.secret_id)&&p.id<1000).slice(0,100).map(p=>p.id);
-    await db.query("INSERT INTO egg_guesses(round_id,pokemon_id,anon_id,ip_hash,day,username) SELECT $1,unnest($2::int[]),'fixture','fixture','2026-10-19','Anonyme'",[state.roundId,ids]);
+    await db.query("INSERT INTO egg_guesses(round_id,pokemon_id,anon_id,ip_hash,day,username,created_at) SELECT $1,unnest($2::int[]),'fixture','fixture','2026-10-19','Anonyme','2026-10-19T08:00:00Z'",[state.roundId,ids]);
     state=await service.state(guest);assert.equal(state.clues.length,1);assert.equal(state.eliminatedIds.length,100);assert.equal(state.feed.length,20);assert.equal(state.compatibleIds.includes(Number(r.secret_id)),true);
     const more=pokemon.filter(p=>p.id!==Number(r.secret_id)&&p.id<1000).slice(100,200).map(p=>p.id);
-    await db.query("INSERT INTO egg_guesses(round_id,pokemon_id,anon_id,ip_hash,day,username) SELECT $1,unnest($2::int[]),'fixture','fixture','2026-10-19','Anonyme'",[state.roundId,more]);
+    await db.query("INSERT INTO egg_guesses(round_id,pokemon_id,anon_id,ip_hash,day,username,created_at) SELECT $1,unnest($2::int[]),'fixture','fixture','2026-10-19','Anonyme','2026-10-19T09:00:00Z'",[state.roundId,more]);
     state=await service.state(guest);assert.equal(state.clues.length,2,"200 eliminations unlock Tuesday's clue on Monday");assert.equal(state.clues[1].reason,"eliminated");
   }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS "'+schema+'" CASCADE');await admin.end();}
 });

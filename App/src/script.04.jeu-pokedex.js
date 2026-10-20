@@ -5162,6 +5162,7 @@ function updatePokedexShinyButton() {
   const localButton = document.getElementById("pokedex-detail-shiny-toggle");
   if (button) {
     button.textContent = `Shiny : ${pokedexGridUseShiny ? "Oui" : "Non"}`;
+    button.setAttribute("aria-pressed", String(Boolean(pokedexGridUseShiny)));
     button.classList.toggle("active", pokedexGridUseShiny);
   }
   if (localButton) {

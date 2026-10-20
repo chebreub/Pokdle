@@ -541,7 +541,7 @@
           </div>
         </div>
         <div class="pokedex-actions">
-          <button id="pokedex-shiny-toggle" class="btn-yellow" type="button">Shiny : Non</button>
+          <button id="pokedex-shiny-toggle" class="btn-ghost pokedex-shiny-switch" type="button" aria-pressed="false">Shiny : Non</button>
         </div>
 
         <div class="pokedex-layout">
@@ -1273,7 +1273,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <div id="party-lobby" class="party-lobby">
           <div class="party-entry-panel"><h3>À toi de jouer</h3><p>Choisis le pseudo que tes amis verront.</p><label class="party-field"><span>Ton pseudo</span><input id="party-nickname" type="text" maxlength="24" placeholder="Ex. Dresseur Sacha" autocomplete="nickname" /></label><button class="btn-blue" type="button" data-action="partyCreateRoom">Créer mon salon <span aria-hidden="true">→</span></button><div class="party-divider"><span>ou rejoindre tes amis</span></div><label class="party-field" for="party-join-code"><span>Code du salon</span></label><div class="party-join-row"><input id="party-join-code" type="text" maxlength="6" placeholder="Ex. AB3DF" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button class="btn-ghost" type="button" data-action="partyJoinRoom">Rejoindre</button></div><p class="party-entry-note">Pas de compte nécessaire. Juste un pseudo.</p></div>
-          <div class="party-welcome"><span class="party-eyebrow">LA SOIRÉE COMMENCE ICI</span><h3>Invite ta bande.<br>Défie votre Pokédex.</h3><p>Crée ton salon, partage le lien et change de mini-jeu entre deux parties.</p><ol class="party-steps"><li><b>01</b><span>Rassemble tes amis<small>Un lien suffit pour vous retrouver.</small></span></li><li><b>02</b><span>Choisis votre défi<small>Vitesse, déduction ou numéros du Pokédex.</small></span></li><li><b>03</b><span>Décroche la première place<small>Les points s’additionnent à chaque manche.</small></span></li></ol><div class="party-new-preview"><span aria-hidden="true">◎</span><div><b>Nouveau · Numéro mystère</b><p>Un numéro tiré au sort. Une proposition chacun. Le plus proche remporte la manche.</p></div></div></div>
+          <div class="party-welcome"><span class="party-eyebrow">LA SOIRÉE COMMENCE ICI</span><h3>Invite ta bande.<br>Défie votre Pokédex.</h3><p>Crée ton salon, partage le lien et change de mini-jeu entre deux parties.</p><ol class="party-steps"><li><b>01</b><span>Rassemble tes amis<small>Un lien suffit pour vous retrouver.</small></span></li><li><b>02</b><span>Choisis votre défi<small>Vitesse, déduction ou numéros du Pokédex.</small></span></li><li><b>03</b><span>Décroche la première place<small>Les points s’additionnent à chaque manche.</small></span></li></ol><div class="party-new-preview"><span aria-hidden="true">◎</span><div><b>Nouveau · Petit Bac</b><p>Tes thèmes, une lettre, et le premier qui a tout rempli crie STOP. Les réponses se vérifient ensemble.</p></div></div></div>
           <section class="party-duels" aria-labelledby="party-duels-title"><div><span class="party-eyebrow">AUSSI À DEUX</span><h3 id="party-duels-title">Duels et défis entre amis</h3><p>Chacun a son propre salon ou son lien à partager.</p></div><div class="party-duels-grid"><button type="button" class="party-duel-link" data-action="openMultiplayerMode"><b>Duel 1v1</b><small>Devinez la même cible. Le premier à trouver gagne.</small></button><button type="button" class="party-duel-link" data-action="openStatClashMode"><b>Stat Clash</b><small>Choisissez vos stats et remportez les manches.</small></button><button type="button" class="party-duel-link" data-action="openStatAuctionMode"><b>Stat Auction</b><small>Misez sur les Pokémon pour construire votre équipe.</small></button><button type="button" class="party-duel-link" data-action="openDefiAmiFromAllModes"><b>Défi ami</b><small>Choisis une cible et partage le lien à un ami.</small></button></div></section>
         </div>
         <div id="party-joined" class="party-joined hidden">
@@ -1303,12 +1303,12 @@ EVs: 252 Atk / 4 Def / 252 Spe
               </div>
               <section id="party-setup" class="party-setup"><div class="party-section-head"><div><span class="party-eyebrow">VOTRE PROCHAIN DÉFI</span><h3>Choisissez votre terrain de jeu</h3></div><span id="party-host-note" class="party-host-note"></span></div>
                 <div id="party-mode-select" class="party-mode-select hidden" role="group" aria-label="Mode de jeu">
-                  <button id="party-mode-dexrace" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["dexrace"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">▦</span><span class="pmt-text"><small class="pmt-tag">Nouveau · Ordinateur</small><b>Course au Pokédex</b><span>Une grille, le premier prend la case</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
-                  <button id="party-mode-coop" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["coop"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Coopération · Nouveau</small><b>Enquête coop</b><span>Vos indices, une seule équipe</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
-                  <button id="party-mode-deduction" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["deduction"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">?</span><span class="pmt-text"><small class="pmt-tag">Nouveau · 2–8</small><b>Pokémon mystère</b><span>Le Duel, tous ensemble</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
-                  <button id="party-mode-quiestce1v1" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["quiestce1v1"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⌕</span><span class="pmt-text"><small class="pmt-tag">Nouveau · 2 joueurs</small><b>Qui est-ce ?</b><span>Chacun son Pokémon secret, tour par tour</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-dexrace" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["dexrace"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">▦</span><span class="pmt-text"><small class="pmt-tag">Course · 2 à 8</small><b>Course au Pokédex</b><span>Une grille, le premier prend la case</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-coop" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["coop"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Coopération</small><b>Enquête coop</b><span>Vos indices, une seule équipe</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-deduction" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["deduction"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">?</span><span class="pmt-text"><small class="pmt-tag">Déduction · 2 à 8</small><b>Pokémon mystère</b><span>Le Duel, tous ensemble</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-quiestce1v1" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["quiestce1v1"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⌕</span><span class="pmt-text"><small class="pmt-tag">2 joueurs</small><b>Qui est-ce ?</b><span>Chacun son Pokémon secret, tour par tour</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-petitbac" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["petitbac"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">Ⓐ</span><span class="pmt-text"><small class="pmt-tag">Nouveau · 2 à 8</small><b>Petit Bac</b><span>Tes thèmes, une lettre, STOP !</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
-                  <button id="party-mode-nearest" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["nearest"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Nouveau</small><b>Numéro mystère</b><span>Vise le numéro le plus proche</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
+                  <button id="party-mode-nearest" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["nearest"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">◎</span><span class="pmt-text"><small class="pmt-tag">Flair</small><b>Numéro mystère</b><span>Vise le numéro le plus proche</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-guess" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["guess"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⚑</span><span class="pmt-text"><small class="pmt-tag">Rapidité</small><b>Course Pokémon</b><span>Reconnais-le avant tes amis</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-typecombo" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["typecombo"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">✦</span><span class="pmt-text"><small class="pmt-tag">Réflexes</small><b>Combo de types</b><span>Un Pokémon, deux types</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
                   <button id="party-mode-duocriteria" type="button" class="party-mode-btn party-mode-tile" data-action="partySetMode" data-args='["duocriteria"]' aria-pressed="false"><span class="pmt-emoji" aria-hidden="true">⊕</span><span class="pmt-text"><small class="pmt-tag">Déduction</small><b>Duo de critères</b><span>Trouve le point commun</span></span><span class="pmt-check" aria-hidden="true">✓</span></button>
@@ -1506,7 +1506,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Higher or Lower</h2>
           <div class="ranking-head-actions">
-            <button class="btn-blue" type="button" data-action="restartHigherLowerGame">Rejouer</button>
+            <button class="btn-blue" type="button" data-action="restartHigherLowerGame">Nouvelle partie</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1534,7 +1534,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Speedrun Pokédex</h2>
           <div class="ranking-head-actions">
-            <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+            <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Nouvelle partie</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>
@@ -1548,7 +1548,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="ranking-head">
           <h2 class="card-title">Combo de types</h2>
           <div class="ranking-head-actions">
-            <button class="btn-blue" type="button" data-action="restartTypeComboGame">Rejouer</button>
+            <button class="btn-blue" type="button" data-action="restartTypeComboGame">Nouvelle partie</button>
             <button class="btn-ghost" type="button" data-action="goToConfig">&#8592; Retour</button>
           </div>
         </div>

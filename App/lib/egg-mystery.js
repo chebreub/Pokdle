@@ -32,14 +32,26 @@ function eggDaysOpen(week) {
   return Math.round((Date.parse(week.day + "T00:00:00Z") - Date.parse(week.start + "T00:00:00Z")) / 86400000) + 1;
 }
 const CLUES = [["gen", "Génération"], ["type1", "Premier type"], ["color", "Couleur"], ["habitat", "Habitat"], ["stage", "Stade d’évolution"]];
-// One clue is guaranteed per day of the round (Monday: generation, Tuesday:
-// first type…), and every 100 eliminated Pokémon can unlock the next one sooner.
-function eggClues(secret, eliminated, daysOpen = 0) {
-  const count = Math.min(CLUES.length, Math.max(Math.floor(eliminated/100), Math.max(0, Math.floor(daysOpen))));
-  return CLUES.slice(0, count).map(([key,label]) => ({ key, label, value: secret[key] }));
+// From the round of 26/10/2026: the weak clues first and the strong ones at the end of
+// the week, so the egg resists until Friday (about 430, 215, 25, 5 then 1 compatible
+// Pokémon on average). The habitat is gone: it says « Rare » for most recent Pokémon.
+const CLUES_V2 = [["stage", "Stade d’évolution"], ["shape", "Nombre de types"], ["color", "Couleur"], ["type1", "Premier type"], ["gen", "Génération"]];
+const CLUES_V2_FROM = "2026-10-26";
+function cluesFor(weekStart) { return String(weekStart || "") >= CLUES_V2_FROM ? CLUES_V2 : CLUES; }
+function clueValue(pokemon, key) { return key === "shape" ? (pokemon.type2 ? 2 : 1) : pokemon[key]; }
+function clueDisplay(key, value) {
+  if (key === "stage") return ({ 1: "Base", 2: "1re évolution", 3: "2e évolution" })[value] || String(value);
+  if (key === "shape") return value === 2 ? "Deux types" : "Un seul type";
+  return String(value);
+}
+// One clue is guaranteed per day of the round (Monday: the first clue, Tuesday: the
+// second…), and every 100 eliminated Pokémon can unlock the next one sooner.
+function eggClues(secret, eliminated, daysOpen = 0, list = CLUES) {
+  const count = Math.min(list.length, Math.max(Math.floor(eliminated/100), Math.max(0, Math.floor(daysOpen))));
+  return list.slice(0, count).map(([key,label]) => { const value = clueValue(secret, key); return { key, label, value, display: clueDisplay(key, value) }; });
 }
 function compatibleWithClues(pokemon, clues) {
-  return clues.every(clue => JSON.stringify(pokemon[clue.key]) === JSON.stringify(clue.value));
+  return clues.every(clue => JSON.stringify(clueValue(pokemon, clue.key)) === JSON.stringify(clue.value));
 }
 function signedGuest(secret, cookie) {
   const [id, signature] = String(cookie || "").split(".");
@@ -125,7 +137,8 @@ function createEggService({ db, pokemon, randomInt = crypto.randomInt, clock = (
     const week = eggWeek(now);
     // Date each clue by whichever came first: its day of the round or its
     // 100-elimination milestone, so the feed can tell when it appeared.
-    const clues = eggClues(byId.get(Number(r.secret_id)), eliminated.length, eggDaysOpen(week)).map((clue, index) => {
+    const clueList = cluesFor(week.start);
+    const clues = eggClues(byId.get(Number(r.secret_id)), eliminated.length, eggDaysOpen(week), clueList).map((clue, index) => {
       const byDay = parisMidnight(addDays(week.start, index)), milestone = wrong[(index+1)*100-1];
       const byGuesses = milestone ? new Date(milestone.created_at) : null, early = Boolean(byGuesses && byGuesses < byDay);
       return { ...clue, unlockedAt: (early ? byGuesses : byDay).toISOString(), reason: early ? "eliminated" : "day" };
@@ -138,7 +151,7 @@ function createEggService({ db, pokemon, randomInt = crypto.randomInt, clock = (
       reward: display(r.reward_id), candidateIds: pool.map(p => Number(p.id)), eliminatedIds: eliminated,
       compatibleIds, remaining: compatibleIds.filter(id => !eliminatedSet.has(id)).length, clues,
       nextClueAt: clues.length < 5 ? (clues.length+1)*100 : null,
-      upcomingClues: CLUES.slice(clues.length).map(([key,label], index) => ({ key, label, at: parisMidnight(addDays(week.start, clues.length+index)).toISOString(), atEliminated: (clues.length+index+1)*100 })),
+      upcomingClues: clueList.slice(clues.length).map(([key,label], index) => ({ key, label, at: parisMidnight(addDays(week.start, clues.length+index)).toISOString(), atEliminated: (clues.length+index+1)*100 })),
       quota: q, authenticated: Boolean(identity.playerId),
       solved: Boolean(r.found_at), winner: r.found_at ? { name: r.winner_name || "Anonyme", at: r.found_at, me: r.found_by === (identity.playerId ? "user:"+identity.playerId : "guest:"+identity.anonId) } : null,
       canClaim: Boolean(identity.playerId && r.found_by === "guest:"+identity.anonId),
@@ -231,4 +244,4 @@ function mountEggRoutes({ app, express, db, pokemon, secret, getUser, readCookie
   app.post("/api/egg/guess",express.json({limit:"2kb"}),handle((who,req) => service.guess(who,Number(req.body?.roundId),req.body?.pokemonId)));
   app.post("/api/egg/claim",express.json({limit:"2kb"}),handle((who,req) => service.claim(who,Number(req.body?.roundId))));
 }
-module.exports = { parisDay, parisMidnight, eggWeek, eggDaysOpen, eggClues, compatibleWithClues, signedGuest, issueGuest, initEggDb, createEggService, mountEggRoutes };
+module.exports = { CLUES, CLUES_V2, cluesFor, parisDay, parisMidnight, eggWeek, eggDaysOpen, eggClues, compatibleWithClues, signedGuest, issueGuest, initEggDb, createEggService, mountEggRoutes };

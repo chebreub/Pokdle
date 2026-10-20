@@ -26893,10 +26893,6 @@ body.theme-dark .lbv3-empty p {
   min-height:160px;
   align-content:center;
 }
-#description-box .challenge-title::before {
-  content:"POKÉDEX // ";
-  color:#2f76ff;
-}
 #description-text.description-text {
   max-width:820px;
   margin:4px auto 0;
