@@ -225,7 +225,7 @@ function openWeeklyLeague() {
   weeklyLeagueSyncScore(state);
   const claim=state.mastered&&!state.claimed
     ? '<button type="button" class="btn-yellow weekly-league-claim" data-action="weeklyLeagueClaimBadge">Réclamer le badge de maîtrise</button>'
-    : state.claimed?'<div class="weekly-league-earned">◆ BADGE DE LIGUE OBTENU</div>':'';
+    : state.claimed?'<div class="weekly-league-earned">'+leagueMedalSvg(leagueMedalTier(playerProfile?.weeklyLeagueBadges?.[state.info.id]?.score),state.info.week,"m"+state.info.id)+'<span>BADGE '+escapeHtml(LEAGUE_MEDAL_TIERS[leagueMedalTier(playerProfile?.weeklyLeagueBadges?.[state.info.id]?.score)].label.toUpperCase())+' OBTENU</span></div>':'';
   ensureOverlay("Épreuve de Ligue",'<div class="weekly-league-modal">'+
     '<header class="weekly-league-modal-head"><div><span>SEMAINE '+String(state.info.week).padStart(2,"0")+'</span><h3>Épreuve de Ligue</h3><p>Trois disciplines. Une semaine. Ta maîtrise avant tout.</p></div><div class="weekly-league-score"><strong>'+state.score+'</strong><span>/ 600 pts</span></div></header>'+
     '<div class="weekly-league-progress"><progress value="'+state.completed+'" max="3"></progress><span>'+state.completed+'/3 objectifs maîtrisés · '+weeklyLeagueTimeLeft()+' restantes</span></div>'+
@@ -305,12 +305,40 @@ if(typeof window!=="undefined"&&window.addEventListener){
   window.addEventListener("pokedle:account-known",()=>setTimeout(renderWeeklyLeagueHome,0));
 }
 // Profile showcase: one badge per mastered week, newest first, with its date and score.
+// League medals: the week's score sets the rank (600 = Maître), drawn as a real medal.
+const LEAGUE_MEDAL_TIERS={
+  master:{label:"Maître",title:"Maître de Ligue",rim:["#fff1a8","#ffb3e6","#a9c8ff","#9ff0d0"],face:["#ffffff","#f4ecff"],ribbon:["#7b5cff","#ff6fb1"],ink:"#4b2f91"},
+  gold:{label:"Or",title:"Badge Or",rim:["#fff4b0","#f0c23a","#c98a0b"],face:["#fffbe6","#ffe9a3"],ribbon:["#e0483f","#2f76ff"],ink:"#7a5300"},
+  silver:{label:"Argent",title:"Badge Argent",rim:["#ffffff","#cfd8e3","#8e9bab"],face:["#ffffff","#e9eef5"],ribbon:["#2f76ff","#5bc0eb"],ink:"#3b4a5c"},
+  bronze:{label:"Bronze",title:"Badge Bronze",rim:["#ffd9b0","#d18a4a","#8f4f1f"],face:["#fff4ea","#f6d7bd"],ribbon:["#3d9b5f","#8ac926"],ink:"#6b3a14"}
+};
+function leagueMedalTier(score){const n=Number(score)||0;return n>=600?"master":n>=540?"gold":n>=450?"silver":"bronze";}
+function leagueMedalSvg(tierKey,week,uid){
+  const t=LEAGUE_MEDAL_TIERS[tierKey]||LEAGUE_MEDAL_TIERS.bronze,id="lm"+String(uid).replace(/[^a-z0-9]/gi,"");
+  const stops=list=>list.map((c,i)=>'<stop offset="'+Math.round(i*100/Math.max(1,list.length-1))+'%" stop-color="'+c+'"/>').join("");
+  // A laurel of seven leaves on each side of the face.
+  const leaves=[0,1,2,3,4,5,6].map(i=>{const a=(200+i*20)*Math.PI/180,x=60+31*Math.cos(a),y=60+31*Math.sin(a),r=(200+i*20)+90;
+    return '<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="2.6" ry="6" transform="rotate('+r+' '+x.toFixed(1)+' '+y.toFixed(1)+')"/><ellipse cx="'+(120-x).toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="2.6" ry="6" transform="rotate('+(-r)+' '+(120-x).toFixed(1)+' '+y.toFixed(1)+')"/>';}).join("");
+  return '<svg class="league-medal" viewBox="0 0 120 150" aria-hidden="true"><defs>'+
+    '<linearGradient id="'+id+'r" x1="0" y1="0" x2="1" y2="1">'+stops(t.rim)+'</linearGradient>'+
+    '<radialGradient id="'+id+'f" cx="50%" cy="35%" r="70%">'+stops(t.face)+'</radialGradient>'+
+    '<linearGradient id="'+id+'b" x1="0" y1="0" x2="1" y2="0">'+stops(t.ribbon)+'</linearGradient></defs>'+
+    '<path d="M38 88 L24 146 L40 136 L50 148 L60 98 Z" fill="url(#'+id+'b)"/><path d="M82 88 L96 146 L80 136 L70 148 L60 98 Z" fill="url(#'+id+'b)" opacity=".85"/>'+
+    '<circle cx="60" cy="60" r="48" fill="url(#'+id+'r)"/><circle cx="60" cy="60" r="48" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="1.5"/>'+
+    '<circle cx="60" cy="60" r="39" fill="url(#'+id+'f)" stroke="url(#'+id+'r)" stroke-width="3"/>'+
+    '<g fill="'+t.ink+'" opacity=".55">'+leaves+'</g>'+
+    '<path d="M60 26 l3.2 6.5 7.2 1 -5.2 5 1.2 7.1 -6.4 -3.4 -6.4 3.4 1.2 -7.1 -5.2 -5 7.2 -1z" fill="'+t.ink+'" opacity=".9"/>'+
+    '<text x="60" y="60" text-anchor="middle" font-family="Nunito, sans-serif" font-size="8" font-weight="900" letter-spacing="1.5" fill="'+t.ink+'">SEMAINE</text>'+
+    '<text x="60" y="84" text-anchor="middle" font-family="Fredoka, Nunito, sans-serif" font-size="26" font-weight="700" fill="'+t.ink+'">'+escapeHtml(String(week))+'</text>'+
+    '<ellipse class="league-medal-shine" cx="44" cy="38" rx="16" ry="7" fill="#fff" opacity=".45" transform="rotate(-30 44 38)"/></svg>';
+}
 function leagueBadgeShowcaseHtml() {
   const badges=Object.entries(playerProfile?.weeklyLeagueBadges||{}).filter(([,b])=>b&&typeof b==="object").sort((a,b)=>(Number(b[1].at)||0)-(Number(a[1].at)||0));
-  if(!badges.length) return '<p class="league-badges-empty">Aucun badge pour l’instant. Remplis les 3 épreuves de la Ligue de la semaine pour gagner le premier.</p><button type="button" class="btn-blue" data-action="openWeeklyLeague">Voir la Ligue de la semaine →</button>';
+  if(!badges.length) return '<p class="league-badges-empty">Aucun badge pour l’instant. Remplis les 3 épreuves de la Ligue de la semaine pour gagner le premier : Bronze, Argent, Or… ou Maître avec 600 points.</p><button type="button" class="btn-blue" data-action="openWeeklyLeague">Voir la Ligue de la semaine →</button>';
   return '<ul class="league-badges">'+badges.map(([id,badge])=>{
-    const [year,week]=String(id).split("-W"),at=Number(badge.at)?new Date(Number(badge.at)).toLocaleDateString("fr-FR",{day:"numeric",month:"long"}):"";
-    return '<li class="league-badge"><span class="league-badge-gem" aria-hidden="true">◆</span><b>Semaine '+escapeHtml(String(Number(week)||week||"?"))+'</b><small>'+escapeHtml(year||"")+(Number(badge.score)?' · '+Number(badge.score)+' / 600 pts':'')+'</small>'+(at?'<small>obtenu le '+escapeHtml(at)+'</small>':'')+'</li>';
+    const [year,week]=String(id).split("-W"),weekNo=String(Number(week)||week||"?"),tierKey=leagueMedalTier(badge.score),tier=LEAGUE_MEDAL_TIERS[tierKey];
+    const at=Number(badge.at)?new Date(Number(badge.at)).toLocaleDateString("fr-FR",{day:"numeric",month:"long"}):"";
+    return '<li class="league-badge tier-'+tierKey+'">'+leagueMedalSvg(tierKey,weekNo,id)+'<span class="league-badge-rank">'+escapeHtml(tier.label)+'</span><b>'+escapeHtml(tier.title)+'</b><small>Semaine '+escapeHtml(weekNo)+' · '+escapeHtml(year||"")+'</small>'+(Number(badge.score)?'<small class="league-badge-score">'+Number(badge.score)+' / 600 pts</small>':'')+(at?'<small>obtenu le '+escapeHtml(at)+'</small>':'')+'</li>';
   }).join('')+'</ul>';
 }
 function renderLeagueBadgeShowcase() {
