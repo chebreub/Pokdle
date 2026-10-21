@@ -71,16 +71,19 @@ async function importLegacy({ db, old, ascModes = [] }) {
   // Accounts: never replace live progress with a longer (possibly older) blob.
   const users = kept(await oldRows(old, "users"), "discord_id");
   for (const user of users) {
-    // Never attach a snapshot explicitly stamped for another identity.
-    if (isRecord(user.data) && user.data._accountId != null &&
-        String(user.data._accountId) !== String(user.discord_id)) {
-      report.profilesOwnerMismatch = (report.profilesOwnerMismatch || 0) + 1;
-      continue;
-    }
     // In production importLegacy runs in one transaction. Lock each existing row
     // so a concurrent /api/profile write cannot race the blank-profile check.
     const current = (await db.query("SELECT data FROM users WHERE discord_id=$1 FOR UPDATE", [user.discord_id])).rows[0];
-    if (!current) { report.users = (report.users || 0) + await insertRows(db, "users", [user]); continue; }
+    const wrongOwner = isRecord(user.data) && user.data._accountId != null &&
+      String(user.data._accountId) !== String(user.discord_id);
+    if (wrongOwner) report.profilesOwnerMismatch = (report.profilesOwnerMismatch || 0) + 1;
+    if (!current) {
+      // Keep the account row for its identities/scores, but never attach someone
+      // else's snapshot to it. Otherwise downstream identity FKs would break.
+      report.users = (report.users || 0) + await insertRows(db, "users", [wrongOwner ? { ...user, data: {} } : user]);
+      continue;
+    }
+    if (wrongOwner) continue;
     if (canRestoreLegacyProfile(current.data, user.data, user.discord_id)) {
       await db.query("UPDATE users SET data=$2::jsonb, partner_id=COALESCE(partner_id,$3), created_at=LEAST(created_at,$4) WHERE discord_id=$1", [user.discord_id, JSON.stringify(user.data), user.partner_id ?? null, user.created_at]);
       report.profilesRestored = (report.profilesRestored || 0) + 1;
