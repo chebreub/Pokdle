@@ -3419,15 +3419,19 @@ function startEvolutionChainGame() {
 }
 
 function startPokedexOrderGame() {
-  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm).sort((a, b) => a.id - b.id);
-  if (pool.length < 3) {
-    showToast("Il faut au moins trois Pokémon dans la sélection.");
+  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
+  const candidates = getPokedexOrderCandidates(pool);
+  if (!candidates.length) {
+    showToast("Aucun trio de numéros consécutifs dans cette sélection. Choisis d'autres générations.");
     return;
   }
-  const middleIndex = 1 + Math.floor(Math.random() * (pool.length - 2));
-  pokedexOrderState = { lower: pool[middleIndex - 1], middle: pool[middleIndex], upper: pool[middleIndex + 1] };
+  const previousMiddleId = pokedexOrderState?.middle?.id ?? null;
+  const fresh = candidates.filter((trio) => trio[1].id !== previousMiddleId);
+  const source = fresh.length ? fresh : candidates;
+  const [lower, middle, upper] = source[Math.floor(Math.random() * source.length)];
+  pokedexOrderState = { lower, middle, upper };
   gameMode = "order";
-  startGameWithSecret(pokedexOrderState.middle, pool);
+  startGameWithSecret(middle, pool);
   renderPokedexOrderPanel();
 }
 
