@@ -62,6 +62,9 @@ jobs:
       - name: Verify Party mobile touch actions
         if: steps.scope.outputs.focused != 'true'
         run: python tools/party_mobile_quality.py
+      - name: Verify seasonal decorations and gameplay isolation
+        if: steps.scope.outputs.focused != 'true'
+        run: python tools/halloween_quality.py
       - name: Verify consecutive guesses on desktop and touch browsers
         run: python tools/guess_flow_quality.py
       - name: Verify daily Wordle on desktop and touch browsers
