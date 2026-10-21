@@ -12,7 +12,7 @@ function fixture(iso = '2026-10-21T12:00:00Z') {
   class FakeDate extends Date { constructor(...args) { super(...(args.length ? args : [iso])); } }
   function element() {
     const classes = new Set();
-    const el = { children: [], style: { setProperty() {} }, dataset: {},
+    const el = { children: [], style: { setProperty(key, value) { this[key] = value; } }, dataset: {},
       classList: { contains: x => classes.has(x), toggle: (x, on) => on ? classes.add(x) : classes.delete(x) },
       setAttribute() {}, addEventListener() {},
       getBoundingClientRect: () => ({ top:180, bottom:500, left:220, right:1146, width:926, height:320 }),
@@ -84,16 +84,31 @@ test('visits are available beyond home, but dialogs, typing and reduced motion s
     assert.equal(ctx.halloweenMayAnimate({...state, screen}), true, screen);
 });
 
-test('placement never covers controls and cannot cross a game board', () => {
+test('flights span the viewport in both directions and vary height bands', () => {
   const {ctx} = fixture();
-  const options = { width:1366, height:900, top:100, content:{top:220},
-    blockers:[{left:200,right:1166,top:220,bottom:850}], roaming:true, small:false, roll:.2 };
-  assert.equal(ctx.halloweenChoosePlacement(options).kind, 'crossing');
-  const game = ctx.halloweenChoosePlacement({...options, roaming:false});
-  assert.notEqual(game.kind, 'crossing');
-  assert.ok(game.x + game.size < 200 || game.x > 1166);
+  for (const small of [false, true]) {
+    const width = small ? 390 : 1366;
+    const options = {width, height:844, top:110, small, roll:.6, lane:0, right:false};
+    const left = ctx.halloweenFlight(options), right = ctx.halloweenFlight({...options, right:true, lane:2});
+    assert.ok(left.points[0][0] < 0 && left.points[2][0] > width);
+    assert.ok(right.points[0][0] > width && right.points[2][0] < 0);
+    assert.ok(Math.abs(left.points[0][1] - right.points[0][1]) > 200);
+    assert.ok(left.points.every(p => p[1] >= 120 && p[1] + left.size < 844));
+    const rise = ctx.halloweenFlight({...options, ascending:true});
+    assert.ok(rise.points[0][1] > 844 && rise.points[2][1] < 150);
+    assert.equal(ctx.halloweenFlight({...options, height:180}), null);
+  }
+});
+
+test('stationary cameos avoid controls and their previous position', () => {
+  const {ctx} = fixture();
+  const options = {width:1366,height:900,top:100,small:false,roll:.6,
+    blockers:[{left:200,right:1166,top:220,bottom:850}]};
+  const first = ctx.halloweenChoosePlacement(options);
+  assert.ok(first.x + first.size < 200 || first.x > 1166);
+  const next = ctx.halloweenChoosePlacement({...options, previous:first});
+  assert.ok(Math.abs(first.x - next.x) >= first.size || Math.abs(first.y - next.y) >= first.size * 1.3);
   assert.equal(ctx.halloweenChoosePlacement({...options, blockers:[{left:0,right:1366,top:100,bottom:900}]}), null);
-  assert.equal(ctx.halloweenChoosePlacement({...options, height:180}), null);
 });
 
 test('outside the season no costume or artwork is requested', () => {
@@ -103,27 +118,27 @@ test('outside the season no costume or artwork is requested', () => {
 });
 
 test('first visit is prompt and navigation discards stale image callbacks', () => {
-  const f = fixture(); f.advance(1599); assert.equal(f.images().length, 0);
+  const f = fixture(); f.advance(1399); assert.equal(f.images().length, 0);
   f.advance(1); assert.equal(f.images().length, 1);
   const stale = f.images()[0];
   f.body.dataset.screen = 'screen-game'; f.mutation(); stale.onload();
   assert.equal(f.stage().children.length, 0);
-  f.advance(1600); f.images()[1].onload();
+  f.advance(1400); f.images()[1].onload();
   assert.equal(f.stage().children.length, 1);
-  assert.ok(!f.stage().children[0].className.includes('crossing'));
+  assert.notEqual(f.stage().children[0], stale.parentNode?.parentNode);
 });
 
 test('24 different local species appear before repeats, with bounded pauses and one actor', () => {
   const f = fixture(), seen = [];
-  f.advance(1600);
+  f.advance(1400);
   for (let i = 0; i < 24; i++) {
     const image = f.images().at(-1);
     seen.push(image.src); image.onload();
     assert.equal(f.stage().children.length, 1);
     assert.ok(fs.existsSync(path.join(__dirname, '..', image.src)));
-    f.advance(8700); // 8.2 second non-crossing appearance plus fallback allowance.
+    f.advance(Number(f.stage().children[0].dataset.duration) + 500);
     assert.equal(f.stage().children.length, 0);
-    f.advance(7200); // Deterministic desktop pause at random=.6.
+    f.advance(5600); // Deterministic desktop pause at random=.6.
     assert.equal(f.images().length, i + 2);
   }
   assert.equal(new Set(seen).size, 24);
@@ -131,18 +146,18 @@ test('24 different local species appear before repeats, with bounded pauses and 
 });
 
 test('typing cancels a visit, and idle input focus does not disable an entire game', () => {
-  const f = fixture(); f.advance(1600); f.images()[0].onload();
+  const f = fixture(); f.advance(1400); f.images()[0].onload();
   f.events.input({target:{matches:() => true}});
   assert.equal(f.stage().children.length, 0);
   f.advance(2199); assert.equal(f.images().length, 1);
-  f.advance(1601); assert.equal(f.images().length, 2);
+  f.advance(1401); assert.equal(f.images().length, 2);
 });
 
 test('hidden tabs cancel arrivals and resume without a burst', () => {
   const f = fixture(); f.document.hidden = true; f.events.visibilitychange();
   f.advance(180000); assert.equal(f.images().length, 0); assert.equal(f.timers.size, 0);
   f.document.hidden = false; f.events.visibilitychange();
-  f.advance(1599); assert.equal(f.images().length, 0);
+  f.advance(1399); assert.equal(f.images().length, 0);
   f.advance(1); assert.equal(f.images().length, 1);
 });
 
@@ -164,7 +179,50 @@ test('reduced motion retains the static costume but stops arrivals', () => {
 });
 
 test('failed artwork cannot stall the schedule', () => {
-  const f = fixture(); f.advance(1600); f.images()[0].onerror();
+  const f = fixture(); f.advance(1400); f.images()[0].onerror();
   assert.equal(f.stage().children.length, 0);
   f.advance(7200); assert.equal(f.images().length, 2);
+});
+
+test('real scheduled visits alternate full flights with varied resting scenes', () => {
+  const f = fixture(), flights = [], rests = [], motions = [];
+  f.advance(1400);
+  for (let i=0;i<10;i++) {
+    f.images().at(-1).onload();
+    const node = f.stage().children[0];
+    motions.push(node.dataset.motion);
+    if (node.dataset.motion === 'travel') flights.push({x:parseFloat(node.style['--x0']),y:parseFloat(node.style['--y0'])});
+    else rests.push({x:node.style.left,y:node.style.top});
+    f.advance(Number(node.dataset.duration) + 500 + 5600);
+  }
+  assert.equal(motions[0], 'travel');
+  assert.ok(flights.length >= 6);
+  assert.ok(flights[0].x < 0 && flights[1].x > 1366);
+  assert.ok(flights[0].y !== flights[1].y);
+  assert.ok(new Set(rests.map(p => p.x + ':' + p.y)).size > 1);
+});
+
+test('clicks and keyboard interaction immediately clear a travelling Pokémon', () => {
+  for (const name of ['pointerdown','keydown']) {
+    const f = fixture(); f.advance(1400); f.images()[0].onload();
+    assert.equal(f.stage().children.length, 1);
+    f.events[name]({type:name, key:'Enter', target:{closest:() => ({})}});
+    assert.equal(f.stage().children.length, 0);
+    f.advance(3599); assert.equal(f.images().length, 1);
+    f.advance(1); assert.equal(f.images().length, 2);
+  }
+});
+
+test('scrolling, scrollbar presses and scroll keys preserve the travelling actor', () => {
+  const f = fixture(); f.advance(1400); f.images()[0].onload();
+  const actor = f.stage().children[0];
+  f.events.scroll?.();
+  f.ctx.innerHeight -= 60;
+  f.events.resize();
+  f.events.pointerdown({type:'pointerdown',target:{closest:() => null}});
+  f.events.keydown({type:'keydown',key:'PageDown',target:{closest:() => null}});
+  f.events.keydown({type:'keydown',key:'ArrowDown',target:{closest:() => null}});
+  f.advance(2000);
+  assert.equal(f.stage().children[0], actor);
+  assert.equal(f.images().length, 1);
 });
