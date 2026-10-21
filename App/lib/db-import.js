@@ -56,6 +56,13 @@ function canRestoreLegacyProfile(current, legacy, accountId) {
     (!legacy._accountId || String(legacy._accountId) === String(accountId));
 }
 
+// An OLD_DATABASE_URL alone is never consent to run a write-heavy legacy import.
+// The operator must first verify an independent snapshot of the live database.
+function canScheduleLegacyImport(env) {
+  return env?.LEGACY_IMPORT_BACKUP_VERIFIED === "yes" &&
+    typeof env.OLD_DATABASE_URL === "string" && env.OLD_DATABASE_URL.trim().length > 0;
+}
+
 async function importLegacy({ db, old, ascModes = [] }) {
   const report = {};
   // Keep both snapshots when an existing account already has progress. Backups
@@ -182,4 +189,4 @@ function scheduleLegacyImport({ db, oldUrl, ascModes = [], readyBefore = Promise
   return { attempt };
 }
 
-module.exports = { IMPORT_NAME, DATE_AS_TEXT, hasProfileData, canRestoreLegacyProfile, importLegacy, scheduleLegacyImport };
+module.exports = { IMPORT_NAME, DATE_AS_TEXT, hasProfileData, canRestoreLegacyProfile, canScheduleLegacyImport, importLegacy, scheduleLegacyImport };
