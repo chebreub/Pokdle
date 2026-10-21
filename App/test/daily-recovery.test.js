@@ -59,6 +59,6 @@ test('real PostgreSQL: shared private target, recovery, migration, guests, atomi
   await game.guess(A,body(secret,A,'2026-10-07'));assert.equal((await game.state(A)).streak.current,3);
   // Lock acquisition across midnight must roll back rather than charge tomorrow.
   now=new Date('2026-10-07T21:59:59Z');const blocked=await db.connect();await blocked.query('BEGIN');await blocked.query("SELECT * FROM daily_plays WHERE identity='user:A' AND day='2026-10-07' FOR UPDATE");
-  const pending=game.guess(A,body(29,A,'2026-10-07'));await new Promise(r=>setTimeout(r,50));now=new Date('2026-10-07T22:00:00Z');await blocked.query('COMMIT');blocked.release();await assert.rejects(pending,{code:'stale_daily'});
+  const pending=assert.rejects(game.guess(A,body(29,A,'2026-10-07')),{code:'stale_daily'});await new Promise(r=>setTimeout(r,50));now=new Date('2026-10-07T22:00:00Z');await blocked.query('COMMIT');blocked.release();await pending;
  }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
 });
