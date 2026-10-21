@@ -21,13 +21,16 @@ function halloweenChoosePlacement({ width, height, top, content, blockers, roami
   const clear = box => !blockers.some(r => r.right > box.left - 8 && r.left < box.right + 8
     && r.bottom > box.top - 8 && r.top < box.bottom + 8);
   const gap = (content?.top || 0) - top;
-  if (roaming && !small && gap >= 62 && roll < .55) {
+  let flight = null;
+  if (roaming && gap >= 62) {
     const size = Math.min(84, gap - 12), y = top + (gap - size) / 2;
     if (y + size <= bottom && clear({ left: 0, right: width, top: y, bottom: y + size }))
-      return { kind: 'crossing', size, y, right: roll > .27 };
+      flight = { kind: 'crossing', size, y, right: roll > .5 };
+    if (flight && roll < .55) return flight;
   }
   const size = small ? 78 : 112;
   const ys = [.68, .35, .52, .82].map(p => Math.max(top + 12, Math.min(height * p, bottom - size)));
+  for (let y = top + 12; y <= bottom - size; y += 28) ys.push(y);
   if (bottom - top < size + 24) return null;
   const sides = roll > .5 ? [true, false] : [false, true];
   // Prefer fully visible Pokémon; a small edge peek is the fallback on dense pages.
@@ -40,7 +43,7 @@ function halloweenChoosePlacement({ width, height, top, content, blockers, roami
       }
     }
   }
-  return null;
+  return flight;
 }
 
 (function installHalloween() {
@@ -149,7 +152,9 @@ function halloweenChoosePlacement({ width, height, top, content, blockers, roami
       const header = document.querySelector('body > header')?.getBoundingClientRect();
       const ticker = document.getElementById('news-ticker')?.getBoundingClientRect();
       const content = document.getElementById(body.dataset.screen === 'screen-config' ? 'daily-hero' : body.dataset.screen);
-      const blockers = Array.from(document.querySelectorAll(blockerSelector), el => el.getBoundingClientRect())
+      const blockers = Array.from(document.querySelectorAll(blockerSelector))
+        .filter(el => el.checkVisibility?.({ checkOpacity: true, checkVisibilityCSS: true }) !== false)
+        .map(el => el.getBoundingClientRect())
         .filter(r => r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight);
       const place = halloweenChoosePlacement({
         width: innerWidth, height: innerHeight,

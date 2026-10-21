@@ -61,8 +61,20 @@ async def run():
                 assert await page.locator('#halloween-frame').count() == 1
                 before = await page.locator('#daily-hero').bounding_box()
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-light.png'))
+                print(json.dumps(dict(engine=engine, width=width, layout=await page.evaluate('''() => ({
+                  header: document.querySelector('body > header').getBoundingClientRect().toJSON(),
+                  ticker: document.getElementById('news-ticker')?.getBoundingClientRect().toJSON(),
+                  hero: document.getElementById('daily-hero').getBoundingClientRect().toJSON()
+                })'''))), flush=True)
                 # A real scheduled visitor must appear, and never intercept a click.
-                await page.wait_for_selector('.halloween-visitor', state='attached', timeout=16000)
+                try:
+                    await page.wait_for_selector('.halloween-visitor', state='attached', timeout=16000)
+                except Exception:
+                    print(json.dumps(await page.evaluate('''() => [...document.querySelectorAll('button,a,input,textarea,select,h1,h2,h3,h4,p,table,.card-title,.card-desc,.game-topbar,.search-bar,.results-wrap,.mode-banner')]
+                      .filter(e => e.checkVisibility?.({checkOpacity:true,checkVisibilityCSS:true}) !== false)
+                      .map(e => ({id:e.id, cls:e.className, tag:e.tagName, r:e.getBoundingClientRect().toJSON()}))
+                      .filter(e => e.r.width && e.r.height && e.r.bottom > 0 && e.r.top < innerHeight)''')), flush=True)
+                    raise
                 assert await page.locator('.halloween-visitor').count() == 1
                 assert await page.locator('.halloween-visitor').evaluate('e => e.getBoundingClientRect().width >= 60')
                 assert await page.locator('.halloween-visitor img').evaluate('e => e.complete && e.naturalWidth > 0')
