@@ -177,6 +177,16 @@ async def run():
                 await page.evaluate('startNormalGame()')
                 await page.wait_for_function('() => document.body.dataset.screen === "screen-game"')
                 await page.wait_for_timeout(6200)
+                # First-time game help deliberately hides the navigation. Dismiss that real
+                # onboarding dialog before checking keyboard restoration and ornament visibility.
+                if await page.evaluate('document.body.classList.contains("modal-open")'):
+                    assert await page.locator('#overlay-modal').get_attribute('data-kind') == 'help'
+                    if width < 640:
+                        assert await page.locator('#mobile-tabbar').evaluate('e => getComputedStyle(e).visibility === "hidden"')
+                    await page.evaluate('closeOverlayModal()')
+                await page.wait_for_function('() => !document.body.classList.contains("modal-open")')
+                if width < 640:
+                    await assert_mobile_ornaments(page)
                 assert await page.locator('#halloween-frame').count() == 1
                 await assert_controls_clear(page)
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-game.png'))
