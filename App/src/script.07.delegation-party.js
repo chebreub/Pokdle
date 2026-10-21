@@ -1692,6 +1692,12 @@ function recordMatchHistory(entry) {
   });
   matchHistory = matchHistory.slice(0, 120);
   saveMatchHistory();
+  // Browser-declared aggregate only: no account, Pokémon name or result details
+  // are sent. The server accepts only known mode/outcome combinations.
+  const recorded = matchHistory[0];
+  if (typeof trackUsage === "function" && (recorded.result === "win" || recorded.result === "loss")) {
+    trackUsage("complete:" + recorded.mode + ":" + recorded.result);
+  }
   discoverFromHistory(matchHistory[0]);
   if (typeof renderShellResult === "function") renderShellResult();
 }
