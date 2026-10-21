@@ -57,7 +57,8 @@ test("PostgreSQL counters survive re-reads, update atomically, and expire after 
   try {
     await admin.query("CREATE SCHEMA " + schema);
     db = new Pool({connectionString:process.env.QA_DATABASE_URL,options:"-c search_path="+schema,max:5});
-    await Promise.all([ensureTable(db), ensureTable(db)]);
+    await ensureTable(db);
+    await ensureTable(db);
     await Promise.all(Array.from({length:25},()=>increment(db,"solo:normal","2026-10-22")));
     await increment(db, completionEvent("normal","win"),"2026-10-22");
     await increment(db, completionEvent("normal","loss"),"2026-10-21");
