@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {hasProfileData, canRestoreLegacyProfile} = require('../lib/db-import');
+const {hasProfileData, canRestoreLegacyProfile, canScheduleLegacyImport} = require('../lib/db-import');
 
 test('a legacy snapshot is restored only into an empty account placeholder', () => {
   const empty = {_accountId: 'A', _savedAt: 1760000000000};
@@ -28,4 +28,14 @@ test('profiles stamped for another account are never restored', () => {
   assert.equal(canRestoreLegacyProfile({_accountId: 'B'}, {profile: '{"xp":12}'}, 'A'), false);
   assert.equal(canRestoreLegacyProfile(null, {profile: '{"xp":12}'}, 'A'), false);
   assert.equal(canRestoreLegacyProfile([], {profile: '{"xp":12}'}, 'A'), false);
+});
+
+test('Neon recovery cannot run merely because the old database is reachable', () => {
+  assert.equal(canScheduleLegacyImport(undefined), false);
+  assert.equal(canScheduleLegacyImport({OLD_DATABASE_URL:'postgresql://old.example/db'}), false);
+  assert.equal(canScheduleLegacyImport({OLD_DATABASE_URL:'postgresql://old.example/db',LEGACY_IMPORT_BACKUP_VERIFIED:'false'}), false);
+  assert.equal(canScheduleLegacyImport({OLD_DATABASE_URL:'postgresql://old.example/db',LEGACY_IMPORT_BACKUP_VERIFIED:'true'}), false);
+  assert.equal(canScheduleLegacyImport({OLD_DATABASE_URL:'',LEGACY_IMPORT_BACKUP_VERIFIED:'yes'}), false);
+  assert.equal(canScheduleLegacyImport({OLD_DATABASE_URL:'  ',LEGACY_IMPORT_BACKUP_VERIFIED:'yes'}), false);
+  assert.equal(canScheduleLegacyImport({OLD_DATABASE_URL:'postgresql://old.example/db',LEGACY_IMPORT_BACKUP_VERIFIED:'yes'}), true);
 });
