@@ -36,8 +36,9 @@ async def assert_mobile_ornaments(page):
         const buttons = [...nav.querySelectorAll('button')].map(e => e.getBoundingClientRect());
         // Temporarily include only this inert image in hit testing to verify its painted layer.
         art.style.setProperty('pointer-events', 'auto', 'important');
-        let topmost;
-        try { topmost = document.elementFromPoint(a.x + a.width/2, a.y + a.height/2) === art; }
+        let topmost, hit;
+        const navStyle = getComputedStyle(nav);
+        try { hit = document.elementFromPoint(a.x + a.width/2, a.y + a.height/2); topmost = hit === art; }
         finally { art.style.removeProperty('pointer-events'); }
         return {
             decoded: art.complete && art.naturalWidth > 0,
@@ -47,7 +48,8 @@ async def assert_mobile_ornaments(page):
             targets: buttons.length === 5 && buttons.every(b => b.width >= 44 && b.height >= 44),
             noInterception: getComputedStyle(art).pointerEvents === 'none',
             padding: parseFloat(getComputedStyle(document.body).paddingBottom) >= n.height + 12,
-            overflow: document.documentElement.scrollWidth <= innerWidth + 1
+            overflow: document.documentElement.scrollWidth <= innerWidth + 1,
+            diagnostic: {hit:hit?.outerHTML?.slice(0,500), navTransform:navStyle.transform, navOpacity:navStyle.opacity, navVisibility:navStyle.visibility, body:document.body.className, x:a.x, y:a.y}
         };
     }''')
     assert all(result.values()), result
@@ -196,7 +198,13 @@ async def run():
                         else delete visualViewport.height;
                         visualViewport.dispatchEvent(new Event('resize'));
                     }''')
-                    await page.wait_for_function('() => !document.body.classList.contains("mobile-keyboard-open") && Number(getComputedStyle(document.getElementById("mobile-tabbar")).opacity) === 1')
+                    await page.wait_for_function('''() => {
+                        const nav = document.getElementById('mobile-tabbar');
+                        return !document.body.classList.contains('mobile-keyboard-open')
+                            && Number(getComputedStyle(nav).opacity) === 1
+                            && !nav.getAnimations().some(animation => animation.playState === 'running');
+                    }''')
+                    await page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
                     await assert_mobile_ornaments(page)
                 # All 24 files must actually decode, including the sixteen new PNGs.
                 decoded = await page.evaluate('''async () => {
