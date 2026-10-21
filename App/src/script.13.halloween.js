@@ -16,9 +16,9 @@ function halloweenMayAnimate(state) {
 }
 
 // Moving visitors use real viewport-spanning paths; resting visitors use empty space.
-function halloweenFlight({ width, height, top, small, lane, right, ascending, roll }) {
+function halloweenFlight({ width, height, top, small, lane, right, ascending, roll, bottomInset = small ? 130 : 24 }) {
   const size = small ? 76 : 104;
-  const minY = Math.max(0, top) + 10, maxY = height - size - (small ? 108 : 24);
+  const minY = Math.max(0, top) + 10, maxY = height - size - bottomInset;
   if (maxY < minY + 20) return null;
   const y = minY + (maxY - minY) * (lane + .2 + roll * .6) / 3;
   const endY = Math.max(minY, Math.min(maxY, y + (right ? -1 : 1) * (42 + roll * 70)));
@@ -36,8 +36,8 @@ function halloweenFlight({ width, height, top, small, lane, right, ascending, ro
   ] };
 }
 
-function halloweenChoosePlacement({ width, height, top, blockers, small, roll, previous }) {
-  const size = small ? 78 : 112, bottom = height - (small ? 108 : 24);
+function halloweenChoosePlacement({ width, height, top, blockers, small, roll, previous, bottomInset = small ? 130 : 24 }) {
+  const size = small ? 78 : 112, bottom = height - bottomInset;
   if (bottom - top < size + 24) return null;
   const candidates = [];
   const clear = box => !blockers.some(r => r.right > box.left - 8 && r.left < box.right + 8
@@ -81,6 +81,9 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
     const leaves = "<svg viewBox=\"0 0 180 54\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4 42c45-18 102 10 171-26\" stroke=\"#9C7455\" stroke-width=\"1.3\"/><path d=\"M22 35C4 34 7 12 7 12s25 4 15 23Z\" fill=\"#CB884C\"/><path d=\"M47 35c-8-20 9-29 9-29s11 24-9 29Z\" fill=\"#D8A65A\"/><path d=\"M76 36C64 40 65 54 65 54s25 0 11-18Z\" fill=\"#98709D\"/><path d=\"M107 31c-10-19 7-27 7-27s10 22-7 27Z\" fill=\"#BF794C\"/><path d=\"M139 26c-4 20 16 22 16 22s2-24-16-22Z\" fill=\"#D9AB62\"/><path d=\"m164 20 8-14m-125 27 7-20m53 16 5-18m29 17 9 15\" stroke=\"#805E4C\" stroke-width=\".8\" opacity=\".7\"/></svg>";
     const lanterns = "<svg viewBox=\"0 0 64 180\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M29 0q18 37 3 68t6 82\" stroke=\"#826385\" stroke-width=\"1\"/><path d=\"M34 25q-7-10 0-14\" stroke=\"#707A4D\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M33 26c-21-12-31 22-14 32 10 6 28 3 30-11 2-13-8-23-16-21Z\" fill=\"#E9A251\" stroke=\"#9A663E\" stroke-width=\"1.2\"/><ellipse cx=\"32\" cy=\"42\" rx=\"9\" ry=\"18\" fill=\"#F5BA6A\"/><path d=\"m23 35 5 3-5 3m17-6-5 3 5 3m-17 5q10 8 18-1\" fill=\"#FFE7A8\" stroke=\"#9A663E\" stroke-width=\".8\" stroke-linejoin=\"round\"/><path d=\"M32 92q10-8 6-17\" stroke=\"#707A4D\" stroke-width=\"2.6\" stroke-linecap=\"round\"/><path d=\"M34 93c-16-8-26 16-15 27 7 7 28 6 30-8 2-11-7-22-15-19Z\" fill=\"#806088\" stroke=\"#503D60\" stroke-width=\"1.2\"/><ellipse cx=\"34\" cy=\"108\" rx=\"7\" ry=\"16\" fill=\"#A07BA2\"/><path d=\"m26 103 1 3 3 1-3 1-1 3-1-3-3-1 3-1Zm15 0 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z\" fill=\"#FFE5A0\"/><path d=\"m29 115 5 3 6-4\" stroke=\"#FFE5A0\" stroke-width=\"1.5\"/><path d=\"m39 145 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z\" fill=\"#E8BF75\" stroke=\"#AD8552\" stroke-width=\".8\"/></svg>";
 
+    const bunting = "<svg viewBox=\"0 0 260 44\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M2 5q126 24 256-1\" stroke=\"#9F799D\" stroke-width=\"1.2\"/><g stroke=\"#684D78\" stroke-width=\"1.2\" stroke-linejoin=\"round\"><path d=\"M42 11v7m83 0v6m86-13v9\"/><path d=\"m30 22 8 2-2-7 7 4 7-4-2 7 8-2-6 10-7-3-7 3Z\" fill=\"#81618F\"/><path d=\"m114 26-6-4v15l6-4m24-7 6-4v15l-6-4\" fill=\"#BFA1C5\"/><rect x=\"115\" y=\"23\" width=\"22\" height=\"14\" rx=\"6\" fill=\"#E6BF78\"/><path d=\"m121 24 6 12m1-12 6 12\" stroke=\"#FFF2CB\"/><path d=\"M211 21q-4-7 1-9\" stroke=\"#778457\" stroke-width=\"2\"/><path d=\"M211 21c-14-7-18 15-7 19 5 2 15 1 17-7 2-9-5-16-10-12Z\" fill=\"#EDAA5A\"/><path d=\"m205 27 3 2-3 2m13-4-3 2 3 2m-12 4q5 4 10-1\" fill=\"#FFE3A0\"/></g><g fill=\"#E1B35F\"><path d=\"m83 18 2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1Zm88 1 2 3 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1Z\"/><circle cx=\"11\" cy=\"18\" r=\"1.5\"/><circle cx=\"247\" cy=\"18\" r=\"1.5\"/></g></svg>";
+    const moonBats = "<svg viewBox=\"0 0 84 100\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M54 8a29 29 0 1 0 13 49A29 29 0 0 1 54 8Z\" fill=\"#ECD09A\" stroke=\"#BE9868\" stroke-width=\"1\"/><path d=\"m45 39 8 3-2-9 8 5 8-5-2 9 10-3-7 15-9-5-8 5Z\" fill=\"#755A86\" stroke=\"#513D63\" stroke-width=\"1.2\" stroke-linejoin=\"round\"/><path d=\"m15 75 6 2-1-6 5 3 5-3-1 6 7-2-5 10-6-4-6 4Z\" fill=\"#A181A9\"/><g fill=\"#E3B46C\"><path d=\"m70 71 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z\"/><path d=\"m14 7 1 4 4 1-4 1-1 4-1-4-4-1 4-1Z\"/><circle cx=\"48\" cy=\"91\" r=\"2\"/><circle cx=\"75\" cy=\"12\" r=\"1.5\"/></g></svg>";
+
     function decorate(parent, className, html) {
       if (!parent) return;
       const element = document.createElement('span');
@@ -106,9 +109,17 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
       decorate(hero, 'halloween-leaves', leaves);
       decorate(hero, 'halloween-season-label', '<span>✦</span> La nuit des Pokémon');
       decorate(hero, 'halloween-pumpkin', '<img src="/img/halloween/pumpkin-garden.png" width="216" height="120" alt="" draggable="false" decoding="async">');
+      // Anchor mobile ornaments in a reserved strip of the navigation, not behind page cards.
+      decorate(document.getElementById('mobile-tabbar'), 'halloween-nav-decor',
+        '<span class="halloween-nav-pumpkins"><img src="/img/halloween/pumpkin-garden.png" width="80" height="44" alt="" draggable="false" decoding="async"></span>'
+        + '<span class="halloween-nav-garland">' + bunting + '</span>');
+      decorate(document.querySelector('.site-footer'), 'halloween-footer-decor',
+        '<span class="halloween-footer-pumpkins"><img src="/img/halloween/pumpkin-garden.png" width="160" height="89" alt="" draggable="false" decoding="async"></span>'
+        + '<span class="halloween-footer-moon">' + moonBats + '</span>');
       const frame = decorate(body, 'halloween-frame',
         '<span class="halloween-corner-pumpkins"><img src="/img/halloween/pumpkin-garden.png" width="148" height="82" alt="" draggable="false" decoding="async"></span>'
         + '<span class="halloween-lanterns">' + lanterns + '</span>'
+        + '<span class="halloween-moon-bats">' + moonBats + '</span>'
         + '<span class="halloween-mist halloween-mist-left"></span><span class="halloween-mist halloween-mist-right"></span>');
       if (frame) frame.id = 'halloween-frame';
       stage = document.createElement('div');
@@ -164,6 +175,8 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
       const ticker = document.getElementById('news-ticker')?.getBoundingClientRect();
 
       const top = Math.max(0, header?.bottom || 0, ticker?.bottom || 0);
+      const nav = small.matches ? document.getElementById('mobile-tabbar')?.getBoundingClientRect() : null;
+      const bottomInset = small.matches ? Math.max(130, innerHeight - (nav?.top ?? innerHeight) + 12) : 24;
       const blockers = Array.from(document.querySelectorAll(blockerSelector))
         .filter(el => el.checkVisibility?.({ checkOpacity: true, checkVisibilityCSS: true }) !== false)
         .map(el => el.getBoundingClientRect())
@@ -176,11 +189,11 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
       let place = null;
       if (scene === 'appearing' || scene === 'peeking') {
         place = halloweenChoosePlacement({ width:innerWidth, height:innerHeight, top,
-          blockers, small:small.matches, roll, previous:lastRest });
+          blockers, small:small.matches, roll, previous:lastRest, bottomInset });
         if (place) lastRest = { x:place.x, y:place.y };
       }
       if (!place) place = halloweenFlight({ width:innerWidth, height:innerHeight, top,
-        small:small.matches, roll, lane, right, ascending:scene === 'ascending' });
+        small:small.matches, roll, lane, right, bottomInset, ascending:scene === 'ascending' });
       if (!place) { planVisit(); return; }
       if (place.points) { lastLane = lane; flightNumber++; }
       visitNumber++;

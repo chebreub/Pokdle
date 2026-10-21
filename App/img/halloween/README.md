@@ -18,7 +18,11 @@ Inspiration, not copied artwork:
 
 The hat, curved fine-thread web, autumn branch and hanging lanterns are original inline SVG.
 The home hero reserves a footer for the illustration and season label; decorations do not cover the notebook or CTAs.
-The global pumpkin/lantern backdrop is behind page content. Hidden with the seasonal preference.
+On desktop, the global pumpkin/lantern/moon backdrop is behind page content.
+On mobile, fixed pumpkins and a candy/bat garland occupy a dedicated 44px strip inside the bottom navigation.
+The controls retain their touch targets; body and scroll padding reserve the extra height, including safe-area insets.
+The strip follows the navigation's keyboard/dialog hiding behavior. Mobile flight bounds account for the measured navigation height.
+A pumpkin-and-moon illustration also decorates the page footer. All are removed with the seasonal preference.
 
 ## Movement
 

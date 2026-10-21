@@ -26,6 +26,34 @@ async def assert_controls_clear(page):
     }''')
     assert not overlaps, overlaps
 
+
+async def assert_mobile_ornaments(page):
+    result = await page.evaluate('''() => {
+        const nav = document.querySelector('#mobile-tabbar');
+        const art = nav.querySelector('.halloween-nav-pumpkins img');
+        const decor = nav.querySelector('.halloween-nav-decor');
+        const a = art.getBoundingClientRect(), d = decor.getBoundingClientRect(), n = nav.getBoundingClientRect();
+        const buttons = [...nav.querySelectorAll('button')].map(e => e.getBoundingClientRect());
+        // Temporarily include only this inert image in hit testing to verify its painted layer.
+        art.style.setProperty('pointer-events', 'auto', 'important');
+        let topmost, hit;
+        const navStyle = getComputedStyle(nav);
+        try { hit = document.elementFromPoint(a.x + a.width/2, a.y + a.height/2); topmost = hit === art; }
+        finally { art.style.removeProperty('pointer-events'); }
+        return {
+            decoded: art.complete && art.naturalWidth > 0,
+            topmost,
+            inViewport: a.x >= 0 && a.y >= 0 && a.right <= innerWidth && a.bottom <= innerHeight,
+            inNav: d.y >= n.y && d.bottom <= Math.min(...buttons.map(b => b.y)) - 2,
+            targets: buttons.length === 5 && buttons.every(b => b.width >= 44 && b.height >= 44),
+            noInterception: getComputedStyle(art).pointerEvents === 'none',
+            padding: parseFloat(getComputedStyle(document.body).paddingBottom) >= n.height + 12,
+            overflow: document.documentElement.scrollWidth <= innerWidth + 1,
+            diagnostic: {hit:hit?.outerHTML?.slice(0,500), navTransform:navStyle.transform, navOpacity:navStyle.opacity, navVisibility:navStyle.visibility, body:document.body.className, x:a.x, y:a.y}
+        };
+    }''')
+    assert all(result.values()), result
+
 async def run():
     results = []
     async with async_playwright() as pw:
@@ -60,6 +88,15 @@ async def run():
                     assert box is None or not (art['x'] < box['x'] + box['width'] and art['x'] + art['width'] > box['x']
                         and art['y'] < box['y'] + box['height'] and art['y'] + art['height'] > box['y']), (selector, art, box)
                 assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+                if width < 640:
+                    for mobile_width in [320, 390, 430]:
+                        await page.set_viewport_size(dict(width=mobile_width, height=height))
+                        await assert_mobile_ornaments(page)
+                        pumpkin = await page.locator('.halloween-pumpkin').bounding_box()
+                        label = await page.locator('.halloween-season-label').bounding_box()
+                        assert pumpkin['x'] >= label['x'] + label['width'] or pumpkin['y'] >= label['y'] + label['height'], (mobile_width, pumpkin, label)
+                        await page.screenshot(path=str(OUT / f'{engine}-{mobile_width}-mobile-ornaments.png'))
+                    await page.set_viewport_size(dict(width=width, height=height))
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-layout.png'))
                 hat_box = await page.locator('.halloween-hat').bounding_box()
                 assert hat_box['y'] >= 0, hat_box
@@ -88,6 +125,8 @@ async def run():
                 await page.evaluate('window.scrollBy(0, 180)')
                 await page.wait_for_timeout(350)
                 assert await page.evaluate('window.__halloweenQAActor.isConnected')
+                if width < 640:
+                    await assert_mobile_ornaments(page)
                 await page.keyboard.press('PageDown')
                 await page.wait_for_timeout(200)
                 assert await page.evaluate('window.__halloweenQAActor.isConnected')
@@ -106,6 +145,7 @@ async def run():
                 await setting.uncheck()
                 await page.wait_for_function('() => !document.querySelector(".halloween-hat")')
                 await page.evaluate('closeOverlayModal()')
+                assert await page.locator('.halloween-nav-decor, .halloween-footer-decor').count() == 0
                 after = await page.locator('#daily-hero').bounding_box()
                 assert before['x'] == after['x'] and before['width'] == after['width'], (before, after)
                 # The decorative footer is seasonal; existing CTA placement remains stable.
@@ -130,17 +170,52 @@ async def run():
                     assert await page.locator('.halloween-hat').count() == 1
                     await page.wait_for_timeout(3800)
                     await assert_controls_clear(page)
+                    if width < 640:
+                        await assert_mobile_ornaments(page)
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-{screen}.png'))
                 # Moving cameos are allowed during idle play; typing clears them immediately.
                 await page.evaluate('startNormalGame()')
                 await page.wait_for_function('() => document.body.dataset.screen === "screen-game"')
                 await page.wait_for_timeout(6200)
+                # First-time game help deliberately hides the navigation. Dismiss that real
+                # onboarding dialog before checking keyboard restoration and ornament visibility.
+                if await page.evaluate('document.body.classList.contains("modal-open")'):
+                    assert await page.locator('#overlay-modal').get_attribute('data-kind') == 'help'
+                    if width < 640:
+                        assert await page.locator('#mobile-tabbar').evaluate('e => getComputedStyle(e).visibility === "hidden"')
+                    await page.evaluate('closeOverlayModal()')
+                await page.wait_for_function('() => !document.body.classList.contains("modal-open")')
+                if width < 640:
+                    await assert_mobile_ornaments(page)
                 assert await page.locator('#halloween-frame').count() == 1
                 await assert_controls_clear(page)
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-game.png'))
                 await page.locator('#guess-input').fill('Pi')
                 await page.wait_for_function('() => !document.querySelector(".halloween-visitor")')
                 await page.locator('#guess-input').fill('')
+                if width < 640:
+                    # Drive the actual keyboard detector: focus plus a smaller visual viewport.
+                    # Setting the CSS class alone is reset by the app's viewport synchronizer.
+                    await page.evaluate('''() => {
+                        document.getElementById('guess-input').focus();
+                        window.__halloweenViewportHeight = Object.getOwnPropertyDescriptor(visualViewport, 'height');
+                        Object.defineProperty(visualViewport, 'height', {configurable:true, get:() => innerHeight - 260});
+                        visualViewport.dispatchEvent(new Event('resize'));
+                    }''')
+                    await page.wait_for_function('() => document.body.classList.contains("mobile-keyboard-open") && Number(getComputedStyle(document.getElementById("mobile-tabbar")).opacity) === 0')
+                    await page.evaluate('''() => {
+                        if (window.__halloweenViewportHeight) Object.defineProperty(visualViewport, 'height', window.__halloweenViewportHeight);
+                        else delete visualViewport.height;
+                        visualViewport.dispatchEvent(new Event('resize'));
+                    }''')
+                    await page.wait_for_function('''() => {
+                        const nav = document.getElementById('mobile-tabbar');
+                        return !document.body.classList.contains('mobile-keyboard-open')
+                            && Number(getComputedStyle(nav).opacity) === 1
+                            && !nav.getAnimations().some(animation => animation.playState === 'running');
+                    }''')
+                    await page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+                    await assert_mobile_ornaments(page)
                 # All 24 files must actually decode, including the sixteen new PNGs.
                 decoded = await page.evaluate('''async () => {
                     const old = new Set([92,93,94,198,425,607,710,778]);
@@ -158,6 +233,15 @@ async def run():
                 await page.wait_for_timeout(7000)
                 assert await page.locator('.halloween-visitor').count() == 0
                 assert await page.locator('.halloween-hat').count() == 1
+                await page.locator('.halloween-footer-decor').scroll_into_view_if_needed()
+                await page.wait_for_timeout(300)
+                assert await page.locator('.halloween-footer-pumpkins img').evaluate('e => e.complete && e.naturalWidth > 0')
+                if width < 640:
+                    footer_art = await page.locator('.halloween-footer-decor').bounding_box()
+                    nav = await page.locator('#mobile-tabbar').bounding_box()
+                    assert footer_art['y'] + footer_art['height'] <= nav['y'], (footer_art, nav)
+                    await assert_mobile_ornaments(page)
+                await page.screenshot(path=str(OUT / f'{engine}-{width}-footer-decor.png'))
                 assert not errors, errors
                 results.append(dict(engine=engine, width=width, ok=True))
                 await context.close()
