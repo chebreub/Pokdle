@@ -203,7 +203,7 @@ test('real scheduled visits alternate full flights with varied resting scenes', 
 });
 
 test('clicks and keyboard interaction immediately clear a travelling Pokémon', () => {
-  for (const name of ['pointerdown','keydown']) {
+  for (const name of ['click','keydown']) {
     const f = fixture(); f.advance(1400); f.images()[0].onload();
     assert.equal(f.stage().children.length, 1);
     f.events[name]({type:name, key:'Enter', target:{closest:() => ({})}});
@@ -219,7 +219,8 @@ test('scrolling, scrollbar presses and scroll keys preserve the travelling actor
   f.events.scroll?.();
   f.ctx.innerHeight -= 60;
   f.events.resize();
-  f.events.pointerdown({type:'pointerdown',target:{closest:() => null}});
+  f.events.pointerdown?.({type:'pointerdown',pointerType:'touch',target:{closest:() => ({})}});
+  f.events.click({type:'click',target:{closest:() => null}});
   f.events.keydown({type:'keydown',key:'PageDown',target:{closest:() => null}});
   f.events.keydown({type:'keydown',key:'ArrowDown',target:{closest:() => null}});
   f.advance(2000);

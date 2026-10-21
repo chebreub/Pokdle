@@ -82,6 +82,9 @@ async def run():
                 await page.wait_for_timeout(1200)
                 second_position = await page.locator('.halloween-visitor').bounding_box()
                 assert abs(second_position['x'] - first_position['x']) > width * .06, (first_position, second_position)
+                # A touch-scroll starting on a button does not constitute a click.
+                await page.locator('#daily-hero-cta').dispatch_event('pointerdown', {'pointerType':'touch'})
+                assert await page.evaluate('window.__halloweenQAActor.isConnected')
                 await page.evaluate('window.scrollBy(0, 180)')
                 await page.wait_for_timeout(350)
                 assert await page.evaluate('window.__halloweenQAActor.isConnected')

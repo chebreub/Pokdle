@@ -277,7 +277,7 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
       if (control || (event.type === 'keydown' && !scrollKey))
         pauseForTyping({target:{matches:() => true}});
     }
-    document.addEventListener('pointerdown', pauseForControl, {passive:true});
+    document.addEventListener('click', pauseForControl, {passive:true});
     document.addEventListener('keydown', pauseForControl);
     motion.addEventListener('change', sync);
     let viewportWidth = innerWidth;
