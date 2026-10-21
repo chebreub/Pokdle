@@ -1,0 +1,82 @@
+/* A seasonal costume over the existing UI. Game feedback colors stay intact. */
+#pokdle-app.halloween-season #logo-home .logo-row { position: relative; }
+.halloween-hat { position:absolute; width:50px; height:43px; left:-5px; top:-12px; transform:rotate(-14deg); z-index:2; pointer-events:none; }
+.halloween-hat svg, .halloween-web svg { display:block; width:100%; height:100%; }
+#pokdle-app.design-refresh.halloween-season #screen-config #daily-hero {
+  position:relative;
+  background:linear-gradient(115deg,#FFF0DB 0%,#F1E8FF 57%,#F9E8F3 100%) !important;
+  border-color:#E3CFE9 !important;
+}
+#pokdle-app.design-refresh.halloween-season.theme-dark #screen-config #daily-hero {
+  background:linear-gradient(115deg,#322735 0%,#2B2543 57%,#35263E 100%) !important;
+  border-color:#594263 !important;
+}
+.halloween-web, .halloween-pumpkin, .halloween-season-label { position:absolute; pointer-events:none; user-select:none; }
+.halloween-web { color:#785489; opacity:.26; }
+.halloween-web-top { right:0; top:0; width:104px; height:104px; border-radius:0 32px 0 0; overflow:hidden; }
+.halloween-web-bottom { left:0; bottom:0; width:58px; height:58px; transform:rotate(180deg); }
+.halloween-season-label {
+  top:10px; right:30px; padding:3px 12px; border:1px solid #E0CDE6; border-radius:999px;
+  background:#FFF8EF; color:#745179; font:800 11px/1.6 Nunito,system-ui,sans-serif; letter-spacing:.025em;
+}
+.halloween-season-label span { color:#BD6C2A; margin-right:4px; }
+.halloween-pumpkin { right:20px; bottom:4px; width:60px; height:60px; transform:rotate(9deg); filter:drop-shadow(0 4px 3px rgb(82 48 86 / 13%)); }
+.halloween-pumpkin img { display:block; width:100%; height:100%; object-fit:contain; }
+.theme-dark .halloween-web { color:#C3A1D0; opacity:.3; }
+.theme-dark .halloween-season-label { background:#272335; color:#DEC8E8; border-color:#594263; }
+.theme-dark .halloween-season-label span { color:#F5B86F; }
+
+/* One non-interactive actor at a time, behind dialogs and navigation. */
+#halloween-stage { position:fixed; inset:0; overflow:hidden; pointer-events:none !important; z-index:25; contain:strict; }
+#halloween-stage * { pointer-events:none !important; user-select:none; }
+.halloween-visitor { position:absolute; width:80px; height:80px; opacity:0; will-change:transform,opacity; }
+.halloween-pose { display:block; position:relative; width:100%; height:100%; }
+.halloween-visitor img { position:relative; display:block; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 3px 3px rgb(57 32 84 / 18%)); }
+.halloween-aura { position:absolute; inset:16%; border-radius:50%; background:radial-gradient(ellipse,#D8B5F080,transparent 72%); transform:scale(1.3); }
+.halloween-crossing { left:-90px; width:60px; height:60px; animation:halloween-drift var(--visit-duration) linear both; }
+.halloween-crossing.is-from-right { left:auto; right:-90px; animation-name:halloween-drift-reverse; }
+.halloween-crossing .halloween-pose { animation:halloween-bob 2.8s ease-in-out infinite; }
+.halloween-crossing.is-crow .halloween-pose { animation:halloween-swoop 1.4s ease-in-out infinite; }
+.halloween-crossing.is-crow .halloween-aura { background:radial-gradient(ellipse,#B79AD350,transparent 70%); }
+.halloween-crossing.is-from-right img { transform:scaleX(-1); }
+.halloween-peeking { left:-20px; animation:halloween-peek var(--visit-duration) ease-in-out both; }
+.halloween-peeking.is-from-right { left:auto; right:-20px; animation-name:halloween-peek-reverse; }
+.halloween-peeking .halloween-pose { transform:rotate(16deg); }
+.halloween-peeking.is-from-right .halloween-pose { transform:rotate(-16deg); }
+@keyframes halloween-drift {
+  0% { transform:translate3d(0,0,0); opacity:0; }
+  12% { opacity:.85; }
+  88% { opacity:.85; }
+  100% { transform:translate3d(calc(100vw + 180px),0,0); opacity:0; }
+}
+@keyframes halloween-drift-reverse {
+  0% { transform:translate3d(0,0,0); opacity:0; }
+  12% { opacity:.85; }
+  88% { opacity:.85; }
+  100% { transform:translate3d(calc(-100vw - 180px),0,0); opacity:0; }
+}
+@keyframes halloween-bob { 0%,100% { transform:translateY(3px) rotate(-4deg); } 50% { transform:translateY(-4px) rotate(4deg); } }
+@keyframes halloween-swoop { 0%,100% { transform:translateY(1px) rotate(-8deg); } 50% { transform:translateY(-5px) rotate(5deg); } }
+@keyframes halloween-peek {
+  0%,100% { opacity:0; transform:translate3d(-85%,14px,0); }
+  24%,70% { opacity:.9; transform:translate3d(0,0,0); }
+  82% { opacity:.6; transform:translate3d(-10%,5px,0); }
+}
+@keyframes halloween-peek-reverse {
+  0%,100% { opacity:0; transform:translate3d(85%,14px,0); }
+  24%,70% { opacity:.9; transform:translate3d(0,0,0); }
+  82% { opacity:.6; transform:translate3d(10%,5px,0); }
+}
+@media(max-width:640px) {
+  .halloween-hat { width:43px; height:37px; left:-3px; top:-6px; }
+  .halloween-web-top { width:65px; height:65px; }
+  .halloween-web-bottom { display:none; }
+  .halloween-season-label { right:18px; font-size:10px; padding:2px 9px; top:7px; }
+  .halloween-pumpkin { width:49px; height:49px; right:12px; bottom:4px; }
+  .halloween-peeking { width:57px; height:57px; left:-22px; }
+  .halloween-peeking.is-from-right { left:auto; right:-22px; }
+}
+.modal-open #halloween-stage, .reduce-motion #halloween-stage { display:none; }
+.a11y-high-contrast .halloween-web { display:none; }
+@media(prefers-reduced-motion:reduce) { #halloween-stage { display:none; } }
+@media print { #halloween-stage, .halloween-hat, .halloween-web, .halloween-pumpkin, .halloween-season-label { display:none; } }

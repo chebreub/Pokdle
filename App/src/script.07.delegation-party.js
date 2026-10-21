@@ -2232,6 +2232,7 @@ const DEFAULT_APP_SETTINGS = {
   reduceMotion: false,
   soundEffects: true,
   pokemonCries: true,
+  seasonalDecorations: true,
 };
 
 function getStoredAppSettings() {
@@ -2268,6 +2269,7 @@ function applyAppSettings(settings = getStoredAppSettings()) {
   document.body.classList.toggle("text-scale-large", settings.textScale === "large");
   document.body.classList.toggle("a11y-high-contrast", Boolean(settings.highContrast));
   document.body.classList.toggle("reduce-motion", Boolean(settings.reduceMotion));
+  document.body.classList.toggle("seasonal-disabled", settings.seasonalDecorations === false);
 }
 
 function updateAppSetting(key, value) {
@@ -2778,6 +2780,10 @@ function openSettingsModal() {
     <div class="app-settings-grid app-settings-grid-rich">
       <section class="app-settings-section">
         <h4>Affichage</h4>
+        <label class="app-setting-item">
+          <span><b>Décorations de saison</b><small>Une touche d’Halloween en octobre. Se désactive après la fête.</small></span>
+          <input type="checkbox" ${settings.seasonalDecorations !== false ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="seasonalDecorations" data-bool="1" />
+        </label>
         <label class="app-setting-item app-setting-item-stack">
           <span><b>Thème</b><small>Basculer entre clair et sombre.</small></span>
           <select data-change-action="appSettingFromEl" data-setting="theme">
