@@ -29,8 +29,8 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
     await old.query(SCHEMA);await db.query(SCHEMA);
     // Before the move: Alice has a long history, Bob played once, an egg was found.
     await old.query(`INSERT INTO users(discord_id,username,data,created_at,partner_id) VALUES
-      ('A','Alice','{"profile":{"xp":900,"album":[1,2,3,4,5,6,7,8]}}','2026-06-01T10:00:00Z',25),('B','Bob','{"profile":{"xp":50}}','2026-07-01T10:00:00Z',NULL),('D','Dan','{"profile":{"xp":5}}','2026-08-01T10:00:00Z',NULL),('E','Eve','{"profile":{"xp":120}}','2026-08-15T10:00:00Z',NULL);
-      INSERT INTO account_identities(provider,provider_user_id,account_id) VALUES('discord','A','A'),('google','g-b','B');
+      ('A','Alice','{"profile":{"xp":900,"album":[1,2,3,4,5,6,7,8]}}','2026-06-01T10:00:00Z',25),('B','Bob','{"profile":{"xp":50}}','2026-07-01T10:00:00Z',NULL),('D','Dan','{"profile":{"xp":5}}','2026-08-01T10:00:00Z',NULL),('E','Eve','{"profile":{"xp":120}}','2026-08-15T10:00:00Z',NULL),('F','Faye','{"_accountId":"B","profile":{"xp":999}}','2026-08-16T10:00:00Z',NULL);
+      INSERT INTO account_identities(provider,provider_user_id,account_id) VALUES('discord','A','A'),('google','g-b','B'),('discord','F','F');
       INSERT INTO scores(discord_id,mode,score) VALUES('A','quiz',10),('A','wordle',3),('B','quiz',4),('D','quiz',99);
       INSERT INTO leaderboard_events(discord_id,mode,score,result_key,created_at) VALUES('A','dossier',18,'dossier:2026-10-17','2026-10-17T12:00:00Z'),('A','quiz',10,NULL,'2026-10-10T12:00:00Z');
       INSERT INTO daily_sessions(discord_id,day,attempts) VALUES('A','2026-09-01',4);
@@ -52,12 +52,15 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
       INSERT INTO egg_rounds(week_start,secret_id,reward_id) VALUES('2026-10-19',9,10);`);
 
     const report=await importLegacy({db,old,ascModes:['wordle','daily']});
-    assert.equal(report.users,1,'Bob comes back');
+    assert.equal(report.users,2,'Bob comes back and Faye gets a blank but valid account row');
+    assert.equal(report.profilesOwnerMismatch,1,'A foreign-owned legacy snapshot is excluded');
     assert.equal(report.profilesRestored,1,'Eve gets the old profile because her live row is genuinely empty');
     assert.equal(report.profilesBackedUp,1,'Alice has both snapshots preserved for deliberate recovery');
     const users=Object.fromEntries((await db.query('SELECT discord_id,data,partner_id,created_at FROM users')).rows.map(r=>[r.discord_id,r]));
     assert.equal(users.A.data.profile.xp,20,'A newer live profile survives even when the old blob is longer');
     assert.equal(users.E.data.profile.xp,120,'Only an empty placeholder is restored');
+    assert.deepEqual(users.F.data,{},'A mismatched old snapshot is not attached to another account');
+    assert.equal((await db.query("SELECT account_id FROM account_identities WHERE provider='discord' AND provider_user_id='F'")).rows[0].account_id,'F','The cleaned account still supports identity import');
     const backups=(await db.query("SELECT legacy_data,current_data FROM legacy_profile_backups WHERE discord_id='A'")).rows;
     assert.equal(backups.length,1);
     assert.equal(backups[0].legacy_data.profile.xp,900,'The old progress is recoverable');
