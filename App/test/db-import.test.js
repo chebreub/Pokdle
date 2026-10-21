@@ -29,7 +29,7 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
     await old.query(SCHEMA);await db.query(SCHEMA);
     // Before the move: Alice has a long history, Bob played once, an egg was found.
     await old.query(`INSERT INTO users(discord_id,username,data,created_at,partner_id) VALUES
-      ('A','Alice','{"profile":{"xp":900,"album":[1,2,3,4,5,6,7,8]}}','2026-06-01T10:00:00Z',25),('B','Bob','{"profile":{"xp":50}}','2026-07-01T10:00:00Z',NULL),('D','Dan','{"profile":{"xp":5}}','2026-08-01T10:00:00Z',NULL);
+      ('A','Alice','{"profile":{"xp":900,"album":[1,2,3,4,5,6,7,8]}}','2026-06-01T10:00:00Z',25),('B','Bob','{"profile":{"xp":50}}','2026-07-01T10:00:00Z',NULL),('D','Dan','{"profile":{"xp":5}}','2026-08-01T10:00:00Z',NULL),('E','Eve','{"profile":{"xp":120}}','2026-08-15T10:00:00Z',NULL);
       INSERT INTO account_identities(provider,provider_user_id,account_id) VALUES('discord','A','A'),('google','g-b','B');
       INSERT INTO scores(discord_id,mode,score) VALUES('A','quiz',10),('A','wordle',3),('B','quiz',4),('D','quiz',99);
       INSERT INTO leaderboard_events(discord_id,mode,score,result_key,created_at) VALUES('A','dossier',18,'dossier:2026-10-17','2026-10-17T12:00:00Z'),('A','quiz',10,NULL,'2026-10-10T12:00:00Z');
@@ -42,7 +42,7 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
       INSERT INTO egg_rewards(round_id,player_id,pokemon_id) VALUES(1,'A',8);`);
     // Since the move: Alice came back on a new browser, Chloé is new, Dan deleted his account, today's games exist already.
     await db.query(`INSERT INTO deleted_accounts(id) VALUES('D');
-      INSERT INTO users(discord_id,username,data) VALUES('A','Alice','{"profile":{"xp":20}}'),('C','Chloé','{"profile":{"xp":70}}');
+      INSERT INTO users(discord_id,username,data) VALUES('A','Alice','{"profile":{"xp":20}}'),('C','Chloé','{"profile":{"xp":70}}'),('E','Eve','{"_accountId":"E","_savedAt":1777777777777}');
       INSERT INTO account_identities(provider,provider_user_id,account_id) VALUES('discord','A','A');
       INSERT INTO scores(discord_id,mode,score) VALUES('A','quiz',12),('A','wordle',5);
       INSERT INTO leaderboard_events(discord_id,mode,score,result_key) VALUES('A','dossier',20,'dossier:2026-10-17');
@@ -53,9 +53,16 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
 
     const report=await importLegacy({db,old,ascModes:['wordle','daily']});
     assert.equal(report.users,1,'Bob comes back');
-    assert.equal(report.profilesRestored,1,'Alice gets her longer history back');
+    assert.equal(report.profilesRestored,1,'Eve gets the old profile because her live row is genuinely empty');
+    assert.equal(report.profilesBackedUp,1,'Alice has both snapshots preserved for deliberate recovery');
     const users=Object.fromEntries((await db.query('SELECT discord_id,data,partner_id,created_at FROM users')).rows.map(r=>[r.discord_id,r]));
-    assert.equal(users.A.data.profile.xp,900);assert.equal(users.A.partner_id,25);assert.equal(users.A.created_at.toISOString(),'2026-06-01T10:00:00.000Z');
+    assert.equal(users.A.data.profile.xp,20,'A newer live profile survives even when the old blob is longer');
+    assert.equal(users.E.data.profile.xp,120,'Only an empty placeholder is restored');
+    const backups=(await db.query("SELECT legacy_data,current_data FROM legacy_profile_backups WHERE discord_id='A'")).rows;
+    assert.equal(backups.length,1);
+    assert.equal(backups[0].legacy_data.profile.xp,900,'The old progress is recoverable');
+    assert.equal(backups[0].current_data.profile.xp,20,'The live snapshot is also recoverable');
+    assert.equal(users.A.partner_id,25);assert.equal(users.A.created_at.toISOString(),'2026-06-01T10:00:00.000Z');
     assert.equal(users.C.data.profile.xp,70,'new players are untouched');
     assert.equal(users.D,undefined,'an account deleted since the move does not come back');
     assert.equal((await db.query("SELECT account_id FROM account_identities WHERE provider='google'")).rows[0].account_id,'B');
@@ -92,5 +99,7 @@ test('PostgreSQL: the old database comes back once, without overwriting what was
     await down.attempt();
     assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM data_imports')).rows[0].n,0);
     assert.ok(logs.some(l=>l.includes('not available yet')));
+    await db.query("DELETE FROM users WHERE discord_id='A'");
+    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM legacy_profile_backups WHERE discord_id='A'")).rows[0].n,0,'Deleting an account automatically purges its migration backup');
   }finally{if(old)await old.end();if(db)await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${oldSchema} CASCADE; DROP SCHEMA IF EXISTS ${newSchema} CASCADE`);await admin.end();}
 });
