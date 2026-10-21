@@ -71,6 +71,12 @@ async function importLegacy({ db, old, ascModes = [] }) {
   // Accounts: never replace live progress with a longer (possibly older) blob.
   const users = kept(await oldRows(old, "users"), "discord_id");
   for (const user of users) {
+    // Never attach a snapshot explicitly stamped for another identity.
+    if (isRecord(user.data) && user.data._accountId != null &&
+        String(user.data._accountId) !== String(user.discord_id)) {
+      report.profilesOwnerMismatch = (report.profilesOwnerMismatch || 0) + 1;
+      continue;
+    }
     // In production importLegacy runs in one transaction. Lock each existing row
     // so a concurrent /api/profile write cannot race the blank-profile check.
     const current = (await db.query("SELECT data FROM users WHERE discord_id=$1 FOR UPDATE", [user.discord_id])).rows[0];
@@ -82,9 +88,9 @@ async function importLegacy({ db, old, ascModes = [] }) {
       // A conflict needs a deliberate merge/recovery; save BOTH sides without
       // changing the currently playable profile, irrespective of JSON size.
       if (hasProfileData(user.data) && JSON.stringify(user.data) !== JSON.stringify(current.data)) {
-        await db.query("INSERT INTO legacy_profile_backups(discord_id,legacy_data,current_data) VALUES($1,$2::jsonb,$3::jsonb) ON CONFLICT (discord_id) DO NOTHING",
+        const backup = await db.query("INSERT INTO legacy_profile_backups(discord_id,legacy_data,current_data) VALUES($1,$2::jsonb,$3::jsonb) ON CONFLICT (discord_id) DO NOTHING",
           [user.discord_id, JSON.stringify(user.data), JSON.stringify(current.data)]);
-        report.profilesBackedUp = (report.profilesBackedUp || 0) + 1;
+        report.profilesBackedUp = (report.profilesBackedUp || 0) + (backup.rowCount || 0);
       }
       await db.query("UPDATE users SET partner_id=COALESCE(partner_id,$2), created_at=LEAST(created_at,$3) WHERE discord_id=$1", [user.discord_id, user.partner_id ?? null, user.created_at]);
     }
