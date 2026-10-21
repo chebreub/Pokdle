@@ -192,6 +192,7 @@
   width:100%;
   height:250px;
   object-fit:cover;
+  background:color-mix(in oklab, var(--feature-soft) 55%, #FFFFFF);
   transition:transform .4s ease;
 }
 #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy {
@@ -457,13 +458,53 @@
   }
   #pokdle-app.design-refresh #screen-all-modes .mode-family-filters::-webkit-scrollbar { display:none; }
   #pokdle-app.design-refresh #screen-all-modes .mode-family-filters button { flex:0 0 auto; }
-  #pokdle-app.design-refresh #screen-all-modes .catalog-feature { border-radius:24px; }
-  #pokdle-app.design-refresh #screen-all-modes .catalog-feature > img { height:150px; }
-  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy { gap:6px; padding:16px 18px 18px; }
-  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy b { font-size:24px; }
-  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy > span:not(.catalog-feature-badge) { font-size:14px; }
-  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy strong { margin-top:6px; padding:10px 18px; font-size:14px; }
-  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat { margin-top:26px !important; }
+  /* Keep the curated pick visible, but let real game cards enter the first screen. */
+  #pokdle-app.design-refresh #screen-all-modes #catalog-picks { margin-top:14px !important; }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature {
+    grid-template-columns:112px minmax(0, 1fr);
+    align-items:stretch;
+    min-height:136px;
+    border-radius:22px;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature > img {
+    width:100%;
+    height:100%;
+    min-height:136px;
+    object-fit:cover;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy {
+    min-width:0;
+    gap:4px;
+    padding:11px 12px;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-badge {
+    padding:2px 7px;
+    font-size:10px;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy b {
+    margin-top:0;
+    font-size:19px;
+    line-height:1.12;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy > span:not(.catalog-feature-badge) {
+    display:-webkit-box;
+    overflow:hidden;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    font-size:12px;
+    line-height:1.3;
+  }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy strong {
+    margin-top:2px;
+    padding:0;
+    border-radius:0;
+    background:none;
+    box-shadow:none;
+    color:#2F51B8;
+    font-size:13px;
+  }
+  #pokdle-app.design-refresh.theme-dark #screen-all-modes .catalog-feature-copy strong { color:#B6C8FF; }
+  #pokdle-app.design-refresh #screen-all-modes .all-modes-cat { margin-top:18px !important; }
   #pokdle-app.design-refresh #screen-all-modes .all-modes-cat-title { margin-bottom:10px !important; font-size:22px !important; }
   #pokdle-app.design-refresh #screen-all-modes .all-modes-cat-desc { display:none; }
   #pokdle-app.design-refresh #screen-all-modes .all-modes-grid { gap:10px !important; }
