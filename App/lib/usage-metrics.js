@@ -58,6 +58,11 @@ async function ensureTable(db) {
   )`);
 }
 
+async function prune(db, now = new Date()) {
+  const cutoff = startDay(90, now);
+  await db.query("DELETE FROM usage_event_daily WHERE day < $1::date", [cutoff]);
+}
+
 async function increment(db, event, day = utcDay()) {
   if (typeof event !== "string" || !/^[a-z][a-z0-9:-]{0,70}$/.test(event)) throw new TypeError("event");
   if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new TypeError("day");
@@ -109,4 +114,4 @@ function summarizeModes(rows, labels = {}) {
   return [...summary.values()].sort((a, b) => b.launches - a.launches || b.completions - a.completions || a.mode.localeCompare(b.mode));
 }
 
-module.exports = { HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, increment, recent, summarizeModes };
+module.exports = { HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, recent, summarizeModes };
