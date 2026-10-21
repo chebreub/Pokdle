@@ -264,7 +264,10 @@ def main():
      expect(img.evaluate('(e)=>e.complete && e.naturalWidth>0'),'Illustration asset failed to load')
      picture=img.bounding_box();title=banner.locator('b').bounding_box();box=banner.bounding_box()
      expect(title['x']>=box['x'] and title['x']+title['width']<=box['x']+box['width']+1,'Banner title is clipped')
-     if width<=900: expect(title['y']>=picture['y']+picture['height']-1,'Narrow banner text should sit below the illustration')
+     if width<=640:
+      expect(title['x']>=picture['x']+picture['width']-1,'On phones, title should sit beside the compact illustration')
+      expect(box['height']<=190,'Featured banner should not bury the real games on phones: '+repr(box))
+     elif width<=900: expect(title['y']>=picture['y']+picture['height']-1,'Tablet banner text should sit below the illustration')
      else: expect(title['x']>=picture['x']+picture['width']-1,'Wide banner text should sit beside the illustration')
      expect(page.locator('#screen-all-modes .all-modes-card[data-args=\'["startNormalGame"]\']').is_visible(),'Unlimited mode disappeared from the catalog')
      expect(page.locator('#screen-all-modes .all-modes-card[data-args=\'["openPokeConnectionsMode"]\']').is_visible(),'Featured game should stay in its family')
