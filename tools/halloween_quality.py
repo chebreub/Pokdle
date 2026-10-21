@@ -1,4 +1,4 @@
-"""Seasonal visuals: Chromium/WebKit, logo alignment, site-wide decorations and safe controls."""
+"""Seasonal visuals: Chromium/WebKit, pumpkin artwork, real viewport flights, scrolling and usable controls."""
 import asyncio, json, os, subprocess, time, urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -13,6 +13,11 @@ async def assert_controls_clear(page):
         const actor = document.querySelector('.halloween-visitor');
         if (!actor || Number(getComputedStyle(actor).opacity) < .2) return [];
         const a = actor.getBoundingClientRect();
+        if (actor.dataset.motion === 'travel') {
+            const hit = document.elementFromPoint(Math.max(0, Math.min(innerWidth - 1, a.x + a.width/2)),
+                                                 Math.max(0, Math.min(innerHeight - 1, a.y + a.height/2)));
+            return actor.contains(hit) ? ['decorative actor intercepted the pointer'] : [];
+        }
         return [...document.querySelectorAll('button, input, select, textarea, table, [role="listbox"]')]
           .filter(e => {
             const b = e.getBoundingClientRect();
@@ -48,7 +53,12 @@ async def run():
                 await page.goto('http://127.0.0.1:3199/', wait_until='domcontentloaded')
                 await page.wait_for_selector('.halloween-hat')
                 await page.wait_for_function('() => !document.getElementById("app-splash")')
-                assert await page.locator('.halloween-pumpkin img').evaluate('e => e.complete && e.naturalWidth > 0')
+                await page.wait_for_function('() => { const img = document.querySelector(".halloween-pumpkin img"); return img?.complete && img.naturalWidth > 0; }')
+                art = await page.locator('.halloween-pumpkin').bounding_box()
+                for selector in ['#daily-notebook', '#daily-hero-cta', '.halloween-season-label']:
+                    box = await page.locator(selector).bounding_box()
+                    assert box is None or not (art['x'] < box['x'] + box['width'] and art['x'] + art['width'] > box['x']
+                        and art['y'] < box['y'] + box['height'] and art['y'] + art['height'] > box['y']), (selector, art, box)
                 assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-layout.png'))
                 hat_box = await page.locator('.halloween-hat').bounding_box()
@@ -60,21 +70,29 @@ async def run():
                 assert ball_box['y'] + 3 < hat_box['y'] + hat_box['height'] < ball_box['y'] + ball_box['height'] * .55
                 assert await page.locator('#halloween-frame').count() == 1
                 before = await page.locator('#daily-hero').bounding_box()
+                cta_before = await page.locator('#daily-hero-cta').bounding_box()
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-light.png'))
-                print(json.dumps(dict(engine=engine, width=width, layout=await page.evaluate('''() => ({
-                  header: document.querySelector('body > header').getBoundingClientRect().toJSON(),
-                  ticker: document.getElementById('news-ticker')?.getBoundingClientRect().toJSON(),
-                  hero: document.getElementById('daily-hero').getBoundingClientRect().toJSON()
-                })'''))), flush=True)
-                # A real scheduled visitor must appear, and never intercept a click.
-                try:
-                    await page.wait_for_selector('.halloween-visitor', state='attached', timeout=16000)
-                except Exception:
-                    print(json.dumps(await page.evaluate('''() => [...document.querySelectorAll('button,a,input,textarea,select,h1,h2,h3,h4,p,table,.card-title,.card-desc,.game-topbar,.search-bar,.results-wrap,.mode-banner')]
-                      .filter(e => e.checkVisibility?.({checkOpacity:true,checkVisibilityCSS:true}) !== false)
-                      .map(e => ({id:e.id, cls:e.className, tag:e.tagName, r:e.getBoundingClientRect().toJSON()}))
-                      .filter(e => e.r.width && e.r.height && e.r.bottom > 0 && e.r.top < innerHeight)''')), flush=True)
-                    raise
+                # A real scheduled flyby must travel across the viewport and survive scrolling.
+                await page.wait_for_selector('.halloween-visitor[data-motion="travel"]', state='attached', timeout=22000)
+                await page.evaluate('''() => {
+                    window.__halloweenQAActor = document.querySelector('.halloween-visitor[data-motion="travel"]');
+                    window.__halloweenQAActor.getAnimations()[0].currentTime = 1000;
+                }''')
+                first_position = await page.locator('.halloween-visitor').bounding_box()
+                await page.wait_for_timeout(1200)
+                second_position = await page.locator('.halloween-visitor').bounding_box()
+                assert abs(second_position['x'] - first_position['x']) > width * .06, (first_position, second_position)
+                # A touch-scroll starting on a button does not constitute a click.
+                await page.locator('#daily-hero-cta').dispatch_event('pointerdown', {'pointerType':'touch'})
+                assert await page.evaluate('window.__halloweenQAActor.isConnected')
+                await page.evaluate('window.scrollBy(0, 180)')
+                await page.wait_for_timeout(350)
+                assert await page.evaluate('window.__halloweenQAActor.isConnected')
+                await page.keyboard.press('PageDown')
+                await page.wait_for_timeout(200)
+                assert await page.evaluate('window.__halloweenQAActor.isConnected')
+                await page.evaluate('window.scrollTo({top:0,behavior:"instant"})')
+                await page.wait_for_function('() => scrollY < 1')
                 assert await page.locator('.halloween-visitor').count() == 1
                 assert await page.locator('.halloween-visitor').evaluate('e => e.getBoundingClientRect().width >= 60')
                 assert await page.locator('.halloween-visitor img').evaluate('e => e.complete && e.naturalWidth > 0')
@@ -89,7 +107,11 @@ async def run():
                 await page.wait_for_function('() => !document.querySelector(".halloween-hat")')
                 await page.evaluate('closeOverlayModal()')
                 after = await page.locator('#daily-hero').bounding_box()
-                assert before == after, (before, after)
+                assert before['x'] == after['x'] and before['width'] == after['width'], (before, after)
+                # The decorative footer is seasonal; existing CTA placement remains stable.
+                cta_after = await page.locator('#daily-hero-cta').bounding_box()
+                assert cta_before == cta_after, (cta_before, cta_after)
+                assert before['height'] >= after['height'], (before, after)
                 await page.reload(wait_until='domcontentloaded')
                 await page.wait_for_function('() => typeof openSettingsModal === "function"')
                 assert await page.locator('.halloween-hat').count() == 0
@@ -109,14 +131,16 @@ async def run():
                     await page.wait_for_timeout(3800)
                     await assert_controls_clear(page)
                     await page.screenshot(path=str(OUT / f'{engine}-{width}-{screen}.png'))
-                # Gameplay can have safe edge cameos, never a crossing over the board.
+                # Moving cameos are allowed during idle play; typing clears them immediately.
                 await page.evaluate('startNormalGame()')
                 await page.wait_for_function('() => document.body.dataset.screen === "screen-game"')
                 await page.wait_for_timeout(6200)
-                assert await page.locator('.halloween-crossing').count() == 0
                 assert await page.locator('#halloween-frame').count() == 1
                 await assert_controls_clear(page)
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-game.png'))
+                await page.locator('#guess-input').fill('Pi')
+                await page.wait_for_function('() => !document.querySelector(".halloween-visitor")')
+                await page.locator('#guess-input').fill('')
                 # All 24 files must actually decode, including the sixteen new PNGs.
                 decoded = await page.evaluate('''async () => {
                     const old = new Set([92,93,94,198,425,607,710,778]);
