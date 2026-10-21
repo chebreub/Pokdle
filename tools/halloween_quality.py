@@ -182,11 +182,21 @@ async def run():
                 await page.wait_for_function('() => !document.querySelector(".halloween-visitor")')
                 await page.locator('#guess-input').fill('')
                 if width < 640:
-                    await page.evaluate('document.body.classList.add("mobile-keyboard-open")')
-                    await page.wait_for_timeout(250)
-                    assert await page.locator('#mobile-tabbar').evaluate('e => Number(getComputedStyle(e).opacity) === 0')
-                    await page.evaluate('document.body.classList.remove("mobile-keyboard-open")')
-                    await page.wait_for_timeout(250)
+                    # Drive the actual keyboard detector: focus plus a smaller visual viewport.
+                    # Setting the CSS class alone is reset by the app's viewport synchronizer.
+                    await page.evaluate('''() => {
+                        document.getElementById('guess-input').focus();
+                        window.__halloweenViewportHeight = Object.getOwnPropertyDescriptor(visualViewport, 'height');
+                        Object.defineProperty(visualViewport, 'height', {configurable:true, get:() => innerHeight - 260});
+                        visualViewport.dispatchEvent(new Event('resize'));
+                    }''')
+                    await page.wait_for_function('() => document.body.classList.contains("mobile-keyboard-open") && Number(getComputedStyle(document.getElementById("mobile-tabbar")).opacity) === 0')
+                    await page.evaluate('''() => {
+                        if (window.__halloweenViewportHeight) Object.defineProperty(visualViewport, 'height', window.__halloweenViewportHeight);
+                        else delete visualViewport.height;
+                        visualViewport.dispatchEvent(new Event('resize'));
+                    }''')
+                    await page.wait_for_function('() => !document.body.classList.contains("mobile-keyboard-open") && Number(getComputedStyle(document.getElementById("mobile-tabbar")).opacity) === 1')
                     await assert_mobile_ornaments(page)
                 # All 24 files must actually decode, including the sixteen new PNGs.
                 decoded = await page.evaluate('''async () => {
