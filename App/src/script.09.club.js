@@ -63,7 +63,7 @@ function filterHomeGames(filter) {
 function renderHomeDiscovery(force = false) {
   const grid = document.getElementById("home-games-grid");
   if (!grid || (grid.childElementCount && !force) || typeof modeTileCloneForHome !== "function") return;
-  // Same families and order as the catalogue; the daily keeps its own block above.
+  // Curated choices, not a live popularity ranking; 'popular' remains the internal filter key.
   const shelves = {
     popular: ["startSilhouetteGame", "startCryGame", "openPokeConnectionsMode", "startQuizGame", "openDraftScoreAttackMode", "openHigherLowerMode"],
     guess: ["startNormalGame", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
