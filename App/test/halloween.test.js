@@ -33,13 +33,13 @@ function fixture(iso = '2026-10-21T12:00:00Z') {
     };
     elements.push(el); return el;
   }
-  const body = element(), hero = element(), logo = element(), header = element(), ball = element();
+  const body = element(), hero = element(), logo = element(), header = element(), ball = element(), tabbar = element(), footer = element();
   logo.appendChild(ball);
   header.getBoundingClientRect = () => ({ bottom:100 });
   body.dataset.screen = 'screen-config';
   const document = { body, hidden:false, readyState:'complete',
-    getElementById: id => id === 'daily-hero' || id.startsWith('screen-') ? hero : elements.find(e => e.id === id && !e.removed),
-    querySelector: s => s.includes('pokeball-icon') ? ball : s.includes('logo-home') ? logo : s.includes('header') ? header : null,
+    getElementById: id => id === 'mobile-tabbar' ? tabbar : id === 'daily-hero' || id.startsWith('screen-') ? hero : elements.find(e => e.id === id && !e.removed),
+    querySelector: s => s === '.site-footer' ? footer : s.includes('pokeball-icon') ? ball : s.includes('logo-home') ? logo : s.includes('header') ? header : null,
     querySelectorAll: () => [],
     createElement(tag) { const el = element(); el.tag = tag; return el; },
     addEventListener(name, cb) { events[name] = cb; }
@@ -62,7 +62,7 @@ function fixture(iso = '2026-10-21T12:00:00Z') {
     }
     clock = target;
   }
-  return { ctx, body, hero, logo, ball, elements, timers, events, document, media, advance,
+  return { ctx, body, hero, logo, ball, tabbar, footer, elements, timers, events, document, media, advance,
     mutation:() => mutation(), stage:() => document.getElementById('halloween-stage'),
     images:() => elements.filter(el => el.tag === 'img') };
 }
@@ -94,6 +94,8 @@ test('flights span the viewport in both directions and vary height bands', () =>
     assert.ok(right.points[0][0] > width && right.points[2][0] < 0);
     assert.ok(Math.abs(left.points[0][1] - right.points[0][1]) > 200);
     assert.ok(left.points.every(p => p[1] >= 120 && p[1] + left.size < 844));
+    const inset = ctx.halloweenFlight({...options, bottomInset:170});
+    assert.ok(inset.points.every(p => p[1] + inset.size <= 844 - 170));
     const rise = ctx.halloweenFlight({...options, ascending:true});
     assert.ok(rise.points[0][1] > 844 && rise.points[2][1] < 150);
     assert.equal(ctx.halloweenFlight({...options, height:180}), null);
@@ -226,4 +228,19 @@ test('scrolling, scrollbar presses and scroll keys preserve the travelling actor
   f.advance(2000);
   assert.equal(f.stage().children[0], actor);
   assert.equal(f.images().length, 1);
+});
+
+test('navigation and footer ornaments mount once and leave cleanly when disabled', () => {
+  const f = fixture();
+  assert.equal(f.tabbar.children.length, 1);
+  assert.equal(f.tabbar.children[0].className, 'halloween-nav-decor');
+  assert.equal(f.footer.children.length, 1);
+  f.mutation(); f.mutation();
+  assert.equal(f.tabbar.children.length, 1);
+  f.body.classList.toggle('seasonal-disabled', true); f.mutation();
+  assert.equal(f.tabbar.children.length, 0);
+  assert.equal(f.footer.children.length, 0);
+  f.body.classList.toggle('seasonal-disabled', false); f.mutation();
+  assert.equal(f.tabbar.children.length, 1);
+  assert.equal(f.footer.children.length, 1);
 });
