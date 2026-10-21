@@ -1222,7 +1222,14 @@ if (pgPool) {
   cleanup.unref?.();
 }
 
+function pruneUsageMemory() {
+  const cutoff = usageMetrics.startDay(USAGE_MAX_DAYS);
+  for (const day of usageDays.keys()) if (day < cutoff) usageDays.delete(day);
+}
+const usageMemoryCleanup = setInterval(pruneUsageMemory, 24 * 3600000);
+usageMemoryCleanup.unref?.();
 function getUsageDay(key) {
+  pruneUsageMemory();
   if (!usageDays.has(key)) {
     while (usageDays.size >= USAGE_MAX_DAYS) usageDays.delete(usageDays.keys().next().value);
     usageDays.set(key, { events: new Map(), uniques: new Set() });
@@ -1292,6 +1299,7 @@ app.get("/admin/stats", async (req, res) => {
     console.warn("[usage] aggregate read failed:", String(error.message || error).slice(0, 160));
     aggregateHtml = "<p>Impossible de lire les agrégats du moment.</p>";
   }
+  pruneUsageMemory();
   const dayKeys = [...usageDays.keys()].sort().slice(-7);
   const events = [...USAGE_EVENTS].filter((e) => dayKeys.some((k) => usageDays.get(k).events.has(e)));
   const cell = (v) => `<td>${v || ""}</td>`;
