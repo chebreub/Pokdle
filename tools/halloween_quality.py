@@ -1,4 +1,4 @@
-"""Seasonal visuals: Chromium/WebKit, layout stability, opt-out and game isolation."""
+"""Seasonal visuals: Chromium/WebKit, logo alignment, site-wide decorations and safe controls."""
 import asyncio, json, os, subprocess, time, urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -6,6 +6,20 @@ from playwright.async_api import async_playwright
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'quality-artifacts' / 'halloween'
 OUT.mkdir(parents=True, exist_ok=True)
+
+async def assert_controls_clear(page):
+    # Inspect the animated, rendered bounds rather than just the placement calculation.
+    overlaps = await page.evaluate('''() => {
+        const actor = document.querySelector('.halloween-visitor');
+        if (!actor || Number(getComputedStyle(actor).opacity) < .2) return [];
+        const a = actor.getBoundingClientRect();
+        return [...document.querySelectorAll('button, input, select, textarea, table, [role="listbox"]')]
+          .filter(e => {
+            const b = e.getBoundingClientRect();
+            return b.width && b.height && b.left < a.right && b.right > a.left && b.top < a.bottom && b.bottom > a.top;
+          }).map(e => e.id || e.className);
+    }''')
+    assert not overlaps, overlaps
 
 async def run():
     results = []
@@ -18,7 +32,7 @@ async def run():
                                                    is_mobile=width < 640, has_touch=width < 640)
                 # Keep this seasonal test meaningful when CI runs outside October.
                 await context.add_init_script('''{
-                  Math.random = () => .6; // Reproducible visitor and crossing in this fixture.
+                  Math.random = () => .6; // Reproducible artwork and placements.
                   const OriginalDate = Date;
                   window.Date = class extends OriginalDate {
                     constructor(...args) { super(...(args.length ? args : ['2026-10-21T12:00:00Z'])); }
@@ -39,15 +53,34 @@ async def run():
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-layout.png'))
                 hat_box = await page.locator('.halloween-hat').bounding_box()
                 assert hat_box['y'] >= 0, hat_box
+                ball_box = await page.locator('#logo-home .pokeball-icon').bounding_box()
+                costume_box = await page.locator('.halloween-logo-costume').bounding_box()
+                assert costume_box == ball_box, (costume_box, ball_box)
+                assert abs(hat_box['x'] + hat_box['width']/2 - ball_box['x'] - ball_box['width']/2) < 1
+                assert ball_box['y'] + 3 < hat_box['y'] + hat_box['height'] < ball_box['y'] + ball_box['height'] * .55
+                assert await page.locator('#halloween-frame').count() == 1
                 before = await page.locator('#daily-hero').bounding_box()
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-light.png'))
+                print(json.dumps(dict(engine=engine, width=width, layout=await page.evaluate('''() => ({
+                  header: document.querySelector('body > header').getBoundingClientRect().toJSON(),
+                  ticker: document.getElementById('news-ticker')?.getBoundingClientRect().toJSON(),
+                  hero: document.getElementById('daily-hero').getBoundingClientRect().toJSON()
+                })'''))), flush=True)
                 # A real scheduled visitor must appear, and never intercept a click.
-                await page.wait_for_selector('.halloween-visitor', state='attached', timeout=16000)
+                try:
+                    await page.wait_for_selector('.halloween-visitor', state='attached', timeout=16000)
+                except Exception:
+                    print(json.dumps(await page.evaluate('''() => [...document.querySelectorAll('button,a,input,textarea,select,h1,h2,h3,h4,p,table,.card-title,.card-desc,.game-topbar,.search-bar,.results-wrap,.mode-banner')]
+                      .filter(e => e.checkVisibility?.({checkOpacity:true,checkVisibilityCSS:true}) !== false)
+                      .map(e => ({id:e.id, cls:e.className, tag:e.tagName, r:e.getBoundingClientRect().toJSON()}))
+                      .filter(e => e.r.width && e.r.height && e.r.bottom > 0 && e.r.top < innerHeight)''')), flush=True)
+                    raise
                 assert await page.locator('.halloween-visitor').count() == 1
-                assert await page.locator('.halloween-crossing').count() == (1 if width > 640 else 0)
+                assert await page.locator('.halloween-visitor').evaluate('e => e.getBoundingClientRect().width >= 60')
                 assert await page.locator('.halloween-visitor img').evaluate('e => e.complete && e.naturalWidth > 0')
                 assert await page.locator('#halloween-stage').evaluate('e => getComputedStyle(e).pointerEvents === "none"')
                 await page.wait_for_timeout(2200)
+                await assert_controls_clear(page)
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-visitor.png'))
                 await page.evaluate('openSettingsModal()')
                 await page.wait_for_function('() => !document.querySelector(".halloween-visitor")')
@@ -66,12 +99,36 @@ async def run():
                 await page.evaluate('closeOverlayModal()')
                 await page.wait_for_selector('.halloween-hat')
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-dark.png'))
-                # Game screens keep their original feedback and have no visitor timer.
+                # The frame persists through real navigation, not just home.
+                for action, screen in [('openAllModesScreen("solo")', 'screen-all-modes'),
+                                       ('openPokedexMode()', 'screen-pokedex')]:
+                    await page.evaluate(action)
+                    await page.wait_for_function('(id) => document.body.dataset.screen === id', arg=screen)
+                    assert await page.locator('#halloween-frame').count() == 1
+                    assert await page.locator('.halloween-hat').count() == 1
+                    await page.wait_for_timeout(3800)
+                    await assert_controls_clear(page)
+                    await page.screenshot(path=str(OUT / f'{engine}-{width}-{screen}.png'))
+                # Gameplay can have safe edge cameos, never a crossing over the board.
                 await page.evaluate('startNormalGame()')
                 await page.wait_for_function('() => document.body.dataset.screen === "screen-game"')
-                await page.wait_for_timeout(7000)
-                assert await page.locator('.halloween-visitor').count() == 0
+                await page.wait_for_timeout(6200)
+                assert await page.locator('.halloween-crossing').count() == 0
+                assert await page.locator('#halloween-frame').count() == 1
+                await assert_controls_clear(page)
                 await page.screenshot(path=str(OUT / f'{engine}-{width}-game.png'))
+                # All 24 files must actually decode, including the sixteen new PNGs.
+                decoded = await page.evaluate('''async () => {
+                    const old = new Set([92,93,94,198,425,607,710,778]);
+                    const ids = [92,93,94,198,200,302,353,354,355,425,429,430,442,477,479,562,570,607,609,708,709,710,778,855];
+                    return Promise.all(ids.map(id => new Promise(resolve => {
+                        const img = new Image();
+                        img.onload = () => resolve(img.naturalWidth > 0);
+                        img.onerror = () => resolve(false);
+                        img.src = '/img/halloween/' + id + (old.has(id) ? '.webp' : '.png');
+                    })));
+                }''')
+                assert len(decoded) == 24 and all(decoded), decoded
                 await page.emulate_media(reduced_motion='reduce')
                 await page.evaluate('goToConfig()')
                 await page.wait_for_timeout(7000)
