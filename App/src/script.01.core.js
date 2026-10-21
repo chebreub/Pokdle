@@ -2249,8 +2249,11 @@ function getUsageUid() {
 function trackUsage(event) {
   try {
     // En session Party, les mini-jeux sont des manches, pas des lancements solo.
-    if (event.startsWith("solo:") && typeof isPartySessionActive === "function" && isPartySessionActive()) return;
-    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event, uid: getUsageUid() }), keepalive: true }).catch(() => {});
+    if ((event.startsWith("solo:") || event.startsWith("complete:")) &&
+        typeof isPartySessionActive === "function" && isPartySessionActive()) return;
+    // A completed game needs no anonymous device token: count an outcome, not a person.
+    const payload = event.startsWith("complete:") ? { event } : { event, uid: getUsageUid() };
+    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), keepalive: true }).catch(() => {});
   } catch (_e) {}
 }
 window.trackUsage = trackUsage;

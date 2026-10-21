@@ -1174,13 +1174,12 @@ app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
 });
 
-// --- Stats de fréquentation (anonymes, en mémoire, 14 jours glissants).
-// Remise à zéro à chaque redémarrage de l'instance — un keep-alive type
-// UptimeRobot rend les compteurs quasi continus. Chaque événement est aussi
-// journalisé en une ligne dans les logs Render (préfixe [usage]) pour garder
-// une trace au-delà des redémarrages. Page de lecture : /admin/stats?key=...
-// (protégée par la variable d'environnement ADMIN_STATS_KEY). ---
+// --- Fréquentation : compteurs anonymes en mémoire (14 jours) et en
+// PostgreSQL (90 jours), sans identifiant de joueur dans la table agrégée.
+// L'interface reste /admin/stats?key=..., protégée par ADMIN_STATS_KEY. ---
+const usageMetrics = require("./lib/usage-metrics");
 const USAGE_EVENTS = new Set([
+  ...usageMetrics.COMPLETION_EVENTS,
   "visit",
   "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
   "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce", "solo:petitbac",
@@ -1206,8 +1205,31 @@ const usageDays = new Map(); // dateKey -> { events: Map, uniques: Set }
 const USAGE_MAX_DAYS = 14;
 const USAGE_MAX_UNIQUES = 5000;
 const usageBootedAt = new Date();
+const usageMetricsReady = pgPool ? authDbReady.then(async () => {
+  await usageMetrics.ensureTable(pgPool);
+  await usageMetrics.prune(pgPool);
+  return true;
+}).catch((error) => {
+  console.warn("[usage] PostgreSQL aggregate counters unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+if (pgPool) {
+  const cleanup = setInterval(() => {
+    void usageMetricsReady.then((ready) => ready ? usageMetrics.prune(pgPool) : null).catch((error) => {
+      console.warn("[usage] aggregate cleanup failed:", String(error.message || error).slice(0, 160));
+    });
+  }, 24 * 3600000);
+  cleanup.unref?.();
+}
 
+function pruneUsageMemory() {
+  const cutoff = usageMetrics.startDay(USAGE_MAX_DAYS);
+  for (const day of usageDays.keys()) if (day < cutoff) usageDays.delete(day);
+}
+const usageMemoryCleanup = setInterval(pruneUsageMemory, 24 * 3600000);
+usageMemoryCleanup.unref?.();
 function getUsageDay(key) {
+  pruneUsageMemory();
   if (!usageDays.has(key)) {
     while (usageDays.size >= USAGE_MAX_DAYS) usageDays.delete(usageDays.keys().next().value);
     usageDays.set(key, { events: new Map(), uniques: new Set() });
@@ -1222,6 +1244,9 @@ function recordUsage(event, uid) {
   day.events.set(event, (day.events.get(event) || 0) + 1);
   if (typeof uid === "string" && /^[a-z0-9-]{8,40}$/i.test(uid) && day.uniques.size < USAGE_MAX_UNIQUES) day.uniques.add(uid);
   console.log("[usage]", JSON.stringify({ d: key, e: event }));
+  // Only counters go into PostgreSQL; never persist a UID, IP, account, or payload.
+  if (pgPool) void usageMetricsReady.then((ready) => ready ? usageMetrics.increment(pgPool, event, key) : null)
+    .catch((error) => console.warn("[usage] aggregate write failed:", String(error.message || error).slice(0, 160)));
 }
 
 // Garde-fou simple : 120 événements/minute par IP.
@@ -1249,6 +1274,7 @@ app.get("/admin/stats", async (req, res) => {
   if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
   let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
+  let aggregateHtml = "<p>Compteurs quotidiens persistants indisponibles.</p>";
   if (pgPool) {
     try {
       const vt = await pgPool.query("SELECT COALESCE(SUM(hits),0)::int AS total FROM visits");
@@ -1256,6 +1282,24 @@ app.get("/admin/stats", async (req, res) => {
       visitTotalHtml = `<h2 style="margin-top:24px">Visites (persistées en base — survivent aux redéploiements)</h2><p>Total cumulé : <b style="font-size:1.6rem;color:#2f76ff">${vt.rows[0].total}</b> chargements de page.</p><table><thead><tr><th>Jour</th><th>Visites</th></tr></thead><tbody>${vd.rows.map((r) => `<tr><th>${r.d}</th><td>${r.hits}</td></tr>`).join("")}</tbody></table>`;
     } catch (e) { visitTotalHtml = "<p>(compteur persistant indisponible : " + e.message + ")</p>"; }
   }
+  try {
+    if (await usageMetricsReady) {
+      const metrics = await usageMetrics.recent(pgPool, 14);
+      const summary = usageMetrics.summarizeModes(metrics, USAGE_LABELS);
+      const rows = summary.map((row) => {
+        const name = String(row.label).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
+        return `<tr><th>${name}</th><td>${row.launches}</td><td>${row.finishInstrumented ? row.completions : "—"}</td><td>${row.finishInstrumented ? row.wins : "—"}</td><td>${row.finishInstrumented ? row.losses : "—"}</td></tr>`;
+      }).join("");
+      aggregateHtml = '<h2 style="margin-top:24px">Modes joués — 14 derniers jours (base persistante)</h2>' +
+        '<p>Événements déclarés par les navigateurs : démarrages et manches conclues, pas des personnes uniques. Un mode peut comporter plusieurs manches par lancement ; <b>ces totaux ne sont pas des taux de conversion ni de rétention</b>. Aucune réponse de jeu, adresse IP ou identité n’est enregistrée dans les agrégats (conservés 90 jours maximum).</p>' +
+        '<table><thead><tr><th>Mode</th><th>Démarrages</th><th>Fins</th><th>Victoires</th><th>Défaites</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="5">Aucune partie suivie dans cette période.</td></tr>') + '</tbody></table>';
+    }
+  } catch (error) {
+    console.warn("[usage] aggregate read failed:", String(error.message || error).slice(0, 160));
+    aggregateHtml = "<p>Impossible de lire les agrégats du moment.</p>";
+  }
+  pruneUsageMemory();
   const dayKeys = [...usageDays.keys()].sort().slice(-7);
   const events = [...USAGE_EVENTS].filter((e) => dayKeys.some((k) => usageDays.get(k).events.has(e)));
   const cell = (v) => `<td>${v || ""}</td>`;
@@ -1266,7 +1310,7 @@ app.get("/admin/stats", async (req, res) => {
   const uniqueRow = `<tr><th>Visiteurs uniques</th>${dayKeys.map((k) => cell(usageDays.get(k).uniques.size)).join("")}<td class="t">—</td></tr>`;
   res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
 <style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
-</head><body><h1>Pokédle — fréquentation</h1>${visitTotalHtml}
+</head><body><h1>Pokédle — fréquentation</h1>${visitTotalHtml}${aggregateHtml}
 <p>Compteurs en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (remis à zéro à chaque redémarrage de l'instance — les événements restent tracés dans les logs Render, préfixe <code>[usage]</code>).</p>
 <table><thead><tr><th>Événement</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${uniqueRow}${rows || ""}</tbody></table>
 ${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);
