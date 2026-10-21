@@ -40,7 +40,7 @@ test("daily aggregates keep starts and outcomes separate, not a fake conversion 
 });
 
 test("UTC range is a fixed calendar window, no Paris DST off-by-one", () => {
-  assert.equal(startDay(14, new Date("2026-10-25T23:15:00Z")), "2026-10-13");
+  assert.equal(startDay(14, new Date("2026-10-25T23:15:00Z")), "2026-10-12");
   assert.equal(startDay(90, new Date("2026-10-22T08:00:00Z")), "2026-07-25");
   assert.throws(() => startDay(0), RangeError);
   assert.throws(() => startDay(91), RangeError);
