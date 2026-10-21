@@ -3195,6 +3195,10 @@ function nextOddOneOutPuzzle() {
     revealed: false,
     count: oddOneOutState.count + 1,
   };
+  gameOver = false;
+  document.getElementById("odd-explanation-box")?.classList.add("hidden");
+  const explanation = document.getElementById("odd-explanation-text");
+  if (explanation) explanation.textContent = "";
   renderOddOneOutPuzzle();
 }
 
