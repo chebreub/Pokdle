@@ -34,6 +34,17 @@ let leaderboardV2LastMode = "daily";
 function leaderboardV2IsDraft(mode) {
   return typeof mode === "string" && /^draft(?:_(?:all|[1-9]))?$/.test(mode);
 }
+// Personal records are preserved independently of verified leaderboard results.
+// They can be displayed, but must never be silently uploaded to a public ranking.
+function leaderboardV2DraftLocalBest(mode) {
+  if (!leaderboardV2IsDraft(mode) || typeof playerProfile === "undefined") return 0;
+  const records = playerProfile?.draftScoreAttackRecords;
+  if (!records || typeof records !== "object" || Array.isArray(records)) return 0;
+  const values = mode === "draft" || mode === "draft_all"
+    ? Object.values(records) : [records[Number(mode.slice(6))]];
+  return values.map(Number).filter(n => Number.isInteger(n) && n > 0 && n <= 1000)
+    .reduce((best, score) => Math.max(best, score), 0);
+}
 function leaderboardV2ModeMeta(mode) {
   if (leaderboardV2IsDraft(mode)) return { label:"Draft Score", hint:"Moyenne BST", unit:"BST", direction:"desc" };
   const rows = {
@@ -278,7 +289,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
     };
     const dayTabs=LEADERBOARD_V2_DAY_MODES.map(modeTab).join("");
     const otherActive=LEADERBOARD_V2_OTHER_MODES.some(([id])=>isActive(id));
-    const otherModes=LEADERBOARD_V2_OTHER_MODES.filter(([id])=>!counts||isActive(id)||Number(counts[id])>0);
+    const otherModes=LEADERBOARD_V2_OTHER_MODES.filter(([id])=>!counts||isActive(id)||Number(counts[id])>0||(id==="draft"&&requestedScope==="all"&&leaderboardV2DraftLocalBest("draft_all")>0));
     const modeTabs='<label class="lbv4-arcade'+(otherActive?' is-active':'')+'"><span>Jeux d’arcade</span><select data-change-action="switchLeaderboardSelect" aria-label="Classement d’un jeu d’arcade">'+
       '<option value=""'+(otherActive?'':' selected')+'>'+(otherModes.length?'Choisir un jeu…':'Aucun record sur cette période')+'</option>'+
       otherModes.map(([id,label])=>'<option value="'+(id==="draft"?"draft_all":id)+'"'+(isActive(id)?' selected':'')+'>'+escapeHtml(label)+'</option>').join("")+
@@ -319,6 +330,10 @@ function openLeaderboardV2(mode="journey",scope="today") {
     let personalHtml='';
     if (data?.me) {
       personalHtml='<section class="lbv3-personal"><span>Ta position</span><strong>#'+Number(data.me.rank)+'</strong><span>·</span><b>'+leaderboardV2ScoreHtml(data.me,current,data.unit||meta.unit)+'</b></section>';
+    }
+    const localDraftBest=requestedScope==="all" ? leaderboardV2DraftLocalBest(current) : 0;
+    if (localDraftBest > (Number(data?.me?.score)||0)) {
+      personalHtml+='<aside class="lbv3-local-record" role="note"><span>Ton record personnel</span><strong>'+localDraftBest+' BST</strong><p>Ce record est conservé dans ton profil, mais il n’est pas confirmé par le serveur pour le classement public. Il n’a pas disparu.</p></aside>';
     }
 
     const empty = !rows.length;

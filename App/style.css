@@ -23448,6 +23448,24 @@ body.reduce-motion .live-rank-hud.is-goal-hit { animation:none !important; }
   color:#245ca6;
   font-size:1.1rem;
 }
+/* A player's saved profile record is visible but never counted as a public rank. */
+.lbv3-local-record {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:6px 12px;
+  padding:11px 14px;
+  margin:10px 0;
+  border-radius:13px;
+  background:#f7faff;
+  border:1px solid rgba(47,118,255,.18);
+  color:#2b4164;
+}
+.lbv3-local-record span { font-size:.82rem; font-weight:700; }
+.lbv3-local-record strong { font-size:1rem; font-variant-numeric:tabular-nums; color:#245ca6; }
+.lbv3-local-record p { flex-basis:100%; margin:0; font-size:.78rem; line-height:1.45; }
+body.theme-dark .lbv3-local-record { background:#142640; color:#d9e7fb; border-color:rgba(116,156,220,.2); }
+body.theme-dark .lbv3-local-record strong { color:#9dc9ff; }
 .lbv3-podium {
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
