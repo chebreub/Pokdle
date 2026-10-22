@@ -23,6 +23,6 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: App/package-lock.json
+      # package.json postinstall already builds the client during npm ci.
       - run: npm ci
-      - run: npm run build
       - run: npm test
