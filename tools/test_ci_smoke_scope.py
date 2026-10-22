@@ -14,7 +14,10 @@ class SmokeScopeTest(unittest.TestCase):
         self.assertEqual(classify([
             "App/src/script.10o.daily-wordle.js",
             "App/test/daily-wordle.test.js",
-        ]), ("daily", False))
+        ]), ("daily", True))
+
+    def test_wordle_database_test_alone_needs_postgresql_not_browsers(self):
+        self.assertEqual(classify(["App/test/daily-wordle.test.js"]), ("none", True))
 
     def test_party_qa_is_party(self):
         self.assertEqual(classify([

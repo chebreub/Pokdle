@@ -35,6 +35,7 @@ DAILY_PREFIXES = (
 DB_TESTS = {
     "App/test/usage-metrics.test.js",
     "App/test/daily-petitbac.test.js",
+    "App/test/daily-wordle.test.js",
     "App/test/daily-grid.test.js",
     "App/test/leaderboard-store.test.js",
     "App/test/egg-mystery.test.js",
