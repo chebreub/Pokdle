@@ -2883,6 +2883,30 @@
 #pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-actions {
   grid-template-columns:1fr 1fr;
 }
+/* Speedrun: results and next actions share one focusable section. */
+#pokdle-app.design-refresh #screen-speedrun .speedrun-gameover,
+#pokdle-app.design-refresh #screen-speedrun .speedrun-result-actions {
+  scroll-margin-block:20px calc(110px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #screen-speedrun .speedrun-gameover:focus { outline:none; }
+#pokdle-app.design-refresh #screen-speedrun .speedrun-gameover:focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);outline-offset:3px;
+}
+#pokdle-app.design-refresh #screen-speedrun .speedrun-result-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  width:min(100%,560px);
+}
+#pokdle-app.design-refresh #screen-speedrun .speedrun-share-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  width:min(100%,420px);
+}
+#pokdle-app.design-refresh #screen-speedrun :is(.speedrun-result-actions,.speedrun-share-actions) button {
+  min-width:0;width:100%;min-height:48px;
+}
 
 @media (max-width:640px) {
   #pokdle-app.design-refresh :is(#screen-speedrun,#screen-type-combo) .gameplay-screen-card > .card-desc {
@@ -2983,6 +3007,13 @@
   }
   #pokdle-app.design-refresh #screen-speedrun .higher-lower-final-actions .btn-blue {
     grid-column:1 / -1;
+  }
+  #pokdle-app.design-refresh #screen-speedrun .speedrun-result-actions {
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+  }
+  #pokdle-app.design-refresh #screen-speedrun :is(.speedrun-result-actions,.speedrun-share-actions) button {
+    min-height:50px;
   }
 }
 
