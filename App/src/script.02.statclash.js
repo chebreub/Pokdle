@@ -329,6 +329,19 @@ function startMysteryStatGame() {
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
+// A fresh Evolution / Ordre puzzle must appear after replay without sending an
+// iPhone user back to a hidden replay button or opening the soft keyboard.
+function focusClassicClueAfterReplay(panelId) {
+  const panel = document.getElementById(panelId);
+  if (!panel || panel.classList.contains("hidden") || gameOver) return;
+  const mobile = Boolean(window.matchMedia?.("(max-width: 640px)")?.matches);
+  if (mobile) panel.focus({ preventScroll: true });
+  panel.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: "start",
+  });
+}
+
 function restartCurrentMode() {
   if (gameMode === "daily") {
     // Le daily du jour est unique : une fois terminé, "Rejouer" bascule sur l'illimité.
@@ -381,12 +394,17 @@ function restartCurrentMode() {
   }
 
   if (gameMode === "evolution") {
+    // Party's end-of-round navigation owns its own next/replay actions.
+    if (partySession?.currentModeKey === "evolution") return;
     startEvolutionChainGame();
+    focusClassicClueAfterReplay("evolution-box");
     return;
   }
 
   if (gameMode === "order") {
+    if (partySession?.currentModeKey === "order") return;
     startPokedexOrderGame();
+    focusClassicClueAfterReplay("order-box");
     return;
   }
 
