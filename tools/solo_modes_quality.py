@@ -77,6 +77,54 @@ def run():
                         cases.append(entry)
                         print("SOLO_MODE_QA " + json.dumps(entry, ensure_ascii=False), flush=True)
 
+                    def quiz_result():
+                        page.evaluate("goToConfig();startQuizGame();closeOverlayModal()")
+                        screen(page, "screen-game")
+                        page.locator("#quiz-question").wait_for(state="visible")
+                        page.evaluate("""() => {
+                            quizScore=11;
+                            quizCurrentIndex=quizQuestions.length;
+                            quizHistory=quizQuestions.map((q,i)=>({ok:i<11,text:'Test'}));
+                            renderQuizQuestion();
+                        }""")
+                        card=page.locator("#quiz-end-card")
+                        assert card.is_visible(), "Missing solo quiz summary"
+                        assert "11 / 15" in page.locator("#quiz-end-score").inner_text()
+                        assert "73 %" in page.locator("#quiz-end-accuracy").inner_text()
+                        assert "+85 XP" in page.locator("#quiz-end-xp").inner_text()
+                        assert not page.locator("#quiz-next-btn").is_visible(), "Duplicate replay button"
+                        assert page.evaluate("document.activeElement?.id") == "quiz-end-card"
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-quiz-result.png"),animations="disabled")
+                        if width < 640:
+                            rect=card.bounding_box();nav=page.locator("#mobile-tabbar").bounding_box()
+                            assert rect and nav and rect["y"]>=0 and rect["y"]+rect["height"]<=nav["y"]-4,(rect,nav)
+                        previous_xp=page.evaluate("playerProfile.xp")
+                        page.evaluate("renderQuizQuestion()")
+                        assert page.evaluate("playerProfile.xp")==previous_xp, "Results rewarded XP twice"
+                        page.evaluate("""() => {
+                            partySession={currentModeKey:'quiz',completed:true,roundResolved:true};
+                            renderQuizQuestion();
+                        }""")
+                        assert not card.is_visible(), "Completed Party exposes solo summary"
+                        page.evaluate("nextQuizQuestion()")
+                        assert page.evaluate("gameOver"), "Party restarted via solo replay"
+                        page.evaluate("partySession=null")
+                        page.evaluate("renderQuizQuestion()")
+                        replay=page.locator("#quiz-result-replay")
+                        if width < 640: replay.tap()
+                        else: replay.click()
+                        assert not card.is_visible() and page.evaluate("!gameOver && quizScore===0")
+                        page.evaluate("""() => {
+                            quizScore=0;quizCurrentIndex=quizQuestions.length;
+                            quizHistory=quizQuestions.map(q=>({ok:false,text:'Test'}));
+                            renderQuizQuestion();
+                        }""")
+                        assert card.is_visible() and page.locator("#quiz-end-score").inner_text().strip()=="0 / 15"
+                        catalog=page.locator("#quiz-result-catalog")
+                        if width < 640: catalog.tap()
+                        else: catalog.click()
+                        screen(page,"screen-all-modes")
+
                     def weight():
                         page.evaluate("goToConfig();startWeightBattle();closeOverlayModal()")
                         screen(page, "screen-game")
@@ -324,6 +372,7 @@ def run():
                         assert name in page.locator("#mystery-name").inner_text()
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery-solved.png"), animations="disabled")
 
+                    execute("quiz-result", quiz_result)
                     execute("weight", weight)
                     execute("evolution", evolution)
                     execute("pokedex-order", order)
