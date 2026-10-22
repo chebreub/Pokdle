@@ -28,6 +28,7 @@ class PlaywrightContainerWorkflowTest(unittest.TestCase):
         for file_name in (
             "test/usage-metrics.test.js",
             "test/daily-petitbac.test.js",
+            "test/daily-wordle.test.js",
             "test/leaderboard-store.test.js",
             "test/daily-grid.test.js",
             "test/egg-mystery.test.js",

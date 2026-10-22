@@ -88,7 +88,7 @@ jobs:
         if: env.QA_FULL == 'true' || steps.smoke.outputs.db == 'true'
         working-directory: App
         run: |
-          node --test test/usage-metrics.test.js test/daily-petitbac.test.js test/leaderboard-store.test.js test/daily-grid.test.js test/egg-mystery.test.js > ../quality-artifacts/postgres-tests.log 2>&1 || { tail -100 ../quality-artifacts/postgres-tests.log; exit 1; }
+          node --test test/usage-metrics.test.js test/daily-petitbac.test.js test/daily-wordle.test.js test/leaderboard-store.test.js test/daily-grid.test.js test/egg-mystery.test.js > ../quality-artifacts/postgres-tests.log 2>&1 || { tail -100 ../quality-artifacts/postgres-tests.log; exit 1; }
           tail -12 ../quality-artifacts/postgres-tests.log
       - name: Full Node regression after merge to main
         if: github.event_name == 'push'
