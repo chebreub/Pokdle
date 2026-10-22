@@ -187,6 +187,61 @@ def run():
                         else: catalog.click()
                         screen(page, "screen-all-modes")
 
+                    def speedrun():
+                        page.evaluate("goToConfig();openSpeedrunMode();closeOverlayModal()")
+                        screen(page, "screen-speedrun")
+                        start = page.locator(".speedrun-start-btn")
+                        if width < 640: start.tap()
+                        else: start.click()
+                        assert page.evaluate("speedrunState.phase === 'playing'")
+                        assert page.locator("#speedrun-timer").is_visible()
+                        page.evaluate("""() => {
+                            // Avoid changing any reward thresholds in this UX test.
+                            playerProfile.speedrunHighScore = 30;
+                            speedrunState.highScore = 30;
+                            speedrunState.correct = 8;
+                            speedrunState.bestStreak = 5;
+                            speedrunState.skipped = 2;
+                            finalizeSpeedrunGame();
+                        }""")
+                        final = page.locator("#speedrun-root .speedrun-gameover")
+                        assert final.is_visible() and "8" in page.locator(".speedrun-final-score").inner_text()
+                        assert page.evaluate("document.activeElement?.classList.contains('speedrun-gameover')")
+                        replay = final.locator('[data-action="replaySpeedrunGame"]')
+                        catalog = final.locator('[data-action="openAllModesScreen"]')
+                        assert replay.is_visible() and catalog.is_visible()
+                        assert page.locator("#screen-speedrun .dedicated-result-actions [data-action='openAllModesScreen']").count() == 0, "Duplicate catalog action below result"
+                        assert final.locator('[data-action="shareSpeedrunResult"]').is_visible()
+                        assert final.locator('[data-action="downloadSpeedrunImage"]').is_visible()
+                        if width < 640:
+                            rect = final.locator(".speedrun-result-actions").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert rect and nav and rect["y"] >= 0 and rect["y"] + rect["height"] <= nav["y"] - 4, (rect, nav)
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-speedrun-result.png"), animations="disabled")
+                        if width < 640: replay.tap()
+                        else: replay.click()
+                        assert page.evaluate("speedrunState.phase === 'playing'")
+                        assert page.evaluate("speedrunState.correct === 0 && speedrunState.leftMs === 60000")
+                        assert page.locator("#speedrun-timer").is_visible(), "Replay did not launch the 60-second round"
+                        assert not final.is_visible(), "Previous result remained after replay"
+                        page.evaluate("speedrunState.correct=0;finalizeSpeedrunGame()")
+                        assert final.is_visible()
+                        page.evaluate("""() => {
+                            partySession={currentModeKey:'speedrun',completed:true,roundResolved:true};
+                            renderSpeedrunScreen();
+                        }""")
+                        assert not final.locator(".speedrun-result-actions").is_visible(), "Solo replay visible in completed Party"
+                        assert not page.locator('#screen-speedrun .ranking-head-actions [data-action="restartSpeedrunGame"]').is_visible()
+                        assert not page.locator("#screen-speedrun .dedicated-result-actions").is_visible(), "Shared shell leaks solo navigation"
+                        page.evaluate("replaySpeedrunGame();restartSpeedrunGame();startSpeedrunGame()")
+                        assert page.evaluate("speedrunState.phase === 'gameover'"), "Completed Party restarted a solo round"
+                        page.evaluate("partySession=null;renderSpeedrunScreen()")
+                        catalog = page.locator("#speedrun-root .speedrun-gameover [data-action='openAllModesScreen']")
+                        assert catalog.is_visible()
+                        if width < 640: catalog.tap()
+                        else: catalog.click()
+                        screen(page, "screen-all-modes")
+
                     def weight():
                         page.evaluate("goToConfig();startWeightBattle();closeOverlayModal()")
                         screen(page, "screen-game")
@@ -436,6 +491,7 @@ def run():
 
                     execute("quiz-result", quiz_result)
                     execute("connections", connections)
+                    execute("speedrun", speedrun)
                     execute("weight", weight)
                     execute("evolution", evolution)
                     execute("pokedex-order", order)
