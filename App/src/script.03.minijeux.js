@@ -135,6 +135,7 @@ function openHigherLowerMode() {
 }
 
 function startHigherLowerMode(mode) {
+  if (higherLowerIsPartyRound() && (partySession?.completed || partySession?.roundResolved)) return;
   trackUsage("solo:higherlower");
   if (!higherLowerState) higherLowerState = createHigherLowerState(mode);
   higherLowerState.mode = mode === "rush60" ? "rush60" : "infinite";
@@ -229,7 +230,37 @@ function answerHigherLower(choice) {
   }, higherLowerState.mode === "rush60" ? 900 : 1800);
 }
 
+function higherLowerIsPartyRound() {
+  // Party controls own continuation even after a round has finished.
+  return typeof partySession !== "undefined" && partySession?.currentModeKey === "higherlower";
+}
+
+function focusHigherLowerResult() {
+  if (higherLowerIsPartyRound()) return;
+  const result = document.querySelector("#higher-lower-root .higher-lower-gameover");
+  if (!result) return;
+  result.focus({ preventScroll: true });
+  const mobile = window.matchMedia?.("(max-width: 640px)")?.matches;
+  const target = mobile ? result.querySelector(".higher-lower-final-actions") || result : result;
+  target.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: mobile ? "end" : "center",
+  });
+}
+
+function replayHigherLowerGame() {
+  if (!higherLowerState || higherLowerState.phase !== "gameover" || higherLowerIsPartyRound()) return;
+  // Reuse the finished format; the existing records, scoring and timers stay unchanged.
+  const mode = higherLowerState.mode;
+  if (mode !== "infinite" && mode !== "rush60") return;
+  clearHigherLowerTimeouts();
+  clearHigherLowerRushInterval();
+  higherLowerState = createHigherLowerState(mode);
+  startHigherLowerMode(mode);
+}
+
 function restartHigherLowerGame() {
+  if (higherLowerIsPartyRound()) return;
   if (!higherLowerState) return openHigherLowerMode();
   if (higherLowerState.mode === "versus" && higherLowerState.room) {
     return leaveHigherLowerRoom();
@@ -254,6 +285,9 @@ function renderHigherLowerScreen() {
   if (!root) return;
   const state = higherLowerState;
   if (!state) { root.innerHTML = ""; return; }
+  const isPartyRound = higherLowerIsPartyRound();
+  document.querySelector('#screen-higher-lower .ranking-head-actions [data-action="restartHigherLowerGame"]')
+    ?.classList.toggle("hidden", isPartyRound);
   if (state.phase === "lobby") {
     root.innerHTML = `
       <div class="higher-lower-lobby">
@@ -372,7 +406,7 @@ function renderHigherLowerScreen() {
       ? `Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} en 60 secondes.`
       : `Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} d'affilée.`;
     root.innerHTML = `
-      <div class="higher-lower-gameover">
+      <div class="higher-lower-gameover" role="region" aria-label="Résultat Higher or Lower" tabindex="-1">
         <h3>${title}</h3>
         <p>${desc}</p>
         <p class="higher-lower-record">${isRecord ? "🏆 Nouveau record !" : `Record actuel : <b>${refScore}</b>`}</p>
@@ -381,12 +415,14 @@ function renderHigherLowerScreen() {
           <div class="higher-lower-final-vs">VS</div>
           <div class="higher-lower-card-mini ${state.lastCorrect ? "is-correct" : "is-wrong"}"><img src="${escapeHtml(rightSprite)}" alt="${escapeHtml(state.right.pokemon.name)}" /><span>${escapeHtml(state.right.pokemon.name)}</span><b>${statMeta.icon} ${state.right.statValue}</b></div>
         </div>` : ""}
-        <div class="higher-lower-final-actions">
-          <button class="btn-red" type="button" data-action="restartHigherLowerGame">Rejouer</button>
+        ${isPartyRound ? "" : `<div class="higher-lower-final-actions">
+          <button class="btn-red" type="button" data-action="replayHigherLowerGame">↻ Rejouer ${isRush ? "60 s" : "en infini"}</button>
+          <button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu →</button>
           <button class="btn-ghost" type="button" data-action="shareHigherLowerResult">📋 Copier</button>
           <button class="btn-ghost" type="button" data-action="downloadHigherLowerImage">💾 Image</button>
-        </div>
+        </div>`}
       </div>`;
+    if (!isPartyRound) focusHigherLowerResult();
     return;
   }
   let scoreHtml;
@@ -424,6 +460,8 @@ function renderHigherLowerScreen() {
       `}
     </div>`;
 }
+
+window.replayHigherLowerGame = replayHigherLowerGame;
 
 // === HIGHER OR LOWER — Versus 1v1 multi ===
 function startHigherLowerVersusFromLobby() {
