@@ -600,20 +600,21 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
 });
 
 // Players ranked per arcade board for a period, so empty boards can be hidden.
-const LB_ARCADE_MODES = ["quiz", "speedrun", "higherlower", "higherlower60", "intrus", "poids", "party", "typecombo", "draft_all"];
+const LB_DRAFT_MODES = ["draft_all", ...Array.from({ length: 9 }, (_, index) => "draft_" + (index + 1))];
+const LB_ARCADE_MODES = ["quiz", "speedrun", "higherlower", "higherlower60", "intrus", "poids", "party", "typecombo", ...LB_DRAFT_MODES];
 app.get("/api/leaderboard/counts", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, counts: {} });
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   try {
     await authDbReady;
     const sql = scope === "all"
-      ? "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY mode"
-      : "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE mode = ANY($1) AND " +
+      ? "SELECT CASE WHEN mode LIKE 'draft_%' THEN 'draft' ELSE mode END AS mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY 1"
+      : "SELECT CASE WHEN e.mode LIKE 'draft_%' THEN 'draft' ELSE e.mode END AS mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE e.mode = ANY($1) AND " +
         (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= now() - interval '7 days'") +
-        " GROUP BY mode";
+        " GROUP BY 1";
     const rows = (await pgPool.query(sql, [LB_ARCADE_MODES])).rows;
-    const counts = Object.fromEntries(LB_ARCADE_MODES.map((mode) => [mode === "draft_all" ? "draft" : mode, 0]));
-    for (const row of rows) counts[row.mode === "draft_all" ? "draft" : row.mode] = Number(row.n) || 0;
+    const counts = Object.fromEntries([...LB_ARCADE_MODES.filter((mode) => !mode.startsWith("draft_")), "draft"].map((mode) => [mode, 0]));
+    for (const row of rows) counts[row.mode] = Number(row.n) || 0;
     res.json({ ok: true, scope, counts });
   } catch (e) {
     console.error("[leaderboard] counts:", e.message);
@@ -630,6 +631,8 @@ app.get("/api/leaderboard", async (req, res) => {
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   const order = leaderboardOrderSql(config);
   const best = leaderboardBestSql(config);
+  const globalDraft = mode === "draft_all";
+  const scoreboardParams = globalDraft ? [LB_DRAFT_MODES] : scoreboardParams;
   const user = getSessionUser(req);
   const meId = user ? user.id : null;
   try {
@@ -639,7 +642,23 @@ app.get("/api/leaderboard", async (req, res) => {
     if(mode === "grid") return res.json(await gridService.leaderboard(scope,meId));
     if(mode === "petitbacday") return res.json(await dailyBacService.leaderboard(scope,meId));
     let rankedCte;
-    if (scope === "all") {
+    if (scope === "all" && globalDraft) {
+      // Aggregate only existing server-backed records; never promote local profile
+      // data to public rankings without proof that a ranked game was completed.
+      rankedCte = `
+        WITH best AS (
+          SELECT DISTINCT ON (s.discord_id) s.discord_id, s.username, s.avatar, s.score, s.updated_at
+          FROM scores s
+          WHERE s.mode = ANY($1)
+          ORDER BY s.discord_id, s.score DESC, s.updated_at ASC
+        ),
+        ranked AS (
+          SELECT b.discord_id, b.username, b.avatar, u.partner_id, b.score,
+            (RANK() OVER (ORDER BY b.score DESC, b.updated_at ASC))::int AS rank
+          FROM best b
+          LEFT JOIN users u ON u.discord_id = b.discord_id
+        )`;
+    } else if (scope === "all") {
       rankedCte = `
         WITH ranked AS (
           SELECT s.discord_id, s.username, s.avatar, u.partner_id, s.score,
@@ -657,7 +676,7 @@ app.get("/api/leaderboard", async (req, res) => {
         WITH best AS (
           SELECT e.discord_id, ${best}(e.score)::int AS score
           FROM leaderboard_events e
-          WHERE e.mode = $1 AND ${timePredicate}
+          WHERE e.mode ${globalDraft ? "= ANY($1)" : "= $1"} AND ${timePredicate}
           GROUP BY e.discord_id
         ),
         ranked AS (
@@ -670,15 +689,15 @@ app.get("/api/leaderboard", async (req, res) => {
 
     const top = await pgPool.query(
       rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
-      [mode]
+      scoreboardParams
     );
-    const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", [mode]);
+    const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", scoreboardParams);
     let me = null;
     let aroundRows = [];
     if (meId) {
       const mine = await pgPool.query(
         rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
-        [mode, meId]
+        scoreboardParams.concat(meId)
       );
       if (mine.rows[0]) {
         const row = mine.rows[0];
@@ -687,7 +706,7 @@ app.get("/api/leaderboard", async (req, res) => {
         const high = Number(row.rank) + 2;
         const around = await pgPool.query(
           rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
-          [mode, low, high]
+          scoreboardParams.concat(low, high)
         );
         aroundRows = around.rows;
       }
