@@ -244,7 +244,9 @@ function focusHigherLowerResult() {
   const target = mobile ? result.querySelector(".higher-lower-final-actions") || result : result;
   target.scrollIntoView({
     behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
-    block: mobile ? "end" : "center",
+    // Center the (four stacked) result actions within the unobstructed mobile viewport.
+    // End-alignment places the last action underneath the fixed mobile tabbar.
+    block: "center",
   });
 }
 
