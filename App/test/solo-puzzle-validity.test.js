@@ -102,6 +102,20 @@ test("Intrus rejects puzzles where different type categories create two plausibl
   assert.deepEqual(JSON.parse(JSON.stringify(context.oddPossibleOutliers(cards,["type"]))),[6,5]);
 });
 
+test("Hard Intrus also rules out plausible alternatives based on color and evolution stage", () => {
+  const ctx = oddCtx("hard");
+  const cards = [
+    {id:1,name:"Alpha",gen:1,type1:"Feu",color:"Rouge",stage:1},
+    {id:2,name:"Bravo",gen:1,type1:"Feu",color:"Rouge",stage:1},
+    {id:3,name:"Charlie",gen:1,type1:"Feu",color:"Rouge",stage:1},
+    {id:4,name:"Delta",gen:1,type1:"Feu",color:"Rouge",stage:1},
+    {id:5,name:"Echo",gen:1,type1:"Feu",color:"Bleu",stage:1},
+    {id:6,name:"Foxtrot",gen:1,type1:"Eau",color:"Rouge",stage:2},
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.oddPossibleOutliers(cards,["type","color","stage"]))),[6,5],
+    "A hidden-criterion puzzle with two plausible outsiders is invalid");
+});
+
 test("Across 3 difficulty tiers, every generated Intrus puzzle has exactly one justified outsider", () => {
   const extended = pokemon.filter(p=>[1,2,3].includes(p.gen) && !p.isAltForm);
   for (const tier of ["easy","medium","hard"]) {
@@ -113,7 +127,7 @@ test("Across 3 difficulty tiers, every generated Intrus puzzle has exactly one j
         assert.equal(puzzle.cards.length,6);
         assert.equal(new Set(puzzle.cards.map(p=>p.id)).size,6);
         assert.ok(pool.some(p=>p.id === puzzle.oddId),"answer must belong to selected generations");
-        const checked = tier === "hard" ? ["type","generation","letter"] : [puzzle.rule];
+        const checked = tier === "hard" ? ["type","generation","letter","color","habitat","stage"] : [puzzle.rule];
         assert.deepEqual(JSON.parse(JSON.stringify(ctx.oddPossibleOutliers(puzzle.cards,checked))),[puzzle.oddId],
           "No other card may satisfy the advertised rule");
       }
