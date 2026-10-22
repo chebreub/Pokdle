@@ -1,7 +1,11 @@
 """Select focused daily QA when the whole diff belongs to that journey."""
 import os,re,subprocess
+from pathlib import Path
+# A container job may start shell commands outside the Git worktree. Use
+# the location of this script as the unambiguous repository root.
+REPO_ROOT = Path(__file__).resolve().parents[1]
 base=os.environ.get('QA_BASE') or 'HEAD^'
-paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+paths=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True,cwd=REPO_ROOT).splitlines()
 allowed=re.compile(r'^(App/(lib/daily[^/]*\.js|test/daily[^/]*\.test\.js|src/script\.10[opqr]\.[^/]+\.js|src/script\.10g\.leaderboard-v2\.js|server\.js|index\.html|build\.mjs|(?:challenge|dossier|wordle)\.css)|tools/(?:daily_scope|challenge_quality|dossier_quality|wordle_quality)\.py|docs/daily[^/]*\.md|\.github/workflows/browser-quality\.yml)$')
 maintenance_extra={'App/src/script.01.core.js','App/src/script.04.jeu-pokedex.js','App/src/script.07.delegation-party.js','App/src/script.10i.weekly-league.js','App/src/script.10s.daily-home.js','App/test/weekly-league.test.js','tools/daily_maintenance_quality.py','docs/step1-maintenance.md'}
 maintenance='App/test/daily-maintenance.test.js' in paths and all(allowed.match(p) or p in maintenance_extra for p in paths)

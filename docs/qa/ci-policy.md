@@ -41,8 +41,18 @@ un commit non entièrement validé.
   exécuter `npm run build` une seconde fois.
 - Les tests Node généraux appartiennent au workflow de régression, les
   véritables tests PostgreSQL au workflow avec conteneur dédié.
-- Les binaires Playwright sont mis en cache ; ses dépendances système restent
-  vérifiées.
+- Le job navigateur s'exécute dans l'**image officielle Playwright** Python
+  `mcr.microsoft.com/playwright/python:v1.55.0-noble` : Chromium, WebKit et les
+  bibliothèques système y sont déjà installés. Installer uniquement la bibliothèque
+  Python `playwright==1.55.0` et tester un lancement de chaque navigateur avant
+  la recette. Conserver **strictement la même version** du client et de l'image.
+- La CI ne relance plus `playwright install --with-deps` à chaque exécution
+  (l'ancien `apt-get` prenait environ 7 min 30 dans les logs du 22/10/2026).
+  Le téléchargement initial de l'image Docker peut encore prendre du temps.
+- Depuis le conteneur de job, le service PostgreSQL est accessible sur le nom
+  réseau `postgres:5432`, et non `localhost:5432`. Les tests conservent
+  l'utilisateur et la base éphémères `qa`/`pokdle_qa` de GitHub Actions,
+  **jamais** les identifiants de la production.
 - Les scripts JavaScript et CSS historiques sont partagés entre plusieurs
   jeux. Si le périmètre est ambigu, le smoke retombe sur une vérification
   générale plutôt que de conclure que tout est couvert.

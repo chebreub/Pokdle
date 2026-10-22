@@ -5,6 +5,8 @@ on:
     paths:
       - "App/**"
       - ".github/workflows/game-tests.yml"
+      # CI-only changes must still validate the Node test suite.
+      - ".github/workflows/browser-quality.yml"
 
 permissions:
   contents: read

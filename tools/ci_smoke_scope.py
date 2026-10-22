@@ -82,6 +82,7 @@ def classify(paths: list[str]) -> tuple[str, bool]:
 def changed_paths(base: str) -> list[str]:
     result = subprocess.run(
         ["git", "diff", "--name-only", base, "HEAD"],
+        cwd=Path(__file__).resolve().parents[1],
         check=True, capture_output=True, text=True,
     )
     return result.stdout.splitlines()
