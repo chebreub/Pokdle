@@ -154,6 +154,9 @@ def run():
                         submit_name(page, chain["names"][1])
                         assert page.evaluate("gameMode") == "evolution", "Mode unexpectedly switched"
                         assert page.locator("#win-box").is_visible(), "Winning Evolution lacks a result"
+                        celebration = page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
+                        if celebration.is_visible():
+                            celebration.click()
                         # Completed Party must not restart via a solo button.
                         page.evaluate("""() => {
                             partySession={currentModeKey:'evolution',completed:true,roundResolved:true};
@@ -197,6 +200,9 @@ def run():
                         submit_name(page, puzzle["name"])
                         assert page.evaluate("gameMode") == "order"
                         assert page.locator("#win-box").is_visible(), "Winning Ordre lacks a result"
+                        celebration = page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
+                        if celebration.is_visible():
+                            celebration.click()
                         button = page.locator("#btn-restart")
                         if width < 640:
                             button.tap()
