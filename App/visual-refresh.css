@@ -2510,8 +2510,25 @@
 }
 #pokdle-app.design-refresh #screen-poke-connections .poke-connections-final h3 { margin:0;color:var(--ui-ink);font-size:1.25rem; }
 #pokdle-app.design-refresh #screen-poke-connections .poke-connections-final p { color:var(--ui-muted);font-size:.8rem; }
-#pokdle-app.design-refresh #screen-poke-connections .poke-connections-final > button { margin-top:8px; }
+/* End-of-puzzle actions stay above long revealed solution lists. */
+#pokdle-app.design-refresh #screen-poke-connections .poke-connections-final,
+#pokdle-app.design-refresh #screen-poke-connections .poke-connections-board {
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #screen-poke-connections :is(.poke-connections-final,.poke-connections-board):focus { outline:none; }
+#pokdle-app.design-refresh #screen-poke-connections :is(.poke-connections-final,.poke-connections-board):focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);outline-offset:3px;
+}
+#pokdle-app.design-refresh #screen-poke-connections .poke-connections-final-actions {
+  display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%;margin-top:12px;
+}
+#pokdle-app.design-refresh #screen-poke-connections .poke-connections-final-actions button {
+  min-height:48px;width:100%;padding:10px 14px;
+}
 #pokdle-app.design-refresh #screen-poke-connections .poke-connections-reveal-groups { margin-top:10px;gap:8px; }
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-poke-connections .poke-connections-final-actions button { min-height:50px; }
+}
 
 @media (max-width:640px) {
   #pokdle-app.design-refresh #screen-game .visual-clue-box {

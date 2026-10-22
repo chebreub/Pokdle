@@ -1248,8 +1248,26 @@ function openPokeConnectionsMode() {
   renderPokeConnectionsScreen();
 }
 
+function pokeConnectionsIsPartyRound() {
+  // A finished Party round is still owned by Party, even once active=false.
+  return typeof partySession !== "undefined" && partySession?.currentModeKey === "connections";
+}
+
+function focusPokeConnectionsSurface(selector, block = "start") {
+  const target = document.querySelector?.(selector);
+  if (!target) return;
+  target.focus?.({ preventScroll: true });
+  target.scrollIntoView?.({
+    behavior: typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block,
+  });
+}
+
 function restartPokeConnectionsGame() {
+  // Never allow a solo restart to escape the Party controller.
+  if (pokeConnectionsIsPartyRound()) return;
   openPokeConnectionsMode();
+  focusPokeConnectionsSurface("#poke-connections-root .poke-connections-board");
 }
 
 function togglePokeConnectionsTile(tileIndex) {
@@ -1321,6 +1339,10 @@ function submitPokeConnectionsGuess() {
     }
   }
   renderPokeConnectionsScreen();
+  if ((pokeConnectionsState.phase === "won" || pokeConnectionsState.phase === "lost")
+      && !pokeConnectionsIsPartyRound()) {
+    focusPokeConnectionsSurface("#poke-connections-root .poke-connections-final");
+  }
 }
 
 function renderPokeConnectionsScreen() {
@@ -1357,17 +1379,26 @@ function renderPokeConnectionsScreen() {
   const mistakeDots = Array.from({ length: POKE_CONNECTIONS_MAX_MISTAKES }, (_, i) => `<span class="poke-connections-mistake-dot ${i < mistakes ? "is-used" : ""}"></span>`).join("");
   const shakeClass = (Date.now() - state.lastShake < 700) ? "is-shaking" : "";
   const selectionCopy = selected.size === 4 ? "Groupe prêt à valider" : selected.size + " / 4 sélectionnés";
+  const partyRound = pokeConnectionsIsPartyRound();
+  // Hide the always-present header restart in Party as well as the final CTAs.
+  document.querySelector?.('#screen-poke-connections .ranking-head-actions [data-action="restartPokeConnectionsGame"]')
+    ?.classList?.toggle("hidden", partyRound);
+  const soloActions = partyRound ? "" : `
+      <div class="poke-connections-final-actions" role="group" aria-label="Après le puzzle">
+        <button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">↻ Nouveau puzzle</button>
+        <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+      </div>`;
   let footer = "";
 
   if (phase === "won") {
-    footer = `<div class="poke-connections-final is-won"><span class="poke-connections-final-kicker">PUZZLE RÉSOLU</span><h3>Les 4 connexions sont trouvées.</h3><p>${mistakes === 0 ? "Parfait, aucune erreur." : mistakes + " erreur" + (mistakes > 1 ? "s" : "") + " avant la solution."}</p><button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle →</button></div>`;
+    footer = `<div class="poke-connections-final is-won" role="region" aria-label="Résultat Poké-Connections" tabindex="-1"><span class="poke-connections-final-kicker">PUZZLE RÉSOLU</span><h3>Les 4 connexions sont trouvées.</h3><p>${mistakes === 0 ? "Parfait, aucune erreur." : mistakes + " erreur" + (mistakes > 1 ? "s" : "") + " avant la solution."}</p>${soloActions}</div>`;
   } else if (phase === "lost") {
     const remainingGroups = puzzle.groups
       .map((g, idx) => ({ g, idx }))
       .filter(({ idx }) => !foundGroupIdx.has(idx))
       .map(({ g, idx }) => renderFoundGroup(g, idx, true))
       .join("");
-    footer = `<div class="poke-connections-final is-lost"><span class="poke-connections-final-kicker">PARTIE TERMINÉE</span><h3>Les 4 erreurs sont utilisées.</h3><p>Voici les connexions qui restaient à trouver.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle →</button></div>`;
+    footer = `<div class="poke-connections-final is-lost" role="region" aria-label="Résultat Poké-Connections" tabindex="-1"><span class="poke-connections-final-kicker">PARTIE TERMINÉE</span><h3>Les 4 erreurs sont utilisées.</h3><p>Voici les connexions qui restaient à trouver.</p>${soloActions}${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}</div>`;
   } else {
     footer = `<div class="poke-connections-action-zone">
       <div class="poke-connections-selection-status"><span>${selectionCopy}</span><b>${selected.size}/4</b></div>
@@ -1381,7 +1412,7 @@ function renderPokeConnectionsScreen() {
   }
 
   root.innerHTML = `
-    <div class="poke-connections-board">
+    <div class="poke-connections-board" tabindex="-1" role="region" aria-label="Grille Poké-Connections">
       <div class="poke-connections-status">
         <div><span class="poke-connections-status-label">ERREURS</span><span class="poke-connections-mistake-dots">${mistakeDots}</span></div>
         <div><span class="poke-connections-status-label">PROGRESSION</span><b>${foundGroupIdx.size} / 4 groupes</b></div>

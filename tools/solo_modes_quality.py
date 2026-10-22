@@ -128,6 +128,65 @@ def run():
                         else: catalog.click()
                         screen(page,"screen-all-modes")
 
+                    def connections():
+                        page.evaluate("goToConfig();openPokeConnectionsMode();closeOverlayModal()")
+                        screen(page, "screen-poke-connections")
+                        assert page.locator(".poke-connections-tile").count() == 16
+                        assert not page.locator(".poke-connections-final").is_visible()
+                        for group in range(4):
+                            indices = page.evaluate("(g) => pokeConnectionsState.puzzle.tiles.flatMap((t,i)=>t.groupIdx===g?[i]:[])", group)
+                            for idx in indices:
+                                page.locator(f'.poke-connections-tile[data-args="[{idx}]"]').click()
+                            page.locator('[data-action="submitPokeConnectionsGuess"]').click()
+                        assert page.evaluate("pokeConnectionsState.phase") == "won"
+                        final = page.locator(".poke-connections-final.is-won")
+                        assert final.is_visible()
+                        assert page.evaluate("document.activeElement?.classList.contains('poke-connections-final')")
+                        assert final.locator('[data-action="restartPokeConnectionsGame"]').is_visible()
+                        assert final.locator('[data-action="openAllModesScreen"]').is_visible()
+                        if width < 640:
+                            rect = final.bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert rect and nav and rect["y"] >= 0 and rect["y"] + rect["height"] <= nav["y"] - 4, (rect, nav)
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-connections-win-result.png"), animations="disabled")
+                        replay = final.locator('[data-action="restartPokeConnectionsGame"]')
+                        if width < 640: replay.tap()
+                        else: replay.click()
+                        assert page.evaluate("pokeConnectionsState.phase === 'playing'")
+                        assert page.locator(".poke-connections-tile").count() == 16
+                        assert page.evaluate("document.activeElement?.classList.contains('poke-connections-board')")
+                        wrong = page.evaluate("[0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.findIndex(t=>t.groupIdx===g))")
+                        for attempt in range(4):
+                            page.evaluate("clearPokeConnectionsSelection()")
+                            for idx in wrong:
+                                page.locator(f'.poke-connections-tile[data-args="[{idx}]"]').click()
+                            page.locator('[data-action="submitPokeConnectionsGuess"]').click()
+                        assert page.evaluate("pokeConnectionsState.phase") == "lost"
+                        loss = page.locator(".poke-connections-final.is-lost")
+                        assert loss.is_visible()
+                        assert page.evaluate("document.activeElement?.classList.contains('poke-connections-final')")
+                        assert loss.locator(".poke-connections-reveal-groups .is-reveal").count() == 4
+                        assert loss.locator('[data-action="restartPokeConnectionsGame"]').is_visible()
+                        assert loss.locator('[data-action="openAllModesScreen"]').is_visible()
+                        if width < 640:
+                            actions = loss.locator(".poke-connections-final-actions").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert actions and nav and actions["y"] >= 0 and actions["y"] + actions["height"] <= nav["y"] - 4, (actions, nav)
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-connections-loss-result.png"), animations="disabled")
+                        page.evaluate("""() => {
+                            partySession={currentModeKey:'connections',completed:true,roundResolved:true};
+                            renderPokeConnectionsScreen();
+                        }""")
+                        assert not page.locator(".poke-connections-final-actions").is_visible(), "Party exposes solo result controls"
+                        assert not page.locator('#screen-poke-connections .ranking-head-actions [data-action="restartPokeConnectionsGame"]').is_visible()
+                        page.evaluate("restartPokeConnectionsGame()")
+                        assert page.evaluate("pokeConnectionsState.phase") == "lost", "Party restarted a solo puzzle"
+                        page.evaluate("partySession=null;renderPokeConnectionsScreen()")
+                        catalog = page.locator(".poke-connections-final [data-action='openAllModesScreen']")
+                        if width < 640: catalog.tap()
+                        else: catalog.click()
+                        screen(page, "screen-all-modes")
+
                     def weight():
                         page.evaluate("goToConfig();startWeightBattle();closeOverlayModal()")
                         screen(page, "screen-game")
@@ -376,6 +435,7 @@ def run():
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery-solved.png"), animations="disabled")
 
                     execute("quiz-result", quiz_result)
+                    execute("connections", connections)
                     execute("weight", weight)
                     execute("evolution", evolution)
                     execute("pokedex-order", order)
