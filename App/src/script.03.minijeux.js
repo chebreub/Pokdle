@@ -1880,7 +1880,11 @@ function buildMysteryBattleClues(secret, stats) {
   return clues;
 }
 
+let mysteryClueRequestVersion = 0;
 async function prepareMysteryClues(secret) {
+  // A previous fetch must never overwrite the clues of a newer mystery round,
+  // even if two successive secrets happen to have the same Pokémon ID.
+  const version = ++mysteryClueRequestVersion;
   mysteryClues = [
     { label: "Type", value: secret.type1 + (secret.type2 ? " / " + secret.type2 : "") },
     { label: "PV", value: "Chargement..." },
@@ -1893,12 +1897,15 @@ async function prepareMysteryClues(secret) {
   ];
   updateMysteryPanel(false);
 
-  const stats = await fetchBattleStats(secret);
-  mysteryClues = buildMysteryBattleClues(secret, stats);
+  let stats = null;
+  try { stats = await fetchBattleStats(secret); } catch (_error) { /* unavailable API => visible '?' values */ }
+  if (version !== mysteryClueRequestVersion || gameMode !== "mystery" ||
+      !secretPokemon || secretPokemon.id !== secret.id) return;
 
-  if (gameMode === "mystery" && secretPokemon && secretPokemon.id === secret.id && !gameOver) {
-    updateMysteryPanel(false);
-  }
+  mysteryClues = buildMysteryBattleClues(secret, stats);
+  // A player can finish before PokeAPI responds. Update the already-revealed
+  // answer too; otherwise its stats remain stuck on "Chargement...".
+  updateMysteryPanel(Boolean(gameOver));
 }
 
 function getMysteryStatMeta(label) {
