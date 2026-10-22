@@ -77,6 +77,63 @@ def run():
                         cases.append(entry)
                         print("SOLO_MODE_QA " + json.dumps(entry, ensure_ascii=False), flush=True)
 
+                    def weight():
+                        page.evaluate("goToConfig();startWeightBattle();closeOverlayModal()")
+                        screen(page, "screen-game")
+                        page.locator("#weight-box").wait_for(state="visible")
+                        assert page.locator("#weight-grid .versus-card").count() == 2
+                        assert not page.locator("#weight-result-actions").is_visible(), "Replay visible during the duel"
+                        wrong = page.evaluate("weightBattleState.left.id === secretPokemon.id ? 1 : 0")
+                        wrong_card = page.locator("#weight-grid .versus-card").nth(wrong)
+                        if width < 640:
+                            wrong_card.tap()
+                        else:
+                            wrong_card.click()
+                        assert page.evaluate("weightBattleState.revealed && gameOver"), "Duel did not finish"
+                        assert page.locator("#weight-result-actions").is_visible(), "Missing replay beside the answer"
+                        assert "était le plus lourd" in page.locator("#weight-result-detail").inner_text()
+                        assert page.evaluate("document.activeElement?.id") == "weight-result-actions", "Focus stayed on disabled card"
+                        if width < 640:
+                            actions = page.locator("#weight-result-actions").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert actions and nav and actions["y"] >= 0, (actions, nav)
+                            assert actions["y"] + actions["height"] <= nav["y"] - 4, "Replay hidden behind mobile tabbar"
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-weight-result.png"), animations="disabled")
+                        replay = page.locator("#weight-restart")
+                        if width < 640:
+                            replay.tap()
+                        else:
+                            replay.click()
+                        assert not page.locator("#weight-result-actions").is_visible(), "Old result leaked into new duel"
+                        assert page.evaluate("!weightBattleState.revealed && !gameOver"), "Duel was not reset"
+                        assert page.evaluate("document.activeElement?.id") == "weight-status", "Focus left on hidden replay"
+                        assert page.locator("#weight-grid .versus-card:not([disabled])").count() == 2
+                        correct = page.evaluate("weightBattleState.left.id === secretPokemon.id ? 0 : 1")
+                        target = page.locator("#weight-grid .versus-card").nth(correct)
+                        if width < 640:
+                            target.tap()
+                        else:
+                            target.click()
+                        assert "Bien vu" in page.locator("#weight-result-detail").inner_text(), "Victory result not shown"
+                        # A completed Party round must not expose the solo replay.
+                        page.evaluate("""() => {
+                            partySession = {currentModeKey:'weight',completed:true,roundResolved:true,
+                                currentRound:1,maxRounds:1,score:0,wins:0,losses:1};
+                            renderWeightBattlePanel();
+                        }""")
+                        assert not page.locator("#weight-result-actions").is_visible(), "Solo actions visible in completed Party"
+                        assert not page.locator("#weight-restart").is_visible(), "Party can start a solo duel"
+                        page.evaluate("replayWeightBattle()")
+                        assert page.evaluate("weightBattleState.revealed && gameOver"), "Party replay guard failed"
+                        page.evaluate("partySession = null;renderWeightBattlePanel()")
+                        assert page.locator("#weight-result-actions").is_visible(), "Solo replay not restored"
+                        catalog = page.locator("#weight-result-catalog")
+                        if width < 640:
+                            catalog.tap()
+                        else:
+                            catalog.click()
+                        screen(page, "screen-all-modes")
+
                     def evolution():
                         page.evaluate("goToConfig();startEvolutionChainGame();closeOverlayModal()")
                         screen(page, "screen-game")
@@ -209,6 +266,7 @@ def run():
                         assert name in page.locator("#mystery-name").inner_text()
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery-solved.png"), animations="disabled")
 
+                    execute("weight", weight)
                     execute("evolution", evolution)
                     execute("pokedex-order", order)
                     execute("intrus", odd)
