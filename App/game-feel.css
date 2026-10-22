@@ -274,3 +274,47 @@
     min-height:50px;
   }
 }
+
+
+/* Duel de poids : explanation and replay together, clear of the mobile tabbar. */
+#pokdle-app.design-refresh #weight-box .weight-result-actions {
+  display:grid;
+  gap:12px;
+  margin-top:16px;
+  padding:16px;
+  border:1px solid var(--ui-line,rgba(47,118,255,.18));
+  border-radius:16px;
+  background:var(--ui-soft,#f5f8ff);
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #weight-box .weight-result-actions:focus {
+  outline:none;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-actions:focus-visible,
+#pokdle-app.design-refresh #weight-box #weight-status:focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);
+  outline-offset:4px;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-actions p {
+  margin:0;
+  font-weight:750;
+  line-height:1.45;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-buttons {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-buttons button {
+  width:100%;
+  min-height:48px;
+}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #weight-box .weight-result-buttons {
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+  }
+  #pokdle-app.design-refresh #weight-box .weight-result-buttons button {
+    min-height:50px;
+  }
+}
