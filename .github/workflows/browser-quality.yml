@@ -52,6 +52,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      # Checkout is owned by the host runner user while the official
+      # Playwright image runs our trusted CI scripts as root. Trust only this
+      # checked-out repository path (not '*') for the remaining Git commands.
+      - name: Trust GitHub checkout path in job container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Verify checkout for container commands
         run: |
           echo "Workspace: $GITHUB_WORKSPACE; working directory: $PWD"
