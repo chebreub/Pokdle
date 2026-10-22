@@ -632,7 +632,7 @@ app.get("/api/leaderboard", async (req, res) => {
   const order = leaderboardOrderSql(config);
   const best = leaderboardBestSql(config);
   const globalDraft = mode === "draft_all";
-  const scoreboardParams = globalDraft ? [LB_DRAFT_MODES] : scoreboardParams;
+  const scoreboardParams = globalDraft ? [LB_DRAFT_MODES] : [mode];
   const user = getSessionUser(req);
   const meId = user ? user.id : null;
   try {
