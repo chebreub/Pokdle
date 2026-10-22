@@ -141,6 +141,6 @@ test("Party round, including completed Party, never displays or executes solo co
 test("dedicated shell keeps stats but does not duplicate Speedrun catalog or leak into Party", () => {
   const shell = read("src/script.10k.mode-shells.js");
   assert.match(shell, /const partySpeedrun = id === "screen-speedrun"/);
-  assert.match(shell, /state\?\.mode === "versus" \|\| partySpeedrun/);
-  assert.match(shell, /catalogAction = id === "screen-speedrun" \? ""/);
+  assert.match(shell, /state\?\.mode === "versus" \|\| partySpeedrun \|\| partyHigherLower/);
+  assert.match(shell, /const catalogAction = \(id === "screen-speedrun" \|\| id === "screen-higher-lower"\) \? ""/);
 });

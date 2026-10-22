@@ -32,19 +32,21 @@ function prepareDedicatedShell(id) {
   const finished = ["gameover", "result", "finished"].includes(state?.phase);
   const partySpeedrun = id === "screen-speedrun" && typeof partySession !== "undefined"
     && partySession?.currentModeKey === "speedrun";
+  const partyHigherLower = id === "screen-higher-lower" && typeof partySession !== "undefined"
+    && partySession?.currentModeKey === "higherlower";
   screen.dataset.finished = String(finished);
   // Keep real-time multiplayer ranking and room controls intact.
   screen.dataset.shell = state?.mode === "versus" ? "" : "focused";
   if (screen.dataset.shell && typeof clearLiveRankHud === "function") clearLiveRankHud(id);
   let footer = card.querySelector(".dedicated-result-footer");
-  if (!finished || state?.mode === "versus" || partySpeedrun) { footer?.remove(); return; }
+  if (!finished || state?.mode === "versus" || partySpeedrun || partyHigherLower) { footer?.remove(); return; }
   if (!footer) { footer = document.createElement("section"); footer.className = "dedicated-result-footer"; card.appendChild(footer); }
   const stats = shellRecentStats(matchHistory, meta.mode);
   const ranking = id === "screen-higher-lower" && state?.mode === "rush60" ? "higherlower60" : meta.ranking;
   const statsHtml = stats.played ? '<p class="shell-stats-caption">Historique récent de ce jeu</p><div class="shell-stats-grid">'+[[stats.played,"Parties"],[stats.wins,"Victoires"],[stats.current,"Série"],[stats.best,"Meilleure série"]].map(([n,l])=>'<div><strong>'+n+'</strong><span>'+l+'</span></div>').join('')+'</div>' : '';
   // Speedrun now has a visible catalog action alongside its replay button.
   // Preserve the history statistics, but do not duplicate its action below.
-  const catalogAction = id === "screen-speedrun" ? "" : '<button class="btn-blue" data-action="openAllModesScreen" data-args=\'["solo"]\'>Choisir le prochain jeu →</button>';
+  const catalogAction = (id === "screen-speedrun" || id === "screen-higher-lower") ? "" : '<button class="btn-blue" data-action="openAllModesScreen" data-args=\'["solo"]\'>Choisir le prochain jeu →</button>';
   const rankingAction = ranking ? '<button class="btn-ghost" data-action="openLeaderboardV2" data-args="'+escapeHtml(JSON.stringify([ranking,"today"]))+'">Classement du jour</button>' : "";
   footer.innerHTML = statsHtml + (rankingAction || catalogAction ? '<div class="dedicated-result-actions">'+rankingAction+catalogAction+'</div>' : "");
 }

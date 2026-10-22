@@ -489,6 +489,56 @@ def run():
                         assert name in page.locator("#mystery-name").inner_text()
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery-solved.png"), animations="disabled")
 
+                    def higher_lower():
+                        page.evaluate("""() => {
+                            goToConfig();openHigherLowerMode();closeOverlayModal();
+                            window.fetchBattleStats = async () => ({
+                                hp:71,attack:52,defense:63,spAttack:74,spDefense:85,speed:96
+                            });
+                        }""")
+                        screen(page, "screen-higher-lower")
+                        page.locator('[data-action="startHigherLowerMode"][data-args=\'["infinite"]\']').click()
+                        wait(page, "higherLowerState.phase === 'playing'")
+                        page.evaluate("""() => {
+                            higherLowerState.highScore = 99;
+                            higherLowerState.score = 4;
+                            higherLowerState.phase = 'gameover';
+                            renderHigherLowerScreen();
+                        }""")
+                        result = page.locator("#higher-lower-root .higher-lower-gameover")
+                        assert result.is_visible()
+                        assert page.evaluate("document.activeElement?.classList.contains('higher-lower-gameover')")
+                        replay = result.locator('[data-action="replayHigherLowerGame"]')
+                        catalog = result.locator('[data-action="openAllModesScreen"]')
+                        assert replay.is_visible() and catalog.is_visible()
+                        assert page.locator("#screen-higher-lower .dedicated-result-actions [data-action='openAllModesScreen']").count() == 0
+                        if width < 640:
+                            actions = result.locator(".higher-lower-final-actions").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert actions and nav and actions["y"] >= 0
+                            assert actions["y"] + actions["height"] <= nav["y"] - 4, "Higher or Lower actions behind mobile tabbar"
+                        if width < 640: replay.tap()
+                        else: replay.click()
+                        wait(page, "higherLowerState.phase === 'playing'")
+                        assert page.evaluate("higherLowerState.mode === 'infinite' && higherLowerState.score === 0")
+                        page.evaluate("""() => {
+                            clearHigherLowerTimeouts();
+                            higherLowerState.phase='gameover';
+                            renderHigherLowerScreen();
+                            partySession={currentModeKey:'higherlower',completed:true,roundResolved:true};
+                            renderHigherLowerScreen();
+                        }""")
+                        assert not result.locator(".higher-lower-final-actions").is_visible(), "Party exposes solo actions"
+                        assert not page.locator("#screen-higher-lower .dedicated-result-actions").is_visible()
+                        page.evaluate("replayHigherLowerGame();restartHigherLowerGame();startHigherLowerMode('rush60')")
+                        assert page.evaluate("higherLowerState.phase === 'gameover'"), "Party bypassed replay guard"
+                        page.evaluate("partySession=null;renderHigherLowerScreen()")
+                        assert result.locator('[data-action="openAllModesScreen"]').is_visible()
+                        if width < 640: result.locator('[data-action="openAllModesScreen"]').tap()
+                        else: result.locator('[data-action="openAllModesScreen"]').click()
+                        screen(page, "screen-all-modes")
+
+                    execute("higher-lower", higher_lower)
                     execute("quiz-result", quiz_result)
                     execute("connections", connections)
                     execute("speedrun", speedrun)
