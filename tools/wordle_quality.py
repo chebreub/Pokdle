@@ -51,7 +51,7 @@ async def run():
                             fail_next=False;await route.fulfill(status=503,json=dict(ok=False,error='unavailable'));return
                         body=route.request.post_data_json;pid=body['pokemonId'];calls.append(pid)
                         await asyncio.sleep(.4)
-                        names={94:('Ectoplasma','ECTOPLASMA'),2:('Herbizarre','HERBIZARRE'),3:('Florizarre','FLORIZARRE'),6:('Dracaufeu','DRACAUFEU'),11:('Chrysacier','CHRYSACIER'),12:('Papilusion','PAPILUSION'),1:('Bulbizarre','BULBIZARRE')}
+                        names={94:('Ectoplasma','ECTOPLASMA'),2:('Herbizarre','HERBIZARRE'),3:('Florizarre','FLORIZARRE'),149:('Dracolosse','DRACOLOSSE'),11:('Chrysacier','CHRYSACIER'),12:('Papilusion','PAPILUSION'),1:('Bulbizarre','BULBIZARRE')}
                         if pid not in names or len(names[pid][1]) != state['length']:
                             invalid_calls.append(pid);await route.fulfill(status=400,json=dict(ok=False,error='invalid_length'));return
                         name,letters=names[pid];state['rows'].append(dict(pokemonId=pid,name=name,letters=letters,colors=colors(letters)))
@@ -124,9 +124,9 @@ async def run():
                         else: await button.click()
                     await page.locator('#wordle-keyboard button',has_text='Valider').click()
                     await ready(page,'dailyWordleState?.attempts === 3 && !dailyWordleBusy')
-                    fail_next=True;await field.fill('Dracaufeu');await page.keyboard.press('Enter')
+                    fail_next=True;await field.fill('Dracolosse');await page.keyboard.press('Enter')
                     await ready(page,'!dailyWordleBusy && document.getElementById("wordle-message").textContent.includes("injoignable")')
-                    assert await field.input_value()=='Dracaufeu' and state['attempts']==3
+                    assert await field.input_value()=='Dracolosse' and state['attempts']==3
                     await field.fill('Bulbizarre');await page.keyboard.press('Enter')
                     await ready(page,'dailyWordleState?.won && !dailyWordleBusy')
                     assert await page.locator('#wordle-form').is_hidden()
@@ -146,7 +146,7 @@ async def run():
                     state.update(status='playing',finished=False,won=False,points=0,attempts=0,rows=[]);state.pop('answerId');state.pop('answerName')
                     await page.evaluate('startDailyWordle()');await ready(page,'dailyWordleState?.status === "playing" && !dailyWordleBusy')
                     assert await page.locator('#wordle-result').is_hidden(), 'Previous result must not leak into a new round'
-                    for attempt,name in enumerate(['Florizarre','Herbizarre','Dracaufeu','Ectoplasma','Chrysacier','Papilusion'],1):
+                    for attempt,name in enumerate(['Florizarre','Herbizarre','Dracolosse','Ectoplasma','Chrysacier','Papilusion'],1):
                         await field.fill(name);await page.keyboard.press('Enter')
                         await ready(page,f'dailyWordleState?.attempts === {attempt} && !dailyWordleBusy')
                     assert state['status']=='lost' and state['points']==0
