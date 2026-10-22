@@ -17,6 +17,11 @@ concurrency:
 jobs:
   browser-database:
     runs-on: ubuntu-latest
+    # Official Playwright image already contains Chromium, WebKit and their
+    # Ubuntu system libraries. Pin the exact Python Playwright version below.
+    # This avoids ~7.5 minutes of apt packages on every clean runner.
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.55.0-noble
     timeout-minutes: 30
     services:
       postgres:
@@ -28,7 +33,9 @@ jobs:
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      QA_DATABASE_URL: postgresql://qa:qa-local-only@localhost:5432/pokdle_qa
+      # Job container and PostgreSQL service share a Docker network.
+      # 'localhost' would address this job, not the PostgreSQL container.
+      QA_DATABASE_URL: postgresql://qa:qa-local-only@postgres:5432/pokdle_qa
       # Full on push/main, manual dispatch, PR ready-for-review, or explicit
       # "qa:full" label. All other PR updates run only a focused smoke suite.
       QA_FULL: ${{ github.event_name != 'pull_request' || github.event.action == 'ready_for_review' || ((github.event.action == 'opened' || github.event.action == 'reopened') && !github.event.pull_request.draft) || (github.event.action == 'labeled' && github.event.label.name == 'qa:full') }}
@@ -55,7 +62,7 @@ jobs:
         env:
           QA_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          python -m unittest tools/test_ci_smoke_scope.py
+          python -m unittest tools/test_ci_smoke_scope.py tools/test_playwright_container.py
           python tools/ci_smoke_scope.py
       - name: Record QA revision
         run: |
@@ -76,17 +83,23 @@ jobs:
         if: github.event_name == 'push'
         working-directory: App
         run: npm test
-      - name: Cache Playwright browser binaries
+      - name: Install Python Playwright client
         if: env.QA_FULL == 'true' || steps.smoke.outputs.suite != 'none'
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-v1.55.0
-      - name: Install browser QA dependencies
+        run: python -m pip install --disable-pip-version-check playwright==1.55.0
+      - name: Verify preinstalled Chromium and WebKit
         if: env.QA_FULL == 'true' || steps.smoke.outputs.suite != 'none'
         run: |
-          python -m pip install playwright==1.55.0
-          python -m playwright install --with-deps chromium webkit
+          python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+
+          print("Playwright browser path:", os.environ.get("PLAYWRIGHT_BROWSERS_PATH"))
+          with sync_playwright() as playwright:
+              for name in ("chromium", "webkit"):
+                  browser = getattr(playwright, name).launch()
+                  print("Verified", name, browser.version)
+                  browser.close()
+          PY
       - name: Browser smoke for changed PR area
         if: env.QA_FULL != 'true' && steps.smoke.outputs.suite != 'none'
         env:
