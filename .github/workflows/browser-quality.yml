@@ -83,6 +83,9 @@ jobs:
       - name: Verify browser journeys at six viewport widths
         if: steps.scope.outputs.focused != 'true'
         run: python tools/browser_quality.py --output quality-artifacts/browser
+      - name: Verify four polished solo games on phone and desktop
+        if: steps.scope.outputs.focused != 'true'
+        run: python tools/solo_modes_quality.py
       - name: Verify an actual two-browser Party Room game
         if: steps.scope.outputs.focused != 'true'
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
