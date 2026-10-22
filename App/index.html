@@ -1257,12 +1257,16 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </label>
         </div>
 
-        <p id="odd-status" class="odd-status">Nouvelle énigme prête.</p>
+        <p id="odd-status" class="odd-status" role="status" aria-live="polite" tabindex="-1">Nouvelle énigme prête.</p>
         <div id="odd-grid" class="odd-grid"></div>
 
-        <div id="odd-explanation-box" class="odd-explanation hidden">
+        <div id="odd-explanation-box" class="odd-explanation hidden" tabindex="-1" role="region" aria-label="Résultat de l'énigme">
           <p class="challenge-title">Explication :</p>
           <p id="odd-explanation-text"></p>
+          <div id="odd-result-actions" class="odd-result-actions hidden" role="group" aria-label="Après l'énigme">
+            <button type="button" id="odd-replay-result" class="btn-blue" data-action="replayOddOneOutPuzzle">↻ Encore une énigme</button>
+            <button type="button" id="odd-result-catalog" class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+          </div>
         </div>
       </div>
     </div>

@@ -3203,6 +3203,7 @@ function nextOddOneOutPuzzle() {
   };
   gameOver = false;
   document.getElementById("odd-explanation-box")?.classList.add("hidden");
+  document.getElementById("odd-result-actions")?.classList.add("hidden");
   const explanation = document.getElementById("odd-explanation-text");
   if (explanation) explanation.textContent = "";
   renderOddOneOutPuzzle();
@@ -3222,8 +3223,9 @@ function submitOddOneOutChoice(pokemonId) {
   if (explanationText) explanationText.textContent = oddOneOutState.explanation;
   renderOddOneOutPuzzle(pokemonId);
   const didWin = pokemonId === oddOneOutState.oddId;
+  const soloResult = !isPartySessionActive();
   // Standalone (hors party) : XP léger + historique + record streak
-  if (!isPartySessionActive()) {
+  if (soloResult) {
     try {
       recordMatchHistory({ mode: "odd", result: didWin ? "win" : "loss", attempts: 1, targetName: odd?.name || null });
     } catch (_e) {}
@@ -3246,6 +3248,28 @@ function submitOddOneOutChoice(pokemonId) {
   }
   finishPartyRound(didWin);
   renderOddOneOutPuzzle(pokemonId);
+  if (soloResult && explanationBox) {
+    // The answer lives beneath six cards. Move keyboard/screen-reader focus to
+    // the result and bring its replay button into view above the mobile tabbar.
+    explanationBox.focus({ preventScroll: true });
+    explanationBox.scrollIntoView({
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+      block: "center",
+    });
+  }
+}
+
+function replayOddOneOutPuzzle() {
+  // A Party round, including its final resolved round, must never restart
+  // through the solo replay CTA.
+  if (!oddOneOutState.revealed || !oddOneOutState.oddId || partySession?.currentModeKey === "odd") return;
+  nextOddOneOutPuzzle();
+  const status = document.getElementById("odd-status");
+  status?.focus({ preventScroll: true });
+  status?.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: "center",
+  });
 }
 
 function renderOddOneOutPuzzle(selectedId = null) {
@@ -3255,8 +3279,12 @@ function renderOddOneOutPuzzle(selectedId = null) {
   const status = document.getElementById("odd-status");
   const newPuzzleBtn = document.getElementById("odd-new-puzzle-btn");
   const partyNextBtn = document.getElementById("odd-party-next-btn");
-  const isPartyOddRound = Boolean(isPartySessionActive() && partySession?.currentModeKey === "odd");
+  const resultActions = document.getElementById("odd-result-actions");
+  // Keep the last Party round in Party context after it marks the session
+  // completed; isPartySessionActive() alone would then incorrectly be false.
+  const isPartyOddRound = Boolean(partySession?.currentModeKey === "odd");
   if (!grid || !count || !source || !status) return;
+  resultActions?.classList.toggle("hidden", !oddOneOutState.revealed || isPartyOddRound);
   if (newPuzzleBtn) newPuzzleBtn.classList.toggle("hidden", isPartyOddRound);
   if (partyNextBtn) {
     partyNextBtn.classList.toggle("hidden", !(isPartyOddRound && partySession?.roundResolved && !partySession?.completed));
