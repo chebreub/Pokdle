@@ -3082,6 +3082,8 @@ function oddRuleValues(pokemon, category) {
   if (!pokemon) return [];
   if (category === "type") return [...new Set([pokemon.type1, pokemon.type2].filter(Boolean).map(String))];
   if (category === "generation") return Number.isInteger(Number(pokemon.gen)) ? [String(pokemon.gen)] : [];
+  if (category === "stage") return Number.isInteger(Number(pokemon.stage)) && Number(pokemon.stage) > 0 ? [String(pokemon.stage)] : [];
+  if (category === "color" || category === "habitat") return pokemon[category] ? [String(pokemon[category])] : [];
   if (category === "letter") {
     const first = norm(pokemon.name).replace(/[^a-z]/g, "").charAt(0);
     return first ? [first] : [];
@@ -3127,7 +3129,11 @@ function buildOddPuzzle(pool, category, requireGlobalUnique = false) {
     if (!oddChoices.length) continue;
     const odd = oddChoices[Math.floor(Math.random() * oddChoices.length)];
     const cards = shuffleArray([...common, odd]);
-    const categories = requireGlobalUnique ? ["type", "generation", "letter"] : [category];
+    // In hard mode the criterion is hidden: reject alternative answers
+    // also justified by the visible color, habitat or evolution stage.
+    const categories = requireGlobalUnique
+      ? ["type", "generation", "letter", "color", "habitat", "stage"]
+      : [category];
     const answers = oddPossibleOutliers(cards, categories);
     if (answers.length !== 1 || answers[0] !== odd.id) continue;
     const descriptions = {
