@@ -1061,9 +1061,15 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
 
       <div id="weight-box" class="challenge-panel hidden">
-        <p id="weight-status" class="challenge-title">Quel Pokémon est le plus lourd ?</p>
+        <p id="weight-status" class="challenge-title" role="status" aria-live="polite" tabindex="-1">Quel Pokémon est le plus lourd ?</p>
         <div id="weight-grid" class="versus-grid"></div>
-        <button type="button" id="weight-restart" class="btn-blue hidden" data-action="startWeightBattle">Nouvelle manche</button>
+        <div id="weight-result-actions" class="weight-result-actions hidden" role="region" aria-label="Résultat du duel de poids" tabindex="-1">
+          <p id="weight-result-detail" class="card-desc"></p>
+          <div class="weight-result-buttons">
+            <button type="button" id="weight-restart" class="btn-blue hidden" data-action="replayWeightBattle">↻ Nouvelle manche</button>
+            <button type="button" id="weight-result-catalog" class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+          </div>
+        </div>
       </div>
 
       <div id="evolution-banner" class="mode-banner hidden">

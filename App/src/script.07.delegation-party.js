@@ -2986,7 +2986,12 @@ function renderWeightBattlePanel() {
   setGameCounter(Number(playerProfile?.weightBattleStreak) || 0, "Série");
   const status = document.getElementById("weight-status");
   const grid = document.getElementById("weight-grid");
-  document.getElementById("weight-restart")?.classList.toggle("hidden", !weightBattleState.revealed || isPartySessionActive());
+  // The last Party round remains a Party round after completion. Do not let its
+  // finished state reveal the solo replay or catalog actions.
+  const isPartyWeightRound = Boolean(partySession?.currentModeKey === "weight");
+  const showSoloResult = weightBattleState.revealed && !isPartyWeightRound;
+  document.getElementById("weight-result-actions")?.classList.toggle("hidden", !showSoloResult);
+  document.getElementById("weight-restart")?.classList.toggle("hidden", !showSoloResult);
   if (status) {
     status.textContent = !weightBattleState.revealed
       ? "Quel Pokémon est le plus lourd ?"
@@ -2994,6 +2999,8 @@ function renderWeightBattlePanel() {
         ? `Bien vu : ${secretPokemon.name} est le plus lourd avec ${secretPokemon.weight} kg.`
         : `${secretPokemon?.name || "Le bon Pokémon"} était le plus lourd avec ${secretPokemon?.weight || "?"} kg.`;
   }
+  const detail = document.getElementById("weight-result-detail");
+  if (detail) detail.textContent = showSoloResult ? (status?.textContent || "") : "";
   if (!grid) return;
   grid.innerHTML = "";
   [weightBattleState.left, weightBattleState.right].forEach((pokemon) => {
@@ -3040,10 +3047,32 @@ function renderWeightBattlePanel() {
         }
       }
       finishPartyRound(didWin);
+      if (!isPartyWeightRound) {
+        // Keep the explanation and replay controls in the same viewport on
+        // iPhone/Android and keep keyboard focus off the now-disabled card.
+        const result = document.getElementById("weight-result-actions");
+        result?.focus({ preventScroll: true });
+        result?.scrollIntoView({
+          behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+          block: "center",
+        });
+      }
     });
     grid.appendChild(btn);
   });
   if (partySession) renderPartySessionUI();
+}
+
+function replayWeightBattle() {
+  // A completed Party round cannot be replayed through the solo CTA.
+  if (!weightBattleState?.revealed || partySession?.currentModeKey === "weight") return;
+  startWeightBattle();
+  const status = document.getElementById("weight-status");
+  status?.focus({ preventScroll: true });
+  status?.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: "center",
+  });
 }
 
 function renderEvolutionChainPanel() {
