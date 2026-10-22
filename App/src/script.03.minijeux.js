@@ -910,6 +910,24 @@ function renderTypeComboScreen() {
     return;
   }
 }
+function speedrunIsPartyRound() {
+  // Party controls still own the last round once the session is completed.
+  return typeof partySession !== "undefined" && partySession?.currentModeKey === "speedrun";
+}
+
+function focusSpeedrunResult() {
+  if (speedrunIsPartyRound()) return;
+  const result = document.querySelector("#speedrun-root .speedrun-gameover");
+  if (!result) return;
+  result.focus({ preventScroll: true });
+  const onMobile = window.matchMedia?.("(max-width: 640px)")?.matches;
+  const target = onMobile ? result.querySelector(".speedrun-result-actions") || result : result;
+  target.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: onMobile ? "end" : "center",
+  });
+}
+
 function openSpeedrunMode() {
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
   if (pool.length < 30) return showToast("Pool Pokémon insuffisant pour Speedrun.");
@@ -925,6 +943,7 @@ function openSpeedrunMode() {
 }
 
 function startSpeedrunGame() {
+  if (speedrunIsPartyRound() && (partySession?.completed || partySession?.roundResolved)) return;
   trackUsage("solo:speedrun");
   if (!speedrunState) return;
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
@@ -1009,7 +1028,8 @@ function speedrunSkip() {
 }
 
 function finalizeSpeedrunGame() {
-  if (!speedrunState) return;
+  // Timer ticks/late callbacks cannot award records, XP or history twice.
+  if (!speedrunState || speedrunState.phase !== "playing") return;
   speedrunState.phase = "gameover";
   const isRecord = speedrunState.correct > speedrunState.highScore;
   if (isRecord && playerProfile) {
@@ -1029,13 +1049,23 @@ function finalizeSpeedrunGame() {
     });
   } catch (_e) {}
   renderSpeedrunScreen();
+  if (!speedrunIsPartyRound()) focusSpeedrunResult();
   notifyPartyRoundFromScreenMode(speedrunState.correct >= 10, `${speedrunState.correct} Pokémon en 60 s`);
 }
 
 function restartSpeedrunGame() {
+  if (speedrunIsPartyRound()) return;
   if (speedrunTimerId) clearInterval(speedrunTimerId);
+  speedrunTimerId = null;
   speedrunState = createSpeedrunState();
   renderSpeedrunScreen();
+}
+
+function replaySpeedrunGame() {
+  if (!speedrunState || speedrunState.phase !== "gameover" || speedrunIsPartyRound()) return;
+  // One action starts the next timed run, with the existing 60s/scoring rules.
+  restartSpeedrunGame();
+  startSpeedrunGame();
 }
 
 function shareSpeedrunResult() {
@@ -1065,6 +1095,7 @@ window.startSpeedrunGame = startSpeedrunGame;
 window.speedrunSubmitGuess = speedrunSubmitGuess;
 window.speedrunSkip = speedrunSkip;
 window.restartSpeedrunGame = restartSpeedrunGame;
+window.replaySpeedrunGame = replaySpeedrunGame;
 window.shareSpeedrunResult = shareSpeedrunResult;
 window.downloadSpeedrunImage = downloadSpeedrunImage;
 
@@ -1073,6 +1104,9 @@ function renderSpeedrunScreen() {
   if (!root) return;
   const state = speedrunState;
   if (!state) { root.innerHTML = ""; return; }
+  const isPartyRound = speedrunIsPartyRound();
+  document.querySelector('#screen-speedrun .ranking-head-actions [data-action="restartSpeedrunGame"]')
+    ?.classList.toggle("hidden", isPartyRound);
   if (state.phase === "lobby") {
     root.innerHTML = `
       <div class="speedrun-lobby">
@@ -1115,7 +1149,7 @@ function renderSpeedrunScreen() {
   if (state.phase === "gameover") {
     const isRecord = state.correct > 0 && state.correct >= state.highScore;
     root.innerHTML = `
-      <div class="speedrun-gameover">
+      <div class="speedrun-gameover" tabindex="-1" role="region" aria-label="Résultat Speedrun Pokédex">
         <h3>⏱️ Temps écoulé</h3>
         <div class="speedrun-final-score">${state.correct}</div>
         <p class="speedrun-final-label">Pokémon devinés en 60s</p>
@@ -1125,11 +1159,14 @@ function renderSpeedrunScreen() {
           <div><span>Record perso</span><b>${state.highScore}</b></div>
         </div>
         ${isRecord ? '<div class="speedrun-record-flash">🏆 NOUVEAU RECORD !</div>' : ""}
-        <div class="higher-lower-final-actions">
-          <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+        ${isPartyRound ? "" : `<div class="speedrun-result-actions" role="group" aria-label="Après le Speedrun">
+          <button class="btn-blue" type="button" data-action="replaySpeedrunGame">↻ Rejouer maintenant</button>
+          <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+        </div>
+        <div class="speedrun-share-actions" role="group" aria-label="Partager mon résultat">
           <button class="btn-ghost" type="button" data-action="shareSpeedrunResult">📋 Copier</button>
           <button class="btn-ghost" type="button" data-action="downloadSpeedrunImage">💾 Image</button>
-        </div>
+        </div>`}
       </div>`;
     return;
   }
