@@ -153,6 +153,31 @@ def run():
                         page.screenshot(path=str(OUT / f"{engine}-{width}-evolution.png"), animations="disabled")
                         submit_name(page, chain["names"][1])
                         assert page.evaluate("gameMode") == "evolution", "Mode unexpectedly switched"
+                        assert page.locator("#win-box").is_visible(), "Winning Evolution lacks a result"
+                        # Completed Party must not restart via a solo button.
+                        page.evaluate("""() => {
+                            partySession={currentModeKey:'evolution',completed:true,roundResolved:true};
+                            restartCurrentMode();
+                        }""")
+                        assert page.evaluate("gameOver && secretPokemon.id") == chain["secret"], "Finished Party replayed solo"
+                        page.evaluate("partySession=null")
+                        button = page.locator("#btn-restart")
+                        if width < 640:
+                            button.tap()
+                        else:
+                            button.click()
+                        assert page.evaluate("gameMode==='evolution' && !gameOver && attempts===0")
+                        assert not page.locator("#win-box").is_visible(), "Old Evolution result remains after replay"
+                        assert page.locator("#evolution-box").is_visible(), "New chain not visible"
+                        assert page.evaluate("secretPokemon.id") != chain["secret"], "Replay reused the same chain"
+                        assert page.evaluate("document.activeElement?.id") == ("evolution-box" if width < 640 else "guess-input"), "Replay focus incorrect"
+                        assert page.locator("#evolution-chain").inner_text().count("Manquant") == 1
+                        if width < 640:
+                            rect = page.locator("#evolution-box").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert rect and nav and rect["y"] >= 0 and rect["y"] + rect["height"] <= nav["y"] - 4, (rect,nav)
+                            assert page.evaluate("document.activeElement?.tagName") != "INPUT", "Mobile keyboard opened after replay"
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-evolution-replay.png"), animations="disabled")
 
                     def order():
                         page.evaluate("goToConfig();startPokedexOrderGame();closeOverlayModal()")
@@ -171,6 +196,33 @@ def run():
                         page.screenshot(path=str(OUT / f"{engine}-{width}-pokedex-order.png"), animations="disabled")
                         submit_name(page, puzzle["name"])
                         assert page.evaluate("gameMode") == "order"
+                        assert page.locator("#win-box").is_visible(), "Winning Ordre lacks a result"
+                        button = page.locator("#btn-restart")
+                        if width < 640:
+                            button.tap()
+                        else:
+                            button.click()
+                        assert page.evaluate("gameMode==='order' && !gameOver && attempts===0")
+                        assert not page.locator("#win-box").is_visible(), "Old Ordre result remains"
+                        assert page.evaluate("pokedexOrderState.middle.id") != puzzle["middle"], "Replay reused the old answer"
+                        assert page.evaluate("document.activeElement?.id") == ("order-box" if width < 640 else "guess-input"), "Replay focus incorrect"
+                        assert page.locator("#order-box").is_visible(), "Ordre clues not visible"
+                        if width < 640:
+                            rect = page.locator("#order-box").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert rect and nav and rect["y"] >= 0 and rect["y"] + rect["height"] <= nav["y"] - 4, (rect,nav)
+                            assert page.evaluate("document.activeElement?.tagName") != "INPUT", "Mobile keyboard opened after replay"
+                        # The same continuation must work after a defeat/abandonment.
+                        page.evaluate("surrenderGame()")
+                        assert page.locator("#win-box").is_visible() and page.evaluate("gameOver")
+                        if width < 640:
+                            button.tap()
+                        else:
+                            button.click()
+                        assert page.evaluate("gameMode==='order' && !gameOver && attempts===0")
+                        assert not page.locator("#win-box").is_visible()
+                        assert page.evaluate("document.activeElement?.id") == ("order-box" if width < 640 else "guess-input")
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-order-replay.png"), animations="disabled")
 
                     def odd():
                         page.evaluate("goToConfig();openOddOneOutMode()")
