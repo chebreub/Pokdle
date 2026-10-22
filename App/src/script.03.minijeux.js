@@ -2276,6 +2276,25 @@ function renderQuizMeta() {
   }
 }
 
+let quizResultSnapshot = null;
+function renderQuizEndSummary(xpReward, recordBonus, newRecord) {
+  const panel = document.getElementById("quiz-end-card");
+  if (!panel) return;
+  const total = quizQuestions.length;
+  const accuracy = total ? Math.round(quizScore * 100 / total) : 0;
+  document.getElementById("quiz-end-score").textContent = quizScore + " / " + total;
+  document.getElementById("quiz-end-accuracy").textContent = accuracy + " % de bonnes réponses";
+  document.getElementById("quiz-end-good").textContent = String(quizScore);
+  document.getElementById("quiz-end-bad").textContent = String(total - quizScore);
+  document.getElementById("quiz-end-xp").textContent = "+" + (xpReward + recordBonus) + " XP";
+  document.getElementById("quiz-end-record").textContent = newRecord
+    ? "🏆 Nouveau record personnel !" : "Meilleur score : " + (Number(playerProfile?.quizHighScore) || 0);
+  panel.classList.remove("hidden");
+  document.getElementById("quiz-next-btn")?.classList.add("hidden");
+  panel.focus({preventScroll:true});
+  panel.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth",block:"center"});
+}
+
 function renderQuizQuestion() {
   if (gameMode !== "quiz") return;
 
@@ -2288,9 +2307,16 @@ function renderQuizQuestion() {
   if (!progress || !questionEl || !optionsEl || !feedbackEl || !nextBtn) return;
 
   renderQuizMeta();
+  const isPartyQuizRound = Boolean(partySession?.currentModeKey === "quiz");
+  const endCard = document.getElementById("quiz-end-card");
+  if (quizCurrentIndex < quizQuestions.length) {
+    quizResultSnapshot = null;
+    endCard?.classList.add("hidden");
+  }
 
   if (quizCurrentIndex >= quizQuestions.length) {
     gameOver = true;
+    let xpReward = 0, recordBonus = 0, newRecord = false;
     if (!quizSessionLogged) {
       quizSessionLogged = true;
       recordMatchHistory({
@@ -2300,26 +2326,35 @@ function renderQuizQuestion() {
         targetName: `Score ${quizScore}/${quizQuestions.length}`,
       });
       // XP : 5 par bonne réponse + bonus si > 50%
-      const xpReward = quizScore * 5 + (quizScore >= Math.ceil(quizQuestions.length / 2) ? 30 : 0);
+      xpReward = quizScore * 5 + (quizScore >= Math.ceil(quizQuestions.length / 2) ? 30 : 0);
       if (xpReward > 0) awardXp(xpReward, `Quiz ${quizScore}/${quizQuestions.length}`);
       // Record perso
       const prevRecord = Number(playerProfile?.quizHighScore) || 0;
       if (playerProfile && quizScore > prevRecord) {
+        newRecord = true;
         playerProfile.quizHighScore = quizScore;
         try { saveProfile(); } catch (_e) {}
-        if (quizScore >= Math.ceil(quizQuestions.length / 2)) awardXp(20, "Nouveau record Quiz");
+        if (quizScore >= Math.ceil(quizQuestions.length / 2)) {
+          recordBonus = 20;
+          awardXp(recordBonus, "Nouveau record Quiz");
+        }
       }
+      // Remember only the already-awarded amounts for this round. Rerendering
+      // the result (e.g. after switching away and back) must not show +0 XP.
+      quizResultSnapshot = { xpReward, recordBonus, newRecord };
     }
     progress.textContent = `Quiz terminé • Score final : ${quizScore} / ${quizQuestions.length}`;
     questionEl.textContent = "Fin du quiz";
     optionsEl.innerHTML = "";
     feedbackEl.textContent = "";
-    if (isPartySessionActive()) {
+    // Completed Party rounds must not expose solo replay controls.
+    if (isPartyQuizRound) {
+      endCard?.classList.add("hidden");
       nextBtn.classList.add("hidden");
       finishPartyRound(quizScore >= Math.ceil(quizQuestions.length / 2));
     } else {
-      nextBtn.classList.remove("hidden");
-      nextBtn.textContent = "Rejouer";
+      const result = quizResultSnapshot || {xpReward, recordBonus, newRecord};
+      renderQuizEndSummary(result.xpReward, result.recordBonus, result.newRecord);
     }
     return;
   }
@@ -2387,7 +2422,7 @@ function submitQuizAnswer(choiceIndex) {
 function nextQuizQuestion() {
   if (gameMode !== "quiz") return;
   if (gameOver) {
-    if (isPartySessionActive()) return;
+    if (partySession?.currentModeKey === "quiz") return;
     startQuizGame();
     return;
   }

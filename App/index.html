@@ -1136,10 +1136,32 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="quiz-good">Bonnes : 0</span>
           <span id="quiz-bad">Mauvaises : 0</span>
         </div>
-        <h3 id="quiz-question"></h3>
+        <h3 id="quiz-question" tabindex="-1"></h3>
         <div id="quiz-options" class="mode-buttons"></div>
         <p id="quiz-feedback" class="err-msg"></p>
         <button id="quiz-next-btn" class="btn-blue hidden" data-action="nextQuizQuestion">Question suivante</button>
+        <section id="quiz-end-card" class="quiz-end-card hidden" role="region" tabindex="-1" aria-label="Bilan de la partie Quiz">
+          <div class="quiz-end-heading">
+            <span class="quiz-end-kicker">BILAN DE PARTIE</span>
+            <h3>Quiz terminé !</h3>
+            <div class="quiz-end-scoreline">
+              <strong id="quiz-end-score">0 / 15</strong>
+              <span id="quiz-end-accuracy">0 % de bonnes réponses</span>
+            </div>
+          </div>
+          <div class="quiz-end-stats">
+            <div><span>Bonnes réponses</span><strong id="quiz-end-good">0</strong></div>
+            <div><span>À revoir</span><strong id="quiz-end-bad">0</strong></div>
+          </div>
+          <div class="quiz-end-rewards">
+            <div><span>XP gagnés au Quiz</span><strong id="quiz-end-xp">+0 XP</strong></div>
+            <p id="quiz-end-record">Meilleur score : 0</p>
+          </div>
+          <div class="quiz-end-actions" role="group" aria-label="Après le Quiz">
+            <button type="button" id="quiz-result-replay" class="btn-blue" data-action="nextQuizQuestion">↻ Rejouer le Quiz</button>
+            <button type="button" id="quiz-result-catalog" class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+          </div>
+        </section>
         <div id="quiz-history" class="quiz-history"></div>
       </div>
       <div class="classic-game-shell">
