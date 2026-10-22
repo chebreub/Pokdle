@@ -2276,6 +2276,7 @@ function renderQuizMeta() {
   }
 }
 
+let quizResultSnapshot = null;
 function renderQuizEndSummary(xpReward, recordBonus, newRecord) {
   const panel = document.getElementById("quiz-end-card");
   if (!panel) return;
@@ -2308,7 +2309,10 @@ function renderQuizQuestion() {
   renderQuizMeta();
   const isPartyQuizRound = Boolean(partySession?.currentModeKey === "quiz");
   const endCard = document.getElementById("quiz-end-card");
-  if (quizCurrentIndex < quizQuestions.length) endCard?.classList.add("hidden");
+  if (quizCurrentIndex < quizQuestions.length) {
+    quizResultSnapshot = null;
+    endCard?.classList.add("hidden");
+  }
 
   if (quizCurrentIndex >= quizQuestions.length) {
     gameOver = true;
@@ -2335,6 +2339,9 @@ function renderQuizQuestion() {
           awardXp(recordBonus, "Nouveau record Quiz");
         }
       }
+      // Remember only the already-awarded amounts for this round. Rerendering
+      // the result (e.g. after switching away and back) must not show +0 XP.
+      quizResultSnapshot = { xpReward, recordBonus, newRecord };
     }
     progress.textContent = `Quiz terminé • Score final : ${quizScore} / ${quizQuestions.length}`;
     questionEl.textContent = "Fin du quiz";
@@ -2346,7 +2353,8 @@ function renderQuizQuestion() {
       nextBtn.classList.add("hidden");
       finishPartyRound(quizScore >= Math.ceil(quizQuestions.length / 2));
     } else {
-      renderQuizEndSummary(xpReward, recordBonus, newRecord);
+      const result = quizResultSnapshot || {xpReward, recordBonus, newRecord};
+      renderQuizEndSummary(result.xpReward, result.recordBonus, result.newRecord);
     }
     return;
   }
