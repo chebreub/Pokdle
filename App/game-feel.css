@@ -237,3 +237,40 @@
   from { background-position:100% 0; }
   to { background-position:0 0; }
 }
+
+/* Intrus : après la réponse, les actions sont au niveau de l'explication.
+   Les commandes de la Party Room restent gérées séparément. */
+#pokdle-app.design-refresh #screen-odd-one-out #odd-explanation-box {
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #screen-odd-one-out #odd-explanation-box:focus,
+#pokdle-app.design-refresh #screen-odd-one-out #odd-status:focus {
+  outline:none;
+}
+#pokdle-app.design-refresh #screen-odd-one-out #odd-explanation-box:focus-visible,
+#pokdle-app.design-refresh #screen-odd-one-out #odd-status:focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);
+  outline-offset:4px;
+  border-radius:12px;
+}
+#pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+#pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions > button {
+  flex:1 1 205px;
+  min-height:48px;
+}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+  }
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions > button {
+    width:100%;
+    min-height:50px;
+  }
+}
