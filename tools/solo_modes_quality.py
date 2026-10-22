@@ -82,6 +82,7 @@ def run():
                         screen(page, "screen-game")
                         page.locator("#quiz-question").wait_for(state="visible")
                         page.evaluate("""() => {
+                            playerProfile.quizHighScore=12;
                             quizScore=11;
                             quizCurrentIndex=quizQuestions.length;
                             quizHistory=quizQuestions.map((q,i)=>({ok:i<11,text:'Test'}));
