@@ -41,7 +41,7 @@ async def run():
                     await ready(page,'!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"')
                     day=await page.evaluate('getDailyDateKey()')
                     state=dict(ok=True,day=day,number=200,accountId=None,authenticated=False,status='playing',finished=False,won=False,maxTries=6,length=10,attempts=0,points=0,ranked=False,rows=[])
-                    calls=[];fail_next=False
+                    calls=[];invalid_calls=[];fail_next=False
                     async def daily(route):
                         await route.fulfill(json=dict(ok=True,day=day,number=200,accountId=None,authenticated=False,status='abandoned',finished=True,won=False,attempts=0,answerId=25,rows=[],streak={}))
                     async def wordle(route): await route.fulfill(json=state)
@@ -51,7 +51,9 @@ async def run():
                             fail_next=False;await route.fulfill(status=503,json=dict(ok=False,error='unavailable'));return
                         body=route.request.post_data_json;pid=body['pokemonId'];calls.append(pid)
                         await asyncio.sleep(.4)
-                        names={25:('Pikachu','PIKACHU'),4:('Salamèche','SALAMECHE'),7:('Carapuce','CARAPUCE'),133:('Évoli','EVOLI'),151:('Mew','MEW'),6:('Dracaufeu','DRACAUFEU'),1:('Bulbizarre','BULBIZARRE')}
+                        names={94:('Ectoplasma','ECTOPLASMA'),2:('Herbizarre','HERBIZARRE'),3:('Florizarre','FLORIZARRE'),6:('Dracaufeu','DRACAUFEU'),11:('Chrysacier','CHRYSACIER'),12:('Papilusion','PAPILUSION'),1:('Bulbizarre','BULBIZARRE')}
+                        if pid not in names or len(names[pid][1]) != state['length']:
+                            invalid_calls.append(pid);await route.fulfill(status=400,json=dict(ok=False,error='invalid_length'));return
                         name,letters=names[pid];state['rows'].append(dict(pokemonId=pid,name=name,letters=letters,colors=colors(letters)))
                         state['attempts']=len(state['rows'])
                         if pid==1 or state['attempts']==6:
@@ -79,37 +81,52 @@ async def run():
                     field=page.locator('#wordle-input')
                     await field.fill('FAUXNOM');await page.locator('#wordle-submit').click()
                     assert calls==[],calls
+                    longer=await page.evaluate("getPokemonUiList().find(p=>wordleNormalize(p.name).length>dailyWordleState.length)?.name")
+                    assert longer, "Need a valid longer Pokémon for the test"
+                    for invalid_name in ['Mew',longer]:
+                        await field.fill(invalid_name)
+                        await page.keyboard.press('Enter')
+                        assert not calls and await page.evaluate("dailyWordleState.attempts") == 0, "Wrong length consumed an attempt"
+                        assert await field.input_value()==invalid_name, "Rejected guess erased the draft"
+                        assert "il en faut 10" in await page.locator('#wordle-message').inner_text()
+                        assert await page.locator('.wordle-next .wordle-cell').count()==10, "Long entry altered the grid width"
                     await field.fill('Pika')
                     item=page.locator('#wordle-suggestions button',has_text='Pikachu').first
                     if width<640: await item.tap()
                     else: await item.click()
-                    assert await field.evaluate('e => document.activeElement === e && !e.disabled && e.value === ""')
-                    await page.keyboard.type('Salam')
-                    await page.keyboard.press('Enter')
+                    assert not calls and "il en faut 10" in await page.locator('#wordle-message').inner_text(), "Autocomplete bypassed length gate"
+                    assert await field.input_value()=='Pika'
+                    await field.fill('Ecto')
+                    item=page.locator('#wordle-suggestions button',has_text='Ectoplasma').first
+                    if width<640: await item.tap()
+                    else: await item.click()
                     await ready(page,'dailyWordleState?.attempts === 1 && !dailyWordleBusy')
-                    assert calls==[25] and await field.input_value()=='Salam'
+                    assert calls==[94] and await field.input_value()==''
                     assert await field.evaluate('e => document.activeElement === e')
-                    await page.keyboard.type('èche');await page.keyboard.press('Enter')
+                    await page.keyboard.type('Herbi')
+                    await page.keyboard.press('Enter')
+                    assert calls==[94] and await field.input_value()=='Herbi'
+                    await page.keyboard.type('zarre');await page.keyboard.press('Enter')
                     await ready(page,'dailyWordleState?.attempts === 2 && !dailyWordleBusy')
-                    assert await field.evaluate('e => document.activeElement === e')
+                    assert calls==[94,2] and await field.evaluate('e => document.activeElement === e')
                     if width<640:
                         await ready(page,'document.getElementById("wordle-form").getBoundingClientRect().bottom < document.getElementById("mobile-tabbar").getBoundingClientRect().top - 7')
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-playing.png'))
                     assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'), 'Horizontal page overflow'
-                    await field.fill('Pikachu');await page.keyboard.press('Enter');assert calls==[25,4]
+                    await field.fill('Mew');await page.keyboard.press('Enter');assert calls==[94,2]
                     await page.reload(wait_until='domcontentloaded');await ready(page,'typeof startDailyWordle === "function"')
                     await page.evaluate('startDailyWordle();closeOverlayModal()');await ready(page,'dailyWordleState?.attempts === 2 && !dailyWordleBusy')
                     assert await page.locator('.wordle-guess:not(.wordle-next)').count()==2
                     # Use the virtual keyboard to submit a real name without native typing.
-                    for letter in 'MEW':
+                    for letter in 'FLORIZARRE':
                         button=page.locator('#wordle-keyboard [data-letter="'+letter+'"]')
                         if width<640: await button.tap()
                         else: await button.click()
                     await page.locator('#wordle-keyboard button',has_text='Valider').click()
                     await ready(page,'dailyWordleState?.attempts === 3 && !dailyWordleBusy')
-                    fail_next=True;await field.fill('Carapuce');await page.keyboard.press('Enter')
+                    fail_next=True;await field.fill('Dracaufeu');await page.keyboard.press('Enter')
                     await ready(page,'!dailyWordleBusy && document.getElementById("wordle-message").textContent.includes("injoignable")')
-                    assert await field.input_value()=='Carapuce' and state['attempts']==3
+                    assert await field.input_value()=='Dracaufeu' and state['attempts']==3
                     await field.fill('Bulbizarre');await page.keyboard.press('Enter')
                     await ready(page,'dailyWordleState?.won && !dailyWordleBusy')
                     assert await page.locator('#wordle-form').is_hidden()
@@ -124,12 +141,12 @@ async def run():
                     await page.locator('#wordle-result').scroll_into_view_if_needed()
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-win.png'))
                     await page.evaluate('startDailyWordle()');await ready(page,'dailyWordleState?.won && !dailyWordleBusy')
-                    assert calls==[25,4,151,1]
+                    assert calls==[94,2,3,1] and not invalid_calls
                     # Another isolated daily fixture covers all six misses and zero points.
                     state.update(status='playing',finished=False,won=False,points=0,attempts=0,rows=[]);state.pop('answerId');state.pop('answerName')
                     await page.evaluate('startDailyWordle()');await ready(page,'dailyWordleState?.status === "playing" && !dailyWordleBusy')
                     assert await page.locator('#wordle-result').is_hidden(), 'Previous result must not leak into a new round'
-                    for attempt,name in enumerate(['Pikachu','Salamèche','Carapuce','Évoli','Mew','Dracaufeu'],1):
+                    for attempt,name in enumerate(['Florizarre','Herbizarre','Dracaufeu','Ectoplasma','Chrysacier','Papilusion'],1):
                         await field.fill(name);await page.keyboard.press('Enter')
                         await ready(page,f'dailyWordleState?.attempts === {attempt} && !dailyWordleBusy')
                     assert state['status']=='lost' and state['points']==0
@@ -138,7 +155,7 @@ async def run():
                     await page.locator('#wordle-result [data-action="goToConfig"]').click()
                     assert await page.locator('#screen-wordle').is_hidden()
                     assert not errors,errors
-                    case.update(ok=True,checks=['Daily abandon -> Wordle','private target','invalid/duplicate free','delayed focus/draft','virtual keyboard','reload','503 retry','win','6-try loss','return home'])
+                    case.update(ok=True,checks=['Daily abandon -> Wordle','private target','short/long lengths refused','autocomplete length protection','invalid/duplicate free','delayed focus/draft','virtual keyboard','reload','503 retry','win','6-try loss','return home'])
                 except Exception as e:
                     case['error']=str(e);case['pageErrors']=errors
                     await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'))

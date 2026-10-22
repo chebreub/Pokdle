@@ -114,6 +114,10 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
       const r=existing?{secret_id:existing.secret_id}:await round(client,calendar.day,who),row=existing||await play(client,calendar.day,who);
       if(!body||row.status!=="playing")return snapshot(calendar,who,row,r);
       const proposed=abandon?null:wordleLetters(byId.get(body.pokemonId).name);
+      // Enforce the exact grid width on the server, not only in the UI.
+      // Rejecting inside the transaction rolls back any other pending writes.
+      const expectedLength=wordleLetters(byId.get(Number(r.secret_id)).name).length;
+      if(!abandon&&proposed.length!==expectedLength)throw error("invalid_length",400);
       if(!abandon&&row.guessed.some(id=>wordleLetters(byId.get(Number(id)).name)===proposed))return {...snapshot(calendar,who,row,r),duplicate:true};
       const guessed=abandon?row.guessed:[...row.guessed,body.pokemonId];
       // Names such as Porygon / Porygon2 share the same letter grid. A fully
