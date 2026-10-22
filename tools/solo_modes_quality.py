@@ -102,6 +102,8 @@ def run():
                         previous_xp=page.evaluate("playerProfile.xp")
                         page.evaluate("renderQuizQuestion()")
                         assert page.evaluate("playerProfile.xp")==previous_xp, "Results rewarded XP twice"
+                        assert page.locator("#quiz-end-xp").inner_text().strip()=="+85 XP", "XP display was reset by rerender"
+                        assert "Meilleur score : 12" in page.locator("#quiz-end-record").inner_text(), "Record display changed on rerender"
                         page.evaluate("""() => {
                             partySession={currentModeKey:'quiz',completed:true,roundResolved:true};
                             renderQuizQuestion();
