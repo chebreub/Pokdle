@@ -318,3 +318,16 @@
     min-height:50px;
   }
 }
+
+
+/* Classic Evolution / Ordre replay: scroll clues clear of fixed mobile UI. */
+#pokdle-app.design-refresh #screen-game :is(#evolution-box, #order-box) {
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #screen-game :is(#evolution-box, #order-box):focus {
+  outline:none;
+}
+#pokdle-app.design-refresh #screen-game :is(#evolution-box, #order-box):focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);
+  outline-offset:4px;
+}
