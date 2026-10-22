@@ -138,13 +138,23 @@ def run():
                         assert page.locator("#odd-explanation-box").is_visible(), "No explanation after answer"
                         assert page.evaluate("oddOneOutState.revealed && gameOver"), "Answer did not end the round"
                         assert page.locator("#odd-status").inner_text().startswith("Bonne réponse")
-                        btn = page.locator("#odd-new-puzzle-btn")
+                        assert page.locator("#odd-result-actions").is_visible(), "Missing continuation beside the result"
+                        assert page.evaluate("document.activeElement?.id") == "odd-explanation-box", "Result did not receive keyboard focus"
+                        if width < 640:
+                            actions = page.locator("#odd-result-actions").bounding_box()
+                            nav = page.locator("#mobile-tabbar").bounding_box()
+                            assert actions and nav and actions["y"] >= 0, (actions, nav)
+                            assert actions["y"] + actions["height"] <= nav["y"] - 4, "Replay hidden behind mobile tabbar"
+                        page.screenshot(path=str(OUT / f"{engine}-{width}-odd-result.png"), animations="disabled")
+                        btn = page.locator("#odd-replay-result")
                         if width < 640:
                             btn.tap()
                         else:
                             btn.click()
                         assert not page.locator("#odd-explanation-box").is_visible(), "Old answer leaked into new round"
+                        assert not page.locator("#odd-result-actions").is_visible(), "Result actions leaked into the new round"
                         assert page.evaluate("!oddOneOutState.revealed && !gameOver"), "Round state was not reset"
+                        assert page.evaluate("document.activeElement?.id") == "odd-status", "Focus was left on a hidden replay button"
                         assert page.evaluate("oddOneOutState.count") > first["count"]
                         selector.select_option("medium")
                         assert page.locator("#odd-grid .odd-card").count() == 6
@@ -157,6 +167,24 @@ def run():
                             ['type','generation','letter','color','habitat','stage'])""")
                         assert unique == [page.evaluate("oddOneOutState.oddId")], unique
                         page.screenshot(path=str(OUT / f"{engine}-{width}-odd-hard.png"), animations="disabled")
+                        page.evaluate("submitOddOneOutChoice(oddOneOutState.oddId)")
+                        assert page.locator("#odd-result-actions").is_visible(), "Missing solo catalog continuation"
+                        # A completed Party round must never show a solo replay,
+                        # even once isPartySessionActive() has become false.
+                        page.evaluate("""() => {
+                            partySession = {currentModeKey:'odd',completed:true,roundResolved:true};
+                            renderOddOneOutPuzzle();
+                        }""")
+                        assert not page.locator("#odd-result-actions").is_visible(), "Solo actions leaked into the completed Party"
+                        assert not page.locator("#odd-new-puzzle-btn").is_visible(), "Party could start an unauthorized solo puzzle"
+                        page.evaluate("""() => { partySession = null;renderOddOneOutPuzzle(); }""")
+                        assert page.locator("#odd-result-actions").is_visible(), "Solo result was not restored"
+                        catalog = page.locator("#odd-result-catalog")
+                        if width < 640:
+                            catalog.tap()
+                        else:
+                            catalog.click()
+                        screen(page, "screen-all-modes")
 
                     def mystery():
                         # Deterministic battle stats prevent CI from depending on a public API.
