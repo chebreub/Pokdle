@@ -65,3 +65,23 @@ test('routes serve the hub, each page and the sitemap; an unknown game goes back
     server.close();
   }
 });
+
+test('home exposes static links to featured pages for crawlers without changing game buttons', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const match = html.match(/<nav class="home-seo-links"[^>]*>([\s\S]*?)<\/nav>/);
+  assert.ok(match, 'a visible game-discovery navigation is present in the HTML');
+  const hrefs = [...match[1].matchAll(/<a href="([^"]+)"/g)].map(item => item[1]);
+  assert.deepEqual(hrefs, [
+    '/jeux/pokemon-du-jour',
+    '/jeux/wordle-pokemon',
+    '/jeux/grille-pokemon',
+    '/jeux/quiz-pokemon',
+    '/jeux/petit-bac-pokemon',
+    '/jeux',
+  ]);
+  const knownSlugs = new Set(GAMES.map(game => game.slug));
+  for (const href of hrefs.filter(href => href !== '/jeux')) {
+    assert.ok(knownSlugs.has(href.slice('/jeux/'.length)), href + ' has a real landing page');
+  }
+  assert.match(html, /data-action="openAllModesScreen"/, 'existing game navigation buttons are preserved');
+});
