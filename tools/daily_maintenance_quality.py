@@ -22,7 +22,7 @@ async def run():
           summary=dict(ok=True,day=day,number=201,points=42,maxPoints=100,finished=False,ranked=False,stages=[])
           async def status(route):await route.fulfill(json=summary)
           await page.route('**/api/daily/challenge/summary',status)
-          actions=['startDailyGame','startDailyWordle','startDailyDossier','startDailyChallenge','showDailyJourneySummary']
+          actions=['startDailyGame','startDailyWordle','startDailyDossier','startDailyChallenge','openAllModesScreen']
           for n in range(5):
             summary.update(finished=n==4,stages=[dict(finished=i<n,points=0,max=[40,10,20,30][i]) for i in range(4)])
             await page.evaluate('invalidateDailyHomeSummary();goToConfig();closeOverlayModal()')
@@ -33,7 +33,8 @@ async def run():
           assert await page.locator('#daily-notebook').is_hidden(), 'Finished journey must not show an empty enquiry notebook'
           await page.reload(wait_until='domcontentloaded')
           await ready(page,'document.getElementById("daily-hero-status").textContent.includes("Journée terminée")')
-          assert await page.locator('#daily-hero-cta').get_attribute('data-action')=='showDailyJourneySummary'
+          assert await page.locator('#daily-hero-cta').get_attribute('data-action')=='openAllModesScreen'
+          assert await page.locator('#daily-hero-ghost').get_attribute('data-action')=='showDailyJourneySummary'
           await page.evaluate('startQuizGame();closeOverlayModal()')
           assert await page.evaluate('quizQuestions.length')==15
           assert '1 / 15' in await page.locator('#quiz-progress').inner_text()
