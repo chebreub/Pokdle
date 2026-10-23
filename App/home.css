@@ -172,7 +172,7 @@ body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur
 #screen-config .pk-hero-main{position:relative;z-index:1;min-width:0;}
 #screen-config .pk-kicker{display:inline-flex;align-items:center;gap:6px;font-weight:900;text-transform:uppercase;}
 #screen-config .pk-kicker .pk-ico{width:13px;height:13px;}
-#screen-config .pk-hero-title{font-family:'Nunito',sans-serif;font-weight:900;color:#fff;}
+#screen-config .pk-hero-title{font-family:'Nunito',sans-serif;font-style:normal;font-weight:900;color:#fff;}
 #screen-config .pk-hero-sub{font-weight:700;margin:0;}
 #screen-config .pk-hero-chips{display:flex;flex-wrap:wrap;}
 #screen-config .pk-chip{display:inline-flex;align-items:center;gap:6px;font-weight:900;}
@@ -253,7 +253,19 @@ body:not(.theme-dark) .nav-pill.active,.nav-pill.active{background:#2f76ff !impo
    DA 2026 — CADRE GLOBAL (en-tete + nav) en clair, comme la maquette
    ================================================================= */
 
-body:not(.theme-dark) header .logo-row h1,body:not(.theme-dark) header h1{text-shadow:none !important;}
+/* The brand stays visually unchanged; the daily hero is the page heading. */
+#pokdle-app header .logo-row .logo-wordmark {
+  display: block;
+  font-family: "Nunito", system-ui, sans-serif;
+  font-style: italic;
+  font-weight: 900;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: .3px;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(12,25,48,.4);
+}
+body:not(.theme-dark) header .logo-row .logo-wordmark,body:not(.theme-dark) header h1{text-shadow:none !important;}
 body:not(.theme-dark) .tagline{color:#6a7a99 !important;text-shadow:none !important;}
 body:not(.theme-dark) .global-nav{background:transparent !important;box-shadow:none !important;border:none !important;backdrop-filter:none !important;}
 /* halos un peu plus discrets sous l'en-tete clair */
@@ -1449,7 +1461,7 @@ body:not(.theme-dark) .header-inner{
 body:not(.theme-dark) header .logo-home-btn{
   padding:5px 8px 5px 0 !important;
 }
-body:not(.theme-dark) header .logo-row h1,
+body:not(.theme-dark) header .logo-row .logo-wordmark,
 body:not(.theme-dark) header h1{
   color:#fff !important;
   letter-spacing:-.03em;

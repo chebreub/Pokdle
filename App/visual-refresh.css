@@ -122,7 +122,7 @@
 /* Header, footer and mobile navigation use the same selected theme as the page. */
 #pokdle-app.design-refresh > header { border-bottom: 1px solid var(--ui-line) !important; padding: 14px 0 !important; }
 #pokdle-app.design-refresh .header-inner { max-width: 1440px !important; margin: 0 auto !important; padding: 0 32px !important; width: 100% !important; }
-#pokdle-app.design-refresh header .logo-row h1 { color: var(--ui-ink) !important; font-size: 1.65rem !important; letter-spacing: -.04em; }
+#pokdle-app.design-refresh header .logo-row .logo-wordmark { color: var(--ui-ink) !important; font-size: 1.65rem !important; letter-spacing: -.04em; }
 #pokdle-app.design-refresh .pokeball-icon { box-shadow: none !important; border: 1px solid #17253d; }
 #pokdle-app.design-refresh header .tagline { display: none !important; }
 #pokdle-app.design-refresh .header-top .nav-pill {
@@ -372,7 +372,7 @@
   #pokdle-app.design-refresh main { padding: 16px 12px 24px !important; }
   #pokdle-app.design-refresh header { padding: 10px 0 !important; }
   #pokdle-app.design-refresh .header-inner { padding: 0 16px !important; }
-  #pokdle-app.design-refresh header .logo-row h1 { font-size: 1.4rem !important; }
+  #pokdle-app.design-refresh header .logo-row .logo-wordmark { font-size: 1.4rem !important; }
   #pokdle-app.design-refresh .header-actions .header-action-btn { font-size: 0 !important; border-radius: 12px !important; }
   #pokdle-app.design-refresh .header-top #global-nav { display: none !important; }
   #pokdle-app.design-refresh :is(.card, .overlay-card) { border-radius: 18px !important; }
@@ -4787,7 +4787,7 @@
 #pokdle-app.design-refresh .btn-yellow { background:#FFD45C !important; color:#2E2A33 !important; border-color:#FFD45C !important; box-shadow:0 4px 0 #D9AD39 !important; }
 #pokdle-app.design-refresh :is(.btn-blue,.btn-yellow,.btn-red,.pk-cta):not(:disabled):active { transform:translateY(3px); box-shadow:0 1px 0 currentColor !important; }
 #pokdle-app.design-refresh > header { background:var(--header-bg) !important; box-shadow:0 1px 0 var(--ui-line) !important; }
-#pokdle-app.design-refresh .logo-row h1 { color:var(--ui-ink) !important; font-size:30px !important; font-weight:600 !important; }
+#pokdle-app.design-refresh .logo-row .logo-wordmark { color:var(--ui-ink) !important; font-size:30px !important; font-weight:600 !important; }
 #pokdle-app.design-refresh #screen-config { gap:28px !important; }
 #pokdle-app.design-refresh #screen-config #daily-hero {
   display:grid !important; grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr); gap:36px;

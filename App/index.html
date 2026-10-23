@@ -123,7 +123,7 @@
             <div class="pb-mid"><div class="pb-btn"></div></div>
             <div class="pb-bot"></div>
           </div>
-          <h1>Pokédle</h1>
+          <span class="logo-wordmark">Pokédle</span>
         </div>
       </button>
       
@@ -165,8 +165,8 @@
       <section class="pk-hero" id="daily-hero">
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
-          <h2 class="pk-hero-title">Un jour.<br>Un Pokémon mystère.</h2>
-          <p class="pk-hero-sub">Le même défi pour tous. Croise les indices et mène ton enquête, un essai à la fois.</p>
+          <h1 class="pk-hero-title">Ta pause Pokémon du jour</h1>
+          <p class="pk-hero-sub">Un Pokémon mystère à deviner chaque jour, des mini-jeux gratuits à découvrir et des résultats à comparer entre amis. Quelques minutes suffisent, sur téléphone ou PC.</p>
           <div class="pk-hero-chips">
             <span class="pk-chip pk-chip-fire" id="daily-hero-streak">🔥 Série : 0</span>
             <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
@@ -181,7 +181,7 @@
       </section>
 
       <section class="home-discovery" aria-labelledby="home-discovery-title">
-        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton jeu</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><div class="home-discovery-actions"><button class="generation-trigger" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div></div>
+        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton mini-jeu Pokémon</h2><p>Devinettes, quiz et défis rapides, seul ou avec des amis.</p></div><div class="home-discovery-actions"><button class="generation-trigger" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div></div>
         <div id="home-game-filters" class="home-game-filters" aria-label="Filtrer les jeux">
           <button data-action="filterHomeGames" data-args='["popular"]' aria-pressed="true">Sélection</button>
           <button data-action="filterHomeGames" data-args='["guess"]' aria-pressed="false">Deviner</button>
@@ -202,17 +202,17 @@
       <section class="home-pathways" aria-label="Choisir comment jouer">
         <article class="home-path home-path-egg">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">◒</span><span class="home-path-label">L’ENQUÊTE COMMUNAUTAIRE</span></div>
-          <h2>Œuf mystère</h2><p>Un mystère pour la semaine, un nouvel indice chaque jour. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
+          <h2>Œuf mystère de la semaine</h2><p>Un mystère pour la semaine, un nouvel indice chaque jour. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openEggGame">Ouvrir l’Œuf mystère →</button></div>
         </article>
         <article class="home-path home-path-solo">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">✦</span><span class="home-path-label">À TON RYTHME</span></div>
-          <h2>Jouer seul</h2><p>Un Pokémon à deviner, un quiz ou un record à battre. Trouve ton prochain défi.</p>
+          <h2>Mini-jeux Pokémon en solo</h2><p>Un Pokémon à deviner, un quiz ou un record à battre. Trouve ton prochain défi.</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu <span aria-hidden="true">→</span></button></div>
         </article>
         <article class="home-path home-path-friends">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">⚔</span><span class="home-path-label">DE 2 À 8 JOUEURS</span></div>
-          <h2>Entre amis</h2><p>Retrouve ta bande en Party Room : des mini-jeux en groupe et des duels à deux. Une salle, un code, c’est parti.</p>
+          <h2>Défis Pokémon entre amis</h2><p>Retrouve ta bande en Party Room : des mini-jeux en groupe et des duels à deux. Une salle, un code, c’est parti.</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openPartyRoomMode">Ouvrir la Party Room <span aria-hidden="true">→</span></button></div>
         </article>
       </section>

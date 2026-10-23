@@ -85,3 +85,27 @@ test('home exposes static links to featured pages for crawlers without changing 
   }
   assert.match(html, /data-action="openAllModesScreen"/, 'existing game navigation buttons are preserved');
 });
+
+test('home describes the daily Pokémon break in its visible H1', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const header = html.match(/<header>[\s\S]*?<\/header>/)?.[0];
+  assert.ok(header, 'the global header exists');
+  assert.match(header, /<span class="logo-wordmark">Pokédle<\/span>/, 'wordmark is not a document heading');
+  assert.doesNotMatch(header, /<h1\b/, 'global logo must not add an H1 to every screen');
+  assert.match(header, /id="logo-home"/, 'return-home navigation remains available');
+
+  const hero = html.match(/<section class="pk-hero" id="daily-hero">([\s\S]*?)<\/section>/)?.[1];
+  assert.ok(hero, 'daily hero exists on the home screen');
+  assert.match(hero, /<h1 class="pk-hero-title">Ta pause Pokémon du jour<\/h1>/);
+  assert.equal((hero.match(/<h1\b/g) || []).length, 1, 'daily hero has a single H1');
+  assert.match(hero, /mini-jeux gratuits à découvrir/);
+  assert.match(hero, /résultats à comparer entre amis/);
+  assert.match(hero, /data-action="startDailyGame"/, 'original daily game action is preserved');
+
+  for (const label of [
+    'Choisis ton mini-jeu Pokémon',
+    'Œuf mystère de la semaine',
+    'Mini-jeux Pokémon en solo',
+    'Défis Pokémon entre amis',
+  ]) assert.ok(html.includes(label), label + ' is explicit for new visitors');
+});
