@@ -1692,6 +1692,12 @@ function recordMatchHistory(entry) {
   });
   matchHistory = matchHistory.slice(0, 120);
   saveMatchHistory();
+  // Browser-declared aggregate only: no account, Pokémon name or result details
+  // are sent. The server accepts only known mode/outcome combinations.
+  const recorded = matchHistory[0];
+  if (typeof trackUsage === "function" && (recorded.result === "win" || recorded.result === "loss")) {
+    trackUsage("complete:" + recorded.mode + ":" + recorded.result);
+  }
   discoverFromHistory(matchHistory[0]);
   if (typeof renderShellResult === "function") renderShellResult();
 }
@@ -2232,6 +2238,7 @@ const DEFAULT_APP_SETTINGS = {
   reduceMotion: false,
   soundEffects: true,
   pokemonCries: true,
+  seasonalDecorations: true,
 };
 
 function getStoredAppSettings() {
@@ -2268,6 +2275,7 @@ function applyAppSettings(settings = getStoredAppSettings()) {
   document.body.classList.toggle("text-scale-large", settings.textScale === "large");
   document.body.classList.toggle("a11y-high-contrast", Boolean(settings.highContrast));
   document.body.classList.toggle("reduce-motion", Boolean(settings.reduceMotion));
+  document.body.classList.toggle("seasonal-disabled", settings.seasonalDecorations === false);
 }
 
 function updateAppSetting(key, value) {
@@ -2778,6 +2786,10 @@ function openSettingsModal() {
     <div class="app-settings-grid app-settings-grid-rich">
       <section class="app-settings-section">
         <h4>Affichage</h4>
+        <label class="app-setting-item">
+          <span><b>Décorations de saison</b><small>Une touche d’Halloween en octobre. Se désactive après la fête.</small></span>
+          <input type="checkbox" ${settings.seasonalDecorations !== false ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="seasonalDecorations" data-bool="1" />
+        </label>
         <label class="app-setting-item app-setting-item-stack">
           <span><b>Thème</b><small>Basculer entre clair et sombre.</small></span>
           <select data-change-action="appSettingFromEl" data-setting="theme">
@@ -2974,7 +2986,12 @@ function renderWeightBattlePanel() {
   setGameCounter(Number(playerProfile?.weightBattleStreak) || 0, "Série");
   const status = document.getElementById("weight-status");
   const grid = document.getElementById("weight-grid");
-  document.getElementById("weight-restart")?.classList.toggle("hidden", !weightBattleState.revealed || isPartySessionActive());
+  // The last Party round remains a Party round after completion. Do not let its
+  // finished state reveal the solo replay or catalog actions.
+  const isPartyWeightRound = Boolean(partySession?.currentModeKey === "weight");
+  const showSoloResult = weightBattleState.revealed && !isPartyWeightRound;
+  document.getElementById("weight-result-actions")?.classList.toggle("hidden", !showSoloResult);
+  document.getElementById("weight-restart")?.classList.toggle("hidden", !showSoloResult);
   if (status) {
     status.textContent = !weightBattleState.revealed
       ? "Quel Pokémon est le plus lourd ?"
@@ -2982,6 +2999,8 @@ function renderWeightBattlePanel() {
         ? `Bien vu : ${secretPokemon.name} est le plus lourd avec ${secretPokemon.weight} kg.`
         : `${secretPokemon?.name || "Le bon Pokémon"} était le plus lourd avec ${secretPokemon?.weight || "?"} kg.`;
   }
+  const detail = document.getElementById("weight-result-detail");
+  if (detail) detail.textContent = showSoloResult ? (status?.textContent || "") : "";
   if (!grid) return;
   grid.innerHTML = "";
   [weightBattleState.left, weightBattleState.right].forEach((pokemon) => {
@@ -3028,10 +3047,32 @@ function renderWeightBattlePanel() {
         }
       }
       finishPartyRound(didWin);
+      if (!isPartyWeightRound) {
+        // Keep the explanation and replay controls in the same viewport on
+        // iPhone/Android and keep keyboard focus off the now-disabled card.
+        const result = document.getElementById("weight-result-actions");
+        result?.focus({ preventScroll: true });
+        result?.scrollIntoView({
+          behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+          block: "center",
+        });
+      }
     });
     grid.appendChild(btn);
   });
   if (partySession) renderPartySessionUI();
+}
+
+function replayWeightBattle() {
+  // A completed Party round cannot be replayed through the solo CTA.
+  if (!weightBattleState?.revealed || partySession?.currentModeKey === "weight") return;
+  startWeightBattle();
+  const status = document.getElementById("weight-status");
+  status?.focus({ preventScroll: true });
+  status?.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: "center",
+  });
 }
 
 function renderEvolutionChainPanel() {
@@ -3063,80 +3104,96 @@ function renderPokedexOrderPanel() {
   if (status) status.textContent = "Entre le Pokémon placé entre ces deux numéros.";
 }
 
+// Six visible cards must have ONE defensible outsider. When a category is
+// disclosed (easy/medium), uniqueness is checked inside that category. On
+// hard, the category is hidden, so uniqueness is checked across ALL categories.
+function oddRuleValues(pokemon, category) {
+  if (!pokemon) return [];
+  if (category === "type") return [...new Set([pokemon.type1, pokemon.type2].filter(Boolean).map(String))];
+  if (category === "generation") return Number.isInteger(Number(pokemon.gen)) ? [String(pokemon.gen)] : [];
+  if (category === "stage") return Number.isInteger(Number(pokemon.stage)) && Number(pokemon.stage) > 0 ? [String(pokemon.stage)] : [];
+  if (category === "color" || category === "habitat") return pokemon[category] ? [String(pokemon[category])] : [];
+  if (category === "letter") {
+    const first = norm(pokemon.name).replace(/[^a-z]/g, "").charAt(0);
+    return first ? [first] : [];
+  }
+  return [];
+}
+
+function oddPossibleOutliers(cards, categories) {
+  const outliers = new Set();
+  for (const category of categories) {
+    const groups = new Map();
+    cards.forEach((pokemon) => {
+      for (const value of oddRuleValues(pokemon, category)) {
+        if (!groups.has(value)) groups.set(value, new Set());
+        groups.get(value).add(pokemon.id);
+      }
+    });
+    for (const ids of groups.values()) {
+      if (ids.size !== cards.length - 1) continue;
+      const remaining = cards.find((pokemon) => !ids.has(pokemon.id));
+      if (remaining) outliers.add(remaining.id);
+    }
+  }
+  return [...outliers];
+}
+
+function buildOddPuzzle(pool, category, requireGlobalUnique = false) {
+  if (pool.length < 6) return null;
+  const groups = new Map();
+  for (const pokemon of pool) {
+    for (const value of oddRuleValues(pokemon, category)) {
+      if (!groups.has(value)) groups.set(value, []);
+      groups.get(value).push(pokemon);
+    }
+  }
+  const valid = [...groups.entries()].filter(([, group]) => group.length >= 5 && group.length < pool.length);
+  if (!valid.length) return null;
+
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const [commonValue, members] = valid[Math.floor(Math.random() * valid.length)];
+    const common = shuffleArray(members.slice()).slice(0, 5);
+    const oddChoices = pool.filter(pokemon => !oddRuleValues(pokemon, category).includes(commonValue));
+    if (!oddChoices.length) continue;
+    const odd = oddChoices[Math.floor(Math.random() * oddChoices.length)];
+    const cards = shuffleArray([...common, odd]);
+    // In hard mode the criterion is hidden: reject alternative answers
+    // also justified by the visible color, habitat or evolution stage.
+    const categories = requireGlobalUnique
+      ? ["type", "generation", "letter", "color", "habitat", "stage"]
+      : [category];
+    const answers = oddPossibleOutliers(cards, categories);
+    if (answers.length !== 1 || answers[0] !== odd.id) continue;
+    const descriptions = {
+      type: `les 5 autres Pokémon possèdent tous le type ${commonValue}`,
+      generation: `les 5 autres viennent de la génération ${commonValue}`,
+      letter: `les 5 autres commencent par la lettre ${String(commonValue).toUpperCase()}`,
+    };
+    const hints = {
+      type: "Indice : compare les types affichés dans le Pokédex.",
+      generation: "Indice : regarde les générations.",
+      letter: "Indice : regarde la première lettre des noms.",
+    };
+    return {
+      cards, oddId: odd.id, rule: category,
+      hint: requireGlobalUnique ? "Trouve toi-même le critère commun aux cinq autres." : hints[category],
+      explanation: `${odd.name} est l'intrus car ${descriptions[category]}.`,
+    };
+  }
+  return null;
+}
+
 function buildOddRuleSet() {
-  return [
-    {
-      key: "type",
-      build(pool) {
-        const typeGroups = new Map();
-        pool.forEach((pokemon) => {
-          [pokemon.type1, pokemon.type2].filter(Boolean).forEach((type) => {
-            if (!typeGroups.has(type)) typeGroups.set(type, []);
-            typeGroups.get(type).push(pokemon);
-          });
-        });
-        const valid = Array.from(typeGroups.entries()).filter(([, list]) => list.length >= 5);
-        if (!valid.length) return null;
-        const [sharedType, group] = valid[Math.floor(Math.random() * valid.length)];
-        const common = shuffleArray(group.slice()).slice(0, 5);
-        const commonIds = new Set(common.map((pokemon) => pokemon.id));
-        const oddChoices = pool.filter((pokemon) => !commonIds.has(pokemon.id) && pokemon.type1 !== sharedType && pokemon.type2 !== sharedType);
-        const odd = oddChoices[Math.floor(Math.random() * oddChoices.length)];
-        if (!odd) return null;
-        return {
-          cards: shuffleArray(common.concat(odd)),
-          oddId: odd.id,
-          explanation: `${odd.name} est l'intrus car les 5 autres Pokémon possèdent tous le type ${sharedType}.`,
-        };
-      },
-    },
-    {
-      key: "generation",
-      build(pool) {
-        const validGens = [...new Set(pool.map((pokemon) => pokemon.gen))].filter((gen) => pool.filter((pokemon) => pokemon.gen === gen).length >= 5);
-        if (!validGens.length) return null;
-        const gen = validGens[Math.floor(Math.random() * validGens.length)];
-        const common = shuffleArray(pool.filter((pokemon) => pokemon.gen === gen)).slice(0, 5);
-        const commonIds = new Set(common.map((pokemon) => pokemon.id));
-        const oddChoices = pool.filter((pokemon) => !commonIds.has(pokemon.id) && pokemon.gen !== gen);
-        const odd = oddChoices[Math.floor(Math.random() * oddChoices.length)];
-        if (!odd) return null;
-        return {
-          cards: shuffleArray(common.concat(odd)),
-          oddId: odd.id,
-          explanation: `${odd.name} est l'intrus car les 5 autres viennent tous de la génération ${gen}.`,
-        };
-      },
-    },
-    {
-      key: "letter",
-      build(pool) {
-        const groups = new Map();
-        pool.forEach((pokemon) => {
-          const first = norm(pokemon.name).replace(/[^a-z]/g, "").charAt(0);
-          if (!first) return;
-          if (!groups.has(first)) groups.set(first, []);
-          groups.get(first).push(pokemon);
-        });
-        const valid = Array.from(groups.entries()).filter(([, list]) => list.length >= 5);
-        if (!valid.length) return null;
-        const [firstLetter, group] = valid[Math.floor(Math.random() * valid.length)];
-        const common = shuffleArray(group.slice()).slice(0, 5);
-        const commonIds = new Set(common.map((pokemon) => pokemon.id));
-        const oddChoices = pool.filter((pokemon) => {
-          const first = norm(pokemon.name).replace(/[^a-z]/g, "").charAt(0);
-          return !commonIds.has(pokemon.id) && first !== firstLetter;
-        });
-        const odd = oddChoices[Math.floor(Math.random() * oddChoices.length)];
-        if (!odd) return null;
-        return {
-          cards: shuffleArray(common.concat(odd)),
-          oddId: odd.id,
-          explanation: `${odd.name} est l'intrus car les 5 autres commencent tous par la lettre ${firstLetter.toUpperCase()}.`,
-        };
-      },
-    },
-  ];
+  const keyOrder = oddDifficulty === "easy"
+    ? ["letter", "type", "generation"]
+    : oddDifficulty === "medium"
+      ? ["generation", "type", "letter"]
+      : ["type", "generation", "letter"];
+  const requireGlobalUnique = oddDifficulty === "hard";
+  return keyOrder.map(key => ({
+    key, build: pool => buildOddPuzzle(pool, key, requireGlobalUnique),
+  }));
 }
 
 function syncOddDifficultyUi() {
@@ -3158,8 +3215,7 @@ function setOddDifficulty(value) {
 }
 
 function nextOddOneOutPuzzle() {
-  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
-  const source = pool.length >= 12 ? pool : getPokemonUiList({ includeAltForms: false });
+  const source = getPoolFromSelectedGens().filter(pokemon => !pokemon.isAltForm && pokemon.guessable !== false);
   const rules = buildOddRuleSet();
   let puzzle = null;
   for (let i = 0; i < rules.length && !puzzle; i += 1) {
@@ -3169,9 +3225,16 @@ function nextOddOneOutPuzzle() {
     cards: puzzle?.cards || [],
     oddId: puzzle?.oddId || null,
     explanation: puzzle?.explanation || "",
+    hint: puzzle?.hint || "",
+    rule: puzzle?.rule || "",
     revealed: false,
     count: oddOneOutState.count + 1,
   };
+  gameOver = false;
+  document.getElementById("odd-explanation-box")?.classList.add("hidden");
+  document.getElementById("odd-result-actions")?.classList.add("hidden");
+  const explanation = document.getElementById("odd-explanation-text");
+  if (explanation) explanation.textContent = "";
   renderOddOneOutPuzzle();
 }
 
@@ -3189,8 +3252,9 @@ function submitOddOneOutChoice(pokemonId) {
   if (explanationText) explanationText.textContent = oddOneOutState.explanation;
   renderOddOneOutPuzzle(pokemonId);
   const didWin = pokemonId === oddOneOutState.oddId;
+  const soloResult = !isPartySessionActive();
   // Standalone (hors party) : XP léger + historique + record streak
-  if (!isPartySessionActive()) {
+  if (soloResult) {
     try {
       recordMatchHistory({ mode: "odd", result: didWin ? "win" : "loss", attempts: 1, targetName: odd?.name || null });
     } catch (_e) {}
@@ -3213,6 +3277,28 @@ function submitOddOneOutChoice(pokemonId) {
   }
   finishPartyRound(didWin);
   renderOddOneOutPuzzle(pokemonId);
+  if (soloResult && explanationBox) {
+    // The answer lives beneath six cards. Move keyboard/screen-reader focus to
+    // the result and bring its replay button into view above the mobile tabbar.
+    explanationBox.focus({ preventScroll: true });
+    explanationBox.scrollIntoView({
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+      block: "center",
+    });
+  }
+}
+
+function replayOddOneOutPuzzle() {
+  // A Party round, including its final resolved round, must never restart
+  // through the solo replay CTA.
+  if (!oddOneOutState.revealed || !oddOneOutState.oddId || partySession?.currentModeKey === "odd") return;
+  nextOddOneOutPuzzle();
+  const status = document.getElementById("odd-status");
+  status?.focus({ preventScroll: true });
+  status?.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: "center",
+  });
 }
 
 function renderOddOneOutPuzzle(selectedId = null) {
@@ -3222,8 +3308,12 @@ function renderOddOneOutPuzzle(selectedId = null) {
   const status = document.getElementById("odd-status");
   const newPuzzleBtn = document.getElementById("odd-new-puzzle-btn");
   const partyNextBtn = document.getElementById("odd-party-next-btn");
-  const isPartyOddRound = Boolean(isPartySessionActive() && partySession?.currentModeKey === "odd");
+  const resultActions = document.getElementById("odd-result-actions");
+  // Keep the last Party round in Party context after it marks the session
+  // completed; isPartySessionActive() alone would then incorrectly be false.
+  const isPartyOddRound = Boolean(partySession?.currentModeKey === "odd");
   if (!grid || !count || !source || !status) return;
+  resultActions?.classList.toggle("hidden", !oddOneOutState.revealed || isPartyOddRound);
   if (newPuzzleBtn) newPuzzleBtn.classList.toggle("hidden", isPartyOddRound);
   if (partyNextBtn) {
     partyNextBtn.classList.toggle("hidden", !(isPartyOddRound && partySession?.roundResolved && !partySession?.completed));
@@ -3236,7 +3326,7 @@ function renderOddOneOutPuzzle(selectedId = null) {
     status.textContent = "Aucune énigme disponible avec la sélection actuelle.";
     return;
   }
-  if (!oddOneOutState.revealed) status.textContent = "Quel Pokémon est l'intrus ?";
+  if (!oddOneOutState.revealed) status.textContent = "Quel Pokémon est l'intrus ? " + oddOneOutState.hint;
   oddOneOutState.cards.forEach((pokemon) => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -3349,7 +3439,8 @@ function openOddOneOutMode() {
   hideScreen("screen-history");
   showScreen("screen-odd-one-out");
   try {
-    oddDifficulty = localStorage.getItem("pokedle_odd_difficulty_v1") || oddDifficulty;
+    const savedDifficulty = localStorage.getItem("pokedle_odd_difficulty_v1");
+    if (["easy", "medium", "hard"].includes(savedDifficulty)) oddDifficulty = savedDifficulty;
   } catch (_err) {
     // noop
   }
@@ -3407,15 +3498,19 @@ function startEvolutionChainGame() {
 }
 
 function startPokedexOrderGame() {
-  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm).sort((a, b) => a.id - b.id);
-  if (pool.length < 3) {
-    showToast("Il faut au moins trois Pokémon dans la sélection.");
+  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
+  const candidates = getPokedexOrderCandidates(pool);
+  if (!candidates.length) {
+    showToast("Aucun trio de numéros consécutifs dans cette sélection. Choisis d'autres générations.");
     return;
   }
-  const middleIndex = 1 + Math.floor(Math.random() * (pool.length - 2));
-  pokedexOrderState = { lower: pool[middleIndex - 1], middle: pool[middleIndex], upper: pool[middleIndex + 1] };
+  const previousMiddleId = pokedexOrderState?.middle?.id ?? null;
+  const fresh = candidates.filter((trio) => trio[1].id !== previousMiddleId);
+  const source = fresh.length ? fresh : candidates;
+  const [lower, middle, upper] = source[Math.floor(Math.random() * source.length)];
+  pokedexOrderState = { lower, middle, upper };
   gameMode = "order";
-  startGameWithSecret(pokedexOrderState.middle, pool);
+  startGameWithSecret(middle, pool);
   renderPokedexOrderPanel();
 }
 

@@ -52,6 +52,7 @@
   <link rel="stylesheet" href="dist/qui-est-ce.min.css">
   <link rel="stylesheet" href="dist/daily-grid.min.css">
   <link rel="stylesheet" href="dist/petit-bac.min.css">
+  <link rel="stylesheet" href="dist/halloween.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -122,7 +123,7 @@
             <div class="pb-mid"><div class="pb-btn"></div></div>
             <div class="pb-bot"></div>
           </div>
-          <h1>Pokédle</h1>
+          <span class="logo-wordmark">Pokédle</span>
         </div>
       </button>
       
@@ -164,8 +165,8 @@
       <section class="pk-hero" id="daily-hero">
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
-          <h2 class="pk-hero-title">Un jour.<br>Un Pokémon mystère.</h2>
-          <p class="pk-hero-sub">Le même défi pour tous. Croise les indices et mène ton enquête, un essai à la fois.</p>
+          <h1 class="pk-hero-title">Ta pause Pokémon du jour</h1>
+          <p class="pk-hero-sub">Un Pokémon mystère à deviner chaque jour, des mini-jeux gratuits à découvrir et des résultats à comparer entre amis. Quelques minutes suffisent, sur téléphone ou PC.</p>
           <div class="pk-hero-chips">
             <span class="pk-chip pk-chip-fire" id="daily-hero-streak">🔥 Série : 0</span>
             <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
@@ -180,29 +181,38 @@
       </section>
 
       <section class="home-discovery" aria-labelledby="home-discovery-title">
-        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton jeu</h2><p>Des mystères à résoudre, des liens à trouver, des records à battre.</p></div><div class="home-discovery-actions"><button class="generation-trigger" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div></div>
+        <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton mini-jeu Pokémon</h2><p>Devinettes, quiz et défis rapides, seul ou avec des amis.</p></div><div class="home-discovery-actions"><button class="generation-trigger" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div></div>
         <div id="home-game-filters" class="home-game-filters" aria-label="Filtrer les jeux">
-          <button data-action="filterHomeGames" data-args='["popular"]' aria-pressed="true">Populaires</button>
+          <button data-action="filterHomeGames" data-args='["popular"]' aria-pressed="true">Sélection</button>
           <button data-action="filterHomeGames" data-args='["guess"]' aria-pressed="false">Deviner</button>
           <button data-action="filterHomeGames" data-args='["play"]' aria-pressed="false">Jouer</button>
         </div>
         <div class="home-games-grid" id="home-games-grid"></div>
+        <nav class="home-seo-links" aria-label="Découvrir les jeux Pokémon">
+          <span>Découvrir les jeux :</span>
+          <a href="/jeux/pokemon-du-jour">Pokémon du jour</a>
+          <a href="/jeux/wordle-pokemon">Wordle Pokémon</a>
+          <a href="/jeux/grille-pokemon">Grille Pokémon</a>
+          <a href="/jeux/quiz-pokemon">Quiz Pokémon</a>
+          <a href="/jeux/petit-bac-pokemon">Petit Bac Pokémon</a>
+          <a href="/jeux">Tous les jeux →</a>
+        </nav>
       </section>
 
       <section class="home-pathways" aria-label="Choisir comment jouer">
         <article class="home-path home-path-egg">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">◒</span><span class="home-path-label">L’ENQUÊTE COMMUNAUTAIRE</span></div>
-          <h2>Œuf mystère</h2><p>Un mystère pour la semaine, un nouvel indice chaque jour. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
+          <h2>Œuf mystère de la semaine</h2><p>Un mystère pour la semaine, un nouvel indice chaque jour. Une proposition par jour, deux avec un compte. Qui le trouvera en premier ?</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openEggGame">Ouvrir l’Œuf mystère →</button></div>
         </article>
         <article class="home-path home-path-solo">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">✦</span><span class="home-path-label">À TON RYTHME</span></div>
-          <h2>Jouer seul</h2><p>Un Pokémon à deviner, un quiz ou un record à battre. Trouve ton prochain défi.</p>
+          <h2>Mini-jeux Pokémon en solo</h2><p>Un Pokémon à deviner, un quiz ou un record à battre. Trouve ton prochain défi.</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu <span aria-hidden="true">→</span></button></div>
         </article>
         <article class="home-path home-path-friends">
           <div class="home-path-top"><span class="home-path-icon" aria-hidden="true">⚔</span><span class="home-path-label">DE 2 À 8 JOUEURS</span></div>
-          <h2>Entre amis</h2><p>Retrouve ta bande en Party Room : neuf mini-jeux de 2 à 8 et les duels à deux. Une salle, un code, c’est parti.</p>
+          <h2>Défis Pokémon entre amis</h2><p>Retrouve ta bande en Party Room : des mini-jeux en groupe et des duels à deux. Une salle, un code, c’est parti.</p>
           <div class="home-path-actions"><button class="btn-blue" type="button" data-action="openPartyRoomMode">Ouvrir la Party Room <span aria-hidden="true">→</span></button></div>
         </article>
       </section>
@@ -338,7 +348,7 @@
           <section class="all-modes-cat" data-family="social">
             <h3 class="all-modes-cat-title"><svg class="pk-ico"><use href="#i-users"/></svg>Entre amis</h3>
             <div class="all-modes-grid">
-              <button type="button" class="card all-modes-card" data-category="friends" data-action="openFromAllModes" data-args='["openPartyRoomMode"]' data-search="Party Room salon amis duel 1v1 stat clash stat auction enchères défi ami"><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-users"/></svg></div><b>Party Room</b><small>De 2 à 8 : neuf mini-jeux, plus les duels à deux.</small></button>
+              <button type="button" class="card all-modes-card" data-category="friends" data-action="openFromAllModes" data-args='["openPartyRoomMode"]' data-search="Party Room salon amis duel 1v1 stat clash stat auction enchères défi ami"><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-users"/></svg></div><b>Party Room</b><small>De 2 à 8 joueurs : mini-jeux en groupe et duels à deux.</small></button>
             </div>
           </section>
           <section class="all-modes-cat" data-family="tools">
@@ -1060,9 +1070,15 @@ EVs: 252 Atk / 4 Def / 252 Spe
       </div>
 
       <div id="weight-box" class="challenge-panel hidden">
-        <p id="weight-status" class="challenge-title">Quel Pokémon est le plus lourd ?</p>
+        <p id="weight-status" class="challenge-title" role="status" aria-live="polite" tabindex="-1">Quel Pokémon est le plus lourd ?</p>
         <div id="weight-grid" class="versus-grid"></div>
-        <button type="button" id="weight-restart" class="btn-blue hidden" data-action="startWeightBattle">Nouvelle manche</button>
+        <div id="weight-result-actions" class="weight-result-actions hidden" role="region" aria-label="Résultat du duel de poids" tabindex="-1">
+          <p id="weight-result-detail" class="card-desc"></p>
+          <div class="weight-result-buttons">
+            <button type="button" id="weight-restart" class="btn-blue hidden" data-action="replayWeightBattle">↻ Nouvelle manche</button>
+            <button type="button" id="weight-result-catalog" class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+          </div>
+        </div>
       </div>
 
       <div id="evolution-banner" class="mode-banner hidden">
@@ -1070,7 +1086,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="mode-banner-text"><b>Chaîne d'évolution</b><span class="mode-banner-desc">Trouve le Pokémon manquant dans la lignée.</span></div>
       </div>
 
-      <div id="evolution-box" class="challenge-panel hidden">
+      <div id="evolution-box" class="challenge-panel hidden" tabindex="-1" role="region" aria-label="Nouvelle chaîne d’évolution">
         <p class="challenge-title">Chaîne d'évolution</p>
         <div id="evolution-chain" class="evolution-chain"></div>
         <p id="evolution-status" class="card-desc">Devine le Pokémon manquant avec la barre de recherche.</p>
@@ -1081,7 +1097,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <div class="mode-banner-text"><b>Ordre Pokédex</b><span class="mode-banner-desc">Trouve le Pokémon situé entre deux numéros.</span></div>
       </div>
 
-      <div id="order-box" class="challenge-panel hidden">
+      <div id="order-box" class="challenge-panel hidden" tabindex="-1" role="region" aria-label="Nouvelle énigme Ordre Pokédex">
         <p class="challenge-title">Quel Pokémon se situe entre ces deux entrées du Pokédex ?</p>
         <div class="order-clue-row">
           <div class="order-clue">
@@ -1129,10 +1145,32 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="quiz-good">Bonnes : 0</span>
           <span id="quiz-bad">Mauvaises : 0</span>
         </div>
-        <h3 id="quiz-question"></h3>
+        <h3 id="quiz-question" tabindex="-1"></h3>
         <div id="quiz-options" class="mode-buttons"></div>
         <p id="quiz-feedback" class="err-msg"></p>
         <button id="quiz-next-btn" class="btn-blue hidden" data-action="nextQuizQuestion">Question suivante</button>
+        <section id="quiz-end-card" class="quiz-end-card hidden" role="region" tabindex="-1" aria-label="Bilan de la partie Quiz">
+          <div class="quiz-end-heading">
+            <span class="quiz-end-kicker">BILAN DE PARTIE</span>
+            <h3>Quiz terminé !</h3>
+            <div class="quiz-end-scoreline">
+              <strong id="quiz-end-score">0 / 15</strong>
+              <span id="quiz-end-accuracy">0 % de bonnes réponses</span>
+            </div>
+          </div>
+          <div class="quiz-end-stats">
+            <div><span>Bonnes réponses</span><strong id="quiz-end-good">0</strong></div>
+            <div><span>À revoir</span><strong id="quiz-end-bad">0</strong></div>
+          </div>
+          <div class="quiz-end-rewards">
+            <div><span>XP gagnés au Quiz</span><strong id="quiz-end-xp">+0 XP</strong></div>
+            <p id="quiz-end-record">Meilleur score : 0</p>
+          </div>
+          <div class="quiz-end-actions" role="group" aria-label="Après le Quiz">
+            <button type="button" id="quiz-result-replay" class="btn-blue" data-action="nextQuizQuestion">↻ Rejouer le Quiz</button>
+            <button type="button" id="quiz-result-catalog" class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+          </div>
+        </section>
         <div id="quiz-history" class="quiz-history"></div>
       </div>
       <div class="classic-game-shell">
@@ -1256,12 +1294,16 @@ EVs: 252 Atk / 4 Def / 252 Spe
           </label>
         </div>
 
-        <p id="odd-status" class="odd-status">Nouvelle énigme prête.</p>
+        <p id="odd-status" class="odd-status" role="status" aria-live="polite" tabindex="-1">Nouvelle énigme prête.</p>
         <div id="odd-grid" class="odd-grid"></div>
 
-        <div id="odd-explanation-box" class="odd-explanation hidden">
+        <div id="odd-explanation-box" class="odd-explanation hidden" tabindex="-1" role="region" aria-label="Résultat de l'énigme">
           <p class="challenge-title">Explication :</p>
           <p id="odd-explanation-text"></p>
+          <div id="odd-result-actions" class="odd-result-actions hidden" role="group" aria-label="Après l'énigme">
+            <button type="button" id="odd-replay-result" class="btn-blue" data-action="replayOddOneOutPuzzle">↻ Encore une énigme</button>
+            <button type="button" id="odd-result-catalog" class="btn-ghost" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1269,7 +1311,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
     <div id="screen-party-room" class="hidden">
       <div class="card party-room-card">
         <div class="party-hero">
-          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>En duel ou en équipe. Vos meilleurs coups, vos plus belles soirées.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>9 mini-jeux</span><span>Entre amis</span></div></div>
+          <div><span class="party-eyebrow">LE RENDEZ-VOUS MULTIJOUEUR</span><h2>Party Room<span class="party-title-dot">.</span></h2><p>En duel ou en équipe. Vos meilleurs coups, vos plus belles soirées.</p><div class="party-hero-tags"><span>2–8 joueurs</span><span>Mini-jeux et duels</span><span>Entre amis</span></div></div>
           <div class="party-hero-art" aria-hidden="true"><span>#025</span><b>VS</b><span>#151</span></div>
           <button class="btn-ghost party-back" type="button" data-action="goToConfig">← Retour</button>
         </div>

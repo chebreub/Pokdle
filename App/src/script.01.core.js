@@ -1904,40 +1904,42 @@ function isPartySessionActive() {
   return Boolean(partySession && !partySession.completed);
 }
 
-function hasPartyEvolutionCandidate() {
-  const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
-  const sorted = pool.slice().sort((a, b) => a.id - b.id);
-  for (let i = 0; i <= sorted.length - 3; i += 1) {
-    const a = sorted[i];
-    const b = sorted[i + 1];
-    const c = sorted[i + 2];
-    if (a && b && c && a.gen === b.gen && b.gen === c.gen && Number(a.stage) === 1 && Number(b.stage) === 2 && Number(c.stage) === 3 && b.id === a.id + 1 && c.id === b.id + 1) {
-      return true;
-    }
-  }
-  return false;
-}
+// Verified three-stage families from our offline Pokédex data. Consecutive
+// dex numbers + stages 1/2/3 ALONE do not prove evolution (e.g. #167-169,
+// #228-230 or #1017-1019 are unrelated). Maintain this allowlist when
+// updating pokemon.js; never generate fictitious evolution chains.
+const VERIFIED_EVOLUTION_FAMILY_STARTS = new Set([1,4,7,10,13,16,29,32,43,60,63,66,69,74,92,147,152,155,158,179,187,246,252,255,258,265,270,273,280,287,293,304,328,363,371,374,387,390,393,396,403,443,495,498,501,506,519,524,532,535,540,543,551,574,577,582,599,602,607,610,633,650,653,656,661,664,669,679,704,722,725,728,731,736,761,782,789,810,813,816,821,824,837,856,859,885,906,909,912,921,928,932,957,996]);
 
 function getEvolutionChainCandidates(pool) {
-  const sorted = pool.slice().sort((a, b) => a.id - b.id);
+  const sorted = pool.slice().filter(p => p && !p.isAltForm && p.guessable !== false).sort((a, b) => a.id - b.id);
   const candidates = [];
   for (let i = 0; i <= sorted.length - 3; i += 1) {
-    const a = sorted[i];
-    const b = sorted[i + 1];
-    const c = sorted[i + 2];
-    if (
-      a &&
-      b &&
-      c &&
-      a.gen === b.gen &&
-      b.gen === c.gen &&
-      Number(a.stage) === 1 &&
-      Number(b.stage) === 2 &&
-      Number(c.stage) === 3 &&
-      b.id === a.id + 1 &&
-      c.id === b.id + 1
-    ) {
+    const [a, b, c] = sorted.slice(i, i + 3);
+    if (VERIFIED_EVOLUTION_FAMILY_STARTS.has(Number(a.id)) &&
+        a.gen === b.gen && b.gen === c.gen &&
+        Number(a.stage) === 1 && Number(b.stage) === 2 && Number(c.stage) === 3 &&
+        Number(b.id) === Number(a.id) + 1 && Number(c.id) === Number(b.id) + 1) {
       candidates.push([a, b, c]);
+    }
+  }
+  return candidates;
+}
+
+function hasPartyEvolutionCandidate() {
+  return getEvolutionChainCandidates(getPoolFromSelectedGens()).length > 0;
+}
+
+// The question is "which dex number is between these two?" The neighbors
+// must be consecutive in the *national dex*, not merely in the selected gens.
+function getPokedexOrderCandidates(pool) {
+  const sorted = pool.slice().filter(p => p && !p.isAltForm && p.guessable !== false).sort((a, b) => a.id - b.id);
+  const candidates = [];
+  for (let i = 0; i <= sorted.length - 3; i += 1) {
+    const [lower, middle, upper] = sorted.slice(i, i + 3);
+    if (Number.isInteger(Number(lower.id)) &&
+        Number(middle.id) === Number(lower.id) + 1 &&
+        Number(upper.id) === Number(middle.id) + 1) {
+      candidates.push([lower, middle, upper]);
     }
   }
   return candidates;
@@ -1955,7 +1957,7 @@ function getPartyModePool() {
     { key: "mystery", label: "Stat Mystère", launch: startMysteryStatGame, canLaunch: () => basePool.length > 0 },
     { key: "weight", label: "Duel de poids", launch: startWeightBattle, canLaunch: () => noAltPool.length >= 2 },
     { key: "evolution", label: "Chaîne d'évolution", launch: startEvolutionChainGame, canLaunch: () => hasPartyEvolutionCandidate() },
-    { key: "order", label: "Ordre Pokédex", launch: startPokedexOrderGame, canLaunch: () => noAltPool.length >= 3 },
+    { key: "order", label: "Ordre Pokédex", launch: startPokedexOrderGame, canLaunch: () => getPokedexOrderCandidates(noAltPool).length > 0 },
     { key: "description", label: "Description Pokédex", launch: startDescriptionMode, canLaunch: () => basePool.length > 0 },
     { key: "odd", label: "Intrus Pokémon", launch: openOddOneOutMode, canLaunch: () => true },
     // Modes à écran dédié (résolus via notifyPartyRoundFromScreenMode à la fin de leur run).
@@ -2249,8 +2251,11 @@ function getUsageUid() {
 function trackUsage(event) {
   try {
     // En session Party, les mini-jeux sont des manches, pas des lancements solo.
-    if (event.startsWith("solo:") && typeof isPartySessionActive === "function" && isPartySessionActive()) return;
-    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event, uid: getUsageUid() }), keepalive: true }).catch(() => {});
+    if ((event.startsWith("solo:") || event.startsWith("complete:")) &&
+        typeof isPartySessionActive === "function" && isPartySessionActive()) return;
+    // A completed game needs no anonymous device token: count an outcome, not a person.
+    const payload = event.startsWith("complete:") ? { event } : { event, uid: getUsageUid() };
+    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), keepalive: true }).catch(() => {});
   } catch (_e) {}
 }
 window.trackUsage = trackUsage;

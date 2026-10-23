@@ -4,7 +4,7 @@ const {wordleLetters,compareLetters,initWordleDb,createWordleService}=require('.
 test('French Pokémon names ignore accents/punctuation and keep Nidoran distinguishable',()=>{
   for(const [name,expected] of [['Évoli','EVOLI'],['Ho-Oh','HOOH'],['M. Mime','MMIME'],['Porygon2','PORYGON'],['Nidoran♀','NIDORANF'],['Nidoran♂','NIDORANM']])assert.equal(wordleLetters(name),expected);
 });
-test('letter feedback reserves exacts, counts duplicates and accepts unequal lengths',()=>{
+test('letter feedback reserves exacts and still renders old unequal-length saved guesses',()=>{
   assert.deepEqual(compareLetters('EEEEE','EVOLI'),['exact','absent','absent','absent','absent']);
   assert.deepEqual(compareLetters('AAAA','BAAA'),['absent','exact','exact','exact']);
   assert.deepEqual(compareLetters('OLIVIER','EVOLI'),['present','present','absent','present','exact','present','absent']);
@@ -22,7 +22,7 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
       CREATE TABLE scores(discord_id TEXT,mode TEXT,score INTEGER,username TEXT,avatar TEXT,updated_at TIMESTAMPTZ,PRIMARY KEY(discord_id,mode));
       INSERT INTO daily_rounds VALUES('2026-10-08',1),('2026-10-09',1);`);
     await initWordleDb(db);await initWordleDb(db);
-    const pokemon=[{id:1,name:'Bulbizarre'},{id:25,name:'Pikachu'},{id:4,name:'Salamèche'},{id:7,name:'Carapuce'},{id:133,name:'Évoli'},{id:151,name:'Mew'},{id:2,name:'Herbizarre'},{id:3,name:'Florizarre'},{id:20001,name:'Méga-Florizarre',isAltForm:true},{id:137,name:'Porygon'},{id:233,name:'Porygon2'}];
+    const pokemon=[{id:1,name:'Bulbizarre'},{id:25,name:'Pikachu'},{id:4,name:'Salamèche'},{id:7,name:'Carapuce'},{id:133,name:'Évoli'},{id:151,name:'Mew'},{id:2,name:'Herbizarre'},{id:3,name:'Florizarre'},{id:20001,name:'Méga-Florizarre',isAltForm:true},{id:137,name:'Porygon'},{id:233,name:'Porygon2'},{id:19,name:'Rattata'},{id:58,name:'Caninos'},{id:16,name:'Roucool'},{id:60,name:'Ptitard'},{id:393,name:'Tiplouf'}];
     let now=new Date('2026-10-08T12:00:00Z');const service=()=>createWordleService({db,pokemon,clock:()=>now,randomInt:()=>0});let game=service();
     const guest={key:'guest:g'},A={key:'user:A',accountId:'A',name:'A'},body=(p,who,day='2026-10-08')=>({day,accountId:who.accountId||null,pokemonId:p});
     const unlock=who=>db.query("INSERT INTO daily_plays VALUES($1,$2,'abandoned')",[who.key,'2026-10-08']);
@@ -34,20 +34,32 @@ test('real PostgreSQL: private shared Wordle after Daily, six tries, recovery, l
     await assert.rejects(game.guess(guest,body(4,guest)),{code:'daily_required'});
     await db.query("UPDATE daily_plays SET status='abandoned' WHERE identity=$1",[guest.key]);
     await assert.rejects(game.guess(A,body(9999,A)),{code:'invalid_guess'});await assert.rejects(game.guess(A,{...body(4,A),accountId:'B'}),{code:'account_changed'});
-    await game.guess(guest,body(4,guest));assert.equal((await game.guess(guest,body(4,guest))).duplicate,true);assert.equal((await service().state(guest)).attempts,1);
+    // Valid Pokémon names with shorter/longer normalized lengths are rejected
+    // by the API without spending an attempt or altering the stored board.
+    await assert.rejects(game.guess(guest,body(151,guest)),{code:'invalid_length',status:400});
+    await assert.rejects(game.guess(guest,body(1,guest)),{code:'invalid_length',status:400});
+    assert.equal((await service().state(guest)).attempts,0);
+    assert.deepEqual((await db.query("SELECT guessed FROM wordle_plays WHERE identity=$1 AND day=$2",[guest.key,'2026-10-08'])).rows[0].guessed,[]);
+    await game.guess(guest,body(137,guest));assert.equal((await game.guess(guest,body(233,guest))).duplicate,true);assert.equal((await service().state(guest)).attempts,1);
     const won=await game.guess(guest,body(25,guest));assert.equal(won.won,true);assert.equal(won.points,8);assert.equal(won.maxPoints,10);assert.equal(won.answerName,'Pikachu');assert.equal(won.ranked,false);
     assert.equal((await db.query('SELECT * FROM leaderboard_events')).rowCount,0);
     const login={key:'user:G',accountId:'G',guestKey:guest.key};await unlock(login);assert.equal((await game.state(login)).won,true);assert.equal((await game.guess(login,body(25,login))).ranked,false);
     const wins=await Promise.all([game.guess(A,body(25,A)),game.guess(A,body(25,A))]);assert.ok(wins.every(s=>s.points===10));assert.equal((await db.query('SELECT * FROM leaderboard_events')).rowCount,1);
-    assert.equal((await game.guess(A,body(4,A))).attempts,1);
+    assert.equal((await game.guess(A,body(137,A))).attempts,1);
     const B={key:'user:B',accountId:'B'};await unlock(B);
-    for(const id of [1,4,7,133,151,25])await game.guess(B,body(id,B));assert.equal((await game.state(B)).points,1);
+    for(const id of [137,19,58,16,60,25])await game.guess(B,body(id,B));assert.equal((await game.state(B)).points,1);
     const C={key:'user:C',accountId:'C'};await unlock(C);
-    for(const id of [1,4,7,133,151,2])await game.guess(C,body(id,C));assert.equal((await game.state(C)).status,'lost');assert.equal((await game.guess(C,body(25,C))).won,false);
+    for(const id of [137,19,58,16,60,393])await game.guess(C,body(id,C));assert.equal((await game.state(C)).status,'lost');assert.equal((await game.guess(C,body(25,C))).won,false);
     const D={key:'user:D',accountId:'D'};await unlock(D);assert.equal((await game.abandon(D,body(undefined,D))).status,'abandoned');assert.equal((await game.guess(D,body(25,D))).points,0);
-    const ongoing={key:'guest:login'};await unlock(ongoing);await game.guess(ongoing,body(4,ongoing));const E={key:'user:E',accountId:'E',guestKey:ongoing.key};await unlock(E);assert.equal((await game.state(E)).attempts,1);assert.equal((await game.guess(E,body(25,E))).ranked,true);
-    const F={key:'user:F',accountId:'F'};await unlock(F);await game.guess(F,body(4,F));await db.query('ALTER TABLE scores ADD CONSTRAINT bad CHECK(score<0) NOT VALID');await assert.rejects(game.guess(F,body(25,F)));assert.equal((await game.state(F)).attempts,1);await db.query('ALTER TABLE scores DROP CONSTRAINT bad');
+    const ongoing={key:'guest:login'};await unlock(ongoing);await game.guess(ongoing,body(137,ongoing));const E={key:'user:E',accountId:'E',guestKey:ongoing.key};await unlock(E);assert.equal((await game.state(E)).attempts,1);assert.equal((await game.guess(E,body(25,E))).ranked,true);
+    const F={key:'user:F',accountId:'F'};await unlock(F);await game.guess(F,body(137,F));await db.query('ALTER TABLE scores ADD CONSTRAINT bad CHECK(score<0) NOT VALID');await assert.rejects(game.guess(F,body(25,F)));assert.equal((await game.state(F)).attempts,1);await db.query('ALTER TABLE scores DROP CONSTRAINT bad');
     const I={key:'guest:ambiguous'};await unlock(I);await game.guess(I,body(137,I));assert.equal((await game.guess(I,body(233,I))).duplicate,true);assert.equal((await game.state(I)).attempts,1);
+    // Existing saved guesses from the old unequal-length rules remain visible.
+    const legacy={key:'guest:legacy'};await unlock(legacy);
+    await db.query("INSERT INTO wordle_plays(identity,day,started_at,guessed,status) VALUES($1,$2,$3,$4,'playing')",[legacy.key,'2026-10-08',now,JSON.stringify([4])]);
+    const legacyState=await service().state(legacy);assert.equal(legacyState.attempts,1);assert.equal(legacyState.rows[0].letters,'SALAMECHE');
+    await assert.rejects(game.guess(legacy,body(151,legacy)),{code:'invalid_length'});assert.equal((await game.state(legacy)).attempts,1);
+    assert.equal((await game.guess(legacy,body(137,legacy))).attempts,2);
     now=new Date('2026-10-08T21:59:59Z');const lock=await db.connect();await lock.query('BEGIN');await lock.query("SELECT * FROM wordle_plays WHERE identity='user:F' AND day='2026-10-08' FOR UPDATE");
     const pending=game.guess(F,body(25,F));await new Promise(r=>setTimeout(r,50));now=new Date('2026-10-08T22:00:00Z');await lock.query('COMMIT');lock.release();await assert.rejects(pending,{code:'stale_daily'});
     await assert.rejects(game.guess(A,body(25,A)),{code:'stale_daily'});await db.query("INSERT INTO daily_plays VALUES('user:A','2026-10-09','won')");const tomorrow=await game.state(A);assert.equal(tomorrow.attempts,0);assert.equal(tomorrow.day,'2026-10-09');assert.notEqual((await db.query("SELECT secret_id FROM wordle_rounds WHERE day='2026-10-09'")).rows[0].secret_id,25);

@@ -15,7 +15,7 @@ function ensureDailyWordleScreen() {
     <form id="wordle-form" class="wordle-form"><label for="wordle-input">Ta proposition</label><div class="wordle-search"><input id="wordle-input" type="text" placeholder="Nom d’un Pokémon…" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="80" aria-controls="wordle-suggestions" aria-expanded="false"><button id="wordle-submit" class="btn-blue" type="submit">Valider</button></div><div id="wordle-suggestions" class="wordle-suggestions hidden" aria-label="Propositions de Pokémon"></div></form>
     <div id="wordle-keyboard" class="wordle-keyboard" aria-label="Clavier de lettres"></div>
     <section id="wordle-result" class="wordle-result hidden" aria-live="polite"></section>
-    <details class="wordle-help"><summary>Comment jouer et marquer des points ?</summary><p>Propose un vrai Pokémon, même si son nom est plus long ou plus court. Une lettre verte est bien placée, une lettre orange se trouve ailleurs. Les lettres répétées respectent le nombre de copies du nom mystère.</p><p>Accents, espaces, chiffres et ponctuation ne prennent aucune case. Pour Nidoran, ♀ devient F et ♂ devient M. La cible est une espèce de base.</p><p>Une victoire rapporte 10 points au premier essai, puis 8, 6, 4, 2 et 1 point au sixième. Une défaite ou un abandon rapporte 0. Le classement Wordle compare le nombre d’essais des victoires ; ces points ne changent pas la Ligue.</p><p>Une partie commune par jour, renouvelée à minuit à Paris. Invités : progression conservée sur cet appareil, sans classement.</p></details>
+    <details class="wordle-help"><summary>Comment jouer et marquer des points ?</summary><p>Propose un vrai Pokémon dont le nom comporte exactement le nombre de lettres annoncé. La liste de suggestions reste disponible pour l’orthographe. Une lettre verte est bien placée, une lettre orange se trouve ailleurs. Les lettres répétées respectent le nombre de copies du nom mystère.</p><p>Accents, espaces, chiffres et ponctuation ne prennent aucune case. Pour Nidoran, ♀ devient F et ♂ devient M. La cible est une espèce de base.</p><p>Une victoire rapporte 10 points au premier essai, puis 8, 6, 4, 2 et 1 point au sixième. Une défaite ou un abandon rapporte 0. Le classement Wordle compare le nombre d’essais des victoires ; ces points ne changent pas la Ligue.</p><p>Une partie commune par jour, renouvelée à minuit à Paris. Invités : progression conservée sur cet appareil, sans classement.</p></details>
     <button id="wordle-abandon" class="btn-ghost" data-action="confirmWordleAbandon">Révéler et terminer</button>
     </article>`;
   document.getElementById('screen-game').parentElement.appendChild(screen);
@@ -100,8 +100,9 @@ async function wordleRequest(action='',pokemonId) {
     return true;
   } catch(e) {
     if(serial!==dailyWordleSerial||document.getElementById('screen-wordle')?.classList.contains('hidden'))return false;
-    const messages={daily_required:'Termine d’abord l’Enquête du jour, même en révélant la réponse.',stale_daily:'Le jour a changé à Paris. Recharge l’épreuve du jour.',account_changed:'Ton compte a changé. Recharge ta partie.',rate_limited:'Trop de propositions rapprochées. Réessaie dans une minute.'};
+    const messages={daily_required:'Termine d’abord l’Enquête du jour, même en révélant la réponse.',stale_daily:'Le jour a changé à Paris. Recharge l’épreuve du jour.',account_changed:'Ton compte a changé. Recharge ta partie.',rate_limited:'Trop de propositions rapprochées. Réessaie dans une minute.',invalid_length:'La longueur du nom ne correspond pas à la grille. Aucun essai retiré.'};
     wordleMessage(messages[e.code]||'Le serveur est injoignable. Réessaie : tes propositions validées sont conservées.');
+    if(e.code==='invalid_length'){wordleNudge();return false;}
     const retry=document.createElement('button');retry.className='btn-ghost';
     const nextDay=e.code==='daily_required'||e.code==='stale_daily';
     retry.dataset.action=nextDay?'startDailyGame':'startDailyWordle';retry.textContent=nextDay?'Ouvrir l’Enquête du jour':'Recharger l’épreuve';document.getElementById('wordle-message').append(' ',retry);
@@ -118,7 +119,7 @@ async function startDailyWordle() {
 function renderWordleSuggestions() {
   const input=document.getElementById('wordle-input'),list=document.getElementById('wordle-suggestions'),query=wordleNormalize(input.value);
   const next=document.querySelector('.wordle-next .wordle-tiles');
-  if(next){const width=Math.max(query.length,dailyWordleState?.length||0);next.style.setProperty('--wordle-columns',width);next.innerHTML=wordleCells(query.padEnd(width,' '));}
+  if(next){const width=dailyWordleState?.length||query.length;next.style.setProperty('--wordle-columns',width);next.innerHTML=wordleCells(query.slice(0,width).padEnd(width,' '));}
   const choices=query.length>=2?getPokemonUiList().filter(p=>wordleNormalize(p.name).includes(query)&&!dailyWordleState?.rows.some(row=>row.pokemonId===p.id)).slice(0,7):[];
   list.innerHTML='';list.classList.toggle('hidden',!choices.length);input.setAttribute('aria-expanded',String(Boolean(choices.length)));
   for(const p of choices) {
@@ -146,6 +147,11 @@ async function submitDailyWordle(pokemonId=null) {
   const input=document.getElementById('wordle-input'),draft=input.value;
   const p=pokemonId?POKEMON_BY_ID.get(Number(pokemonId)):getPokemonUiList().find(p=>wordleNormalize(p.name)===wordleNormalize(draft));
   if(!p){wordleMessage('Choisis un vrai nom de Pokémon dans les propositions. Aucun essai retiré.');wordleNudge();return;}
+  const proposedLength=wordleNormalize(p.name).length,expectedLength=dailyWordleState.length;
+  if(proposedLength!==expectedLength){
+    wordleMessage('Ce Pokémon comporte '+proposedLength+' lettres ; il en faut '+expectedLength+'. Aucun essai retiré.');
+    wordleNudge();return;
+  }
   if(dailyWordleState.rows.some(row=>row.letters===wordleNormalize(p.name))){wordleMessage('Déjà proposé ! Choisis un autre Pokémon.');wordleNudge();return;}
   input.value='';document.getElementById('wordle-suggestions').classList.add('hidden');input.setAttribute('aria-expanded','false');input.focus({preventScroll:true});
   const serial=dailyWordleSerial+1,accountId=dailyObservedAccountId();

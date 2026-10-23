@@ -44,21 +44,64 @@ async function oldRows(old, table, where = "", params = []) {
   if (!(await tableExists(old, table))) return [];
   return (await old.query(`SELECT * FROM ${table} ${where}`, params)).rows;
 }
-const profileSize = data => JSON.stringify(data || {}).length;
+// A saved profile is a complete snapshot, not an append-only progress log.
+// JSON length is never evidence that one version is newer or safer to keep.
+const PROFILE_METADATA = new Set(["_accountId", "_savedAt"]);
+const isRecord = value => Boolean(value && typeof value === "object" && !Array.isArray(value));
+const hasProfileData = data => isRecord(data) && Object.keys(data).some(key => !PROFILE_METADATA.has(key));
+const isBlankProfile = data => isRecord(data) && !hasProfileData(data);
+function canRestoreLegacyProfile(current, legacy, accountId) {
+  return isBlankProfile(current) && hasProfileData(legacy) &&
+    (!current._accountId || String(current._accountId) === String(accountId)) &&
+    (!legacy._accountId || String(legacy._accountId) === String(accountId));
+}
+
+// An OLD_DATABASE_URL alone is never consent to run a write-heavy legacy import.
+// The operator must first verify an independent snapshot of the live database.
+function canScheduleLegacyImport(env) {
+  return env?.LEGACY_IMPORT_BACKUP_VERIFIED === "yes" &&
+    typeof env.OLD_DATABASE_URL === "string" && env.OLD_DATABASE_URL.trim().length > 0;
+}
 
 async function importLegacy({ db, old, ascModes = [] }) {
   const report = {};
+  // Keep both snapshots when an existing account already has progress. Backups
+  // are private to the database and vanish with the account via ON DELETE CASCADE.
+  await db.query(`CREATE TABLE IF NOT EXISTS legacy_profile_backups (
+    discord_id TEXT PRIMARY KEY REFERENCES users(discord_id) ON DELETE CASCADE,
+    legacy_data JSONB NOT NULL,
+    current_data JSONB NOT NULL,
+    captured_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
   const deleted = new Set((await tableExists(db, "deleted_accounts")) ? (await db.query("SELECT id FROM deleted_accounts")).rows.map(r => r.id) : []);
   const kept = (rows, field) => rows.filter(r => !deleted.has(String(r[field] ?? "")));
-  // Accounts: a profile kept since the move wins, unless the old one holds more progress.
+  // Accounts: never replace live progress with a longer (possibly older) blob.
   const users = kept(await oldRows(old, "users"), "discord_id");
   for (const user of users) {
-    const current = (await db.query("SELECT data FROM users WHERE discord_id=$1", [user.discord_id])).rows[0];
-    if (!current) { report.users = (report.users || 0) + await insertRows(db, "users", [user]); continue; }
-    if (profileSize(user.data) > profileSize(current.data)) {
+    // In production importLegacy runs in one transaction. Lock each existing row
+    // so a concurrent /api/profile write cannot race the blank-profile check.
+    const current = (await db.query("SELECT data FROM users WHERE discord_id=$1 FOR UPDATE", [user.discord_id])).rows[0];
+    const wrongOwner = isRecord(user.data) && user.data._accountId != null &&
+      String(user.data._accountId) !== String(user.discord_id);
+    if (wrongOwner) report.profilesOwnerMismatch = (report.profilesOwnerMismatch || 0) + 1;
+    if (!current) {
+      // Keep the account row for its identities/scores, but never attach someone
+      // else's snapshot to it. Otherwise downstream identity FKs would break.
+      report.users = (report.users || 0) + await insertRows(db, "users", [wrongOwner ? { ...user, data: {} } : user]);
+      continue;
+    }
+    if (wrongOwner) continue;
+    if (canRestoreLegacyProfile(current.data, user.data, user.discord_id)) {
       await db.query("UPDATE users SET data=$2::jsonb, partner_id=COALESCE(partner_id,$3), created_at=LEAST(created_at,$4) WHERE discord_id=$1", [user.discord_id, JSON.stringify(user.data), user.partner_id ?? null, user.created_at]);
       report.profilesRestored = (report.profilesRestored || 0) + 1;
     } else {
+      // A conflict needs a deliberate merge/recovery; save BOTH sides without
+      // changing the currently playable profile, irrespective of JSON size.
+      if (hasProfileData(user.data) && JSON.stringify(user.data) !== JSON.stringify(current.data)) {
+        const backup = await db.query("INSERT INTO legacy_profile_backups(discord_id,legacy_data,current_data) VALUES($1,$2::jsonb,$3::jsonb) ON CONFLICT (discord_id) DO NOTHING",
+          [user.discord_id, JSON.stringify(user.data), JSON.stringify(current.data)]);
+        report.profilesBackedUp = (report.profilesBackedUp || 0) + (backup.rowCount || 0);
+      }
       await db.query("UPDATE users SET partner_id=COALESCE(partner_id,$2), created_at=LEAST(created_at,$3) WHERE discord_id=$1", [user.discord_id, user.partner_id ?? null, user.created_at]);
     }
   }
@@ -146,4 +189,4 @@ function scheduleLegacyImport({ db, oldUrl, ascModes = [], readyBefore = Promise
   return { attempt };
 }
 
-module.exports = { IMPORT_NAME, DATE_AS_TEXT, importLegacy, scheduleLegacyImport };
+module.exports = { IMPORT_NAME, DATE_AS_TEXT, hasProfileData, canRestoreLegacyProfile, canScheduleLegacyImport, importLegacy, scheduleLegacyImport };

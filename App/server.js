@@ -600,20 +600,21 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
 });
 
 // Players ranked per arcade board for a period, so empty boards can be hidden.
-const LB_ARCADE_MODES = ["quiz", "speedrun", "higherlower", "higherlower60", "intrus", "poids", "party", "typecombo", "draft_all"];
+const LB_DRAFT_MODES = ["draft_all", ...Array.from({ length: 9 }, (_, index) => "draft_" + (index + 1))];
+const LB_ARCADE_MODES = ["quiz", "speedrun", "higherlower", "higherlower60", "intrus", "poids", "party", "typecombo", ...LB_DRAFT_MODES];
 app.get("/api/leaderboard/counts", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, counts: {} });
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   try {
     await authDbReady;
     const sql = scope === "all"
-      ? "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY mode"
-      : "SELECT mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE mode = ANY($1) AND " +
+      ? "SELECT CASE WHEN mode LIKE 'draft_%' THEN 'draft' ELSE mode END AS mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY 1"
+      : "SELECT CASE WHEN e.mode LIKE 'draft_%' THEN 'draft' ELSE e.mode END AS mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE e.mode = ANY($1) AND " +
         (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= now() - interval '7 days'") +
-        " GROUP BY mode";
+        " GROUP BY 1";
     const rows = (await pgPool.query(sql, [LB_ARCADE_MODES])).rows;
-    const counts = Object.fromEntries(LB_ARCADE_MODES.map((mode) => [mode === "draft_all" ? "draft" : mode, 0]));
-    for (const row of rows) counts[row.mode === "draft_all" ? "draft" : row.mode] = Number(row.n) || 0;
+    const counts = Object.fromEntries([...LB_ARCADE_MODES.filter((mode) => !mode.startsWith("draft_")), "draft"].map((mode) => [mode, 0]));
+    for (const row of rows) counts[row.mode] = Number(row.n) || 0;
     res.json({ ok: true, scope, counts });
   } catch (e) {
     console.error("[leaderboard] counts:", e.message);
@@ -630,6 +631,8 @@ app.get("/api/leaderboard", async (req, res) => {
   const scope = ["today", "week", "all"].includes(req.query.scope) ? req.query.scope : "all";
   const order = leaderboardOrderSql(config);
   const best = leaderboardBestSql(config);
+  const globalDraft = mode === "draft_all";
+  const scoreboardParams = globalDraft ? [LB_DRAFT_MODES] : [mode];
   const user = getSessionUser(req);
   const meId = user ? user.id : null;
   try {
@@ -639,7 +642,23 @@ app.get("/api/leaderboard", async (req, res) => {
     if(mode === "grid") return res.json(await gridService.leaderboard(scope,meId));
     if(mode === "petitbacday") return res.json(await dailyBacService.leaderboard(scope,meId));
     let rankedCte;
-    if (scope === "all") {
+    if (scope === "all" && globalDraft) {
+      // Aggregate only existing server-backed records; never promote local profile
+      // data to public rankings without proof that a ranked game was completed.
+      rankedCte = `
+        WITH best AS (
+          SELECT DISTINCT ON (s.discord_id) s.discord_id, s.username, s.avatar, s.score, s.updated_at
+          FROM scores s
+          WHERE s.mode = ANY($1)
+          ORDER BY s.discord_id, s.score DESC, s.updated_at ASC
+        ),
+        ranked AS (
+          SELECT b.discord_id, b.username, b.avatar, u.partner_id, b.score,
+            (RANK() OVER (ORDER BY b.score DESC, b.updated_at ASC))::int AS rank
+          FROM best b
+          LEFT JOIN users u ON u.discord_id = b.discord_id
+        )`;
+    } else if (scope === "all") {
       rankedCte = `
         WITH ranked AS (
           SELECT s.discord_id, s.username, s.avatar, u.partner_id, s.score,
@@ -657,7 +676,7 @@ app.get("/api/leaderboard", async (req, res) => {
         WITH best AS (
           SELECT e.discord_id, ${best}(e.score)::int AS score
           FROM leaderboard_events e
-          WHERE e.mode = $1 AND ${timePredicate}
+          WHERE e.mode ${globalDraft ? "= ANY($1)" : "= $1"} AND ${timePredicate}
           GROUP BY e.discord_id
         ),
         ranked AS (
@@ -670,15 +689,15 @@ app.get("/api/leaderboard", async (req, res) => {
 
     const top = await pgPool.query(
       rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
-      [mode]
+      scoreboardParams
     );
-    const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", [mode]);
+    const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", scoreboardParams);
     let me = null;
     let aroundRows = [];
     if (meId) {
       const mine = await pgPool.query(
         rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
-        [mode, meId]
+        scoreboardParams.concat(meId)
       );
       if (mine.rows[0]) {
         const row = mine.rows[0];
@@ -687,7 +706,7 @@ app.get("/api/leaderboard", async (req, res) => {
         const high = Number(row.rank) + 2;
         const around = await pgPool.query(
           rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
-          [mode, low, high]
+          scoreboardParams.concat(low, high)
         );
         aroundRows = around.rows;
       }
@@ -735,9 +754,15 @@ petitBacParty.mountPetitBacSolo({ app, express, pokemon: POKEMON_LIST });
 const dailyBacService = require("./lib/daily-petitbac").mountDailyPetitBacRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
 // Grille du jour: the bonus of the day, beside the 100-point journey.
 const gridService = require("./lib/daily-grid").mountGridRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,readyBefore:authDbReady});
-// The old Neon data (blocked by its free quota on 19/10/2026) comes back on its own once
-// OLD_DATABASE_URL answers again; it never overwrites what was played since the move.
-require("./lib/db-import").scheduleLegacyImport({ db: pgPool, oldUrl: process.env.OLD_DATABASE_URL, ascModes: Object.keys(LB_MODE_CONFIG).filter((mode) => LB_MODE_CONFIG[mode].direction === "asc"), readyBefore: authDbReady.then(() => new Promise((resolve) => setTimeout(resolve, 20000))) });
+// The old Neon data can only be imported AFTER the operator verifies an
+// independent, restorable backup of the CURRENT PostgreSQL database.
+// An OLD_DATABASE_URL by itself is not authorization to overwrite any data.
+const legacyImport = require("./lib/db-import");
+if (legacyImport.canScheduleLegacyImport(process.env)) {
+  legacyImport.scheduleLegacyImport({ db: pgPool, oldUrl: process.env.OLD_DATABASE_URL, ascModes: Object.keys(LB_MODE_CONFIG).filter((mode) => LB_MODE_CONFIG[mode].direction === "asc"), readyBefore: authDbReady.then(() => new Promise((resolve) => setTimeout(resolve, 20000))) });
+} else if (process.env.OLD_DATABASE_URL) {
+  console.warn("[import] Neon recovery paused: verify a restorable current-database backup before setting LEGACY_IMPORT_BACKUP_VERIFIED=yes.");
+}
 require("./lib/egg-mystery").mountEggRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies });
 const MAX_ROOM_SIZE = 2;
 const DUEL_RECONNECT_GRACE_MS = 30000; // fenêtre de reconnexion avant forfait en duel live
@@ -1174,13 +1199,12 @@ app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
 });
 
-// --- Stats de fréquentation (anonymes, en mémoire, 14 jours glissants).
-// Remise à zéro à chaque redémarrage de l'instance — un keep-alive type
-// UptimeRobot rend les compteurs quasi continus. Chaque événement est aussi
-// journalisé en une ligne dans les logs Render (préfixe [usage]) pour garder
-// une trace au-delà des redémarrages. Page de lecture : /admin/stats?key=...
-// (protégée par la variable d'environnement ADMIN_STATS_KEY). ---
+// --- Fréquentation : compteurs anonymes en mémoire (14 jours) et en
+// PostgreSQL (90 jours), sans identifiant de joueur dans la table agrégée.
+// L'interface reste /admin/stats?key=..., protégée par ADMIN_STATS_KEY. ---
+const usageMetrics = require("./lib/usage-metrics");
 const USAGE_EVENTS = new Set([
+  ...usageMetrics.COMPLETION_EVENTS,
   "visit",
   "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
   "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce", "solo:petitbac",
@@ -1206,8 +1230,31 @@ const usageDays = new Map(); // dateKey -> { events: Map, uniques: Set }
 const USAGE_MAX_DAYS = 14;
 const USAGE_MAX_UNIQUES = 5000;
 const usageBootedAt = new Date();
+const usageMetricsReady = pgPool ? authDbReady.then(async () => {
+  await usageMetrics.ensureTable(pgPool);
+  await usageMetrics.prune(pgPool);
+  return true;
+}).catch((error) => {
+  console.warn("[usage] PostgreSQL aggregate counters unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+if (pgPool) {
+  const cleanup = setInterval(() => {
+    void usageMetricsReady.then((ready) => ready ? usageMetrics.prune(pgPool) : null).catch((error) => {
+      console.warn("[usage] aggregate cleanup failed:", String(error.message || error).slice(0, 160));
+    });
+  }, 24 * 3600000);
+  cleanup.unref?.();
+}
 
+function pruneUsageMemory() {
+  const cutoff = usageMetrics.startDay(USAGE_MAX_DAYS);
+  for (const day of usageDays.keys()) if (day < cutoff) usageDays.delete(day);
+}
+const usageMemoryCleanup = setInterval(pruneUsageMemory, 24 * 3600000);
+usageMemoryCleanup.unref?.();
 function getUsageDay(key) {
+  pruneUsageMemory();
   if (!usageDays.has(key)) {
     while (usageDays.size >= USAGE_MAX_DAYS) usageDays.delete(usageDays.keys().next().value);
     usageDays.set(key, { events: new Map(), uniques: new Set() });
@@ -1222,6 +1269,9 @@ function recordUsage(event, uid) {
   day.events.set(event, (day.events.get(event) || 0) + 1);
   if (typeof uid === "string" && /^[a-z0-9-]{8,40}$/i.test(uid) && day.uniques.size < USAGE_MAX_UNIQUES) day.uniques.add(uid);
   console.log("[usage]", JSON.stringify({ d: key, e: event }));
+  // Only counters go into PostgreSQL; never persist a UID, IP, account, or payload.
+  if (pgPool) void usageMetricsReady.then((ready) => ready ? usageMetrics.increment(pgPool, event, key) : null)
+    .catch((error) => console.warn("[usage] aggregate write failed:", String(error.message || error).slice(0, 160)));
 }
 
 // Garde-fou simple : 120 événements/minute par IP.
@@ -1249,6 +1299,7 @@ app.get("/admin/stats", async (req, res) => {
   if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
   let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
+  let aggregateHtml = "<p>Compteurs quotidiens persistants indisponibles.</p>";
   if (pgPool) {
     try {
       const vt = await pgPool.query("SELECT COALESCE(SUM(hits),0)::int AS total FROM visits");
@@ -1256,6 +1307,24 @@ app.get("/admin/stats", async (req, res) => {
       visitTotalHtml = `<h2 style="margin-top:24px">Visites (persistées en base — survivent aux redéploiements)</h2><p>Total cumulé : <b style="font-size:1.6rem;color:#2f76ff">${vt.rows[0].total}</b> chargements de page.</p><table><thead><tr><th>Jour</th><th>Visites</th></tr></thead><tbody>${vd.rows.map((r) => `<tr><th>${r.d}</th><td>${r.hits}</td></tr>`).join("")}</tbody></table>`;
     } catch (e) { visitTotalHtml = "<p>(compteur persistant indisponible : " + e.message + ")</p>"; }
   }
+  try {
+    if (await usageMetricsReady) {
+      const metrics = await usageMetrics.recent(pgPool, 14);
+      const summary = usageMetrics.summarizeModes(metrics, USAGE_LABELS);
+      const rows = summary.map((row) => {
+        const name = String(row.label).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
+        return `<tr><th>${name}</th><td>${row.launches}</td><td>${row.finishInstrumented ? row.completions : "—"}</td><td>${row.finishInstrumented ? row.wins : "—"}</td><td>${row.finishInstrumented ? row.losses : "—"}</td></tr>`;
+      }).join("");
+      aggregateHtml = '<h2 style="margin-top:24px">Modes joués — 14 derniers jours (base persistante)</h2>' +
+        '<p>Événements déclarés par les navigateurs : démarrages et manches conclues, pas des personnes uniques. Un mode peut comporter plusieurs manches par lancement ; <b>ces totaux ne sont pas des taux de conversion ni de rétention</b>. Aucune réponse de jeu, adresse IP ou identité n’est enregistrée dans les agrégats (conservés 90 jours maximum).</p>' +
+        '<table><thead><tr><th>Mode</th><th>Démarrages</th><th>Fins</th><th>Victoires</th><th>Défaites</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="5">Aucune partie suivie dans cette période.</td></tr>') + '</tbody></table>';
+    }
+  } catch (error) {
+    console.warn("[usage] aggregate read failed:", String(error.message || error).slice(0, 160));
+    aggregateHtml = "<p>Impossible de lire les agrégats du moment.</p>";
+  }
+  pruneUsageMemory();
   const dayKeys = [...usageDays.keys()].sort().slice(-7);
   const events = [...USAGE_EVENTS].filter((e) => dayKeys.some((k) => usageDays.get(k).events.has(e)));
   const cell = (v) => `<td>${v || ""}</td>`;
@@ -1266,7 +1335,7 @@ app.get("/admin/stats", async (req, res) => {
   const uniqueRow = `<tr><th>Visiteurs uniques</th>${dayKeys.map((k) => cell(usageDays.get(k).uniques.size)).join("")}<td class="t">—</td></tr>`;
   res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
 <style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
-</head><body><h1>Pokédle — fréquentation</h1>${visitTotalHtml}
+</head><body><h1>Pokédle — fréquentation</h1>${visitTotalHtml}${aggregateHtml}
 <p>Compteurs en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (remis à zéro à chaque redémarrage de l'instance — les événements restent tracés dans les logs Render, préfixe <code>[usage]</code>).</p>
 <table><thead><tr><th>Événement</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${uniqueRow}${rows || ""}</tbody></table>
 ${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);

@@ -5,6 +5,8 @@ on:
     paths:
       - "App/**"
       - ".github/workflows/game-tests.yml"
+      # CI-only changes must still validate the Node test suite.
+      - ".github/workflows/browser-quality.yml"
 
 permissions:
   contents: read
@@ -23,6 +25,6 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: App/package-lock.json
+      # package.json postinstall already builds the client during npm ci.
       - run: npm ci
-      - run: npm run build
       - run: npm test

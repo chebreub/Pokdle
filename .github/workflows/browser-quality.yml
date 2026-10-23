@@ -1,6 +1,9 @@
 name: Browser and database quality
 on:
   pull_request:
+    # Every push gets a focused smoke run; a ready-for-review transition
+    # requests the complete browser suite on the exact merge candidate.
+    types: [opened, reopened, synchronize, ready_for_review, labeled]
     paths: ['App/**', 'tools/**', '.github/workflows/browser-quality.yml']
   push:
     branches: [main]
@@ -14,7 +17,12 @@ concurrency:
 jobs:
   browser-database:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Official Playwright image already contains Chromium, WebKit and their
+    # Ubuntu system libraries. Pin the exact Python Playwright version below.
+    # This avoids ~7.5 minutes of apt packages on every clean runner.
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.55.0-noble
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16
@@ -25,7 +33,12 @@ jobs:
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      QA_DATABASE_URL: postgresql://qa:qa-local-only@localhost:5432/pokdle_qa
+      # Job container and PostgreSQL service share a Docker network.
+      # 'localhost' would address this job, not the PostgreSQL container.
+      QA_DATABASE_URL: postgresql://qa:qa-local-only@postgres:5432/pokdle_qa
+      # Full on push/main, manual dispatch, PR ready-for-review, or explicit
+      # "qa:full" label. All other PR updates run only a focused smoke suite.
+      QA_FULL: ${{ github.event_name != 'pull_request' || github.event.action == 'ready_for_review' || ((github.event.action == 'opened' || github.event.action == 'reopened') && !github.event.pull_request.draft) || (github.event.action == 'labeled' && github.event.label.name == 'qa:full') }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -39,65 +52,125 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      # Checkout is owned by the host runner user while the official
+      # Playwright image runs our trusted CI scripts as root. Trust only this
+      # checked-out repository path (not '*') for the remaining Git commands.
+      - name: Trust GitHub checkout path in job container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Verify checkout for container commands
+        run: |
+          echo "Workspace: $GITHUB_WORKSPACE; working directory: $PWD"
+          test -d "$GITHUB_WORKSPACE/.git"
+          git -C "$GITHUB_WORKSPACE" rev-parse --show-toplevel
+          git -C "$GITHUB_WORKSPACE" rev-parse HEAD
       - name: Select relevant QA scope
         id: scope
         env:
           QA_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python tools/daily_scope.py
+      - name: Select focused PR browser smoke
+        id: smoke
+        env:
+          QA_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python -m unittest tools/test_ci_smoke_scope.py tools/test_playwright_container.py
+          python tools/ci_smoke_scope.py
+      - name: Record QA revision
+        run: |
+          mkdir -p quality-artifacts
+          git -C "$GITHUB_WORKSPACE" rev-parse HEAD > quality-artifacts/revision.txt
       - name: Install application dependencies
         run: npm ci
         working-directory: App
-      - name: Build and unit/database tests
-        run: |
-          mkdir -p ../quality-artifacts
-          git rev-parse HEAD > ../quality-artifacts/revision.txt
-          npm run build
-          if [ '${{ steps.scope.outputs.focused }}' = 'true' ]; then node --test test/daily*.test.js > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }; else npm test > ../quality-artifacts/unit-tests.log 2>&1 || { tail -100 ../quality-artifacts/unit-tests.log; exit 1; }; fi
-          tail -12 ../quality-artifacts/unit-tests.log
+      - name: Isolated PostgreSQL integration tests
+        # Game regression tests already runs the full Node unit suite on PRs.
+        # Keep real PostgreSQL checks here; never connect to production.
+        if: env.QA_FULL == 'true' || steps.smoke.outputs.db == 'true'
         working-directory: App
-      - name: Install browser QA dependencies
         run: |
-          python -m pip install playwright==1.55.0
-          python -m playwright install --with-deps chromium webkit
+          node --test test/usage-metrics.test.js test/daily-petitbac.test.js test/daily-wordle.test.js test/leaderboard-store.test.js test/daily-grid.test.js test/egg-mystery.test.js > ../quality-artifacts/postgres-tests.log 2>&1 || { tail -100 ../quality-artifacts/postgres-tests.log; exit 1; }
+          tail -12 ../quality-artifacts/postgres-tests.log
+      - name: Full Node regression after merge to main
+        if: github.event_name == 'push'
+        working-directory: App
+        run: npm test
+      - name: Install Python Playwright client
+        if: env.QA_FULL == 'true' || steps.smoke.outputs.suite != 'none'
+        run: python -m pip install --disable-pip-version-check playwright==1.55.0
+      - name: Verify preinstalled Chromium and WebKit
+        if: env.QA_FULL == 'true' || steps.smoke.outputs.suite != 'none'
+        run: |
+          python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+
+          print("Playwright browser path:", os.environ.get("PLAYWRIGHT_BROWSERS_PATH"))
+          with sync_playwright() as playwright:
+              for name in ("chromium", "webkit"):
+                  browser = getattr(playwright, name).launch()
+                  print("Verified", name, browser.version)
+                  browser.close()
+          PY
+      - name: Browser smoke for changed PR area
+        if: env.QA_FULL != 'true' && steps.smoke.outputs.suite != 'none'
+        env:
+          SMOKE_SUITE: ${{ steps.smoke.outputs.suite }}
+        run: |
+          case "$SMOKE_SUITE" in
+            solo) python tools/solo_modes_quality.py ;;
+            daily) python tools/wordle_quality.py && python tools/dossier_quality.py ;;
+            party) python tools/party_mobile_quality.py ;;
+            general) python tools/guess_flow_quality.py ;;
+            *) echo "Unsupported smoke scope: $SMOKE_SUITE"; exit 1 ;;
+          esac
       - name: Verify Party mobile touch actions
-        if: steps.scope.outputs.focused != 'true'
+        if: env.QA_FULL == 'true'
         run: python tools/party_mobile_quality.py
+      - name: Verify seasonal decorations and gameplay isolation
+        if: env.QA_FULL == 'true'
+        run: python tools/halloween_quality.py
       - name: Verify consecutive guesses on desktop and touch browsers
+        if: env.QA_FULL == 'true'
         run: python tools/guess_flow_quality.py
       - name: Verify daily Wordle on desktop and touch browsers
+        if: env.QA_FULL == 'true'
         run: python tools/wordle_quality.py
       - name: Verify daily Dossier on desktop and touch browsers
+        if: env.QA_FULL == 'true'
         run: python tools/dossier_quality.py
       - name: Verify daily recognition and journey summary
-        if: steps.scope.outputs.focused == 'true' && steps.scope.outputs.maintenance != 'true'
+        if: env.QA_FULL == 'true' && steps.scope.outputs.focused == 'true' && steps.scope.outputs.maintenance != 'true'
         run: python tools/challenge_quality.py
       - name: Verify the Grille du jour bonus
-        if: steps.scope.outputs.maintenance != 'true'
+        if: env.QA_FULL == 'true' && steps.scope.outputs.maintenance != 'true'
         run: python tools/grid_quality.py
       - name: Verify maintenance home, Quiz, League launch and Daily counter
-        if: steps.scope.outputs.maintenance == 'true'
+        if: env.QA_FULL == 'true' && steps.scope.outputs.maintenance == 'true'
         run: python tools/daily_maintenance_quality.py
       - name: Verify browser journeys at six viewport widths
-        if: steps.scope.outputs.focused != 'true'
+        if: env.QA_FULL == 'true'
         run: python tools/browser_quality.py --output quality-artifacts/browser
+      - name: Verify four polished solo games on phone and desktop
+        if: env.QA_FULL == 'true'
+        run: python tools/solo_modes_quality.py
       - name: Verify an actual two-browser Party Room game
-        if: steps.scope.outputs.focused != 'true'
+        if: env.QA_FULL == 'true'
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
       - name: Verify a two-browser Petit Bac round and the solo sheet
-        if: steps.scope.outputs.focused != 'true'
+        if: env.QA_FULL == 'true'
         run: python tools/petitbac_quality.py
       - name: Capture original design at matching viewports
-        if: startsWith(github.head_ref, 'codex/structure-')
+        if: env.QA_FULL == 'true' && startsWith(github.head_ref, 'codex/structure-')
         run: python tools/structure_before.py --output before-artifacts
       - name: Dependency audit
-        if: always()
+        if: always() && env.QA_FULL == 'true'
         working-directory: App
         run: |
           mkdir -p ../quality-artifacts
           npm audit --audit-level=high --json > ../quality-artifacts/dependency-audit.json
       - name: Ensure QA did not modify tracked source files
         if: always()
-        run: git diff --exit-code && git diff --cached --exit-code
+        run: git -C "$GITHUB_WORKSPACE" diff --exit-code && git -C "$GITHUB_WORKSPACE" diff --cached --exit-code
       - name: Save reports and full-size screenshots
         if: always()
         uses: actions/upload-artifact@v5

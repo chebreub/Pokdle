@@ -135,6 +135,7 @@ function openHigherLowerMode() {
 }
 
 function startHigherLowerMode(mode) {
+  if (higherLowerIsPartyRound() && (partySession?.completed || partySession?.roundResolved)) return;
   trackUsage("solo:higherlower");
   if (!higherLowerState) higherLowerState = createHigherLowerState(mode);
   higherLowerState.mode = mode === "rush60" ? "rush60" : "infinite";
@@ -229,7 +230,39 @@ function answerHigherLower(choice) {
   }, higherLowerState.mode === "rush60" ? 900 : 1800);
 }
 
+function higherLowerIsPartyRound() {
+  // Party controls own continuation even after a round has finished.
+  return typeof partySession !== "undefined" && partySession?.currentModeKey === "higherlower";
+}
+
+function focusHigherLowerResult() {
+  if (higherLowerIsPartyRound()) return;
+  const result = document.querySelector("#higher-lower-root .higher-lower-gameover");
+  if (!result) return;
+  result.focus({ preventScroll: true });
+  const mobile = window.matchMedia?.("(max-width: 640px)")?.matches;
+  const target = mobile ? result.querySelector(".higher-lower-final-actions") || result : result;
+  target.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    // Center the (four stacked) result actions within the unobstructed mobile viewport.
+    // End-alignment places the last action underneath the fixed mobile tabbar.
+    block: "center",
+  });
+}
+
+function replayHigherLowerGame() {
+  if (!higherLowerState || higherLowerState.phase !== "gameover" || higherLowerIsPartyRound()) return;
+  // Reuse the finished format; the existing records, scoring and timers stay unchanged.
+  const mode = higherLowerState.mode;
+  if (mode !== "infinite" && mode !== "rush60") return;
+  clearHigherLowerTimeouts();
+  clearHigherLowerRushInterval();
+  higherLowerState = createHigherLowerState(mode);
+  startHigherLowerMode(mode);
+}
+
 function restartHigherLowerGame() {
+  if (higherLowerIsPartyRound()) return;
   if (!higherLowerState) return openHigherLowerMode();
   if (higherLowerState.mode === "versus" && higherLowerState.room) {
     return leaveHigherLowerRoom();
@@ -254,6 +287,9 @@ function renderHigherLowerScreen() {
   if (!root) return;
   const state = higherLowerState;
   if (!state) { root.innerHTML = ""; return; }
+  const isPartyRound = higherLowerIsPartyRound();
+  document.querySelector('#screen-higher-lower .ranking-head-actions [data-action="restartHigherLowerGame"]')
+    ?.classList.toggle("hidden", isPartyRound);
   if (state.phase === "lobby") {
     root.innerHTML = `
       <div class="higher-lower-lobby">
@@ -372,7 +408,7 @@ function renderHigherLowerScreen() {
       ? `Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} en 60 secondes.`
       : `Tu as fait <b>${state.score}</b> bonne${state.score > 1 ? "s" : ""} réponse${state.score > 1 ? "s" : ""} d'affilée.`;
     root.innerHTML = `
-      <div class="higher-lower-gameover">
+      <div class="higher-lower-gameover" role="region" aria-label="Résultat Higher or Lower" tabindex="-1">
         <h3>${title}</h3>
         <p>${desc}</p>
         <p class="higher-lower-record">${isRecord ? "🏆 Nouveau record !" : `Record actuel : <b>${refScore}</b>`}</p>
@@ -381,12 +417,14 @@ function renderHigherLowerScreen() {
           <div class="higher-lower-final-vs">VS</div>
           <div class="higher-lower-card-mini ${state.lastCorrect ? "is-correct" : "is-wrong"}"><img src="${escapeHtml(rightSprite)}" alt="${escapeHtml(state.right.pokemon.name)}" /><span>${escapeHtml(state.right.pokemon.name)}</span><b>${statMeta.icon} ${state.right.statValue}</b></div>
         </div>` : ""}
-        <div class="higher-lower-final-actions">
-          <button class="btn-red" type="button" data-action="restartHigherLowerGame">Rejouer</button>
+        ${isPartyRound ? "" : `<div class="higher-lower-final-actions">
+          <button class="btn-red" type="button" data-action="replayHigherLowerGame">↻ Rejouer ${isRush ? "60 s" : "en infini"}</button>
+          <button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu →</button>
           <button class="btn-ghost" type="button" data-action="shareHigherLowerResult">📋 Copier</button>
           <button class="btn-ghost" type="button" data-action="downloadHigherLowerImage">💾 Image</button>
-        </div>
+        </div>`}
       </div>`;
+    if (!isPartyRound) focusHigherLowerResult();
     return;
   }
   let scoreHtml;
@@ -424,6 +462,8 @@ function renderHigherLowerScreen() {
       `}
     </div>`;
 }
+
+window.replayHigherLowerGame = replayHigherLowerGame;
 
 // === HIGHER OR LOWER — Versus 1v1 multi ===
 function startHigherLowerVersusFromLobby() {
@@ -910,6 +950,24 @@ function renderTypeComboScreen() {
     return;
   }
 }
+function speedrunIsPartyRound() {
+  // Party controls still own the last round once the session is completed.
+  return typeof partySession !== "undefined" && partySession?.currentModeKey === "speedrun";
+}
+
+function focusSpeedrunResult() {
+  if (speedrunIsPartyRound()) return;
+  const result = document.querySelector("#speedrun-root .speedrun-gameover");
+  if (!result) return;
+  result.focus({ preventScroll: true });
+  const onMobile = window.matchMedia?.("(max-width: 640px)")?.matches;
+  const target = onMobile ? result.querySelector(".speedrun-result-actions") || result : result;
+  target.scrollIntoView({
+    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block: onMobile ? "end" : "center",
+  });
+}
+
 function openSpeedrunMode() {
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
   if (pool.length < 30) return showToast("Pool Pokémon insuffisant pour Speedrun.");
@@ -925,6 +983,7 @@ function openSpeedrunMode() {
 }
 
 function startSpeedrunGame() {
+  if (speedrunIsPartyRound() && (partySession?.completed || partySession?.roundResolved)) return;
   trackUsage("solo:speedrun");
   if (!speedrunState) return;
   const pool = (Array.isArray(POKEMON_LIST) ? POKEMON_LIST : []).filter((p) => Number(p.id) < 10000 && p.sprite);
@@ -1009,7 +1068,8 @@ function speedrunSkip() {
 }
 
 function finalizeSpeedrunGame() {
-  if (!speedrunState) return;
+  // Timer ticks/late callbacks cannot award records, XP or history twice.
+  if (!speedrunState || speedrunState.phase !== "playing") return;
   speedrunState.phase = "gameover";
   const isRecord = speedrunState.correct > speedrunState.highScore;
   if (isRecord && playerProfile) {
@@ -1029,13 +1089,23 @@ function finalizeSpeedrunGame() {
     });
   } catch (_e) {}
   renderSpeedrunScreen();
+  if (!speedrunIsPartyRound()) focusSpeedrunResult();
   notifyPartyRoundFromScreenMode(speedrunState.correct >= 10, `${speedrunState.correct} Pokémon en 60 s`);
 }
 
 function restartSpeedrunGame() {
+  if (speedrunIsPartyRound()) return;
   if (speedrunTimerId) clearInterval(speedrunTimerId);
+  speedrunTimerId = null;
   speedrunState = createSpeedrunState();
   renderSpeedrunScreen();
+}
+
+function replaySpeedrunGame() {
+  if (!speedrunState || speedrunState.phase !== "gameover" || speedrunIsPartyRound()) return;
+  // One action starts the next timed run, with the existing 60s/scoring rules.
+  restartSpeedrunGame();
+  startSpeedrunGame();
 }
 
 function shareSpeedrunResult() {
@@ -1065,6 +1135,7 @@ window.startSpeedrunGame = startSpeedrunGame;
 window.speedrunSubmitGuess = speedrunSubmitGuess;
 window.speedrunSkip = speedrunSkip;
 window.restartSpeedrunGame = restartSpeedrunGame;
+window.replaySpeedrunGame = replaySpeedrunGame;
 window.shareSpeedrunResult = shareSpeedrunResult;
 window.downloadSpeedrunImage = downloadSpeedrunImage;
 
@@ -1073,6 +1144,9 @@ function renderSpeedrunScreen() {
   if (!root) return;
   const state = speedrunState;
   if (!state) { root.innerHTML = ""; return; }
+  const isPartyRound = speedrunIsPartyRound();
+  document.querySelector('#screen-speedrun .ranking-head-actions [data-action="restartSpeedrunGame"]')
+    ?.classList.toggle("hidden", isPartyRound);
   if (state.phase === "lobby") {
     root.innerHTML = `
       <div class="speedrun-lobby">
@@ -1115,7 +1189,7 @@ function renderSpeedrunScreen() {
   if (state.phase === "gameover") {
     const isRecord = state.correct > 0 && state.correct >= state.highScore;
     root.innerHTML = `
-      <div class="speedrun-gameover">
+      <div class="speedrun-gameover" tabindex="-1" role="region" aria-label="Résultat Speedrun Pokédex">
         <h3>⏱️ Temps écoulé</h3>
         <div class="speedrun-final-score">${state.correct}</div>
         <p class="speedrun-final-label">Pokémon devinés en 60s</p>
@@ -1125,11 +1199,14 @@ function renderSpeedrunScreen() {
           <div><span>Record perso</span><b>${state.highScore}</b></div>
         </div>
         ${isRecord ? '<div class="speedrun-record-flash">🏆 NOUVEAU RECORD !</div>' : ""}
-        <div class="higher-lower-final-actions">
-          <button class="btn-blue" type="button" data-action="restartSpeedrunGame">Rejouer</button>
+        ${isPartyRound ? "" : `<div class="speedrun-result-actions" role="group" aria-label="Après le Speedrun">
+          <button class="btn-blue" type="button" data-action="replaySpeedrunGame">↻ Rejouer maintenant</button>
+          <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+        </div>
+        <div class="speedrun-share-actions" role="group" aria-label="Partager mon résultat">
           <button class="btn-ghost" type="button" data-action="shareSpeedrunResult">📋 Copier</button>
           <button class="btn-ghost" type="button" data-action="downloadSpeedrunImage">💾 Image</button>
-        </div>
+        </div>`}
       </div>`;
     return;
   }
@@ -1248,8 +1325,26 @@ function openPokeConnectionsMode() {
   renderPokeConnectionsScreen();
 }
 
+function pokeConnectionsIsPartyRound() {
+  // A finished Party round is still owned by Party, even once active=false.
+  return typeof partySession !== "undefined" && partySession?.currentModeKey === "connections";
+}
+
+function focusPokeConnectionsSurface(selector, block = "start") {
+  const target = document.querySelector?.(selector);
+  if (!target) return;
+  target.focus?.({ preventScroll: true });
+  target.scrollIntoView?.({
+    behavior: typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+    block,
+  });
+}
+
 function restartPokeConnectionsGame() {
+  // Never allow a solo restart to escape the Party controller.
+  if (pokeConnectionsIsPartyRound()) return;
   openPokeConnectionsMode();
+  focusPokeConnectionsSurface("#poke-connections-root .poke-connections-board");
 }
 
 function togglePokeConnectionsTile(tileIndex) {
@@ -1321,6 +1416,10 @@ function submitPokeConnectionsGuess() {
     }
   }
   renderPokeConnectionsScreen();
+  if ((pokeConnectionsState.phase === "won" || pokeConnectionsState.phase === "lost")
+      && !pokeConnectionsIsPartyRound()) {
+    focusPokeConnectionsSurface("#poke-connections-root .poke-connections-final");
+  }
 }
 
 function renderPokeConnectionsScreen() {
@@ -1357,17 +1456,26 @@ function renderPokeConnectionsScreen() {
   const mistakeDots = Array.from({ length: POKE_CONNECTIONS_MAX_MISTAKES }, (_, i) => `<span class="poke-connections-mistake-dot ${i < mistakes ? "is-used" : ""}"></span>`).join("");
   const shakeClass = (Date.now() - state.lastShake < 700) ? "is-shaking" : "";
   const selectionCopy = selected.size === 4 ? "Groupe prêt à valider" : selected.size + " / 4 sélectionnés";
+  const partyRound = pokeConnectionsIsPartyRound();
+  // Hide the always-present header restart in Party as well as the final CTAs.
+  document.querySelector?.('#screen-poke-connections .ranking-head-actions [data-action="restartPokeConnectionsGame"]')
+    ?.classList?.toggle("hidden", partyRound);
+  const soloActions = partyRound ? "" : `
+      <div class="poke-connections-final-actions" role="group" aria-label="Après le puzzle">
+        <button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">↻ Nouveau puzzle</button>
+        <button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un autre jeu</button>
+      </div>`;
   let footer = "";
 
   if (phase === "won") {
-    footer = `<div class="poke-connections-final is-won"><span class="poke-connections-final-kicker">PUZZLE RÉSOLU</span><h3>Les 4 connexions sont trouvées.</h3><p>${mistakes === 0 ? "Parfait, aucune erreur." : mistakes + " erreur" + (mistakes > 1 ? "s" : "") + " avant la solution."}</p><button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle →</button></div>`;
+    footer = `<div class="poke-connections-final is-won" role="region" aria-label="Résultat Poké-Connections" tabindex="-1"><span class="poke-connections-final-kicker">PUZZLE RÉSOLU</span><h3>Les 4 connexions sont trouvées.</h3><p>${mistakes === 0 ? "Parfait, aucune erreur." : mistakes + " erreur" + (mistakes > 1 ? "s" : "") + " avant la solution."}</p>${soloActions}</div>`;
   } else if (phase === "lost") {
     const remainingGroups = puzzle.groups
       .map((g, idx) => ({ g, idx }))
       .filter(({ idx }) => !foundGroupIdx.has(idx))
       .map(({ g, idx }) => renderFoundGroup(g, idx, true))
       .join("");
-    footer = `<div class="poke-connections-final is-lost"><span class="poke-connections-final-kicker">PARTIE TERMINÉE</span><h3>Les 4 erreurs sont utilisées.</h3><p>Voici les connexions qui restaient à trouver.</p>${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}<button class="btn-blue" type="button" data-action="restartPokeConnectionsGame">Nouveau puzzle →</button></div>`;
+    footer = `<div class="poke-connections-final is-lost" role="region" aria-label="Résultat Poké-Connections" tabindex="-1"><span class="poke-connections-final-kicker">PARTIE TERMINÉE</span><h3>Les 4 erreurs sont utilisées.</h3><p>Voici les connexions qui restaient à trouver.</p>${soloActions}${remainingGroups ? `<div class="poke-connections-reveal-groups">${remainingGroups}</div>` : ""}</div>`;
   } else {
     footer = `<div class="poke-connections-action-zone">
       <div class="poke-connections-selection-status"><span>${selectionCopy}</span><b>${selected.size}/4</b></div>
@@ -1381,7 +1489,7 @@ function renderPokeConnectionsScreen() {
   }
 
   root.innerHTML = `
-    <div class="poke-connections-board">
+    <div class="poke-connections-board" tabindex="-1" role="region" aria-label="Grille Poké-Connections">
       <div class="poke-connections-status">
         <div><span class="poke-connections-status-label">ERREURS</span><span class="poke-connections-mistake-dots">${mistakeDots}</span></div>
         <div><span class="poke-connections-status-label">PROGRESSION</span><b>${foundGroupIdx.size} / 4 groupes</b></div>
@@ -1880,7 +1988,11 @@ function buildMysteryBattleClues(secret, stats) {
   return clues;
 }
 
+let mysteryClueRequestVersion = 0;
 async function prepareMysteryClues(secret) {
+  // A previous fetch must never overwrite the clues of a newer mystery round,
+  // even if two successive secrets happen to have the same Pokémon ID.
+  const version = ++mysteryClueRequestVersion;
   mysteryClues = [
     { label: "Type", value: secret.type1 + (secret.type2 ? " / " + secret.type2 : "") },
     { label: "PV", value: "Chargement..." },
@@ -1893,12 +2005,15 @@ async function prepareMysteryClues(secret) {
   ];
   updateMysteryPanel(false);
 
-  const stats = await fetchBattleStats(secret);
-  mysteryClues = buildMysteryBattleClues(secret, stats);
+  let stats = null;
+  try { stats = await fetchBattleStats(secret); } catch (_error) { /* unavailable API => visible '?' values */ }
+  if (version !== mysteryClueRequestVersion || gameMode !== "mystery" ||
+      !secretPokemon || secretPokemon.id !== secret.id) return;
 
-  if (gameMode === "mystery" && secretPokemon && secretPokemon.id === secret.id && !gameOver) {
-    updateMysteryPanel(false);
-  }
+  mysteryClues = buildMysteryBattleClues(secret, stats);
+  // A player can finish before PokeAPI responds. Update the already-revealed
+  // answer too; otherwise its stats remain stuck on "Chargement...".
+  updateMysteryPanel(Boolean(gameOver));
 }
 
 function getMysteryStatMeta(label) {
@@ -2269,6 +2384,25 @@ function renderQuizMeta() {
   }
 }
 
+let quizResultSnapshot = null;
+function renderQuizEndSummary(xpReward, recordBonus, newRecord) {
+  const panel = document.getElementById("quiz-end-card");
+  if (!panel) return;
+  const total = quizQuestions.length;
+  const accuracy = total ? Math.round(quizScore * 100 / total) : 0;
+  document.getElementById("quiz-end-score").textContent = quizScore + " / " + total;
+  document.getElementById("quiz-end-accuracy").textContent = accuracy + " % de bonnes réponses";
+  document.getElementById("quiz-end-good").textContent = String(quizScore);
+  document.getElementById("quiz-end-bad").textContent = String(total - quizScore);
+  document.getElementById("quiz-end-xp").textContent = "+" + (xpReward + recordBonus) + " XP";
+  document.getElementById("quiz-end-record").textContent = newRecord
+    ? "🏆 Nouveau record personnel !" : "Meilleur score : " + (Number(playerProfile?.quizHighScore) || 0);
+  panel.classList.remove("hidden");
+  document.getElementById("quiz-next-btn")?.classList.add("hidden");
+  panel.focus({preventScroll:true});
+  panel.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth",block:"center"});
+}
+
 function renderQuizQuestion() {
   if (gameMode !== "quiz") return;
 
@@ -2281,9 +2415,16 @@ function renderQuizQuestion() {
   if (!progress || !questionEl || !optionsEl || !feedbackEl || !nextBtn) return;
 
   renderQuizMeta();
+  const isPartyQuizRound = Boolean(partySession?.currentModeKey === "quiz");
+  const endCard = document.getElementById("quiz-end-card");
+  if (quizCurrentIndex < quizQuestions.length) {
+    quizResultSnapshot = null;
+    endCard?.classList.add("hidden");
+  }
 
   if (quizCurrentIndex >= quizQuestions.length) {
     gameOver = true;
+    let xpReward = 0, recordBonus = 0, newRecord = false;
     if (!quizSessionLogged) {
       quizSessionLogged = true;
       recordMatchHistory({
@@ -2293,26 +2434,35 @@ function renderQuizQuestion() {
         targetName: `Score ${quizScore}/${quizQuestions.length}`,
       });
       // XP : 5 par bonne réponse + bonus si > 50%
-      const xpReward = quizScore * 5 + (quizScore >= Math.ceil(quizQuestions.length / 2) ? 30 : 0);
+      xpReward = quizScore * 5 + (quizScore >= Math.ceil(quizQuestions.length / 2) ? 30 : 0);
       if (xpReward > 0) awardXp(xpReward, `Quiz ${quizScore}/${quizQuestions.length}`);
       // Record perso
       const prevRecord = Number(playerProfile?.quizHighScore) || 0;
       if (playerProfile && quizScore > prevRecord) {
+        newRecord = true;
         playerProfile.quizHighScore = quizScore;
         try { saveProfile(); } catch (_e) {}
-        if (quizScore >= Math.ceil(quizQuestions.length / 2)) awardXp(20, "Nouveau record Quiz");
+        if (quizScore >= Math.ceil(quizQuestions.length / 2)) {
+          recordBonus = 20;
+          awardXp(recordBonus, "Nouveau record Quiz");
+        }
       }
+      // Remember only the already-awarded amounts for this round. Rerendering
+      // the result (e.g. after switching away and back) must not show +0 XP.
+      quizResultSnapshot = { xpReward, recordBonus, newRecord };
     }
     progress.textContent = `Quiz terminé • Score final : ${quizScore} / ${quizQuestions.length}`;
     questionEl.textContent = "Fin du quiz";
     optionsEl.innerHTML = "";
     feedbackEl.textContent = "";
-    if (isPartySessionActive()) {
+    // Completed Party rounds must not expose solo replay controls.
+    if (isPartyQuizRound) {
+      endCard?.classList.add("hidden");
       nextBtn.classList.add("hidden");
       finishPartyRound(quizScore >= Math.ceil(quizQuestions.length / 2));
     } else {
-      nextBtn.classList.remove("hidden");
-      nextBtn.textContent = "Rejouer";
+      const result = quizResultSnapshot || {xpReward, recordBonus, newRecord};
+      renderQuizEndSummary(result.xpReward, result.recordBonus, result.newRecord);
     }
     return;
   }
@@ -2380,7 +2530,7 @@ function submitQuizAnswer(choiceIndex) {
 function nextQuizQuestion() {
   if (gameMode !== "quiz") return;
   if (gameOver) {
-    if (isPartySessionActive()) return;
+    if (partySession?.currentModeKey === "quiz") return;
     startQuizGame();
     return;
   }

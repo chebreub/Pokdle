@@ -181,3 +181,42 @@ test("incomplete selection is ignored and four wrong groups reveal the solution 
   assert.equal(events.filter(([type]) => type === "xp").length, 0);
   assert.deepEqual(events.filter(([type]) => type === "party"), [["party", false, "0/4 groupes"]]);
 });
+
+
+test("solo result keeps both continuation choices and completed Party cannot replay", () => {
+  const { context, root, events } = fixture(); context.openPokeConnectionsMode();
+  const original = context.testState();
+  for (let group = 0; group < 4; group++) {
+    select(context, original.puzzle.tiles.flatMap((t, idx) => t.groupIdx === group ? [idx] : []));
+    context.submitPokeConnectionsGuess();
+  }
+  assert.equal(original.phase, "won");
+  assert.match(root.innerHTML, /role="region" aria-label="Résultat Poké-Connections"/);
+  assert.match(root.innerHTML, /data-action="restartPokeConnectionsGame"/);
+  assert.match(root.innerHTML, /data-action="openAllModesScreen"/);
+  assert.match(root.innerHTML, /Choisir un autre jeu/);
+
+  context.partySession = { currentModeKey: "connections", completed: true, roundResolved: true };
+  context.renderPokeConnectionsScreen();
+  assert.doesNotMatch(root.innerHTML, /data-action="restartPokeConnectionsGame"/);
+  assert.doesNotMatch(root.innerHTML, /data-action="openAllModesScreen"/);
+  context.restartPokeConnectionsGame();
+  assert.equal(context.testState(), original, "finished Party must not create a new solo puzzle");
+  context.partySession = null;
+  context.renderPokeConnectionsScreen();
+  assert.match(root.innerHTML, /data-action="restartPokeConnectionsGame"/);
+  assert.equal(events.filter(([type]) => type === "xp").length, 1);
+});
+
+test("loss shows replay before remaining solutions without hiding any groups", () => {
+  const { context, root, events } = fixture(); context.openPokeConnectionsMode();
+  const state = context.testState();
+  const wrong = [0, 1, 2, 3].map((g) => state.puzzle.tiles.findIndex((t) => t.groupIdx === g));
+  for (let attempt = 0; attempt < 4; attempt++) { select(context, wrong); context.submitPokeConnectionsGuess(); }
+  assert.equal(state.phase, "lost");
+  const action = root.innerHTML.indexOf('class="poke-connections-final-actions"');
+  const reveals = root.innerHTML.indexOf('class="poke-connections-reveal-groups"');
+  assert.ok(action > 0 && reveals > action, "players should reach replay without scrolling past four revealed groups");
+  assert.equal((root.innerHTML.match(/is-reveal/g) || []).length, 4);
+  assert.equal(events.filter(([type]) => type === "xp").length, 0);
+});

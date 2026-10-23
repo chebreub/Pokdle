@@ -237,3 +237,128 @@
   from { background-position:100% 0; }
   to { background-position:0 0; }
 }
+
+/* Intrus : après la réponse, les actions sont au niveau de l'explication.
+   Les commandes de la Party Room restent gérées séparément. */
+#pokdle-app.design-refresh #screen-odd-one-out #odd-explanation-box {
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #screen-odd-one-out #odd-explanation-box:focus,
+#pokdle-app.design-refresh #screen-odd-one-out #odd-status:focus {
+  outline:none;
+}
+#pokdle-app.design-refresh #screen-odd-one-out #odd-explanation-box:focus-visible,
+#pokdle-app.design-refresh #screen-odd-one-out #odd-status:focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);
+  outline-offset:4px;
+  border-radius:12px;
+}
+#pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+#pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions > button {
+  flex:1 1 205px;
+  min-height:48px;
+}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+  }
+  #pokdle-app.design-refresh #screen-odd-one-out .odd-result-actions > button {
+    width:100%;
+    min-height:50px;
+  }
+}
+
+
+/* Duel de poids : explanation and replay together, clear of the mobile tabbar. */
+#pokdle-app.design-refresh #weight-box .weight-result-actions {
+  display:grid;
+  gap:12px;
+  margin-top:16px;
+  padding:16px;
+  border:1px solid var(--ui-line,rgba(47,118,255,.18));
+  border-radius:16px;
+  background:var(--ui-soft,#f5f8ff);
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #weight-box .weight-result-actions:focus {
+  outline:none;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-actions:focus-visible,
+#pokdle-app.design-refresh #weight-box #weight-status:focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);
+  outline-offset:4px;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-actions p {
+  margin:0;
+  font-weight:750;
+  line-height:1.45;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-buttons {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+#pokdle-app.design-refresh #weight-box .weight-result-buttons button {
+  width:100%;
+  min-height:48px;
+}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh #weight-box .weight-result-buttons {
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+  }
+  #pokdle-app.design-refresh #weight-box .weight-result-buttons button {
+    min-height:50px;
+  }
+}
+
+
+/* Classic Evolution / Ordre replay: scroll clues clear of fixed mobile UI. */
+#pokdle-app.design-refresh #screen-game :is(#evolution-box, #order-box) {
+  scroll-margin-block:20px calc(105px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #screen-game :is(#evolution-box, #order-box):focus {
+  outline:none;
+}
+#pokdle-app.design-refresh #screen-game :is(#evolution-box, #order-box):focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);
+  outline-offset:4px;
+}
+
+/* Quiz end card — summary stays above the fixed mobile navigation. */
+#pokdle-app.design-refresh #quiz-box .quiz-end-card {
+  display:grid;gap:14px;margin-top:16px;padding:18px;border:1px solid var(--ui-line,#e4dacc);
+  border-radius:18px;background:var(--ui-soft,#f7f8fc);
+  scroll-margin-block:20px calc(110px + env(safe-area-inset-bottom));
+}
+#pokdle-app.design-refresh #quiz-box .quiz-end-card.hidden {display:none!important;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-card:focus {outline:none;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-card:focus-visible {
+  outline:3px solid var(--ui-accent,#2f76ff);outline-offset:3px;
+}
+#pokdle-app.design-refresh #quiz-box .quiz-end-kicker {font-size:.72rem;font-weight:900;letter-spacing:.09em;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-heading h3 {margin:3px 0 8px;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-scoreline {display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-scoreline strong {font-size:clamp(1.7rem,4vw,2.3rem);font-variant-numeric:tabular-nums;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-stats {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-stats>div,
+#pokdle-app.design-refresh #quiz-box .quiz-end-rewards {
+  padding:12px;border-radius:12px;background:var(--ui-card,#fff);display:grid;gap:3px;
+}
+#pokdle-app.design-refresh #quiz-box .quiz-end-stats span,
+#pokdle-app.design-refresh #quiz-box .quiz-end-rewards span {font-size:.8rem;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-stats strong {font-size:1.3rem;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-rewards p {margin:3px 0 0;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+#pokdle-app.design-refresh #quiz-box .quiz-end-actions button {min-height:48px;width:100%;}
+@media(max-width:640px) {
+  #pokdle-app.design-refresh #quiz-box .quiz-end-actions {grid-template-columns:minmax(0,1fr);}
+  #pokdle-app.design-refresh #quiz-box .quiz-end-actions button {min-height:50px;}
+}

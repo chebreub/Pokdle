@@ -23,7 +23,7 @@ for(const mode of ['wordle','dossier'])test(mode+': answers use one transaction;
   };
   const db={query,connect:async()=>({query,release(){}})},app={get:(path,handler)=>routes.set('GET '+path,handler),post:(path,_middleware,handler)=>routes.set('POST '+path,handler)};
   const daily={state:async()=>upstream.push('daily')},wordle={ready:Promise.resolve(true),state:async()=>upstream.push('wordle')};
-  const options={app,express:{json:()=>()=>{}},db,secret,getUser:()=>null,readCookies:()=>({pokdle_daily:guest.cookie}),daily,wordle,pokemon:[{id:25,name:'Pikachu'},{id:4,name:'Salamèche'}]};
+  const options={app,express:{json:()=>()=>{}},db,secret,getUser:()=>null,readCookies:()=>({pokdle_daily:guest.cookie}),daily,wordle,pokemon:[{id:25,name:'Pikachu'},{id:4,name:'Salamèche'},{id:137,name:'Porygon'}]};
   if(mode==='wordle')mountWordleRoutes(options);else mountDossierRoutes(options);
   const invoke=async(method,body)=>{
     const res={headers:{},statusCode:200,set(name,value){this.headers[name]=value;return this;},cookie(){},status(code){this.statusCode=code;return this;},json(data){this.data=data;return this;}};
@@ -32,7 +32,7 @@ for(const mode of ['wordle','dossier'])test(mode+': answers use one transaction;
   };
   assert.equal((await invoke('GET')).data.ok,true);assert.deepEqual(upstream,mode==='wordle'?['daily']:['daily','wordle']);
   queries.length=0;upstream.length=0;
-  const body=mode==='wordle'?{day,accountId:null,pokemonId:4}:{day,accountId:null,index:0,choice:(questions[0].answer+1)%4};
+  const body=mode==='wordle'?{day,accountId:null,pokemonId:137}:{day,accountId:null,index:0,choice:(questions[0].answer+1)%4};
   let res=await invoke('POST',body);assert.equal(res.statusCode,200);assert.equal(res.data.ok,true);assert.deepEqual(upstream,[]);assert.ok(queries.length<=6,'Warm answer exceeded six SQL calls: '+queries.length);
   assert.ok(!queries.some(s=>s.includes('pg_advisory_xact_lock')),'Existing rounds must not serialize every player');
   if(mode==='wordle'){
@@ -42,5 +42,11 @@ for(const mode of ['wordle','dossier'])test(mode+': answers use one transaction;
   }
   assert.match(res.headers['Server-Timing'],new RegExp('^'+mode+';dur=\\d+(?:\\.\\d+)?'));
   assert.equal(mode==='wordle'?res.data.attempts:res.data.answered,1);
+  if(mode==='wordle'){
+    const rejected=await invoke('POST',{...body,pokemonId:4});
+    assert.equal(rejected.statusCode,400,'An unequal-length name must be rejected');
+    assert.equal(rejected.data.error,'invalid_length');
+    assert.equal(row.guessed.length,1,'A rejected guess must not update the saved round');
+  }
   res=await invoke('POST',body);assert.equal(mode==='wordle'?res.data.attempts:res.data.answered,1);assert.equal(res.data.duplicate,true);
 });
