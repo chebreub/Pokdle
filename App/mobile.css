@@ -18,7 +18,7 @@
   body:not(.theme-dark) .header-inner .header-top #global-nav { display: none !important; }
   .logo-home-btn { flex: 0 1 auto; min-width: 0; }
   .logo-row { gap: 8px !important; }
-  .logo-row h1 { font-size: 1.35rem !important; }
+  .logo-row .logo-wordmark { font-size: 1.35rem !important; }
   .pokeball-icon { width: 34px !important; height: 34px !important; flex-shrink: 0; }
   .header-inner .header-actions .header-action-btn { width: 44px !important; height: 44px !important; }
   .header-inner .header-top .header-actions { width: auto !important; min-width: 0; }
@@ -412,7 +412,7 @@
   .logo-row{
     gap:6px !important;
   }
-  .logo-row h1{
+  .logo-row .logo-wordmark{
     font-size:1.2rem !important;
   }
   .header-actions{
