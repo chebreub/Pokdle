@@ -2136,3 +2136,29 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
 #pokdle-app.theme-dark .support-kofi-btn, #pokdle-app.theme-dark .site-footer a.support-kofi-btn { background: #3a2a1c; border-color: #6b4a2c; color: #ffd9a8 !important; }
 #pokdle-app.theme-dark .journey-support { background: #241c16; border-color: #6b4a2c; }
 #pokdle-app.theme-dark .journey-support p { color: #e8d6c4; }
+
+/* Crawlable links from the home page to the game's descriptive pages.
+   Keep the existing JavaScript game buttons unchanged. */
+#screen-config .home-seo-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 15px;
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--ui-line, #e9dfd4);
+  font: 700 .83rem/1.5 Nunito, sans-serif;
+}
+#screen-config .home-seo-links span { color: var(--ui-muted, #776b63); }
+#screen-config .home-seo-links a {
+  color: var(--ui-ink, #2e2a33);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#screen-config .home-seo-links a:last-child { font-weight: 900; }
+#screen-config .home-seo-links a:hover { text-decoration-thickness: 2px; }
+#screen-config .home-seo-links a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
