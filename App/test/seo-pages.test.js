@@ -96,11 +96,12 @@ test('home describes the daily Pokémon break in its visible H1', () => {
 
   const hero = html.match(/<section class="pk-hero" id="daily-hero">([\s\S]*?)<\/section>/)?.[1];
   assert.ok(hero, 'daily hero exists on the home screen');
-  assert.match(hero, /<h1 class="pk-hero-title">Ta pause Pokémon du jour<\/h1>/);
+  assert.match(hero, /<h1 class="pk-hero-title">Le Pokémon du jour à deviner, et plein de mini-jeux Pokémon<\/h1>/);
   assert.equal((hero.match(/<h1\b/g) || []).length, 1, 'daily hero has a single H1');
-  assert.match(hero, /mini-jeux gratuits à découvrir/);
-  assert.match(hero, /résultats à comparer entre amis/);
+  assert.match(hero, /Ta pause Pokémon du jour/);
+  assert.match(hero, /défis entre amis\. Gratuit, sans pub, sans compte\./);
   assert.match(hero, /data-action="startDailyGame"/, 'original daily game action is preserved');
+  assert.ok(hero.indexOf('id="daily-hero-cta"') < hero.indexOf('class="pk-hero-chips"'), 'the main button comes before the day\'s progress');
 
   for (const label of [
     'Choisis ton mini-jeu Pokémon',
@@ -108,4 +109,13 @@ test('home describes the daily Pokémon break in its visible H1', () => {
     'Mini-jeux Pokémon en solo',
     'Défis Pokémon entre amis',
   ]) assert.ok(html.includes(label), label + ' is explicit for new visitors');
+});
+
+test('no script rewrites the home presentation, the day\'s state has its own line', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  assert.match(html, /<p class="pk-hero-note hidden" id="daily-hero-note"><\/p>/);
+  const src = path.join(__dirname, '../src');
+  for (const file of fs.readdirSync(src).filter(name => name.endsWith('.js'))) {
+    assert.doesNotMatch(fs.readFileSync(path.join(src, file), 'utf8'), /pk-hero-sub/, file + ' must leave the presentation alone');
+  }
 });

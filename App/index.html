@@ -148,7 +148,6 @@
         <div id="account-area" class="account-area" aria-live="polite"></div>
       </div>
     </div>
-    <p class="tagline">Devinez le Pokémon mystère !</p>
   </div>
 </header>
 <aside id="news-ticker" class="news-ticker" aria-label="Actualités de Pokédle" hidden><div class="news-ticker-track"></div></aside>
@@ -165,17 +164,19 @@
       <section class="pk-hero" id="daily-hero">
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
-          <h1 class="pk-hero-title">Ta pause Pokémon du jour</h1>
-          <p class="pk-hero-sub">Un Pokémon mystère à deviner chaque jour, des mini-jeux gratuits à découvrir et des résultats à comparer entre amis. Quelques minutes suffisent, sur téléphone ou PC.</p>
-          <div class="pk-hero-chips">
-            <span class="pk-chip pk-chip-fire" id="daily-hero-streak">🔥 Série : 0</span>
-            <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
-            <span class="pk-chip pk-chip-status hidden" id="daily-hero-status"></span>
-          </div>
+          <h1 class="pk-hero-title">Le Pokémon du jour à deviner, et plein de mini-jeux Pokémon</h1>
+          <!-- Presentation for new visitors: fixed text, the day's progress goes in #daily-hero-note. -->
+          <p class="pk-hero-sub">Ta pause Pokémon du jour : un Pokémon mystère à trouver avec des indices, puis des quiz et des défis entre amis. Gratuit, sans pub, sans compte.</p>
           <div class="pk-hero-cta-row">
             <button class="pk-cta" type="button" data-action="startDailyGame" id="daily-hero-cta">▶ Jouer au Pokémon du jour</button>
             <button class="pk-cta-ghost" type="button" data-action="openLeaderboardV2" data-args='["journey","today"]'>Classement du jour →</button>
           </div>
+          <div class="pk-hero-chips">
+            <span class="pk-chip pk-chip-fire hidden" id="daily-hero-streak">🔥 Série : 0</span>
+            <span class="pk-chip pk-chip-time" id="daily-hero-countdown">⏳ —</span>
+            <span class="pk-chip pk-chip-status hidden" id="daily-hero-status"></span>
+          </div>
+          <p class="pk-hero-note hidden" id="daily-hero-note"></p>
         </div>
         <div class="daily-notebook" id="daily-notebook" aria-label="Carnet du défi quotidien"></div>
       </section>
