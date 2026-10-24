@@ -923,12 +923,33 @@ function getMysteryApiId(secret) {
   return null;
 }
 
+// The base stats ship with the site (base-stats.json, built from PokeAPI by
+// tools/base-stats.js): Stat Mystère shows them at once instead of « Chargement… », and
+// a slow or unreachable PokeAPI no longer leaves only « ? ». PokeAPI stays the fallback.
+let localBaseStats = null;
+function loadLocalBaseStats() {
+  if (!localBaseStats) {
+    localBaseStats = fetch("base-stats.json")
+      .then((response) => (response.ok ? response.json() : {}))
+      .catch(() => { localBaseStats = null; return {}; });
+  }
+  return localBaseStats;
+}
+
 async function fetchBattleStats(secret) {
   const apiId = getMysteryApiId(secret);
   if (!apiId) return null;
 
   if (MYSTERY_STAT_CACHE.has(apiId)) {
     return MYSTERY_STAT_CACHE.get(apiId);
+  }
+
+  const local = (await loadLocalBaseStats())?.[String(apiId)];
+  if (Array.isArray(local) && local.length === 6 && local.every((value) => value > 0)) {
+    const [hp, attack, defense, spAttack, spDefense, speed] = local;
+    const parsed = { hp, attack, defense, spAttack, spDefense, speed };
+    MYSTERY_STAT_CACHE.set(apiId, parsed);
+    return parsed;
   }
 
   try {
