@@ -48,11 +48,22 @@ for (const file of ["style.css", "nav.css", "pokedex.css", "multiplayer.css", "h
   await minifyAsset(file, "css", { minify: true });
 }
 
+// Client Socket.IO servi depuis dist/ (minifié, compressé, cache d'un an) au lieu de
+// /socket.io/socket.io.js, que Socket.IO envoie avec max-age=0. Même paquet que le
+// serveur, donc même version.
+writeFileSync("dist/socket.io.min.js", readFileSync("node_modules/socket.io/client-dist/socket.io.min.js", "utf8").replace(/\n?\/\/# sourceMappingURL=\S+\s*$/, "\n"));
+
+// Une seule feuille de style bloquante au lieu de 21 : les dist/*.min.css liés par
+// index.html, recollés dans le même ordre, donc la même cascade.
+const source = readFileSync("index.html", "utf8");
+const cssLinks = [...source.matchAll(/^[ \t]*<link rel="stylesheet" href="dist\/([\w.-]+\.min\.css)">\n/gm)];
+writeFileSync("dist/app.min.css", cssLinks.map(([, file]) => readFileSync(`dist/${file}`, "utf8")).join("\n"));
+const html = cssLinks.reduce((page, [tag], i) => page.replace(tag, i ? "" : '  <link rel="stylesheet" href="dist/app.min.css">\n'), source);
+
 // Génère dist/index.html : mêmes contenus que index.html mais avec des URLs
 // versionnées (?v=<hash du contenu>) sur les assets dist/. Combiné au
 // Cache-Control immutable côté serveur, le navigateur ne re-télécharge un
 // asset que si son contenu a changé.
-const html = readFileSync("index.html", "utf8");
 const versioned = html.replace(/(["'])dist\/([\w.-]+\.min\.(?:js|css))\1/g, (_m, quote, file) => {
   const hash = createHash("md5").update(readFileSync(`dist/${file}`)).digest("hex").slice(0, 10);
   return `${quote}dist/${file}?v=${hash}${quote}`;

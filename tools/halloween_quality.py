@@ -216,15 +216,14 @@ async def run():
                     }''')
                     await page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
                     await assert_mobile_ornaments(page)
-                # All 24 files must actually decode, including the sixteen new PNGs.
+                # All 24 visitor files must actually decode; they all ship as WebP.
                 decoded = await page.evaluate('''async () => {
-                    const old = new Set([92,93,94,198,425,607,710,778]);
                     const ids = [92,93,94,198,200,302,353,354,355,425,429,430,442,477,479,562,570,607,609,708,709,710,778,855];
                     return Promise.all(ids.map(id => new Promise(resolve => {
                         const img = new Image();
                         img.onload = () => resolve(img.naturalWidth > 0);
                         img.onerror = () => resolve(false);
-                        img.src = '/img/halloween/' + id + (old.has(id) ? '.webp' : '.png');
+                        img.src = '/img/halloween/' + id + '.webp';
                     })));
                 }''')
                 assert len(decoded) == 24 and all(decoded), decoded

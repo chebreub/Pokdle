@@ -405,6 +405,8 @@
   #pokdle-app.design-refresh .mobile-tabbar { background: var(--header-bg) !important; border-top: 1px solid var(--ui-line) !important; box-shadow: 0 -4px 18px rgb(30 65 100 / 8%) !important; backdrop-filter: none; }
   #pokdle-app.design-refresh .mobile-tabbar button { color: var(--ui-muted) !important; font-weight: 500; border-radius: 10px; font-size: .75rem; }
   #pokdle-app.design-refresh .mobile-tabbar button.active { color: var(--ui-accent) !important; background: var(--ui-accent-soft) !important; }
+  /* The 9px tab label needs 4.5:1 on its pale blue pill: a deeper blue in the light theme. */
+  #pokdle-app.design-refresh:not(.theme-dark) .mobile-tabbar button.active { color: #3557BA !important; }
   #pokdle-app.design-refresh .site-footer { width: calc(100% - 24px); font-size: .8125rem; }
   #pokdle-app.design-refresh .higher-lower-pair { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; position: relative; }
   #pokdle-app.design-refresh .higher-lower-card-pokemon { min-width: 0; padding: 14px 8px !important; }
@@ -4971,7 +4973,7 @@
 #pokdle-app.design-refresh #screen-leaderboard { width:100%; max-width:1320px; margin:24px auto 56px; }
 #pokdle-app.design-refresh .leaderboard-page { padding:24px; border:1px solid var(--ui-line); border-radius:28px; background:var(--ui-surface); }
 #pokdle-app.design-refresh .leaderboard-page-bar { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
-#pokdle-app.design-refresh .leaderboard-page-bar h1 { margin:0; font:500 clamp(26px,4vw,36px)/1.2 Fredoka,sans-serif; color:var(--ui-ink); }
+#pokdle-app.design-refresh .leaderboard-page-bar h2 { margin:0; font:500 clamp(26px,4vw,36px)/1.2 Fredoka,sans-serif; color:var(--ui-ink); }
 @media (max-width:640px) {
   #pokdle-app.design-refresh #screen-leaderboard { margin:12px auto 96px; }
   #pokdle-app.design-refresh .leaderboard-page { padding:14px; border-radius:22px; }

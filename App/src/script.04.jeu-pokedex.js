@@ -3758,7 +3758,7 @@ function renderTeamBuilderSummary() {
     <div class="team-builder-synthesis-grid">
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
-          <h5>Vue d’ensemble équipe</h5>
+          <h3>Vue d’ensemble équipe</h3>
           <p>Lecture rapide de la construction actuelle et des grands repères de team.</p>
         </div>
         ${overviewHtml}
@@ -3767,7 +3767,7 @@ function renderTeamBuilderSummary() {
         <summary class="team-builder-analysis-summary">🔎 Voir l'analyse détaillée</summary>
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
-          <h5>Couvertures et faiblesses</h5>
+          <h3>Couvertures et faiblesses</h3>
           <p>Ce que la team encaisse déjà bien, et les types encore les plus dangereux.</p>
         </div>
         <div class="team-builder-summary-mini-grid">
@@ -3784,7 +3784,7 @@ function renderTeamBuilderSummary() {
       </section>
       <section class="team-builder-synthesis-card">
         <div class="team-builder-synthesis-head">
-          <h5>Rôles et angles morts</h5>
+          <h3>Rôles et angles morts</h3>
           <p>Répartition offensive actuelle, menaces bien pressées et points encore faibles.</p>
         </div>
         <div class="team-builder-summary-mini-grid">
@@ -4040,7 +4040,7 @@ function renderTeamBuilderComputedStats() {
   const header = `
     <div class="team-builder-computed-stats-head">
       <div>
-        <h5>Stats finales</h5>
+        <h4>Stats finales</h4>
         <p>Calcul au niveau 50 (standard VGC / Champions) selon base stats, nature, EV et IV.</p>
       </div>
       <span class="home-coming-badge">Niv. 50</span>

@@ -8920,7 +8920,7 @@ body.theme-dark #screen-config .home-progress-card{
   gap: 4px;
 }
 
-.team-builder-synthesis-head h5 {
+.team-builder-synthesis-head h3 {
   margin: 0;
   color: var(--strong-text);
   font-size: 0.92rem;
@@ -9261,7 +9261,7 @@ body.theme-dark #screen-config .home-progress-card{
   display: grid;
 }
 
-.team-builder-editor-section-head h5 {
+.team-builder-editor-section-head h4 {
   margin: 0;
   color: var(--strong-text);
   font-size: 0.96rem;
@@ -9403,7 +9403,7 @@ body.theme-dark #screen-config .home-progress-card{
   color: #95724a;
 }
 
-.home-builder-editor-head h4 {
+.home-builder-editor-head h3 {
   margin: 0;
   color: var(--strong-text);
   font-size: 0.98rem;
@@ -9441,7 +9441,7 @@ body.theme-dark #screen-config .home-progress-card{
   background: linear-gradient(180deg, rgba(238, 244, 249, 0.98), rgba(231, 237, 245, 0.94));
 }
 
-.team-builder-strategic .team-builder-editor-section-head h4 {
+.team-builder-strategic .team-builder-editor-section-head h3 {
   font-size: 0.94rem;
 }
 
@@ -9547,7 +9547,7 @@ body.theme-dark #screen-config .home-progress-card{
   gap: 12px;
 }
 
-.team-builder-computed-stats-head h5 {
+.team-builder-computed-stats-head h4 {
   margin: 0 0 4px;
   font-size: 0.94rem;
   color: #163661;
@@ -9625,7 +9625,7 @@ body.theme-dark .team-builder-computed-stats {
   background: rgba(22, 36, 63, 0.88);
 }
 
-body.theme-dark .team-builder-computed-stats-head h5,
+body.theme-dark .team-builder-computed-stats-head h4,
 body.theme-dark .team-builder-computed-stat strong,
 body.theme-dark .team-builder-computed-stats-total strong {
   color: #edf5ff;
@@ -9770,7 +9770,7 @@ body.theme-dark .team-builder-module .home-builder-slot.is-active .home-builder-
 }
 
 body.theme-dark .home-builder-slot-head,
-body.theme-dark .home-builder-editor-head h4,
+body.theme-dark .home-builder-editor-head h3,
 body.theme-dark .home-builder-slot-info strong {
   color: #edf5ff;
 }
@@ -9814,7 +9814,7 @@ body.theme-dark .team-builder-synthesis-card {
   background: linear-gradient(180deg, rgba(29, 48, 80, 0.9), rgba(22, 38, 64, 0.92));
 }
 
-body.theme-dark .team-builder-synthesis-head h5,
+body.theme-dark .team-builder-synthesis-head h3,
 body.theme-dark .team-builder-offense-stat strong {
   color: #edf5ff;
 }
@@ -9918,7 +9918,7 @@ body.theme-dark .team-builder-editor-status-badge {
   color: #ffe08d;
 }
 
-body.theme-dark .team-builder-editor-section-head h5 {
+body.theme-dark .team-builder-editor-section-head h4 {
   color: #edf5ff;
 }
 
@@ -10522,8 +10522,9 @@ body:not(.theme-dark) #screen-config .card, body:not(.theme-dark) #screen-config
   gap: 14px;
 }
 
-.team-builder-export-head h4 {
+.team-builder-export-head h3 {
   margin: 0 0 6px;
+  font-size: 1em;
   color: #1e3f6c;
 }
 
@@ -10561,7 +10562,7 @@ body.theme-dark .team-builder-export {
   border-color: rgba(96, 131, 194, 0.26);
 }
 
-body.theme-dark .team-builder-export-head h4 {
+body.theme-dark .team-builder-export-head h3 {
   color: #edf4ff;
 }
 
@@ -11919,7 +11920,7 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel {
 }
 
 body:not(.theme-dark) .card-title,
-body:not(.theme-dark) .team-builder-export-head h4,
+body:not(.theme-dark) .team-builder-export-head h3,
 body:not(.theme-dark) #screen-draft-arena .draft-panel h3 {
   color: #16385f !important;
   letter-spacing: 0.01em;
@@ -12269,7 +12270,7 @@ body:not(.theme-dark) #screen-draft-arena .draft-panel {
     inset 0 1px 0 rgba(255,255,255,0.78);
 }
 
-#screen-team-builder .team-builder-editor-section:focus-within .team-builder-editor-section-head h5 {
+#screen-team-builder .team-builder-editor-section:focus-within .team-builder-editor-section-head h4 {
   color: #204b82;
 }
 
@@ -12333,7 +12334,7 @@ body.theme-dark #screen-team-builder .home-builder-slot.is-active, body.theme-da
   color: #5a7396;
 }
 
-#screen-team-builder .home-builder-editor-head h4, #screen-team-builder .team-builder-editor-section-head h5, #screen-team-builder .team-builder-strategic .team-builder-editor-section-head h4, #screen-team-builder .team-builder-export-head h4, #screen-draft-arena .draft-panel h3, #screen-draft-arena .draft-team-card b {
+#screen-team-builder .home-builder-editor-head h3, #screen-team-builder .team-builder-editor-section-head h4, #screen-team-builder .team-builder-strategic .team-builder-editor-section-head h3, #screen-team-builder .team-builder-export-head h3, #screen-draft-arena .draft-panel h3, #screen-draft-arena .draft-team-card b {
   color: #163a68;
   letter-spacing: 0.01em;
 }
@@ -12475,7 +12476,7 @@ body.theme-dark #screen-team-builder .home-builder-editor-head p, body.theme-dar
   color: #bfd1eb;
 }
 
-body.theme-dark #screen-team-builder .home-builder-editor-head h4, body.theme-dark #screen-team-builder .team-builder-editor-section-head h5, body.theme-dark #screen-team-builder .team-builder-strategic .team-builder-editor-section-head h4, body.theme-dark #screen-team-builder .team-builder-export-head h4, body.theme-dark #screen-draft-arena .draft-panel h3, body.theme-dark #screen-draft-arena .draft-team-card b {
+body.theme-dark #screen-team-builder .home-builder-editor-head h3, body.theme-dark #screen-team-builder .team-builder-editor-section-head h4, body.theme-dark #screen-team-builder .team-builder-strategic .team-builder-editor-section-head h3, body.theme-dark #screen-team-builder .team-builder-export-head h3, body.theme-dark #screen-draft-arena .draft-panel h3, body.theme-dark #screen-draft-arena .draft-team-card b {
   color: #edf5ff;
 }
 
@@ -12789,9 +12790,9 @@ body.theme-dark #screen-draft-arena .draft-card {
   border-radius: 18px;
 }
 
-#screen-team-builder .team-builder-synthesis-head h5,
-#screen-team-builder .team-builder-computed-stats-head h5,
-#screen-team-builder .team-builder-export-head h4,
+#screen-team-builder .team-builder-synthesis-head h3,
+#screen-team-builder .team-builder-computed-stats-head h4,
+#screen-team-builder .team-builder-export-head h3,
 #screen-draft-arena .draft-summary-card b {
   letter-spacing: 0.01em;
 }

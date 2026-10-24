@@ -116,7 +116,7 @@ def main():
       expect(page.locator('#egg-clues .egg-clue:not(.is-locked)').count()==2 and page.locator('#egg-clues .egg-clue.is-locked').count()==3,'Egg does not show the unlocked and upcoming daily clues')
       expect('demain' in page.locator('#egg-next-clue').inner_text(),'Egg does not announce the clue of tomorrow')
       expect(page.locator('#egg-feed-list .egg-feed-clue time').count()==2,'Egg feed does not date the daily clues')
-      expect(page.locator('#screen-egg h1').evaluate('(e)=>getComputedStyle(e).color')=='rgb(46, 42, 51)','Egg heading is unreadable on its cream background')
+      expect(page.locator('#screen-egg .egg-title').evaluate('(e)=>getComputedStyle(e).color')=='rgb(46, 42, 51)','Egg heading is unreadable on its cream background')
       if width==390:
        toolbar_buttons=page.locator('#screen-egg .egg-toolbar>button').all()
        expect(abs(toolbar_buttons[0].bounding_box()['y']-toolbar_buttons[1].bounding_box()['y'])<2,'Egg mobile toolbar wastes two rows on navigation')
@@ -134,7 +134,7 @@ def main():
       expect(page.locator('#egg-form').is_hidden(),'Solved Egg still accepts guesses')
       page.screenshot(path=str(out/f'{width}-egg-solved.jpg'),quality=85,animations='disabled')
       page.evaluate('document.body.classList.add("theme-dark")');screen('screen-egg')
-      expect(page.locator('#screen-egg h1').evaluate('(e)=>getComputedStyle(e).color')=='rgb(255, 248, 239)','Egg heading is unreadable in dark mode')
+      expect(page.locator('#screen-egg .egg-title').evaluate('(e)=>getComputedStyle(e).color')=='rgb(255, 248, 239)','Egg heading is unreadable in dark mode')
       page.screenshot(path=str(out/f'{width}-egg-dark.jpg'),quality=85,animations='disabled')
      finally:
       page.evaluate('document.body.classList.remove("theme-dark");goToConfig()')

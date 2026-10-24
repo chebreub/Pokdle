@@ -127,3 +127,39 @@ test('blocks added to the home by scripts never add a second H1', () => {
   const league = fs.readFileSync(path.join(src, 'script.10i.weekly-league.js'), 'utf8');
   assert.match(league, /<h2><span class="sr-only">Épreuve de Ligue de la semaine : <\/span>/, 'the League card heading says what it is');
 });
+
+test('the delivered page has one H1, no skipped level, no empty or repeated heading', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const headings = [...html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/g)].map(([, level, inner]) => ({ level: Number(level), text: inner.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() }));
+  assert.equal(headings.filter(h => h.level === 1).length, 1, 'a single H1');
+  headings.forEach((h, i) => {
+    assert.ok(h.text, 'heading ' + i + ' (H' + h.level + ') is empty');
+    if (i) assert.ok(h.level <= headings[i - 1].level + 1, 'H' + headings[i - 1].level + ' → H' + h.level + ' before « ' + h.text + ' »');
+  });
+  const seen = new Set();
+  for (const { text } of headings) { assert.ok(!seen.has(text.toLowerCase()), 'repeated heading « ' + text + ' »'); seen.add(text.toLowerCase()); }
+});
+
+test('every form field of the page has a name for screen readers', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const forIds = new Set([...html.matchAll(/<label\b[^>]*\bfor="([^"]+)"/g)].map(m => m[1]));
+  const wrapped = new Set();
+  for (const [label] of html.matchAll(/<label\b[\s\S]*?<\/label>/g)) for (const [, id] of label.matchAll(/<(?:input|select|textarea)\b[^>]*\bid="([^"]+)"/g)) wrapped.add(id);
+  for (const [tag, id] of [...html.matchAll(/<(?:input|select|textarea)\b[^>]*>/g)].map(([t]) => [t, (t.match(/\bid="([^"]+)"/) || [])[1]])) {
+    if (/type="(?:hidden|submit|button|reset|image)"/.test(tag)) continue;
+    assert.ok(/aria-label(?:ledby)?="/.test(tag) || forIds.has(id) || wrapped.has(id), 'unlabelled field: ' + tag.slice(0, 80));
+  }
+});
+
+test('the built page loads one local stylesheet and a long-cached Socket.IO client', () => {
+  const built = fs.readFileSync(path.join(__dirname, '../dist/index.html'), 'utf8');
+  const sheets = [...built.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(sheets.map(href => href.replace(/\?v=\w+$/, '')), ['dist/app.min.css']);
+  assert.match(built, /<script src="dist\/socket\.io\.min\.js\?v=\w+" defer><\/script>/);
+  assert.doesNotMatch(built, /\/socket\.io\/socket\.io\.js/);
+  // Same cascade: the bundle is the source page's stylesheets, in their order.
+  const source = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const files = [...source.matchAll(/<link rel="stylesheet" href="dist\/([\w.-]+\.min\.css)">/g)].map(m => m[1]);
+  assert.equal(files.length, 21);
+  assert.equal(fs.readFileSync(path.join(__dirname, '../dist/app.min.css'), 'utf8'), files.map(file => fs.readFileSync(path.join(__dirname, '../dist', file), 'utf8')).join('\n'));
+});

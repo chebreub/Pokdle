@@ -254,3 +254,14 @@ test('seasonal decorations stay light: every Halloween image the page loads is u
     assert.ok(size < 200 * 1024, file + ' weighs ' + Math.round(size / 1024) + ' KB');
   }
 });
+
+test('every Halloween visitor is a light local WebP', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../src/script.13.halloween.js'), 'utf8');
+  const ids = source.match(/const visitors = \[([\d,\s]+)\]/)[1].split(',').map(Number);
+  assert.equal(ids.length, 24);
+  assert.match(source, /image\.src = '\/img\/halloween\/' \+ id \+ '\.webp';/);
+  for (const id of ids) {
+    const size = fs.statSync(path.join(__dirname, '../img/halloween', id + '.webp')).size;
+    assert.ok(size < 40 * 1024, id + '.webp weighs ' + Math.round(size / 1024) + ' KB');
+  }
+});
