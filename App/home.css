@@ -549,14 +549,14 @@ body.theme-dark .gen-item:focus-within { outline-color: #ffcc33; }
   letter-spacing:.15em;
   color:#4b78bc;
 }
-.home-adventure-copy h1 {
+.home-adventure-copy h2 {
   margin:0;
   font-size:clamp(2rem,4.8vw,3.5rem);
   line-height:.98;
   letter-spacing:-.04em;
   color:#17375f;
 }
-.home-adventure-copy h1 span { color:#2f76ff; }
+.home-adventure-copy h2 span { color:#2f76ff; }
 .home-adventure-copy > p {
   max-width:640px;
   margin:0;
@@ -860,7 +860,7 @@ body.theme-dark .home-adventure-v2 {
     linear-gradient(180deg,#142641,#0d1b31);
   border-color:rgba(111,151,218,.16);
 }
-body.theme-dark .home-adventure-copy h1,
+body.theme-dark .home-adventure-copy h2,
 body.theme-dark .home-trainer-rank b,
 body.theme-dark .home-next-copy h2,
 body.theme-dark .home-next-reward strong,
@@ -890,7 +890,7 @@ body.theme-dark .home-adventure-region {
 @media (max-width:640px) {
   .home-adventure-v2 { border-radius:22px; }
   .home-adventure-main { padding:20px 16px 12px; gap:10px; }
-  .home-adventure-copy h1 { font-size:2.2rem; }
+  .home-adventure-copy h2 { font-size:2.2rem; }
   .home-adventure-copy > p { font-size:.88rem; }
   .home-adventure-partner-art,
   .home-adventure-partner-empty { min-height:170px; }
@@ -919,7 +919,7 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
 #screen-config .home-adventure-copy {
   gap: 8px;
 }
-#screen-config .home-adventure-copy h1 {
+#screen-config .home-adventure-copy h2 {
   line-height: 1.02;
 }
 
@@ -1016,7 +1016,7 @@ body.reduce-motion .home-adventure-partner-art img { animation:none !important; 
   font-weight:1000;
   letter-spacing:.1em;
 }
-.weekly-league-home-copy h3 {
+.weekly-league-home-copy h2 {
   margin:0;
   color:#293e68;
   font-size:1rem;
@@ -1319,7 +1319,7 @@ body.theme-dark .weekly-ranking-empty {
   background:#142640;
   border-color:rgba(116,156,220,.14);
 }
-body.theme-dark .weekly-league-home-copy h3,
+body.theme-dark .weekly-league-home-copy h2,
 body.theme-dark .weekly-league-modal-head h3,
 body.theme-dark .weekly-league-discipline-copy h4,
 body.theme-dark .weekly-ranking-head h3,
@@ -1649,7 +1649,7 @@ body:not(.theme-dark) #global-xp-badge{
   box-shadow:none !important;
 }
 #screen-config .weekly-league-home-copy > span,
-#screen-config .weekly-league-home-copy h3,
+#screen-config .weekly-league-home-copy h2,
 #screen-config .weekly-league-home-copy p,
 #screen-config .weekly-league-home-score strong,
 #screen-config .weekly-league-home-score small{
@@ -1762,7 +1762,7 @@ body:not(.theme-dark) #global-xp-badge{
   grid-template-columns:minmax(0,1fr) 120px !important;
   padding:17px 18px 8px !important;
 }
-#screen-config .home-adventure-copy h1{
+#screen-config .home-adventure-copy h2{
   font-size:1.65rem !important;
   color:#17345b !important;
 }
@@ -2102,7 +2102,7 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
   #screen-config .home-adventure-partner-art::before,
   #screen-config .home-adventure-partner-empty::before{width:68px !important;height:68px !important;}
   #screen-config .home-adventure-partner-art img{width:72px !important;height:72px !important;}
-  #screen-config .home-adventure-copy h1{font-size:1.35rem !important;}
+  #screen-config .home-adventure-copy h2{font-size:1.35rem !important;}
   #screen-config .home-adventure-copy > p{display:none;}
   #screen-config .home-adventure-stats{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));}
   #screen-config .home-adventure-stats button{min-width:0 !important;}

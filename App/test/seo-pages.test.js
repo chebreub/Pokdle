@@ -119,3 +119,11 @@ test('no script rewrites the home presentation, the day\'s state has its own lin
     assert.doesNotMatch(fs.readFileSync(path.join(src, file), 'utf8'), /pk-hero-sub/, file + ' must leave the presentation alone');
   }
 });
+
+test('blocks added to the home by scripts never add a second H1', () => {
+  const src = path.join(__dirname, '../src');
+  const adventure = fs.readFileSync(path.join(src, 'script.10f.home-adventure.js'), 'utf8');
+  assert.doesNotMatch(adventure, /<h1\b/, 'the adventure block sits under the home H1');
+  const league = fs.readFileSync(path.join(src, 'script.10i.weekly-league.js'), 'utf8');
+  assert.match(league, /<h2><span class="sr-only">Épreuve de Ligue de la semaine : <\/span>/, 'the League card heading says what it is');
+});
