@@ -160,7 +160,6 @@
     <div id="screen-config">
 
       <!-- DA 2026 : hero "Pokémon du jour" — le jeu d'abord -->
-      <section id="home-return" class="home-return hidden" aria-label="Retrouver mes jeux"></section>
       <section class="pk-hero" id="daily-hero">
         <div class="pk-hero-main">
           <div class="pk-kicker"><svg class="pk-ico"><use href="#i-calendar"/></svg> Défi du jour · <span id="daily-hero-date">—</span></div>
@@ -180,6 +179,8 @@
         </div>
         <div class="daily-notebook" id="daily-notebook" aria-label="Carnet du défi quotidien"></div>
       </section>
+      <!-- Regulars see the daily first; their recent games and resumable game come right after. -->
+      <section id="home-return" class="home-return hidden" aria-label="Retrouver mes jeux"></section>
 
       <section class="home-discovery" aria-labelledby="home-discovery-title">
         <div class="home-discovery-head"><div><span class="club-eyebrow">UNE PETITE PAUSE POKÉMON ?</span><h2 id="home-discovery-title">Choisis ton mini-jeu Pokémon</h2><p>Devinettes, quiz et défis rapides, seul ou avec des amis.</p></div><div class="home-discovery-actions"><button class="generation-trigger" type="button" data-action="openGenerationPicker" aria-haspopup="dialog"><svg class="pk-ico" aria-hidden="true"><use href="#i-layers"/></svg><span>Générations <small data-generation-summary>Kanto</small></span></button><button class="btn-ghost" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Tous les jeux →</button></div></div>
