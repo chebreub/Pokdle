@@ -4231,7 +4231,8 @@ function injectStatClashExtraForms(list) {
       habitat: form.habitat || base.habitat,
       stage: Number.isInteger(form.stage) ? form.stage : base.stage,
       height: typeof data.height === "number" ? data.height : (typeof form.height === "number" ? form.height : base.height),
-      weight: typeof data.weight === "number" ? data.weight : (typeof form.weight === "number" ? form.weight : base.weight),
+      // An explicit null (Gigamax forms) means an unknown weight, not the species' one.
+      weight: typeof data.weight === "number" ? data.weight : (typeof form.weight === "number" || form.weight === null ? form.weight : base.weight),
       spriteId,
       sprite: data.sprite || form.sprite || (form.spriteId ? buildSpriteUrl(form.spriteId) : base.sprite || buildSpriteUrl(spriteId)),
       isAltForm: true,

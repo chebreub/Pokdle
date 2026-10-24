@@ -5549,6 +5549,14 @@ function openPokedexMode() {
   renderPokedexGrid();
 }
 
+// Gigamax forms only have a minimum height (« 28,0 m+ ») and no official weight.
+function pokedexHeightLabel(pokemon) {
+  return pokemon.height + (/ Gigamax$/.test(pokemon.name) ? " m et plus" : " m");
+}
+function pokedexWeightLabel(pokemon) {
+  return typeof pokemon.weight === "number" ? pokemon.weight + " kg" : "Inconnu";
+}
+
 function getFilteredPokedexList() {
   const q = norm(pokedexSearch || "");
   const type1Filter = pokedexTypeFilter || "all";
@@ -5975,8 +5983,8 @@ async function renderPokedexDetail(pokemon) {
     ${compareBlockHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
-      <div><span>Taille</span><b>${pokemon.height} m</b></div>
-      <div><span>Poids</span><b>${pokemon.weight} kg</b></div>
+      <div><span>Taille</span><b>${pokedexHeightLabel(pokemon)}</b></div>
+      <div><span>Poids</span><b>${pokedexWeightLabel(pokemon)}</b></div>
       <div><span>Habitat local</span><b>${escapeHtml(pokemon.habitat || "Inconnu")}</b></div>
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>
@@ -6045,8 +6053,8 @@ async function renderPokedexDetail(pokemon) {
     ${compareHtml}
     <div class="pokedex-detail-grid">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
-      <div><span>Taille</span><b>${pokemon.height} m</b></div>
-      <div><span>Poids</span><b>${pokemon.weight} kg</b></div>
+      <div><span>Taille</span><b>${pokedexHeightLabel(pokemon)}</b></div>
+      <div><span>Poids</span><b>${pokedexWeightLabel(pokemon)}</b></div>
       <div><span>Habitat officiel</span><b>${escapeHtml(officialHabitat)}</b></div>
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>

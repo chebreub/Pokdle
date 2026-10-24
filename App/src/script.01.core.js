@@ -742,6 +742,42 @@ const EXTRA_FORMS = [
   { id: 25066, name: "Banshitrouye Taille Mini", baseId: 711, type1: "Spectre", type2: "Plante", height: 0.7, weight: 9.5, spriteId: 10030 },
   { id: 25067, name: "Banshitrouye Taille Maxi", baseId: 711, type1: "Spectre", type2: "Plante", height: 1.1, weight: 14, spriteId: 10031 },
   { id: 25068, name: "Banshitrouye Taille Ultra", baseId: 711, type1: "Spectre", type2: "Plante", height: 1.7, weight: 39, spriteId: 10032 },
+  // Gigamax forms: in the Pokédex only. They share their species' types and generation, and have
+  // no official weight (« ???,? kg »), so as answers every clue but the size would match the species.
+  { id: 26001, name: "Florizarre Gigamax", baseId: 3, gen: 8, type1: "Plante", type2: "Poison", height: 24, weight: null, spriteId: 10195, guessable: false },
+  { id: 26002, name: "Dracaufeu Gigamax", baseId: 6, gen: 8, type1: "Feu", type2: "Vol", height: 28, weight: null, spriteId: 10196, guessable: false },
+  { id: 26003, name: "Tortank Gigamax", baseId: 9, gen: 8, type1: "Eau", type2: null, height: 25, weight: null, spriteId: 10197, guessable: false },
+  { id: 26004, name: "Papilusion Gigamax", baseId: 12, gen: 8, type1: "Insecte", type2: "Vol", height: 17, weight: null, spriteId: 10198, guessable: false },
+  { id: 26005, name: "Pikachu Gigamax", baseId: 25, gen: 8, type1: "Électrik", type2: null, height: 21, weight: null, spriteId: 10199, guessable: false },
+  { id: 26006, name: "Miaouss Gigamax", baseId: 52, gen: 8, type1: "Normal", type2: null, height: 33, weight: null, spriteId: 10200, guessable: false },
+  { id: 26007, name: "Mackogneur Gigamax", baseId: 68, gen: 8, type1: "Combat", type2: null, height: 25, weight: null, spriteId: 10201, guessable: false },
+  { id: 26008, name: "Ectoplasma Gigamax", baseId: 94, gen: 8, type1: "Spectre", type2: "Poison", height: 20, weight: null, spriteId: 10202, guessable: false },
+  { id: 26009, name: "Krabboss Gigamax", baseId: 99, gen: 8, type1: "Eau", type2: null, height: 19, weight: null, spriteId: 10203, guessable: false },
+  { id: 26010, name: "Lokhlass Gigamax", baseId: 131, gen: 8, type1: "Eau", type2: "Glace", height: 24, weight: null, spriteId: 10204, guessable: false },
+  { id: 26011, name: "Évoli Gigamax", baseId: 133, gen: 8, type1: "Normal", type2: null, height: 18, weight: null, spriteId: 10205, guessable: false },
+  { id: 26012, name: "Ronflex Gigamax", baseId: 143, gen: 8, type1: "Normal", type2: null, height: 35, weight: null, spriteId: 10206, guessable: false },
+  { id: 26013, name: "Miasmax Gigamax", baseId: 569, gen: 8, type1: "Poison", type2: null, height: 21, weight: null, spriteId: 10207, guessable: false },
+  { id: 26014, name: "Melmetal Gigamax", baseId: 809, gen: 8, type1: "Acier", type2: null, height: 25, weight: null, spriteId: 10208, guessable: false },
+  { id: 26015, name: "Gorythmic Gigamax", baseId: 812, gen: 8, type1: "Plante", type2: null, height: 28, weight: null, spriteId: 10209, guessable: false },
+  { id: 26016, name: "Pyrobut Gigamax", baseId: 815, gen: 8, type1: "Feu", type2: null, height: 27, weight: null, spriteId: 10210, guessable: false },
+  { id: 26017, name: "Lézargus Gigamax", baseId: 818, gen: 8, type1: "Eau", type2: null, height: 40, weight: null, spriteId: 10211, guessable: false },
+  { id: 26018, name: "Corvaillus Gigamax", baseId: 823, gen: 8, type1: "Vol", type2: "Acier", height: 14, weight: null, spriteId: 10212, guessable: false },
+  { id: 26019, name: "Astronelle Gigamax", baseId: 826, gen: 8, type1: "Insecte", type2: "Psy", height: 14, weight: null, spriteId: 10213, guessable: false },
+  { id: 26020, name: "Torgamord Gigamax", baseId: 834, gen: 8, type1: "Eau", type2: "Roche", height: 24, weight: null, spriteId: 10214, guessable: false },
+  { id: 26021, name: "Monthracite Gigamax", baseId: 839, gen: 8, type1: "Roche", type2: "Feu", height: 42, weight: null, spriteId: 10215, guessable: false },
+  { id: 26022, name: "Pomdrapi Gigamax", baseId: 841, gen: 8, type1: "Plante", type2: "Dragon", height: 24, weight: null, spriteId: 10216, guessable: false },
+  { id: 26023, name: "Dratatin Gigamax", baseId: 842, gen: 8, type1: "Plante", type2: "Dragon", height: 24, weight: null, spriteId: 10217, guessable: false },
+  { id: 26024, name: "Dunaconda Gigamax", baseId: 844, gen: 8, type1: "Sol", type2: null, height: 22, weight: null, spriteId: 10218, guessable: false },
+  { id: 26025, name: "Salarsen Forme Aigüe Gigamax", baseId: 849, gen: 8, type1: "Électrik", type2: "Poison", height: 24, weight: null, spriteId: 10219, guessable: false },
+  { id: 26026, name: "Scolocendre Gigamax", baseId: 851, gen: 8, type1: "Feu", type2: "Insecte", height: 75, weight: null, spriteId: 10220, guessable: false },
+  { id: 26027, name: "Sorcilence Gigamax", baseId: 858, gen: 8, type1: "Psy", type2: "Fée", height: 26, weight: null, spriteId: 10221, guessable: false },
+  { id: 26028, name: "Angoliath Gigamax", baseId: 861, gen: 8, type1: "Ténèbres", type2: "Fée", height: 32, weight: null, spriteId: 10222, guessable: false },
+  { id: 26029, name: "Charmilly Gigamax", baseId: 869, gen: 8, type1: "Fée", type2: null, height: 30, weight: null, spriteId: 10223, guessable: false },
+  { id: 26030, name: "Pachyradjah Gigamax", baseId: 879, gen: 8, type1: "Acier", type2: null, height: 23, weight: null, spriteId: 10224, guessable: false },
+  { id: 26031, name: "Duralugon Gigamax", baseId: 884, gen: 8, type1: "Acier", type2: "Dragon", height: 43, weight: null, spriteId: 10225, guessable: false },
+  { id: 26032, name: "Shifours Style Poing Final Gigamax", baseId: 892, gen: 8, type1: "Combat", type2: "Ténèbres", height: 29, weight: null, spriteId: 10226, guessable: false },
+  { id: 26033, name: "Shifours Style Mille Poings Gigamax", baseId: 892, gen: 8, type1: "Combat", type2: "Eau", height: 26, weight: null, spriteId: 10227, guessable: false },
+  { id: 26034, name: "Salarsen Forme Grave Gigamax", baseId: 849, gen: 8, type1: "Électrik", type2: "Poison", height: 24, weight: null, spriteId: 10228, guessable: false },
 ];
 
 const FORM_API_NAME_BY_NAME = {
@@ -1033,7 +1069,7 @@ function injectExtraForms() {
       color: form.color || base.color,
       stage: Number.isInteger(form.stage) ? form.stage : base.stage,
       height: typeof cachedForm?.height === "number" ? cachedForm.height : (typeof form.height === "number" ? form.height : base.height),
-      weight: typeof cachedForm?.weight === "number" ? cachedForm.weight : (typeof form.weight === "number" ? form.weight : base.weight),
+      weight: typeof cachedForm?.weight === "number" ? cachedForm.weight : (typeof form.weight === "number" || form.weight === null ? form.weight : base.weight),
       spriteId,
       sprite: cachedForm?.sprite || getSpriteUrl(spriteId),
       formApiName: FORM_API_NAME_BY_NAME[form.name] || null,
@@ -1306,6 +1342,7 @@ function pokedexMatchesCategory(p) {
     case "alt": return isAlt;
     case "mega": return /^Méga-/.test(name);
     case "regional": return /d['\u2019]Alola|de Galar|de Hisui|de Paldea/i.test(name);
+    case "gigamax": return / Gigamax$/.test(name);
     case "mono": return !(p && p.type2);
     case "dual": return Boolean(p && p.type2);
     case "base": return Number(p && p.stage) === 1;

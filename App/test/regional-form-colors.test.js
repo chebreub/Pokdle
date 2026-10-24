@@ -19,7 +19,7 @@ test('every regional form has its own Pokédex colour instead of its species one
 });
 
 test('Méga and special forms carry their own colour only where they look different from their species', () => {
-  const special = forms.filter(form => !regional.includes(form));
+  const special = forms.filter(form => !regional.includes(form) && !/ Gigamax$/.test(form.name));
   const coloured = special.filter(form => form.color);
   assert.equal(special.length, 164);
   assert.equal(coloured.length, 44);
