@@ -130,7 +130,7 @@ function renderHomeAdventureV2() {
     <div class="home-adventure-main">
       <div class="home-adventure-copy">
         <span class="home-adventure-eyebrow">TON AVENTURE CONTINUE</span>
-        <h1>Bon retour, <span>${escapeHtml(homeAdventureTrainerName())}</span>.</h1>
+        <h2>Bon retour, <span>${escapeHtml(homeAdventureTrainerName())}</span>.</h2>
         <p>Ton Pokédex avance à chaque défi. Continue là où ton aventure s’est arrêtée.</p>
         <div class="home-trainer-rank">
           <span class="home-rank-icon">${xpProgress.tier.emoji || '⭐'}</span>

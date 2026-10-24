@@ -26,7 +26,8 @@ async function newsTickerItems() {
   }
   if (board.status === "fulfilled") {
     const total = Number(board.value.total) || 0;
-    items.push({ icon: "★", text: total ? total + " dresseur" + (total > 1 ? "s" : "") + " au classement Global du jour" : "Personne n’est encore classé aujourd’hui : la première place est libre", action: "openLeaderboardV2" });
+    // An empty ranking reads as an empty site: say nothing until someone is ranked.
+    if (total) items.push({ icon: "★", text: total + " dresseur" + (total > 1 ? "s" : "") + " au classement Global du jour", action: "openLeaderboardV2" });
   }
   if (newsTickerParisDay() <= NEWS_TICKER_RELEASE.until) items.push({ icon: "✦", text: NEWS_TICKER_RELEASE.text, action: NEWS_TICKER_RELEASE.action });
   return items;

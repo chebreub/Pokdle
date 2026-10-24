@@ -8,6 +8,7 @@ Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.; existing site attributi
 ## Decorative artwork
 
 The pumpkin garden is an original generated illustration at `App/img/halloween/pumpkin-garden.png`.
+The page loads `pumpkin-garden-648.webp` (648×360, about 65 KB), made from that PNG; it is shown at 216 px wide at most, so 648 px stays sharp on 3× screens. The 1.8 MB PNG is kept only as the source.
 Created with the built-in imagegen tool. Prompt:
 Original transparent pumpkin garden illustration, generated with the built-in imagegen tool: three carved pumpkin lanterns (orange Gengar-like grin, purple star eyes, tiny ivory pumpkin), warm candlelight, copper/ochre leaves, lavender wrapped candies and golden sparkles; hand-drawn 2D game illustration with aubergine outlines and soft cel shading; wide compact composition, transparent background, no text/logos.
 

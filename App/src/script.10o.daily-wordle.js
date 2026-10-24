@@ -198,8 +198,7 @@ renderDailyHero=function() {
     let button=document.getElementById('daily-wordle-home');
     if(!button){button=document.createElement('button');button.id='daily-wordle-home';button.type='button';button.className='pk-cta-ghost';button.dataset.action='startDailyWordle';row.appendChild(button);}
     const complete=Boolean(getTodayDailyResult());button.classList.toggle('hidden',!complete);button.textContent='Épreuve 2 : Wordle →';
-    const subtitle=document.querySelector('#daily-hero .pk-hero-sub');
-    if(complete&&subtitle)subtitle.textContent='Enquête terminée. Passe au Wordle du jour : un autre nom à déchiffrer en six essais.';
+    if(complete)setDailyHeroNote('Pokémon du jour trouvé. Passe au Wordle du jour : un autre nom à déchiffrer en six essais.');
   }
   return value;
 };

@@ -50,6 +50,8 @@
   #pokdle-app.design-refresh .daily-result-actions button {font-size:12px!important}
 }
 /* Bloc du jour : les quatre épreuves, leurs points et la prochaine à jouer. */
+#pokdle-app.design-refresh #daily-hero .pk-hero-note{margin:0;font:700 14px/1.45 Nunito,sans-serif;color:#5e546b}
+#pokdle-app.design-refresh.theme-dark #daily-hero .pk-hero-note{color:#d9d0e8}
 #pokdle-app.design-refresh #daily-hero .daily-hero-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 4px;padding:0;list-style:none}
 #pokdle-app.design-refresh #daily-hero .daily-hero-steps button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:52px;padding:8px 10px;border:1px solid rgba(46,42,51,.08);border-radius:14px;background:rgba(255,255,255,.75);color:#2e2a33;font:700 12px Nunito,sans-serif;text-align:left;cursor:pointer}
 #pokdle-app.design-refresh #daily-hero .daily-hero-steps b{font:600 15px Fredoka,sans-serif}

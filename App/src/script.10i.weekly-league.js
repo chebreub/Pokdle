@@ -271,7 +271,7 @@ function renderWeeklyLeagueHome() {
   const next=state.disciplines.find(row=>!row.metric.complete)||state.disciplines[0];
   card.innerHTML=
     '<div class="weekly-league-home-mark"><span>◆</span><small>ÉPREUVE<br>DE LIGUE</small></div>'+
-    '<div class="weekly-league-home-copy"><span>SEMAINE '+String(state.info.week).padStart(2,"0")+' · '+weeklyLeagueTimeLeft()+'</span><h3>'+state.completed+'/3 disciplines maîtrisées</h3><p>Prochain objectif · '+escapeHtml(next.template.objective)+'</p></div>'+
+    '<div class="weekly-league-home-copy"><span>SEMAINE '+String(state.info.week).padStart(2,"0")+' · '+weeklyLeagueTimeLeft()+'</span><h2><span class="sr-only">Épreuve de Ligue de la semaine : </span>'+state.completed+'/3 disciplines maîtrisées</h2><p>Prochain objectif · '+escapeHtml(next.template.objective)+'</p></div>'+
     '<div class="weekly-league-home-score"><strong>'+state.score+'</strong><small>/600 pts</small><progress value="'+state.score+'" max="600"></progress></div>'+
     '<button type="button" class="'+(state.mastered&&!state.claimed?'btn-yellow':'btn-blue')+'" data-action="openWeeklyLeague">'+(state.mastered&&!state.claimed?'Badge prêt':'Voir l’épreuve')+' →</button>';
 }

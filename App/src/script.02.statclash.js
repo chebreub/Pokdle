@@ -105,6 +105,13 @@ function renderDailyNotebook(record, complete) {
     '<p>' + (count ? count + ' essai' + (count > 1 ? 's' : '') + (complete ? ' · défi terminé' : ' · progression conservée') : '9 critères. Un seul Pokémon à trouver.') + '</p>' +
     '<span class="notebook-stamp">' + (complete ? 'ENQUÊTE TERMINÉE' : 'RENDEZ-VOUS QUOTIDIEN') + '</span>';
 }
+// The day's status line on the home hero; an empty text hides it.
+function setDailyHeroNote(text) {
+  const note = document.getElementById("daily-hero-note");
+  if (!note) return;
+  note.textContent = text || "";
+  note.classList.toggle("hidden", !text);
+}
 function renderDailyHero() {
   const dateEl = document.getElementById("daily-hero-date");
   const streakEl = document.getElementById("daily-hero-streak");
@@ -120,20 +127,22 @@ function renderDailyHero() {
   const today = getDailyDateKey();
   dailyHeroDay = today;
   refreshDailyStreakStatus();
-  if (streakEl) streakEl.textContent = `🔥 Série : ${Number(playerStats?.dailyCurrentStreak) || 0}`;
+  if (streakEl) {
+    const streak = Number(playerStats?.dailyCurrentStreak) || 0;
+    streakEl.textContent = `🔥 Série : ${streak}`;
+    // A streak of 0 tells a new visitor nothing.
+    streakEl.classList.toggle("hidden", streak === 0);
+  }
   const todayResult = getTodayDailyResult();
   const wonToday = Boolean(todayResult && todayResult.won);
   const lostToday = Boolean(todayResult && !todayResult.won);
   const hero = document.getElementById("daily-hero");
   if (hero) {
     hero.dataset.dailyState = wonToday || lostToday ? "complete" : "available";
-    const subtitle = hero.querySelector(".pk-hero-sub");
-    if (subtitle) {
-      if (!subtitle.dataset.initialCopy) subtitle.dataset.initialCopy = subtitle.textContent;
-      const count = Number(todayResult?.attempts) || 0;
-      subtitle.textContent = wonToday ? (count > 0 ? `Trouvé en ${count} essai${count > 1 ? "s" : ""}. Continue en solo ou entre amis.` : "Défi réussi. Continue en solo ou entre amis.")
-        : lostToday ? "Défi terminé. Un nouveau Pokémon arrive au prochain rendez-vous." : subtitle.dataset.initialCopy;
-    }
+    // The presentation sentence never changes; the day's state goes in the note under it.
+    const count = Number(todayResult?.attempts) || 0;
+    setDailyHeroNote(wonToday ? (count > 0 ? `Trouvé en ${count} essai${count > 1 ? "s" : ""}. Continue en solo ou entre amis.` : "Défi réussi. Continue en solo ou entre amis.")
+      : lostToday ? "Défi terminé. Un nouveau Pokémon arrive au prochain rendez-vous." : "");
     const image = hero.querySelector(".pk-silo-img");
     if (image) {
       if (!image.dataset.initialSrc) image.dataset.initialSrc = image.getAttribute("src");

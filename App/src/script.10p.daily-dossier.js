@@ -118,8 +118,7 @@ renderDailyHero=function() {
     const wordleDone=dailyWordleState?.day===day&&dailyWordleState.finished,dossierDone=dailyDossierState?.day===day&&dailyDossierState.finished;
     button.dataset.action=wordleDone?'startDailyDossier':'startDailyWordle';
     button.textContent=dossierDone?'Voir mon dossier · '+dailyDossierState.points+' pts':wordleDone?'Épreuve 3 : Dossier →':'Épreuve 2 : Wordle →';
-    const subtitle=document.querySelector('#daily-hero .pk-hero-sub');
-    if(getTodayDailyResult()&&subtitle)subtitle.textContent='Enquête, Wordle, Dossier : trois épreuves pour ton rendez-vous du jour.';
+    if(getTodayDailyResult())setDailyHeroNote('Pokémon du jour, Wordle, Dossier : trois épreuves pour ton rendez-vous du jour.');
   }
   return value;
 };

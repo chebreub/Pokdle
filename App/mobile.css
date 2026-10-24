@@ -528,7 +528,7 @@
     padding:9px 10px !important;
     border-radius:14px !important;
   }
-  #screen-config .weekly-league-home-copy h3{
+  #screen-config .weekly-league-home-copy h2{
     font-size:.82rem !important;
   }
   #screen-config .weekly-league-home-copy p{
@@ -590,7 +590,7 @@
   #screen-config .home-adventure-copy{
     gap:5px !important;
   }
-  #screen-config .home-adventure-copy h1{
+  #screen-config .home-adventure-copy h2{
     font-size:1.18rem !important;
   }
   #screen-config .home-trainer-rank{
