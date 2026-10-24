@@ -3,6 +3,7 @@
 24 independent Pokémon visitors use local official artwork from:
 https://github.com/PokeAPI/sprites/tree/master/sprites/pokemon/other/official-artwork
 IDs: 92, 93, 94, 198, 200, 302, 353, 354, 355, 425, 429, 430, 442, 477, 479, 562, 570, 607, 609, 708, 709, 710, 778, 855.
+They ship as WebP only (`<id>.webp`, 192–256 px square, about 8–15 KB each): a visitor is drawn at 76 px on phones and 104 px on desktop.
 Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.; existing site attribution applies.
 
 ## Decorative artwork

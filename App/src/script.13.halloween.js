@@ -64,7 +64,6 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
     if (!body || document.getElementById('halloween-stage')) return;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const small = window.matchMedia('(max-width: 640px)');
-    const localWebp = new Set([92, 93, 94, 198, 425, 607, 710, 778]);
     const visitors = [92, 93, 94, 198, 200, 302, 353, 354, 355, 425, 429, 430,
       442, 477, 479, 562, 570, 607, 609, 708, 709, 710, 778, 855];
     const blockerSelector = 'button, a, input, textarea, select, [contenteditable="true"], h1, h2, h3, h4, p, table, '
@@ -241,7 +240,7 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
       };
       image.onerror = () => { if (actor === node) finishVisit(); };
       departure = setTimeout(() => { if (actor === node) finishVisit(); }, 5000);
-      image.src = '/img/halloween/' + id + (localWebp.has(id) ? '.webp' : '.png');
+      image.src = '/img/halloween/' + id + '.webp';
     }
     function sync() {
       const next = halloweenInSeason() && !body.classList.contains('seasonal-disabled');
