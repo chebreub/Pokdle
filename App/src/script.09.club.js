@@ -78,9 +78,9 @@ function homeGameRecordHtml(action) {
 }
 // One painted illustration per week leads the catalogue; the games themselves stay in their family.
 var CATALOG_FEATURES = [
-  ["startDailyGame", "daily", "Le Pokémon du jour", "Le même mystère pour tout le monde. Enquête, puis Wordle, Dossier et Défi.", "Carnet d’enquête, loupe et Pokédex sur un sentier"],
-  ["openPokeConnectionsMode", "connections", "Poké-Connections", "16 Pokémon, quatre liens cachés. À toi de retrouver les quatre groupes.", "Évoli et ses évolutions autour d’un puzzle"],
-  ["openDraftScoreAttackMode", "draft", "Draft Score Attack", "Six choix pour une équipe de rêve. Vise le meilleur total.", "Gardevoir, Lucario et Corvaillus devant une arène"]
+  ["startDailyGame", "daily", "Le Pokémon du jour", "Le même mystère pour tout le monde. Enquête, puis Wordle, Dossier et Défi.", "Silhouette mystère d’un Pokémon et un point d’interrogation"],
+  ["openPokeConnectionsMode", "connections", "Poké-Connections", "16 Pokémon, quatre liens cachés. À toi de retrouver les quatre groupes.", "Évoli, Mentali, Noctali et Nymphali sur les quatre couleurs des groupes"],
+  ["openDraftScoreAttackMode", "draft", "Draft Score Attack", "Six choix pour une équipe de rêve. Vise le meilleur total.", "Gardevoir, Lucario et Corvaillus, trois choix de draft"]
 ];
 function catalogFeatureOfWeek(now = Date.now()) {
   // 1 January 1970 was a Thursday: shifting by 3 days makes weeks start on Monday.
@@ -95,7 +95,8 @@ function renderCatalogPicks(category, query, difficulty = "all", family = "all")
   if (!show) return;
   const [action, image, title, line, alt] = catalogFeatureOfWeek();
   if (panel.dataset.feature === action) return;
-  const base = "img/modes/" + image + "-v1-";
+  // Official artwork only (tools/catalog-feature-images.js), never generated pictures.
+  const base = "img/modes/" + image + "-v2-";
   panel.dataset.feature = action;
   panel.innerHTML = '<button type="button" class="catalog-feature catalog-feature-' + image + '" data-action="openFromAllModes" data-args="' + escapeHtml(JSON.stringify([action])) + '">' +
     '<img src="' + base + '960.webp" srcset="' + base + '480.webp 480w, ' + base + '960.webp 960w" sizes="(max-width:760px) 100vw, 640px" width="960" height="640" alt="' + alt + '" loading="lazy" decoding="async" />' +

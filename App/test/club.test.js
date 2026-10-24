@@ -29,7 +29,7 @@ test('the catalogue feature rotates every Monday and only leads the untouched so
  assert.equal(env.catalogFeatureOfWeek(monday)[0],env.catalogFeatureOfWeek(sunday)[0]);
  assert.notEqual(env.catalogFeatureOfWeek(sunday)[0],env.catalogFeatureOfWeek(nextMonday)[0]);
  env.renderCatalogPicks('solo','','all','all');
- assert.equal(panel.classList.hidden,false);assert.match(panel.innerHTML,/img\/modes\/(daily|connections|draft)-v1-960\.webp/);assert.match(panel.innerHTML,/alt="[^"]+"/);
+ assert.equal(panel.classList.hidden,false);assert.match(panel.innerHTML,/img\/modes\/(daily|connections|draft)-v2-960\.webp/);assert.match(panel.innerHTML,/alt="[^"]+"/);
  for(const args of [['solo','cri','all','all'],['solo','','hard','all'],['solo','','all','guess'],['friends','','all','all'],['all','','all','all']]){env.renderCatalogPicks(...args);assert.equal(panel.classList.hidden,true,args.join(','));}
 });
 test('rank movement handles ties and no gain correctly',()=>{

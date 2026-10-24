@@ -472,6 +472,9 @@
     min-height:136px;
     object-fit:cover;
   }
+  /* The narrow picture keeps two whole Pokémon instead of halves of four (or three). */
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-connections > img { object-position:8% 50%; }
+  #pokdle-app.design-refresh #screen-all-modes .catalog-feature-draft > img { object-position:21% 50%; }
   #pokdle-app.design-refresh #screen-all-modes .catalog-feature-copy {
     min-width:0;
     gap:4px;

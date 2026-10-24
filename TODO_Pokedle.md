@@ -26,10 +26,11 @@ Dernière mise à jour : 13 octobre 2026 (soir). Reste : comptes (à la fin). Pa
 - [x] Vérification après chaque livraison : site + CI (fait pour chaque merge, voir mémoire « rythme de livraison »).
 
 ## Priorité de l'utilisateur (9/10)
-- [ ] Refaire la liste des modes : une seule carte de mode sur l'accueil et le catalogue, grande mascotte, objet qui montre la mécanique, les 3 illustrations en bannière « À la une » et en image de partage. Prompt : [PROMPT_GPT_Catalogue_Modes.md](PROMPT_GPT_Catalogue_Modes.md).
+- [x] Refaire la liste des modes : une seule carte de mode sur l'accueil et le catalogue, grande mascotte, objet qui montre la mécanique, les 3 illustrations en bannière « À la une » et en image de partage. Prompt : [PROMPT_GPT_Catalogue_Modes.md](PROMPT_GPT_Catalogue_Modes.md).
   - Catalogue livré par Claude le 9/10 (merge da0f8fc), en ligne et vérifié en invité.
   - Accueil avec les mêmes cartes, record Quiz « / 15 » et noms des jeux récents corrigés : livré le 9/10 (merge cbda9d2), vérifié en ligne.
-  - Reste à faire : les illustrations en image de partage. Ancien code des visuels supprimé le 13/10 (merge 1349b79).
+  - Image de partage : faite le 24/10 autrement. Chaque page /jeux/<slug> a son aperçu (img/og/<slug>.jpg, artwork officiel de sa mascotte, `node tools/og-game-images.js`) ; la page Pokémon du jour garde la silhouette du jour. Ancien code des visuels supprimé le 13/10 (merge 1349b79).
+  - **Plus d'images IA (24/10, demande de l'utilisateur : les joueurs n'aiment pas)** : les 3 illustrations du bandeau « À la une » (dont Nymphali au ruban fondu dans la patte) sont remplacées par des compositions d'artworks officiels (`node tools/catalog-feature-images.js`).
   - Ménage du 13/10 (merge 1349b79) : moteur de combat du Draft (Arènes) et anciens visuels retirés, environ 10 700 lignes, JS du site 1,34 Mo → 1,12 Mo. Moteur PRO, salles `draft-battle:*` du serveur et CSS PRO retirés (merge a54f4f8, 13/10).
 
 ## À décider
@@ -84,11 +85,11 @@ Calendrier décidé le 9 octobre :
 - ~~Bientôt (juste après l'étape 1)~~ → **à la fin** (décision du 12/10) : la base des comptes (PR 9) et Google, une fois le site présentable.
 - **Quand le site sera fini** : email, Twitch, Facebook, écran de connexion final.
 - [x] **Google** livré le 13/10 (merge 884e586) : table account_identities, comptes « google:<sub> », liaison quand on est déjà connecté, page /confidentialite (contact chebreub@gmail.com). Testé par l'utilisateur en navigation privée (OK), URL de confidentialité ajoutée et **application Google publiée le 13/10**. Son essai a créé un compte Google séparé : bouton « Supprimer mon compte » prévu au lot suivant, puis reconnexion Discord → « Relier Google ».
-- [ ] **Compte par email** : inscription, connexion, mot de passe oublié, vérification de l'adresse.
+- [ ] **Compte par email** : inscription, connexion, mot de passe oublié, vérification de l'adresse. **Mis de côté le 24/10** : la page Confidentialité promet de ne garder ni e-mail ni mot de passe, et des mails fiables demandent un nom de domaine à soi (décision du 24/10 : rester sur pokdle.onrender.com tant qu'il y a peu de joueurs).
   - Il faut un service d'envoi d'emails (par exemple Resend ou Brevo, gratuits au début).
   - Mots de passe stockés chiffrés (bcrypt ou argon2), limite de tentatives.
   - Variante plus simple : connexion par lien magique envoyé par email.
-- [ ] **Twitch** (facile, intéressant pour les streamers).
+- [x] **Twitch** livré le 24/10 (merge 02b955d) : OpenID Connect, scope `openid` seul (pas d'e-mail), comptes « twitch:<id> », liaison au compte connecté, bouton violet visible dès que TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET / TWITCH_CALLBACK_URL sont posées sur Render (fait par l'utilisateur le 24/10). À tester par l'utilisateur avec son compte.
 - [ ] **Facebook** en dernier (vérification d'application plus lourde, politique de confidentialité obligatoire).
 - [ ] **Écran de connexion** façon « Bon retour ! » : boutons pleine largeur par fournisseur, séparateur « ou », email / mot de passe, « Pas encore de compte ? Inscris-toi », « Continuer sans compte ».
 - [ ] **Profil** : relier ou délier un fournisseur, supprimer son compte (obligation RGPD).
