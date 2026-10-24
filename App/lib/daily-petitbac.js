@@ -6,6 +6,7 @@
 const crypto=require('node:crypto');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {checkPokemonAnswer,examplesFor,drawSoloSheet}=require('./party-petitbac');
+const {regionalFormsOn}=require('./daily-grid');
 const fail=(code,status=409)=>Object.assign(new Error(code),{code,status});
 const COLUMNS=8,SECONDS=90,GRACE_MS=15000;
 
@@ -101,7 +102,7 @@ function createDailyPetitBacService({db,pokemon,clock=()=>new Date(),draw=drawDa
   // Corrects the sheet; a sheet sent after the time (plus a grace for slow networks) scores 0.
   async function complete(c,who,day,round,row,answers){
     const now=clock(),elapsed=Math.max(0,now-new Date(row.started_at)),late=elapsed>SECONDS*1000+GRACE_MS;
-    const results=round.categories.map((cat,i)=>{const r=checkPokemonAnswer(answers[i],round.letter,cat,pokemon,[1,2,3,4,5,6,7,8,9]);return {text:r.text,valid:r.valid&&!late,...(r.reason?{reason:r.reason}:{}),...(r.name&&r.name!==r.text?{name:r.name}:{}),...(r.valid?{pokemonId:r.pokemonId}:{})};});
+    const results=round.categories.map((cat,i)=>{const r=checkPokemonAnswer(answers[i],round.letter,cat,pokemon,[1,2,3,4,5,6,7,8,9],{regionalForms:regionalFormsOn(day)});return {text:r.text,valid:r.valid&&!late,...(r.reason?{reason:r.reason}:{}),...(r.name&&r.name!==r.text?{name:r.name}:{}),...(r.valid?{pokemonId:r.pokemonId}:{})};});
     const points=late?0:dailyPoints(results);
     await c.query('UPDATE petitbac_daily_plays SET answers=$3::jsonb,results=$4::jsonb,points=$5,status=$6,late=$7,finished_at=$8,elapsed_ms=$9 WHERE identity=$1 AND day=$2',
       [who.key,day,JSON.stringify(answers),JSON.stringify(results),points,'completed',late,now,Math.min(elapsed,SECONDS*1000)]);

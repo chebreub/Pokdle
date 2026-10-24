@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const {PP,LEGENDARY_IDS,buildCriteria,buildGrid,gridPoints,speciesOf,initGridDb,createGridService}=require('../lib/daily-grid');
+const {PP,LEGENDARY_IDS,REGIONAL_FORMS_FROM,buildCriteria,buildGrid,gridPoints,speciesOf,isRegionalForm,regionalFormsOn,playableOf,speciesIdOf,initGridDb,createGridService}=require('../lib/daily-grid');
 
 // The real catalogue: 1025 species plus the forms the server injects (Méga, régionales…).
 function realCatalogue(){
@@ -110,5 +110,43 @@ test('PostgreSQL: shared grid, nine PP, rarity, originality, adoption, rankings 
     now=new Date('2026-10-19T22:00:01Z');
     s=await game.state(A);assert.equal(s.day,'2026-10-20');assert.equal(s.status,'ready');assert.equal(s.pp,PP);
     assert.equal((await game.leaderboard('today','A')).total,0);assert.equal((await game.leaderboard('all','A')).me.score,10);
+  }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
+});
+
+test('regional forms are answers of their own from REGIONAL_FORMS_FROM, judged on their own types and colour',()=>{
+  const pokemon=realCatalogue(),criteria=buildCriteria(pokemon),byName=name=>pokemon.find(p=>p.name===name);
+  assert.equal(pokemon.filter(isRegionalForm).length,57,'Alola, Galar, Hisui, Paldea and the three Paldea Tauros');
+  assert.ok(!isRegionalForm(byName('Méga-Dracaufeu X'))&&!isRegionalForm(byName('Darumacho de Galar Mode Transe')),'Méga and special forms stay out');
+  assert.ok(!regionalFormsOn('2026-10-24')&&regionalFormsOn(REGIONAL_FORMS_FROM),'the day already started keeps its rules');
+  assert.equal(playableOf(pokemon,'2026-10-24').length,1025);
+  assert.equal(playableOf(pokemon,REGIONAL_FORMS_FROM).length,1025+57);
+  const articuno=byName('Artikodin de Galar'),weezing=byName('Smogogo de Galar');
+  for(const key of ['type:Psy','color:Violet','special:legendary','special:regional'])assert.ok(criteria.get(key).test(articuno),'Artikodin de Galar fits '+key);
+  assert.ok(!criteria.get('type:Glace').test(articuno),'not the species types');
+  assert.ok(criteria.get('shape:dual').test(weezing)&&!criteria.get('shape:dual').test(byName('Smogogo')),'Smogogo de Galar has two types, Smogogo one');
+  assert.ok(criteria.get('special:regional').test(byName('Tauros')),'Tauros has its Paldea forms');
+  assert.equal(speciesIdOf(weezing),110);
+});
+
+test('PostgreSQL: a regional form counts from REGIONAL_FORMS_FROM and shares « one Pokémon per grid » with its species',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
+  const {Pool}=require('pg'),{randomUUID}=require('node:crypto');const schema='gridform_'+randomUUID().replaceAll('-','');const admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
+  const base={stage:1,height:1,weight:10,type2:null};
+  const pokemon=[{...base,id:1,name:'Alpha',type1:'Feu',gen:1,color:'Rouge'},{...base,id:2,name:'Beta',type1:'Eau',gen:1,color:'Bleu'},{...base,id:3,name:'Gamma',type1:'Plante',gen:1,color:'Vert'},
+    {...base,id:21001,name:'Alpha de Galar',baseId:1,isAltForm:true,type1:'Eau',gen:8,color:'Bleu'}];
+  const draw=()=>({rows:['type:Feu','type:Eau','type:Plante'],cols:['gen:1','gen:8','shape:mono']});
+  try{
+    await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
+    await initGridDb(db);
+    let now=new Date('2026-10-24T12:00:00Z');const game=createGridService({db,pokemon,clock:()=>now,draw});
+    const guest={key:'guest:f',guestKey:'guest:f'},play=(day,cell,pokemonId)=>game.guess(guest,{day,accountId:null,cell,pokemonId});
+    let s=await game.state(guest);
+    assert.equal(s.regionalForms,false);assert.equal(s.possible[4],0,'Eau × Galar has no species');
+    await assert.rejects(play('2026-10-24',4,21001),{code:'form_not_allowed'},'the day already started keeps its rules');
+    now=new Date(REGIONAL_FORMS_FROM+'T12:00:00Z');
+    s=await game.state(guest);
+    assert.equal(s.regionalForms,true);assert.equal(s.possible[4],1,'the form answers Eau × Galar');
+    s=await play(REGIONAL_FORMS_FROM,4,21001);
+    assert.equal(s.feedback.correct,true);assert.equal(s.cells[4].pokemonId,21001);
+    await assert.rejects(play(REGIONAL_FORMS_FROM,0,1),{code:'already_used'},'its species cannot fill another cell');
   }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
 });
