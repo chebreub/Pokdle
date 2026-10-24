@@ -42,7 +42,8 @@ test('forms added from PokeAPI can be told apart and keep their real data',()=>{
  // Two forms of one species with the same types and size could not be told apart in the game.
  const seen=new Map();
  // Forms added on 2026-10-12; older look-alikes (Deoxys, Ash-Greninja) predate this rule.
- const added=p=>(p.id>=20072&&p.id<21000)||p.id===22020||p.id===23017||p.id>=25044;
+ // Forms kept out of the games (guessable: false, like the Gigamax pair of Salarsen) may look alike.
+ const added=p=>p.guessable!==false&&((p.id>=20072&&p.id<21000)||p.id===22020||p.id===23017||p.id>=25044);
  for(const p of extra.filter(added)){
   const key=[p.baseId,p.type1,p.type2,p.height,p.weight].join('|');
   assert.ok(!seen.has(key),p.name+' duplicates '+seen.get(key));seen.set(key,p.name);
@@ -70,7 +71,8 @@ test('every form carries its own sprite and the number shown is its species numb
 });
 
 test('look-alike forms stay in the Pokédex but never enter a guessing game',()=>{
- const hidden=extra.filter(p=>p.guessable===false).map(p=>p.name).sort();
+ const hidden=extra.filter(p=>p.guessable===false&&!/ Gigamax$/.test(p.name)).map(p=>p.name).sort();
+ assert.equal(extra.filter(p=>/ Gigamax$/.test(p.name)&&p.guessable===false).length,34,'every Gigamax form is Pokédex-only');
  assert.equal(JSON.stringify(hidden),JSON.stringify(['Amphinobi Ash','Deoxys Attaque','Deoxys Défense','Deoxys Vitesse','Genesect Module Aqua','Genesect Module Chaleur','Genesect Module Choc','Genesect Module Froid']));
  const context=vm.createContext({fs,path,vm,__dirname:root});
  vm.runInContext(['loadPokemonList','loadStatClashExtraFormsConfig','injectStatClashExtraForms','buildSpriteUrl','isDuelPokemonAllowed'].map(n=>extract(server,n)).join('\n'),context);

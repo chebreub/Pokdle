@@ -93,7 +93,8 @@ test('all species and alternative forms in every selected generation can be sear
     assert.ok(duelIds.has(room.secretPokemon.id));
   }
   assert.ok(forms > 50, 'actual alternative forms tested');
-  assert.equal(lookAlikes, 8, 'look-alike forms are skipped, not lost');
+  // 8 look-alikes (Deoxys, Genesect, Ash-Greninja) and the 34 Gigamax forms, all in the Pokédex only.
+  assert.equal(lookAlikes, 8 + 34, 'look-alike forms are skipped, not lost');
 });
 
 test('eight-player room hides the target and all rival guess identities while retaining own feedback', () => {
