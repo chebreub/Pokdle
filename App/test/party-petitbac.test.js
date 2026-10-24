@@ -205,3 +205,15 @@ test("the end-of-game recap adds up every letter and names the champion, the mos
   r.status = "finished";
   assert.equal(bac.publicPetitBac(r, "p0").recap, null, "only once the game is over");
 });
+
+test("regional forms answer with their own types; Méga and special forms say they don't count", () => {
+  const check = (text, letter, key, options) => bac.checkPokemonAnswer(text, letter, { key }, catalogue, ALL, options);
+  assert.equal(check("Artikodin de Galar", "A", "type:Psy").valid, true);
+  assert.equal(check("Artikodin De Galar", "A", "color:Violet").valid, true);
+  assert.equal(check("Smogogo de Galar", "S", "shape:dual").valid, true);
+  assert.equal(check("Smogogo", "S", "shape:dual").reason, "criterion", "the species alone is Poison only");
+  assert.equal(check("Typhlosion de Hisui", "T", "special:starter").valid, true, "a starter's regional form is still a starter");
+  assert.deepEqual(check("Artikodin de Galar", "A", "type:Psy", { regionalForms: false }), { text: "Artikodin de Galar", valid: false, reason: "form" });
+  assert.equal(check("Méga-Dracaufeu X", "M", "any").reason, "form");
+  assert.equal(check("Mewtwoo", "M", "any").valid, true, "small typos still find the species");
+});

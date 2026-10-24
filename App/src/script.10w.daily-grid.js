@@ -8,7 +8,7 @@ function ensureDailyGridScreen(){
   const screen=document.createElement('section');screen.id='screen-grid';screen.className='hidden grid-screen';
   screen.innerHTML=`<div class="challenge-toolbar"><button class="btn-ghost" data-action="goToConfig">← Accueil</button><button class="btn-ghost" data-action="openLeaderboardV2" data-args='["grid","today"]'>Classement</button></div>
 <article class="grid-card">
-  <div class="grid-heading"><p class="challenge-kicker" id="grid-day">BONUS DU JOUR</p><h1>Grille du jour</h1><p class="grid-lead">Un Pokémon par case, qui coche sa ligne <b>et</b> sa colonne. Plus ton choix est rare, plus tu es original.</p></div>
+  <div class="grid-heading"><p class="challenge-kicker" id="grid-day">BONUS DU JOUR</p><h1>Grille du jour</h1><p class="grid-lead">Un Pokémon par case, qui coche sa ligne <b>et</b> sa colonne. Plus ton choix est rare, plus tu es original.</p><p id="grid-forms-rule" class="grid-lead grid-forms-rule"></p></div>
   <div id="grid-hud" class="grid-hud"></div>
   <div id="grid-board" class="grid-board"></div>
   <p id="grid-message" class="grid-message" role="status" aria-live="polite"></p>
@@ -77,6 +77,7 @@ function renderGridResult(s){
 function renderDailyGrid(){
   const s=dailyGridState;if(!s)return;
   document.getElementById('grid-day').textContent='BONUS DU JOUR · JOUR #'+s.number;
+  document.getElementById('grid-forms-rule').textContent=s.regionalForms?'Les formes régionales (Alola, Galar, Hisui, Paldea) comptent, avec leurs propres types. Une seule forme par Pokémon.':'Seule la forme normale de chaque Pokémon compte.';
   document.getElementById('grid-hud').innerHTML='<span class="grid-pp" aria-label="'+s.pp+' PP sur '+s.maxPp+'">'+Array.from({length:s.maxPp},(_,i)=>'<i class="'+(i<s.pp?'is-full':'')+'"></i>').join('')+'<b>'+s.pp+' / '+s.maxPp+' PP</b></span><span><strong>'+s.points+'</strong> / '+s.maxPoints+' pts</span><span title="Part des joueurs qui n’ont pas fait les mêmes choix que toi">Originalité <strong>'+(s.originality==null||s.players<3?'—':s.originality+' %')+'</strong></span>';
   renderGridBoard(s);renderGridResult(s);
   document.getElementById('grid-stop').classList.toggle('hidden',s.finished||s.status==='ready');
@@ -88,11 +89,16 @@ function syncGridControls(){
   const submit=document.getElementById('grid-submit');if(!submit)return;
   submit.disabled=dailyGridBusy||!dailyGridState||dailyGridState.finished;submit.textContent=dailyGridBusy?'Vérification…':'Valider';
 }
-// Base species only, never one already placed in the grid or already refused in this cell.
+// Same as the server's REGIONAL_FORM_NAME (lib/daily-grid.js).
+const GRID_REGIONAL_FORM=/(d['’]Alola|de Galar|de Hisui|de Paldea)( \(.+\))?$/;
+function gridIsRegionalForm(p){return Boolean(p&&p.isAltForm&&p.baseId&&GRID_REGIONAL_FORM.test(p.name));}
+function gridSpeciesId(p){return p.isAltForm?Number(p.baseId):Number(p.id);}
+// Species, plus regional forms on the days they count; never a Pokémon (or another form of
+// it) already placed in the grid, nor one already refused in this cell.
 function gridChoices(q){
   const s=dailyGridState;if(!s||q.length<2)return [];
-  const used=new Set(s.cells.filter(Boolean).map(c=>c.pokemonId)),tried=new Set(s.misses.filter(m=>m.cell===dailyGridCell).map(m=>m.pokemonId));
-  return getPokemonUiList({includeAltForms:false}).filter(p=>p.id>=1&&p.id<=1025&&!used.has(p.id)&&!tried.has(p.id)&&wordleNormalize(p.name).includes(q))
+  const used=new Set(s.cells.filter(Boolean).map(c=>gridPokemon(c.pokemonId)).filter(Boolean).map(gridSpeciesId)),tried=new Set(s.misses.filter(m=>m.cell===dailyGridCell).map(m=>m.pokemonId));
+  return getPokemonUiList({includeAltForms:Boolean(s.regionalForms)}).filter(p=>(p.isAltForm?gridIsRegionalForm(p):p.id>=1&&p.id<=1025)&&!used.has(gridSpeciesId(p))&&!tried.has(p.id)&&wordleNormalize(p.name).includes(q))
     .sort((a,b)=>(wordleNormalize(a.name).startsWith(q)?0:1)-(wordleNormalize(b.name).startsWith(q)?0:1)).slice(0,6);
 }
 function renderGridSuggestions(){
@@ -107,7 +113,7 @@ function renderGridPicker(){
   form.classList.remove('hidden');
   document.getElementById('grid-picker-title').innerHTML='<b>'+escapeHtml(s.rows[Math.floor(i/3)].label)+'</b> × <b>'+escapeHtml(s.cols[i%3].label)+'</b><span>'+s.possible[i]+' réponses possibles</span>';
   const tried=s.misses.filter(m=>m.cell===i).map(m=>gridPokemon(m.pokemonId)?.name).filter(Boolean);
-  document.getElementById('grid-picker-tried').textContent=tried.length?'Déjà essayé ici : '+tried.join(', '):'';
+  document.getElementById('grid-picker-tried').textContent=tried.length?'Raté sur cette case : '+tried.join(', '):'';
   renderGridSuggestions();
 }
 function openGridCell(i){
@@ -129,9 +135,9 @@ async function gridRequest(action='',payload={}){
     dailyGridState=data;return data;
   }catch(e){
     if(serial!==dailyGridSerial)return null;
-    const messages={cell_filled:'Cette case est déjà remplie.',already_used:'Ce Pokémon est déjà dans ta grille : un Pokémon par case.',already_tried:'Déjà refusé dans cette case. Ça ne coûte pas de PP : choisis-en un autre.',stale_daily:'Une nouvelle grille est arrivée. On recharge…',account_changed:'Ton compte a changé. On recharge ta grille…',rate_limited:'Doucement ! Réessaie dans un instant.',invalid_guess:'Choisis un Pokémon dans la liste.'};
+    const messages={cell_filled:'Cette case est déjà remplie.',already_used:'Ce Pokémon (ou une autre de ses formes) est déjà dans ta grille : un Pokémon par case.',form_not_allowed:'Seule la forme normale compte dans cette grille.',already_tried:'Déjà refusé dans cette case. Ça ne coûte pas de PP : choisis-en un autre.',stale_daily:'Une nouvelle grille est arrivée. On recharge…',account_changed:'Ton compte a changé. On recharge ta grille…',rate_limited:'Doucement ! Réessaie dans un instant.',invalid_guess:'Choisis un Pokémon dans la liste.'};
     gridMessage(messages[e.code]||'Grille momentanément indisponible. Réessaie dans un instant.');
-    if(['already_used','already_tried','invalid_guess','cell_filled'].includes(e.code))gridNudge();
+    if(['already_used','already_tried','invalid_guess','cell_filled','form_not_allowed'].includes(e.code))gridNudge();
     if(e.code==='stale_daily'||e.code==='account_changed')setTimeout(startDailyGrid,900);
     return null;
   }finally{clearTimeout(timer);if(serial===dailyGridSerial){dailyGridBusy=false;syncGridControls();}}
@@ -158,7 +164,7 @@ async function submitGridGuess(id){
   if(f){
     const node=document.querySelector('#grid-board [data-cell="'+cell+'"]');
     if(f.correct)gridMessage('Bien vu ! '+(p?.name||'')+' · choisi par '+data.cells[cell].rarity+' % des joueurs.');
-    else gridMessage((p?.name||'Ce Pokémon')+' ne coche pas « '+f.failed.join(' » ni « ')+' ». −1 PP.');
+    else gridMessage((p?.name||'Ce Pokémon')+(p?.type1?' ('+[p.type1,p.type2].filter(Boolean).join('/')+')':'')+' ne coche pas « '+f.failed.join(' » ni « ')+' ». −1 PP.');
     if(typeof gameFeelAnswer==='function')gameFeelAnswer(f.correct,node,f.correct?'+10':'×');
     if(f.correct&&typeof gameFeelReplay==='function')gameFeelReplay(node,'is-new');
     if(!f.correct)gridNudge();

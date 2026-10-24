@@ -18,10 +18,20 @@ const FAMILY_LIMIT={type:4,gen:2,color:1,stage:1,special:1,shape:1,size:1};
 const FALLBACK={rows:['type:Feu','type:Eau','type:Plante'],cols:['gen:1','stage:1','shape:dual']};
 
 function speciesOf(pokemon){return pokemon.filter(p=>!p.isAltForm&&Number.isInteger(p.id)&&p.id>=1&&p.id<=1025);}
+// Regional forms (Alola, Galar, Hisui, Paldea, the three Paldea Tauros) are answers of their
+// own, with their own types, colour and generation, from this Paris day on: the day's games
+// already started keep their rules.
+const REGIONAL_FORMS_FROM='2026-10-25';
+const REGIONAL_FORM_NAME=/(d['’]Alola|de Galar|de Hisui|de Paldea)( \(.+\))?$/;
+function isRegionalForm(p){return Boolean(p&&p.isAltForm&&p.baseId&&REGIONAL_FORM_NAME.test(p.name));}
+function regionalFormsOn(day){return String(day)>=REGIONAL_FORMS_FROM;}
+function playableOf(pokemon,day){const species=speciesOf(pokemon);return regionalFormsOn(day)?[...species,...pokemon.filter(isRegionalForm)]:species;}
+// A form and its species are the same Pokémon for « one Pokémon per grid ».
+function speciesIdOf(p){return p.isAltForm?Number(p.baseId):Number(p.id);}
 function buildCriteria(pokemon){
   const forms=pokemon.filter(p=>p.isAltForm&&p.baseId);
   const mega=new Set(forms.filter(p=>/^Méga-/.test(p.name)).map(p=>Number(p.baseId)));
-  const regional=new Set(forms.filter(p=>/(d['’]Alola|de Galar|de Hisui|de Paldea)$/.test(p.name)).map(p=>Number(p.baseId)));
+  const regional=new Set(forms.filter(isRegionalForm).map(p=>Number(p.baseId)));
   const list=[
     ...TYPES.map(t=>({key:'type:'+t,family:'type',value:t,label:'Type '+t,test:p=>p.type1===t||p.type2===t})),
     ...REGIONS.map((r,i)=>({key:'gen:'+(i+1),family:'gen',value:i+1,label:r+' (gén. '+(i+1)+')',test:p=>Number(p.gen)===i+1})),
@@ -29,9 +39,9 @@ function buildCriteria(pokemon){
     {key:'stage:1',family:'stage',value:1,label:'Stade de base',hint:'N’est l’évolution d’aucun Pokémon',test:p=>Number(p.stage)===1},
     {key:'stage:2',family:'stage',value:2,label:'Évolué une fois',test:p=>Number(p.stage)===2},
     {key:'stage:3',family:'stage',value:3,label:'Évolué deux fois',test:p=>Number(p.stage)===3},
-    {key:'special:legendary',family:'special',label:'Légendaire ou fabuleux',test:p=>LEGENDARY_IDS.has(p.id)},
+    {key:'special:legendary',family:'special',label:'Légendaire ou fabuleux',test:p=>LEGENDARY_IDS.has(speciesIdOf(p))},
     {key:'special:mega',family:'special',label:'A une Méga-évolution',test:p=>mega.has(p.id)},
-    {key:'special:regional',family:'special',label:'A une forme régionale',hint:'Alola, Galar, Hisui ou Paldea',test:p=>regional.has(p.id)},
+    {key:'special:regional',family:'special',label:'A une forme régionale',hint:'Alola, Galar, Hisui ou Paldea',test:p=>regional.has(p.id)||isRegionalForm(p)},
     {key:'shape:mono',family:'shape',label:'Un seul type',test:p=>!p.type2},
     {key:'shape:dual',family:'shape',label:'Deux types',test:p=>Boolean(p.type2)},
     {key:'size:heavy',family:'size',label:'Pèse 100 kg ou plus',test:p=>Number(p.weight)>=100},
@@ -78,19 +88,19 @@ async function initGridDb(db){
 }
 
 function createGridService({db,pokemon,clock=()=>new Date(),draw=buildGrid}){
-  const species=speciesOf(pokemon),byId=new Map(species.map(p=>[p.id,p])),criteria=buildCriteria(pokemon),rounds=new Map();
+  const byId=new Map(playableOf(pokemon,REGIONAL_FORMS_FROM).map(p=>[p.id,p])),criteria=buildCriteria(pokemon),rounds=new Map();
   function describe(key){const c=criteria.get(key);return c?{key,family:c.family,label:c.label,...(c.value!==undefined?{value:c.value}:{}),...(c.hint?{hint:c.hint}:{})}:{key,family:'unknown',label:key};}
   function cellCriteria(round,cell){return [criteria.get(round.rows[Math.floor(cell/3)]),criteria.get(round.cols[cell%3])];}
-  function answersFor(round,cell){const [r,c]=cellCriteria(round,cell);return r&&c?cellAnswers(species,r,c):[];}
+  function answersFor(round,cell){const [r,c]=cellCriteria(round,cell);return r&&c?cellAnswers(round.pool,r,c):[];}
   async function ensureRound(day){
     if(rounds.has(day))return rounds.get(day);
     let r=(await db.query('SELECT rows,cols FROM grid_rounds WHERE day=$1',[day])).rows[0];
     if(!r){
-      const drawn=draw(day,criteria,species);
+      const drawn=draw(day,criteria,playableOf(pokemon,day));
       await db.query('INSERT INTO grid_rounds(day,rows,cols) VALUES($1,$2::jsonb,$3::jsonb) ON CONFLICT(day) DO NOTHING',[day,JSON.stringify(drawn.rows),JSON.stringify(drawn.cols)]);
       r=(await db.query('SELECT rows,cols FROM grid_rounds WHERE day=$1',[day])).rows[0];
     }
-    const round={rows:r.rows,cols:r.cols};round.possible=Array.from({length:CELLS},(_,i)=>answersFor(round,i).length);
+    const round={rows:r.rows,cols:r.cols,pool:playableOf(pokemon,day),regionalForms:regionalFormsOn(day)};round.possible=Array.from({length:CELLS},(_,i)=>answersFor(round,i).length);
     rounds.set(day,round);if(rounds.size>4)rounds.delete(rounds.keys().next().value);
     return round;
   }
@@ -124,7 +134,7 @@ function createGridService({db,pokemon,clock=()=>new Date(),draw=buildGrid}){
       const examples=answersFor(round,i).map(p=>p.id).filter(id=>id!==cells[i]).slice(0,8);
       return {popular:top?{pokemonId:Number(top.id),rarity:s.rarity(i,top.id)}:null,examples};
     }):null;
-    return {ok:true,...cal,accountId:who.accountId||null,authenticated:Boolean(who.accountId),mode:'grid',label:'Grille du jour',
+    return {ok:true,...cal,accountId:who.accountId||null,authenticated:Boolean(who.accountId),mode:'grid',regionalForms:round.regionalForms,label:'Grille du jour',
       status,finished,endReason:row?.end_reason||null,pp:PP-found-misses.length,maxPp:PP,found,points:Number(row?.points||0),maxPoints:100,
       originality:rarities.length?Math.round(100-rarities.reduce((a,b)=>a+b,0)/rarities.length):null,players:s.players,
       rows:round.rows.map(describe),cols:round.cols.map(describe),possible:round.possible,
@@ -175,7 +185,8 @@ function createGridService({db,pokemon,clock=()=>new Date(),draw=buildGrid}){
       if(row.status!=='playing')return snapshot(cal,who,round,row,await stats(c,cal.day));
       const cells=[...row.cells],misses=[...row.misses];
       if(cells[cell])throw fail('cell_filled');
-      if(cells.includes(id))throw fail('already_used');
+      if(byId.get(id).isAltForm&&!round.regionalForms)throw fail('form_not_allowed',400);
+      if(cells.some(c=>c&&speciesIdOf(byId.get(c))===speciesIdOf(byId.get(id))))throw fail('already_used');
       if(misses.some(m=>m.cell===cell&&m.pokemonId===id))throw fail('already_tried');
       const failed=cellCriteria(round,cell).filter(k=>!k.test(byId.get(id))).map(k=>k.label),correct=!failed.length;
       if(correct)cells[cell]=id;else misses.push({cell,pokemonId:id});
@@ -256,4 +267,4 @@ function mountGridRoutes({app,express,db,pokemon,secret,getUser,readCookies,read
   app.post('/api/daily/grid/stop',express.json({limit:'2kb'}),handle((who,req)=>service.stop(who,req.body||{})));
   return {ready,async leaderboard(scope,accountId){if(!service||!await ready)throw fail('unavailable',503);return service.leaderboard(scope,accountId);}};
 }
-module.exports={PP,LEGENDARY_IDS,buildCriteria,buildGrid,gridPoints,speciesOf,initGridDb,createGridService,mountGridRoutes};
+module.exports={PP,LEGENDARY_IDS,REGIONAL_FORMS_FROM,buildCriteria,buildGrid,gridPoints,speciesOf,isRegionalForm,regionalFormsOn,playableOf,speciesIdOf,initGridDb,createGridService,mountGridRoutes};

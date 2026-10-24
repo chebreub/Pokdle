@@ -4,7 +4,7 @@
 // sa feuille en privé, le premier qui a tout rempli crie STOP, puis tout le monde
 // vérifie les réponses (justes d'office, la majorité peut en refuser) avant les points.
 let petitBacState = null, petitBacClock = null;
-const PETITBAC_REASONS = { empty: 'Case vide', letter: 'Mauvaise lettre', unknown: 'Pokémon inconnu', criterion: 'Ne coche pas le thème', vote: 'Refusé au vote' };
+const PETITBAC_REASONS = { empty: 'Case vide', letter: 'Mauvaise lettre', unknown: 'Pokémon inconnu', form: 'Cette forme ne compte pas (Méga ou spéciale)', criterion: 'Ne coche pas le thème', vote: 'Refusé au vote' };
 
 function petitBacNormalize(text) { return String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 function petitBacInitial(text) { return petitBacNormalize(text).charAt(0).toUpperCase(); }

@@ -5,7 +5,7 @@
 // right unless Pokédle knows they are wrong (letter, unknown Pokémon, wrong type…), and
 // a majority vote can turn any of them. Small spelling mistakes are forgiven. A valid
 // answer earns 2 points when nobody else gave it, 1 point when shared.
-const {buildCriteria,speciesOf}=require('./daily-grid');
+const {buildCriteria,speciesOf,isRegionalForm,speciesIdOf}=require('./daily-grid');
 const STOP_MS=10000,REVIEW_MS=90000,MAX_ANSWER=40,MIN_THEMES=3,MAX_THEMES=10,SOLO_COLUMNS=6,MIN_SOLO_ANSWERS=2;
 const TIMES=[60,300,0],DEFAULT_TIME=300,ROUNDS=[3,5,10],DEFAULT_ROUNDS=3;
 const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),HARD_LETTERS=['Q','W','X','Y','Z'];
@@ -54,22 +54,25 @@ function catalogFor(catalogue){
   const auto=[
     {key:'any',family:'any',label:'N’importe quel Pokémon',test:()=>true},
     ...grid,
-    {key:'special:starter',family:'special',label:'Starter ou son évolution',test:p=>STARTER_IDS.has(p.id)},
+    {key:'special:starter',family:'special',label:'Starter ou son évolution',test:p=>STARTER_IDS.has(speciesIdOf(p))},
     {key:'size:light',family:'size',label:'Pèse moins de 10 kg',test:p=>Number(p.weight)<10},
     {key:'size:small',family:'size',label:'Mesure moins de 1 m',test:p=>Number(p.height)<1},
   ];
   const groupOf=family=>['type','gen','color','free'].includes(family)?family:'pokemon';
   const entries=[...auto,...FREE.map(f=>({...f,family:'free'}))].map(c=>({...c,group:groupOf(c.family)}));
   const byKey=new Map(entries.map(c=>[c.key,c]));
-  const species=speciesOf(catalogue).map(p=>({p,norm:normalize(p.name),initial:initialOf(p.name)}));
-  const value={byKey,species,list:entries.map(describe)};
+  const entry=p=>({p,norm:normalize(p.name),initial:initialOf(p.name)});
+  const species=speciesOf(catalogue).map(entry),regional=catalogue.filter(isRegionalForm).map(entry);
+  // Méga and special forms never count; naming one says so instead of « unknown ».
+  const otherForms=catalogue.filter(p=>p.isAltForm&&!isRegionalForm(p)).map(entry);
+  const value={byKey,species,regional,otherForms,list:entries.map(describe)};
   catalogs.set(catalogue,value);
   return value;
 }
 function describe(c){return {key:c.key,family:c.family,group:c.group,label:c.label,...(c.value!==undefined?{value:c.value}:{}),...(c.hint?{hint:c.hint}:{})};}
-function poolFor(cat,gens){
+function poolFor(cat,gens,regionalForms=false){
   const allowed=Array.isArray(gens)&&gens.length?gens.map(Number):[1,2,3,4,5,6,7,8,9];
-  return cat.species.filter(s=>allowed.includes(Number(s.p.gen||s.p.generation)));
+  return (regionalForms?[...cat.species,...cat.regional]:cat.species).filter(s=>allowed.includes(Number(s.p.gen||s.p.generation)));
 }
 // Letters where every Pokémon theme has at least one answer in the chosen generations.
 function playableLetters(catalogue,gens,themes,hard=false){
@@ -86,12 +89,17 @@ function matchPokemon(text,pool){
   for(const s of pool){if(s.norm[0]!==name[0])continue;const d=distance(name,s.norm,max);if(d<best){best=d;list=[s.p];}else if(d===best)list.push(s.p);}
   return best<=max?{matches:list,fuzzy:true}:null;
 }
-function checkPokemonAnswer(text,letter,category,catalogue,gens){
+// Regional forms answer with their own types and colour; the daily sheet switches them on
+// from REGIONAL_FORMS_FROM, live Party Rooms at once.
+function checkPokemonAnswer(text,letter,category,catalogue,gens,{regionalForms=true}={}){
   const cat=catalogFor(catalogue),answer=cleanAnswer(text);
   if(!answer)return {text:'',valid:false,reason:'empty'};
   if(initialOf(answer)!==letter)return {text:answer,valid:false,reason:'letter'};
-  const found=matchPokemon(answer,poolFor(cat,gens));
-  if(!found)return {text:answer,valid:false,reason:'unknown'};
+  const found=matchPokemon(answer,poolFor(cat,gens,regionalForms));
+  if(!found){
+    const name=normalize(answer),form=[...cat.otherForms,...(regionalForms?[]:cat.regional)].find(s=>s.norm===name);
+    return {text:answer,valid:false,reason:form?'form':'unknown'};
+  }
   const c=cat.byKey.get(category.key),hit=c?found.matches.find(p=>c.test(p)):null;
   if(!hit)return {text:answer,valid:false,reason:'criterion',pokemonId:Number(found.matches[0].id),name:found.matches[0].name};
   return {text:answer,valid:true,pokemonId:Number(hit.id),name:hit.name,...(found.fuzzy?{fuzzy:true}:{})};
