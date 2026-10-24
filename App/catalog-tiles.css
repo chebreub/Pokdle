@@ -521,7 +521,9 @@
   #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) .mode-tile > .mode-tile-body { gap:2px; padding:9px 5px 3px; }
   #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) .mode-tile-family { font-size:10px; }
   #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) .mode-tile-title { font-size:16.5px; }
-  #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) :is(.mode-tile-desc, .mode-tile-record, .mode-tile-level span) { display:none !important; }
+  #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) :is(.mode-tile-record, .mode-tile-level span) { display:none !important; }
+  /* A newcomer on a phone reads what the game is, not only its name: two short lines at most. */
+  #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) .mode-tile-desc { flex:0 0 auto; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font:600 12px/1.3 Nunito, sans-serif; }
   #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) .mode-tile-foot { margin-top:auto; padding-top:6px; }
   #pokdle-app.design-refresh :is(#screen-all-modes, #home-games-grid) .mode-tile-go { font-size:13px; }
 }
