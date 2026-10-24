@@ -3,7 +3,7 @@
 #screen-egg .egg-toolbar {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;}
 #screen-egg .egg-toolbar>span {font:800 12px Nunito,sans-serif;padding:10px 14px;background:#EFE8FF;color:#57408a;border-radius:30px;}
 #screen-egg .shell-intro {text-align:center;margin-bottom:24px;}
-#pokdle-app.design-refresh #screen-egg h1 {font:500 clamp(30px,5vw,44px)/1.2 Fredoka,sans-serif;margin:12px 0;color:inherit;}
+#pokdle-app.design-refresh #screen-egg h2.egg-title {font:500 clamp(30px,5vw,44px)/1.2 Fredoka,sans-serif;margin:12px 0;color:inherit;}
 #screen-egg h2 {font:500 24px Fredoka,sans-serif;margin:6px 0 12px;}
 #screen-egg .shell-intro>p:last-child {font-size:16px;line-height:1.6;max-width:650px;margin:0 auto;color:var(--egg-muted);}
 #egg-notice:empty {display:none;}

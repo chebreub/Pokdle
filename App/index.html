@@ -116,7 +116,7 @@
   <header>
   <div class="header-inner">
     <div class="header-top">
-      <button id="logo-home" class="logo-home-btn" type="button" aria-label="Retour à l'accueil">
+      <button id="logo-home" class="logo-home-btn" type="button" aria-label="Pokédle, retour à l'accueil">
         <div class="logo-row">
           <div class="pokeball-icon">
             <div class="pb-top"></div>
@@ -230,7 +230,7 @@
       <div id="challenge-panel" class="card challenge-panel hidden">
         <p class="challenge-title">🤝 Défi ami — choisis un Pokémon et envoie le lien :</p>
         <div class="ac-wrapper">
-          <input type="text" id="challenge-input" placeholder="Chercher un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
+          <input type="text" id="challenge-input" aria-label="Pokémon à envoyer en défi" placeholder="Chercher un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" />
           <div id="challenge-ac" class="ac-list hidden"></div>
         </div>
         <div id="challenge-preview" class="challenge-preview hidden">
@@ -247,7 +247,7 @@
         <div id="home-engagement-widget" class="home-engagement-widget"></div>
         <div class="home-section-head">
           <div>
-            <h2 class="card-title">Progression</h2>
+            <h2 class="card-title">Mes statistiques de jeu</h2>
             <p class="card-desc">Retrouve tes statistiques, ta série quotidienne et ta progression en un coup d'œil.</p>
           </div>
         </div>
@@ -389,7 +389,7 @@
         </div>
 
         <div id="profile-trainer-card" class="trainer-card" aria-live="polite"></div>
-        <input id="profile-photo-input" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
+        <input id="profile-photo-input" aria-label="Photo de profil" type="file" accept="image/*" class="hidden" data-change-action="handleProfilePhotoFromEl" />
         <section id="profile-secrets" class="hidden" aria-label="Carnet des secrets">
           <div class="secrets-intro"><span class="adventure-eyebrow">IL SE PASSE QUELQUE CHOSE ICI</span><h3>Le carnet des secrets</h3><p>Douze secrets, des énigmes et des Pokémon cachés dans le site. À toi de les débusquer.</p><small>Ces missions commencent maintenant : tes anciennes parties ne les accomplissent pas à ta place. Rien n’expire.</small></div>
           <div class="secret-filters" role="group" aria-label="Filtrer les secrets"><button type="button" data-secret-filter="active" data-action="setSecretJournalFilter" data-args='["active"]' aria-pressed="true">À explorer <span>12</span></button><button type="button" data-secret-filter="ready" data-action="setSecretJournalFilter" data-args='["ready"]' aria-pressed="false">À rencontrer <span>0</span></button><button type="button" data-secret-filter="found" data-action="setSecretJournalFilter" data-args='["found"]' aria-pressed="false">Rencontrés <span>0</span></button></div>
@@ -617,13 +617,13 @@
           <div class="home-builder-grid" id="team-builder-grid" aria-label="Slots de la team"></div>
           <div class="home-builder-editor">
             <div class="home-builder-editor-head">
-              <h4 id="team-builder-editor-title">Slot 1</h4>
+              <h3 id="team-builder-editor-title">Slot 1</h3>
               <p id="team-builder-editor-sub">Sélectionne un slot pour l’éditer.</p>
               <div id="team-builder-editor-identity" class="team-builder-editor-identity" aria-live="polite"></div>
             </div>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
-                <h5>Pokémon</h5>
+                <h4>Pokémon</h4>
               </div>
               <div class="home-builder-fields team-builder-fields-single">
                 <div class="home-type-helper-label team-builder-pokemon-picker">
@@ -635,7 +635,7 @@
                   </button>
                   <div id="team-builder-pokemon-picker" class="team-builder-pokemon-picker-panel hidden" role="dialog" aria-label="Sélecteur de Pokémon">
                     <div class="team-builder-pokemon-picker-head">
-                      <input id="team-builder-pokemon-search" type="search" placeholder="Rechercher un Pokémon" autocomplete="off" />
+                      <input id="team-builder-pokemon-search" aria-label="Rechercher un Pokémon pour l’équipe" type="search" placeholder="Rechercher un Pokémon" autocomplete="off" />
                       <button id="team-builder-pokemon-clear" class="btn-ghost" type="button">Effacer</button>
                     </div>
                     <div id="team-builder-pokemon-results" class="team-builder-pokemon-results"></div>
@@ -645,7 +645,7 @@
             </section>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
-                <h5>Set</h5>
+                <h4>Set</h4>
                 <p>Objet tenu et les 4 attaques.</p>
               </div>
               <div class="home-builder-fields">
@@ -693,7 +693,7 @@
               <summary class="team-builder-advanced-summary">⚙️ Détails compétitifs <span>nature, talent, EV/IV, Tera, stats finales</span></summary>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
-                <h5>Mécanique de slot</h5>
+                <h4>Mécanique de slot</h4>
                 <p>Gimmick : Téra, Méga, etc.</p>
               </div>
               <div class="home-builder-fields">
@@ -709,7 +709,7 @@
             </section>
             <section class="team-builder-editor-section team-builder-strategic">
               <div class="team-builder-editor-section-head">
-                <h4>Réglages stratégiques</h4>
+                <h3>Réglages stratégiques</h3>
                 <p>Des réglages guidés pour préparer le slot sans alourdir l’édition.</p>
               </div>
               <div class="team-builder-strategic-grid">
@@ -750,7 +750,7 @@
             </section>
             <section class="team-builder-editor-section">
               <div class="team-builder-editor-section-head">
-                <h5>Stats finales</h5>
+                <h4>Stats finales</h4>
                 <p>Lecture rapide du slot final avec sa nature, ses EV et ses IV.</p>
               </div>
               <div id="team-builder-computed-stats" class="team-builder-computed-stats" aria-live="polite"></div>
@@ -761,7 +761,7 @@
           <div class="team-builder-export">
             <div class="team-builder-export-head">
               <div>
-                <h4>Export rapide</h4>
+                <h3>Export rapide</h3>
                 <p>Copie ta team au format texte pour la partager ou la retravailler ailleurs.</p>
               </div>
               <span id="team-builder-export-meta" class="home-coming-badge">0 Pokémon</span>
@@ -775,7 +775,7 @@
           <div class="team-builder-export">
             <div class="team-builder-export-head">
               <div>
-                <h4>Import rapide</h4>
+                <h3>Import rapide</h3>
                 <p>Colle une team texte pour remplir le builder automatiquement.</p>
               </div>
               <span class="home-coming-badge">Texte</span>
@@ -946,7 +946,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <p class="card-desc">Lance une ROM GBA, GBC ou DS depuis ton appareil. Aucune ROM n'est fournie — charge la tienne (jeux que tu possèdes).</p>
 
         <div class="emulator-toolbar">
-          <select id="emu-rom-select"></select>
+          <select id="emu-rom-select" aria-label="Jeu à lancer"></select>
           <button class="btn-blue" data-action="launchSelectedEmuRom">&#9654; Lancer</button>
           <label class="btn-blue emu-upload-btn" for="emu-rom-file">&#128193; Charger ma ROM</label>
           <input id="emu-rom-file" type="file" accept=".gba,.gbc,.gb,.nds" class="hidden" />
@@ -975,7 +975,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
         <button class="btn-ghost btn-tiny shell-help" data-action="openHelpModal">Comment jouer</button>
         <span class="shell-topbar-break" aria-hidden="true"></span>
       </div>
-      <div id="shell-intro" class="shell-intro hidden"><p id="shell-kicker"></p><h1 id="shell-title"></h1><p id="shell-instruction"></p></div>
+      <div id="shell-intro" class="shell-intro hidden"><p id="shell-kicker"></p><h2 id="shell-title">Jeu Pokémon</h2><p id="shell-instruction"></p></div>
       <details id="shell-notebook" class="shell-notebook hidden" aria-label="Carnet d’enquête" open>
         <summary class="notebook-heading"><span class="notebook-stamp" aria-hidden="true">◉</span><div><span>CARNET D’ENQUÊTE</span><h2>Ce que tu sais déjà</h2></div></summary>
         <div id="shell-facts" aria-live="polite"></div><p id="shell-goal"></p>
@@ -1146,7 +1146,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="quiz-good">Bonnes : 0</span>
           <span id="quiz-bad">Mauvaises : 0</span>
         </div>
-        <h3 id="quiz-question" tabindex="-1"></h3>
+        <h3 id="quiz-question" tabindex="-1">Question du quiz</h3>
         <div id="quiz-options" class="mode-buttons"></div>
         <p id="quiz-feedback" class="err-msg"></p>
         <button id="quiz-next-btn" class="btn-blue hidden" data-action="nextQuizQuestion">Question suivante</button>
@@ -1233,17 +1233,17 @@ EVs: 252 Atk / 4 Def / 252 Spe
 
     <div id="screen-leaderboard" class="hidden" aria-label="Classements">
       <section class="leaderboard-page">
-        <div class="leaderboard-page-bar"><button class="btn-ghost" type="button" data-action="goToConfig">← Accueil</button><h1>Classements</h1></div>
+        <div class="leaderboard-page-bar"><button class="btn-ghost" type="button" data-action="goToConfig">← Accueil</button><h2>Classements</h2></div>
         <div id="leaderboard-page-body"></div>
       </section>
     </div>
 
     <div id="screen-egg" class="hidden" aria-label="Œuf mystère">
       <div class="egg-toolbar"><button class="btn-ghost" data-action="goToConfig">← Jeux</button><span>COMMUNAUTÉ · HEBDOMADAIRE</span><button class="btn-ghost" data-action="loadEggState">Actualiser</button></div>
-      <div class="shell-intro"><p class="club-eyebrow">UNE ENQUÊTE À RÉSOUDRE ENSEMBLE</p><h1>L’Œuf mystère</h1><p>Chaque mauvaise piste est écartée pour tout le monde. La prochaine sera-t-elle la bonne ?</p></div>
+      <div class="shell-intro"><p class="club-eyebrow">UNE ENQUÊTE À RÉSOUDRE ENSEMBLE</p><h2 class="egg-title">L’Œuf mystère</h2><p>Chaque mauvaise piste est écartée pour tout le monde. La prochaine sera-t-elle la bonne ?</p></div>
       <p id="egg-notice" class="pk-skel-text" role="status" aria-live="polite">Chargement du défi…</p>
       <div id="egg-content" class="hidden">
-        <section class="egg-prize"><div class="egg-drawing" aria-hidden="true"><i></i><i></i><i></i></div><div><span class="club-eyebrow">LE PREMIER À TROUVER REMPORTE</span><h2 id="egg-reward-name"></h2><p>Un compagnon et l’insigne de cette enquête. Une autre récompense est choisie si tu possèdes déjà ce Pokémon.</p><small id="egg-reset"></small></div><img id="egg-reward-sprite" alt="" width="112" height="112"/></section>
+        <section class="egg-prize"><div class="egg-drawing" aria-hidden="true"><i></i><i></i><i></i></div><div><span class="club-eyebrow">LE PREMIER À TROUVER REMPORTE</span><h2 id="egg-reward-name">Récompense de l’Œuf mystère</h2><p>Un compagnon et l’insigne de cette enquête. Une autre récompense est choisie si tu possèdes déjà ce Pokémon.</p><small id="egg-reset"></small></div><img id="egg-reward-sprite" alt="" width="112" height="112"/></section>
         <section class="egg-investigation"><div class="egg-progress"><strong id="egg-eliminated"></strong><span id="egg-remaining"></span></div><progress id="egg-progress-bar" max="1025" value="0" aria-label="Pokémon écartés"></progress><div id="egg-clues" class="egg-clues"></div><p id="egg-next-clue"></p></section>
         <section id="egg-finish" class="egg-finish hidden" aria-live="polite"></section>
         <form id="egg-form" class="egg-form" data-submit-action="submitEggGuess">
@@ -1327,7 +1327,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <div class="party-play-area">
               <div id="party-round" class="party-round hidden">
                 <div class="party-stage-top"><span id="party-stage-progress" class="party-eyebrow"></span><div id="party-timer" class="party-timer hidden"></div></div>
-                <h3 id="party-round-mode" class="party-round-mode"></h3>
+                <h3 id="party-round-mode" class="party-round-mode">Manche en cours</h3>
                 <div id="party-nearest-target" class="party-nearest-target hidden"><span>NUMÉRO CIBLE</span><b id="party-target-number">#000</b><p>Quel Pokémon s’en rapproche le plus ?</p></div>
                 <img id="party-round-sprite" class="party-round-sprite" alt="Pokémon à deviner" />
                 <section id="party-round-recap" class="party-round-recap hidden" aria-live="polite"></section>
@@ -1441,7 +1441,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
               <button id="multiplayer-create-room" class="btn-red multiplayer-create-room-btn" type="button" data-action="createMultiplayerRoom">Créer une room</button>
             </div>
             <div class="multiplayer-join-row">
-              <input id="multiplayer-room-input" type="text" maxlength="5" placeholder="Code de room..." autocomplete="off" />
+              <input id="multiplayer-room-input" aria-label="Code de la room" type="text" maxlength="5" placeholder="Code de room..." autocomplete="off" />
               <button class="btn-blue" type="button" data-action="joinMultiplayerRoom">Rejoindre</button>
             </div>
             <div class="multiplayer-steps">
@@ -1648,7 +1648,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
 </footer>
 
     <script src="dist/pokemon.min.js" defer></script>
-    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="dist/socket.io.min.js" defer></script>
     <script src="dist/script.min.js" defer></script>
     <div id="app-toast" class="app-toast" role="status" aria-live="polite"></div>
   </body>
