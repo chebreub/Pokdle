@@ -111,8 +111,9 @@ function renderHubPage() {
   ] };
   return layout({ title: 'Tous les jeux Pokémon gratuits · Pokédle', description: 'Les ' + GAMES.length + ' jeux et outils Pokémon de Pokédle : Pokémon du jour, Grille, Petit Bac, quiz, Qui est-ce, Pokédex et table des types. Gratuit, sans pub.', path: '/jeux', body, data });
 }
+// Only pages that are their own canonical: /emulateur serves the home page, whose canonical is « / ».
 function sitemapXml() {
-  const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/emulateur', 'monthly', '0.5'], ['/confidentialite', 'yearly', '0.2']];
+  const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/confidentialite', 'yearly', '0.2']];
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map(([path, freq, priority]) => '  <url>\n    <loc>' + esc(SITE + path) + '</loc>\n    <changefreq>' + freq + '</changefreq>\n    <priority>' + priority + '</priority>\n  </url>').join('\n') + '\n</urlset>\n';
 }

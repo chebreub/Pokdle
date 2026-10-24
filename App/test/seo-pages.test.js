@@ -169,3 +169,9 @@ test('regulars see the daily first: recent games come right after the daily hero
   const hero = html.indexOf('id="daily-hero"'), back = html.indexOf('id="home-return"'), discovery = html.indexOf('class="home-discovery"');
   assert.ok(hero > 0 && hero < back && back < discovery, 'order: daily hero, recent games, game catalogue');
 });
+
+test('the sitemap lists only canonical pages, never /emulateur (the home page under another path)', () => {
+  const xml = sitemapXml();
+  assert.doesNotMatch(xml, /\/emulateur/);
+  assert.match(xml, /<loc>https:\/\/pokdle\.onrender\.com\/<\/loc>/);
+});
