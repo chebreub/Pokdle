@@ -1253,6 +1253,7 @@ app.get("/apple-touch-icon.png", (_req, res) => res.sendFile(path.join(__dirname
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
 // PokeAPI par nouveau visiteur.
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
+app.get("/base-stats.json", (_req, res) => res.sendFile(path.join(__dirname, "base-stats.json"), { maxAge: "1d" }));
 // SEO.
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
 app.get("/googled8d0a3d4583f5db3.html", (_req, res) => res.sendFile(path.join(__dirname, "googled8d0a3d4583f5db3.html")));
@@ -1365,16 +1366,26 @@ app.get("/admin/stats", async (req, res) => {
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
   let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
   let aggregateHtml = "<p>Compteurs quotidiens persistants indisponibles.</p>";
+  let metrics = null;
+  try { if (pgPool && await usageMetricsReady) metrics = await usageMetrics.recent(pgPool, 14); } catch (_error) { metrics = null; }
   if (pgPool) {
     try {
-      const vt = await pgPool.query("SELECT COALESCE(SUM(hits),0)::int AS total FROM visits");
-      const vd = await pgPool.query("SELECT to_char(day, 'DD/MM/YYYY') AS d, hits FROM visits ORDER BY day DESC LIMIT 14");
-      visitTotalHtml = `<h2 style="margin-top:24px">Visites (persistées en base — survivent aux redéploiements)</h2><p>Total cumulé : <b style="font-size:1.6rem;color:#2f76ff">${vt.rows[0].total}</b> chargements de page.</p><table><thead><tr><th>Jour</th><th>Visites</th></tr></thead><tbody>${vd.rows.map((r) => `<tr><th>${r.d}</th><td>${r.hits}</td></tr>`).join("")}</tbody></table>`;
+      // Real visits: one per browser session, sent by the page itself (« visit »). Robots,
+      // link previews and keep-alive pings never run the page, but every one of them loads
+      // « / »: the raw count stays alongside, for comparison only.
+      const vd = await pgPool.query("SELECT to_char(day, 'YYYY-MM-DD') AS d, hits FROM visits ORDER BY day DESC LIMIT 14");
+      const raw = new Map(vd.rows.map((r) => [r.d, Number(r.hits) || 0]));
+      const real = new Map((metrics || []).filter((r) => r.event === "visit").map((r) => [r.day, Number(r.hits) || 0]));
+      const days = [...new Set([...real.keys(), ...raw.keys()])].sort().reverse().slice(0, 14);
+      const label = (day) => day.slice(8, 10) + "/" + day.slice(5, 7) + "/" + day.slice(0, 4);
+      const realTotal = days.reduce((sum, day) => sum + (real.get(day) || 0), 0);
+      visitTotalHtml = `<h2 style="margin-top:24px">Visites — 14 derniers jours</h2><p><b style="font-size:1.6rem;color:#2f76ff">${realTotal}</b> visites réelles : une par session de navigateur qui a vraiment ouvert le site.</p>` +
+        `<p>« Chargements bruts » compte chaque appel de la page d'accueil, robots (Google, aperçus de liens) et pings de maintien en éveil compris : ne pas le lire comme une audience.</p>` +
+        `<table><thead><tr><th>Jour</th><th>Visites réelles</th><th>Chargements bruts</th></tr></thead><tbody>${days.map((day) => `<tr><th>${label(day)}</th><td>${real.has(day) ? real.get(day) : "—"}</td><td>${raw.has(day) ? raw.get(day) : "—"}</td></tr>`).join("")}</tbody></table>`;
     } catch (e) { visitTotalHtml = "<p>(compteur persistant indisponible : " + e.message + ")</p>"; }
   }
   try {
-    if (await usageMetricsReady) {
-      const metrics = await usageMetrics.recent(pgPool, 14);
+    if (metrics) {
       const summary = usageMetrics.summarizeModes(metrics, USAGE_LABELS);
       const rows = summary.map((row) => {
         const name = String(row.label).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
@@ -1382,7 +1393,7 @@ app.get("/admin/stats", async (req, res) => {
       }).join("");
       aggregateHtml = '<h2 style="margin-top:24px">Modes joués — 14 derniers jours (base persistante)</h2>' +
         '<p>Événements déclarés par les navigateurs : démarrages et manches conclues, pas des personnes uniques. Un mode peut comporter plusieurs manches par lancement ; <b>ces totaux ne sont pas des taux de conversion ni de rétention</b>. Aucune réponse de jeu, adresse IP ou identité n’est enregistrée dans les agrégats (conservés 90 jours maximum).</p>' +
-        '<table><thead><tr><th>Mode</th><th>Démarrages</th><th>Fins</th><th>Victoires</th><th>Défaites</th></tr></thead><tbody>' +
+        '<table><thead><tr><th>Mode</th><th>Démarrages</th><th>Fins</th><th>Victoires</th><th>Défaites ou abandons</th></tr></thead><tbody>' +
         (rows || '<tr><td colspan="5">Aucune partie suivie dans cette période.</td></tr>') + '</tbody></table>';
     }
   } catch (error) {

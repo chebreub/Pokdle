@@ -3450,6 +3450,8 @@ function openOddOneOutMode() {
 }
 
 function startWeightBattle() {
+  // Each next duel calls this again: only entering the game counts as a start.
+  const entering = gameMode !== "weight";
   const pool = getPoolFromSelectedGens().filter((pokemon) => !pokemon.isAltForm);
   if (pool.length < 2) {
     showToast("Sélectionne au moins une génération avec suffisamment de Pokémon.");
@@ -3460,6 +3462,7 @@ function startWeightBattle() {
   const right = pickRandomPokemonFromPool(rightPool) || rightPool[0];
   weightBattleState = { left, right, revealed: false, selectedId: null };
   gameMode = "weight";
+  if (entering) trackUsage("solo:weight");
   secretPokemon = left.weight >= right.weight ? left : right;
   activePool = pool;
   attempts = 0;
