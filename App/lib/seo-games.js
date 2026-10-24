@@ -13,6 +13,8 @@ const GROUPS = {
 const GAMES = [
   {
     slug: 'pokemon-du-jour', group: 'daily', sprite: 149, name: 'Pokémon du jour',
+    // The daily silhouette « Tu le reconnais ? »; every other page has img/og/<slug>.jpg.
+    ogImage: '/og-image.png',
     short: 'Le même Pokémon mystère pour tous, chaque jour.',
     title: 'Pokémon du jour : devine le Pokémon mystère | Pokédle',
     description: 'Chaque jour, un Pokémon mystère, le même pour tous. Propose un nom : type, génération, taille, poids… chaque essai te rapproche. Gratuit, sans pub.',
@@ -29,7 +31,7 @@ const GAMES = [
       'Jusqu’à 40 points si tu trouves du premier coup.',
       'Le Pokémon change chaque jour à minuit (heure de Paris) et ne revient pas avant un an.',
       'C’est la première épreuve du parcours du jour : Enquête, Wordle, Dossier puis Défi, pour 100 points au total.',
-      'Avec un compte Discord ou Google, ton résultat entre au classement du jour et ta série de victoires est gardée.',
+      'Avec un compte Discord, Google ou Twitch, ton résultat entre au classement du jour et ta série de victoires est gardée.',
     ],
     related: ['wordle-pokemon', 'grille-pokemon', 'devine-le-pokemon'],
   },
@@ -112,7 +114,7 @@ const GAMES = [
     facts: [
       'Médaille Bronze, Argent dès 450 points, Or dès 540 et Maître avec 600 points.',
       'La semaine commence le lundi à minuit, heure de Paris.',
-      'Le classement de la Ligue compte les joueurs connectés avec Discord ou Google.',
+      'Le classement de la Ligue compte les joueurs connectés avec Discord, Google ou Twitch.',
     ],
     related: ['quiz-pokemon', 'speedrun-pokedex', 'higher-or-lower-pokemon'],
   },

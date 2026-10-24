@@ -175,3 +175,17 @@ test('the sitemap lists only canonical pages, never /emulateur (the home page un
   assert.doesNotMatch(xml, /\/emulateur/);
   assert.match(xml, /<loc>https:\/\/pokdle\.onrender\.com\/<\/loc>/);
 });
+
+test('every game page shows its own link preview: a 1200×630 image that exists and stays light', async () => {
+  const sharp = require('sharp');
+  for (const game of GAMES) {
+    const image = renderGamePage(game).match(/<meta property="og:image" content="([^"]+)">/)[1];
+    if (game.ogImage) { assert.equal(image, SITE + game.ogImage); continue; }
+    assert.equal(image, SITE + '/img/og/' + game.slug + '.jpg', game.slug);
+    const file = path.join(__dirname, '../img/og', game.slug + '.jpg');
+    assert.ok(fs.existsSync(file), game.slug + ' has no preview image: run node tools/og-game-images.js');
+    assert.ok(fs.statSync(file).size < 120 * 1024, game.slug + ' preview is too heavy');
+    const { width, height, format } = await sharp(file).metadata();
+    assert.deepEqual([width, height, format], [1200, 630, 'jpeg'], game.slug);
+  }
+});

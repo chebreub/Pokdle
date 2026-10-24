@@ -62,11 +62,11 @@ function related(game) {
 function cardHtml(game) {
   return '<li><a href="/jeux/' + esc(game.slug) + '"><img src="' + esc(ARTWORK(game.sprite)) + '" alt="" width="56" height="56" loading="lazy"><b>' + esc(game.name) + '</b><small>' + esc(game.short) + '</small></a></li>';
 }
-function layout({ title, description, path, body, data }) {
+function layout({ title, description, path, body, data, image = '/og-image.png' }) {
   const url = SITE + path;
   return '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     '<title>' + esc(title) + '</title>\n<meta name="description" content="' + esc(description) + '">\n<link rel="canonical" href="' + esc(url) + '">\n' +
-    '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + SITE + '/og-image.png">\n<meta property="og:locale" content="fr_FR">\n<meta name="twitter:card" content="summary_large_image">\n' +
+    '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + SITE + esc(image) + '">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:locale" content="fr_FR">\n<meta name="twitter:card" content="summary_large_image">\n' +
     '<meta name="theme-color" content="#FFF8EF">\n<link rel="icon" type="image/svg+xml" href="' + ICON + '">\n' + FONTS + '<style>' + STYLE + '</style>\n' +
     '<script type="application/ld+json">' + jsonLd(data) + '</script>\n</head>\n<body>\n' +
     '<header class="top"><a class="brand" href="/"><img src="' + ICON + '" alt="" width="32" height="32">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Tous les jeux</a><a href="/">Jouer</a></nav></header>\n' +
@@ -94,7 +94,8 @@ function renderGamePage(game) {
     { '@type': 'WebApplication', name: game.name + ' · Pokédle', url: SITE + path, description: game.description, applicationCategory: game.group === 'tools' ? 'ReferenceApplication' : 'GameApplication', operatingSystem: 'Navigateur web', inLanguage: 'fr', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }, image: ARTWORK(game.sprite) },
     breadcrumb([['Pokédle', '/'], ['Jeux', '/jeux'], [game.name, path]]),
   ] };
-  return layout({ title: game.title, description: game.description, path, body, data });
+  // Each game page shows its own link preview (tools/og-game-images.js builds them).
+  return layout({ title: game.title, description: game.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg' });
 }
 function renderHubPage() {
   const body =
