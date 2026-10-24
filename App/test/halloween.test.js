@@ -244,3 +244,13 @@ test('navigation and footer ornaments mount once and leave cleanly when disabled
   assert.equal(f.tabbar.children.length, 1);
   assert.equal(f.footer.children.length, 1);
 });
+
+test('seasonal decorations stay light: every Halloween image the page loads is under 200 KB', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../src/script.13.halloween.js'), 'utf8');
+  const files = [...new Set(source.match(/\/img\/halloween\/[\w.-]+\.(?:png|webp)/g) || [])];
+  assert.ok(files.some(file => file.includes('pumpkin-garden')), 'the pumpkin garden is referenced');
+  for (const file of files) {
+    const size = fs.statSync(path.join(__dirname, '..', file)).size;
+    assert.ok(size < 200 * 1024, file + ' weighs ' + Math.round(size / 1024) + ' KB');
+  }
+});

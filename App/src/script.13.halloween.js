@@ -108,16 +108,16 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
       decorate(hero, 'halloween-web halloween-web-top', web);
       decorate(hero, 'halloween-leaves', leaves);
       decorate(hero, 'halloween-season-label', '<span>✦</span> La nuit des Pokémon');
-      decorate(hero, 'halloween-pumpkin', '<img src="/img/halloween/pumpkin-garden.png" width="216" height="120" alt="" draggable="false" decoding="async">');
+      decorate(hero, 'halloween-pumpkin', '<img src="/img/halloween/pumpkin-garden-648.webp" width="216" height="120" alt="" draggable="false" decoding="async">');
       // Anchor mobile ornaments in a reserved strip of the navigation, not behind page cards.
       decorate(document.getElementById('mobile-tabbar'), 'halloween-nav-decor',
-        '<span class="halloween-nav-pumpkins"><img src="/img/halloween/pumpkin-garden.png" width="80" height="44" alt="" draggable="false" decoding="async"></span>'
+        '<span class="halloween-nav-pumpkins"><img src="/img/halloween/pumpkin-garden-648.webp" width="80" height="44" alt="" draggable="false" decoding="async"></span>'
         + '<span class="halloween-nav-garland">' + bunting + '</span>');
       decorate(document.querySelector('.site-footer'), 'halloween-footer-decor',
-        '<span class="halloween-footer-pumpkins"><img src="/img/halloween/pumpkin-garden.png" width="160" height="89" alt="" draggable="false" decoding="async"></span>'
+        '<span class="halloween-footer-pumpkins"><img src="/img/halloween/pumpkin-garden-648.webp" width="160" height="89" alt="" draggable="false" decoding="async"></span>'
         + '<span class="halloween-footer-moon">' + moonBats + '</span>');
       const frame = decorate(body, 'halloween-frame',
-        '<span class="halloween-corner-pumpkins"><img src="/img/halloween/pumpkin-garden.png" width="148" height="82" alt="" draggable="false" decoding="async"></span>'
+        '<span class="halloween-corner-pumpkins"><img src="/img/halloween/pumpkin-garden-648.webp" width="148" height="82" alt="" draggable="false" decoding="async"></span>'
         + '<span class="halloween-lanterns">' + lanterns + '</span>'
         + '<span class="halloween-moon-bats">' + moonBats + '</span>'
         + '<span class="halloween-mist halloween-mist-left"></span><span class="halloween-mist halloween-mist-right"></span>');
