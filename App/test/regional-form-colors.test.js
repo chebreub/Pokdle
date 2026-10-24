@@ -17,3 +17,20 @@ test('every regional form has its own Pokédex colour instead of its species one
   assert.equal(byName["Goupix d'Alola"], 'Blanc');
   assert.equal(byName['Smogogo de Galar'], 'Gris');
 });
+
+test('Méga and special forms carry their own colour only where they look different from their species', () => {
+  const special = forms.filter(form => !regional.includes(form));
+  const coloured = special.filter(form => form.color);
+  assert.equal(special.length, 164);
+  assert.equal(coloured.length, 44);
+  for (const form of coloured) assert.ok(COLORS.includes(form.color), form.name + ' has colour ' + form.color);
+  const byName = Object.fromEntries(special.map(form => [form.name, form.color]));
+  assert.equal(byName['Méga-Dracaufeu X'], 'Noir');
+  assert.equal(byName['Méga-Latias'], 'Violet');
+  assert.equal(byName['Kyurem Noir'], 'Noir');
+  assert.equal(byName['Darumacho Mode Transe'], 'Bleu');
+  assert.equal(byName['Ogerpon Masque du Fourneau'], 'Rouge');
+  // Same look as the species: no colour of its own, so it keeps the species one.
+  assert.equal(byName['Méga-Dracaufeu Y'], undefined);
+  assert.equal(byName['Motisma Chaleur'], undefined);
+});
