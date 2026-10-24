@@ -8,11 +8,12 @@ const { createRequire } = require("node:module");
 
 // Exercise the actual Express auth routes with synthetic Discord and DB data.
 // Never read production credentials or call Discord/Postgres during tests.
-async function fixture(t, db = null, people = {}) {
+async function fixture(t, db = null, people = {}, env = {}) {
   const appDir = path.resolve(__dirname, "..");
   const appRequire = createRequire(path.join(appDir, "server.js"));
   const source = fs.readFileSync(path.join(appDir, "server.js"), "utf8").split("// ===== Fin auth Phase 1 =====")[0];
   const calls = [];
+  let twitchHeaders = null;
   const sandbox = {
     require(name) {
       if (name === "pg") return { Pool: class {
@@ -27,13 +28,19 @@ async function fixture(t, db = null, people = {}) {
       DISCORD_CLIENT_SECRET: "test-secret", DISCORD_CALLBACK_URL: "https://example.test/auth/discord/callback",
       GOOGLE_CLIENT_ID: "test-google-client", GOOGLE_CLIENT_SECRET: "test-google-secret",
       GOOGLE_CALLBACK_URL: "https://example.test/auth/google/callback",
-      SESSION_SECRET: "synthetic-session-secret-for-tests-only"
+      TWITCH_CLIENT_ID: "test-twitch-client", TWITCH_CLIENT_SECRET: "test-twitch-secret",
+      TWITCH_CALLBACK_URL: "https://example.test/auth/twitch/callback",
+      SESSION_SECRET: "synthetic-session-secret-for-tests-only", ...env
     } },
     console: { log() {}, warn() {}, error() {} },
     URL, URLSearchParams, AbortSignal, Buffer, __dirname: appDir,
     module: { exports: {} },
-    async fetch(url) {
+    async fetch(url, options) {
       calls.push(url);
+      if (url.includes("api.twitch.tv/helix/users")) {
+        twitchHeaders = options && options.headers;
+        return { ok: true, json: async () => ({ data: [{ id: people.twitchId || "44322889", login: "ondine_tv", display_name: "Ondine_TV", profile_image_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/synthetic.png", email: "never-stored@example.test" }] }) };
+      }
       if (url.includes("openidconnect.googleapis.com")) return { ok: true, json: async () => ({ sub: people.googleSub || "109876543210987654321", given_name: "Sacha", name: "Sacha Ketchum", picture: "https://lh3.googleusercontent.com/a/synthetic", email: "never-stored@example.test" }) };
       return { ok: true, json: async () => url.endsWith("/token")
         ? { access_token: "synthetic-token" }
@@ -45,7 +52,7 @@ async function fixture(t, db = null, people = {}) {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const base = `http://127.0.0.1:${server.address().port}`;
-  return { calls, get: (url, cookie) => fetch(base + url, {
+  return { calls, twitchHeaders: () => twitchHeaders, get: (url, cookie) => fetch(base + url, {
     redirect: "manual", headers: cookie ? { Cookie: cookie } : {}
   }), post: (url, cookie, body) => fetch(base + url, {
     method: "POST", redirect: "manual", body: JSON.stringify(body || {}),
@@ -101,8 +108,43 @@ test("Google sign-in asks only for the profile and opens a google: account", asy
   assert.equal(session.via, "google");
   assert.equal(JSON.stringify(session).includes("example.test"), false, "the email is never kept");
   const me = await (await f.get("/api/me", `pokdle_session=${token}`)).json();
-  assert.deepEqual(me.providers, { discord: true, google: true });
+  assert.deepEqual(me.providers, { discord: true, google: true, twitch: true });
   assert.equal(me.user.via, "google");
+});
+
+test("Twitch sign-in asks only for the identity and opens a twitch: account", async (t) => {
+  const f = await fixture(t);
+  const start = await f.get("/auth/twitch");
+  assert.equal(start.status, 302);
+  const target = new URL(start.headers.get("location"));
+  assert.equal(target.origin + target.pathname, "https://id.twitch.tv/oauth2/authorize");
+  assert.equal(target.searchParams.get("scope"), "openid", "no email or other scope is requested");
+  assert.equal(target.searchParams.get("redirect_uri"), "https://example.test/auth/twitch/callback");
+  const state = target.searchParams.get("state");
+  const cookie = start.headers.get("set-cookie").split(";")[0];
+  const callback = `/auth/twitch/callback?code=synthetic-code&state=${state}`;
+  assert.equal((await f.get(callback)).headers.get("location"), "/?auth=erreur&via=twitch");
+  assert.equal(f.calls.length, 0, "no call to Twitch without the bound attempt");
+  const valid = await f.get(callback, cookie);
+  assert.equal(valid.headers.get("location"), "/?auth=ok&via=twitch");
+  assert.deepEqual(f.calls, ["https://id.twitch.tv/oauth2/token", "https://api.twitch.tv/helix/users"]);
+  assert.equal(f.twitchHeaders()["Client-Id"], "test-twitch-client");
+  const token = valid.headers.get("set-cookie").match(/pokdle_session=([^;]+)/)[1];
+  const session = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
+  assert.equal(session.id, "twitch:44322889", "a Twitch account id can never look like a Discord id");
+  assert.equal(session.username, "Ondine_TV");
+  assert.equal(session.avatar, "https://static-cdn.jtvnw.net/jtv_user_pictures/synthetic.png");
+  assert.equal(session.via, "twitch");
+  assert.equal(JSON.stringify(session).includes("example.test"), false, "the email is never kept");
+});
+
+test("Twitch stays hidden and closed until its keys are set", async (t) => {
+  const f = await fixture(t, null, {}, { TWITCH_CLIENT_ID: "", TWITCH_CLIENT_SECRET: "" });
+  const me = await (await f.get("/api/me")).json();
+  assert.deepEqual(me.providers, { discord: true, google: true, twitch: false });
+  assert.equal((await f.get("/auth/twitch")).headers.get("location"), "/?auth=indispo");
+  assert.equal((await f.get("/auth/twitch/callback?code=c&state=s")).headers.get("location"), "/?auth=indispo");
+  assert.equal(f.calls.length, 0);
 });
 
 // Just enough of the accounts tables to follow sign-ins and links.
@@ -148,6 +190,17 @@ test("signing in with Google while connected links Google to the same account", 
   assert.equal(again.session.id, "1234567890", "later, Google alone opens that account");
 });
 
+test("signing in with Twitch while connected links Twitch to the same account", async (t) => {
+  const store = accountsDb(), people = { discordId: "1234567890", twitchId: "987" };
+  const f = await fixture(t, store.db, people);
+  const discord = await signIn(f, "discord");
+  const linked = await signIn(f, "twitch", discord.cookie);
+  assert.equal(linked.location, "/?auth=linked&via=twitch");
+  assert.equal(linked.session.id, "1234567890");
+  assert.equal(store.identities.get("twitch|987"), "1234567890");
+  assert.equal(store.users.has("twitch:987"), false, "no second account was created");
+});
+
 test("an existing Discord account with its own records is never linked into another account", async (t) => {
   const store = accountsDb(), people = { discordId: "555", googleSub: "42" };
   store.users.set("555", { username: "Ancien", avatar: "" });
@@ -176,10 +229,11 @@ test("deleting an account removes it and its sign-ins, then signs out", async (t
   assert.equal(again.session.id, "google:109876543210987654321", "a stale session cannot link into a deleted account");
 });
 
-test("Google avatars are allowed by the image policy", async (t) => {
+test("Google and Twitch avatars are allowed by the image policy", async (t) => {
   const f = await fixture(t);
   const response = await f.get("/api/me");
   assert.match(response.headers.get("content-security-policy"), /img-src[^;]*https:\/\/\*\.googleusercontent\.com/);
+  assert.match(response.headers.get("content-security-policy"), /img-src[^;]*https:\/\/static-cdn\.jtvnw\.net/);
 });
 
 test("missing state is rejected without contacting Discord", async (t) => {

@@ -30,6 +30,7 @@
 #pokdle-app.design-refresh .login-welcome .btn-blue {display:block;min-height:48px;padding:14px!important;text-decoration:none;}
 #pokdle-app.design-refresh .login-welcome .login-google {display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:12px!important;text-decoration:none;background:#fff!important;color:#2e2a33!important;border:1px solid #dadce0!important;border-radius:14px;font-weight:800;}
 #pokdle-app.design-refresh .login-welcome .login-discord {background:#5865f2!important;border-color:#5865f2!important;color:#fff!important;}
+#pokdle-app.design-refresh .login-welcome .login-twitch {background:#9146ff!important;border-color:#9146ff!important;color:#fff!important;box-shadow:0 4px 0 #6527c6!important;}
 #pokdle-app.design-refresh .login-welcome small a, #pokdle-app.design-refresh .account-menu-privacy {color:inherit;font-weight:700;}
 #pokdle-app.design-refresh .account-menu-linked {display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.8rem;color:var(--ui-muted);}
 #pokdle-app.design-refresh .account-menu-linked:empty {display:none;}

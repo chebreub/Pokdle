@@ -67,6 +67,7 @@ const strictCspDirectives = {
     "https://archives.bulbagarden.net",
     "https://cdn.discordapp.com",
     "https://*.googleusercontent.com",
+    "https://static-cdn.jtvnw.net",
     "https://www.pokepedia.fr",
   ],
   connectSrc: [
@@ -119,6 +120,9 @@ const DISCORD_API_BASE = (process.env.DISCORD_API_BASE || "https://discord.com")
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || "";
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || "";
+const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || "";
+const TWITCH_CALLBACK_URL = process.env.TWITCH_CALLBACK_URL || "";
 const SESSION_SECRET = process.env.SESSION_SECRET || "";
 const AUTH_COOKIE = "pokdle_session";
 const oauthStates = createOAuthStateStore();
@@ -141,8 +145,9 @@ try { jwtLib = require("jsonwebtoken"); } catch (e) { console.error("[auth] json
 const accountsBaseReady = () => Boolean(pgPool && jwtLib && SESSION_SECRET);
 const discordReady = () => accountsBaseReady() && Boolean(DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET && DISCORD_CALLBACK_URL);
 const googleReady = () => accountsBaseReady() && Boolean(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_CALLBACK_URL);
+const twitchReady = () => accountsBaseReady() && Boolean(TWITCH_CLIENT_ID && TWITCH_CLIENT_SECRET && TWITCH_CALLBACK_URL);
 // Accounts exist as soon as one sign-in provider is configured.
-const authReady = () => discordReady() || googleReady();
+const authReady = () => discordReady() || googleReady() || twitchReady();
 
 async function initAuthDb() {
   if (!pgPool) return;
@@ -157,7 +162,8 @@ async function initAuthDb() {
     )`);
     await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_id INTEGER");
     // An account id is users.discord_id: Discord accounts keep their Discord id, a
-    // Google-only account gets "google:<sub>" (never digits only, so no collision).
+    // Google-only account gets "google:<sub>" and a Twitch-only one "twitch:<id>"
+    // (never digits only, so no collision).
     // Each row here is one way to sign in to an account.
     await pgPool.query(`CREATE TABLE IF NOT EXISTS account_identities (
       provider TEXT NOT NULL,
@@ -412,13 +418,72 @@ app.get("/auth/google/callback", async (req, res) => {
   }
 });
 
+// ===== Twitch (OpenID Connect, profile only: no email is requested or stored) =====
+app.get("/auth/twitch", (req, res) => {
+  if (!twitchReady()) return res.redirect("/?auth=indispo");
+  const attempt = oauthStates.issue();
+  if (!attempt) return res.status(503).send("Connexion temporairement indisponible. Réessaie dans quelques minutes.");
+  res.cookie(attempt.cookieName, attempt.binding, { ...oauthCookieOptions, maxAge: attempt.maxAge });
+  res.set("Cache-Control", "no-store");
+  const params = new URLSearchParams({
+    client_id: TWITCH_CLIENT_ID,
+    redirect_uri: TWITCH_CALLBACK_URL,
+    response_type: "code",
+    scope: "openid",
+    state: attempt.state,
+  });
+  res.redirect(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+});
+
+app.get("/auth/twitch/callback", async (req, res) => {
+  if (!twitchReady()) return res.redirect("/?auth=indispo");
+  res.set("Cache-Control", "no-store");
+  const state = req.query && req.query.state;
+  if (!oauthStates.consume(state, parseAuthCookies(req))) return res.redirect("/?auth=erreur&via=twitch");
+  res.clearCookie(oauthStates.cookieName(state), oauthCookieOptions);
+  const code = req.query && req.query.code;
+  if (typeof code !== "string" || !code) return res.redirect("/?auth=annule");
+  try {
+    const tokenResp = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: TWITCH_CLIENT_ID,
+        client_secret: TWITCH_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code: String(code),
+        redirect_uri: TWITCH_CALLBACK_URL,
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!tokenResp.ok) throw new Error("twitch token HTTP " + tokenResp.status);
+    const tok = await tokenResp.json();
+    const userResp = await fetch("https://api.twitch.tv/helix/users", {
+      headers: { Authorization: `Bearer ${tok.access_token}`, "Client-Id": TWITCH_CLIENT_ID },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!userResp.ok) throw new Error("twitch user HTTP " + userResp.status);
+    const u = (await userResp.json())?.data?.[0] || {};
+    const twitchId = String(u.id || "");
+    if (!/^[0-9]{1,20}$/.test(twitchId)) throw new Error("twitch id invalide");
+    const username = String(u.display_name || u.login || "Dresseur").trim().slice(0, 32) || "Dresseur";
+    const picture = String(u.profile_image_url || "");
+    const avatar = /^https:\/\/static-cdn\.jtvnw\.net\//i.test(picture) ? picture.slice(0, 500) : "";
+    const session = await signInWithIdentity(req, res, { provider: "twitch", providerUserId: twitchId, nativeId: "twitch:" + twitchId, username, avatar });
+    res.redirect(session.linked ? "/?auth=linked&via=twitch" : "/?auth=ok&via=twitch");
+  } catch (e) {
+    console.error("[auth] twitch callback echec:", e.message);
+    res.redirect("/?auth=erreur&via=twitch");
+  }
+});
+
 app.get("/auth/logout", (req, res) => {
   res.clearCookie(AUTH_COOKIE, { path: "/" });
   res.redirect("/");
 });
 
 app.get("/api/me", (req, res) => {
-  const providers = { discord: discordReady(), google: googleReady() };
+  const providers = { discord: discordReady(), google: googleReady(), twitch: twitchReady() };
   if (!authReady()) return res.json({ user: null, auth: false, providers });
   const user = getSessionUser(req);
   if (user) ensureAccountRow(user);

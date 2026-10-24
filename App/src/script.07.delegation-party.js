@@ -935,7 +935,7 @@ function openAccountMenu() {
     <div class="account-menu account-menu-v2">
       <div class="account-menu-identity">
         <div class="account-menu-avatar">${avatar}</div>
-        <div><span class="adventure-eyebrow">CONNECTÉ AVEC ${connectedAccountUser.via === 'google' ? 'GOOGLE' : 'DISCORD'}</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}</small></div>
+        <div><span class="adventure-eyebrow">CONNECTÉ AVEC ${(ACCOUNT_PROVIDER_NAMES[connectedAccountUser.via] || 'Discord').toUpperCase()}</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}</small></div>
       </div>
       <div class="account-menu-stats">
         <div><strong>${Number(playerProfile?.xp)||0}</strong><span>XP</span></div>
@@ -954,7 +954,8 @@ function openAccountMenu() {
     </div>`);
   renderAccountLinkedProviders();
 }
-// "Relier Google / Discord": the missing sign-ins of this account, one tap away.
+const ACCOUNT_PROVIDER_NAMES = { discord: 'Discord', google: 'Google', twitch: 'Twitch' };
+// "Relier Google / Discord / Twitch": the missing sign-ins of this account, one tap away.
 // Signing in with them while connected adds them to this account.
 function renderAccountLinkedProviders() {
   const box = document.getElementById('account-menu-linked');
@@ -962,7 +963,7 @@ function renderAccountLinkedProviders() {
   const providers = window.__pokedleProviders || {};
   fetch('/api/account/identities', { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json()).then(data => {
     if (!data?.ok || !document.getElementById('account-menu-linked')) return;
-    const names = { discord: 'Discord', google: 'Google' };
+    const names = ACCOUNT_PROVIDER_NAMES;
     const linked = data.identities.filter(id => names[id]);
     const missing = Object.keys(names).filter(id => providers[id] && !linked.includes(id));
     box.innerHTML = '<span>Connexion avec : ' + escapeHtml(linked.map(id => names[id]).join(' et ') || '—') + '</span>' +
@@ -971,7 +972,7 @@ function renderAccountLinkedProviders() {
 }
 function confirmDeleteAccount() {
   if (!connectedAccountUser) return;
-  ensureOverlay('Supprimer mon compte ?', '<p class="card-desc">Ton compte, ta progression en ligne et tes résultats des classements seront <b>effacés pour de bon</b>. Les connexions Discord et Google reliées à ce compte disparaissent aussi.</p><p class="card-desc">Ta progression reste sur cet appareil, comme pour un invité.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="openAccountMenu">Annuler</button><button class="btn-red" type="button" data-action="doDeleteAccount">Supprimer définitivement</button></div>');
+  ensureOverlay('Supprimer mon compte ?', '<p class="card-desc">Ton compte, ta progression en ligne et tes résultats des classements seront <b>effacés pour de bon</b>. Les connexions (Discord, Google, Twitch) reliées à ce compte disparaissent aussi.</p><p class="card-desc">Ta progression reste sur cet appareil, comme pour un invité.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="openAccountMenu">Annuler</button><button class="btn-red" type="button" data-action="doDeleteAccount">Supprimer définitivement</button></div>');
 }
 function doDeleteAccount() {
   const accountId = connectedAccountUser ? String(connectedAccountUser.id) : '';
@@ -1025,7 +1026,7 @@ function accountNavigate(destination) {
       var m = p.get("auth");
       if (m) {
         if (typeof showToast === "function") {
-          var via = p.get("via") === "google" ? "Google" : "Discord";
+          var via = Object.prototype.hasOwnProperty.call(ACCOUNT_PROVIDER_NAMES, p.get("via")) ? ACCOUNT_PROVIDER_NAMES[p.get("via")] : "Discord";
           if (m === "ok") showToast("Connecté avec " + via + " ✅");
           else if (m === "linked") showToast(via + " est maintenant relié à ton compte ✅");
           else if (m === "deleted") showToast("Ton compte a été supprimé.");
