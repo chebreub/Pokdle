@@ -58,6 +58,9 @@
 #pokdle-app #screen-party-room .party-divider { display: flex; align-items: center; gap: 12px; color: var(--ui-muted); font-size: .74rem; margin: 8px 0; }
 #pokdle-app #screen-party-room .party-divider::before, #pokdle-app #screen-party-room .party-divider::after { content: ''; flex: 1; height: 1px; background: var(--ui-line); }
 #pokdle-app #screen-party-room .party-join-row { display: flex; gap: 8px; }
+/* The button keeps the width of its label, the code field takes the rest (phone and computer). */
+#pokdle-app #screen-party-room .party-join-row input { flex: 1 1 auto; min-width: 0; }
+#pokdle-app #screen-party-room .party-join-row button { flex: 0 0 auto; width: auto; }
 #pokdle-app #screen-party-room #party-join-code { text-transform: uppercase; letter-spacing: .14em; }
 #pokdle-app #screen-party-room .party-entry-note { text-align: center; font-size: .74rem !important; }
 #pokdle-app #screen-party-room .party-joined { padding: 24px; }
