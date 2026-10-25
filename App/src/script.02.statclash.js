@@ -288,7 +288,7 @@ function startQuizGame() {
   winRegisteredForCurrentGame = false;
   quizSessionLogged = false;
   // En Party, un round Quiz est raccourci pour rester équilibré avec les autres mini-jeux.
-  quizQuestions = shuffleArray(buildQuizQuestionPool()).slice(0, isPartySessionActive() ? 5 : QUIZ_QUESTION_COUNT);
+  quizQuestions = pickQuizQuestions(buildQuizQuestionPool(), isPartySessionActive() ? 5 : QUIZ_QUESTION_COUNT);
   quizCurrentIndex = 0;
   quizScore = 0;
   quizAnswered = false;
@@ -322,7 +322,6 @@ function startQuizGame() {
   setGlobalNavActive("game");
 
   renderQuizQuestion();
-  registerGameStart();
 }
 
 

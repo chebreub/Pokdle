@@ -6660,6 +6660,12 @@ body.theme-dark .mystery-bar {
   padding: 10px 12px;
 }
 
+/* Recap lines: the question, then the right answer, and the player's when it was wrong. */
+.quiz-history .quiz-history-item { display: grid; gap: 2px; }
+.quiz-history .quiz-history-item span { font-weight: 700; }
+.quiz-history .quiz-history-item b { font-weight: 900; }
+.quiz-history .quiz-history-item small { font-weight: 700; opacity: 0.85; }
+
 
 
 

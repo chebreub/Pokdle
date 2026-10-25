@@ -65,7 +65,7 @@ function renderHomeDiscovery(force = false) {
   if (!grid || (grid.childElementCount && !force) || typeof modeTileCloneForHome !== "function") return;
   // Curated choices, not a live popularity ranking; 'popular' remains the internal filter key.
   const shelves = {
-    popular: ["startSilhouetteGame", "startCryGame", "openPokeConnectionsMode", "startQuizGame", "openDraftScoreAttackMode", "openHigherLowerMode"],
+    popular: ["startSilhouetteGame", "openHigherLowerMode", "startWeightBattle", "openOddOneOutMode", "startQuizGame", "openPokeConnectionsMode"],
     guess: ["startNormalGame", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
     play: ["openPokeConnectionsMode", "startQuizGame", "openHigherLowerMode", "openDraftScoreAttackMode", "openOddOneOutMode", "openTypeComboSolo", "openSpeedrunMode", "startWeightBattle", "openQuiEstCeMode", "openPetitBacMode"]
   };
