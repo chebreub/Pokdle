@@ -91,7 +91,7 @@ function confirmDossierAbandon() {
 async function abandonDailyDossier(){closeOverlayModal();if(!dailyDossierBusy&&dailyDossierState&&!dailyDossierState.finished)await dossierRequest('/abandon');}
 async function shareDailyDossier() {
   const s=dailyDossierState;if(!s?.finished)return;
-  const text='Pokédle #'+s.number+' · Dossier du jour'+(s.status==='abandoned'?' · abandon':'')+' · '+s.points+'/'+(s.maxPoints||20)+' pts\n'+s.results.map(r=>r.correct?'🟩':'⬜').join('')+'\n'+(s.bonusUnlocked?'Dossier expert débloqué !\n':'')+'https://pokdle.onrender.com/';
+  const text='Pokédle #'+s.number+' · Dossier du jour'+(s.status==='abandoned'?' · abandon':'')+' · '+s.points+'/'+(s.maxPoints||20)+' pts\n'+s.results.map(r=>r.correct?'🟩':'⬜').join('')+'\n'+(s.bonusUnlocked?'Dossier expert débloqué !\n':'')+'https://pokdle.fr/';
   try{await navigator.clipboard.writeText(text);dossierMessage('Dossier copié, sans révéler le Pokémon ni les réponses !');}catch(_e){ensureOverlay('Partager mon dossier','<pre>'+escapeHtml(text)+'</pre>');}
 }
 const renderWordleBeforeDossier=renderDailyWordle;

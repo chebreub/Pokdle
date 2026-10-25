@@ -51,7 +51,7 @@ function svgFor(game) {
   <text x="80" y="150" font-family="Inter, sans-serif" font-weight="bold" font-size="56" fill="#ffffff">Pokédle</text>
   ${text(name, 80, nameTop, 72, `font-family="Inter, sans-serif" font-weight="800" font-size="${nameSize}" fill="#ffe9b3"`)}
   ${text(short, 82, shortTop, 40, 'font-family="Inter, sans-serif" font-weight="500" font-size="30" fill="#ffffff"')}
-  <text x="82" y="575" font-family="Inter, sans-serif" font-size="26" fill="#dce9ff">pokdle.onrender.com</text>
+  <text x="82" y="575" font-family="Inter, sans-serif" font-size="26" fill="#dce9ff">pokdle.fr</text>
 </svg>`;
 }
 

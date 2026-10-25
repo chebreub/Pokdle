@@ -18,8 +18,12 @@ const coopParty = require("./lib/party-coop");
 const { bestDuelProximity } = require("./lib/duel-proximity");
 let compression; try { compression = require("compression"); } catch (e) { console.error("[perf] compression indisponible:", e.message); }
 
+const { SITE_URL, mountSiteMove, injectTransfer } = require("./lib/site-move");
+
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
+// Déménagement vers pokdle.fr : l'adresse du site est toujours autorisée dès que la liste est posée.
+if (ALLOWED_ORIGINS.length && !ALLOWED_ORIGINS.includes(SITE_URL)) ALLOWED_ORIGINS.push(SITE_URL);
 const app = express();
 app.set("trust proxy", 1);
 const server = http.createServer(app);
@@ -106,6 +110,9 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 app.use((req, res, next) => (req.path === "/emulateur" ? emulatorCsp(req, res, next) : strictCsp(req, res, next)));
+// Ancienne adresse pokdle.onrender.com : redirection 301 et transfert de la progression,
+// avant toutes les autres routes (lib/site-move.js).
+const siteMove = mountSiteMove(app, { express, readCookies: (req) => parseAuthCookies(req) });
 
 const rooms = new Map();
 
@@ -1095,14 +1102,19 @@ function recordVisitDb() {
   if (!pgPool) return;
   pgPool.query("INSERT INTO visits (day, hits) VALUES (CURRENT_DATE, 1) ON CONFLICT (day) DO UPDATE SET hits = visits.hits + 1").catch(() => {});
 }
-function sendIndex(res) {
+function sendIndex(req, res) {
   // L'index n'est jamais mise en cache : c'est elle qui porte les URLs versionnées.
   res.set("Cache-Control", "no-cache");
   recordVisitDb();
-  res.sendFile(fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX);
+  const file = fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX;
+  // Retour de l'ancienne adresse : la progression du joueur part dans la page (lib/site-move.js).
+  const moved = siteMove.takeTransfer(req, res);
+  if (!moved) return res.sendFile(file);
+  res.set("Cache-Control", "no-store");
+  res.type("html").send(injectTransfer(fs.readFileSync(file, "utf8"), moved));
 }
 
-app.get(["/", "/index.html"], (_req, res) => sendIndex(res));
+app.get(["/", "/index.html"], (req, res) => sendIndex(req, res));
 // Development-only responsive workbench; never served by npm start in production.
 if (process.env.NODE_ENV === "development") {
   app.get("/__responsive", (_req, res) => res.sendFile(path.join(__dirname, "tools/responsive.html")));
@@ -1110,7 +1122,7 @@ if (process.env.NODE_ENV === "development") {
 }
 // Page émulateur (lot D audit) : même SPA, mais servie sous /emulateur avec la
 // CSP permissive requise par EmulatorJS. Le client y ouvre l'écran émulateur.
-app.get("/emulateur", (_req, res) => { recordUsage("solo:emulator"); sendIndex(res); });
+app.get("/emulateur", (req, res) => { recordUsage("solo:emulator"); sendIndex(req, res); });
 // dist/* : noms stables, mais référencés en dist/x.min.js?v=<hash> depuis
 // dist/index.html (cf. build.mjs) -> cache long sans risque de stale.
 app.use("/dist", express.static(DIST_DIR, { maxAge: "365d", immutable: true, fallthrough: false }));
@@ -1209,7 +1221,7 @@ async function buildDailyOgBuffer() {
   <rect x="84" y="296" rx="26" ry="26" width="280" height="52" fill="#ffcc33"/>
   <text x="224" y="332" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="30" fill="#4a3203">${dateLabel}</text>
   <text x="84" y="432" font-family="sans-serif" font-weight="bold" font-size="44" fill="#ffffff">Tu le reconnais ?</text>
-  <text x="84" y="560" font-family="sans-serif" font-size="28" fill="#dce9ff">pokdle.onrender.com</text>
+  <text x="84" y="560" font-family="sans-serif" font-size="28" fill="#dce9ff">pokdle.fr</text>
 </svg>`;
   const buffer = await sharp(Buffer.from(baseSvg))
     .composite([{ input: silhouette, left: Math.round(885 - meta.width / 2), top: Math.round(318 - meta.height / 2) }])
@@ -4091,7 +4103,7 @@ server.listen(PORT, () => {
     // (sinon le CORS Socket.io serait ouvert à toutes les origines).
     const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true" || Boolean(process.env.RENDER_EXTERNAL_URL);
     if (isProduction) {
-      console.error("[security] ALLOWED_ORIGINS doit être défini en production (ex: https://pokdle.onrender.com). Arrêt.");
+      console.error("[security] ALLOWED_ORIGINS doit être défini en production (ex: https://pokdle.fr). Arrêt.");
       process.exit(1);
     }
     console.warn("[security] ALLOWED_ORIGINS not set — CORS is open to all origins. Set ALLOWED_ORIGINS in production.");

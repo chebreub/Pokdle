@@ -282,7 +282,7 @@ function shareScoreAttackResult() {
   const tier = getXpTier(xp);
   const text = `🎯 Score Attack ${gen} : ${metrics.average} BST (${rank})
 ${tier.emoji} Niveau ${tier.level} · ${tier.name}
-👉 https://pokdle.onrender.com`;
+👉 https://pokdle.fr`;
   copyShareText(text);
 }
 
@@ -336,7 +336,7 @@ function generateScoreImagePng({ title, mainScore, mainLabel, subtitle, accentFr
     // URL bottom
     ctx.font = "800 28px Nunito, system-ui, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.42)";
-    ctx.fillText("pokdle.onrender.com", W / 2, 1000);
+    ctx.fillText("pokdle.fr", W / 2, 1000);
     canvas.toBlob((blob) => resolve(blob), "image/png");
   });
 }
@@ -381,7 +381,7 @@ function shareHigherLowerResult() {
   const newRecord = score > 0 && score >= record;
   const text = `🎯 Higher or Lower : ${score} d'affilée${newRecord ? " 🏆 NOUVEAU RECORD !" : ""}
 ${tier.emoji} Niveau ${tier.level} · ${tier.name}
-👉 https://pokdle.onrender.com`;
+👉 https://pokdle.fr`;
   copyShareText(text);
 }
 
@@ -393,7 +393,7 @@ function shareLevelBadge() {
   const text = `${tier.emoji} Niveau ${tier.level} · ${tier.name}
 🎯 ${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · MAX"}
 🏆 ${Number(playerProfile.totalQuestsCompleted) || 0} quêtes réussies
-👉 https://pokdle.onrender.com`;
+👉 https://pokdle.fr`;
   copyShareText(text);
 }
 
