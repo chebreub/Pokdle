@@ -1,0 +1,178 @@
+/* ===== Profil (25/10, proposition A) =====
+   Une carte de Dresseur claire (partenaire, titre, anneau de niveau), quatre chiffres d'aventure,
+   une seule rangée d'onglets, puis l'aperçu sur deux colonnes : chaque chiffre n'apparaît qu'une fois.
+   Chargée en dernier : elle remplace l'ancienne carte bleu nuit, d'où quelques !important face aux
+   règles du même nom dans visual-refresh.css et style.css. */
+
+#pokdle-app.design-refresh #screen-profile .profile-hero {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 230px;
+  align-items: center;
+  gap: 28px;
+  margin: 8px 0 16px;
+  padding: 26px 28px;
+  border: 1px solid var(--ui-line, #e9dfd4);
+  border-radius: 28px;
+  background: var(--ui-surface, #fff);
+  box-shadow: var(--ui-shadow, none);
+  color: var(--ui-ink, #2e2a33);
+}
+#pokdle-app.design-refresh #screen-profile .profile-hero-art { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-circle {
+  width: 200px; height: 200px; border-radius: 50%; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--dex-tint, var(--ui-soft, #f5efe8));
+}
+#pokdle-app.theme-dark #screen-profile .profile-hero-circle { background: var(--ui-soft, #1e2c43); }
+#pokdle-app.design-refresh #screen-profile .profile-hero-circle img { width: 184px; height: 184px; object-fit: contain; image-rendering: auto; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-circle img.is-photo { width: 100%; height: 100%; object-fit: cover; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-empty { font: 700 4rem/1 Fredoka, sans-serif; color: var(--ui-muted, #776b63); }
+#pokdle-app.design-refresh #screen-profile .profile-hero-partner {
+  width: auto; min-height: 0; padding: 5px 12px; border: 0; border-radius: 999px;
+  background: var(--ui-soft, #f5efe8); color: var(--ui-muted, #776b63); font-size: .8rem; font-weight: 800;
+}
+#pokdle-app.design-refresh #screen-profile button.profile-hero-partner { min-height: 44px; color: var(--ui-accent, #4069e0); cursor: pointer; }
+
+#pokdle-app.design-refresh #screen-profile .profile-hero-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-eyebrow { font-size: .72rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: var(--ui-accent, #4069e0); }
+#pokdle-app.design-refresh #screen-profile .profile-hero-name { margin: 0; font-family: Fredoka, sans-serif; font-weight: 600; font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1; overflow-wrap: anywhere; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-title { padding: 5px 13px; border-radius: 999px; background: #fff1cc; color: #7a5600; font-size: .92rem; font-weight: 800; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-pioneer { padding: 5px 12px; border-radius: 999px; background: #f1eafb; color: #5f4f91; font-size: .8rem; font-weight: 800; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-line { margin: 0; color: var(--ui-muted, #776b63); font-size: .95rem; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-actions :is(.btn-blue, .btn-ghost) { width: auto; min-height: 44px; margin: 0; padding: 0 18px; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-photo {
+  width: auto; min-height: 44px; margin: 0; padding: 0 6px; border: 0; background: none;
+  color: var(--ui-muted, #776b63); font-weight: 700; text-decoration: underline; cursor: pointer;
+}
+
+#pokdle-app.design-refresh #screen-profile .profile-hero-level { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-level-text { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-level strong { font-size: .95rem; }
+#pokdle-app.design-refresh #screen-profile .profile-hero-level :is(span, small) { color: var(--ui-muted, #776b63); font-size: .82rem; }
+#pokdle-app.design-refresh #screen-profile .profile-ring { position: relative; flex: 0 0 auto; }
+#pokdle-app.design-refresh #screen-profile .profile-ring svg { display: block; }
+#pokdle-app.design-refresh #screen-profile .profile-ring-track { stroke: var(--ui-accent-soft, #ecf1ff); }
+#pokdle-app.design-refresh #screen-profile .profile-ring-fill { stroke: var(--ui-accent, #4069e0); }
+#pokdle-app.design-refresh #screen-profile .profile-ring > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#pokdle-app.design-refresh #screen-profile .profile-ring b { font: 700 2.8rem/1 Fredoka, sans-serif; color: var(--ui-ink, #2e2a33); }
+#pokdle-app.design-refresh #screen-profile .profile-ring small { font-size: .62rem; font-weight: 900; letter-spacing: .12em; color: var(--ui-muted, #776b63); }
+
+/* Les quatre chiffres d'aventure, cliquables : chacun ouvre sa page. */
+#pokdle-app.design-refresh #screen-profile .profile-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+#pokdle-app.design-refresh #screen-profile .profile-figure {
+  width: auto; min-height: 0; margin: 0; padding: 14px 18px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px; text-align: left;
+  border: 1px solid var(--ui-line, #e9dfd4); border-radius: 20px; background: var(--ui-surface, #fff);
+  color: var(--ui-ink, #2e2a33); font: inherit; cursor: pointer; box-shadow: none;
+}
+#pokdle-app.design-refresh #screen-profile .profile-figure:hover { border-color: var(--ui-accent, #4069e0); }
+#pokdle-app.design-refresh #screen-profile .profile-figure > span { font-size: .82rem; font-weight: 800; color: var(--ui-muted, #776b63); }
+#pokdle-app.design-refresh #screen-profile .profile-figure b { font: 600 1.7rem/1.1 Fredoka, sans-serif; }
+#pokdle-app.design-refresh #screen-profile .profile-figure b small { font-size: .95rem; color: var(--ui-muted, #776b63); }
+#pokdle-app.design-refresh #screen-profile .profile-figure i { display: block; height: 7px; border-radius: 999px; background: var(--ui-accent-soft, #ecf1ff); }
+#pokdle-app.design-refresh #screen-profile .profile-figure em { display: block; height: 100%; border-radius: inherit; background: var(--ui-accent, #4069e0); }
+#pokdle-app.design-refresh #screen-profile .profile-figure.is-complete i { background: #fff1cc; }
+#pokdle-app.design-refresh #screen-profile .profile-figure.is-complete em { background: #e9a800; }
+
+/* Une seule rangée d'onglets : les vues du profil et les pages liées. */
+#pokdle-app.design-refresh #screen-profile .profile-tabs {
+  display: flex; gap: 6px; margin: 0 0 16px; padding: 6px;
+  border-radius: 16px; background: var(--ui-soft, #f5efe8);
+  overflow-x: auto; scrollbar-width: none;
+}
+#pokdle-app.design-refresh #screen-profile .profile-tabs::-webkit-scrollbar { display: none; }
+#pokdle-app.design-refresh #screen-profile .profile-tabs button {
+  flex: 1 0 auto; width: auto; min-height: 44px; margin: 0; padding: 0 16px;
+  border: 0; border-radius: 12px; background: transparent; box-shadow: none;
+  color: var(--ui-muted, #776b63); font-size: .92rem; font-weight: 800; white-space: nowrap; cursor: pointer;
+}
+#pokdle-app.design-refresh #screen-profile .profile-tabs button[aria-pressed="true"] { background: var(--ui-surface, #fff); color: var(--ui-ink, #2e2a33); box-shadow: 0 2px 6px rgb(100 71 45 / 8%); }
+#pokdle-app.design-refresh #screen-profile .profile-tabs button span { margin-left: 4px; font-size: .75rem; color: var(--ui-accent, #4069e0); }
+
+/* L'aperçu : chiffres, records et duels à gauche ; succès, Ligue et identité à droite. */
+#pokdle-app.design-refresh #screen-profile .profile-overview { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) !important; align-items: start; gap: 18px; margin: 0; }
+#pokdle-app.design-refresh #screen-profile .profile-overview.hidden { display: none; }
+#pokdle-app.design-refresh #screen-profile :is(.profile-overview-main, .profile-overview-side) { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+#pokdle-app.design-refresh #screen-profile .profile-overview :is(.profile-panel, .profile-disclosure) { margin: 0; }
+#pokdle-app.design-refresh #screen-profile .profile-progress-panel h3 { margin: 0 0 12px; font-family: Fredoka, sans-serif; font-size: 1.25rem; }
+#pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 10px !important; }
+#pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-card {
+  min-width: 0; padding: 12px 14px !important; border: 0 !important; border-radius: 16px !important;
+  background: var(--ui-bg, #fff8ef) !important; box-shadow: none !important; text-align: left;
+}
+#pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-card span { display: block; font-size: .8rem; font-weight: 700 !important; }
+#pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-card b { display: block; font-family: Fredoka, sans-serif; font-size: 1.6rem; }
+
+#pokdle-app.design-refresh #screen-profile .profile-achievements-panel .profile-summary-grid { display: flex; flex-direction: column; gap: 14px; }
+#pokdle-app.design-refresh #screen-profile .profile-achievements-summary { display: block !important; margin: 0; }
+#pokdle-app.design-refresh #screen-profile .profile-medals { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 7px; }
+#pokdle-app.design-refresh #screen-profile .profile-medal { aspect-ratio: 1; border-radius: 50%; background: var(--ui-soft, #f5efe8); border: 2px dashed #d9cec2; box-sizing: border-box; }
+#pokdle-app.design-refresh #screen-profile .profile-medal.is-on { background: #fff1cc; border: 2px solid #e9a800; }
+
+/* Fenêtre des quêtes : les couleurs du site, un anneau de niveau, l'XP en pastille dorée. */
+#pokdle-app .daily-quests-overlay .dq-content { background: var(--ui-bg, #fff8ef); border-radius: 28px; }
+#pokdle-app .daily-quests-overlay .dq-hero {
+  background: var(--ui-surface, #fff); color: var(--ui-ink, #2e2a33);
+  border: 1px solid var(--ui-line, #e9dfd4); box-shadow: none;
+}
+#pokdle-app .daily-quests-overlay .dq-hero::before { display: none; }
+#pokdle-app .daily-quests-overlay .dq-hero-tier small { color: var(--ui-muted, #776b63); opacity: 1; }
+#pokdle-app .daily-quests-overlay .dq-hero-ring {
+  width: 58px; height: 58px; flex: 0 0 58px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--ui-accent, #4069e0) var(--dq-ring, 0%), var(--ui-accent-soft, #ecf1ff) 0);
+}
+#pokdle-app .daily-quests-overlay .dq-hero-ring b {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ui-surface, #fff); font: 700 1.2rem/1 Fredoka, sans-serif;
+}
+/* L'anneau montre déjà la progression ; la croix Fermer vit dans la carte de niveau, en haut à droite. */
+#pokdle-app .daily-quests-overlay .dq-hero-bar { display: none; }
+#pokdle-app .daily-quests-overlay .dq-hero { flex-shrink: 0; padding-right: 60px !important; }
+#pokdle-app .daily-quests-overlay .dq-close { top: 10px; right: 10px; z-index: 2; background: var(--ui-soft, #f5efe8); color: var(--ui-ink, #2e2a33); }
+#pokdle-app .daily-quests-overlay .dq-item-bar { background: var(--ui-line, #e9dfd4); }
+#pokdle-app .daily-quests-overlay .dq-item.is-done .dq-item-fill { background: #3fbf7f; }
+@media (max-width: 480px) {
+  #pokdle-app .daily-quests-overlay .dq-hero { padding-right: 46px !important; }
+  #pokdle-app .daily-quests-overlay .dq-close { top: 8px; right: 8px; width: 32px; height: 32px; font-size: 18px; }
+}
+#pokdle-app .daily-quests-overlay .dq-header h3 { color: var(--ui-ink, #2e2a33); font-family: Fredoka, sans-serif; font-weight: 600; }
+#pokdle-app .daily-quests-overlay .dq-item { background: var(--ui-surface, #fff); border: 1px solid var(--ui-line, #e9dfd4); border-radius: 18px; }
+#pokdle-app .daily-quests-overlay .dq-item-head b { color: var(--ui-ink, #2e2a33); }
+#pokdle-app .daily-quests-overlay .dq-xp { background: #fff1cc; color: #7a5600; box-shadow: none; }
+#pokdle-app .daily-quests-overlay .dq-item-fill { background: var(--ui-accent, #4069e0); }
+#pokdle-app .daily-quests-overlay .dq-footer b { color: var(--ui-ink, #2e2a33); }
+
+@media (max-width: 1100px) {
+  #pokdle-app.design-refresh #screen-profile .profile-hero { grid-template-columns: 180px minmax(0, 1fr); }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle { width: 170px; height: 170px; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle img { width: 156px; height: 156px; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px 16px; }
+}
+
+@media (max-width: 760px) {
+  #pokdle-app.design-refresh #screen-profile .profile-hero { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 20px 16px; text-align: center; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-main { align-items: center; }
+  #pokdle-app.design-refresh #screen-profile :is(.profile-hero-chips, .profile-hero-actions) { justify-content: center; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle { width: 156px; height: 156px; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle img { width: 140px; height: 140px; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level { flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; gap: 12px; padding: 12px; border-radius: 18px; background: var(--ui-bg, #fff8ef); text-align: left; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text { align-items: flex-start; min-width: 0; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level strong { font-size: .86rem; }
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level :is(span, small) { font-size: .76rem; }
+  #pokdle-app.design-refresh #screen-profile .profile-ring { width: 92px !important; height: 92px !important; }
+  #pokdle-app.design-refresh #screen-profile .profile-ring svg { width: 92px; height: 92px; }
+  #pokdle-app.design-refresh #screen-profile .profile-ring b { font-size: 1.8rem; }
+  #pokdle-app.design-refresh #screen-profile .profile-ring small { font-size: .5rem; }
+  #pokdle-app.design-refresh #screen-profile .profile-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #pokdle-app.design-refresh #screen-profile .profile-figure { padding: 12px 14px; }
+  #pokdle-app.design-refresh #screen-profile .profile-figure b { font-size: 1.4rem; }
+  #pokdle-app.design-refresh #screen-profile .profile-tabs button { flex: 0 0 auto; }
+  #pokdle-app.design-refresh #screen-profile .profile-overview { grid-template-columns: minmax(0, 1fr) !important; }
+  #pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  #pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-card b { font-size: 1.35rem; }
+  #pokdle-app.design-refresh #screen-profile .profile-medals { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+  /* Missions et Secrets commencent tout de suite sous les onglets, comme avant. */
+  #pokdle-app.design-refresh #screen-profile:is(.profile-view-album, .profile-view-secrets) :is(.profile-hero, .profile-figures) { display: none; }
+}
