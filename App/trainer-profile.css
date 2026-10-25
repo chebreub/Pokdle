@@ -176,3 +176,10 @@
   /* Missions et Secrets commencent tout de suite sous les onglets, comme avant. */
   #pokdle-app.design-refresh #screen-profile:is(.profile-view-album, .profile-view-secrets) :is(.profile-hero, .profile-figures) { display: none; }
 }
+
+/* Mes chiffres: which games the first three figures count (audit of 25/10). */
+#pokdle-app.design-refresh #screen-profile .profile-numbers-note { margin: -6px 0 12px; color: var(--ui-muted); font-size: .85rem; line-height: 1.45; }
+#pokdle-app.design-refresh #screen-profile .profile-numbers-note .link-button {
+  padding: 0; border: 0; background: none; color: var(--ui-accent); font: inherit; font-weight: 800;
+  text-decoration: underline; cursor: pointer;
+}

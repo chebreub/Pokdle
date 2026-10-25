@@ -362,3 +362,6 @@
   #pokdle-app.design-refresh #quiz-box .quiz-end-actions {grid-template-columns:minmax(0,1fr);}
   #pokdle-app.design-refresh #quiz-box .quiz-end-actions button {min-height:50px;}
 }
+
+/* Quiz over: the whole recap shows at once, each line with its question (audit of 25/10). */
+#pokdle-app #quiz-box:has(#quiz-end-card:not(.hidden)) .quiz-history { max-height: none; overflow: visible; }

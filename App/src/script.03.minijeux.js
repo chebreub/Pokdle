@@ -2333,6 +2333,7 @@ function buildQuizQuestionPool() {
     ];
     const options = randomUniqueChoices([...new Set(distractors)], correct);
     pool.push({
+      kind: "dex",
       question: `Quel est le numéro Pokédex de ${p.name} ?`,
       options,
       answer: options.indexOf(correct),
@@ -2343,6 +2344,7 @@ function buildQuizQuestionPool() {
     const correct = p.type1;
     const options = randomUniqueChoices(allTypes, correct);
     pool.push({
+      kind: "type",
       question: `Quel est le type principal de ${p.name} ?`,
       options,
       answer: options.indexOf(correct),
@@ -2353,6 +2355,7 @@ function buildQuizQuestionPool() {
     const correct = `Gen ${p.gen}`;
     const options = randomUniqueChoices(allGens.map((g) => `Gen ${g}`), correct);
     pool.push({
+      kind: "gen",
       question: `${p.name} appartient à quelle génération ?`,
       options,
       answer: options.indexOf(correct),
@@ -2360,6 +2363,19 @@ function buildQuizQuestionPool() {
   }
 
   return pool;
+}
+
+// Every Quiz mixes its questions: the written ones (QUIZ_QUESTIONS), types, generations, then
+// Pokédex numbers, in turn. Drawn at random, one game of the 25/10 audit had 6 numbers and 7 generations.
+const QUIZ_KIND_ORDER = ["culture", "type", "gen", "dex"];
+function pickQuizQuestions(pool, count) {
+  const byKind = new Map(QUIZ_KIND_ORDER.map((kind) => [kind, []]));
+  for (const question of shuffleArray(pool.slice())) byKind.get(byKind.has(question.kind) ? question.kind : "culture").push(question);
+  const picked = [];
+  while (picked.length < count && QUIZ_KIND_ORDER.some((kind) => byKind.get(kind).length)) {
+    for (const kind of QUIZ_KIND_ORDER) if (picked.length < count && byKind.get(kind).length) picked.push(byKind.get(kind).pop());
+  }
+  return shuffleArray(picked);
 }
 
 function renderQuizMeta() {
@@ -2378,8 +2394,9 @@ function renderQuizMeta() {
   if (badEl) badEl.textContent = `Mauvaises : ${bad}`;
 
   if (historyEl) {
+    // Each line recalls its question: « 211 » or « Gen 3 » alone meant nothing in the recap.
     historyEl.innerHTML = quizHistory
-      .map((h) => `<div class="quiz-history-item ${h.ok ? "ok" : "bad"}">${h.ok ? "✓" : "✕"} ${h.text}</div>`)
+      .map((h) => `<div class="quiz-history-item ${h.ok ? "ok" : "bad"}"><span>${h.ok ? "✓" : "✕"} ${h.number}. ${escapeHtml(h.question)}</span><b>${escapeHtml(h.answer)}</b>${h.ok ? "" : `<small>Ta réponse : ${escapeHtml(h.chosen)}</small>`}</div>`)
       .join("");
   }
 }
@@ -2521,11 +2538,17 @@ function submitQuizAnswer(choiceIndex) {
 
   quizHistory.push({
     ok,
-    text: `${quizCurrentIndex + 1}. ${current.options[current.answer]}`,
+    number: quizCurrentIndex + 1,
+    question: current.question,
+    answer: current.options[current.answer],
+    chosen: current.options[choiceIndex],
   });
   renderQuizMeta();
 
-  if (nextBtn) nextBtn.classList.remove("hidden");
+  if (nextBtn) {
+    nextBtn.textContent = quizCurrentIndex + 1 >= quizQuestions.length ? "Voir mon résultat" : "Question suivante";
+    nextBtn.classList.remove("hidden");
+  }
 }
 function nextQuizQuestion() {
   if (gameMode !== "quiz") return;
