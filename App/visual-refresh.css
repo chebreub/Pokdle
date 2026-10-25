@@ -343,10 +343,28 @@
 /* The Pokémon provide the artwork; the catalogue frame follows the theme. */
 #pokdle-app.design-refresh #screen-pokedex .pokedex-grid { background: var(--ui-soft) !important; border-color: var(--ui-line) !important; padding: 14px; gap: 12px; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card { background: linear-gradient(150deg, #f1f6ff, #dce8f9) !important; border-color: #b4c8e4 !important; }
-#pokdle-app.design-refresh #screen-pokedex .pokedex-card:has(.type-plante) { background: linear-gradient(150deg, #eaf9ee, #cce7dc) !important; }
-#pokdle-app.design-refresh #screen-pokedex .pokedex-card:has(.type-feu) { background: linear-gradient(150deg, #fff2e3, #f4d5bd) !important; }
-#pokdle-app.design-refresh #screen-pokedex .pokedex-card:has(.type-eau) { background: linear-gradient(150deg, #e9f6ff, #c5e0f6) !important; }
-#pokdle-app.design-refresh #screen-pokedex .pokedex-card:has(.type-electrik) { background: linear-gradient(150deg, #fff7dc, #f2e3a8) !important; }
+/* One pastel tint per main type (data-type, set by the Pokédex script) for the tiles and the
+   top of the detail panel. */
+#pokdle-app.design-refresh #screen-pokedex [data-type] { --dex-tint: #eef1f6; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="plante"] { --dex-tint: #e3f4e6; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="feu"] { --dex-tint: #fbe6d8; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="eau"] { --dex-tint: #e1ecfb; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="electrik"] { --dex-tint: #fbf1c9; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="insecte"] { --dex-tint: #eef3d6; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="normal"] { --dex-tint: #eeede6; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="poison"] { --dex-tint: #efe3f6; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="sol"] { --dex-tint: #f4ead2; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="fee"] { --dex-tint: #fbe6ee; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="vol"] { --dex-tint: #e8ebfb; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="glace"] { --dex-tint: #dcf2f5; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="psy"] { --dex-tint: #fbe3ec; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="combat"] { --dex-tint: #f6dfdb; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="roche"] { --dex-tint: #efe8d4; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="spectre"] { --dex-tint: #e8e4f6; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="dragon"] { --dex-tint: #e3e2fb; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="tenebres"] { --dex-tint: #e9e4e1; }
+#pokdle-app.design-refresh #screen-pokedex [data-type="acier"] { --dex-tint: #e4eaf1; }
+#pokdle-app.design-refresh #screen-pokedex .pokedex-card[data-type] { background: var(--dex-tint) !important; border-color: rgb(46 42 51 / 10%) !important; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card.selected { border: 2px solid #ffca53 !important; box-shadow: 0 0 0 2px #72581f !important; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card strong { color: #17253d !important; }
 #pokdle-app.design-refresh #screen-pokedex .pokedex-card .pokedex-num { color: #3e516d !important; background: rgb(255 255 255 / 65%) !important; }
