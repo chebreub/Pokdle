@@ -3227,27 +3227,15 @@ body.theme-dark .pokedex-collection-legend > span {
 #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { image-rendering: auto; }
 
 /* ===== Fiche du Pokédex, au plus près de la maquette A (25/10) =====
-   Précédent / Suivant dans le bandeau (sur ordinateur), des cases blanches toutes simples, les
-   faiblesses sans cases dans la case et une seule pastille « Feu ×2 », des barres de stats plus
-   épaisses. */
+   Précédent / Suivant dans le bandeau (sur ordinateur), une seule pastille « Feu ×2 » par type,
+   des barres de stats plus épaisses. Les cases gardent le bleu d'origine (choix de l'utilisateur). */
 #screen-pokedex .pokedex-detail-head-nav { display: none; }
 @media (min-width: 1200px) {
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-nav { display: inline-flex; }
   #pokdle-app #screen-pokedex #pokedex-detail > .pokedex-detail-nav { display: none; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-actions .btn-ghost { min-height: 0; padding: 6px 12px; font-size: .85rem; }
 
-  #pokdle-app:not(.theme-dark) #screen-pokedex #pokedex-detail .pokedex-section {
-    background: #fff !important;
-    border: 1px solid #ece4d9 !important;
-    border-radius: 16px;
-    box-shadow: none !important;
-    padding: 12px 14px;
-  }
-  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-match-section {
-    margin-top: 10px; padding: 0; gap: 6px;
-    background: none !important; border: 0 !important; box-shadow: none !important;
-  }
-  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-match-section > span { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; opacity: .75; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-section { padding: 12px 14px; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-match-list { gap: 6px; }
   #pokdle-app #screen-pokedex #pokedex-detail .match-badge {
     display: inline-flex; align-items: center; gap: 6px; width: auto;
