@@ -79,7 +79,7 @@ function layout({ title, description, path, body, data, image = '/og-image.png' 
     '<main>\n' + body + '\n</main>\n' +
     '<footer><a class="support" href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">☕ Soutenir Pokédle</a>' +
     '<p>Pokédle est un projet de fan gratuit, sans publicité, non affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.</p>' +
-    '<p><a href="/">Accueil</a> · <a href="/jeux">Tous les jeux</a> · <a href="/confidentialite">Confidentialité</a></p></footer>\n</body>\n</html>\n';
+    '<p><a href="/">Accueil</a> · <a href="/jeux">Tous les jeux</a> · <a href="/a-propos">À propos</a> · <a href="/confidentialite">Confidentialité</a></p></footer>\n</body>\n</html>\n';
 }
 function breadcrumb(items) {
   return { '@type': 'BreadcrumbList', itemListElement: items.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: SITE + path })) };
@@ -118,15 +118,48 @@ function renderHubPage() {
   ] };
   return layout({ title: 'Tous les jeux Pokémon gratuits · Pokédle', description: 'Les ' + GAMES.length + ' jeux et outils Pokémon de Pokédle : Pokémon du jour, Grille, Petit Bac, quiz, Qui est-ce, Pokédex et table des types. Gratuit, sans pub.', path: '/jeux', body, data });
 }
+// What Pokédle is, who makes it and how to reach them: the page assistants and search engines
+// read to explain the site. No postal address or phone: it is a fan project, not a company.
+const CONTACT_EMAIL = 'chebreub@gmail.com';
+function renderAboutPage() {
+  const groups = Object.entries(GROUPS).map(([key, group]) => {
+    const games = GAMES.filter(game => game.group === key);
+    return games.length ? '<li><b>' + esc(group.title) + '</b> : ' + games.map(game => '<a href="/jeux/' + esc(game.slug) + '">' + esc(game.name) + '</a>').join(', ') + '.</li>' : '';
+  }).join('');
+  const body =
+    '<p class="crumbs"><a href="/">Pokédle</a> › À propos</p>\n' +
+    '<h1>À propos de Pokédle</h1>\n<p class="lead">Pokédle est un site de jeux Pokémon gratuits, en français. Chaque jour, un Pokémon mystère à deviner, et à côté plus de 20 mini-jeux à jouer seul ou entre amis, sur téléphone comme sur ordinateur.</p>\n' +
+    '<p><a class="cta" href="/?jeu=pokemon-du-jour">▶ Jouer au Pokémon du jour</a></p>\n' +
+    '<h2>Ce que tu trouves sur Pokédle</h2>\n<div class="panel"><ul>' + groups + '</ul></div>\n' +
+    '<p><a href="/jeux">Voir les ' + GAMES.length + ' jeux et outils →</a></p>\n' +
+    '<h2>Gratuit, sans pub, sans inscription</h2>\n<div class="panel"><ul>' +
+    '<li>Tous les jeux sont gratuits et sans publicité. Il n’y a rien à acheter.</li>' +
+    '<li>Tu peux jouer sans compte : ta progression reste alors sur ton appareil.</li>' +
+    '<li>Un compte Discord, Google ou Twitch sert seulement à retrouver ta progression partout et à apparaître dans les classements.</li>' +
+    '<li>Si tu veux aider le site, tu peux le <a href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">soutenir sur Ko-fi</a>. C’est facultatif.</li></ul></div>\n' +
+    '<h2>Qui fait Pokédle ?</h2>\n' +
+    '<p>Pokédle est un projet de fan, créé et entretenu par un passionné de Pokémon, sur son temps libre. Tes idées sont les bienvenues : elles aident à choisir les prochaines nouveautés.</p>\n' +
+    '<p>Pokédle n’est pas affilié à Nintendo, Game Freak, Creatures ou The Pokémon Company. Pokémon et les noms des Pokémon sont des marques de leurs propriétaires. Les données et les images des Pokémon viennent de <a href="https://pokeapi.co" target="_blank" rel="noreferrer">PokéAPI</a>.</p>\n' +
+    '<h2 id="contact">Contact</h2>\n<div class="panel"><ul>' +
+    '<li><b>Une idée, un bug, un avis ?</b> Le plus simple : <a href="/?avis">Donne ton avis</a>, le bouton en bas de chaque page du jeu. Chaque message est lu.</li>' +
+    '<li><b>Une question sur tes données, ou une autre demande ?</b> Écris à <a href="mailto:' + CONTACT_EMAIL + '">' + CONTACT_EMAIL + '</a>.</li>' +
+    '<li>Ce que Pokédle garde sur toi, et comment l’effacer : <a href="/confidentialite">Confidentialité</a>.</li></ul></div>';
+  const data = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'AboutPage', name: 'À propos de Pokédle', url: SITE + '/a-propos', inLanguage: 'fr', mainEntity: { '@id': SITE + '/#jeu' } },
+    { '@type': ['WebApplication', 'VideoGame'], '@id': SITE + '/#jeu', name: 'Pokédle', url: SITE + '/', applicationCategory: 'GameApplication', operatingSystem: 'Navigateur web', inLanguage: 'fr', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' } },
+    breadcrumb([['Pokédle', '/'], ['À propos', '/a-propos']]),
+  ] };
+  return layout({ title: 'À propos de Pokédle · jeux Pokémon gratuits', description: 'Pokédle, c’est quoi ? Des jeux Pokémon gratuits en français : le Pokémon du jour et plus de 20 mini-jeux, sans pub. Qui le fait et comment le contacter.', path: '/a-propos', body, data });
+}
 // Only pages that are their own canonical: /emulateur serves the home page, whose canonical is « / ».
 function sitemapXml() {
-  const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/confidentialite', 'yearly', '0.2']];
+  const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/a-propos', 'yearly', '0.3'], ['/confidentialite', 'yearly', '0.2']];
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map(([path, freq, priority]) => '  <url>\n    <loc>' + esc(SITE + path) + '</loc>\n    <changefreq>' + freq + '</changefreq>\n    <priority>' + priority + '</priority>\n  </url>').join('\n') + '\n</urlset>\n';
 }
 function mountSeoPages(app) {
   const pages = new Map(GAMES.map(game => [game.slug, renderGamePage(game)]));
-  const hub = renderHubPage(), sitemap = sitemapXml();
+  const hub = renderHubPage(), about = renderAboutPage(), sitemap = sitemapXml();
   const send = (res, html) => { res.set('Cache-Control', 'public, max-age=3600'); res.type('html').send(html); };
   app.get(['/jeux', '/jeux/'], (_req, res) => send(res, hub));
   app.get('/jeux/:slug', (req, res) => {
@@ -134,6 +167,11 @@ function mountSeoPages(app) {
     if (page) return send(res, page);
     res.redirect(301, '/jeux');
   });
+  app.get('/a-propos', (_req, res) => send(res, about));
+  // The English addresses assistants and scanners try first.
+  app.get('/about', (_req, res) => res.redirect(301, '/a-propos'));
+  app.get('/contact', (_req, res) => res.redirect(301, '/a-propos#contact'));
+  app.get('/privacy', (_req, res) => res.redirect(301, '/confidentialite'));
   app.get('/sitemap.xml', (_req, res) => { res.set('Cache-Control', 'public, max-age=86400'); res.type('application/xml').send(sitemap); });
 }
-module.exports = { SITE, renderGamePage, renderHubPage, sitemapXml, mountSeoPages };
+module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, sitemapXml, mountSeoPages };
