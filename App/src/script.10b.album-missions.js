@@ -321,6 +321,10 @@ function claimAlbumMission(id, now = Date.now()) {
   normalizeMissionRewardEntry(playerProfile.discoveries[pokemon.id], mission.id, now);
   playerProfile.albumMissionClaims[id] = Math.min(Number(now) || Date.now(), Date.now());
   saveProfile();
+  if (typeof awardXp === 'function') {
+    awardXp(ADVENTURE_XP.mission[mission.tier] || ADVENTURE_XP.mission.confirmed, `Mission « ${mission.title} »`);
+    awardRegionXpIfComplete(pokemon);
+  }
   if (typeof renderPartner === 'function') renderPartner();
   if (typeof renderDiscoveryAlbum === 'function') renderDiscoveryAlbum();
   if (typeof celebrateAlbumMission === 'function') celebrateAlbumMission(mission, pokemon);

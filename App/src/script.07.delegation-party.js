@@ -281,7 +281,7 @@ function renderStats() {
     const homeProg = getXpProgress(homeXp);
     if (homeLevelName) homeLevelName.textContent = `Niv. ${homeProg.tier.level} · ${homeProg.tier.name}`;
     if (homeLevelXp) homeLevelXp.textContent = `XP : ${homeXp}`;
-    if (homeLevelNext) homeLevelNext.textContent = homeProg.next ? `Prochain : ${homeProg.next.name} (${homeProg.next.minXp - homeXp} XP)` : "Niveau max !";
+    if (homeLevelNext) homeLevelNext.textContent = homeProg.next ? `Niveau ${homeProg.next.level} dans ${homeProg.next.minXp - homeXp} XP` : "Niveau max !";
     if (homeLevelBar) homeLevelBar.style.width = `${homeProg.percent}%`;
   }
 }
@@ -317,9 +317,9 @@ function registerWin() {
   } else if (gameMode === "normal" || gameMode === "challenge") {
     // XP variable selon le nombre d'essais (moins = mieux)
     const xpReward = Math.max(20, 80 - (attempts - 1) * 8);
-    awardXp(xpReward, "Pokédle classique");
+    awardXp(xpReward, "Pokédle classique", "classic");
   } else {
-    awardXp(40, `Mode ${gameMode}`);
+    awardXp(40, `Mode ${gameMode}`, gameMode);
   }
 
   saveStats();
@@ -1572,6 +1572,7 @@ function loadProfile() {
   }
   // Init quests + badge
   ensureDailyQuests();
+  if (typeof migrateXpLevels === "function") migrateXpLevels();
   if (typeof updateXpBadge === "function") {
     setTimeout(() => updateXpBadge(), 0);
   }
@@ -1783,7 +1784,7 @@ function renderProfileScreen() {
     datalist.dataset.ready = "1";
   }
 
-  // DA 2026 : un seul système de niveau partout (XP réel + XP_TIERS, comme le header).
+  // DA 2026 : un seul système de niveau partout (XP réel + getXpProgress, comme le header).
   const profileXp = Number(playerProfile.xp || 0);
   const profileProg = getXpProgress(profileXp);
   if (levelName) levelName.textContent = `Niv. ${profileProg.tier.level} · ${profileProg.tier.name}`;
@@ -1820,6 +1821,7 @@ function renderProfileScreen() {
           <span class="trainer-card-chip">🎮 ${playerStats.played || 0} parties</span>
           <span class="trainer-card-chip">🔥 ${playerStats.dailyBestStreak || 0} record série</span>
           <span class="trainer-card-chip">🏅 ${badgesUnlocked}/${ACHIEVEMENT_DEFS.length} succès</span>
+          ${playerProfile.pioneerMyth ? '<span class="trainer-card-chip is-pioneer" title="A atteint « Mythe Pokémon » avant le passage à 100 niveaux">✨ Pionnier · Mythe Pokémon</span>' : ""}
         </div>
         <div class="trainer-card-photo-actions"><button type="button" class="trainer-card-photo-action" data-action="triggerProfilePhoto">📷 ${photo ? "Changer" : "Ajouter"} ma photo</button>${photo ? '<button type="button" class="trainer-card-photo-action is-remove" data-action="removeProfilePhoto">Retirer</button>' : ''}</div>
       </div>`;
@@ -3031,7 +3033,7 @@ function renderWeightBattlePanel() {
           recordMatchHistory({ mode: "weight", result: didWin ? "win" : "loss", attempts: 1, targetName: secretPokemon?.name || null });
         } catch (_e) {}
         if (didWin) {
-          awardXp(10, "Duel de poids");
+          awardXp(10, "Duel de poids", "weight");
           if (playerProfile) {
             const next = (Number(playerProfile.weightBattleStreak) || 0) + 1;
             playerProfile.weightBattleStreak = next;
@@ -3260,7 +3262,7 @@ function submitOddOneOutChoice(pokemonId) {
       recordMatchHistory({ mode: "odd", result: didWin ? "win" : "loss", attempts: 1, targetName: odd?.name || null });
     } catch (_e) {}
     if (didWin) {
-      awardXp(10, "Intrus Pokémon");
+      awardXp(10, "Intrus Pokémon", "odd");
       if (playerProfile) {
         const next = (Number(playerProfile.oddOneOutStreak) || 0) + 1;
         playerProfile.oddOneOutStreak = next;

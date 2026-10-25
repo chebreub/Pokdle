@@ -123,7 +123,7 @@ function renderHomeAdventureV2() {
   const missionTitle = candidate?.mission?.title || 'Commence ton aventure';
   const rewardName = reward?.name || 'Prochaine découverte';
   const missionAction = candidate ? `continueHomeAdventureMission', data-args='["${candidate.mission.id}"]` : 'openPokedexCollection';
-  const xpLabel = xpProgress.next ? `${xpProgress.xpInTier} / ${xpProgress.xpToNext} XP vers ${escapeHtml(xpProgress.next.name)}` : `${xp} XP · palier maximum`;
+  const xpLabel = xpProgress.next ? `${xpProgress.xpInTier} / ${xpProgress.xpToNext} XP vers le niveau ${xpProgress.next.level}` : `${xp} XP · niveau maximum`;
 
   home.className = 'home-adventure-v2';
   home.innerHTML = `

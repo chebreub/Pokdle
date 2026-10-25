@@ -883,7 +883,7 @@ async function pickDraftArenaOption(pokemonId) {
         ? `🏆 NOUVEAU RECORD Gen ${draftArenaState.selectedGen} : moyenne BST ${metrics.average} ! (avant : ${previousRecord || 0})`
         : `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
       // XP + quêtes Score Attack
-      awardXp(Math.round(metrics.average / 10), `Score Attack ${metrics.average} BST`);
+      awardXp(Math.round(metrics.average / 10), `Score Attack ${metrics.average} BST`, "scoreattack");
       if (isNewRecord) awardXp(50, "Nouveau record Score Attack");
       progressQuest("score_attack_500", metrics.average);
       progressQuest("score_attack_600", metrics.average);
