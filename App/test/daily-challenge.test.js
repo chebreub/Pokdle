@@ -26,7 +26,7 @@ test('PostgreSQL: common targets, timer, hints, retries, migration, scores, glob
   try{await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:6});
     await db.query(`CREATE TABLE dossier_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,points INT,elapsed_ms BIGINT);
       CREATE TABLE daily_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,guessed JSONB,hints_used INT,elapsed_ms BIGINT);
-      CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT);
+      CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT);
       CREATE TABLE leaderboard_events(id BIGSERIAL PRIMARY KEY,discord_id TEXT,mode TEXT,score INT,created_at TIMESTAMPTZ,result_key TEXT);
       CREATE UNIQUE INDEX event_key ON leaderboard_events(discord_id,mode,result_key) WHERE result_key IS NOT NULL;
       CREATE TABLE scores(discord_id TEXT,mode TEXT,score INT,username TEXT,avatar TEXT,updated_at TIMESTAMPTZ,PRIMARY KEY(discord_id,mode));`);

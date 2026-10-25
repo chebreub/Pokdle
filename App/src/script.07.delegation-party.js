@@ -1447,7 +1447,7 @@ function openLeaderboard(mode) {
         var rankCls = i < 3 ? " lb-rank-top" : "";
         var rankTxt = i < 3 ? MEDALS[i] : (i + 1);
         var av = row.avatar ? '<img class="lb-avatar" src="' + escapeHtml(row.avatar) + '" alt="" />' : '<span class="lb-avatar lb-avatar-empty"></span>';
-        return '<div class="lb-row' + (row.me ? " lb-row-me" : "") + '"><span class="lb-rank' + rankCls + '">' + rankTxt + '</span>' + av + '<span class="lb-name">' + escapeHtml(row.username || "Dresseur") + '</span><b class="lb-score">' + (Number(row.score) || 0) + '</b></div>';
+        return '<div class="lb-row' + (row.me ? " lb-row-me" : "") + '"><span class="lb-rank' + rankCls + '">' + rankTxt + '</span>' + av + '<span class="lb-name">' + escapeHtml(row.username || "Dresseur") + (typeof leaderboardLevelPill === "function" ? leaderboardLevelPill(row) : "") + '</span><b class="lb-score">' + (Number(row.score) || 0) + '</b></div>';
       }).join("");
       if (!list) list = '<p class="card-desc">Aucun score pour ce mode pour le moment. Sois le premier !</p>';
       var me = "";

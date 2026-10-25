@@ -52,8 +52,8 @@ test('PostgreSQL: shared grid, nine PP, rarity, originality, adoption, rankings 
   const answers=cell=>pokemon.filter(p=>fits(cell,p)).map(p=>p.id),wrong=cell=>pokemon.find(p=>!fits(cell,p)).id;
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:6});
-    await db.query('CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT)');
-    await db.query("INSERT INTO users VALUES('A','Alice',''),('B','Bob',''),('C','Chloé',''),('D','Dan','')");
+    await db.query('CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT)');
+    await db.query("INSERT INTO users(discord_id,username,avatar,xp) VALUES('A','Alice','',122928),('B','Bob','',0),('C','Chloé','',NULL),('D','Dan','',2250)");
     await initGridDb(db);await initGridDb(db);
     let now=new Date('2026-10-19T12:00:00Z');const game=createGridService({db,pokemon,clock:()=>now,draw});
     const guest={key:'guest:g',guestKey:'guest:g'},A={key:'user:A',guestKey:'guest:a',accountId:'A'},B={key:'user:B',guestKey:'guest:b',accountId:'B'},C={key:'user:C',guestKey:'guest:c',accountId:'C'};
@@ -104,6 +104,8 @@ test('PostgreSQL: shared grid, nine PP, rarity, originality, adoption, rankings 
 
     const board=await game.leaderboard('today','A');
     assert.deepEqual(board.top.map(r=>[r.username,r.score]),[['Bob',100],['Alice',10],['Chloé',0]],'guests and unfinished plays stay out');
+    // The level next to each name: from the account's XP, none without a saved profile.
+    assert.deepEqual(board.top.map(r=>[r.username,r.level]),[['Bob',1],['Alice',70],['Chloé',null]]);
     assert.deepEqual(board.me,{rank:2,score:10,originality:60},'two of the five players chose that Pokémon');
     assert.equal((await game.leaderboard('week','B')).me.score,100);
 

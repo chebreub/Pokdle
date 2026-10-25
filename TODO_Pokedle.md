@@ -44,7 +44,11 @@ Dernière mise à jour : 13 octobre 2026 (soir). Reste : comptes (à la fin). Pa
 ## À faire
 
 ### Prochains chantiers (notés le 25/10 à la demande de l'utilisateur)
-- [ ] **Niveaux, XP et aventure : nouvelle architecture.** Le système actuel vient d'une ancienne version : on atteint trop vite le niveau max (Niv. 10 « Mythe Pokémon » ; l'utilisateur y est depuis longtemps, 122 928 XP). Repenser la progression (paliers, ce qu'on gagne), l'aventure et leur affichage (fenêtre du niveau, quêtes du jour, partage du niveau).
+- [x] **Niveaux, XP et aventure : nouvelle architecture.** Proposition A choisie le 25/10 (page « Nouveaux niveaux Pokédle ») :
+  - 100 niveaux, chaque niveau coûte 50 XP de plus que le précédent, un titre tous les 10 niveaux, étoiles après 100. XP conservée, badge Pionnier pour les anciens « Mythe Pokémon ». Livré le 25/10 (PR #147).
+  - L'aventure rapporte de l'XP (Pokémon, missions, secrets, régions) ; un jeu ne rapporte que la moitié après 500 XP dans la journée. Livré le 25/10 (PR #147).
+  - Le niveau à côté des pseudos (classements, Ligue, top 3 de la semaine, Party Rooms). PR suivante.
+  - Plus tard : les badges d'arène (proposition C) pour la refonte du profil ; les saisons (proposition B) si on veut un rendez-vous mensuel.
 - [ ] **Profil : direction artistique et fonctionnalités à revoir**, en regardant ce que font les concurrents ou en imaginant mieux (carte de dresseur, partenaire, progression, succès, historique, notes des jeux, favoris).
 
 ### Formes manquantes (signalé le 12/10)
