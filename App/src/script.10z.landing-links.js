@@ -29,14 +29,21 @@ const LANDING_GAMES = Object.freeze({
   'team-builder': ['openTeamBuilderScreen'],
   'pokedex': ['openPokedexMode'],
 });
+// The contact link of the About page (/a-propos) opens « Donne ton avis »: /?avis.
 function openLandingGame() {
   let params;
   try { params = new URLSearchParams(location.search); } catch (e) { return; }
   const slug = params.get('jeu');
-  if (!slug) return;
+  const feedback = params.has('avis');
+  if (!slug && !feedback) return;
   params.delete('jeu');
+  params.delete('avis');
   const query = params.toString();
   try { history.replaceState(history.state, '', location.pathname + (query ? '?' + query : '') + location.hash); } catch (e) {}
+  if (feedback) {
+    if (typeof window.openFeedbackModal === 'function') try { window.openFeedbackModal(); } catch (e) { console.warn('[avis] ouverture impossible :', e); }
+    return;
+  }
   const entry = Object.prototype.hasOwnProperty.call(LANDING_GAMES, slug) ? LANDING_GAMES[slug] : null;
   if (!entry || typeof window[entry[0]] !== 'function') return;
   try { window[entry[0]](...(entry[1] || [])); } catch (e) { console.warn('[jeu] ouverture impossible :', e); }
