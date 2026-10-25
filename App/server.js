@@ -1307,9 +1307,8 @@ const USAGE_LABELS = {
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
-const usageDays = new Map(); // dateKey -> { events: Map, uniques: Set }
+const usageDays = new Map(); // dateKey -> { events: Map } (diagnostic since restart only)
 const USAGE_MAX_DAYS = 14;
-const USAGE_MAX_UNIQUES = 5000;
 const usageBootedAt = new Date();
 const usageMetricsReady = pgPool ? authDbReady.then(async () => {
   await usageMetrics.ensureTable(pgPool);
@@ -1338,7 +1337,7 @@ function getUsageDay(key) {
   pruneUsageMemory();
   if (!usageDays.has(key)) {
     while (usageDays.size >= USAGE_MAX_DAYS) usageDays.delete(usageDays.keys().next().value);
-    usageDays.set(key, { events: new Map(), uniques: new Set() });
+    usageDays.set(key, { events: new Map() });
   }
   return usageDays.get(key);
 }
@@ -1348,11 +1347,14 @@ function recordUsage(event, uid) {
   const key = serverUTCDateKey();
   const day = getUsageDay(key);
   day.events.set(event, (day.events.get(event) || 0) + 1);
-  if (typeof uid === "string" && /^[a-z0-9-]{8,40}$/i.test(uid) && day.uniques.size < USAGE_MAX_UNIQUES) day.uniques.add(uid);
   console.log("[usage]", JSON.stringify({ d: key, e: event }));
-  // Only counters go into PostgreSQL; never persist a UID, IP, account, or payload.
-  if (pgPool) void usageMetricsReady.then((ready) => ready ? usageMetrics.increment(pgPool, event, key) : null)
-    .catch((error) => console.warn("[usage] aggregate write failed:", String(error.message || error).slice(0, 160)));
+  // Both tables persist aggregates only. The visitor bitmap is updated on
+  // genuine page-visit events, never from game actions or completion events.
+  if (pgPool) void usageMetricsReady.then(async (ready) => {
+    if (!ready) return;
+    await usageMetrics.increment(pgPool, event, key);
+    if (event === "visit") await usageMetrics.recordUnique(pgPool, uid, key);
+  }).catch((error) => console.warn("[usage] aggregate write failed:", String(error.message || error).slice(0, 160)));
 }
 
 // Garde-fou simple : 120 événements/minute par IP.
@@ -1394,8 +1396,15 @@ app.get("/admin/stats", async (req, res) => {
   try { if (pgPool && await feedbackReady) feedbackHtml = feedback.feedbackSectionHtml(await feedback.recent(pgPool, 50)); } catch (_error) { feedbackHtml = "<p>Messages des joueurs indisponibles pour le moment.</p>"; }
   let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
   let aggregateHtml = "<p>Compteurs quotidiens persistants indisponibles.</p>";
-  let metrics = null;
-  try { if (pgPool && await usageMetricsReady) metrics = await usageMetrics.recent(pgPool, 14); } catch (_error) { metrics = null; }
+  let metrics = null, uniqueDays = null;
+  try {
+    if (pgPool && await usageMetricsReady) {
+      metrics = await usageMetrics.recent(pgPool, 14);
+      uniqueDays = await usageMetrics.recentUniques(pgPool, 14);
+    }
+  } catch (error) {
+    console.warn("[usage] persistent stats unavailable:", String(error.message || error).slice(0, 160));
+  }
   if (pgPool) {
     try {
       // Real visits: one per browser session, sent by the page itself (« visit »). Robots,
@@ -1404,12 +1413,15 @@ app.get("/admin/stats", async (req, res) => {
       const vd = await pgPool.query("SELECT to_char(day, 'YYYY-MM-DD') AS d, hits FROM visits ORDER BY day DESC LIMIT 14");
       const raw = new Map(vd.rows.map((r) => [r.d, Number(r.hits) || 0]));
       const real = new Map((metrics || []).filter((r) => r.event === "visit").map((r) => [r.day, Number(r.hits) || 0]));
-      const days = [...new Set([...real.keys(), ...raw.keys()])].sort().reverse().slice(0, 14);
+      const unique = new Map((uniqueDays || []).map((r) => [r.day, Number(r.uniques) || 0]));
+      const days = [...new Set([...real.keys(), ...raw.keys(), ...unique.keys()])].sort().reverse().slice(0, 14);
       const label = (day) => day.slice(8, 10) + "/" + day.slice(5, 7) + "/" + day.slice(0, 4);
       const realTotal = days.reduce((sum, day) => sum + (real.get(day) || 0), 0);
-      visitTotalHtml = `<h2 style="margin-top:24px">Visites — 14 derniers jours</h2><p><b style="font-size:1.6rem;color:#2f76ff">${realTotal}</b> visites réelles : une par session de navigateur qui a vraiment ouvert le site.</p>` +
+      const today = usageMetrics.utcDay(), todayUnique = uniqueDays === null ? "indisponible" : (unique.get(today) || 0);
+      visitTotalHtml = `<h2 style="margin-top:24px">Visites — 14 derniers jours (base persistante)</h2><p><b style="font-size:1.6rem;color:#2f76ff">${realTotal}</b> visites réelles : une par session de navigateur qui a vraiment ouvert le site. <b>${todayUnique}</b> visiteurs uniques estimés aujourd’hui (UTC).</p>` +
+        `<p>« Visiteurs uniques estimés » compte les navigateurs distincts par jour grâce à une empreinte statistique (faible risque de sous-comptage), conservée 90 jours. Aucun identifiant de navigateur ni aucune adresse IP n'est enregistré dans cette table. Historique disponible uniquement depuis l'activation de ce compteur ; « — » signifie non mesuré, pas zéro.</p>` +
         `<p>« Chargements bruts » compte chaque appel de la page d'accueil, robots (Google, aperçus de liens) et pings de maintien en éveil compris : ne pas le lire comme une audience.</p>` +
-        `<table><thead><tr><th>Jour</th><th>Visites réelles</th><th>Chargements bruts</th></tr></thead><tbody>${days.map((day) => `<tr><th>${label(day)}</th><td>${real.has(day) ? real.get(day) : "—"}</td><td>${raw.has(day) ? raw.get(day) : "—"}</td></tr>`).join("")}</tbody></table>`;
+        `<table><thead><tr><th>Jour</th><th>Visites réelles</th><th>Visiteurs uniques estimés</th><th>Chargements bruts</th></tr></thead><tbody>${days.map((day) => `<tr><th>${label(day)}</th><td>${real.has(day) ? real.get(day) : "—"}</td><td>${unique.has(day) ? unique.get(day) : "—"}</td><td>${raw.has(day) ? raw.get(day) : "—"}</td></tr>`).join("")}</tbody></table>`;
     } catch (e) { visitTotalHtml = "<p>(compteur persistant indisponible : " + e.message + ")</p>"; }
   }
   try {
@@ -1436,12 +1448,11 @@ app.get("/admin/stats", async (req, res) => {
     const total = dayKeys.reduce((s, k) => s + (usageDays.get(k).events.get(e) || 0), 0);
     return `<tr><th>${USAGE_LABELS[e] || e}</th>${dayKeys.map((k) => cell(usageDays.get(k).events.get(e))).join("")}<td class="t">${total}</td></tr>`;
   }).join("");
-  const uniqueRow = `<tr><th>Visiteurs uniques</th>${dayKeys.map((k) => cell(usageDays.get(k).uniques.size)).join("")}<td class="t">—</td></tr>`;
   res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
 <style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
 </head><body><h1>Pokédle — fréquentation</h1>${feedbackHtml}${visitTotalHtml}${aggregateHtml}
-<p>Compteurs en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (remis à zéro à chaque redémarrage de l'instance — les événements restent tracés dans les logs Render, préfixe <code>[usage]</code>).</p>
-<table><thead><tr><th>Événement</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${uniqueRow}${rows || ""}</tbody></table>
+<p>Événements de diagnostic en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (réinitialisés au redémarrage ; les visites et visiteurs uniques estimés sont conservés dans les tableaux persistants ci-dessus).</p>
+<table><thead><tr><th>Événement (depuis redémarrage)</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${rows || ""}</tbody></table>
 ${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);
 });
 
