@@ -462,7 +462,7 @@ async function submitDailyPetitBac(event) {
 async function shareDailyPetitBac() {
   const s = dailyBacState; if (!s?.finished) return;
   const row = (s.results || []).map(r => r.valid ? (r.rarity && r.rarity <= 10 ? '🟪' : '🟩') : '⬜').join('');
-  const text = 'Pokédle · Petit Bac du jour #' + s.number + ' · lettre ' + s.letter + '\n' + row + '\n' + s.points + ' pts' + (s.originality != null && s.players >= 3 ? ' · originalité ' + s.originality + ' %' : '') + '\nhttps://pokdle.onrender.com';
+  const text = 'Pokédle · Petit Bac du jour #' + s.number + ' · lettre ' + s.letter + '\n' + row + '\n' + s.points + ' pts' + (s.originality != null && s.players >= 3 ? ' · originalité ' + s.originality + ' %' : '') + '\nhttps://pokdle.fr';
   try { if (navigator.share) { await navigator.share({ text }); return; } await navigator.clipboard.writeText(text); if (typeof showToast === 'function') showToast('Résultat copié !'); }
   catch (e) { if (e?.name !== 'AbortError' && typeof showToast === 'function') showToast('Partage impossible sur cet appareil.'); }
 }

@@ -173,7 +173,18 @@ test('regulars see the daily first: recent games come right after the daily hero
 test('the sitemap lists only canonical pages, never /emulateur (the home page under another path)', () => {
   const xml = sitemapXml();
   assert.doesNotMatch(xml, /\/emulateur/);
-  assert.match(xml, /<loc>https:\/\/pokdle\.onrender\.com\/<\/loc>/);
+  assert.match(xml, /<loc>https:\/\/pokdle\.fr\/<\/loc>/);
+  assert.doesNotMatch(xml, /onrender/);
+});
+
+test('the home page, robots.txt and share texts point to pokdle.fr, never to the old address', () => {
+  const files = ['index.html', 'robots.txt', ...fs.readdirSync(path.join(__dirname, '../src')).map(file => 'src/' + file)];
+  for (const file of files.filter(file => file !== 'src/script.00.transfert.js')) {
+    assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), /pokdle\.onrender\.com/, file);
+  }
+  const home = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  assert.ok(home.includes('<link rel="canonical" href="https://pokdle.fr/">'));
+  assert.match(fs.readFileSync(path.join(__dirname, '../robots.txt'), 'utf8'), /^Sitemap: https:\/\/pokdle\.fr\/sitemap\.xml$/m);
 });
 
 test('every image of the game pages has a description, and the illustration names its Pokémon', () => {

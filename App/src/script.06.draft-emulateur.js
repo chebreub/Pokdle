@@ -957,7 +957,7 @@ function shareDraftScore() {
     var avg = getDraftTeamBstMetrics(draftArenaState.team).average;
     var gen = draftArenaState.selectedGen;
     var label = getDraftScoreAttackResultLabel(avg);
-    var txt = "\ud83c\udfaf Draft Score Attack \u2014 Gen " + gen + " : moyenne BST " + avg + " (" + label + ") sur Pok\u00e9dle ! https://pokdle.onrender.com";
+    var txt = "\ud83c\udfaf Draft Score Attack \u2014 Gen " + gen + " : moyenne BST " + avg + " (" + label + ") sur Pok\u00e9dle ! https://pokdle.fr";
     if (navigator.share) { navigator.share({ text: txt }).catch(function () {}); }
     else if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function () { if (typeof showToast === "function") showToast("R\u00e9sultat copi\u00e9 !"); }).catch(function () {}); }
   } catch (e) {}

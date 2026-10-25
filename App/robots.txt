@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://pokdle.onrender.com/sitemap.xml
+Sitemap: https://pokdle.fr/sitemap.xml

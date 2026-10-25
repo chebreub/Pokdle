@@ -175,7 +175,7 @@ async function abandonDailyWordle() {closeOverlayModal();if(!dailyWordleBusy&&da
 async function shareDailyWordle() {
   const s=dailyWordleState;if(!s?.finished)return;
   const emoji={exact:'🟩',present:'🟧',absent:'⬜'};
-  const text='Pokédle #'+s.number+' · Wordle '+(s.won?s.attempts:'X')+'/6 · '+s.points+' pt'+(s.points>1?'s':'')+'\n'+s.rows.map(r=>r.colors.map(c=>emoji[c]).join('')).join('\n')+'\nhttps://pokdle.onrender.com/';
+  const text='Pokédle #'+s.number+' · Wordle '+(s.won?s.attempts:'X')+'/6 · '+s.points+' pt'+(s.points>1?'s':'')+'\n'+s.rows.map(r=>r.colors.map(c=>emoji[c]).join('')).join('\n')+'\nhttps://pokdle.fr/';
   try{await navigator.clipboard.writeText(text);wordleMessage('Grille copiée, sans révéler le Pokémon !');}catch(_e){ensureOverlay('Partager ma grille','<pre>'+escapeHtml(text)+'</pre>');}
 }
 

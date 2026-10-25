@@ -1114,7 +1114,7 @@ function shareSpeedrunResult() {
   const tier = getXpTier(xp);
   const text = `⚡ Speedrun Pokédex : ${speedrunState.correct} Pokémon en 60s (best streak ${speedrunState.bestStreak})
 ${tier.emoji} Niveau ${tier.level} · ${tier.name}
-👉 https://pokdle.onrender.com`;
+👉 https://pokdle.fr`;
   copyShareText(text);
 }
 

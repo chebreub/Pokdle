@@ -5,8 +5,8 @@
 const fs = require('fs');
 const path = require('path');
 const { GAMES, GROUPS } = require('./seo-games');
+const { SITE_URL: SITE } = require('./site-move');
 
-const SITE = String(process.env.SITE_URL || 'https://pokdle.onrender.com').replace(/\/+$/, '');
 const SUPPORT_URL = 'https://ko-fi.com/chebreub';
 const ARTWORK = id => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + Number(id) + '.png';
 // French names for the alt text of each game's illustration, read from pokemon.js like server.js does.

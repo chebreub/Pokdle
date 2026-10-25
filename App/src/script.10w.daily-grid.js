@@ -180,7 +180,7 @@ async function stopDailyGrid(){closeOverlayModal();if(dailyGridBusy)return;daily
 async function shareDailyGrid(){
   const s=dailyGridState;if(!s?.finished)return;
   const rows=[0,1,2].map(r=>[0,1,2].map(c=>{const cell=s.cells[r*3+c];return cell?(cell.rarity<=10?'🟪':'🟩'):'⬜';}).join('')).join('\n');
-  const text='Pokédle · Grille du jour #'+s.number+'\n'+rows+'\n'+s.found+'/9 · '+s.points+' pts'+(s.originality!=null&&s.players>=3?' · originalité '+s.originality+' %':'')+'\nhttps://pokdle.onrender.com';
+  const text='Pokédle · Grille du jour #'+s.number+'\n'+rows+'\n'+s.found+'/9 · '+s.points+' pts'+(s.originality!=null&&s.players>=3?' · originalité '+s.originality+' %':'')+'\nhttps://pokdle.fr';
   try{if(navigator.share){await navigator.share({text});return;}await navigator.clipboard.writeText(text);if(typeof showToast==='function')showToast('Résultat copié !');}
   catch(e){if(e?.name!=='AbortError'&&typeof showToast==='function')showToast('Partage impossible sur cet appareil.');}
 }
