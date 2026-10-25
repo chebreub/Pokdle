@@ -3212,6 +3212,10 @@ body.theme-dark .pokedex-collection-legend > span {
 @media (min-width: 2000px) {
   #pokdle-app #screen-pokedex #pokedex-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #pokdle-app #screen-pokedex #pokedex-detail > :not(.is-stats, .is-matchups, .is-abilities, .is-evolution) { grid-column: 1 / -1; }
+  /* Stats, talents et évolution l'un sous l'autre à gauche, les faiblesses (souvent la plus haute) à droite
+     sur toute leur hauteur : aucune case ne s'étire pour s'aligner sur sa voisine. */
+  #pokdle-app #screen-pokedex #pokedex-detail > :is(.is-stats, .is-abilities, .is-evolution) { grid-column: 1; align-self: start; }
+  #pokdle-app #screen-pokedex #pokedex-detail > .is-matchups { grid-column: 2; grid-row: span 3; align-self: start; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head { grid-template-columns: 150px minmax(0, 1fr); }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { width: 150px !important; height: 150px !important; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-summary h3 { font-size: 2rem; }
