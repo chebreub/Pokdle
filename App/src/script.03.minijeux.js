@@ -1489,7 +1489,7 @@ function renderPokeConnectionsScreen() {
   }
 
   root.innerHTML = `
-    <div class="poke-connections-board" tabindex="-1" role="region" aria-label="Grille Poké-Connections">
+    <div class="poke-connections-board${phase === "won" || phase === "lost" ? " is-over" : ""}" tabindex="-1" role="region" aria-label="Grille Poké-Connections">
       <div class="poke-connections-status">
         <div><span class="poke-connections-status-label">ERREURS</span><span class="poke-connections-mistake-dots">${mistakeDots}</span></div>
         <div><span class="poke-connections-status-label">PROGRESSION</span><b>${foundGroupIdx.size} / 4 groupes</b></div>

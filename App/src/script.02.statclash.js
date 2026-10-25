@@ -803,8 +803,9 @@ function updateSilhouettePanel(reveal) {
   const totalLevels = 7;
   const level = reveal ? totalLevels : Math.min(totalLevels, attempts + 1);
   const progress = Math.round((level / totalLevels) * 100);
+  const url = getPokemonSprite(secretPokemon);
   box.classList.remove("hidden");
-  img.src = getPokemonSprite(secretPokemon);
+  img.src = url;
   img.alt = "Vue zoomée du Pokémon mystère";
   if (levelEl) levelEl.textContent = reveal ? "Révélé" : "Détail " + level + " / " + totalLevels;
   if (meterEl) meterEl.style.width = progress + "%";
@@ -816,9 +817,53 @@ function updateSilhouettePanel(reveal) {
     const startScale = 4;
     const step = 0.55;
     const scale = Math.max(1, startScale - attempts * step);
-    img.style.transform = `translate(0px, 0px) scale(${scale})`;
+    // Centre the view on the Pokémon's body: translate(-scale × offset) keeps that point in the middle.
+    const apply = (focus) => {
+      img.style.transform = `translate(${(-(focus.x - 0.5) * scale * 100).toFixed(2)}%, ${(-(focus.y - 0.5) * scale * 100).toFixed(2)}%) scale(${scale})`;
+    };
+    apply(zoomFocusCache.get(url) || { x: 0.5, y: 0.5 });
+    zoomFocus(url, (focus) => {
+      if (gameMode === "silhouette" && secretPokemon && getPokemonSprite(secretPokemon) === url && !box.classList.contains("revealed")) apply(focus);
+    });
   }
   box.classList.toggle("revealed", Boolean(reveal));
+}
+
+// Where the Pokémon is in its sprite: the visible pixel nearest to the centre of all its visible
+// pixels, measured once per sprite. The middle of the sprite is often empty background.
+const zoomFocusCache = new Map();
+function zoomFocusFromAlpha(alpha, side) {
+  let sx = 0, sy = 0, n = 0;
+  for (let i = 0; i < alpha.length; i += 1) if (alpha[i] > 128) { sx += i % side; sy += Math.floor(i / side); n += 1; }
+  if (!n) return { x: 0.5, y: 0.5 };
+  const cx = sx / n, cy = sy / n;
+  let best = -1, bestDistance = Infinity;
+  for (let i = 0; i < alpha.length; i += 1) {
+    if (alpha[i] <= 128) continue;
+    const distance = (i % side - cx) ** 2 + (Math.floor(i / side) - cy) ** 2;
+    if (distance < bestDistance) { bestDistance = distance; best = i; }
+  }
+  return { x: (best % side + 0.5) / side, y: (Math.floor(best / side) + 0.5) / side };
+}
+function zoomFocus(url, done) {
+  if (zoomFocusCache.has(url)) return done(zoomFocusCache.get(url));
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  const finish = (focus) => { zoomFocusCache.set(url, focus); done(focus); };
+  image.onload = () => {
+    try {
+      const side = 64, canvas = document.createElement("canvas");
+      canvas.width = canvas.height = side;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, side, side);
+      const data = ctx.getImageData(0, 0, side, side).data;
+      const alpha = new Uint8Array(side * side);
+      for (let i = 0; i < alpha.length; i += 1) alpha[i] = data[i * 4 + 3];
+      finish(zoomFocusFromAlpha(alpha, side));
+    } catch (_e) { finish({ x: 0.5, y: 0.5 }); }
+  };
+  image.onerror = () => finish({ x: 0.5, y: 0.5 });
+  image.src = url;
 }
 
 function getPixelBlurForAttempts(tries) {
