@@ -54,7 +54,7 @@ test('server stores dated events and exposes today week all scopes',()=>{
 });
 
 test('server sanity-checks mode-specific score ceilings',()=>{
-  assert.match(server,/Quiz", unit: "bonnes réponses", max: 10/);
+  assert.match(server,/Quiz", unit: "bonnes réponses", max: 15/);
   assert.match(server,/Pokémon du jour", unit: "essais", max: 1025/);
   assert.match(server,/if \(n > max\) return null/);
 });

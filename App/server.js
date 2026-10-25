@@ -583,7 +583,8 @@ const LB_MODE_CONFIG = Object.freeze({
   dossier: { direction: "desc", label: "Dossier du jour", unit: "pts", max: 20 },
   wordle: { direction: "asc", label: "Wordle du jour", unit: "essais", max: 6 },
   daily: { direction: "asc", label: "Pokémon du jour", unit: "essais", max: 1025 },
-  quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 10 },
+  // 15 questions per Quiz (QUIZ_QUESTION_COUNT in src/script.01.core.js).
+  quiz: { direction: "desc", label: "Quiz", unit: "bonnes réponses", max: 15 },
   speedrun: { direction: "desc", label: "Speedrun", unit: "Pokémon", max: 100 },
   party: { direction: "desc", label: "Party", unit: "victoires", max: 20 },
   intrus: { direction: "desc", label: "Intrus", unit: "série", max: 1000 },

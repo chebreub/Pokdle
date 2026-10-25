@@ -516,7 +516,10 @@ def main():
      return screen('screen-game')
     check('daily-resume',daily_resume)
     def daily_abandoned():
-     page.locator('#btn-surrender').click();page.locator('#win-box').wait_for(state='visible')
+     page.locator('#btn-surrender').click()
+     confirm=page.locator('[data-action="abandonDailyGame"]');confirm.wait_for(state='visible')
+     expect(page.evaluate('!gameOver') and page.locator('#win-box').is_hidden(),'Daily gives up before the player confirms')
+     confirm.click();page.locator('#win-box').wait_for(state='visible')
      expect(page.locator('#btn-share').is_hidden(),'Abandoned Daily can share a victory')
      page.evaluate('startDailyGame()')
      expect(page.evaluate('gameOver && dailyServerState.status === "abandoned"'),'Server abandonment does not survive resume')

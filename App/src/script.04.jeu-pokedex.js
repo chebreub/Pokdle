@@ -112,7 +112,7 @@ async function submitGuess() {
 }
 
 function surrenderGame() {
-  if (gameMode === "daily") { if (!gameOver) return requestDailyObservedState(null,"",true); return; }
+  if (gameMode === "daily") { if (!gameOver) confirmDailySurrender(); return; }
   if (gameOver || !secretPokemon || gameMode === "quiz") return;
 
   gameOver = true;
@@ -122,6 +122,16 @@ function surrenderGame() {
   saveDailyResult(false);
   clearSavedGame();
   finishPartyRound(false);
+}
+
+// The day's Pokémon is one chance a day: giving up reveals the answer, so it asks first, like the Wordle.
+function confirmDailySurrender() {
+  if (gameMode !== "daily" || gameOver) return;
+  ensureOverlay("Abandonner le Pokémon du jour ?", '<p>La réponse sera révélée et le défi du jour sera terminé. Tu pourras revenir demain.</p><div class="wordle-result-actions"><button class="btn-ghost" data-action="closeOverlayModal">Continuer à chercher</button><button class="btn-blue" data-action="abandonDailyGame">Révéler la réponse</button></div>');
+}
+function abandonDailyGame() {
+  closeOverlayModal();
+  if (gameMode === "daily" && !gameOver) requestDailyObservedState(null, "", true);
 }
 
 // Rendu partagé de l'écran de fin (victoire, abandon, grille-trophée du daily).
