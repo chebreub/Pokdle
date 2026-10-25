@@ -117,3 +117,13 @@ test("PostgreSQL counters survive re-reads, update atomically, and expire after 
     await admin.end();
   }
 });
+
+test("privacy notice explains the durable anonymous estimate rather than a restart-prone Set", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const html = fs.readFileSync(path.join(__dirname, "../confidentialite.html"), "utf8");
+  assert.match(html, /navigateurs distincts par jour/);
+  assert.match(html, /tableau de présence agrégé/);
+  assert.match(html, /survivent aux redémarrages/);
+  assert.doesNotMatch(html, /effacés lors du redémarrage/);
+});
