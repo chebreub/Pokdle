@@ -176,6 +176,45 @@ test('the sitemap lists only canonical pages, never /emulateur (the home page un
   assert.match(xml, /<loc>https:\/\/pokdle\.onrender\.com\/<\/loc>/);
 });
 
+test('every image of the game pages has a description, and the illustration names its Pokémon', () => {
+  const { renderHubPage } = require('../lib/seo-render');
+  for (const html of [renderHubPage(), ...GAMES.map(renderGamePage)]) {
+    for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) assert.match(tag, /\balt="[^"]+"/, 'Bing reports an image without alt: ' + tag);
+  }
+  const hero = renderGamePage(GAMES.find(g => g.slug === 'qui-est-ce-pokemon')).match(/<section class="hero">[\s\S]*?<\/section>/)[0];
+  assert.match(hero, /alt="Pikachu, illustration du jeu Qui est-ce \? Pokémon"/);
+  assert.match(renderHubPage(), /official-artwork\/149\.png" alt="Dracolosse"/);
+});
+
+test('search engines find a real icon file: /favicon.ico (16, 32 and 48 px) and /favicon.svg', async () => {
+  const pages = {
+    'index.html': fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8'),
+    'confidentialite.html': fs.readFileSync(path.join(__dirname, '../confidentialite.html'), 'utf8'),
+    '/jeux/team-builder': renderGamePage(GAMES.find(g => g.slug === 'team-builder')),
+  };
+  for (const [name, html] of Object.entries(pages)) {
+    assert.ok(html.includes('<link rel="icon" href="/favicon.ico" sizes="48x48">'), name + ' links /favicon.ico');
+    assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="/favicon.svg">'), name + ' links /favicon.svg');
+    assert.doesNotMatch(html, /rel="icon"[^>]*href="data:/, name + ': search engines ignore a data: icon');
+  }
+  const server = fs.readFileSync(path.join(__dirname, '../server.js'), 'utf8');
+  assert.match(server, /app\.get\("\/favicon\.ico", \(_req, res\) => res\.sendFile\(path\.join\(__dirname, "favicon\.ico"\)/);
+  assert.match(server, /app\.get\("\/favicon\.svg", \(_req, res\) => res\.sendFile\(path\.join\(__dirname, "favicon\.svg"\)/);
+
+  const ico = fs.readFileSync(path.join(__dirname, '../favicon.ico'));
+  assert.deepEqual([ico.readUInt16LE(0), ico.readUInt16LE(2)], [0, 1], 'an ICO header');
+  const sharp = require('sharp');
+  const sizes = [];
+  for (let i = 0; i < ico.readUInt16LE(4); i++) {
+    const at = 6 + 16 * i, length = ico.readUInt32LE(at + 8), offset = ico.readUInt32LE(at + 12);
+    const { width, height, format } = await sharp(ico.subarray(offset, offset + length)).metadata();
+    assert.deepEqual([width, height, format], [ico[at], ico[at + 1], 'png']);
+    sizes.push(width);
+  }
+  assert.deepEqual(sizes, [16, 32, 48], 'run node tools/favicon.js after changing favicon.svg');
+  assert.match(fs.readFileSync(path.join(__dirname, '../favicon.svg'), 'utf8'), /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 64 64">/);
+});
+
 test('every game page shows its own link preview: a 1200×630 image that exists and stays light', async () => {
   const sharp = require('sharp');
   for (const game of GAMES) {
