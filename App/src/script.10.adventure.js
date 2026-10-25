@@ -109,7 +109,7 @@ function renderPartner() {
   if (home) home.innerHTML = (pokemon ? partnerImage(pokemon) : '<span class="partner-placeholder" aria-hidden="true">✦</span>') +
     `<div class="partner-strip-copy"><span class="adventure-eyebrow">MON AVENTURE</span><strong>${pokemon ? escapeHtml(pokemon.name) + ' & toi' : 'Trouve ton compagnon de jeu'}</strong><span>${pokemon ? stage.name + ' · ' + count + ' découverte' + (count === 1 ? '' : 's') : 'Un partenaire, un album, tes découvertes.'}</span></div><button type="button" class="btn-ghost" data-action="${pokemon ? 'openDiscoveryAlbum' : 'openPartnerProfile'}">${pokemon ? 'Mon album →' : 'Choisir →'}</button>`;
   const card = document.getElementById('profile-favorite-card');
-  if (card) card.innerHTML = pokemon ? `<div class="partner-card">${partnerImage(pokemon)}<div><span class="adventure-eyebrow">TON PARTENAIRE</span><h3>${escapeHtml(pokemon.name)}</h3><div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div></div><div class="partner-bond"><strong>${stage.name}</strong><span>${count} découverte${count === 1 ? '' : 's'} dans ton aventure</span><progress value="${stage.percent}" max="100" aria-label="Progression du duo"></progress><small>${stage.next ? (stage.next - count) + ' découverte(s) avant le prochain palier' : 'Le dernier palier est atteint. L’aventure continue !'}</small></div></div>` :
+  if (card) card.innerHTML = pokemon ? `<div class="partner-card">${partnerImage(pokemon)}<div><span class="adventure-eyebrow">TON PARTENAIRE</span><h3>${escapeHtml(pokemon.name)}</h3><div class="pokemon-card-types">${typeBadgesHtml(pokemon.type1, pokemon.type2)}</div></div><div class="partner-bond"><strong>${stage.name}</strong><span>${count} découverte${count === 1 ? '' : 's'} dans ton aventure</span><progress value="${stage.percent}" max="100" aria-label="Progression du duo"></progress><small>${stage.next ? (stage.next - count) + ' découverte(s) avant le prochain palier' : 'Votre lien est au plus haut. L’aventure continue !'}</small></div></div>` :
     '<div class="partner-empty"><span class="adventure-eyebrow">LE DÉBUT D’UNE AVENTURE</span><h3>Avec qui pars-tu ?</h3><p>Choisis n’importe quel Pokémon dans le champ ci-dessus, ou commence avec un de ces compagnons.</p><div class="partner-starters">' + [1, 4, 7].map(id => { const p = POKEMON_BY_ID.get(id); return p ? `<button type="button" data-action="choosePartner" data-args="[${id}]">${partnerImage(p)}<span>${escapeHtml(p.name)}</span></button>` : ''; }).join('') + '</div></div>';
   const tabCount = document.getElementById('album-tab-count');
   if (tabCount) {
@@ -149,8 +149,12 @@ function openDiscoveryAlbum() {
 }
 function switchProfileView(view) {
   const selected = ['trainer', 'album', 'secrets'].includes(view) ? view : 'trainer';
-  document.querySelectorAll('.profile-view-switch button').forEach(button => button.setAttribute('aria-pressed', String(JSON.parse(button.dataset.args || '[]')[0] === selected)));
-  document.querySelectorAll('#profile-trainer-card, #screen-profile .profile-stats-links, #screen-profile .profile-layout, #screen-profile .profile-achievements-panel, #screen-profile .profile-records-panel, #profile-secret-rune').forEach(el => el.classList.toggle('hidden', selected !== 'trainer'));
+  document.querySelectorAll('.profile-view-switch button[data-action="switchProfileView"]').forEach(button => button.setAttribute('aria-pressed', String(JSON.parse(button.dataset.args || '[]')[0] === selected)));
+  // The trainer card and the four figures stay (on phones they step aside for Missions and Secrets);
+  // the tabs change what is under them.
+  document.querySelectorAll('#screen-profile .profile-overview, #screen-profile .profile-management, #profile-secret-rune').forEach(el => el.classList.toggle('hidden', selected !== 'trainer'));
+  const screen = document.getElementById('screen-profile');
+  if (screen) ['trainer', 'album', 'secrets'].forEach(view => screen.classList.toggle('profile-view-' + view, view === selected));
   document.getElementById('profile-album')?.classList.toggle('hidden', selected !== 'album');
   document.getElementById('profile-secrets')?.classList.toggle('hidden', selected !== 'secrets');
   if (selected === 'album') { renderDiscoveryAlbum(); if (typeof renderAlbumMissions === 'function') renderAlbumMissions(); }

@@ -342,7 +342,8 @@ function leagueBadgeShowcaseHtml() {
   }).join('')+'</ul>';
 }
 function renderLeagueBadgeShowcase() {
-  const records=document.querySelector("#screen-profile .profile-records-panel");
+  // In the profile's right column, above the pseudo and partner panel.
+  const records=document.getElementById("profile-identity")||document.querySelector("#screen-profile .profile-records-panel");
   if(!records) return;
   let panel=document.getElementById("profile-league-badges");
   if(!panel){

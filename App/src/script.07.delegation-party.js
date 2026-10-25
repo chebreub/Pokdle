@@ -1754,6 +1754,112 @@ function initProfileDisclosureState() {
   });
 }
 
+// Profile (25/10, proposal A): one trainer card at the top, four adventure figures under it.
+function profileDaysLabel(value) {
+  const days = Number(value) || 0;
+  return `${formatNumberFr(days)} jour${days > 1 ? "s" : ""}`;
+}
+
+function profileLevelRingHtml(prog, size) {
+  const radius = size / 2 - 11;
+  const length = 2 * Math.PI * radius;
+  const filled = Math.round((length * Math.max(0, Math.min(100, prog.percent))) / 100);
+  return `<div class="profile-ring" style="width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Niveau ${prog.tier.level}, ${prog.percent} % vers le niveau suivant">
+      <circle cx="${size / 2}" cy="${size / 2}" r="${radius}" fill="none" class="profile-ring-track" stroke-width="12"></circle>
+      <circle cx="${size / 2}" cy="${size / 2}" r="${radius}" fill="none" class="profile-ring-fill" stroke-width="12" stroke-linecap="round" stroke-dasharray="${filled} ${Math.ceil(length)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
+    </svg>
+    <span><b>${prog.tier.level}</b><small>NIVEAU</small></span>
+  </div>`;
+}
+
+function renderProfileHero(prog, xp) {
+  const hero = document.getElementById("profile-trainer-card");
+  if (!hero) return;
+  hero.className = "profile-hero";
+  const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
+  const photo = playerProfile.avatarPhoto || "";
+  const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
+  const art = photo
+    ? `<img class="is-photo" src="${photo}" alt="Photo de profil" />`
+    : fav
+      ? `<img src="${pokedexDetailArtwork(fav, false)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getPokemonSprite(fav)}" />`
+      : `<span class="profile-hero-empty" aria-hidden="true">?</span>`;
+  const streak = Number(playerStats.dailyCurrentStreak) || 0;
+  const quests = Number(playerProfile.totalQuestsCompleted) || 0;
+  const line = [
+    streak ? `Pokédle du jour : ${profileDaysLabel(streak)} d’affilée` : "",
+    quests ? `${formatNumberFr(quests)} quête${quests > 1 ? "s" : ""} réussie${quests > 1 ? "s" : ""}` : "",
+  ].filter(Boolean).join(" · ");
+  const titleHint = prog.nextTitle ? `<span>Prochain titre : ${escapeHtml(prog.nextTitle.name)} au niveau ${prog.nextTitle.level}</span>` : "";
+  const next = prog.next
+    ? `<strong>${formatNumberFr(prog.next.minXp - xp)} XP avant le niveau ${prog.next.level}</strong>${titleHint}`
+    : `<strong>Niveau maximum</strong><span>${formatNumberFr(prog.xpToNext - prog.xpInTier)} XP avant la prochaine étoile</span>`;
+  hero.innerHTML = `
+    <div class="profile-hero-art">
+      <div class="profile-hero-circle"${fav && !photo ? ` data-type="${typeSlug(fav.type1)}"` : ""}>${art}</div>
+      ${fav ? `<span class="profile-hero-partner">Partenaire · ${escapeHtml(fav.name)}</span>` : `<button type="button" class="profile-hero-partner" data-action="openProfileEditor">Choisir mon partenaire</button>`}
+    </div>
+    <div class="profile-hero-main">
+      <span class="profile-hero-eyebrow">Carte de Dresseur</span>
+      <h3 class="profile-hero-name">${pseudo}</h3>
+      <div class="profile-hero-chips">
+        <span class="profile-hero-title">${prog.tier.emoji} ${escapeHtml(prog.tier.name)}</span>
+        ${playerProfile.pioneerMyth ? '<span class="profile-hero-pioneer" title="A atteint « Mythe Pokémon » avant le passage à 100 niveaux">✦ Pionnier · ancien Mythe Pokémon</span>' : ""}
+      </div>
+      ${line ? `<p class="profile-hero-line">${line}</p>` : ""}
+      <div class="profile-hero-actions">
+        <button type="button" class="btn-blue" data-action="shareLevelBadge">Partager ma carte</button>
+        <button type="button" class="btn-ghost" data-action="openProfileEditor">Modifier mon profil</button>
+        <button type="button" class="profile-hero-photo" data-action="triggerProfilePhoto">${photo ? "Changer ma photo" : "Ajouter ma photo"}</button>
+        ${photo ? '<button type="button" class="profile-hero-photo" data-action="removeProfilePhoto">Retirer la photo</button>' : ""}
+      </div>
+    </div>
+    <div class="profile-hero-level">
+      ${profileLevelRingHtml(prog, 156)}
+      <div class="profile-hero-level-text">
+        ${next}
+        <small>${formatNumberFr(xp)} XP au total</small>
+      </div>
+    </div>`;
+}
+
+function renderProfileKeyFigures() {
+  const box = document.getElementById("profile-key-figures");
+  if (!box) return;
+  const dex = typeof pokedexCollectionNationalStats === "function"
+    ? pokedexCollectionNationalStats()
+    : { found: Object.keys(playerProfile.discoveries || {}).length, total: 1025 };
+  const missionsTotal = typeof ALBUM_MISSIONS !== "undefined" ? ALBUM_MISSIONS.length : 108;
+  const missions = Object.keys(playerProfile.albumMissionClaims || {}).length;
+  const secretsTotal = typeof SECRET_MISSIONS !== "undefined" ? SECRET_MISSIONS.length : 12;
+  const secrets = Object.keys(playerProfile.secrets?.claimed || {}).length;
+  const achievements = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
+  const figure = (label, value, total, action, args = "") => {
+    const percent = total ? Math.min(100, Math.round((value / total) * 100)) : 0;
+    return `<button type="button" class="profile-figure${total && value >= total ? " is-complete" : ""}" data-action="${action}"${args ? ` data-args='${args}'` : ""}>
+      <span>${label}</span>
+      <b>${formatNumberFr(value)} <small>/ ${formatNumberFr(total)}</small></b>
+      <i aria-hidden="true"><em style="width:${percent}%"></em></i>
+    </button>`;
+  };
+  box.innerHTML = figure("Pokédex", dex.found, dex.total, "openPokedexCollection")
+    + figure("Missions", missions, missionsTotal, "switchProfileView", '["album"]')
+    + figure("Secrets", secrets, secretsTotal, "switchProfileView", '["secrets"]')
+    + figure("Succès", achievements, ACHIEVEMENT_DEFS.length, "openAchievementsScreen");
+}
+
+// « Modifier mon profil »: opens the pseudo and partner panel and puts the cursor in it.
+function openProfileEditor() {
+  if (typeof switchProfileView === "function") switchProfileView("trainer");
+  const panel = document.getElementById("profile-identity");
+  if (!panel) return;
+  panel.open = true;
+  panel.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => document.getElementById("profile-nickname")?.focus({ preventScroll: true }), 350);
+}
+window.openProfileEditor = openProfileEditor;
+
 function renderProfileScreen() {
   evaluateAchievements();
   const nicknameInput = document.getElementById("profile-nickname");
@@ -1787,52 +1893,30 @@ function renderProfileScreen() {
   // DA 2026 : un seul système de niveau partout (XP réel + getXpProgress, comme le header).
   const profileXp = Number(playerProfile.xp || 0);
   const profileProg = getXpProgress(profileXp);
+  const played = Number(playerStats.played) || 0;
+  const wins = Number(playerStats.wins) || 0;
+  const winRate = document.getElementById("profile-win-rate");
+  const questsTotal = document.getElementById("profile-quests-total");
   if (levelName) levelName.textContent = `Niv. ${profileProg.tier.level} · ${profileProg.tier.name}`;
-  if (levelXp) levelXp.textContent = `XP : ${profileXp}`;
+  if (levelXp) levelXp.textContent = `XP : ${formatNumberFr(profileXp)}`;
   if (levelBar) levelBar.style.width = `${profileProg.percent}%`;
-  if (totalGames) totalGames.textContent = String(playerStats.played || 0);
-  if (totalWins) totalWins.textContent = String(playerStats.wins || 0);
-  if (currentStreak) currentStreak.textContent = String(playerStats.dailyCurrentStreak || 0);
-  if (bestStreak) bestStreak.textContent = String(playerStats.dailyBestStreak || 0);
+  if (totalGames) totalGames.textContent = formatNumberFr(played);
+  if (totalWins) totalWins.textContent = formatNumberFr(wins);
+  if (winRate) winRate.textContent = played ? `${Math.round((wins / played) * 100)} %` : "—";
+  if (currentStreak) currentStreak.textContent = profileDaysLabel(playerStats.dailyCurrentStreak);
+  if (bestStreak) bestStreak.textContent = profileDaysLabel(playerStats.dailyBestStreak);
+  if (questsTotal) questsTotal.textContent = formatNumberFr(playerProfile.totalQuestsCompleted);
 
   renderPartner();
   renderDiscoveryAlbum();
   renderSecretMissions();
-  const trainerCard = document.getElementById("profile-trainer-card");
-  if (trainerCard) {
-    const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
-    const photo = playerProfile.avatarPhoto || "";
-    const avatar = photo
-      ? `<img src="${photo}" alt="Photo de profil" />`
-      : (fav
-        ? `<img src="${getPokemonSprite(fav)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getSpriteUrl(getPokemonSpriteId(fav))}" />`
-        : `<span class="trainer-card-avatar-empty">?</span>`);
-    const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
-    const badgesUnlocked = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
-    trainerCard.innerHTML = `
-      <div class="trainer-card-avatar">${avatar}</div>
-      <div class="trainer-card-main">
-        <span class="trainer-card-eyebrow">🎫 Carte de Dresseur</span>
-        <strong class="trainer-card-name">${pseudo}</strong>
-        <span class="trainer-card-title">Niv. ${profileProg.tier.level} · ${escapeHtml(profileProg.tier.name)}</span>
-        <div class="trainer-card-bar"><i style="width:${profileProg.percent}%"></i></div>
-        <div class="trainer-card-chips">
-          <span class="trainer-card-chip">🏆 ${playerStats.wins || 0} victoires</span>
-          <span class="trainer-card-chip">🎮 ${playerStats.played || 0} parties</span>
-          <span class="trainer-card-chip">🔥 ${playerStats.dailyBestStreak || 0} record série</span>
-          <span class="trainer-card-chip">🏅 ${badgesUnlocked}/${ACHIEVEMENT_DEFS.length} succès</span>
-          ${playerProfile.pioneerMyth ? '<span class="trainer-card-chip is-pioneer" title="A atteint « Mythe Pokémon » avant le passage à 100 niveaux">✨ Pionnier · Mythe Pokémon</span>' : ""}
-        </div>
-        <div class="trainer-card-photo-actions"><button type="button" class="trainer-card-photo-action" data-action="triggerProfilePhoto">📷 ${photo ? "Changer" : "Ajouter"} ma photo</button>${photo ? '<button type="button" class="trainer-card-photo-action is-remove" data-action="removeProfilePhoto">Retirer</button>' : ''}</div>
-      </div>`;
-  }
+  renderProfileHero(profileProg, profileXp);
+  renderProfileKeyFigures();
 
   if (achSummary) {
     const unlockedCount = ACHIEVEMENT_DEFS.filter((a) => unlockedAchievements[a.id]).length;
-    achSummary.innerHTML = `
-      <div class="profile-stat-card"><span>Débloqués</span><b>${unlockedCount}</b></div>
-      <div class="profile-stat-card"><span>Total</span><b>${ACHIEVEMENT_DEFS.length}</b></div>
-    `;
+    // One medal per achievement: gold when unlocked; the title shows on hover.
+    achSummary.innerHTML = `<div class="profile-medals">${ACHIEVEMENT_DEFS.map((a) => `<span class="profile-medal${unlockedAchievements[a.id] ? " is-on" : ""}" title="${escapeHtml(a.title)}${unlockedAchievements[a.id] ? "" : " (à débloquer)"}"></span>`).join("")}</div>`;
     const achLabel = document.getElementById("profile-achievements-summary-label");
     if (achLabel) achLabel.textContent = `${unlockedCount}/${ACHIEVEMENT_DEFS.length} débloqués`;
   }
@@ -1841,7 +1925,7 @@ function renderProfileScreen() {
     const recent = ACHIEVEMENT_DEFS
       .filter((a) => unlockedAchievements[a.id])
       .sort((a, b) => (unlockedAchievements[b.id]?.unlockedAt || 0) - (unlockedAchievements[a.id]?.unlockedAt || 0))
-      .slice(0, 4);
+      .slice(0, 3);
     recentWrap.innerHTML = recent.length
       ? recent.map((a) => `<div class="profile-achievement-item"><strong>${escapeHtml(a.title)}</strong><span>${escapeHtml(a.desc)}</span><small>${new Date(unlockedAchievements[a.id].unlockedAt).toLocaleDateString("fr-FR")}</small></div>`).join("")
       : '<p class="card-desc">Aucun succès débloqué pour le moment.</p>';

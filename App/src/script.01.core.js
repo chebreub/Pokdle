@@ -93,6 +93,12 @@ function xpLevelEntry(level, stars = 0) {
   return { level, name: stars > 0 ? `${title.name} ★${stars}` : title.name, emoji: title.emoji, minXp: xpForLevel(level), stars };
 }
 
+// Big numbers read with a space every three digits: 123 368 XP, not 123368 XP.
+function formatNumberFr(value) {
+  // fr-FR groups with a narrow no-break space, which some of the site's fonts draw with no width.
+  return (Number(value) || 0).toLocaleString("fr-FR").replace(/\u202f/g, "\u00a0");
+}
+
 function getXpTier(xp = 0) {
   const total = Math.max(0, Number(xp) || 0);
   let level = Math.min(XP_MAX_LEVEL, Math.max(1, Math.floor((1 + Math.sqrt(1 + total / 6.25)) / 2)));
@@ -296,9 +302,9 @@ function openDailyQuestsModal() {
   overlay.innerHTML = `
     <div class="dq-backdrop" data-action="closeDailyQuestsModal"></div>
     <div class="dq-content" role="dialog" aria-modal="true">
-      <button class="dq-close" type="button" data-action="closeDailyQuestsModal" aria-label="Fermer">×</button>
       <div class="dq-hero">
-        <div class="dq-hero-tier"><span class="dq-hero-emoji">${prog.tier.emoji}</span><div><b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : ""}</small></div></div>
+        <button class="dq-close" type="button" data-action="closeDailyQuestsModal" aria-label="Fermer">×</button>
+        <div class="dq-hero-tier"><span class="dq-hero-ring" style="--dq-ring:${prog.percent}%"><b>${prog.tier.level}</b></span><div><b>Niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)} ${prog.tier.emoji}</b><small>${prog.next ? `${formatNumberFr(prog.next.minXp - xp)} XP avant le niveau ${prog.next.level}` : `${formatNumberFr(xp)} XP · niveau maximum`}</small></div></div>
         <div class="dq-hero-bar"><div class="dq-hero-fill" style="width:${prog.percent}%"></div></div>
       </div>
       <div class="dq-header">
@@ -318,7 +324,7 @@ function openDailyQuestsModal() {
       <div class="dq-actions">
         <button class="btn-blue" type="button" data-action="shareLevelBadge">📋 Partager mon niveau</button>
       </div>
-      <p class="dq-footer">Nouvelles quêtes chaque jour à minuit · Total quêtes : <b>${Number(playerProfile?.totalQuestsCompleted) || 0}</b>${Number(playerProfile?.dailyLoginStreak) > 1 ? ` · 🔥 <b>${playerProfile.dailyLoginStreak}</b> jours d'affilée` : ""}</p>
+      <p class="dq-footer">Nouvelles quêtes à minuit · <b>${formatNumberFr(playerProfile?.totalQuestsCompleted)}</b> quêtes réussies${Number(playerProfile?.dailyLoginStreak) > 1 ? ` · <b>${playerProfile.dailyLoginStreak}</b> jours d’affilée` : ""}</p>
     </div>`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add("is-visible"));
@@ -484,7 +490,7 @@ function shareLevelBadge() {
   const tier = getXpTier(xp);
   const prog = getXpProgress(xp);
   const text = `${tier.emoji} Niveau ${tier.level} · ${tier.name}
-🎯 ${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · MAX"}
+🎯 ${formatNumberFr(xp)} XP${prog.next ? ` · ${formatNumberFr(prog.next.minXp - xp)} avant Niv. ${prog.next.level}` : " · MAX"}
 🏆 ${Number(playerProfile.totalQuestsCompleted) || 0} quêtes réussies
 👉 https://pokdle.fr`;
   copyShareText(text);
@@ -499,7 +505,7 @@ function updateXpBadge() {
   if (!badge || !playerProfile) return;
   const xp = Number(playerProfile.xp) || 0;
   const prog = getXpProgress(xp);
-  badge.innerHTML = `<span class="xp-badge-emoji">${prog.tier.emoji}</span><span class="xp-badge-info"><b>Niv. ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · Max"}</small></span><div class="xp-badge-bar"><div class="xp-badge-fill" style="width:${prog.percent}%"></div></div>`;
+  badge.innerHTML = `<span class="xp-badge-emoji">${prog.tier.emoji}</span><span class="xp-badge-info"><b>Niv. ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b><small>${formatNumberFr(xp)} XP${prog.next ? ` · ${formatNumberFr(prog.next.minXp - xp)} avant Niv. ${prog.next.level}` : " · Max"}</small></span><div class="xp-badge-bar"><div class="xp-badge-fill" style="width:${prog.percent}%"></div></div>`;
   renderHomeEngagementWidget();
 }
 
@@ -535,7 +541,7 @@ function renderHomeEngagementWidget() {
         <div class="heb-tier-emoji">${prog.tier.emoji}</div>
         <div class="heb-tier-info">
           <b>Niv. ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b>
-          <span>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · MAX"}</span>
+          <span>${formatNumberFr(xp)} XP${prog.next ? ` · ${formatNumberFr(prog.next.minXp - xp)} avant Niv. ${prog.next.level}` : " · MAX"}</span>
         </div>
       </div>
       <div class="heb-bar"><div class="heb-bar-fill" style="width:${prog.percent}%"></div></div>

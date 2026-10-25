@@ -160,7 +160,7 @@ test('the built page loads one local stylesheet and a long-cached Socket.IO clie
   // Same cascade: the bundle is the source page's stylesheets, in their order.
   const source = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
   const files = [...source.matchAll(/<link rel="stylesheet" href="dist\/([\w.-]+\.min\.css)">/g)].map(m => m[1]);
-  assert.equal(files.length, 21);
+  assert.equal(files.length, 22);
   assert.equal(fs.readFileSync(path.join(__dirname, '../dist/app.min.css'), 'utf8'), files.map(file => fs.readFileSync(path.join(__dirname, '../dist', file), 'utf8')).join('\n'));
 });
 

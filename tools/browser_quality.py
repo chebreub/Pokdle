@@ -660,7 +660,7 @@ def main():
     check('profile',lambda:nav('profile','screen-profile'))
     def d3_profile_density():
      nav('profile','screen-profile')
-     page.get_by_role('button',name='Dresseur',exact=True).click()
+     page.get_by_role('button',name='Aperçu',exact=True).click()
      page.evaluate("""() => {
        playerProfile.speedrunHighScore=14;
        playerProfile.quizHighScore=18;
@@ -669,12 +669,12 @@ def main():
        renderProfileScreen();
      }""")
      disclosures=page.locator('#screen-profile [data-profile-mobile-collapse]')
-     expect(disclosures.count()>=4,'Profile disclosures missing')
+     expect(disclosures.count()>=3,'Profile disclosures missing')
      if width<=640:
       expect(all(not x for x in disclosures.evaluate_all('(els)=>els.map(e=>e.open)')),'Mobile profile disclosures should start collapsed')
       cards=page.locator('#screen-profile .profile-stat-grid .profile-stat-card')
       rects=cards.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
-      expect(len(rects)==4 and abs(rects[0]['y']-rects[1]['y'])<3 and rects[2]['y']>rects[0]['y'],'Mobile profile stats are not compact 2x2: '+repr(rects))
+      expect(len(rects)==6 and abs(rects[0]['y']-rects[1]['y'])<3 and rects[2]['y']>rects[0]['y'],'Mobile profile figures are not compact 2 per row: '+repr(rects))
      else:
       expect(all(disclosures.evaluate_all('(els)=>els.map(e=>e.open)')),'Desktop profile disclosures should start open')
       if width>=1280:
@@ -685,10 +685,12 @@ def main():
        expect(cols==2,'PC4 profile overview is not a two-column desktop dashboard: '+str(cols))
        stats=page.locator('#screen-profile .profile-stat-grid .profile-stat-card')
        stat_rects=stats.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
-       expect(len(stat_rects)==4 and max(abs(r['y']-stat_rects[0]['y']) for r in stat_rects)<3,'PC4 profile stats are not a single desktop row: '+repr(stat_rects))
-       chips=page.locator('#screen-profile .trainer-card-chip')
-       chip_rects=chips.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
-       expect(len(chip_rects)==4 and max(abs(r['y']-chip_rects[0]['y']) for r in chip_rects)<3,'PC4 trainer summary chips are not a desktop row: '+repr(chip_rects))
+       expect(len(stat_rects)==6 and max(abs(r['y']-stat_rects[0]['y']) for r in stat_rects[:3])<3 and stat_rects[3]['y']>stat_rects[0]['y'],'PC4 « Mes chiffres » is not two desktop rows of three: '+repr(stat_rects))
+       hero_cols=page.locator('#profile-trainer-card').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
+       expect(hero_cols==3,'PC4 trainer card is not partner | name | level: '+str(hero_cols))
+       figures=page.locator('#profile-key-figures .profile-figure')
+       figure_rects=figures.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
+       expect(len(figure_rects)==4 and max(abs(r['y']-figure_rects[0]['y']) for r in figure_rects)<3,'PC4 adventure figures are not a desktop row: '+repr(figure_rects))
      records_details=page.locator('#screen-profile .profile-records-panel.profile-disclosure').first
      records_details.evaluate('(e)=>e.open=true')
      expect(page.locator('#profile-mode-records .profile-record-card').count()==3,'Unexpected compact record-card count')
