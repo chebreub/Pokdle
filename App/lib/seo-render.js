@@ -2,12 +2,18 @@
 // One light page per game for search engines (/jeux and /jeux/<slug>): its own title,
 // description and text, then a « Jouer » button that opens the game in the app.
 // The pages are built once at start-up from lib/seo-games.js; nothing runs per visit.
+const fs = require('fs');
+const path = require('path');
 const { GAMES, GROUPS } = require('./seo-games');
 
 const SITE = String(process.env.SITE_URL || 'https://pokdle.onrender.com').replace(/\/+$/, '');
 const SUPPORT_URL = 'https://ko-fi.com/chebreub';
 const ARTWORK = id => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + Number(id) + '.png';
-const ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='white'/%3E%3Cpath d='M2 32a30 30 0 0 1 60 0Z' fill='%23ef4438'/%3E%3Cpath d='M2 32h60' stroke='%231b315f' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='white' stroke='%231b315f' stroke-width='6'/%3E%3C/svg%3E";
+// French names for the alt text of each game's illustration, read from pokemon.js like server.js does.
+const POKEMON_NAMES = new Map(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'pokemon.js'), 'utf8')
+  .match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]).map(pokemon => [pokemon.id, pokemon.name]));
+const pokemonName = id => POKEMON_NAMES.get(Number(id)) || 'Pokémon';
+const ICON_LINKS = '<link rel="icon" href="/favicon.ico" sizes="48x48">\n<link rel="icon" type="image/svg+xml" href="/favicon.svg">\n';
 const FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@400;700;800;900&display=swap">\n';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -22,7 +28,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Nunito,system-
 a{color:var(--accent)}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:960px;margin:0 auto;padding:16px}
 .brand{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font:700 1.3rem Fredoka,Nunito,system-ui,sans-serif}
-.brand img{width:32px;height:32px}
+.brand::before{content:"";width:32px;height:32px;background:url(/favicon.svg) center/contain no-repeat}
 .top nav{display:flex;gap:14px;font-weight:800;font-size:.95rem}
 .top nav a{text-decoration:none}
 main{max-width:960px;margin:0 auto;padding:8px 16px 48px}
@@ -60,16 +66,16 @@ function related(game) {
   return [...new Set([...picks, ...same])].slice(0, 4);
 }
 function cardHtml(game) {
-  return '<li><a href="/jeux/' + esc(game.slug) + '"><img src="' + esc(ARTWORK(game.sprite)) + '" alt="" width="56" height="56" loading="lazy"><b>' + esc(game.name) + '</b><small>' + esc(game.short) + '</small></a></li>';
+  return '<li><a href="/jeux/' + esc(game.slug) + '"><img src="' + esc(ARTWORK(game.sprite)) + '" alt="' + esc(pokemonName(game.sprite)) + '" width="56" height="56" loading="lazy"><b>' + esc(game.name) + '</b><small>' + esc(game.short) + '</small></a></li>';
 }
 function layout({ title, description, path, body, data, image = '/og-image.png' }) {
   const url = SITE + path;
   return '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     '<title>' + esc(title) + '</title>\n<meta name="description" content="' + esc(description) + '">\n<link rel="canonical" href="' + esc(url) + '">\n' +
     '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + SITE + esc(image) + '">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:locale" content="fr_FR">\n<meta name="twitter:card" content="summary_large_image">\n' +
-    '<meta name="theme-color" content="#FFF8EF">\n<link rel="icon" type="image/svg+xml" href="' + ICON + '">\n' + FONTS + '<style>' + STYLE + '</style>\n' +
+    '<meta name="theme-color" content="#FFF8EF">\n' + ICON_LINKS + FONTS + '<style>' + STYLE + '</style>\n' +
     '<script type="application/ld+json">' + jsonLd(data) + '</script>\n</head>\n<body>\n' +
-    '<header class="top"><a class="brand" href="/"><img src="' + ICON + '" alt="" width="32" height="32">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Tous les jeux</a><a href="/">Jouer</a></nav></header>\n' +
+    '<header class="top"><a class="brand" href="/">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Tous les jeux</a><a href="/">Jouer</a></nav></header>\n' +
     '<main>\n' + body + '\n</main>\n' +
     '<footer><a class="support" href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">☕ Soutenir Pokédle</a>' +
     '<p>Pokédle est un projet de fan gratuit, sans publicité, non affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.</p>' +
@@ -85,7 +91,7 @@ function renderGamePage(game) {
     '<p class="crumbs"><a href="/">Pokédle</a> › <a href="/jeux">Jeux</a> › ' + esc(game.name) + '</p>\n' +
     '<section class="hero"><div><p class="kicker">' + esc(group.kicker) + '</p><h1>' + esc(game.h1) + '</h1><p class="lead">' + esc(game.lead) + '</p>' +
     '<a class="cta" href="/?jeu=' + esc(game.slug) + '">▶ ' + esc(game.cta || 'Jouer à ' + game.name) + '</a><span class="free">Gratuit, sans pub, sans inscription.</span></div>' +
-    '<img src="' + esc(ARTWORK(game.sprite)) + '" alt="" width="180" height="180"></section>\n' +
+    '<img src="' + esc(ARTWORK(game.sprite)) + '" alt="' + esc(pokemonName(game.sprite) + ', illustration du jeu ' + game.name) + '" width="180" height="180"></section>\n' +
     '<h2>Comment jouer</h2>\n<div class="panel"><ol>' + game.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div>\n' +
     '<h2>Bon à savoir</h2>\n<div class="panel"><ul>' + game.facts.map(fact => '<li>' + esc(fact) + '</li>').join('') + '</ul></div>\n' +
     '<h2>D’autres jeux Pokémon à essayer</h2>\n<ul class="grid">' + related(game).map(cardHtml).join('') + '</ul>\n' +

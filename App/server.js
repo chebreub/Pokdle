@@ -1250,6 +1250,9 @@ app.get("/manifest.webmanifest", (_req, res) => {
   res.sendFile(path.join(__dirname, "manifest.webmanifest"), { maxAge: "1h" });
 });
 app.get("/apple-touch-icon.png", (_req, res) => res.sendFile(path.join(__dirname, "img/app-icons/pokedle-180-v1.png"), { maxAge: "1d" }));
+// Icône de site : Bing et Google l'affichent à côté des résultats (cf. tools/favicon.js).
+app.get("/favicon.ico", (_req, res) => res.sendFile(path.join(__dirname, "favicon.ico"), { maxAge: "7d" }));
+app.get("/favicon.svg", (_req, res) => res.sendFile(path.join(__dirname, "favicon.svg"), { maxAge: "7d" }));
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
 // PokeAPI par nouveau visiteur.
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));

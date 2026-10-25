@@ -89,7 +89,7 @@ Calendrier décidé le 9 octobre :
   - Il faut un service d'envoi d'emails (par exemple Resend ou Brevo, gratuits au début).
   - Mots de passe stockés chiffrés (bcrypt ou argon2), limite de tentatives.
   - Variante plus simple : connexion par lien magique envoyé par email.
-- [x] **Twitch** livré le 24/10 (merge 02b955d) : OpenID Connect, scope `openid` seul (pas d'e-mail), comptes « twitch:<id> », liaison au compte connecté, bouton violet visible dès que TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET / TWITCH_CALLBACK_URL sont posées sur Render (fait par l'utilisateur le 24/10). À tester par l'utilisateur avec son compte.
+- [x] **Twitch** livré le 24/10 (merge 02b955d) : OpenID Connect, scope `openid` seul (pas d'e-mail), comptes « twitch:<id> », liaison au compte connecté, bouton violet visible dès que TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET / TWITCH_CALLBACK_URL sont posées sur Render (fait par l'utilisateur le 24/10). Connexion vérifiée par l'utilisateur avec son compte.
 - [ ] **Facebook** en dernier (vérification d'application plus lourde, politique de confidentialité obligatoire).
 - [ ] **Écran de connexion** façon « Bon retour ! » : boutons pleine largeur par fournisseur, séparateur « ou », email / mot de passe, « Pas encore de compte ? Inscris-toi », « Continuer sans compte ».
 - [ ] **Profil** : relier ou délier un fournisseur, supprimer son compte (obligation RGPD).
