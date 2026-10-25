@@ -4917,44 +4917,59 @@ const POKEAPI_VERSION_LABELS = {
   crystal: "Cristal",
   ruby: "Rubis",
   sapphire: "Saphir",
-  emerald: "Emeraude",
+  emerald: "Émeraude",
   firered: "Rouge Feu",
   leafgreen: "Vert Feuille",
   diamond: "Diamant",
   pearl: "Perle",
   platinum: "Platine",
-  heartgold: "HeartGold",
-  soulsilver: "SoulSilver",
+  heartgold: "Or HeartGold",
+  soulsilver: "Argent SoulSilver",
   black: "Noir",
   white: "Blanc",
+  colosseum: "Colosseum",
+  xd: "XD",
   "black-2": "Noir 2",
   "white-2": "Blanc 2",
   x: "X",
   y: "Y",
-  "omega-ruby": "Rubis Omega",
+  "omega-ruby": "Rubis Oméga",
   "alpha-sapphire": "Saphir Alpha",
   sun: "Soleil",
   moon: "Lune",
   "ultra-sun": "Ultra-Soleil",
   "ultra-moon": "Ultra-Lune",
-  "lets-go-pikachu": "Let's Go Pikachu",
-  "lets-go-eevee": "Let's Go Evoli",
-  sword: "Epée",
+  "lets-go-pikachu": "Let’s Go, Pikachu",
+  "lets-go-eevee": "Let’s Go, Évoli",
+  sword: "Épée",
   shield: "Bouclier",
-  "brilliant-diamond": "Diamant Etincelant",
+  "the-isle-of-armor-sword": "Épée (Île de l’Armure)",
+  "the-isle-of-armor-shield": "Bouclier (Île de l’Armure)",
+  "the-crown-tundra-sword": "Épée (Terres de la Couronne)",
+  "the-crown-tundra-shield": "Bouclier (Terres de la Couronne)",
+  "brilliant-diamond": "Diamant Étincelant",
   "shining-pearl": "Perle Scintillante",
-  legends: "Legends",
-  scarlet: "Ecarlate",
+  "legends-arceus": "Légendes : Arceus",
+  scarlet: "Écarlate",
   violet: "Violet",
+  "the-teal-mask-scarlet": "Écarlate (Masque Turquoise)",
+  "the-teal-mask-violet": "Violet (Masque Turquoise)",
+  "the-indigo-disk-scarlet": "Écarlate (Disque Indigo)",
+  "the-indigo-disk-violet": "Violet (Disque Indigo)",
+  "legends-za": "Légendes : Z-A",
+  "mega-dimension": "Méga-Dimension",
+  "red-japan": "Rouge (Japon)",
+  "green-japan": "Vert (Japon)",
+  "blue-japan": "Bleu (Japon)",
 };
 
 const POKEAPI_LOCATION_WORDS = {
   area: "zone",
   cave: "grotte",
   city: "ville",
-  desert: "desert",
-  forest: "foret",
-  island: "ile",
+  desert: "désert",
+  forest: "forêt",
+  island: "île",
   lake: "lac",
   meadow: "prairie",
   mountain: "mont",
@@ -4975,7 +4990,7 @@ function formatPokeApiPlainLabel(value) {
     .filter(Boolean)
     .map((part) => POKEAPI_LOCATION_WORDS[part] || part)
     .join(" ")
-    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/(^|\s)\S/g, (start) => start.toUpperCase())
     .trim();
 }
 
@@ -4995,7 +5010,7 @@ function formatPokeApiEncounterAreaName(value) {
     .map((part) => POKEAPI_LOCATION_WORDS[part] || part)
     .join(" ")
     .replace(/\b(route\s+)(\d+)/gi, "Route $2")
-    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/(^|\s)\S/g, (start) => start.toUpperCase())
     .trim();
 }
 
@@ -5006,22 +5021,39 @@ function formatPokemonSpeciesHabitat(speciesData, fallbackPokemon = null) {
   return fallbackPokemon?.habitat || "Inconnu";
 }
 
-function summarizeEncounterAreas(rawAreas, limit = 8) {
+// The French name PokeAPI gives a place (« Route 204 (sud, vers Féli-Cité) »); the slug in words if it has none.
+async function pokeApiEncounterAreaLabel(areaRef) {
+  try {
+    const data = areaRef?.url ? await fetchPokeApiJson(areaRef.url) : null;
+    const fr = Array.isArray(data?.names) ? data.names.find((entry) => entry?.language?.name === "fr") : null;
+    if (fr?.name) return fr.name;
+  } catch (_err) {}
+  return formatPokeApiEncounterAreaName(areaRef?.name);
+}
+
+async function summarizeEncounterAreas(rawAreas, limit = 8) {
   if (!Array.isArray(rawAreas)) return null;
   const seen = new Set();
-  const entries = [];
+  const picked = [];
   for (const area of rawAreas) {
-    const areaName = area?.location_area?.name || "";
-    const label = formatPokeApiEncounterAreaName(areaName);
-    if (!label || seen.has(label)) continue;
-    seen.add(label);
-    const versions = Array.isArray(area?.version_details)
-      ? [...new Set(area.version_details.map((entry) => formatPokeApiVersionLabel(entry?.version?.name)).filter(Boolean))]
-      : [];
-    entries.push({ label, versions: versions.slice(0, 4) });
-    if (entries.length >= limit) break;
+    const slugLabel = formatPokeApiEncounterAreaName(area?.location_area?.name || "");
+    if (!slugLabel || seen.has(slugLabel)) continue;
+    seen.add(slugLabel);
+    picked.push(area);
+    if (picked.length >= limit) break;
   }
-  return entries;
+  // Two areas can share a French name: they become one line with both sets of games.
+  const labels = await Promise.all(picked.map((area) => pokeApiEncounterAreaLabel(area.location_area)));
+  const entries = new Map();
+  picked.forEach((area, index) => {
+    const versions = Array.isArray(area?.version_details)
+      ? area.version_details.map((entry) => formatPokeApiVersionLabel(entry?.version?.name)).filter(Boolean)
+      : [];
+    const entry = entries.get(labels[index]) || { label: labels[index], versions: [] };
+    entry.versions = [...new Set([...entry.versions, ...versions])].slice(0, 4);
+    entries.set(labels[index], entry);
+  });
+  return [...entries.values()];
 }
 
 async function fetchPokemonEncounterAreas(pokemon, pokeData = null) {
@@ -5040,11 +5072,11 @@ async function fetchPokemonEncounterAreas(pokemon, pokeData = null) {
   }
 }
 
-function renderPokedexEncounterLocationsHtml(rawAreas) {
+async function renderPokedexEncounterLocationsHtml(rawAreas) {
   if (rawAreas === null) {
     return '<p class="pokedex-muted">Lieux de rencontre indisponibles pour ce Pokémon.</p>';
   }
-  const entries = summarizeEncounterAreas(rawAreas, 10);
+  const entries = await summarizeEncounterAreas(rawAreas, 10);
   if (!entries || !entries.length) {
     return '<p class="pokedex-muted">Aucun lieu de rencontre sauvage listé par PokéAPI. Le Pokémon peut être obtenu par starter, échange, cadeau, évolution, événement ou méthode spéciale selon les jeux.</p>';
   }
@@ -5062,7 +5094,7 @@ async function hydrateComparisonRowEncounter(row, pokemon) {
   if (!detail) return;
   const rawAreas = await fetchPokemonEncounterAreas(pokemon);
   if (!row.isConnected) return;
-  const entries = summarizeEncounterAreas(rawAreas, 3);
+  const entries = await summarizeEncounterAreas(rawAreas, 3);
   if (entries && entries.length) {
     detail.textContent = `Lieux : ${entries.map((entry) => entry.label).join(" / ")}`;
   } else if (rawAreas === null) {
@@ -6039,8 +6071,8 @@ async function renderPokedexDetail(pokemon) {
   const hatch = formatHatchCycles(speciesData);
   const officialHabitat = formatPokemonSpeciesHabitat(speciesData, pokemon);
   const encounterAreas = await fetchPokemonEncounterAreas(pokemon, pokeData);
+  const encounterLocations = await renderPokedexEncounterLocationsHtml(encounterAreas);
   if (currentRequest !== pokedexDetailRequestId) return;
-  const encounterLocations = renderPokedexEncounterLocationsHtml(encounterAreas);
   const currentStats = statsTotalsFromPokemonData(pokeData);
   const compareReference = Number.isInteger(Number(pokedexCompareId)) ? POKEMON_BY_ID.get(Number(pokedexCompareId)) : null;
   let compareHtml = "";
