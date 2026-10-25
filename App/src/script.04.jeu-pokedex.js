@@ -5955,11 +5955,13 @@ async function renderPokedexDetail(pokemon) {
   const dexNumber = getPokemonDexNumber(pokemon);
   const navigation = getPokedexNavigationState();
   const recentHtml = renderPokedexRecentBlock();
+  // Précédent / Suivant name the Pokémon they lead to: « ← #150 Mewtwo », « #2 Herbizarre → ».
+  const neighbourHtml = (target) => `<small>#${getPokemonDexNumber(target)}</small> ${escapeHtml(target.name)}`;
   const navigationHtml = `
     <button type="button" class="btn-ghost pokedex-back-to-list" data-action="closePokedexMobileDetail">← Tous les Pokémon</button>
     <div class="pokedex-detail-nav">
-      <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["prev"]' ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
-      <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["next"]' ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
+      <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["prev"]' title="Pokémon précédent (flèche ←)" ${navigation.previous ? "" : "disabled"}>&larr; ${navigation.previous ? neighbourHtml(navigation.previous) : "Précédent"}</button>
+      <button type="button" class="btn-ghost pokedex-detail-nav-btn" data-action="navigatePokedexDetail" data-args='["next"]' title="Pokémon suivant (flèche →)" ${navigation.next ? "" : "disabled"}>${navigation.next ? neighbourHtml(navigation.next) : "Suivant"} &rarr;</button>
     </div>
   `;
   const builderActionHtml = `
@@ -5967,8 +5969,6 @@ async function renderPokedexDetail(pokemon) {
       <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" data-action="togglePokedexShiny">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
       <button class="btn-ghost pokedex-detail-builder-btn" type="button" data-action="addSelectedPokedexPokemonToBuilder">Ajouter au Builder</button>
       <button class="btn-ghost pokedex-detail-compare-btn" type="button" data-action="setPokedexCompareReferenceById" data-args='[${pokemon.id}]'>Comparer</button>
-      <button type="button" class="btn-ghost pokedex-detail-head-nav" data-action="navigatePokedexDetail" data-args='["prev"]' ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
-      <button type="button" class="btn-ghost pokedex-detail-head-nav" data-action="navigatePokedexDetail" data-args='["next"]' ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
       <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
       <span id="pokedex-compare-feedback" class="pokedex-compare-feedback" aria-live="polite"></span>
     </div>

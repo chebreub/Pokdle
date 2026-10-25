@@ -21,9 +21,11 @@ test('the detail panel shows stats and weaknesses first, in both the loading and
     assert.match(view, /src="\$\{pokedexDetailArtwork\(pokemon, pokedexSelectedShiny\)\}"[^>]*data-fallback="\$\{getPokedexDisplaySprite\(pokemon, pokedexSelectedShiny\)\}"/);
   }
   assert.match(body, /detail\.dataset\.type = typeSlug\(pokemon\.type1\);/);
-  // On a computer, Précédent / Suivant sit in the header; phones keep their own row.
-  assert.equal((body.match(/class="btn-ghost pokedex-detail-head-nav" data-action="navigatePokedexDetail"/g) || []).length, 2);
-  assert.match(css, /#screen-pokedex \.pokedex-detail-head-nav \{ display: none; \}/);
+  // Précédent / Suivant stay together on one row, name the Pokémon they lead to, and sit above the header on a computer.
+  assert.doesNotMatch(body, /pokedex-detail-head-nav/);
+  assert.match(body, /&larr; \$\{navigation\.previous \? neighbourHtml\(navigation\.previous\) : "Précédent"\}/);
+  assert.match(body, /\$\{navigation\.next \? neighbourHtml\(navigation\.next\) : "Suivant"\} &rarr;/);
+  assert.match(css, /#pokedex-detail > \.pokedex-detail-nav \{ order: -1; justify-content: space-between; margin: 0; \}/);
 });
 
 test('one chip per type with its multiplier: Feu ×2, Plante ×¼, Eau ×½', () => {

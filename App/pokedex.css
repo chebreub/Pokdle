@@ -3227,13 +3227,16 @@ body.theme-dark .pokedex-collection-legend > span {
 #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { image-rendering: auto; }
 
 /* ===== Fiche du Pokédex, au plus près de la maquette A (25/10) =====
-   Précédent / Suivant dans le bandeau (sur ordinateur), une seule pastille « Feu ×2 » par type,
-   des barres de stats plus épaisses. Les cases gardent le bleu d'origine (choix de l'utilisateur). */
-#screen-pokedex .pokedex-detail-head-nav { display: none; }
+   Précédent / Suivant sur une seule ligne, chacun à son bout et avec le nom du voisin, une seule
+   pastille « Feu ×2 » par type, des barres de stats plus épaisses. Les cases gardent le bleu d'origine
+   (choix de l'utilisateur). */
+#screen-pokedex .pokedex-detail-nav-btn { min-width: 0; max-width: 50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#screen-pokedex .pokedex-detail-nav-btn small { font-size: .85em; font-weight: 700; opacity: .65; }
 @media (min-width: 1200px) {
-  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-nav { display: inline-flex; }
-  #pokdle-app #screen-pokedex #pokedex-detail > .pokedex-detail-nav { display: none; }
-  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-actions .btn-ghost { min-height: 0; padding: 6px 12px; font-size: .85rem; }
+  #pokdle-app #screen-pokedex #pokedex-detail > .pokedex-detail-nav { order: -1; justify-content: space-between; margin: 0; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-nav-btn { min-height: 0; padding: 5px 12px; font-size: .85rem; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-actions .btn-ghost { min-height: 0; padding: 6px 10px; font-size: .85rem; }
+  #pokdle-app #screen-pokedex #pokedex-detail { container: dex-detail / inline-size; }
 
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-section { padding: 12px 14px; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-match-list { gap: 6px; }
@@ -3251,4 +3254,10 @@ body.theme-dark .pokedex-collection-legend > span {
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-stat-track { height: 12px; border-radius: 999px; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-stat-track i { border-radius: 999px; background: linear-gradient(90deg, #4aa3df, #3fbf9f); }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-stat-row.total .pokedex-stat-track i { background: linear-gradient(90deg, #f2b705, #ee6a2f); }
+}
+
+/* Fiche étroite (écran de portable, moins de 495px utiles) : les trois boutons passent sous l'image et le nom,
+   sur toute la largeur, pour tenir sur une seule ligne au lieu de laisser « Comparer » seul en dessous. */
+@container dex-detail (max-width: 495px) {
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head { grid-template-areas: "art summary" "actions actions"; }
 }
