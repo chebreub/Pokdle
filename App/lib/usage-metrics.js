@@ -1,4 +1,10 @@
 "use strict";
+const { createHash } = require("node:crypto");
+
+// 131,072 anonymous presence slots per UTC day (16 KiB/day).
+// A collision can slightly undercount; no UID, IP, or per-visitor hash is stored.
+const UNIQUE_BITMAP_BITS = 131072;
+const UNIQUE_BITMAP_BYTES = UNIQUE_BITMAP_BITS / 8;
 
 // Product analytics deliberately store only daily aggregate event counters.
 // No account id, anonymous browser id, IP, guessed Pokémon or answers are persisted.
@@ -56,11 +62,18 @@ async function ensureTable(db) {
     hits BIGINT NOT NULL DEFAULT 0 CHECK (hits >= 0),
     PRIMARY KEY (day, event)
   )`);
+  // Only an aggregate bitmap and a count: never store browser identifiers.
+  await db.query(`CREATE TABLE IF NOT EXISTS usage_unique_daily (
+    day DATE PRIMARY KEY,
+    bitmap BYTEA NOT NULL,
+    uniques INTEGER NOT NULL DEFAULT 0 CHECK (uniques >= 0)
+  )`);
 }
 
 async function prune(db, now = new Date()) {
   const cutoff = startDay(90, now);
   await db.query("DELETE FROM usage_event_daily WHERE day < $1::date", [cutoff]);
+  await db.query("DELETE FROM usage_unique_daily WHERE day < $1::date", [cutoff]);
 }
 
 async function increment(db, event, day = utcDay()) {
@@ -78,6 +91,40 @@ async function recent(db, days = 14, now = new Date()) {
   const result = await db.query(
     "SELECT day::text AS day,event,hits FROM usage_event_daily WHERE day >= $1::date AND day <= $2::date ORDER BY day DESC,event",
     [from, until]
+  );
+  return result.rows;
+}
+
+// The browser provides an existing random local identifier. Hash it together
+// with the UTC day to select one bitmap slot; keep neither its value nor its hash.
+// Different days have different slots, so they cannot be linked from this table.
+function uniqueSlot(uid, day = utcDay()) {
+  if (typeof uid !== "string" || !/^[a-z0-9-]{8,40}$/i.test(uid)) return null;
+  if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const digest = createHash("sha256").update(day).update("\0").update(uid).digest();
+  return digest.readUInt32BE(0) % UNIQUE_BITMAP_BITS;
+}
+
+// PostgreSQL's ON CONFLICT serializes updates to the same day. A repeated
+// browser/day sets the same bit and cannot increment again, even across workers.
+async function recordUnique(db, uid, day = utcDay()) {
+  const slot = uniqueSlot(uid, day);
+  if (slot === null) return false;
+  await db.query(
+    `INSERT INTO usage_unique_daily(day,bitmap,uniques)
+     VALUES($1::date,set_bit(decode(repeat('00',${UNIQUE_BITMAP_BYTES}), 'hex'),$2::int,1),1)
+     ON CONFLICT(day) DO UPDATE SET
+       uniques = usage_unique_daily.uniques + (1 - get_bit(usage_unique_daily.bitmap,$2::int)),
+       bitmap = set_bit(usage_unique_daily.bitmap,$2::int,1)`,
+    [day, slot]
+  );
+  return true;
+}
+
+async function recentUniques(db, days = 14, now = new Date()) {
+  const result = await db.query(
+    "SELECT day::text AS day,uniques FROM usage_unique_daily WHERE day >= $1::date AND day <= $2::date ORDER BY day DESC",
+    [startDay(days, now), utcDay(now)]
   );
   return result.rows;
 }
@@ -114,4 +161,4 @@ function summarizeModes(rows, labels = {}) {
   return [...summary.values()].sort((a, b) => b.launches - a.launches || b.completions - a.completions || a.mode.localeCompare(b.mode));
 }
 
-module.exports = { HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, recent, summarizeModes };
+module.exports = { HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, recent, uniqueSlot, recordUnique, recentUniques, summarizeModes };

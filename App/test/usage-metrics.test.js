@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, startDay,
-  ensureTable, increment, recent, prune, summarizeModes
+  ensureTable, increment, recent, prune, uniqueSlot, recordUnique, recentUniques, summarizeModes
 } = require("../lib/usage-metrics");
 
 test("whitelist permits only genuine known game outcomes", () => {
@@ -46,6 +46,17 @@ test("UTC range is a fixed calendar window, no Paris DST off-by-one", () => {
   assert.throws(() => startDay(91), RangeError);
 });
 
+test("visitor slots are stable within a UTC day but carry no browser identifier", () => {
+  const uid = "550e8400-e29b-41d4-a716-446655440000";
+  const slot = uniqueSlot(uid, "2026-10-25");
+  assert.ok(Number.isInteger(slot) && slot >= 0 && slot < 131072);
+  assert.equal(uniqueSlot(uid, "2026-10-25"), slot);
+  assert.notEqual(uniqueSlot(uid, "2026-10-26"), slot);
+  assert.equal(uniqueSlot("invalid uid!", "2026-10-25"), null);
+  assert.equal(uniqueSlot(uid, "bad-day"), null);
+  assert.equal(uniqueSlot(null, "2026-10-25"), null);
+});
+
 test("PostgreSQL counters survive re-reads, update atomically, and expire after 90 days", {
   skip: !process.env.QA_DATABASE_URL, timeout: 30000
 }, async () => {
@@ -59,6 +70,28 @@ test("PostgreSQL counters survive re-reads, update atomically, and expire after 
     db = new Pool({connectionString:process.env.QA_DATABASE_URL,options:"-c search_path="+schema,max:5});
     await ensureTable(db);
     await ensureTable(db);
+    // Two instances can send the same visitor simultaneously: count once.
+    const today = "2026-10-22", uid = "550e8400-e29b-41d4-a716-446655440000";
+    await Promise.all(Array.from({length:25},()=>recordUnique(db,uid,today)));
+    const otherUids = [];
+    const slots = new Set([uniqueSlot(uid,today)]);
+    for(let n=0;otherUids.length<12;n++){
+      const candidate = "visitor-" + String(n).padStart(14,"0");
+      const slot = uniqueSlot(candidate,today);
+      if(!slots.has(slot)){slots.add(slot);otherUids.push(candidate);}
+    }
+    await Promise.all(otherUids.map(v=>recordUnique(db,v,today)));
+    assert.equal(await recordUnique(db,"INVALID!",today),false);
+    await recordUnique(db,uid,"2026-10-21"); // same browser, another UTC day
+    await recordUnique(db,uid,"2026-07-20"); // older than retention
+    let uniqueRows = await recentUniques(db,14,new Date("2026-10-22T12:00:00Z"));
+    assert.deepEqual(uniqueRows.map(r=>[r.day,Number(r.uniques)]),[["2026-10-22",13],["2026-10-21",1]]);
+    assert.equal((await db.query("SELECT octet_length(bitmap) AS bytes FROM usage_unique_daily WHERE day=$1::date",[today])).rows[0].bytes,16384);
+    // A new DB client behaves like a new Render process, with no in-memory set.
+    await db.end();
+    db = new Pool({connectionString:process.env.QA_DATABASE_URL,options:"-c search_path="+schema,max:5});
+    await recordUnique(db,uid,today);
+    assert.equal(Number((await recentUniques(db,14,new Date("2026-10-22T12:00:00Z"))).find(r=>r.day===today).uniques),13);
     await Promise.all(Array.from({length:25},()=>increment(db,"solo:normal","2026-10-22")));
     await increment(db, completionEvent("normal","win"),"2026-10-22");
     await increment(db, completionEvent("normal","loss"),"2026-10-21");
@@ -71,13 +104,26 @@ test("PostgreSQL counters survive re-reads, update atomically, and expire after 
     assert.equal(Number(rows.find(r=>r.event==="solo:normal").hits),25);
     await prune(db,new Date("2026-10-22T12:00:00Z"));
     assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM usage_event_daily")).rows[0].n,3);
+    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM usage_unique_daily")).rows[0].n,2,"old unique bitmap pruned");
     rows=await recent(db,14,new Date("2026-10-22T12:00:00Z"));
     assert.equal(summarizeModes(rows).find(r=>r.mode==="normal").completions,2);
     const cols=(await db.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name='usage_event_daily'",[schema])).rows.map(r=>r.column_name).sort();
     assert.deepEqual(cols,["day","event","hits"],"No UID, IP, account, answer or device data stored");
+    const uniqueCols=(await db.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name='usage_unique_daily'",[schema])).rows.map(r=>r.column_name).sort();
+    assert.deepEqual(uniqueCols,["bitmap","day","uniques"],"Only per-day aggregate bitmap and count stored");
   } finally {
     if(db)await db.end();
     await admin.query("DROP SCHEMA IF EXISTS "+schema+" CASCADE");
     await admin.end();
   }
+});
+
+test("privacy notice explains the durable anonymous estimate rather than a restart-prone Set", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const html = fs.readFileSync(path.join(__dirname, "../confidentialite.html"), "utf8");
+  assert.match(html, /navigateurs distincts par jour/);
+  assert.match(html, /tableau de présence agrégé/);
+  assert.match(html, /survivent aux redémarrages/);
+  assert.doesNotMatch(html, /effacés lors du redémarrage/);
 });
