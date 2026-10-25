@@ -1189,8 +1189,9 @@ body:not(.theme-dark) .pokedex-card strong{
     padding-right: 12px;
   }
 
+  /* La fiche prend 38 % de la largeur : assez pour la lire sans la serrer (fiche du Pokédex en fin de fichier). */
   #screen-pokedex .pokedex-layout {
-    grid-template-columns: minmax(0, 1.2fr) minmax(340px, 440px);
+    grid-template-columns: minmax(0, 1fr) minmax(440px, 38%);
     gap: 16px;
   }
 
@@ -1203,15 +1204,15 @@ body:not(.theme-dark) .pokedex-card strong{
   }}
 
 /* Grands écrans (27 pouces en 2560px, ou 2048px avec le zoom Windows à 125 %) : le Pokédex
-   est un catalogue à parcourir, il prend plus de largeur (10 colonnes au lieu de 7).
-   Jusqu'à 1999px (écrans 1920px compris), rien ne change. */
+   est un catalogue à parcourir, il prend plus de largeur, et la fiche passe à 760px sur deux
+   colonnes (fiche du Pokédex en fin de fichier). */
 @media (min-width: 2000px) {
   body:has(#screen-pokedex:not(.hidden)) main {
     max-width: 1840px;
   }
 
   #screen-pokedex .pokedex-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(380px, 480px);
+    grid-template-columns: minmax(0, 1fr) 760px;
   }
 }
 
@@ -3164,3 +3165,59 @@ body.theme-dark .pokedex-collection-legend > span {
     scroll-margin-top: 84px;
   }
 }
+
+/* ===== Fiche du Pokédex sur ordinateur (maquette A, 25/10) =====
+   Un bandeau en haut (image, nom, types, boutons) teinté selon le type principal, les 6 infos
+   en tuiles, puis les stats et les faiblesses avant le reste. À partir de 2000px, la fiche
+   passe sur deux colonnes : stats | faiblesses, talents | évolution. */
+@media (min-width: 1200px) {
+  #pokdle-app #screen-pokedex #pokedex-detail { align-content: start; gap: 12px; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-areas: "art summary" "art actions";
+    align-items: center;
+    gap: 6px 16px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--dex-tint, #eef1f6), #fff 150%);
+  }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-sticky { grid-area: summary; position: static; padding: 0; background: none; box-shadow: none; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main { display: contents; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { grid-area: art; width: 112px !important; height: 112px !important; object-fit: contain; margin: 0; image-rendering: auto; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-actions { grid-area: actions; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-summary h3 { font-size: 1.6rem; line-height: 1.1; margin: 0; }
+  /* Les messages « ajouté au Builder » ne prennent de la place que quand ils s'affichent. */
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-actions > span:empty { flex-basis: 0; min-height: 0; height: 0; margin: 0; padding: 0; }
+  #pokdle-app #screen-pokedex #pokedex-detail > .pokedex-recent-block { order: 1; }
+
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-extra-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #pokdle-app #screen-pokedex #pokedex-detail :is(.pokedex-detail-facts, .pokedex-extra-grid) > div {
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 8px 10px; min-height: 0;
+  }
+  #pokdle-app #screen-pokedex #pokedex-detail :is(.pokedex-detail-facts, .pokedex-extra-grid) span { font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; }
+  #pokdle-app #screen-pokedex #pokedex-detail :is(.pokedex-detail-facts, .pokedex-extra-grid) b { font-size: 1rem; text-align: left; }
+
+  /* Plus lisible : titres, stats et pastilles des faiblesses un cran plus grands. */
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-section h4 { font-size: 1rem; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-stat-row :is(span, b) { font-size: .9rem; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-stat-track { height: 10px; }
+  #pokdle-app #screen-pokedex #pokedex-detail .is-matchups .type-badge { font-size: .8rem; }
+
+  body.theme-dark #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head,
+  #pokdle-app.theme-dark #screen-pokedex #pokedex-detail .pokedex-detail-head { background: var(--ui-soft, #1e2c43); }
+}
+
+@media (min-width: 2000px) {
+  #pokdle-app #screen-pokedex #pokedex-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #pokdle-app #screen-pokedex #pokedex-detail > :not(.is-stats, .is-matchups, .is-abilities, .is-evolution) { grid-column: 1 / -1; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head { grid-template-columns: 150px minmax(0, 1fr); }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { width: 150px !important; height: 150px !important; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-summary h3 { font-size: 2rem; }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-facts { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  #pokdle-app #screen-pokedex #pokedex-detail .pokedex-extra-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* L'illustration officielle du bandeau reste nette à toutes les tailles (les petits sprites des tuiles restent pixelisés). */
+#pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { image-rendering: auto; }

@@ -2727,8 +2727,12 @@ function typeBadgeHtml(typeFr) {
   const icon = getTypeIconPath(typeFr);
   const iconHtml = icon ? `<img src="${icon}" alt="${escapeHtml(typeFr)}" loading="lazy" />` : "";
   // DA 2026 v2 : pastille colorée officielle du type (classes .type-feu, .type-eau...).
-  const typeSlug = typeFr.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return `<span class="type-badge type-${typeSlug}">${iconHtml}<span>${escapeHtml(typeFr)}</span></span>`;
+  return `<span class="type-badge type-${typeSlug(typeFr)}">${iconHtml}<span>${escapeHtml(typeFr)}</span></span>`;
+}
+
+// « Électrik » → « electrik » : classes des pastilles, teinte des tuiles et de la fiche du Pokédex.
+function typeSlug(typeFr) {
+  return String(typeFr || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function renderHomeTypeHelper() {
@@ -5666,6 +5670,7 @@ function createPokedexCard(p) {
   card.type = "button";
   card.className = "pokedex-card" + (p.id === pokedexSelectedId ? " selected" : "");
   card.dataset.pokemonId = String(p.id);
+  card.dataset.type = typeSlug(p.type1);
 
   const dexId = getPokemonSpriteId(p), dexNumber = getPokemonDexNumber(p);
   const sprite = getPokedexDisplaySprite(p, pokedexGridUseShiny);
@@ -5923,6 +5928,11 @@ function navigatePokedexDetail(direction) {
   ensurePokedexSelectedCardVisible();
 }
 
+// The big picture of the detail panel: the official artwork (shiny or not), the sprite if it is missing.
+function pokedexDetailArtwork(pokemon, shiny) {
+  return "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/" + (shiny ? "shiny/" : "") + getPokemonSpriteId(pokemon) + ".png";
+}
+
 async function renderPokedexDetail(pokemon) {
   const detail = document.getElementById("pokedex-detail");
   if (!detail) return;
@@ -5939,8 +5949,9 @@ async function renderPokedexDetail(pokemon) {
     trackPokedexRecentId(pokemon.id);
   }
   loadPokedexCompareId();
+  detail.dataset.type = typeSlug(pokemon.type1);
   const currentRequest = ++pokedexDetailRequestId;
-  const dexId = getPokemonSpriteId(pokemon), dexNumber = getPokemonDexNumber(pokemon);
+  const dexNumber = getPokemonDexNumber(pokemon);
   const navigation = getPokedexNavigationState();
   const recentHtml = renderPokedexRecentBlock();
   const navigationHtml = `
@@ -5974,14 +5985,14 @@ async function renderPokedexDetail(pokemon) {
         </div>
       </div>
       <div class="pokedex-detail-head-main">
-        <img class="${[pokemonIsRare(pokemon) ? "is-rare" : "", pokedexSelectedShiny ? "is-shiny-view" : ""].filter(Boolean).join(" ")}" src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
+        <img class="${[pokemonIsRare(pokemon) ? "is-rare" : "", pokedexSelectedShiny ? "is-shiny-view" : ""].filter(Boolean).join(" ")}" src="${pokedexDetailArtwork(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" />
         ${builderActionHtml}
       </div>
     </div>
     ${navigationHtml}
     ${recentHtml}
     ${compareBlockHtml}
-    <div class="pokedex-detail-grid">
+    <div class="pokedex-detail-grid pokedex-detail-facts">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokedexHeightLabel(pokemon)}</b></div>
       <div><span>Poids</span><b>${pokedexWeightLabel(pokemon)}</b></div>
@@ -5989,13 +6000,13 @@ async function renderPokedexDetail(pokemon) {
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>
     </div>
-    <div class="pokedex-section"><h4>Entrée Pokédex</h4>${skeletonHtml("Chargement de la fiche…", "lines", 3)}</div>
-    <div class="pokedex-section"><h4>Lieux de rencontre</h4>${skeletonHtml("", "lines", 2)}</div>
-    <div class="pokedex-section"><h4>Talents</h4>${skeletonHtml("", "lines", 2)}</div>
-    <div class="pokedex-section"><h4>Statistiques de base</h4>${skeletonHtml("", "lines", 2)}</div>
-    <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
-    <div class="pokedex-section"><h4>Évolution</h4>${skeletonHtml("", "lines", 2)}</div>
-    <div class="pokedex-section"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Genre</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Groupes d'oeufs</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Eclosion</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div></div></div>
+    <div class="pokedex-section is-stats"><h4>Statistiques de base</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section is-matchups"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
+    <div class="pokedex-section is-abilities"><h4>Talents</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section is-evolution"><h4>Évolution</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section is-entry"><h4>Entrée Pokédex</h4>${skeletonHtml("Chargement de la fiche…", "lines", 3)}</div>
+    <div class="pokedex-section is-places"><h4>Lieux de rencontre</h4>${skeletonHtml("", "lines", 2)}</div>
+    <div class="pokedex-section is-extra"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Genre</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Groupes d'oeufs</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Eclosion</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div></div></div>
   `;
 
   const apiId = getMysteryApiId(pokemon);
@@ -6044,14 +6055,14 @@ async function renderPokedexDetail(pokemon) {
         </div>
       </div>
       <div class="pokedex-detail-head-main">
-        <img class="${[pokemonIsRare(pokemon) ? "is-rare" : "", pokedexSelectedShiny ? "is-shiny-view" : ""].filter(Boolean).join(" ")}" src="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getSpriteUrl(dexId)}" />
+        <img class="${[pokemonIsRare(pokemon) ? "is-rare" : "", pokedexSelectedShiny ? "is-shiny-view" : ""].filter(Boolean).join(" ")}" src="${pokedexDetailArtwork(pokemon, pokedexSelectedShiny)}" alt="${pokemon.name}" loading="lazy" data-fallback="${getPokedexDisplaySprite(pokemon, pokedexSelectedShiny)}" />
         ${builderActionHtml}
       </div>
     </div>
     ${navigationHtml}
     ${recentHtml}
     ${compareHtml}
-    <div class="pokedex-detail-grid">
+    <div class="pokedex-detail-grid pokedex-detail-facts">
       <div><span>Génération</span><b>Gen ${pokemon.gen}</b></div>
       <div><span>Taille</span><b>${pokedexHeightLabel(pokemon)}</b></div>
       <div><span>Poids</span><b>${pokedexWeightLabel(pokemon)}</b></div>
@@ -6059,13 +6070,13 @@ async function renderPokedexDetail(pokemon) {
       <div><span>Couleur</span><b>${escapeHtml(formatColorLabel(pokemon.color))}</b></div>
       <div><span>Stade</span><b>${pokemon.stage}</b></div>
     </div>
-    <div class="pokedex-section"><h4>Entrée Pokédex</h4><p>${escapeHtml(description)}</p></div>
-    <div class="pokedex-section"><h4>Lieux de rencontre</h4>${encounterLocations}</div>
-    <div class="pokedex-section"><h4>Talents</h4><div class="pokedex-abilities">${abilities}</div></div>
-    <div class="pokedex-section"><h4>Statistiques de base</h4><div class="pokedex-stats-wrap">${stats}</div></div>
-    <div class="pokedex-section"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
-    <div class="pokedex-section"><h4>Évolution</h4>${evolution}</div>
-    <div class="pokedex-section"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b>${captureRate}</b></div><div><span>Genre</span><b>${escapeHtml(gender)}</b></div><div><span>Groupes d'oeufs</span><b>${escapeHtml(eggs)}</b></div><div><span>Eclosion</span><b>${escapeHtml(hatch)}</b></div></div></div>
+    <div class="pokedex-section is-stats"><h4>Statistiques de base</h4><div class="pokedex-stats-wrap">${stats}</div></div>
+    <div class="pokedex-section is-matchups"><h4>Faiblesses et résistances</h4>${typeMatchupHtml(pokemon.type1, pokemon.type2)}</div>
+    <div class="pokedex-section is-abilities"><h4>Talents</h4><div class="pokedex-abilities">${abilities}</div></div>
+    <div class="pokedex-section is-evolution"><h4>Évolution</h4>${evolution}</div>
+    <div class="pokedex-section is-entry"><h4>Entrée Pokédex</h4><p>${escapeHtml(description)}</p></div>
+    <div class="pokedex-section is-places"><h4>Lieux de rencontre</h4>${encounterLocations}</div>
+    <div class="pokedex-section is-extra"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b>${captureRate}</b></div><div><span>Genre</span><b>${escapeHtml(gender)}</b></div><div><span>Groupes d'oeufs</span><b>${escapeHtml(eggs)}</b></div><div><span>Eclosion</span><b>${escapeHtml(hatch)}</b></div></div></div>
   `;
 }
 function defaultGameRatingEntry() {

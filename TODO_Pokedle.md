@@ -43,6 +43,10 @@ Dernière mise à jour : 13 octobre 2026 (soir). Reste : comptes (à la fin). Pa
 
 ## À faire
 
+### Prochains chantiers (notés le 25/10 à la demande de l'utilisateur)
+- [ ] **Niveaux, XP et aventure : nouvelle architecture.** Le système actuel vient d'une ancienne version : on atteint trop vite le niveau max (Niv. 10 « Mythe Pokémon » ; l'utilisateur y est depuis longtemps, 122 928 XP). Repenser la progression (paliers, ce qu'on gagne), l'aventure et leur affichage (fenêtre du niveau, quêtes du jour, partage du niveau).
+- [ ] **Profil : direction artistique et fonctionnalités à revoir**, en regardant ce que font les concurrents ou en imaginant mieux (carte de dresseur, partenaire, progression, succès, historique, notes des jeux, favoris).
+
 ### Formes manquantes (signalé le 12/10)
 Comparaison avec PokeAPI le 12/10 : le site a 172 formes (71 Méga), PokeAPI en a 326. Manquent notamment :
 - [x] Méga livrées le 12/10 : 22 ajoutées (les variantes identiques en jeu ont été laissées de côté).
