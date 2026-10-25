@@ -1358,12 +1358,25 @@ app.post("/api/track", express.json({ limit: "1kb" }), (req, res) => {
   res.json({ ok: true });
 });
 
+// « Donne ton avis »: players' ideas, bugs and opinions, read on /admin/stats.
+const feedback = require("./lib/feedback");
+const feedbackReady = pgPool ? authDbReady.then(async () => {
+  await feedback.ensureTable(pgPool);
+  return true;
+}).catch((error) => {
+  console.warn("[feedback] table unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+feedback.mountFeedbackRoutes(app, { express, db: pgPool, ready: feedbackReady });
+
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");
   res.set("X-Robots-Tag", "noindex");
   const adminKey = process.env.ADMIN_STATS_KEY || "";
   if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
+  let feedbackHtml = "<p>(base non connectée — messages des joueurs indisponibles)</p>";
+  try { if (pgPool && await feedbackReady) feedbackHtml = feedback.feedbackSectionHtml(await feedback.recent(pgPool, 50)); } catch (_error) { feedbackHtml = "<p>Messages des joueurs indisponibles pour le moment.</p>"; }
   let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
   let aggregateHtml = "<p>Compteurs quotidiens persistants indisponibles.</p>";
   let metrics = null;
@@ -1411,7 +1424,7 @@ app.get("/admin/stats", async (req, res) => {
   const uniqueRow = `<tr><th>Visiteurs uniques</th>${dayKeys.map((k) => cell(usageDays.get(k).uniques.size)).join("")}<td class="t">—</td></tr>`;
   res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
 <style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
-</head><body><h1>Pokédle — fréquentation</h1>${visitTotalHtml}${aggregateHtml}
+</head><body><h1>Pokédle — fréquentation</h1>${feedbackHtml}${visitTotalHtml}${aggregateHtml}
 <p>Compteurs en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (remis à zéro à chaque redémarrage de l'instance — les événements restent tracés dans les logs Render, préfixe <code>[usage]</code>).</p>
 <table><thead><tr><th>Événement</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${uniqueRow}${rows || ""}</tbody></table>
 ${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);

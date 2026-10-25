@@ -2141,6 +2141,20 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
 #pokdle-app .support-kofi-btn, #pokdle-app.design-refresh .site-footer a.support-kofi-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 18px; border: 1px solid #f0c9a0; border-radius: 999px; background: #fff1e0; color: #7a4210 !important; font: 800 .9rem Nunito, sans-serif; text-decoration: none; text-shadow: none !important; box-shadow: 0 4px 12px rgba(122,66,16,.12); transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
 #pokdle-app .support-kofi-btn:hover, #pokdle-app .support-kofi-btn:focus-visible { background: #ffe4c4; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(122,66,16,.18); }
 #pokdle-app .site-footer-support { margin: 6px 0 10px; }
+/* « Donne ton avis »: the footer button and its form. */
+#pokdle-app .site-footer-feedback { margin: 0 0 10px; }
+#pokdle-app .site-footer-feedback .btn-ghost { min-height: 44px; padding: 8px 16px; }
+.feedback-form { display: grid; gap: 14px; }
+.feedback-form .feedback-kinds { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; padding: 0; border: 0; }
+.feedback-form .feedback-kinds legend { margin-bottom: 6px; font-weight: 800; }
+.feedback-form .feedback-kinds label { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; cursor: pointer; }
+.feedback-form .feedback-field { display: grid; gap: 6px; font-weight: 700; }
+.feedback-form .feedback-field span { font-size: .9rem; }
+.feedback-form textarea, .feedback-form input[name="pseudo"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--ui-line, #d8d2c8); border-radius: 12px; background: var(--ui-surface, #fff); color: var(--ui-ink, #1d2b4a); font: inherit; font-weight: 500; }
+.feedback-form textarea { resize: vertical; min-height: 110px; }
+.feedback-form .feedback-status { min-height: 1.2em; margin: 0; font-weight: 700; }
+/* The robot trap stays out of sight and out of the tab order. */
+.feedback-form .feedback-trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 #pokdle-app .app-settings-support .card-desc { margin: 0 0 10px; }
 #pokdle-app .journey-support { display: grid; justify-items: center; gap: 10px; margin: 18px auto 0; max-width: 520px; padding: 14px 16px; border: 1px dashed #f0c9a0; border-radius: 18px; background: #fffaf3; text-align: center; }
 #pokdle-app .journey-support p { margin: 0; color: #6b5a4e; font-weight: 700; }
