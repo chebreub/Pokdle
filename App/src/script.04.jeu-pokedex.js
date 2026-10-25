@@ -5273,7 +5273,8 @@ function typeMatchupHtml(type1, type2) {
   const resist = entries.filter((e) => e.m > 0 && e.m < 1).sort((a, b) => a.m - b.m);
   const immune = entries.filter((e) => e.m === 0);
 
-  const badge = (e) => `<span class=\"match-badge\"><span class=\"match-badge-type\">${typeBadgeHtml(e.type)}</span><b class=\"match-badge-multiplier\">x${e.m}</b></span>`;
+  const multiplier = (m) => ({ 0.25: "¼", 0.5: "½" })[m] || String(m);
+  const badge = (e) => `<span class=\"match-badge\"><span class=\"match-badge-type\">${typeBadgeHtml(e.type)}</span><b class=\"match-badge-multiplier\">×${multiplier(e.m)}</b></span>`;
   const none = '<span class="pokedex-muted">Aucun</span>';
 
   return `
@@ -5966,6 +5967,8 @@ async function renderPokedexDetail(pokemon) {
       <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" data-action="togglePokedexShiny">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
       <button class="btn-ghost pokedex-detail-builder-btn" type="button" data-action="addSelectedPokedexPokemonToBuilder">Ajouter au Builder</button>
       <button class="btn-ghost pokedex-detail-compare-btn" type="button" data-action="setPokedexCompareReferenceById" data-args='[${pokemon.id}]'>Comparer</button>
+      <button type="button" class="btn-ghost pokedex-detail-head-nav" data-action="navigatePokedexDetail" data-args='["prev"]' ${navigation.previous ? "" : "disabled"}>&larr; Précédent</button>
+      <button type="button" class="btn-ghost pokedex-detail-head-nav" data-action="navigatePokedexDetail" data-args='["next"]' ${navigation.next ? "" : "disabled"}>Suivant &rarr;</button>
       <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
       <span id="pokedex-compare-feedback" class="pokedex-compare-feedback" aria-live="polite"></span>
     </div>

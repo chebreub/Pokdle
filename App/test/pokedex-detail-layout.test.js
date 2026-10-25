@@ -21,6 +21,15 @@ test('the detail panel shows stats and weaknesses first, in both the loading and
     assert.match(view, /src="\$\{pokedexDetailArtwork\(pokemon, pokedexSelectedShiny\)\}"[^>]*data-fallback="\$\{getPokedexDisplaySprite\(pokemon, pokedexSelectedShiny\)\}"/);
   }
   assert.match(body, /detail\.dataset\.type = typeSlug\(pokemon\.type1\);/);
+  // On a computer, Précédent / Suivant sit in the header; phones keep their own row.
+  assert.equal((body.match(/class="btn-ghost pokedex-detail-head-nav" data-action="navigatePokedexDetail"/g) || []).length, 2);
+  assert.match(css, /#screen-pokedex \.pokedex-detail-head-nav \{ display: none; \}/);
+});
+
+test('one chip per type with its multiplier: Feu ×2, Plante ×¼, Eau ×½', () => {
+  const fn = src.slice(src.indexOf('function typeMatchupHtml('), src.indexOf('function formatGenderRate('));
+  assert.match(fn, /const multiplier = \(m\) => \(\{ 0\.25: "¼", 0\.5: "½" \}\)\[m\] \|\| String\(m\);/);
+  assert.match(fn, /<b class=\\"match-badge-multiplier\\">×\$\{multiplier\(e\.m\)\}<\/b>/);
 });
 
 test('tiles and the detail header are tinted by the main type, for all 18 types', () => {
