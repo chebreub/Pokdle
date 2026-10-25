@@ -209,7 +209,7 @@ function answerHigherLower(choice) {
     }
     if (correct) {
       higherLowerState.score += 1;
-      awardXp(3, "Higher or Lower");
+      awardXp(3, "Higher or Lower", "higherlower");
       progressQuest("hl_streak_10", higherLowerState.score);
       if (higherLowerState.score > higherLowerState.highScore) {
         higherLowerState.highScore = higherLowerState.score;
@@ -809,7 +809,7 @@ function typeComboSubmitGuess() {
     st.solved += 1;
     st.last = { name: mon.name, pts: pts, label: st.combo.tier.label };
     st.feedback = "";
-    try { awardXp(6, "Combo de types"); } catch (e) {}
+    try { awardXp(6, "Combo de types", "typecombo"); } catch (e) {}
     if (typeof gameFeelAnswer === "function") gameFeelAnswer(true, document.querySelector("#type-combo-root .tc-combo") || input, "+" + pts);
     typeComboNextCombo();
   } else {
@@ -1031,7 +1031,7 @@ function speedrunSubmitGuess() {
     speedrunState.streak += 1;
     if (speedrunState.streak > speedrunState.bestStreak) speedrunState.bestStreak = speedrunState.streak;
     speedrunState.history.push({ id: target.id, name: target.name, correct: true });
-    awardXp(5, "Speedrun Pokédex");
+    awardXp(5, "Speedrun Pokédex", "speedrun");
     speedrunState.currentIndex += 1;
     if (input) input.value = "";
     speedrunState.currentInput = "";
@@ -1079,7 +1079,7 @@ function finalizeSpeedrunGame() {
     awardXp(50, "Nouveau record Speedrun");
   }
   // XP global selon score
-  if (speedrunState.correct >= 10) awardXp(speedrunState.correct * 3, `Speedrun ${speedrunState.correct} Pokémon`);
+  if (speedrunState.correct >= 10) awardXp(speedrunState.correct * 3, `Speedrun ${speedrunState.correct} Pokémon`, "speedrun");
   try {
     recordMatchHistory({
       mode: "speedrun",
@@ -1397,7 +1397,7 @@ function submitPokeConnectionsGuess() {
     pokeConnectionsState.selected = new Set();
     if (pokeConnectionsState.foundGroupIdx.size === 4) {
       pokeConnectionsState.phase = "won";
-      awardXp(100, "Poké-Connections résolu");
+      awardXp(100, "Poké-Connections résolu", "connections");
       progressQuest("connections_clear", 1);
       try {
         recordMatchHistory({ mode: "poke-connections", result: "win", attempts: 4 - pokeConnectionsState.mistakes, targetName: `${pokeConnectionsState.mistakes} erreur${pokeConnectionsState.mistakes > 1 ? "s" : ""}` });
@@ -1821,14 +1821,14 @@ function applyStatAuctionRoomState(room) {
       const self = room.players?.find((p) => p.isSelf);
       let result = "loss";
       if (self && room.winnerSide === self.side) {
-        awardXp(80, "Victoire Stat Auction");
+        awardXp(80, "Victoire Stat Auction", "statauction");
         progressQuest("stat_auction_win", 1);
         result = "win";
       } else if (room.winnerSide === "tie") {
-        awardXp(40, "Stat Auction (égalité)");
+        awardXp(40, "Stat Auction (égalité)", "statauction");
         result = "draw";
       } else {
-        awardXp(25, "Stat Auction (défaite)");
+        awardXp(25, "Stat Auction (défaite)", "statauction");
       }
       try {
         const opp = room.players?.find((p) => !p.isSelf);
@@ -2435,7 +2435,7 @@ function renderQuizQuestion() {
       });
       // XP : 5 par bonne réponse + bonus si > 50%
       xpReward = quizScore * 5 + (quizScore >= Math.ceil(quizQuestions.length / 2) ? 30 : 0);
-      if (xpReward > 0) awardXp(xpReward, `Quiz ${quizScore}/${quizQuestions.length}`);
+      if (xpReward > 0) awardXp(xpReward, `Quiz ${quizScore}/${quizQuestions.length}`, "quiz");
       // Record perso
       const prevRecord = Number(playerProfile?.quizHighScore) || 0;
       if (playerProfile && quizScore > prevRecord) {

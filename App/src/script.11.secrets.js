@@ -214,6 +214,10 @@ function claimSecretPokemon(key) {
   // Persist before any animation: closing, reloading or reduced motion never loses a reward.
   saveProfile(); renderPartner(); renderSecretMissions();
   const pokemon = POKEMON_BY_ID.get(mission.pokemonId);
+  if (typeof awardXp === 'function') {
+    awardXp(ADVENTURE_XP.secret, `Secret « ${mission.title} »`);
+    awardRegionXpIfComplete(pokemon);
+  }
   if (pokemon && typeof showPokedexRegistration === 'function') {
     closeOverlayModal();
     showPokedexRegistration(pokemon, {

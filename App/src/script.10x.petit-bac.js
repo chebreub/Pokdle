@@ -130,7 +130,7 @@ async function submitPetitBac(event) {
     const best = Number(playerProfile?.petitBacBest) || 0;
     s.newRecord = s.score > best;
     if (s.newRecord && typeof playerProfile !== 'undefined' && playerProfile) { playerProfile.petitBacBest = s.score; try { saveProfile(); } catch (_e) {} }
-    if (s.score && typeof awardXp === 'function') awardXp(s.score * 5, 'Petit Bac');
+    if (s.score && typeof awardXp === 'function') awardXp(s.score * 5, 'Petit Bac', 'petitbac');
     if (typeof recordMatchHistory === 'function') recordMatchHistory({ mode: 'petitbac', result: s.score >= 4 ? 'win' : 'loss', attempts: s.score, targetName: null });
     renderPetitBac();
     if (typeof gameFeelReplay === 'function') gameFeelReplay(document.querySelector('#petitbac-root .bac-review'), 'is-new');

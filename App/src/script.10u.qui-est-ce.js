@@ -128,7 +128,7 @@ function finishQuiEstCe(won) {
       playerProfile.quiEstCeBest = state.questions;
       try { saveProfile(); } catch (_e) {}
     }
-    if (typeof awardXp === 'function') awardXp(Math.max(10, 50 - state.questions * 3), 'Qui est-ce ?');
+    if (typeof awardXp === 'function') awardXp(Math.max(10, 50 - state.questions * 3), 'Qui est-ce ?', 'quiestce');
   }
   if (typeof recordMatchHistory === 'function') recordMatchHistory({ mode: 'quiestce', result: won ? 'win' : 'loss', attempts: state.questions, targetName: secret?.name || null });
   renderQuiEstCe();

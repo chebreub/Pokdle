@@ -49,18 +49,26 @@ const DEFAULT_PROFILE = {
 };
 
 // === ENGAGEMENT — XP + quêtes quotidiennes ===
-const XP_TIERS = [
-  { level: 1, name: "Recrue", emoji: "🥚", minXp: 0 },
-  { level: 2, name: "Novice", emoji: "🐣", minXp: 100 },
-  { level: 3, name: "Apprenti", emoji: "🌱", minXp: 300 },
-  { level: 4, name: "Dresseur", emoji: "🔥", minXp: 700 },
-  { level: 5, name: "Expert", emoji: "⚡", minXp: 1500 },
-  { level: 6, name: "Vétéran", emoji: "💎", minXp: 3000 },
-  { level: 7, name: "Champion", emoji: "🏆", minXp: 6000 },
-  { level: 8, name: "Maître", emoji: "👑", minXp: 12000 },
-  { level: 9, name: "Légende", emoji: "🌟", minXp: 25000 },
-  { level: 10, name: "Mythe Pokémon", emoji: "✨", minXp: 50000 },
+// 100 levels (25/10/2026): going from level N to N+1 costs 50 × N XP (500 at level 10,
+// 2 500 at level 50), so level N needs 25 × N × (N − 1) XP in all. A new title every 10 levels;
+// past level 100, one prestige star per 5 000 XP.
+const XP_MAX_LEVEL = 100;
+const XP_STAR_COST = 5000;
+const XP_TITLES = [
+  { level: 1, name: "Recrue", emoji: "🥚" },
+  { level: 10, name: "Novice", emoji: "🐣" },
+  { level: 20, name: "Apprenti", emoji: "🌱" },
+  { level: 30, name: "Dresseur", emoji: "🔥" },
+  { level: 40, name: "Expert", emoji: "⚡" },
+  { level: 50, name: "Vétéran", emoji: "💎" },
+  { level: 60, name: "Champion", emoji: "🏆" },
+  { level: 70, name: "Maître", emoji: "👑" },
+  { level: 80, name: "Légende", emoji: "🌟" },
+  { level: 90, name: "Mythe Pokémon", emoji: "✨" },
+  { level: 100, name: "Maître Pokémon", emoji: "🎖️" },
 ];
+// Under the 10 old levels, 50 000 XP made a « Mythe Pokémon »; those players keep a Pionnier badge.
+const XP_LEGACY_MYTH_XP = 50000;
 
 const QUEST_POOL = [
   { id: "win_daily", icon: "📅", label: "Gagne le Pokédle du jour", target: 1, xp: 80 },
@@ -75,19 +83,40 @@ const QUEST_POOL = [
   { id: "pokedex_browse", icon: "📖", label: "Consulte le Pokédex aujourd'hui", target: 1, xp: 30 },
 ];
 
-function getXpTier(xp = 0) {
-  let tier = XP_TIERS[0];
-  for (const t of XP_TIERS) if (xp >= t.minXp) tier = t;
-  return tier;
+function xpForLevel(level) {
+  return 25 * level * (level - 1);
 }
 
+function xpLevelEntry(level, stars = 0) {
+  let title = XP_TITLES[0];
+  for (const t of XP_TITLES) if (level >= t.level) title = t;
+  return { level, name: stars > 0 ? `${title.name} ★${stars}` : title.name, emoji: title.emoji, minXp: xpForLevel(level), stars };
+}
+
+function getXpTier(xp = 0) {
+  const total = Math.max(0, Number(xp) || 0);
+  let level = Math.min(XP_MAX_LEVEL, Math.max(1, Math.floor((1 + Math.sqrt(1 + total / 6.25)) / 2)));
+  while (level < XP_MAX_LEVEL && xpForLevel(level + 1) <= total) level += 1;
+  while (level > 1 && xpForLevel(level) > total) level -= 1;
+  const stars = level === XP_MAX_LEVEL ? Math.floor((total - xpForLevel(XP_MAX_LEVEL)) / XP_STAR_COST) : 0;
+  return xpLevelEntry(level, stars);
+}
+
+// Progress toward the next level, and the next title (« Légende au niveau 80 »).
+// At level 100 the bar fills toward the next prestige star.
 function getXpProgress(xp = 0) {
-  const cur = getXpTier(xp);
-  const next = XP_TIERS.find((t) => t.level > cur.level) || null;
-  if (!next) return { tier: cur, next: null, percent: 100, xpInTier: xp - cur.minXp, xpToNext: 0 };
-  const xpInTier = xp - cur.minXp;
-  const xpToNext = next.minXp - cur.minXp;
-  return { tier: cur, next, percent: Math.min(100, Math.round((xpInTier / xpToNext) * 100)), xpInTier, xpToNext };
+  const total = Math.max(0, Number(xp) || 0);
+  const tier = getXpTier(total);
+  if (tier.level >= XP_MAX_LEVEL) {
+    const xpInTier = (total - xpForLevel(XP_MAX_LEVEL)) % XP_STAR_COST;
+    return { tier, next: null, nextTitle: null, percent: Math.round((xpInTier / XP_STAR_COST) * 100), xpInTier, xpToNext: XP_STAR_COST };
+  }
+  const next = xpLevelEntry(tier.level + 1);
+  const titleLevel = XP_TITLES.find((t) => t.level > tier.level)?.level;
+  const nextTitle = titleLevel ? xpLevelEntry(titleLevel) : null;
+  const xpInTier = total - tier.minXp;
+  const xpToNext = next.minXp - tier.minXp;
+  return { tier, next, nextTitle, percent: Math.min(100, Math.round((xpInTier / xpToNext) * 100)), xpInTier, xpToNext };
 }
 
 // Quests and the login streak change at midnight in Paris, like the day's games.
@@ -121,17 +150,81 @@ function setGameCounter(value, label = "Essais") {
   if (name) name.textContent = label;
 }
 
-function awardXp(amount, source = "") {
+// Each game gives its full XP up to 500 XP a day, then half: varying pays more than repeating.
+// Awards without a game (the daily game, quests, records, the adventure) are not counted.
+const XP_GAME_DAILY_FULL = 500;
+function xpAfterDailyGameLimit(amount, game) {
+  if (!game) return { amount, reduced: false };
+  const today = getDailyDateKey();
+  if (playerProfile.xpGameDay?.date !== today || typeof playerProfile.xpGameDay?.games !== "object") playerProfile.xpGameDay = { date: today, games: {} };
+  const earned = Number(playerProfile.xpGameDay.games[game]) || 0;
+  const full = Math.max(0, Math.min(amount, XP_GAME_DAILY_FULL - earned));
+  playerProfile.xpGameDay.games[game] = earned + amount;
+  return { amount: Math.round(full + (amount - full) / 2), reduced: full < amount };
+}
+
+function awardXp(amount, source = "", game = "") {
   if (!playerProfile || !Number.isFinite(amount) || amount <= 0) return;
   const prevTier = getXpTier(playerProfile.xp || 0);
-  playerProfile.xp = Math.max(0, (Number(playerProfile.xp) || 0) + Math.round(amount));
+  const given = xpAfterDailyGameLimit(Math.round(amount), game);
+  playerProfile.xp = Math.max(0, (Number(playerProfile.xp) || 0) + given.amount);
   const newTier = getXpTier(playerProfile.xp);
   try { saveProfile(); } catch (_e) {}
-  queueXpToast(Math.round(amount), source);
+  queueXpToast(given.amount, given.reduced ? `${source} (½ XP au-delà de ${XP_GAME_DAILY_FULL} par jeu et par jour)` : source);
   if (newTier.level > prevTier.level) {
-    setTimeout(() => showXpToast(`🎉 Niveau ${newTier.level} — ${newTier.name} ${newTier.emoji}`, "is-levelup"), 700);
+    const message = newTier.name !== prevTier.name
+      ? `🎉 Niveau ${newTier.level} — nouveau titre : ${newTier.name} ${newTier.emoji}`
+      : `🎉 Niveau ${newTier.level} ${newTier.emoji}`;
+    setTimeout(() => showXpToast(message, "is-levelup"), 700);
   }
   updateXpBadge();
+}
+
+// The adventure counts too: a new Pokémon, a mission, a secret, a whole region.
+const ADVENTURE_XP = {
+  discovery: 20,
+  secret: 300,
+  region: 1000,
+  mission: { confirmed: 100, expert: 200, prestige: 300, legendary: 500, secret: 500 },
+};
+const ADVENTURE_REGION_NAMES = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Unys", "Kalos", "Alola", "Galar", "Paldea"];
+
+function awardRegionXpIfComplete(pokemon) {
+  const gen = Number(pokemon?.gen);
+  if (!playerProfile || !Number.isInteger(gen) || typeof pokedexCollectionRegionStats !== "function") return;
+  const stats = pokedexCollectionRegionStats(gen);
+  if (!stats.total || stats.found < stats.total) return;
+  playerProfile.regionXpClaims = playerProfile.regionXpClaims && typeof playerProfile.regionXpClaims === "object" ? playerProfile.regionXpClaims : {};
+  if (playerProfile.regionXpClaims[gen]) return;
+  playerProfile.regionXpClaims[gen] = Date.now();
+  awardXp(ADVENTURE_XP.region, `${ADVENTURE_REGION_NAMES[gen - 1] || `Génération ${gen}`} complété à 100 %`);
+}
+
+// 25/10/2026: the 10 levels became 100. The XP stays; whoever had reached « Mythe Pokémon »
+// keeps a Pionnier badge, and every player with XP is told once what changed.
+function migrateXpLevels() {
+  if (!playerProfile || playerProfile.xpLevels === 2) return;
+  const xp = Number(playerProfile.xp) || 0;
+  if (xp >= XP_LEGACY_MYTH_XP) playerProfile.pioneerMyth = true;
+  playerProfile.xpLevels = 2;
+  try { saveProfile(); } catch (_e) {}
+  if (xp > 0) setTimeout(() => showXpLevelsNotice(xp), 1200);
+}
+
+function showXpLevelsNotice(xp) {
+  if (typeof ensureOverlay !== "function") return;
+  const prog = getXpProgress(xp);
+  const pioneer = playerProfile?.pioneerMyth
+    ? `<p>Tu avais atteint « Mythe Pokémon » : tu gardes le badge <b>✨ Pionnier</b> sur ta carte de Dresseur.</p>`
+    : "";
+  ensureOverlay("Les niveaux vont jusqu’à 100", `
+    <div class="xp-levels-notice">
+      <p>Ton XP est conservée : <b>${xp.toLocaleString("fr-FR")} XP</b>, soit le <b>niveau ${prog.tier.level} · ${escapeHtml(prog.tier.name)} ${prog.tier.emoji}</b>.</p>
+      <p>Chaque niveau demande 50 XP de plus que le précédent, et un nouveau titre arrive tous les 10 niveaux${prog.nextTitle ? ` (prochain : ${escapeHtml(prog.nextTitle.name)} au niveau ${prog.nextTitle.level})` : ""}.</p>
+      <p>Nouveau : enregistrer un Pokémon, finir une mission ou trouver un secret rapporte de l’XP. Et varier paie : après 500 XP gagnés dans un même jeu, ce jeu ne rapporte plus que la moitié jusqu’au lendemain.</p>
+      ${pioneer}
+      <button type="button" class="btn-blue" data-action="closeOverlayModal">Compris</button>
+    </div>`);
 }
 
 function progressQuest(questId, amount = 1) {
@@ -442,7 +535,7 @@ function renderHomeEngagementWidget() {
         <div class="heb-tier-emoji">${prog.tier.emoji}</div>
         <div class="heb-tier-info">
           <b>Niv. ${prog.tier.level} · ${escapeHtml(prog.tier.name)}</b>
-          <span>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant ${prog.next.emoji}` : " · MAX"}</span>
+          <span>${xp} XP${prog.next ? ` · ${prog.next.minXp - xp} avant Niv. ${prog.next.level}` : " · MAX"}</span>
         </div>
       </div>
       <div class="heb-bar"><div class="heb-bar-fill" style="width:${prog.percent}%"></div></div>
@@ -2166,7 +2259,7 @@ function finalizePartySession() {
   const completionBonus = rounds >= Number(partySession.maxRounds || rounds) ? 25 : 0;
   const perfectBonus = wins === rounds && wins >= 5 ? 50 : 0;
   const totalXp = baseXp + completionBonus + perfectBonus;
-  if (totalXp > 0) awardXp(totalXp, `Party Pokémon ${wins}/${rounds}`);
+  if (totalXp > 0) awardXp(totalXp, `Party Pokémon ${wins}/${rounds}`, "party");
   // Record session party (meilleur nombre de victoires)
   const prevRecord = Number(playerProfile?.partyHighScore) || 0;
   if (playerProfile && wins > prevRecord) {

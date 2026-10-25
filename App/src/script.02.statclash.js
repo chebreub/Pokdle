@@ -1818,12 +1818,12 @@ function finalizeStatClashBotGame() {
   s.finalWinnerSide = winnerSide;
   // XP + quête Stat Clash
   if (winnerSide === "left") {
-    awardXp(70, "Victoire Stat Clash");
+    awardXp(70, "Victoire Stat Clash", "statclash");
     progressQuest("stat_clash_win", 1);
   } else if (winnerSide === "right") {
-    awardXp(20, "Stat Clash (défaite)");
+    awardXp(20, "Stat Clash (défaite)", "statclash");
   } else {
-    awardXp(35, "Stat Clash (égalité)");
+    awardXp(35, "Stat Clash (égalité)", "statclash");
   }
   try {
     const result = winnerSide === "left" ? "win" : winnerSide === "right" ? "loss" : "draw";
