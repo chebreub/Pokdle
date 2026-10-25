@@ -3211,11 +3211,11 @@ body.theme-dark .pokedex-collection-legend > span {
 
 @media (min-width: 2000px) {
   #pokdle-app #screen-pokedex #pokedex-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #pokdle-app #screen-pokedex #pokedex-detail > :not(.is-stats, .is-matchups, .is-abilities, .is-evolution) { grid-column: 1 / -1; }
-  /* Stats, talents et évolution l'un sous l'autre à gauche, les faiblesses (souvent la plus haute) à droite
-     sur toute leur hauteur : aucune case ne s'étire pour s'aligner sur sa voisine. */
-  #pokdle-app #screen-pokedex #pokedex-detail > :is(.is-stats, .is-abilities, .is-evolution) { grid-column: 1; align-self: start; }
-  #pokdle-app #screen-pokedex #pokedex-detail > .is-matchups { grid-column: 2; grid-row: span 3; align-self: start; }
+  #pokdle-app #screen-pokedex #pokedex-detail > :not(.is-stats, .is-matchups, .is-abilities) { grid-column: 1 / -1; }
+  /* Stats et talents l'un sous l'autre à gauche, les faiblesses (souvent la plus haute) à droite sur toute
+     leur hauteur : aucune case ne s'étire pour s'aligner sur sa voisine. L'évolution prend toute la largeur. */
+  #pokdle-app #screen-pokedex #pokedex-detail > :is(.is-stats, .is-abilities) { grid-column: 1; align-self: start; }
+  #pokdle-app #screen-pokedex #pokedex-detail > .is-matchups { grid-column: 2; grid-row: span 2; align-self: start; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head { grid-template-columns: 150px minmax(0, 1fr); }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head-main img { width: 150px !important; height: 150px !important; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-summary h3 { font-size: 2rem; }
@@ -3260,4 +3260,34 @@ body.theme-dark .pokedex-collection-legend > span {
    sur toute la largeur, pour tenir sur une seule ligne au lieu de laisser « Comparer » seul en dessous. */
 @container dex-detail (max-width: 495px) {
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-head { grid-template-areas: "art summary" "actions actions"; }
+}
+
+/* ===== Évolution : la famille en images, la méthode sur chaque flèche (25/10) =====
+   En ligne droite de gauche à droite (Férosinge → Colossinge → Courrousinge) ; quand la famille se divise
+   (Évoli), le Pokémon de départ puis une case par évolution avec sa méthode. Un clic ouvre la fiche.
+   Couleurs fixes : la case reste claire dans les deux thèmes. */
+#screen-pokedex .pokedex-evo-chain { display: flex; align-items: center; gap: 6px; }
+#screen-pokedex .pokedex-evo-card {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 auto; min-width: 92px; max-width: 132px;
+  padding: 6px 8px; border: 1px solid #d9e3f2; border-radius: 12px; background: #fff;
+  font: inherit; color: inherit; text-align: center;
+}
+#screen-pokedex button.pokedex-evo-card { cursor: pointer; transition: border-color .15s, transform .15s; }
+#screen-pokedex button.pokedex-evo-card:hover { border-color: #4aa3df; transform: translateY(-1px); }
+#screen-pokedex .pokedex-evo-card.is-current { background: var(--dex-tint, #eef1f6); border-color: rgb(46 42 51 / 22%); }
+#screen-pokedex .pokedex-evo-card img { width: 64px; height: 64px; object-fit: contain; }
+#screen-pokedex .pokedex-evo-card b { font-size: .8rem; line-height: 1.15; overflow-wrap: break-word; }
+#screen-pokedex .pokedex-evo-card small { display: block; margin-top: 1px; font-size: .72rem; font-weight: 700; line-height: 1.2; color: #5b6b84; }
+#screen-pokedex .pokedex-evo-step { flex: 1 1 0; min-width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+#screen-pokedex .pokedex-evo-step span { font-size: .74rem; font-weight: 800; line-height: 1.2; color: #5b6b84; }
+#screen-pokedex :is(.pokedex-evo-step, .pokedex-evo-branch) > i { font-style: normal; font-size: 1.15rem; line-height: 1; color: #4aa3df; }
+#screen-pokedex .pokedex-evo-branch { display: flex; align-items: center; gap: 8px; }
+#screen-pokedex .pokedex-evo-branch + .pokedex-evo-branch { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d9e3f2; }
+#screen-pokedex .pokedex-evo-targets { flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+#screen-pokedex .pokedex-evo-targets .pokedex-evo-card { min-width: 0; max-width: none; flex-direction: row; justify-content: flex-start; gap: 6px; padding: 4px 8px 4px 4px; text-align: left; }
+#screen-pokedex .pokedex-evo-targets .pokedex-evo-card img { width: 40px; height: 40px; flex: 0 0 40px; }
+@media (max-width: 640px) {
+  #screen-pokedex .pokedex-evo-card { min-width: 74px; max-width: 104px; padding: 6px 4px; }
+  #screen-pokedex .pokedex-evo-card img { width: 52px; height: 52px; }
+  #screen-pokedex .pokedex-evo-targets { grid-template-columns: minmax(0, 1fr); }
 }

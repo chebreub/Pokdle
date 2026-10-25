@@ -48,8 +48,9 @@ test('on large screens the detail panel is 760 px and two columns wide; from 120
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\) minmax\(440px, 38%\);/);
   const wide = css.slice(css.indexOf('@media (min-width: 2000px) {\n  body:has(#screen-pokedex'));
   assert.match(wide, /grid-template-columns: minmax\(0, 1fr\) 760px;/);
-  assert.match(css, /#pokedex-detail > :not\(\.is-stats, \.is-matchups, \.is-abilities, \.is-evolution\) \{ grid-column: 1 \/ -1; \}/);
-  // Stats, abilities and evolution stack on the left, weaknesses span them on the right: no stretched empty box.
-  assert.match(css, /#pokedex-detail > :is\(\.is-stats, \.is-abilities, \.is-evolution\) \{ grid-column: 1; align-self: start; \}/);
-  assert.match(css, /#pokedex-detail > \.is-matchups \{ grid-column: 2; grid-row: span 3; align-self: start; \}/);
+  assert.match(css, /#pokedex-detail > :not\(\.is-stats, \.is-matchups, \.is-abilities\) \{ grid-column: 1 \/ -1; \}/);
+  // Stats and abilities stack on the left, weaknesses span them on the right: no stretched empty box.
+  // The evolution chain gets the full width so its pictures fit on one line.
+  assert.match(css, /#pokedex-detail > :is\(\.is-stats, \.is-abilities\) \{ grid-column: 1; align-self: start; \}/);
+  assert.match(css, /#pokedex-detail > \.is-matchups \{ grid-column: 2; grid-row: span 2; align-self: start; \}/);
 });

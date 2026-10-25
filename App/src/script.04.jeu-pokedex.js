@@ -5292,10 +5292,17 @@ function formatGenderRate(speciesData) {
   return `${male}% mâle / ${female}% femelle`;
 }
 
+// PokeAPI's French names for the 15 egg groups.
+const POKEDEX_EGG_GROUPS_FR = {
+  monster: "Monstrueux", water1: "Aquatique 1", water2: "Aquatique 2", water3: "Aquatique 3", bug: "Insectoïde",
+  flying: "Aérien", ground: "Terrestre", fairy: "Féerique", plant: "Végétal", humanshape: "Humanoïde",
+  mineral: "Minéral", indeterminate: "Amorphe", ditto: "Métamorph", dragon: "Draconique", "no-eggs": "Inconnu",
+};
+
 function formatEggGroups(speciesData) {
   const list = Array.isArray(speciesData?.egg_groups) ? speciesData.egg_groups : [];
   if (!list.length) return "Inconnu";
-  return list.map((g) => g?.name || "?").join(" / ");
+  return list.map((g) => POKEDEX_EGG_GROUPS_FR[g?.name] || formatPokedexApiLabel(g?.name)).join(" / ");
 }
 
 function formatHatchCycles(speciesData) {
@@ -6009,7 +6016,7 @@ async function renderPokedexDetail(pokemon) {
     <div class="pokedex-section is-evolution"><h4>Évolution</h4>${skeletonHtml("", "lines", 2)}</div>
     <div class="pokedex-section is-entry"><h4>Entrée Pokédex</h4>${skeletonHtml("Chargement de la fiche…", "lines", 3)}</div>
     <div class="pokedex-section is-places"><h4>Lieux de rencontre</h4>${skeletonHtml("", "lines", 2)}</div>
-    <div class="pokedex-section is-extra"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Genre</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Groupes d'oeufs</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Eclosion</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div></div></div>
+    <div class="pokedex-section is-extra"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Taux de capture</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Genre</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Groupes d’œufs</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div><div><span>Éclosion</span><b><i class="pk-skel-bone is-inline" aria-hidden="true"></i></b></div></div></div>
   `;
 
   const apiId = getMysteryApiId(pokemon);
@@ -6079,7 +6086,7 @@ async function renderPokedexDetail(pokemon) {
     <div class="pokedex-section is-evolution"><h4>Évolution</h4>${evolution}</div>
     <div class="pokedex-section is-entry"><h4>Entrée Pokédex</h4><p>${escapeHtml(description)}</p></div>
     <div class="pokedex-section is-places"><h4>Lieux de rencontre</h4>${encounterLocations}</div>
-    <div class="pokedex-section is-extra"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Capture</span><b>${captureRate}</b></div><div><span>Genre</span><b>${escapeHtml(gender)}</b></div><div><span>Groupes d'oeufs</span><b>${escapeHtml(eggs)}</b></div><div><span>Eclosion</span><b>${escapeHtml(hatch)}</b></div></div></div>
+    <div class="pokedex-section is-extra"><h4>Infos utiles</h4><div class="pokedex-detail-grid pokedex-extra-grid"><div><span>Taux de capture</span><b>${captureRate}</b></div><div><span>Genre</span><b>${escapeHtml(gender)}</b></div><div><span>Groupes d’œufs</span><b>${escapeHtml(eggs)}</b></div><div><span>Éclosion</span><b>${escapeHtml(hatch)}</b></div></div></div>
   `;
 }
 function defaultGameRatingEntry() {
