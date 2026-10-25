@@ -237,7 +237,7 @@ function openWeeklyLeague() {
 function weeklyLeagueRankRow(row,index) {
   const rank=Number(row?.rank)||index+1;
   const medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;
-  return '<div class="weekly-rank-row '+(row?.me?'is-me':'')+'"><span>'+medal+'</span><b>'+escapeHtml(row?.username||"Dresseur")+'</b><strong>'+Number(row?.score||0)+' pts</strong></div>';
+  return '<div class="weekly-rank-row '+(row?.me?'is-me':'')+'"><span>'+medal+'</span><b>'+escapeHtml(row?.username||"Dresseur")+(typeof leaderboardLevelPill==="function"?leaderboardLevelPill(row):'')+'</b><strong>'+Number(row?.score||0)+' pts</strong></div>';
 }
 function openWeeklyLeagueRanking() {
   const info=weeklyLeagueIsoWeek();

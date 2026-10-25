@@ -1,5 +1,5 @@
 const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
-const { profileForClient, profileForStorage, partnerIdFromProfileData } = require("./lib/profile-sync");
+const { profileForClient, profileForStorage, partnerIdFromProfileData, xpFromProfileData, playerLevelFromXp } = require("./lib/profile-sync");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -168,6 +168,7 @@ async function initAuthDb() {
       last_login TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
     await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_id INTEGER");
+    await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INTEGER");
     // An account id is users.discord_id: Discord accounts keep their Discord id, a
     // Google-only account gets "google:<sub>" and a Twitch-only one "twitch:<id>"
     // (never digits only, so no collision).
@@ -187,6 +188,12 @@ async function initAuthDb() {
     for (const row of missing.rows) {
       const partner = partnerIdFromProfileData(row.data);
       if (partner) await pgPool.query("UPDATE users SET partner_id = $2 WHERE discord_id = $1", [row.discord_id, partner]);
+    }
+    // Profiles saved before the xp column existed: copy their XP once, for the level shown in rankings.
+    const missingXp = await pgPool.query("SELECT discord_id, data FROM users WHERE xp IS NULL AND data ? 'profile'");
+    for (const row of missingXp.rows) {
+      const xp = xpFromProfileData(row.data);
+      if (xp !== null) await pgPool.query("UPDATE users SET xp = $2 WHERE discord_id = $1", [row.discord_id, xp]);
     }
     await pgPool.query(`CREATE TABLE IF NOT EXISTS scores (
       discord_id TEXT NOT NULL,
@@ -566,7 +573,7 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   }
   try {
     await ensureAccountRow(user);
-    await pgPool.query("UPDATE users SET data = $2, partner_id = $3 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data)]);
+    await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data)]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });
@@ -725,7 +732,7 @@ app.get("/api/leaderboard", async (req, res) => {
           ORDER BY s.discord_id, s.score DESC, s.updated_at ASC
         ),
         ranked AS (
-          SELECT b.discord_id, b.username, b.avatar, u.partner_id, b.score,
+          SELECT b.discord_id, b.username, b.avatar, u.partner_id, u.xp, b.score,
             (RANK() OVER (ORDER BY b.score DESC, b.updated_at ASC))::int AS rank
           FROM best b
           LEFT JOIN users u ON u.discord_id = b.discord_id
@@ -733,7 +740,7 @@ app.get("/api/leaderboard", async (req, res) => {
     } else if (scope === "all") {
       rankedCte = `
         WITH ranked AS (
-          SELECT s.discord_id, s.username, s.avatar, u.partner_id, s.score,
+          SELECT s.discord_id, s.username, s.avatar, u.partner_id, u.xp, s.score,
             (RANK() OVER (ORDER BY s.score ${order}, s.updated_at ASC))::int AS rank
           FROM scores s
           LEFT JOIN users u ON u.discord_id = s.discord_id
@@ -752,7 +759,7 @@ app.get("/api/leaderboard", async (req, res) => {
           GROUP BY e.discord_id
         ),
         ranked AS (
-          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, COALESCE(u.avatar, '') AS avatar, u.partner_id, b.score,
+          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, COALESCE(u.avatar, '') AS avatar, u.partner_id, u.xp, b.score,
             (RANK() OVER (ORDER BY b.score ${order}))::int AS rank
           FROM best b
           LEFT JOIN users u ON u.discord_id = b.discord_id
@@ -760,7 +767,7 @@ app.get("/api/leaderboard", async (req, res) => {
     }
 
     const top = await pgPool.query(
-      rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
+      rankedCte + " SELECT discord_id, username, avatar, partner_id, xp, score, rank FROM ranked ORDER BY rank ASC, username ASC LIMIT 20",
       scoreboardParams
     );
     const totalR = await pgPool.query(rankedCte + " SELECT COUNT(*)::int AS total FROM ranked", scoreboardParams);
@@ -768,7 +775,7 @@ app.get("/api/leaderboard", async (req, res) => {
     let aroundRows = [];
     if (meId) {
       const mine = await pgPool.query(
-        rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
+        rankedCte + " SELECT discord_id, username, avatar, partner_id, xp, score, rank FROM ranked WHERE discord_id = $2 LIMIT 1",
         scoreboardParams.concat(meId)
       );
       if (mine.rows[0]) {
@@ -777,7 +784,7 @@ app.get("/api/leaderboard", async (req, res) => {
         const low = Math.max(1, Number(row.rank) - 2);
         const high = Number(row.rank) + 2;
         const around = await pgPool.query(
-          rankedCte + " SELECT discord_id, username, avatar, partner_id, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
+          rankedCte + " SELECT discord_id, username, avatar, partner_id, xp, score, rank FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank ASC, username ASC LIMIT 7",
           scoreboardParams.concat(low, high)
         );
         aroundRows = around.rows;
@@ -788,6 +795,7 @@ app.get("/api/leaderboard", async (req, res) => {
       username: row.username,
       avatar: row.avatar,
       partnerId: row.partner_id ? Number(row.partner_id) : null,
+      level: playerLevelFromXp(row.xp),
       score: Number(row.score),
       me: meId != null && row.discord_id === meId
     });
@@ -1496,7 +1504,13 @@ function generatePartyRoomCode() {
   return code;
 }
 
-function joinPlayerToPartyRoom(room, socket, nickname) {
+// The level a player shows in a Party Room, sent by their browser (1 to 100), or none.
+function sanitizePartyLevel(value) {
+  const level = Number(value);
+  return Number.isInteger(level) && level >= 1 && level <= 100 ? level : null;
+}
+
+function joinPlayerToPartyRoom(room, socket, nickname, level = null) {
   socket.join(room.code);
   socket.data.partyRoomCode = room.code;
   const blue = room.players.filter(p => p.raceTeam === 'blue').length;
@@ -1504,6 +1518,7 @@ function joinPlayerToPartyRoom(room, socket, nickname) {
   const player = {
     id: socket.id,
     nickname,
+    level,
     connected: true,
     score: 0,
     correct: false,
@@ -1599,6 +1614,7 @@ function publicPartyRoomState(room, viewerId = null) {
     players: room.players.map((player) => ({
       id: player.id,
       nickname: player.nickname,
+      level: player.level || null,
       connected: player.connected,
       reconnectUntil: player.connected ? null : (Number(player.reconnectUntil) || null),
       raceTeam: player.raceTeam || "blue",
@@ -2541,7 +2557,7 @@ io.on("connection", (socket) => {
       const code = generatePartyRoomCode();
       const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
-      const player = joinPlayerToPartyRoom(room, socket, nickname);
+      const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
       recordUsage("party:create");
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
@@ -2561,7 +2577,7 @@ io.on("connection", (socket) => {
       if (room.players.length >= PARTY_MAX_PLAYERS) return respond(ack, { ok: false, error: "La room est deja complete (8 max)." });
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
       clearPartyRoomCleanup(room);
-      const player = joinPlayerToPartyRoom(room, socket, nickname);
+      const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
       recordUsage("party:join");
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });

@@ -17,7 +17,7 @@ function fillLeaderboardWeekTop(isCurrent) {
     if (!box || !isCurrent()) return;
     const rows = (Array.isArray(data?.top) ? data.top : []).filter(row => Number(row.rank) <= 3).slice(0, 3);
     box.innerHTML = rows.length
-      ? '<small>Top 3 de la semaine</small>' + rows.map(row => '<div class="leaderboard-week-row rank-' + Number(row.rank) + (row.me ? ' is-me' : '') + '"><span>' + Number(row.rank) + '</span>' + leaderboardV2Avatar(row) + '<b>' + escapeHtml(row.username || "Dresseur") + '</b><strong>' + Number(row.score || 0) + ' pts</strong></div>').join("")
+      ? '<small>Top 3 de la semaine</small>' + rows.map(row => '<div class="leaderboard-week-row rank-' + Number(row.rank) + (row.me ? ' is-me' : '') + '"><span>' + Number(row.rank) + '</span>' + leaderboardV2Avatar(row) + '<b>' + escapeHtml(row.username || "Dresseur") + leaderboardLevelPill(row) + '</b><strong>' + Number(row.score || 0) + ' pts</strong></div>').join("")
       : '<small>Personne n’a encore marqué cette semaine : la première place t’attend.</small>';
   }).catch(() => {
     const box = document.getElementById("leaderboard-week-top");

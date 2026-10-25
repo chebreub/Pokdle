@@ -582,3 +582,6 @@ body.theme-dark .profile-mission-intro p { color:#afc0da; }
 .xp-levels-notice { display: grid; gap: 10px; }
 .xp-levels-notice p { margin: 0; line-height: 1.5; }
 .xp-levels-notice .btn-blue { justify-self: start; }
+
+/* Le niveau à côté du pseudo : classements, Ligue, top 3 de la semaine, Party Rooms (25/10). */
+.player-level-pill { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--ui-accent-soft, #ecf1ff); color: var(--ui-accent, #4069e0); font-size: .72em; font-weight: 800; line-height: 1.5; letter-spacing: .01em; vertical-align: middle; white-space: nowrap; }

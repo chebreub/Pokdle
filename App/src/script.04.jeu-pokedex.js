@@ -1822,13 +1822,18 @@ function setPartyStatus(message) {
   if (inline) inline.textContent = inRound ? message || "" : "";
 }
 
+// The level shown next to this player's name in the room.
+function partyPlayerLevel() {
+  return typeof getXpTier === "function" ? getXpTier(Number(playerProfile?.xp) || 0).level : null;
+}
+
 function partyCreateRoom() {
   var socket = ensurePartyListeners();
   if (!socket) { setPartyStatus("Serveur temps reel indisponible."); return; }
   var input = document.getElementById("party-nickname");
   var nickname = ((input && input.value) || "").trim();
   if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
-  socket.emit("party:create-room", { nickname: nickname }, function (res) {
+  socket.emit("party:create-room", { nickname: nickname, level: partyPlayerLevel() }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur de creation."); return; }
     partyRoomState.room = res.room;
@@ -1849,7 +1854,7 @@ function partyJoinRoom() {
   var code = ((codeEl && codeEl.value) || "").trim();
   if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
   if (!code) { setPartyStatus("Entre un code de room."); return; }
-  socket.emit("party:join-room", { nickname: nickname, code: code }, function (res) {
+  socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel() }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Impossible de rejoindre."); return; }
     partyRoomState.room = res.room;
@@ -2362,7 +2367,7 @@ function renderPartyRoom() {
       var highlight = (scMode && playing && p.pickKey) || (scMode && revealed && (p.lastGain || 0) > 0) || (!scMode && p.correct);
       return '<li class="party-player' + (p.connected ? '' : ' is-offline') + (highlight ? ' is-correct' : '') + '">' +
         '<span class="party-avatar av-' + avatarTone + '">' + (complete && room.gameMode !== "coop" ? rank : escapeHtml(avatarInitial)) + '</span>' +
-        '<div class="party-player-info"><span class="party-player-name">' + escapeHtml(p.nickname) + '</span><span class="party-player-meta">' +
+        '<div class="party-player-info"><span class="party-player-name">' + escapeHtml(p.nickname) + (p.level ? '<span class="player-level-pill">Niv. ' + Number(p.level) + '</span>' : '') + '</span><span class="party-player-meta">' +
         (p.isHost ? '<span class="party-badge-host">Hôte</span>' : '') +
         (p.isSelf ? '<span class="party-badge-self">Toi</span>' : '') + statusBadge + '</span></div>' +
         '<span class="party-score' + (gained ? ' is-gain' : '') + '">' + (p.score || 0) + '<small>POINTS</small></span></li>';

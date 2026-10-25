@@ -4,6 +4,7 @@
 // each right answer shows how many players gave the same Pokémon for that theme. It is a
 // bonus of the day, beside the 100-point journey, with its own leaderboard.
 const crypto=require('node:crypto');
+const {playerLevelFromXp}=require('./profile-sync');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {checkPokemonAnswer,examplesFor,drawSoloSheet}=require('./party-petitbac');
 const {regionalFormsOn}=require('./daily-grid');
@@ -157,7 +158,7 @@ function createDailyPetitBacService({db,pokemon,clock=()=>new Date(),draw=drawDa
       FROM petitbac_daily_plays p LEFT JOIN originality o ON o.day=p.day AND o.identity=p.identity
       WHERE p.status='completed' AND p.account_id IS NOT NULL ${predicate}
     ), ranked AS (
-      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,u.partner_id,c.score,c.originality,
+      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,u.partner_id,u.xp,c.score,c.originality,
         (RANK() OVER(ORDER BY c.score DESC,c.originality DESC,c.elapsed_ms ASC))::int AS rank
       FROM candidates c LEFT JOIN users u ON u.discord_id=c.discord_id WHERE c.attempt_rank=1)`;
     const [top,count,mine]=await Promise.all([
@@ -166,7 +167,7 @@ function createDailyPetitBacService({db,pokemon,clock=()=>new Date(),draw=drawDa
       accountId?db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,String(accountId)]):Promise.resolve({rows:[]})]);
     const me=mine.rows[0]||null;
     const around=me?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,me.rank-2),me.rank+2])).rows:[];
-    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,score:Number(r.score),originality:Number(r.originality),me:r.discord_id===String(accountId)});
+    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,level:playerLevelFromXp(r.xp),score:Number(r.score),originality:Number(r.originality),me:r.discord_id===String(accountId)});
     return {ok:true,mode:'petitbacday',scope,authenticated:Boolean(accountId),direction:'desc',label:'Petit Bac du jour',unit:'pts',
       total:Number(count.rows[0]?.total||0),top:top.rows.map(map),me:me?{rank:Number(me.rank),score:Number(me.score),originality:Number(me.originality)}:null,around:around.map(map)};
   }

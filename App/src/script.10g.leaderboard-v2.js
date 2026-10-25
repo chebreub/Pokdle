@@ -227,12 +227,17 @@ function leaderboardV2Avatar(row) {
 function leaderboardV2ArcadeCounts(scope) {
   return leaderboardFetchJson("/api/leaderboard/counts?scope="+encodeURIComponent(scope)).then(data=>data?.counts||null).catch(()=>null);
 }
+// « Niv. 70 » after a player's name; accounts without a saved profile have no level.
+function leaderboardLevelPill(row) {
+  const level = Number(row?.level);
+  return Number.isInteger(level) && level >= 1 ? '<span class="player-level-pill">Niv. '+level+'</span>' : '';
+}
 function leaderboardV2Row(row, fallbackRank, mode, unit, compact=false) {
   const rank=Number(row?.rank)||fallbackRank||0;
   return '<div class="lbv2-row'+(row?.me?' is-me':'')+(rank<=3?' is-podium rank-'+rank:'')+(compact?' is-compact':'')+'">'+
     '<span class="lbv2-rank">#'+rank+'</span>'+
     leaderboardV2Avatar(row)+
-    '<span class="lbv2-player"><b>'+escapeHtml(row?.username||"Dresseur")+'</b>'+(row?.me?'<small>TOI</small>':'')+'</span>'+
+    '<span class="lbv2-player"><b>'+escapeHtml(row?.username||"Dresseur")+'</b>'+leaderboardLevelPill(row)+(row?.me?'<small>TOI</small>':'')+'</span>'+
     '<strong>'+leaderboardV2ScoreHtml(row,mode,unit)+'</strong>'+
     '</div>';
 }
