@@ -1202,6 +1202,19 @@ body:not(.theme-dark) .pokedex-card strong{
     max-height: 74vh;
   }}
 
+/* Grands écrans (27 pouces en 2560px, ou 2048px avec le zoom Windows à 125 %) : le Pokédex
+   est un catalogue à parcourir, il prend plus de largeur (10 colonnes au lieu de 7).
+   Jusqu'à 1999px (écrans 1920px compris), rien ne change. */
+@media (min-width: 2000px) {
+  body:has(#screen-pokedex:not(.hidden)) main {
+    max-width: 1840px;
+  }
+
+  #screen-pokedex .pokedex-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 480px);
+  }
+}
+
 #pokedex-shiny-toggle.active {
   box-shadow: 0 0 0 3px rgba(255, 204, 51, 0.22), 0 12px 24px rgba(20, 36, 66, 0.14);
 }
