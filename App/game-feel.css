@@ -362,6 +362,11 @@
   #pokdle-app.design-refresh #quiz-box .quiz-end-actions {grid-template-columns:minmax(0,1fr);}
   #pokdle-app.design-refresh #quiz-box .quiz-end-actions button {min-height:50px;}
 }
+/* Dark theme: the header of the end card reads light on its dark background (audit of 25/10). */
+#pokdle-app.design-refresh.theme-dark #quiz-box .quiz-end-heading :is(h3, .quiz-end-scoreline strong) {color:#eef5ff;}
+#pokdle-app.design-refresh.theme-dark #quiz-box .quiz-end-heading :is(.quiz-end-kicker, .quiz-end-scoreline span) {color:#aebfda;}
+/* Good answers in the recap: a slightly deeper green, readable on its pale background. */
+#pokdle-app #quiz-box .quiz-history-item.ok {color:#1a7a4a;}
 
 /* Quiz over: the whole recap shows at once, each line with its question (audit of 25/10). */
 #pokdle-app #quiz-box:has(#quiz-end-card:not(.hidden)) .quiz-history { max-height: none; overflow: visible; }
