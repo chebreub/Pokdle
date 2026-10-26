@@ -42,9 +42,19 @@ function wordleMarkNewRow() {
   row.classList.add('is-new');
   if(dailyWordleState?.finished)document.getElementById('wordle-result')?.classList.add('is-new');
 }
-function wordleCells(letters,colors=[]) {
+function wordleCells(letters,colors=[],pattern='') {
   const labels={exact:'bien placée',present:'présente ailleurs',absent:'absente'};
-  return [...letters].map((letter,i)=>'<span class="wordle-cell '+(colors[i]||'empty')+'" aria-label="'+escapeHtml(letter==='?'?'Lettre inconnue':letter+(labels[colors[i]]?' : '+labels[colors[i]]:''))+'">'+escapeHtml(letter)+'</span>').join('');
+  const cell=(letter,i)=>'<span class="wordle-cell '+(colors[i]||'empty')+'" aria-label="'+escapeHtml(letter==='?'?'Lettre inconnue':letter+(labels[colors[i]]?' : '+labels[colors[i]]:''))+'">'+escapeHtml(letter)+'</span>';
+  const chars=[...letters];
+  // Hyphens, spaces, dots and digits of the name show as fixed marks between the letters.
+  if(!pattern||[...pattern].filter(c=>c==='_').length!==chars.length)return chars.map(cell).join('');
+  let i=0;
+  return [...pattern].map(c=>c==='_'?cell(chars[i],i++):c===' '?'<span class="wordle-gap" aria-hidden="true"></span>':'<span class="wordle-sep" aria-hidden="true">'+escapeHtml(c)+'</span>').join('');
+}
+// Width of a row in letter slots: a mark (8 px and its gap) takes about 0.6 of a letter.
+function wordleColumns(length,pattern='') {
+  const marks=pattern&&[...pattern].filter(c=>c==='_').length===length?pattern.length-length:0;
+  return length+marks*0.6;
 }
 function renderDailyWordle() {
   const s=dailyWordleState;if(!s)return;
@@ -56,9 +66,9 @@ function renderDailyWordle() {
     if((priority[color]||0)>(priority[keyStates[letter]]||0))keyStates[letter]=color;
   }
   const grid=document.getElementById('wordle-board');
-  grid.innerHTML='<div class="wordle-mystery"><small>NOM MYSTÈRE · '+s.length+' LETTRES</small><div class="wordle-tiles" style="--wordle-columns:'+s.length+'">'+wordleCells(known.join(''),known.map(l=>l==='?'?'empty':'exact'))+'</div></div>'+
-    s.rows.map((row,i)=>'<div class="wordle-guess"><small>ESSAI '+(i+1)+' · '+escapeHtml(row.name)+'</small><div class="wordle-tiles" style="--wordle-columns:'+row.letters.length+'">'+wordleCells(row.letters,row.colors)+'</div></div>').join('')+
-    (!s.finished?'<div class="wordle-guess wordle-next"><small>ESSAI '+(s.attempts+1)+' / '+s.maxTries+'</small><div class="wordle-tiles" style="--wordle-columns:'+s.length+'">'+wordleCells(' '.repeat(s.length))+'</div></div>':'');
+  grid.innerHTML='<div class="wordle-mystery"><small>NOM MYSTÈRE · '+s.length+' LETTRES</small><div class="wordle-tiles" style="--wordle-columns:'+wordleColumns(s.length,s.pattern)+'">'+wordleCells(known.join(''),known.map(l=>l==='?'?'empty':'exact'),s.pattern)+'</div></div>'+
+    s.rows.map((row,i)=>'<div class="wordle-guess"><small>ESSAI '+(i+1)+' · '+escapeHtml(row.name)+'</small><div class="wordle-tiles" style="--wordle-columns:'+wordleColumns(row.letters.length,row.pattern)+'">'+wordleCells(row.letters,row.colors,row.pattern)+'</div></div>').join('')+
+    (!s.finished?'<div class="wordle-guess wordle-next"><small>ESSAI '+(s.attempts+1)+' / '+s.maxTries+'</small><div class="wordle-tiles" style="--wordle-columns:'+wordleColumns(s.length,s.pattern)+'">'+wordleCells(' '.repeat(s.length),[],s.pattern)+'</div></div>':'');
   for(const key of document.querySelectorAll('#wordle-keyboard [data-letter]'))key.className=keyStates[key.dataset.letter]||'';
   document.getElementById('wordle-form').classList.toggle('hidden',s.finished);
   document.getElementById('wordle-keyboard').classList.toggle('hidden',s.finished);
@@ -118,7 +128,7 @@ async function startDailyWordle() {
 function renderWordleSuggestions() {
   const input=document.getElementById('wordle-input'),list=document.getElementById('wordle-suggestions'),query=wordleNormalize(input.value);
   const next=document.querySelector('.wordle-next .wordle-tiles');
-  if(next){const width=Math.max(query.length,dailyWordleState?.length||0);next.style.setProperty('--wordle-columns',width);next.innerHTML=wordleCells(query.padEnd(width,' '));}
+  if(next){const length=dailyWordleState?.length||0,width=Math.max(query.length,length),pattern=query.length<=length?dailyWordleState?.pattern||'':'';next.style.setProperty('--wordle-columns',wordleColumns(width,pattern));next.innerHTML=wordleCells(query.padEnd(width,' '),[],pattern);}
   const choices=query.length>=2?getPokemonUiList().filter(p=>wordleNormalize(p.name).includes(query)&&!dailyWordleState?.rows.some(row=>row.pokemonId===p.id)).slice(0,7):[];
   list.innerHTML='';list.classList.toggle('hidden',!choices.length);input.setAttribute('aria-expanded',String(Boolean(choices.length)));
   for(const p of choices) {
