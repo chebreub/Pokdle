@@ -812,24 +812,42 @@ function updateSilhouettePanel(reveal) {
 
   if (reveal) {
     img.style.transform = "translate(0px, 0px) scale(1)";
+    img.style.filter = "none";
+    img.style.visibility = "";
   } else {
-    const startScale = 4;
-    const step = 0.55;
+    const startScale = 5;
+    const step = 0.7;
     const scale = Math.max(1, startScale - attempts * step);
-    // Centre the view on the Pokémon's body: translate(-scale × offset) keeps that point in the middle.
+    // The first three clues are in black and white: in colour, the main colour gave the answer away.
+    img.style.filter = attempts < ZOOM_GREY_CLUES ? "grayscale(1)" : "none";
+    // Centre the view on the chosen detail (translate(-scale × offset) keeps a point in the middle),
+    // then drift back to the whole Pokémon as the view widens.
     const apply = (focus) => {
-      img.style.transform = `translate(${(-(focus.x - 0.5) * scale * 100).toFixed(2)}%, ${(-(focus.y - 0.5) * scale * 100).toFixed(2)}%) scale(${scale})`;
+      const drift = (scale - 1) / (startScale - 1);
+      const fx = 0.5 + (focus.x - 0.5) * drift, fy = 0.5 + (focus.y - 0.5) * drift;
+      img.style.transform = `translate(${(-(fx - 0.5) * scale * 100).toFixed(2)}%, ${(-(fy - 0.5) * scale * 100).toFixed(2)}%) scale(${scale})`;
     };
-    apply(zoomFocusCache.get(url) || { x: 0.5, y: 0.5 });
-    zoomFocus(url, (focus) => {
-      if (gameMode === "silhouette" && secretPokemon && getPokemonSprite(secretPokemon) === url && !box.classList.contains("revealed")) apply(focus);
-    });
+    const known = zoomFocusCache.get(url);
+    if (known) apply(known);
+    else {
+      // Nothing shows until the detail is chosen, so the view never slides from the middle to it.
+      img.style.visibility = "hidden";
+      zoomFocus(url, (focus) => {
+        if (gameMode !== "silhouette" || !secretPokemon || getPokemonSprite(secretPokemon) !== url || box.classList.contains("revealed")) return;
+        img.style.transition = "none";
+        apply(focus);
+        void img.offsetWidth;
+        img.style.transition = "";
+        img.style.visibility = "";
+      });
+    }
   }
   box.classList.toggle("revealed", Boolean(reveal));
 }
 
-// Where the Pokémon is in its sprite: the visible pixel nearest to the centre of all its visible
-// pixels, measured once per sprite. The middle of the sprite is often empty background.
+// Where the zoom looks: a detail picked at random on the Pokémon's outline (an ear, a tail, a paw),
+// once per sprite. The middle of the body showed its main colour, which was too easy (26/10).
+const ZOOM_GREY_CLUES = 3;
 const zoomFocusCache = new Map();
 function zoomFocusFromAlpha(alpha, side) {
   let sx = 0, sy = 0, n = 0;
@@ -843,6 +861,26 @@ function zoomFocusFromAlpha(alpha, side) {
     if (distance < bestDistance) { bestDistance = distance; best = i; }
   }
   return { x: (best % side + 0.5) / side, y: (Math.floor(best / side) + 0.5) / side };
+}
+// A visible pixel next to the background, whose first view (about a fifth of the sprite) shows
+// some body and some outline; any outline pixel if none does; the body's centre for an odd sprite.
+function zoomDetailFromAlpha(alpha, side, random = Math.random) {
+  const opaque = (x, y) => x >= 0 && y >= 0 && x < side && y < side && alpha[y * side + x] > 128;
+  const reach = Math.round(side / 10), area = (2 * reach + 1) ** 2;
+  const outline = [], mixed = [];
+  for (let y = 0; y < side; y += 1) {
+    for (let x = 0; x < side; x += 1) {
+      if (!opaque(x, y) || ![[-2, 0], [2, 0], [0, -2], [0, 2]].some(([dx, dy]) => !opaque(x + dx, y + dy))) continue;
+      outline.push(y * side + x);
+      let filled = 0;
+      for (let dy = -reach; dy <= reach; dy += 1) for (let dx = -reach; dx <= reach; dx += 1) if (opaque(x + dx, y + dy)) filled += 1;
+      if (filled >= area * 0.3 && filled <= area * 0.8) mixed.push(y * side + x);
+    }
+  }
+  const pool = mixed.length ? mixed : outline;
+  if (!pool.length) return zoomFocusFromAlpha(alpha, side);
+  const pick = pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
+  return { x: (pick % side + 0.5) / side, y: (Math.floor(pick / side) + 0.5) / side };
 }
 function zoomFocus(url, done) {
   if (zoomFocusCache.has(url)) return done(zoomFocusCache.get(url));
@@ -858,7 +896,7 @@ function zoomFocus(url, done) {
       const data = ctx.getImageData(0, 0, side, side).data;
       const alpha = new Uint8Array(side * side);
       for (let i = 0; i < alpha.length; i += 1) alpha[i] = data[i * 4 + 3];
-      finish(zoomFocusFromAlpha(alpha, side));
+      finish(zoomDetailFromAlpha(alpha, side));
     } catch (_e) { finish({ x: 0.5, y: 0.5 }); }
   };
   image.onerror = () => finish({ x: 0.5, y: 0.5 });

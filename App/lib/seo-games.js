@@ -146,12 +146,12 @@ const GAMES = [
     h1: 'Zoom progressif : reconnais le Pokémon',
     lead: 'Tout commence par un gros plan sur un détail : une oreille, une queue, un bout d’aile. À chaque mauvaise réponse, l’image s’élargit. Trouveras-tu le Pokémon avant de le voir en entier ?',
     steps: [
-      'Observe le détail affiché, zoomé quatre fois.',
+      'Observe le détail affiché, zoomé cinq fois et en noir et blanc.',
       'Propose un Pokémon. Si ce n’est pas lui, l’image dézoome et les indices de comparaison s’ajoutent.',
       'Trouve-le avec le moins d’essais possible.',
     ],
     facts: [
-      'Sept niveaux de zoom avant de voir l’image entière.',
+      'Sept niveaux de zoom avant de voir l’image entière ; les couleurs reviennent au quatrième.',
       'Aucune limite d’essais.',
       'Choisis les générations que tu veux réviser.',
     ],

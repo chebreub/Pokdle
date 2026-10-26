@@ -289,6 +289,9 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-input {min-height:48px!important;padding:11px 12px!important;scroll-margin-top:12px;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #err-msg:empty {display:none;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac {position:static!important;inset:auto!important;width:100%!important;max-width:100%!important;max-height:var(--guess-list-height,282px)!important;margin:8px 0 0!important;padding:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;}
+ /* Keyboard open: the list keeps one height, even with fewer or no suggestions, so the buttons below never jump (iPhone, 26/10). */
+ #pokdle-app.design-refresh.mobile-keyboard-open #screen-game[data-shell="focused"] #guess-ac {height:var(--guess-list-height,282px)!important;}
+ #pokdle-app.design-refresh.mobile-keyboard-open #screen-game[data-shell="focused"] .search-bar:focus-within #guess-ac.hidden {display:block!important;visibility:hidden;pointer-events:none;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .ac-item {height:56px!important;min-height:56px!important;padding:5px 8px!important;gap:8px;box-sizing:border-box;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .ac-item > img {width:34px!important;height:34px!important;flex:0 0 34px!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #guess-ac .ac-item > div {min-width:0;}
