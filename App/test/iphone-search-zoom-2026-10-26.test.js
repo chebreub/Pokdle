@@ -13,9 +13,9 @@ test('typing on a phone no longer scrolls the page with every letter', () => {
   // Our own scroll fired visualViewport « scroll », which called the fit again.
   assert.doesNotMatch(shell, /visualViewport\?\.addEventListener\("scroll", scheduleMobileGuessSearch\)/);
   assert.match(shell, /visualViewport\?\.addEventListener\("resize", scheduleMobileGuessSearch\)/);
-  // The page moves only for the field itself (hidden, or no room for three suggestions), not for the list.
+  // The page moves only for the field itself (hidden, or no room for five suggestions), not for the list.
   const fit = between(shell, 'function fitMobileGuessSearch()', 'function scheduleMobileGuessSearch()');
-  assert.match(fit, /const needed = field\.bottom \+ 8 \+ rowHeight \* 3;/);
+  assert.match(fit, /const needed = field\.bottom \+ 8 \+ rowHeight \* 5 \+ 2;/);
   assert.doesNotMatch(fit, /bar\.getBoundingClientRect\(\)/);
   // While the keyboard is open, the list keeps one height and its place, so the buttons stay put.
   const css = read('game-shell.css');

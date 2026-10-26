@@ -135,7 +135,7 @@ renderGameOverBox = function(options) {
 // The mobile list stays in document flow, above the submit/abandon buttons.
 // iPhone, 26/10: the page used to scroll with every letter, as the list grew and shrank, and the
 // scroll fired visualViewport "scroll" again, so the field jumped up and down. Now the page moves
-// only when the field is hidden or has no room below it for three suggestions, and while the
+// only when the field is hidden or has no room below it for five suggestions, and while the
 // keyboard is open the list keeps one fixed height (game-shell.css), so nothing moves as you type.
 let mobileGuessSearchFrame = 0;
 function fitMobileGuessSearch() {
@@ -152,7 +152,7 @@ function fitMobileGuessSearch() {
   if (nav && !document.body.classList.contains("mobile-keyboard-open") && nav.getBoundingClientRect().top > top) bottom = Math.min(bottom, nav.getBoundingClientRect().top - 8);
   const rowHeight = 56;
   const field = input.getBoundingClientRect();
-  const needed = field.bottom + 8 + rowHeight * 3;
+  const needed = field.bottom + 8 + rowHeight * 5 + 2;
   const delta = field.top < top ? field.top - top : needed > bottom ? Math.min(field.top - top, needed - bottom) : 0;
   if (Math.abs(delta) > 1) window.scrollBy({ top: Math.round(delta), behavior: "instant" });
   // The list fills the room between the field and the bottom of the visible area.
