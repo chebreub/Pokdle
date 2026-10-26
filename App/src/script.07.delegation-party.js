@@ -2466,7 +2466,7 @@ function getHelpContentForGameMode(mode) {
         body: `
           <section class="app-help-card">
             <h4>Zoom progressif</h4>
-            <p>Le sprite est extrêmement <b>zoomé au départ</b> et se dézoome à chaque essai. Tu joues sur les générations choisies avec le bouton Générations.</p>
+            <p>Le sprite est extrêmement <b>zoomé au départ</b>, sur un détail pris au hasard (une oreille, une queue, une patte), et se dézoome à chaque essai. Les <b>trois premiers indices sont en noir et blanc</b>, puis les couleurs reviennent. Tu joues sur les générations choisies avec le bouton Générations.</p>
           </section>
           <section class="app-help-card">
             <h4>Indices classiques en plus</h4>

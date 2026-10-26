@@ -133,6 +133,10 @@ renderGameOverBox = function(options) {
 
 // Keep the input and suggestions within the actual visible area, including iOS keyboards.
 // The mobile list stays in document flow, above the submit/abandon buttons.
+// iPhone, 26/10: the page used to scroll with every letter, as the list grew and shrank, and the
+// scroll fired visualViewport "scroll" again, so the field jumped up and down. Now the page moves
+// only when the field is hidden or has no room below it for three suggestions, and while the
+// keyboard is open the list keeps one fixed height (game-shell.css), so nothing moves as you type.
 let mobileGuessSearchFrame = 0;
 function fitMobileGuessSearch() {
   mobileGuessSearchFrame = 0;
@@ -146,14 +150,14 @@ function fitMobileGuessSearch() {
   if (header && ["fixed", "sticky"].includes(getComputedStyle(header).position)) top = Math.max(top, header.getBoundingClientRect().bottom + 8);
   const nav = document.getElementById("mobile-tabbar");
   if (nav && !document.body.classList.contains("mobile-keyboard-open") && nav.getBoundingClientRect().top > top) bottom = Math.min(bottom, nav.getBoundingClientRect().top - 8);
-  if (!list.classList.contains('hidden')) {
-    const rowHeight = list.firstElementChild?.getBoundingClientRect().height || 52;
-    const controlsHeight = bar.getBoundingClientRect().height - list.getBoundingClientRect().height;
-    list.style.setProperty("--guess-list-height", Math.max(rowHeight, Math.min(rowHeight * 5 + 2, bottom - top - controlsHeight)) + "px");
-  }
-  const rect = bar.getBoundingClientRect();
-  const delta = rect.top < top ? rect.top - top : rect.bottom > bottom ? Math.min(rect.top - top, rect.bottom - bottom) : 0;
+  const rowHeight = 56;
+  const field = input.getBoundingClientRect();
+  const needed = field.bottom + 8 + rowHeight * 3;
+  const delta = field.top < top ? field.top - top : needed > bottom ? Math.min(field.top - top, needed - bottom) : 0;
   if (Math.abs(delta) > 1) window.scrollBy({ top: Math.round(delta), behavior: "instant" });
+  // The list fills the room between the field and the bottom of the visible area.
+  const room = bottom - (field.bottom - delta) - 8;
+  list.style.setProperty("--guess-list-height", Math.max(rowHeight, Math.min(rowHeight * 5 + 2, room)) + "px");
 }
 function scheduleMobileGuessSearch() {
   if (mobileGuessSearchFrame) cancelAnimationFrame(mobileGuessSearchFrame);
@@ -162,5 +166,4 @@ function scheduleMobileGuessSearch() {
 if (typeof window !== "undefined") {
   window.addEventListener("resize", scheduleMobileGuessSearch);
   window.visualViewport?.addEventListener("resize", scheduleMobileGuessSearch);
-  window.visualViewport?.addEventListener("scroll", scheduleMobileGuessSearch);
 }

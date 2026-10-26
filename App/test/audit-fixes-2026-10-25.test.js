@@ -17,7 +17,7 @@ test('a Quiz of 15 questions can rank 11 to 15 good answers', () => {
   assert.equal(clamp(16, { max: count }), null);
 });
 
-test('the Zoom shows the Pokémon in colour, centred on its body', () => {
+test('the Zoom is never a black square, and its fallback centres on the Pokémon’s body', () => {
   const css = read('style.css');
   assert.doesNotMatch(between(css, '.zoom-sprite {', '}'), /brightness\(0\)/);
   const src = read('src/script.02.statclash.js');
@@ -36,7 +36,7 @@ test('the Zoom shows the Pokémon in colour, centred on its body', () => {
   assert.ok(ring.some(([x, y]) => x === cell[0] && y === cell[1]), JSON.stringify(onRing));
   // Nothing readable: the middle, as before.
   assert.deepEqual(focusOf(new Uint8Array(side * side), side), { x: 0.5, y: 0.5 });
-  assert.match(src, /img\.style\.transform = `translate\(\$\{\(-\(focus\.x - 0\.5\) \* scale \* 100\)\.toFixed\(2\)\}%/);
+  assert.match(src, /img\.style\.transform = `translate\(\$\{\(-\(fx - 0\.5\) \* scale \* 100\)\.toFixed\(2\)\}%/);
 });
 
 test('at the end of Connections, the result takes the puzzle’s place instead of covering the groups', () => {

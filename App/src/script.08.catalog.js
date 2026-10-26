@@ -4,7 +4,7 @@ var modeCatalogCategory = 'solo';
 var modeCatalogDifficulty = 'all';
 var MODE_CATALOG_DIFFICULTY_LABELS = Object.freeze({ all:'Toutes', easy:'Facile', medium:'Moyen', hard:'Difficile', expert:'Expert' });
 var MODE_CATALOG_DIFFICULTY = Object.freeze({
-  startDailyGame:'medium', openEggGame:'easy', startNormalGame:'medium', startSilhouetteGame:'easy', startPixelGame:'medium',
+  startDailyGame:'medium', openEggGame:'easy', startNormalGame:'medium', startSilhouetteGame:'medium', startPixelGame:'medium',
   startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium', openQuiEstCeMode:'easy', openPetitBacMode:'medium',
   startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
   openTypeComboSolo:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
