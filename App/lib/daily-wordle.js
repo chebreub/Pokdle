@@ -7,6 +7,11 @@ const MAX_TRIES = 6;
 function wordleLetters(name) {
   return String(name).replace(/♀/g,"F").replace(/♂/g,"M").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g,"");
 }
+// The name's shape for the grid: "_" for each playable letter, other characters kept as
+// they are (Garde-de-Fer gives "_____-__-___", M. Mime "_. ____", Porygon2 "_______2").
+function wordlePattern(name) {
+  return [...String(name).normalize("NFD").replace(/[\u0300-\u036f]/g,"")].map(c=>wordleLetters(c)?"_":/\s/.test(c)?" ":c).join("").trim();
+}
 // Reserve exact matches first: a duplicate letter can only consume a remaining copy.
 function compareLetters(guess, answer) {
   const result = Array(guess.length).fill("absent"), remaining = new Map();
@@ -83,10 +88,10 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
   function snapshot(calendar,who,row,r) {
     const target=byId.get(Number(r.secret_id)),answer=wordleLetters(target.name), finished=row.status!=="playing";
     return {ok:true,...calendar,accountId:who.accountId||null,authenticated:Boolean(who.accountId),
-      status:row.status,finished,won:row.status==="won",maxTries:MAX_TRIES,length:answer.length,
+      status:row.status,finished,won:row.status==="won",maxTries:MAX_TRIES,length:answer.length,pattern:wordlePattern(target.name),
       attempts:row.guessed.length,points:wordlePoints(row.status==="won",row.guessed.length),maxPoints:DAILY_MAX.wordle,
       ranked:row.status==="won"&&Boolean(row.account_id),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
-      rows:row.guessed.map(id=>{const p=byId.get(Number(id)),letters=wordleLetters(p.name);return {pokemonId:p.id,name:p.name,letters,colors:compareLetters(letters,answer)};}),
+      rows:row.guessed.map(id=>{const p=byId.get(Number(id)),letters=wordleLetters(p.name);return {pokemonId:p.id,name:p.name,letters,pattern:wordlePattern(p.name),colors:compareLetters(letters,answer)};}),
       ...(finished?{answerId:target.id,answerName:target.name}:{})};
   }
   async function act(who,body=null,abandon=false) {
@@ -169,4 +174,4 @@ function mountWordleRoutes({app,express,db,pokemon,secret,getUser,readCookies,da
   if(service)service.ready=ready;
   return service;
 }
-module.exports={MAX_TRIES,wordleLetters,compareLetters,initWordleDb,createWordleService,mountWordleRoutes};
+module.exports={MAX_TRIES,wordleLetters,wordlePattern,compareLetters,initWordleDb,createWordleService,mountWordleRoutes};

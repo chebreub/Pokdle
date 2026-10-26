@@ -4,6 +4,15 @@ const {wordleLetters,compareLetters,initWordleDb,createWordleService}=require('.
 test('French Pokémon names ignore accents/punctuation and keep Nidoran distinguishable',()=>{
   for(const [name,expected] of [['Évoli','EVOLI'],['Ho-Oh','HOOH'],['M. Mime','MMIME'],['Porygon2','PORYGON'],['Nidoran♀','NIDORANF'],['Nidoran♂','NIDORANM']])assert.equal(wordleLetters(name),expected);
 });
+test('the grid shows hyphens, spaces, dots and digits of a name as fixed marks',()=>{
+  const {wordlePattern,wordleLetters}=require('../lib/daily-wordle');
+  assert.equal(wordlePattern('Garde-de-Fer'),'_____-__-___');
+  assert.equal(wordlePattern('M. Mime'),'_. ____');
+  assert.equal(wordlePattern('Porygon2'),'_______2');
+  assert.equal(wordlePattern('Type:0'),'____:0');
+  assert.equal(wordlePattern('Nidoran♀'),'________','♀ stays the playable letter F');
+  for(const name of ['Prédastérie','Épine-de-Fer','Mime Jr.','Ho-Oh','Flotte-Mèche'])assert.equal(wordlePattern(name).split('').filter(c=>c==='_').length,wordleLetters(name).length,name);
+});
 test('letter feedback reserves exacts and still renders old unequal-length saved guesses',()=>{
   assert.deepEqual(compareLetters('EEEEE','EVOLI'),['exact','absent','absent','absent','absent']);
   assert.deepEqual(compareLetters('AAAA','BAAA'),['absent','exact','exact','exact']);
