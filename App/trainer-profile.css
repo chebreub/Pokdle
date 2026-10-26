@@ -183,3 +183,25 @@
   padding: 0; border: 0; background: none; color: var(--ui-accent); font: inherit; font-weight: 800;
   text-decoration: underline; cursor: pointer;
 }
+
+/* « Image de profil » : trois ronds au choix dans « Identité & partenaire » (26/10). */
+#pokdle-app.design-refresh #screen-profile .profile-avatar-field { display: grid; gap: 8px; margin-top: 12px; }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice {
+  display: grid; justify-items: center; align-content: start; gap: 4px; min-width: 0; padding: 10px 6px;
+  border: 2px solid var(--ui-line); border-radius: 16px; background: var(--ui-surface); color: var(--ui-ink);
+  font: inherit; text-align: center; cursor: pointer;
+}
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice img,
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice-empty {
+  width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: var(--ui-soft);
+  display: grid; place-items: center; font: 700 1.4rem Fredoka, sans-serif; color: var(--ui-muted);
+}
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice.is-pokemon img { object-fit: contain; image-rendering: pixelated; }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice b { font-size: .82rem; line-height: 1.2; }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice small { font-size: .7rem; line-height: 1.25; color: var(--ui-muted); }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice.is-selected { border-color: var(--ui-accent); background: var(--ui-accent-soft); }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-choice:disabled { cursor: default; opacity: .6; }
+#pokdle-app.design-refresh #screen-profile .profile-avatar-note { color: var(--ui-muted); font-size: .78rem; line-height: 1.4; }
+#pokdle-app.design-refresh .account-chip .account-avatar.is-pokemon,
+#pokdle-app.design-refresh .account-menu img.is-pokemon { object-fit: contain; image-rendering: pixelated; background: var(--ui-soft); }
