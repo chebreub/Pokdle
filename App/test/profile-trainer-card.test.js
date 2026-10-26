@@ -55,6 +55,9 @@ function heroContext(profileData, stats) {
     pokedexCollectionNationalStats: () => ({ found: 667, total: 1025 }),
     ALBUM_MISSIONS: Array.from({ length: 108 }),
     SECRET_MISSIONS: Array.from({ length: 12 }),
+    // « Image de profil » (26/10): no choice made, so the card keeps photo, then partner, then account.
+    profileAvatarOptions: () => ({ partner: profileData.favoritePokemonId ? 'sprite-' + profileData.favoritePokemonId : '', photo: profileData.avatarPhoto || '', account: '' }),
+    profileAvatarChoice: () => '',
   };
   const names = Object.keys(env);
   const api = Function(...names, levels + curve + block + '; return { renderProfileHero, renderProfileKeyFigures, getXpProgress };')(...names.map((n) => env[n]));

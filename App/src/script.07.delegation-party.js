@@ -925,6 +925,8 @@ function removeProfilePhoto() {
   showToast("Photo retirée.");
 }
 
+
+let connectedAccountUser = null;
 // « Image de profil » (26/10): the player picks the picture shown on their card, in the top bar
 // and, for the partner or the account picture, in the rankings. The uploaded photo stays private:
 // the rankings show the partner, or the account picture, instead. Without a choice, the card shows
@@ -974,8 +976,6 @@ function refreshAccountChipAvatar() {
   const area = document.getElementById("account-area");
   if (area && connectedAccountUser && area.querySelector(".account-chip")) area.innerHTML = accountChipHtml(connectedAccountUser);
 }
-
-let connectedAccountUser = null;
 function accountChipHtml(user) {
   const name = escapeHtml(user.username || 'Dresseur');
   const src = accountAvatarSrc(user);
