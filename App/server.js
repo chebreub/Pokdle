@@ -1,5 +1,5 @@
 const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
-const { profileForClient, profileForStorage, partnerIdFromProfileData, xpFromProfileData, playerLevelFromXp } = require("./lib/profile-sync");
+const { profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp } = require("./lib/profile-sync");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -169,6 +169,10 @@ async function initAuthDb() {
     )`);
     await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_id INTEGER");
     await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INTEGER");
+    // The photo a player shares in the rankings (26/10), and its hash, which is its address.
+    await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT");
+    await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo BYTEA");
+    await pgPool.query("CREATE INDEX IF NOT EXISTS users_photo_key ON users(photo_key) WHERE photo_key IS NOT NULL");
     // An account id is users.discord_id: Discord accounts keep their Discord id, a
     // Google-only account gets "google:<sub>" and a Twitch-only one "twitch:<id>"
     // (never digits only, so no collision).
@@ -573,9 +577,21 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   }
   try {
     await ensureAccountRow(user);
-    await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data)]);
+    const photo = sharedPhotoFromProfileData(prepared.data);
+    await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data), photo ? photo.key : null, photo ? photo.bytes : null]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
+});
+// A shared profile photo, as the rankings show it. A day of cache: a photo taken back
+// disappears for everyone by the next day.
+app.get("/api/avatar-photo/:key", async (req, res) => {
+  if (!pgPool || !/^[0-9a-f]{24}$/.test(req.params.key)) return res.status(404).end();
+  try {
+    const r = await pgPool.query("SELECT photo FROM users WHERE photo_key = $1 AND photo IS NOT NULL LIMIT 1", [req.params.key]);
+    if (!r.rows[0]) return res.status(404).end();
+    res.set({ "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff" });
+    res.send(r.rows[0].photo);
+  } catch (e) { console.error("[avatar-photo]", e.message); res.status(404).end(); }
 });
 const LB_MODE_CONFIG = Object.freeze({
   challenge: { direction: "desc", label: "Défi du jour", unit: "pts", max: 60 },
@@ -733,7 +749,7 @@ app.get("/api/leaderboard", async (req, res) => {
           ORDER BY s.discord_id, s.score DESC, s.updated_at ASC
         ),
         ranked AS (
-          SELECT b.discord_id, b.username, b.avatar, u.partner_id, u.xp, b.score,
+          SELECT b.discord_id, b.username, ${rankingAvatarSql("b.avatar")} AS avatar, u.partner_id, u.xp, b.score,
             (RANK() OVER (ORDER BY b.score DESC, b.updated_at ASC))::int AS rank
           FROM best b
           LEFT JOIN users u ON u.discord_id = b.discord_id
@@ -741,7 +757,7 @@ app.get("/api/leaderboard", async (req, res) => {
     } else if (scope === "all") {
       rankedCte = `
         WITH ranked AS (
-          SELECT s.discord_id, s.username, s.avatar, u.partner_id, u.xp, s.score,
+          SELECT s.discord_id, s.username, ${rankingAvatarSql("s.avatar")} AS avatar, u.partner_id, u.xp, s.score,
             (RANK() OVER (ORDER BY s.score ${order}, s.updated_at ASC))::int AS rank
           FROM scores s
           LEFT JOIN users u ON u.discord_id = s.discord_id
@@ -760,7 +776,7 @@ app.get("/api/leaderboard", async (req, res) => {
           GROUP BY e.discord_id
         ),
         ranked AS (
-          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, COALESCE(u.avatar, '') AS avatar, u.partner_id, u.xp, b.score,
+          SELECT b.discord_id, COALESCE(u.username, 'Dresseur') AS username, ${rankingAvatarSql("COALESCE(u.avatar, '')")} AS avatar, u.partner_id, u.xp, b.score,
             (RANK() OVER (ORDER BY b.score ${order}))::int AS rank
           FROM best b
           LEFT JOIN users u ON u.discord_id = b.discord_id

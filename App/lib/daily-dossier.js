@@ -1,6 +1,6 @@
 "use strict";
 const crypto=require('node:crypto');
-const {playerLevelFromXp}=require('./profile-sync');
+const {playerLevelFromXp,rankingAvatarSql}=require('./profile-sync');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {buildDossierQuestions,facts}=require('./dossier-questions');
 const {recordLeaderboardResultInTransaction}=require('./leaderboard-store');
@@ -105,7 +105,7 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
         ROW_NUMBER() OVER(PARTITION BY p.account_id ORDER BY p.points DESC,p.elapsed_ms ASC,p.finished_at ASC) AS attempt_rank
       FROM dossier_plays p WHERE p.status='completed' AND p.account_id IS NOT NULL ${predicate}
     ), ranked AS (
-      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,u.partner_id,u.xp,c.score,
+      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,${rankingAvatarSql("COALESCE(u.avatar,'')")} AS avatar,u.partner_id,u.xp,c.score,
         (RANK() OVER(ORDER BY c.score DESC,c.elapsed_ms ASC))::int AS rank
       FROM candidates c LEFT JOIN users u ON u.discord_id=c.discord_id WHERE c.attempt_rank=1)`;
     const rows=(await db.query(cte+' SELECT * FROM ranked ORDER BY rank,username LIMIT 20',[day])).rows;

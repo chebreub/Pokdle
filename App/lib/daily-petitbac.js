@@ -4,7 +4,7 @@
 // each right answer shows how many players gave the same Pokémon for that theme. It is a
 // bonus of the day, beside the 100-point journey, with its own leaderboard.
 const crypto=require('node:crypto');
-const {playerLevelFromXp}=require('./profile-sync');
+const {playerLevelFromXp,rankingAvatarSql}=require('./profile-sync');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {checkPokemonAnswer,examplesFor,drawSoloSheet}=require('./party-petitbac');
 const {regionalFormsOn}=require('./daily-grid');
@@ -158,7 +158,7 @@ function createDailyPetitBacService({db,pokemon,clock=()=>new Date(),draw=drawDa
       FROM petitbac_daily_plays p LEFT JOIN originality o ON o.day=p.day AND o.identity=p.identity
       WHERE p.status='completed' AND p.account_id IS NOT NULL ${predicate}
     ), ranked AS (
-      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,COALESCE(u.avatar,'') AS avatar,u.partner_id,u.xp,c.score,c.originality,
+      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,${rankingAvatarSql("COALESCE(u.avatar,'')")} AS avatar,u.partner_id,u.xp,c.score,c.originality,
         (RANK() OVER(ORDER BY c.score DESC,c.originality DESC,c.elapsed_ms ASC))::int AS rank
       FROM candidates c LEFT JOIN users u ON u.discord_id=c.discord_id WHERE c.attempt_rank=1)`;
     const [top,count,mine]=await Promise.all([

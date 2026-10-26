@@ -62,10 +62,10 @@ test('the picker shows three choices; missing ones are disabled and say why', ()
   assert.match(html, /data-args='\["account"\]' disabled>.*<b>Image du compte<\/b><small>Connecte-toi avec Discord, Google ou Twitch<\/small>/);
   const index = read('index.html');
   assert.match(index, /<div id="profile-avatar-choices" class="profile-avatar-choices" role="radiogroup" aria-labelledby="profile-avatar-label"><\/div>/);
-  assert.match(index, /Ta photo n’est visible que par toi\. Dans les classements, les autres joueurs voient ton partenaire ou l’image de ton compte\./);
+  assert.match(index, /L’image choisie s’affiche aussi dans les classements : si tu choisis ta photo, les autres joueurs la voient\./);
 });
 
-test('the rankings show the account picture when it is the choice; the photo never leaves the player', () => {
+test('the rankings show the account picture when it is the choice; a photo not shared keeps the partner', () => {
   const data = (profile) => ({ profile: JSON.stringify(profile) });
   assert.equal(partnerIdFromProfileData(data({ favoritePokemonId: 937 })), 937);
   assert.equal(partnerIdFromProfileData(data({ favoritePokemonId: 937, avatarChoice: 'partner' })), 937);

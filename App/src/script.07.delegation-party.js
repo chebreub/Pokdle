@@ -903,7 +903,9 @@ function handleProfilePhotoFromEl() {
       try {
         playerProfile.avatarPhoto = canvas.toDataURL("image/jpeg", 0.82);
         playerProfile.avatarChoice = "photo";
+        playerProfile.avatarPhotoShared = true;
         saveProfile();
+        syncProfileNow();
         refreshAccountChipAvatar();
         if (typeof renderProfileScreen === "function") renderProfileScreen();
         showToast("Photo de profil enregistrée ✅");
@@ -919,6 +921,7 @@ function removeProfilePhoto() {
     playerProfile.avatarPhoto = "";
     if (playerProfile.avatarChoice === "photo") playerProfile.avatarChoice = "";
     saveProfile();
+    syncProfileNow();
   }
   if (typeof renderProfileScreen === "function") renderProfileScreen();
   refreshAccountChipAvatar();
@@ -928,10 +931,14 @@ function removeProfilePhoto() {
 
 let connectedAccountUser = null;
 // « Image de profil » (26/10): the player picks the picture shown on their card, in the top bar
-// and, for the partner or the account picture, in the rankings. The uploaded photo stays private:
-// the rankings show the partner, or the account picture, instead. Without a choice, the card shows
+// and in the rankings. A photo shows in the rankings once picked under the note saying so
+// (avatarPhotoShared); photos sent before stay private. Without a choice, the card shows
 // the photo, then the partner, then the account picture, and the top bar the account picture.
 const PROFILE_AVATAR_CHOICES = ["partner", "photo", "account"];
+// The rankings follow a new picture right away instead of at the next minute's sync.
+function syncProfileNow() {
+  if (typeof window !== "undefined" && typeof window.pokedleSyncNow === "function") window.pokedleSyncNow();
+}
 function profileAvatarOptions() {
   const partner = playerProfile?.favoritePokemonId ? POKEMON_BY_ID.get(Number(playerProfile.favoritePokemonId)) : null;
   return {
@@ -948,7 +955,9 @@ function profileAvatarChoice() {
 function setProfileAvatarChoice(choice) {
   if (!playerProfile || !PROFILE_AVATAR_CHOICES.includes(choice) || !profileAvatarOptions()[choice]) return;
   playerProfile.avatarChoice = choice;
+  if (choice === "photo") playerProfile.avatarPhotoShared = true;
   saveProfile();
+  syncProfileNow();
   if (typeof renderProfileScreen === "function") renderProfileScreen();
   refreshAccountChipAvatar();
   showToast("Image de profil mise à jour ✅");
@@ -1468,6 +1477,7 @@ function accountNavigate(destination) {
     });
   }
   window.pokedleRestorePoints = { list: restorePointsForOwner, capture: captureRestorePoint, restore: restorePointById };
+  window.pokedleSyncNow = pushSync;
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSync);
   else initSync();
 })();

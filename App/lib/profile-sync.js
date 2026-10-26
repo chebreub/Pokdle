@@ -1,4 +1,5 @@
 "use strict";
+const crypto = require("crypto");
 
 function profileForClient(value, userId) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -17,18 +18,45 @@ function profileForStorage(value, userId) {
 }
 
 // The partner Pokémon chosen in the profile; rankings show it as the player's avatar.
-// A player who picked the account picture as « Image de profil » (26/10) gets none, so the
-// rankings show that picture instead.
+// A player who picked the account picture or a shared photo as « Image de profil » (26/10)
+// gets none, so the rankings show that picture instead.
 function partnerIdFromProfileData(data) {
   try {
     const raw = data && data.profile;
     const profile = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (profile && profile.avatarChoice === "account") return null;
+    if (profile && (profile.avatarChoice === "account" || sharedPhotoFromProfileData(data))) return null;
     const id = Number(profile && profile.favoritePokemonId);
     return Number.isInteger(id) && id > 0 && id < 30000 ? id : null;
   } catch (_error) {
     return null;
   }
+}
+
+// The photo a player shows in the rankings (26/10): only once « Ma photo » was picked under the
+// note saying the other players see it (avatarPhotoShared), so photos sent before stay private.
+// A small JPEG, as the profile makes it (160 × 160); anything else is ignored.
+const SHARED_PHOTO_MAX_BYTES = 60000;
+function sharedPhotoFromProfileData(data) {
+  try {
+    const raw = data && data.profile;
+    const profile = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!profile || profile.avatarChoice !== "photo" || profile.avatarPhotoShared !== true) return null;
+    const photo = typeof profile.avatarPhoto === "string" ? profile.avatarPhoto : "";
+    if (photo.length > 100000) return null;
+    const match = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(photo);
+    if (!match) return null;
+    const bytes = Buffer.from(match[1], "base64");
+    if (bytes.length > SHARED_PHOTO_MAX_BYTES || bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) return null;
+    return { key: crypto.createHash("sha256").update(bytes).digest("hex").slice(0, 24), bytes };
+  } catch (_error) {
+    return null;
+  }
+}
+
+// The picture a ranking row shows (SQL, users joined as u): the shared photo, else the fallback.
+// The key is the photo's own hash, so a new photo gets a new address.
+function rankingAvatarSql(fallback) {
+  return `COALESCE('/api/avatar-photo/' || u.photo_key, ${fallback})`;
 }
 
 // The profile's XP, copied next to the account so rankings can show each player's level.
@@ -55,4 +83,4 @@ function playerLevelFromXp(xp) {
   return level;
 }
 
-module.exports = { profileForClient, profileForStorage, partnerIdFromProfileData, xpFromProfileData, playerLevelFromXp };
+module.exports = { profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp };

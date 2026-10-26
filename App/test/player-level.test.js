@@ -31,7 +31,7 @@ test('the XP copied next to the account comes from the saved profile', () => {
 test('every ranking returns the level, and the profile save keeps the XP column up to date', () => {
   const server = read('server.js');
   assert.match(server, /ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INTEGER/);
-  assert.match(server, /UPDATE users SET data = \$2, partner_id = \$3, xp = \$4 WHERE discord_id = \$1/);
+  assert.match(server, /UPDATE users SET data = \$2, partner_id = \$3, xp = \$4, photo_key = \$5, photo = \$6 WHERE discord_id = \$1/);
   assert.match(server, /SELECT discord_id, data FROM users WHERE xp IS NULL AND data \? 'profile'/);
   assert.equal((server.match(/u\.partner_id, u\.xp, /g) || []).length, 3);
   assert.equal((server.match(/ SELECT discord_id, username, avatar, partner_id, xp, score, rank FROM ranked/g) || []).length, 3);
