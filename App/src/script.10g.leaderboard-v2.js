@@ -214,7 +214,7 @@ function leaderboardV2ScoreHtml(row, mode, unit) {
   const detail = leaderboardV2Detail(row, mode);
   return escapeHtml(leaderboardV2FormatScore(row?.score, mode, unit)) + (detail ? '<small class="lbv2-detail">' + escapeHtml(detail) + "</small>" : "");
 }
-// The player's partner Pokémon first, then their account picture, then a Poké Ball.
+// The player's partner Pokémon first, then their shared photo or account picture, then a Poké Ball.
 const LEADERBOARD_V2_DEFAULT_AVATAR = "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png";
 function leaderboardV2Avatar(row) {
   const partner = row?.partnerId && typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(row.partnerId)) : null;

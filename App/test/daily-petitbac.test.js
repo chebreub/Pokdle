@@ -31,7 +31,7 @@ test('PostgreSQL: start, save, submit, rarity, late sheets, adoption, rankings a
   const draw=()=>({letter:'S',categories:themes});
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:6});
-    await db.query('CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT)');
+    await db.query('CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT,photo_key TEXT)');
     await db.query("INSERT INTO users VALUES('A','Alice',''),('B','Bob',''),('C','Chloé',''),('D','Dan','')");
     await initDailyPetitBacDb(db);await initDailyPetitBacDb(db);
     let now=new Date('2026-10-19T12:00:00Z');const game=createDailyPetitBacService({db,pokemon,clock:()=>now,draw});

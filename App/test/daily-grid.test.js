@@ -52,7 +52,7 @@ test('PostgreSQL: shared grid, nine PP, rarity, originality, adoption, rankings 
   const answers=cell=>pokemon.filter(p=>fits(cell,p)).map(p=>p.id),wrong=cell=>pokemon.find(p=>!fits(cell,p)).id;
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:6});
-    await db.query('CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT)');
+    await db.query('CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT,photo_key TEXT)');
     await db.query("INSERT INTO users(discord_id,username,avatar,xp) VALUES('A','Alice','',122928),('B','Bob','',0),('C','Chloé','',NULL),('D','Dan','',2250)");
     await initGridDb(db);await initGridDb(db);
     let now=new Date('2026-10-19T12:00:00Z');const game=createGridService({db,pokemon,clock:()=>now,draw});
