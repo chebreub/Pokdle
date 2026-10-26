@@ -6010,7 +6010,7 @@ async function renderPokedexDetail(pokemon) {
   const navigation = getPokedexNavigationState();
   const recentHtml = renderPokedexRecentBlock();
   // Précédent / Suivant name the Pokémon they lead to: « ← #150 Mewtwo », « #2 Herbizarre → ».
-  const neighbourHtml = (target) => `<small>#${getPokemonDexNumber(target)}</small> ${escapeHtml(target.name)}`;
+  const neighbourHtml = (target) => `<small>#${getPokemonDexNumber(target)}</small> <span class="pokedex-detail-nav-name">${escapeHtml(target.name)}</span>`;
   const navigationHtml = `
     <button type="button" class="btn-ghost pokedex-back-to-list" data-action="closePokedexMobileDetail">← Tous les Pokémon</button>
     <div class="pokedex-detail-nav">

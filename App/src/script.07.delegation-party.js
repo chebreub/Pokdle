@@ -902,7 +902,9 @@ function handleProfilePhotoFromEl() {
       ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
       try {
         playerProfile.avatarPhoto = canvas.toDataURL("image/jpeg", 0.82);
+        playerProfile.avatarChoice = "photo";
         saveProfile();
+        refreshAccountChipAvatar();
         if (typeof renderProfileScreen === "function") renderProfileScreen();
         showToast("Photo de profil enregistrée ✅");
       } catch (e) { showToast("Image trop lourde, réessaie."); }
@@ -913,21 +915,78 @@ function handleProfilePhotoFromEl() {
   reader.readAsDataURL(file);
 }
 function removeProfilePhoto() {
-  if (playerProfile) { playerProfile.avatarPhoto = ""; saveProfile(); }
+  if (playerProfile) {
+    playerProfile.avatarPhoto = "";
+    if (playerProfile.avatarChoice === "photo") playerProfile.avatarChoice = "";
+    saveProfile();
+  }
   if (typeof renderProfileScreen === "function") renderProfileScreen();
+  refreshAccountChipAvatar();
   showToast("Photo retirée.");
 }
 
+
 let connectedAccountUser = null;
+// « Image de profil » (26/10): the player picks the picture shown on their card, in the top bar
+// and, for the partner or the account picture, in the rankings. The uploaded photo stays private:
+// the rankings show the partner, or the account picture, instead. Without a choice, the card shows
+// the photo, then the partner, then the account picture, and the top bar the account picture.
+const PROFILE_AVATAR_CHOICES = ["partner", "photo", "account"];
+function profileAvatarOptions() {
+  const partner = playerProfile?.favoritePokemonId ? POKEMON_BY_ID.get(Number(playerProfile.favoritePokemonId)) : null;
+  return {
+    partner: partner ? getPokemonSprite(partner) : "",
+    photo: playerProfile?.avatarPhoto || "",
+    account: connectedAccountUser?.avatar || "",
+  };
+}
+// The chosen picture when it still exists, otherwise "" and each place keeps its own rule.
+function profileAvatarChoice() {
+  const choice = playerProfile?.avatarChoice;
+  return PROFILE_AVATAR_CHOICES.includes(choice) && profileAvatarOptions()[choice] ? choice : "";
+}
+function setProfileAvatarChoice(choice) {
+  if (!playerProfile || !PROFILE_AVATAR_CHOICES.includes(choice) || !profileAvatarOptions()[choice]) return;
+  playerProfile.avatarChoice = choice;
+  saveProfile();
+  if (typeof renderProfileScreen === "function") renderProfileScreen();
+  refreshAccountChipAvatar();
+  showToast("Image de profil mise à jour ✅");
+}
+function renderProfileAvatarChoices() {
+  const box = document.getElementById("profile-avatar-choices");
+  if (!box) return;
+  const options = profileAvatarOptions();
+  const current = profileAvatarChoice() || PROFILE_AVATAR_CHOICES.slice().sort((a, b) => ["photo", "partner", "account"].indexOf(a) - ["photo", "partner", "account"].indexOf(b)).find((key) => options[key]) || "";
+  const labels = { partner: "Mon partenaire", photo: "Ma photo", account: "Image du compte" };
+  const missing = { partner: "Choisis d’abord un partenaire", photo: "Ajoute d’abord une photo", account: "Connecte-toi avec Discord, Google ou Twitch" };
+  box.innerHTML = PROFILE_AVATAR_CHOICES.map((key) => {
+    const src = options[key];
+    return `<button type="button" class="profile-avatar-choice${key === current ? " is-selected" : ""}${key === "partner" ? " is-pokemon" : ""}" role="radio" aria-checked="${key === current}" data-action="setProfileAvatarChoice" data-args='["${key}"]'${src ? "" : " disabled"}>` +
+      (src ? `<img src="${escapeHtml(src)}" alt="" />` : `<span class="profile-avatar-choice-empty" aria-hidden="true">?</span>`) +
+      `<b>${labels[key]}</b>${src ? "" : `<small>${missing[key]}</small>`}</button>`;
+  }).join("");
+}
+// The picture of the top bar and of the « Mon compte » menu: the chosen one, else the account's.
+function accountAvatarSrc(user) {
+  const choice = profileAvatarChoice();
+  return choice && choice !== "account" ? profileAvatarOptions()[choice] : (user?.avatar || "");
+}
+function refreshAccountChipAvatar() {
+  const area = document.getElementById("account-area");
+  if (area && connectedAccountUser && area.querySelector(".account-chip")) area.innerHTML = accountChipHtml(connectedAccountUser);
+}
 function accountChipHtml(user) {
   const name = escapeHtml(user.username || 'Dresseur');
-  const avatar = user.avatar ? `<img class="account-avatar" src="${escapeHtml(user.avatar)}" alt="" />` : `<span class="account-avatar account-avatar-fallback" aria-hidden="true">${escapeHtml((user.username || 'D').charAt(0).toUpperCase())}</span>`;
+  const src = accountAvatarSrc(user);
+  const avatar = src ? `<img class="account-avatar${profileAvatarChoice() === "partner" ? " is-pokemon" : ""}" src="${escapeHtml(src)}" alt="" />` : `<span class="account-avatar account-avatar-fallback" aria-hidden="true">${escapeHtml((user.username || 'D').charAt(0).toUpperCase())}</span>`;
   return `<button type="button" class="account-chip account-profile" data-action="openAccountMenu" aria-label="Ouvrir mon compte" aria-haspopup="dialog">${avatar}<span class="account-name">${name}</span><span class="account-chevron" aria-hidden="true">⌄</span></button>`;
 }
 function openAccountMenu() {
   if (!connectedAccountUser) return;
-  const avatar = connectedAccountUser.avatar
-    ? `<img src="${escapeHtml(connectedAccountUser.avatar)}" alt="" />`
+  const menuAvatar = accountAvatarSrc(connectedAccountUser);
+  const avatar = menuAvatar
+    ? `<img${profileAvatarChoice() === "partner" ? ' class="is-pokemon"' : ""} src="${escapeHtml(menuAvatar)}" alt="" />`
     : `<span class="account-menu-avatar-fallback">${escapeHtml((connectedAccountUser.username || 'D').charAt(0).toUpperCase())}</span>`;
   const level = typeof getXpTier === 'function' ? getXpTier(Number(playerProfile?.xp) || 0) : { level: 1, name: 'Dresseur' };
   const dex = typeof pokedexCollectionNationalStats === 'function' ? pokedexCollectionNationalStats() : { found: Object.keys(playerProfile?.discoveries || {}).length, total: 0 };
@@ -1530,6 +1589,7 @@ function loadProfile() {
     albumMissionClaims: typeof normalizeAlbumMissionClaims === 'function' ? normalizeAlbumMissionClaims(parsed?.albumMissionClaims) : (parsed?.albumMissionClaims || {}),
     albumMissionStats: typeof normalizeAlbumMissionStats === 'function' ? normalizeAlbumMissionStats(parsed?.albumMissionStats) : (parsed?.albumMissionStats || null),
     avatarPhoto: typeof parsed?.avatarPhoto === "string" ? parsed.avatarPhoto : "",
+    avatarChoice: ["partner", "photo", "account"].includes(parsed?.avatarChoice) ? parsed.avatarChoice : "",
     // Engagement system
     xp: Number(parsed?.xp) || 0,
     dailyQuests: Array.isArray(parsed?.dailyQuests) ? parsed.dailyQuests : null,
@@ -1778,13 +1838,17 @@ function renderProfileHero(prog, xp) {
   if (!hero) return;
   hero.className = "profile-hero";
   const fav = playerProfile.favoritePokemonId ? POKEMON_BY_ID.get(playerProfile.favoritePokemonId) : null;
-  const photo = playerProfile.avatarPhoto || "";
+  const avatars = profileAvatarOptions();
+  const shown = profileAvatarChoice() || ["photo", "partner", "account"].find((key) => avatars[key]) || "";
+  const photo = shown === "photo" ? avatars.photo : "";
   const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
-  const art = photo
+  const art = shown === "photo"
     ? `<img class="is-photo" src="${photo}" alt="Photo de profil" />`
-    : fav
-      ? `<img src="${pokedexDetailArtwork(fav, false)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getPokemonSprite(fav)}" />`
-      : `<span class="profile-hero-empty" aria-hidden="true">?</span>`;
+    : shown === "account"
+      ? `<img class="is-photo" src="${escapeHtml(avatars.account)}" alt="Image du compte" />`
+      : fav
+        ? `<img src="${pokedexDetailArtwork(fav, false)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getPokemonSprite(fav)}" />`
+        : `<span class="profile-hero-empty" aria-hidden="true">?</span>`;
   const streak = Number(playerStats.dailyCurrentStreak) || 0;
   const quests = Number(playerProfile.totalQuestsCompleted) || 0;
   const line = [
@@ -1797,7 +1861,7 @@ function renderProfileHero(prog, xp) {
     : `<strong>Niveau maximum</strong><span>${formatNumberFr(prog.xpToNext - prog.xpInTier)} XP avant la prochaine étoile</span>`;
   hero.innerHTML = `
     <div class="profile-hero-art">
-      <div class="profile-hero-circle"${fav && !photo ? ` data-type="${typeSlug(fav.type1)}"` : ""}>${art}</div>
+      <div class="profile-hero-circle"${fav && shown === "partner" ? ` data-type="${typeSlug(fav.type1)}"` : ""}>${art}</div>
       ${fav ? `<span class="profile-hero-partner">Partenaire · ${escapeHtml(fav.name)}</span>` : `<button type="button" class="profile-hero-partner" data-action="openProfileEditor">Choisir mon partenaire</button>`}
     </div>
     <div class="profile-hero-main">
@@ -1811,8 +1875,8 @@ function renderProfileHero(prog, xp) {
       <div class="profile-hero-actions">
         <button type="button" class="btn-blue" data-action="shareLevelBadge">Partager ma carte</button>
         <button type="button" class="btn-ghost" data-action="openProfileEditor">Modifier mon profil</button>
-        <button type="button" class="profile-hero-photo" data-action="triggerProfilePhoto">${photo ? "Changer ma photo" : "Ajouter ma photo"}</button>
-        ${photo ? '<button type="button" class="profile-hero-photo" data-action="removeProfilePhoto">Retirer la photo</button>' : ""}
+        <button type="button" class="profile-hero-photo" data-action="triggerProfilePhoto">${avatars.photo ? "Changer ma photo" : "Ajouter ma photo"}</button>
+        ${avatars.photo ? '<button type="button" class="profile-hero-photo" data-action="removeProfilePhoto">Retirer la photo</button>' : ""}
       </div>
     </div>
     <div class="profile-hero-level">
@@ -1911,6 +1975,7 @@ function renderProfileScreen() {
   renderDiscoveryAlbum();
   renderSecretMissions();
   renderProfileHero(profileProg, profileXp);
+  renderProfileAvatarChoices();
   renderProfileKeyFigures();
 
   if (achSummary) {

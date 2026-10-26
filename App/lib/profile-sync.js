@@ -17,10 +17,13 @@ function profileForStorage(value, userId) {
 }
 
 // The partner Pokémon chosen in the profile; rankings show it as the player's avatar.
+// A player who picked the account picture as « Image de profil » (26/10) gets none, so the
+// rankings show that picture instead.
 function partnerIdFromProfileData(data) {
   try {
     const raw = data && data.profile;
     const profile = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (profile && profile.avatarChoice === "account") return null;
     const id = Number(profile && profile.favoritePokemonId);
     return Number.isInteger(id) && id > 0 && id < 30000 ? id : null;
   } catch (_error) {

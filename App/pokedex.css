@@ -2514,9 +2514,11 @@ body.theme-dark #pokedex-category-filter {
 #screen-pokedex .pokedex-card .pokedex-card-types { gap: 3px !important; }
 
 /* ===== Pokedex : layout 1 colonne sous 760px (la liste etait ecrasee a 99px a cote du detail) ===== */
+/* minmax(0, 1fr), not 1fr: a 1fr column grows to its widest content, and a long neighbour name
+   (« #3 Méga-Florizarre ») pushed the whole phone detail past the screen (26/10). */
 @media (max-width: 760px) {
-  #screen-pokedex .pokedex-layout { grid-template-columns: 1fr !important; }
-  #screen-pokedex .pokedex-detail { grid-template-columns: 1fr !important; }
+  #screen-pokedex .pokedex-layout { grid-template-columns: minmax(0, 1fr) !important; }
+  #screen-pokedex .pokedex-detail { grid-template-columns: minmax(0, 1fr) !important; }
 }
 /* Sprite du Pokemon selectionne : plus grand dans le panneau de detail */
 #screen-pokedex .pokedex-detail-head-main img { width: 112px !important; height: 112px !important; }
@@ -3232,6 +3234,12 @@ body.theme-dark .pokedex-collection-legend > span {
    (choix de l'utilisateur). */
 #screen-pokedex .pokedex-detail-nav-btn { min-width: 0; max-width: 50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #screen-pokedex .pokedex-detail-nav-btn small { font-size: .85em; font-weight: 700; opacity: .65; }
+#screen-pokedex .pokedex-detail-nav-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+  #screen-pokedex .pokedex-detail-nav { gap: 6px; }
+  /* The site's buttons are 15px with 20px padding (!important): smaller here, so most names fit. */
+  #pokdle-app.design-refresh #screen-pokedex .pokedex-detail-nav-btn { flex: 1 1 0; gap: 4px; padding: 9px 10px !important; font-size: .8125rem !important; }
+}
 @media (min-width: 1200px) {
   #pokdle-app #screen-pokedex #pokedex-detail > .pokedex-detail-nav { order: -1; justify-content: space-between; margin: 0; }
   #pokdle-app #screen-pokedex #pokedex-detail .pokedex-detail-nav-btn { min-height: 0; padding: 5px 12px; font-size: .85rem; }
@@ -3290,4 +3298,13 @@ body.theme-dark .pokedex-collection-legend > span {
   #screen-pokedex .pokedex-evo-card { min-width: 74px; max-width: 104px; padding: 6px 4px; }
   #screen-pokedex .pokedex-evo-card img { width: 52px; height: 52px; }
   #screen-pokedex .pokedex-evo-targets { grid-template-columns: minmax(0, 1fr); }
+  /* Three stages do not fit across a phone (the third card went off the screen, 26/10):
+     the family goes top to bottom, one card per line, the method on the arrow between. */
+  #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) { flex-direction: column; align-items: stretch; gap: 4px; }
+  #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) > .pokedex-evo-card {
+    flex-direction: row; justify-content: flex-start; gap: 10px; min-width: 0; max-width: none; padding: 4px 12px 4px 4px; text-align: left;
+  }
+  #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) > .pokedex-evo-card img { width: 44px; height: 44px; flex: 0 0 44px; }
+  #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) > .pokedex-evo-step { flex-direction: row; justify-content: center; gap: 6px; min-width: 0; }
+  #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) > .pokedex-evo-step > i { order: -1; transform: rotate(90deg); }
 }
