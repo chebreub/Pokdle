@@ -52,14 +52,21 @@ def main():
      page.evaluate('typeof closeOverlayModal === "function" && closeOverlayModal()');return screen('screen-config')
     check('home',boot)
     def news_ticker():
-     # Only real facts: without a database the League week and the release note remain.
-     page.locator('#news-ticker:not([hidden])').wait_for(state='visible',timeout=15000)
-     items=page.locator('#news-ticker .news-ticker-group:first-child .news-ticker-item')
-     expect(items.count()>=2,'News ticker shows fewer than two facts: '+str(items.count()))
-     expect(all(i.get_attribute('data-action') for i in items.all()),'A news item leads nowhere')
-     page.evaluate("document.body.dataset.screen='screen-game'")
-     expect(not page.locator('#news-ticker').is_visible(),'News ticker pushes a game down')
-     page.evaluate("document.body.dataset.screen='screen-config'")
+     # Only real facts. Without a database the League week remains, and a release note expires:
+     # an Œuf mystère served here is the second fact, whatever the date.
+     egg={'ok':True,'roundId':42,'remaining':151,'eliminatedIds':[],'clues':[],'solved':False,'winner':None}
+     page.route('**/api/egg',lambda route:route.fulfill(status=200,content_type='application/json',body=json.dumps(egg)))
+     try:
+      page.evaluate('renderNewsTicker()')
+      page.locator('#news-ticker:not([hidden])').wait_for(state='visible',timeout=15000)
+      items=page.locator('#news-ticker .news-ticker-group:first-child .news-ticker-item')
+      expect(items.count()>=2,'News ticker shows fewer than two facts: '+str(items.count()))
+      expect(all(i.get_attribute('data-action') for i in items.all()),'A news item leads nowhere')
+      page.evaluate("document.body.dataset.screen='screen-game'")
+      expect(not page.locator('#news-ticker').is_visible(),'News ticker pushes a game down')
+      page.evaluate("document.body.dataset.screen='screen-config'")
+     finally:
+      page.unroute('**/api/egg')
      return screen('screen-config')
     check('news-ticker',news_ticker)
     def generation_home():
