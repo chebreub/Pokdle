@@ -29,11 +29,18 @@ function shellRecentStats(history, mode) {
 // Only facts already disclosed by a comparison are used here. No target access.
 function shellObservedFacts(rows) {
   const facts = new Map();
+  let genFrom = 0, genTo = Infinity;
   const labels = { generation: ["Génération", "gen"], altForm: ["Forme alternative", "isAltForm"], type1: ["Type 1", "type1"], type2: ["Type 2", "type2"], habitat: ["Habitat", "habitat"], color: ["Couleur", "color"], stage: ["Stade", "stage"] };
   for (const row of rows) {
     const { pokemon: p, cmp } = row;
     for (const [key, [label, prop]] of Object.entries(labels)) {
       if (cmp[key] === "ok") facts.set(key, `${label} : ${key === "altForm" ? (p[prop] ? "oui" : "non") : (p[prop] || "aucun")}`);
+    }
+    // The generation arrows narrow it down: « Génération : entre 4 et 6 ».
+    const gen = Number(p.gen);
+    if (cmp.generation !== "ok" && Number.isInteger(gen) && row.generationDirection) {
+      if (row.generationDirection === "↑") genFrom = Math.max(genFrom, gen + 1);
+      else genTo = Math.min(genTo, gen - 1);
     }
     for (const [key, label, unit] of [["height", "Taille", "m"], ["weight", "Poids", "kg"]]) {
       const value = Number(p[key]);
@@ -46,6 +53,9 @@ function shellObservedFacts(rows) {
       }
       if (cmp[key] === "ok") { facts.delete(key + "↑"); facts.delete(key + "↓"); }
     }
+  }
+  if (!facts.has("generation") && (genFrom || genTo < Infinity)) {
+    facts.set("generation", genFrom === genTo ? `Génération : ${genFrom}` : genFrom && genTo < Infinity ? `Génération : entre ${genFrom} et ${genTo}` : genFrom ? `Génération : ${genFrom} ou plus récente` : `Génération : ${genTo} ou plus ancienne`);
   }
   return [...facts.values()];
 }
@@ -61,7 +71,7 @@ function prepareGameShell() {
   if (legend) command.after(legend);
   const guide = document.createElement("details");
   guide.className = "shell-guide";
-  guide.innerHTML = '<summary>Comment mener l’enquête ?</summary><ol><li>Propose un Pokémon avec la recherche.</li><li>Compare les neuf indices : ✓ exact, ≈ partiel ou proche, × différent.</li><li>Croise les informations pour affiner ta prochaine proposition.</li></ol><p>Aucune limite d’essais. La forme alternative fait partie des indices ; les flèches concernent la taille et le poids.</p>';
+  guide.innerHTML = '<summary>Comment mener l’enquête ?</summary><ol><li>Propose un Pokémon avec la recherche.</li><li>Compare les neuf indices : ✓ exact, ≈ partiel ou proche, × différent.</li><li>Croise les informations pour affiner ta prochaine proposition.</li></ol><p>Aucune limite d’essais. La forme alternative fait partie des indices ; les flèches concernent la génération, la taille et le poids.</p>';
   shell.appendChild(guide);
 }
 
@@ -92,7 +102,7 @@ function renderGameShell() {
   document.getElementById("shell-daily")?.setAttribute("aria-pressed", String(gameMode === "daily"));
   document.getElementById("shell-infinite")?.setAttribute("aria-pressed", String(gameMode === "normal"));
   const rows = Array.from(document.querySelectorAll("#results-body tr"));
-  const facts = shellObservedFacts((resultHistory || []).map((row, index) => ({ ...row, heightDirection: rows[index]?.dataset.heightDirection, weightDirection: rows[index]?.dataset.weightDirection })));
+  const facts = shellObservedFacts((resultHistory || []).map((row, index) => ({ ...row, generationDirection: rows[index]?.dataset.generationDirection, heightDirection: rows[index]?.dataset.heightDirection, weightDirection: rows[index]?.dataset.weightDirection })));
   document.getElementById("shell-facts").innerHTML = facts.length ? facts.map(text => `<span class="notebook-fact">✓ ${escapeHtml(text)}</span>`).join("") : '<p class="notebook-empty">Ton carnet est encore vierge. Chaque proposition t’aidera à le compléter.</p>';
   const best = Math.min(...(matchHistory || []).filter(row => row.mode === gameMode && row.result === "win" && row.attempts > 0).map(row => row.attempts));
   document.getElementById("shell-goal").textContent = Number.isFinite(best) && attempts === 0 ? `Ton record récent : ${best} essai${best > 1 ? "s" : ""}.` : Number.isFinite(best) && attempts + 1 < best ? `Objectif personnel : trouver en moins de ${best} essais.` : attempts ? `${attempts} essai${attempts > 1 ? "s" : ""} · Chaque indice compte. Continue à ton rythme.` : "Commence par un Pokémon que tu connais bien.";

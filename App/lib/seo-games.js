@@ -23,7 +23,7 @@ const GAMES = [
     cta: 'Jouer au Pokémon du jour',
     steps: [
       'Propose le nom d’un Pokémon, de n’importe quelle génération.',
-      'Pokédle le compare au Pokémon mystère sur 9 critères : génération, forme, types, habitat, couleur, stade d’évolution, taille et poids. Vert : c’est juste. Orange : c’est proche. Les flèches disent s’il faut viser plus grand ou plus lourd.',
+      'Pokédle le compare au Pokémon mystère sur 9 critères : génération, forme, types, habitat, couleur, stade d’évolution, taille et poids. Vert : c’est juste. Orange : c’est proche. Les flèches disent s’il faut viser une génération plus récente ou plus ancienne, plus grand ou plus lourd.',
       'Croise les indices jusqu’à trouver le bon Pokémon. Moins tu fais d’essais, plus tu gagnes de points.',
     ],
     facts: [
