@@ -5318,6 +5318,7 @@ function buildGuessFeedback(guess, secret) {
     height: guess.height,
     weight: guess.weight,
     feedback: compareGuessToSecret(guess, secret),
+    genArrow: arrowFor(guess.gen, secret.gen),
     heightArrow: arrowFor(guess.height, secret.height),
     weightArrow: arrowFor(guess.weight, secret.weight),
   };

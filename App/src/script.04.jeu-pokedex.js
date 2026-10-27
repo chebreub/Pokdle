@@ -18,14 +18,14 @@ function dailyControls() {
 }
 function applyDailyObservedState(data,{awardFreshWin=false,animateLatest=false}={}) {
   if(!Array.isArray(data?.rows)||data.rows.length!==data.attempts||!['playing','won','abandoned'].includes(data.status)||Boolean(data.finished)!==(data.status!=='playing'))throw Error('daily_state_mismatch');
-  const rows=data.rows.map(row=>({pokemon:POKEMON_BY_ID.get(Number(row.pokemonId)),cmp:row.cmp,heightDirection:row.heightDirection,weightDirection:row.weightDirection}));
+  const rows=data.rows.map(row=>({pokemon:POKEMON_BY_ID.get(Number(row.pokemonId)),cmp:row.cmp,generationDirection:row.generationDirection,heightDirection:row.heightDirection,weightDirection:row.weightDirection}));
   if(rows.some(r=>!r.pokemon||!r.cmp)||new Set(rows.map(r=>r.pokemon.id)).size!==rows.length)throw Error('daily_state_mismatch');
   const answer=data.finished?POKEMON_BY_ID.get(Number(data.answerId)):null;
   if(data.finished&&!answer||!data.finished&&data.answerId!==undefined)throw Error('daily_state_mismatch');
   const wasFinished=dailyServerState?.day===data.day&&dailyServerState?.finished;
   const tbody=document.getElementById('results-body');
   const keepRows=dailyServerState?.day===data.day&&tbody.children.length===resultHistory.length&&resultHistory.length<=rows.length&&resultHistory.every((row,i)=>
-    row.pokemon.id===rows[i].pokemon.id&&JSON.stringify(row.cmp)===JSON.stringify(rows[i].cmp)&&row.heightDirection===rows[i].heightDirection&&row.weightDirection===rows[i].weightDirection);
+    row.pokemon.id===rows[i].pokemon.id&&JSON.stringify(row.cmp)===JSON.stringify(rows[i].cmp)&&row.generationDirection===rows[i].generationDirection&&row.heightDirection===rows[i].heightDirection&&row.weightDirection===rows[i].weightDirection);
   const firstNewRow=keepRows?resultHistory.length:0;
   dailyServerState=data;secretPokemon=answer;attempts=data.attempts;
   registerGameStart();
@@ -253,6 +253,8 @@ function comparisonTypeHtml(type) {
   return '<span class="comparison-type">' + (icon ? '<img src="img/type-icons/' + icon + '.svg" alt="" width="28" height="28" />' : '') + '<span>' + escapeHtml(type) + '</span></span>';
 }
 function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) {
+  // The generation has its arrow too (27/10): ↑ a more recent one, ↓ an older one.
+  const gArrow = directions ? directions.generationDirection : arrowFor(pokemon.gen, targetPokemon.gen);
   const hArrow = directions ? directions.heightDirection : arrowFor(pokemon.height, targetPokemon.height);
   const wArrow = directions ? directions.weightDirection : arrowFor(pokemon.weight, targetPokemon.weight);
   const fallbackSprite = getSpriteUrl(getPokemonSpriteId(pokemon));
@@ -267,7 +269,12 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) 
         ${escapeHtml(pokemon.name)}
       </div>
     </td>
-    <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${pokemon.gen}</td>
+    <td data-label="Génération" class="${cls(cmp.generation)}">
+      <div class="cell-num">
+        Gen ${pokemon.gen}
+        ${cmp.generation !== "ok" && gArrow ? `<span class="${gArrow === "↑" ? "arrow-up" : "arrow-down"}">${gArrow}</span>` : ""}
+      </div>
+    </td>
     <td data-label="Forme" class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
     <td data-label="Type 1" class="${cls(cmp.type1)}">${comparisonTypeHtml(pokemon.type1)}</td>
     <td data-label="Type 2" class="${cls(cmp.type2)}">${comparisonTypeHtml(pokemon.type2)}</td>
@@ -310,9 +317,11 @@ function addRow(pokemon, cmp, directions = null, {animate=true,renderShell=true}
     cell.style.setProperty("--reveal-index", String(index));
     if (reducedMotion || !animate) cell.classList.add("guess-result-cell-static");
   });
+  tr.dataset.generationDirection = directions ? directions.generationDirection || "" : arrowFor(pokemon.gen, secretPokemon.gen);
   tr.dataset.heightDirection = directions ? directions.heightDirection : arrowFor(pokemon.height, secretPokemon.height);
   tr.dataset.weightDirection = directions ? directions.weightDirection : arrowFor(pokemon.weight, secretPokemon.weight);
   tr.querySelector(".poke-cell")?.insertAdjacentHTML("beforeend", `<small class="guess-number">Essai ${tbody.children.length + 1}</small>`);
+  tr.querySelector('[data-label="Génération"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché vient d’une génération plus ${tr.dataset.generationDirection === "↑" ? "récente" : "ancienne"}`);
   tr.querySelector('[data-label="Hauteur"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.heightDirection === "↑" ? "grand" : "petit"}`);
   tr.querySelector('[data-label="Poids"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.weightDirection === "↑" ? "lourd" : "léger"}`);
   tbody.appendChild(tr);
@@ -2253,7 +2262,7 @@ function partyForfeitDeduction() {
 var PARTY_GUESS_HEAD = ["Pokémon", "Génération", "Forme", "Type 1", "Type 2", "Habitat", "Couleur", "Stade", "Taille", "Poids"];
 function partyDeductionGuessHtml(entry, index) {
   var pokemon = Object.assign({}, entry, { spriteId: entry.spriteId || entry.id });
-  var directions = { heightDirection: entry.heightArrow || "", weightDirection: entry.weightArrow || "" };
+  var directions = { generationDirection: entry.genArrow || "", heightDirection: entry.heightArrow || "", weightDirection: entry.weightArrow || "" };
   var row = buildComparisonRowHtml(pokemon, entry.feedback || {}, null, directions)
     .replace(/<details class="guess-locations">[\s\S]*?<\/details>/, "")
     .replace('data-label="Habitat / lieux"', 'data-label="Habitat"')

@@ -133,7 +133,7 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
       status:row.status,finished:row.status!=="playing",won:row.status==="won",attempts:ids.length,
       hintsUsed:Number(row.hints_used),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
       points:enquiryPoints(row.status==='won',ids.length,row.hints_used),maxPoints:DAILY_MAX.enquiry,
-      rows:ids.map(id=>{const p=byId.get(Number(id));return {pokemonId:p.id,cmp:compare(p,secret),heightDirection:direction(p.height,secret.height),weightDirection:direction(p.weight,secret.weight)};}),
+      rows:ids.map(id=>{const p=byId.get(Number(id));return {pokemonId:p.id,cmp:compare(p,secret),generationDirection:direction(p.gen,secret.gen),heightDirection:direction(p.height,secret.height),weightDirection:direction(p.weight,secret.weight)};}),
       ...(row.status!=="playing"?{answerId:secret.id}:{}),
       streak:streakOf(days!==undefined?days:await streakDays(client,who),day,row.status),ranked:Boolean(who.accountId&&row.account_id&&row.status==="won")};
   }
