@@ -2335,6 +2335,8 @@ function hideAllScreens() {
 }
 
 function showScreen(id) {
+  // The Draft's phone bar belongs to its screen only.
+  if (id !== "screen-draft-score-attack") document.getElementById("draft-mobile-bar")?.remove();
   const target = document.getElementById(id);
   // Never blank the app because of a stale or mistyped navigation target.
   if (!target) {
