@@ -1,6 +1,6 @@
 # Passation Pokédle (pokdle.fr), à lire en entier avant d'agir
 
-Rédigée le 27/10/2026, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
+Rédigée le 27/10/2026 et mise à jour le 29/10/2026, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
 
 ---
 
@@ -37,13 +37,14 @@ Rédigée le 27/10/2026, à partir de nos sessions Claude Code passées, du dép
   - `App/src/script.NN.*.js` : le JS du site, en 40 morceaux concaténés par `App/build.mjs` dans `App/script.js`. Ce fichier est **généré : ne jamais l'éditer**.
   - `App/dist/` : JS et CSS minifiés par esbuild, plus `app.min.css`. Généré, ignoré par git.
   - `App/lib/*.js` : logique serveur (jeux du jour, Party Room, classements, synchro du profil, import de l'ancienne base, avis des joueurs, SEO, métriques).
-  - `App/test/*.test.js` : environ 95 fichiers, environ 556 tests.
+  - `App/test/*.test.js` : environ 105 fichiers, environ 590 tests.
   - Une vingtaine de CSS par thème, dont `style.css` (voir les pièges).
 - **Commandes,** depuis `App/` :
   - `npm ci`, qui lance déjà le build via `postinstall` ;
   - `npm run build` ;
   - `npm test` (`node --test`) ;
   - `npm run dev`.
+- **Postgres local :** il s'arrête souvent dans le conteneur (erreurs `ECONNREFUSED 127.0.0.1:5432` dans les tests). Relance-le avec `service postgresql start`.
 - **Tests avec une vraie base :**
   1. Lance un PostgreSQL local.
   2. Exporte `QA_DATABASE_URL` vers une base **jetable** locale. Prends le même utilisateur et la même base que dans `.github/workflows/browser-quality.yml`, avec `127.0.0.1` comme hôte.
@@ -64,7 +65,7 @@ Rédigée le 27/10/2026, à partir de nos sessions Claude Code passées, du dép
     - Discord : `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_CALLBACK_URL` ;
     - Google : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` ;
     - Twitch : `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, `TWITCH_CALLBACK_URL` ;
-    - autres : `SESSION_SECRET`, `ADMIN_STATS_KEY`, `SITE_URL`, `LEGACY_ORIGIN`, `ALLOWED_ORIGINS`.
+    - autres : `SESSION_SECRET`, `ADMIN_STATS_KEY`, `ADMIN_ACCOUNT_IDS` (mon numéro de compte, pour le panneau admin), `SITE_URL`, `LEGACY_ORIGIN`, `ALLOWED_ORIGINS`.
 - **Base de données :** PostgreSQL sur **Supabase** (offre gratuite, région Oregon comme Render) depuis le 19/10. L'ancienne base **Neon** gratuite était saturée (quota de 100 CU-h par mois). Ses anciennes données sont réimportées automatiquement par `App/lib/db-import.js`, qui garde les meilleurs scores, dès que Neon répond à nouveau (voir le rappel du 1/11).
 - **Connexion :**
   - Discord, le compte principal : l'identifiant Discord sert de numéro de compte interne.
@@ -72,7 +73,9 @@ Rédigée le 27/10/2026, à partir de nos sessions Claude Code passées, du dép
   - Twitch, depuis le 24/10.
   - Les fournisseurs sont liés dans la table `account_identities`.
   - Les appels Discord passent par un Worker Cloudflare (`discord-proxy-worker.js`), parce que l'IP partagée de Render était bannie par Discord.
-- **Admin :** `/admin/stats?key=…` (clé = `ADMIN_STATS_KEY`) montre les stats de visites et de modes, ainsi que les avis « Donne ton avis » des joueurs (PR #138).
+- **Admin :**
+  - `/admin/stats?key=…` (clé = `ADMIN_STATS_KEY`) montre les stats de visites et de modes, ainsi que les avis « Donne ton avis » des joueurs (PR #138, tableau refait par la #168).
+  - `/admin`, le panneau admin (PR #161), ouvert par le bouton « Panneau admin » du menu du compte quand je suis connecté : bandeau d'actualités et retrait d'une photo de profil.
 - **Domaine :** pokdle.fr, acheté chez OVH le 25/10 pour 1 an. Renouvellement en octobre 2027 (environ 7,79 € HT).
 - **SEO :**
   - Google Search Console avec une propriété `https://pokdle.fr/`.
@@ -188,52 +191,68 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - annonce dans le bandeau d'actualités jusqu'au 3/11 ;
   - test du bandeau rendu indépendant de la date.
 
-## 5. État actuel (27/10/2026 au soir)
+- **28/10 :**
+  - #158 : ce `CLAUDE.md` ;
+  - #159 : tests Défi et Dossier réparés (colonne `photo_key`), CI de `main` de nouveau verte ;
+  - premières vidéos TikTok / Shorts filmées sur le vrai site (voir section 6).
+- **29/10 (#160 à #169) :**
+  - #160 : Stat Mystère, la première lettre s'affiche au 5e essai (3 victoires pour 43 abandons sur 14 jours) ;
+  - #161 : panneau admin `/admin` (bandeau d'actualités, retrait de photos) ;
+  - #162 : carte « Niveau supérieur » et bandeau « Succès débloqué » (proposition A) ;
+  - #163 : Draft Score Attack revue (paliers Standard / Solide 500 / Elite 550 / Master 600, jauge, barre sur téléphone, « Défier un ami ») ;
+  - #164 : bouton des générations plus clair, classement simplifié (un menu, semaine par défaut s'il y a peu de joueurs, écart avec le joueur au-dessus) ;
+  - #165 : annonce dans le bandeau jusqu'au 5/11, invitation « Donne ton avis » en fin de partie, TODO et `KIT_LANCEMENT.md` à jour ;
+  - #166 : profil sur deux appareils, les progressions s'additionnent au lieu de s'écraser ;
+  - #167 : flèches de génération, taille et poids en pastilles (« ↑ plus récente », « ↓ plus léger ») ; « Party Pokémon » renommé « Marathon mini-jeux » dans les missions (Scarabrute, Entei, Brutalibré, Félinferno, Victini) ;
+  - #168 : nouveau tableau `/admin/stats` (période, courbes, détail par jeu), branche `feat/…`, pas faite dans cette session **(à confirmer : sans doute Codex)** ;
+  - #169 : défis du jour « Consulte le Pokédex » et « Joue à 3 modes différents » réparés (ils n'étaient jamais comptés).
+- **Décisions du 29/10 :**
+  - vidéos : pas le Duel de poids (« trop simple ») ; les posts YouTube attendront d'avoir des abonnés ;
+  - un filtre TikTok pour le Draft est risqué (droits Pokémon, à fabriquer dans Effect House sur mon PC) : plutôt une vidéo du vrai site.
 
-- `main` est sur `5c104a0` (merge de la #157). Aucune PR ouverte, rien en cours.
-- **Cassé :** la CI `Browser and database quality` est **rouge sur `main` depuis la #156**. Le site en ligne n'est pas touché.
-  - Cause : deux tests créent une table `users` sans la nouvelle colonne `photo_key`, d'où l'erreur `column u.photo_key does not exist`.
-  - Correctif prêt, **en attente de mon « go »** : dans `App/test/daily-challenge.test.js` et `App/test/daily-dossier.test.js`, ligne 29, ajouter `,photo_key TEXT` à la fin du `CREATE TABLE users(...)`.
-  - Ensuite, vérifier avec Postgres local et ouvrir la PR.
+## 5. État actuel (29/10/2026, fin d'après-midi)
+
+- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour.
+- **Rappels programmés** dans la session du 29/10 : le 5/11 à 10 h (Paris), point sur les stats (Mystère depuis l'indice, messages « Donne ton avis », nouvelle annonce du bandeau). Le rappel Neon du 1/11 est toujours à faire (section 7).
 - **Incident du 26/10 :** un 503 de Render sur la page de santé, revenu tout seul. Cause inconnue, sans doute un redémarrage Render. Si ça revient, demande-moi une capture des logs Render.
-- **`TODO_Pokedle.md` est en partie périmé** (dernière mise à jour générale le 13/10). Exemple : il dit encore « rester sur pokdle.onrender.com », décision annulée le 25/10. Il faudra le remettre à jour.
+- **Stats du 22 au 28/10 :** 55 à 60 sessions par jour, 30 à 40 navigateurs ; Pokémon du jour et Higher or Lower en tête ; aucun message « Donne ton avis ».
 
 ## 6. Idées et chantiers à venir (avec mes préférences)
 
-1. **Vidéos TikTok / YouTube Shorts du site** (demandé le 27/10) :
-   - Vidéos verticales 1080 × 1920 filmées automatiquement sur le vrai site (Playwright), de 15 à 30 secondes.
-   - Mes modes préférés :
-     - **Pixel** : l'image se dépixelise ;
-     - **Cri** : le son est activé sur TikTok ;
-     - **Pokémon du jour** : cases colorées et flèches ;
-     - **Petit Bac** et **Party Room**, à filmer avec de vrais joueurs (moi et mes amis).
-   - J'ajoute ma tête en fond vert dans CapCut et je poste moi-même.
-   - **Pas de musique, pas de voix IA, pas de bruitages gratuits.** Rythme pas trop rapide, cohérent, avec du vrai mouvement (« motion design »), pas un diaporama.
-   - Commence par **une vidéo test de 20 secondes** et dis-moi avant combien ça coûte.
-   - L'ancienne passation disait « Kayan ajoutera la musique » : c'est **faux**, pas de musique.
+1. **Vidéos TikTok / YouTube Shorts du site :**
+   - Vidéos verticales 1080 × 1920 de 20 à 30 secondes, montées à partir de captures du vrai site (Playwright) avec du vrai mouvement.
+   - **Pas de musique, pas de voix IA, pas de bruitages gratuits.** Les vrais cris du jeu, oui.
+   - J'ajoute parfois ma tête en fond vert dans CapCut et je poste moi-même. Donne-moi à chaque fois le fichier, un titre, une description et un commentaire à épingler. Fin de vidéo : « Joue / Entraîne-toi sur pokdle.fr » et « 🔔 Abonne-toi pour le prochain défi ».
+   - Déjà faites : Pixel, Cri, Pokémon du jour, Petit Bac, Higher or Lower, Stat Clash, Combo, Course au Pokédex, « 5 Pokémon pixelisés » (Gen 1, puis une version mélangée : Ectoplasma, Lucario, Amphinobi, Mimiqui, Ninjask) et « 5 cris » (Pikachu, Lucario, Zoroark, Ho-Oh, Wailord).
+   - Publiées (à ma connaissance) : Pixel et Higher or Lower sur YouTube ; Higher or Lower, Petit Bac et « 5 pixelisés » sur TikTok ; « 5 pixelisés » mélangée programmée le 29/10 à 17 h ; « 5 cris » conseillée le 30/10 vers 18 h 30 **(à confirmer)**.
+   - Mes règles : pas que des Pokémon faciles ni que de la Gen 1, un bon équilibre de générations et de difficulté ; une vidéo par jour au plus.
+   - L'outil de montage vivait dans le dossier temporaire de la session du 29/10 (`scratchpad/vid/`) : il est perdu avec le conteneur. Avant de tout refaire, propose-moi de le ranger dans le dépôt (`tools/video/`).
+   - Idée suivante : le Pokémon mystère avec les pastilles, où on voit l'enquête se resserrer.
 2. **Faire connaître le site, en douceur :**
    - Des retours de gens qui connaissent Pokémon (par exemple des streamers que je suis en tant que viewer Chebreub), **sans demander de vidéo**.
    - Messages courts et naturels. Je peux dire que ça part d'un truc au boulot avec mes collègues.
-   - Kit de textes déjà prêt : `KIT_LANCEMENT.md`. Il est ancien et utilise encore l'adresse onrender : mets-le à jour.
+   - Kit de textes : `KIT_LANCEMENT.md`, mis à jour le 29/10 pour pokdle.fr.
    - Une annonce Discord a été rédigée, mais je n'ai pas confirmé l'avoir postée **(à confirmer)**.
-3. **Panneau admin :** pour retirer une photo choquante **et plusieurs autres actions**. Demande-moi la liste. « On fera plus tard quand on aura plus de tokens. »
-4. **Profil sur deux appareils :** risque d'écrasement de la progression. À reproduire avant de corriger.
-5. **Bandeau d'actualités :** la note sur la flèche de génération expire le 3/11. Prévoir une nouvelle annonce si besoin.
-6. **Profil :** la refonte de la direction artistique est commencée (#149). Plus tard : badges d'arène (proposition C) et saisons mensuelles (proposition B) si on veut un rendez-vous.
-7. **Comptes :**
+3. **Panneau admin :** bandeau et retrait de photos faits (#161). **D'autres actions à ajouter : demande-moi la liste.**
+4. **Bandeau d'actualités :** l'annonce « animations et Draft revue » expire le 5/11. La suivante se pose dans le panneau admin, sans PR.
+5. **Rappel du lendemain par notification** (idée du 29/10) : bouton « 🔔 Me rappeler le Pokémon du jour », une notification par jour au plus, rien si j'ai déjà joué. Sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil. Montre-moi d'abord une capture. Détails dans la TODO.
+6. **Triche des jeux d'image** (signalée le 29/10) : glisser l'image du Zoom ou du Pixelisé montrait le vrai sprite. Le glisser est bloqué depuis le 29/10, mais l'adresse de l'image dit encore quel Pokémon c'est : le vrai correctif (image préparée par le serveur, dessinée dans un canvas) reste à faire.
+7. **Profil :** la refonte de la direction artistique est commencée (#149). Plus tard : badges d'arène (proposition C) et saisons mensuelles (proposition B) si on veut un rendez-vous.
+8. **Comptes :**
    - e-mail et mot de passe mis de côté le 24/10 (la page de confidentialité promet de ne garder ni e-mail ni mot de passe) ;
    - Facebook en dernier ;
    - écran de connexion façon « Bon retour ! » ;
    - relier ou délier un fournisseur dans le profil.
-8. **Après le déménagement vers pokdle.fr, côté moi (à confirmer si c'est fait) :**
+9. **Après le déménagement vers pokdle.fr, côté moi (à confirmer si c'est fait) :**
    - adresses de retour Discord, Google et Twitch, et variables `*_CALLBACK_URL` sur Render ;
    - pingeur sur pokdle.fr ;
    - Search Console : sitemap et « Changement d'adresse » ;
    - Bing.
-9. **Autres notes de la TODO :**
-   - catalogue à resserrer **(à confirmer)** ;
-   - nettoyage du code Draft resté dormant ;
-   - lenteur restante du Pokémon du jour et du Wordle (déjà très améliorée le 13/10).
+10. **Autres notes de la TODO :**
+    - catalogue à resserrer **(à confirmer)** ;
+    - nettoyage du code Draft resté dormant ;
+    - lenteur restante du Pokémon du jour et du Wordle (déjà très améliorée le 13/10) ;
+    - les lancements du Quiz depuis le Marathon ne sont pas comptés dans les stats.
 
 ## 7. Ce qui servait de mémoire
 

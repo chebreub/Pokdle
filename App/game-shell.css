@@ -485,3 +485,6 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
  #pokdle-app .dir-pill {font-size:.72rem;padding:3px 8px;}
  #pokdle-app .dir-pill .dir-more {display:none;}
 }
+
+/* 29/10 — the mystery images can't be dragged or long-pressed: the drag preview showed the real sprite. */
+#pokdle-app :is(#silhouette-sprite, #pixel-sprite, .party-sprite-silhouette, .party-sprite-pixel) {pointer-events:none;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;}
