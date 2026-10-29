@@ -70,3 +70,18 @@ openSettingsModal = function () {
   }
   return value;
 };
+
+// Nobody opens the footer button: the result screen of a classic game invites once a week,
+// after a few games, with one quiet line (never twice the same week, never on a first visit).
+const FEEDBACK_INVITE_KEY = 'pokedle_feedback_invite_v1';
+const FEEDBACK_INVITE_EVERY_MS = 7 * 86400000;
+const FEEDBACK_INVITE_MIN_GAMES = 3;
+function feedbackResultInvite(now = Date.now()) {
+  try {
+    if ((Number(playerStats?.played) || 0) < FEEDBACK_INVITE_MIN_GAMES) return '';
+    const last = Number(localStorage.getItem(FEEDBACK_INVITE_KEY)) || 0;
+    if (now - last < FEEDBACK_INVITE_EVERY_MS) return '';
+    localStorage.setItem(FEEDBACK_INVITE_KEY, String(now));
+  } catch (_error) { return ''; }
+  return '<p class="win-feedback-invite">Une idée, un bug ? <button type="button" class="btn-link" data-action="openFeedbackModal">Donne ton avis</button></p>';
+}

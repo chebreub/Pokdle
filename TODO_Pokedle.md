@@ -1,8 +1,20 @@
 # To-do Pokédle
 
-Dernière mise à jour : 13 octobre 2026 (soir). Reste : comptes (à la fin). Passation : `side-session-notes/local_6a2c80a7-670f-4312-8d28-929de97ce3b8/passation-2026-10-13-soir.md`. Passation pour un nouveau chat : `C:/Users/chahi-za/AppData/Roaming/Claude/side-session-notes/local_e3eea6b0-6233-461d-9d40-0ed64c7cd10b/passation-2026-10-13.md`.
+Dernière mise à jour : 29 octobre 2026. La passation complète et à jour est dans `CLAUDE.md` (racine du dépôt) ; ce fichier garde le détail des chantiers.
 
-## En attente : GPT travaille dessus
+## Le 29/10 (session Claude)
+- [x] #158 : `CLAUDE.md`, la passation lue au début de chaque session.
+- [x] #159 : tests Défi et Dossier réparés (colonne `photo_key`), CI de `main` de nouveau verte.
+- [x] #160 : Stat Mystère, la première lettre s'affiche au 5e essai (3 victoires pour 43 abandons sur 14 jours).
+- [x] #161 : panneau admin `/admin` (bandeau d'actualités, retrait de photos). Variable Render `ADMIN_ACCOUNT_IDS` posée par l'utilisateur le 29/10.
+- [x] #162 : carte « Niveau supérieur » et bandeau « Succès débloqué ».
+- [x] #163 : Draft Score Attack revue (paliers Standard / Solide / Elite / Master au lieu de « Exceptionnel » partout en Gen 9, jauge avec paliers, barre de relance sur téléphone, « Défier un ami »).
+- [ ] #164 : bouton des générations qui dit ce qui est choisi, classement simplifié (un menu, semaine par défaut s'il y a peu de joueurs, écart avec le joueur au-dessus). En attente du « go ».
+- [ ] Bandeau d'actualités : l'annonce « animations et Draft revue » s'arrête le 5/11. Ensuite, la changer dans le panneau admin.
+- [ ] Profil sur deux appareils : risque d'écrasement de la progression, en cours d'analyse.
+- [ ] Vidéos TikTok / Shorts : 8 vidéos faites (sans musique ni voix, avec sous-titres). Prochaine idée : Duel de poids (peu lancé, mais 1 360 manches jouées en 14 jours).
+
+## En attente : GPT travaille dessus (archives, avant le 14/10)
 - [x] PR #99 (étape 1, PR 2) : Quiz sur 15, Ligue 12/15, boutons Ligue, accueil « Journée terminée », points de l'Enquête, aide ✓/≈/× — vérifiée en ligne le 9/10.
   - À revérifier demain ou depuis un autre appareil : vitesse du Wordle, explication du Dossier interrompu.
 - Depuis le 9/10, Claude reprend seul l'étape 1 (GPT en pause, sa PR 1 n'a jamais été poussée). Ordre validé : 1 → 4 → 3 → 6 → 7 → 8 → 11 → 9 → 10.
@@ -49,7 +61,7 @@ Dernière mise à jour : 13 octobre 2026 (soir). Reste : comptes (à la fin). Pa
   - L'aventure rapporte de l'XP (Pokémon, missions, secrets, régions) ; un jeu ne rapporte que la moitié après 500 XP dans la journée. Livré le 25/10 (PR #147).
   - Le niveau à côté des pseudos (classements, Ligue, top 3 de la semaine, Party Rooms). PR suivante.
   - Plus tard : les badges d'arène (proposition C) pour la refonte du profil ; les saisons (proposition B) si on veut un rendez-vous mensuel.
-- [ ] **Profil : direction artistique et fonctionnalités à revoir**, en regardant ce que font les concurrents ou en imaginant mieux (carte de dresseur, partenaire, progression, succès, historique, notes des jeux, favoris).
+- [ ] **Profil : direction artistique et fonctionnalités à revoir** (commencé le 25/10 avec la carte de dresseur, PR #149), en regardant ce que font les concurrents ou en imaginant mieux (carte de dresseur, partenaire, progression, succès, historique, notes des jeux, favoris).
 
 ### Formes manquantes (signalé le 12/10)
 Comparaison avec PokeAPI le 12/10 : le site a 172 formes (71 Méga), PokeAPI en a 326. Manquent notamment :
@@ -93,7 +105,7 @@ Calendrier décidé le 9 octobre :
 - ~~Bientôt (juste après l'étape 1)~~ → **à la fin** (décision du 12/10) : la base des comptes (PR 9) et Google, une fois le site présentable.
 - **Quand le site sera fini** : email, Twitch, Facebook, écran de connexion final.
 - [x] **Google** livré le 13/10 (merge 884e586) : table account_identities, comptes « google:<sub> », liaison quand on est déjà connecté, page /confidentialite (contact chebreub@gmail.com). Testé par l'utilisateur en navigation privée (OK), URL de confidentialité ajoutée et **application Google publiée le 13/10**. Son essai a créé un compte Google séparé : bouton « Supprimer mon compte » prévu au lot suivant, puis reconnexion Discord → « Relier Google ».
-- [ ] **Compte par email** : inscription, connexion, mot de passe oublié, vérification de l'adresse. **Mis de côté le 24/10** : la page Confidentialité promet de ne garder ni e-mail ni mot de passe, et des mails fiables demandent un nom de domaine à soi (décision du 24/10 : rester sur pokdle.onrender.com tant qu'il y a peu de joueurs).
+- [ ] **Compte par email** : inscription, connexion, mot de passe oublié, vérification de l'adresse. **Mis de côté le 24/10** : la page Confidentialité promet de ne garder ni e-mail ni mot de passe, et des mails fiables demandent un nom de domaine à soi (la décision du 24/10 de rester sur pokdle.onrender.com est annulée : le site est sur pokdle.fr depuis le 25/10).
   - Il faut un service d'envoi d'emails (par exemple Resend ou Brevo, gratuits au début).
   - Mots de passe stockés chiffrés (bcrypt ou argon2), limite de tentatives.
   - Variante plus simple : connexion par lien magique envoyé par email.
@@ -117,7 +129,7 @@ Calendrier décidé le 9 octobre :
   - Lot 2a livré le 13/10 (merge 40b194d) : **course à plusieurs** dans la Party Room (mode `quiestce`, lib/party-quiestce.js, 2 à 8, même grille et même mystère, questions privées, premier qui trouve +100) + **Supprimer mon compte** (POST /api/account/delete, transaction) + correctif du test Bulbizarre. Reste le **1 contre 1 classique** tour par tour (lot 2b).
   - Lot 1 : solo contre l'ordinateur (record = le moins de questions). Lot 2 (validé le 13/10) : dans la Party Room, **1 contre 1 classique** (chacun son secret, tour par tour) **et course à plusieurs** (même mystère pour 2 à 8, réponses privées, le premier qui trouve gagne).
 - [ ] **Base de données (19/10)** : Neon gratuit saturé (100 CU-h/mois) → base déplacée sur Supabase gratuit, Oregon (comme Render). Import automatique en ligne (lib/db-import.js, merge d4878ff) : il se lancera seul dès que Neon répond. **Le 1/11** : vérifier dans les logs Render la ligne « [import] old data restored », importer les anciennes données Neon (variable Render `OLD_DATABASE_URL`) en gardant les meilleurs scores, et faire changer le mot de passe Neon à l'utilisateur (vu en clair sur une capture), puis mettre à jour `OLD_DATABASE_URL`.
-- [ ] **Domaine pokdle.fr (25/10)** : acheté chez OVH par l'utilisateur (1 an, 5,99 € TTC, renouvellement oct. 2027 à 7,79 € HT ; e-mail du titulaire confirmé pour NIS2). Un 2e débit Apple Pay de 6 € à vérifier vers le 28/10 (sinon ticket OVH, commande 261487651). Code prêt (lib/site-move.js) : 301 de pokdle.onrender.com vers pokdle.fr, transfert automatique de la progression (localStorage + cookies compte, défi du jour, œuf) au premier passage par l'ancienne page d'accueil. **À fusionner seulement quand pokdle.fr est vert dans Render.** Ensuite, côté utilisateur : adresses de retour Discord / Google / Twitch et variables `*_CALLBACK_URL` sur Render, pingeur sur `https://pokdle.fr/api/multiplayer/health`, Search Console (nouvelle propriété, sitemap, « Changement d'adresse ») et Bing (déplacement de site).
+- [x] **Domaine pokdle.fr (25/10)**, en ligne depuis la PR #140. Reste à confirmer côté utilisateur : adresses de retour des connexions, pingeur, Search Console et Bing (détail ci-dessous). Ancienne note : acheté chez OVH par l'utilisateur (1 an, 5,99 € TTC, renouvellement oct. 2027 à 7,79 € HT ; e-mail du titulaire confirmé pour NIS2). Un 2e débit Apple Pay de 6 € à vérifier vers le 28/10 (sinon ticket OVH, commande 261487651). Code prêt (lib/site-move.js) : 301 de pokdle.onrender.com vers pokdle.fr, transfert automatique de la progression (localStorage + cookies compte, défi du jour, œuf) au premier passage par l'ancienne page d'accueil. **À fusionner seulement quand pokdle.fr est vert dans Render.** Ensuite, côté utilisateur : adresses de retour Discord / Google / Twitch et variables `*_CALLBACK_URL` sur Render, pingeur sur `https://pokdle.fr/api/multiplayer/health`, Search Console (nouvelle propriété, sitemap, « Changement d'adresse ») et Bing (déplacement de site).
 - [x] **Défi du jour : Pixelisé uniquement** (19/10) — le Cri (trop dur) et le Zoom centré (trop simple) sont retirés du quotidien ; les modes libres Zoom et Cri restent.
 - [x] **(Livrée le 19/10, merge 5fcdb63 ; bonus hors barème des 100 pts, à confirmer par l'utilisateur) Grille du jour (« Puzzle » façon PokéDoku), demandée le 14/10, à faire dans la journée Pokédle avec notre DA, en mieux** : grille 3×3, 3 critères en colonnes et 3 en lignes (types, région/génération, forme Méga/Gigamax/régionale, couleur, stade…) ; chaque case = un Pokémon qui coche sa ligne ET sa colonne ; 9 essais (« PP 6/9 ») ; chaque bonne réponse affiche son % de rareté (part des joueurs qui l'ont choisie) ; score d'originalité (« UNIQ ») + rang ; bouton abandonner. Même grille pour tous chaque jour (serveur), vérifier qu'il existe au moins une réponse par case. Capture de référence fournie par l'utilisateur (site anglais sombre « Today's Puzzle »).
 - [x] **(Livré le 19/10, merge d4878ff)** **Petit Bac Pokémon** (après) : une lettre, une catégorie par colonne, 2 à 8 joueurs dans la Party Room + solo contre le chrono. Validation **automatique** sur les données + **catégories libres validées par un vote** en option (décidé le 13/10). Points : 2 si réponse unique, 1 si partagée. Lettre tirée seulement si chaque catégorie a au moins une réponse.
@@ -125,4 +137,4 @@ Calendrier décidé le 9 octobre :
   - **Fait par l'utilisateur le 13/10** : Google Cloud configuré (à confirmer : clés dans Render). Avant : l'utilisateur prépare Google Cloud (projet, écran de connexion en mode Test, client Web avec `/auth/google/callback`, clés `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_CALLBACK_URL` dans Render). **À faire par Claude : une page de confidentialité** (`/confidentialite`), demandée par Google avant publication et obligatoire (RGPD).
 
 ### Maquette
-- [ ] (Abandonné ?) Mettre la maquette Claude Design à jour : l'utilisateur ne veut plus de maquettes depuis le 9/10.
+- [x] Plus de maquettes Claude Design (9/10). Quand une maquette est demandée, elle se fait sur le vrai site en local (captures ou courte vidéo), comme pour la Draft et les niveaux le 29/10.

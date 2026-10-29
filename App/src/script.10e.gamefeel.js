@@ -324,7 +324,8 @@ function enhanceGameOverBox({won,pokemon,attempts,mode}) {
       '<span><small>Entrée</small><b>#'+String(dexId).padStart(3,'0')+'</b></span>'+
       '<span><small>Essais</small><b>'+Math.max(0,Number(attempts)||0)+'</b></span>'+
     '</div>'+
-    '<div class="win-result-types">'+types+'</div>';
+    '<div class="win-result-types">'+types+'</div>'+
+    (typeof feedbackResultInvite==='function'?feedbackResultInvite():'');
   box.classList.toggle('is-win-result',Boolean(won));
   box.classList.toggle('is-loss-result',!won);
 }
