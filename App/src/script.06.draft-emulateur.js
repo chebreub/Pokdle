@@ -717,7 +717,7 @@ function selectDraftGeneration(gen) {
     ? `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`
     : draftArenaState.scoreAttackPro
       ? `🔥 Score Attack PRO ${draftGenLabel(gen)}. Drafte 6 Pokémon — les bonus tombent à la fin !`
-      : `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`;
+      : draftScoreIntroMessage(gen);
 
   fillDraftArenaOptions();
   renderDraftArena();
@@ -789,6 +789,20 @@ function openDraftScoreAttackMode(pro) {
 }
 
 
+function draftScoreIntroMessage(gen) {
+  return `Score Attack ${draftGenLabel(gen)}. Monte la meilleure moyenne BST possible.`;
+}
+
+// The label a Score Attack card shows follows its BST and the same goals as the gauge.
+// (The arena rarity also counts "Rare" habitats, which marked every Gen 9 Pokémon "Exceptionnel".)
+function draftScoreTier(bst) {
+  const value = Number(bst) || 0;
+  if (value >= 600) return { key: "master", label: "Master" };
+  if (value >= 550) return { key: "elite", label: "Elite" };
+  if (value >= 500) return { key: "solide", label: "Solide" };
+  return { key: "standard", label: "Standard" };
+}
+
 function mountDraftModeCard(mode = "arena") {
   const card = document.getElementById("draft-mode-card");
   const arenaScreen = document.getElementById("screen-draft-arena");
@@ -809,6 +823,57 @@ function mountDraftModeCard(mode = "arena") {
     : DRAFT_BATTLE_ENABLED
         ? "Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser."
         : "Drafte 6 Pokémon et analyse ton équipe. Les combats d’arène sont en préparation ; Score Attack est disponible pour jouer une partie complète.";
+}
+
+// "Nouvelle draft" in the middle of a draft asks first: one tap must not lose five picks.
+function requestDraftRestart() {
+  const inProgress = draftArenaState?.mode === "scoreAttack" && draftArenaState.phase === "draft"
+    && draftArenaState.team.length > 0 && !draftArenaState.duelMode;
+  if (!inProgress) return restartDraftAndShowGenerations();
+  ensureOverlay("Nouvelle draft ?", `<p class="card-desc">Ta draft en cours (${draftArenaState.team.length}/${DRAFT_TEAM_SIZE}) sera perdue.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="closeOverlayModal">Continuer ma draft</button><button class="btn-blue" type="button" data-action="confirmDraftRestart">🎲 Nouvelle draft</button></div>`);
+}
+function confirmDraftRestart() {
+  closeOverlayModal();
+  restartDraftAndShowGenerations();
+}
+// A new draft starts at the generation choice: bring it into view (on a phone it is far above).
+function restartDraftAndShowGenerations() {
+  restartDraftArenaRun();
+  const panel = document.querySelector("#screen-draft-score-attack .draft-panel-gen");
+  if (panel && draftArenaState?.phase === "gen") {
+    panel.scrollIntoView({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth", block: "start" });
+  }
+}
+function openDraftDuelChoice() {
+  ensureOverlay("Défier un ami", `<p class="card-desc">Même tirage pour vous deux : la meilleure moyenne BST gagne.</p><div class="reset-confirm-actions"><button class="btn-blue" type="button" data-action="startDraftDuelFromChoice" data-args='["create"]'>🆚 Créer un salon</button><button class="btn-ghost" type="button" data-action="startDraftDuelFromChoice" data-args='["join"]'>🔗 Rejoindre par code</button></div>`);
+}
+function startDraftDuelFromChoice(kind) {
+  closeOverlayModal();
+  if (kind === "join") joinDraftScoreAttackRoom();
+  else createDraftScoreAttackRoom();
+}
+
+if (typeof window !== "undefined") window.addEventListener("resize", () => { if (document.getElementById("draft-mobile-bar")) renderDraftMobileBar(); });
+
+// Phones: the restart actions stay at hand above the tab bar while the cards scroll.
+function renderDraftMobileBar() {
+  let bar = document.getElementById("draft-mobile-bar");
+  const screen = document.getElementById("screen-draft-score-attack");
+  const show = Boolean(screen && !screen.classList.contains("hidden") && draftArenaState?.mode === "scoreAttack"
+    && draftArenaState.phase === "draft" && !draftArenaState.duelMode && window.matchMedia?.("(max-width: 640px)").matches);
+  if (!show) { bar?.remove(); return; }
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "draft-mobile-bar";
+    bar.className = "draft-mobile-bar";
+    document.body.appendChild(bar);
+  }
+  const rerolls = draftArenaState.scoreAttackRerollsLeft;
+  bar.innerHTML = `<button type="button" class="btn-ghost" data-action="rerollDraftScoreAttackWave" ${rerolls > 0 ? "" : "disabled"}>↻ Vague (${rerolls})</button><button type="button" class="btn-blue" data-action="requestDraftRestart">🎲 Nouvelle draft</button>`;
+  const tabbar = document.getElementById("mobile-tabbar");
+  const tabRect = tabbar ? tabbar.getBoundingClientRect() : null;
+  const top = tabRect && tabRect.height > 0 ? tabRect.top : window.innerHeight;
+  bar.style.bottom = Math.max(8, Math.round(window.innerHeight - top + 8)) + "px";
 }
 
 function restartDraftArenaRun() {
@@ -1002,7 +1067,11 @@ function renderDraftArena() {
       : "Choisis une génération, drafte 6 Pokémon, puis découvre les badges que ton équipe peut réellement viser.";
   }
 
-  if (status) status.textContent = draftArenaState.message;
+  if (status) {
+    status.textContent = draftArenaState.message;
+    // The intro sentence repeats the title; real messages (errors, duel) still show.
+    status.classList.toggle("hidden", isScoreAttackMode && draftArenaState.message === draftScoreIntroMessage(draftArenaState.selectedGen));
+  }
   if (genBadge) genBadge.textContent = draftArenaState.selectedGen ? `Génération : ${draftGenLabel(draftArenaState.selectedGen)}` : "Génération : -";
   if (picksBadge) picksBadge.textContent = `Équipe : ${draftArenaState.team.length} / ${DRAFT_TEAM_SIZE}`;
   if (shinyBadge) shinyBadge.textContent = `Shiny : ${draftArenaState.shinyCount}`;
@@ -1021,9 +1090,23 @@ function renderDraftArena() {
       restartBtn.textContent = isLiveDuel ? "⏳ Partie en cours…" : (selfRoom?.isHost ? "🎮 Nouvelle partie" : "⏳ En attente de l'hôte");
       restartBtn.disabled = isLiveDuel || !selfRoom?.isHost;
     } else {
-      restartBtn.textContent = "🎲 Nouveau draft";
+      restartBtn.textContent = isScoreAttackMode ? "🎲 Nouvelle draft" : "🎲 Nouveau draft";
       restartBtn.disabled = false;
     }
+    restartBtn.dataset.action = "requestDraftRestart";
+    restartBtn.classList.toggle("btn-blue", isScoreAttackMode && !isDuel);
+    restartBtn.classList.toggle("btn-ghost", !isScoreAttackMode || isDuel);
+    let duelBtn = document.getElementById("draft-duel-btn");
+    if (!duelBtn && restartBtn.parentElement) {
+      duelBtn = document.createElement("button");
+      duelBtn.id = "draft-duel-btn";
+      duelBtn.type = "button";
+      duelBtn.className = "btn-ghost";
+      duelBtn.dataset.action = "openDraftDuelChoice";
+      duelBtn.textContent = "🆚 Défier un ami";
+      restartBtn.before(duelBtn);
+    }
+    if (duelBtn) duelBtn.classList.toggle("hidden", !isScoreAttackMode || Boolean(draftArenaState.scoreAttackRoom));
   }
   const recordBadge = document.getElementById("draft-score-record-badge");
   if (recordBadge) {
@@ -1077,8 +1160,9 @@ function renderDraftArena() {
     scoreRoomLeave.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || !draftArenaState.scoreAttackRoom);
   }
   if (scoreRoomStatus) {
+    // Solo, the duel lives in the header ("Défier un ami"); this panel only shows a room.
     const shouldShowScoreRoom = draftArenaState.mode === "scoreAttack"
-      && (!draftFinished || Boolean(draftArenaState.scoreAttackRoom) || Boolean(draftArenaState.scoreAttackRoomError));
+      && (Boolean(draftArenaState.scoreAttackRoom) || Boolean(draftArenaState.scoreAttackRoomError));
     scoreRoomStatus.classList.toggle("hidden", !shouldShowScoreRoom);
     scoreRoomStatus.innerHTML = shouldShowScoreRoom ? renderDraftScoreAttackRoomStatus() : "";
   }
@@ -1103,7 +1187,7 @@ function renderDraftArena() {
     } else {
       scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft");
       scoreRerollButton.disabled = !canReroll;
-      scoreRerollButton.textContent = `Relancer la vague (${draftArenaState.scoreAttackRerollsLeft})`;
+      scoreRerollButton.textContent = `↻ Nouvelle vague (${draftArenaState.scoreAttackRerollsLeft})`;
     }
   }
   if (genButtons) {
@@ -1162,7 +1246,9 @@ function renderDraftArena() {
         optionIdx += 1;
         const spriteId = getPokemonSpriteId(option.pokemon);
         const normalSprite = getPokemonSprite(option.pokemon);
-        const shownSprite = option.shiny ? getPokemonShinySprite(option.pokemon) : normalSprite;
+        const shownSprite = draftArenaState.mode === "scoreAttack" && typeof pokedexDetailArtwork === "function"
+          ? pokedexDetailArtwork(option.pokemon, option.shiny)
+          : option.shiny ? getPokemonShinySprite(option.pokemon) : normalSprite;
         const sparkle = option.shiny ? '<span class="draft-shiny-mark">&#10024; Shiny</span>' : "";
           const metrics = getDraftCachedPokemonPowerData(option.pokemon);
         const projectedAverage = draftArenaState.team.length < DRAFT_TEAM_SIZE
@@ -1174,16 +1260,27 @@ function renderDraftArena() {
         card.dataset.rarity = optLoading ? "loading" : rarity;
         if (option.pokemon.type1) card.dataset.type1 = option.pokemon.type1;
         const isScoreAttack = draftArenaState.mode === "scoreAttack";
+        const tier = draftScoreTier(bstValue);
+        if (isScoreAttack && !optLoading) card.dataset.tier = tier.key;
+        const tierLabel = isScoreAttack ? tier.label : metrics.rarityLabel;
+        const typesHtml = isScoreAttack
+          ? `<div class="dsc-types">${[option.pokemon.type1, option.pokemon.type2].filter(Boolean).map((type) => `<span>${escapeHtml(type)}</span>`).join("")}</div>`
+          : "";
+        // With an empty team the projected average is the card's own BST: said once is enough.
+        const projectionHtml = isScoreAttack && !draftArenaState.team.length
+          ? ""
+          : `<div class="dsc-proj">${isScoreAttack ? "→ moy." : "Moy."} <b>${optLoading ? "\u2026" : projectedAverage}</b></div>`;
         const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0 && !draftArenaState.duelMode;
         const rerollBtn = canRerollOption
           ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Reroll cette option (1 jeton)" aria-label="Reroll ${escapeHtml(option.pokemon.name)}">↻</button>`
           : "";
         card.innerHTML = `
           ${rerollBtn}
-          <div class="dsc-top"><span class="dsc-tier">${optLoading ? "\u2026" : escapeHtml(metrics.rarityLabel)}</span><span class="dsc-bst">${optLoading ? "\u2026" : metrics.statGlobal}</span></div>
+          <div class="dsc-top"><span class="dsc-tier">${optLoading ? "\u2026" : escapeHtml(tierLabel)}</span><span class="dsc-bst">${optLoading ? "\u2026" : metrics.statGlobal}</span></div>
           <div class="dsc-art"><img src="${shownSprite}" alt="${escapeHtml(option.pokemon.name)}" loading="lazy" data-fallback="${normalSprite}" /></div>
           <strong class="dsc-name">${escapeHtml(option.pokemon.name)}</strong>
-          <div class="dsc-proj">Moy. <b>${optLoading ? "\u2026" : projectedAverage}</b></div>
+          ${typesHtml}
+          ${projectionHtml}
           ${sparkle}
         `;
         card.disabled = Boolean(option.locked);
@@ -1241,7 +1338,7 @@ function renderDraftArena() {
           <small class="draft-team-slot-label">Slot ${index + 1}${isLatest ? " • Nouveau" : ""}</small>
           <b>${escapeHtml(member.pokemon.name)}</b>
           <div class="draft-team-card-types">${typesHtml}</div>
-          <small>Stat global ${metrics.statGlobal} • ${escapeHtml(metrics.rarityLabel)}</small>
+          <small>Stat global ${metrics.statGlobal} • ${escapeHtml(draftArenaState.mode === "scoreAttack" ? draftScoreTier(metrics.statGlobal).label : metrics.rarityLabel)}</small>
         </div>
       `;
       team.appendChild(item);
@@ -1265,16 +1362,23 @@ function renderDraftArena() {
   if (scoreHero) {
     if (draftArenaState.mode === "scoreAttack" && draftArenaState.selectedGen) {
       const avg = bstMetrics.average || 0;
-      const pct = avg ? Math.max(4, Math.min(100, Math.round((avg / 600) * 100))) : 0;
+      // The gauge runs from 300 to 680 BST so the three goals and the record read at a glance.
+      const gaugeAt = (value) => Math.max(0, Math.min(100, Math.round(((value - 300) / 380) * 100)));
+      const pct = avg ? Math.max(4, gaugeAt(avg)) : 0;
       const rec = getDraftScoreAttackRecord(draftArenaState.selectedGen);
-      const sub = bstMetrics.nextTarget
-        ? (bstMetrics.nextTarget.min - avg) + " pts avant " + escapeHtml(bstMetrics.nextTarget.label)
-        : (bstMetrics.rank ? "Palier " + escapeHtml(bstMetrics.rank.label) + " atteint !" : "Commence \u00e0 drafter");
+      const sub = !draftArenaState.team.length
+        ? "Choisis ton 1er Pokémon : vise la meilleure moyenne des 6."
+        : bstMetrics.nextTarget
+          ? (bstMetrics.nextTarget.min - avg) + " pts avant " + escapeHtml(bstMetrics.nextTarget.label)
+          : (bstMetrics.rank ? "Palier " + escapeHtml(bstMetrics.rank.label) + " atteint !" : "Commence \u00e0 drafter");
+      const goals = DRAFT_SCORE_ATTACK_TARGETS.map((target) => '<span class="dsh-goal" style="left:' + gaugeAt(target.min) + '%"><b>' + target.min + '</b>' + escapeHtml(target.label.replace(/\s*\d+\+$/, "")) + '</span>').join("") +
+        (rec ? '<span class="dsh-goal dsh-goal-record" style="left:' + gaugeAt(rec) + '%" title="Ton record">\ud83c\udfc6</span>' : "");
       scoreHero.innerHTML =
         '<div class="dsh-main">' +
           '<div class="dsh-label" title="BST : total des statistiques de base de chaque Pokémon">Puissance moyenne · BST</div>' +
-          '<div class="dsh-score">' + (avg || "\u2013") + '</div>' +
+          '<div class="dsh-score">' + (avg || "?") + '</div>' +
           '<div class="dsh-gauge"><span style="width:' + pct + '%"></span></div>' +
+          '<div class="dsh-goals" aria-hidden="true">' + goals + '</div>' +
           '<div class="dsh-sub">' + sub + '</div>' +
         '</div>' +
         '<div class="dsh-stats">' +
@@ -1362,7 +1466,7 @@ function renderDraftArena() {
       runSummary.innerHTML = "";
     }
   }
-
+  renderDraftMobileBar();
 }
 // Pas de ROMs par défaut hébergées (évite les 404 + souci de copyright) : seul le chargement local est proposé.
 const EMU_ROM_OPTIONS = [];

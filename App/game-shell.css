@@ -417,3 +417,36 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh .lbv4 .lbv2-avatar {width:34px!important;height:34px!important;}
  #pokdle-app.design-refresh .lbv4 .lbv2-player b, #pokdle-app.design-refresh .lbv4 .lbv2-row > strong {font-size:.92rem;}
 }
+
+/* Draft Score Attack: card labels follow the BST goals, big artwork, goals on the gauge, phone bar. */
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-tier { padding:2px 9px; border-radius:999px; color:#fff !important; background:#8F8796; letter-spacing:.06em; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="solide"] { border-color:#4069E0 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="solide"] .dsc-tier { background:#4069E0; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="elite"] { border-color:#7C5BD6 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="elite"] .dsc-tier { background:#7C5BD6; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="master"] { border-color:#E0A800 !important; box-shadow:0 0 0 3px rgba(255,212,92,.55) !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="master"] .dsc-tier { background:#C98F00; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card[data-tier="standard"] { border-color:#DCD4C8 !important; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-card .dsc-art img { width:108px !important; height:108px !important; image-rendering:auto; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-types { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:4px; }
+#screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-types span { padding:1px 8px; border-radius:999px; background:rgba(46,42,51,.07); color:#2E2A33; font-size:.68rem; font-weight:800; }
+body.theme-dark #screen-draft-score-attack.is-mode-score-attack #draft-options .dsc-types span { background:rgba(255,255,255,.12); color:#F3EEE8; }
+#screen-draft-score-attack .draft-score-hero .dsh-goals { position:relative; height:30px; margin:0 6px; font-size:.68rem; font-weight:800; color:#5b5363; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-goals { grid-column:2; }
+#pokdle-app.design-refresh #screen-draft-score-attack .dsh-score { grid-row:1 / 5; }
+#screen-draft-score-attack .draft-score-hero .dsh-goal { position:absolute; top:0; transform:translateX(-50%); text-align:center; line-height:1.15; white-space:nowrap; }
+#screen-draft-score-attack .draft-score-hero .dsh-goal b { display:block; font-size:.72rem; color:#2E2A33; }
+#screen-draft-score-attack .draft-score-hero .dsh-goal::before { content:""; position:absolute; left:50%; top:-9px; width:2px; height:8px; background:currentColor; opacity:.45; }
+#screen-draft-score-attack .draft-score-hero .dsh-goal-record { top:-1px; font-size:.9rem; }
+#screen-draft-score-attack .draft-score-hero .dsh-goal-record::before { background:#E0A800; opacity:1; width:3px; }
+body.theme-dark #screen-draft-score-attack .draft-score-hero .dsh-goals, body.theme-dark #screen-draft-score-attack .draft-score-hero .dsh-goal b { color:#E6DFEA; }
+.draft-mobile-bar { position:fixed; left:12px; right:12px; z-index:1500; display:flex; gap:10px; padding:10px; border-radius:18px; background:rgba(255,248,239,.97); border:1px solid #EADFD0; box-shadow:0 8px 24px rgba(46,42,51,.18); }
+.draft-mobile-bar button { flex:1; min-height:46px; padding-inline:8px !important; white-space:nowrap; font-size:15px !important; }
+body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:#3A3642; }
+@media (max-width:640px) {
+  #screen-draft-score-attack.is-drafting #draft-mode-card { padding-bottom:84px; }
+  #screen-draft-score-attack .draft-score-hero .dsh-goals { height:16px; }
+  #screen-draft-score-attack .draft-score-hero .dsh-goal { font-size:0; }
+  #screen-draft-score-attack .draft-score-hero .dsh-goal b { font-size:.68rem; }
+  #screen-draft-score-attack .draft-score-hero .dsh-goal-record { font-size:.85rem; }
+}
