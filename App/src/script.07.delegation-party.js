@@ -1014,6 +1014,7 @@ function openAccountMenu() {
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
+        ${connectedAccountUser.admin ? `<button type="button" data-action="accountNavigate" data-args='["admin"]'><span>Panneau admin</span><b>→</b></button>` : ''}
       </nav>
       <div class="account-menu-linked" id="account-menu-linked" aria-live="polite"></div>
       <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
@@ -1064,6 +1065,7 @@ function accountNavigate(destination) {
   closeOverlayModal();
   if (destination === 'album') openDiscoveryAlbum();
   else if (destination === 'settings') openSettingsModal();
+  else if (destination === 'admin') location.assign('/admin');
   else { openProfileScreen(); switchProfileView('trainer'); }
 }
 (function () {

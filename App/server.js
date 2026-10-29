@@ -500,12 +500,15 @@ app.get("/auth/logout", (req, res) => {
   res.redirect("/");
 });
 
+// Accounts that open the admin panel (/admin): their ids, comma-separated, set on Render.
+const adminPanel = require("./lib/admin-panel");
+const ADMIN_ACCOUNT_IDS = adminPanel.adminIdsFrom(process.env.ADMIN_ACCOUNT_IDS);
 app.get("/api/me", (req, res) => {
   const providers = { discord: discordReady(), google: googleReady(), twitch: twitchReady() };
   if (!authReady()) return res.json({ user: null, auth: false, providers });
   const user = getSessionUser(req);
   if (user) ensureAccountRow(user);
-  res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar, via: user.via || "discord" } : null, auth: true, providers });
+  res.json({ user: user ? { id: user.id, username: user.username, avatar: user.avatar, via: user.via || "discord", ...(ADMIN_ACCOUNT_IDS.has(String(user.id)) ? { admin: true } : {}) } : null, auth: true, providers });
 });
 // Delete my account: every row tied to it, in one transaction, then the session.
 // Public egg feed entries are kept but anonymised so the shared investigation stays whole.
@@ -577,7 +580,9 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   }
   try {
     await ensureAccountRow(user);
-    const photo = sharedPhotoFromProfileData(prepared.data);
+    let photo = sharedPhotoFromProfileData(prepared.data);
+    // A photo the admin took back never returns to the rankings, even if the profile sends it again.
+    if (photo && await adminPanel.isPhotoBlocked(pgPool, photo.key).catch(() => false)) photo = null;
     await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data), photo ? photo.key : null, photo ? photo.bytes : null]);
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
@@ -1410,6 +1415,16 @@ const feedbackReady = pgPool ? authDbReady.then(async () => {
   return false;
 }) : Promise.resolve(false);
 feedback.mountFeedbackRoutes(app, { express, db: pgPool, ready: feedbackReady });
+
+// The admin panel (/admin): news banner and shared photos, for the accounts in ADMIN_ACCOUNT_IDS.
+const adminPanelReady = pgPool ? authDbReady.then(async () => {
+  await adminPanel.ensureTables(pgPool);
+  return true;
+}).catch((error) => {
+  console.warn("[admin] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, getSessionUser: (req) => (authReady() ? getSessionUser(req) : null), adminIds: ADMIN_ACCOUNT_IDS });
 
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");

@@ -15,7 +15,7 @@ async function newsTickerItems() {
   if (typeof weeklyLeagueIsoWeek === "function" && typeof weeklyLeagueTimeLeft === "function") {
     items.push({ icon: "◆", text: "Ligue · semaine " + weeklyLeagueIsoWeek().week + " · le badge se joue encore " + weeklyLeagueTimeLeft(), action: "openWeeklyLeague" });
   }
-  const [egg, board] = await Promise.allSettled([newsTickerJson("/api/egg"), newsTickerJson("/api/leaderboard?mode=journey&scope=today")]);
+  const [egg, board, news] = await Promise.allSettled([newsTickerJson("/api/egg"), newsTickerJson("/api/leaderboard?mode=journey&scope=today"), newsTickerJson("/api/news")]);
   if (egg.status === "fulfilled") {
     const state = egg.value, today = newsTickerParisDay();
     const fresh = (state.clues || []).filter(clue => clue.unlockedAt && newsTickerParisDay(new Date(clue.unlockedAt)) === today).pop();
@@ -29,7 +29,9 @@ async function newsTickerItems() {
     // An empty ranking reads as an empty site: say nothing until someone is ranked.
     if (total) items.push({ icon: "★", text: total + " dresseur" + (total > 1 ? "s" : "") + " au classement Global du jour", action: "openLeaderboardV2" });
   }
-  if (newsTickerParisDay() <= NEWS_TICKER_RELEASE.until) items.push({ icon: "✦", text: NEWS_TICKER_RELEASE.text, action: NEWS_TICKER_RELEASE.action });
+  // The line set from the admin panel replaces the built-in one; until then the built-in one stays.
+  const release = news.status === "fulfilled" && news.value.set ? news.value.news : NEWS_TICKER_RELEASE;
+  if (release && newsTickerParisDay() <= release.until) items.push({ icon: "✦", text: release.text, action: release.action });
   return items;
 }
 async function renderNewsTicker() {
