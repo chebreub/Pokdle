@@ -9,9 +9,12 @@ Dernière mise à jour : 29 octobre 2026. La passation complète et à jour est 
 - [x] #161 : panneau admin `/admin` (bandeau d'actualités, retrait de photos). Variable Render `ADMIN_ACCOUNT_IDS` posée par l'utilisateur le 29/10.
 - [x] #162 : carte « Niveau supérieur » et bandeau « Succès débloqué ».
 - [x] #163 : Draft Score Attack revue (paliers Standard / Solide / Elite / Master au lieu de « Exceptionnel » partout en Gen 9, jauge avec paliers, barre de relance sur téléphone, « Défier un ami »).
-- [ ] #164 : bouton des générations qui dit ce qui est choisi, classement simplifié (un menu, semaine par défaut s'il y a peu de joueurs, écart avec le joueur au-dessus). En attente du « go ».
+- [x] #164 : bouton des générations qui dit ce qui est choisi, classement simplifié (un menu, semaine par défaut s'il y a peu de joueurs, écart avec le joueur au-dessus).
+- [x] #165 : annonce des nouveautés, invitation « Donne ton avis », TODO et kit de lancement à jour.
+- [x] #166 : profil sur deux appareils, les progressions s'additionnent au lieu de s'écraser.
+- [ ] #167 : flèches de génération, taille et poids en pastilles (« ↑ plus récente »), et « Party Pokémon » renommé « Marathon mini-jeux » dans les missions (Entei, Scarabrute, Brutalibré, Félinferno, Victini).
 - [ ] Bandeau d'actualités : l'annonce « animations et Draft revue » s'arrête le 5/11. Ensuite, la changer dans le panneau admin.
-- [ ] Profil sur deux appareils : risque d'écrasement de la progression, en cours d'analyse.
+- [ ] **Idée notée pour plus tard (29/10) : rappel du lendemain par notification.** Notifications du navigateur, seulement si le joueur active « 🔔 Me rappeler le Pokémon du jour ». Une par jour au plus, à l'heure qu'il choisit, et rien s'il a déjà joué. Marche directement sur Android et PC ; sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil (petit guide à prévoir). Côté Render : 2 clés à ajouter (générées par Claude). Chantier moyen, comme le panneau admin. Montrer d'abord une capture du bouton et de la notification.
 - [ ] Vidéos TikTok / Shorts : 8 vidéos faites (sans musique ni voix, avec sous-titres). Prochaine idée : Duel de poids (peu lancé, mais 1 360 manches jouées en 14 jours).
 
 ## En attente : GPT travaille dessus (archives, avant le 14/10)

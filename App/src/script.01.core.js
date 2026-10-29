@@ -582,7 +582,7 @@ const ACHIEVEMENT_DEFS = [
   { id: "quiz_5", title: "Quiz débutant", desc: "Marquer 5 au Quiz.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.quizHighScore) || 0 },
   { id: "quiz_10", title: "Cerveau de Pierre", desc: "Marquer 10 au Quiz.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.quizHighScore) || 0 },
   { id: "speedrun_10", title: "Vitesse Graine", desc: "Atteindre 10 au Speedrun.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.speedrunHighScore) || 0 },
-  { id: "party_5", title: "Esprit fête", desc: "Atteindre 5 en Party Pokémon.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.partyHighScore) || 0 },
+  { id: "party_5", title: "Esprit fête", desc: "Gagner 5 manches dans une session Marathon mini-jeux.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.partyHighScore) || 0 },
   { id: "odd_10", title: "Œil de lynx", desc: "Atteindre 10 à l'Intrus.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.oddOneOutHighScore) || 0 },
   { id: "odd_streak_5", title: "Sans faute", desc: "Série de 5 à l'Intrus.", target: 5, category: "Mini-jeux", getValue: () => Number(playerProfile?.oddOneOutStreak) || 0 },
   { id: "weight_10", title: "Pèse-Pokémon", desc: "Atteindre 10 au Duel de poids.", target: 10, category: "Mini-jeux", getValue: () => Number(playerProfile?.weightBattleHighScore) || 0 },
@@ -2200,9 +2200,9 @@ function renderPartySessionUI() {
 
   if (modeLabel) {
     modeLabel.textContent = showFinalSummary
-      ? "Résultats Party Pokémon"
+      ? "Résultats du Marathon"
       : showInterRoundSummary
-        ? "Party Pokémon"
+        ? "Marathon mini-jeux"
         : (partySession.currentModeLabel || "Mini-jeu");
     modeLabel.classList.toggle("hidden", false);
   }
@@ -2263,7 +2263,7 @@ function finalizePartySession() {
   const completionBonus = rounds >= Number(partySession.maxRounds || rounds) ? 25 : 0;
   const perfectBonus = wins === rounds && wins >= 5 ? 50 : 0;
   const totalXp = baseXp + completionBonus + perfectBonus;
-  if (totalXp > 0) awardXp(totalXp, `Party Pokémon ${wins}/${rounds}`, "party");
+  if (totalXp > 0) awardXp(totalXp, `Marathon mini-jeux ${wins}/${rounds}`, "party");
   // Record session party (meilleur nombre de victoires)
   const prevRecord = Number(playerProfile?.partyHighScore) || 0;
   if (playerProfile && wins > prevRecord) {
@@ -2287,7 +2287,7 @@ function launchPartyRound() {
   const mode = pickPartyMode();
   if (!mode) {
     partySession.completed = true;
-    partySession.currentModeLabel = "Party Pokémon";
+    partySession.currentModeLabel = "Marathon mini-jeux";
     finalizePartySession();
     renderPartySessionUI();
     return;

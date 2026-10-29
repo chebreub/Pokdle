@@ -256,7 +256,7 @@ function renderStats() {
       ["Higher or Lower", Number(playerProfile?.higherLowerHighScore) || 0, "série record"],
       ["Speedrun Pokédex", Number(playerProfile?.speedrunHighScore) || 0, "en 60 s"],
       ["Quiz Pokémon", Number(playerProfile?.quizHighScore) || 0, "bonnes réponses"],
-      ["Party Pokémon", Number(playerProfile?.partyHighScore) || 0, "points record"],
+      ["Marathon mini-jeux", Number(playerProfile?.partyHighScore) || 0, "points record"],
       ["Intrus", Number(playerProfile?.oddOneOutHighScore) || 0, "d'affilée"],
       ["Duel de poids", Number(playerProfile?.weightBattleHighScore) || 0, "d'affilée"],
     ].filter(([, value]) => value > 0);
@@ -1783,7 +1783,7 @@ function modeLabelFr(mode) {
     "higher-lower-rush": "Higher or Lower (60s)",
     "poke-connections": "Poké-Connections",
     speedrun: "Speedrun Pokédex",
-    party: "Party Pokémon",
+    party: "Marathon mini-jeux",
   };
   return map[mode] || mode || "Mode inconnu";
 }
@@ -2083,7 +2083,7 @@ function renderProfileScreen() {
     // Party Pokémon
     const party = Number(playerProfile.partyHighScore) || 0;
     if (party > 0) {
-      records.push({ icon: "🎲", label: "Party Pokémon", value: `${party} victoires en une session`, color: "gold" });
+      records.push({ icon: "🎲", label: "Marathon mini-jeux", value: `${party} victoires en une session`, color: "gold" });
     }
     // Intrus / Poids — meilleure série
     const oddSerie = Number(playerProfile.oddOneOutHighScore) || 0;
@@ -2099,7 +2099,7 @@ function renderProfileScreen() {
     if (records.length) {
       modeRecordsWrap.innerHTML = records.map((r) => `<div class="profile-record-card is-${r.color}"><span class="profile-record-icon">${r.icon}</span><div><b>${escapeHtml(r.label)}</b><span>${escapeHtml(r.value)}</span></div></div>`).join("");
     } else {
-      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record hors Score Attack. Joue à Higher or Lower, Speedrun, Quiz, Intrus, Duel de poids ou Party Pokémon.</p>';
+      modeRecordsWrap.innerHTML = '<p class="card-desc">Pas encore de record hors Score Attack. Joue à Higher or Lower, Speedrun, Quiz, Intrus, Duel de poids ou Marathon mini-jeux.</p>';
     }
     const recordsSummary = document.getElementById("profile-records-summary");
     const recordCount = records.length + scoreAttackCount;
@@ -2987,7 +2987,7 @@ function openHelpModal() {
       </section>
       <section class="app-help-card">
         <h4>Modes rapides</h4>
-        <p>Pokémon du jour propose une cible quotidienne. Le Mode illimité relance une partie libre. Party Pokémon enchaîne plusieurs mini-jeux.</p>
+        <p>Pokémon du jour propose une cible quotidienne. Le Mode illimité relance une partie libre. Le Marathon mini-jeux enchaîne plusieurs défis.</p>
       </section>
       <section class="app-help-card">
         <h4>Multijoueur</h4>
@@ -4427,7 +4427,12 @@ function buildMultiplayerComparisonRowHtml(entry) {
         ${escapeHtml(entry.name)}
       </div>
     </td>
-    <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${entry.gen}</td>
+    <td data-label="Génération" class="${cls(cmp.generation)}">
+      <div class="cell-num">
+        Gen ${entry.gen}
+        ${cmp.generation !== "ok" ? directionPillHtml("gen", entry.genArrow || "") : ""}
+      </div>
+    </td>
     <td data-label="Forme" class="${cls(cmp.altForm)}">${entry.isAltForm ? "Oui" : "Non"}</td>
     <td data-label="Type 1" class="${cls(cmp.type1)}">${escapeHtml(entry.type1 || "Aucun")}</td>
     <td data-label="Type 2" class="${cls(cmp.type2)}">${escapeHtml(entry.type2 || "Aucun")}</td>
@@ -4437,13 +4442,13 @@ function buildMultiplayerComparisonRowHtml(entry) {
     <td data-label="Hauteur" class="${cls(cmp.height)}">
       <div class="cell-num">
         ${entry.height}m
-        ${cmp.height !== "ok" && heightArrow ? `<span class="${heightArrow === "↑" ? "arrow-up" : "arrow-down"}">${heightArrow}</span>` : ""}
+        ${cmp.height !== "ok" ? directionPillHtml("height", heightArrow) : ""}
       </div>
     </td>
     <td data-label="Poids" class="${cls(cmp.weight)}">
       <div class="cell-num">
         ${entry.weight}kg
-        ${cmp.weight !== "ok" && weightArrow ? `<span class="${weightArrow === "↑" ? "arrow-up" : "arrow-down"}">${weightArrow}</span>` : ""}
+        ${cmp.weight !== "ok" ? directionPillHtml("weight", weightArrow) : ""}
       </div>
     </td>
   `;

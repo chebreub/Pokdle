@@ -48,7 +48,7 @@ const ALBUM_MISSIONS = [
   albumMission('g2_espeon',196,2,'expert','Clarté mentale','Une bonne déduction doit arriver tôt.',[AMR.quick('normal',4,4),AMR.type('Psy',7)]),
   albumMission('g2_umbreon',197,2,'prestige','Dans l’ombre','Les modes sombres récompensent les joueurs réguliers.',[AMR.wins('silhouette',4),AMR.type('Ténèbres',7)]),
   albumMission('g2_scizor',212,2,'prestige','Acier rouge','L’évolution demande de connaître l’original et le métal.',[AMR.specific([123],1,'Avoir Insécateur dans l’album'),AMR.type('Acier',6)]),
-  albumMission('g2_heracross',214,2,'expert','Force collective','La victoire compte aussi quand elle se partage.',[AMR.wins('party',2),AMR.type('Insecte',7)]),
+  albumMission('g2_heracross',214,2,'expert','Force collective','Enchaîner les mini-jeux, ça forge le caractère.',[AMR.wins('party',2),AMR.type('Insecte',7)]),
   albumMission('g2_tyranitar',248,2,'prestige','Tempête de sable','Johto exige une vraie équipe de haut niveau.',[AMR.draft(2,500),AMR.type('Ténèbres',7)]),
   albumMission('g2_raikou',243,2,'legendary','Éclair fugitif','La vitesse ouvre la piste de Raikou.',[AMR.record('speedrunHighScore',12,'Atteindre 12 au Speedrun'),AMR.type('Électrik',7)]),
   albumMission('g2_entei',244,2,'legendary','Rugissement volcanique','Le feu et la victoire vont de pair.',[AMR.wins('party',4),AMR.type('Feu',9)]),
@@ -103,7 +103,7 @@ const ALBUM_MISSIONS = [
   albumMission('g6_talonflame',663,6,'expert','Premier dans le ciel','Rapidité et Vol.',[AMR.record('higherLowerHighScore',10,'Atteindre 10 à Higher or Lower'),AMR.type('Vol',10)]),
   albumMission('g6_sylveon',700,6,'prestige','Lien féerique','La collection Fée doit être bien installée.',[AMR.type('Fée',10),AMR.modes(5)]),
   albumMission('g6_aegislash',681,6,'prestige','Attaque ou défense','Une bonne culture des statistiques avant la récompense.',[AMR.record('quizHighScore',9,'Atteindre 9 au Quiz'),AMR.type('Acier',10),AMR.type('Spectre',9)]),
-  albumMission('g6_hawlucha',701,6,'expert','Entrée spectaculaire','La compétition amicale compte.',[AMR.wins('party',3),AMR.type('Combat',10)]),
+  albumMission('g6_hawlucha',701,6,'expert','Entrée spectaculaire','Chaque manche du Marathon compte.',[AMR.wins('party',3),AMR.type('Combat',10)]),
   albumMission('g6_goodra',706,6,'prestige','Dragon tendre','Une maîtrise Dragon sans brutalité.',[AMR.type('Dragon',11),AMR.gen(6,24)]),
   albumMission('g6_noivern',715,6,'expert','Écho nocturne','Vitesse et Vol dans plusieurs parties.',[AMR.wins('cry',2),AMR.type('Vol',11)]),
   albumMission('g6_xerneas',716,6,'legendary','Cycle de vie','Les types doivent se diversifier.',[AMR.gen(6,34),AMR.types(14)]),
@@ -288,6 +288,8 @@ function albumMissionRequirementLabel(req) {
   if (req.type === 'type') return `${req.goal} Pokémon de type ${req.value}`;
   if (req.type === 'total') return `${req.goal} Pokémon découverts au total`;
   if (req.type === 'modes') return `Gagner dans ${req.goal} modes différents`;
+  // A Marathon counts once per session won (at least as many rounds won as lost).
+  if (req.type === 'wins' && req.mode === 'party') return `${req.goal} session(s) gagnée(s) au Marathon mini-jeux`;
   if (req.type === 'wins') return `${req.goal} victoire(s) en ${typeof modeLabelFr === 'function' ? modeLabelFr(req.mode) : req.mode}`;
   if (req.type === 'quick') return `${req.goal} victoire(s) en ≤ ${req.attempts} essai(s)`;
   if (req.type === 'draft') return `Score Draft Gen ${req.generation} ≥ ${req.goal}`;
@@ -399,7 +401,7 @@ function albumMissionNextAction(mission, state = albumMissionState(mission)) {
     cry:['startCryGame','Jouer au Cri'], quiz:['startQuizGame','Jouer au Quiz'],
     odd:['openOddOneOutMode','Jouer à Intrus'], connections:['openPokeConnectionsMode','Jouer à Connections'],
     higherlower:['openHigherLowerMode','Jouer à Higher or Lower'], speedrun:['openSpeedrunMode','Jouer au Speedrun'],
-    weight:['startWeightBattle','Jouer au Duel de poids']
+    weight:['startWeightBattle','Jouer au Duel de poids'], party:['startPartyMode','Jouer au Marathon mini-jeux']
   };
   const recordActions = {
     quizHighScore:modeActions.quiz, weightBattleHighScore:modeActions.weight,
