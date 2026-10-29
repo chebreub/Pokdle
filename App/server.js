@@ -1442,71 +1442,57 @@ adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, 
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");
   res.set("X-Robots-Tag", "noindex");
+  res.set("Referrer-Policy", "no-referrer");
   const adminKey = process.env.ADMIN_STATS_KEY || "";
   if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
-  let feedbackHtml = "<p>(base non connectée — messages des joueurs indisponibles)</p>";
-  try { if (pgPool && await feedbackReady) feedbackHtml = feedback.feedbackSectionHtml(await feedback.recent(pgPool, 50)); } catch (_error) { feedbackHtml = "<p>Messages des joueurs indisponibles pour le moment.</p>"; }
-  let visitTotalHtml = "<p>(base non connectée — compteur persistant inactif)</p>";
-  let aggregateHtml = "<p>Compteurs quotidiens persistants indisponibles.</p>";
-  let metrics = null, uniqueDays = null;
+
+  // Full UTC days only. Avoid showing a false decline during an incomplete day.
+  const days = [7, 14, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 14;
+  const end = new Date(Date.parse(usageMetrics.utcDay() + "T00:00:00.000Z") - 86400000);
+  const endDay = usageMetrics.utcDay(end);
+  const start = usageMetrics.startDay(days, end);
+  let feedbackHtml = "<h2>Retours des joueurs</h2><p>Messages indisponibles.</p>";
+  try {
+    if (pgPool && await feedbackReady) feedbackHtml = feedback.feedbackSectionHtml(await feedback.recent(pgPool, 50));
+  } catch (error) {
+    console.warn("[stats] feedback unavailable:", String(error.message || error).slice(0, 120));
+  }
+  let metrics = null, uniqueRows = null, rawRows = null;
   try {
     if (pgPool && await usageMetricsReady) {
-      metrics = await usageMetrics.recent(pgPool, 14);
-      uniqueDays = await usageMetrics.recentUniques(pgPool, 14);
+      [metrics, uniqueRows] = await Promise.all([
+        usageMetrics.recent(pgPool, days, end),
+        usageMetrics.recentUniques(pgPool, days, end)
+      ]);
     }
   } catch (error) {
-    console.warn("[usage] persistent stats unavailable:", String(error.message || error).slice(0, 160));
-  }
-  if (pgPool) {
-    try {
-      // Real visits: one per browser session, sent by the page itself (« visit »). Robots,
-      // link previews and keep-alive pings never run the page, but every one of them loads
-      // « / »: the raw count stays alongside, for comparison only.
-      const vd = await pgPool.query("SELECT to_char(day, 'YYYY-MM-DD') AS d, hits FROM visits ORDER BY day DESC LIMIT 14");
-      const raw = new Map(vd.rows.map((r) => [r.d, Number(r.hits) || 0]));
-      const real = new Map((metrics || []).filter((r) => r.event === "visit").map((r) => [r.day, Number(r.hits) || 0]));
-      const unique = new Map((uniqueDays || []).map((r) => [r.day, Number(r.uniques) || 0]));
-      const days = [...new Set([...real.keys(), ...raw.keys(), ...unique.keys()])].sort().reverse().slice(0, 14);
-      const label = (day) => day.slice(8, 10) + "/" + day.slice(5, 7) + "/" + day.slice(0, 4);
-      const realTotal = days.reduce((sum, day) => sum + (real.get(day) || 0), 0);
-      const today = usageMetrics.utcDay(), todayUnique = uniqueDays === null ? "indisponible" : (unique.get(today) || 0);
-      visitTotalHtml = `<h2 style="margin-top:24px">Visites — 14 derniers jours (base persistante)</h2><p><b style="font-size:1.6rem;color:#2f76ff">${realTotal}</b> visites réelles : une par session de navigateur qui a vraiment ouvert le site. <b>${todayUnique}</b> visiteurs uniques estimés aujourd’hui (UTC).</p>` +
-        `<p>« Visiteurs uniques estimés » compte les navigateurs distincts par jour grâce à une empreinte statistique (faible risque de sous-comptage), conservée 90 jours. Aucun identifiant de navigateur ni aucune adresse IP n'est enregistré dans cette table. Historique disponible uniquement depuis l'activation de ce compteur ; « — » signifie non mesuré, pas zéro.</p>` +
-        `<p>« Chargements bruts » compte chaque appel de la page d'accueil, robots (Google, aperçus de liens) et pings de maintien en éveil compris : ne pas le lire comme une audience.</p>` +
-        `<table><thead><tr><th>Jour</th><th>Visites réelles</th><th>Visiteurs uniques estimés</th><th>Chargements bruts</th></tr></thead><tbody>${days.map((day) => `<tr><th>${label(day)}</th><td>${real.has(day) ? real.get(day) : "—"}</td><td>${unique.has(day) ? unique.get(day) : "—"}</td><td>${raw.has(day) ? raw.get(day) : "—"}</td></tr>`).join("")}</tbody></table>`;
-    } catch (e) { visitTotalHtml = "<p>(compteur persistant indisponible : " + e.message + ")</p>"; }
+    console.warn("[stats] aggregate read unavailable:", String(error.message || error).slice(0, 120));
   }
   try {
-    if (metrics) {
-      const summary = usageMetrics.summarizeModes(metrics, USAGE_LABELS);
-      const rows = summary.map((row) => {
-        const name = String(row.label).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
-        return `<tr><th>${name}</th><td>${row.launches}</td><td>${row.finishInstrumented ? row.completions : "—"}</td><td>${row.finishInstrumented ? row.wins : "—"}</td><td>${row.finishInstrumented ? row.losses : "—"}</td></tr>`;
-      }).join("");
-      aggregateHtml = '<h2 style="margin-top:24px">Modes joués — 14 derniers jours (base persistante)</h2>' +
-        '<p>Événements déclarés par les navigateurs : démarrages et manches conclues, pas des personnes uniques. Un mode peut comporter plusieurs manches par lancement ; <b>ces totaux ne sont pas des taux de conversion ni de rétention</b>. Aucune réponse de jeu, adresse IP ou identité n’est enregistrée dans les agrégats (conservés 90 jours maximum).</p>' +
-        '<table><thead><tr><th>Mode</th><th>Démarrages</th><th>Fins</th><th>Victoires</th><th>Défaites ou abandons</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="5">Aucune partie suivie dans cette période.</td></tr>') + '</tbody></table>';
+    if (pgPool) {
+      rawRows = (await pgPool.query(
+        "SELECT to_char(day, 'YYYY-MM-DD') AS d, hits FROM visits WHERE day >= $1::date AND day <= $2::date ORDER BY day DESC",
+        [start, endDay]
+      )).rows;
     }
   } catch (error) {
-    console.warn("[usage] aggregate read failed:", String(error.message || error).slice(0, 160));
-    aggregateHtml = "<p>Impossible de lire les agrégats du moment.</p>";
+    console.warn("[stats] raw loads unavailable:", String(error.message || error).slice(0, 120));
   }
   pruneUsageMemory();
-  const dayKeys = [...usageDays.keys()].sort().slice(-7);
-  const events = [...USAGE_EVENTS].filter((e) => dayKeys.some((k) => usageDays.get(k).events.has(e)));
-  const cell = (v) => `<td>${v || ""}</td>`;
-  const rows = events.map((e) => {
-    const total = dayKeys.reduce((s, k) => s + (usageDays.get(k).events.get(e) || 0), 0);
-    return `<tr><th>${USAGE_LABELS[e] || e}</th>${dayKeys.map((k) => cell(usageDays.get(k).events.get(e))).join("")}<td class="t">${total}</td></tr>`;
-  }).join("");
-  res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Pokédle — stats</title><meta name="robots" content="noindex">
-<style>body{font-family:system-ui,sans-serif;background:#f4f8ff;color:#1d2b4a;padding:24px;}table{border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(29,43,74,.08);}th,td{padding:8px 14px;border-bottom:1px solid #e6eefb;text-align:right;font-variant-numeric:tabular-nums;}th{text-align:left;}thead th{background:#1d2b4a;color:#fff;text-align:right;}thead th:first-child{text-align:left;}td.t{font-weight:800;background:#fff7df;}p{color:#5a6f96;max-width:640px;}</style>
-</head><body><h1>Pokédle — fréquentation</h1>${feedbackHtml}${visitTotalHtml}${aggregateHtml}
-<p>Événements de diagnostic en mémoire depuis le ${usageBootedAt.toISOString().replace("T", " ").slice(0, 16)} UTC (réinitialisés au redémarrage ; les visites et visiteurs uniques estimés sont conservés dans les tableaux persistants ci-dessus).</p>
-<table><thead><tr><th>Événement (depuis redémarrage)</th>${dayKeys.map((k) => `<th>${k.slice(5)}</th>`).join("")}<th>Total</th></tr></thead><tbody>${rows || ""}</tbody></table>
-${events.length ? "" : "<p>Aucun événement enregistré pour le moment.</p>"}</body></html>`);
+  const diagnosticDays = [...usageDays.keys()].sort().slice(-7);
+  const diagnosticRows = [...USAGE_EVENTS]
+    .filter(event => diagnosticDays.some(day => usageDays.get(day).events.has(event)))
+    .map(event => {
+      const values = diagnosticDays.map(day => usageDays.get(day).events.get(event) || 0);
+      return { label: USAGE_LABELS[event] || event, values, total: values.reduce((a, b) => a + b, 0) };
+    });
+  const { renderStatsDashboard } = require("./lib/admin-stats-dashboard");
+  res.type("html").send(renderStatsDashboard({
+    days, endDay, adminKey, metrics, uniqueRows, rawRows,
+    labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
+    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16)
+  }));
 });
 
 // Diagnostic protégé : teste directement le client_secret Discord via client_credentials.
