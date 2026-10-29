@@ -7,7 +7,7 @@ const GAME_SHELL_MODES = {
   silhouette: { title: "Zoom progressif", instruction: "Observe le détail. Chaque essai élargit la vue.", kicker: "OUVRE L’ŒIL" },
   pixel: { title: "Pokémon pixelisé", instruction: "L’image devient plus nette à chaque proposition.", kicker: "UNE IMAGE À DÉCHIFFRER" },
   cry: { title: "Le cri mystère", instruction: "Écoute, reconnais, propose. Tu peux rejouer le cri à volonté.", kicker: "TENDS L’OREILLE" },
-  mystery: { title: "Stat Mystère", instruction: "Observe les statistiques et croise-les avec les indices.", kicker: "DERRIÈRE LES CHIFFRES" },
+  mystery: { title: "Stat Mystère", instruction: "Propose des Pokémon : le tableau t’aide comme en Classique.", kicker: "DERRIÈRE LES CHIFFRES" },
   description: { title: "Description Pokédex", instruction: "Lis l’extrait du Pokédex pour retrouver son propriétaire.", kicker: "LE PORTRAIT MYSTÈRE" },
   quiz: { title: "Quiz Pokémon", instruction: "Choisis une réponse : la bonne s’affiche aussitôt.", kicker: "À TOI DE JOUER", custom: true },
   weight: { title: "Duel de poids", instruction: "Quel Pokémon est le plus lourd ? Choisis ta réponse.", kicker: "FAIS PENCHER LA BALANCE", custom: true },

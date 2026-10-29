@@ -2042,6 +2042,8 @@ function getMysteryScaleColor(value, statMeta) {
   return "#ea5b57";
 }
 
+const MYSTERY_LETTER_HINT_AFTER = 5;
+
 function updateMysteryPanel(reveal) {
   const box = document.getElementById("mystery-box");
   const list = document.getElementById("mystery-list");
@@ -2114,6 +2116,22 @@ function updateMysteryPanel(reveal) {
     li.appendChild(value);
     list.appendChild(li);
   }
+
+  // A stuck player gets the first letter after a few guesses instead of giving up.
+  const hint = document.createElement("li");
+  hint.className = "mystery-item mystery-item-type mystery-item-hint";
+  const hintLabel = document.createElement("span");
+  hintLabel.className = "mystery-label";
+  hintLabel.textContent = "Première lettre";
+  const hintValue = document.createElement("strong");
+  hintValue.className = "mystery-value";
+  const guessesLeft = MYSTERY_LETTER_HINT_AFTER - (Number(attempts) || 0);
+  hintValue.textContent = reveal || guessesLeft <= 0
+    ? [...String(secretPokemon.name)][0].toUpperCase()
+    : `🔒 dans ${guessesLeft} essai${guessesLeft > 1 ? "s" : ""}`;
+  hint.appendChild(hintLabel);
+  hint.appendChild(hintValue);
+  list.appendChild(hint);
 
   if (reveal) {
     revealBox.classList.remove("hidden");
