@@ -480,7 +480,7 @@ def run():
                         page.locator("#mystery-box").wait_for(state="visible")
                         wait(page, 'mysteryClues.length === 8 && mysteryClues[1].value === 71')
                         assert page.locator("#mystery-list .mystery-item:not(.mystery-item-hint)").count() == 8
-                        assert "dans 5 essais" in page.locator("#mystery-list .mystery-item-hint").inner_text()
+                        assert page.locator("#mystery-list .mystery-item-hint").count() == 0, "Hint shown before 5 guesses"
                         assert page.evaluate("mysteryClues[7].value") == 441
                         name = page.evaluate("secretPokemon.name")
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery.png"), animations="disabled")

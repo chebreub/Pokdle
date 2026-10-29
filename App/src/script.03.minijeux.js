@@ -2117,21 +2117,21 @@ function updateMysteryPanel(reveal) {
     list.appendChild(li);
   }
 
-  // A stuck player gets the first letter after a few guesses instead of giving up.
-  const hint = document.createElement("li");
-  hint.className = "mystery-item mystery-item-type mystery-item-hint";
-  const hintLabel = document.createElement("span");
-  hintLabel.className = "mystery-label";
-  hintLabel.textContent = "Première lettre";
-  const hintValue = document.createElement("strong");
-  hintValue.className = "mystery-value";
-  const guessesLeft = MYSTERY_LETTER_HINT_AFTER - (Number(attempts) || 0);
-  hintValue.textContent = reveal || guessesLeft <= 0
-    ? [...String(secretPokemon.name)][0].toUpperCase()
-    : `🔒 dans ${guessesLeft} essai${guessesLeft > 1 ? "s" : ""}`;
-  hint.appendChild(hintLabel);
-  hint.appendChild(hintValue);
-  list.appendChild(hint);
+  // A stuck player gets the first letter after a few guesses instead of giving up. The row
+  // only appears once unlocked: on small phones a locked row pushed the guess field under the tab bar.
+  if (reveal || (Number(attempts) || 0) >= MYSTERY_LETTER_HINT_AFTER) {
+    const hint = document.createElement("li");
+    hint.className = "mystery-item mystery-item-type mystery-item-hint";
+    const hintLabel = document.createElement("span");
+    hintLabel.className = "mystery-label";
+    hintLabel.textContent = "Première lettre";
+    const hintValue = document.createElement("strong");
+    hintValue.className = "mystery-value";
+    hintValue.textContent = [...String(secretPokemon.name)][0].toUpperCase();
+    hint.appendChild(hintLabel);
+    hint.appendChild(hintValue);
+    list.appendChild(hint);
+  }
 
   if (reveal) {
     revealBox.classList.remove("hidden");
