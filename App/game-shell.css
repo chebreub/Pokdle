@@ -471,3 +471,17 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
  #pokdle-app.design-refresh .lbv4 .lbv3-personal em {flex-basis:100%;}
  #pokdle-app.design-refresh .lbv4 .lbv3-personal em::before {content:none;}
 }
+
+/* 29/10 — direction pills: « ↑ plus récente », « ↓ plus léger »… under the value, impossible to miss. */
+#pokdle-app .cell-num:has(.dir-pill) {flex-direction:column;gap:4px;white-space:nowrap;}
+#pokdle-app .dir-pill {display:inline-flex;align-items:center;justify-content:center;gap:4px;max-width:100%;padding:3px 9px;border-radius:999px;background:#4069E0;color:#fff !important;font:700 .72rem/1.2 Nunito, sans-serif;white-space:nowrap;opacity:1 !important;box-shadow:0 1px 0 rgba(0,0,0,.12);}
+#pokdle-app .dir-pill b {font-size:1.05rem;line-height:1;}
+@media (max-width:640px) {
+ #pokdle-app .dir-pill {font-size:.68rem;padding:3px 7px;gap:3px;}
+ /* The Party Room cards are narrower: « ↑ récente » fits, « ↑ plus récente » doesn't. */
+ #pokdle-app #screen-party-room .dir-pill .dir-more {display:none;}
+}
+@media (min-width:641px) {
+ #pokdle-app .dir-pill {font-size:.72rem;padding:3px 8px;}
+ #pokdle-app .dir-pill .dir-more {display:none;}
+}

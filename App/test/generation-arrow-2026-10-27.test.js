@@ -10,7 +10,7 @@ const between = (src, from, to) => src.slice(src.indexOf(from), src.indexOf(to, 
 
 function rowBuilder() {
   const src = read('src/script.04.jeu-pokedex.js');
-  const code = between(src, 'function comparisonTypeHtml(', 'function addRow(') + between(src, 'function cls(', 'function triggerWinCelebration(');
+  const code = between(src, 'function comparisonTypeHtml(', 'function addRow(') + between(src, 'function cls(', 'function triggerWinCelebration(').replace(/^const DIRECTION_WORDS/m, 'var DIRECTION_WORDS');
   const env = {
     escapeHtml: (s) => String(s), getSpriteUrl: () => 'sprite', getPokemonSpriteId: (p) => p.id, getPokemonSprite: () => 'sprite',
     pokemonTypeColor: () => '#000', formatColorLabel: (c) => c, comparisonStatusHtml: () => '',
@@ -18,18 +18,30 @@ function rowBuilder() {
   return Function(...Object.keys(env), code + '; return buildComparisonRowHtml;')(...Object.values(env));
 }
 const pokemon = (id, gen) => ({ id, gen, name: 'P' + id, type1: 'Feu', type2: null, habitat: 'Plaine', color: 'Rouge', stage: 1, height: 1, weight: 10, isAltForm: false });
-const genCell = (html) => html.match(/<td data-label="Génération"[\s\S]*?<\/td>/)[0];
+const cell = (label) => (html) => html.match(new RegExp(`<td data-label="${label}"[\\s\\S]*?<\\/td>`))[0];
+const genCell = cell('Génération');
 
 test('the generation cell points to the right generation, like height and weight', () => {
   const build = rowBuilder();
   const cmp = (generation) => ({ generation, altForm: 'ok', type1: 'ok', type2: 'ok', habitat: 'ok', color: 'ok', stage: 'ok', height: 'ok', weight: 'ok' });
   // Unlimited game: the secret is in the browser.
-  assert.match(genCell(build(pokemon(1, 3), cmp('wrong'), pokemon(2, 5))), /Gen 3\s*<span class="arrow-up">↑<\/span>/);
-  assert.match(genCell(build(pokemon(1, 7), cmp('wrong'), pokemon(2, 5))), /Gen 7\s*<span class="arrow-down">↓<\/span>/);
-  assert.doesNotMatch(genCell(build(pokemon(1, 5), cmp('ok'), pokemon(2, 5))), /arrow/);
+  assert.match(genCell(build(pokemon(1, 3), cmp('wrong'), pokemon(2, 5))), /Gen 3\s*<span class="dir-pill dir-up"[^>]*><b aria-hidden="true">↑<\/b> <span class="dir-more">plus <\/span>récente<\/span>/);
+  assert.match(genCell(build(pokemon(1, 7), cmp('wrong'), pokemon(2, 5))), /Gen 7\s*<span class="dir-pill dir-down"[^>]*><b aria-hidden="true">↓<\/b> <span class="dir-more">plus <\/span>ancienne<\/span>/);
+  assert.doesNotMatch(genCell(build(pokemon(1, 5), cmp('ok'), pokemon(2, 5))), /dir-pill/);
   // Pokémon du jour and Party Rooms: the server sends the direction, never the secret.
-  assert.match(genCell(build(pokemon(1, 2), cmp('wrong'), null, { generationDirection: '↑', heightDirection: '', weightDirection: '' })), /arrow-up/);
-  assert.doesNotMatch(genCell(build(pokemon(1, 2), cmp('wrong'), null, { heightDirection: '', weightDirection: '' })), /arrow/, 'an older answer without the field shows no arrow');
+  assert.match(genCell(build(pokemon(1, 2), cmp('wrong'), null, { generationDirection: '↑', heightDirection: '', weightDirection: '' })), /dir-up/);
+  assert.doesNotMatch(genCell(build(pokemon(1, 2), cmp('wrong'), null, { heightDirection: '', weightDirection: '' })), /dir-pill/, 'an older answer without the field shows no arrow');
+});
+
+test('height and weight say it in words too, for screen readers as well', () => {
+  const build = rowBuilder();
+  const cmp = { generation: 'ok', altForm: 'ok', type1: 'ok', type2: 'ok', habitat: 'ok', color: 'ok', stage: 'ok', height: 'close', weight: 'wrong' };
+  const html = build(pokemon(1, 5), cmp, null, { generationDirection: '', heightDirection: '↑', weightDirection: '↓' });
+  assert.match(cell('Hauteur')(html), /aria-label="Le Pokémon recherché est plus grand"><b aria-hidden="true">↑<\/b> <span class="dir-more">plus <\/span>grand</);
+  assert.match(cell('Poids')(html), /aria-label="Le Pokémon recherché est plus léger"><b aria-hidden="true">↓<\/b> <span class="dir-more">plus <\/span>léger</);
+  const party = read('src/script.07.delegation-party.js');
+  assert.match(party, /directionPillHtml\("gen", entry\.genArrow \|\| ""\)/, 'the 1 vs 1 table has the generation pill');
+  assert.doesNotMatch(party, /"arrow-up" : "arrow-down"/);
 });
 
 test('the server sends the generation direction for the daily game and Party Rooms', () => {

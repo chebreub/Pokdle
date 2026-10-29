@@ -4427,7 +4427,12 @@ function buildMultiplayerComparisonRowHtml(entry) {
         ${escapeHtml(entry.name)}
       </div>
     </td>
-    <td data-label="Génération" class="${cls(cmp.generation)}">Gen ${entry.gen}</td>
+    <td data-label="Génération" class="${cls(cmp.generation)}">
+      <div class="cell-num">
+        Gen ${entry.gen}
+        ${cmp.generation !== "ok" ? directionPillHtml("gen", entry.genArrow || "") : ""}
+      </div>
+    </td>
     <td data-label="Forme" class="${cls(cmp.altForm)}">${entry.isAltForm ? "Oui" : "Non"}</td>
     <td data-label="Type 1" class="${cls(cmp.type1)}">${escapeHtml(entry.type1 || "Aucun")}</td>
     <td data-label="Type 2" class="${cls(cmp.type2)}">${escapeHtml(entry.type2 || "Aucun")}</td>
@@ -4437,13 +4442,13 @@ function buildMultiplayerComparisonRowHtml(entry) {
     <td data-label="Hauteur" class="${cls(cmp.height)}">
       <div class="cell-num">
         ${entry.height}m
-        ${cmp.height !== "ok" && heightArrow ? `<span class="${heightArrow === "↑" ? "arrow-up" : "arrow-down"}">${heightArrow}</span>` : ""}
+        ${cmp.height !== "ok" ? directionPillHtml("height", heightArrow) : ""}
       </div>
     </td>
     <td data-label="Poids" class="${cls(cmp.weight)}">
       <div class="cell-num">
         ${entry.weight}kg
-        ${cmp.weight !== "ok" && weightArrow ? `<span class="${weightArrow === "↑" ? "arrow-up" : "arrow-down"}">${weightArrow}</span>` : ""}
+        ${cmp.weight !== "ok" ? directionPillHtml("weight", weightArrow) : ""}
       </div>
     </td>
   `;

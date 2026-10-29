@@ -254,6 +254,7 @@ function comparisonTypeHtml(type) {
 }
 function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) {
   // The generation has its arrow too (27/10): ↑ a more recent one, ↓ an older one.
+  // Since 29/10 each arrow is a pill that says it in words, so it can't be missed.
   const gArrow = directions ? directions.generationDirection : arrowFor(pokemon.gen, targetPokemon.gen);
   const hArrow = directions ? directions.heightDirection : arrowFor(pokemon.height, targetPokemon.height);
   const wArrow = directions ? directions.weightDirection : arrowFor(pokemon.weight, targetPokemon.weight);
@@ -272,7 +273,7 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) 
     <td data-label="Génération" class="${cls(cmp.generation)}">
       <div class="cell-num">
         Gen ${pokemon.gen}
-        ${cmp.generation !== "ok" && gArrow ? `<span class="${gArrow === "↑" ? "arrow-up" : "arrow-down"}">${gArrow}</span>` : ""}
+        ${cmp.generation !== "ok" ? directionPillHtml("gen", gArrow) : ""}
       </div>
     </td>
     <td data-label="Forme" class="${cls(cmp.altForm)}">${pokemon.isAltForm ? "Oui" : "Non"}</td>
@@ -287,13 +288,13 @@ function buildComparisonRowHtml(pokemon, cmp, targetPokemon, directions = null) 
     <td data-label="Hauteur" class="${cls(cmp.height)}">
       <div class="cell-num">
         ${pokemon.height}m
-        ${cmp.height !== "ok" ? `<span class="${hArrow === "↑" ? "arrow-up" : "arrow-down"}">${hArrow}</span>` : ""}
+        ${cmp.height !== "ok" ? directionPillHtml("height", hArrow) : ""}
       </div>
     </td>
     <td data-label="Poids" class="${cls(cmp.weight)}">
       <div class="cell-num">
         ${pokemon.weight}kg
-        ${cmp.weight !== "ok" ? `<span class="${wArrow === "↑" ? "arrow-up" : "arrow-down"}">${wArrow}</span>` : ""}
+        ${cmp.weight !== "ok" ? directionPillHtml("weight", wArrow) : ""}
       </div>
     </td>
   `;
@@ -321,9 +322,6 @@ function addRow(pokemon, cmp, directions = null, {animate=true,renderShell=true}
   tr.dataset.heightDirection = directions ? directions.heightDirection : arrowFor(pokemon.height, secretPokemon.height);
   tr.dataset.weightDirection = directions ? directions.weightDirection : arrowFor(pokemon.weight, secretPokemon.weight);
   tr.querySelector(".poke-cell")?.insertAdjacentHTML("beforeend", `<small class="guess-number">Essai ${tbody.children.length + 1}</small>`);
-  tr.querySelector('[data-label="Génération"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché vient d’une génération plus ${tr.dataset.generationDirection === "↑" ? "récente" : "ancienne"}`);
-  tr.querySelector('[data-label="Hauteur"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.heightDirection === "↑" ? "grand" : "petit"}`);
-  tr.querySelector('[data-label="Poids"] .cell-num span')?.setAttribute("aria-label", `Le Pokémon recherché est plus ${tr.dataset.weightDirection === "↑" ? "lourd" : "léger"}`);
   tbody.appendChild(tr);
   if (renderShell && typeof renderGameShell === "function") renderGameShell();
   if (typeof scheduleMobileGuessSearch === 'function') scheduleMobileGuessSearch();
@@ -349,6 +347,20 @@ function cls(result) {
 function arrowFor(guessVal, secretVal) {
   if (guessVal === secretVal) return "";
   return guessVal < secretVal ? "↑" : "↓";
+}
+
+// « ↑ plus récente », « ↓ plus léger »… : what the Pokémon to find is, compared with this guess.
+const DIRECTION_WORDS = {
+  gen: { up: "récente", down: "ancienne", label: "vient d’une génération" },
+  height: { up: "grand", down: "petit", label: "est" },
+  weight: { up: "lourd", down: "léger", label: "est" },
+};
+function directionPillHtml(kind, arrow) {
+  const words = DIRECTION_WORDS[kind];
+  if (!words || (arrow !== "↑" && arrow !== "↓")) return "";
+  const word = arrow === "↑" ? words.up : words.down;
+  // « plus » is dropped on wide screens, where the table cells are narrow.
+  return `<span class="dir-pill ${arrow === "↑" ? "dir-up" : "dir-down"}" aria-label="Le Pokémon recherché ${words.label} plus ${word}"><b aria-hidden="true">${arrow}</b> <span class="dir-more">plus </span>${word}</span>`;
 }
 
 function triggerWinCelebration(box) {
