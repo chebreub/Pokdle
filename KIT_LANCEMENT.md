@@ -1,6 +1,8 @@
 # Kit de lancement — Pokédle
 
-Lien du site : **https://pokdle.onrender.com**
+Lien du site : **https://pokdle.fr** (l'ancienne adresse pokdle.onrender.com redirige vers celle-ci).
+
+Mis à jour le 29/10/2026. Rappel : **pas d'afflux massif pour l'instant**. On cherche des retours honnêtes de gens qui connaissent Pokémon, pas de la pub. Un ou deux endroits à la fois.
 
 ---
 
@@ -20,38 +22,41 @@ Le moteur de croissance d'un jeu « -dle », c'est le **partage du résultat du 
 ## ✍️ Textes prêts à coller
 
 ### Pitch ultra-court (bio, story, message rapide)
-> 🔴 Pokédle — devine le Pokémon mystère du jour, défie un pote en duel 1v1, et prépare ta team. Nouveau défi chaque jour 👉 https://pokdle.onrender.com
+> Pokédle : un Pokémon mystère à deviner chaque jour, et des petits jeux à faire seul ou entre potes. Gratuit, sur mobile et PC 👉 https://pokdle.fr
+
+### Message court à un streamer ou un créateur (sans demander de vidéo)
+> Salut ! Au boulot, avec des collègues, on s'est fait un petit jeu Pokémon qui a un peu grandi : pokdle.fr. Si un jour t'as 2 minutes pour le tester, ton avis de connaisseur m'aiderait beaucoup. Merci et bon stream !
 
 ### Discord (serveurs Pokémon FR — salon « jeux » / « partage »)
 > Hello ! J'ai développé un petit jeu Pokémon en français, **Pokédle** 🔴
-> Un Pokémon mystère à deviner chaque jour (style Wordle), + plein de modes : silhouette, cri, duel 1v1 en temps réel, Party à plusieurs, et un Team Builder orienté VGC.
-> C'est gratuit, sans pub, et ça tourne dans le navigateur 👉 https://pokdle.onrender.com
+> Un Pokémon mystère à deviner chaque jour, plus plein de modes : Pixelisé, Cri, Higher or Lower, Petit Bac, Draft, et une Party Room pour jouer à plusieurs.
+> C'est gratuit, sans pub, et ça tourne dans le navigateur 👉 https://pokdle.fr
 > Vos retours m'aident à l'améliorer 🙏 (et tentez le défi du jour, on compare nos scores !)
 
 ### Reddit — communautés casual (r/pokemon, r/jeuxvideo, r/france)
 **Titre :** J'ai créé Pokédle, un « Wordle » Pokémon en français (défi quotidien + duel 1v1 + mini-jeux)
 **Corps :**
-> Salut ! Je bosse sur **Pokédle**, un jeu de devinette Pokémon gratuit dans le navigateur : un Pokémon mystère par jour avec des indices (type, génération, etc.), un duel 1v1 en temps réel, une dizaine de mini-jeux (silhouette, cri, intrus…) et un Team Builder.
-> Lien : https://pokdle.onrender.com
+> Salut ! Au départ c'était un délire au boulot avec des collègues : **Pokédle**, un jeu Pokémon gratuit dans le navigateur. Un Pokémon mystère par jour avec des indices (type, génération, flèches…), et une vingtaine de petits jeux : Pixelisé, Cri, Higher or Lower, Petit Bac, Draft, Party Room entre amis.
+> Lien : https://pokdle.fr
 > C'est un projet perso, je cherche surtout des retours honnêtes sur ce qui est fun ou pas. Merci 🙏
 
 ### Reddit / communautés compétitives (VGC, Champions, r/stunfisk) — angle Team Builder
 **Titre :** Un Team Builder FR pour préparer ses équipes (objet, talent, nature, EV/IV, Tera, stats niv. 50) + import/export
 **Corps :**
 > J'ai ajouté à mon site Pokédle un **Team Builder orienté VGC/Champions** : sets complets (objet, talent, nature, EV/IV, **type Tera**), **stats calculées au niveau 50**, analyse de couverture de types, et **import/export texte** pour partager une équipe.
-> https://pokdle.onrender.com (onglet Outils → Team Builder)
+> https://pokdle.fr (onglet Outils → Team Builder)
 > Curieux de vos retours de joueurs compétitifs sur ce qui manque.
 
 ### Message à des potes (WhatsApp / groupe)
-> Hey, j'ai fait un petit jeu Pokémon 😄 Y'a un Pokémon mystère à deviner chaque jour, on peut comparer nos scores. Teste le défi du jour et envoie-moi ton résultat 👉 https://pokdle.onrender.com
+> Hey, j'ai fait un petit jeu Pokémon 😄 Y'a un Pokémon mystère à deviner chaque jour, on peut comparer nos scores. Teste le défi du jour et envoie-moi ton résultat 👉 https://pokdle.fr
 
 ### X / Twitter
-> 🔴 Pokédle — le Pokémon mystère du jour à deviner, + duel 1v1, mini-jeux et Team Builder. Gratuit, en français, nouveau défi chaque jour 👉 https://pokdle.onrender.com
+> 🔴 Pokédle — le Pokémon mystère du jour à deviner, + duel 1v1, mini-jeux et Team Builder. Gratuit, en français, nouveau défi chaque jour 👉 https://pokdle.fr
 > #Pokemon #PokemonChampions #VGC
 *(l'aperçu de lien affiche automatiquement la silhouette du jour — laisse-le faire le visuel)*
 
-### Idée TikTok / Shorts (fort potentiel viral)
-Petit clip de 10-15s : écran « devine le Pokémon » (silhouette ou cri), tu réfléchis à voix haute, révélation. Texte à l'écran : « Tu l'avais ? ». **Lien en bio.** À refaire chaque jour avec le Pokémon du jour.
+### TikTok / YouTube Shorts
+Les vidéos sont déjà faites (Pixel, Cri, Pokémon du jour, Stat Clash, Petit Bac, Combo de types, Course au Pokédex, Higher or Lower) : verticales, environ 25 s, **sans musique ni voix**, avec des sous-titres et « pokdle.fr » visible dès la première seconde. Poste le fichier d'origine sur Shorts (pas celui retéléchargé de TikTok), coche « pas conçue pour les enfants », épingle un premier commentaire qui pose une question (« tu l'as eu au combien ? ») et réponds aux commentaires les premiers jours.
 
 ---
 
@@ -66,7 +71,7 @@ Petit clip de 10-15s : écran « devine le Pokémon » (silhouette ou cri), tu r
 ---
 
 ## 📈 Mesurer ce qui marche
-Garde un œil sur ta **page de stats** (`/admin/stats?key=…`) après chaque vague de partage : tu verras quels modes décollent et, en croisant avec où tu as posté, **où réinvestir ton énergie**. Double sur ce qui ramène du monde.
+Garde un œil sur ta **page de stats** (`/admin/stats?key=…`, la clé est sur Render, ne la montre jamais) après chaque vague de partage. Les annonces du bandeau se changent dans le **panneau admin** (`/admin`, menu « Mon compte ») : tu verras quels modes décollent et, en croisant avec où tu as posté, **où réinvestir ton énergie**. Double sur ce qui ramène du monde.
 
 ---
 

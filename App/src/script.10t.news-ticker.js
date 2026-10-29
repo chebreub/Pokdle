@@ -1,6 +1,6 @@
 // News ticker under the header: only real, current facts about the site, each
 // one a door to the matching screen. Hidden when fewer than two facts exist.
-const NEWS_TICKER_RELEASE = { until: "2026-11-03", text: "Nouveau : une flèche pour la génération dans le Pokémon du jour", action: "startDailyGame" };
+const NEWS_TICKER_RELEASE = { until: "2026-11-05", text: "Nouveau : des animations quand tu montes de niveau, et la Draft revue", action: "openDraftScoreAttackMode" };
 function newsTickerParisDay(date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
