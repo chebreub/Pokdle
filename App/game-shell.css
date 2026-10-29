@@ -254,10 +254,11 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .tag-tries {padding:6px!important;font-size:12px!important;white-space:nowrap;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector {min-width:0;margin:0!important;padding:3px;gap:2px;flex:0 0 auto;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-selector button {width:auto!important;padding:6px 9px!important;min-height:38px;font:800 12px Nunito,sans-serif!important;white-space:nowrap;}
- #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice {min-height:44px;width:52px!important;padding:6px!important;gap:3px;font-size:12px!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice {min-height:44px;width:auto!important;max-width:150px;padding:6px 10px!important;gap:5px;font-size:12px!important;white-space:nowrap;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice > span {display:none;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice .pk-ico {width:14px;height:14px;flex-basis:14px;}
- #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice::after {content:"Gén.";}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice .generation-chip-short {display:inline;font:800 12px Nunito,sans-serif;overflow:hidden;text-overflow:ellipsis;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #game-generation-choice .generation-chip-short > span {display:inline;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .shell-intro {margin:10px 0 14px!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #shell-kicker {margin:0;font-size:12px;line-height:1.4;letter-spacing:.06em;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #shell-title {font-size:26px!important;line-height:1.15;margin:5px 0!important;}
@@ -449,4 +450,24 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
   #screen-draft-score-attack .draft-score-hero .dsh-goal { font-size:0; }
   #screen-draft-score-attack .draft-score-hero .dsh-goal b { font-size:.68rem; }
   #screen-draft-score-attack .draft-score-hero .dsh-goal-record { font-size:.85rem; }
+}
+
+/* Generation chip: the short summary only shows on phones (the long one stays on wider screens). */
+.generation-chip-short {display:none;}
+.generation-hint {position:absolute;z-index:1400;width:260px;box-sizing:border-box;padding:10px 12px;border-radius:14px;background:#2E2A33;color:#fff;font:700 13px/1.35 Nunito,system-ui,sans-serif;box-shadow:0 10px 24px rgba(0,0,0,.25);animation:generationHintIn .3s ease;}
+.generation-hint::before {content:"";position:absolute;left:22px;top:-6px;width:12px;height:12px;background:#2E2A33;transform:rotate(45deg);}
+@keyframes generationHintIn {from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.generation-hint{animation:none;}}
+
+/* Rankings: one board menu, the gap to the next place, and the 7-day fallback note. */
+#pokdle-app.design-refresh .lbv4 .lbv4-board-select select {min-width:200px;font-weight:800!important;color:var(--ui-ink);}
+#pokdle-app.design-refresh .lbv4 .lbv3-personal {flex-wrap:wrap;}
+#pokdle-app.design-refresh .lbv4 .lbv3-personal em {font-style:normal;font-weight:800;color:var(--ui-muted);}
+#pokdle-app.design-refresh .lbv4 .lbv3-personal em::before {content:"·";margin-right:8px;color:var(--ui-muted);}
+.lbv4-auto-week {margin:-6px 0 12px;font:700 .85rem Nunito,sans-serif;color:var(--ui-muted,#6B6472);}
+@media(max-width:640px){
+ #pokdle-app.design-refresh .lbv4 .lbv4-board-select {flex:1 1 100%;}
+ #pokdle-app.design-refresh .lbv4 .lbv4-board-select select {width:100%;min-width:0;}
+ #pokdle-app.design-refresh .lbv4 .lbv3-personal em {flex-basis:100%;}
+ #pokdle-app.design-refresh .lbv4 .lbv3-personal em::before {content:none;}
 }

@@ -592,7 +592,8 @@ def main():
      expect(hero and listing and listing['y']>=hero['y']+hero['height']-3,'Leaderboard list is not below the week card: '+repr([hero,listing]))
      expect(page.locator('.lbv3-list .lbv2-row').count()==6 and page.locator('.lbv3-list .lbv2-row').first.locator('.lbv2-rank').inner_text().strip()=='#1','The list does not start with the first player')
      expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
-     expect(page.locator('.lbv3-mode-tab[aria-pressed="true"]').count()==1,'Selected game is not announced')
+     expect(page.locator('.lbv4-board-select select').input_value()=='enquete','Selected board is not shown in the board menu')
+     expect('à 1 essai de Leaf (#3)' in page.locator('.lbv3-personal').inner_text(),'The gap to the player above is missing')
      for card in page.locator('.lbv3-list .lbv2-row').all():
       bounds=card.bounding_box()
       for content in card.locator('.lbv2-player b, :scope > strong').all():

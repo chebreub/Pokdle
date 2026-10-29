@@ -77,6 +77,20 @@ function leaderboardV2FormatScore(score, mode, unit) {
   if (mode === "higherlower60" || mode === "typecombo") return n + " pts";
   return n + (unit ? " " + unit : "");
 }
+// « Global du jour » over 7 days reads « Global · 7 jours ».
+function leaderboardV2Title(label, scope) {
+  const text = String(label || "");
+  // « Pokémon du jour » is a game's name: only the other boards lose their « du jour ».
+  const base = text === "Pokémon du jour" ? text : text.replace(/ du jour$/, "");
+  if (scope === "week") return base + " · 7 jours";
+  if (scope === "all") return base + " · records";
+  return text;
+}
+// « à 1 pt de Jade », « à 12 pts de Jade »: the gap reads in the board's unit, singular for one.
+function leaderboardV2GapText(gap, mode, unit) {
+  const text = leaderboardV2FormatScore(gap, mode, unit);
+  return Number(gap) === 1 ? text.replace(/(\p{L})s\b/gu, "$1") : text;
+}
 // R1: validate both HTTP and application responses; a failed request is not an empty board.
 async function leaderboardFetchJson(url, options = {}) {
   const controller = typeof AbortController === "function" ? new AbortController() : null;
@@ -258,7 +272,13 @@ function switchLeaderboardSelect() {
   if (value === "__league") { this.value = ""; return typeof openWeeklyLeagueRanking === "function" ? openWeeklyLeagueRanking() : null; }
   openLeaderboardV2(value, leaderboardV2Scope);
 }
+// Opened from the menu (no period given) with fewer than three players today, the board shows
+// the last 7 days: an almost empty list reads as an empty site.
+const LEADERBOARD_V2_FEW_PLAYERS = 3;
+let leaderboardV2AutoWeek = false;
 function openLeaderboardV2(mode="journey",scope="today") {
+  const autoScope = arguments.length < 2;
+  if (!autoScope) leaderboardV2AutoWeek = false;
   const DRAFT_GENS=[["draft_all","Tous"],["draft_1","G1"],["draft_2","G2"],["draft_3","G3"],["draft_4","G4"],["draft_5","G5"],["draft_6","G6"],["draft_7","G7"],["draft_8","G8"],["draft_9","G9"]];
   let current=String(mode||"journey");
   if (LEADERBOARD_V2_ALIASES[current]) current=LEADERBOARD_V2_ALIASES[current];
@@ -287,17 +307,18 @@ function openLeaderboardV2(mode="journey",scope="today") {
   }).then(result=>{
     const [data,counts]=result||[];
     if (!data || !leaderboardOwnsDialog(requestId)) return;
+    if (autoScope && requestedScope==="today" && (Number(data.total)||0) < LEADERBOARD_V2_FEW_PLAYERS) {
+      const shown=openLeaderboardV2(current,"week");
+      leaderboardV2AutoWeek = true;
+      return shown;
+    }
     const isActive=id=>id==="draft"?leaderboardV2IsDraft(current):id===current;
-    const modeTab=([id,label])=>{
-      const active=isActive(id),target=id==="draft"?"draft_all":id,tone=LEADERBOARD_V2_TONES[id];
-      return '<button type="button" class="lbv3-mode-tab'+(tone?' is-day':'')+(active?' is-active':'')+'"'+(tone?' style="--lb-tone:'+tone[0]+';--lb-ink:'+tone[1]+'"':'')+' aria-pressed="'+active+'" data-action="switchLeaderboardV2" data-lb-mode="'+target+'">'+escapeHtml(label)+'</button>';
-    };
-    const dayTabs=LEADERBOARD_V2_DAY_MODES.map(modeTab).join("");
-    const otherActive=LEADERBOARD_V2_OTHER_MODES.some(([id])=>isActive(id));
     const otherModes=LEADERBOARD_V2_OTHER_MODES.filter(([id])=>!counts||isActive(id)||Number(counts[id])>0||(id==="draft"&&requestedScope==="all"&&leaderboardV2DraftLocalBest("draft_all")>0));
-    const modeTabs='<label class="lbv4-arcade'+(otherActive?' is-active':'')+'"><span>Jeux d’arcade</span><select data-change-action="switchLeaderboardSelect" aria-label="Classement d’un jeu d’arcade">'+
-      '<option value=""'+(otherActive?'':' selected')+'>'+(otherModes.length?'Choisir un jeu…':'Aucun record sur cette période')+'</option>'+
-      otherModes.map(([id,label])=>'<option value="'+(id==="draft"?"draft_all":id)+'"'+(isActive(id)?' selected':'')+'>'+escapeHtml(label)+'</option>').join("")+
+    // One menu for every board: the day's stages first, then the arcade games that have a score.
+    const option=([id,label])=>'<option value="'+(id==="draft"?"draft_all":id)+'"'+(isActive(id)?' selected':'')+'>'+escapeHtml(label)+'</option>';
+    const modeTabs='<label class="lbv4-arcade lbv4-board-select is-active"><span>Classement</span><select data-change-action="switchLeaderboardSelect" aria-label="Choisir un classement">'+
+      '<optgroup label="Jeux du jour">'+LEADERBOARD_V2_DAY_MODES.map(option).join("")+'</optgroup>'+
+      (otherModes.length?'<optgroup label="Jeux d’arcade">'+otherModes.map(option).join("")+'</optgroup>':'')+
       '<option value="__league">Ligue · 3 disciplines</option></select></label>';
 
     const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
@@ -334,7 +355,20 @@ function openLeaderboardV2(mode="journey",scope="today") {
 
     let personalHtml='';
     if (data?.me) {
-      personalHtml='<section class="lbv3-personal"><span>Ta position</span><strong>#'+Number(data.me.rank)+'</strong><span>·</span><b>'+leaderboardV2ScoreHtml(data.me,current,data.unit||meta.unit)+'</b></section>';
+      const myRank=Number(data.me.rank)||0, unit=data.unit||meta.unit;
+      const inList=rows.some(row=>row.me);
+      const above=[...rows,...(Array.isArray(data?.around)?data.around:[])].find(row=>Number(row.rank)===myRank-1&&!row.me);
+      // Whatever the direction of the board, the gap is the distance to the next place.
+      const gap=above?Math.abs((Number(above.score)||0)-(Number(data.me.score)||0)):null;
+      const gapHtml=above
+        ? (gap>0
+            ? '<em>à '+escapeHtml(leaderboardV2GapText(gap,current,unit))+' de '+escapeHtml(above.username||"Dresseur")+' (#'+(myRank-1)+')</em>'
+            : '<em>à égalité avec '+escapeHtml(above.username||"Dresseur")+' : le temps vous départage</em>')
+        : '';
+      // Already in the list and first: nothing to add. Otherwise the line says how far the next place is.
+      if (!(inList && myRank===1)) {
+        personalHtml='<section class="lbv3-personal"><span>Ta position</span><strong>#'+myRank+'</strong><span>·</span><b>'+leaderboardV2ScoreHtml(data.me,current,unit)+'</b>'+gapHtml+'</section>';
+      }
     }
     const localDraftBest=requestedScope==="all" ? leaderboardV2DraftLocalBest(current) : 0;
     if (localDraftBest > (Number(data?.me?.score)||0)) {
@@ -353,11 +387,11 @@ function openLeaderboardV2(mode="journey",scope="today") {
     const total=Number(data?.total)||0;
     const body='<div class="lbv3-shell lbv4" data-lb-request="'+requestId+'">'+
       leaderboardWeekHero()+
-      '<div class="lbv3-controls"><div class="lbv3-day-tabs" role="group" aria-label="Classements de la journée">'+dayTabs+'</div>'+
-        '<div class="lbv4-filters"><div class="lbv3-scope-tabs">'+scopeTabs+'</div>'+modeTabs+'</div></div>'+
+      '<div class="lbv3-controls"><div class="lbv4-filters">'+modeTabs+'<div class="lbv3-scope-tabs">'+scopeTabs+'</div></div></div>'+
+      (leaderboardV2AutoWeek&&requestedScope==="week"?'<p class="lbv4-auto-week" role="status">Peu de joueurs aujourd’hui : voici les 7 derniers jours.</p>':'')+
       genTabs+
       '<header class="lbv3-header lbv4-board-head">'+
-        '<div class="lbv3-title"><h3>'+escapeHtml(data?.label||meta.label)+'</h3><p>'+escapeHtml(meta.hint)+'</p></div>'+
+        '<div class="lbv3-title"><h3>'+escapeHtml(leaderboardV2Title(data?.label||meta.label,requestedScope))+'</h3><p>'+escapeHtml(meta.hint)+'</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
       personalHtml+
