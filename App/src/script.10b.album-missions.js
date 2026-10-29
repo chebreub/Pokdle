@@ -410,6 +410,7 @@ function albumMissionNextAction(mission, state = albumMissionState(mission)) {
   for (const {req, done} of state.reqs) {
     if (done) continue;
     const match = req.type === 'draft' ? ['openDraftScoreAttackMode','Jouer au Draft Score Attack']
+      : req.type === 'dexrace' ? ['openPartyRoomMode','Course au Pokédex en Party Room']
       : req.type === 'record' ? recordActions[req.field]
       : ['wins','quick'].includes(req.type) ? modeActions[req.mode] : null;
     if (match) return { action:match[0], label:match[1] };
