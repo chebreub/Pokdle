@@ -12,8 +12,18 @@ function generationChoiceSummary(values = [...selectedGens]) {
   const gens=validGenerationChoices(values);
   return gens.length===9 ? 'Toutes les régions' : gens.length<=2 ? gens.map(n=>GENERATIONS[n].label).join(' + ') : `${gens.length} générations`;
 }
+// The phone chip has room for a few characters: « Toutes », « 1-4 », « 1, 3, 5 », « 4 gén. ».
+function generationChoiceShort(values = [...selectedGens]) {
+  const gens=validGenerationChoices(values);
+  if(gens.length===9)return 'Toutes';
+  const contiguous=gens.every((n,i)=>i===0||n===gens[i-1]+1);
+  if(gens.length===1)return String(gens[0]);
+  if(contiguous)return `${gens[0]}-${gens[gens.length-1]}`;
+  return gens.length<=3?gens.join(', '):`${gens.length} gén.`;
+}
 function renderGenerationSummaries() {
   document.querySelectorAll('[data-generation-summary]').forEach(node=>node.textContent=generationChoiceSummary());
+  document.querySelectorAll('[data-generation-short]').forEach(node=>node.textContent=generationChoiceShort());
 }
 function openGenerationPicker(mode = null) {
   generationPickerMode = GENERATION_MODE_START[mode] ? mode : null;
@@ -45,10 +55,28 @@ function applyGenerationChoices() {
   setSelectedGenerations(choices);writeJson(GENERATION_PREFERENCE_KEY,choices);renderGenerationSummaries();closeOverlayModal();
   if(mode)window[GENERATION_MODE_START[mode]]();
 }
+const GENERATION_HINT_KEY='pokedle_generation_hint_v1';
 function renderGameGenerationControl() {
   const button=document.getElementById('game-generation-choice');if(!button)return;
   const supported=Boolean(GENERATION_MODE_START[gameMode])&&!(typeof isPartySessionActive==='function'&&isPartySessionActive());
   button.classList.toggle('hidden',!supported);
+  // The phone chip says what is chosen (« Gén. 1-4 ▾ »), not only « Gén. ».
+  if(!button.querySelector('[data-generation-short]'))button.insertAdjacentHTML('beforeend','<b class="generation-chip-short"><span aria-hidden="true">Gén. </span><span data-generation-short></span> ▾</b>');
   button.dataset.args=JSON.stringify([gameMode]);renderGenerationSummaries();
+  if(supported)setTimeout(showGenerationHintOnce,600);
+}
+// Once per browser: a bubble under the chip says the Pokémon pool can be chosen.
+function showGenerationHintOnce() {
+  const button=document.getElementById('game-generation-choice');
+  if(!button||button.classList.contains('hidden')||!button.getClientRects().length||document.getElementById('generation-hint'))return;
+  try{if(localStorage.getItem(GENERATION_HINT_KEY))return;localStorage.setItem(GENERATION_HINT_KEY,'1');}catch(_e){return;}
+  const hint=document.createElement('div');hint.id='generation-hint';hint.className='generation-hint';hint.setAttribute('role','status');
+  hint.textContent='Astuce : choisis ici les générations des Pokémon à deviner.';
+  const r=button.getBoundingClientRect();
+  hint.style.top=Math.round(r.bottom+window.scrollY+10)+'px';
+  hint.style.left=Math.round(Math.max(12,Math.min(r.left+window.scrollX,window.innerWidth-272)))+'px';
+  document.body.appendChild(hint);
+  const close=()=>{hint.remove();document.removeEventListener('pointerdown',close,true);};
+  document.addEventListener('pointerdown',close,true);setTimeout(close,6000);
 }
 document.addEventListener('DOMContentLoaded',renderGenerationSummaries);
