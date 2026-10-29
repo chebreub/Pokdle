@@ -253,6 +253,17 @@ function progressQuest(questId, amount = 1) {
   updateXpBadge();
 }
 
+// « Joue à 3 modes différents »: every finished game counts, won or lost, once per mode.
+function progressQuestMode(mode) {
+  if (!playerProfile || !mode) return;
+  const quest = ensureDailyQuests().find((q) => q.id === "play_3_modes");
+  if (!quest || quest.completed) return;
+  const modes = Array.isArray(quest.modes) ? quest.modes : [];
+  if (modes.includes(mode)) return;
+  quest.modes = [...modes, String(mode).slice(0, 40)];
+  progressQuest("play_3_modes", 1);
+}
+
 // XP earned by one action (a win and the quest it completes) shows as a single toast;
 // otherwise the second message replaced the first in the same instant.
 let xpToastBatch = null;
