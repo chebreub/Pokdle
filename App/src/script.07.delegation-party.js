@@ -1825,6 +1825,7 @@ function recordMatchHistory(entry) {
     trackUsage("complete:" + recorded.mode + ":" + recorded.result);
   }
   discoverFromHistory(matchHistory[0]);
+  if (typeof progressQuestMode === "function") progressQuestMode(recorded.mode);
   if (typeof renderShellResult === "function") renderShellResult();
 }
 
@@ -2397,6 +2398,8 @@ function showScreen(id) {
   // Lets styles know which screen is shown (the news ticker stays off during games).
   if (document.body) document.body.dataset.screen = id;
   if (id === "screen-game" && typeof renderGameShell === "function") renderGameShell();
+  // The « Consulte le Pokédex » quest, whatever way the Pokédex was opened.
+  if (id === "screen-pokedex" && typeof progressQuest === "function") progressQuest("pokedex_browse", 1);
   if (typeof prepareDedicatedShell === "function") prepareDedicatedShell(id);
   window.scrollTo(0, 0);
   return true;
