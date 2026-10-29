@@ -1690,16 +1690,20 @@ function getPlayerLevelInfo() {
   return { current, next, xp: wins * 100, progress };
 }
 
+// The first check of a page load only catches up on old progress: it unlocks quietly.
+let achievementsCheckedOnce = false;
 function evaluateAchievements() {
-  let changed = false;
+  const fresh = [];
   for (const achievement of ACHIEVEMENT_DEFS) {
     const value = achievement.getValue();
     if (value >= achievement.target && !unlockedAchievements[achievement.id]) {
       unlockedAchievements[achievement.id] = { unlockedAt: Date.now() };
-      changed = true;
+      fresh.push(achievement);
     }
   }
-  if (changed) saveAchievementsState();
+  if (fresh.length) saveAchievementsState();
+  if (fresh.length && achievementsCheckedOnce && typeof celebrateAchievements === "function") celebrateAchievements(fresh);
+  achievementsCheckedOnce = true;
 }
 
 function getAchievementProgress(achievement) {

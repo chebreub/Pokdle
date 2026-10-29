@@ -370,3 +370,56 @@
 
 /* Quiz over: the whole recap shows at once, each line with its question (audit of 25/10). */
 #pokdle-app #quiz-box:has(#quiz-end-card:not(.hidden)) .quiz-history { max-height: none; overflow: visible; }
+
+/* Level-up card and achievement banner (script.10eb.celebration.js). */
+.lvc-back{position:fixed;inset:0;z-index:2147483000;background:rgba(46,42,51,0);animation:lvcBack .35s ease forwards}
+@keyframes lvcBack{to{background:rgba(46,42,51,.55)}}
+.lvc-card{position:fixed;left:50%;top:46%;z-index:2147483001;width:min(330px,86vw);box-sizing:border-box;padding:26px 20px 20px;border-radius:28px;background:#FFF8EF;color:#2E2A33;text-align:center;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);font-family:Nunito,system-ui,sans-serif;transform:translate(-50%,-50%) scale(.4);opacity:0;animation:lvcPop .55s cubic-bezier(.2,1.6,.4,1) .1s forwards;cursor:pointer}
+@keyframes lvcPop{to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.lvc-rays{position:absolute;left:50%;top:92px;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:repeating-conic-gradient(rgba(255,212,92,.35) 0 10deg,transparent 10deg 20deg);animation:lvcSpin 9s linear infinite;pointer-events:none}
+@keyframes lvcSpin{to{transform:rotate(360deg)}}
+.lvc-kick,.lvc-title,.lvc-badge,.lvc-next,.lvc-btn,.lvc-ring{position:relative}
+.lvc-kick{margin:0;font:800 13px Nunito,sans-serif;letter-spacing:.14em;color:#7C5BD6}
+@property --lvc-p{syntax:'<percentage>';inherits:false;initial-value:0%}
+.lvc-ring{width:128px;height:128px;margin:10px auto 8px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#4069E0 var(--lvc-p),#E9E2D6 0);animation:lvcFill 1s ease .45s forwards}
+@keyframes lvcFill{to{--lvc-p:100%}}
+.lvc-ring::before{content:"";position:absolute;inset:12px;border-radius:50%;background:#fff}
+.lvc-num{position:relative;display:block;font:700 54px Fredoka,sans-serif;line-height:1;color:#4069E0}
+.lvc-old{display:block;animation:lvcOld .3s ease 1.45s forwards}
+.lvc-new{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transform:translateY(40px) scale(.3);animation:lvcNew .45s cubic-bezier(.2,1.8,.4,1) 1.5s forwards}
+@keyframes lvcOld{to{opacity:0;transform:translateY(-40px)}}
+@keyframes lvcNew{to{opacity:1;transform:none}}
+.lvc-title{margin:4px 0 2px;font:700 30px Fredoka,sans-serif;color:#2E2A33}
+.lvc-badge{display:inline-block;margin:8px 0 4px;padding:8px 16px;border-radius:999px;background:#FFD45C;color:#2E2A33;font:800 16px Nunito,sans-serif;opacity:0;transform:scale(.3) rotate(-8deg);animation:lvcBadge .5s cubic-bezier(.2,1.8,.4,1) 2s forwards}
+@keyframes lvcBadge{to{opacity:1;transform:none}}
+.lvc-next{margin:6px 0 14px;font:700 14px Nunito,sans-serif;color:#6B6472}
+.lvc-btn{width:100%;padding:14px;border:0;border-radius:16px;background:#4069E0;color:#fff;font:800 17px Nunito,sans-serif;box-shadow:0 4px 0 #2d4fb3;cursor:pointer}
+.lvc-back.is-leaving,.lvc-card.is-leaving{transition:opacity .2s ease;opacity:0 !important}
+.lvc-conf{position:fixed;top:40%;left:50%;z-index:2147483002;width:10px;height:14px;border-radius:3px;pointer-events:none;opacity:0;animation:lvcConf 1.6s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes lvcConf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}
+.achc{position:fixed;left:50%;top:14px;z-index:2147483003;width:min(460px,calc(100vw - 24px));box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:20px;background:#2E2A33;color:#fff;
+  font-family:Nunito,system-ui,sans-serif;box-shadow:0 14px 30px rgba(0,0,0,.35);transform:translate(-50%,-140%);animation:achcIn .5s cubic-bezier(.2,1.4,.4,1) forwards;cursor:pointer}
+@keyframes achcIn{to{transform:translate(-50%,0)}}
+.achc.is-leaving{animation:achcOut .38s ease forwards}
+@keyframes achcOut{from{transform:translate(-50%,0)}to{transform:translate(-50%,-140%)}}
+.achc-medal{position:relative;flex:0 0 52px;height:52px;border-radius:50%;display:grid;place-items:center;overflow:hidden;font-size:26px;background:radial-gradient(circle at 35% 30%,#FFF2B8,#FFD45C 45%,#D39B00);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
+.achc-medal::after{content:"";position:absolute;inset:-20px;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.85) 50%,transparent 60%);transform:translateX(-80px);animation:achcShine 1s ease .6s forwards}
+@keyframes achcShine{to{transform:translateX(80px)}}
+.achc-text{min-width:0}
+.achc-text small{display:block;font:800 11px Nunito,sans-serif;letter-spacing:.12em;color:#FFD45C}
+.achc-text b{display:block;font:700 18px Fredoka,sans-serif}
+.achc-text span{display:block;font:600 13px Nunito,sans-serif;color:#D9D2DF}
+body.theme-dark .lvc-card{background:#29262F;color:#F3EEE8}
+body.theme-dark .lvc-title{color:#F3EEE8}
+body.theme-dark .lvc-ring::before{background:#1E1C24}
+body.theme-dark .lvc-next{color:#B5ADBB}
+/* Less motion asked: everything appears in place, no rays, no confetti. */
+.lvc-back.is-still,.lvc-card.is-still,.lvc-card.is-still *,.achc.is-still,.achc.is-still *{animation:none !important;transition:none !important}
+.lvc-back.is-still{background:rgba(46,42,51,.55)}
+.lvc-card.is-still{transform:translate(-50%,-50%);opacity:1}
+.lvc-card.is-still .lvc-rays,.lvc-card.is-still .lvc-old{display:none}
+.lvc-card.is-still .lvc-ring{--lvc-p:100%}
+.lvc-card.is-still .lvc-new,.lvc-card.is-still .lvc-badge{opacity:1;transform:none;position:static}
+.achc.is-still{transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.lvc-conf{display:none}}

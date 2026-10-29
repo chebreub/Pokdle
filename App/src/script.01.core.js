@@ -178,10 +178,8 @@ function awardXp(amount, source = "", game = "") {
   try { saveProfile(); } catch (_e) {}
   queueXpToast(given.amount, given.reduced ? `${source} (½ XP au-delà de ${XP_GAME_DAILY_FULL} par jeu et par jour)` : source);
   if (newTier.level > prevTier.level) {
-    const message = newTier.name !== prevTier.name
-      ? `🎉 Niveau ${newTier.level} — nouveau titre : ${newTier.name} ${newTier.emoji}`
-      : `🎉 Niveau ${newTier.level} ${newTier.emoji}`;
-    setTimeout(() => showXpToast(message, "is-levelup"), 700);
+    if (typeof celebrateLevelUp === "function") celebrateLevelUp(prevTier.level, newTier.level);
+    else setTimeout(() => showXpToast(`🎉 Niveau ${newTier.level} ${newTier.emoji}`, "is-levelup"), 700);
   }
   updateXpBadge();
 }
