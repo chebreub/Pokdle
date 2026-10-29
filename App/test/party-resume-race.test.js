@@ -39,7 +39,7 @@ function partyResumeFixture(resumeId="guest-new") {
     io:{sockets:{sockets:new Map([["host-old",oldHost],["guest-old",oldGuest],[resumeId,socket]])}},
     checkRateLimit(){return false;},sanitizeRoomCode:v=>String(v||"").toUpperCase(),
     respond:(ack,value)=>ack(value),clearTimeout(){},clearPartyRoomCleanup(){},
-    emitPartyRoomState(){calls.emits++;},petitBacParty:require('../lib/party-petitbac'),
+    emitPartyRoomState(){calls.emits++;},petitBacParty:require('../lib/party-petitbac'),dessinParty:require('../lib/party-dessin'),
     publicPartyRoomState(value,viewerId){return {code:value.code,viewerId,players:value.players.map(p=>({id:p.id,connected:p.connected}))};}
   };
   const start=server.indexOf('  socket.on("party:resume"');

@@ -11,6 +11,7 @@ const { Server } = require("socket.io");
 const { createOAuthStateStore } = require("./lib/oauth-state");
 const nearestParty = require("./lib/party-nearest");
 const dexRace = require("./lib/party-dexrace");
+const dessinParty = require("./lib/party-dessin");
 const deductionParty = require("./lib/party-deduction");
 const quiEstCeParty = require("./lib/party-quiestce");
 const petitBacParty = require("./lib/party-petitbac");
@@ -1035,6 +1036,8 @@ const RATE_LIMITS = {
   "restart":     { max: 3,  windowMs: RATE_LIMIT_WINDOW_MS },
   "commit":      { max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
   "party-guess": { max: 12, windowMs: RATE_LIMIT_WINDOW_MS },
+  // « Dessine-le ! »: the drawer sends a piece of stroke about every 100 ms.
+  "party-draw":  { max: 160, ipMax: 400, windowMs: RATE_LIMIT_WINDOW_MS },
 };
 const PAYLOAD_MAX_BYTES = 64_000;
 const DRAFT_BATTLE_MAX_TEAM_INDEX = 5;
@@ -1335,7 +1338,7 @@ const USAGE_EVENTS = new Set([
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
   "solo:draft", "solo:statclash", "solo:emulator",
   "party:create", "party:join",
-  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:petitbac", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty",
+  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:petitbac", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty", "party:start:dessin",
   "duel:create", "statclash:create",
 ]);
 const USAGE_LABELS = {
@@ -1348,7 +1351,7 @@ const USAGE_LABELS = {
   "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
   "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:petitbac": "Party — Petit Bac", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
-  "party:start:statclashparty": "Party — Stat Clash", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
+  "party:start:statclashparty": "Party — Stat Clash", "party:start:dessin": "Party — Dessine-le !", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
 };
 const usageDays = new Map(); // dateKey -> { events: Map } (diagnostic since restart only)
 const USAGE_MAX_DAYS = 14;
@@ -1608,7 +1611,9 @@ function resolvePartyNearestRound(room) {
 function publicPartyRoomState(room, viewerId = null) {
   const revealed = room.status === "finished" || room.status === "complete";
   const gameMode = room.gameMode || "guess";
-  const roundState = room.status === "waiting" ? null : gameMode === "dexrace" ? dexRace.publicRace(room) : gameMode === "coop"
+  const roundState = room.status === "waiting" ? null : gameMode === "dexrace" ? dexRace.publicRace(room) : gameMode === "dessin"
+    ? dessinParty.publicDessin(room, viewerId, revealed)
+    : gameMode === "coop"
     ? coopParty.publicCoopRound(room, viewerId, revealed)
     : gameMode === "deduction"
     ? deductionParty.publicDeductionRound(room, revealed)
@@ -1730,6 +1735,8 @@ async function startPartyGame(room) {
   room.recentDuoKeys = [];
   room.bacUsedLetters = [];
   room.bacStats = {};
+  room.dessinUsed = [];
+  room.dessinOrder = room.players.map((player) => player.id);
   for (const player of room.players) {
     player.score = 0;
     player.correct = false;
@@ -1763,6 +1770,15 @@ function partyPointsForRank(rank) {
 
 function clearPartyRoundTimer(room) {
   if (room && room.roundTimer) { clearTimeout(room.roundTimer); room.roundTimer = null; }
+  if (room && room.dessinHintTimers) { room.dessinHintTimers.forEach(clearTimeout); room.dessinHintTimers = null; }
+}
+
+// « Dessine-le ! »: the drawing clock, and a state update when each hint opens (type, then generation).
+function armPartyDessinDraw(room) {
+  armPartyPhaseTimer(room, dessinParty.DRAW_MS);
+  room.dessinHintTimers = [dessinParty.TYPE_HINT_MS, dessinParty.GEN_HINT_MS].map((ms) => setTimeout(() => {
+    if (room.status === "playing" && room.gameMode === "dessin") emitPartyRoomState(room);
+  }, ms + 50));
 }
 
 function resetPartyCampaign(room) {
@@ -1805,6 +1821,9 @@ function resetPartyCampaign(room) {
   room.bac = null;
   room.bacUsedLetters = [];
   room.bacStats = {};
+  room.dessin = null;
+  room.dessinUsed = [];
+  room.dessinOrder = null;
   for (const player of room.players || []) {
     player.score = 0;
     player.correct = false;
@@ -1824,6 +1843,10 @@ function forcePartyRoundEnd(room) {
   if (!room || room.status !== "playing") return;
   if (room.gameMode === "dexrace") {
     room.race.endedReason = "time"; endPartyRound(room);
+  } else if (room.gameMode === "dessin" && room.dessin?.phase === "choose") {
+    // No choice in time: the easy Pokémon is drawn.
+    dessinParty.chooseDessin(room, null, 0);
+    armPartyDessinDraw(room);
   } else if (room.gameMode === "nearest") {
     resolvePartyNearestRound(room);
   } else if (room.gameMode === "petitbac") {
@@ -1859,7 +1882,7 @@ function armPartyRoundTimer(room) {
     room.roundStartedAt = Date.now();
     return;
   }
-  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : // Qui est-ce ? waits for human answers: a long safety limit only.
+  const duration = room.gameMode === "dexrace" ? (room.raceDuration === 300 ? 300000 : 180000) : room.gameMode === "dessin" ? dessinParty.CHOOSE_MS : // Qui est-ce ? waits for human answers: a long safety limit only.
     room.gameMode === "quiestce1v1" ? 1200000 : room.gameMode === "petitbac" ? room.bac.time * 1000 : ["deduction", "coop"].includes(room.gameMode) ? 180000 : PARTY_ROUND_TIMER_MS;
   room.deadlineAt = Date.now() + duration;
   room.roundStartedAt = Date.now();
@@ -1870,6 +1893,8 @@ async function startPartyRound(room) {
   // Dispatch selon le mode de la party
   if (room.gameMode === "dexrace") {
     dexRace.startRace(room, POKEMON_LIST);
+  } else if (room.gameMode === "dessin") {
+    dessinParty.startDessinRound(room, POKEMON_LIST);
   } else if (room.gameMode === "coop") {
     coopParty.startCoopRound(room, POKEMON_LIST);
   } else if (room.gameMode === "deduction") {
@@ -2328,6 +2353,8 @@ function handlePartyDisconnect(socketId, voluntary) {
     if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
     if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
     if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
+    // « Dessine-le ! »: no drawer, no drawing; and the round ends once everyone left has found.
+    if (room.status === "playing" && room.gameMode === "dessin" && (dessinParty.drawerGone(room) || (room.dessin?.phase === "draw" && dessinParty.guessers(room).every((p) => room.dessin.found[p.id])))) endPartyRound(room);
     emitPartyRoomState(room);
   };
 
@@ -2657,6 +2684,7 @@ io.on("connection", (socket) => {
       if (room.quiPending && room.quiPending.askerId === previousId) room.quiPending.askerId = socket.id;
       if (Array.isArray(room.quiLog)) room.quiLog.forEach((entry) => { if (entry.by === previousId) entry.by = socket.id; });
       petitBacParty.rekeyPetitBac(room, previousId, socket.id);
+      dessinParty.rekeyDessin(room, previousId, socket.id);
       if (room.race?.roster) room.race.roster.forEach((member) => { if (member.id === previousId) member.id = socket.id; });
       if (room.race?.claims instanceof Map) {
         for (const claim of room.race.claims.values()) if (claim.playerId === previousId) claim.playerId = socket.id;
@@ -2696,7 +2724,7 @@ io.on("connection", (socket) => {
       if (room.gameMode === "petitbac" && !petitBacParty.publicOptions(room, POKEMON_LIST).letters) return respond(ack, { ok: false, error: "Aucune lettre ne convient à ces thèmes : change un thème ou les générations." });
       if (room.gameMode === "quiestce1v1" && room.players.filter((player) => player.connected).length !== 2) return respond(ack, { ok: false, error: "Qui est-ce ? se joue à deux exactement." });
       await startPartyGame(room);
-      if (!room.target && room.gameMode !== "dexrace") return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       recordUsage("party:start:" + (room.gameMode || "guess"));
       emitPartyRoomState(room);
@@ -2710,7 +2738,7 @@ io.on("connection", (socket) => {
     try {
       if (checkRateLimit(socket, "party-guess")) return respond(ack, { ok: false, error: "Trop de requetes." });
       const room = findPartyRoomBySocket(socket.id);
-      if (!room || room.status !== "playing" || (!room.target && room.gameMode !== "dexrace")) return respond(ack, { ok: false, error: "Aucune manche en cours." });
+      if (!room || room.status !== "playing" || (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin")) return respond(ack, { ok: false, error: "Aucune manche en cours." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
       if (room.gameMode === "dexrace") {
@@ -2718,6 +2746,17 @@ io.on("connection", (socket) => {
         if (result.error) return respond(ack, { ok: false, error: result.error });
         if (result.full) { room.race.endedReason = "full"; endPartyRound(room); }
         if (result.claimed) emitPartyRoomState(room);
+        return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
+      }
+      if (room.gameMode === "dessin") {
+        if (payload.code !== room.code) return respond(ack, { ok: false, error: "Cette salle a changé." });
+        const choosing = payload.dessinAction === "choose";
+        const result = choosing ? dessinParty.chooseDessin(room, player, payload.option, payload.roundSerial)
+          : dessinParty.submitDessinGuess(room, player, payload.guess, payload.roundSerial, resolveRoomPokemonGuess);
+        if (result.error) return respond(ack, { ok: false, error: result.error, room: publicPartyRoomState(room, socket.id) });
+        if (choosing) armPartyDessinDraw(room);
+        if (result.ended) endPartyRound(room);
+        emitPartyRoomState(room);
         return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
       }
       if (room.gameMode === "coop") {
@@ -2841,7 +2880,7 @@ io.on("connection", (socket) => {
       if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) return respond(ack, { ok: false, error: "La party est terminee." });
       room.roundNumber = (Number(room.roundNumber) || 1) + 1;
       await startPartyRound(room);
-      if (!room.target && room.gameMode !== "dexrace") return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -2874,7 +2913,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "petitbac" && mode !== "coop" && mode !== "dexrace") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "petitbac" && mode !== "coop" && mode !== "dexrace" && mode !== "dessin") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
         room.roundNumber = 0;
@@ -2939,6 +2978,26 @@ io.on("connection", (socket) => {
     if (result.error) return respond(ack, {ok:false,error:result.error,room:publicPartyRoomState(room,socket.id)});
     room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds, room.bacRounds);
     emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
+  });
+  // « Dessine-le ! »: a piece of stroke, an undo or a clear, relayed to the others without the whole room state.
+  socket.on("party:dessin-draw", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "party-draw")) return respond(ack, { ok: false, error: "Trop de traits d’un coup." });
+      const room = findPartyRoomBySocket(socket.id);
+      if (!room || room.gameMode !== "dessin" || payload.code !== room.code) return respond(ack, { ok: false, error: "Aucun dessin en cours." });
+      const player = room.players.find((entry) => entry.id === socket.id);
+      const op = String(payload.op || "");
+      const result = op === "add" ? dessinParty.addDessinPiece(room, player, payload.piece, payload.roundSerial)
+        : op === "undo" ? dessinParty.undoDessin(room, player, payload.roundSerial)
+        : op === "clear" ? dessinParty.clearDessin(room, player, payload.roundSerial)
+        : { error: "Action inconnue." };
+      if (result.error) return respond(ack, { ok: false, error: result.error });
+      const relay = { code: room.code, roundSerial: room.roundSerial, op, piece: result.piece || null, k: result.undone ?? null };
+      for (const other of room.players) if (other.connected && other.id !== socket.id) io.to(other.id).emit("party:dessin-draw", relay);
+      respond(ack, { ok: true });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Trait non envoyé." });
+    }
   });
   socket.on("party:dexrace-options", (payload = {}, ack) => {
     const room = findPartyRoomBySocket(socket.id);

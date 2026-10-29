@@ -580,3 +580,44 @@
   #pokdle-app.design-refresh #screen-party-room .party-guess-table .poke-cell { flex-direction: row !important; gap: 10px; font-size: 16px !important; width: 100%; }
   #pokdle-app.design-refresh #screen-party-room .party-guess-table .guess-number { margin-left: auto; }
 }
+
+/* 29/10 — « Dessine-le ! »: one draws, the others guess. */
+#pokdle-app #screen-party-room .party-dessin {margin-top:10px;}
+#pokdle-app #screen-party-room .dessin-choose {text-align:center;padding:8px 0 4px;}
+#pokdle-app #screen-party-room .dessin-choose h4 {margin:4px 0;font:700 1.35rem Fredoka, sans-serif;color:var(--ui-ink, #2E2A33);}
+#pokdle-app #screen-party-room .dessin-choose p {margin:0 0 12px;color:var(--ui-muted, #6b6475);font-weight:700;}
+#pokdle-app #screen-party-room .dessin-options {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+#pokdle-app #screen-party-room .dessin-option {display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 14px;border-radius:20px;border:2px solid #F0E8DD;background:#fff;font:inherit;color:#2E2A33;cursor:pointer;}
+#pokdle-app #screen-party-room .dessin-option:hover,#pokdle-app #screen-party-room .dessin-option:focus-visible {border-color:#7C5BD6;}
+#pokdle-app #screen-party-room .dessin-option img {width:100%;max-width:120px;height:auto;aspect-ratio:1;object-fit:contain;}
+#pokdle-app #screen-party-room .dessin-option b {font:700 1rem Fredoka, sans-serif;}
+#pokdle-app #screen-party-room .dessin-option small {color:#6b6475;font-weight:800;font-size:.75rem;}
+#pokdle-app #screen-party-room .dessin-level {padding:3px 10px;border-radius:999px;font-weight:900;font-size:.7rem;background:#5DBE7E;color:#2E2A33;}
+#pokdle-app #screen-party-room .dessin-option.is-medium .dessin-level {background:#FFD45C;}
+#pokdle-app #screen-party-room .dessin-option.is-hard .dessin-level {background:#FF9F5A;}
+#pokdle-app #screen-party-room .dessin-muted {color:#6b6475;font-size:.82rem;font-weight:700;}
+#pokdle-app #screen-party-room .dessin-top {display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:10px;border-radius:18px;background:#fff;border:1px solid #F0E8DD;}
+#pokdle-app #screen-party-room .dessin-top img {width:52px;height:52px;object-fit:contain;flex:none;}
+#pokdle-app #screen-party-room .dessin-top small {display:block;font-size:.7rem;font-weight:900;letter-spacing:.08em;color:#7C5BD6;}
+#pokdle-app #screen-party-room .dessin-top b {font:700 1.2rem Fredoka, sans-serif;color:#2E2A33;}
+#pokdle-app #screen-party-room .dessin-found {margin-left:auto;text-align:right;font-size:.75rem;font-weight:800;color:#6b6475;}
+#pokdle-app #screen-party-room .dessin-hint {display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+#pokdle-app #screen-party-room .dessin-letters {font:700 1.3rem Fredoka, sans-serif;letter-spacing:.12em;color:#2E2A33;margin-right:4px;white-space:pre-wrap;}
+#pokdle-app #screen-party-room .dessin-chip {padding:4px 10px;border-radius:999px;background:#F3EEFC;color:#5a3fb0;font-weight:800;font-size:.78rem;}
+#pokdle-app #screen-party-room .dessin-chip.is-soon {background:#F4F1EC;color:#9a93a3;}
+#pokdle-app #screen-party-room .dessin-board {padding:8px;border-radius:20px;background:#fff;border:1px solid #F0E8DD;}
+#pokdle-app #screen-party-room #party-dessin-canvas {display:block;width:100%;max-width:calc(58vh * 4 / 3);margin:0 auto;height:auto;aspect-ratio:4/3;border-radius:14px;background:#FFFDF9;border:2px dashed #E6DCCF;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+#pokdle-app #screen-party-room .dessin-tools {display:flex;flex-direction:column;gap:8px;padding:10px 4px 2px;}
+#pokdle-app #screen-party-room .dessin-colors,#pokdle-app #screen-party-room .dessin-actions {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:7px;}
+#pokdle-app #screen-party-room .dessin-dot {width:29px;height:29px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #E6DCCF;cursor:pointer;padding:0;}
+#pokdle-app #screen-party-room .dessin-dot.is-on {box-shadow:0 0 0 3px #2E2A33;}
+#pokdle-app #screen-party-room .dessin-size {display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;border:0;background:#F7F2EA;cursor:pointer;padding:0;}
+#pokdle-app #screen-party-room .dessin-size i {display:block;border-radius:50%;background:#2E2A33;}
+#pokdle-app #screen-party-room .dessin-size.is-on {background:#2E2A33;}
+#pokdle-app #screen-party-room .dessin-size.is-on i {background:#fff;}
+#pokdle-app #screen-party-room .dessin-btn {min-height:38px;padding:0 12px;border-radius:12px;border:0;background:#F7F2EA;color:#2E2A33;font:800 .82rem Nunito, sans-serif;cursor:pointer;}
+#pokdle-app #screen-party-room .dessin-btn.is-on {background:#2E2A33;color:#fff;}
+#pokdle-app #screen-party-room .dessin-feed {display:flex;flex-direction:column;gap:5px;margin-top:10px;padding:10px 14px;border-radius:18px;background:#fff;border:1px solid #F0E8DD;font-size:.86rem;max-height:9.5em;overflow:auto;}
+#pokdle-app #screen-party-room .dessin-feed .is-ok {color:#1f7a45;font-weight:800;}
+#pokdle-app #screen-party-room .dessin-feed .is-close {color:#8a6a00;font-weight:800;}
+#pokdle-app #screen-party-room .dessin-feed .is-no {color:#6b6475;}
