@@ -578,12 +578,25 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   if (!prepared.ok) {
     return res.status(prepared.error === "profile_owner_mismatch" ? 409 : 400).json({ ok: false, error: prepared.error });
   }
+  // The copy this device started from. A newer copy online (another device synced meanwhile)
+  // is not overwritten: the device gets it back (409), merges both and sends again.
+  const baseSavedAt = Number(prepared.data._baseSavedAt);
+  const checkBase = Object.prototype.hasOwnProperty.call(prepared.data, "_baseSavedAt") && Number.isFinite(baseSavedAt) && baseSavedAt >= 0;
+  delete prepared.data._baseSavedAt;
   try {
     await ensureAccountRow(user);
     let photo = sharedPhotoFromProfileData(prepared.data);
     // A photo the admin took back never returns to the rankings, even if the profile sends it again.
     if (photo && await adminPanel.isPhotoBlocked(pgPool, photo.key).catch(() => false)) photo = null;
-    await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1", [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data), photo ? photo.key : null, photo ? photo.bytes : null]);
+    const values = [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data), photo ? photo.key : null, photo ? photo.bytes : null];
+    const saved = checkBase
+      ? await pgPool.query(`UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1
+          AND (CASE WHEN jsonb_typeof(data->'_savedAt') = 'number' THEN (data->>'_savedAt')::numeric ELSE 0 END) <= $7`, [...values, baseSavedAt])
+      : await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1", values);
+    if (checkBase && saved.rowCount === 0) {
+      const current = await pgPool.query("SELECT data FROM users WHERE discord_id = $1", [user.id]);
+      return res.status(409).json({ ok: false, error: "stale_profile", data: profileForClient((current.rows[0] && current.rows[0].data) || {}, user.id) });
+    }
     res.json({ ok: true });
   } catch (e) { console.error("[profile] post:", e.message); res.json({ ok: false }); }
 });

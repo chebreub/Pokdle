@@ -1126,6 +1126,9 @@ function accountNavigate(destination) {
   var ANON_CACHE = "pokedle_sync_cache_v2:anonymous";
   var LEGACY_BACKUP = "pokedle_sync_legacy_backup_v2";
   var CONFLICT_PREFIX = "pokedle_sync_conflict_v2:";
+  // The last copy known to match the server, kept across reloads: it lets a merge add up
+  // what each device earned since then instead of only keeping the higher numbers.
+  var BASE_PREFIX = "pokedle_sync_base_v1:";
   var loggedIn = false;
   // Local/server ownership must be reconciled before this page is allowed to upload.
   // This also prevents a restore-triggered reload from beaconing the restored blob back
@@ -1189,6 +1192,14 @@ function accountNavigate(destination) {
     writeItem(ANON_CACHE, JSON.stringify(copy));
   }
   function readAnonymousCache() { return parseBlob(readItem(ANON_CACHE)); }
+  function saveSyncBase(accountId, blob) {
+    if (!accountId || !hasContent(blob)) return;
+    writeItem(BASE_PREFIX + encodeURIComponent(String(accountId)), JSON.stringify(Object.assign({}, blob, { _accountId: String(accountId) })));
+  }
+  function readSyncBase(accountId) {
+    var blob = parseBlob(readItem(BASE_PREFIX + encodeURIComponent(String(accountId))));
+    return blob && String(blob._accountId || "") === String(accountId) ? blob : null;
+  }
   function backupOnce(key, blob) {
     if (!hasContent(blob) || readItem(key)) return;
     writeItem(key, JSON.stringify(blob));
@@ -1266,12 +1277,16 @@ function accountNavigate(destination) {
         return { reload: false, ready: true };
       }
       if (serverHas && (serverAt > localAt || !hasContent(local))) {
+        var incoming = server;
         if (hasContent(local) && !sameContent(local, server)) {
           captureRestorePoint("server");
           backupConflict(accountId, snapshotLocal(accountId, Date.now()));
+          // Another device synced meanwhile: keep both. The online copy's choices win, nothing
+          // earned here is lost; the merged copy is sent back once the page has reloaded.
+          if (typeof mergeSyncBlobs === "function") incoming = Object.assign(mergeSyncBlobs(server, local, readSyncBase(accountId)), { _savedAt: serverAt, _accountId: accountId });
         }
-        applyAccountBlob(server, accountId);
-        saveAccountCache(accountId, server);
+        applyAccountBlob(incoming, accountId);
+        saveAccountCache(accountId, incoming);
         return { reload: reloadAfterStorageSwitch(), ready: true };
       }
       return { reload: false, ready: true };
@@ -1342,10 +1357,34 @@ function accountNavigate(destination) {
   // An unchanged profile is never re-sent: an idle tab would otherwise stamp old data with a
   // fresh time every minute and overwrite progress made meanwhile on another device.
   var lastSyncedBlob = null;
+  // Version of the online copy this page last saw (received or sent): the server refuses a
+  // copy built on an older one, so a device never wipes what another device just synced.
+  var serverSavedAt = null;
   function unchangedSinceSync(blob) {
     return Boolean(lastSyncedBlob) && sameContent(blob, lastSyncedBlob);
   }
-  function pushSync() {
+  function withBase(blob) {
+    return serverSavedAt === null ? blob : Object.assign({}, blob, { _baseSavedAt: serverSavedAt });
+  }
+  // Both devices progressed: merge the online copy into this one (this device's choices win,
+  // counters add up from the last common copy), reload the game state, then send again.
+  function mergeOnlineCopy(accountId, server) {
+    if (typeof mergeSyncBlobs !== "function" || String(server?._accountId || "") !== accountId) return false;
+    var local = snapshotLocal(accountId, localSavedAt());
+    var merged = mergeSyncBlobs(local, server, lastSyncedBlob);
+    captureRestorePoint("server");
+    applySyncedKeys(merged);
+    serverSavedAt = Math.max(0, Number(server._savedAt) || 0);
+    lastSyncedBlob = server;
+    saveSyncBase(accountId, server);
+    try { if (typeof loadProfile === "function") loadProfile(); } catch (e) {}
+    try { if (typeof loadStats === "function") loadStats(); } catch (e) {}
+    try { if (typeof loadAchievementsState === "function") loadAchievementsState(); } catch (e) {}
+    try { if (typeof updateXpBadge === "function") updateXpBadge(); } catch (e) {}
+    try { if (typeof renderStats === "function") renderStats(); } catch (e) {}
+    return true;
+  }
+  function pushSync(retried) {
     var accountId = activeAccountId;
     if (!syncReady || !loggedIn || !accountId || localOwner() !== accountId) return Promise.resolve(false);
     var blob = buildLocalBlob(accountId);
@@ -1355,14 +1394,21 @@ function accountNavigate(destination) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify(blob)
+        body: JSON.stringify(withBase(blob))
       }).then(function (response) {
         return response.json().catch(function () { return null; }).then(function (data) {
+          if (response.status === 409 && data?.error === "stale_profile") {
+            if (!syncReady || !loggedIn || activeAccountId !== accountId || localOwner() !== accountId) return false;
+            if (retried !== true && mergeOnlineCopy(accountId, data.data)) return pushSync(true);
+            return false;
+          }
           if (!response.ok || !data?.ok) return false;
           if (!syncReady || !loggedIn || activeAccountId !== accountId || localOwner() !== accountId) return false;
           setLocalSavedAt(blob._savedAt);
           saveAccountCache(accountId, blob);
           lastSyncedBlob = blob;
+          serverSavedAt = blob._savedAt;
+          saveSyncBase(accountId, blob);
           return true;
         });
       }).catch(function () { return false; });
@@ -1459,6 +1505,8 @@ function accountNavigate(destination) {
           var activation = activateAccount(activeAccountId, server);
           if (!activation.ready || activation.reload) return;
           lastSyncedBlob = server;
+          serverSavedAt = Math.max(0, Number(server._savedAt) || 0);
+          saveSyncBase(activeAccountId, server);
           syncReady = true;
           pushSync();
         });
@@ -1473,7 +1521,7 @@ function accountNavigate(destination) {
         saveAccountCache(activeAccountId, blob);
         if (unchangedSinceSync(blob)) return;
         if (navigator.sendBeacon) {
-          navigator.sendBeacon("/api/profile", new Blob([JSON.stringify(blob)], { type: "application/json" }));
+          navigator.sendBeacon("/api/profile", new Blob([JSON.stringify(withBase(blob))], { type: "application/json" }));
         }
       } catch (e) {}
     });

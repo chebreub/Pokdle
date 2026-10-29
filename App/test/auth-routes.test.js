@@ -296,3 +296,54 @@ test("a session from before the database move gets its account row back, a delet
   assert.deepEqual(users.get("google:42").data, { _accountId: "google:42", profile: { xp: 12 } }, "a profile save no longer lands nowhere");
   assert.ok(queries.some(([sql, p]) => sql.includes("'google'") && p[0] === "42" && p[1] === "google:42"));
 });
+
+test("a profile built on an older online copy is refused with the newer one, so a device never wipes another", async (t) => {
+  const users = new Map([["1234567890", { data: { _accountId: "1234567890", _savedAt: 2000, profile: '{"xp":300}' } }]]);
+  const db = (sql, p) => {
+    if (/SELECT data FROM users/.test(sql)) { const u = users.get(p[0]); return { rows: u ? [{ data: u.data }] : [], rowCount: u ? 1 : 0 }; }
+    if (/UPDATE users SET data/.test(sql)) {
+      const u = users.get(p[0]);
+      // The real query compares the stored _savedAt with the base ($7) in SQL.
+      if (!u || (p.length > 6 && Number(u.data._savedAt || 0) > Number(p[6]))) return { rows: [], rowCount: 0 };
+      u.data = JSON.parse(p[1]); return { rows: [], rowCount: 1 };
+    }
+    return { rows: [], rowCount: 1 };
+  };
+  const f = await fixture(t, db);
+  const jwt = require("../node_modules/jsonwebtoken");
+  const cookie = "pokdle_session=" + jwt.sign({ id: "1234567890", username: "Sacha", avatar: "", via: "discord" }, "synthetic-session-secret-for-tests-only");
+  const stale = await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 3000, _baseSavedAt: 1000, profile: '{"xp":7}' });
+  assert.equal(stale.status, 409);
+  const body = await stale.json();
+  assert.equal(body.error, "stale_profile");
+  assert.equal(body.data.profile, '{"xp":300}', "the newer online copy comes back to be merged");
+  assert.equal(users.get("1234567890").data.profile, '{"xp":300}', "nothing was overwritten");
+  const fresh = await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 4000, _baseSavedAt: 2000, profile: '{"xp":307}' });
+  assert.deepEqual(await fresh.json(), { ok: true });
+  assert.deepEqual(users.get("1234567890").data, { _accountId: "1234567890", _savedAt: 4000, profile: '{"xp":307}' }, "the base marker is not stored");
+  const legacy = await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 5000, profile: '{"xp":308}' });
+  assert.deepEqual(await legacy.json(), { ok: true }, "a page from before this change still saves");
+});
+
+test("PostgreSQL: the stale-profile check runs on the real users table", { skip: !process.env.QA_DATABASE_URL, timeout: 20000 }, async () => {
+  const { Pool } = require("pg"), { randomUUID } = require("node:crypto");
+  const source = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
+  const sql = source.match(/`(UPDATE users SET data = \$2[^`]+<= \$7)`/)[1];
+  const schema = "sync_" + randomUUID().replaceAll("-", ""), root = new Pool({ connectionString: process.env.QA_DATABASE_URL });
+  let db;
+  try {
+    await root.query("CREATE SCHEMA " + schema);
+    db = new Pool({ connectionString: process.env.QA_DATABASE_URL, options: "-c search_path=" + schema, max: 2 });
+    await db.query("CREATE TABLE users(discord_id TEXT PRIMARY KEY, data JSONB NOT NULL DEFAULT '{}'::jsonb, partner_id INTEGER, xp INTEGER, photo_key TEXT, photo BYTEA)");
+    await db.query("INSERT INTO users(discord_id, data) VALUES ('1', '{\"_savedAt\": 2000}'), ('2', '{}'), ('3', '{\"_savedAt\": \"oops\"}')");
+    const run = (id, base) => db.query(sql, [id, JSON.stringify({ _savedAt: 9000 }), null, 0, null, null, base]);
+    assert.equal((await run("1", 1000)).rowCount, 0, "older base: refused");
+    assert.equal((await run("1", 2000)).rowCount, 1, "same base: saved");
+    assert.equal((await run("2", 0)).rowCount, 1, "no online copy yet: saved");
+    assert.equal((await run("3", 0)).rowCount, 1, "an unreadable stamp never blocks the save");
+  } finally {
+    if (db) await db.end();
+    await root.query("DROP SCHEMA IF EXISTS " + schema + " CASCADE").catch(() => {});
+    await root.end();
+  }
+});
