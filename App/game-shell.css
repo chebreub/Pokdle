@@ -272,6 +272,7 @@ body.theme-dark .generation-picker-actions {background:#292634;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list li {display:grid!important;grid-template-columns:110px minmax(0,1fr) 38px!important;gap:8px!important;align-items:center;min-height:24px;padding:3px 7px!important;font-size:12px!important;line-height:18px;border:0!important;border-radius:8px;box-shadow:none;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-head {display:none!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-item-type {grid-template-columns:44px minmax(0,1fr)!important;}
+ #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-list .mystery-item-type.mystery-item-hint {grid-template-columns:110px minmax(0,1fr)!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .mystery-label {color:var(--shell-muted)!important;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .mystery-value {color:var(--shell-ink)!important;font-size:13px!important;min-width:0;justify-self:end;white-space:nowrap;}
  #pokdle-app.design-refresh #screen-game[data-shell="focused"] .mystery-bar {grid-column:auto;height:8px;min-width:0;}

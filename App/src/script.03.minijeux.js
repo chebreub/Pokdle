@@ -2042,6 +2042,8 @@ function getMysteryScaleColor(value, statMeta) {
   return "#ea5b57";
 }
 
+const MYSTERY_LETTER_HINT_AFTER = 5;
+
 function updateMysteryPanel(reveal) {
   const box = document.getElementById("mystery-box");
   const list = document.getElementById("mystery-list");
@@ -2113,6 +2115,22 @@ function updateMysteryPanel(reveal) {
     li.appendChild(label);
     li.appendChild(value);
     list.appendChild(li);
+  }
+
+  // A stuck player gets the first letter after a few guesses instead of giving up. The row
+  // only appears once unlocked: on small phones a locked row pushed the guess field under the tab bar.
+  if (reveal || (Number(attempts) || 0) >= MYSTERY_LETTER_HINT_AFTER) {
+    const hint = document.createElement("li");
+    hint.className = "mystery-item mystery-item-type mystery-item-hint";
+    const hintLabel = document.createElement("span");
+    hintLabel.className = "mystery-label";
+    hintLabel.textContent = "Première lettre";
+    const hintValue = document.createElement("strong");
+    hintValue.className = "mystery-value";
+    hintValue.textContent = [...String(secretPokemon.name)][0].toUpperCase();
+    hint.appendChild(hintLabel);
+    hint.appendChild(hintValue);
+    list.appendChild(hint);
   }
 
   if (reveal) {

@@ -107,7 +107,7 @@ async function submitGuess() {
   const cmp = compare(found, secretPokemon); resultHistory.push({ pokemon: found, cmp }); addRow(found, cmp);
   document.getElementById("results-wrap").classList.remove("hidden");
   document.getElementById("guess-input").value = "";
-  guessCache.clear(); updateSilhouettePanel(false); updatePixelPanel(false); saveCurrentGame();
+  guessCache.clear(); updateSilhouettePanel(false); updatePixelPanel(false); if (gameMode === "mystery") updateMysteryPanel(false); saveCurrentGame();
   if (found.name === secretPokemon.name) { gameOver = true; showWin(); }
 }
 

@@ -479,7 +479,8 @@ def run():
                         screen(page, "screen-game")
                         page.locator("#mystery-box").wait_for(state="visible")
                         wait(page, 'mysteryClues.length === 8 && mysteryClues[1].value === 71')
-                        assert page.locator("#mystery-list .mystery-item").count() == 8
+                        assert page.locator("#mystery-list .mystery-item:not(.mystery-item-hint)").count() == 8
+                        assert page.locator("#mystery-list .mystery-item-hint").count() == 0, "Hint shown before 5 guesses"
                         assert page.evaluate("mysteryClues[7].value") == 441
                         name = page.evaluate("secretPokemon.name")
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery.png"), animations="disabled")
@@ -487,6 +488,7 @@ def run():
                         assert page.evaluate("gameMode") == "mystery"
                         assert page.locator("#mystery-reveal").is_visible(), "Solution not revealed"
                         assert name in page.locator("#mystery-name").inner_text()
+                        assert page.locator("#mystery-list .mystery-item-hint .mystery-value").inner_text() == name[0].upper()
                         page.screenshot(path=str(OUT / f"{engine}-{width}-mystery-solved.png"), animations="disabled")
 
                     def higher_lower():

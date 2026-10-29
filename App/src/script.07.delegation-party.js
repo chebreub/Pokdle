@@ -2589,6 +2589,10 @@ function getHelpContentForGameMode(mode) {
             <h4>Indices classiques en plus</h4>
             <p>Les indices habituels (gen, types, habitat…) restent dispos pour t'aider.</p>
           </section>
+          <section class="app-help-card">
+            <h4>Coup de pouce</h4>
+            <p>Après 5 essais, la <b>première lettre</b> du nom s’affiche.</p>
+          </section>
         `,
       };
     case 'quiz':
