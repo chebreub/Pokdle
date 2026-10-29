@@ -288,6 +288,8 @@ function albumMissionRequirementLabel(req) {
   if (req.type === 'type') return `${req.goal} Pokémon de type ${req.value}`;
   if (req.type === 'total') return `${req.goal} Pokémon découverts au total`;
   if (req.type === 'modes') return `Gagner dans ${req.goal} modes différents`;
+  // A Marathon counts once per session won (at least as many rounds won as lost).
+  if (req.type === 'wins' && req.mode === 'party') return `${req.goal} session(s) gagnée(s) au Marathon mini-jeux`;
   if (req.type === 'wins') return `${req.goal} victoire(s) en ${typeof modeLabelFr === 'function' ? modeLabelFr(req.mode) : req.mode}`;
   if (req.type === 'quick') return `${req.goal} victoire(s) en ≤ ${req.attempts} essai(s)`;
   if (req.type === 'draft') return `Score Draft Gen ${req.generation} ≥ ${req.goal}`;
@@ -399,7 +401,7 @@ function albumMissionNextAction(mission, state = albumMissionState(mission)) {
     cry:['startCryGame','Jouer au Cri'], quiz:['startQuizGame','Jouer au Quiz'],
     odd:['openOddOneOutMode','Jouer à Intrus'], connections:['openPokeConnectionsMode','Jouer à Connections'],
     higherlower:['openHigherLowerMode','Jouer à Higher or Lower'], speedrun:['openSpeedrunMode','Jouer au Speedrun'],
-    weight:['startWeightBattle','Jouer au Duel de poids']
+    weight:['startWeightBattle','Jouer au Duel de poids'], party:['startPartyMode','Jouer au Marathon mini-jeux']
   };
   const recordActions = {
     quizHighScore:modeActions.quiz, weightBattleHighScore:modeActions.weight,
