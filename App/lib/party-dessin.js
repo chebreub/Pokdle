@@ -8,7 +8,7 @@ const GEN_HINT_MS = 50000;
 const MAX_POINTS = 9000;
 const MAX_PIECE_NUMBERS = 400;
 const MAX_WRONG_GUESSES = 30;
-const COLORS = 8;
+const COLORS = 16; // 0–15 are the palette, 16 is the eraser
 const SIZES = 3;
 const LEVELS = {
   easy: { label: "FACILE", points: 100 },
@@ -97,7 +97,8 @@ function validDrawer(room, player, serial, now) {
   return null;
 }
 
-// A piece of stroke: { k: stroke number, c: colour (8 = eraser), s: size, p: [x, y, x, y…] from 0 to 1000 }.
+// A piece of stroke: { k: stroke number, c: colour (16 = eraser), s: size, p: [x, y, x, y…] from 0 to 1000 }.
+// A fill (« Remplir ») is a piece with f: 1 and a single point: the closed area under it takes the colour.
 function addDessinPiece(room, player, raw, serial, now = Date.now()) {
   const error = validDrawer(room, player, serial, now);
   if (error) return { error };
@@ -105,11 +106,12 @@ function addDessinPiece(room, player, raw, serial, now = Date.now()) {
   const k = Number(raw?.k), c = Number(raw?.c), s = Number(raw?.s);
   const p = Array.isArray(raw?.p) ? raw.p : null;
   if (!Number.isInteger(k) || k < 0 || k > 100000 || !Number.isInteger(c) || c < 0 || c > COLORS || !Number.isInteger(s) || s < 0 || s >= SIZES) return { error: "Trait invalide." };
-  if (!p || p.length < 2 || p.length > MAX_PIECE_NUMBERS || p.length % 2) return { error: "Trait invalide." };
+  const fill = raw?.f === 1;
+  if (!p || p.length < 2 || p.length > MAX_PIECE_NUMBERS || p.length % 2 || (fill && p.length !== 2)) return { error: "Trait invalide." };
   const pts = p.map((v) => Math.round(Number(v)));
   if (pts.some((v) => !Number.isFinite(v) || v < 0 || v > 1000)) return { error: "Trait invalide." };
   if (d.points + pts.length / 2 > MAX_POINTS) return { error: "Le dessin est plein : efface un peu." };
-  const piece = { k, c, s, p: pts };
+  const piece = fill ? { k, c, s, p: pts, f: 1 } : { k, c, s, p: pts };
   d.strokes.push(piece);
   d.points += pts.length / 2;
   return { piece };
