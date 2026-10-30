@@ -1,6 +1,6 @@
 # Passation Pokédle (pokdle.fr), à lire en entier avant d'agir
 
-Rédigée le 27/10/2026 et mise à jour le 30/10/2026 en fin d'après-midi, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
+Rédigée le 27/10/2026 et mise à jour le 30/10/2026 au soir, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
 
 ---
 
@@ -22,7 +22,8 @@ Rédigée le 27/10/2026 et mise à jour le 30/10/2026 en fin d'après-midi, à p
   - **Le moche ou le mal pensé :** « c'est encore plus moche », « faut penser intelligent » (boutons mal alignés, etc.).
   - **Rester sans nouvelles.** Si je demande « alors ? » ou « so ? », donne l'état tout de suite. Donne les heures **à l'heure de Paris**, pas en UTC (erreur déjà faite). Préviens-moi quand une mise en ligne est faite.
   - **Les maquettes :** je n'en veux plus depuis le 9/10. Montre plutôt des captures du vrai site.
-- **Pas de musique** dans les vidéos ou contenus que tu fais pour moi : c'est un choix personnel et religieux, dit le 13/10. Les sons d'effets du jeu, oui.
+- **Pas de musique** dans les vidéos ou contenus que tu fais pour moi : c'est un choix personnel et religieux, dit le 13/10. Les sons d'effets du jeu, oui. Le 30/10, j'ai accepté en fond une **ambiance nature faite maison** (vent, feuilles, oiseaux, sans instrument ni mélodie). Pas de vraie musique Pokémon non plus (droits de Nintendo).
+- **Jamais ma tête ni ma voix** dans les vidéos (dit le 30/10 au soir) : uniquement l'écran du vrai site, du texte et des sons.
 - **Pas d'afflux massif pour l'instant.** Je ne veux pas 500 personnes d'un coup tant que le serveur et mes moyens ne suivent pas. Je cherche des retours honnêtes de gens qui connaissent Pokémon, pas de la pub.
 
 ## 2. Le projet
@@ -118,7 +119,7 @@ Rédigée le 27/10/2026 et mise à jour le 30/10/2026 en fin d'après-midi, à p
 - **Images :** uniquement des artworks officiels, **plus aucune image IA** (décision du 24/10).
 - **Secrets :** jamais de secret dans le code, les commits ou le chat. Si j'envoie une capture qui en montre un, dis-le-moi et fais-le-moi changer.
 - **Heure :** je suis à Paris. Le « jour » des jeux quotidiens est le jour de Paris.
-- **Environnement cloud :** pokdle.fr et pokemind.fr sont autorisés dans le réseau de la session (ajoutés le 30/10). `cdn.jsdelivr.net` est bloqué : pour des captures locales avec les artworks, détourne les requêtes vers `raw.githubusercontent.com/PokeAPI/sprites/master/…` (Playwright `route`). Chromium headless ne peut pas s'abonner aux vraies notifications : on simule l'abonnement et on livre un message au service worker (CDP `ServiceWorker.deliverPushMessage`).
+- **Environnement cloud :** pokdle.fr et pokemind.fr sont autorisés dans le réseau de la session (ajoutés le 30/10), puis youtube.com et la base Supabase de PokeQuizz (30/10 au soir). `cdn.jsdelivr.net` est bloqué : pour des captures locales avec les artworks, détourne les requêtes vers `raw.githubusercontent.com/PokeAPI/sprites/master/…` (Playwright `route`). Chromium headless ne peut pas s'abonner aux vraies notifications : on simule l'abonnement et on livre un message au service worker (CDP `ServiceWorker.deliverPushMessage`).
 
 ## 4. Historique (principales PR et décisions)
 
@@ -227,7 +228,8 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - la « collection » existe déjà en partie (le Pokédex enregistre chaque Pokémon trouvé) ;
   - un chat « public » sur le site (« la discussion du jour ») attendra plus de joueurs et de la modération ; le chat de la Party Room, entre amis, suffit pour l'instant ;
   - Pokébip : blog créé et premier article publié le 30/10 (pub tolérée seulement sur les blogs, interdite sur leur Discord, en commentaires et en messages privés). Jeuxvideo.com et les annuaires de jeux « -dle » avaient déjà été essayés sans résultat ;
-  - pause sur la promo pendant une semaine, on regarde les chiffres le 5/11.
+  - pause sur la promo pendant une semaine, on regarde les chiffres le 5/11 ;
+  - le soir : vidéo de présentation et story faites (section 6), étude de PokeMind et de **PokeQuizz** (section 6), et **plan d'attaque validé** (détail dans `TODO_Pokedle.md`) : d'abord faire revenir les joueurs (classement en points cumulés, podium et lot de la semaine, clic sur un pseudo → carte de dresseur, collection et shiny, réglages), en parallèle être trouvé sur Google (pages de jeux enrichies, guides), puis le bouche-à-oreille (parrainage, streamers).
 - **Décisions du 29/10 :**
   - vidéos : pas le Duel de poids (« trop simple ») ; les posts YouTube attendront d'avoir des abonnés ;
   - un filtre TikTok pour le Draft est risqué (droits Pokémon, à fabriquer dans Effect House sur mon PC) : plutôt une vidéo du vrai site.
@@ -239,7 +241,8 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
 - **Stats du 30/10 :** la vidéo « 5 pixelisés » mélangée a fait 0 vue ; 2 ou 3 nouveaux joueurs dans la journée.
 - **Rappels programmés** dans la session du 29/10 :
   - le 1/11 à 10 h (Paris) : repasser Render en gratuit si je veux (et mettre carnet-force en pause), vérifier l'import Neon et **changer le mot de passe Neon** (section 7) ;
-  - le 5/11 à 10 h : point sur les stats (Mystère depuis l'indice, messages « Donne ton avis », nouvelle annonce du bandeau).
+  - le 5/11 à 10 h : point sur les stats (Mystère depuis l'indice, messages « Donne ton avis », nouvelle annonce du bandeau) ;
+  - le 6/11 à 10 h (programmé le 30/10) : relancer Fildrong s'il n'a pas répondu.
 - **Incident du 26/10 :** un 503 de Render sur la page de santé, revenu tout seul. Cause inconnue, sans doute un redémarrage Render. Si ça revient, demande-moi une capture des logs Render.
 - **Stats du 22 au 28/10 :** 55 à 60 sessions par jour, 30 à 40 navigateurs ; Pokémon du jour et Higher or Lower en tête ; aucun message « Donne ton avis ».
 
@@ -248,21 +251,23 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
 1. **Vidéos TikTok / YouTube Shorts du site :**
    - Vidéos verticales 1080 × 1920 de 20 à 30 secondes, montées à partir de captures du vrai site (Playwright) avec du vrai mouvement.
    - **Pas de musique, pas de voix IA, pas de bruitages gratuits.** Les vrais cris du jeu, oui.
-   - J'ajoute parfois ma tête en fond vert dans CapCut et je poste moi-même. Donne-moi à chaque fois le fichier, un titre, une description et un commentaire à épingler. Fin de vidéo : « Joue / Entraîne-toi sur pokdle.fr » et « 🔔 Abonne-toi pour le prochain défi ».
+   - Je poste moi-même. Donne-moi à chaque fois le fichier, un titre, une description et un commentaire à épingler. Fin de vidéo : « Joue / Entraîne-toi sur pokdle.fr » et « 🔔 Abonne-toi pour le prochain défi ».
    - Déjà faites : Pixel, Cri, Pokémon du jour, Petit Bac, Higher or Lower, Stat Clash, Combo, Course au Pokédex, « 5 Pokémon pixelisés » (Gen 1, puis une version mélangée : Ectoplasma, Lucario, Amphinobi, Mimiqui, Ninjask) et « 5 cris » (Pikachu, Lucario, Zoroark, Ho-Oh, Wailord).
    - Publiées : Pixel et Higher or Lower sur YouTube ; Higher or Lower, Petit Bac et « 5 pixelisés » sur TikTok ; « 5 pixelisés » mélangée le 29/10 à 17 h (0 vue) ; « 5 cris » programmée le 30/10 vers 18 h 30.
-   - **Nouvelle approche proposée le 30/10** (les captures seules ne prennent pas sur un compte neuf) : ma tête et ma vraie voix, une accroche dès la première seconde (« mes collègues ont-ils trouvé le Pokémon du jour ? »), 3 vidéos par semaine à heure fixe. Sinon, mettre les vidéos en pause.
+   - Le 30/10, l'idée « ma tête et ma voix » a été **refusée** : jamais de visage ni de voix. À la place, une **vidéo de présentation du site** (52 s) : accroche « Tu connais vraiment les 1025 Pokémon ? », Pokéball, téléphone en 3D avec une vraie partie du Pokémon du jour (la pastille « ↑ plus récente » sort du téléphone), éventail de jeux, Party Room sur PC et téléphone (Dessine-le ! et chat), fin pokdle.fr. Frappe lente avec clics de clavier, son doux sur « Deviner », ambiance nature, vrais cris. Plus une **story** de 12 s. Mes retours : un rythme trop rapide fatigue, il faut montrer le PC aussi, et une frappe trop rapide fait « rush ».
    - Mes règles : pas que des Pokémon faciles ni que de la Gen 1, un bon équilibre de générations et de difficulté ; une vidéo par jour au plus.
-   - L'outil de montage est rangé dans **`tools/video/`** (mode d'emploi dans son `README.md`) : sons faits maison (`synth.py`), images et cris (`fetch-assets.sh`), captures du vrai site (`cap-*.js`), scènes (`pro-*.js`), rendu (`render-all.sh`).
-   - Idées suivantes : « 5 shinies : tu les reconnais ? » sur le vrai jeu Shiny ou normal (je fais les images, j'ajoute ma voix) ; le Pokémon mystère avec les pastilles, où on voit l'enquête se resserrer.
+   - L'outil de montage est rangé dans **`tools/video/`** (mode d'emploi dans son `README.md`) : sons faits maison (`synth.py`), images et cris (`fetch-assets.sh`), captures du vrai site (`cap-*.js`), scènes (`pro-*.js`), rendu (`render-all.sh`). La vidéo de présentation et la story sont dans **`tools/video/pub/`**.
+   - Idées suivantes : le Pokémon mystère avec les pastilles, où on voit l'enquête se resserrer ; la Party Room seule, dans la même logique que la vidéo de présentation. Abandonné : « 5 shinies » (Shiny ou normal est trop facile pour qui connaît Pokémon).
+   - **Leçon de PokeMind :** 365 Shorts faits automatiquement, 105 abonnés, la plupart à 0–10 vues. Seuls les formats « Tu reconnais ce Pokémon ? » (870 vues) et « Pokémon zoomé » (408) marchent un peu. Peu de vidéos, mais soignées.
 2. **Faire connaître le site, en douceur :**
    - Des retours de gens qui connaissent Pokémon (par exemple des streamers que je suis en tant que viewer Chebreub), **sans demander de vidéo**.
    - Messages courts et naturels. Je peux dire que ça part d'un truc au boulot avec mes collègues.
    - Kit de textes : `KIT_LANCEMENT.md`, mis à jour le 29/10 pour pokdle.fr.
    - Une annonce Discord a été rédigée, mais je n'ai pas confirmé l'avoir postée **(à confirmer)**.
-   - Le 30/10 : un mail court pour le youtubeur Fildrong a été rédigé (envoi par moi, 1 ou 2 créateurs par semaine au plus). Pistes : blogs membres de Pokébip, Discord Pokémon FR, et un mail aux sites qui publient « la réponse du jour » (Breakflip, Millenium, Dexerto).
+   - Le 30/10 : un mail court pour le youtubeur Fildrong a été rédigé et envoyé (1 ou 2 créateurs par semaine au plus). Fildrong a fait le 29/07/2026 une vidéo sur PokeMind (« Le site de quiz Pokémon ultime… », 19 748 vues, pas sponsorisée) : il teste des sites Pokémon en live sur Twitch. Relance prévue le 6/11 avec un angle différent du « tout-en-un » de PokeMind : **la Party Room pour jouer avec son chat** (Dessine-le !, Petit Bac, Qui est-ce ?, Course au Pokédex), avec 4 captures. Attention : une telle vidéo peut amener des centaines de joueurs d'un coup (vérifier Render en Starter). Pistes : blogs membres de Pokébip, Discord Pokémon FR, et un mail aux sites qui publient « la réponse du jour » (Breakflip, Millenium, Dexerto).
    - **Attention au nom :** un autre site s'appelle aussi « Pokédle » (Breakflip publie sa réponse du jour). Quand on cherche « pokedle » sur Google, on tombe sur lui. À garder en tête pour le référencement.
-   - **PokeMind (pokemind.fr), étudié le 30/10 :** 44 modes, Discord et YouTube en haut de page, économie (PokéDollars, Balls, boutique, marché d'échange), amis et chat, multijoueur façon Kahoot, quiz créés par les joueurs. Ce qu'on en a gardé : le partage en défi (#176) et Shiny ou normal (#177). Plus tard, si on veut : une collection plus poussée.
+   - **PokeMind (pokemind.fr), étudié le 30/10 :** 44 modes, Discord et YouTube en haut de page, économie (PokéDollars, Balls, boutique, marché d'échange), amis et chat, multijoueur façon Kahoot, quiz créés par les joueurs. Le soir, en détail : leur force est la boucle « je joue → j'achète des Poké Balls → j'attrape » (Pokédex de 1025, shinies, missions, **boss de la semaine** à 1 401 dresseurs, événements). 17 joueurs en ligne un vendredi soir. Musique officielle de PokéPark en fond, réglages complets (sons, volume, sans chrono). Aucune source de revenus visible. Site lourd (≈ 6 Mo), compte obligatoire pour le défi du jour. Ce qu'on en a gardé : le partage en défi (#176) et Shiny ou normal (#177).
+   - **PokeQuizz (pokequizz.com), étudié le 30/10 au soir :** le plus utile. Démarré en mai, **près de 14 000 joueurs par mois en octobre** (176 → 494 → 1 929 → 4 784 → 7 418 → 13 686, chiffres publiés par eux). Croissance par **Google** : 7 langues, 343 pages, 18 guides longs (table des types, méthode Pokédle…), `llms.txt`. Rétention : « 0/12 quiz du jour », chance de shiny et vitrine, Œuf Chance avec avatar rare, PVP entre amis. **Classement très réussi** : une seule unité (points), « Semaine » et « Cumulé » additionnent tout, podium du top 3, lot de la semaine (« Kyogre à gagner, 2 j avant le reset »), clic sur un pseudo → fiche joueur (parties, victoires, ratio, points, série, stats par quiz avec artworks). Revenus : pub (optAd360), « Offrir un café », boutique (avatars, rejeux illimités, pass de saison), appli Google Play. Style beige et cosy proche du nôtre.
 3. **Panneau admin :** bandeau et retrait de photos faits (#161). **D'autres actions à ajouter : demande-moi la liste.**
 4. **Bandeau d'actualités :** l'annonce « animations et Draft revue » expire le 5/11. La suivante se pose dans le panneau admin, sans PR.
 5. **Rappel par notification :** fait (#175). À regarder dans `/admin/stats` (nombre de rappels activés) avant d'en faire plus.
