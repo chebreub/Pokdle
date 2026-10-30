@@ -1,6 +1,6 @@
 # Passation Pokédle (pokdle.fr), à lire en entier avant d'agir
 
-Rédigée le 27/10/2026 et mise à jour le 30/10/2026, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
+Rédigée le 27/10/2026 et mise à jour le 30/10/2026 à midi, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
 
 ---
 
@@ -75,7 +75,7 @@ Rédigée le 27/10/2026 et mise à jour le 30/10/2026, à partir de nos sessions
   - Les fournisseurs sont liés dans la table `account_identities`.
   - Les appels Discord passent par un Worker Cloudflare (`discord-proxy-worker.js`), parce que l'IP partagée de Render était bannie par Discord.
 - **Admin :**
-  - `/admin/stats?key=…` (clé = `ADMIN_STATS_KEY`) montre les stats de visites et de modes, ainsi que les avis « Donne ton avis » des joueurs (PR #138, tableau refait par la #168).
+  - `/admin/stats?key=…` (clé = `ADMIN_STATS_KEY`) montre les stats de visites et de modes, ainsi que les avis « Donne ton avis » des joueurs (PR #138, tableau refait par la #168). Depuis le 30/10 : nombre de rappels 🔔 activés (#175), lignes « Partage — Pokémon du jour partagé » et « Partage — arrivées par un lien de défi » (#176).
   - `/admin`, le panneau admin (PR #161), ouvert par le bouton « Panneau admin » du menu du compte quand je suis connecté : bandeau d'actualités et retrait d'une photo de profil.
 - **Domaine :** pokdle.fr, acheté chez OVH le 25/10 pour 1 an. Renouvellement en octobre 2027 (environ 7,79 € HT).
 - **SEO :**
@@ -98,7 +98,9 @@ Rédigée le 27/10/2026 et mise à jour le 30/10/2026, à partir de nos sessions
   9. Me prévenir que Render déploie.
 - **Qualité :**
   - Un smoke vert ne suffit pas pour merger.
-  - Si un commit arrive après la QA complète, repasse la PR en brouillon puis en « Ready », ou utilise `qa:full`.
+  - Si un commit arrive après la QA complète, repasse la PR en brouillon puis en « Ready », ou utilise `qa:full` (sans label sur la PR : l'ajouter ; déjà posé : l'enlever puis le remettre).
+  - **Nouveau jeu dans le catalogue :** la QA navigateur compte les cartes en dur (`tools/browser_quality.py` : 22 jeux solo, 14 dans « Jouer » au 30/10) ainsi que `App/test/catalog.test.js` (30 cartes). Mets ces nombres à jour dans la même PR (oubli lors de la #177).
+  - La carte « Niveau supérieur » peut s'ouvrir pendant la QA : `browser_quality.py` la ferme seul depuis la #174, avec un clic qui ne remonte pas (un clic normal fermait aussi des menus).
 - **Branche :** la dernière session travaillait sur `claude/leaderboard-cosy-nc0axg`, réutilisée pour les PR #127 à #157. Une nouvelle branche par chantier est plus propre.
 - **Piège `App/style.css` :** le fichier a des fins de ligne **mélangées** (CRLF et LF). Ne le modifie jamais avec un outil d'édition classique. Passe par un petit script Python qui travaille sur les octets en gardant la fin de chaque ligne (incident lors de la PR #151).
 - **Pièges de build :** ne jamais éditer `App/script.js` ni `App/dist/`. On édite `App/src/…` et les `.css`, puis on build.
@@ -116,6 +118,7 @@ Rédigée le 27/10/2026 et mise à jour le 30/10/2026, à partir de nos sessions
 - **Images :** uniquement des artworks officiels, **plus aucune image IA** (décision du 24/10).
 - **Secrets :** jamais de secret dans le code, les commits ou le chat. Si j'envoie une capture qui en montre un, dis-le-moi et fais-le-moi changer.
 - **Heure :** je suis à Paris. Le « jour » des jeux quotidiens est le jour de Paris.
+- **Environnement cloud :** pokdle.fr et pokemind.fr sont autorisés dans le réseau de la session (ajoutés le 30/10). `cdn.jsdelivr.net` est bloqué : pour des captures locales avec les artworks, détourne les requêtes vers `raw.githubusercontent.com/PokeAPI/sprites/master/…` (Playwright `route`). Chromium headless ne peut pas s'abonner aux vraies notifications : on simule l'abonnement et on livre un message au service worker (CDP `ServiceWorker.deliverPushMessage`).
 
 ## 4. Historique (principales PR et décisions)
 
@@ -210,13 +213,25 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - #170 : cette passation, images du Zoom et du Pixelisé qu'on ne peut plus glisser (le vrai sprite se voyait), mission Hexadron → Party Room ;
   - #171 : **« Dessine-le ! »**, nouveau jeu de Party Room (un dessine, les autres devinent ; choix entre 3 Pokémon facile/moyen/difficile ; indices lettres, type à 30 s, génération à 50 s ; `App/lib/party-dessin.js`, `App/src/script.10xb.party-dessin.js`) ;
   - #172 (30/10) : Dessine-le ! v2 après mon test : stylo qui ne reste plus « appuyé » à la souris, outil 🪣 Remplir, 16 couleurs, image modèle plus grande.
+- **30/10 (#173 à #177) :**
+  - #173 : outil vidéo rangé dans `tools/video/`, passation et TODO à jour ;
+  - #174 : QA navigateur réparée (la carte « Niveau supérieur » bloquait des clics au hasard, sur `main` aussi) ;
+  - #175 : **rappel du Pokémon du jour par notification** (bouton « 🔔 Me rappeler demain » sous le compte à rebours, 8 h / 12 h / 18 h / 20 h, rien si déjà joué, série dans le texte ; guide « écran d'accueil » sur iPhone ; `App/lib/push-reminders.js`, `App/sw.js` sans cache, dépendance `web-push`, clés créées par le serveur et gardées dans la table `push_keys`, rien à régler sur Render) ;
+  - #176 : **partage du Pokémon du jour en défi** (« Fais mieux que moi 👉 pokdle.fr/?defi=222-3 », aperçu « Trouvé en 3 essais : à toi de faire mieux ! » dans WhatsApp/Discord, objectif de l'ami sous le titre du jeu ; `App/lib/share-preview.js`) ;
+  - #177 : **« Shiny ou normal ? »**, nouveau jeu dans « Jouer » (artwork officiel, 3 vies, les deux versions côte à côte après chaque réponse ; seuls les 762 Pokémon dont le shiny se voit vraiment, liste `App/shiny-pool.json` faite par `App/tools/shiny-pool.js` ; page `/jeux/shiny-ou-normal`).
+- **Décisions du 30/10 :**
+  - **pas de serveur Discord tant qu'il y a moins de 100 joueurs par jour** (un serveur vide fait site mort) : aller plutôt dans les Discord Pokémon existants ;
+  - la vraie correction de la triche des images attend d'avoir plus de joueurs ;
+  - la « collection » existe déjà en partie (le Pokédex enregistre chaque Pokémon trouvé).
 - **Décisions du 29/10 :**
   - vidéos : pas le Duel de poids (« trop simple ») ; les posts YouTube attendront d'avoir des abonnés ;
   - un filtre TikTok pour le Draft est risqué (droits Pokémon, à fabriquer dans Effect House sur mon PC) : plutôt une vidéo du vrai site.
 
-## 5. État actuel (30/10/2026, matin)
+## 5. État actuel (30/10/2026, midi)
 
-- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour. Dessine-le ! est en ligne : je dois encore le tester avec mes collègues (fluidité au doigt sur iPhone) avant de l'annoncer dans le bandeau.
+- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour. En ligne depuis ce matin : rappels 🔔, partage en défi, Shiny ou normal ?. Je dois encore les tester sur mon téléphone et les annoncer dans le bandeau (panneau admin), et tester Dessine-le ! avec mes collègues (fluidité au doigt sur iPhone).
+- **Logo dans Google :** l'icône est correcte en ligne (48 px et SVG, vérifiées le 30/10) et j'ai demandé l'indexation dans la Search Console. Il n'y a plus qu'à attendre que Google mette à jour son cache.
+- **Stats du 30/10 :** la vidéo « 5 pixelisés » mélangée a fait 0 vue ; 2 ou 3 nouveaux joueurs dans la journée.
 - **Rappels programmés** dans la session du 29/10 :
   - le 1/11 à 10 h (Paris) : repasser Render en gratuit si je veux (et mettre carnet-force en pause), vérifier l'import Neon et **changer le mot de passe Neon** (section 7) ;
   - le 5/11 à 10 h : point sur les stats (Mystère depuis l'indice, messages « Donne ton avis », nouvelle annonce du bandeau).
@@ -230,20 +245,23 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
    - **Pas de musique, pas de voix IA, pas de bruitages gratuits.** Les vrais cris du jeu, oui.
    - J'ajoute parfois ma tête en fond vert dans CapCut et je poste moi-même. Donne-moi à chaque fois le fichier, un titre, une description et un commentaire à épingler. Fin de vidéo : « Joue / Entraîne-toi sur pokdle.fr » et « 🔔 Abonne-toi pour le prochain défi ».
    - Déjà faites : Pixel, Cri, Pokémon du jour, Petit Bac, Higher or Lower, Stat Clash, Combo, Course au Pokédex, « 5 Pokémon pixelisés » (Gen 1, puis une version mélangée : Ectoplasma, Lucario, Amphinobi, Mimiqui, Ninjask) et « 5 cris » (Pikachu, Lucario, Zoroark, Ho-Oh, Wailord).
-   - Publiées (à ma connaissance) : Pixel et Higher or Lower sur YouTube ; Higher or Lower, Petit Bac et « 5 pixelisés » sur TikTok ; « 5 pixelisés » mélangée programmée le 29/10 à 17 h ; « 5 cris » conseillée le 30/10 vers 18 h 30 **(à confirmer)**.
+   - Publiées : Pixel et Higher or Lower sur YouTube ; Higher or Lower, Petit Bac et « 5 pixelisés » sur TikTok ; « 5 pixelisés » mélangée le 29/10 à 17 h (0 vue) ; « 5 cris » programmée le 30/10 vers 18 h 30.
+   - **Nouvelle approche proposée le 30/10** (les captures seules ne prennent pas sur un compte neuf) : ma tête et ma vraie voix, une accroche dès la première seconde (« mes collègues ont-ils trouvé le Pokémon du jour ? »), 3 vidéos par semaine à heure fixe. Sinon, mettre les vidéos en pause.
    - Mes règles : pas que des Pokémon faciles ni que de la Gen 1, un bon équilibre de générations et de difficulté ; une vidéo par jour au plus.
    - L'outil de montage est rangé dans **`tools/video/`** (mode d'emploi dans son `README.md`) : sons faits maison (`synth.py`), images et cris (`fetch-assets.sh`), captures du vrai site (`cap-*.js`), scènes (`pro-*.js`), rendu (`render-all.sh`).
-   - « 5 cris » (Pikachu, Lucario, Zoroark, Ho-Oh, Wailord) prête, à programmer **(à confirmer)**.
-   - Idée suivante : le Pokémon mystère avec les pastilles, où on voit l'enquête se resserrer.
+   - Idées suivantes : « 5 shinies : tu les reconnais ? » sur le vrai jeu Shiny ou normal (je fais les images, j'ajoute ma voix) ; le Pokémon mystère avec les pastilles, où on voit l'enquête se resserrer.
 2. **Faire connaître le site, en douceur :**
    - Des retours de gens qui connaissent Pokémon (par exemple des streamers que je suis en tant que viewer Chebreub), **sans demander de vidéo**.
    - Messages courts et naturels. Je peux dire que ça part d'un truc au boulot avec mes collègues.
    - Kit de textes : `KIT_LANCEMENT.md`, mis à jour le 29/10 pour pokdle.fr.
    - Une annonce Discord a été rédigée, mais je n'ai pas confirmé l'avoir postée **(à confirmer)**.
+   - Le 30/10 : un mail court pour le youtubeur Fildrong a été rédigé (envoi par moi, 1 ou 2 créateurs par semaine au plus). Pistes : blogs membres de Pokébip, Discord Pokémon FR, et un mail aux sites qui publient « la réponse du jour » (Breakflip, Millenium, Dexerto).
+   - **Attention au nom :** un autre site s'appelle aussi « Pokédle » (Breakflip publie sa réponse du jour). Quand on cherche « pokedle » sur Google, on tombe sur lui. À garder en tête pour le référencement.
+   - **PokeMind (pokemind.fr), étudié le 30/10 :** 44 modes, Discord et YouTube en haut de page, économie (PokéDollars, Balls, boutique, marché d'échange), amis et chat, multijoueur façon Kahoot, quiz créés par les joueurs. Ce qu'on en a gardé : le partage en défi (#176) et Shiny ou normal (#177). Plus tard, si on veut : une collection plus poussée.
 3. **Panneau admin :** bandeau et retrait de photos faits (#161). **D'autres actions à ajouter : demande-moi la liste.**
 4. **Bandeau d'actualités :** l'annonce « animations et Draft revue » expire le 5/11. La suivante se pose dans le panneau admin, sans PR.
-5. **Rappel du lendemain par notification** (idée du 29/10) : bouton « 🔔 Me rappeler le Pokémon du jour », une notification par jour au plus, rien si j'ai déjà joué. Sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil. Montre-moi d'abord une capture. Détails dans la TODO.
-6. **Triche des jeux d'image** (signalée le 29/10) : glisser l'image du Zoom ou du Pixelisé montrait le vrai sprite. Le glisser est bloqué depuis le 29/10, mais l'adresse de l'image dit encore quel Pokémon c'est : le vrai correctif (image préparée par le serveur, dessinée dans un canvas) reste à faire.
+5. **Rappel par notification :** fait (#175). À regarder dans `/admin/stats` (nombre de rappels activés) avant d'en faire plus.
+6. **Triche des jeux d'image** (signalée le 29/10) : glisser l'image du Zoom ou du Pixelisé montrait le vrai sprite. Le glisser est bloqué depuis le 29/10, mais l'adresse de l'image dit encore quel Pokémon c'est (et « shiny » dans Shiny ou normal) : le vrai correctif (image préparée par le serveur, dessinée dans un canvas) attend d'avoir plus de joueurs (décision du 30/10).
 7. **Profil :** la refonte de la direction artistique est commencée (#149). Plus tard : badges d'arène (proposition C) et saisons mensuelles (proposition B) si on veut un rendez-vous.
 8. **Comptes :**
    - e-mail et mot de passe mis de côté le 24/10 (la page de confidentialité promet de ne garder ni e-mail ni mot de passe) ;
