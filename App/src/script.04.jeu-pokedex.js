@@ -444,7 +444,8 @@ function shareResult() {
   if (gameMode === "mystery") header += " • Stat Mystère";
   if (gameMode === "cry") header += " • Cri du Pokémon";
 
-  let text = `${header}\n${attempts} essai${attempts > 1 ? "s" : ""}\n\n`;
+  const tries = `${attempts} essai${attempts > 1 ? "s" : ""}`;
+  let text = `${header}\n${gameMode === "daily" ? "Trouvé en " + tries + " 🎯" : tries}\n\n`;
 
   // DA 2026 : pas de noms de Pokémon dans le partage (façon Wordle, zéro spoil).
   resultHistory.forEach(({ cmp }) => {
@@ -457,8 +458,12 @@ function shareResult() {
   if (gameMode === "daily") {
     const streak = dailyServerState?.authenticated ? Number(dailyServerState.streak?.current) || 0 : Number(playerStats?.dailyCurrentStreak) || 0;
     if (streak > 1) text += `\n🔥 Série : ${streak} jours`;
+    // The link opens today's game with this score as the target (lib/share-preview.js).
+    text += `\nFais mieux que moi 👉 ${window.location.origin}/?defi=${dailyServerState?.number || getDailyNumber()}-${attempts}`;
+    trackUsage("share:daily");
+  } else {
+    text += "\nJoue ici : " + window.location.origin;
   }
-  text += "\nJoue ici : " + window.location.origin;
 
   const confirmCopied = () => {
     document.getElementById("share-ok").classList.remove("hidden");
