@@ -1,6 +1,6 @@
 # Passation Pokédle (pokdle.fr), à lire en entier avant d'agir
 
-Rédigée le 27/10/2026 et mise à jour le 29/10/2026, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
+Rédigée le 27/10/2026 et mise à jour le 30/10/2026, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
 
 ---
 
@@ -59,6 +59,7 @@ Rédigée le 27/10/2026 et mise à jour le 29/10/2026, à partir de nos sessions
     - sur `main`.
   - Règles détaillées : `docs/qa/ci-policy.md`.
 - **Hébergement :** Render. Chaque merge sur `main` déclenche un déploiement automatique (2 à 3 minutes).
+  - **Depuis le 29/10 au soir, Pokdle est sur l'offre payante « Starter » (7 $/mois, sans engagement, facturé à la seconde).** Le 29/10, les 750 heures gratuites du mois (partagées avec mon autre service carnet-force) étaient épuisées et le site a été coupé. On change le plan dans Render : service Pokdle → Compute → Edit (une carte bancaire doit être enregistrée dans Billing). Je trouve ça cher : le 1/11, je pourrai repasser en gratuit si carnet-force est mis en pause (rappel programmé).
   - Un moniteur externe pingue `/api/multiplayer/health` pour que Render ne s'endorme pas. Il doit viser pokdle.fr depuis le déménagement **(à confirmer)**.
   - Les variables d'environnement sont réglées sur Render. Je les pose moi-même ; tu ne vois jamais leurs valeurs. Noms principaux :
     - base : `DATABASE_URL`, `OLD_DATABASE_URL` ;
@@ -206,14 +207,19 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - #167 : flèches de génération, taille et poids en pastilles (« ↑ plus récente », « ↓ plus léger ») ; « Party Pokémon » renommé « Marathon mini-jeux » dans les missions (Scarabrute, Entei, Brutalibré, Félinferno, Victini) ;
   - #168 : nouveau tableau `/admin/stats` (période, courbes, détail par jeu), branche `feat/…`, pas faite dans cette session **(à confirmer : sans doute Codex)** ;
   - #169 : défis du jour « Consulte le Pokédex » et « Joue à 3 modes différents » réparés (ils n'étaient jamais comptés).
+  - #170 : cette passation, images du Zoom et du Pixelisé qu'on ne peut plus glisser (le vrai sprite se voyait), mission Hexadron → Party Room ;
+  - #171 : **« Dessine-le ! »**, nouveau jeu de Party Room (un dessine, les autres devinent ; choix entre 3 Pokémon facile/moyen/difficile ; indices lettres, type à 30 s, génération à 50 s ; `App/lib/party-dessin.js`, `App/src/script.10xb.party-dessin.js`) ;
+  - #172 (30/10) : Dessine-le ! v2 après mon test : stylo qui ne reste plus « appuyé » à la souris, outil 🪣 Remplir, 16 couleurs, image modèle plus grande.
 - **Décisions du 29/10 :**
   - vidéos : pas le Duel de poids (« trop simple ») ; les posts YouTube attendront d'avoir des abonnés ;
   - un filtre TikTok pour le Draft est risqué (droits Pokémon, à fabriquer dans Effect House sur mon PC) : plutôt une vidéo du vrai site.
 
-## 5. État actuel (29/10/2026, fin d'après-midi)
+## 5. État actuel (30/10/2026, matin)
 
-- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour.
-- **Rappels programmés** dans la session du 29/10 : le 5/11 à 10 h (Paris), point sur les stats (Mystère depuis l'indice, messages « Donne ton avis », nouvelle annonce du bandeau). Le rappel Neon du 1/11 est toujours à faire (section 7).
+- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour. Dessine-le ! est en ligne : je dois encore le tester avec mes collègues (fluidité au doigt sur iPhone) avant de l'annoncer dans le bandeau.
+- **Rappels programmés** dans la session du 29/10 :
+  - le 1/11 à 10 h (Paris) : repasser Render en gratuit si je veux (et mettre carnet-force en pause), vérifier l'import Neon et **changer le mot de passe Neon** (section 7) ;
+  - le 5/11 à 10 h : point sur les stats (Mystère depuis l'indice, messages « Donne ton avis », nouvelle annonce du bandeau).
 - **Incident du 26/10 :** un 503 de Render sur la page de santé, revenu tout seul. Cause inconnue, sans doute un redémarrage Render. Si ça revient, demande-moi une capture des logs Render.
 - **Stats du 22 au 28/10 :** 55 à 60 sessions par jour, 30 à 40 navigateurs ; Pokémon du jour et Higher or Lower en tête ; aucun message « Donne ton avis ».
 
@@ -226,7 +232,8 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
    - Déjà faites : Pixel, Cri, Pokémon du jour, Petit Bac, Higher or Lower, Stat Clash, Combo, Course au Pokédex, « 5 Pokémon pixelisés » (Gen 1, puis une version mélangée : Ectoplasma, Lucario, Amphinobi, Mimiqui, Ninjask) et « 5 cris » (Pikachu, Lucario, Zoroark, Ho-Oh, Wailord).
    - Publiées (à ma connaissance) : Pixel et Higher or Lower sur YouTube ; Higher or Lower, Petit Bac et « 5 pixelisés » sur TikTok ; « 5 pixelisés » mélangée programmée le 29/10 à 17 h ; « 5 cris » conseillée le 30/10 vers 18 h 30 **(à confirmer)**.
    - Mes règles : pas que des Pokémon faciles ni que de la Gen 1, un bon équilibre de générations et de difficulté ; une vidéo par jour au plus.
-   - L'outil de montage vivait dans le dossier temporaire de la session du 29/10 (`scratchpad/vid/`) : il est perdu avec le conteneur. Avant de tout refaire, propose-moi de le ranger dans le dépôt (`tools/video/`).
+   - L'outil de montage est rangé dans **`tools/video/`** (mode d'emploi dans son `README.md`) : sons faits maison (`synth.py`), images et cris (`fetch-assets.sh`), captures du vrai site (`cap-*.js`), scènes (`pro-*.js`), rendu (`render-all.sh`).
+   - « 5 cris » (Pikachu, Lucario, Zoroark, Ho-Oh, Wailord) prête, à programmer **(à confirmer)**.
    - Idée suivante : le Pokémon mystère avec les pastilles, où on voit l'enquête se resserrer.
 2. **Faire connaître le site, en douceur :**
    - Des retours de gens qui connaissent Pokémon (par exemple des streamers que je suis en tant que viewer Chebreub), **sans demander de vidéo**.

@@ -1,0 +1,5 @@
+# Generated: captures, downloaded assets and finished videos stay out of git.
+raw/
+out/
+assets/*
+!assets/favicon.svg
