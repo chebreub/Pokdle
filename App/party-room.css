@@ -621,3 +621,11 @@
 #pokdle-app #screen-party-room .dessin-feed .is-ok {color:#1f7a45;font-weight:800;}
 #pokdle-app #screen-party-room .dessin-feed .is-close {color:#8a6a00;font-weight:800;}
 #pokdle-app #screen-party-room .dessin-feed .is-no {color:#6b6475;}
+
+/* 30/10 — « Dessine-le ! » v2: a bigger model for the drawer (tap to enlarge), 16 colours on two rows. */
+#pokdle-app #screen-party-room .dessin-model {flex:none;padding:0;border:0;border-radius:16px;background:#F7F2EA;cursor:zoom-in;line-height:0;}
+#pokdle-app #screen-party-room .dessin-top .dessin-model img {width:110px;height:110px;}
+#pokdle-app #screen-party-room .dessin-top.is-zoom {flex-wrap:wrap;}
+#pokdle-app #screen-party-room .dessin-top.is-zoom .dessin-model {flex-basis:100%;cursor:zoom-out;}
+#pokdle-app #screen-party-room .dessin-top.is-zoom .dessin-model img {width:min(260px,70vw);height:min(260px,70vw);}
+#pokdle-app #screen-party-room .dessin-colors {display:grid;grid-template-columns:repeat(8,29px);justify-content:center;gap:7px;}

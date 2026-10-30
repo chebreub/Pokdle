@@ -74,7 +74,8 @@ test('strokes: only the drawer draws, coordinates stay on the page, undo removes
   const s = r.roundSerial;
   assert.ok(D.addDessinPiece(r, r.players[1], { k: 1, c: 0, s: 1, p: [1, 2, 3, 4] }, s, 2000).error);
   assert.ok(D.addDessinPiece(r, r.players[0], { k: 1, c: 0, s: 1, p: [1, 2, 3, 4000] }, s, 2000).error);
-  assert.ok(D.addDessinPiece(r, r.players[0], { k: 1, c: 9, s: 1, p: [1, 2] }, s, 2000).error);
+  assert.ok(D.addDessinPiece(r, r.players[0], { k: 1, c: 17, s: 1, p: [1, 2] }, s, 2000).error, 'only 16 colours and the eraser');
+  assert.ok(D.addDessinPiece(r, r.players[0], { k: 1, c: 5, s: 1, p: [1, 2, 3, 4], f: 1 }, s, 2000).error, 'a fill is a single point');
   assert.ok(D.addDessinPiece(r, r.players[0], { k: 1, c: 0, s: 1, p: [1, 2, 3, 4] }, s - 1, 2000).error, 'an old round is refused');
   D.addDessinPiece(r, r.players[0], { k: 1, c: 0, s: 1, p: [1, 2, 3, 4] }, s, 2000);
   D.addDessinPiece(r, r.players[0], { k: 2, c: 3, s: 0, p: [10, 10, 20, 20] }, s, 2000);
@@ -150,4 +151,20 @@ test('server: the mode is allowed, pieces are relayed with a rate limit, hints r
   const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
   assert.match(html, /id="party-mode-dessin"[^>]*data-args='\["dessin"\]'/);
   assert.match(html, /<section id="party-dessin" class="party-dessin hidden"/);
+});
+
+test('v2 (30/10): fills travel as single points, 16 colours plus the eraser, and the pen never stays down', () => {
+  const r = room();
+  D.startDessinRound(r, catalogue, rnd, 0);
+  D.chooseDessin(r, r.players[0], 0, r.roundSerial, 0);
+  const fill = D.addDessinPiece(r, r.players[0], { k: 1, c: 15, s: 1, p: [500, 500], f: 1 }, r.roundSerial, 1000);
+  assert.deepEqual(fill.piece, { k: 1, c: 15, s: 1, p: [500, 500], f: 1 });
+  assert.ok(D.addDessinPiece(r, r.players[0], { k: 2, c: 16, s: 2, p: [1, 2, 3, 4] }, r.roundSerial, 1000).piece, 'the eraser is colour 16');
+  assert.equal(D.undoDessin(r, r.players[0], r.roundSerial, 1000).undone, 2);
+  const client = fs.readFileSync(path.join(__dirname, '../src/script.10xb.party-dessin.js'), 'utf8');
+  const palette = client.match(/const DESSIN_COLORS = \[([^\]]+)\]/)[1].match(/#[0-9A-F]{6}/gi);
+  assert.equal(palette.length, 16);
+  assert.match(client, /if \(event\.pointerType === 'mouse' && !\(event\.buttons & 1\)\) \{ end\(\); return; \}/);
+  assert.match(client, /clearTimeout\(dessinState\.timer\); dessinState\.timer = null; dessinState\.drawing = null;/);
+  assert.match(client, /if \(piece\.f === 1\) \{ dessinFill\(ctx, piece\); return; \}/);
 });
