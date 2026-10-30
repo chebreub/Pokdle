@@ -22,8 +22,9 @@ def main():
     page.on('pageerror',lambda e:errors.append(str(e)))
     # The level-up card and the achievement banner open whenever QA play crosses a level or
     # unlocks a success; a player taps them away, so the robot does the same before acting.
+    # The click must not bubble: a page-level listener would take it for a tap outside a menu.
     for reward in ('.lvc-back','.achc'):
-     page.add_locator_handler(page.locator(reward).first,lambda shown:shown.evaluate('e=>e.click()'),no_wait_after=True)
+     page.add_locator_handler(page.locator(reward).first,lambda shown:shown.evaluate("e=>e.dispatchEvent(new MouseEvent('click',{bubbles:false}))"),no_wait_after=True)
     def expect(value,message):
      if not value: raise AssertionError(message)
     def check(name,action,capture=True):
