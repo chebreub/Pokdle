@@ -26,3 +26,22 @@ Depuis `tools/video/`, avec `ffmpeg`, Node et Playwright (déjà installés dans
 | `cri5` | « 5 cris » : Pikachu, Lucario, Zoroark, Ho-Oh, Wailord, barres qui suivent le vrai cri |
 
 Pour un nouveau défi « 5 Pokémon » : copier `pro-quiz5b.js` (ou `pro-cri5.js`), changer la liste `Q`, lancer `fetch-assets.sh` avec les numéros, et pour le pixel, adapter `cap-quiz5b.js`.
+
+## Vidéo de présentation et story (`pub/`, 30/10)
+
+Vidéo verticale de 52 s qui présente le site (accroche « 1025 Pokémon », Pokéball, téléphone en 3D avec le Pokémon du jour, éventail de jeux, Party Room sur PC et téléphone, fin pokdle.fr) et une story de 12 s. Tout est animé en code par-dessus de vraies parties filmées. Pas de musique : une ambiance nature faite maison, des clics de clavier, un son doux sur « Deviner » et les vrais cris.
+
+Depuis `tools/video/`, le site local lancé sur le port 4173 :
+
+1. **Sons :** `python3 synth.py && python3 pub/sfx.py && python3 pub/ambience.py` (clavier, validation, ambiance dans `assets/sfx/`).
+2. **Images et cris :** `./fetch-assets.sh 6 197 257 448 609 658 778 887 1000 214 25 54`.
+3. **Parties filmées** (dans `raw/promo-*`) :
+   - `G=Pikachu,Lucario,Amphinobi,Scarhino node pub/cap-promo-daily.js` (le dernier nom doit être le Pokémon du jour de la base locale : `SELECT secret_id FROM daily_rounds ORDER BY day DESC LIMIT 1`) ;
+   - `node pub/cap-modes.js shiny qui pixel hl` ;
+   - `node pub/cap-party-pc.js` (relancer tant qu'il sort avec le code 3 : il ne garde que des Pokémon faciles à dessiner, et trace le dessin d'après la forme de l'artwork avec `pub/contour.py`) ;
+   - `node pub/cap-home.js`.
+4. **Servir ce dossier :** `python3 -m http.server 4180 --bind 127.0.0.1`.
+5. **Vérifier :** `PAGE=pub/pub.html node render.js pub --stills 5,20,48`.
+6. **Rendu :** `PAGE=pub/pub.html node render.js pub && ./mix.sh pub` → `out/Pokedle-pub.mp4`. La story : `PAGE=pub/story.html node render.js story && ./mix.sh story`.
+
+Le rythme se règle dans `WARP` (`pub/pub.js`) : chaque ligne ralentit ou accélère un passage. La frappe et les parties filmées suivent le temps réel de la vidéo, pour que la saisie reste lisible.

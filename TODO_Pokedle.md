@@ -32,7 +32,41 @@ Dernière mise à jour : 30 octobre 2026. La passation complète et à jour est 
 - [ ] Faire connaître le site : mail à Fildrong (rédigé le 30/10), Pokébip, Discord Pokémon FR. Pas de serveur Discord à nous avant 100 joueurs par jour.
 - [ ] **Triche à corriger plus tard (signalée le 29/10) : Zoom, Pixelisé et autres jeux d'image.** En cliquant sur l'image et en la glissant sur le côté, on voit le vrai sprite, sans le zoom ni la pixelisation. Cause : le jeu affiche la vraie image (`<img id="silhouette-sprite">`, `<img id="pixel-sprite">`) et ne fait que la déformer en CSS ; l'adresse de l'image contient aussi le numéro du Pokémon. Correctif rapide (bloque le glisser) : `draggable="false"` et pas de clic sur l'image. Vrai correctif : le serveur envoie l'image déjà zoomée ou pixelisée, sous une adresse qui ne dit pas quel Pokémon c'est, et le site la dessine dans un canvas. À vérifier aussi : l'Ombre et le Qui est-ce ?.
 - [x] **Rappel du Pokémon du jour par notification (idée du 29/10, codé le 30/10).** Notifications du navigateur, seulement si le joueur active « 🔔 Me rappeler le Pokémon du jour ». Une par jour au plus, à l'heure qu'il choisit, et rien s'il a déjà joué. Marche directement sur Android et PC ; sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil (petit guide à prévoir). Rien à régler sur Render : les clés sont créées par le serveur et rangées dans la base (ou lues dans `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` si on les pose un jour). Nombre de rappels activés visible dans `/admin/stats`.
-- [ ] Vidéos TikTok / Shorts : 10 vidéos faites (sans musique ni voix IA). « 5 pixelisés » mélangée : 0 vue. Nouvelle approche à essayer : ma voix et une accroche ; idée « 5 shinies : tu les reconnais ? ».
+- [ ] Vidéos TikTok / Shorts : 10 vidéos faites (sans musique ni voix IA). « 5 pixelisés » mélangée : 0 vue. Décision du 30/10 au soir : **jamais ma tête ni ma voix**. Plus de « 5 shinies » non plus (Shiny ou normal est trop facile pour les connaisseurs).
+- [x] 30/10 au soir : **vidéo de présentation du site** (52 s, motion design sur le vrai site filmé, PC et téléphone, clics de clavier, ambiance nature faite maison, vrais cris) et une **story** de 12 s. Outil rangé dans `tools/video/pub/`. À poster par moi.
+- [ ] 6/11 à 10 h (rappel programmé) : relancer Fildrong avec l'angle Party Room et 4 captures, s'il n'a pas répondu.
+
+## Plan d'attaque (validé le 30/10 au soir)
+Idée : d'abord faire revenir ceux qui viennent déjà, puis être trouvé sur Google (ça monte doucement, sans afflux d'un coup), puis le bouche-à-oreille entre amis. Tiré de l'étude de PokeMind et de PokeQuizz (voir `CLAUDE.md`, section 6).
+
+### Étape 0 : sécuriser
+- [x] Outil de la pub sauvegardé dans `tools/video/pub/`, plan et passation à jour.
+- [ ] 31/10 : vérifier la notification 🔔. 1/11 : décision Render et import Neon.
+- [ ] Mesurer le retour des joueurs dans `/admin/stats` (part qui revient le lendemain et la semaine suivante).
+
+### Étape 1 : faire revenir
+- [ ] **Classement en points cumulés** : « Semaine » et « Tout le temps » additionnent les points de chaque jour au lieu de garder la meilleure journée, et chaque épreuve jouée compte même si les quatre ne sont pas finies. Les modes « record » (Higher or Lower, Quiz, Speedrun…) gardent leur classement à part : leurs scores viennent du navigateur.
+- [ ] Podium du top 3 et lot de la semaine avec compte à rebours (comme PokeQuizz).
+- [ ] Clic sur un pseudo → sa carte de dresseur (parties, victoires, série, stats par jeu ; la photo seulement si le joueur l'a choisi).
+- [ ] Collection et shiny : trouver le Pokémon du jour = le capturer, petite chance de shiny, vitrine sur la carte de dresseur.
+- [ ] Réglages : sons oui / non avec volume, mode sans chrono.
+
+### Étape 2 : être trouvé sur Google (en parallèle)
+- [ ] Enrichir les 27 pages `/jeux/<slug>` : comment jouer, astuces, jeux similaires (comme PokeMind).
+- [ ] 5 premiers guides avec artworks officiels et un bouton vers le jeu : méthode du Pokémon du jour, table des types, générations, starters, légendaires (comme PokeQuizz).
+- [ ] Viser « Pokémon du jour » et « jeux Pokémon entre amis » plutôt que « pokedle », disputé par trois sites.
+- [ ] Plus tard (pas avant décembre) : l'anglais.
+
+### Étape 3 : le bouche-à-oreille
+- [ ] Parrainage : le lien de défi débloque un badge ou un avatar quand un ami vient jouer.
+- [ ] Fildrong le 6/11, puis d'autres streamers (un ou deux par semaine au plus).
+- [ ] Vidéos : la pub, puis une ou deux vidéos courtes par semaine au plus, format « Tu reconnais ce Pokémon ? » (le seul qui marche un peu chez PokeMind).
+
+### Plus tard (au-delà de 100 joueurs par jour)
+- Serveur Discord, chat public, vrai correctif de la triche des images. Pub ou boutique seulement vers 10 000 joueurs par mois (PokeQuizz en est là).
+
+### Suivi
+- Un point par semaine dans `/admin/stats` : joueurs par jour, part qui revient, d'où ils viennent. Premier point le 5/11.
 
 ## En attente : GPT travaille dessus (archives, avant le 14/10)
 - [x] PR #99 (étape 1, PR 2) : Quiz sur 15, Ligue 12/15, boutons Ligue, accueil « Journée terminée », points de l'Enquête, aide ✓/≈/× — vérifiée en ligne le 9/10.
