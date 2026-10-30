@@ -12,6 +12,7 @@ const { createOAuthStateStore } = require("./lib/oauth-state");
 const nearestParty = require("./lib/party-nearest");
 const dexRace = require("./lib/party-dexrace");
 const dessinParty = require("./lib/party-dessin");
+const partyChat = require("./lib/party-chat");
 const deductionParty = require("./lib/party-deduction");
 const quiEstCeParty = require("./lib/party-quiestce");
 const petitBacParty = require("./lib/party-petitbac");
@@ -1038,6 +1039,7 @@ const RATE_LIMITS = {
   "party-guess": { max: 12, windowMs: RATE_LIMIT_WINDOW_MS },
   // « Dessine-le ! »: the drawer sends a piece of stroke about every 100 ms.
   "party-draw":  { max: 160, ipMax: 400, windowMs: RATE_LIMIT_WINDOW_MS },
+  "party-chat":  { max: 8, ipMax: 30, windowMs: RATE_LIMIT_WINDOW_MS },
 };
 const PAYLOAD_MAX_BYTES = 64_000;
 const DRAFT_BATTLE_MAX_TEAM_INDEX = 5;
@@ -3028,6 +3030,24 @@ io.on("connection", (socket) => {
       respond(ack, { ok: true });
     } catch (error) {
       respond(ack, { ok: false, error: "Trait non envoyé." });
+    }
+  });
+  // Room chat: relayed to the players of the room, never stored. A message naming the
+  // Pokémon being guessed reaches the others hidden (lib/party-chat.js).
+  socket.on("party:chat", (payload = {}, ack) => {
+    try {
+      if (checkRateLimit(socket, "party-chat")) return respond(ack, { ok: false, error: "Doucement : quelques secondes entre deux messages." });
+      const room = findPartyRoomBySocket(socket.id);
+      const player = room?.players.find((entry) => entry.id === socket.id);
+      if (!room || !player || payload.code !== room.code) return respond(ack, { ok: false, error: "Tu n'es pas dans ce salon." });
+      room.chatSerial = (Number(room.chatSerial) || 0) + 1;
+      const pokemonName = (id) => POKEMON_LIST.find((entry) => Number(entry.id) === Number(id))?.name || null;
+      const result = partyChat.chatMessage(room, player, payload, { pokemonName, id: room.chatSerial });
+      if (result.error) return respond(ack, { ok: false, error: result.error });
+      for (const other of room.players) if (other.connected && other.id !== socket.id) io.to(other.id).emit("party:chat", { code: room.code, message: result.others });
+      respond(ack, { ok: true, message: result.mine });
+    } catch (error) {
+      respond(ack, { ok: false, error: "Message non envoyé." });
     }
   });
   socket.on("party:dexrace-options", (payload = {}, ack) => {
