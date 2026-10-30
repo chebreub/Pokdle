@@ -25,7 +25,9 @@ Dernière mise à jour : 30 octobre 2026. La passation complète et à jour est 
 - [x] #175 : rappel du Pokémon du jour par notification (voir plus bas).
 - [x] #176 : partage du Pokémon du jour en défi (`/?defi=…`, aperçu « Trouvé en N essais », objectif sous le titre).
 - [x] #177 : nouveau jeu « Shiny ou normal ? ».
-- [ ] Tester sur mon téléphone : rappel 🔔, partage en défi, Shiny ou normal ; puis annoncer dans le bandeau (panneau admin).
+- [x] Testé sur mon téléphone et annoncé dans le bandeau (30/10). Le 31/10 au matin : vérifier que la notification 🔔 est bien arrivée.
+- [x] #179 : chat de la Party Room (bouton dans l'en-tête du salon, réactions, réponse cachée aux autres).
+- [ ] Partie avec les collègues : Dessine-le ! et le chat (retours à remonter).
 - [ ] Dans quelques jours, regarder dans `/admin/stats` : rappels activés, partages, arrivées par lien de défi, parties de Shiny ou normal.
 - [ ] Faire connaître le site : mail à Fildrong (rédigé le 30/10), Pokébip, Discord Pokémon FR. Pas de serveur Discord à nous avant 100 joueurs par jour.
 - [ ] **Triche à corriger plus tard (signalée le 29/10) : Zoom, Pixelisé et autres jeux d'image.** En cliquant sur l'image et en la glissant sur le côté, on voit le vrai sprite, sans le zoom ni la pixelisation. Cause : le jeu affiche la vraie image (`<img id="silhouette-sprite">`, `<img id="pixel-sprite">`) et ne fait que la déformer en CSS ; l'adresse de l'image contient aussi le numéro du Pokémon. Correctif rapide (bloque le glisser) : `draggable="false"` et pas de clic sur l'image. Vrai correctif : le serveur envoie l'image déjà zoomée ou pixelisée, sous une adresse qui ne dit pas quel Pokémon c'est, et le site la dessine dans un canvas. À vérifier aussi : l'Ombre et le Qui est-ce ?.

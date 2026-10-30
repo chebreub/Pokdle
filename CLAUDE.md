@@ -1,6 +1,6 @@
 # Passation Pokédle (pokdle.fr), à lire en entier avant d'agir
 
-Rédigée le 27/10/2026 et mise à jour le 30/10/2026 à midi, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
+Rédigée le 27/10/2026 et mise à jour le 30/10/2026 en fin d'après-midi, à partir de nos sessions Claude Code passées, du dépôt, de `TODO_Pokedle.md` et des PR GitHub. Les infos incertaines ou anciennes sont signalées par **(à confirmer)**.
 
 ---
 
@@ -213,23 +213,28 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - #170 : cette passation, images du Zoom et du Pixelisé qu'on ne peut plus glisser (le vrai sprite se voyait), mission Hexadron → Party Room ;
   - #171 : **« Dessine-le ! »**, nouveau jeu de Party Room (un dessine, les autres devinent ; choix entre 3 Pokémon facile/moyen/difficile ; indices lettres, type à 30 s, génération à 50 s ; `App/lib/party-dessin.js`, `App/src/script.10xb.party-dessin.js`) ;
   - #172 (30/10) : Dessine-le ! v2 après mon test : stylo qui ne reste plus « appuyé » à la souris, outil 🪣 Remplir, 16 couleurs, image modèle plus grande.
-- **30/10 (#173 à #177) :**
+- **30/10 (#173 à #179) :**
   - #173 : outil vidéo rangé dans `tools/video/`, passation et TODO à jour ;
   - #174 : QA navigateur réparée (la carte « Niveau supérieur » bloquait des clics au hasard, sur `main` aussi) ;
   - #175 : **rappel du Pokémon du jour par notification** (bouton « 🔔 Me rappeler demain » sous le compte à rebours, 8 h / 12 h / 18 h / 20 h, rien si déjà joué, série dans le texte ; guide « écran d'accueil » sur iPhone ; `App/lib/push-reminders.js`, `App/sw.js` sans cache, dépendance `web-push`, clés créées par le serveur et gardées dans la table `push_keys`, rien à régler sur Render) ;
   - #176 : **partage du Pokémon du jour en défi** (« Fais mieux que moi 👉 pokdle.fr/?defi=222-3 », aperçu « Trouvé en 3 essais : à toi de faire mieux ! » dans WhatsApp/Discord, objectif de l'ami sous le titre du jeu ; `App/lib/share-preview.js`) ;
+  - #178 : passation de midi ;
+  - #179 : **chat de la Party Room** (bouton « 💬 Chat » dans l'en-tête du salon, à côté de « Copier l'invitation », avec non-lus ; panneau du bas sur téléphone, petite fenêtre sur PC ; réactions 😂 🔥 👏 😱 ; bulle `showToast` quand un message arrive chat fermé ; rien n'est gardé, pas de liens, 120 caractères ; un message qui contient la réponse de la manche arrive caché chez les autres ; `App/lib/party-chat.js`, `App/src/script.10xe.party-chat.js`). La première version flottait en bas à droite et couvrait « Lancer la partie » à 360 px : **jamais de bouton flottant par-dessus la Party Room** (la QA `tools/party_mobile_quality.py` le vérifie) ;
   - #177 : **« Shiny ou normal ? »**, nouveau jeu dans « Jouer » (artwork officiel, 3 vies, les deux versions côte à côte après chaque réponse ; seuls les 762 Pokémon dont le shiny se voit vraiment, liste `App/shiny-pool.json` faite par `App/tools/shiny-pool.js` ; page `/jeux/shiny-ou-normal`).
 - **Décisions du 30/10 :**
   - **pas de serveur Discord tant qu'il y a moins de 100 joueurs par jour** (un serveur vide fait site mort) : aller plutôt dans les Discord Pokémon existants ;
   - la vraie correction de la triche des images attend d'avoir plus de joueurs ;
-  - la « collection » existe déjà en partie (le Pokédex enregistre chaque Pokémon trouvé).
+  - la « collection » existe déjà en partie (le Pokédex enregistre chaque Pokémon trouvé) ;
+  - un chat « public » sur le site (« la discussion du jour ») attendra plus de joueurs et de la modération ; le chat de la Party Room, entre amis, suffit pour l'instant ;
+  - Pokébip : blog créé et premier article publié le 30/10 (pub tolérée seulement sur les blogs, interdite sur leur Discord, en commentaires et en messages privés). Jeuxvideo.com et les annuaires de jeux « -dle » avaient déjà été essayés sans résultat ;
+  - pause sur la promo pendant une semaine, on regarde les chiffres le 5/11.
 - **Décisions du 29/10 :**
   - vidéos : pas le Duel de poids (« trop simple ») ; les posts YouTube attendront d'avoir des abonnés ;
   - un filtre TikTok pour le Draft est risqué (droits Pokémon, à fabriquer dans Effect House sur mon PC) : plutôt une vidéo du vrai site.
 
-## 5. État actuel (30/10/2026, midi)
+## 5. État actuel (30/10/2026, fin d'après-midi)
 
-- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour. En ligne depuis ce matin : rappels 🔔, partage en défi, Shiny ou normal ?. Je dois encore les tester sur mon téléphone et les annoncer dans le bandeau (panneau admin), et tester Dessine-le ! avec mes collègues (fluidité au doigt sur iPhone).
+- `main` est vert. Aucune PR ouverte à part celle de cette mise à jour. En ligne : rappels 🔔, partage en défi, Shiny ou normal ?, chat de la Party Room. Annonce posée dans le bandeau (panneau admin). Rappel 🔔 activé sur mon téléphone le 30/10 : vérifier le 31/10 au matin que la notification est bien arrivée. Reste à tester Dessine-le ! et le chat avec mes collègues (fluidité au doigt sur iPhone).
 - **Logo dans Google :** l'icône est correcte en ligne (48 px et SVG, vérifiées le 30/10) et j'ai demandé l'indexation dans la Search Console. Il n'y a plus qu'à attendre que Google mette à jour son cache.
 - **Stats du 30/10 :** la vidéo « 5 pixelisés » mélangée a fait 0 vue ; 2 ou 3 nouveaux joueurs dans la journée.
 - **Rappels programmés** dans la session du 29/10 :
