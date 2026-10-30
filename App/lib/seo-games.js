@@ -310,6 +310,25 @@ const GAMES = [
     related: ['poke-connections', 'qui-est-ce-pokemon', 'duel-de-poids'],
   },
   {
+    slug: 'shiny-ou-normal', group: 'play', sprite: 130, name: 'Shiny ou normal\u00a0?',
+    short: 'Un artwork officiel : est-ce la version shiny ?',
+    title: 'Shiny ou normal ? Le quiz des Pokémon chromatiques | Pokédle',
+    description: 'Un Pokémon apparaît : est-ce sa version shiny (chromatique) ou sa version normale ? Trois vies, une série à battre, sur les artworks officiels.',
+    h1: 'Shiny ou normal ? Reconnais les Pokémon chromatiques',
+    lead: 'Un artwork officiel s’affiche avec le nom du Pokémon : à toi de dire si c’est sa version shiny ou sa version normale. Après chaque réponse, les deux versions apparaissent côte à côte.',
+    steps: [
+      'Regarde l’artwork et le nom du Pokémon.',
+      'Réponds « Shiny » ou « Normal ».',
+      'Compare les deux versions, puis passe au suivant. Trois erreurs et la partie s’arrête.',
+    ],
+    facts: [
+      'Un point par bonne réponse, ton record est gardé sur ton appareil.',
+      'Seuls les Pokémon dont le shiny se voit vraiment sont proposés.',
+      'Toutes les générations, sur les artworks officiels.',
+    ],
+    related: ['pokemon-pixelise', 'intrus-pokemon', 'higher-or-lower-pokemon'],
+  },
+  {
     slug: 'qui-est-ce-pokemon', group: 'play', sprite: 25, name: 'Qui est-ce ? Pokémon',
     short: '24 Pokémon, des questions oui/non : démasque le bon.',
     title: 'Qui est-ce ? version Pokémon | Pokédle',

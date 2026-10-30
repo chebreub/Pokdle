@@ -5,7 +5,7 @@ var modeCatalogDifficulty = 'all';
 var MODE_CATALOG_DIFFICULTY_LABELS = Object.freeze({ all:'Toutes', easy:'Facile', medium:'Moyen', hard:'Difficile', expert:'Expert' });
 var MODE_CATALOG_DIFFICULTY = Object.freeze({
   startDailyGame:'medium', openEggGame:'easy', startNormalGame:'medium', startSilhouetteGame:'medium', startPixelGame:'medium',
-  startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium', openQuiEstCeMode:'easy', openPetitBacMode:'medium',
+  startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium', openShinyMode:'medium', openQuiEstCeMode:'easy', openPetitBacMode:'medium',
   startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
   openTypeComboSolo:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
   startPartyMode:'medium', openDraftScoreAttackMode:'hard', openPartyRoomMode:'medium',
@@ -24,6 +24,7 @@ var MODE_TILE_THEME = Object.freeze({
   startMysteryStatGame:{ids:[68],tone:'#F59A86',ink:'#9A2E22',prop:'bars'},
   openPokeConnectionsMode:{ids:[133,700],tone:'#F7A8C8',ink:'#A3285A',prop:'grid'},
   openOddOneOutMode:{ids:[570],tone:'#B9A3C9',ink:'#5A3F6E',prop:'odd'},
+  openShinyMode:{ids:[130],tone:'#F5D96B',ink:'#6E5600',prop:'sparkle'},
   openQuiEstCeMode:{ids:[132,25],tone:'#F2B8C6',ink:'#8C2F4E',prop:'grid'},
   openPetitBacMode:{ids:[201],tone:'#9FD8CB',ink:'#1F6B5E',prop:'abc'},
   startQuizGame:{ids:[65],tone:'#B9A6F2',ink:'#5C3FB0',prop:'abc'},
@@ -51,6 +52,7 @@ var MODE_TILE_THEME = Object.freeze({
   openLeaderboard:{ids:[384],tone:'#C4D66A',ink:'#4E5E00',prop:'podium'}
 });
 var MODE_TILE_PROPS = Object.freeze({
+  sparkle:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.2 6.3 6.3 2.2-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-2.2z"/><path d="M19 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" opacity=".6"/></svg>',
   egg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c-3.9 0-7 6.3-7 11.2a7 7 0 0 0 14 0C19 8.8 15.9 2.5 12 2.5z"/><path d="M6.5 13l2.7 2 2.3-2.6 2.4 2.6 2.6-2"/></svg>',
   question:'<svg viewBox="0 0 24 24" fill="currentColor"><text x="12" y="18.5" text-anchor="middle" font-family="Fredoka, Nunito, sans-serif" font-weight="700" font-size="19">?</text></svg>',
   infinity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 12c-2-3-4-4.5-6-4.5S2.5 9.5 2.5 12 4 16.5 6 16.5s4-1.5 6-4.5 4-4.5 6-4.5 3.5 2 3.5 4.5-1.5 4.5-3.5 4.5-4-1.5-6-4.5z"/></svg>',

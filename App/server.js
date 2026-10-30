@@ -1327,6 +1327,8 @@ app.get("/favicon.svg", (_req, res) => res.sendFile(path.join(__dirname, "favico
 // Données de formes alternatives embarquées (lot B audit) : évite ~170 appels
 // PokeAPI par nouveau visiteur.
 app.get("/forms-data.json", (_req, res) => res.sendFile(path.join(__dirname, "forms-data.json"), { maxAge: "1d" }));
+// The Pokémon whose shiny clearly differs, for « Shiny ou normal ? » (tools/shiny-pool.js).
+app.get("/shiny-pool.json", (_req, res) => res.sendFile(path.join(__dirname, "shiny-pool.json"), { maxAge: "1d" }));
 app.get("/base-stats.json", (_req, res) => res.sendFile(path.join(__dirname, "base-stats.json"), { maxAge: "1d" }));
 // SEO.
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
@@ -1349,7 +1351,7 @@ const USAGE_EVENTS = new Set([
   "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
   "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce", "solo:petitbac",
   "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
-  "solo:draft", "solo:statclash", "solo:emulator",
+  "solo:draft", "solo:statclash", "solo:emulator", "solo:shiny",
   "party:create", "party:join",
   "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:petitbac", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty", "party:start:dessin",
   "duel:create", "statclash:create",
@@ -1362,7 +1364,7 @@ const USAGE_LABELS = {
   "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:quiestce": "Qui est-ce ?", "solo:petitbac": "Petit Bac", "solo:higherlower": "Higher or Lower",
   "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
   "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
-  "solo:emulator": "Émulateur", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
+  "solo:emulator": "Émulateur", "solo:shiny": "Shiny ou normal", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
   "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:petitbac": "Party — Petit Bac", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "party:start:dessin": "Party — Dessine-le !", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
