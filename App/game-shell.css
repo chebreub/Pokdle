@@ -488,3 +488,7 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
 
 /* 29/10 — the mystery images can't be dragged or long-pressed: the drag preview showed the real sprite. */
 #pokdle-app :is(#silhouette-sprite, #pixel-sprite, .party-sprite-silhouette, .party-sprite-pixel) {pointer-events:none;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;}
+
+/* A friend's score from a shared link (/?defi=…): the visitor's target for today. */
+#screen-game .shell-intro .shell-friend-goal{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:#EEF2FD;color:#2b4fb8;font-weight:800;display:inline-block}
+#pokdle-app.theme-dark #screen-game .shell-intro .shell-friend-goal{background:#24305a;color:#d6e0ff}

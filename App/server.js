@@ -1148,6 +1148,7 @@ function recordVisitDb() {
   if (!pgPool) return;
   pgPool.query("INSERT INTO visits (day, hits) VALUES (CURRENT_DATE, 1) ON CONFLICT (day) DO UPDATE SET hits = visits.hits + 1").catch(() => {});
 }
+const sharePreview = require("./lib/share-preview");
 function sendIndex(req, res) {
   // L'index n'est jamais mise en cache : c'est elle qui porte les URLs versionnées.
   res.set("Cache-Control", "no-cache");
@@ -1155,6 +1156,12 @@ function sendIndex(req, res) {
   const file = fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX;
   // Retour de l'ancienne adresse : la progression du joueur part dans la page (lib/site-move.js).
   const moved = siteMove.takeTransfer(req, res);
+  // A friend's shared result: same page, with a preview that says « Trouvé en 3 essais ».
+  const challenge = !moved && sharePreview.parseChallenge(req.query.defi);
+  if (challenge) {
+    recordUsage("share:visit");
+    return res.type("html").send(sharePreview.challengePageHtml(fs.readFileSync(file, "utf8"), challenge));
+  }
   if (!moved) return res.sendFile(file);
   res.set("Cache-Control", "no-store");
   res.type("html").send(injectTransfer(fs.readFileSync(file, "utf8"), moved));
@@ -1346,6 +1353,7 @@ const USAGE_EVENTS = new Set([
   "party:create", "party:join",
   "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:petitbac", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty", "party:start:dessin",
   "duel:create", "statclash:create",
+  "share:daily", "share:visit",
 ]);
 const USAGE_LABELS = {
   visit: "Visites", "solo:daily": "Pokémon du jour", "solo:normal": "Classique", "solo:challenge": "Challenge",
@@ -1358,6 +1366,7 @@ const USAGE_LABELS = {
   "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:petitbac": "Party — Petit Bac", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
   "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
   "party:start:statclashparty": "Party — Stat Clash", "party:start:dessin": "Party — Dessine-le !", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
+  "share:daily": "Partage — Pokémon du jour partagé", "share:visit": "Partage — arrivées par un lien de défi",
 };
 const usageDays = new Map(); // dateKey -> { events: Map } (diagnostic since restart only)
 const USAGE_MAX_DAYS = 14;
