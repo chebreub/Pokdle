@@ -1307,6 +1307,12 @@ app.get("/manifest.webmanifest", (_req, res) => {
   res.type("application/manifest+json");
   res.sendFile(path.join(__dirname, "manifest.webmanifest"), { maxAge: "1h" });
 });
+// Service worker: shows the daily reminder notification. No cache, so the site never goes stale.
+app.get("/sw.js", (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.set("Service-Worker-Allowed", "/");
+  res.sendFile(path.join(__dirname, "sw.js"));
+});
 app.get("/apple-touch-icon.png", (_req, res) => res.sendFile(path.join(__dirname, "img/app-icons/pokedle-180-v1.png"), { maxAge: "1d" }));
 // Icône de site : Bing et Google l'affichent à côté des résultats (cf. tools/favicon.js).
 app.get("/favicon.ico", (_req, res) => res.sendFile(path.join(__dirname, "favicon.ico"), { maxAge: "7d" }));
@@ -1432,6 +1438,19 @@ const feedbackReady = pgPool ? authDbReady.then(async () => {
 }) : Promise.resolve(false);
 feedback.mountFeedbackRoutes(app, { express, db: pgPool, ready: feedbackReady });
 
+// « 🔔 Me rappeler le Pokémon du jour » : browser notifications the player turns on.
+const pushReminders = require("./lib/push-reminders");
+const webpush = require("web-push");
+const pushReady = pgPool ? authDbReady.then(async () => {
+  await pushReminders.ensureTables(pgPool);
+  return true;
+}).catch((error) => {
+  console.warn("[push] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+const pushRoutes = pushReminders.mountPushRoutes(app, { express, db: pgPool, ready: pushReady, secret: SESSION_SECRET, getUser: getSessionUser, readCookies: parseAuthCookies, webpush });
+if (pgPool) pushReminders.startScheduler({ db: pgPool, webpush, configured: pushRoutes.configured });
+
 // The admin panel (/admin): news banner and shared photos, for the accounts in ADMIN_ACCOUNT_IDS.
 const adminPanelReady = pgPool ? authDbReady.then(async () => {
   await adminPanel.ensureTables(pgPool);
@@ -1458,6 +1477,7 @@ app.get("/admin/stats", async (req, res) => {
   let feedbackHtml = "<h2>Retours des joueurs</h2><p>Messages indisponibles.</p>";
   try {
     if (pgPool && await feedbackReady) feedbackHtml = feedback.feedbackSectionHtml(await feedback.recent(pgPool, 50));
+    if (pgPool && await pushReady) feedbackHtml = pushReminders.pushSectionHtml(await pushReminders.countActive(pgPool)) + feedbackHtml;
   } catch (error) {
     console.warn("[stats] feedback unavailable:", String(error.message || error).slice(0, 120));
   }

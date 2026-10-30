@@ -2188,3 +2188,22 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
   outline-offset: 3px;
   border-radius: 2px;
 }
+
+/* « 🔔 Me rappeler le Pokémon du jour » : a chip that looks tappable, and its little sheet.
+   Three classes to win over the cosy hero chips of visual-refresh.css, loaded later. */
+#pokdle-app #daily-hero .pk-hero-chips .pk-chip.pk-chip-remind{cursor:pointer;border:2px solid #4069E0 !important;background:#fff !important;color:#4069E0 !important;font-weight:900}
+#pokdle-app #daily-hero .pk-hero-chips .pk-chip.pk-chip-remind.is-on{background:#4069E0 !important;color:#fff !important}
+#pokdle-app #daily-hero .pk-hero-chips .pk-chip.pk-chip-remind:focus-visible{outline:3px solid #FFD45C;outline-offset:2px}
+#pokdle-app.theme-dark #daily-hero .pk-hero-chips .pk-chip.pk-chip-remind{background:transparent !important;border-color:#9fb4ff !important;color:#d6e0ff !important}
+#pokdle-app.theme-dark #daily-hero .pk-hero-chips .pk-chip.pk-chip-remind.is-on{background:#4069E0 !important;border-color:#4069E0 !important;color:#fff !important}
+.remind-sheet{display:grid;gap:12px;text-align:left}
+.remind-sheet p{margin:0}
+.remind-label{font-weight:800}
+.remind-hours{display:flex;flex-wrap:wrap;gap:8px}
+.remind-hour{min-width:64px;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid rgba(128,118,140,.35);background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer}
+.remind-hour.is-on{background:#4069E0;border-color:#4069E0;color:#fff}
+.remind-go{width:100%;min-height:50px;padding:12px;border:0;border-radius:999px;background:#4069E0;color:#fff;font:inherit;font-weight:800;font-size:1.05em;box-shadow:0 4px 0 #2d4fb3;cursor:pointer}
+.remind-go:disabled{opacity:.7;cursor:wait}
+.remind-stop{justify-self:center;border:0;background:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px}
+.remind-note{font-size:.85em;opacity:.75}
+.remind-steps{margin:0;padding-left:1.3em;display:grid;gap:6px}
