@@ -1,6 +1,8 @@
-// Party Room chat: a « 💬 Chat » button with the number of unread messages, and a panel with
-// the room's messages, four quick reactions and a short text field. Messages live only in
-// this page: the server relays them and forgets them (lib/party-chat.js).
+// Party Room chat: a « 💬 Chat » button in the room's header with the number of unread
+// messages, and a panel with the room's messages, four quick reactions and a short text field.
+// The button stays in the page flow: a floating one would cover the room's own buttons. A new
+// message while the panel is closed shows a short toast. Messages live only in this page: the
+// server relays them and forgets them (lib/party-chat.js).
 const PARTY_CHAT_REACTIONS = ['😂', '🔥', '👏', '😱'];
 const PARTY_CHAT_KEEP = 60;
 const partyChat = { open: false, unread: 0, messages: [], code: null, bound: false, sending: false, error: '' };
@@ -32,8 +34,19 @@ function partyChatBind() {
 function partyChatAdd(message, mine) {
   partyChat.messages.push({ ...message, mine });
   if (partyChat.messages.length > PARTY_CHAT_KEEP) partyChat.messages.splice(0, partyChat.messages.length - PARTY_CHAT_KEEP);
-  if (!partyChat.open && !mine) partyChat.unread += 1;
+  if (!partyChat.open && !mine) {
+    partyChat.unread += 1;
+    if (typeof showToast === 'function') showToast(partyChatPreview(message));
+  }
   renderPartyChat();
+}
+
+// The toast never gives away a hidden message.
+function partyChatPreview(message) {
+  if (message.reaction) return '💬 ' + message.nickname + ' ' + message.reaction;
+  if (message.masked) return '💬 ' + message.nickname + ' a écrit dans le chat';
+  const text = String(message.text || '');
+  return '💬 ' + message.nickname + ' : ' + (text.length > 60 ? text.slice(0, 59) + '…' : text);
 }
 
 function partyChatMessageHtml(message) {
@@ -50,9 +63,10 @@ function renderPartyChat() {
   const room = partyChatRoom();
   if (room && room.code !== partyChat.code) Object.assign(partyChat, { code: room.code, messages: [], unread: 0, error: '' });
   const visible = partyChatVisible(room);
+  const head = document.querySelector('#party-joined .party-room-head-actions');
   let fab = document.getElementById('party-chat-fab');
   let panel = document.getElementById('party-chat');
-  if (!visible) { fab?.classList.add('hidden'); panel?.classList.add('hidden'); return; }
+  if (!visible || !head) { fab?.classList.add('hidden'); panel?.classList.add('hidden'); return; }
   partyChatBind();
   if (!fab) {
     fab = document.createElement('button');
@@ -60,7 +74,7 @@ function renderPartyChat() {
     fab.type = 'button';
     fab.className = 'pchat-fab';
     fab.dataset.action = 'togglePartyChat';
-    document.body.appendChild(fab);
+    head.insertBefore(fab, head.lastElementChild);
   }
   if (!panel) {
     panel = document.createElement('section');
@@ -78,7 +92,8 @@ function renderPartyChat() {
     panel.querySelector('#party-chat-form').addEventListener('submit', (event) => { event.preventDefault(); sendPartyChatText(); });
     panel.addEventListener('keydown', (event) => { if (event.key === 'Escape') togglePartyChat(false); });
   }
-  fab.classList.toggle('hidden', partyChat.open);
+  fab.classList.remove('hidden');
+  fab.setAttribute('aria-expanded', String(partyChat.open));
   fab.innerHTML = '💬 Chat' + (partyChat.unread ? ' <b>' + Math.min(partyChat.unread, 99) + '</b>' : '');
   fab.setAttribute('aria-label', partyChat.unread ? 'Ouvrir le chat, ' + partyChat.unread + ' nouveau' + (partyChat.unread > 1 ? 'x' : '') + ' message' + (partyChat.unread > 1 ? 's' : '') : 'Ouvrir le chat');
   panel.classList.toggle('hidden', !partyChat.open);

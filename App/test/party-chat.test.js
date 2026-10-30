@@ -54,7 +54,7 @@ test('a message naming the answer reaches the others hidden; the sender keeps th
 
 test('the chat panel escapes what players write and hides the masked message for others', () => {
   const src = fs.readFileSync(path.join(__dirname, '../src/script.10xe.party-chat.js'), 'utf8');
-  const fn = src.slice(src.indexOf('function partyChatMessageHtml'), src.indexOf('function renderPartyChat'));
+  const fn = src.slice(src.indexOf('function partyChatPreview'), src.indexOf('function renderPartyChat'));
   const c = { escapeHtml: (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') };
   vm.createContext(c);
   vm.runInContext(fn, c);
@@ -66,4 +66,16 @@ test('the chat panel escapes what players write and hides the masked message for
   assert.match(mine, /<i>Moi<\/i>pikachu/);
   assert.match(mine, /Caché aux autres/);
   assert.match(c.partyChatMessageHtml({ nickname: 'Tom', reaction: '😂' }), /pchat-emoji">😂/);
+  // The toast of a closed chat never gives away a hidden message.
+  assert.equal(c.partyChatPreview({ nickname: 'Léa', masked: true }), '💬 Léa a écrit dans le chat');
+  assert.equal(c.partyChatPreview({ nickname: 'Tom', reaction: '🔥' }), '💬 Tom 🔥');
+  assert.equal(c.partyChatPreview({ nickname: 'Tom', text: 'x'.repeat(80) }).length, '💬 Tom : '.length + 60);
+});
+
+test('the chat button lives in the room header, never floating over the room\'s buttons', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../src/script.10xe.party-chat.js'), 'utf8');
+  assert.match(src, /querySelector\('#party-joined \.party-room-head-actions'\)/);
+  const css = fs.readFileSync(path.join(__dirname, '../party-room.css'), 'utf8');
+  const button = css.match(/\.party-room-head-actions \.pchat-fab\{[^}]*\}/)[0];
+  assert.doesNotMatch(button, /position:\s*fixed/);
 });
