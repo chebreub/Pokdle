@@ -1,9 +1,9 @@
 "use strict";
 const crypto=require('node:crypto');
-const {playerLevelFromXp,rankingAvatarSql}=require('./profile-sync');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const {buildDossierQuestions,facts}=require('./dossier-questions');
 const {recordLeaderboardResultInTransaction}=require('./leaderboard-store');
+const {dayBoard}=require('./day-boards');
 const {DAILY_MAX,dossierPoints,sql:pointsSql}=require('./daily-points');
 const fail=(code,status=409)=>Object.assign(new Error(code),{code,status});
 async function initDossierDb(db) {
@@ -98,22 +98,7 @@ function createDossierService({db,clock=()=>new Date(),buildQuestions=buildDossi
     });
   }
   async function leaderboard(scope,accountId) {
-    const day=dailyCalendar(clock()).day;
-    const predicate=scope==='today'?'AND p.day=$1::date':scope==='week'?"AND p.day>$1::date-7 AND p.day<=$1::date":'AND p.day<=$1::date';
-    const cte=`WITH candidates AS (
-      SELECT p.account_id AS discord_id,p.points AS score,p.elapsed_ms,p.finished_at,
-        ROW_NUMBER() OVER(PARTITION BY p.account_id ORDER BY p.points DESC,p.elapsed_ms ASC,p.finished_at ASC) AS attempt_rank
-      FROM dossier_plays p WHERE p.status='completed' AND p.account_id IS NOT NULL ${predicate}
-    ), ranked AS (
-      SELECT c.discord_id,COALESCE(u.username,'Dresseur') AS username,${rankingAvatarSql("COALESCE(u.avatar,'')")} AS avatar,u.partner_id,u.xp,c.score,
-        (RANK() OVER(ORDER BY c.score DESC,c.elapsed_ms ASC))::int AS rank
-      FROM candidates c LEFT JOIN users u ON u.discord_id=c.discord_id WHERE c.attempt_rank=1)`;
-    const rows=(await db.query(cte+' SELECT * FROM ranked ORDER BY rank,username LIMIT 20',[day])).rows;
-    const total=Number((await db.query(cte+' SELECT COUNT(*)::int AS total FROM ranked',[day])).rows[0].total);
-    const mine=accountId?(await db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,accountId])).rows[0]:null;
-    const around=mine?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,mine.rank-2),mine.rank+2])).rows:[];
-    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,level:playerLevelFromXp(r.xp),score:Number(r.score),me:r.discord_id===accountId});
-    return {ok:true,mode:'dossier',scope,authenticated:Boolean(accountId),direction:'desc',label:'Dossier du jour',unit:'pts',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score)}:null,around:around.map(map)};
+    return dayBoard(db,{mode:'dossier',scope,accountId,day:dailyCalendar(clock()).day});
   }
   return {state:who=>act(who),answer:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),leaderboard};
 }

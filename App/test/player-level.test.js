@@ -36,7 +36,8 @@ test('every ranking returns the level, and the profile save keeps the XP column 
   assert.equal((server.match(/u\.partner_id, u\.xp, /g) || []).length, 3);
   assert.equal((server.match(/ SELECT discord_id, username, avatar, partner_id, xp, score, rank FROM ranked/g) || []).length, 3);
   assert.match(server, /level: playerLevelFromXp\(row\.xp\),/);
-  for (const [file, count] of [['lib/daily-challenge.js', 2], ['lib/daily-dossier.js', 1], ['lib/daily-grid.js', 1], ['lib/daily-petitbac.js', 1]]) {
+  // The Enquête, Wordle, Dossier, Défi and Parcours boards share lib/day-boards.js.
+  for (const [file, count] of [['lib/day-boards.js', 1], ['lib/daily-grid.js', 1], ['lib/daily-petitbac.js', 1]]) {
     const src = read(file);
     assert.equal((src.match(/u\.partner_id,u\.xp,/g) || []).length, count, file);
     assert.equal((src.match(/level:playerLevelFromXp\(r\.xp\),/g) || []).length, count, file);

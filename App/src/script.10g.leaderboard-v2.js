@@ -77,13 +77,28 @@ function leaderboardV2FormatScore(score, mode, unit) {
   if (mode === "higherlower60" || mode === "typecombo") return n + " pts";
   return n + (unit ? " " + unit : "");
 }
+// The day's stages add their points up over a period (30/10/2026): « Total » instead of « Records ».
+const LEADERBOARD_V2_CUMULATIVE = ["journey","enquete","wordlepts","dossier","challenge"];
+function leaderboardV2IsCumulative(mode) {
+  return LEADERBOARD_V2_CUMULATIVE.includes(mode);
+}
+function leaderboardV2ScopeLabel(scope, mode) {
+  if (scope === "all" && leaderboardV2IsCumulative(mode)) return "Total";
+  return (LEADERBOARD_V2_SCOPES.find(([id]) => id === scope) || [scope, scope])[1];
+}
+// Over a period the points of every day are added up: the hint says so.
+function leaderboardV2Hint(meta, mode, scope) {
+  if (scope === "today" || !leaderboardV2IsCumulative(mode)) return meta.hint;
+  const period = scope === "week" ? "sur 7 jours" : "depuis ton premier jour";
+  return (mode === "journey" ? "Tes 4 épreuves additionnées " : "Tes points additionnés ") + period + " : chaque jour joué compte";
+}
 // « Global du jour » over 7 days reads « Global · 7 jours ».
-function leaderboardV2Title(label, scope) {
+function leaderboardV2Title(label, scope, mode) {
   const text = String(label || "");
   // « Pokémon du jour » is a game's name: only the other boards lose their « du jour ».
   const base = text === "Pokémon du jour" ? text : text.replace(/ du jour$/, "");
   if (scope === "week") return base + " · 7 jours";
-  if (scope === "all") return base + " · records";
+  if (scope === "all") return base + (leaderboardV2IsCumulative(mode) ? " · total" : " · records");
   return text;
 }
 // « à 1 pt de Jade », « à 12 pts de Jade »: the gap reads in the board's unit, singular for one.
@@ -217,6 +232,8 @@ function switchLeaderboardScopeV2() {
 }
 // Points come first; the detail behind them follows ("3 essais · 1 indice", "2/6").
 function leaderboardV2Detail(row, mode) {
+  const days = Number(row?.days);
+  if (days > 0) return days + " jour" + (days > 1 ? "s" : "");
   const attempts = Number(row?.attempts);
   if (!(attempts > 0)) return "";
   if (mode === "wordlepts") return attempts + "/6";
@@ -321,8 +338,8 @@ function openLeaderboardV2(mode="journey",scope="today") {
       (otherModes.length?'<optgroup label="Jeux d’arcade">'+otherModes.map(option).join("")+'</optgroup>':'')+
       '<option value="__league">Ligue · 3 disciplines</option></select></label>';
 
-    const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id,label])=>
-      '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" aria-pressed="'+(id===leaderboardV2Scope)+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+label+'</button>'
+    const scopeTabs=LEADERBOARD_V2_SCOPES.map(([id])=>
+      '<button type="button" class="lbv3-scope-tab'+(id===leaderboardV2Scope?' is-active':'')+'" aria-pressed="'+(id===leaderboardV2Scope)+'" data-action="switchLeaderboardScopeV2" data-lb-scope="'+id+'">'+leaderboardV2ScopeLabel(id,current)+'</button>'
     ).join("");
 
     const genTabs=leaderboardV2IsDraft(current)
@@ -379,7 +396,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
     const emptyHtml = empty
       ? '<section class="lbv3-empty"><div class="lbv3-empty-icon">🏆</div><h4>Pas encore de performance ici</h4><p>'+
         (requestedScope==="all"
-          ? (window.__pokedleAuthed?'Aucun record enregistré pour ce mode.':'Connecte-toi pour enregistrer tes records.')
+          ? (leaderboardV2IsCumulative(current)?(window.__pokedleAuthed?'Aucun point enregistré pour l’instant.':'Connecte-toi pour que tes points comptent.'):(window.__pokedleAuthed?'Aucun record enregistré pour ce mode.':'Connecte-toi pour enregistrer tes records.'))
           : 'Aucune performance enregistrée sur cette période. Les records locaux antérieurs ne sont pas antidatés.')+
         '</p></section>'
       : '';
@@ -391,7 +408,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
       (leaderboardV2AutoWeek&&requestedScope==="week"?'<p class="lbv4-auto-week" role="status">Peu de joueurs aujourd’hui : voici les 7 derniers jours.</p>':'')+
       genTabs+
       '<header class="lbv3-header lbv4-board-head">'+
-        '<div class="lbv3-title"><h3>'+escapeHtml(leaderboardV2Title(data?.label||meta.label,requestedScope))+'</h3><p>'+escapeHtml(meta.hint)+'</p></div>'+
+        '<div class="lbv3-title"><h3>'+escapeHtml(leaderboardV2Title(data?.label||meta.label,requestedScope,current))+'</h3><p>'+escapeHtml(leaderboardV2Hint(meta,current,requestedScope))+'</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
       personalHtml+
