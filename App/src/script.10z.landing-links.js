@@ -18,6 +18,7 @@ const LANDING_GAMES = Object.freeze({
   'quiz-pokemon': ['startQuizGame'],
   'higher-or-lower-pokemon': ['openHigherLowerMode'],
   'intrus-pokemon': ['openOddOneOutMode'],
+  'shiny-ou-normal': ['openShinyMode'],
   'qui-est-ce-pokemon': ['openQuiEstCeMode'],
   'evolution-pokemon': ['startEvolutionChainGame'],
   'ordre-pokedex': ['startPokedexOrderGame'],

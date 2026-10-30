@@ -30,6 +30,7 @@ const HISTORY_TO_LAUNCH = Object.freeze({
   "stat-auction": "statauction",
   "stat-clash": "statclash",
   typecombo: "typecombo",
+  shiny: "shiny",
   challenge: "challenge",
 });
 

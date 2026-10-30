@@ -337,6 +337,7 @@
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openPokeConnectionsMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-link"/></svg></div><b>Poké-Connections</b><small>16 Pokémon, quatre liens cachés à retrouver.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["startQuizGame"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-help"/></svg></div><b>Quiz</b><small>Quinze questions sur l’univers Pokémon.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openHigherLowerMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-trending"/></svg></div><b>Higher or Lower</b><small>Compare les statistiques et prolonge ta série.</small></button>
+              <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openShinyMode"]' data-search="shiny chromatique couleur rare"><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-eye"/></svg></div><b>Shiny ou normal ?</b><small>Un artwork : est-ce la version shiny ? Trois vies.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openDraftScoreAttackMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-chart"/></svg></div><b>Draft Score Attack</b><span class="all-modes-badge">Score</span><small>Drafte six Pokémon pour maximiser ton score.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openOddOneOutMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-grid"/></svg></div><b>Intrus</b><small>Trouve celui qui ne suit pas la même règle.</small></button>
               <button type="button" class="card all-modes-card" data-category="solo" data-action="openFromAllModes" data-args='["openQuiEstCeMode"]'><div class="pk-tile pk-tile-sm"><svg class="pk-ico"><use href="#i-help"/></svg></div><b>Qui est-ce ?</b><small>24 Pokémon, des questions oui/non : démasque le bon.</small></button>
@@ -1266,6 +1267,20 @@ EVs: 252 Atk / 4 Def / 252 Spe
         </div>
         <p class="card-desc qui-intro">L’ordinateur a choisi un des 24 Pokémon. Pose des questions oui ou non : les cartes qui ne collent plus se retournent. Trouve-le en un minimum de questions.</p>
         <div id="qui-root"></div>
+      </div>
+    </div>
+
+    <div id="screen-shiny" class="hidden">
+      <div class="card shiny-screen-card gameplay-screen-card">
+        <div class="ranking-head">
+          <h2 class="card-title">Shiny ou normal ?</h2>
+          <div class="ranking-head-actions">
+            <button class="btn-blue" data-action="restartShinyGame">🎲 Nouvelle partie</button>
+            <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
+          </div>
+        </div>
+        <p class="card-desc shiny-intro">Un Pokémon apparaît : est-ce sa version shiny ou sa version normale ? Trois vies, un point par bonne réponse.</p>
+        <div id="shiny-root"></div>
       </div>
     </div>
 

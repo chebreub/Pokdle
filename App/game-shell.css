@@ -492,3 +492,39 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
 /* A friend's score from a shared link (/?defi=…): the visitor's target for today. */
 #screen-game .shell-intro .shell-friend-goal{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:#EEF2FD;color:#2b4fb8;font-weight:800;display:inline-block}
 #pokdle-app.theme-dark #screen-game .shell-intro .shell-friend-goal{background:#24305a;color:#d6e0ff}
+
+/* « Shiny ou normal ? » : one big artwork, two big answers, then both versions side by side. */
+#screen-shiny .shiny-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0 12px}
+#screen-shiny .shiny-lives{display:inline-flex;gap:2px;font-size:1.15rem;margin-right:4px}
+#screen-shiny .shiny-stage{display:flex;justify-content:center;padding:14px;border-radius:22px;background:radial-gradient(circle at 50% 45%,#fff 0,#fff 45%,#F4EEFF 100%);border:1px solid #E4DACB}
+#screen-shiny .shiny-art{width:min(260px,62vw);height:auto;aspect-ratio:1;object-fit:contain;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;pointer-events:none}
+#screen-shiny .shiny-question{text-align:center;font-size:1.1rem;margin:14px 0 10px}
+#screen-shiny .shiny-choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+#screen-shiny .shiny-choice{min-width:140px;min-height:56px;padding:12px 22px;border-radius:999px;border:2px solid #4069E0;background:#fff;color:#4069E0;font:inherit;font-weight:900;font-size:1.1rem;cursor:pointer}
+#screen-shiny .shiny-choice.is-shiny{background:#4069E0;color:#fff;box-shadow:0 4px 0 #2d4fb3}
+#screen-shiny .shiny-choice:focus-visible{outline:3px solid #FFD45C;outline-offset:2px}
+#screen-shiny .shiny-verdict{text-align:center;font-weight:900;font-size:1.1rem;margin:4px 0 0;padding:10px 14px;border-radius:14px}
+#screen-shiny .shiny-verdict.is-good{background:#E3F5E7;color:#1E6B35}
+#screen-shiny .shiny-verdict.is-bad{background:#F2EEEA;color:#5A4F45}
+#screen-shiny .shiny-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:420px;margin:0 auto}
+#screen-shiny .shiny-side{margin:0;padding:10px;border-radius:18px;border:2px solid #E4DACB;background:#fff;text-align:center}
+#screen-shiny .shiny-side.is-shown{border-color:#4069E0;box-shadow:0 0 0 3px rgba(64,105,224,.18)}
+#screen-shiny .shiny-side img{width:100%;max-width:140px;height:auto;aspect-ratio:1;object-fit:contain;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none;pointer-events:none}
+#screen-shiny .shiny-side figcaption{font-weight:800;font-size:.9rem}
+#screen-shiny .shiny-over{text-align:center;margin-top:14px}
+#screen-shiny .shiny-status{text-align:center}
+#pokdle-app.theme-dark #screen-shiny .shiny-stage{background:radial-gradient(circle at 50% 45%,#3a3550 0,#2c283c 70%);border-color:#514758}
+#pokdle-app.theme-dark #screen-shiny .shiny-side{background:#2c283c;border-color:#514758}
+#pokdle-app.theme-dark #screen-shiny .shiny-side.is-shown{border-color:#9fb4ff}
+#pokdle-app.theme-dark #screen-shiny .shiny-choice:not(.is-shiny){background:transparent;color:#d6e0ff;border-color:#9fb4ff}
+#pokdle-app.theme-dark #screen-shiny .shiny-verdict.is-good{background:#1f3a28;color:#bfe8c9}
+#pokdle-app.theme-dark #screen-shiny .shiny-verdict.is-bad{background:#3a3430;color:#e7dfd6}
+/* Phone: the picture and both answers fit above the tab bar, no scrolling to answer. */
+@media (max-width:640px){
+  #screen-shiny .shiny-intro{display:none}
+  #screen-shiny .shiny-stage{padding:8px}
+  #screen-shiny .shiny-art{width:min(200px,52vw)}
+  #screen-shiny .shiny-question{margin:10px 0 8px}
+  #screen-shiny .shiny-choice{min-width:0;flex:1;min-height:52px}
+  #screen-shiny .shiny-side img{max-width:110px}
+}
