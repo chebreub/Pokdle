@@ -1,6 +1,6 @@
 # To-do Pokédle
 
-Dernière mise à jour : 29 octobre 2026. La passation complète et à jour est dans `CLAUDE.md` (racine du dépôt) ; ce fichier garde le détail des chantiers.
+Dernière mise à jour : 30 octobre 2026. La passation complète et à jour est dans `CLAUDE.md` (racine du dépôt) ; ce fichier garde le détail des chantiers.
 
 ## Le 29/10 (session Claude)
 - [x] #158 : `CLAUDE.md`, la passation lue au début de chaque session.
@@ -18,10 +18,19 @@ Dernière mise à jour : 29 octobre 2026. La passation complète et à jour est 
 - [x] #170 : passation à jour, images mystère non glissables (correctif rapide de la triche ci-dessous), mission Hexadron → Party Room.
 - [x] #171 / #172 : nouveau jeu Party Room « Dessine-le ! », puis v2 (stylo débloqué, Remplir, 16 couleurs, modèle plus grand). À tester avec les collègues avant de l'annoncer.
 - [x] 29/10 au soir : Render a coupé le site (750 heures gratuites épuisées, partagées avec carnet-force). Pokdle passé en payant (7 $/mois). Rappel le 1/11 pour décider de repasser en gratuit.
-- [x] Outil vidéo rangé dans `tools/video/` (30/10).
+- [x] Outil vidéo rangé dans `tools/video/` (30/10, #173).
+
+## Le 30/10 (session Claude)
+- [x] #174 : QA navigateur réparée (carte « Niveau supérieur » qui bloquait des clics).
+- [x] #175 : rappel du Pokémon du jour par notification (voir plus bas).
+- [x] #176 : partage du Pokémon du jour en défi (`/?defi=…`, aperçu « Trouvé en N essais », objectif sous le titre).
+- [x] #177 : nouveau jeu « Shiny ou normal ? ».
+- [ ] Tester sur mon téléphone : rappel 🔔, partage en défi, Shiny ou normal ; puis annoncer dans le bandeau (panneau admin).
+- [ ] Dans quelques jours, regarder dans `/admin/stats` : rappels activés, partages, arrivées par lien de défi, parties de Shiny ou normal.
+- [ ] Faire connaître le site : mail à Fildrong (rédigé le 30/10), Pokébip, Discord Pokémon FR. Pas de serveur Discord à nous avant 100 joueurs par jour.
 - [ ] **Triche à corriger plus tard (signalée le 29/10) : Zoom, Pixelisé et autres jeux d'image.** En cliquant sur l'image et en la glissant sur le côté, on voit le vrai sprite, sans le zoom ni la pixelisation. Cause : le jeu affiche la vraie image (`<img id="silhouette-sprite">`, `<img id="pixel-sprite">`) et ne fait que la déformer en CSS ; l'adresse de l'image contient aussi le numéro du Pokémon. Correctif rapide (bloque le glisser) : `draggable="false"` et pas de clic sur l'image. Vrai correctif : le serveur envoie l'image déjà zoomée ou pixelisée, sous une adresse qui ne dit pas quel Pokémon c'est, et le site la dessine dans un canvas. À vérifier aussi : l'Ombre et le Qui est-ce ?.
 - [x] **Rappel du Pokémon du jour par notification (idée du 29/10, codé le 30/10).** Notifications du navigateur, seulement si le joueur active « 🔔 Me rappeler le Pokémon du jour ». Une par jour au plus, à l'heure qu'il choisit, et rien s'il a déjà joué. Marche directement sur Android et PC ; sur iPhone, il faut d'abord ajouter le site à l'écran d'accueil (petit guide à prévoir). Rien à régler sur Render : les clés sont créées par le serveur et rangées dans la base (ou lues dans `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` si on les pose un jour). Nombre de rappels activés visible dans `/admin/stats`.
-- [ ] Vidéos TikTok / Shorts : 8 vidéos faites (sans musique ni voix, avec sous-titres). Prochaine idée : Duel de poids (peu lancé, mais 1 360 manches jouées en 14 jours).
+- [ ] Vidéos TikTok / Shorts : 10 vidéos faites (sans musique ni voix IA). « 5 pixelisés » mélangée : 0 vue. Nouvelle approche à essayer : ma voix et une accroche ; idée « 5 shinies : tu les reconnais ? ».
 
 ## En attente : GPT travaille dessus (archives, avant le 14/10)
 - [x] PR #99 (étape 1, PR 2) : Quiz sur 15, Ligue 12/15, boutons Ligue, accueil « Journée terminée », points de l'Enquête, aide ✓/≈/× — vérifiée en ligne le 9/10.
