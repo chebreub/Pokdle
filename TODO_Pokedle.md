@@ -60,7 +60,7 @@ Idée : d'abord faire revenir ceux qui viennent déjà, puis être trouvé sur G
 
 ### Étape 2 : être trouvé sur Google (en parallèle)
 - [ ] Enrichir les pages `/jeux/<slug>` : comment jouer, astuces, jeux similaires (comme PokeMind). Commencé le 31/10 : « Comment jouer », « Bon à savoir » et « D'autres jeux » existaient déjà ; ajout des sections **Astuces** et **Questions fréquentes** (avec données structurées FAQ pour Google) sur le Pokémon du jour, le Wordle, Higher or Lower, Qui est-ce ?, le Petit Bac et les jeux entre amis ; page « Jeux Pokémon entre amis » mise à jour (12 jeux, Dessine-le !, chat) ; **nouvelle page `/jeux/dessine-le-pokemon`** (« le Pictionary Pokémon entre amis », le bouton ouvre le salon avec Dessine-le ! déjà choisi) ; liens vers ces deux pages sur l'accueil. Reste : astuces et questions des autres pages.
-- [ ] 5 premiers guides avec artworks officiels et un bouton vers le jeu : méthode du Pokémon du jour, table des types, générations, starters, légendaires (comme PokeQuizz).
+- [ ] 5 premiers guides avec artworks officiels et un bouton vers le jeu : méthode du Pokémon du jour, table des types, générations, starters, légendaires (comme PokeQuizz). **2 faits le 31/10** sous `/guides` : « Pokémon du jour : la méthode » (`/guides/methode-pokemon-du-jour`) et « La table des types expliquée » (`/guides/table-des-types-pokemon`, tableau des 18 types avec icônes, identique à celui du site). Chaque règle citée est vérifiée par un test contre le code du jeu. Restent : générations, starters, légendaires.
 - [ ] Viser « Pokémon du jour » et « jeux Pokémon entre amis » plutôt que « pokedle », disputé par trois sites.
 - [ ] Plus tard (pas avant décembre) : l'anglais.
 
