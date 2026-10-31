@@ -13,7 +13,8 @@ function dailyReactionsHtml(data) {
       '<span aria-hidden="true">' + emoji + '</span><b>' + n + '</b></button>';
   }).join('');
   return '<div class="daily-react" id="daily-react">' + found +
-    '<div class="daily-react-row" role="group" aria-label="Ta réaction au Pokémon du jour"><span class="daily-react-label">Ta réaction</span>' + buttons + '</div></div>';
+    '<div class="daily-react-row" role="group" aria-label="Ta réaction au Pokémon du jour"><span class="daily-react-label">Ta réaction</span>' + buttons + '</div>' +
+    '<button type="button" class="daily-invite-link" data-action="openInviteFriend">🎁 Invite un ami : +100 XP chacun</button></div>';
 }
 
 function placeDailyReactions() {

@@ -4,6 +4,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
 const vm = require("vm");
+const nameOverrides = require("./lib/name-overrides");
 const express = require("express");
 const helmet = require("helmet");
 const http = require("http");
@@ -234,6 +235,8 @@ async function initAuthDb() {
     )`);
     // Deleted accounts stay deleted: no rebuilt row, no import from the old database.
     await pgPool.query("CREATE TABLE IF NOT EXISTS deleted_accounts (id TEXT PRIMARY KEY, deleted_at TIMESTAMPTZ NOT NULL DEFAULT now())");
+    // Names replaced by the admin (« Pseudo déplacé »), loaded before any sign-in can rewrite them.
+    await nameOverrides.ensureNameOverrides(pgPool);
     // Players who recorded a score since the move get their name back in every ranking.
     await pgPool.query(`INSERT INTO users(discord_id, username, avatar)
       SELECT DISTINCT ON (s.discord_id) s.discord_id, s.username, s.avatar FROM scores s
@@ -263,7 +266,8 @@ function getSessionUser(req) {
   if (!jwtLib || !SESSION_SECRET) return null;
   const token = parseAuthCookies(req)[AUTH_COOKIE];
   if (!token) return null;
-  try { return jwtLib.verify(token, SESSION_SECRET); } catch (e) { return null; }
+  // A name replaced by the admin wins over the one kept in the session cookie.
+  try { return nameOverrides.withOverride(jwtLib.verify(token, SESSION_SECRET)); } catch (e) { return null; }
 }
 function setSessionCookie(res, payload) {
   const token = jwtLib.sign(payload, SESSION_SECRET, { expiresIn: "30d" });
@@ -305,7 +309,7 @@ async function signInWithIdentity(req, res, { provider, providerUserId, nativeId
   if (accountId === nativeId) {
     await pgPool.query(
       `INSERT INTO users (discord_id, username, avatar, last_login) VALUES ($1, $2, $3, now())
-       ON CONFLICT (discord_id) DO UPDATE SET username = EXCLUDED.username, avatar = EXCLUDED.avatar, last_login = now()`,
+       ON CONFLICT (discord_id) DO UPDATE SET username = ${nameOverrides.KEEP_OVERRIDE_SQL}, avatar = EXCLUDED.avatar, last_login = now()`,
       [accountId, username, avatar]
     );
   } else {
@@ -532,6 +536,8 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
     ["weekly_awards", "DELETE FROM weekly_awards WHERE discord_id = $1", [id]],
     ["daily_reactions", "DELETE FROM daily_reactions WHERE identity = $1", ["user:" + id]],
+    ["referrals", "DELETE FROM referrals WHERE referrer_id = $1 OR friend_key = $2", [id, "user:" + id]],
+    ["name_overrides", "DELETE FROM name_overrides WHERE account_id = $1", [id]],
     ["player_message_replies", "DELETE FROM player_message_replies WHERE account_id = $1", [id]],
     ["player_message_reads", "DELETE FROM player_message_reads WHERE account_id = $1", [id]],
     ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
@@ -901,7 +907,14 @@ const draftScoreRooms = new Map();
 const partyRooms = new Map();
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
-const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
+// « Invite un ami » (lib/referrals.js): a bonus for both once the friend finds a first Pokémon du jour.
+const referralLib = require("./lib/referrals");
+const referralsReady = pgPool ? authDbReady.then(() => referralLib.ensureReferralTables(pgPool)).then(() => true).catch((error) => { console.error("[referral] tables:", error.message); return false; }) : Promise.resolve(false);
+const referrals = pgPool ? referralLib.createReferrals({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: referralsReady }) : null;
+if (referrals) referralLib.mountReferralRoutes({ app, express, getUser: getSessionUser, referrals });
+// « Jours passés » : earlier Pokémon du jour, 7 days with an account, 7 more per friend invited.
+require("./lib/daily-past").mountPastRoutes({ app, db: pgPool, getUser: getSessionUser, today: () => require("./lib/egg-mystery").parisDay(new Date()) });
+const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, referrals, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
 const wordleService = require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
 const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, wordle:wordleService, readyBefore:authDbReady });
 const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,daily:dailyService,wordle:wordleService,dossier:dossierService,readyBefore:authDbReady});
@@ -1537,6 +1550,10 @@ app.get("/admin/stats", async (req, res) => {
   try {
     if (pgPool && await feedbackReady) feedbackHtml = feedback.feedbackSectionHtml(await feedback.recent(pgPool, 50));
     if (pgPool && await pushReady) feedbackHtml = pushReminders.pushSectionHtml(await pushReminders.countActive(pgPool)) + feedbackHtml;
+    if (pgPool) {
+      const retentionLib = require("./lib/daily-retention");
+      feedbackHtml = retentionLib.todaySectionHtml(await retentionLib.dailyToday(pgPool, require("./lib/egg-mystery").parisDay(new Date()))) + feedbackHtml;
+    }
   } catch (error) {
     console.warn("[stats] feedback unavailable:", String(error.message || error).slice(0, 120));
   }

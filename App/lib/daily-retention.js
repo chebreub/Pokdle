@@ -27,4 +27,19 @@ async function dailyRetention(db, fromDay, toDay) {
   return { nextDay: rate(row.back1, row.base1), week: rate(row.back7, row.base7), newWeek: rate(row.newback7, row.new7) };
 }
 
-module.exports = { dailyRetention };
+// Today's Pokémon du jour at a glance for /admin/stats: finders, give-ups, reactions, friends invited.
+async function dailyToday(db, day) {
+  const q = async (sql, fallback) => { try { return (await db.query(sql, [day])).rows[0]; } catch (_e) { return fallback; } };
+  const plays = await q(`SELECT count(*) FILTER (WHERE status = 'won' AND NOT excluded_stats)::int AS found,
+    count(*) FILTER (WHERE status = 'abandoned')::int AS gaveup FROM daily_plays WHERE day = $1`, { found: null, gaveup: null });
+  const reactions = await q("SELECT COALESCE(json_object_agg(emoji, n), '{}'::json) AS r FROM (SELECT emoji, count(*)::int AS n FROM daily_reactions WHERE day = $1 GROUP BY emoji) x", { r: null });
+  const friends = await q("SELECT count(*)::int AS n FROM referrals WHERE day = $1", { n: null });
+  return { day, found: plays.found, gaveup: plays.gaveup, reactions: reactions.r, friends: friends.n };
+}
+function todaySectionHtml(t) {
+  const n = (v) => (v == null ? "—" : String(Number(v)));
+  const reactions = t.reactions ? ["😂", "🔥", "👏", "😱"].map((e) => e + " " + (Number(t.reactions[e]) || 0)).join(" · ") : "—";
+  return `<p style="margin:16px 0 0">🎯 Pokémon du jour aujourd'hui : <b>${n(t.found)}</b> trouvé(s), <b>${n(t.gaveup)}</b> abandon(s) · réactions ${reactions} · 🎁 parrainages : <b>${n(t.friends)}</b></p>`;
+}
+
+module.exports = { dailyRetention, dailyToday, todaySectionHtml };

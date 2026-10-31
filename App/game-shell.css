@@ -858,3 +858,56 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
   .daily-react-label {display:none;}
   .daily-react-btn {min-height:38px;padding:0 11px;}
 }
+/* 🎁 Invite un ami. */
+.daily-invite-link {margin-top:2px;border:0;background:none;color:#4069E0;font:800 13px Nunito,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.invite-friend {display:grid;gap:12px;}
+.invite-friend-lead {margin:0;font:600 15px/1.5 Nunito,sans-serif;color:#2E2A33;}
+.invite-friend-link input {width:100%;min-height:46px;border-radius:12px;border:1.5px solid #EADFCF;padding:0 12px;font:700 14px Nunito,sans-serif;color:#2E2A33;background:#FFF8EF;}
+.invite-friend-actions {display:grid;grid-template-columns:1.5fr 1fr;gap:8px;}
+.invite-friend-actions button {min-height:46px;}
+.invite-friend-count {margin:0;text-align:center;font:800 13px Nunito,sans-serif;color:#7A7180;}
+.theme-dark .invite-friend-lead {color:#F3EEE8;}
+.theme-dark .invite-friend-link input {background:#29262F;border-color:#3D3844;color:#F3EEE8;}
+.theme-dark .daily-invite-link {color:#8EA8FF;}
+/* End of the day's journey and « Jours passés ». */
+.day-done-card {margin:16px 0 0;padding:16px;border-radius:20px;background:#FFF8EF;border:1.5px solid #EADFCF;display:grid;gap:10px;text-align:center;}
+.day-done-kicker {margin:0;font:700 20px Fredoka,sans-serif;color:#2E2A33;}
+.day-done-text {margin:0;font:600 14px/1.45 Nunito,sans-serif;color:#7A7180;}
+.day-done-actions {display:grid;grid-template-columns:1.4fr 1fr;gap:8px;}
+.day-done-actions button {min-height:46px;}
+.day-done-past, .past-days-unlock {border:0;background:none;color:#4069E0;font:800 14px Nunito,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.past-days {display:grid;gap:12px;}
+.past-days-lead {margin:0;font:600 14px/1.5 Nunito,sans-serif;color:#2E2A33;}
+.past-days-list {list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(420px,55vh);overflow-y:auto;}
+.past-day {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px 8px 14px;border-radius:14px;background:#fff;border:1px solid #EADFCF;font:800 14px Nunito,sans-serif;color:#2E2A33;}
+.past-day button {min-height:38px;padding:0 14px;width:auto;}
+.past-day.is-locked {opacity:.55;}
+.past-day.is-locked b {padding:8px 12px;}
+.theme-dark .day-done-card {background:#29262F;border-color:#3D3844;}
+.theme-dark .day-done-kicker, .theme-dark .past-days-lead {color:#F3EEE8;}
+.theme-dark .past-day {background:#29262F;border-color:#3D3844;color:#F3EEE8;}
+/* Pokémon pixelisé en série (5 / 10 / 20 images). */
+.pixel-series-bar {display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px 8px 14px;border-radius:16px;background:#fff;border:1px solid #EADFCF;}
+.pixel-series-count {font:800 14px Nunito,sans-serif;color:#2E2A33;}
+.pixel-series-count b {font:700 18px Fredoka,sans-serif;}
+.pixel-series-chips {display:inline-flex;gap:6px;}
+.pixel-series-chip {min-width:44px;min-height:36px;padding:0 10px;border-radius:999px;border:1.5px solid #EADFCF;background:#FFF8EF;color:#2E2A33;font:800 14px Nunito,sans-serif;cursor:pointer;}
+.pixel-series-chip.is-on {border-color:#4069E0;background:#EEF2FF;color:#2447B8;}
+.pixel-series-summary {display:grid;gap:6px;justify-items:center;margin:0 0 12px;padding:14px;border-radius:18px;background:#FFF8EF;border:1.5px solid #EADFCF;text-align:center;}
+.pss-kicker {margin:0;font:900 11px Nunito,sans-serif;letter-spacing:.1em;color:#7A7180;}
+.pss-score b {font:700 44px/1 Fredoka,sans-serif;color:#2E2A33;}
+.pss-score span {margin-left:6px;font:800 15px Nunito,sans-serif;color:#7A7180;}
+.pss-line {margin:0;font:700 14px Nunito,sans-serif;color:#2E2A33;}
+.pss-dots {display:flex;flex-wrap:wrap;justify-content:center;gap:4px;}
+.pss-dots i {width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:900 12px Nunito,sans-serif;font-style:normal;}
+.pss-dots i.is-won {background:#DDF3E4;color:#1f7a3a;}
+.pss-dots i.is-lost {background:#EEE8E1;color:#7A7180;}
+.theme-dark .pixel-series-bar, .theme-dark .pixel-series-summary {background:#29262F;border-color:#3D3844;}
+.theme-dark .pixel-series-count, .theme-dark .pss-score b, .theme-dark .pss-line {color:#F3EEE8;}
+.theme-dark .pixel-series-chip {background:#211E26;border-color:#3D3844;color:#F3EEE8;}
+.theme-dark .pixel-series-chip.is-on {background:#2B3150;border-color:#7C9BFF;color:#DCE4FF;}
+/* Wordle Pokémon en entraînement: no journey, ranking or points help; the series bar above the message. */
+#screen-wordle.is-training .wordle-journey, #screen-wordle.is-training .wordle-toolbar [data-action="openLeaderboardV2"], #screen-wordle.is-training .wordle-help {display:none !important;}
+#screen-wordle .wordle-training-bar {margin:0 0 10px;}
+#screen-wordle .wordle-training-summary {margin:12px 0;}
+#screen-wordle .wordle-train-cta {justify-content:center;margin-top:10px;}

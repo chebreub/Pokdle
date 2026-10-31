@@ -26,6 +26,9 @@ function renderGenerationSummaries() {
   document.querySelectorAll('[data-generation-short]').forEach(node=>node.textContent=generationChoiceShort());
 }
 function openGenerationPicker(mode = null) {
+  // Once the picker has been opened, the player knows it exists: the hint stops for good.
+  try{localStorage.setItem(GENERATION_PICKED_KEY,'1');}catch(_e){}
+  document.getElementById('generation-hint')?.remove();
   generationPickerMode = GENERATION_MODE_START[mode] ? mode : null;
   generationPickerDraft = new Set(selectedGens);
   const cards=Object.entries(GENERATIONS).map(([n,gen])=>`<button type="button" class="generation-choice" data-generation="${n}" data-action="toggleGenerationChoice" data-args='[${n}]' aria-pressed="false"><span class="generation-choice-check" aria-hidden="true">✓</span><span class="generation-choice-number">GÉN. ${n}</span><strong>${escapeHtml(gen.label)}</strong><small>${getPokemonCountForGeneration(Number(n),{includeAltForms:false})} Pokémon</small></button>`).join('');
@@ -56,6 +59,10 @@ function applyGenerationChoices() {
   if(mode)window[GENERATION_MODE_START[mode]]();
 }
 const GENERATION_HINT_KEY='pokedle_generation_hint_v1';
+// 31/10/2026: the hint came once per browser, then never again. It now comes back once per visit
+// until the player has opened the generation picker one time.
+const GENERATION_PICKED_KEY='pokedle_generation_picked_v1';
+let generationHintShownThisVisit=false;
 function renderGameGenerationControl() {
   const button=document.getElementById('game-generation-choice');if(!button)return;
   const supported=Boolean(GENERATION_MODE_START[gameMode])&&!(typeof isPartySessionActive==='function'&&isPartySessionActive());
@@ -65,11 +72,13 @@ function renderGameGenerationControl() {
   button.dataset.args=JSON.stringify([gameMode]);renderGenerationSummaries();
   if(supported)setTimeout(showGenerationHintOnce,600);
 }
-// Once per browser: a bubble under the chip says the Pokémon pool can be chosen.
+// A bubble under the chip says the Pokémon pool can be chosen (once a visit, until the picker is opened).
 function showGenerationHintOnce() {
   const button=document.getElementById('game-generation-choice');
   if(!button||button.classList.contains('hidden')||!button.getClientRects().length||document.getElementById('generation-hint'))return;
-  try{if(localStorage.getItem(GENERATION_HINT_KEY))return;localStorage.setItem(GENERATION_HINT_KEY,'1');}catch(_e){return;}
+  if(generationHintShownThisVisit)return;
+  try{if(localStorage.getItem(GENERATION_PICKED_KEY))return;}catch(_e){return;}
+  generationHintShownThisVisit=true;
   const hint=document.createElement('div');hint.id='generation-hint';hint.className='generation-hint';hint.setAttribute('role','status');
   hint.textContent='Astuce : choisis ici les générations des Pokémon à deviner.';
   const r=button.getBoundingClientRect();
