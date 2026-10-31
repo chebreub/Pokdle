@@ -272,13 +272,75 @@ function leaderboardV2PodiumHtml(rows, mode, unit) {
   if (!Array.isArray(rows) || rows.length < 3) return "";
   const places = [[rows[1], "silver"], [rows[0], "gold"], [rows[2], "bronze"]];
   return '<section class="lbv5-podium" aria-label="Podium">' + places.map(([row, metal]) =>
-    '<div class="lbv5-step is-' + metal + (row.me ? ' is-me' : '') + (row.champion ? ' is-champion' : '') + '">' +
+    '<div class="lbv5-step is-' + metal + (row.me ? ' is-me' : '') + (row.champion ? ' is-champion' : '') + '"' + leaderboardPlayerAttrs(row) + '>' +
       '<span class="lbv5-medal">' + (Number(row.rank) || "") + '</span>' + leaderboardV2PodiumArt(row) +
       '<b>' + escapeHtml(row.username || "Dresseur") + '</b>' + leaderboardLevelPill(row) +
       '<strong>' + escapeHtml(leaderboardV2FormatScore(row.score, mode, unit)) + '</strong>' +
       (row.me ? '<small>TOI</small>' : '') +
     '</div>').join("") + '</section>';
 }
+// The trainer card of a ranked player, as on PokeQuizz: partner, level, medals, days played,
+// Pokémon du jour found, best streak, points, the day's games and the latest arcade records.
+const PLAYER_CARD_GAMES = { enquete: ["Pokémon du jour", 149], wordlepts: ["Wordle", 201], dossier: ["Dossier", 65], challenge: ["Défi", 137] };
+function playerCardArt(player) {
+  const partner = leaderboardV2Partner(player);
+  if (partner) return '<img src="'+escapeHtml(pokedexDetailArtwork(partner, Boolean(player.champion)))+'" data-fallback="'+escapeHtml(player.champion ? getPokemonShinySprite(partner) : getPokemonSprite(partner))+'" alt="'+escapeHtml(partner.name+(player.champion ? ' shiny' : ''))+'" />';
+  return '<img class="is-photo" src="'+escapeHtml(player.avatar || LEADERBOARD_V2_DEFAULT_AVATAR)+'" data-fallback="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" />';
+}
+function playerCardSince(since) {
+  const [year, month] = String(since || "").split("-").map(Number);
+  if (!year || !month) return "";
+  return "Membre depuis " + new Date(Date.UTC(year, month - 1, 15)).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
+}
+function playerCardHtml(data) {
+  const player = data.player || {}, figures = data.figures || {};
+  const tier = typeof getXpTier === "function" ? getXpTier(Number(player.xp) || 0) : null;
+  const level = tier ? Number(tier.level) || 1 : 1;
+  const medals = [1, 2, 3].map((rank, i) => Number(player.medals?.[rank]) ? ["🥇","🥈","🥉"][i]+' ×'+Number(player.medals[rank]) : "").filter(Boolean).join(" · ");
+  const number = n => typeof formatNumberFr === "function" ? formatNumberFr(n) : String(n);
+  const figure = (value, label) => '<div><b>'+value+'</b><span>'+label+'</span></div>';
+  const games = (data.games || []).map(row => {
+    const [name, sprite] = PLAYER_CARD_GAMES[row.game] || [row.game, 0];
+    const pokemon = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(sprite) : null;
+    return '<div class="player-card-game">'+(pokemon ? '<img src="'+escapeHtml(pokedexDetailArtwork(pokemon, false))+'" data-fallback="'+escapeHtml(getPokemonSprite(pokemon))+'" alt="" loading="lazy" />' : '')+
+      '<b>'+escapeHtml(name)+'</b><span>'+(row.played ? row.played+' partie'+(row.played > 1 ? 's' : '')+' · '+number(row.points)+' pts' : 'Pas encore joué')+'</span></div>';
+  }).join("");
+  const records = (data.records || []).map(row => '<div class="player-card-record"><span>'+escapeHtml(row.label)+'</span><b>'+number(row.score)+(row.unit ? ' '+escapeHtml(row.unit) : '')+'</b></div>').join("");
+  return '<article class="player-card">'+
+    '<div class="player-card-hero"><div class="player-card-circle'+(player.champion ? ' is-champion' : '')+'">'+playerCardArt(player)+'</div>'+
+      '<div class="player-card-id"><h3>'+escapeHtml(player.username || "Dresseur")+'</h3>'+
+        '<div class="player-card-chips"><span class="player-card-title">'+(tier ? escapeHtml(tier.emoji+' '+tier.name)+' · ' : '')+'Niv. '+level+'</span>'+
+          (player.pioneer ? '<span class="player-card-pioneer">✦ Pionnier</span>' : '')+(medals ? '<span class="profile-hero-medals">'+medals+'</span>' : '')+'</div>'+
+        (player.champion ? '<p class="player-card-champion">✨ Partenaire shiny : champion de la semaine</p>' : '')+
+        (player.since ? '<small>'+escapeHtml(playerCardSince(player.since))+'</small>' : '')+
+      '</div></div>'+
+    '<div class="player-card-figures">'+figure(number(figures.days || 0), 'jours joués')+figure(number(figures.found || 0), 'Pokémon du jour trouvés')+
+      figure((figures.bestStreak || 0)+' j', 'meilleure série')+figure(number(figures.points || 0), 'points cumulés')+'</div>'+
+    '<h4>Jeux du jour</h4><div class="player-card-games">'+games+'</div>'+
+    (records ? '<h4>Derniers records</h4><div class="player-card-records">'+records+'</div>' : '')+
+  '</article>';
+}
+let playerCardRequest = 0;
+function openPlayerCard(pid) {
+  const id = String(pid || "");
+  if (!/^[0-9a-f]{16}$/.test(id) || typeof ensureOverlay !== "function") return;
+  const request = ++playerCardRequest;
+  ensureOverlay("Carte de dresseur", '<div class="player-card is-loading" aria-busy="true">'+(typeof skeletonHtml === "function" ? skeletonHtml("Chargement de la carte…", "rows", 4) : "Chargement…")+'</div>');
+  const overlay = document.getElementById("overlay-modal");
+  if (overlay) overlay.dataset.kind = "player";
+  leaderboardFetchJson("/api/player/"+id).then(data => {
+    const body = document.getElementById("overlay-body");
+    if (request !== playerCardRequest || !body || overlay?.dataset.kind !== "player") return;
+    body.innerHTML = playerCardHtml(data);
+  }).catch(() => {
+    const body = document.getElementById("overlay-body");
+    if (request === playerCardRequest && body && overlay?.dataset.kind === "player") body.innerHTML = '<p class="player-card-error" role="status">Cette carte n’a pas pu s’ouvrir. Recharge le classement et réessaie.</p>';
+  });
+}
+if (typeof document !== "undefined") document.addEventListener?.("keydown", event => {
+  const row = event.target?.closest?.('[role="button"][data-action="openPlayerCard"]');
+  if (row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); row.click(); }
+});
 // Arcade boards with nobody ranked on the period are hidden; null keeps them all.
 function leaderboardV2ArcadeCounts(scope) {
   return leaderboardFetchJson("/api/leaderboard/counts?scope="+encodeURIComponent(scope)).then(data=>data?.counts||null).catch(()=>null);
@@ -288,9 +350,13 @@ function leaderboardLevelPill(row) {
   const level = Number(row?.level);
   return Number.isInteger(level) && level >= 1 ? '<span class="player-level-pill">Niv. '+level+'</span>' : '';
 }
+// A ranked player opens their trainer card (31/10/2026): by a click, or Enter on the focused row.
+function leaderboardPlayerAttrs(row) {
+  return row?.pid ? ' data-action="openPlayerCard" data-args=\'["'+escapeHtml(String(row.pid))+'"]\' role="button" tabindex="0" aria-label="Voir la carte de dresseur de '+escapeHtml(row.username||"Dresseur")+'"' : '';
+}
 function leaderboardV2Row(row, fallbackRank, mode, unit, compact=false) {
   const rank=Number(row?.rank)||fallbackRank||0;
-  return '<div class="lbv2-row'+(row?.me?' is-me':'')+(rank<=3?' is-podium rank-'+rank:'')+(compact?' is-compact':'')+'">'+
+  return '<div class="lbv2-row'+(row?.me?' is-me':'')+(rank<=3?' is-podium rank-'+rank:'')+(compact?' is-compact':'')+(row?.pid?' is-clickable':'')+'"'+leaderboardPlayerAttrs(row)+'>'+
     '<span class="lbv2-rank">#'+rank+'</span>'+
     leaderboardV2Avatar(row)+
     '<span class="lbv2-player"><b>'+escapeHtml(row?.username||"Dresseur")+'</b>'+leaderboardLevelPill(row)+(row?.me?'<small>TOI</small>':'')+'</span>'+
@@ -333,7 +399,7 @@ function fillLeaderboardPrize(isCurrent) {
     const medals = [1, 2, 3].map(rank => (data.medals || []).filter(m => m.rank === rank).length);
     const mine = medals.some(Boolean) ? '<small>Tes médailles : '+["🥇","🥈","🥉"].map((icon, i) => medals[i] ? icon+' ×'+medals[i] : "").filter(Boolean).join(" · ")+'</small>' : "";
     box.innerHTML = firsts.length
-      ? '<span>Champion de la semaine dernière</span>'+firsts.map(row => '<div class="lbv5-champion">'+leaderboardV2Avatar({ ...row, champion: true })+'<b>'+escapeHtml(row.username || "Dresseur")+'</b>'+leaderboardLevelPill(row)+'<strong>'+Number(row.points)+' pts</strong></div>').join("")+mine
+      ? '<span>Champion de la semaine dernière</span>'+firsts.map(row => '<div class="lbv5-champion"'+leaderboardPlayerAttrs(row)+'>'+leaderboardV2Avatar({ ...row, champion: true })+'<b>'+escapeHtml(row.username || "Dresseur")+'</b>'+leaderboardLevelPill(row)+'<strong>'+Number(row.points)+' pts</strong></div>').join("")+mine
       : '<span>Champion de la semaine dernière</span><p>Pas encore de champion : la première couronne t’attend.</p>'+mine;
   });
 }

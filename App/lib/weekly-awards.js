@@ -6,6 +6,7 @@
 const { weekPodium } = require('./day-boards');
 const { setChampions } = require('./week-champions');
 const { playerLevelFromXp } = require('./profile-sync');
+const { playerPid } = require('./player-ids');
 
 function shiftDay(day, days) {
   const d = new Date(day + 'T12:00:00Z');
@@ -67,7 +68,7 @@ function createWeeklyAwards({ db }) {
       champion: podium.some((row) => row.rank === 1 && row.discord_id === me),
       podium: podium.map((row) => ({
         rank: Number(row.rank), points: Number(row.points), username: row.username,
-        partnerId: row.partner_id ? Number(row.partner_id) : null, level: playerLevelFromXp(row.xp), me: row.discord_id === me,
+        partnerId: row.partner_id ? Number(row.partner_id) : null, pid: playerPid(row.discord_id), level: playerLevelFromXp(row.xp), me: row.discord_id === me,
       })),
       medals: medals.map((row) => ({ week: row.week, rank: Number(row.rank) })),
     };

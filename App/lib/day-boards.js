@@ -4,6 +4,7 @@
 // « Semaine » runs from Monday to Sunday in Paris, like the week's prize (31/10/2026).
 const {playerLevelFromXp,rankingAvatarSql}=require('./profile-sync');
 const {isChampion}=require('./week-champions');
+const {playerPid}=require('./player-ids');
 const {sql:pointsSql}=require('./daily-points');
 
 // Where each stage's plays are and what a play is worth.
@@ -57,8 +58,8 @@ async function dayBoard(db,{mode,scope,accountId,day}){
   const around=mine?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,mine.rank-2),mine.rank+2])).rows:[];
   // The detail behind the points: guesses for one day of Enquête or Wordle, days played over a period.
   const detail=r=>detailed?{attempts:Number(r.attempts),hints:Number(r.hints)}:scope==='today'?{}:{days:Number(r.days)};
-  const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,champion:isChampion(r.discord_id),level:playerLevelFromXp(r.xp),score:Number(r.score),...detail(r),me:r.discord_id===accountId});
+  const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,champion:isChampion(r.discord_id),pid:playerPid(r.discord_id),level:playerLevelFromXp(r.xp),score:Number(r.score),...detail(r),me:r.discord_id===accountId});
   return {ok:true,mode,scope,authenticated:Boolean(accountId),direction:'desc',label:LABELS[mode],unit:'pts',cumulative:scope!=='today',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score),...detail(mine)}:null,around:around.map(map)};
 }
 
-module.exports={DAY_BOARDS,dayBoard,weekPodium};
+module.exports={DAY_BOARDS,STAGES,FINISHED,dayBoard,weekPodium};

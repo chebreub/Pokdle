@@ -224,7 +224,8 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - #177 : **« Shiny ou normal ? »**, nouveau jeu dans « Jouer » (artwork officiel, 3 vies, les deux versions côte à côte après chaque réponse ; seuls les 762 Pokémon dont le shiny se voit vraiment, liste `App/shiny-pool.json` faite par `App/tools/shiny-pool.js` ; page `/jeux/shiny-ou-normal`).
 - **31/10 :**
   - #182 : classement des jeux du jour en points cumulés (« Semaine » et « Total » additionnent les jours) ;
-  - **podium et lot de la semaine** (option A) : « Semaine » du lundi au dimanche (Paris) partout, podium 2-1-3, encart « À gagner cette semaine » ; le 1er du Global de la semaine a son partenaire en shiny la semaine suivante (classements et carte de dresseur), médailles 🥇🥈🥉 pour le podium ; table `weekly_awards` remplie à la première visite de la nouvelle semaine (`App/lib/weekly-awards.js`, `App/lib/week-champions.js`).
+  - **podium et lot de la semaine** (option A) : « Semaine » du lundi au dimanche (Paris) partout, podium 2-1-3, encart « À gagner cette semaine » ; le 1er du Global de la semaine a son partenaire en shiny la semaine suivante (classements et carte de dresseur), médailles 🥇🥈🥉 pour le podium ; table `weekly_awards` remplie à la première visite de la nouvelle semaine (`App/lib/weekly-awards.js`, `App/lib/week-champions.js`) ;
+  - **clic sur un pseudo → sa carte de dresseur** (fenêtre : partenaire, niveau, médailles, jours joués, Pokémon du jour trouvés, meilleure série, points, jeux du jour, derniers records) ; `GET /api/player/:pid` (`App/lib/player-cards.js`), identifiant public par joueur (`App/lib/player-ids.js`, HMAC de `SESSION_SECRET`).
 - **Décisions du 30/10 :**
   - **pas de serveur Discord tant qu'il y a moins de 100 joueurs par jour** (un serveur vide fait site mort) : aller plutôt dans les Discord Pokémon existants ;
   - la vraie correction de la triche des images attend d'avoir plus de joueurs ;
