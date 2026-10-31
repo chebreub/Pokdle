@@ -107,7 +107,7 @@ test('home describes the daily Pokémon break in its visible H1', () => {
     'Choisis ton mini-jeu Pokémon',
     'Œuf mystère de la semaine',
     'Mini-jeux Pokémon en solo',
-    'Défis Pokémon entre amis',
+    'Joue avec tes amis, en direct',
   ]) assert.ok(html.includes(label), label + ' is explicit for new visitors');
 });
 

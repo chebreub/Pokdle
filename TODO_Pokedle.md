@@ -45,7 +45,7 @@ Idée : d'abord faire revenir ceux qui viennent déjà, puis être trouvé sur G
 - [ ] Mesurer le retour des joueurs dans `/admin/stats` (part qui revient le lendemain et la semaine suivante).
 
 ### Étape 1 : faire revenir
-- [ ] **Classement en points cumulés** : « Semaine » et « Tout le temps » additionnent les points de chaque jour au lieu de garder la meilleure journée, et chaque épreuve jouée compte même si les quatre ne sont pas finies. Les modes « record » (Higher or Lower, Quiz, Speedrun…) gardent leur classement à part : leurs scores viennent du navigateur.
+- [x] **Classement en points cumulés** (#182, 31/10) : « Semaine » et « Tout le temps » additionnent les points de chaque jour au lieu de garder la meilleure journée, et chaque épreuve jouée compte même si les quatre ne sont pas finies. Les modes « record » (Higher or Lower, Quiz, Speedrun…) gardent leur classement à part : leurs scores viennent du navigateur.
 - [x] Podium du top 3 et lot de la semaine avec compte à rebours (comme PokeQuizz), fait le 31/10 (option A choisie) :
   - « Semaine » va du lundi au dimanche (heure de Paris) dans tous les classements, au lieu des 7 derniers jours ;
   - podium 2-1-3 en haut de chaque classement (dès 3 classés), avec l'artwork du partenaire ;
@@ -54,7 +54,9 @@ Idée : d'abord faire revenir ceux qui viennent déjà, puis être trouvé sur G
   - la Ligue garde son badge et son classement dans le menu « Classement ».
 - [x] Clic sur un pseudo → sa carte de dresseur, fait le 31/10 : fenêtre par-dessus le classement (liste, podium, champion), avec partenaire (shiny si champion), niveau et titre, médailles, « Membre depuis », jours joués, Pokémon du jour trouvés, meilleure série, points cumulés, stats des 4 jeux du jour et 3 derniers records d'arcade. Chiffres calculés par le serveur (`App/lib/player-cards.js`, `GET /api/player/:pid`) ; chaque joueur a un identifiant public (`App/lib/player-ids.js`), jamais son numéro de compte ; la photo seulement si le joueur l'a partagée.
 - [ ] Collection et shiny : trouver le Pokémon du jour = le capturer, petite chance de shiny, vitrine sur la carte de dresseur.
+- [x] Bande « À plusieurs » sur l'accueil, faite le 31/10 (carte blanche) : les nouveaux ne voyaient pas qu'on peut jouer entre amis (la seule carte était tout en bas). Entre le Pokémon du jour et les mini-jeux : « Joue avec tes amis, en direct », 4 jeux en artwork (Dessine-le !, Qui est-ce ?, Petit Bac, Course au Pokédex), « Créer un salon » et « J'ai un code ». Un clic sur un jeu ouvre la Party Room avec ce jeu déjà choisi. Pas de compteur « en ligne » (chez PokeMind, « 1 en ligne » fait site vide).
 - [ ] Réglages : sons oui / non avec volume, mode sans chrono.
+- [ ] Messages de l'admin aux joueurs connectés : écrits depuis `/admin`, vus dans une fenêtre 📬 à la prochaine visite, avec réponse possible ; en plus une notification pour ceux qui ont activé 🔔. Pas d'e-mail (on ne le garde pas, promis dans `/confidentialite`) ni de message Discord (il faudrait un serveur commun). Ligne à ajouter dans la page de confidentialité.
 
 ### Étape 2 : être trouvé sur Google (en parallèle)
 - [ ] Enrichir les 27 pages `/jeux/<slug>` : comment jouer, astuces, jeux similaires (comme PokeMind).
