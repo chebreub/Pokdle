@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
-const { GUIDES, TYPE_CHART, TYPE_ICONS } = require('../lib/seo-guides');
+const { GUIDES, TYPE_CHART, TYPE_ICONS, GENERATIONS, STARTERS, LEGENDARIES, MYTHICALS, ULTRA_BEASTS, PARADOX_LEGENDS } = require('../lib/seo-guides');
 const { renderGuidePage, renderGamePage, renderHubPage, sitemapXml, mountSeoPages } = require('../lib/seo-render');
 const { GAMES } = require('../lib/seo-games');
 const { shinyOdds } = require('../lib/daily-game');
@@ -85,7 +85,9 @@ test('each guide is a findable page: titles, structured data, sitemap and links 
     assert.ok(html.includes('href="' + g.cta.href + '"'));
     for (const slug of g.games) {
       assert.ok(GAMES.some((game) => game.slug === slug), slug);
-      assert.match(renderGamePage(GAMES.find((game) => game.slug === slug)), new RegExp('<h2>Le guide pour progresser</h2>\\n<ul class="grid"><li><a href="/guides/' + g.slug + '">'));
+      const gamePage = renderGamePage(GAMES.find((game) => game.slug === slug));
+      const block = gamePage.match(/<h2>(?:Le guide|Les guides) pour progresser<\/h2>\n<ul class="grid">(.*?)<\/ul>/);
+      assert.ok(block && block[1].includes('<a href="/guides/' + g.slug + '">'), slug + ' links to ' + g.slug);
     }
     assert.match(sitemapXml(), new RegExp('<loc>https://pokdle\\.fr/guides/' + g.slug + '</loc>'));
   }
@@ -102,4 +104,80 @@ test('each guide is a findable page: titles, structured data, sitemap and links 
   const unknown = await fetch(base + '/guides/inconnu', { redirect: 'manual' });
   assert.equal(unknown.status, 301);
   assert.equal(unknown.headers.get('location'), '/guides');
+});
+
+const BASE = POKEMON.filter((p) => p.id >= 1 && p.id <= 1025 && !p.isAltForm);
+const byId = (id) => BASE.find((p) => p.id === id);
+
+test('the generations guide: every number range, count and record comes from the Pokédex', () => {
+  assert.equal(GENERATIONS.length, 9);
+  assert.equal(GENERATIONS[0].from, 1);
+  assert.equal(GENERATIONS[8].to, 1025);
+  for (const [i, g] of GENERATIONS.entries()) {
+    if (i) assert.equal(g.from, GENERATIONS[i - 1].to + 1);
+    const ids = BASE.filter((p) => p.gen === g.gen).map((p) => p.id);
+    assert.equal(ids.length, g.to - g.from + 1, 'gen ' + g.gen);
+    assert.ok(ids.every((id) => id >= g.from && id <= g.to), 'gen ' + g.gen + ' range');
+    if (g.gen === 5) assert.equal(byId(g.from).name, 'Victini', 'the one generation that does not open on its starters');
+    else assert.equal(g.from, STARTERS[i][0], 'gen ' + g.gen + ' opens on its Plante starter');
+  }
+  const counts = GENERATIONS.map((g) => [g.gen, g.to - g.from + 1]).sort((a, b) => b[1] - a[1]);
+  const text = JSON.stringify(guide('generations-pokemon'));
+  assert.deepEqual(counts[0], [5, 156]);
+  assert.deepEqual(counts[8], [6, 72]);
+  assert.match(text, /La 5e, celle d’Unys, avec 156 nouveaux Pokémon/);
+  assert.match(text, /La 6e, celle de Kalos, avec 72 nouveaux Pokémon/);
+  assert.match(text, /Bulbizarre \(n° 1\), Germignon \(n° 152\), Arcko \(n° 252\)… Seule exception, la 5e commence par Victini \(n° 494\)/);
+  assert.match(JSON.stringify(GAMES.find((game) => game.slug === 'ordre-pokedex').tips), /la 5e commence par Victini, n° 494/);
+  assert.deepEqual([1, 152, 252].map((id) => byId(id).name), ['Bulbizarre', 'Germignon', 'Arcko']);
+  const regions = read('src/script.10d.pokedex-collection.js').match(/POKEDEX_COLLECTION_REGIONS = \[([^\]]+)\]/)[1].replace(/'/g, '').split(',');
+  assert.deepEqual(GENERATIONS.map((g) => g.region), regions, 'the region names of the site');
+});
+
+test('the starters guide: Plante, Feu, Eau, finals two numbers later, curiosities counted', () => {
+  assert.equal(STARTERS.length, 9);
+  for (const trio of STARTERS) {
+    assert.deepEqual(trio.map((id) => byId(id).type1), ['Plante', 'Feu', 'Eau']);
+    for (const id of trio) assert.equal(byId(id + 2).stage, 3, byId(id + 2).name + ' is a final stage');
+  }
+  assert.ok(TYPE_CHART.Plante.super.includes('Eau') && TYPE_CHART.Eau.super.includes('Feu') && TYPE_CHART.Feu.super.includes('Plante'));
+  const all = STARTERS.flat();
+  const twoTypes = all.filter((id) => byId(id).type2).map((id) => byId(id).name);
+  assert.deepEqual(twoTypes, ['Bulbizarre', 'Brindibou']);
+  const fireFighting = STARTERS.map((t) => byId(t[1] + 2)).filter((p) => p.type2 === 'Combat').map((p) => p.name);
+  assert.deepEqual(fireFighting, ['Braségali', 'Simiabraz', 'Roitiflam']);
+  const single = all.map((id) => byId(id + 2)).filter((p) => !p.type2).map((p) => p.name);
+  assert.equal(single.length, 10);
+  assert.ok(single.includes('Tortank') && single.includes('Typhlosion'));
+  const text = JSON.stringify(guide('starters-pokemon'));
+  assert.match(text, /Bulbizarre \(Plante et Poison\) et Brindibou \(Plante et Vol\)/);
+  assert.match(text, /Trois starters Feu finissent Feu et Combat : Braségali, Simiabraz et Roitiflam/);
+  assert.match(text, /10 évolutions finales sur 27 n’ont qu’un seul type, comme Tortank ou Typhlosion/);
+  assert.deepEqual(STARTERS[8].map((id) => byId(id).name), ['Poussacha', 'Chochodile', 'Coiffeton']);
+  assert.match(renderGuidePage(guide('starters-pokemon')), /Salamèche<\/span><small>Feu · évolue en Dracaufeu \(Feu et Vol\)<\/small>/);
+});
+
+test('the legendaries guide: the categories add up to the site\'s « Légendes », counts and records', () => {
+  const core = read('src/script.01.core.js');
+  const site = JSON.parse(core.match(/POKEDEX_LEGENDARY_IDS = new Set\((\[[^\]]+\])\)/)[1]);
+  const grid = JSON.parse(read('lib/daily-grid.js').match(/const LEGENDARY_IDS=new Set\((\[[^\]]+\])\)/)[1]);
+  const legendaries = Object.values(LEGENDARIES).flat();
+  const union = [...legendaries, ...MYTHICALS, ...ULTRA_BEASTS, ...PARADOX_LEGENDS].sort((a, b) => a - b);
+  assert.equal(new Set(union).size, union.length, 'no Pokémon in two categories');
+  assert.deepEqual(union, [...site].sort((a, b) => a - b));
+  assert.deepEqual(union, [...grid].sort((a, b) => a - b));
+  assert.deepEqual([legendaries.length, MYTHICALS.length, ULTRA_BEASTS.length, PARADOX_LEGENDS.length, union.length], [71, 23, 11, 6, 111]);
+  for (const [gen, ids] of Object.entries(LEGENDARIES)) for (const id of ids) assert.equal(byId(id).gen, Number(gen), byId(id).name);
+  const most = Math.max(...Object.values(LEGENDARIES).map((ids) => ids.length));
+  assert.deepEqual(Object.entries(LEGENDARIES).filter(([, ids]) => ids.length === most).map(([gen]) => gen), ['7', '8', '9']);
+  assert.equal(most, 11);
+  assert.equal(byId(MYTHICALS[0]).name, 'Mew');
+  assert.equal(MYTHICALS[0], 151);
+  for (const name of ['Zéroïd', 'Mouscoto', 'Pierroteknik']) assert.ok(ULTRA_BEASTS.includes(BASE.find((p) => p.name === name).id), name);
+  const text = JSON.stringify(guide('pokemon-legendaires'));
+  assert.match(text, /71 légendaires, les 23 fabuleux, les 11 Ultra-Chimères et six Pokémon Paradoxe, soit 111 Pokémon/);
+  assert.match(text, /Les 7e, 8e et 9e générations, avec 11 légendaires chacune/);
+  const html = renderGuidePage(guide('pokemon-legendaires'));
+  assert.equal((html.match(/<ul class="mons">/g) || []).length, 10, 'nine generations and the mythicals');
+  assert.match(html, /Mewtwo<small>n° 150<\/small>/);
 });

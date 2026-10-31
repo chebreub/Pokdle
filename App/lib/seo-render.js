@@ -5,14 +5,15 @@
 const fs = require('fs');
 const path = require('path');
 const { GAMES, GROUPS } = require('./seo-games');
-const { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED } = require('./seo-guides');
+const { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED, GENERATIONS, STARTERS, LEGENDARIES, MYTHICALS } = require('./seo-guides');
 const { SITE_URL: SITE } = require('./site-move');
 
 const SUPPORT_URL = 'https://ko-fi.com/chebreub';
 const ARTWORK = id => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + Number(id) + '.png';
 // French names for the alt text of each game's illustration, read from pokemon.js like server.js does.
-const POKEMON_NAMES = new Map(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'pokemon.js'), 'utf8')
-  .match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]).map(pokemon => [pokemon.id, pokemon.name]));
+const POKEMON_LIST = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'pokemon.js'), 'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
+const POKEMON_NAMES = new Map(POKEMON_LIST.map(pokemon => [pokemon.id, pokemon.name]));
+const POKEMON_BY_ID = new Map(POKEMON_LIST.filter(pokemon => !pokemon.isAltForm).map(pokemon => [pokemon.id, pokemon]));
 const pokemonName = id => POKEMON_NAMES.get(Number(id)) || 'Pokémon';
 const ICON_LINKS = '<link rel="icon" href="/favicon.ico" sizes="48x48">\n<link rel="icon" type="image/svg+xml" href="/favicon.svg">\n';
 const FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@400;700;800;900&display=swap">\n';
@@ -65,6 +66,14 @@ table.types th{font-weight:900;font-size:.8rem;text-transform:uppercase;letter-s
 table.types tbody th{font-size:1rem;text-transform:none;letter-spacing:0;color:var(--ink);white-space:nowrap}
 .type{display:inline-flex;align-items:center;gap:4px;margin:2px 6px 2px 0;font-weight:800;white-space:nowrap}
 .type img{width:18px;height:18px}
+table.types td small{display:block;color:var(--muted);font-size:.82rem}
+.mon{display:inline-flex;align-items:center;gap:6px;font-weight:800}
+.mon img{width:40px;height:40px;object-fit:contain}
+.mons{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;padding:0;margin:8px 0 16px;list-style:none}
+.mons li{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid var(--line);border-radius:16px;background:var(--card);text-align:center;font-weight:800;font-size:.88rem}
+.mons img{width:72px;height:72px;object-fit:contain}
+.mons small{color:var(--muted);font-weight:700;font-size:.75rem}
+h3.gen{margin:18px 0 4px;font:600 1.05rem Fredoka,Nunito,system-ui,sans-serif}
 @media (max-width:640px){table.types thead{display:none}table.types tr{display:block;padding:8px 4px;border-bottom:1px solid var(--line)}table.types tr:last-child{border-bottom:0}table.types th[scope=row]{display:block;padding:6px 12px 2px;font-size:1.05rem}table.types td{display:block;border:0;padding:4px 12px}table.types td[data-label]::before{content:attr(data-label);display:block;font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}}
 footer{max-width:960px;margin:0 auto;padding:24px 16px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
 footer p{margin:4px 0}
@@ -113,7 +122,7 @@ function renderGamePage(game) {
     '<h2>Bon à savoir</h2>\n<div class="panel"><ul>' + game.facts.map(fact => '<li>' + esc(fact) + '</li>').join('') + '</ul></div>\n' +
     (game.tips?.length ? '<h2>Astuces</h2>\n<div class="panel"><ul>' + game.tips.map(tip => '<li>' + esc(tip) + '</li>').join('') + '</ul></div>\n' : '') +
     (game.faq?.length ? '<h2>Questions fréquentes</h2>\n<div class="panel faq">' + game.faq.map(([question, answer]) => '<h3>' + esc(question) + '</h3><p>' + esc(answer) + '</p>').join('') + '</div>\n' : '') +
-    (guidesFor(game.slug).length ? '<h2>Le guide pour progresser</h2>\n<ul class="grid">' + guidesFor(game.slug).map(guideCardHtml).join('') + '</ul>\n' : '') +
+    (guidesFor(game.slug).length ? '<h2>' + (guidesFor(game.slug).length > 1 ? 'Les guides pour progresser' : 'Le guide pour progresser') + '</h2>\n<ul class="grid">' + guidesFor(game.slug).map(guideCardHtml).join('') + '</ul>\n' : '') +
     '<h2>D’autres jeux Pokémon à essayer</h2>\n<ul class="grid">' + related(game).map(cardHtml).join('') + '</ul>\n' +
     '<p><a href="/jeux">Voir les ' + GAMES.length + ' jeux et outils de Pokédle →</a></p>';
   const data = { '@context': 'https://schema.org', '@graph': [
@@ -149,12 +158,36 @@ function typeTableHtml() {
     Object.entries(TYPE_CHART).map(([type, row]) => '<tr><th scope="row">' + typeChip(type) + '</th>' + cell('Super efficace (×2) contre', row.super) + cell('Pas très efficace (×½) contre', row.not) + cell('Aucun effet sur', row.no) + '</tr>').join('') +
     '</tbody></table></div>';
 }
+const monName = (id) => esc(POKEMON_NAMES.get(Number(id)) || 'Pokémon');
+const monTypes = (id) => { const p = POKEMON_BY_ID.get(Number(id)); return p ? [p.type1, p.type2].filter(Boolean).join(' et ') : ''; };
+const monImg = (id, size) => '<img src="' + esc(ARTWORK(id)) + '" alt="" width="' + size + '" height="' + size + '" loading="lazy">';
+function monsHtml(ids) {
+  return '<ul class="mons">' + ids.map(id => '<li>' + monImg(id, 72) + monName(id) + '<small>n° ' + Number(id) + '</small></li>').join('') + '</ul>';
+}
+function generationsTableHtml() {
+  const head = ['Génération', 'Région', 'Premiers jeux', 'Sortie', 'Nouveaux Pokémon', 'Numéros'];
+  return '<div class="table-wrap"><table class="types"><thead><tr>' + head.map(h => '<th scope="col">' + h + '</th>').join('') + '</tr></thead><tbody>' +
+    GENERATIONS.map(g => '<tr><th scope="row">' + g.gen + '<sup>' + (g.gen === 1 ? 're' : 'e') + '</sup> génération</th>' +
+      '<td data-label="Région">' + esc(g.region) + '</td><td data-label="Premiers jeux">' + esc(g.games) + '</td><td data-label="Sortie">' + g.year + '</td>' +
+      '<td data-label="Nouveaux Pokémon">' + (g.to - g.from + 1) + '</td><td data-label="Numéros">' + g.from + ' à ' + g.to + '</td></tr>').join('') +
+    '</tbody></table></div>';
+}
+function startersTableHtml() {
+  const cell = (label, id) => '<td data-label="' + label + '"><span class="mon">' + monImg(id, 40) + monName(id) + '</span><small>' + esc(monTypes(id)) + ' · évolue en ' + monName(id + 2) + ' (' + esc(monTypes(id + 2)) + ')</small></td>';
+  return '<div class="table-wrap"><table class="types"><thead><tr><th scope="col">Génération</th><th scope="col">Plante</th><th scope="col">Feu</th><th scope="col">Eau</th></tr></thead><tbody>' +
+    STARTERS.map((ids, i) => '<tr><th scope="row">' + (i + 1) + '<sup>' + (i ? 'e' : 're') + '</sup> · ' + esc(GENERATIONS[i].region) + '</th>' +
+      cell('Plante', ids[0]) + cell('Feu', ids[1]) + cell('Eau', ids[2]) + '</tr>').join('') + '</tbody></table></div>';
+}
+function legendariesHtml() {
+  return Object.entries(LEGENDARIES).map(([gen, ids]) => '<h3 class="gen">' + gen + '<sup>' + (gen === '1' ? 're' : 'e') + '</sup> génération · ' + esc(GENERATIONS[gen - 1].region) + ' · ' + ids.length + ' légendaire' + (ids.length > 1 ? 's' : '') + '</h3>' + monsHtml(ids)).join('');
+}
 function renderGuidePage(guide) {
   const path = '/guides/' + guide.slug;
   const sections = guide.sections.map(section => '<h2>' + esc(section.h2) + '</h2>\n' +
     (section.p || []).map(text => '<p>' + esc(text) + '</p>').join('') +
     (section.list ? '<div class="panel"><ul>' + section.list.map(item => '<li>' + esc(item) + '</li>').join('') + '</ul></div>' : '') +
-    (section.table === 'types' ? typeTableHtml() : '')).join('\n');
+    (section.table === 'types' ? typeTableHtml() : section.table === 'generations' ? generationsTableHtml() : section.table === 'starters' ? startersTableHtml() : '') +
+    (section.legendaries ? legendariesHtml() : '') + (section.pokemon === 'mythicals' ? monsHtml(MYTHICALS) : '')).join('\n');
   const games = guide.games.map(slug => BY_SLUG.get(slug)).filter(Boolean);
   const body =
     '<p class="crumbs"><a href="/">Pokédle</a> › <a href="/guides">Guides</a> › ' + esc(guide.name) + '</p>\n' +
