@@ -36,6 +36,12 @@ function createPlayerCards({ db, arcadeModes = [], modeConfig = () => null }) {
     try {
       medals = (await db.query('SELECT rank, COUNT(*)::int AS n FROM weekly_awards WHERE discord_id = $1 GROUP BY rank', [id])).rows;
     } catch (_error) { medals = []; }
+    // The shiny hunt: the Pokémon du jour this player caught shiny (31/10/2026).
+    let shinies = [];
+    try {
+      shinies = (await db.query(`SELECT to_char(p.day, 'YYYY-MM-DD') AS day, r.secret_id FROM daily_plays p JOIN daily_rounds r ON r.day = p.day
+        WHERE p.account_id = $1 AND p.status = 'won' AND p.shiny ORDER BY p.day DESC LIMIT 60`, [id])).rows;
+    } catch (_error) { shinies = []; }
 
     const byGame = Object.fromEntries(games.map((row) => [row.game, row]));
     const profile = profileOf(user.profile);
@@ -59,6 +65,7 @@ function createPlayerCards({ db, arcadeModes = [], modeConfig = () => null }) {
         bestStreak: streakFromDays(wins.map((row) => row.day), today).best,
         points: games.reduce((sum, row) => sum + Number(row.points), 0),
       },
+      shinies: { count: shinies.length, latest: shinies.slice(0, 8).map((row) => ({ id: Number(row.secret_id), day: row.day })) },
       games: DAY_GAMES.map((game) => ({ game, played: Number(byGame[game]?.played) || 0, points: Number(byGame[game]?.points) || 0 })),
       records: records.map((row) => {
         const config = modeConfig(row.mode) || {};

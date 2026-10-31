@@ -49,6 +49,7 @@ function pokedexCollectionMatchesFilter(pokemon) {
   if (pokedexCollectionFilter === 'mission') return state.kind === 'mission';
   if (pokedexCollectionFilter === 'secret') return state.kind === 'secret' || (state.kind === 'registered' && state.secret);
   if (pokedexCollectionFilter === 'unknown') return state.kind === 'unknown';
+  if (pokedexCollectionFilter === 'shiny') return Boolean(state.entry?.shiny);
   return true;
 }
 function pokedexCollectionBaseCatalogue() {
@@ -118,6 +119,7 @@ function ensurePokedexCollectionHub() {
       <button type="button" data-collection-filter="mission" data-action="setPokedexCollectionFilter" data-args='["mission"]'>◆ À mériter</button>
       <button type="button" data-collection-filter="unknown" data-action="setPokedexCollectionFilter" data-args='["unknown"]'>? À trouver</button>
       <button type="button" data-collection-filter="secret" data-action="setPokedexCollectionFilter" data-args='["secret"]'>✦ Secrets</button>
+      <button type="button" data-collection-filter="shiny" data-action="setPokedexCollectionFilter" data-args='["shiny"]'>✨ Shinies</button>
     </div>
 `;
   toolbar.parentElement.insertBefore(hub, toolbar);

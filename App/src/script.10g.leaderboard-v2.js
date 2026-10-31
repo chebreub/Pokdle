@@ -292,6 +292,19 @@ function playerCardSince(since) {
   if (!year || !month) return "";
   return "Membre depuis " + new Date(Date.UTC(year, month - 1, 15)).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" });
 }
+// The shiny hunt (31/10/2026): the Pokémon du jour caught shiny, newest first, with their day.
+function shinyShowcaseHtml(list, count) {
+  const entries = Array.isArray(list) ? list : [];
+  const items = entries.map(entry => {
+    const pokemon = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(entry.id)) : null;
+    if (!pokemon) return "";
+    const day = String(entry.day || "").split("-").reverse().slice(0, 2).join("/");
+    return '<figure class="shiny-showcase-item"><img src="'+escapeHtml(pokedexDetailArtwork(pokemon, true))+'" data-fallback="'+escapeHtml(getPokemonShinySprite(pokemon))+'" alt="'+escapeHtml(pokemon.name)+' shiny" loading="lazy" />'+
+      '<figcaption>'+escapeHtml(pokemon.name)+(day ? '<small>'+escapeHtml(day)+'</small>' : '')+'</figcaption></figure>';
+  }).join("");
+  const more = Number(count) > entries.length ? '<span class="shiny-showcase-more">+'+(Number(count) - entries.length)+'</span>' : "";
+  return items ? '<div class="shiny-showcase">'+items+more+'</div>' : "";
+}
 function playerCardHtml(data) {
   const player = data.player || {}, figures = data.figures || {};
   const tier = typeof getXpTier === "function" ? getXpTier(Number(player.xp) || 0) : null;
@@ -316,6 +329,7 @@ function playerCardHtml(data) {
       '</div></div>'+
     '<div class="player-card-figures">'+figure(number(figures.days || 0), 'jours joués')+figure(number(figures.found || 0), 'Pokémon du jour trouvés')+
       figure((figures.bestStreak || 0)+' j', 'meilleure série')+figure(number(figures.points || 0), 'points cumulés')+'</div>'+
+    (Number(data.shinies?.count) ? '<h4>✨ Shinies · '+number(Number(data.shinies.count))+'</h4>'+shinyShowcaseHtml(data.shinies.latest, data.shinies.count) : '')+
     '<h4>Jeux du jour</h4><div class="player-card-games">'+games+'</div>'+
     (records ? '<h4>Derniers records</h4><div class="player-card-records">'+records+'</div>' : '')+
   '</article>';

@@ -1946,6 +1946,7 @@ function renderProfileHero(prog, xp) {
         ${medals}
       </div>
       ${line ? `<p class="profile-hero-line">${line}</p>` : ""}
+      ${typeof profileShinyHtml === "function" ? profileShinyHtml() : ""}
       <div class="profile-hero-actions">
         <button type="button" class="btn-blue" data-action="shareLevelBadge">Partager ma carte</button>
         <button type="button" class="btn-ghost" data-action="openProfileEditor">Modifier mon profil</button>
