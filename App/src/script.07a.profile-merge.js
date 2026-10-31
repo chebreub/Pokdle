@@ -69,7 +69,16 @@ const PROFILE_MAX_FIELDS = ["dailyLoginStreak", "xpLevels", "draftScoreAttackRec
 function mergeProfileData(p, o, b) {
   const out = { ...o, ...p };
   const base = b || {};
-  out.xp = profileMergeCounter(p.xp, o.xp, b ? base.xp : null, "xp");
+  // A level put back by the admin (« Niveau d'un joueur », 31/10/2026, lib/player-level-admin.js) wins
+  // over a copy made before it: that copy's XP is the one it replaced, adding it would count it twice.
+  // A common copy from before it is not common either.
+  const setP = profileMergeNumber(p.xpSetAt), setO = profileMergeNumber(o.xpSetAt);
+  if (setP !== setO) {
+    out.xp = profileMergeNumber((setP > setO ? p : o).xp);
+    out.xpSetAt = Math.max(setP, setO);
+  } else {
+    out.xp = profileMergeCounter(p.xp, o.xp, b && profileMergeNumber(base.xpSetAt) === setP ? base.xp : null, "xp");
+  }
   out.totalQuestsCompleted = profileMergeCounter(p.totalQuestsCompleted, o.totalQuestsCompleted, b ? base.totalQuestsCompleted : null, "totalQuestsCompleted");
   for (const key of Object.keys(out)) {
     if (/HighScore$/.test(key) || (key.endsWith("Best") && key !== "quiEstCeBest")) out[key] = Math.max(profileMergeNumber(p[key]), profileMergeNumber(o[key]));

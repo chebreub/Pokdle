@@ -5,6 +5,7 @@
 // Admins are the account ids listed in ADMIN_ACCOUNT_IDS (comma-separated) on Render.
 
 const nameOverrides = require("./name-overrides");
+const playerLevel = require("./player-level-admin");
 const NEWS_TEXT_MAX = 90;
 const NEWS_DAYS_MAX = 60;
 // Where a news line leads: only screens the site can open from the banner.
@@ -111,6 +112,7 @@ const NOTICES = Object.freeze({
   "message-removed": "Message retiré.",
   "name-replaced": "Pseudo remplacé par « Dresseur » partout, et il le reste à la prochaine connexion.",
   "name-restored": "Pseudo rétabli : son nom revient à sa prochaine connexion.",
+  level: "Niveau remis : le joueur le retrouve à sa prochaine visite, sur chacun de ses appareils.",
 });
 
 function page(title, body) {
@@ -216,6 +218,9 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
         ]);
         namesHtml = namesSection(players, replaced);
       } catch (error) { log.error("[admin] names:", error.message); }
+      let levelHtml = "";
+      try { levelHtml = playerLevel.levelSectionHtml(await playerLevel.playersWithLevel(db)); }
+      catch (error) { log.error("[admin] level:", error.message); }
       let messagesHtml = "";
       if (messages) {
         try {
@@ -226,7 +231,7 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
       res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
@@ -275,6 +280,20 @@ ${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}<p c
       } catch (error) { log.error("[admin] names:", error.message); back(res, { err: "Modification impossible." }); }
     });
   }
+
+  // « Niveau d'un joueur » : put back a lost level (lib/player-level-admin.js).
+  app.post("/admin/level", form, async (req, res) => {
+    if (!guard(req, res)) return;
+    if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+    const id = oneLine(req.body && req.body.account_id).slice(0, 80);
+    if (!id) return back(res, { err: "Choisis un joueur." });
+    if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+    try {
+      const result = await playerLevel.setPlayerLevel(db, id, Number(oneLine(req.body && req.body.level)));
+      if (result.error) return back(res, { err: result.error });
+      back(res, { ok: "level" });
+    } catch (error) { log.error("[admin] level:", error.message); back(res, { err: "Modification impossible." }); }
+  });
 
   if (messages) {
     app.post("/admin/messages", form, async (req, res) => {
