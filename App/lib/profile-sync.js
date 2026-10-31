@@ -59,6 +59,11 @@ function rankingAvatarSql(fallback) {
   return `COALESCE('/api/avatar-photo/' || u.photo_key, ${fallback})`;
 }
 
+// Same ceiling as the page (script.07a.profile-merge.js): 247 500 XP (level 100) until 10/11/2026,
+// then 30 000 more a day.
+function xpCeiling(now = Date.now()) {
+  return 247500 + Math.max(0, Math.floor((now - Date.parse("2026-11-10T00:00:00Z")) / 86400000)) * 30000;
+}
 // The profile's XP, copied next to the account so rankings can show each player's level.
 // null when the account has no saved profile yet.
 function xpFromProfileData(data) {
@@ -67,7 +72,9 @@ function xpFromProfileData(data) {
     const profile = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!profile || typeof profile !== "object") return null;
     const xp = Math.floor(Number(profile.xp));
-    return Number.isFinite(xp) && xp > 0 ? Math.min(xp, 100000000) : 0;
+    // A copy above what anyone could earn is broken (XP that ran away on 31/10/2026): no level from it.
+    if (Number.isFinite(xp) && xp > xpCeiling()) return null;
+    return Number.isFinite(xp) && xp > 0 ? xp : 0;
   } catch (_error) {
     return null;
   }
@@ -83,4 +90,4 @@ function playerLevelFromXp(xp) {
   return level;
 }
 
-module.exports = { profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp };
+module.exports = { xpCeiling, profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp };
