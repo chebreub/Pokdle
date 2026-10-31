@@ -208,6 +208,7 @@ test('search engines find a real icon file: /favicon.ico (16, 32 and 48 px) and 
   for (const [name, html] of Object.entries(pages)) {
     assert.ok(html.includes('<link rel="icon" href="/favicon.ico" sizes="48x48">'), name + ' links /favicon.ico');
     assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="/favicon.svg">'), name + ' links /favicon.svg');
+    assert.ok(html.includes('<link rel="icon" type="image/png" sizes="192x192" href="/img/app-icons/pokedle-192-v1.png">'), name + ' links the 192 px icon');
     assert.doesNotMatch(html, /rel="icon"[^>]*href="data:/, name + ': search engines ignore a data: icon');
   }
   const server = fs.readFileSync(path.join(__dirname, '../server.js'), 'utf8');

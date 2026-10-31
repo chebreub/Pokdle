@@ -15,7 +15,8 @@ const POKEMON_LIST = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'poke
 const POKEMON_NAMES = new Map(POKEMON_LIST.map(pokemon => [pokemon.id, pokemon.name]));
 const POKEMON_BY_ID = new Map(POKEMON_LIST.filter(pokemon => !pokemon.isAltForm).map(pokemon => [pokemon.id, pokemon]));
 const pokemonName = id => POKEMON_NAMES.get(Number(id)) || 'Pokémon';
-const ICON_LINKS = '<link rel="icon" href="/favicon.ico" sizes="48x48">\n<link rel="icon" type="image/svg+xml" href="/favicon.svg">\n';
+// A larger PNG too: Google prefers a sharp icon (a multiple of 48 px) in its results.
+const ICON_LINKS = '<link rel="icon" href="/favicon.ico" sizes="48x48">\n<link rel="icon" type="image/svg+xml" href="/favicon.svg">\n<link rel="icon" type="image/png" sizes="192x192" href="/img/app-icons/pokedle-192-v1.png">\n';
 const FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@400;700;800;900&display=swap">\n';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
