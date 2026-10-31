@@ -817,3 +817,5 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
 #pokdle-app #screen-party-room .party-typecombo-panel .tc-pure-tag {top:auto;bottom:16px;}
 #pokdle-app #screen-party-room .party-typecombo-panel .tc-half-ic {width:64px;height:64px;}
 #pokdle-app #screen-party-room .party-typecombo-panel .tc-half-ic img {width:42px;height:42px;}
+/* Description Pokédex: the mystery comes from Gen 1 to 8 (French entries), but every Pokémon can be typed. */
+#pokdle-app .description-gen-note {max-width:620px;margin:4px auto 0;text-align:center;color:var(--ui-muted,#7A7180);font-weight:700;font-size:.8rem;line-height:1.4;}

@@ -3244,6 +3244,8 @@ function renderDescriptionMode() {
   document.getElementById("description-box")?.classList.remove("hidden");
   const text = document.getElementById("description-text");
   if (text) text.textContent = descriptionState.text || "";
+  // Gen 9 can be typed, but the mystery never comes from it: say so rather than let players search there.
+  document.getElementById("description-gen-note")?.classList.toggle("hidden", !(selectedGens instanceof Set && [...selectedGens].some((gen) => Number(gen) > 8)));
 }
 
 function renderWeightBattlePanel() {
@@ -3687,7 +3689,9 @@ function startDescriptionMode() {
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   descriptionState = { text: "Chargement de l'entrée Pokédex…", loading: true, error: null };
   gameMode = "description";
-  startGameWithSecret(secret, pool);
+  // Every Pokémon of the chosen generations can be typed (Gen 9 included); only the mystery needs a
+  // French Pokédex entry. Same pool as a reloaded game (restoreGame uses getPoolFromSelectedGens()).
+  startGameWithSecret(secret, selected);
   renderDescriptionMode();
   // Charge async la vraie description Pokédex
   loadDescriptionFlavorText(secret);
