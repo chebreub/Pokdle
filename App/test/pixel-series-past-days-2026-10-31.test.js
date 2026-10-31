@@ -9,7 +9,7 @@ const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
 test('Pixelisé and Cri play series of 10 by default, 5 / 10 / 20 to pick, with a summary', () => {
   const src = read('src/script.10xm.guess-series.js');
   assert.match(src, /var GUESS_SERIES_SIZES = \[5, 10, 20\];/);
-  assert.match(src, /var GUESS_SERIES_ON = \['pixel', 'cry'\];/);
+  assert.match(src, /var GUESS_SERIES_ON = \['pixel', 'cry', 'silhouette', 'description'\];/);
   assert.match(src, /return GUESS_SERIES_SIZES\.indexOf\(n\) >= 0 \? n : 10;/, '10 when nothing was chosen');
   assert.match(src, /pixel: \{ start: 'startPixelGame', box: 'pixel-box', one: 'Image', many: 'images', skip: 'Passer l’image', next: 'Image suivante →' \}/);
   assert.match(src, /cry: \{ start: 'startCryGame', box: 'cry-box', one: 'Cri', many: 'cris', skip: 'Passer le cri', next: 'Cri suivant →' \}/);

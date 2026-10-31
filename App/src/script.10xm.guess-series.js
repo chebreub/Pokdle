@@ -10,8 +10,8 @@ var GUESS_SERIES_MODES = {
   silhouette: { start: 'startSilhouetteGame', box: 'silhouette-box', one: 'Silhouette', many: 'silhouettes', skip: 'Passer la silhouette', next: 'Silhouette suivante →' },
   description: { start: 'startDescriptionMode', box: 'description-box', one: 'Description', many: 'descriptions', skip: 'Passer la description', next: 'Description suivante →' },
 };
-// The modes that play in series (Silhouette and Description wait for Kayan's go).
-var GUESS_SERIES_ON = ['pixel', 'cry'];
+// The modes that play in series (all four since Kayan's go, 31/10/2026).
+var GUESS_SERIES_ON = ['pixel', 'cry', 'silhouette', 'description'];
 var guessSeries = null;
 var guessSeriesAdvancing = false;
 var guessSeriesStarts = {};
