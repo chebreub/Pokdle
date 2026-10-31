@@ -994,10 +994,15 @@ def main():
 
      page.evaluate('openTypeComboSolo()');page.locator('.tc-start-btn').click();screen('screen-type-combo')
      combo_card=page.locator('#screen-type-combo .gameplay-screen-card').bounding_box()
-     combo=page.locator('.tc-combo').bounding_box();tc_status=page.locator('.tc-status').bounding_box()
+     # Style B (31/10/2026): a wide stage in the colours of the two types, the answer on its lower edge.
+     combo=page.locator('.tc-stage').bounding_box();field=page.locator('#type-combo-input').bounding_box()
      expect(combo_card and 900<=combo_card['width']<=1001,'Type Combo desktop card is still too narrow: '+repr(combo_card))
-     expect(combo and tc_status and tc_status['x']>combo['x']+combo['width'],'Type Combo cockpit is not beside the prompt stage: '+repr([combo,tc_status]))
-     expect(combo['height']>=380,'Type Combo desktop prompt stage is too small: '+repr(combo))
+     expect(combo and combo['width']>=760 and combo['height']>=260,'Type Combo desktop stage is too small: '+repr(combo))
+     expect(field and combo['y']+combo['height']-70<=field['y']<=combo['y']+combo['height'],'Type Combo answer does not sit on the stage edge: '+repr([combo,field]))
+     page.fill('#type-combo-input','airm');page.wait_for_timeout(500)
+     sprites=[page.locator('.tc-ac-sprite').nth(i).bounding_box() for i in range(page.locator('.tc-ac-sprite').count())]
+     expect(len(sprites)>=2 and all(b and b['height']<=48 and b['width']<=48 for b in sprites),'Type Combo suggestion images are not contained (Méga artwork): '+repr(sprites))
+     page.fill('#type-combo-input','')
 
      start('startPixelGame','screen-game')
      clue=page.locator('#pixel-box').bounding_box()

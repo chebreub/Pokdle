@@ -739,47 +739,81 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
 .theme-dark .daily-capture.is-shiny .daily-capture-text small, .theme-dark .profile-shinies-title {color:#FFD45C;}
 .theme-dark .shiny-showcase-item {background:linear-gradient(180deg,#4A3D12 0%,#29262F 100%);border-color:#7A6420;}
 
-/* Combo de types v2 (31/10/2026): one column, the types right above the answer, a draining time bar,
-   suggestions in a menu over the page (small sprites, Méga artworks included), the combos found below. */
-#pokdle-app.design-refresh #screen-type-combo .tc-board {display:flex;flex-direction:column;align-items:stretch;gap:12px;}
+/* Combo de types, style B « couleurs du combo » (31/10/2026): the stage takes the colours of the two types,
+   cut on a slant; the answer sits on its lower edge; suggestions open over the page with small artworks.
+   The stage is shared with the Party Room round. */
+#pokdle-app .tc-stage {position:relative;width:100%;height:260px;border-radius:28px;overflow:hidden;background:var(--ui-soft,#F6EEE2);box-shadow:0 16px 32px rgba(46,42,51,.16);}
+#pokdle-app .tc-half {position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding-bottom:40px;font:700 26px/1 Fredoka,sans-serif;}
+#pokdle-app .tc-half.is-a {clip-path:polygon(0 0,62% 0,38% 100%,0 100%);padding-right:50%;}
+#pokdle-app .tc-half.is-b {clip-path:polygon(62% 0,100% 0,100% 100%,38% 100%);padding-left:50%;}
+#pokdle-app .tc-half-ic {width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.24);box-shadow:inset 0 0 0 3px rgba(255,255,255,.4);}
+#pokdle-app .tc-half-ic img {width:50px;height:50px;border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.55);}
+#pokdle-app .tc-vs {position:absolute;left:50%;top:calc(50% - 20px);width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#FFF8EF;color:#2E2A33;font:700 28px/1 Fredoka,sans-serif;box-shadow:0 5px 0 rgba(0,0,0,.14);}
+#pokdle-app .tc-pure-tag {position:absolute;left:50%;top:calc(50% + 58px);transform:translateX(-50%);padding:5px 14px;border-radius:999px;background:rgba(255,255,255,.9);color:#2E2A33;font:900 13px Nunito,sans-serif;white-space:nowrap;}
+#pokdle-app .tc-stage.is-pure .tc-half {padding-bottom:64px;}
+#pokdle-app .tc-timebar {position:absolute;left:0;right:0;top:0;height:8px;background:rgba(255,255,255,.35);}
+#pokdle-app .tc-timebar i {display:block;height:100%;width:100%;background:#fff;transition:width 1s linear,background-color .3s;}
+#pokdle-app .tc-timebar.is-low i {background:#E2453C;}
+body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
+@media (prefers-reduced-motion: reduce) { #pokdle-app .tc-timebar i {transition:none;} }
+#pokdle-app .tc-corner {position:absolute;top:18px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.92);color:#2E2A33;font:800 14px Nunito,sans-serif;white-space:nowrap;}
+#pokdle-app .tc-corner b {font-weight:900;}
+#pokdle-app .tc-corner.is-left {left:14px;}
+#pokdle-app .tc-corner.is-right {right:14px;background:#2E2A33;color:#fff;}
+#pokdle-app .tc-ask {position:absolute;left:50%;bottom:44px;transform:translateX(-50%);max-width:calc(100% - 28px);overflow:hidden;text-overflow:ellipsis;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.92);color:#2E2A33;font:800 13px Nunito,sans-serif;white-space:nowrap;}
+#pokdle-app.design-refresh #screen-type-combo .tc-board {display:flex;flex-direction:column;align-items:stretch;gap:10px;}
 #pokdle-app.design-refresh #screen-type-combo .tc-board > * {width:100% !important;max-width:640px;margin-left:auto;margin-right:auto;}
-#pokdle-app.design-refresh #screen-type-combo .tc-status {display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:8px;}
-#pokdle-app.design-refresh #screen-type-combo .tc-timebar {grid-column:1/-1;height:8px;border-radius:999px;background:var(--ui-soft);overflow:hidden;}
-#pokdle-app.design-refresh #screen-type-combo .tc-timebar i {display:block;height:100%;width:100%;border-radius:inherit;background:var(--mode-color);transition:width 1s linear,background-color .3s;}
-#pokdle-app.design-refresh #screen-type-combo .tc-timebar.is-low i {background:#E2453C;}
-body.reduce-motion #screen-type-combo .tc-timebar i {transition:none;}
-@media (prefers-reduced-motion: reduce) { #screen-type-combo .tc-timebar i {transition:none;} }
-#pokdle-app.design-refresh #screen-type-combo .tc-combo {min-height:0;padding:20px 16px;gap:10px;}
-#pokdle-app.design-refresh #screen-type-combo .tc-combo-types {transform:none;margin:4px 0;gap:10px;}
-#pokdle-app.design-refresh #screen-type-combo .tc-combo-types .type-badge {min-height:46px;padding:9px 18px;font-size:1.08rem;}
-#pokdle-app.design-refresh #screen-type-combo .tc-pure {display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;background:var(--ui-surface);border:1px dashed var(--ui-line);color:var(--ui-muted);font-weight:900;font-size:.8rem;}
-#pokdle-app.design-refresh #screen-type-combo .tc-combo-meta {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
-#pokdle-app.design-refresh #screen-type-combo .tc-combo-count {color:var(--ui-muted);font-weight:800;font-size:.78rem;}
-#pokdle-app.design-refresh #screen-type-combo .tc-form {padding:0;border:0;background:none;}
+#pokdle-app.design-refresh #screen-type-combo .tc-board > .tc-combo {max-width:980px;min-height:0;padding:0;border:0;background:none;display:block;}
+#pokdle-app.design-refresh #screen-type-combo .tc-form {position:relative;z-index:2;margin-top:-34px;padding:0 14px;border:0;background:none;display:grid;gap:10px;}
 #pokdle-app.design-refresh #screen-type-combo .tc-field {position:relative;}
-#pokdle-app.design-refresh #screen-type-combo .tc-input {width:100%;}
-#pokdle-app.design-refresh #screen-type-combo .tc-ac {position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;max-width:none;margin:0;max-height:min(312px,46vh);overflow-y:auto;}
-#pokdle-app.design-refresh #screen-type-combo .tc-ac-item {display:flex;align-items:center;gap:10px;width:100%;min-height:50px;padding:5px 14px 5px 8px;}
+#pokdle-app.design-refresh #screen-type-combo .tc-input {width:100%;min-height:58px;border-radius:18px;font-size:1.05rem;box-shadow:0 10px 24px rgba(46,42,51,.14);}
+#pokdle-app.design-refresh #screen-type-combo .tc-ac {position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;max-width:none;margin:0;border-radius:18px;max-height:min(330px,46vh);overflow-y:auto;}
+#pokdle-app.design-refresh #screen-type-combo .tc-ac-item {display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:5px 14px 5px 10px;font-size:1rem;}
 #pokdle-app.design-refresh #screen-type-combo .tc-ac-item.is-active {background:var(--ui-accent-soft) !important;}
-#pokdle-app.design-refresh #screen-type-combo .tc-ac-sprite {width:40px;height:40px;flex:none;object-fit:contain;}
+#pokdle-app.design-refresh #screen-type-combo .tc-ac-sprite {width:44px;height:44px;flex:none;object-fit:contain;}
+#pokdle-app.design-refresh #screen-type-combo .tc-meta {margin:2px 0 0;text-align:center;color:var(--ui-muted);font-weight:800;font-size:.84rem;}
+#pokdle-app.design-refresh #screen-type-combo .tc-meta b {background:none;padding:0;border-radius:0;}
+#pokdle-app #screen-type-combo .tc-pure-tag {display:none;}
+#pokdle-app #screen-type-combo .tc-stage.is-pure .tc-half {padding-bottom:40px;}
+#pokdle-app.design-refresh #screen-type-combo .tc-meta .tc-tier-facile {color:#1f8a37;}
+#pokdle-app.design-refresh #screen-type-combo .tc-meta .tc-tier-moyen {color:#1d4fd6;}
+#pokdle-app.design-refresh #screen-type-combo .tc-meta .tc-tier-difficile {color:#B35B00;}
+#pokdle-app.design-refresh #screen-type-combo .tc-meta .tc-tier-legendaire {color:#7a2bd0;}
 #pokdle-app.design-refresh #screen-type-combo .tc-feedback {min-height:22px;margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;}
 #pokdle-app.design-refresh #screen-type-combo .tc-mini-types {display:inline-flex;gap:4px;align-items:center;}
 #pokdle-app.design-refresh #screen-type-combo .tc-mini-types .type-badge {min-height:24px;padding:2px 9px;font-size:.74rem;}
-#pokdle-app.design-refresh #screen-type-combo .tc-mini-types .tc-pure {min-height:22px;font-size:.7rem;padding:0 8px;}
-#pokdle-app.design-refresh #screen-type-combo .tc-found {display:grid;gap:8px;padding:12px;border:1px solid var(--ui-line);border-radius:16px;background:var(--ui-surface);}
+#pokdle-app.design-refresh #screen-type-combo .tc-pure {display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;border:1px dashed var(--ui-line);color:var(--ui-muted);font-weight:900;font-size:.7rem;}
+#pokdle-app.design-refresh #screen-type-combo .tc-found {display:grid;gap:8px;padding:0 4px;}
 #pokdle-app.design-refresh #screen-type-combo .tc-found-title {color:var(--ui-muted);font-size:.66rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;}
-#pokdle-app.design-refresh #screen-type-combo .tc-found-list {display:flex;flex-wrap:wrap;gap:6px;}
-#pokdle-app.design-refresh #screen-type-combo .tc-found-chip {display:inline-flex;align-items:center;gap:4px;padding:2px 10px 2px 2px;border-radius:999px;background:var(--ui-soft);border:1px solid var(--ui-line);color:var(--ui-ink);font-weight:800;font-size:.82rem;}
-#pokdle-app.design-refresh #screen-type-combo .tc-found-chip img {width:34px;height:34px;object-fit:contain;}
-#pokdle-app.design-refresh #screen-type-combo .tc-found-chip b {color:#1f8a37;}
+#pokdle-app.design-refresh #screen-type-combo .tc-found-list {display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;}
+#pokdle-app.design-refresh #screen-type-combo .tc-found-card {display:flex;flex-direction:column;align-items:center;padding:6px 4px 8px;border-radius:18px;background:var(--ui-surface);border:1px solid var(--ui-line);color:var(--ui-ink);font-weight:800;font-size:.8rem;text-align:center;}
+#pokdle-app.design-refresh #screen-type-combo .tc-found-card img {width:64px;height:64px;object-fit:contain;}
+#pokdle-app.design-refresh #screen-type-combo .tc-found-card b {color:#1f8a37;font-size:.8rem;}
 #pokdle-app.design-refresh #screen-type-combo .tc-found-empty {color:var(--ui-muted);font-size:.8rem;font-weight:700;}
-#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found {max-width:560px;margin:4px auto 12px;text-align:left;}
-.theme-dark #screen-type-combo .tc-found-chip b {color:#7BD88F;}
-@media (min-width:1280px) {
-  #pokdle-app.design-refresh #screen-type-combo .tc-board {display:flex;padding:18px 16px 20px;}
-  #pokdle-app.design-refresh #screen-type-combo .tc-combo {padding:26px 20px;}
-  #pokdle-app.design-refresh #screen-type-combo .tc-combo-types .type-badge {min-height:54px;padding:10px 22px;font-size:1.2rem;}
-  #pokdle-app.design-refresh #screen-type-combo .tc-form, #pokdle-app.design-refresh #screen-type-combo .tc-feedback {padding:0;border:0;background:none;}
-}
+#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found {max-width:560px;margin:4px auto 14px;text-align:left;}
+.theme-dark #screen-type-combo .tc-found-card b, .theme-dark #screen-type-combo .tc-meta .tc-tier-facile {color:#7BD88F;}
 #pokdle-app #screen-type-combo.tc-is-playing .type-combo-card > .ranking-head,
 #pokdle-app #screen-type-combo.tc-is-playing .type-combo-card > .card-desc {display:none !important;}
+@media (max-width:640px) {
+  #pokdle-app .tc-stage {height:236px;border-radius:24px;}
+  #pokdle-app .tc-half {font-size:23px;}
+  #pokdle-app .tc-half-ic {width:68px;height:68px;}
+  #pokdle-app .tc-half-ic img {width:44px;height:44px;}
+  #pokdle-app.design-refresh #screen-type-combo .tc-form {padding:0 10px;}
+}
+@media (min-width:1280px) {
+  #pokdle-app.design-refresh #screen-type-combo .tc-board {display:flex;padding:16px;}
+  #pokdle-app .tc-stage {height:300px;}
+  #pokdle-app #screen-type-combo .tc-half {font-size:32px;}
+  #pokdle-app #screen-type-combo .tc-half-ic {width:100px;height:100px;}
+  #pokdle-app #screen-type-combo .tc-half-ic img {width:62px;height:62px;}
+  #pokdle-app.design-refresh #screen-type-combo .tc-form {padding:0;}
+}
+/* Party Room round: the same stage, a little lower. */
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-stage {width:100%;max-width:560px;height:200px;}
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-half {padding-bottom:0;font-size:22px;}
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-stage.is-pure .tc-half {padding-bottom:30px;}
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-vs {top:50%;}
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-pure-tag {top:auto;bottom:16px;}
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-half-ic {width:64px;height:64px;}
+#pokdle-app #screen-party-room .party-typecombo-panel .tc-half-ic img {width:42px;height:42px;}

@@ -920,22 +920,18 @@ function renderTypeComboScreen() {
   }
   if (st.phase === "playing") {
     const c = st.combo;
-    // A single-type Pokémon is asked as « Ténèbres pur », never « Ténèbres + Ténèbres ».
-    const pure = c && c.displayTypes[0] === c.displayTypes[1];
-    const badges = !c ? "" : pure ? (typeBadgeHtml(c.displayTypes[0]) + '<span class="tc-pure">pur</span>') : c.displayTypes.map((t) => typeBadgeHtml(t)).join('<span class="tc-plus">+</span>');
+    const types = c ? c.displayTypes : [];
+    const pure = Boolean(c) && types[0] === types[1];
     const count = c ? c.count : 0;
+    const ask = !c ? "" : pure ? ("Trouve un Pokémon " + types[0] + " pur") : ("Trouve un Pokémon " + types[0] + " / " + types[1]);
     root.innerHTML =
       '<div class="tc-board">' +
-        '<div class="tc-status">' +
-          '<div class="tc-chip"><span>Score</span><b>' + st.score + '</b></div>' +
-          '<div class="tc-chip"><span>Combos</span><b>' + st.solved + '</b></div>' +
-          '<div class="tc-chip is-timer">⏱️ <b id="type-combo-timer">' + Math.ceil(st.leftMs / 1000) + 's</b></div>' +
-          '<div class="tc-timebar" id="type-combo-timebar" aria-hidden="true"><i></i></div>' +
-        '</div>' +
         '<div class="tc-combo">' +
-          '<div class="tc-combo-label">' + (pure ? 'Trouve un Pokémon avec un seul type' : 'Trouve un Pokémon de type') + '</div>' +
-          '<div class="tc-combo-types">' + badges + '</div>' +
-          '<div class="tc-combo-meta"><span class="tc-combo-tier tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</span><span class="tc-combo-count">' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</span></div>' +
+          typeComboStageHtml(types,
+            '<div class="tc-timebar" id="type-combo-timebar" aria-hidden="true"><i></i></div>' +
+            '<span class="tc-corner is-left">⭐ <b>' + st.score + '</b> pts · 🔥 <b>' + st.solved + '</b></span>' +
+            '<span class="tc-corner is-right">⏱ <b id="type-combo-timer">' + Math.ceil(st.leftMs / 1000) + 's</b></span>' +
+            '<span class="tc-ask">' + escapeHtml(ask) + '</span>') +
         '</div>' +
         '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
           '<div class="tc-field">' +
@@ -944,6 +940,7 @@ function renderTypeComboScreen() {
           '</div>' +
           '<div class="tc-actions"><button class="btn-blue" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
         '</form>' +
+        '<p class="tc-meta"><b class="tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</b> · ' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</p>' +
         '<p class="tc-feedback" id="type-combo-feedback"></p>' +
         typeComboFoundHtml(st.found) +
       '</div>';
@@ -976,9 +973,22 @@ function typeComboPaintTimeBar() {
 }
 function typeComboFoundHtml(found) {
   const list = Array.isArray(found) ? found : [];
-  const chips = list.map((f) => '<span class="tc-found-chip"><img src="' + escapeHtml(getPokemonSprite(f.ref)) + '" alt="" loading="lazy" />' + escapeHtml(f.name) + ' <b>+' + f.pts + '</b></span>').join("");
+  const art = (p) => (typeof pokedexDetailArtwork === "function" ? pokedexDetailArtwork(p) : getPokemonSprite(p));
+  const cards = list.map((f) => '<span class="tc-found-card"><img src="' + escapeHtml(art(f.ref)) + '" data-fallback="' + escapeHtml(getPokemonSprite(f.ref)) + '" alt="" loading="lazy" /><span>' + escapeHtml(f.name) + '</span><b>+' + f.pts + '</b></span>').join("");
   return '<div class="tc-found"><div class="tc-found-title">Tes combos' + (list.length ? ' · ' + list.length : '') + '</div>' +
-    (chips ? '<div class="tc-found-list">' + chips + '</div>' : '<div class="tc-found-empty">Chaque Pokémon trouvé s\'ajoute ici.</div>') + '</div>';
+    (cards ? '<div class="tc-found-list">' + cards + '</div>' : '<div class="tc-found-empty">Chaque Pokémon trouvé s\'ajoute ici.</div>') + '</div>';
+}
+// The combo stage, shared by the solo game and the Party Room: the screen takes the colours of the two
+// types, cut on a slant (one colour and « Type pur » for a single type). `extra` lands inside the stage.
+function typeComboStageHtml(types, extra) {
+  const a = types && types[0], b = (types && types[1]) || a;
+  if (!a) return '<div class="tc-stage">' + (extra || '') + '</div>';
+  const half = (t, side) => {
+    const icon = typeof getTypeIconPath === "function" ? getTypeIconPath(t) : null;
+    return '<div class="tc-half is-' + side + ' type-' + typeSlug(t) + '"><span class="tc-half-ic">' + (icon ? '<img src="' + escapeHtml(icon) + '" alt="" />' : '') + '</span><b>' + escapeHtml(t) + '</b></div>';
+  };
+  const body = a === b ? half(a, "full") + '<span class="tc-pure-tag">Type pur</span>' : half(a, "a") + half(b, "b") + '<span class="tc-vs" aria-hidden="true">+</span>';
+  return '<div class="tc-stage' + (a === b ? ' is-pure' : '') + '">' + body + (extra || '') + '</div>';
 }
 function speedrunIsPartyRound() {
   // Party controls still own the last round once the session is completed.

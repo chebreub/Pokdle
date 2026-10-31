@@ -2612,8 +2612,9 @@ function renderPartyRoom() {
           ? '<div class="party-duo-criteria">' + duoCriteriaList.map(function (criterion) {
               return '<span class="party-duo-chip is-' + escapeHtml((criterion && criterion.kind) || "") + '">' + escapeHtml((criterion && criterion.label) || "?") + '</span>';
             }).join('<span class="party-duo-plus">+</span>') + '</div>'
-          : (types.length === 2 && types[0] === types[1]
-            ? '<div class="party-typecombo-types">' + typeBadgeHtml(types[0]) + '<span class="party-combo-pure">type pur</span></div>'
+          // Same stage as the solo game: the colours of the two types (« Type pur » for a single type).
+          : (typeof typeComboStageHtml === "function" && types.length
+            ? typeComboStageHtml([types[0], types[1] || types[0]])
             : '<div class="party-typecombo-types">' + types.map(function (type) { return typeBadgeHtml(type); }).join("") + '</div>');
         statReveal.innerHTML = '<div class="party-typecombo-panel">' +
           criteriaHtml +
