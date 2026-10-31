@@ -248,7 +248,7 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
   }
   return {state,guess:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),distribution,shinies,reactions,react};
 }
-function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,compare,legacyTarget,readyBefore=Promise.resolve()}) {
+function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,compare,legacyTarget,readyBefore=Promise.resolve(),referrals=null}) {
   const service=db&&secret?createDailyService({db,pokemon,compare,legacyTarget}):null;
   const ready=service?readyBefore.then(()=>initDailyDb(db)).then(()=>true).catch(e=>{console.error("[daily] init:",e.message);return false;}):Promise.resolve(false);
   const buckets=new Map();
@@ -285,6 +285,11 @@ function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,com
   app.get("/api/daily/shinies",handle(who=>service.shinies(who)));
   app.get("/api/daily/reactions",handle(who=>service.reactions(who)));
   app.post("/api/daily/react",express.json({limit:"1kb"}),handle((who,req)=>service.react(who,req.body||{})));
+  // « Invite un ami » : the friend's first Pokémon du jour, checked with the same identity as the game.
+  app.post("/api/daily/referral",express.json({limit:"1kb"}),handle(async(who,req)=>{
+    if(!referrals)throw dailyError("unavailable",503);
+    return referrals.friendFound(who,req.body&&req.body.ref,parisDay(new Date()));
+  }));
   app.post("/api/daily-stats/report",(_req,res)=>res.status(410).json({ok:false,error:"retired"}));
   app.post("/api/daily/session",(_req,res)=>res.status(409).json({ok:false,error:"daily_update_required"}));
   return service;

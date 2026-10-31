@@ -17,7 +17,7 @@ function fixture() {
  return {context,elements,rows};
 }
 test('every former menu destination remains reachable and categorized',()=>{
- assert.equal(cards.length,30); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
+ assert.equal(cards.length,31); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
  for(const action of ['openEggGame','startPartyMode','openTypeComboSolo','openTeamsScreen','openEmulatorMode','openLeaderboard','openPartyRoomMode']) assert.ok(cards.some(card=>card.markup.includes(action)),action);
  // Entre amis is one door: the two-player games live in the Party Room lobby.
  const lobby=html.slice(html.indexOf('id="party-lobby"'),html.indexOf('id="party-joined"'));
@@ -33,7 +33,7 @@ test('search ignores accents, matches unordered words and recovers from no resul
  const {context,rows,elements}=fixture();context.setModeCatalogCategory('all');elements['mode-search'].value='attack draft';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='emulateur';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='zzzznoresult';context.renderModeCatalog();assert.equal(elements['mode-empty'].hidden,false);
- context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,30);
+ context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,31);
  assert.ok(!rows.some(card=>card.markup.includes('openDraftArenaMode')),'Draft Arènes was removed');
 });
 test('search matches the start of words so short queries stay precise',()=>{

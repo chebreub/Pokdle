@@ -1014,6 +1014,8 @@ function openAccountMenu() {
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages</span><b>→</b></button>
+        <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
+        <button type="button" data-action="accountNavigate" data-args='["past"]'><span>📅 Jours passés</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
         ${connectedAccountUser.admin ? `<button type="button" data-action="accountNavigate" data-args='["admin"]'><span>Panneau admin</span><b>→</b></button>` : ''}
       </nav>
@@ -1068,6 +1070,8 @@ function accountNavigate(destination) {
   else if (destination === 'settings') openSettingsModal();
   else if (destination === 'admin') location.assign('/admin');
   else if (destination === 'messages' && typeof openMyMessages === 'function') openMyMessages();
+  else if (destination === 'invite' && typeof openInviteFriend === 'function') openInviteFriend();
+  else if (destination === 'past' && typeof openPastDays === 'function') openPastDays();
   else { openProfileScreen(); switchProfileView('trainer'); }
 }
 (function () {

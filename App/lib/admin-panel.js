@@ -4,6 +4,7 @@
 // news banner and takes back a shared profile photo, from a phone, without a deploy.
 // Admins are the account ids listed in ADMIN_ACCOUNT_IDS (comma-separated) on Render.
 
+const nameOverrides = require("./name-overrides");
 const NEWS_TEXT_MAX = 90;
 const NEWS_DAYS_MAX = 60;
 // Where a news line leads: only screens the site can open from the banner.
@@ -108,6 +109,8 @@ const NOTICES = Object.freeze({
   photo: "Photo retirée des classements.",
   message: "Message envoyé : le joueur le verra à sa prochaine visite.",
   "message-removed": "Message retiré.",
+  "name-replaced": "Pseudo remplacé par « Dresseur » partout, et il le reste à la prochaine connexion.",
+  "name-restored": "Pseudo rétabli : son nom revient à sa prochaine connexion.",
 });
 
 function page(title, body) {
@@ -157,6 +160,17 @@ function photosSection(rows) {
 ${rows.length ? `<div class="photos">${cards}</div>` : "<p>Aucune photo partagée pour l'instant.</p>"}</section>`;
 }
 
+// « Pseudo déplacé » : replace a player's name with « Dresseur » (lib/name-overrides.js).
+function namesSection(players, replaced) {
+  const options = players.map((p) => `<option value="${escapeHtml(p.discord_id)}">${escapeHtml(p.username)}</option>`).join("");
+  const list = replaced.map((r) => `<div class="photo"><b>${escapeHtml(r.previous || "?")}</b><small>remplacé le ${escapeHtml(r.day)}</small>
+<form method="post" action="/admin/names/restore"><input type="hidden" name="account_id" value="${escapeHtml(r.account_id)}"><button class="ghost" type="submit">Rétablir</button></form></div>`).join("");
+  return `<section><h2>Pseudo déplacé</h2><p class="hint">Remplace le pseudo d'un joueur par « Dresseur » dans les classements, la carte de dresseur et la Party Room. Il le reste même s'il se reconnecte.</p>
+<form method="post" action="/admin/names/replace"><label>Joueur<select name="account_id" required><option value="">Choisis un joueur</option>${options}</select></label>
+<div class="row"><button class="danger" type="submit">Remplacer par « Dresseur »</button></div></form>
+${list ? `<h3>Pseudos remplacés</h3><div class="photos">${list}</div>` : ""}</section>`;
+}
+
 // `db` is the pg pool; `ready` resolves to true once the tables exist.
 // `messages` (optional) writes to the players: { module, webpush, pushReady }, see lib/player-messages.js.
 function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console, messages = null }) {
@@ -194,6 +208,14 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
     const day = today();
     try {
       const [news, photos] = await Promise.all([readNews(db, day), sharedPhotos(db)]);
+      let namesHtml = "";
+      try {
+        const [players, replaced] = await Promise.all([
+          db.query("SELECT discord_id, username FROM users WHERE username <> '' AND username <> $1 ORDER BY last_login DESC NULLS LAST LIMIT 300", [nameOverrides.REPLACED_NAME]).then((r) => r.rows),
+          nameOverrides.listOverrides(db),
+        ]);
+        namesHtml = namesSection(players, replaced);
+      } catch (error) { log.error("[admin] names:", error.message); }
       let messagesHtml = "";
       if (messages) {
         try {
@@ -204,7 +226,7 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
       res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${newsSection(news, day)}${messagesHtml}${photosSection(photos)}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
@@ -238,6 +260,21 @@ ${newsSection(news, day)}${messagesHtml}${photosSection(photos)}<p class="hint">
     try { await removePhoto(db, key); back(res, { ok: "photo" }); }
     catch (error) { log.error("[admin] photo:", error.message); back(res, { err: "Retrait impossible." }); }
   });
+
+  for (const [path, action, notice] of [["/admin/names/replace", "replaceName", "name-replaced"], ["/admin/names/restore", "restoreName", "name-restored"]]) {
+    app.post(path, form, async (req, res) => {
+      if (!guard(req, res)) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      const id = oneLine(req.body && req.body.account_id).slice(0, 80);
+      if (!id) return back(res, { err: "Choisis un joueur." });
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      try {
+        const result = await nameOverrides[action](db, id);
+        if (result.error) return back(res, { err: result.error });
+        back(res, { ok: notice });
+      } catch (error) { log.error("[admin] names:", error.message); back(res, { err: "Modification impossible." }); }
+    });
+  }
 
   if (messages) {
     app.post("/admin/messages", form, async (req, res) => {
