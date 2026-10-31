@@ -77,6 +77,8 @@ test('home exposes static links to featured pages for crawlers without changing 
     '/jeux/grille-pokemon',
     '/jeux/quiz-pokemon',
     '/jeux/petit-bac-pokemon',
+    '/jeux/jeux-pokemon-entre-amis',
+    '/jeux/dessine-le-pokemon',
     '/jeux',
   ]);
   const knownSlugs = new Set(GAMES.map(game => game.slug));

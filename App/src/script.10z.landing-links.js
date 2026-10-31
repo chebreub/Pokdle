@@ -26,6 +26,7 @@ const LANDING_GAMES = Object.freeze({
   'duel-de-poids': ['startWeightBattle'],
   'speedrun-pokedex': ['openSpeedrunMode'],
   'jeux-pokemon-entre-amis': ['openPartyRoomMode'],
+  'dessine-le-pokemon': ['openPartyRoomWithGame', ['dessin']],
   'table-des-types': ['openTypeChartScreen'],
   'team-builder': ['openTeamBuilderScreen'],
   'pokedex': ['openPokedexMode'],
