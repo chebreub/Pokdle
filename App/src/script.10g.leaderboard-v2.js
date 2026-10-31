@@ -27,7 +27,8 @@ const LEADERBOARD_V2_MODES = LEADERBOARD_V2_DAY_MODES.concat(LEADERBOARD_V2_OTHE
 const LEADERBOARD_V2_ALIASES = { daily:"enquete", wordle:"wordlepts" };
 // One colour per stage of the day (background, ink).
 const LEADERBOARD_V2_TONES = { journey:["#C9B6F5","#4B3291"], enquete:["#FFD45C","#6B4C00"], wordlepts:["#8FC8FF","#1F5288"], dossier:["#F7A8C8","#8E1F4D"], challenge:["#86D9B0","#17583A"], grid:["#FFC48C","#7A3E00"], petitbacday:["#9FD8CB","#1F6B5E"] };
-const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","7 jours"],["all","Records"]];
+// « Semaine » runs from Monday to Sunday in Paris, like the week's prize (31/10/2026).
+const LEADERBOARD_V2_SCOPES = [["today","Aujourd’hui"],["week","Semaine"],["all","Records"]];
 let leaderboardV2Scope = "all";
 let leaderboardV2LastMode = "daily";
 
@@ -89,15 +90,15 @@ function leaderboardV2ScopeLabel(scope, mode) {
 // Over a period the points of every day are added up: the hint says so.
 function leaderboardV2Hint(meta, mode, scope) {
   if (scope === "today" || !leaderboardV2IsCumulative(mode)) return meta.hint;
-  const period = scope === "week" ? "sur 7 jours" : "depuis ton premier jour";
+  const period = scope === "week" ? "depuis lundi" : "depuis ton premier jour";
   return (mode === "journey" ? "Tes 4 épreuves additionnées " : "Tes points additionnés ") + period + " : chaque jour joué compte";
 }
-// « Global du jour » over 7 days reads « Global · 7 jours ».
+// « Global du jour » over the week reads « Global · semaine ».
 function leaderboardV2Title(label, scope, mode) {
   const text = String(label || "");
   // « Pokémon du jour » is a game's name: only the other boards lose their « du jour ».
   const base = text === "Pokémon du jour" ? text : text.replace(/ du jour$/, "");
-  if (scope === "week") return base + " · 7 jours";
+  if (scope === "week") return base + " · semaine";
   if (scope === "all") return base + (leaderboardV2IsCumulative(mode) ? " · total" : " · records");
   return text;
 }
@@ -247,12 +248,36 @@ function leaderboardV2ScoreHtml(row, mode, unit) {
 }
 // The player's partner Pokémon first, then their shared photo or account picture, then a Poké Ball.
 const LEADERBOARD_V2_DEFAULT_AVATAR = "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png";
+// Last week's champion plays with a shiny partner (31/10/2026). A picture that fails shows the Poké Ball.
+function leaderboardV2Partner(row) {
+  return row?.partnerId && typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(row.partnerId)) : null;
+}
 function leaderboardV2Avatar(row) {
-  const partner = row?.partnerId && typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(row.partnerId)) : null;
-  if (partner) return '<img class="lbv2-avatar is-partner'+(typeof pokemonIsRare === "function" && pokemonIsRare(partner)?' is-rare':'')+'" src="'+escapeHtml(getPokemonSprite(partner))+'" alt="" title="'+escapeHtml(partner.name)+'" loading="lazy" />';
+  const partner = leaderboardV2Partner(row), shiny = Boolean(row?.champion);
+  if (partner) return '<img class="lbv2-avatar is-partner'+(typeof pokemonIsRare === "function" && pokemonIsRare(partner)?' is-rare':'')+(shiny?' is-champion':'')+'" src="'+escapeHtml(shiny ? getPokemonShinySprite(partner) : getPokemonSprite(partner))+'" data-fallback="'+escapeHtml(getPokemonSprite(partner))+'" alt="" title="'+escapeHtml(partner.name+(shiny ? ' shiny · champion de la semaine' : ''))+'" loading="lazy" />';
   return row?.avatar
-    ? '<img class="lbv2-avatar" src="'+escapeHtml(row.avatar)+'" alt="" loading="lazy" />'
+    ? '<img class="lbv2-avatar" src="'+escapeHtml(row.avatar)+'" data-fallback="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" loading="lazy" />'
     : '<img class="lbv2-avatar is-default" src="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" loading="lazy" />';
+}
+// The podium's big picture: the partner's official artwork (shiny for the champion), else the player's picture.
+function leaderboardV2PodiumArt(row) {
+  const partner = leaderboardV2Partner(row), shiny = Boolean(row?.champion);
+  if (partner) return '<img class="lbv5-art" src="'+escapeHtml(pokedexDetailArtwork(partner, shiny))+'" data-fallback="'+escapeHtml(shiny ? getPokemonShinySprite(partner) : getPokemonSprite(partner))+'" alt="" title="'+escapeHtml(partner.name+(shiny ? ' shiny' : ''))+'" loading="lazy" />';
+  return row?.avatar
+    ? '<img class="lbv5-art is-photo" src="'+escapeHtml(row.avatar)+'" data-fallback="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" loading="lazy" />'
+    : '<img class="lbv5-art is-default" src="'+LEADERBOARD_V2_DEFAULT_AVATAR+'" alt="" loading="lazy" />';
+}
+// The board's podium, as on PokeQuizz: second, first, third. Below three players the list stays alone.
+function leaderboardV2PodiumHtml(rows, mode, unit) {
+  if (!Array.isArray(rows) || rows.length < 3) return "";
+  const places = [[rows[1], "silver"], [rows[0], "gold"], [rows[2], "bronze"]];
+  return '<section class="lbv5-podium" aria-label="Podium">' + places.map(([row, metal]) =>
+    '<div class="lbv5-step is-' + metal + (row.me ? ' is-me' : '') + (row.champion ? ' is-champion' : '') + '">' +
+      '<span class="lbv5-medal">' + (Number(row.rank) || "") + '</span>' + leaderboardV2PodiumArt(row) +
+      '<b>' + escapeHtml(row.username || "Dresseur") + '</b>' + leaderboardLevelPill(row) +
+      '<strong>' + escapeHtml(leaderboardV2FormatScore(row.score, mode, unit)) + '</strong>' +
+      (row.me ? '<small>TOI</small>' : '') +
+    '</div>').join("") + '</section>';
 }
 // Arcade boards with nobody ranked on the period are hidden; null keeps them all.
 function leaderboardV2ArcadeCounts(scope) {
@@ -272,16 +297,45 @@ function leaderboardV2Row(row, fallbackRank, mode, unit, compact=false) {
     '<strong>'+leaderboardV2ScoreHtml(row,mode,unit)+'</strong>'+
     '</div>';
 }
-// The week's card, as on Pokequizz: the League prize and the time left on one side,
-// the week's top three on the other (filled by fillLeaderboardWeekTop).
-function leaderboardWeekHero() {
-  if (typeof weeklyLeagueIsoWeek !== "function") return "";
-  const info = weeklyLeagueIsoWeek(), league = typeof weeklyLeagueState === "function" ? weeklyLeagueState(info) : null;
-  const medal = typeof leagueMedalSvg === "function" ? leagueMedalSvg("master", info.week, "lbhero") : "";
-  return '<section class="lbv4-hero"><button type="button" class="lbv4-prize" data-action="openWeeklyLeague">'+medal+
-    '<span class="lbv4-prize-text"><small>Ligue · semaine '+escapeHtml(String(info.week))+'</small><b>'+escapeHtml(typeof weeklyLeagueTimeLeft === "function" ? weeklyLeagueTimeLeft() : "")+'</b><small>avant le reset</small>'+
-    (league ? '<em>Toi : '+Number(league.score)+' / 600 pts</em>' : '')+'</span></button>'+
-    '<div id="leaderboard-week-top" class="leaderboard-week-top"><small>Top 3 de la semaine</small></div></section>';
+// The week's prize (31/10/2026), as on PokeQuizz: the first of the week's Global plays the next week
+// with a shiny partner, and the top three keep a medal on their trainer card. Last week's champion
+// is filled in by fillLeaderboardPrize.
+const LEADERBOARD_PRIZE_EXAMPLE = 133;
+function leaderboardPrizeHtml(mode, scope) {
+  const byId = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID : null;
+  const own = byId && typeof playerProfile !== "undefined" && playerProfile?.favoritePokemonId ? byId.get(Number(playerProfile.favoritePokemonId)) : null;
+  const pokemon = own || byId?.get(LEADERBOARD_PRIZE_EXAMPLE);
+  const art = pokemon && typeof pokedexDetailArtwork === "function" && typeof getPokemonShinySprite === "function" ? '<img class="lbv5-prize-art" src="'+escapeHtml(pokedexDetailArtwork(pokemon, true))+'" data-fallback="'+escapeHtml(getPokemonShinySprite(pokemon))+'" alt="'+escapeHtml(pokemon.name)+' shiny" loading="lazy" />' : '';
+  const left = typeof weeklyLeagueTimeLeft === "function" ? weeklyLeagueTimeLeft() : "";
+  const onWeek = mode === "journey" && scope === "week";
+  return '<section class="lbv5-prize" aria-label="À gagner cette semaine"><span class="lbv5-prize-tag">À gagner cette semaine</span>'+
+    '<div class="lbv5-prize-main">'+art+'<div class="lbv5-prize-text">'+
+      '<h4>'+(own ? 'Ton '+escapeHtml(own.name)+' en shiny' : 'Ton partenaire en shiny')+'</h4>'+
+      '<p>Pour le 1er du Global de la semaine, pendant 7 jours dans tous les classements. Médaille d’or, d’argent et de bronze pour le podium.</p>'+
+      '<p class="lbv5-prize-time"><b>'+escapeHtml(left)+'</b> avant le reset · lundi 0 h</p>'+
+      (onWeek ? '' : '<button type="button" class="btn-ghost lbv5-prize-link" data-action="openLeaderboardV2" data-args="[&quot;journey&quot;,&quot;week&quot;]">Voir le Global de la semaine →</button>')+
+    '</div></div><div id="leaderboard-prize-last" class="lbv5-prize-last"></div></section>';
+}
+// The week's prize: last week's podium, the player's medals and whether they are the champion.
+function loadWeeklyAwards() {
+  return leaderboardFetchJson("/api/weekly-awards").then(data => {
+    if (typeof window !== "undefined") window.__pokedleWeeklyAwards = data;
+    if (document.getElementById("screen-profile")?.classList.contains("hidden") === false && typeof renderProfileScreen === "function") renderProfileScreen();
+    return data;
+  }).catch(() => null);
+}
+if (typeof window !== "undefined") window.addEventListener?.("pokedle:auth-ready", () => loadWeeklyAwards());
+function fillLeaderboardPrize(isCurrent) {
+  return loadWeeklyAwards().then(data => {
+    const box = document.getElementById("leaderboard-prize-last");
+    if (!box || !isCurrent() || !data) return;
+    const firsts = (data.podium || []).filter(row => row.rank === 1);
+    const medals = [1, 2, 3].map(rank => (data.medals || []).filter(m => m.rank === rank).length);
+    const mine = medals.some(Boolean) ? '<small>Tes médailles : '+["🥇","🥈","🥉"].map((icon, i) => medals[i] ? icon+' ×'+medals[i] : "").filter(Boolean).join(" · ")+'</small>' : "";
+    box.innerHTML = firsts.length
+      ? '<span>Champion de la semaine dernière</span>'+firsts.map(row => '<div class="lbv5-champion">'+leaderboardV2Avatar({ ...row, champion: true })+'<b>'+escapeHtml(row.username || "Dresseur")+'</b>'+leaderboardLevelPill(row)+'<strong>'+Number(row.points)+' pts</strong></div>').join("")+mine
+      : '<span>Champion de la semaine dernière</span><p>Pas encore de champion : la première couronne t’attend.</p>'+mine;
+  });
 }
 function switchLeaderboardSelect() {
   const value = this?.value || "";
@@ -358,7 +412,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
       ? '<section class="lbv3-list">'+rest.map((row,i)=>leaderboardV2Row(row,i+1,current,data.unit||meta.unit)).join("")+'</section>'
       : '';
     const freePlaces=3-rows.length;
-    const period=requestedScope==="today"?" aujourd’hui":requestedScope==="week"?" sur 7 jours":"";
+    const period=requestedScope==="today"?" aujourd’hui":requestedScope==="week"?" cette semaine":"";
     const inviteHtml=smallAudience
       ? '<p class="lbv3-invite" role="status">'+(rows.some(row=>row.me)
           ? 'Tu fais partie des premiers classés'+period+'. Le podium a encore '+freePlaces+' place'+(freePlaces>1?'s':'')+' : invite tes amis !'
@@ -403,14 +457,15 @@ function openLeaderboardV2(mode="journey",scope="today") {
 
     const total=Number(data?.total)||0;
     const body='<div class="lbv3-shell lbv4" data-lb-request="'+requestId+'">'+
-      leaderboardWeekHero()+
+      leaderboardPrizeHtml(current, requestedScope)+
       '<div class="lbv3-controls"><div class="lbv4-filters">'+modeTabs+'<div class="lbv3-scope-tabs">'+scopeTabs+'</div></div></div>'+
-      (leaderboardV2AutoWeek&&requestedScope==="week"?'<p class="lbv4-auto-week" role="status">Peu de joueurs aujourd’hui : voici les 7 derniers jours.</p>':'')+
+      (leaderboardV2AutoWeek&&requestedScope==="week"?'<p class="lbv4-auto-week" role="status">Peu de joueurs aujourd’hui : voici la semaine.</p>':'')+
       genTabs+
       '<header class="lbv3-header lbv4-board-head">'+
         '<div class="lbv3-title"><h3>'+escapeHtml(leaderboardV2Title(data?.label||meta.label,requestedScope,current))+'</h3><p>'+escapeHtml(leaderboardV2Hint(meta,current,requestedScope))+'</p></div>'+
         '<div class="lbv3-stats"><b>'+total+'</b><span>joueur'+(total>1?'s':'')+' classé'+(total>1?'s':'')+'</span></div>'+
       '</header>'+
+      leaderboardV2PodiumHtml(rows, current, data.unit||meta.unit)+
       personalHtml+
       inviteHtml+
       listHtml+
@@ -419,7 +474,7 @@ function openLeaderboardV2(mode="journey",scope="today") {
     '</div>';
 
     leaderboardV2Show(body);
-    if (typeof fillLeaderboardWeekTop === "function") fillLeaderboardWeekTop(()=>requestId===leaderboardViewRequest);
+    fillLeaderboardPrize(()=>requestId===leaderboardViewRequest);
   }).catch(()=>{
     if (!leaderboardOwnsDialog(requestId)) return;
     const args=escapeHtml(JSON.stringify([current,requestedScope]));

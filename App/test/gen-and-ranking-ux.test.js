@@ -26,7 +26,7 @@ test('the ranking says how far the next place is, and names the period', () => {
   assert.equal(c.leaderboardV2GapText(1, 'journey', 'pts'), '1 pt');
   assert.equal(c.leaderboardV2GapText(1, 'quiz', 'bonnes réponses'), '1 bonne');
   assert.equal(c.leaderboardV2GapText(1, 'daily', 'essais'), '1 essai');
-  assert.equal(c.leaderboardV2Title('Global du jour', 'week'), 'Global · 7 jours');
+  assert.equal(c.leaderboardV2Title('Global du jour', 'week'), 'Global · semaine');
   assert.equal(c.leaderboardV2Title('Global du jour', 'today'), 'Global du jour');
   assert.equal(c.leaderboardV2Title('Pokémon du jour', 'all'), 'Pokémon du jour · records');
 });

@@ -592,9 +592,11 @@ def main():
      shell=page.locator('.lbv3-shell')
      cols=shell.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").filter(Boolean).length')
      expect(cols==1,'Leaderboard should be one column: '+str(cols))
-     # Since 20/10/2026 (Pokequizz style): the week's card on top, then one list with every ranked player.
-     hero=page.locator('.lbv4-hero').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
-     expect(hero and listing and listing['y']>=hero['y']+hero['height']-3,'Leaderboard list is not below the week card: '+repr([hero,listing]))
+     # Since 31/10/2026 (Pokequizz style): the week's prize on top, the podium 2-1-3, then one list with every ranked player.
+     hero=page.locator('.lbv5-prize').bounding_box();listing=page.locator('.lbv3-list').bounding_box()
+     expect(hero and listing and listing['y']>=hero['y']+hero['height']-3,'Leaderboard list is not below the prize card: '+repr([hero,listing]))
+     steps=page.locator('.lbv5-podium .lbv5-step')
+     expect(steps.count()==3 and 'is-gold' in (steps.nth(1).get_attribute('class') or ''),'The podium does not read second, first, third')
      expect(page.locator('.lbv3-list .lbv2-row').count()==6 and page.locator('.lbv3-list .lbv2-row').first.locator('.lbv2-rank').inner_text().strip()=='#1','The list does not start with the first player')
      expect(page.locator('.lbv3-personal').is_visible(),'Personal position missing')
      expect(page.locator('.lbv4-board-select select').input_value()=='enquete','Selected board is not shown in the board menu')

@@ -528,3 +528,57 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
   #screen-shiny .shiny-choice{min-width:0;flex:1;min-height:52px}
   #screen-shiny .shiny-side img{max-width:110px}
 }
+
+/* The week's prize and the podium (31/10/2026), as on PokeQuizz: second, first, third, then the prize. */
+#pokdle-app.design-refresh .lbv4 .lbv5-prize {position:relative;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:center;margin:14px 0 20px;padding:24px 22px 18px;border:2px solid #4069e0;border-radius:24px;background:linear-gradient(135deg,#f3f6ff,#e8eeff);color:#2e2a33;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-tag {position:absolute;top:-14px;left:50%;transform:translateX(-50%);padding:4px 14px;border-radius:999px;background:#4069e0;color:#fff;font:900 .78rem Nunito,sans-serif;white-space:nowrap;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-main {display:flex;align-items:center;gap:16px;min-width:0;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-art {flex:0 0 auto;width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(64,105,224,.25));}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-text {display:grid;gap:4px;min-width:0;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-text h4 {margin:0;font:700 1.15rem Fredoka,Nunito,sans-serif;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-text p {margin:0;font:600 .86rem/1.4 Nunito,sans-serif;color:#5d5a66;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-time b {font:900 1.05rem Nunito,sans-serif;color:#4069e0;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-link {justify-self:start;margin-top:4px;padding:6px 12px!important;font-size:.82rem!important;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-last {display:grid;gap:6px;min-width:0;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.88);}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-last:empty {display:none;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-last > span {font:900 .7rem Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#4069e0;}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize-last p, #pokdle-app.design-refresh .lbv4 .lbv5-prize-last small {margin:0;font:700 .84rem Nunito,sans-serif;color:#5d5a66;}
+#pokdle-app.design-refresh .lbv4 .lbv5-champion {display:grid;grid-template-columns:36px minmax(0,auto) auto 1fr;align-items:center;gap:8px;}
+#pokdle-app.design-refresh .lbv4 .lbv5-champion .lbv2-avatar {width:36px;height:36px;}
+#pokdle-app.design-refresh .lbv4 .lbv5-champion b {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 .95rem Nunito,sans-serif;}
+#pokdle-app.design-refresh .lbv4 .lbv5-champion strong {justify-self:end;font:800 .9rem Nunito,sans-serif;}
+#pokdle-app.design-refresh .lbv4 .lbv5-podium {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:12px;max-width:640px;margin:18px auto 16px;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step {position:relative;display:grid;justify-items:center;gap:4px;min-width:0;padding:26px 10px 14px;border:1px solid #eadfcd;border-radius:22px;background:#fff;box-shadow:0 4px 0 #efe4d2;text-align:center;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold {padding:34px 10px 22px;border-color:#efd08a;background:linear-gradient(180deg,#fff6d8,#fff);box-shadow:0 5px 0 #eedba8;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-me {outline:2px solid #4069e0;outline-offset:2px;}
+#pokdle-app.design-refresh .lbv4 .lbv5-medal {position:absolute;top:-15px;left:50%;transform:translateX(-50%);display:grid;place-items:center;width:30px;height:30px;border:3px solid #fff;border-radius:50%;font:900 .95rem Nunito,sans-serif;color:#fff;box-shadow:0 2px 6px rgba(46,42,51,.18);}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold .lbv5-medal {background:#e3ac12;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-silver .lbv5-medal {background:#a9b4c4;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-bronze .lbv5-medal {background:#cf8a55;}
+#pokdle-app.design-refresh .lbv4 .lbv5-art {width:84px;height:84px;object-fit:contain;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold .lbv5-art {width:104px;height:104px;}
+#pokdle-app.design-refresh .lbv4 .lbv5-art.is-photo, #pokdle-app.design-refresh .lbv4 .lbv5-art.is-default {width:64px;height:64px;margin:10px 0;border-radius:50%;object-fit:cover;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step.is-champion .lbv5-art, #pokdle-app.design-refresh .lbv2-avatar.is-champion {filter:drop-shadow(0 0 6px rgba(227,172,18,.75));}
+#pokdle-app.design-refresh .lbv4 .lbv5-step b {max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 .95rem Nunito,sans-serif;color:#2e2a33;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step strong {font:900 1.05rem Nunito,sans-serif;color:#2e2a33;}
+#pokdle-app.design-refresh .lbv4 .lbv5-step small {padding:1px 8px;border-radius:999px;background:#4069e0;color:#fff;font:900 .66rem Nunito,sans-serif;}
+#pokdle-app.design-refresh .profile-hero-medals {display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#fff6d8;border:1px solid #efd08a;font:800 .82rem Nunito,sans-serif;color:#5a3f00;}
+@media (max-width:640px) {
+  #pokdle-app.design-refresh .lbv4 .lbv5-prize {grid-template-columns:1fr;gap:12px;padding:22px 14px 14px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-prize-art {width:72px;height:72px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-podium {gap:8px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step {padding:22px 6px 10px;border-radius:18px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold {padding:28px 6px 16px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-art {width:58px;height:58px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold .lbv5-art {width:72px;height:72px;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step b {font-size:.82rem;}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step .player-level-pill {font-size:.62rem;}
+}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize {background:linear-gradient(135deg,#1c2a47,#18233b);color:#fff8ef;}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize-text p, #pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize-last p, #pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize-last small {color:#c8d2e6;}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize-time b, #pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize-last > span {color:#9db6ff;}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize-last {background:rgba(255,255,255,.07);}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-step {background:#1e2c43;border-color:#33415c;box-shadow:0 4px 0 #15203a;}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-step.is-gold {background:linear-gradient(180deg,#3a3020,#1e2c43);border-color:#6b5a2c;}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-step b, #pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-step strong {color:#fff8ef;}
+#pokdle-app.design-refresh.theme-dark .profile-hero-medals {background:#3a3020;border-color:#6b5a2c;color:#ffe6a8;}

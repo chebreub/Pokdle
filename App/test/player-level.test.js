@@ -55,7 +55,7 @@ test('Party Rooms carry the level each browser sends, from 1 to 100', () => {
   assert.match(client, /'<span class="player-level-pill">Niv\. ' \+ Number\(p\.level\) \+ '<\/span>'/);
 });
 
-test('rankings, the League and the week top 3 show « Niv. N » after the name', () => {
+test('rankings, the League, the podium and last week\'s champion show « Niv. N » after the name', () => {
   const lb = read('src/script.10g.leaderboard-v2.js');
   const pill = Function(lb.match(/function leaderboardLevelPill\(row\) \{[\s\S]*?\n\}/)[0] + '; return leaderboardLevelPill;')();
   assert.equal(pill({ level: 70 }), '<span class="player-level-pill">Niv. 70</span>');
@@ -63,5 +63,7 @@ test('rankings, the League and the week top 3 show « Niv. N » after the name',
   assert.equal(pill({}), '');
   assert.match(lb, /escapeHtml\(row\?\.username\|\|"Dresseur"\)\+'<\/b>'\+leaderboardLevelPill\(row\)/);
   assert.match(read('src/script.10i.weekly-league.js'), /leaderboardLevelPill\(row\)/);
-  assert.match(read('src/script.10l.discovery-polish.js'), /leaderboardLevelPill\(row\)/);
+  // The week's top three became the podium (31/10/2026), and last week's champion keeps the pill.
+  assert.match(lb, /'<b>' \+ escapeHtml\(row\.username \|\| "Dresseur"\) \+ '<\/b>' \+ leaderboardLevelPill\(row\)/);
+  assert.match(lb, /'<b>'\+escapeHtml\(row\.username \|\| "Dresseur"\)\+'<\/b>'\+leaderboardLevelPill\(row\)/);
 });

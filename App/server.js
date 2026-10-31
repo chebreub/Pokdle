@@ -726,7 +726,7 @@ app.get("/api/leaderboard/counts", async (req, res) => {
     const sql = scope === "all"
       ? "SELECT CASE WHEN mode LIKE 'draft_%' THEN 'draft' ELSE mode END AS mode, COUNT(DISTINCT discord_id)::int AS n FROM scores WHERE mode = ANY($1) GROUP BY 1"
       : "SELECT CASE WHEN e.mode LIKE 'draft_%' THEN 'draft' ELSE e.mode END AS mode, COUNT(DISTINCT discord_id)::int AS n FROM leaderboard_events e WHERE e.mode = ANY($1) AND " +
-        (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= now() - interval '7 days'") +
+        (scope === "today" ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')" : "e.created_at >= (date_trunc('week', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')") +
         " GROUP BY 1";
     const rows = (await pgPool.query(sql, [LB_ARCADE_MODES])).rows;
     const counts = Object.fromEntries([...LB_ARCADE_MODES.filter((mode) => !mode.startsWith("draft_")), "draft"].map((mode) => [mode, 0]));
@@ -737,6 +737,23 @@ app.get("/api/leaderboard/counts", async (req, res) => {
     res.json({ ok: false, counts: {} });
   }
 });
+// The week's prize (31/10/2026): last week's podium, the player's medals, and the champion
+// whose partner shows shiny in the rankings (lib/weekly-awards.js).
+const weeklyAwards = pgPool ? require("./lib/weekly-awards").createWeeklyAwards({ db: pgPool }) : null;
+const { isChampion } = require("./lib/week-champions");
+function refreshWeeklyChampions() {
+  if (!weeklyAwards) return Promise.resolve();
+  return weeklyAwards.refresh(require("./lib/daily-game").dailyCalendar().day).catch((e) => console.error("[weekly-awards]", e.message));
+}
+app.get("/api/weekly-awards", async (req, res) => {
+  if (!weeklyAwards) return res.json({ ok: false });
+  try {
+    await authDbReady;
+    const user = getSessionUser(req);
+    res.json(await weeklyAwards.summary(require("./lib/daily-game").dailyCalendar().day, user ? user.id : null));
+  } catch (e) { console.error("[weekly-awards]", e.message); res.status(503).json({ ok: false }); }
+});
+
 app.get("/api/leaderboard", async (req, res) => {
   if (!authReady()) return res.json({ ok: false, top: [], me: null, around: [], total: 0 });
   const requestedMode = String(req.query.mode || "quiz");
@@ -753,6 +770,7 @@ app.get("/api/leaderboard", async (req, res) => {
   const meId = user ? user.id : null;
   try {
     await authDbReady;
+    await refreshWeeklyChampions();
     if(playModes.includes(mode)) return res.json(await challengeService.leaderboard(mode,scope,meId));
     if(mode === "dossier") return res.json(await dossierService.leaderboard(scope,meId));
     if(mode === "grid") return res.json(await gridService.leaderboard(scope,meId));
@@ -787,7 +805,8 @@ app.get("/api/leaderboard", async (req, res) => {
       const timePredicate = scope === "today"
         // Every "today" board resets at midnight in Paris.
         ? "e.created_at >= (date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')"
-        : "e.created_at >= now() - interval '7 days'";
+        // « Semaine » runs from Monday to Sunday in Paris, like the week's prize.
+        : "e.created_at >= (date_trunc('week', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')";
       rankedCte = `
         WITH best AS (
           SELECT e.discord_id, ${best}(e.score)::int AS score
@@ -832,6 +851,7 @@ app.get("/api/leaderboard", async (req, res) => {
       username: row.username,
       avatar: row.avatar,
       partnerId: row.partner_id ? Number(row.partner_id) : null,
+      champion: isChampion(row.discord_id),
       level: playerLevelFromXp(row.xp),
       score: Number(row.score),
       me: meId != null && row.discord_id === meId

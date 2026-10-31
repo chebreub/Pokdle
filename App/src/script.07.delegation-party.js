@@ -1908,12 +1908,19 @@ function renderProfileHero(prog, xp) {
   const shown = profileAvatarChoice() || ["photo", "partner", "account"].find((key) => avatars[key]) || "";
   const photo = shown === "photo" ? avatars.photo : "";
   const pseudo = playerProfile.nickname && playerProfile.nickname.trim() ? escapeHtml(playerProfile.nickname.trim()) : "Dresseur";
+  // The week's prize (31/10/2026): last week's champion shows a shiny partner, medals sit with the titles.
+  const awards = typeof window !== "undefined" ? window.__pokedleWeeklyAwards : null;
+  const shiny = Boolean(awards?.champion);
+  const medalCount = [1, 2, 3].map((rank) => (awards?.medals || []).filter((m) => m.rank === rank).length);
+  const medals = medalCount.some(Boolean)
+    ? `<span class="profile-hero-medals" title="Médailles du podium de la semaine">${["🥇", "🥈", "🥉"].map((icon, i) => medalCount[i] ? `${icon} ×${medalCount[i]}` : "").filter(Boolean).join(" · ")}</span>`
+    : "";
   const art = shown === "photo"
     ? `<img class="is-photo" src="${photo}" alt="Photo de profil" />`
     : shown === "account"
       ? `<img class="is-photo" src="${escapeHtml(avatars.account)}" alt="Image du compte" />`
       : fav
-        ? `<img src="${pokedexDetailArtwork(fav, false)}" alt="${escapeHtml(fav.name)}" loading="lazy" data-fallback="${getPokemonSprite(fav)}" />`
+        ? `<img src="${pokedexDetailArtwork(fav, shiny)}" alt="${escapeHtml(fav.name)}${shiny ? " shiny" : ""}" loading="lazy" data-fallback="${shiny ? getPokemonShinySprite(fav) : getPokemonSprite(fav)}" />`
         : `<span class="profile-hero-empty" aria-hidden="true">?</span>`;
   const streak = Number(playerStats.dailyCurrentStreak) || 0;
   const quests = Number(playerProfile.totalQuestsCompleted) || 0;
@@ -1928,7 +1935,7 @@ function renderProfileHero(prog, xp) {
   hero.innerHTML = `
     <div class="profile-hero-art">
       <div class="profile-hero-circle"${fav && shown === "partner" ? ` data-type="${typeSlug(fav.type1)}"` : ""}>${art}</div>
-      ${fav ? `<span class="profile-hero-partner">Partenaire · ${escapeHtml(fav.name)}</span>` : `<button type="button" class="profile-hero-partner" data-action="openProfileEditor">Choisir mon partenaire</button>`}
+      ${fav ? `<span class="profile-hero-partner">Partenaire · ${escapeHtml(fav.name)}${shiny ? " ✨ shiny, champion de la semaine" : ""}</span>` : `<button type="button" class="profile-hero-partner" data-action="openProfileEditor">Choisir mon partenaire</button>`}
     </div>
     <div class="profile-hero-main">
       <span class="profile-hero-eyebrow">Carte de Dresseur</span>
@@ -1936,6 +1943,7 @@ function renderProfileHero(prog, xp) {
       <div class="profile-hero-chips">
         <span class="profile-hero-title">${prog.tier.emoji} ${escapeHtml(prog.tier.name)}</span>
         ${playerProfile.pioneerMyth ? '<span class="profile-hero-pioneer" title="A atteint « Mythe Pokémon » avant le passage à 100 niveaux">✦ Pionnier · ancien Mythe Pokémon</span>' : ""}
+        ${medals}
       </div>
       ${line ? `<p class="profile-hero-line">${line}</p>` : ""}
       <div class="profile-hero-actions">

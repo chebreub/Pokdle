@@ -4,7 +4,7 @@ const {dayBoard}=require('../lib/day-boards');
 const {initChallengeDb}=require('../lib/daily-challenge');
 const {initWordleDb}=require('../lib/daily-wordle');
 
-test('PostgreSQL: 7 days and Total add every day up, and a stage left out only costs its own points',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
+test('PostgreSQL: the week and Total add every day up, and a stage left out only costs its own points',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='boards_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
   try{await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
     await db.query(`CREATE TABLE dossier_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,points INT,elapsed_ms BIGINT);
@@ -34,7 +34,7 @@ test('PostgreSQL: 7 days and Total add every day up, and a stage left out only c
     assert.deepEqual(today.top.map(r=>[r.username,r.score]),[['B',100],['A',94],['C',40],['E',10],['D',5]],'one day: the best day wins, unfinished journeys still count');
     assert.equal(today.cumulative,false);assert.equal(today.me.days,undefined);
     const week=await board('journey','week','B');
-    assert.deepEqual(week.top.slice(0,2).map(r=>[r.username,r.score,r.days]),[['A',282,3],['B',100,1]],'over 7 days, playing every day beats one perfect day');
+    assert.deepEqual(week.top.slice(0,2).map(r=>[r.username,r.score,r.days]),[['A',282,3],['B',100,1]],'over the week, playing every day beats one perfect day');
     assert.deepEqual([week.me.rank,week.me.score,week.me.days],[2,100,1]);assert.equal(week.cumulative,true);
     assert.equal((await board('journey','all','A')).me.score,302,'Total keeps the days older than a week');
 

@@ -48,7 +48,9 @@ test('server stores dated events and exposes today week all scopes',()=>{
   assert.match(server,/leaderboard_events_mode_created_idx/);
   assert.match(server,/\["today", "week", "all"\]/);
   assert.match(server,/date_trunc\('day'/);
-  assert.match(server,/interval '7 days'/);
+  // « Semaine » runs from Monday in Paris, like the week's prize (31/10/2026).
+  assert.match(server,/date_trunc\('week', timezone\('Europe\/Paris', now\(\)\)\)/);
+  assert.doesNotMatch(server,/interval '7 days'/);
   assert.match(server,/RANK\(\) OVER/);
   assert.match(server,/around:/);
 });
