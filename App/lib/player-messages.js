@@ -80,6 +80,17 @@ async function inbox(db, accountId) {
   return r.rows.map((row) => ({ id: Number(row.id), body: row.body, day: row.day }));
 }
 
+// « 📬 Mes messages » : every message still kept for the player, read or not, with their own answers.
+async function history(db, accountId) {
+  const r = await db.query(`SELECT m.id, m.body, to_char(m.created_at AT TIME ZONE 'Europe/Paris', 'YYYY-MM-DD') AS day,
+      (SELECT COALESCE(json_agg(json_build_object('body', p.body, 'day', to_char(p.created_at AT TIME ZONE 'Europe/Paris', 'YYYY-MM-DD')) ORDER BY p.created_at), '[]'::json)
+        FROM player_message_replies p WHERE p.message_id = m.id AND p.account_id = $1) AS replies
+    FROM player_messages m
+    WHERE ${FOR_PLAYER} AND m.expires_at > now()
+    ORDER BY m.created_at DESC, m.id DESC LIMIT 20`, [String(accountId)]);
+  return r.rows.map((row) => ({ id: Number(row.id), body: row.body, day: row.day, replies: Array.isArray(row.replies) ? row.replies : [] }));
+}
+
 async function visibleTo(db, id, accountId) {
   const r = await db.query(`SELECT 1 FROM player_messages m WHERE m.id = $2 AND m.expires_at > now() AND ${FOR_PLAYER}`, [String(accountId), id]);
   return r.rows.length > 0;
@@ -158,7 +169,8 @@ function adminSectionHtml(state, pushCount) {
   const options = state.players.map((p) => `<option value="${escapeHtml(p.discord_id)}">${escapeHtml(p.username)} · vu le ${escapeHtml(frDay(p.seen))}</option>`).join("");
   const sent = state.messages.map((m) => {
     const who = m.to == null ? "Tous les joueurs" : escapeHtml(m.username || "Joueur supprimé");
-    const read = m.to == null ? `Lu par ${m.reads}` : (m.reads ? "Lu ✓" : "Pas encore lu");
+    // « Vu » : the window showed the message once; it may have been closed without reading.
+    const read = m.to == null ? `Vu par ${m.reads}` : (m.reads ? "Vu ✓" : "Pas encore vu");
     const answers = m.replies.map((p) => `<div class="answer"><b>${escapeHtml(p.username)}</b> · ${escapeHtml(frDay(p.day))}<br>${multiline(p.body)}</div>`).join("");
     return `<div class="message"><div class="meta">${escapeHtml(frDay(m.day))} → <b>${who}</b> · ${read}${m.live ? "" : " · expiré"}</div><div class="body">${multiline(m.body)}</div>${answers}
 <details><summary class="btn ghost">Retirer…</summary><form method="post" action="/admin/messages/remove"><input type="hidden" name="id" value="${m.id}"><button class="danger" type="submit">Oui, retirer ce message</button></form></details></div>`;
@@ -214,6 +226,14 @@ function mountPlayerRoutes(app, { express, db, ready, getUser, log = console, li
     catch (error) { log.error("[messages] inbox:", error.message); res.json({ ok: false, messages: [] }); }
   });
 
+  app.get("/api/messages/all", async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const user = getUser(req);
+    if (!user || !await dbReady()) return res.json({ ok: true, messages: [], repliesPerMessage: REPLIES_PER_MESSAGE });
+    try { res.json({ ok: true, messages: await history(db, user.id), repliesPerMessage: REPLIES_PER_MESSAGE }); }
+    catch (error) { log.error("[messages] history:", error.message); res.json({ ok: false, messages: [] }); }
+  });
+
   app.post("/api/messages/read", json, async (req, res) => {
     const user = userOf(req, res);
     if (!user || !sameOrigin(req, res)) return;
@@ -241,6 +261,6 @@ function mountPlayerRoutes(app, { express, db, ready, getUser, log = console, li
 
 module.exports = {
   MESSAGE_MAX, REPLY_MAX, REPLIES_PER_MESSAGE, KEEP_DAYS, BROADCAST_DAYS,
-  cleanText, ensureTables, purge, sendMessage, inbox, markRead, reply, removeMessage, adminState, notify,
+  cleanText, ensureTables, purge, sendMessage, inbox, history, markRead, reply, removeMessage, adminState, notify,
   adminSectionHtml, mountPlayerRoutes,
 };

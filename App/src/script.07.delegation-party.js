@@ -1013,6 +1013,7 @@ function openAccountMenu() {
       <nav class="account-menu-links">
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
+        <button type="button" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
         ${connectedAccountUser.admin ? `<button type="button" data-action="accountNavigate" data-args='["admin"]'><span>Panneau admin</span><b>→</b></button>` : ''}
       </nav>
@@ -1066,6 +1067,7 @@ function accountNavigate(destination) {
   if (destination === 'album') openDiscoveryAlbum();
   else if (destination === 'settings') openSettingsModal();
   else if (destination === 'admin') location.assign('/admin');
+  else if (destination === 'messages' && typeof openMyMessages === 'function') openMyMessages();
   else { openProfileScreen(); switchProfileView('trainer'); }
 }
 (function () {

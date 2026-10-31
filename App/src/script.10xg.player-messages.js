@@ -103,3 +103,74 @@ if (typeof window !== 'undefined' && window.addEventListener) {
     setTimeout(loadPlayerMessages, fromPush ? 300 : 1500);
   });
 }
+
+
+// ===== 📬 Mes messages (31/10/2026) =====
+// The window above shows a message once; a player who closed it can read it again here and answer
+// later (three answers at most per message, as on the server).
+var myMessagesRepliesMax = 3;
+
+function myMessageHtml(message) {
+  var id = Number(message.id);
+  var day = playerMessageDay(message.day);
+  var replies = Array.isArray(message.replies) ? message.replies : [];
+  var repliesHtml = replies.map(function (reply) {
+    var replyDay = playerMessageDay(reply.day);
+    return '<div class="my-message-reply"><b>Toi' + (replyDay ? ' · ' + replyDay : '') + '</b>' + escapeHtml(reply.body).replace(/\n/g, '<br>') + '</div>';
+  }).join('');
+  var canReply = replies.length < myMessagesRepliesMax;
+  return '<article class="my-message">' +
+    '<p class="player-message-from">Du créateur de Pokédle' + (day ? ' · le ' + day : '') + '</p>' +
+    '<div class="player-message-body">' + escapeHtml(message.body).replace(/\n/g, '<br>') + '</div>' +
+    repliesHtml +
+    (canReply
+      ? '<label class="player-message-label" for="my-message-reply-' + id + '">' + (replies.length ? 'Ajouter un mot' : 'Ta réponse') + '</label>' +
+        '<textarea id="my-message-reply-' + id + '" maxlength="500" rows="2" placeholder="Écris ta réponse…"></textarea>' +
+        '<p class="player-message-status" id="my-message-status-' + id + '" role="status" aria-live="polite"></p>' +
+        '<div class="player-message-actions"><button type="button" class="btn-blue" data-action="sendMyMessageReply" data-args="[' + id + ']">Envoyer</button></div>'
+      : '') +
+    '</article>';
+}
+
+function renderMyMessages(messages) {
+  var list = Array.isArray(messages) ? messages : [];
+  ensureOverlay('📬 Mes messages', list.length
+    ? '<div class="my-messages">' + list.map(myMessageHtml).join('') + '</div>'
+    : '<div class="my-messages"><p class="my-messages-empty">Aucun message pour l’instant. Quand le créateur de Pokédle t’écrit, son message reste ici 90 jours.</p></div>');
+  var overlay = document.getElementById('overlay-modal');
+  if (overlay) overlay.dataset.kind = 'message';
+}
+
+function openMyMessages() {
+  renderMyMessages([]);
+  var body = document.querySelector('#overlay-body .my-messages');
+  if (body) body.innerHTML = '<p class="my-messages-empty">Chargement…</p>';
+  fetch('/api/messages/all', { credentials: 'same-origin', cache: 'no-store' })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data && Number(data.repliesPerMessage) > 0) myMessagesRepliesMax = Number(data.repliesPerMessage);
+      renderMyMessages(data && data.messages);
+    })
+    .catch(function () {
+      var box = document.querySelector('#overlay-body .my-messages');
+      if (box) box.innerHTML = '<p class="my-messages-empty">Messages indisponibles pour le moment. Réessaie dans un instant.</p>';
+    });
+}
+window.openMyMessages = openMyMessages;
+
+function sendMyMessageReply(id) {
+  var box = document.getElementById('my-message-reply-' + id);
+  var status = document.getElementById('my-message-status-' + id);
+  var text = String((box && box.value) || '').trim();
+  var say = function (line) { if (status) status.textContent = line; };
+  if (text.length < 2) { say('Écris quelques mots avant d’envoyer.'); if (box) box.focus(); return; }
+  postPlayerMessage('/api/messages/reply', { id: Number(id), body: text }).then(function (data) {
+    if (!data || !data.ok) {
+      say(data && typeof data.error === 'string' && data.error.indexOf(' ') > 0 ? data.error : 'Envoi impossible pour le moment. Réessaie dans un instant.');
+      return;
+    }
+    if (typeof showToast === 'function') showToast('Réponse envoyée ✓');
+    openMyMessages();
+  }).catch(function () { say('Envoi impossible pour le moment. Réessaie dans un instant.'); });
+}
+window.sendMyMessageReply = sendMyMessageReply;

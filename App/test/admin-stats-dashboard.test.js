@@ -38,8 +38,10 @@ test("dashboard shows truthful summary, party metrics, charts and details withou
   assert.match(html, />154</);
   assert.match(html, /Pokémon du jour/);
   assert.match(html, /<svg/);
-  assert.match(html, /Fidélisation/);
-  assert.match(html, /Non mesurée/);
+  // No figure is invented: without the daily plays, the return of players says it is unavailable.
+  assert.match(html, /Retour des joueurs<\/div><strong>—<\/strong><small>Indisponible : base du Pokémon du jour injoignable/);
+  const withReturn = renderStatsDashboard({ ...sample, retention: { nextDay: { back: 12, base: 40, rate: 30 }, week: { back: 9, base: 20, rate: 45 }, newWeek: { back: 2, base: 10, rate: 20 } } });
+  assert.match(withReturn, /Retour des joueurs<\/div><strong>30 %<\/strong><small>Rejouent le lendemain \(12\/40\) · dans les 7 jours : 45 % · nouveaux revenus en 7 jours : 20 %/);
   assert.match(html, /Diagnostic technique/);
   assert.match(html, /complete:daily:win/);
   assert.doesNotMatch(html, /128 joueurs ont abandonné/);
