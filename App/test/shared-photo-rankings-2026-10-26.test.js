@@ -38,7 +38,7 @@ test('the server keeps the shared photo with the profile and serves it by its ha
 test('every ranking shows the shared photo first, then the account picture', () => {
   assert.equal(rankingAvatarSql('s.avatar'), "COALESCE('/api/avatar-photo/' || u.photo_key, s.avatar)");
   assert.equal((read('server.js').match(/\$\{rankingAvatarSql\(/g) || []).length, 3);
-  for (const file of ['lib/daily-challenge.js', 'lib/daily-dossier.js', 'lib/daily-grid.js', 'lib/daily-petitbac.js']) {
+  for (const file of ['lib/day-boards.js', 'lib/daily-grid.js', 'lib/daily-petitbac.js']) {
     const src = read(file);
     assert.doesNotMatch(src, /COALESCE\(u\.avatar,''\) AS avatar/, file);
     assert.match(src, /\$\{rankingAvatarSql\("COALESCE\(u\.avatar,''\)"\)\} AS avatar/, file);
