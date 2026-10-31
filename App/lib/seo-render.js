@@ -53,6 +53,8 @@ li{margin:6px 0}
 .grid img{grid-row:span 2;width:56px;height:56px;object-fit:contain}
 .grid b{font:600 1.05rem Fredoka,Nunito,system-ui,sans-serif}
 .grid small{color:var(--muted);font-size:.85rem;line-height:1.35}
+.faq h3{margin:14px 0 4px;font:700 1.02rem/1.35 Nunito,system-ui,sans-serif}
+.faq p{margin:0 0 6px}
 footer{max-width:960px;margin:0 auto;padding:24px 16px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
 footer p{margin:4px 0}
 .support{display:inline-block;margin:6px 0 10px;padding:6px 14px;border:1px solid #f0c9a0;border-radius:999px;background:#fff1e0;color:#7a4210;font-weight:800;text-decoration:none}
@@ -94,11 +96,15 @@ function renderGamePage(game) {
     '<img src="' + esc(ARTWORK(game.sprite)) + '" alt="' + esc(pokemonName(game.sprite) + ', illustration du jeu ' + game.name) + '" width="180" height="180"></section>\n' +
     '<h2>Comment jouer</h2>\n<div class="panel"><ol>' + game.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div>\n' +
     '<h2>Bon à savoir</h2>\n<div class="panel"><ul>' + game.facts.map(fact => '<li>' + esc(fact) + '</li>').join('') + '</ul></div>\n' +
+    (game.tips?.length ? '<h2>Astuces</h2>\n<div class="panel"><ul>' + game.tips.map(tip => '<li>' + esc(tip) + '</li>').join('') + '</ul></div>\n' : '') +
+    (game.faq?.length ? '<h2>Questions fréquentes</h2>\n<div class="panel faq">' + game.faq.map(([question, answer]) => '<h3>' + esc(question) + '</h3><p>' + esc(answer) + '</p>').join('') + '</div>\n' : '') +
     '<h2>D’autres jeux Pokémon à essayer</h2>\n<ul class="grid">' + related(game).map(cardHtml).join('') + '</ul>\n' +
     '<p><a href="/jeux">Voir les ' + GAMES.length + ' jeux et outils de Pokédle →</a></p>';
   const data = { '@context': 'https://schema.org', '@graph': [
     { '@type': 'WebApplication', name: game.name + ' · Pokédle', url: SITE + path, description: game.description, applicationCategory: game.group === 'tools' ? 'ReferenceApplication' : 'GameApplication', operatingSystem: 'Navigateur web', inLanguage: 'fr', isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }, image: ARTWORK(game.sprite) },
     breadcrumb([['Pokédle', '/'], ['Jeux', '/jeux'], [game.name, path]]),
+    // The questions shown on the page, for search engines and assistants (31/10/2026).
+    ...(game.faq?.length ? [{ '@type': 'FAQPage', mainEntity: game.faq.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) }] : []),
   ] };
   // Each game page shows its own link preview (tools/og-game-images.js builds them).
   return layout({ title: game.title, description: game.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg' });
