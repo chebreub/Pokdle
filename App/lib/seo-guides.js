@@ -32,6 +32,32 @@ const TYPE_ICONS = Object.freeze({
 
 const PUBLISHED = '2026-10-31';
 
+// The 9 generations: region, first games (year of release in Japan) and their national numbers.
+const GENERATIONS = Object.freeze([
+  { gen: 1, region: 'Kanto', games: 'Rouge et Bleu', year: 1996, from: 1, to: 151 },
+  { gen: 2, region: 'Johto', games: 'Or et Argent', year: 1999, from: 152, to: 251 },
+  { gen: 3, region: 'Hoenn', games: 'Rubis et Saphir', year: 2002, from: 252, to: 386 },
+  { gen: 4, region: 'Sinnoh', games: 'Diamant et Perle', year: 2006, from: 387, to: 493 },
+  { gen: 5, region: 'Unys', games: 'Noir et Blanc', year: 2010, from: 494, to: 649 },
+  { gen: 6, region: 'Kalos', games: 'X et Y', year: 2013, from: 650, to: 721 },
+  { gen: 7, region: 'Alola', games: 'Soleil et Lune', year: 2016, from: 722, to: 809 },
+  { gen: 8, region: 'Galar', games: 'Épée et Bouclier', year: 2019, from: 810, to: 905 },
+  { gen: 9, region: 'Paldea', games: 'Écarlate et Violet', year: 2022, from: 906, to: 1025 },
+]);
+// The three starters of each generation (Plante, Feu, Eau); each line ends two numbers later.
+const STARTERS = Object.freeze([[1, 4, 7], [152, 155, 158], [252, 255, 258], [387, 390, 393], [495, 498, 501], [650, 653, 656], [722, 725, 728], [810, 813, 816], [906, 909, 912]]);
+// Legendary and mythical Pokémon by the official categories. With the Ultra Beasts and six
+// Paradox Pokémon they make the « Légendes » of the site (POKEDEX_LEGENDARY_IDS, LEGENDARY_IDS).
+const LEGENDARIES = Object.freeze({
+  1: [144, 145, 146, 150], 2: [243, 244, 245, 249, 250], 3: [377, 378, 379, 380, 381, 382, 383, 384],
+  4: [480, 481, 482, 483, 484, 485, 486, 487, 488], 5: [638, 639, 640, 641, 642, 643, 644, 645, 646], 6: [716, 717, 718],
+  7: [772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 800], 8: [888, 889, 890, 891, 892, 894, 895, 896, 897, 898, 905],
+  9: [1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1024],
+});
+const MYTHICALS = Object.freeze([151, 251, 385, 386, 489, 490, 491, 492, 493, 494, 647, 648, 649, 719, 720, 721, 801, 802, 807, 808, 809, 893, 1025]);
+const ULTRA_BEASTS = Object.freeze([793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 806]);
+const PARADOX_LEGENDS = Object.freeze([1009, 1010, 1020, 1021, 1022, 1023]);
+
 const GUIDES = [
   {
     slug: 'methode-pokemon-du-jour', sprite: 65, ogImage: '/og-image.png', name: 'La méthode du Pokémon du jour',
@@ -157,6 +183,98 @@ const GUIDES = [
       ['Qu’est-ce qu’une faiblesse ×4 ?', 'Quand une attaque est super efficace contre les deux types d’un Pokémon, ses dégâts sont multipliés par 4, comme Glace contre Dracolosse.'],
     ],
   },
+  {
+    slug: 'generations-pokemon', sprite: 251, ogImage: '/img/og/ordre-pokedex.jpg', name: 'Les 9 générations Pokémon',
+    short: 'Régions, jeux, années et numéros de chaque génération.',
+    title: 'Les 9 générations Pokémon : régions et jeux | Pokédle',
+    description: 'De Kanto à Paldea : les 9 générations Pokémon, leurs régions, leurs premiers jeux, leur année et les numéros du Pokédex de chacune.',
+    h1: 'Les 9 générations Pokémon, de Kanto à Paldea',
+    lead: 'Depuis 1996, chaque génération apporte une nouvelle région et de nouveaux Pokémon : 1025 en tout, sur 9 générations. Voici le tableau complet, avec les numéros du Pokédex de chacune.',
+    cta: { href: '/?jeu=ordre-pokedex', label: 'S’entraîner à l’Ordre Pokédex' },
+    games: ['ordre-pokedex', 'speedrun-pokedex', 'quiz-pokemon'],
+    sections: [
+      { h2: 'Le tableau des générations', p: ['Les années sont celles de la sortie au Japon. Les numéros sont ceux du Pokédex national.'], table: 'generations' },
+      {
+        h2: 'Reconnaître la génération d’un Pokémon',
+        list: [
+          'Son numéro du Pokédex national le dit tout de suite : de 1 à 151 pour la 1re, de 152 à 251 pour la 2e, et ainsi de suite.',
+          'Presque chaque génération s’ouvre sur ses trois starters : Bulbizarre (n° 1), Germignon (n° 152), Arcko (n° 252)… Seule exception, la 5e commence par Victini (n° 494).',
+          'Les formes régionales (Alola, Galar, Hisui, Paldea) gardent le numéro du Pokémon d’origine.',
+          'Les Méga-Évolutions, apparues en 6e génération, ne sont pas de nouveaux Pokémon : elles gardent le numéro du Pokémon qui évolue.',
+        ],
+      },
+      {
+        h2: 'Sur Pokédle',
+        p: ['Le bouton « Générations » de l’accueil limite les jeux compatibles aux générations que tu choisis. Dans le Pokémon du jour, la pastille de génération te dit s’il faut chercher plus ancien ou plus récent.'],
+      },
+    ],
+    faq: [
+      ['Combien y a-t-il de générations Pokémon ?', '9, de Kanto (1996) à Paldea (2022), pour 1025 Pokémon en tout.'],
+      ['Quelle génération a le plus de Pokémon ?', 'La 5e, celle d’Unys, avec 156 nouveaux Pokémon.'],
+      ['Quelle génération en a le moins ?', 'La 6e, celle de Kalos, avec 72 nouveaux Pokémon.'],
+    ],
+  },
+  {
+    slug: 'starters-pokemon', sprite: 4, ogImage: '/img/og/devine-le-pokemon.jpg', name: 'Les starters Pokémon',
+    short: 'Les 27 starters de chaque génération et leur évolution finale.',
+    title: 'Les starters Pokémon de chaque génération | Pokédle',
+    description: 'Les 27 starters Pokémon, de Bulbizarre à Coiffeton : génération par génération, avec leurs types et leur évolution finale, et le triangle Plante, Feu, Eau.',
+    h1: 'Les starters Pokémon de chaque génération',
+    lead: 'Au début de chaque aventure, on choisit un Pokémon parmi trois : un Plante, un Feu et un Eau. Voici les 27 starters, de Kanto à Paldea, avec leur évolution finale.',
+    cta: { href: '/?jeu=devine-le-pokemon', label: 'Deviner des Pokémon' },
+    games: ['devine-le-pokemon', 'evolution-pokemon', 'pokemon-pixelise'],
+    sections: [
+      {
+        h2: 'Le triangle Plante, Feu, Eau',
+        p: ['Plante bat Eau, Eau bat Feu, Feu bat Plante : chaque starter a un avantage contre un des deux autres, et une faiblesse contre le troisième. C’est pour ça que le rival choisit souvent celui qui bat le tien.'],
+      },
+      { h2: 'Les starters génération par génération', p: ['Chaque starter, puis son évolution finale.'], table: 'starters' },
+      {
+        h2: 'Quelques curiosités',
+        list: [
+          'Seuls deux starters ont deux types dès le départ : Bulbizarre (Plante et Poison) et Brindibou (Plante et Vol).',
+          'Trois starters Feu finissent Feu et Combat : Braségali, Simiabraz et Roitiflam.',
+          '10 évolutions finales sur 27 n’ont qu’un seul type, comme Tortank ou Typhlosion.',
+        ],
+      },
+    ],
+    faq: [
+      ['Combien y a-t-il de starters Pokémon ?', '27 : trois par génération, sur 9 générations.'],
+      ['Quels sont les starters de la 9e génération ?', 'Poussacha (Plante), Chochodile (Feu) et Coiffeton (Eau), dans Écarlate et Violet.'],
+      ['Quel starter choisir ?', 'Il n’y a pas de mauvais choix : chacun a un avantage contre un des deux autres. Prends celui que tu préfères !'],
+    ],
+  },
+  {
+    slug: 'pokemon-legendaires', sprite: 150, ogImage: '/img/og/pokedex.jpg', name: 'Les Pokémon légendaires',
+    short: 'Les 71 légendaires et 23 fabuleux, génération par génération.',
+    title: 'Pokémon légendaires et fabuleux : la liste | Pokédle',
+    description: 'La liste des Pokémon légendaires et fabuleux de chaque génération, de Mewtwo à Terapagos, avec la différence entre légendaire, fabuleux et Ultra-Chimère.',
+    h1: 'Les Pokémon légendaires et fabuleux, génération par génération',
+    lead: 'Mewtwo, Lugia, Rayquaza, Arceus… Les légendaires sont les Pokémon les plus rares de chaque région. Voici la liste complète des 71 légendaires et des 23 fabuleux.',
+    cta: { href: '/?jeu=pokedex', label: 'Ouvrir le Pokédex' },
+    games: ['pokedex', 'grille-pokemon', 'devine-le-pokemon'],
+    sections: [
+      {
+        h2: 'Légendaire ou fabuleux ?',
+        p: ['Les légendaires sont des Pokémon rares, souvent uniques dans leur jeu et liés à l’histoire de leur région. Les fabuleux (on dit aussi « mythiques ») sont encore plus rares : on les obtenait surtout lors d’évènements, comme Mew ou Celebi.'],
+      },
+      { h2: 'Les légendaires génération par génération', legendaries: true },
+      { h2: 'Les 23 Pokémon fabuleux', pokemon: 'mythicals' },
+      {
+        h2: 'Et les Ultra-Chimères ?',
+        p: ['Venues d’un autre monde dans Soleil et Lune, puis Ultra-Soleil et Ultra-Lune, les 11 Ultra-Chimères (Zéroïd, Mouscoto, Pierroteknik…) ne sont ni légendaires ni fabuleuses, mais on les range souvent avec eux.'],
+      },
+      {
+        h2: 'Sur Pokédle',
+        p: ['Le filtre « Légendes » du Pokédex et le critère « Légendaire ou fabuleux » de la Grille du jour regroupent les 71 légendaires, les 23 fabuleux, les 11 Ultra-Chimères et six Pokémon Paradoxe, soit 111 Pokémon.'],
+      },
+    ],
+    faq: [
+      ['Combien y a-t-il de Pokémon légendaires ?', '71 légendaires et 23 fabuleux, sur les 1025 Pokémon des 9 générations.'],
+      ['Quel est le premier Pokémon fabuleux ?', 'Mew, le n° 151, caché dans les premiers jeux Rouge et Bleu.'],
+      ['Quelle génération a le plus de légendaires ?', 'Les 7e, 8e et 9e générations, avec 11 légendaires chacune.'],
+    ],
+  },
 ];
 
-module.exports = { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED };
+module.exports = { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED, GENERATIONS, STARTERS, LEGENDARIES, MYTHICALS, ULTRA_BEASTS, PARADOX_LEGENDS };

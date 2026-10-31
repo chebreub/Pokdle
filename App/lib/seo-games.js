@@ -98,6 +98,15 @@ const GAMES = [
       'À égalité, le classement favorise les choix les plus originaux, ceux que peu de joueurs ont faits.',
       'La même grille pour tout le monde, renouvelée chaque jour à minuit.',
     ],
+    tips: [
+      'Commence par les cases les plus difficiles, tant qu’il te reste des PP.',
+      'Un Pokémon ne sert qu’une fois : garde les Pokémon qui vont partout pour les cases où tu n’as pas d’autre idée.',
+      'Pour grimper au classement, vise des réponses originales : à égalité, les choix rares passent devant.',
+    ],
+    faq: [
+      ['Combien de PP a-t-on ?', '9 PP par grille : chaque proposition en coûte 1, juste ou fausse.'],
+      ['La grille change-t-elle chaque jour ?', 'Oui, à minuit heure de Paris, avec la même grille pour tout le monde.'],
+    ],
     related: ['pokemon-du-jour', 'petit-bac-pokemon', 'poke-connections'],
   },
   {
@@ -119,6 +128,15 @@ const GAMES = [
       'Cinq indices au maximum, un nouveau chaque jour à partir du lundi.',
       'La semaine va du lundi au dimanche, heure de Paris.',
     ],
+    tips: [
+      'Regarde les noms déjà éliminés avant de proposer : ils ne peuvent plus être la réponse.',
+      'Lis bien l’indice du jour et choisis un nom qui le respecte : chaque bonne idée élimine une piste pour tout le monde.',
+      'Avec un compte, tu as deux propositions par jour au lieu d’une.',
+    ],
+    faq: [
+      ['Combien de propositions par jour ?', 'Une par jour, ou deux avec un compte.'],
+      ['Quand l’œuf change-t-il ?', 'Chaque lundi à minuit, heure de Paris.'],
+    ],
     related: ['pokemon-du-jour', 'ligue-pokemon', 'grille-pokemon'],
   },
   {
@@ -138,6 +156,13 @@ const GAMES = [
       'Médaille Bronze, Argent dès 450 points, Or dès 540 et Maître avec 600 points.',
       'La semaine commence le lundi à minuit, heure de Paris.',
       'Le classement de la Ligue compte les joueurs connectés avec Discord, Google ou Twitch.',
+    ],
+    tips: [
+      'Regarde les trois épreuves dès le lundi : tu as toute la semaine pour les réussir.',
+      'Commence par l’épreuve où tu es le plus à l’aise pour assurer ta médaille.',
+    ],
+    faq: [
+      ['Comment gagner la médaille ?', 'En remplissant les trois objectifs de la semaine. Elle est Bronze, puis Argent dès 450 points, Or dès 540 et Maître avec 600.'],
     ],
     related: ['quiz-pokemon', 'speedrun-pokedex', 'higher-or-lower-pokemon'],
   },
@@ -159,6 +184,10 @@ const GAMES = [
       'Les formes alternatives (Alola, Galar, Méga…) peuvent aussi tomber.',
       'Plus de 1 000 Pokémon : les 1 025 espèces et plus de 200 formes.',
     ],
+    tips: [
+      'Limite d’abord les générations à celles que tu connais le mieux, puis ouvre-les petit à petit.',
+      'Ici, les formes alternatives peuvent tomber : pense aux formes d’Alola ou de Galar quand les types ne collent pas.',
+    ],
     related: ['pokemon-du-jour', 'zoom-pokemon', 'pokemon-pixelise'],
   },
   {
@@ -177,6 +206,11 @@ const GAMES = [
       'Sept niveaux de zoom avant de voir l’image entière ; les couleurs reviennent au quatrième.',
       'Aucune limite d’essais.',
       'Choisis les générations que tu veux réviser.',
+    ],
+    tips: [
+      'Concentre-toi sur la forme du détail : une oreille pointue, une queue en flamme, un bout d’aile…',
+      'Les couleurs reviennent au quatrième niveau : c’est souvent là que tout s’éclaire.',
+      'Chaque erreur ajoute des indices de comparaison : sers-t’en comme dans le Pokémon du jour.',
     ],
     related: ['pokemon-pixelise', 'cri-pokemon', 'devine-le-pokemon'],
   },
@@ -197,6 +231,13 @@ const GAMES = [
       'Le Défi du jour (4e épreuve du parcours) : 10 Pokémon pixelisés en 3 minutes, 6 essais chacun, et un bouton pour passer.',
       'Dans le Défi, la génération se dévoile après 2 erreurs et les types après 4.',
     ],
+    tips: [
+      'Regarde les grandes taches de couleur : elles trahissent souvent le Pokémon avant les détails.',
+      'Dans le Défi du jour, passe sans hésiter un Pokémon qui te bloque : le chrono tourne.',
+    ],
+    faq: [
+      ['Combien d’essais pour trouver ?', 'Autant que tu veux en solo. Dans le Défi du jour, 6 essais par Pokémon.'],
+    ],
     related: ['zoom-pokemon', 'pokemon-du-jour', 'speedrun-pokedex'],
   },
   {
@@ -215,6 +256,10 @@ const GAMES = [
       'Les entrées sont en français quand elles existent.',
       'Aucune limite d’essais.',
       'Choisis les générations à réviser.',
+    ],
+    tips: [
+      'Repère les mots-clés : un élément, une partie du corps, un lieu ou une habitude du Pokémon.',
+      'Après un premier essai, les indices de comparaison confirment le type et la génération.',
     ],
     related: ['stat-mystere', 'cri-pokemon', 'quiz-pokemon'],
   },
@@ -235,6 +280,10 @@ const GAMES = [
       'Choisis les générations à réviser.',
       'Fonctionne sur téléphone comme sur ordinateur.',
     ],
+    tips: [
+      'Écoute plusieurs fois, au casque si possible : beaucoup de cris se ressemblent au début.',
+      'Combine le cri avec les indices : après un essai, tu sais déjà si le type et la génération sont les bons.',
+    ],
     related: ['zoom-pokemon', 'description-pokedex', 'devine-le-pokemon'],
   },
   {
@@ -253,6 +302,11 @@ const GAMES = [
       'Le total des statistiques est aussi affiché.',
       'Aucune limite d’essais.',
       'Choisis les générations à réviser.',
+    ],
+    tips: [
+      'Regarde la statistique la plus haute : une Vitesse énorme ou des PV géants réduisent vite les pistes.',
+      'Un total très élevé annonce souvent un légendaire ou un Pokémon entièrement évolué.',
+      'Si tu bloques, la première lettre du nom s’affiche au 5e essai.',
     ],
     related: ['higher-or-lower-pokemon', 'description-pokedex', 'team-builder'],
   },
@@ -273,6 +327,11 @@ const GAMES = [
       'Trois erreurs permises.',
       'Les Pokémon viennent de toutes les générations.',
     ],
+    tips: [
+      'Commence par le groupe le plus évident : il reste moins de Pokémon pour les autres.',
+      'Méfie-toi des pièges : un Pokémon peut sembler aller dans deux groupes.',
+      'Pense aux trois liens possibles : type, génération ou couleur.',
+    ],
     related: ['intrus-pokemon', 'grille-pokemon', 'quiz-pokemon'],
   },
   {
@@ -291,6 +350,13 @@ const GAMES = [
       'Plus de 100 questions possibles, tirées au hasard à chaque partie.',
       'Le Quiz est aussi une épreuve possible de la Ligue de la semaine : 12 bonnes réponses sur 15.',
       'Ton meilleur score est gardé.',
+    ],
+    tips: [
+      'Les questions sur les numéros du Pokédex reviennent souvent : entraîne-toi avec l’Ordre Pokédex.',
+      'Élimine d’abord les réponses impossibles parmi les quatre.',
+    ],
+    faq: [
+      ['Combien de questions dans une partie ?', 'Quinze questions à quatre choix, tirées parmi plus de 100.'],
     ],
     related: ['poke-connections', 'ordre-pokedex', 'ligue-pokemon'],
   },
@@ -335,6 +401,10 @@ const GAMES = [
       'Gagner 5 Intrus est une épreuve possible de la Ligue de la semaine.',
       'Choisis les générations à réviser.',
     ],
+    tips: [
+      'Vérifie les trois pistes dans l’ordre : le type, la génération, puis la première lettre du nom.',
+      'Tu n’as qu’un essai par énigme : prends le temps avant de choisir.',
+    ],
     related: ['poke-connections', 'qui-est-ce-pokemon', 'duel-de-poids'],
   },
   {
@@ -353,6 +423,10 @@ const GAMES = [
       'Un point par bonne réponse, ton record est gardé sur ton appareil.',
       'Seuls les Pokémon dont le shiny se voit vraiment sont proposés.',
       'Toutes les générations, sur les artworks officiels.',
+    ],
+    tips: [
+      'Un shiny change souvent une seule couleur : regarde la couleur principale du Pokémon.',
+      'Après chaque réponse, compare bien les deux versions : c’est comme ça qu’on progresse.',
     ],
     related: ['pokemon-pixelise', 'intrus-pokemon', 'higher-or-lower-pokemon'],
   },
@@ -395,6 +469,10 @@ const GAMES = [
       'Essais illimités.',
       'Choisis les générations à réviser.',
     ],
+    tips: [
+      'Le Pokémon caché est le stade du milieu : il ressemble souvent aux deux autres.',
+      'Pense aux lignées de trois Pokémon, comme celles des starters.',
+    ],
     related: ['ordre-pokedex', 'pokedex', 'quiz-pokemon'],
   },
   {
@@ -412,6 +490,10 @@ const GAMES = [
     facts: [
       'Choisis les générations à réviser.',
       'Un bon entraînement pour le Quiz, qui pose aussi des questions sur les numéros du Pokédex.',
+    ],
+    tips: [
+      'Les starters ouvrent presque chaque génération : Bulbizarre (n° 1), Germignon (n° 152), Arcko (n° 252)… ce sont de bons repères (la 5e commence par Victini, n° 494).',
+      'Les légendaires et les fabuleux ferment souvent une génération, comme Mew (n° 151) ou Celebi (n° 251).',
     ],
     related: ['evolution-pokemon', 'quiz-pokemon', 'pokedex'],
   },
@@ -432,6 +514,10 @@ const GAMES = [
       'Se joue aussi entre amis en Party Room.',
       'Ton record est gardé.',
     ],
+    tips: [
+      'Les combos rares rapportent le plus : apprends quelques Pokémon aux doubles types originaux.',
+      'Passe vite un combo qui te bloque : 60 secondes, ça file.',
+    ],
     related: ['table-des-types', 'speedrun-pokedex', 'jeux-pokemon-entre-amis'],
   },
   {
@@ -451,6 +537,10 @@ const GAMES = [
       'Choisis les générations à réviser.',
       'Ton record est gardé.',
     ],
+    tips: [
+      'Les Pokémon Roche, Acier et Sol sont souvent très lourds.',
+      'Méfie-toi de la taille : un grand Pokémon n’est pas forcément lourd.',
+    ],
     related: ['higher-or-lower-pokemon', 'intrus-pokemon', 'ligue-pokemon'],
   },
   {
@@ -469,6 +559,10 @@ const GAMES = [
       'Toutes les générations peuvent tomber.',
       'Reconnaître 12 Pokémon est une épreuve possible de la Ligue de la semaine.',
       'Ton record est gardé.',
+    ],
+    tips: [
+      'Ne bloque pas sur un Pokémon : passe-le et garde ton rythme.',
+      'Révise les dernières générations : ce sont souvent elles qui font perdre du temps.',
     ],
     related: ['pokemon-pixelise', 'combo-de-types', 'ligue-pokemon'],
   },
@@ -581,6 +675,10 @@ const GAMES = [
       'Utile pour préparer ton équipe dans le Team Builder.',
       'Fonctionne sur téléphone, pratique pendant une partie.',
     ],
+    tips: [
+      'Retiens d’abord les 8 immunités : ce sont elles qui surprennent le plus.',
+      'Pour un Pokémon à deux types, multiplie les deux effets : ×2 et ×2 donnent ×4.',
+    ],
     related: ['team-builder', 'combo-de-types', 'pokedex'],
   },
   {
@@ -601,6 +699,10 @@ const GAMES = [
       'Les Pokémon de toutes les générations sont disponibles.',
       'Vérifie les faiblesses de ton équipe avec la table des types.',
     ],
+    tips: [
+      'Varie les types d’attaque de ton équipe pour ne pas bloquer contre un seul adversaire.',
+      'Évite d’avoir trop de Pokémon qui craignent le même type.',
+    ],
     related: ['table-des-types', 'pokedex', 'stat-mystere'],
   },
   {
@@ -620,6 +722,13 @@ const GAMES = [
       '1 025 espèces et plus de 200 formes alternatives.',
       'Tri et filtres combinables.',
       'Les Pokémon que tu découvres en jouant s’ajoutent à ta collection.',
+    ],
+    tips: [
+      'Combine les filtres, par exemple une génération et « Légendes », pour réviser avant une partie.',
+      'Active le mode shiny avant une partie de « Shiny ou normal ? » : c’est le meilleur entraînement.',
+    ],
+    faq: [
+      ['Combien de Pokémon dans le Pokédex ?', '1 025 espèces, de Kanto à Paldea, et plus de 200 formes alternatives.'],
     ],
     related: ['table-des-types', 'team-builder', 'evolution-pokemon'],
   },
