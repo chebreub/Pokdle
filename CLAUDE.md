@@ -77,7 +77,7 @@ Rédigée le 27/10/2026 et mise à jour le 30/10/2026 au soir, à partir de nos 
   - Les appels Discord passent par un Worker Cloudflare (`discord-proxy-worker.js`), parce que l'IP partagée de Render était bannie par Discord.
 - **Admin :**
   - `/admin/stats?key=…` (clé = `ADMIN_STATS_KEY`) montre les stats de visites et de modes, ainsi que les avis « Donne ton avis » des joueurs (PR #138, tableau refait par la #168). Depuis le 30/10 : nombre de rappels 🔔 activés (#175), lignes « Partage — Pokémon du jour partagé » et « Partage — arrivées par un lien de défi » (#176).
-  - `/admin`, le panneau admin (PR #161), ouvert par le bouton « Panneau admin » du menu du compte quand je suis connecté : bandeau d'actualités et retrait d'une photo de profil.
+  - `/admin`, le panneau admin (PR #161), ouvert par le bouton « Panneau admin » du menu du compte quand je suis connecté : bandeau d'actualités, **messages aux joueurs** (31/10) et retrait d'une photo de profil.
 - **Domaine :** pokdle.fr, acheté chez OVH le 25/10 pour 1 an. Renouvellement en octobre 2027 (environ 7,79 € HT).
 - **SEO :**
   - Google Search Console avec une propriété `https://pokdle.fr/`.
@@ -227,7 +227,7 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - **podium et lot de la semaine** (option A) : « Semaine » du lundi au dimanche (Paris) partout, podium 2-1-3, encart « À gagner cette semaine » ; le 1er du Global de la semaine a son partenaire en shiny la semaine suivante (classements et carte de dresseur), médailles 🥇🥈🥉 pour le podium ; table `weekly_awards` remplie à la première visite de la nouvelle semaine (`App/lib/weekly-awards.js`, `App/lib/week-champions.js`) ;
   - **clic sur un pseudo → sa carte de dresseur** (fenêtre : partenaire, niveau, médailles, jours joués, Pokémon du jour trouvés, meilleure série, points, jeux du jour, derniers records) ; `GET /api/player/:pid` (`App/lib/player-cards.js`), identifiant public par joueur (`App/lib/player-ids.js`, HMAC de `SESSION_SECRET`).
   - **bande « À plusieurs » sur l'accueil** (« carte blanche » de ma part) : entre le Pokémon du jour et les mini-jeux, 4 jeux de Party Room en artwork (Dessine-le !, Qui est-ce ?, Petit Bac, Course au Pokédex), « Créer un salon » et « J'ai un code » ; un jeu cliqué ouvre le salon avec ce jeu déjà choisi (`App/src/script.10xf.home-party.js`). L'ancienne carte « Défis Pokémon entre amis » du bas de page est retirée. Vu chez les concurrents : PokeQuizz met son multi juste sous le titre, PokeMind affiche « 1 en ligne » (à ne pas copier) ;
-  - contacter les joueurs : possible **seulement dans le site** (on ne garde pas d'e-mail, pas de serveur Discord) ; à faire ensuite.
+  - **messages de l'admin aux joueurs** : dans `/admin`, section « Écrire aux joueurs » (un joueur par son pseudo, ou tous ceux qui ont un compte) ; le joueur voit une fenêtre 📬 à sa prochaine visite et peut répondre, la réponse s'affiche dans `/admin` ; notification si 🔔 activé. Seulement dans le site : on ne garde pas d'e-mail, pas de serveur Discord. Effacé au bout de 90 jours ou avec le compte (`App/lib/player-messages.js`, `App/src/script.10xg.player-messages.js`).
 - **Décisions du 30/10 :**
   - **pas de serveur Discord tant qu'il y a moins de 100 joueurs par jour** (un serveur vide fait site mort) : aller plutôt dans les Discord Pokémon existants ;
   - la vraie correction de la triche des images attend d'avoir plus de joueurs ;

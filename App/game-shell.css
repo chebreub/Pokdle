@@ -681,3 +681,19 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
 #pokdle-app.design-refresh.theme-dark .party-pending-game span {color:#cdbcff;}
 #pokdle-app.design-refresh.theme-dark .party-pending-game b {color:#f6f2ff;}
 #pokdle-app.design-refresh.theme-dark .party-pending-game button {color:#9db4ff;}
+/* 📬 A message from the site's creator (31/10/2026). */
+#overlay-modal[data-kind="message"] .overlay-card {width:min(520px, calc(100vw - 32px));}
+#pokdle-app.design-refresh .player-message-from, .player-message-from {margin:0 0 10px;font:700 14px Nunito,sans-serif;color:#6B6472;}
+.player-message-body {margin:0 0 16px;padding:14px 16px;border-radius:16px;background:#FFF8EF;border-left:4px solid #7C5BD6;font:600 16px/1.55 Nunito,sans-serif;color:#2E2A33;overflow-wrap:anywhere;}
+.player-message-label {display:block;margin:0 0 6px;font:800 14px Nunito,sans-serif;color:#2E2A33;}
+.player-message-label small {font-weight:600;color:#6B6472;}
+#player-message-reply {width:100%;min-height:84px;padding:12px;border:1.5px solid #EADFD0;border-radius:14px;background:#fff;color:#2E2A33;font:600 16px/1.45 Nunito,sans-serif;resize:vertical;}
+#player-message-reply:focus-visible {outline:3px solid #4069E0;outline-offset:2px;}
+.player-message-status {min-height:20px;margin:6px 0;font:700 14px Nunito,sans-serif;color:#A3285A;}
+.player-message-actions {display:flex;flex-wrap:wrap;gap:10px;}
+.player-message-actions button {flex:1 1 180px;min-height:46px;}
+.theme-dark .player-message-from, .theme-dark .player-message-label small {color:#B5ADBB;}
+.theme-dark .player-message-body {background:#29262F;color:#F3EEE8;}
+.theme-dark .player-message-label {color:#F3EEE8;}
+.theme-dark #player-message-reply {background:#1E1C24;border-color:#3A3642;color:#F3EEE8;}
+.theme-dark .player-message-status {color:#F7A8C8;}
