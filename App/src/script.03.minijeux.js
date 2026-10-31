@@ -737,7 +737,7 @@ function typeComboFindMon(name, pool) {
   return pool.find((p) => norm(p.name) === n) || null;
 }
 function createTypeComboState() {
-  return { phase: "lobby", score: 0, solved: 0, leftMs: TYPE_COMBO_DURATION_MS, endsAt: 0, combo: null, recent: [], pool: [], combos: [], highScore: Number(playerProfile?.typeComboHighScore) || 0, feedback: "", last: null };
+  return { phase: "lobby", score: 0, solved: 0, leftMs: TYPE_COMBO_DURATION_MS, endsAt: 0, combo: null, recent: [], pool: [], combos: [], highScore: Number(playerProfile?.typeComboHighScore) || 0, feedback: "", last: null, found: [] };
 }
 function pickTypeComboSolo() {
   const st = typeComboState;
@@ -781,6 +781,7 @@ function startTypeComboGame() {
     typeComboState.leftMs = Math.max(0, typeComboState.endsAt - Date.now());
     const t = document.getElementById("type-combo-timer");
     if (t) t.textContent = Math.ceil(typeComboState.leftMs / 1000) + "s";
+    typeComboPaintTimeBar();
     if (typeComboState.leftMs <= 0) { clearInterval(typeComboTimerId); finalizeTypeComboGame(); }
   }, 100);
   setTimeout(() => { const i = document.getElementById("type-combo-input"); if (i) i.focus(); }, 100);
@@ -808,16 +809,18 @@ function typeComboSubmitGuess() {
     st.score += pts;
     st.solved += 1;
     st.last = { name: mon.name, pts: pts, label: st.combo.tier.label };
+    st.found = [{ name: mon.name, ref: mon.ref || mon, pts: pts }].concat(st.found || []);
     st.feedback = "";
     try { awardXp(6, "Combo de types", "typecombo"); } catch (e) {}
     if (typeof gameFeelAnswer === "function") gameFeelAnswer(true, document.querySelector("#type-combo-root .tc-combo") || input, "+" + pts);
     typeComboNextCombo();
   } else {
-    st.feedback = mon ? (escapeHtml(mon.name) + " n'a pas cette paire de types") : "Pokémon inconnu";
+    // A wrong name teaches its real types, so the next try is better informed.
+    st.feedback = mon ? ("✗ " + escapeHtml(mon.name) + " est " + typeComboTypesHtml([mon.type1, mon.type2 || mon.type1])) : "Pokémon inconnu";
     if (input) { input.classList.add("is-wrong"); setTimeout(() => input.classList.remove("is-wrong"), 280); }
     if (typeof gameFeelAnswer === "function") gameFeelAnswer(false, input, "×");
     const fb = document.getElementById("type-combo-feedback");
-    if (fb) fb.textContent = st.feedback;
+    if (fb) fb.innerHTML = st.feedback;
   }
 }
 function typeComboSkip() {
@@ -842,9 +845,9 @@ function typeComboInput() {
     if (i === 0) { seen[n] = 1; starts.push(p); }
     else if (i > 0) { seen[n] = 1; contains.push(p); }
   }
-  const matches = starts.concat(contains).slice(0, 8);
+  const matches = starts.concat(contains).slice(0, 6);
   if (!matches.length) { list.innerHTML = ""; list.classList.remove("is-open"); return; }
-  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-name="' + escapeHtml(String(p.name).replace(/"/g, "&quot;")) + '" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p.ref || p)) + '" alt="" loading="lazy" />' + escapeHtml(p.name) + '</button>').join("");
+  list.innerHTML = matches.map((p) => '<button type="button" class="tc-ac-item" data-action="typeComboPick" data-name="' + escapeHtml(String(p.name).replace(/"/g, "&quot;")) + '" data-args=\'["' + String(p.name).replace(/["\\]/g, "") + '"]\'><img class="tc-ac-sprite" src="' + escapeHtml(getPokemonSprite(p.ref || p)) + '" alt="" loading="lazy" /><span>' + escapeHtml(p.name) + '</span></button>').join("");
   typeComboAcIndex = -1;
   list.classList.add("is-open");
 }
@@ -901,6 +904,9 @@ function renderTypeComboScreen() {
   if (!root) return;
   const st = typeComboState;
   if (!st) { root.innerHTML = ""; return; }
+  // While the clock runs, the intro text steps aside so the types and the answer fit on a phone screen.
+  const screen = document.getElementById("screen-type-combo");
+  if (screen) screen.classList.toggle("tc-is-playing", st.phase === "playing");
   if (st.phase === "lobby") {
     root.innerHTML =
       '<div class="tc-lobby">' +
@@ -914,28 +920,31 @@ function renderTypeComboScreen() {
   }
   if (st.phase === "playing") {
     const c = st.combo;
-    const badges = c ? c.displayTypes.map((t) => typeBadgeHtml(t)).join('<span class="tc-plus">+</span>') : "";
-    const lastHtml = st.last ? ('<div class="tc-last">✅ ' + escapeHtml(st.last.name) + ' <b>+' + st.last.pts + '</b> <small>' + escapeHtml(st.last.label) + '</small></div>') : "";
+    const types = c ? c.displayTypes : [];
+    const pure = Boolean(c) && types[0] === types[1];
+    const count = c ? c.count : 0;
+    const ask = !c ? "" : pure ? ("Trouve un Pokémon " + types[0] + " pur") : ("Trouve un Pokémon " + types[0] + " / " + types[1]);
     root.innerHTML =
       '<div class="tc-board">' +
-        '<div class="tc-status">' +
-          '<div class="tc-chip"><span>Score</span><b>' + st.score + '</b></div>' +
-          '<div class="tc-chip"><span>Combos</span><b>' + st.solved + '</b></div>' +
-          '<div class="tc-chip is-timer">⏱️ <b id="type-combo-timer">' + Math.ceil(st.leftMs / 1000) + 's</b></div>' +
-        '</div>' +
         '<div class="tc-combo">' +
-          '<div class="tc-combo-label">Trouve un Pokémon de type</div>' +
-          '<div class="tc-combo-types">' + badges + '</div>' +
-          '<div class="tc-combo-tier tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</div>' +
+          typeComboStageHtml(types,
+            '<div class="tc-timebar" id="type-combo-timebar" aria-hidden="true"><i></i></div>' +
+            '<span class="tc-corner is-left">⭐ <b>' + st.score + '</b> pts · 🔥 <b>' + st.solved + '</b></span>' +
+            '<span class="tc-corner is-right">⏱ <b id="type-combo-timer">' + Math.ceil(st.leftMs / 1000) + 's</b></span>' +
+            '<span class="tc-ask">' + escapeHtml(ask) + '</span>') +
         '</div>' +
         '<form class="tc-form" data-submit-action="typeComboFormSubmit">' +
-          '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" data-input-action="typeComboInput" data-keydown-action="typeComboKeydown" autofocus />' +
-          '<div class="tc-ac" id="type-combo-ac"></div>' +
+          '<div class="tc-field">' +
+            '<input id="type-combo-input" class="tc-input" type="text" placeholder="Nom d\'un Pokémon..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search" inputmode="search" data-input-action="typeComboInput" data-keydown-action="typeComboKeydown" autofocus />' +
+            '<div class="tc-ac" id="type-combo-ac"></div>' +
+          '</div>' +
           '<div class="tc-actions"><button class="btn-blue" type="submit">Valider</button><button class="btn-ghost" type="button" data-action="typeComboSkip">Passer ⏭</button></div>' +
         '</form>' +
+        '<p class="tc-meta"><b class="tc-tier-' + (c ? c.tier.tier : "") + '">' + (c ? c.tier.label : "") + ' · ' + (c ? c.tier.points : 0) + ' pts</b> · ' + count + ' Pokémon possible' + (count > 1 ? 's' : '') + '</p>' +
         '<p class="tc-feedback" id="type-combo-feedback"></p>' +
-        lastHtml +
+        typeComboFoundHtml(st.found) +
       '</div>';
+    typeComboPaintTimeBar();
     return;
   }
   if (st.phase === "gameover") {
@@ -945,10 +954,41 @@ function renderTypeComboScreen() {
         '<h3>⏱️ Temps écoulé</h3>' +
         '<div class="tc-final-score">' + st.score + '</div>' +
         '<p>' + st.solved + ' combos réussis' + (isRecord ? ' · <b>🏆 Nouveau record !</b>' : (' · record : ' + st.highScore)) + '</p>' +
+        (st.found && st.found.length ? typeComboFoundHtml(st.found) : '') +
         '<div class="tc-actions"><button class="btn-blue" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
       '</div>';
     return;
   }
+}
+function typeComboTypesHtml(types) {
+  const a = types[0], b = types[1];
+  return '<span class="tc-mini-types">' + typeBadgeHtml(a) + (b && b !== a ? typeBadgeHtml(b) : '<span class="tc-pure">pur</span>') + '</span>';
+}
+function typeComboPaintTimeBar() {
+  const st = typeComboState, bar = document.getElementById("type-combo-timebar");
+  if (!st || !bar) return;
+  const left = Math.max(0, st.leftMs) / TYPE_COMBO_DURATION_MS;
+  bar.firstChild.style.width = (left * 100).toFixed(1) + "%";
+  bar.classList.toggle("is-low", st.leftMs <= 10000);
+}
+function typeComboFoundHtml(found) {
+  const list = Array.isArray(found) ? found : [];
+  const art = (p) => (typeof pokedexDetailArtwork === "function" ? pokedexDetailArtwork(p) : getPokemonSprite(p));
+  const cards = list.map((f) => '<span class="tc-found-card"><img src="' + escapeHtml(art(f.ref)) + '" data-fallback="' + escapeHtml(getPokemonSprite(f.ref)) + '" alt="" loading="lazy" /><span>' + escapeHtml(f.name) + '</span><b>+' + f.pts + '</b></span>').join("");
+  return '<div class="tc-found"><div class="tc-found-title">Tes combos' + (list.length ? ' · ' + list.length : '') + '</div>' +
+    (cards ? '<div class="tc-found-list">' + cards + '</div>' : '<div class="tc-found-empty">Chaque Pokémon trouvé s\'ajoute ici.</div>') + '</div>';
+}
+// The combo stage, shared by the solo game and the Party Room: the screen takes the colours of the two
+// types, cut on a slant (one colour and « Type pur » for a single type). `extra` lands inside the stage.
+function typeComboStageHtml(types, extra) {
+  const a = types && types[0], b = (types && types[1]) || a;
+  if (!a) return '<div class="tc-stage">' + (extra || '') + '</div>';
+  const half = (t, side) => {
+    const icon = typeof getTypeIconPath === "function" ? getTypeIconPath(t) : null;
+    return '<div class="tc-half is-' + side + ' type-' + typeSlug(t) + '"><span class="tc-half-ic">' + (icon ? '<img src="' + escapeHtml(icon) + '" alt="" />' : '') + '</span><b>' + escapeHtml(t) + '</b></div>';
+  };
+  const body = a === b ? half(a, "full") + '<span class="tc-pure-tag">Type pur</span>' : half(a, "a") + half(b, "b") + '<span class="tc-vs" aria-hidden="true">+</span>';
+  return '<div class="tc-stage' + (a === b ? ' is-pure' : '') + '">' + body + (extra || '') + '</div>';
 }
 function speedrunIsPartyRound() {
   // Party controls still own the last round once the session is completed.

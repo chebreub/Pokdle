@@ -24,6 +24,7 @@ Depuis `tools/video/`, avec `ffmpeg`, Node et Playwright (déjà installés dans
 | `quiz5` | « Trouve les 5 Pokémon » pixelisés, Gen 1 (publiée) |
 | `quiz5b` | la même, version mélangée : Ectoplasma, Lucario, Amphinobi, Mimiqui, Ninjask (publiée le 29/10) |
 | `cri5` | « 5 cris » : Pikachu, Lucario, Zoroark, Ho-Oh, Wailord, barres qui suivent le vrai cri |
+| `cri3` | « Quel Pokémon fait ce cri ? » : 5 cris, 3 choix A/B/C, réponses dans le commentaire épinglé (1B 2A 3C 4C 5B). Pas de capture : créer `raw/cri3/index.json` avec une seule image vide. Calée sur une musique à 150 BPM (31/10) |
 
 Pour un nouveau défi « 5 Pokémon » : copier `pro-quiz5b.js` (ou `pro-cri5.js`), changer la liste `Q`, lancer `fetch-assets.sh` avec les numéros, et pour le pixel, adapter `cap-quiz5b.js`.
 
