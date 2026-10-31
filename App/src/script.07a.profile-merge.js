@@ -30,12 +30,15 @@ const PROFILE_MERGE_GAIN_MAX = { xp: 50000, totalQuestsCompleted: 200, played: 2
 function profileMergeCounter(p, o, b, field) {
   const ceiling = profileCounterCeiling(field), gainMax = PROFILE_MERGE_GAIN_MAX[field] || Infinity;
   let a = profileMergeNumber(p), c = profileMergeNumber(o);
+  // Two broken copies: keep one, the repair on load brings it back to a sound value. Making it 0
+  // (the first version of this fix) sent Kayan back to level 1.
+  if (a > ceiling && c > ceiling) return Math.max(a, c);
   if (a > ceiling) a = 0;
   if (c > ceiling) c = 0;
   if (b === undefined || b === null || !Number.isFinite(Number(b))) return Math.max(a, c);
   const base = Number(b);
   if (base > ceiling || base > Math.min(a, c)) return Math.max(a, c);
-  return Math.max(a, c, Math.min(a + c - base, Math.max(a, c) + gainMax));
+  return Math.max(a, c, Math.min(a + c - base, Math.max(a, c) + gainMax, ceiling));
 }
 // Records and tallies: the higher number wins, objects are merged key by key.
 function profileMergeMax(p, o) {
@@ -138,8 +141,11 @@ function mergeSyncBlobs(primary, other, base = null) {
 
 // Repair (31/10/2026): a counter that ran away is set back to the highest sound value this browser
 // still keeps (restore points, older synced copies), else to a safe default. Runs once per load.
-function profileSoundValues(field, part) {
+function profileSoundValues(field, part) { return profileCounterCopies(field, part).sound; }
+// Every copy of a counter this browser keeps: the sound values, and whether a broken one was seen.
+function profileCounterCopies(field, part) {
   const ceiling = profileCounterCeiling(field), found = [];
+  let broken = false;
   const visit = (value, depth) => {
     if (depth > 4 || value == null) return;
     if (typeof value === "string") {
@@ -152,11 +158,25 @@ function profileSoundValues(field, part) {
       const inner = typeof value[part] === "string" ? (() => { try { return JSON.parse(value[part]); } catch (_e) { return null; } })() : value[part];
       const n = Number(inner && inner[field]);
       if (Number.isFinite(n) && n > 0 && n <= ceiling) found.push(n);
+      if (Number.isFinite(n) && n > ceiling) broken = true;
     }
     Object.keys(value).forEach((key) => { if (key !== part) visit(value[key], depth + 1); });
   };
   try { for (let i = 0; i < localStorage.length; i += 1) visit(localStorage.getItem(localStorage.key(i)), 0); } catch (_e) {}
-  return found;
+  return { sound: found, broken };
+}
+// XP lost to that first fix: when this browser still keeps a broken copy (the runaway happened here)
+// and a sound copy well above today's XP, the sound one comes back. Done once per browser.
+function recoverLostXp(target) {
+  if (!target) return false;
+  try { if (localStorage.getItem("pokedle.xpRecovered.v1")) return false; } catch (_e) { return false; }
+  const copies = profileCounterCopies("xp", "profile");
+  if (!copies.broken) return false;
+  const best = copies.sound.length ? Math.max(...copies.sound) : 0;
+  try { localStorage.setItem("pokedle.xpRecovered.v1", String(Date.now())); } catch (_e) {}
+  if (best <= (Number(target.xp) || 0) + 1000) return false;
+  target.xp = best;
+  return true;
 }
 function repairRunawayCounters(target, part, fallback) {
   if (!target) return false;
@@ -174,7 +194,8 @@ if (typeof loadProfile === "function") {
   loadProfile = function () {
     const value = loadProfileBeforeRepair.apply(this, arguments);
     // No sound copy left: level 100 without stars rather than billions or nothing.
-    if (repairRunawayCounters(playerProfile, "profile", { xp: typeof xpForLevel === "function" ? xpForLevel(100) : 247500 })) { try { saveProfile(); } catch (_e) {} }
+    const repaired = repairRunawayCounters(playerProfile, "profile", { xp: typeof xpForLevel === "function" ? xpForLevel(100) : 247500 });
+    if (recoverLostXp(playerProfile) || repaired) { try { saveProfile(); } catch (_e) {} }
     return value;
   };
 }
@@ -186,3 +207,19 @@ if (typeof loadStats === "function") {
     return value;
   };
 }
+
+// The same repair on the saved copies right away, before any sync can merge them (the sync may run
+// before the page loads the profile).
+(function repairStoredCopiesNow() {
+  if (typeof STORAGE_KEYS === "undefined" || typeof localStorage === "undefined") return;
+  for (const [key, part, fallback] of [[STORAGE_KEYS.profile, "profile", { xp: 247500 }], [STORAGE_KEYS.stats, "stats", {}]]) {
+    try {
+      const raw = localStorage.getItem(key);
+      const value = raw ? JSON.parse(raw) : null;
+      if (!value || typeof value !== "object") continue;
+      const repaired = repairRunawayCounters(value, part, fallback);
+      const recovered = part === "profile" && recoverLostXp(value);
+      if (repaired || recovered) localStorage.setItem(key, JSON.stringify(value));
+    } catch (_e) {}
+  }
+})();

@@ -64,3 +64,27 @@ test('the common copy moves when the online copy is accepted at load', () => {
   const load = src.slice(src.indexOf('function activateAccount('), src.indexOf('// Last content known to match the server'));
   assert.equal((load.match(/saveSyncBase\(accountId, server\);/g) || []).length, 2, 'same content, and online copy taken or merged');
 });
+
+test('two broken copies never merge to 0, and XP lost that way comes back once from a sound copy', () => {
+  const { profileMergeCounter } = merge();
+  assert.equal(profileMergeCounter(5.6e16, 9e15, 1e15, 'xp'), 5.6e16, 'kept for the repair, never 0 (Kayan fell to level 1)');
+  const code = read('src/script.07a.profile-merge.js');
+  const make = (entries) => {
+    const store = new Map(entries);
+    const localStorage = { get length() { return store.size; }, key: (i) => [...store.keys()][i], getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)) };
+    return { store, api: Function('localStorage', 'loadProfile', 'loadStats', code + '; return { recoverLostXp };')(localStorage, undefined, undefined) };
+  };
+  const backups = [['pokedle_restore_points_v1', JSON.stringify([{ data: { profile: JSON.stringify({ xp: 9e15 }) } }, { data: { profile: JSON.stringify({ xp: 131400 }) } }])]];
+  const { store, api } = make(backups);
+  const profile = { xp: 0 };
+  assert.equal(api.recoverLostXp(profile), true);
+  assert.equal(profile.xp, 131400, 'back to level 73');
+  assert.ok(store.get('pokedle.xpRecovered.v1'), 'once per browser');
+  assert.equal(api.recoverLostXp({ xp: 0 }), false, 'never twice');
+  // A browser where the runaway never happened is left alone.
+  const calm = make([['pokedle_restore_points_v1', JSON.stringify([{ data: { profile: JSON.stringify({ xp: 131400 }) } }])]]);
+  const fresh = { xp: 50 };
+  assert.equal(calm.api.recoverLostXp(fresh), false);
+  assert.equal(fresh.xp, 50);
+  assert.match(code, /\(function repairStoredCopiesNow\(\) \{/, 'the saved copies are repaired before any sync');
+});
