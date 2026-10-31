@@ -1276,6 +1276,8 @@ function accountNavigate(destination) {
         var confirmedAt = Math.max(localAt, serverAt);
         setLocalSavedAt(confirmedAt);
         saveAccountCache(accountId, Object.assign({}, server, { _savedAt: confirmedAt, _accountId: accountId }));
+        // The online copy is now common to both: the next merge counts from it (31/10/2026).
+        saveSyncBase(accountId, server);
         return { reload: false, ready: true };
       }
       if (serverHas && (serverAt > localAt || !hasContent(local))) {
@@ -1289,6 +1291,9 @@ function accountNavigate(destination) {
         }
         applyAccountBlob(incoming, accountId);
         saveAccountCache(accountId, incoming);
+        // Before 31/10/2026 the common copy only moved when this device sent: every reload then
+        // counted the progress shared since an old copy twice, and XP ran away. It moves here too.
+        saveSyncBase(accountId, server);
         return { reload: reloadAfterStorageSwitch(), ready: true };
       }
       return { reload: false, ready: true };

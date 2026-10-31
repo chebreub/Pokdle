@@ -23,7 +23,8 @@ test('the XP copied next to the account comes from the saved profile', () => {
   assert.equal(xpFromProfileData({ profile: { xp: 30 } }), 30);
   assert.equal(xpFromProfileData({ profile: { nickname: 'Kayan' } }), 0);
   assert.equal(xpFromProfileData({ profile: { xp: -5 } }), 0);
-  assert.equal(xpFromProfileData({ profile: { xp: 1e12 } }), 100000000);
+  assert.equal(xpFromProfileData({ profile: { xp: 1e12 } }), null, 'XP that ran away (31/10/2026) gives no level');
+  assert.equal(xpFromProfileData({ profile: { xp: 247500 } }), 247500, 'level 100 is still possible');
   assert.equal(xpFromProfileData({}), null);
   assert.equal(xpFromProfileData({ profile: '{broken' }), null);
 });
