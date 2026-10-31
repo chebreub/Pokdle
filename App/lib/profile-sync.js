@@ -80,6 +80,19 @@ function xpFromProfileData(data) {
   }
 }
 
+// When the admin last put back this player's level (lib/player-level-admin.js), 0 if never. A copy
+// made before that moment never replaces the online one (POST /api/profile).
+function xpSetAtFromProfileData(data) {
+  try {
+    const raw = data && data.profile;
+    const profile = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const at = Number(profile && profile.xpSetAt);
+    return Number.isFinite(at) && at > 0 ? Math.floor(at) : 0;
+  } catch (_error) {
+    return 0;
+  }
+}
+
 // Same curve as the game (script.01.core.js): level N needs 25 × N × (N − 1) XP, from 1 to 100.
 function playerLevelFromXp(xp) {
   if (xp === null || xp === undefined) return null;
@@ -90,4 +103,4 @@ function playerLevelFromXp(xp) {
   return level;
 }
 
-module.exports = { xpCeiling, profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp };
+module.exports = { xpCeiling, xpSetAtFromProfileData, profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp };

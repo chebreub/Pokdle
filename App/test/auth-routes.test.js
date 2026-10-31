@@ -303,8 +303,10 @@ test("a profile built on an older online copy is refused with the newer one, so 
     if (/SELECT data FROM users/.test(sql)) { const u = users.get(p[0]); return { rows: u ? [{ data: u.data }] : [], rowCount: u ? 1 : 0 }; }
     if (/UPDATE users SET data/.test(sql)) {
       const u = users.get(p[0]);
-      // The real query compares the stored _savedAt with the base ($7) in SQL.
-      if (!u || (p.length > 6 && Number(u.data._savedAt || 0) > Number(p[6]))) return { rows: [], rowCount: 0 };
+      // The real query compares the stored _savedAt with the base ($7) and the stored mark of a level
+      // put back by the admin (_xpSetAt) with the copy's own ($8, or $7 without a base) in SQL.
+      const checksBase = sql.includes("data->>'_savedAt'"), setAt = checksBase ? p[7] : p[6];
+      if (!u || (checksBase && Number(u.data._savedAt || 0) > Number(p[6])) || Number(u.data._xpSetAt || 0) > Number(setAt)) return { rows: [], rowCount: 0 };
       u.data = JSON.parse(p[1]); return { rows: [], rowCount: 1 };
     }
     return { rows: [], rowCount: 1 };
@@ -323,24 +325,39 @@ test("a profile built on an older online copy is refused with the newer one, so 
   assert.deepEqual(users.get("1234567890").data, { _accountId: "1234567890", _savedAt: 4000, profile: '{"xp":307}' }, "the base marker is not stored");
   const legacy = await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 5000, profile: '{"xp":308}' });
   assert.deepEqual(await legacy.json(), { ok: true }, "a page from before this change still saves");
+
+  // « Niveau d'un joueur » (31/10/2026): once the admin put a level back, a copy made before it is
+  // refused whatever its stamps say, and the device gets the online copy to take that level.
+  users.get("1234567890").data = { _accountId: "1234567890", _savedAt: 6000, _xpSetAt: 6000, profile: '{"xp":131400,"xpSetAt":6000}' };
+  const before = await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 9000, _baseSavedAt: 9000, profile: '{"xp":50}' });
+  assert.equal(before.status, 409, "a device clock ahead does not get past the level put back");
+  assert.equal((await before.json()).data.profile, '{"xp":131400,"xpSetAt":6000}');
+  assert.equal((await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 9000, profile: '{"xp":50}' })).status, 409, "nor a page without a base");
+  const after = await f.post("/api/profile", cookie, { _accountId: "1234567890", _savedAt: 9100, _baseSavedAt: 6000, _xpSetAt: 1, profile: '{"xp":131450,"xpSetAt":6000}' });
+  assert.deepEqual(await after.json(), { ok: true });
+  assert.deepEqual(users.get("1234567890").data, { _accountId: "1234567890", _savedAt: 9100, _xpSetAt: 6000, profile: '{"xp":131450,"xpSetAt":6000}' }, "the mark is read from the profile, never trusted from the page");
 });
 
 test("PostgreSQL: the stale-profile check runs on the real users table", { skip: !process.env.QA_DATABASE_URL, timeout: 20000 }, async () => {
   const { Pool } = require("pg"), { randomUUID } = require("node:crypto");
   const source = fs.readFileSync(path.join(__dirname, "../server.js"), "utf8");
-  const sql = source.match(/`(UPDATE users SET data = \$2[^`]+<= \$7)`/)[1];
+  // The save with a base, and the check of a level put back by the admin ($8).
+  const guard = source.match(/const levelGuard = \(n\) => `([^`]+)`;/)[1].replace("$${n}", "$8");
+  const sql = source.match(/`(UPDATE users SET data = \$2[^`]+<= \$7) \$\{levelGuard\(8\)\}`/)[1] + " " + guard;
   const schema = "sync_" + randomUUID().replaceAll("-", ""), root = new Pool({ connectionString: process.env.QA_DATABASE_URL });
   let db;
   try {
     await root.query("CREATE SCHEMA " + schema);
     db = new Pool({ connectionString: process.env.QA_DATABASE_URL, options: "-c search_path=" + schema, max: 2 });
     await db.query("CREATE TABLE users(discord_id TEXT PRIMARY KEY, data JSONB NOT NULL DEFAULT '{}'::jsonb, partner_id INTEGER, xp INTEGER, photo_key TEXT, photo BYTEA)");
-    await db.query("INSERT INTO users(discord_id, data) VALUES ('1', '{\"_savedAt\": 2000}'), ('2', '{}'), ('3', '{\"_savedAt\": \"oops\"}')");
-    const run = (id, base) => db.query(sql, [id, JSON.stringify({ _savedAt: 9000 }), null, 0, null, null, base]);
+    await db.query("INSERT INTO users(discord_id, data) VALUES ('1', '{\"_savedAt\": 2000}'), ('2', '{}'), ('3', '{\"_savedAt\": \"oops\", \"_xpSetAt\": \"oops\"}'), ('4', '{\"_savedAt\": 2000, \"_xpSetAt\": 2000}')");
+    const run = (id, base, setAt = 0) => db.query(sql, [id, JSON.stringify({ _savedAt: 9000 }), null, 0, null, null, base, setAt]);
     assert.equal((await run("1", 1000)).rowCount, 0, "older base: refused");
     assert.equal((await run("1", 2000)).rowCount, 1, "same base: saved");
     assert.equal((await run("2", 0)).rowCount, 1, "no online copy yet: saved");
     assert.equal((await run("3", 0)).rowCount, 1, "an unreadable stamp never blocks the save");
+    assert.equal((await run("4", 2000)).rowCount, 0, "a copy from before the level put back: refused");
+    assert.equal((await run("4", 2000, 2000)).rowCount, 1, "a copy that took that level: saved");
   } finally {
     if (db) await db.end();
     await root.query("DROP SCHEMA IF EXISTS " + schema + " CASCADE").catch(() => {});

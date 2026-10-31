@@ -1,5 +1,5 @@
 const { ensureLeaderboardResultKeys, recordLeaderboardResult, recordLeaderboardResultInTransaction } = require("./lib/leaderboard-store");
-const { profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, playerLevelFromXp } = require("./lib/profile-sync");
+const { profileForClient, profileForStorage, partnerIdFromProfileData, sharedPhotoFromProfileData, rankingAvatarSql, xpFromProfileData, xpSetAtFromProfileData, playerLevelFromXp } = require("./lib/profile-sync");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
@@ -596,6 +596,13 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
   const baseSavedAt = Number(prepared.data._baseSavedAt);
   const checkBase = Object.prototype.hasOwnProperty.call(prepared.data, "_baseSavedAt") && Number.isFinite(baseSavedAt) && baseSavedAt >= 0;
   delete prepared.data._baseSavedAt;
+  // A level put back by the admin (« Niveau d'un joueur », lib/player-level-admin.js): a copy made
+  // before it never replaces it, whatever the device's clock says. The device gets the online copy
+  // back (409) and takes that level (script.07a.profile-merge.js).
+  const xpSetAt = xpSetAtFromProfileData(prepared.data);
+  delete prepared.data._xpSetAt;
+  if (xpSetAt > 0) prepared.data._xpSetAt = xpSetAt;
+  const levelGuard = (n) => `AND (CASE WHEN jsonb_typeof(data->'_xpSetAt') = 'number' THEN (data->>'_xpSetAt')::numeric ELSE 0 END) <= $${n}`;
   try {
     await ensureAccountRow(user);
     let photo = sharedPhotoFromProfileData(prepared.data);
@@ -604,10 +611,12 @@ app.post("/api/profile", express.json({ limit: "300kb" }), async (req, res) => {
     const values = [user.id, JSON.stringify(prepared.data), partnerIdFromProfileData(prepared.data), xpFromProfileData(prepared.data), photo ? photo.key : null, photo ? photo.bytes : null];
     const saved = checkBase
       ? await pgPool.query(`UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1
-          AND (CASE WHEN jsonb_typeof(data->'_savedAt') = 'number' THEN (data->>'_savedAt')::numeric ELSE 0 END) <= $7`, [...values, baseSavedAt])
-      : await pgPool.query("UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1", values);
-    if (checkBase && saved.rowCount === 0) {
+          AND (CASE WHEN jsonb_typeof(data->'_savedAt') = 'number' THEN (data->>'_savedAt')::numeric ELSE 0 END) <= $7 ${levelGuard(8)}`, [...values, baseSavedAt, xpSetAt])
+      : await pgPool.query(`UPDATE users SET data = $2, partner_id = $3, xp = $4, photo_key = $5, photo = $6 WHERE discord_id = $1 ${levelGuard(7)}`, [...values, xpSetAt]);
+    if (saved.rowCount === 0) {
       const current = await pgPool.query("SELECT data FROM users WHERE discord_id = $1", [user.id]);
+      // No account row (as before this check): nothing to compare with, the page is not asked to merge.
+      if (!checkBase && !current.rows[0]) return res.json({ ok: true });
       return res.status(409).json({ ok: false, error: "stale_profile", data: profileForClient((current.rows[0] && current.rows[0].data) || {}, user.id) });
     }
     res.json({ ok: true });
