@@ -106,6 +106,8 @@ const NOTICES = Object.freeze({
   news: "Annonce enregistrée : elle s'affiche au prochain chargement du site.",
   "news-cleared": "Annonce retirée.",
   photo: "Photo retirée des classements.",
+  message: "Message envoyé : le joueur le verra à sa prochaine visite.",
+  "message-removed": "Message retiré.",
 });
 
 function page(title, body) {
@@ -126,6 +128,10 @@ input,select{width:100%;font:inherit;padding:12px;border:1px solid var(--line);b
 .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.photo{border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
 .photo img{width:96px;height:96px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 8px;background:var(--bg)}.photo b{display:block;overflow-wrap:anywhere;margin-bottom:8px}
 .photo button,.photo summary{width:100%}.photo summary{list-style:none;margin-bottom:8px}.photo summary::-webkit-details-marker{display:none}
+textarea{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);resize:vertical}
+label.check{display:flex;gap:8px;align-items:center;font-weight:700}label.check input{width:auto}h3{font:700 17px Fredoka,system-ui,sans-serif;margin:20px 0 8px}
+.message{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 10px}.message .meta{color:var(--muted);font-size:14px;margin-bottom:6px}.message .body{overflow-wrap:anywhere;margin-bottom:8px}
+.answer{border-left:4px solid #7C5BD6;background:var(--bg);border-radius:8px;padding:8px 12px;margin:0 0 8px;overflow-wrap:anywhere}.message summary{list-style:none}.message summary::-webkit-details-marker{display:none}
 </style></head><body><main>${body}</main></body></html>`;
 }
 
@@ -152,8 +158,9 @@ ${rows.length ? `<div class="photos">${cards}</div>` : "<p>Aucune photo partagé
 }
 
 // `db` is the pg pool; `ready` resolves to true once the tables exist.
-function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console }) {
-  const form = express.urlencoded({ extended: false, limit: "4kb" });
+// `messages` (optional) writes to the players: { module, webpush, pushReady }, see lib/player-messages.js.
+function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console, messages = null }) {
+  const form = express.urlencoded({ extended: false, limit: "8kb" });
   const ids = () => (typeof adminIds === "function" ? adminIds() : adminIds) || new Set();
   const noStore = (res) => res.set({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex", "Referrer-Policy": "same-origin" });
   const isAdmin = (user) => Boolean(user && ids().has(String(user.id)));
@@ -187,10 +194,17 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
     const day = today();
     try {
       const [news, photos] = await Promise.all([readNews(db, day), sharedPhotos(db)]);
+      let messagesHtml = "";
+      if (messages) {
+        try {
+          const pushCount = await db.query("SELECT COUNT(*)::int AS n FROM push_subscriptions WHERE account_id IS NOT NULL").then((r) => r.rows[0].n, () => NaN);
+          messagesHtml = messages.module.adminSectionHtml(await messages.module.adminState(db), pushCount);
+        } catch (error) { log.error("[admin] messages:", error.message); messagesHtml = "<section><h2>Écrire aux joueurs</h2><p>Lecture impossible pour le moment.</p></section>"; }
+      }
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
       res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${newsSection(news, day)}${photosSection(photos)}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+${newsSection(news, day)}${messagesHtml}${photosSection(photos)}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
@@ -224,6 +238,35 @@ ${newsSection(news, day)}${photosSection(photos)}<p class="hint">Connecté : ${e
     try { await removePhoto(db, key); back(res, { ok: "photo" }); }
     catch (error) { log.error("[admin] photo:", error.message); back(res, { err: "Retrait impossible." }); }
   });
+
+  if (messages) {
+    app.post("/admin/messages", form, async (req, res) => {
+      if (!guard(req, res)) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      const raw = String((req.body && req.body.to) || "");
+      if (!raw) return back(res, { err: "Choisis à qui écrire." });
+      const to = raw === "all" ? null : raw;
+      try {
+        const sent = await messages.module.sendMessage(db, { to, body: req.body && req.body.body });
+        if (sent.error) return back(res, { err: sent.error });
+        if (req.body.push === "1" && messages.webpush && await messages.pushReady) {
+          messages.module.notify(db, messages.webpush, to, log).catch((error) => log.warn("[admin] message push:", error.message));
+        }
+        back(res, { ok: "message" });
+      } catch (error) { log.error("[admin] message:", error.message); back(res, { err: "Envoi impossible." }); }
+    });
+
+    app.post("/admin/messages/remove", form, async (req, res) => {
+      if (!guard(req, res)) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      const id = Number(req.body && req.body.id);
+      if (!Number.isSafeInteger(id) || id <= 0) return back(res, { err: "Message inconnu." });
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      try { await messages.module.removeMessage(db, id); back(res, { ok: "message-removed" }); }
+      catch (error) { log.error("[admin] message remove:", error.message); back(res, { err: "Retrait impossible." }); }
+    });
+  }
 
   // What the news banner reads. Public: it only carries the line everyone will see.
   app.get("/api/news", async (req, res) => {

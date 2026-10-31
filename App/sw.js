@@ -1,4 +1,4 @@
-// Pokédle service worker: only shows the daily reminder. It caches nothing, so the site
+// Pokédle service worker: only shows notifications (the daily reminder, a message from the creator). It caches nothing, so the site
 // always loads fresh from the server.
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -10,7 +10,7 @@ self.addEventListener("push", (event) => {
     body: data.body || "",
     icon: "/img/app-icons/pokedle-192-v1.png",
     badge: "/img/app-icons/pokedle-192-v1.png",
-    tag: "pokedle-daily",
+    tag: data.tag === "pokedle-message" ? "pokedle-message" : "pokedle-daily",
     data: { url: data.url || "/" },
   }));
 });

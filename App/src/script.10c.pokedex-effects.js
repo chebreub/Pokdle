@@ -45,7 +45,8 @@ function playPokedexUiSfx(kind = 'register') {
     legendary: [[261.6,0,.14,.03,'triangle'],[392,.09,.17,.034,'triangle'],[523.3,.2,.22,.038,'sine'],[784,.34,.24,.03,'sine']],
     secret: [[329.6,0,.16,.02,'sine'],[493.9,.12,.18,.026,'sine'],[659.3,.27,.24,.03,'sine']]
   }[kind] || [[440,0,.1,.025,'sine']];
-  for (const [freq,offset,duration,gain,type] of score) pokedexFxTone(ctx,freq,t+offset,duration,gain,type);
+  const volume = typeof appSoundVolume === 'function' ? appSoundVolume() : 1;
+  for (const [freq,offset,duration,gain,type] of score) pokedexFxTone(ctx,freq,t+offset,duration,gain*volume,type);
 }
 function playPokedexRegistrationCry(pokemon, volume = 0.5) {
   if (!pokemon || !pokedexFxSettings().pokemonCries) return;

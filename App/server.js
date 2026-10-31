@@ -530,6 +530,10 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["egg_rewards", "DELETE FROM egg_rewards WHERE player_id = $1", [id]],
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
+    ["weekly_awards", "DELETE FROM weekly_awards WHERE discord_id = $1", [id]],
+    ["player_message_replies", "DELETE FROM player_message_replies WHERE account_id = $1", [id]],
+    ["player_message_reads", "DELETE FROM player_message_reads WHERE account_id = $1", [id]],
+    ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
     ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
     ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
   ];
@@ -1499,15 +1503,21 @@ const pushReady = pgPool ? authDbReady.then(async () => {
 const pushRoutes = pushReminders.mountPushRoutes(app, { express, db: pgPool, ready: pushReady, secret: SESSION_SECRET, getUser: getSessionUser, readCookies: parseAuthCookies, webpush });
 if (pgPool) pushReminders.startScheduler({ db: pgPool, webpush, configured: pushRoutes.configured });
 
-// The admin panel (/admin): news banner and shared photos, for the accounts in ADMIN_ACCOUNT_IDS.
+// The admin panel (/admin): news banner, messages to the players and shared photos, for the
+// accounts in ADMIN_ACCOUNT_IDS.
+const playerMessages = require("./lib/player-messages");
 const adminPanelReady = pgPool ? authDbReady.then(async () => {
   await adminPanel.ensureTables(pgPool);
+  await playerMessages.ensureTables(pgPool);
   return true;
 }).catch((error) => {
   console.warn("[admin] tables unavailable:", String(error.message || error).slice(0, 160));
   return false;
 }) : Promise.resolve(false);
-adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, getSessionUser: (req) => (authReady() ? getSessionUser(req) : null), adminIds: ADMIN_ACCOUNT_IDS });
+adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, getSessionUser: (req) => (authReady() ? getSessionUser(req) : null), adminIds: ADMIN_ACCOUNT_IDS,
+  messages: { module: playerMessages, webpush, pushReady: pushRoutes.configured } });
+// The player's 📬 window: the messages the creator wrote to them, and their answers.
+playerMessages.mountPlayerRoutes(app, { express, db: pgPool, ready: adminPanelReady, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");
