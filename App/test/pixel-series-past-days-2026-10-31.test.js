@@ -6,21 +6,23 @@ const fs = require('node:fs');
 const path = require('node:path');
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
-test('Pixelisé is a series of 10 images by default, 5 / 10 / 20 to pick, with a summary', () => {
-  const src = read('src/script.10xm.pixel-series.js');
-  assert.match(src, /var PIXEL_SERIES_SIZES = \[5, 10, 20\];/);
-  assert.match(src, /return PIXEL_SERIES_SIZES\.indexOf\(n\) >= 0 \? n : 10;/, '10 when nothing was chosen');
-  assert.match(src, /surrender\.textContent = pixelSeries \? 'Passer l’image' : 'Abandonner';/);
-  assert.match(src, /restart\.innerHTML = last \? '🔁 Nouvelle série' : 'Image suivante →';/);
+test('Pixelisé and Cri play series of 10 by default, 5 / 10 / 20 to pick, with a summary', () => {
+  const src = read('src/script.10xm.guess-series.js');
+  assert.match(src, /var GUESS_SERIES_SIZES = \[5, 10, 20\];/);
+  assert.match(src, /var GUESS_SERIES_ON = \['pixel', 'cry'\];/);
+  assert.match(src, /return GUESS_SERIES_SIZES\.indexOf\(n\) >= 0 \? n : 10;/, '10 when nothing was chosen');
+  assert.match(src, /pixel: \{ start: 'startPixelGame', box: 'pixel-box', one: 'Image', many: 'images', skip: 'Passer l’image', next: 'Image suivante →' \}/);
+  assert.match(src, /cry: \{ start: 'startCryGame', box: 'cry-box', one: 'Cri', many: 'cris', skip: 'Passer le cri', next: 'Cri suivant →' \}/);
+  assert.match(src, /restart\.innerHTML = last \? '🔁 Nouvelle série' : GUESS_SERIES_MODES\[s\.mode\]\.next;/);
   // The summary, rendered with a sample series.
-  const code = src.split("if (typeof startPixelGame === 'function')")[0];
-  const env = { window: {}, escapeHtml: (s) => String(s), playerProfile: { xp: 1220, pixelSeriesBest: { 10: 6 } }, localStorage: { getItem: () => null } };
-  const { pixelSeriesSummaryHtml } = Function(...Object.keys(env), code + '; return { pixelSeriesSummaryHtml };')(...Object.values(env));
-  const html = pixelSeriesSummaryHtml({ total: 10, found: 7, attemptsWon: 21, xpStart: 1000, rounds: [{ won: true, name: 'Pikachu' }, { won: false, name: 'Mew' }] });
+  const code = src.split('GUESS_SERIES_ON.forEach(')[0];
+  const env = { window: {}, escapeHtml: (x) => String(x), playerProfile: { xp: 1220, guessSeriesBest: { cry: { 10: 6 } } }, localStorage: { getItem: () => null } };
+  const { guessSeriesSummaryHtml } = Function(...Object.keys(env), code + '; return { guessSeriesSummaryHtml };')(...Object.values(env));
+  const html = guessSeriesSummaryHtml({ mode: 'cry', total: 10, found: 7, attemptsWon: 21, xpStart: 1000, rounds: [{ won: true, name: 'Pikachu' }, { won: false, name: 'Mew' }] });
   assert.match(html, /<b>7<\/b><span>\/ 10 trouvés<\/span>/);
   assert.match(html, /3,0 essais en moyenne · \+220 XP · 🏆 Record !/);
   assert.match(html, /<i class="is-won" title="Pikachu">✓<\/i><i class="is-lost" title="Mew">×<\/i>/);
-  assert.match(read('src/script.02.statclash.js'), /function startPixelGame\(\)/, 'the catalog still opens it the same way');
+  for (const name of ['startPixelGame', 'startCryGame']) assert.match(read('src/script.02.statclash.js'), new RegExp('function ' + name + '\\(\\)'), 'the catalog still opens ' + name);
 });
 
 test('a finished day offers Pokédle in unlimited mode, the mini-games and the past days', () => {
