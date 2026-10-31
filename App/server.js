@@ -741,6 +741,20 @@ app.get("/api/leaderboard/counts", async (req, res) => {
 // whose partner shows shiny in the rankings (lib/weekly-awards.js).
 const weeklyAwards = pgPool ? require("./lib/weekly-awards").createWeeklyAwards({ db: pgPool }) : null;
 const { isChampion } = require("./lib/week-champions");
+// A click on a name opens that player's trainer card (31/10/2026); rows name players by a public id.
+const { setPlayerIdSecret, playerPid } = require("./lib/player-ids");
+setPlayerIdSecret(SESSION_SECRET);
+const playerCards = pgPool ? require("./lib/player-cards").createPlayerCards({ db: pgPool, arcadeModes: LB_ARCADE_MODES, modeConfig: leaderboardConfig }) : null;
+app.get("/api/player/:pid", async (req, res) => {
+  if (!playerCards) return res.json({ ok: false });
+  try {
+    await authDbReady;
+    await refreshWeeklyChampions();
+    const card = await playerCards.card(String(req.params.pid), require("./lib/daily-game").dailyCalendar().day);
+    if (!card) return res.status(404).json({ ok: false, error: "unknown_player" });
+    res.json(card);
+  } catch (e) { console.error("[player-card]", e.message); res.status(503).json({ ok: false }); }
+});
 function refreshWeeklyChampions() {
   if (!weeklyAwards) return Promise.resolve();
   return weeklyAwards.refresh(require("./lib/daily-game").dailyCalendar().day).catch((e) => console.error("[weekly-awards]", e.message));
@@ -852,6 +866,7 @@ app.get("/api/leaderboard", async (req, res) => {
       avatar: row.avatar,
       partnerId: row.partner_id ? Number(row.partner_id) : null,
       champion: isChampion(row.discord_id),
+      pid: playerPid(row.discord_id),
       level: playerLevelFromXp(row.xp),
       score: Number(row.score),
       me: meId != null && row.discord_id === meId

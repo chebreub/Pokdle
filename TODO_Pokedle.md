@@ -52,7 +52,7 @@ Idée : d'abord faire revenir ceux qui viennent déjà, puis être trouvé sur G
   - encart « À gagner cette semaine » à la place de la carte de la Ligue : le 1er du Global de la semaine a son partenaire en shiny pendant toute la semaine suivante, dans tous les classements et sur sa carte de dresseur ; médaille d'or, d'argent ou de bronze pour le podium (sur la carte de dresseur) ;
   - les gagnants sont écrits une seule fois dans la table `weekly_awards` à la première visite de la nouvelle semaine (`App/lib/weekly-awards.js`, rien à régler sur Render) ;
   - la Ligue garde son badge et son classement dans le menu « Classement ».
-- [ ] Clic sur un pseudo → sa carte de dresseur (parties, victoires, série, stats par jeu ; la photo seulement si le joueur l'a choisi).
+- [x] Clic sur un pseudo → sa carte de dresseur, fait le 31/10 : fenêtre par-dessus le classement (liste, podium, champion), avec partenaire (shiny si champion), niveau et titre, médailles, « Membre depuis », jours joués, Pokémon du jour trouvés, meilleure série, points cumulés, stats des 4 jeux du jour et 3 derniers records d'arcade. Chiffres calculés par le serveur (`App/lib/player-cards.js`, `GET /api/player/:pid`) ; chaque joueur a un identifiant public (`App/lib/player-ids.js`), jamais son numéro de compte ; la photo seulement si le joueur l'a partagée.
 - [ ] Collection et shiny : trouver le Pokémon du jour = le capturer, petite chance de shiny, vitrine sur la carte de dresseur.
 - [ ] Réglages : sons oui / non avec volume, mode sans chrono.
 
