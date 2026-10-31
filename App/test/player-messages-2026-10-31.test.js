@@ -29,9 +29,9 @@ test('the admin section escapes what players wrote and says who read what', () =
     ],
   }, 12);
   assert.match(html, /<option value="all">Tous les joueurs qui ont un compte<\/option><option value="7">&lt;b&gt;Sacha&lt;\/b&gt; · vu le 31\/10<\/option>/);
-  assert.match(html, /31\/10 → <b>&lt;b&gt;Sacha&lt;\/b&gt;<\/b> · Lu ✓<\/div><div class="body">Salut !<br>Ça va \?<\/div>/);
+  assert.match(html, /31\/10 → <b>&lt;b&gt;Sacha&lt;\/b&gt;<\/b> · Vu ✓<\/div><div class="body">Salut !<br>Ça va \?<\/div>/);
   assert.match(html, /<b>Sacha&lt;script&gt;<\/b> · 31\/10<br>Oui &lt;img src=x&gt;/);
-  assert.match(html, /30\/10 → <b>Tous les joueurs<\/b> · Lu par 4 · expiré/);
+  assert.match(html, /30\/10 → <b>Tous les joueurs<\/b> · Vu par 4 · expiré/);
   assert.match(html, /\(12 en tout\)/);
   assert.match(html, /<input type="checkbox" name="push" value="1" checked>/);
   assert.doesNotMatch(html, /<script>|<img src=x>/);
@@ -148,6 +148,14 @@ test('PostgreSQL: the creator writes, the player reads once and answers, nobody 
     await json('/api/messages/reply', '7', { id: mine.id, body: 'Dernier mot' });
     assert.equal((await (await json('/api/messages/reply', '7', { id: mine.id, body: 'Encore' })).json()).error, 'Tu as déjà répondu à ce message.');
 
+    // « 📬 Mes messages » : a message already seen stays there, with the player's own answers.
+    const all = async (user) => (await (await fetch(base + '/api/messages/all', { headers: user ? { 'x-test-user': user } : {} })).json());
+    const kept = await all('7');
+    assert.equal(kept.repliesPerMessage, 3);
+    assert.deepEqual(kept.messages.map((m) => [m.body, m.replies.map((r) => r.body)]), [['Salut Sacha !\nTu aimes Dessine-le ?', ['Oui, trop bien !', 'Et le chat aussi', 'Dernier mot']]]);
+    assert.deepEqual((await all('8')).messages, [], 'never someone else\'s message');
+    assert.deepEqual((await all(null)).messages, []);
+
     // A message to everyone: the players who had an account then, for two weeks.
     await db.query("INSERT INTO users(discord_id,username,created_at) VALUES('9','Pierre',now()+interval '1 minute')");
     await form('/admin/messages', '42', { to: 'all', body: 'Merci à tous ceux qui jouent !' });
@@ -158,9 +166,9 @@ test('PostgreSQL: the creator writes, the player reads once and answers, nobody 
     // The panel lists the answers.
     const panel = await (await fetch(base + '/admin', { headers: { 'x-test-user': '42' } })).text();
     assert.match(panel, /<h2>Écrire aux joueurs<\/h2>/);
-    assert.match(panel, /→ <b>Sacha<\/b> · Lu ✓/);
+    assert.match(panel, /→ <b>Sacha<\/b> · Vu ✓/);
     assert.match(panel, /<b>Sacha<\/b> · \d\d\/\d\d<br>Oui, trop bien !/);
-    assert.match(panel, /→ <b>Tous les joueurs<\/b> · Lu par 0/);
+    assert.match(panel, /→ <b>Tous les joueurs<\/b> · Vu par 0/);
 
     // Removed by the admin, or erased after 90 days, with its answers.
     const broadcast = (await db.query("SELECT id FROM player_messages WHERE account_id IS NULL")).rows[0].id;

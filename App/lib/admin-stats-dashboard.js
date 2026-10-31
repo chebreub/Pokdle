@@ -30,8 +30,16 @@ function countRows(rows, event) {
 }
 function kpi(title, value, note, icon) {
   return '<div class="kpi"><div class="kpi-label"><span class="kpi-symbol" aria-hidden="true">' +
-    icon + '</span>' + escapeHtml(title) + '</div><strong>' + number(value) +
+    icon + '</span>' + escapeHtml(title) + '</div><strong>' + (typeof value === "string" ? escapeHtml(value) : number(value)) +
     '</strong><small>' + escapeHtml(note) + '</small></div>';
+}
+// « Retour des joueurs » from the Pokémon du jour plays (lib/daily-retention.js).
+function retentionKpi(retention) {
+  const pct = (part) => part && part.rate != null ? part.rate + " %" : "—";
+  if (!retention) return kpi("Retour des joueurs", null, "Indisponible : base du Pokémon du jour injoignable", "↻");
+  const note = "Rejouent le lendemain (" + retention.nextDay.back + "/" + retention.nextDay.base + ") · dans les 7 jours : " +
+    pct(retention.week) + " · nouveaux revenus en 7 jours : " + pct(retention.newWeek);
+  return kpi("Retour des joueurs", pct(retention.nextDay), note, "↻");
 }
 function graph(series) {
   const available = series.some(x => x.sessions !== null || x.uniques !== null);
@@ -77,7 +85,7 @@ function renderStatsDashboard(options) {
   const {
     days = 14, endDay = utcDay(), adminKey = "", metrics = null, uniqueRows = null,
     rawRows = null, labels = {}, feedbackHtml = "", diagnosticDays = [],
-    diagnosticRows = [], bootedAt = ""
+    diagnosticRows = [], bootedAt = "", retention = null
   } = options;
   const period = PERIODS.includes(days) ? days : 14;
   const calendar = rangeDays(period, endDay);
@@ -144,7 +152,7 @@ details{background:#fff;border:1px solid var(--line);border-radius:16px;margin:1
 ${kpi("Sessions enregistrées",sessionsTotal,"Une visite par session de navigateur, pas des personnes uniques","↗")}
 ${kpi("Navigateurs uniques",lastDay.uniques,"Estimation du " + dateLong(endDay) + " (pas des personnes)","◎")}
 ${kpi("Lancements de jeux",launches,"Somme des lancements déclarés sur la période","▣")}
-${kpi("Fidélisation",null,"Non mesurée : un même navigateur ne peut pas être suivi entre les jours","↻")}
+${retentionKpi(retention)}
 </div>
 <div class="columns"><div>
 <section class="panel"><div class="panel-head"><h2>Fréquentation quotidienne</h2><span class="pill">${period} jours · UTC</span></div>
@@ -154,7 +162,7 @@ ${kpi("Fidélisation",null,"Non mesurée : un même navigateur ne peut pas être
 <section class="panel"><h2>Party Room</h2><p>Événements déclarés sur la même période. Une personne peut rejoindre plusieurs fois.</p><div class="party">
 <div class="mini"><strong>${number(partyCreated)}</strong><span>Salles créées</span></div><div class="mini"><strong>${number(partyJoined)}</strong><span>Jonctions</span></div><div class="mini"><strong>${number(partyRounds)}</strong><span>Manches démarrées</span></div></div></section>
 <section class="panel feedback">${feedbackHtml}</section>
-<section class="panel"><h2>Comment lire ces chiffres ?</h2><p><strong>Sessions :</strong> ouvertures réelles de l'application, pas les robots.</p><p><strong>Navigateurs uniques :</strong> estimation par jour uniquement, non additionnable entre les jours.</p><p><strong>Fins de manches :</strong> certains jeux enchaînent plusieurs tours pour un seul lancement. Ne pas les lire comme des taux d'abandon.</p><p><strong>Retour des joueurs :</strong> n'est pas calculable à partir des compteurs anonymes agrégés. Aucune donnée personnelle supplémentaire n'est collectée ici.</p></section>
+<section class="panel"><h2>Comment lire ces chiffres ?</h2><p><strong>Sessions :</strong> ouvertures réelles de l'application, pas les robots.</p><p><strong>Navigateurs uniques :</strong> estimation par jour uniquement, non additionnable entre les jours.</p><p><strong>Fins de manches :</strong> certains jeux enchaînent plusieurs tours pour un seul lancement. Ne pas les lire comme des taux d'abandon.</p><p><strong>Retour des joueurs :</strong> calculé avec les parties du Pokémon du jour que le jeu garde déjà (un compte, ou un navigateur pour les invités) : la part des joueurs d'un jour qui rejouent le lendemain, puis dans les 7 jours. Aucune donnée n'est ajoutée pour ça.</p></section>
 </div></div>
 <details><summary>Voir le détail quotidien des visites</summary><div class="detail-body"><div class="table-scroll"><table><thead><tr><th>Jour (UTC)</th><th>Sessions</th><th>Navigateurs uniques estimés</th><th>Chargements bruts (robots inclus)</th></tr></thead><tbody>${trafficRows}</tbody></table></div><p class="footnote">« — » = non mesuré, et non zéro. Les chargements bruts comprennent les robots, aperçus de liens et pings de maintien en éveil.</p></div></details>
 <details><summary>Voir le détail de tous les jeux</summary><div class="detail-body"><div class="table-scroll"><table><thead><tr><th>Mode</th><th>Lancements</th><th>Fins de manches</th><th>Victoires</th><th>Fins sans victoire</th></tr></thead><tbody>${modeRows || '<tr><td colspan="5">Aucune donnée de jeu disponible.</td></tr>'}</tbody></table></div><p class="footnote">Une fin n'est pas toujours une partie distincte ; les manches peuvent être rejouées plusieurs fois. « — » = mode sans suivi des fins.</p></div></details>

@@ -531,6 +531,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
     ["weekly_awards", "DELETE FROM weekly_awards WHERE discord_id = $1", [id]],
+    ["daily_reactions", "DELETE FROM daily_reactions WHERE identity = $1", ["user:" + id]],
     ["player_message_replies", "DELETE FROM player_message_replies WHERE account_id = $1", [id]],
     ["player_message_reads", "DELETE FROM player_message_reads WHERE account_id = $1", [id]],
     ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
@@ -1569,10 +1570,17 @@ app.get("/admin/stats", async (req, res) => {
       return { label: USAGE_LABELS[event] || event, values, total: values.reduce((a, b) => a + b, 0) };
     });
   const { renderStatsDashboard } = require("./lib/admin-stats-dashboard");
+  // Return of players, from the Pokémon du jour plays already kept (lib/daily-retention.js).
+  let retention = null;
+  try {
+    if (pgPool) retention = await require("./lib/daily-retention").dailyRetention(pgPool, start, endDay);
+  } catch (error) {
+    console.warn("[stats] retention unavailable:", String(error.message || error).slice(0, 120));
+  }
   res.type("html").send(renderStatsDashboard({
     days, endDay, adminKey, metrics, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
-    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16)
+    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention
   }));
 });
 

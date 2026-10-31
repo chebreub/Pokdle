@@ -58,7 +58,15 @@ async function initDailyDb(db, now = new Date()) {
   await db.query("CREATE INDEX IF NOT EXISTS daily_plays_account ON daily_plays(account_id,day)");
   await db.query("ALTER TABLE daily_plays ADD COLUMN IF NOT EXISTS excluded_stats BOOLEAN NOT NULL DEFAULT false");
   await db.query("ALTER TABLE daily_plays ADD COLUMN IF NOT EXISTS shiny BOOLEAN NOT NULL DEFAULT false");
+  // One quick reaction per player and per day, once the day is played (31/10/2026). Kept 30 days.
+  await db.query(`CREATE TABLE IF NOT EXISTS daily_reactions (
+    day DATE NOT NULL, identity TEXT NOT NULL, emoji TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(day,identity))`);
 }
+// The reactions under the Pokémon du jour result. Under FOUND_MIN finders the count stays hidden:
+// « 1 joueur l'a trouvé » would make the site look empty.
+const DAILY_REACTIONS=["😂","🔥","👏","😱"];
+const DAILY_FOUND_MIN=5;
 function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(),randomInt=crypto.randomInt}) {
   const pool=pokemon.filter(p=>p&&!p.isAltForm&&Number(p.id)>0&&Number(p.id)<=1025).sort((a,b)=>a.id-b.id);
   // Targets stay base species; proposals include every playable form. Use the
@@ -214,7 +222,31 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
       WHERE ${where} AND p.status='won' AND p.shiny ORDER BY p.day DESC LIMIT 60`,[who.accountId||who.key])).rows;
     return {ok:true,count:rows.length,shinies:rows.map(row=>({id:Number(row.secret_id),day:row.day}))};
   }
-  return {state,guess:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),distribution,shinies};
+  async function reactions(who) {
+    const day=parisDay(clock());
+    const [counts,mine,found]=await Promise.all([
+      db.query("SELECT emoji,count(*)::int AS n FROM daily_reactions WHERE day=$1 GROUP BY emoji",[day]),
+      db.query("SELECT emoji FROM daily_reactions WHERE day=$1 AND identity=$2",[day,who.key]),
+      db.query("SELECT count(*)::int AS n FROM daily_plays WHERE day=$1 AND status='won' AND NOT excluded_stats",[day]),
+    ]);
+    const byEmoji=Object.fromEntries(DAILY_REACTIONS.map(e=>[e,0]));
+    for(const row of counts.rows)if(row.emoji in byEmoji)byEmoji[row.emoji]=row.n;
+    const n=found.rows[0]?found.rows[0].n:0;
+    return {ok:true,key:day,emojis:DAILY_REACTIONS,counts:byEmoji,mine:mine.rows[0]?mine.rows[0].emoji:null,found:n>=DAILY_FOUND_MIN?n:null};
+  }
+  async function react(who,body) {
+    const day=parisDay(clock()),emoji=String(body&&body.emoji||"");
+    if(!DAILY_REACTIONS.includes(emoji))throw dailyError("bad_reaction",400);
+    const play=(await db.query("SELECT status FROM daily_plays WHERE identity=$1 AND day=$2",[who.key,day])).rows[0];
+    if(!play||play.status==="playing")throw dailyError("play_first",409);
+    const current=(await db.query("SELECT emoji FROM daily_reactions WHERE day=$1 AND identity=$2",[day,who.key])).rows[0];
+    // The same emoji again takes the reaction back; another one replaces it.
+    if(current&&current.emoji===emoji)await db.query("DELETE FROM daily_reactions WHERE day=$1 AND identity=$2",[day,who.key]);
+    else await db.query("INSERT INTO daily_reactions(day,identity,emoji) VALUES($1,$2,$3) ON CONFLICT(day,identity) DO UPDATE SET emoji=EXCLUDED.emoji,created_at=now()",[day,who.key,emoji]);
+    await db.query("DELETE FROM daily_reactions WHERE day < $1::date - 30",[day]);
+    return reactions(who);
+  }
+  return {state,guess:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),distribution,shinies,reactions,react};
 }
 function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,compare,legacyTarget,readyBefore=Promise.resolve()}) {
   const service=db&&secret?createDailyService({db,pokemon,compare,legacyTarget}):null;
@@ -251,8 +283,10 @@ function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,com
   app.post("/api/daily/abandon",express.json({limit:"2kb"}),handle((who,req)=>service.abandon(who,req.body||{})));
   app.get("/api/daily-stats/today",handle(()=>service.distribution()));
   app.get("/api/daily/shinies",handle(who=>service.shinies(who)));
+  app.get("/api/daily/reactions",handle(who=>service.reactions(who)));
+  app.post("/api/daily/react",express.json({limit:"1kb"}),handle((who,req)=>service.react(who,req.body||{})));
   app.post("/api/daily-stats/report",(_req,res)=>res.status(410).json({ok:false,error:"retired"}));
   app.post("/api/daily/session",(_req,res)=>res.status(409).json({ok:false,error:"daily_update_required"}));
   return service;
 }
-module.exports={DAILY_ORIGIN,SHINY_TIERS,shinyOdds,shinyState,dailyCalendar,nextDay,streakFromDays,dailyGuest,issueDailyGuest,initDailyDb,createDailyService,mountDailyRoutes};
+module.exports={DAILY_ORIGIN,SHINY_TIERS,DAILY_REACTIONS,DAILY_FOUND_MIN,shinyOdds,shinyState,dailyCalendar,nextDay,streakFromDays,dailyGuest,issueDailyGuest,initDailyDb,createDailyService,mountDailyRoutes};

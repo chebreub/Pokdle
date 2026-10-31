@@ -819,3 +819,42 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
 #pokdle-app #screen-party-room .party-typecombo-panel .tc-half-ic img {width:42px;height:42px;}
 /* Description Pokédex: the mystery comes from Gen 1 to 8 (French entries), but every Pokémon can be typed. */
 #pokdle-app .description-gen-note {max-width:620px;margin:4px auto 0;text-align:center;color:var(--ui-muted,#7A7180);font-weight:700;font-size:.8rem;line-height:1.4;}
+/* « Nouveau » on the latest games (31/10/2026), until the date set in script.10xi.new-badges.js. */
+#pokdle-app .has-new-badge {position:relative !important;}
+#pokdle-app .has-new-badge > .new-game-badge {position:absolute !important;top:8px !important;left:8px !important;right:auto !important;bottom:auto !important;width:auto !important;height:auto !important;margin:0 !important;display:inline-block !important;z-index:3;padding:3px 9px;border-radius:999px;background:#E2453C;color:#fff;font:900 11px/1.2 Nunito,sans-serif;letter-spacing:.02em;text-transform:none;box-shadow:0 3px 0 rgba(0,0,0,.15);pointer-events:none;}
+/* « Reviens demain ? » in the daily win card. */
+.daily-remind-cta {display:flex;align-items:center;gap:12px;margin:12px 0 0;padding:12px 14px;border-radius:18px;background:#F1EDFF;border:1px solid #DCD2FA;text-align:left;}
+.daily-remind-cta-ico {font-size:26px;line-height:1;}
+.daily-remind-cta-text {flex:1;display:grid;gap:2px;}
+.daily-remind-cta-text b {font:800 15px Nunito,sans-serif;color:#2E2A33;}
+.daily-remind-cta-text small {font:700 12px/1.35 Nunito,sans-serif;color:#7A7180;}
+.daily-remind-cta .btn-blue {min-height:40px;padding:0 16px;border-radius:12px;white-space:nowrap;width:auto;}
+.theme-dark .daily-remind-cta {background:#2F2943;border-color:#4A3F6E;}
+.theme-dark .daily-remind-cta-text b {color:#F3EEE8;}
+.theme-dark .daily-remind-cta-text small {color:#B5ADBB;}
+/* Reactions under the Pokémon du jour. */
+.daily-react {margin:12px 0 0;display:grid;gap:8px;justify-items:center;}
+.daily-react-found {margin:0;font:800 14px Nunito,sans-serif;color:#2E2A33;}
+.daily-react-row {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;}
+.daily-react-label {font:800 12px Nunito,sans-serif;color:#7A7180;margin-right:2px;}
+.daily-react-btn {display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid #EADFCF;background:#fff;color:#2E2A33;font:800 14px Nunito,sans-serif;cursor:pointer;}
+.daily-react-btn span {font-size:18px;line-height:1;}
+.daily-react-btn.is-on {border-color:#4069E0;background:#EEF2FF;}
+.theme-dark .daily-react-found {color:#F3EEE8;}
+.theme-dark .daily-react-btn {background:#29262F;border-color:#3D3844;color:#F3EEE8;}
+.theme-dark .daily-react-btn.is-on {border-color:#7C9BFF;background:#2B3150;}
+/* « 📬 Mes messages ». */
+.my-messages {display:grid;gap:14px;}
+.my-message {padding:0 0 14px;border-bottom:1px solid #EADFCF;}
+.my-message:last-child {border-bottom:0;padding-bottom:0;}
+.my-message textarea {width:100%;min-height:64px;border-radius:12px;border:1.5px solid #EADFCF;padding:10px 12px;font:600 15px Nunito,sans-serif;resize:vertical;}
+.my-message-reply {margin:0 0 10px 18px;padding:10px 12px;border-radius:14px;background:#EEF2FF;font:600 14px/1.45 Nunito,sans-serif;color:#2E2A33;}
+.my-message-reply b {display:block;font:900 11px Nunito,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#4069E0;margin-bottom:2px;}
+.my-messages-empty {margin:0;color:#7A7180;font:700 14px/1.5 Nunito,sans-serif;text-align:center;}
+.theme-dark .my-message {border-color:#3D3844;}
+.theme-dark .my-message textarea {background:#29262F;border-color:#3D3844;color:#F3EEE8;}
+.theme-dark .my-message-reply {background:#2B3150;color:#F3EEE8;}
+@media (max-width:420px) {
+  .daily-react-label {display:none;}
+  .daily-react-btn {min-height:38px;padding:0 11px;}
+}

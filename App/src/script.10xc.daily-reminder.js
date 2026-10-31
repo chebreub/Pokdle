@@ -52,6 +52,7 @@ function renderDailyReminderChip() {
   const saved = support === 'push' && Notification.permission === 'granted' ? dailyReminderSaved() : null;
   chip.textContent = saved ? '🔔 Rappel à ' + dailyReminderHourLabel(saved.hour) : '🔔 Me rappeler demain';
   chip.classList.toggle('is-on', Boolean(saved));
+  if (saved) document.getElementById('daily-remind-cta')?.remove();
 }
 
 function dailyReminderHoursHtml() {
@@ -182,3 +183,27 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!dailyReminderSupport()) return;
   loadDailyReminderServer().then(() => { renderDailyReminderChip(); if (dailyReminderServer.ok) syncDailyReminder(); });
 });
+
+// The win card asks once more, at the best moment: « Reviens demain ? » with the same button, only
+// while no reminder is on and this browser can show one (or guide an iPhone to the home screen).
+function dailyRemindCtaHtml() {
+  const support = dailyReminderSupport();
+  if (!support || !dailyReminderServer?.ok) return '';
+  if (support === 'push' && Notification.permission === 'granted' && dailyReminderSaved()) return '';
+  return '<div class="daily-remind-cta" id="daily-remind-cta"><span class="daily-remind-cta-ico" aria-hidden="true">🔔</span>' +
+    '<span class="daily-remind-cta-text"><b>Reviens demain ?</b><small>Un rappel à l’heure de ton choix, jamais si tu as déjà joué.</small></span>' +
+    '<button type="button" class="btn-blue" data-action="openDailyReminder">Activer</button></div>';
+}
+if (typeof renderGameOverBox === 'function') {
+  const renderGameOverBeforeReminder = renderGameOverBox;
+  renderGameOverBox = function () {
+    const value = renderGameOverBeforeReminder.apply(this, arguments);
+    document.getElementById('daily-remind-cta')?.remove();
+    if (gameMode === 'daily' && typeof dailyServerState !== 'undefined' && dailyServerState && dailyServerState.won) {
+      const html = dailyRemindCtaHtml();
+      const anchor = document.getElementById('daily-enquiry-points') || document.querySelector('#win-box .win-inner');
+      if (html && anchor) anchor.insertAdjacentHTML('afterend', html);
+    }
+    return value;
+  };
+}
