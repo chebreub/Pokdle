@@ -704,3 +704,37 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
 .app-setting-volume output {min-width:48px;text-align:right;font:800 15px Nunito,sans-serif;color:#2E2A33;}
 #overlay-modal .app-setting-volume .app-volume-row .btn-ghost {flex:0 0 auto;width:auto;min-height:40px;margin:0;padding:8px 14px;white-space:nowrap;}
 .theme-dark .app-setting-volume output {color:#F3EEE8;}
+/* The shiny hunt (31/10/2026): the day's capture on the result card, the shinies on the cards. */
+.daily-capture {display:flex;align-items:center;gap:14px;margin:12px 0;padding:14px;border-radius:20px;background:#FFF8EF;border:1px solid #EADFD0;text-align:left;}
+.daily-capture-art {flex:0 0 auto;display:grid;place-items:center;width:104px;height:104px;border-radius:50%;background:#fff;border:1px solid #EADFD0;position:relative;}
+.daily-capture-art img {width:92px;height:92px;object-fit:contain;}
+.daily-capture-text {display:flex;flex-direction:column;gap:4px;min-width:0;}
+.daily-capture-text small {font:800 12px/1.3 Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#6B6472;}
+.daily-capture-text b {font:700 18px/1.25 Fredoka,Nunito,sans-serif;color:#2E2A33;}
+.daily-capture-odds {font:800 14px/1.4 Nunito,sans-serif;color:#2E2A33;}
+.daily-capture-hint {font:600 13px/1.45 Nunito,sans-serif;color:#6B6472;}
+.daily-capture.is-shiny {background:linear-gradient(135deg,#FFF3C4 0%,#FFE7A3 55%,#FFF8EF 100%);border-color:#F1C84B;box-shadow:0 0 0 3px rgba(255,212,92,.35);}
+.daily-capture.is-shiny .daily-capture-art {border-color:#F1C84B;box-shadow:0 0 18px rgba(255,212,92,.8);}
+.daily-capture.is-shiny .daily-capture-art::after {content:"✨";position:absolute;top:-6px;right:-4px;font-size:24px;animation:shiny-twinkle 1.6s ease-in-out infinite;}
+.daily-capture.is-shiny .daily-capture-text small {color:#7A5700;}
+@keyframes shiny-twinkle {0%,100% {transform:scale(1) rotate(0);opacity:1;} 50% {transform:scale(1.25) rotate(12deg);opacity:.75;}}
+.reduce-motion .daily-capture.is-shiny .daily-capture-art::after {animation:none;}
+@media (prefers-reduced-motion:reduce) {.daily-capture.is-shiny .daily-capture-art::after {animation:none;}}
+@media (max-width:420px) {.daily-capture {gap:10px;padding:12px;} .daily-capture-art {width:84px;height:84px;} .daily-capture-art img {width:74px;height:74px;} .daily-capture-text b {font-size:16px;}}
+.shiny-showcase {display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin:6px 0 4px;}
+.shiny-showcase-item {margin:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:16px;background:linear-gradient(180deg,#FFF3C4 0%,#FFF8EF 100%);border:1px solid #F1D98A;text-align:center;}
+.shiny-showcase-item img {width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,212,92,.7));}
+.shiny-showcase-item figcaption {font:700 12px/1.25 Nunito,sans-serif;color:#2E2A33;overflow-wrap:anywhere;}
+.shiny-showcase-item small {display:block;font-weight:600;color:#6B6472;}
+.shiny-showcase-more {display:grid;place-items:center;border-radius:16px;border:1px dashed #F1D98A;font:800 15px Nunito,sans-serif;color:#7A5700;}
+.profile-shinies {align-self:stretch;width:100%;max-width:460px;margin:10px auto 4px;text-align:center;}
+.profile-shinies .shiny-showcase {width:100%;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
+.profile-shinies-title {display:block;font:800 14px Nunito,sans-serif;color:#7A5700;}
+.profile-shinies-empty {margin:8px 0 4px;font:600 14px/1.45 Nunito,sans-serif;color:#6B6472;}
+.theme-dark .daily-capture {background:#29262F;border-color:#3A3642;}
+.theme-dark .daily-capture-art {background:#1E1C24;border-color:#3A3642;}
+.theme-dark .daily-capture-text b, .theme-dark .daily-capture-odds, .theme-dark .shiny-showcase-item figcaption {color:#F3EEE8;}
+.theme-dark .daily-capture-text small, .theme-dark .daily-capture-hint, .theme-dark .shiny-showcase-item small, .theme-dark .profile-shinies-empty {color:#B5ADBB;}
+.theme-dark .daily-capture.is-shiny {background:linear-gradient(135deg,#4A3D12 0%,#3A3010 60%,#29262F 100%);border-color:#B8952E;}
+.theme-dark .daily-capture.is-shiny .daily-capture-text small, .theme-dark .profile-shinies-title {color:#FFD45C;}
+.theme-dark .shiny-showcase-item {background:linear-gradient(180deg,#4A3D12 0%,#29262F 100%);border-color:#7A6420;}

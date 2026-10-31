@@ -205,6 +205,13 @@ def main():
      page.evaluate("updateAppSetting('soundVolume',100);closeOverlayModal()")
      return screen('screen-config')
     check('settings-volume',settings_volume)
+    def shiny_profile():
+     # The shiny hunt (31/10/2026): the trainer card tells what the next Pokémon du jour can bring.
+     nav('profile','screen-profile')
+     hint=page.locator('#profile-trainer-card .profile-shinies-empty, #profile-trainer-card .profile-shinies').first
+     expect(hint.is_visible() and 'shin' in hint.inner_text().lower(),'The shiny hunt is missing from the trainer card')
+     return nav('home','screen-config')
+    check('shiny-profile',shiny_profile)
     check('catalog',lambda:nav('game','screen-all-modes'))
     def audit_catalog():
      for opener in ["openAllModesScreen('solo')","openAllModesScreen('friends')"]:

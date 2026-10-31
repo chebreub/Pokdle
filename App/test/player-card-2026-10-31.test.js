@@ -95,15 +95,17 @@ test('PostgreSQL: the card counts the finished plays, the Pokémon found, the be
     db = new Pool({ connectionString: process.env.QA_DATABASE_URL, options: '-c search_path=' + schema, max: 4 });
     await db.query(`CREATE TABLE dossier_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,points INT,elapsed_ms BIGINT);
       CREATE TABLE challenge_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,points INT,elapsed_ms BIGINT);
-      CREATE TABLE daily_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,guessed JSONB,hints_used INT,elapsed_ms BIGINT);
+      CREATE TABLE daily_rounds(day DATE PRIMARY KEY,secret_id INTEGER NOT NULL);
+      CREATE TABLE daily_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,guessed JSONB,hints_used INT,elapsed_ms BIGINT,shiny BOOLEAN NOT NULL DEFAULT false);
       CREATE TABLE wordle_plays(identity TEXT,day DATE,account_id TEXT,status TEXT,guessed JSONB,elapsed_ms BIGINT);
       CREATE TABLE scores(discord_id TEXT,mode TEXT,score INT,username TEXT,avatar TEXT,updated_at TIMESTAMPTZ,PRIMARY KEY(discord_id,mode));
       CREATE TABLE users(discord_id TEXT PRIMARY KEY,username TEXT,avatar TEXT,partner_id INT,xp INT,photo_key TEXT,data JSONB DEFAULT '{}'::jsonb,created_at TIMESTAMPTZ DEFAULT now());`);
     await db.query(`INSERT INTO users(discord_id,username,partner_id,xp,data,created_at) VALUES('K','Kayan',571,123368,$1,'2026-09-12T10:00:00Z'),('S','Sacha',null,500,'{}','2026-10-20T10:00:00Z')`,
       [JSON.stringify({ profile: JSON.stringify({ pioneerMyth: true }) })]);
-    const enquete = (day, guessed, status = 'won') => db.query('INSERT INTO daily_plays VALUES($1,$2,$1,$3,$4,0,1000)', ['K', day, status, JSON.stringify(guessed)]);
+    const enquete = (day, guessed, status = 'won', shiny = false) => db.query('INSERT INTO daily_plays(identity,day,account_id,status,guessed,hints_used,elapsed_ms,shiny) VALUES($1,$2,$1,$3,$4,0,1000,$5)', ['K', day, status, JSON.stringify(guessed), shiny]);
     // Three days in a row, a gap, then one more: 4 Pokémon found, a best streak of 3.
-    await enquete('2026-10-20', [1, 2, 3]); await enquete('2026-10-21', [1]); await enquete('2026-10-22', [1, 2]); await enquete('2026-10-25', [1, 2, 3, 4]);
+    await enquete('2026-10-20', [1, 2, 3]); await enquete('2026-10-21', [1]); await enquete('2026-10-22', [1, 2]); await enquete('2026-10-25', [1, 2, 3, 4], 'won', true);
+    await db.query("INSERT INTO daily_rounds VALUES('2026-10-25',571)");
     await enquete('2026-10-26', [1, 2], 'abandoned'); await enquete('2026-10-27', [1], 'playing');
     await db.query("INSERT INTO dossier_plays VALUES('K','2026-10-20','K','completed',18,1000),('K','2026-10-28','K','completed',20,1000)");
     await db.query("INSERT INTO challenge_plays VALUES('K','2026-10-21','K','abandoned',5,1000)");
@@ -117,9 +119,10 @@ test('PostgreSQL: the card counts the finished plays, the Pokémon found, the be
     // Days with a finished stage: 20, 21, 22, 25, 26 (the abandoned Enquête counts), 28.
     assert.deepEqual(card.figures, { days: 6, found: 4, attempts: 2.5, bestStreak: 3, points: 36 + 40 + 38 + 34 + 0 + 18 + 20 + 5 });
     assert.deepEqual(card.games.map((g) => [g.game, g.played]), [['enquete', 5], ['wordlepts', 0], ['dossier', 2], ['challenge', 1]]);
+    assert.deepEqual(card.shinies, { count: 1, latest: [{ id: 571, day: '2026-10-25' }] }, 'the shiny caught on 25/10');
     assert.deepEqual(card.records.map((r) => [r.label, r.score]), [['Speedrun', 42], ['Quiz', 15], ['Higher/Lower 60s', 900]], 'the three latest arcade records, not the daily boards');
     const other = await cards.card(playerPid('S'), '2026-10-31');
-    assert.deepEqual([other.player.champion, other.player.pioneer, other.figures.days, other.records.length], [false, false, 0, 0]);
+    assert.deepEqual([other.player.champion, other.player.pioneer, other.figures.days, other.records.length, other.shinies.count], [false, false, 0, 0, 0]);
     assert.equal(await cards.card('0000000000000000', '2026-10-31'), null);
   } finally {
     setChampions([]);

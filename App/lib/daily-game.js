@@ -18,6 +18,20 @@ function streakFromDays(days, today, abandoned = false) {
   for (const day of wins) { run = previous && nextDay(previous)===day ? run+1 : 1; best=Math.max(best,run); previous=day; }
   return { current: !abandoned && [today,nextDay(today,-1)].includes(previous) ? run : 0, best, lastWin:previous };
 }
+// The shiny hunt (31/10/2026): each Pokémon du jour found is captured, shiny with odds that
+// improve with the streak, like chaining in the games: 1 in 40, 1 in 30 from a 7-day streak,
+// 1 in 20 from 30 days. The server rolls once, at the win, and keeps the result with the play.
+const SHINY_TIERS = Object.freeze([[30, 20], [7, 30], [0, 40]]);
+function shinyOdds(streak) {
+  const days = Math.max(0, Number(streak) || 0);
+  return SHINY_TIERS.find(([from]) => days >= from)[1];
+}
+// What the result card shows: the capture once won, the odds for a win today while playing.
+function shinyState(status, shiny, streak) {
+  if (status === "won") return { captured: true, shiny: Boolean(shiny), streak, odds: shinyOdds(streak) };
+  if (status === "playing") return { captured: false, shiny: false, streak: streak + 1, odds: shinyOdds(streak + 1) };
+  return { captured: false, shiny: false, streak: 0, odds: null };
+}
 function dailyGuest(secret, cookie) {
   const [id,mac] = String(cookie||"").split(".");
   if (!/^[a-f0-9]{32}$/.test(id||"") || !/^[a-f0-9]{64}$/.test(mac||"")) return null;
@@ -43,6 +57,7 @@ async function initDailyDb(db, now = new Date()) {
   await db.query("CREATE INDEX IF NOT EXISTS daily_plays_results ON daily_plays(day,status)");
   await db.query("CREATE INDEX IF NOT EXISTS daily_plays_account ON daily_plays(account_id,day)");
   await db.query("ALTER TABLE daily_plays ADD COLUMN IF NOT EXISTS excluded_stats BOOLEAN NOT NULL DEFAULT false");
+  await db.query("ALTER TABLE daily_plays ADD COLUMN IF NOT EXISTS shiny BOOLEAN NOT NULL DEFAULT false");
 }
 function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(),randomInt=crypto.randomInt}) {
   const pool=pokemon.filter(p=>p&&!p.isAltForm&&Number(p.id)>0&&Number(p.id)<=1025).sort((a,b)=>a.id-b.id);
@@ -106,7 +121,7 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
         const guest=(await client.query("SELECT * FROM daily_plays WHERE identity=$1 AND day=$2 FOR UPDATE",[who.guestKey,day])).rows[0];
         if(guest&&(guest.guessed.length||guest.status!=="playing")){
           const completed=guest.status!=="playing";
-          await client.query("UPDATE daily_plays SET guessed=$3::jsonb,status=$4,started_at=$5,finished_at=$6,elapsed_ms=$7,account_id=$8,excluded_stats=$9 WHERE identity=$1 AND day=$2",[who.key,day,JSON.stringify(guest.guessed),guest.status,guest.started_at,guest.finished_at,guest.elapsed_ms,completed?null:who.accountId,completed]);
+          await client.query("UPDATE daily_plays SET guessed=$3::jsonb,status=$4,started_at=$5,finished_at=$6,elapsed_ms=$7,account_id=$8,excluded_stats=$9,shiny=$10 WHERE identity=$1 AND day=$2",[who.key,day,JSON.stringify(guest.guessed),guest.status,guest.started_at,guest.finished_at,guest.elapsed_ms,completed?null:who.accountId,completed,Boolean(guest.shiny)]);
           if(!completed)await client.query("UPDATE daily_plays SET excluded_stats=true WHERE identity=$1 AND day=$2",[who.guestKey,day]);
         }
       }
@@ -129,13 +144,14 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
     const secret=byId.get(Number(r.secret_id)); if(!secret)throw dailyError("unavailable",503);
     const ids=row.guessed||[], day=parisDay(now);
     const direction=(a,b)=>a===b?"":a<b?"↑":"↓";
+    const streak=streakOf(days!==undefined?days:await streakDays(client,who),day,row.status);
     return {ok:true,...dailyCalendar(now),accountId:who.accountId||null,authenticated:Boolean(who.accountId),
       status:row.status,finished:row.status!=="playing",won:row.status==="won",attempts:ids.length,
       hintsUsed:Number(row.hints_used),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
       points:enquiryPoints(row.status==='won',ids.length,row.hints_used),maxPoints:DAILY_MAX.enquiry,
       rows:ids.map(id=>{const p=byId.get(Number(id));return {pokemonId:p.id,cmp:compare(p,secret),generationDirection:direction(p.gen,secret.gen),heightDirection:direction(p.height,secret.height),weightDirection:direction(p.weight,secret.weight)};}),
       ...(row.status!=="playing"?{answerId:secret.id}:{}),
-      streak:streakOf(days!==undefined?days:await streakDays(client,who),day,row.status),ranked:Boolean(who.accountId&&row.account_id&&row.status==="won")};
+      streak,shiny:shinyState(row.status,row.shiny,streak.current),ranked:Boolean(who.accountId&&row.account_id&&row.status==="won")};
   }
   async function state(who) {
     // A returning player only reads: the round, the play and the streak arrive in
@@ -162,10 +178,17 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
       const ids=abandon?row.guessed:[...row.guessed,pokemonId];
       const status=abandon?"abandoned":Number(r.secret_id)===pokemonId?"won":"playing";
       const finished=status!=="playing",elapsed=finished?Math.max(0,now-new Date(row.started_at)):null;
-      await client.query("UPDATE daily_plays SET guessed=$3::jsonb,status=$4,finished_at=$5,elapsed_ms=$6 WHERE identity=$1 AND day=$2",[who.key,day,JSON.stringify(ids),status,finished?now:null,elapsed]);
+      // One roll, at the win, with the streak this win makes (guests have no streak).
+      let shiny=false;
+      if(status==="won"){
+        const days=await streakDays(client,who);
+        const streak=days?streakFromDays([...days.filter(d=>d<day),day],day).current:0;
+        shiny=randomInt(shinyOdds(streak))===0;
+      }
+      await client.query("UPDATE daily_plays SET guessed=$3::jsonb,status=$4,finished_at=$5,elapsed_ms=$6,shiny=$7 WHERE identity=$1 AND day=$2",[who.key,day,JSON.stringify(ids),status,finished?now:null,elapsed,shiny]);
       if(status==="won"&&who.accountId&&row.account_id)await recordLeaderboardResultInTransaction(client,{id:who.accountId,username:who.name,avatar:who.avatar},"daily",ids.length,{direction:"asc"},"daily:"+day);
       if(day!==parisDay(clock()))throw dailyError("stale_daily");
-      return {...await snapshot(client,who,{...row,guessed:ids,status,elapsed_ms:elapsed},r,now),fresh:finished};
+      return {...await snapshot(client,who,{...row,guessed:ids,status,elapsed_ms:elapsed,shiny},r,now),fresh:finished};
     });
   }
   async function distribution() {
@@ -184,7 +207,14 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
     for(const row of results){if(row.status==="abandoned")abandoned+=row.count;else {wins+=row.count;counts[row.attempts>=7?"7plus":String(row.attempts)]+=row.count;}}
     return {ok:true,key:day,counts,wins,abandoned,total:wins+abandoned};
   }
-  return {state,guess:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),distribution};
+  // The player's shinies, newest first: by account once signed in, else this browser's guest plays.
+  async function shinies(who) {
+    const where=who.accountId?"p.account_id=$1":"p.identity=$1";
+    const rows=(await db.query(`SELECT to_char(p.day,'YYYY-MM-DD') AS day,r.secret_id FROM daily_plays p JOIN daily_rounds r ON r.day=p.day
+      WHERE ${where} AND p.status='won' AND p.shiny ORDER BY p.day DESC LIMIT 60`,[who.accountId||who.key])).rows;
+    return {ok:true,count:rows.length,shinies:rows.map(row=>({id:Number(row.secret_id),day:row.day}))};
+  }
+  return {state,guess:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),distribution,shinies};
 }
 function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,compare,legacyTarget,readyBefore=Promise.resolve()}) {
   const service=db&&secret?createDailyService({db,pokemon,compare,legacyTarget}):null;
@@ -220,8 +250,9 @@ function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,com
   app.post("/api/daily/guess",express.json({limit:"2kb"}),handle((who,req)=>service.guess(who,req.body||{})));
   app.post("/api/daily/abandon",express.json({limit:"2kb"}),handle((who,req)=>service.abandon(who,req.body||{})));
   app.get("/api/daily-stats/today",handle(()=>service.distribution()));
+  app.get("/api/daily/shinies",handle(who=>service.shinies(who)));
   app.post("/api/daily-stats/report",(_req,res)=>res.status(410).json({ok:false,error:"retired"}));
   app.post("/api/daily/session",(_req,res)=>res.status(409).json({ok:false,error:"daily_update_required"}));
   return service;
 }
-module.exports={DAILY_ORIGIN,dailyCalendar,nextDay,streakFromDays,dailyGuest,issueDailyGuest,initDailyDb,createDailyService,mountDailyRoutes};
+module.exports={DAILY_ORIGIN,SHINY_TIERS,shinyOdds,shinyState,dailyCalendar,nextDay,streakFromDays,dailyGuest,issueDailyGuest,initDailyDb,createDailyService,mountDailyRoutes};
