@@ -2468,8 +2468,37 @@ const DEFAULT_APP_SETTINGS = {
   reduceMotion: false,
   soundEffects: true,
   pokemonCries: true,
+  soundVolume: 100,
   seasonalDecorations: true,
 };
+
+// The master volume (31/10/2026): from 10 to 100 %, for the sound effects and the cries alike.
+// Turning a sound off stays the job of its own switch.
+function appSoundVolume(settings = getStoredAppSettings()) {
+  const value = Number(settings && settings.soundVolume);
+  return Number.isFinite(value) ? Math.min(1, Math.max(0.1, Math.round(value) / 100)) : 1;
+}
+function appVolumeLabel(value) {
+  return Math.round(appSoundVolume({ soundVolume: value }) * 100) + ' %';
+}
+// While the slider moves, only its label changes; the setting is saved when it is let go.
+window.appVolumePreview = function () {
+  const output = document.getElementById('app-volume-value');
+  if (output) output.textContent = appVolumeLabel(this.value);
+};
+window.appVolumeFromEl = function () {
+  updateAppSetting('soundVolume', Math.round(appSoundVolume({ soundVolume: this.value }) * 100));
+  window.appVolumePreview.call(this);
+  testAppSound();
+};
+function testAppSound() {
+  const settings = getStoredAppSettings();
+  if (settings.soundEffects !== false && typeof playPokedexUiSfx === 'function') { playPokedexUiSfx('correct'); return; }
+  const pikachu = typeof POKEMON_BY_ID !== 'undefined' ? POKEMON_BY_ID.get(25) : null;
+  if (settings.pokemonCries !== false && pikachu && typeof playPokemonCry === 'function') { playPokemonCry(pikachu, 0.55); return; }
+  if (typeof showToast === 'function') showToast('Les effets sonores et les cris sont coupés.');
+}
+window.testAppSound = testAppSound;
 
 function getStoredAppSettings() {
   // Lot C audit : on respecte @media (prefers-reduced-motion) par défaut,
@@ -3058,6 +3087,14 @@ function openSettingsModal() {
           <span><b>Cris des Pokémon</b><small>Joue le cri lors des révélations et rencontres.</small></span>
           <input type="checkbox" ${settings.pokemonCries !== false ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="pokemonCries" data-bool="1" />
         </label>
+        <div class="app-setting-item app-setting-item-stack app-setting-volume">
+          <span><b>Volume</b><small>Pour les effets et les cris. Le mode Cri suit aussi ce volume.</small></span>
+          <div class="app-volume-row">
+            <input id="app-volume" type="range" min="10" max="100" step="10" value="${Math.round(appSoundVolume(settings) * 100)}" aria-label="Volume des sons" aria-describedby="app-volume-value" data-input-action="appVolumePreview" data-change-action="appVolumeFromEl" />
+            <output id="app-volume-value" for="app-volume">${appVolumeLabel(settings.soundVolume)}</output>
+            <button class="btn-ghost" type="button" data-action="testAppSound">▶ Tester</button>
+          </div>
+        </div>
         <label class="app-setting-item">
           <span><b>Contraste renforcé</b><small>Renforce les bordures et certains contrastes.</small></span>
           <input type="checkbox" ${settings.highContrast ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="highContrast" data-bool="1" />

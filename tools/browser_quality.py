@@ -193,6 +193,18 @@ def main():
      page.evaluate('goToConfig()');page.evaluate('window.scrollTo(0,0)')
      return screen('screen-config')
     check('home-party',home_party)
+    def settings_volume():
+     # The volume (31/10/2026): a real slider under the sound switches, saved when let go.
+     page.evaluate('openSettingsModal()')
+     slider=page.locator('#app-volume');slider.scroll_into_view_if_needed()
+     box=slider.bounding_box()
+     expect(box and box['width']>=80,'The volume slider is squeezed: '+repr(box))
+     slider.fill('40');slider.dispatch_event('change')
+     expect(page.evaluate('getStoredAppSettings().soundVolume')==40,'The volume was not saved')
+     expect(page.locator('#app-volume-value').inner_text().strip()=='40 %','The volume label did not follow')
+     page.evaluate("updateAppSetting('soundVolume',100);closeOverlayModal()")
+     return screen('screen-config')
+    check('settings-volume',settings_volume)
     check('catalog',lambda:nav('game','screen-all-modes'))
     def audit_catalog():
      for opener in ["openAllModesScreen('solo')","openAllModesScreen('friends')"]:

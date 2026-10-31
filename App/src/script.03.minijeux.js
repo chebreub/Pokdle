@@ -2231,6 +2231,8 @@ function playCrySound() {
 
   setCryUiStatus("loading", "Chargement du cri…");
   try { cryAudio.currentTime = 0; } catch (_e) {}
+  // The Cry game always plays its cry (it is the game), at the volume chosen in the settings.
+  try { cryAudio.volume = typeof appSoundVolume === "function" ? appSoundVolume() : 1; } catch (_e) {}
   const playPromise = cryAudio.play();
   if (playPromise && typeof playPromise.then === "function") {
     playPromise
@@ -2246,15 +2248,18 @@ function playCrySound() {
 }
 
 let __draftBattleCryAudio = null;
+// Every cry outside the Cry game: silent when the cries are turned off, at the chosen volume.
 function playPokemonCry(pokemon, volume = 0.55) {
   if (!pokemon) return;
+  const settings = typeof getStoredAppSettings === "function" ? getStoredAppSettings() : {};
+  if (settings.pokemonCries === false) return;
   try {
     const url = getPokemonCryUrl(pokemon);
     if (__draftBattleCryAudio) {
       try { __draftBattleCryAudio.pause(); } catch (e) { /* noop */ }
     }
     __draftBattleCryAudio = new Audio(url);
-    __draftBattleCryAudio.volume = volume;
+    __draftBattleCryAudio.volume = Math.min(1, Math.max(0, volume * (typeof appSoundVolume === "function" ? appSoundVolume(settings) : 1)));
     __draftBattleCryAudio.play().catch(() => { /* silent fail (autoplay block / 404) */ });
   } catch (e) { /* noop */ }
 }
