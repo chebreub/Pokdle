@@ -1843,7 +1843,9 @@ function ensurePartyListeners() {
   return socket;
 }
 
-function openPartyRoomMode() {
+// A game picked on the home band stays chosen only when the room is opened from there.
+function openPartyRoomMode(keepPendingGame) {
+  if (keepPendingGame !== true) partyRoomState.pendingMode = null;
   ensurePartyListeners();
   showScreen("screen-party-room");
   setGlobalNavActive("social");
@@ -1878,6 +1880,9 @@ function partyCreateRoom() {
     savePartySession(res.code, nickname, res.resumeToken);
     setPartyStatus("");
     renderPartyRoom();
+    var pendingMode = partyRoomState.pendingMode;
+    partyRoomState.pendingMode = null;
+    if (pendingMode) partySetMode(pendingMode);
   });
 }
 
@@ -1893,6 +1898,7 @@ function partyJoinRoom() {
   socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel() }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Impossible de rejoindre."); return; }
+    partyRoomState.pendingMode = null;
     partyRoomState.room = res.room;
     partyRoomState.code = res.code;
     partyRoomState.reconnecting = false;
@@ -2332,6 +2338,7 @@ function renderPartyRoom() {
     partyRoomState.lastGuessRoundKey = null;
     if (lobby) lobby.classList.remove("hidden");
     if (joined) joined.classList.add("hidden");
+    if (typeof renderPartyPendingGame === "function") renderPartyPendingGame();
     return;
   }
   if (lobby) lobby.classList.add("hidden");

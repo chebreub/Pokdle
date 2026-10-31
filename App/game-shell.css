@@ -629,3 +629,55 @@ body.theme-dark .draft-mobile-bar { background:rgba(41,38,47,.97); border-color:
 #pokdle-app.design-refresh.theme-dark .player-card-figures b {color:#fff8ef;}
 #pokdle-app.design-refresh.theme-dark .player-card-figures span, #pokdle-app.design-refresh.theme-dark .player-card-game span, #pokdle-app.design-refresh.theme-dark .player-card-id small {color:#c8d2e6;}
 #pokdle-app.design-refresh.theme-dark .player-card-record {background:#1c2a47;}
+
+/* « À plusieurs » on the home (31/10/2026): the party games by name, in the Party lavender. */
+#pokdle-app.design-refresh .home-party {display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head actions" "games games" "more more";gap:18px 24px;align-items:end;margin:28px 0;padding:26px;border-radius:26px;background:#EFE8FF;border:1px solid #dfd2fa;}
+#pokdle-app.design-refresh .home-party-head {grid-area:head;min-width:0;}
+#pokdle-app.design-refresh .home-party-eyebrow {display:block;font:800 12px/1.3 Nunito,sans-serif;letter-spacing:.08em;color:#5C3FB0;}
+#pokdle-app.design-refresh .home-party-head h2 {margin:6px 0;font:700 clamp(24px,3vw,32px)/1.15 Fredoka,Nunito,sans-serif;color:#2E2A33;}
+#pokdle-app.design-refresh .home-party-head p {margin:0;max-width:62ch;font:600 15px/1.5 Nunito,sans-serif;color:#4b4558;}
+#pokdle-app.design-refresh .home-party-games {grid-area:games;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+#pokdle-app.design-refresh .home-party-game {display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:8px;border-radius:22px;background:#fff;border:1px solid #e4dafb;box-shadow:0 3px 0 #dfd2fa;color:#2E2A33;text-align:left;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}
+#pokdle-app.design-refresh .home-party-game:hover {transform:translateY(-2px);box-shadow:0 5px 0 #cdbdf5;}
+#pokdle-app.design-refresh .home-party-game:focus-visible, #pokdle-app.design-refresh .home-party-actions button:focus-visible {outline:3px solid #4069E0;outline-offset:3px;}
+#pokdle-app.design-refresh .home-party-art {display:grid;place-items:center;height:112px;border-radius:16px;background:var(--party-tone,#D8CCF7);overflow:hidden;}
+#pokdle-app.design-refresh .home-party-art img {width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(46,42,51,.18));}
+#pokdle-app.design-refresh .home-party-game.is-dessin {--party-tone:#FFD9C2;}
+#pokdle-app.design-refresh .home-party-game.is-quiestce1v1 {--party-tone:#F7CAD6;}
+#pokdle-app.design-refresh .home-party-game.is-petitbac {--party-tone:#BFE6DC;}
+#pokdle-app.design-refresh .home-party-game.is-dexrace {--party-tone:#D8CCF7;}
+#pokdle-app.design-refresh .home-party-copy {display:flex;flex-direction:column;gap:3px;padding:10px 6px 6px;}
+#pokdle-app.design-refresh .home-party-copy small {font:800 11px/1.3 Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#6A4CC4;}
+#pokdle-app.design-refresh .home-party-copy b {font:700 18px/1.2 Fredoka,Nunito,sans-serif;}
+#pokdle-app.design-refresh .home-party-copy > span {font:600 13px/1.4 Nunito,sans-serif;color:#5b5566;}
+#pokdle-app.design-refresh .home-party-actions {grid-area:actions;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;}
+#pokdle-app.design-refresh .home-party-cta {min-height:48px;padding:12px 22px;border:0;border-radius:999px;background:#7C5BD6;box-shadow:0 4px 0 #5e40ad;color:#fff;font:800 16px Nunito,sans-serif;cursor:pointer;}
+#pokdle-app.design-refresh .home-party-join {min-height:48px;padding:12px 20px;border:1.5px solid #cdbdf5;border-radius:999px;background:#fff;color:#5C3FB0;font:800 15px Nunito,sans-serif;cursor:pointer;}
+#pokdle-app.design-refresh .home-party-more {grid-area:more;margin:0;font:600 13px/1.5 Nunito,sans-serif;color:#5b5566;}
+#pokdle-app.design-refresh.reduce-motion .home-party-game, #pokdle-app.design-refresh.reduce-motion .home-party-game:hover {transition:none;transform:none;}
+@media (prefers-reduced-motion:reduce){#pokdle-app.design-refresh .home-party-game, #pokdle-app.design-refresh .home-party-game:hover {transition:none;transform:none;}}
+@media (max-width:720px){
+  #pokdle-app.design-refresh .home-party {grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "games" "actions" "more";gap:16px;margin:22px 0;padding:20px 14px;border-radius:24px;}
+  #pokdle-app.design-refresh .home-party-games {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  #pokdle-app.design-refresh .home-party-art {height:84px;}
+  #pokdle-app.design-refresh .home-party-art img {width:76px;height:76px;}
+  #pokdle-app.design-refresh .home-party-copy b {font-size:17px;}
+  #pokdle-app.design-refresh .home-party-actions {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);}
+  #pokdle-app.design-refresh .home-party-actions button {padding:12px;white-space:nowrap;font-size:15px;}
+}
+#pokdle-app.design-refresh.theme-dark .home-party {background:#352f49;border-color:#594975;}
+#pokdle-app.design-refresh.theme-dark .home-party-eyebrow, #pokdle-app.design-refresh.theme-dark .home-party-copy small {color:#cdbcff;}
+#pokdle-app.design-refresh.theme-dark .home-party-head h2 {color:#f6f2ff;}
+#pokdle-app.design-refresh.theme-dark .home-party-head p, #pokdle-app.design-refresh.theme-dark .home-party-more, #pokdle-app.design-refresh.theme-dark .home-party-copy > span {color:#d6cfe6;}
+#pokdle-app.design-refresh.theme-dark .home-party-game {background:#2a2538;border-color:#4a3f63;box-shadow:0 3px 0 #4a3f63;color:#f6f2ff;}
+#pokdle-app.design-refresh.theme-dark .home-party-join {background:transparent;border-color:#7a68a3;color:#e6dcff;}
+/* The game picked on the home, shown in the lobby above « Créer mon salon ». */
+#pokdle-app.design-refresh .party-pending-game {display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin:2px 0 12px;padding:10px 12px;border-radius:14px;background:#EFE8FF;border:1px solid #dfd2fa;color:#2E2A33;}
+#pokdle-app.design-refresh .party-pending-game[hidden] {display:none;}
+#pokdle-app.design-refresh .party-pending-game span {font:800 12px Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#5C3FB0;}
+#pokdle-app.design-refresh .party-pending-game b {font:700 17px Fredoka,Nunito,sans-serif;color:#2E2A33;}
+#pokdle-app.design-refresh .party-pending-game button {margin-left:auto;min-height:36px;padding:4px 6px;border:0;background:none;color:#4069E0;font:800 14px Nunito,sans-serif;text-decoration:underline;cursor:pointer;}
+#pokdle-app.design-refresh.theme-dark .party-pending-game {background:#352f49;border-color:#594975;color:#f6f2ff;}
+#pokdle-app.design-refresh.theme-dark .party-pending-game span {color:#cdbcff;}
+#pokdle-app.design-refresh.theme-dark .party-pending-game b {color:#f6f2ff;}
+#pokdle-app.design-refresh.theme-dark .party-pending-game button {color:#9db4ff;}
