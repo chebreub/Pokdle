@@ -5,6 +5,7 @@
 // it stands beside the 100-point journey and has its own leaderboard.
 const crypto=require('node:crypto');
 const {playerLevelFromXp,rankingAvatarSql}=require('./profile-sync');
+const {isChampion}=require('./week-champions');
 const {dailyCalendar,dailyGuest,issueDailyGuest}=require('./daily-game');
 const fail=(code,status=409)=>Object.assign(new Error(code),{code,status});
 const PP=9,CELLS=9,MIN_ANSWERS=3;
@@ -205,7 +206,7 @@ function createGridService({db,pokemon,clock=()=>new Date(),draw=buildGrid}){
   }
   // Cells found first, then originality (the rarer the picks the better), then time.
   async function leaderboard(scope,accountId,day=dailyCalendar(clock()).day){
-    const predicate=scope==='today'?'AND p.day=$1::date':scope==='week'?'AND p.day>$1::date-7 AND p.day<=$1::date':'AND p.day<=$1::date';
+    const predicate=scope==='today'?'AND p.day=$1::date':scope==='week'?"AND p.day>=date_trunc('week',$1::date)::date AND p.day<=$1::date":'AND p.day<=$1::date';
     const cte=`WITH picks AS (
       SELECT p.day,p.identity,c.idx,c.val FROM grid_plays p CROSS JOIN LATERAL jsonb_array_elements_text(p.cells) WITH ORDINALITY AS c(val,idx)
       WHERE c.val IS NOT NULL ${predicate}
@@ -228,7 +229,7 @@ function createGridService({db,pokemon,clock=()=>new Date(),draw=buildGrid}){
       accountId?db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,String(accountId)]):Promise.resolve({rows:[]})]);
     const me=mine.rows[0]||null;
     const around=me?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,me.rank-2),me.rank+2])).rows:[];
-    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,level:playerLevelFromXp(r.xp),score:Number(r.score),originality:Number(r.originality),me:r.discord_id===String(accountId)});
+    const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,champion:isChampion(r.discord_id),level:playerLevelFromXp(r.xp),score:Number(r.score),originality:Number(r.originality),me:r.discord_id===String(accountId)});
     return {ok:true,mode:'grid',scope,authenticated:Boolean(accountId),direction:'desc',label:'Grille du jour',unit:'pts',
       total:Number(count.rows[0]?.total||0),top:top.rows.map(map),me:me?{rank:Number(me.rank),score:Number(me.score),originality:Number(me.originality)}:null,around:around.map(map)};
   }

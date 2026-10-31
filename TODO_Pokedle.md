@@ -46,7 +46,12 @@ Idée : d'abord faire revenir ceux qui viennent déjà, puis être trouvé sur G
 
 ### Étape 1 : faire revenir
 - [ ] **Classement en points cumulés** : « Semaine » et « Tout le temps » additionnent les points de chaque jour au lieu de garder la meilleure journée, et chaque épreuve jouée compte même si les quatre ne sont pas finies. Les modes « record » (Higher or Lower, Quiz, Speedrun…) gardent leur classement à part : leurs scores viennent du navigateur.
-- [ ] Podium du top 3 et lot de la semaine avec compte à rebours (comme PokeQuizz).
+- [x] Podium du top 3 et lot de la semaine avec compte à rebours (comme PokeQuizz), fait le 31/10 (option A choisie) :
+  - « Semaine » va du lundi au dimanche (heure de Paris) dans tous les classements, au lieu des 7 derniers jours ;
+  - podium 2-1-3 en haut de chaque classement (dès 3 classés), avec l'artwork du partenaire ;
+  - encart « À gagner cette semaine » à la place de la carte de la Ligue : le 1er du Global de la semaine a son partenaire en shiny pendant toute la semaine suivante, dans tous les classements et sur sa carte de dresseur ; médaille d'or, d'argent ou de bronze pour le podium (sur la carte de dresseur) ;
+  - les gagnants sont écrits une seule fois dans la table `weekly_awards` à la première visite de la nouvelle semaine (`App/lib/weekly-awards.js`, rien à régler sur Render) ;
+  - la Ligue garde son badge et son classement dans le menu « Classement ».
 - [ ] Clic sur un pseudo → sa carte de dresseur (parties, victoires, série, stats par jeu ; la photo seulement si le joueur l'a choisi).
 - [ ] Collection et shiny : trouver le Pokémon du jour = le capturer, petite chance de shiny, vitrine sur la carte de dresseur.
 - [ ] Réglages : sons oui / non avec volume, mode sans chrono.

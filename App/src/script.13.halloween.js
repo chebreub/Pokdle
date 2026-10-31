@@ -69,6 +69,7 @@ function halloweenChoosePlacement({ width, height, top, blockers, small, roll, p
     const blockerSelector = 'button, a, input, textarea, select, [contenteditable="true"], h1, h2, h3, h4, p, table, '
       + '.card-title, .card-desc, .game-topbar, .search-bar, .results-wrap, .mode-banner, '
       + '.wordle-board, .dossier-board, .daily-grid, .quiz-options, .pokedex-grid, .halloween-pumpkin, '
+      + '.lbv5-prize, .lbv5-podium, '
       + '[role="dialog"], [role="menu"], [role="listbox"]';
     let stage = null, actor = null, arrival = null, departure = null, calendar = null, typingTimer = null;
     let enabled = false, editing = false, lastVisitor = -1, bag = [], currentScreen = '';

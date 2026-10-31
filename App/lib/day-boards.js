@@ -1,7 +1,9 @@
 'use strict';
-// The day's boards, all in points. « Aujourd'hui » is the day's score; « 7 jours » and « Total »
+// The day's boards, all in points. « Aujourd'hui » is the day's score; « Semaine » and « Total »
 // add up every day played, so playing often counts, not only one lucky day (decided 30/10/2026).
+// « Semaine » runs from Monday to Sunday in Paris, like the week's prize (31/10/2026).
 const {playerLevelFromXp,rankingAvatarSql}=require('./profile-sync');
+const {isChampion}=require('./week-champions');
 const {sql:pointsSql}=require('./daily-points');
 
 // Where each stage's plays are and what a play is worth.
@@ -19,7 +21,7 @@ const LABELS=Object.freeze({journey:'Parcours du jour',enquete:'Enquête du jour
 const DAY_BOARDS=Object.freeze(Object.keys(LABELS));
 
 function periodSql(scope){
-  return scope==='today'?'AND p.day=$1::date':scope==='week'?'AND p.day>$1::date-7 AND p.day<=$1::date':'AND p.day<=$1::date';
+  return scope==='today'?'AND p.day=$1::date':scope==='week'?"AND p.day>=date_trunc('week',$1::date)::date AND p.day<=$1::date":'AND p.day<=$1::date';
 }
 // One row per account and day for a stage; MAX keeps a single play if an account has two.
 function stageSql(name,condition,scope){
@@ -27,24 +29,36 @@ function stageSql(name,condition,scope){
   return `SELECT p.account_id,p.day,MAX(${s.points})::int AS points,MIN(COALESCE(p.elapsed_ms,0))::bigint AS elapsed_ms,MIN(${s.attempts})::int AS attempts,MIN(${s.hints})::int AS hints FROM ${s.table} p WHERE p.account_id IS NOT NULL AND ${condition} ${periodSql(scope)} GROUP BY p.account_id,p.day`;
 }
 
-async function dayBoard(db,{mode,scope,accountId,day}){
-  if(!LABELS[mode])throw new Error('Unknown day board: '+mode);
+// The ranked board as SQL ($1 = the day): every account with its points over the period.
+function boardCte(mode,scope){
   const journey=mode==='journey';
   const parts=journey?Object.keys(STAGES).map(name=>stageSql(name,FINISHED[name],scope)):[stageSql(mode,OWN[mode],scope)];
   // A single day of Enquête or Wordle keeps its validated order: guesses, hints, then time.
   const detailed=scope==='today'&&(mode==='enquete'||mode==='wordlepts');
   const order=detailed?'t.score DESC,t.attempts ASC,t.hints ASC,t.elapsed_ms ASC':'t.score DESC,t.elapsed_ms ASC';
-  const cte=`WITH plays AS (${parts.join(' UNION ALL ')}),
+  return `WITH plays AS (${parts.join(' UNION ALL ')}),
     totals AS (SELECT account_id AS discord_id,SUM(points)::int AS score,SUM(elapsed_ms)::bigint AS elapsed_ms,MIN(attempts)::int AS attempts,MIN(hints)::int AS hints,COUNT(DISTINCT day)::int AS days FROM plays GROUP BY account_id),
     ranked AS (SELECT t.discord_id,COALESCE(u.username,'Dresseur') AS username,${rankingAvatarSql("COALESCE(u.avatar,'')")} AS avatar,u.partner_id,u.xp,t.score,t.attempts,t.hints,t.days,(RANK() OVER(ORDER BY ${order}))::int AS rank FROM totals t LEFT JOIN users u ON u.discord_id=t.discord_id)`;
+}
+
+// The podium of the week that holds `day`: the first three of the Parcours with at least one point.
+async function weekPodium(db,day){
+  return (await db.query(boardCte('journey','week')+' SELECT discord_id,score,rank FROM ranked WHERE rank<=3 AND score>0 ORDER BY rank,username',[day])).rows
+    .map(r=>({discordId:String(r.discord_id),points:Number(r.score),rank:Number(r.rank)}));
+}
+
+async function dayBoard(db,{mode,scope,accountId,day}){
+  if(!LABELS[mode])throw new Error('Unknown day board: '+mode);
+  const detailed=scope==='today'&&(mode==='enquete'||mode==='wordlepts');
+  const cte=boardCte(mode,scope);
   const rows=(await db.query(cte+' SELECT * FROM ranked ORDER BY rank,username LIMIT 20',[day])).rows;
   const total=Number((await db.query(cte+' SELECT COUNT(*)::int AS total FROM ranked',[day])).rows[0].total);
   const mine=accountId?(await db.query(cte+' SELECT * FROM ranked WHERE discord_id=$2',[day,accountId])).rows[0]:null;
   const around=mine?(await db.query(cte+' SELECT * FROM ranked WHERE rank BETWEEN $2 AND $3 ORDER BY rank,username LIMIT 7',[day,Math.max(1,mine.rank-2),mine.rank+2])).rows:[];
   // The detail behind the points: guesses for one day of Enquête or Wordle, days played over a period.
   const detail=r=>detailed?{attempts:Number(r.attempts),hints:Number(r.hints)}:scope==='today'?{}:{days:Number(r.days)};
-  const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,level:playerLevelFromXp(r.xp),score:Number(r.score),...detail(r),me:r.discord_id===accountId});
+  const map=r=>({rank:Number(r.rank),username:r.username,avatar:r.avatar,partnerId:r.partner_id?Number(r.partner_id):null,champion:isChampion(r.discord_id),level:playerLevelFromXp(r.xp),score:Number(r.score),...detail(r),me:r.discord_id===accountId});
   return {ok:true,mode,scope,authenticated:Boolean(accountId),direction:'desc',label:LABELS[mode],unit:'pts',cumulative:scope!=='today',total,top:rows.map(map),me:mine?{rank:Number(mine.rank),score:Number(mine.score),...detail(mine)}:null,around:around.map(map)};
 }
 
-module.exports={DAY_BOARDS,dayBoard};
+module.exports={DAY_BOARDS,dayBoard,weekPodium};

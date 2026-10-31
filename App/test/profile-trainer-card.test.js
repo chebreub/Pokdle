@@ -48,7 +48,8 @@ function heroContext(profileData, stats) {
     POKEMON_BY_ID: new Map([[937, { id: 937, name: 'Malvalame', type1: 'Feu' }]]),
     escapeHtml: (s) => String(s),
     getPokemonSprite: (p) => 'sprite-' + p.id,
-    pokedexDetailArtwork: (p) => 'artwork-' + p.id,
+    getPokemonShinySprite: (p) => 'shiny-sprite-' + p.id,
+    pokedexDetailArtwork: (p, shiny) => (shiny ? 'shiny-artwork-' : 'artwork-') + p.id,
     typeSlug: () => 'feu',
     ACHIEVEMENT_DEFS: Array.from({ length: 30 }, (_, i) => ({ id: 'a' + i, title: 'Succès ' + i })),
     unlockedAchievements: Object.fromEntries(Array.from({ length: 25 }, (_, i) => ['a' + i, { unlockedAt: 1 }])),
@@ -83,6 +84,18 @@ test('the trainer card shows the partner, the title, the Pionnier badge and the 
   assert.match(figures, /Missions<\/span>\s*<b>2 <small>\/ 108<\/small><\/b>/);
   assert.match(figures, /class="profile-figure is-complete" data-action="switchProfileView" data-args='\["secrets"\]'>\s*<span>Secrets<\/span>\s*<b>12 <small>\/ 12<\/small>/);
   assert.match(figures, /data-action="openAchievementsScreen">\s*<span>Succès<\/span>\s*<b>25 <small>\/ 30<\/small>/);
+});
+
+test('last week\'s champion shows a shiny partner, and medals sit with the titles', () => {
+  global.window = { __pokedleWeeklyAwards: { champion: true, medals: [{ week: '2026-10-19', rank: 1 }, { week: '2026-10-12', rank: 2 }, { week: '2026-10-05', rank: 2 }] } };
+  try {
+    const { renderProfileHero, getXpProgress, els } = heroContext({ xp: 2000, nickname: 'Kayan', favoritePokemonId: 937 }, {});
+    renderProfileHero(getXpProgress(2000), 2000);
+    const hero = els['profile-trainer-card'].innerHTML;
+    assert.match(hero, /<img src="shiny-artwork-937" alt="Malvalame shiny" loading="lazy" data-fallback="shiny-sprite-937" \/>/);
+    assert.ok(hero.includes('Partenaire · Malvalame ✨ shiny, champion de la semaine'));
+    assert.match(hero, /<span class="profile-hero-medals" title="Médailles du podium de la semaine">🥇 ×1 · 🥈 ×2<\/span>/);
+  } finally { delete global.window; }
 });
 
 test('a new player gets an inviting card: no partner yet, no badge, no empty line', () => {
