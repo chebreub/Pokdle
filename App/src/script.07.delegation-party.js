@@ -1013,6 +1013,7 @@ function openAccountMenu() {
       <nav class="account-menu-links">
         <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().duels ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["defis"]'><span>⚔️ Mes défis${typeof inboxCounts === 'function' && inboxCounts().duels ? ' <i class="pc-badge">' + inboxCounts().duels + '</i>' : ''}</span><b>→</b></button>
         <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().messages ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages${typeof inboxCounts === 'function' && inboxCounts().messages ? ' <i class="pc-badge">' + inboxCounts().messages + '</i>' : ''}</span><b>→</b></button>
+        <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().friends ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["amis"]'><span>🤝 Mes amis${typeof inboxCounts === 'function' && inboxCounts().friends ? ' <i class="pc-badge">' + inboxCounts().friends + '</i>' : ''}</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
@@ -1074,6 +1075,7 @@ function accountNavigate(destination) {
   else if (destination === 'messages' && typeof openMyMessages === 'function') openMyMessages();
   else if (destination === 'defis' && typeof openMyChallenges === 'function') openMyChallenges();
   else if (destination === 'install' && typeof openInstallApp === 'function') openInstallApp();
+  else if (destination === 'amis' && typeof openMyFriends === 'function') openMyFriends();
   else if (destination === 'invite' && typeof openInviteFriend === 'function') openInviteFriend();
   else if (destination === 'past' && typeof openPastDays === 'function') openPastDays();
   else { openProfileScreen(); switchProfileView('trainer'); }

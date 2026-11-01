@@ -1312,3 +1312,48 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .home-install {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
 #pokdle-app.theme-dark .notif-ask {background:linear-gradient(135deg,#3a3320,#2e2655);border-color:#7a6a3a;color:#e8ecf6;}
 #pokdle-app.theme-dark .notif-ask p {color:#f0e2b6;}
+
+/* ===== 🤝 Amis (01/11/2026) ===== */
+.party-seg {display:flex;gap:4px;margin:0 0 12px;padding:4px;border-radius:14px;background:#F3ECE2;}
+.party-seg button {flex:1;min-height:40px;border:0;border-radius:10px;background:transparent;color:#6B6472;font:800 .95rem Nunito,sans-serif;cursor:pointer;}
+.party-seg button.is-on {background:#fff;color:#2E2A33;box-shadow:0 1px 3px rgba(46,42,51,.12);}
+#screen-party-room.party-tab-friends #party-lobby, #screen-party-room.party-tab-friends #party-duels {display:none !important;}
+#screen-party-room:not(.party-tab-friends) #party-friends {display:none;}
+.party-friends {margin:0 0 14px;padding:14px;border-radius:20px;background:#fff;border:1px solid #EADFD0;color:#2E2A33;}
+.fr-req {display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 12px;padding:10px 12px;border-radius:16px;background:#EFE8FF;border:1px solid #D9CCF7;}
+.fr-req p {flex:1;min-width:140px;margin:0;font-weight:700;}
+.fr-req p small {display:block;color:#6B6472;font-weight:800;}
+.fr-req .btn-blue {min-height:38px;padding:0 14px;}
+.fr-x {width:38px;min-height:38px;padding:0;}
+.fr-req-block {flex-basis:100%;text-align:right;}
+.fr-head {display:flex;align-items:baseline;justify-content:space-between;margin:2px 0 8px;}
+.fr-head h3 {margin:0;font-family:Fredoka,sans-serif;font-size:1.15rem;}
+.fr-head small, .fr-note, .fr-empty {color:#6B6472;font-weight:700;}
+.fr-note {margin:12px 0 0;font-size:.82rem;}
+.fr-sub {margin:14px 0 6px;font-size:.9rem;color:#6B6472;}
+.fr-list {display:flex;flex-direction:column;border:1px solid #EADFD0;border-radius:16px;overflow:hidden;}
+.fr-row {display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid #EADFD0;}
+.fr-row:first-child {border-top:0;}
+.fr-row-main {flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;color:inherit;text-align:left;font:inherit;cursor:pointer;}
+.fr-row-main span {display:flex;flex-direction:column;min-width:0;}
+.fr-row-main b {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fr-row-main small {color:#6B6472;font-weight:700;font-size:.8rem;}
+.fr-duel {width:42px;min-height:40px;padding:0;font-size:1.1rem;}
+.fr-blocked {margin-top:12px;}
+.fr-blocked summary {cursor:pointer;color:#6B6472;font-weight:800;}
+.fr-card-slot {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;margin:8px 0 10px;}
+.fr-card-btn {min-height:42px;padding:0 18px;}
+.fr-card-btn.is-friend {border-color:#2F9E5A;color:#1E7A43;}
+.fr-card-wait {font-weight:800;color:#6B6472;}
+.fr-card-link {border:0;background:transparent;color:#4069E0;font:800 .9rem Nunito,sans-serif;text-decoration:underline;cursor:pointer;padding:4px;}
+.fr-card-menu {display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+.fr-danger {color:#C23B3F;border-color:#F0C4C5;}
+#pokdle-app.theme-dark .party-seg {background:#1a2438;}
+#pokdle-app.theme-dark .party-seg button {color:#b8c2d8;}
+#pokdle-app.theme-dark .party-seg button.is-on {background:#2b3a57;color:#e8ecf6;}
+#pokdle-app.theme-dark .party-friends {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .fr-req {background:#2e2655;border-color:#5d4bb0;}
+#pokdle-app.theme-dark .fr-list, #pokdle-app.theme-dark .fr-row {border-color:#33425f;}
+#pokdle-app.theme-dark .fr-head small, #pokdle-app.theme-dark .fr-note, #pokdle-app.theme-dark .fr-empty, #pokdle-app.theme-dark .fr-row-main small,
+#pokdle-app.theme-dark .fr-req p small, #pokdle-app.theme-dark .fr-sub, #pokdle-app.theme-dark .fr-blocked summary, #pokdle-app.theme-dark .fr-card-wait {color:#b8c2d8;}
+#pokdle-app.theme-dark .fr-card-link {color:#8fb0ff;}
