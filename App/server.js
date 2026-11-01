@@ -1242,6 +1242,13 @@ function sendIndex(req, res) {
 }
 
 app.get(["/", "/index.html"], (req, res) => sendIndex(req, res));
+// The version of the page's script (01/11/2026): a page left open since before a deploy keeps its old
+// script, which cannot open what came after. The page asks this now and then and offers to reload.
+const SITE_BUILD = (() => {
+  try { return (fs.readFileSync(DIST_INDEX, "utf8").match(/dist\/script\.min\.js\?v=([0-9a-f]+)/) || [])[1] || ""; }
+  catch (_error) { return ""; }
+})();
+app.get("/api/version", (_req, res) => { res.set("Cache-Control", "no-store"); res.json({ ok: true, build: SITE_BUILD }); });
 // Development-only responsive workbench; never served by npm start in production.
 if (process.env.NODE_ENV === "development") {
   app.get("/__responsive", (_req, res) => res.sendFile(path.join(__dirname, "tools/responsive.html")));
