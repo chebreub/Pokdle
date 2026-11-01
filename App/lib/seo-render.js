@@ -7,6 +7,7 @@ const path = require('path');
 const { GAMES, GROUPS } = require('./seo-games');
 const { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED, GENERATIONS, STARTERS, LEGENDARIES, MYTHICALS } = require('./seo-guides');
 const { SITE_URL: SITE } = require('./site-move');
+const seoPokemon = require('./seo-pokemon');
 
 const SUPPORT_URL = 'https://ko-fi.com/chebreub';
 const ARTWORK = id => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + Number(id) + '.png';
@@ -80,6 +81,15 @@ footer{max-width:960px;margin:0 auto;padding:24px 16px 40px;border-top:1px solid
 footer p{margin:4px 0}
 .support{display:inline-block;margin:6px 0 10px;padding:6px 14px;border:1px solid #f0c9a0;border-radius:999px;background:#fff1e0;color:#7a4210;font-weight:800;text-decoration:none}
 @media (max-width:640px){.hero{grid-template-columns:1fr;text-align:center;padding:20px 16px}.hero img{order:-1;width:140px;height:140px;margin:0 auto}.top nav{gap:10px;font-size:.9rem}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.chips .type{margin:0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--soft)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.tag{padding:4px 10px;border-radius:999px;background:#fff1c9;color:#5c4510;font-weight:900;font-size:.8rem}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:0;margin:0;list-style:none}.facts li{margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.facts small{display:block;color:var(--muted);font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.facts b{font-size:1.02rem}
+.weak{display:grid;gap:8px}.weak div{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.weak div>b{min-width:150px;font-size:.9rem}
+.stats{display:grid;gap:6px}.stats div{display:grid;grid-template-columns:110px 44px 1fr;gap:8px;align-items:center;font-size:.92rem}.stats span{font-weight:800}.stats i{display:block;height:10px;border-radius:999px;background:linear-gradient(90deg,#2f9e5a,#55c27f)}.stats .total{font-weight:900;border-top:1px solid var(--line);padding-top:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin:28px 0 0;font-weight:800}.alpha{columns:4 150px;column-gap:16px;padding:0;list-style:none}.alpha li{margin:2px 0;break-inside:avoid}.alpha small{color:var(--muted)}
+.ctas{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.cta.alt{background:var(--card);color:var(--accent);border:2px solid var(--accent);box-shadow:none}
+.hero .type img{width:18px;height:18px;order:0;margin:0}
+@media (max-width:640px){.hero .chips,.hero .tags,.hero .ctas{justify-content:center}}
 `;
 
 const BY_SLUG = new Map(GAMES.map(game => [game.slug, game]));
@@ -95,18 +105,20 @@ function guideCardHtml(guide) {
   return '<li><a href="/guides/' + esc(guide.slug) + '"><img src="' + esc(ARTWORK(guide.sprite)) + '" alt="' + esc(pokemonName(guide.sprite)) + '" width="56" height="56" loading="lazy"><b>' + esc(guide.name) + '</b><small>' + esc(guide.short) + '</small></a></li>';
 }
 const guidesFor = (slug) => GUIDES.filter(guide => guide.games.includes(slug));
-function layout({ title, description, path, body, data, image = '/og-image.png' }) {
+function layout({ title, description, path, body, data, image = '/og-image.png', imageSize = [1200, 630] }) {
   const url = SITE + path;
+  // A Pokémon page shows its official artwork (square) in link previews.
+  const imageUrl = /^https?:\/\//.test(image) ? image : SITE + image;
   return '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     '<title>' + esc(title) + '</title>\n<meta name="description" content="' + esc(description) + '">\n<link rel="canonical" href="' + esc(url) + '">\n' +
-    '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + SITE + esc(image) + '">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta property="og:locale" content="fr_FR">\n<meta name="twitter:card" content="summary_large_image">\n' +
+    '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + esc(imageUrl) + '">\n<meta property="og:image:width" content="' + imageSize[0] + '">\n<meta property="og:image:height" content="' + imageSize[1] + '">\n<meta property="og:locale" content="fr_FR">\n<meta name="twitter:card" content="' + (imageSize[0] === imageSize[1] ? 'summary' : 'summary_large_image') + '">\n' +
     '<meta name="theme-color" content="#FFF8EF">\n' + ICON_LINKS + FONTS + '<style>' + STYLE + '</style>\n' +
     '<script type="application/ld+json">' + jsonLd(data) + '</script>\n</head>\n<body>\n' +
-    '<header class="top"><a class="brand" href="/">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Tous les jeux</a><a href="/guides">Guides</a><a href="/">Jouer</a></nav></header>\n' +
+    '<header class="top"><a class="brand" href="/">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Jeux</a><a href="/pokemon">Pokémon</a><a href="/guides">Guides</a><a href="/">Jouer</a></nav></header>\n' +
     '<main>\n' + body + '\n</main>\n' +
     '<footer><a class="support" href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">☕ Soutenir Pokédle</a>' +
     '<p>Pokédle est un projet de fan gratuit, sans publicité, non affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.</p>' +
-    '<p><a href="/">Accueil</a> · <a href="/jeux">Tous les jeux</a> · <a href="/guides">Guides</a> · <a href="/a-propos">À propos</a> · <a href="/confidentialite">Confidentialité</a></p></footer>\n</body>\n</html>\n';
+    '<p><a href="/">Accueil</a> · <a href="/jeux">Tous les jeux</a> · <a href="/pokemon">Les 1025 Pokémon</a> · <a href="/guides">Guides</a> · <a href="/a-propos">À propos</a> · <a href="/confidentialite">Confidentialité</a></p></footer>\n</body>\n</html>\n';
 }
 function breadcrumb(items) {
   return { '@type': 'BreadcrumbList', itemListElement: items.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: SITE + path })) };
@@ -253,8 +265,71 @@ function renderAboutPage() {
   return layout({ title: 'À propos de Pokédle · jeux Pokémon gratuits', description: 'Pokédle, c’est quoi ? Des jeux Pokémon gratuits en français : le Pokémon du jour et plus de 20 mini-jeux, sans pub. Qui le fait et comment le contacter.', path: '/a-propos', body, data });
 }
 // Only pages that are their own canonical: /emulateur serves the home page, whose canonical is « / ».
+// Une page par Pokémon (01/11/2026) : /pokemon/<nom>, rendue à la demande et gardée en mémoire.
+const typeChips = (types) => '<p class="chips">' + types.map(typeChip).join('') + '</p>';
+const monLink = (p) => '<a href="' + esc(seoPokemon.pokemonPath(p.id)) + '">' + esc(p.name) + '</a>';
+function renderPokemonPage(id) {
+  const p = seoPokemon.BASE[Number(id) - 1];
+  if (!p) return null;
+  const f = seoPokemon.facts(p);
+  const ord = f.gen === 1 ? 're' : 'e';
+  const tags = [f.legendary && 'Légendaire', f.mythical && 'Fabuleux', f.starter && 'Pokémon de départ'].filter(Boolean);
+  const facts = [['Numéro', 'n° ' + f.id], ['Génération', f.gen + ord + ' · ' + f.region], ['Taille', String(f.height).replace('.', ',') + ' m'], ['Poids', String(f.weight).replace('.', ',') + ' kg'],
+    ['Couleur', f.color], ['Habitat', f.habitat], ['Stade', f.stage], ['Premiers jeux', f.firstGames + ' (' + f.year + ')']].filter(([, v]) => v);
+  const weakRow = (label, list) => list.length ? '<div><b>' + label + '</b>' + list.map(typeChip).join('') + '</div>' : '';
+  const max = 255;
+  const statsHtml = f.stats ? '<div class="panel stats">' + f.stats.map(st => '<div><span>' + esc(st.label) + '</span><b>' + st.value + '</b><i style="width:' + Math.max(4, Math.round(st.value / max * 100)) + '%"></i></div>').join('') +
+    '<div class="total"><span>Total</span><b>' + f.total + '</b><span></span></div></div>' : '';
+  const faq = seoPokemon.faq(f);
+  const body =
+    '<p class="crumbs"><a href="/">Pokédle</a> › <a href="/pokemon">Pokémon</a> › ' + esc(f.name) + '</p>\n' +
+    '<section class="hero"><div><p class="kicker">Pokémon n° ' + f.id + ' · ' + f.gen + ord + ' génération</p><h1>' + esc(f.name) + '</h1>' + typeChips(f.types) +
+      (tags.length ? '<p class="tags">' + tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</p>' : '') +
+      '<p class="lead">' + esc(seoPokemon.intro(f)) + '</p>' +
+      '<div class="ctas"><a class="cta" href="/">▶ Deviner le Pokémon du jour</a><a class="cta alt" href="/?pokedex=' + f.id + '">Sa fiche dans le Pokédex</a></div>' +
+      '<span class="free">Gratuit, sans pub, sans inscription.</span></div>' +
+    '<img src="' + esc(ARTWORK(f.id)) + '" alt="' + esc(f.name + ', artwork officiel') + '" width="180" height="180"></section>\n' +
+    '<h2>Fiche de ' + esc(f.name) + '</h2>\n<ul class="facts">' + facts.map(([k, v]) => '<li><small>' + esc(k) + '</small><b>' + esc(v) + '</b></li>').join('') + '</ul>\n' +
+    '<h2>Faiblesses et résistances de ' + esc(f.name) + '</h2>\n<p>Ce que font les attaques de chaque type à ' + esc(f.name) + ' (' + esc(f.types.join(' / ')) + '), d’après la <a href="/guides/table-des-types-pokemon">table des types</a>.</p>\n' +
+    '<div class="weak">' + weakRow('Très faible (×4)', f.weak.x4) + weakRow('Faible (×2)', f.weak.x2) + weakRow('Résiste (×½)', f.weak.half) + weakRow('Résiste bien (×¼)', f.weak.quarter) + weakRow('Immunisé (×0)', f.weak.none) + '</div>\n' +
+    (statsHtml ? '<h2>Statistiques de base</h2>\n' + statsHtml + '\n' : '') +
+    '<h2>Le deviner dans Pokédle</h2>\n<p>Dans le <a href="/jeux/pokemon-du-jour">Pokémon du jour</a>, chaque essai compare ces indices à ceux du Pokémon mystère. Si ' + esc(f.name) + ' est la réponse, voici ce qu’il faut trouver :</p>\n' +
+    '<ul class="facts">' + seoPokemon.dailyClues(f).map(([k, v]) => '<li><small>' + esc(k) + '</small><b>' + esc(v) + '</b></li>').join('') + '</ul>\n' +
+    '<p class="ctas" style="margin-top:14px"><a class="cta alt" href="/?jeu=pokemon-pixelise">Pokémon pixelisé</a><a class="cta alt" href="/?jeu=devine-le-pokemon">Devine le Pokémon</a><a class="cta alt" href="/?jeu=cri-pokemon">Cri Pokémon</a></p>\n' +
+    '<h2>Questions fréquentes</h2>\n<div class="panel faq">' + faq.map(([q, r]) => '<h3>' + esc(q) + '</h3><p>' + esc(r) + '</p>').join('') + '</div>\n' +
+    '<h2>D’autres Pokémon de type ' + esc(f.types[0]) + '</h2>\n' + '<ul class="mons">' + f.sameType.map(o => '<li><a href="' + esc(seoPokemon.pokemonPath(o.id)) + '">' + monImg(o.id, 72) + '</a>' + monLink(o) + '<small>n° ' + o.id + '</small></li>').join('') + '</ul>\n' +
+    '<p class="pager"><span>' + (f.prev ? '← ' + monLink(f.prev) : '') + '</span><a href="/pokemon#gen-' + f.gen + '">Les Pokémon de ' + esc(f.region) + '</a><span>' + (f.next ? monLink(f.next) + ' →' : '') + '</span></p>';
+  const data = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', name: f.name + ' : types, faiblesses, taille et poids', url: SITE + f.path, inLanguage: 'fr', primaryImageOfPage: ARTWORK(f.id), description: seoPokemon.intro(f) },
+    breadcrumb([['Pokédle', '/'], ['Pokémon', '/pokemon'], [f.name, f.path]]),
+    { '@type': 'FAQPage', mainEntity: faq.map(([q, r]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: r } })) },
+  ] };
+  const weakTitle = f.weak.x4.concat(f.weak.x2).slice(0, 3);
+  return layout({
+    title: f.name + ' (n° ' + f.id + ') : type ' + f.types.join('/') + ', faiblesses, taille et poids · Pokédle',
+    description: f.name + ', Pokémon n° ' + f.id + ' de type ' + f.types.join(' et ') + ' (' + f.gen + ord + ' génération, ' + f.region + ').' + (weakTitle.length ? ' Faible contre ' + weakTitle.join(', ') + '.' : '') + ' Taille, poids, stats et indices pour le deviner.',
+    path: f.path, body, data, image: ARTWORK(f.id), imageSize: [475, 475],
+  });
+}
+function renderPokemonHub() {
+  const gens = GENERATIONS.map(g => {
+    const list = seoPokemon.BASE.filter(p => p.gen === g.gen);
+    return '<h2 id="gen-' + g.gen + '">' + g.gen + '<sup>' + (g.gen === 1 ? 're' : 'e') + '</sup> génération · ' + esc(g.region) + ' · ' + list.length + ' Pokémon</h2>\n' +
+      '<ul class="alpha">' + list.map(p => '<li><small>' + String(p.id).padStart(4, '0') + '</small> ' + monLink(p) + '</li>').join('') + '</ul>';
+  }).join('\n');
+  const body =
+    '<p class="crumbs"><a href="/">Pokédle</a> › Pokémon</p>\n' +
+    '<h1>Les 1025 Pokémon</h1>\n<p class="lead">Tous les Pokémon, génération par génération, avec pour chacun ses types, ses faiblesses, sa taille, son poids, ses stats et les indices pour le deviner dans le Pokémon du jour.</p>\n' +
+    '<p class="ctas"><a class="cta" href="/">▶ Deviner le Pokémon du jour</a><a class="cta alt" href="/guides/generations-pokemon">Le guide des générations</a></p>\n' + gens;
+  const data = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'CollectionPage', name: 'Les 1025 Pokémon · Pokédle', url: SITE + '/pokemon', inLanguage: 'fr' },
+    breadcrumb([['Pokédle', '/'], ['Pokémon', '/pokemon']]),
+  ] };
+  return layout({ title: 'Liste des 1025 Pokémon par génération : types et faiblesses · Pokédle', description: 'La liste des 1025 Pokémon de la 1re à la 9e génération, avec une fiche par Pokémon : types, faiblesses et résistances, taille, poids, stats et indices du Pokémon du jour.', path: '/pokemon', body, data });
+}
 function sitemapXml() {
-  const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/guides', 'weekly', '0.6'], ...GUIDES.map(guide => ['/guides/' + guide.slug, 'monthly', '0.7']), ['/a-propos', 'yearly', '0.3'], ['/confidentialite', 'yearly', '0.2']];
+  const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/guides', 'weekly', '0.6'], ...GUIDES.map(guide => ['/guides/' + guide.slug, 'monthly', '0.7']), ['/a-propos', 'yearly', '0.3'], ['/confidentialite', 'yearly', '0.2'],
+    ['/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemon.pokemonPath(p.id), 'monthly', '0.5'])];
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map(([path, freq, priority]) => '  <url>\n    <loc>' + esc(SITE + path) + '</loc>\n    <changefreq>' + freq + '</changefreq>\n    <priority>' + priority + '</priority>\n  </url>').join('\n') + '\n</urlset>\n';
 }
@@ -276,10 +351,22 @@ function mountSeoPages(app) {
     res.redirect(301, '/guides');
   });
   app.get('/a-propos', (_req, res) => send(res, about));
+  const pokemonHub = renderPokemonHub();
+  const pokemonPages = new Map();
+  app.get(['/pokemon', '/pokemon/'], (_req, res) => send(res, pokemonHub));
+  app.get('/pokemon/:slug', (req, res, next) => {
+    const slug = String(req.params.slug || '').toLowerCase();
+    const p = seoPokemon.BY_SLUG.get(slug) || (/^\d{1,4}$/.test(slug) ? seoPokemon.BASE[Number(slug) - 1] : null);
+    if (!p) return next();
+    const canonical = seoPokemon.pokemonPath(p.id);
+    if (req.path !== canonical) return res.redirect(301, canonical);
+    if (!pokemonPages.has(p.id)) pokemonPages.set(p.id, renderPokemonPage(p.id));
+    send(res, pokemonPages.get(p.id));
+  });
   // The English addresses assistants and scanners try first.
   app.get('/about', (_req, res) => res.redirect(301, '/a-propos'));
   app.get('/contact', (_req, res) => res.redirect(301, '/a-propos#contact'));
   app.get('/privacy', (_req, res) => res.redirect(301, '/confidentialite'));
   app.get('/sitemap.xml', (_req, res) => { res.set('Cache-Control', 'public, max-age=86400'); res.type('application/xml').send(sitemap); });
 }
-module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, renderGuidePage, renderGuidesHub, sitemapXml, mountSeoPages };
+module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, renderGuidePage, renderGuidesHub, renderPokemonPage, renderPokemonHub, sitemapXml, mountSeoPages };
