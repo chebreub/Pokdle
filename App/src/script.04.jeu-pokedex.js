@@ -5259,6 +5259,10 @@ function getPokedexDisplaySprite(pokemon, useShiny = false) {
   return useShiny ? getPokemonShinySprite(pokemon) : getPokemonSprite(pokemon);
 }
 
+function pokedexShinyButtonLabel() {
+  return pokedexSelectedShiny ? "Voir le normal" : "✨ Voir le shiny";
+}
+
 function updatePokedexShinyButton() {
   const button = document.getElementById("pokedex-shiny-toggle");
   const localButton = document.getElementById("pokedex-detail-shiny-toggle");
@@ -5268,8 +5272,10 @@ function updatePokedexShinyButton() {
     button.classList.toggle("active", pokedexGridUseShiny);
   }
   if (localButton) {
-    localButton.textContent = pokedexSelectedShiny ? "Shiny" : "Normal";
+    // The button says what it does (01/11/2026): « Normal » did not tell that it showed the shiny.
+    localButton.textContent = pokedexShinyButtonLabel();
     localButton.classList.toggle("active", pokedexSelectedShiny);
+    localButton.setAttribute("aria-pressed", String(Boolean(pokedexSelectedShiny)));
   }
 }
 
@@ -6071,7 +6077,7 @@ async function renderPokedexDetail(pokemon) {
   `;
   const builderActionHtml = `
     <div class="pokedex-detail-head-actions">
-      <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn" type="button" data-action="togglePokedexShiny">${pokedexSelectedShiny ? "Shiny" : "Normal"}</button>
+      <button id="pokedex-detail-shiny-toggle" class="btn-ghost pokedex-detail-shiny-btn${pokedexSelectedShiny ? " active" : ""}" type="button" aria-pressed="${pokedexSelectedShiny ? "true" : "false"}" data-action="togglePokedexShiny">${pokedexShinyButtonLabel()}</button>
       <button class="btn-ghost pokedex-detail-builder-btn" type="button" data-action="addSelectedPokedexPokemonToBuilder">Ajouter au Builder</button>
       <button class="btn-ghost pokedex-detail-compare-btn" type="button" data-action="setPokedexCompareReferenceById" data-args='[${pokemon.id}]'>Comparer</button>
       <span id="pokedex-detail-builder-feedback" class="pokedex-detail-builder-feedback" aria-live="polite"></span>
