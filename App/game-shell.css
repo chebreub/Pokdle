@@ -1232,3 +1232,10 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .pc-end.is-won {background:#163828;border-color:#2F9E5B;}
 #pokdle-app.theme-dark .pc-try {background:#1f2b42;border-color:#33425f;}
 #pokdle-app.theme-dark .pc-try-who {color:#e8ecf6;}
+
+/* Stat Clash, Room 1v1 (01/11/2026): the room's status under the fields, full width, never squeezed
+   into a narrow column next to them (it showed one word per line on PC). */
+#screen-stat-clash .stat-clash-shell.mode-room .stat-clash-room-panel:not(.is-compact) {grid-template-columns:minmax(0,1fr) !important;}
+#screen-stat-clash .stat-clash-room-status {flex-wrap:wrap;}
+#screen-stat-clash .stat-clash-room-status > div {flex:1 1 220px;min-width:0;}
+#screen-stat-clash .stat-clash-room-feedback {white-space:normal;}
