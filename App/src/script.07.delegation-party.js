@@ -1011,10 +1011,10 @@ function openAccountMenu() {
         <div><strong>${Object.keys(playerProfile?.weeklyLeagueBadges || {}).length}</strong><span>Badges Ligue</span></div>
       </div>
       <nav class="account-menu-links">
+        <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().duels ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["defis"]'><span>⚔️ Mes défis${typeof inboxCounts === 'function' && inboxCounts().duels ? ' <i class="pc-badge">' + inboxCounts().duels + '</i>' : ''}</span><b>→</b></button>
+        <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().messages ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages${typeof inboxCounts === 'function' && inboxCounts().messages ? ' <i class="pc-badge">' + inboxCounts().messages + '</i>' : ''}</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["defis"]'><span>⚔️ Mes défis${typeof pcPendingCount === 'function' && pcPendingCount() ? ' <i class="pc-badge">' + pcPendingCount() + '</i>' : ''}</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["past"]'><span>📅 Jours passés</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
