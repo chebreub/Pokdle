@@ -46,3 +46,15 @@ Depuis `tools/video/`, le site local lancé sur le port 4173 :
 6. **Rendu :** `PAGE=pub/pub.html node render.js pub && ./mix.sh pub` → `out/Pokedle-pub.mp4`. La story : `PAGE=pub/story.html node render.js story && ./mix.sh story`.
 
 Le rythme se règle dans `WARP` (`pub/pub.js`) : chaque ligne ralentit ou accélère un passage. La frappe et les parties filmées suivent le temps réel de la vidéo, pour que la saisie reste lisible.
+
+## « 3 Pokémon pixelisés » (`pub/pix3.js`, 01/11)
+
+Vidéo de 32 s dans le style de la présentation : accroche « 3 Pokémon pixelisés, le 3e presque personne ne le trouve », Absol sur téléphone, Trousselin sur PC (la caméra se rapproche de l'image), puis Dodoala qui reste un mystère (« ✗ Ronflex », 3-2-1, « Écris ta réponse en commentaire », indice « type Normal », réponse le lendemain dans le commentaire épinglé ; l'écran reste environ 4 s pour qu'on ait le temps de le lire). Lanssorien, d'abord prévu, était trop connu, fin pokdle.fr.
+
+1. Sons et images : `python3 synth.py && python3 pub/sfx.py && python3 pub/ambience.py` puis `./fetch-assets.sh 359 707`.
+2. Site local sur le port 4173, puis `node pub/cap-pix3.js a b c` (vraies parties du Pixelisé ; toutes les générations, liste de suggestions masquée, pas de carte « Niveau supérieur ») et `node pub/cap-home.js`.
+3. Vignettes floues de l'accroche et du n°3 : découpées dans les captures (`#pixel-sprite`) vers `assets/pix3-thumb-a|b|c|c2.png` (pour Dodoala, seulement le centre de la boîte, qu'il ne remplit pas).
+4. `python3 -m http.server 4180 --bind 127.0.0.1`, vérifier avec `PAGE=pub/pix3.html node render.js pix3 --stills 2,8.9,16.6,23.9`, puis `PAGE=pub/pix3.html node render.js pix3`.
+5. Son : `./mix.sh pix3` (sans musique, avec l'ambiance nature) ; `./mixm.sh pix3 <musique.mp3> out/Pokedle-pix3-musique.mp4` (musique à 0,30, à 40 % pendant les cris, entrée en 1 s, fondu de 3 s, sans l'ambiance).
+
+Pour d'autres Pokémon : changer les numéros et les mauvaises réponses dans `pub/cap-pix3.js`, les noms et les cris dans `pub/pix3.js` (`N.g`), et recaler les clés `KA`, `KB`, `KC` sur les événements des nouvelles captures.

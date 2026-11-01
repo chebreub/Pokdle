@@ -911,3 +911,79 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
 #screen-wordle .wordle-training-bar {margin:0 0 10px;}
 #screen-wordle .wordle-training-summary {margin:12px 0;}
 #screen-wordle .wordle-train-cta {justify-content:center;margin-top:10px;}
+
+/* « Mes Pokémon préférés » (01/11/2026): the whole table on a phone (types in rows, generations in
+   columns), generations in rows on a computer; normal / shiny; a sheet to pick; an image to share. */
+#screen-ranking .fav-screen {display:flex;flex-direction:column;gap:14px;}
+#screen-ranking .fav-top {display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 20px;}
+#screen-ranking .fav-title {flex:1 1 320px;min-width:0;}
+#screen-ranking .fav-title .card-desc {margin:4px 0 0;}
+#screen-ranking .fav-tools {display:flex;flex-direction:column;gap:10px;flex:0 1 330px;min-width:240px;}
+#screen-ranking .fav-seg {display:flex;gap:4px;padding:4px;border-radius:999px;border:1px solid var(--ui-line,#EADFD0);background:var(--ui-surface,#fff);}
+#screen-ranking .fav-seg button {flex:1;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ui-muted,#6B6472);font:800 14px Nunito,sans-serif;cursor:pointer;}
+#screen-ranking .fav-seg button[aria-pressed="true"] {background:#2E2A33;color:#fff;}
+#screen-ranking .fav-seg button:last-child[aria-pressed="true"] {background:linear-gradient(135deg,#7C5BD6,#4069E0);}
+#screen-ranking .fav-progress {display:flex;align-items:center;gap:10px;font:800 13px Nunito,sans-serif;color:var(--ui-muted,#6B6472);}
+#screen-ranking .fav-progress i {flex:1;height:8px;border-radius:4px;background:var(--ui-line,#EDE4D8);overflow:hidden;}
+#screen-ranking .fav-progress b {display:block;height:100%;border-radius:4px;background:#4069E0;}
+#screen-ranking .fav-grid {display:grid;gap:3px;width:100%;}
+#screen-ranking .fav-grid.is-tall {gap:2px;}
+#screen-ranking .fav-cell {position:relative;aspect-ratio:1;min-width:0;padding:0;border-radius:9px;border:1px solid var(--ui-line,#EFE6DA);background:var(--ui-surface,#fff);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;}
+#screen-ranking .fav-grid.is-tall .fav-cell {border-radius:7px;}
+#screen-ranking .fav-cell img {width:100%;height:100%;object-fit:contain;image-rendering:pixelated;}
+#screen-ranking .fav-cell.is-empty {border:1.5px dashed #D9CDBD;background:transparent;}
+#screen-ranking .fav-cell.is-empty::after {content:'+';font:700 15px Fredoka,sans-serif;color:#B9AEA0;}
+#screen-ranking .fav-cell.is-fav {background:#FFF4D1;border-color:#F3D27A;}
+#screen-ranking .fav-cell.is-none {border:0;background:repeating-linear-gradient(135deg,rgba(46,42,51,.05) 0 4px,transparent 4px 8px);cursor:default;}
+#screen-ranking .fav-cell.is-none:hover {transform:none;box-shadow:none;}
+#screen-ranking .fav-cell.is-fav.is-empty {border:1.5px dashed #F3D27A;}
+#screen-ranking .fav-cell.is-top {background:linear-gradient(135deg,#FFE7A8,#E9DDFF);border:2px solid #7C5BD6;}
+#screen-ranking .fav-cell.is-top.is-empty::after {content:'👑';font-size:14px;}
+#screen-ranking .fav-grid.is-shiny .fav-cell:not(.is-empty):not(.is-fav) {background:linear-gradient(160deg,#fff 50%,#F1EBFF);}
+#screen-ranking .fav-cell:hover {transform:translateY(-1px);box-shadow:0 3px 0 rgba(46,42,51,.12);}
+#screen-ranking .fav-cell:focus-visible {outline:3px solid #4069E0;outline-offset:1px;}
+#screen-ranking .fav-head {display:flex;align-items:center;justify-content:center;min-width:0;border-radius:9px;font:800 11px Nunito,sans-serif;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.18);overflow:hidden;}
+#screen-ranking .fav-col-head,#screen-ranking .fav-row-head {background:var(--fav-col);}
+#screen-ranking .fav-col-head {flex-direction:column;gap:2px;padding:6px 1px;min-height:54px;font-size:10px;}
+#screen-ranking .fav-col-head img,#screen-ranking .fav-row-head img {width:17px;height:17px;flex:none;}
+#screen-ranking .fav-col-head span,#screen-ranking .fav-row-head span {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+#screen-ranking .fav-row-head {justify-content:flex-start;gap:4px;padding:0 6px;font-size:11px;}
+#screen-ranking .fav-grid.is-tall .fav-row-head {font-size:10.5px;padding:0 4px;gap:3px;border-radius:7px;}
+#screen-ranking .fav-grid.is-tall .fav-row-head img {width:14px;height:14px;}
+#screen-ranking .fav-gen-head {flex-direction:column;background:#2E2A33;font:700 14px Fredoka,sans-serif;line-height:1;}
+#screen-ranking .fav-gen-head small {font:800 9px Nunito,sans-serif;opacity:.75;margin-top:2px;}
+#screen-ranking .fav-grid.is-tall .fav-gen-head {min-height:30px;border-radius:7px;font-size:13px;}
+#screen-ranking .fav-heart-head {background:#FFD45C;font-size:15px;min-height:30px;}
+#screen-ranking .is-fav-row {background:#FFD45C;color:#2E2A33;text-shadow:none;}
+#screen-ranking .fav-actions {display:flex;flex-wrap:wrap;gap:8px;}
+#screen-ranking .fav-actions .fav-share {flex:1 1 220px;}
+@media (max-width: 760px) {
+  #screen-ranking .fav-screen.card {padding:14px 6px;}
+  #screen-ranking .fav-top,#screen-ranking .fav-actions {padding:0 8px;}
+  #screen-ranking .fav-tools {flex:1 1 100%;}
+  #screen-ranking .fav-actions .fav-share {flex:1 1 100%;}
+  #screen-ranking .fav-actions .btn-ghost {flex:1 1 0;width:auto;min-width:0;padding-left:4px;padding-right:4px;font-size:13px;white-space:nowrap;}
+}
+body.fav-sheet-open {overflow:hidden;}
+.fav-sheet-back {position:fixed;inset:0;z-index:1200;background:rgba(46,42,51,.38);}
+.fav-sheet {position:fixed;z-index:1201;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);max-height:78vh;display:flex;flex-direction:column;gap:10px;padding:10px 16px calc(18px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:var(--ui-surface,#fff);color:var(--ui-ink,#2E2A33);box-shadow:0 -20px 60px rgba(46,42,51,.3);}
+@media (min-width: 761px) { .fav-sheet {bottom:50%;transform:translate(-50%,50%);border-radius:26px;max-height:80vh;} }
+.fav-sheet-grab {width:44px;height:5px;border-radius:3px;background:#DDD3C7;margin:0 auto;}
+.fav-sheet-head {display:flex;align-items:center;gap:8px;}
+.fav-sheet-head h3 {margin:0;font:700 21px Fredoka,sans-serif;}
+.fav-chip {padding:4px 10px;border-radius:999px;color:#fff;font:800 12px Nunito,sans-serif;white-space:nowrap;}
+.fav-sheet-x {margin-left:auto;width:38px;height:38px;border-radius:50%;border:1px solid var(--ui-line,#EADFD0);background:transparent;color:inherit;font-size:16px;cursor:pointer;}
+.fav-search {width:100%;padding:11px 14px;border-radius:12px;border:2px solid var(--ui-line,#EADFD0);background:var(--ui-soft,#FFF8EF);color:inherit;font:700 15px Nunito,sans-serif;}
+.fav-cands {display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;overflow-y:auto;padding-bottom:4px;}
+.fav-cand {display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 8px;border-radius:14px;border:1px solid var(--ui-line,#EADFD0);background:transparent;color:inherit;font:800 12px Nunito,sans-serif;cursor:pointer;}
+.fav-cand.is-on {border:2px solid #4069E0;background:#EEF2FF;color:#2E2A33;}
+.fav-cand img {width:72px;height:72px;object-fit:contain;}
+.fav-cand span {text-align:center;line-height:1.15;}
+.fav-empty {margin:6px 0 10px;color:var(--ui-muted,#6B6472);font:700 14px Nunito,sans-serif;}
+.fav-sheet-foot {display:flex;justify-content:center;}
+.fav-share {display:flex;flex-direction:column;align-items:center;gap:12px;}
+.fav-share img {width:min(100%,360px);border-radius:16px;box-shadow:0 10px 30px rgba(46,42,51,.2);}
+.fav-share-row {display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.fav-share-row a {text-decoration:none;}
+.fav-share-hint,.fav-share-wait {margin:0;text-align:center;color:var(--ui-muted,#6B6472);font:700 14px Nunito,sans-serif;}
+@media (prefers-reduced-motion: reduce) { #screen-ranking .fav-cell:hover {transform:none;} }

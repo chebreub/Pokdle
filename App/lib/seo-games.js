@@ -732,6 +732,33 @@ const GAMES = [
     ],
     related: ['table-des-types', 'team-builder', 'evolution-pokemon'],
   },
+  {
+    slug: 'pokemon-prefere-par-type', group: 'tools', sprite: 6, name: 'Mes Pokémon préférés',
+    short: 'Ton préféré de chaque type et de chaque génération, à partager.',
+    title: 'Ton Pokémon préféré par type et génération | Pokédle',
+    description: 'Remplis la grille des Pokémon préférés : un par type et par génération, plus starters, formes et légendaires. Version normale et shiny, puis partage ton image.',
+    h1: 'La grille de tes Pokémon préférés, par type et par génération',
+    lead: 'Le grand tableau des fans de Pokémon : ton préféré de chaque type, dans chacune des 9 générations, avec une ligne Starter, Formes et Légendes. Choisis ensuite ton préféré de chaque ligne et de chaque colonne, puis ton n°1.',
+    cta: 'Faire ma grille',
+    steps: [
+      'Touche une case : la liste montre seulement les Pokémon de ce type et de cette génération.',
+      'Remplis les cases ❤️ avec ton préféré de chaque type et de chaque génération, puis ton n°1.',
+      'Passe en ✨ Shiny pour faire la grille de tes shinies préférés, puis partage l’image.',
+    ],
+    facts: [
+      '18 types et 3 catégories (Starter, Formes, Légendes) pour 9 générations : 189 cases.',
+      'Deux grilles séparées, normale et shiny, gardées sur ton appareil.',
+      'Une image au format story à poster, avec « Fais la tienne sur pokdle.fr ».',
+    ],
+    tips: [
+      'Pas d’idée pour une case ? Le bouton 🎲 remplit les cases vides au hasard, tu changes ensuite ce qui ne te plaît pas.',
+      'Pose ta grille en story et demande à tes amis leur préféré de chaque type : chacun a son avis.',
+    ],
+    faq: [
+      ['Faut-il un compte pour faire sa grille ?', 'Non. La grille est gardée sur ton appareil, sans compte.'],
+    ],
+    related: ['pokedex', 'shiny-ou-normal', 'table-des-types'],
+  },
 ];
 
 module.exports = { GROUPS, GAMES };
