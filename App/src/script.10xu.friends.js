@@ -62,7 +62,8 @@ function frAvatar(p) { return typeof pcAvatar === 'function' ? pcAvatar(p) : '';
 function frCardButtonHtml(rel, pid, name, id) {
   if (rel === 'self') return '';
   if (rel === 'friends') {
-    return '<button type="button" class="btn-ghost fr-card-btn is-friend" data-action="frCardMenu" data-args="' + frArgs([pid, name]) + '">✓ Ami</button>';
+    return (typeof openFriendChat === 'function' ? '<button type="button" class="btn-blue fr-card-btn" data-action="openFriendChat" data-args="' + frArgs([pid, name]) + '">💬 Écrire</button>' : '') +
+      '<button type="button" class="btn-ghost fr-card-btn is-friend" data-action="frCardMenu" data-args="' + frArgs([pid, name]) + '">✓ Ami</button>';
   }
   if (rel === 'sent') {
     return '<span class="fr-card-wait">⏳ Demande envoyée</span><button type="button" class="fr-card-link" data-action="frCancel" data-args="' + frArgs([pid]) + '">Annuler</button>';
@@ -188,11 +189,19 @@ function frPanelHtml() {
   });
   html += '<div class="fr-head"><h3>Mes amis</h3><small>' + friends.length + ' / ' + (Number(d.max) || 50) + '</small></div>';
   if (friends.length) {
-    html += '<div class="fr-list">' + friends.map(function (f) {
-      var since = frDay(f.since);
-      return '<div class="fr-row">' +
-        '<button type="button" class="fr-row-main" data-action="openPlayerCard" data-args="' + frArgs([f.pid]) + '">' + frAvatar(f) +
-          '<span><b>' + escapeHtml(f.username) + '</b><small>Niv. ' + frLevel(f.xp) + (since ? ' · ami depuis le ' + since : '') + '</small></span></button>' +
+    // With the chat (script.10xv.friend-chat.js): the last message under the name, and 💬 with its count.
+    var convs = typeof chatState !== 'undefined' && chatState ? chatState.convs || {} : {};
+    var chatOn = typeof openFriendChat === 'function';
+    html += '<div class="fr-list">' + friends.slice().sort(function (a, b) {
+      var la = convs[a.pid] && convs[a.pid].last ? String(convs[a.pid].last.at) : '', lb = convs[b.pid] && convs[b.pid].last ? String(convs[b.pid].last.at) : '';
+      return lb.localeCompare(la);
+    }).map(function (f) {
+      var since = frDay(f.since), conv = convs[f.pid], unread = conv ? Number(conv.unread) || 0 : 0;
+      var line = conv && conv.last ? (conv.last.mine ? 'Toi : ' : '') + conv.last.body : 'Niv. ' + frLevel(f.xp) + (since ? ' · ami depuis le ' + since : '');
+      return '<div class="fr-row' + (unread ? ' is-unread' : '') + '">' +
+        '<button type="button" class="fr-row-main" data-action="' + (chatOn ? 'openFriendChat' : 'openPlayerCard') + '" data-args="' + frArgs(chatOn ? [f.pid, f.username] : [f.pid]) + '">' + frAvatar(f) +
+          '<span><b>' + escapeHtml(f.username) + '</b><small>' + escapeHtml(line) + '</small></span></button>' +
+        (chatOn ? '<button type="button" class="btn-ghost fr-duel fr-chat" data-action="openFriendChat" data-args="' + frArgs([f.pid, f.username]) + '" aria-label="Écrire à ' + escapeHtml(f.username) + '">💬' + (unread ? '<i class="pc-badge">' + unread + '</i>' : '') + '</button>' : '') +
         '<button type="button" class="btn-ghost fr-duel" data-action="openChallengeForm" data-args="' + frArgs([f.pid, f.username]) + '" aria-label="Défier ' + escapeHtml(f.username) + '">⚔️</button></div>';
     }).join('') + '</div>';
   } else {
@@ -210,7 +219,8 @@ function frPanelHtml() {
         '<button type="button" class="fr-card-link" data-action="frUnblock" data-args="' + frArgs([f.pid]) + '">Débloquer</button></div>';
     }).join('') + '</details>';
   }
-  html += '<p class="fr-note">On ajoute un ami depuis sa carte de dresseur : pas de recherche par pseudo. Une demande sans réponse est effacée au bout de 30 jours.</p>';
+  html += '<p class="fr-note">On ajoute un ami depuis sa carte de dresseur : pas de recherche par pseudo. Une demande sans réponse est effacée au bout de 30 jours.' +
+    (typeof openFriendChat === 'function' ? ' Entre amis, les messages sont gardés 30 jours ; 🚩 Signaler et ⛔ Bloquer sont dans la discussion.' : '') + '</p>';
   return html;
 }
 function renderPartyFriends() {
@@ -231,7 +241,7 @@ function renderPartyFriends() {
     var anchor = document.getElementById('party-duels') || lobby;
     anchor.parentNode.insertBefore(seg, anchor);
   }
-  var count = frPendingCount();
+  var count = frPendingCount() + (typeof chatUnreadCount === 'function' ? chatUnreadCount() : 0);
   seg.innerHTML = '<button type="button" role="tab" aria-selected="' + (frState.tab !== 'friends') + '" class="' + (frState.tab !== 'friends' ? 'is-on' : '') + '" data-action="frShowTab" data-args=\'["party"]\'>Party Room</button>' +
     '<button type="button" role="tab" aria-selected="' + (frState.tab === 'friends') + '" class="' + (frState.tab === 'friends' ? 'is-on' : '') + '" data-action="frShowTab" data-args=\'["friends"]\'>Mes amis' + (count ? ' <i class="pc-badge">' + count + '</i>' : '') + '</button>';
   if (!panel) {

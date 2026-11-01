@@ -13,11 +13,13 @@ function inboxChallenges() {
   return { list: list, waiting: waiting, news: news };
 }
 function inboxCounts() {
-  if (!window.__pokedleAuthed) return { duels: 0, messages: 0, friends: 0 };
+  if (!window.__pokedleAuthed) return { duels: 0, messages: 0, friends: 0, chat: 0 };
   var s = inboxChallenges();
   // 🤝 Friend requests waiting, and my requests accepted (script.10xu.friends.js).
   var friends = typeof frPendingCount === 'function' ? frPendingCount() : 0;
-  return { duels: s.waiting.length + s.news.length, messages: inboxMessagesCount(), friends: friends };
+  // 💬 Unread messages from friends (script.10xv.friend-chat.js).
+  var chat = typeof chatUnreadCount === 'function' ? chatUnreadCount() : 0;
+  return { duels: s.waiting.length + s.news.length, messages: inboxMessagesCount(), friends: friends, chat: chat };
 }
 function inboxSetDot(el, n) {
   if (!el) return;
@@ -34,7 +36,7 @@ function renderInboxHome() {
   if (!home) return;
   var box = document.getElementById('home-inbox');
   var s = inboxChallenges(), messages = inboxMessagesCount();
-  var friendLine = typeof frHomeLineHtml === 'function' ? frHomeLineHtml() : '';
+  var friendLine = (typeof chatHomeLineHtml === 'function' ? chatHomeLineHtml() : '') + (typeof frHomeLineHtml === 'function' ? frHomeLineHtml() : '');
   if (!window.__pokedleAuthed || (!s.waiting.length && !s.news.length && !messages && !friendLine)) { if (box) box.remove(); return; }
   if (!box) { box = document.createElement('section'); box.id = 'home-inbox'; box.className = 'home-inbox'; home.insertBefore(box, home.firstChild); }
   var html = '';
@@ -76,9 +78,9 @@ function renderPartyDuels() {
 }
 function renderInboxUi() {
   var n = inboxCounts();
-  inboxSetDot(document.querySelector('#account-area .account-chip'), n.duels + n.messages + (n.friends || 0));
-  inboxSetDot(document.querySelector('#mobile-tabbar [data-tab="social"]'), n.duels + (n.friends || 0));
-  inboxSetDot(document.getElementById('nav-social'), n.duels + (n.friends || 0));
+  inboxSetDot(document.querySelector('#account-area .account-chip'), n.duels + n.messages + (n.friends || 0) + (n.chat || 0));
+  inboxSetDot(document.querySelector('#mobile-tabbar [data-tab="social"]'), n.duels + (n.friends || 0) + (n.chat || 0));
+  inboxSetDot(document.getElementById('nav-social'), n.duels + (n.friends || 0) + (n.chat || 0));
   renderInboxHome();
   renderPartyDuels();
 }
