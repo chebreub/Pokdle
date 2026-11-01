@@ -965,6 +965,8 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
   #screen-ranking .fav-actions .btn-ghost {flex:1 1 0;width:auto;min-width:0;padding-left:4px;padding-right:4px;font-size:13px;white-space:nowrap;}
 }
 body.fav-sheet-open {overflow:hidden;}
+/* the phone tab bar (z-index 2000) would cover the bottom of a sheet */
+body.fav-sheet-open .mobile-tabbar {display:none !important;}
 .fav-sheet-back {position:fixed;inset:0;z-index:1200;background:rgba(46,42,51,.38);}
 .fav-sheet {position:fixed;z-index:1201;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);max-height:78vh;display:flex;flex-direction:column;gap:10px;padding:10px 16px calc(18px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:var(--ui-surface,#fff);color:var(--ui-ink,#2E2A33);box-shadow:0 -20px 60px rgba(46,42,51,.3);}
 @media (min-width: 761px) { .fav-sheet {bottom:50%;transform:translate(-50%,50%);border-radius:26px;max-height:80vh;} }
@@ -987,3 +989,139 @@ body.fav-sheet-open {overflow:hidden;}
 .fav-share-row a {text-decoration:none;}
 .fav-share-hint,.fav-share-wait {margin:0;text-align:center;color:var(--ui-muted,#6B6472);font:700 14px Nunito,sans-serif;}
 @media (prefers-reduced-motion: reduce) { #screen-ranking .fav-cell:hover {transform:none;} }
+
+/* « Mon équipe » (01/11/2026): the Team Builder made visual (App/src/script.10xp.team-builder-v2.js). */
+#screen-team-builder .tb-top {display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 18px;margin-bottom:14px;}
+#screen-team-builder .tb-top-copy {flex:1 1 300px;min-width:0;}
+#screen-team-builder .tb-top-copy .card-desc {margin:4px 0 0;}
+#screen-team-builder .tb-actions {display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+#screen-team-builder .tb-more {position:relative;}
+#screen-team-builder .tb-more > summary {list-style:none;cursor:pointer;min-width:48px;text-align:center;}
+#screen-team-builder .tb-more > summary::-webkit-details-marker {display:none;}
+#screen-team-builder .tb-more-menu {position:absolute;right:0;top:calc(100% + 6px);z-index:30;display:flex;flex-direction:column;min-width:230px;padding:6px;border-radius:16px;border:1px solid var(--ui-line,#EADFD0);background:var(--ui-surface,#fff);box-shadow:0 18px 40px rgba(46,42,51,.18);}
+#screen-team-builder .tb-more-menu button {text-align:left;padding:11px 12px;border:0;border-radius:10px;background:transparent;color:var(--ui-ink,#2E2A33);font:800 14px Nunito,sans-serif;cursor:pointer;}
+#screen-team-builder .tb-more-menu button:hover {background:var(--ui-soft,#F6F0E8);}
+#screen-team-builder .tb-more-menu .is-danger {color:#C7423A;}
+/* the six cards */
+#screen-team-builder #team-builder-grid {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:0;background:transparent;border:0;box-shadow:none;}
+#screen-team-builder .tb-card-wrap {position:relative;min-width:0;}
+#screen-team-builder .tb-card {position:relative;width:100%;min-height:100%;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px 12px;border-radius:20px;border:1px solid var(--ui-line,#EADFD0);background:linear-gradient(160deg,color-mix(in srgb,var(--tb-c1) 22%,#fff),color-mix(in srgb,var(--tb-c2) 22%,#fff));box-shadow:0 5px 0 rgba(46,42,51,.07);color:#2E2A33;cursor:pointer;overflow:hidden;}
+#screen-team-builder .tb-card img {width:86%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(46,42,51,.18));}
+#screen-team-builder .tb-card b {font:700 15px Fredoka,sans-serif;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#screen-team-builder .tb-types {display:flex;flex-wrap:wrap;justify-content:center;gap:3px;}
+#screen-team-builder .tb-types .type-badge {font-size:10px;padding:2px 7px;}
+#screen-team-builder .tb-item {margin-top:4px;max-width:100%;padding:2px 8px;border-radius:999px;background:#FFF4D1;border:1px solid #F3D27A;font:800 10px Nunito,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#screen-team-builder .tb-card-wrap.is-active .tb-card {outline:3px solid #4069E0;outline-offset:2px;}
+#screen-team-builder .tb-card.is-empty {min-height:170px;justify-content:center;gap:8px;border:2px dashed #D9CDBD;background:transparent;box-shadow:none;color:#9A90A3;font:800 13px Nunito,sans-serif;}
+#screen-team-builder .tb-card.is-empty.is-active {outline:3px solid #4069E0;outline-offset:2px;}
+#screen-team-builder .tb-card.is-empty i {font-style:normal;width:46px;height:46px;border-radius:50%;background:#F3EDE4;display:flex;align-items:center;justify-content:center;font:700 28px Fredoka,sans-serif;color:#4069E0;}
+#screen-team-builder .tb-lock {position:absolute;top:6px;left:6px;width:32px;height:32px;border-radius:50%;border:1px solid var(--ui-line,#EADFD0);background:rgba(255,255,255,.85);font-size:14px;line-height:1;cursor:pointer;opacity:.6;}
+#screen-team-builder .tb-lock.is-on {opacity:1;background:#FFF4D1;border-color:#F3D27A;}
+/* « Ton équipe face aux types » */
+#screen-team-builder .tb-cov {padding:14px;border-radius:20px;border:1px solid var(--ui-line,#EADFD0);background:var(--ui-surface,#fff);margin-bottom:12px;}
+#screen-team-builder .tb-cov h3 {display:flex;align-items:center;gap:8px;margin:0 0 10px;font:700 18px Fredoka,sans-serif;}
+#screen-team-builder .tb-cov h3 small {margin-left:auto;font:800 12px Nunito,sans-serif;color:var(--ui-muted,#6B6472);}
+#screen-team-builder .tb-cov-grid {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;}
+#screen-team-builder .tb-cov-cell {position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 5px;border-radius:12px;color:#fff;font:800 10px Nunito,sans-serif;text-shadow:0 1px 0 rgba(0,0,0,.2);min-width:0;}
+#screen-team-builder .tb-cov-cell img {width:16px;height:16px;}
+#screen-team-builder .tb-cov-cell span {max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#screen-team-builder .tb-cov-cell em {position:absolute;top:-7px;right:-4px;min-width:22px;height:22px;padding:0 4px;border-radius:11px;border:2px solid #fff;font:900 11px/18px Nunito,sans-serif;font-style:normal;text-align:center;text-shadow:none;}
+#screen-team-builder .tb-cov-cell em.is-bad {background:#E5484D;color:#fff;}
+#screen-team-builder .tb-cov-cell em.is-good {background:#2F9E5B;color:#fff;}
+#screen-team-builder .tb-verdict {display:flex;flex-direction:column;gap:6px;margin-top:10px;font:700 13px/1.35 Nunito,sans-serif;}
+#screen-team-builder .tb-verdict div {padding:8px 10px;border-radius:12px;}
+#screen-team-builder .tb-verdict .is-bad {background:#FDECEC;color:#8A2A23;}
+#screen-team-builder .tb-verdict .is-good {background:#E6F6EC;color:#1F5E3A;}
+#screen-team-builder .tb-cov-empty {margin:0;color:var(--ui-muted,#6B6472);font:700 14px Nunito,sans-serif;}
+/* the editor in tabs */
+#screen-team-builder .tb-tabs {display:flex;gap:6px;padding:4px;border-radius:14px;background:var(--ui-soft,#F6F0E8);margin:4px 0 12px;}
+#screen-team-builder .tb-tabs button {flex:1;min-height:40px;border:0;border-radius:10px;background:transparent;color:var(--ui-muted,#6B6472);font:800 13px Nunito,sans-serif;cursor:pointer;}
+#screen-team-builder .tb-tabs button[aria-selected="true"] {background:var(--ui-surface,#fff);color:var(--ui-ink,#2E2A33);box-shadow:0 2px 0 rgba(46,42,51,.08);}
+#screen-team-builder .home-builder-editor.tb-tabbed [data-tb-tab] {display:none;}
+#screen-team-builder .home-builder-editor.tb-tabbed[data-tab="set"] [data-tb-tab="set"],
+#screen-team-builder .home-builder-editor.tb-tabbed[data-tab="reglages"] [data-tb-tab="reglages"],
+#screen-team-builder .home-builder-editor.tb-tabbed[data-tab="stats"] [data-tb-tab="stats"],
+#screen-team-builder .home-builder-editor.tb-tabbed[data-tab="tera"] [data-tb-tab="tera"] {display:block;}
+#screen-team-builder .home-builder-editor.tb-tabbed .team-builder-advanced > summary {display:none;}
+#screen-team-builder .home-builder-editor-head {position:relative;}
+#screen-team-builder .tb-editor-x {display:none;position:absolute;top:0;right:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--ui-line,#EADFD0);background:var(--ui-surface,#fff);font-size:16px;cursor:pointer;}
+@media (max-width: 1100px) {
+  #screen-team-builder #team-builder-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (max-width: 760px) {
+  #screen-team-builder .tb-actions {width:100%;}
+  #screen-team-builder .tb-actions > .btn-blue {flex:1 1 100%;}
+  #screen-team-builder .tb-actions > .btn-ghost {flex:1 1 0;min-width:0;padding-left:6px;padding-right:6px;white-space:nowrap;}
+  #screen-team-builder #team-builder-grid {gap:8px;}
+  #screen-team-builder .tb-card {padding:8px 5px 10px;border-radius:18px;}
+  #screen-team-builder .tb-card b {font-size:13px;}
+  #screen-team-builder .tb-types .type-badge {font-size:9px;padding:2px 5px;}
+  #screen-team-builder .tb-item {display:none;}
+  #screen-team-builder .tb-lock {width:28px;height:28px;font-size:12px;}
+  /* no room for the names on a phone: the type icon and its colour (the name stays for screen readers) */
+  #screen-team-builder .tb-cov-cell {padding:8px 2px;}
+  #screen-team-builder .tb-cov-cell img {width:20px;height:20px;}
+  #screen-team-builder .tb-cov-cell span {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  #screen-team-builder .tb-types .type-badge > span {display:none;}
+  #screen-team-builder .tb-types .type-badge {padding:3px 5px;}
+  /* the editor opens as a sheet over the team (moved to the body while open) */
+  #screen-team-builder .team-builder-module > .home-builder-editor {display:none;}
+}
+@media (max-width: 1099px) {
+  #screen-team-builder .team-builder-module {display:flex !important;flex-direction:column;}
+  #screen-team-builder .team-builder-module > .home-builder-grid {order:1;}
+  #screen-team-builder .team-builder-module > .home-builder-summary {order:2;}
+  #screen-team-builder .team-builder-module > .home-builder-editor {order:3;}
+  #screen-team-builder .team-builder-module > .team-builder-export {order:4;}
+}
+.tb-editor-sheet {position:fixed;z-index:1201;left:0;right:0;bottom:0;max-height:86vh;overflow-y:auto;padding:14px 14px calc(20px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:var(--ui-surface,#fff);color:var(--ui-ink,#2E2A33);box-shadow:0 -20px 60px rgba(46,42,51,.3);}
+.tb-editor-sheet > .home-builder-editor {margin:0;padding:0;border:0;box-shadow:none;background:transparent;}
+.tb-editor-sheet .tb-editor-x {display:block;position:absolute;top:0;right:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--ui-line,#EADFD0);background:var(--ui-surface,#fff);font-size:16px;cursor:pointer;}
+.tb-editor-sheet .home-builder-editor-head {position:relative;padding-right:46px;}
+.tb-editor-sheet .tb-tabs {display:flex;gap:6px;padding:4px;border-radius:14px;background:var(--ui-soft,#F6F0E8);margin:4px 0 12px;}
+.tb-editor-sheet .tb-tabs button {flex:1;min-height:40px;border:0;border-radius:10px;background:transparent;color:var(--ui-muted,#6B6472);font:800 13px Nunito,sans-serif;cursor:pointer;}
+.tb-editor-sheet .tb-tabs button[aria-selected="true"] {background:var(--ui-surface,#fff);color:var(--ui-ink,#2E2A33);box-shadow:0 2px 0 rgba(46,42,51,.08);}
+.tb-editor-sheet .home-builder-editor.tb-tabbed [data-tb-tab] {display:none;}
+.tb-editor-sheet .home-builder-editor.tb-tabbed[data-tab="set"] [data-tb-tab="set"],
+.tb-editor-sheet .home-builder-editor.tb-tabbed[data-tab="reglages"] [data-tb-tab="reglages"],
+.tb-editor-sheet .home-builder-editor.tb-tabbed[data-tab="stats"] [data-tb-tab="stats"],
+.tb-editor-sheet .home-builder-editor.tb-tabbed[data-tab="tera"] [data-tb-tab="tera"] {display:block;}
+.tb-editor-sheet .team-builder-advanced > summary {display:none;}
+/* in the sheet the Pokémon field already shows who is edited */
+.tb-editor-sheet #team-builder-editor-sub, .tb-editor-sheet #team-builder-editor-identity {display:none;}
+.tb-editor-sheet .home-builder-editor-head {min-height:38px;}
+.tb-editor-sheet .team-builder-move-label-row {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.tb-editor-sheet .team-builder-move-label-row > span {white-space:nowrap;}
+.tb-editor-sheet .home-builder-fields > * {min-width:0;}
+.tb-editor-sheet .home-builder-editor select {width:100%;min-width:0;max-width:100%;box-sizing:border-box;}
+/* the Pokémon field says « Pokémon » already; the old footnote is noise under the tabs */
+#screen-team-builder .tb-pokemon-section > .team-builder-editor-section-head, .tb-editor-sheet .tb-pokemon-section > .team-builder-editor-section-head {display:none;}
+#screen-team-builder .home-builder-editor.tb-tabbed > .home-builder-footnote, .tb-editor-sheet .home-builder-editor.tb-tabbed > .home-builder-footnote {display:none;}
+.tb-editor-sheet .team-builder-move-clear {flex:0 0 auto;width:auto;min-height:30px;padding:4px 12px;font-size:13px;}
+/* the Pokémon picker in the sheet: one row per Pokémon, small type badges */
+.tb-editor-sheet .team-builder-pokemon-picker-head {display:flex;gap:8px;align-items:center;}
+.tb-editor-sheet .team-builder-pokemon-picker-head input {flex:1 1 auto;min-width:0;width:auto;}
+.tb-editor-sheet .team-builder-pokemon-picker-head button {flex:0 0 auto;width:auto;}
+.tb-editor-sheet .team-builder-pokemon-results {grid-template-columns:1fr;gap:6px;max-height:48vh;}
+.tb-editor-sheet .team-builder-pokemon-card {grid-template-columns:44px minmax(0,1fr);justify-items:start;align-items:center;column-gap:10px;row-gap:3px;padding:6px 10px;text-align:left;transform:none;}
+.tb-editor-sheet .team-builder-pokemon-card img {grid-row:span 2;width:44px;height:44px;}
+.tb-editor-sheet .team-builder-pokemon-card strong {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tb-editor-sheet .team-builder-pokemon-card strong {font-size:15px;}
+.tb-editor-sheet .team-builder-pokemon-card .pokemon-card-types {display:flex;gap:4px;flex-wrap:nowrap;justify-content:flex-start;justify-self:start;margin:0;}
+.tb-editor-sheet .team-builder-pokemon-card .type-badge {min-height:20px;padding:2px 7px;gap:4px;box-shadow:none;}
+.tb-editor-sheet .team-builder-pokemon-card .type-badge img {width:12px;height:12px;}
+.tb-editor-sheet .team-builder-pokemon-card .type-badge span {font-size:11px;}
+.tb-random .tb-random-hint {margin:0;color:var(--ui-muted,#6B6472);font:700 14px Nunito,sans-serif;}
+.tb-random .tb-gens-label {margin:4px 0 -2px;font:800 13px Nunito,sans-serif;color:var(--ui-ink,#2E2A33);}
+.tb-random .tb-gens {display:grid;grid-template-columns:repeat(9,1fr);gap:5px;}
+.tb-random .tb-gens button {min-height:40px;border-radius:10px;border:1px solid var(--ui-line,#EADFD0);background:transparent;color:var(--ui-muted,#6B6472);font:700 15px Fredoka,sans-serif;cursor:pointer;}
+.tb-random .tb-gens button[aria-pressed="true"] {background:#2E2A33;border-color:#2E2A33;color:#fff;}
+/* field titles of the editor were dark blue on dark blue in the dark theme (page and sheet) */
+body.theme-dark :is(#screen-team-builder, .tb-editor-sheet) .home-type-helper-label > span,
+body.theme-dark :is(#screen-team-builder, .tb-editor-sheet) .team-builder-move-label-row > span {color:#C9D6EE;}
+body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4EFE6;border-color:#F4EFE6;color:#2E2A33;}
+.tb-random .tb-opt {display:flex;align-items:flex-start;gap:10px;padding:8px 2px;cursor:pointer;}
+.tb-random .tb-opt input {width:20px;height:20px;margin-top:2px;flex:none;accent-color:#4069E0;}
+.tb-random .tb-opt b {display:block;font:800 15px Nunito,sans-serif;}
+.tb-random .tb-opt small {display:block;color:var(--ui-muted,#6B6472);font:700 12px Nunito,sans-serif;}
+.tb-random .tb-roll {width:100%;margin-top:4px;}
