@@ -1,5 +1,5 @@
 // « 3 Pokémon pixelisés, le 3e presque personne ne le trouve » (01/11/2026, ~28 s, vertical).
-// Hook, then three real games of the pixel mode (Absol on a phone, Trousselin on a PC, Lanssorien on a
+// Hook, then three real games of the pixel mode (Absol on a phone, Trousselin on a PC, Dodoala on a
 // phone), each answer bursting out of the screen; the 3rd stays a mystery: « Écris ta réponse en com ».
 // Every frame is a pure function of t (same toolkit as pub.js).
 const $ = (id) => document.getElementById(id);
@@ -16,14 +16,16 @@ const noise = (x) => Math.sin(x * 12.9898) * Math.sin(x * 4.1414 + 1.3) * Math.c
 const rnd = (seed) => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
 const el = (tag, cls, parent, html) => { const d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; parent.appendChild(d); return d; };
 const vis = (node, on) => { node.style.visibility = on ? 'visible' : 'hidden'; return on; };
-var S = { audio: [], total: 28.3 };
+var S = { audio: [], total: 32.25 };
 const IDX = {};
 
 // ---- timeline (output seconds). Each game: [output t, footage t] keys, real time between them.
 const KA = [[3.05, 1.3], [5.25, 3.5], [6.05, 4.3], [6.75, 5.8], [8.2, 7.25], [10.0, 9.05]];
 const KB = [[10.25, 1.3], [12.25, 3.3], [12.95, 4.0], [13.65, 5.65], [15.95, 7.95], [17.7, 9.7]];
-const KC = [[17.95, 1.3], [20.5, 3.85], [21.5, 4.85]];
-const WIN_A = 8.23, WIN_B = 16.0, FREEZE = 21.55, CD = [21.8, 22.25, 22.7], TOI = 23.15, W2 = 24.75;
+const KC = [[17.95, 1.3], [19.97, 3.32], [20.97, 4.32]];
+// The last mystery: a slow 3-2-1, then the question, the clue and « tomorrow » one after the other, and
+// the whole screen stays about 4 s so everyone can read it (feedback of 01/11).
+const WIN_A = 8.23, WIN_B = 16.0, FREEZE = 21.2, CD = [21.55, 22.2, 22.85], TOI = 23.5, W2 = 28.7;
 function mapF(K, t) { if (t <= K[0][0]) return K[0][1]; for (let i = 0; i < K.length - 1; i++) if (t <= K[i + 1][0]) return lerp(K[i][1], K[i + 1][1], seg(t, K[i][0], K[i + 1][0])); const l = K[K.length - 1]; return l[1] + (t - l[0]); }
 function mapOut(K, f) { if (f < K[0][1]) return null; for (let i = 0; i < K.length - 1; i++) if (f <= K[i + 1][1]) return lerp(K[i][0], K[i + 1][0], (f - K[i][1]) / (K[i + 1][1] - K[i][1])); const l = K[K.length - 1]; return l[0] + (f - l[1]); }
 
@@ -123,7 +125,7 @@ function build() {
   N.g = [
     { box: $('s2'), name: 'pix3-a', K: KA, win: WIN_A, art: 359, label: 'N°1 · 😏 Moyen', col: '#4069E0', cap: 'Tu le reconnais ?', wrong: 'Mangriff', stamp: 'ABSOL', dev: 'phone', t0: 2.95, t1: 10.05 },
     { box: $('s3'), name: 'pix3-b', K: KB, win: WIN_B, art: 707, label: 'N°2 · 😬 Difficile', col: '#E8453C', cap: 'Et sur PC ?', wrong: 'Magnéti', stamp: 'TROUSSELIN', dev: 'laptop', t0: 9.95, t1: 17.75 },
-    { box: $('s4'), name: 'pix3-c', K: KC, win: null, art: 0, label: 'N°3 · 💀 Très difficile', col: '#2E2A33', cap: 'Le dernier…', wrong: 'Dracolosse', stamp: '', dev: 'phone', t0: 17.65, t1: W2 + .5 },
+    { box: $('s4'), name: 'pix3-c', K: KC, win: null, art: 0, label: 'N°3 · 💀 Très difficile', col: '#2E2A33', cap: 'Le dernier…', wrong: 'Ronflex', stamp: '', dev: 'phone', t0: 17.65, t1: W2 + .5 },
   ];
   N.g.forEach((g, i) => {
     g.rays = el('div', 'rays', g.box); g.rays.style.cssText = 'position:absolute;width:2200px;height:2200px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,212,92,.55) 0 8deg,rgba(255,212,92,0) 8deg 20deg);-webkit-mask:radial-gradient(circle,#000 0,#000 22%,transparent 64%);opacity:0';
@@ -143,7 +145,7 @@ function build() {
   N.toi = W(c.box, 'À TOI !', { size: 190, y: 250, color: '#FFD45C' });
   N.ask1 = el('div', 'big', c.box, '✍️ Écris ta réponse'); N.ask1.style.top = '1430px';
   N.ask2 = el('div', 'big', c.box, 'en commentaire 👇'); N.ask2.style.top = '1555px';
-  N.hint = el('div', 'chip', c.box, 'Indice : type Dragon 🐉'); N.hint.style.cssText += 'background:#7C5BD6;color:#fff';
+  N.hint = el('div', 'chip', c.box, 'Indice : type Normal'); N.hint.style.cssText += 'background:#7C5BD6;color:#fff';
   N.tom = el('div', 'chip', c.box, 'Réponse demain en commentaire épinglé 📌'); N.tom.style.cssText += 'background:#FFF8EF;color:#2E2A33;font-size:38px';
   // end card
   N.lap5 = laptop($('s5')); N.ph5 = phone($('s5'));
@@ -279,9 +281,9 @@ function renderAsk(t) {
   const kq = seg(t, TOI + .05, TOI + .55);
   N.q.style.opacity = clamp(kq * 3) * (1 - seg(t, W2 + .3, W2 + .5));
   N.q.style.transform = `translate(${800 - 130}px, ${1050 - 260}px) scale(${lerp(.2, 1, spring(kq)) * (1 + .04 * Math.sin(t * 5))}) rotate(${12 + Math.sin(t * 2) * 4}deg)`;
-  pop(N.ask1, t, TOI + .25, { out: W2 + .3 }); pop(N.ask2, t, TOI + .4, { out: W2 + .3 });
-  const kh = seg(t, TOI + .75, TOI + 1.2); chipAt(N.hint, 540, 1745, lerp(.4, 1, spring(kh)), -2, clamp(kh * 3) * (1 - seg(t, W2 + .3, W2 + .5)));
-  const kt = seg(t, TOI + 1.05, TOI + 1.5); chipAt(N.tom, 540, 1850, lerp(.4, 1, spring(kt)), 1, clamp(kt * 3) * (1 - seg(t, W2 + .3, W2 + .5)));
+  pop(N.ask1, t, TOI + .3, { out: W2 + .3 }); pop(N.ask2, t, TOI + .6, { out: W2 + .3 });
+  const kh = seg(t, TOI + 1.3, TOI + 1.75); chipAt(N.hint, 540, 1745, lerp(.4, 1, spring(kh)), -2, clamp(kh * 3) * (1 - seg(t, W2 + .3, W2 + .5)));
+  const kt = seg(t, TOI + 2.0, TOI + 2.45); chipAt(N.tom, 540, 1850, lerp(.4, 1, spring(kt)), 1, clamp(kt * 3) * (1 - seg(t, W2 + .3, W2 + .5)));
 }
 
 function renderEnd(t) {
@@ -312,7 +314,7 @@ async function setup() {
   const SFX = 'assets/sfx/', A = (t, n, v) => ({ file: SFX + n + '.wav', t, vol: v });
   S.audio = [A(.08, 'pop', .8), A(.42, 'whoosh', .8), A(.66, 'thump', .7), A(.95, 'pop', .7), A(1.12, 'pop', .7), A(1.29, 'pop', .8), A(1.6, 'swish', .8),
     A(2.42, 'whoosh_long', .8), A(2.9, 'tap', .9), A(3.05, 'swish', .7), A(9.6, 'whoosh_long', .7), A(17.3, 'whoosh_long', .7),
-    A(FREEZE, 'riser', .6), A(CD[0], 'tick', .9), A(CD[1], 'tick', .9), A(CD[2], 'tick', .9), A(TOI, 'boom', .7), A(TOI + .05, 'thump', .6), A(TOI + .75, 'pop', .6), A(TOI + 1.05, 'pop', .5),
+    A(FREEZE, 'riser', .6), A(CD[0], 'tick', .9), A(CD[1], 'tick', .9), A(CD[2], 'tick', .9), A(TOI, 'boom', .7), A(TOI + .05, 'thump', .6), A(TOI + 1.3, 'pop', .6), A(TOI + 2.0, 'pop', .5),
     A(W2, 'whoosh_long', .8), A(W2 + .48, 'tap', .9), A(W2 + .66, 'swish', .8), A(W2 + .73, 'pop', .7), A(W2 + 1.58, 'pop', .6), A(W2 + 2.28, 'pop', .7)];
   N.g.forEach((g) => {
     S.audio.push(A(g.t0 + .35, 'pop', .6));

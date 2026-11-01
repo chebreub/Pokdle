@@ -1,5 +1,5 @@
 // « 3 Pokémon pixelisés » (01/11/2026): three real games of the pixel mode, filmed on the local site.
-// a: Absol on a phone (one wrong guess, then found), b: Trousselin on a PC (1920 × 1200, so the box to type in stays in view), c: Lanssorien on a
+// a: Absol on a phone (one wrong guess, then found), b: Trousselin on a PC (1920 × 1200, so the box to type in stays in view), c: Dodoala on a
 // phone (one wrong guess, never found: the viewers answer in the comments). Typing at 165 ms a letter.
 const V = require('path').join(__dirname, '..') + '/';
 const { capture, BASE } = require(V + 'capture');
@@ -34,6 +34,6 @@ const game = (name, pc, id, guesses, end, more) => capture(name, {
 const M = {
   a: () => game('pix3-a', false, 359, ['Mangriff'], 'Absol', [NO_ROWS]),
   b: () => game('pix3-b', true, 707, ['Magnéti'], 'Trousselin'),
-  c: () => game('pix3-c', false, 887, ['Dracolosse'], null),
+  c: () => game('pix3-c', false, 775, ['Ronflex'], null),
 };
 (async () => { for (const m of process.argv.slice(2)) await M[m](); })();
