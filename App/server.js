@@ -543,6 +543,8 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
     ["player_challenges", "DELETE FROM player_challenges WHERE from_id = $1 OR to_id = $1", [id]],
     ["player_challenge_blocks", "DELETE FROM player_challenge_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
+    ["player_friends", "DELETE FROM player_friends WHERE from_id = $1 OR to_id = $1", [id]],
+    ["player_blocks", "DELETE FROM player_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
     ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
   ];
@@ -1570,6 +1572,15 @@ playerChallenges = pgPool ? challengeLib.createPlayerChallenges({ db: pgPool, ac
   pokemon: POKEMON_LIST, compare: require("./lib/daily-comparison").compareDaily,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 challengeLib.mountChallengeRoutes(app, { express, challenges: playerChallenges, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// Amis (01/11/2026): both accept; the private chat between friends comes next.
+const friendLib = require("./lib/player-friends");
+const friendsReady = pgPool ? authDbReady.then(() => friendLib.ensureTables(pgPool)).then(() => true).catch((error) => {
+  console.warn("[amis] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+const playerFriends = pgPool ? friendLib.createPlayerFriends({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: friendsReady,
+  push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
+friendLib.mountFriendRoutes(app, { express, friends: playerFriends, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");

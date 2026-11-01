@@ -13,9 +13,11 @@ function inboxChallenges() {
   return { list: list, waiting: waiting, news: news };
 }
 function inboxCounts() {
-  if (!window.__pokedleAuthed) return { duels: 0, messages: 0 };
+  if (!window.__pokedleAuthed) return { duels: 0, messages: 0, friends: 0 };
   var s = inboxChallenges();
-  return { duels: s.waiting.length + s.news.length, messages: inboxMessagesCount() };
+  // 🤝 Friend requests waiting, and my requests accepted (script.10xu.friends.js).
+  var friends = typeof frPendingCount === 'function' ? frPendingCount() : 0;
+  return { duels: s.waiting.length + s.news.length, messages: inboxMessagesCount(), friends: friends };
 }
 function inboxSetDot(el, n) {
   if (!el) return;
@@ -32,7 +34,8 @@ function renderInboxHome() {
   if (!home) return;
   var box = document.getElementById('home-inbox');
   var s = inboxChallenges(), messages = inboxMessagesCount();
-  if (!window.__pokedleAuthed || (!s.waiting.length && !s.news.length && !messages)) { if (box) box.remove(); return; }
+  var friendLine = typeof frHomeLineHtml === 'function' ? frHomeLineHtml() : '';
+  if (!window.__pokedleAuthed || (!s.waiting.length && !s.news.length && !messages && !friendLine)) { if (box) box.remove(); return; }
   if (!box) { box = document.createElement('section'); box.id = 'home-inbox'; box.className = 'home-inbox'; home.insertBefore(box, home.firstChild); }
   var html = '';
   if (s.waiting.length) {
@@ -45,6 +48,7 @@ function renderInboxHome() {
       '<button type="button" class="btn-ghost" data-action="openMyChallenges">Voir</button></div>';
   }
   if (messages) html += '<button type="button" class="home-inbox-line" data-action="openMyMessages"><span>📬 ' + (messages > 1 ? messages + ' nouveaux messages' : '1 nouveau message') + ' du créateur</span><b>Lire →</b></button>';
+  html += friendLine;
   box.innerHTML = html;
 }
 function renderPartyDuels() {
@@ -72,9 +76,9 @@ function renderPartyDuels() {
 }
 function renderInboxUi() {
   var n = inboxCounts();
-  inboxSetDot(document.querySelector('#account-area .account-chip'), n.duels + n.messages);
-  inboxSetDot(document.querySelector('#mobile-tabbar [data-tab="social"]'), n.duels);
-  inboxSetDot(document.getElementById('nav-social'), n.duels);
+  inboxSetDot(document.querySelector('#account-area .account-chip'), n.duels + n.messages + (n.friends || 0));
+  inboxSetDot(document.querySelector('#mobile-tabbar [data-tab="social"]'), n.duels + (n.friends || 0));
+  inboxSetDot(document.getElementById('nav-social'), n.duels + (n.friends || 0));
   renderInboxHome();
   renderPartyDuels();
 }
