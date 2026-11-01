@@ -14,6 +14,22 @@ function profileOf(raw) {
   try { return typeof raw === 'string' ? JSON.parse(raw) : (raw && typeof raw === 'object' ? raw : {}); } catch (_error) { return {}; }
 }
 
+// 📒 The album (01/11/2026): how many of the 1025 Pokémon are in it, and the best medal of each region
+// (« gen:tier » keys of profile.albumMedals, b < s < g). Cosmetic, read from the synced profile.
+const ALBUM_TOTAL = 1025;
+function albumOf(profile) {
+  const discoveries = profile && typeof profile.discoveries === 'object' && profile.discoveries ? profile.discoveries : {};
+  const found = Object.keys(discoveries).filter((key) => { const id = Number(key); return Number.isInteger(id) && id >= 1 && id <= ALBUM_TOTAL; }).length;
+  const rank = { b: 1, s: 2, g: 3 };
+  const best = {};
+  for (const key of Object.keys(profile && typeof profile.albumMedals === 'object' && profile.albumMedals ? profile.albumMedals : {})) {
+    const match = /^([1-9]):([bsg])$/.exec(key);
+    if (match && (!best[match[1]] || rank[match[2]] > rank[best[match[1]]])) best[match[1]] = match[2];
+  }
+  const medals = Object.keys(best).sort((a, b) => rank[best[b]] - rank[best[a]] || Number(a) - Number(b)).map((gen) => ({ gen: Number(gen), tier: best[gen] }));
+  return { found, total: ALBUM_TOTAL, medals };
+}
+
 function createPlayerCards({ db, arcadeModes = [], modeConfig = () => null }) {
   async function card(pid, today) {
     const id = await accountOfPid(db, pid);
@@ -65,6 +81,7 @@ function createPlayerCards({ db, arcadeModes = [], modeConfig = () => null }) {
         bestStreak: streakFromDays(wins.map((row) => row.day), today).best,
         points: games.reduce((sum, row) => sum + Number(row.points), 0),
       },
+      album: albumOf(profile),
       shinies: { count: shinies.length, latest: shinies.slice(0, 8).map((row) => ({ id: Number(row.secret_id), day: row.day })) },
       games: DAY_GAMES.map((game) => ({ game, played: Number(byGame[game]?.played) || 0, points: Number(byGame[game]?.points) || 0 })),
       records: records.map((row) => {
@@ -76,4 +93,4 @@ function createPlayerCards({ db, arcadeModes = [], modeConfig = () => null }) {
   return { card };
 }
 
-module.exports = { createPlayerCards, DAY_GAMES };
+module.exports = { createPlayerCards, DAY_GAMES, albumOf };

@@ -1392,3 +1392,103 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .chat-warn:not(:empty) {background:#3a3320;border-color:#7a6a3a;color:#f0e2b6;}
 #pokdle-app.theme-dark .fr-row.is-unread .fr-row-main small {color:#e8ecf6;}
 @media (max-width:640px) {.chat-msgs {height:min(44vh,380px);} .chat-win {min-width:0;}}
+
+/* ===== 📒 Mon album : classeur par région et médailles (01/11/2026) ===== */
+.alb {display:flex;flex-direction:column;gap:10px;min-width:min(560px,86vw);}
+.alb-tabs {display:flex;gap:4px;padding:4px;border-radius:14px;background:#F3ECE2;}
+.alb-tabs button {flex:1;min-height:38px;border:0;border-radius:10px;background:transparent;color:#6B6472;font:800 .92rem Nunito,sans-serif;cursor:pointer;}
+.alb-tabs button.is-on {background:#fff;color:#2E2A33;box-shadow:0 1px 3px rgba(46,42,51,.12);}
+.alb-chips {display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+.alb-chips::-webkit-scrollbar {display:none;}
+.alb-chip {flex:none;min-height:36px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid #EADFD0;color:#6B6472;font:800 .85rem Nunito,sans-serif;cursor:pointer;}
+.alb-chip.is-on {background:#2E2A33;border-color:#2E2A33;color:#fff;}
+.alb-head {padding:12px 14px;border-radius:20px;background:linear-gradient(135deg,#FFF3C4,#FFE7A3);border:2px solid #F0D28E;color:#2E2A33;}
+.alb-head h3 {margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:700 1.35rem Fredoka,sans-serif;}
+.alb-head h3 small {font:800 .9rem Nunito,sans-serif;color:#5C4510;}
+.alb-bar {display:block;height:10px;border-radius:999px;background:rgba(255,255,255,.75);overflow:hidden;margin:8px 0;}
+.alb-bar b {display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2F9E5A,#55C27F);}
+.alb-bar.is-thin {height:6px;margin:5px 0 0;background:#F3ECE2;}
+.alb-medals {display:flex;gap:6px;}
+.alb-medal {flex:1;padding:6px 4px;border-radius:12px;background:rgba(255,255,255,.7);text-align:center;font:800 .78rem Nunito,sans-serif;color:#6B6472;}
+.alb-medal.is-got {background:#fff;color:#1E7A43;box-shadow:inset 0 0 0 2px #2F9E5A;}
+.alb-binder {width:100%;max-width:440px;margin:0 auto;padding:10px;border-radius:20px;background:#7C5BD6;box-shadow:inset 0 0 0 4px rgba(255,255,255,.18);}
+.alb-page {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px;border-radius:14px;background:#F4EEFF;}
+.alb-slot {position:relative;aspect-ratio:.8;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding:18px 4px 6px;border-radius:12px;background:#fff;border:1px solid #DCD2F2;overflow:hidden;}
+.alb-slot img {width:76%;max-height:70%;object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;}
+.alb-slot b {font:800 .78rem Nunito,sans-serif;color:#2E2A33;text-align:center;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.alb-slot small {font:800 .75rem Nunito,sans-serif;color:#8B82A0;}
+.alb-num {position:absolute;top:5px;left:7px;font:800 .7rem Nunito,sans-serif;color:#8B82A0;}
+.alb-sp {position:absolute;top:4px;right:6px;font-size:.85rem;}
+.alb-slot.is-shiny {background:linear-gradient(160deg,#FFFBEA,#fff);box-shadow:inset 0 0 0 2px #E8C455;}
+.alb-slot.is-miss {background:repeating-linear-gradient(135deg,#F7F3FF,#F7F3FF 6px,#EFE8FF 6px,#EFE8FF 12px);border-style:dashed;}
+.alb-slot .alb-shadow {filter:brightness(0) opacity(.16);}
+.alb-mark {margin:auto 0 4px;font-size:1.6rem;color:#B9A9E6;}
+.alb-pager {display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 2px 0;color:#fff;font:800 .85rem Nunito,sans-serif;}
+.alb-pager span {padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.2);}
+.alb-arrow {width:40px;height:40px;border:0;border-radius:999px;background:rgba(255,255,255,.22);color:#fff;font:900 1.3rem Nunito,sans-serif;cursor:pointer;}
+.alb-arrow:disabled {opacity:.35;cursor:default;}
+.alb-hint {display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:#fff;border:1px solid #EADFD0;}
+.alb-hint p {flex:1;margin:0;font-weight:800;}
+.alb-hint small {display:block;color:#6B6472;font-weight:700;}
+.alb-hint-num {flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#F4EEFF;color:#7C5BD6;font:900 .75rem Nunito,sans-serif;}
+.alb-hint .btn-blue {flex:none;min-height:40px;padding:0 14px;}
+.alb-hint.is-done {justify-content:center;background:#E3F4E8;border-color:#BFE3CB;}
+.alb-total {padding:12px 14px;border-radius:18px;background:#fff;border:1px solid #EADFD0;}
+.alb-total b {font:700 1.2rem Fredoka,sans-serif;}
+.alb-total .alb-bar {background:#F3ECE2;}
+.alb-total small {color:#6B6472;font-weight:800;}
+.alb-rows {display:flex;flex-direction:column;gap:8px;}
+.alb-row {display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:16px;background:#fff;border:1px solid #EADFD0;color:inherit;text-align:left;font:inherit;cursor:pointer;}
+.alb-row-medal {width:30px;text-align:center;font-size:1.4rem;}
+.alb-row-medal.is-none {opacity:.3;filter:grayscale(1);}
+.alb-row-main {flex:1;min-width:0;display:flex;flex-direction:column;}
+.alb-row-main b {font:700 1.05rem Fredoka,sans-serif;}
+.alb-row-main small {color:#6B6472;font-weight:800;font-size:.78rem;}
+.alb-row em {font-style:normal;font-weight:900;}
+.alb-foot {margin:0;color:#6B6472;font-size:.82rem;font-weight:700;}
+.home-album {position:relative;z-index:3;display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:12px 14px;border-radius:20px;background:linear-gradient(135deg,#EDE4FF,#FFF1C9);border:2px solid #CDBDF5;color:#2E2A33;}
+.home-album-ico {font-size:1.8rem;}
+.home-album-text {flex:1;min-width:0;display:flex;flex-direction:column;}
+.home-album-text b {font-family:Fredoka,sans-serif;font-size:1.05rem;}
+.home-album-text small {color:#6B6472;font-weight:800;}
+.home-album .btn-blue {flex:none;min-height:42px;padding:0 18px;}
+.pokedex-album-link {font-weight:800;}
+.player-card-album {margin:4px 0 10px;padding:10px 12px;border-radius:16px;background:#FFF8E1;border:1px solid #F0D28E;}
+.player-card-album b {font-weight:900;}
+.player-card-album-medals {display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.player-card-album-medals span {padding:4px 10px;border-radius:999px;background:#fff;font-weight:800;font-size:.8rem;}
+@media (max-width:640px) {.alb {min-width:0;} .alb-slot b {font-size:.72rem;}}
+/* PC: the region on the left, the binder page on the right, all visible without scrolling. */
+@media (min-width:900px) {
+  #pokdle-app #overlay-modal[data-kind="album"] .overlay-card {max-width:880px!important;width:min(880px,calc(100vw - 48px))!important;}
+  .alb {min-width:min(820px,88vw);}
+  .alb.is-binder {display:grid;grid-template-columns:minmax(0,1fr) 400px;grid-template-areas:"tabs tabs" "chips chips" "head binder" "hint binder" "foot binder";grid-template-rows:auto auto auto auto 1fr;gap:12px 16px;align-items:start;}
+  .alb.is-binder > .alb-tabs {grid-area:tabs;}
+  .alb.is-binder > .alb-chips {grid-area:chips;flex-wrap:wrap;}
+  .alb.is-binder > .alb-head {grid-area:head;}
+  .alb.is-binder > .alb-binder {grid-area:binder;max-width:none;}
+  .alb.is-binder > .alb-hint {grid-area:hint;}
+  .alb.is-binder > .alb-foot {grid-area:foot;}
+  .alb.is-binder .alb-slot {aspect-ratio:.86;}
+}
+#pokdle-app.theme-dark .alb-tabs, #pokdle-app.theme-dark .alb-bar.is-thin, #pokdle-app.theme-dark .alb-total .alb-bar {background:#1a2438;}
+#pokdle-app.theme-dark .alb-tabs button {color:#b8c2d8;}
+#pokdle-app.theme-dark .alb-tabs button.is-on {background:#2b3a57;color:#e8ecf6;}
+#pokdle-app.theme-dark .alb-chip, #pokdle-app.theme-dark .alb-hint, #pokdle-app.theme-dark .alb-total, #pokdle-app.theme-dark .alb-row {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .alb-chip.is-on {background:#e8ecf6;color:#101b30;}
+#pokdle-app.theme-dark .alb-head {background:linear-gradient(135deg,#3a3320,#2e2655);border-color:#7a6a3a;color:#e8ecf6;}
+#pokdle-app.theme-dark .alb-head h3 small {color:#f0e2b6;}
+#pokdle-app.theme-dark .alb-medal {background:rgba(16,27,48,.5);color:#c9d6ee;}
+#pokdle-app.theme-dark .alb-medal.is-got {background:#16213a;color:#8fe0ad;}
+#pokdle-app.theme-dark .alb-page {background:#2a2347;}
+#pokdle-app.theme-dark .alb-slot {background:#1f2b42;border-color:#3d3566;}
+#pokdle-app.theme-dark .alb-slot b {color:#e8ecf6;}
+#pokdle-app.theme-dark .alb-slot.is-miss {background:repeating-linear-gradient(135deg,#231d3d,#231d3d 6px,#2a2347 6px,#2a2347 12px);}
+#pokdle-app.theme-dark .alb-slot .alb-shadow {filter:brightness(0) invert(1) opacity(.12);}
+#pokdle-app.theme-dark .alb-slot.is-shiny {background:linear-gradient(160deg,#3a3320,#1f2b42);}
+#pokdle-app.theme-dark .alb-hint small, #pokdle-app.theme-dark .alb-total small, #pokdle-app.theme-dark .alb-row-main small, #pokdle-app.theme-dark .alb-foot {color:#b8c2d8;}
+#pokdle-app.theme-dark .alb-hint.is-done {background:#16301f;border-color:#2f6b45;}
+#pokdle-app.theme-dark .home-album {background:linear-gradient(135deg,#2e2655,#3a3320);border-color:#5d4bb0;color:#e8ecf6;}
+#pokdle-app.theme-dark .home-album-text small {color:#b8c2d8;}
+#pokdle-app.theme-dark .player-card-album {background:#3a3320;border-color:#7a6a3a;}
+#pokdle-app.theme-dark .player-card-album-medals span {background:#1f2b42;}
