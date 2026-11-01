@@ -1232,3 +1232,18 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .pc-end.is-won {background:#163828;border-color:#2F9E5B;}
 #pokdle-app.theme-dark .pc-try {background:#1f2b42;border-color:#33425f;}
 #pokdle-app.theme-dark .pc-try-who {color:#e8ecf6;}
+
+/* Stat Clash, Room 1v1 (01/11/2026): the room's status under the fields, full width, never squeezed
+   into a narrow column next to them (it showed one word per line on PC). */
+#screen-stat-clash .stat-clash-shell.mode-room .stat-clash-room-panel:not(.is-compact) {grid-template-columns:minmax(0,1fr) !important;}
+#screen-stat-clash .stat-clash-room-status {flex-wrap:wrap;}
+#screen-stat-clash .stat-clash-room-status > div {flex:1 1 220px;min-width:0;}
+#screen-stat-clash .stat-clash-room-feedback {white-space:normal;}
+
+/* 🔄 « Pokédle a été mis à jour » : at the top of the page, in its flow (never over a game). */
+.site-update-banner {display:flex;align-items:center;gap:10px;max-width:1180px;margin:0 auto 12px;padding:8px 8px 8px 16px;border-radius:16px;background:#E8EEFF;border:1px solid #C9D6F5;color:#2E2A33;font:800 15px Nunito,sans-serif;}
+.site-update-banner span {flex:1;min-width:0;}
+.site-update-banner .btn-blue {flex:none;width:auto;min-height:40px;padding:0 16px;}
+.site-update-x {flex:none;width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:#6B6472;font-size:16px;cursor:pointer;}
+#pokdle-app.theme-dark .site-update-banner {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .site-update-x {color:#b8c2d8;}
