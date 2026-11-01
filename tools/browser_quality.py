@@ -780,7 +780,7 @@ def main():
      expect(('is-tall' in (grid.get_attribute('class') or ''))==(width<=1000),'Wrong table layout for this width')
      box=grid.bounding_box()
      expect(box['x']+box['width']<=width+1,'Favourites table is wider than the screen: '+repr(box))
-     expect(page.locator('#fav-grid .fav-gen-head').count()==9,'The 9 generations are not all there')
+     expect(page.locator('#fav-grid .fav-gen-head:not(.is-fav-row)').count()==9,'The 9 generations are not all there')
      cell=page.locator('#fav-grid .fav-cell.is-empty[data-args*="\\"cell\\""]').first
      cell.click()
      page.locator('.fav-sheet').wait_for(state='visible')
