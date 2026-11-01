@@ -998,34 +998,48 @@ function openAccountMenu() {
     ? `<img${profileAvatarChoice() === "partner" ? ' class="is-pokemon"' : ""} src="${escapeHtml(menuAvatar)}" alt="" />`
     : `<span class="account-menu-avatar-fallback">${escapeHtml((connectedAccountUser.username || 'D').charAt(0).toUpperCase())}</span>`;
   const level = typeof getXpTier === 'function' ? getXpTier(Number(playerProfile?.xp) || 0) : { level: 1, name: 'Dresseur' };
+  const progress = typeof getXpProgress === 'function' ? getXpProgress(Number(playerProfile?.xp) || 0) : null;
   const dex = typeof pokedexCollectionNationalStats === 'function' ? pokedexCollectionNationalStats() : { found: Object.keys(playerProfile?.discoveries || {}).length, total: 0 };
+  const counts = typeof inboxCounts === 'function' ? inboxCounts() : {};
+  const fmt = typeof formatNumberFr === 'function' ? formatNumberFr : String;
+  const badge = (n) => n ? ' <i class="pc-badge">' + n + '</i>' : '';
+  // 01/11/2026: wider on a computer, the links in two groups, everything visible without scrolling.
   ensureOverlay('Mon compte', `
-    <div class="account-menu account-menu-v2">
+    <div class="account-menu account-menu-v2 account-menu-v3">
       <div class="account-menu-identity">
         <div class="account-menu-avatar">${avatar}</div>
-        <div><span class="adventure-eyebrow">CONNECTÉ AVEC ${(ACCOUNT_PROVIDER_NAMES[connectedAccountUser.via] || 'Discord').toUpperCase()}</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}</small></div>
+        <div class="account-menu-who"><span class="adventure-eyebrow">CONNECTÉ AVEC ${(ACCOUNT_PROVIDER_NAMES[connectedAccountUser.via] || 'Discord').toUpperCase()}</span><h4>${escapeHtml(connectedAccountUser.username || 'Dresseur')}</h4><small>Niv. ${Number(level.level)||1} · ${escapeHtml(level.name || 'Dresseur')}${progress && progress.next ? ' · ' + fmt(progress.xpInTier) + ' / ' + fmt(progress.xpToNext) + ' XP vers le niveau ' + Number(progress.next.level) : ''}</small>
+          ${progress ? `<span class="account-menu-xpbar" role="img" aria-label="${Number(progress.percent) || 0} % du niveau"><b style="width:${Math.max(2, Number(progress.percent) || 0)}%"></b></span>` : ''}
+          <div class="account-menu-linked" id="account-menu-linked" aria-live="polite"></div></div>
       </div>
       <div class="account-menu-stats">
-        <div><strong>${Number(playerProfile?.xp)||0}</strong><span>XP</span></div>
-        <div><strong>${Number(dex.found)||0}${dex.total ? '<small>/'+Number(dex.total)+'</small>' : ''}</strong><span>Pokédex</span></div>
+        <div><strong>${fmt(Number(playerProfile?.xp)||0)}</strong><span>XP</span></div>
+        <div><strong>${Number(dex.found)||0}${dex.total ? '<small>/'+Number(dex.total)+'</small>' : ''}</strong><span>📒 Album</span></div>
         <div><strong>${Object.keys(playerProfile?.weeklyLeagueBadges || {}).length}</strong><span>Badges Ligue</span></div>
       </div>
-      <nav class="account-menu-links">
-        <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().duels ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["defis"]'><span>⚔️ Mes défis${typeof inboxCounts === 'function' && inboxCounts().duels ? ' <i class="pc-badge">' + inboxCounts().duels + '</i>' : ''}</span><b>→</b></button>
-        <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().messages ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages${typeof inboxCounts === 'function' && inboxCounts().messages ? ' <i class="pc-badge">' + inboxCounts().messages + '</i>' : ''}</span><b>→</b></button>
-        <button type="button" class="${typeof inboxCounts === 'function' && inboxCounts().friends ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["amis"]'><span>🤝 Mes amis${typeof inboxCounts === 'function' && inboxCounts().friends ? ' <i class="pc-badge">' + inboxCounts().friends + '</i>' : ''}</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>Profil de dresseur</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
-        <button type="button" data-action="accountNavigate" data-args='["past"]'><span>📅 Jours passés</span><b>→</b></button>
+      <div class="account-menu-groups">
+        <section><h5>Entre joueurs</h5><nav class="account-menu-links">
+          <button type="button" class="${counts.duels ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["defis"]'><span>⚔️ Mes défis${badge(counts.duels)}</span><b>→</b></button>
+          <button type="button" class="${counts.messages ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages${badge(counts.messages)}</span><b>→</b></button>
+          <button type="button" class="${counts.friends || counts.chat ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["amis"]'><span>🤝 Mes amis${badge((counts.friends || 0) + (counts.chat || 0))}</span><b>→</b></button>
+          <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
+        </nav></section>
+        <section><h5>Ma progression</h5><nav class="account-menu-links">
+          <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>🪪 Profil de dresseur</span><b>→</b></button>
+          <button type="button" data-action="accountNavigate" data-args='["album"]'><span>📒 Mon album</span><b>→</b></button>
+          <button type="button" data-action="accountNavigate" data-args='["past"]'><span>📅 Jours passés</span><b>→</b></button>
+          <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>⚙️ Paramètres</span><b>→</b></button>
+        </nav></section>
+      </div>
+      <nav class="account-menu-links account-menu-extra">
         ${typeof installIsStandalone === 'function' && installIsStandalone() ? '' : `<button type="button" data-action="accountNavigate" data-args='["install"]'><span>📲 Installer l’appli</span><b>→</b></button>`}
-        <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
-        ${connectedAccountUser.admin ? `<button type="button" data-action="accountNavigate" data-args='["admin"]'><span>Panneau admin</span><b>→</b></button>` : ''}
+        ${connectedAccountUser.admin ? `<button type="button" data-action="accountNavigate" data-args='["admin"]'><span>🛠️ Panneau admin</span><b>→</b></button>` : ''}
       </nav>
-      <div class="account-menu-linked" id="account-menu-linked" aria-live="polite"></div>
-      <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
-      <a class="account-menu-privacy" href="/confidentialite">Confidentialité</a>
-      <button type="button" class="account-menu-delete" data-action="confirmDeleteAccount">Supprimer mon compte</button>
+      <div class="account-menu-foot">
+        <a class="account-menu-logout" href="/auth/logout">Se déconnecter</a>
+        <a class="account-menu-privacy" href="/confidentialite">Confidentialité</a>
+        <button type="button" class="account-menu-delete" data-action="confirmDeleteAccount">Supprimer mon compte</button>
+      </div>
     </div>`);
   renderAccountLinkedProviders();
 }
@@ -3126,7 +3140,7 @@ function openSettingsModal() {
         <h4>Appli & notifications</h4>
         <div class="app-setting-item app-setting-item-stack">
           <span><b>📲 Pokédle en appli</b><small>Une icône sur ton écran d’accueil, en plein écran. Sur iPhone, c’est ce qui permet les notifications.</small></span>
-          <button class="btn-ghost" type="button" data-action="openInstallApp">Comment l’installer</button>
+          <button class="btn-ghost" type="button" data-action="openInstallApp">Voir comment</button>
         </div>
         <div class="app-setting-item app-setting-item-stack">
           <span><b>🔔 Notifications</b><small>Défis reçus ou relevés, et un rappel du Pokémon du jour à l’heure de ton choix.</small></span>

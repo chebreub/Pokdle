@@ -33,10 +33,18 @@ openSettingsModal = function () {
   const value = openSettingsBeforeSupport.apply(this, arguments);
   const grid = document.querySelector('#overlay-modal .app-settings-grid');
   if (grid && !grid.querySelector('.app-settings-support')) {
-    const section = document.createElement('section');
-    section.className = 'app-settings-section app-settings-support';
-    section.innerHTML = '<h4>Soutenir Pokédle</h4><p class="card-desc">Pokédle est gratuit et sans pub. Un café aide à payer le serveur et à ajouter de nouveaux jeux.</p>' + supportLinkHtml();
-    grid.insertBefore(section, grid.querySelector('.app-settings-reset'));
+    // « Aide & soutien » (01/11/2026): one section, one line per action, the button on the right.
+    let section = grid.querySelector('.app-settings-help');
+    if (!section) {
+      section = document.createElement('section');
+      section.className = 'app-settings-section app-settings-help';
+      section.innerHTML = '<h4>Aide & soutien</h4>';
+      grid.insertBefore(section, grid.querySelector('.app-settings-reset'));
+    }
+    const row = document.createElement('div');
+    row.className = 'app-setting-item app-settings-support';
+    row.innerHTML = '<span><b>☕ Soutenir Pokédle</b><small>Gratuit et sans pub : un café aide à payer le serveur.</small></span>' + supportLinkHtml('app-settings-support-link');
+    section.appendChild(row);
   }
   return value;
 };

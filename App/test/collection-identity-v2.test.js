@@ -40,7 +40,7 @@ test("base species and alternate forms are reported separately",()=>{
 test("mission and secret rewards open their exact Pokédex entry",()=>{
   assert.match(missions,/function viewAlbumMissionReward[\s\S]*openRegisteredPokemonInPokedex\(pokemon\.id\)/);
   assert.match(secrets,/function viewSecretAlbum[\s\S]*openRegisteredPokemonInPokedex\(pokemon\.id\)/);
-  assert.match(account,/Ma collection/);
+  assert.match(account,/Ma collection|Mon album/, 'the account menu opens the collection (« 📒 Mon album » since 01/11/2026)');
 });
 
 test("collection identity has responsive and dark visual treatment",()=>{
