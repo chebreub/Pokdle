@@ -275,7 +275,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==23,'Solo catalogue should list 23 games: '+str(tiles.count()))
+     expect(tiles.count()==24,'Solo catalogue should list 24 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
@@ -296,7 +296,7 @@ def main():
      labels=[t.strip() for t in chips.all_inner_texts()]
      expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Jouer') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
      chips.filter(has_text='Jouer').click()
-     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==14,'Jouer chip does not narrow the list')
+     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==15,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
      expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openEmulatorMode"]\']').is_visible(),'Tools chip does not reach the emulator')
      chips.filter(has_text='Tous').click()
@@ -771,17 +771,23 @@ def main():
      return screen('screen-history')
     check('final-history-density',final_history_density)
     def ranking_tool():
+     # « Mes Pokémon préférés » (01/11/2026): the whole table on a phone (types in rows, 9 generations
+     # and ❤️ in columns), generations in rows on a computer; a cell opens a sheet limited to its type
+     # and generation, and the choice stays.
      page.evaluate('openRankingMode()');screen('screen-ranking')
-     if width<=640:
-      expect(page.locator('#ranking-grid .ranking-mobile-flow').is_visible(),'Mobile ranking flow missing')
-      expect(page.locator('#ranking-grid .ranking-table').count()==0,'Desktop ranking table leaked into mobile')
-      page.locator('.ranking-mobile-slot').click()
-      page.locator('#rank-float-picker').wait_for(state='visible')
-      expect(page.locator('#rank-float-list .rank-float-item').count()>0,'Mobile ranking picker has no candidates')
-      page.locator('#rank-float-list .rank-float-item').first.click()
-      expect('is-filled' in (page.locator('.ranking-mobile-slot').get_attribute('class') or ''),'Mobile ranking choice was not persisted')
-     else:
-      expect(page.locator('#ranking-grid .ranking-table').is_visible(),'Desktop ranking table missing')
+     grid=page.locator('#fav-grid')
+     expect(grid.is_visible(),'Favourites table missing')
+     expect(('is-tall' in (grid.get_attribute('class') or ''))==(width<=1000),'Wrong table layout for this width')
+     box=grid.bounding_box()
+     expect(box['x']+box['width']<=width+1,'Favourites table is wider than the screen: '+repr(box))
+     expect(page.locator('#fav-grid .fav-gen-head').count()==9,'The 9 generations are not all there')
+     cell=page.locator('#fav-grid .fav-cell.is-empty[data-args*="\\"cell\\""]').first
+     cell.click()
+     page.locator('.fav-sheet').wait_for(state='visible')
+     expect(page.locator('.fav-sheet .fav-cand').count()>0,'Favourites picker has no candidates')
+     page.locator('.fav-sheet .fav-cand').first.click()
+     expect(page.locator('.fav-sheet').count()==0,'The picker did not close')
+     expect(page.locator('#fav-grid .fav-cell:not(.is-empty):not(.is-none) img').count()>0,'The favourite choice was not kept')
      return screen('screen-ranking')
     check('ranking-responsive',ranking_tool)
     def games_ranking_tool():
