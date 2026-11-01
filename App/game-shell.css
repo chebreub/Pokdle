@@ -1277,3 +1277,38 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .party-duels-row p {color:#e8ecf6;}
 #pokdle-app.theme-dark .account-menu-links button.is-hot {border-color:#5d4bb0;background:#2e2655;}
 #pokdle-app.theme-dark .inbox-dot {border-color:#101b30;}
+
+/* ===== 📲 Installer l'appli + 🔔 notifications au bon moment (01/11/2026) ===== */
+.install-sheet {display:flex;flex-direction:column;gap:12px;}
+.install-lead {margin:0;padding:10px 12px;border-radius:14px;background:#FFF3C4;border:1px solid #F0D28E;color:#5C4510;font-weight:700;}
+.install-why {display:flex;flex-wrap:wrap;gap:6px;}
+.install-why span {padding:6px 10px;border-radius:999px;background:#F6F0E8;font-weight:800;font-size:.85rem;color:#2E2A33;}
+.install-tabs {display:flex;gap:6px;}
+.install-tabs button {flex:1;min-height:40px;border:0;border-radius:12px;background:#F3ECE2;color:#6B6472;font:800 .95rem Nunito,sans-serif;cursor:pointer;}
+.install-tabs button.is-on {background:#2E2A33;color:#fff;}
+.install-steps {margin:0;padding-left:22px;line-height:1.6;font-weight:700;}
+.install-steps li {margin:2px 0;}
+.install-ico {display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 4px;border-radius:7px;background:#E6EDFF;color:#4069E0;font-size:.9rem;vertical-align:-4px;}
+.install-now {width:100%;min-height:48px;font-size:1.05rem;}
+.install-hint, .install-note {margin:0;color:#6B6472;font-size:.85rem;font-weight:700;}
+.install-done {margin:0;font-weight:800;}
+.home-install {position:relative;z-index:3;display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 40px 10px 12px;border-radius:18px;background:#fff;border:2px solid #D9E4FF;color:#2E2A33;}
+.home-install-ico {font-size:1.6rem;}
+.home-install-text {flex:1;min-width:0;display:flex;flex-direction:column;}
+.home-install-text b {font-family:Fredoka,sans-serif;font-size:1.02rem;}
+.home-install-text small {color:#6B6472;font-weight:700;}
+.home-install .btn-blue {flex:none;min-height:40px;padding:0 16px;}
+.home-install-close {position:absolute;top:4px;right:4px;width:32px;height:32px;border:0;border-radius:10px;background:transparent;color:#6B6472;font-size:1rem;cursor:pointer;}
+.site-footer-install {margin:6px 0;}
+.notif-ask {display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,#FFF3C4,#FFE7A3);border:2px solid #F0D28E;color:#2E2A33;text-align:left;}
+.notif-ask-title {font-family:Fredoka,sans-serif;font-size:1.05rem;}
+.notif-ask p {margin:0;font-size:.9rem;font-weight:700;color:#5C4510;}
+.notif-ask-actions {display:flex;gap:8px;flex-wrap:wrap;}
+.notif-ask-actions button {flex:1;min-height:42px;}
+.notif-ask-xp {display:inline-block;white-space:nowrap;margin-left:6px;padding:2px 8px;border-radius:999px;background:#2F9E5A;color:#fff;font-style:normal;font-size:.8rem;font-weight:900;}
+#pokdle-app.theme-dark .install-why span, #pokdle-app.theme-dark .install-tabs button {background:#1f2b42;color:#c9d6ee;}
+#pokdle-app.theme-dark .install-tabs button.is-on {background:#e8ecf6;color:#101b30;}
+#pokdle-app.theme-dark .install-hint, #pokdle-app.theme-dark .install-note, #pokdle-app.theme-dark .home-install-text small, #pokdle-app.theme-dark .home-install-close {color:#b8c2d8;}
+#pokdle-app.theme-dark .home-install {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .notif-ask {background:linear-gradient(135deg,#3a3320,#2e2655);border-color:#7a6a3a;color:#e8ecf6;}
+#pokdle-app.theme-dark .notif-ask p {color:#f0e2b6;}

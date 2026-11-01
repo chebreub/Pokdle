@@ -61,10 +61,15 @@ function dailyReminderHoursHtml() {
     `<button type="button" role="radio" class="remind-hour${hour === dailyReminderPicked ? ' is-on' : ''}" aria-checked="${hour === dailyReminderPicked}" data-action="pickDailyReminderHour" data-args="[${hour}]">${dailyReminderHourLabel(hour)}</button>`).join('') + '</div>';
 }
 
-function openDailyReminder() {
+// reason 'notif': opened from a challenge (script.10xt.install-app.js), the same subscription also
+// brings the challenges. The first activation gives +50 XP once (notifGiveBonus).
+function openDailyReminder(reason) {
   const support = dailyReminderSupport();
-  const title = 'Me rappeler le Pokémon du jour';
+  const fromChallenge = reason === 'notif';
+  const title = fromChallenge ? '🔔 Les notifications Pokédle' : 'Me rappeler le Pokémon du jour';
   if (support === 'ios-install') {
+    // Sur iPhone, les rappels marchent seulement depuis l'icône Pokédle de ton écran d'accueil.
+    if (typeof openInstallApp === 'function') { openInstallApp('notif'); return; }
     ensureOverlay(title, `<div class="remind-sheet">
       <p>Sur iPhone, les rappels marchent seulement depuis l'icône Pokédle de ton écran d'accueil.</p>
       <ol class="remind-steps"><li>Touche <b>Partager</b> (le carré avec une flèche) en bas de Safari.</li>
@@ -79,11 +84,14 @@ function openDailyReminder() {
   }
   const saved = Notification.permission === 'granted' ? dailyReminderSaved() : null;
   dailyReminderPicked = saved ? saved.hour : DAILY_REMINDER_DEFAULT_HOUR;
+  const bonus = !saved && typeof notifBonusLeft === 'function' && notifBonusLeft() ? ' <i class="notif-ask-xp">+' + NOTIF_BONUS_XP + ' XP</i>' : '';
   ensureOverlay(title, `<div class="remind-sheet">
-    <p>Une petite notification par jour pour ne pas casser ta série. <b>Rien si tu as déjà joué.</b></p>
-    <p class="remind-label">À quelle heure ?</p>
+    ${fromChallenge
+      ? '<p>Une notification quand on te défie ou qu\'on relève ton défi, et un petit rappel du Pokémon du jour. <b>Rien si tu as déjà joué.</b></p>'
+      : '<p>Une petite notification par jour pour ne pas casser ta série. <b>Rien si tu as déjà joué.</b></p>'}
+    <p class="remind-label">${fromChallenge ? 'Le rappel du Pokémon du jour, à quelle heure ?' : 'À quelle heure ?'}</p>
     <div id="remind-hours-box">${dailyReminderHoursHtml()}</div>
-    <button type="button" class="remind-go" id="remind-go" data-action="activateDailyReminder">${saved ? 'Enregistrer' : '🔔 Activer le rappel'}</button>
+    <button type="button" class="remind-go" id="remind-go" data-action="activateDailyReminder">${saved ? 'Enregistrer' : (fromChallenge ? '🔔 Activer les notifications' : '🔔 Activer le rappel') + bonus}</button>
     ${saved ? '<button type="button" class="remind-stop" data-action="stopDailyReminder">Arrêter le rappel</button>' : ''}
     <p class="remind-note">${saved ? 'Tu peux changer l\'heure ou arrêter quand tu veux.' : 'Tu peux l\'arrêter quand tu veux depuis ce même bouton.'}</p></div>`);
 }
@@ -132,6 +140,8 @@ async function activateDailyReminder() {
     dailyReminderRemember({ hour, synced: getDailyQuestKey() });
     closeOverlayModal();
     showToast('C\'est noté : rappel chaque jour à ' + dailyReminderHourLabel(hour) + '.');
+    if (typeof notifGiveBonus === 'function') notifGiveBonus();
+    document.querySelectorAll('.notif-ask').forEach((el) => el.remove());
   } catch (_e) {
     showToast('Le rappel n\'a pas pu être activé. Réessaie dans un moment.');
   } finally {

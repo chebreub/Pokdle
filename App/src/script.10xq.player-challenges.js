@@ -205,6 +205,7 @@ function sendChallenge() {
     var box = document.querySelector('#overlay-body .pc-form');
     if (box) box.innerHTML = '<div class="pc-sent"><b>Défi envoyé ⚔️</b><p>' + escapeHtml(pcForm.name) + ' le verra à sa prochaine visite. ' +
       (mystery ? 'Tu seras prévenu s’il trouve ton Pokémon… ou pas.' : 'Tu seras prévenu s’il fait mieux que ' + Number(data.target) + '.') + '</p>' +
+      (typeof notifAskHtml === 'function' ? notifAskHtml(pcForm.name, 'sent') : '') +
       '<button type="button" class="btn-ghost" data-action="closeOverlayModal">OK</button></div>';
   }).catch(function () {
     if (status) status.textContent = 'Envoi impossible pour le moment. Réessaie dans un instant.';

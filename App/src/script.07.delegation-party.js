@@ -1017,6 +1017,7 @@ function openAccountMenu() {
         <button type="button" data-action="accountNavigate" data-args='["album"]'><span>Ma collection</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
         <button type="button" data-action="accountNavigate" data-args='["past"]'><span>📅 Jours passés</span><b>→</b></button>
+        ${typeof installIsStandalone === 'function' && installIsStandalone() ? '' : `<button type="button" data-action="accountNavigate" data-args='["install"]'><span>📲 Installer l’appli</span><b>→</b></button>`}
         <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>Paramètres</span><b>→</b></button>
         ${connectedAccountUser.admin ? `<button type="button" data-action="accountNavigate" data-args='["admin"]'><span>Panneau admin</span><b>→</b></button>` : ''}
       </nav>
@@ -1072,6 +1073,7 @@ function accountNavigate(destination) {
   else if (destination === 'admin') location.assign('/admin');
   else if (destination === 'messages' && typeof openMyMessages === 'function') openMyMessages();
   else if (destination === 'defis' && typeof openMyChallenges === 'function') openMyChallenges();
+  else if (destination === 'install' && typeof openInstallApp === 'function') openInstallApp();
   else if (destination === 'invite' && typeof openInviteFriend === 'function') openInviteFriend();
   else if (destination === 'past' && typeof openPastDays === 'function') openPastDays();
   else { openProfileScreen(); switchProfileView('trainer'); }
@@ -3117,6 +3119,17 @@ function openSettingsModal() {
           <span><b>Réduire les animations</b><small>Limite les transitions et animations décoratives.</small></span>
           <input type="checkbox" ${settings.reduceMotion ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="reduceMotion" data-bool="1" />
         </label>
+      </section>
+      <section class="app-settings-section">
+        <h4>Appli & notifications</h4>
+        <div class="app-setting-item app-setting-item-stack">
+          <span><b>📲 Pokédle en appli</b><small>Une icône sur ton écran d’accueil, en plein écran. Sur iPhone, c’est ce qui permet les notifications.</small></span>
+          <button class="btn-ghost" type="button" data-action="openInstallApp">Comment l’installer</button>
+        </div>
+        <div class="app-setting-item app-setting-item-stack">
+          <span><b>🔔 Notifications</b><small>Défis reçus ou relevés, et un rappel du Pokémon du jour à l’heure de ton choix.</small></span>
+          <button class="btn-ghost" type="button" data-action="openNotifSetup">${typeof notifIsOn === 'function' && notifIsOn() ? 'Changer l’heure ou arrêter' : 'Activer'}</button>
+        </div>
       </section>
       <button class="btn-ghost app-settings-reset" type="button" data-action="resetAppSettings">Réinitialiser les paramètres</button>
     </div>

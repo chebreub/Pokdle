@@ -1415,6 +1415,8 @@ app.get("/base-stats.json", (_req, res) => res.sendFile(path.join(__dirname, "ba
 app.get("/robots.txt", (_req, res) => res.sendFile(path.join(__dirname, "robots.txt"), { maxAge: "1d" }));
 app.get("/googled8d0a3d4583f5db3.html", (_req, res) => res.sendFile(path.join(__dirname, "googled8d0a3d4583f5db3.html")));
 app.get("/confidentialite", (_req, res) => res.sendFile(path.join(__dirname, "confidentialite.html"), { maxAge: "1h" }));
+// pokdle.fr/appli : the site opens on « 📲 Pokédle en appli » (src/script.10xt.install-app.js).
+app.get(["/appli", "/application", "/installer"], (_req, res) => res.redirect(302, "/?appli=1"));
 // One page per game (/jeux, /jeux/<slug>) and the sitemap that lists them.
 require("./lib/seo-render").mountSeoPages(app);
 
