@@ -18,7 +18,7 @@ test('account menu exposes trainer identity and progression',()=>{
   assert.match(delegation,/getXpTier/);
   assert.match(delegation,/pokedexCollectionNationalStats/);
   assert.match(delegation,/Profil de dresseur/);
-  assert.match(delegation,/Ma collection/);
+  assert.match(delegation,/Ma collection|📒 Mon album/, 'the collection, « 📒 Mon album » since 01/11/2026');
 });
 
 test('legacy modes receive dedicated modern styling',()=>{

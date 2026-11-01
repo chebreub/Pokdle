@@ -1492,3 +1492,50 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .home-album-text small {color:#b8c2d8;}
 #pokdle-app.theme-dark .player-card-album {background:#3a3320;border-color:#7a6a3a;}
 #pokdle-app.theme-dark .player-card-album-medals span {background:#1f2b42;}
+
+/* ===== Mon compte et Paramètres plus aérés (01/11/2026, maquette validée) ===== */
+#pokdle-app #overlay-modal[data-kind="account"] .overlay-card {width:min(780px,calc(100vw - 32px))!important;}
+#pokdle-app .account-menu-v3 {gap:14px;}
+#pokdle-app .account-menu-v3 .account-menu-identity {align-items:flex-start;gap:16px;}
+#pokdle-app .account-menu-v3 .account-menu-avatar {width:76px;height:76px;flex:0 0 76px;border-radius:20px;}
+#pokdle-app .account-menu-v3 .account-menu-who {flex:1;min-width:0;}
+#pokdle-app .account-menu-v3 .account-menu-identity h4 {font-family:Fredoka,sans-serif;font-size:1.5rem;}
+#pokdle-app .account-menu-v3 .account-menu-identity small {font-size:.8rem;}
+#pokdle-app .account-menu-xpbar {display:block;height:8px;margin:6px 0 6px;border-radius:999px;background:#F3ECE2;overflow:hidden;}
+#pokdle-app .account-menu-xpbar b {display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#4069E0,#7C5BD6);}
+#pokdle-app .account-menu-v3 .account-menu-linked {gap:6px 10px;font-size:.8rem;}
+#pokdle-app .account-menu-v3 .account-menu-linked span {flex:0 1 auto;}
+#pokdle-app .account-menu-v3 .account-menu-linked .account-link-provider {min-height:0;padding:2px 4px;border:0;background:none;color:#4069E0;text-decoration:underline;font-weight:800;}
+#pokdle-app .account-menu-v3 .account-menu-stats {grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+#pokdle-app .account-menu-v3 .account-menu-stats > div {padding:12px 14px;border-radius:16px;}
+#pokdle-app .account-menu-v3 .account-menu-stats strong {font-family:Fredoka,sans-serif;font-size:1.35rem;}
+#pokdle-app .account-menu-groups {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+#pokdle-app .account-menu-groups h5 {margin:0 0 8px;color:#6B6472;font:900 .72rem Nunito,sans-serif;letter-spacing:.07em;text-transform:uppercase;}
+#pokdle-app .account-menu-v3 .account-menu-links {gap:8px;}
+#pokdle-app .account-menu-v3 .account-menu-links button {min-height:46px;border-radius:14px;font-size:.95rem;}
+#pokdle-app .account-menu-extra {grid-template-columns:repeat(2,minmax(0,1fr));}
+#pokdle-app .account-menu-extra:empty {display:none;}
+#pokdle-app .account-menu-foot {display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 18px;padding-top:12px;border-top:1px solid #EADFD0;}
+#pokdle-app .account-menu-foot .account-menu-logout, #pokdle-app .account-menu-foot .account-menu-privacy, #pokdle-app .account-menu-foot .account-menu-delete {display:inline-block;margin:0;padding:4px 2px;font:800 .85rem Nunito,sans-serif;}
+#pokdle-app .account-menu-foot .account-menu-logout {color:#4069E0;border:0!important;background:none!important;box-shadow:none!important;text-align:center;}
+@media (max-width:640px) {
+  #pokdle-app .account-menu-groups, #pokdle-app .account-menu-extra {grid-template-columns:1fr;}
+  #pokdle-app .account-menu-v3 .account-menu-avatar {width:60px;height:60px;flex-basis:60px;}
+  #pokdle-app .account-menu-v3 .account-menu-stats strong {font-size:1.1rem;}
+}
+#pokdle-app.theme-dark .account-menu-groups h5 {color:#aebfda;}
+#pokdle-app.theme-dark .account-menu-xpbar {background:#1a2438;}
+#pokdle-app.theme-dark .account-menu-foot {border-top-color:#33425f;}
+#pokdle-app.theme-dark .account-menu-foot .account-menu-logout, #pokdle-app.theme-dark .account-menu-v3 .account-menu-linked .account-link-provider {color:#8fb0ff;}
+
+/* Paramètres: each setting on one line, the control on the right; small buttons; reset as a link. */
+#pokdle-app #overlay-modal[data-kind="settings"] .app-settings-grid-rich {align-items:start;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-item {display:flex!important;align-items:center;justify-content:space-between;gap:12px;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-item > span:first-child {flex:1;min-width:0;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-item .btn-ghost,
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-item .support-kofi-btn {flex:none;width:auto;min-height:36px;padding:7px 14px;border-radius:999px;font-size:.85rem;white-space:nowrap;box-shadow:none;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-item select {flex:none;width:auto;min-width:120px;max-width:150px;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-volume {flex-direction:column;align-items:stretch;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-settings-help {display:grid;gap:8px;align-content:start;}
+#pokdle-app #overlay-modal[data-kind="settings"] .app-settings-reset {grid-column:1 / -1;justify-self:end;width:auto;min-height:0;height:auto;aspect-ratio:auto;padding:4px 2px;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:#6B6472;font:800 .85rem Nunito,sans-serif;text-decoration:underline;}
+#pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .app-settings-reset {color:#aebfda;}

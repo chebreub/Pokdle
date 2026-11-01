@@ -63,10 +63,17 @@ openSettingsModal = function () {
   const value = openSettingsBeforeFeedback.apply(this, arguments);
   const grid = document.querySelector('#overlay-modal .app-settings-grid');
   if (grid && !grid.querySelector('.app-settings-feedback')) {
-    const section = document.createElement('section');
-    section.className = 'app-settings-section app-settings-feedback';
-    section.innerHTML = '<h4>Une idée, un bug ?</h4><p class="card-desc">Dis-le directement : tous les messages sont lus.</p><button class="btn-ghost" type="button" data-action="openFeedbackModal">Donner mon avis</button>';
-    grid.insertBefore(section, grid.querySelector('.app-settings-reset'));
+    let section = grid.querySelector('.app-settings-help');
+    if (!section) {
+      section = document.createElement('section');
+      section.className = 'app-settings-section app-settings-help';
+      section.innerHTML = '<h4>Aide & soutien</h4>';
+      grid.insertBefore(section, grid.querySelector('.app-settings-reset'));
+    }
+    const row = document.createElement('div');
+    row.className = 'app-setting-item app-settings-feedback';
+    row.innerHTML = '<span><b>Une idée, un bug ?</b><small>Tous les messages sont lus.</small></span><button class="btn-ghost" type="button" data-action="openFeedbackModal">Donner mon avis</button>';
+    section.insertBefore(row, section.querySelector('.app-settings-support'));
   }
   return value;
 };
