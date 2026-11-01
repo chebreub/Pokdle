@@ -1125,3 +1125,55 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 .tb-random .tb-opt b {display:block;font:800 15px Nunito,sans-serif;}
 .tb-random .tb-opt small {display:block;color:var(--ui-muted,#6B6472);font:700 12px Nunito,sans-serif;}
 .tb-random .tb-roll {width:100%;margin-top:4px;}
+
+/* ===== ⚔️ Défis entre joueurs (01/11/2026) ===== */
+.btn-duel {display:block;width:100%;margin:12px 0 4px;padding:13px 16px;border:0;border-radius:16px;background:#7C5BD6;color:#fff;font:800 16px Nunito,sans-serif;box-shadow:0 4px 0 #5a3fb0;cursor:pointer;}
+.btn-duel:active {transform:translateY(2px);box-shadow:0 2px 0 #5a3fb0;}
+.player-card-duel-hint {margin:10px 0 2px;text-align:center;color:#6B6472;font:800 14px Nunito,sans-serif;}
+.pc-form, .pc-list {display:flex;flex-direction:column;gap:10px;}
+.pc-step {margin:4px 0 0;font:900 13px Nunito,sans-serif;color:#6B6472;text-transform:uppercase;letter-spacing:.02em;}
+.pc-modes {display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+.pc-mode {display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:10px 12px;border-radius:14px;border:2px solid #EADFD0;background:#fff;color:#2E2A33;font:800 14px Nunito,sans-serif;text-align:left;cursor:pointer;}
+.pc-mode b {font:700 20px Fredoka,sans-serif;color:#7C5BD6;}
+.pc-mode[aria-pressed="true"] {border-color:#7C5BD6;background:#F3EEFF;}
+.pc-phrases {display:flex;flex-wrap:wrap;gap:6px;}
+.pc-phrase {min-height:40px;padding:8px 12px;border-radius:999px;border:1px solid #EADFD0;background:#F6F0E8;color:#2E2A33;font:800 14px Nunito,sans-serif;cursor:pointer;}
+.pc-phrase[aria-pressed="true"] {background:#2E2A33;border-color:#2E2A33;color:#fff;}
+.pc-summary {margin:2px 0 0;font:800 15px Nunito,sans-serif;color:#2E2A33;}
+.pc-send {width:100%;}
+.pc-status {margin:0;min-height:1em;color:#C7423A;font:800 14px Nunito,sans-serif;}
+.pc-note, .pc-empty {margin:0;color:#6B6472;font:700 13px Nunito,sans-serif;}
+.pc-sent {display:grid;gap:8px;text-align:center;}
+.pc-sent b {font:700 22px Fredoka,sans-serif;}
+.pc-sent p {margin:0;font:700 15px Nunito,sans-serif;}
+.pc-card {display:grid;gap:10px;padding:14px;border-radius:20px;background:linear-gradient(135deg,#EDE4FF,#FFF1C9);border:2px solid #CDBDF5;color:#2E2A33;}
+.pc-card:not(.is-open) {background:#F6F0E8;border-color:#EADFD0;}
+.pc-who {display:flex;align-items:center;gap:10px;}
+.pc-who b {display:block;font:700 19px Fredoka,sans-serif;}
+.pc-who small {color:#6B6472;font:800 13px Nunito,sans-serif;}
+.pc-avatar {flex:none;width:48px;height:48px;border-radius:14px;background:#fff;object-fit:contain;image-rendering:pixelated;}
+.pc-avatar.is-letter {display:grid;place-items:center;font:700 22px Fredoka,sans-serif;color:#7C5BD6;}
+.pc-goal {display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:#fff;}
+.pc-goal b {font:700 32px Fredoka,sans-serif;color:#7C5BD6;}
+.pc-goal span {font:800 14px Nunito,sans-serif;}
+.pc-quote {justify-self:start;padding:6px 10px;border-radius:12px;background:#fff;font:800 14px Nunito,sans-serif;}
+.pc-actions .btn-blue {width:100%;}
+.pc-more summary {cursor:pointer;color:#6B6472;font:800 13px Nunito,sans-serif;}
+.pc-more button {display:block;width:100%;margin-top:6px;padding:9px 12px;border-radius:12px;border:1px solid #EADFD0;background:#fff;color:#C7423A;font:800 13px Nunito,sans-serif;text-align:left;cursor:pointer;}
+.pc-list h4 {margin:8px 0 0;font:700 18px Fredoka,sans-serif;}
+.pc-row {display:flex;align-items:center;gap:10px;padding:10px;border-radius:16px;background:#fff;border:1px solid #EADFD0;}
+.pc-row p {flex:1;margin:0;font:700 14px Nunito,sans-serif;color:#2E2A33;}
+.pc-again {flex:none;width:auto;padding:8px 12px;font-size:13px;}
+.pc-accept {display:flex;align-items:center;gap:8px;margin-top:6px;font:800 14px Nunito,sans-serif;}
+.pc-accept input {width:20px;height:20px;accent-color:#7C5BD6;}
+.pc-later {align-self:center;}
+.pc-badge {display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:#E5484D;color:#fff;font:900 12px/20px Nunito,sans-serif;font-style:normal;text-align:center;}
+#pokdle-app.theme-dark .pc-mode, #pokdle-app.theme-dark .pc-row, #pokdle-app.theme-dark .pc-goal, #pokdle-app.theme-dark .pc-quote, #pokdle-app.theme-dark .pc-more button {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-mode[aria-pressed="true"] {background:#2e2655;border-color:#9b82ec;}
+#pokdle-app.theme-dark .pc-phrase {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-phrase[aria-pressed="true"] {background:#e8ecf6;color:#1e2c43;}
+#pokdle-app.theme-dark .pc-card {background:linear-gradient(135deg,#2e2655,#3a3320);border-color:#5d4bb0;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-card:not(.is-open) {background:#1f2b42;border-color:#33425f;}
+#pokdle-app.theme-dark .pc-summary, #pokdle-app.theme-dark .pc-row p {color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-step, #pokdle-app.theme-dark .pc-note, #pokdle-app.theme-dark .pc-empty, #pokdle-app.theme-dark .pc-who small, #pokdle-app.theme-dark .pc-more summary {color:#b8c2d8;}
+.pc-card > .pc-again {justify-self:start;}
