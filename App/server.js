@@ -541,6 +541,8 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_message_replies", "DELETE FROM player_message_replies WHERE account_id = $1", [id]],
     ["player_message_reads", "DELETE FROM player_message_reads WHERE account_id = $1", [id]],
     ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
+    ["player_challenges", "DELETE FROM player_challenges WHERE from_id = $1 OR to_id = $1", [id]],
+    ["player_challenge_blocks", "DELETE FROM player_challenge_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
     ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
   ];
@@ -710,6 +712,8 @@ app.post("/api/scores", express.json({ limit: "4kb" }), (req, res) => {
   if (!getSessionUser(req)) return res.status(401).json({ ok: false, error: "authentication_required" });
   return res.status(410).json({ ok: false, error: "legacy_score_sync_retired" });
 });
+// Défis entre joueurs (lib/player-challenges.js), set up further down with the notifications.
+let playerChallenges = null;
 app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, res) => {
   if (!authReady()) return res.status(503).json({ok:false,error:"unavailable"});
   const user=getSessionUser(req);
@@ -728,7 +732,13 @@ app.post("/api/leaderboard/result", express.json({ limit: "4kb" }), async (req, 
   const key=mode==="daily"?"daily:"+today:id||null;
   try {
     const stored=await recordLeaderboardResult(pgPool,user,mode,score,config,key);
-    res.json({ok:true,mode,...stored});
+    // A challenge in this game is won once a stored result beats its target.
+    let challenges=[];
+    if (playerChallenges && !stored.duplicate) {
+      try { challenges=await playerChallenges.afterResult(user.id,mode,stored.score); }
+      catch (error) { console.warn("[defis] result:",error.message); }
+    }
+    res.json({ok:true,mode,...stored,challenges});
   } catch (error) {
     console.error("[leaderboard] result:",error.message);
     res.status(503).json({ok:false,error:"storage_unavailable"});
@@ -1541,6 +1551,15 @@ adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, 
   messages: { module: playerMessages, webpush, pushReady: pushRoutes.configured } });
 // The player's 📬 window: the messages the creator wrote to them, and their answers.
 playerMessages.mountPlayerRoutes(app, { express, db: pgPool, ready: adminPanelReady, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// Défis entre joueurs (01/11/2026): « Bats ma série au Higher or Lower : 23 », from a trainer card.
+const challengeLib = require("./lib/player-challenges");
+const challengesReady = pgPool ? authDbReady.then(() => challengeLib.ensureTables(pgPool)).then(() => true).catch((error) => {
+  console.warn("[defis] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+playerChallenges = pgPool ? challengeLib.createPlayerChallenges({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: challengesReady,
+  push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
+challengeLib.mountChallengeRoutes(app, { express, challenges: playerChallenges, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");
