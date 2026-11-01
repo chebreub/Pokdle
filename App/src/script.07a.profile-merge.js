@@ -63,7 +63,8 @@ function profileMergeUnion(p, o) {
   if (p && typeof p === "object" || o && typeof o === "object") return { ...(o || {}), ...(p || {}) };
   return p !== undefined && p !== null ? p : o;
 }
-const PROFILE_UNION_FIELDS = ["discoveries", "albumMissionClaims", "regionXpClaims", "secrets", "weeklyLeagueBadges"];
+// albumMedals (📒 album, 01/11/2026): « gen:tier » keys, so a medal won on one device is kept on the other.
+const PROFILE_UNION_FIELDS = ["discoveries", "albumMissionClaims", "regionXpClaims", "secrets", "weeklyLeagueBadges", "albumMedals"];
 const PROFILE_MAX_FIELDS = ["dailyLoginStreak", "xpLevels", "draftScoreAttackRecords", "weeklyLeagueScores", "weeklyLeagueStats", "albumMissionStats"];
 
 function mergeProfileData(p, o, b) {
