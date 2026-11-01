@@ -1177,3 +1177,58 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app.theme-dark .pc-summary, #pokdle-app.theme-dark .pc-row p {color:#e8ecf6;}
 #pokdle-app.theme-dark .pc-step, #pokdle-app.theme-dark .pc-note, #pokdle-app.theme-dark .pc-empty, #pokdle-app.theme-dark .pc-who small, #pokdle-app.theme-dark .pc-more summary {color:#b8c2d8;}
 .pc-card > .pc-again {justify-self:start;}
+/* « Trouve ce Pokémon » */
+.pc-tabs {display:flex;gap:6px;padding:4px;border-radius:14px;background:#F6F0E8;}
+.pc-tabs button {flex:1;min-height:42px;border:0;border-radius:10px;background:transparent;color:#6B6472;font:800 14px Nunito,sans-serif;cursor:pointer;}
+.pc-tabs button[aria-selected="true"] {background:#fff;color:#2E2A33;box-shadow:0 2px 0 rgba(46,42,51,.08);}
+.pc-search, .pc-guess {width:100%;min-height:46px;padding:10px 14px;border-radius:14px;border:2px solid #7C5BD6;background:#fff;color:#2E2A33;font:700 16px Nunito,sans-serif;box-sizing:border-box;}
+.pc-suggests {display:flex;flex-direction:column;gap:4px;}
+.pc-suggests:empty {display:none;}
+.pc-suggest {display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 10px;border-radius:12px;border:1px solid #EADFD0;background:#fff;color:#2E2A33;font:800 15px Nunito,sans-serif;text-align:left;cursor:pointer;}
+.pc-suggest img {width:36px;height:36px;image-rendering:pixelated;}
+.pc-chosen {display:flex;align-items:center;gap:12px;padding:10px;border-radius:18px;background:linear-gradient(135deg,#EDE4FF,#FFF1C9);border:2px solid #CDBDF5;}
+.pc-chosen img {flex:none;width:76px;height:76px;border-radius:16px;background:#fff;object-fit:contain;}
+.pc-chosen b {display:block;font:700 20px Fredoka,sans-serif;color:#2E2A33;}
+.pc-chosen small {display:block;color:#6B6472;font:800 12.5px Nunito,sans-serif;}
+.pc-lock {display:inline-block;margin-top:4px;padding:3px 8px;border-radius:999px;background:#2E2A33;color:#fff;font:900 11.5px Nunito,sans-serif;}
+.pc-attempts {display:flex;gap:6px;}
+.pc-attempts button {flex:1;min-height:42px;border-radius:12px;border:0;background:#F6F0E8;color:#2E2A33;font:900 14px Nunito,sans-serif;cursor:pointer;}
+.pc-attempts button[aria-pressed="true"] {background:#2E2A33;color:#fff;}
+.pc-mystery {flex:none;display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#2E2A33;color:#FFD45C;font:700 34px Fredoka,sans-serif;}
+.pc-goal .pc-small-b {font:700 22px Fredoka,sans-serif;color:#7C5BD6;}
+.pc-game {display:flex;flex-direction:column;gap:10px;}
+.pc-game-bar {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:16px;background:#F3EEFF;border:2px solid #CDBDF5;font:800 15px Nunito,sans-serif;color:#2E2A33;}
+.pc-game-bar b {flex:none;font:700 22px Fredoka,sans-serif;color:#7C5BD6;}
+.pc-game-input {display:flex;gap:8px;}
+.pc-game-input .btn-blue {flex:none;width:auto;padding:0 18px;}
+.pc-tries {display:flex;flex-direction:column;gap:8px;}
+.pc-try {display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:center;padding:6px;border-radius:14px;background:#fff;border:1px solid #EADFD0;}
+.pc-try-who {display:flex;flex-direction:column;align-items:center;gap:1px;color:#2E2A33;font:800 11px/1.1 Nunito,sans-serif;text-align:center;overflow-wrap:break-word;}
+.pc-try-who img {width:46px;height:46px;image-rendering:pixelated;}
+.pc-try-cells {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
+@media (min-width: 700px) { .pc-try-cells {grid-template-columns:repeat(8,minmax(0,1fr));} }
+.pc-cell {position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:42px;padding:3px 2px;border-radius:9px;color:#fff;font:900 11.5px/1.1 Nunito,sans-serif;text-align:center;overflow-wrap:break-word;hyphens:auto;}
+.pc-cell small {display:block;margin-bottom:1px;font:900 8px/1 Nunito,sans-serif;letter-spacing:.02em;text-transform:uppercase;opacity:.85;}
+.pc-cell.is-ok {background:#2F9E5B;}
+.pc-cell.is-ok::after {content:"✓";position:absolute;top:1px;right:3px;font-size:8px;}
+.pc-cell.is-close {background:repeating-linear-gradient(135deg,#E8B92E 0 6px,#F2CB55 6px 12px);color:#2E2A33;}
+.pc-cell.is-wrong {background:#9AA0A8;}
+.pc-end {display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:#F6F0E8;border:2px solid #EADFD0;}
+.pc-end.is-won {background:#E6F6EC;border-color:#9ED9B4;}
+.pc-end img {flex:none;width:84px;height:84px;object-fit:contain;}
+.pc-end b {display:block;font:700 21px Fredoka,sans-serif;color:#2E2A33;}
+.pc-end p {margin:2px 0 0;font:800 14px Nunito,sans-serif;color:#2E2A33;}
+.pc-again-big {width:100%;}
+#pokdle-app.theme-dark .pc-tabs {background:#1f2b42;}
+#pokdle-app.theme-dark .pc-tabs button {color:#b8c2d8;}
+#pokdle-app.theme-dark .pc-tabs button[aria-selected="true"] {background:#33425f;color:#fff;}
+#pokdle-app.theme-dark .pc-search, #pokdle-app.theme-dark .pc-guess, #pokdle-app.theme-dark .pc-suggest {background:#1f2b42;color:#e8ecf6;border-color:#5d4bb0;}
+#pokdle-app.theme-dark .pc-attempts button {background:#1f2b42;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-attempts button[aria-pressed="true"] {background:#e8ecf6;color:#1e2c43;}
+#pokdle-app.theme-dark .pc-chosen {background:linear-gradient(135deg,#2e2655,#3a3320);border-color:#5d4bb0;}
+#pokdle-app.theme-dark .pc-chosen b, #pokdle-app.theme-dark .pc-game-bar, #pokdle-app.theme-dark .pc-end b, #pokdle-app.theme-dark .pc-end p {color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-game-bar {background:#2e2655;border-color:#5d4bb0;}
+#pokdle-app.theme-dark .pc-end {background:#1f2b42;border-color:#33425f;}
+#pokdle-app.theme-dark .pc-end.is-won {background:#163828;border-color:#2F9E5B;}
+#pokdle-app.theme-dark .pc-try {background:#1f2b42;border-color:#33425f;}
+#pokdle-app.theme-dark .pc-try-who {color:#e8ecf6;}

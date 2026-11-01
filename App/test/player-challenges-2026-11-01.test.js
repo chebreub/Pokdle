@@ -33,7 +33,7 @@ test('the site: a ⚔️ Défier button on trainer cards, « Mes défis » in th
   const src = read('src/script.10xq.player-challenges.js');
   assert.match(src, /return html\.replace\('<div class="player-card-figures">', button \+ '<div class="player-card-figures">'\);/, 'the button sits under the card\'s name');
   assert.match(src, /if \(!player\.pid \|\| \(pcState\.options && pcState\.options\.pid === player\.pid\)\) return html;/, 'never on one\'s own card');
-  assert.match(src, /pcPost\('\/api\/challenges', \{ pid: pcForm\.pid, mode: pcForm\.mode, phrase: pcForm\.phrase \}\)/, 'a phrase by its number: no free text');
+  assert.match(src, /: \{ pid: pcForm\.pid, mode: pcForm\.mode, phrase: pcForm\.phrase \}\)/, 'a phrase by its number: no free text');
   assert.doesNotMatch(src, /<textarea|<input type="text"/);
   assert.match(src, /submitLeaderboardResult = function \(mode, score\) \{/, 'the result of a game is checked against the challenges');
   for (const fn of ['openHigherLowerMode', 'startHigherLowerMode', 'startWeightBattle', 'openOddOneOutMode', 'openTypeComboSolo', 'startQuizGame', 'openSpeedrunMode', 'openDraftScoreAttackMode']) {
@@ -135,6 +135,6 @@ test('the routes: signed in, same origin for every change', async () => {
     assert.equal((await post({ origin: 'https://evil.example' })).status, 403);
     assert.equal((await post({ origin: base })).status, 200);
     assert.deepEqual(calls.at(-1), ['create', 'A', { pid: 'abc', mode: 'quiz', phrase: 1, body: 'texte libre' }]);
-    assert.match(read('lib/player-challenges.js'), /async function create\(fromId, \{ pid, mode, phrase \} = \{\}\) \{/, 'a free text sent anyway is never read');
+    assert.match(read('lib/player-challenges.js'), /async function create\(fromId, \{ pid, mode, phrase, pokemonId, attempts \} = \{\}\) \{/, 'a free text sent anyway is never read');
   } finally { server.close(); }
 });
