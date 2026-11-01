@@ -1558,6 +1558,7 @@ const challengesReady = pgPool ? authDbReady.then(() => challengeLib.ensureTable
   return false;
 }) : Promise.resolve(false);
 playerChallenges = pgPool ? challengeLib.createPlayerChallenges({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: challengesReady,
+  pokemon: POKEMON_LIST, compare: require("./lib/daily-comparison").compareDaily,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 challengeLib.mountChallengeRoutes(app, { express, challenges: playerChallenges, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
