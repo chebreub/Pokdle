@@ -545,6 +545,8 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_challenge_blocks", "DELETE FROM player_challenge_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["player_friends", "DELETE FROM player_friends WHERE from_id = $1 OR to_id = $1", [id]],
     ["player_blocks", "DELETE FROM player_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
+    ["friend_messages", "DELETE FROM friend_messages WHERE from_id = $1 OR to_id = $1", [id]],
+    ["friend_reports", "DELETE FROM friend_reports WHERE reporter_id = $1 OR reported_id = $1", [id]],
     ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
     ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
   ];
@@ -1559,7 +1561,7 @@ const adminPanelReady = pgPool ? authDbReady.then(async () => {
   return false;
 }) : Promise.resolve(false);
 adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, getSessionUser: (req) => (authReady() ? getSessionUser(req) : null), adminIds: ADMIN_ACCOUNT_IDS,
-  messages: { module: playerMessages, webpush, pushReady: pushRoutes.configured } });
+  messages: { module: playerMessages, webpush, pushReady: pushRoutes.configured }, reports: { module: require("./lib/friend-chat") } });
 // The player's 📬 window: the messages the creator wrote to them, and their answers.
 playerMessages.mountPlayerRoutes(app, { express, db: pgPool, ready: adminPanelReady, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 // Défis entre joueurs (01/11/2026): « Bats ma série au Higher or Lower : 23 », from a trainer card.
@@ -1581,6 +1583,15 @@ const friendsReady = pgPool ? authDbReady.then(() => friendLib.ensureTables(pgPo
 const playerFriends = pgPool ? friendLib.createPlayerFriends({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: friendsReady,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 friendLib.mountFriendRoutes(app, { express, friends: playerFriends, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// Discussion entre amis: 200 characters, no links nor numbers, « Signaler » to /admin.
+const chatLib = require("./lib/friend-chat");
+const chatReady = pgPool ? friendsReady.then((ok) => ok && chatLib.ensureTables(pgPool)).then((ok) => ok !== false).catch((error) => {
+  console.warn("[chat] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+const friendChat = playerFriends ? chatLib.createFriendChat({ db: pgPool, friends: playerFriends, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: chatReady,
+  push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
+chatLib.mountChatRoutes(app, { express, chat: friendChat, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");

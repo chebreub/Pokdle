@@ -26,16 +26,16 @@ test('what counts: challenges waiting for me, news of mine, unread messages', ()
   ctx.pcOpen = (c) => c && c.status === 'open' && Date.parse(c.expiresAt) > Date.now();
   vm.createContext(ctx);
   vm.runInContext(src, ctx);
-  assert.equal(JSON.stringify(ctx.inboxCounts()), JSON.stringify({ duels: 2, messages: 1, friends: 0 }), 'an expired one, a pending one sent and old news do not count');
+  assert.equal(JSON.stringify(ctx.inboxCounts()), JSON.stringify({ duels: 2, messages: 1, friends: 0, chat: 0 }), 'an expired one, a pending one sent and old news do not count');
   ctx.window.__pokedleAuthed = false;
-  assert.equal(JSON.stringify(ctx.inboxCounts()), JSON.stringify({ duels: 0, messages: 0, friends: 0 }), 'nothing for a guest');
+  assert.equal(JSON.stringify(ctx.inboxCounts()), JSON.stringify({ duels: 0, messages: 0, friends: 0, chat: 0 }), 'nothing for a guest');
 });
 
 test('where it shows: account button, Amis tab and Entre amis, home card, Party Room, menu first', () => {
-  // Friend requests (script.10xu.friends.js, 01/11/2026) count on the same dots.
-  assert.match(src, /inboxSetDot\(document\.querySelector\('#account-area \.account-chip'\), n\.duels \+ n\.messages \+ \(n\.friends \|\| 0\)\);/);
-  assert.match(src, /inboxSetDot\(document\.querySelector\('#mobile-tabbar \[data-tab="social"\]'\), n\.duels \+ \(n\.friends \|\| 0\)\);/);
-  assert.match(src, /inboxSetDot\(document\.getElementById\('nav-social'\), n\.duels \+ \(n\.friends \|\| 0\)\);/);
+  // Friend requests (script.10xu.friends.js) and unread chat (script.10xv.friend-chat.js) count on the same dots.
+  assert.match(src, /inboxSetDot\(document\.querySelector\('#account-area \.account-chip'\), n\.duels \+ n\.messages \+ \(n\.friends \|\| 0\) \+ \(n\.chat \|\| 0\)\);/);
+  assert.match(src, /inboxSetDot\(document\.querySelector\('#mobile-tabbar \[data-tab="social"\]'\), n\.duels \+ \(n\.friends \|\| 0\) \+ \(n\.chat \|\| 0\)\);/);
+  assert.match(src, /inboxSetDot\(document\.getElementById\('nav-social'\), n\.duels \+ \(n\.friends \|\| 0\) \+ \(n\.chat \|\| 0\)\);/);
   assert.match(src, /home\.insertBefore\(box, home\.firstChild\);/, 'the card sits at the top of the home');
   assert.match(src, /lobby\.parentNode\.insertBefore\(box, lobby\);/, 'in the Party Room, above the lobby, in its flow');
   assert.match(src, /if \(!window\.__pokedleAuthed \|\| inRoom \|\| lobby\.classList\.contains\('hidden'\)\)/, 'never inside a room being played');

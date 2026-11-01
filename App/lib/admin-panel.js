@@ -113,6 +113,7 @@ const NOTICES = Object.freeze({
   "name-replaced": "Pseudo remplacé par « Dresseur » partout, et il le reste à la prochaine connexion.",
   "name-restored": "Pseudo rétabli : son nom revient à sa prochaine connexion.",
   level: "Niveau remis : le joueur le retrouve à sa prochaine visite, sur chacun de ses appareils.",
+  report: "Signalement marqué comme traité.",
 });
 
 function page(title, body) {
@@ -175,7 +176,7 @@ ${list ? `<h3>Pseudos remplacés</h3><div class="photos">${list}</div>` : ""}</s
 
 // `db` is the pg pool; `ready` resolves to true once the tables exist.
 // `messages` (optional) writes to the players: { module, webpush, pushReady }, see lib/player-messages.js.
-function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console, messages = null }) {
+function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console, messages = null, reports = null }) {
   const form = express.urlencoded({ extended: false, limit: "8kb" });
   const ids = () => (typeof adminIds === "function" ? adminIds() : adminIds) || new Set();
   const noStore = (res) => res.set({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex", "Referrer-Policy": "same-origin" });
@@ -228,10 +229,16 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
           messagesHtml = messages.module.adminSectionHtml(await messages.module.adminState(db), pushCount);
         } catch (error) { log.error("[admin] messages:", error.message); messagesHtml = "<section><h2>Écrire aux joueurs</h2><p>Lecture impossible pour le moment.</p></section>"; }
       }
+      // 🚩 Reports from the chat between friends (lib/friend-chat.js), first when one waits.
+      let reportsHtml = "";
+      if (reports) {
+        try { reportsHtml = reports.module.adminSectionHtml(await reports.module.adminReports(db), escapeHtml); }
+        catch (error) { log.error("[admin] reports:", error.message); }
+      }
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
       res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
@@ -321,6 +328,18 @@ ${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${le
       if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
       try { await messages.module.removeMessage(db, id); back(res, { ok: "message-removed" }); }
       catch (error) { log.error("[admin] message remove:", error.message); back(res, { err: "Retrait impossible." }); }
+    });
+  }
+
+  if (reports) {
+    app.post("/admin/reports/done", form, async (req, res) => {
+      if (!guard(req, res)) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      const id = Number(req.body && req.body.id);
+      if (!Number.isSafeInteger(id) || id <= 0) return back(res, { err: "Signalement inconnu." });
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      try { await reports.module.resolveReport(db, id); back(res, { ok: "report" }); }
+      catch (error) { log.error("[admin] report:", error.message); back(res, { err: "Modification impossible." }); }
     });
   }
 
