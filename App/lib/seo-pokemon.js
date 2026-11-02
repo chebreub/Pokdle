@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { TYPE_CHART, GENERATIONS, STARTERS, LEGENDARIES, MYTHICALS } = require('./seo-guides');
+const FIRST_GAMES = require('./pokemon-first-games');
 
 const POKEMON_LIST = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'pokemon.js'), 'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
 const BASE = POKEMON_LIST.filter((p) => !p.isAltForm && p.id >= 1 && p.id <= 1025).sort((a, b) => a.id - b.id);
@@ -53,12 +54,13 @@ const listFr = (items) => items.length <= 1 ? items.join('') : items.slice(0, -1
 
 function facts(p) {
   const gen = GENERATIONS[p.gen - 1] || { region: '', games: '', year: '' };
+  const first = { ...gen, ...FIRST_GAMES.get(p.id) };
   const stats = Array.isArray(STATS[String(p.id)]) ? STATS[String(p.id)] : null;
   const w = weaknesses(p);
   const types = [p.type1, p.type2].filter(Boolean);
   return {
     id: p.id, name: p.name, slug: SLUGS.get(p.id), path: pokemonPath(p.id), types,
-    gen: p.gen, region: gen.region, firstGames: gen.games, year: gen.year,
+    gen: p.gen, region: first.region, generationRegion: gen.region, firstGames: first.games, year: first.year,
     height: p.height, weight: p.weight, color: p.color, habitat: p.habitat,
     stage: STAGE_LABELS[p.stage] || null,
     starter: STARTER_IDS.has(p.id), legendary: LEGENDARY_IDS.has(p.id), mythical: MYTHICAL_IDS.has(p.id),
@@ -75,7 +77,7 @@ function facts(p) {
 function intro(f) {
   const kind = f.mythical ? 'un Pokémon fabuleux' : f.legendary ? 'un Pokémon légendaire' : f.starter ? 'un Pokémon de départ' : 'un Pokémon';
   const typeText = f.types.length > 1 ? 'de type ' + f.types.join(' et ') : 'de type ' + f.types[0];
-  return f.name + ' est ' + kind + ' ' + typeText + ' de la ' + f.gen + (f.gen === 1 ? 're' : 'e') + ' génération (région de ' + f.region + '), n° ' + f.id + ' du Pokédex national. ' +
+  return f.name + ' est ' + kind + ' ' + typeText + ' de la ' + f.gen + (f.gen === 1 ? 're' : 'e') + ' génération' + (f.region ? ' (région de ' + f.region + ')' : '') + ', n° ' + f.id + ' du Pokédex national. ' +
     'Il mesure ' + fr(f.height) + ' m pour ' + fr(f.weight) + ' kg.' +
     (f.weak.x4.length ? ' Il craint surtout les attaques ' + listFr(f.weak.x4) + ' (dégâts ×4).' : f.weak.x2.length ? ' Il est faible face aux attaques ' + listFr(f.weak.x2) + '.' : ' Il n’a aucune faiblesse de type.');
 }
@@ -86,14 +88,14 @@ function faq(f) {
     ['Quelles sont les faiblesses de ' + f.name + ' ?', weakAll.length
       ? f.name + ' est faible face aux attaques ' + listFr(weakAll) + (f.weak.x4.length ? ' (×4 contre ' + listFr(f.weak.x4) + ')' : '') + '.' + (f.weak.none.length ? ' Les attaques ' + listFr(f.weak.none) + ' ne lui font rien.' : '')
       : f.name + ' n’a aucune faiblesse.'],
-    ['De quelle génération est ' + f.name + ' ?', f.name + ' vient de la ' + f.gen + (f.gen === 1 ? 're' : 'e') + ' génération (région de ' + f.region + ', ' + f.firstGames + ', ' + f.year + ').'],
+    ['De quelle génération est ' + f.name + ' ?', f.name + ' appartient à la ' + f.gen + (f.gen === 1 ? 're' : 'e') + ' génération' + (f.region ? ' (région de ' + f.region + ')' : '') + '. Premiers jeux : ' + f.firstGames + ' (' + f.year + ').'],
     ['Combien mesure et pèse ' + f.name + ' ?', f.name + ' mesure ' + fr(f.height) + ' m et pèse ' + fr(f.weight) + ' kg.'],
   ];
 }
 // The clues of the Pokémon du jour (lib/daily-comparison.js compares exactly these).
 function dailyClues(f) {
   return [
-    ['Génération', 'Gen ' + f.gen + ' (' + f.region + ')'],
+    ['Génération', 'Gen ' + f.gen + ' (' + f.generationRegion + ')'],
     ['Type 1', f.types[0]],
     ['Type 2', f.types[1] || 'Aucun'],
     ['Habitat', f.habitat || '—'],

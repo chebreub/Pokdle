@@ -14,6 +14,8 @@ const pokedexSrc = read('src/script.04.jeu-pokedex.js');
 // The real type chart and multiplier, so the coverage is checked against the site's own rules.
 const typeChart = pokedexSrc.match(/const TYPE_EFFECTIVENESS = \{[\s\S]*?\n\};/)[0];
 const multiplier = pokedexSrc.match(/function attackMultiplier\(attackType, defenseType\) \{[\s\S]*?\n\}/)[0];
+const legendIds = vm.runInNewContext(read('src/script.01.core.js').match(/const POKEDEX_LEGENDARY_IDS = new Set\([^;]+;/)[0] + '\n' +
+  pokedexSrc.match(/const LEGENDARY_IDS = [^;]+;/)[0] + '\nArray.from(LEGENDARY_IDS)');
 
 const LIST = [
   { id: 6, name: 'Dracaufeu', gen: 1, type1: 'Feu', type2: 'Vol' },
@@ -41,7 +43,7 @@ function load(state) {
   const store = {};
   const ctx = {
     window: {}, document: { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [], body: { classList: { add() {}, remove() {} } } },
-    POKEMON_LIST: LIST, LEGENDARY_IDS: new Set([150]),
+    POKEMON_LIST: LIST, LEGENDARY_IDS: new Set(legendIds),
     teamBuilderState: state || Array.from({ length: 6 }, empty), teamBuilderActiveSlot: 0,
     getTeamBuilderPokemon: (slot) => LIST.find((p) => p.id === slot?.pokemonId) || null,
     createTeamBuilderEmptySlot: empty,
@@ -82,7 +84,8 @@ test('« Ton équipe face aux types »: a type 2 Pokémon fear is flagged, with 
   const sol = cov.rows.find((r) => r.type === 'Sol');
   assert.equal(sol.weak, 0, 'Vol is immune to Sol: not a weakness');
   const html = c.tbCoverageHtml(cov);
-  assert.match(html, /Craint surtout <b>(Roche et Électrik|Électrik et Roche)<\/b>/);
+  assert.match(html, /<b>Roche<\/b> \(2 Pokémon faibles\)/);
+  assert.match(html, /<b>Électrik<\/b> \(2 Pokémon faibles\)/);
   assert.equal((html.match(/class="tb-cov-cell"/g) || []).length, 18);
   assert.match(html, /<em class="is-bad">−2<\/em>/);
   // Under 2 Pokémon: a sentence, no empty table.
@@ -191,4 +194,26 @@ test('a drawn set: one attack of each of its types, one of another type, known m
   }
   // A Pokémon with almost nothing to learn still gets what it has.
   assert.deepEqual([...c.tbPickMoves([{ name: 'Trempette', types: [] }, { name: 'Métronome', types: [] }], draco, () => 0)].sort(), ['Métronome', 'Trempette']);
+});
+
+test('real 1025-species pool excludes the complete shared legendary category', async () => {
+  const c = load();
+  c.POKEMON_LIST = require('../lib/seo-pokemon').BASE;
+  const rules = { gens: [1,2,3,4,5,6,7,8,9], strong: false, noLegend: true };
+  const pool = await c.tbRandomPool(rules);
+  const ids = new Set(pool.map((p) => p.id));
+  for (const id of [494, 772, 773, 808, 809, 905, 1014, 1015, 1016, 1017]) assert.equal(ids.has(id), false, 'excluded ' + id);
+  for (const id of legendIds) assert.equal(ids.has(id), false, 'shared category ' + id);
+  for (const id of [6, 130, 248, 445, 908]) assert.equal(ids.has(id), true, 'ordinary Pokémon retained ' + id);
+  assert.equal((await c.tbRandomPool({ ...rules, noLegend: false })).length, 1025);
+});
+
+test('the weakness sentence gives each type its own count', () => {
+  const html = load().tbCoverageHtml({ size: 6, rows: [], strong: [], weak: [
+    { type: 'Sol', weak: 4 }, { type: 'Combat', weak: 3 }, { type: 'Eau', weak: 2 }, { type: 'Feu', weak: 2 },
+  ] });
+  for (const [type, count] of [['Sol', 4], ['Combat', 3], ['Eau', 2], ['Feu', 2]]) {
+    assert.ok(html.includes('<b>' + type + '</b> (' + count + ' Pokémon faibles)'), type);
+  }
+  assert.doesNotMatch(html, /ou plus/);
 });

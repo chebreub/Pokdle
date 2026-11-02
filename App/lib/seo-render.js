@@ -80,7 +80,7 @@ h3.gen{margin:18px 0 4px;font:600 1.05rem Fredoka,Nunito,system-ui,sans-serif}
 footer{max-width:960px;margin:0 auto;padding:24px 16px 40px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
 footer p{margin:4px 0}
 .support{display:inline-block;margin:6px 0 10px;padding:6px 14px;border:1px solid #f0c9a0;border-radius:999px;background:#fff1e0;color:#7a4210;font-weight:800;text-decoration:none}
-@media (max-width:640px){.hero{grid-template-columns:1fr;text-align:center;padding:20px 16px}.hero img{order:-1;width:140px;height:140px;margin:0 auto}.top nav{gap:10px;font-size:.9rem}}
+@media (max-width:640px){.hero{grid-template-columns:1fr;text-align:center;padding:20px 16px}.hero img{order:-1;width:140px;height:140px;margin:0 auto}.top{flex-wrap:wrap;gap:10px}.top nav{flex-wrap:wrap;gap:10px;font-size:.9rem}}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.chips .type{margin:0;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--soft)}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.tag{padding:4px 10px;border-radius:999px;background:#fff1c9;color:#5c4510;font-weight:900;font-size:.8rem}
 .facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:0;margin:0;list-style:none}.facts li{margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.facts small{display:block;color:var(--muted);font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}.facts b{font-size:1.02rem}
@@ -274,7 +274,7 @@ function renderPokemonPage(id) {
   const f = seoPokemon.facts(p);
   const ord = f.gen === 1 ? 're' : 'e';
   const tags = [f.legendary && 'Légendaire', f.mythical && 'Fabuleux', f.starter && 'Pokémon de départ'].filter(Boolean);
-  const facts = [['Numéro', 'n° ' + f.id], ['Génération', f.gen + ord + ' · ' + f.region], ['Taille', String(f.height).replace('.', ',') + ' m'], ['Poids', String(f.weight).replace('.', ',') + ' kg'],
+  const facts = [['Numéro', 'n° ' + f.id], ['Génération', f.gen + ord + (f.region ? ' · ' + f.region : '')], ['Taille', String(f.height).replace('.', ',') + ' m'], ['Poids', String(f.weight).replace('.', ',') + ' kg'],
     ['Couleur', f.color], ['Habitat', f.habitat], ['Stade', f.stage], ['Premiers jeux', f.firstGames + ' (' + f.year + ')']].filter(([, v]) => v);
   const weakRow = (label, list) => list.length ? '<div><b>' + label + '</b>' + list.map(typeChip).join('') + '</div>' : '';
   const max = 255;
@@ -298,7 +298,7 @@ function renderPokemonPage(id) {
     '<p class="ctas" style="margin-top:14px"><a class="cta alt" href="/?jeu=pokemon-pixelise">Pokémon pixelisé</a><a class="cta alt" href="/?jeu=devine-le-pokemon">Devine le Pokémon</a><a class="cta alt" href="/?jeu=cri-pokemon">Cri Pokémon</a></p>\n' +
     '<h2>Questions fréquentes</h2>\n<div class="panel faq">' + faq.map(([q, r]) => '<h3>' + esc(q) + '</h3><p>' + esc(r) + '</p>').join('') + '</div>\n' +
     '<h2>D’autres Pokémon de type ' + esc(f.types[0]) + '</h2>\n' + '<ul class="mons">' + f.sameType.map(o => '<li><a href="' + esc(seoPokemon.pokemonPath(o.id)) + '">' + monImg(o.id, 72) + '</a>' + monLink(o) + '<small>n° ' + o.id + '</small></li>').join('') + '</ul>\n' +
-    '<p class="pager"><span>' + (f.prev ? '← ' + monLink(f.prev) : '') + '</span><a href="/pokemon#gen-' + f.gen + '">Les Pokémon de ' + esc(f.region) + '</a><span>' + (f.next ? monLink(f.next) + ' →' : '') + '</span></p>';
+    '<p class="pager"><span>' + (f.prev ? '← ' + monLink(f.prev) : '') + '</span><a href="/pokemon#gen-' + f.gen + '">Les Pokémon de la génération ' + f.gen + '</a><span>' + (f.next ? monLink(f.next) + ' →' : '') + '</span></p>';
   const data = { '@context': 'https://schema.org', '@graph': [
     { '@type': 'WebPage', name: f.name + ' : types, faiblesses, taille et poids', url: SITE + f.path, inLanguage: 'fr', primaryImageOfPage: ARTWORK(f.id), description: seoPokemon.intro(f) },
     breadcrumb([['Pokédle', '/'], ['Pokémon', '/pokemon'], [f.name, f.path]]),
@@ -307,7 +307,7 @@ function renderPokemonPage(id) {
   const weakTitle = f.weak.x4.concat(f.weak.x2).slice(0, 3);
   return layout({
     title: f.name + ' (n° ' + f.id + ') : type ' + f.types.join('/') + ', faiblesses, taille et poids · Pokédle',
-    description: f.name + ', Pokémon n° ' + f.id + ' de type ' + f.types.join(' et ') + ' (' + f.gen + ord + ' génération, ' + f.region + ').' + (weakTitle.length ? ' Faible contre ' + weakTitle.join(', ') + '.' : '') + ' Taille, poids, stats et indices pour le deviner.',
+    description: f.name + ', Pokémon n° ' + f.id + ' de type ' + f.types.join(' et ') + ' (' + f.gen + ord + ' génération' + (f.region ? ', ' + f.region : '') + ').' + (weakTitle.length ? ' Faible contre ' + weakTitle.join(', ') + '.' : '') + ' Taille, poids, stats et indices pour le deviner.',
     path: f.path, body, data, image: ARTWORK(f.id), imageSize: [475, 475],
   });
 }
