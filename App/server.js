@@ -545,6 +545,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_challenge_blocks", "DELETE FROM player_challenge_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["player_friends", "DELETE FROM player_friends WHERE from_id = $1 OR to_id = $1", [id]],
     ["player_blocks", "DELETE FROM player_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
+    ["chat_suspensions", "DELETE FROM chat_suspensions WHERE account_id = $1", [id]],
     ["friend_messages", "DELETE FROM friend_messages WHERE from_id = $1 OR to_id = $1", [id]],
     ["friend_reports", "DELETE FROM friend_reports WHERE reporter_id = $1 OR reported_id = $1", [id]],
     ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
@@ -1580,13 +1581,14 @@ const challengesReady = pgPool ? authDbReady.then(() => challengeLib.ensureTable
 playerChallenges = pgPool ? challengeLib.createPlayerChallenges({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: challengesReady,
   pokemon: POKEMON_LIST, compare: require("./lib/daily-comparison").compareDaily,
   // Défis v2: a free message between friends only (playerFriends is set up just below), with the chat's guard.
-  friends: { areFriends: (a, b) => (typeof playerFriends !== "undefined" && playerFriends ? playerFriends.areFriends(a, b) : false) },
+  friends: { areFriends: (a, b) => playerFriends ? playerFriends.areFriends(a, b) : false,
+    block: (id, body) => playerFriends.block(id, body) },
   checkNote: require("./lib/friend-chat").checkBody,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 challengeLib.mountChallengeRoutes(app, { express, challenges: playerChallenges, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 // Amis (01/11/2026): both accept; the private chat between friends comes next.
 const friendLib = require("./lib/player-friends");
-const friendsReady = pgPool ? authDbReady.then(() => friendLib.ensureTables(pgPool)).then(() => true).catch((error) => {
+const friendsReady = pgPool ? challengesReady.then(() => friendLib.ensureTables(pgPool)).then(() => true).catch((error) => {
   console.warn("[amis] tables unavailable:", String(error.message || error).slice(0, 160));
   return false;
 }) : Promise.resolve(false);

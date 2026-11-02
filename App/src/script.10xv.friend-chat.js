@@ -12,6 +12,8 @@ var CHAT_ERRORS = {
   empty: 'Écris quelques mots avant d’envoyer.',
   limit: 'Doucement 🙂 Attends un peu avant d’envoyer d’autres messages.',
   rate_limited: 'Doucement 🙂 Attends un peu avant d’envoyer d’autres messages.',
+  discussion_unavailable: 'Cette discussion est suspendue. Tu peux toujours lire, signaler ou bloquer.',
+  no_messages: 'Il n’y a aucun message à signaler dans cette discussion.',
   not_friends: 'Vous n’êtes plus amis : la discussion est fermée.',
   login: 'Connecte-toi pour discuter avec tes amis.',
 };
@@ -63,6 +65,7 @@ function chatWindowHtml(pid, name) {
       '<button type="button" class="btn-ghost fr-danger" data-action="chatReport">🚩 Signaler</button>' +
       '<button type="button" class="btn-ghost fr-danger" data-action="chatBlock">⛔ Bloquer</button></div>' +
     '<div class="chat-msgs" id="chat-msgs" aria-live="polite">' + chatMessagesHtml() + '</div>' +
+    '<p class="chat-warn" id="chat-status" role="status"></p>' +
     '<p class="chat-warn" id="chat-warn" role="status"></p>' +
     '<div class="chat-form"><input id="chat-input" type="text" maxlength="' + CHAT_MAX + '" autocomplete="off" enterkeyhint="send" placeholder="Écris un message…" aria-label="Ton message">' +
       '<button type="button" class="btn-blue chat-send" data-action="chatSend" aria-label="Envoyer">➤</button></div>' +
@@ -87,27 +90,37 @@ function chatPoll() {
   clearTimeout(chatState.timer);
   if (!chatIsOpen()) { chatState.pid = null; chatRefresh(); return; }
   if (document.visibilityState === 'visible') {
-    chatGet('/api/chat/thread?pid=' + encodeURIComponent(chatState.pid) + '&after=' + chatLastId()).then(function (data) {
-      if (!chatIsOpen() || !data || !data.ok) return;
-      if (data.friends === false) { chatClosed(); return; }
+    var pid = chatState.pid;
+    chatGet('/api/chat/thread?pid=' + encodeURIComponent(pid) + '&after=' + chatLastId()).then(function (data) {
+      if (!chatIsOpen() || chatState.pid !== pid || !data || !data.ok) return;
       if (data.messages && data.messages.length) {
         var known = {};
         chatState.messages.forEach(function (m) { known[m.id] = true; });
         data.messages.forEach(function (m) { if (!known[m.id]) chatState.messages.push(m); });
         chatPaint(false);
       }
+      if (data.canSend === false || data.friends === false) chatClosed(data.friends === false ? 'not_friends' : 'discussion_unavailable');
     }).catch(function () {});
   }
   chatState.timer = setTimeout(chatPoll, 4000);
 }
-function chatClosed() {
+function chatClosed(reason) {
+  clearTimeout(chatState.timer);
+  var input = document.getElementById('chat-input');
+  var send = document.querySelector('#overlay-body .chat-send');
+  var status = document.getElementById('chat-status');
   var win = document.querySelector('#overlay-body .chat-win');
-  if (win) win.innerHTML = '<p class="chat-empty">' + escapeHtml(CHAT_ERRORS.not_friends) + '</p>';
+  if (win) win.classList.add('is-readonly');
+  if (input) input.disabled = true;
+  if (send) send.disabled = true;
+  if (status) status.textContent = CHAT_ERRORS[reason || 'not_friends'];
 }
+
 function openFriendChat(pid, name) {
   if (!window.__pokedleAuthed) { showToast(CHAT_ERRORS.login); return; }
   var friend = chatFriend(pid);
-  name = name || (friend && friend.username) || 'Ton ami';
+  name = name || (friend && friend.username) || (chatConv(pid) && chatConv(pid).username) || 'Ton ami';
+  clearTimeout(chatState.timer);
   chatState.pid = pid; chatState.name = name; chatState.messages = [];
   ensureOverlay('💬 Discussion', chatWindowHtml(pid, name));
   var overlay = document.getElementById('overlay-modal');
@@ -120,28 +133,30 @@ function openFriendChat(pid, name) {
     input.addEventListener('keydown', function (event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); chatSend(); } });
   }
   chatGet('/api/chat/thread?pid=' + encodeURIComponent(pid)).then(function (data) {
-    if (!chatIsOpen()) return;
+    if (!chatIsOpen() || chatState.pid !== pid) return;
     if (!data || !data.ok) { var b = document.getElementById('chat-msgs'); if (b) b.innerHTML = '<p class="chat-empty">La discussion n’a pas pu s’ouvrir. Réessaie dans un instant.</p>'; return; }
-    if (data.friends === false) { chatClosed(); return; }
     chatState.messages = data.messages || [];
     chatPaint(true);
     if (chatState.convs[pid]) { chatState.unread = Math.max(0, chatState.unread - (chatState.convs[pid].unread || 0)); chatState.convs[pid].unread = 0; }
     if (typeof renderInboxUi === 'function') renderInboxUi();
-    chatState.timer = setTimeout(chatPoll, 4000);
+    if (data.canSend === false || data.friends === false) chatClosed(data.friends === false ? 'not_friends' : 'discussion_unavailable');
+    else chatState.timer = setTimeout(chatPoll, 4000);
   }).catch(function () {});
 }
 function chatSend() {
   var input = document.getElementById('chat-input');
   var warn = document.getElementById('chat-warn');
-  if (!input || chatState.busy || !chatState.pid) return;
+  if (!input || input.disabled || chatState.busy || !chatState.pid) return;
   var text = input.value.trim();
   if (!text) { if (warn) warn.textContent = CHAT_ERRORS.empty; return; }
   chatState.busy = true;
-  chatPost('/api/chat/send', { pid: chatState.pid, body: text }).then(function (data) {
+  var pid = chatState.pid;
+  chatPost('/api/chat/send', { pid: pid, body: text }).then(function (data) {
     chatState.busy = false;
+    if (chatState.pid !== pid || !chatIsOpen()) return;
     if (!data || !data.ok) {
       if (warn) warn.textContent = CHAT_ERRORS[data && data.error] || 'Envoi impossible pour le moment. Réessaie dans un instant.';
-      if (data && data.error === 'not_friends') chatClosed();
+      if (data && (data.error === 'not_friends' || data.error === 'discussion_unavailable')) chatClosed(data.error);
       return;
     }
     if (warn) warn.textContent = '';
@@ -183,7 +198,7 @@ function chatBlock() {
   var warn = document.getElementById('chat-warn');
   var menu = document.querySelector('#overlay-body .chat-menu');
   if (menu) menu.hidden = true;
-  if (warn) warn.innerHTML = '<span class="chat-confirm">Bloquer ' + escapeHtml(chatState.name) + ' ? Vous ne serez plus amis et il ne pourra plus t’écrire ni te redemander. ' +
+  if (warn) warn.innerHTML = '<span class="chat-confirm">Bloquer ' + escapeHtml(chatState.name) + ' ? Vous ne serez plus amis et il ne pourra plus t’écrire, te défier ni te redemander. ' +
     '<button type="button" class="btn-ghost fr-danger" data-action="chatBlockNow">⛔ Bloquer</button>' +
     '<button type="button" class="fr-card-link" data-action="chatCancelConfirm">Annuler</button></span>';
 }

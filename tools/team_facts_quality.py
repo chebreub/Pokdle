@@ -47,7 +47,8 @@ def main():
                 for row in weak:
                     assert f'{row["type"]} ({row["weak"]} Pokémon faibles)' in verdict, verdict
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'), 'Team overflow'
-                page.locator('#team-builder-summary .tb-cov').scroll_into_view_if_needed()
+                # The summary may be redrawn while pictures load: scroll to whatever copy is there now.
+                page.evaluate('document.querySelector("#team-builder-summary .tb-cov")?.scrollIntoView({block: "center"})')
                 page.screenshot(path=str(OUT / f'{width}-team-weaknesses.png'))
                 for slug, expected in [('meltan','Pokémon GO (2018)'), ('melmetal','Pokémon GO (2018)'), ('ogerpon','Le Masque Turquoise (2023)'), ('pechaminus','épilogue')]:
                     response = page.goto(base + '/pokemon/' + slug, wait_until='domcontentloaded')

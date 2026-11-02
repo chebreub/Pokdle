@@ -1578,3 +1578,6 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 /* « Défi ami » : its Pokémon list was cut by the card (01/11/2026). */
 #pokdle-app #challenge-panel {overflow:visible!important;}
 #pokdle-app #challenge-panel:focus-within {position:relative;z-index:40;}
+
+/* Closed conversations keep reporting visible, without an unusable composer. */
+.chat-win.is-readonly .chat-form,.chat-win.is-readonly #chat-count {display:none;}

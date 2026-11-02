@@ -100,21 +100,21 @@ test('PostgreSQL: send, beat (strictly), refuse, stop a player, turn off, limits
     await duels.seen('A', [forA.id]);
     assert.equal((await duels.list('A')).challenges[0].seen, true);
 
-    // Refuse one, then stop this player: nothing more from Kayan, until challenges are turned back on.
+    // Refuse one, then stop this player: nothing more from Kayan, even when challenges are turned back on.
     const quiz = await duels.create('A', { pid: B, mode: 'quiz', phrase: 2 });
     assert.deepEqual(await duels.decline('B', quiz.id), { ok: true });
     assert.deepEqual(await duels.decline('A', quiz.id), { ok: false }, 'only the challenged player refuses');
     assert.deepEqual(await duels.block('B', quiz.id), { ok: true });
     assert.deepEqual(await duels.create('A', { pid: B, mode: 'quiz', phrase: 0 }), { ok: false, error: 'refused' });
     assert.deepEqual(await duels.setAccepting('B', true), { ok: true, accepting: true });
-    assert.equal((await duels.create('A', { pid: B, mode: 'quiz', phrase: 0 })).ok, true);
+    assert.equal((await duels.create('A', { pid: B, mode: 'quiz', phrase: 0 })).error, 'refused');
     await duels.setAccepting('C', false);
     assert.deepEqual(await duels.create('A', { pid: C, mode: 'quiz', phrase: 0 }), { ok: false, error: 'refused' });
     assert.equal((await duels.list('C')).accepting, false);
 
     // Five a day; a challenge not beaten in 7 days ends, and nothing stays past 30 days.
     await duels.setAccepting('C', true);
-    await db.query("INSERT INTO player_challenges(from_id, to_id, mode, target, expires_at) SELECT 'A', 'C', 'quiz', 12, now() + interval '7 days' FROM generate_series(1, 2)");
+    await db.query("INSERT INTO player_challenges(from_id, to_id, mode, target, expires_at) SELECT 'A', 'C', 'quiz', 12, now() + interval '7 days' FROM generate_series(1, 3)");
     assert.equal((await duels.options('A')).left, 0);
     assert.deepEqual(await duels.create('A', { pid: C, mode: 'higherlower', phrase: 0 }), { ok: false, error: 'limit' });
     await db.query("UPDATE player_challenges SET expires_at = now() - interval '1 minute' WHERE to_id = 'C'");

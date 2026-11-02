@@ -40,6 +40,7 @@ const PER_DAY = 5;
 // Défis v2: up to 20 a day when they go to friends (still 5 to other players), a duration to
 // choose, a free message between friends, and « 📅 Du jour » (fewer tries at today's Pokémon).
 const PER_DAY_FRIENDS = 20;
+const safety = require("./social-safety");
 const DAY_CHOICES = Object.freeze([1, 3, 7]);
 const NOTE_MAX = 100;
 const DAILY = "jour";
@@ -52,6 +53,7 @@ const ALL = "*";
 const PARIS_DAY_START = "(date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')";
 
 async function ensureTables(db) {
+  await safety.ensureTables(db);
   await db.query(`CREATE TABLE IF NOT EXISTS player_challenges (
     id BIGSERIAL PRIMARY KEY, from_id TEXT NOT NULL, to_id TEXT NOT NULL, mode TEXT NOT NULL,
     target INTEGER NOT NULL, phrase SMALLINT NOT NULL DEFAULT 0, best INTEGER,
@@ -60,10 +62,6 @@ async function ensureTables(db) {
     seen_to BOOLEAN NOT NULL DEFAULT false, seen_from BOOLEAN NOT NULL DEFAULT true)`);
   await db.query("CREATE INDEX IF NOT EXISTS player_challenges_to ON player_challenges(to_id, status)");
   await db.query("CREATE INDEX IF NOT EXISTS player_challenges_from ON player_challenges(from_id, created_at)");
-  // blocked_id '*' : this player takes no challenges at all.
-  await db.query(`CREATE TABLE IF NOT EXISTS player_challenge_blocks (
-    account_id TEXT NOT NULL, blocked_id TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (account_id, blocked_id))`);
   // « Trouve ce Pokémon » : the hidden Pokémon and the tries (its number of tries is the target).
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS secret_id INTEGER");
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS guesses JSONB NOT NULL DEFAULT '[]'::jsonb");
@@ -141,6 +139,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     } else target = Number((await db.query("SELECT score FROM scores WHERE discord_id = $1 AND mode = $2", [from, mode])).rows[0]?.score) || 0;
     if (target <= 0) return { ok: false, error: daily ? "no_daily" : "no_record" };
     if ((await db.query("SELECT 1 FROM player_challenge_blocks WHERE account_id = $1 AND blocked_id IN ($2, $3) LIMIT 1", [to, from, ALL])).rowCount) return { ok: false, error: "refused" };
+    if (await safety.blockedEither(db, from, to)) return { ok: false, error: "refused" };
     // « Du jour » to a player who already played today's Pokémon would be decided at once.
     if (daily && ["won", "abandoned"].includes((await dailyTries(to))?.status)) return { ok: false, error: "daily_done" };
     const friend = await isFriend(from, to);
@@ -148,6 +147,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     let message = null;
     if (note != null && String(note).trim()) {
       if (!friend) return { ok: false, error: "note_friends" };
+      if (!await safety.discussionAllowed(db, from, to)) return { ok: false, error: "discussion_unavailable" };
       if ([...String(note).trim()].length > NOTE_MAX) return { ok: false, error: "note" };
       const checked = checkNote ? checkNote(note) : { body: String(note).trim() };
       if (checked.error) return { ok: false, error: checked.error === "contact" ? "note_contact" : "note" };
@@ -336,17 +336,18 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     const id = String(accountId);
     const from = (await db.query("SELECT from_id FROM player_challenges WHERE id = $2 AND to_id = $1", [id, Number(challengeId)])).rows[0]?.from_id;
     if (!from) return { ok: false };
-    await db.query("INSERT INTO player_challenge_blocks(account_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, from]);
+    if (friends && friends.block) await friends.block(id, { pid: playerPid(from) });
+    else await db.query("INSERT INTO player_blocks(account_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, from]);
     await db.query(`UPDATE player_challenges SET status = 'declined', resolved_at = now(), seen_from = false
       WHERE to_id = $1 AND from_id = $2 AND status = 'open'`, [id, from]);
     return { ok: true };
   }
 
-  // Challenges on or off; turning them back on also forgets the players stopped one by one.
+  // The global switch never clears individual blocks.
   async function setAccepting(accountId, on) {
     await ready;
     const id = String(accountId);
-    if (on) await db.query("DELETE FROM player_challenge_blocks WHERE account_id = $1", [id]);
+    if (on) await db.query("DELETE FROM player_challenge_blocks WHERE account_id = $1 AND blocked_id = $2", [id, ALL]);
     else await db.query("INSERT INTO player_challenge_blocks(account_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, ALL]);
     return { ok: true, accepting: Boolean(on) };
   }

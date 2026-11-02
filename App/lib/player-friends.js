@@ -4,12 +4,14 @@
 // met (rankings, Party Room, a challenge). The friends list is what the private chat (next PR) will
 // use: only friends can write to each other. A request can be refused, a player blocked (no request
 // from them any more, and the friendship ends). A request with no answer is erased after 30 days.
+const safety = require("./social-safety");
 const MAX_FRIENDS = 50;
 const REQUESTS_PER_DAY = 20;
 const KEEP_PENDING_DAYS = 30;
 const PARIS_DAY_START = "(date_trunc('day', timezone('Europe/Paris', now())) AT TIME ZONE 'Europe/Paris')";
 
 async function ensureTables(db) {
+  await safety.ensureTables(db);
   // status: 'pending' (from_id asked to_id), 'accepted', or 'declined' (kept quiet: the asker is not
   // told, and is not notified again by a new request). seen: the receiver saw a pending request, or
   // the asker saw that it was accepted.
@@ -20,10 +22,11 @@ async function ensureTables(db) {
   await db.query("CREATE UNIQUE INDEX IF NOT EXISTS player_friends_pair ON player_friends (LEAST(from_id, to_id), GREATEST(from_id, to_id))");
   await db.query("CREATE INDEX IF NOT EXISTS player_friends_to ON player_friends(to_id, status)");
   await db.query("CREATE INDEX IF NOT EXISTS player_friends_from ON player_friends(from_id, status)");
-  // A blocked player can no longer ask this one to be friends (nor write, with the chat).
-  await db.query(`CREATE TABLE IF NOT EXISTS player_blocks (
-    account_id TEXT NOT NULL, blocked_id TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (account_id, blocked_id))`);
+  // Existing challenge blocks also end an old friendship when upgrading.
+  await db.query(`DELETE FROM player_friends f WHERE EXISTS (
+    SELECT 1 FROM player_challenge_blocks b WHERE b.blocked_id <> '*'
+      AND LEAST(b.account_id, b.blocked_id) = LEAST(f.from_id, f.to_id)
+      AND GREATEST(b.account_id, b.blocked_id) = GREATEST(f.from_id, f.to_id))`);
 }
 
 const iso = (column) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
@@ -49,8 +52,7 @@ function createPlayerFriends({ db, accountOfPid, playerPid, push = async () => 0
     "SELECT id, from_id, to_id, status FROM player_friends WHERE LEAST(from_id, to_id) = LEAST($1::text, $2::text) AND GREATEST(from_id, to_id) = GREATEST($1::text, $2::text)", [a, b])).rows[0] || null;
   const friendCount = async (id, client = db) => Number((await client.query(
     "SELECT count(*)::int AS n FROM player_friends WHERE status = 'accepted' AND (from_id = $1 OR to_id = $1)", [id])).rows[0].n);
-  const blockedEither = async (a, b) => (await db.query(
-    "SELECT 1 FROM player_blocks WHERE (account_id = $1 AND blocked_id = $2) OR (account_id = $2 AND blocked_id = $1)", [a, b])).rowCount > 0;
+  const blockedEither = (a, b) => safety.blockedEither(db, a, b);
 
   async function purge() {
     await db.query(`DELETE FROM player_friends WHERE status IN ('pending', 'declined') AND created_at < now() - make_interval(days => $1)`, [KEEP_PENDING_DAYS]);
@@ -79,7 +81,9 @@ function createPlayerFriends({ db, accountOfPid, playerPid, push = async () => 0
       FROM player_friends f JOIN users o ON o.discord_id = CASE WHEN f.from_id = $1 THEN f.to_id ELSE f.from_id END
       WHERE (f.from_id = $1 OR f.to_id = $1) ORDER BY COALESCE(f.accepted_at, f.created_at) DESC LIMIT 300`, [me])).rows;
     const blocked = (await db.query(`SELECT b.blocked_id AS o_id, u.username AS o_name, u.partner_id AS o_partner, u.xp AS o_xp
-      FROM player_blocks b JOIN users u ON u.discord_id = b.blocked_id WHERE b.account_id = $1 ORDER BY b.created_at DESC LIMIT 100`, [me])).rows;
+      FROM (SELECT account_id, blocked_id, max(created_at) AS created_at FROM (
+        SELECT * FROM player_blocks UNION ALL SELECT * FROM player_challenge_blocks WHERE blocked_id <> '*'
+      ) all_blocks GROUP BY account_id, blocked_id) b JOIN users u ON u.discord_id = b.blocked_id WHERE b.account_id = $1 ORDER BY b.created_at DESC LIMIT 100`, [me])).rows;
     const friends = [], incoming = [], outgoing = [], news = [];
     for (const row of rows) {
       const who = person(row, "o_");
@@ -122,6 +126,7 @@ function createPlayerFriends({ db, accountOfPid, playerPid, push = async () => 0
     if (!Number.isSafeInteger(rowId) || rowId <= 0) return { ok: false, error: "unknown" };
     const row = (await db.query("SELECT id, from_id, to_id, status FROM player_friends WHERE id = $1 AND to_id = $2 AND status = 'pending'", [rowId, me])).rows[0];
     if (!row) return { ok: false, error: "unknown" };
+    if (await blockedEither(me, row.from_id)) return { ok: false, error: "refused" };
     if (accept === false) {
       await db.query("UPDATE player_friends SET status = 'declined', seen = true WHERE id = $1", [rowId]);
       return { ok: true, relation: "none" };
@@ -140,7 +145,7 @@ function createPlayerFriends({ db, accountOfPid, playerPid, push = async () => 0
     const t = await target(accountId, pid);
     if (t.error) return { ok: false, error: t.error };
     await db.query(`DELETE FROM player_friends WHERE LEAST(from_id, to_id) = LEAST($1::text, $2::text) AND GREATEST(from_id, to_id) = GREATEST($1::text, $2::text)
-      AND (status = 'accepted' OR (status = 'pending' AND from_id = $1))`, [t.me, t.other]);
+      AND (status = 'accepted' OR (status IN ('pending', 'declined') AND from_id = $1))`, [t.me, t.other]);
     return { ok: true, relation: "none" };
   }
 
@@ -158,6 +163,7 @@ function createPlayerFriends({ db, accountOfPid, playerPid, push = async () => 0
     const t = await target(accountId, pid);
     if (t.error) return { ok: false, error: t.error };
     await db.query("DELETE FROM player_blocks WHERE account_id = $1 AND blocked_id = $2", [t.me, t.other]);
+    await db.query("DELETE FROM player_challenge_blocks WHERE account_id = $1 AND blocked_id = $2", [t.me, t.other]);
     return { ok: true, relation: "none" };
   }
 
@@ -172,7 +178,7 @@ function createPlayerFriends({ db, accountOfPid, playerPid, push = async () => 0
   async function areFriends(a, b) {
     await ready;
     const row = await pairRow(String(a), String(b));
-    return Boolean(row && row.status === "accepted");
+    return Boolean(row && row.status === "accepted" && !await blockedEither(a, b));
   }
 
   return { status, list, request, respond, remove, block, unblock, seen, areFriends };
