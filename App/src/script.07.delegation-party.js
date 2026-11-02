@@ -40,7 +40,7 @@ function filterChallengeAC() {
       <img src="${getPokemonSprite(p)}" alt="${p.name}" loading="lazy" data-fallback="${fallbackSprite}" />
       <div>
         <div class="ac-name">${p.name}</div>
-        <div class="ac-sub">Gen ${p.gen} ? ${p.type1}${p.type2 ? ` / ${p.type2}` : ""}</div>
+        <div class="ac-sub">Gen ${p.gen} · ${p.type1}${p.type2 ? ` / ${p.type2}` : ""}</div>
       </div>
     `;
 

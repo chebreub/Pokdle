@@ -3,8 +3,9 @@
 // to beat a record of theirs in an arcade game (« Bats ma série au Higher or Lower : 23 »). The
 // target comes from the scores the server keeps, and the challenge is won by a result the server
 // records for that game afterwards, never by anything the browser claims about the challenge.
-// No free text between players: the challenger picks one of a few ready-made phrases. A player
-// can refuse a challenge, stop one player's challenges, or turn challenges off. Kept 30 days.
+// The challenger picks one of a few ready-made phrases (a free message only between friends, since
+// Défis v2). A player can refuse a challenge, stop one player's challenges, or turn challenges off.
+// Kept 30 days.
 // « Trouve ce Pokémon » : the challenger picks a Pokémon, kept on the server only; the other player
 // guesses it with the clues of the Pokémon du jour, compared by the server, in 6, 8 or 10 tries.
 const CHALLENGE_MODES = Object.freeze({
@@ -13,16 +14,38 @@ const CHALLENGE_MODES = Object.freeze({
   poids: { label: "Duel de poids", kind: "serie" },
   intrus: { label: "Intrus", kind: "serie" },
   typecombo: { label: "Combo de types", kind: "record" },
-  quiz: { label: "Quiz", kind: "record" },
+  quiz: { label: "Quiz", kind: "record", max: 15 },
   speedrun: { label: "Speedrun Pokédex", kind: "record" },
   draft_all: { label: "Draft Score Attack", kind: "record" },
+  // Défis v2 (01/11/2026): the Draft record of one generation (the server keeps draft_1…draft_9).
+  ...Object.fromEntries(Array.from({ length: 9 }, (_, i) => ["draft_" + (i + 1), { label: "Draft Gen " + (i + 1), kind: "record" }])),
+  // Défis v2: 7 more games (15 in all). The guessing series count on a series of 10 mysteries.
+  party: { label: "Marathon mini-jeux", kind: "record", max: 20 },
+  pixel10: { label: "Pokémon pixelisé (10)", kind: "record", max: 10 },
+  silhouette10: { label: "Zoom progressif (10)", kind: "record", max: 10 },
+  cry10: { label: "Cri (10)", kind: "record", max: 10 },
+  description10: { label: "Description Pokédex (10)", kind: "record", max: 10 },
+  shiny: { label: "Shiny ou normal", kind: "record" },
+  petitbac: { label: "Petit Bac", kind: "record", max: 8 },
 });
+// A target at the game's maximum (10 / 10, 15 / 15…) cannot be beaten: matching it wins.
+const NO_MAX = 1000000;
+const needOf = (mode) => CHALLENGE_MODES[mode]?.max || NO_MAX;
 // New phrases go at the end: a challenge keeps the number of its phrase.
 const PHRASES = Object.freeze(["Tu tiendras pas 😏", "Facile pour toi ?", "Revanche ? 🔥", "Bonne chance 🍀", "À toi de jouer !", "Tu le trouveras jamais 😏"]);
 const MYSTERY = "pokemon";
 const MYSTERY_LABEL = "Pokémon mystère";
 const MYSTERY_ATTEMPTS = Object.freeze([6, 8, 10]);
 const PER_DAY = 5;
+// Défis v2: up to 20 a day when they go to friends (still 5 to other players), a duration to
+// choose, a free message between friends, and « 📅 Du jour » (fewer tries at today's Pokémon).
+const PER_DAY_FRIENDS = 20;
+const DAY_CHOICES = Object.freeze([1, 3, 7]);
+const NOTE_MAX = 100;
+const DAILY = "jour";
+const DAILY_LABEL = "Pokémon du jour";
+const PARIS_TODAY = "timezone('Europe/Paris', now())::date";
+const PARIS_MIDNIGHT = "((date_trunc('day', timezone('Europe/Paris', now())) + interval '1 day') AT TIME ZONE 'Europe/Paris')";
 const DAYS = 7;
 const KEEP_DAYS = 30;
 const ALL = "*";
@@ -44,11 +67,29 @@ async function ensureTables(db) {
   // « Trouve ce Pokémon » : the hidden Pokémon and the tries (its number of tries is the target).
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS secret_id INTEGER");
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS guesses JSONB NOT NULL DEFAULT '[]'::jsonb");
+  // Défis v2: a message between friends, and the day of a « Du jour » challenge.
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS note TEXT");
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS day DATE");
 }
 
 const verb = (mode) => (CHALLENGE_MODES[mode]?.kind === "serie" ? "série" : "record");
 
-function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () => 0, ready = Promise.resolve(true), log = console, pokemon = [], compare = null }) {
+// friends.areFriends (lib/player-friends.js) and checkNote (the chat's filter: no links nor numbers).
+function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () => 0, ready = Promise.resolve(true), log = console, pokemon = [], compare = null,
+  friends = null, checkNote = null }) {
+  const isFriend = async (a, b) => { try { return Boolean(friends && await friends.areFriends(a, b)); } catch (_error) { return false; } };
+  // Today's challenges sent, and how many went to players who are not friends.
+  async function sentToday(from) {
+    const rows = (await db.query(`SELECT to_id FROM player_challenges WHERE from_id = $1 AND created_at >= ${PARIS_DAY_START}`, [from])).rows;
+    let others = 0;
+    for (const row of rows) if (!await isFriend(from, row.to_id)) others += 1;
+    return { total: rows.length, others };
+  }
+  const dailyTries = async (id) => {
+    const row = (await db.query(`SELECT status, jsonb_array_length(guessed) AS tries FROM daily_plays WHERE account_id = $1 AND day = ${PARIS_TODAY}
+      ORDER BY (status = 'won') DESC LIMIT 1`, [String(id)]).catch(() => ({ rows: [] }))).rows[0];
+    return row || null;
+  };
   const byId = new Map(pokemon.map((p) => [Number(p.id), p]));
   const nameOf = async (id) => (await db.query("SELECT username FROM users WHERE discord_id = $1", [String(id)])).rows[0]?.username || "Un dresseur";
   const tell = (to, payload) => Promise.resolve(push(String(to), payload)).catch((error) => log.warn("[defis] push:", String(error?.message || error).slice(0, 120)));
@@ -58,22 +99,29 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     const id = String(accountId);
     const records = (await db.query("SELECT mode, score FROM scores WHERE discord_id = $1 AND mode = ANY($2) AND score > 0",
       [id, Object.keys(CHALLENGE_MODES)])).rows;
-    const sent = (await db.query(`SELECT count(*)::int AS n FROM player_challenges WHERE from_id = $1 AND created_at >= ${PARIS_DAY_START}`, [id])).rows[0].n;
+    const sent = await sentToday(id);
     const off = (await db.query("SELECT 1 FROM player_challenge_blocks WHERE account_id = $1 AND blocked_id = $2", [id, ALL])).rowCount > 0;
     const byMode = Object.fromEntries(records.map((row) => [row.mode, Number(row.score)]));
+    const today = await dailyTries(id);
     return {
-      ok: true, pid: playerPid(id), accepting: !off, left: Math.max(0, PER_DAY - sent), perDay: PER_DAY, days: DAYS, phrases: PHRASES,
+      ok: true, pid: playerPid(id), accepting: !off,
+      left: Math.max(0, Math.min(PER_DAY - sent.others, PER_DAY_FRIENDS - sent.total)), leftFriends: Math.max(0, PER_DAY_FRIENDS - sent.total),
+      perDay: PER_DAY, perDayFriends: PER_DAY_FRIENDS, days: DAYS, dayChoices: DAY_CHOICES, noteMax: NOTE_MAX, phrases: PHRASES,
       mystery: compare ? { attempts: MYSTERY_ATTEMPTS } : null,
-      modes: Object.entries(CHALLENGE_MODES).map(([mode, cfg]) => ({ mode, label: cfg.label, kind: cfg.kind, record: byMode[mode] || 0 })),
+      daily: today && today.status === "won" ? { tries: Number(today.tries) } : null,
+      modes: Object.entries(CHALLENGE_MODES).map(([mode, cfg]) => ({ mode, label: cfg.label, kind: cfg.kind, record: byMode[mode] || 0, ...(cfg.max ? { max: cfg.max } : {}) })),
     };
   }
 
-  async function create(fromId, { pid, mode, phrase, pokemonId, attempts } = {}) {
+  async function create(fromId, { pid, mode, phrase, pokemonId, attempts, days, note } = {}) {
     await ready;
     const from = String(fromId);
     const mystery = mode === MYSTERY;
-    const cfg = mystery ? null : CHALLENGE_MODES[mode];
-    if (!mystery && !cfg) return { ok: false, error: "mode" };
+    const daily = mode === DAILY;
+    const cfg = mystery || daily ? null : CHALLENGE_MODES[mode];
+    if (!mystery && !daily && !cfg) return { ok: false, error: "mode" };
+    const length = days == null ? DAYS : Number(days);
+    if (!DAY_CHOICES.includes(length)) return { ok: false, error: "days" };
     const said = Number(phrase);
     if (!Number.isInteger(said) || said < 0 || said >= PHRASES.length) return { ok: false, error: "phrase" };
     // The hidden Pokémon: one of the 1025, never a form, and a number of tries from the list.
@@ -83,18 +131,39 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     const to = await accountOfPid(db, String(pid || ""));
     if (!to) return { ok: false, error: "unknown" };
     if (to === from) return { ok: false, error: "self" };
-    const target = mystery ? Number(attempts)
-      : Number((await db.query("SELECT score FROM scores WHERE discord_id = $1 AND mode = $2", [from, mode])).rows[0]?.score) || 0;
-    if (target <= 0) return { ok: false, error: "no_record" };
+    let target;
+    if (mystery) target = Number(attempts);
+    else if (daily) {
+      // « Du jour » : fewer tries than mine at today's Pokémon (found today).
+      const today = await dailyTries(from);
+      if (!today || today.status !== "won") return { ok: false, error: "no_daily" };
+      target = Number(today.tries);
+    } else target = Number((await db.query("SELECT score FROM scores WHERE discord_id = $1 AND mode = $2", [from, mode])).rows[0]?.score) || 0;
+    if (target <= 0) return { ok: false, error: daily ? "no_daily" : "no_record" };
     if ((await db.query("SELECT 1 FROM player_challenge_blocks WHERE account_id = $1 AND blocked_id IN ($2, $3) LIMIT 1", [to, from, ALL])).rowCount) return { ok: false, error: "refused" };
-    const sent = (await db.query(`SELECT count(*)::int AS n FROM player_challenges WHERE from_id = $1 AND created_at >= ${PARIS_DAY_START}`, [from])).rows[0].n;
-    if (sent >= PER_DAY) return { ok: false, error: "limit" };
+    // « Du jour » to a player who already played today's Pokémon would be decided at once.
+    if (daily && ["won", "abandoned"].includes((await dailyTries(to))?.status)) return { ok: false, error: "daily_done" };
+    const friend = await isFriend(from, to);
+    // A free message only between friends, with the chat's guard (no links, numbers, other apps).
+    let message = null;
+    if (note != null && String(note).trim()) {
+      if (!friend) return { ok: false, error: "note_friends" };
+      if ([...String(note).trim()].length > NOTE_MAX) return { ok: false, error: "note" };
+      const checked = checkNote ? checkNote(note) : { body: String(note).trim() };
+      if (checked.error) return { ok: false, error: checked.error === "contact" ? "note_contact" : "note" };
+      message = checked.body;
+    }
+    const sent = await sentToday(from);
+    if (sent.total >= PER_DAY_FRIENDS || (!friend && sent.others >= PER_DAY)) return { ok: false, error: "limit" };
     const open = (await db.query("SELECT 1 FROM player_challenges WHERE from_id = $1 AND to_id = $2 AND mode = $3 AND status = 'open' AND expires_at > now()", [from, to, mode])).rowCount;
     if (open) return { ok: false, error: "already" };
-    const row = (await db.query(`INSERT INTO player_challenges(from_id, to_id, mode, target, phrase, expires_at, secret_id)
-      VALUES ($1, $2, $3, $4, $5, now() + make_interval(days => $6), $7) RETURNING id`, [from, to, mode, target, said, DAYS, secret ? secret.id : null])).rows[0];
+    // « Du jour » ends at midnight in Paris (always sooner than a day from now).
+    const expires = daily ? `LEAST(${PARIS_MIDNIGHT}, now() + make_interval(days => $6))` : "now() + make_interval(days => $6)";
+    const row = (await db.query(`INSERT INTO player_challenges(from_id, to_id, mode, target, phrase, expires_at, secret_id, note, day)
+      VALUES ($1, $2, $3, $4, $5, ${expires}, $7, $8, ${daily ? PARIS_TODAY : "NULL"}) RETURNING id`, [from, to, mode, target, said, length, secret ? secret.id : null, message])).rows[0];
     const name = await nameOf(from);
-    tell(to, { title: `⚔️ ${name} te défie`, body: (mystery ? `Trouve son Pokémon mystère en ${target} essais.` : `Bats sa ${verb(mode)} au ${cfg.label} : ${target}.`) + ` « ${PHRASES[said]} »`, url: "/?defis=1", tag: "pokedle-defi" });
+    const what = mystery ? `Trouve son Pokémon mystère en ${target} essais.` : daily ? `Trouve le Pokémon du jour en moins de ${target} essais, aujourd’hui.` : `Bats sa ${verb(mode)} au ${cfg.label} : ${target}.`;
+    tell(to, { title: `⚔️ ${name} te défie`, body: what + ` « ${message || PHRASES[said]} »`, url: "/?defis=1", tag: "pokedle-defi" });
     return { ok: true, id: Number(row.id), target };
   }
 
@@ -105,12 +174,13 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     await ready;
     const n = Math.floor(Number(score));
     if (!Number.isFinite(n) || n <= 0) return [];
+    const beats = "GREATEST(COALESCE(best, 0), $3) >= LEAST(target + 1, $4)";
     const rows = (await db.query(`UPDATE player_challenges SET best = GREATEST(COALESCE(best, 0), $3),
-        status = CASE WHEN GREATEST(COALESCE(best, 0), $3) > target THEN 'won' ELSE status END,
-        resolved_at = CASE WHEN GREATEST(COALESCE(best, 0), $3) > target THEN now() ELSE resolved_at END,
-        seen_from = CASE WHEN GREATEST(COALESCE(best, 0), $3) > target THEN false ELSE seen_from END
+        status = CASE WHEN ${beats} THEN 'won' ELSE status END,
+        resolved_at = CASE WHEN ${beats} THEN now() ELSE resolved_at END,
+        seen_from = CASE WHEN ${beats} THEN false ELSE seen_from END
       WHERE to_id = $1 AND mode = $2 AND status = 'open' AND expires_at > now()
-      RETURNING id, from_id, target, best, status`, [String(accountId), mode, n])).rows;
+      RETURNING id, from_id, target, best, status`, [String(accountId), mode, n, needOf(mode)])).rows;
     const won = rows.filter((row) => row.status === "won");
     if (won.length) {
       const name = await nameOf(accountId);
@@ -119,14 +189,32 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     return rows.map((row) => ({ id: Number(row.id), target: Number(row.target), best: Number(row.best), won: row.status === "won" }));
   }
 
+  // « Du jour » : decided by the day's play of the challenged player, as soon as one of the two looks.
+  async function settleDaily(id) {
+    const rows = (await db.query(`SELECT c.id, c.from_id, c.to_id, c.target, p.status, p.tries FROM player_challenges c
+      JOIN LATERAL (SELECT status, jsonb_array_length(guessed) AS tries FROM daily_plays d WHERE d.account_id = c.to_id AND d.day = c.day
+        AND d.status IN ('won', 'abandoned') ORDER BY (d.status = 'won') DESC, jsonb_array_length(d.guessed) LIMIT 1) p ON true
+      WHERE c.mode = $2 AND c.status = 'open' AND (c.from_id = $1 OR c.to_id = $1)`, [id, DAILY]).catch(() => ({ rows: [] }))).rows;
+    for (const row of rows) {
+      const won = row.status === "won" && Number(row.tries) < Number(row.target);
+      const done = (await db.query(`UPDATE player_challenges SET status = $2, best = $3, resolved_at = now(), seen_from = false
+        WHERE id = $1 AND status = 'open' RETURNING id`, [row.id, won ? "won" : "lost", row.status === "won" ? Number(row.tries) : null])).rowCount;
+      if (done && won) {
+        const name = await nameOf(row.to_id);
+        tell(row.from_id, { title: `🏆 ${name} a fait mieux que toi`, body: `Pokémon du jour en ${row.tries} essais contre ${row.target}. Revanche demain ?`, url: "/?defis=1", tag: "pokedle-defi" });
+      }
+    }
+  }
+
   async function list(accountId) {
     await ready;
     const id = String(accountId);
+    await settleDaily(id);
     await db.query(`UPDATE player_challenges SET status = 'expired', resolved_at = now(), seen_from = false
       WHERE status = 'open' AND expires_at <= now() AND (from_id = $1 OR to_id = $1)`, [id]);
     await db.query(`DELETE FROM player_challenges WHERE created_at < now() - make_interval(days => $1)`, [KEEP_DAYS]);
     const rows = (await db.query(`SELECT c.id, c.from_id, c.to_id, c.mode, c.target, c.phrase, c.best, c.status, c.seen_to, c.seen_from,
-        c.secret_id, jsonb_array_length(c.guesses) AS tries,
+        c.secret_id, jsonb_array_length(c.guesses) AS tries, c.note,
         to_char(c.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at,
         to_char(c.expires_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS expires_at,
         uf.username AS from_name, uf.partner_id AS from_partner, ut.username AS to_name, ut.partner_id AS to_partner
@@ -138,14 +226,15 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       challenges: rows.map((row) => {
         const incoming = row.to_id === id;
         const mystery = row.mode === MYSTERY;
-        const cfg = mystery ? { label: MYSTERY_LABEL, kind: "mystere" } : CHALLENGE_MODES[row.mode] || { label: row.mode, kind: "record" };
+        const cfg = mystery ? { label: MYSTERY_LABEL, kind: "mystere" } : row.mode === DAILY ? { label: DAILY_LABEL, kind: DAILY }
+          : CHALLENGE_MODES[row.mode] || { label: row.mode, kind: "record" };
         // The hidden Pokémon is named to the one who chose it, and to the other once the challenge is over.
         const named = mystery && row.secret_id && (!incoming || row.status !== "open");
         return {
           id: Number(row.id), incoming, mode: row.mode, label: cfg.label, kind: cfg.kind,
           ...(mystery ? { tries: Number(row.tries) || 0 } : {}), ...(named ? { secretId: Number(row.secret_id) } : {}),
-          target: Number(row.target), best: row.best == null ? null : Number(row.best),
-          phrase: PHRASES[Number(row.phrase)] || PHRASES[0], status: row.status,
+          target: Number(row.target), best: row.best == null ? null : Number(row.best), ...(cfg.max ? { max: cfg.max } : {}),
+          phrase: PHRASES[Number(row.phrase)] || PHRASES[0], ...(row.note ? { note: row.note } : {}), status: row.status,
           seen: incoming ? Boolean(row.seen_to) : Boolean(row.seen_from),
           createdAt: row.created_at, expiresAt: row.expires_at,
           other: {
@@ -332,4 +421,4 @@ function mountChallengeRoutes(app, { express, challenges, getUser, log = console
   app.post("/api/challenges/settings", json, run("settings", (user, body) => challenges.setAccepting(user.id, body.accepting !== false)));
 }
 
-module.exports = { CHALLENGE_MODES, PHRASES, MYSTERY, MYSTERY_ATTEMPTS, PER_DAY, DAYS, KEEP_DAYS, ensureTables, createPlayerChallenges, pushSender, mountChallengeRoutes };
+module.exports = { CHALLENGE_MODES, PHRASES, MYSTERY, MYSTERY_ATTEMPTS, PER_DAY, PER_DAY_FRIENDS, DAY_CHOICES, NOTE_MAX, DAILY, DAYS, KEEP_DAYS, ensureTables, createPlayerChallenges, pushSender, mountChallengeRoutes };

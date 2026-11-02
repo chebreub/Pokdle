@@ -40,7 +40,7 @@ async function withSchema(prefix, run) {
 
 test('the site: a « Trouve ce Pokémon » tab, a game window whose clues come from the server', () => {
   const src = read('src/script.10xq.player-challenges.js');
-  assert.match(src, /\{ pid: pcForm\.pid, mode: PC_MYSTERY, phrase: pcForm\.phrase, pokemonId: pcForm\.pokemonId, attempts: pcForm\.attempts \}/);
+  assert.match(src, /if \(pcForm\.tab === 'pokemon'\) return Object\.assign\(base, \{ mode: PC_MYSTERY, pokemonId: pcForm\.pokemonId, attempts: pcForm\.attempts \}\);/);
   assert.match(src, /pcPost\('\/api\/challenges\/guess', \{ id: pcGame\.id, pokemonId: id \}\)/, 'each try goes to the server');
   assert.match(src, /var state = row\.cmp\[cell\[0\]\] \|\| 'wrong';/, 'the colours come from the server\'s comparison');
   assert.doesNotMatch(src, /secretPokemon/, 'the game never holds the answer while it is played');

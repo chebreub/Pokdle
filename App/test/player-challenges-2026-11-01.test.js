@@ -33,10 +33,15 @@ test('the site: a ⚔️ Défier button on trainer cards, « Mes défis » in th
   const src = read('src/script.10xq.player-challenges.js');
   assert.match(src, /return html\.replace\('<div class="player-card-figures">', button \+ '<div class="player-card-figures">'\);/, 'the button sits under the card\'s name');
   assert.match(src, /if \(!player\.pid \|\| \(pcState\.options && pcState\.options\.pid === player\.pid\)\) return html;/, 'never on one\'s own card');
-  assert.match(src, /: \{ pid: pcForm\.pid, mode: pcForm\.mode, phrase: pcForm\.phrase \}\)/, 'a phrase by its number: no free text');
-  assert.doesNotMatch(src, /<textarea|<input type="text"/);
+  assert.match(src, /var base = \{ pid: pid, phrase: pcForm\.phrase \};/, 'a phrase by its number');
+  // Défis v2 (01/11/2026): a free message, only between friends (the server checks it too).
+  assert.doesNotMatch(src, /<textarea/);
+  assert.equal(src.split('<input type="text"').length, 2, 'one text field');
+  assert.match(src, /\(friend \? '<input type="text" class="pc-note-input"/, 'shown to friends only');
+  assert.match(src, /if \(pcForm\.note && pcForm\.note\.trim\(\) && \(pid !== pcForm\.pid \|\| pcIsFriend\(pid\)\)\) base\.note = pcForm\.note\.trim\(\);/);
   assert.match(src, /submitLeaderboardResult = function \(mode, score\) \{/, 'the result of a game is checked against the challenges');
-  for (const fn of ['openHigherLowerMode', 'startHigherLowerMode', 'startWeightBattle', 'openOddOneOutMode', 'openTypeComboSolo', 'startQuizGame', 'openSpeedrunMode', 'openDraftScoreAttackMode']) {
+  for (const fn of ['openHigherLowerMode', 'startHigherLowerMode', 'startWeightBattle', 'openOddOneOutMode', 'openTypeComboSolo', 'startQuizGame', 'openSpeedrunMode', 'openDraftScoreAttackMode',
+    'selectDraftGeneration', 'startPartyMode', 'startGuessSeries', 'openShinyMode', 'openPetitBacMode', 'startDailyGame']) {
     assert.ok(read('script.js').includes('function ' + fn + '('), fn + ' exists to launch a challenge');
   }
   assert.deepEqual(Object.keys(lib.CHALLENGE_MODES).sort(), src.match(/^ {2}([a-z0-9_]+): function \(\) \{/gm).map((l) => l.trim().split(':')[0]).sort(), 'every game of a challenge can be launched');
@@ -135,6 +140,6 @@ test('the routes: signed in, same origin for every change', async () => {
     assert.equal((await post({ origin: 'https://evil.example' })).status, 403);
     assert.equal((await post({ origin: base })).status, 200);
     assert.deepEqual(calls.at(-1), ['create', 'A', { pid: 'abc', mode: 'quiz', phrase: 1, body: 'texte libre' }]);
-    assert.match(read('lib/player-challenges.js'), /async function create\(fromId, \{ pid, mode, phrase, pokemonId, attempts \} = \{\}\) \{/, 'a free text sent anyway is never read');
+    assert.match(read('lib/player-challenges.js'), /async function create\(fromId, \{ pid, mode, phrase, pokemonId, attempts, days, note \} = \{\}\) \{/, 'a « body » sent anyway is never read');
   } finally { server.close(); }
 });

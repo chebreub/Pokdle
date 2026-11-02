@@ -1539,3 +1539,42 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 #pokdle-app #overlay-modal[data-kind="settings"] .app-settings-help {display:grid;gap:8px;align-content:start;}
 #pokdle-app #overlay-modal[data-kind="settings"] .app-settings-reset {grid-column:1 / -1;justify-self:end;width:auto;min-height:0;height:auto;aspect-ratio:auto;padding:4px 2px;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:#6B6472;font:800 .85rem Nunito,sans-serif;text-decoration:underline;}
 #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .app-settings-reset {color:#aebfda;}
+
+/* ===== ⚔️ Défis v2 (01/11/2026): 15 games, the Draft by generation, « Du jour », a duration, a note
+   between friends, several friends at once ===== */
+.pc-tabs-3 button {min-width:0;padding:0 4px;font-size:13.5px;}
+.pc-form .pc-mode {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;row-gap:0;}
+.pc-form .pc-mode span {min-width:0;overflow-wrap:anywhere;}
+.pc-form .pc-mode small {grid-column:1 / -1;color:#6B6472;font:700 12px Nunito,sans-serif;}
+.pc-form .pc-mode.is-new {border-style:dashed;}
+.pc-gens {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;}
+.pc-gens button, .pc-days button {min-height:42px;padding:4px 2px;border-radius:12px;border:0;background:#F6F0E8;color:#2E2A33;font:900 13px Nunito,sans-serif;cursor:pointer;}
+.pc-gens button small {display:block;color:#6B6472;font:700 11px Nunito,sans-serif;}
+.pc-gens button[aria-pressed="true"], .pc-days button[aria-pressed="true"] {background:#2E2A33;color:#fff;}
+.pc-gens button[aria-pressed="true"] small {color:#ddd6ea;}
+.pc-days {display:flex;gap:6px;}
+.pc-days button {flex:1;font-size:14px;}
+.pc-first {padding:10px 12px;border-radius:14px;background:#F7F3FF;border:1px solid #DCD2F2;color:#2E2A33;font:700 14px/1.35 Nunito,sans-serif;}
+.pc-first b {color:#7C5BD6;}
+.pc-daily {display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#FFF6D6;border:1px solid #F1DC8F;color:#2E2A33;}
+.pc-daily p {margin:0;display:grid;gap:2px;font:800 15px Nunito,sans-serif;}
+.pc-daily small {color:#6B6472;font:700 13px Nunito,sans-serif;}
+.pc-daily-n {flex:none;font:700 38px/1 Fredoka,sans-serif;color:#8A6400;}
+.pc-daily.is-todo {flex-direction:column;align-items:stretch;}
+.pc-daily.is-todo .btn-blue {width:100%;}
+.pc-note-input {width:100%;min-height:46px;padding:10px 12px;border-radius:12px;border:1px solid #EADFD0;background:#fff;color:#2E2A33;font:700 16px Nunito,sans-serif;box-sizing:border-box;}
+.pc-extra {display:flex;flex-wrap:wrap;gap:6px;}
+.pc-extra button {min-height:38px;padding:6px 12px;border-radius:999px;border:1px solid #EADFD0;background:#fff;color:#2E2A33;font:800 13.5px Nunito,sans-serif;cursor:pointer;}
+.pc-extra button[aria-pressed="true"] {border:2px solid #4069E0;background:#EEF2FF;}
+.pc-extra .is-all {border-style:dashed;color:#4069E0;}
+.pc-quote.is-note {background:#F3EEFF;}
+.pc-mystery.is-day {background:#FFD45C;}
+#pokdle-app.theme-dark .pc-gens button, #pokdle-app.theme-dark .pc-days button, #pokdle-app.theme-dark .pc-extra button, #pokdle-app.theme-dark .pc-note-input {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-gens button[aria-pressed="true"], #pokdle-app.theme-dark .pc-days button[aria-pressed="true"] {background:#e8ecf6;color:#1e2c43;}
+#pokdle-app.theme-dark .pc-first, #pokdle-app.theme-dark .pc-quote.is-note {background:#2a2350;border-color:#4b3f86;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-daily {background:#3a3218;border-color:#6b5a24;color:#f5ecd0;}
+#pokdle-app.theme-dark .pc-daily-n {color:#FFD45C;}
+#pokdle-app.theme-dark .pc-form .pc-mode small, #pokdle-app.theme-dark .pc-gens button small, #pokdle-app.theme-dark .pc-daily small {color:#aebfda;}
+/* « Défi ami » : its Pokémon list was cut by the card (01/11/2026). */
+#pokdle-app #challenge-panel {overflow:visible!important;}
+#pokdle-app #challenge-panel:focus-within {position:relative;z-index:40;}
