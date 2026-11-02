@@ -18,11 +18,11 @@ const PARIS_DAY_START = "(date_trunc('day', timezone('Europe/Paris', now())) AT 
 const CONTACT_PATTERNS = [
   /https?:\/\//i,
   /\bwww\s*\./i,
-  /\b[a-z0-9-]{2,}\.[a-z]{2,24}\b/i,
-  /\b[a-z0-9-]{2,}\s*(\.|\(\s*\.\s*\)|\[\s*\.\s*\]|\b(point|dot)\b)\s*(com|fr|net|org|gg|io|xyz|ly|tv|be|app|dev|site|online|info|zip|eu)\b/i,
+  /\b[a-z0-9-]+\.[a-z]{2,24}\b/i,
+  /\b[a-z0-9-]+\s*(\.|\(\s*\.\s*\)|\[\s*\.\s*\]|\b(point|dot)\b)\s*(com|fr|net|org|gg|io|xyz|ly|tv|be|app|dev|site|online|info|zip|eu)\b/i,
   /[\w.+-]+@[\w-]+\.[\w.]+/,
   /(^|[\s(])@[\w.]{3,}/,
-  /(\p{Nd}[\p{P}\p{Z}\s]*){6,}/u,
+  /(\p{Nd}[\p{P}\p{S}\p{Z}\s]*){6,}/u,
   /\b(snap(chat)?|insta(gram)?|ig|whats?\s?app|wh?ats?ap+|telegram|tiktok|tik\s?tok|discord|kik|facebook|fb|messenger|twitter|wechat|skype)\b/i,
 ];
 function checkBody(raw) {

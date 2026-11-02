@@ -7,8 +7,8 @@ const challengeLib = require("../lib/player-challenges");
 const safety = require("../lib/social-safety");
 
 test("contact filter: separated domains, punctuated numbers and invisible characters", () => {
-  for (const body of ["example . fr", "example .com", "example. fr", "example [ . ] fr", "example point fr", "example.zip",
-    "06,12,34,56,78", "06 ; 12 ; 34 ; 56 ; 78", "０６１２３４５６７８", "٠٦،١٢،٣٤،٥٦،٧٨",
+  for (const body of ["x . fr", "x.fr", "example . fr", "example .com", "example. fr", "example [ . ] fr", "example point fr", "example.zip",
+    "06+12+34+56+78", "06|12|34|56|78", "06☎12☎34☎56☎78", "06,12,34,56,78", "06 ; 12 ; 34 ; 56 ; 78", "０６１２３４５６７８", "٠٦،١٢،٣٤،٥٦،٧٨",
     "sn\u200bap", "s\u2060nap", "sn\u00adap", "s\uFE0Fnap", "s n a p", "s.n.a.p", "d i s c o r d", "ＩＮＳＴＡ", "sna\u0301p"]) {
     assert.equal(chatLib.checkBody(body).error, "contact", JSON.stringify(body));
   }
