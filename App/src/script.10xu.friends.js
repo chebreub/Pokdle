@@ -162,7 +162,7 @@ function frBlock(pid, name) {
   frPost('/api/friends/block', { pid: pid }).then(function (data) {
     if (!data || !data.ok) { frSay(data); return; }
     frPaintCard(pid, 'blocked');
-    showToast('⛔ ' + name + ' est bloqué : plus de demande de sa part.');
+    showToast('⛔ ' + name + ' est bloqué : plus de demandes, de messages ni de défis.');
     frRefresh();
   }).catch(function () { frSay(null); });
 }

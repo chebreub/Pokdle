@@ -138,3 +138,20 @@ test("admin suspension route rejects unsigned, non-admin and cross-origin writes
   assert.equal((await post("admin", base)).status, 303);
   assert.equal(writes, 2);
 });
+
+
+test("challenge blocking confirms success only after the server accepts it, then refreshes friends and chat", async () => {
+  const vm = require("node:vm"), fs = require("node:fs"), path = require("node:path");
+  const source = fs.readFileSync(path.join(__dirname, "../src/script.10xq.player-challenges.js"), "utf8");
+  const fn = source.match(/function blockChallenger\(id\) \{[\s\S]*?\n\}/)[0];
+  for (const ok of [false, true]) {
+    const calls = [], toasts = [];
+    const ctx = { pcPost: async () => ({ ok }), pcRefresh: async () => calls.push("challenges"),
+      frRefresh: async () => calls.push("friends"), chatRefresh: async () => calls.push("chat"),
+      showToast: (s) => toasts.push(s), document: { querySelector: () => null }, closeOverlayModal() {} };
+    vm.createContext(ctx); vm.runInContext(fn, ctx);
+    await ctx.blockChallenger(1);
+    assert.deepEqual(calls, ok ? ["challenges", "friends", "chat"] : []);
+    assert.match(toasts[0], ok ? /Joueur bloqué/ : /Blocage impossible/);
+  }
+});

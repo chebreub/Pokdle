@@ -89,3 +89,27 @@ test('the routes: page, hub, redirects to the right address, unknown name falls 
     assert.equal((await fetch(base + '/pokemon/pas-un-pokemon')).status, 404);
   } finally { server.close(); }
 });
+
+test('mid-generation Pokémon have explicit first games in both visible facts and FAQ data', () => {
+  for (const [id, game, year, gen] of [
+    [25, 'Rouge et Bleu', 1996, 1], [803, 'Ultra-Soleil et Ultra-Lune', 2017, 7],
+    [808, 'Pokémon GO', 2018, 7], [809, 'Pokémon GO', 2018, 7],
+    [891, 'L’île solitaire de l’Armure', 2020, 8], [898, 'Les terres enneigées de la Couronne', 2020, 8],
+    [899, 'Légendes Pokémon : Arceus', 2022, 8], [905, 'Légendes Pokémon : Arceus', 2022, 8],
+    [1009, 'raids événementiels', 2023, 9], [1017, 'Le Masque Turquoise', 2023, 9],
+    [1024, 'Le Disque Indigo', 2023, 9], [1025, 'épilogue', 2024, 9],
+  ]) {
+    const f = seo.facts(seo.BASE[id - 1]);
+    assert.ok(f.firstGames.includes(game), id + ': ' + f.firstGames);
+    assert.equal(f.year, year, String(id));
+    assert.equal(f.gen, gen, 'game generation is unchanged');
+    const html = renderPokemonPage(id);
+    assert.ok(html.includes(f.firstGames + ' (' + year + ')'), 'visible facts ' + id);
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
+    const faq = ld['@graph'].find((n) => n['@type'] === 'FAQPage');
+    assert.ok(faq.mainEntity.some((q) => q.acceptedAnswer.text.includes(f.firstGames + ' (' + year + ')')), 'FAQ ' + id);
+  }
+  assert.equal(seo.facts(seo.BASE[898]).region, 'Hisui');
+  assert.equal(seo.facts(seo.BASE[807]).region, null, 'do not invent an Alola origin for Meltan');
+  assert.doesNotMatch(seo.intro(seo.facts(seo.BASE[807])), /Alola|null/);
+});

@@ -153,6 +153,9 @@ jobs:
       - name: Verify browser journeys at six viewport widths
         if: env.QA_FULL == 'true'
         run: python tools/browser_quality.py --output quality-artifacts/browser
+      - name: Verify Team Builder and Pokemon facts on phone and desktop
+        if: env.QA_FULL == 'true'
+        run: python tools/team_facts_quality.py
       - name: Verify four polished solo games on phone and desktop
         if: env.QA_FULL == 'true'
         run: python tools/solo_modes_quality.py

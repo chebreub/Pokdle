@@ -497,16 +497,9 @@ const STARTER_IDS = new Set([
   906, 909, 912,
 ]);
 
-const LEGENDARY_IDS = new Set([
-  144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251,
-  377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
-  480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493,
-  638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
-  716, 717, 718, 719, 720, 721,
-  785, 786, 787, 788, 789, 790, 791, 792, 800, 801, 802, 803, 804, 805, 806, 807,
-  888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898,
-  1001, 1002, 1003, 1004, 1007, 1008, 1024, 1025,
-]);
+// Same « Légendes » category as the Pokédex and daily grid: legendary/mythical Pokémon,
+// Ultra Beasts and the six legendary-related Paradox Pokémon. Avoid a second, incomplete list.
+const LEGENDARY_IDS = POKEDEX_LEGENDARY_IDS;
 
 
 // Lot B audit : WebP (-95 % de poids vs PNG), support universel des navigateurs modernes.

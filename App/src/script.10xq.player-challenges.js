@@ -378,7 +378,7 @@ function pcIncomingHtml(c) {
     goal + '<span class="pc-quote' + (c.note ? ' is-note' : '') + '">« ' + escapeHtml(c.note || c.phrase) + ' »</span>' +
     (open ? '<div class="pc-actions"><button type="button" class="btn-blue" data-action="acceptChallenge" data-args="[' + Number(c.id) + ']">' + go + '</button></div>' +
       '<details class="pc-more"><summary>Refuser…</summary><button type="button" data-action="declineChallenge" data-args="[' + Number(c.id) + ']">Refuser ce défi</button>' +
-      '<button type="button" data-action="blockChallenger" data-args="[' + Number(c.id) + ']">Ne plus recevoir les défis de ' + escapeHtml(c.other.username) + '</button></details>'
+      '<button type="button" data-action="blockChallenger" data-args="[' + Number(c.id) + ']">Bloquer ' + escapeHtml(c.other.username) + ' (amis, messages et défis)</button></details>'
       : c.status !== 'declined' ? '<button type="button" class="btn-ghost pc-again" data-action="openChallengeForm" data-args="' + pcArgs([c.other.pid, c.other.username, c.mode]) + '">⚔️ Défier ' + escapeHtml(c.other.username) + ' à ton tour</button>' : '') +
     '</article>';
 }
@@ -583,11 +583,13 @@ function declineChallenge(id) {
   });
 }
 function blockChallenger(id) {
-  var c = pcFind(id);
-  pcPost('/api/challenges/block', { id: Number(id) }).then(function () { return pcRefresh(); }).then(function () {
-    showToast('Tu ne recevras plus les défis de ' + (c ? c.other.username : 'ce joueur'));
-    if (document.querySelector('#overlay-body .pc-list h4')) renderMyChallenges(); else closeOverlayModal();
-  });
+  return pcPost('/api/challenges/block', { id: Number(id) }).then(function (data) {
+    if (!data || !data.ok) { showToast('Blocage impossible pour le moment. Réessaie dans un instant.'); return; }
+    return Promise.all([pcRefresh(), typeof frRefresh === 'function' ? frRefresh() : null, typeof chatRefresh === 'function' ? chatRefresh() : null]).then(function () {
+      showToast('Joueur bloqué : plus de demandes d’ami, de messages ni de défis.');
+      if (document.querySelector('#overlay-body .pc-list h4')) renderMyChallenges(); else closeOverlayModal();
+    });
+  }).catch(function () { showToast('Blocage impossible pour le moment. Réessaie dans un instant.'); });
 }
 
 // ---- after a game: did that result win a challenge?
