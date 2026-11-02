@@ -57,8 +57,8 @@ function tbCoverageHtml(cov = tbCoverage()) {
     const icon = typeof getTypeIconPath === "function" ? getTypeIconPath(r.type) : null;
     return `<div class="tb-cov-cell" style="background:${tbTypeColor(r.type)}" title="${escapeHtml(r.type)} : ${r.weak} faible(s), ${r.resist} résiste(nt)">${icon ? `<img src="${escapeHtml(icon)}" alt="">` : ""}<span>${escapeHtml(r.type)}</span>${badge}</div>`;
   }).join("");
-  const weakTypes = cov.weak.slice(0, 4).map((r) => r.type);
-  const weakLine = weakTypes.length ? `<div class="is-bad">⚠️ Craint surtout <b>${escapeHtml(tbList(weakTypes))}</b> (${cov.weak[0].weak} Pokémon faibles${weakTypes.length > 1 ? " ou plus" : ""}).</div>` : '<div class="is-good">👍 Aucune faiblesse partagée par 2 Pokémon.</div>';
+  const weakTypes = cov.weak.slice(0, 4).map((r) => `<b>${escapeHtml(r.type)}</b> (${r.weak} Pokémon faibles)`);
+  const weakLine = weakTypes.length ? `<div class="is-bad">⚠️ Craint surtout ${tbList(weakTypes)}.</div>` : '<div class="is-good">👍 Aucune faiblesse partagée par 2 Pokémon.</div>';
   const strongTypes = cov.strong.slice(0, 3).map((r) => r.type);
   const strongLine = strongTypes.length ? `<div class="is-good">✅ Tient bien face à <b>${escapeHtml(tbList(strongTypes))}</b>.</div>` : "";
   return `<section class="tb-cov"><h3>🛡️ Ton équipe face aux types <small>${cov.size}/6 Pokémon</small></h3><div class="tb-cov-grid">${cells}</div><div class="tb-verdict">${weakLine}${strongLine}</div></section>`;
@@ -261,7 +261,7 @@ function openTeamRandomizer() {
     <p class="tb-gens-label" id="tb-gens-label">Générations</p>
     <div class="tb-gens" role="group" aria-labelledby="tb-gens-label">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => `<button type="button" data-tb-gen="${g}" aria-pressed="${s.gens.includes(g)}">${g}</button>`).join("")}</div>
     ${opt("strong", "Pokémon forts seulement", "Au moins 450 de stats de base : pas de Chenipan.")}
-    ${opt("noLegend", "Sans légendaires ni fabuleux", "")}
+    ${opt("noLegend", "Sans légendaires ni fabuleux", "Exclut aussi les Ultra-Chimères et les Paradoxes de la catégorie Légendes.")}
     ${opt("varied", "Types variés", "Pas deux fois le même type dans l’équipe.")}
     ${opt("sets", "Attaques, objet et nature au hasard", "Sinon, juste les Pokémon.")}
     <button type="button" class="btn-blue tb-roll" data-action="rollTeamFromSheet">🎲 Tirer l’équipe</button>`;

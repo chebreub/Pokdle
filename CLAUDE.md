@@ -280,6 +280,8 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
   - vidéos : pas le Duel de poids (« trop simple ») ; les posts YouTube attendront d'avoir des abonnés ;
   - un filtre TikTok pour le Draft est risqué (droits Pokémon, à fabriquer dans Effect House sur mon PC) : plutôt une vidéo du vrai site.
 
+- **2/11 — Petites corrections (lot B, « go les 2 ») :** favoris et tirage du Team Builder utilisent la liste complète « Légendes » du Pokédex (dont Melmetal, Ogerpon), la phrase des faiblesses donne un nombre pour chaque type, les pages `/pokemon/…` et leurs FAQ distinguent les sorties en cours de génération (Meltan/Melmetal dans GO en 2018, Hisui, extensions et épilogue). Générations des jeux et sauvegardes inchangées.
+
 ## 5. État actuel (30/10/2026, fin d'après-midi)
 
 - `main` est vert. Aucune PR ouverte à part celle de cette mise à jour. En ligne : rappels 🔔, partage en défi, Shiny ou normal ?, chat de la Party Room. Annonce posée dans le bandeau (panneau admin). Rappel 🔔 activé sur mon téléphone le 30/10 : vérifier le 31/10 au matin que la notification est bien arrivée. Reste à tester Dessine-le ! et le chat avec mes collègues (fluidité au doigt sur iPhone).
