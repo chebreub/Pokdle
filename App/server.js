@@ -653,7 +653,14 @@ const LB_MODE_CONFIG = Object.freeze({
   poids: { direction: "desc", label: "Duel de poids", unit: "série", max: 1000 },
   higherlower: { direction: "desc", label: "Higher/Lower", unit: "série", max: 1000 },
   higherlower60: { direction: "desc", label: "Higher/Lower 60s", unit: "points", max: 5000 },
-  typecombo: { direction: "desc", label: "Combo de types", unit: "points", max: 10000 }
+  typecombo: { direction: "desc", label: "Combo de types", unit: "points", max: 10000 },
+  // Défis v2 (01/11/2026): kept for the challenges between players (no board of their own yet).
+  pixel10: { direction: "desc", label: "Pokémon pixelisé (10)", unit: "trouvés", max: 10 },
+  silhouette10: { direction: "desc", label: "Zoom progressif (10)", unit: "trouvés", max: 10 },
+  cry10: { direction: "desc", label: "Cri (10)", unit: "trouvés", max: 10 },
+  description10: { direction: "desc", label: "Description Pokédex (10)", unit: "trouvés", max: 10 },
+  shiny: { direction: "desc", label: "Shiny ou normal", unit: "points", max: 1000 },
+  petitbac: { direction: "desc", label: "Petit Bac", unit: "bonnes réponses", max: 8 }
 });
 const LB_MODES = Object.keys(LB_MODE_CONFIG);
 function leaderboardConfig(mode) {
@@ -1572,6 +1579,9 @@ const challengesReady = pgPool ? authDbReady.then(() => challengeLib.ensureTable
 }) : Promise.resolve(false);
 playerChallenges = pgPool ? challengeLib.createPlayerChallenges({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: challengesReady,
   pokemon: POKEMON_LIST, compare: require("./lib/daily-comparison").compareDaily,
+  // Défis v2: a free message between friends only (playerFriends is set up just below), with the chat's guard.
+  friends: { areFriends: (a, b) => (typeof playerFriends !== "undefined" && playerFriends ? playerFriends.areFriends(a, b) : false) },
+  checkNote: require("./lib/friend-chat").checkBody,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 challengeLib.mountChallengeRoutes(app, { express, challenges: playerChallenges, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 // Amis (01/11/2026): both accept; the private chat between friends comes next.

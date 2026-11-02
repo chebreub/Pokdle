@@ -221,6 +221,9 @@ function leaderboardResultFromHistory(entry) {
   }
   if (mode === "odd" && win) return {mode:"intrus",score:(Number(playerProfile?.oddOneOutStreak)||0)+1};
   if (mode === "weight" && win) return {mode:"poids",score:(Number(playerProfile?.weightBattleStreak)||0)+1};
+  // Défis v2 (01/11/2026): kept on the server for the challenges between players.
+  if (mode === "shiny") return {mode:"shiny",score:Number(entry.attempts)||0};
+  if (mode === "petitbac") return {mode:"petitbac",score:Number(entry.attempts)||0};
   return null;
 }
 function switchLeaderboardV2() {
