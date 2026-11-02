@@ -113,6 +113,7 @@ const NOTICES = Object.freeze({
   "name-replaced": "Pseudo remplacé par « Dresseur » partout, et il le reste à la prochaine connexion.",
   "name-restored": "Pseudo rétabli : son nom revient à sa prochaine connexion.",
   level: "Niveau remis : le joueur le retrouve à sa prochaine visite, sur chacun de ses appareils.",
+  suspension: "Discussion mise à jour.",
   report: "Signalement marqué comme traité.",
 });
 
@@ -232,7 +233,7 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
       // 🚩 Reports from the chat between friends (lib/friend-chat.js), first when one waits.
       let reportsHtml = "";
       if (reports) {
-        try { reportsHtml = reports.module.adminSectionHtml(await reports.module.adminReports(db), escapeHtml); }
+        try { reportsHtml = reports.module.adminSectionHtml(await reports.module.adminReports(db), escapeHtml) + await reports.module.suspensionSectionHtml(db, escapeHtml); }
         catch (error) { log.error("[admin] reports:", error.message); }
       }
       const ok = NOTICES[req.query.ok];
@@ -332,6 +333,17 @@ ${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${
   }
 
   if (reports) {
+    app.post("/admin/chat/suspension", form, async (req, res) => {
+      const admin = guard(req, res);
+      if (!admin) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      try {
+        const body = req.body || {};
+        const ok = await require("./social-safety").setSuspension(db, { accountId: body.accountId, days: body.days, reason: body.reason, adminId: admin.id });
+        back(res, ok ? { ok: "suspension" } : { err: "Compte ou durée inconnus." });
+      } catch (error) { log.error("[admin] suspension:", error.message); back(res, { err: "Modification impossible." }); }
+    });
     app.post("/admin/reports/done", form, async (req, res) => {
       if (!guard(req, res)) return;
       if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");

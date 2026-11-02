@@ -97,8 +97,11 @@ test('PostgreSQL: friends only, one notification at a time, report, block, 30 da
     // Blocking ends the friendship, so the chat.
     await friends.block('B', { pid: A });
     assert.deepEqual(await chat.send('A', { pid: B, body: 'hé' }), { ok: false, error: 'not_friends' });
-    assert.deepEqual(await chat.thread('A', { pid: B }), { ok: true, friends: false, messages: [] });
-    assert.deepEqual((await chat.conversations('A')).conversations, {});
+    const archived = await chat.thread('A', { pid: B });
+    assert.equal(archived.friends, false);
+    assert.equal(archived.canSend, false);
+    assert.ok(archived.messages.length > 0);
+    assert.equal((await chat.conversations('A')).conversations[B].friends, false);
 
     // 30 days for messages, 90 for reports.
     await db.query("UPDATE friend_messages SET created_at = now() - interval '31 days'");

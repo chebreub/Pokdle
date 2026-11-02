@@ -207,6 +207,14 @@ function frPanelHtml() {
   } else {
     html += '<p class="fr-empty">Pas encore d’ami. Clique sur un pseudo dans un <button type="button" class="party-duels-link" data-action="openLeaderboardV2" data-args=\'["journey","week"]\'>classement</button>, puis <b>🤝 Ajouter en ami</b>.</p>';
   }
+  var archives = typeof chatState !== 'undefined' && chatState ? chatState.convs || {} : {};
+  var archivedPids = Object.keys(archives).filter(function (pid) { return archives[pid].friends === false; });
+  if (archivedPids.length) {
+    html += '<details class="fr-blocked"><summary>Anciennes discussions (' + archivedPids.length + ')</summary><p class="fr-note">Lecture et signalement restent possibles pendant 30 jours.</p>' + archivedPids.map(function (pid) {
+      var conv = archives[pid];
+      return '<div class="fr-row"><button type="button" class="fr-row-main" data-action="openFriendChat" data-args="' + frArgs([pid, conv.username]) + '"><span><b>' + escapeHtml(conv.username) + '</b><small>Lire ou signaler' + (conv.unread ? ' · ' + Number(conv.unread) + ' non lus' : '') + '</small></span></button></div>';
+    }).join('') + '</details>';
+  }
   if (outgoing.length) {
     html += '<h4 class="fr-sub">En attente de réponse</h4><div class="fr-list">' + outgoing.map(function (f) {
       return '<div class="fr-row"><span class="fr-row-main">' + frAvatar(f) + '<span><b>' + escapeHtml(f.username) + '</b><small>Demande envoyée</small></span></span>' +

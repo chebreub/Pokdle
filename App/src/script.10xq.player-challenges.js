@@ -51,6 +51,7 @@ var PC_ERRORS = {
   rate_limited: 'Doucement ! Réessaie dans un moment.', pokemon: 'Choisis un Pokémon dans la liste.', attempts: 'Choisis un nombre d’essais.',
   days: 'Choisis une durée.', no_daily: 'Trouve d’abord le Pokémon du jour : ton nombre d’essais sera la cible.',
   note_friends: 'Le message libre est réservé à tes amis.', note: 'Ton message fait 100 caractères au plus.',
+  discussion_unavailable: 'Cette discussion est suspendue. Tu peux envoyer un défi avec une phrase proposée.',
   note_contact: '🔒 Pas de liens ni de numéros dans le message.',
   daily_done: 'Il a déjà joué le Pokémon du jour aujourd’hui.',
 };

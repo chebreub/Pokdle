@@ -6,6 +6,7 @@
 // messages of the conversation to the creator's /admin; « Bloquer » ends the friendship (and so the
 // chat). Messages are erased after 30 days, reports after 90, everything with the account.
 const MAX_LEN = 200;
+const safety = require("./social-safety");
 const KEEP_DAYS = 30;
 const REPORT_KEEP_DAYS = 90;
 const PER_10_MIN = 30;
@@ -16,23 +17,27 @@ const PARIS_DAY_START = "(date_trunc('day', timezone('Europe/Paris', now())) AT 
 // Links, e-mail addresses, @pseudos, phone numbers and the names of other messaging apps.
 const CONTACT_PATTERNS = [
   /https?:\/\//i,
-  /\bwww\./i,
-  /\b[a-z0-9-]{2,}(\.|\s?\(\.\)\s?|\s?\[\.\]\s?|\s(point|dot)\s)(com|fr|net|org|gg|io|xyz|ly|tv|be)\b/i,
+  /\bwww\s*\./i,
+  /\b[a-z0-9-]{2,}\.[a-z]{2,24}\b/i,
+  /\b[a-z0-9-]{2,}\s*(\.|\(\s*\.\s*\)|\[\s*\.\s*\]|\b(point|dot)\b)\s*(com|fr|net|org|gg|io|xyz|ly|tv|be|app|dev|site|online|info|zip|eu)\b/i,
   /[\w.+-]+@[\w-]+\.[\w.]+/,
   /(^|[\s(])@[\w.]{3,}/,
-  /(\d[\s.\-_/]*){6,}/,
+  /(\p{Nd}[\p{P}\p{Z}\s]*){6,}/u,
   /\b(snap(chat)?|insta(gram)?|ig|whats?\s?app|wh?ats?ap+|telegram|tiktok|tik\s?tok|discord|kik|facebook|fb|messenger|twitter|wechat|skype)\b/i,
 ];
 function checkBody(raw) {
   const body = String(raw == null ? "" : raw).replace(/\r\n?/g, "\n").replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, "").replace(/\n{3,}/g, "\n\n").trim();
   if (!body) return { error: "empty" };
   if ([...body].length > MAX_LEN) return { error: "long" };
-  const flat = body.normalize("NFKC");
+  // Check a canonical copy; preserve the player's accents and emoji in the stored message.
+  const flat = body.normalize("NFKD").replace(/[\p{Default_Ignorable_Code_Point}\p{M}]/gu, "");
   if (CONTACT_PATTERNS.some((re) => re.test(flat))) return { error: "contact" };
+  if (/\b(?:s[\s._-]*n[\s._-]*a[\s._-]*p|d[\s._-]*i[\s._-]*s[\s._-]*c[\s._-]*o[\s._-]*r[\s._-]*d|i[\s._-]*n[\s._-]*s[\s._-]*t[\s._-]*a)\b/i.test(flat)) return { error: "contact" };
   return { body };
 }
 
 async function ensureTables(db) {
+  await safety.ensureTables(db);
   await db.query(`CREATE TABLE IF NOT EXISTS friend_messages (
     id BIGSERIAL PRIMARY KEY, from_id TEXT NOT NULL, to_id TEXT NOT NULL, body TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), read_at TIMESTAMPTZ)`);
@@ -70,6 +75,7 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     if (t.error) return { ok: false, error: t.error };
     const { me, other } = t;
     if (!await friends.areFriends(me, other)) return { ok: false, error: "not_friends" };
+    if (!await safety.discussionAllowed(db, me, other)) return { ok: false, error: "discussion_unavailable" };
     const checked = checkBody(body);
     if (checked.error) return { ok: false, error: checked.error };
     const recent = Number((await db.query("SELECT count(*)::int AS n FROM friend_messages WHERE from_id = $1 AND created_at > now() - interval '10 minutes'", [me])).rows[0].n);
@@ -93,14 +99,15 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     if (t.error) return { ok: false, error: t.error };
     const { me, other } = t;
     const areFriends = await friends.areFriends(me, other);
-    if (!areFriends) return { ok: true, friends: false, messages: [] };
+    const canSend = areFriends && await safety.discussionAllowed(db, me, other);
     const since = Number(after);
     const rows = Number.isSafeInteger(since) && since > 0
-      ? (await db.query(`SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere} AND id > $3 ORDER BY id LIMIT 60`, [me, other, since])).rows
+      ? (await db.query(`SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere} AND id > $3
+          AND created_at > now() - make_interval(days => $4) ORDER BY id LIMIT 60`, [me, other, since, KEEP_DAYS])).rows
       : (await db.query(`SELECT * FROM (SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere}
           AND created_at > now() - make_interval(days => $3) ORDER BY id DESC LIMIT 60) last ORDER BY id`, [me, other, KEEP_DAYS])).rows;
     await db.query("UPDATE friend_messages SET read_at = now() WHERE to_id = $1 AND from_id = $2 AND read_at IS NULL", [me, other]);
-    return { ok: true, friends: true, messages: rows.map((row) => view(row, me)) };
+    return { ok: true, friends: areFriends, canSend, messages: rows.map((row) => view(row, me)) };
   }
 
   // For the friends list: the last message and the unread count of each conversation.
@@ -115,8 +122,8 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     const out = {};
     let unread = 0;
     for (const row of rows) {
-      if (!await friends.areFriends(me, row.other)) continue;
-      out[playerPid(row.other)] = { last: view(row, me), unread: Number(row.unread) || 0 };
+      const isFriend = await friends.areFriends(me, row.other);
+      out[playerPid(row.other)] = { last: view(row, me), unread: Number(row.unread) || 0, friends: isFriend, username: await nameOf(row.other) };
       unread += Number(row.unread) || 0;
     }
     return { ok: true, unread, conversations: out };
@@ -130,7 +137,8 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     const today = Number((await db.query(`SELECT count(*)::int AS n FROM friend_reports WHERE reporter_id = $1 AND created_at >= ${PARIS_DAY_START}`, [me])).rows[0].n);
     if (today >= REPORTS_PER_DAY) return { ok: false, error: "limit" };
     const rows = (await db.query(`SELECT * FROM (SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere}
-      ORDER BY id DESC LIMIT 30) last ORDER BY id`, [me, other])).rows;
+      AND created_at > now() - make_interval(days => $3) ORDER BY id DESC LIMIT 30) last ORDER BY id`, [me, other, KEEP_DAYS])).rows;
+    if (!rows.length) return { ok: false, error: "no_messages" };
     const excerpt = rows.map((row) => ({ by: row.from_id === me ? "reporter" : "reported", body: row.body, at: row.created_at }));
     await db.query("INSERT INTO friend_reports(reporter_id, reported_id, excerpt) VALUES ($1, $2, $3)", [me, other, JSON.stringify(excerpt)]);
     return { ok: true };
@@ -161,9 +169,27 @@ function adminSectionHtml(reports, escapeHtml) {
       `<li><b>${escapeHtml(m.by === "reporter" ? r.reporter_name || "?" : r.reported_name || "?")}</b> · <small>${escapeHtml(day(m.at))}</small><br>${escapeHtml(m.body)}</li>`).join("");
     return `<details${r.status === "open" ? " open" : ""}><summary>${r.status === "open" ? "🚩" : "✓"} ${escapeHtml(day(r.created_at))} · <b>${escapeHtml(r.reporter_name || "?")}</b> signale <b>${escapeHtml(r.reported_name || "?")}</b> <small>(compte ${escapeHtml(r.reported_id)})</small></summary>
 <ol class="hint">${lines || "<li>Aucun message dans la discussion.</li>"}</ol>
+${suspensionForm(r.reported_id, escapeHtml)}
 ${r.status === "open" ? `<form method="post" action="/admin/reports/done"><input type="hidden" name="id" value="${Number(r.id)}"><button class="btn" type="submit">Traité</button></form>` : ""}</details>`;
   }).join("");
-  return `<section><h2>Signalements${open ? ` (${open} à lire)` : ""}</h2><p class="hint">Quand un joueur signale un ami, ses 30 derniers messages arrivent ici. Pour agir : « Pseudo déplacé » plus bas, ou écrire au joueur. Gardé 90 jours.</p>${items || "<p>Aucun signalement.</p>"}</section>`;
+  return `<section><h2>Signalements${open ? ` (${open} à lire)` : ""}</h2><p class="hint">Quand un joueur signale un ami, ses 30 derniers messages arrivent ici. Tu peux suspendre la discussion du joueur signalé, puis marquer le signalement comme traité. Gardé 90 jours.</p>${items || "<p>Aucun signalement.</p>"}</section>`;
+}
+
+function suspensionForm(id, escapeHtml) {
+  return `<form method="post" action="/admin/chat/suspension" class="row">
+    <input type="hidden" name="accountId" value="${escapeHtml(id)}">
+    <label>Discussion <select name="days"><option value="1">Suspendre 24 h</option><option value="7">Suspendre 7 jours</option><option value="30">Suspendre 30 jours</option><option value="-1">Suspendre sans date de fin</option><option value="0">Rétablir</option></select></label>
+    <label>Motif privé <input name="reason" maxlength="300" placeholder="Facultatif"></label>
+    <button class="btn" type="submit">Appliquer</button></form>`;
+}
+async function suspensionSectionHtml(db, escapeHtml) {
+  const rows = (await db.query(`SELECT s.account_id, s.until_at, s.reason, u.username FROM chat_suspensions s
+    LEFT JOIN users u ON u.discord_id = s.account_id WHERE s.until_at IS NULL OR s.until_at > now() ORDER BY s.updated_at DESC`)).rows;
+  return `<section><h2>Suspendre la discussion</h2><p class="hint">Coupe les messages privés et les messages libres des défis. Le joueur peut toujours jouer, lire et signaler. Les suspensions temporaires se lèvent automatiquement.</p>
+    <form method="post" action="/admin/chat/suspension" class="row"><label>Identifiant du compte <input name="accountId" required></label>
+    <label>Durée <select name="days"><option value="1">24 heures</option><option value="7">7 jours</option><option value="30">30 jours</option><option value="-1">Sans date de fin</option><option value="0">Rétablir</option></select></label>
+    <label>Motif privé <input name="reason" maxlength="300"></label><button class="btn" type="submit">Appliquer</button></form>
+    ${rows.map((r) => `<details><summary>${escapeHtml(r.username || r.account_id)} · ${r.until_at ? 'jusqu’au ' + escapeHtml(new Date(r.until_at).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })) : 'sans date de fin'}</summary><p>${escapeHtml(r.reason)}</p>${suspensionForm(r.account_id, escapeHtml)}</details>`).join('') || '<p>Aucune suspension en cours.</p>'}</section>`;
 }
 
 function createRateLimit(limit, windowMs) {
@@ -200,4 +226,4 @@ function mountChatRoutes(app, { express, chat, getUser, log = console, limited =
   app.post("/api/chat/report", json, run("report", (user, body) => chat.report(user.id, { pid: body.pid }), limited));
 }
 
-module.exports = { MAX_LEN, KEEP_DAYS, REPORT_KEEP_DAYS, checkBody, ensureTables, createFriendChat, adminReports, resolveReport, adminSectionHtml, mountChatRoutes };
+module.exports = { MAX_LEN, KEEP_DAYS, REPORT_KEEP_DAYS, checkBody, ensureTables, createFriendChat, adminReports, resolveReport, adminSectionHtml, suspensionSectionHtml, mountChatRoutes };
