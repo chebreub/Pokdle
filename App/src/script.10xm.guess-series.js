@@ -118,6 +118,8 @@ if (typeof renderGameOverBox === 'function') {
       s.recorded = true;
       s.rounds.push({ id: secretPokemon.id, name: secretPokemon.name, won: won });
       if (won) { s.found += 1; s.attemptsWon += Number(attempts) || 0; }
+      // A series of 10 is kept on the server: the challenges between players use it (Défis v2).
+      if (s.index >= s.total && s.total === 10 && s.found > 0 && typeof submitLeaderboardResult === 'function') submitLeaderboardResult(s.mode + '10', s.found);
     }
     renderGuessSeriesBar();
     var restart = document.getElementById('btn-restart');

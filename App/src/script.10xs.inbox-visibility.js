@@ -29,6 +29,7 @@ function inboxSetDot(el, n) {
   dot.textContent = n > 9 ? '9+' : String(n);
 }
 function inboxDescribe(c) {
+  if (c.kind === 'jour') return 'Pokémon du jour en moins de ' + Number(c.target) + ' essais, aujourd’hui';
   return c.kind === 'mystere' ? 'Trouve son Pokémon mystère' : (c.kind === 'serie' ? 'Bats sa série' : 'Bats son record') + ' au ' + c.label + ' : ' + Number(c.target);
 }
 function renderInboxHome() {
