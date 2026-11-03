@@ -69,7 +69,7 @@ function recordPokemonDiscovery(pokemon, mode, at) {
   return true;
 }
 function discoveryModeLabel(mode) {
-  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète', mission: 'Mission de collection' };
+  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète', mission: 'Mission de collection', capture: 'Hautes herbes' };
   return labels[mode] || modeLabelFr(mode);
 }
 function discoveryProofHtml(entry) {

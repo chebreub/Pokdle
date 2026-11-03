@@ -57,3 +57,55 @@ body.theme-dark .ball-bag-btn.has-gift{background:#3a3220;border-color:#FFD45C}
 body.theme-dark .home-balls-main b,body.theme-dark .ball-count b{color:#f5efe6}
 body.theme-dark .home-balls-art,body.theme-dark .ball-count{background:#1d1a22}
 body.theme-dark .ball-soon{background:#1f3326}
+
+/* Les hautes herbes (PR B) : la scène de rencontre, la Ball qui tremble et « Gotcha ! ». */
+.ball-grass-cta,.wild-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:0;border-radius:14px;background:#3E9B57;color:#fff;font:800 16px/1.2 Nunito,sans-serif;cursor:pointer;box-shadow:0 3px 0 #2b7240}
+.ball-grass-cta:active,.wild-cta:active{transform:translateY(2px);box-shadow:0 1px 0 #2b7240}
+.ball-soon .ball-grass-cta{margin-left:auto;flex:none}
+.ball-soon p small{color:#4b6b52;font-weight:700}
+
+.wild-scene{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#FFF8EF;color:#2E2A33;overflow:auto}
+.wild-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:2px solid rgba(46,42,51,.08)}
+.wild-head b{font:700 20px/1 Fredoka,Nunito,sans-serif}
+.wild-head span{font:800 14px/1 Nunito,sans-serif;color:#4069E0}
+.wild-close{margin-left:auto;width:44px;height:44px;border-radius:50%;border:2px solid rgba(46,42,51,.12);background:#fff;font-size:26px;line-height:1;cursor:pointer;color:#2E2A33}
+.wild-stage{position:relative;flex:1;min-height:300px;max-height:52vh;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse 60% 22% at 50% 82%,rgba(46,42,51,.16),transparent 70%),linear-gradient(#DFF3FF 0%,#EAF8E9 55%,#BFE3A9 56%,#9ED38A 100%)}
+.wild-grass{position:absolute;left:0;right:0;bottom:0;height:34%;background:repeating-linear-gradient(100deg,transparent 0 14px,rgba(46,120,60,.28) 14px 17px),linear-gradient(transparent,rgba(62,155,87,.35));pointer-events:none}
+.wild-mon{position:relative;z-index:1;width:min(64vw,300px);height:auto;filter:drop-shadow(0 10px 14px rgba(46,42,51,.25));animation:wildAppear .5s ease-out backwards;transition:transform .35s ease,opacity .35s ease}
+.wild-stage.is-shiny::after{content:"✨";position:absolute;top:18%;right:22%;font-size:34px;animation:wildTwinkle 1.4s ease-in-out infinite}
+.wild-ball{position:absolute;z-index:2;left:50%;bottom:-60px;transform:translateX(-50%);opacity:0;transition:bottom .45s cubic-bezier(.3,.7,.4,1),opacity .2s}
+.wild-ball .ball-img{width:44px;height:44px}
+.wild-stage.is-throw .wild-ball{bottom:42%;opacity:1}
+.wild-stage.is-in .wild-mon{transform:scale(.05);opacity:0}
+.wild-stage.is-in .wild-ball{bottom:22%}
+.wild-ball.is-shake{animation:wildShake .6s ease-in-out}
+.wild-stage.is-out .wild-mon{transform:none;opacity:1}
+.wild-stage.is-out .wild-ball{opacity:0}
+.wild-stage.is-caught .wild-ball::after{content:"★ ★ ★";position:absolute;left:50%;top:-24px;transform:translateX(-50%);white-space:nowrap;color:#FFD45C;font-size:16px;text-shadow:0 1px 0 #b98a12}
+@keyframes wildAppear{from{transform:translateY(16px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+@keyframes wildShake{0%,100%{transform:translateX(-50%) rotate(0)}25%{transform:translateX(-50%) rotate(-22deg)}75%{transform:translateX(-50%) rotate(22deg)}}
+@keyframes wildTwinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.wild-panel{padding:16px;display:grid;gap:12px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.wild-line{margin:0;font:700 19px/1.35 Fredoka,Nunito,sans-serif;text-align:center}
+.wild-meta{display:flex;justify-content:space-between;align-items:center;font:700 14px/1.3 Nunito,sans-serif;color:#6b6472}
+.wild-throws{display:flex;gap:6px}
+.wild-throws i{width:14px;height:14px;border-radius:50%;border:2px solid #E3350D;background:transparent}
+.wild-throws i.is-on{background:#E3350D}
+.wild-balls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.wild-ball-btn{display:flex;align-items:center;gap:10px;min-height:60px;padding:10px 14px;border-radius:16px;border:2px solid rgba(46,42,51,.12);background:#fff;color:#2E2A33;text-align:left;cursor:pointer}
+.wild-ball-btn b{display:block;font:800 16px/1.2 Nunito,sans-serif}
+.wild-ball-btn small{display:block;font:700 13px/1.2 Nunito,sans-serif;color:#6b6472}
+.wild-ball-btn:not(:disabled):hover{border-color:#4069E0}
+.wild-ball-btn:disabled{opacity:.45;cursor:not-allowed}
+.wild-run,.wild-skip{justify-self:center;min-height:44px;padding:8px 18px;border:0;background:none;color:#6b6472;font:800 15px/1 Nunito,sans-serif;text-decoration:underline;cursor:pointer}
+.wild-end{flex:1;display:grid;align-content:center;justify-items:center;gap:14px;padding:24px 16px;text-align:center}
+.wild-gotcha img{width:min(56vw,240px);height:auto;filter:drop-shadow(0 10px 14px rgba(46,42,51,.2));animation:wildAppear .45s ease-out backwards}
+.wild-gotcha h3{margin:8px 0 4px;font:700 24px/1.25 Fredoka,Nunito,sans-serif}
+.wild-gotcha p,.wild-note{margin:0;font:600 15px/1.4 Nunito,sans-serif;color:#6b6472;max-width:420px}
+.wild-gotcha.is-shiny h3{color:#B8860B}
+@media (min-width:900px){.wild-scene{inset:5vh 50%;transform:translateX(-50%);width:min(760px,92vw);border-radius:28px;box-shadow:0 0 0 100vmax rgba(46,42,51,.45),0 30px 80px rgba(46,42,51,.35)}.wild-stage{max-height:none;min-height:360px}}
+@media (prefers-reduced-motion:reduce){.wild-mon,.wild-gotcha img,.wild-stage.is-shiny::after,.wild-ball.is-shake{animation:none}.wild-mon,.wild-ball{transition:none}}
+.alb-origin{position:absolute;top:4px;right:6px;font-size:12px;line-height:1;z-index:1}
+.alb-origin.is-caught{font-weight:900;color:#2E2A33}
+body.theme-dark .wild-scene{background:#1d1a22;color:#f5efe6}
+body.theme-dark .wild-ball-btn,body.theme-dark .wild-close{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.12)}

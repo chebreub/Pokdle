@@ -80,6 +80,16 @@ function ballMeterHtml(state) {
   return '<div class="ball-meter" role="img" aria-label="' + today + ' Balls gagnées sur ' + cap + ' aujourd’hui">' +
     Array.from({ length: cap }, (_, i) => '<span class="' + (i < today ? "is-on" : "") + '"></span>').join("") + '</div>';
 }
+// Les hautes herbes : 6 rencontres par jour pour lancer ses Balls (script.10xz.wild-grass.js).
+function ballGrassLeft(s) { const w = s && s.wild; return w ? (w.open ? Math.max(1, w.left) : w.left) : 6; }
+function ballGrassHtml(s) {
+  const w = s && s.wild || { left: 6, max: 6, caught: 0 }, left = ballGrassLeft(s);
+  return '<section class="ball-soon"><span aria-hidden="true">🌿</span><p><b>Les hautes herbes</b> · ' + (w.open ? "un Pokémon t’attend !" : left + " rencontre" + (left > 1 ? "s" : "") + " sur " + w.max + " aujourd’hui") +
+    (w.caught ? '<br><small>' + w.caught + ' Pokémon attrapé' + (w.caught > 1 ? "s" : "") + '</small>' : "") + '</p>' +
+    (left > 0 ? '<button type="button" class="ball-grass-cta" data-action="ballGoGrass">' + (w.open ? "Y retourner" : "Y aller") + '</button>' : "") + '</section>';
+}
+function ballGoGrass() { if (typeof closeOverlayModal === "function") closeOverlayModal(); if (typeof openWildGrass === "function") openWildGrass(); }
+window.ballGoGrass = ballGoGrass;
 function openBallBag() {
   const draw = () => {
     const s = ballState || { bag: { poke: 0, great: 0, ultra: 0 }, today: 0, cap: 10, gains: [] };
@@ -96,7 +106,7 @@ function openBallBag() {
         '<li>' + ballImg("poke", 20) + '<span>Le <b>Pokémon du jour</b> trouvé</span></li>' +
         '<li>' + ballImg("great", 20) + '<span>Le <b>parcours du jour</b> fini (4/4)</span></li>' +
       '</ul><p class="ball-note">10 Balls par jour au plus. Rejouer au même mode ne rapporte plus de Ball ce jour-là.</p></section>' +
-      '<section class="ball-soon"><span aria-hidden="true">🌿</span><p><b>Bientôt : les hautes herbes.</b> Tes Balls serviront à attraper des Pokémon pour remplir ton album.</p></section>' +
+      ballGrassHtml(s) +
       guest + '</div>');
   };
   draw();
@@ -130,6 +140,7 @@ function renderBallHomeCard() {
     '<div><span class="home-balls-eyebrow">TES BALLS DU JOUR</span><b>' + (full ? "Sac plein pour aujourd’hui 🎉" : s.today + " / " + s.cap + " gagnées") + '</b>' + ballMeterHtml(s) +
     '<small>' + (full ? "Reviens demain pour 10 nouvelles Balls." : "1 Ball par mode joué aujourd’hui, une Super Ball pour une belle partie.") + '</small></div></div>' +
     '<div class="home-balls-actions">' + (s.giftAvailable ? '<button type="button" class="ball-gift-cta" data-action="claimBallGift">🎁 Cadeau du jour</button>' : "") +
+    (ballGrassLeft(s) > 0 && ballTotal(s) > 0 ? '<button type="button" class="ball-grass-cta" data-action="openWildGrass">🌿 Hautes herbes · ' + ballGrassLeft(s) + '/' + ((s.wild && s.wild.max) || 6) + '</button>' : "") +
     '<button type="button" class="btn-ghost" data-action="openBallBag">🎒 Mon sac · ' + ballTotal(s) + '</button></div>';
 }
 
