@@ -543,16 +543,137 @@ function openMyChallenges() {
   if (overlay) overlay.dataset.kind = 'challenge';
   pcRefresh().then(renderMyChallenges);
 }
+// « Mes défis » rangé en 3 onglets (3/11, maquette validée) : À relever · Envoyés (un défi envoyé à plusieurs
+// amis = une carte) · Terminés (une ligne, 🗑 pour l'effacer de sa liste). Le serveur garde la ligne pour l'autre joueur.
+var pcTab = null;
+var pcConfirm = null;
+function pcDayLabel(iso) {
+  var t = Date.parse(iso);
+  if (!t) return '';
+  var key = function (d) { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); };
+  var today = key(new Date()), yest = key(new Date(Date.now() - 86400000)), day = key(new Date(t));
+  if (day === today) return 'aujourd’hui';
+  if (day === yest) return 'hier';
+  if (Date.now() - t < 6 * 86400000) return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long' }).format(new Date(t));
+  return 'le ' + new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'long' }).format(new Date(t));
+}
+function pcGroupKey(c) {
+  return [c.kind, c.mode, c.target, c.secretId || '', c.note || c.phrase || '', String(c.createdAt || '').slice(0, 16)].join('|');
+}
+function pcSentGroups(sent) {
+  var groups = [], byKey = {};
+  sent.forEach(function (c) {
+    var k = pcGroupKey(c);
+    if (!byKey[k]) { byKey[k] = { key: k, items: [] }; groups.push(byKey[k]); }
+    byKey[k].items.push(c);
+  });
+  return groups;
+}
+function pcMoreMenu(inner) {
+  return '<details class="pc-dots"><summary aria-label="Plus d’actions">⋯</summary><div class="pc-dots-menu">' + inner + '</div></details>';
+}
+function pcTodoHtml(c) {
+  var mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY;
+  var goal = mystery
+    ? '<div class="pc-goal"><span class="pc-mystery">?</span><span>Trouve son Pokémon mystère en <b class="pc-small-b">' + Number(c.target) + '</b> essais</span></div>'
+    : daily ? '<div class="pc-goal"><span class="pc-mystery is-day">📅</span><span>Trouve le Pokémon du jour en <b class="pc-small-b">moins de ' + Number(c.target) + '</b> essais</span></div>'
+    : '<div class="pc-goal"><span class="pc-num">' + Number(c.target) + '</span><span>' + (pcAtMax(c) ? 'Égale ' + pcWord(c) + ' parfait' : 'Bats ' + pcWord(c)) + ' au <b class="pc-small-b">' + escapeHtml(c.label) + '</b></span></div>';
+  var go = mystery && c.tries ? 'Continuer · ' + Number(c.tries) + ' / ' + Number(c.target) : daily ? 'Jouer au Pokémon du jour' : 'Relever le défi';
+  return '<article class="pc-card is-open pc-todo">' +
+    '<div class="pc-who">' + pcAvatar(c.other) + '<div><b>' + escapeHtml(c.other.username) + ' te défie</b><small>' + escapeHtml(daily ? 'avant minuit' : pcLeft(c).replace('encore', 'expire dans')) + '</small></div>' +
+    pcMoreMenu('<button type="button" data-action="declineChallenge" data-args="[' + Number(c.id) + ']">Refuser ce défi</button>' +
+      '<button type="button" class="is-red" data-action="blockChallenger" data-args="[' + Number(c.id) + ']">Bloquer ' + escapeHtml(c.other.username) + ' (amis, messages et défis)</button>') + '</div>' +
+    goal + (c.note || c.phrase ? '<span class="pc-quote' + (c.note ? ' is-note' : '') + '">« ' + escapeHtml(c.note || c.phrase) + ' »</span>' : '') +
+    '<button type="button" class="btn-blue pc-go" data-action="acceptChallenge" data-args="[' + Number(c.id) + ']">' + go + '</button></article>';
+}
+function pcPersonState(c) {
+  var mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY, open = pcOpen(c);
+  if (c.status === 'won') return { cls: 'ok', text: '✅ ' + (mystery ? Number(c.best) + '/' + Number(c.target) : Number(c.best)), pct: mystery ? Number(c.best) / Number(c.target) : 1 };
+  if (c.status === 'declined') return { cls: 'off', text: 'passé', pct: 0 };
+  if (c.status === 'lost') return { cls: 'ko', text: mystery ? '❌ raté' : '💪 ' + (c.best != null ? Number(c.best) : '–'), pct: 1 };
+  if (!open) return { cls: 'off', text: '⏳ fini', pct: 0 };
+  if (mystery) return { cls: '', text: Number(c.tries || 0) + '/' + Number(c.target), pct: Number(c.tries || 0) / Number(c.target) };
+  if (daily) return { cls: '', text: 'pas joué', pct: 0 };
+  return { cls: '', text: c.best != null ? Number(c.best) + ' / ' + Number(c.target) : 'pas joué', pct: c.best != null ? Math.min(1, Number(c.best) / Number(c.target)) : 0 };
+}
+function pcGroupHtml(g) {
+  var c = g.items[0], n = g.items.length, mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY;
+  var done = g.items.filter(function (x) { return x.status === 'won'; }).length;
+  var p = mystery && c.secretId && typeof POKEMON_BY_ID !== 'undefined' ? POKEMON_BY_ID.get(Number(c.secretId)) : null;
+  var icon = p ? '<img src="' + escapeHtml(getPokemonSprite(p)) + '" alt="" loading="lazy">' : daily ? '📅' : '<b>' + Number(c.target) + '</b>';
+  var title = mystery ? '🔍 Ton ' + escapeHtml(pcSecretName(c)) : daily ? '📅 Pokémon du jour en moins de ' + Number(c.target) : '⚔️ ' + escapeHtml(c.label) + ' : ' + pcMyWord(c) + ' ' + Number(c.target);
+  var open = g.items.filter(pcOpen);
+  var sub = (mystery ? Number(c.target) + ' essais · ' : '') + (n > 1 ? 'envoyé à ' + n + ' amis' : 'à ' + escapeHtml(c.other.username)) + ' · ' + (daily ? 'avant minuit' : pcLeft(open[0] || c));
+  var word = mystery ? 'trouvé' : daily ? 'réussi' : 'battu';
+  var people = g.items.map(function (x) {
+    var st = pcPersonState(x);
+    var watch = mystery && Number(x.tries) > 0 ? '<button type="button" class="pc-watch" data-action="openMysteryGame" data-args="[' + Number(x.id) + ']" aria-label="Voir les essais de ' + escapeHtml(x.other.username) + '">👀</button>' : '';
+    return '<li><span class="pc-mini">' + pcAvatar(x.other) + '</span><span class="pc-name">' + escapeHtml(x.other.username) + '</span>' +
+      '<span class="pc-bar"><i style="width:' + Math.round(Math.max(0, Math.min(1, st.pct)) * 100) + '%"></i></span><em class="' + st.cls + '">' + escapeHtml(st.text) + '</em>' + watch + '</li>';
+  }).join('');
+  var ids = open.map(function (x) { return Number(x.id); });
+  var confirming = pcConfirm === 'cancel:' + g.key;
+  return '<article class="pc-group"><div class="pc-group-head"><span class="pc-mon">' + icon + '</span><div><b>' + title + '</b><small>' + sub + '</small></div>' +
+    '<span class="pc-score"><b>' + done + ' / ' + n + '</b><small>' + word + '</small></span>' +
+    (ids.length ? pcMoreMenu('<button type="button" class="is-red" data-action="pcCancelGroup" data-args="' + pcArgs([g.key, ids]) + '">' + (confirming ? 'Sûr ? Appuie encore pour annuler' : 'Annuler ce défi' + (ids.length > 1 ? ' (' + ids.length + ' amis)' : '')) + '</button>') : '') + '</div>' +
+    '<ul class="pc-people">' + people + '</ul></article>';
+}
+function pcDoneParts(c) {
+  var mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY, who = escapeHtml(c.other.username), secret = escapeHtml(pcSecretName(c)), label = escapeHtml(c.label);
+  if (c.incoming) {
+    if (c.status === 'declined') return ['🚫', 'Refusé : le défi de ' + who, mystery ? 'Pokémon mystère' : daily ? 'Pokémon du jour' : label];
+    if (c.status === 'won') return ['✅', mystery ? 'Tu as trouvé le Pokémon de ' + who : daily ? 'Tu as battu ' + who + ' au Pokémon du jour' : 'Tu as battu le record de ' + who + ' au ' + label,
+      mystery ? secret + ' · ' + Number(c.best) + ' essais sur ' + Number(c.target) : daily ? Number(c.best) + ' essais contre ' + Number(c.target) : Number(c.best) + ' contre ' + Number(c.target)];
+    if (c.status === 'expired') return ['⏳', 'Pas fini à temps : le défi de ' + who, mystery ? 'c’était ' + secret : daily ? 'Pokémon du jour' : label];
+    return ['❌', mystery ? 'Raté : le Pokémon de ' + who : daily ? 'Raté : le Pokémon du jour de ' + who : 'Pas battu : le ' + label + ' de ' + who,
+      mystery ? 'c’était ' + secret : c.best != null ? Number(c.best) + ' contre ' + Number(c.target) : 'objectif ' + Number(c.target)];
+  }
+  if (c.status === 'won') return ['🏆', mystery ? who + ' a trouvé ton ' + secret : daily ? who + ' a fait mieux au Pokémon du jour' : who + ' a battu ' + pcMyWord(c) + ' au ' + label,
+    mystery ? Number(c.best) + ' essais sur ' + Number(c.target) : Number(c.best) + ' contre ' + Number(c.target)];
+  if (c.status === 'declined') return ['🚫', who + ' a passé son tour', mystery ? 'ton ' + secret : daily ? 'Pokémon du jour' : label];
+  if (c.status === 'lost') return ['💪', mystery ? who + ' n’a pas trouvé ton ' + secret : daily ? who + ' n’a pas fait mieux au Pokémon du jour' : who + ' n’a pas battu ' + pcMyWord(c) + ' au ' + label,
+    mystery ? Number(c.target) + ' essais' : c.best != null ? Number(c.best) + ' contre ' + Number(c.target) : 'objectif ' + Number(c.target)];
+  return ['⏳', who + ' n’a pas joué à temps', mystery ? 'ton ' + secret : daily ? 'Pokémon du jour' : label];
+}
+function pcDoneHtml(c) {
+  var parts = pcDoneParts(c), day = pcDayLabel(c.createdAt);
+  var again = c.incoming && c.status === 'declined' ? '' : '<button type="button" class="pc-again-sm" data-action="openChallengeForm" data-args="' + pcArgs([c.other.pid, c.other.username, c.mode]) + '">⚔️ ' + (c.incoming ? 'À ton tour' : c.status === 'won' ? 'Revanche' : 'Redéfier') + '</button>';
+  return '<div class="pc-done' + (c.status === 'expired' || c.status === 'declined' ? ' is-faded' : '') + '"><span class="pc-ic" aria-hidden="true">' + parts[0] + '</span>' +
+    '<p>' + parts[1] + '<small>' + parts[2] + (day ? ' · ' + escapeHtml(day) : '') + '</small></p>' + again +
+    '<button type="button" class="pc-del" data-action="pcHideChallenge" data-args="[' + Number(c.id) + ']" aria-label="Effacer de ma liste">🗑</button></div>';
+}
 function renderMyChallenges() {
   var box = document.querySelector('#overlay-body .pc-list');
   if (!box) return;
   var list = pcState.list || [];
-  var incoming = list.filter(function (c) { return c.incoming; });
+  var todo = list.filter(function (c) { return c.incoming && pcOpen(c); });
   var sent = list.filter(function (c) { return !c.incoming; });
-  box.innerHTML = '<h4>Reçus</h4>' + (incoming.length ? incoming.map(pcIncomingHtml).join('') : '<p class="pc-empty">Aucun défi reçu pour l’instant.</p>') +
-    '<h4>Envoyés</h4>' + (sent.length ? sent.map(pcSentHtml).join('') : '<p class="pc-empty">Pour défier quelqu’un : clique sur son pseudo dans un classement, puis ⚔️ Défier.</p>') +
+  var groups = pcSentGroups(sent);
+  var live = groups.filter(function (g) { return g.items.some(pcOpen); });
+  var liveIds = {};
+  live.forEach(function (g) { g.items.forEach(function (c) { liveIds[c.id] = true; }); });
+  var done = list.filter(function (c) { return !pcOpen(c) && !liveIds[c.id]; });
+  if (!pcTab) pcTab = todo.length ? 'todo' : live.length ? 'sent' : 'done';
+  var tab = function (key, label, n) {
+    return '<button type="button" role="tab" aria-selected="' + (pcTab === key) + '" class="' + (pcTab === key ? 'is-on' : '') + '" data-action="pcSetTab" data-args=\'["' + key + '"]\'>' + label + (n ? '<i>' + n + '</i>' : '') + '</button>';
+  };
+  var body;
+  if (pcTab === 'todo') {
+    body = todo.length ? todo.map(pcTodoHtml).join('') + '<p class="pc-note pc-center">⋯ : refuser ou bloquer</p>'
+      : '<p class="pc-empty pc-center">Aucun défi à relever pour l’instant.</p>';
+  } else if (pcTab === 'sent') {
+    body = live.length ? live.map(pcGroupHtml).join('')
+      : '<p class="pc-empty pc-center">Aucun défi en cours. Pour défier quelqu’un : clique sur son pseudo dans un classement, puis ⚔️ Défier.</p>';
+  } else {
+    body = done.length ? done.map(pcDoneHtml).join('') +
+      '<button type="button" class="pc-clear" data-action="pcHideAllDone">' + (pcConfirm === 'all' ? 'Sûr ? Appuie encore pour tout effacer' : '🗑 Effacer tous les défis terminés') + '</button>'
+      : '<p class="pc-empty pc-center">Rien ici pour l’instant.</p>';
+  }
+  box.dataset.tabs = '1';
+  box.innerHTML = '<div class="pc-tabs" role="tablist" aria-label="Mes défis">' + tab('todo', 'À relever', todo.length) + tab('sent', 'Envoyés', live.length) + tab('done', 'Terminés', 0) + '</div>' +
+    '<div class="pc-tabbody" role="tabpanel">' + body + '</div>' +
     '<label class="pc-accept"><input type="checkbox" data-pc-accept' + (pcState.accepting !== false ? ' checked' : '') + '> Recevoir des défis des autres joueurs</label>' +
-    '<p class="pc-note">Un défi dure 24 h, 3 ou 7 jours (celui du Pokémon du jour, jusqu’à minuit). Tout est effacé au bout de 30 jours, ou avec ton compte.</p>';
+    '<p class="pc-note pc-center">Un défi dure 24 h, 3 ou 7 jours (celui du Pokémon du jour, jusqu’à minuit). 🗑 l’efface de ta liste seulement. Tout est effacé au bout de 30 jours, ou avec ton compte.</p>';
   var box2 = box.querySelector('[data-pc-accept]');
   if (box2) box2.onchange = function () {
     pcPost('/api/challenges/settings', { accepting: box2.checked }).then(function (data) {
@@ -561,6 +682,41 @@ function renderMyChallenges() {
   };
   pcMarkSeen(list);
 }
+function pcInList() { return Boolean(document.querySelector('#overlay-body .pc-list[data-tabs]')); }
+function pcSetTab(key) {
+  pcTab = ['todo', 'sent', 'done'].indexOf(key) >= 0 ? key : 'todo';
+  pcConfirm = null;
+  renderMyChallenges();
+}
+function pcAfterTidy(message) {
+  return pcRefresh().then(function () { if (message) showToast(message); if (pcInList()) renderMyChallenges(); });
+}
+function pcHideChallenge(id) {
+  pcState.list = (pcState.list || []).filter(function (c) { return Number(c.id) !== Number(id); });
+  renderMyChallenges();
+  pcPost('/api/challenges/hide', { ids: [Number(id)] }).then(function (data) {
+    if (!data || !data.ok) { showToast('Impossible d’effacer pour le moment. Réessaie dans un instant.'); pcAfterTidy(); }
+  });
+}
+function pcHideAllDone() {
+  if (pcConfirm !== 'all') { pcConfirm = 'all'; renderMyChallenges(); setTimeout(function () { if (pcConfirm === 'all') { pcConfirm = null; if (pcInList()) renderMyChallenges(); } }, 4000); return; }
+  pcConfirm = null;
+  pcPost('/api/challenges/hide', { finished: true }).then(function (data) {
+    pcAfterTidy(data && data.ok ? '🗑 Défis terminés effacés' : 'Impossible d’effacer pour le moment. Réessaie dans un instant.');
+  });
+}
+function pcCancelGroup(key, ids) {
+  var mark = 'cancel:' + key;
+  if (pcConfirm !== mark) { pcConfirm = mark; renderMyChallenges(); var d = document.querySelector('#overlay-body .pc-dots'); if (d) d.open = true; return; }
+  pcConfirm = null;
+  pcPost('/api/challenges/cancel', { ids: ids }).then(function (data) {
+    pcAfterTidy(data && data.ok ? 'Défi annulé' : 'Impossible d’annuler pour le moment. Réessaie dans un instant.');
+  });
+}
+window.pcSetTab = pcSetTab;
+window.pcHideChallenge = pcHideChallenge;
+window.pcHideAllDone = pcHideAllDone;
+window.pcCancelGroup = pcCancelGroup;
 
 function acceptChallenge(id) {
   var c = pcFind(id);
@@ -579,7 +735,7 @@ function acceptChallenge(id) {
 function declineChallenge(id) {
   pcPost('/api/challenges/decline', { id: Number(id) }).then(function () { return pcRefresh(); }).then(function () {
     showToast('Défi refusé');
-    if (document.querySelector('#overlay-body .pc-list h4')) renderMyChallenges(); else closeOverlayModal();
+    if (pcInList()) renderMyChallenges(); else closeOverlayModal();
   });
 }
 function blockChallenger(id) {
@@ -587,7 +743,7 @@ function blockChallenger(id) {
     if (!data || !data.ok) { showToast('Blocage impossible pour le moment. Réessaie dans un instant.'); return; }
     return Promise.all([pcRefresh(), typeof frRefresh === 'function' ? frRefresh() : null, typeof chatRefresh === 'function' ? chatRefresh() : null]).then(function () {
       showToast('Joueur bloqué : plus de demandes d’ami, de messages ni de défis.');
-      if (document.querySelector('#overlay-body .pc-list h4')) renderMyChallenges(); else closeOverlayModal();
+      if (pcInList()) renderMyChallenges(); else closeOverlayModal();
     });
   }).catch(function () { showToast('Blocage impossible pour le moment. Réessaie dans un instant.'); });
 }
