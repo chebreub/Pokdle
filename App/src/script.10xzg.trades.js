@@ -3,6 +3,7 @@
 // ⭐ Partenaire. Jamais le dernier exemplaire ; un shiny seulement contre un shiny. Serveur : lib/wild-trades.js,
 // POST /api/wild/release (lib/poke-balls.js).
 const TRADE_RELEASE_XP = 20;
+function tradeReleaseGain(authed, shiny) { return authed ? "+" + (shiny ? "1 500" : "15") + " ₽" : "+" + TRADE_RELEASE_XP + " XP"; }
 let tradeState = null;     // GET /api/trades
 let tradeFlow = null;      // { mon, shiny, friend: {pid, username}, data, want }
 function tradeMon(id) { return typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(id)) || null : null; }
@@ -42,8 +43,8 @@ function openTradeMon(id) {
     '<div class="tm-cnt"><span>' + tradeBallSvg() + ' ×' + n.normal + ' attrapé' + (n.normal > 1 ? "s" : "") + '</span><span class="is-sh">✨ ×' + n.shiny + '</span></div></div></div>' +
     '<div class="tm-acts">' +
     (dupe ? row("🔁", "#E9EEFB", "Échanger avec un ami", authed ? "Contre un Pokémon qui te manque" : "Connecte-toi pour échanger", "tradeStart", JSON.stringify([p.id, shinyDupe]), "", !authed) : "") +
-    (n.normal > 1 ? row("🌿", "#E8F6EC", "Relâcher 1 doublon", "Il retourne dans les herbes", "tradeRelease", JSON.stringify([p.id, false]), "+" + TRADE_RELEASE_XP + " XP") : "") +
-    (n.shiny > 1 ? row("✨", "#FFF1C9", "Relâcher 1 shiny en double", "Le dernier shiny reste toujours", "tradeRelease", JSON.stringify([p.id, true]), "+" + TRADE_RELEASE_XP + " XP") : "") +
+    (n.normal > 1 ? row("🌿", "#E8F6EC", "Relâcher 1 doublon", "Il retourne dans les herbes", "tradeRelease", JSON.stringify([p.id, false]), tradeReleaseGain(authed, false)) : "") +
+    (n.shiny > 1 ? row("✨", "#FFF1C9", "Relâcher 1 shiny en double", "Le dernier shiny reste toujours", "tradeRelease", JSON.stringify([p.id, true]), tradeReleaseGain(authed, true)) : "") +
     row("⭐", "#FFF1C9", "Choisir comme partenaire", "Il s’affiche sur ta carte de dresseur", "tradePartner", JSON.stringify([p.id])) +
     '</div><p class="tm-keep">' + (dupe ? "Le dernier exemplaire est toujours gardé : on ne peut ni l’échanger ni le relâcher." : "Attrape-le encore une fois dans les hautes herbes pour pouvoir l’échanger.") + '</p></div>';
   ensureOverlay("📒 " + p.name, html);
@@ -57,9 +58,12 @@ function tradeRelease(id, shiny) {
   tradePost("/api/wild/release", { id: Number(id), shiny: Boolean(shiny) }).then((data) => {
     if (!data || !data.ok) { if (typeof showToast === "function") showToast(tradeError(data)); return; }
     if (typeof wildSyncAlbum === "function") wildSyncAlbum(data.captures);
-    if (typeof awardXp === "function") awardXp(TRADE_RELEASE_XP, "Doublon relâché : " + (p ? p.name : ""));
+    // 💰 Avec un compte, le doublon rapporte des Pokédollars (15 ₽, 1 500 ₽ pour un shiny) ; sans compte, de l'XP comme avant.
+    const coins = Number(data.coinsEarned) || 0;
+    if (coins > 0) { if (typeof ballApply === "function") ballApply(data, { announce: false }); }
+    else if (typeof awardXp === "function") awardXp(TRADE_RELEASE_XP, "Doublon relâché : " + (p ? p.name : ""));
     if (typeof moSfx === "function") moSfx("sparkle");
-    if (typeof showToast === "function") showToast("🌿 " + (p ? p.name : "Le Pokémon") + " retourne dans les herbes · +" + TRADE_RELEASE_XP + " XP");
+    if (typeof showToast === "function") showToast("🌿 " + (p ? p.name : "Le Pokémon") + " retourne dans les herbes · +" + (coins > 0 ? coins.toLocaleString("fr-FR") + " ₽" : TRADE_RELEASE_XP + " XP"));
     openTradeMon(id);
   });
 }
