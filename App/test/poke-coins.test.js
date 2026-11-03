@@ -44,7 +44,7 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     assert.deepEqual(s.coinsAdded.map((x) => x.amount), [90]);
     s = await balls.earn(me, { mode: 'quiz', result: 'win', score: 3 });
     assert.deepEqual(s.coinsAdded, [], 'the same mode pays once a day');
-    s = await balls.earn(me, { mode: 'weight', result: 'win', score: 3 });
+    s = await balls.earn(me, { mode: 'description', result: 'win', score: 4 });
     assert.deepEqual(s.coinsAdded.map((x) => x.amount), [60]);
     s = await balls.earn(me, { mode: 'normal', result: 'loss', score: 9 });
     assert.deepEqual([s.coins.balance, s.coins.today, s.coins.played], [180, 180, 180]);

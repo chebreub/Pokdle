@@ -5,6 +5,7 @@
 // dans leurs tables ; les autres modes sont déclarés en fin de partie, comme leurs classements.
 // Sans compte, les Balls sont gardées sous l'identité invitée et passent sur le compte à la connexion.
 const crypto = require("node:crypto");
+const verifiedArcade = require("./verified-arcade");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
 
@@ -127,6 +128,7 @@ function arcadeGain(mode, result, score) {
 }
 
 async function initBallsDb(db) {
+  await verifiedArcade.initVerifiedArcadeDb(db);
   await db.query(`CREATE TABLE IF NOT EXISTS ball_gains(
     identity TEXT NOT NULL, day DATE NOT NULL, source TEXT NOT NULL, ball TEXT NOT NULL,
     account_id TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(identity,day,source))`);
@@ -159,7 +161,8 @@ async function initBallsDb(db) {
   await db.query("CREATE UNIQUE INDEX IF NOT EXISTS coin_ledger_source ON coin_ledger(identity,day,source)");
 }
 
-function createBallService({ db, clock = () => new Date(), randomInt = crypto.randomInt, random = () => crypto.randomInt(1000000) / 1000000 }) {
+function createBallService({ db, clock = () => new Date(), randomInt = crypto.randomInt, random = () => crypto.randomInt(1000000) / 1000000, pokemon, secret }) {
+  const arcade = verifiedArcade.createVerifiedArcade({pokemon,secret,clock,randomInt});
   const lock = (c, key) => c.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["balls:" + key]);
   async function tx(fn) {
     const c = await db.connect();
@@ -195,6 +198,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       ultra=ball_merge_credits.ultra+EXCLUDED.ultra`, [who.key,who.accountId,...credit]);
     await c.query("DELETE FROM ball_gains WHERE identity=$1", [who.guestKey]);
     await c.query("UPDATE wild_encounters SET identity=$2,account_id=$3 WHERE identity=$1", [who.guestKey, who.key, who.accountId]);
+    await c.query("UPDATE arcade_runs SET account_id=$2 WHERE identity=$1 AND account_id IS NULL", [who.guestKey, who.accountId]);
     // Keep guest receipt keys stable; associate them with the owner for account erasure.
     await c.query("UPDATE ball_actions SET account_id=$2 WHERE identity=$1 AND account_id IS NULL", [who.guestKey, who.accountId]);
   }
@@ -316,7 +320,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const bonus = (await c.query(`SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 AND ${BONUS_SQL} ORDER BY created_at,source`, [who.key, day])).rows;
     const bag = await bagOf(c, who);
     const cal = dailyCalendar(clock());
-    return { ok: true, actionScope: crypto.createHash("sha256").update(who.key).digest("hex"), day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
+    return { ok: true, verifiedModes: verifiedArcade.MODES, actionScope: crypto.createHash("sha256").update(who.key).digest("hex"), day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
       giftAvailable: today.length < DAILY_CAP && !today.some((g) => g.source === "gift"), authenticated: Boolean(who.accountId),
       bonus, streak: await streakOf(c, who, day), welcomeBalls: WELCOME_BALLS.length,
       wild: await wildState(c, who, day), coins: await coinState(c, who, day), coinsAdded };
@@ -460,7 +464,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const coinsAdded = await coinDaily(c, who, day, daily);
     if (extraGains.coin) { const r = await coinPlay(c, who, day, extraGains[0], extraGains.coin.result); if (r) coinsAdded.push(r); }
     if (extraGains.party) { const r = await coinGrant(c, who, day, "day:party", COIN_PARTY); if (r) coinsAdded.push(r); }
-    return state(c, who, day, added, coinsAdded);
+    return { ...await state(c, who, day, added, coinsAdded), ...(extraGains.response || {}) };
   });
   // Une action des hautes herbes, puis le sac et l'état à jour.
   const wild = (who, action, receipt) => tx(async (c) => {
@@ -488,9 +492,25 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   return {
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
-    earn: (who, body) => run(who, async () => body.mode === "party"
+    arcadeStart: (who, body) => wild(who, c => arcade.start(c,who,body)),
+    arcadeNext: (who, body) => wild(who, c => arcade.next(c,who,body)),
+    arcadeAnswer: (who, body) => run(who, async c => {
+      const out = await arcade.answer(c,who,body), gains = [];
+      if (out.earned) {
+        gains.push(arcadeGain(out.earned.mode,out.earned.result,out.earned.score));
+        gains.coin = {result:out.earned.result};
+        delete out.earned;
+      }
+      gains.response = out;
+      return gains;
+    }),
+    arcadeImageSpec: arcade.imageSpec,
+    earn: (who, body) => run(who, async () => {
+      if (verifiedArcade.MODES.includes(String(body.mode || ""))) throw fail("verified_game_required",400);
+      return body.mode === "party"
       ? Object.assign([{ source: "party", ball: "poke" }], { party: true })
-      : Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } })),
+      : Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } });
+    }),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, async (c, day) => {
       if (body.encounterId !== undefined) {
@@ -509,8 +529,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   };
 }
 
-function mountBallRoutes({ app, express, db, secret, getUser, readCookies, readyBefore = Promise.resolve(), clock }) {
-  const service = db && secret ? createBallService({ db, clock }) : null;
+function mountBallRoutes({ app, express, db, secret, getUser, readCookies, readyBefore = Promise.resolve(), clock, pokemon, artworkLoader, randomInt }) {
+  const service = db && secret ? createBallService({ db, clock, pokemon, secret, randomInt }) : null;
   const ready = service ? readyBefore.then(() => initBallsDb(db)).then(() => true).catch((e) => { console.error("[balls] init:", e.message); return false; }) : Promise.resolve(false);
   const buckets = new Map();
   function rate(key, limit, now) {
@@ -519,7 +539,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
     if (b && b.until > now) { if (++b.count > limit) throw fail("rate_limited", 429); }
     else buckets.set(key, { count: 1, until: now + 60000 });
   }
-  const handle = (action, paidOperation = null) => async (req, res) => {
+  const handle = (action, paidOperation = null, accountBound = false) => async (req, res) => {
     res.set("Cache-Control", "no-store");
     if (!service || !await ready) return res.status(503).json({ ok: false, error: "unavailable" });
     try {
@@ -536,12 +556,15 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
       let id = dailyGuest(secret, readCookies(req).pokdle_daily);
       if (!id) { const issued = issueDailyGuest(secret); id = issued.id; res.cookie("pokdle_daily", issued.cookie, { httpOnly: true, secure: req.secure, sameSite: "lax", path: "/", maxAge: 180 * 86400000 }); }
       const user = getUser(req), who = { key: user?.id ? "user:" + user.id : "guest:" + id, guestKey: "guest:" + id, accountId: user?.id ? String(user.id) : null };
-      if (req.method === "POST" && paidOperation) {
-        if (typeof req.body.actionScope !== "string") throw fail("reload_required", 400);
+      if (req.method === "POST" && (paidOperation || accountBound)) {
+        if (typeof req.body?.actionScope !== "string") throw fail("reload_required", 400);
         if (req.body.actionScope !== crypto.createHash("sha256").update(who.key).digest("hex")) throw fail("account_changed", 409);
       }
       const ip = crypto.createHmac("sha256", secret).update("balls-ip:" + String(req.ip)).digest("hex");
-      rate("ip:" + ip, 120, Date.now()); rate("id:" + who.key, 40, Date.now());
+      // A verified round needs start/answer/next requests; keep the existing economy limits separate.
+      const prefix = accountBound ? "arcade:" : "";
+      rate(prefix + "ip:" + ip, accountBound ? 360 : 120, Date.now());
+      rate(prefix + "id:" + who.key, accountBound ? 120 : 40, Date.now());
       res.json(await action(who, req));
     } catch (e) {
       if (!e.status) console.error("[balls] request:", e.message);
@@ -549,6 +572,19 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
       res.status(e.status || 503).json({ ok: false, error: e.status ? e.code : "unavailable" });
     }
   };
+  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"]]) {
+    app.post("/api/arcade/" + route, express.json({limit:"1kb"}), handle((who,req) => service[method](who,req.body || {}),null,true));
+  }
+  const loadArt = artworkLoader || verifiedArcade.createArcadeArtworkLoader();
+  app.get("/api/arcade/art/:token", async (req,res) => {
+    res.set("Cache-Control","private, no-store");
+    if (!service || !await ready) return res.sendStatus(503);
+    const guest = dailyGuest(secret,readCookies(req).pokdle_daily), user = getUser(req);
+    const who = {key:user?.id ? "user:" + user.id : guest ? "guest:" + guest : ""};
+    const spec = service.arcadeImageSpec(req.params.token,who);
+    if (!spec) return res.sendStatus(404);
+    try { res.type("png").send(await loadArt(spec)); } catch (_) { res.sendStatus(503); }
+  });
   app.get("/api/balls", handle((who) => service.state(who)));
   app.post("/api/balls/gift", express.json({ limit: "1kb" }), handle((who) => service.gift(who)));
   app.post("/api/balls/earn", express.json({ limit: "1kb" }), handle((who, req) => service.earn(who, req.body || {})));
