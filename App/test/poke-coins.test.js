@@ -39,26 +39,38 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     await assert.rejects(balls.buy(guest, { item: 'poke' }), /account_required/);
 
     const me = { key: 'user:7', guestKey: 'guest:c2', accountId: '7' };
-    // Une belle partie 90 ₽, une partie gagnée 60 ₽, une perdue 30 ₽ ; chaque partie compte, même le même mode.
+    // La 1re partie du jour de chaque mode : belle partie 90 ₽, gagnée 60 ₽, perdue 30 ₽ ; rejouer ne paie plus.
     s = await balls.earn(me, { mode: 'quiz', result: 'win', score: 14 });
     assert.deepEqual(s.coinsAdded.map((x) => x.amount), [90]);
     s = await balls.earn(me, { mode: 'quiz', result: 'win', score: 3 });
+    assert.deepEqual(s.coinsAdded, [], 'the same mode pays once a day');
+    s = await balls.earn(me, { mode: 'weight', result: 'win', score: 3 });
     assert.deepEqual(s.coinsAdded.map((x) => x.amount), [60]);
     s = await balls.earn(me, { mode: 'normal', result: 'loss', score: 9 });
     assert.deepEqual([s.coins.balance, s.coins.today, s.coins.played], [180, 180, 180]);
+    // 🎉 Party Room : 150 ₽ + 1 Poké Ball, une fois par jour.
+    const bagBefore = s.bag.poke;
+    s = await balls.earn(me, { mode: 'party' });
+    assert.deepEqual(s.coinsAdded, [{ source: 'day:party', amount: 150 }]);
+    assert.equal(s.bag.poke, bagBefore + 1);
+    s = await balls.earn(me, { mode: 'party' });
+    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 330]);
+    assert.ok(s.coins.done.includes('party'));
 
     // Le Pokémon du jour : 300 ₽ une seule fois, lu dans sa table.
     await db.query("INSERT INTO daily_plays VALUES('user:7','2026-11-03','won')");
     s = await balls.state(me);
     assert.deepEqual(s.coinsAdded, [{ source: 'day:daily', amount: 300 }]);
-    assert.deepEqual(s.coins.done, ['daily']);
+    assert.deepEqual(s.coins.done.sort(), ['daily', 'party']);
     s = await balls.state(me);
-    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 480], 'not paid twice');
+    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 630], 'not paid twice');
 
     // Les parties : 2 000 ₽ par jour au plus (la dernière est coupée).
-    for (let i = 0; i < 25; i++) s = await balls.earn(me, { mode: 'pixel', result: 'win', score: 2 });
+    await db.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) SELECT 'user:7','7','2026-11-03','play:x'||g,90 FROM generate_series(1,20) g");
+    s = await balls.earn(me, { mode: 'pixel', result: 'win', score: 2 });
+    assert.deepEqual(s.coinsAdded.map((x) => x.amount), [20], 'the last one is cut to the cap');
     assert.equal(s.coins.played, COIN_PLAY_CAP);
-    assert.equal(s.coins.balance, 300 + COIN_PLAY_CAP);
+    assert.equal(s.coins.balance, 300 + 150 + COIN_PLAY_CAP);
 
     // Boutique : 3 Poké Balls = 150 ₽, hors du plafond des 10 Balls du jour.
     const before = s;
@@ -66,7 +78,7 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     assert.deepEqual(s.bought, { item: 'poke', qty: 3, price: 150 });
     assert.equal(s.bag.poke, before.bag.poke + 3);
     assert.equal(s.today, before.today, 'bought Balls are not in the 10 a day');
-    assert.equal(s.coins.balance, 2150);
+    assert.equal(s.coins.balance, 2300);
     await assert.rejects(balls.buy(me, { item: 'master' }), /invalid_item/);
     await assert.rejects(balls.buy(me, { item: 'ultra', qty: 11 }), /invalid_qty/);
 
@@ -75,16 +87,16 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     s = await balls.buy(me, { item: 'recharge' });
     assert.deepEqual([s.bought.price, s.wild.left, s.wild.max, s.coins.rechargePrice], [100, left + 4, 28, 200]);
     s = await balls.buy(me, { item: 'recharge' });
-    assert.deepEqual([s.bought.price, s.wild.left, s.coins.balance], [200, left + 8, 1850]);
+    assert.deepEqual([s.bought.price, s.wild.left, s.coins.balance], [200, left + 8, 2000]);
 
     // Pas assez de ₽ : rien ne bouge.
     await assert.rejects(balls.buy(me, { item: 'ultra', qty: 7 }), /not_enough_coins/);
-    assert.equal((await balls.state(me)).coins.balance, 1850);
+    assert.equal((await balls.state(me)).coins.balance, 2000);
 
     // Le lendemain : la recharge repart à 100 ₽, le solde reste.
     const tomorrow = createBallService({ db, clock: () => new Date('2026-11-04T08:30:00Z') });
     s = await tomorrow.state(me);
-    assert.deepEqual([s.coins.balance, s.coins.today, s.coins.rechargePrice, s.wild.left], [1850, 0, 100, 12]);
+    assert.deepEqual([s.coins.balance, s.coins.today, s.coins.rechargePrice, s.wild.left], [2000, 0, 100, 12]);
   });
 });
 
