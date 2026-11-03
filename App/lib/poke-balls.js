@@ -13,7 +13,24 @@ const DAILY_CAP = 10;
 // et les 5 Balls offertes une fois par compte.
 const STREAK_EVERY = 7;
 const WELCOME_BALLS = Object.freeze(["poke", "poke", "poke", "poke", "great"]);
-const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%')";
+const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%')";
+
+// ===== L'Expédition de la semaine (PR 2 du plan, 3/11/2026) =====
+// Une région par semaine (lundi → dimanche, Paris). 1 participation = un jour où le joueur a gagné des Balls
+// dans 2 jeux différents. Objectif commun = 1,5 × les joueurs actifs de la semaine d'avant, 7 au moins.
+// Coffres à 25 / 50 / 75 % (perdus s'ils ne sont pas ouverts avant dimanche minuit), et à 100 % une rencontre
+// avec le légendaire de la région (compte et 2 participations au moins ; vrai taux de capture, rien de garanti).
+// Seulement des légendaires qui ne sont pas des récompenses de missions d'album (sinon la capture ne remplirait pas l'album).
+const EXPEDITIONS = Object.freeze([
+  { region: "Hoenn", gen: 3, legend: 380 }, { region: "Sinnoh", gen: 4, legend: 485 }, { region: "Unys", gen: 5, legend: 639 },
+  { region: "Alola", gen: 7, legend: 785 }, { region: "Galar", gen: 8, legend: 894 }, { region: "Paldea", gen: 9, legend: 1001 }
+]);
+const EXP_CHESTS = Object.freeze({ 25: ["poke", "poke"], 50: ["great", "poke"], 75: ["great", "great"] });
+const EXP_MIN_GOAL = 7;
+const PLAY_SOURCES_SQL = "(source LIKE 'mode:%' OR source IN ('daily','wordle','dossier','challenge'))";
+function shiftDay(day, n) { const t = new Date(day + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
+function weekStart(day) { const t = new Date(day + "T12:00:00Z"); return shiftDay(day, -((t.getUTCDay() + 6) % 7)); }
+function expeditionOf(monday) { const n = Math.round(Date.parse(monday + "T12:00:00Z") / (7 * 86400000)); return EXPEDITIONS[((n % EXPEDITIONS.length) + EXPEDITIONS.length) % EXPEDITIONS.length]; }
 const BALLS = Object.freeze(["poke", "great", "ultra"]);
 
 // ===== Les hautes herbes (PR B) : 6 rencontres par jour, 3 lancers, shiny à 1 sur 150. =====
@@ -81,6 +98,9 @@ async function initBallsDb(db) {
     used_poke INT NOT NULL DEFAULT 0, used_great INT NOT NULL DEFAULT 0, used_ultra INT NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'open', ball TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), ended_at TIMESTAMPTZ)`);
   await db.query("CREATE INDEX IF NOT EXISTS wild_encounters_identity ON wild_encounters(identity,day)");
+  // « legend » : la rencontre de l'Expédition, hors des 6 rencontres du jour.
+  await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'wild'");
+  await db.query("CREATE INDEX IF NOT EXISTS ball_gains_day ON ball_gains(day)");
 }
 
 function createBallService({ db, clock = () => new Date(), randomInt = crypto.randomInt, random = () => crypto.randomInt(1000000) / 1000000 }) {
@@ -178,13 +198,13 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   function encounterView(row) {
     if (!row) return null;
     return { id: Number(row.id), pokemonId: Number(row.pokemon_id), shiny: Boolean(row.shiny), throws: Number(row.throws),
-      throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null,
+      throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null, legend: row.kind === "legend",
       chances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(Number(row.pokemon_id), b) * 100)])) };
   }
   async function wildState(c, who, day) {
     // Une rencontre restée ouverte un autre jour : le Pokémon est parti.
     await c.query("UPDATE wild_encounters SET status='fled',ended_at=NOW() WHERE identity=$1 AND status='open' AND day<>$2", [who.key, day]);
-    const used = Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_encounters WHERE identity=$1 AND day=$2", [who.key, day])).rows[0].n);
+    const used = Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_encounters WHERE identity=$1 AND day=$2 AND kind='wild'", [who.key, day])).rows[0].n);
     const open = (await c.query("SELECT * FROM wild_encounters WHERE identity=$1 AND status='open' ORDER BY id DESC LIMIT 1", [who.key])).rows[0];
     const caught = Number((await c.query("SELECT COUNT(DISTINCT pokemon_id)::int AS n FROM wild_encounters WHERE identity=$1 AND status='caught'", [who.key])).rows[0].n);
     return { max: ENCOUNTERS_PER_DAY, today: used, left: Math.max(0, ENCOUNTERS_PER_DAY - used), open: encounterView(open), caught };
@@ -215,6 +235,48 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const updated = (await c.query(`UPDATE wild_encounters SET throws=$2,used_${ball}=used_${ball}+1,status=$3,ball=$4,ended_at=CASE WHEN $3='open' THEN NULL ELSE NOW() END WHERE id=$1 RETURNING *`,
       [row.id, throws, status, caught ? ball : null])).rows[0];
     return { result: { caught, fled: status === "fled", shakes, ball }, encounter: encounterView(updated) };
+  }
+  // L'Expédition : tout est recalculé depuis les Balls gagnées, rien d'autre n'est gardé.
+  async function expedition(c, who, day) {
+    const monday = weekStart(day), sunday = shiftDay(monday, 6), exp = expeditionOf(monday);
+    const parts = `SELECT identity,day FROM ball_gains WHERE day BETWEEN $1 AND $2 AND ${PLAY_SOURCES_SQL} GROUP BY identity,day HAVING COUNT(DISTINCT source)>=2`;
+    const all = (await c.query(`SELECT COUNT(*)::int AS n,COUNT(DISTINCT identity)::int AS p FROM (${parts}) x`, [monday, day])).rows[0];
+    const prev = Number((await c.query(`SELECT COUNT(DISTINCT identity)::int AS p FROM (${parts}) x`, [shiftDay(monday, -7), shiftDay(monday, -1)])).rows[0].p);
+    const goal = Math.max(EXP_MIN_GOAL, Math.ceil(prev * 1.5));
+    const mine = (await c.query(`SELECT to_char(day,'YYYY-MM-DD') AS d FROM ball_gains WHERE identity=$3 AND day BETWEEN $1 AND $2 AND ${PLAY_SOURCES_SQL} GROUP BY day HAVING COUNT(DISTINCT source)>=2`, [monday, day, who.key])).rows.map((r) => r.d);
+    const claimed = new Set((await c.query("SELECT DISTINCT split_part(source,':',3) AS t FROM ball_gains WHERE identity=$1 AND source LIKE $2", [who.key, "exp:" + monday + ":%"])).rows.map((r) => Number(r.t)));
+    const progress = Number(all.n), pct = Math.min(100, Math.floor(progress * 100 / goal));
+    const legendRow = (await c.query("SELECT status FROM wild_encounters WHERE identity=$1 AND kind='legend' AND day BETWEEN $2 AND $3 ORDER BY id DESC LIMIT 1", [who.key, monday, sunday])).rows[0];
+    const eligible = Boolean(who.accountId) && mine.length >= 2;
+    return { week: monday, endsOn: sunday, region: exp.region, gen: exp.gen, legendId: exp.legend,
+      legendChances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(exp.legend, b) * 100)])),
+      goal, progress, pct, participants: Number(all.p), myDays: mine, days: Array.from({ length: 7 }, (_, i) => shiftDay(monday, i)),
+      chests: Object.keys(EXP_CHESTS).map(Number).map((tier) => ({ tier, balls: EXP_CHESTS[tier], reached: pct >= tier, claimed: claimed.has(tier), canClaim: pct >= tier && !claimed.has(tier) && mine.length >= 1 })),
+      legend: { reached: pct >= 100, eligible, needsAccount: !who.accountId, needsDays: Math.max(0, 2 - mine.length), status: legendRow ? legendRow.status : null, available: pct >= 100 && eligible && !legendRow } };
+  }
+  async function claimChests(c, who, day) {
+    const st = await expedition(c, who, day), added = [];
+    for (const chest of st.chests.filter((x) => x.canClaim)) {
+      for (const [i, ball] of chest.balls.entries()) {
+        const row = (await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING RETURNING source,ball",
+          [who.key, day, "exp:" + st.week + ":" + chest.tier + ":" + (i + 1), ball, who.accountId || null])).rows[0];
+        if (row) added.push(row);
+      }
+    }
+    if (!added.length) throw fail("no_chest");
+    return { added };
+  }
+  async function meetLegend(c, who, day) {
+    const st = await expedition(c, who, day);
+    if (!st.legend.reached) throw fail("expedition_not_done");
+    if (st.legend.needsAccount) throw fail("account_required", 401);
+    if (!st.legend.eligible) throw fail("not_enough_days");
+    if (st.legend.status) throw fail("legend_already_met");
+    if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
+    if (!Object.values(await bagOf(c, who)).some((n) => n > 0)) throw fail("no_balls");
+    const shiny = randomInt(SHINY_ODDS) === 0;
+    const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'legend') RETURNING *", [who.key, who.accountId, day, st.legendId, shiny])).rows[0];
+    return { encounter: encounterView(row), fresh: true };
   }
   async function skipEncounter(c, who, day) {
     const r = await c.query("UPDATE wild_encounters SET status='skipped',ended_at=NOW() WHERE identity=$1 AND status='open' AND day=$2", [who.key, day]);
@@ -256,7 +318,10 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     encounter: (who) => wild(who, (c, day) => encounter(c, who, day)),
     throwBall: (who, body) => wild(who, (c, day) => throwBall(c, who, day, String(body && body.ball || ""))),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
-    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who) }))
+    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who) })),
+    expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
+    claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
+    meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day))
   };
 }
 
@@ -297,7 +362,10 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.post("/api/wild/throw", express.json({ limit: "1kb" }), handle((who, req) => service.throwBall(who, req.body || {})));
   app.post("/api/wild/skip", express.json({ limit: "1kb" }), handle((who) => service.skip(who)));
   app.get("/api/wild/collection", handle((who) => service.collection(who)));
+  app.get("/api/expedition", handle((who) => service.expedition(who)));
+  app.post("/api/expedition/chests", express.json({ limit: "1kb" }), handle((who) => service.claimChests(who)));
+  app.post("/api/expedition/legend", express.json({ limit: "1kb" }), handle((who) => service.meetLegend(who)));
   return service;
 }
 
-module.exports = { STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
