@@ -19,6 +19,65 @@ function moBallSvg(kind) {
     '<rect x="2" y="25.4" width="52" height="2.6" fill="#2E2A33"/></g>' +
     '<circle cx="28" cy="28" r="8" fill="#f4f1ec" stroke="#2E2A33" stroke-width="3"/><circle class="mo-btn" cx="28" cy="28" r="3.5" fill="#fff"/></svg>';
 }
+// --- 🔊 Sons faits maison, calés sur chaque mouvement (jamais de son officiel : droits de Nintendo) ---
+// Souffles (bruit filtré), glissements de note et petits clics ; respectent « Effets sonores » et le volume.
+let moNoiseBuffer = null;
+function moAudio() {
+  if (typeof getPokedexFxAudioContext !== "function") return null;
+  const ctx = getPokedexFxAudioContext();
+  return ctx ? { ctx, t: ctx.currentTime + 0.01, v: typeof appSoundVolume === "function" ? appSoundVolume() : 1 } : null;
+}
+function moTone(a, f0, f1, at, dur, gain, type) {
+  const o = a.ctx.createOscillator(), g = a.ctx.createGain(), s = a.t + at;
+  o.type = type || "sine";
+  o.frequency.setValueAtTime(f0, s);
+  if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, s + dur);
+  g.gain.setValueAtTime(0.0001, s);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain * a.v), s + Math.min(0.02, dur / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+  o.connect(g); g.connect(a.ctx.destination); o.start(s); o.stop(s + dur + 0.03);
+}
+function moNoise(a, at, dur, gain, f0, f1, q) {
+  const ctx = a.ctx, s = a.t + at;
+  if (!moNoiseBuffer || moNoiseBuffer.sampleRate !== ctx.sampleRate) {
+    moNoiseBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.8), ctx.sampleRate);
+    const d = moNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  src.buffer = moNoiseBuffer; f.type = "bandpass"; f.Q.value = q || 1.2;
+  f.frequency.setValueAtTime(f0, s); if (f1 && f1 !== f0) f.frequency.exponentialRampToValueAtTime(f1, s + dur);
+  g.gain.setValueAtTime(0.0001, s);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain * a.v), s + dur * 0.35);
+  g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+  src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(s); src.stop(s + dur + 0.03);
+}
+function moSfx(kind) {
+  const a = moAudio();
+  if (!a) return;
+  try {
+    switch (kind) {
+      case "throw": moNoise(a, 0, .38, .05, 700, 2600, .9); moTone(a, 380, 720, 0, .3, .008, "sine"); break;
+      case "ballOpen": moTone(a, 620, 1250, 0, .09, .022, "sine"); moTone(a, 2200, 2200, 0, .025, .006, "square"); break;
+      case "absorb": moTone(a, 300, 1500, .02, .55, .012, "triangle"); moTone(a, 450, 2200, .05, .5, .006, "sine"); moNoise(a, 0, .55, .022, 2500, 6000, 2); break;
+      case "close": moTone(a, 1400, 900, 0, .05, .014, "square"); break;
+      case "land": moTone(a, 150, 80, 0, .12, .04, "triangle"); moNoise(a, 0, .06, .02, 500, 300, 1); break;
+      case "tick": moTone(a, 270, 220, 0, .07, .032, "triangle"); moTone(a, 1900, 1900, 0, .018, .006, "square"); break;
+      case "caught":
+        moTone(a, 1600, 1600, 0, .03, .016, "square");
+        [[784, .14], [988, .24], [1319, .34]].forEach(([f, at]) => moTone(a, f, f, at, .22, .024, "sine"));
+        moTone(a, 1976, 1976, .46, .3, .01, "sine"); break;
+      case "breakFree": moTone(a, 900, 280, 0, .18, .022, "sine"); moNoise(a, 0, .2, .04, 1800, 600, 1); break;
+      case "shake": moNoise(a, 0, .1, .045, 420, 300, 1.4); moTone(a, 190, 160, 0, .08, .022, "triangle"); break;
+      case "open": moNoise(a, 0, .45, .04, 600, 3800, .9); [[523.3, .1], [659.3, .16], [784, .22], [1046.5, .3]].forEach(([f, at]) => moTone(a, f, f, at, .35, .02, "sine")); break;
+      case "pop": moTone(a, 700, 1150, 0, .08, .02, "sine"); break;
+      case "collect": moTone(a, 1319, 1760, 0, .07, .014, "sine"); break;
+      case "flip": moNoise(a, 0, .16, .035, 1400, 3200, 1.3); break;
+      case "sparkle": [1568, 2093, 2637, 3136].forEach((f, i) => moTone(a, f, f, i * .06, .14, .008, "sine")); break;
+      case "glint": moTone(a, 2637, 3520, 0, .14, .008, "sine"); moTone(a, 3951, 3951, .08, .12, .005, "sine"); break;
+    }
+  } catch (_e) { /* son facultatif */ }
+}
 function moAnim(el, frames, opts) {
   if (!el || !el.animate) return Promise.resolve();
   return el.animate(frames, Object.assign({ fill: "forwards" }, opts)).finished.catch(() => {});
@@ -76,7 +135,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       await moAnim(el, [{ transform: at(sx, sy) }, { transform: at(sx + 6, H - 70, "scale(1.05)") }, { transform: at(sx + 14, H - 52, "scale(.95,1.05)") }], { duration: 380, easing: MO_OUT });
       if (run.over) return;
       // 2. Lancer en cloche, en tournant.
-      wildSfx("throw");
+      moSfx("throw");
       const peak = Math.min(150, Math.max(70, cy * 0.7)), path = [];
       for (let i = 0; i <= 12; i++) {
         const t = i / 12, x = sx + 14 + (cx - sx - 14) * t, y = H - 52 + (cy - (H - 52)) * t - Math.sin(Math.PI * t) * peak;
@@ -85,7 +144,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       await moAnim(el, path, { duration: 620, easing: "cubic-bezier(.3,.2,.5,1)" });
       if (run.over) return;
       // 3. Impact : la Ball s'ouvre, flash, le Pokémon devient blanc et se fait aspirer par un rayon rouge.
-      wildSfx("absorb"); flashAt(cy);
+      moSfx("ballOpen"); moSfx("absorb"); flashAt(cy);
       moAnim(el, [{ transform: at(cx, cy, "scale(.8)") }, { transform: at(cx, cy - 14, "scale(.84) rotate(-12deg)") }], { duration: 260, easing: MO_OUT });
       moAnim(top, [{ transform: "rotate(0)" }, { transform: "rotate(-48deg)" }], { duration: 220, easing: MO_OUT });
       await moAnim(mon, [{ filter: "brightness(1) invert(0) drop-shadow(0 0 0 rgba(255,77,77,0))" }, { filter: "brightness(0) invert(1) drop-shadow(0 0 14px rgba(255,77,77,.85))" }], { duration: 240 });
@@ -103,7 +162,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       // 4. La Ball se referme, tombe et rebondit (écrasée à l'arrivée).
       moAnim(top, [{ transform: "rotate(-48deg)" }, { transform: "rotate(0)" }], { duration: 160, easing: MO_IN });
       moAnim(shadow, [{ opacity: 0, transform: "translateX(-50%) scale(.4)" }, { opacity: 1, transform: "translateX(-50%) scale(1)" }], { duration: 420 });
-      setTimeout(() => { if (!run.over) wildSfx("land"); }, 400);
+      moSfx("close"); setTimeout(() => { if (!run.over) moSfx("land"); }, 400);
       await moAnim(el, [{ transform: at(cx, cy - 14, "scale(.84) rotate(-12deg)") },
         { transform: at(cx, ground, "scale(.9,.72)"), offset: .55, easing: MO_OUT },
         { transform: at(cx, ground - 32, "scale(.82,.88)"), offset: .78, easing: MO_IN },
@@ -114,7 +173,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       for (let i = 0; i < shakes; i++) {
         if (!(await run.wait(380))) return;
         const r = i % 2 ? 22 : -22;
-        wildSfx("tick");
+        moSfx("tick");
         await moAnim(el, [{ transform: at(cx, ground, "scale(.82) rotate(0)") },
           { transform: at(cx + r * 0.35, ground, "scale(.82) rotate(" + r + "deg)"), offset: .35 },
           { transform: at(cx - r * 0.1, ground, "scale(.82) rotate(" + (-r * 0.3) + "deg)"), offset: .7 },
@@ -124,14 +183,14 @@ wildAnimate = function (scene, ball, shakes, caught) {
       if (!(await run.wait(caught ? 320 : 220))) return;
       if (caught) {
         // 6a. « Clic » : le bouton brille, des étoiles sortent.
-        wildSfx("click"); stage.classList.add("is-caught");
+        moSfx("caught"); stage.classList.add("is-caught");
         moAnim(el, [{ transform: at(cx, ground, "scale(.82)") }, { transform: at(cx, ground, "scale(.94,.72)") }, { transform: at(cx, ground, "scale(.82)") }], { duration: 260, easing: MO_BACK });
         moAnim(el.querySelector(".mo-ball-svg"), [{ filter: "brightness(1)" }, { filter: "brightness(1.5) drop-shadow(0 0 10px #fff)" }, { filter: "brightness(.9)" }], { duration: 520 });
         moStars(stage, cx, ground - 18, 3);
         await run.wait(950);
       } else {
         // 6b. Raté : la Ball s'ouvre d'un coup, le Pokémon ressort en blanc puis reprend ses couleurs.
-        wildSfx("free"); flashAt(ground);
+        moSfx("breakFree"); flashAt(ground);
         moAnim(top, [{ transform: "rotate(0)" }, { transform: "rotate(-70deg)" }], { duration: 200, easing: MO_OUT });
         moAnim(el, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 160 });
         moAnim(shadow, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
@@ -199,6 +258,7 @@ fxReveal = function ({ title, balls }) {
         const dx = Math.round(to.left + to.width / 2 - from.left - from.width / 2), dy = Math.round(to.top + to.height / 2 - from.top - from.height / 2);
         moAnim(o, [{ transform: place() }, { transform: place("translateY(10px) scale(1.08)"), offset: .18 }, { transform: "translate(calc(-50% + " + dx + "px)," + dy + "px) scale(.3)", opacity: .9 }],
           { duration: 560, delay: i * 90, easing: "cubic-bezier(.6,0,.4,1)" });
+        setTimeout(() => moSfx("collect"), 520 + i * 90);
       });
       setTimeout(() => { el.remove(); bag.classList.add("fx-bump"); setTimeout(() => bag.classList.remove("fx-bump"), 500); resolve(); }, 620 + n * 90);
     };
@@ -212,7 +272,7 @@ fxReveal = function ({ title, balls }) {
       for (let i = 0; i < 3; i++) {
         if (!(await run.wait(i ? 260 : 380))) return;
         const a = 4 + i * 3;
-        fxSound("shake");
+        moSfx("shake");
         moAnim(seam, [{ opacity: 0 }, { opacity: .5 + i * .25 }, { opacity: .2 + i * .2 }], { duration: 400 });
         moAnim(lid, [{ transform: "translateY(0)" }, { transform: "translateY(" + (-3 - i * 3) + "px)" }, { transform: "translateY(0)" }], { duration: 400, easing: "ease-out" });
         await moAnim(box, [{ transform: "rotate(0)" }, { transform: "rotate(" + -a + "deg) scale(1.03,.97)" }, { transform: "rotate(" + a + "deg)" }, { transform: "rotate(" + -a / 2 + "deg)" }, { transform: "none" }], { duration: 400, easing: "ease-in-out" });
@@ -222,7 +282,7 @@ fxReveal = function ({ title, balls }) {
       // Élan, puis le couvercle saute : lumière, rayons, étincelles.
       await moAnim(box, [{ transform: "none" }, { transform: "scale(1.1,.86)" }], { duration: 170, easing: MO_OUT });
       if (run.over) return;
-      fxSound("open"); el.classList.add("is-open");
+      moSfx("open"); el.classList.add("is-open");
       moAnim(box, [{ transform: "scale(1.1,.86)" }, { transform: "scale(.96,1.06)" }, { transform: "none" }], { duration: 420, easing: MO_BACK });
       moAnim(lid, isChest ? [{ transform: "none" }, { transform: "translate(-6px,-40px) rotate(-62deg)", offset: .6 }, { transform: "translate(-4px,-30px) rotate(-52deg)" }]
         : [{ transform: "none" }, { transform: "translate(8px,-70px) rotate(18deg)", offset: .6 }, { transform: "translate(14px,-56px) rotate(24deg)" }], { duration: 520, easing: MO_OUT });
@@ -239,7 +299,7 @@ fxReveal = function ({ title, balls }) {
           const t = k / 10;
           kf.push({ opacity: Math.min(1, t * 4), transform: "translate(calc(-50% + " + Math.round(-spots[i].x * (1 - t)) + "px)," + Math.round((150 - spots[i].y) * (1 - t) - Math.sin(Math.PI * t) * 150) + "px) rotate(" + Math.round(t * 360 * (i % 2 ? -1 : 1)) + "deg) scale(" + (.4 + t * .6).toFixed(2) + ")", offset: t });
         }
-        fxSound("pop");
+        moSfx("pop");
         moAnim(o, kf, { duration: 600, easing: "cubic-bezier(.3,.3,.4,1)" }).then(() => {
           if (leaving) return;
           moAnim(o, [{ transform: place("scale(1.15,.8)") }, { transform: place("translateY(-16px) scale(.95,1.05)") }, { transform: place() }], { duration: 360, easing: MO_BACK });
@@ -266,6 +326,7 @@ if (typeof shinyIntroFx === "function") {
     mon.after(shine);
     const sweep = [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0" }, { maskPosition: "0% 0", webkitMaskPosition: "0% 0" }];
     shine.animate(sweep, { duration: 900, delay: 1300, easing: "ease-in-out" });
+    setTimeout(() => moSfx("glint"), 1650); setTimeout(() => moSfx("glint"), 2850);
     shine.animate(sweep, { duration: 900, delay: 2500, easing: "ease-in-out" }).finished.then(() => shine.remove()).catch(() => {});
     const fx = stage.querySelector(".fx-shiny");
     if (fx) {
@@ -295,9 +356,11 @@ if (typeof fxCaptureCard === "function") {
       color.className = "mo-catch-color"; color.setAttribute("aria-hidden", "true");
       img.after(color);
       moAnim(color, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0" }, { maskPosition: "0% 0", webkitMaskPosition: "0% 0" }], { duration: 900, delay: 900, easing: "ease-in-out" });
+      setTimeout(() => moSfx("sparkle"), 1000);
     }
     (async () => {
       await moAnim(card, [{ transform: "perspective(900px) translateY(40px) scale(.7) rotateY(0)", opacity: 0 }, { transform: "perspective(900px) translateY(0) scale(1) rotateY(0)", opacity: 1, offset: .55 }, { transform: "perspective(900px) rotateY(0)", opacity: 1 }], { duration: 420, easing: MO_BACK });
+      moSfx("flip");
       await moAnim(card, [{ transform: "perspective(900px) rotateY(0)" }, { transform: "perspective(900px) rotateY(90deg)" }], { duration: 220, easing: MO_IN });
       back.remove();
       await moAnim(card, [{ transform: "perspective(900px) rotateY(-90deg)" }, { transform: "perspective(900px) rotateY(10deg)", offset: .7 }, { transform: "perspective(900px) rotateY(0)" }], { duration: 420, easing: MO_OUT });

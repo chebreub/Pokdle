@@ -368,3 +368,51 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .mo-catch-back svg{width:96px;height:96px}
 @keyframes moSpin{to{rotate:360deg}}
 @media (prefers-reduced-motion:reduce){.mo-ball,.mo-shine,.mo-rays{display:none}}
+/* ⚪ Fiche « Nouvelle entrée · Pokédex » (1re capture) */
+.fx-catch-card.dexc{padding:0;border:0;border-radius:28px;background:#FFF8EF;text-align:center}
+.fx-catch.is-shiny .fx-catch-card.dexc{background:#FFF8EF;box-shadow:0 0 0 3px #F6B93B,0 20px 60px rgba(0,0,0,.35)}
+.dexc-top{display:flex;align-items:center;gap:10px;padding:12px 16px 10px;background:#E3350D;color:#fff}
+.dexc-led{flex:none;width:22px;height:22px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle at 35% 35%,#BFE3FF,#4AA3FF 60%,#1C5FB8);box-shadow:0 0 10px #8FD0FF}
+.dexc-dots{display:flex;gap:4px}.dexc-dots i{width:8px;height:8px;border-radius:50%;background:#FFD45C}.dexc-dots i:nth-child(2){background:#7BE07B}.dexc-dots i:nth-child(3){background:#FF8A8A}
+.dexc-top b{margin-left:auto;font:800 12px/1 Nunito,sans-serif;letter-spacing:.08em}
+.fx-catch-art.dexc-hero{position:relative;height:230px;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 60%,rgba(255,255,255,.8) 0,rgba(255,255,255,0) 58%),linear-gradient(160deg,var(--t1),var(--t2))}
+.dexc-hero:before{content:"";position:absolute;left:50%;top:58%;width:440px;height:440px;border-radius:50%;transform:translate(-50%,-50%);background:repeating-conic-gradient(rgba(255,255,255,.2) 0 8deg,transparent 8deg 22deg)}
+.fx-catch.is-shiny .dexc-hero:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,rgba(255,229,138,.55),rgba(246,185,59,.25) 70%)}
+.dexc-plat{position:absolute;bottom:20px;left:50%;width:200px;height:34px;margin-left:-100px;border-radius:50%;background:rgba(255,255,255,.45)}
+.fx-catch-art.dexc-hero img{position:relative;z-index:1;width:200px;height:200px;filter:grayscale(1) opacity(.5) drop-shadow(0 10px 10px rgba(0,0,0,.2))}
+.dexc-hero .mo-catch-color{z-index:1;width:200px;height:200px;filter:drop-shadow(0 10px 10px rgba(0,0,0,.2))!important}
+.dexc-new{position:absolute;z-index:2;top:12px;left:12px;padding:6px 10px;border-radius:999px;background:#FFD45C;color:#5B3A00;font:900 12px/1 Nunito,sans-serif;letter-spacing:.06em;box-shadow:0 3px 0 rgba(0,0,0,.12)}
+.dexc-num{position:absolute;z-index:2;top:10px;right:14px;font:700 22px/1 Fredoka,Nunito,sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+.dexc-body{padding:14px 16px 16px}
+.fx-catch-card.dexc h3{margin:0;font:700 30px/1 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.dexc-sub{margin-top:4px;font:800 13px/1.2 Nunito,sans-serif;color:#6B6475}
+.dexc-types{display:flex;justify-content:center;gap:6px;margin:10px 0}
+.dexc-types span{padding:5px 12px;border-radius:999px;color:#fff;font:900 12px/1 Nunito,sans-serif;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.dexc-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 10px}
+.dexc-facts div{padding:8px 4px;border-radius:14px;background:#fff;border:2px solid rgba(46,42,51,.08)}
+.dexc-facts small{display:block;font:800 11px/1.2 Nunito,sans-serif;color:#8A8492}
+.dexc-facts b{display:inline-flex;align-items:center;gap:3px;font:800 15px/1.3 Nunito,sans-serif;color:#2E2A33}
+.dexc-ball .mo-ball-svg{width:17px;height:17px;flex:none}
+.dexc-line{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-bottom:12px;padding:8px 10px;border-radius:12px;background:#fff;font:800 13px/1 Nunito,sans-serif;color:#2E2A33}
+.dexc-line .dexc-ball{display:inline-flex;align-items:center;gap:4px}
+.dexc-line i{height:8px;border-radius:5px;background:rgba(46,42,51,.1);overflow:hidden}.dexc-line i b{display:block;height:100%;background:#E3350D}
+.dexc-line em{font-style:normal;color:#5C5663}
+.dexc .fx-catch-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dexc-hero img.mo-catch-color{position:absolute}
+/* 👁️ Vus / Attrapés dans Pokédex › Ma collection */
+.pokedex-collection-national>.col-track{display:grid;grid-template-columns:104px minmax(60px,1fr) auto;align-items:center;gap:10px;margin:2px 0;color:#fff}
+.pokedex-collection-national .col-track span{display:flex;align-items:center;gap:4px;min-width:0;color:#fff;font-size:.85rem}
+.pokedex-collection-national .col-track i{display:block;height:10px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden}
+.pokedex-collection-national .col-track i b{display:block;height:100%;border-radius:6px}
+.pokedex-collection-national .col-track em{color:rgba(255,255,255,.8)}
+.pokedex-collection-national .col-track .mo-ball-svg{width:16px;height:16px}
+.col-track.is-shiny i b{background:#F6B93B}
+.pokedex-collection-filters .mo-ball-svg,.pokedex-collection-legend .mo-ball-svg{display:inline-block;width:14px;height:14px;margin-right:4px;vertical-align:-2px}
+.pokedex-collection-filters button{white-space:nowrap}
+.collection-card.is-seen img{filter:grayscale(1) opacity(.5)}
+.collection-card.is-caught{box-shadow:inset 0 0 0 2px rgba(227,53,13,.45)}
+.collection-card.is-shiny-entry{box-shadow:inset 0 0 0 2px #F6B93B}
+.pokedex-collection-state.is-caught,.pokedex-collection-state.is-seen{display:inline-flex;align-items:center;gap:3px}
+.pokedex-collection-state.is-caught{background:#FDE7E1;color:#B3260A}
+.pokedex-collection-state.is-seen{background:#E9EEFB;color:#3550B0}
+.pokedex-collection-state .mo-ball-svg{width:14px;height:14px}
