@@ -173,7 +173,7 @@ function wildNextLabel(w) {
     const part = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(w.nextAt)).find((x) => x.type === "hour");
     const h = Number(part && part.value);
     if (!Number.isInteger(h)) return "";
-    return h === 0 ? "à minuit" : "à " + h + " h";
+    return h === 0 ? "à minuit" : "à " + h + "\u00a0h"; // espace insécable : « 20 h » ne se coupe pas en fin de ligne
   } catch (_e) { return ""; }
 }
 function homeDayGrassTile(s) {
