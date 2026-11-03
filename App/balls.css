@@ -416,3 +416,42 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .pokedex-collection-state.is-caught{background:#FDE7E1;color:#B3260A}
 .pokedex-collection-state.is-seen{background:#E9EEFB;color:#3550B0}
 .pokedex-collection-state .mo-ball-svg{width:14px;height:14px}
+/* 🗺️ Zones des hautes herbes : décors en pixel art (img/zones) */
+.wz-pick{flex:1;overflow:auto;padding:14px 16px 18px}
+.wz-pick h3{margin:0 0 4px;font:700 22px/1.15 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.wz-pick>p{margin:0 0 12px;font:700 13px/1.4 Nunito,sans-serif;color:#6B6475}
+.wz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wz-tile{position:relative;height:148px;padding:0;border:0;border-radius:18px;overflow:hidden;cursor:pointer;background-color:#9CC98A;background-size:cover;background-position:center 70%;image-rendering:pixelated;box-shadow:0 3px 0 rgba(46,42,51,.14),inset 0 0 0 2px rgba(255,255,255,.3);transition:transform .15s ease}
+.wz-tile:hover{transform:translateY(-2px)}
+.wz-tile img{position:absolute;right:8%;bottom:26%;width:66px;height:66px;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 4px 3px rgba(0,0,0,.3))}
+.wz-lab{position:absolute;left:0;right:0;bottom:0;padding:20px 9px 7px;background:linear-gradient(transparent,rgba(20,16,32,.75));color:#fff;text-align:left}
+.wz-lab b{display:block;font:700 16px/1 Fredoka,Nunito,sans-serif;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.wz-lab small{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+.wz-dots{display:flex;gap:4px}.wz-dots i{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.9)}
+.wz-lab em{font:900 11px/1 Nunito,sans-serif;font-style:normal;padding:3px 6px;border-radius:7px;background:#FFD45C;color:#5B3A00}
+.wz-tile.is-on{box-shadow:0 0 0 3px #2E2A33,0 3px 0 rgba(46,42,51,.14)}
+.wz-tile.is-on:after{content:"✓";position:absolute;left:8px;top:8px;width:24px;height:24px;border-radius:50%;background:#fff;color:#2E2A33;display:grid;place-items:center;font:900 14px/1 Nunito,sans-serif;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.wz-rand{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:10px 12px;border-radius:14px;border:2px dashed rgba(46,42,51,.2);background:#fff;color:#2E2A33;font:800 14px Nunito,sans-serif;cursor:pointer}
+.wz-rand small{margin-left:auto;font:700 12px Nunito,sans-serif;color:#8A8492}
+.wz-rand.is-on{border-style:solid;border-color:#2E2A33}
+.wz-go{width:100%;min-height:54px;margin-top:12px;border:0;border-radius:16px;background:#2F5FC4;color:#fff;font:900 17px Nunito,sans-serif;box-shadow:0 4px 0 #1F428F;cursor:pointer}
+.wz-note{margin:12px 0 0;text-align:center;font:700 12px Nunito,sans-serif;color:#8A8492}
+@media (min-width:900px){.wz-grid{grid-template-columns:repeat(3,1fr)}.wz-tile{height:160px}}
+.wild-stage.has-zone .wild-sky,.wild-stage.has-zone .wild-hills,.wild-stage.has-zone .wild-pad,.wild-stage.has-zone .wild-grass-back{display:none}
+.wild-stage.has-zone:not(.zone-foret):not(.zone-prairie) .wild-grass-front{display:none}
+.wz-bg,.wz-fx{position:absolute;inset:0;pointer-events:none}
+.wz-bg{background-size:cover;background-position:center bottom;image-rendering:pixelated}
+.wild-stage.has-zone.is-shiny .wz-bg{filter:saturate(1.15) brightness(1.05)}
+.wz-where{font-weight:800;color:#6B6475}
+/* Le décor bouge doucement */
+.zone-volcan .wz-fx{background:radial-gradient(circle at 50% 28%,rgba(255,180,80,.45),transparent 45%);animation:wzPulse 2.6s ease-in-out infinite}
+.zone-mer .wz-fx{background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(255,255,255,.18) 22px 26px);-webkit-mask-image:linear-gradient(transparent 44%,#000 46%,#000 66%,transparent 68%);mask-image:linear-gradient(transparent 44%,#000 46%,#000 66%,transparent 68%);animation:wzWaves 3.5s linear infinite}
+.zone-tour .wz-fx{background:linear-gradient(transparent 60%,rgba(170,150,230,.28) 72%,transparent 86%);animation:wzFog 7s ease-in-out infinite alternate}
+.zone-foret .wz-fx{background:linear-gradient(115deg,transparent 40%,rgba(255,248,200,.22) 48%,transparent 56%);animation:wzRays 6s ease-in-out infinite alternate}
+.zone-montagne .wz-fx{background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);background-size:40% 30%;background-repeat:no-repeat;animation:wzWind 9s linear infinite}
+@keyframes wzPulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes wzWaves{from{background-position:0 0}to{background-position:52px 0}}
+@keyframes wzFog{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes wzRays{from{opacity:.4}to{opacity:1}}
+@keyframes wzWind{from{background-position:-40% 20%}to{background-position:140% 20%}}
+@media (prefers-reduced-motion:reduce){.wz-fx{animation:none!important}}
