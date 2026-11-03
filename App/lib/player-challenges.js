@@ -68,6 +68,9 @@ async function ensureTables(db) {
   // Défis v2: a message between friends, and the day of a « Du jour » challenge.
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS note TEXT");
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS day DATE");
+  // 🗑 Effacer (3/11) : chacun efface de sa liste. La ligne reste (comptée dans les défis du jour) et part au bout de 30 jours.
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS hidden_to BOOLEAN NOT NULL DEFAULT false");
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS hidden_from BOOLEAN NOT NULL DEFAULT false");
 }
 
 const verb = (mode) => (CHALLENGE_MODES[mode]?.kind === "serie" ? "série" : "record");
@@ -219,7 +222,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
         to_char(c.expires_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS expires_at,
         uf.username AS from_name, uf.partner_id AS from_partner, ut.username AS to_name, ut.partner_id AS to_partner
       FROM player_challenges c LEFT JOIN users uf ON uf.discord_id = c.from_id LEFT JOIN users ut ON ut.discord_id = c.to_id
-      WHERE c.from_id = $1 OR c.to_id = $1 ORDER BY c.created_at DESC LIMIT 60`, [id])).rows;
+      WHERE (c.from_id = $1 AND NOT c.hidden_from) OR (c.to_id = $1 AND NOT c.hidden_to) ORDER BY c.created_at DESC LIMIT 60`, [id])).rows;
     const off = (await db.query("SELECT 1 FROM player_challenge_blocks WHERE account_id = $1 AND blocked_id = $2", [id, ALL])).rowCount > 0;
     return {
       ok: true, accepting: !off,
@@ -352,7 +355,30 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     return { ok: true, accepting: Boolean(on) };
   }
 
-  return { options, create, afterResult, list, game, guess, seen, decline, block, setAccepting };
+  // 🗑 Effacer de sa liste les défis finis (reçus ou envoyés). Un défi encore ouvert ne s'efface pas :
+  // reçu, on le refuse d'abord ; envoyé, on l'annule (cancel).
+  const idList = (ids) => (Array.isArray(ids) ? ids : [ids]).map(Number).filter((n) => Number.isSafeInteger(n) && n > 0).slice(0, 60);
+  async function hide(accountId, { ids, finished } = {}) {
+    await ready;
+    const id = String(accountId), list = idList(ids);
+    if (!list.length && !finished) return { ok: false, error: "nothing" };
+    const which = finished ? "TRUE" : "id = ANY($2)";
+    const args = finished ? [id] : [id, list];
+    const a = await db.query(`UPDATE player_challenges SET hidden_to = true WHERE to_id = $1 AND status <> 'open' AND ${which}`, args);
+    const b = await db.query(`UPDATE player_challenges SET hidden_from = true WHERE from_id = $1 AND status <> 'open' AND ${which}`, args);
+    return { ok: true, hidden: a.rowCount + b.rowCount };
+  }
+  // Annuler un défi envoyé encore ouvert (à un ou plusieurs amis) : il disparaît des deux côtés sans notification.
+  async function cancel(accountId, { ids } = {}) {
+    await ready;
+    const list = idList(ids);
+    if (!list.length) return { ok: false, error: "nothing" };
+    const r = await db.query(`UPDATE player_challenges SET status = 'cancelled', resolved_at = now(), hidden_from = true, hidden_to = true, seen_to = true
+      WHERE from_id = $1 AND status = 'open' AND id = ANY($2)`, [String(accountId), list]);
+    return { ok: true, cancelled: r.rowCount };
+  }
+
+  return { options, create, afterResult, list, game, guess, seen, decline, block, setAccepting, hide, cancel };
 }
 
 // The same notification the 🔔 reminders use, for the players who turned it on.
@@ -386,7 +412,7 @@ function createRateLimit(limit = 30, windowMs = 3600000) {
   };
 }
 
-function mountChallengeRoutes(app, { express, challenges, getUser, log = console, limited = createRateLimit(), limitedGuesses = createRateLimit(200) }) {
+function mountChallengeRoutes(app, { express, challenges, getUser, log = console, limited = createRateLimit(), limitedGuesses = createRateLimit(200), limitedTidy = createRateLimit(200) }) {
   const json = express.json({ limit: "2kb" });
   const signedIn = (req, res) => {
     res.set("Cache-Control", "no-store");
@@ -419,6 +445,8 @@ function mountChallengeRoutes(app, { express, challenges, getUser, log = console
   app.post("/api/challenges/seen", json, run("seen", (user, body) => challenges.seen(user.id, body.ids)));
   app.post("/api/challenges/decline", json, run("decline", (user, body) => challenges.decline(user.id, body.id)));
   app.post("/api/challenges/block", json, run("block", (user, body) => challenges.block(user.id, body.id)));
+  app.post("/api/challenges/hide", json, run("hide", (user, body) => challenges.hide(user.id, { ids: body.ids, finished: body.finished === true }), limitedTidy));
+  app.post("/api/challenges/cancel", json, run("cancel", (user, body) => challenges.cancel(user.id, { ids: body.ids }), limitedTidy));
   app.post("/api/challenges/settings", json, run("settings", (user, body) => challenges.setAccepting(user.id, body.accepting !== false)));
 }
 

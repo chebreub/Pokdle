@@ -1581,3 +1581,69 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 
 /* Closed conversations keep reporting visible, without an unusable composer. */
 .chat-win.is-readonly .chat-form,.chat-win.is-readonly #chat-count {display:none;}
+
+/* ===== « Mes défis » rangé (3/11, maquette validée) : 3 onglets, envois groupés, 🗑 ===== */
+.pc-tabs {display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:#EFE6DA;}
+.pc-tabs button {display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:42px;padding:8px 4px;border:0;border-radius:11px;background:none;color:#5C5663;font:800 14px Nunito,sans-serif;cursor:pointer;}
+.pc-tabs button.is-on {background:#2E2A33;color:#fff;}
+.pc-tabs button:focus-visible {outline:3px solid #4069E0;outline-offset:2px;}
+.pc-tabs i {display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#E5484D;color:#fff;font:900 11px Nunito,sans-serif;font-style:normal;}
+.pc-tabs .is-on i {background:#FFD45C;color:#2E2A33;}
+.pc-tabbody {display:flex;flex-direction:column;gap:10px;}
+.pc-center {text-align:center;}
+.pc-todo {background:linear-gradient(#fff,#F7F3FF);border-color:#C9B8F2;}
+.pc-todo .pc-who > div {flex:1;min-width:0;}
+.pc-todo .pc-goal {background:#F5F1EA;}
+.pc-num {flex:none;display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#4069E0;color:#fff;font:700 26px Fredoka,sans-serif;}
+.pc-go {width:100%;}
+.pc-dots {position:relative;flex:none;margin-left:auto;}
+.pc-dots > summary {display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#F3EEE7;color:#6B6475;font:900 18px/1 Nunito,sans-serif;cursor:pointer;list-style:none;}
+.pc-dots > summary::-webkit-details-marker {display:none;}
+.pc-dots-menu {position:absolute;right:0;top:44px;z-index:5;display:grid;gap:4px;min-width:230px;padding:6px;border-radius:14px;background:#fff;border:1px solid #EADFD0;box-shadow:0 10px 28px rgba(46,42,51,.16);}
+.pc-dots-menu button {padding:10px 12px;border:0;border-radius:10px;background:none;color:#2E2A33;font:800 14px Nunito,sans-serif;text-align:left;cursor:pointer;}
+.pc-dots-menu button:hover {background:#F6F0E8;}
+.pc-dots-menu .is-red {color:#C7423A;}
+.pc-group {display:grid;gap:10px;padding:12px;border-radius:18px;background:#fff;border:2px solid #EADFD0;}
+.pc-group-head {display:flex;align-items:center;gap:10px;}
+.pc-group-head > div {flex:1;min-width:0;}
+.pc-group-head > div b {display:block;font:900 15px/1.25 Nunito,sans-serif;}
+.pc-group-head > div small {display:block;font:700 12px/1.35 Nunito,sans-serif;color:#6B6475;}
+.pc-mon {flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:12px;background:#F3F6FE;font-size:22px;}
+.pc-mon img {width:44px;height:44px;object-fit:contain;image-rendering:pixelated;}
+.pc-mon b {font:700 20px Fredoka,sans-serif;color:#4069E0;}
+.pc-score {flex:none;text-align:right;}
+.pc-score b {display:block;font:900 15px Nunito,sans-serif;color:#2F8A4C;}
+.pc-score small {font:700 11px Nunito,sans-serif;color:#6B6475;}
+.pc-people {list-style:none;margin:0;padding:0;display:grid;gap:6px;}
+.pc-people li {display:flex;align-items:center;gap:8px;font:800 13px Nunito,sans-serif;}
+.pc-mini .pc-avatar {width:28px;height:28px;border-radius:8px;}
+.pc-mini .pc-avatar.is-letter {font-size:14px;}
+.pc-name {flex:0 1 auto;min-width:0;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pc-bar {flex:1;min-width:30px;height:6px;border-radius:4px;background:#EFE6DA;overflow:hidden;}
+.pc-bar i {display:block;height:100%;border-radius:4px;background:#7C5BD6;}
+.pc-people em {flex:none;min-width:52px;text-align:right;font:900 12px Nunito,sans-serif;font-style:normal;color:#6B6475;}
+.pc-people em.ok {color:#2F8A4C;}
+.pc-people em.ko {color:#B23B2E;}
+.pc-people em.off {color:#9B94A3;}
+.pc-watch {flex:none;width:30px;height:30px;border:0;border-radius:9px;background:#F3EEE7;cursor:pointer;}
+.pc-done {display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:14px;background:#fff;border:2px solid #EFE6DA;}
+.pc-done.is-faded {opacity:.65;}
+.pc-ic {flex:none;font-size:18px;}
+.pc-done p {flex:1;min-width:0;margin:0;font:800 13px/1.3 Nunito,sans-serif;color:#2E2A33;}
+.pc-done p small {display:block;font:700 11px/1.35 Nunito,sans-serif;color:#8A8492;}
+.pc-again-sm {flex:none;min-height:36px;padding:6px 10px;border-radius:10px;border:2px solid rgba(46,42,51,.12);background:#fff;color:#2E2A33;font:900 12px Nunito,sans-serif;white-space:nowrap;cursor:pointer;}
+.pc-del {flex:none;width:36px;height:36px;border:0;border-radius:10px;background:#F6EFE9;font-size:14px;cursor:pointer;}
+.pc-del:hover {background:#FBE3DF;}
+.pc-clear {min-height:42px;border-radius:12px;border:2px dashed rgba(199,66,58,.4);background:none;color:#C7423A;font:900 13px Nunito,sans-serif;cursor:pointer;}
+@media (max-width:420px){.pc-again-sm{padding:6px 8px}.pc-done{gap:8px}.pc-tabs button{font-size:13px}}
+#pokdle-app.theme-dark .pc-tabs {background:#1f2b42;}
+#pokdle-app.theme-dark .pc-tabs button {color:#aebfda;}
+#pokdle-app.theme-dark .pc-tabs button.is-on {background:#e8ecf6;color:#1e2c43;}
+#pokdle-app.theme-dark .pc-group, #pokdle-app.theme-dark .pc-done, #pokdle-app.theme-dark .pc-dots-menu, #pokdle-app.theme-dark .pc-again-sm {background:#1f2b42;border-color:#33425f;color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-done p, #pokdle-app.theme-dark .pc-dots-menu button {color:#e8ecf6;}
+#pokdle-app.theme-dark .pc-todo {background:linear-gradient(135deg,#2e2655,#1f2b42);}
+#pokdle-app.theme-dark .pc-todo .pc-goal {background:#1f2b42;}
+.pc-todo .pc-goal .pc-small-b {font-size:18px;}
+.pc-people li {display:grid;grid-template-columns:28px minmax(0,150px) 1fr 58px 30px;}
+.pc-people .pc-name {max-width:none;}
+@media (max-width:420px){.pc-people li{grid-template-columns:28px minmax(0,96px) 1fr 52px 30px;}}
