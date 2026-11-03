@@ -67,6 +67,21 @@ const WILD_POOL = Object.freeze((() => {
   const out = new Set([...CAPTURE.legendary, ...CAPTURE.mythical, ...siteLegendIds(), ...missionPokemonIds()]);
   return Array.from({ length: 1025 }, (_, i) => i + 1).filter((id) => !out.has(id));
 })());
+// 🗺️ Zones des hautes herbes (3/11/2026) : 6 décors de 3 types chacun ; « Au hasard » garde tout le pool.
+const ZONES = Object.freeze({
+  foret: ["Plante", "Insecte", "Poison"],
+  mer: ["Eau", "Glace", "Vol"],
+  montagne: ["Roche", "Sol", "Acier"],
+  volcan: ["Feu", "Dragon", "Combat"],
+  tour: ["Spectre", "Ténèbres", "Psy"],
+  prairie: ["Normal", "Électrik", "Fée"]
+});
+const ZONE_POOLS = Object.freeze((() => {
+  const fs = require("fs"), path = require("path");
+  const list = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "pokemon.js"), "utf8").match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
+  const types = new Map(list.filter((p) => p.id <= 1025).map((p) => [Number(p.id), [p.type1, p.type2].filter(Boolean)]));
+  return Object.fromEntries(Object.entries(ZONES).map(([key, zone]) => [key, Object.freeze(WILD_POOL.filter((id) => (types.get(id) || []).some((t) => zone.includes(t))))]));
+})());
 const fail = (code, status = 409) => Object.assign(new Error(code), { code, status });
 
 // Super Ball (« l'or ») pour une belle partie ; sinon une Poké Ball. Score = celui du classement
@@ -108,6 +123,7 @@ async function initBallsDb(db) {
   await db.query("CREATE INDEX IF NOT EXISTS wild_encounters_identity ON wild_encounters(identity,day)");
   // « legend » : la rencontre de l'Expédition, hors des 6 rencontres du jour.
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'wild'");
+  await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS zone TEXT");
   await db.query("CREATE INDEX IF NOT EXISTS ball_gains_day ON ball_gains(day)");
 }
 
@@ -206,7 +222,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   function encounterView(row) {
     if (!row) return null;
     return { id: Number(row.id), pokemonId: Number(row.pokemon_id), shiny: Boolean(row.shiny), throws: Number(row.throws),
-      throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null, legend: row.kind === "legend",
+      throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null, legend: row.kind === "legend", zone: row.zone || null,
       chances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(Number(row.pokemon_id), b) * 100)])) };
   }
   async function wildState(c, who, day) {
@@ -221,15 +237,17 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { max: ENCOUNTERS_PER_DAY, available, today: used, left: Math.max(0, available - used), nextAt, nextCount: afternoon ? 0 : ENCOUNTERS_PER_DAY - ENCOUNTERS_MORNING, open: encounterView(open), caught };
   }
   // Entrer dans les hautes herbes : la rencontre ouverte, ou une nouvelle si le jour en laisse.
-  async function encounter(c, who, day) {
+  async function encounter(c, who, day, zone) {
+    if (zone && !ZONE_POOLS[zone]) throw fail("invalid_zone", 400);
     const st = await wildState(c, who, day);
     if (st.open) return { encounter: st.open, fresh: false };
     if (st.left <= 0) throw fail("no_encounters_left");
     const bag = await bagOf(c, who);
     if (!BALLS.some((b) => bag[b] > 0)) throw fail("no_balls");
-    const pokemonId = WILD_POOL[randomInt(WILD_POOL.length)];
+    const pool = zone ? ZONE_POOLS[zone] : WILD_POOL;
+    const pokemonId = pool[randomInt(pool.length)];
     const shiny = randomInt(SHINY_ODDS) === 0;
-    const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny) VALUES($1,$2,$3,$4,$5) RETURNING *", [who.key, who.accountId || null, day, pokemonId, shiny])).rows[0];
+    const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,zone) VALUES($1,$2,$3,$4,$5,$6) RETURNING *", [who.key, who.accountId || null, day, pokemonId, shiny, zone || null])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
   // Un lancer : le serveur tire, la Ball tremble 0 à 3 fois ; au 3e lancer raté, le Pokémon s'enfuit.
@@ -326,10 +344,10 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
     earn: (who, body) => run(who, async () => [arcadeGain(body.mode, body.result, body.score)]),
-    encounter: (who) => wild(who, (c, day) => encounter(c, who, day)),
+    encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, (c, day) => throwBall(c, who, day, String(body && body.ball || ""))),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
-    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who) })),
+    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS })),
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day))
@@ -369,7 +387,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.get("/api/balls", handle((who) => service.state(who)));
   app.post("/api/balls/gift", express.json({ limit: "1kb" }), handle((who) => service.gift(who)));
   app.post("/api/balls/earn", express.json({ limit: "1kb" }), handle((who, req) => service.earn(who, req.body || {})));
-  app.post("/api/wild/encounter", express.json({ limit: "1kb" }), handle((who) => service.encounter(who)));
+  app.post("/api/wild/encounter", express.json({ limit: "1kb" }), handle((who, req) => service.encounter(who, req.body || {})));
   app.post("/api/wild/throw", express.json({ limit: "1kb" }), handle((who, req) => service.throwBall(who, req.body || {})));
   app.post("/api/wild/skip", express.json({ limit: "1kb" }), handle((who) => service.skip(who)));
   app.get("/api/wild/collection", handle((who) => service.collection(who)));
@@ -379,4 +397,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { ENCOUNTERS_MORNING, SECOND_BATCH_HOUR, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { ZONES, ZONE_POOLS, ENCOUNTERS_MORNING, SECOND_BATCH_HOUR, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
