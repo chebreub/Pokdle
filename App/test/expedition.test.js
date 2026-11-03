@@ -46,7 +46,7 @@ test('PostgreSQL: participations, shared goal, chests before Sunday, legendary f
     await assert.rejects(balls.meetLegend(guest),/account_required/);
     await play('user:1','2026-11-03','mode:quiz','daily');
     s=await balls.meetLegend(me);
-    assert.deepEqual([s.encounter.legend,s.wild.left],[true,6],'the legendary encounter does not use one of the 6 daily encounters');
+    assert.deepEqual([s.encounter.legend,s.wild.left],[true,16],'the legendary encounter does not use one of the daily encounters (16 open at 13 h 30)');
     assert.equal(s.encounter.pokemonId,639);
     rolls.push(0.99,0.99,0.99);
     for(let i=0;i<3;i++)s=await balls.throwBall(me,{ball:'poke'});

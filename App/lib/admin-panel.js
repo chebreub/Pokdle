@@ -36,6 +36,13 @@ function addDays(day, n) {
   return d.toISOString().slice(0, 10);
 }
 
+// 🌿 Pour tester les hautes herbes sur son propre compte (3/11) : rendre ses rencontres du jour, +5 Poké Balls.
+// Seulement pour l'admin connecté, jamais pour un autre joueur ; les captures restent.
+function wildTestSectionHtml() {
+  return `<section><h2>🌿 Hautes herbes (test)</h2><p class="hint">Pour toi seulement, pour tester les hautes herbes sur ton compte. Tes captures restent dans ton album.</p>
+<form method="post" action="/admin/wild/reset"><div class="row"><button class="primary" type="submit">Rendre mes rencontres du jour</button></div></form>
+<form method="post" action="/admin/wild/balls"><div class="row"><button type="submit">+5 Poké Balls</button></div></form></section>`;
+}
 const oneLine = (value) => String(value ?? "").replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -113,6 +120,8 @@ const NOTICES = Object.freeze({
   "name-replaced": "Pseudo remplacé par « Dresseur » partout, et il le reste à la prochaine connexion.",
   "name-restored": "Pseudo rétabli : son nom revient à sa prochaine connexion.",
   level: "Niveau remis : le joueur le retrouve à sa prochaine visite, sur chacun de ses appareils.",
+  "wild-reset": "Tes rencontres du jour sont rendues (pour tester).",
+  "wild-balls": "+5 Poké Balls dans ton sac (pour tester).",
   suspension: "Discussion mise à jour.",
   report: "Signalement marqué comme traité.",
 });
@@ -239,7 +248,7 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
       res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}${wildTestSectionHtml()}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
@@ -288,6 +297,33 @@ ${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${
       } catch (error) { log.error("[admin] names:", error.message); back(res, { err: "Modification impossible." }); }
     });
   }
+
+  // 🌿 Test des hautes herbes, sur le compte de l'admin seulement (lib/poke-balls.js).
+  app.post("/admin/wild/reset", form, async (req, res) => {
+    const user = guard(req, res);
+    if (!user) return;
+    if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+    if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+    try {
+      // Les rencontres finies d'aujourd'hui ne comptent plus dans la limite du jour ; les captures restent.
+      await db.query("UPDATE wild_encounters SET kind = 'test_reset' WHERE identity = $1 AND day = $2 AND kind = 'wild' AND status <> 'open'", ["user:" + user.id, today()]);
+      back(res, { ok: "wild-reset" });
+    } catch (error) { log.error("[admin] wild reset:", error.message); back(res, { err: "Impossible pour le moment." }); }
+  });
+  app.post("/admin/wild/balls", form, async (req, res) => {
+    const user = guard(req, res);
+    if (!user) return;
+    if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+    if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+    try {
+      const stamp = Date.now();
+      for (let i = 0; i < 5; i++) {
+        await db.query("INSERT INTO ball_gains(identity, day, source, ball, account_id) VALUES ($1, $2, $3, 'poke', $4) ON CONFLICT DO NOTHING",
+          ["user:" + user.id, today(), "admin:" + stamp + ":" + i, String(user.id)]);
+      }
+      back(res, { ok: "wild-balls" });
+    } catch (error) { log.error("[admin] wild balls:", error.message); back(res, { err: "Impossible pour le moment." }); }
+  });
 
   // « Niveau d'un joueur » : put back a lost level (lib/player-level-admin.js).
   app.post("/admin/level", form, async (req, res) => {

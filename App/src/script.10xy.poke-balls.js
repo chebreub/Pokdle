@@ -165,9 +165,17 @@ function homeDayLeagueTile() {
   return '<button type="button" class="day-tile t-league" data-action="openWeeklyLeague"><b>🏅 Ligue</b><small>' + (ready ? "Badge prêt à récupérer !" : st.completed + "/3 épreuves" + (left ? " · " + escapeHtml(left) : "")) + '</small>' +
     '<span class="day-bar" aria-hidden="true"><i style="width:' + Math.min(100, Math.round((Number(st.score) || 0) / 6)) + '%"></i></span><span class="go">' + (ready ? "Récupérer →" : "Voir →") + '</span></button>';
 }
+// « à 16 h », « à minuit » : l'heure de la prochaine vague de rencontres, heure de Paris.
+function wildNextLabel(w) {
+  if (!w || !w.nextAt) return "";
+  try {
+    const h = Number(new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", hourCycle: "h23" }).format(new Date(w.nextAt)));
+    return h === 0 ? "à minuit" : "à " + h + " h";
+  } catch (_e) { return ""; }
+}
 function homeDayGrassTile(s) {
-  const w = s.wild || { left: 6, max: 6 }, left = ballGrassLeft(s), balls = ballTotal(s);
-  const later = w.nextAt ? (w.nextCount || 3) + " de plus à 13 h" : "";
+  const w = s.wild || { left: 4, max: 24 }, left = ballGrassLeft(s), balls = ballTotal(s);
+  const later = w.nextAt ? "+" + (w.nextCount || 4) + " " + wildNextLabel(w) : "";
   const line = !balls ? "Gagne une Ball pour y entrer" : left <= 0 ? (later ? "🕐 " + later : "Plus de rencontre aujourd’hui") : w.open ? "Un Pokémon t’attend !" : left + " rencontre" + (left > 1 ? "s" : "") + (later ? " · " + later : " · un Pokémon rôde");
   const action = balls && left > 0 ? "openWildGrass" : "openBallBag";
   return '<button type="button" class="day-tile t-grass" data-action="' + action + '"><b>🌿 Hautes herbes</b><small>' + line + '</small><span class="go">' + (balls && left > 0 ? "Capturer →" : "Mon sac →") + '</span></button>';
