@@ -169,7 +169,10 @@ function homeDayLeagueTile() {
 function wildNextLabel(w) {
   if (!w || !w.nextAt) return "";
   try {
-    const h = Number(new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", hourCycle: "h23" }).format(new Date(w.nextAt)));
+    // formatToParts : en français, l'heure seule s'écrit « 16 h » (Number("16 h") donnait « NaN h »).
+    const part = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(w.nextAt)).find((x) => x.type === "hour");
+    const h = Number(part && part.value);
+    if (!Number.isInteger(h)) return "";
     return h === 0 ? "à minuit" : "à " + h + " h";
   } catch (_e) { return ""; }
 }
