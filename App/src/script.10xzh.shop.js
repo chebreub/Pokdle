@@ -38,6 +38,7 @@ function coinGainLabel(list) {
     if (src === "day:wordle") return "Wordle du jour réussi !";
     if (src === "day:dossier") return "Dossier du jour fini !";
     if (src === "day:challenge") return "Défi du jour fini !";
+    if (src === "day:party") return "partie de Party Room !";
     if (src.startsWith("play:")) return g.amount >= 90 ? "belle partie !" : g.amount >= 60 ? "partie gagnée" : "partie jouée";
   }
   return list.every((g) => String(g.source).startsWith("day:")) ? "jeux du jour" : "tes parties";
@@ -121,11 +122,12 @@ function shopEarnTabHtml(s) {
     row(133, false, "Wordle du jour réussi", coinFmt(daily.wordle) + " ₽", done.has("wordle")) +
     row(54, false, "Dossier du jour fini", coinFmt(daily.dossier) + " ₽", done.has("dossier")) +
     row(150, false, "Défi du jour fini", coinFmt(daily.challenge) + " ₽", done.has("challenge")) +
-    row(448, false, "Chaque partie d’un autre jeu", "30 à 90 ₽", false) +
+    row(235, false, "1re partie du jour en Party Room", coinFmt(c.party || 150) + " ₽ + 1 Ball", done.has("party")) +
+    row(448, false, "1re partie du jour de chaque autre mode", "30 à 90 ₽", false) +
     row(7, false, "Doublon relâché (dans l’album)", coinFmt(rel.normal) + " ₽", false) +
     row(6, true, "Doublon shiny relâché", coinFmt(rel.shiny) + " ₽", false) + '</ul>' +
     '<div class="shop-cap"><span>Parties d’aujourd’hui : <b>' + coinFmt(played) + ' / ' + coinFmt(cap) + ' ₽</b></span><i aria-hidden="true"><b style="width:' + Math.min(100, Math.round(played * 100 / cap)) + '%"></b></i></div>' +
-    '<p class="ball-note shop-note">Une partie perdue rapporte 30 ₽, gagnée 60 ₽, une belle partie 90 ₽. Pas de ₽ dans la Party Room.</p>';
+    '<p class="ball-note shop-note">La 1re partie du jour de chaque mode : perdue 30 ₽, gagnée 60 ₽, belle partie 90 ₽. Rejouer au même mode ne rapporte plus ce jour-là.</p>';
 }
 function shopBagHtml() {
   const s = ballState || { bag: { poke: 0, great: 0, ultra: 0 }, today: 0, cap: 10, gains: [] };
