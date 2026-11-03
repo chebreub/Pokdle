@@ -22,8 +22,8 @@ function parisHour(now = new Date()) {
 function reminderMessage(streak) {
   const title = "🔍 Le Pokémon du jour t'attend";
   return streak >= 2
-    ? { title, body: `Ta série de ${streak} jours continue si tu le trouves avant minuit.` }
-    : { title, body: "Un nouveau Pokémon mystère est à trouver aujourd'hui." };
+    ? { title, body: `Ta série de ${streak} jours continue si tu le trouves avant minuit. 🎁 Ton cadeau et 6 rencontres t'attendent.` }
+    : { title, body: "Un nouveau Pokémon mystère, ton cadeau 🎁 et 6 rencontres dans les hautes herbes t'attendent." };
 }
 
 function pushHostAllowed(endpoint) {

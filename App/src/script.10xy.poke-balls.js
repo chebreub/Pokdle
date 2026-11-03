@@ -16,7 +16,8 @@ const BALL_SOURCES = Object.freeze({
   "mode:evolution": "Évolutions", "mode:order": "Ordre", "mode:odd": "Intrus", "mode:quiestce": "Qui est-ce ?",
   "mode:petitbac": "Petit Bac", "mode:higherlower": "Higher or Lower", "mode:connections": "Connexions",
   "mode:speedrun": "Speedrun", "mode:statauction": "Enchères de stats", "mode:statclash": "Stat Clash",
-  "mode:typecombo": "Combo de types", "mode:shiny": "Shiny ou normal"
+  "mode:typecombo": "Combo de types", "mode:shiny": "Shiny ou normal",
+  streak: "🔥 Série de 7 jours"
 });
 // Les modes de fin de partie que le serveur accepte (les jeux du jour sont vérifiés par lui).
 const BALL_ARCADE_MODES = new Set(["normal","silhouette","pixel","mystery","cry","quiz","description","weight","evolution","order","odd","quiestce","petitbac","higher-lower","higher-lower-rush","poke-connections","speedrun","stat-auction","stat-clash","typecombo","shiny"]);
@@ -40,9 +41,17 @@ function ballApply(data, { announce = true } = {}) {
   if (!data || !data.ok) return ballState;
   ballState = data;
   if (announce && Array.isArray(data.added) && data.added.length) {
-    const great = data.added.filter((g) => g.ball === "great").length, poke = data.added.length - great;
+    const added = data.added;
+    const welcome = added.filter((g) => String(g.source).startsWith("welcome:")).length;
+    const streak = added.some((g) => g.source === "streak");
+    const rest = added.filter((g) => !String(g.source).startsWith("welcome:") && g.source !== "streak");
+    const great = rest.filter((g) => g.ball === "great").length, poke = rest.length - great;
     const parts = [great ? "+" + great + " Super Ball" + (great > 1 ? "s" : "") : "", poke ? "+" + poke + " Poké Ball" + (poke > 1 ? "s" : "") : ""].filter(Boolean);
-    if (typeof showToast === "function") showToast(parts.join(" · ") + " · " + data.today + "/" + data.cap + " aujourd’hui");
+    const lines = [];
+    if (parts.length) lines.push(parts.join(" · ") + " · " + data.today + "/" + data.cap + " aujourd’hui");
+    if (streak) lines.push("🔥 Série de " + ((data.streak && data.streak.days) || 7) + " jours : +1 Hyper Ball !");
+    if (welcome) lines.push("🎁 " + welcome + " Balls offertes pour ton compte !");
+    if (typeof showToast === "function") lines.forEach((line, i) => setTimeout(() => showToast(line), i * 2600));
   }
   renderBallHeader();
   renderBallHomeCard();
@@ -109,6 +118,7 @@ function openBallBag() {
         '<li>' + ballImg("great", 20) + '<span>Une <b>Super Ball</b> si tu fais une belle partie</span></li>' +
         '<li>' + ballImg("poke", 20) + '<span>Le <b>Pokémon du jour</b> trouvé</span></li>' +
         '<li>' + ballImg("great", 20) + '<span>Le <b>parcours du jour</b> fini (4/4)</span></li>' +
+        '<li>' + ballImg("ultra", 20) + '<span>Une <b>Hyper Ball</b> tous les <b>7 jours joués d’affilée</b></span></li>' +
       '</ul><p class="ball-note">10 Balls par jour au plus. Rejouer au même mode ne rapporte plus de Ball ce jour-là.</p></section>' +
       ballGrassHtml(s) +
       guest + '</div>');
@@ -171,6 +181,37 @@ function homeDayBallsRow(s) {
   return '<div class="day-balls" role="img" aria-label="' + s.today + ' Balls gagnées sur ' + s.cap + ' aujourd’hui">' +
     Array.from({ length: s.cap }, (_, i) => gains[i] ? ballImg(gains[i].ball, 24) : '<i></i>').join("") + '</div>';
 }
+// Ce qui fait revenir : quand tout se recharge, et la série qui mène à l'Hyper Ball.
+function homeDayCountdown(resetAt) {
+  const ms = Math.max(0, Date.parse(resetAt) - Date.now());
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+  return h ? h + " h " + String(m).padStart(2, "0") : m + " min";
+}
+function homeDayResetHtml(s) {
+  if (!s.resetAt) return "";
+  return '<p class="day-reset">⏳ Nouvelles Balls et 6 rencontres dans <b data-reset-at="' + escapeHtml(s.resetAt) + '">' + homeDayCountdown(s.resetAt) + '</b></p>';
+}
+function homeDayStreakHtml(s) {
+  const st = s.streak;
+  if (!st) return "";
+  const every = st.every || 7, done = Math.min(every, st.inCycle || 0);
+  const names = ["J1", "J2", "J3", "J4", "J5", "J6"];
+  const boxes = Array.from({ length: every }, (_, i) => i === every - 1
+    ? '<span class="goal' + (done >= every ? " on" : "") + '">' + ballImg("ultra", 20) + '</span>'
+    : '<span class="' + (i < done ? "on" : "") + '">' + names[i] + '</span>').join("");
+  const line = done >= every && st.playedToday ? "🔥 Série de " + st.days + " jours : Hyper Ball gagnée aujourd’hui !"
+    : st.days ? "🔥 Série de " + st.days + " jour" + (st.days > 1 ? "s" : "") + (st.playedToday ? "" : " · joue aujourd’hui pour la garder") + " · encore " + st.left + " pour une Hyper Ball"
+    : "🔥 Joue un jour de suite après l’autre : au 7e, une Hyper Ball";
+  return '<div class="day-streak"><b>' + escapeHtml(line) + '</b><div class="day-streak-days">' + boxes + '</div></div>';
+}
+setInterval(() => {
+  if (document.hidden) return;
+  document.querySelectorAll("[data-reset-at]").forEach((el) => {
+    const at = el.getAttribute("data-reset-at");
+    if (Date.parse(at) <= Date.now()) { if (typeof refreshBalls === "function") refreshBalls(); return; }
+    el.textContent = homeDayCountdown(at);
+  });
+}, 30000);
 function renderBallHomeCard() {
   const hero = document.getElementById("daily-hero");
   if (!hero || !ballState) return;
@@ -191,6 +232,7 @@ function renderBallHomeCard() {
   const todo = HOME_DAY_SUGGEST.filter(([src]) => !got.has(src)).slice(0, 3).map(([, label, gain]) => label + " " + gain);
   card.innerHTML = '<div class="day-head"><h2>Ta journée</h2><span>' + s.today + ' / ' + s.cap + ' Balls</span></div>' + homeDayBallsRow(s) +
     '<p class="day-hint">' + (full ? "Sac plein pour aujourd’hui 🎉 Reviens demain." : todo.length ? "Encore : " + escapeHtml(todo.join(" · ")) : "1 Ball par mode joué aujourd’hui.") + '</p>' +
+    homeDayResetHtml(s) + homeDayStreakHtml(s) +
     '<div class="day-tiles">' + homeDayGrassTile(s) + homeDayBagTile(s) + homeDayEggTile() + homeDayLeagueTile() + '</div>';
   homeDayLoadEgg();
 }

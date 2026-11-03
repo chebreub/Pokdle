@@ -57,12 +57,38 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     await db.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES('user:42',$1,'gift','poke','42'),('user:42','2026-11-01','mode:quiz','great','42')",[day]);
     s=await balls.state(user);
     assert.equal(s.today,10);assert.equal(s.authenticated,true);
-    assert.deepEqual(s.bag,{poke:7,great:4,ultra:0});
+    assert.deepEqual(s.bag,{poke:11,great:5,ultra:0},'the guest Balls, the account Balls and its 5 welcome Balls (4 Poké + 1 Super)');
+    assert.equal(s.bonus.filter(b=>b.source.startsWith('welcome:')).length,5);
+    assert.equal(s.today,10,'the welcome Balls are outside the daily cap');
+    assert.equal((await balls.state(user)).bonus.length,5,'given once per account');
     assert.equal(Number((await db.query("SELECT COUNT(*) FROM ball_gains WHERE identity='guest:g1'")).rows[0].count),0);
 
     // A new Paris day starts a new count.
     now=new Date('2026-11-03T23:30:00Z');
     s=await balls.gift(user);
     assert.deepEqual([s.day,s.today,s.added],['2026-11-04',1,[{source:'gift',ball:'poke'}]]);
+  }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
+});
+
+test('PostgreSQL: 7 days in a row give a Hyper Ball, outside the cap; the gift alone does not keep the streak',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
+  const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='streak_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
+  try{
+    await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
+    let now=new Date('2026-11-03T09:00:00Z');
+    const balls=createBallService({db,clock:()=>now});await initBallsDb(db);
+    const g={key:'guest:s1',guestKey:'guest:s1',accountId:null};
+    // Six days played before today, and a day with only the gift before them (it does not count).
+    for(let i=1;i<=6;i++)await db.query("INSERT INTO ball_gains(identity,day,source,ball) VALUES('guest:s1','2026-11-03'::date-$1::int,'mode:quiz','poke')",[i]);
+    await db.query("INSERT INTO ball_gains(identity,day,source,ball) VALUES('guest:s1','2026-10-27','gift','poke')");
+    let s=await balls.state(g);
+    assert.deepEqual([s.streak.days,s.streak.playedToday,s.streak.left],[6,false,1],'6 days kept until midnight, one more for the Hyper Ball');
+    assert.equal((await balls.gift(g)).streak.playedToday,false,'opening the gift is not playing');
+    s=await balls.earn(g,{mode:'pixel',result:'loss',score:1});
+    assert.deepEqual(s.added.map(a=>a.source+':'+a.ball),['mode:pixel:poke','streak:ultra']);
+    assert.deepEqual([s.streak.days,s.streak.inCycle,s.bag.ultra,s.today],[7,7,1,2]);
+    assert.equal((await balls.earn(g,{mode:'quiz',result:'loss',score:1})).added.some(a=>a.source==='streak'),false,'one Hyper Ball for the 7th day');
+    // A missed day breaks the streak.
+    now=new Date('2026-11-05T09:00:00Z');
+    assert.equal((await balls.state(g)).streak.days,0);
   }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
 });
