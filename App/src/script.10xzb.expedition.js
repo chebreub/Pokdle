@@ -67,7 +67,12 @@ function expeditionHtml(e) {
 function openExpedition() {
   const draw = () => { if (expeditionState && typeof ensureOverlay === "function") ensureOverlay("🧭 Expédition de la semaine", expeditionHtml(expeditionState)); };
   draw();
-  loadExpedition(true).then(() => { const o = document.getElementById("overlay-modal"); if (o && !o.classList.contains("hidden") && document.querySelector("#overlay-body .exp")) draw(); else if (!document.querySelector("#overlay-body .exp")) draw(); });
+  const first = !expeditionState;
+  // Ne rouvre jamais la fenêtre fermée entre-temps (ouverture des coffres) : on redessine seulement celle qui est ouverte.
+  loadExpedition(true).then(() => {
+    const o = document.getElementById("overlay-modal"), open = o && !o.classList.contains("hidden");
+    if ((open && document.querySelector("#overlay-body .exp")) || (first && !document.querySelector(".fx-reveal"))) draw();
+  });
 }
 function claimExpeditionChests() {
   return expeditionFetch("/api/expedition/chests", {}).then((d) => {

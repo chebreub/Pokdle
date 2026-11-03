@@ -131,7 +131,7 @@ function renderWildEncounter(state, message, intro) {
     '</div>' +
     '<div class="wild-panel">' +
       '<p class="wild-line" aria-live="polite">' + (message || (e.legend ? "👑 " + name + (e.shiny ? " <b>shiny</b>" : "") + " se réveille ! Une seule chance cette semaine." : e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
-      '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures && wildCaptures[p.id] ? "⚪ Déjà dans ton album" : "Nouveau pour ton album ?") + '</span></div>' +
+      '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures && wildCaptures[p.id] ? "⚪ Déjà attrapé" : "🆕 Pas encore attrapé !") + '</span></div>' +
       wildBallButtons(state, e) +
       (e.legend ? "" : '<button type="button" class="wild-run" data-action="wildRun">Fuir</button>') +
     '</div>';
@@ -152,11 +152,11 @@ function renderWildEnd(state, outcome) {
     const p = wildPokemon(outcome.pokemonId);
     body = '<div class="wild-gotcha is-fled"><h3>' + escapeHtml(p ? p.name : "Le Pokémon") + ' s’est enfui…</h3><p>Pas de chance cette fois.</p></div>';
   } else {
-    body = '<div class="wild-gotcha is-empty"><h3>' + (w.left > 0 ? "Les herbes bougent…" : "Plus de rencontre aujourd’hui") + '</h3></div>';
+    body = '<div class="wild-gotcha is-empty"><h3>' + (w.left > 0 ? "Les herbes bougent…" : w.nextAt ? "Les herbes se reposent jusqu’à 13 h" : "Plus de rencontre aujourd’hui") + '</h3></div>';
   }
   const next = w.left > 0 && hasBall
     ? '<button type="button" class="wild-cta" data-action="openWildGrass">🌿 Continuer · ' + w.left + ' rencontre' + (w.left > 1 ? "s" : "") + '</button>'
-    : '<p class="wild-note">' + (w.left > 0 ? "Plus de Ball dans ton sac : joue à un mode pour en gagner." : "6 rencontres par jour : reviens demain pour de nouveaux Pokémon.") + '</p>';
+    : '<p class="wild-note">' + (w.left > 0 ? "Plus de Ball dans ton sac : joue à un mode pour en gagner." : (w.nextAt ? (w.nextCount || 3) + " nouvelles rencontres à 13 h : reviens à la pause de midi !" : "Reviens demain : 3 rencontres à minuit, 3 de plus à 13 h.")) + '</p>';
   // Sans compte : proposer de garder sa capture partout, avec 5 Balls offertes (jamais de mur, « Plus tard » suffit).
   const keep = outcome && outcome.caught && state && state.authenticated === false
     ? '<div class="wild-keep"><b>Garde ' + escapeHtml((wildPokemon(outcome.pokemonId) || {}).name || "ton Pokémon") + ' partout</b><span>Crée ton compte : ton album te suit sur tous tes appareils, et <b>5 Balls offertes 🎁</b>.</span>' +
@@ -258,13 +258,23 @@ function wildThrow(ball) {
         const known = typeof playerProfile !== "undefined" && playerProfile && playerProfile.discoveries || {};
         const isNew = Boolean(p && !known[p.id]);
         // « Gotcha ! » d'abord ; la fiche « Nouvelle entrée » du Pokédex arrive juste après.
+        // 1re capture de ce Pokémon : sa propre carte « Attrapé ! » (plus forte que la fiche « Vu » du Pokédex).
+        const firstCatch = !(wildCaptures && wildCaptures[e.pokemonId]);
+        const caughtCount = Object.keys(wildCaptures || {}).length + (firstCatch ? 1 : 0);
         const register = () => {
-          if (p && typeof recordPokemonDiscovery === "function") recordPokemonDiscovery(p, "capture");
+          if (p && firstCatch && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
+            playerProfile.discoveries ||= {};
+            if (addDiscovery(playerProfile.discoveries, p, "capture")) {
+              if (typeof saveProfile === "function") saveProfile();
+              if (typeof awardXp === "function" && typeof ADVENTURE_XP !== "undefined") { awardXp(ADVENTURE_XP.discovery, "Nouveau Pokémon : " + p.name); if (typeof awardRegionXpIfComplete === "function") awardRegionXpIfComplete(p); }
+            }
+            if (typeof fxCaptureCard === "function") fxCaptureCard(p, e.shiny, caughtCount);
+          } else if (p && typeof recordPokemonDiscovery === "function") recordPokemonDiscovery(p, "capture");
           const rec = p && typeof playerProfile !== "undefined" && playerProfile && playerProfile.discoveries && playerProfile.discoveries[p.id];
           if (rec && e.shiny && !rec.shiny) { rec.shiny = "capture"; if (typeof saveProfile === "function") saveProfile(); }
           if (typeof albumClaimMedals === "function") albumClaimMedals(false);
         };
-        if (isNew && !wildReducedMotion()) setTimeout(register, 1800); else register();
+        if ((isNew || firstCatch) && !wildReducedMotion()) setTimeout(register, 1800); else register();
         wildCaptures ||= {};
         const c = wildCaptures[e.pokemonId] ||= { normal: 0, shiny: 0 };
         c[e.shiny ? "shiny" : "normal"] += 1;
@@ -299,8 +309,12 @@ if (typeof albumSlotHtml === "function") {
     if (!entry) return html;
     const c = wildCaptures && wildCaptures[p.id];
     const count = c ? c.normal + c.shiny : 0;
-    const mark = entry.shiny ? "" : count ? '<span class="alb-origin is-caught" title="Capturé">⚪' + (count > 1 ? "×" + count : "") + '</span>' : '<span class="alb-origin" title="Deviné">🔍</span>';
-    return mark ? html.replace('<span class="alb-num">', mark + '<span class="alb-num">') : html;
+    // Vu = pâle, avec un œil ; Attrapé = en couleur, avec une vraie Poké Ball (un shiny compte comme attrapé).
+    const caught = count > 0 || Boolean(entry.shiny);
+    const mark = caught
+      ? '<span class="alb-origin is-caught" title="Attrapé">' + (typeof ballImg === "function" ? ballImg("poke", 18) : "⚪") + (count > 1 ? "<b>×" + count + "</b>" : "") + '</span>'
+      : '<span class="alb-origin is-seen" title="Vu (trouvé en jouant), pas encore attrapé">👁️</span>';
+    return html.replace('class="alb-slot', 'class="alb-slot ' + (caught ? "is-caught" : "is-seen")).replace('<span class="alb-num">', mark + '<span class="alb-num">');
   };
 }
 if (typeof openAlbumBinder === "function") {
