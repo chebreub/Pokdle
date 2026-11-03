@@ -19,7 +19,9 @@ test('the tall grass never holds a legendary, a mythical or an album mission rew
   const missions=missionPokemonIds();
   assert.equal(missions.length,108);
   for(const id of [...CAPTURE.legendary,...CAPTURE.mythical,...missions])assert.ok(!WILD_POOL.includes(id),'#'+id+' must not appear');
-  for(const id of [150,151,384,448])assert.ok(!WILD_POOL.includes(id));
+  // 1020 Feu-Perçant (Paradoxe légendaire) and 793 Zéroïd (Ultra-Chimère) are not flagged by PokéAPI but are Légendes on the site.
+  for(const id of [150,151,384,448,1020,793,1009])assert.ok(!WILD_POOL.includes(id),'#'+id);
+  for(const id of require('../lib/poke-balls').siteLegendIds())assert.ok(!WILD_POOL.includes(id));
   assert.ok(WILD_POOL.includes(10)&&WILD_POOL.includes(19));
   assert.ok(WILD_POOL.length>800);
   // The missions are read from the client file: the same 108 ids as the album shows.

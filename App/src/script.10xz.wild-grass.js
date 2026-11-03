@@ -73,17 +73,60 @@ function wildBallButtons(state, e) {
       ballImg(k, 34) + '<span><b>' + BALL_KINDS[k].name + '</b><small>× ' + n + ' · ' + (Number(e.chances && e.chances[k]) || 0) + ' %</small></span></button>';
   }).join("") + '</div>';
 }
-function renderWildEncounter(state, message) {
+// Le décor : ciel, nuages, collines, plateforme et trois rangées de brins (SVG fait ici, sans image).
+function wildBlades(seed, count, height, colors) {
+  let x = seed * 7, out = "";
+  const rnd = () => { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+  for (let i = 0; i < count; i++) {
+    const cx = (i + rnd() * 0.8) * (400 / count), h = height * (0.55 + rnd() * 0.45), w = 5 + rnd() * 5, bend = (rnd() - 0.5) * 14;
+    out += '<path d="M' + (cx - w).toFixed(1) + ' 100 Q' + (cx + bend * 0.4).toFixed(1) + ' ' + (100 - h * 0.6).toFixed(1) + ' ' + (cx + bend).toFixed(1) + ' ' + (100 - h).toFixed(1) +
+      ' Q' + (cx + bend * 0.2 + w * 0.3).toFixed(1) + ' ' + (100 - h * 0.5).toFixed(1) + ' ' + (cx + w).toFixed(1) + ' 100Z" fill="' + colors[i % colors.length] + '"/>';
+  }
+  return '<svg viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true">' + out + '</svg>';
+}
+function wildBackdropHtml() {
+  return '<div class="wild-sky" aria-hidden="true"><i style="left:12%;top:16%;width:70px"></i><i style="left:64%;top:9%;width:54px;animation-duration:80s"></i><i style="left:88%;top:26%;width:46px;animation-duration:70s"></i></div>' +
+    '<div class="wild-hills" aria-hidden="true"><svg viewBox="0 0 400 100" preserveAspectRatio="none"><path d="M0 38 Q60 12 130 30 T260 26 T400 34 V100 H0Z" fill="#B4DE9A"/><path d="M0 56 Q90 36 190 52 T400 48 V100 H0Z" fill="#9CD283"/><rect y="64" width="400" height="36" fill="#8DC874"/></svg></div>' +
+    '<div class="wild-pad" aria-hidden="true"></div>' +
+    '<div class="wild-grass-back" aria-hidden="true">' + wildBlades(3, 46, 90, ["#5DB36A", "#4FA45E", "#6CC077"]) + '</div>';
+}
+function wildFrontGrassHtml() {
+  return '<div class="wild-grass-front" aria-hidden="true">' + wildBlades(11, 38, 100, ["#3E9B57", "#2F8A4A", "#48A862"]) + '</div>';
+}
+function wildSparklesHtml() {
+  return '<div class="wild-sparkles" aria-hidden="true">' + [[30, 22, 0], [70, 18, .5], [24, 52, .9], [76, 46, .3], [52, 10, 1.2]]
+    .map(([l, t, d]) => '<b style="left:' + l + '%;top:' + t + '%;animation-delay:' + d + 's">✦</b>').join("") + '</div>';
+}
+// Des sons doux, faits par le navigateur (réglages « Effets sonores » et « Volume » du site).
+function wildSfx(kind) {
+  if (typeof getPokedexFxAudioContext !== "function" || typeof pokedexFxTone !== "function") return;
+  const ctx = getPokedexFxAudioContext();
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.01, v = typeof appSoundVolume === "function" ? appSoundVolume() : 1;
+  const notes = {
+    throw: [[520, 0, .06, .012, "sine"], [420, .05, .07, .01, "sine"], [330, .1, .08, .008, "sine"]],
+    absorb: [[880, 0, .08, .018, "sine"], [1320, .05, .1, .014, "sine"]],
+    land: [[150, 0, .07, .03, "triangle"]],
+    tick: [[240, 0, .05, .028, "triangle"], [200, .06, .05, .02, "triangle"]],
+    click: [[1100, 0, .035, .02, "square"], [523.3, .12, .1, .026, "triangle"], [659.3, .22, .1, .026, "triangle"], [784, .32, .2, .03, "sine"]],
+    free: [[600, 0, .05, .02, "sine"], [300, .05, .1, .018, "triangle"]]
+  }[kind] || [];
+  for (const [f, o, d, g, type] of notes) pokedexFxTone(ctx, f, t + o, d, g * v, type);
+}
+function renderWildEncounter(state, message, intro) {
   const e = state.encounter || state.wild && state.wild.open;
   const p = e && wildPokemon(e.pokemonId);
   if (!e || !p) return renderWildEnd(state, null);
   const scene = wildScene();
   const name = escapeHtml(p.name);
   scene.innerHTML = wildHead(state) +
-    '<div class="wild-stage' + (e.shiny ? " is-shiny" : "") + '">' +
-      '<div class="wild-grass" aria-hidden="true"></div>' +
+    '<div class="wild-stage' + (e.shiny ? " is-shiny" : "") + (intro && !wildReducedMotion() ? " is-intro" : "") + '">' +
+      wildBackdropHtml() +
       '<img class="wild-mon" src="' + escapeHtml(wildArtwork(p, e.shiny)) + '" data-fallback="' + escapeHtml(getPokemonSprite(p)) + '" alt="' + name + (e.shiny ? " shiny" : "") + '" draggable="false">' +
-      '<div class="wild-ball" aria-hidden="true">' + ballImg("poke", 44) + '</div>' +
+      (e.shiny ? wildSparklesHtml() : "") +
+      '<div class="wild-ball" aria-hidden="true"><div class="wild-ball-arc"><div class="wild-ball-sh">' + ballImg("poke", 48) + '</div></div></div>' +
+      '<div class="wild-flash" aria-hidden="true"></div><div class="wild-stars" aria-hidden="true"></div>' +
+      wildFrontGrassHtml() +
     '</div>' +
     '<div class="wild-panel">' +
       '<p class="wild-line" aria-live="polite">' + (message || (e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
@@ -129,7 +172,7 @@ function openWildGrass() {
   (wildCaptures ? Promise.resolve() : loadWildCaptures()).then(() => wildPost("/api/wild/encounter")).then((data) => {
     if (data && data.ok) {
       if (typeof ballApply === "function") ballApply(data, { announce: false });
-      renderWildEncounter(data);
+      renderWildEncounter(data, null, data.fresh);
       const p = wildPokemon(data.encounter.pokemonId);
       if (data.fresh && p && typeof playPokemonCry === "function") { try { playPokemonCry(p, 0.5); } catch (_e) {} }
       return;
@@ -142,12 +185,25 @@ function openWildGrass() {
   }).finally(() => { wildBusy = false; });
 }
 
-// La Ball part, le Pokémon y entre, elle tremble 0 à 3 fois, puis le résultat. « Passer » saute l'animation.
+// La Ball part en cloche, flash, le Pokémon entre dedans, elle tombe sur la plateforme, tremble 0 à 3 fois,
+// puis « clic » et étoiles, ou le Pokémon ressort. « Passer » saute l'animation ; rien si « réduire les animations ».
 function wildAnimate(scene, ball, shakes, caught) {
   const stage = scene.querySelector(".wild-stage");
-  const ballEl = scene.querySelector(".wild-ball");
-  if (!stage || !ballEl || wildReducedMotion()) return Promise.resolve();
-  ballEl.innerHTML = ballImg(ball, 44);
+  const ballEl = scene.querySelector(".wild-ball"), mon = scene.querySelector(".wild-mon");
+  if (!stage || !ballEl || !mon || wildReducedMotion()) return Promise.resolve();
+  const sh = ballEl.querySelector(".wild-ball-sh");
+  sh.innerHTML = ballImg(ball, 48);
+  const sr = stage.getBoundingClientRect(), mr = mon.getBoundingClientRect();
+  const hy = Math.max(60, mr.top - sr.top + mr.height * 0.45), ground = sr.height * 0.8 - 18;
+  stage.style.setProperty("--hy", hy + "px");
+  stage.style.setProperty("--sx", Math.round(sr.width * 0.36) + "px");
+  stage.style.setProperty("--sy", Math.round(sr.height - hy + 40) + "px");
+  stage.style.setProperty("--peak", -Math.round(Math.min(90, hy * 0.5)) + "px");
+  stage.style.setProperty("--gy", Math.round(ground - hy) + "px");
+  stage.style.setProperty("--gyabs", Math.round(ground) + "px");
+  stage.classList.remove("is-intro");
+  const flash = stage.querySelector(".wild-flash");
+  const flashAt = (y) => { stage.style.setProperty("--fy", Math.round(y) + "px"); flash.classList.remove("is-on"); void flash.offsetWidth; flash.classList.add("is-on"); };
   const panel = scene.querySelector(".wild-panel");
   if (panel) panel.insertAdjacentHTML("beforeend", '<button type="button" class="wild-skip" data-action="wildSkipAnimation">Passer ›</button>');
   return new Promise((resolve) => {
@@ -155,12 +211,23 @@ function wildAnimate(scene, ball, shakes, caught) {
     const done = () => { timers.forEach(clearTimeout); wildSkipAnim = null; resolve(); };
     wildSkipAnim = done;
     const at = (ms, fn) => timers.push(setTimeout(fn, ms));
-    stage.classList.add("is-throw");
-    at(450, () => stage.classList.add("is-in"));
-    let t = 900;
-    for (let i = 0; i < shakes; i++) { at(t, () => { ballEl.classList.remove("is-shake"); void ballEl.offsetWidth; ballEl.classList.add("is-shake"); }); t += 650; }
-    at(t, () => stage.classList.add(caught ? "is-caught" : "is-out"));
-    at(t + (caught ? 700 : 500), done);
+    stage.classList.add("is-throw"); wildSfx("throw");
+    at(620, () => { flashAt(hy); stage.classList.add("is-absorb"); wildSfx("absorb"); });
+    at(1000, () => { stage.classList.remove("is-throw"); stage.classList.add("is-drop"); });
+    at(1310, () => wildSfx("land"));
+    let t = 1650;
+    for (let i = 0; i < shakes; i++) { at(t, () => { sh.classList.remove("is-shake"); void sh.offsetWidth; sh.classList.add("is-shake"); wildSfx("tick"); }); t += 950; }
+    if (caught) {
+      at(t, () => {
+        stage.classList.add("is-caught"); wildSfx("click");
+        const stars = stage.querySelector(".wild-stars");
+        stars.innerHTML = [[-70, -40], [0, -78], [70, -40], [-46, -66], [46, -66]].map(([dx, dy], i) => '<i style="--dx:' + dx + 'px;--dy:' + dy + 'px;animation-delay:' + (i * 0.04) + 's">★</i>').join("");
+      });
+      at(t + 1000, done);
+    } else {
+      at(t + 100, () => { flashAt(ground); stage.classList.add("is-free"); stage.classList.remove("is-absorb"); wildSfx("free"); });
+      at(t + 750, done);
+    }
   });
 }
 function wildSkipAnimation() { if (wildSkipAnim) wildSkipAnim(); }

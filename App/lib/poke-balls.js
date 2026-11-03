@@ -28,8 +28,13 @@ function captureChance(pokemonId, ball) {
 function missionPokemonIds(source = require("fs").readFileSync(require("path").join(__dirname, "..", "src", "script.10b.album-missions.js"), "utf8")) {
   return [...source.matchAll(/albumMission\('[^']+',\s*(\d+)/g)].map((m) => Number(m[1]));
 }
+// Les « Légendes » du site (Pokédex, Grille du jour : Ultra-Chimères et Paradoxes légendaires compris) en plus de PokéAPI.
+function siteLegendIds() {
+  const { ULTRA_BEASTS, PARADOX_LEGENDS } = require("./seo-guides");
+  return [...require("./daily-grid").LEGENDARY_IDS, ...Object.values(ULTRA_BEASTS || {}).flat(), ...(PARADOX_LEGENDS || [])].map(Number);
+}
 const WILD_POOL = Object.freeze((() => {
-  const out = new Set([...CAPTURE.legendary, ...CAPTURE.mythical, ...missionPokemonIds()]);
+  const out = new Set([...CAPTURE.legendary, ...CAPTURE.mythical, ...siteLegendIds(), ...missionPokemonIds()]);
   return Array.from({ length: 1025 }, (_, i) => i + 1).filter((id) => !out.has(id));
 })());
 const fail = (code, status = 409) => Object.assign(new Error(code), { code, status });
@@ -256,4 +261,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
