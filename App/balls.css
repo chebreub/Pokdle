@@ -177,3 +177,19 @@ body.theme-dark .wild-ball-btn,body.theme-dark .wild-close{background:#26222c;co
 body.theme-dark .home-day{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.1)}
 body.theme-dark .day-head h2{color:#f5efe6}
 body.theme-dark .day-hint{color:#cfc6d8}
+
+/* ✨ Carnet shiny (3/11) */
+.shl{display:grid;gap:12px}
+.shl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.shl-stats div{border-radius:14px;background:#FFF6D6;padding:10px;text-align:center;font:800 12px/1.2 Nunito,sans-serif;color:#5b4300}
+.shl-stats b{display:block;font:700 24px/1.1 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.shl-next{margin:0;font:700 14px/1.4 Nunito,sans-serif;color:#5c5663}
+.shl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.shl-card{margin:0;border-radius:16px;padding:8px;text-align:center;background:linear-gradient(160deg,#FFF6D6,#fff);border:2px solid #f2d27a}
+.shl-card img{width:100%;height:110px;object-fit:contain}
+.shl-card b{display:block;font:700 14px/1.2 Fredoka,Nunito,sans-serif}
+.shl-card small{display:block;font:700 11px/1.3 Nunito,sans-serif;color:#6b6472}
+.shl-card.is-fled{background:#f3f1ee;border-color:#ddd}
+.shl-card.is-fled img{filter:grayscale(1) opacity(.5)}
+.shl-empty{margin:0;padding:16px;border-radius:14px;background:#FFF8EF;font:700 14px/1.45 Nunito,sans-serif;color:#5c5663;text-align:center}
+.shl-actions{display:flex;justify-content:center}

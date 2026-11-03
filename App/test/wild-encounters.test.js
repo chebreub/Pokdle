@@ -95,6 +95,7 @@ test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and m
     const user={key:'user:7',guestKey:'guest:w1',accountId:'7'};
     s=await balls.collection(user);
     assert.deepEqual(s.captures,[{id:10,normal:1,shiny:0}]);
+    assert.deepEqual(s.shinyLog.map(e=>[e.id,e.caught]),[[19,false]],'the shiny left behind is in the shiny log, greyed out');
     assert.equal(s.wild.caught,1);
     await assert.rejects(balls.throwBall(user,{ball:'ultra'}),/no_encounter/);
   }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}

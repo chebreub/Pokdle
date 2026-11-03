@@ -188,6 +188,12 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const r = await c.query("UPDATE wild_encounters SET status='skipped',ended_at=NOW() WHERE identity=$1 AND status='open' AND day=$2", [who.key, day]);
     return { skipped: r.rowCount > 0 };
   }
+  // Le carnet shiny : chaque shiny croisé dans les hautes herbes, attrapé ou non (le plus récent d'abord).
+  async function shinyLog(c, who) {
+    return (await c.query(`SELECT pokemon_id,status,to_char(day,'YYYY-MM-DD') AS day FROM wild_encounters
+      WHERE identity=$1 AND shiny AND status<>'open' ORDER BY id DESC LIMIT 100`, [who.key])).rows
+      .map((r) => ({ id: Number(r.pokemon_id), day: r.day, caught: r.status === "caught" }));
+  }
   async function collection(c, who) {
     return (await c.query(`SELECT pokemon_id,COUNT(*) FILTER (WHERE NOT shiny)::int AS normal,COUNT(*) FILTER (WHERE shiny)::int AS shiny
       FROM wild_encounters WHERE identity=$1 AND status='caught' GROUP BY pokemon_id ORDER BY pokemon_id`, [who.key])).rows
@@ -217,7 +223,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     encounter: (who) => wild(who, (c, day) => encounter(c, who, day)),
     throwBall: (who, body) => wild(who, (c, day) => throwBall(c, who, day, String(body && body.ball || ""))),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
-    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who) }))
+    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who) }))
   };
 }
 
