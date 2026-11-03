@@ -139,3 +139,6 @@ body.theme-dark .ball-soon{background:#1f3326}
 .alb-origin.is-caught{font-weight:900;color:#2E2A33}
 body.theme-dark .wild-scene{background:#1d1a22;color:#f5efe6}
 body.theme-dark .wild-ball-btn,body.theme-dark .wild-close{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.12)}
+/* 3/11 : sac de l'en-tête en deux compteurs, boutons de la carte sur une seule ligne. */
+.ball-sep{width:1px;height:16px;background:rgba(46,42,51,.2);margin:0 2px}
+.home-balls-actions button{white-space:nowrap}

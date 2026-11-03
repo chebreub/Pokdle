@@ -67,7 +67,11 @@ function renderBallHeader() {
   const total = ballTotal(ballState), gift = Boolean(ballState && ballState.giftAvailable);
   btn.classList.toggle("has-gift", gift);
   btn.setAttribute("aria-label", "Mon sac : " + total + " Ball" + (total > 1 ? "s" : "") + (gift ? ", cadeau du jour à ouvrir" : ""));
-  btn.innerHTML = ballImg("poke", 22) + '<b>' + total + '</b>' + (gift ? '<span class="ball-gift-dot" aria-hidden="true">🎁</span>' : "");
+  // Poké Balls et Super Balls séparées (🔴 4 · 🔵 1), comme sur la maquette du 2/11 ; l'Hyper Ball seulement si on en a.
+  const bag = ballState && ballState.bag || {};
+  const kinds = ["poke", "great", "ultra"].filter((k) => k !== "ultra" || Number(bag.ultra) > 0);
+  btn.innerHTML = kinds.map((k) => ballImg(k, 22) + '<b>' + (Number(bag[k]) || 0) + '</b>').join('<span class="ball-sep" aria-hidden="true"></span>') +
+    (gift ? '<span class="ball-gift-dot" aria-hidden="true">🎁</span>' : "");
 }
 
 function ballGainsHtml(state) {
@@ -139,7 +143,7 @@ function renderBallHomeCard() {
   card.innerHTML = '<div class="home-balls-main"><span class="home-balls-art">' + ballImg(s.today && s.gains.some((g) => g.ball === "great") ? "great" : "poke", 44) + '</span>' +
     '<div><span class="home-balls-eyebrow">TES BALLS DU JOUR</span><b>' + (full ? "Sac plein pour aujourd’hui 🎉" : s.today + " / " + s.cap + " gagnées") + '</b>' + ballMeterHtml(s) +
     '<small>' + (full ? "Reviens demain pour 10 nouvelles Balls." : "1 Ball par mode joué aujourd’hui, une Super Ball pour une belle partie.") + '</small></div></div>' +
-    '<div class="home-balls-actions">' + (s.giftAvailable ? '<button type="button" class="ball-gift-cta" data-action="claimBallGift">🎁 Cadeau du jour</button>' : "") +
+    '<div class="home-balls-actions">' + (s.giftAvailable ? '<button type="button" class="ball-gift-cta" data-action="claimBallGift">🎁 Cadeau</button>' : "") +
     (ballGrassLeft(s) > 0 && ballTotal(s) > 0 ? '<button type="button" class="ball-grass-cta" data-action="openWildGrass">🌿 Hautes herbes · ' + ballGrassLeft(s) + '/' + ((s.wild && s.wild.max) || 6) + '</button>' : "") +
     '<button type="button" class="btn-ghost" data-action="openBallBag">🎒 Mon sac · ' + ballTotal(s) + '</button></div>';
 }
