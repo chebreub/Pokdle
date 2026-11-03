@@ -19,7 +19,7 @@ const url = '/api/shop/buy', buy = {item: 'poke', expectedPrice: 50};
 test('uncertain purchase keeps its id through a reload; confirmed success clears it', async () => {
   const a = client(); await a.c.ballPaidAction(url, buy);
   const b = client(a.storage); b.c.response = {ok: true}; await b.c.ballPaidAction(url, buy);
-  assert.equal(a.sent[0].body.actionId, b.sent[0].body.actionId); assert.equal(a.storage.size, 0);
+  assert.equal(a.sent[0].body.actionScope, 'account-a'); assert.equal(a.sent[0].body.actionId, b.sent[0].body.actionId); assert.equal(a.storage.size, 0);
 });
 test('different purchase resolves pending one without sending the new intent', async () => {
   const a = client(); await a.c.ballPaidAction(url, buy); a.c.response = {ok: true};

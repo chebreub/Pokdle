@@ -305,13 +305,13 @@ function ballPaidAction(url, payload) {
   const fingerprint = JSON.stringify(payload);
   const recovering = pending && pending.fingerprint !== fingerprint;
   if (!pending) {
-    pending = { fingerprint, body: { ...payload, actionId: crypto.randomUUID() } };
+    pending = { fingerprint, body: { ...payload, actionScope: scope, actionId: crypto.randomUUID() } };
     try { sessionStorage.setItem(key, JSON.stringify(pending)); } catch (_) {
       return Promise.resolve({ ok: false, error: "storage_unavailable" });
     }
   }
   return ballFetch(url, pending.body).then((data) => {
-    if (data && (data.ok || ["price_changed", "encounter_changed", "no_ball_left", "no_encounter", "not_enough_coins", "recharge_limit", "reload_required", "action_conflict"].includes(data.error))) {
+    if (data && (data.ok || ["price_changed", "encounter_changed", "no_ball_left", "no_encounter", "not_enough_coins", "recharge_limit", "reload_required", "action_conflict", "account_changed"].includes(data.error))) {
       try { sessionStorage.removeItem(key); } catch (_) {}
     }
     if (!ballState || ballState.actionScope !== scope) return { ok: false, error: "account_changed" };

@@ -155,6 +155,7 @@ function openShop() { openBallBag("shop"); }
 
 // --- Acheter : un 1er appui demande « Confirmer ? » (4 s), le 2e achète ---
 const SHOP_ERRORS = {
+  account_changed: "Le compte a changé. Vérifie ton sac avant de recommencer.",
   previous_action: "Vérification de ton achat précédent. Vérifie ton sac avant de recommencer.",
   price_changed: "Le prix a changé. Vérifie le nouveau prix avant de confirmer.",
   reload_required: "Recharge la page pour utiliser la boutique.",

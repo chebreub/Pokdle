@@ -530,6 +530,10 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
       let id = dailyGuest(secret, readCookies(req).pokdle_daily);
       if (!id) { const issued = issueDailyGuest(secret); id = issued.id; res.cookie("pokdle_daily", issued.cookie, { httpOnly: true, secure: req.secure, sameSite: "lax", path: "/", maxAge: 180 * 86400000 }); }
       const user = getUser(req), who = { key: user?.id ? "user:" + user.id : "guest:" + id, guestKey: "guest:" + id, accountId: user?.id ? String(user.id) : null };
+      if (req.method === "POST" && ["/api/shop/buy", "/api/wild/throw"].includes(req.path)) {
+        if (typeof req.body.actionScope !== "string") throw fail("reload_required", 400);
+        if (req.body.actionScope !== crypto.createHash("sha256").update(who.key).digest("hex")) throw fail("account_changed", 409);
+      }
       const ip = crypto.createHmac("sha256", secret).update("balls-ip:" + String(req.ip)).digest("hex");
       rate("ip:" + ip, 120, Date.now()); rate("id:" + who.key, 40, Date.now());
       res.json(await action(who, req));

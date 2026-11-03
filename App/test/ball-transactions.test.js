@@ -126,6 +126,9 @@ test('PostgreSQL + HTTP: old clients cannot bypass receipts or quoted prices', s
     }
     const r = await fetch(url + '/api/shop/buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: 'poke', actionId: randomUUID() }) });
     assert.equal(r.status, 400);
+    const switched = await fetch(url + '/api/shop/buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: 'poke', expectedPrice: 50, actionId: randomUUID(), actionScope: 'a-different-account' }) });
+    assert.equal(switched.status, 409);
+    assert.equal((await switched.json()).error, 'account_changed');
     assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM coin_ledger')).rows[0].n, 0);
   } finally { await new Promise(resolve => server.close(resolve)); }
 }));
