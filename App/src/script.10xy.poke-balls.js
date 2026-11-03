@@ -129,23 +129,70 @@ function claimBallGift() {
   }).finally(() => { if (button) button.disabled = false; });
 }
 
-// La carte de l'accueil : les Balls du jour et le cadeau, juste après le Pokémon du jour.
+// « Ta journée » (maquette validée le 3/11) : une seule carte pour les Balls du jour, les hautes herbes,
+// le cadeau, l'Œuf mystère et la Ligue. Sur PC, à côté du Pokémon du jour tant que l'enquête n'a pas commencé ;
+// sinon (et sur téléphone) juste dessous. Les anciennes cartes de l'Œuf et de la Ligue sont cachées.
+const HOME_DAY_SUGGEST = [["daily", "Pokémon du jour", "+1"], ["journey", "Parcours 4/4", "Super"], ["mode:higherlower", "Higher or Lower", "+1"], ["mode:quiz", "Quiz", "+1"], ["mode:pixel", "Pixelisé", "+1"], ["mode:shiny", "Shiny ou normal", "+1"]];
+let homeDayEgg = null, homeDayEggAt = 0;
+function homeDayLoadEgg() {
+  if (typeof eggRequest !== "function" || Date.now() - homeDayEggAt < 300000) return;
+  homeDayEggAt = Date.now();
+  eggRequest("/api/egg").then((data) => { homeDayEgg = data; renderBallHomeCard(); }).catch(() => {});
+}
+function homeDayEggTile() {
+  const e = homeDayEgg || (typeof eggState !== "undefined" ? eggState : null);
+  const clues = e && Array.isArray(e.clues) ? e.clues.filter((c) => c.unlockedAt) : [];
+  const last = clues[clues.length - 1];
+  const line = e && e.solved ? "Trouvé cette semaine ✓" : last ? "Indice : " + escapeHtml(last.label) + " · " + escapeHtml(String(last.display ?? last.value)) : "Un mystère pour la semaine";
+  return '<button type="button" class="day-tile t-egg" data-action="openEggGame"><b>🥚 Œuf mystère</b><small>' + line + '</small><span class="go">Deviner →</span></button>';
+}
+function homeDayLeagueTile() {
+  let st = null;
+  try { st = typeof weeklyLeagueState === "function" ? weeklyLeagueState() : null; } catch (_e) { st = null; }
+  if (!st) return '<button type="button" class="day-tile t-league" data-action="openWeeklyLeague"><b>🏅 Ligue</b><small>Les épreuves de la semaine</small><span class="go">Voir →</span></button>';
+  const left = typeof weeklyLeagueTimeLeft === "function" ? weeklyLeagueTimeLeft() : "";
+  const ready = st.mastered && !st.claimed;
+  return '<button type="button" class="day-tile t-league" data-action="openWeeklyLeague"><b>🏅 Ligue</b><small>' + (ready ? "Badge prêt à récupérer !" : st.completed + "/3 épreuves" + (left ? " · " + escapeHtml(left) : "")) + '</small>' +
+    '<span class="day-bar" aria-hidden="true"><i style="width:' + Math.min(100, Math.round((Number(st.score) || 0) / 6)) + '%"></i></span><span class="go">' + (ready ? "Récupérer →" : "Voir →") + '</span></button>';
+}
+function homeDayGrassTile(s) {
+  const w = s.wild || { left: 6, max: 6 }, left = ballGrassLeft(s), balls = ballTotal(s);
+  const line = !balls ? "Gagne une Ball pour y entrer" : left <= 0 ? "Plus de rencontre aujourd’hui" : w.open ? "Un Pokémon t’attend !" : left + " / " + w.max + " rencontres · un Pokémon rôde";
+  const action = balls && left > 0 ? "openWildGrass" : "openBallBag";
+  return '<button type="button" class="day-tile t-grass" data-action="' + action + '"><b>🌿 Hautes herbes</b><small>' + line + '</small><span class="go">' + (balls && left > 0 ? "Capturer →" : "Mon sac →") + '</span></button>';
+}
+function homeDayBagTile(s) {
+  return s.giftAvailable
+    ? '<button type="button" class="day-tile t-gift" data-action="claimBallGift"><b>🎁 Cadeau</b><small>+1 Poké Ball à ouvrir</small><span class="go">Ouvrir →</span>' + ballImg("poke", 34) + '</button>'
+    : '<button type="button" class="day-tile t-bag" data-action="openBallBag"><b>🎒 Mon sac</b><small>' + ballTotal(s) + ' Ball' + (ballTotal(s) > 1 ? "s" : "") + (s.wild && s.wild.caught ? " · " + s.wild.caught + " attrapé" + (s.wild.caught > 1 ? "s" : "") : "") + '</small><span class="go">Voir →</span></button>';
+}
+function homeDayBallsRow(s) {
+  const gains = s.gains || [];
+  return '<div class="day-balls" role="img" aria-label="' + s.today + ' Balls gagnées sur ' + s.cap + ' aujourd’hui">' +
+    Array.from({ length: s.cap }, (_, i) => gains[i] ? ballImg(gains[i].ball, 24) : '<i></i>').join("") + '</div>';
+}
 function renderBallHomeCard() {
   const hero = document.getElementById("daily-hero");
   if (!hero || !ballState) return;
   let card = document.getElementById("home-balls");
   if (!card) {
     card = document.createElement("section");
-    card.id = "home-balls"; card.className = "home-balls"; card.setAttribute("aria-label", "Mes Balls du jour");
-    hero.insertAdjacentElement("afterend", card);
+    card.id = "home-balls"; card.className = "home-balls home-day"; card.setAttribute("aria-label", "Ta journée");
   }
+  // À côté du Pokémon du jour (dans le bloc du haut) quand la grille d'enquête est vide, sinon juste dessous.
+  const notebook = document.getElementById("daily-notebook");
+  const inside = !notebook || notebook.dataset.progress === "empty" || notebook.classList.contains("hidden") || notebook.hidden;
+  hero.classList.toggle("has-day", inside);
+  if (inside) { if (card.parentElement !== hero) hero.appendChild(card); }
+  else if (hero.nextElementSibling !== card) hero.insertAdjacentElement("afterend", card);
+  document.getElementById("screen-config")?.classList.add("has-home-day");
   const s = ballState, full = s.today >= s.cap;
-  card.innerHTML = '<div class="home-balls-main"><span class="home-balls-art">' + ballImg(s.today && s.gains.some((g) => g.ball === "great") ? "great" : "poke", 44) + '</span>' +
-    '<div><span class="home-balls-eyebrow">TES BALLS DU JOUR</span><b>' + (full ? "Sac plein pour aujourd’hui 🎉" : s.today + " / " + s.cap + " gagnées") + '</b>' + ballMeterHtml(s) +
-    '<small>' + (full ? "Reviens demain pour 10 nouvelles Balls." : "1 Ball par mode joué aujourd’hui, une Super Ball pour une belle partie.") + '</small></div></div>' +
-    '<div class="home-balls-actions">' + (s.giftAvailable ? '<button type="button" class="ball-gift-cta" data-action="claimBallGift">🎁 Cadeau</button>' : "") +
-    (ballGrassLeft(s) > 0 && ballTotal(s) > 0 ? '<button type="button" class="ball-grass-cta" data-action="openWildGrass">🌿 Hautes herbes · ' + ballGrassLeft(s) + '/' + ((s.wild && s.wild.max) || 6) + '</button>' : "") +
-    '<button type="button" class="btn-ghost" data-action="openBallBag">🎒 Mon sac · ' + ballTotal(s) + '</button></div>';
+  const got = new Set((s.gains || []).map((g) => g.source));
+  const todo = HOME_DAY_SUGGEST.filter(([src]) => !got.has(src)).slice(0, 3).map(([, label, gain]) => label + " " + gain);
+  card.innerHTML = '<div class="day-head"><h2>Ta journée</h2><span>' + s.today + ' / ' + s.cap + ' Balls</span></div>' + homeDayBallsRow(s) +
+    '<p class="day-hint">' + (full ? "Sac plein pour aujourd’hui 🎉 Reviens demain." : todo.length ? "Encore : " + escapeHtml(todo.join(" · ")) : "1 Ball par mode joué aujourd’hui.") + '</p>' +
+    '<div class="day-tiles">' + homeDayGrassTile(s) + homeDayBagTile(s) + homeDayEggTile() + homeDayLeagueTile() + '</div>';
+  homeDayLoadEgg();
 }
 
 // Fin de partie : la 1re partie du jour d'un mode rapporte sa Ball. Les jeux du jour passent

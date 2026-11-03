@@ -142,3 +142,38 @@ body.theme-dark .wild-ball-btn,body.theme-dark .wild-close{background:#26222c;co
 /* 3/11 : sac de l'en-tête en deux compteurs, boutons de la carte sur une seule ligne. */
 .ball-sep{width:1px;height:16px;background:rgba(46,42,51,.2);margin:0 2px}
 .home-balls-actions button{white-space:nowrap}
+
+/* « Ta journée » (3/11, maquette validée) : une carte pour les Balls, les hautes herbes, le cadeau, l'Œuf et la Ligue. */
+#screen-config.has-home-day .home-path-egg,#screen-config.has-home-day #weekly-league-home{display:none!important}
+#daily-hero.has-day .daily-notebook{display:none!important}
+.home-day{display:block;margin:12px 0 0;padding:16px;border-radius:24px;background:#fff;border:2px solid rgba(46,42,51,.08);box-shadow:0 6px 20px rgba(46,42,51,.06);box-sizing:border-box;color:#2E2A33}
+.day-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.day-head h2{margin:0;font:700 21px/1.2 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.day-head span{font:900 14px/1 Nunito,sans-serif;color:#4069E0;white-space:nowrap}
+.day-balls{display:flex;gap:4px;margin:10px 0 4px;flex-wrap:wrap}
+.day-balls .ball-img{width:24px;height:24px}
+.day-balls i{width:20px;height:20px;margin:2px;border-radius:50%;border:2px dashed rgba(46,42,51,.22);box-sizing:border-box}
+.day-hint{margin:0;font:700 13px/1.4 Nunito,sans-serif;color:#5c5663}
+.day-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.day-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:112px;padding:12px;border:0;border-radius:18px;text-align:left;cursor:pointer;overflow:hidden;font-family:Nunito,sans-serif;transition:transform .12s ease}
+.day-tile:hover{transform:translateY(-2px)}
+.day-tile:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.day-tile b{font:700 16px/1.2 Fredoka,Nunito,sans-serif}
+.day-tile small{font:800 12px/1.35 Nunito,sans-serif;opacity:.88}
+.day-tile .go{margin-top:auto;font:900 13px/1 Nunito,sans-serif}
+.day-tile .ball-img{position:absolute;right:10px;bottom:10px;width:34px;height:34px}
+.t-grass{background:linear-gradient(#5DB36A,#3E9B57);color:#fff}
+.t-gift{background:#FFF1C2;color:#5b4300}
+.t-bag{background:#FFF6E6;color:#5b4300}
+.t-egg{background:#EEF2FF;color:#2d3f8f}
+.t-league{background:#F1ECFF;color:#4b3596}
+.day-bar{display:block;width:100%;height:6px;border-radius:4px;background:rgba(75,53,150,.15);margin-top:6px}
+.day-bar i{display:block;height:100%;border-radius:4px;background:#7C5BD6}
+@media (min-width:861px){
+  #daily-hero.has-day .home-day{flex:0 0 min(44%,520px);margin:0;align-self:center}
+}
+@media (max-width:860px){ #daily-hero.has-day .home-day{width:100%} }
+@media (prefers-reduced-motion:reduce){.day-tile{transition:none}}
+body.theme-dark .home-day{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.1)}
+body.theme-dark .day-head h2{color:#f5efe6}
+body.theme-dark .day-hint{color:#cfc6d8}
