@@ -268,7 +268,7 @@ function wildThrow(ball) {
               if (typeof saveProfile === "function") saveProfile();
               if (typeof awardXp === "function" && typeof ADVENTURE_XP !== "undefined") { awardXp(ADVENTURE_XP.discovery, "Nouveau Pokémon : " + p.name); if (typeof awardRegionXpIfComplete === "function") awardRegionXpIfComplete(p); }
             }
-            if (typeof fxCaptureCard === "function") fxCaptureCard(p, e.shiny, caughtCount);
+            if (typeof fxCaptureCard === "function") fxCaptureCard(p, e.shiny, caughtCount, ball);
           } else if (p && typeof recordPokemonDiscovery === "function") recordPokemonDiscovery(p, "capture");
           const rec = p && typeof playerProfile !== "undefined" && playerProfile && playerProfile.discoveries && playerProfile.discoveries[p.id];
           if (rec && e.shiny && !rec.shiny) { rec.shiny = "capture"; if (typeof saveProfile === "function") saveProfile(); }

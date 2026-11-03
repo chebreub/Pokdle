@@ -150,26 +150,42 @@ if (typeof albumRender === "function") {
   };
 }
 
-// --- ⚪ 1re capture d'un Pokémon : la carte « Attrapé ! » ---
-function fxCaptureCard(p, shiny, count) {
+// --- ⚪ 1re capture d'un Pokémon : la fiche « Nouvelle entrée » façon Pokédex des jeux ---
+const FX_REGIONS = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Unys", "Kalos", "Alola", "Galar", "Paldea"];
+function fxCaptureCard(p, shiny, count, ball) {
   if (!p) return;
   const el = document.createElement("div");
   el.className = "fx-catch" + (shiny ? " is-shiny" : "") + (fxReduced() ? " is-static" : "");
   el.setAttribute("role", "dialog"); el.setAttribute("aria-label", p.name + " attrapé");
   const art = typeof pokedexDetailArtwork === "function" ? pokedexDetailArtwork(p, shiny) : getPokemonSprite(p);
-  el.innerHTML = '<div class="fx-catch-card">' +
-    '<div class="fx-catch-top"><span>POKÉDLE · ATTRAPÉS</span><b>N° ' + count + '</b></div>' +
-    '<div class="fx-catch-art"><img src="' + escapeHtml(art) + '" alt="" draggable="false"><span class="fx-catch-stamp" aria-hidden="true">' + (typeof ballImg === "function" ? ballImg("poke", 64) : "⚪") + '</span></div>' +
-    '<div class="fx-catch-label">' + (shiny ? "✨ SHINY · " : "") + 'ATTRAPÉ POUR LA 1re FOIS</div>' +
-    '<h3>' + escapeHtml(p.name) + '</h3>' +
-    '<p>' + count + 'e Pokémon de ta collection « Attrapés ». Il brille maintenant en couleur dans ton album.</p>' +
-    '<div class="fx-catch-btns"><button type="button" class="btn-blue" data-fx-close>Super !</button><button type="button" class="btn-ghost" data-fx-album>📒 Voir mon album</button></div>' +
+  const color = (t) => typeof pokemonTypeColor === "function" ? pokemonTypeColor(t) : "#6890f0";
+  const t1 = color(p.type1), t2 = p.type2 ? color(p.type2) : t1;
+  const types = [p.type1, p.type2].filter(Boolean).map((t) => '<span style="background:' + color(t) + '">' + escapeHtml(t) + '</span>').join("");
+  const num = "N° " + String(p.id).padStart(3, "0");
+  const fmt = (n, unit) => (Number(n) || 0).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " " + unit;
+  const ballKind = ["poke", "great", "ultra"].includes(ball) ? ball : "poke";
+  const ballName = { poke: "Poké", great: "Super", ultra: "Hyper" }[ballKind];
+  const ballIcon = typeof moBallSvg === "function" ? moBallSvg(ballKind) : (typeof ballImg === "function" ? ballImg(ballKind, 18) : "");
+  const total = typeof POKEMON_BY_ID !== "undefined" ? Math.min(1025, POKEMON_BY_ID.size) || 1025 : 1025;
+  const region = FX_REGIONS[(Number(p.gen) || 1) - 1] || "";
+  el.innerHTML = '<div class="fx-catch-card dexc">' +
+    '<div class="dexc-top"><span class="dexc-led" aria-hidden="true"></span><span class="dexc-dots" aria-hidden="true"><i></i><i></i><i></i></span><b>NOUVELLE ENTRÉE · POKÉDEX</b></div>' +
+    '<div class="fx-catch-art dexc-hero" style="--t1:' + t1 + ';--t2:' + t2 + '"><div class="dexc-plat" aria-hidden="true"></div>' +
+      '<img src="' + escapeHtml(art) + '" alt="" draggable="false">' +
+      '<span class="dexc-new">' + (shiny ? "✨ 1re CAPTURE SHINY !" : "1re CAPTURE !") + '</span><span class="dexc-num">' + num + '</span></div>' +
+    '<div class="dexc-body"><h3>' + escapeHtml(p.name) + '</h3>' +
+      '<div class="dexc-sub">' + escapeHtml(region) + ' · Génération ' + (Number(p.gen) || 1) + '</div>' +
+      '<div class="dexc-types">' + types + '</div>' +
+      '<div class="dexc-facts"><div><small>Taille</small><b>' + fmt(p.height, "m") + '</b></div><div><small>Poids</small><b>' + fmt(p.weight, "kg") + '</b></div>' +
+        '<div><small>Attrapé avec</small><b class="dexc-ball">' + ballIcon + ballName + '</b></div></div>' +
+      '<div class="dexc-line"><span class="dexc-ball">' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "") + 'Attrapés</span><i><b style="width:' + Math.max(1, Math.round(count * 100 / total)) + '%"></b></i><em>' + count + ' / ' + total + '</em></div>' +
+      '<div class="fx-catch-btns"><button type="button" class="btn-blue" data-fx-close>Super !</button><button type="button" class="btn-ghost" data-fx-album>📒 Mon album</button></div></div>' +
     '<div class="fx-catch-confetti" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => '<i style="left:' + ((i * 37) % 100) + '%;animation-delay:' + ((i % 5) * 0.12 + 0.9) + 's;background:' + ["#FFD45C", "#E3350D", "#4069E0", "#3E9B57"][i % 4] + '"></i>').join("") + '</div></div>';
   document.body.appendChild(el);
   const close = () => el.remove();
   el.querySelector("[data-fx-close]").addEventListener("click", close);
   el.querySelector("[data-fx-album]").addEventListener("click", () => { close(); if (typeof closeWildGrass === "function") closeWildGrass(); if (typeof openAlbumBinder === "function") openAlbumBinder(p.gen); });
-  if (!fxReduced()) { setTimeout(() => fxSound("open"), 650); setTimeout(() => fxSound(shiny ? "shiny" : "pop"), 1000); }
+  if (shiny && !fxReduced()) setTimeout(() => fxSound("shiny"), 1100);
   el.querySelector("[data-fx-close]").focus({ preventScroll: true });
 }
 window.fxCaptureCard = fxCaptureCard;
