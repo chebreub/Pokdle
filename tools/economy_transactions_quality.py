@@ -52,8 +52,8 @@ def main():
                     page.route('**/api/balls', lambda route: route.fulfill(json=state))
                     page.route('**/api/shop/buy', purchase)
                     page.goto(base, wait_until='domcontentloaded')
-                    page.wait_for_function('typeof openShop === "function" && typeof ballPaidAction === "function"')
-                    page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"')
+                    page.wait_for_function('() => typeof openShop === "function" && typeof ballPaidAction === "function"')
+                    page.wait_for_function('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"')
                     page.evaluate('(s) => { ballApply(s, {announce:false}); openShop(); }', state)
                     button = page.locator('[data-action="shopBuy"][data-args=\'["poke"]\']')
                     button.click()
@@ -61,15 +61,15 @@ def main():
                     assert len(purchases) == 0
                     page.screenshot(path=str(OUT / f'{engine}-{width}-confirm.png'))
                     button.click()
-                    page.wait_for_function('!shopBusy')
+                    page.wait_for_function('() => !shopBusy')
                     assert len(purchases) == 1
                     page.reload(wait_until='domcontentloaded')
-                    page.wait_for_function('typeof openShop === "function"')
-                    page.wait_for_function('!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"')
+                    page.wait_for_function('() => typeof openShop === "function"')
+                    page.wait_for_function('() => !document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"')
                     page.evaluate('(s) => { ballApply(s, {announce:false}); openShop(); }', state)
                     button.click()
                     button.click()
-                    page.wait_for_function('!shopBusy')
+                    page.wait_for_function('() => !shopBusy')
                     assert len(purchases) == 2
                     assert page.evaluate('ballState.coins.balance') == 950
                     assert page.evaluate('ballState.bag.poke') == 5
@@ -90,15 +90,15 @@ def main():
                             assert body == throws[0]
                             route.fulfill(json=dict(state, encounter=encounter, result=dict(caught=False, fled=False, shakes=0), replayed=True))
                     page.route('**/api/wild/throw', throw)
-                    page.wait_for_function('Boolean(wildPokemon(10))')
+                    page.wait_for_function('() => Boolean(wildPokemon(10))')
                     page.evaluate('(s) => { closeOverlayModal(); ballApply(s, {announce:false}); renderWildEncounter(s); }', state)
                     ball = page.locator('[data-action="wildThrow"][data-args=\'["poke"]\']')
                     ball.click()
-                    page.wait_for_function('!wildBusy')
+                    page.wait_for_function('() => !wildBusy')
                     expect(ball).to_be_enabled()
                     assert ball.get_attribute('aria-disabled') != 'true'
                     ball.click()
-                    page.wait_for_function('!wildBusy')
+                    page.wait_for_function('() => !wildBusy')
                     assert len(throws) == 2
                     assert page.evaluate('ballState.bag.poke') == 4
                     assert page.evaluate('ballState.wild.open.throws') == 1
