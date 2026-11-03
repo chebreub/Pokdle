@@ -150,3 +150,19 @@ test('artwork proxy uses a fixed URL, checks PNGs, shares concurrent loads and r
   await assert.rejects(load({id:6,shiny:true}),/image_unavailable/);
   fail=false; await Promise.all([load({id:6,shiny:true}),load({id:6,shiny:true})]); assert.equal(calls,2);
 });
+
+// AES-GCM hides content, not plaintext length. Both answers must have the same
+// token length for an otherwise identical question/owner/date.
+test('shiny artwork tokens do not disclose the answer through their length',async()=>{
+  let bit=0;
+  const arcade=createVerifiedArcade({pokemon,secret:'local-only',clock:()=>new Date('2026-11-03T12:00:00Z'),randomInt:n=>n===2?bit:0});
+  const c={query:async()=>({rows:[]})};
+  const a=await arcade.start(c,me,{mode:'shiny',startId:randomUUID()});
+  bit=1;
+  const b=await arcade.start(c,me,{mode:'shiny',startId:randomUUID()});
+  const token=s=>s.arcade.question.image.split('/').at(-1);
+  assert.equal(a.arcade.question.id,b.arcade.question.id);
+  assert.equal(token(a).length,token(b).length);
+  assert.equal(arcade.imageSpec(token(a),me).shiny,true);
+  assert.equal(arcade.imageSpec(token(b),me).shiny,false);
+});

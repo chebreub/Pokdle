@@ -55,6 +55,7 @@ def main():
                         page.wait_for_function('() => weightBattleState?.verified && !verifiedWeightLoading')
                         assert page.evaluate('secretPokemon === null')
                         first_id = page.evaluate('weightBattleState.verified.sessionId')
+                        page.wait_for_function('() => [...document.querySelectorAll("#weight-grid img")].every(img => img.complete && img.naturalWidth > 0)')
                         page.screenshot(path=str(OUT / f'{engine}-{width}-weight.png'))
                         # The fixture uses the real catalogue: Dracaufeu is heavier than Pikachu.
                         replies = []

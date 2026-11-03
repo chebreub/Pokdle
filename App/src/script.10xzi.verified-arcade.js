@@ -42,10 +42,16 @@ startWeightBattle = function () {
   if (!verifiedArcadeOnline('weight') || (typeof partySession !== 'undefined' && partySession?.currentModeKey === 'weight')) return startWeightBattleLocal();
   verifiedWeightLoading = true;
   const modeBefore = gameMode, screenBefore = document.body.dataset.screen;
-  if (typeof showToast === 'function') showToast('Chargement du duel…');
+  if (modeBefore === 'weight' && screenBefore === 'screen-game') {
+    const status = document.getElementById('weight-status');
+    if (status) status.textContent = 'Chargement du duel…';
+  }
   return verifiedArcadeRequest('start', {mode:'weight',startId:crypto.randomUUID(),gens:[...selectedGens].map(Number)}).then(data => {
     if (gameMode !== modeBefore || document.body.dataset.screen !== screenBefore) return;
-    if (!data?.ok) { verifiedArcadeError(data,'weight'); return; }
+    if (!data?.ok) {
+      if (modeBefore === 'weight' && screenBefore === 'screen-game') renderWeightBattlePanel();
+      verifiedArcadeError(data,'weight'); return;
+    }
     const s = data.arcade;
     startWeightBattleLocal();
     weightBattleState = {left:POKEMON_BY_ID.get(s.question.left),right:POKEMON_BY_ID.get(s.question.right),

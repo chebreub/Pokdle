@@ -18,7 +18,8 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   const key = crypto.createHash('sha256').update(String(secret || 'test-only')).digest();
   function imageToken(who, question, expires) {
     const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-    const data = Buffer.concat([cipher.update(JSON.stringify({owner:who.key, id:question.id, shiny:question.shiny, expires})), cipher.final()]);
+    // Encode the answer as 0/1: true/false would leak it through ciphertext length.
+    const data = Buffer.concat([cipher.update(JSON.stringify({owner:who.key, id:question.id, shiny:Number(question.shiny), expires})), cipher.final()]);
     return Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url');
   }
   function imageSpec(token, who) {
@@ -27,7 +28,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       const b = Buffer.from(token, 'base64url'), decipher = crypto.createDecipheriv('aes-256-gcm', key, b.subarray(0,12));
       decipher.setAuthTag(b.subarray(12,28));
       const spec = JSON.parse(Buffer.concat([decipher.update(b.subarray(28)), decipher.final()]));
-      return spec.owner === who.key && spec.expires > +clock() && shinyPool.includes(spec.id) && typeof spec.shiny === 'boolean' ? spec : null;
+      return spec.owner === who.key && spec.expires > +clock() && shinyPool.includes(spec.id) && [0,1].includes(spec.shiny) ? {...spec,shiny:spec.shiny === 1} : null;
     } catch (_) { return null; }
   }
   function question(s, who) {
