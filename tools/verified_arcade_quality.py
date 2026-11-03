@@ -86,6 +86,15 @@ def main():
                         page.wait_for_function('() => weightBattleState.revealed')
                         assert page.evaluate('playerProfile.weightBattleStreak') == 0
                         assert page.evaluate('ballState.coins.balance') == 60
+                        # Leaving while a new duel is loading must not reopen its screen.
+                        def leave_before_reply(route):
+                            response = route.fetch()
+                            page.evaluate('goToConfig()')
+                            route.fulfill(response=response)
+                        page.route('**/api/arcade/start', leave_before_reply)
+                        page.evaluate('startWeightBattle()')
+                        assert page.evaluate('document.body.dataset.screen') == 'screen-config'
+                        page.unroute('**/api/arcade/start', leave_before_reply)
                         page.evaluate('closeOverlayModal(); openShinyMode()')
                         page.wait_for_function('() => shinyState?.verified && shinyState.imageReady')
                         assert page.evaluate('shinyState.round.shiny === undefined')

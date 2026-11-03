@@ -41,11 +41,11 @@ startWeightBattle = function () {
   if (verifiedWeightLoading) return;
   if (!verifiedArcadeOnline('weight') || (typeof partySession !== 'undefined' && partySession?.currentModeKey === 'weight')) return startWeightBattleLocal();
   verifiedWeightLoading = true;
-  const modeBefore = gameMode;
+  const modeBefore = gameMode, screenBefore = document.body.dataset.screen;
   if (typeof showToast === 'function') showToast('Chargement du duel…');
   return verifiedArcadeRequest('start', {mode:'weight',startId:crypto.randomUUID(),gens:[...selectedGens].map(Number)}).then(data => {
+    if (gameMode !== modeBefore || document.body.dataset.screen !== screenBefore) return;
     if (!data?.ok) { verifiedArcadeError(data,'weight'); return; }
-    if (gameMode !== modeBefore) return;
     const s = data.arcade;
     startWeightBattleLocal();
     weightBattleState = {left:POKEMON_BY_ID.get(s.question.left),right:POKEMON_BY_ID.get(s.question.right),
@@ -79,7 +79,7 @@ renderWeightBattlePanel = function () {
       const p = index === 0 ? state.left : state.right, s = state.verified;
       const data = await verifiedArcadeRequest('answer', {mode:'weight',sessionId:s.sessionId,round:s.round,choice:p.id});
       state.busy = false;
-      if (weightBattleState !== state || gameMode !== 'weight') return;
+      if (weightBattleState !== state || gameMode !== 'weight' || document.body.dataset.screen !== 'screen-game') return;
       if (!data?.ok) { renderWeightBattlePanel(); verifiedArcadeError(data,'weight'); return; }
       const result = data.arcade;
       secretPokemon = POKEMON_BY_ID.get(result.reveal.correctId);
@@ -88,6 +88,7 @@ renderWeightBattlePanel = function () {
       state.allowLocalCommit = true; button.disabled = false; button.click(); state.allowLocalCommit = false;
       state.verified = result;
       if (playerProfile) playerProfile.weightBattleStreak = result.score;
+      setGameCounter(result.score, "Série");
     },true);
   });
   return out;
@@ -107,7 +108,7 @@ function startVerifiedShiny(restart) {
   verifiedShinyLoading = true;
   const previous = shinyState;
   return verifiedArcadeRequest('start',{mode:'shiny',startId:crypto.randomUUID(),restart}).then(data => {
-    if (gameMode !== 'shiny') return;
+    if (gameMode !== 'shiny' || document.body.dataset.screen !== 'screen-shiny') return;
     if (!data?.ok) {
       const root = document.getElementById('shiny-root');
       root.innerHTML = '<p class="shiny-status">Impossible de charger la partie.</p>';
@@ -136,7 +137,7 @@ answerShiny = function (choice) {
   const s = state.verified;
   return verifiedArcadeRequest('answer',{mode:'shiny',sessionId:s.sessionId,round:s.round,choice}).then(data => {
     state.busy = false;
-    if (shinyState !== state || gameMode !== 'shiny') return;
+    if (shinyState !== state || gameMode !== 'shiny' || document.body.dataset.screen !== 'screen-shiny') return;
     if (!data?.ok) { renderShinyGame(); verifiedArcadeError(data,'shiny'); return; }
     applyVerifiedShiny(data,state);
     if (shinyState.phase === 'over') { finishShinyGame(shinyState); renderShinyGame(); }
@@ -152,7 +153,7 @@ nextShinyRound = function () {
   const s = state.verified;
   return verifiedArcadeRequest('next',{mode:'shiny',sessionId:s.sessionId,round:s.round}).then(data => {
     state.busy = false;
-    if (shinyState !== state || gameMode !== 'shiny') return;
+    if (shinyState !== state || gameMode !== 'shiny' || document.body.dataset.screen !== 'screen-shiny') return;
     if (!data?.ok) { renderShinyGame(); verifiedArcadeError(data,'shiny'); return; }
     applyVerifiedShiny(data,state);
   });
