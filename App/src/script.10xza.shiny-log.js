@@ -24,7 +24,8 @@ function shinyLogHtml() {
       '<figcaption><b>' + escapeHtml(p.name) + '</b><small>' + (e.caught ? where : "Enfui") + ' · ' + escapeHtml(shinyLogDay(e.day)) + '</small></figcaption></figure>';
   }).join("");
   return '<div class="shl">' +
-    '<div class="shl-stats"><div><b>' + caught.length + '</b>shin' + (caught.length > 1 ? "ies" : "y") + '</div><div><b>' + fled + '</b>enfui' + (fled > 1 ? "s" : "") + '</div><div><b>1/150</b>dans les herbes</div></div>' +
+    '<div class="shl-stats"><div><b>' + caught.length + '</b>shin' + (caught.length > 1 ? "ies" : "y") + '</div><div><b>' + fled + '</b>enfui' + (fled > 1 ? "s" : "") + '</div><div><b>1 sur 150</b>chance qu’une rencontre soit shiny</div></div>' +
+    '<p class="shl-next">Chacun des 846 Pokémon des hautes herbes peut être shiny, et chaque Pokémon du jour trouvé aussi.</p>' +
     (next ? '<p class="shl-next">🏅 Prochain badge : <b>' + escapeHtml(next[1]) + '</b> à ' + next[0] + ' shin' + (next[0] > 1 ? "ies" : "y") + ' (encore ' + (next[0] - caught.length) + ')</p>' : '<p class="shl-next">🏅 Tous les badges shiny sont à toi !</p>') +
     (cards ? '<div class="shl-grid">' + cards + '</div>' : '<p class="shl-empty">Pas encore de shiny. Chaque Pokémon du jour trouvé et chaque rencontre dans les hautes herbes peut briller ✨</p>') +
     '<div class="shl-actions"><button type="button" class="ball-grass-cta" data-action="shinyLogGoGrass">🌿 Aller dans les hautes herbes</button></div></div>';

@@ -62,7 +62,8 @@ function wildThrowsHtml(e) {
 }
 function wildHead(state) {
   const w = state && state.wild || { today: 0, max: 6 };
-  return '<div class="wild-head"><b>🌿 Hautes herbes</b><span>Rencontre ' + Math.min(w.max, Math.max(1, w.today)) + ' / ' + w.max + '</span>' +
+  const legend = state && ((state.encounter && state.encounter.legend) || (w.open && w.open.legend));
+  return '<div class="wild-head"><b>' + (legend ? "👑 Expédition" : "🌿 Hautes herbes") + '</b><span>' + (legend ? "Rencontre légendaire" : "Rencontre " + Math.min(w.max, Math.max(1, w.today)) + ' / ' + w.max) + '</span>' +
     '<button type="button" class="wild-close" data-action="closeWildGrass" aria-label="Fermer">×</button></div>';
 }
 function wildBallButtons(state, e) {
@@ -129,10 +130,10 @@ function renderWildEncounter(state, message, intro) {
       wildFrontGrassHtml() +
     '</div>' +
     '<div class="wild-panel">' +
-      '<p class="wild-line" aria-live="polite">' + (message || (e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
+      '<p class="wild-line" aria-live="polite">' + (message || (e.legend ? "👑 " + name + (e.shiny ? " <b>shiny</b>" : "") + " se réveille ! Une seule chance cette semaine." : e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
       '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures && wildCaptures[p.id] ? "⚪ Déjà dans ton album" : "Nouveau pour ton album ?") + '</span></div>' +
       wildBallButtons(state, e) +
-      '<button type="button" class="wild-run" data-action="wildRun">Fuir</button>' +
+      (e.legend ? "" : '<button type="button" class="wild-run" data-action="wildRun">Fuir</button>') +
     '</div>';
   scene.querySelector(".wild-close")?.focus({ preventScroll: true });
 }
