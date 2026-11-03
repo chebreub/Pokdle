@@ -535,6 +535,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
     ["weekly_awards", "DELETE FROM weekly_awards WHERE discord_id = $1", [id]],
+    ["wild_trades", "DELETE FROM wild_trades WHERE from_id = $1 OR to_id = $1", [id]],
     ["daily_reactions", "DELETE FROM daily_reactions WHERE identity = $1", ["user:" + id]],
     ["referrals", "DELETE FROM referrals WHERE referrer_id = $1 OR friend_key = $2", [id, "user:" + id]],
     ["name_overrides", "DELETE FROM name_overrides WHERE account_id = $1", [id]],
@@ -1597,6 +1598,15 @@ const friendsReady = pgPool ? challengesReady.then(() => friendLib.ensureTables(
 const playerFriends = pgPool ? friendLib.createPlayerFriends({ db: pgPool, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: friendsReady,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 friendLib.mountFriendRoutes(app, { express, friends: playerFriends, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// 🔁 Échanges de doublons entre amis (3/11/2026) : un doublon contre un doublon, l'autre accepte.
+const tradeLib = require("./lib/wild-trades");
+const tradesReady = pgPool ? friendsReady.then((ok) => ok && tradeLib.ensureTables(pgPool)).then((ok) => ok !== false).catch((error) => {
+  console.warn("[echanges] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+const wildTrades = pgPool ? tradeLib.createWildTrades({ db: pgPool, friends: playerFriends, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: tradesReady,
+  push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
+tradeLib.mountTradeRoutes(app, { express, trades: wildTrades, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 // Discussion entre amis: 200 characters, no links nor numbers, « Signaler » to /admin.
 const chatLib = require("./lib/friend-chat");
 const chatReady = pgPool ? friendsReady.then((ok) => ok && chatLib.ensureTables(pgPool)).then((ok) => ok !== false).catch((error) => {

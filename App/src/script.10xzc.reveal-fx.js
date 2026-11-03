@@ -165,7 +165,8 @@ function fxCaptureCard(p, shiny, count, ball) {
   const fmt = (n, unit) => (Number(n) || 0).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " " + unit;
   const ballKind = ["poke", "great", "ultra"].includes(ball) ? ball : "poke";
   const ballName = { poke: "Poké", great: "Super", ultra: "Hyper" }[ballKind];
-  const ballIcon = typeof moBallSvg === "function" ? moBallSvg(ballKind) : (typeof ballImg === "function" ? ballImg(ballKind, 18) : "");
+  const traded = ball === "trade";
+  const ballIcon = traded ? "🔁 " : typeof moBallSvg === "function" ? moBallSvg(ballKind) : (typeof ballImg === "function" ? ballImg(ballKind, 18) : "");
   const total = typeof POKEMON_BY_ID !== "undefined" ? Math.min(1025, POKEMON_BY_ID.size) || 1025 : 1025;
   const region = FX_REGIONS[(Number(p.gen) || 1) - 1] || "";
   el.innerHTML = '<div class="fx-catch-card dexc">' +
@@ -177,7 +178,7 @@ function fxCaptureCard(p, shiny, count, ball) {
       '<div class="dexc-sub">' + escapeHtml(region) + ' · Génération ' + (Number(p.gen) || 1) + '</div>' +
       '<div class="dexc-types">' + types + '</div>' +
       '<div class="dexc-facts"><div><small>Taille</small><b>' + fmt(p.height, "m") + '</b></div><div><small>Poids</small><b>' + fmt(p.weight, "kg") + '</b></div>' +
-        '<div><small>Attrapé avec</small><b class="dexc-ball">' + ballIcon + ballName + '</b></div></div>' +
+        '<div><small>' + (traded ? "Reçu par" : "Attrapé avec") + '</small><b class="dexc-ball">' + ballIcon + (traded ? "échange" : ballName) + '</b></div></div>' +
       '<div class="dexc-line"><span class="dexc-ball">' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "") + 'Attrapés</span><i><b style="width:' + Math.max(1, Math.round(count * 100 / total)) + '%"></b></i><em>' + count + ' / ' + total + '</em></div>' +
       '<div class="fx-catch-btns"><button type="button" class="btn-blue" data-fx-close>Super !</button><button type="button" class="btn-ghost" data-fx-album>📒 Mon album</button></div></div>' +
     '<div class="fx-catch-confetti" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => '<i style="left:' + ((i * 37) % 100) + '%;animation-delay:' + ((i % 5) * 0.12 + 0.9) + 's;background:' + ["#FFD45C", "#E3350D", "#4069E0", "#3E9B57"][i % 4] + '"></i>').join("") + '</div></div>';
