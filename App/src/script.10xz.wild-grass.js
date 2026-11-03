@@ -262,22 +262,34 @@ function wildThrow(ball) {
   if (wildBusy) return;
   wildBusy = true;
   const scene = document.getElementById("wild-scene");
+  const snapshot = scene ? scene.querySelector(".wild-panel")?.innerHTML : null;
   // Pendant le lancer, les boutons restent visibles mais ne répondent plus (avant : grisés puis « revenus » à la fin).
   scene?.querySelector(".wild-panel")?.classList.add("is-busy");
   scene?.querySelectorAll(".wild-ball-btn,.wild-run").forEach((b) => { b.setAttribute("aria-disabled", "true"); b.tabIndex = -1; });
   const before = typeof ballState !== "undefined" && ballState && ballState.wild && ballState.wild.open;
-  const snapshot = scene ? scene.querySelector(".wild-panel")?.innerHTML : null;
   wildMarkThrow(scene, ball);
-  wildPost("/api/wild/throw", { ball }).then((data) => {
+  ballPaidAction("/api/wild/throw", { ball, encounterId: before && before.id, expectedThrows: before && before.throws }).then((data) => {
     if (!data || !data.ok) {
       wildBusy = false;
       const panel = scene && scene.querySelector(".wild-panel");
       if (panel && snapshot != null) { panel.innerHTML = snapshot; panel.classList.remove("is-busy"); }
-      if (typeof showToast === "function") showToast(data && data.error === "no_ball_left" ? "Plus de " + BALL_KINDS[ball].name + " dans ton sac." : "Le lancer n’a pas pu partir. Réessaie.");
-      if (scene) scene.querySelectorAll(".wild-ball-btn,.wild-run").forEach((b) => { b.disabled = false; });
+      if (typeof showToast === "function") showToast(data && data.error === "no_ball_left" ? "Plus de " + BALL_KINDS[ball].name + " dans ton sac." : data && data.error === "reload_required" ? "Recharge la page pour lancer une Ball." : data && ["encounter_changed", "previous_action"].includes(data.error) ? "La rencontre a changé. Ton sac est en cours de mise à jour." : "Le lancer n’a pas pu être confirmé. Réessaie.");
+      if (data && ["encounter_changed", "previous_action"].includes(data.error)) {
+        refreshBalls({ announce: false }).then(() => { if (document.getElementById("wild-scene") && ballState) renderWildEncounter(ballState); });
+      }
+
       return;
     }
     const r = data.result, e = data.encounter;
+    const current = data.wild && data.wild.open;
+    if (data.replayed && (current ? current.id !== e.id || current.throws !== e.throws : e.status === "open")) {
+      ballApply(data, { announce: false });
+      wildBusy = false;
+      if (current) renderWildEncounter(data);
+      else renderWildEnd(data);
+      loadWildCaptures();
+      return;
+    }
     return wildAnimate(scene, ball, r.shakes, r.caught).then(() => {
       if (typeof ballApply === "function") ballApply(data, { announce: false });
       if (r.caught) {
@@ -304,7 +316,8 @@ function wildThrow(ball) {
         if ((isNew || firstCatch) && !wildReducedMotion()) setTimeout(register, 1800); else register();
         wildCaptures ||= {};
         const c = wildCaptures[e.pokemonId] ||= { normal: 0, shiny: 0 };
-        c[e.shiny ? "shiny" : "normal"] += 1;
+        if (!data.replayed) c[e.shiny ? "shiny" : "normal"] += 1;
+        else ballFetch("/api/wild/collection").then(d => { if (d && d.ok) wildSyncAlbum(d.captures); });
         renderWildEnd(data, { caught: true, pokemonId: e.pokemonId, shiny: e.shiny, isNew });
       } else if (r.fled) {
         renderWildEnd(data, { fled: true, pokemonId: e.pokemonId });
