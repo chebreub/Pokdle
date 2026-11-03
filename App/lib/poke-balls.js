@@ -9,6 +9,11 @@ const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
 
 const DAILY_CAP = 10;
+// Bonus hors plafond (3/11/2026) : la série de jours (Hyper Ball tous les 7 jours joués d'affilée)
+// et les 5 Balls offertes une fois par compte.
+const STREAK_EVERY = 7;
+const WELCOME_BALLS = Object.freeze(["poke", "poke", "poke", "poke", "great"]);
+const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%')";
 const BALLS = Object.freeze(["poke", "great", "ultra"]);
 
 // ===== Les hautes herbes (PR B) : 6 rencontres par jour, 3 lancers, shiny à 1 sur 150. =====
@@ -98,7 +103,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   async function grant(c, who, day, gains) {
     const added = [];
     for (const g of gains) {
-      const count = Number((await c.query("SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND day=$2", [who.key, day])).rows[0].n);
+      const count = Number((await c.query(`SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND day=$2 AND NOT ${BONUS_SQL}`, [who.key, day])).rows[0].n);
       if (count >= DAILY_CAP) break;
       const row = (await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING RETURNING source,ball",
         [who.key, day, g.source, g.ball, who.accountId || null])).rows[0];
@@ -127,12 +132,39 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (done(enquete) && done(wordle) && done(dossier) && ["completed", "abandoned"].includes(challenge?.status)) gains.push({ source: "journey", ball: "great" });
     return gains;
   }
+  // La série : les jours d'affilée où le joueur a gagné au moins une Ball en jouant (le cadeau et les bonus ne comptent pas).
+  async function streakOf(c, who, day) {
+    const days = (await c.query(`SELECT DISTINCT to_char(day,'YYYY-MM-DD') AS d FROM ball_gains WHERE identity=$1 AND source<>'gift' AND NOT ${BONUS_SQL} ORDER BY d DESC LIMIT 400`, [who.key])).rows.map((r) => r.d);
+    const prev = (d) => { const t = new Date(d + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); };
+    const playedToday = days[0] === day;
+    let cursor = playedToday ? day : prev(day), n = 0;
+    for (const d of days) { if (d === cursor) { n += 1; cursor = prev(cursor); } else if (d < cursor) break; }
+    const inCycle = n % STREAK_EVERY === 0 && n > 0 && playedToday ? STREAK_EVERY : n % STREAK_EVERY;
+    return { days: n, playedToday, inCycle, every: STREAK_EVERY, left: STREAK_EVERY - inCycle };
+  }
+  async function bonuses(c, who, day) {
+    const added = [];
+    const streak = await streakOf(c, who, day);
+    if (streak.playedToday && streak.days > 0 && streak.days % STREAK_EVERY === 0) {
+      const row = (await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,'streak','ultra',$3) ON CONFLICT DO NOTHING RETURNING source,ball", [who.key, day, who.accountId || null])).rows[0];
+      if (row) added.push(row);
+    }
+    if (who.accountId && !(await c.query("SELECT 1 FROM ball_gains WHERE identity=$1 AND source LIKE 'welcome:%' LIMIT 1", [who.key])).rows.length) {
+      for (const [i, ball] of WELCOME_BALLS.entries()) {
+        const row = (await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING RETURNING source,ball", [who.key, day, "welcome:" + (i + 1), ball, who.accountId])).rows[0];
+        if (row) added.push(row);
+      }
+    }
+    return added;
+  }
   async function state(c, who, day, added = []) {
-    const today = (await c.query("SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 ORDER BY created_at,source", [who.key, day])).rows;
+    const today = (await c.query(`SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 AND NOT ${BONUS_SQL} ORDER BY created_at,source`, [who.key, day])).rows;
+    const bonus = (await c.query(`SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 AND ${BONUS_SQL} ORDER BY created_at,source`, [who.key, day])).rows;
     const bag = await bagOf(c, who);
     const cal = dailyCalendar(clock());
     return { ok: true, day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
       giftAvailable: today.length < DAILY_CAP && !today.some((g) => g.source === "gift"), authenticated: Boolean(who.accountId),
+      bonus, streak: await streakOf(c, who, day), welcomeBalls: WELCOME_BALLS.length,
       wild: await wildState(c, who, day) };
   }
   // Le sac = les Balls gagnées moins les Balls lancées.
@@ -206,6 +238,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     await lock(c, who.key);
     const extraGains = extra ? await extra(c, day) : [];
     const added = await grant(c, who, day, [...extraGains, ...await dailyGains(c, who, day)]);
+    added.push(...await bonuses(c, who, day));
     return state(c, who, day, added);
   });
   // Une action des hautes herbes, puis le sac et l'état à jour.
@@ -267,4 +300,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };

@@ -156,7 +156,12 @@ function renderWildEnd(state, outcome) {
   const next = w.left > 0 && hasBall
     ? '<button type="button" class="wild-cta" data-action="openWildGrass">🌿 Continuer · ' + w.left + ' rencontre' + (w.left > 1 ? "s" : "") + '</button>'
     : '<p class="wild-note">' + (w.left > 0 ? "Plus de Ball dans ton sac : joue à un mode pour en gagner." : "6 rencontres par jour : reviens demain pour de nouveaux Pokémon.") + '</p>';
-  scene.innerHTML = wildHead(state) + '<div class="wild-end">' + body + next +
+  // Sans compte : proposer de garder sa capture partout, avec 5 Balls offertes (jamais de mur, « Plus tard » suffit).
+  const keep = outcome && outcome.caught && state && state.authenticated === false
+    ? '<div class="wild-keep"><b>Garde ' + escapeHtml((wildPokemon(outcome.pokemonId) || {}).name || "ton Pokémon") + ' partout</b><span>Crée ton compte : ton album te suit sur tous tes appareils, et <b>5 Balls offertes 🎁</b>.</span>' +
+      '<div class="wild-keep-btns"><a class="wild-keep-discord" href="/auth/discord">Discord</a><a class="wild-keep-google" href="/auth/google">Google</a><a class="wild-keep-twitch" href="/auth/twitch">Twitch</a></div><small>Plus tard : tes Pokémon restent sur ce navigateur.</small></div>'
+    : "";
+  scene.innerHTML = wildHead(state) + '<div class="wild-end">' + body + keep + next +
     '<button type="button" class="btn-ghost" data-action="' + (outcome && outcome.shiny ? "wildOpenShinyLog" : "wildOpenAlbum") + '">' + (outcome && outcome.shiny ? "✨ Voir mon carnet shiny" : "📒 Voir mon album") + '</button></div>';
 }
 function wildOpenAlbum() {
