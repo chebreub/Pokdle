@@ -15,7 +15,7 @@ test('PostgreSQL: participations, shared goal, chests before Sunday, legendary f
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='exp_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
-    let now=new Date('2026-11-03T09:00:00Z');const rolls=[];
+    let now=new Date('2026-11-03T12:30:00Z');const rolls=[];
     const balls=createBallService({db,clock:()=>now,randomInt:(n)=>1%n,random:()=>rolls.length?rolls.shift():0.99});await initBallsDb(db);
     const play=(who,day,...sources)=>Promise.all(sources.map(src=>db.query("INSERT INTO ball_gains(identity,day,source,ball) VALUES($1,$2,$3,'poke') ON CONFLICT DO NOTHING",[who,day,src])));
     // Last week: 6 active players → goal 9 this week.

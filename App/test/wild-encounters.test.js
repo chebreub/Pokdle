@@ -33,7 +33,7 @@ test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and m
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='wild_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
-    let now=new Date('2026-11-03T09:00:00Z');
+    let now=new Date('2026-11-03T12:30:00Z'); // 13 h 30 à Paris : les 6 rencontres du jour sont ouvertes
     // Scripted draws: the next index into the pool / shiny roll, and the capture roll.
     const ints=[],rolls=[];
     const balls=createBallService({db,clock:()=>now,randomInt:(n)=>ints.length?ints.shift()%n:0,random:()=>rolls.length?rolls.shift():0.99});
@@ -84,11 +84,15 @@ test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and m
     await assert.rejects(balls.encounter(guest),/no_encounters_left/);
 
     // An encounter left open overnight is gone the next day; the count starts again.
-    now=new Date('2026-11-04T09:00:00Z');
+    now=new Date('2026-11-04T12:30:00Z');
     ints.push(WILD_POOL.indexOf(10),5);s=await balls.encounter(guest);
+    // The next morning: 3 encounters until 13 h, then 3 more.
     now=new Date('2026-11-05T09:00:00Z');
     s=await balls.state(guest);
-    assert.deepEqual([s.wild.open,s.wild.left],[null,6]);
+    assert.deepEqual([s.wild.open,s.wild.left,s.wild.available,s.wild.nextAt],[null,3,3,'2026-11-05T12:00:00.000Z']);
+    now=new Date('2026-11-05T12:00:00Z');
+    s=await balls.state(guest);
+    assert.deepEqual([s.wild.left,s.wild.nextAt],[6,null]);
     assert.equal((await db.query("SELECT status FROM wild_encounters WHERE day='2026-11-04'")).rows[0].status,'fled');
 
     // Logging in: captures and spent Balls follow the account.

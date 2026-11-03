@@ -247,3 +247,84 @@ body.theme-dark .day-streak{background:#3a2a1e}body.theme-dark .day-reset{backgr
 .exp-legend-msg{margin:0;font:700 15px/1.45 Nunito,sans-serif}
 .exp-legend-cta{width:100%;min-height:50px;border:0;border-radius:14px;background:#2E2A33;color:#FFD45C;font:900 17px Nunito,sans-serif;cursor:pointer}
 body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.1)}
+
+/* Animations (3/11) : apparition shiny, Gotcha shiny, ouverture du cadeau et des coffres. */
+.fx-shiny{position:absolute;inset:0;z-index:6;pointer-events:none}
+.fx-shiny-dim{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,236,170,.0) 0,rgba(20,16,40,.55) 70%);animation:fxDim 2.8s ease both}
+.fx-shiny-ring{position:absolute;left:50%;top:48%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:4px solid #FFE58A;box-shadow:0 0 30px #FFD45C;opacity:0;animation:fxRing 1.1s ease-out .85s both}
+.fx-shiny-stars{position:absolute;left:50%;top:48%}
+.fx-shiny-stars i{position:absolute;left:0;top:0;font-style:normal;font-size:26px;color:#FFE58A;text-shadow:0 0 10px #fff,0 0 18px #FFD45C;opacity:0;animation:fxStar 1.3s cubic-bezier(.2,.8,.3,1) both}
+.fx-shiny-badge{position:absolute;left:50%;top:14%;transform:translateX(-50%);padding:8px 18px;border-radius:999px;background:linear-gradient(135deg,#FFE58A,#F6B93B);color:#5b3a00;font:900 20px/1 Fredoka,Nunito,sans-serif;letter-spacing:.06em;box-shadow:0 6px 18px rgba(246,185,59,.55);opacity:0;animation:fxBadge .7s cubic-bezier(.3,1.6,.5,1) 1.1s both}
+.fx-shiny.is-done .fx-shiny-dim,.fx-shiny.is-done .fx-shiny-ring,.fx-shiny.is-done .fx-shiny-stars{display:none}
+.wild-stage.is-shiny{background:linear-gradient(#FFF1C9 0%,#FFF8E1 38%,#F4F9E4 58%)}
+.wild-stage.is-shiny .wild-mon{filter:drop-shadow(0 0 14px rgba(255,212,92,.85)) drop-shadow(0 8px 0 rgba(46,42,51,.12))}
+@keyframes fxDim{0%{opacity:0}20%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@keyframes fxRing{0%{transform:scale(.2);opacity:1}100%{transform:scale(9);opacity:0}}
+@keyframes fxStar{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}25%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.2) rotate(180deg);opacity:0}}
+@keyframes fxBadge{0%{transform:translateX(-50%) scale(.2) rotate(-200deg);opacity:0}100%{transform:translateX(-50%) scale(1) rotate(0);opacity:1}}
+.wild-gotcha.is-shiny{position:relative;padding:18px 14px;border-radius:24px;background:radial-gradient(circle at 50% 35%,#FFF6D6 0,#FFE9A8 55%,#F6C85A 100%);overflow:hidden}
+.fx-gold-rain{position:absolute;inset:0;pointer-events:none}
+.fx-gold-rain i{position:absolute;top:-20px;font-style:normal;color:#fff;text-shadow:0 0 8px #FFD45C;font-size:18px;animation:fxRain linear infinite}
+@keyframes fxRain{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(420px) rotate(240deg);opacity:0}}
+.fx-shiny-title{position:relative;margin-bottom:4px;font:900 22px/1.1 Fredoka,Nunito,sans-serif;letter-spacing:.04em;color:#8a5a00;text-shadow:0 2px 0 #fff}
+.fx-reveal{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,rgba(64,105,224,.35),rgba(20,16,32,.9) 70%);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);padding:16px}
+.fx-reveal-box{display:grid;justify-items:center;gap:14px;width:min(420px,100%);text-align:center;color:#fff}
+.fx-reveal-title{font:700 22px/1.2 Fredoka,Nunito,sans-serif}
+.fx-reveal-icon{font-size:110px;line-height:1;transform-origin:50% 90%;animation:fxShake 1.2s ease-in-out .2s both}
+.fx-reveal.is-open .fx-reveal-icon{animation:fxBurst .45s ease-out forwards}
+.fx-reveal-balls{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;min-height:84px}
+.fx-ball{display:grid;justify-items:center;gap:4px;opacity:0;animation:fxPop .45s cubic-bezier(.3,1.6,.5,1) both;font:800 12px Nunito,sans-serif}
+.fx-ball .ball-img{width:44px;height:44px;filter:drop-shadow(0 0 10px rgba(255,255,255,.7))}
+.fx-reveal:not(.is-open):not(.is-static) .fx-ball{animation-play-state:paused}
+.fx-reveal-skip{min-height:44px;padding:8px 20px;border-radius:12px;border:2px solid rgba(255,255,255,.5);background:transparent;color:#fff;font:800 15px Nunito,sans-serif;cursor:pointer}
+.fx-reveal.is-static .fx-ball{opacity:1;animation:none}.fx-reveal.is-static .fx-reveal-icon{animation:none}
+.fx-reveal.is-leaving .fx-reveal-skip,.fx-reveal.is-leaving .fx-reveal-title{opacity:0;transition:opacity .2s}
+.ball-bag-btn.fx-bump{animation:fxBump .5s ease}
+@keyframes fxShake{0%,100%{transform:rotate(0)}10%,40%,70%{transform:rotate(-10deg) scale(1.03)}25%,55%,85%{transform:rotate(10deg) scale(1.03)}}
+@keyframes fxBurst{0%{transform:scale(1);filter:brightness(1)}40%{transform:scale(1.35);filter:brightness(2.5)}100%{transform:scale(.2);opacity:0;filter:brightness(3)}}
+@keyframes fxPop{0%{transform:translateY(-40px) scale(.2);opacity:0}100%{transform:none;opacity:1}}
+@keyframes fxBump{0%,100%{transform:scale(1)}40%{transform:scale(1.18)}}
+@media (prefers-reduced-motion:reduce){.fx-shiny,.fx-gold-rain{display:none}.fx-reveal-icon,.fx-ball{animation:none!important;opacity:1!important}}
+.alb-counts{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px}
+.alb-counts span{white-space:nowrap}
+.alb-legend{display:block;margin-bottom:4px;font-weight:800}
+.fx-reveal{z-index:10050}
+/* Album : Vu = pâle avec un œil, Attrapé = couleur avec une Poké Ball. */
+.alb-slot.is-seen img{filter:grayscale(.9) opacity(.5)}
+.alb-slot.is-seen b{color:#8a8492}
+.alb-origin.is-seen{opacity:.75}
+.alb-origin.is-caught{display:flex;align-items:center;gap:1px;font:900 10px/1 Nunito,sans-serif;color:#2E2A33}
+.alb-origin.is-caught .ball-img{width:18px;height:18px}
+.alb-slot.is-caught{box-shadow:inset 0 0 0 2px rgba(227,53,13,.25)}
+.alb-track{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin:6px 0 0;font:800 13px/1 Nunito,sans-serif;color:#2E2A33}
+.alb-track span{display:flex;align-items:center;gap:4px;min-width:96px}
+.alb-track .ball-img{width:16px;height:16px}
+.alb-track i{display:block;height:10px;border-radius:6px;background:rgba(46,42,51,.1);overflow:hidden}
+.alb-track i b{display:block;height:100%;border-radius:6px}
+.alb-track.is-seen i b{background:#4069E0}
+.alb-track.is-caught i b{background:#E3350D}
+.alb-track em{font-style:normal;color:#5c5663}
+/* ⚪ Carte « Attrapé pour la 1re fois » */
+.fx-catch{position:fixed;inset:0;z-index:10060;display:grid;place-items:center;padding:16px;background:rgba(30,26,40,.72);animation:fxFade .25s ease both}
+.fx-catch-card{position:relative;overflow:hidden;width:min(380px,100%);padding:16px;border-radius:26px;background:linear-gradient(180deg,#fff 0,#FFF8EF 100%);border:3px solid #E3350D;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;color:#2E2A33;animation:fxCardIn .5s cubic-bezier(.3,1.5,.5,1) both}
+.fx-catch.is-shiny .fx-catch-card{border-color:#F6B93B;background:radial-gradient(circle at 50% 30%,#FFF6D6,#FFE9A8 70%)}
+.fx-catch-top{display:flex;justify-content:space-between;font:900 11px Nunito,sans-serif;letter-spacing:.1em;color:#E3350D}
+.fx-catch-top b{font:700 15px Fredoka,Nunito,sans-serif;letter-spacing:0}
+.fx-catch-art{position:relative;height:200px;display:grid;place-items:center}
+.fx-catch-art img{width:190px;height:190px;object-fit:contain;filter:grayscale(1) opacity(.5);animation:fxColor .7s ease .55s forwards}
+.fx-catch-stamp{position:absolute;right:18%;bottom:6px;opacity:0;transform:scale(3) rotate(-30deg);animation:fxStamp .45s cubic-bezier(.3,1.6,.5,1) .95s forwards}
+.fx-catch-stamp .ball-img{width:64px;height:64px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
+.fx-catch-label{display:inline-block;margin-top:4px;padding:6px 12px;border-radius:999px;background:#E3350D;color:#fff;font:900 12px Nunito,sans-serif;letter-spacing:.08em}
+.fx-catch.is-shiny .fx-catch-label{background:linear-gradient(135deg,#FFE58A,#F6B93B);color:#5b3a00}
+.fx-catch-card h3{margin:8px 0 4px;font:700 28px/1.1 Fredoka,Nunito,sans-serif}
+.fx-catch-card p{margin:0 0 12px;font:700 14px/1.45 Nunito,sans-serif;color:#5c5663}
+.fx-catch-btns{display:grid;gap:8px}
+.fx-catch-confetti{position:absolute;inset:0;pointer-events:none}
+.fx-catch-confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;opacity:0;animation:fxConfetti 1.8s ease-in both}
+@keyframes fxFade{from{opacity:0}to{opacity:1}}
+@keyframes fxCardIn{from{transform:translateY(30px) scale(.85);opacity:0}to{transform:none;opacity:1}}
+@keyframes fxColor{to{filter:none}}
+@keyframes fxStamp{to{opacity:1;transform:none}}
+@keyframes fxConfetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(520px) rotate(540deg);opacity:0}}
+.fx-catch.is-static *,.fx-catch.is-static{animation:none!important}.fx-catch.is-static .fx-catch-art img{filter:none}.fx-catch.is-static .fx-catch-stamp{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.fx-catch *,.fx-catch{animation:none!important}.fx-catch-art img{filter:none!important}.fx-catch-stamp{opacity:1!important;transform:none!important}}
