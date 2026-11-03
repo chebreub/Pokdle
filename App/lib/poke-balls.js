@@ -20,6 +20,8 @@ const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'e
 // Jeux du jour une fois par jour, chaque autre partie 30 à 90 ₽ (2 000 ₽ par jour au plus), doublon relâché.
 const COIN_DAILY = Object.freeze({ daily: 300, wordle: 150, dossier: 150, challenge: 150 });
 const COIN_PLAY = Object.freeze({ gold: 90, win: 60, loss: 30 });
+// 🎉 Party Room (3/11, choix de Kayan) : la 1re partie de salon finie du jour = 150 ₽ + 1 Poké Ball.
+const COIN_PARTY = 150;
 const COIN_PLAY_CAP = 2000;
 const COIN_RELEASE = Object.freeze({ normal: 15, shiny: 1500 });
 // 🏪 Boutique : 4 rencontres de plus (100 ₽, puis le prix double à chaque recharge du jour) et des Balls.
@@ -40,7 +42,7 @@ const EXPEDITIONS = Object.freeze([
 ]);
 const EXP_CHESTS = Object.freeze({ 25: ["poke", "poke"], 50: ["great", "poke"], 75: ["great", "great"] });
 const EXP_MIN_GOAL = 7;
-const PLAY_SOURCES_SQL = "(source LIKE 'mode:%' OR source IN ('daily','wordle','dossier','challenge'))";
+const PLAY_SOURCES_SQL = "(source LIKE 'mode:%' OR source IN ('daily','wordle','dossier','challenge','party'))";
 function shiftDay(day, n) { const t = new Date(day + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
 function weekStart(day) { const t = new Date(day + "T12:00:00Z"); return shiftDay(day, -((t.getUTCDay() + 6) % 7)); }
 function expeditionOf(monday) { const n = Math.round(Date.parse(monday + "T12:00:00Z") / (7 * 86400000)); return EXPEDITIONS[((n % EXPEDITIONS.length) + EXPEDITIONS.length) % EXPEDITIONS.length]; }
@@ -267,7 +269,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return out;
   }
   async function coinState(c, who, day) {
-    const base = { enabled: Boolean(who.accountId), prices: SHOP_PRICES, daily: COIN_DAILY, play: COIN_PLAY, playCap: COIN_PLAY_CAP, release: COIN_RELEASE };
+    const base = { enabled: Boolean(who.accountId), prices: SHOP_PRICES, daily: COIN_DAILY, play: COIN_PLAY, playCap: COIN_PLAY_CAP, release: COIN_RELEASE, party: COIN_PARTY };
     const r = (await c.query(`SELECT COALESCE(SUM(amount),0)::int AS balance,
       COALESCE(SUM(amount) FILTER (WHERE day=$2 AND amount>0),0)::int AS today,
       COALESCE(SUM(amount) FILTER (WHERE day=$2 AND source LIKE 'play:%'),0)::int AS played,
@@ -278,12 +280,13 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { ...base, balance: Number(r.balance), today: Number(r.today), played: Number(r.played), done: r.done || [],
       recharges, rechargePrice: rechargePrice(recharges), rechargeLeft: Math.max(0, RECHARGE_MAX - recharges) };
   }
-  // Chaque partie d'un autre jeu : 30 ₽ (perdue), 60 ₽ (gagnée), 90 ₽ (belle partie), 2 000 ₽ par jour au plus.
+  // La 1re partie du jour de chaque mode (3/11, choix de Kayan : un Duel de poids de 20 s ne paie plus à chaque fois) :
+  // 30 ₽ (perdue), 60 ₽ (gagnée), 90 ₽ (belle partie), 2 000 ₽ par jour au plus.
   async function coinPlay(c, who, day, gain, result) {
     if (!who.accountId) return null;
     const played = Number((await c.query("SELECT COALESCE(SUM(amount),0)::int AS n FROM coin_ledger WHERE identity=$1 AND day=$2 AND source LIKE 'play:%'", [who.key, day])).rows[0].n);
     const want = gain.ball === "great" ? COIN_PLAY.gold : result === "win" ? COIN_PLAY.win : COIN_PLAY.loss;
-    return coinGrant(c, who, day, "play:" + crypto.randomUUID(), Math.min(want, COIN_PLAY_CAP - played));
+    return coinGrant(c, who, day, "play:" + String(gain.source).replace(/^mode:/, ""), Math.min(want, COIN_PLAY_CAP - played));
   }
   // Acheter : une recharge de 4 rencontres, ou 1 à 10 Balls d'une sorte. Rien sans compte ni sans assez de ₽.
   async function buy(c, who, day, body) {
@@ -456,6 +459,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     added.push(...await bonuses(c, who, day));
     const coinsAdded = await coinDaily(c, who, day, daily);
     if (extraGains.coin) { const r = await coinPlay(c, who, day, extraGains[0], extraGains.coin.result); if (r) coinsAdded.push(r); }
+    if (extraGains.party) { const r = await coinGrant(c, who, day, "day:party", COIN_PARTY); if (r) coinsAdded.push(r); }
     return state(c, who, day, added, coinsAdded);
   });
   // Une action des hautes herbes, puis le sac et l'état à jour.
@@ -484,7 +488,9 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   return {
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
-    earn: (who, body) => run(who, async () => Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } })),
+    earn: (who, body) => run(who, async () => body.mode === "party"
+      ? Object.assign([{ source: "party", ball: "poke" }], { party: true })
+      : Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } })),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, async (c, day) => {
       if (body.encounterId !== undefined) {
@@ -558,4 +564,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };

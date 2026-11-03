@@ -17,7 +17,7 @@ const BALL_SOURCES = Object.freeze({
   "mode:petitbac": "Petit Bac", "mode:higherlower": "Higher or Lower", "mode:connections": "Connexions",
   "mode:speedrun": "Speedrun", "mode:statauction": "Enchères de stats", "mode:statclash": "Stat Clash",
   "mode:typecombo": "Combo de types", "mode:shiny": "Shiny ou normal",
-  streak: "🔥 Série de 7 jours"
+  streak: "🔥 Série de 7 jours", party: "🎉 Party Room"
 });
 // Les modes de fin de partie que le serveur accepte (les jeux du jour sont vérifiés par lui).
 const BALL_ARCADE_MODES = new Set(["normal","silhouette","pixel","mystery","cry","quiz","description","weight","evolution","order","odd","quiestce","petitbac","higher-lower","higher-lower-rush","poke-connections","speedrun","stat-auction","stat-clash","typecombo","shiny"]);
@@ -118,6 +118,7 @@ function openBallBag() {
         '<li>' + ballImg("great", 20) + '<span>Une <b>Super Ball</b> si tu fais une belle partie</span></li>' +
         '<li>' + ballImg("poke", 20) + '<span>Le <b>Pokémon du jour</b> trouvé</span></li>' +
         '<li>' + ballImg("great", 20) + '<span>Le <b>parcours du jour</b> fini (4/4)</span></li>' +
+        '<li>' + ballImg("poke", 20) + '<span>Ta <b>1re partie du jour en Party Room</b></span></li>' +
         '<li>' + ballImg("ultra", 20) + '<span>Une <b>Hyper Ball</b> tous les <b>7 jours joués d’affilée</b></span></li>' +
       '</ul><p class="ball-note">10 Balls par jour au plus. Rejouer au même mode ne rapporte plus de Ball ce jour-là.</p></section>' +
       ballGrassHtml(s) +
@@ -142,7 +143,7 @@ function claimBallGift() {
 // « Ta journée » (maquette validée le 3/11) : une seule carte pour les Balls du jour, les hautes herbes,
 // le cadeau, l'Œuf mystère et la Ligue. Sur PC, à côté du Pokémon du jour tant que l'enquête n'a pas commencé ;
 // sinon (et sur téléphone) juste dessous. Les anciennes cartes de l'Œuf et de la Ligue sont cachées.
-const HOME_DAY_SUGGEST = [["daily", "Pokémon du jour", "+1"], ["journey", "Parcours 4/4", "Super"], ["mode:higherlower", "Higher or Lower", "+1"], ["mode:quiz", "Quiz", "+1"], ["mode:pixel", "Pixelisé", "+1"], ["mode:shiny", "Shiny ou normal", "+1"]];
+const HOME_DAY_SUGGEST = [["daily", "Pokémon du jour", "+1"], ["party", "une partie en Party Room", "+1 et 150 ₽"], ["journey", "Parcours 4/4", "Super"], ["mode:higherlower", "Higher or Lower", "+1"], ["mode:quiz", "Quiz", "+1"], ["mode:pixel", "Pixelisé", "+1"], ["mode:shiny", "Shiny ou normal", "+1"]];
 let homeDayEgg = null, homeDayEggAt = 0;
 function homeDayLoadEgg() {
   if (typeof eggRequest !== "function" || Date.now() - homeDayEggAt < 300000) return;
@@ -272,6 +273,24 @@ if (typeof recordMatchHistory === "function") {
     const result = recordMatchHistoryBeforeBalls(entry);
     try { earnBallsAfterGame(matchHistory && matchHistory[0] || entry); } catch (_e) {}
     return result;
+  };
+}
+// 🎉 Party Room (3/11) : la 1re partie de salon finie du jour (2 joueurs au moins) rapporte 1 Poké Ball et 150 ₽.
+// Le serveur ne la paie qu'une fois par jour.
+let ballPartyPaid = "";
+if (typeof renderPartyRoom === "function") {
+  const renderPartyRoomBeforeBalls = renderPartyRoom;
+  renderPartyRoom = function () {
+    const out = renderPartyRoomBeforeBalls.apply(this, arguments);
+    try {
+      const room = typeof partyRoomState !== "undefined" && partyRoomState ? partyRoomState.room : null;
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+      if (room && room.status === "complete" && (room.players || []).length >= 2 && ballPartyPaid !== today) {
+        ballPartyPaid = today;
+        ballFetch("/api/balls/earn", { mode: "party" }).then((data) => ballApply(data));
+      }
+    } catch (_e) {}
+    return out;
   };
 }
 // Retour à l'accueil : le serveur ajoute les Balls des jeux du jour finis entre-temps.
