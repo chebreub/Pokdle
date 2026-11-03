@@ -34,10 +34,12 @@ def ready(page):
 
 
 def dismiss(page):
-    for selector in ('.lvc-back', '.achc'):
-        item = page.locator(selector).first
-        if item.count() and item.is_visible():
-            item.evaluate("e=>e.dispatchEvent(new MouseEvent('click',{bubbles:false}))")
+    # A locator action would trigger the registered auto-dismiss handler first,
+    # then wait forever for the element it just removed. Dispatch once in-page.
+    page.evaluate("""() => {
+        for (const selector of ['.lvc-back', '.achc'])
+            document.querySelector(selector)?.dispatchEvent(new MouseEvent('click', {bubbles:false}));
+    }""")
 
 
 def oracle(page, mode):
@@ -78,6 +80,7 @@ def main():
                     entry = dict(engine=engine, width=width, ok=False)
                     results.append(entry)
                     try:
+                        entry['stage'] = 'quiz'
                         page.goto(BASE, wait_until='domcontentloaded')
                         ready(page)
                         page.evaluate('startQuizGame()')
@@ -117,6 +120,7 @@ def main():
                         assert page.locator('#quiz-history .quiz-history-item').count() == 15
                         dismiss(page)
                         page.screenshot(path=str(OUT / f'{engine}-{width}-quiz-result.png'))
+                        entry['stage'] = 'infinite'
                         page.evaluate('closeOverlayModal();openHigherLowerMode();startHigherLowerMode("infinite")')
                         page.wait_for_function('()=>isVerifiedHL() && higherLowerState.phase==="playing" && !verifiedHLLoading')
                         assert page.evaluate('higherLowerState.right.statValue === undefined')
@@ -131,6 +135,7 @@ def main():
                         assert page.evaluate('ballState.coins.balance') == 120
                         dismiss(page)
                         page.screenshot(path=str(OUT / f'{engine}-{width}-infinite-result.png'))
+                        entry['stage'] = 'rush'
                         page.evaluate('restartHigherLowerGame();startHigherLowerMode("rush60")')
                         page.wait_for_function('()=>isVerifiedHL() && higherLowerState.mode==="rush60" && !verifiedHLLoading')
                         deadline = page.evaluate('higherLowerState.verified.endsAt')
