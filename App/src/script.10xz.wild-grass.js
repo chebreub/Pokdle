@@ -262,11 +262,11 @@ function wildThrow(ball) {
   if (wildBusy) return;
   wildBusy = true;
   const scene = document.getElementById("wild-scene");
+  const snapshot = scene ? scene.querySelector(".wild-panel")?.innerHTML : null;
   // Pendant le lancer, les boutons restent visibles mais ne répondent plus (avant : grisés puis « revenus » à la fin).
   scene?.querySelector(".wild-panel")?.classList.add("is-busy");
   scene?.querySelectorAll(".wild-ball-btn,.wild-run").forEach((b) => { b.setAttribute("aria-disabled", "true"); b.tabIndex = -1; });
   const before = typeof ballState !== "undefined" && ballState && ballState.wild && ballState.wild.open;
-  const snapshot = scene ? scene.querySelector(".wild-panel")?.innerHTML : null;
   wildMarkThrow(scene, ball);
   ballPaidAction("/api/wild/throw", { ball, encounterId: before && before.id, expectedThrows: before && before.throws }).then((data) => {
     if (!data || !data.ok) {

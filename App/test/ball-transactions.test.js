@@ -120,7 +120,7 @@ test('PostgreSQL + HTTP: old clients cannot bypass receipts or quoted prices', s
   await new Promise(resolve => server.once('listening', resolve));
   const url = 'http://127.0.0.1:' + server.address().port;
   try {
-    for (const path of ['/api/shop/buy', '/api/wild/throw']) {
+    for (const path of ['/api/shop/buy', '/api/wild/throw', '/api/shop/buy/', '/API/WILD/THROW']) {
       const r = await fetch(url + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: 'poke', ball: 'poke' }) });
       assert.equal(r.status, 400); assert.equal((await r.json()).error, 'reload_required');
     }
@@ -130,5 +130,13 @@ test('PostgreSQL + HTTP: old clients cannot bypass receipts or quoted prices', s
     assert.equal(switched.status, 409);
     assert.equal((await switched.json()).error, 'account_changed');
     assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM coin_ledger')).rows[0].n, 0);
+    await seed(db, who('http'), 100);
+    const current = await (await fetch(url + '/api/balls')).json();
+    const purchase = { item: 'poke', expectedPrice: 50, actionId: randomUUID(), actionScope: current.actionScope };
+    for (const path of ['/api/shop/buy', '/API/SHOP/BUY/']) {
+      const reply = await fetch(url + path, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(purchase)});
+      assert.equal(reply.status, 200);
+      assert.equal((await reply.json()).coins.balance, 50);
+    }
   } finally { await new Promise(resolve => server.close(resolve)); }
 }));

@@ -123,6 +123,9 @@ jobs:
             general) python tools/guess_flow_quality.py ;;
             *) echo "Unsupported smoke scope: $SMOKE_SUITE"; exit 1 ;;
           esac
+      - name: Verify purchases and lost-response recovery on phone and desktop
+        if: env.QA_FULL == 'true'
+        run: python tools/economy_transactions_quality.py
       - name: Verify Party mobile touch actions
         if: env.QA_FULL == 'true'
         run: python tools/party_mobile_quality.py
@@ -144,9 +147,6 @@ jobs:
       - name: Verify the Grille du jour bonus
         if: env.QA_FULL == 'true' && steps.scope.outputs.maintenance != 'true'
         run: python tools/grid_quality.py
-      - name: Verify purchases and lost-response recovery on phone and desktop
-        if: env.QA_FULL == 'true'
-        run: python tools/economy_transactions_quality.py
       - name: Verify maintenance home, Quiz, League launch and Daily counter
         if: env.QA_FULL == 'true' && steps.scope.outputs.maintenance == 'true'
         run: python tools/daily_maintenance_quality.py

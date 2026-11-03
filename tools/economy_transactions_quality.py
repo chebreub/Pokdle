@@ -75,6 +75,34 @@ def main():
                     assert page.evaluate('ballState.bag.poke') == 5
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
                     page.screenshot(path=str(OUT / f'{engine}-{width}-recovered.png'))
+                    # Same lost-response scenario for a throw: controls must remain usable for retry.
+                    throws = []
+                    encounter = dict(id=123, pokemonId=10, shiny=False, throws=0, throwsLeft=3, status='open', chances=dict(poke=80, great=95, ultra=95))
+                    state['wild']['open'] = encounter
+                    def throw(route):
+                        body = route.request.post_data_json
+                        throws.append(body)
+                        if len(throws) == 1:
+                            state['bag']['poke'] -= 1
+                            encounter.update(throws=1, throwsLeft=2)
+                            route.abort()
+                        else:
+                            assert body == throws[0]
+                            route.fulfill(json=dict(state, encounter=encounter, result=dict(caught=False, fled=False, shakes=0), replayed=True))
+                    page.route('**/api/wild/throw', throw)
+                    page.wait_for_function('Boolean(wildPokemon(10))')
+                    page.evaluate('(s) => { closeOverlayModal(); ballApply(s, {announce:false}); renderWildEncounter(s); }', state)
+                    ball = page.locator('[data-action="wildThrow"][data-args=\'["poke"]\']')
+                    ball.click()
+                    page.wait_for_function('!wildBusy')
+                    expect(ball).to_be_enabled()
+                    assert ball.get_attribute('aria-disabled') != 'true'
+                    ball.click()
+                    page.wait_for_function('!wildBusy')
+                    assert len(throws) == 2
+                    assert page.evaluate('ballState.bag.poke') == 4
+                    assert page.evaluate('ballState.wild.open.throws') == 1
+                    page.screenshot(path=str(OUT / f'{engine}-{width}-throw-recovered.png'))
                     assert not errors, errors
                     results.append(dict(engine=engine, width=width, ok=True))
                     context.close()

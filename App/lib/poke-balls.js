@@ -513,24 +513,24 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
     if (b && b.until > now) { if (++b.count > limit) throw fail("rate_limited", 429); }
     else buckets.set(key, { count: 1, until: now + 60000 });
   }
-  const handle = (action) => async (req, res) => {
+  const handle = (action, paidOperation = null) => async (req, res) => {
     res.set("Cache-Control", "no-store");
     if (!service || !await ready) return res.status(503).json({ ok: false, error: "unavailable" });
     try {
       if (req.method === "POST") {
         if (!req.is("application/json")) throw fail("json_required", 415);
-        if (["/api/shop/buy", "/api/wild/throw"].includes(req.path)) {
+        if (paidOperation) {
           const b = req.body || {};
           if (typeof b.actionId !== "string" || !/^[a-zA-Z0-9_-]{16,80}$/.test(b.actionId)) throw fail("reload_required", 400);
-          if (req.path === "/api/shop/buy" && (!Number.isInteger(b.expectedPrice) || b.expectedPrice < 1)) throw fail("reload_required", 400);
-          if (req.path === "/api/wild/throw" && (!Number.isSafeInteger(b.encounterId) || !Number.isInteger(b.expectedThrows) || b.expectedThrows < 0 || b.expectedThrows >= MAX_THROWS)) throw fail("reload_required", 400);
+          if (paidOperation === "buy" && (!Number.isInteger(b.expectedPrice) || b.expectedPrice < 1)) throw fail("reload_required", 400);
+          if (paidOperation === "throw" && (!Number.isSafeInteger(b.encounterId) || !Number.isInteger(b.expectedThrows) || b.expectedThrows < 0 || b.expectedThrows >= MAX_THROWS)) throw fail("reload_required", 400);
         }
         const origin = req.get("origin"); if (origin && new URL(origin).host !== req.get("host")) throw fail("origin_denied", 403);
       }
       let id = dailyGuest(secret, readCookies(req).pokdle_daily);
       if (!id) { const issued = issueDailyGuest(secret); id = issued.id; res.cookie("pokdle_daily", issued.cookie, { httpOnly: true, secure: req.secure, sameSite: "lax", path: "/", maxAge: 180 * 86400000 }); }
       const user = getUser(req), who = { key: user?.id ? "user:" + user.id : "guest:" + id, guestKey: "guest:" + id, accountId: user?.id ? String(user.id) : null };
-      if (req.method === "POST" && ["/api/shop/buy", "/api/wild/throw"].includes(req.path)) {
+      if (req.method === "POST" && paidOperation) {
         if (typeof req.body.actionScope !== "string") throw fail("reload_required", 400);
         if (req.body.actionScope !== crypto.createHash("sha256").update(who.key).digest("hex")) throw fail("account_changed", 409);
       }
@@ -547,11 +547,11 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.post("/api/balls/gift", express.json({ limit: "1kb" }), handle((who) => service.gift(who)));
   app.post("/api/balls/earn", express.json({ limit: "1kb" }), handle((who, req) => service.earn(who, req.body || {})));
   app.post("/api/wild/encounter", express.json({ limit: "1kb" }), handle((who, req) => service.encounter(who, req.body || {})));
-  app.post("/api/wild/throw", express.json({ limit: "1kb" }), handle((who, req) => service.throwBall(who, req.body || {})));
+  app.post("/api/wild/throw", express.json({ limit: "1kb" }), handle((who, req) => service.throwBall(who, req.body || {}), "throw"));
   app.post("/api/wild/skip", express.json({ limit: "1kb" }), handle((who) => service.skip(who)));
   app.get("/api/wild/collection", handle((who) => service.collection(who)));
   app.post("/api/wild/release", express.json({ limit: "1kb" }), handle((who, req) => service.release(who, req.body || {})));
-  app.post("/api/shop/buy", express.json({ limit: "1kb" }), handle((who, req) => service.buy(who, req.body || {})));
+  app.post("/api/shop/buy", express.json({ limit: "1kb" }), handle((who, req) => service.buy(who, req.body || {}), "buy"));
   app.get("/api/expedition", handle((who) => service.expedition(who)));
   app.post("/api/expedition/chests", express.json({ limit: "1kb" }), handle((who) => service.claimChests(who)));
   app.post("/api/expedition/legend", express.json({ limit: "1kb" }), handle((who) => service.meetLegend(who)));
