@@ -261,6 +261,7 @@ function ballScoreFromHistory(entry) {
 }
 function earnBallsAfterGame(entry) {
   const mode = String(entry && entry.mode || "");
+  if (mode === "weight" || mode === "shiny") return Promise.resolve(null);
   if (mode === "daily" || mode === "challenge") return refreshBalls();
   if (!BALL_ARCADE_MODES.has(mode) || !["win", "loss"].includes(entry.result)) return Promise.resolve(null);
   // Une partie de la Party Room ne compte pas : elle a ses propres récompenses.

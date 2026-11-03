@@ -47,7 +47,7 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     assert.deepEqual([s.today,s.bag],[5,{poke:2,great:3,ultra:0}]);
 
     // The cap: 10 a day, whatever the source.
-    for(const mode of ['normal','pixel','cry','speedrun','odd','weight','shiny'])await balls.earn(guest,{mode,result:'loss',score:1});
+    for(const mode of ['normal','pixel','cry','speedrun','odd','description','evolution'])await balls.earn(guest,{mode,result:'loss',score:1});
     s=await balls.state(guest);
     assert.deepEqual([s.today,s.giftAvailable],[10,false]);
     assert.equal(s.gains.filter(g=>g.source.startsWith('mode:')).length,6,'the 7th mode is past the cap');

@@ -121,7 +121,7 @@ function renderShinyGame() {
   let html = '<div class="shiny-meta">' + shinyHeartsHtml(state.lives) +
     '<span class="tag-tries">Score : <b>' + state.score + '</b></span><span class="tag-gen">Record : ' + best + '</span></div>';
   if (state.phase === 'playing') {
-    html += '<div class="shiny-stage"><img class="shiny-art" src="' + escapeHtml(shinyArtwork(round.id, round.shiny)) + '" alt="' + name + '" draggable="false" width="260" height="260"></div>' +
+    html += '<div class="shiny-stage"><img class="shiny-art" src="' + escapeHtml(round.image || shinyArtwork(round.id, round.shiny)) + '" alt="' + name + '" draggable="false" width="260" height="260"></div>' +
       '<p class="shiny-question">' + name + ' : <b>shiny ou normal ?</b></p>' +
       '<div class="shiny-choices">' +
       '<button type="button" id="shiny-say-shiny" class="shiny-choice is-shiny" data-action="answerShiny" data-args=\'["shiny"]\'>✨ Shiny</button>' +
