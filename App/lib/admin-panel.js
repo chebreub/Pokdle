@@ -41,7 +41,8 @@ function addDays(day, n) {
 function wildTestSectionHtml() {
   return `<section><h2>🌿 Hautes herbes (test)</h2><p class="hint">Pour toi seulement, pour tester les hautes herbes sur ton compte. Tes captures restent dans ton album.</p>
 <form method="post" action="/admin/wild/reset"><div class="row"><button class="primary" type="submit">Rendre mes rencontres du jour</button></div></form>
-<form method="post" action="/admin/wild/balls"><div class="row"><button type="submit">+5 Poké Balls</button></div></form></section>`;
+<form method="post" action="/admin/wild/balls"><div class="row"><button type="submit">+5 Poké Balls</button></div></form>
+<form method="post" action="/admin/wild/coins"><div class="row"><button type="submit">+1 000 ₽</button></div></form></section>`;
 }
 const oneLine = (value) => String(value ?? "").replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -122,6 +123,7 @@ const NOTICES = Object.freeze({
   level: "Niveau remis : le joueur le retrouve à sa prochaine visite, sur chacun de ses appareils.",
   "wild-reset": "Tes rencontres du jour sont rendues (pour tester).",
   "wild-balls": "+5 Poké Balls dans ton sac (pour tester).",
+  "wild-coins": "+1 000 ₽ dans ton porte-monnaie (pour tester la boutique).",
   suspension: "Discussion mise à jour.",
   report: "Signalement marqué comme traité.",
 });
@@ -323,6 +325,18 @@ ${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${
       }
       back(res, { ok: "wild-balls" });
     } catch (error) { log.error("[admin] wild balls:", error.message); back(res, { err: "Impossible pour le moment." }); }
+  });
+
+  app.post("/admin/wild/coins", form, async (req, res) => {
+    const user = guard(req, res);
+    if (!user) return;
+    if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+    if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+    try {
+      await db.query("INSERT INTO coin_ledger(identity, account_id, day, source, amount) VALUES ($1, $2, $3, $4, 1000) ON CONFLICT DO NOTHING",
+        ["user:" + user.id, String(user.id), today(), "admin:" + Date.now()]);
+      back(res, { ok: "wild-coins" });
+    } catch (error) { log.error("[admin] wild coins:", error.message); back(res, { err: "Impossible pour le moment." }); }
   });
 
   // « Niveau d'un joueur » : put back a lost level (lib/player-level-admin.js).

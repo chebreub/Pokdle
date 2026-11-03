@@ -14,7 +14,19 @@ const DAILY_CAP = 10;
 const STREAK_EVERY = 7;
 const WELCOME_BALLS = Object.freeze(["poke", "poke", "poke", "poke", "great"]);
 // Hors du plafond de 10 par jour : série, Balls de bienvenue, coffres d'Expédition, et les Balls de test de l'admin.
-const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%')";
+// Hors du plafond de 10 : série, Balls offertes, coffres, test de l'admin et Balls achetées à la boutique.
+const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%' OR source LIKE 'shop:%')";
+// 💰 Pokédollars (3/11/2026, interview puis maquette ; prix d'origine choisis) : compte obligatoire.
+// Jeux du jour une fois par jour, chaque autre partie 30 à 90 ₽ (2 000 ₽ par jour au plus), doublon relâché.
+const COIN_DAILY = Object.freeze({ daily: 300, wordle: 150, dossier: 150, challenge: 150 });
+const COIN_PLAY = Object.freeze({ gold: 90, win: 60, loss: 30 });
+const COIN_PLAY_CAP = 2000;
+const COIN_RELEASE = Object.freeze({ normal: 15, shiny: 1500 });
+// 🏪 Boutique : 4 rencontres de plus (100 ₽, puis le prix double à chaque recharge du jour) et des Balls.
+const SHOP_PRICES = Object.freeze({ recharge: 100, poke: 50, great: 120, ultra: 300 });
+const SHOP_MAX_QTY = 10;
+const RECHARGE_MAX = 10;
+function rechargePrice(done) { return SHOP_PRICES.recharge * 2 ** done; }
 
 // ===== L'Expédition de la semaine (PR 2 du plan, 3/11/2026) =====
 // Une région par semaine (lundi → dimanche, Paris). 1 participation = un jour où le joueur a gagné des Balls
@@ -129,6 +141,11 @@ async function initBallsDb(db) {
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS zone TEXT");
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS released_on DATE");
   await db.query("CREATE INDEX IF NOT EXISTS ball_gains_day ON ball_gains(day)");
+  // 💰 Le carnet des Pokédollars : un gain (+) ou un achat (−) par ligne ; le solde est la somme.
+  await db.query(`CREATE TABLE IF NOT EXISTS coin_ledger(
+    id BIGSERIAL PRIMARY KEY, identity TEXT NOT NULL, account_id TEXT, day DATE NOT NULL, source TEXT NOT NULL,
+    amount INT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  await db.query("CREATE UNIQUE INDEX IF NOT EXISTS coin_ledger_source ON coin_ledger(identity,day,source)");
 }
 
 function createBallService({ db, clock = () => new Date(), randomInt = crypto.randomInt, random = () => crypto.randomInt(1000000) / 1000000 }) {
@@ -205,7 +222,61 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     }
     return added;
   }
-  async function state(c, who, day, added = []) {
+  // --- 💰 Pokédollars ---
+  async function coinGrant(c, who, day, source, amount) {
+    if (!who.accountId || !(amount > 0)) return null;
+    const row = (await c.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING RETURNING source,amount",
+      [who.key, who.accountId, day, source, amount])).rows[0];
+    return row ? { source: row.source, amount: Number(row.amount) } : null;
+  }
+  // Les jeux du jour (vérifiés dans leurs tables par dailyGains) : une fois par jour chacun.
+  async function coinDaily(c, who, day, gains) {
+    const out = [];
+    for (const g of gains) if (COIN_DAILY[g.source]) { const r = await coinGrant(c, who, day, "day:" + g.source, COIN_DAILY[g.source]); if (r) out.push(r); }
+    return out;
+  }
+  async function coinState(c, who, day) {
+    const base = { enabled: Boolean(who.accountId), prices: SHOP_PRICES, daily: COIN_DAILY, play: COIN_PLAY, playCap: COIN_PLAY_CAP, release: COIN_RELEASE };
+    const r = (await c.query(`SELECT COALESCE(SUM(amount),0)::int AS balance,
+      COALESCE(SUM(amount) FILTER (WHERE day=$2 AND amount>0),0)::int AS today,
+      COALESCE(SUM(amount) FILTER (WHERE day=$2 AND source LIKE 'play:%'),0)::int AS played,
+      COUNT(*) FILTER (WHERE day=$2 AND source LIKE 'shop:recharge:%')::int AS recharges,
+      COALESCE(array_agg(substr(source,5)) FILTER (WHERE day=$2 AND source LIKE 'day:%'),'{}') AS done
+      FROM coin_ledger WHERE identity=$1`, [who.key, day])).rows[0];
+    const recharges = Number(r.recharges);
+    return { ...base, balance: Number(r.balance), today: Number(r.today), played: Number(r.played), done: r.done || [],
+      recharges, rechargePrice: rechargePrice(recharges), rechargeLeft: Math.max(0, RECHARGE_MAX - recharges) };
+  }
+  // Chaque partie d'un autre jeu : 30 ₽ (perdue), 60 ₽ (gagnée), 90 ₽ (belle partie), 2 000 ₽ par jour au plus.
+  async function coinPlay(c, who, day, gain, result) {
+    if (!who.accountId) return null;
+    const played = Number((await c.query("SELECT COALESCE(SUM(amount),0)::int AS n FROM coin_ledger WHERE identity=$1 AND day=$2 AND source LIKE 'play:%'", [who.key, day])).rows[0].n);
+    const want = gain.ball === "great" ? COIN_PLAY.gold : result === "win" ? COIN_PLAY.win : COIN_PLAY.loss;
+    return coinGrant(c, who, day, "play:" + crypto.randomUUID(), Math.min(want, COIN_PLAY_CAP - played));
+  }
+  // Acheter : une recharge de 4 rencontres, ou 1 à 10 Balls d'une sorte. Rien sans compte ni sans assez de ₽.
+  async function buy(c, who, day, body) {
+    if (!who.accountId) throw fail("account_required", 401);
+    const item = String(body && body.item || "");
+    if (!Object.hasOwn(SHOP_PRICES, item)) throw fail("invalid_item", 400);
+    const qty = item === "recharge" ? 1 : Number(body && body.qty || 1);
+    if (!Number.isInteger(qty) || qty < 1 || qty > SHOP_MAX_QTY) throw fail("invalid_qty", 400);
+    const coins = await coinState(c, who, day);
+    if (item === "recharge" && coins.recharges >= RECHARGE_MAX) throw fail("recharge_limit", 429);
+    const price = item === "recharge" ? coins.rechargePrice : SHOP_PRICES[item] * qty;
+    if (coins.balance < price) throw fail("not_enough_coins");
+    if (item === "recharge") {
+      await c.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) VALUES($1,$2,$3,$4,$5)", [who.key, who.accountId, day, "shop:recharge:" + (coins.recharges + 1), -price]);
+    } else {
+      const stamp = crypto.randomUUID();
+      await c.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) VALUES($1,$2,$3,$4,$5)", [who.key, who.accountId, day, "shop:" + item + ":" + stamp, -price]);
+      for (let i = 1; i <= qty; i++) {
+        await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,$3,$4,$5)", [who.key, day, "shop:" + stamp + ":" + i, item, who.accountId]);
+      }
+    }
+    return { bought: { item, qty, price } };
+  }
+  async function state(c, who, day, added = [], coinsAdded = []) {
     const today = (await c.query(`SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 AND NOT ${BONUS_SQL} ORDER BY created_at,source`, [who.key, day])).rows;
     const bonus = (await c.query(`SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 AND ${BONUS_SQL} ORDER BY created_at,source`, [who.key, day])).rows;
     const bag = await bagOf(c, who);
@@ -213,7 +284,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { ok: true, day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
       giftAvailable: today.length < DAILY_CAP && !today.some((g) => g.source === "gift"), authenticated: Boolean(who.accountId),
       bonus, streak: await streakOf(c, who, day), welcomeBalls: WELCOME_BALLS.length,
-      wild: await wildState(c, who, day) };
+      wild: await wildState(c, who, day), coins: await coinState(c, who, day), coinsAdded };
   }
   // Le sac = les Balls gagnées moins les Balls lancées.
   async function bagOf(c, who) {
@@ -235,11 +306,13 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const used = Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_encounters WHERE identity=$1 AND day=$2 AND kind='wild'", [who.key, day])).rows[0].n);
     const open = (await c.query("SELECT * FROM wild_encounters WHERE identity=$1 AND status='open' ORDER BY id DESC LIMIT 1", [who.key])).rows[0];
     const caught = Number((await c.query("SELECT COUNT(DISTINCT pokemon_id)::int AS n FROM wild_encounters WHERE identity=$1 AND status='caught'", [who.key])).rows[0].n);
+    // Les recharges achetées à la boutique ajoutent 4 rencontres chacune, tout de suite.
+    const recharged = Number((await c.query("SELECT COUNT(*)::int AS n FROM coin_ledger WHERE identity=$1 AND day=$2 AND source LIKE 'shop:recharge:%'", [who.key, day])).rows[0].n);
     const now = clock(), batch = Math.floor(parisHourOf(now) / BATCH_HOURS);
-    const available = Math.min(ENCOUNTERS_PER_DAY, (batch + 1) * ENCOUNTERS_PER_BATCH);
+    const available = Math.min(ENCOUNTERS_PER_DAY, (batch + 1) * ENCOUNTERS_PER_BATCH) + recharged * ENCOUNTERS_PER_BATCH;
     const nextHour = (batch + 1) * BATCH_HOURS;
     const nextAt = nextHour < 24 ? nextBatchAt(dailyCalendar(now).resetAt, nextHour) : dailyCalendar(now).resetAt;
-    return { max: ENCOUNTERS_PER_DAY, available, today: used, left: Math.max(0, available - used), nextAt, nextCount: ENCOUNTERS_PER_BATCH, everyHours: BATCH_HOURS, open: encounterView(open), caught };
+    return { max: ENCOUNTERS_PER_DAY + recharged * ENCOUNTERS_PER_BATCH, recharged, available, today: used, left: Math.max(0, available - used), nextAt, nextCount: ENCOUNTERS_PER_BATCH, everyHours: BATCH_HOURS, open: encounterView(open), caught };
   }
   // Entrer dans les hautes herbes : la rencontre ouverte, ou une nouvelle si le jour en laisse.
   async function encounter(c, who, day, zone) {
@@ -337,7 +410,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const rows = (await c.query("SELECT id FROM wild_encounters WHERE identity=$1 AND status='caught' AND pokemon_id=$2 AND shiny=$3 ORDER BY id DESC", [who.key, id, shiny])).rows;
     if (rows.length < 2) throw fail("last_one");
     await c.query("UPDATE wild_encounters SET status='released',released_on=$2 WHERE id=$1", [rows[0].id, day]);
-    return { released: { id, shiny }, captures: await collection(c, who) };
+    const coins = await coinGrant(c, who, day, "release:" + rows[0].id, shiny ? COIN_RELEASE.shiny : COIN_RELEASE.normal);
+    return { released: { id, shiny }, captures: await collection(c, who), coinsEarned: coins ? coins.amount : 0 };
   }
   // Chaque appel commence par récupérer les Balls dues par les jeux du jour : rien ne se perd si une requête a échoué.
   const run = (who, extra) => tx(async (c) => {
@@ -345,9 +419,12 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     await adopt(c, who);
     await lock(c, who.key);
     const extraGains = extra ? await extra(c, day) : [];
-    const added = await grant(c, who, day, [...extraGains, ...await dailyGains(c, who, day)]);
+    const daily = await dailyGains(c, who, day);
+    const added = await grant(c, who, day, [...extraGains, ...daily]);
     added.push(...await bonuses(c, who, day));
-    return state(c, who, day, added);
+    const coinsAdded = await coinDaily(c, who, day, daily);
+    if (extraGains.coin) { const r = await coinPlay(c, who, day, extraGains[0], extraGains.coin.result); if (r) coinsAdded.push(r); }
+    return state(c, who, day, added, coinsAdded);
   });
   // Une action des hautes herbes, puis le sac et l'état à jour.
   const wild = (who, action) => tx(async (c) => {
@@ -360,7 +437,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   return {
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
-    earn: (who, body) => run(who, async () => [arcadeGain(body.mode, body.result, body.score)]),
+    earn: (who, body) => run(who, async () => Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } })),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, (c, day) => throwBall(c, who, day, String(body && body.ball || ""))),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
@@ -368,7 +445,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
-    release: (who, body) => wild(who, (c, day) => release(c, who, day, body))
+    release: (who, body) => wild(who, (c, day) => release(c, who, day, body)),
+    buy: (who, body) => wild(who, (c, day) => buy(c, who, day, body))
   };
 }
 
@@ -410,10 +488,11 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.post("/api/wild/skip", express.json({ limit: "1kb" }), handle((who) => service.skip(who)));
   app.get("/api/wild/collection", handle((who) => service.collection(who)));
   app.post("/api/wild/release", express.json({ limit: "1kb" }), handle((who, req) => service.release(who, req.body || {})));
+  app.post("/api/shop/buy", express.json({ limit: "1kb" }), handle((who, req) => service.buy(who, req.body || {})));
   app.get("/api/expedition", handle((who) => service.expedition(who)));
   app.post("/api/expedition/chests", express.json({ limit: "1kb" }), handle((who) => service.claimChests(who)));
   app.post("/api/expedition/legend", express.json({ limit: "1kb" }), handle((who) => service.meetLegend(who)));
   return service;
 }
 
-module.exports = { RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
