@@ -91,7 +91,7 @@ function shopBallsTabHtml(s) {
 }
 function shopBuyButton(key, price, title) {
   const c = shopCoins(), can = Boolean(c && c.enabled && c.balance >= price);
-  const confirm = can && shopConfirm && shopConfirm.item === key && shopConfirm.until > Date.now();
+  const confirm = can && shopConfirm && shopConfirm.item === key && shopConfirm.price === price && shopConfirm.until > Date.now();
   return '<button type="button" class="shop-buy' + (can ? "" : " is-off") + (confirm ? " is-confirm" : "") + '" data-action="shopBuy" data-args=\'["' + key + '"]\'' +
     ' aria-label="' + (confirm ? "Confirmer l’achat : " : "Acheter ") + escapeHtml(title) + ', ' + coinFmt(price) + ' Pokédollars"' + (can ? "" : ' aria-disabled="true"') + '>' +
     (confirm ? "Confirmer ?" : coinIcon() + coinFmt(price)) + '</button>';
@@ -155,6 +155,10 @@ function openShop() { openBallBag("shop"); }
 
 // --- Acheter : un 1er appui demande « Confirmer ? » (4 s), le 2e achète ---
 const SHOP_ERRORS = {
+  previous_action: "Vérification de ton achat précédent. Vérifie ton sac avant de recommencer.",
+  price_changed: "Le prix a changé. Vérifie le nouveau prix avant de confirmer.",
+  reload_required: "Recharge la page pour utiliser la boutique.",
+  storage_unavailable: "Le navigateur ne peut pas conserver cet achat. Vérifie ses réglages de stockage.",
   account_required: "Connecte-toi pour utiliser la boutique.",
   not_enough_coins: "Pas assez de Pokédollars.",
   recharge_limit: "Plus de recharge aujourd’hui.",
@@ -170,16 +174,17 @@ function shopBuy(item, from) {
   if (!c || !c.enabled) { if (typeof showToast === "function") showToast(SHOP_ERRORS.account_required); return; }
   const price = shopPrice(item);
   if (c.balance < price) { if (typeof showToast === "function") showToast("Il te manque " + coinFmt(price - c.balance) + " ₽. Joue une partie pour en gagner."); return; }
-  if (from !== "wild" && !(shopConfirm && shopConfirm.item === item && shopConfirm.until > Date.now())) {
-    shopConfirm = { item, until: Date.now() + 4000 };
+  if (!(shopConfirm && shopConfirm.item === item && shopConfirm.price === price && shopConfirm.until > Date.now())) {
+    shopConfirm = { item, price, until: Date.now() + 4000 };
     shopRedraw();
+    if (from === "wild" && typeof showToast === "function") showToast("Confirmer la recharge : " + coinFmt(price) + " ₽ ? Appuie à nouveau.");
     setTimeout(() => { if (shopConfirm && shopConfirm.item === item && shopConfirm.until <= Date.now()) { shopConfirm = null; shopRedraw(); } }, 4100);
     return;
   }
   if (shopBusy) return;
   shopBusy = true;
   shopConfirm = null;
-  ballFetch("/api/shop/buy", { item }).then((data) => {
+  ballPaidAction("/api/shop/buy", { item, expectedPrice: price }).then((data) => {
     if (!data || !data.ok) {
       if (typeof showToast === "function") showToast(SHOP_ERRORS[data && data.error] || "Achat impossible pour le moment. Réessaie dans un instant.");
       refreshBalls();

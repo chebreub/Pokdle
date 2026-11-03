@@ -129,6 +129,15 @@ async function initBallsDb(db) {
     identity TEXT NOT NULL, day DATE NOT NULL, source TEXT NOT NULL, ball TEXT NOT NULL,
     account_id TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(identity,day,source))`);
   await db.query("CREATE INDEX IF NOT EXISTS ball_gains_identity ON ball_gains(identity)");
+  await db.query(`CREATE TABLE IF NOT EXISTS ball_actions(
+    identity TEXT NOT NULL, action_id TEXT NOT NULL, account_id TEXT,
+    operation TEXT NOT NULL, payload TEXT NOT NULL, result JSONB NOT NULL,
+    PRIMARY KEY(identity,action_id))`);
+  // Offsets spent guest Balls whose earning cannot be imported (duplicate source / daily cap).
+  // These credits only neutralize imported consumption: they never add spendable stock.
+  await db.query(`CREATE TABLE IF NOT EXISTS ball_merge_credits(
+    identity TEXT PRIMARY KEY, account_id TEXT NOT NULL,
+    poke INT NOT NULL DEFAULT 0, great INT NOT NULL DEFAULT 0, ultra INT NOT NULL DEFAULT 0)`);
   // Une rencontre : le Pokémon tiré, les Balls lancées (une colonne par sorte) et la fin.
   await db.query(`CREATE TABLE IF NOT EXISTS wild_encounters(
     id BIGSERIAL PRIMARY KEY, identity TEXT NOT NULL, account_id TEXT, day DATE NOT NULL,
@@ -156,14 +165,36 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     catch (e) { await c.query("ROLLBACK").catch(() => {}); throw e; }
     finally { c.release(); }
   }
-  // Les Balls gagnées sans compte rejoignent le compte ; une source déjà gagnée sur le compte ce jour-là n'est pas doublée.
+  // Lock both identities in stable order, also before importing guest rows.
   async function adopt(c, who) {
-    if (!who.accountId || who.guestKey === who.key) return;
-    await lock(c, who.guestKey);
-    await c.query(`INSERT INTO ball_gains(identity,day,source,ball,account_id,created_at)
-      SELECT $2,day,source,ball,$3,created_at FROM ball_gains WHERE identity=$1 ON CONFLICT DO NOTHING`, [who.guestKey, who.key, who.accountId]);
+    const keys = [...new Set([who.key, who.accountId && who.guestKey].filter(Boolean))].sort();
+    for (const key of keys) await lock(c, key);
+    if (!who.accountId || !who.guestKey || who.guestKey === who.key) return;
+    const gains = (await c.query(`SELECT to_char(day,'YYYY-MM-DD') AS day,source,ball,created_at,
+      ${BONUS_SQL} AS bonus FROM ball_gains WHERE identity=$1 ORDER BY day,created_at,source`, [who.guestKey])).rows;
+    const accepted = Object.fromEntries(BALLS.map(b => [b, 0]));
+    for (const g of gains) {
+      if (!g.bonus) {
+        const n = Number((await c.query(`SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND day=$2 AND NOT ${BONUS_SQL}`, [who.key, g.day])).rows[0].n);
+        if (n >= DAILY_CAP) continue;
+      }
+      const row = (await c.query(`INSERT INTO ball_gains(identity,day,source,ball,account_id,created_at)
+        VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING ball`,
+        [who.key,g.day,g.source,g.ball,who.accountId,g.created_at])).rows[0];
+      if (row && row.ball in accepted) accepted[row.ball]++;
+    }
+    const used = (await c.query(`SELECT COALESCE(SUM(used_poke),0)::int AS poke,
+      COALESCE(SUM(used_great),0)::int AS great,COALESCE(SUM(used_ultra),0)::int AS ultra
+      FROM wild_encounters WHERE identity=$1`, [who.guestKey])).rows[0];
+    const credit = BALLS.map(b => Math.max(0, Number(used[b]) - accepted[b]));
+    if (credit.some(Boolean)) await c.query(`INSERT INTO ball_merge_credits(identity,account_id,poke,great,ultra)
+      VALUES($1,$2,$3,$4,$5) ON CONFLICT(identity) DO UPDATE SET
+      poke=ball_merge_credits.poke+EXCLUDED.poke,great=ball_merge_credits.great+EXCLUDED.great,
+      ultra=ball_merge_credits.ultra+EXCLUDED.ultra`, [who.key,who.accountId,...credit]);
     await c.query("DELETE FROM ball_gains WHERE identity=$1", [who.guestKey]);
     await c.query("UPDATE wild_encounters SET identity=$2,account_id=$3 WHERE identity=$1", [who.guestKey, who.key, who.accountId]);
+    // Keep guest receipt keys stable; associate them with the owner for account erasure.
+    await c.query("UPDATE ball_actions SET account_id=$2 WHERE identity=$1 AND account_id IS NULL", [who.guestKey, who.accountId]);
   }
   async function grant(c, who, day, gains) {
     const added = [];
@@ -264,6 +295,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const coins = await coinState(c, who, day);
     if (item === "recharge" && coins.recharges >= RECHARGE_MAX) throw fail("recharge_limit", 429);
     const price = item === "recharge" ? coins.rechargePrice : SHOP_PRICES[item] * qty;
+    if (body.expectedPrice !== undefined && body.expectedPrice !== price) throw fail("price_changed");
     if (coins.balance < price) throw fail("not_enough_coins");
     if (item === "recharge") {
       await c.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) VALUES($1,$2,$3,$4,$5)", [who.key, who.accountId, day, "shop:recharge:" + (coins.recharges + 1), -price]);
@@ -281,7 +313,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const bonus = (await c.query(`SELECT source,ball FROM ball_gains WHERE identity=$1 AND day=$2 AND ${BONUS_SQL} ORDER BY created_at,source`, [who.key, day])).rows;
     const bag = await bagOf(c, who);
     const cal = dailyCalendar(clock());
-    return { ok: true, day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
+    return { ok: true, actionScope: crypto.createHash("sha256").update(who.key).digest("hex"), day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
       giftAvailable: today.length < DAILY_CAP && !today.some((g) => g.source === "gift"), authenticated: Boolean(who.accountId),
       bonus, streak: await streakOf(c, who, day), welcomeBalls: WELCOME_BALLS.length,
       wild: await wildState(c, who, day), coins: await coinState(c, who, day), coinsAdded };
@@ -291,7 +323,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const bag = Object.fromEntries(BALLS.map((b) => [b, 0]));
     for (const r of (await c.query("SELECT ball,COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 GROUP BY ball", [who.key])).rows) if (r.ball in bag) bag[r.ball] = Number(r.n);
     const used = (await c.query("SELECT COALESCE(SUM(used_poke),0)::int AS poke,COALESCE(SUM(used_great),0)::int AS great,COALESCE(SUM(used_ultra),0)::int AS ultra FROM wild_encounters WHERE identity=$1", [who.key])).rows[0];
-    for (const b of BALLS) bag[b] = Math.max(0, bag[b] - Number(used[b]));
+    const credit = (await c.query("SELECT poke,great,ultra FROM ball_merge_credits WHERE identity=$1", [who.key])).rows[0] || {};
+    for (const b of BALLS) bag[b] = Math.max(0, bag[b] + Number(credit[b] || 0) - Number(used[b]));
     return bag;
   }
   function encounterView(row) {
@@ -417,7 +450,6 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   const run = (who, extra) => tx(async (c) => {
     const day = dailyCalendar(clock()).day;
     await adopt(c, who);
-    await lock(c, who.key);
     const extraGains = extra ? await extra(c, day) : [];
     const daily = await dailyGains(c, who, day);
     const added = await grant(c, who, day, [...extraGains, ...daily]);
@@ -427,26 +459,47 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return state(c, who, day, added, coinsAdded);
   });
   // Une action des hautes herbes, puis le sac et l'état à jour.
-  const wild = (who, action) => tx(async (c) => {
+  const wild = (who, action, receipt) => tx(async (c) => {
     const day = dailyCalendar(clock()).day;
     await adopt(c, who);
-    await lock(c, who.key);
+    if (receipt) {
+      const previous = (await c.query("SELECT operation,payload,result FROM ball_actions WHERE identity=$1 AND action_id=$2", [who.key, receipt.id])).rows[0];
+      if (previous) {
+        if (previous.operation !== receipt.operation || previous.payload !== receipt.payload) throw fail("action_conflict");
+        return { ...await state(c, who, day), ...previous.result, replayed: true };
+      }
+    }
     const out = await action(c, day);
+    if (receipt) await c.query("INSERT INTO ball_actions(identity,action_id,account_id,operation,payload,result) VALUES($1,$2,$3,$4,$5,$6::jsonb)",
+      [who.key, receipt.id, who.accountId || null, receipt.operation, receipt.payload, JSON.stringify(out)]);
     return { ...await state(c, who, day), ...out };
   });
+  // HTTP requires a receipt. Internal callers retain their legacy API for scheduled/test work.
+  function actionReceipt(operation, body) {
+    if (!body.actionId) return null;
+    if (typeof body.actionId !== "string" || !/^[a-zA-Z0-9_-]{16,80}$/.test(body.actionId)) throw fail("invalid_action", 400);
+    const payload = operation === "buy" ? [body.item, body.qty || 1, body.expectedPrice] : [body.ball, body.encounterId, body.expectedThrows];
+    return { id: body.actionId, operation, payload: JSON.stringify(payload) };
+  }
   return {
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
     earn: (who, body) => run(who, async () => Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } })),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
-    throwBall: (who, body) => wild(who, (c, day) => throwBall(c, who, day, String(body && body.ball || ""))),
+    throwBall: (who, body) => wild(who, async (c, day) => {
+      if (body.encounterId !== undefined) {
+        const open = (await c.query("SELECT id,throws FROM wild_encounters WHERE identity=$1 AND status='open' AND day=$2 ORDER BY id DESC LIMIT 1", [who.key, day])).rows[0];
+        if (!open || Number(open.id) !== body.encounterId || Number(open.throws) !== body.expectedThrows) throw fail("encounter_changed");
+      }
+      return throwBall(c, who, day, String(body && body.ball || ""));
+    }, actionReceipt("throw", body)),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
     collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS })),
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
     release: (who, body) => wild(who, (c, day) => release(c, who, day, body)),
-    buy: (who, body) => wild(who, (c, day) => buy(c, who, day, body))
+    buy: (who, body) => wild(who, (c, day) => buy(c, who, day, body), actionReceipt("buy", body))
   };
 }
 
@@ -466,6 +519,12 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
     try {
       if (req.method === "POST") {
         if (!req.is("application/json")) throw fail("json_required", 415);
+        if (["/api/shop/buy", "/api/wild/throw"].includes(req.path)) {
+          const b = req.body || {};
+          if (typeof b.actionId !== "string" || !/^[a-zA-Z0-9_-]{16,80}$/.test(b.actionId)) throw fail("reload_required", 400);
+          if (req.path === "/api/shop/buy" && (!Number.isInteger(b.expectedPrice) || b.expectedPrice < 1)) throw fail("reload_required", 400);
+          if (req.path === "/api/wild/throw" && (!Number.isSafeInteger(b.encounterId) || !Number.isInteger(b.expectedThrows) || b.expectedThrows < 0 || b.expectedThrows >= MAX_THROWS)) throw fail("reload_required", 400);
+        }
         const origin = req.get("origin"); if (origin && new URL(origin).host !== req.get("host")) throw fail("origin_denied", 403);
       }
       let id = dailyGuest(secret, readCookies(req).pokdle_daily);

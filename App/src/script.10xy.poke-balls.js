@@ -34,7 +34,7 @@ function ballTotal(state) {
 }
 function ballFetch(url, body) {
   const options = body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin" };
-  return fetch(url, options).then((r) => r.ok ? r.json() : null).catch(() => null);
+  return fetch(url, options).then((r) => r.json().catch(() => null)).catch(() => null);
 }
 // Chaque réponse du serveur dit ce qui vient d'être gagné : on l'annonce, puis on redessine.
 function ballApply(data, { announce = true } = {}) {
@@ -135,7 +135,7 @@ function claimBallGift() {
   return ballFetch("/api/balls/gift", {}).then((data) => {
     ballApply(data);
     if (document.querySelector("#overlay-body .ball-bag")) openBallBag();
-    if (!data && typeof showToast === "function") showToast("Le cadeau n’a pas pu s’ouvrir. Réessaie dans un instant.");
+    if ((!data || !data.ok) && typeof showToast === "function") showToast("Le cadeau n’a pas pu s’ouvrir. Réessaie dans un instant.");
   }).finally(() => { if (button) button.disabled = false; });
 }
 
@@ -293,3 +293,33 @@ else initBalls();
 window.openBallBag = openBallBag;
 window.claimBallGift = claimBallGift;
 window.refreshBalls = refreshBalls;
+
+// Retry an uncertain paid operation using its original id, including after a reload.
+function ballPaidAction(url, payload) {
+  const scope = ballState && ballState.actionScope;
+  if (!scope) return Promise.resolve({ ok: false, error: "reload_required" });
+  const key = "pokdle_paid_action:" + scope + ":" + url;
+  let pending;
+  try { pending = JSON.parse(sessionStorage.getItem(key) || "null"); } catch (_) {}
+  if (pending && (typeof pending.fingerprint !== "string" || !pending.body || typeof pending.body.actionId !== "string")) return Promise.resolve({ ok: false, error: "storage_unavailable" });
+  const fingerprint = JSON.stringify(payload);
+  const recovering = pending && pending.fingerprint !== fingerprint;
+  if (!pending) {
+    pending = { fingerprint, body: { ...payload, actionId: crypto.randomUUID() } };
+    try { sessionStorage.setItem(key, JSON.stringify(pending)); } catch (_) {
+      return Promise.resolve({ ok: false, error: "storage_unavailable" });
+    }
+  }
+  return ballFetch(url, pending.body).then((data) => {
+    if (data && (data.ok || ["price_changed", "encounter_changed", "no_ball_left", "no_encounter", "not_enough_coins", "recharge_limit", "reload_required", "action_conflict"].includes(data.error))) {
+      try { sessionStorage.removeItem(key); } catch (_) {}
+    }
+    if (!ballState || ballState.actionScope !== scope) return { ok: false, error: "account_changed" };
+    if (recovering) {
+      if (data && data.ok) ballApply(data, { announce: false });
+      refreshBalls({ announce: false });
+      return { ok: false, error: "previous_action" };
+    }
+    return data;
+  });
+}
