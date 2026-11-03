@@ -949,6 +949,8 @@ const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express
 const wordleService = require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
 const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, wordle:wordleService, readyBefore:authDbReady });
 const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,daily:dailyService,wordle:wordleService,dossier:dossierService,readyBefore:authDbReady});
+// Les Balls (3/11/2026) : gagnées en jouant, gardées par le serveur (lib/poke-balls.js).
+require("./lib/poke-balls").mountBallRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, readyBefore:authDbReady });
 // Petit Bac solo: a sheet drawn and checked by the server, nothing stored.
 petitBacParty.mountPetitBacSolo({ app, express, pokemon: POKEMON_LIST });
 // Petit Bac du jour: same letter and themes for everyone, another bonus of the day.

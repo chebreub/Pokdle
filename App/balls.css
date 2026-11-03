@@ -1,0 +1,59 @@
+/* Les Balls (3/11/2026) : bouton du sac dans l'en-tête, carte de l'accueil, fenêtre « Mon sac ». */
+.ball-img{image-rendering:pixelated;flex:none;display:block}
+.ball-bag-btn{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 14px 6px 10px;border-radius:999px;border:2px solid rgba(46,42,51,.12);background:#fff;color:#2E2A33;font:800 16px/1 Nunito,sans-serif;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+.ball-bag-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(46,42,51,.12)}
+.ball-bag-btn:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.ball-bag-btn.has-gift{border-color:#FFD45C;background:#FFF6D6}
+.ball-gift-dot{position:absolute;top:-8px;right:-8px;font-size:16px;line-height:1;animation:ballGiftBob 1.6s ease-in-out infinite}
+@keyframes ballGiftBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+.home-balls{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:16px 0 0;padding:16px 20px;border-radius:22px;background:#fff;border:2px solid rgba(46,42,51,.08);box-shadow:0 6px 20px rgba(46,42,51,.06);box-sizing:border-box}
+.home-balls-main{display:flex;align-items:center;gap:14px;min-width:0}
+.home-balls-art{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#FFF8EF;flex:none}
+.home-balls-main b{display:block;font:700 20px/1.2 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.home-balls-main small{display:block;color:#6b6472;font:600 14px/1.35 Nunito,sans-serif;margin-top:6px}
+.home-balls-eyebrow{display:block;font:900 11px/1 Nunito,sans-serif;letter-spacing:.12em;color:#4069E0;margin-bottom:4px}
+.home-balls-actions{display:flex;gap:10px;flex-wrap:wrap}
+.home-balls-actions .btn-ghost{min-height:44px}
+
+.ball-meter{display:flex;gap:4px;margin-top:8px}
+.ball-meter span{width:18px;height:8px;border-radius:4px;background:rgba(46,42,51,.12)}
+.ball-meter span.is-on{background:#E3350D}
+
+.ball-gift-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:0;border-radius:14px;background:#FFD45C;color:#2E2A33;font:800 16px/1.2 Nunito,sans-serif;cursor:pointer;box-shadow:0 3px 0 #d9a91f}
+.ball-gift-cta small{font-weight:700;opacity:.75}
+.ball-gift-cta:active{transform:translateY(2px);box-shadow:0 1px 0 #d9a91f}
+.ball-gift-cta:disabled{opacity:.6;cursor:wait}
+
+.ball-bag{display:grid;gap:16px}
+.ball-counts{display:flex;gap:12px}
+.ball-count{flex:1;display:grid;justify-items:center;gap:2px;padding:14px 8px;border-radius:18px;background:#FFF8EF}
+.ball-count b{font:700 28px/1 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.ball-count small{font:700 13px/1.2 Nunito,sans-serif;color:#6b6472}
+.ball-bag .ball-gift-cta{width:100%}
+.ball-today,.ball-how{padding:14px 16px;border-radius:18px;border:2px solid rgba(46,42,51,.08)}
+.ball-today-head{display:flex;justify-content:space-between;align-items:baseline}
+.ball-bag h4{margin:0;font:700 17px/1.2 Fredoka,Nunito,sans-serif}
+.ball-today-head span{font:800 15px/1 Nunito,sans-serif;color:#4069E0}
+.ball-gains,.ball-how ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.ball-gains li,.ball-how li{display:flex;align-items:center;gap:10px;font:600 15px/1.3 Nunito,sans-serif}
+.ball-gains li span{flex:1}
+.ball-gains li b{font-size:13px;color:#6b6472}
+.ball-empty,.ball-note{margin:10px 0 0;font:600 14px/1.4 Nunito,sans-serif;color:#6b6472}
+.ball-soon{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:18px;background:#EAF6EC}
+.ball-soon span{font-size:26px}
+.ball-soon p{margin:0;font:600 14px/1.4 Nunito,sans-serif}
+
+@media (max-width:720px){
+  .ball-bag-btn{min-height:40px;padding:4px 10px 4px 6px;font-size:15px}
+  .home-balls{margin-top:12px;padding:14px 16px}
+  .home-balls-actions{width:100%}
+  .home-balls-actions>*{flex:1}
+}
+@media (prefers-reduced-motion:reduce){.ball-gift-dot{animation:none}.ball-bag-btn{transition:none}}
+
+body.theme-dark .ball-bag-btn,body.theme-dark .home-balls{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.1)}
+body.theme-dark .ball-bag-btn.has-gift{background:#3a3220;border-color:#FFD45C}
+body.theme-dark .home-balls-main b,body.theme-dark .ball-count b{color:#f5efe6}
+body.theme-dark .home-balls-art,body.theme-dark .ball-count{background:#1d1a22}
+body.theme-dark .ball-soon{background:#1f3326}
