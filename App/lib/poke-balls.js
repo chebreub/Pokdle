@@ -13,7 +13,8 @@ const DAILY_CAP = 10;
 // et les 5 Balls offertes une fois par compte.
 const STREAK_EVERY = 7;
 const WELCOME_BALLS = Object.freeze(["poke", "poke", "poke", "poke", "great"]);
-const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%')";
+// Hors du plafond de 10 par jour : série, Balls de bienvenue, coffres d'Expédition, et les Balls de test de l'admin.
+const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%')";
 
 // ===== L'Expédition de la semaine (PR 2 du plan, 3/11/2026) =====
 // Une région par semaine (lundi → dimanche, Paris). 1 participation = un jour où le joueur a gagné des Balls
@@ -33,16 +34,17 @@ function weekStart(day) { const t = new Date(day + "T12:00:00Z"); return shiftDa
 function expeditionOf(monday) { const n = Math.round(Date.parse(monday + "T12:00:00Z") / (7 * 86400000)); return EXPEDITIONS[((n % EXPEDITIONS.length) + EXPEDITIONS.length) % EXPEDITIONS.length]; }
 const BALLS = Object.freeze(["poke", "great", "ultra"]);
 
-// ===== Les hautes herbes (PR B) : 6 rencontres par jour, 3 lancers, shiny à 1 sur 150. =====
-const ENCOUNTERS_PER_DAY = 6;
-// Deux rendez-vous (choix C du 3/11) : 3 rencontres à minuit, 3 de plus à 13 h (heure de Paris).
-const ENCOUNTERS_MORNING = 3;
-const SECOND_BATCH_HOUR = 13;
+// ===== Les hautes herbes : 3 lancers par rencontre, shiny à 1 sur 150. =====
+// Rencontres (3/11 au soir, à sa demande) : 4 de plus toutes les 4 h, heure de Paris (0 h, 4 h, 8 h, 12 h, 16 h, 20 h),
+// celles qu'on n'a pas utilisées restent jusqu'à minuit : 24 par jour au plus. Les Balls (10 par jour) restent le vrai frein.
+const ENCOUNTERS_PER_BATCH = 4;
+const BATCH_HOURS = 4;
+const ENCOUNTERS_PER_DAY = ENCOUNTERS_PER_BATCH * (24 / BATCH_HOURS);
 function parisHourOf(date) {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hourCycle: "h23" }).format(date));
 }
-// 13 h à Paris ce jour-là, en partant de minuit du lendemain (resetAt) moins 11 heures.
-function secondBatchAt(resetAt) { return new Date(Date.parse(resetAt) - (24 - SECOND_BATCH_HOUR) * 3600000).toISOString(); }
+// La prochaine vague : l'heure ronde à Paris, comptée depuis minuit du lendemain (resetAt).
+function nextBatchAt(resetAt, hour) { return new Date(Date.parse(resetAt) - (24 - hour) * 3600000).toISOString(); }
 const MAX_THROWS = 3;
 const SHINY_ODDS = 150;
 // Taux de capture officiels (capture-rates.json, fait par tools/capture-rates.js depuis PokéAPI).
@@ -233,10 +235,11 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const used = Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_encounters WHERE identity=$1 AND day=$2 AND kind='wild'", [who.key, day])).rows[0].n);
     const open = (await c.query("SELECT * FROM wild_encounters WHERE identity=$1 AND status='open' ORDER BY id DESC LIMIT 1", [who.key])).rows[0];
     const caught = Number((await c.query("SELECT COUNT(DISTINCT pokemon_id)::int AS n FROM wild_encounters WHERE identity=$1 AND status='caught'", [who.key])).rows[0].n);
-    const now = clock(), afternoon = parisHourOf(now) >= SECOND_BATCH_HOUR;
-    const available = afternoon ? ENCOUNTERS_PER_DAY : ENCOUNTERS_MORNING;
-    const nextAt = afternoon ? null : secondBatchAt(dailyCalendar(now).resetAt);
-    return { max: ENCOUNTERS_PER_DAY, available, today: used, left: Math.max(0, available - used), nextAt, nextCount: afternoon ? 0 : ENCOUNTERS_PER_DAY - ENCOUNTERS_MORNING, open: encounterView(open), caught };
+    const now = clock(), batch = Math.floor(parisHourOf(now) / BATCH_HOURS);
+    const available = Math.min(ENCOUNTERS_PER_DAY, (batch + 1) * ENCOUNTERS_PER_BATCH);
+    const nextHour = (batch + 1) * BATCH_HOURS;
+    const nextAt = nextHour < 24 ? nextBatchAt(dailyCalendar(now).resetAt, nextHour) : dailyCalendar(now).resetAt;
+    return { max: ENCOUNTERS_PER_DAY, available, today: used, left: Math.max(0, available - used), nextAt, nextCount: ENCOUNTERS_PER_BATCH, everyHours: BATCH_HOURS, open: encounterView(open), caught };
   }
   // Entrer dans les hautes herbes : la rencontre ouverte, ou une nouvelle si le jour en laisse.
   async function encounter(c, who, day, zone) {
@@ -413,4 +416,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_MORNING, SECOND_BATCH_HOUR, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };

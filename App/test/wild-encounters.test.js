@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('fs'),path=require('path');
-const {captureChance,WILD_POOL,missionPokemonIds,createBallService,initBallsDb,ENCOUNTERS_PER_DAY}=require('../lib/poke-balls');
+const {captureChance,WILD_POOL,missionPokemonIds,createBallService,initBallsDb,ENCOUNTERS_PER_DAY,ENCOUNTERS_PER_BATCH}=require('../lib/poke-balls');
 const CAPTURE=require('../capture-rates.json');
 
 test('capture chances follow the official rates and the validated formula',()=>{
@@ -29,11 +29,11 @@ test('the tall grass never holds a legendary, a mythical or an album mission rew
   assert.deepEqual(missionPokemonIds(source),missions);
 });
 
-test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and moved to the account',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
+test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures kept and moved to the account',{skip:!process.env.QA_DATABASE_URL,timeout:30000},async()=>{
   const {Pool}=require('pg'),{randomUUID}=require('node:crypto'),schema='wild_'+randomUUID().replaceAll('-',''),admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
-    let now=new Date('2026-11-03T12:30:00Z'); // 13 h 30 à Paris : les 6 rencontres du jour sont ouvertes
+    let now=new Date('2026-11-03T08:30:00Z'); // 9 h 30 à Paris : 3 vagues (0 h, 4 h, 8 h) = 12 rencontres ouvertes
     // Scripted draws: the next index into the pool / shiny roll, and the capture roll.
     const ints=[],rolls=[];
     const balls=createBallService({db,clock:()=>now,randomInt:(n)=>ints.length?ints.shift()%n:0,random:()=>rolls.length?rolls.shift():0.99});
@@ -45,7 +45,8 @@ test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and m
     for(const mode of ['quiz','normal','pixel'])await balls.earn(guest,{mode,result:'loss',score:1});
     let s=await balls.state(guest);
     assert.deepEqual(s.bag,{poke:4,great:0,ultra:0});
-    assert.deepEqual([s.wild.max,s.wild.left,s.wild.open],[ENCOUNTERS_PER_DAY,6,null]);
+    assert.deepEqual([s.wild.max,s.wild.left,s.wild.open,s.wild.nextAt,s.wild.nextCount],[24,12,null,'2026-11-03T11:00:00.000Z',4]);
+    assert.equal(ENCOUNTERS_PER_DAY,24);assert.equal(ENCOUNTERS_PER_BATCH,4);
 
     // Encounter 1: Chenipan (rate 255), caught at the 2nd throw.
     ints.push(WILD_POOL.indexOf(10),5);
@@ -69,7 +70,7 @@ test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and m
     assert.deepEqual([s.encounter.status,s.bag.poke],['open',0]);
     await assert.rejects(balls.throwBall(guest,{ball:'poke'}),/no_ball_left/);
     s=await balls.skip(guest);
-    assert.deepEqual([s.skipped,s.wild.today,s.wild.left],[true,2,4]);
+    assert.deepEqual([s.skipped,s.wild.today,s.wild.left],[true,2,10]);
     await assert.rejects(balls.encounter(guest),/no_balls/);
 
     // A 3rd failed throw: the Pokémon flees.
@@ -78,21 +79,24 @@ test('PostgreSQL: 6 encounters a day, 3 throws, Balls spent, captures kept and m
     for(let i=0;i<3;i++){rolls.push(0.99);ints.push(0);s=await balls.throwBall(guest,{ball:'great'});}
     assert.deepEqual([s.result.fled,s.encounter.status,s.bag.great],[true,'fled',0]);
 
-    // The day's limit: 6 encounters, skipped and fled ones included.
+    // The limit of the moment: 12 encounters by 9 h 30, skipped and fled ones included.
     await db.query("INSERT INTO ball_gains(identity,day,source,ball) SELECT 'guest:w1','2026-10-01'::date+g,'gift','poke' FROM generate_series(0,9) g");
-    for(let i=0;i<3;i++){ints.push(WILD_POOL.indexOf(10),5);await balls.encounter(guest);await balls.skip(guest);}
+    for(let i=0;i<9;i++){ints.push(WILD_POOL.indexOf(10),5);await balls.encounter(guest);await balls.skip(guest);}
     await assert.rejects(balls.encounter(guest),/no_encounters_left/);
 
     // An encounter left open overnight is gone the next day; the count starts again.
     now=new Date('2026-11-04T12:30:00Z');
     ints.push(WILD_POOL.indexOf(10),5);s=await balls.encounter(guest);
-    // The next morning: 3 encounters until 13 h, then 3 more.
-    now=new Date('2026-11-05T09:00:00Z');
+    // The next morning: 4 at midnight, 4 more at 4 h, 8 h… and 24 by 20 h (heure de Paris).
+    now=new Date('2026-11-04T23:30:00Z');
     s=await balls.state(guest);
-    assert.deepEqual([s.wild.open,s.wild.left,s.wild.available,s.wild.nextAt],[null,3,3,'2026-11-05T12:00:00.000Z']);
+    assert.deepEqual([s.wild.open,s.wild.left,s.wild.available,s.wild.nextAt],[null,4,4,'2026-11-05T03:00:00.000Z']);
     now=new Date('2026-11-05T12:00:00Z');
     s=await balls.state(guest);
-    assert.deepEqual([s.wild.left,s.wild.nextAt],[6,null]);
+    assert.deepEqual([s.wild.left,s.wild.nextAt],[16,'2026-11-05T15:00:00.000Z']);
+    now=new Date('2026-11-05T21:00:00Z');
+    s=await balls.state(guest);
+    assert.deepEqual([s.wild.left,s.wild.nextAt],[24,'2026-11-05T23:00:00.000Z'],'after 20 h, the next ones come at midnight');
     assert.equal((await db.query("SELECT status FROM wild_encounters WHERE day='2026-11-04'")).rows[0].status,'fled');
 
     // Logging in: captures and spent Balls follow the account.

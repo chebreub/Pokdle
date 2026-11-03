@@ -505,3 +505,14 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .trl-acts{display:flex;gap:8px;margin-top:8px}.trl-acts button{flex:1;min-height:40px}
 .trs-album{width:100%;margin-top:12px}
 body.theme-dark .tm-act,body.theme-dark .tr-friend,body.theme-dark .tr-with,body.theme-dark .tr-card,body.theme-dark .tr-mini button,body.theme-dark .trl{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.12)}
+/* 🎯 Les 3 lancers : des points + une phrase ; le point s'éteint dès que la Ball part (3/11 au soir) */
+.wild-throws{align-items:center;gap:8px;min-width:0}
+.wild-throws-dots{display:flex;gap:5px;flex:none}
+.wild-throws em{font:800 12.5px/1.2 Nunito,sans-serif;font-style:normal;color:#6B6475}
+.wild-throws.is-last em{color:#E3350D}
+.wild-throws.is-last i.is-on{box-shadow:0 0 0 3px rgba(227,53,13,.2);animation:wtPulse 1.2s ease-in-out infinite}
+.wild-throws i.is-spent{animation:wtSpend .45s ease-out}
+.wild-panel.is-busy .wild-ball-btn,.wild-panel.is-busy .wild-run{pointer-events:none}
+@keyframes wtSpend{0%{transform:scale(1);background:#E3350D}40%{transform:scale(1.5)}100%{transform:scale(1);background:transparent}}
+@keyframes wtPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+@media (prefers-reduced-motion:reduce){.wild-throws i{animation:none!important}}

@@ -56,9 +56,30 @@ function closeWildGrass() {
   document.body.classList.remove("modal-open");
   if (typeof refreshBalls === "function") refreshBalls({ announce: false });
 }
+// Les 3 lancers avant que le Pokémon s'enfuie : des points, et une phrase qui le dit (3/11, « c quoi les points ? »).
+function wildThrowsText(n) {
+  return n <= 0 ? "Plus de lancer" : n === 1 ? "Dernier lancer !" : n + " lancers avant qu’il s’enfuie";
+}
 function wildThrowsHtml(e) {
-  return '<span class="wild-throws" aria-label="' + e.throwsLeft + ' lancer' + (e.throwsLeft > 1 ? "s" : "") + ' restant' + (e.throwsLeft > 1 ? "s" : "") + '">' +
-    Array.from({ length: 3 }, (_, i) => '<i class="' + (i < e.throwsLeft ? "is-on" : "") + '"></i>').join("") + '</span>';
+  const n = Number(e.throwsLeft) || 0;
+  return '<span class="wild-throws' + (n === 1 ? " is-last" : "") + '" aria-label="' + escapeHtml(wildThrowsText(n)) + '"><span class="wild-throws-dots" aria-hidden="true">' +
+    Array.from({ length: 3 }, (_, i) => '<i class="' + (i < n ? "is-on" : "") + '"></i>').join("") + '</span><em>🎯 ' + wildThrowsText(n) + '</em></span>';
+}
+// Dès que la Ball part : un lancer et une Ball en moins à l'écran, sans attendre la fin de l'animation.
+function wildMarkThrow(scene, ball) {
+  const box = scene && scene.querySelector(".wild-throws");
+  if (box) {
+    const on = box.querySelectorAll("i.is-on");
+    const dot = on[on.length - 1];
+    if (dot) { dot.classList.remove("is-on"); dot.classList.add("is-spent"); }
+    const n = Math.max(0, on.length - 1);
+    box.classList.toggle("is-last", n === 1);
+    const em = box.querySelector("em");
+    if (em) em.textContent = "🎯 " + wildThrowsText(n);
+    box.setAttribute("aria-label", wildThrowsText(n));
+  }
+  const btn = scene && scene.querySelector('.wild-ball-btn[data-args=\'["' + ball + '"]\'] small');
+  if (btn) btn.textContent = btn.textContent.replace(/×\s*(\d+)/, (_m, k) => "× " + Math.max(0, Number(k) - 1));
 }
 function wildHead(state) {
   const w = state && state.wild || { today: 0, max: 6 };
@@ -152,11 +173,11 @@ function renderWildEnd(state, outcome) {
     const p = wildPokemon(outcome.pokemonId);
     body = '<div class="wild-gotcha is-fled"><h3>' + escapeHtml(p ? p.name : "Le Pokémon") + ' s’est enfui…</h3><p>Pas de chance cette fois.</p></div>';
   } else {
-    body = '<div class="wild-gotcha is-empty"><h3>' + (w.left > 0 ? "Les herbes bougent…" : w.nextAt ? "Les herbes se reposent jusqu’à 13 h" : "Plus de rencontre aujourd’hui") + '</h3></div>';
+    body = '<div class="wild-gotcha is-empty"><h3>' + (w.left > 0 ? "Les herbes bougent…" : w.nextAt ? "Les herbes se reposent jusqu’" + (wildNextLabel(w) || "à plus tard") : "Plus de rencontre aujourd’hui") + '</h3></div>';
   }
   const next = w.left > 0 && hasBall
     ? '<button type="button" class="wild-cta" data-action="openWildGrass">🌿 Continuer · ' + w.left + ' rencontre' + (w.left > 1 ? "s" : "") + '</button>'
-    : '<p class="wild-note">' + (w.left > 0 ? "Plus de Ball dans ton sac : joue à un mode pour en gagner." : (w.nextAt ? (w.nextCount || 3) + " nouvelles rencontres à 13 h : reviens à la pause de midi !" : "Reviens demain : 3 rencontres à minuit, 3 de plus à 13 h.")) + '</p>';
+    : '<p class="wild-note">' + (w.left > 0 ? "Plus de Ball dans ton sac : joue à un mode pour en gagner." : (w.nextAt ? (w.nextCount || 4) + " nouvelles rencontres " + wildNextLabel(w) + " : de nouvelles arrivent toutes les " + (w.everyHours || 4) + " h." : "Reviens demain : de nouvelles rencontres toutes les 4 h.")) + '</p>';
   // Sans compte : proposer de garder sa capture partout, avec 5 Balls offertes (jamais de mur, « Plus tard » suffit).
   const keep = outcome && outcome.caught && state && state.authenticated === false
     ? '<div class="wild-keep"><b>Garde ' + escapeHtml((wildPokemon(outcome.pokemonId) || {}).name || "ton Pokémon") + ' partout</b><span>Crée ton compte : ton album te suit sur tous tes appareils, et <b>5 Balls offertes 🎁</b>.</span>' +
@@ -241,11 +262,17 @@ function wildThrow(ball) {
   if (wildBusy) return;
   wildBusy = true;
   const scene = document.getElementById("wild-scene");
-  scene?.querySelectorAll(".wild-ball-btn,.wild-run").forEach((b) => { b.disabled = true; });
+  // Pendant le lancer, les boutons restent visibles mais ne répondent plus (avant : grisés puis « revenus » à la fin).
+  scene?.querySelector(".wild-panel")?.classList.add("is-busy");
+  scene?.querySelectorAll(".wild-ball-btn,.wild-run").forEach((b) => { b.setAttribute("aria-disabled", "true"); b.tabIndex = -1; });
   const before = typeof ballState !== "undefined" && ballState && ballState.wild && ballState.wild.open;
+  const snapshot = scene ? scene.querySelector(".wild-panel")?.innerHTML : null;
+  wildMarkThrow(scene, ball);
   wildPost("/api/wild/throw", { ball }).then((data) => {
     if (!data || !data.ok) {
       wildBusy = false;
+      const panel = scene && scene.querySelector(".wild-panel");
+      if (panel && snapshot != null) { panel.innerHTML = snapshot; panel.classList.remove("is-busy"); }
       if (typeof showToast === "function") showToast(data && data.error === "no_ball_left" ? "Plus de " + BALL_KINDS[ball].name + " dans ton sac." : "Le lancer n’a pas pu partir. Réessaie.");
       if (scene) scene.querySelectorAll(".wild-ball-btn,.wild-run").forEach((b) => { b.disabled = false; });
       return;
