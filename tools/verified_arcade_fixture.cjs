@@ -15,9 +15,15 @@ const {mountBallRoutes,initBallsDb} = require(path.join(appDir,'lib/poke-balls')
   await initBallsDb(db);
   const app=express();
   const readCookies=req=>Object.fromEntries(String(req.headers.cookie||'').split(';').map(s=>s.trim().split('=')));
-  const pokemon=JSON.parse(fs.readFileSync(path.join(appDir,'pokemon.js'),'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]).filter(p=>[6,25,133].includes(p.id));
+  const pokemon=JSON.parse(fs.readFileSync(path.join(appDir,'pokemon.js'),'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]).filter(p=>process.env.QA_ARCADE_FULL_CATALOG === "1" || [6,25,133].includes(p.id));
   mountBallRoutes({app,express,db,pokemon,secret:'isolated-browser-test-only',randomInt:()=>0,
     readCookies,getUser:req=>({id:readCookies(req).qa_user||'qa-default'})});
+  // Read-only oracle for synthetic browser tests, confined to this CI-only fixture.
+  app.get('/__qa/state',async(req,res)=>{
+    const identity='user:'+(readCookies(req).qa_user||'qa-default');
+    const row=await db.query('SELECT state FROM arcade_runs WHERE identity=$1 AND mode=$2',[identity,String(req.query.mode)]);
+    res.json(row.rows[0]?.state||null);
+  });
   app.use('/api',(req,res)=>res.status(503).json({ok:false,error:'unavailable'}));
   app.get('/',(req,res)=>res.sendFile(path.join(appDir,'dist/index.html')));
   app.use(express.static(appDir));

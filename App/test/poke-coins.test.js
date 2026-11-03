@@ -34,15 +34,15 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
 
     // Sans compte : pas de ₽, et la boutique demande un compte.
     const guest = { key: 'guest:c1', guestKey: 'guest:c1', accountId: null };
-    let s = await balls.earn(guest, { mode: 'quiz', result: 'win', score: 14 });
+    let s = await balls.earn(guest, { mode: 'odd', result: 'win', score: 14 });
     assert.deepEqual([s.coins.enabled, s.coins.balance, s.coinsAdded.length], [false, 0, 0]);
     await assert.rejects(balls.buy(guest, { item: 'poke' }), /account_required/);
 
     const me = { key: 'user:7', guestKey: 'guest:c2', accountId: '7' };
     // La 1re partie du jour de chaque mode : belle partie 90 ₽, gagnée 60 ₽, perdue 30 ₽ ; rejouer ne paie plus.
-    s = await balls.earn(me, { mode: 'quiz', result: 'win', score: 14 });
+    s = await balls.earn(me, { mode: 'odd', result: 'win', score: 14 });
     assert.deepEqual(s.coinsAdded.map((x) => x.amount), [90]);
-    s = await balls.earn(me, { mode: 'quiz', result: 'win', score: 3 });
+    s = await balls.earn(me, { mode: 'odd', result: 'win', score: 3 });
     assert.deepEqual(s.coinsAdded, [], 'the same mode pays once a day');
     s = await balls.earn(me, { mode: 'description', result: 'win', score: 4 });
     assert.deepEqual(s.coinsAdded.map((x) => x.amount), [60]);
