@@ -58,6 +58,12 @@ function createPlayerCards({ db, arcadeModes = [], modeConfig = () => null }) {
       shinies = (await db.query(`SELECT to_char(p.day, 'YYYY-MM-DD') AS day, r.secret_id FROM daily_plays p JOIN daily_rounds r ON r.day = p.day
         WHERE p.account_id = $1 AND p.status = 'won' AND p.shiny ORDER BY p.day DESC LIMIT 60`, [id])).rows;
     } catch (_error) { shinies = []; }
+    // The shinies caught in the tall grass join the showcase (3/11/2026).
+    try {
+      const wild = (await db.query(`SELECT to_char(day, 'YYYY-MM-DD') AS day, pokemon_id AS secret_id FROM wild_encounters
+        WHERE account_id = $1 AND shiny AND status = 'caught' ORDER BY id DESC LIMIT 60`, [id])).rows;
+      shinies = shinies.concat(wild).sort((a, b) => String(b.day).localeCompare(String(a.day))).slice(0, 60);
+    } catch (_error) { /* no tall grass yet on this deployment */ }
 
     const byGame = Object.fromEntries(games.map((row) => [row.game, row]));
     const profile = profileOf(user.profile);

@@ -1027,6 +1027,8 @@ function openAccountMenu() {
         <section><h5>Ma progression</h5><nav class="account-menu-links">
           <button type="button" data-action="accountNavigate" data-args='["profile"]'><span>🪪 Profil de dresseur</span><b>→</b></button>
           <button type="button" data-action="accountNavigate" data-args='["album"]'><span>📒 Mon album</span><b>→</b></button>
+          <button type="button" data-action="accountNavigate" data-args='["sac"]'><span>🎒 Mon sac</span><b>→</b></button>
+          <button type="button" data-action="accountNavigate" data-args='["shiny"]'><span>✨ Carnet shiny</span><b>→</b></button>
           <button type="button" data-action="accountNavigate" data-args='["past"]'><span>📅 Jours passés</span><b>→</b></button>
           <button type="button" data-action="accountNavigate" data-args='["settings"]'><span>⚙️ Paramètres</span><b>→</b></button>
         </nav></section>
@@ -1084,6 +1086,8 @@ function doDeleteAccount() {
 function accountNavigate(destination) {
   closeOverlayModal();
   if (destination === 'album') openDiscoveryAlbum();
+  else if (destination === 'sac' && typeof openBallBag === 'function') openBallBag();
+  else if (destination === 'shiny' && typeof openShinyLog === 'function') openShinyLog();
   else if (destination === 'settings') openSettingsModal();
   else if (destination === 'admin') location.assign('/admin');
   else if (destination === 'messages' && typeof openMyMessages === 'function') openMyMessages();

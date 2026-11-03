@@ -103,7 +103,8 @@ function renderDailyNotebook(record, complete) {
   panel.innerHTML = '<div class="notebook-head"><span class="notebook-ball" aria-hidden="true"></span><b>' + (complete ? 'Ton enquête du jour' : count ? 'Ton enquête en cours' : 'À toi de mener l’enquête') + '</b><span aria-hidden="true">✦</span></div>' +
     '<div class="notebook-grid" aria-hidden="true">' + rows + blanks + '</div>' +
     '<p>' + (count ? count + ' essai' + (count > 1 ? 's' : '') + (complete ? ' · défi terminé' : ' · progression conservée') : '9 critères. Un seul Pokémon à trouver.') + '</p>' +
-    '<span class="notebook-stamp">' + (complete ? 'ENQUÊTE TERMINÉE' : 'RENDEZ-VOUS QUOTIDIEN') + '</span>';
+    // The red stamp only once the inquiry is over: before, it overflowed the card on PC (critique of 3/11/2026).
+    (complete ? '<span class="notebook-stamp">ENQUÊTE TERMINÉE</span>' : '');
 }
 // The day's status line on the home hero; an empty text hides it.
 function setDailyHeroNote(text) {

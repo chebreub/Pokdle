@@ -59,8 +59,8 @@
 #pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-done b{color:#1e6b45}
 #pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-next button{background:#fff;border:2px solid #4069e0;box-shadow:0 3px 0 #c9d6fb}
 #pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-next b{color:#2f51b8}
-#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-locked button{opacity:.6;cursor:default}
-#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-locked b{font:700 11px Nunito,sans-serif;color:#776b63}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-locked button{opacity:1;cursor:default;background:rgba(255,255,255,.55);color:#5c5663}
+#pokdle-app.design-refresh #daily-hero .daily-hero-steps .is-locked b{font:700 12px Nunito,sans-serif;color:#5c5663}
 #pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps button{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:#f0eaf9}
 #pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps .is-done button{background:rgba(54,185,102,.18)}
 #pokdle-app.design-refresh.theme-dark #daily-hero .daily-hero-steps .is-done b{color:#9be3b4}

@@ -469,7 +469,9 @@ function openLeaderboardV2(mode="journey",scope="today") {
     const isActive=id=>id==="draft"?leaderboardV2IsDraft(current):id===current;
     const otherModes=LEADERBOARD_V2_OTHER_MODES.filter(([id])=>!counts||isActive(id)||Number(counts[id])>0||(id==="draft"&&requestedScope==="all"&&leaderboardV2DraftLocalBest("draft_all")>0));
     // One menu for every board: the day's stages first, then the arcade games that have a score.
-    const option=([id,label])=>'<option value="'+(id==="draft"?"draft_all":id)+'"'+(isActive(id)?' selected':'')+'>'+escapeHtml(label)+'</option>';
+    // « Global du jour » only on « Aujourd’hui »: on « Semaine » or « Total » the menu says « Global » (3/11/2026).
+    const optionLabel=(id,label)=>id==="journey"&&requestedScope!=="today"?"Global":label;
+    const option=([id,label])=>'<option value="'+(id==="draft"?"draft_all":id)+'"'+(isActive(id)?' selected':'')+'>'+escapeHtml(optionLabel(id,label))+'</option>';
     const modeTabs='<label class="lbv4-arcade lbv4-board-select is-active"><span>Classement</span><select data-change-action="switchLeaderboardSelect" aria-label="Choisir un classement">'+
       '<optgroup label="Jeux du jour">'+LEADERBOARD_V2_DAY_MODES.map(option).join("")+'</optgroup>'+
       (otherModes.length?'<optgroup label="Jeux d’arcade">'+otherModes.map(option).join("")+'</optgroup>':'')+

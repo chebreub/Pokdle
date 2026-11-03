@@ -146,7 +146,7 @@ function renderWildEnd(state, outcome) {
     const p = wildPokemon(outcome.pokemonId);
     body = '<div class="wild-gotcha' + (outcome.shiny ? " is-shiny" : "") + '"><img src="' + escapeHtml(wildArtwork(p, outcome.shiny)) + '" alt="" draggable="false">' +
       '<h3>Gotcha ! ' + escapeHtml(p.name) + (outcome.shiny ? " ✨" : "") + ' est attrapé !</h3>' +
-      '<p>' + (outcome.isNew ? "Il rejoint ton album." : "Un doublon de plus dans ta collection.") + '</p></div>';
+      '<p>' + (outcome.isNew ? "Il rejoint ton album." : "Un doublon de plus dans ta collection.") + (outcome.shiny ? " Il brille dans ton carnet shiny ✨" : "") + '</p></div>';
   } else if (outcome && outcome.fled) {
     const p = wildPokemon(outcome.pokemonId);
     body = '<div class="wild-gotcha is-fled"><h3>' + escapeHtml(p ? p.name : "Le Pokémon") + ' s’est enfui…</h3><p>Pas de chance cette fois.</p></div>';
@@ -157,7 +157,7 @@ function renderWildEnd(state, outcome) {
     ? '<button type="button" class="wild-cta" data-action="openWildGrass">🌿 Continuer · ' + w.left + ' rencontre' + (w.left > 1 ? "s" : "") + '</button>'
     : '<p class="wild-note">' + (w.left > 0 ? "Plus de Ball dans ton sac : joue à un mode pour en gagner." : "6 rencontres par jour : reviens demain pour de nouveaux Pokémon.") + '</p>';
   scene.innerHTML = wildHead(state) + '<div class="wild-end">' + body + next +
-    '<button type="button" class="btn-ghost" data-action="wildOpenAlbum">📒 Voir mon album</button></div>';
+    '<button type="button" class="btn-ghost" data-action="' + (outcome && outcome.shiny ? "wildOpenShinyLog" : "wildOpenAlbum") + '">' + (outcome && outcome.shiny ? "✨ Voir mon carnet shiny" : "📒 Voir mon album") + '</button></div>';
 }
 function wildOpenAlbum() {
   closeWildGrass();
@@ -312,4 +312,6 @@ window.wildThrow = wildThrow;
 window.wildRun = wildRun;
 window.wildSkipAnimation = wildSkipAnimation;
 window.wildOpenAlbum = wildOpenAlbum;
+function wildOpenShinyLog() { closeWildGrass(); if (typeof openShinyLog === "function") openShinyLog(); }
+window.wildOpenShinyLog = wildOpenShinyLog;
 window.openAlbumBinder = openAlbumBinder;
