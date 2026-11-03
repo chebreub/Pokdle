@@ -1,0 +1,141 @@
+/* Les Balls (3/11/2026) : bouton du sac dans l'en-tête, carte de l'accueil, fenêtre « Mon sac ». */
+.ball-img{image-rendering:pixelated;flex:none;display:block}
+.ball-bag-btn{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 14px 6px 10px;border-radius:999px;border:2px solid rgba(46,42,51,.12);background:#fff;color:#2E2A33;font:800 16px/1 Nunito,sans-serif;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+.ball-bag-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(46,42,51,.12)}
+.ball-bag-btn:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.ball-bag-btn.has-gift{border-color:#FFD45C;background:#FFF6D6}
+.ball-gift-dot{position:absolute;top:-8px;right:-8px;font-size:16px;line-height:1;animation:ballGiftBob 1.6s ease-in-out infinite}
+@keyframes ballGiftBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+.home-balls{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:16px 0 0;padding:16px 20px;border-radius:22px;background:#fff;border:2px solid rgba(46,42,51,.08);box-shadow:0 6px 20px rgba(46,42,51,.06);box-sizing:border-box}
+.home-balls-main{display:flex;align-items:center;gap:14px;min-width:0}
+.home-balls-art{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#FFF8EF;flex:none}
+.home-balls-main b{display:block;font:700 20px/1.2 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.home-balls-main small{display:block;color:#6b6472;font:600 14px/1.35 Nunito,sans-serif;margin-top:6px}
+.home-balls-eyebrow{display:block;font:900 11px/1 Nunito,sans-serif;letter-spacing:.12em;color:#4069E0;margin-bottom:4px}
+.home-balls-actions{display:flex;gap:10px;flex-wrap:wrap}
+.home-balls-actions .btn-ghost{min-height:44px}
+
+.ball-meter{display:flex;gap:4px;margin-top:8px}
+.ball-meter span{width:18px;height:8px;border-radius:4px;background:rgba(46,42,51,.12)}
+.ball-meter span.is-on{background:#E3350D}
+
+.ball-gift-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:0;border-radius:14px;background:#FFD45C;color:#2E2A33;font:800 16px/1.2 Nunito,sans-serif;cursor:pointer;box-shadow:0 3px 0 #d9a91f}
+.ball-gift-cta small{font-weight:700;opacity:.75}
+.ball-gift-cta:active{transform:translateY(2px);box-shadow:0 1px 0 #d9a91f}
+.ball-gift-cta:disabled{opacity:.6;cursor:wait}
+
+.ball-bag{display:grid;gap:16px}
+.ball-counts{display:flex;gap:12px}
+.ball-count{flex:1;display:grid;justify-items:center;gap:2px;padding:14px 8px;border-radius:18px;background:#FFF8EF}
+.ball-count b{font:700 28px/1 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.ball-count small{font:700 13px/1.2 Nunito,sans-serif;color:#6b6472}
+.ball-bag .ball-gift-cta{width:100%}
+.ball-today,.ball-how{padding:14px 16px;border-radius:18px;border:2px solid rgba(46,42,51,.08)}
+.ball-today-head{display:flex;justify-content:space-between;align-items:baseline}
+.ball-bag h4{margin:0;font:700 17px/1.2 Fredoka,Nunito,sans-serif}
+.ball-today-head span{font:800 15px/1 Nunito,sans-serif;color:#4069E0}
+.ball-gains,.ball-how ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.ball-gains li,.ball-how li{display:flex;align-items:center;gap:10px;font:600 15px/1.3 Nunito,sans-serif}
+.ball-gains li span{flex:1}
+.ball-gains li b{font-size:13px;color:#6b6472}
+.ball-empty,.ball-note{margin:10px 0 0;font:600 14px/1.4 Nunito,sans-serif;color:#6b6472}
+.ball-soon{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:18px;background:#EAF6EC}
+.ball-soon span{font-size:26px}
+.ball-soon p{margin:0;font:600 14px/1.4 Nunito,sans-serif}
+
+@media (max-width:720px){
+  .ball-bag-btn{min-height:40px;padding:4px 10px 4px 6px;font-size:15px}
+  .home-balls{margin-top:12px;padding:14px 16px}
+  .home-balls-actions{width:100%}
+  .home-balls-actions>*{flex:1}
+}
+@media (prefers-reduced-motion:reduce){.ball-gift-dot{animation:none}.ball-bag-btn{transition:none}}
+
+body.theme-dark .ball-bag-btn,body.theme-dark .home-balls{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.1)}
+body.theme-dark .ball-bag-btn.has-gift{background:#3a3220;border-color:#FFD45C}
+body.theme-dark .home-balls-main b,body.theme-dark .ball-count b{color:#f5efe6}
+body.theme-dark .home-balls-art,body.theme-dark .ball-count{background:#1d1a22}
+body.theme-dark .ball-soon{background:#1f3326}
+
+/* Les hautes herbes (PR B) : la scène de rencontre, la Ball qui tremble et « Gotcha ! ». */
+.ball-grass-cta,.wild-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border:0;border-radius:14px;background:#3E9B57;color:#fff;font:800 16px/1.2 Nunito,sans-serif;cursor:pointer;box-shadow:0 3px 0 #2b7240}
+.ball-grass-cta:active,.wild-cta:active{transform:translateY(2px);box-shadow:0 1px 0 #2b7240}
+.ball-soon .ball-grass-cta{margin-left:auto;flex:none}
+.ball-soon p small{color:#4b6b52;font-weight:700}
+
+.wild-scene{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;background:#FFF8EF;color:#2E2A33;overflow:auto}
+.wild-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:2px solid rgba(46,42,51,.08)}
+.wild-head b{font:700 20px/1 Fredoka,Nunito,sans-serif}
+.wild-head span{font:800 14px/1 Nunito,sans-serif;color:#4069E0}
+.wild-close{margin-left:auto;width:44px;height:44px;border-radius:50%;border:2px solid rgba(46,42,51,.12);background:#fff;font-size:26px;line-height:1;cursor:pointer;color:#2E2A33}
+.wild-stage{position:relative;flex:1;min-height:320px;max-height:56vh;overflow:hidden;background:linear-gradient(#BFE6FF 0%,#DDF3FF 38%,#EEF9EC 58%)}
+.wild-sky,.wild-hills,.wild-grass-back,.wild-grass-front{position:absolute;left:0;right:0;pointer-events:none}
+.wild-sky{top:0;height:60%}
+.wild-sky i{position:absolute;height:22px;border-radius:999px;background:rgba(255,255,255,.85);box-shadow:18px -10px 0 2px rgba(255,255,255,.85),38px 0 0 rgba(255,255,255,.85);animation:wildCloud 60s linear infinite}
+.wild-hills{bottom:0;height:62%}
+.wild-hills svg,.wild-grass-back svg,.wild-grass-front svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.wild-pad{position:absolute;left:50%;bottom:17%;width:min(70%,360px);aspect-ratio:3.2;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at 50% 45%,#C8EBAE 0 38%,#9AD27F 39% 62%,#7FBF66 63% 100%);box-shadow:inset 0 -6px 0 rgba(46,110,50,.22)}
+.wild-grass-back{bottom:9%;height:24%;transform-origin:50% 100%;animation:wildSway 4.2s ease-in-out infinite}
+.wild-grass-front{bottom:-2%;height:26%;z-index:3;transform-origin:50% 100%;animation:wildSway 3.1s ease-in-out infinite reverse}
+.wild-stage.is-intro .wild-grass-front,.wild-stage.is-intro .wild-grass-back{animation:wildRustle .16s ease-in-out 4,wildSway 3.1s ease-in-out .64s infinite}
+.wild-mon{position:absolute;z-index:1;left:50%;bottom:24%;width:min(58vw,280px);height:auto;transform:translateX(-50%);transform-origin:50% 100%;filter:drop-shadow(0 8px 0 rgba(46,42,51,.12));animation:wildIdle 2.6s ease-in-out infinite}
+.wild-stage.is-intro .wild-mon{animation:wildRise .7s cubic-bezier(.3,1.6,.5,1) .55s backwards,wildIdle 2.6s ease-in-out 1.25s infinite}
+.wild-stage.is-absorb .wild-mon{animation:wildAbsorb .45s ease-in forwards}
+.wild-stage.is-free .wild-mon{animation:wildFree .5s cubic-bezier(.3,1.6,.5,1) both}
+.wild-sparkles{position:absolute;inset:0;z-index:2;pointer-events:none}
+.wild-sparkles b{position:absolute;color:#FFD45C;font-size:22px;text-shadow:0 0 6px #fff;animation:wildTwinkle 1.6s ease-in-out infinite}
+.wild-ball{position:absolute;z-index:4;left:50%;top:var(--hy,40%);width:48px;height:48px;margin:-24px 0 0 -24px;opacity:0;pointer-events:none}
+.wild-ball-arc,.wild-ball-sh{width:100%;height:100%}
+.wild-ball .ball-img{width:48px;height:48px}
+.wild-ball-sh{transform-origin:50% 92%}
+.wild-stage.is-throw .wild-ball{opacity:1;animation:wildFlyX .62s linear both}
+.wild-stage.is-throw .wild-ball-arc{animation:wildFlyY .62s both}
+.wild-stage.is-drop .wild-ball{opacity:1;animation:none}
+.wild-stage.is-drop .wild-ball-arc{animation:wildDrop .5s cubic-bezier(.45,0,.6,1) both}
+.wild-ball-sh.is-shake{animation:wildShake .7s ease-in-out}
+.wild-stage.is-caught .wild-ball .ball-img{filter:brightness(.82) saturate(.9)}
+.wild-stage.is-free .wild-ball{opacity:0;transition:opacity .15s}
+.wild-flash{position:absolute;z-index:5;left:50%;top:var(--fy,40%);width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,rgba(255,255,255,.75) 40%,rgba(255,255,255,0) 70%);opacity:0;pointer-events:none}
+.wild-flash.is-on{animation:wildFlash .45s ease-out}
+.wild-stars{position:absolute;z-index:5;left:50%;top:var(--gyabs,60%);pointer-events:none}
+.wild-stars i{position:absolute;left:0;top:0;font-style:normal;color:#FFD45C;font-size:20px;text-shadow:0 1px 0 #c79a12;animation:wildStar .8s ease-out both}
+@keyframes wildCloud{from{transform:translateX(0)}to{transform:translateX(-40vw)}}
+@keyframes wildSway{0%,100%{transform:skewX(0)}50%{transform:skewX(-2.5deg)}}
+@keyframes wildRustle{0%,100%{transform:skewX(0) translateY(0)}25%{transform:skewX(6deg) translateY(2px)}75%{transform:skewX(-6deg) translateY(-1px)}}
+@keyframes wildRise{from{transform:translateX(-50%) translateY(45%) scale(.55);opacity:0}to{transform:translateX(-50%);opacity:1}}
+@keyframes wildIdle{0%,100%{transform:translateX(-50%) scale(1,1)}50%{transform:translateX(-50%) scale(1.015,.985)}}
+@keyframes wildAbsorb{0%{transform:translateX(-50%);filter:brightness(1)}35%{transform:translateX(-50%) scale(1.04);filter:brightness(3) saturate(0)}100%{transform:translateX(-50%) translateY(-30%) scale(.04);filter:brightness(3) saturate(0);opacity:0}}
+@keyframes wildFree{0%{transform:translateX(-50%) translateY(10%) scale(.1);filter:brightness(3) saturate(0);opacity:0}60%{filter:brightness(1.6) saturate(.5);opacity:1}100%{transform:translateX(-50%);filter:none;opacity:1}}
+@keyframes wildFlyX{from{transform:translateX(var(--sx,160px))}to{transform:translateX(0)}}
+@keyframes wildFlyY{0%{transform:translateY(var(--sy,260px)) rotate(0);animation-timing-function:cubic-bezier(.2,.7,.4,1)}48%{transform:translateY(var(--peak,-60px)) rotate(-400deg);animation-timing-function:cubic-bezier(.6,0,.8,.4)}100%{transform:translateY(0) rotate(-720deg)}}
+@keyframes wildDrop{0%{transform:translateY(0)}62%{transform:translateY(var(--gy,90px))}80%{transform:translateY(calc(var(--gy,90px) - 16px))}100%{transform:translateY(var(--gy,90px))}}
+@keyframes wildShake{0%,100%{transform:rotate(0)}18%{transform:rotate(-20deg)}40%{transform:rotate(16deg)}58%{transform:rotate(-7deg)}72%{transform:rotate(0)}}
+@keyframes wildFlash{0%{opacity:0;transform:scale(.3)}30%{opacity:1}100%{opacity:0;transform:scale(1.4)}}
+@keyframes wildStar{0%{transform:translate(-50%,-50%) scale(.4);opacity:0}25%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1) rotate(90deg);opacity:0}}
+@keyframes wildAppear{from{transform:translateY(16px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+@keyframes wildTwinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.wild-panel{padding:16px;display:grid;gap:12px;max-width:640px;width:100%;margin:0 auto;box-sizing:border-box}
+.wild-line{margin:0;font:700 19px/1.35 Fredoka,Nunito,sans-serif;text-align:center}
+.wild-meta{display:flex;justify-content:space-between;align-items:center;font:700 14px/1.3 Nunito,sans-serif;color:#6b6472}
+.wild-throws{display:flex;gap:6px}
+.wild-throws i{width:14px;height:14px;border-radius:50%;border:2px solid #E3350D;background:transparent}
+.wild-throws i.is-on{background:#E3350D}
+.wild-balls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.wild-ball-btn{display:flex;align-items:center;gap:10px;min-height:60px;padding:10px 14px;border-radius:16px;border:2px solid rgba(46,42,51,.12);background:#fff;color:#2E2A33;text-align:left;cursor:pointer}
+.wild-ball-btn b{display:block;font:800 16px/1.2 Nunito,sans-serif}
+.wild-ball-btn small{display:block;font:700 13px/1.2 Nunito,sans-serif;color:#6b6472}
+.wild-ball-btn:not(:disabled):hover{border-color:#4069E0}
+.wild-ball-btn:disabled{opacity:.45;cursor:not-allowed}
+.wild-run,.wild-skip{justify-self:center;min-height:44px;padding:8px 18px;border:0;background:none;color:#6b6472;font:800 15px/1 Nunito,sans-serif;text-decoration:underline;cursor:pointer}
+.wild-end{flex:1;display:grid;align-content:center;justify-items:center;gap:14px;padding:24px 16px;text-align:center}
+.wild-gotcha img{width:min(56vw,240px);height:auto;filter:drop-shadow(0 10px 14px rgba(46,42,51,.2));animation:wildAppear .45s ease-out backwards}
+.wild-gotcha h3{margin:8px 0 4px;font:700 24px/1.25 Fredoka,Nunito,sans-serif}
+.wild-gotcha p,.wild-note{margin:0;font:600 15px/1.4 Nunito,sans-serif;color:#6b6472;max-width:420px}
+.wild-gotcha.is-shiny h3{color:#B8860B}
+@media (min-width:900px){.wild-scene{inset:5vh 50%;transform:translateX(-50%);width:min(760px,92vw);border-radius:28px;box-shadow:0 0 0 100vmax rgba(46,42,51,.45),0 30px 80px rgba(46,42,51,.35)}.wild-stage{max-height:none;min-height:380px}}
+@media (prefers-reduced-motion:reduce){.wild-scene *,.wild-scene *::before,.wild-scene *::after{animation:none!important;transition:none!important}}
+.alb-origin{position:absolute;top:4px;right:6px;font-size:12px;line-height:1;z-index:1}
+.alb-origin.is-caught{font-weight:900;color:#2E2A33}
+body.theme-dark .wild-scene{background:#1d1a22;color:#f5efe6}
+body.theme-dark .wild-ball-btn,body.theme-dark .wild-close{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.12)}
