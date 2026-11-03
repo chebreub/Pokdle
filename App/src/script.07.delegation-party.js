@@ -1022,6 +1022,7 @@ function openAccountMenu() {
           <button type="button" class="${counts.duels ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["defis"]'><span>⚔️ Mes défis${badge(counts.duels)}</span><b>→</b></button>
           <button type="button" class="${counts.messages ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["messages"]'><span>📬 Mes messages${badge(counts.messages)}</span><b>→</b></button>
           <button type="button" class="${counts.friends || counts.chat ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["amis"]'><span>🤝 Mes amis${badge((counts.friends || 0) + (counts.chat || 0))}</span><b>→</b></button>
+          <button type="button" class="${counts.trades ? 'is-hot' : ''}" data-action="accountNavigate" data-args='["echanges"]'><span>🔁 Mes échanges${badge(counts.trades)}</span><b>→</b></button>
           <button type="button" data-action="accountNavigate" data-args='["invite"]'><span>🎁 Invite un ami</span><b>→</b></button>
         </nav></section>
         <section><h5>Ma progression</h5><nav class="account-menu-links">
@@ -1092,6 +1093,7 @@ function accountNavigate(destination) {
   else if (destination === 'admin') location.assign('/admin');
   else if (destination === 'messages' && typeof openMyMessages === 'function') openMyMessages();
   else if (destination === 'defis' && typeof openMyChallenges === 'function') openMyChallenges();
+  else if (destination === 'echanges' && typeof openMyTrades === 'function') openMyTrades();
   else if (destination === 'install' && typeof openInstallApp === 'function') openInstallApp();
   else if (destination === 'amis' && typeof openMyFriends === 'function') openMyFriends();
   else if (destination === 'invite' && typeof openInviteFriend === 'function') openInviteFriend();

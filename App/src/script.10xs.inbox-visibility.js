@@ -13,13 +13,15 @@ function inboxChallenges() {
   return { list: list, waiting: waiting, news: news };
 }
 function inboxCounts() {
-  if (!window.__pokedleAuthed) return { duels: 0, messages: 0, friends: 0, chat: 0 };
+  if (!window.__pokedleAuthed) return { duels: 0, messages: 0, friends: 0, chat: 0, trades: 0 };
   var s = inboxChallenges();
   // 🤝 Friend requests waiting, and my requests accepted (script.10xu.friends.js).
   var friends = typeof frPendingCount === 'function' ? frPendingCount() : 0;
   // 💬 Unread messages from friends (script.10xv.friend-chat.js).
   var chat = typeof chatUnreadCount === 'function' ? chatUnreadCount() : 0;
-  return { duels: s.waiting.length + s.news.length, messages: inboxMessagesCount(), friends: friends, chat: chat };
+  // 🔁 Échanges reçus, et mes échanges acceptés (script.10xzg.trades.js).
+  var trades = typeof tradePendingCount === 'function' ? tradePendingCount() : 0;
+  return { duels: s.waiting.length + s.news.length, messages: inboxMessagesCount(), friends: friends, chat: chat, trades: trades };
 }
 function inboxSetDot(el, n) {
   if (!el) return;
@@ -79,7 +81,7 @@ function renderPartyDuels() {
 }
 function renderInboxUi() {
   var n = inboxCounts();
-  inboxSetDot(document.querySelector('#account-area .account-chip'), n.duels + n.messages + (n.friends || 0) + (n.chat || 0));
+  inboxSetDot(document.querySelector('#account-area .account-chip'), n.duels + n.messages + (n.friends || 0) + (n.chat || 0) + (n.trades || 0));
   inboxSetDot(document.querySelector('#mobile-tabbar [data-tab="social"]'), n.duels + (n.friends || 0) + (n.chat || 0));
   inboxSetDot(document.getElementById('nav-social'), n.duels + (n.friends || 0) + (n.chat || 0));
   renderInboxHome();
