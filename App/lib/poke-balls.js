@@ -1,8 +1,8 @@
 "use strict";
 // Les Balls (PR A de la boucle « jouer → gagner des Balls → attraper », validée le 3/11/2026).
 // Le serveur décide de tout : une Ball par source et par jour (jour de Paris), 10 par jour au
-// plus. Les jeux du jour (Pokémon du jour, Wordle, Dossier, Défi, parcours 4/4) sont vérifiés
-// dans leurs tables ; les autres modes sont déclarés en fin de partie, comme leurs classements.
+// plus. Les jeux du jour sont vérifiés dans leurs tables, les arcades vérifiées dans
+// arcade_runs ; les autres scores déclarés ne donnent aucune Ball ni monnaie.
 // Sans compte, les Balls sont gardées sous l'identité invitée et passent sur le compte à la connexion.
 const crypto = require("node:crypto");
 const verifiedArcade = require("./verified-arcade");
