@@ -19,8 +19,6 @@ const BALL_SOURCES = Object.freeze({
   "mode:typecombo": "Combo de types", "mode:shiny": "Shiny ou normal",
   streak: "🔥 Série de 7 jours", party: "🎉 Party Room"
 });
-// Les modes de fin de partie que le serveur accepte (les jeux du jour sont vérifiés par lui).
-const BALL_ARCADE_MODES = new Set(["normal","silhouette","pixel","mystery","cry","quiz","description","weight","evolution","order","odd","quiestce","petitbac","higher-lower","higher-lower-rush","poke-connections","speedrun","stat-auction","stat-clash","typecombo","shiny"]);
 let ballState = null;
 let ballRequest = null;
 
@@ -114,13 +112,13 @@ function openBallBag() {
       '<div class="ball-counts">' + counts + '</div>' + gift +
       '<section class="ball-today"><div class="ball-today-head"><h4>Aujourd’hui</h4><span>' + (Number(s.today) || 0) + ' / ' + (Number(s.cap) || 10) + '</span></div>' + ballMeterHtml(s) + ballGainsHtml(s) + '</section>' +
       '<section class="ball-how"><h4>Comment gagner des Balls</h4><ul>' +
-        '<li>' + ballImg("poke", 20) + '<span>Ta <b>1re partie du jour</b> de chaque mode</span></li>' +
+        '<li>' + ballImg("poke", 20) + '<span>Ta <b>1re partie du jour</b> dans un mode vérifié par le serveur</span></li>' +
         '<li>' + ballImg("great", 20) + '<span>Une <b>Super Ball</b> si tu fais une belle partie</span></li>' +
         '<li>' + ballImg("poke", 20) + '<span>Le <b>Pokémon du jour</b> trouvé</span></li>' +
         '<li>' + ballImg("great", 20) + '<span>Le <b>parcours du jour</b> fini (4/4)</span></li>' +
         '<li>' + ballImg("poke", 20) + '<span>Ta <b>1re partie du jour en Party Room</b></span></li>' +
         '<li>' + ballImg("ultra", 20) + '<span>Une <b>Hyper Ball</b> tous les <b>7 jours joués d’affilée</b></span></li>' +
-      '</ul><p class="ball-note">10 Balls par jour au plus. Rejouer au même mode ne rapporte plus de Ball ce jour-là.</p></section>' +
+      '</ul><p class="ball-note">10 Balls par jour au plus. Les modes encore non vérifiés ne rapportent pas de Ball pour éviter la triche. Rejouer au même mode ne rapporte plus de Ball ce jour-là.</p></section>' +
       ballGrassHtml(s) +
       guest + '</div>');
   };
@@ -247,7 +245,7 @@ function renderBallHomeCard() {
   const got = new Set((s.gains || []).map((g) => g.source));
   const todo = HOME_DAY_SUGGEST.filter(([src]) => !got.has(src)).slice(0, 3).map(([, label, gain]) => label + " " + gain);
   card.innerHTML = '<div class="day-head"><h2>Ta journée</h2><span>' + s.today + ' / ' + s.cap + ' Balls</span></div>' + homeDayBallsRow(s) +
-    '<p class="day-hint">' + (full ? "Sac plein pour aujourd’hui 🎉 Reviens demain." : todo.length ? "Encore : " + escapeHtml(todo.join(" · ")) : "1 Ball par mode joué aujourd’hui.") + '</p>' +
+    '<p class="day-hint">' + (full ? "Sac plein pour aujourd’hui 🎉 Reviens demain." : todo.length ? "Encore : " + escapeHtml(todo.join(" · ")) : "1 Ball par mode vérifié aujourd’hui.") + '</p>' +
     homeDayResetHtml(s) + homeDayStreakHtml(s) +
     '<div class="day-tiles">' + homeDayGrassTile(s) + homeDayBagTile(s) + homeDayEggTile() + homeDayLeagueTile() + '</div>';
   homeDayLoadEgg();
@@ -263,14 +261,11 @@ function ballScoreFromHistory(entry) {
   return Math.max(0, Math.floor(Number(entry && entry.attempts) || 0));
 }
 function earnBallsAfterGame(entry) {
+  // Les récompenses arcade sont versées uniquement à la fin d'une partie
+  // réellement vérifiée par /api/arcade. Ne rien réclamer avec un score local.
   const mode = String(entry && entry.mode || "");
-  // Les modes vérifiés sont payés par le serveur pendant la partie ; une partie locale (service indisponible) ne paie pas.
-  if (["weight","shiny","quiz","higher-lower","higher-lower-rush","pixel","silhouette","cry","description","normal","mystery"].includes(mode)) return Promise.resolve(null);
   if (mode === "daily" || mode === "challenge") return refreshBalls();
-  if (!BALL_ARCADE_MODES.has(mode) || !["win", "loss"].includes(entry.result)) return Promise.resolve(null);
-  // Une partie de la Party Room ne compte pas : elle a ses propres récompenses.
-  if (typeof isPartySessionActive === "function" && isPartySessionActive()) return Promise.resolve(null);
-  return ballFetch("/api/balls/earn", { mode, result: entry.result, score: ballScoreFromHistory(entry) }).then((data) => ballApply(data));
+  return Promise.resolve(null);
 }
 if (typeof recordMatchHistory === "function") {
   const recordMatchHistoryBeforeBalls = recordMatchHistory;
@@ -283,6 +278,7 @@ if (typeof recordMatchHistory === "function") {
 // 🎉 Party Room (3/11) : la 1re partie de salon finie du jour (2 joueurs au moins) rapporte 1 Poké Ball et 150 ₽.
 // Le serveur ne la paie qu'une fois par jour.
 let ballPartyPaid = "";
+let ballPartyPending = "";
 if (typeof renderPartyRoom === "function") {
   const renderPartyRoomBeforeBalls = renderPartyRoom;
   renderPartyRoom = function () {
@@ -290,9 +286,19 @@ if (typeof renderPartyRoom === "function") {
     try {
       const room = typeof partyRoomState !== "undefined" && partyRoomState ? partyRoomState.room : null;
       const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
-      if (room && room.status === "complete" && (room.players || []).length >= 2 && ballPartyPaid !== today) {
-        ballPartyPaid = today;
-        ballFetch("/api/balls/earn", { mode: "party" }).then((data) => ballApply(data));
+      // Le serveur émet cette preuve seulement après la dernière manche, pour
+      // un membre identifié d'une salle avec deux participants distincts.
+      const proof = room && room.status === "complete" && typeof room.rewardProof === "string" ? room.rewardProof : "";
+      if (proof && ballPartyPaid !== today && ballPartyPending !== proof) {
+        ballPartyPending = proof;
+        ballFetch("/api/balls/earn", { mode: "party", partyProof: proof })
+          .then((data) => {
+            if (data && data.ok) {
+              ballPartyPaid = today;
+              ballApply(data);
+            }
+          })
+          .finally(() => { if (ballPartyPending === proof) ballPartyPending = ""; });
       }
     } catch (_e) {}
     return out;

@@ -42,7 +42,9 @@ test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures ke
     await assert.rejects(balls.encounter(guest),/no_balls/,'no Ball, no encounter');
 
     await balls.gift(guest);
-    for(const mode of ['evolution','order','odd'])await balls.earn(guest,{mode,result:'loss',score:1});
+    // Balls de test existantes : les parties non vérifiées ne peuvent plus les fabriquer.
+    for(const mode of ['evolution','order','odd']) await db.query(
+      "INSERT INTO ball_gains(identity,day,source,ball) VALUES('guest:w1','2026-11-03',$1,'poke')",['mode:'+mode]);
     let s=await balls.state(guest);
     assert.deepEqual(s.bag,{poke:4,great:0,ultra:0});
     assert.deepEqual([s.wild.max,s.wild.left,s.wild.open,s.wild.nextAt,s.wild.nextCount],[24,12,null,'2026-11-03T11:00:00.000Z',4]);
