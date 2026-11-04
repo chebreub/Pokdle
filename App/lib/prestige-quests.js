@@ -10,7 +10,7 @@ const SALAMENCE = Object.freeze({
   windowDays: 30,
   cooldownDays: 21,
 });
-const DREAM_ANSWER = "draby";
+const DREAM_ANSWER = "drackhaus";
 function normalizeDreamAnswer(raw) {
   if (typeof raw !== "string" || raw.length > 50) return "";
   return raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
