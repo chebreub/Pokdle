@@ -98,6 +98,7 @@ function fn(name) {
 function wired(room) {
   const context = {
     nearestParty: nearest, POKEMON_LIST: catalogue, normalizeName: normalize,
+    partyRewards:{issuePartyRewardProof:()=>null},partyCalendar:()=>({day:'2026-11-04'}),SESSION_SECRET:'fixture',
     PARTY_MIN_PLAYERS: 2, PARTY_MAX_PLAYERS: 8, PARTY_TOTAL_ROUNDS: 5,
     clearPartyRoundTimer() {}, emitPartyRoomState() {},
     findPartyRoomBySocket: () => room, checkRateLimit: () => false,
