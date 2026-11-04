@@ -3,6 +3,7 @@
 // Le serveur (lib/poke-balls.js) tire le Pokémon, le shiny (1/150) et chaque lancer. Ici : la scène,
 // la Ball qui tremble, « Gotcha ! », et le Pokémon capturé qui rejoint l'album (marque ⚪).
 let wildCaptures = null;      // { [id]: { normal, shiny } } lu sur le serveur
+let wildCatchableTotal = null; // dénominateur renvoyé par le serveur (herbes + expéditions)
 let wildBusy = false;
 let wildSkipAnim = null;
 
@@ -34,7 +35,11 @@ function wildSyncAlbum(list) {
 }
 function loadWildCaptures() {
   return fetch("/api/wild/collection", { credentials: "same-origin" }).then((r) => r.ok ? r.json() : null).then((data) => {
-    if (data && data.ok) { wildSyncAlbum(data.captures); if (typeof ballApply === "function") ballApply(data, { announce: false }); }
+    if (data && data.ok) {
+      wildSyncAlbum(data.captures);
+      if (Number.isInteger(data.catchableTotal) && data.catchableTotal > 0) wildCatchableTotal = data.catchableTotal;
+      if (typeof ballApply === "function") ballApply(data, { announce: false });
+    }
     return wildCaptures;
   }).catch(() => wildCaptures);
 }

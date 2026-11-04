@@ -133,8 +133,12 @@ if (typeof albumBinderHtml === "function") {
     const html = albumBinderHtmlBeforeCaught.apply(this, arguments);
     const s = albumStats(albumView.gen), caught = albumCaughtIn(albumRegionList(albumView.gen));
     const bar = (cls, label, n, title) => '<div class="alb-track ' + cls + '" title="' + title + '"><span>' + label + '</span><i><b style="width:' + Math.round(n * 100 / Math.max(1, s.total)) + '%"></b></i><em>' + n + ' / ' + s.total + '</em></div>';
+    // Pas de fausse cible régionale : les récompenses de mission et légendaires
+    // ne sont pas toutes capturables. On affiche ici le nombre réellement conservé.
+    const caughtLabel = (typeof ballImg === "function" ? ballImg("poke", 16) : "⚪") + " Capturés";
+    const caughtCount = '<div class="alb-track is-caught is-count" title="Capturés avec une Ball dans cette région"><span>' + caughtLabel + '</span><em>' + caught + ' espèce' + (caught > 1 ? 's' : '') + '</em></div>';
     return html.replace(/<h3>([^<]*)<small>[^<]*<\/small><\/h3>/, (_m, name) => '<h3>' + name + (s.shinies ? ' <small>✨ ' + s.shinies + '</small>' : '') + '</h3>' +
-      bar("is-seen", "👁️ Vus", s.found, "Trouvés en jouant") + bar("is-caught", (typeof ballImg === "function" ? ballImg("poke", 16) : "⚪") + " Attrapés", caught, "Capturés avec une Ball"));
+      bar("is-seen", "👁️ Vus", s.found, "Trouvés en jouant") + caughtCount);
   };
 }
 if (typeof albumRender === "function") {
@@ -167,7 +171,7 @@ function fxCaptureCard(p, shiny, count, ball) {
   const ballName = { poke: "Poké", great: "Super", ultra: "Hyper" }[ballKind];
   const traded = ball === "trade";
   const ballIcon = traded ? "🔁 " : typeof moBallSvg === "function" ? moBallSvg(ballKind) : (typeof ballImg === "function" ? ballImg(ballKind, 18) : "");
-  const total = typeof POKEMON_BY_ID !== "undefined" ? Math.min(1025, POKEMON_BY_ID.size) || 1025 : 1025;
+  const total = typeof wildCatchableTotal !== "undefined" && Number.isInteger(wildCatchableTotal) && wildCatchableTotal > 0 ? wildCatchableTotal : null;
   const region = FX_REGIONS[(Number(p.gen) || 1) - 1] || "";
   el.innerHTML = '<div class="fx-catch-card dexc">' +
     '<div class="dexc-top"><span class="dexc-led" aria-hidden="true"></span><span class="dexc-dots" aria-hidden="true"><i></i><i></i><i></i></span><b>NOUVELLE ENTRÉE · POKÉDEX</b></div>' +
@@ -179,7 +183,7 @@ function fxCaptureCard(p, shiny, count, ball) {
       '<div class="dexc-types">' + types + '</div>' +
       '<div class="dexc-facts"><div><small>Taille</small><b>' + fmt(p.height, "m") + '</b></div><div><small>Poids</small><b>' + fmt(p.weight, "kg") + '</b></div>' +
         '<div><small>' + (traded ? "Reçu par" : "Attrapé avec") + '</small><b class="dexc-ball">' + ballIcon + (traded ? "échange" : ballName) + '</b></div></div>' +
-      '<div class="dexc-line"><span class="dexc-ball">' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "") + 'Attrapés</span><i><b style="width:' + Math.max(1, Math.round(count * 100 / total)) + '%"></b></i><em>' + count + ' / ' + total + '</em></div>' +
+      '<div class="dexc-line"><span class="dexc-ball">' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "") + 'Capturés</span><i><b style="width:' + (total ? Math.min(100, Math.max(1, Math.round(count * 100 / total))) : 0) + '%"></b></i><em>' + count + (total ? ' / ' + total : ' espèces') + '</em></div>' +
       '<div class="fx-catch-btns"><button type="button" class="btn-blue" data-fx-close>Super !</button><button type="button" class="btn-ghost" data-fx-album>📒 Mon album</button></div></div>' +
     '<div class="fx-catch-confetti" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => '<i style="left:' + ((i * 37) % 100) + '%;animation-delay:' + ((i % 5) * 0.12 + 0.9) + 's;background:' + ["#FFD45C", "#E3350D", "#4069E0", "#3E9B57"][i % 4] + '"></i>').join("") + '</div></div>';
   document.body.appendChild(el);
