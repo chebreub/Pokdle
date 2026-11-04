@@ -118,7 +118,8 @@ test("server catchable total updates to 851 after Drattak becomes an album missi
   assert.equal(WILD_POOL.length,845);
   assert.equal(EXPEDITIONS.length,6);
   assert.equal(ids.size,851);
-  assert.match(balls,/catchableTotal:\s*new Set\(\[\.\.\.WILD_POOL,\s*\.\.\.EXPEDITIONS\.map/);
+  assert.match(balls,/const catchable = new Set\(\[\.\.\.WILD_POOL,\s*\.\.\.EXPEDITIONS\.map/);
+  assert.match(balls,/catchableTotal: catchable\.size, legacyCaptured:/);
   for(const id of EXPEDITIONS.map(e=>e.legend))assert.ok(!WILD_POOL.includes(id));
 });
 
@@ -148,4 +149,18 @@ test("capture ceremony reuses server catchable total instead of claiming 1025 ca
   assert.doesNotMatch(fx,/Math\.min\(1025, POKEMON_BY_ID\.size\)/);
   const wild=fs.readFileSync(path.join(__dirname,"../src/script.10xz.wild-grass.js"),"utf8");
   assert.match(wild,/wildCatchableTotal = data\.catchableTotal/);
+});
+
+
+test("old Drattak captures remain visible and obtained but do not inflate the new 851 goal",()=>{
+  const f=fixture();
+  f.ctx.wildCaptures[373]={normal:1,shiny:0};
+  f.ctx.wildLegacyCaptured=1;
+  f.ctx.wildCatchableTotal=851;
+  const stats=f.ctx.__progress(f.mons);
+  assert.deepEqual({...stats},{seen:6,caught:2,obtained:5,historical:1});
+  assert.equal(f.ctx.__obtained(f.mons[4]),true);
+  f.ctx.renderPokedexCollectionHub();
+  assert.match(f.national.innerHTML,/2 \/ 851/);
+  assert.match(f.national.innerHTML,/\+1<\/b> capture historique conservée/);
 });
