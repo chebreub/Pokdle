@@ -34,7 +34,7 @@ Le tirage auparavant uniforme dans `WILD_POOL` et dans chacune des six zones est
 
 *Le taux de capture officiel n'est qu'un indicateur imparfait de rareté d'apparition. Les starters, évolutions et espèces populaires devront être revus manuellement. Exception volontaire : les quatre espèces ayant un taux officiel de 3 (Terhal, Métang, Pondralugon et Pomdorochi) ont un poids d'apparition compensateur de 16 : leur capture est déjà extrêmement difficile, il ne faut pas cumuler deux barrières excessives. Les chances de réussir un lancer de Ball restent strictement inchangées.*
 
-Drattak n'apparaît plus dans les tirages sauvages ordinaires. Le serveur vérifie **14 jours actifs, 28 victoires et 5 modes de jeu distincts** sur les 45 derniers jours, en ne comptant qu'une victoire vérifiée par mode et par jour. Les progrès doivent être regagnés après une tentative et une nouvelle rencontre est espacée d'au moins 21 jours. La capture se tente avec trois Balls maximum, avec les taux habituels.
+Drattak n'apparaît plus dans les tirages sauvages ordinaires. Sa quête **« Le rêve de Draby »** s'inspire de la légende de Draby se jetant des falaises pour apprendre à voler. Le joueur doit **posséder un Draby ou un Drackhaus réellement capturé**, puis réussir **3 parties Cri, 3 Silhouette et 3 Description** vérifiées par le serveur, réparties sur **5 jours distincts** parmi les 30 derniers jours (une victoire de chaque mode au maximum par jour). Les succès dévoilent trois indices qui permettent de répondre à une énigme finale (l'intermédiaire de la lignée, Drackhaus). Cette énigme ne remplace jamais les preuves vérifiées. Elle ouvre une seule rencontre de Drattak avec **3 lancers de Balls maximum** et le taux habituel. En cas d'échec, nouvelle progression obligatoire et **21 jours minimum** entre deux rencontres.
 
 Invariant : l'ensemble des espèces autorisées **ne change pas** ; seuls leurs poids changent. Un légendaire exclu, une mission ou un Pokémon réservé ne peut pas entrer dans une zone via ce mécanisme.
 
@@ -42,7 +42,7 @@ Invariant : l'ensemble des espèces autorisées **ne change pas** ; seuls leurs 
 
 - Dracolosse #149 : mission
 - Tyranocif #248 : mission
-- Drattak #373 : mission Hoenn de **découverte** + épreuve de prestige **capturable avec une Ball**, vérifiée côté serveur
+- Drattak #373 : mission Hoenn de **découverte de sa lignée** + quête « Le rêve de Draby » fondée sur Draby/Drackhaus capturé, modes thématiques et énigme à indices ; seule une Ball réussie permet de posséder Drattak
 - Métalosse #376 : mission
 - Carchacrok #445 : mission
 - Trioxhydre #635 : mission
