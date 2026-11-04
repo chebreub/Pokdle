@@ -1822,3 +1822,10 @@ body.theme-dark .dex-search input{color:#f5efe6}
     min-width:0;
   }
 }
+
+/* Quiz verifie : montrer le choix en attente sans annoncer bonne/mauvaise reponse. */
+#quiz-box #quiz-options button.is-verifying:disabled {
+  opacity:1!important;
+  outline:3px solid #e7ad40;
+  outline-offset:2px;
+}
