@@ -57,7 +57,7 @@ test("Wordle, Dossier, Grille, training and both Higher or Lower variants appear
   assert.equal(rush.completions,2);
   assert.equal(infinite.launches,1);
   assert.equal(infinite.completions,0);
-  assert.equal(HISTORY_TO_LAUNCH["higher-lower-rush"],"higherlowerrush");
+  assert.equal(HISTORY_TO_LAUNCH["higher-lower-rush"],"higherlower","the ball reward source remains shared as before");
   assert.ok(PARTY_CATALOG["party:start:dessin"]);
   assert.ok(SOLO_CATALOG.wordletraining);
   assert.match(html,/leur rapport aux ouvertures ne mesure pas l’abandon/);
