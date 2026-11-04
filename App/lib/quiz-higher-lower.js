@@ -43,10 +43,14 @@ function createQuizHigherLower(catalog,randomInt,clock) {
     else if(s.mode==='higher-lower-rush')s.endsAt=+clock()+60000;
     question(s);
   }
+  // Quiz preloads its next question (without the correct option index) only after
+  // the current answer has been confirmed. Preview does not advance the round.
+  const publicQuizQuestion=q=>({question:q.question,options:q.options,kind:q.kind});
   function view(s) {
     const q=s.question,revealed=s.phase!=='playing';
     return s.mode==='quiz'?{
-      total:15,question:{question:q.question,options:q.options,kind:q.kind},history:s.history,
+      total:15,question:publicQuizQuestion(q),history:s.history,
+      ...(s.phase==='reveal'&&s.round<14 ? {nextQuestion:publicQuizQuestion(s.questions[s.round+1])}:{}),
       ...(revealed?{reveal:{answer:q.answer}}:{})
     }:{
       question:{left:q.left,right:q.right,statKey:q.statKey,leftValue:q.leftValue},
