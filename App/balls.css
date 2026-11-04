@@ -246,6 +246,21 @@ body.theme-dark .day-streak{background:#3a2a1e}body.theme-dark .day-reset{backgr
 .exp-note{margin:8px 0 0;font:700 13px/1.45 Nunito,sans-serif;color:#5c5663}
 .exp-legend-msg{margin:0;font:700 15px/1.45 Nunito,sans-serif}
 .exp-legend-cta{width:100%;min-height:50px;border:0;border-radius:14px;background:#2E2A33;color:#FFD45C;font:900 17px Nunito,sans-serif;cursor:pointer}
+/* Draby's dream: compact quest steps and mobile-friendly riddle input. */
+.exp-prestige{border-color:rgba(94,73,160,.25)}
+.exp-prestige-lineage,.exp-prestige-trial{padding:10px 12px;margin-top:8px;border:1px solid rgba(94,73,160,.18);border-radius:12px;background:rgba(94,73,160,.055);font:700 13px/1.45 Nunito,sans-serif}
+.exp-prestige-lineage span,.exp-prestige-trial span{display:block}
+.exp-prestige-trial b{display:block;margin-bottom:3px;color:#6c48a3}
+.exp-prestige-riddle{display:grid;gap:9px;margin-top:14px;padding:12px;border-radius:14px;background:#f5efff;font:700 14px/1.45 Nunito,sans-serif;color:#332540}
+.exp-prestige-riddle p{margin:0}
+.exp-prestige-riddle label{font:800 13px Nunito,sans-serif}
+.exp-prestige-riddle input{box-sizing:border-box;width:100%;min-height:48px;padding:10px 12px;font:700 16px Nunito,sans-serif;border:2px solid #ac93dc;border-radius:12px;background:#fff;color:#2e2a33}
+.exp-prestige-riddle input:focus-visible{outline:3px solid #7854bd;outline-offset:2px}
+.exp-prestige-riddle .exp-legend-cta{min-height:52px}
+body.theme-dark .exp-prestige-trial,body.theme-dark .exp-prestige-lineage{background:rgba(189,165,239,.07);border-color:rgba(189,165,239,.2)}
+body.theme-dark .exp-prestige-trial b{color:#d4b7ff}
+body.theme-dark .exp-prestige-riddle{background:#332a42;color:#f2e6ff}
+
 body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.1)}
 
 /* Animations (3/11) : apparition shiny, Gotcha shiny, ouverture du cadeau et des coffres. */

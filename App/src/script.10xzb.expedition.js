@@ -2,6 +2,90 @@
 // ===== 🧭 L'Expédition de la semaine (3/11/2026, maquette « ce qui manque au plan ») =====
 // Le serveur (lib/poke-balls.js) calcule tout : région, objectif commun, participations, coffres, légendaire.
 let expeditionState = null, expeditionAt = 0;
+let drattakPrestigeState = null, drattakPrestigeAt = 0;
+function loadDrattakPrestige(force = false) {
+  if (!force && drattakPrestigeState && Date.now() - drattakPrestigeAt < 120000) return Promise.resolve(drattakPrestigeState);
+  return expeditionFetch("/api/prestige/drattak").then((data) => {
+    if (data?.ok && data.prestige) {
+      drattakPrestigeState = data.prestige;
+      drattakPrestigeAt = Date.now();
+      const body = document.querySelector("#overlay-body .exp");
+      if (body && expeditionState && typeof ensureOverlay === "function") {
+        ensureOverlay("🧭 Expédition de la semaine", expeditionHtml(expeditionState));
+      }
+    }
+    return drattakPrestigeState;
+  });
+}
+function drattakPrestigeHtml() {
+  const p = drattakPrestigeState;
+  if (!p) return '<section class="exp-card exp-prestige"><h4>🐉 Le rêve de Draby</h4><p class="exp-note">Chargement des indices et de ta progression…</p></section>';
+  const line = p.hasLineage
+    ? '<span>✅ La lignée retrouvée : ' + (p.lineageIds.includes(371) ? 'Draby' : 'Drackhaus') + ' a été capturé avec une Ball.</span>'
+    : '<span>🔒 Retrouve et capture un Draby ou un Drackhaus dans les hautes herbes. Ils vivent notamment près du volcan.</span>';
+  const trials = [
+    ['cry','Cri','Le murmure des falaises','Un cri de Dragon résonne au pied de la falaise.'],
+    ['silhouette','Silhouette','L’ombre sans ailes','Une silhouette immobile, protégée par une cuirasse, contemple le ciel.'],
+    ['description','Description','La mémoire de la pierre','Ce Pokémon n’est ni le premier rêveur, ni celui qui vole enfin.']
+  ];
+  const trialsHtml = trials.map(([mode,label,title,clue]) => {
+    const won = Number(p.wins?.[mode] || 0),goal = Number(p.goal?.modes?.[mode] || 3);
+    const done = won >= goal;
+    return '<div class="exp-prestige-trial"><b>' + (done ? '✅ ' : '🔒 ') + label + ' · ' + Math.min(won,goal) + '/' + goal + '</b>' +
+      '<span>' + (done ? '✦ ' + title + ' : ' + clue : 'Gagne ' + goal + ' parties vérifiées en mode ' + label + ' pour révéler cet indice.') + '</span></div>';
+  }).join("");
+  const days = '<p class="exp-note">📅 ' + Math.min(p.days,p.goal.days) + '/' + p.goal.days +
+    ' jours de réussite dans ces modes, sur une période de 30 jours. Une victoire par mode et par jour compte.</p>';
+  let next = '';
+  if (p.needsAccount) next = '<p class="exp-note">Connecte-toi pour garder tes preuves de jeu et débloquer la rencontre.</p>';
+  else if (p.cooldown) next = '<p class="exp-note">Drattak a quitté les falaises. Nouvelle tentative à partir du ' +
+    escapeHtml(p.nextAttemptDay.split("-").reverse().join("/")) + ', après de nouvelles épreuves.</p>';
+  else if (p.available) next = '<div class="exp-prestige-riddle"><strong>✦ Le secret de la falaise</strong>' +
+    '<p>« Entre celui qui rêvait de voler et celui qui déploie ses ailes, je demeure immobile dans mon armure. Qui suis-je ? »</p>' +
+    '<label for="prestige-drattak-answer">Le nom du Pokémon</label>' +
+    '<input id="prestige-drattak-answer" type="text" maxlength="50" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ta réponse" />' +
+    '<button type="button" class="exp-legend-cta" data-action="meetPrestigeDrattak">🐉 Ouvrir le passage vers Drattak</button>' +
+    '<p class="exp-note">La bonne réponse permet une rencontre, pas une capture garantie. Trois lancers maximum avec tes Balls : Poké ' +
+    p.chances.poke + ' %, Super ' + p.chances.great + ' %, Hyper ' + p.chances.ultra + ' % par lancer.</p></div>';
+  else next = '<p class="exp-note">Termine les étapes pour déchiffrer le secret de la falaise et débloquer ta rencontre.</p>';
+  return '<section class="exp-card exp-prestige"><h4>🐉 Le rêve de Draby · Quête de Drattak</h4>' +
+    '<p class="exp-note">Dans les jeux Pokémon, Draby rêvait de voler en s’élançant des falaises. Sur Pokédle, suis sa lignée et retrouve les indices cachés dans trois modes.</p>' +
+    '<div class="exp-prestige-lineage">' + line + '</div>' + trialsHtml + days + next + '</section>';
+}
+function meetPrestigeDrattak() {
+  const answer = document.getElementById("prestige-drattak-answer")?.value?.trim() || "";
+  if (!answer) { if (typeof showToast === "function") showToast("Entre ta réponse à l’énigme de la falaise."); return; }
+  const scope = typeof ballState !== "undefined" && ballState?.actionScope;
+  if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
+  return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
+    if (!data?.ok) {
+      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_need_three_balls:"Il te faut au moins trois Balls pour ne pas perdre une rare occasion de rencontre.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
+        encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
+        account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
+      // Une requête peut avoir réussi alors que sa réponse s'est perdue.
+      // Reprendre l'unique rencontre ouverte plutôt que brûler une nouvelle tentative.
+      if (["prestige_cooldown","encounter_open"].includes(data?.error) && typeof refreshBalls === "function") {
+        return refreshBalls({announce:false}).then((current) => {
+          if (current?.wild?.open?.prestige && typeof renderWildEncounter === "function") {
+            if (typeof closeOverlayModal === "function") closeOverlayModal();
+            renderWildEncounter(current);
+            return;
+          }
+          if (typeof showToast === "function") showToast(message);
+        });
+      }
+      if (typeof showToast === "function") showToast(message);
+      return;
+    }
+    if (typeof closeOverlayModal === "function") closeOverlayModal();
+    if (typeof ballApply === "function") ballApply(data,{announce:false});
+    if (typeof renderWildEncounter === "function") renderWildEncounter(data,null,true);
+    drattakPrestigeAt = 0;
+    const pokemon = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(373) : null;
+    if (pokemon && typeof playPokemonCry === "function") try { playPokemonCry(pokemon,0.6); } catch (_e) {}
+  });
+}
+window.meetPrestigeDrattak = meetPrestigeDrattak;
 function expeditionFetch(url, body) {
   const opts = body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin" };
   return fetch(url, opts).then((r) => r.json().catch(() => null)).catch(() => null);
@@ -62,12 +146,13 @@ function expeditionHtml(e) {
       '<p class="exp-note">Les coffres non ouverts sont perdus dimanche à minuit.</p></section>' +
     '<section class="exp-card"><h4>Ta participation <span>' + e.myDays.length + ' jour' + (e.myDays.length > 1 ? "s" : "") + '</span></h4><div class="exp-days">' + days + '</div>' +
       '<p class="exp-note">1 participation = 2 jeux différents joués dans la journée (le cadeau ne compte pas).</p></section>' +
-    '<section class="exp-card">' + legend + '</section></div>';
+    '<section class="exp-card">' + legend + '</section>' + drattakPrestigeHtml() + '</div>';
 }
 function openExpedition() {
   const draw = () => { if (expeditionState && typeof ensureOverlay === "function") ensureOverlay("🧭 Expédition de la semaine", expeditionHtml(expeditionState)); };
   draw();
   const first = !expeditionState;
+  loadDrattakPrestige(true);
   // Ne rouvre jamais la fenêtre fermée entre-temps (ouverture des coffres) : on redessine seulement celle qui est ouverte.
   loadExpedition(true).then(() => {
     const o = document.getElementById("overlay-modal"), open = o && !o.classList.contains("hidden");

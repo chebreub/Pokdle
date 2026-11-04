@@ -27,7 +27,7 @@ function wildSyncAlbum(list) {
     const p = wildPokemon(c.id);
     if (!p || typeof playerProfile === "undefined" || !playerProfile) continue;
     playerProfile.discoveries ||= {};
-    if (!playerProfile.discoveries[p.id] && typeof addDiscovery === "function" && addDiscovery(playerProfile.discoveries, p, "capture")) changed = true;
+    if (!playerProfile.discoveries[p.id] && typeof addDiscovery === "function" && addDiscovery(playerProfile.discoveries, p, "capture", Date.now(), "capture")) changed = true;
     const rec = playerProfile.discoveries[p.id];
     if (rec && c.shiny > 0 && !rec.shiny) { rec.shiny = "capture"; changed = true; }
   }
@@ -88,8 +88,10 @@ function wildMarkThrow(scene, ball) {
 }
 function wildHead(state) {
   const w = state && state.wild || { today: 0, max: 6 };
-  const legend = state && ((state.encounter && state.encounter.legend) || (w.open && w.open.legend));
-  return '<div class="wild-head"><b>' + (legend ? "👑 Expédition" : "🌿 Hautes herbes") + '</b><span>' + (legend ? "Rencontre légendaire" : "Rencontre " + Math.min(w.max, Math.max(1, w.today)) + ' / ' + w.max) + '</span>' +
+  const encounter = state?.encounter || w.open;
+  const legend = Boolean(encounter?.legend);
+  const prestige = Boolean(encounter?.prestige);
+  return '<div class="wild-head"><b>' + (prestige ? "🐉 Épreuve de prestige" : legend ? "👑 Expédition" : "🌿 Hautes herbes") + '</b><span>' + (prestige ? "Rencontre spéciale" : legend ? "Rencontre légendaire" : "Rencontre " + Math.min(w.max, Math.max(1, w.today)) + ' / ' + w.max) + '</span>' +
     '<button type="button" class="wild-close" data-action="closeWildGrass" aria-label="Fermer">×</button></div>';
 }
 function wildBallButtons(state, e) {
@@ -156,10 +158,10 @@ function renderWildEncounter(state, message, intro) {
       wildFrontGrassHtml() +
     '</div>' +
     '<div class="wild-panel">' +
-      '<p class="wild-line" aria-live="polite">' + (message || (e.legend ? "👑 " + name + (e.shiny ? " <b>shiny</b>" : "") + " se réveille ! Une seule chance cette semaine." : e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
+      '<p class="wild-line" aria-live="polite">' + (message || (e.prestige ? "🐉 " + name + (e.shiny ? " <b>shiny</b>" : "") + " t’attend ! Trois lancers, aucune capture garantie." : e.legend ? "👑 " + name + (e.shiny ? " <b>shiny</b>" : "") + " se réveille ! Une seule chance cette semaine." : e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
       '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures && wildCaptures[p.id] ? "⚪ Déjà attrapé" : "🆕 Pas encore attrapé !") + '</span></div>' +
       wildBallButtons(state, e) +
-      (e.legend ? "" : '<button type="button" class="wild-run" data-action="wildRun">Fuir</button>') +
+      (e.legend || e.prestige ? "" : '<button type="button" class="wild-run" data-action="wildRun">Fuir</button>') +
     '</div>';
   scene.querySelector(".wild-close")?.focus({ preventScroll: true });
 }
@@ -317,12 +319,15 @@ function wildThrow(ball) {
         const register = () => {
           if (p && firstCatch && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
             playerProfile.discoveries ||= {};
-            if (addDiscovery(playerProfile.discoveries, p, "capture")) {
+            if (addDiscovery(playerProfile.discoveries, p, "capture", Date.now(), "capture")) {
               if (typeof saveProfile === "function") saveProfile();
               if (typeof awardXp === "function" && typeof ADVENTURE_XP !== "undefined") { awardXp(ADVENTURE_XP.discovery, "Nouveau Pokémon : " + p.name); if (typeof awardRegionXpIfComplete === "function") awardRegionXpIfComplete(p); }
             }
             if (typeof fxCaptureCard === "function") fxCaptureCard(p, e.shiny, caughtCount, ball);
-          } else if (p && typeof recordPokemonDiscovery === "function") recordPokemonDiscovery(p, "capture");
+          } else if (p && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
+            playerProfile.discoveries ||= {};
+            if (addDiscovery(playerProfile.discoveries, p, "capture", Date.now(), "capture") && typeof saveProfile === "function") saveProfile();
+          }
           const rec = p && typeof playerProfile !== "undefined" && playerProfile && playerProfile.discoveries && playerProfile.discoveries[p.id];
           if (rec && e.shiny && !rec.shiny) { rec.shiny = "capture"; if (typeof saveProfile === "function") saveProfile(); }
           if (typeof albumClaimMedals === "function") albumClaimMedals(false);

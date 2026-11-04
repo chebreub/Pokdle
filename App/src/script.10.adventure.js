@@ -9,7 +9,7 @@ function normalizeDiscoveries(raw) {
   for (const [key, entry] of Object.entries(raw)) {
     const id = Number(key), at = Number(entry?.at);
     if (!Number.isInteger(id) || !POKEMON_BY_ID.has(id) || !Number.isFinite(at) || at <= 0) continue;
-    clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal', source: ['game', 'history', 'secret', 'mission'].includes(entry.source) ? entry.source : 'legacy' };
+    clean[id] = { at: Math.min(at, Date.now()), mode: typeof entry.mode === 'string' ? entry.mode.slice(0, 30) : 'normal', source: ['game', 'history', 'secret', 'mission', 'capture'].includes(entry.source) ? entry.source : 'legacy' };
     if (entry.secrets && typeof entry.secrets === 'object') {
       clean[id].secrets = Object.fromEntries(Object.entries(entry.secrets).filter(([key, value]) => (typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.some(m => m.id === key) : ['companion', 'signal', 'runes'].includes(key)) && Number.isFinite(value) && value > 0).map(([key, value]) => [key, Math.min(value, Date.now())]));
     }
@@ -74,14 +74,15 @@ function discoveryModeLabel(mode) {
 }
 function discoveryProofHtml(entry) {
   const source = entry.source || 'legacy';
-  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Découverte secrète', mission: 'Mission validée', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
+  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Découverte secrète', mission: 'Mission validée', capture: 'Pokémon capturé', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
   const mode = escapeHtml(discoveryModeLabel(entry.mode));
   const explanations = {
     game: `Bonne réponse enregistrée en ${mode}.`,
     history: `Victoire en ${mode}, récupérée automatiquement depuis ton historique. Ce Pokémon n’a pas été rencontré à nouveau lors de l’import.`,
     legacy: `Mode enregistré : ${mode}. Cette entrée date de l’ancienne version. Elle peut venir de l’historique importé ; l’origine exacte n’avait pas été conservée.`,
     secret: 'Pokémon découvert après avoir accompli une mission et trouvé sa cachette. Une capture avec une Ball est nécessaire pour le posséder.',
-    mission: 'Pokémon découvert après validation de sa mission. Une Ball est nécessaire pour le posséder.'
+    mission: 'Pokémon découvert après validation de sa mission. Une Ball est nécessaire pour le posséder.',
+    capture: 'Pokémon réellement capturé avec une Ball et confirmé par le serveur.'
   };
   const confirmed = entry.confirmed ? `<p>Retrouvé en ${escapeHtml(discoveryModeLabel(entry.confirmed.mode))} le ${new Date(entry.confirmed.at).toLocaleDateString('fr-FR')}.</p>` : '';
   const secrets = Object.entries(entry.secrets || {}).map(([key, at]) => `<p>✦ Mission « ${escapeHtml((typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.find(m => m.id === key)?.title : ({companion:'Une présence familière',signal:'Un drôle de signal',runes:'Les trois marques'})[key]) || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`).join('');
