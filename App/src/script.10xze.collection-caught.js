@@ -36,7 +36,8 @@ function colCollectionProgress(base) {
     if (colCaughtCount(pokemon.id) > 0) caught++;
     if (colIsObtained(pokemon)) obtained++;
   }
-  return { seen, caught, obtained };
+  const historical = typeof wildLegacyCaptured !== "undefined" && Number.isInteger(wildLegacyCaptured) && wildLegacyCaptured >= 0 ? wildLegacyCaptured : 0;
+  return { seen, caught: Math.max(0, caught - historical), obtained, historical };
 }
 function colIsShiny(pokemon, state) {
   const c = typeof wildCaptures !== "undefined" && wildCaptures ? wildCaptures[pokemon.id] : null;
@@ -118,7 +119,8 @@ if (typeof renderPokedexCollectionHub === "function") {
         bar("is-caught", (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + " Capturés", loaded ? totals.caught : null, catchable, "Capturés avec une Ball parmi les espèces sauvages et d'expédition") +
         bar("is-mission", "◆ Obtenus", loaded ? totals.obtained : null, total, "Captures encore possédées et récompenses de missions ou secrets réclamées ; une simple découverte ne suffit pas") +
         bar("is-shiny", "✨ Shinies", shinies, 0, "Shinies trouvés ou capturés") +
-        '<div class="pokedex-collection-substats"><span><b>' + stats.formsFound + '</b> / ' + stats.formsTotal + ' formes</span><span><b>' + stats.missions + '</b> récompenses spéciales à débloquer</span></div>';
+        '<div class="pokedex-collection-substats"><span><b>' + stats.formsFound + '</b> / ' + stats.formsTotal + ' formes</span><span><b>' + stats.missions + '</b> récompenses spéciales à débloquer</span>' +
+        (totals.historical ? '<span><b>+' + totals.historical + '</b> capture' + (totals.historical > 1 ? 's' : '') + ' historique' + (totals.historical > 1 ? 's' : '') + ' conservée' + (totals.historical > 1 ? 's' : '') + '</span>' : '') + '</div>';
     }
     return out;
   };
