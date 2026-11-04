@@ -108,6 +108,12 @@ test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures ke
     assert.deepEqual(s.captures,[{id:10,normal:1,shiny:0}]);
     assert.deepEqual(s.shinyLog.map(e=>[e.id,e.caught]),[[19,false]],'the shiny left behind is in the shiny log, greyed out');
     assert.equal(s.wild.caught,1);
+    // An old Drattak capture remains untouched when its new quest removes it
+    // from the wild pool. The denominator tracks only currently catchable IDs.
+    await db.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,status) VALUES($1,$2,$3,373,false,'caught')",[user.key,user.accountId,'2026-10-01']);
+    s=await balls.collection(user);
+    assert.deepEqual(s.captures.map(c=>c.id),[10,373],'historic Drattak stays held');
+    assert.deepEqual([s.catchableTotal,s.legacyCaptured],[851,1]);
     await assert.rejects(balls.throwBall(user,{ball:'ultra'}),/no_encounter/);
   }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end();}
 });
