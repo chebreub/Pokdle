@@ -8,6 +8,57 @@ const UNIQUE_BITMAP_BYTES = UNIQUE_BITMAP_BITS / 8;
 
 // Product analytics deliberately store only daily aggregate event counters.
 // No account id, anonymous browser id, IP, guessed Pokémon or answers are persisted.
+
+// One catalogue for server validation, labels, groups and /admin/stats.
+// An entry is a trackable opening, not a verified unique play. New counters
+// start on deployment; past visits cannot be inferred.
+const SOLO_CATALOG = Object.freeze({
+  daily: {label:"Pokémon du jour · Enquête",group:"Quotidien"},
+  wordle: {label:"Wordle du jour",group:"Quotidien"},
+  dossier: {label:"Dossier du jour",group:"Quotidien"},
+  grid: {label:"Grille du jour",group:"Quotidien"},
+  challenge: {label:"Défi du jour",group:"Quotidien"},
+  normal: {label:"Pokédle illimité",group:"Deviner"},
+  silhouette: {label:"Silhouette",group:"Deviner"},
+  pixel: {label:"Pixelisé",group:"Deviner"},
+  mystery: {label:"Stat mystère",group:"Deviner"},
+  cry: {label:"Cri Pokémon",group:"Deviner"},
+  description: {label:"Description Pokédex",group:"Deviner"},
+  evolution: {label:"Chaîne d'évolution",group:"Deviner"},
+  order: {label:"Ordre Pokédex",group:"Deviner"},
+  quiestce: {label:"Qui est-ce ?",group:"Deviner"},
+  wordletraining: {label:"Wordle Pokémon · Entraînement",group:"Deviner"},
+  shiny: {label:"Shiny ou normal ?",group:"Deviner"},
+  quiz: {label:"Quiz",group:"Arcade"},
+  weight: {label:"Duel de poids",group:"Arcade"},
+  odd: {label:"Intrus",group:"Arcade"},
+  petitbac: {label:"Petit Bac",group:"Arcade"},
+  higherlower: {label:"Higher or Lower · Illimité",group:"Arcade"},
+  higherlowerrush: {label:"Higher or Lower · 60 s",group:"Arcade"},
+  connections: {label:"Poké-Connections",group:"Arcade"},
+  speedrun: {label:"Speedrun",group:"Arcade"},
+  statauction: {label:"Enchères de stats",group:"Arcade"},
+  scoreattack: {label:"Score Attack",group:"Arcade"},
+  draft: {label:"Draft Arènes",group:"Arcade"},
+  statclash: {label:"Stat Clash",group:"Arcade"},
+  typecombo: {label:"Combo de types",group:"Arcade"},
+  emulator: {label:"Émulateur",group:"Autres"},
+});
+
+const PARTY_CATALOG = Object.freeze({
+  "party:start:dexrace":"Course au Pokédex",
+  "party:start:coop":"Enquête coop",
+  "party:start:deduction":"Pokémon mystère",
+  "party:start:quiestce1v1":"Qui est-ce ?",
+  "party:start:petitbac":"Petit Bac",
+  "party:start:nearest":"Numéro mystère",
+  "party:start:guess":"Course Pokémon",
+  "party:start:typecombo":"Combo de types",
+  "party:start:duocriteria":"Duo de critères",
+  "party:start:statclash":"Meilleure stat",
+  "party:start:statclashparty":"Stat Clash",
+  "party:start:dessin":"Dessine-le !",
+});
 const HISTORY_TO_LAUNCH = Object.freeze({
   normal: "normal",
   daily: "daily",
@@ -24,7 +75,7 @@ const HISTORY_TO_LAUNCH = Object.freeze({
   quiestce: "quiestce",
   petitbac: "petitbac",
   "higher-lower": "higherlower",
-  "higher-lower-rush": "higherlower",
+  "higher-lower-rush": "higherlowerrush",
   "poke-connections": "connections",
   speedrun: "speedrun",
   "stat-auction": "statauction",
@@ -136,7 +187,7 @@ function summarizeModes(rows, labels = {}) {
   const summary = new Map();
   function get(mode) {
     if (!summary.has(mode)) summary.set(mode, {
-      mode, label: labels["solo:" + mode] || mode, launches: 0,
+      mode, label: labels["solo:" + mode] || SOLO_CATALOG[mode]?.label || mode, group: SOLO_CATALOG[mode]?.group || "Autres", launches: 0,
       completions: 0, wins: 0, losses: 0, finishInstrumented: FINISHABLE_LAUNCHES.has(mode)
     });
     return summary.get(mode);
@@ -162,4 +213,4 @@ function summarizeModes(rows, labels = {}) {
   return [...summary.values()].sort((a, b) => b.launches - a.launches || b.completions - a.completions || a.mode.localeCompare(b.mode));
 }
 
-module.exports = { HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, recent, uniqueSlot, recordUnique, recentUniques, summarizeModes };
+module.exports = { SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, recent, uniqueSlot, recordUnique, recentUniques, summarizeModes };
