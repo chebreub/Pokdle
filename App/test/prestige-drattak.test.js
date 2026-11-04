@@ -123,3 +123,37 @@ test("network response loss can resume the single open prestige encounter",()=>{
   assert.match(script,/current\?\.wild\?\.open\?\.prestige/);
   assert.match(script,/renderWildEncounter\(current\)/);
 });
+
+
+test("a captured Drattak stays visible even when its album mission was never claimed",()=>{
+  const adventure=fs.readFileSync(path.join(__dirname,"../src/script.10.adventure.js"),"utf8");
+  const wild=fs.readFileSync(path.join(__dirname,"../src/script.10xz.wild-grass.js"),"utf8");
+  const s1=adventure.indexOf("function normalizeDiscoveries(");
+  const s2=adventure.indexOf("function addDiscovery(",s1);
+  const s3=adventure.indexOf("function historyDiscovery(",s2);
+  const w1=wild.indexOf("function wildSyncAlbum(");
+  const w2=wild.indexOf("function loadWildCaptures(",w1);
+  assert.ok([s1,s2,s3,w1,w2].every(n=>n>=0));
+  const pokemon={id:373,name:"Drattak",gen:3,type1:"Dragon",type2:"Vol"};
+  let saves=0;
+  const ctx={
+    Date,Math,Number,Array,Object,Set,Map,Boolean,String,
+    POKEMON_BY_ID:new Map([[373,pokemon]]),
+    playerProfile:{discoveries:{}},
+    wildPokemon:(id)=>Number(id)===373?pokemon:null,
+    isAlbumMissionGated:()=>true,
+    isAlbumMissionClaimedForPokemon:()=>false,
+    saveProfile:()=>{saves++;}
+  };
+  vm.createContext(ctx);
+  vm.runInContext("let wildCaptures=null;\n"+adventure.slice(s1,s3)+"\n"+
+    wild.slice(w1,w2)+"\nthis.sync=wildSyncAlbum;this.captureState=()=>wildCaptures;",ctx);
+  ctx.sync([{id:373,normal:1,shiny:0}]);
+  assert.equal(ctx.playerProfile.discoveries[373].source,"capture");
+  assert.equal(ctx.captureState()[373].normal,1);
+  assert.equal(saves,1);
+  const clean=ctx.normalizeDiscoveries(ctx.playerProfile.discoveries);
+  assert.equal(clean[373].source,"capture","cross-device profile normalization preserves trusted capture origin");
+  ctx.sync([{id:373,normal:1,shiny:0}]);
+  assert.equal(saves,1,"sync never manufactures a duplicate discovery");
+});
