@@ -303,6 +303,8 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .alb-track i b{display:block;height:100%;border-radius:6px}
 .alb-track.is-seen i b{background:#4069E0}
 .alb-track.is-caught i b{background:#E3350D}
+.alb-track.is-count{display:flex;justify-content:space-between;gap:10px}
+.alb-track.is-count span{min-width:0}
 .alb-track em{font-style:normal;color:#5c5663}
 /* ⚪ Carte « Attrapé pour la 1re fois » */
 .fx-catch{position:fixed;inset:0;z-index:10060;display:grid;place-items:center;padding:16px;background:rgba(30,26,40,.72);animation:fxFade .25s ease both}
