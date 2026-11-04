@@ -175,22 +175,27 @@ function createArcadeArtworkLoader(fetcher = fetch) {
   async function fetchPng(url) {
     const response = await fetcher(url, {signal:AbortSignal.timeout(8000),redirect:'error'});
     if (!response.ok || Number(response.headers.get('content-length')) > 2000000) throw fail('image_unavailable',503);
-    return response;
+    const data = Buffer.from(await response.arrayBuffer());
+    if (data.length > 2000000 || data.subarray(0,8).toString('hex') !== '89504e470d0a1a0a') throw fail('image_unavailable',503);
+    return data;
   }
   return async function load(spec) {
     const key = spec.src || spec.id + ':' + spec.shiny;
     if (cache.has(key)) return cache.get(key);
     const promise = (async () => {
-      let response;
+      // The same official artwork is available from GitHub if jsDelivr returns
+      // an error or a non-PNG response. Both origins are fixed and trusted.
+      let path;
       if (spec.src) {
         const m = SPRITE.exec(spec.src);
         if (!m) throw fail('image_unavailable',503);
-        try { response = await fetchPng(spec.src); }
-        catch (_) { response = await fetchPng('https://raw.githubusercontent.com/PokeAPI/sprites/master/' + m[1]); }
-      } else response = await fetchPng('https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + (spec.shiny ? 'shiny/' : '') + spec.id + '.png');
-      const data = Buffer.from(await response.arrayBuffer());
-      if (data.length > 2000000 || data.subarray(0,8).toString('hex') !== '89504e470d0a1a0a') throw fail('image_unavailable',503);
-      return data;
+        path = m[1];
+      } else {
+        if (!Number.isSafeInteger(Number(spec.id)) || Number(spec.id) < 1) throw fail('image_unavailable',503);
+        path = 'sprites/pokemon/other/official-artwork/' + (spec.shiny ? 'shiny/' : '') + Number(spec.id) + '.png';
+      }
+      try { return await fetchPng('https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/' + path); }
+      catch (_) { return await fetchPng('https://raw.githubusercontent.com/PokeAPI/sprites/master/' + path); }
     })();
     cache.set(key,promise);
     if (cache.size > 64) cache.delete(cache.keys().next().value);
