@@ -19,25 +19,47 @@ function loadDrattakPrestige(force = false) {
 }
 function drattakPrestigeHtml() {
   const p = drattakPrestigeState;
-  if (!p) return '<section class="exp-card"><h4>🐉 Épreuve de prestige · Drattak</h4><p class="exp-note">Chargement des progrès vérifiés…</p></section>';
-  const count = (n, max, label) => '<span><strong>' + n + '/' + max + '</strong> ' + label + '</span>';
-  const stats = '<div class="exp-days">' + count(p.days,p.goal.days,'jours') + count(p.wins,p.goal.wins,'victoires') +
-    count(p.modes,p.goal.modes,'modes') + '</div>';
-  let message = '';
-  if (p.needsAccount) message = '<p class="exp-note">Connecte-toi pour enregistrer tes victoires vérifiées et débloquer cette rencontre.</p>';
-  else if (p.cooldown) message = '<p class="exp-note">Drattak a quitté l’arène. Nouvelle tentative possible à partir du ' + escapeHtml(p.nextAttemptDay.split("-").reverse().join("/")) + ', après avoir reconstruit ta progression.</p>';
-  else if (p.available) message = '<button type="button" class="exp-legend-cta" data-action="meetPrestigeDrattak">🐉 Rencontrer Drattak avec mes Balls</button><p class="exp-note">Trois lancers maximum : Poké ' + p.chances.poke + ' %, Super ' + p.chances.great + ' %, Hyper ' + p.chances.ultra + ' % par lancer. Aucune capture garantie.</p>';
-  else message = '<p class="exp-note">Seules les victoires confirmées par le serveur comptent. Progresse au moins 14 jours, remporte 28 parties et réussis dans 5 modes différents sur une période de 45 jours. Une seule victoire par mode et par jour est retenue.</p>';
-  return '<section class="exp-card exp-prestige"><h4>🐉 Drattak · Épreuve de prestige</h4>' +
-    '<p class="exp-note">Les missions d’album dévoilent le Pokémon. Pour le posséder, il faut réussir une capture réelle.</p>' +
-    stats + message + '</section>';
+  if (!p) return '<section class="exp-card exp-prestige"><h4>🐉 Le rêve de Draby</h4><p class="exp-note">Chargement des indices et de ta progression…</p></section>';
+  const line = p.hasLineage
+    ? '<span>✅ La lignée retrouvée : ' + (p.lineageIds.includes(371) ? 'Draby' : 'Drackhaus') + ' a été capturé avec une Ball.</span>'
+    : '<span>🔒 Retrouve et capture un Draby ou un Drackhaus dans les hautes herbes. Ils vivent notamment près du volcan.</span>';
+  const trials = [
+    ['cry','Cri','Le murmure des falaises','Un cri résonne au bord d’une falaise de Hoenn.'],
+    ['silhouette','Silhouette','L’ombre sans ailes','Une silhouette sans ailes regarde le ciel depuis les hauteurs.'],
+    ['description','Description','La mémoire de la pierre','Sa tête, durcie par ses sauts, garde la trace de ses rêves.']
+  ];
+  const trialsHtml = trials.map(([mode,label,title,clue]) => {
+    const won = Number(p.wins?.[mode] || 0),goal = Number(p.goal?.modes?.[mode] || 3);
+    const done = won >= goal;
+    return '<div class="exp-prestige-trial"><b>' + (done ? '✅ ' : '🔒 ') + label + ' · ' + Math.min(won,goal) + '/' + goal + '</b>' +
+      '<span>' + (done ? '✦ ' + title + ' : ' + clue : 'Gagne ' + goal + ' parties vérifiées en mode ' + label + ' pour révéler cet indice.') + '</span></div>';
+  }).join("");
+  const days = '<p class="exp-note">📅 ' + Math.min(p.days,p.goal.days) + '/' + p.goal.days +
+    ' jours de réussite dans ces modes, sur une période de 30 jours. Une victoire par mode et par jour compte.</p>';
+  let next = '';
+  if (p.needsAccount) next = '<p class="exp-note">Connecte-toi pour garder tes preuves de jeu et débloquer la rencontre.</p>';
+  else if (p.cooldown) next = '<p class="exp-note">Drattak a quitté les falaises. Nouvelle tentative à partir du ' +
+    escapeHtml(p.nextAttemptDay.split("-").reverse().join("/")) + ', après de nouvelles épreuves.</p>';
+  else if (p.available) next = '<div class="exp-prestige-riddle"><strong>✦ Le secret de la falaise</strong>' +
+    '<p>« Sans ailes, j’ai bravé mille fois le vide. Ma tête est devenue solide, mais je ne rêvais que de voler. Qui suis-je ? »</p>' +
+    '<label for="prestige-drattak-answer">Le nom du Pokémon</label>' +
+    '<input id="prestige-drattak-answer" type="text" maxlength="50" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ta réponse" />' +
+    '<button type="button" class="exp-legend-cta" data-action="meetPrestigeDrattak">🐉 Ouvrir le passage vers Drattak</button>' +
+    '<p class="exp-note">La bonne réponse permet une rencontre, pas une capture garantie. Trois lancers maximum avec tes Balls : Poké ' +
+    p.chances.poke + ' %, Super ' + p.chances.great + ' %, Hyper ' + p.chances.ultra + ' % par lancer.</p></div>';
+  else next = '<p class="exp-note">Termine les étapes pour déchiffrer le secret de la falaise et débloquer ta rencontre.</p>';
+  return '<section class="exp-card exp-prestige"><h4>🐉 Le rêve de Draby · Quête de Drattak</h4>' +
+    '<p class="exp-note">Dans les jeux Pokémon, Draby rêvait de voler en s’élançant des falaises. Sur Pokédle, suis sa lignée et retrouve les indices cachés dans trois modes.</p>' +
+    '<div class="exp-prestige-lineage">' + line + '</div>' + trialsHtml + days + next + '</section>';
 }
 function meetPrestigeDrattak() {
+  const answer = document.getElementById("prestige-drattak-answer")?.value?.trim() || "";
+  if (!answer) { if (typeof showToast === "function") showToast("Entre ta réponse à l’énigme de la falaise."); return; }
   const scope = typeof ballState !== "undefined" && ballState?.actionScope;
   if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
-  return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope}).then((data) => {
+  return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
     if (!data?.ok) {
-      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
+      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
         encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
         account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
       // Une requête peut avoir réussi alors que sa réponse s'est perdue.
