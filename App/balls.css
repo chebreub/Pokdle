@@ -399,7 +399,7 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .dexc-line em{font-style:normal;color:#5C5663}
 .dexc .fx-catch-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dexc-hero img.mo-catch-color{position:absolute}
-/* 👁️ Vus / Attrapés dans Pokédex › Ma collection */
+/* 👁️ Vus / ⚪ Capturés / ◆ Obtenus dans Pokédex › Ma collection */
 .pokedex-collection-national>.col-track{display:grid;grid-template-columns:104px minmax(60px,1fr) auto;align-items:center;gap:10px;margin:2px 0;color:#fff}
 .pokedex-collection-national .col-track span{display:flex;align-items:center;gap:4px;min-width:0;color:#fff;font-size:.85rem}
 .pokedex-collection-national .col-track i{display:block;height:10px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden}
@@ -407,14 +407,17 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .pokedex-collection-national .col-track em{color:rgba(255,255,255,.8)}
 .pokedex-collection-national .col-track .mo-ball-svg{width:16px;height:16px}
 .col-track.is-shiny i b{background:#F6B93B}
+.col-track.is-mission i b{background:#B88AE8}
 .pokedex-collection-filters .mo-ball-svg,.pokedex-collection-legend .mo-ball-svg{display:inline-block;width:14px;height:14px;margin-right:4px;vertical-align:-2px}
 .pokedex-collection-filters button{white-space:nowrap}
 .collection-card.is-seen img{filter:grayscale(1) opacity(.5)}
 .collection-card.is-caught{box-shadow:inset 0 0 0 2px rgba(227,53,13,.45)}
+.collection-card.is-mission{box-shadow:inset 0 0 0 2px rgba(151,93,199,.4)}
 .collection-card.is-shiny-entry{box-shadow:inset 0 0 0 2px #F6B93B}
-.pokedex-collection-state.is-caught,.pokedex-collection-state.is-seen{display:inline-flex;align-items:center;gap:3px}
+.pokedex-collection-state.is-caught,.pokedex-collection-state.is-seen,.pokedex-collection-state.is-mission{display:inline-flex;align-items:center;gap:3px}
 .pokedex-collection-state.is-caught{background:#FDE7E1;color:#B3260A}
 .pokedex-collection-state.is-seen{background:#E9EEFB;color:#3550B0}
+.pokedex-collection-state.is-mission{background:#F1E8FA;color:#673995}
 .pokedex-collection-state .mo-ball-svg{width:14px;height:14px}
 /* 🗺️ Zones des hautes herbes : décors en pixel art (img/zones) */
 .wz-pick{flex:1;overflow:auto;padding:14px 16px 18px}
