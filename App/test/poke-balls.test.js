@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {arcadeGain,createBallService,initBallsDb,DAILY_CAP}=require('../lib/poke-balls');
+const {issuePartyRewardProof}=require('../lib/party-rewards');
 
 test('a game gives a Poké Ball, a fine one a Super Ball, and an unknown mode nothing',()=>{
   assert.deepEqual(arcadeGain('quiz','win',12),{source:'mode:quiz',ball:'great'});
@@ -20,7 +21,7 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
   try{
     await admin.query('CREATE SCHEMA '+schema);db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:'-c search_path='+schema,max:4});
     let now=new Date('2026-11-03T09:00:00Z');const day='2026-11-03';
-    const balls=createBallService({db,clock:()=>now});
+    const balls=createBallService({db,clock:()=>now,secret:'test-secret'});
     await initBallsDb(db);
     const guest={key:'guest:g1',guestKey:'guest:g1',accountId:null};
     // The daily games' tables are not there yet: the Balls still work.
@@ -30,10 +31,16 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     s=await balls.gift(guest);
     assert.deepEqual(s.added,[{source:'gift',ball:'poke'}]);
     assert.deepEqual([(await balls.gift(guest)).added,(await balls.state(guest)).giftAvailable],[[],false],'one gift a day');
-    s=await balls.earn(guest,{mode:'evolution',result:'win',score:3});
-    assert.deepEqual(s.added,[{source:'mode:evolution',ball:'great'}]);
-    assert.deepEqual((await balls.earn(guest,{mode:'evolution',result:'win',score:2})).added,[],'replaying a mode the same day gives nothing');
-    await assert.rejects(balls.earn(guest,{mode:'daily',result:'win',score:1}),/unknown_mode/,'the Pokémon du jour is never declared by the browser');
+    await assert.rejects(balls.earn(guest,{mode:'evolution',result:'win',score:3}),/verified_game_required/,'an unverified client score cannot mint Balls');
+    await assert.rejects(balls.earn(guest,{mode:'party'}),/party_proof_required/,'declaring a Party Room is insufficient');
+    await assert.rejects(balls.earn(guest,{mode:'daily',result:'win',score:1}),/verified_game_required/,'daily is verified by the server');
+    const room={status:'complete',rewardRunId:'a'.repeat(32),completedAt:Date.parse('2026-11-03T09:00:00Z'),
+      players:[{rewardIdentity:'guest:g1'},{rewardIdentity:'guest:g2'}]};
+    const partyProof=issuePartyRewardProof('test-secret',room,'guest:g1',day);
+    s=await balls.earn(guest,{mode:'party',partyProof});
+    assert.deepEqual(s.added,[{source:'party',ball:'poke'}]);
+    assert.deepEqual((await balls.earn(guest,{mode:'party',partyProof})).added,[],'the same valid Party proof never awards twice');
+    await assert.rejects(balls.earn(guest,{mode:'party',partyProof:partyProof+'x'}),/party_proof_required/);
 
     // Daily games are read from their own tables.
     await db.query(`CREATE TABLE daily_plays(identity TEXT,day DATE,status TEXT);CREATE TABLE wordle_plays(identity TEXT,day DATE,status TEXT);
@@ -44,20 +51,25 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     await db.query("INSERT INTO wordle_plays VALUES('guest:g1',$1,'lost');INSERT INTO dossier_plays VALUES('guest:g1',$1,'completed',20);INSERT INTO challenge_plays VALUES('guest:g1',$1,'abandoned',5)".replaceAll('$1',`'${day}'`));
     s=await balls.state(guest);
     assert.deepEqual(s.added,[{source:'dossier',ball:'great'},{source:'journey',ball:'great'}],'a perfect Dossier and the 4/4 journey give Super Balls; a lost Wordle and an abandoned Défi give nothing');
-    assert.deepEqual([s.today,s.bag],[5,{poke:2,great:3,ultra:0}]);
+    assert.deepEqual([s.today,s.bag],[5,{poke:3,great:2,ultra:0}]);
 
-    // The cap: 10 a day, whatever the source.
-    for(const mode of ['typecombo','order','stat-clash','speedrun','odd','quiestce','petitbac'])await balls.earn(guest,{mode,result:'loss',score:1});
+    // The cap still applies when an eligible source is completed after ten rewards.
+    for(const mode of ['typecombo','order','stat-clash','speedrun','odd']) {
+      await db.query("INSERT INTO ball_gains(identity,day,source,ball) VALUES($1,$2,$3,'poke')",['guest:g1',day,'mode:'+mode]);
+    }
     s=await balls.state(guest);
     assert.deepEqual([s.today,s.giftAvailable],[10,false]);
-    assert.equal(s.gains.filter(g=>g.source.startsWith('mode:')).length,6,'the 7th mode is past the cap');
+    await db.query("UPDATE wordle_plays SET status='won' WHERE identity=$1 AND day=$2",['guest:g1',day]);
+    s=await balls.state(guest);
+    assert.equal(s.today,10);
+    assert.equal(s.gains.some(g=>g.source==='wordle'),false,'the 11th Ball is blocked');
 
     // Logging in: the guest's Balls join the account, and a source already won on the account is not doubled.
     const user={key:'user:42',guestKey:'guest:g1',accountId:'42'};
     await db.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES('user:42',$1,'gift','poke','42'),('user:42','2026-11-01','mode:quiz','great','42')",[day]);
     s=await balls.state(user);
     assert.equal(s.today,10);assert.equal(s.authenticated,true);
-    assert.deepEqual(s.bag,{poke:11,great:5,ultra:0},'the guest Balls, the account Balls and its 5 welcome Balls (4 Poké + 1 Super)');
+    assert.equal(s.bag.poke+s.bag.great+s.bag.ultra,16,'10 daily Balls, 5 welcome Balls and one historical Ball');
     assert.equal(s.bonus.filter(b=>b.source.startsWith('welcome:')).length,5);
     assert.equal(s.today,10,'the welcome Balls are outside the daily cap');
     assert.equal((await balls.state(user)).bonus.length,5,'given once per account');
@@ -83,10 +95,11 @@ test('PostgreSQL: 7 days in a row give a Hyper Ball, outside the cap; the gift a
     let s=await balls.state(g);
     assert.deepEqual([s.streak.days,s.streak.playedToday,s.streak.left],[6,false,1],'6 days kept until midnight, one more for the Hyper Ball');
     assert.equal((await balls.gift(g)).streak.playedToday,false,'opening the gift is not playing');
-    s=await balls.earn(g,{mode:'odd',result:'loss',score:1});
-    assert.deepEqual(s.added.map(a=>a.source+':'+a.ball),['mode:odd:poke','streak:ultra']);
+    await db.query("INSERT INTO ball_gains(identity,day,source,ball) VALUES('guest:s1','2026-11-03','mode:odd','poke')");
+    s=await balls.state(g);
+    assert.deepEqual(s.added.map(a=>a.source+':'+a.ball),['streak:ultra']);
     assert.deepEqual([s.streak.days,s.streak.inCycle,s.bag.ultra,s.today],[7,7,1,2]);
-    assert.equal((await balls.earn(g,{mode:'order',result:'loss',score:1})).added.some(a=>a.source==='streak'),false,'one Hyper Ball for the 7th day');
+    assert.equal((await balls.state(g)).added.some(a=>a.source==='streak'),false,'one Hyper Ball for the 7th day');
     // A missed day breaks the streak.
     now=new Date('2026-11-05T09:00:00Z');
     assert.equal((await balls.state(g)).streak.days,0);
