@@ -482,7 +482,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (!verifyDreamAnswer(body.answer)) throw fail("prestige_riddle_wrong",400);
     if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
     const bag = await bagOf(c,who);
-    if (!BALLS.some((ball) => bag[ball] > 0)) throw fail("no_balls");
+    if (BALLS.reduce((n, ball) => n + Number(bag[ball] || 0), 0) < MAX_THROWS) throw fail("prestige_need_three_balls");
     const shiny = randomInt(SHINY_ODDS) === 0;
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'prestige') RETURNING *",
       [who.key,who.accountId,day,SALAMENCE.pokemonId,shiny])).rows[0];
