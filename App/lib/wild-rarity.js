@@ -9,7 +9,9 @@ const RARITY_WEIGHTS = Object.freeze({
   uncommon: 18,
   rare: 8,
   scarce: 3,
-  exceptional: 1,
+  // Ces quatre espèces (taux de capture 3) sont très dures à attraper.
+  // Les rendre aussi presque invisibles serait une double pénalité disproportionnée.
+  elusive: 16,
   prestige: 1,
 });
 
@@ -28,7 +30,7 @@ function wildRarity(id, captureRates) {
   if (captureRate >= 100) return "uncommon";
   if (captureRate >= 60) return "rare";
   if (captureRate >= 25) return "scarce";
-  return "exceptional";
+  return "elusive";
 }
 
 function buildWildEncounterTable(pool, captureRates) {
