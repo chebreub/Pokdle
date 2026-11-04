@@ -128,3 +128,23 @@ test('Description draws its mystery up to #898 only, but any Pokémon of the gen
   assert.ok(t.secretId <= 898);
   assert.equal(games.answer(t, 906), true, 'a Gen 9 guess is allowed');
 });
+
+test('Classique and Stat Mystère are verified: the mystery gets its types and stats, the first letter only from the 5th guess', async () => {
+  assert.ok(MODES.includes('normal') && MODES.includes('mystery'));
+  const list = [...pokemon, ...[4,7,10,13,16].map((id) => ({id,name:'P'+id,gen:1,generation:1,sprite:sprite(id)}))];
+  const rows = [];
+  const c = {query: async (q, p) => { if (/^SELECT state/.test(q)) return {rows}; if (/^INSERT/.test(q)) { rows[0] = {state: JSON.parse(p[3])}; } return {rows:[]}; }};
+  const arcade = createVerifiedArcade({pokemon:list,secret:'local-only',randomInt:()=>0});
+  const n = (await arcade.start(c, me, {mode:'normal', startId:randomUUID(), gens:[1]})).arcade;
+  assert.equal(n.image, undefined); assert.equal(n.mystery, undefined); assert.equal(n.answerId, undefined);
+  rows.length = 0;
+  let m = (await arcade.start(c, me, {mode:'mystery', startId:randomUUID(), gens:[1]})).arcade;
+  const secretId = rows[0].state.secretId;
+  assert.deepEqual(m.mystery.stats, require('../base-stats.json')[String(secretId)]);
+  assert.equal(m.mystery.letter, undefined, 'no letter at first');
+  const wrong = list.filter((p) => p.gen === 1 && p.id !== secretId).slice(0, 5);
+  for (const p of wrong) m = (await arcade.answer(c, me, {mode:'mystery', sessionId:m.sessionId, round:0, choice:p.id})).arcade;
+  assert.equal(m.attempts, 5);
+  assert.equal(m.mystery.letter, list.find((p) => p.id === secretId).name[0].toUpperCase());
+  assert.equal(m.answerId, undefined);
+});

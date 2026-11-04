@@ -7,7 +7,7 @@ let verifiedGuess = null;
 let verifiedGuessResumed = {};
 // Une fois : la prochaine partie de ce mode se joue en local (le serveur n'a pas répondu).
 let verifiedGuessOffline = "";
-const VERIFIED_GUESS_STARTS = { pixel: "startPixelGame", silhouette: "startSilhouetteGame", cry: "startCryGame", description: "startDescriptionMode" };
+const VERIFIED_GUESS_STARTS = { pixel: "startPixelGame", silhouette: "startSilhouetteGame", cry: "startCryGame", description: "startDescriptionMode", normal: "startNormalGame", mystery: "startMysteryStatGame" };
 
 // Pendant le chargement, une image vide garde la case visible (pas de saut de mise en page).
 const VERIFIED_GUESS_LOADING = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
@@ -25,6 +25,14 @@ function verifiedGuessDescription(view) {
   descriptionState = view && view.clue ? { text: view.clue, loading: false, error: null } : { text: "Chargement de l'entrée Pokédex…", loading: true, error: null };
   if (typeof renderDescriptionMode === "function") renderDescriptionMode();
 }
+// Stat Mystère : types, stats et 1re lettre envoyés par le serveur (la lettre à partir du 5e essai).
+function verifiedGuessMystery() {
+  const m = verifiedGuess && verifiedGuess.mode === "mystery" && gameMode === "mystery" ? verifiedGuess.mystery : null;
+  if (!m) return null;
+  const st = Array.isArray(m.stats) ? m.stats : null;
+  return { type1: m.type1, type2: m.type2, letter: m.letter || "",
+    parsed: st ? { hp: st[0], attack: st[1], defense: st[2], spAttack: st[3], spDefense: st[4], speed: st[5] } : null };
+}
 function verifiedGuessActive() {
   return Boolean(verifiedGuess && verifiedGuess.sessionId && gameMode === verifiedGuess.mode && !secretPokemon && !gameOver);
 }
@@ -34,12 +42,14 @@ function verifiedGuessControls(busy, label) {
   if (submit) { submit.textContent = busy && label ? label : "Deviner"; if (busy) submit.setAttribute("aria-busy", "true"); else submit.removeAttribute("aria-busy"); }
 }
 function verifiedGuessPanels() {
+  if (gameMode === "mystery" && typeof updateMysteryPanel === "function") updateMysteryPanel(false);
   if (typeof updatePixelPanel === "function") updatePixelPanel(false);
   if (typeof updateSilhouettePanel === "function") updateSilhouettePanel(false);
   if (typeof updateCryPanel === "function" && gameMode === "cry") updateCryPanel(false);
 }
 // Ajoute les essais que le serveur connaît et que la page n'a pas encore affichés (reprise, réponse rejouée).
 function verifiedGuessApplyRows(view, animate) {
+  if (view.mystery && verifiedGuess) { const fresh = !verifiedGuess.mystery; verifiedGuess.mystery = view.mystery; if (fresh) mysteryClues = []; }
   const rows = Array.isArray(view.rows) ? view.rows : [];
   for (let i = resultHistory.length; i < rows.length; i += 1) {
     const row = rows[i], pokemon = POKEMON_BY_ID.get(row.pokemonId);
@@ -93,7 +103,7 @@ function verifiedGuessStart(mode, pool) {
   verifiedGuessResumed[mode] = true;
   verifiedArcadeRequest("start", { mode, startId: crypto.randomUUID(), gens: [...selectedGens].map(Number), restart }).then((data) => {
     if (!verifiedGuess || verifiedGuess.ticket !== ticket || gameMode !== mode) return;
-    if (!data || !data.ok || !data.arcade || !(data.arcade.image || data.arcade.cry || data.arcade.clue)) {
+    if (!data || !data.ok || !data.arcade || !data.arcade.sessionId) {
       verifiedGuessLocal(mode, pool, "Le serveur ne répond pas : partie d’entraînement, sans Pokédollars ni Ball.");
       return;
     }

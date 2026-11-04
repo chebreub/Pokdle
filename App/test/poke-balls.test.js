@@ -30,9 +30,9 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     s=await balls.gift(guest);
     assert.deepEqual(s.added,[{source:'gift',ball:'poke'}]);
     assert.deepEqual([(await balls.gift(guest)).added,(await balls.state(guest)).giftAvailable],[[],false],'one gift a day');
-    s=await balls.earn(guest,{mode:'mystery',result:'win',score:3});
-    assert.deepEqual(s.added,[{source:'mode:mystery',ball:'great'}]);
-    assert.deepEqual((await balls.earn(guest,{mode:'mystery',result:'win',score:2})).added,[],'replaying a mode the same day gives nothing');
+    s=await balls.earn(guest,{mode:'evolution',result:'win',score:3});
+    assert.deepEqual(s.added,[{source:'mode:evolution',ball:'great'}]);
+    assert.deepEqual((await balls.earn(guest,{mode:'evolution',result:'win',score:2})).added,[],'replaying a mode the same day gives nothing');
     await assert.rejects(balls.earn(guest,{mode:'daily',result:'win',score:1}),/unknown_mode/,'the Pokémon du jour is never declared by the browser');
 
     // Daily games are read from their own tables.
@@ -47,7 +47,7 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     assert.deepEqual([s.today,s.bag],[5,{poke:2,great:3,ultra:0}]);
 
     // The cap: 10 a day, whatever the source.
-    for(const mode of ['normal','order','mystery','speedrun','odd','quiestce','evolution'])await balls.earn(guest,{mode,result:'loss',score:1});
+    for(const mode of ['typecombo','order','stat-clash','speedrun','odd','quiestce','petitbac'])await balls.earn(guest,{mode,result:'loss',score:1});
     s=await balls.state(guest);
     assert.deepEqual([s.today,s.giftAvailable],[10,false]);
     assert.equal(s.gains.filter(g=>g.source.startsWith('mode:')).length,6,'the 7th mode is past the cap');
@@ -86,7 +86,7 @@ test('PostgreSQL: 7 days in a row give a Hyper Ball, outside the cap; the gift a
     s=await balls.earn(g,{mode:'odd',result:'loss',score:1});
     assert.deepEqual(s.added.map(a=>a.source+':'+a.ball),['mode:odd:poke','streak:ultra']);
     assert.deepEqual([s.streak.days,s.streak.inCycle,s.bag.ultra,s.today],[7,7,1,2]);
-    assert.equal((await balls.earn(g,{mode:'mystery',result:'loss',score:1})).added.some(a=>a.source==='streak'),false,'one Hyper Ball for the 7th day');
+    assert.equal((await balls.earn(g,{mode:'order',result:'loss',score:1})).added.some(a=>a.source==='streak'),false,'one Hyper Ball for the 7th day');
     // A missed day breaks the streak.
     now=new Date('2026-11-05T09:00:00Z');
     assert.equal((await balls.state(g)).streak.days,0);

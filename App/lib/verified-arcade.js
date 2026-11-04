@@ -100,7 +100,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       // Ce que le joueur reçoit pour deviner : une image ou un cri sous une adresse opaque, ou le texte du Pokédex.
       if (s.mode === 'cry') s.cry = '/api/arcade/cry/' + imageToken(who, {id:s.secretId, guess:true, cry:true}, s.startedAt + TTL);
       else if (s.mode === 'description') s.clue = await describe(guessing.get(s.secretId), guessing.speciesOf(s.secretId));
-      else s.image = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
+      else if (s.mode === 'pixel' || s.mode === 'silhouette') s.image = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
     } else question(s, who);
     await save(c,who,s); return {arcade:view(s)};
   }

@@ -4,7 +4,10 @@
 // formes comprises, sauf celles marquées guessable:false), reçoit chaque essai et renvoie les mêmes
 // pastilles que le Pokémon du jour. La réponse ne part qu'à la fin ; l'image passe par une adresse opaque.
 const { compareDaily } = require('./daily-comparison');
-const MODES = Object.freeze(['pixel', 'silhouette', 'cry', 'description']);
+const MODES = Object.freeze(['pixel', 'silhouette', 'cry', 'description', 'normal', 'mystery']);
+// Stat Mystère : les stats de base embarquées (même source que le navigateur et le Higher or Lower).
+const STATS = require('../base-stats.json');
+const MYSTERY_LETTER_AFTER = 5;
 // PokeAPI n'a d'entrées Pokédex en français que jusqu'au n° 898 : le mystère de la Description vient de là
 // (on peut quand même proposer n'importe quel Pokémon des générations choisies, comme avant).
 const DESCRIPTION_LAST_FRENCH_SPECIES = 898;
@@ -36,8 +39,16 @@ function createGuessGames(catalog, randomInt) {
         heightDirection: direction(p.height, secret.height), weightDirection: direction(p.weight, secret.weight) };
     });
   }
+  // Stat Mystère : les types et les 6 stats dès le début, la 1re lettre à partir du 5e essai (comme avant).
+  function mysteryClues(s) {
+    const p = byId.get(s.secretId), stats = STATS[String(p.apiId || p.baseId || p.id)];
+    const ok = Array.isArray(stats) && stats.length === 6 && stats.every((v) => Number.isFinite(v) && v > 0);
+    return { type1: p.type1, type2: p.type2 || null, stats: ok ? stats : null,
+      ...(s.phase === 'over' || s.guesses.length >= MYSTERY_LETTER_AFTER ? { letter: [...String(p.name)][0].toUpperCase() } : {}) };
+  }
   function view(s) {
-    return { attempts: s.guesses.length, rows: rows(s), won: s.won, ...(s.phase === 'over' ? { answerId: s.secretId } : {}) };
+    return { attempts: s.guesses.length, rows: rows(s), won: s.won, ...(s.mode === 'mystery' ? { mystery: mysteryClues(s) } : {}),
+      ...(s.phase === 'over' ? { answerId: s.secretId } : {}) };
   }
   function result(s) { return { mode: s.mode, result: s.won ? 'win' : 'loss', score: s.guesses.length }; }
   function answer(s, choice) {
