@@ -7,7 +7,7 @@
 const crypto = require("node:crypto");
 const verifiedArcade = require("./verified-arcade");
 const wildRarity = require("./wild-rarity");
-const { SALAMENCE, statusForSalamence } = require("./prestige-quests");
+const { SALAMENCE, statusForSalamence, verifyDreamAnswer } = require("./prestige-quests");
 const { verifyPartyRewardProof } = require("./party-rewards");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
@@ -448,32 +448,45 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'legend') RETURNING *", [who.key, who.accountId, day, st.legendId, shiny])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
-  // 🐉 Drattak : une longue épreuve vérifiable par le serveur.
-  // Les missions d'album sont des DÉCOUVERTES côté profil, sans preuve d'éligibilité.
-  // Les accès à cette rencontre sont fondés uniquement sur les victoires arcade
-  // effectivement vérifiées après la mise en place du système.
+  // 🐉 Draby rêve de voler : la quête combine possession réelle d'un Draby
+  // (ou Drackhaus), épreuves thématiques et énigme de la falaise.
+  // Ni les 108 missions locales ni un score déclaré ne créent une capture.
   async function prestige(c, who, day) {
     const last = (await c.query("SELECT to_char(day,'YYYY-MM-DD') AS day,status FROM wild_encounters WHERE identity=$1 AND kind='prestige' AND pokemon_id=$2 ORDER BY id DESC LIMIT 1",
       [who.key, SALAMENCE.pokemonId])).rows[0] || null;
-    const progress = (await c.query(`SELECT COUNT(*)::int AS wins,COUNT(DISTINCT day)::int AS days,COUNT(DISTINCT mode)::int AS modes
-      FROM prestige_verified_wins WHERE identity=$1 AND day BETWEEN $2 AND $3 AND day>$4`,
-      [who.key,shiftDay(day,-SALAMENCE.windowDays+1),day,last?.day || "1900-01-01"])).rows[0];
-    const result = statusForSalamence({ ...progress, lastAttemptDay:last?.day || null }, day, shiftDay);
-    return { ...result, needsAccount: !who.accountId, lastStatus: last?.status || null,
-      available: Boolean(who.accountId) && result.eligible,
-      chances: Object.fromEntries(BALLS.map((ball) => [ball,Math.round(captureChance(SALAMENCE.pokemonId,ball)*100)])) };
+    const modes = Object.keys(SALAMENCE.modes);
+    const rows = (await c.query(`SELECT mode,COUNT(*)::int AS wins
+      FROM prestige_verified_wins WHERE identity=$1 AND mode=ANY($2::text[]) AND day BETWEEN $3 AND $4 AND day>$5
+      GROUP BY mode`,
+      [who.key,modes,shiftDay(day,-SALAMENCE.windowDays+1),day,last?.day || "1900-01-01"])).rows;
+    const days = Number((await c.query(`SELECT COUNT(DISTINCT day)::int AS days FROM prestige_verified_wins
+      WHERE identity=$1 AND mode=ANY($2::text[]) AND day BETWEEN $3 AND $4 AND day>$5`,
+      [who.key,modes,shiftDay(day,-SALAMENCE.windowDays+1),day,last?.day || "1900-01-01"])).rows[0].days);
+    const lineageIds = (await c.query(`SELECT DISTINCT pokemon_id FROM wild_encounters
+      WHERE identity=$1 AND status='caught' AND pokemon_id=ANY($2::int[])`,
+      [who.key,SALAMENCE.lineageIds])).rows.map((r) => Number(r.pokemon_id));
+    const wins = Object.fromEntries(rows.map((r) => [r.mode,Number(r.wins)]));
+    const result = statusForSalamence({ wins,days,lineageIds,lastAttemptDay:last?.day || null },day,shiftDay);
+    return { ...result, needsAccount:!who.accountId,lastStatus:last?.status || null,
+      available:Boolean(who.accountId) && result.eligible,
+      chances:Object.fromEntries(BALLS.map((ball) => [ball,Math.round(captureChance(SALAMENCE.pokemonId,ball)*100)])) };
   }
-  async function meetPrestige(c, who, day) {
+  async function meetPrestige(c, who, day, body = {}) {
     if (!who.accountId) throw fail("account_required",401);
+    // Atomicity: the next request cannot issue a second encounter for the same
+    // unlocked quest while the first transaction is still committing.
+    await lock(c,who.key);
     const state = await prestige(c, who, day);
     if (state.cooldown) throw fail("prestige_cooldown");
     if (!state.eligible) throw fail("prestige_not_ready");
+    if (!verifyDreamAnswer(body.answer)) throw fail("prestige_riddle_wrong",400);
     if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
-    if (!Object.values(await bagOf(c, who)).some((count) => count > 0)) throw fail("no_balls");
+    const bag = await bagOf(c,who);
+    if (!BALLS.some((ball) => bag[ball] > 0)) throw fail("no_balls");
     const shiny = randomInt(SHINY_ODDS) === 0;
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'prestige') RETURNING *",
       [who.key,who.accountId,day,SALAMENCE.pokemonId,shiny])).rows[0];
-    return { encounter: encounterView(row), fresh:true };
+    return { encounter:encounterView(row),fresh:true };
   }
   async function skipEncounter(c, who, day) {
     const r = await c.query("UPDATE wild_encounters SET status='skipped',ended_at=NOW() WHERE identity=$1 AND status='open' AND day=$2", [who.key, day]);
@@ -587,7 +600,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
     prestige: (who) => wild(who, async (c, day) => ({ prestige: await prestige(c, who, day) })),
-    meetPrestige: (who) => wild(who, (c, day) => meetPrestige(c, who, day)),
+    meetPrestige: (who, body = {}) => wild(who, (c, day) => meetPrestige(c, who, day, body)),
     release: (who, body) => wild(who, (c, day) => release(c, who, day, body)),
     buy: (who, body) => wild(who, (c, day) => buy(c, who, day, body), actionReceipt("buy", body))
   };
@@ -674,7 +687,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.post("/api/expedition/legend", express.json({ limit: "1kb" }), handle((who) => service.meetLegend(who)));
   app.get("/api/prestige/drattak", handle((who) => service.prestige(who)));
   app.post("/api/prestige/drattak/meet", express.json({ limit: "1kb" }),
-    handle((who) => service.meetPrestige(who),null,true));
+    handle((who, req) => service.meetPrestige(who, req.body || {}),null,true));
   return service;
 }
 
