@@ -1,6 +1,6 @@
 
 // ===== Les hautes herbes (PR B de la boucle, 3/11/2026) =====
-// Le serveur (lib/poke-balls.js) tire le Pokémon, le shiny (1/150) et chaque lancer. Ici : la scène,
+// Le serveur (lib/poke-balls.js) tire le Pokémon, le shiny (1/500 depuis le 5/11) et chaque lancer. Ici : la scène,
 // la Ball qui tremble, « Gotcha ! », et le Pokémon capturé qui rejoint l'album (marque ⚪).
 let wildCaptures = null;      // { [id]: { normal, shiny } } lu sur le serveur
 let wildCatchableTotal = null; // dénominateur renvoyé par le serveur (herbes + expéditions)

@@ -52,7 +52,7 @@ function weekStart(day) { const t = new Date(day + "T12:00:00Z"); return shiftDa
 function expeditionOf(monday) { const n = Math.round(Date.parse(monday + "T12:00:00Z") / (7 * 86400000)); return EXPEDITIONS[((n % EXPEDITIONS.length) + EXPEDITIONS.length) % EXPEDITIONS.length]; }
 const BALLS = Object.freeze(["poke", "great", "ultra"]);
 
-// ===== Les hautes herbes : 3 lancers par rencontre, shiny à 1 sur 150. =====
+// ===== Les hautes herbes : 3 lancers par rencontre, shiny à 1 sur 500 (1 sur 150 jusqu'au 4/11/2026). =====
 // Rencontres (3/11 au soir, à sa demande) : 4 de plus toutes les 4 h, heure de Paris (0 h, 4 h, 8 h, 12 h, 16 h, 20 h),
 // celles qu'on n'a pas utilisées restent jusqu'à minuit : 24 par jour au plus. Les Balls (10 par jour) restent le vrai frein.
 const ENCOUNTERS_PER_BATCH = 4;
@@ -64,7 +64,10 @@ function parisHourOf(date) {
 // La prochaine vague : l'heure ronde à Paris, comptée depuis minuit du lendemain (resetAt).
 function nextBatchAt(resetAt, hour) { return new Date(Date.parse(resetAt) - (24 - hour) * 3600000).toISOString(); }
 const MAX_THROWS = 3;
-const SHINY_ODDS = 150;
+const SHINY_ODDS = 500;
+// 4/11/2026, choix de Kayan (« plus rare 1/500 ») : le nouveau taux part du 5/11 à minuit (jour de Paris).
+const SHINY_ODDS_FROM = "2026-11-05", SHINY_ODDS_BEFORE = 150;
+function shinyOddsFor(day) { return String(day || "") >= SHINY_ODDS_FROM ? SHINY_ODDS : SHINY_ODDS_BEFORE; }
 // Taux de capture officiels (capture-rates.json, fait par tools/capture-rates.js depuis PokéAPI).
 const CAPTURE = require("../capture-rates.json");
 const BALL_BONUS = Object.freeze({ poke: 1, great: 1.4, ultra: 2 });
@@ -390,7 +393,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (!BALLS.some((b) => bag[b] > 0)) throw fail("no_balls");
     const table = zone ? ZONE_ENCOUNTER_TABLES[zone] : WILD_ENCOUNTER_TABLE;
     const pokemonId = wildRarity.drawWildPokemon(table, randomInt);
-    const shiny = randomInt(SHINY_ODDS) === 0;
+    const shiny = randomInt(shinyOddsFor(day)) === 0;
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,zone) VALUES($1,$2,$3,$4,$5,$6) RETURNING *", [who.key, who.accountId || null, day, pokemonId, shiny, zone || null])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
@@ -447,7 +450,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (st.legend.status) throw fail("legend_already_met");
     if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
     if (!Object.values(await bagOf(c, who)).some((n) => n > 0)) throw fail("no_balls");
-    const shiny = randomInt(SHINY_ODDS) === 0;
+    const shiny = randomInt(shinyOddsFor(day)) === 0;
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'legend') RETURNING *", [who.key, who.accountId, day, st.legendId, shiny])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
@@ -486,7 +489,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
     const bag = await bagOf(c,who);
     if (BALLS.reduce((n, ball) => n + Number(bag[ball] || 0), 0) < MAX_THROWS) throw fail("prestige_need_three_balls");
-    const shiny = randomInt(SHINY_ODDS) === 0;
+    const shiny = randomInt(shinyOddsFor(day)) === 0;
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'prestige') RETURNING *",
       [who.key,who.accountId,day,SALAMENCE.pokemonId,shiny])).rows[0];
     return { encounter:encounterView(row),fresh:true };
@@ -694,4 +697,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { SALAMENCE, COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { SALAMENCE, COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, shinyOddsFor, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
