@@ -11,7 +11,7 @@ var DEX_FILTERS = [['all', 'Tous'], ['caught', 'Attrapés'], ['seen', 'Vus'], ['
 function dexSlotMatches(slot) {
   var f = albumView.filter;
   if (f === 'caught' && !slot.classList.contains('is-caught')) return false;
-  if (f === 'seen' && (slot.classList.contains('is-caught') || slot.classList.contains('is-miss'))) return false;
+  if (f === 'seen' && slot.classList.contains('is-miss')) return false;
   if (f === 'miss' && !slot.classList.contains('is-miss')) return false;
   if (f === 'shiny' && !slot.classList.contains('is-shiny')) return false;
   var q = String(albumView.q || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/^#/, '');
