@@ -509,7 +509,9 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       if (verifiedArcade.MODES.includes(String(body.mode || ""))) throw fail("verified_game_required",400);
       return body.mode === "party"
       ? Object.assign([{ source: "party", ball: "poke" }], { party: true })
-      : Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } });
+      // Lot B de l'audit (4/11) : un mode dont le serveur ne vérifie pas encore la partie donne sa Ball, plus de ₽.
+      // Les ₽ des parties viennent seulement des modes vérifiés (arcadeRun) ; jeux du jour et Party Room inchangés.
+      : [arcadeGain(body.mode, body.result, body.score)];
     }),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, async (c, day) => {

@@ -39,22 +39,19 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     await assert.rejects(balls.buy(guest, { item: 'poke' }), /account_required/);
 
     const me = { key: 'user:7', guestKey: 'guest:c2', accountId: '7' };
-    // La 1re partie du jour de chaque mode : belle partie 90 ₽, gagnée 60 ₽, perdue 30 ₽ ; rejouer ne paie plus.
+    // Un mode pas encore vérifié par le serveur donne sa Ball, mais plus de ₽ (lot B de l'audit, 4/11).
     s = await balls.earn(me, { mode: 'odd', result: 'win', score: 14 });
-    assert.deepEqual(s.coinsAdded.map((x) => x.amount), [90]);
-    s = await balls.earn(me, { mode: 'odd', result: 'win', score: 3 });
-    assert.deepEqual(s.coinsAdded, [], 'the same mode pays once a day');
-    s = await balls.earn(me, { mode: 'description', result: 'win', score: 4 });
-    assert.deepEqual(s.coinsAdded.map((x) => x.amount), [60]);
+    assert.deepEqual(s.coinsAdded, [], 'no Pokédollars from a declared result');
+    assert.ok(s.added.some((g) => g.source === 'mode:odd'), 'the Ball is still given');
     s = await balls.earn(me, { mode: 'normal', result: 'loss', score: 9 });
-    assert.deepEqual([s.coins.balance, s.coins.today, s.coins.played], [180, 180, 180]);
+    assert.deepEqual([s.coins.balance, s.coins.today, s.coins.played], [0, 0, 0]);
     // 🎉 Party Room : 150 ₽ + 1 Poké Ball, une fois par jour.
     const bagBefore = s.bag.poke;
     s = await balls.earn(me, { mode: 'party' });
     assert.deepEqual(s.coinsAdded, [{ source: 'day:party', amount: 150 }]);
     assert.equal(s.bag.poke, bagBefore + 1);
     s = await balls.earn(me, { mode: 'party' });
-    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 330]);
+    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 150]);
     assert.ok(s.coins.done.includes('party'));
 
     // Le Pokémon du jour : 300 ₽ une seule fois, lu dans sa table.
@@ -63,15 +60,12 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     assert.deepEqual(s.coinsAdded, [{ source: 'day:daily', amount: 300 }]);
     assert.deepEqual(s.coins.done.sort(), ['daily', 'party']);
     s = await balls.state(me);
-    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 630], 'not paid twice');
+    assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 450], 'not paid twice');
 
-    // Les parties : 2 000 ₽ par jour au plus (la dernière est coupée).
-    await db.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) SELECT 'user:7','7','2026-11-03','play:x'||g,90 FROM generate_series(1,20) g");
-    s = await balls.earn(me, { mode: 'pixel', result: 'win', score: 2 });
-    assert.deepEqual(s.coinsAdded.map((x) => x.amount), [20], 'the last one is cut to the cap');
-    assert.equal(s.coins.played, COIN_PLAY_CAP);
-    assert.equal(s.coins.balance, 300 + 150 + COIN_PLAY_CAP);
-
+    // De quoi tester la boutique (les gains des modes vérifiés sont testés dans verified-*.test.js).
+    await db.query("INSERT INTO coin_ledger(identity,account_id,day,source,amount) VALUES('user:7','7','2026-11-03','admin:test',2000)");
+    s = await balls.state(me);
+    assert.equal(s.coins.balance, 300 + 150 + 2000);
     // Boutique : 3 Poké Balls = 150 ₽, hors du plafond des 10 Balls du jour.
     const before = s;
     s = await balls.buy(me, { item: 'poke', qty: 3 });
