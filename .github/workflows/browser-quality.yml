@@ -123,6 +123,9 @@ jobs:
             general) python tools/guess_flow_quality.py ;;
             *) echo "Unsupported smoke scope: $SMOKE_SUITE"; exit 1 ;;
           esac
+      - name: Verify Admin Stats V2 in Chromium and WebKit at three widths
+        if: env.QA_FULL == 'true'
+        run: python tools/admin_stats_quality.py
       - name: Verify server-observed arcade rounds on phone and desktop
         if: env.QA_FULL == 'true'
         run: python tools/verified_arcade_quality.py
