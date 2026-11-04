@@ -1,8 +1,9 @@
 'use strict';
-// Server-observed rounds for the first two migrated arcade modes. This prevents invented
+// Server-observed arcade rounds. This prevents invented
 // results, not automated play or looking up public Pokémon facts.
 const crypto = require('node:crypto');
-const MODES = Object.freeze(['weight', 'shiny']);
+const advanced = require('./quiz-higher-lower');
+const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES]);
 const TTL = 24 * 60 * 60 * 1000;
 const fail = (code, status = 409) => Object.assign(new Error(code), {code, status});
 async function initVerifiedArcadeDb(db) {
@@ -12,6 +13,8 @@ async function initVerifiedArcadeDb(db) {
 }
 function createVerifiedArcade({pokemon, secret, clock = () => new Date(), randomInt = crypto.randomInt}) {
   const catalog = pokemon || JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../pokemon.js'), 'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
+  const games = advanced.createQuizHigherLower(catalog,randomInt,clock);
+  const isAdvanced = s => advanced.MODES.includes(s.mode);
   const base = catalog.filter(p => !p.isAltForm && Number(p.id) <= 1025);
   const byId = new Map(base.map(p => [Number(p.id), p]));
   const shinyPool = require('../shiny-pool.json').ids.filter(id => byId.has(id));
@@ -47,6 +50,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     }
   }
   function view(s) {
+    if (isAdvanced(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,score:s.score,answer:s.answer,...games.view(s)};
     const q = s.question;
     return {mode:s.mode, sessionId:s.id, round:s.round, phase:s.phase, score:s.score, lives:s.lives,
       question:s.mode === 'weight' ? {left:q.left,right:q.right} : {id:q.id,image:q.image},
@@ -67,12 +71,15 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     if (!Array.isArray(gens) || !gens.length || gens.length > 9 || gens.some(g => !Number.isInteger(g) || g < 1 || g > 9)) throw fail('invalid_generations',400);
     if (body.restart !== undefined && typeof body.restart !== 'boolean') throw fail('invalid_action',400);
     const old = await read(c, who, body.mode);
+    if (old && !body.restart && old.startedAt + TTL > +clock() && games.expire(old)) {
+      await save(c,who,old); return {arcade:view(old),earned:games.result(old)};
+    }
     const sameGens = body.mode !== 'weight' || JSON.stringify([...new Set(gens)].sort()) === JSON.stringify([...(old?.gens || [])].sort());
     if (old && old.startedAt + TTL > +clock() && (old.startId === body.startId || (!body.restart && sameGens && old.phase !== 'over'))) return {arcade:view(old)};
     const s = {id:crypto.randomUUID(), startId:body.startId, mode:body.mode, gens:[...new Set(gens)], round:0,
       phase:'playing', score:body.mode === 'weight' && old?.phase === 'over' && !body.restart ? old.score : 0,
       lives:3, recent:[], startedAt:+clock(), answer:null};
-    question(s, who); await save(c,who,s); return {arcade:view(s)};
+    if (isAdvanced(s)) games.init(s); else question(s, who); await save(c,who,s); return {arcade:view(s)};
   }
   async function current(c,who,body) {
     const s = await read(c,who,body.mode);
@@ -83,10 +90,16 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function answer(c,who,body) {
     const s = await current(c,who,body);
+    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),earned:games.result(s)}; }
     if (s.round !== body.round) throw fail('round_changed');
+    if (s.phase === 'over' && s.mode === 'higher-lower-rush') return {arcade:view(s),replayed:true};
     if (s.phase !== 'playing') {
       if (s.answer.choice !== body.choice) throw fail('answer_conflict');
       return {arcade:view(s), replayed:true};
+    }
+    if (isAdvanced(s)) {
+      games.answer(s,body.choice); await save(c,who,s);
+      return {arcade:view(s),...(s.phase === 'over' ? {earned:games.result(s)} : {})};
     }
     if (s.mode === 'weight' ? ![s.question.left,s.question.right].includes(body.choice) : !['shiny','normal'].includes(body.choice)) throw fail('invalid_choice',400);
     const correct = s.mode === 'weight' ? body.choice === s.question.correctId : (body.choice === 'shiny') === s.question.shiny;
@@ -98,13 +111,23 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function next(c,who,body) {
     const s = await current(c,who,body);
-    if (s.mode !== 'shiny') throw fail('invalid_mode',400);
+    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),earned:games.result(s)}; }
+    if (isAdvanced(s) && s.phase === 'over') return {arcade:view(s),replayed:true};
+    if (s.mode !== 'shiny' && !isAdvanced(s)) throw fail('invalid_mode',400);
     if (s.round === body.round + 1 && s.phase === 'playing') return {arcade:view(s),replayed:true};
     if (s.round !== body.round || s.phase !== 'reveal') throw fail('round_changed');
-    s.round++; s.answer = null; s.phase = 'playing'; question(s,who);
+    if (isAdvanced(s)) games.next(s);
+    else { s.round++; s.answer = null; s.phase = 'playing'; question(s,who); }
     await save(c,who,s); return {arcade:view(s)};
   }
-  return {start,answer,next,imageSpec};
+  async function finish(c,who,body) {
+    const s = await current(c,who,body);
+    if (s.mode !== 'higher-lower-rush') throw fail('invalid_mode',400);
+    if (s.phase === 'over') return {arcade:view(s),replayed:true};
+    if (!games.expire(s)) throw fail('round_wait');
+    await save(c,who,s); return {arcade:view(s),earned:games.result(s)};
+  }
+  return {start,answer,next,finish,imageSpec};
 }
 
 // Fixed origin, opaque encrypted URL, no upstream URL/ETag exposed. Pictures themselves

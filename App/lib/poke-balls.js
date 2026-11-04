@@ -489,21 +489,21 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const payload = operation === "buy" ? [body.item, body.qty || 1, body.expectedPrice] : [body.ball, body.encounterId, body.expectedThrows];
     return { id: body.actionId, operation, payload: JSON.stringify(payload) };
   }
+  const arcadeRun = (who,body,action) => run(who,async c => {
+    const out = await arcade[action](c,who,body), gains = [];
+    if (out.earned) {
+      gains.push(arcadeGain(out.earned.mode,out.earned.result,out.earned.score));
+      gains.coin = {result:out.earned.result}; delete out.earned;
+    }
+    gains.response = out; return gains;
+  });
   return {
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
-    arcadeStart: (who, body) => wild(who, c => arcade.start(c,who,body)),
-    arcadeNext: (who, body) => wild(who, c => arcade.next(c,who,body)),
-    arcadeAnswer: (who, body) => run(who, async c => {
-      const out = await arcade.answer(c,who,body), gains = [];
-      if (out.earned) {
-        gains.push(arcadeGain(out.earned.mode,out.earned.result,out.earned.score));
-        gains.coin = {result:out.earned.result};
-        delete out.earned;
-      }
-      gains.response = out;
-      return gains;
-    }),
+    arcadeStart: (who, body) => arcadeRun(who,body,'start'),
+    arcadeNext: (who, body) => arcadeRun(who,body,'next'),
+    arcadeAnswer: (who, body) => arcadeRun(who,body,'answer'),
+    arcadeFinish: (who, body) => arcadeRun(who,body,'finish'),
     arcadeImageSpec: arcade.imageSpec,
     earn: (who, body) => run(who, async () => {
       if (verifiedArcade.MODES.includes(String(body.mode || ""))) throw fail("verified_game_required",400);
@@ -572,7 +572,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
       res.status(e.status || 503).json({ ok: false, error: e.status ? e.code : "unavailable" });
     }
   };
-  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"]]) {
+  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"],["finish","arcadeFinish"]]) {
     app.post("/api/arcade/" + route, express.json({limit:"1kb"}), handle((who,req) => service[method](who,req.body || {}),null,true));
   }
   const loadArt = artworkLoader || verifiedArcade.createArcadeArtworkLoader();
