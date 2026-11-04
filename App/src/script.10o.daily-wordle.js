@@ -120,6 +120,7 @@ async function wordleRequest(action='',pokemonId) {
   } finally {clearTimeout(timer);if(serial===dailyWordleSerial){dailyWordleBusy=false;syncWordleControls();}}
 }
 async function startDailyWordle() {
+  if (typeof trackUsage === 'function') trackUsage('solo:wordle');
   ensureDailyWordleScreen();closeOverlayModal();showScreen('screen-wordle');setGlobalNavActive('game');
   dailyWordleState=null;document.getElementById('wordle-board').innerHTML='';document.getElementById('wordle-result').classList.add('hidden');
   document.getElementById('wordle-form').classList.remove('hidden');document.getElementById('wordle-keyboard').classList.remove('hidden');
