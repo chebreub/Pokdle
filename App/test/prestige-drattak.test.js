@@ -39,8 +39,21 @@ test("PostgreSQL: verified win records across 14 days are required, account-boun
     await admin.query("CREATE SCHEMA "+schema);
     db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:"-c search_path="+schema,max:4});
     let now=new Date("2026-11-04T11:00:00Z");
-    const service=createBallService({db,clock:()=>now,randomInt:n=>1%n,random:()=>0.99});
+    const pokemon=[{id:6,name:"Dracaufeu",generation:1,weight:5},{id:25,name:"Pikachu",generation:1,weight:20},{id:133,name:"Évoli",generation:2,weight:8}];
+    const service=createBallService({db,clock:()=>now,pokemon,secret:"qa-prestige-secret",randomInt:n=>0,random:()=>0.99});
     await initBallsDb(db);
+    // Exercise a genuine completed server round: an invented client result cannot
+    // create a prestige win, and repeating the same answer must stay idempotent.
+    const proofWho={key:"user:proof",guestKey:"guest:proof",accountId:"proof"};
+    const initial=(await service.arcadeStart(proofWho,{mode:"weight",startId:randomUUID(),gens:[1]})).arcade;
+    const evidence=await service.arcadeAnswer(proofWho,{mode:"weight",sessionId:initial.sessionId,
+      round:initial.round,choice:25,result:"win",score:999999});
+    assert.equal(evidence.arcade.score,1);
+    const replay=await service.arcadeAnswer(proofWho,{mode:"weight",sessionId:initial.sessionId,round:initial.round,choice:25});
+    assert.equal(replay.replayed,true);
+    const trusted=await db.query("SELECT day,mode FROM prestige_verified_wins WHERE identity=$1",[proofWho.key]);
+    assert.deepEqual(trusted.rows.map(r=>r.mode),["weight"]);
+    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM prestige_verified_wins WHERE identity=$1",["guest:proof"])).rows[0].n,0);
     const me={key:"user:prestige",guestKey:"guest:prestige",accountId:"prestige"};
     const guest={key:"guest:other",guestKey:"guest:other",accountId:null};
     let s=(await service.prestige(me)).prestige;
