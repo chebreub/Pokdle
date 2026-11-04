@@ -18,14 +18,14 @@ test('capture chances follow the official rates and the validated formula',()=>{
 
 test('the tall grass never holds a legendary, a mythical or an album mission reward',()=>{
   const missions=missionPokemonIds();
-  assert.equal(missions.length,108);
+  assert.equal(missions.length,109);
   for(const id of [...CAPTURE.legendary,...CAPTURE.mythical,...missions])assert.ok(!WILD_POOL.includes(id),'#'+id+' must not appear');
   // 1020 Feu-Perçant (Paradoxe légendaire) and 793 Zéroïd (Ultra-Chimère) are not flagged by PokéAPI but are Légendes on the site.
-  for(const id of [150,151,384,448,1020,793,1009])assert.ok(!WILD_POOL.includes(id),'#'+id);
+  for(const id of [150,151,373,384,448,1020,793,1009])assert.ok(!WILD_POOL.includes(id),'#'+id);
   for(const id of require('../lib/poke-balls').siteLegendIds())assert.ok(!WILD_POOL.includes(id));
   assert.ok(WILD_POOL.includes(10)&&WILD_POOL.includes(19));
   assert.ok(WILD_POOL.length>800);
-  // The missions are read from the client file: the same 108 ids as the album shows.
+  // The missions are read from the client file, including the new Drattak prestige mission.
   const source=fs.readFileSync(path.join(__dirname,'../src/script.10b.album-missions.js'),'utf8');
   assert.deepEqual(missionPokemonIds(source),missions);
 });
