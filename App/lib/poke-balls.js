@@ -504,12 +504,15 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     arcadeNext: (who, body) => arcadeRun(who,body,'next'),
     arcadeAnswer: (who, body) => arcadeRun(who,body,'answer'),
     arcadeFinish: (who, body) => arcadeRun(who,body,'finish'),
+    arcadeAbandon: (who, body) => arcadeRun(who,body,'abandon'),
     arcadeImageSpec: arcade.imageSpec,
     earn: (who, body) => run(who, async () => {
       if (verifiedArcade.MODES.includes(String(body.mode || ""))) throw fail("verified_game_required",400);
       return body.mode === "party"
       ? Object.assign([{ source: "party", ball: "poke" }], { party: true })
-      : Object.assign([arcadeGain(body.mode, body.result, body.score)], { coin: { result: body.result } });
+      // Lot B de l'audit (4/11) : un mode dont le serveur ne vérifie pas encore la partie donne sa Ball, plus de ₽.
+      // Les ₽ des parties viennent seulement des modes vérifiés (arcadeRun) ; jeux du jour et Party Room inchangés.
+      : [arcadeGain(body.mode, body.result, body.score)];
     }),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, async (c, day) => {
@@ -572,7 +575,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
       res.status(e.status || 503).json({ ok: false, error: e.status ? e.code : "unavailable" });
     }
   };
-  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"],["finish","arcadeFinish"]]) {
+  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"],["finish","arcadeFinish"],["abandon","arcadeAbandon"]]) {
     app.post("/api/arcade/" + route, express.json({limit:"1kb"}), handle((who,req) => service[method](who,req.body || {}),null,true));
   }
   const loadArt = artworkLoader || verifiedArcade.createArcadeArtworkLoader();

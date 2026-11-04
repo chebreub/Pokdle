@@ -3,7 +3,8 @@
 // results, not automated play or looking up public Pokémon facts.
 const crypto = require('node:crypto');
 const advanced = require('./quiz-higher-lower');
-const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES]);
+const guessGames = require('./verified-guess');
+const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES, ...guessGames.MODES]);
 const TTL = 24 * 60 * 60 * 1000;
 const fail = (code, status = 409) => Object.assign(new Error(code), {code, status});
 async function initVerifiedArcadeDb(db) {
@@ -15,6 +16,9 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   const catalog = pokemon || JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../pokemon.js'), 'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
   const games = advanced.createQuizHigherLower(catalog,randomInt,clock);
   const isAdvanced = s => advanced.MODES.includes(s.mode);
+  // Pokémon pixelisé et Zoom progressif : le mystère reste sur le serveur (lib/verified-guess.js).
+  const guessing = guessGames.createGuessGames(catalog, randomInt);
+  const isGuess = s => guessGames.MODES.includes(s.mode);
   const base = catalog.filter(p => !p.isAltForm && Number(p.id) <= 1025);
   const byId = new Map(base.map(p => [Number(p.id), p]));
   const shinyPool = require('../shiny-pool.json').ids.filter(id => byId.has(id));
@@ -22,7 +26,10 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   function imageToken(who, question, expires) {
     const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
     // Encode the answer as 0/1: true/false would leak it through ciphertext length.
-    const data = Buffer.concat([cipher.update(JSON.stringify({owner:who.key, id:question.id, shiny:Number(question.shiny), expires})), cipher.final()]);
+    // A guessing-game picture pads its id (forms go up to 5 digits) for the same reason.
+    const body = question.guess ? {owner:who.key, id:String(question.id).padStart(6,'0'), shiny:0, k:'g', expires}
+      : {owner:who.key, id:question.id, shiny:Number(question.shiny), expires};
+    const data = Buffer.concat([cipher.update(JSON.stringify(body)), cipher.final()]);
     return Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url');
   }
   function imageSpec(token, who) {
@@ -31,6 +38,10 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       const b = Buffer.from(token, 'base64url'), decipher = crypto.createDecipheriv('aes-256-gcm', key, b.subarray(0,12));
       decipher.setAuthTag(b.subarray(12,28));
       const spec = JSON.parse(Buffer.concat([decipher.update(b.subarray(28)), decipher.final()]));
+      if (spec.k === 'g') {
+        const id = Number(spec.id), src = guessing.spriteOf(id);
+        return spec.owner === who.key && spec.expires > +clock() && guessing.has(id) && src ? {id, shiny:false, src} : null;
+      }
       return spec.owner === who.key && spec.expires > +clock() && shinyPool.includes(spec.id) && [0,1].includes(spec.shiny) ? {...spec,shiny:spec.shiny === 1} : null;
     } catch (_) { return null; }
   }
@@ -50,6 +61,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     }
   }
   function view(s) {
+    if (isGuess(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,image:s.image,...guessing.view(s)};
     if (isAdvanced(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,score:s.score,answer:s.answer,...games.view(s)};
     const q = s.question;
     return {mode:s.mode, sessionId:s.id, round:s.round, phase:s.phase, score:s.score, lives:s.lives,
@@ -74,12 +86,18 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     if (old && !body.restart && old.startedAt + TTL > +clock() && games.expire(old)) {
       await save(c,who,old); return {arcade:view(old),earned:games.result(old)};
     }
-    const sameGens = body.mode !== 'weight' || JSON.stringify([...new Set(gens)].sort()) === JSON.stringify([...(old?.gens || [])].sort());
+    const sameGens = (body.mode !== 'weight' && !guessGames.MODES.includes(body.mode)) || JSON.stringify([...new Set(gens)].sort()) === JSON.stringify([...(old?.gens || [])].sort());
     if (old && old.startedAt + TTL > +clock() && (old.startId === body.startId || (!body.restart && sameGens && old.phase !== 'over'))) return {arcade:view(old)};
     const s = {id:crypto.randomUUID(), startId:body.startId, mode:body.mode, gens:[...new Set(gens)], round:0,
       phase:'playing', score:body.mode === 'weight' && old?.phase === 'over' && !body.restart ? old.score : 0,
       lives:3, recent:[], startedAt:+clock(), answer:null};
-    if (isAdvanced(s)) games.init(s); else question(s, who); await save(c,who,s); return {arcade:view(s)};
+    if (isAdvanced(s)) games.init(s);
+    else if (isGuess(s)) {
+      s.recent = Array.isArray(old?.recent) ? old.recent : [];
+      guessing.init(s);
+      s.image = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
+    } else question(s, who);
+    await save(c,who,s); return {arcade:view(s)};
   }
   async function current(c,who,body) {
     const s = await read(c,who,body.mode);
@@ -92,6 +110,12 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     const s = await current(c,who,body);
     if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),earned:games.result(s)}; }
     if (s.round !== body.round) throw fail('round_changed');
+    if (isGuess(s)) {
+      // Un essai rejoué (réseau) ou un nom déjà proposé ne compte pas deux fois.
+      if (s.phase === 'over' || !guessing.answer(s, body.choice)) return {arcade:view(s), replayed:true};
+      await save(c,who,s);
+      return {arcade:view(s), ...(s.phase === 'over' ? {earned:guessing.result(s)} : {})};
+    }
     if (s.phase === 'over' && s.mode === 'higher-lower-rush') return {arcade:view(s),replayed:true};
     if (s.phase !== 'playing') {
       if (s.answer.choice !== body.choice) throw fail('answer_conflict');
@@ -127,19 +151,38 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     if (!games.expire(s)) throw fail('round_wait');
     await save(c,who,s); return {arcade:view(s),earned:games.result(s)};
   }
-  return {start,answer,next,finish,imageSpec};
+  async function abandon(c,who,body) {
+    const s = await current(c,who,body);
+    if (!isGuess(s)) throw fail('invalid_mode',400);
+    if (s.phase === 'over') return {arcade:view(s),replayed:true};
+    guessing.abandon(s); await save(c,who,s);
+    return {arcade:view(s),earned:guessing.result(s)};
+  }
+  return {start,answer,next,finish,abandon,imageSpec};
 }
 
 // Fixed origin, opaque encrypted URL, no upstream URL/ETag exposed. Pictures themselves
 // remain public knowledge; this does not claim to stop image recognition bots.
 function createArcadeArtworkLoader(fetcher = fetch) {
   const cache = new Map();
+  // A guessing-game sprite (spec.src) must be a PokeAPI sprite; GitHub serves the same file if the CDN fails.
+  const SPRITE = /^https:\/\/cdn\.jsdelivr\.net\/gh\/PokeAPI\/sprites@master\/(sprites\/pokemon\/[a-z0-9\-\/]+\.png)$/;
+  async function fetchPng(url) {
+    const response = await fetcher(url, {signal:AbortSignal.timeout(8000),redirect:'error'});
+    if (!response.ok || Number(response.headers.get('content-length')) > 2000000) throw fail('image_unavailable',503);
+    return response;
+  }
   return async function load(spec) {
-    const key = spec.id + ':' + spec.shiny;
+    const key = spec.src || spec.id + ':' + spec.shiny;
     if (cache.has(key)) return cache.get(key);
     const promise = (async () => {
-      const response = await fetcher('https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + (spec.shiny ? 'shiny/' : '') + spec.id + '.png', {signal:AbortSignal.timeout(8000),redirect:'error'});
-      if (!response.ok || Number(response.headers.get('content-length')) > 2000000) throw fail('image_unavailable',503);
+      let response;
+      if (spec.src) {
+        const m = SPRITE.exec(spec.src);
+        if (!m) throw fail('image_unavailable',503);
+        try { response = await fetchPng(spec.src); }
+        catch (_) { response = await fetchPng('https://raw.githubusercontent.com/PokeAPI/sprites/master/' + m[1]); }
+      } else response = await fetchPng('https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/' + (spec.shiny ? 'shiny/' : '') + spec.id + '.png');
       const data = Buffer.from(await response.arrayBuffer());
       if (data.length > 2000000 || data.subarray(0,8).toString('hex') !== '89504e470d0a1a0a') throw fail('image_unavailable',503);
       return data;
