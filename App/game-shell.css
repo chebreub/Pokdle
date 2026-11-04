@@ -1807,3 +1807,18 @@ body.theme-dark #overlay-modal.is-dex .alb-slot.is-seen,body.theme-dark #overlay
 body.theme-dark #overlay-modal.is-dex .alb-slot b{color:#f5efe6}
 body.theme-dark .dex-search,body.theme-dark .dex-filter{background:#2f2a36;border-color:rgba(255,255,255,.12);color:#f5efe6}
 body.theme-dark .dex-search input{color:#f5efe6}
+
+/* Carnet desktop : annule l'ancien classeur a deux colonnes.
+   En-tete, recherche, filtres, grille et informations suivent l'ordre du DOM. */
+@media (min-width:900px) {
+  #overlay-modal.is-dex .alb.is-binder {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  #overlay-modal.is-dex .alb.is-binder > .dex-tools,
+  #overlay-modal.is-dex .alb.is-binder > .alb-binder {
+    width:100%;
+    min-width:0;
+  }
+}
