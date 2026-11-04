@@ -67,7 +67,7 @@ function homeAdventureMissionReward(candidate) {
 function homeAdventureMissionSummary(candidate) {
   if (!candidate) return 'Explore ton Pokédex pour faire apparaître de nouveaux objectifs.';
   const { mission, state } = candidate;
-  if (state.ready) return 'Tous les objectifs sont remplis. La récompense t’attend.';
+  if (state.ready) return 'Tous les objectifs sont remplis. La découverte est prête dans ton Pokédex.';
   const pending = state.reqs?.find(item=>!item.done);
   if (pending && typeof albumMissionRequirementLabel === 'function') return albumMissionRequirementLabel(pending.req);
   return mission.hint || 'Continue ta progression pour faire avancer cette mission.';
@@ -79,6 +79,9 @@ function homeAdventureMissionTier(candidate) {
 }
 function homeAdventureClaimedMissionCount() {
   return Object.keys(playerProfile?.albumMissionClaims || {}).length;
+}
+function homeAdventureMissionTotal() {
+  return typeof ALBUM_MISSIONS !== 'undefined' ? ALBUM_MISSIONS.length : 0;
 }
 function homeAdventureSecretCount() {
   return Object.keys(playerProfile?.secrets?.claimed || {}).length;
@@ -139,7 +142,7 @@ function renderHomeAdventureV2() {
         </div>
         <div class="home-adventure-stats">
           <button type="button" data-action="openPokedexCollection"><strong>${national.found}<small>/${national.total}</small></strong><span>Pokédex</span></button>
-          <button type="button" data-action="openPokedexMissionHub"><strong>${homeAdventureClaimedMissionCount()}<small>/108</small></strong><span>Missions</span></button>
+          <button type="button" data-action="openPokedexMissionHub"><strong>${homeAdventureClaimedMissionCount()}<small>/${homeAdventureMissionTotal()}</small></strong><span>Missions</span></button>
           <button type="button" data-action="openSecretJournal"><strong>${homeAdventureSecretCount()}<small>/12</small></strong><span>Secrets</span></button>
         </div>
       </div>
@@ -149,12 +152,12 @@ function renderHomeAdventureV2() {
     <div class="home-adventure-next">
       <div class="home-next-head">
         <span>${escapeHtml(homeAdventureMissionTier(candidate))}</span>
-        <b>${ready ? 'RÉCOMPENSE PRÊTE' : 'À POURSUIVRE'}</b>
+        <b>${ready ? 'DÉCOUVERTE PRÊTE' : 'À POURSUIVRE'}</b>
       </div>
       <div class="home-next-body">
         <div class="home-next-reward">
           ${reward ? `<img src="${getPokemonSprite(reward)}" alt="${escapeHtml(reward.name)}" data-fallback="${getSpriteUrl(getPokemonSpriteId(reward))}" />` : '<span class="home-next-question">?</span>'}
-          <div><small>RÉCOMPENSE</small><strong>${escapeHtml(rewardName)}</strong></div>
+          <div><small>À DÉCOUVRIR</small><strong>${escapeHtml(rewardName)}</strong></div>
         </div>
         <div class="home-next-copy">
           <h2>${escapeHtml(missionTitle)}</h2>
@@ -162,7 +165,7 @@ function renderHomeAdventureV2() {
           <div class="home-next-progress"><progress value="${progressDone}" max="${progressTotal}"></progress><span>${progressDone}/${progressTotal} objectifs</span></div>
         </div>
       </div>
-      <button type="button" class="${ready ? 'btn-yellow' : 'btn-blue'} home-adventure-continue" data-action="${candidate ? 'continueHomeAdventureMission' : 'openPokedexCollection'}" ${candidate ? `data-args='["${candidate.mission.id}"]'` : ''}>${ready ? 'Réclamer la récompense' : 'Continuer mon aventure'} <span aria-hidden="true">→</span></button>
+      <button type="button" class="${ready ? 'btn-yellow' : 'btn-blue'} home-adventure-continue" data-action="${candidate ? 'continueHomeAdventureMission' : 'openPokedexCollection'}" ${candidate ? `data-args='["${candidate.mission.id}"]'` : ''}>${ready ? 'Voir la découverte' : 'Continuer mon aventure'} <span aria-hidden="true">→</span></button>
     </div>
 
     <div class="home-adventure-region">

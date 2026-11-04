@@ -40,7 +40,7 @@ function homeSimpleStepsHtml() {
   return '<div class="hs-steps-head"><h2>Joue, gagne des Balls, attrape</h2></div>' +
     '<ol class="hs-steps">' +
     '<li><span class="hs-step-ico is-find">' + homeSimpleIcon('find') + '</span><b>1. Devine</b><small>le Pokémon du jour ou un mini-jeu</small></li>' +
-    '<li><span class="hs-step-ico is-ball">' + ballImg('poke', 24) + '</span><b>2. Gagne</b><small>une Poké Ball par jeu, chaque jour</small></li>' +
+    '<li><span class="hs-step-ico is-ball">' + ballImg('poke', 24) + '</span><b>2. Gagne</b><small>une Ball dans les mini-jeux marqués +1 Ball</small></li>' +
     '<li><span class="hs-step-ico is-grass">' + homeSimpleIcon('grass') + '</span><b>3. Attrape</b><small>dans les hautes herbes, remplis ton album</small></li>' +
     '</ol>';
 }
@@ -56,7 +56,7 @@ function homeSimpleCaptureHtml(s) {
       ? '<button type="button" class="hs-capture-go" data-action="openBallBag">Comment gagner des Balls</button>'
       : '<button type="button" class="hs-capture-go" data-action="openBallBag">' + (later ? 'Nouvelles rencontres ' + escapeHtml(later) : 'Mon sac') + '</button>';
   var hint = full ? 'Tes 10 Balls du jour sont gagnées. Les mini-jeux restent là pour le plaisir.'
-    : 'Chaque mini-jeu te donne une Ball à ta 1re partie du jour (' + s.today + ' sur ' + s.cap + ' aujourd’hui).';
+    : 'Joue à un mini-jeu marqué +1 Ball pour gagner une Ball (' + s.today + ' sur ' + s.cap + ' aujourd’hui).';
   if (balls && left <= 0 && later) hint = '+' + (Number(w.nextCount) || 4) + ' rencontres ' + later + '. ' + hint;
   return '<div class="hs-capture"><span class="hs-eyebrow">Ta prochaine capture</span><strong>' + escapeHtml(title) + '</strong>' + button + '<small>' + escapeHtml(hint) + '</small></div>';
 }

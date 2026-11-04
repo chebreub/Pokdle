@@ -350,7 +350,7 @@ function ensureAlbumMissionPanel() {
   panel.id = 'album-mission-panel';
   panel.className = 'album-mission-panel';
   panel.innerHTML = `
-    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine récompense</h3><p>Les Pokémon à découvrir, puis tes objectifs les plus avancés. Une capture avec une Ball reste indispensable pour les posséder.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
+    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine découverte</h3><p>Les Pokémon à découvrir, puis tes objectifs les plus avancés. Une capture avec une Ball reste indispensable pour les posséder.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
     <details class="album-mission-filter-details"><summary id="album-mission-filter-label">Filtrer les missions</summary><div class="album-mission-filters">
       <label>Génération<select id="album-mission-gen"><option value="all">Toutes</option>${ALBUM_REGIONS.map((r,i)=>`<option value="${i+1}">Gen ${i+1} · ${r}</option>`).join('')}</select></label>
       <label>Niveau<select id="album-mission-tier"><option value="all">Tous</option>${Object.entries(ALBUM_MISSION_TIERS).map(([id,t])=>`<option value="${id}">${t.label}</option>`).join('')}</select></label>
