@@ -84,25 +84,28 @@ test('mission claim records provenance and cannot be claimed twice',()=>{
 });
 
 
-test('Drattak album mission only unlocks a sighting and never mints a Ball capture',()=>{
+test('Drattak album mission discovers a Pokémon only after the Draby lineage and Cry clues',()=>{
   const f=fixture(),mission=f.albumMissionById('g3_salamence');
   assert.equal(mission.pokemonId,373);
   assert.equal(mission.tier,'prestige');
   assert.equal(f.isAlbumMissionGated(373),true);
   assert.equal(f.albumMissionState(mission).ready,false);
-  for(let i=0;i<42;i++){
-    const id=4000+i, pokemon={id,name:'Hoenn '+i,gen:3,type1:i<12?'Dragon':'Eau',type2:null};
-    f.POKEMON_BY_ID.set(id,pokemon);
+  for(const id of [371,372]) {
+    f.POKEMON_BY_ID.set(id,{id,name:id===371?'Draby':'Drackhaus',gen:3,type1:'Dragon'});
     f.playerProfile.discoveries[id]={at:1000,source:'game'};
   }
-  f.playerProfile.draftScoreAttackRecords[3]=520;
+  for(let i=0;i<26;i++){
+    const id=4000+i;
+    f.POKEMON_BY_ID.set(id,{id,name:'Hoenn '+i,gen:3,type1:'Eau'});
+    f.playerProfile.discoveries[id]={at:1000,source:'game'};
+  }
   f.POKEMON_BY_ID.set(373,{id:373,name:'Drattak',gen:3,type1:'Dragon',type2:'Vol'});
-  assert.equal(f.albumMissionState(mission).ready,false,'Métalosse must be discovered by its mission');
-  f.playerProfile.albumMissionClaims.g3_metagross=1000;
+  assert.equal(f.albumMissionState(mission).ready,false,'Three Cry victories are still needed');
+  f.playerProfile.albumMissionStats=f.normalizeAlbumMissionStats({seeded:true,modeWins:{cry:3}});
   assert.equal(f.albumMissionState(mission).ready,true);
   assert.equal(f.claimAlbumMission('g3_salamence'),true);
   assert.equal(f.playerProfile.discoveries[373].source,'mission');
   assert.ok(f.playerProfile.discoveries[373].missions.g3_salamence);
-  assert.equal(f.playerProfile.wildCaptures,undefined,'a client-only mission cannot credit the server collection');
-  assert.equal(f.claimAlbumMission('g3_salamence'),false,'mission discovery is idempotent');
+  assert.equal(f.playerProfile.wildCaptures,undefined,'client missions cannot credit any server capture');
+  assert.equal(f.claimAlbumMission('g3_salamence'),false,'one discovery per mission');
 });
