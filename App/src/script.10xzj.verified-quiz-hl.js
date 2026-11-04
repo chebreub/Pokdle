@@ -26,6 +26,29 @@ function verifiedQuizShowPending(choice) {
     if(next){next.disabled=true;next.textContent='Chargement de la question…';}
   }
 }
+// Show the next question immediately on request, with disabled options until
+// /api/arcade/next confirms the actual round. The preview never includes an answer
+// or commits score, attempts or progression client-side.
+function verifiedQuizShowNextPreview(s) {
+  const preview=s?.phase==='reveal' ? s.nextQuestion : null;
+  if(!preview||!Array.isArray(preview.options)||!preview.options.length||typeof preview.question!=='string')return false;
+  const progress=document.getElementById('quiz-progress');
+  const question=document.getElementById('quiz-question');
+  const options=document.getElementById('quiz-options');
+  const feedback=document.getElementById('quiz-feedback');
+  if(!progress||!question||!options)return false;
+  progress.textContent='Question '+(s.round+2)+' / '+s.total;
+  question.textContent=preview.question;
+  options.replaceChildren();
+  for(const label of preview.options) {
+    const button=document.createElement('button');
+    button.type='button';button.className='btn-blue';button.disabled=true;
+    button.textContent=label;
+    options.appendChild(button);
+  }
+  if(feedback)feedback.textContent='Chargement de la question…';
+  return true;
+}
 function renderVerifiedQuiz() {
   const state=verifiedQuiz,s=state.server;
   quizQuestions=Array.from({length:s.total},()=>({question:'',options:[]}));
@@ -86,6 +109,7 @@ nextQuizQuestion=function(){
   if(state.server.phase!=='reveal')return;
   state.busy=true;verifiedQuizShowPending(null);
   const s=state.server;
+  verifiedQuizShowNextPreview(s);
   return verifiedArcadeRequest('next',{mode:'quiz',sessionId:s.sessionId,round:s.round}).then(data=>{
     state.busy=false;
     if(verifiedQuiz!==state||gameMode!=='quiz'||document.body.dataset.screen!=='screen-game')return;
