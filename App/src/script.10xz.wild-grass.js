@@ -27,7 +27,7 @@ function wildSyncAlbum(list) {
     const p = wildPokemon(c.id);
     if (!p || typeof playerProfile === "undefined" || !playerProfile) continue;
     playerProfile.discoveries ||= {};
-    if (!playerProfile.discoveries[p.id] && typeof addDiscovery === "function" && addDiscovery(playerProfile.discoveries, p, "capture")) changed = true;
+    if (!playerProfile.discoveries[p.id] && typeof addDiscovery === "function" && addDiscovery(playerProfile.discoveries, p, "capture", Date.now(), "capture")) changed = true;
     const rec = playerProfile.discoveries[p.id];
     if (rec && c.shiny > 0 && !rec.shiny) { rec.shiny = "capture"; changed = true; }
   }
@@ -319,12 +319,15 @@ function wildThrow(ball) {
         const register = () => {
           if (p && firstCatch && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
             playerProfile.discoveries ||= {};
-            if (addDiscovery(playerProfile.discoveries, p, "capture")) {
+            if (addDiscovery(playerProfile.discoveries, p, "capture", Date.now(), "capture")) {
               if (typeof saveProfile === "function") saveProfile();
               if (typeof awardXp === "function" && typeof ADVENTURE_XP !== "undefined") { awardXp(ADVENTURE_XP.discovery, "Nouveau Pokémon : " + p.name); if (typeof awardRegionXpIfComplete === "function") awardRegionXpIfComplete(p); }
             }
             if (typeof fxCaptureCard === "function") fxCaptureCard(p, e.shiny, caughtCount, ball);
-          } else if (p && typeof recordPokemonDiscovery === "function") recordPokemonDiscovery(p, "capture");
+          } else if (p && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
+            playerProfile.discoveries ||= {};
+            if (addDiscovery(playerProfile.discoveries, p, "capture", Date.now(), "capture") && typeof saveProfile === "function") saveProfile();
+          }
           const rec = p && typeof playerProfile !== "undefined" && playerProfile && playerProfile.discoveries && playerProfile.discoveries[p.id];
           if (rec && e.shiny && !rec.shiny) { rec.shiny = "capture"; if (typeof saveProfile === "function") saveProfile(); }
           if (typeof albumClaimMedals === "function") albumClaimMedals(false);
