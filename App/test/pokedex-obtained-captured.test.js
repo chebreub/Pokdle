@@ -113,11 +113,11 @@ test("missing server capture data never invents 0 captured or 0 obtained",()=>{
   assert.match(f.national.innerHTML,/Obtenus[\s\S]*?<em>… \/ 7<\/em>/);
 });
 
-test("server catchable total is exactly wild pool plus six expedition legends, not all national species",()=>{
+test("server catchable total updates to 851 after Drattak becomes an album mission",()=>{
   const ids=new Set([...WILD_POOL,...EXPEDITIONS.map(e=>e.legend)]);
-  assert.equal(WILD_POOL.length,846);
+  assert.equal(WILD_POOL.length,845);
   assert.equal(EXPEDITIONS.length,6);
-  assert.equal(ids.size,852);
+  assert.equal(ids.size,851);
   assert.match(balls,/catchableTotal:\s*new Set\(\[\.\.\.WILD_POOL,\s*\.\.\.EXPEDITIONS\.map/);
   for(const id of EXPEDITIONS.map(e=>e.legend))assert.ok(!WILD_POOL.includes(id));
 });
