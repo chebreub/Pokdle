@@ -125,6 +125,15 @@ const restartHLUnverified=restartHigherLowerGame;
 function isVerifiedHL(state=higherLowerState){return Boolean(state?.verified&&['infinite','rush60'].includes(state.mode)&&!higherLowerIsPartyRound());}
 function verifiedHLVisible(state){return higherLowerState===state&&gameMode==='higher-lower'&&document.body.dataset.screen==='screen-higher-lower';}
 function verifiedHLBody(state){const s=state.verified;return {mode:s.mode,sessionId:s.sessionId,round:s.round};}
+// Start the verified Rush /next request while its result is still displayed.
+// The server still enforces its 900ms round gate, and the result remains
+// visible for 900ms on the client before any new question can appear.
+function verifiedHLNextDelay(server, requestRttMs) {
+  const remaining=Math.max(0,(server.nextAt||server.serverNow)-server.serverNow);
+  if(server.mode!=='higher-lower-rush')return remaining+30;
+  const rtt=Math.max(0,Math.min(900,Number(requestRttMs)||0));
+  return Math.max(0,remaining-rtt+30);
+}
 // Monotonic local countdown: a delayed server response must never give a 60 s
 // run extra visible time. The server's endsAt remains authoritative.
 function verifiedHLClockReading(server, previous, now=performance.now()) {
@@ -145,14 +154,17 @@ function startVerifiedHLClock(state){
     if(state.rushLeftMs<=0&&!state.busy){clearHigherLowerRushInterval();finalizeHigherLowerRush();}
   },100);
 }
-function applyVerifiedHL(data,previous){
+function applyVerifiedHL(data,previous,requestRttMs) {
   const s=data.arcade,q=s.question,same=previous?.verified?.sessionId===s.sessionId;
   const clockReading=verifiedHLClockReading(s,previous);
+  const networkRttMs=Number.isFinite(requestRttMs) ? requestRttMs : (same ? previous.networkRttMs||0 : 0);
+  const revealReadyMono=s.mode==='higher-lower-rush'&&s.phase==='reveal' ? performance.now()+900 : 0;
   const state={...createHigherLowerState(),...(same?previous:{}),verified:s,
     mode:s.mode==='higher-lower-rush'?'rush60':'infinite',phase:s.phase==='over'?'gameover':s.phase==='reveal'?'revealing':'playing',
     left:{pokemon:POKEMON_BY_ID.get(q.left),statValue:q.leftValue},right:{pokemon:POKEMON_BY_ID.get(q.right),statValue:s.reveal?.rightValue},
     score:s.score,statKey:q.statKey,lastChoice:s.answer?.choice,lastCorrect:s.answer?.correct,
     busy:false,isAnimating:s.phase==='reveal',recorded:same&&previous.recorded,
+    networkRttMs,revealReadyMono,
     rushLeftMs:clockReading.rushLeftMs,endsMono:clockReading.endsMono};
   higherLowerState=state;
   if(state.mode==='infinite'&&same&&s.score>previous.score){
@@ -168,7 +180,7 @@ function applyVerifiedHL(data,previous){
   renderHigherLowerScreen();startVerifiedHLClock(state);
   if(state.phase==='revealing')trackHigherLowerTimeout(()=>{
     if(verifiedHLVisible(state))advanceVerifiedHL(state);
-  },Math.max(0,(s.nextAt||s.serverNow)-s.serverNow)+30);
+  },verifiedHLNextDelay(s,state.networkRttMs));
 }
 function hlRequestFailed(state,data,retry){
   state.busy=false;state.isAnimating=state.phase==='revealing';renderHigherLowerScreen();
@@ -182,9 +194,28 @@ function advanceVerifiedHL(state){
   if(!verifiedHLVisible(state)||state.busy||!isVerifiedHL(state)||state.phase!=='revealing')return;
   state.busy=true;
   return verifiedArcadeRequest('next',verifiedHLBody(state)).then(data=>{
-    state.busy=false;if(!verifiedHLVisible(state))return;
-    if(!data?.ok)return hlRequestFailed(state,data,()=>advanceVerifiedHL(state));
-    applyVerifiedHL(data,state);
+    if(!verifiedHLVisible(state))return;
+    if(!data?.ok) {
+      state.busy=false;
+      // RTT is an estimate: a fast response may reach /next before nextAt.
+      // Retry only this expected race, without a misleading error or extra score.
+      if(state.mode==='rush60'&&data.error==='round_wait'&&(state.earlyNextRetries||0)<2) {
+        state.earlyNextRetries=(state.earlyNextRetries||0)+1;
+        trackHigherLowerTimeout(()=>{
+          if(verifiedHLVisible(state))advanceVerifiedHL(state);
+        },100*state.earlyNextRetries);
+        return;
+      }
+      return hlRequestFailed(state,data,()=>advanceVerifiedHL(state));
+    }
+    const revealLeft=state.mode==='rush60'
+      ? Math.max(0,(state.revealReadyMono||0)-performance.now()) : 0;
+    if(revealLeft>0) {
+      // Already verified by the server, but preserve the full visible reveal.
+      trackHigherLowerTimeout(()=>{
+        if(verifiedHLVisible(state))applyVerifiedHL(data,state);
+      },revealLeft);
+    } else applyVerifiedHL(data,state);
   });
 }
 startHigherLowerMode=function(mode){
@@ -212,10 +243,11 @@ answerHigherLower=function(choice){
   if(!isVerifiedHL(state))return answerHLUnverified(choice);
   if(verifiedHLLoading||!verifiedHLVisible(state)||state.busy||state.phase!=='playing')return;
   state.busy=true;state.isAnimating=true;renderHigherLowerScreen();
+  const requestStarted=performance.now();
   return verifiedArcadeRequest('answer',{...verifiedHLBody(state),choice}).then(data=>{
     state.busy=false;if(!verifiedHLVisible(state))return;
     if(!data?.ok)return hlRequestFailed(state,data,()=>answerHigherLower(choice));
-    applyVerifiedHL(data,state);
+    applyVerifiedHL(data,state,performance.now()-requestStarted);
     if(data.arcade.answer&&typeof gameFeelAnswer==='function')gameFeelAnswer(data.arcade.answer.correct,document.querySelector('#higher-lower-root .side-right'),data.arcade.answer.correct?'✓':'×');
   });
 };
