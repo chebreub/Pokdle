@@ -232,6 +232,8 @@ function startNormalGame(forcedPokemon = null) {
   }
 
   gameMode = "normal";
+  // Hors Party Room, le serveur tire le mystère et garde la réponse (script.10xzk.verified-guess.js).
+  if (typeof verifiedGuessStart === "function" && verifiedGuessStart("normal", pool)) return;
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
@@ -339,6 +341,7 @@ function startMysteryStatGame() {
   }
 
   gameMode = "mystery";
+  if (typeof verifiedGuessStart === "function" && verifiedGuessStart("mystery", pool)) return;
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
@@ -551,7 +554,9 @@ function startGameWithSecret(secret, pool, options = {}) {
   updateSilhouettePanel(false);
   updatePixelPanel(false);
   if (gameMode === "mystery") {
-    prepareMysteryClues(secretPokemon);
+    // Partie vérifiée : les indices arrivent du serveur (pas de mystère dans la page).
+    if (secretPokemon) prepareMysteryClues(secretPokemon);
+    else { mysteryClues = []; updateMysteryPanel(false); }
   } else {
     mysteryClues = [];
     updateMysteryPanel(false);

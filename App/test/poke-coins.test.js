@@ -43,7 +43,7 @@ test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, ne
     s = await balls.earn(me, { mode: 'odd', result: 'win', score: 14 });
     assert.deepEqual(s.coinsAdded, [], 'no Pokédollars from a declared result');
     assert.ok(s.added.some((g) => g.source === 'mode:odd'), 'the Ball is still given');
-    s = await balls.earn(me, { mode: 'normal', result: 'loss', score: 9 });
+    s = await balls.earn(me, { mode: 'order', result: 'loss', score: 9 });
     assert.deepEqual([s.coins.balance, s.coins.today, s.coins.played], [0, 0, 0]);
     // 🎉 Party Room : 150 ₽ + 1 Poké Ball, une fois par jour.
     const bagBefore = s.bag.poke;
