@@ -1407,6 +1407,8 @@ app.get("/og-image.png", async (_req, res) => {
 // Icônes de types (utilisées par les badges de types dans tous les modes).
 app.use("/types", express.static(path.join(__dirname, "types"), { maxAge: "7d", fallthrough: false }));
 app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: "30d", fallthrough: false }));
+// Sons de capture des hautes herbes (Pokémon GO, fournis par Kayan le 4/11/2026 : effets seulement, pas de musique).
+app.use("/sfx", express.static(path.join(__dirname, "sfx"), { maxAge: "30d", fallthrough: false }));
 // Installation sur l'écran d'accueil (iOS et Android).
 app.get("/manifest.webmanifest", (_req, res) => {
   res.type("application/manifest+json");
