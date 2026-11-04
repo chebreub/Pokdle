@@ -11,6 +11,21 @@ function advancedArcadeError(data,rootId,resume) {
 }
 const startQuizUnverified=startQuizGame, renderQuizUnverified=renderQuizQuestion;
 const submitQuizUnverified=submitQuizAnswer, nextQuizUnverified=nextQuizQuestion;
+// Keep the clicked answer visibly selected while waiting for the authoritative server.
+// Never guess whether it is correct: only the server may reveal that.
+function verifiedQuizShowPending(choice) {
+  const buttons=document.querySelectorAll('#quiz-options button');
+  buttons.forEach(b=>{b.disabled=true;});
+  if(Number.isInteger(choice)) {
+    const selected=buttons[choice];
+    if(selected){selected.classList.add('is-verifying');selected.setAttribute('aria-pressed','true');}
+    const feedback=document.getElementById('quiz-feedback');
+    if(feedback){feedback.textContent='Vérification de ta réponse…';feedback.setAttribute('role','status');}
+  } else {
+    const next=document.getElementById('quiz-next-btn');
+    if(next){next.disabled=true;next.textContent='Chargement de la question…';}
+  }
+}
 function renderVerifiedQuiz() {
   const state=verifiedQuiz,s=state.server;
   quizQuestions=Array.from({length:s.total},()=>({question:'',options:[]}));
@@ -52,7 +67,7 @@ submitQuizAnswer=function(choice){
   const state=verifiedQuiz;
   if(!state||isPartySessionActive())return submitQuizUnverified(choice);
   if(verifiedQuizLoading||state.busy||state.server.phase!=='playing'||gameMode!=='quiz')return;
-  state.busy=true;renderVerifiedQuiz();
+  state.busy=true;verifiedQuizShowPending(choice);
   const s=state.server;
   return verifiedArcadeRequest('answer',{mode:'quiz',sessionId:s.sessionId,round:s.round,choice}).then(data=>{
     state.busy=false;
@@ -69,7 +84,7 @@ nextQuizQuestion=function(){
   if(state.showResult)return startQuizGame();
   if(state.server.phase==='over'){state.showResult=true;return renderVerifiedQuiz();}
   if(state.server.phase!=='reveal')return;
-  state.busy=true;renderVerifiedQuiz();
+  state.busy=true;verifiedQuizShowPending(null);
   const s=state.server;
   return verifiedArcadeRequest('next',{mode:'quiz',sessionId:s.sessionId,round:s.round}).then(data=>{
     state.busy=false;
@@ -86,6 +101,16 @@ const restartHLUnverified=restartHigherLowerGame;
 function isVerifiedHL(state=higherLowerState){return Boolean(state?.verified&&['infinite','rush60'].includes(state.mode)&&!higherLowerIsPartyRound());}
 function verifiedHLVisible(state){return higherLowerState===state&&gameMode==='higher-lower'&&document.body.dataset.screen==='screen-higher-lower';}
 function verifiedHLBody(state){const s=state.verified;return {mode:s.mode,sessionId:s.sessionId,round:s.round};}
+// Monotonic local countdown: a delayed server response must never give a 60 s
+// run extra visible time. The server's endsAt remains authoritative.
+function verifiedHLClockReading(server, previous, now=performance.now()) {
+  const remaining=server.endsAt?Math.max(0,server.endsAt-server.serverNow):60000;
+  const candidate=now+remaining;
+  const same=server.endsAt&&previous?.verified?.sessionId===server.sessionId;
+  const endsMono=same&&Number.isFinite(previous.endsMono)
+    ? Math.min(previous.endsMono,candidate) : candidate;
+  return {endsMono,rushLeftMs:Math.max(0,endsMono-now)};
+}
 function startVerifiedHLClock(state){
   clearHigherLowerRushInterval();
   if(state.mode!=='rush60'||state.phase==='gameover')return;
@@ -98,12 +123,13 @@ function startVerifiedHLClock(state){
 }
 function applyVerifiedHL(data,previous){
   const s=data.arcade,q=s.question,same=previous?.verified?.sessionId===s.sessionId;
+  const clockReading=verifiedHLClockReading(s,previous);
   const state={...createHigherLowerState(),...(same?previous:{}),verified:s,
     mode:s.mode==='higher-lower-rush'?'rush60':'infinite',phase:s.phase==='over'?'gameover':s.phase==='reveal'?'revealing':'playing',
     left:{pokemon:POKEMON_BY_ID.get(q.left),statValue:q.leftValue},right:{pokemon:POKEMON_BY_ID.get(q.right),statValue:s.reveal?.rightValue},
     score:s.score,statKey:q.statKey,lastChoice:s.answer?.choice,lastCorrect:s.answer?.correct,
     busy:false,isAnimating:s.phase==='reveal',recorded:same&&previous.recorded,
-    rushLeftMs:s.endsAt?Math.max(0,s.endsAt-s.serverNow):60000,endsMono:performance.now()+(s.endsAt?s.endsAt-s.serverNow:60000)};
+    rushLeftMs:clockReading.rushLeftMs,endsMono:clockReading.endsMono};
   higherLowerState=state;
   if(state.mode==='infinite'&&same&&s.score>previous.score){
     awardXp(3,'Higher or Lower','higherlower');progressQuest('hl_streak_10',s.score);
@@ -186,6 +212,16 @@ restartHigherLowerGame=function(){
 };
 renderHigherLowerScreen=function(){
   const out=renderHLUnverified(),state=higherLowerState;
+  if(state&&isVerifiedHL(state)&&state.busy&&state.phase==='playing') {
+    const actions=document.querySelector('#higher-lower-root .higher-lower-actions');
+    if(actions){
+      const note=document.createElement('p');
+      note.className='higher-lower-feedback';
+      note.setAttribute('role','status');
+      note.textContent='Vérification de ta réponse…';
+      actions.after(note);
+    }
+  }
   if(state&&!isVerifiedHL(state)&&['infinite','rush60'].includes(state.mode)&&!higherLowerIsPartyRound()){
     const note=document.createElement('p');note.className='higher-lower-feedback';note.textContent='Entraînement sans Pokédollars ni Balls';document.getElementById('higher-lower-root')?.appendChild(note);
   }
