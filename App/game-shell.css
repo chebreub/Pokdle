@@ -1738,3 +1738,30 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 @media (max-width:520px){.fr-sorts{gap:4px}.fr-sorts button{min-height:32px;padding:4px 9px;font-size:12px}.fr-head h3{font-size:1.15rem}}
 .fr-grid .fr-dot {display:none !important;}
 .fr-grid + .fr-note, .fr-grid ~ .fr-note {margin-top:12px;}
+
+/* 🌿 Carte « Attrapé ! » (4/11/2026, maquette validée) : à chaque capture (src/script.10xzn.catch-card.js). */
+.wild-end.has-catch-card{align-content:start;gap:10px;padding-top:16px}
+.wild-gotcha.catch-card{width:min(100%,380px);padding:0;border-radius:26px;background:#FFF8EF;border:2px solid #EFE4D3;overflow:hidden;box-shadow:0 14px 34px rgba(46,42,51,.18);text-align:center;color:#2E2A33}
+.wild-gotcha.catch-card.is-shiny{border:3px solid #E2B33C;background:#FFF8EF}
+.catch-card .cc-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#2F7D47;color:#fff}
+.catch-card.is-shiny .cc-head{background:#9A6B00}
+.catch-card .cc-head .ball-img{width:26px;height:26px}
+.catch-card .cc-head strong{font:700 23px/1 Fredoka,Nunito,sans-serif}
+.catch-card .cc-head span{margin-left:auto;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18);font:800 13px/1.2 Nunito,sans-serif}
+.catch-card .cc-body{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px 16px}
+.catch-card .cc-art{width:170px;height:170px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,#fff 0 40%,color-mix(in srgb,var(--cc1) 22%,#fff) 41% 100%);border:3px solid color-mix(in srgb,var(--cc1) 35%,#fff)}
+.wild-gotcha.catch-card .cc-art img{width:146px;height:146px;object-fit:contain}
+.catch-card .cc-num{font:900 13px/1.2 Nunito,sans-serif;letter-spacing:.05em;color:#6E6878}
+.catch-card .cc-name{font:700 28px/1.1 Fredoka,Nunito,sans-serif}
+.catch-card .cc-types{display:flex;gap:6px;justify-content:center}
+.catch-card .cc-types span{padding:4px 12px;border-radius:999px;color:#fff;font:800 13px/1.2 Nunito,sans-serif;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.catch-card .cc-stats{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin-top:4px}
+.catch-card .cc-stats div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:16px;background:#fff;border:1.5px solid #EFE4D3;text-align:left}
+.catch-card .cc-stats small{font:800 12px/1.2 Nunito,sans-serif;color:#6E6878}
+.catch-card .cc-stats b{font:800 16px/1.2 Nunito,sans-serif}
+.wild-gotcha.catch-card .cc-line{margin:0;font:700 13px/1.4 Nunito,sans-serif;color:#5E5866}
+.has-catch-card .wild-cta{width:min(100%,380px);min-height:54px;border-radius:16px;background:#4069E0;box-shadow:0 3px 0 #2D4FB8;font:600 19px/1.2 Fredoka,Nunito,sans-serif}
+.has-catch-card .wild-cta .cc-left{padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.2);font:800 14px/1.2 Nunito,sans-serif}
+body.theme-dark .wild-gotcha.catch-card{background:#26222c;border-color:rgba(255,255,255,.1);color:#f5efe6}
+body.theme-dark .catch-card .cc-stats div{background:#2f2a36;border-color:rgba(255,255,255,.08)}
+body.theme-dark .catch-card .cc-num,body.theme-dark .catch-card .cc-stats small,body.theme-dark .wild-gotcha.catch-card .cc-line{color:#cfc6d8}
