@@ -99,3 +99,12 @@ test("prestige play evidence is erased when a player deletes their account",()=>
   const source=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
   assert.match(source,/"prestige_verified_wins"\]\.map\(\(table\) => \[table, `DELETE FROM \$\{table\} WHERE account_id = \$1 OR identity = \$2`/);
 });
+
+test("client can resume a server-open prestige encounter after a lost response",()=>{
+  const fs=require("node:fs"),path=require("node:path");
+  const client=fs.readFileSync(path.join(__dirname,"../src/script.10xzb.expedition.js"),"utf8");
+  assert.match(client,/\["prestige_cooldown","encounter_open"\]\.includes\(data\?\.error\)/);
+  assert.match(client,/refreshBalls\(\{announce:false\}\)/);
+  assert.match(client,/current\?\.wild\?\.open\?\.prestige/);
+  assert.match(client,/renderWildEncounter\(current\)/);
+});
