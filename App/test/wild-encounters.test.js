@@ -1,7 +1,8 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('fs'),path=require('path');
-const {captureChance,WILD_POOL,missionPokemonIds,createBallService,initBallsDb,ENCOUNTERS_PER_DAY,ENCOUNTERS_PER_BATCH}=require('../lib/poke-balls');
+const {captureChance,WILD_POOL,WILD_ENCOUNTER_TABLE,missionPokemonIds,createBallService,initBallsDb,ENCOUNTERS_PER_DAY,ENCOUNTERS_PER_BATCH}=require('../lib/poke-balls');
+const {wildTicketFor}=require('../lib/wild-rarity');
 const CAPTURE=require('../capture-rates.json');
 
 test('capture chances follow the official rates and the validated formula',()=>{
@@ -49,7 +50,7 @@ test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures ke
     assert.equal(ENCOUNTERS_PER_DAY,24);assert.equal(ENCOUNTERS_PER_BATCH,4);
 
     // Encounter 1: Chenipan (rate 255), caught at the 2nd throw.
-    ints.push(WILD_POOL.indexOf(10),5);
+    ints.push(wildTicketFor(WILD_ENCOUNTER_TABLE,10),5);
     s=await balls.encounter(guest);
     assert.deepEqual([s.encounter.pokemonId,s.encounter.shiny,s.encounter.throwsLeft,s.encounter.chances.poke],[10,false,3,80]);
     assert.equal((await balls.encounter(guest)).encounter.id,s.encounter.id,'the open encounter comes back, it is not redrawn');
@@ -62,7 +63,7 @@ test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures ke
     assert.deepEqual([s.result.caught,s.result.shakes,s.encounter.status,s.bag.poke,s.wild.caught,s.wild.open],[true,3,'caught',2,1,null]);
 
     // Encounter 2: a shiny that flees after 3 throws... with only 2 Balls left, the bag empties first.
-    ints.push(WILD_POOL.indexOf(19),0);
+    ints.push(wildTicketFor(WILD_ENCOUNTER_TABLE,19),0);
     s=await balls.encounter(guest);
     assert.equal(s.encounter.shiny,true,'1 chance in 150, here forced');
     rolls.push(0.99,0.99);ints.push(0,2);
@@ -75,18 +76,18 @@ test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures ke
 
     // A 3rd failed throw: the Pokémon flees.
     await db.query("INSERT INTO ball_gains(identity,day,source,ball) VALUES('guest:w1','2026-11-02','gift','great'),('guest:w1','2026-11-01','gift','great'),('guest:w1','2026-10-31','gift','great')");
-    ints.push(WILD_POOL.indexOf(19),5);await balls.encounter(guest);
+    ints.push(wildTicketFor(WILD_ENCOUNTER_TABLE,19),5);await balls.encounter(guest);
     for(let i=0;i<3;i++){rolls.push(0.99);ints.push(0);s=await balls.throwBall(guest,{ball:'great'});}
     assert.deepEqual([s.result.fled,s.encounter.status,s.bag.great],[true,'fled',0]);
 
     // The limit of the moment: 12 encounters by 9 h 30, skipped and fled ones included.
     await db.query("INSERT INTO ball_gains(identity,day,source,ball) SELECT 'guest:w1','2026-10-01'::date+g,'gift','poke' FROM generate_series(0,9) g");
-    for(let i=0;i<9;i++){ints.push(WILD_POOL.indexOf(10),5);await balls.encounter(guest);await balls.skip(guest);}
+    for(let i=0;i<9;i++){ints.push(wildTicketFor(WILD_ENCOUNTER_TABLE,10),5);await balls.encounter(guest);await balls.skip(guest);}
     await assert.rejects(balls.encounter(guest),/no_encounters_left/);
 
     // An encounter left open overnight is gone the next day; the count starts again.
     now=new Date('2026-11-04T12:30:00Z');
-    ints.push(WILD_POOL.indexOf(10),5);s=await balls.encounter(guest);
+    ints.push(wildTicketFor(WILD_ENCOUNTER_TABLE,10),5);s=await balls.encounter(guest);
     // The next morning: 4 at midnight, 4 more at 4 h, 8 h… and 24 by 20 h (heure de Paris).
     now=new Date('2026-11-04T23:30:00Z');
     s=await balls.state(guest);
