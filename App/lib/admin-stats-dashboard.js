@@ -114,7 +114,7 @@ function renderStatsDashboard(options) {
       completions: measured ? observed?.completions || 0 : null,
       wins: measured ? observed?.wins || 0 : null,
       losses: measured ? observed?.losses || 0 : null,
-      finishInstrumented: Object.values(HISTORY_TO_LAUNCH).includes(mode)
+      finishInstrumented: mode === "higherlowerrush" || Object.values(HISTORY_TO_LAUNCH).includes(mode)
     };
   });
   // Preserve any new validated mode that hasn't yet been classified in this UI.
