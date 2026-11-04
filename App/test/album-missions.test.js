@@ -23,8 +23,8 @@ function fixture() {
 test('catalogue preserves all 108 original missions and adds a distinct Hoenn prestige mission',()=>{
   const f=fixture(),missions=Array.from(f.__missions);
   assert.equal(missions.length,109);
-  assert.equal(new Set(missions.map(m=>m.id)).size,108);
-  assert.equal(new Set(missions.map(m=>m.pokemonId)).size,108);
+  assert.equal(new Set(missions.map(m=>m.id)).size,109);
+  assert.equal(new Set(missions.map(m=>m.pokemonId)).size,109);
   for(let gen=1;gen<=9;gen++) assert.equal(missions.filter(m=>m.generation===gen).length,gen===3?13:12,'gen '+gen);
   assert.equal(missions.find(m=>m.id==='g3_salamence').pokemonId,373);
 });
