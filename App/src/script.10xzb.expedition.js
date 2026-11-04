@@ -40,6 +40,18 @@ function meetPrestigeDrattak() {
       const message = { prestige_not_ready:"Épreuve non terminée.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
         encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
         account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
+      // Une requête peut avoir réussi alors que sa réponse s'est perdue.
+      // Reprendre l'unique rencontre ouverte plutôt que brûler une nouvelle tentative.
+      if (["prestige_cooldown","encounter_open"].includes(data?.error) && typeof refreshBalls === "function") {
+        return refreshBalls({announce:false}).then((current) => {
+          if (current?.wild?.open?.prestige && typeof renderWildEncounter === "function") {
+            if (typeof closeOverlayModal === "function") closeOverlayModal();
+            renderWildEncounter(current);
+            return;
+          }
+          if (typeof showToast === "function") showToast(message);
+        });
+      }
       if (typeof showToast === "function") showToast(message);
       return;
     }
