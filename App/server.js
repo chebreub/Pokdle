@@ -530,7 +530,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["scores", "DELETE FROM scores WHERE discord_id = $1", [id]],
     ["leaderboard_events", "DELETE FROM leaderboard_events WHERE discord_id = $1", [id]],
     ["daily_sessions", "DELETE FROM daily_sessions WHERE discord_id = $1", [id]],
-    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays", "grid_plays", "petitbac_daily_plays", "ball_gains", "wild_encounters", "coin_ledger", "ball_actions", "ball_merge_credits", "arcade_runs"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
+    ...["daily_plays", "wordle_plays", "dossier_plays", "challenge_plays", "grid_plays", "petitbac_daily_plays", "ball_gains", "wild_encounters", "coin_ledger", "ball_actions", "ball_merge_credits", "arcade_runs", "prestige_verified_wins"].map((table) => [table, `DELETE FROM ${table} WHERE account_id = $1 OR identity = $2`, [id, key]]),
     ["egg_rewards", "DELETE FROM egg_rewards WHERE player_id = $1", [id]],
     ["egg_guesses", "UPDATE egg_guesses SET player_id = NULL, credited_player_id = NULL, username = 'Anonyme' WHERE player_id = $1 OR credited_player_id = $1", [id]],
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
