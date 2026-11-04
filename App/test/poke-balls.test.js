@@ -47,7 +47,7 @@ test('PostgreSQL: one Ball per source and day, 10 a day, daily games checked, gu
     assert.deepEqual([s.today,s.bag],[5,{poke:2,great:3,ultra:0}]);
 
     // The cap: 10 a day, whatever the source.
-    for(const mode of ['normal','order','cry','speedrun','odd','description','evolution'])await balls.earn(guest,{mode,result:'loss',score:1});
+    for(const mode of ['normal','order','mystery','speedrun','odd','quiestce','evolution'])await balls.earn(guest,{mode,result:'loss',score:1});
     s=await balls.state(guest);
     assert.deepEqual([s.today,s.giftAvailable],[10,false]);
     assert.equal(s.gains.filter(g=>g.source.startsWith('mode:')).length,6,'the 7th mode is past the cap');
@@ -83,8 +83,8 @@ test('PostgreSQL: 7 days in a row give a Hyper Ball, outside the cap; the gift a
     let s=await balls.state(g);
     assert.deepEqual([s.streak.days,s.streak.playedToday,s.streak.left],[6,false,1],'6 days kept until midnight, one more for the Hyper Ball');
     assert.equal((await balls.gift(g)).streak.playedToday,false,'opening the gift is not playing');
-    s=await balls.earn(g,{mode:'cry',result:'loss',score:1});
-    assert.deepEqual(s.added.map(a=>a.source+':'+a.ball),['mode:cry:poke','streak:ultra']);
+    s=await balls.earn(g,{mode:'odd',result:'loss',score:1});
+    assert.deepEqual(s.added.map(a=>a.source+':'+a.ball),['mode:odd:poke','streak:ultra']);
     assert.deepEqual([s.streak.days,s.streak.inCycle,s.bag.ultra,s.today],[7,7,1,2]);
     assert.equal((await balls.earn(g,{mode:'mystery',result:'loss',score:1})).added.some(a=>a.source==='streak'),false,'one Hyper Ball for the 7th day');
     // A missed day breaks the streak.

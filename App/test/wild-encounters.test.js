@@ -42,7 +42,7 @@ test('PostgreSQL: 4 encounters every 4 hours, 3 throws, Balls spent, captures ke
     await assert.rejects(balls.encounter(guest),/no_balls/,'no Ball, no encounter');
 
     await balls.gift(guest);
-    for(const mode of ['mystery','normal','cry'])await balls.earn(guest,{mode,result:'loss',score:1});
+    for(const mode of ['mystery','normal','odd'])await balls.earn(guest,{mode,result:'loss',score:1});
     let s=await balls.state(guest);
     assert.deepEqual(s.bag,{poke:4,great:0,ultra:0});
     assert.deepEqual([s.wild.max,s.wild.left,s.wild.open,s.wild.nextAt,s.wild.nextCount],[24,12,null,'2026-11-03T11:00:00.000Z',4]);

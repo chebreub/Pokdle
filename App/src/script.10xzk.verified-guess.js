@@ -1,16 +1,29 @@
-// 🔒 Pokémon pixelisé et Zoom progressif vérifiés par le serveur (4/11/2026).
-// Hors Party Room, le serveur tire le mystère et garde la réponse : la page reçoit une image sous une
-// adresse opaque, envoie chaque essai et reçoit les mêmes pastilles que le Pokémon du jour. La 1re partie
+// 🔒 Pokémon pixelisé, Zoom progressif, Cri et Description Pokédex vérifiés par le serveur (4/11/2026).
+// Hors Party Room, le serveur tire le mystère et garde la réponse : la page reçoit une image ou un cri sous
+// une adresse opaque (ou le texte du Pokédex), envoie chaque essai et reçoit les mêmes pastilles que le Pokémon du jour. La 1re partie
 // du jour de chaque mode rapporte sa Ball et ses ₽ (payés par le serveur, plus déclarés par la page).
 // Si le service ne répond pas : partie d'entraînement locale, sans ₽ ni Ball, comme avant.
 let verifiedGuess = null;
 let verifiedGuessResumed = {};
+// Une fois : la prochaine partie de ce mode se joue en local (le serveur n'a pas répondu).
+let verifiedGuessOffline = "";
+const VERIFIED_GUESS_STARTS = { pixel: "startPixelGame", silhouette: "startSilhouetteGame", cry: "startCryGame", description: "startDescriptionMode" };
 
 // Pendant le chargement, une image vide garde la case visible (pas de saut de mise en page).
 const VERIFIED_GUESS_LOADING = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 function verifiedGuessImage(mode) {
   if (!verifiedGuess || verifiedGuess.mode !== mode || gameMode !== mode) return "";
   return verifiedGuess.image || VERIFIED_GUESS_LOADING;
+}
+// Le cri de la partie vérifiée, en adresse complète (Audio.src la renvoie ainsi).
+function verifiedGuessCry() {
+  if (!verifiedGuess || verifiedGuess.mode !== "cry" || gameMode !== "cry" || !verifiedGuess.cry) return "";
+  try { return new URL(verifiedGuess.cry, location.href).href; } catch (_e) { return verifiedGuess.cry; }
+}
+function verifiedGuessDescription(view) {
+  if (typeof descriptionState === "undefined" || gameMode !== "description") return;
+  descriptionState = view && view.clue ? { text: view.clue, loading: false, error: null } : { text: "Chargement de l'entrée Pokédex…", loading: true, error: null };
+  if (typeof renderDescriptionMode === "function") renderDescriptionMode();
 }
 function verifiedGuessActive() {
   return Boolean(verifiedGuess && verifiedGuess.sessionId && gameMode === verifiedGuess.mode && !secretPokemon && !gameOver);
@@ -23,6 +36,7 @@ function verifiedGuessControls(busy, label) {
 function verifiedGuessPanels() {
   if (typeof updatePixelPanel === "function") updatePixelPanel(false);
   if (typeof updateSilhouettePanel === "function") updateSilhouettePanel(false);
+  if (typeof updateCryPanel === "function" && gameMode === "cry") updateCryPanel(false);
 }
 // Ajoute les essais que le serveur connaît et que la page n'a pas encore affichés (reprise, réponse rejouée).
 function verifiedGuessApplyRows(view, animate) {
@@ -51,17 +65,23 @@ function verifiedGuessFinish(view) {
   recordMatchHistory({ mode: gameMode, result: "loss", attempts, targetName: answer.name });
   clearSavedGame();
 }
-function verifiedGuessLocal(mode, pool, reason) {
+// Le serveur ne répond pas : la même partie se joue en local (règles d'avant), sans ₽ ni Ball.
+// La fonction de départ d'origine est relancée sans ouvrir une nouvelle série.
+function verifiedGuessLocal(mode, _pool, reason) {
   verifiedGuess = null;
   verifiedGuessControls(false);
   if (reason && typeof showToast === "function") showToast(reason);
-  gameMode = mode;
-  startGameWithSecret(pickRandomPokemonFromPool(pool) || pool[0], pool);
+  verifiedGuessOffline = mode;
+  const original = (typeof guessSeriesStarts !== "undefined" && guessSeriesStarts[mode]) || window[VERIFIED_GUESS_STARTS[mode]];
+  const advancing = typeof guessSeriesAdvancing !== "undefined" ? guessSeriesAdvancing : false;
+  try { if (typeof guessSeriesAdvancing !== "undefined") guessSeriesAdvancing = true; original.call(window); }
+  finally { verifiedGuessOffline = ""; if (typeof guessSeriesAdvancing !== "undefined") guessSeriesAdvancing = advancing; }
 }
 
 // Appelé par startPixelGame / startSilhouetteGame : true quand le serveur prend la partie.
 function verifiedGuessStart(mode, pool) {
   verifiedGuess = null;
+  if (verifiedGuessOffline === mode) return false;
   if (typeof isPartySessionActive === "function" && isPartySessionActive()) return false;
   if (typeof verifiedArcadeOnline !== "function" || !verifiedArcadeOnline(mode)) return false;
   const ticket = {};
@@ -73,13 +93,14 @@ function verifiedGuessStart(mode, pool) {
   verifiedGuessResumed[mode] = true;
   verifiedArcadeRequest("start", { mode, startId: crypto.randomUUID(), gens: [...selectedGens].map(Number), restart }).then((data) => {
     if (!verifiedGuess || verifiedGuess.ticket !== ticket || gameMode !== mode) return;
-    if (!data || !data.ok || !data.arcade || !data.arcade.image) {
+    if (!data || !data.ok || !data.arcade || !(data.arcade.image || data.arcade.cry || data.arcade.clue)) {
       verifiedGuessLocal(mode, pool, "Le serveur ne répond pas : partie d’entraînement, sans Pokédollars ni Ball.");
       return;
     }
     const view = data.arcade;
-    verifiedGuess = { mode, ticket, sessionId: view.sessionId, image: view.image };
+    verifiedGuess = { mode, ticket, sessionId: view.sessionId, image: view.image || "", cry: view.cry || "" };
     verifiedGuessControls(false);
+    verifiedGuessDescription(view);
     verifiedGuessApplyRows(view, false);
     if (view.phase === "over") verifiedGuessFinish(view);
     else if (window.matchMedia("(min-width: 641px)").matches) document.getElementById("guess-input")?.focus({ preventScroll: true });

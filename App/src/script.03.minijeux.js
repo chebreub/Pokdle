@@ -2238,9 +2238,11 @@ function setCryUiStatus(state, message = "") {
 }
 
 function playCrySound() {
-  if (gameMode !== "cry" || !secretPokemon) return;
+  // Partie vérifiée : le cri arrive du serveur sous une adresse opaque (script.10xzk.verified-guess.js).
+  const verifiedCry = !secretPokemon && typeof verifiedGuessCry === "function" ? verifiedGuessCry() : "";
+  if (gameMode !== "cry" || (!secretPokemon && !verifiedCry)) return;
 
-  const url = getPokemonCryUrl(secretPokemon);
+  const url = verifiedCry || getPokemonCryUrl(secretPokemon);
 
   // Nouveau cri : reset audio + UI
   if (!cryAudio || cryAudio.src !== url) {
@@ -2312,7 +2314,8 @@ function updateCryPanel(reveal) {
 
   if (!box || !revealBox || !sprite || !name) return;
 
-  if (gameMode !== "cry" || !secretPokemon) {
+  const verifiedCry = !secretPokemon && typeof verifiedGuessImage === "function" ? verifiedGuessImage("cry") : "";
+  if (gameMode !== "cry" || (!secretPokemon && !verifiedCry)) {
     box.classList.add("hidden");
     revealBox.classList.add("hidden");
     sprite.onerror = null;

@@ -12,7 +12,7 @@ async function initVerifiedArcadeDb(db) {
     identity TEXT NOT NULL, mode TEXT NOT NULL, account_id TEXT,
     state JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY(identity,mode))`);
 }
-function createVerifiedArcade({pokemon, secret, clock = () => new Date(), randomInt = crypto.randomInt}) {
+function createVerifiedArcade({pokemon, secret, clock = () => new Date(), randomInt = crypto.randomInt, describe = guessGames.createFlavorLoader(fetch, randomInt)}) {
   const catalog = pokemon || JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../pokemon.js'), 'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
   const games = advanced.createQuizHigherLower(catalog,randomInt,clock);
   const isAdvanced = s => advanced.MODES.includes(s.mode);
@@ -27,7 +27,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
     // Encode the answer as 0/1: true/false would leak it through ciphertext length.
     // A guessing-game picture pads its id (forms go up to 5 digits) for the same reason.
-    const body = question.guess ? {owner:who.key, id:String(question.id).padStart(6,'0'), shiny:0, k:'g', expires}
+    const body = question.guess ? {owner:who.key, id:String(question.id).padStart(6,'0'), shiny:0, k:question.cry ? 'c' : 'g', expires}
       : {owner:who.key, id:question.id, shiny:Number(question.shiny), expires};
     const data = Buffer.concat([cipher.update(JSON.stringify(body)), cipher.final()]);
     return Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url');
@@ -38,9 +38,10 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       const b = Buffer.from(token, 'base64url'), decipher = crypto.createDecipheriv('aes-256-gcm', key, b.subarray(0,12));
       decipher.setAuthTag(b.subarray(12,28));
       const spec = JSON.parse(Buffer.concat([decipher.update(b.subarray(28)), decipher.final()]));
-      if (spec.k === 'g') {
+      if (spec.k === 'g' || spec.k === 'c') {
         const id = Number(spec.id), src = guessing.spriteOf(id);
-        return spec.owner === who.key && spec.expires > +clock() && guessing.has(id) && src ? {id, shiny:false, src} : null;
+        if (spec.owner !== who.key || spec.expires <= +clock() || !guessing.has(id)) return null;
+        return spec.k === 'c' ? {id, cry:guessing.cryOf(id)} : src ? {id, shiny:false, src} : null;
       }
       return spec.owner === who.key && spec.expires > +clock() && shinyPool.includes(spec.id) && [0,1].includes(spec.shiny) ? {...spec,shiny:spec.shiny === 1} : null;
     } catch (_) { return null; }
@@ -61,7 +62,8 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     }
   }
   function view(s) {
-    if (isGuess(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,image:s.image,...guessing.view(s)};
+    if (isGuess(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,
+      ...(s.image ? {image:s.image} : {}),...(s.cry ? {cry:s.cry} : {}),...(s.clue ? {clue:s.clue} : {}),...guessing.view(s)};
     if (isAdvanced(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,score:s.score,answer:s.answer,...games.view(s)};
     const q = s.question;
     return {mode:s.mode, sessionId:s.id, round:s.round, phase:s.phase, score:s.score, lives:s.lives,
@@ -95,7 +97,10 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     else if (isGuess(s)) {
       s.recent = Array.isArray(old?.recent) ? old.recent : [];
       guessing.init(s);
-      s.image = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
+      // Ce que le joueur reçoit pour deviner : une image ou un cri sous une adresse opaque, ou le texte du Pokédex.
+      if (s.mode === 'cry') s.cry = '/api/arcade/cry/' + imageToken(who, {id:s.secretId, guess:true, cry:true}, s.startedAt + TTL);
+      else if (s.mode === 'description') s.clue = await describe(guessing.get(s.secretId), guessing.speciesOf(s.secretId));
+      else s.image = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
     } else question(s, who);
     await save(c,who,s); return {arcade:view(s)};
   }
@@ -192,4 +197,29 @@ function createArcadeArtworkLoader(fetcher = fetch) {
     try { return await promise; } catch(e) { cache.delete(key); throw e; }
   };
 }
-module.exports = {MODES,TTL,initVerifiedArcadeDb,createVerifiedArcade,createArcadeArtworkLoader};
+// The Cri game's sound: PokeAPI's cry (CDN, GitHub if it fails), checked to be an Ogg file.
+function createArcadeCryLoader(fetcher = fetch) {
+  const cache = new Map();
+  return async function load(spec) {
+    const id = Number(spec.cry);
+    if (!Number.isInteger(id) || id <= 0) throw fail('cry_unavailable',503);
+    if (cache.has(id)) return cache.get(id);
+    const promise = (async () => {
+      let data = null;
+      for (const url of ['https://cdn.jsdelivr.net/gh/PokeAPI/cries@main/cries/pokemon/latest/' + id + '.ogg', 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/' + id + '.ogg']) {
+        try {
+          const response = await fetcher(url, {signal:AbortSignal.timeout(8000),redirect:'error'});
+          if (!response.ok || Number(response.headers.get('content-length')) > 1000000) continue;
+          const body = Buffer.from(await response.arrayBuffer());
+          if (body.length <= 1000000 && body.subarray(0,4).toString('latin1') === 'OggS') { data = body; break; }
+        } catch (_) { /* next source */ }
+      }
+      if (!data) throw fail('cry_unavailable',503);
+      return data;
+    })();
+    cache.set(id,promise);
+    if (cache.size > 128) cache.delete(cache.keys().next().value);
+    try { return await promise; } catch(e) { cache.delete(id); throw e; }
+  };
+}
+module.exports = {MODES,TTL,initVerifiedArcadeDb,createVerifiedArcade,createArcadeArtworkLoader,createArcadeCryLoader};

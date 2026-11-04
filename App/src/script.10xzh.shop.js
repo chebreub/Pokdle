@@ -132,11 +132,11 @@ function shopEarnTabHtml(s) {
     row(54, false, "Dossier du jour fini", coinFmt(daily.dossier) + " ₽", done.has("dossier")) +
     row(150, false, "Défi du jour fini", coinFmt(daily.challenge) + " ₽", done.has("challenge")) +
     row(235, false, "1re partie du jour en Party Room", coinFmt(c.party || 150) + " ₽ + 1 Ball", done.has("party")) +
-    row(448, false, "1re partie du jour : Quiz, Higher or Lower, Duel de poids, Shiny ou normal, Pokémon pixelisé, Zoom progressif", "30 à 90 ₽", false) +
+    row(448, false, "1re partie du jour : Quiz, Higher or Lower, Duel de poids, Shiny ou normal, Pokémon pixelisé, Zoom, Cri, Description", "30 à 90 ₽", false) +
     row(7, false, "Doublon relâché (dans l’album)", coinFmt(rel.normal) + " ₽", false) +
     row(6, true, "Doublon shiny relâché", coinFmt(rel.shiny) + " ₽", false) + '</ul>' +
     '<div class="shop-cap"><span>Parties d’aujourd’hui : <b>' + coinFmt(played) + ' / ' + coinFmt(cap) + ' ₽</b></span><i aria-hidden="true"><b style="width:' + Math.min(100, Math.round(played * 100 / cap)) + '%"></b></i></div>' +
-    '<p class="ball-note shop-note">Dans ces 6 jeux, la 1re partie du jour : perdue 30 ₽, gagnée 60 ₽, belle partie 90 ₽ (trouvé en 3 essais au plus pour le Pixelisé et le Zoom). Les autres jeux donnent leur Ball ; leurs ₽ arriveront quand le serveur vérifiera aussi leurs parties.</p>';
+    '<p class="ball-note shop-note">Dans ces 8 jeux, la 1re partie du jour : perdue 30 ₽, gagnée 60 ₽, belle partie 90 ₽ (trouvé en 3 essais au plus pour le Pixelisé, le Zoom, le Cri et la Description). Les autres jeux donnent leur Ball ; leurs ₽ arriveront quand le serveur vérifiera aussi leurs parties.</p>';
 }
 function shopBagHtml() {
   const s = ballState || { bag: { poke: 0, great: 0, ultra: 0 }, today: 0, cap: 10, gains: [] };
