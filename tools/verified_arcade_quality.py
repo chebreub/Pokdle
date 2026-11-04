@@ -68,12 +68,11 @@ def main():
                             else:
                                 route.fulfill(response=response)
                         page.route('**/api/arcade/answer', lose_reply)
+                        # 4/11/2026 : le résultat s'affiche tout de suite ; une réponse perdue repart seule,
+                        # à l'identique, et le serveur ne la compte qu'une fois.
                         page.locator('#weight-grid .versus-card').first.click()
-                        page.wait_for_function('() => !weightBattleState.busy')
-                        assert not page.evaluate('weightBattleState.revealed')
-                        page.locator('#weight-grid .versus-card').first.click()
-                        page.wait_for_function('() => weightBattleState.revealed')
-                        assert replies[0] == replies[1]
+                        page.wait_for_function('() => weightBattleState.revealed && !weightBattleState.busy')
+                        assert len(replies) == 2 and replies[0] == replies[1]
                         assert page.evaluate('playerProfile.weightBattleStreak') == 1
                         assert page.evaluate('ballState.coins.balance') == 60
                         assert page.evaluate('ballState.gains.filter(g => g.source === "mode:weight").length') == 1
@@ -93,7 +92,8 @@ def main():
                             page.evaluate('goToConfig()')
                             route.fulfill(response=response)
                         page.route('**/api/arcade/start', leave_before_reply)
-                        page.evaluate('startWeightBattle()')
+                        # The next duel is normally fetched ahead of time (4/11/2026); drop it to test a real load.
+                        page.evaluate('weightPrefetch = null; startWeightBattle()')
                         assert page.evaluate('document.body.dataset.screen') == 'screen-config'
                         page.unroute('**/api/arcade/start', leave_before_reply)
                         page.evaluate('closeOverlayModal(); openShinyMode()')

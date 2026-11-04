@@ -10,6 +10,7 @@ const VERIFIED_ARCADE_ERRORS = {
   rate_limited: 'Un peu trop de demandes. Réessaie dans une minute.'
 };
 let verifiedWeightLoading = false, verifiedShinyLoading = false;
+let weightPrefetch = null;
 function verifiedArcadeOnline(mode) {
   return Boolean(ballState && ballState.actionScope && ballState.verifiedModes?.includes(mode));
 }
@@ -46,7 +47,12 @@ startWeightBattle = function () {
     const status = document.getElementById('weight-status');
     if (status) status.textContent = 'Chargement du duel…';
   }
-  return verifiedArcadeRequest('start', {mode:'weight',startId:crypto.randomUUID(),gens:[...selectedGens].map(Number)}).then(data => {
+  // 4/11 : la question suivante a souvent déjà été demandée pendant que le joueur lisait le résultat.
+  const gensKey = [...selectedGens].map(Number).sort().join(',');
+  const prefetch = weightPrefetch && weightPrefetch.gens === gensKey ? weightPrefetch.promise : null;
+  weightPrefetch = null;
+  const pending = weightBattleState && weightBattleState.pending ? weightBattleState.pending : Promise.resolve();
+  return pending.then(() => prefetch || verifiedArcadeRequest('start', {mode:'weight',startId:crypto.randomUUID(),gens:[...selectedGens].map(Number)})).then(data => {
     if (gameMode !== modeBefore || document.body.dataset.screen !== screenBefore) return;
     if (!data?.ok) {
       if (modeBefore === 'weight' && screenBefore === 'screen-game') renderWeightBattlePanel();
@@ -76,25 +82,44 @@ renderWeightBattlePanel = function () {
   }
   document.querySelectorAll('#weight-grid .versus-card').forEach((button,index) => {
     if (state.busy) button.disabled = true;
-    button.addEventListener('click', async event => {
+    button.addEventListener('click', event => {
       if (state.allowLocalCommit) return;
       event.preventDefault(); event.stopImmediatePropagation();
       if (state.busy || state.revealed) return;
       state.busy = true;
-      document.querySelectorAll('#weight-grid .versus-card').forEach(b => { b.disabled = true; });
       const p = index === 0 ? state.left : state.right, s = state.verified;
-      const data = await verifiedArcadeRequest('answer', {mode:'weight',sessionId:s.sessionId,round:s.round,choice:p.id});
-      state.busy = false;
-      if (weightBattleState !== state || gameMode !== 'weight' || document.body.dataset.screen !== 'screen-game') return;
-      if (!data?.ok) { renderWeightBattlePanel(); verifiedArcadeError(data,'weight'); return; }
-      const result = data.arcade;
-      secretPokemon = POKEMON_BY_ID.get(result.reveal.correctId);
-      // Keep the existing history/XP/result UI, but feed it only a verified answer.
-      if (playerProfile && result.answer.correct) playerProfile.weightBattleStreak = result.score - 1;
-      state.allowLocalCommit = true; button.disabled = false; button.click(); state.allowLocalCommit = false;
-      state.verified = result;
-      if (playerProfile) playerProfile.weightBattleStreak = result.score;
-      setGameCounter(result.score, "Série");
+      // 4/11/2026 : le résultat s'affiche tout de suite (les deux poids sont déjà connus de la page, même règle
+      // que le serveur : le plus lourd, égalité pour celui de gauche). Le serveur confirme et compte la série,
+      // les Balls et les ₽ en arrière-plan ; s'il voit autre chose, c'est lui qui a raison et l'écran se corrige.
+      const localCorrectId = Number(state.left.weight) >= Number(state.right.weight) ? state.left.id : state.right.id;
+      const localCorrect = p.id === localCorrectId;
+      secretPokemon = POKEMON_BY_ID.get(localCorrectId);
+      if (playerProfile && localCorrect) playerProfile.weightBattleStreak = s.score;
+      // Juste après ce clic (un clic dans un clic serait ignoré par le navigateur) : moins d'une image d'attente.
+      setTimeout(() => {
+        if (weightBattleState !== state || state.revealed) return;
+        state.allowLocalCommit = true; button.disabled = false; button.click(); state.allowLocalCommit = false;
+        setGameCounter(state.verified === s ? (localCorrect ? s.score + 1 : 0) : state.verified.score, "Série");
+      }, 0);
+      const onScreen = () => weightBattleState === state && gameMode === 'weight' && document.body.dataset.screen === 'screen-game';
+      // Réponse perdue sur le réseau : la même réponse repart une fois (le serveur ne la compte qu'une fois).
+      const payload = {mode:'weight',sessionId:s.sessionId,round:s.round,choice:p.id};
+      state.pending = verifiedArcadeRequest('answer', payload)
+        .then(data => data?.ok || (data && data.error) ? data : verifiedArcadeRequest('answer', payload)).then(data => {
+        state.busy = false;
+        if (!data?.ok) { if (onScreen()) verifiedArcadeError(data,'weight'); return; }
+        const result = data.arcade;
+        state.verified = result;
+        if (playerProfile) playerProfile.weightBattleStreak = result.score;
+        if (result.answer.correct !== localCorrect || result.reveal.correctId !== localCorrectId) {
+          secretPokemon = POKEMON_BY_ID.get(result.reveal.correctId);
+          if (onScreen()) renderWeightBattlePanel();
+        }
+        if (onScreen()) setGameCounter(result.score, "Série");
+        // La question suivante se prépare pendant que le joueur lit le résultat.
+        const gens = [...selectedGens].map(Number);
+        weightPrefetch = {gens:gens.slice().sort().join(','), promise:verifiedArcadeRequest('start', {mode:'weight',startId:crypto.randomUUID(),gens})};
+      }).catch(() => { state.busy = false; });
     },true);
   });
   return out;
