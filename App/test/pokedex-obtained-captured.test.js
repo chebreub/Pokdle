@@ -121,3 +121,31 @@ test("server catchable total is exactly wild pool plus six expedition legends, n
   assert.match(balls,/catchableTotal:\s*new Set\(\[\.\.\.WILD_POOL,\s*\.\.\.EXPEDITIONS\.map/);
   for(const id of EXPEDITIONS.map(e=>e.legend))assert.ok(!WILD_POOL.includes(id));
 });
+
+
+test("regional binder does not promise capture of mission-only species",()=>{
+  const fx=fs.readFileSync(path.join(__dirname,"../src/script.10xzc.reveal-fx.js"),"utf8");
+  const block=fx.match(/if \(typeof albumBinderHtml === "function"\) \{[\s\S]*?\n\}/);
+  assert.ok(block,"actual production binder wrapper found");
+  const context={
+    albumBinderHtml:()=>"<h3>Hoenn <small>3 / 135</small></h3>",
+    albumStats:()=>({gen:3,total:135,found:3,shinies:0}),
+    albumView:{gen:3},
+    albumCaughtIn:()=>1,
+    albumRegionList:()=>[{id:10}],
+    ballImg:()=>"<ball>"
+  };
+  vm.runInNewContext(block[0],context);
+  const html=context.albumBinderHtml();
+  assert.match(html,/3 \/ 135/,"viewed species still retain their full regional objective");
+  assert.match(html,/1 espèce/,"captures show number owned without an impossible region denominator");
+  assert.doesNotMatch(html,/1 \/ 135/,"do not use total national species as the capture target");
+});
+
+test("capture ceremony reuses server catchable total instead of claiming 1025 can be caught",()=>{
+  const fx=fs.readFileSync(path.join(__dirname,"../src/script.10xzc.reveal-fx.js"),"utf8");
+  assert.match(fx,/const total = typeof wildCatchableTotal/);
+  assert.doesNotMatch(fx,/Math\.min\(1025, POKEMON_BY_ID\.size\)/);
+  const wild=fs.readFileSync(path.join(__dirname,"../src/script.10xz.wild-grass.js"),"utf8");
+  assert.match(wild,/wildCatchableTotal = data\.catchableTotal/);
+});
