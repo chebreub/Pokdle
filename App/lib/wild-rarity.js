@@ -3,7 +3,7 @@
 // Rareté de rencontre (Pokédle, pas une statistique officielle Pokémon).
 // Les taux de capture PokéAPI restent inchangés : ils ne servent ici qu'à
 // classer les espèces déjà autorisées dans les hautes herbes.
-// Les 108 récompenses de mission et les légendaires restent exclus en amont.
+// Les récompenses de mission et les légendaires restent exclus en amont.
 const RARITY_WEIGHTS = Object.freeze({
   common: 36,
   uncommon: 18,
@@ -12,20 +12,12 @@ const RARITY_WEIGHTS = Object.freeze({
   // Ces quatre espèces (taux de capture 3) sont très dures à attraper.
   // Les rendre aussi presque invisibles serait une double pénalité disproportionnée.
   elusive: 16,
-  prestige: 1,
 });
-
-// Drattak est le seul pseudo-légendaire non déjà protégé par une
-// mission d'album. Il reste obtenable provisoirement, mais exceptionnel.
-// Prévoir une véritable voie de prestige avant de le retirer du pool.
-const PRESTIGE_WILD_IDS = Object.freeze([373]);
-const PRESTIGE_SET = new Set(PRESTIGE_WILD_IDS);
 
 function wildRarity(id, captureRates) {
   if (!Number.isInteger(id) || id < 1 || id > 1025) throw new Error("invalid_pokemon_id");
   const captureRate = Number(captureRates && captureRates[id]);
   if (!Number.isInteger(captureRate) || captureRate < 1 || captureRate > 255) throw new Error("missing_capture_rate");
-  if (PRESTIGE_SET.has(id)) return "prestige";
   if (captureRate >= 190) return "common";
   if (captureRate >= 100) return "uncommon";
   if (captureRate >= 60) return "rare";
@@ -82,7 +74,7 @@ function acquisitionCatalogue(total, wildIds, missionIds, expeditionIds, secretI
   for (let id = 1; id <= total; id++) {
     result[id] = missions.has(id) ? "mission"
       : expeditions.has(id) ? "expedition"
-      : wild.has(id) ? PRESTIGE_SET.has(id) ? "prestige_wild" : "wild"
+      : wild.has(id) ? "wild"
       : secrets.has(id) ? "secret"
       : "unassigned";
   }
@@ -90,6 +82,6 @@ function acquisitionCatalogue(total, wildIds, missionIds, expeditionIds, secretI
 }
 
 module.exports = {
-  RARITY_WEIGHTS, PRESTIGE_WILD_IDS, wildRarity, buildWildEncounterTable,
+  RARITY_WEIGHTS, wildRarity, buildWildEncounterTable,
   drawWildPokemon, wildTicketFor, acquisitionCatalogue,
 };
