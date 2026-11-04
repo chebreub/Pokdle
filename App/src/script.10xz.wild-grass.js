@@ -4,6 +4,7 @@
 // la Ball qui tremble, « Gotcha ! », et le Pokémon capturé qui rejoint l'album (marque ⚪).
 let wildCaptures = null;      // { [id]: { normal, shiny } } lu sur le serveur
 let wildCatchableTotal = null; // dénominateur renvoyé par le serveur (herbes + expéditions)
+let wildLegacyCaptured = null; // captures anciennes d'espèces depuis réservées aux missions
 let wildBusy = false;
 let wildSkipAnim = null;
 
@@ -38,6 +39,7 @@ function loadWildCaptures() {
     if (data && data.ok) {
       wildSyncAlbum(data.captures);
       if (Number.isInteger(data.catchableTotal) && data.catchableTotal > 0) wildCatchableTotal = data.catchableTotal;
+      if (Number.isInteger(data.legacyCaptured) && data.legacyCaptured >= 0) wildLegacyCaptured = data.legacyCaptured;
       if (typeof ballApply === "function") ballApply(data, { announce: false });
     }
     return wildCaptures;
