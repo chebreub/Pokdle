@@ -178,11 +178,11 @@ def main():
      return screen('screen-config')
     check('cosy-home',cosy_home)
     def home_party():
-     # « À plusieurs » (31/10/2026): the party games are named between the daily and the mini-games,
-     # and a game opens the Party Room with that game already chosen.
+     # « À plusieurs » (31/10/2026): the party games are named on the home, right after the mini-games
+     # (simplified home, 4/11/2026), and a game opens the Party Room with that game already chosen.
      expect(page.locator('#home-party .home-party-game').count()==4,'Party games are missing on the home')
      hero=page.locator('#daily-hero').bounding_box();band=page.locator('#home-party').bounding_box();catalog=page.locator('.home-discovery').bounding_box()
-     expect(hero and band and catalog and band['y']>=hero['y']+hero['height'] and catalog['y']>=band['y']+band['height'],'À plusieurs must sit between the daily and the mini-games')
+     expect(hero and band and catalog and catalog['y']>=hero['y']+hero['height'] and band['y']>=catalog['y']+catalog['height'],'À plusieurs must sit right after the mini-games')
      tile=page.locator('#home-party .home-party-game.is-petitbac');tile.scroll_into_view_if_needed()
      if width in (390,1366): page.locator('#home-party').screenshot(path=str(out/f'{width}-home-party.jpg'),quality=85,animations='disabled')
      tile.click();screen('screen-party-room')

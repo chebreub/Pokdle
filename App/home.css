@@ -2207,3 +2207,51 @@ body.theme-dark #screen-all-modes .mode-difficulty-inline{
 .remind-stop{justify-self:center;border:0;background:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px}
 .remind-note{font-size:.85em;opacity:.75}
 .remind-steps{margin:0;padding-left:1.3em;display:grid;gap:6px}
+
+/* Accueil simplifié (4/11/2026, maquette validée) : « Ta prochaine capture » + « Aussi aujourd'hui »,
+   ou les 3 étapes pour un nouveau joueur (src/script.10xzm.home-simple.js). */
+#home-balls.home-simple{display:grid;gap:10px;padding:0;background:none;border:0;box-shadow:none}
+#screen-config.home-simple-on #home-album{display:none}
+.home-simple .hs-ico{width:20px;height:20px;flex:0 0 auto}
+.home-simple .hs-eyebrow{font:900 12px/1.2 Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.hs-capture{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:24px;background:#2F7D47;color:#fff;box-shadow:0 6px 20px rgba(46,42,51,.08)}
+.hs-capture .hs-eyebrow{color:#D4F0DC}
+.hs-capture strong{font:700 22px/1.15 Fredoka,Nunito,sans-serif}
+.hs-capture small{font:700 13px/1.4 Nunito,sans-serif;color:#E4F5E9}
+.hs-capture-go{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:0;border-radius:16px;background:#fff;color:#1F5A33;font:600 17px/1.1 Fredoka,Nunito,sans-serif;cursor:pointer}
+.hs-capture-go:hover{background:#F1FAF3}
+.hs-capture-go:focus-visible,.hs-row:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.hs-more{display:flex;flex-direction:column;padding:12px 0 4px;border-radius:20px;background:#fff;border:2px solid rgba(46,42,51,.08)}
+.hs-more .hs-eyebrow{padding:0 16px 4px;color:#6E6878}
+.hs-row{display:flex;align-items:center;gap:12px;min-height:54px;padding:8px 16px;border:0;border-top:1px solid #F3ECE1;background:none;color:#2E2A33;text-align:left;cursor:pointer;font-family:Nunito,sans-serif}
+.hs-row:first-of-type{border-top:0}
+.hs-row:hover{background:#FFF8EF}
+.hs-row-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.hs-row-text b{font:800 15px/1.25 Nunito,sans-serif}
+.hs-row-text small{font:600 13px/1.3 Nunito,sans-serif;color:#5E5866}
+.hs-row .hs-ico{color:#8A8392;width:16px;height:16px}
+.hs-dot{width:10px;height:10px;border-radius:50%;background:#E5484D;flex:0 0 auto}
+#home-balls.is-beginner{padding:16px;border-radius:24px;background:#fff;border:2px solid rgba(46,42,51,.08)}
+.hs-steps-head h2{margin:0 0 10px;font:600 19px/1.2 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.hs-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.hs-steps li{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;background:#FFF8EF;text-align:center}
+.hs-steps b{font:800 14px/1.2 Nunito,sans-serif;color:#2E2A33}
+.hs-steps small{font:600 12px/1.3 Nunito,sans-serif;color:#5E5866}
+.hs-step-ico{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%}
+.hs-step-ico.is-find{background:#FFF1C7;color:#2E2A33}
+.hs-step-ico.is-ball{background:#FDE7E7}
+.hs-step-ico.is-grass{background:#E3F3E7;color:#2F7D47}
+.hs-step-ico .ball-img{width:24px;height:24px}
+.home-games-grid .hs-tagged{position:relative}
+.hs-ball-tag{position:absolute;left:10px;top:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 6px;border-radius:999px;background:#fff;color:#2E2A33;font:800 11px/1.2 Nunito,sans-serif;box-shadow:0 1px 4px rgba(46,42,51,.15);pointer-events:none}
+.hs-ball-tag .ball-img{width:14px;height:14px}
+.hs-ball-tag.is-won{background:#DDF1E2;color:#1F6136;padding-left:9px}
+.home-day.hs-sheet{margin:0;padding:0;border:0;box-shadow:none;background:none}
+.hs-sheet .day-exp{margin-top:0}
+body.theme-dark .hs-more,body.theme-dark #home-balls.is-beginner{background:#26222c;border-color:rgba(255,255,255,.1)}
+body.theme-dark .hs-row{color:#f5efe6;border-color:rgba(255,255,255,.08)}
+body.theme-dark .hs-row:hover{background:#2f2a36}
+body.theme-dark .hs-row-text small,body.theme-dark .hs-steps small,body.theme-dark .hs-more .hs-eyebrow{color:#cfc6d8}
+body.theme-dark .hs-steps li{background:#2f2a36}
+body.theme-dark .hs-steps b,body.theme-dark .hs-steps-head h2{color:#f5efe6}
+body.theme-dark .home-day.hs-sheet{background:none}
