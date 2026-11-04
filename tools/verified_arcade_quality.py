@@ -96,8 +96,32 @@ def main():
                         page.evaluate('weightPrefetch = null; startWeightBattle()')
                         assert page.evaluate('document.body.dataset.screen') == 'screen-config'
                         page.unroute('**/api/arcade/start', leave_before_reply)
+                        # Recover a transient artwork failure through the real UI, without
+                        # changing the server round. Do not just increase the timeout.
+                        def wait_shiny_artwork():
+                            for _ in range(3):
+                                page.wait_for_function(
+                                    '() => shinyState?.verified && (shinyState.imageReady || !!document.getElementById("shiny-image-retry"))',
+                                    timeout=25000)
+                                if page.evaluate('shinyState.imageReady'):
+                                    return
+                                page.locator('#shiny-image-retry').click()
+                            page.wait_for_function('() => shinyState?.verified && shinyState.imageReady', timeout=25000)
+
+                        failed_artwork = []
+                        def fail_once(route):
+                            if not failed_artwork:
+                                failed_artwork.append(route.request.url)
+                                route.abort()
+                            else:
+                                route.continue_()
+                        page.route('**/api/arcade/art/*', fail_once)
                         page.evaluate('closeOverlayModal(); openShinyMode()')
-                        page.wait_for_function('() => shinyState?.verified && shinyState.imageReady')
+                        page.wait_for_function('() => shinyState?.verified && !!document.getElementById("shiny-image-retry")')
+                        assert len(failed_artwork) == 1
+                        assert page.evaluate('shinyState.imageReady') is False
+                        page.unroute('**/api/arcade/art/*', fail_once)
+                        wait_shiny_artwork()
                         assert page.evaluate('shinyState.round.shiny === undefined')
                         assert '/api/arcade/art/' in page.locator('.shiny-art').get_attribute('src')
                         page.screenshot(path=str(OUT / f'{engine}-{width}-shiny.png'))
@@ -114,7 +138,8 @@ def main():
                         assert page.evaluate('shinyState.score') == 1
                         for lives in (2, 1, 0):
                             page.locator('#shiny-next').click()
-                            page.wait_for_function('() => shinyState.phase === "playing" && shinyState.imageReady')
+                            page.wait_for_function('() => shinyState.phase === "playing"')
+                            wait_shiny_artwork()
                             page.locator('#shiny-say-normal').click()
                             page.wait_for_function('(n) => shinyState.lives === n && !shinyState.busy', arg=lives)
                         assert page.evaluate('shinyState.phase') == 'over'

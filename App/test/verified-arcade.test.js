@@ -141,14 +141,42 @@ test('PostgreSQL + HTTP: account binding, route aliases, old earn rejection and 
   } finally {await new Promise(r=>server.close(r));}
 }));
 
-test('artwork proxy uses a fixed URL, checks PNGs, shares concurrent loads and retries failures',async()=>{
-  let calls=0, fail=true;
+test('artwork proxy uses fixed CDN/GitHub URLs, shares concurrent loads and retries failures',async()=>{
+  let fail=true;
+  const urls=[];
+  const cdn='https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/shiny/6.png';
+  const github='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/6.png';
   const load=createArcadeArtworkLoader(async url=>{
-    calls++; assert.equal(url,'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/shiny/6.png');
+    urls.push(url);
+    assert.ok([cdn,github].includes(url),'the image loader must never accept an arbitrary origin');
     return {ok:!fail,headers:{get:()=>null},arrayBuffer:async()=>Buffer.from('89504e470d0a1a0a','hex')};
   });
   await assert.rejects(load({id:6,shiny:true}),/image_unavailable/);
-  fail=false; await Promise.all([load({id:6,shiny:true}),load({id:6,shiny:true})]); assert.equal(calls,2);
+  fail=false;
+  const [first,second]=await Promise.all([load({id:6,shiny:true}),load({id:6,shiny:true})]);
+  assert.deepEqual(first,second);
+  assert.deepEqual(urls,[cdn,github,cdn]);
+});
+
+test('official artworks use GitHub fallback when the CDN is unavailable or returns invalid PNG bytes',async()=>{
+  const path='sprites/pokemon/other/official-artwork/133.png';
+  const cdn='https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/'+path;
+  const github='https://raw.githubusercontent.com/PokeAPI/sprites/master/'+path;
+  const png=Buffer.from('89504e470d0a1a0a','hex');
+  for (const kind of ['network_error','invalid_body']) {
+    const urls=[];
+    const load=createArcadeArtworkLoader(async url=>{
+      urls.push(url);
+      if(url===cdn) {
+        if(kind==='network_error') throw new Error('CDN unavailable');
+        return {ok:true,headers:{get:()=>null},arrayBuffer:async()=>Buffer.from('not a PNG')};
+      }
+      assert.equal(url,github);
+      return {ok:true,headers:{get:()=>null},arrayBuffer:async()=>png};
+    });
+    assert.deepEqual(await load({id:133,shiny:false}),png);
+    assert.deepEqual(urls,[cdn,github]);
+  }
 });
 
 // AES-GCM hides content, not plaintext length. Both answers must have the same
