@@ -40,6 +40,8 @@ async function ensureTables(db) {
     read_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (message_id, account_id)
   )`);
+  // 🗑 (4/11/2026) : effacer un message de « Mes messages » (chez ce joueur seulement ; l'admin garde sa copie).
+  await db.query("ALTER TABLE player_message_reads ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false");
   await db.query(`CREATE TABLE IF NOT EXISTS player_message_replies (
     id BIGSERIAL PRIMARY KEY,
     message_id BIGINT NOT NULL REFERENCES player_messages(id) ON DELETE CASCADE,
@@ -87,6 +89,7 @@ async function history(db, accountId) {
         FROM player_message_replies p WHERE p.message_id = m.id AND p.account_id = $1) AS replies
     FROM player_messages m
     WHERE ${FOR_PLAYER} AND m.expires_at > now()
+      AND NOT EXISTS (SELECT 1 FROM player_message_reads r WHERE r.message_id = m.id AND r.account_id = $1 AND r.hidden)
     ORDER BY m.created_at DESC, m.id DESC LIMIT 20`, [String(accountId)]);
   return r.rows.map((row) => ({ id: Number(row.id), body: row.body, day: row.day, replies: Array.isArray(row.replies) ? row.replies : [] }));
 }
@@ -111,6 +114,21 @@ async function reply(db, id, accountId, body) {
   await db.query("INSERT INTO player_message_replies(message_id, account_id, body) VALUES ($1, $2, $3)", [id, String(accountId), checked.text]);
   await db.query("INSERT INTO player_message_reads(message_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, String(accountId)]);
   return { ok: true };
+}
+
+// Effacer de ma liste : un message (id) ou tous (all). Effacer vaut lecture : la fenêtre ne revient pas.
+async function hideMessages(db, accountId, { id, all } = {}) {
+  const me = String(accountId);
+  if (all) {
+    const r = await db.query(`INSERT INTO player_message_reads(message_id, account_id, hidden)
+      SELECT m.id, $1, true FROM player_messages m WHERE ${FOR_PLAYER} AND m.expires_at > now()
+      ON CONFLICT (message_id, account_id) DO UPDATE SET hidden = true`, [me]);
+    return { ok: true, hidden: r.rowCount || 0 };
+  }
+  if (!await visibleTo(db, id, me)) return { error: "Message introuvable." };
+  await db.query(`INSERT INTO player_message_reads(message_id, account_id, hidden) VALUES ($1, $2, true)
+    ON CONFLICT (message_id, account_id) DO UPDATE SET hidden = true`, [id, me]);
+  return { ok: true, hidden: 1 };
 }
 
 async function removeMessage(db, id) {
@@ -244,6 +262,20 @@ function mountPlayerRoutes(app, { express, db, ready, getUser, log = console, li
     catch (error) { log.error("[messages] read:", error.message); res.status(503).json({ ok: false, error: "unavailable" }); }
   });
 
+  app.post("/api/messages/hide", json, async (req, res) => {
+    const user = userOf(req, res);
+    if (!user || !sameOrigin(req, res)) return;
+    const all = req.body && req.body.all === true;
+    const id = all ? null : idOf(req);
+    if (!all && !id) return res.status(400).json({ ok: false, error: "bad_id" });
+    if (!await dbReady()) return res.status(503).json({ ok: false, error: "unavailable" });
+    try {
+      const result = await hideMessages(db, user.id, { id, all });
+      if (result.error) return res.status(400).json({ ok: false, error: result.error });
+      res.json(result);
+    } catch (error) { log.error("[messages] hide:", error.message); res.status(503).json({ ok: false, error: "unavailable" }); }
+  });
+
   app.post("/api/messages/reply", json, async (req, res) => {
     const user = userOf(req, res);
     if (!user || !sameOrigin(req, res)) return;
@@ -261,6 +293,6 @@ function mountPlayerRoutes(app, { express, db, ready, getUser, log = console, li
 
 module.exports = {
   MESSAGE_MAX, REPLY_MAX, REPLIES_PER_MESSAGE, KEEP_DAYS, BROADCAST_DAYS,
-  cleanText, ensureTables, purge, sendMessage, inbox, history, markRead, reply, removeMessage, adminState, notify,
+  cleanText, ensureTables, purge, sendMessage, inbox, history, markRead, reply, hideMessages, removeMessage, adminState, notify,
   adminSectionHtml, mountPlayerRoutes,
 };

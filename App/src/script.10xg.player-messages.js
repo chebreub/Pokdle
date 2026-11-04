@@ -109,6 +109,9 @@ if (typeof window !== 'undefined' && window.addEventListener) {
 // The window above shows a message once; a player who closed it can read it again here and answer
 // later (three answers at most per message, as on the server).
 var myMessagesRepliesMax = 3;
+// 🗑 (4/11) : effacer un message de ma liste (2 appuis), ou tous (« Tout effacer », 2 appuis aussi).
+var myMessagesConfirm = 0;
+var myMessagesList = [];
 
 function myMessageHtml(message) {
   var id = Number(message.id);
@@ -119,6 +122,7 @@ function myMessageHtml(message) {
     return '<div class="my-message-reply"><b>Toi' + (replyDay ? ' · ' + replyDay : '') + '</b>' + escapeHtml(reply.body).replace(/\n/g, '<br>') + '</div>';
   }).join('');
   var canReply = replies.length < myMessagesRepliesMax;
+  var bin = '<button type="button" class="btn-ghost my-message-bin' + (myMessagesConfirm === id ? ' is-confirm' : '') + '" data-action="hideMyMessage" data-args="[' + id + ']" aria-label="Effacer ce message de ma liste">' + (myMessagesConfirm === id ? 'Sûr ? 🗑' : '🗑') + '</button>';
   return '<article class="my-message">' +
     '<p class="player-message-from">Du créateur de Pokédle' + (day ? ' · le ' + day : '') + '</p>' +
     '<div class="player-message-body">' + escapeHtml(message.body).replace(/\n/g, '<br>') + '</div>' +
@@ -127,15 +131,17 @@ function myMessageHtml(message) {
       ? '<label class="player-message-label" for="my-message-reply-' + id + '">' + (replies.length ? 'Ajouter un mot' : 'Ta réponse') + '</label>' +
         '<textarea id="my-message-reply-' + id + '" maxlength="500" rows="2" placeholder="Écris ta réponse…"></textarea>' +
         '<p class="player-message-status" id="my-message-status-' + id + '" role="status" aria-live="polite"></p>' +
-        '<div class="player-message-actions"><button type="button" class="btn-blue" data-action="sendMyMessageReply" data-args="[' + id + ']">Envoyer</button></div>'
-      : '') +
+        '<div class="player-message-actions"><button type="button" class="btn-blue" data-action="sendMyMessageReply" data-args="[' + id + ']">Envoyer</button>' + bin + '</div>'
+      : '<div class="player-message-actions">' + bin + '</div>') +
     '</article>';
 }
 
 function renderMyMessages(messages) {
   var list = Array.isArray(messages) ? messages : [];
+  myMessagesList = list;
   ensureOverlay('📬 Mes messages', list.length
-    ? '<div class="my-messages">' + list.map(myMessageHtml).join('') + '</div>'
+    ? '<div class="my-messages">' + list.map(myMessageHtml).join('') +
+      '<button type="button" class="my-messages-clear" data-action="hideAllMyMessages">' + (myMessagesConfirm === -1 ? 'Sûr ? Tout effacer' : 'Tout effacer') + '</button></div>'
     : '<div class="my-messages"><p class="my-messages-empty">Aucun message pour l’instant. Quand le créateur de Pokédle t’écrit, son message reste ici 90 jours.</p></div>');
   var overlay = document.getElementById('overlay-modal');
   if (overlay) overlay.dataset.kind = 'message';
@@ -174,3 +180,22 @@ function sendMyMessageReply(id) {
   }).catch(function () { say('Envoi impossible pour le moment. Réessaie dans un instant.'); });
 }
 window.sendMyMessageReply = sendMyMessageReply;
+
+function myMessagesHide(body, confirmKey) {
+  if (myMessagesConfirm !== confirmKey) {
+    myMessagesConfirm = confirmKey;
+    renderMyMessages(myMessagesList);
+    setTimeout(function () { if (myMessagesConfirm === confirmKey) { myMessagesConfirm = 0; if (document.querySelector('#overlay-body .my-messages')) renderMyMessages(myMessagesList); } }, 4000);
+    return;
+  }
+  myMessagesConfirm = 0;
+  postPlayerMessage('/api/messages/hide', body).then(function (data) {
+    if (!data || !data.ok) { if (typeof showToast === 'function') showToast('Impossible d’effacer pour le moment.'); return; }
+    renderMyMessages(body.all ? [] : myMessagesList.filter(function (m) { return Number(m.id) !== Number(body.id); }));
+    if (typeof showToast === 'function') showToast(body.all ? '🗑 Messages effacés' : '🗑 Message effacé');
+  }).catch(function () { if (typeof showToast === 'function') showToast('Impossible d’effacer pour le moment.'); });
+}
+function hideMyMessage(id) { myMessagesHide({ id: Number(id) }, Number(id)); }
+function hideAllMyMessages() { myMessagesHide({ all: true }, -1); }
+window.hideMyMessage = hideMyMessage;
+window.hideAllMyMessages = hideAllMyMessages;

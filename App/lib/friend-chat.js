@@ -43,6 +43,12 @@ async function ensureTables(db) {
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), read_at TIMESTAMPTZ)`);
   await db.query("CREATE INDEX IF NOT EXISTS friend_messages_pair ON friend_messages (LEAST(from_id, to_id), GREATEST(from_id, to_id), id)");
   await db.query("CREATE INDEX IF NOT EXISTS friend_messages_unread ON friend_messages (to_id) WHERE read_at IS NULL");
+  // 🗑 Supprimer (4/11/2026) : « pour tout le monde » (l'auteur seulement : « Message supprimé » des deux côtés)
+  // ou « pour moi » (caché de ma discussion seulement). Le texte reste en base jusqu'aux 30 jours : un
+  // signalement copie toujours les vrais messages, pour protéger les plus jeunes.
+  await db.query("ALTER TABLE friend_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ");
+  await db.query("ALTER TABLE friend_messages ADD COLUMN IF NOT EXISTS hidden_from BOOLEAN NOT NULL DEFAULT false");
+  await db.query("ALTER TABLE friend_messages ADD COLUMN IF NOT EXISTS hidden_to BOOLEAN NOT NULL DEFAULT false");
   // A report keeps a copy of the last messages: the conversation itself goes after 30 days.
   await db.query(`CREATE TABLE IF NOT EXISTS friend_reports (
     id BIGSERIAL PRIMARY KEY, reporter_id TEXT NOT NULL, reported_id TEXT NOT NULL,
@@ -52,6 +58,9 @@ async function ensureTables(db) {
 
 const iso = (column) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
 const pairWhere = "LEAST(from_id, to_id) = LEAST($1::text, $2::text) AND GREATEST(from_id, to_id) = GREATEST($1::text, $2::text)";
+// Ce que $1 voit encore : pas les messages qu'il a supprimés « pour moi ».
+const visibleTo = "NOT (CASE WHEN from_id = $1 THEN hidden_from ELSE hidden_to END)";
+const COLS = (iso) => `id, from_id, body, deleted_at IS NOT NULL AS deleted, ${iso("created_at")} AS created_at`;
 
 function createFriendChat({ db, friends, accountOfPid, playerPid, push = async () => 0, ready = Promise.resolve(true), log = console }) {
   const nameOf = async (id) => (await db.query("SELECT username FROM users WHERE discord_id = $1", [String(id)])).rows[0]?.username || "Un dresseur";
@@ -63,7 +72,7 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     if (other === me) return { me, error: "self" };
     return { me, other };
   }
-  const view = (row, me) => ({ id: Number(row.id), mine: row.from_id === me, body: row.body, at: row.created_at });
+  const view = (row, me) => ({ id: Number(row.id), mine: row.from_id === me, body: row.deleted ? "" : row.body, at: row.created_at, ...(row.deleted ? { deleted: true } : {}) });
   async function purge() {
     await db.query("DELETE FROM friend_messages WHERE created_at < now() - make_interval(days => $1)", [KEEP_DAYS]);
     await db.query("DELETE FROM friend_reports WHERE created_at < now() - make_interval(days => $1)", [REPORT_KEEP_DAYS]);
@@ -84,7 +93,7 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     const waiting = (await db.query(`SELECT 1 FROM friend_messages WHERE from_id = $1 AND to_id = $2 AND read_at IS NULL
       AND created_at > now() - make_interval(mins => $3) LIMIT 1`, [me, other, PUSH_GAP_MINUTES])).rowCount > 0;
     const row = (await db.query(`INSERT INTO friend_messages(from_id, to_id, body) VALUES ($1, $2, $3)
-      RETURNING id, from_id, body, ${iso("created_at")} AS created_at`, [me, other, checked.body])).rows[0];
+      RETURNING ${COLS(iso)}`, [me, other, checked.body])).rows[0];
     if (!waiting) {
       const name = await nameOf(me);
       tell(other, { title: "💬 " + name, body: [...checked.body].slice(0, 120).join(""), url: "/?chat=" + playerPid(me), tag: "pokedle-chat-" + playerPid(me) });
@@ -102,12 +111,16 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     const canSend = areFriends && await safety.discussionAllowed(db, me, other);
     const since = Number(after);
     const rows = Number.isSafeInteger(since) && since > 0
-      ? (await db.query(`SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere} AND id > $3
+      ? (await db.query(`SELECT ${COLS(iso)} FROM friend_messages WHERE ${pairWhere} AND ${visibleTo} AND id > $3
           AND created_at > now() - make_interval(days => $4) ORDER BY id LIMIT 60`, [me, other, since, KEEP_DAYS])).rows
-      : (await db.query(`SELECT * FROM (SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere}
+      : (await db.query(`SELECT * FROM (SELECT ${COLS(iso)} FROM friend_messages WHERE ${pairWhere} AND ${visibleTo}
           AND created_at > now() - make_interval(days => $3) ORDER BY id DESC LIMIT 60) last ORDER BY id`, [me, other, KEEP_DAYS])).rows;
+    // Pendant que la fenêtre est ouverte : les messages supprimés depuis peu (« Message supprimé » chez l'autre aussi).
+    const deleted = Number.isSafeInteger(since) && since > 0
+      ? (await db.query(`SELECT id FROM friend_messages WHERE ${pairWhere} AND deleted_at > now() - interval '5 minutes'`, [me, other])).rows.map((r) => Number(r.id))
+      : [];
     await db.query("UPDATE friend_messages SET read_at = now() WHERE to_id = $1 AND from_id = $2 AND read_at IS NULL", [me, other]);
-    return { ok: true, friends: areFriends, canSend, messages: rows.map((row) => view(row, me)) };
+    return { ok: true, friends: areFriends, canSend, messages: rows.map((row) => view(row, me)), deleted };
   }
 
   // For the friends list: the last message and the unread count of each conversation.
@@ -115,9 +128,9 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     await ready;
     const me = String(accountId);
     await purge();
-    const rows = (await db.query(`SELECT DISTINCT ON (other) other, id, from_id, body, ${iso("created_at")} AS created_at,
-        (SELECT count(*)::int FROM friend_messages u WHERE u.to_id = $1 AND u.from_id = m.other AND u.read_at IS NULL) AS unread
-      FROM (SELECT *, CASE WHEN from_id = $1 THEN to_id ELSE from_id END AS other FROM friend_messages WHERE from_id = $1 OR to_id = $1) m
+    const rows = (await db.query(`SELECT DISTINCT ON (other) other, id, from_id, body, deleted_at IS NOT NULL AS deleted, ${iso("created_at")} AS created_at,
+        (SELECT count(*)::int FROM friend_messages u WHERE u.to_id = $1 AND u.from_id = m.other AND u.read_at IS NULL AND u.deleted_at IS NULL AND NOT u.hidden_to) AS unread
+      FROM (SELECT *, CASE WHEN from_id = $1 THEN to_id ELSE from_id END AS other FROM friend_messages WHERE (from_id = $1 OR to_id = $1) AND ${visibleTo}) m
       ORDER BY other, id DESC`, [me])).rows;
     const out = {};
     let unread = 0;
@@ -136,15 +149,41 @@ function createFriendChat({ db, friends, accountOfPid, playerPid, push = async (
     const { me, other } = t;
     const today = Number((await db.query(`SELECT count(*)::int AS n FROM friend_reports WHERE reporter_id = $1 AND created_at >= ${PARIS_DAY_START}`, [me])).rows[0].n);
     if (today >= REPORTS_PER_DAY) return { ok: false, error: "limit" };
-    const rows = (await db.query(`SELECT * FROM (SELECT id, from_id, body, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere}
+    // Les vrais messages, même supprimés ou cachés : c'est ce que l'admin doit pouvoir lire.
+    const rows = (await db.query(`SELECT * FROM (SELECT id, from_id, body, deleted_at, ${iso("created_at")} AS created_at FROM friend_messages WHERE ${pairWhere}
       AND created_at > now() - make_interval(days => $3) ORDER BY id DESC LIMIT 30) last ORDER BY id`, [me, other, KEEP_DAYS])).rows;
     if (!rows.length) return { ok: false, error: "no_messages" };
-    const excerpt = rows.map((row) => ({ by: row.from_id === me ? "reporter" : "reported", body: row.body, at: row.created_at }));
+    const excerpt = rows.map((row) => ({ by: row.from_id === me ? "reporter" : "reported", body: row.body, at: row.created_at, ...(row.deleted_at ? { deleted: true } : {}) }));
     await db.query("INSERT INTO friend_reports(reporter_id, reported_id, excerpt) VALUES ($1, $2, $3)", [me, other, JSON.stringify(excerpt)]);
     return { ok: true };
   }
 
-  return { send, thread, conversations, report };
+  // 🗑 Un message : « all » = le mien, supprimé pour nous deux ; « me » = n'importe lequel, caché chez moi seulement.
+  async function remove(accountId, { pid, id, scope } = {}) {
+    await ready;
+    const t = await target(accountId, pid);
+    if (t.error) return { ok: false, error: t.error };
+    const { me, other } = t;
+    const mid = Number(id);
+    if (!Number.isSafeInteger(mid) || mid <= 0 || !["all", "me"].includes(scope)) return { ok: false, error: "invalid" };
+    const res = scope === "all"
+      ? await db.query(`UPDATE friend_messages SET deleted_at = COALESCE(deleted_at, now()) WHERE id = $3 AND from_id = $1 AND to_id = $2`, [me, other, mid])
+      : await db.query(`UPDATE friend_messages SET hidden_from = hidden_from OR from_id = $1, hidden_to = hidden_to OR to_id = $1
+          WHERE id = $3 AND ${pairWhere}`, [me, other, mid]);
+    return res.rowCount ? { ok: true } : { ok: false, error: "not_found" };
+  }
+  // 🧹 Effacer la discussion (pour moi) : tout ce qui est là disparaît de ma fenêtre ; l'ami garde la sienne.
+  async function clear(accountId, { pid } = {}) {
+    await ready;
+    const t = await target(accountId, pid);
+    if (t.error) return { ok: false, error: t.error };
+    const { me, other } = t;
+    const res = await db.query(`UPDATE friend_messages SET hidden_from = hidden_from OR from_id = $1, hidden_to = hidden_to OR to_id = $1,
+      read_at = CASE WHEN to_id = $1 THEN COALESCE(read_at, now()) ELSE read_at END WHERE ${pairWhere}`, [me, other]);
+    return { ok: true, cleared: res.rowCount };
+  }
+
+  return { send, thread, conversations, report, remove, clear };
 }
 
 // /admin : the reports, with the copied messages, and « Traité ».
@@ -166,7 +205,7 @@ function adminSectionHtml(reports, escapeHtml) {
   };
   const items = reports.map((r) => {
     const lines = (Array.isArray(r.excerpt) ? r.excerpt : []).map((m) =>
-      `<li><b>${escapeHtml(m.by === "reporter" ? r.reporter_name || "?" : r.reported_name || "?")}</b> · <small>${escapeHtml(day(m.at))}</small><br>${escapeHtml(m.body)}</li>`).join("");
+      `<li><b>${escapeHtml(m.by === "reporter" ? r.reporter_name || "?" : r.reported_name || "?")}</b> · <small>${escapeHtml(day(m.at))}${m.deleted ? " · 🗑 supprimé par son auteur" : ""}</small><br>${escapeHtml(m.body)}</li>`).join("");
     return `<details${r.status === "open" ? " open" : ""}><summary>${r.status === "open" ? "🚩" : "✓"} ${escapeHtml(day(r.created_at))} · <b>${escapeHtml(r.reporter_name || "?")}</b> signale <b>${escapeHtml(r.reported_name || "?")}</b> <small>(compte ${escapeHtml(r.reported_id)})</small></summary>
 <ol class="hint">${lines || "<li>Aucun message dans la discussion.</li>"}</ol>
 ${suspensionForm(r.reported_id, escapeHtml)}
@@ -224,6 +263,8 @@ function mountChatRoutes(app, { express, chat, getUser, log = console, limited =
   app.get("/api/chat/thread", run("thread", (user, _b, req) => chat.thread(user.id, { pid: String(req.query.pid || ""), after: req.query.after }), limitedReads));
   app.post("/api/chat/send", json, run("send", (user, body) => chat.send(user.id, { pid: body.pid, body: body.body }), limited));
   app.post("/api/chat/report", json, run("report", (user, body) => chat.report(user.id, { pid: body.pid }), limited));
+  app.post("/api/chat/delete", json, run("delete", (user, body) => chat.remove(user.id, { pid: body.pid, id: body.id, scope: body.scope }), limited));
+  app.post("/api/chat/clear", json, run("clear", (user, body) => chat.clear(user.id, { pid: body.pid }), limited));
 }
 
 module.exports = { MAX_LEN, KEEP_DAYS, REPORT_KEEP_DAYS, checkBody, ensureTables, createFriendChat, adminReports, resolveReport, adminSectionHtml, suspensionSectionHtml, mountChatRoutes };

@@ -16,7 +16,7 @@ const BALL_SOURCES = Object.freeze({
   "mode:evolution": "Évolutions", "mode:order": "Ordre", "mode:odd": "Intrus", "mode:quiestce": "Qui est-ce ?",
   "mode:petitbac": "Petit Bac", "mode:higherlower": "Higher or Lower", "mode:connections": "Connexions",
   "mode:speedrun": "Speedrun", "mode:statauction": "Enchères de stats", "mode:statclash": "Stat Clash",
-  "mode:typecombo": "Combo de types", "mode:shiny": "Shiny ou normal",
+  "mode:typecombo": "Combo de types", "mode:shiny": "Shiny ou normal", "mode:draft": "Draft",
   streak: "🔥 Série de 7 jours", party: "🎉 Party Room"
 });
 let ballState = null;

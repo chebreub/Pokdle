@@ -851,6 +851,13 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
 .my-message-reply {margin:0 0 10px 18px;padding:10px 12px;border-radius:14px;background:#EEF2FF;font:600 14px/1.45 Nunito,sans-serif;color:#2E2A33;}
 .my-message-reply b {display:block;font:900 11px Nunito,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#4069E0;margin-bottom:2px;}
 .my-messages-empty {margin:0;color:#7A7180;font:700 14px/1.5 Nunito,sans-serif;text-align:center;}
+.my-message .player-message-actions {flex-wrap:nowrap;}
+.my-message .player-message-actions .my-message-bin {flex:0 0 64px;width:64px;min-width:0;padding:0;}
+.my-message .player-message-actions .my-message-bin.is-confirm {flex-basis:112px;width:112px;white-space:nowrap;}
+.my-message .player-message-actions .btn-blue {flex:1 1 auto;width:auto;min-width:0;}
+.my-message .player-message-actions .my-message-bin:only-child {margin-left:auto;}
+.player-message-actions .my-message-bin.is-confirm {background:#4069E0;color:#fff;border-color:#4069E0;}
+.my-messages-clear {display:block;margin:4px auto 0;border:0;background:none;color:#C2412D;font:800 14px Nunito,sans-serif;text-decoration:underline;cursor:pointer;min-height:40px;}
 .theme-dark .my-message {border-color:#3D3844;}
 .theme-dark .my-message textarea {background:#29262F;border-color:#3D3844;color:#F3EEE8;}
 .theme-dark .my-message-reply {background:#2B3150;color:#F3EEE8;}
@@ -1372,6 +1379,18 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 .chat-bubble small {margin-top:2px;font-size:.7rem;opacity:.7;font-weight:700;}
 .chat-bubble.is-mine {align-self:flex-end;background:#4069E0;color:#fff;border-bottom-right-radius:6px;}
 .chat-bubble.is-them {align-self:flex-start;background:#fff;border:1px solid #EADFD0;color:#2E2A33;border-bottom-left-radius:6px;}
+.chat-bubble {font:inherit;font-weight:700;text-align:left;cursor:pointer;border:0;}
+.chat-bubble.is-picked {outline:3px solid #FFD45C;outline-offset:1px;}
+.chat-bubble.is-deleted {background:transparent;border:2px dashed rgba(46,42,51,.2);color:#6B6475;font-style:italic;cursor:default;}
+.chat-pick {display:flex;flex-direction:column;gap:2px;min-width:220px;max-width:90%;padding:6px;border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.15);}
+.chat-pick.is-mine {align-self:flex-end;}
+.chat-pick.is-them {align-self:flex-start;}
+.chat-pick button {border:0;background:none;text-align:left;padding:10px 12px;border-radius:10px;font:800 14px Nunito,sans-serif;color:#2E2A33;cursor:pointer;min-height:40px;}
+.chat-pick button:hover {background:#F3EEE6;}
+.chat-pick .fr-danger {color:#C2412D;}
+.chat-pick .chat-pick-x {color:#6B6475;font-weight:700;}
+#pokdle-app.theme-dark .chat-pick {background:#1f2b42;}
+#pokdle-app.theme-dark .chat-pick button {color:#e8ecf6;}
 .chat-empty {margin:auto;color:#6B6472;font-weight:700;text-align:center;}
 .chat-warn {margin:0;min-height:0;font-weight:800;font-size:.88rem;color:#7A5A12;}
 .chat-warn:empty {display:none;}

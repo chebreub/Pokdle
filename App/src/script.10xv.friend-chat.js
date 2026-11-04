@@ -4,7 +4,7 @@
 // numbers: the server refuses them and the window says why. « 🚩 Signaler » sends the last messages
 // to the creator's /admin; « ⛔ Bloquer » ends the friendship. The window asks for news every few
 // seconds while it is open, never in the background.
-var chatState = { convs: {}, unread: 0, pid: null, name: '', messages: [], timer: null, busy: false };
+var chatState = { convs: {}, unread: 0, pid: null, name: '', messages: [], timer: null, busy: false, pick: 0 };
 var CHAT_MAX = 200;
 var CHAT_ERRORS = {
   contact: '🔒 Pas de liens ni de numéros ici (Snap, Insta, téléphone…) : on se parle sur Pokédle.',
@@ -51,17 +51,63 @@ function chatFriend(pid) {
 }
 
 // ---- the window
+// 🗑 (4/11) : un appui sur une bulle ouvre « Supprimer pour tout le monde » (mes messages) et « Supprimer pour moi ».
 function chatMessagesHtml() {
   if (!chatState.messages.length) return '<p class="chat-empty">Pas encore de message. Dis bonjour 👋</p>';
   return chatState.messages.map(function (m) {
-    return '<div class="chat-bubble ' + (m.mine ? 'is-mine' : 'is-them') + '"><span>' + escapeHtml(m.body).replace(/\n/g, '<br>') + '</span><small>' + escapeHtml(chatTime(m.at)) + '</small></div>';
+    var side = m.mine ? 'is-mine' : 'is-them';
+    if (m.deleted) return '<div class="chat-bubble ' + side + ' is-deleted"><span>🚫 Message supprimé</span><small>' + escapeHtml(chatTime(m.at)) + '</small></div>';
+    var picked = chatState.pick === m.id;
+    var bubble = '<button type="button" class="chat-bubble ' + side + (picked ? ' is-picked' : '') + '" data-action="chatPick" data-args="[' + Number(m.id) + ']" aria-label="Message, appuie pour le supprimer"><span>' +
+      escapeHtml(m.body).replace(/\n/g, '<br>') + '</span><small>' + escapeHtml(chatTime(m.at)) + '</small></button>';
+    if (!picked) return bubble;
+    return bubble + '<div class="chat-pick ' + side + '">' +
+      (m.mine ? '<button type="button" class="fr-danger" data-action="chatDelete" data-args="[' + Number(m.id) + ',&quot;all&quot;]">🗑 Supprimer pour tout le monde</button>' : '') +
+      '<button type="button" data-action="chatDelete" data-args="[' + Number(m.id) + ',&quot;me&quot;]">🙈 Supprimer pour moi</button>' +
+      '<button type="button" class="chat-pick-x" data-action="chatPick" data-args="[0]">Annuler</button></div>';
   }).join('');
+}
+function chatPick(id) {
+  chatState.pick = chatState.pick === Number(id) ? 0 : Number(id) || 0;
+  chatPaint(false);
+}
+function chatDelete(id, scope) {
+  var pid = chatState.pid;
+  chatState.pick = 0;
+  chatPost('/api/chat/delete', { pid: pid, id: Number(id), scope: scope }).then(function (data) {
+    if (chatState.pid !== pid) return;
+    if (!data || !data.ok) { showToast('Suppression impossible pour le moment.'); chatPaint(false); return; }
+    if (scope === 'all') chatState.messages.forEach(function (m) { if (m.id === Number(id)) { m.deleted = true; m.body = ''; } });
+    else chatState.messages = chatState.messages.filter(function (m) { return m.id !== Number(id); });
+    chatPaint(false);
+    chatRefresh();
+  }).catch(function () { showToast('Suppression impossible pour le moment.'); });
+}
+function chatClear() {
+  var warn = document.getElementById('chat-warn');
+  var menu = document.querySelector('#overlay-body .chat-menu');
+  if (menu) menu.hidden = true;
+  if (warn) warn.innerHTML = '<span class="chat-confirm">Effacer toute la discussion de ton côté ? ' + escapeHtml(chatState.name) + ' garde la sienne. ' +
+    '<button type="button" class="btn-ghost fr-danger" data-action="chatClearNow">🧹 Effacer</button>' +
+    '<button type="button" class="fr-card-link" data-action="chatCancelConfirm">Annuler</button></span>';
+}
+function chatClearNow() {
+  var pid = chatState.pid;
+  chatPost('/api/chat/clear', { pid: pid }).then(function (data) {
+    if (chatState.pid !== pid) return;
+    if (!data || !data.ok) { showToast('Impossible d’effacer pour le moment.'); return; }
+    chatState.messages = [];
+    chatCancelConfirm();
+    chatPaint(true);
+    chatRefresh();
+  }).catch(function () { showToast('Impossible d’effacer pour le moment.'); });
 }
 function chatWindowHtml(pid, name) {
   return '<div class="chat-win" data-chat-pid="' + escapeHtml(pid) + '">' +
     '<div class="chat-top"><button type="button" class="chat-who" data-action="openPlayerCard" data-args="' + frArgs([pid]) + '">' + frAvatar(chatFriend(pid) || { username: name }) + '<span><b>' + escapeHtml(name) + '</b><small>Voir sa carte</small></span></button>' +
       '<button type="button" class="btn-ghost chat-more" data-action="chatMenu" aria-label="Plus d’actions">⋯</button></div>' +
     '<div class="chat-menu" hidden><button type="button" class="btn-ghost" data-action="openChallengeForm" data-args="' + frArgs([pid, name]) + '">⚔️ Défier</button>' +
+      '<button type="button" class="btn-ghost" data-action="chatClear">🧹 Effacer la discussion (pour moi)</button>' +
       '<button type="button" class="btn-ghost fr-danger" data-action="chatReport">🚩 Signaler</button>' +
       '<button type="button" class="btn-ghost fr-danger" data-action="chatBlock">⛔ Bloquer</button></div>' +
     '<div class="chat-msgs" id="chat-msgs" aria-live="polite">' + chatMessagesHtml() + '</div>' +
@@ -93,6 +139,10 @@ function chatPoll() {
     var pid = chatState.pid;
     chatGet('/api/chat/thread?pid=' + encodeURIComponent(pid) + '&after=' + chatLastId()).then(function (data) {
       if (!chatIsOpen() || chatState.pid !== pid || !data || !data.ok) return;
+      var gone = Array.isArray(data.deleted) ? data.deleted : [];
+      var changed = false;
+      chatState.messages.forEach(function (m) { if (!m.deleted && gone.indexOf(m.id) >= 0) { m.deleted = true; m.body = ''; changed = true; } });
+      if (changed && !(data.messages && data.messages.length)) chatPaint(false);
       if (data.messages && data.messages.length) {
         var known = {};
         chatState.messages.forEach(function (m) { known[m.id] = true; });
@@ -121,7 +171,7 @@ function openFriendChat(pid, name) {
   var friend = chatFriend(pid);
   name = name || (friend && friend.username) || (chatConv(pid) && chatConv(pid).username) || 'Ton ami';
   clearTimeout(chatState.timer);
-  chatState.pid = pid; chatState.name = name; chatState.messages = [];
+  chatState.pid = pid; chatState.name = name; chatState.messages = []; chatState.pick = 0;
   ensureOverlay('💬 Discussion', chatWindowHtml(pid, name));
   var overlay = document.getElementById('overlay-modal');
   if (overlay) overlay.dataset.kind = 'chat';
@@ -250,3 +300,7 @@ window.chatReportNow = chatReportNow;
 window.chatBlock = chatBlock;
 window.chatBlockNow = chatBlockNow;
 window.chatCancelConfirm = chatCancelConfirm;
+window.chatPick = chatPick;
+window.chatDelete = chatDelete;
+window.chatClear = chatClear;
+window.chatClearNow = chatClearNow;
