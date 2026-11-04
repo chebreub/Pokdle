@@ -1,6 +1,6 @@
 # Plan de rareté et voies d'obtention — 1 025 Pokémon
 
-**Statut :** premier lot technique : classification exhaustive + rencontres sauvages pondérées. Les 62 voies manquantes restent un **backlog**, non débloqué implicitement.
+**Statut :** rareté sauvage pondérée + Drattak retiré du sauvage et rendu capturable via une épreuve vérifiée avec Balls (PR de prestige). Les 62 voies manquantes restent un **backlog**.
 
 ## Source de vérité au 4 novembre 2026
 
@@ -8,13 +8,13 @@ Classement construit à partir des données existantes dans `App/lib/poke-balls.
 
 | Route d'obtention | Nombre d'espèces | Règle |
 | --- | ---: | --- |
-| Hautes herbes ordinaires | 845 | Seules les espèces du `WILD_POOL` existant |
-| Rencontre sauvage de prestige | 1 | Drattak (#373), provisoirement très rare |
-| Récompenses de missions d'album | 108 | Garder toutes les missions et leurs contraintes |
+| Hautes herbes ordinaires | 845 | Espèces actuellement présentes dans le `WILD_POOL` (sans Drattak) |
+| Rencontre spéciale de prestige | 1 | Drattak (#373), uniquement avec éligibilité serveur, 3 lancers de Ball, capture non garantie |
+| Découvertes par missions d'album | 108 | Débloquer une **découverte**, jamais une capture ni une possession automatique |
 | Légendaires d'expédition hebdomadaire | 6 | Garder l'éligibilité, les lancers, les taux et la fréquence actuels |
-| Récompenses secrètes **hors autres routes** | 3 | Mew, Celebi, Jirachi (les 12 secrets restent inchangés) |
+| Découvertes secrètes **hors autres routes** | 3 | Mew, Celebi, Jirachi (les 12 secrets restent inchangés ; aucune capture accordée) |
 | Aucune voie d'obtention dédiée à ce jour | **62** | Réserver à des quêtes/événements/épreuves ultérieurs |
-| **Total national** | **1 025** | Chaque numéro est compté une fois |
+| **Total national** | **1 025** | Chaque numéro est compté une fois ; les 109 missions affichées dont Drattak ne sont pas 109 captures |
 
 Attention : « Vus » dans le Pokédex n'est pas équivalent à « capturés » ni à « gagnés par une mission ». Ne pas afficher `1025/1025 attrapés` tant que les routes ci-dessus sont différentes.
 
@@ -27,14 +27,14 @@ Le tirage auparavant uniforme dans `WILD_POOL` et dans chacune des six zones est
 | Commun | ≥ 190 | 36 | 223 |
 | Peu commun | 100–189 | 18 | 131 |
 | Rare | 60–99 | 8 | 186 |
-| Très rare | 25–59 (sauf Drattak) | 3 | 301 |
+| Très rare | 25–59 | 3 | 301 |
 | Fuyant (capture difficile) | 1–24 | 16 | 4 |
-| Prestige provisoire | Drattak #373 | 1 | 1 |
-| **Total** | | **12 842 unités** (toutes espèces) | **846** |
+
+| **Total** | | **12 841 unités** (toutes espèces) | **845** |
 
 *Le taux de capture officiel n'est qu'un indicateur imparfait de rareté d'apparition. Les starters, évolutions et espèces populaires devront être revus manuellement. Exception volontaire : les quatre espèces ayant un taux officiel de 3 (Terhal, Métang, Pondralugon et Pomdorochi) ont un poids d'apparition compensateur de 16 : leur capture est déjà extrêmement difficile, il ne faut pas cumuler deux barrières excessives. Les chances de réussir un lancer de Ball restent strictement inchangées.*
 
-Exemples : dans un tirage « Au hasard », un exemplaire commun a **36 fois** le poids de Drattak. Drattak représente environ **1 rencontre sur 12 842** au hasard, **1 sur 1 422** dans la zone Volcan et **1 sur 3 653** dans la zone Mer (avant capture). Ces probabilités sont très difficiles : une voie de prestige réutilisable doit être conçue avant de supprimer totalement sa présence sauvage. **Ces fréquences ne sont pas des garanties de rencontre**.
+Drattak n'apparaît plus dans les tirages sauvages ordinaires. Le serveur vérifie **14 jours actifs, 28 victoires et 5 modes de jeu distincts** sur les 45 derniers jours, en ne comptant qu'une victoire vérifiée par mode et par jour. Les progrès doivent être regagnés après une tentative et une nouvelle rencontre est espacée d'au moins 21 jours. La capture se tente avec trois Balls maximum, avec les taux habituels.
 
 Invariant : l'ensemble des espèces autorisées **ne change pas** ; seuls leurs poids changent. Un légendaire exclu, une mission ou un Pokémon réservé ne peut pas entrer dans une zone via ce mécanisme.
 
@@ -42,7 +42,7 @@ Invariant : l'ensemble des espèces autorisées **ne change pas** ; seuls leurs 
 
 - Dracolosse #149 : mission
 - Tyranocif #248 : mission
-- Drattak #373 : rencontre exceptionnelle provisoire, future voie de prestige à concevoir
+- Drattak #373 : mission Hoenn de **découverte** + épreuve de prestige **capturable avec une Ball**, vérifiée côté serveur
 - Métalosse #376 : mission
 - Carchacrok #445 : mission
 - Trioxhydre #635 : mission
@@ -51,7 +51,7 @@ Invariant : l'ensemble des espèces autorisées **ne change pas** ; seuls leurs 
 - Lanssorien #887 : mission
 - Glaivodo #998 : mission
 
-Ne pas ajouter ces Pokémon aux rencontres sauvages communes. Ne pas retirer Drattak avant de lui attribuer une nouvelle voie réalisable.
+Ne pas ajouter ces Pokémon aux rencontres sauvages communes. Les anciens Drattak capturés restent possédés et les futures captures passent par l'épreuve vérifiée.
 
 ## 62 espèces sans voie dédiée : backlog par génération
 
@@ -83,13 +83,13 @@ Baojian #1002, Dinglu #1003, Yuyu #1004, Serpente-Eau #1009, Vert-de-Fer #1010, 
 3. **Exploration des Ultra-Brèches** pour les Ultra-Chimères : épreuves d'Alola avec fréquence limitée.
 4. **Filières légendaires spécialisées** (Wushours/Shifours, Cosmog/Cosmovum, Paradoxes) plutôt qu'un tirage sauvage indifférencié.
 5. **Événements récurrents** pour les fabuleux, avec occasion de retour pour un joueur qui manque un événement.
-6. **Quête dédiée Drattak** avec exigences élevées ; à créer avant retrait de sa rencontre exceptionnelle.
+6. **Quête dédiée Drattak** : une longue progression vérifiée côté serveur donne une seule occasion de capture, jamais une attribution gratuite.
 
 ## Garde-fous / non-régression
 
 - Ne pas modifier `captureChance`, les taux officiels, les trois lancers, le shiny à 1/150, ni les 24 rencontres disponibles par jour.
-- Conserver les six zones et la totalité des 108 missions d'album, sans migrations/destructions de sauvegarde.
+- Conserver les six zones et la totalité des 108 missions historiques, auxquelles s'ajoute une mission de découverte de Drattak (109 missions affichées) sans migrations/destructions de sauvegarde.
 - Le tirage côté serveur utilise un seul entier aléatoire sur la somme des poids, puis une recherche cumulative.
 - Vérifier les tailles des pools et les bornes (tirage premier et dernier ticket), et préserver les rencontres ouvertes pendant les transitions de version.
 - Tant que les 62 espèces n'ont pas de route, ne pas promettre que la collection des 1 025 est **déjà** complétable.
-- La progression « Vus / Capturés / Obtenus » exige une conception et des tests séparés avant changement d'interface ou de données.
+- Progression « Vus / Capturés / Possédés » : une découverte par mission ou secret ne doit **jamais** être considérée comme une possession. Les compteurs réels doivent lire uniquement les captures détenues dans la base serveur. Le total des espèces capturables du lot reste **852** (845 sauvages + 6 expéditions + Drattak).
