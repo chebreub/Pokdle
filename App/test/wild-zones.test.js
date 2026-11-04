@@ -1,7 +1,8 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('fs'),path=require('path');
-const {ZONES,ZONE_POOLS,WILD_POOL,createBallService,initBallsDb}=require('../lib/poke-balls');
+const {ZONES,ZONE_POOLS,WILD_POOL,WILD_ENCOUNTER_TABLE,ZONE_ENCOUNTER_TABLES,createBallService,initBallsDb}=require('../lib/poke-balls');
+const {wildTicketFor}=require('../lib/wild-rarity');
 const LIST=JSON.parse(fs.readFileSync(path.join(__dirname,'..','pokemon.js'),'utf8').match(/const POKEMON_LIST =\s*(\[[\s\S]*\]);/)[1]);
 const TYPES=new Map(LIST.filter(p=>p.id<=1025).map(p=>[p.id,[p.type1,p.type2].filter(Boolean)]));
 
@@ -26,12 +27,12 @@ test('PostgreSQL: a zone draws from its own types, keeps the zone on the encount
     const guest={key:'guest:z1',guestKey:'guest:z1',accountId:null};
     await balls.gift(guest);
     await assert.rejects(balls.encounter(guest,{zone:'lune'}),/invalid_zone/);
-    ints.push(ZONE_POOLS.mer.indexOf(7),5);
+    ints.push(wildTicketFor(ZONE_ENCOUNTER_TABLES.mer,7),5);
     let s=await balls.encounter(guest,{zone:'mer'});
     assert.deepEqual([s.encounter.pokemonId,s.encounter.zone],[7,'mer']);
     assert.equal((await balls.state(guest)).wild.open.zone,'mer','the zone comes back with the open encounter');
     await balls.skip(guest);
-    ints.push(10,5);
+    ints.push(wildTicketFor(WILD_ENCOUNTER_TABLE,WILD_POOL[10]),5);
     s=await balls.encounter(guest,{});
     assert.equal(s.encounter.zone,null,'no zone = au hasard');
     assert.equal(s.encounter.pokemonId,WILD_POOL[10]);
