@@ -23,19 +23,23 @@ function rewardModeNow() {
   var screen = document.body && document.body.dataset.screen;
   if (!screen || (typeof isPartySessionActive === 'function' && isPartySessionActive())) return null;
   if (screen === 'screen-game') return REWARD_GOLD[gameMode] ? gameMode : null;
-  if (screen === 'screen-higher-lower') return typeof higherLowerState !== 'undefined' && higherLowerState && higherLowerState.mode === 'rush' ? 'higher-lower-rush' : 'higher-lower';
+  if (screen === 'screen-higher-lower') return typeof higherLowerState !== 'undefined' && higherLowerState && ['rush60', 'rush'].includes(higherLowerState.mode) ? 'higher-lower-rush' : 'higher-lower';
   return REWARD_SCREENS[screen] || null;
 }
 function rewardLineHtml(mode) {
   var s = typeof ballState !== 'undefined' ? ballState : null;
   if (!s) return '';
+  // A game without server verification remains training, including when the daily Ball cap is reached.
+  var paid = Array.isArray(s.verifiedModes) && s.verifiedModes.indexOf(mode) >= 0;
+  if (!paid) return '<p class="reward-line is-training"><span>🎯 Entraînement : pas de Ball ni de ₽ pour ce jeu pour l’instant</span></p>';
   var source = 'mode:' + (REWARD_SOURCE[mode] || mode);
   var won = (s.gains || []).concat(s.bonus || []).some(function (g) { return g.source === source; });
   if (won) return '<p class="reward-line is-done"><span>✓ Récompense du jour gagnée · revient demain</span></p>';
-  if (Number(s.today) >= Number(s.cap || 10)) return '<p class="reward-line is-done"><span>Tes 10 Balls du jour sont gagnées · revient demain</span></p>';
-  var paid = Array.isArray(s.verifiedModes) && s.verifiedModes.indexOf(mode) >= 0;
-  // Un jeu que le serveur ne vérifie pas encore ne rapporte rien pour l'instant (choix du 4/11) : on le dit.
-  if (!paid) return '<p class="reward-line is-training"><span>🎯 Entraînement : pas de Ball ni de ₽ pour ce jeu pour l’instant</span></p>';
+  // Pokédollars and Balls have distinct caps: a paid mode may still grant coins after 10 Balls.
+  if (Number(s.today) >= Number(s.cap || 10)) {
+    var coinNote = s.coins && s.coins.enabled ? ' · Les Pokédollars ont leur propre plafond.' : '';
+    return '<p class="reward-line is-done"><span>Plafond quotidien des Balls atteint (' + Number(s.cap || 10) + '/' + Number(s.cap || 10) + '). Continue de jouer !' + coinNote + '</span></p>';
+  }
   var coins = s.coins && s.coins.enabled ? ' + 30 à 90 ₽' : ' (+ ₽ avec un compte)';
   return '<p class="reward-line"><span class="reward-ball" aria-hidden="true"></span><span>1re partie du jour : 1 Ball' + coins +
     ' · <b>Super Ball</b> : ' + escapeHtml(REWARD_GOLD[mode]) + '</span></p>';
