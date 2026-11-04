@@ -93,7 +93,7 @@ function ballMeterHtml(state) {
   return '<div class="ball-meter" role="img" aria-label="' + today + ' Balls gagnées sur ' + cap + ' aujourd’hui">' +
     Array.from({ length: cap }, (_, i) => '<span class="' + (i < today ? "is-on" : "") + '"></span>').join("") + '</div>';
 }
-// Les hautes herbes : 6 rencontres par jour pour lancer ses Balls (script.10xz.wild-grass.js).
+// Les hautes herbes : 4 rencontres toutes les 4 h (24 par jour au plus) pour lancer ses Balls (script.10xz.wild-grass.js).
 function ballGrassLeft(s) { const w = s && s.wild; return w ? (w.open ? Math.max(1, w.left) : w.left) : 6; }
 function ballGrassHtml(s) {
   const w = s && s.wild || { left: 6, max: 6, caught: 0 }, left = ballGrassLeft(s);
@@ -202,7 +202,10 @@ function homeDayCountdown(resetAt) {
 }
 function homeDayResetHtml(s) {
   if (!s.resetAt) return "";
-  return '<p class="day-reset">⏳ Nouvelles Balls et 6 rencontres dans <b data-reset-at="' + escapeHtml(s.resetAt) + '">' + homeDayCountdown(s.resetAt) + '</b></p>';
+  // Les Balls repartent à minuit ; les rencontres arrivent par 4 toutes les 4 h (pas « 6 à minuit »).
+  const w = s.wild || {}, next = w.nextAt && typeof wildNextLabel === "function" ? wildNextLabel(w) : "";
+  return '<p class="day-reset">⏳ Nouvelles Balls dans <b data-reset-at="' + escapeHtml(s.resetAt) + '">' + homeDayCountdown(s.resetAt) + '</b>' +
+    (next ? ' · 🌿 +' + (Number(w.nextCount) || 4) + ' rencontres ' + next : "") + '</p>';
 }
 function homeDayStreakHtml(s) {
   const st = s.streak;

@@ -158,6 +158,13 @@ function renderWildEncounter(state, message, intro) {
     '</div>';
   scene.querySelector(".wild-close")?.focus({ preventScroll: true });
 }
+// Le texte sous « Gotcha ! » : il compte les captures, pas les Pokémon « vus » en jouant
+// (un Pokémon déjà deviné mais jamais attrapé n'est pas un doublon).
+function wildCatchLine(outcome) {
+  if (outcome.firstCatch) return outcome.shiny ? "1re capture, et en shiny ! Il brille dans ton carnet shiny ✨" : "1re capture ! Il rejoint tes Attrapés dans l’album.";
+  if (outcome.shiny && outcome.firstShiny) return "Ton 1er shiny de ce Pokémon ! Il brille dans ton carnet shiny ✨";
+  return "Un doublon de plus : tu peux l’échanger avec un ami ou le relâcher dans l’album." + (outcome.shiny ? " Il brille dans ton carnet shiny ✨" : "");
+}
 function renderWildEnd(state, outcome) {
   const scene = wildScene();
   const w = state && state.wild || { left: 0, max: 6 };
@@ -168,7 +175,7 @@ function renderWildEnd(state, outcome) {
     const p = wildPokemon(outcome.pokemonId);
     body = '<div class="wild-gotcha' + (outcome.shiny ? " is-shiny" : "") + '"><img src="' + escapeHtml(wildArtwork(p, outcome.shiny)) + '" alt="" draggable="false">' +
       '<h3>Gotcha ! ' + escapeHtml(p.name) + (outcome.shiny ? " ✨" : "") + ' est attrapé !</h3>' +
-      '<p>' + (outcome.isNew ? "Il rejoint ton album." : "Un doublon de plus dans ta collection.") + (outcome.shiny ? " Il brille dans ton carnet shiny ✨" : "") + '</p></div>';
+      '<p>' + wildCatchLine(outcome) + '</p></div>';
   } else if (outcome && outcome.fled) {
     const p = wildPokemon(outcome.pokemonId);
     body = '<div class="wild-gotcha is-fled"><h3>' + escapeHtml(p ? p.name : "Le Pokémon") + ' s’est enfui…</h3><p>Pas de chance cette fois.</p></div>';
@@ -298,7 +305,9 @@ function wildThrow(ball) {
         const isNew = Boolean(p && !known[p.id]);
         // « Gotcha ! » d'abord ; la fiche « Nouvelle entrée » du Pokédex arrive juste après.
         // 1re capture de ce Pokémon : sa propre carte « Attrapé ! » (plus forte que la fiche « Vu » du Pokédex).
-        const firstCatch = !(wildCaptures && wildCaptures[e.pokemonId]);
+        const before = wildCaptures && wildCaptures[e.pokemonId];
+        const firstCatch = !(before && (Number(before.normal) || 0) + (Number(before.shiny) || 0) > 0);
+        const firstShiny = Boolean(e.shiny && !(before && Number(before.shiny) > 0));
         const caughtCount = Object.keys(wildCaptures || {}).length + (firstCatch ? 1 : 0);
         const register = () => {
           if (p && firstCatch && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
@@ -318,7 +327,7 @@ function wildThrow(ball) {
         const c = wildCaptures[e.pokemonId] ||= { normal: 0, shiny: 0 };
         if (!data.replayed) c[e.shiny ? "shiny" : "normal"] += 1;
         else ballFetch("/api/wild/collection").then(d => { if (d && d.ok) wildSyncAlbum(d.captures); });
-        renderWildEnd(data, { caught: true, pokemonId: e.pokemonId, shiny: e.shiny, isNew });
+        renderWildEnd(data, { caught: true, pokemonId: e.pokemonId, shiny: e.shiny, firstCatch, firstShiny });
       } else if (r.fled) {
         renderWildEnd(data, { fled: true, pokemonId: e.pokemonId });
       } else {

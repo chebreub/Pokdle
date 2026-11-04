@@ -6,6 +6,9 @@
 let shopTab = "balls";
 let shopConfirm = null;
 let shopBusy = false;
+// Combien de Balls d'une sorte on achète d'un coup (×1, ×5, ×10 : le serveur en accepte 10 au plus).
+const SHOP_QTYS = [1, 5, 10];
+const shopQty = { poke: 1, great: 1, ultra: 1 };
 
 function coinFmt(n) { return Math.max(0, Math.floor(Number(n) || 0)).toLocaleString("fr-FR").replace(/[  ]/g, " "); }
 function coinShort(n) { n = Math.max(0, Math.floor(Number(n) || 0)); return n >= 10000 ? Math.floor(n / 1000) + " k" : coinFmt(n); }
@@ -109,7 +112,13 @@ function shopShopTabHtml(s) {
     ? '<div class="shop-item is-hero is-done"><span class="shop-ic">🌿</span><div class="shop-txt"><b>4 rencontres de plus</b><small>Plus de recharge aujourd’hui. Ça repart à ' + coinFmt(prices.recharge) + ' ₽ à minuit.</small></div></div>'
     : '<div class="shop-item is-hero"><span class="shop-ic">🌿</span><div class="shop-txt"><b>4 rencontres de plus</b><small>Tout de suite' + (when ? ", sans attendre " + escapeHtml(when.replace(/^à /, "")) : "") + '</small></div>' +
       '<div class="shop-hero-foot">' + shopRechargeSteps(c) + shopBuyButton("recharge", Number(c.rechargePrice) || prices.recharge, "4 rencontres de plus") + '</div></div>';
-  const ball = (k, extra) => '<div class="shop-item"><span class="shop-ic">' + ballImg(k, 40) + '</span><div class="shop-txt"><b>' + BALL_KINDS[k].name + '</b><small>Tu en as ' + (Number(bag[k]) || 0) + extra + '</small></div>' + shopBuyButton(k, prices[k], BALL_KINDS[k].name) + '</div>';
+  const ball = (k, extra) => {
+    const q = shopQty[k] || 1;
+    const chips = '<span class="shop-qty" role="group" aria-label="Combien de ' + BALL_KINDS[k].name + ' ?">' + SHOP_QTYS.map((n) =>
+      '<button type="button" class="' + (n === q ? "is-on" : "") + '" aria-pressed="' + (n === q) + '" data-action="shopSetQty" data-args=\'["' + k + '",' + n + ']\'>×' + n + '</button>').join("") + '</span>';
+    return '<div class="shop-item is-ball"><span class="shop-ic">' + ballImg(k, 40) + '</span><div class="shop-txt"><b>' + BALL_KINDS[k].name + '</b><small>Tu en as ' + (Number(bag[k]) || 0) + extra + '</small>' + chips + '</div>' +
+      shopBuyButton(k, prices[k] * q, (q > 1 ? q + " " : "") + BALL_KINDS[k].name + (q > 1 ? "s" : "")) + '</div>';
+  };
   return '<div class="shop-items">' + recharge + ball("poke", "") + ball("great", " · 1,4 × plus de chances") + ball("ultra", " · 2 × plus de chances") + '</div>' +
     '<p class="ball-note shop-note">La recharge repart à ' + coinFmt(prices.recharge) + ' ₽ à minuit, puis double à chaque fois dans la journée. Les 10 Balls gagnées en jouant restent gratuites.</p>';
 }
@@ -170,7 +179,13 @@ const SHOP_ERRORS = {
 function shopPrice(item) {
   const c = shopCoins();
   if (!c) return 0;
-  return item === "recharge" ? Number(c.rechargePrice) || 0 : Number(c.prices && c.prices[item]) || 0;
+  return item === "recharge" ? Number(c.rechargePrice) || 0 : (Number(c.prices && c.prices[item]) || 0) * (shopQty[item] || 1);
+}
+function shopSetQty(item, n) {
+  if (!Object.hasOwn(shopQty, item) || !SHOP_QTYS.includes(Number(n))) return;
+  shopQty[item] = Number(n);
+  shopConfirm = null;
+  shopRedraw();
 }
 function shopBuy(item, from) {
   const c = shopCoins();
@@ -187,7 +202,8 @@ function shopBuy(item, from) {
   if (shopBusy) return;
   shopBusy = true;
   shopConfirm = null;
-  ballPaidAction("/api/shop/buy", { item, expectedPrice: price }).then((data) => {
+  const qty = item === "recharge" ? 1 : shopQty[item] || 1;
+  ballPaidAction("/api/shop/buy", item === "recharge" ? { item, expectedPrice: price } : { item, qty, expectedPrice: price }).then((data) => {
     if (!data || !data.ok) {
       if (typeof showToast === "function") showToast(SHOP_ERRORS[data && data.error] || "Achat impossible pour le moment. Réessaie dans un instant.");
       refreshBalls();
@@ -196,7 +212,7 @@ function shopBuy(item, from) {
     ballApply(data, { announce: false });
     if (typeof moSfx === "function") moSfx("pop");
     const left = data.wild ? data.wild.left : 0;
-    if (typeof showToast === "function") showToast(item === "recharge" ? "🌿 +4 rencontres ! " + left + " à faire aujourd’hui" : "🛒 +1 " + BALL_KINDS[item].name + " dans ton sac");
+    if (typeof showToast === "function") showToast(item === "recharge" ? "🌿 +4 rencontres ! " + left + " à faire aujourd’hui" : "🛒 +" + qty + " " + BALL_KINDS[item].name + (qty > 1 ? "s" : "") + " dans ton sac");
     if (from === "wild" && item === "recharge" && typeof openWildGrass === "function") openWildGrass();
   }).finally(() => { shopBusy = false; });
 }
@@ -252,5 +268,6 @@ window.openBallBag = openBallBag;
 window.openShop = openShop;
 window.shopSetTab = shopSetTab;
 window.shopBuy = shopBuy;
+window.shopSetQty = shopSetQty;
 window.shopWildRecharge = shopWildRecharge;
 window.shopWildBalls = shopWildBalls;
