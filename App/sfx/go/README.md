@@ -14,5 +14,5 @@ Des effets seulement : aucune fanfare ni mélodie (pas de musique, choix de Kaya
 | appear.mp3 | se_go_pokemon_appear | un Pokémon apparaît |
 | flee.mp3 | se_go_pokemon_run | il s'enfuit |
 
-À brancher à la prochaine session (pas encore servis ni utilisés par le site) : route statique `/sfx`, puis `moSfx`
-(`App/src/script.10xzd.motion.js`) joue ces fichiers pour les hautes herbes, avec « Effets sonores » et le volume.
+Servis sous `/sfx/go/…` (`server.js`) et joués par `App/src/script.10xzo.go-sfx.js`, qui enveloppe `moSfx` :
+même réglage « Effets sonores », même volume ; tant qu'un fichier n'est pas chargé, l'ancien son fait maison reste.
