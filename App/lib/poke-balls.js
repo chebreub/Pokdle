@@ -7,6 +7,7 @@
 const crypto = require("node:crypto");
 const verifiedArcade = require("./verified-arcade");
 const wildRarity = require("./wild-rarity");
+const { SALAMENCE, statusForSalamence } = require("./prestige-quests");
 const { verifyPartyRewardProof } = require("./party-rewards");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
@@ -73,7 +74,7 @@ function captureChance(pokemonId, ball) {
   if (!rate || !BALL_BONUS[ball]) return 0;
   return Math.min(0.95, 0.8 * Math.pow(rate / 255, 0.72) * BALL_BONUS[ball]);
 }
-// Les Pokémon des 108 missions d'album restent des récompenses : jamais dans les hautes herbes, ni les légendaires et fabuleux.
+// Les missions d'album donnent des découvertes, jamais des captures. Leur cible est exclue des hautes herbes.
 function missionPokemonIds(source = require("fs").readFileSync(require("path").join(__dirname, "..", "src", "script.10b.album-missions.js"), "utf8")) {
   return [...source.matchAll(/albumMission\('[^']+',\s*(\d+)/g)].map((m) => Number(m[1]));
 }
@@ -165,6 +166,12 @@ async function initBallsDb(db) {
     used_poke INT NOT NULL DEFAULT 0, used_great INT NOT NULL DEFAULT 0, used_ultra INT NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'open', ball TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), ended_at TIMESTAMPTZ)`);
   await db.query("CREATE INDEX IF NOT EXISTS wild_encounters_identity ON wild_encounters(identity,day)");
+  // Seules les victoires confirmées par le moteur arcade serveur comptent pour le prestige.
+  // Un mode peut rapporter un point par jour ; les stats déclarées du profil sont ignorées.
+  await db.query(`CREATE TABLE IF NOT EXISTS prestige_verified_wins(
+    identity TEXT NOT NULL, account_id TEXT NOT NULL, day DATE NOT NULL, mode TEXT NOT NULL,
+    PRIMARY KEY(identity,day,mode))`);
+  await db.query("CREATE INDEX IF NOT EXISTS prestige_verified_wins_identity ON prestige_verified_wins(identity,day)");
   // « legend » : la rencontre de l'Expédition, hors des 6 rencontres du jour.
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'wild'");
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS zone TEXT");
@@ -353,7 +360,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   function encounterView(row) {
     if (!row) return null;
     return { id: Number(row.id), pokemonId: Number(row.pokemon_id), shiny: Boolean(row.shiny), throws: Number(row.throws),
-      throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null, legend: row.kind === "legend", zone: row.zone || null,
+      throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null, legend: row.kind === "legend", prestige: row.kind === "prestige", zone: row.zone || null,
       chances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(Number(row.pokemon_id), b) * 100)])) };
   }
   async function wildState(c, who, day) {
@@ -441,6 +448,33 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'legend') RETURNING *", [who.key, who.accountId, day, st.legendId, shiny])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
+  // 🐉 Drattak : une longue épreuve vérifiable par le serveur.
+  // Les missions d'album sont des DÉCOUVERTES côté profil, sans preuve d'éligibilité.
+  // Les accès à cette rencontre sont fondés uniquement sur les victoires arcade
+  // effectivement vérifiées après la mise en place du système.
+  async function prestige(c, who, day) {
+    const last = (await c.query("SELECT to_char(day,'YYYY-MM-DD') AS day,status FROM wild_encounters WHERE identity=$1 AND kind='prestige' AND pokemon_id=$2 ORDER BY id DESC LIMIT 1",
+      [who.key, SALAMENCE.pokemonId])).rows[0] || null;
+    const progress = (await c.query(`SELECT COUNT(*)::int AS wins,COUNT(DISTINCT day)::int AS days,COUNT(DISTINCT mode)::int AS modes
+      FROM prestige_verified_wins WHERE identity=$1 AND day BETWEEN $2 AND $3 AND day>$4`,
+      [who.key,shiftDay(day,-SALAMENCE.windowDays+1),day,last?.day || "1900-01-01"])).rows[0];
+    const result = statusForSalamence({ ...progress, lastAttemptDay:last?.day || null }, day, shiftDay);
+    return { ...result, needsAccount: !who.accountId, lastStatus: last?.status || null,
+      available: Boolean(who.accountId) && result.eligible,
+      chances: Object.fromEntries(BALLS.map((ball) => [ball,Math.round(captureChance(SALAMENCE.pokemonId,ball)*100)])) };
+  }
+  async function meetPrestige(c, who, day) {
+    if (!who.accountId) throw fail("account_required",401);
+    const state = await prestige(c, who, day);
+    if (state.cooldown) throw fail("prestige_cooldown");
+    if (!state.eligible) throw fail("prestige_not_ready");
+    if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
+    if (!Object.values(await bagOf(c, who)).some((count) => count > 0)) throw fail("no_balls");
+    const shiny = randomInt(SHINY_ODDS) === 0;
+    const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'prestige') RETURNING *",
+      [who.key,who.accountId,day,SALAMENCE.pokemonId,shiny])).rows[0];
+    return { encounter: encounterView(row), fresh:true };
+  }
   async function skipEncounter(c, who, day) {
     const r = await c.query("UPDATE wild_encounters SET status='skipped',ended_at=NOW() WHERE identity=$1 AND status='open' AND day=$2", [who.key, day]);
     return { skipped: r.rowCount > 0 };
@@ -505,11 +539,19 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const payload = operation === "buy" ? [body.item, body.qty || 1, body.expectedPrice] : [body.ball, body.encounterId, body.expectedThrows];
     return { id: body.actionId, operation, payload: JSON.stringify(payload) };
   }
-  const arcadeRun = (who,body,action) => run(who,async c => {
+  const arcadeRun = (who,body,action) => run(who,async (c,day) => {
     const out = await arcade[action](c,who,body), gains = [];
     if (out.earned) {
-      gains.push(arcadeGain(out.earned.mode,out.earned.result,out.earned.score));
-      gains.coin = {result:out.earned.result}; delete out.earned;
+      const earned = out.earned;
+      // Do not award prestige points for guesses submitted by a browser:
+      // only a finished server-owned arcade session can create this row.
+      if (who.accountId && earned.result === "win" && out.arcade?.sessionId &&
+          verifiedArcade.MODES.includes(earned.mode)) {
+        await c.query("INSERT INTO prestige_verified_wins(identity,account_id,day,mode) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
+          [who.key,who.accountId,day,earned.mode]);
+      }
+      gains.push(arcadeGain(earned.mode,earned.result,earned.score));
+      gains.coin = {result:earned.result}; delete out.earned;
     }
     gains.response = out; return gains;
   });
@@ -540,10 +582,12 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
     collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS,
       // Espèces obtenables par lancer de Ball : hautes herbes et expéditions hebdomadaires.
-      catchableTotal: new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend)]).size })),
+      catchableTotal: new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend), SALAMENCE.pokemonId]).size })),
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
+    prestige: (who) => wild(who, async (c, day) => ({ prestige: await prestige(c, who, day) })),
+    meetPrestige: (who) => wild(who, (c, day) => meetPrestige(c, who, day)),
     release: (who, body) => wild(who, (c, day) => release(c, who, day, body)),
     buy: (who, body) => wild(who, (c, day) => buy(c, who, day, body), actionReceipt("buy", body))
   };
@@ -628,7 +672,10 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.get("/api/expedition", handle((who) => service.expedition(who)));
   app.post("/api/expedition/chests", express.json({ limit: "1kb" }), handle((who) => service.claimChests(who)));
   app.post("/api/expedition/legend", express.json({ limit: "1kb" }), handle((who) => service.meetLegend(who)));
+  app.get("/api/prestige/drattak", handle((who) => service.prestige(who)));
+  app.post("/api/prestige/drattak/meet", express.json({ limit: "1kb" }),
+    handle((who) => service.meetPrestige(who),null,true));
   return service;
 }
 
-module.exports = { COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { SALAMENCE, COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
