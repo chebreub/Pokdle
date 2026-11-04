@@ -538,9 +538,15 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       return throwBall(c, who, day, String(body && body.ball || ""));
     }, actionReceipt("throw", body)),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
-    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS,
-      // Espèces obtenables par lancer de Ball : hautes herbes et expéditions hebdomadaires.
-      catchableTotal: new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend)]).size })),
+    collection: (who) => wild(who, async (c) => {
+      const captures = await collection(c, who);
+      const catchable = new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend)]);
+      // Ne jamais effacer les captures de Drattak obtenues avant sa mission.
+      // Elles restent dans l'inventaire et le Pokédex ; le compteur "Capturés"
+      // mesure uniquement les espèces encore capturables aujourd'hui.
+      return { captures, shinyLog: await shinyLog(c, who), zones: ZONE_POOLS,
+        catchableTotal: catchable.size, legacyCaptured: captures.filter(({ id }) => !catchable.has(id)).length };
+    }),
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
