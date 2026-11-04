@@ -330,7 +330,7 @@ function claimAlbumMission(id, now = Date.now()) {
   if (typeof renderPartner === 'function') renderPartner();
   if (typeof renderDiscoveryAlbum === 'function') renderDiscoveryAlbum();
   if (typeof celebrateAlbumMission === 'function') celebrateAlbumMission(mission, pokemon);
-  else if (typeof showToast === 'function') showToast(`${pokemon.name} rejoint ton album · mission « ${mission.title} »`);
+  else if (typeof showToast === 'function') showToast(`${pokemon.name} découvert · mission « ${mission.title} ». Capture nécessaire pour le posséder.`);
   return true;
 }
 function albumMissionTierLabel(mission) {
@@ -349,11 +349,11 @@ function ensureAlbumMissionPanel() {
   panel.id = 'album-mission-panel';
   panel.className = 'album-mission-panel';
   panel.innerHTML = `
-    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine récompense</h3><p>Les récompenses prêtes, puis tes objectifs les plus avancés.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
+    <div class="album-mission-head"><div><span class="adventure-eyebrow">MISSIONS DE COLLECTION</span><h3>Ta prochaine récompense</h3><p>Les Pokémon à découvrir, puis tes objectifs les plus avancés. Une capture avec une Ball reste indispensable pour les posséder.</p></div><div id="album-mission-summary" class="album-mission-summary"></div></div>
     <details class="album-mission-filter-details"><summary id="album-mission-filter-label">Filtrer les missions</summary><div class="album-mission-filters">
       <label>Génération<select id="album-mission-gen"><option value="all">Toutes</option>${ALBUM_REGIONS.map((r,i)=>`<option value="${i+1}">Gen ${i+1} · ${r}</option>`).join('')}</select></label>
       <label>Niveau<select id="album-mission-tier"><option value="all">Tous</option>${Object.entries(ALBUM_MISSION_TIERS).map(([id,t])=>`<option value="${id}">${t.label}</option>`).join('')}</select></label>
-      <label>État<select id="album-mission-status"><option value="active">À accomplir</option><option value="ready">À réclamer</option><option value="claimed">Obtenues</option><option value="all">Toutes</option></select></label>
+      <label>État<select id="album-mission-status"><option value="active">À accomplir</option><option value="ready">À réclamer</option><option value="claimed">Découvertes</option><option value="all">Toutes</option></select></label>
     </div></details>
     <div id="album-mission-grid" class="album-mission-grid"></div>
     <button id="album-mission-more" type="button" class="btn-ghost album-mission-more hidden" data-action="showMoreAlbumMissions">Afficher plus</button>`;
@@ -372,13 +372,13 @@ function albumMissionCard(mission) {
     ? '<p class="album-mission-secret-copy">Les détails apparaîtront quand tu commenceras à suivre la piste.</p>'
     : '<ul class="album-mission-reqs">' + state.reqs.map(item => `<li class="${item.done ? 'is-done' : ''}"><span>${item.done ? '✓' : '○'} ${escapeHtml(albumMissionRequirementLabel(item.req))}</span><b>${Math.min(item.value,item.goal)}/${item.goal}</b></li>`).join('') + '</ul>';
   const action = state.claimed
-    ? `<button type="button" class="btn-ghost" data-action="viewAlbumMissionReward" data-args='["${mission.id}"]'>Voir dans l’album →</button>`
+    ? `<button type="button" class="btn-ghost" data-action="viewAlbumMissionReward" data-args='["${mission.id}"]'>Voir la découverte →</button>`
     : state.ready
       ? `<button type="button" class="btn-blue" data-action="claimAlbumMission" data-args='["${mission.id}"]'>Réclamer ${escapeHtml(pokemon.name)} →</button>`
       : hidden ? '' : `<button type="button" class="btn-ghost" data-action="playAlbumMission" data-args='["${mission.id}"]'>${escapeHtml(albumMissionNextAction(mission, state).label)} →</button>`;
   return `<article id="album-mission-${mission.id}" class="album-mission-card tier-${mission.tier} ${state.ready ? 'is-ready' : ''} ${state.claimed ? 'is-claimed' : ''}">
     <div class="album-mission-top"><span class="album-mission-tier">${tier.icon} ${tier.label}</span><span>Gen ${mission.generation}</span></div>
-    <div class="album-mission-reward">${reward}<div><small>${state.claimed ? 'OBTENU' : state.ready ? 'RÉCOMPENSE PRÊTE' : hidden ? 'POKÉMON SECRET' : 'RÉCOMPENSE'}</small><h4>${hidden ? '???' : escapeHtml(pokemon.name)}</h4><span>${escapeHtml(mission.title)}</span></div></div>
+    <div class="album-mission-reward">${reward}<div><small>${state.claimed ? 'DÉCOUVERT · NON CAPTURÉ' : state.ready ? 'DÉCOUVERTE PRÊTE' : hidden ? 'POKÉMON SECRET' : 'DÉCOUVERTE'}</small><h4>${hidden ? '???' : escapeHtml(pokemon.name)}</h4><span>${escapeHtml(mission.title)}</span></div></div>
     <p>${escapeHtml(mission.hint)}</p>
     <progress max="${state.total}" value="${state.done}" aria-label="Progression ${escapeHtml(mission.title)}"></progress>
     ${reqs}${action}
@@ -438,7 +438,7 @@ function renderAlbumMissions() {
   const readyCount = allStates.filter(([,s]) => s.ready && !s.claimed).length;
   const claimedCount = allStates.filter(([,s]) => s.claimed).length;
   const summary = document.getElementById('album-mission-summary');
-  if (summary) summary.innerHTML = `<strong>${claimedCount}<small> / ${ALBUM_MISSIONS.length}</small></strong><span>${readyCount ? readyCount + ' récompense' + (readyCount > 1 ? 's' : '') + ' prête' + (readyCount > 1 ? 's' : '') : 'Progression enregistrée'}</span>`;
+  if (summary) summary.innerHTML = `<strong>${claimedCount}<small> / ${ALBUM_MISSIONS.length}</small></strong><span>${readyCount ? readyCount + ' découverte' + (readyCount > 1 ? 's' : '') + ' prête' + (readyCount > 1 ? 's' : '') : 'Missions accomplies (découvertes)'}</span>`;
   let list = allStates.filter(([m,s]) =>
     (gen === 'all' || String(m.generation) === gen) &&
     (tier === 'all' || m.tier === tier) &&
