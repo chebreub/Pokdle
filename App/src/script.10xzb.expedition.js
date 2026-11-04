@@ -2,6 +2,56 @@
 // ===== 🧭 L'Expédition de la semaine (3/11/2026, maquette « ce qui manque au plan ») =====
 // Le serveur (lib/poke-balls.js) calcule tout : région, objectif commun, participations, coffres, légendaire.
 let expeditionState = null, expeditionAt = 0;
+let drattakPrestigeState = null, drattakPrestigeAt = 0;
+function loadDrattakPrestige(force = false) {
+  if (!force && drattakPrestigeState && Date.now() - drattakPrestigeAt < 120000) return Promise.resolve(drattakPrestigeState);
+  return expeditionFetch("/api/prestige/drattak").then((data) => {
+    if (data?.ok && data.prestige) {
+      drattakPrestigeState = data.prestige;
+      drattakPrestigeAt = Date.now();
+      const body = document.querySelector("#overlay-body .exp");
+      if (body && expeditionState && typeof ensureOverlay === "function") {
+        ensureOverlay("🧭 Expédition de la semaine", expeditionHtml(expeditionState));
+      }
+    }
+    return drattakPrestigeState;
+  });
+}
+function drattakPrestigeHtml() {
+  const p = drattakPrestigeState;
+  if (!p) return '<section class="exp-card"><h4>🐉 Épreuve de prestige · Drattak</h4><p class="exp-note">Chargement des progrès vérifiés…</p></section>';
+  const count = (n, max, label) => '<span><strong>' + n + '/' + max + '</strong> ' + label + '</span>';
+  const stats = '<div class="exp-days">' + count(p.days,p.goal.days,'jours') + count(p.wins,p.goal.wins,'victoires') +
+    count(p.modes,p.goal.modes,'modes') + '</div>';
+  let message = '';
+  if (p.needsAccount) message = '<p class="exp-note">Connecte-toi pour enregistrer tes victoires vérifiées et débloquer cette rencontre.</p>';
+  else if (p.cooldown) message = '<p class="exp-note">Drattak a quitté l’arène. Nouvelle tentative possible à partir du ' + escapeHtml(p.nextAttemptDay.split("-").reverse().join("/")) + ', après avoir reconstruit ta progression.</p>';
+  else if (p.available) message = '<button type="button" class="exp-legend-cta" data-action="meetPrestigeDrattak">🐉 Rencontrer Drattak avec mes Balls</button><p class="exp-note">Trois lancers maximum : Poké ' + p.chances.poke + ' %, Super ' + p.chances.great + ' %, Hyper ' + p.chances.ultra + ' % par lancer. Aucune capture garantie.</p>';
+  else message = '<p class="exp-note">Seules les victoires confirmées par le serveur comptent. Progresse au moins 14 jours, remporte 28 parties et réussis dans 5 modes différents sur une période de 45 jours. Une seule victoire par mode et par jour est retenue.</p>';
+  return '<section class="exp-card exp-prestige"><h4>🐉 Drattak · Épreuve de prestige</h4>' +
+    '<p class="exp-note">Les missions d’album dévoilent le Pokémon. Pour le posséder, il faut réussir une capture réelle.</p>' +
+    stats + message + '</section>';
+}
+function meetPrestigeDrattak() {
+  const scope = typeof ballState !== "undefined" && ballState?.actionScope;
+  if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
+  return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope}).then((data) => {
+    if (!data?.ok) {
+      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
+        encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
+        account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
+      if (typeof showToast === "function") showToast(message);
+      return;
+    }
+    if (typeof closeOverlayModal === "function") closeOverlayModal();
+    if (typeof ballApply === "function") ballApply(data,{announce:false});
+    if (typeof renderWildEncounter === "function") renderWildEncounter(data,null,true);
+    drattakPrestigeAt = 0;
+    const pokemon = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(373) : null;
+    if (pokemon && typeof playPokemonCry === "function") try { playPokemonCry(pokemon,0.6); } catch (_e) {}
+  });
+}
+window.meetPrestigeDrattak = meetPrestigeDrattak;
 function expeditionFetch(url, body) {
   const opts = body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin" };
   return fetch(url, opts).then((r) => r.json().catch(() => null)).catch(() => null);
@@ -62,12 +112,13 @@ function expeditionHtml(e) {
       '<p class="exp-note">Les coffres non ouverts sont perdus dimanche à minuit.</p></section>' +
     '<section class="exp-card"><h4>Ta participation <span>' + e.myDays.length + ' jour' + (e.myDays.length > 1 ? "s" : "") + '</span></h4><div class="exp-days">' + days + '</div>' +
       '<p class="exp-note">1 participation = 2 jeux différents joués dans la journée (le cadeau ne compte pas).</p></section>' +
-    '<section class="exp-card">' + legend + '</section></div>';
+    '<section class="exp-card">' + legend + '</section>' + drattakPrestigeHtml() + '</div>';
 }
 function openExpedition() {
   const draw = () => { if (expeditionState && typeof ensureOverlay === "function") ensureOverlay("🧭 Expédition de la semaine", expeditionHtml(expeditionState)); };
   draw();
   const first = !expeditionState;
+  loadDrattakPrestige(true);
   // Ne rouvre jamais la fenêtre fermée entre-temps (ouverture des coffres) : on redessine seulement celle qui est ouverte.
   loadExpedition(true).then(() => {
     const o = document.getElementById("overlay-modal"), open = o && !o.classList.contains("hidden");
