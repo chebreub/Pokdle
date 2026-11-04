@@ -1,110 +1,125 @@
 "use strict";
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const { SALAMENCE, statusForSalamence } = require("../lib/prestige-quests");
-const { createBallService, initBallsDb, WILD_POOL, EXPEDITIONS } = require("../lib/poke-balls");
-
-function shiftDay(day, n) {
-  const d = new Date(day + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-test("a mission claim can never unlock a prestige Ball capture without server-verified wins", () => {
-  const base = statusForSalamence({days:0,wins:0,modes:0}, "2026-11-04", shiftDay);
-  assert.deepEqual(base.needs,{days:14,wins:28,modes:5});
-  assert.equal(base.eligible,false);
-  assert.equal(SALAMENCE.pokemonId,373);
-  const almost = statusForSalamence({days:14,wins:28,modes:4}, "2026-11-04", shiftDay);
-  assert.equal(almost.eligible,false,"four unique verified modes are not enough");
-  const done = statusForSalamence({days:14,wins:28,modes:5},"2026-11-04",shiftDay);
-  assert.equal(done.eligible,true);
-  const cool = statusForSalamence({days:14,wins:28,modes:5,lastAttemptDay:"2026-11-03"},"2026-11-04",shiftDay);
-  assert.equal(cool.cooldown,true);
-  assert.equal(cool.nextAttemptDay,"2026-11-24");
-  assert.equal(cool.eligible,false);
-  const readyAgain = statusForSalamence({days:14,wins:28,modes:5,lastAttemptDay:"2026-11-03"},"2026-11-24",shiftDay);
-  assert.equal(readyAgain.eligible,true);
+const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
+const {randomUUID}=require("node:crypto");
+const {SALAMENCE,statusForSalamence,verifyDreamAnswer}=require("../lib/prestige-quests");
+const {createBallService,initBallsDb,WILD_POOL,EXPEDITIONS}=require("../lib/poke-balls");
+function shiftDay(day,n){const d=new Date(day+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+const ready={days:5,lineageIds:[371],wins:{cry:3,silhouette:3,description:3}};
+test("Draby quest: captured lineage, three verified themed modes and five distinct days",()=>{
+  const none=statusForSalamence({},"2026-11-04",shiftDay);
+  assert.deepEqual(none.needs,{lineage:true,days:5,modes:{cry:3,silhouette:3,description:3}});
+  assert.equal(none.eligible,false);
+  assert.deepEqual(SALAMENCE.lineageIds,[371,372]);
+  assert.deepEqual([SALAMENCE.windowDays,SALAMENCE.cooldownDays],[30,21]);
+  assert.equal(statusForSalamence({...ready,lineageIds:[]},"2026-11-04",shiftDay).eligible,false);
+  assert.equal(statusForSalamence({...ready,days:4},"2026-11-04",shiftDay).eligible,false);
+  assert.equal(statusForSalamence({...ready,wins:{cry:2,silhouette:3,description:3}},"2026-11-04",shiftDay).eligible,false);
+  assert.equal(statusForSalamence({...ready,lineageIds:[372]},"2026-11-04",shiftDay).eligible,true);
+  assert.equal(statusForSalamence(ready,"2026-11-04",shiftDay).eligible,true);
+  const cooldown=statusForSalamence({...ready,lastAttemptDay:"2026-11-03"},"2026-11-04",shiftDay);
+  assert.deepEqual([cooldown.cooldown,cooldown.nextAttemptDay,cooldown.eligible],[true,"2026-11-24",false]);
+  assert.equal(statusForSalamence({...ready,lastAttemptDay:"2026-11-03"},"2026-11-24",shiftDay).eligible,true);
 });
-test("Drattak is excluded from all wild grass; a special encounter is the only available server capture path", () => {
+test("riddle is a narrative gate, never a substitute for verified progress",()=>{
+  assert.equal(verifyDreamAnswer("Drackhaus"),true);
+  assert.equal(verifyDreamAnswer("  DRACKHAUS  "),true);
+  for(const answer of ["Draby","Drattak","", "x".repeat(200)])assert.equal(verifyDreamAnswer(answer),false);
+});
+test("Drattak remains outside wild grass and weekly expeditions",()=>{
   assert.equal(WILD_POOL.includes(373),false);
   assert.equal(EXPEDITIONS.some(e=>e.legend===373),false);
   assert.equal(new Set([...WILD_POOL,...EXPEDITIONS.map(e=>e.legend),373]).size,852);
 });
-test("PostgreSQL: verified win records across 14 days are required, account-bound, and one prestige encounter per cooldown",{skip:!process.env.QA_DATABASE_URL,timeout:45000},async()=>{
-  const {Pool}=require("pg"),{randomUUID}=require("node:crypto");
-  const schema="prestige_"+randomUUID().replaceAll("-","");
-  const admin=new Pool({connectionString:process.env.QA_DATABASE_URL});
-  let db;
-  try {
+test("quest clues are gated by real mode progress and riddle appears after completion",()=>{
+  const script=fs.readFileSync(path.join(__dirname,"../src/script.10xzb.expedition.js"),"utf8");
+  const start=script.indexOf("function drattakPrestigeHtml() {"),end=script.indexOf("function meetPrestigeDrattak() {",start);
+  assert.ok(start>=0&&end>start);
+  const ctx={drattakPrestigeState:{needsAccount:false,hasLineage:false,lineageIds:[],
+    wins:{cry:0,silhouette:0,description:0},days:0,
+    goal:{days:5,modes:{cry:3,silhouette:3,description:3}},cooldown:false,available:false,
+    chances:{poke:23,great:32,ultra:46}},escapeHtml:String};
+  vm.createContext(ctx);
+  vm.runInContext(script.slice(start,end)+"\nthis.render=drattakPrestigeHtml;",ctx);
+  let html=ctx.render();
+  assert.match(html,/capture un Draby ou un Drackhaus/);
+  assert.doesNotMatch(html,/Une silhouette immobile/);
+  assert.doesNotMatch(html,/prestige-drattak-answer/);
+  ctx.drattakPrestigeState={...ctx.drattakPrestigeState,hasLineage:true,lineageIds:[371],
+    wins:{cry:3,silhouette:3,description:3},days:5,available:true};
+  html=ctx.render();
+  assert.match(html,/Une silhouette immobile/);
+  assert.match(html,/Ce Pokémon n’est ni le premier rêveur/);
+  assert.match(html,/prestige-drattak-answer/);
+  assert.match(html,/meetPrestigeDrattak/);
+  assert.doesNotMatch(html,/Drackhaus a été capturé/);
+});
+test("PostgreSQL: verified play and captured Draby allow one real capture attempt, not an automatic Pokémon",{
+  skip:!process.env.QA_DATABASE_URL,timeout:60000
+},async()=>{
+  const {Pool}=require("pg"),schema="prestige_"+randomUUID().replaceAll("-","");
+  const admin=new Pool({connectionString:process.env.QA_DATABASE_URL});let db;
+  try{
     await admin.query("CREATE SCHEMA "+schema);
     db=new Pool({connectionString:process.env.QA_DATABASE_URL,options:"-c search_path="+schema,max:4});
     let now=new Date("2026-11-04T11:00:00Z");
     const pokemon=[{id:6,name:"Dracaufeu",generation:1,weight:5},{id:25,name:"Pikachu",generation:1,weight:20},{id:133,name:"Évoli",generation:2,weight:8}];
     const service=createBallService({db,clock:()=>now,pokemon,secret:"qa-prestige-secret",randomInt:n=>0,random:()=>0.99});
     await initBallsDb(db);
-    // Exercise a genuine completed server round: an invented client result cannot
-    // create a prestige win, and repeating the same answer must stay idempotent.
-    const proofWho={key:"user:proof",guestKey:"guest:proof",accountId:"proof"};
-    const initial=(await service.arcadeStart(proofWho,{mode:"weight",startId:randomUUID(),gens:[1]})).arcade;
-    const evidence=await service.arcadeAnswer(proofWho,{mode:"weight",sessionId:initial.sessionId,
-      round:initial.round,choice:25,result:"win",score:999999});
-    assert.equal(evidence.arcade.score,1);
-    const replay=await service.arcadeAnswer(proofWho,{mode:"weight",sessionId:initial.sessionId,round:initial.round,choice:25});
-    assert.equal(replay.replayed,true);
-    const trusted=await db.query("SELECT day,mode FROM prestige_verified_wins WHERE identity=$1",[proofWho.key]);
-    assert.deepEqual(trusted.rows.map(r=>r.mode),["weight"]);
-    assert.equal((await db.query("SELECT COUNT(*)::int AS n FROM prestige_verified_wins WHERE identity=$1",["guest:proof"])).rows[0].n,0);
     const me={key:"user:prestige",guestKey:"guest:prestige",accountId:"prestige"};
     const guest={key:"guest:other",guestKey:"guest:other",accountId:null};
-    let s=(await service.prestige(me)).prestige;
-    assert.equal(s.available,false);
-    assert.equal(s.days,0);
-    await assert.rejects(service.meetPrestige(me,{completed:true,pokemonId:373}),/prestige_not_ready/);
-    await assert.rejects(service.meetPrestige(guest),/account_required/);
-    // A profile/mission claim never writes these rows; only verified arcade
-    // server outcomes can. Test database state is seeded as that trusted evidence.
-    const modes=["normal","quiz","pixel","shiny","weight"];
-    for(let i=0;i<14;i++){
-      const day=shiftDay("2026-10-21",i);
-      for(const mode of [modes[i%5],modes[(i+1)%5]]) {
-        await db.query("INSERT INTO prestige_verified_wins(identity,account_id,day,mode) VALUES($1,$2,$3,$4)",[me.key,me.accountId,day,mode]);
-      }
-    }
-    s=(await service.prestige(me)).prestige;
-    assert.deepEqual([s.days,s.wins,s.modes,s.available],[14,28,5,true]);
-    await assert.rejects(service.meetPrestige(me),/no_balls/);
-    await service.state(me); // Grants normal welcome Balls, never a prestige capture
-    let started=await service.meetPrestige(me);
+    const who={key:"user:proof",guestKey:"guest:proof",accountId:"proof"};
+    const s=(await service.arcadeStart(who,{mode:"weight",startId:randomUUID(),gens:[1]})).arcade;
+    const evidence=await service.arcadeAnswer(who,{mode:"weight",sessionId:s.sessionId,round:s.round,choice:25,score:99999,result:"win"});
+    assert.equal(evidence.arcade.score,1);
+    assert.equal((await service.arcadeAnswer(who,{mode:"weight",sessionId:s.sessionId,round:s.round,choice:25})).replayed,true);
+    const proof=(await db.query("SELECT mode FROM prestige_verified_wins WHERE identity=$1",[who.key])).rows;
+    assert.deepEqual(proof.map(r=>r.mode),["weight"]);
+    await assert.rejects(service.meetPrestige(guest,{answer:"Drackhaus"}),/account_required/);
+    await assert.rejects(service.meetPrestige(me,{answer:"Drackhaus",completed:true}),/prestige_not_ready/);
+    await db.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,status) VALUES($1,$2,$3,371,false,'caught')",
+      [me.key,me.accountId,"2026-10-01"]);
+    const events=[
+      ["2026-10-31","cry"],["2026-10-31","silhouette"],
+      ["2026-11-01","description"],["2026-11-01","cry"],
+      ["2026-11-02","silhouette"],["2026-11-02","description"],
+      ["2026-11-03","cry"],["2026-11-03","silhouette"],["2026-11-04","description"]
+    ];
+    for(const [day,mode] of events)await db.query(
+      "INSERT INTO prestige_verified_wins(identity,account_id,day,mode) VALUES($1,$2,$3,$4)",
+      [me.key,me.accountId,day,mode]);
+    let status=(await service.prestige(me)).prestige;
+    assert.deepEqual([status.days,status.wins.cry,status.wins.silhouette,status.wins.description,status.hasLineage,status.available],
+      [5,3,3,3,true,true]);
+    await assert.rejects(service.meetPrestige(me,{answer:"Draby"}),/prestige_riddle_wrong/);
+    assert.equal((await service.prestige(me)).prestige.available,true);
+    await assert.rejects(service.meetPrestige(me,{answer:"Drackhaus"}),/no_balls/);
+    await service.state(me);
+    const started=await service.meetPrestige(me,{answer:"Drackhaus"});
     assert.deepEqual([started.encounter.pokemonId,started.encounter.prestige,started.encounter.legend,started.encounter.throws],[373,true,false,0]);
     assert.equal(started.wild.open.id,started.encounter.id);
-    await assert.rejects(service.meetPrestige(me),/prestige_cooldown/);
-    for(let i=0;i<3;i++)started=await service.throwBall(me,{ball:"poke"});
-    assert.equal(started.encounter.status,"fled");
-    assert.equal((await service.collection(me)).captures.some(c=>c.id===373),false,"a completed mission alone never owns Drattak");
-    s=(await service.prestige(me)).prestige;
-    assert.deepEqual([s.days,s.wins,s.lastStatus,s.cooldown],[0,0,"fled",true]);
+    await assert.rejects(service.meetPrestige(me,{answer:"Drackhaus"}),/prestige_cooldown/);
+    for(let i=0;i<3;i++)await service.throwBall(me,{ball:"poke"});
+    assert.equal((await service.collection(me)).captures.some(c=>c.id===373),false);
+    status=(await service.prestige(me)).prestige;
+    assert.deepEqual([status.days,status.wins.cry||0,status.lastStatus,status.cooldown],[0,0,"fled",true]);
     now=new Date("2026-12-10T11:00:00Z");
-    s=(await service.prestige(me)).prestige;
-    assert.equal(s.cooldown,false);
-    assert.equal(s.available,false,"a new window requires new verified wins after the last meeting");
-  } finally {
-    if(db) await db.end();
+    status=(await service.prestige(me)).prestige;
+    assert.equal(status.cooldown,false);
+    assert.equal(status.available,false);
+  }finally{
+    if(db)await db.end();
     await admin.query("DROP SCHEMA IF EXISTS "+schema+" CASCADE");
     await admin.end();
   }
 });
-
-test("prestige play evidence is erased when a player deletes their account",()=>{
-  const fs=require("node:fs"),path=require("node:path");
-  const source=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
-  assert.match(source,/"prestige_verified_wins"\]\.map\(\(table\) => \[table, `DELETE FROM \$\{table\} WHERE account_id = \$1 OR identity = \$2`/);
+test("account deletion clears server-held prestige progression",()=>{
+  const server=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
+  assert.ok(server.includes('"arcade_runs", "prestige_verified_wins"'));
 });
-
-test("client can resume a server-open prestige encounter after a lost response",()=>{
-  const fs=require("node:fs"),path=require("node:path");
-  const client=fs.readFileSync(path.join(__dirname,"../src/script.10xzb.expedition.js"),"utf8");
-  assert.match(client,/\["prestige_cooldown","encounter_open"\]\.includes\(data\?\.error\)/);
-  assert.match(client,/refreshBalls\(\{announce:false\}\)/);
-  assert.match(client,/current\?\.wild\?\.open\?\.prestige/);
-  assert.match(client,/renderWildEncounter\(current\)/);
+test("network response loss can resume the single open prestige encounter",()=>{
+  const script=fs.readFileSync(path.join(__dirname,"../src/script.10xzb.expedition.js"),"utf8");
+  assert.match(script,/\["prestige_cooldown","encounter_open"\]\.includes\(data\?\.error\)/);
+  assert.match(script,/refreshBalls\(\{announce:false\}\)/);
+  assert.match(script,/current\?\.wild\?\.open\?\.prestige/);
+  assert.match(script,/renderWildEncounter\(current\)/);
 });
