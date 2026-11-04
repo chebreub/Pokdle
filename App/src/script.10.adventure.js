@@ -80,7 +80,7 @@ function discoveryProofHtml(entry) {
     game: `Bonne réponse enregistrée en ${mode}.`,
     history: `Victoire en ${mode}, récupérée automatiquement depuis ton historique. Ce Pokémon n’a pas été rencontré à nouveau lors de l’import.`,
     legacy: `Mode enregistré : ${mode}. Cette entrée date de l’ancienne version. Elle peut venir de l’historique importé ; l’origine exacte n’avait pas été conservée.`,
-    secret: 'Pokémon accueilli après avoir accompli une mission et découvert sa cachette.',
+    secret: 'Pokémon découvert après avoir accompli une mission et trouvé sa cachette. Une capture avec une Ball est nécessaire pour le posséder.',
     mission: 'Pokémon obtenu après validation d’une mission de collection.'
   };
   const confirmed = entry.confirmed ? `<p>Retrouvé en ${escapeHtml(discoveryModeLabel(entry.confirmed.mode))} le ${new Date(entry.confirmed.at).toLocaleDateString('fr-FR')}.</p>` : '';
