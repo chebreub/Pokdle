@@ -45,7 +45,7 @@ async function setup() {
   await document.fonts.ready;
   await Promise.all(['66px "Press Start 2P"', '700 52px Fredoka', '600 42px Fredoka'].map((f) => document.fonts.load(f, 'ÉÀ!?')));
   const A = S.audio, go = (f, t, vol) => A.push({ file: 'assets/go-' + f + '.mp3', t: +t.toFixed(3), vol });
-  A.push({ file: 'assets/sfx/ambience.wav', t: 0, vol: 0.35 });
+  A.push({ file: 'assets/sfx/ambience.wav', t: 0, vol: 0.35, bed: true }); // bed: left out by mixm.sh
   Q.forEach((q, i) => {
     const s = START[i];
     go('throw', s, 0.9); go('land', s + 0.72, 0.7); go('appear', s + OPEN - 0.05, 0.9);
@@ -53,7 +53,7 @@ async function setup() {
     // Tic-tac qui accélère pendant les 3 paliers (pub/timer.py).
     A.push({ file: 'assets/sfx/timer.wav', t: +(s + OPEN + 0.05).toFixed(3), vol: 0.9 });
     if (q.mystery) go('caught', s + REVEAL, 0.9);
-    else A.push({ file: 'assets/cry-' + q.id + '.ogg', t: +(s + REVEAL + 0.05).toFixed(3), vol: 1.5 });
+    else A.push({ file: 'assets/cry-' + q.id + '.ogg', t: +(s + REVEAL + 0.05).toFixed(3), vol: 1.5, cry: true });
   });
   renderAt(0);
   return TOTAL;

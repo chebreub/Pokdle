@@ -68,3 +68,5 @@ Format d'une vidéo TikTok à 1,4 M de vues : 6 Pokémon (~66 s), une Ball lanc�
 3. `PAGE=pub/px6.html node render.js px6 && ./mix.sh px6` → `out/Pokedle-px6.mp4`.
 
 Pour d'autres Pokémon : la liste `Q` de `pub/px6.js` (numéro, nom, décor) ; la finesse des 3 étapes dans `GRID` (et `GRID_MYSTERY` pour le dernier).
+
+Version avec musique (fournie par Kayan, rangée dans `assets/music/`, ignorée par git) : `./mixm.sh px6 assets/music/trainer-battle.mp3 out/Pokedle-px6-musique.mp4` (sans l'ambiance, musique baissée pendant les cris).
