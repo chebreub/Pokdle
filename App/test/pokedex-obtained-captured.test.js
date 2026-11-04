@@ -66,7 +66,7 @@ function fixture() {
 test("collection counts are disjoint in meaning and never turn a guessed Pokemon into a prize",()=>{
   const f=fixture(),before=JSON.stringify(f.profile);
   const p=f.ctx.__progress(f.mons);
-  assert.deepEqual({...p},{seen:6,caught:2,obtained:4});
+  assert.deepEqual({...p},{seen:6,caught:2,obtained:4,historical:0});
   assert.equal(f.ctx.__obtained(f.mons[0]),false,"guessed Chenipan is seen but not owned");
   assert.equal(f.ctx.__obtained(f.mons[4]),false,"historical Drattak guess is not a prestige prize");
   assert.equal(f.ctx.__obtained(f.mons[1]),true,"server-held Pikachu is captured");
