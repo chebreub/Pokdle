@@ -63,7 +63,7 @@ Pour d'autres Pokémon : changer les numéros et les mauvaises réponses dans `p
 
 Format d'une vidéo TikTok à 1,4 M de vues : 6 Pokémon (~66 s), une Ball lancée sur la plateforme de nos décors pixel art, le Pokémon se précise en 3 temps (3 pts → 2 pts → 1 pt), puis « ! », son nom et son vrai cri. Le n°6 (Forgelina) reste pixelisé : « Écris ta réponse en commentaire ». Fin : barème du score sur 15. Sons officiels de Pokémon GO (lancer, chute, sortie, clic), vrais cris, ambiance nature, pas de musique.
 
-1. `./fetch-assets.sh 131 229 350 609 823 959 && python3 pub/ambience.py`, puis copier `App/img/zones/*.png` en `assets/zone-*.png` et `App/sfx/go/{throw,land,appear,caught}.mp3` en `assets/go-*.mp3`.
+1. `./fetch-assets.sh 131 229 350 609 823 959 && python3 pub/ambience.py && python3 pub/timer.py` (tic-tac qui accélère), puis copier `App/img/zones/*.png` en `assets/zone-*.png` et `App/sfx/go/{throw,land,appear,caught}.mp3` en `assets/go-*.mp3`.
 2. `python3 -m http.server 4180 --bind 127.0.0.1`, vérifier avec `PAGE=pub/px6.html node render.js px6 --stills 2,8,55.5,64`.
 3. `PAGE=pub/px6.html node render.js px6 && ./mix.sh px6` → `out/Pokedle-px6.mp4`.
 
