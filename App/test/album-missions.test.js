@@ -83,3 +83,47 @@ test('mission claim records provenance and cannot be claimed twice',()=>{
   assert.equal(f.playerProfile.discoveries[870].missions.g8_falinks,1000);
   assert.equal(f.claimAlbumMission('g8_falinks',2000),false);
 });
+
+
+test('Drattak prestige requires Métalosse claimed, 42 Hoenn discoveries, 12 Dragons and Draft 520',()=>{
+  const f=fixture(), mission=f.albumMissionById('g3_salamence');
+  assert.equal(mission.pokemonId,373);
+  assert.equal(mission.tier,'prestige');
+  assert.equal(f.isAlbumMissionGated(373),true);
+  assert.equal(f.isAlbumMissionClaimedForPokemon(373),false);
+  // Fixture : four independent conditions. A simple encounter or guessing Drattak
+  // cannot satisfy the Métalosse mission prerequisite.
+  for(let i=0;i<42;i++){
+    const id=4000+i, p={id,gen:3,type1:i<12?'Dragon':'Eau',type2:null,name:'Test '+i};
+    f.POKEMON_BY_ID.set(id,p);
+    f.playerProfile.discoveries[id]={at:1000,source:'game'};
+  }
+  f.POKEMON_BY_ID.set(373,{id:373,name:'Drattak',gen:3,type1:'Dragon',type2:'Vol'});
+  f.playerProfile.draftScoreAttackRecords[3]=520;
+  assert.equal(f.albumMissionState(mission).ready,false,'missing Metagross blocks the reward');
+  f.playerProfile.albumMissionClaims.g3_metagross=Date.now();
+  assert.equal(f.albumMissionState(mission).ready,true,'all four requirements must be fulfilled');
+  assert.equal(f.claimAlbumMission('g3_salamence'),true);
+  assert.equal(f.playerProfile.discoveries[373].source,'mission');
+  assert.ok(f.playerProfile.discoveries[373].missions.g3_salamence);
+  assert.equal(f.claimAlbumMission('g3_salamence'),false,'one claim per mission');
+});
+
+test('a previously captured Drattak remains owned and gains its mission provenance without erasure',()=>{
+  const f=fixture(),mission=f.albumMissionById('g3_salamence');
+  f.POKEMON_BY_ID.set(373,{id:373,name:'Drattak',gen:3,type1:'Dragon',type2:'Vol'});
+  f.playerProfile.discoveries[373]={at:900,mode:'capture',source:'capture',shiny:'capture'};
+  for(let i=0;i<42;i++){
+    const id=4000+i, p={id,gen:3,type1:i<12?'Dragon':'Eau',type2:null,name:'Test '+i};
+    f.POKEMON_BY_ID.set(id,p);
+    f.playerProfile.discoveries[id]={at:1000,source:'game'};
+  }
+  f.playerProfile.draftScoreAttackRecords[3]=520;
+  f.playerProfile.albumMissionClaims.g3_metagross=Date.now();
+  assert.equal(f.albumMissionState(mission).ready,true);
+  assert.equal(f.claimAlbumMission('g3_salamence'),true);
+  assert.equal(f.playerProfile.discoveries[373].source,'capture');
+  assert.equal(f.playerProfile.discoveries[373].shiny,'capture');
+  assert.equal(f.playerProfile.discoveries[373].at,900);
+  assert.ok(f.playerProfile.discoveries[373].missions.g3_salamence);
+});
