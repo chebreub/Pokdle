@@ -92,7 +92,7 @@ test("PostgreSQL: verified play and captured Draby allow one real capture attemp
       [5,3,3,3,true,true]);
     await assert.rejects(service.meetPrestige(me,{answer:"Draby"}),/prestige_riddle_wrong/);
     assert.equal((await service.prestige(me)).prestige.available,true);
-    await assert.rejects(service.meetPrestige(me,{answer:"Drackhaus"}),/no_balls/);
+    await assert.rejects(service.meetPrestige(me,{answer:"Drackhaus"}),/prestige_need_three_balls/);
     await service.state(me);
     const started=await service.meetPrestige(me,{answer:"Drackhaus"});
     assert.deepEqual([started.encounter.pokemonId,started.encounter.prestige,started.encounter.legend,started.encounter.throws],[373,true,false,0]);
