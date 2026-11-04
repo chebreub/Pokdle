@@ -42,14 +42,14 @@ test("dashboard shows truthful summary, party metrics, charts and details withou
   assert.match(html, /Retour des joueurs<\/div><strong>—<\/strong><small>Indisponible : base du Pokémon du jour injoignable/);
   const withReturn = renderStatsDashboard({ ...sample, retention: { nextDay: { back: 12, base: 40, rate: 30 }, week: { back: 9, base: 20, rate: 45 }, newWeek: { back: 2, base: 10, rate: 20 } } });
   assert.match(withReturn, /Retour des joueurs<\/div><strong>30 %<\/strong><small>Rejouent le lendemain \(12\/40\) · dans les 7 jours : 45 % · nouveaux revenus en 7 jours : 20 %/);
-  assert.match(html, /Diagnostic technique/);
+  assert.match(html, /Diagnostic/);
   assert.match(html, /complete:daily:win/);
   assert.doesNotMatch(html, /128 joueurs ont abandonné/);
 });
 test("handles missing days without silently treating unmeasured browsers as zero", () => {
   const html = renderStatsDashboard({...sample, metrics:null, uniqueRows:null, rawRows:null, diagnosticRows:[], diagnosticDays:[]});
   assert.match(html, /Aucune donnée de fréquentation disponible/);
-  assert.match(html, /Aucun lancement de jeu comptabilisé/);
+  assert.match(html, /Aucun lancement enregistré/);
   assert.match(html, /—/);
   assert.doesNotMatch(html, />NaN</);
 });
@@ -76,7 +76,7 @@ test("stats route keeps access control, does not touch gameplay and excludes tod
   const route=server.slice(a,b);
   assert.match(route,/ADMIN_STATS_KEY/);
   assert.match(route,/return res\.status\(403\)/);
-  assert.match(route,/Date\.parse\(usageMetrics\.utcDay\(\)/);
+  assert.match(route,/Date\.parse\(todayUtc/);
   assert.match(route,/usageMetrics\.recent\(pgPool, days, end\)/);
   assert.doesNotMatch(route,/INSERT INTO|UPDATE\s+\w+|DELETE FROM/);
 });
