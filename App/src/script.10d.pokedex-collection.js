@@ -134,7 +134,7 @@ function renderPokedexCollectionHub() {
   document.querySelectorAll('[data-collection-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.collectionFilter === pokedexCollectionFilter)));
   const national = document.getElementById('pokedex-collection-national');
   if (national) national.innerHTML = `
-    <div><strong>${stats.found}<small> / ${stats.total}</small></strong><span>espèces gagnées</span></div>
+    <div><strong>${stats.found}<small> / ${stats.total}</small></strong><span>espèces découvertes</span></div>
     <progress value="${stats.found}" max="${stats.total || 1}" aria-label="Progression de la collection nationale"></progress>
     <div class="pokedex-collection-substats"><span><b>${stats.formsFound}</b> / ${stats.formsTotal} formes</span><span><b>${stats.missions}</b> récompenses spéciales à débloquer</span></div>
     <small>${stats.percent}% des espèces de base enregistrées</small>`;
@@ -156,8 +156,8 @@ function renderPokedexCollectionHub() {
     const show = pokedexExperienceView === 'collection' && (ready > 0 || stats.found === 0);
     next.classList.toggle('hidden', !show);
     next.innerHTML = !show ? '' : ready > 0
-      ? `<div><strong>${ready} récompense${ready > 1 ? 's' : ''} prête${ready > 1 ? 's' : ''}</strong><span>Un objectif accompli mérite son Pokémon.</span></div><button class="btn-blue" type="button" data-action="openPokedexMissionHub">Réclamer mes récompenses →</button>`
-      : `<div><strong>Ta première découverte t’attend</strong><span>Gagne une partie pour ajouter un Pokémon à ta collection.</span></div><button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu →</button>`;
+      ? `<div><strong>${ready} découverte${ready > 1 ? 's' : ''} prête${ready > 1 ? 's' : ''}</strong><span>Une mission révèle un Pokémon : il reste à le capturer avec une Ball.</span></div><button class="btn-blue" type="button" data-action="openPokedexMissionHub">Voir mes découvertes →</button>`
+      : `<div><strong>Ta première découverte t’attend</strong><span>Gagne une partie pour découvrir ton premier Pokémon.</span></div><button class="btn-blue" type="button" data-action="openAllModesScreen" data-args='["solo"]'>Choisir un jeu →</button>`;
   }
   const readyEl=document.getElementById('pokedex-mission-ready-count');
   if (readyEl) readyEl.textContent = ready ? `· ${ready} prête${ready>1?'s':''}` : '';
