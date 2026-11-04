@@ -58,3 +58,13 @@ Vidéo de 32 s dans le style de la présentation : accroche « 3 Pokémon pixeli
 5. Son : `./mix.sh pix3` (sans musique, avec l'ambiance nature) ; `./mixm.sh pix3 <musique.mp3> out/Pokedle-pix3-musique.mp4` (musique à 0,30, à 40 % pendant les cris, entrée en 1 s, fondu de 3 s, sans l'ambiance).
 
 Pour d'autres Pokémon : changer les numéros et les mauvaises réponses dans `pub/cap-pix3.js`, les noms et les cris dans `pub/pix3.js` (`N.g`), et recaler les clés `KA`, `KB`, `KC` sur les événements des nouvelles captures.
+
+## « Devine le Pokémon ! » : 6 pixelisés (`pub/px6.js`, 04/11)
+
+Format d'une vidéo TikTok à 1,4 M de vues : 6 Pokémon (~66 s), une Ball lancée sur la plateforme de nos décors pixel art, le Pokémon se précise en 3 temps (3 pts → 2 pts → 1 pt), puis « ! », son nom et son vrai cri. Le n°6 (Forgelina) reste pixelisé : « Écris ta réponse en commentaire ». Fin : barème du score sur 15. Sons officiels de Pokémon GO (lancer, chute, sortie, clic), vrais cris, ambiance nature, pas de musique.
+
+1. `./fetch-assets.sh 131 229 350 609 823 959 && python3 pub/ambience.py`, puis copier `App/img/zones/*.png` en `assets/zone-*.png` et `App/sfx/go/{throw,land,appear,caught}.mp3` en `assets/go-*.mp3`.
+2. `python3 -m http.server 4180 --bind 127.0.0.1`, vérifier avec `PAGE=pub/px6.html node render.js px6 --stills 2,8,55.5,64`.
+3. `PAGE=pub/px6.html node render.js px6 && ./mix.sh px6` → `out/Pokedle-px6.mp4`.
+
+Pour d'autres Pokémon : la liste `Q` de `pub/px6.js` (numéro, nom, décor) ; la finesse des 3 étapes dans `GRID` (et `GRID_MYSTERY` pour le dernier).
