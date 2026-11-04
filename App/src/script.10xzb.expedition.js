@@ -59,7 +59,7 @@ function meetPrestigeDrattak() {
   if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
   return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
     if (!data?.ok) {
-      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
+      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_need_three_balls:"Il te faut au moins trois Balls pour ne pas perdre une rare occasion de rencontre.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
         encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
         account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
       // Une requête peut avoir réussi alors que sa réponse s'est perdue.
