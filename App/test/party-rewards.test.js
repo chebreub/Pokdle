@@ -17,7 +17,8 @@ test("Party reward proof requires a server-completed game with two distinct play
   assert.equal(verifyPartyRewardProof(secret, proof, "user:43", day), false, "proof is account-bound");
   assert.equal(verifyPartyRewardProof(secret, proof, "user:42", "2026-11-05"), false, "proof expires at the Paris day boundary");
   assert.equal(verifyPartyRewardProof("wrong-secret", proof, "user:42", day), false);
-  assert.equal(verifyPartyRewardProof(secret, proof.slice(0, -1) + "A", "user:42", day), false);
+  const tampered = proof.slice(0, -1) + (proof.endsWith("A") ? "B" : "A");
+  assert.equal(verifyPartyRewardProof(secret, tampered, "user:42", day), false);
   assert.equal(verifyPartyRewardProof(secret, "invented", "user:42", day), false);
   assert.equal(verifyPartyRewardProof(secret, null, "user:42", day), false);
 });
