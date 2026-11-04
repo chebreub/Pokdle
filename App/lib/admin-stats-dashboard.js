@@ -1,7 +1,7 @@
 "use strict";
 
 // Read-only presentation of existing aggregate counters. Never stores visitor IDs or modifies game state.
-const { summarizeModes, startDay, utcDay, SOLO_CATALOG, PARTY_CATALOG } = require("./usage-metrics");
+const { summarizeModes, startDay, utcDay, SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH } = require("./usage-metrics");
 const PERIODS = [1, 3, 7, 14, 30, 90];
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
@@ -114,7 +114,7 @@ function renderStatsDashboard(options) {
       completions: measured ? observed?.completions || 0 : null,
       wins: measured ? observed?.wins || 0 : null,
       losses: measured ? observed?.losses || 0 : null,
-      finishInstrumented: observed?.finishInstrumented || false
+      finishInstrumented: Object.values(HISTORY_TO_LAUNCH).includes(mode)
     };
   });
   // Preserve any new validated mode that hasn't yet been classified in this UI.
