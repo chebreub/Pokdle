@@ -198,19 +198,35 @@ renderShinyGame = function () {
     const img = root.querySelector('.shiny-art');
     state.imageReady = false;
     const ready = () => {
-      if (shinyState !== state) return;
+      if (shinyState !== state || !root.contains(img)) return;
       state.imageReady = true;
       root.querySelectorAll('.shiny-choice').forEach(b => { b.disabled = Boolean(state.busy); });
     };
     root.querySelectorAll('.shiny-choice').forEach(b => { b.disabled = true; });
     if (img) {
-      img.addEventListener('load',ready,{once:true});
-      img.addEventListener('error',() => {
-        if (shinyState !== state) return;
-        const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'btn-blue'; retry.textContent = 'Recharger l’image';
-        retry.addEventListener('click',() => renderShinyGame()); root.appendChild(retry);
-      },{once:true});
-      if (img.complete && img.naturalWidth) ready();
+      const unavailable = () => {
+        if (shinyState !== state || !root.contains(img) || root.querySelector('#shiny-image-retry')) return;
+        const retry = document.createElement('button');
+        retry.id = 'shiny-image-retry'; retry.type = 'button'; retry.className = 'btn-blue';
+        retry.textContent = 'Recharger l’image';
+        retry.addEventListener('click', () => {
+          if (shinyState !== state || !root.contains(img)) return;
+          retry.remove();
+          state.imageReady = false;
+          root.querySelectorAll('.shiny-choice').forEach(b => { b.disabled = true; });
+          // Retry the same opaque artwork, never a new round or a revealed answer.
+          state.imageRetries = (state.imageRetries || 0) + 1;
+          img.src = (state.round.image || img.getAttribute('src').split('?')[0]) + '?retry=' + state.imageRetries;
+        });
+        root.appendChild(retry);
+      };
+      // A cached error may have happened before listeners were registered.
+      img.onload = ready;
+      img.onerror = unavailable;
+      if (img.complete) {
+        if (img.naturalWidth > 0) ready();
+        else unavailable();
+      }
     }
   }
   return out;
