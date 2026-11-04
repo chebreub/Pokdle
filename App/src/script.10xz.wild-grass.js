@@ -315,7 +315,7 @@ function wildThrow(ball) {
         const before = wildCaptures && wildCaptures[e.pokemonId];
         const firstCatch = !(before && (Number(before.normal) || 0) + (Number(before.shiny) || 0) > 0);
         const firstShiny = Boolean(e.shiny && !(before && Number(before.shiny) > 0));
-        const caughtCount = Object.keys(wildCaptures || {}).length + (firstCatch ? 1 : 0);
+        const caughtCount = Math.max(0, Object.keys(wildCaptures || {}).length + (firstCatch ? 1 : 0) - (wildLegacyCaptured || 0));
         const register = () => {
           if (p && firstCatch && typeof addDiscovery === "function" && typeof playerProfile !== "undefined" && playerProfile) {
             playerProfile.discoveries ||= {};
