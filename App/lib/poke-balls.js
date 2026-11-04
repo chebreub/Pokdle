@@ -6,6 +6,7 @@
 // Sans compte, les Balls sont gardées sous l'identité invitée et passent sur le compte à la connexion.
 const crypto = require("node:crypto");
 const verifiedArcade = require("./verified-arcade");
+const { verifyPartyRewardProof } = require("./party-rewards");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
 
@@ -506,13 +507,12 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     arcadeFinish: (who, body) => arcadeRun(who,body,'finish'),
     arcadeAbandon: (who, body) => arcadeRun(who,body,'abandon'),
     arcadeImageSpec: arcade.imageSpec,
-    earn: (who, body) => run(who, async () => {
-      if (verifiedArcade.MODES.includes(String(body.mode || ""))) throw fail("verified_game_required",400);
-      return body.mode === "party"
-      ? Object.assign([{ source: "party", ball: "poke" }], { party: true })
-      // Lot B de l'audit (4/11) : un mode dont le serveur ne vérifie pas encore la partie donne sa Ball, plus de ₽.
-      // Les ₽ des parties viennent seulement des modes vérifiés (arcadeRun) ; jeux du jour et Party Room inchangés.
-      : [arcadeGain(body.mode, body.result, body.score)];
+    earn: (who, body = {}) => run(who, async (_c, day) => {
+      // Aucune récompense sur un score déclaré : les arcades utilisent /api/arcade,
+      // et Party Room exige une preuve signée à la fin d'une vraie partie.
+      if (body.mode !== "party") throw fail("verified_game_required", 400);
+      if (!verifyPartyRewardProof(secret, body.partyProof, who.key, day)) throw fail("party_proof_required", 403);
+      return Object.assign([{ source: "party", ball: "poke" }], { party: true });
     }),
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, async (c, day) => {
