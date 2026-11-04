@@ -281,6 +281,7 @@ function startCryGame() {
   }
 
   gameMode = "cry";
+  if (typeof verifiedGuessStart === "function" && verifiedGuessStart("cry", pool)) return;
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }

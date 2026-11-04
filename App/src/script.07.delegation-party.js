@@ -3734,9 +3734,11 @@ function startDescriptionMode() {
     showToast(selected.length ? "Pas encore de descriptions en français pour ces Pokémon : ajoute une autre génération." : "Sélectionne au moins une génération !");
     return;
   }
-  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   descriptionState = { text: "Chargement de l'entrée Pokédex…", loading: true, error: null };
   gameMode = "description";
+  // Hors Party Room, le serveur tire le mystère et envoie l'entrée Pokédex (script.10xzk.verified-guess.js).
+  if (typeof verifiedGuessStart === "function" && verifiedGuessStart("description", selected)) { renderDescriptionMode(); return; }
+  const secret = pickRandomPokemonFromPool(pool) || pool[0];
   // Every Pokémon of the chosen generations can be typed (Gen 9 included); only the mystery needs a
   // French Pokédex entry. Same pool as a reloaded game (restoreGame uses getPoolFromSelectedGens()).
   startGameWithSecret(secret, selected);

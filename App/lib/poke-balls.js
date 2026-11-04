@@ -161,8 +161,8 @@ async function initBallsDb(db) {
   await db.query("CREATE UNIQUE INDEX IF NOT EXISTS coin_ledger_source ON coin_ledger(identity,day,source)");
 }
 
-function createBallService({ db, clock = () => new Date(), randomInt = crypto.randomInt, random = () => crypto.randomInt(1000000) / 1000000, pokemon, secret }) {
-  const arcade = verifiedArcade.createVerifiedArcade({pokemon,secret,clock,randomInt});
+function createBallService({ db, clock = () => new Date(), randomInt = crypto.randomInt, random = () => crypto.randomInt(1000000) / 1000000, pokemon, secret, describe }) {
+  const arcade = verifiedArcade.createVerifiedArcade({pokemon,secret,clock,randomInt,...(describe ? {describe} : {})});
   const lock = (c, key) => c.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["balls:" + key]);
   async function tx(fn) {
     const c = await db.connect();
@@ -532,8 +532,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   };
 }
 
-function mountBallRoutes({ app, express, db, secret, getUser, readCookies, readyBefore = Promise.resolve(), clock, pokemon, artworkLoader, randomInt }) {
-  const service = db && secret ? createBallService({ db, clock, pokemon, secret, randomInt }) : null;
+function mountBallRoutes({ app, express, db, secret, getUser, readCookies, readyBefore = Promise.resolve(), clock, pokemon, artworkLoader, cryLoader, describe, randomInt }) {
+  const service = db && secret ? createBallService({ db, clock, pokemon, secret, randomInt, describe }) : null;
   const ready = service ? readyBefore.then(() => initBallsDb(db)).then(() => true).catch((e) => { console.error("[balls] init:", e.message); return false; }) : Promise.resolve(false);
   const buckets = new Map();
   function rate(key, limit, now) {
@@ -585,8 +585,19 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
     const guest = dailyGuest(secret,readCookies(req).pokdle_daily), user = getUser(req);
     const who = {key:user?.id ? "user:" + user.id : guest ? "guest:" + guest : ""};
     const spec = service.arcadeImageSpec(req.params.token,who);
-    if (!spec) return res.sendStatus(404);
+    if (!spec || spec.cry) return res.sendStatus(404);
     try { res.type("png").send(await loadArt(spec)); } catch (_) { res.sendStatus(503); }
+  });
+  // Le cri du jeu Cri : même jeton opaque, lié au joueur ; l'adresse ne dit pas quel Pokémon c'est.
+  const loadCry = cryLoader || verifiedArcade.createArcadeCryLoader();
+  app.get("/api/arcade/cry/:token", async (req,res) => {
+    res.set("Cache-Control","private, no-store");
+    if (!service || !await ready) return res.sendStatus(503);
+    const guest = dailyGuest(secret,readCookies(req).pokdle_daily), user = getUser(req);
+    const who = {key:user?.id ? "user:" + user.id : guest ? "guest:" + guest : ""};
+    const spec = service.arcadeImageSpec(req.params.token,who);
+    if (!spec || !spec.cry) return res.sendStatus(404);
+    try { res.type("audio/ogg").send(await loadCry(spec)); } catch (_) { res.sendStatus(503); }
   });
   app.get("/api/balls", handle((who) => service.state(who)));
   app.post("/api/balls/gift", express.json({ limit: "1kb" }), handle((who) => service.gift(who)));

@@ -3,8 +3,8 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const {randomUUID} = require('node:crypto');
 const {createBallService,initBallsDb} = require('../lib/poke-balls');
-const {createVerifiedArcade,createArcadeArtworkLoader,MODES} = require('../lib/verified-arcade');
-const {createGuessGames} = require('../lib/verified-guess');
+const {createVerifiedArcade,createArcadeArtworkLoader,createArcadeCryLoader,MODES} = require('../lib/verified-arcade');
+const {createGuessGames,createFlavorLoader} = require('../lib/verified-guess');
 const sprite = (id) => 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/' + id + '.png';
 const pokemon = [
   {id:1,name:'Bulbizarre',gen:1,generation:1,type1:'Plante',type2:'Poison',color:'Vert',habitat:'Prairie',stage:1,height:0.7,weight:6.9,sprite:sprite(1)},
@@ -88,4 +88,43 @@ test('the picture token only opens for its player, and only a PokeAPI sprite is 
   assert.deepEqual(await load(spec), png);
   assert.match(seen[1], /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/\d+\.png$/);
   await assert.rejects(createArcadeArtworkLoader(async () => ({}))({src:'https://evil.example/x.png'}), /image_unavailable/);
+});
+
+test('Cri and Description are verified too: an opaque cry, the Pokédex text without the name', async () => {
+  assert.ok(MODES.includes('cry') && MODES.includes('description'));
+  const rows = [];
+  const c = {query: async (q, p) => { if (/^SELECT state/.test(q)) return {rows}; if (/^INSERT/.test(q)) { rows[0] = {state: JSON.parse(p[3])}; } return {rows:[]}; }};
+  const arcade = createVerifiedArcade({pokemon,secret:'local-only',randomInt:()=>0,describe:async (p) => 'Texte de ' + p.name.length + ' lettres'});
+  const cry = (await arcade.start(c, me, {mode:'cry', startId:randomUUID(), gens:[1]})).arcade;
+  assert.match(cry.cry, /^\/api\/arcade\/cry\/[\w-]+$/);
+  assert.equal(cry.image, undefined);
+  const spec = arcade.imageSpec(cry.cry.split('/').pop(), me);
+  assert.equal(spec.cry, rows[0].state.secretId);
+  assert.equal(arcade.imageSpec(cry.cry.split('/').pop(), other), null);
+  const d = (await arcade.start(c, me, {mode:'description', startId:randomUUID(), gens:[1,2]})).arcade;
+  assert.match(d.clue, /^Texte de \d+ lettres$/);
+  assert.equal(d.answerId, undefined);
+  // The Pokédex text hides the name; without any French entry, generic hints instead.
+  const loader = createFlavorLoader(async () => ({ok:true, json:async () => ({flavor_text_entries:[{language:{name:'en'},flavor_text:'Pikachu'}, {language:{name:'fr'},flavor_text:'PIKACHU\nstocke'}]})}), () => 0);
+  assert.equal(await loader({name:'Pikachu'}, 25), 'ce Pokémon stocke');
+  const empty = createFlavorLoader(async () => { throw new Error('down'); }, () => 0);
+  assert.match(await empty({name:'Pikachu', gen:1, stage:2}, 25), /génération 1, stade d’évolution 2/);
+  // The cry: PokeAPI's Ogg file, GitHub when the CDN fails, nothing else.
+  const seen = [];
+  const ogg = Buffer.from('OggS0000');
+  const cryLoad = createArcadeCryLoader(async (url) => { seen.push(url); if (seen.length === 1) throw new Error('cdn'); return {ok:true, headers:{get:()=>null}, arrayBuffer:async()=>ogg}; });
+  assert.deepEqual(await cryLoad({cry:25}), ogg);
+  assert.equal(seen[1], 'https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/25.ogg');
+  await assert.rejects(createArcadeCryLoader(async () => ({ok:true, headers:{get:()=>null}, arrayBuffer:async()=>Buffer.from('<html>')}))({cry:26}), /cry_unavailable/);
+});
+
+test('Description draws its mystery up to #898 only, but any Pokémon of the generations can be proposed', () => {
+  const list = [...pokemon, {id:906,name:'Poussacha',gen:9,generation:9,sprite:sprite(906)}];
+  const games = createGuessGames(list, (n) => n - 1);
+  const s = {mode:'description', gens:[9], recent:[]};
+  assert.throws(() => games.init(s), /invalid_generations/, 'no French Pokédex text for Gen 9');
+  const t = {mode:'description', gens:[1,9], recent:[]};
+  games.init(t);
+  assert.ok(t.secretId <= 898);
+  assert.equal(games.answer(t, 906), true, 'a Gen 9 guess is allowed');
 });
