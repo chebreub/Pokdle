@@ -34,6 +34,7 @@ function wordleTrainingPick(seen) {
 }
 
 function startWordleTraining(total) {
+  if (typeof trackUsage === 'function') trackUsage('solo:wordletraining');
   ensureDailyWordleScreen();
   if (typeof closeOverlayModal === 'function') closeOverlayModal();
   showScreen('screen-wordle');

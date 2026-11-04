@@ -228,7 +228,7 @@ startHigherLowerMode=function(mode){
   verifiedHLLoading=true;clearHigherLowerTimeouts();clearHigherLowerRushInterval();
   const previous=higherLowerState;
   higherLowerState={...createHigherLowerState(mode),mode:mode==='rush60'?'rush60':'infinite'};
-  const pending=higherLowerState;renderHigherLowerScreen();trackUsage('solo:higherlower');
+  const pending=higherLowerState;renderHigherLowerScreen();trackUsage(mode==='rush60'?'solo:higherlowerrush':'solo:higherlower');
   return verifiedArcadeRequest('start',{mode:key,startId:crypto.randomUUID()}).then(data=>{
     if(!verifiedHLVisible(pending))return;
     if(!data?.ok){

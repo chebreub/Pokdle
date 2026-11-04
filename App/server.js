@@ -1450,27 +1450,21 @@ const usageMetrics = require("./lib/usage-metrics");
 const USAGE_EVENTS = new Set([
   ...usageMetrics.COMPLETION_EVENTS,
   "visit",
-  "solo:normal", "solo:daily", "solo:challenge", "solo:silhouette", "solo:pixel", "solo:mystery", "solo:cry",
-  "solo:quiz", "solo:description", "solo:weight", "solo:evolution", "solo:order", "solo:odd", "solo:quiestce", "solo:petitbac",
-  "solo:higherlower", "solo:connections", "solo:speedrun", "solo:statauction", "solo:scoreattack",
-  "solo:draft", "solo:statclash", "solo:emulator", "solo:shiny",
+  ...Object.keys(usageMetrics.SOLO_CATALOG).map(mode => "solo:" + mode),
   "party:create", "party:join",
-  "party:start:dexrace", "party:start:coop", "party:start:deduction", "party:start:quiestce1v1", "party:start:petitbac", "party:start:nearest", "party:start:guess", "party:start:typecombo", "party:start:duocriteria", "party:start:statclash", "party:start:statclashparty", "party:start:dessin",
-  "duel:create", "statclash:create",
-  "share:daily", "share:visit",
+  ...Object.keys(usageMetrics.PARTY_CATALOG),
+  "duel:create", "statclash:create", "share:daily", "share:visit",
 ]);
 const USAGE_LABELS = {
-  visit: "Visites", "solo:daily": "Pokémon du jour", "solo:normal": "Classique", "solo:challenge": "Challenge",
-  "solo:silhouette": "Silhouette", "solo:pixel": "Pixelisé", "solo:mystery": "Mystère", "solo:cry": "Cri",
-  "solo:quiz": "Quiz", "solo:description": "Description", "solo:weight": "Duel de poids", "solo:evolution": "Évolution",
-  "solo:order": "Ordre Pokédex", "solo:odd": "Intrus", "solo:quiestce": "Qui est-ce ?", "solo:petitbac": "Petit Bac", "solo:higherlower": "Higher or Lower",
-  "solo:connections": "Poké-Connections", "solo:speedrun": "Speedrun", "solo:statauction": "Enchères de stats",
-  "solo:scoreattack": "Score Attack", "solo:draft": "Draft Arènes", "solo:statclash": "Stat Clash (rapide)",
-  "solo:emulator": "Émulateur", "solo:shiny": "Shiny ou normal", "party:create": "Party — rooms créées", "party:join": "Party — joueurs rejoints",
-  "party:start:dexrace": "Party — Course au Pokédex", "party:start:coop": "Party — Enquête coop", "party:start:deduction": "Party — Pokémon mystère", "party:start:quiestce1v1": "Party — Qui est-ce ?", "party:start:petitbac": "Party — Petit Bac", "party:start:nearest": "Party — Numéro mystère", "party:start:guess": "Party — Course Pokémon", "party:start:typecombo": "Party — Combo de types",
-  "party:start:duocriteria": "Party — Duo de critères", "party:start:statclash": "Party — Meilleure stat",
-  "party:start:statclashparty": "Party — Stat Clash", "party:start:dessin": "Party — Dessine-le !", "duel:create": "Duel 1v1 — rooms", "statclash:create": "Stat Clash 1v1 — rooms",
-  "share:daily": "Partage — Pokémon du jour partagé", "share:visit": "Partage — arrivées par un lien de défi",
+  visit: "Visites",
+  ...Object.fromEntries(Object.entries(usageMetrics.SOLO_CATALOG).map(([mode, meta]) => ["solo:" + mode, meta.label])),
+  "party:create": "Party — salles créées",
+  "party:join": "Party — entrées dans un salon",
+  ...Object.fromEntries(Object.entries(usageMetrics.PARTY_CATALOG).map(([event, label]) => [event, "Party — " + label])),
+  "duel:create": "Duel 1v1 — salons créés",
+  "statclash:create": "Stat Clash 1v1 — salons créés",
+  "share:daily": "Pokémon du jour partagé",
+  "share:visit": "Arrivées via lien de défi",
 };
 const usageDays = new Map(); // dateKey -> { events: Map } (diagnostic since restart only)
 const USAGE_MAX_DAYS = 14;
@@ -1629,9 +1623,12 @@ app.get("/admin/stats", async (req, res) => {
   if (!adminKey) return res.status(503).send("Configure la variable d'environnement ADMIN_STATS_KEY sur Render pour activer cette page.");
   if ((req.query.key || "") !== adminKey) return res.status(403).send("Clé invalide.");
 
-  // Full UTC days only. Avoid showing a false decline during an incomplete day.
-  const days = [7, 14, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 14;
-  const end = new Date(Date.parse(usageMetrics.utcDay() + "T00:00:00.000Z") - 86400000);
+  // 1j = today UTC, 3j = today + two preceding UTC days (in progress).
+  // Longer periods retain the established full-day comparison semantics.
+  const days = [1, 3, 7, 14, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 14;
+  const todayUtc = usageMetrics.utcDay();
+  const livePeriod = days === 1 || days === 3;
+  const end = new Date(Date.parse(todayUtc + "T00:00:00.000Z") - (livePeriod ? 0 : 86400000));
   const endDay = usageMetrics.utcDay(end);
   const start = usageMetrics.startDay(days, end);
   let feedbackHtml = "<h2>Retours des joueurs</h2><p>Messages indisponibles.</p>";
@@ -1675,15 +1672,22 @@ app.get("/admin/stats", async (req, res) => {
       return { label: USAGE_LABELS[event] || event, values, total: values.reduce((a, b) => a + b, 0) };
     });
   const { renderStatsDashboard } = require("./lib/admin-stats-dashboard");
-  // Return of players, from the Pokémon du jour plays already kept (lib/daily-retention.js).
+  // Cohorts need mature days. Keep D+1 / D+7 based on the same 14
+  // completed UTC days regardless of the dashboard's short-term selection.
   let retention = null;
   try {
-    if (pgPool) retention = await require("./lib/daily-retention").dailyRetention(pgPool, start, endDay);
+    if (pgPool) {
+      const retentionEnd = new Date(Date.parse(todayUtc + "T00:00:00.000Z") - 86400000);
+      retention = await require("./lib/daily-retention").dailyRetention(
+        pgPool, usageMetrics.startDay(14, retentionEnd), usageMetrics.utcDay(retentionEnd)
+      );
+    }
   } catch (error) {
     console.warn("[stats] retention unavailable:", String(error.message || error).slice(0, 120));
   }
   res.type("html").send(renderStatsDashboard({
-    days, endDay, adminKey, metrics, uniqueRows, rawRows,
+    days, endDay, livePeriod, generatedAt: new Date().toISOString(),
+    adminKey, metrics, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
     bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention
   }));

@@ -70,6 +70,7 @@ function dossierAnswerFeel(s) {
   gameFeelReplay(document.querySelector('#dossier-question .dossier-feedback'),'is-new');
 }
 async function startDailyDossier() {
+  if (typeof trackUsage === 'function') trackUsage('solo:dossier');
   ensureDailyDossierScreen();closeOverlayModal();showScreen('screen-dossier');setGlobalNavActive('game');dailyDossierState=null;dailyDossierFeedback=false;
   for(const id of ['dossier-pokemon','dossier-progress','dossier-question','dossier-result'])document.getElementById(id).innerHTML='';
   document.getElementById('dossier-result').classList.add('hidden');document.getElementById('dossier-question').classList.remove('hidden');

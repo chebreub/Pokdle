@@ -143,6 +143,7 @@ async function gridRequest(action='',payload={}){
   }finally{clearTimeout(timer);if(serial===dailyGridSerial){dailyGridBusy=false;syncGridControls();}}
 }
 async function startDailyGrid(){
+  if (typeof trackUsage === 'function') trackUsage('solo:grid');
   ensureDailyGridScreen();closeOverlayModal();showScreen('screen-grid');setGlobalNavActive('game');
   dailyGridCell=null;document.getElementById('grid-form').classList.add('hidden');
   if(gridIsCurrent(dailyGridState))renderDailyGrid();

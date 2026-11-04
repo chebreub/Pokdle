@@ -136,7 +136,7 @@ function openHigherLowerMode() {
 
 function startHigherLowerMode(mode) {
   if (higherLowerIsPartyRound() && (partySession?.completed || partySession?.roundResolved)) return;
-  trackUsage("solo:higherlower");
+  trackUsage(mode === "rush60" ? "solo:higherlowerrush" : "solo:higherlower");
   if (!higherLowerState) higherLowerState = createHigherLowerState(mode);
   higherLowerState.mode = mode === "rush60" ? "rush60" : "infinite";
   higherLowerState.score = 0;
