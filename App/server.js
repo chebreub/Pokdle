@@ -937,6 +937,8 @@ app.get("/api/leaderboard", async (req, res) => {
 const statClashRooms = new Map();
 const draftScoreRooms = new Map();
 const partyRooms = new Map();
+const partyRewards = require("./lib/party-rewards");
+const { dailyCalendar: partyCalendar, dailyGuest: partyDailyGuest } = require("./lib/daily-game");
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
 // « Invite un ami » (lib/referrals.js): a bonus for both once the friend finds a first Pokémon du jour.
@@ -1732,6 +1734,10 @@ function sanitizePartyLevel(value) {
 }
 
 function joinPlayerToPartyRoom(room, socket, nickname, level = null) {
+  // Snapshot the real signed account/guest identity, never trust nickname or client payload.
+  const account = getSessionUser(socket.request);
+  const guestId = partyDailyGuest(SESSION_SECRET, parseAuthCookies(socket.request).pokdle_daily);
+  const rewardIdentity = account?.id ? "user:" + account.id : guestId ? "guest:" + guestId : null;
   socket.join(room.code);
   socket.data.partyRoomCode = room.code;
   const blue = room.players.filter(p => p.raceTeam === 'blue').length;
@@ -1740,6 +1746,7 @@ function joinPlayerToPartyRoom(room, socket, nickname, level = null) {
     id: socket.id,
     nickname,
     level,
+    rewardIdentity,
     connected: true,
     score: 0,
     correct: false,
@@ -1797,6 +1804,10 @@ function resolvePartyNearestRound(room) {
 
 function publicPartyRoomState(room, viewerId = null) {
   const revealed = room.status === "finished" || room.status === "complete";
+  const viewer = room.players.find((player) => player.id === viewerId);
+  const rewardProof = room.status === "complete" && viewer
+    ? partyRewards.issuePartyRewardProof(SESSION_SECRET, room, viewer.rewardIdentity, partyCalendar(new Date()).day)
+    : null;
   const gameMode = room.gameMode || "guess";
   const roundState = room.status === "waiting" ? null : gameMode === "dexrace" ? dexRace.publicRace(room) : gameMode === "dessin"
     ? dessinParty.publicDessin(room, viewerId, revealed)
@@ -1820,6 +1831,7 @@ function publicPartyRoomState(room, viewerId = null) {
   return {
     code: room.code,
     status: room.status,
+    rewardProof,
     hostId: room.hostId,
     minPlayers: PARTY_MIN_PLAYERS,
     maxPlayers: PARTY_MAX_PLAYERS,
@@ -1916,6 +1928,9 @@ function isPartyStatMode(room) {
 }
 
 async function startPartyGame(room) {
+  // A new round series gets a new server-only ID; old receipts cannot carry over.
+  room.rewardRunId = crypto.randomBytes(16).toString("hex");
+  room.completedAt = null;
   room.roundNumber = 1;
   room.totalRounds = partyTotalRoundsForMode(room.gameMode, room.configuredRounds, room.bacRounds);
   room.recentComboKeys = [];
@@ -1937,6 +1952,7 @@ function endPartyRound(room) {
   room.deadlineAt = null;
   if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) {
     room.status = "complete";
+    room.completedAt = Date.now();
   } else {
     room.status = "finished";
   }
@@ -1971,6 +1987,8 @@ function armPartyDessinDraw(room) {
 function resetPartyCampaign(room) {
   if (!room) return;
   clearPartyRoundTimer(room);
+  room.rewardRunId = null;
+  room.completedAt = null;
   room.status = "waiting";
   room.roundNumber = 0;
   const configuredRounds = Number(room.configuredRounds);
