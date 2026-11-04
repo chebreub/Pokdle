@@ -93,3 +93,9 @@ test("PostgreSQL: verified win records across 14 days are required, account-boun
     await admin.end();
   }
 });
+
+test("prestige play evidence is erased when a player deletes their account",()=>{
+  const fs=require("node:fs"),path=require("node:path");
+  const source=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
+  assert.match(source,/"prestige_verified_wins"\]\.map\(\(table\) => \[table, `DELETE FROM \$\{table\} WHERE account_id = \$1 OR identity = \$2`/);
+});
