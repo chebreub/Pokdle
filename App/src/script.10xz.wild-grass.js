@@ -364,7 +364,7 @@ if (typeof albumSlotHtml === "function") {
     const c = wildCaptures && wildCaptures[p.id];
     const count = c ? c.normal + c.shiny : 0;
     // Vu = pâle, avec un œil ; Attrapé = en couleur, avec une vraie Poké Ball (un shiny compte comme attrapé).
-    const caught = count > 0 || Boolean(entry.shiny);
+    const caught = count > 0;
     const mark = caught
       ? '<span class="alb-origin is-caught" title="Attrapé">' + (typeof ballImg === "function" ? ballImg("poke", 18) : "⚪") + (count > 1 ? "<b>×" + count + "</b>" : "") + '</span>'
       : '<span class="alb-origin is-seen" title="Vu (trouvé en jouant), pas encore attrapé">👁️</span>';

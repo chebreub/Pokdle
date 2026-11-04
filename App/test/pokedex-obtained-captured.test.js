@@ -63,13 +63,15 @@ function fixture() {
   return {ctx,mons,profile,header,intro,filters,legend,national,get rendered(){return rendered;}};
 }
 
-test("collection counts are disjoint in meaning and never turn a guessed Pokemon into a prize",()=>{
+test("claimed missions and secrets count as seen, never possessed until Ball capture",()=>{
   const f=fixture(),before=JSON.stringify(f.profile);
   const p=f.ctx.__progress(f.mons);
-  assert.deepEqual({...p},{seen:6,caught:2,obtained:4});
+  assert.deepEqual({...p},{seen:6,caught:2,obtained:2});
   assert.equal(f.ctx.__obtained(f.mons[0]),false,"guessed Chenipan is seen but not owned");
   assert.equal(f.ctx.__obtained(f.mons[4]),false,"historical Drattak guess is not a prestige prize");
   assert.equal(f.ctx.__obtained(f.mons[1]),true,"server-held Pikachu is captured");
+  assert.equal(f.ctx.__obtained(f.mons[2]),false,"completed Mewtwo mission is only a discovery");
+  assert.equal(f.ctx.__obtained(f.mons[3]),false,"claimed secret is only a discovery");
   assert.equal(f.ctx.__reward(f.mons[2]),"mission");
   assert.equal(f.ctx.__reward(f.mons[3]),"secret");
   assert.equal(f.ctx.__obtained(f.mons[5]),true,"expedition encounter is held");
@@ -84,7 +86,7 @@ test("filters distinguish all seen, actual capture, rewards and missing entries"
   }
   assert.deepEqual(ids("seen"),[10,25,150,151,373,380]);
   assert.deepEqual(ids("caught"),[25,380]);
-  assert.deepEqual(ids("obtained"),[25,150,151,380]);
+  assert.deepEqual(ids("obtained"),[25,380]);
   assert.deepEqual(ids("missing"),[1009]);
   assert.ok(!ids("obtained").includes(373),"rarity is not bypassed by guessing");
 });
@@ -94,23 +96,23 @@ test("collection UI shows 852 catchable, 1025 national on real site, and disting
   f.ctx.renderPokedexCollectionHub();
   assert.match(f.national.innerHTML,/👁️ Vus[\s\S]*?<em>6 \/ 7<\/em>/);
   assert.match(f.national.innerHTML,/Capturés[\s\S]*?<em>2 \/ 852<\/em>/);
-  assert.match(f.national.innerHTML,/◆ Obtenus[\s\S]*?<em>4 \/ 7<\/em>/);
-  assert.match(f.filters.innerHTML,/Obtenus/);
-  assert.match(f.intro.textContent,/Obtenu = capturé ou récompense réclamée/);
+  assert.match(f.national.innerHTML,/◆ Possédés[\s\S]*?<em>2 \/ 7<\/em>/);
+  assert.match(f.filters.innerHTML,/Possédés/);
+  assert.match(f.intro.textContent,/Une mission ne donne pas directement le Pokémon/);
   const badge=f.ctx.createPokedexCard(f.mons[2]).badge.innerHTML;
-  assert.match(badge,/Mission obtenue/);
-  assert.match(f.ctx.createPokedexCard(f.mons[3]).badge.innerHTML,/Secret obtenu/);
+  assert.match(badge,/Mission accomplie · Vu/);
+  assert.match(f.ctx.createPokedexCard(f.mons[3]).badge.innerHTML,/Secret découvert/);
   assert.match(f.ctx.createPokedexCard(f.mons[0]).badge.innerHTML,/Vu/);
   assert.match(f.ctx.createPokedexCard(f.mons[5]).badge.innerHTML,/Attrapé/);
 });
 
-test("missing server capture data never invents 0 captured or 0 obtained",()=>{
+test("missing server capture data never invents 0 captured or 0 owned",()=>{
   const f=fixture();
   f.ctx.wildCaptures=null;
   f.ctx.wildCatchableTotal=null;
   f.ctx.renderPokedexCollectionHub();
   assert.match(f.national.innerHTML,/Capturés[\s\S]*?<em>… \/ …<\/em>/);
-  assert.match(f.national.innerHTML,/Obtenus[\s\S]*?<em>… \/ 7<\/em>/);
+  assert.match(f.national.innerHTML,/Possédés[\s\S]*?<em>… \/ 7<\/em>/);
 });
 
 test("server catchable total is exactly wild pool plus six expedition legends, not all national species",()=>{

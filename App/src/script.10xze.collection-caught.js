@@ -1,8 +1,7 @@
-// ===== Collection : découvertes, captures et récompenses (4/11/2026) =====
-// Découvert (vu) : trouvé en jouant, depuis les découvertes du profil.
-// Capturé : encore possédé, depuis /api/wild/collection uniquement.
-// Obtenu : capturé OU véritable mission/secret réclamé (jamais une simple devinette).
-// Ces compteurs sont des vues dérivées : aucune migration ni nouvelle donnée locale.
+// ===== Collection : découvertes, missions et véritables captures =====
+// Mission/secret = découverte uniquement. Seule la collection de captures côté
+// serveur prouve qu'un Pokémon est possédé ; jamais un champ de profil local.
+// Aucun changement des sauvegardes : tous ces compteurs sont dérivés.
 function colCaughtCount(id) {
   const c = typeof wildCaptures !== "undefined" && wildCaptures ? wildCaptures[id] : null;
   return c ? (Number(c.normal) || 0) + (Number(c.shiny) || 0) : 0;
@@ -27,7 +26,7 @@ function colRewardKind(pokemon) {
   return null;
 }
 function colIsObtained(pokemon) {
-  return colCaughtCount(pokemon.id) > 0 || Boolean(colRewardKind(pokemon));
+  return colCaughtCount(pokemon.id) > 0;
 }
 function colCollectionProgress(base) {
   let seen = 0, caught = 0, obtained = 0;
@@ -52,7 +51,7 @@ function colEnsureCaptures() {
     if (loaded && typeof pokedexExperienceView !== "undefined" && pokedexExperienceView === "collection" && typeof renderPokedexGrid === "function") renderPokedexGrid();
   });
 }
-const COL_FILTERS = [["all", "Tous"], ["seen", "👁️ Vus"], ["caught", "Attrapés"], ["obtained", "◆ Obtenus"], ["shiny", "✨ Shinies"], ["missing", "? Manquants"], ["mission", "◆ À mériter"], ["secret", "✦ Secrets"]];
+const COL_FILTERS = [["all", "Tous"], ["seen", "👁️ Vus"], ["caught", "Attrapés"], ["obtained", "◆ Possédés"], ["shiny", "✨ Shinies"], ["missing", "? Manquants"], ["mission", "◆ À mériter"], ["secret", "✦ Secrets"]];
 
 if (typeof pokedexCollectionMatchesFilter === "function") {
   const colMatchesBefore = pokedexCollectionMatchesFilter;
@@ -85,7 +84,7 @@ if (typeof renderPokedexCollectionHub === "function") {
       id.dataset.vus = "1";
       const h3 = id.querySelector("h3"), p = id.querySelector("p");
       if (h3) h3.textContent = "Ma collection";
-      if (p) p.textContent = "Vu = découvert en jouant · Capturé = avec une Ball · Obtenu = capturé ou récompense réclamée.";
+      if (p) p.textContent = "Vu = découvert en jouant ou en mission · Possédé = capturé avec une Ball. Une mission ne donne pas directement le Pokémon.";
     }
     const filters = document.getElementById("pokedex-collection-filters");
     if (filters && !filters.dataset.vus) {
@@ -98,7 +97,7 @@ if (typeof renderPokedexCollectionHub === "function") {
     if (legend && !legend.dataset.vus) {
       legend.dataset.vus = "1";
       legend.innerHTML = '<span class="is-caught"><b>' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + '</b> Capturé avec une Ball (herbes ou expédition)</span><span class="is-seen"><b>👁️</b> Découvert en jouant</span>' +
-        '<span class="is-mission"><b>◆</b> Obtenu en récompense</span><span class="is-unknown"><b>?</b> Pas encore vu</span><span class="is-secret"><b>✦</b> Piste cachée</span>';
+        '<span class="is-mission"><b>◆</b> Mission accomplie : Pokémon vu, à capturer</span><span class="is-unknown"><b>?</b> Pas encore vu</span><span class="is-secret"><b>✦</b> Piste cachée</span>';
     }
     const national = document.getElementById("pokedex-collection-national");
     if (national) {
@@ -116,7 +115,7 @@ if (typeof renderPokedexCollectionHub === "function") {
       };
       national.innerHTML = bar("is-seen", "👁️ Vus", totals.seen, total, "Espèces découvertes en jouant") +
         bar("is-caught", (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + " Capturés", loaded ? totals.caught : null, catchable, "Capturés avec une Ball parmi les espèces sauvages et d'expédition") +
-        bar("is-mission", "◆ Obtenus", loaded ? totals.obtained : null, total, "Captures encore possédées et récompenses de missions ou secrets réclamées ; une simple découverte ne suffit pas") +
+        bar("is-mission", "◆ Possédés", loaded ? totals.obtained : null, total, "Espèces réellement capturées avec une Ball et encore possédées ; une mission ne donne qu’une découverte") +
         bar("is-shiny", "✨ Shinies", shinies, 0, "Shinies trouvés ou capturés") +
         '<div class="pokedex-collection-substats"><span><b>' + stats.formsFound + '</b> / ' + stats.formsTotal + ' formes</span><span><b>' + stats.missions + '</b> récompenses spéciales à débloquer</span></div>';
     }
@@ -138,7 +137,7 @@ if (typeof createPokedexCard === "function") {
     const badge = card.querySelector(".pokedex-collection-state");
     if (badge) {
       badge.classList.add(n ? "is-caught" : reward ? "is-mission" : "is-seen");
-      badge.innerHTML = n ? (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + "Attrapé" + (n > 1 ? " ×" + n : "") : reward ? (reward === "secret" ? "✦ Secret obtenu" : "◆ Mission obtenue") : "👁️ Vu";
+      badge.innerHTML = n ? (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + "Attrapé" + (n > 1 ? " ×" + n : "") : reward ? (reward === "secret" ? "✦ Secret découvert" : "◆ Mission accomplie · Vu") : "👁️ Vu";
       if (shiny) badge.insertAdjacentHTML("beforeend", " ✨");
     }
     return card;
