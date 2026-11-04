@@ -20,12 +20,13 @@ function fixture() {
   vm.runInContext(source+'\nthis.__missions=ALBUM_MISSIONS;this.__tiers=ALBUM_MISSION_TIERS;',context);
   return context;
 }
-test('catalogue contains exactly 108 curated missions, 12 for every generation',()=>{
+test('catalogue preserves all 108 original missions and adds a distinct Hoenn prestige mission',()=>{
   const f=fixture(),missions=Array.from(f.__missions);
-  assert.equal(missions.length,108);
+  assert.equal(missions.length,109);
   assert.equal(new Set(missions.map(m=>m.id)).size,108);
   assert.equal(new Set(missions.map(m=>m.pokemonId)).size,108);
-  for(let gen=1;gen<=9;gen++) assert.equal(missions.filter(m=>m.generation===gen).length,12,'gen '+gen);
+  for(let gen=1;gen<=9;gen++) assert.equal(missions.filter(m=>m.generation===gen).length,gen===3?13:12,'gen '+gen);
+  assert.equal(missions.find(m=>m.id==='g3_salamence').pokemonId,373);
 });
 test('prestige and legendary rewards are gated until their mission is claimed',()=>{
   const f=fixture();
