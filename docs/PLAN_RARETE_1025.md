@@ -28,13 +28,13 @@ Le tirage auparavant uniforme dans `WILD_POOL` et dans chacune des six zones est
 | Peu commun | 100–189 | 18 | 131 |
 | Rare | 60–99 | 8 | 186 |
 | Très rare | 25–59 (sauf Drattak) | 3 | 301 |
-| Exceptionnel | 1–24 | 1 | 4 |
+| Fuyant (capture difficile) | 1–24 | 16 | 4 |
 | Prestige provisoire | Drattak #373 | 1 | 1 |
-| **Total** | | **12 782 unités** (toutes espèces) | **846** |
+| **Total** | | **12 842 unités** (toutes espèces) | **846** |
 
-*Le taux de capture officiel n'est qu'un indicateur imparfait de rareté d'apparition. Les starters, évolutions et espèces populaires devront être revus manuellement dans un lot de tuning. Les classes n'ont pas de relation avec le taux de succès d'un lancer de Poké Ball.*
+*Le taux de capture officiel n'est qu'un indicateur imparfait de rareté d'apparition. Les starters, évolutions et espèces populaires devront être revus manuellement. Exception volontaire : les quatre espèces ayant un taux officiel de 3 (Terhal, Métang, Pondralugon et Pomdorochi) ont un poids d'apparition compensateur de 16 : leur capture est déjà extrêmement difficile, il ne faut pas cumuler deux barrières excessives. Les chances de réussir un lancer de Ball restent strictement inchangées.*
 
-Exemples : dans un tirage « Au hasard », un exemplaire commun a **36 fois** le poids de Drattak. Drattak représente environ **1 rencontre sur 12 782** au hasard, **1 sur 1 392** dans la zone Volcan et **1 sur 3 653** dans la zone Mer (avant capture). Ces probabilités sont très difficiles : une voie de prestige réutilisable doit être conçue avant de supprimer totalement sa présence sauvage. **Ces fréquences ne sont pas des garanties de rencontre**.
+Exemples : dans un tirage « Au hasard », un exemplaire commun a **36 fois** le poids de Drattak. Drattak représente environ **1 rencontre sur 12 842** au hasard, **1 sur 1 422** dans la zone Volcan et **1 sur 3 653** dans la zone Mer (avant capture). Ces probabilités sont très difficiles : une voie de prestige réutilisable doit être conçue avant de supprimer totalement sa présence sauvage. **Ces fréquences ne sont pas des garanties de rencontre**.
 
 Invariant : l'ensemble des espèces autorisées **ne change pas** ; seuls leurs poids changent. Un légendaire exclu, une mission ou un Pokémon réservé ne peut pas entrer dans une zone via ce mécanisme.
 
