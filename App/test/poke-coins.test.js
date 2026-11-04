@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createBallService, initBallsDb, COIN_PLAY_CAP, SHOP_PRICES, rechargePrice } = require('../lib/poke-balls');
+const { issuePartyRewardProof } = require('../lib/party-rewards');
 
 test('shop prices: the original ones, the recharge doubles each time', () => {
   assert.deepEqual(SHOP_PRICES, { recharge: 100, poke: 50, great: 120, ultra: 300 });
@@ -28,29 +29,33 @@ async function withSchema(run) {
 test('PostgreSQL: Pokédollars are earned with an account, spent at the shop, never below zero', { skip: !process.env.QA_DATABASE_URL, timeout: 30000 }, async () => {
   await withSchema(async (db) => {
     const now = new Date('2026-11-03T08:30:00Z'); // 9 h 30 à Paris : 12 rencontres ouvertes
-    const balls = createBallService({ db, clock: () => now });
+    const balls = createBallService({ db, clock: () => now, secret: 'test-secret' });
     await initBallsDb(db);
     await db.query('CREATE TABLE daily_plays(identity TEXT, day DATE, status TEXT)');
 
     // Sans compte : pas de ₽, et la boutique demande un compte.
     const guest = { key: 'guest:c1', guestKey: 'guest:c1', accountId: null };
-    let s = await balls.earn(guest, { mode: 'odd', result: 'win', score: 14 });
+    let s = await balls.state(guest);
+    await assert.rejects(balls.earn(guest, { mode: 'odd', result: 'win', score: 14 }), /verified_game_required/);
     assert.deepEqual([s.coins.enabled, s.coins.balance, s.coinsAdded.length], [false, 0, 0]);
     await assert.rejects(balls.buy(guest, { item: 'poke' }), /account_required/);
 
     const me = { key: 'user:7', guestKey: 'guest:c2', accountId: '7' };
-    // Un mode pas encore vérifié par le serveur donne sa Ball, mais plus de ₽ (lot B de l'audit, 4/11).
-    s = await balls.earn(me, { mode: 'odd', result: 'win', score: 14 });
-    assert.deepEqual(s.coinsAdded, [], 'no Pokédollars from a declared result');
-    assert.ok(s.added.some((g) => g.source === 'mode:odd'), 'the Ball is still given');
-    s = await balls.earn(me, { mode: 'order', result: 'loss', score: 9 });
+    // Aucun gain, même une Ball, ne provient d'un résultat inventé côté navigateur.
+    await assert.rejects(balls.earn(me, { mode: 'odd', result: 'win', score: 14 }), /verified_game_required/);
+    await assert.rejects(balls.earn(me, { mode: 'order', result: 'loss', score: 9 }), /verified_game_required/);
+    s = await balls.state(me);
     assert.deepEqual([s.coins.balance, s.coins.today, s.coins.played], [0, 0, 0]);
     // 🎉 Party Room : 150 ₽ + 1 Poké Ball, une fois par jour.
     const bagBefore = s.bag.poke;
-    s = await balls.earn(me, { mode: 'party' });
+    await assert.rejects(balls.earn(me, { mode: 'party' }), /party_proof_required/);
+    const room = {status:'complete',rewardRunId:'b'.repeat(32),completedAt:now.getTime(),
+      players:[{rewardIdentity:'user:7'},{rewardIdentity:'guest:other'}]};
+    const partyProof = issuePartyRewardProof('test-secret', room, 'user:7', '2026-11-03');
+    s = await balls.earn(me, { mode: 'party', partyProof });
     assert.deepEqual(s.coinsAdded, [{ source: 'day:party', amount: 150 }]);
     assert.equal(s.bag.poke, bagBefore + 1);
-    s = await balls.earn(me, { mode: 'party' });
+    s = await balls.earn(me, { mode: 'party', partyProof });
     assert.deepEqual([s.coinsAdded.length, s.coins.balance], [0, 150]);
     assert.ok(s.coins.done.includes('party'));
 
