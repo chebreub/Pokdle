@@ -374,11 +374,11 @@ function albumMissionCard(mission) {
   const action = state.claimed
     ? `<button type="button" class="btn-ghost" data-action="viewAlbumMissionReward" data-args='["${mission.id}"]'>Voir la découverte →</button>`
     : state.ready
-      ? `<button type="button" class="btn-blue" data-action="claimAlbumMission" data-args='["${mission.id}"]'>Réclamer ${escapeHtml(pokemon.name)} →</button>`
+      ? `<button type="button" class="btn-blue" data-action="claimAlbumMission" data-args='["${mission.id}"]'>Découvrir ${escapeHtml(pokemon.name)} →</button>`
       : hidden ? '' : `<button type="button" class="btn-ghost" data-action="playAlbumMission" data-args='["${mission.id}"]'>${escapeHtml(albumMissionNextAction(mission, state).label)} →</button>`;
   return `<article id="album-mission-${mission.id}" class="album-mission-card tier-${mission.tier} ${state.ready ? 'is-ready' : ''} ${state.claimed ? 'is-claimed' : ''}">
     <div class="album-mission-top"><span class="album-mission-tier">${tier.icon} ${tier.label}</span><span>Gen ${mission.generation}</span></div>
-    <div class="album-mission-reward">${reward}<div><small>${state.claimed ? 'DÉCOUVERT · NON CAPTURÉ' : state.ready ? 'DÉCOUVERTE PRÊTE' : hidden ? 'POKÉMON SECRET' : 'DÉCOUVERTE'}</small><h4>${hidden ? '???' : escapeHtml(pokemon.name)}</h4><span>${escapeHtml(mission.title)}</span></div></div>
+    <div class="album-mission-reward">${reward}<div><small>${state.claimed ? 'DÉCOUVERTE VALIDÉE' : state.ready ? 'DÉCOUVERTE PRÊTE' : hidden ? 'POKÉMON SECRET' : 'DÉCOUVERTE'}</small><h4>${hidden ? '???' : escapeHtml(pokemon.name)}</h4><span>${escapeHtml(mission.title)}</span></div></div>
     <p>${escapeHtml(mission.hint)}</p>
     <progress max="${state.total}" value="${state.done}" aria-label="Progression ${escapeHtml(mission.title)}"></progress>
     ${reqs}${action}
