@@ -618,3 +618,12 @@ body.theme-dark .shop-qty button.is-on{background:#f5efe6;border-color:#f5efe6;c
 .shop-item.is-hero{flex-wrap:wrap;row-gap:10px}
 .shop-hero-foot{flex-basis:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px dashed rgba(62,155,87,.35)}
 .shop-hero-foot .shop-steps{margin:0}
+/* 🎁 Les gains annoncés avant de jouer (4/11/2026) : une ligne sous la barre du jeu. */
+.reward-line{display:flex;align-items:center;gap:8px;margin:8px 0;padding:8px 12px;border-radius:14px;background:#FFF4D1;border:2px solid #F2D27A;color:#2E2A33;font:800 13px/1.35 Nunito,sans-serif}
+.reward-line b{font-weight:900}
+.reward-line.is-done{background:#F1FAF2;border-color:rgba(62,155,87,.3);color:#2F6E2A}
+.reward-line.is-training{background:#F3EEE6;border-color:rgba(46,42,51,.12);color:#5c5663}
+.reward-ball{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid #2E2A33;background:linear-gradient(#E3350D 0 47%,#2E2A33 47% 53%,#fff 53%)}
+body.theme-dark .reward-line{background:#3a3320;border-color:#6b5a26;color:#f5efe6}
+body.theme-dark .reward-line.is-training{background:#2f2a35;border-color:rgba(255,255,255,.1);color:#cfc7d6}
+body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;color:#bfe8c8}
