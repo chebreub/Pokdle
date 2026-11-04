@@ -102,7 +102,10 @@ renderWeightBattlePanel = function () {
         setGameCounter(state.verified === s ? (localCorrect ? s.score + 1 : 0) : state.verified.score, "Série");
       }, 0);
       const onScreen = () => weightBattleState === state && gameMode === 'weight' && document.body.dataset.screen === 'screen-game';
-      state.pending = verifiedArcadeRequest('answer', {mode:'weight',sessionId:s.sessionId,round:s.round,choice:p.id}).then(data => {
+      // Réponse perdue sur le réseau : la même réponse repart une fois (le serveur ne la compte qu'une fois).
+      const payload = {mode:'weight',sessionId:s.sessionId,round:s.round,choice:p.id};
+      state.pending = verifiedArcadeRequest('answer', payload)
+        .then(data => data?.ok || (data && data.error) ? data : verifiedArcadeRequest('answer', payload)).then(data => {
         state.busy = false;
         if (!data?.ok) { if (onScreen()) verifiedArcadeError(data,'weight'); return; }
         const result = data.arcade;
