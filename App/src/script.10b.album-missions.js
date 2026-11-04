@@ -65,7 +65,7 @@ const ALBUM_MISSIONS = [
   albumMission('g3_absol',359,3,'expert','Présage','Anticipe avant d’avoir besoin de tous les indices.',[AMR.quick('normal',3,4),AMR.type('Ténèbres',7)]),
   albumMission('g3_flygon',330,3,'prestige','Vent du désert','Sol et Dragon doivent être familiers.',[AMR.type('Sol',9),AMR.type('Dragon',7)]),
   albumMission('g3_metagross',376,3,'prestige','Calcul parfait','La meilleure équipe de Hoenn demande des chiffres solides.',[AMR.draft(3,510),AMR.record('quizHighScore',9,'Atteindre 9 au Quiz')]),
-  albumMission('g3_salamence',373,3,'prestige','L’envol du dernier dragon','Cette mission révèle Drattak. Pour le capturer, relève ensuite l’épreuve de prestige vérifiée côté serveur.',[AMR.missions(['g3_metagross'],'Découvrir Métalosse grâce à sa mission'),AMR.gen(3,42),AMR.type('Dragon',12),AMR.draft(3,520)]),
+  albumMission('g3_salamence',373,3,'prestige','Le rêve de Draby','Retrouve la lignée qui rêvait de voler. Cette mission ne fait que révéler Drattak : sa capture exige ensuite une véritable épreuve.',[AMR.specific([371,372],2,'Découvrir Draby et Drackhaus'),AMR.wins('cry',3,'Réussir 3 parties Cri'),AMR.gen(3,28,'Découvrir 28 Pokémon de Hoenn')]),
   albumMission('g3_kyogre',382,3,'legendary','Le monde sous la pluie','Hoenn côté mer.',[AMR.gen(3,38),AMR.type('Eau',14)]),
   albumMission('g3_groudon',383,3,'legendary','Le monde sous le soleil','Hoenn côté terre.',[AMR.gen(3,38),AMR.type('Sol',10)]),
   albumMission('g3_rayquaza',384,3,'legendary','Maître des cieux','Le ciel ne s’ouvre qu’après la mer et la terre.',[AMR.missions(['g3_kyogre','g3_groudon'],'Obtenir Kyogre et Groudon'),AMR.draft(3,520),AMR.type('Dragon',9)]),
