@@ -101,6 +101,7 @@ async function submitGuess() {
   if (!found) { showErr(`"${raw}" introuvable dans le pool actif.`); return; }
   if (gameMode === "daily") { clearErr(); return requestDailyObservedState(found, raw); }
   if (guessedSet.has(found.name)) { showErr(`Tu as déjà proposé ${found.name} !`); return; }
+  if (typeof verifiedGuessActive === "function" && verifiedGuessActive()) { clearErr(); return verifiedGuessSubmit(found, raw); }
   clearErr();
   attempts += 1; setGameCounter(attempts);
   guessedNames.push(found.name); guessedSet.add(found.name);
@@ -113,6 +114,7 @@ async function submitGuess() {
 
 function surrenderGame() {
   if (gameMode === "daily") { if (!gameOver) confirmDailySurrender(); return; }
+  if (!gameOver && typeof verifiedGuessActive === "function" && verifiedGuessActive()) { verifiedGuessAbandon(); return; }
   if (gameOver || !secretPokemon || gameMode === "quiz") return;
 
   gameOver = true;

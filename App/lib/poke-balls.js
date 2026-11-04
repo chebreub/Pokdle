@@ -504,6 +504,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     arcadeNext: (who, body) => arcadeRun(who,body,'next'),
     arcadeAnswer: (who, body) => arcadeRun(who,body,'answer'),
     arcadeFinish: (who, body) => arcadeRun(who,body,'finish'),
+    arcadeAbandon: (who, body) => arcadeRun(who,body,'abandon'),
     arcadeImageSpec: arcade.imageSpec,
     earn: (who, body) => run(who, async () => {
       if (verifiedArcade.MODES.includes(String(body.mode || ""))) throw fail("verified_game_required",400);
@@ -574,7 +575,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
       res.status(e.status || 503).json({ ok: false, error: e.status ? e.code : "unavailable" });
     }
   };
-  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"],["finish","arcadeFinish"]]) {
+  for (const [route, method] of [["start","arcadeStart"],["answer","arcadeAnswer"],["next","arcadeNext"],["finish","arcadeFinish"],["abandon","arcadeAbandon"]]) {
     app.post("/api/arcade/" + route, express.json({limit:"1kb"}), handle((who,req) => service[method](who,req.body || {}),null,true));
   }
   const loadArt = artworkLoader || verifiedArcade.createArcadeArtworkLoader();

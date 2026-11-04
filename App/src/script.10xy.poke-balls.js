@@ -264,7 +264,8 @@ function ballScoreFromHistory(entry) {
 }
 function earnBallsAfterGame(entry) {
   const mode = String(entry && entry.mode || "");
-  if (["weight","shiny","quiz","higher-lower","higher-lower-rush"].includes(mode)) return Promise.resolve(null);
+  // Les modes vérifiés sont payés par le serveur pendant la partie ; une partie locale (service indisponible) ne paie pas.
+  if (["weight","shiny","quiz","higher-lower","higher-lower-rush","pixel","silhouette"].includes(mode)) return Promise.resolve(null);
   if (mode === "daily" || mode === "challenge") return refreshBalls();
   if (!BALL_ARCADE_MODES.has(mode) || !["win", "loss"].includes(entry.result)) return Promise.resolve(null);
   // Une partie de la Party Room ne compte pas : elle a ses propres récompenses.

@@ -254,6 +254,8 @@ function startSilhouetteGame() {
   }
 
   gameMode = "silhouette";
+  // Hors Party Room, le serveur tire le mystère (script.10xzk.verified-guess.js) ; sinon, jeu local.
+  if (typeof verifiedGuessStart === "function" && verifiedGuessStart("silhouette", pool)) return;
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
@@ -266,6 +268,7 @@ function startPixelGame() {
   }
 
   gameMode = "pixel";
+  if (typeof verifiedGuessStart === "function" && verifiedGuessStart("pixel", pool)) return;
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
   startGameWithSecret(secret, pool);
 }
@@ -792,7 +795,8 @@ function updateSilhouettePanel(reveal) {
 
   if (!box || !img) return;
 
-  if (gameMode !== "silhouette" || !secretPokemon) {
+  const verifiedImage = typeof verifiedGuessImage === "function" ? verifiedGuessImage("silhouette") : "";
+  if (gameMode !== "silhouette" || (!secretPokemon && !verifiedImage)) {
     box.classList.add("hidden");
     box.classList.remove("revealed");
     img.src = "";
@@ -803,7 +807,7 @@ function updateSilhouettePanel(reveal) {
   const totalLevels = 7;
   const level = reveal ? totalLevels : Math.min(totalLevels, attempts + 1);
   const progress = Math.round((level / totalLevels) * 100);
-  const url = getPokemonSprite(secretPokemon);
+  const url = verifiedImage && !secretPokemon ? verifiedImage : getPokemonSprite(secretPokemon);
   box.classList.remove("hidden");
   img.src = url;
   img.alt = "Vue zoomée du Pokémon mystère";
@@ -834,7 +838,7 @@ function updateSilhouettePanel(reveal) {
       // Nothing shows until the detail is chosen, so the view never slides from the middle to it.
       img.style.visibility = "hidden";
       zoomFocus(url, (focus) => {
-        if (gameMode !== "silhouette" || !secretPokemon || getPokemonSprite(secretPokemon) !== url || box.classList.contains("revealed")) return;
+        if (gameMode !== "silhouette" || img.getAttribute("src") !== url || box.classList.contains("revealed")) return;
         img.style.transition = "none";
         apply(focus);
         void img.offsetWidth;
@@ -943,7 +947,8 @@ function updatePixelPanel(reveal) {
 
   if (!box || !img) return;
 
-  if (gameMode !== "pixel" || !secretPokemon) {
+  const verifiedImage = typeof verifiedGuessImage === "function" ? verifiedGuessImage("pixel") : "";
+  if (gameMode !== "pixel" || (!secretPokemon && !verifiedImage)) {
     box.classList.add("hidden");
     box.classList.remove("revealed");
     img.src = "";
@@ -955,7 +960,7 @@ function updatePixelPanel(reveal) {
   const totalLevels = PIXEL_SIDES.length + 1;
   const level = reveal ? totalLevels : Math.min(totalLevels, attempts + 1);
   box.classList.remove("hidden");
-  const spriteUrl = getPokemonSprite(secretPokemon);
+  const spriteUrl = verifiedImage && !secretPokemon ? verifiedImage : getPokemonSprite(secretPokemon);
   const side = reveal ? 0 : PIXEL_SIDES[attempts] || 0;
   img.alt = "Pokémon pixelisé";
   if (levelEl) levelEl.textContent = reveal ? "Révélé" : "Netteté " + level + " / " + totalLevels;
@@ -967,7 +972,7 @@ function updatePixelPanel(reveal) {
   if (!side) { img.src = spriteUrl; img.style.filter = "none"; return; }
   // Hide the sharp picture until its pixelated copy is ready.
   img.style.filter = "blur(18px)";
-  const token = secretPokemon.id + ":" + attempts;
+  const token = spriteUrl + ":" + attempts;
   img.dataset.pixelToken = token;
   pixelatedSprite(spriteUrl, side, (dataUrl) => {
     if (img.dataset.pixelToken !== token) return;
