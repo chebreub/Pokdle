@@ -6,6 +6,7 @@
 // Sans compte, les Balls sont gardées sous l'identité invitée et passent sur le compte à la connexion.
 const crypto = require("node:crypto");
 const verifiedArcade = require("./verified-arcade");
+const wildRarity = require("./wild-rarity");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
 
@@ -99,6 +100,20 @@ const ZONE_POOLS = Object.freeze((() => {
   const types = new Map(list.filter((p) => p.id <= 1025).map((p) => [Number(p.id), [p.type1, p.type2].filter(Boolean)]));
   return Object.fromEntries(Object.entries(ZONES).map(([key, zone]) => [key, Object.freeze(WILD_POOL.filter((id) => (types.get(id) || []).some((t) => zone.includes(t))))]));
 })());
+// Les zones conservent les mêmes espèces : seul le tirage est désormais pondéré.
+const WILD_ENCOUNTER_TABLE = wildRarity.buildWildEncounterTable(WILD_POOL, CAPTURE.rates);
+const ZONE_ENCOUNTER_TABLES = Object.freeze(Object.fromEntries(
+  Object.entries(ZONE_POOLS).map(([zone, ids]) => [zone, wildRarity.buildWildEncounterTable(ids, CAPTURE.rates)])
+));
+// Inventaire exhaustif, utilisé pour contrôler les voies d'obtention sans déverrouiller d'espèces.
+function secretPokemonIds() {
+  const fs = require("fs"), path = require("path");
+  const source = fs.readFileSync(path.join(__dirname, "..", "src", "script.11.secrets.js"), "utf8");
+  return [...source.matchAll(/\{ id:\s*'[^']+',\s*pokemonId:\s*(\d+)/g)].map((m) => Number(m[1]));
+}
+const ACQUISITION_CATALOGUE = wildRarity.acquisitionCatalogue(
+  1025, WILD_POOL, missionPokemonIds(), EXPEDITIONS.map((e) => e.legend), secretPokemonIds()
+);
 const RELEASES_PER_DAY = 10;
 const fail = (code, status = 409) => Object.assign(new Error(code), { code, status });
 
@@ -362,8 +377,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (st.left <= 0) throw fail("no_encounters_left");
     const bag = await bagOf(c, who);
     if (!BALLS.some((b) => bag[b] > 0)) throw fail("no_balls");
-    const pool = zone ? ZONE_POOLS[zone] : WILD_POOL;
-    const pokemonId = pool[randomInt(pool.length)];
+    const table = zone ? ZONE_ENCOUNTER_TABLES[zone] : WILD_ENCOUNTER_TABLE;
+    const pokemonId = wildRarity.drawWildPokemon(table, randomInt);
     const shiny = randomInt(SHINY_ODDS) === 0;
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,zone) VALUES($1,$2,$3,$4,$5,$6) RETURNING *", [who.key, who.accountId || null, day, pokemonId, shiny, zone || null])).rows[0];
     return { encounter: encounterView(row), fresh: true };
@@ -614,4 +629,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
