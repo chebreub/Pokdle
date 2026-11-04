@@ -75,7 +75,7 @@ const HISTORY_TO_LAUNCH = Object.freeze({
   quiestce: "quiestce",
   petitbac: "petitbac",
   "higher-lower": "higherlower",
-  "higher-lower-rush": "higherlowerrush",
+  "higher-lower-rush": "higherlower",
   "poke-connections": "connections",
   speedrun: "speedrun",
   "stat-auction": "statauction",
@@ -89,7 +89,7 @@ const COMPLETION_EVENTS = Object.freeze(Object.keys(HISTORY_TO_LAUNCH).flatMap(
   (mode) => ["win", "loss"].map((result) => "complete:" + mode + ":" + result)
 ));
 const COMPLETION_EVENT_SET = new Set(COMPLETION_EVENTS);
-const FINISHABLE_LAUNCHES = new Set(Object.values(HISTORY_TO_LAUNCH));
+const FINISHABLE_LAUNCHES = new Set([...Object.values(HISTORY_TO_LAUNCH), "higherlowerrush"]);
 
 function completionEvent(mode, result) {
   const event = "complete:" + mode + ":" + result;
@@ -203,7 +203,10 @@ function summarizeModes(rows, labels = {}) {
     }
     if (!COMPLETION_EVENT_SET.has(event)) continue;
     const last = event.lastIndexOf(":");
-    const mode = HISTORY_TO_LAUNCH[event.slice(9, last)];
+    // Stats split the 60-second variant; the shared HISTORY_TO_LAUNCH mapping
+    // remains unchanged because rewards also rely on it for daily caps.
+    const modeName = event.slice(9, last);
+    const mode = modeName === "higher-lower-rush" ? "higherlowerrush" : HISTORY_TO_LAUNCH[modeName];
     const outcome = event.slice(last + 1);
     const item = get(mode);
     item.completions += hits;
