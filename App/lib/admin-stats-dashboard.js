@@ -293,7 +293,7 @@ ${retentionKpi(retention)}
     <div class="party">
       <div class="mini"><strong>${number(partyCreated)}</strong><span>Salles créées</span></div>
       <div class="mini"><strong>${number(partyJoined)}</strong><span>Entrées en salle</span></div>
-      <div class="mini"><strong>${number(partyRounds)}</strong><span>Manches lancées</span></div>
+      <div class="mini"><strong>${number(partyRounds)}</strong><span>Manches démarrées</span></div>
     </div>
     <h3>Modes lancés en Party Room</h3>
     <div class="table-scroll"><table><thead><tr><th>Mode multijoueur</th><th>Lancements</th></tr></thead><tbody>${partyRows}</tbody></table></div>
