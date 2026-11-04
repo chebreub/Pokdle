@@ -31,13 +31,14 @@ test("rarity is custom encounter weighting, not a change to official catch rates
   assert.equal(wildRarity(11, CAPTURE.rates), "uncommon");
   assert.equal(wildRarity(26, CAPTURE.rates), "rare");
   assert.equal(wildRarity(1, CAPTURE.rates), "scarce");
-  assert.equal(wildRarity(374, CAPTURE.rates), "exceptional");
+  assert.equal(wildRarity(374, CAPTURE.rates), "elusive");
   assert.equal(wildRarity(373, CAPTURE.rates), "prestige");
   assert.deepEqual(PRESTIGE_WILD_IDS, [373]);
   assert.ok(RARITY_WEIGHTS.common > RARITY_WEIGHTS.uncommon);
   assert.ok(RARITY_WEIGHTS.uncommon > RARITY_WEIGHTS.rare);
   assert.ok(RARITY_WEIGHTS.rare > RARITY_WEIGHTS.scarce);
   assert.ok(RARITY_WEIGHTS.scarce > RARITY_WEIGHTS.prestige);
+  assert.ok(RARITY_WEIGHTS.elusive > RARITY_WEIGHTS.scarce, "low official catch rates already make these species difficult to capture");
   assert.equal(CAPTURE.rates[373], 45);
   assert.equal(CAPTURE.rates[10], 255);
 });
