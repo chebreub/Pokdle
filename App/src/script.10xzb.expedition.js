@@ -24,9 +24,9 @@ function drattakPrestigeHtml() {
     ? '<span>✅ La lignée retrouvée : ' + (p.lineageIds.includes(371) ? 'Draby' : 'Drackhaus') + ' a été capturé avec une Ball.</span>'
     : '<span>🔒 Retrouve et capture un Draby ou un Drackhaus dans les hautes herbes. Ils vivent notamment près du volcan.</span>';
   const trials = [
-    ['cry','Cri','Le murmure des falaises','Un cri résonne au bord d’une falaise de Hoenn.'],
-    ['silhouette','Silhouette','L’ombre sans ailes','Une silhouette sans ailes regarde le ciel depuis les hauteurs.'],
-    ['description','Description','La mémoire de la pierre','Sa tête, durcie par ses sauts, garde la trace de ses rêves.']
+    ['cry','Cri','Le murmure des falaises','Un cri de Dragon résonne au pied de la falaise.'],
+    ['silhouette','Silhouette','L’ombre sans ailes','Une silhouette immobile, protégée par une cuirasse, contemple le ciel.'],
+    ['description','Description','La mémoire de la pierre','Ce Pokémon n’est ni le premier rêveur, ni celui qui vole enfin.']
   ];
   const trialsHtml = trials.map(([mode,label,title,clue]) => {
     const won = Number(p.wins?.[mode] || 0),goal = Number(p.goal?.modes?.[mode] || 3);
@@ -41,7 +41,7 @@ function drattakPrestigeHtml() {
   else if (p.cooldown) next = '<p class="exp-note">Drattak a quitté les falaises. Nouvelle tentative à partir du ' +
     escapeHtml(p.nextAttemptDay.split("-").reverse().join("/")) + ', après de nouvelles épreuves.</p>';
   else if (p.available) next = '<div class="exp-prestige-riddle"><strong>✦ Le secret de la falaise</strong>' +
-    '<p>« Sans ailes, j’ai bravé mille fois le vide. Ma tête est devenue solide, mais je ne rêvais que de voler. Qui suis-je ? »</p>' +
+    '<p>« Entre celui qui rêvait de voler et celui qui déploie ses ailes, je demeure immobile dans mon armure. Qui suis-je ? »</p>' +
     '<label for="prestige-drattak-answer">Le nom du Pokémon</label>' +
     '<input id="prestige-drattak-answer" type="text" maxlength="50" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ta réponse" />' +
     '<button type="button" class="exp-legend-cta" data-action="meetPrestigeDrattak">🐉 Ouvrir le passage vers Drattak</button>' +
