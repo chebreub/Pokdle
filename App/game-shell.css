@@ -1765,3 +1765,45 @@ body.theme-dark .tb-random .tb-gens button[aria-pressed="true"] {background:#F4E
 body.theme-dark .wild-gotcha.catch-card{background:#26222c;border-color:rgba(255,255,255,.1);color:#f5efe6}
 body.theme-dark .catch-card .cc-stats div{background:#2f2a36;border-color:rgba(255,255,255,.08)}
 body.theme-dark .catch-card .cc-num,body.theme-dark .catch-card .cc-stats small,body.theme-dark .wild-gotcha.catch-card .cc-line{color:#cfc6d8}
+
+/* 📕 Carnet façon Pokédex (4/11/2026, maquette validée, src/script.10xzp.dex-carnet.js). */
+#overlay-modal.is-dex[data-kind="album"] .overlay-card{background:#D83A3F!important;border:0!important;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+#overlay-modal.is-dex[data-kind="album"] .overlay-head{background:#D83A3F!important;border:0!important;padding-bottom:6px}
+#overlay-modal.is-dex[data-kind="album"] #overlay-title{color:#fff!important;font-family:Fredoka,Nunito,sans-serif;display:flex;align-items:center;gap:10px}
+#overlay-modal.is-dex[data-kind="album"] #overlay-title::before{content:"";width:28px;height:28px;flex:0 0 auto;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle at 35% 35%,#BFE7FF,#2F8BD8 60%,#1C5E99)}
+#overlay-modal.is-dex[data-kind="album"] .overlay-close{background:rgba(0,0,0,.18);color:#fff;border-color:transparent}
+#overlay-modal.is-dex #overlay-body .alb{background:#FFF8EF;border:4px solid #A82A2F;border-radius:22px;padding:12px;color:#2E2A33}
+#overlay-modal.is-dex .alb-tabs button.is-on,#overlay-modal.is-dex .alb-chip.is-on{background:#2E2A33;color:#fff;border-color:#2E2A33}
+#overlay-modal.is-dex .alb-binder{background:none;padding:0;box-shadow:none;border:0}
+#overlay-modal.is-dex .alb-pager{display:none}
+#overlay-modal.is-dex .alb-page{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;padding:0;background:none}
+#overlay-modal.is-dex .alb-slot{aspect-ratio:auto;min-height:118px;justify-content:flex-start;padding:22px 6px 8px;border-radius:14px;background:#fff;border:1.5px solid #EFE4D3;box-shadow:none}
+#overlay-modal.is-dex .alb-slot[hidden]{display:none}
+#overlay-modal.is-dex .alb-slot > img{width:72px;height:72px;max-height:none;object-fit:contain}
+#overlay-modal.is-dex .alb-slot .alb-origin{position:absolute;right:6px;top:4px;display:flex;align-items:center;gap:2px;font:900 11px/1 Nunito,sans-serif}
+#overlay-modal.is-dex .alb-slot .alb-origin img{width:16px;height:16px}
+#overlay-modal.is-dex .alb-slot .alb-num{position:absolute;left:7px;top:5px;font:900 11px/1 Nunito,sans-serif;color:#6E6878;background:none;padding:0}
+#overlay-modal.is-dex .alb-slot b{font:800 13px/1.15 Nunito,sans-serif}
+#overlay-modal.is-dex .alb-slot.is-seen{background:#F6F1EA;border:1.5px dashed #D9CDBE}
+#overlay-modal.is-dex .alb-slot.is-seen img{filter:grayscale(1) opacity(.55)}
+#overlay-modal.is-dex .alb-slot.is-miss{background:#F6F1EA;border:1.5px dashed #D9CDBE}
+#overlay-modal.is-dex .alb-slot.is-miss .alb-shadow{filter:brightness(0) opacity(.18)}
+#overlay-modal.is-dex .alb-slot.is-miss small{margin-top:4px;color:#8A8392}
+#overlay-modal.is-dex .alb-slot.is-shiny{background:#FFF6D6;border:2px solid #E2B33C}
+.dex-tools{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.dex-search{flex:1 1 180px;display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;border-radius:12px;background:#fff;border:1.5px solid #EFE4D3}
+.dex-search svg{width:16px;height:16px;fill:none;stroke:#6E6878;stroke-width:2.4;stroke-linecap:round}
+.dex-search input{flex:1;min-width:0;height:auto;margin:0;padding:0;border:0!important;box-shadow:none!important;border-radius:0;outline:0;background:none!important;font:700 15px Nunito,sans-serif;color:#2E2A33}
+#overlay-modal .dex-search input[type="search"]{-webkit-appearance:none;appearance:none;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;min-height:0;padding:0!important}
+.dex-search:focus-within{border-color:#4069E0}
+.dex-filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.dex-filter{flex:0 0 auto;min-height:42px;padding:0 12px;border-radius:999px;border:1.5px solid #EFE4D3;background:#fff;font:800 13px Nunito,sans-serif;color:#2E2A33;cursor:pointer}
+.dex-filter.is-on{background:#2E2A33;border-color:#2E2A33;color:#fff}
+.dex-filter:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.dex-empty{margin:16px 0;text-align:center;font:700 14px Nunito,sans-serif;color:#6E6878}
+#pokdle-app.theme-dark #overlay-modal.is-dex #overlay-body .alb,body.theme-dark #overlay-modal.is-dex #overlay-body .alb{background:#26222c;color:#f5efe6}
+body.theme-dark #overlay-modal.is-dex .alb-slot{background:#2f2a36;border-color:rgba(255,255,255,.1)}
+body.theme-dark #overlay-modal.is-dex .alb-slot.is-seen,body.theme-dark #overlay-modal.is-dex .alb-slot.is-miss{background:#231f29}
+body.theme-dark #overlay-modal.is-dex .alb-slot b{color:#f5efe6}
+body.theme-dark .dex-search,body.theme-dark .dex-filter{background:#2f2a36;border-color:rgba(255,255,255,.12);color:#f5efe6}
+body.theme-dark .dex-search input{color:#f5efe6}
