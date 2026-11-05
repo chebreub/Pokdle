@@ -33,7 +33,7 @@ def tap_at_point(page, selector, method, index=0):
       const top = document.elementFromPoint(x,y);
       const chain = document.elementsFromPoint(x,y).slice(0,5).map(n =>
         n.tagName.toLowerCase() + (n.id ? '#'+n.id : '') +
-        (typeof n.className === 'string' ? '.'+n.className.trim().replace(/\s+/g,'.') : ''));
+        (typeof n.className === 'string' ? '.'+n.className.trim().replace(/\\s+/g,'.') : ''));
       return {
         selector, x, y, viewportWidth:innerWidth, viewportHeight:innerHeight,
         target:el.tagName.toLowerCase() + '.' + el.className,
@@ -71,7 +71,7 @@ def case(page, engine, width, height):
         expected = int(json.loads(btn.get_attribute('data-args'))[0])
         detail = tap_at_point(page, selector, method)
         assert page.evaluate('quiEstCeState.selected') == expected, f'Card {n+1} touch was ignored: {detail}'
-        steps.append(dict(action='select-card', target=n+1, **detail))
+        steps.append(dict(action='select-card', card_index=n+1, **detail))
 
     # Questions live in a nested scroll container. Check top and lower buttons.
     for index in (0, -1):
@@ -84,7 +84,7 @@ def case(page, engine, width, height):
         detail = tap_at_point(page, selector, method, index=index)
         after = page.evaluate('quiEstCeState.questions')
         assert after == before + 1, f'Question index {index} touch was ignored: {detail}'
-        steps.append(dict(action='ask-question', target=index, **detail))
+        steps.append(dict(action='ask-question', question_index=index, **detail))
 
     # On a small screen at least one game action must be tested in lower half.
     if width < 640:
