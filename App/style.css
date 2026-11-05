@@ -6136,6 +6136,8 @@ body.theme-dark .app-setting-item input[type="checkbox"]:checked {
   cursor: pointer;
 }
 #mystery-box .mystery-guide summary::before { content: "ⓘ"; margin-right: 7px; }
+#mystery-box .mystery-guide summary::after { content: "⌄"; margin-left: 7px; }
+#mystery-box .mystery-guide[open] summary::after { transform: rotate(180deg); }
 #mystery-box .mystery-guide summary:focus-visible { outline: 3px solid #7aa8f3; outline-offset: 2px; }
 #mystery-box .mystery-guide[open] { order: 3; flex-basis: 100%; margin-left: 0; }
 #mystery-box .mystery-guide[open] summary { margin-left: auto; width: max-content; max-width: 100%; }
