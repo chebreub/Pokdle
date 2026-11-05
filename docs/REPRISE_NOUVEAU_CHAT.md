@@ -33,7 +33,7 @@ Ce fichier est le **point de départ autonome** pour un nouveau chat ChatGPT, Cl
 >
 > **Vérifie ensuite** le dernier commit de `main`, les PR ouvertes et celles fusionnées depuis la dernière photographie ; ne suppose jamais que le document d'avancement est plus récent que GitHub. Prends connaissance des tests déjà présents avant toute modification. Ne reconstitue pas d'anciens chiffres d'administration à partir de suppositions ; les agrégats du 22/10 au 04/11 sont historiques et l'export brut n'est pas dans Git.
 >
-> **État documenté le 05/11/2026 :** 1 tâche terminée sur 43 (2,3 %) et deux en cours. PR #260 (plan + diagnostics) et PR #261 (protection des séries 5/10/20) fusionnées ; PR #264 (filtres masquant Party Room) ouverte avec CI Node et navigateur vertes au dernier contrôle, **à revérifier**. Le bug tactile Qui est-ce ? n'a pas été reproduit sur iPhone réel ; ne l'annonce pas corrigé.
+> **État actualisé le 05/11/2026 :** 2 tâches terminées sur 43 (4,7 %), BUG-MOB-01 en investigation. PR #260, #261 et #264 fusionnées ; #264 au commit `cfa0d021` (CI Node et navigateur vertes). Le bug tactile Qui est-ce ? n'a pas été reproduit sur iPhone réel ; ne l'annonce pas corrigé.
 >
 > **Objectif :** poursuivre le plan de manière incrémentale, d'abord les problèmes concrets de fiabilité et de sauvegarde, puis l'expérience de jeu, le Pokédex, les captures et enfin le partage naturel et l'acquisition de joueurs. Les neuf générations Pokémon sont conservées : le commentaire sur Kokiyas/Gen 9 était une plaisanterie et **ne constitue pas une demande de changement produit**.
 >
@@ -50,7 +50,7 @@ Ce fichier est le **point de départ autonome** pour un nouveau chat ChatGPT, Cl
 >
 > **À la fin de chaque PR :** mettre à jour docs/PLAN_AMELIORATION_POKEDLE.md et docs/ETAT_AVANCEMENT_POKEDLE.md, avec les cases réelles [x]/[~]/[ ], numéro de PR, SHA, preuve CI, points réellement non vérifiés et la prochaine action concrète. Recalculer le pourcentage **tâches terminées / 43**, hors l'action stationnée, tant que le périmètre n'a pas été modifié.
 >
-> **Maintenant :** vérifie si la PR #264 est toujours ouverte et fusionnable ; si oui, traite-la avant de démarrer de nouveaux travaux. Ensuite, attaque **LOG-02** (record zéro dans Qui est-ce ? et cohérence de fusion de profils) dans un lot isolé, puis LOG-04 et SAVE-01 selon les dépendances. Le P0 tactile peut nécessiter une vraie reproduction sur le téléphone d'origine ; garde-le ouvert sans l'inventer.
+> **Maintenant :** PR #264 fusionnée ; attaque **LOG-02** (record zéro dans Qui est-ce ? et cohérence de fusion de profils) dans un lot isolé, puis LOG-04 et SAVE-01 selon les dépendances. Le P0 tactile peut nécessiter une vraie reproduction sur le téléphone d'origine ; garde-le ouvert sans l'inventer.
 >
 > **Compte rendu demandé pour chaque étape :** ce qui a été fait, fichiers modifiés, tests exacts et leurs résultats, lien PR, fusion oui/non, état réel du déploiement, risques restant et prochaine tâche. Pour les questions simples « Suite ? » ou « Go », reprends le dernier état GitHub et exécute le prochain lot pertinent plutôt que répéter un audit global.
 

@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**1 tâche terminée sur 43 actions actives = 2,3 %** du plan au sens strict des cases validées et fusionnées.
+**2 tâches terminées sur 43 actions actives = 4,7 %** du plan au sens strict des cases validées et fusionnées.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **1** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et LOG-03 |
+| **Terminé et intégré à main** | **2** | Action vérifiée, PR fusionnée |
+| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 |
 | **Non commencé / à conduire ou à décider** | **40** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (1 action terminée / 43 actions actives) × 100 = **2,3256 %, arrondi à 2,3 %**.
+**Formule explicite :** (2 actions terminées / 43 actions actives) × 100 = **4,6512 %, arrondi à 4,7 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -26,14 +26,14 @@
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
 | 0 | Ergonomie mobile / PC et mesures | 0 / 7 | 0 % | Protocole et test tactile en place, BUG-MOB-01 non reproduit sur téléphone réel |
-| 1 | Fiabilité des jeux et sauvegardes | 1 / 8 | 12,5 % | LOG-01 terminé ; LOG-03 en PR ouverte |
+| 1 | Fiabilité des jeux et sauvegardes | 2 / 8 | 25 % | LOG-01 et LOG-03 terminés |
 | 2 | Gameplay, pédagogie, découverte | 0 / 5 | 0 % | Recommandations documentées, rien de nouveau livré dans ce plan |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
 | 4 | Économie et rencontres | 0 / 8 | 0 % | Règles existantes auditées ; propositions de changement **non approuvées** |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **1 / 43** | **2,3 %** | NIV-01 stationné exclu |
+| **Total** | | **2 / 43** | **4,7 %** | NIV-01 stationné exclu |
 
 ## Journal GitHub vérifié
 
@@ -43,9 +43,9 @@
 | [#261](https://github.com/chebreub/Pokdle/pull/261) | LOG-01 : protection des séries 5/10/20 | **Fusionnée** ; merge `646d83c` | Tests Node + navigateur verts |
 | [#262](https://github.com/chebreub/Pokdle/pull/262) | Journal et document de reprise des premiers lots | **Fusionnée** ; merge `b327a4d` | Documentation uniquement |
 | [#263](https://github.com/chebreub/Pokdle/pull/263) | Clôture documentaire de LOG-01 dans le plan | **Fusionnée** ; merge `b86a4e3` | Mise à jour du plan |
-| [#264](https://github.com/chebreub/Pokdle/pull/264) | LOG-03 : filtre solo ne doit plus cacher la Party Room | **OUVERTE, non fusionnée** | [Tests Node verts](https://github.com/chebreub/Pokdle/actions/runs/42024332274) et [suite navigateur verte](https://github.com/chebreub/Pokdle/actions/runs/42024332512) sur le head `9dfd42f4dce2` |
+| [#264](https://github.com/chebreub/Pokdle/pull/264) | LOG-03 : filtre solo ne doit plus cacher la Party Room | **Fusionnée** ; merge `cfa0d021` | [Tests Node verts](https://github.com/chebreub/Pokdle/actions/runs/42024332274) et [suite navigateur verte](https://github.com/chebreub/Pokdle/actions/runs/42024332512) sur le head `9dfd42f4dce2` |
 
-**Ne pas confondre :** « CI verte » pour #264 ne signifie pas « intégré à main » et ne doit pas faire passer LOG-03 à terminé. Un autre chat doit **reconsulter GitHub** : ce tableau est une photographie, pas un suivi automatique.
+**LOG-03 intégré** : #264 a été fusionnée après CI verte ; la recette sur iPhone réel concerne toujours BUG-MOB-01. Un autre chat doit **reconsulter GitHub** : ce tableau est une photographie, pas un suivi automatique.
 
 ## Risques et verrous à connaître
 
@@ -59,7 +59,7 @@
 
 ## Suite opérationnelle recommandée
 
-1. **Vérifier l'état exact de #264**. Si toujours ouverte, relire les changements, confirmer les statuts CI sur le head, intégrer conformément aux règles du dépôt, puis mettre LOG-03 à `[x]` dans le plan et actualiser ce fichier.
+1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
 2. Démarrer **LOG-02** dans une PR séparée : record de 0 question sur Qui est-ce ?, fusion des profils, zéro comme valeur historique valide, tests de non-régression.
 3. Traiter **LOG-04** puis approfondir **SAVE-01** (sauvegarde atomique et reprise de la totalité d'une série, sans mélanger les comptes).
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
