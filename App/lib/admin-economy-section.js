@@ -1,5 +1,6 @@
 "use strict";
 // Private admin-only HTML, using aggregate rows from economy-stats.js.
+const { economyExportHref } = require("./economy-export");
 const COIN_LABELS = Object.freeze({
   daily:"Jeux du jour",arcade:"Mini-jeux vérifiés",party:"Party Room",
   release:"Doublons relâchés",recharge:"Recharges de rencontres",
@@ -27,6 +28,7 @@ function renderEconomySection(economy) {
     '<section class="panel"><h2>Mesures indisponibles</h2>' +
     '<p>La base des Pokédollars, des Balls ou des captures n’a pas répondu. Aucun total n’est estimé.</p></section>';
   const {coins,balls,wild,startDay,endDay} = economy;
+  const reportHref = economyExportHref(economy);
   const coinRows = coins.sources.map(row =>
     '<tr><th scope="row">' + esc(COIN_LABELS[row.category] || "Autres") + '</th>' +
     '<td>' + fmt(row.gained) + ' ₽</td><td>' + fmt(row.spent) + ' ₽</td></tr>').join("") || empty(3);
@@ -46,6 +48,10 @@ function renderEconomySection(economy) {
   return '<h2 class="section-title">Économie et captures</h2>' +
     '<p class="economy-period">Du <b>' + esc(day(startDay)) + '</b> au <b>' + esc(day(endDay)) +
     '</b> · jours de Paris (contrairement aux visites, mesurées en UTC). Opérations enregistrées, pas joueurs uniques.</p>' +
+    '<p class="economy-export"><a href="' + esc(reportHref) +
+    '" download="pokdle-economie-' + esc(endDay) +
+    '.json" class="economy-export-link">Exporter le bilan anonymisé (JSON)</a>' +
+    '<span class="quiet"> Chiffres agrégés uniquement : aucune clé d’administration, compte, identité ou transaction individuelle. À joindre dans la conversation pour analyser l’équilibrage.</span></p>' +
     '<div class="columns">' +
     '<section class="panel"><h2>Circulation des Pokédollars</h2>' +
     '<p>Sommes des écritures du journal serveur, achats inclus. Le net mesure les gains moins les dépenses sur la période, <b>pas</b> le solde total des joueurs.</p>' +
