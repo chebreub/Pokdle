@@ -61,7 +61,7 @@ Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus 
 
 ## Cadrage économique décidé le 05/11/2026 — sans implémentation
 
-Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_AMELIORATION_POKEDLE.md#lot-4--économie-et-rencontres-à-simuler-avant-approbation), avec les codes ECO correspondants :
+Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_AMELIORATION_POKEDLE.md), avec les codes ECO correspondants :
 
 - **ECO-01** : **simuler et comparer avant décision** sur les nouvelles occasions d'expédition légendaire.
 - **ECO-02** : **accord de principe, sous réserve des tests** pour éviter la perte intégrale après fuite de Drattak ; **événement spécial / rendez-vous particulier** souhaité, déclenchement potentiellement aléatoire **à rediscuter** (fréquence, conservation, reprise et récompenses non fixées).
