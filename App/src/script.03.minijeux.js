@@ -1358,6 +1358,8 @@ function openPokeConnectionsMode() {
     puzzle,
     selected: new Set(),
     foundGroupIdx: new Set(),
+    rejectedGuesses: new Set(),
+    duplicateGuess: false,
     mistakes: 0,
     phase: "playing",
     lastShake: 0,
@@ -1391,6 +1393,7 @@ function togglePokeConnectionsTile(tileIndex) {
   if (!pokeConnectionsState || pokeConnectionsState.phase !== "playing") return;
   const tile = pokeConnectionsState.puzzle.tiles[tileIndex];
   if (!tile || pokeConnectionsState.foundGroupIdx.has(tile.groupIdx)) return;
+  pokeConnectionsState.duplicateGuess = false;
   if (pokeConnectionsState.selected.has(tileIndex)) {
     pokeConnectionsState.selected.delete(tileIndex);
   } else {
@@ -1416,12 +1419,14 @@ function shufflePokeConnectionsTiles() {
   }
   pokeConnectionsState.puzzle.tiles = newTiles;
   pokeConnectionsState.selected = new Set();
+  pokeConnectionsState.duplicateGuess = false;
   renderPokeConnectionsScreen();
 }
 
 function clearPokeConnectionsSelection() {
   if (!pokeConnectionsState) return;
   pokeConnectionsState.selected = new Set();
+  pokeConnectionsState.duplicateGuess = false;
   renderPokeConnectionsScreen();
 }
 
@@ -1445,6 +1450,16 @@ function submitPokeConnectionsGuess() {
       notifyPartyRoundFromScreenMode(true, "puzzle résolu");
     }
   } else {
+    // Use stable Pokémon IDs, not tile positions: shuffling cannot reset a rejected guess.
+    const guessKey = selectedIdxs.map((i) => Number(tiles[i].id)).sort((a, b) => a - b).join(",");
+    if (!pokeConnectionsState.rejectedGuesses) pokeConnectionsState.rejectedGuesses = new Set();
+    if (pokeConnectionsState.rejectedGuesses.has(guessKey)) {
+      pokeConnectionsState.duplicateGuess = true;
+      renderPokeConnectionsScreen();
+      return;
+    }
+    pokeConnectionsState.rejectedGuesses.add(guessKey);
+    pokeConnectionsState.duplicateGuess = false;
     pokeConnectionsState.mistakes += 1;
     pokeConnectionsState.lastShake = Date.now();
     if (pokeConnectionsState.mistakes >= POKE_CONNECTIONS_MAX_MISTAKES) {
@@ -1519,7 +1534,7 @@ function renderPokeConnectionsScreen() {
   } else {
     footer = `<div class="poke-connections-action-zone">
       <div class="poke-connections-selection-status"><span>${selectionCopy}</span><b>${selected.size}/4</b></div>
-      <p class="poke-connections-selection-help">${selected.size === 4 ? "Tu peux valider ce groupe." : "Sélectionne " + (4 - selected.size) + " Pokémon de plus."}</p>
+      <p class="poke-connections-selection-help" role="status" aria-live="polite">${state.duplicateGuess ? "Combinaison déjà proposée : aucune erreur supplémentaire." : selected.size === 4 ? "Tu peux valider ce groupe." : "Sélectionne " + (4 - selected.size) + " Pokémon de plus."}</p>
       <div class="poke-connections-actions">
         <button class="btn-ghost" type="button" data-action="shufflePokeConnectionsTiles">Mélanger</button>
         <button class="btn-ghost" type="button" data-action="clearPokeConnectionsSelection" ${selected.size === 0 ? "disabled" : ""}>Tout désélectionner</button>
