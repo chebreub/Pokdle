@@ -160,8 +160,12 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     const s = await current(c,who,body);
     if (!isGuess(s)) throw fail('invalid_mode',400);
     if (s.phase === 'over') return {arcade:view(s),replayed:true};
+    // An unopened round costs no entry fee and cannot earn a Ball or coins.
+    // Once the server has recorded at least one valid guess, a real loss still
+    // qualifies for the usual first-play reward.
+    const attempted = Array.isArray(s.guesses) && s.guesses.length > 0;
     guessing.abandon(s); await save(c,who,s);
-    return {arcade:view(s),earned:guessing.result(s)};
+    return {arcade:view(s),...(attempted ? {earned:guessing.result(s)} : {})};
   }
   return {start,answer,next,finish,abandon,imageSpec};
 }
