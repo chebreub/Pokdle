@@ -2,7 +2,7 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.  
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
-> **Statut : LOT 0 — infrastructure de diagnostic validée par CI et intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. Lot 1 LOG-01 proposé dans la PR #261, non fusionnée à la date de cette note.**
+> **Statut : LOT 0 — infrastructure de diagnostic validée par CI et intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. Lot 1 LOG-01 terminé et fusionné (#261) avec tests verts.**
 
 ## À lire en premier à chaque reprise
 
@@ -55,7 +55,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **PC-02 · P1** : Entrée, flèches, Échap dans le contexte du jeu, sans intercepter les messages du chat.
 
 ### Lot 1 — Logique, reprise, données
-- [~] **LOG-01 · P1** : sélecteur 5/10/20 sans reset si valeur identique ; confirmation si changement en cours. Correctif et cinq tests Node **en PR [#261](https://github.com/chebreub/Pokdle/pull/261)** ; ne cocher [x] qu'après fusion et vérification de la CI.
+- [x] **LOG-01 · P1** : choix 5/10/20 sans réinitialisation si valeur identique ; confirmation et conservation de l'état/préférence si changement refusé. PR [#261](https://github.com/chebreub/Pokdle/pull/261), **CI Node et navigateurs vertes**, fusionnée au commit `646d83c`.
 - [ ] **LOG-02 · P1** : record « Qui est-ce ? » de 0 question distinct d'absence de record.
 - [ ] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ».
 - [ ] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur.
@@ -122,15 +122,15 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### État GitHub au 05/11/2026 (reprise inter-chats)
 
 - **PR [#260](https://github.com/chebreub/Pokdle/pull/260) fusionnée** dans `main` : plan, protocole tactile et tests coordinate-based. CI complète verte, aucune correction du bug utilisateur confirmée.
-- **PR [#261](https://github.com/chebreub/Pokdle/pull/261) ouverte** : correctif de remise à zéro des séries, tests Node verts, CI navigateur à contrôler avant fusion. Sa branche a été créée avant la fusion de #260 : ne pas écraser le plan de `main` en fusionnant.
-- Pour reprendre : **vérifier la CI et l'état de #261, la fusionner si verte, puis mettre à jour LOG-01 et ce journal**. En parallèle, conserver BUG-MOB-01 en attente d'une reproduction sur iPhone réel ; ne pas le « réparer » au jugé.
+- **PR [#261](https://github.com/chebreub/Pokdle/pull/261) fusionnée** dans `main` : correction des remises à zéro accidentelles des séries 5/10/20 ; suite Node + CI navigateur complètes vertes. La sauvegarde et la reprise de séries sur rechargement (SAVE-01) restent un chantier distinct.
+- Pour reprendre : **vérifier le dernier `main`, puis attaquer LOG-02 (record zéro « Qui est-ce ? ») ou SAVE-01 en lot isolé**, après lecture des fichiers et tests existants. BUG-MOB-01 demeure en attente d'une reproduction sur iPhone réel ; ne pas le « réparer » au jugé.
 
 ## Journal d'avancement (à mettre à jour dans les PR)
 
 | Date | Lot | Fait | Vérification | PR |
 |---|---|---|---|---|
 | 2026-11-05 | 0 | Plan permanent, protocole et tests Chromium/WebKit des coordonnées tactiles ; **aucun correctif CSS** | Node + suite navigateur **vertes**, PR fusionnée ; aucune reproduction Safari iPhone réel ; bug toujours ouvert | [#260](https://github.com/chebreub/Pokdle/pull/260), commit `000728c` |
-| 2026-11-05 | 1 | Anti-réinitialisation 5/10/20, confirmation si changement en cours, cinq tests Node | Tests Node **verts** ; suite navigateur de PR en cours au dernier contrôle ; **non fusionné** | [#261](https://github.com/chebreub/Pokdle/pull/261) |
+| 2026-11-05 | 1 | Anti-réinitialisation des séries 5/10/20 ; confirmation si changement en cours ; cinq tests Node | **Tests Node et suite navigateur complets verts**, PR fusionnée ; aucune nouvelle règle de capture | [#261](https://github.com/chebreub/Pokdle/pull/261), commit `646d83c` |
 
 ## Prompt minimal pour un nouveau chat
 
