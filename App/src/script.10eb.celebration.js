@@ -9,8 +9,8 @@ const CELEBRATION_LEVEL_MS = 6500;
 const CELEBRATION_ACHIEVEMENT_MS = 3800;
 const CELEBRATION_MAX_ACHIEVEMENTS = 3;
 const celebrationQueue = [];
-// One lane each: the banner (top) can run while the level card (centre) is open.
-const celebrationBusy = { level: false, achievement: false };
+// One presentation at a time: a level card must never be covered by an achievement.
+let celebrationBusy = false;
 let celebrationWaitTimer = null;
 
 function celebrationReducedMotion() {
@@ -43,32 +43,59 @@ function celebrationLevelHtml(from, to) {
 }
 
 function celebrationAchievementHtml(item) {
-  return `<span class="achc-medal" aria-hidden="true">🏆</span><span class="achc-text"><small>SUCCÈS DÉBLOQUÉ</small><b>${escapeHtml(item.title)}</b><span>${escapeHtml(item.desc)}</span></span>`;
+  const items = Array.isArray(item.items) ? item.items : [item];
+  const shown = items.slice(0, CELEBRATION_MAX_ACHIEVEMENTS);
+  const extra = items.length - shown.length;
+  const titles = shown.map((achievement) => `<b>${escapeHtml(achievement.title)}</b>`).join("");
+  const details = extra
+    ? `+${extra} autre${extra > 1 ? "s" : ""} succès · Retrouve-les dans tes succès.`
+    : items.length === 1 ? escapeHtml(shown[0].desc) : "Retrouve-les dans tes succès.";
+  return `<span class="achc-medal" aria-hidden="true">🏆</span><span class="achc-text"><small>${items.length > 1 ? "SUCCÈS DÉBLOQUÉS" : "SUCCÈS DÉBLOQUÉ"}</small>${titles}<span>${details}</span></span>`;
 }
 
 function queueCelebration(item) {
-  celebrationQueue.push(item);
-  runCelebrations();
+  // Consecutive level gains and a burst of achievements become a single presentation.
+  // Grouping is visual only: XP, rewards and unlocked achievements are already recorded.
+  const pending = celebrationQueue.find((queued) => queued.kind === item.kind);
+  if (pending && item.kind === "level") {
+    pending.from = Math.min(pending.from, item.from);
+    pending.to = Math.max(pending.to, item.to);
+  } else if (pending && item.kind === "achievement") {
+    pending.items.push(...item.items);
+  } else {
+    celebrationQueue.push(item);
+  }
+  // Defer until the current game's DOM mutations (e.g. a capture modal) finish.
+  if (typeof document !== "undefined" && !celebrationBusy) {
+    clearTimeout(celebrationWaitTimer);
+    celebrationWaitTimer = setTimeout(runCelebrations, 0);
+  }
+}
+
+function celebrationOverlayOpen() {
+  // These existing dialogs intentionally own the screen. Do not put a level-up
+  // backdrop above a capture, gift, wild encounter or another open modal.
+  return Boolean(document.querySelector(
+    ".fx-catch, .fx-reveal, #wild-scene, #overlay-modal:not(.hidden), #daily-quests-overlay, .lvc-back, .achc"
+  ));
 }
 
 function runCelebrations() {
-  if (!celebrationQueue.length || typeof document === "undefined") return;
-  if (!celebrationCalm()) {
-    // Check again shortly: the round ends, or the player goes back to a menu.
-    clearTimeout(celebrationWaitTimer);
-    celebrationWaitTimer = setTimeout(runCelebrations, 1200);
+  celebrationWaitTimer = null;
+  if (!celebrationQueue.length || typeof document === "undefined" || celebrationBusy) return;
+  if (!celebrationCalm() || celebrationOverlayOpen()) {
+    // Once the player dismisses the dialog or the round ends, retry quietly.
+    celebrationWaitTimer = setTimeout(runCelebrations, 900);
     return;
   }
-  for (const lane of ["level", "achievement"]) {
-    if (celebrationBusy[lane]) continue;
-    const index = celebrationQueue.findIndex((item) => item.kind === lane);
-    if (index < 0) continue;
-    const [item] = celebrationQueue.splice(index, 1);
-    celebrationBusy[lane] = true;
-    const done = () => { celebrationBusy[lane] = false; setTimeout(runCelebrations, 250); };
-    if (lane === "level") showLevelCelebration(item, done);
-    else showAchievementCelebration(item, done);
-  }
+  const item = celebrationQueue.shift();
+  celebrationBusy = true;
+  const done = () => {
+    celebrationBusy = false;
+    celebrationWaitTimer = setTimeout(runCelebrations, 250);
+  };
+  if (item.kind === "level") showLevelCelebration(item, done);
+  else showAchievementCelebration(item, done);
 }
 
 function showLevelCelebration({ from, to }, done) {
@@ -133,10 +160,11 @@ function celebrateLevelUp(from, to) {
   if (to > from) queueCelebration({ kind: "level", from, to });
 }
 
-// Several unlocked at once: the first ones by name, the rest in one line.
+// A burst of unlocks should be readable in one banner, not four popups in a row.
 function celebrateAchievements(list) {
-  const shown = list.slice(0, CELEBRATION_MAX_ACHIEVEMENTS);
-  shown.forEach((a) => queueCelebration({ kind: "achievement", title: a.title, desc: a.desc }));
-  const more = list.length - shown.length;
-  if (more > 0) queueCelebration({ kind: "achievement", title: `+${more} autre${more > 1 ? "s" : ""} succès`, desc: "Retrouve-les dans tes succès." });
+  if (!Array.isArray(list) || !list.length) return;
+  queueCelebration({
+    kind: "achievement",
+    items: list.map((a) => ({ title: a.title, desc: a.desc }))
+  });
 }
