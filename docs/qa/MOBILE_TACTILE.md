@@ -2,7 +2,7 @@
 
 **Source :** retour joueur du 04/11/2026 sur « Qui est-ce ? ». Sur téléphone, certains éléments situés dans la partie basse semblent ne pas répondre ; le joueur doit faire défiler la page pour les remonter. Le navigateur et le modèle du téléphone sont inconnus.
 
-**Statut :** signalement à reproduire ; cause non établie. Aucune correction du positionnement ou des `z-index` ne doit être livrée uniquement sur une hypothèse.
+**Statut :** signalement réel toujours à reproduire sur l’appareil de Jade. Cause technique possible isolée dans le code : carte de résultat flottante transparente mais encore cliquable ; un correctif CSS ciblé et un test de régression du hit-test sont proposés dans la PR de diagnostic. Aucun `z-index` général modifié.
 
 ## Test automatisé : hit-test réel, pas clic forcé
 
@@ -72,4 +72,8 @@ Pour arrêter : `stopPokedleTouchDebug()`. Ne pas intégrer cette journalisation
 
 ## Extension du diagnostic au 05/11/2026
 
-Le retour de Jade concerne potentiellement plusieurs modes. La suite automatisée vérifie désormais deux écrans indépendants à plusieurs hauteurs et après navigation/mélange, par `elementFromPoint` puis véritable tap aux coordonnées. Cette extension **ne prouve pas la correction du bug sur téléphone réel**, et ne démontre pas qu'il touche tous les appareils. Aucun changement CSS ni effet sur les sauvegardes n'a été introduit. Pour aller plus loin, il faut idéalement un appareil reproduisant le défaut, ou au minimum le navigateur et un enregistrement sans données personnelles.
+Le retour de Jade concerne potentiellement plusieurs modes. La suite automatisée vérifie désormais deux écrans indépendants à plusieurs hauteurs et après navigation/mélange, par `elementFromPoint` puis véritable tap aux coordonnées. Cette extension **ne prouve pas la correction du bug sur téléphone réel**, et ne démontre pas qu'il touche tous les appareils. Une modification CSS très ciblée sur la carte de résultat flottante empêche l'interception des taps lorsqu'elle est masquée ; aucun effet sur les sauvegardes. Pour aller plus loin, il faut idéalement un appareil reproduisant le défaut, ou au minimum le navigateur et un enregistrement sans données personnelles.
+
+### Cause technique candidate : carte de résultat transparente
+
+Dans `App/style.css`, `.gamefeel-layer` restait dans le DOM après disparition (`opacity:0`), mais `.gamefeel-result-card` gardait `pointer-events:auto` ; en CSS, le descendant pouvait donc capter les taps même si son parent n'en capte pas. Sur mobile, la carte est ancrée en bas (`bottom:82px`). Cela peut expliquer des actions invisiblement bloquées après une partie et fonctionnant après défilement. Le changement est limité à `pointer-events:none` sur la carte **masquée**, rétabli à `auto` uniquement si `.gamefeel-layer.is-visible`. Un test Chromium/WebKit vérifie cet état masqué, visible, puis masqué à nouveau. Ce défaut démontrable dans le code ne garantit pas qu'il soit l'unique cause du signalement de Jade.
