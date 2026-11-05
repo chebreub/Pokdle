@@ -97,7 +97,9 @@ test('PostgreSQL: abandoning before the first valid guess never earns a Ball or 
     // The empty attempt must not mark the mode as paid: restart, make a
     // real wrong guess and then forfeit to receive the usual first-play loss.
     const renewed = (await start(service,who,mode,{restart:true})).arcade;
-    await guess(service,who,renewed,25);
+    // Exactly two Pokémon in the test pool: restart avoids the previous secret,
+    // so submitting the previous one is guaranteed to be a valid wrong guess.
+    await guess(service,who,renewed,response.arcade.answerId);
     const loss = await service.arcadeAbandon(who,{mode,sessionId:renewed.sessionId,round:0});
     assert.deepEqual(loss.coinsAdded,[{source:'play:'+mode,amount:30}],mode);
     assert.ok(loss.added.some(g=>g.source==='mode:'+mode && g.ball==='poke'),mode);
