@@ -67,10 +67,46 @@ test('PostgreSQL: the answer stays on the server until the end; a guess pays onc
   const gaveUp = await service.arcadeAbandon(me,{mode:'pixel',sessionId:n.sessionId,round:0});
   assert.equal(gaveUp.arcade.phase, 'over'); assert.equal(gaveUp.arcade.won, false); assert.ok(gaveUp.arcade.answerId);
   assert.deepEqual(gaveUp.coinsAdded, []);
-  // Zoom progressif: its own first game of the day; a skip pays the small reward.
+  // Zoom progressif: a genuine attempted loss still pays the small reward.
   const z = (await start(service,me,'silhouette')).arcade;
+  const missed = await guess(service,me,z,25);
+  assert.equal(missed.arcade.phase, 'playing');
   const skipped = await service.arcadeAbandon(me,{mode:'silhouette',sessionId:z.sessionId,round:0});
   assert.deepEqual(skipped.coinsAdded, [{source:'play:silhouette', amount:30}]);
+}));
+
+test('PostgreSQL: abandoning before the first valid guess never earns a Ball or coins, including on replay', sql, () => withDb(async db => {
+  const who = {key:'user:no-attempt',guestKey:'guest:no-attempt',accountId:'no-attempt'};
+  const service = createBallService({db,pokemon,secret:'local-only',clock:()=>new Date('2026-11-05T12:00:00Z'),
+    randomInt:()=>0,describe:async()=> 'Une description sans nom'});
+  const initial = await service.state(who);
+  const modes = ['pixel','silhouette','cry','description','normal','mystery'];
+  for (const mode of modes) {
+    const view = (await start(service,who,mode)).arcade;
+    assert.equal(view.attempts,0,mode);
+    const body = {mode,sessionId:view.sessionId,round:0};
+    const response = await service.arcadeAbandon(who,body);
+    assert.equal(response.arcade.phase,'over',mode);
+    assert.deepEqual(response.coinsAdded,[],mode);
+    assert.deepEqual(response.added,[],mode);
+    assert.deepEqual(response.bag,initial.bag,mode);
+    const replay = await service.arcadeAbandon(who,body);
+    assert.equal(replay.replayed,true,mode);
+    assert.deepEqual(replay.coinsAdded,[],mode);
+    assert.deepEqual(replay.added,[],mode);
+    // The empty attempt must not mark the mode as paid: restart, make a
+    // real wrong guess and then forfeit to receive the usual first-play loss.
+    const renewed = (await start(service,who,mode,{restart:true})).arcade;
+    await guess(service,who,renewed,25);
+    const loss = await service.arcadeAbandon(who,{mode,sessionId:renewed.sessionId,round:0});
+    assert.deepEqual(loss.coinsAdded,[{source:'play:'+mode,amount:30}],mode);
+    assert.ok(loss.added.some(g=>g.source==='mode:'+mode && g.ball==='poke'),mode);
+  }
+  const rows = (await db.query("SELECT source,amount FROM coin_ledger WHERE identity=$1 AND source LIKE 'play:%' ORDER BY source",[who.key])).rows;
+  assert.equal(rows.length,modes.length);
+  assert.ok(rows.every(row=>row.amount===30));
+  const bag = await service.state(who);
+  assert.equal(bag.coins.played,180);
 }));
 
 test('the picture token only opens for its player, and only a PokeAPI sprite is fetched', async () => {
