@@ -15,6 +15,7 @@ function fixture(store=new Map(),account='A') {
     gameMode:'pixel',gameOver:false,attempts:0,secretPokemon:null,
     guessedNames:[],resultHistory:[],selectedGens:new Set([1]),
     playerProfile:{xp:100,guessSeriesBest:{}},escapeHtml:String,
+    POKEMON_BY_ID:new Map([[101,{id:101,name:'Pikachu'}],[102,{id:102,name:'Pikachu'}]]),
     document:{getElementById:()=>null,querySelector:()=>null},
     restoreSavedGame(mode,data){resumes.push({mode,data});env.gameMode=mode;env.gameOver=false;env.secretPokemon={id:data.secretId,name:'Pikachu'};return true;},
     renderGameOverBox(){},saveProfile(){},showToast(){},
@@ -98,4 +99,47 @@ test('server-verified checkpoint never contains an unrevealed answer',()=>{
   const b=fixture(storage);b.env.window.startPixelGame();
   assert.equal(b.starts.length,1,'existing server-aware start flow remains authoritative');
   assert.equal(b.env.guessSeries.index,1);
+});
+
+test('restoring a series round cannot clear an unrelated Daily or ordinary save', () => {
+  const accountSource=fs.readFileSync(path.join(__dirname,'../src/script.07.delegation-party.js'),'utf8');
+  const start=accountSource.indexOf('function restoreSavedGame(');
+  const stop=accountSource.indexOf('\n// ============================================================',start);
+  assert.ok(start>=0 && stop>start,'real restore function must be available');
+  const section=accountSource.slice(start,stop);
+  const deleted=[],elements=new Map();
+  const el=(id)=>{
+    if(!elements.has(id))elements.set(id,{
+      classList:{add(){},remove(){},toggle(){}},
+      focus(){},style:{},innerHTML:'',textContent:'',value:''
+    });
+    return elements.get(id);
+  };
+  const secret={id:25,name:'Pikachu',gen:1};
+  const env={
+    STORAGE_KEYS:{dailyGame:'daily-slot',game:'ordinary-slot'},
+    readJson(){throw Error('series restore must never read shared save slots');},
+    clearSavedGame(mode){deleted.push(mode);},
+    VALID_MODES:new Set(['pixel','daily']),
+    POKEMON_BY_ID:new Map([[25,secret],[1,{id:1,name:'Bulbizarre'}]]),
+    GENERATIONS:{1:true},
+    getDailyDateKey:()=> '2026-11-05',
+    selectedGens:new Set([1]),gameMode:'normal',attempts:0,gameOver:true,
+    guessedNames:[],guessedSet:new Set(),resultHistory:[],activePool:[],
+    document:{getElementById:el},
+    buildGenGrid(){},getPoolFromSelectedGens(){return [secret];},
+    compare(){return {type1:'ok'};},addRow(){},rebuildActiveSearchIndex(){},
+    setGameCounter(){},updateTopTag(){},updateModeBanners(){},
+    updateSilhouettePanel(){},updatePixelPanel(){},updateCryPanel(){},
+    setQuizModeLayout(){},showScreen(){},setGlobalNavActive(){},updateMysteryPanel(){}
+  };
+  vm.createContext(env);
+  vm.runInContext(section,env);
+  assert.equal(env.restoreSavedGame('pixel',{version:1,mode:'pixel',secretId:25,attempts:2,selectedGens:[1],historyIds:[1],guessedNames:['Bulbizarre']}),true);
+  assert.equal(env.secretPokemon.id,25);
+  assert.equal(env.attempts,2);
+  assert.equal(env.resultHistory.length,1);
+  assert.deepEqual(deleted,[],'other saved games must not be touched');
+  assert.equal(env.restoreSavedGame('pixel',{version:1,mode:'pixel',secretId:999999}),false);
+  assert.deepEqual(deleted,[],'corrupt series snapshot must not erase other slots');
 });
