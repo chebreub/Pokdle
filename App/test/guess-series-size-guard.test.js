@@ -19,6 +19,7 @@ function fixture() {
     playerProfile: { xp: 0 },
     document: { getElementById: () => null },
     gameMode: 'pixel', gameOver: false, attempts: 0,
+    selectedGens: new Set([1]),
     showToast(text) { notices.push(text); },
     escapeHtml: String,
   };
