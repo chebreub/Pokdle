@@ -122,10 +122,12 @@ function finishQuiEstCe(won) {
   state.selected = null;
   state.feedback = '';
   if (won && typeof playerProfile !== 'undefined' && playerProfile) {
-    const best = Number(playerProfile.quiEstCeBest) || 0;
-    state.newRecord = !best || state.questions < best;
+    const best = Number(playerProfile.quiEstCeBest);
+    const hasRecord = playerProfile.quiEstCeRecorded === true || (Number.isFinite(best) && best > 0);
+    state.newRecord = !hasRecord || state.questions < best;
     if (state.newRecord) {
       playerProfile.quiEstCeBest = state.questions;
+      playerProfile.quiEstCeRecorded = true;
       try { saveProfile(); } catch (_e) {}
     }
     if (typeof awardXp === 'function') awardXp(Math.max(10, 50 - state.questions * 3), 'Qui est-ce ?', 'quiestce');
@@ -167,9 +169,10 @@ function quiPanelHtml(state) {
   const remaining = quiRemaining(state);
   if (state.phase === 'finished') {
     const secret = quiPokemon(state.secretId) || { name: '?' };
-    const best = Number(playerProfile?.quiEstCeBest) || 0;
+    const best = Number(playerProfile?.quiEstCeBest);
+    const hasRecord = playerProfile?.quiEstCeRecorded === true || (Number.isFinite(best) && best > 0);
     const detail = state.won
-      ? 'En ' + state.questions + ' question' + (state.questions > 1 ? 's' : '') + (state.wrong ? ' (dont ' + state.wrong * QUI_WRONG_GUESS_COST + ' pour ' + (state.wrong > 1 ? 'les erreurs' : 'l’erreur') + ')' : '') + (state.newRecord ? ' · nouveau record !' : best ? ' · record : ' + best : '')
+      ? 'En ' + state.questions + ' question' + (state.questions > 1 ? 's' : '') + (state.wrong ? ' (dont ' + state.wrong * QUI_WRONG_GUESS_COST + ' pour ' + (state.wrong > 1 ? 'les erreurs' : 'l’erreur') + ')' : '') + (state.newRecord ? ' · nouveau record !' : hasRecord ? ' · record : ' + best : '')
       : 'Il te restait ' + remaining.length + ' Pokémon possibles.';
     return '<div class="qui-result ' + (state.won ? 'is-won' : 'is-lost') + '" role="status">' +
       '<img src="' + escapeHtml(getPokemonSprite(secret)) + '" alt="" width="120" height="120">' +
