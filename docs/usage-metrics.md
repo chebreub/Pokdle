@@ -3,6 +3,8 @@
 ## Objectif
 Aider à décider **quels modes améliorer** sur la base des usages plutôt que d'un classement supposé « populaire ».
 
+**Dictionnaire vérifié des unités et des dates (DATA-01) :** [grain des événements et couverture observée](qa/USAGE_EVENT_GRAIN.md). Ce document explique pourquoi une ouverture ne correspond pas forcément à une partie commencée ni à une fin, et pourquoi la date exacte de mise en service de chaque compteur ne peut pas être déduite des agrégats survivants. Ne pas renseigner une date fictive.
+
 ## Périmètre
 - L'API existante `POST /api/track` garde son filtrage d'événements et sa limite de requêtes.
 - Les lancements de modes déjà instrumentés restent `solo:<mode>`.
