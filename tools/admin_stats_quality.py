@@ -31,6 +31,11 @@ def main():
                     assert page.get_by_text("Circulation des Pokédollars").count()==1
                     assert page.get_by_text("Shinies capturés").count()==1
                     assert page.get_by_text("Balls lancées").count()==1
+                    export = page.get_by_role("link", name="Exporter le bilan anonymisé (JSON)")
+                    assert export.count()==1
+                    assert export.get_attribute("href").startswith("data:application/json;charset=utf-8,")
+                    expected_end = "2026-11-03" if days==14 else "2026-11-04"
+                    assert export.get_attribute("download")=="pokdle-economie-"+expected_end+".json"
                     if days==1:
                         assert page.get_by_text("Sessions aujourd’hui").count()>0
                         assert page.locator("svg.trend-chart").count()==0
