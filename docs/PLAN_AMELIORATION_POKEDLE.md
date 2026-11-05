@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : finaliser SAVE-01, puis examiner FX-02** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **Prochaine action de développement : terminer SAVE-01 [#270](https://github.com/chebreub/Pokdle/pull/270) avec CI verte**, puis examiner FX-02. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non reproduite et non identifiée**.
 
@@ -50,7 +50,7 @@ Voir `docs/qa/MOBILE_TACTILE.md` pour le protocole et les outils de diagnostic.
 Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot n'est pas « terminé » si une recette iPhone requise reste absente.
 
 ### Lot 0 — Fiabilité tactile, ergonomie mobile/PC
-- [~] **BUG-MOB-01 · P0** : diagnostiquer zone basse non cliquable sur téléphone. Source réelle à confirmer.
+- [~] **BUG-MOB-01 · P0** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
 - [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [ ] **DATA-01 · P0** : documenter grain des événements ouverture/partie/manche/fin et date de début du suivi ; ne pas reconstruire l'historique fictivement.
 - [ ] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.
@@ -63,7 +63,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-02 · P1** : record « Qui est-ce ? » à 0 question distingué de l'absence de record via indicateur explicite, fusion multi-appareils et affichage. [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée au commit `9a68b84f` ; **CI Node et navigateur vertes**.
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
 - [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
-- [~] **SAVE-01 · P1** : point de reprise local versionné des séries Pixelisé, Cri, Silhouette et Description, avec isolement par compte, état de manche et reprise serveur lorsqu'il est responsable du mystère. Tests de non-régression ajoutés ; **CI, revue et fusion à vérifier**.
+- [~] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte, avec état de manche et conservation des manches achevées ; [PR #270](https://github.com/chebreub/Pokdle/pull/270), tests et vérification en cours. Aucune synchronisation inter-appareils revendiquée.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
 - [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
@@ -150,6 +150,11 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - Progression après fusion : **2/43 = 4,7 %** ; prochaine action LOG-02.
 - Ce lot documentaire **n'implémente aucune mécanique de jeu** et n'ajoute pas de tâche [x] au décompte.
 
+### SAVE-01 — en validation
+
+- [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI et fusion à revérifier sur le dernier head**.
+- Progression intégrée inchangée **4/43 = 9,3 %** jusqu'à fusion. La sauvegarde entre appareils n'est pas couverte ; compte, inventaire et économie inchangés.
+
 ### LOG-04 — intégré
 
 - [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée (`d8c87fe7`) après CI [Node verte](https://github.com/chebreub/Pokdle/actions/runs/42036602850) et [navigateur/base de données verte](https://github.com/chebreub/Pokdle/actions/runs/42036604853), sur le head exact `ed9b57f8`. Tests répétitions, mélange et quatre erreurs distinctes.
@@ -161,12 +166,6 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - Prochaine action : LOG-04. BUG-MOB-01 reste en investigation : aucune recette iPhone réel.
 
 | 2026-11-05 | 1 | LOG-04 : rejets répétés dans Connections sans nouvelle pénalité | CI Node + navigateur/base de données vertes ; PR fusionnée, aucune recette Safari réel | [#268](https://github.com/chebreub/Pokdle/pull/268), commit `d8c87fe7` |
-
-### SAVE-01 — en revue
-
-- Reprise locale par compte, sans inclure la sauvegarde de série dans les synchronisations cloud de profils. Les parties serveur conservent le mystère côté serveur. Aucun inventaire ni compteur financier touché.
-- Critère de clôture : les tests Node et navigateur sur le dernier head de la PR doivent être verts ; vérifier les cas de refresh sur manche 6, de changement de compte, et l'absence d'XP attribuée une seconde fois. La vraie recette iPhone et la continuité **entre appareils** ne sont pas démontrées par un stockage local.
-- **Progression intégrée inchangée à 4/43 = 9,3 % tant que non fusionnée.**
 
 ## Prompt minimal pour un nouveau chat
 

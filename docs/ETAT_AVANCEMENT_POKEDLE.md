@@ -55,9 +55,13 @@
 
 [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée, merge `d8c87fe7`. Une combinaison erronée de quatre Pokémon ne consomme qu'une erreur par partie, y compris après mélange. Message joueur explicite, tests Node et Playwright. CI [Node verte](https://github.com/chebreub/Pokdle/actions/runs/42036602850) et [navigateur/base de données verte](https://github.com/chebreub/Pokdle/actions/runs/42036604853) sur le head `ed9b57f8`. Aucun changement aux 4 erreurs autorisées, récompenses ni sauvegardes. Progression intégrée **4/43 = 9,3 %** ; prochaine tâche **SAVE-01**.
 
-## SAVE-01 — en revue
+### Diagnostic supplémentaire — BUG-MOB-01
 
-Branche dédiée : sauvegarde locale versionnée de série pour les quatre modes d'identification, isolée par compte après confirmation `/api/me`. Elle conserve les manches terminées et, en mode local, les essais/secret de la manche active ; en mode vérifié, le serveur reste propriétaire du mystère. Tests des limites et du changement d'identité ajoutés. **CI / merge non vérifiés** : 4/43 = 9,3 % intégré à ce stade. La synchronisation de cette série **entre appareils** n'est pas réalisée, et aucune recette physique iPhone n'est revendiquée.
+Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus de « Qui est-ce ? », avec frappes réelles aux coordonnées, contrôles de sélection et réouverture après navigation/mélange. **Cause candidate ciblée** : un toast de résultat invisible restait tactile (`.gamefeel-result-card { pointer-events:auto }` sous parent à `opacity:0`). [PR #271](https://github.com/chebreub/Pokdle/pull/271) ajoute le test caché/visible/caché et limite l'interception à la carte visible. **CI Node et navigateur vertes sur #271, mais validation sur l'appareil de Jade toujours nécessaire** ; le problème peut avoir plusieurs causes. Progression intégrée **4/43 = 9,3 %** inchangée tant que non clôturé.
+
+## SAVE-01 — en validation
+
+[PR #270](https://github.com/chebreub/Pokdle/pull/270) : sauvegarde versionnée locale de la série par compte et reprise au bon numéro de manche. Le premier contrôle CI a échoué sur une confusion entre une manche de série et une ancienne sauvegarde Daily ; la condition de validation a été corrigée et un test protège les sauvegardes Daily et classiques contre leur suppression lors d'une reprise. **CI complète et fusion du dernier head encore à contrôler**. Aucun transfert de cette série entre deux appareils n'est revendiqué. Progression intégrée **4/43 = 9,3 %** jusqu'à fusion.
 
 ## Risques et verrous à connaître
 

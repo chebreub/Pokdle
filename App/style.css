@@ -22149,7 +22149,8 @@ body.reduce-motion #screen-game .guess-result-cell::after {
   transform: none;
 }
 .gamefeel-result-card {
-  pointer-events: auto;
+  /* Hidden toasts remain in the DOM, so they must never intercept taps. */
+  pointer-events: none;
   display: grid;
   grid-template-columns: auto minmax(0,1fr);
   gap: 10px 12px;
@@ -22161,6 +22162,10 @@ body.reduce-motion #screen-game .guess-result-cell::after {
   background: rgba(255,255,255,.96);
   box-shadow: 0 22px 60px rgba(17,43,84,.22);
   backdrop-filter: blur(14px);
+}
+.gamefeel-layer.is-visible .gamefeel-result-card {
+  /* Active actions remain usable only while the toast is visible. */
+  pointer-events: auto;
 }
 .gamefeel-result-card.is-win {
   border-color: rgba(46,173,99,.28);
