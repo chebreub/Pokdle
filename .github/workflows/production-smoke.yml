@@ -1,0 +1,63 @@
+name: Public deployment smoke (read-only)
+
+on:
+  pull_request:
+    paths:
+      - tools/production_smoke.py
+      - tools/test_production_smoke.py
+      - .github/workflows/production-smoke.yml
+  push:
+    branches: [main]
+    paths:
+      - App/**
+      - tools/production_smoke.py
+      - tools/test_production_smoke.py
+      - .github/workflows/production-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Check the read-only probe with mocked HTTP requests
+        run: python -m unittest tools/test_production_smoke.py -v
+      - uses: actions/setup-node@v6
+        if: github.event_name != 'pull_request'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: App/package-lock.json
+      - name: Rebuild the expected version from this GitHub commit
+        if: github.event_name != 'pull_request'
+        working-directory: App
+        run: npm ci
+      - name: Verify the deployed public version, health and assets
+        if: github.event_name != 'pull_request'
+        run: |
+          python tools/production_smoke.py \
+            --index App/dist/index.html \
+            --wait-seconds 600 \
+            --interval-seconds 20 \
+            --report quality-artifacts/production-smoke/report.json
+      - name: Save the public probe report
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v5
+        with:
+          name: public-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: quality-artifacts/production-smoke/report.json
+          retention-days: 14
+          if-no-files-found: warn
