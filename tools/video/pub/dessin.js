@@ -14,7 +14,7 @@ const eBack = (k, s = 1.9) => (k <= 0 ? 0 : k >= 1 ? 1 : 1 + (s + 1) * Math.pow(
 // Réponses du salon : seulement celles qu'on voit sur les captures de Kayan (docs/promo/dessine-le/).
 const D = [
   { n: 1, id: 522, name: 'ZÉBIBRON', found: '0 joueur l’a trouvé', chat: ['Zekrom', 'Raikou', 'Dynavolt', 'Galvagla'] },
-  { n: 2, id: 921, name: 'PIMITO', found: '', chat: [] },
+  { n: 2, id: 951, name: 'PIMITO', found: '', chat: [] },
   { n: 3, id: 890, name: 'ÉTHERNATOS', found: '2 joueurs l’ont trouvé', chat: [] },
   { n: 4, id: 1008, name: 'MIRAIDON', found: '1 joueur l’a trouvé', chat: ['Ire-Foudre'] },
   { n: 5, id: 405, name: '???', mystery: true }
