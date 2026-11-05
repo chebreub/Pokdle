@@ -57,7 +57,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### Lot 1 — Logique, reprise, données
 - [x] **LOG-01 · P1** : choix 5/10/20 sans réinitialisation si valeur identique ; confirmation et conservation de l'état/préférence si changement refusé. PR [#261](https://github.com/chebreub/Pokdle/pull/261), **CI Node et navigateurs vertes**, fusionnée au commit `646d83c`.
 - [ ] **LOG-02 · P1** : record « Qui est-ce ? » de 0 question distinct d'absence de record.
-- [ ] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ».
+- [~] **LOG-03 · P1** : le changement vers « Entre amis » efface le filtre de difficulté solo afin de laisser la Party Room visible. Correctif + tests ajoutés en branche ; **CI et fusion à vérifier**.
 - [ ] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur.
 - [ ] **SAVE-01 · P1** : conserver série entière (ex. relance à la manche 6) sans mélange entre comptes.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
@@ -131,6 +131,10 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 |---|---|---|---|---|
 | 2026-11-05 | 0 | Plan permanent, protocole et tests Chromium/WebKit des coordonnées tactiles ; **aucun correctif CSS** | Node + suite navigateur **vertes**, PR fusionnée ; aucune reproduction Safari iPhone réel ; bug toujours ouvert | [#260](https://github.com/chebreub/Pokdle/pull/260), commit `000728c` |
 | 2026-11-05 | 1 | Anti-réinitialisation des séries 5/10/20 ; confirmation si changement en cours ; cinq tests Node | **Tests Node et suite navigateur complets verts**, PR fusionnée ; aucune nouvelle règle de capture | [#261](https://github.com/chebreub/Pokdle/pull/261), commit `646d83c` |
+
+### En cours — LOG-03
+
+Ce lot est isolé de LOG-02 et SAVE-01. Lorsque la PR est validée et fusionnée, remplacer `[~]` par `[x]`, ajouter le numéro de PR dans le journal et laisser BUG-MOB-01 ouvert faute de reproduction iPhone réel.
 
 ## Prompt minimal pour un nouveau chat
 

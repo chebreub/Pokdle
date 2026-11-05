@@ -52,7 +52,21 @@ test('family chips narrow the solo catalogue and reset with the category',()=>{
  context.setModeCatalogCategory('solo');assert.equal(context.modeCatalogFamily,'all');
 });
 test('changing category clears stale searches and saves it for Back',()=>{
- const {context,elements}=fixture();elements['mode-search'].value='quiz';context.setModeCatalogDifficulty('hard');context.setModeCatalogCategory('friends');assert.equal(elements['mode-search'].value,'');assert.equal(context.history.state.category,'friends');assert.equal(context.history.state.difficulty,'hard');
+ const {context,elements}=fixture();elements['mode-search'].value='quiz';context.setModeCatalogDifficulty('hard');context.setModeCatalogCategory('friends');assert.equal(elements['mode-search'].value,'');assert.equal(context.history.state.category,'friends');assert.equal(context.history.state.difficulty,'all');
+});
+test('friends destination clears a stale solo difficulty and exposes Party Room',()=>{
+ const {context,rows,elements}=fixture();
+ context.setModeCatalogCategory('solo');
+ context.setModeCatalogDifficulty('hard');
+ elements['mode-search'].value='cri';
+ context.setModeCatalogCategory('friends');
+ const visible=rows.filter(card=>!card.hidden);
+ assert.equal(context.modeCatalogDifficulty,'all');
+ assert.equal(elements['mode-difficulty'].value,'all');
+ assert.equal(context.history.state.difficulty,'all');
+ assert.equal(visible.length,1);
+ assert.ok(visible[0].markup.includes('openPartyRoomMode'));
+ assert.equal(elements['mode-search'].value,'');
 });
 test('difficulty filter narrows playable modes and never hides Explore tools',()=>{
  const {context,rows,elements}=fixture();
