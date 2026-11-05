@@ -79,3 +79,7 @@ Même décor que px6, artworks officiels, chrono `assets/sfx/timer4.wav` (`pytho
 - `stat` « Qui a le plus de… ? » (PV, Attaque, Défense, Atq Spé, Déf Spé, puis Vitesse en mystère : Ninjask, réponse A).
 
 `PAGE=pub/px4.html node render.js hl && ./mixm.sh hl assets/music/trainer-battle.mp3 out/Pokedle-hl-musique.mp4` (pareil pour `cri`, `stat`). Les questions sont dans `V` de `pub/px4.js`. `px6b` (6 autres pixelisés, Terraiste en mystère) : `PAGE=pub/px6.html node render.js px6b`.
+
+## « C'est qui ? » : 5 dessins ratés de Dessine-le ! (`pub/dessin.js`, 05/11)
+
+Vrais dessins de la Party Room envoyés par Kayan (`docs/promo/dessine-le/`). `python3 pub/dessin-prep.py` (dans `tools/video/`) découpe chaque dessin et calcule l'ordre d'apparition du trait (`assets/dessin/`), puis `./fetch-assets.sh 522 921 890 1008 405`. Rendu : `PAGE=pub/dessin.html node render.js dessin && ./mixm.sh dessin assets/music/trainer-battle.mp3 out/Pokedle-dessin-musique.mp4`. Les réponses du salon affichées sont seulement celles visibles sur les captures (pseudos masqués). Le 5e (Luxray) reste en mystère.

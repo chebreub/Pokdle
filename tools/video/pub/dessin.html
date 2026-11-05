@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@600;700&display=block" rel="stylesheet">
+<style>
+:root{--ink:#2E2A33;--yellow:#FFD45C;--green:#6BE05A;--red:#FF5A48}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:'Press Start 2P',monospace}
+.bg{position:absolute;left:0;top:-524px;width:3072px;height:2304px;background-size:100% 100%;image-rendering:pixelated}
+#fade{position:absolute;inset:0;background:#000;opacity:0}
+.px{font-family:'Press Start 2P',monospace;color:#fff;text-align:center;white-space:nowrap;
+ text-shadow:6px 6px 0 var(--ink),-4px -4px 0 var(--ink),4px -4px 0 var(--ink),-4px 4px 0 var(--ink),0 6px 0 var(--ink),6px 0 0 var(--ink)}
+#title{position:absolute;left:0;right:0;top:150px;font-size:66px;line-height:1.45;color:var(--yellow)}
+#name{position:absolute;left:0;right:0;top:372px;font-size:60px;color:var(--green)}
+#hook{position:absolute;left:0;right:0;top:395px;font:700 62px Fredoka,sans-serif;color:#fff;text-align:center;
+ -webkit-text-stroke:14px var(--ink);paint-order:stroke fill}
+#mon{position:absolute;left:230px;top:700px;width:620px;height:620px;image-rendering:pixelated;transform-origin:50% 92%}
+#flash{position:absolute;left:540px;top:1230px;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:#fff;opacity:0}
+#ball{position:absolute;left:0;top:0;width:110px;height:110px;margin:-55px 0 0 -55px}
+#bang{position:absolute;left:770px;top:600px;width:150px;height:150px;border-radius:22px;background:#fff;border:9px solid var(--ink);
+ display:flex;align-items:center;justify-content:center;font-size:84px;color:#E0402E;transform-origin:30% 110%}
+#bang::after{content:'';position:absolute;left:30px;bottom:-40px;border:18px solid transparent;border-top:22px solid var(--ink)}
+#hud{position:absolute;left:40px;right:40px;top:1560px;height:300px;border-radius:36px;background:rgba(46,42,51,.88);border:6px solid #fff}
+#num{position:absolute;left:0;right:0;top:44px;font-size:52px}
+#bar{position:absolute;left:60px;right:60px;top:132px;height:46px;border-radius:12px;border:6px solid #fff;background:#57525e;overflow:hidden}
+#fill{position:absolute;left:0;top:0;bottom:0}
+#pts{position:absolute;left:0;right:0;top:214px;font-size:46px}
+#stage{background:linear-gradient(#8E6FE0,#6A4CC8)}
+.bg{opacity:.28}
+#paper,#artc{position:absolute;background:#FFFDF8;border:9px solid var(--ink);border-radius:34px;overflow:hidden;box-shadow:0 18px 0 rgba(46,42,51,.25)}
+#artc{background:#E8F7E4}
+#ink{position:absolute}
+#art{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain}
+.lab{position:absolute;width:490px;text-align:center;font:700 50px Fredoka,sans-serif;color:#fff;-webkit-text-stroke:14px var(--ink);paint-order:stroke fill}
+#lab2{font:40px 'Press Start 2P';color:var(--green);-webkit-text-stroke:0}
+#found{position:absolute;left:0;right:0;top:1200px;text-align:center;font:700 54px Fredoka,sans-serif;color:#fff;-webkit-text-stroke:14px var(--ink);paint-order:stroke fill}
+#chat{position:absolute;left:60px;right:60px;top:1150px}
+.msg{position:absolute;left:0;right:0;height:88px;border-radius:24px;background:#fff;border:7px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 34px;font:700 46px Fredoka,sans-serif;color:var(--ink)}
+.msg b{color:#E0402E;font-size:50px}
+#card{position:absolute;left:60px;right:60px;top:300px;border-radius:44px;background:rgba(46,42,51,.93);border:7px solid #fff;padding:60px 40px;text-align:center}
+#card .big{font-size:50px;line-height:1.5;color:var(--yellow)}
+#card .mid{font:700 54px/1.25 Fredoka,sans-serif;color:#fff;margin-top:34px}
+#card .sm{font:600 42px/1.3 Fredoka,sans-serif;color:#d9d3e2;margin-top:26px}
+#card .row{display:flex;justify-content:space-between;font:700 50px/1.2 Fredoka,sans-serif;color:#fff;margin-top:24px;padding:0 20px}
+#card .row b{color:var(--yellow);font-family:'Press Start 2P';font-size:40px;line-height:1.5}
+#card .site{font-size:54px;color:var(--green);margin-top:44px}
+</style></head><body>
+<div id="stage">
+ <div id="bgs"></div>
+ <div id="paper"><canvas id="ink"></canvas></div>
+ <div id="artc"><img id="art"></div>
+ <div id="lab1" class="lab">Le dessin</div><div id="lab2" class="lab px"></div><div id="found"></div>
+ <div id="chat"></div>
+ <div id="flash"></div>
+ <svg id="ball" style="display:none" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#2E2A33" stroke-width="7"/><path d="M4 50a46 46 0 0 1 92 0z" fill="#EE4B3B" stroke="#2E2A33" stroke-width="7"/><path d="M4 50h92" stroke="#2E2A33" stroke-width="7"/><circle cx="50" cy="50" r="14" fill="#fff" stroke="#2E2A33" stroke-width="7"/></svg>
+ <div id="title" class="px">DEVINE LE<br>POKÉMON !</div>
+ <div id="hook"></div>
+ <div id="hud"><div id="num" class="px"></div><div id="bar"><div id="fill"></div></div><div id="pts" class="px"></div></div>
+ <div id="card"></div>
+ <div id="fade"></div>
+</div>
+<script src="dessin.js"></script>
+</body></html>
