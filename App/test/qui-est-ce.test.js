@@ -96,3 +96,33 @@ test("giving up reveals the secret as a loss without touching the record", () =>
   assert.equal(profile.quiEstCeBest, 4);
   assert.equal(history[0].result, "loss");
 });
+
+test("zero-question win is a valid record and cannot be overwritten by a worse win", () => {
+  const { context, profile, state } = fixture(seeded(17));
+  context.selectQuiEstCeCard(state().secretId);
+  assert.equal(context.proposeQuiEstCe(), true);
+  assert.equal(profile.quiEstCeBest, 0);
+  assert.equal(profile.quiEstCeRecorded, true);
+  assert.equal(state().newRecord, true);
+  const panel = context.quiPanelHtml(state());
+  assert.match(panel, /nouveau record !/);
+  context.restartQuiEstCe();
+  const next = state();
+  const wrong = next.cards.find(id => id !== next.secretId);
+  context.selectQuiEstCeCard(wrong);
+  context.proposeQuiEstCe();
+  context.selectQuiEstCeCard(next.secretId);
+  assert.equal(context.proposeQuiEstCe(), true);
+  assert.equal(next.newRecord, false);
+  assert.equal(profile.quiEstCeBest, 0);
+  assert.match(context.quiPanelHtml(next), /record : 0/);
+});
+
+test("legacy positive record remains valid without the explicit record flag", () => {
+  const { context, profile, state } = fixture(seeded(19));
+  profile.quiEstCeBest = 4;
+  context.selectQuiEstCeCard(state().secretId);
+  assert.equal(context.proposeQuiEstCe(), true);
+  assert.equal(profile.quiEstCeBest, 0);
+  assert.equal(profile.quiEstCeRecorded, true);
+});

@@ -58,3 +58,18 @@ test('the daily streak belongs to the copy that won the latest day; a missing pa
   assert.equal(s.dailyBestStreak, 9);
   assert.equal(parsed(merged, 'profile').xp, 50);
 });
+
+test('a recorded zero wins against positive and legacy missing scores on either device', () => {
+  const zero = blob({ quiEstCeBest: 0, quiEstCeRecorded: true, xp: 100 });
+  const positive = blob({ quiEstCeBest: 5, xp: 200 });
+  const missing = blob({ quiEstCeBest: 0, xp: 300 });
+  for (const [primary, other] of [[zero, positive], [positive, zero], [zero, missing], [missing, zero]]) {
+    const p = parsed(c.mergeSyncBlobs(primary, other), 'profile');
+    assert.equal(p.quiEstCeBest, 0);
+    assert.equal(p.quiEstCeRecorded, true);
+    assert.equal(p.xp, Math.max(JSON.parse(primary.profile).xp, JSON.parse(other.profile).xp));
+  }
+  const old = parsed(c.mergeSyncBlobs(missing, positive), 'profile');
+  assert.equal(old.quiEstCeBest, 5);
+  assert.equal(old.quiEstCeRecorded, true);
+});

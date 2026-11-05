@@ -84,9 +84,14 @@ function mergeProfileData(p, o, b) {
   for (const key of Object.keys(out)) {
     if (/HighScore$/.test(key) || (key.endsWith("Best") && key !== "quiEstCeBest")) out[key] = Math.max(profileMergeNumber(p[key]), profileMergeNumber(o[key]));
   }
-  // Qui est-ce ? keeps the fewest questions (0 = no record yet).
-  const qa = profileMergeNumber(p.quiEstCeBest), qb = profileMergeNumber(o.quiEstCeBest);
-  if (qa || qb) out.quiEstCeBest = qa && qb ? Math.min(qa, qb) : qa || qb;
+  // Legacy 0 means "not recorded"; an explicit flag makes a genuine 0-question win durable.
+  const qa = Number(p.quiEstCeBest), qb = Number(o.quiEstCeBest);
+  const hasA = p.quiEstCeRecorded === true || (Number.isFinite(qa) && qa > 0);
+  const hasB = o.quiEstCeRecorded === true || (Number.isFinite(qb) && qb > 0);
+  if (hasA || hasB) {
+    out.quiEstCeBest = hasA && hasB ? Math.min(qa, qb) : hasA ? qa : qb;
+    out.quiEstCeRecorded = true;
+  }
   for (const key of PROFILE_UNION_FIELDS) if (key in p || key in o) out[key] = profileMergeUnion(p[key], o[key]);
   for (const key of PROFILE_MAX_FIELDS) if (key in p || key in o) out[key] = profileMergeMax(p[key], o[key]);
   if (p.pioneerMyth || o.pioneerMyth) out.pioneerMyth = true;

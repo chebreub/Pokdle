@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.  
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
-> **Statut au 05/11/2026 : LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 intégré (#261) ; LOG-03 en PR #264 ouverte avec CI Node et navigateur vertes.**
+> **Statut de suivi au 05/11/2026 : LOG-02 en PR, CI à vérifier. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression vérifiée : 2 tâches terminées / 43 actives = 4,7 %.** Une tâche en investigation (BUG-MOB-01), 40 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression vérifiée : 2 tâches terminées / 43 actives = 4,7 %.** Deux actions en cours (BUG-MOB-01, LOG-02), 39 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : traiter LOG-02 (LOG-03 fusionné dans #264)** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : terminer LOG-02 puis traiter LOG-04** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non reproduite et non identifiée**.
 
@@ -60,7 +60,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### Lot 1 — Logique, reprise, données
 - [x] **LOG-01 · P1** : choix 5/10/20 sans réinitialisation si valeur identique ; confirmation et conservation de l'état/préférence si changement refusé. PR [#261](https://github.com/chebreub/Pokdle/pull/261), **CI Node et navigateurs vertes**, fusionnée au commit `646d83c`.
-- [ ] **LOG-02 · P1** : record « Qui est-ce ? » de 0 question distinct d'absence de record.
+- [~] **LOG-02 · P1** : record « Qui est-ce ? » à 0 question distingué de l'absence de record via indicateur explicite, fusion multi-appareils et affichage. Correctif en PR, **tests CI / fusion à vérifier**.
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
 - [ ] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur.
 - [ ] **SAVE-01 · P1** : conserver série entière (ex. relance à la manche 6) sans mélange entre comptes.
@@ -149,6 +149,11 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - **LOG-03 est [x]** : [PR #264](https://github.com/chebreub/Pokdle/pull/264) fusionnée (`cfa0d021`), [CI Node](https://github.com/chebreub/Pokdle/actions/runs/42024332274) et [CI navigateur](https://github.com/chebreub/Pokdle/actions/runs/42024332512) vertes. Merge confirmé le 05/11/2026.
 - Progression après fusion : **2/43 = 4,7 %** ; prochaine action LOG-02.
 - Ce lot documentaire **n'implémente aucune mécanique de jeu** et n'ajoute pas de tâche [x] au décompte.
+
+### En cours — LOG-02
+
+- [PR #266](https://github.com/chebreub/Pokdle/pull/266) : record zéro, fusion multi-appareils, affichage et tests ciblés. CI et fusion à vérifier sur le dernier commit ; **progression inchangée à 2/43 = 4,7 %** tant que non fusionnée.
+- Prochaine action après clôture : LOG-04 ; BUG-MOB-01 nécessite toujours une reproduction réelle.
 
 ## Prompt minimal pour un nouveau chat
 

@@ -73,8 +73,11 @@ function renderHomeDiscovery(force = false) {
 }
 function homeGameRecordHtml(action) {
   const records = { openQuiEstCeMode:["quiEstCeBest","questions"], openPetitBacMode:["petitBacBest","bonnes réponses"], openHigherLowerMode:["higherLowerHighScore","de série"], startQuizGame:["quizHighScore","/ " + (typeof QUIZ_QUESTION_COUNT === "number" ? QUIZ_QUESTION_COUNT : 15)], openSpeedrunMode:["speedrunHighScore","Pokémon"], openTypeComboSolo:["typeComboHighScore","pts"], openOddOneOutMode:["oddOneOutHighScore","de série"], startWeightBattle:["weightBattleHighScore","de série"] };
-  const spec = records[action], value = spec ? Number(playerProfile?.[spec[0]]) || 0 : 0;
-  return value > 0 ? '<small class="home-game-record">Ton record : '+value+' '+spec[1]+'</small>' : '';
+  const spec = records[action], value = spec ? Number(playerProfile?.[spec[0]]) : NaN;
+  const hasRecord = spec && (action === 'openQuiEstCeMode'
+    ? playerProfile?.quiEstCeRecorded === true || (Number.isFinite(value) && value > 0)
+    : Number.isFinite(value) && value > 0);
+  return hasRecord ? '<small class="home-game-record">Ton record : '+value+' '+spec[1]+'</small>' : '';
 }
 // One painted illustration per week leads the catalogue; the games themselves stay in their family.
 var CATALOG_FEATURES = [
