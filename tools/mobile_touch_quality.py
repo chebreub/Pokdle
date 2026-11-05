@@ -75,6 +75,10 @@ def case(page, engine, width, height):
 
     # Questions live in a nested scroll container. Check top and lower buttons.
     for index in (0, -1):
+        # The first question can already identify a unique Pokemon; use a fresh
+        # board for the second gesture instead of relying on random outcomes.
+        if index == -1:
+            page.evaluate('restartQuiEstCe()')
         selector = '#screen-qui-est-ce .qui-questions .qui-question:not(:disabled)'
         before = page.evaluate('quiEstCeState.questions')
         detail = tap_at_point(page, selector, method, index=index)
