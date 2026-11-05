@@ -25,6 +25,17 @@ Seuls les **totaux journaliers** sont ajoutés en base. Les compteurs existants 
 - La CI GitHub utilise une base de test isolée `QA_DATABASE_URL` ; ne jamais exécuter la suite sur la base de production.
 - Après fusion validée et publication Render, contrôler dans la console `/admin/stats` que les chiffres apparaissent en jouant des manches fictives (sans comptes réels) et que les autres modes restent fonctionnels.
 
+## Économie et captures — agrégats dans Admin Stats
+
+- Les périodes économiques suivent le **jour de jeu Europe/Paris** des écritures `coin_ledger.day`, `ball_gains.day` et `wild_encounters.day`, alors que les statistiques de visites historiques restent en **UTC**. En 1j et 3j, la journée de Paris en cours est incluse ; sur les périodes longues, seules les journées closes sont incluses.
+- Les chiffres viennent exclusivement des tables serveur existantes, par requêtes `SELECT` paramétrées, sans nouvelles données personnelles : **pas d'identifiant, de compte, de transaction brute ni de Pokémon possédé envoyé dans la page**. Les sources sont classées par catégories générales.
+- Pokédollars : somme des **crédits positifs**, **dépenses négatives** et variation nette de la période (ne représente pas les soldes cumulés des comptes) ; la catégorie « Autres » conserve les opérations administratives et non classées, sans les présenter comme des gains de jeu.
+- Balls : nombre **attribué** par type et catégorie. Les Balls achetées, bonus, cadeaux, jeux du jour et mini-jeux sont distincts. Ne pas tenter de recalculer un « stock » global par différence des périodes, car les reprises invité/compte possèdent des crédits de fusion.
+- Rencontres : n'inclut que les types `wild`, `legend` et `prestige`, pas les Pokémon reçus par échange (`trade`) ni les réinitialisations administrateur. Les captures ensuite relâchées ou échangées restent des **captures ayant réellement réussi**, attribuées au **jour de rencontre**.
+- Shinies **croisés** vs **capturés** ; lancers et captures ventilés par Poké/Super/Hyper Ball. « Captures par lancer » = captures réussies / Balls réellement dépensées dans les rencontres de la période. Cela **n'est pas la chance officielle de capture** : les espèces et stratégies diffèrent, et les rencontres ouvertes peuvent biaiser la période partielle.
+- Les identités distinctes ayant commencé une rencontre constituent une estimation du volume d'observations, **pas un nombre de personnes uniques** (invité et compte peuvent être deux identités).
+- Données indisponibles : le tableau affiche explicitement « Mesures indisponibles », jamais un zéro ou un taux fabriqué. Aucun accès sans l'authentification existante `ADMIN_STATS_KEY`.
+
 ## Tableau d'administration V2 — novembre 2026
 
 - Périodes 1 jour (aujourd'hui UTC, **journée en cours**) et 3 jours (aujourd'hui compris) ; les périodes de 7, 14, 30 et 90 jours gardent la comparaison sur **jours UTC entièrement écoulés**.
