@@ -2372,6 +2372,13 @@ function getUsageUid() {
     return uid;
   } catch (_e) { return ""; }
 }
+// Explicit test-only browser session. Not an identity or security signal.
+// In a QA tab: sessionStorage.setItem("pokedle_usage_test_v1","1"), then reload.
+// To return to normal: sessionStorage.removeItem("pokedle_usage_test_v1").
+function isUsageTestSession() {
+  try { return sessionStorage.getItem("pokedle_usage_test_v1") === "1"; }
+  catch (_e) { return false; }
+}
 function trackUsage(event) {
   try {
     // En session Party, les mini-jeux sont des manches, pas des lancements solo.
@@ -2379,6 +2386,7 @@ function trackUsage(event) {
         typeof isPartySessionActive === "function" && isPartySessionActive()) return;
     // A completed game needs no anonymous device token: count an outcome, not a person.
     const payload = event.startsWith("complete:") ? { event } : { event, uid: getUsageUid() };
+    if (isUsageTestSession()) payload.usageTest = true;
     fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), keepalive: true }).catch(() => {});
   } catch (_e) {}
 }
