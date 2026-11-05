@@ -57,7 +57,7 @@
 
 ### Diagnostic supplémentaire — BUG-MOB-01
 
-Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus de « Qui est-ce ? », avec frappes réelles aux coordonnées, contrôles de sélection et réouverture après navigation/mélange. **Analyse transversale uniquement**, pas un correctif présumé et aucune validation sur l'appareil de Jade. La progression intégrée reste à **4/43 = 9,3 %** tant que le signalement n'est pas reproduit/corrigé sur appareil réel.
+Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus de « Qui est-ce ? », avec frappes réelles aux coordonnées, contrôles de sélection et réouverture après navigation/mélange. **Cause candidate ciblée** : un toast de résultat invisible restait tactile (`.gamefeel-result-card { pointer-events:auto }` sous parent à `opacity:0`). [PR #271](https://github.com/chebreub/Pokdle/pull/271) ajoute le test caché/visible/caché et limite l'interception à la carte visible. **CI et validation sur l'appareil de Jade restent nécessaires** ; le problème peut avoir plusieurs causes. Progression intégrée **4/43 = 9,3 %** inchangée tant que non clôturé.
 
 ## Risques et verrous à connaître
 
