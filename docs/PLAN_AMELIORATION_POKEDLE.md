@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression vérifiée : 4 tâches terminées / 43 actives = 9,3 %.** Une action en investigation (BUG-MOB-01), 38 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression vérifiée : 4 tâches terminées / 43 actives = 9,3 %.** Deux actions en cours (BUG-MOB-01, SAVE-01), 37 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : analyser SAVE-01 (reprise de série isolée par compte)** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : finaliser SAVE-01, puis examiner FX-02** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non reproduite et non identifiée**.
 
@@ -63,7 +63,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-02 · P1** : record « Qui est-ce ? » à 0 question distingué de l'absence de record via indicateur explicite, fusion multi-appareils et affichage. [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée au commit `9a68b84f` ; **CI Node et navigateur vertes**.
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
 - [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
-- [ ] **SAVE-01 · P1** : conserver série entière (ex. relance à la manche 6) sans mélange entre comptes.
+- [~] **SAVE-01 · P1** : point de reprise local versionné des séries Pixelisé, Cri, Silhouette et Description, avec isolement par compte, état de manche et reprise serveur lorsqu'il est responsable du mystère. Tests de non-régression ajoutés ; **CI, revue et fusion à vérifier**.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
 - [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
@@ -161,6 +161,12 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - Prochaine action : LOG-04. BUG-MOB-01 reste en investigation : aucune recette iPhone réel.
 
 | 2026-11-05 | 1 | LOG-04 : rejets répétés dans Connections sans nouvelle pénalité | CI Node + navigateur/base de données vertes ; PR fusionnée, aucune recette Safari réel | [#268](https://github.com/chebreub/Pokdle/pull/268), commit `d8c87fe7` |
+
+### SAVE-01 — en revue
+
+- Reprise locale par compte, sans inclure la sauvegarde de série dans les synchronisations cloud de profils. Les parties serveur conservent le mystère côté serveur. Aucun inventaire ni compteur financier touché.
+- Critère de clôture : les tests Node et navigateur sur le dernier head de la PR doivent être verts ; vérifier les cas de refresh sur manche 6, de changement de compte, et l'absence d'XP attribuée une seconde fois. La vraie recette iPhone et la continuité **entre appareils** ne sont pas démontrées par un stockage local.
+- **Progression intégrée inchangée à 4/43 = 9,3 % tant que non fusionnée.**
 
 ## Prompt minimal pour un nouveau chat
 
