@@ -479,7 +479,11 @@ function restoreSavedGame(preferredMode = null, seriesRound = null) {
   showScreen("screen-game");
   setGlobalNavActive("game");
 
-  document.getElementById("guess-input").focus();
+  // Like a fresh round, restoring a game must not open the phone keyboard or
+  // scroll the viewport before the player interacts with the input.
+  if (window.matchMedia("(min-width: 641px)").matches) {
+    document.getElementById("guess-input").focus({ preventScroll: true });
+  }
 
   if (gameMode === "daily") syncDailyObservedState();
   return true;
