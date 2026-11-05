@@ -47,7 +47,7 @@ const V = {
   // Épisodes 2 (noms et stats lus dans assets/mons.json).
   hl2: { chain: [129, 130, 128, 292, 493, 321, 445, 609], zones: ['mer', 'prairie', 'tour', 'montagne', 'mer', 'volcan', 'tour'] },
   cri2: { rounds: [
-    { o: [4, 7, 1, 25], a: 1, z: 'prairie' }, { o: [94, 92, 93, 609], a: 0, z: 'tour' },
+    { o: [252, 255, 258, 387], a: 2, z: 'prairie' }, { o: [94, 92, 93, 609], a: 0, z: 'tour' },
     { o: [658, 448, 571, 727], a: 3, z: 'volcan' }, { o: [150, 151, 251, 385], a: 1, z: 'montagne' },
     { o: [6, 149, 445, 373], a: 2, z: 'foret' }, { o: [778, 25, 777, 702], a: 0, z: 'mer', mystery: true }] }
 };

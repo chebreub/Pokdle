@@ -19,15 +19,15 @@ const SETS = {
   px6b: { hint: 'Indice : type Poison', q: [
     { id: 59, n: 'ARCANIN', z: 'volcan' }, { id: 181, n: 'PHARAMP', z: 'prairie' }, { id: 373, n: 'DRATTAK', z: 'mer' },
     { id: 445, n: 'CARCHACROK', z: 'montagne' }, { id: 706, n: 'MUPLODOCUS', z: 'foret' }, { id: 980, n: '??????', z: 'tour', mystery: true }] },
-  px6c: { hint: 'Indice : type Feu', q: [
+  px6c: { hint: 'Indice : type Feu', grid: [6, 10, 15], q: [
     { id: 39, n: 'RONDOUDOU', z: 'prairie' }, { id: 212, n: 'CIZAYOX', z: 'montagne' }, { id: 560, n: 'BAGGAÏD', z: 'tour' },
     { id: 663, n: 'FLAMBUSARD', z: 'volcan' }, { id: 875, n: 'BEKAGLAÇON', z: 'mer' }, { id: 936, n: '??????', z: 'foret', mystery: true }] },
-  px6d: { hint: 'Indice : type Roche', q: [
+  px6d: { hint: 'Indice : type Roche', grid: [6, 10, 15], q: [
     { id: 54, n: 'PSYKOKWAK', z: 'mer' }, { id: 248, n: 'TYRANOCIF', z: 'montagne' }, { id: 437, n: 'ARCHÉODONG', z: 'tour' },
     { id: 547, n: 'FARFADUVET', z: 'prairie' }, { id: 724, n: 'ARCHÉDUC', z: 'foret' }, { id: 970, n: '??????', z: 'volcan', mystery: true }] }
 };
 let Q = SETS.px6.q, HINT = SETS.px6.hint;
-const GRID = [8, 12, 19], GRID_MYSTERY = [7, 9, 11];
+let GRID = [8, 12, 19], GRID_MYSTERY = [7, 9, 11];
 // Round timing (seconds from the round start).
 const R = 9.0, OPEN = 1.15, STEP2 = 3.25, STEP3 = 5.35, REVEAL = 7.35;
 const SUB = 1.6; // « Abonne-toi » card after round 2
@@ -40,7 +40,7 @@ const IMG = {}, GROUND = {};
 function load(src) { return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
 
 async function setup(name) {
-  if (SETS[name]) { Q = SETS[name].q; HINT = SETS[name].hint; }
+  if (SETS[name]) { Q = SETS[name].q; HINT = SETS[name].hint; if (SETS[name].grid) GRID = SETS[name].grid; }
   for (const q of Q) IMG[q.id] = await load('../assets/art-' + q.id + '.png');
   const bgs = $('bgs');
   for (const z of new Set(Q.map((q) => q.z))) {
