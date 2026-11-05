@@ -222,3 +222,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   renderHomeReturn();
 });
+
+// /api/me resolves asynchronously; refresh the scoped "Reprendre" tile when it does.
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+  window.addEventListener("pokedle:account-known", () => {
+    if (document.getElementById("home-return")) renderHomeReturn();
+  });
+}
