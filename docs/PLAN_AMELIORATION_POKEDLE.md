@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression vérifiée : 4 tâches terminées / 43 actives = 9,3 %.** Deux actions en cours (BUG-MOB-01, SAVE-01), 37 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression vérifiée : 5 tâches terminées / 43 actives = 11,6 %.** Une action en cours (BUG-MOB-01), 37 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,9 +32,9 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **Prochaine action de développement : terminer SAVE-01 [#270](https://github.com/chebreub/Pokdle/pull/270) avec CI verte**, puis examiner FX-02. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **Prochaine action de développement : examiner FX-02**, après fusion de SAVE-01 [#270](https://github.com/chebreub/Pokdle/pull/270) au commit `f1b1abef` (CI Node et navigateur vertes sur son dernier head). Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
-Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non reproduite et non identifiée**.
+Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non confirmée sur le téléphone réel** ; l'interception par un toast transparent a été corrigée dans #271, mais le retour de Jade reste à recueillir.
 
 Méthode :
 1. Reproduire sur appareil réel, avec détails modèle/navigateur, état du clavier et éventuels panneaux ouverts.
@@ -63,7 +63,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-02 · P1** : record « Qui est-ce ? » à 0 question distingué de l'absence de record via indicateur explicite, fusion multi-appareils et affichage. [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée au commit `9a68b84f` ; **CI Node et navigateur vertes**.
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
 - [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
-- [~] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte et sélection de générations, avec état de manche, conservation des manches achevées et bouton « Reprendre » sur l'accueil ; [PR #270](https://github.com/chebreub/Pokdle/pull/270), tests et vérification en cours. Aucune synchronisation inter-appareils revendiquée.
+- [x] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte et sélection de générations, avec état de manche, manches achevées et bouton « Reprendre » à l'accueil. [PR #270](https://github.com/chebreub/Pokdle/pull/270) **fusionnée** au commit `f1b1abef` après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42065243849) et [CI navigateur/base verte](https://github.com/chebreub/Pokdle/actions/runs/42065325060) sur le head `933d4f15`. Aucune synchronisation inter-appareils ni recette sur iPhone réel revendiquée.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
 - [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
@@ -111,7 +111,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
 4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
 
-**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Étape de développement prioritaire inchangée : SAVE-01**, puis FX-02 ; le cadrage économique est distinct.
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine étape de développement : FX-02** ; SAVE-01 est intégrée ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
@@ -156,7 +156,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 - **PR [#260](https://github.com/chebreub/Pokdle/pull/260) fusionnée** dans `main` : plan, protocole tactile et tests coordinate-based. CI complète verte, aucune correction du bug utilisateur confirmée.
 - **PR [#261](https://github.com/chebreub/Pokdle/pull/261) fusionnée** dans `main` : correction des remises à zéro accidentelles des séries 5/10/20 ; suite Node + CI navigateur complètes vertes. La sauvegarde et la reprise de séries sur rechargement (SAVE-01) restent un chantier distinct.
-- Pour reprendre : **vérifier le dernier `main` et la PR #264**, puis attaquer LOG-02 (record zéro « Qui est-ce ? ») ou SAVE-01 en lot isolé, après lecture des fichiers et tests existants. BUG-MOB-01 demeure en attente d'une reproduction sur iPhone réel ; ne pas le « réparer » au jugé.
+- **Point historique de novembre :** les PR #264, #266, #268 et #270 sont désormais intégrées. Au prochain chat, consulter `main` et commencer **FX-02** sans refaire les lots antérieurs ; BUG-MOB-01 attend la confirmation sur appareil réel.
 
 ## Journal d'avancement (à mettre à jour dans les PR)
 
@@ -171,11 +171,16 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - Progression après fusion : **2/43 = 4,7 %** ; prochaine action LOG-02.
 - Ce lot documentaire **n'implémente aucune mécanique de jeu** et n'ajoute pas de tâche [x] au décompte.
 
-### SAVE-01 — en validation
+### SAVE-01 — intégrée (#270)
 
-- La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Nouvelle CI sur le head final à confirmer avant fusion.**
-- [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte **et groupe de générations**. Le test navigateur initial a également révélé une régression quand la génération changeait : sauvegardes désormais distinctes par groupe, sans effacement du précédent. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI et fusion à revérifier sur le dernier head**.
-- Progression intégrée inchangée **4/43 = 9,3 %** jusqu'à fusion. La sauvegarde entre appareils n'est pas couverte ; compte, inventaire et économie inchangés.
+- La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Contrôle ultérieur : CI Node et navigateur vertes sur le head final `933d4f15`, puis PR fusionnée.**
+- [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte **et groupe de générations**. Le test navigateur initial a également révélé une régression quand la génération changeait : sauvegardes désormais distinctes par groupe, sans effacement du précédent. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI Node et navigateur verte sur `933d4f15`; merge confirmé `f1b1abef`**.
+- Progression après fusion : **5/43 = 11,6 %**. La sauvegarde entre appareils n'est pas couverte ; compte, inventaire et économie inchangés. La recette réelle sur Safari iPhone / Render n'est pas revendiquée.
+
+### Clôture SAVE-01 — 05/11/2026
+
+- [PR #270](https://github.com/chebreub/Pokdle/pull/270) fusionnée (`f1b1abef`) après validations [Node](https://github.com/chebreub/Pokdle/actions/runs/42065243849) et [navigateur/base](https://github.com/chebreub/Pokdle/actions/runs/42065325060) vertes sur le head `933d4f15`. Le correctif mobile du libellé « Manche 6 / 10 » est inclus. **Pas de synchronisation inter-appareils** et **pas de recette Render/iPhone réelle** dans cette validation.
+- **5/43 = 11,6 %** ; prochain chantier **FX-02**, sans modification des décisions économiques déjà consignées.
 
 ### LOG-04 — intégré
 
