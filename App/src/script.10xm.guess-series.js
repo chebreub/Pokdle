@@ -55,7 +55,7 @@ function guessSeriesRead(mode) {
     if (data.recorded && data.index >= data.total) return null; // finished: a fresh launch starts over
     return { mode, owner, gens, total:data.total, index:data.index, found:data.found,
       attemptsWon:data.attemptsWon, rounds:data.rounds, xpStart:Number(data.xpStart) || 0,
-      recorded:data.recorded === true, round:data.round || null };
+      recorded:data.recorded === true, round:data.round || null, savedAt:Number(data.savedAt) || 0 };
   } catch (_e) { return null; }
 }
 // One atomic localStorage write per checkpoint, never in the cloud profile or economy data.
