@@ -63,7 +63,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-02 · P1** : record « Qui est-ce ? » à 0 question distingué de l'absence de record via indicateur explicite, fusion multi-appareils et affichage. [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée au commit `9a68b84f` ; **CI Node et navigateur vertes**.
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
 - [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
-- [~] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte, avec état de manche et conservation des manches achevées ; [PR #270](https://github.com/chebreub/Pokdle/pull/270), tests et vérification en cours. Aucune synchronisation inter-appareils revendiquée.
+- [~] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte et sélection de générations, avec état de manche et conservation des manches achevées ; [PR #270](https://github.com/chebreub/Pokdle/pull/270), tests et vérification en cours. Aucune synchronisation inter-appareils revendiquée.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
 - [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
@@ -152,7 +152,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### SAVE-01 — en validation
 
-- [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI et fusion à revérifier sur le dernier head**.
+- [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte **et groupe de générations**. Le test navigateur initial a également révélé une régression quand la génération changeait : sauvegardes désormais distinctes par groupe, sans effacement du précédent. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI et fusion à revérifier sur le dernier head**.
 - Progression intégrée inchangée **4/43 = 9,3 %** jusqu'à fusion. La sauvegarde entre appareils n'est pas couverte ; compte, inventaire et économie inchangés.
 
 ### LOG-04 — intégré
