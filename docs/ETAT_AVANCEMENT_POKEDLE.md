@@ -12,8 +12,8 @@
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
 | **Terminé et intégré à main** | **2** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 |
-| **Non commencé / à conduire ou à décider** | **40** | Dont certaines propositions économiques soumises à validation préalable |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et LOG-02 |
+| **Non commencé / à conduire ou à décider** | **39** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
@@ -64,8 +64,8 @@ Correctif de la valeur `0` comme record valide via `quiEstCeRecorded`, sans migr
 ## Suite opérationnelle recommandée
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
-2. Démarrer **LOG-02** dans une PR séparée : record de 0 question sur Qui est-ce ?, fusion des profils, zéro comme valeur historique valide, tests de non-régression.
-3. Traiter **LOG-04** puis approfondir **SAVE-01** (sauvegarde atomique et reprise de la totalité d'une série, sans mélanger les comptes).
+2. **Terminer [LOG-02 PR #266](https://github.com/chebreub/Pokdle/pull/266)** : contrôler les tests Node/navigateur sur le head exact et fusionner uniquement si verts. Un ancien zéro sans indicateur est ambigu, aucune migration de données inventée.
+3. Après fusion de #266, traiter **LOG-04** puis approfondir **SAVE-01** (sauvegarde atomique et reprise de la totalité d'une série, sans mélanger les comptes).
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
