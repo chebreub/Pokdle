@@ -18,7 +18,13 @@ const SETS = {
     { id: 609, n: 'LUGULABRE', z: 'tour' }, { id: 823, n: 'CORVAILLUS', z: 'foret' }, { id: 959, n: '??????', z: 'prairie', mystery: true }] },
   px6b: { hint: 'Indice : type Poison', q: [
     { id: 59, n: 'ARCANIN', z: 'volcan' }, { id: 181, n: 'PHARAMP', z: 'prairie' }, { id: 373, n: 'DRATTAK', z: 'mer' },
-    { id: 445, n: 'CARCHACROK', z: 'montagne' }, { id: 706, n: 'MUPLODOCUS', z: 'foret' }, { id: 980, n: '??????', z: 'tour', mystery: true }] }
+    { id: 445, n: 'CARCHACROK', z: 'montagne' }, { id: 706, n: 'MUPLODOCUS', z: 'foret' }, { id: 980, n: '??????', z: 'tour', mystery: true }] },
+  px6c: { hint: 'Indice : type Feu', q: [
+    { id: 39, n: 'RONDOUDOU', z: 'prairie' }, { id: 212, n: 'CIZAYOX', z: 'montagne' }, { id: 560, n: 'BAGGAÏD', z: 'tour' },
+    { id: 663, n: 'FLAMBUSARD', z: 'volcan' }, { id: 875, n: 'BEKAGLAÇON', z: 'mer' }, { id: 936, n: '??????', z: 'foret', mystery: true }] },
+  px6d: { hint: 'Indice : type Roche', q: [
+    { id: 54, n: 'PSYKOKWAK', z: 'mer' }, { id: 248, n: 'TYRANOCIF', z: 'montagne' }, { id: 437, n: 'ARCHÉODONG', z: 'tour' },
+    { id: 547, n: 'FARFADUVET', z: 'prairie' }, { id: 724, n: 'ARCHÉDUC', z: 'foret' }, { id: 970, n: '??????', z: 'volcan', mystery: true }] }
 };
 let Q = SETS.px6.q, HINT = SETS.px6.hint;
 const GRID = [8, 12, 19], GRID_MYSTERY = [7, 9, 11];

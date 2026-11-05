@@ -43,7 +43,13 @@ const V = {
   stat: { rounds: [
     { s: 0, l: 'DE PV ?', o: [143, 321, 131, 40], z: 'mer' }, { s: 1, l: 'D’ATTAQUE ?', o: [68, 464, 149, 214], z: 'montagne' },
     { s: 2, l: 'DE DÉFENSE ?', o: [208, 306, 411, 91], z: 'volcan' }, { s: 3, l: 'D’ATQ SPÉ ?', o: [65, 94, 609, 282], z: 'tour' },
-    { s: 4, l: 'DE DÉF SPÉ ?', o: [113, 242, 226, 131], z: 'prairie' }, { s: 5, l: 'DE VITESSE ?', o: [291, 101, 142, 617], z: 'foret', mystery: true }] }
+    { s: 4, l: 'DE DÉF SPÉ ?', o: [113, 242, 226, 131], z: 'prairie' }, { s: 5, l: 'DE VITESSE ?', o: [291, 101, 142, 617], z: 'foret', mystery: true }] },
+  // Épisodes 2 (noms et stats lus dans assets/mons.json).
+  hl2: { chain: [129, 130, 128, 292, 493, 321, 445, 609], zones: ['mer', 'prairie', 'tour', 'montagne', 'mer', 'volcan', 'tour'] },
+  cri2: { rounds: [
+    { o: [4, 7, 1, 25], a: 1, z: 'prairie' }, { o: [94, 92, 93, 609], a: 0, z: 'tour' },
+    { o: [658, 448, 571, 727], a: 3, z: 'volcan' }, { o: [150, 151, 251, 385], a: 1, z: 'montagne' },
+    { o: [6, 149, 445, 373], a: 2, z: 'foret' }, { o: [778, 25, 777, 702], a: 0, z: 'mer', mystery: true }] }
 };
 for (const r of V.stat.rounds) r.a = r.o.reduce((b, id, k) => (M[id][1][r.s] > M[r.o[b]][1][r.s] ? k : b), 0);
 
@@ -60,7 +66,8 @@ function load(src) { return new Promise((ok, ko) => { const i = new Image(); i.o
 function el(tag, cls, parent, html) { const d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; parent.appendChild(d); return d; }
 
 async function setup(name) {
-  KIND = name; const v = V[name];
+  KIND = name.replace(/\d+$/, ''); const v = V[name];
+  try { const extra = await (await fetch('../assets/mons.json')).json(); for (const k in extra) if (!M[k]) M[k] = [extra[k][0], extra[k][1]]; } catch (_e) {}
   const A = S.audio, go = (f, t, vol) => A.push({ file: 'assets/go-' + f + '.mp3', t: +t.toFixed(3), vol });
   const cry = (id, t, vol = 1.5) => A.push({ file: 'assets/cry-' + id + '.ogg', t: +t.toFixed(3), vol, cry: true });
   const tick = (t) => A.push({ file: 'assets/sfx/timer4.wav', t: +t.toFixed(3), vol: 0.9 });
@@ -155,7 +162,8 @@ function renderAt(t) {
   const shown = ROUNDS.length - 1;
   if (mCard) {
     cOn = true; ck = seg(t, CARD_M, CARD_M + .3); top = 36;
-    const q = KIND === 'hl' ? '<div class="big">ET LE DERNIER ?</div><div class="mid">Lokhlass : plus ou moins que Ectoplasma (500) ?</div>'
+    const lastR = ROUNDS[ROUNDS.length - 1];
+    const q = KIND === 'hl' ? '<div class="big">ET LE DERNIER ?</div><div class="mid">' + M[lastR.id][0] + ' : plus ou moins que ' + M[lastR.prev][0] + ' (' + tot(lastR.prev) + ') ?</div>'
       : KIND === 'cri' ? '<div class="big">LE DERNIER,<br>PRESQUE PERSONNE<br>NE L’A</div><div class="mid">A, B, C ou D ? Réponds en commentaire</div>'
         : '<div class="big">LE PLUS RAPIDE ?</div><div class="mid">A, B, C ou D ? Réponds en commentaire</div>';
     setCard(q + '<div class="sm">' + (KIND === 'hl' ? 'Réponds en commentaire · ' : '') + 'réponse demain dans le commentaire épinglé</div>');
