@@ -288,6 +288,9 @@ function renderModeCatalog() {
 }
 function setModeCatalogCategory(category, save = true) {
   modeCatalogCategory = Object.prototype.hasOwnProperty.call(modeCatalogCopy, category) ? category : 'solo';
+  // A solo difficulty filter must not conceal the sole Party Room entry.
+  // Keep the filter when switching among solo/explore/all; reset for friends only.
+  if (modeCatalogCategory === 'friends') modeCatalogDifficulty = 'all';
   modeCatalogFamily = 'all';
   var input = document.getElementById('mode-search');
   if (input) input.value = '';
