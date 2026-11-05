@@ -365,7 +365,7 @@ function restoreSavedGame(preferredMode = null, seriesRound = null) {
   // An account-scoped series can pass its own round; never overwrite the ordinary slot.
   // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
   let save = seriesRound || (preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null));
-  if (save && (save.mode !== "daily" || save.dailyKey !== getDailyDateKey())) {
+  if (!seriesRound && save && (save.mode !== "daily" || save.dailyKey !== getDailyDateKey())) {
     clearSavedGame("daily");
     save = null;
   }
@@ -381,7 +381,7 @@ function restoreSavedGame(preferredMode = null, seriesRound = null) {
   if (!save || (preferredMode && save.mode !== preferredMode)) return false;
 
   if (!VALID_MODES.has(save.mode)) {
-    clearSavedGame(save.mode);
+    if (!seriesRound) clearSavedGame(save.mode);
     return false;
   }
 
@@ -393,7 +393,7 @@ function restoreSavedGame(preferredMode = null, seriesRound = null) {
   if(save.mode === "daily") { startDailyGame();return true; }
   const secret = POKEMON_BY_ID.get(Number(save.secretId));
   if (!secret) {
-    clearSavedGame();
+    if (!seriesRound) clearSavedGame();
     return false;
   }
 
