@@ -165,7 +165,7 @@ async function incrementSegmented(db, event, segment, day = utcDay()) {
       RETURNING day
     )
     INSERT INTO usage_event_segment_daily(day,event,segment,hits)
-    SELECT day,$2,$3,1 FROM total
+    SELECT day,$2,$3,1 FROM total WHERE TRUE
     ON CONFLICT(day,event,segment) DO UPDATE
       SET hits=usage_event_segment_daily.hits+1
   `, [day, event, segment]);
