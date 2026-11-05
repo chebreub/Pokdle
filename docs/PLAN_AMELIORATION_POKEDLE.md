@@ -2,11 +2,13 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.  
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
-> **Statut : LOT 0 — infrastructure de diagnostic validée par CI et intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. Lot 1 LOG-01 terminé et fusionné (#261) avec tests verts.**
+> **Statut au 05/11/2026 : LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 intégré (#261) ; LOG-03 en PR #264 ouverte avec CI Node et navigateur vertes.**
+
+**Progression vérifiée : 1 tâche terminée / 43 actives = 2,3 %.** Deux tâches en cours (BUG-MOB-01, LOG-03), 40 non terminées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
-1. Lire ce document, puis le dernier `main`, les PR fusionnées **après** le SHA ci-dessus et les tests concernés.
+1. Lire ce document, l'[état d'avancement](ETAT_AVANCEMENT_POKEDLE.md), les [deux audits de novembre](audits/README.md) et le [guide du nouveau chat](REPRISE_NOUVEAU_CHAT.md), puis le dernier `main`, les PR fusionnées **après** le SHA ci-dessus et les tests concernés.
 2. Prendre la **première action non terminée** de la section « Prochaine action ». Ne pas refaire un audit global.
 3. Petits changements minimaux, tests locaux, CI GitHub, PR vérifiée ; ne pas fusionner de modifications sensibles sans contrôle.
 4. **Mettre à jour ce document dans chaque PR** : statut, tests, numéro, commit et action suivante.
@@ -29,6 +31,8 @@
 ## Prochaine action (une seule prioritaire)
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
+
+Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : terminer LOG-03 (PR #264, actuellement ouverte malgré CI verte), puis traiter LOG-02** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non reproduite et non identifiée**.
 
@@ -57,7 +61,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### Lot 1 — Logique, reprise, données
 - [x] **LOG-01 · P1** : choix 5/10/20 sans réinitialisation si valeur identique ; confirmation et conservation de l'état/préférence si changement refusé. PR [#261](https://github.com/chebreub/Pokdle/pull/261), **CI Node et navigateurs vertes**, fusionnée au commit `646d83c`.
 - [ ] **LOG-02 · P1** : record « Qui est-ce ? » de 0 question distinct d'absence de record.
-- [ ] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ».
+- [~] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». Correctif et test en [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, **non fusionnée au dernier contrôle**.
 - [ ] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur.
 - [ ] **SAVE-01 · P1** : conserver série entière (ex. relance à la manche 6) sans mélange entre comptes.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
@@ -105,6 +109,14 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **GROW-01 · P2** : test guidé auprès de quelques joueurs externes, compétences Pokémon différentes, appareils réels.
 - [ ] **GROW-02 · P2** : séquences réelles de jeu sans visage ni musique, diffusion ciblée avec accord des communautés.
 
+## Audits détaillés et documents de reprise
+
+- [Audit UX, gameplay, mobile, fidélisation et diffusion](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) — constats, observations, risques et améliorations sans redéveloppement inutile.
+- [Audit des Pokédollars, captures, Balls, rareté et expéditions](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md) — règles en vigueur, export 22/10–04/11 et propositions **non validées**.
+- [État d'avancement des 43 actions, % et PR](ETAT_AVANCEMENT_POKEDLE.md) — à mettre à jour après chaque fusion.
+- [Prompt autonome de reprise dans un nouveau chat](REPRISE_NOUVEAU_CHAT.md) — ordre de lecture, décisions et méthode.
+- [Index des audits anciens](audits/README.md) — historique : ne pas prendre leurs constats datés pour des bugs actuels sans vérification.
+
 ## Chiffres à garder correctement interprétés
 
 **Source :** captures du tableau de bord et `pokdle-economie-2026-11-04.json` fournis dans la conversation du 05/11. 22/10–04/11 inclus, agrégats principalement, non joueurs uniques.
@@ -123,7 +135,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 - **PR [#260](https://github.com/chebreub/Pokdle/pull/260) fusionnée** dans `main` : plan, protocole tactile et tests coordinate-based. CI complète verte, aucune correction du bug utilisateur confirmée.
 - **PR [#261](https://github.com/chebreub/Pokdle/pull/261) fusionnée** dans `main` : correction des remises à zéro accidentelles des séries 5/10/20 ; suite Node + CI navigateur complètes vertes. La sauvegarde et la reprise de séries sur rechargement (SAVE-01) restent un chantier distinct.
-- Pour reprendre : **vérifier le dernier `main`, puis attaquer LOG-02 (record zéro « Qui est-ce ? ») ou SAVE-01 en lot isolé**, après lecture des fichiers et tests existants. BUG-MOB-01 demeure en attente d'une reproduction sur iPhone réel ; ne pas le « réparer » au jugé.
+- Pour reprendre : **vérifier le dernier `main` et la PR #264**, puis attaquer LOG-02 (record zéro « Qui est-ce ? ») ou SAVE-01 en lot isolé, après lecture des fichiers et tests existants. BUG-MOB-01 demeure en attente d'une reproduction sur iPhone réel ; ne pas le « réparer » au jugé.
 
 ## Journal d'avancement (à mettre à jour dans les PR)
 
@@ -132,6 +144,14 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 | 2026-11-05 | 0 | Plan permanent, protocole et tests Chromium/WebKit des coordonnées tactiles ; **aucun correctif CSS** | Node + suite navigateur **vertes**, PR fusionnée ; aucune reproduction Safari iPhone réel ; bug toujours ouvert | [#260](https://github.com/chebreub/Pokdle/pull/260), commit `000728c` |
 | 2026-11-05 | 1 | Anti-réinitialisation des séries 5/10/20 ; confirmation si changement en cours ; cinq tests Node | **Tests Node et suite navigateur complets verts**, PR fusionnée ; aucune nouvelle règle de capture | [#261](https://github.com/chebreub/Pokdle/pull/261), commit `646d83c` |
 
+## Suivi de la PR #264 (au dernier contrôle du 05/11/2026)
+
+- **LOG-03 est [~], pas [x]** : [PR #264](https://github.com/chebreub/Pokdle/pull/264) encore ouverte, [CI Node](https://github.com/chebreub/Pokdle/actions/runs/42024332274) et [CI navigateur](https://github.com/chebreub/Pokdle/actions/runs/42024332512) vertes. Aucun merge constaté au moment de cette photographie.
+- Après fusion, vérifier la branche `main` et marquer LOG-03 [x], consigner le SHA puis recalculer la progression (elle deviendrait **2/43 = 4,7 %** si aucune autre tâche ne change).
+- Ce lot documentaire **n'implémente aucune mécanique de jeu** et n'ajoute pas de tâche [x] au décompte.
+
 ## Prompt minimal pour un nouveau chat
 
+> **Prompt complet et directement copiable : [REPRISE_NOUVEAU_CHAT.md](REPRISE_NOUVEAU_CHAT.md).** Pour une reprise autonome, lire les deux audits et l'état d'avancement avant d'ouvrir une PR.
+>
 > Reprends `chebreub/Pokdle` depuis le dernier `main`, lis `docs/PLAN_AMELIORATION_POKEDLE.md` et `docs/qa/MOBILE_TACTILE.md`, puis compare les PR fusionnées depuis le dernier journal. Continue la prochaine tâche ouverte avec changements minimaux, tests et PR. Ne réaudite pas tout. Respecte les statuts et les décisions, notamment la correction de l'anecdote Kokiyas, les sauvegardes et l'autorité serveur. Termine par la mise à jour du plan et un bilan « fait / testé / non vérifié en production / prochaine action ».
