@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut au 05/11/2026 : LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 intégré (#261) ; LOG-03 en PR #264 ouverte avec CI Node et navigateur vertes.**
 
-**Progression vérifiée : 1 tâche terminée / 43 actives = 2,3 %.** Deux tâches en cours (BUG-MOB-01, LOG-03), 40 non terminées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression vérifiée : 1 tâche terminée / 43 actives = 2,3 %.** Deux tâches en cours (BUG-MOB-01, LOG-03), 40 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
