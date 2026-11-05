@@ -68,15 +68,16 @@ function queueCelebration(item) {
   // Defer until the current game's DOM mutations (e.g. a capture modal) finish.
   if (typeof document !== "undefined" && !celebrationBusy) {
     clearTimeout(celebrationWaitTimer);
-    celebrationWaitTimer = setTimeout(runCelebrations, 0);
+    celebrationWaitTimer = setTimeout(runCelebrations, 80);
   }
 }
 
 function celebrationOverlayOpen() {
   // These existing dialogs intentionally own the screen. Do not put a level-up
-  // backdrop above a capture, gift, wild encounter or another open modal.
+  // backdrop above a capture, gift, wild encounter, visible XP/result toast or modal.
   return Boolean(document.querySelector(
-    ".fx-catch, .fx-reveal, #wild-scene, #overlay-modal:not(.hidden), #daily-quests-overlay, .lvc-back, .achc"
+    ".fx-catch, .fx-reveal, #wild-scene, #overlay-modal:not(.hidden), #daily-quests-overlay, " +
+    ".gamefeel-layer.is-visible, .xp-toast.is-visible, .lvc-back, .achc"
   ));
 }
 
