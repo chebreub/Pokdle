@@ -552,6 +552,7 @@ def run():
                             closeOverlayModal();
                             goToConfig();
                             setSelectedGenerations([1]);
+                            writeJson(GENERATION_PREFERENCE_KEY, [1]);
                             window.verifiedArcadeOnline = () => false;
                             startPixelGame();
                             const state = guessSeries;
