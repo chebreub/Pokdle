@@ -40,7 +40,7 @@ test('a burst of achievements produces one banner showing three titles plus over
   assert.match(banner, /Succès 1/);
   assert.match(banner, /Succès 2/);
   assert.match(banner, /Succès 3/);
-  assert.match(banner, /\\+2 autres succès/);
+  assert.ok(banner.includes('+2 autres succès'));
   assert.doesNotMatch(banner, /Succès 4|Succès 5/);
   c.celebrateLevelUp(10, 10);
   assert.equal(c.celebrationQueue.length, 1, 'no card without a new level');
@@ -105,8 +105,8 @@ test('captures, gifts and existing modals delay celebrations until they close', 
 
 test('dismissal transitions cannot intercept touches after a celebration closes', () => {
   const css = fs.readFileSync(path.join(__dirname, '../game-feel.css'), 'utf8');
-  assert.match(css, /\\.lvc-back\\.is-leaving,\\.lvc-card\\.is-leaving\\{[^}]*pointer-events:none/);
-  assert.match(css, /\\.achc\\.is-leaving\\{[^}]*pointer-events:none/);
+  assert.ok(css.includes('.lvc-back.is-leaving,.lvc-card.is-leaving{transition:opacity .2s ease;opacity:0 !important;pointer-events:none}'));
+  assert.ok(css.includes('.achc.is-leaving{animation:achcOut .38s ease forwards;pointer-events:none}'));
 });
 
 test('the first achievement check of a page load unlocks quietly; later ones are celebrated', () => {
