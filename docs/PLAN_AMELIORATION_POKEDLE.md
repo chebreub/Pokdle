@@ -92,7 +92,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **ECO-04 · P2 · ACCORD DE PRINCIPE, À TESTER** : assurer qu'un coffre d'expédition déjà acquis est crédité une seule fois, même s'il n'est pas ouvert immédiatement. Vérifier les cas de reconnexion, requête répétée et interruption avant validation finale.
 - [ ] **ECO-06 · P2** : vérifier la réelle autorité serveur des récompenses pour chaque mode prioritaire.
 
-## Décisions de cadrage économique — 05/11/2026
+#### Décisions de cadrage économique — 05/11/2026
 
 **Nature de ces décisions :** orientations du propriétaire du jeu, **pas** approbations de règles définitives ni autorisations de déploiement. Elles ne terminent aucune action ECO, ne changent pas le compteur des 43 tâches et ne remplacent pas les audits historiques.
 
