@@ -331,7 +331,12 @@ function registerWin() {
 // AUTO-SAVE / RESTORE GAME
 // ============================================================
 function saveCurrentGame(forcedDailyKey = null) {
-  if (typeof saveGuessSeriesCheckpoint === 'function') saveGuessSeriesCheckpoint();
+  // Account-scoped series do not overwrite the shared legacy one-game slot.
+  if (typeof guessSeriesActive === 'function' && guessSeriesActive()
+    && typeof guessSeriesOwner === 'function' && guessSeriesOwner()) {
+    saveGuessSeriesCheckpoint();
+    return;
+  }
   if(gameMode === "daily") { if(dailyServerState && !dailyServerState.finished) writeJson(STORAGE_KEYS.dailyGame,{version:2,mode:"daily",dailyKey:dailyServerState.day,accountId:dailyServerState.accountId,attempts,historyIds:resultHistory.map(r=>r.pokemon.id),rows:dailyServerState.rows,savedAt:Date.now()});return; }
   if (!secretPokemon || gameOver) return;
   // Seuls les modes restaurables sont sauvegardés (cohérence avec VALID_MODES).
@@ -355,6 +360,11 @@ function saveCurrentGame(forcedDailyKey = null) {
 
 function clearSavedGame(targetMode = gameMode) {
   try {
+    // A series result must not erase another mode's existing ordinary save.
+    if (targetMode !== "daily" && typeof guessSeriesActive === 'function' && guessSeriesActive()) {
+      const otherSave = readJson(STORAGE_KEYS.game, null);
+      if (!otherSave || otherSave.mode !== targetMode) return;
+    }
     localStorage.removeItem(targetMode === "daily" ? STORAGE_KEYS.dailyGame : STORAGE_KEYS.game);
   } catch (e) {
     console.warn("localStorage unavailable:", e);
