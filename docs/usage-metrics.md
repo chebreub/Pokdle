@@ -25,6 +25,14 @@ Seuls les **totaux journaliers** sont ajoutés en base. Les compteurs existants 
 - La CI GitHub utilise une base de test isolée `QA_DATABASE_URL` ; ne jamais exécuter la suite sur la base de production.
 - Après fusion validée et publication Render, contrôler dans la console `/admin/stats` que les chiffres apparaissent en jouant des manches fictives (sans comptes réels) et que les autres modes restent fonctionnels.
 
+## Export du bilan économique anonymisé
+
+- Depuis `/admin/stats`, bouton **Exporter le bilan anonymisé (JSON)** : génère dans le navigateur un fichier `pokdle-economie-AAAA-MM-JJ.json` à partir des seuls **agrégats déjà calculés et visibles** sur la page.
+- Le rapport contient la période Europe/Paris, les totaux Pokédollars/Balls/captures, leur ventilation par catégories et les limites d'interprétation. Un champ manquant reste `null`, jamais converti en faux zéro.
+- Liste blanche de propriétés : **aucune clé `ADMIN_STATS_KEY`, identifiant de joueur, cookie, action ID, nom de Pokémon, transaction brute ou réponse serveur brute** n'est exporté. Aucun nouvel appel de réseau ni stockage de données.
+- Pour demander une analyse des usages réels, partager le JSON, idéalement pour les vues **3 / 7 / 30 jours**. Attention : les jours partiels et les périodes très courtes ont des effectifs parfois insuffisants ; les catégories « Autres » peuvent contenir des attributions administratives.
+- L'export n'établit pas des probabilités de capture officielles, un taux de churn ni des soldes individuels ; ces inférences restent hors périmètre.
+
 ## Économie et captures — agrégats dans Admin Stats
 
 - Les périodes économiques suivent le **jour de jeu Europe/Paris** des écritures `coin_ledger.day`, `ball_gains.day` et `wild_encounters.day`, alors que les statistiques de visites historiques restent en **UTC**. En 1j et 3j, la journée de Paris en cours est incluse ; sur les périodes longues, seules les journées closes sont incluses.
