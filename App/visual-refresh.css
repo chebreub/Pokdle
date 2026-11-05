@@ -1515,7 +1515,9 @@
     gap:8px;
   }
   #pokdle-app.design-refresh .club-return-main small{
-    display:none;
+    /* Keep the saved round number visible on phones (e.g. "Manche 6 / 10"). */
+    display:block;
+    white-space:normal;
   }
   #pokdle-app.design-refresh .club-return-bar .club-recent{
     padding:8px 0 0;
