@@ -30,7 +30,7 @@ function fixture(store=new Map(),account='A') {
   vm.createContext(env);vm.runInContext(source,env);
   return {env,store,starts,resumes,rewards};
 }
-const key='pokedle.guessSeries.v1:user%3AA:pixel';
+const key='pokedle.guessSeries.v1:user%3AA:pixel:1';
 function endRound(f,won=true) {
   f.env.secretPokemon={id:200+f.env.guessSeries.index,name:'Pikachu'};
   f.env.attempts=2;f.env.gameOver=true;
@@ -73,11 +73,31 @@ test('saving and reading remain isolated to account identity',()=>{
   assert.equal(b.env.guessSeries.index,1);
   assert.equal(b.env.guessSeries.found,0);
   assert.ok(storage.has(key));
-  assert.ok(storage.has('pokedle.guessSeries.v1:user%3AB:pixel'));
+  assert.ok(storage.has('pokedle.guessSeries.v1:user%3AB:pixel:1'));
   const again=fixture(storage,'A');again.env.window.startPixelGame();
   assert.equal(again.env.guessSeries.index,2);
   assert.equal(again.env.guessSeries.found,1);
 });
+test('changing generations starts a different pool without erasing the previous series',()=>{
+  const store=new Map(),f=fixture(store,'A');
+  f.env.window.startPixelGame();
+  endRound(f);
+  const original=store.get(key);
+  assert.ok(original);
+  f.env.selectedGens=new Set([9]);
+  f.env.window.startPixelGame();
+  assert.equal(f.env.guessSeries.index,1);
+  assert.equal(f.env.guessSeries.found,0);
+  assert.equal(f.env.guessSeries.gens,'9');
+  assert.ok(store.has('pokedle.guessSeries.v1:user%3AA:pixel:9'));
+  assert.equal(store.get(key),original,'a different pool may not overwrite the first series');
+  f.env.selectedGens=new Set([1]);
+  f.env.window.startPixelGame();
+  assert.equal(f.env.guessSeries.index,2);
+  assert.equal(f.env.guessSeries.found,1);
+  assert.equal(f.env.guessSeries.gens,'1');
+});
+
 test('unresolved account never touches any checkpoint',()=>{
   const f=fixture();f.env.window.__pokedleAccountKnown=false;
   f.env.window.startPixelGame();
