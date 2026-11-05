@@ -152,6 +152,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### SAVE-01 — en validation
 
+- La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Nouvelle CI sur le head final à confirmer avant fusion.**
 - [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte **et groupe de générations**. Le test navigateur initial a également révélé une régression quand la génération changeait : sauvegardes désormais distinctes par groupe, sans effacement du précédent. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI et fusion à revérifier sur le dernier head**.
 - Progression intégrée inchangée **4/43 = 9,3 %** jusqu'à fusion. La sauvegarde entre appareils n'est pas couverte ; compte, inventaire et économie inchangés.
 
