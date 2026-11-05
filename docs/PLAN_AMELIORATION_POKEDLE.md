@@ -50,7 +50,7 @@ Voir `docs/qa/MOBILE_TACTILE.md` pour le protocole et les outils de diagnostic.
 Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot n'est pas « terminé » si une recette iPhone requise reste absente.
 
 ### Lot 0 — Fiabilité tactile, ergonomie mobile/PC
-- [~] **BUG-MOB-01 · P0** : diagnostiquer zone basse non cliquable sur téléphone. Source réelle à confirmer.
+- [~] **BUG-MOB-01 · P0** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI et recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
 - [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [ ] **DATA-01 · P0** : documenter grain des événements ouverture/partie/manche/fin et date de début du suivi ; ne pas reconstruire l'historique fictivement.
 - [ ] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.

@@ -95,7 +95,66 @@ def case(page, engine, width, height):
     page.evaluate('''() => { goToConfig(); openQuiEstCeMode(); restartQuiEstCe(); }''')
     selector = '#screen-qui-est-ce .qui-card:nth-child(2):not(:disabled)'
     detail = tap_at_point(page, selector, method)
+    assert page.evaluate('quiEstCeState.selected') is not None, 'Qui est-ce? tap ignored after navigation: ' + str(detail)
     steps.append(dict(action='after-navigation', **detail))
+
+    # This was reported across game modes, not just Qui est-ce ?. Reuse the same
+    # coordinate hit test on a second independent game with no locator auto-scroll.
+    page.evaluate('''() => { closeOverlayModal(); goToConfig(); openPokeConnectionsMode(); }''')
+    page.locator('#screen-poke-connections .poke-connections-tile').first.wait_for(state='visible')
+    for index in (0, -1):
+        selector = '#screen-poke-connections .poke-connections-tile'
+        before = page.evaluate('pokeConnectionsState.selected.size')
+        detail = tap_at_point(page, selector, method, index=index)
+        after = page.evaluate('pokeConnectionsState.selected.size')
+        assert after == before + 1, f'Poké-Connections tile index {index} ignored: {detail}'
+        steps.append(dict(action='connections-select', tile_index=index, **detail))
+
+    # Shuffling and switching screens should not leave a transparent blocker
+    # on top of the game at the same viewport position.
+    page.evaluate('''() => {
+      clearPokeConnectionsSelection();
+      shufflePokeConnectionsTiles();
+      goToConfig();
+      openPokeConnectionsMode();
+    }''')
+    selector = '#screen-poke-connections .poke-connections-tile'
+    detail = tap_at_point(page, selector, method, index=2)
+    assert page.evaluate('pokeConnectionsState.selected.size') == 1, f'Connections blocked after reentry: {detail}'
+    steps.append(dict(action='connections-after-navigation', **detail))
+
+    if width < 640:
+        lower_connections = [step for step in steps if step['action'].startswith('connections') and step['y'] >= height * .60]
+        assert lower_connections, 'No Connections target sampled below 60% viewport: ' + json.dumps(steps)
+
+    # A shared result toast used by several modes remains mounted after fading
+    # out. Its button/card must not intercept the underlying gameplay when hidden.
+    toast = page.evaluate("""() => {
+      const layer = typeof ensureGameFeelLayer === 'function'
+        ? ensureGameFeelLayer() : document.getElementById('gamefeel-layer');
+      if (!layer) return {error:'missing gamefeel layer'};
+      layer.innerHTML = '<section class="gamefeel-result-card is-win"><button type="button" class="gamefeel-result-action">Voir les missions</button></section>';
+      layer.classList.remove('is-visible');
+      const card = layer.querySelector('.gamefeel-result-card');
+      const bounds = card.getBoundingClientRect();
+      const x = Math.round(bounds.left + bounds.width / 2);
+      const y = Math.round(bounds.top + bounds.height / 2);
+      const intercepted = () => Boolean(document.elementFromPoint(x,y)?.closest('.gamefeel-result-card'));
+      const hidden = intercepted();
+      layer.classList.add('is-visible');
+      const shown = intercepted();
+      layer.classList.remove('is-visible');
+      const hiddenAgain = intercepted();
+      const out = {x,y,hidden,shown,hiddenAgain,
+        hiddenPointerEvents:getComputedStyle(card).pointerEvents,
+        visualViewportHeight:visualViewport?.height || innerHeight};
+      layer.remove();
+      return out;
+    }""")
+    assert not toast.get('error'), toast
+    assert not toast['hidden'] and toast['shown'] and not toast['hiddenAgain'], (
+        'Invisible floating result card intercepts lower viewport taps: ' + json.dumps(toast))
+    steps.append(dict(action='invisible-result-toast', **toast))
     return steps
 
 
