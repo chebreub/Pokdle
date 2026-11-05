@@ -1657,15 +1657,24 @@ app.get("/admin/stats", async (req, res) => {
   let metrics = null, segmentRows = null, segmentStartedAt = null, uniqueRows = null, rawRows = null;
   try {
     if (pgPool && await usageMetricsReady) {
-      [metrics, uniqueRows, segmentRows, segmentStartedAt] = await Promise.all([
+      [metrics, uniqueRows] = await Promise.all([
         usageMetrics.recent(pgPool, days, end),
-        usageMetrics.recentUniques(pgPool, days, end),
+        usageMetrics.recentUniques(pgPool, days, end)
+      ]);
+    }
+  } catch (error) {
+    console.warn("[stats] aggregate read unavailable:", String(error.message || error).slice(0, 120));
+  }
+  // A new segment table must never hide existing dashboard totals if its read fails.
+  try {
+    if (pgPool && await usageMetricsReady) {
+      [segmentRows, segmentStartedAt] = await Promise.all([
         usageMetrics.recentSegments(pgPool, days, end),
         usageMetrics.segmentTrackingStartedAt(pgPool)
       ]);
     }
   } catch (error) {
-    console.warn("[stats] aggregate read unavailable:", String(error.message || error).slice(0, 120));
+    console.warn("[stats] segment read unavailable:", String(error.message || error).slice(0, 120));
   }
   try {
     if (pgPool) {
