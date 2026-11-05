@@ -177,6 +177,30 @@ def case(page, engine, width, height):
     assert leaving['ok'] and leaving['pointerEvents']=='none', (
         'Dismissed level overlay blocked game actions: ' + json.dumps(leaving))
     steps.append(dict(action='level-backdrop-dismissed', **leaving))
+
+    # Exercise the actual presentation scheduler with simultaneous unlocks.
+    # This is UI-only on a synthetic local guest: no XP/reward is awarded.
+    page.evaluate("""() => {
+      goToConfig();
+      celebrateLevelUp(9, 10);
+      celebrateAchievements([1,2,3,4,5].map(n => ({
+        title:'Succès démo '+n, desc:'Test affichage'
+      })));
+    }""")
+    level_card=page.locator('.lvc-card')
+    level_card.wait_for(state='visible',timeout=8000)
+    assert page.locator('.achc').count()==0, 'Achievement banner overlaps active level modal'
+    page.locator('.lvc-btn').click()
+    banner=page.locator('.achc')
+    banner.wait_for(state='visible',timeout=8000)
+    assert page.locator('.lvc-back').count()==0, 'Level backdrop persists beneath achievement'
+    banner_text=banner.inner_text()
+    assert 'Succès démo 1' in banner_text and 'Succès démo 3' in banner_text, banner_text
+    assert '+2 autres succès' in banner_text, 'Unlock burst not grouped: '+banner_text
+    assert 'Succès démo 4' not in banner_text, 'More than three titles in grouped banner'
+    banner.click()
+    page.wait_for_function("!document.querySelector('.achc')",timeout=8000)
+    steps.append(dict(action='level-then-grouped-achievements', grouped=True))
     return steps
 
 
