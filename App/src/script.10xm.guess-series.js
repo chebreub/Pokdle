@@ -26,20 +26,26 @@ function guessSeriesOwner() {
   var account = typeof dailyObservedAccountId === 'function' ? dailyObservedAccountId() : null;
   return account ? 'user:' + String(account) : 'guest';
 }
+function guessSeriesGens() {
+  return [...selectedGens].map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 9)
+    .sort((a, b) => a - b).join(',');
+}
 function guessSeriesActive() {
   return Boolean(guessSeries) && gameMode === guessSeries.mode && !guessSeriesInParty()
-    && (!guessSeries.owner || guessSeries.owner === guessSeriesOwner());
+    && (!guessSeries.owner || guessSeries.owner === guessSeriesOwner())
+    && guessSeries.gens === guessSeriesGens();
 }
 var GUESS_SERIES_SAVE_PREFIX = 'pokedle.guessSeries.v1:';
-function guessSeriesSaveKey(mode, owner = guessSeriesOwner()) {
-  return owner && GUESS_SERIES_MODES[mode] ? GUESS_SERIES_SAVE_PREFIX + encodeURIComponent(owner) + ':' + mode : null;
+function guessSeriesSaveKey(mode, owner = guessSeriesOwner(), gens = guessSeriesGens()) {
+  return owner && gens && GUESS_SERIES_MODES[mode]
+    ? GUESS_SERIES_SAVE_PREFIX + encodeURIComponent(owner) + ':' + mode + ':' + gens : null;
 }
 function guessSeriesRead(mode) {
-  var owner = guessSeriesOwner(), key = guessSeriesSaveKey(mode, owner);
+  var owner = guessSeriesOwner(), gens = guessSeriesGens(), key = guessSeriesSaveKey(mode, owner, gens);
   if (!key) return null;
   try {
     var data = JSON.parse(localStorage.getItem(key) || 'null');
-    if (!data || data.version !== 1 || data.owner !== owner || data.mode !== mode
+    if (!data || data.version !== 1 || data.owner !== owner || data.mode !== mode || data.gens !== gens
       || !GUESS_SERIES_SIZES.includes(data.total) || !Number.isInteger(data.index)
       || data.index < 1 || data.index > data.total
       || !Array.isArray(data.rounds) || data.rounds.length !== (data.recorded ? data.index : data.index - 1)
@@ -47,7 +53,7 @@ function guessSeriesRead(mode) {
       || !Number.isFinite(data.attemptsWon) || data.attemptsWon < 0
       || data.rounds.some(r => !r || !Number.isInteger(r.id) || r.id <= 0 || typeof r.name !== 'string' || typeof r.won !== 'boolean')) return null;
     if (data.recorded && data.index >= data.total) return null; // finished: a fresh launch starts over
-    return { mode, owner, total:data.total, index:data.index, found:data.found,
+    return { mode, owner, gens, total:data.total, index:data.index, found:data.found,
       attemptsWon:data.attemptsWon, rounds:data.rounds, xpStart:Number(data.xpStart) || 0,
       recorded:data.recorded === true, round:data.round || null };
   } catch (_e) { return null; }
@@ -59,12 +65,13 @@ function saveGuessSeriesCheckpoint() {
   if (!owner) return;
   if (guessSeries.owner && guessSeries.owner !== owner) return;
   guessSeries.owner = owner;
-  var key = guessSeriesSaveKey(guessSeries.mode, owner);
+  var key = guessSeriesSaveKey(guessSeries.mode, owner, guessSeries.gens);
+  if (!key) return;
   var round = !guessSeries.recorded && !gameOver && secretPokemon && Number(secretPokemon.id) > 0
     ? { version:1, mode:guessSeries.mode, secretId:Number(secretPokemon.id), attempts:Number(attempts) || 0,
         historyIds:resultHistory.map(r => Number(r.pokemon.id)), guessedNames:guessedNames.slice(),
         selectedGens:[...selectedGens], savedAt:Date.now() } : null;
-  var checkpoint = { version:1, owner, mode:guessSeries.mode, total:guessSeries.total,
+  var checkpoint = { version:1, owner, gens:guessSeries.gens, mode:guessSeries.mode, total:guessSeries.total,
     index:guessSeries.index, found:guessSeries.found, attemptsWon:guessSeries.attemptsWon,
     rounds:guessSeries.rounds, xpStart:guessSeries.xpStart, recorded:guessSeries.recorded,
     round, savedAt:Date.now() };
@@ -121,7 +128,7 @@ function guessSeriesNext() {
 window.guessSeriesNext = guessSeriesNext;
 
 function startGuessSeries(mode, total) {
-  guessSeries = { mode: mode, owner:guessSeriesOwner(), total: total || guessSeriesSize(mode), index: 0, found: 0, attemptsWon: 0, rounds: [], xpStart: Number(playerProfile && playerProfile.xp) || 0, recorded: false };
+  guessSeries = { mode: mode, owner:guessSeriesOwner(), gens:guessSeriesGens(), total: total || guessSeriesSize(mode), index: 0, found: 0, attemptsWon: 0, rounds: [], xpStart: Number(playerProfile && playerProfile.xp) || 0, recorded: false };
   guessSeriesNext();
 }
 
