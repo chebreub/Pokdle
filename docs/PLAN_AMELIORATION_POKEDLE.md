@@ -24,7 +24,7 @@
 - Conserver les sauvegardes, comptes, Balls, captures et Pokédollars. Pas de suppression de `localStorage` en masse, pas de fausse sécurité cliente et pas de migration destructive.
 - La collection distingue **vu**, **capturé au moins une fois** et **actuellement possédé** ; découvrir un Pokémon via une mission n'accorde pas une capture.
 - Pour l'instant, **aucune modification des probabilités de capture** : formule actuelle et trois lancers conservés. Le shiny est à 1/500 depuis le 05/11/2026 ; les stats arrêtées le 04/11 ne l'évaluent pas.
-- Toute modification économique ou de progression serveur doit être examinée séparément et faire l'objet de simulations/tests ; les propositions chiffrées ci-dessous ne sont **pas des décisions de mise en production**.
+- Toute modification économique ou de progression serveur doit être examinée séparément et faire l'objet de simulations/tests ; les propositions chiffrées ci-dessous ne sont **pas des décisions de mise en production**. **Six arbitrages de cadrage du 05/11/2026 sont consignés au Lot 4 ; les accords de principe ne valent pas validation finale.**
 - Un geste iPhone est facultatif et ne remplace jamais les boutons accessibles, ni ne valide une dépense, une fuite, un abandon ou un relâchement caché.
 - On vise un **partage lié à une activité** (Dessine-le, défi comparable, collection), pas des sollicitations répétitives.
 
@@ -82,15 +82,36 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.
 
-### Lot 4 — Économie et rencontres **à simuler avant approbation**
-- [ ] **ECO-01 · P1 · PROPOSITION** : nouvelle occasion limitée pour l'expédition légendaire, sans capture garantie, contrôlée serveur.
-- [ ] **ECO-02 · P1 · PROPOSITION** : après fuite de Drattak, conserver une partie du travail et proposer une reprise contrôlée plutôt que remise à zéro intégrale.
-- [ ] **ECO-07 · P1 · PROPOSITION** : préparation explicite des rencontres de prestige (au moins 3 Balls avant ouverture, chances visibles, annulation sans perdre la piste).
-- [ ] **ECO-08 · P1 · PROPOSITION** : rencontre spéciale ouverte conservée 72 h, sans nouveau tirage ni nouveau stock gratuit.
+### Lot 4 — Économie et rencontres **décisions de cadrage, sans autorisation de mise en production**
+- [ ] **ECO-01 · P1 · À SIMULER** : nouvelle occasion limitée pour l'expédition légendaire, sans capture garantie et sous autorité serveur. **Pas d'accord de principe avant comparaison des scénarios.**
+- [ ] **ECO-02 · P1 · ACCORD DE PRINCIPE, À CADRER** : éviter la remise à zéro intégrale après fuite de Drattak, sous réserve des tests. **Repenser l'expédition comme un rendez-vous particulier, de type événement**, avec éventuelle apparition aléatoire à discuter ; fréquence, déclenchement, récupération et conditions de reprise **non décidés**.
+- [ ] **ECO-07 · P1 · ACCORD DE PRINCIPE, À TESTER** : préparation explicite des rencontres de prestige (proposition : au moins 3 Balls avant ouverture, chances visibles, annulation sans perdre la piste). Définir et vérifier les détails opérationnels avant validation finale.
+- [ ] **ECO-08 · P1 · ACCORD DE PRINCIPE, À TESTER** : proposition de conserver une rencontre spéciale ouverte pendant 72 h, sans nouveau tirage ni nouveau stock gratuit. Durée et conditions exactes à confirmer après tests ; **ne pas appliquer d'office à l'événement Drattak**.
 - [ ] **ECO-05 · P1** : instrumenter la version des règles (`shiny 1/150` vs `1/500`), cible, Ball, ordre du lancer et type de rencontre, en agrégats.
-- [ ] **ECO-03 · P2 · PROPOSITION** : 30/60/90 ₽ = meilleur palier journalier complété par différence, plafond 90/mode, idempotence.
-- [ ] **ECO-04 · P2 · PROPOSITION** : coffres d'expédition acquis crédités une seule fois même si pas ouverts immédiatement.
+- [ ] **ECO-03 · P2 · À REDISCUTER** : proposition 30/60/90 ₽ (différence entre paliers, plafond 90/mode, idempotence) **non acceptée à ce stade**. Ne pas implémenter ni changer les récompenses avant nouvel échange et validation.
+- [ ] **ECO-04 · P2 · ACCORD DE PRINCIPE, À TESTER** : assurer qu'un coffre d'expédition déjà acquis est crédité une seule fois, même s'il n'est pas ouvert immédiatement. Vérifier les cas de reconnexion, requête répétée et interruption avant validation finale.
 - [ ] **ECO-06 · P2** : vérifier la réelle autorité serveur des récompenses pour chaque mode prioritaire.
+
+## Décisions de cadrage économique — 05/11/2026
+
+**Nature de ces décisions :** orientations du propriétaire du jeu, **pas** approbations de règles définitives ni autorisations de déploiement. Elles ne terminent aucune action ECO, ne changent pas le compteur des 43 tâches et ne remplacent pas les audits historiques.
+
+| Référence | Décision | À faire avant toute modification |
+| --- | --- | --- |
+| **ECO-01 — Expéditions légendaires** | **Simuler et comparer avant de décider.** | Comparer des scénarios de nouvelle occasion limitée et leur effet sur la rareté, la fréquence de rencontre, l'inventaire et le risque d'abus. Ne pas présumer d'une capture garantie. |
+| **ECO-02 — Drattak** | **Accord de principe sous réserve des tests**, **concept événementiel à rediscuter**. | Préserver une partie du travail après fuite est une piste favorable, mais l'expédition doit pouvoir devenir un **rendez-vous particulier, de type événement**, possiblement déclenché de façon aléatoire. **Aucune règle fixée** sur périodicité, hasard, conditions d'accès, fenêtre, progression conservée, reprise ou récompense. Présenter des variantes avant arbitrage. |
+| **ECO-07 — Préparation** | **Accord de principe sous réserve des tests.** | Étudier l'exigence proposée d'au moins trois Balls, l'affichage des chances et une annulation sans perte de piste ; vérifier les situations sans suffisamment de Balls, les interruptions et les tentatives répétées. |
+| **ECO-08 — Rencontre spéciale ouverte** | **Accord de principe sous réserve des tests.** | Évaluer le maintien proposé pendant **72 h**, sans nouveau tirage ni Balls offertes ; tester expiration, reprise, multi-appareils et idempotence. **Pas d'association automatique avec l'événement Drattak**, qui reste à cadrer séparément. |
+| **ECO-03 — Paliers de Pokédollars** | **À rediscuter ensemble.** | Aucune validation du barème 30/60/90 ₽, du plafond ni de la règle de complément par différence. Conserver les récompenses existantes jusqu'à nouvel arbitrage. |
+| **ECO-04 — Coffres d'expédition** | **Accord de principe sous réserve des tests.** | Sécuriser le crédit unique du coffre acquis, même sans ouverture immédiate. Contrôler attribution, reprise, double clic, déconnexion et répétition de requêtes sans duplication de gains. |
+
+**Conditions de passage à la réalisation :**
+1. Établir pour chaque piste un état actuel vérifié dans le code et, si pertinent, dans les données agrégées, sans confondre règles existantes et propositions.
+2. Simuler les variantes et les conséquences sur la rareté, les ressources, les dépenses et les comportements abusifs, en conservant explicitement les paramètres en vigueur.
+3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
+4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
+
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Étape de développement prioritaire inchangée : SAVE-01**, puis FX-02 ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
