@@ -5,7 +5,7 @@
 const COIN_CATEGORIES = new Set(["daily","party","arcade","release","recharge","buy_poke","buy_great","buy_ultra","other"]);
 const BALL_CATEGORIES = new Set(["arcade","daily","party","gift","streak","welcome","expedition","shop","other"]);
 const BALL_TYPES = ["poke","great","ultra"];
-const finite = n => Number.isFinite(Number(n)) ? Number(n) : null;
+const finite = n => n == null ? null : (Number.isFinite(Number(n)) ? Number(n) : null);
 const safeGroup = (group, categories) => categories.has(group) ? group : "other";
 
 function buildEconomyExport(economy) {
