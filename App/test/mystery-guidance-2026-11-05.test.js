@@ -14,6 +14,8 @@ test("NIV-02 explains actual Mystery base stats without revealing the current an
   assert.ok(a >= 0 && b > a);
   const block = html.slice(a, b);
   assert.match(block, /<details class="mystery-guide">/);
+  assert.equal((html.match(/<details class="mystery-guide">/g) || []).length, 1,
+    "only the Stat Mystère panel may expose this contextual guidance");
   assert.doesNotMatch(block, /<details class="mystery-guide"[^>]*\sopen(?:=|\s|>)/,
     "optional help must be closed until a player opens it");
   assert.match(block, /<summary>Comment lire les stats \?<\/summary>/);
