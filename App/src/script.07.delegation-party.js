@@ -360,11 +360,9 @@ function saveCurrentGame(forcedDailyKey = null) {
 
 function clearSavedGame(targetMode = gameMode) {
   try {
-    // A series result must not erase another mode's existing ordinary save.
-    if (targetMode !== "daily" && typeof guessSeriesActive === 'function' && guessSeriesActive()) {
-      const otherSave = readJson(STORAGE_KEYS.game, null);
-      if (!otherSave || otherSave.mode !== targetMode) return;
-    }
+    // Series checkpoints are separate: finishing a series must never erase
+    // any pre-existing ordinary save, including one from the same mode.
+    if (targetMode !== "daily" && typeof guessSeriesActive === 'function' && guessSeriesActive()) return;
     localStorage.removeItem(targetMode === "daily" ? STORAGE_KEYS.dailyGame : STORAGE_KEYS.game);
   } catch (e) {
     console.warn("localStorage unavailable:", e);
