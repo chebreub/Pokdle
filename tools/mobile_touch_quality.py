@@ -155,6 +155,28 @@ def case(page, engine, width, height):
     assert not toast['hidden'] and toast['shown'] and not toast['hiddenAgain'], (
         'Invisible floating result card intercepts lower viewport taps: ' + json.dumps(toast))
     steps.append(dict(action='invisible-result-toast', **toast))
+
+    # FX-02: a dismissed level-up backdrop stays mounted for the fade-out.
+    # It must not block an actual game button beneath it during that transition.
+    leaving = page.evaluate("""() => {
+      const target=document.querySelector('#screen-poke-connections .poke-connections-tile:not(:disabled)');
+      if (!target) return {error:'no active Connections tile'};
+      target.scrollIntoView({block:'center',behavior:'instant'});
+      const rect=target.getBoundingClientRect();
+      const x=Math.round(rect.left+rect.width/2), y=Math.round(rect.top+rect.height/2);
+      const back=document.createElement('div');
+      back.className='lvc-back is-leaving is-still';
+      document.body.appendChild(back);
+      const top=document.elementFromPoint(x,y);
+      const ok=Boolean(top && (top===target || target.contains(top)));
+      const pointerEvents=getComputedStyle(back).pointerEvents;
+      back.remove();
+      return {x,y,ok,pointerEvents};
+    }""")
+    assert not leaving.get('error'), leaving
+    assert leaving['ok'] and leaving['pointerEvents']=='none', (
+        'Dismissed level overlay blocked game actions: ' + json.dumps(leaving))
+    steps.append(dict(action='level-backdrop-dismissed', **leaving))
     return steps
 
 
