@@ -95,7 +95,38 @@ def case(page, engine, width, height):
     page.evaluate('''() => { goToConfig(); openQuiEstCeMode(); restartQuiEstCe(); }''')
     selector = '#screen-qui-est-ce .qui-card:nth-child(2):not(:disabled)'
     detail = tap_at_point(page, selector, method)
+    assert page.evaluate('quiEstCeState.selected') is not None, 'Qui est-ce? tap ignored after navigation: ' + str(detail)
     steps.append(dict(action='after-navigation', **detail))
+
+    # This was reported across game modes, not just Qui est-ce ?. Reuse the same
+    # coordinate hit test on a second independent game with no locator auto-scroll.
+    page.evaluate('''() => { closeOverlayModal(); goToConfig(); openPokeConnectionsMode(); }''')
+    page.locator('#screen-poke-connections .poke-connections-tile').first.wait_for(state='visible')
+    for index in (0, -1):
+        selector = '#screen-poke-connections .poke-connections-tile'
+        before = page.evaluate('pokeConnectionsState.selected.size')
+        detail = tap_at_point(page, selector, method, index=index)
+        after = page.evaluate('pokeConnectionsState.selected.size')
+        assert after == before + 1, f'Poké-Connections tile index {index} ignored: {detail}'
+        steps.append(dict(action='connections-select', tile_index=index, **detail))
+
+    # Shuffling and switching screens should not leave a transparent blocker
+    # on top of the game at the same viewport position.
+    page.evaluate('''() => {
+      clearPokeConnectionsSelection();
+      shufflePokeConnectionsTiles();
+      goToConfig();
+      openPokeConnectionsMode();
+    }''')
+    selector = '#screen-poke-connections .poke-connections-tile'
+    detail = tap_at_point(page, selector, method, index=2)
+    assert page.evaluate('pokeConnectionsState.selected.size') == 1, f'Connections blocked after reentry: {detail}'
+    steps.append(dict(action='connections-after-navigation', **detail))
+
+    if width < 640:
+        lower_connections = [step for step in steps if step['action'].startswith('connections') and step['y'] >= height * .60]
+        assert lower_connections, 'No Connections target sampled below 60% viewport: ' + json.dumps(steps)
+
     return steps
 
 
