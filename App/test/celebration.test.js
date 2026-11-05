@@ -54,11 +54,11 @@ test('a burst of achievements produces one banner showing three titles plus over
 
 function presentationFixture() {
   let modalOpen = false;
-  const pending = [], shown = [], done = [];
+  const pending = [], shown = [], done = [], queried = [];
   const doc = {
     getElementById: () => null,
     querySelectorAll: () => [],
-    querySelector: () => modalOpen ? {} : null
+    querySelector: (selector) => { queried.push(selector); return modalOpen ? {} : null; }
   };
   const { c } = context({
     document: doc,
@@ -67,7 +67,7 @@ function presentationFixture() {
   });
   c.showLevelCelebration = (item, complete) => { shown.push({ kind: 'level', item }); done.push(complete); };
   c.showAchievementCelebration = (item, complete) => { shown.push({ kind: 'achievement', item }); done.push(complete); };
-  return { c, shown, done, block: (value) => { modalOpen = value; } };
+  return { c, shown, done, queried, block: (value) => { modalOpen = value; } };
 }
 
 test('level and achievement never overlap, and two level jumps share one card', () => {
@@ -95,6 +95,9 @@ test('captures, gifts and existing modals delay celebrations until they close', 
   f.c.runCelebrations();
   assert.equal(f.shown.length, 0, 'no overlay on top of a capture');
   assert.equal(f.c.celebrationQueue.length, 2, 'no celebration is lost');
+  assert.ok(f.queried.some(selector => selector.includes('.xp-toast.is-visible')
+    && selector.includes('.gamefeel-layer.is-visible')
+    && selector.includes('.fx-catch')), 'visible XP/result and capture overlays all block celebrations');
   f.block(false);
   f.c.runCelebrations();
   assert.deepEqual(f.shown.map(s => s.kind), ['level']);
