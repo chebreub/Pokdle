@@ -61,7 +61,7 @@ Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus 
 
 ## SAVE-01 — en validation
 
-**Dernière QA complète :** 410 parcours généraux réussis, mais la recette spécifique `series-reload` échoue sur mobile (390 px) alors qu'elle passe sur desktop. Le bouton Reprendre existe mais la série 6/10 ne semble pas être choisie. Une instrumentation ciblée du test capture désormais le choix effectif et les sauvegardes disponibles ; ne pas fusionner avant diagnostic et CI verte sur le dernier head.
+**Dernière QA complète :** 410 parcours généraux réussis. Le scénario `series-reload` a échoué seulement à 390 px, sur Chromium et WebKit, tandis que les valeurs réelles (`index=6`, `total=10`, `getClubResumeSave().isSeries=true`) étaient correctes. **Cause identifiée :** `App/visual-refresh.css` masquait `.club-return-main small` sur mobile, donc le texte de progression n'était pas visible. La règle mobile a été corrigée sans toucher aux données ni aux calculs. **Nouvelle CI du dernier head à vérifier avant fusion.**
 
 La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Nouvelle CI sur le head final à confirmer avant fusion.**
 
