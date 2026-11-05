@@ -163,3 +163,31 @@ test('restoring a series round cannot clear an unrelated Daily or ordinary save'
   assert.equal(env.restoreSavedGame('pixel',{version:1,mode:'pixel',secretId:999999}),false);
   assert.deepEqual(deleted,[],'corrupt series snapshot must not erase other slots');
 });
+
+test('series save and completion preserve another mode legacy slot',()=>{
+  const accountSource=fs.readFileSync(path.join(__dirname,'../src/script.07.delegation-party.js'),'utf8');
+  const a=accountSource.indexOf('function saveCurrentGame(');
+  const b=accountSource.indexOf('\nfunction restoreSavedGame(',a);
+  assert.ok(a>=0 && b>a);
+  const removed=[],state={legacy:{mode:'normal'},snapshots:0};
+  const ctx={
+    gameMode:'pixel',STORAGE_KEYS:{dailyGame:'daily-slot',game:'ordinary-slot'},
+    guessSeriesActive(){return true;},guessSeriesOwner(){return 'user:A';},
+    saveGuessSeriesCheckpoint(){state.snapshots++;},
+    readJson(){return state.legacy;},
+    localStorage:{removeItem:key=>removed.push(key)},
+    writeJson(){throw Error('series may not write shared slot');}
+  };
+  vm.createContext(ctx);
+  vm.runInContext(accountSource.slice(a,b),ctx);
+  ctx.saveCurrentGame();
+  assert.equal(state.snapshots,1);
+  assert.deepEqual(removed,[]);
+  ctx.clearSavedGame('pixel');
+  assert.deepEqual(removed,[],'another mode save must stay intact');
+  state.legacy={mode:'pixel'};
+  ctx.clearSavedGame('pixel');
+  assert.deepEqual(removed,['ordinary-slot'],'a legacy save for the active mode may still be cleared');
+  ctx.clearSavedGame('daily');
+  assert.deepEqual(removed,['ordinary-slot','daily-slot'],'Daily retains its own original slot');
+});
