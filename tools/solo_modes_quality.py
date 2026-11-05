@@ -575,7 +575,11 @@ def run():
                         assert page.evaluate('(key) => localStorage.getItem(key) !== null', before['key'])
                         page.reload(wait_until='domcontentloaded')
                         wait(page, 'typeof startPixelGame === "function" && POKEMON_LIST.length > 1000 && window.__pokedleAccountKnown === true')
-                        page.evaluate('''() => { closeOverlayModal(); startPixelGame(); }''')
+                        page.evaluate('''() => { closeOverlayModal(); goToConfig(); renderHomeReturn(); }''')
+                        continue_button=page.locator('#home-return [data-action="resumeClubGame"]')
+                        continue_button.wait_for(state='visible')
+                        assert 'Manche 6 / 10' in page.locator('#home-return').inner_text(), 'Home does not offer exact series resume'
+                        continue_button.click()
                         wait(page, 'guessSeries && guessSeries.index === 6 && guessSeries.rounds.length === 5')
                         observed = page.evaluate("""() => ({
                             id:secretPokemon?.id, attempts, found:guessSeries.found,
