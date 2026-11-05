@@ -57,9 +57,18 @@ function startGuessSeries(mode, total) {
 function setGuessSeriesSize(n) {
   n = Number(n);
   if (GUESS_SERIES_SIZES.indexOf(n) < 0 || !guessSeries) return;
+  // Re-tapping the selected length must never erase a partially played series.
+  if (n === guessSeries.total) return;
+  const untouched = guessSeries.index === 1 && !gameOver && attempts === 0;
+  const finished = guessSeries.index >= guessSeries.total && gameOver;
+  // A real change after starting discards the current series; require a deliberate choice.
+  if (!untouched && !finished) {
+    const question = 'Changer de longueur effacera la série en cours. Recommencer avec ' + n + ' ' + GUESS_SERIES_MODES[guessSeries.mode].many + ' ?';
+    if (typeof window.confirm !== 'function' || !window.confirm(question)) return;
+  }
+  // Persist only accepted choices, never a cancelled or redundant selection.
   try { localStorage.setItem('pokedle.guessSeries.' + guessSeries.mode, String(n)); } catch (_e) {}
-  // Before the first guess the series just changes length; later, a new series starts.
-  if (guessSeries.index === 1 && !gameOver && attempts === 0) { guessSeries.total = n; renderGuessSeriesBar(); return; }
+  if (untouched) { guessSeries.total = n; renderGuessSeriesBar(); return; }
   if (typeof showToast === 'function') showToast('Nouvelle série de ' + n + ' ' + GUESS_SERIES_MODES[guessSeries.mode].many);
   startGuessSeries(guessSeries.mode, n);
 }
