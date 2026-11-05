@@ -127,16 +127,18 @@ test('restoring a series round cannot clear an unrelated Daily or ordinary save'
   const stop=accountSource.indexOf('\n// ============================================================',start);
   assert.ok(start>=0 && stop>start,'real restore function must be available');
   const section=accountSource.slice(start,stop);
-  const deleted=[],elements=new Map();
+  const deleted=[],elements=new Map(),focuses=[];
+  let desktop=false;
   const el=(id)=>{
     if(!elements.has(id))elements.set(id,{
       classList:{add(){},remove(){},toggle(){}},
-      focus(){},style:{},innerHTML:'',textContent:'',value:''
+      focus(options){focuses.push({id,options});},style:{},innerHTML:'',textContent:'',value:''
     });
     return elements.get(id);
   };
   const secret={id:25,name:'Pikachu',gen:1};
   const env={
+    window:{matchMedia:()=>({matches:desktop})},
     STORAGE_KEYS:{dailyGame:'daily-slot',game:'ordinary-slot'},
     readJson(){throw Error('series restore must never read shared save slots');},
     clearSavedGame(mode){deleted.push(mode);},
@@ -159,6 +161,12 @@ test('restoring a series round cannot clear an unrelated Daily or ordinary save'
   assert.equal(env.secretPokemon.id,25);
   assert.equal(env.attempts,2);
   assert.equal(env.resultHistory.length,1);
+  assert.deepEqual(focuses,[],'mobile restore cannot focus the input or scroll the viewport');
+  desktop=true;
+  assert.equal(env.restoreSavedGame('pixel',{version:1,mode:'pixel',secretId:25,attempts:0,selectedGens:[1]}),true);
+  assert.equal(focuses.length,1,'desktop restore may focus the input');
+  assert.equal(focuses[0].id,'guess-input');
+  assert.equal(focuses[0].options.preventScroll,true);
   assert.deepEqual(deleted,[],'other saved games must not be touched');
   assert.equal(env.restoreSavedGame('pixel',{version:1,mode:'pixel',secretId:999999}),false);
   assert.deepEqual(deleted,[],'corrupt series snapshot must not erase other slots');
