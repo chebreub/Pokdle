@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**2 tâches terminées sur 43 actions actives = 4,7 %** du plan au sens strict des cases validées et fusionnées.
+**3 tâches terminées sur 43 actions actives = 7,0 %** du plan au sens strict des cases validées et fusionnées.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **2** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et LOG-02 |
+| **Terminé et intégré à main** | **3** | Action vérifiée, PR fusionnée |
+| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 |
 | **Non commencé / à conduire ou à décider** | **39** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (2 actions terminées / 43 actions actives) × 100 = **4,6512 %, arrondi à 4,7 %**.
+**Formule explicite :** (3 actions terminées / 43 actions actives) × 100 = **6,9767 %, arrondi à 7,0 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -26,14 +26,14 @@
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
 | 0 | Ergonomie mobile / PC et mesures | 0 / 7 | 0 % | Protocole et test tactile en place, BUG-MOB-01 non reproduit sur téléphone réel |
-| 1 | Fiabilité des jeux et sauvegardes | 2 / 8 | 25 % | LOG-01 et LOG-03 terminés |
+| 1 | Fiabilité des jeux et sauvegardes | 3 / 8 | 37,5 % | LOG-01, LOG-02 et LOG-03 terminés |
 | 2 | Gameplay, pédagogie, découverte | 0 / 5 | 0 % | Recommandations documentées, rien de nouveau livré dans ce plan |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
 | 4 | Économie et rencontres | 0 / 8 | 0 % | Règles existantes auditées ; propositions de changement **non approuvées** |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **2 / 43** | **4,7 %** | NIV-01 stationné exclu |
+| **Total** | | **3 / 43** | **7,0 %** | NIV-01 stationné exclu |
 
 ## Journal GitHub vérifié
 
@@ -47,9 +47,9 @@
 
 **LOG-03 intégré** : #264 a été fusionnée après CI verte ; la recette sur iPhone réel concerne toujours BUG-MOB-01. Un autre chat doit **reconsulter GitHub** : ce tableau est une photographie, pas un suivi automatique.
 
-## Lot en revue — LOG-02
+## Lot intégré — LOG-02
 
-Correctif de la valeur `0` comme record valide via `quiEstCeRecorded`, sans migration des anciens profils : les anciennes valeurs positives restent des records ; un zéro ancien sans indicateur reste indéterminé et n'est pas inventé. Tests de fusion multi-appareils, nouvelle victoire à zéro et affichage ajoutés. **En cours [~] jusqu'à CI verte et intégration dans `main`**. Le total intégré reste **2/43 = 4,7 %**.
+[PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée, merge `9a68b84f`. Valeur `0` conservée comme record valide via `quiEstCeRecorded`, sans migration des anciens profils : les anciennes valeurs positives restent des records ; un zéro ancien sans indicateur reste indéterminé et n'est pas inventé. Tests de fusion multi-appareils, nouvelle victoire à zéro et affichage ajoutés. CI Node [verte](https://github.com/chebreub/Pokdle/actions/runs/42034302915) et navigateur/base de données [verte](https://github.com/chebreub/Pokdle/actions/runs/42034303017) sur le head `7af64f8`. Le total intégré passe à **3/43 = 7,0 %**.
 
 ## Risques et verrous à connaître
 
@@ -64,8 +64,8 @@ Correctif de la valeur `0` comme record valide via `quiEstCeRecorded`, sans migr
 ## Suite opérationnelle recommandée
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
-2. **Terminer [LOG-02 PR #266](https://github.com/chebreub/Pokdle/pull/266)** : contrôler les tests Node/navigateur sur le head exact et fusionner uniquement si verts. Un ancien zéro sans indicateur est ambigu, aucune migration de données inventée.
-3. Après fusion de #266, traiter **LOG-04** puis approfondir **SAVE-01** (sauvegarde atomique et reprise de la totalité d'une série, sans mélanger les comptes).
+2. **LOG-02 intégré via PR #266** : tests Node et navigateur verts, merge `9a68b84f`. Un ancien zéro sans indicateur demeure ambigu, aucune migration inventée.
+3. Traiter **LOG-04** puis approfondir **SAVE-01** (sauvegarde atomique et reprise de la totalité d'une série, sans mélanger les comptes).
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
