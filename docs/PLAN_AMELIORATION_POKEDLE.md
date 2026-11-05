@@ -122,7 +122,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 | Date | Lot | Fait | Vérification | PR |
 |---|---|---|---|---|
-| 2026-11-05 | 0 | Plan persistant + protocole diagnostic tactile ajoutés en branche de travail | Lecture du code ; **pas de reproduction iPhone** | À reporter lors de la création de PR |
+| 2026-11-05 | 0 | Plan persistant, protocole et test de hit-test tactile ajoutés ; PR de diagnostic **sans correctif CSS** | Compilation Python locale ; suite CI sur PR ; **pas de reproduction iPhone réel** | [#260](https://github.com/chebreub/Pokdle/pull/260) |
 
 ## Prompt minimal pour un nouveau chat
 
