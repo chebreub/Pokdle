@@ -39,6 +39,30 @@ test("completed rounds are sent without anonymous device ids; launches preserve 
   assert.equal(calls.length,2,"Party rounds should not leak into solo statistics");
 });
 
+test("DATA-02 QA browser flag remains opt-in and sends no player or Pokémon identifiers", () => {
+  const calls = [];
+  const session = new Map([["pokedle_usage_test_v1","1"]]);
+  const ctx = {
+    localStorage: {getItem() {return "browser-test-id";}, setItem() {}},
+    sessionStorage: {getItem(k) {return session.get(k) || null;}},
+    window: {crypto: {randomUUID() {return "browser-test-id";}}},
+    crypto: {randomUUID() {return "browser-test-id";}},
+    fetch(_url, options) {calls.push(JSON.parse(options.body)); return Promise.resolve({ok:true});},
+    isPartySessionActive() {return false;}, Date, Math, JSON
+  };
+  vm.createContext(ctx);
+  vm.runInContext(extract(core, "function getUsageUid()", "const MOBILE_KEYBOARD_INPUT_SELECTOR"), ctx);
+  ctx.trackUsage("complete:quiz:win");
+  ctx.trackUsage("solo:quiz");
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [
+    {event:"complete:quiz:win",usageTest:true},
+    {event:"solo:quiz",uid:"browser-test-id",usageTest:true}
+  ]);
+  session.delete("pokedle_usage_test_v1");
+  ctx.trackUsage("complete:quiz:loss");
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[2])),{event:"complete:quiz:loss"});
+});
+
 test("the centralized match history emits only mode and outcome, never Pokémon or account details", () => {
   const events = [];
   const context = {
