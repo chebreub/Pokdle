@@ -1685,11 +1685,26 @@ app.get("/admin/stats", async (req, res) => {
   } catch (error) {
     console.warn("[stats] retention unavailable:", String(error.message || error).slice(0, 120));
   }
+  // Economy journals use the gameplay calendar (Europe/Paris), unlike UTC traffic.
+  // Daily source tables already contain the relevant dates; never query identities
+  // or return raw transactions to the browser.
+  let economy = null;
+  try {
+    if (pgPool) {
+      const parisToday = require("./lib/egg-mystery").parisDay(new Date());
+      const economyEndDay = livePeriod ? parisToday
+        : new Date(Date.parse(parisToday + "T12:00:00Z") - 86400000).toISOString().slice(0, 10);
+      const economyStartDay = usageMetrics.startDay(days, new Date(economyEndDay + "T12:00:00Z"));
+      economy = await require("./lib/economy-stats").readEconomyStats(pgPool, economyStartDay, economyEndDay);
+    }
+  } catch (error) {
+    console.warn("[stats] economy aggregates unavailable:", String(error.message || error).slice(0, 120));
+  }
   res.type("html").send(renderStatsDashboard({
     days, endDay, livePeriod, generatedAt: new Date().toISOString(),
     adminKey, metrics, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
-    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention
+    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, economy
   }));
 });
 

@@ -2,6 +2,7 @@
 
 // Read-only presentation of existing aggregate counters. Never stores visitor IDs or modifies game state.
 const { summarizeModes, startDay, utcDay, SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH } = require("./usage-metrics");
+const { renderEconomySection } = require("./admin-economy-section");
 const PERIODS = [1, 3, 7, 14, 30, 90];
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
@@ -88,7 +89,7 @@ function renderStatsDashboard(options) {
     generatedAt = new Date().toISOString(), adminKey = "", metrics = null,
     uniqueRows = null, rawRows = null, labels = {},
     feedbackHtml = "", diagnosticDays = [], diagnosticRows = [],
-    bootedAt = "", retention = null
+    bootedAt = "", retention = null, economy = null
   } = options;
   const period = PERIODS.includes(days) ? days : 14;
   const calendar = rangeDays(period, endDay);
@@ -252,6 +253,7 @@ table .mode-name{font-weight:700}
 table .mode-family{font-size:10px;color:#66788e;font-weight:550}
 table .not-tracked{color:#697a92}
 .panel .quiet{font-size:11px;color:#697a92}
+.economy-period{font-size:12px;color:#5d708b;margin:0 0 12px}.panel .quick-strip{margin:13px 0}.panel .quick-stat small{display:block;margin-top:6px;line-height:1.35}.panel .metric-row{margin-top:4px}
 .footnote{font-size:12px}
 .focus-note{display:flex;align-items:center;gap:7px;font-size:12px;color:#526883;background:#f1f5fd;border-radius:10px;padding:10px 12px;margin:12px 0}
 .feedback{overflow-wrap:anywhere}
@@ -304,6 +306,7 @@ ${retentionKpi(retention)}
     <p class="quiet">Compteurs d’événements : aucun suivi individuel ni attribution par réseau social.</p>
   </section>
 </div></div>
+${renderEconomySection(economy)}
 <h2 class="section-title">Tous les modes suivis</h2>
 <section class="panel">
   <div class="panel-head"><h2>Lancements et résultats</h2><span class="pill">${modeData.length} modes référencés</span></div>
