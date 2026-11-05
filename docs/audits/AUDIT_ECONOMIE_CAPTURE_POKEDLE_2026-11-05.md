@@ -117,7 +117,7 @@ Le document de référence [PLAN_RARETE_1025.md](../PLAN_RARETE_1025.md) fournit
 
 ## 5. Expédition hebdomadaire : fonctionnement et difficulté
 
-**[Code]** Rotation de six rencontres possibles : Latias (#380), Heatran (#485), Terrakium (#639), Tokopiyon (#785), Regieleki (#894) et Chongjian (#1001). La liste des numéros et espèces doit toujours être confirmée dans le Pokédex si des libellés changent.
+**[Code]** Rotation de six rencontres possibles : Latias (#380), Heatran (#485), Terrakium (#639), Tokorico (#785), Regieleki (#894) et Chongjian (#1001). La liste des numéros et espèces doit toujours être confirmée dans le Pokédex si des libellés changent.
 
 Règles observées :
 
