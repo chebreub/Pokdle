@@ -2,6 +2,7 @@
 // Synthetic presentation fixture only: NEVER reads the real admin key, users or production statistics.
 const fs=require("node:fs"),path=require("node:path");
 const {renderStatsDashboard}=require("../App/lib/admin-stats-dashboard");
+const {summarizeEconomy}=require("../App/lib/economy-stats");
 const root=path.resolve(__dirname,"../quality-artifacts/admin-stats");
 fs.mkdirSync(root,{recursive:true});
 const data=[];
@@ -47,6 +48,33 @@ for(const period of [1,3,14]) {
   selected.metrics=data.filter(x=>x.day>=fromDate&&x.day<=selected.endDay);
   selected.uniqueRows=uniqueRows.filter(x=>x.day>=fromDate&&x.day<=selected.endDay);
   selected.rawRows=rawRows.filter(x=>x.d>=fromDate&&x.d<=selected.endDay);
+  // Fictional aggregated entries for layout only, never production identities/amounts.
+  selected.economy=summarizeEconomy({
+    startDay:fromDate,endDay:selected.endDay,actors:6,
+    coinRows:[
+      {category:"daily",gained:1500,spent:0,operations:9},
+      {category:"party",gained:300,spent:0,operations:2},
+      {category:"arcade",gained:780,spent:0,operations:17},
+      {category:"release",gained:60,spent:0,operations:4},
+      {category:"recharge",gained:0,spent:300,operations:2},
+      {category:"buy_poke",gained:0,spent:150,operations:1},
+      {category:"buy_great",gained:0,spent:240,operations:1}
+    ],
+    ballRows:[
+      {category:"daily",ball:"poke",awarded:12},
+      {category:"arcade",ball:"great",awarded:7},
+      {category:"shop",ball:"poke",awarded:3},
+      {category:"shop",ball:"great",awarded:2},
+      {category:"gift",ball:"poke",awarded:6}
+    ],
+    wildRows:[
+      {kind:"wild",status:"caught",shiny:false,ball:"poke",encounters:9,attempted:9,poke:12,great:0,ultra:0},
+      {kind:"wild",status:"caught",shiny:false,ball:"great",encounters:6,attempted:6,poke:1,great:7,ultra:0},
+      {kind:"wild",status:"fled",shiny:false,ball:null,encounters:3,attempted:3,poke:5,great:2,ultra:0},
+      {kind:"wild",status:"skipped",shiny:false,ball:null,encounters:5,attempted:0,poke:0,great:0,ultra:0},
+      {kind:"legend",status:"open",shiny:true,ball:null,encounters:1,attempted:0,poke:0,great:0,ultra:0}
+    ]
+  });
   fs.writeFileSync(path.join(root,"view-"+period+".html"),renderStatsDashboard(selected));
 }
 console.log("Synthetic Admin Stats V2 previews created.");
