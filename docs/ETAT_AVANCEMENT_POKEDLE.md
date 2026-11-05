@@ -12,8 +12,8 @@
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
 | **Terminé et intégré à main** | **4** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 |
-| **Non commencé / à conduire ou à décider** | **38** | Dont certaines propositions économiques soumises à validation préalable |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et SAVE-01 |
+| **Non commencé / à conduire ou à décider** | **37** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
@@ -54,6 +54,10 @@
 ## Lot intégré — LOG-04
 
 [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée, merge `d8c87fe7`. Une combinaison erronée de quatre Pokémon ne consomme qu'une erreur par partie, y compris après mélange. Message joueur explicite, tests Node et Playwright. CI [Node verte](https://github.com/chebreub/Pokdle/actions/runs/42036602850) et [navigateur/base de données verte](https://github.com/chebreub/Pokdle/actions/runs/42036604853) sur le head `ed9b57f8`. Aucun changement aux 4 erreurs autorisées, récompenses ni sauvegardes. Progression intégrée **4/43 = 9,3 %** ; prochaine tâche **SAVE-01**.
+
+## SAVE-01 — en revue
+
+Branche dédiée : sauvegarde locale versionnée de série pour les quatre modes d'identification, isolée par compte après confirmation `/api/me`. Elle conserve les manches terminées et, en mode local, les essais/secret de la manche active ; en mode vérifié, le serveur reste propriétaire du mystère. Tests des limites et du changement d'identité ajoutés. **CI / merge non vérifiés** : 4/43 = 9,3 % intégré à ce stade. La synchronisation de cette série **entre appareils** n'est pas réalisée, et aucune recette physique iPhone n'est revendiquée.
 
 ## Risques et verrous à connaître
 
