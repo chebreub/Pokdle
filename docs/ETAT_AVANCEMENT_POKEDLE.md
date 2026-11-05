@@ -61,6 +61,8 @@ Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus 
 
 ## SAVE-01 — en validation
 
+**Dernière QA complète :** 410 parcours généraux réussis, mais la recette spécifique `series-reload` échoue sur mobile (390 px) alors qu'elle passe sur desktop. Le bouton Reprendre existe mais la série 6/10 ne semble pas être choisie. Une instrumentation ciblée du test capture désormais le choix effectif et les sauvegardes disponibles ; ne pas fusionner avant diagnostic et CI verte sur le dernier head.
+
 La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Nouvelle CI sur le head final à confirmer avant fusion.**
 
 [PR #270](https://github.com/chebreub/Pokdle/pull/270) : sauvegarde versionnée locale de la série par compte, par mode et par générations sélectionnées, avec reprise au bon numéro de manche. Le premier contrôle CI a échoué sur une confusion entre une manche de série et une ancienne sauvegarde Daily ; la condition de validation a été corrigée et un test protège les sauvegardes Daily et classiques contre leur suppression lors d'une reprise. Un échec navigateur sur le sélecteur de générations a aussi été corrigé en conservant séparément les séries de groupes différents. Le bouton « Reprendre » de l'accueil sait désormais relancer le checkpoint du bon compte ; une série n'écrase plus le slot historique des jeux classiques. **CI complète et fusion du dernier head encore à contrôler**. Aucun transfert de cette série entre deux appareils n'est revendiqué. Progression intégrée **4/43 = 9,3 %** jusqu'à fusion.
