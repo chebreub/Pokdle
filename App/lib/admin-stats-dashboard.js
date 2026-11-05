@@ -83,11 +83,55 @@ function graph(series) {
     '<div class="legend"><span><i class="dot blue"></i>Sessions enregistrées</span><span><i class="dot orange"></i>Navigateurs uniques estimés</span></div>';
 }
 
+// DATA-02 is deliberately additive: the top KPIs remain historical totals.
+// "Unmarked" is not verified human traffic; "undistributed" may include days
+// before the new measurement, and is never silently assigned to players.
+function renderUsageScopes(metrics, segmentRows, startedAt) {
+  if (!Array.isArray(metrics) || !Array.isArray(segmentRows)) {
+    return '<section class="panel"><h2>Origine des essais et de l’activité</h2><p>Ventilation indisponible : les totaux historiques restent inchangés.</p></section>';
+  }
+  const categories = [
+    ["Sessions navigateur", (e) => e === "visit"],
+    ["Ouvertures solo", (e) => e.startsWith("solo:")],
+    ["Fins solo déclarées", (e) => e.startsWith("complete:")],
+    ["Salons et partages", (e) => e.startsWith("party:") || e.startsWith("share:") || e === "duel:create" || e === "statclash:create"],
+    ["Tous les événements", (_e) => true]
+  ];
+  function hits(rows, filter, segment) {
+    return rows.reduce((sum, row) => {
+      if (!filter(String(row.event || "")) || (segment && row.segment !== segment)) return sum;
+      const value = Number(row.hits);
+      return Number.isSafeInteger(value) && value >= 0 ? sum + value : sum;
+    }, 0);
+  }
+  const tableRows = categories.map(([label, filter]) => {
+    const total = hits(metrics, filter);
+    const admin = hits(segmentRows, filter, "admin");
+    const test = hits(segmentRows, filter, "test");
+    const unmarked = hits(segmentRows, filter, "unmarked");
+    const old = total - admin - test - unmarked;
+    return '<tr><th scope="row">' + escapeHtml(label) + '</th><td>' + number(total) +
+      '</td><td>' + number(admin) + '</td><td>' + number(test) + '</td><td>' +
+      number(unmarked) + '</td><td>' + (old >= 0 ? number(old) : "Incohérent") + '</td></tr>';
+  }).join("");
+  const startLabel = typeof startedAt === "string" && /^\d{4}-\d\d-\d\dT/.test(startedAt)
+    ? startedAt.slice(8,10) + "/" + startedAt.slice(5,7) + "/" + startedAt.slice(0,4) + " " + startedAt.slice(11,16) + " UTC"
+    : "date de début indisponible";
+  return '<section class="panel" aria-label="Ventilation de provenance DATA-02">' +
+    '<div class="panel-head"><h2>Origine des essais et de l’activité</h2><span class="pill">DATA-02 · à partir du ' +
+    escapeHtml(startLabel) + '</span></div>' +
+    '<p>Les KPI principaux restent les <b>totaux bruts</b>, essais inclus. Cette ventilation complémentaire permet de repérer l’activité de comptes administrateurs connectés et les sessions volontairement marquées comme tests.</p>' +
+    '<div class="table-scroll"><table><thead><tr><th>Signalements</th><th>Total brut</th><th>Admin identifié</th><th>Test déclaré</th><th>Non marqué</th><th>Antérieur ou non ventilé</th></tr></thead><tbody>' +
+    tableRows + '</tbody></table></div>' +
+    '<p class="footnote"><b>Non marqué ≠ joueur humain confirmé.</b> Robots, tests non déclarés et requêtes artificielles restent possibles. Un test déclaré est un signal volontaire, non authentifié ; seul le statut admin est vérifié côté serveur. Les données antérieures ne sont jamais reclassées. Les navigateurs distincts, les chargements bruts, l’économie et les cohortes Daily ne sont pas ventilés ici.</p>' +
+    '<p class="footnote">Pour marquer les essais d’un onglet non administrateur, exécuter <code>sessionStorage.setItem("pokedle_usage_test_v1","1")</code> puis recharger ; pour revenir à la normale : <code>sessionStorage.removeItem("pokedle_usage_test_v1")</code> puis recharger. Ne pas utiliser de vrai compte joueur pour une recette.</p></section>';
+}
+
 function renderStatsDashboard(options) {
   const {
     days = 14, endDay = utcDay(), livePeriod = days <= 3,
     generatedAt = new Date().toISOString(), adminKey = "", metrics = null,
-    uniqueRows = null, rawRows = null, labels = {},
+    uniqueRows = null, rawRows = null, segmentRows = null, segmentStartedAt = null, labels = {},
     feedbackHtml = "", diagnosticDays = [], diagnosticRows = [],
     bootedAt = "", retention = null, economy = null
   } = options;
@@ -279,6 +323,7 @@ ${kpi("Fins déclarées",finishes,"Résultats signalés par les jeux ; pas un ta
 ${kpi("Partages du Pokémon du jour",shares,"Actions de partage, pas forcément des visites reçues","◇")}
 ${retentionKpi(retention)}
 </section>
+${renderUsageScopes(metrics, segmentRows, segmentStartedAt)}
 <h2 class="section-title">Fréquentation et jeux</h2>
 <div class="columns"><div>
   <section class="panel"><div class="panel-head"><h2>${period===1?"Activité d’aujourd’hui":"Fréquentation par jour"}</h2><span class="pill">${escapeHtml(period===1?"UTC · en cours":period+" jours · UTC")}</span></div>
