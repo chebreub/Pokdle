@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**6 tâches terminées sur 43 actions actives = 14,0 %** du plan au sens strict des cases validées et fusionnées.
+**7 tâches terminées sur 43 actions actives = 16,3 %** du plan au sens strict des cases validées et fusionnées.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **6** | Action vérifiée, PR fusionnée |
+| **Terminé et intégré à main** | **7** | Action vérifiée, PR fusionnée |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **36** | Dont certaines propositions économiques soumises à validation préalable |
+| **Non commencé / à conduire ou à décider** | **35** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (6 actions terminées / 43 actions actives) × 100 = **13,9535 %, arrondi à 14,0 %**.
+**Formule explicite :** (7 actions terminées / 43 actions actives) × 100 = **16,2791 %, arrondi à 16,3 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,7 +25,7 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 0 / 7 | 0 % | Protocole et test tactile en place, BUG-MOB-01 non reproduit sur téléphone réel |
+| 0 | Ergonomie mobile / PC et mesures | 1 / 7 | 14,3 % | DATA-01 documenté ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 6 / 8 | 75 % | LOG-01 à LOG-04, SAVE-01 et FX-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 0 / 5 | 0 % | Recommandations documentées, rien de nouveau livré dans ce plan |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
@@ -33,7 +33,7 @@
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **6 / 43** | **14,0 %** | NIV-01 stationné exclu |
+| **Total** | | **7 / 43** | **16,3 %** | NIV-01 stationné exclu |
 
 ## Journal GitHub vérifié
 
@@ -89,6 +89,12 @@ Modifications **uniquement de présentation/coordination et CSS** ; aucune réat
 - **Non vérifié sur appareil réel :** Safari iPhone et retour de Jade. Les tests Chromium/WebKit ne constituent pas une recette physique.
 - **Progression : 6/43 = 14,0 %** ; prochaine action autonome **DATA-01** ; BUG-MOB-01 reste ouvert.
 
+## DATA-01 — dictionnaire et couverture, intégré
+
+- [Dictionnaire vérifié](qa/USAGE_EVENT_GRAIN.md) : classe et explique les unités réelles de `visit`, `visits` (chargements bruts), `solo:<mode>`, `complete:<mode>:win|loss`, événements Party et partages, plus l'estimation d'unicité par jour UTC. Il distingue **ouverture**, **commande de début de manche** et **fin déclarée**, et souligne qu'une partie commencée n'est pas instrumentée exhaustivement par un événement de référence unique.
+- Fenêtres temporelles, rétention agrégée 90 jours, périodes UTC vs économie Europe/Paris et absence de conversion fiable sont documentées dans le [guide existant](usage-metrics.md). **La date réelle de mise en production par compteur n'a pas été établie** ; seule une requête agrégée permet d'identifier les premiers jours *encore* présents, qui ne valent pas date de lancement. Aucun historique fictif produit.
+- **DATA-01 clôture son objectif documentaire**, mais ne valide pas les dates de déploiement manquantes ; pas de nouveau suivi ni de modification à la base. **Progression : 7/43 = 16,3 %**. Prochaine étape : **DATA-02**, qui analysera la pollution des mesures par essais/admin sans supprimer des événements existants.
+
 ## Cadrage économique décidé le 05/11/2026 — sans implémentation
 
 Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_AMELIORATION_POKEDLE.md), avec les codes ECO correspondants :
@@ -100,7 +106,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 - **ECO-03** : **à rediscuter** ; les paliers 30/60/90 Pokédollars ne sont pas validés.
 - **ECO-04** : **accord de principe sous réserve des tests** pour créditer une seule fois les coffres acquis même sans ouverture immédiate.
 
-**Distinction impérative :** « accord de principe » ≠ autorisation de modifier le code, le paramétrage, les récompenses ni la base de données. Exiger simulation des conséquences, propositions de règles précises, tests/idempotence et **validation finale explicite** du propriétaire avant PR économique et déploiement. Toutes les règles actuelles (capture, shiny, 3 lancers, Balls, Pokédollars, rareté, inventaires) restent identiques. **Aucune tâche économique clôturée** ; progression globale après FX-02 : **6/43 = 14,0 %**. Prochain chantier autonome : **DATA-01**.
+**Distinction impérative :** « accord de principe » ≠ autorisation de modifier le code, le paramétrage, les récompenses ni la base de données. Exiger simulation des conséquences, propositions de règles précises, tests/idempotence et **validation finale explicite** du propriétaire avant PR économique et déploiement. Toutes les règles actuelles (capture, shiny, 3 lancers, Balls, Pokédollars, rareté, inventaires) restent identiques. **Aucune tâche économique clôturée** ; progression globale après DATA-01 : **7/43 = 16,3 %**. Prochain chantier autonome : **DATA-02**.
 
 ## Risques et verrous à connaître
 
@@ -116,7 +122,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
 2. **LOG-02 intégré via PR #266** : tests Node et navigateur verts, merge `9a68b84f`. Un ancien zéro sans indicateur demeure ambigu, aucune migration inventée.
-3. **SAVE-01 (#270) et FX-02 (#274) intégrés** après CI Node et navigateurs vertes ; **prochain chantier DATA-01** : définir le grain et les dates de couverture des événements statistiques sans inventer d'historique.
+3. **SAVE-01 (#270), FX-02 (#274) et le cadrage DATA-01 intégrés** ; **prochain chantier DATA-02** : différencier essais/admin et usages réels dans l'interprétation des KPI, sans effacer les journaux.
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
