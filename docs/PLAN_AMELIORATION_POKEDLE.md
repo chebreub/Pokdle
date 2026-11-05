@@ -180,7 +180,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### FX-02 — correctif UX en validation (pas encore compté)
 
 - Célébrations de niveau et de succès auparavant autorisées **en parallèle** ; une file unique garde un seul bandeau/écran actif, et regroupe les succès déverrouillés simultanément en un bandeau (jusqu'à trois noms, puis `+N autres succès`). Les événements de récompenses sont conservés, seul leur **affichage** change.
-- Les fenêtres de capture, cadeau/coffre, rencontre sauvage et autres modales ouvertes gardent la priorité. Les célébrations patientent au lieu de les recouvrir. Après fermeture, l'affichage reprend automatiquement. Les fonds et bandeaux en cours de disparition ont `pointer-events:none`.
+- Les notifications visibles d'XP et de résultat, ainsi que les fenêtres de capture, cadeau/coffre, rencontre sauvage et autres modales ouvertes, gardent la priorité. Les célébrations patientent au lieu de les recouvrir. Après fermeture, l'affichage reprend automatiquement. Les fonds et bandeaux en cours de disparition ont `pointer-events:none`.
 - Tests Node (file, regroupement, blocage/reprise) et navigateur Chromium/WebKit (interception tactile à coordonnées) ajoutés. **Aucune règle de gain, XP, Balls, Pokédollars, inventaire, shiny ou capture changée.**
 - En attente de CI verte sur le head exact et de fusion ; progression **5/43 = 11,6 %** inchangée avant intégration ; BUG-MOB-01 reste un sujet distinct en attente de confirmation réelle.
 
