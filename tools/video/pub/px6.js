@@ -11,14 +11,16 @@ const seg = (t, a, b) => clamp((t - a) / (b - a));
 const eOut = (k) => 1 - Math.pow(1 - k, 3);
 const eBack = (k, s = 1.9) => (k <= 0 ? 0 : k >= 1 ? 1 : 1 + (s + 1) * Math.pow(k - 1, 3) + s * Math.pow(k - 1, 2));
 
-const Q = [
-  { id: 131, n: 'LOKHLASS', z: 'montagne' },
-  { id: 229, n: 'DÉMOLOSSE', z: 'volcan' },
-  { id: 350, n: 'MILOBELLUS', z: 'mer' },
-  { id: 609, n: 'LUGULABRE', z: 'tour' },
-  { id: 823, n: 'CORVAILLUS', z: 'foret' },
-  { id: 959, n: '??????', z: 'prairie', mystery: true }
-];
+// Une liste par vidéo : « node render.js px6 » (Forgelina en mystère) ou « px6b » (Terraiste).
+const SETS = {
+  px6: { hint: 'Indice : type Fée', q: [
+    { id: 131, n: 'LOKHLASS', z: 'montagne' }, { id: 229, n: 'DÉMOLOSSE', z: 'volcan' }, { id: 350, n: 'MILOBELLUS', z: 'mer' },
+    { id: 609, n: 'LUGULABRE', z: 'tour' }, { id: 823, n: 'CORVAILLUS', z: 'foret' }, { id: 959, n: '??????', z: 'prairie', mystery: true }] },
+  px6b: { hint: 'Indice : type Poison', q: [
+    { id: 59, n: 'ARCANIN', z: 'volcan' }, { id: 181, n: 'PHARAMP', z: 'prairie' }, { id: 373, n: 'DRATTAK', z: 'mer' },
+    { id: 445, n: 'CARCHACROK', z: 'montagne' }, { id: 706, n: 'MUPLODOCUS', z: 'foret' }, { id: 980, n: '??????', z: 'tour', mystery: true }] }
+};
+let Q = SETS.px6.q, HINT = SETS.px6.hint;
 const GRID = [8, 12, 19], GRID_MYSTERY = [7, 9, 11];
 // Round timing (seconds from the round start).
 const R = 9.0, OPEN = 1.15, STEP2 = 3.25, STEP3 = 5.35, REVEAL = 7.35;
@@ -31,7 +33,8 @@ const IMG = {}, GROUND = {};
 
 function load(src) { return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
 
-async function setup() {
+async function setup(name) {
+  if (SETS[name]) { Q = SETS[name].q; HINT = SETS[name].hint; }
   for (const q of Q) IMG[q.id] = await load('../assets/art-' + q.id + '.png');
   const bgs = $('bgs');
   for (const z of new Set(Q.map((q) => q.z))) {
@@ -156,7 +159,7 @@ function renderAt(t) {
     setCard('<div class="big">ABONNE-TOI</div><div class="mid">pour le prochain défi</div><div class="sm">Il reste 4 Pokémon, le dernier est un piège</div>');
   } else if (mCard) {
     cOn = true; ck = seg(t, CARD_M, CARD_M + .3); top = 110;
-    setCard('<div class="big">LE N°6, PRESQUE<br>PERSONNE NE LE<br>TROUVE</div><div class="mid">Écris ta réponse en commentaire</div><div class="sm">Indice : type Fée · réponse demain<br>dans le commentaire épinglé</div>');
+    setCard('<div class="big">LE N°6, PRESQUE<br>PERSONNE NE LE<br>TROUVE</div><div class="mid">Écris ta réponse en commentaire</div><div class="sm">' + HINT + ' · réponse demain<br>dans le commentaire épinglé</div>');
   } else if (inEnd) {
     cOn = true; ck = seg(t, END, END + .3); top = 230;
     setCard('<div class="big">TON SCORE<br>SUR 15 ?</div>' +

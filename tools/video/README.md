@@ -70,3 +70,12 @@ Format d'une vidéo TikTok à 1,4 M de vues : 6 Pokémon (~66 s), une Ball lanc�
 Pour d'autres Pokémon : la liste `Q` de `pub/px6.js` (numéro, nom, décor) ; la finesse des 3 étapes dans `GRID` (et `GRID_MYSTERY` pour le dernier).
 
 Version avec musique (fournie par Kayan, rangée dans `assets/music/`, ignorée par git) : `./mixm.sh px6 assets/music/trainer-battle.mp3 out/Pokedle-px6-musique.mp4` (sans l'ambiance, musique baissée pendant les cris).
+
+## Trois formats de quiz (`pub/px4.js`, 05/11)
+
+Même décor que px6, artworks officiels, chrono `assets/sfx/timer4.wav` (`python3 pub/timer.py 4`), sons officiels de Pokémon GO, vrais cris, dernière question sans réponse (« réponds en commentaire »), barème du score à la fin :
+- `hl` « Plus ou moins ? » (total des stats, en chaîne : Pikachu, Lucario, Caratroc, Monaflèmit, Mimiqui, Ptéra, Ectoplasma, puis Lokhlass en mystère) ;
+- `cri` « Devine le cri » (4 choix A-D ; mystère : Gallame, réponse C) ;
+- `stat` « Qui a le plus de… ? » (PV, Attaque, Défense, Atq Spé, Déf Spé, puis Vitesse en mystère : Ninjask, réponse A).
+
+`PAGE=pub/px4.html node render.js hl && ./mixm.sh hl assets/music/trainer-battle.mp3 out/Pokedle-hl-musique.mp4` (pareil pour `cri`, `stat`). Les questions sont dans `V` de `pub/px4.js`. `px6b` (6 autres pixelisés, Terraiste en mystère) : `PAGE=pub/px6.html node render.js px6b`.
