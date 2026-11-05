@@ -331,6 +331,7 @@ function registerWin() {
 // AUTO-SAVE / RESTORE GAME
 // ============================================================
 function saveCurrentGame(forcedDailyKey = null) {
+  if (typeof saveGuessSeriesCheckpoint === 'function') saveGuessSeriesCheckpoint();
   if(gameMode === "daily") { if(dailyServerState && !dailyServerState.finished) writeJson(STORAGE_KEYS.dailyGame,{version:2,mode:"daily",dailyKey:dailyServerState.day,accountId:dailyServerState.accountId,attempts,historyIds:resultHistory.map(r=>r.pokemon.id),rows:dailyServerState.rows,savedAt:Date.now()});return; }
   if (!secretPokemon || gameOver) return;
   // Seuls les modes restaurables sont sauvegardés (cohérence avec VALID_MODES).
@@ -360,9 +361,10 @@ function clearSavedGame(targetMode = gameMode) {
   }
 }
 
-function restoreSavedGame(preferredMode = null) {
+function restoreSavedGame(preferredMode = null, seriesRound = null) {
+  // An account-scoped series can pass its own round; never overwrite the ordinary slot.
   // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
-  let save = preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null);
+  let save = seriesRound || (preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null));
   if (save && (save.mode !== "daily" || save.dailyKey !== getDailyDateKey())) {
     clearSavedGame("daily");
     save = null;
