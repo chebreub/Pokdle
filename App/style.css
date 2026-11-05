@@ -6112,6 +6112,48 @@ body.theme-dark .app-setting-item input[type="checkbox"]:checked {
   background: linear-gradient(180deg, #6b87b8 0%, #4b6797 100%);
 }
 
+/* NIV-02 — optional stat-reading guide: stays on one heading row while
+   closed, keeps the native keyboard-accessible disclosure on mobile. */
+#mystery-box .mystery-guide-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+#mystery-box .mystery-guide-row .challenge-title { margin: 0; }
+#mystery-box .mystery-guide { margin-left: auto; max-width: 100%; font-size: 13px; color: inherit; }
+#mystery-box .mystery-guide summary {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 1px solid rgba(152, 173, 207, .45);
+  border-radius: 10px;
+  color: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+#mystery-box .mystery-guide summary::before { content: "ⓘ"; margin-right: 7px; }
+#mystery-box .mystery-guide summary::after { content: "⌄"; margin-left: 7px; }
+#mystery-box .mystery-guide[open] summary::after { transform: rotate(180deg); }
+#mystery-box .mystery-guide summary:focus-visible { outline: 3px solid #7aa8f3; outline-offset: 2px; }
+#mystery-box .mystery-guide[open] { order: 3; flex-basis: 100%; margin-left: 0; }
+#mystery-box .mystery-guide[open] summary { margin-left: auto; width: max-content; max-width: 100%; }
+#mystery-box .mystery-guide-text {
+  margin-top: 8px;
+  padding: 11px 13px;
+  border: 1px solid rgba(152, 173, 207, .28);
+  border-radius: 12px;
+  background: rgba(135, 163, 216, .08);
+}
+#mystery-box .mystery-guide-text p { margin: 0 0 8px; line-height: 1.55; }
+#mystery-box .mystery-guide-text p:last-child { margin-bottom: 0; }
+@media (max-width: 480px) {
+  #mystery-box .mystery-guide summary { min-height: 44px; padding: 7px 9px; font-size: 12px; }
+}
+
 /* ---------- Mystery stat scale refinements ---------- */
 
 
