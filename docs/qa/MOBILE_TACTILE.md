@@ -16,7 +16,7 @@ python tools/mobile_touch_quality.py
 ```
 
 - Lance `App/server.js` sur **127.0.0.1:3197** sans `DATABASE_URL`, avec des sessions invitées locales.
-- Examine « Qui est-ce ? » en Chromium et WebKit, à 360×780, 390×844 et 1366×768.
+- Examine « Qui est-ce ? » **et Poké-Connections** en Chromium et WebKit, à 360×780, 390×844 et 1366×768.
 - Pour chaque cible, le script défile pour la rendre visible, note la position et la pile d'éléments via `document.elementsFromPoint(x, y)`, puis effectue un **vrai tap aux coordonnées** (`touchscreen.tap`, sans l'auto-scroll des `locator.click`/`locator.tap`).
 - Vérifie que le changement de carte ou de nombre de questions s'est bien produit, puis refait un contrôle après navigation.
 - Contrôle qu'au moins un élément de jeu a été testé dans la moitié basse des fenêtres mobiles.
@@ -69,3 +69,7 @@ Pour arrêter : `stopPokedleTouchDebug()`. Ne pas intégrer cette journalisation
 - Navigation, scroll des questions et barre mobile ne sont pas dégradés.
 - Les tests automatisés concernés passent et la recette sur **appareil réel** est notée dans le plan.
 - Aucune modification de compte, d'économie, de collection ou de difficulté n'est incluse dans ce lot.
+
+## Extension du diagnostic au 05/11/2026
+
+Le retour de Jade concerne potentiellement plusieurs modes. La suite automatisée vérifie désormais deux écrans indépendants à plusieurs hauteurs et après navigation/mélange, par `elementFromPoint` puis véritable tap aux coordonnées. Cette extension **ne prouve pas la correction du bug sur téléphone réel**, et ne démontre pas qu'il touche tous les appareils. Aucun changement CSS ni effet sur les sauvegardes n'a été introduit. Pour aller plus loin, il faut idéalement un appareil reproduisant le défaut, ou au minimum le navigateur et un enregistrement sans données personnelles.
