@@ -30,11 +30,14 @@ function getClubResumeSave() {
 }
 function resumeClubGame() {
   const save = getClubResumeSave();
-  const starter = save?.isSeries && typeof GUESS_SERIES_MODES !== "undefined"
-    ? window[GUESS_SERIES_MODES[save.mode]?.start] : null;
-  if (!save || (save.isSeries
-    ? typeof starter !== "function" || (starter(), false)
-    : !restoreSavedGame(save.mode))) {
+  let restored = false;
+  if (save?.isSeries && typeof GUESS_SERIES_MODES !== "undefined") {
+    const starter = window[GUESS_SERIES_MODES[save.mode]?.start];
+    if (typeof starter === "function") { starter(); restored = true; }
+  } else if (save) {
+    restored = restoreSavedGame(save.mode);
+  }
+  if (!restored) {
     renderHomeReturn();
     showToast("Cette partie n’est plus disponible.");
     return;
