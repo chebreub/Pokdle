@@ -1,0 +1,74 @@
+# Pokédle — État d'avancement du plan d'amélioration
+
+**Photographie vérifiée : 5 novembre 2026.**  
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `b86a4e3e7b6e08836c1174960864254809f40726` sur `main`.  
+**Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).  
+**Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
+
+## Synthèse à retenir
+
+**1 tâche terminée sur 43 actions actives = 2,3 %** du plan au sens strict des cases validées et fusionnées.
+
+| Statut | Nombre | Règle |
+| --- | ---: | --- |
+| **Terminé et intégré à main** | **1** | Action vérifiée, PR fusionnée |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et LOG-03 |
+| **Non commencé / à conduire ou à décider** | **40** | Dont certaines propositions économiques soumises à validation préalable |
+| **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
+| **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
+
+**Formule explicite :** (1 action terminée / 43 actions actives) × 100 = **2,3256 %, arrondi à 2,3 %**.
+
+> **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
+
+## Répartition par chantier
+
+| Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
+| --- | --- | ---: | ---: | --- |
+| 0 | Ergonomie mobile / PC et mesures | 0 / 7 | 0 % | Protocole et test tactile en place, BUG-MOB-01 non reproduit sur téléphone réel |
+| 1 | Fiabilité des jeux et sauvegardes | 1 / 8 | 12,5 % | LOG-01 terminé ; LOG-03 en PR ouverte |
+| 2 | Gameplay, pédagogie, découverte | 0 / 5 | 0 % | Recommandations documentées, rien de nouveau livré dans ce plan |
+| 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
+| 4 | Économie et rencontres | 0 / 8 | 0 % | Règles existantes auditées ; propositions de changement **non approuvées** |
+| 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
+| 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
+| 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
+| **Total** | | **1 / 43** | **2,3 %** | NIV-01 stationné exclu |
+
+## Journal GitHub vérifié
+
+| PR | Réalisation | Statut GitHub | Validation |
+| --- | --- | --- | --- |
+| [#260](https://github.com/chebreub/Pokdle/pull/260) | Plan permanent, diagnostic tactile sur navigateur et protocole réel | **Fusionnée** ; merge `000728c` | Node + navigateur complets verts ; **bug iPhone non reproduit** |
+| [#261](https://github.com/chebreub/Pokdle/pull/261) | LOG-01 : protection des séries 5/10/20 | **Fusionnée** ; merge `646d83c` | Tests Node + navigateur verts |
+| [#262](https://github.com/chebreub/Pokdle/pull/262) | Journal et document de reprise des premiers lots | **Fusionnée** ; merge `b327a4d` | Documentation uniquement |
+| [#263](https://github.com/chebreub/Pokdle/pull/263) | Clôture documentaire de LOG-01 dans le plan | **Fusionnée** ; merge `b86a4e3` | Mise à jour du plan |
+| [#264](https://github.com/chebreub/Pokdle/pull/264) | LOG-03 : filtre solo ne doit plus cacher la Party Room | **OUVERTE, non fusionnée** | [Tests Node verts](https://github.com/chebreub/Pokdle/actions/runs/42024332274) et [suite navigateur verte](https://github.com/chebreub/Pokdle/actions/runs/42024332512) sur le head `9dfd42f4dce2` |
+
+**Ne pas confondre :** « CI verte » pour #264 ne signifie pas « intégré à main » et ne doit pas faire passer LOG-03 à terminé. Un autre chat doit **reconsulter GitHub** : ce tableau est une photographie, pas un suivi automatique.
+
+## Risques et verrous à connaître
+
+**P0 — BUG-MOB-01.** Signalement de zones basses non cliquables sur téléphone dans Qui est-ce ?. L'émulation tactile Chromium/WebKit passe, mais ni le modèle ni le navigateur ayant échoué ne sont connus. **En attente de preuve sur appareil réel ; ne pas ajouter de patch de calques arbitraire.**
+
+**P1 — Synchronisation et reprise.** LOG-01 évite un redémarrage accidentel mais **SAVE-01 n'est pas terminé** : une série entamée doit être récupérable après rechargement et rester isolée par compte. Ne pas effacer l'état existant.
+
+**P1 — Record zéro Qui est-ce ?.** LOG-02 : éviter la confusion entre score 0 et record absent ; regarder la logique de rendu du record et de fusion des profils, pas uniquement le mode local.
+
+**P1 — Économie.** Aucun changement aux taux shiny, capture, prix, capacités, légendaires ou Drattak dans ce plan sans simulations et accord sur les règles. Le 05/11 est la frontière 1/150 → 1/500 pour le shiny, donc ne pas regrouper sans distinction les chiffres avant/après.
+
+## Suite opérationnelle recommandée
+
+1. **Vérifier l'état exact de #264**. Si toujours ouverte, relire les changements, confirmer les statuts CI sur le head, intégrer conformément aux règles du dépôt, puis mettre LOG-03 à `[x]` dans le plan et actualiser ce fichier.
+2. Démarrer **LOG-02** dans une PR séparée : record de 0 question sur Qui est-ce ?, fusion des profils, zéro comme valeur historique valide, tests de non-régression.
+3. Traiter **LOG-04** puis approfondir **SAVE-01** (sauvegarde atomique et reprise de la totalité d'une série, sans mélanger les comptes).
+4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
+5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
+
+**Après chaque fusion :** recenser les actions gagnées, recalculer le % avec la même formule, mettre le lien et SHA de PR, consigner la CI, et identifier la **prochaine action unique** dans le plan.
+
+## Transmission entre chats
+
+Le fichier [REPRISE_NOUVEAU_CHAT.md](REPRISE_NOUVEAU_CHAT.md) fournit un prompt autonome à copier-coller. Il renvoie aux deux audits, au plan des 43 tâches, au présent état, aux contraintes de sécurité et à la méthode de vérification GitHub.
+
+**Aucune modification de gameplay, de base de données ou de production n'est incluse dans cette branche documentaire.**
