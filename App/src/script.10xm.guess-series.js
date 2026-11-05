@@ -20,7 +20,77 @@ function guessSeriesSize(mode) {
   try { var n = Number(localStorage.getItem('pokedle.guessSeries.' + mode)); return GUESS_SERIES_SIZES.indexOf(n) >= 0 ? n : 10; } catch (_e) { return 10; }
 }
 function guessSeriesInParty() { return typeof isPartySessionActive === 'function' && isPartySessionActive(); }
-function guessSeriesActive() { return Boolean(guessSeries) && gameMode === guessSeries.mode && !guessSeriesInParty(); }
+function guessSeriesOwner() {
+  // /api/me is async: an unidentified visitor must never load another account's checkpoint.
+  if (typeof window !== 'undefined' && !window.__pokedleAccountKnown) return null;
+  var account = typeof dailyObservedAccountId === 'function' ? dailyObservedAccountId() : null;
+  return account ? 'user:' + String(account) : 'guest';
+}
+function guessSeriesActive() {
+  return Boolean(guessSeries) && gameMode === guessSeries.mode && !guessSeriesInParty()
+    && (!guessSeries.owner || guessSeries.owner === guessSeriesOwner());
+}
+var GUESS_SERIES_SAVE_PREFIX = 'pokedle.guessSeries.v1:';
+function guessSeriesSaveKey(mode, owner = guessSeriesOwner()) {
+  return owner && GUESS_SERIES_MODES[mode] ? GUESS_SERIES_SAVE_PREFIX + encodeURIComponent(owner) + ':' + mode : null;
+}
+function guessSeriesRead(mode) {
+  var owner = guessSeriesOwner(), key = guessSeriesSaveKey(mode, owner);
+  if (!key) return null;
+  try {
+    var data = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!data || data.version !== 1 || data.owner !== owner || data.mode !== mode
+      || !GUESS_SERIES_SIZES.includes(data.total) || !Number.isInteger(data.index)
+      || data.index < 1 || data.index > data.total
+      || !Array.isArray(data.rounds) || data.rounds.length !== (data.recorded ? data.index : data.index - 1)
+      || !Number.isInteger(data.found) || data.found < 0 || data.found > data.rounds.length
+      || !Number.isFinite(data.attemptsWon) || data.attemptsWon < 0
+      || data.rounds.some(r => !r || !Number.isInteger(r.id) || r.id <= 0 || typeof r.name !== 'string' || typeof r.won !== 'boolean')) return null;
+    if (data.recorded && data.index >= data.total) return null; // finished: a fresh launch starts over
+    return { mode, owner, total:data.total, index:data.index, found:data.found,
+      attemptsWon:data.attemptsWon, rounds:data.rounds, xpStart:Number(data.xpStart) || 0,
+      recorded:data.recorded === true, round:data.round || null };
+  } catch (_e) { return null; }
+}
+// One atomic localStorage write per checkpoint, never in the cloud profile or economy data.
+function saveGuessSeriesCheckpoint() {
+  if (!guessSeriesActive() || !guessSeries.index) return;
+  var owner = guessSeriesOwner();
+  if (!owner) return;
+  if (guessSeries.owner && guessSeries.owner !== owner) return;
+  guessSeries.owner = owner;
+  var key = guessSeriesSaveKey(guessSeries.mode, owner);
+  var round = !guessSeries.recorded && !gameOver && secretPokemon && Number(secretPokemon.id) > 0
+    ? { version:1, mode:guessSeries.mode, secretId:Number(secretPokemon.id), attempts:Number(attempts) || 0,
+        historyIds:resultHistory.map(r => Number(r.pokemon.id)), guessedNames:guessedNames.slice(),
+        selectedGens:[...selectedGens], savedAt:Date.now() } : null;
+  var checkpoint = { version:1, owner, mode:guessSeries.mode, total:guessSeries.total,
+    index:guessSeries.index, found:guessSeries.found, attemptsWon:guessSeries.attemptsWon,
+    rounds:guessSeries.rounds, xpStart:guessSeries.xpStart, recorded:guessSeries.recorded,
+    round, savedAt:Date.now() };
+  try { localStorage.setItem(key, JSON.stringify(checkpoint)); } catch (_e) {}
+}
+function resumeGuessSeries(mode, start) {
+  var saved = guessSeriesRead(mode);
+  if (!saved) return false;
+  guessSeries = saved;
+  if (saved.recorded) { guessSeriesNext(); return true; }
+  // Offline rounds keep their exact answer and attempts. Server-verified rounds contain no
+  // secret; the existing /api/arcade/start(restart:false) resumes the authoritative session.
+  if (saved.round && Number(saved.round.secretId) > 0 && typeof restoreSavedGame === 'function'
+      && typeof POKEMON_BY_ID !== 'undefined' && POKEMON_BY_ID.has(Number(saved.round.secretId))) {
+    if (restoreSavedGame(mode, saved.round)) {
+      var surrender = document.getElementById('btn-surrender');
+      if (surrender) surrender.textContent = GUESS_SERIES_MODES[mode].skip;
+      renderGuessSeriesBar();
+      return true;
+    }
+  }
+  guessSeriesAdvancing = true;
+  try { start.call(window); } finally { guessSeriesAdvancing = false; }
+  renderGuessSeriesBar();
+  return true;
+}
 
 function guessSeriesBarHtml(s) {
   var cfg = GUESS_SERIES_MODES[s.mode];
@@ -46,11 +116,12 @@ function guessSeriesNext() {
   guessSeriesAdvancing = true;
   try { guessSeriesStarts[guessSeries.mode].call(window); } finally { guessSeriesAdvancing = false; }
   renderGuessSeriesBar();
+  saveGuessSeriesCheckpoint();
 }
 window.guessSeriesNext = guessSeriesNext;
 
 function startGuessSeries(mode, total) {
-  guessSeries = { mode: mode, total: total || guessSeriesSize(mode), index: 0, found: 0, attemptsWon: 0, rounds: [], xpStart: Number(playerProfile && playerProfile.xp) || 0, recorded: false };
+  guessSeries = { mode: mode, owner:guessSeriesOwner(), total: total || guessSeriesSize(mode), index: 0, found: 0, attemptsWon: 0, rounds: [], xpStart: Number(playerProfile && playerProfile.xp) || 0, recorded: false };
   guessSeriesNext();
 }
 
@@ -68,7 +139,7 @@ function setGuessSeriesSize(n) {
   }
   // Persist only accepted choices, never a cancelled or redundant selection.
   try { localStorage.setItem('pokedle.guessSeries.' + guessSeries.mode, String(n)); } catch (_e) {}
-  if (untouched) { guessSeries.total = n; renderGuessSeriesBar(); return; }
+  if (untouched) { guessSeries.total = n; renderGuessSeriesBar(); saveGuessSeriesCheckpoint(); return; }
   if (typeof showToast === 'function') showToast('Nouvelle série de ' + n + ' ' + GUESS_SERIES_MODES[guessSeries.mode].many);
   startGuessSeries(guessSeries.mode, n);
 }
@@ -94,6 +165,7 @@ GUESS_SERIES_ON.forEach(function (mode) {
   guessSeriesStarts[mode] = original;
   window[name] = function () {
     if (guessSeriesAdvancing || guessSeriesInParty()) { if (!guessSeriesAdvancing) guessSeries = null; return original.apply(this, arguments); }
+    if (resumeGuessSeries(mode, original)) return;
     startGuessSeries(mode, guessSeriesSize(mode));
   };
 });
@@ -131,6 +203,7 @@ if (typeof renderGameOverBox === 'function') {
       if (s.index >= s.total && s.total === 10 && s.found > 0 && typeof submitLeaderboardResult === 'function') submitLeaderboardResult(s.mode + '10', s.found);
     }
     renderGuessSeriesBar();
+    saveGuessSeriesCheckpoint();
     var restart = document.getElementById('btn-restart');
     var last = s.index >= s.total;
     if (restart) restart.innerHTML = last ? '🔁 Nouvelle série' : GUESS_SERIES_MODES[s.mode].next;
