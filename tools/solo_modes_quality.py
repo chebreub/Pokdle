@@ -578,7 +578,15 @@ def run():
                         page.evaluate('''() => { closeOverlayModal(); goToConfig(); renderHomeReturn(); }''')
                         continue_button=page.locator('#home-return [data-action="resumeClubGame"]')
                         continue_button.wait_for(state='visible')
-                        assert 'Manche 6 / 10' in page.locator('#home-return').inner_text(), 'Home does not offer exact series resume'
+                        resume_view = page.evaluate("""() => ({
+                            text:document.getElementById('home-return')?.innerText,
+                            choice:getClubResumeSave(),
+                            series:guessSeriesRead('pixel'),
+                            selected:[...selectedGens],
+                            ordinary:readJson(STORAGE_KEYS.game,null),
+                            daily:readJson(STORAGE_KEYS.dailyGame,null)
+                        })""")
+                        assert 'Manche 6 / 10' in page.locator('#home-return').inner_text(), 'Home does not offer exact series resume: '+json.dumps(resume_view,ensure_ascii=False,default=str)
                         continue_button.click()
                         wait(page, 'guessSeries && guessSeries.index === 6 && guessSeries.rounds.length === 5')
                         observed = page.evaluate("""() => ({
