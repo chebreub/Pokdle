@@ -544,6 +544,64 @@ def run():
                         else: result.locator('[data-action="openAllModesScreen"]').click()
                         screen(page, "screen-all-modes")
 
+                    def series_reload():
+                        # Check the real browser restore path, not just a mocked VM.
+                        # Guest fixture, no ball economy, no server rewards.
+                        wait(page, 'window.__pokedleAccountKnown === true')
+                        before = page.evaluate("""() => {
+                            closeOverlayModal();
+                            goToConfig();
+                            setSelectedGenerations([1]);
+                            writeJson(GENERATION_PREFERENCE_KEY, [1]);
+                            window.verifiedArcadeOnline = () => false;
+                            startPixelGame();
+                            const state = guessSeries;
+                            if (!state || !secretPokemon) throw Error('Local series not started');
+                            const choices = getPoolFromSelectedGens().filter(p => p.id !== secretPokemon.id).slice(0, 2);
+                            state.total = 10;
+                            state.index = 6;
+                            state.found = 4;
+                            state.attemptsWon = 8;
+                            state.rounds = [1,2,3,4,5].map((id,i) => ({id, name:'Test '+id, won:i !== 2}));
+                            state.recorded = false;
+                            attempts = 2;
+                            guessedNames = choices.map(p => p.name);
+                            resultHistory = choices.map(p => ({pokemon:p,cmp:compare(p,secretPokemon)}));
+                            saveCurrentGame();
+                            return {id:secretPokemon.id, guessed:choices.map(p => p.id),
+                                key:guessSeriesSaveKey('pixel'), owner:state.owner};
+                        }""")
+                        assert before['owner'] == 'guest', 'No test account should be used in the guest browser'
+                        assert page.evaluate('(key) => localStorage.getItem(key) !== null', before['key'])
+                        page.reload(wait_until='domcontentloaded')
+                        wait(page, 'typeof startPixelGame === "function" && POKEMON_LIST.length > 1000 && window.__pokedleAccountKnown === true')
+                        page.evaluate('''() => { closeOverlayModal(); goToConfig(); renderHomeReturn(); }''')
+                        continue_button=page.locator('#home-return [data-action="resumeClubGame"]')
+                        continue_button.wait_for(state='visible')
+                        resume_view = page.evaluate("""() => ({
+                            text:document.getElementById('home-return')?.innerText,
+                            choice:getClubResumeSave(),
+                            series:guessSeriesRead('pixel'),
+                            selected:[...selectedGens],
+                            ordinary:readJson(STORAGE_KEYS.game,null),
+                            daily:readJson(STORAGE_KEYS.dailyGame,null)
+                        })""")
+                        assert 'Manche 6 / 10' in page.locator('#home-return').inner_text(), 'Home does not offer exact series resume: '+json.dumps(resume_view,ensure_ascii=False,default=str)
+                        continue_button.click()
+                        wait(page, 'guessSeries && guessSeries.index === 6 && guessSeries.rounds.length === 5')
+                        observed = page.evaluate("""() => ({
+                            id:secretPokemon?.id, attempts, found:guessSeries.found,
+                            index:guessSeries.index, total:guessSeries.total,
+                            guesses:resultHistory.map(r=>r.pokemon.id),
+                            text:document.getElementById('guess-series-bar')?.textContent || '',
+                            gameOver
+                        })""")
+                        assert observed['id'] == before['id'], 'Reload replaced the exact mystery'
+                        assert observed['guesses'] == before['guessed'], 'Previous answers lost after reload'
+                        assert observed['attempts'] == 2 and observed['found'] == 4, observed
+                        assert observed['index'] == 6 and observed['total'] == 10, observed
+                        assert not observed['gameOver'] and '6' in observed['text'], observed
+
                     execute("higher-lower", higher_lower)
                     execute("quiz-result", quiz_result)
                     execute("connections", connections)
@@ -553,6 +611,7 @@ def run():
                     execute("pokedex-order", order)
                     execute("intrus", odd)
                     execute("stat-mystere", mystery)
+                    execute("series-reload", series_reload)
                     execute("javascript-errors", lambda: (_ for _ in ()).throw(AssertionError(errors)) if errors else None)
                 finally:
                     await_close = context.close

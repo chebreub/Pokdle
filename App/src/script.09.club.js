@@ -16,14 +16,28 @@ function rememberClubGame(key) {
   try { localStorage.setItem(CLUB_RECENT_KEY, JSON.stringify(recent)); } catch (_error) {}
 }
 function getClubResumeSave() {
-  const saves = [readJson(STORAGE_KEYS.dailyGame, null), readJson(STORAGE_KEYS.game, null)];
-  return saves.filter(save => save && VALID_MODES.has(save.mode) && (save.mode === "daily" ? save.version === 2 && save.accountId === dailyObservedAccountId() : POKEMON_BY_ID.has(Number(save.secretId))) &&
+  // Series have a separate, account-scoped checkpoint, not the shared legacy save slot.
+  const series = typeof guessSeriesRead === "function" && typeof GUESS_SERIES_MODES !== "undefined"
+    ? Object.keys(GUESS_SERIES_MODES).map(mode => {
+        const state = guessSeriesRead(mode);
+        return state ? { mode, isSeries:true, seriesIndex:state.index, seriesTotal:state.total,
+          attempts:Number(state.round?.attempts)||0, savedAt:state.savedAt } : null;
+      }).filter(Boolean) : [];
+  const saves = [readJson(STORAGE_KEYS.dailyGame, null), readJson(STORAGE_KEYS.game, null), ...series];
+  return saves.filter(save => save && VALID_MODES.has(save.mode) && (save.mode === "daily" ? save.version === 2 && save.accountId === dailyObservedAccountId() : save.isSeries || POKEMON_BY_ID.has(Number(save.secretId))) &&
     (save.mode !== "daily" || save.dailyKey === getDailyDateKey()) && Number.isFinite(Number(save.savedAt)))
     .sort((a, b) => Number(b.savedAt) - Number(a.savedAt))[0] || null;
 }
 function resumeClubGame() {
   const save = getClubResumeSave();
-  if (!save || !restoreSavedGame(save.mode)) {
+  let restored = false;
+  if (save?.isSeries && typeof GUESS_SERIES_MODES !== "undefined") {
+    const starter = window[GUESS_SERIES_MODES[save.mode]?.start];
+    if (typeof starter === "function") { starter(); restored = true; }
+  } else if (save) {
+    restored = restoreSavedGame(save.mode);
+  }
+  if (!restored) {
     renderHomeReturn();
     showToast("Cette partie n’est plus disponible.");
     return;
@@ -47,7 +61,7 @@ function renderHomeReturn() {
   panel.classList.toggle("hidden", !save && !recent.length);
   const modeNames = { normal: "Mode illimité", daily: "Pokémon du jour", silhouette: "Zoom progressif", pixel: "Pixelisé", cry: "Cri", mystery: "Stat mystère", description: "Description", evolution: "Évolution", order: "Ordre Pokédex", weight: "Duel de poids" };
   const resumeHtml = save
-    ? '<div class="club-return-main"><span class="club-eyebrow">REPRENDRE</span><div><strong>' + escapeHtml(modeNames[save.mode] || "Partie en cours") + '</strong><small>' + Math.max(0, Number(save.attempts) || 0) + ' essai(s) · progression conservée</small></div><button type="button" class="btn-blue" data-action="resumeClubGame">Reprendre →</button></div>'
+    ? '<div class="club-return-main"><span class="club-eyebrow">REPRENDRE</span><div><strong>' + escapeHtml(modeNames[save.mode] || "Partie en cours") + '</strong><small>' + (save.isSeries ? 'Manche ' + save.seriesIndex + ' / ' + save.seriesTotal + ' · série conservée' : Math.max(0, Number(save.attempts) || 0) + ' essai(s) · progression conservée') + '</small></div><button type="button" class="btn-blue" data-action="resumeClubGame">Reprendre →</button></div>'
     : '';
   const recentHtml = recent.length
     ? '<div class="club-recent"><span>Récents</span>' + recent.map(key => '<button type="button" class="btn-ghost" data-action="clubLaunchRecent" data-args="' + escapeHtml(JSON.stringify([key])) + '">' + escapeHtml(clubLaunchers.get(key).label) + '</button>').join("") + '</div>'
@@ -208,3 +222,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   renderHomeReturn();
 });
+
+// /api/me resolves asynchronously; refresh the scoped "Reprendre" tile when it does.
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+  window.addEventListener("pokedle:account-known", () => {
+    if (document.getElementById("home-return")) renderHomeReturn();
+  });
+}

@@ -331,6 +331,12 @@ function registerWin() {
 // AUTO-SAVE / RESTORE GAME
 // ============================================================
 function saveCurrentGame(forcedDailyKey = null) {
+  // Account-scoped series do not overwrite the shared legacy one-game slot.
+  if (typeof guessSeriesActive === 'function' && guessSeriesActive()
+    && typeof guessSeriesOwner === 'function' && guessSeriesOwner()) {
+    saveGuessSeriesCheckpoint();
+    return;
+  }
   if(gameMode === "daily") { if(dailyServerState && !dailyServerState.finished) writeJson(STORAGE_KEYS.dailyGame,{version:2,mode:"daily",dailyKey:dailyServerState.day,accountId:dailyServerState.accountId,attempts,historyIds:resultHistory.map(r=>r.pokemon.id),rows:dailyServerState.rows,savedAt:Date.now()});return; }
   if (!secretPokemon || gameOver) return;
   // Seuls les modes restaurables sont sauvegardés (cohérence avec VALID_MODES).
@@ -354,16 +360,20 @@ function saveCurrentGame(forcedDailyKey = null) {
 
 function clearSavedGame(targetMode = gameMode) {
   try {
+    // Series checkpoints are separate: finishing a series must never erase
+    // any pre-existing ordinary save, including one from the same mode.
+    if (targetMode !== "daily" && typeof guessSeriesActive === 'function' && guessSeriesActive()) return;
     localStorage.removeItem(targetMode === "daily" ? STORAGE_KEYS.dailyGame : STORAGE_KEYS.game);
   } catch (e) {
     console.warn("localStorage unavailable:", e);
   }
 }
 
-function restoreSavedGame(preferredMode = null) {
+function restoreSavedGame(preferredMode = null, seriesRound = null) {
+  // An account-scoped series can pass its own round; never overwrite the ordinary slot.
   // Priorité au daily du jour (slot dédié), sinon la dernière partie d'un autre mode.
-  let save = preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null);
-  if (save && (save.mode !== "daily" || save.dailyKey !== getDailyDateKey())) {
+  let save = seriesRound || (preferredMode && preferredMode !== "daily" ? null : readJson(STORAGE_KEYS.dailyGame, null));
+  if (!seriesRound && save && (save.mode !== "daily" || save.dailyKey !== getDailyDateKey())) {
     clearSavedGame("daily");
     save = null;
   }
@@ -379,7 +389,7 @@ function restoreSavedGame(preferredMode = null) {
   if (!save || (preferredMode && save.mode !== preferredMode)) return false;
 
   if (!VALID_MODES.has(save.mode)) {
-    clearSavedGame(save.mode);
+    if (!seriesRound) clearSavedGame(save.mode);
     return false;
   }
 
@@ -391,7 +401,7 @@ function restoreSavedGame(preferredMode = null) {
   if(save.mode === "daily") { startDailyGame();return true; }
   const secret = POKEMON_BY_ID.get(Number(save.secretId));
   if (!secret) {
-    clearSavedGame();
+    if (!seriesRound) clearSavedGame();
     return false;
   }
 
@@ -467,7 +477,11 @@ function restoreSavedGame(preferredMode = null) {
   showScreen("screen-game");
   setGlobalNavActive("game");
 
-  document.getElementById("guess-input").focus();
+  // Like a fresh round, restoring a game must not open the phone keyboard or
+  // scroll the viewport before the player interacts with the input.
+  if (window.matchMedia("(min-width: 641px)").matches) {
+    document.getElementById("guess-input").focus({ preventScroll: true });
+  }
 
   if (gameMode === "daily") syncDailyObservedState();
   return true;

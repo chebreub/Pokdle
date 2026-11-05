@@ -12,8 +12,8 @@
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
 | **Terminé et intégré à main** | **4** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 |
-| **Non commencé / à conduire ou à décider** | **38** | Dont certaines propositions économiques soumises à validation préalable |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et SAVE-01 |
+| **Non commencé / à conduire ou à décider** | **37** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
@@ -57,7 +57,15 @@
 
 ### Diagnostic supplémentaire — BUG-MOB-01
 
-Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus de « Qui est-ce ? », avec frappes réelles aux coordonnées, contrôles de sélection et réouverture après navigation/mélange. **Cause candidate ciblée** : un toast de résultat invisible restait tactile (`.gamefeel-result-card { pointer-events:auto }` sous parent à `opacity:0`). [PR #271](https://github.com/chebreub/Pokdle/pull/271) ajoute le test caché/visible/caché et limite l'interception à la carte visible. **CI et validation sur l'appareil de Jade restent nécessaires** ; le problème peut avoir plusieurs causes. Progression intégrée **4/43 = 9,3 %** inchangée tant que non clôturé.
+Suite `tools/mobile_touch_quality.py` élargie à **Poké-Connections** en plus de « Qui est-ce ? », avec frappes réelles aux coordonnées, contrôles de sélection et réouverture après navigation/mélange. **Cause candidate ciblée** : un toast de résultat invisible restait tactile (`.gamefeel-result-card { pointer-events:auto }` sous parent à `opacity:0`). [PR #271](https://github.com/chebreub/Pokdle/pull/271) ajoute le test caché/visible/caché et limite l'interception à la carte visible. **CI Node et navigateur vertes sur #271, mais validation sur l'appareil de Jade toujours nécessaire** ; le problème peut avoir plusieurs causes. Progression intégrée **4/43 = 9,3 %** inchangée tant que non clôturé.
+
+## SAVE-01 — en validation
+
+**Dernière QA complète :** 410 parcours généraux réussis. Le scénario `series-reload` a échoué seulement à 390 px, sur Chromium et WebKit, tandis que les valeurs réelles (`index=6`, `total=10`, `getClubResumeSave().isSeries=true`) étaient correctes. **Cause identifiée :** `App/visual-refresh.css` masquait `.club-return-main small` sur mobile, donc le texte de progression n'était pas visible. La règle mobile a été corrigée sans toucher aux données ni aux calculs. **Nouvelle CI du dernier head à vérifier avant fusion.**
+
+La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Nouvelle CI sur le head final à confirmer avant fusion.**
+
+[PR #270](https://github.com/chebreub/Pokdle/pull/270) : sauvegarde versionnée locale de la série par compte, par mode et par générations sélectionnées, avec reprise au bon numéro de manche. Le premier contrôle CI a échoué sur une confusion entre une manche de série et une ancienne sauvegarde Daily ; la condition de validation a été corrigée et un test protège les sauvegardes Daily et classiques contre leur suppression lors d'une reprise. Un échec navigateur sur le sélecteur de générations a aussi été corrigé en conservant séparément les séries de groupes différents. Le bouton « Reprendre » de l'accueil sait désormais relancer le checkpoint du bon compte ; une série n'écrase plus le slot historique des jeux classiques. **CI complète et fusion du dernier head encore à contrôler**. Aucun transfert de cette série entre deux appareils n'est revendiqué. Progression intégrée **4/43 = 9,3 %** jusqu'à fusion.
 
 ## Cadrage économique décidé le 05/11/2026 — sans implémentation
 

@@ -22,6 +22,30 @@ test('resume restores without drawing another target or counting a new game',()=
  const env=fixture({readJson:()=>save,STORAGE_KEYS:{},VALID_MODES:new Set(['normal']),POKEMON_BY_ID:new Map([[25,{}]]),getDailyDateKey:()=> 'today',dailyObservedAccountId:()=>null,restoreSavedGame:m=>{mode=m;return true;},history:{pushState:s=>{pushed=s;}},gameMode:'normal',secretPokemon:{id:25},location:{pathname:'/',search:''}});
  env.resumeClubGame();assert.equal(mode,'normal');assert.equal(pushed.secretId,25);assert.equal(pushed.screen,'game');
 });
+
+test('home resume finds account-scoped series and resumes its mode, not an ordinary save',()=>{
+ let launched=0,pushed=null;
+ const env=fixture({
+  readJson:()=>null,STORAGE_KEYS:{dailyGame:'daily',game:'game'},
+  VALID_MODES:new Set(['pixel','daily']),POKEMON_BY_ID:new Map(),
+  GUESS_SERIES_MODES:{pixel:{start:'startPixelGame'}},
+  guessSeriesRead:mode=>mode==='pixel'?{index:6,total:10,savedAt:9000,round:{attempts:2}}:null,
+  getDailyDateKey:()=> '2026-11-05',dailyObservedAccountId:()=> 'A',
+  window:{startPixelGame:()=>{launched++;}},
+  history:{pushState:state=>{pushed=state;}},
+  gameMode:'pixel',secretPokemon:null,location:{pathname:'/',search:''},
+  restoreSavedGame(){throw Error('series must not be loaded from the common save slot');}
+ });
+ const saved=env.getClubResumeSave();
+ assert.equal(saved.isSeries,true);
+ assert.equal(saved.mode,'pixel');
+ assert.equal(saved.seriesIndex,6);
+ env.resumeClubGame();
+ assert.equal(launched,1);
+ assert.equal(pushed.mode,'pixel');
+ assert.equal(pushed.screen,'game');
+});
+
 test('the catalogue feature rotates every Monday and only leads the untouched solo list',()=>{
  const panel={dataset:{},innerHTML:'',classList:{hidden:false,toggle(name,on){this.hidden=on;}}};
  const env=fixture({document:{addEventListener(){},getElementById:id=>id==='catalog-picks'?panel:null},escapeHtml:value=>String(value)});
