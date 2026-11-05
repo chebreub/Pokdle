@@ -1250,7 +1250,7 @@ function sendIndex(req, res) {
   // A friend's shared result: same page, with a preview that says « Trouvé en 3 essais ».
   const challenge = !moved && sharePreview.parseChallenge(req.query.defi);
   if (challenge) {
-    recordUsage("share:visit");
+    recordUsage("share:visit", null, usageSegmentForRequest(req));
     return res.type("html").send(sharePreview.challengePageHtml(fs.readFileSync(file, "utf8"), challenge));
   }
   if (!moved) return res.sendFile(file);
@@ -1273,7 +1273,7 @@ if (process.env.NODE_ENV === "development") {
 }
 // Page émulateur (lot D audit) : même SPA, mais servie sous /emulateur avec la
 // CSP permissive requise par EmulatorJS. Le client y ouvre l'écran émulateur.
-app.get("/emulateur", (req, res) => { recordUsage("solo:emulator"); sendIndex(req, res); });
+app.get("/emulateur", (req, res) => { recordUsage("solo:emulator", null, usageSegmentForRequest(req)); sendIndex(req, res); });
 // dist/* : noms stables, mais référencés en dist/x.min.js?v=<hash> depuis
 // dist/index.html (cf. build.mjs) -> cache long sans risque de stale.
 app.use("/dist", express.static(DIST_DIR, { maxAge: "365d", immutable: true, fallthrough: false }));
@@ -1501,7 +1501,19 @@ function getUsageDay(key) {
   return usageDays.get(key);
 }
 
-function recordUsage(event, uid) {
+// The admin classification is checked against the signed session on the server.
+ // Test is an explicit browser signal; it is NOT a verified player identity.
+function usageSegmentForRequest(req) {
+  const user = authReady() ? getSessionUser(req) : null;
+  if (user && ADMIN_ACCOUNT_IDS.has(String(user.id))) return "admin";
+  return req?.body?.usageTest === true ? "test" : "unmarked";
+}
+function usageSegmentForSocket(socket) {
+  const user = authReady() ? getSessionUser(socket.request) : null;
+  if (user && ADMIN_ACCOUNT_IDS.has(String(user.id))) return "admin";
+  return socket.handshake?.auth?.usageTest === true ? "test" : "unmarked";
+}
+function recordUsage(event, uid, segment = "unmarked") {
   if (!USAGE_EVENTS.has(event)) return;
   const key = serverUTCDateKey();
   const day = getUsageDay(key);
@@ -1511,7 +1523,7 @@ function recordUsage(event, uid) {
   // genuine page-visit events, never from game actions or completion events.
   if (pgPool) void usageMetricsReady.then(async (ready) => {
     if (!ready) return;
-    await usageMetrics.increment(pgPool, event, key);
+    await usageMetrics.incrementSegmented(pgPool, event, segment, key);
     if (event === "visit") await usageMetrics.recordUnique(pgPool, uid, key);
   }).catch((error) => console.warn("[usage] aggregate write failed:", String(error.message || error).slice(0, 160)));
 }
@@ -1530,7 +1542,7 @@ app.post("/api/track", express.json({ limit: "1kb" }), (req, res) => {
   const event = typeof req.body?.event === "string" ? req.body.event : "";
   if (!USAGE_EVENTS.has(event)) return res.status(400).json({ ok: false });
   if (usageRateLimited(req.ip || "?")) return res.status(429).json({ ok: false });
-  recordUsage(event, req.body?.uid);
+  recordUsage(event, req.body?.uid, usageSegmentForRequest(req));
   res.json({ ok: true });
 });
 
@@ -1642,7 +1654,7 @@ app.get("/admin/stats", async (req, res) => {
   } catch (error) {
     console.warn("[stats] feedback unavailable:", String(error.message || error).slice(0, 120));
   }
-  let metrics = null, uniqueRows = null, rawRows = null;
+  let metrics = null, segmentRows = null, segmentStartedAt = null, uniqueRows = null, rawRows = null;
   try {
     if (pgPool && await usageMetricsReady) {
       [metrics, uniqueRows] = await Promise.all([
@@ -1652,6 +1664,17 @@ app.get("/admin/stats", async (req, res) => {
     }
   } catch (error) {
     console.warn("[stats] aggregate read unavailable:", String(error.message || error).slice(0, 120));
+  }
+  // A new segment table must never hide existing dashboard totals if its read fails.
+  try {
+    if (pgPool && await usageMetricsReady) {
+      [segmentRows, segmentStartedAt] = await Promise.all([
+        usageMetrics.recentSegments(pgPool, days, end),
+        usageMetrics.segmentTrackingStartedAt(pgPool)
+      ]);
+    }
+  } catch (error) {
+    console.warn("[stats] segment read unavailable:", String(error.message || error).slice(0, 120));
   }
   try {
     if (pgPool) {
@@ -1702,7 +1725,7 @@ app.get("/admin/stats", async (req, res) => {
   }
   res.type("html").send(renderStatsDashboard({
     days, endDay, livePeriod, generatedAt: new Date().toISOString(),
-    adminKey, metrics, uniqueRows, rawRows,
+    adminKey, metrics, segmentRows, segmentStartedAt, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
     bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, economy
   }));
@@ -2625,7 +2648,7 @@ io.on("connection", (socket) => {
       };
       rooms.set(code, room);
       const player = joinPlayerToRoom(room, socket, nickname);
-      recordUsage("duel:create");
+      recordUsage("duel:create", null, usageSegmentForSocket(socket));
       emitRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicRoomState(room, socket.id) });
     } catch (error) {
@@ -2842,7 +2865,7 @@ io.on("connection", (socket) => {
       const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
       const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
-      recordUsage("party:create");
+      recordUsage("party:create", null, usageSegmentForSocket(socket));
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -2862,7 +2885,7 @@ io.on("connection", (socket) => {
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
       clearPartyRoomCleanup(room);
       const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
-      recordUsage("party:join");
+      recordUsage("party:join", null, usageSegmentForSocket(socket));
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -2952,7 +2975,7 @@ io.on("connection", (socket) => {
       await startPartyGame(room);
       if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
-      recordUsage("party:start:" + (room.gameMode || "guess"));
+      recordUsage("party:start:" + (room.gameMode || "guess"), null, usageSegmentForSocket(socket));
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -3312,7 +3335,7 @@ io.on("connection", (socket) => {
       statClashRooms.set(code, room);
       const player = joinPlayerToStatClashRoom(room, socket, nickname);
       console.log("[stat-clash][create-room] created", { code: maskCode(code) });
-      recordUsage("statclash:create");
+      recordUsage("statclash:create", null, usageSegmentForSocket(socket));
       emitStatClashRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicStatClashRoomState(room, socket.id) });
     } catch (_error) {

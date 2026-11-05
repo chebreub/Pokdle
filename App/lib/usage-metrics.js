@@ -120,12 +120,26 @@ async function ensureTable(db) {
     bitmap BYTEA NOT NULL,
     uniques INTEGER NOT NULL DEFAULT 0 CHECK (uniques >= 0)
   )`);
+  // DATA-02 is an additive, prospective view. Never rewrite historical totals.
+  await db.query(`CREATE TABLE IF NOT EXISTS usage_event_segment_daily (
+    day DATE NOT NULL,
+    event TEXT NOT NULL,
+    segment TEXT NOT NULL CHECK (segment IN ('admin','test','unmarked')),
+    hits BIGINT NOT NULL DEFAULT 0 CHECK (hits >= 0),
+    PRIMARY KEY (day, event, segment)
+  )`);
+  await db.query(`CREATE TABLE IF NOT EXISTS usage_segment_metadata (
+    name TEXT PRIMARY KEY,
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`);
+  await db.query("INSERT INTO usage_segment_metadata(name) VALUES ('v1') ON CONFLICT (name) DO NOTHING");
 }
 
 async function prune(db, now = new Date()) {
   const cutoff = startDay(90, now);
   await db.query("DELETE FROM usage_event_daily WHERE day < $1::date", [cutoff]);
   await db.query("DELETE FROM usage_unique_daily WHERE day < $1::date", [cutoff]);
+  await db.query("DELETE FROM usage_event_segment_daily WHERE day < $1::date", [cutoff]);
 }
 
 async function increment(db, event, day = utcDay()) {
@@ -135,6 +149,39 @@ async function increment(db, event, day = utcDay()) {
     "INSERT INTO usage_event_daily(day,event,hits) VALUES($1::date,$2,1) ON CONFLICT(day,event) DO UPDATE SET hits=usage_event_daily.hits+1",
     [day, event]
   );
+}
+
+// Write both aggregates in ONE statement: a failed scope insert cannot silently
+// create an unmatched legacy total. The client never gets to choose a segment.
+async function incrementSegmented(db, event, segment, day = utcDay()) {
+  if (typeof event !== "string" || !/^[a-z][a-z0-9:-]{0,70}$/.test(event)) throw new TypeError("event");
+  if (!["admin", "test", "unmarked"].includes(segment)) throw new TypeError("segment");
+  if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new TypeError("day");
+  await db.query(`
+    WITH total AS (
+      INSERT INTO usage_event_daily(day,event,hits)
+      VALUES ($1::date,$2,1)
+      ON CONFLICT(day,event) DO UPDATE SET hits=usage_event_daily.hits+1
+      RETURNING day
+    )
+    INSERT INTO usage_event_segment_daily(day,event,segment,hits)
+    SELECT day,$2,$3,1 FROM total WHERE TRUE
+    ON CONFLICT(day,event,segment) DO UPDATE
+      SET hits=usage_event_segment_daily.hits+1
+  `, [day, event, segment]);
+}
+
+async function recentSegments(db, days = 14, now = new Date()) {
+  const result = await db.query(
+    "SELECT day::text AS day,event,segment,hits FROM usage_event_segment_daily WHERE day >= $1::date AND day <= $2::date ORDER BY day DESC,event,segment",
+    [startDay(days, now), utcDay(now)]
+  );
+  return result.rows;
+}
+
+async function segmentTrackingStartedAt(db) {
+  const result = await db.query("SELECT started_at FROM usage_segment_metadata WHERE name = 'v1'");
+  return result.rows[0]?.started_at ? new Date(result.rows[0].started_at).toISOString() : null;
 }
 
 async function recent(db, days = 14, now = new Date()) {
@@ -216,4 +263,4 @@ function summarizeModes(rows, labels = {}) {
   return [...summary.values()].sort((a, b) => b.launches - a.launches || b.completions - a.completions || a.mode.localeCompare(b.mode));
 }
 
-module.exports = { SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, recent, uniqueSlot, recordUnique, recentUniques, summarizeModes };
+module.exports = { SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, incrementSegmented, recent, recentSegments, segmentTrackingStartedAt, uniqueSlot, recordUnique, recentUniques, summarizeModes };

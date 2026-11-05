@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression vérifiée : 7 tâches terminées / 43 actives = 16,3 %.** Une action en cours (BUG-MOB-01), 35 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression après intégration de DATA-02 : 8 tâches terminées / 43 actives = 18,6 %.** Une investigation en cours (BUG-MOB-01), 34 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs, leur calendrier et les dates de suivi indéterminables sans les déploiements/agrégats. Prochaine action autonome : DATA-02**, distinguer activité réelle et tests/admin sans effacer de données ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : NIV-02**, aide pédagogique de Stat mystère ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non confirmée sur le téléphone réel** ; l'interception par un toast transparent a été corrigée dans #271, mais le retour de Jade reste à recueillir.
 
@@ -65,7 +65,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
 - [x] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte et sélection de générations, avec état de manche, manches achevées et bouton « Reprendre » à l'accueil. [PR #270](https://github.com/chebreub/Pokdle/pull/270) **fusionnée** au commit `f1b1abef` après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42065243849) et [CI navigateur/base verte](https://github.com/chebreub/Pokdle/actions/runs/42065325060) sur le head `933d4f15`. Aucune synchronisation inter-appareils ni recette sur iPhone réel revendiquée.
 - [x] **FX-02 · P1** : sérialisation des célébrations de niveau et de succès, regroupement des succès débloqués simultanément, respect des notifications XP/résultat et des fenêtres de capture, cadeaux/coffres, rencontre sauvage et autres modales ; animations de sortie non cliquables. [PR #274](https://github.com/chebreub/Pokdle/pull/274) **fusionnée** au commit `70e75a2` après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42078493841) et [CI navigateur/base verte](https://github.com/chebreub/Pokdle/actions/runs/42078513945) sur le head `92c62a23`. Recette iPhone réel non revendiquée ; aucun gain/XP/capture modifié.
-- [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
+- [x] **DATA-02 · P1** : [PR #278](https://github.com/chebreub/Pokdle/pull/278) : nouveaux agrégats prospectifs admin authentifié / tests déclarés / non marqués ; totaux historiques et purge à 90 jours maintenus. Aucune attribution rétroactive aux joueurs ; voir [protocole](qa/USAGE_SEGMENTS.md). KPI bruts, estimations de navigateurs et économie non filtrés.
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
 
 ### Lot 2 — Gameplay, maîtrise et découverte
@@ -111,7 +111,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
 4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
 
-**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine étape de développement : DATA-02** ; DATA-01, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : NIV-02** ; DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
@@ -129,6 +129,13 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### Lot 7 — Validation et acquisition
 - [ ] **GROW-01 · P2** : test guidé auprès de quelques joueurs externes, compétences Pokémon différentes, appareils réels.
 - [ ] **GROW-02 · P2** : séquences réelles de jeu sans visage ni musique, diffusion ciblée avec accord des communautés.
+
+### Livraison DATA-02 — PR #278 (après fusion)
+
+- **Séparation prospective des compteurs** sans migration destructive : `usage_event_daily` reste intact en tant que total brut ; les nouvelles lignes segmentées par événement et date classent l'administration à partir de la session signée, les tests volontairement déclarés et les événements non marqués.
+- **Transparence** : un test peut se déclarer côté client ; un événement non marqué ne permet pas de conclure à l'existence d'un joueur humain. La période antérieure est explicitement non ventilable. Les uniques, l'économie, les cohortes Daily et les chargements bruts ne sont pas reclassifiés.
+- **Tests** : contrôles Node sur la classification, la ventilation, le navigateur et l'atomicité SQL ; CI GitHub Node et navigateur/base obligatoires avant fusion. **Pas de recette de production ni de Safari réel déclarée**.
+- **Progression après fusion : 8/43 = 18,6 %**. Prochaine tâche autonome : **NIV-02**. `BUG-MOB-01` reste en attente de confirmation sur l'appareil de Jade.
 
 ## Audits détaillés et documents de reprise
 

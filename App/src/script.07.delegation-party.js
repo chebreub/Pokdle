@@ -4301,7 +4301,7 @@ function ensureMultiplayerSocket() {
 
   ensureMultiplayerLiveState();
   setMultiplayerConnectionStatus("connecting");
-  multiplayerSocket = window.io();
+  multiplayerSocket = window.io({ auth: { usageTest: typeof isUsageTestSession === "function" && isUsageTestSession() } });
 
   multiplayerSocket.on("connect", () => {
     setMultiplayerConnectionStatus("online");

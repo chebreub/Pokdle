@@ -5,6 +5,8 @@ Aider à décider **quels modes améliorer** sur la base des usages plutôt que 
 
 **Dictionnaire vérifié des unités et des dates (DATA-01) :** [grain des événements et couverture observée](qa/USAGE_EVENT_GRAIN.md). Ce document explique pourquoi une ouverture ne correspond pas forcément à une partie commencée ni à une fin, et pourquoi la date exacte de mise en service de chaque compteur ne peut pas être déduite des agrégats survivants. Ne pas renseigner une date fictive.
 
+**Ventilation prospective des essais et de l'administration (DATA-02) :** [protocole de segmentation et limites](qa/USAGE_SEGMENTS.md). Les KPI principaux restent les totaux bruts, qui peuvent inclure des essais ; les événements nouvellement classés `admin`, `test`, `unmarked` s'affichent séparément sans refaire l'historique. « Non marqué » n'est pas synonyme de joueur réel ; pas de modification des compteurs précédents.
+
 ## Périmètre
 - L'API existante `POST /api/track` garde son filtrage d'événements et sa limite de requêtes.
 - Les lancements de modes déjà instrumentés restent `solo:<mode>`.

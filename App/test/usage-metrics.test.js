@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, startDay,
-  ensureTable, increment, recent, prune, uniqueSlot, recordUnique, recentUniques, summarizeModes
+  ensureTable, increment, incrementSegmented, recent, recentSegments, segmentTrackingStartedAt, prune, uniqueSlot, recordUnique, recentUniques, summarizeModes
 } = require("../lib/usage-metrics");
 
 test("whitelist permits only genuine known game outcomes", () => {
@@ -55,6 +55,21 @@ test("visitor slots are stable within a UTC day but carry no browser identifier"
   assert.equal(uniqueSlot("invalid uid!", "2026-10-25"), null);
   assert.equal(uniqueSlot(uid, "bad-day"), null);
   assert.equal(uniqueSlot(null, "2026-10-25"), null);
+});
+
+test("DATA-02 validates scope values before writing and does not accept arbitrary event labels", async () => {
+  const seen = [];
+  const db = {query: async (sql, args) => { seen.push({sql, args}); return {rows: []}; }};
+  await assert.rejects(incrementSegmented(db, "bad event", "test", "2026-11-05"), TypeError);
+  await assert.rejects(incrementSegmented(db, "visit", "player", "2026-11-05"), TypeError);
+  await assert.rejects(incrementSegmented(db, "visit", "test", "not-a-date"), TypeError);
+  assert.equal(seen.length, 0, "no SQL on invalid inputs");
+  await incrementSegmented(db, "complete:quiz:win", "test", "2026-11-05");
+  assert.deepEqual(seen[0].args, ["2026-11-05", "complete:quiz:win", "test"]);
+  assert.match(seen[0].sql, /WITH total AS/);
+  assert.match(seen[0].sql, /INSERT INTO usage_event_daily/);
+  assert.match(seen[0].sql, /INSERT INTO usage_event_segment_daily/);
+  assert.equal(seen.length, 1, "one SQL statement for both counters");
 });
 
 test("PostgreSQL counters survive re-reads, update atomically, and expire after 90 days", {
@@ -111,6 +126,26 @@ test("PostgreSQL counters survive re-reads, update atomically, and expire after 
     assert.deepEqual(cols,["day","event","hits"],"No UID, IP, account, answer or device data stored");
     const uniqueCols=(await db.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name='usage_unique_daily'",[schema])).rows.map(r=>r.column_name).sort();
     assert.deepEqual(uniqueCols,["bitmap","day","uniques"],"Only per-day aggregate bitmap and count stored");
+    // New counters are additive: historical values, UID bitmap and legacy columns
+    // survive untouched; a tagged event is also present in the original table.
+    const start = await segmentTrackingStartedAt(db);
+    assert.match(start, /^\d{4}-\d\d-\d\dT/);
+    await Promise.all(Array.from({length:20},()=>incrementSegmented(db,"solo:normal","test",today)));
+    await incrementSegmented(db,"solo:normal","admin",today);
+    await incrementSegmented(db,"solo:normal","unmarked",today);
+    const scopeRows = await recentSegments(db,14,new Date("2026-10-22T12:00:00Z"));
+    assert.deepEqual(scopeRows.map(r=>[r.event,r.segment,Number(r.hits)]),[
+      ["solo:normal","admin",1],["solo:normal","test",20],["solo:normal","unmarked",1]
+    ]);
+    const all = await recent(db,14,new Date("2026-10-22T12:00:00Z"));
+    assert.equal(Number(all.find(r=>r.event==="solo:normal").hits),47,
+      "25 old untagged events plus 22 newly classified events");
+    const segCols = (await db.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name='usage_event_segment_daily'",[schema])).rows.map(r=>r.column_name).sort();
+    assert.deepEqual(segCols,["day","event","hits","segment"],"No IP, device or account stored in scopes");
+    await incrementSegmented(db,"solo:cry","test","2026-07-20");
+    await prune(db,new Date("2026-10-22T12:00:00Z"));
+    assert.equal((await recentSegments(db,90,new Date("2026-10-22T12:00:00Z"))).some(r=>r.event==="solo:cry"),false,
+      "the 90-day purge applies to new scopes too");
   } finally {
     if(db)await db.end();
     await admin.query("DROP SCHEMA IF EXISTS "+schema+" CASCADE");
