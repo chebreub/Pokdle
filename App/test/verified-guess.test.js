@@ -79,9 +79,10 @@ test('PostgreSQL: abandoning before the first valid guess never earns a Ball or 
   const who = {key:'user:no-attempt',guestKey:'guest:no-attempt',accountId:'no-attempt'};
   const service = createBallService({db,pokemon,secret:'local-only',clock:()=>new Date('2026-11-05T12:00:00Z'),
     randomInt:()=>0,describe:async()=> 'Une description sans nom'});
-  const initial = await service.state(who);
+  await service.state(who);
   const modes = ['pixel','silhouette','cry','description','normal','mystery'];
   for (const mode of modes) {
+    const before = await service.state(who);
     const view = (await start(service,who,mode)).arcade;
     assert.equal(view.attempts,0,mode);
     const body = {mode,sessionId:view.sessionId,round:0};
@@ -89,7 +90,7 @@ test('PostgreSQL: abandoning before the first valid guess never earns a Ball or 
     assert.equal(response.arcade.phase,'over',mode);
     assert.deepEqual(response.coinsAdded,[],mode);
     assert.deepEqual(response.added,[],mode);
-    assert.deepEqual(response.bag,initial.bag,mode);
+    assert.deepEqual(response.bag,before.bag,mode);
     const replay = await service.arcadeAbandon(who,body);
     assert.equal(replay.replayed,true,mode);
     assert.deepEqual(replay.coinsAdded,[],mode);
