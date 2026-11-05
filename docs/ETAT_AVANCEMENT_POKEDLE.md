@@ -12,8 +12,8 @@
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
 | **Terminé et intégré à main** | **3** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 |
-| **Non commencé / à conduire ou à décider** | **39** | Dont certaines propositions économiques soumises à validation préalable |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 et LOG-04 |
+| **Non commencé / à conduire ou à décider** | **38** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
@@ -50,6 +50,10 @@
 ## Lot intégré — LOG-02
 
 [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée, merge `9a68b84f`. Valeur `0` conservée comme record valide via `quiEstCeRecorded`, sans migration des anciens profils : les anciennes valeurs positives restent des records ; un zéro ancien sans indicateur reste indéterminé et n'est pas inventé. Tests de fusion multi-appareils, nouvelle victoire à zéro et affichage ajoutés. CI Node [verte](https://github.com/chebreub/Pokdle/actions/runs/42034302915) et navigateur/base de données [verte](https://github.com/chebreub/Pokdle/actions/runs/42034303017) sur le head `7af64f8`. Le total intégré passe à **3/43 = 7,0 %**.
+
+## Lot en cours — LOG-04
+
+[PR #268](https://github.com/chebreub/Pokdle/pull/268) : une même combinaison incorrecte de quatre Pokémon ne consomme qu'une erreur par partie, même après mélange du plateau. Message joueur explicite, test Node et adaptations Playwright. **Statut [~]** : CI sur le head exact et fusion non encore confirmées. Les 4 erreurs / récompenses / sauvegardes restent inchangées. Progression intégrée inchangée **3/43 = 7,0 %** ; après fusion, prochaine tâche SAVE-01.
 
 ## Risques et verrous à connaître
 

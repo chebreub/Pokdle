@@ -155,12 +155,16 @@ def run():
                         assert page.evaluate("pokeConnectionsState.phase === 'playing'")
                         assert page.locator(".poke-connections-tile").count() == 16
                         assert page.evaluate("document.activeElement?.classList.contains('poke-connections-board')")
-                        wrong = page.evaluate("[0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.findIndex(t=>t.groupIdx===g))")
                         for attempt in range(4):
+                            wrong = page.evaluate("(a) => [0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.flatMap((t,i)=>t.groupIdx===g?[i]:[])[a])", attempt)
                             page.evaluate("clearPokeConnectionsSelection()")
                             for idx in wrong:
                                 page.locator(f'.poke-connections-tile[data-args="[{idx}]"]').click()
                             page.locator('[data-action="submitPokeConnectionsGuess"]').click()
+                            if attempt == 0:
+                                page.locator('[data-action="submitPokeConnectionsGuess"]').click()
+                                assert page.evaluate("pokeConnectionsState.mistakes") == 1
+                                assert "Combinaison déjà proposée" in page.locator(".poke-connections-selection-help").inner_text()
                         assert page.evaluate("pokeConnectionsState.phase") == "lost"
                         loss = page.locator(".poke-connections-final.is-lost")
                         assert loss.is_visible()

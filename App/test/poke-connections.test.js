@@ -173,8 +173,11 @@ test("incomplete selection is ignored and four wrong groups reveal the solution 
   const state = context.testState();
   select(context, [0, 1, 2]); context.submitPokeConnectionsGuess();
   assert.equal(state.mistakes, 0);
-  const wrong = [0, 1, 2, 3].map((g) => state.puzzle.tiles.findIndex((t) => t.groupIdx === g));
-  for (let attempt = 0; attempt < 4; attempt++) { select(context, wrong); context.submitPokeConnectionsGuess(); }
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const wrong = [0, 1, 2, 3].map((g) => state.puzzle.tiles.flatMap((t, i) => t.groupIdx === g ? [i] : [])[attempt]);
+    select(context, wrong);
+    context.submitPokeConnectionsGuess();
+  }
   assert.equal(state.phase, "lost"); assert.equal(state.mistakes, 4);
   assert.match(root.innerHTML, /Les 4 erreurs sont utilisées/);
   assert.equal((root.innerHTML.match(/is-reveal/g) || []).length, 4);
@@ -182,6 +185,46 @@ test("incomplete selection is ignored and four wrong groups reveal the solution 
   assert.deepEqual(events.filter(([type]) => type === "party"), [["party", false, "0/4 groupes"]]);
 });
 
+
+
+test("repeating an incorrect quartet never charges twice, even after a shuffle", () => {
+  const { context, root, events } = fixture();
+  context.openPokeConnectionsMode();
+  const state = context.testState();
+  const wrong = [0, 1, 2, 3].map(g => state.puzzle.tiles.findIndex(t => t.groupIdx === g));
+  const ids = wrong.map(i => state.puzzle.tiles[i].id);
+  select(context, wrong);
+  context.submitPokeConnectionsGuess();
+  assert.equal(state.mistakes, 1);
+  assert.equal(state.rejectedGuesses.size, 1);
+  const firstShake = state.lastShake;
+  context.submitPokeConnectionsGuess();
+  context.submitPokeConnectionsGuess();
+  assert.equal(state.mistakes, 1);
+  assert.equal(state.lastShake, firstShake, "a repeat must not trigger a second error animation");
+  assert.match(root.innerHTML, /Combinaison déjà proposée : aucune erreur supplémentaire/);
+  assert.equal(state.phase, "playing");
+
+  context.shufflePokeConnectionsTiles();
+  const reshuffled = ids.map(id => state.puzzle.tiles.findIndex(t => t.id === id));
+  select(context, reshuffled.slice().reverse());
+  context.submitPokeConnectionsGuess();
+  assert.equal(state.mistakes, 1);
+  assert.equal(state.rejectedGuesses.size, 1);
+  assert.match(root.innerHTML, /Combinaison déjà proposée/);
+  assert.equal(events.filter(([type]) => type === "party").length, 0);
+
+  const different = [0, 1, 2, 3].map(g => state.puzzle.tiles.flatMap((t, i) => t.groupIdx === g ? [i] : [])[1]);
+  select(context, different);
+  context.submitPokeConnectionsGuess();
+  assert.equal(state.mistakes, 2, "a new wrong combination still costs one error");
+  assert.equal(state.rejectedGuesses.size, 2);
+  assert.doesNotMatch(root.innerHTML, /Combinaison déjà proposée/);
+
+  context.restartPokeConnectionsGame();
+  assert.equal(context.testState().mistakes, 0);
+  assert.equal(context.testState().rejectedGuesses.size, 0, "a new puzzle has a fresh rejection history");
+});
 
 test("solo result keeps both continuation choices and completed Party cannot replay", () => {
   const { context, root, events } = fixture(); context.openPokeConnectionsMode();
@@ -211,8 +254,11 @@ test("solo result keeps both continuation choices and completed Party cannot rep
 test("loss shows replay before remaining solutions without hiding any groups", () => {
   const { context, root, events } = fixture(); context.openPokeConnectionsMode();
   const state = context.testState();
-  const wrong = [0, 1, 2, 3].map((g) => state.puzzle.tiles.findIndex((t) => t.groupIdx === g));
-  for (let attempt = 0; attempt < 4; attempt++) { select(context, wrong); context.submitPokeConnectionsGuess(); }
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const wrong = [0, 1, 2, 3].map((g) => state.puzzle.tiles.flatMap((t, i) => t.groupIdx === g ? [i] : [])[attempt]);
+    select(context, wrong);
+    context.submitPokeConnectionsGuess();
+  }
   assert.equal(state.phase, "lost");
   const action = root.innerHTML.indexOf('class="poke-connections-final-actions"');
   const reveals = root.innerHTML.indexOf('class="poke-connections-reveal-groups"');
