@@ -155,6 +155,56 @@ def case(page, engine, width, height):
     assert not toast['hidden'] and toast['shown'] and not toast['hiddenAgain'], (
         'Invisible floating result card intercepts lower viewport taps: ' + json.dumps(toast))
     steps.append(dict(action='invisible-result-toast', **toast))
+
+    # FX-02: a dismissed level-up backdrop stays mounted for the fade-out.
+    # It must not block an actual game button beneath it during that transition.
+    leaving = page.evaluate("""() => {
+      const target=document.querySelector('#screen-poke-connections .poke-connections-tile:not(:disabled)');
+      if (!target) return {error:'no active Connections tile'};
+      target.scrollIntoView({block:'center',behavior:'instant'});
+      const rect=target.getBoundingClientRect();
+      const x=Math.round(rect.left+rect.width/2), y=Math.round(rect.top+rect.height/2);
+      const back=document.createElement('div');
+      back.className='lvc-back is-leaving is-still';
+      document.body.appendChild(back);
+      const top=document.elementFromPoint(x,y);
+      const ok=Boolean(top && (top===target || target.contains(top)));
+      const pointerEvents=getComputedStyle(back).pointerEvents;
+      back.remove();
+      return {x,y,ok,pointerEvents};
+    }""")
+    assert not leaving.get('error'), leaving
+    assert leaving['ok'] and leaving['pointerEvents']=='none', (
+        'Dismissed level overlay blocked game actions: ' + json.dumps(leaving))
+    steps.append(dict(action='level-backdrop-dismissed', **leaving))
+
+    # Exercise the actual presentation scheduler with simultaneous unlocks.
+    # This is UI-only on a synthetic local guest: no XP/reward is awarded.
+    page.evaluate("""() => {
+      goToConfig();
+      showXpToast('+100 XP · démo interface FX-02');
+      celebrateLevelUp(9, 10);
+      celebrateAchievements([1,2,3,4,5].map(n => ({
+        title:'Succès démo '+n, desc:'Test affichage'
+      })));
+    }""")
+    page.locator('#xp-toast.is-visible').wait_for(state='visible',timeout=4000)
+    page.wait_for_timeout(300)
+    assert page.locator('.lvc-back').count()==0, 'Level backdrop appeared over the visible XP toast'
+    level_card=page.locator('.lvc-card')
+    level_card.wait_for(state='visible',timeout=8000)
+    assert page.locator('.achc').count()==0, 'Achievement banner overlaps active level modal'
+    page.locator('.lvc-btn').click()
+    banner=page.locator('.achc')
+    banner.wait_for(state='visible',timeout=8000)
+    assert page.locator('.lvc-back').count()==0, 'Level backdrop persists beneath achievement'
+    banner_text=banner.inner_text()
+    assert 'Succès démo 1' in banner_text and 'Succès démo 3' in banner_text, banner_text
+    assert '+2 autres succès' in banner_text, 'Unlock burst not grouped: '+banner_text
+    assert 'Succès démo 4' not in banner_text, 'More than three titles in grouped banner'
+    banner.click()
+    page.locator('.achc').wait_for(state='detached',timeout=8000)
+    steps.append(dict(action='level-then-grouped-achievements', grouped=True))
     return steps
 
 

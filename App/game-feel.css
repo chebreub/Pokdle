@@ -395,13 +395,13 @@
 @keyframes lvcBadge{to{opacity:1;transform:none}}
 .lvc-next{margin:6px 0 14px;font:700 14px Nunito,sans-serif;color:#6B6472}
 .lvc-btn{width:100%;padding:14px;border:0;border-radius:16px;background:#4069E0;color:#fff;font:800 17px Nunito,sans-serif;box-shadow:0 4px 0 #2d4fb3;cursor:pointer}
-.lvc-back.is-leaving,.lvc-card.is-leaving{transition:opacity .2s ease;opacity:0 !important}
+.lvc-back.is-leaving,.lvc-card.is-leaving{transition:opacity .2s ease;opacity:0 !important;pointer-events:none}
 .lvc-conf{position:fixed;top:40%;left:50%;z-index:2147483002;width:10px;height:14px;border-radius:3px;pointer-events:none;opacity:0;animation:lvcConf 1.6s cubic-bezier(.1,.7,.3,1) forwards}
 @keyframes lvcConf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}
 .achc{position:fixed;left:50%;top:14px;z-index:2147483003;width:min(460px,calc(100vw - 24px));box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:20px;background:#2E2A33;color:#fff;
   font-family:Nunito,system-ui,sans-serif;box-shadow:0 14px 30px rgba(0,0,0,.35);transform:translate(-50%,-140%);animation:achcIn .5s cubic-bezier(.2,1.4,.4,1) forwards;cursor:pointer}
 @keyframes achcIn{to{transform:translate(-50%,0)}}
-.achc.is-leaving{animation:achcOut .38s ease forwards}
+.achc.is-leaving{animation:achcOut .38s ease forwards;pointer-events:none}
 @keyframes achcOut{from{transform:translate(-50%,0)}to{transform:translate(-50%,-140%)}}
 .achc-medal{position:relative;flex:0 0 52px;height:52px;border-radius:50%;display:grid;place-items:center;overflow:hidden;font-size:26px;background:radial-gradient(circle at 35% 30%,#FFF2B8,#FFD45C 45%,#D39B00);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
 .achc-medal::after{content:"";position:absolute;inset:-20px;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.85) 50%,transparent 60%);transform:translateX(-80px);animation:achcShine 1s ease .6s forwards}
@@ -409,6 +409,7 @@
 .achc-text{min-width:0}
 .achc-text small{display:block;font:800 11px Nunito,sans-serif;letter-spacing:.12em;color:#FFD45C}
 .achc-text b{display:block;font:700 18px Fredoka,sans-serif}
+.achc-text b + b{font-size:15px;margin-top:2px}
 .achc-text span{display:block;font:600 13px Nunito,sans-serif;color:#D9D2DF}
 body.theme-dark .lvc-card{background:#29262F;color:#F3EEE8}
 body.theme-dark .lvc-title{color:#F3EEE8}

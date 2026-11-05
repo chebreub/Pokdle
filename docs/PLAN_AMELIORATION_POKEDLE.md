@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression vérifiée : 5 tâches terminées / 43 actives = 11,6 %.** Une action en cours (BUG-MOB-01), 37 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression vérifiée : 5 tâches terminées / 43 actives = 11,6 %.** Deux actions en cours (BUG-MOB-01 et FX-02), 36 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -64,7 +64,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
 - [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
 - [x] **SAVE-01 · P1** : reprise locale des séries Pixelisé, Cri, Silhouette et Description par compte et sélection de générations, avec état de manche, manches achevées et bouton « Reprendre » à l'accueil. [PR #270](https://github.com/chebreub/Pokdle/pull/270) **fusionnée** au commit `f1b1abef` après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42065243849) et [CI navigateur/base verte](https://github.com/chebreub/Pokdle/actions/runs/42065325060) sur le head `933d4f15`. Aucune synchronisation inter-appareils ni recette sur iPhone réel revendiquée.
-- [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
+- [~] **FX-02 · P1** : correctif proposé en PR dédiée : afficher une seule célébration niveau/succès à la fois, regrouper les succès débloqués simultanément et attendre la fermeture des fenêtres de capture, cadeau, rencontre sauvage et autres modales ouvertes ; désactiver l'interception des clics pendant les transitions de sortie. **CI et recette téléphone réel encore à confirmer.** Aucun gain/XP/capture modifié.
 - [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
 
@@ -176,6 +176,13 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - La CI navigateur du head `5b1c9971` a également identifié un focus mobile non souhaité pendant la restauration (scroll du mode Cri à 360/390 px). Le focus est désormais réservé au desktop avec `preventScroll`, et un test Node couvre mobile et desktop. **Contrôle ultérieur : CI Node et navigateur vertes sur le head final `933d4f15`, puis PR fusionnée.**
 - [PR #270](https://github.com/chebreub/Pokdle/pull/270) : reprise locale versionnée des séries par compte **et groupe de générations**. Le test navigateur initial a également révélé une régression quand la génération changeait : sauvegardes désormais distinctes par groupe, sans effacement du précédent. Le test initial a révélé qu'une restauration de manche passait par erreur dans la validation du Daily : condition corrigée, et contrôle de non-suppression des anciens slots ajouté. **CI Node et navigateur verte sur `933d4f15`; merge confirmé `f1b1abef`**.
 - Progression après fusion : **5/43 = 11,6 %**. La sauvegarde entre appareils n'est pas couverte ; compte, inventaire et économie inchangés. La recette réelle sur Safari iPhone / Render n'est pas revendiquée.
+
+### FX-02 — correctif UX en validation (pas encore compté)
+
+- Célébrations de niveau et de succès auparavant autorisées **en parallèle** ; une file unique garde un seul bandeau/écran actif, et regroupe les succès déverrouillés simultanément en un bandeau (jusqu'à trois noms, puis `+N autres succès`). Les événements de récompenses sont conservés, seul leur **affichage** change.
+- Les notifications visibles d'XP et de résultat, ainsi que les fenêtres de capture, cadeau/coffre, rencontre sauvage et autres modales ouvertes, gardent la priorité. Les célébrations patientent au lieu de les recouvrir. Après fermeture, l'affichage reprend automatiquement. Les fonds et bandeaux en cours de disparition ont `pointer-events:none`.
+- Tests Node (file, regroupement, blocage/reprise) et navigateur Chromium/WebKit (interception tactile à coordonnées) ajoutés. **Aucune règle de gain, XP, Balls, Pokédollars, inventaire, shiny ou capture changée.**
+- En attente de CI verte sur le head exact et de fusion ; progression **5/43 = 11,6 %** inchangée avant intégration ; BUG-MOB-01 reste un sujet distinct en attente de confirmation réelle.
 
 ### Clôture SAVE-01 — 05/11/2026
 

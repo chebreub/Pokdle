@@ -12,8 +12,8 @@
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
 | **Terminé et intégré à main** | **5** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **37** | Dont certaines propositions économiques soumises à validation préalable |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 (retour mobile réel à obtenir) et FX-02 (PR en validation) |
+| **Non commencé / à conduire ou à décider** | **36** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
@@ -26,7 +26,7 @@
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
 | 0 | Ergonomie mobile / PC et mesures | 0 / 7 | 0 % | Protocole et test tactile en place, BUG-MOB-01 non reproduit sur téléphone réel |
-| 1 | Fiabilité des jeux et sauvegardes | 5 / 8 | 62,5 % | LOG-01 à LOG-04 et SAVE-01 terminés |
+| 1 | Fiabilité des jeux et sauvegardes | 5 / 8 | 62,5 % | LOG-01 à LOG-04 et SAVE-01 terminés ; FX-02 en validation |
 | 2 | Gameplay, pédagogie, découverte | 0 / 5 | 0 % | Recommandations documentées, rien de nouveau livré dans ce plan |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
 | 4 | Économie et rencontres | 0 / 8 | 0 % | 6 décisions de cadrage consignées le 05/11 : 4 accords de principe soumis aux tests, 1 simulation préalable, 1 sujet à rediscuter ; **aucune règle approuvée pour production** |
@@ -73,6 +73,14 @@ La CI navigateur du head `5b1c9971` a également identifié un focus mobile non 
 - Les corrections de focus et de libellé mobile, la conservation de l'ancien slot Daily/classique et l'isolation des checkpoints par compte, mode et générations sont incluses. Le scénario de reprise « manche 6/10 » est testé dans le navigateur après rechargement.
 - **Non vérifié en production :** recette manuelle iPhone Safari / Render et reprise entre appareils (cette dernière n'est pas une fonctionnalité livrée). Aucun changement aux règles économiques, Balls, captures, Pokédollars ou inventaires.
 - **Progression mise à jour : 5/43 = 11,6 %**. Prochaine action de développement : **FX-02**.
+
+## FX-02 — prévention des fenêtres superposées, en validation
+
+Proposition de PR à valider : **une seule célébration active** pour niveau et succès, regroupement en un bandeau des succès débloqués lors d'un même événement, et **attente** pendant les notifications visibles d'XP/résultat ou les fenêtres existantes de capture, cadeau/coffre, rencontre sauvage ou modale. Les bandeaux et fonds qui disparaissent ne doivent plus intercepter les appuis (contrôle via `document.elementFromPoint`).
+
+Tests ajoutés : VM Node (ordre, regroupement, blocage pendant une modal et reprise) ; QA Playwright mobile Chromium/WebKit (cible sous un fond de célébration fermé). **À confirmer : CI sur le dernier head, fusion et recette iPhone réel.** Ne pas confondre succès des tests simulés avec validation sur appareil réel.
+
+Modifications **uniquement de présentation/coordination et CSS** ; aucune réattribution d'XP, de Balls ou de Pokédollars. Progression **5/43 = 11,6 %** tant que FX-02 n'est pas fusionné. BUG-MOB-01 reste ouvert à la vérification de Jade.
 
 ## Cadrage économique décidé le 05/11/2026 — sans implémentation
 
