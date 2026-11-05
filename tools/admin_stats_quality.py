@@ -28,6 +28,9 @@ def main():
                     assert page.locator("table").count()>=2
                     assert page.get_by_text("Dessine-le !").count()>0
                     assert page.get_by_text("Wordle du jour").count()>0
+                    assert page.get_by_text("Circulation des Pokédollars").count()==1
+                    assert page.get_by_text("Shinies capturés").count()==1
+                    assert page.get_by_text("Balls lancées").count()==1
                     if days==1:
                         assert page.get_by_text("Sessions aujourd’hui").count()>0
                         assert page.locator("svg.trend-chart").count()==0
