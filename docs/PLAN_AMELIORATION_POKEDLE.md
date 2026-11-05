@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression après intégration de DATA-02 : 8 tâches terminées / 43 actives = 18,6 %.** Une investigation en cours (BUG-MOB-01), 34 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression après intégration de NIV-02 : 9 tâches terminées / 43 actives = 20,9 %.** Une investigation en cours (BUG-MOB-01), 33 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : NIV-02**, aide pédagogique de Stat mystère ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : SER-01**, records Pixelisé : pilotage et préservation des anciens records ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non confirmée sur le téléphone réel** ; l'interception par un toast transparent a été corrigée dans #271, mais le retour de Jade reste à recueillir.
 
@@ -69,7 +69,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **DATA-04 · P1** : rétention J1/J7 sur cohortes matures ; « retour Pokémon du jour » ≠ rétention globale.
 
 ### Lot 2 — Gameplay, maîtrise et découverte
-- [ ] **NIV-02 · P1** : aide pédagogique facultative pour Stat mystère ; conserver la 1re lettre déjà révélée après 5 essais. Signal 5/50 victoires parmi fins déclarées.
+- [x] **NIV-02 · P1** : [PR #279](https://github.com/chebreub/Pokdle/pull/279) : aide repliable pour lire les statistiques dans Stat mystère (exemple fictif, barres, total), clavier et mobile accessibles ; difficulté, première lettre après 5 essais déjà présente, récompenses et secret serveur inchangés. Signal initial 5/50 victoires parmi fins déclarées.
 - [ ] **SER-01 · P1** : pilote Pixelisé : records départagés par trouvés puis essais, sans falsifier les anciens scores, avec passes définies.
 - [ ] **MEDIA-01 · P1** : panne de lecture du Cri ne cause pas de défaite imposée.
 - [ ] **DISC-01 · P2** : une carte de découverte tournante, sans déplacer les favoris ni refaire l'accueil.
@@ -111,7 +111,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
 4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
 
-**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : NIV-02** ; DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : SER-01** ; NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
@@ -136,6 +136,13 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - **Transparence** : un test peut se déclarer côté client ; un événement non marqué ne permet pas de conclure à l'existence d'un joueur humain. La période antérieure est explicitement non ventilable. Les uniques, l'économie, les cohortes Daily et les chargements bruts ne sont pas reclassifiés.
 - **Tests** : contrôles Node sur la classification, la ventilation, le navigateur et l'atomicité SQL ; CI GitHub Node et navigateur/base obligatoires avant fusion. **Pas de recette de production ni de Safari réel déclarée**.
 - **Progression après fusion : 8/43 = 18,6 %**. Prochaine tâche autonome : **NIV-02**. `BUG-MOB-01` reste en attente de confirmation sur l'appareil de Jade.
+
+### NIV-02 — aide pédagogique facultative, PR #279 (après fusion)
+
+- Ajout d'un panneau de compréhension des statistiques de base de **Stat Mystère**, fermé par défaut et intégré à la rangée du titre. Exemple volontairement fictif ; guide accessible au clavier et cible de 44 px sur petit écran.
+- **Aucune règle changée :** essais, classement, gains, secret côté serveur, capture et aide existante de la première lettre après 5 tentatives. L'aide ne dévoile aucun nouveau indice propre au Pokémon courant.
+- Tests Node de structure/accessibilité + QA navigateur/serveur exigées sur le head exact ; **aucune recette physique iPhone ou Render n'est revendiquée.**
+- **Progression après fusion : 9/43 = 20,9 %**. Prochain chantier **SER-01** : pilotes de records Pixelisé sans écraser les anciens scores. `BUG-MOB-01` toujours ouvert et non confirmé sur vrai appareil.
 
 ## Audits détaillés et documents de reprise
 
