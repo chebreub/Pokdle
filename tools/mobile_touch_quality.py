@@ -188,7 +188,7 @@ def case(page, engine, width, height):
         title:'Succès démo '+n, desc:'Test affichage'
       })));
     }""")
-    page.wait_for_function("!!document.querySelector('#xp-toast.is-visible')",timeout=4000)
+    page.locator('#xp-toast.is-visible').wait_for(state='visible',timeout=4000)
     page.wait_for_timeout(300)
     assert page.locator('.lvc-back').count()==0, 'Level backdrop appeared over the visible XP toast'
     level_card=page.locator('.lvc-card')
@@ -203,7 +203,7 @@ def case(page, engine, width, height):
     assert '+2 autres succès' in banner_text, 'Unlock burst not grouped: '+banner_text
     assert 'Succès démo 4' not in banner_text, 'More than three titles in grouped banner'
     banner.click()
-    page.wait_for_function("!document.querySelector('.achc')",timeout=8000)
+    page.locator('.achc').wait_for(state='detached',timeout=8000)
     steps.append(dict(action='level-then-grouped-achievements', grouped=True))
     return steps
 
