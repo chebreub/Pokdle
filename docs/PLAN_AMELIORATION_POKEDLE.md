@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.  
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
-> **Statut de suivi au 05/11/2026 : LOG-02 fusionné (#266), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
+> **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression vérifiée : 3 tâches terminées / 43 actives = 7,0 %.** Deux actions en cours (BUG-MOB-01, LOG-04), 38 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression vérifiée : 4 tâches terminées / 43 actives = 9,3 %.** Une action en investigation (BUG-MOB-01), 38 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : finaliser LOG-04 (PR #268), puis analyser SAVE-01** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **reproduction sur appareil réel**, encore absente. **Prochaine action de développement pouvant avancer sans cette preuve : analyser SAVE-01 (reprise de série isolée par compte)** dans une PR séparée. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non reproduite et non identifiée**.
 
@@ -62,7 +62,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **LOG-01 · P1** : choix 5/10/20 sans réinitialisation si valeur identique ; confirmation et conservation de l'état/préférence si changement refusé. PR [#261](https://github.com/chebreub/Pokdle/pull/261), **CI Node et navigateurs vertes**, fusionnée au commit `646d83c`.
 - [x] **LOG-02 · P1** : record « Qui est-ce ? » à 0 question distingué de l'absence de record via indicateur explicite, fusion multi-appareils et affichage. [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée au commit `9a68b84f` ; **CI Node et navigateur vertes**.
 - [x] **LOG-03 · P1** : filtre solo du catalogue ne masque pas la Party Room lors du passage « Entre amis ». [PR #264](https://github.com/chebreub/Pokdle/pull/264), CI Node et navigateur **vertes**, fusionnée au commit `cfa0d021`.
-- [~] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. Correctif et tests en [PR #268](https://github.com/chebreub/Pokdle/pull/268) ; **CI / fusion à vérifier**.
+- [x] **LOG-04 · P1** : une combinaison erronée Connections déjà soumise ne coûte pas une deuxième erreur, y compris après mélange. [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée au commit `d8c87fe7` après **CI Node et navigateur/base de données vertes**.
 - [ ] **SAVE-01 · P1** : conserver série entière (ex. relance à la manche 6) sans mélange entre comptes.
 - [ ] **FX-02 · P1** : éviter la succession de modales gain/capture/niveau et vérifier que leurs animations ne capturent pas les clics.
 - [ ] **DATA-02 · P1** : séparer test/admin et vraie activité produit sans effacer les journaux.
@@ -150,15 +150,17 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - Progression après fusion : **2/43 = 4,7 %** ; prochaine action LOG-02.
 - Ce lot documentaire **n'implémente aucune mécanique de jeu** et n'ajoute pas de tâche [x] au décompte.
 
-### LOG-04 — en PR
+### LOG-04 — intégré
 
-- [PR #268](https://github.com/chebreub/Pokdle/pull/268) : répétition d'une combinaison incorrecte sans pénalité supplémentaire, y compris après mélange. Tests Node et Playwright ajoutés ; **CI verte et fusion à confirmer**.
-- Progression intégrée inchangée **3/43 = 7,0 %** jusqu'à la fusion. Prochaine tâche après LOG-04 : SAVE-01 (reprise de série et isolation des comptes).
+- [PR #268](https://github.com/chebreub/Pokdle/pull/268) fusionnée (`d8c87fe7`) après CI [Node verte](https://github.com/chebreub/Pokdle/actions/runs/42036602850) et [navigateur/base de données verte](https://github.com/chebreub/Pokdle/actions/runs/42036604853), sur le head exact `ed9b57f8`. Tests répétitions, mélange et quatre erreurs distinctes.
+- Progression **4/43 = 9,3 %**. Prochaine tâche : SAVE-01 (reprise atomique des séries et isolation multi-comptes). BUG-MOB-01 reste non reproduit sur vrai téléphone.
 
 ### LOG-02 — intégré
 
 - [PR #266](https://github.com/chebreub/Pokdle/pull/266) fusionnée (`9a68b84f`) après CI Node [verte](https://github.com/chebreub/Pokdle/actions/runs/42034302915) et navigateur/base de données [verte](https://github.com/chebreub/Pokdle/actions/runs/42034303017). Progression : **3/43 = 7,0 %**.
 - Prochaine action : LOG-04. BUG-MOB-01 reste en investigation : aucune recette iPhone réel.
+
+| 2026-11-05 | 1 | LOG-04 : rejets répétés dans Connections sans nouvelle pénalité | CI Node + navigateur/base de données vertes ; PR fusionnée, aucune recette Safari réel | [#268](https://github.com/chebreub/Pokdle/pull/268), commit `d8c87fe7` |
 
 ## Prompt minimal pour un nouveau chat
 
