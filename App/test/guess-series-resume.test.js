@@ -195,7 +195,7 @@ test('series save and completion preserve another mode legacy slot',()=>{
   assert.deepEqual(removed,[],'another mode save must stay intact');
   state.legacy={mode:'pixel'};
   ctx.clearSavedGame('pixel');
-  assert.deepEqual(removed,['ordinary-slot'],'a legacy save for the active mode may still be cleared');
+  assert.deepEqual(removed,[],'even a prior save of the same mode must survive');
   ctx.clearSavedGame('daily');
-  assert.deepEqual(removed,['ordinary-slot','daily-slot'],'Daily retains its own original slot');
+  assert.deepEqual(removed,['daily-slot'],'Daily retains its own independent lifecycle');
 });
