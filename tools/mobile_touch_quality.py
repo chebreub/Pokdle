@@ -182,11 +182,15 @@ def case(page, engine, width, height):
     # This is UI-only on a synthetic local guest: no XP/reward is awarded.
     page.evaluate("""() => {
       goToConfig();
+      showXpToast('+100 XP · démo interface FX-02');
       celebrateLevelUp(9, 10);
       celebrateAchievements([1,2,3,4,5].map(n => ({
         title:'Succès démo '+n, desc:'Test affichage'
       })));
     }""")
+    page.wait_for_function("!!document.querySelector('#xp-toast.is-visible')",timeout=4000)
+    page.wait_for_timeout(300)
+    assert page.locator('.lvc-back').count()==0, 'Level backdrop appeared over the visible XP toast'
     level_card=page.locator('.lvc-card')
     level_card.wait_for(state='visible',timeout=8000)
     assert page.locator('.achc').count()==0, 'Achievement banner overlaps active level modal'
