@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**5 tâches terminées sur 43 actions actives = 11,6 %** du plan au sens strict des cases validées et fusionnées.
+**6 tâches terminées sur 43 actions actives = 14,0 %** du plan au sens strict des cases validées et fusionnées.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **5** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 (retour mobile réel à obtenir) et FX-02 (PR en validation) |
+| **Terminé et intégré à main** | **6** | Action vérifiée, PR fusionnée |
+| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
 | **Non commencé / à conduire ou à décider** | **36** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (5 actions terminées / 43 actions actives) × 100 = **11,6279 %, arrondi à 11,6 %**.
+**Formule explicite :** (6 actions terminées / 43 actions actives) × 100 = **13,9535 %, arrondi à 14,0 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -26,14 +26,14 @@
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
 | 0 | Ergonomie mobile / PC et mesures | 0 / 7 | 0 % | Protocole et test tactile en place, BUG-MOB-01 non reproduit sur téléphone réel |
-| 1 | Fiabilité des jeux et sauvegardes | 5 / 8 | 62,5 % | LOG-01 à LOG-04 et SAVE-01 terminés ; FX-02 en validation |
+| 1 | Fiabilité des jeux et sauvegardes | 6 / 8 | 75 % | LOG-01 à LOG-04, SAVE-01 et FX-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 0 / 5 | 0 % | Recommandations documentées, rien de nouveau livré dans ce plan |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
 | 4 | Économie et rencontres | 0 / 8 | 0 % | 6 décisions de cadrage consignées le 05/11 : 4 accords de principe soumis aux tests, 1 simulation préalable, 1 sujet à rediscuter ; **aucune règle approuvée pour production** |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **5 / 43** | **11,6 %** | NIV-01 stationné exclu |
+| **Total** | | **6 / 43** | **14,0 %** | NIV-01 stationné exclu |
 
 ## Journal GitHub vérifié
 
@@ -74,13 +74,20 @@ La CI navigateur du head `5b1c9971` a également identifié un focus mobile non 
 - **Non vérifié en production :** recette manuelle iPhone Safari / Render et reprise entre appareils (cette dernière n'est pas une fonctionnalité livrée). Aucun changement aux règles économiques, Balls, captures, Pokédollars ou inventaires.
 - **Progression mise à jour : 5/43 = 11,6 %**. Prochaine action de développement : **FX-02**.
 
-## FX-02 — prévention des fenêtres superposées, en validation
+## FX-02 — intégré dans `main`
 
 Proposition de PR à valider : **une seule célébration active** pour niveau et succès, regroupement en un bandeau des succès débloqués lors d'un même événement, et **attente** pendant les notifications visibles d'XP/résultat ou les fenêtres existantes de capture, cadeau/coffre, rencontre sauvage ou modale. Les bandeaux et fonds qui disparaissent ne doivent plus intercepter les appuis (contrôle via `document.elementFromPoint`).
 
-Tests ajoutés : VM Node (ordre, regroupement, blocage pendant une modal et reprise) ; QA Playwright mobile Chromium/WebKit (cible sous un fond de célébration fermé). **À confirmer : CI sur le dernier head, fusion et recette iPhone réel.** Ne pas confondre succès des tests simulés avec validation sur appareil réel.
+Tests ajoutés : VM Node (ordre, regroupement, blocage pendant une modal et reprise) ; QA Playwright mobile Chromium/WebKit (cible sous un fond de célébration fermé). **CI Node et navigateur/base vertes sur le dernier head `92c62a23`, fusion au commit `70e75a2` ; recette iPhone réelle non effectuée.** Ne pas confondre succès des tests simulés avec validation sur appareil réel.
 
-Modifications **uniquement de présentation/coordination et CSS** ; aucune réattribution d'XP, de Balls ou de Pokédollars. Progression **5/43 = 11,6 %** tant que FX-02 n'est pas fusionné. BUG-MOB-01 reste ouvert à la vérification de Jade.
+Modifications **uniquement de présentation/coordination et CSS** ; aucune réattribution d'XP, de Balls ou de Pokédollars. Progression intégrée **6/43 = 14,0 %** après fusion. BUG-MOB-01 reste ouvert à la vérification de Jade.
+
+### Validation finale de FX-02
+
+- [PR #274](https://github.com/chebreub/Pokdle/pull/274) **fusionnée** au commit `70e75a2ad648bcea85d588e5fa4870e4083b9170` après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42078493841) et [CI navigateur/base verte](https://github.com/chebreub/Pokdle/actions/runs/42078513945) sur le dernier head `92c62a23450083f1fddb7dea2d91a81d3a13975f`.
+- Écrans de niveau et succès en série ; succès regroupés ; notifications XP et résultat prioritaires ; les transitions sortantes ne captent plus les touches. Aucun changement aux récompenses, XP, Balls, Pokédollars ni aux captures.
+- **Non vérifié sur appareil réel :** Safari iPhone et retour de Jade. Les tests Chromium/WebKit ne constituent pas une recette physique.
+- **Progression : 6/43 = 14,0 %** ; prochaine action autonome **DATA-01** ; BUG-MOB-01 reste ouvert.
 
 ## Cadrage économique décidé le 05/11/2026 — sans implémentation
 
@@ -93,7 +100,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 - **ECO-03** : **à rediscuter** ; les paliers 30/60/90 Pokédollars ne sont pas validés.
 - **ECO-04** : **accord de principe sous réserve des tests** pour créditer une seule fois les coffres acquis même sans ouverture immédiate.
 
-**Distinction impérative :** « accord de principe » ≠ autorisation de modifier le code, le paramétrage, les récompenses ni la base de données. Exiger simulation des conséquences, propositions de règles précises, tests/idempotence et **validation finale explicite** du propriétaire avant PR économique et déploiement. Toutes les règles actuelles (capture, shiny, 3 lancers, Balls, Pokédollars, rareté, inventaires) restent identiques. **Aucune tâche économique clôturée** ; progression globale après SAVE-01 : **5/43 = 11,6 %**. Prochain chantier de développement : **FX-02**.
+**Distinction impérative :** « accord de principe » ≠ autorisation de modifier le code, le paramétrage, les récompenses ni la base de données. Exiger simulation des conséquences, propositions de règles précises, tests/idempotence et **validation finale explicite** du propriétaire avant PR économique et déploiement. Toutes les règles actuelles (capture, shiny, 3 lancers, Balls, Pokédollars, rareté, inventaires) restent identiques. **Aucune tâche économique clôturée** ; progression globale après FX-02 : **6/43 = 14,0 %**. Prochain chantier autonome : **DATA-01**.
 
 ## Risques et verrous à connaître
 
@@ -109,7 +116,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
 2. **LOG-02 intégré via PR #266** : tests Node et navigateur verts, merge `9a68b84f`. Un ancien zéro sans indicateur demeure ambigu, aucune migration inventée.
-3. **SAVE-01 intégré via PR #270** après CI verte ; **prochain lot FX-02** : vérifier et limiter les successions de fenêtres/animations de gain, niveau et capture sans toucher aux règles économiques.
+3. **SAVE-01 (#270) et FX-02 (#274) intégrés** après CI Node et navigateurs vertes ; **prochain chantier DATA-01** : définir le grain et les dates de couverture des événements statistiques sans inventer d'historique.
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
