@@ -959,10 +959,14 @@ def main():
      page.locator('.poke-connections-final [data-action="restartPokeConnectionsGame"]').click()
      expect(page.locator('.poke-connections-tile').count()==16,'Restart did not restore 16 tiles')
      expect(page.locator('.poke-connections-mistake-dot.is-used').count()==0,'Restart kept old mistakes')
-     wrong=page.evaluate('[0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.findIndex(t=>t.groupIdx===g))')
      for attempt in range(4):
       if attempt: page.locator('[data-action="clearPokeConnectionsSelection"]').click()
+      wrong=page.evaluate('(a)=>[0,1,2,3].map(g=>pokeConnectionsState.puzzle.tiles.flatMap((t,i)=>t.groupIdx===g?[i]:[])[a])',attempt)
       choose(wrong)
+      if attempt==0:
+       page.locator('[data-action="submitPokeConnectionsGuess"]').click()
+       expect(page.locator('.poke-connections-mistake-dot.is-used').count()==1,'Repeated incorrect group charged twice')
+       expect('Combinaison déjà proposée' in page.locator('.poke-connections-selection-help').inner_text(),'Repeated group feedback missing')
      expect(page.locator('.poke-connections-final.is-lost').is_visible(),'Connections loss state missing')
      expect(page.locator('.poke-connections-reveal-groups .is-reveal').count()==4,'Loss did not reveal four groups')
      screen('screen-poke-connections');return fairness
