@@ -81,7 +81,7 @@ function renderAt(t) {
   const title = $('title'); title.style.display = mCard || inEnd ? 'none' : 'block'; title.style.top = '140px';
   title.innerHTML = rev ? 'C’ÉTAIT…' : mystery ? 'ET CELUI-LÀ ?' : 'C’EST QUI ?';
   const hk = $('hook'); hk.style.display = mCard || inEnd || rev ? 'none' : 'block';
-  hk.textContent = i === 0 ? 'Un vrai dessin de nos joueurs' : 'Dessin n°' + (i + 1) + ' de nos joueurs';
+  hk.textContent = i === 0 ? 'Les dessins éclatés de mes potes' : 'Dessin n°' + (i + 1) + ' de mes potes';
   hk.style.opacity = seg(lt, 0, 0.3); hk.style.top = '262px'; hk.style.fontSize = '54px';
 
   // Paper: full while drawing, then slides to the left half; artwork comes in on the right.
