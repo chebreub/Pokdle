@@ -2218,15 +2218,31 @@ function getPokemonCryUrl(pokemon) {
   return `https://cdn.jsdelivr.net/gh/PokeAPI/cries@main/cries/pokemon/latest/${getPokemonCryId(pokemon)}.ogg`;
 }
 
+// MEDIA-01: playback belongs to one listening attempt, not to a guess.
+// A blocked/stalled/broken sound must never finish a round or consume a guess.
+let cryPlaybackVersion = 0;
+let cryPlaybackTimeout = null;
+let cryPlaybackBroken = false;
+function clearCryPlaybackTimeout() {
+  if (cryPlaybackTimeout !== null) clearTimeout(cryPlaybackTimeout);
+  cryPlaybackTimeout = null;
+}
 function stopCrySound() {
-  if (!cryAudio) return;
-  try { cryAudio.pause(); } catch (_e) {}
-  try { cryAudio.currentTime = 0; } catch (_e) {}
+  cryPlaybackVersion += 1;
+  clearCryPlaybackTimeout();
+  cryPlaybackBroken = false;
+  if (cryAudio) {
+    try { cryAudio.pause(); } catch (_e) {}
+    try { cryAudio.currentTime = 0; } catch (_e) {}
+    cryAudio = null; // Discard the old round's handlers and media error state.
+  }
   setCryUiStatus("idle", "");
 }
 
 function setCryUiStatus(state, message = "") {
   const statusEl = document.getElementById("cry-status-text");
+  const leaveBtn = document.getElementById("cry-leave-btn");
+  if (leaveBtn) leaveBtn.classList.toggle("hidden", state !== "error");
   const btn = document.getElementById("cry-play-btn");
   const box = document.getElementById("cry-box");
   const label = btn?.querySelector(".cry-play-label");
@@ -2249,60 +2265,99 @@ function setCryUiStatus(state, message = "") {
     btn.classList.toggle("is-loading", state === "loading");
   }
   if (label) {
-    label.textContent = state === "loading" ? "Chargement…" : state === "playing" ? "Lecture en cours…" : "Rejouer le cri";
+    label.textContent = state === "loading" ? "Chargement…" : state === "playing" ? "Lecture en cours…" : state === "error" ? "Réessayer le cri" : "Rejouer le cri";
     label.classList.toggle("pk-skel-text", state === "loading");
   }
 }
 
 function playCrySound() {
-  // Partie vérifiée : le cri arrive du serveur sous une adresse opaque (script.10xzk.verified-guess.js).
+  // The server-verified secret remains server-side, even when playback fails.
   const verifiedCry = !secretPokemon && typeof verifiedGuessCry === "function" ? verifiedGuessCry() : "";
-  if (gameMode !== "cry" || (!secretPokemon && !verifiedCry)) return;
-
-  const url = verifiedCry || getPokemonCryUrl(secretPokemon);
-
-  // Nouveau cri : reset audio + UI
-  if (!cryAudio || cryAudio.src !== url) {
-    if (cryAudio) {
-      try { cryAudio.pause(); } catch (_e) {}
-    }
-    cryAudio = new Audio();
-    cryAudio.preload = "auto";
-    cryAudio.addEventListener("loadstart", () => {
-      if (cryAudio?.src === url) setCryUiStatus("loading", "Chargement du cri…");
-    });
-    cryAudio.addEventListener("canplay", () => {
-      if (cryAudio?.src === url && cryAudio.paused) setCryUiStatus("ready", "Prêt à être écouté.");
-    });
-    cryAudio.addEventListener("playing", () => {
-      if (cryAudio?.src === url) setCryUiStatus("playing", "Écoute bien…");
-    });
-    cryAudio.addEventListener("ended", () => {
-      if (cryAudio?.src === url) setCryUiStatus("ready", "Tu peux le rejouer autant de fois que nécessaire.");
-    });
-    cryAudio.addEventListener("error", () => {
-      if (cryAudio?.src === url) {
-        setCryUiStatus("error", "Cri indisponible pour ce Pokémon (réseau ou source). Réessaie ou abandonne.");
-      }
-    });
-    cryAudio.src = url;
+  if (gameMode !== "cry" || gameOver) return;
+  if (!secretPokemon && !verifiedCry) {
+    setCryUiStatus("ready", "Le cri arrive du serveur. Réessaie dans un instant : aucun essai n’est décompté.");
+    return;
   }
+  let url;
+  try { url = verifiedCry || getPokemonCryUrl(secretPokemon); }
+  catch (_e) {
+    setCryUiStatus("error", "Le lien du cri est indisponible. Aucun essai n’a été ajouté.");
+    return;
+  }
+  const version = ++cryPlaybackVersion;
+  clearCryPlaybackTimeout();
+
+  // An HTMLAudioElement that entered the media error state cannot reliably
+  // be replayed. Recreate it on the next explicit tap, never change the mystery.
+  if (!cryAudio || cryAudio.src !== url || cryPlaybackBroken || cryAudio.error) {
+    if (cryAudio) { try { cryAudio.pause(); } catch (_e) {} }
+    try {
+      cryAudio = new Audio();
+      cryAudio.preload = "auto";
+      cryAudio.src = url;
+    } catch (_e) {
+      cryPlaybackBroken = true;
+      setCryUiStatus("error", "Ce navigateur ne peut pas ouvrir le cri. Réessaie : aucun essai n’a été ajouté.");
+      return;
+    }
+  }
+  cryPlaybackBroken = false;
+  const audio = cryAudio;
+  const active = () => gameMode === "cry" && !gameOver && cryAudio === audio && cryPlaybackVersion === version;
+  const failed = (message) => {
+    if (!active() || cryPlaybackBroken) return;
+    cryPlaybackBroken = true;
+    clearCryPlaybackTimeout();
+    try { audio.pause(); } catch (_e) {}
+    setCryUiStatus("error", message + " Réessaie le cri : cette erreur n’a ajouté aucun essai.");
+  };
+  const armTimeout = () => {
+    clearCryPlaybackTimeout();
+    // The verified URL can take two upstream CDN attempts of 8s each.
+    cryPlaybackTimeout = setTimeout(() => failed("Le chargement audio prend trop de temps."), verifiedCry ? 20000 : 12000);
+  };
+
+  // Overwrite callbacks on each replay: a promise from an earlier tap must
+  // never repaint the status of a newer playback or another Pokémon.
+  audio.onloadstart = () => {
+    if (active() && !cryPlaybackBroken) setCryUiStatus("loading", "Chargement du cri…");
+  };
+  audio.oncanplay = () => {
+    if (active() && !cryPlaybackBroken && audio.paused) setCryUiStatus("ready", "Prêt à être écouté.");
+  };
+  audio.onplaying = () => {
+    if (!active() || cryPlaybackBroken) return;
+    clearCryPlaybackTimeout();
+    setCryUiStatus("playing", "Écoute bien…");
+  };
+  audio.onwaiting = () => {
+    if (!active() || cryPlaybackBroken) return;
+    setCryUiStatus("loading", "Le cri s'interrompt : reprise du chargement…");
+    armTimeout();
+  };
+  audio.onended = () => {
+    if (!active() || cryPlaybackBroken) return;
+    clearCryPlaybackTimeout();
+    setCryUiStatus("ready", "Tu peux le rejouer autant de fois que nécessaire.");
+  };
+  audio.onerror = () => failed("Cri indisponible (réseau ou source audio).");
 
   setCryUiStatus("loading", "Chargement du cri…");
-  try { cryAudio.currentTime = 0; } catch (_e) {}
-  // The Cry game always plays its cry (it is the game), at the volume chosen in the settings.
-  try { cryAudio.volume = typeof appSoundVolume === "function" ? appSoundVolume() : 1; } catch (_e) {}
-  const playPromise = cryAudio.play();
-  if (playPromise && typeof playPromise.then === "function") {
-    playPromise
-      .then(() => setCryUiStatus("playing", "Écoute bien…"))
-      .catch((err) => {
-        const blocked = err?.name === "NotAllowedError";
-        setCryUiStatus("error", blocked
-          ? "Lecture audio bloquée par le navigateur — clique encore une fois pour autoriser."
-          : "Impossible de lire le cri (réseau ?). Réessaie."
-        );
-      });
+  try { audio.currentTime = 0; } catch (_e) {}
+  // In this game, the cry is mandatory regardless of the optional ambient-cries switch.
+  try { audio.volume = typeof appSoundVolume === "function" ? appSoundVolume() : 1; } catch (_e) {}
+  armTimeout();
+  let playback;
+  try { playback = audio.play(); }
+  catch (error) { failed(error?.name === "NotAllowedError" ? "Le navigateur bloque la lecture audio." : "Impossible de démarrer le son."); return; }
+  if (playback && typeof playback.then === "function") {
+    playback.then(() => {
+      if (!active() || cryPlaybackBroken) return;
+      clearCryPlaybackTimeout();
+      setCryUiStatus("playing", "Écoute bien…");
+    }).catch((error) => failed(error?.name === "NotAllowedError"
+      ? "Le navigateur bloque la lecture audio."
+      : "Impossible de lire le son (connexion ou format)."));
   }
 }
 

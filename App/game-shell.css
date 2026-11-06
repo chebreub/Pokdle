@@ -901,6 +901,30 @@ body.reduce-motion #pokdle-app .tc-timebar i {transition:none;}
 .pixel-series-chip {min-width:44px;min-height:36px;padding:0 10px;border-radius:999px;border:1.5px solid #EADFCF;background:#FFF8EF;color:#2E2A33;font:800 14px Nunito,sans-serif;cursor:pointer;}
 .pixel-series-chip.is-on {border-color:#4069E0;background:#EEF2FF;color:#2447B8;}
 .pixel-series-summary {display:grid;gap:6px;justify-items:center;margin:0 0 12px;padding:14px;border-radius:18px;background:#FFF8EF;border:1.5px solid #EADFCF;text-align:center;}
+.cry-leave-btn {display:block;margin:7px auto 0;max-width:100%;min-height:44px;white-space:normal;text-align:center;}
+.cry-leave-btn.hidden {display:none !important;}
+/* QA mobile 360 px: the optional Stat Mystère guide introduced in NIV-02 must
+   not wrap onto a second row and push the first guess beneath the mobile dock.
+   Keep its full accessible summary text in the DOM; show a short visual label. */
+@media (max-width: 380px) {
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-box .mystery-guide-row {
+    display: flex; flex-wrap: nowrap; gap: 4px; margin-bottom: 4px;
+  }
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-box .challenge-title {
+    margin: 0 !important; font-size: 13px !important; white-space: nowrap;
+  }
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-box .mystery-guide summary {
+    font-size: 0 !important; min-height: 44px; padding: 7px 8px;
+    white-space: nowrap;
+  }
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-box .mystery-guide summary::before {
+    content: "ⓘ Aide"; font-size: 12px; margin-right: 0;
+  }
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"] #mystery-box .mystery-guide summary::after {
+    font-size: 12px; margin-left: 6px;
+  }
+}
+
 .pss-kicker {margin:0;font:900 11px Nunito,sans-serif;letter-spacing:.1em;color:#7A7180;}
 .pss-score b {font:700 44px/1 Fredoka,sans-serif;color:#2E2A33;}
 .pss-score span {margin-left:6px;font:800 15px Nunito,sans-serif;color:#7A7180;}
