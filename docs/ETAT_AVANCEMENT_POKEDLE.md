@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**12 tâches terminées sur 43 actions actives = 27,9 %** après intégration de PC-02 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
+**13 tâches terminées sur 43 actions actives = 30,2 %** après intégration de PC-01 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **12** | Action vérifiée, PR fusionnée |
+| **Terminé et intégré à main** | **13** | Action vérifiée, PR fusionnée |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **30** | Dont certaines propositions économiques soumises à validation préalable |
+| **Non commencé / à conduire ou à décider** | **29** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (12 actions terminées / 43 actions actives) × 100 = **27,9070 %, arrondi à 27,9 %**.
+**Formule explicite :** (13 actions terminées / 43 actions actives) × 100 = **30,2326 %, arrondi à 30,2 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,7 +25,7 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 2 / 7 | 28,6 % | DATA-01 documenté, PC-02 clavier ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
+| 0 | Ergonomie mobile / PC et mesures | 3 / 7 | 42,9 % | DATA-01 documenté, PC-01 plateau PC, PC-02 clavier ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
@@ -33,7 +33,7 @@
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **12 / 43** | **27,9 %** | NIV-01 stationné exclu |
+| **Total** | | **13 / 43** | **30,2 %** | NIV-01 stationné exclu |
 
 ## DATA-02 — intégré après fusion de la PR #278
 
@@ -71,6 +71,14 @@
 - **Protection** : aucune écoute globale introduite pour les touches de réponse, pas d'interférence volontaire avec les chats et formulaires, aucun changement de récompense, sauvegarde, Pokémon, score ou économie.
 - **Validation :** tests ciblés `App/test/pc-02-keyboard-context.test.js`, et CI Node/navigateur/base exigée sur head final avant fusion ; Safari réel/production non revendiqués.
 - **Après fusion : 12/43 = 27,9 %**, prochaine action autonome **PC-01** ; `BUG-MOB-01` demeure non vérifié sur téléphone réel.
+
+## PC-01 — intégré après fusion de la PR #283
+
+- [PR #283](https://github.com/chebreub/Pokdle/pull/283) : mise en page compacte de l'arène Course au Pokédex et du jeu normal sur écran PC 1366×768, sans défilement du plateau. Moteur existant de grille réactive conservé ; seule la densité CSS desktop a changé.
+- **Recette automatisée ciblée** `tools/pc_desktop_quality.py` : deux joueurs en salle isolée, navigateur Chromium + WebKit, résolution 1280×720 / 1366×768 / 1600×900 / 1920×1080 ; 151 cellules vérifiées dans le viewport, champ et boutons visibles, première inscription et doublon refusé. Le scénario jeu classique vérifie le champ de recherche et les deux colonnes.
+- **Validation :** CI Node + navigateur/base sur le dernier commit avant fusion. Cette validation ne prouve ni un test humain sur iPhone ni le fonctionnement réel du déploiement Render.
+- **Sécurité :** pas de modification de Socket.IO, scores, temps, progression, accès aux Pokémon, capture, économie ou données personnelles. `BUG-MOB-01` demeure non confirmé sur téléphone réel.
+- **Après fusion : 13/43 = 30,2 %** ; prochaine action autonome **MOB-03**, ergonomie du pouce et gestion des éléments superposés en jeu, sans patch global prématuré.
 
 ## Journal GitHub vérifié
 
@@ -159,7 +167,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
 2. **LOG-02 intégré via PR #266** : tests Node et navigateur verts, merge `9a68b84f`. Un ancien zéro sans indicateur demeure ambigu, aucune migration inventée.
-3. **SAVE-01 (#270), FX-02 (#274), DATA-01/02 (#276/#278), NIV-02 (#279), SER-01 (#280), MEDIA-01 (#281) et PC-02 (#282) intégrés** ; **prochain chantier PC-01** : confort desktop et grille Course au Pokédex sans scroll de jeu.
+3. **SAVE-01 (#270), FX-02 (#274), DATA-01/02 (#276/#278), NIV-02 (#279), SER-01 (#280), MEDIA-01 (#281) PC-02 (#282) et PC-01 (#283) intégrés** ; **prochain chantier MOB-03** : accès au bouton principal au pouce, sans superposition clavier/dock/chat.
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
