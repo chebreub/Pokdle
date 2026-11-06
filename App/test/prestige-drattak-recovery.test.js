@@ -74,3 +74,29 @@ test('PostgreSQL: first failure grants one weekend retry and no duplicate',{
   assert.equal(count,2);
  }finally{if(db)await db.end();await admin.query('DROP SCHEMA IF EXISTS '+schema+' CASCADE');await admin.end()}
 });
+
+test('ECO-02 G: UI labels pending weekend without offering a disabled encounter',()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+ const source=fs.readFileSync(path.join(__dirname,'../src/script.10xzb.expedition.js'),'utf8');
+ const a=source.indexOf('function drattakPrestigeHtml() {');
+ const b=source.indexOf('function meetPrestigeDrattak() {',a);
+ assert.ok(a>=0&&b>a);
+ const data={
+  hasLineage:true,lineageIds:[371],wins:{cry:2,silhouette:2,description:2},days:3,
+  goal:{days:5,modes:{cry:3,silhouette:3,description:3}},chances:{poke:23,great:32,ultra:46},
+  recovery:{active:true,goal:{days:3,modes:{cry:2,silhouette:2,description:2}},
+    ready:true,weekendOpen:false,nextEventDay:'2026-11-28'},
+  eligible:false,available:false,needsAccount:false,cooldown:false
+ };
+ const ctx={drattakPrestigeState:data,escapeHtml:String};
+ vm.createContext(ctx);
+ vm.runInContext(source.slice(a,b)+'\nthis.render=drattakPrestigeHtml;',ctx);
+ const friday=ctx.render();
+ assert.match(friday,/3 nouveaux jours et 2 victoires par mode/);
+ assert.match(friday,/Prochain rendez-vous : 28\/11\/2026/);
+ assert.doesNotMatch(friday,/data-action="meetPrestigeDrattak"/);
+ data.recovery.weekendOpen=true;data.available=true;
+ const weekend=ctx.render();
+ assert.match(weekend,/Seconde chance/);
+ assert.match(weekend,/data-action="meetPrestigeDrattak"/);
+});
