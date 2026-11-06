@@ -1,8 +1,8 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
-> **État vérifié le 6 novembre 2026 :** PR #287 fusionnée dans `main` au commit `cd318937864d3c3b6e6dcc8096a09604a3890800` après CI complète verte sur `817f15e`. MOB-03 : boutons du champ partagé (#285), chat et célébrations (#287) intégrés ; commandes Party/Duel/Défi à vérifier.
-> **13 actions intégrées sur 43 = 30,2 %** ; **2 actions en cours** (MOB-03 et BUG-MOB-01) ; **28 non commencées** ; NIV-01 stationnée.
-> **Prochaine action : MOB-03.** PC-01 est intégrée ; ne pas recommencer son audit ni sa réalisation.
+> **État vérifié le 6 novembre 2026 :** PR #289 fusionnée dans `main` au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67` après CI complète verte sur `842484f`. MOB-03 clôturé techniquement : #285, #287 et #289 intégrés.
+> **14 actions intégrées sur 43 = 32,6 %** ; **2 actions en cours** (DEX-01 et BUG-MOB-01) ; **27 non commencées** ; NIV-01 stationnée.
+> **Prochaine action unique : DEX-01.** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
 >
 > **Important :** le taux de progression mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
 
@@ -27,7 +27,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 
 | Lot | Périmètre | Avancement confirmé |
 | --- | --- | --- |
-| 0 | Fiabilité tactile, ergonomie iPhone/PC, compréhension des données | 3 / 7 |
+| 0 | Fiabilité tactile, ergonomie iPhone/PC, compréhension des données | 4 / 7 |
 | 1 | Logique des jeux, reprise de séries, animations/récompenses, données d'usage | 7 / 8 |
 | 2 | Gameplay, maîtrise, pédagogie, découverte de modes | 3 / 5 |
 | 3 | Pokédex, collection, rareté et objectifs personnels | 0 / 4 |
@@ -35,7 +35,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | 5 | Invitations, défis, partage, échanges et diffusion naturelle | 0 / 5 |
 | 6 | Gestes et animations facultatifs, après stabilisation tactile | 0 / 4 |
 | 7 | Recette auprès de joueurs externes et acquisition | 0 / 2 |
-| **Total** | **43 actions actives** | **13 / 43 = 30,2 %** |
+| **Total** | **43 actions actives** | **14 / 43 = 32,6 %** |
 
 **DATA-02 achevée et NIV-02 intégrée : ne pas concentrer davantage le travail sur le dashboard.** Une fois les mesures fiabilisées, reprendre les améliorations concrètes des modes, du mobile, du Pokédex, de l'économie et du multijoueur dans l'ordre des priorités, contraintes et dépendances du plan. Les statistiques servent à orienter le gameplay ; elles ne remplacent pas le gameplay.
 
@@ -55,6 +55,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | **SER-01** | Pilote des records **personnels** Pixelisé : trouvés puis essais connus ; historiques préservés, profils fusionnés sans perdre les records, classement public inchangé et non départagé faute de mesure serveur | [#280](https://github.com/chebreub/Pokdle/pull/280) |
 | **MEDIA-01** | Cry : gérer erreurs de chargement/lecture, délai, retour tardif ; relancer le même son ou quitter vers les modes sans abandon. Secret serveur et économie inchangés | [#281](https://github.com/chebreub/Pokdle/pull/281) |
 | **PC-02** | Flèches/Entrée/Échap contextuels en Solo, Défi, Party et Duel ; envoi d'une proposition en duel par un seul gestionnaire ; IME et chats préservés | [#282](https://github.com/chebreub/Pokdle/pull/282) |
+| **MOB-03** | Commandes solo, Party, Duel et Défi accessibles avec viewport clavier simulé ; chat et célébrations coordonnés | [#285](https://github.com/chebreub/Pokdle/pull/285), [#287](https://github.com/chebreub/Pokdle/pull/287), [#289](https://github.com/chebreub/Pokdle/pull/289) |
 | **PC-01** | PC compact : saisie à gauche et indices lisibles à droite ; résultat à 1 000 px ; Course complète sans scroll, doublon refusé | [#283](https://github.com/chebreub/Pokdle/pull/283) |
 
 Autres PR à ne pas confondre avec une action supplémentaire terminée :
@@ -67,7 +68,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 ## 4. Point de reprise exact et sujets en attente
 
-**Prochaine action autonome : `MOB-03` — sur téléphone, rendre l'action principale accessible au pouce sans empilement des éléments (clavier, dock de jeu, chat, récompenses).** Traiter les jeux concernés un à un, préserver les gardes de confirmation et ne pas masquer des commandes essentielles. Ne pas confondre avec `BUG-MOB-01` (anomalie tactile observée chez Jade, non reproduite sur son téléphone).
+**Prochaine action unique : `DEX-01` — distinguer vu/découvert, déjà capturé, possédé actuellement.** Comprendre les données existantes et les échanges/cessions ; aucun historique inventé, aucune modification de captures ou sauvegardes pour un libellé. MOB-03 est clôturé techniquement ; ne pas recommencer son audit.
 
 **PC-01 :** [PR #283](https://github.com/chebreub/Pokdle/pull/283) : CSS desktop plus compact sur 1366×768, arène Course au Pokédex sur un seul viewport, moteur de dimensionnement inchangé. Recette Chromium/WebKit locale sur deux vrais joueurs, avec 151 cases et refus de doublon ; ni Safari physique ni Render réel revendiqués.
 
@@ -83,7 +84,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 **En parallèle : `BUG-MOB-01` reste ouvert.** Sur le téléphone de Jade, des boutons en bas de « Qui est-ce ? » ne répondaient pas, puis redevenaient accessibles après scroll. Le correctif #271 traite une cause possible ; **aucune validation réelle sur son appareil**. Ne pas annoncer le P0 résolu ni appliquer des `z-index` / `pointer-events` globaux sans reproduction. Demander modèle, navigateur, comportement du clavier et reproduction **uniquement si ces détails deviennent nécessaires pour cette recette réelle** ; avancer sur d'autres tâches indépendantes en attendant.
 
-**Après `MOB-03` :** poursuivre les priorités et les dépendances du plan, sans figer artificiellement une file. Exemples : `DATA-04` (rétention J1/J7), `MOB-04`, `DEX-01/02`, `PART-01/02`, ainsi que les simulations économiques. Le P0 mobile conserve sa priorité de sûreté, sans bloquer le reste si la reproduction dépend du retour de Jade.
+**Après DEX-01 :** reprendre le plan selon les priorités et dépendances. BUG-MOB-01 attend le retour de l’appareil de Jade ; MOB-04 reste une recette distincte de focus/scroll Safari réel.
 
 ## 5. Économie, captures et décisions réservées au propriétaire
 
@@ -134,10 +135,22 @@ Les autres actions économiques (`ECO-05` version des règles, `ECO-06` autorit�
 
 1. **État technique** : contenu de `main` actuel, commits, PR et tests effectifs.
 2. **Décisions produit** : arbitrages validés et conditions figurant dans le plan, sans transformer des pistes en règles officielles.
-3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **13/43**, après fusion vérifiée de #283 ; vérifier main pour toute modification ultérieure.
+3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **14/43**, après fusion vérifiée de #289 ; vérifier main pour toute modification ultérieure.
 4. **Audits historiques** : photographie datée, à confronter aux corrections plus récentes.
 
 Ce guide remplace les anciennes instructions qui faisaient encore commencer par `LOG-02` ou `DATA-02`, ou annonçaient **2/43**, **7/43**, **8/43**, **9/43**, **10/43** ou **11/43** ; ces informations étaient dépassées au 5 novembre 2026.
+
+**DEX-01 a ensuite été engagé dans la [PR #290](https://github.com/chebreub/Pokdle/pull/290), encore ouverte et en validation CI.** Le total intégré reste **14/43** ; situation courante : **2 actions en cours** (DEX-01 et BUG-MOB-01), **27 non commencées**. Ne pas compter DEX-01 terminé avant sa fusion.
+
+## MOB-03 — clôture technique vérifiée le 6 novembre 2026
+
+[PR #289](https://github.com/chebreub/Pokdle/pull/289) fusionnée au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67`, après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42237885834) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42237896376) sur `842484f479dd0ecc01e668281e7512d600a670ac`. Les trois volets (#285, #287, #289) sont intégrés. Le commit fusionné et son arbre ont été contrôlés sur `main`.
+
+Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur `mousedown`, sans envoyer au `pointerdown`. Build, 20 tests Node ciblés et parcours local Chromium/WebKit à 360/390/1366 px réussis ; la CI complète valide aussi le reste des parcours. [Détails et limites](qa/MOB_03_CONTROLS.md).
+
+**À la clôture de MOB-03 : 14/43 = 32,6 % ; 1 action en cours : BUG-MOB-01 ; 28 non commencées ; lot 0 : 4/7. Prochaine action unique : DEX-01.** Aucun clavier iPhone physique ni déploiement Render vérifié. BUG-MOB-01 (appareil de Jade) et MOB-04 (focus/scroll Safari réel) restent distincts et ouverts. NIV-01 reste stationné, exclu du total. Économie, captures et sauvegardes inchangées.
+
+## Historique MOB-03 — états intermédiaires remplacés par la clôture ci-dessus
 
 ## MOB-03 — premier correctif intégré, chantier encore en cours (06/11/2026)
 

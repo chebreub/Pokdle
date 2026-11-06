@@ -1,5 +1,13 @@
 # MOB-03 — commandes mobiles, périmètre et validation
 
+## MOB-03 — clôture technique vérifiée le 6 novembre 2026
+
+[PR #289](https://github.com/chebreub/Pokdle/pull/289) fusionnée au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67`, après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42237885834) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42237896376) sur `842484f479dd0ecc01e668281e7512d600a670ac`. Les trois volets (#285, #287, #289) sont intégrés. Le commit fusionné et son arbre ont été contrôlés sur `main`.
+
+Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur `mousedown`, sans envoyer au `pointerdown`. Build, 20 tests Node ciblés et parcours local Chromium/WebKit à 360/390/1366 px réussis ; la CI complète valide aussi le reste des parcours. [Détails et limites](MOB_03_CONTROLS.md).
+
+**14/43 = 32,6 % ; 1 action en cours : BUG-MOB-01 ; 28 non commencées ; lot 0 : 4/7. Prochaine action unique : DEX-01.** Aucun clavier iPhone physique ni déploiement Render vérifié. BUG-MOB-01 (appareil de Jade) et MOB-04 (focus/scroll Safari réel) restent distincts et ouverts. NIV-01 reste stationné, exclu du total. Économie, captures et sauvegardes inchangées.
+
 ## Livraisons
 
 - #285 : les boutons Deviner/Abandonner conservent leur espace sous les suggestions du champ solo partagé.
@@ -15,13 +23,13 @@ Sur Chromium mobile, viewport visuel simulé à 400 px : après placement du cha
 
 `tools/mobile_guess_controls_quality.py` ouvre deux vrais invités sur un serveur local isolé par résolution. Chromium et WebKit : 360×740, 390×844 et 1366×768. Sur mobile, simulation `visualViewport` à 260/320/400 px et décalage de 60 px. Vérifie champ, bouton, au moins une suggestion entière, liste défilable, stabilité sur plusieurs lettres/aucun résultat, tap aux coordonnées sans auto-scroll mobile, un seul envoi et une seule tentative serveur, abandon avec confirmation, sélection du défi sans copie automatique. Captures et rapport dans `quality-artifacts/mobile-controls/`.
 
-Les tests ciblés existants protègent le clavier PC, les suggestions solo, le chat et la file de célébrations. La CI complète reste requise avant fusion. Les sources sont reconstruites via `npm run build` ; les tests utilisent les ressources réellement servies depuis `App/dist/`.
+Les tests ciblés existants protègent le clavier PC, les suggestions solo, le chat et la file de célébrations. La CI complète finale est verte avant fusion (liens ci-dessus). Les sources sont reconstruites via `npm run build` ; les tests utilisent les ressources réellement servies depuis `App/dist/`.
 
 ## Limites et suite
 
 La clôture technique de MOB-03 exige les trois volets intégrés et les contrôles automatisés verts ; elle ne clôture ni BUG-MOB-01 (téléphone de Jade), ni MOB-04 (focus/scroll Safari réel). Le viewport clavier est simulé, aucun test sur iPhone physique ni vérification Render n'est revendiqué. Prix, probabilités, gains, captures, sauvegardes et règles serveur restent inchangés.
 
-Après fusion du dernier volet et validation complète : **14/43 = 32,6 %**. Prochaine action autonome : **DEX-01**, distinguer vu/découvert, déjà capturé et possédé actuellement, en s'appuyant sur les données existantes.
+Dernier volet fusionné après validation complète : **14/43 = 32,6 %**. Prochaine action autonome : **DEX-01**, distinguer vu/découvert, déjà capturé et possédé actuellement, en s'appuyant sur les données existantes.
 
 ## Correctif WebKit après le transfert du 6 novembre
 

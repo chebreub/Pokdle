@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie vérifiée : 6 novembre 2026, après fusion vérifiée de #287 ; MOB-03 reste en cours.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `cd318937864d3c3b6e6dcc8096a09604a3890800` sur `main`.
+**Photographie vérifiée : 6 novembre 2026, après fusion vérifiée de #289 ; MOB-03 clôturé techniquement.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67` sur `main`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**13 tâches terminées sur 43 actions actives = 30,2 %** après intégration de PC-01 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
+**14 tâches terminées sur 43 actions actives = 32,6 %** après intégration de MOB-03 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **13** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **2** | MOB-03 et BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **28** | Dont certaines propositions économiques soumises à validation préalable |
+| **Terminé et intégré à main** | **14** | Action vérifiée, PR fusionnée |
+| **En cours / investigation / PR ouverte** | **2** | DEX-01 (#290 ouverte) et BUG-MOB-01 (retour mobile réel à obtenir) |
+| **Non commencé / à conduire ou à décider** | **27** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (13 actions terminées / 43 actions actives) × 100 = **30,2326 %, arrondi à 30,2 %**.
+**Formule explicite :** (14 actions terminées / 43 actions actives) × 100 = **32,5581 %, arrondi à 32,6 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,7 +25,7 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 3 / 7 | 42,9 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
+| 0 | Ergonomie mobile / PC et mesures | 4 / 7 | 57,1 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
@@ -33,7 +33,19 @@
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **13 / 43** | **30,2 %** | NIV-01 stationné exclu |
+| **Total** | | **14 / 43** | **32,6 %** | NIV-01 stationné exclu |
+
+**DEX-01 a ensuite été engagé dans la [PR #290](https://github.com/chebreub/Pokdle/pull/290), encore ouverte et en validation CI.** Le total intégré reste **14/43** ; situation courante : **2 actions en cours** (DEX-01 et BUG-MOB-01), **27 non commencées**. Ne pas compter DEX-01 terminé avant sa fusion.
+
+## MOB-03 — clôture technique vérifiée le 6 novembre 2026
+
+[PR #289](https://github.com/chebreub/Pokdle/pull/289) fusionnée au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67`, après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42237885834) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42237896376) sur `842484f479dd0ecc01e668281e7512d600a670ac`. Les trois volets (#285, #287, #289) sont intégrés. Le commit fusionné et son arbre ont été contrôlés sur `main`.
+
+Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur `mousedown`, sans envoyer au `pointerdown`. Build, 20 tests Node ciblés et parcours local Chromium/WebKit à 360/390/1366 px réussis ; la CI complète valide aussi le reste des parcours. [Détails et limites](qa/MOB_03_CONTROLS.md).
+
+**À la clôture de MOB-03 : 14/43 = 32,6 % ; 1 action en cours : BUG-MOB-01 ; 28 non commencées ; lot 0 : 4/7. Prochaine action unique : DEX-01.** Aucun clavier iPhone physique ni déploiement Render vérifié. BUG-MOB-01 (appareil de Jade) et MOB-04 (focus/scroll Safari réel) restent distincts et ouverts. NIV-01 reste stationné, exclu du total. Économie, captures et sauvegardes inchangées.
+
+## Journal historique — pourcentages aux dates des livraisons
 
 ## DATA-02 — intégré après fusion de la PR #278
 
