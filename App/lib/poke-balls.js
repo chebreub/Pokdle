@@ -377,7 +377,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   // Expiry is checked inside the same transaction as each action. An old row
   // without expires_at NEVER acquires a new window retroactively.
   async function expireOpenEncounters(c, who, day) {
-    await c.query(`UPDATE wild_encounters SET status='fled',ended_at=NOW()
+    await c.query(`UPDATE wild_encounters SET status='fled',ended_at=$3::timestamptz
       WHERE identity=$1 AND status='open' AND (
         (kind='legend' AND expires_at IS NOT NULL AND expires_at <= $3::timestamptz)
         OR ((kind<>'legend' OR expires_at IS NULL) AND day<>$2::date))`,
@@ -431,6 +431,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   }
   // L'Expédition : tout est recalculé depuis les Balls gagnées, rien d'autre n'est gardé.
   async function expedition(c, who, day) {
+    // The previous week's held legend can still be active after Monday.
+    await expireOpenEncounters(c, who, day);
     const monday = weekStart(day), sunday = shiftDay(monday, 6), exp = expeditionOf(monday);
     const parts = `SELECT identity,day FROM ball_gains WHERE day BETWEEN $1 AND $2 AND ${PLAY_SOURCES_SQL} GROUP BY identity,day HAVING COUNT(DISTINCT source)>=2`;
     const all = (await c.query(`SELECT COUNT(*)::int AS n,COUNT(DISTINCT identity)::int AS p FROM (${parts}) x`, [monday, day])).rows[0];
@@ -440,12 +442,19 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const claimed = new Set((await c.query("SELECT DISTINCT split_part(source,':',3) AS t FROM ball_gains WHERE identity=$1 AND source LIKE $2", [who.key, "exp:" + monday + ":%"])).rows.map((r) => Number(r.t)));
     const progress = Number(all.n), pct = Math.min(100, Math.floor(progress * 100 / goal));
     const legendRow = (await c.query("SELECT status FROM wild_encounters WHERE identity=$1 AND kind='legend' AND day BETWEEN $2 AND $3 ORDER BY id DESC LIMIT 1", [who.key, monday, sunday])).rows[0];
+    // All encounter kinds block new openings; an active legend is resumable
+    // by ID, including when it belongs to the preceding expedition week.
+    const pending = (await c.query("SELECT kind,pokemon_id,expires_at FROM wild_encounters WHERE identity=$1 AND status='open' ORDER BY id DESC LIMIT 1", [who.key])).rows[0] || null;
     const eligible = Boolean(who.accountId) && mine.length >= 2;
     return { week: monday, endsOn: sunday, region: exp.region, gen: exp.gen, legendId: exp.legend,
       legendChances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(exp.legend, b) * 100)])),
       goal, progress, pct, participants: Number(all.p), myDays: mine, days: Array.from({ length: 7 }, (_, i) => shiftDay(monday, i)),
       chests: Object.keys(EXP_CHESTS).map(Number).map((tier) => ({ tier, balls: EXP_CHESTS[tier], reached: pct >= tier, claimed: claimed.has(tier), canClaim: pct >= tier && !claimed.has(tier) && mine.length >= 1 })),
-      legend: { reached: pct >= 100, eligible, needsAccount: !who.accountId, needsDays: Math.max(0, 2 - mine.length), status: legendRow ? legendRow.status : null, available: pct >= 100 && eligible && !legendRow } };
+      legend: { reached: pct >= 100, eligible, needsAccount: !who.accountId, needsDays: Math.max(0, 2 - mine.length),
+        status: legendRow ? legendRow.status : null,
+        pending: pending ? {kind:pending.kind,pokemonId:Number(pending.pokemon_id),
+          expiresAt:pending.kind==='legend' && pending.expires_at ? new Date(pending.expires_at).toISOString() : null} : null,
+        available: pct >= 100 && eligible && !legendRow && !pending } };
   }
   async function claimChests(c, who, day) {
     const st = await expedition(c, who, day), added = [];
