@@ -252,6 +252,7 @@ function renderPokedexCollectionLockedDetail(pokemon,state) {
         <p>${escapeHtml(helper)}</p>
       </div>
       ${pokedexCollectionMissionRequirementsHtml(state)}
+      ${typeof colAcquisitionHtml === 'function' ? colAcquisitionHtml(pokemon) : ''}
       <div class="pokedex-lock-actions">
         ${state.kind==='unknown'?'<button type="button" class="btn-blue" data-action="startNormalGame">Partir à sa recherche →</button>':''}
         <button type="button" class="btn-ghost" data-action="setPokedexExperienceView" data-args='["encyclopedia"]'>Consulter l’encyclopédie</button>
@@ -272,6 +273,7 @@ function pokedexCollectionRecordHtml(pokemon,state) {
       <div><span>Origine</span><b>${escapeHtml(typeof discoveryModeLabel==='function'?discoveryModeLabel(entry.mode):String(entry.mode||'Pokédle'))}</b></div>
     </div>
     <div class="pokedex-personal-proof">${proof}</div>
+    ${typeof colAcquisitionHtml === 'function' ? colAcquisitionHtml(pokemon) : ''}
     <div class="pokedex-personal-actions">
       <button type="button" class="btn-ghost" data-action="playCollectionPokemonCry" data-args='[${Number(pokemon.id)}]'>🔊 Écouter le cri</button>
       <button type="button" class="btn-ghost" data-action="chooseCollectionPartner" data-args='[${Number(pokemon.id)}]' ${partner?'disabled':''}>${partner?'Ton partenaire ✓':'Choisir comme partenaire'}</button>

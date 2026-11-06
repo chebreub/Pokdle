@@ -58,6 +58,37 @@ function colRefreshVisibleCollection() {
   colResetCaptureSnapshot();
   renderPokedexGrid();
 }
+
+// DEX-02 : l'API de collection reste la source des voies de capture.
+// Les missions et secrets visibles dans le client n'accordent que des découvertes.
+// Ne pas reconstruire des captures ni déduire des routes si le serveur est indisponible.
+function colAcquisitionHtml(pokemon) {
+  if (!pokemon) return "";
+  const id = Number(pokemon.id);
+  const routes = typeof wildCaptureRoutes !== "undefined" ? wildCaptureRoutes : null;
+  const mission = typeof ALBUM_MISSIONS !== "undefined"
+    ? ALBUM_MISSIONS.find(m => Number(m.pokemonId) === id) : null;
+  const secret = typeof SECRET_MISSIONS !== "undefined"
+    ? SECRET_MISSIONS.some(m => Number(m.pokemonId) === id) : false;
+  const state = typeof pokedexCollectionState === "function" ? pokedexCollectionState(pokemon) : null;
+  const hidden = state?.kind === "secret" || Boolean(mission?.hidden);
+  let capture;
+  if (!routes) capture = "Informations indisponibles pour le moment.";
+  else if (routes.prestige === id) capture = "Épreuve de prestige Drattak : conditions à remplir, rencontre avec Balls, capture non garantie.";
+  else if (routes.expedition.includes(id)) capture = "Expédition hebdomadaire : lors de sa rotation et sous conditions de participation, rencontre avec Balls sans capture garantie.";
+  else if (routes.wild.includes(id)) capture = "Hautes herbes : rencontre aléatoire selon les zones, puis lancer de Ball. Rien n’est garanti.";
+  else capture = "Aucune voie de capture avec une Ball actuellement disponible.";
+  const discovery = hidden || (secret && !mission)
+    ? "Piste secrète : consulte le carnet des secrets. Découvrir ne donne pas le Pokémon."
+    : mission
+      ? "Mission d’album : débloque la découverte uniquement, jamais une capture automatique."
+      : "Jeux de découverte : une entrée peut être révélée en jouant, sans donner de capture.";
+  return '<section class="pokedex-acquisition" data-pokemon-id="' + id + '" aria-label="Voies d’obtention">' +
+    '<h4>Voies d’obtention</h4><p><b>Capture :</b> ' + capture + '</p>' +
+    '<p><b>Découverte :</b> ' + discovery + '</p>' +
+    '<small>Un échange peut donner un exemplaire déjà détenu par un autre joueur, sans prouver une capture personnelle.</small></section>';
+}
+
 function colPersonalStatesHtml(pokemon) {
   const captured = colEverCaughtCount(pokemon.id);
   const owned = typeof wildCaptures !== "undefined" && wildCaptures !== null ? colCaughtCount(pokemon.id) : null;

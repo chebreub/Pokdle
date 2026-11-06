@@ -5,6 +5,7 @@
 let wildCaptures = null;      // { [id]: { normal, shiny } } lu sur le serveur
 let wildCaptureHistory = null; // captures personnelles enregistrées, distinctes de la possession
 let wildCatchableTotal = null; // dénominateur renvoyé par le serveur (herbes + expéditions)
+let wildCaptureRoutes = null; // voies de capture serveur (null = inconnues, jamais déduites du profil)
 let wildBusy = false;
 let wildSkipAnim = null;
 
@@ -42,10 +43,14 @@ function loadWildCaptures() {
         ? Object.fromEntries(data.captureHistory.map(c => [c.id, { normal: Number(c.normal) || 0, shiny: Number(c.shiny) || 0 }]))
         : null;
       if (Number.isInteger(data.catchableTotal) && data.catchableTotal > 0) wildCatchableTotal = data.catchableTotal;
+      const routes = data.captureRoutes;
+      wildCaptureRoutes = routes && Array.isArray(routes.wild) && Array.isArray(routes.expedition) && Number.isInteger(routes.prestige)
+        ? { wild: routes.wild, expedition: routes.expedition, prestige: routes.prestige }
+        : null;
       if (typeof ballApply === "function") ballApply(data, { announce: false });
     }
     return wildCaptures;
-  }).catch(() => wildCaptures);
+  }).catch(() => { wildCaptureRoutes = null; return wildCaptures; });
 }
 
 function wildScene() {

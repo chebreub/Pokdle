@@ -92,7 +92,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### Lot 3 — Pokédex et collection
 - [x] **DEX-01 · P1** : trois états distincts dans filtres, compteurs et fiches ; historique personnel consulté en lecture seule, échange reçu non présenté comme capture et capture cédée préservée. [PR #290](https://github.com/chebreub/Pokdle/pull/290) ; [tests et limites](qa/DEX_01_STATES.md).
-- [ ] **DEX-02 · P1** : montrer les voies d'obtention vraies ; document actuel `docs/PLAN_RARETE_1025.md` = 852 espèces capturables, 173 non capturables maintenant.
+- [~] **DEX-02 · P1** : fiches de collection affichant les voies de capture serveur et de découverte (mission/secret), sans confondre les deux. [Règles, cas et limites](qa/DEX_02_ROUTES.md). CI et fusion requises pour clôturer ; 852 capturables / 173 sans voie de capture par Ball.
 - [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.
 

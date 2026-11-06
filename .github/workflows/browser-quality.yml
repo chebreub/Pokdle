@@ -130,6 +130,9 @@ jobs:
       - name: Verify discovered captured and currently owned collection states
         if: env.QA_FULL == 'true'
         run: python tools/pokedex_states_quality.py
+      - name: Verify truthful Pokédex acquisition routes on phone and desktop
+        if: env.QA_FULL == 'true'
+        run: python tools/pokedex_routes_quality.py
       - name: Verify Admin Stats V2 in Chromium and WebKit at three widths
         if: env.QA_FULL == 'true'
         run: python tools/admin_stats_quality.py
