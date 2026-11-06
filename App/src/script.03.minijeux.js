@@ -2234,6 +2234,7 @@ function stopCrySound() {
   if (cryAudio) {
     try { cryAudio.pause(); } catch (_e) {}
     try { cryAudio.currentTime = 0; } catch (_e) {}
+    cryAudio = null; // Discard the old round's handlers and media error state.
   }
   setCryUiStatus("idle", "");
 }
