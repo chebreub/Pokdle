@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
 > **Suivi au 06/11/2026 : PC-01 (#283) fusionnée au commit `e3e804de2c0cc0652280c464fd27c5eaeda69813` après CI complète verte ; 13 actions intégrées.**
 
-**Progression validée : 13 tâches terminées / 43 actives = 30,2 %.** Une investigation en cours (BUG-MOB-01), 29 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression validée : 13 tâches terminées / 43 actives = 30,2 %.** Deux actions en cours (MOB-03 et BUG-MOB-01), 28 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -53,7 +53,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [~] **BUG-MOB-01 · P0** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
 - [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [x] **DATA-01 · P0** : [dictionnaire de grain et couverture](qa/USAGE_EVENT_GRAIN.md) vérifié dans les sources (`trackUsage`, `recordMatchHistory`, `usage-metrics`, Party, dashboard) : distingue visites brutes, sessions navigateur, ouvertures, fins déclarées, commandes de manches et retours Daily. **Dates exactes de mise en production non disponibles** : méthode de lecture de la première observation conservée et limites des 90 jours documentées, **aucune date ni historique inventés**. Documentation uniquement ; pas de nouveau suivi individuel. Clôture du cadrage, pas vérification de dates de déploiement réelles.
-- [ ] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.
+- [~] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.
 - [ ] **MOB-04 · P1** : contrôle de focus et scroll dans les jeux rapides, Safari réel.
 - [x] **PC-01 · P1** : [PR #283](https://github.com/chebreub/Pokdle/pull/283) (après fusion) : styles PC compacts à 1366×768 ; grille Course au Pokédex intégrale sans scroll de jeu, avec moteur de dimensionnement inchangé ; commandes et panneau secondaire du jeu classique visibles. Recette deux navigateurs sur plusieurs tailles et refus des doublons.
 - [x] **PC-02 · P1** : [PR #282](https://github.com/chebreub/Pokdle/pull/282) (après fusion) : clavier contextualisé Solo, Défi, Party et Duel ; flèches limitées aux suggestions visibles, Échap ferme la liste avant une modale, Entrée en Duel reliée à un seul gestionnaire, saisie IME/modificateurs protégés. Chats et autres champs non interceptés, sans modification des parties ou récompenses.
@@ -262,6 +262,8 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 PR [#283](https://github.com/chebreub/Pokdle/pull/283) fusionnée, commit `e3e804de2c0cc0652280c464fd27c5eaeda69813`. CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42208624207) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42208628864) vertes sur le head `eca06a7fce06700a701ec8ac796cfa1a0b596222`. Placement des indices corrigé, résultat limité à 1 000 px, Course et doublons vérifiés ; détail dans l’état d’avancement. **13/43 = 30,2 %** ; prochaine action **MOB-03**. Render et iPhone réel non vérifiés ; BUG-MOB-01 reste ouvert.
 
-## MOB-03 — premier correctif en cours (06/11/2026)
+## MOB-03 — premier correctif intégré, chantier encore en cours (06/11/2026)
 
 Le calcul de hauteur des suggestions du champ partagé réserve désormais la rangée des boutons Deviner/Abandonner, son espacement et la marge basse. Il conserve le dimensionnement stable à la saisie. Tests unitaires : quatre hauteurs visibles (260/320/400/600 px), boutons dans le viewport et absence de scroll répété ; régression Zoom inchangée. Build réussi. Cette première correction ne clôture pas MOB-03 : interactions chat/récompenses et autres commandes restent à vérifier. BUG-MOB-01 et la recette iPhone physique restent distincts. Progression intégrée inchangée : 13/43.
+
+PR [#285](https://github.com/chebreub/Pokdle/pull/285) fusionnée au commit `ab8f0f4b4904cbd68c03fcc2d00bcf127e141812`. CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42212571024) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42212616154) vertes sur `953651f4`. Vérification Chromium locale avec viewport visuel simulé à 400 px : bouton Deviner à 375 px, accessible. Pas de recette clavier iPhone physique ni Render. Prochaine action : poursuivre MOB-03 sur les autres commandes et les superpositions chat/récompenses. Total inchangé : **13/43**, désormais **2 actions en cours** (MOB-03 et BUG-MOB-01), **28 non commencées**.
