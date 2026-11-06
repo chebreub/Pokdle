@@ -19,6 +19,13 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   // Pokémon pixelisé et Zoom progressif : le mystère reste sur le serveur (lib/verified-guess.js).
   const guessing = guessGames.createGuessGames(catalog, randomInt);
   const isGuess = s => guessGames.MODES.includes(s.mode);
+  // ECO-06: a timed run that never received an accepted answer is not a
+  // completed play eligible for Balls or coins. No new saved state needed:
+  // round > 0 proves that a prior answer was followed by next().
+  function verifiedTimedEarning(s) {
+    if (s.mode === 'higher-lower-rush' && !(s.round > 0 || ['higher','lower'].includes(s.answer?.choice))) return {};
+    return {earned:games.result(s)};
+  }
   const base = catalog.filter(p => !p.isAltForm && Number(p.id) <= 1025);
   const byId = new Map(base.map(p => [Number(p.id), p]));
   const shinyPool = require('../shiny-pool.json').ids.filter(id => byId.has(id));
@@ -86,7 +93,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     if (body.restart !== undefined && typeof body.restart !== 'boolean') throw fail('invalid_action',400);
     const old = await read(c, who, body.mode);
     if (old && !body.restart && old.startedAt + TTL > +clock() && games.expire(old)) {
-      await save(c,who,old); return {arcade:view(old),earned:games.result(old)};
+      await save(c,who,old); return {arcade:view(old),...verifiedTimedEarning(old)};
     }
     const sameGens = (body.mode !== 'weight' && !guessGames.MODES.includes(body.mode)) || JSON.stringify([...new Set(gens)].sort()) === JSON.stringify([...(old?.gens || [])].sort());
     if (old && old.startedAt + TTL > +clock() && (old.startId === body.startId || (!body.restart && sameGens && old.phase !== 'over'))) return {arcade:view(old)};
@@ -113,7 +120,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function answer(c,who,body) {
     const s = await current(c,who,body);
-    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),earned:games.result(s)}; }
+    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)}; }
     if (s.round !== body.round) throw fail('round_changed');
     if (isGuess(s)) {
       // Un essai rejoué (réseau) ou un nom déjà proposé ne compte pas deux fois.
@@ -140,7 +147,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function next(c,who,body) {
     const s = await current(c,who,body);
-    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),earned:games.result(s)}; }
+    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)}; }
     if (isAdvanced(s) && s.phase === 'over') return {arcade:view(s),replayed:true};
     if (s.mode !== 'shiny' && !isAdvanced(s)) throw fail('invalid_mode',400);
     if (s.round === body.round + 1 && s.phase === 'playing') return {arcade:view(s),replayed:true};
@@ -154,7 +161,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     if (s.mode !== 'higher-lower-rush') throw fail('invalid_mode',400);
     if (s.phase === 'over') return {arcade:view(s),replayed:true};
     if (!games.expire(s)) throw fail('round_wait');
-    await save(c,who,s); return {arcade:view(s),earned:games.result(s)};
+    await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)};
   }
   async function abandon(c,who,body) {
     const s = await current(c,who,body);
