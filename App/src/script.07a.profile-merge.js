@@ -65,7 +65,28 @@ function profileMergeUnion(p, o) {
 }
 // albumMedals (📒 album, 01/11/2026): « gen:tier » keys, so a medal won on one device is kept on the other.
 const PROFILE_UNION_FIELDS = ["discoveries", "albumMissionClaims", "regionXpClaims", "secrets", "weeklyLeagueBadges", "albumMedals"];
-const PROFILE_MAX_FIELDS = ["dailyLoginStreak", "xpLevels", "draftScoreAttackRecords", "weeklyLeagueScores", "weeklyLeagueStats", "albumMissionStats", "guessSeriesBest"];
+const PROFILE_MAX_FIELDS = ["dailyLoginStreak", "xpLevels", "draftScoreAttackRecords", "weeklyLeagueScores", "weeklyLeagueStats", "albumMissionStats"];
+
+// The old per-mode/per-size records are nested numeric maps, NOT one number.
+// A previously broken merge may already have put 0 at the top or mode level.
+// Ignore those invalid wrappers in favor of any intact device copy instead of
+// sending the surviving counts back to zero. Strings from legacy JSON imports
+// are accepted only when they represent non-negative safe integers.
+function profileMergeSeriesBests(a, b) {
+  const object = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  const left = object(a), right = object(b), merged = Object.create(null);
+  for (const mode of new Set([...Object.keys(left), ...Object.keys(right)])) {
+    const l = object(left[mode]), r = object(right[mode]), scores = Object.create(null);
+    for (const size of new Set([...Object.keys(l), ...Object.keys(r)])) {
+      const valid = [l[size], r[size]]
+        .filter(v => v !== null && v !== undefined && v !== "")
+        .map(Number).filter(n => Number.isSafeInteger(n) && n >= 0);
+      if (valid.length) scores[size] = Math.max(...valid);
+    }
+    if (Object.keys(scores).length) merged[mode] = scores;
+  }
+  return merged;
+}
 
 // SER-01: old guessSeriesBest scores contain only found, never attempts.
 // Keep these historical maxima independently of new Pixel precision records.
@@ -115,6 +136,9 @@ function mergeProfileData(p, o, b) {
   }
   for (const key of PROFILE_UNION_FIELDS) if (key in p || key in o) out[key] = profileMergeUnion(p[key], o[key]);
   for (const key of PROFILE_MAX_FIELDS) if (key in p || key in o) out[key] = profileMergeMax(p[key], o[key]);
+  if ("guessSeriesBest" in p || "guessSeriesBest" in o) {
+    out.guessSeriesBest = profileMergeSeriesBests(p.guessSeriesBest, o.guessSeriesBest);
+  }
   if (p.guessSeriesPrecision || o.guessSeriesPrecision) {
     out.guessSeriesPrecision = {
       ...(o.guessSeriesPrecision || {}), ...(p.guessSeriesPrecision || {}),
