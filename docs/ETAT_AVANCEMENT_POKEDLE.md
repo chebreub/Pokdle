@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie vérifiée : 6 novembre 2026, après fusion de #293 ; DEX-02 clôturé.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `692b8e42ab3a86451e2fdf2eea46924a011b934d` sur `main` (DEX-02).
+**Photographie vérifiée : 6 novembre 2026, après fusion de #295 ; DEX-03 clôturé.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `967b9c8d91977be6b38af7317e7e047121394efe` sur `main` (DEX-03).
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**16 tâches terminées sur 43 actions actives = 37,2 %** après intégration de DEX-02 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
+**17 tâches terminées sur 43 actions actives = 39,5 %** après intégration de DEX-03 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **16** | Action vérifiée, PR fusionnée |
+| **Terminé et intégré à main** | **17** | Action vérifiée, PR fusionnée |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **26** | Dont certaines propositions économiques soumises à validation préalable |
+| **Non commencé / à conduire ou à décider** | **25** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (16 actions terminées / 43 actions actives) × 100 = **37,2093 %, arrondi à 37,2 %**.
+**Formule explicite :** (17 actions terminées / 43 actions actives) × 100 = **39,5349 %, arrondi à 39,5 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -28,14 +28,18 @@
 | 0 | Ergonomie mobile / PC et mesures | 4 / 7 | 57,1 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
-| 3 | Pokédex et collection | 2 / 4 | 50 % | DEX-01 et DEX-02 terminés ; DEX-03 prochain |
+| 3 | Pokédex et collection | 3 / 4 | 75 % | DEX-01, DEX-02, DEX-03 terminés ; DEX-04 prochain |
 | 4 | Économie et rencontres | 0 / 8 | 0 % | 6 décisions de cadrage consignées le 05/11 : 4 accords de principe soumis aux tests, 1 simulation préalable, 1 sujet à rediscuter ; **aucune règle approuvée pour production** |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **16 / 43** | **37,2 %** | NIV-01 stationné exclu |
+| **Total** | | **17 / 43** | **39,5 %** | NIV-01 stationné exclu |
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
+
+## DEX-03 — clôture technique vérifiée le 6 novembre 2026
+
+**DEX-03 terminé et fusionné :** [PR #295](https://github.com/chebreub/Pokdle/pull/295), commit `967b9c8d91977be6b38af7317e7e047121394efe`, head validé `0e02036b5b13daa88aa17996b45483ec32297824`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42250700271) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42251003537). Jusqu'à trois cibles privées, suppression et synchronisation fiables, secret non divulgué, chances inchangées. **17/43 = 39,5 %** ; 1 action en cours (BUG-MOB-01), 25 non commencées ; lot 0 **4/7**, lot 3 **3/4**. **DEX-04** est la prochaine action de développement ; aucune recette sur iPhone physique ou sur Render revendiquée.
 
 ## DEX-02 — clôture technique vérifiée le 6 novembre 2026
 
