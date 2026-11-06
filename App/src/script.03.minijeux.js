@@ -2241,6 +2241,8 @@ function stopCrySound() {
 
 function setCryUiStatus(state, message = "") {
   const statusEl = document.getElementById("cry-status-text");
+  const leaveBtn = document.getElementById("cry-leave-btn");
+  if (leaveBtn) leaveBtn.classList.toggle("hidden", state !== "error");
   const btn = document.getElementById("cry-play-btn");
   const box = document.getElementById("cry-box");
   const label = btn?.querySelector(".cry-play-label");
@@ -2276,7 +2278,12 @@ function playCrySound() {
     setCryUiStatus("ready", "Le cri arrive du serveur. Réessaie dans un instant : aucun essai n’est décompté.");
     return;
   }
-  const url = verifiedCry || getPokemonCryUrl(secretPokemon);
+  let url;
+  try { url = verifiedCry || getPokemonCryUrl(secretPokemon); }
+  catch (_e) {
+    setCryUiStatus("error", "Le lien du cri est indisponible. Aucun essai n’a été ajouté.");
+    return;
+  }
   const version = ++cryPlaybackVersion;
   clearCryPlaybackTimeout();
 
