@@ -2816,6 +2816,30 @@ body.theme-dark #pokedex-category-filter {
   margin:0 auto;
   accent-color:#7c5ac3;
 }
+.pokedex-acquisition {
+  display:grid;
+  gap:7px;
+  min-width:0;
+  padding:12px;
+  margin:12px 0;
+  border:1px solid rgba(50,129,87,.2);
+  border-radius:12px;
+  background:rgba(255,255,255,.65);
+  overflow-wrap:anywhere;
+}
+.pokedex-acquisition h4 { margin:0; font-size:.88rem; }
+.pokedex-acquisition p { margin:0; font-size:.8rem; line-height:1.5; }
+.pokedex-acquisition small { font-size:.72rem; opacity:.76; }
+.pokedex-collection-lock .pokedex-acquisition {
+  background:rgba(255,255,255,.05);
+  border-color:rgba(255,255,255,.14);
+  color:#eaf2ff;
+}
+body.theme-dark .pokedex-personal-record .pokedex-acquisition {
+  background:rgba(255,255,255,.05);
+  color:#eaf2ff;
+  border-color:rgba(255,255,255,.14);
+}
 .pokedex-personal-record {
   position:relative;
   overflow:hidden;
