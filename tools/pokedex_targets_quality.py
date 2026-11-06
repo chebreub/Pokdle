@@ -18,7 +18,7 @@ def scenario(browser,engine,width):
         qa.ready(page,'!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents==="none"')
         page.evaluate("""() => {
           closeOverlayModal();
-          playerProfile.discoveries={25:{source:'game',mode:'normal',at:1},150:{source:'mission',mode:'mission',at:1}};
+          playerProfile.discoveries={10:{source:'game',mode:'normal',at:1},25:{source:'game',mode:'normal',at:1},150:{source:'mission',mode:'mission',at:1}};
           playerProfile.pokedexTrackedTargets=[];
           playerProfile.pokedexTrackedUpdatedAt=0;
           saveProfile();
@@ -26,7 +26,7 @@ def scenario(browser,engine,width):
         }""")
         qa.ready(page,'!!document.getElementById("pokedex-tracking-hub")')
         for id in [25,150,373]:
-            page.evaluate('(id)=>{pokedexSelectedId=id;return renderPokedexDetail(POKEMON_BY_ID.get(id));}',id)
+            page.evaluate('(id)=>{pokedexSelectedId=id;showPokedexMobileDetail();return renderPokedexDetail(POKEMON_BY_ID.get(id));}',id)
             qa.ready(page,'document.querySelector("#pokedex-detail .pokedex-tracking-control button")?.getAttribute("data-args") === "[%d]"' % id)
             button=page.locator('#pokedex-detail .pokedex-tracking-control button')
             assert not button.is_disabled(),(engine,width,id)
@@ -34,23 +34,23 @@ def scenario(browser,engine,width):
         assert page.evaluate('pokedexTrackedTargetIds().join(",")')=='25,150,373'
         assert '3 / 3' in page.locator('#pokedex-tracking-hub').inner_text()
         # The fourth selection is blocked, and no profile write occurs.
-        page.evaluate('(id)=>{pokedexSelectedId=id;return renderPokedexDetail(POKEMON_BY_ID.get(id));}',380)
-        qa.ready(page,'!!document.querySelector("#pokedex-detail .pokedex-tracking-control")')
+        page.evaluate('(id)=>{pokedexSelectedId=id;showPokedexMobileDetail();return renderPokedexDetail(POKEMON_BY_ID.get(id));}',10)
+        qa.ready(page,'document.querySelector("#pokedex-detail .pokedex-tracking-control button")?.getAttribute("data-args") === "[10]"')
         assert page.locator('#pokedex-detail .pokedex-tracking-control button').is_disabled()
         page.evaluate('togglePokedexTrackedTarget(150)')
         assert page.evaluate('pokedexTrackedTargetIds().join(",")')=='25,373'
         # An unrevealed target may be chosen deliberately in the encyclopedia,
         # but its name is masked in collection mode.
         page.evaluate('setPokedexExperienceView("encyclopedia")')
-        page.evaluate('(id)=>{pokedexSelectedId=id;return renderPokedexDetail(POKEMON_BY_ID.get(id));}',380)
-        qa.ready(page,'!!document.querySelector("#pokedex-detail .pokedex-tracking-control button")')
+        page.evaluate('(id)=>{pokedexSelectedId=id;showPokedexMobileDetail();return renderPokedexDetail(POKEMON_BY_ID.get(id));}',380)
+        qa.ready(page,'document.querySelector("#pokedex-detail .pokedex-tracking-control button")?.getAttribute("data-args") === "[380]"')
         page.locator('#pokedex-detail .pokedex-tracking-control button').click()
         assert page.evaluate('pokedexTrackedTargetIds().join(",")')=='25,373,380'
         page.evaluate('setPokedexExperienceView("collection")')
         pane=page.locator('#pokedex-tracking-hub')
         assert 'Cible non révélée' in pane.inner_text()
         assert 'Latias' not in pane.inner_text()
-        page.evaluate('(id)=>{pokedexSelectedId=id;return renderPokedexDetail(POKEMON_BY_ID.get(id));}',151)
+        page.evaluate('(id)=>{pokedexSelectedId=id;showPokedexMobileDetail();return renderPokedexDetail(POKEMON_BY_ID.get(id));}',151)
         qa.ready(page,'document.querySelector("#pokedex-detail .pokedex-collection-lock") !== null')
         assert page.locator('#pokedex-detail .pokedex-tracking-control').count()==0
         assert page.evaluate('togglePokedexTrackedTarget(151)') is False
