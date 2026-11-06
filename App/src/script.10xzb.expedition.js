@@ -103,6 +103,7 @@ window.meetPrestigeDrattak = meetPrestigeDrattak;
  // Les stocks, conditions d'accès et probabilités restent strictement décidés par le serveur.
 let expeditionPendingEncounter = null;
 let expeditionOpeningEncounter = false;
+let expeditionPreflightSerial = 0;
 function expeditionPreflightHtml(kind, bag, chances) {
   const prestige = kind === "prestige";
   const total = ["poke", "great", "ultra"].reduce((n, k) => n + Math.max(0, Number(bag?.[k]) || 0), 0);
@@ -129,8 +130,11 @@ function expeditionPreflightHtml(kind, bag, chances) {
 function expeditionPrepareEncounter(kind, answer) {
   if (expeditionOpeningEncounter) return Promise.resolve();
   // L'écran montre toujours le sac et l'éligibilité actualisés ; aucun POST de rencontre ici.
+  const serial = ++expeditionPreflightSerial;
   const detail = kind === "prestige" ? loadDrattakPrestige(true) : loadExpedition(true);
   return Promise.all([refreshBalls({ announce: false }), detail]).then(([state, progress]) => {
+    const overlay = document.getElementById("overlay-modal");
+    if (serial !== expeditionPreflightSerial || !overlay || overlay.classList.contains("hidden")) return;
     if (!state?.bag || !progress || (kind === "prestige" ? !progress.available : !progress.legend?.available)) {
       if (typeof showToast === "function") showToast("Rencontre indisponible : vérifie ta progression et ton sac.");
       return;
@@ -147,12 +151,14 @@ function expeditionPrepareEncounter(kind, answer) {
   });
 }
 function expeditionCancelEncounter() {
+  expeditionPreflightSerial++;
   expeditionPendingEncounter = null;
   if (typeof openExpedition === "function") openExpedition();
 }
 function expeditionConfirmEncounter() {
   const pending = expeditionPendingEncounter;
   if (!pending || expeditionOpeningEncounter || !document.querySelector("#overlay-body .exp-preflight")) return;
+  expeditionPreflightSerial++;
   expeditionPendingEncounter = null;
   expeditionOpeningEncounter = true;
   return Promise.resolve(pending.kind === "prestige"
