@@ -2818,28 +2818,33 @@ function selectGuessAC(name) {
 
 function handleGuessKey(e) {
   const list = document.getElementById("guess-ac");
-  if (!list) return;
-  if (e.isComposing || guessInputComposing || e.keyCode === 229) return;
-  const items = list.querySelectorAll(".ac-item");
+  if (!list || e.defaultPrevented || e.isComposing || guessInputComposing || e.keyCode === 229
+    || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+  // PC-02: arrows are only keyboard navigation when actual suggestions exist.
+  const visible = !list.classList.contains("hidden");
+  const items = visible ? list.querySelectorAll(".ac-item") : [];
 
-  if (e.key === "ArrowDown") {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (!items.length) return;
     e.preventDefault();
-    acIndex = Math.min(acIndex + 1, items.length - 1);
-    highlightItems(items, acIndex);
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    acIndex = Math.max(acIndex - 1, -1);
+    acIndex = e.key === "ArrowDown"
+      ? Math.min(acIndex + 1, items.length - 1)
+      : Math.max(acIndex - 1, -1);
     highlightItems(items, acIndex);
   } else if (e.key === "Enter") {
     e.preventDefault();
-    if (acIndex >= 0 && items[acIndex]) {
-      const name = items[acIndex].querySelector(".ac-name").textContent;
-      selectGuessAC(name);
+    if (visible && acIndex >= 0 && items[acIndex]) {
+      const name = items[acIndex].querySelector(".ac-name")?.textContent;
+      if (name) selectGuessAC(name);
     } else {
       submitGuess();
     }
-  } else if (e.key === "Escape") {
+  } else if (e.key === "Escape" && visible) {
+    // Dismiss suggestions first; do not close a dialog around the input.
+    e.preventDefault();
+    e.stopPropagation();
     list.classList.add("hidden");
+    acIndex = -1;
   }
 }
 
