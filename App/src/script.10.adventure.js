@@ -69,12 +69,12 @@ function recordPokemonDiscovery(pokemon, mode, at) {
   return true;
 }
 function discoveryModeLabel(mode) {
-  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète', mission: 'Mission de collection', capture: 'Hautes herbes' };
+  const labels = { duel: 'Duel 1v1', guess: 'Party · Course Pokémon', deduction: 'Party · Pokémon mystère', coop: 'Party · Enquête coop', nearest: 'Party · Numéro exact', secret: 'Rencontre secrète', mission: 'Mission de collection', capture: 'Collection' };
   return labels[mode] || modeLabelFr(mode);
 }
 function discoveryProofHtml(entry) {
   const source = entry.source || 'legacy';
-  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Découverte secrète', mission: 'Mission validée', capture: 'Pokémon capturé', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
+  const label = { game: 'Trouvé en jeu', history: 'Importé de l’historique', secret: 'Découverte secrète', mission: 'Mission validée', capture: 'Entrée de collection', legacy: 'Ancienne entrée' }[source] || 'Ancienne entrée';
   const mode = escapeHtml(discoveryModeLabel(entry.mode));
   const explanations = {
     game: `Bonne réponse enregistrée en ${mode}.`,
@@ -82,7 +82,7 @@ function discoveryProofHtml(entry) {
     legacy: `Mode enregistré : ${mode}. Cette entrée date de l’ancienne version. Elle peut venir de l’historique importé ; l’origine exacte n’avait pas été conservée.`,
     secret: 'Pokémon découvert après avoir accompli une mission et trouvé sa cachette. Une capture avec une Ball est nécessaire pour le posséder.',
     mission: 'Pokémon découvert après validation de sa mission. Une Ball est nécessaire pour le posséder.',
-    capture: 'Pokémon réellement capturé avec une Ball et confirmé par le serveur.'
+    capture: 'Pokémon découvert dans ta collection, après une capture ou un échange. Le Pokédex distingue tes captures personnelles de tes exemplaires possédés.'
   };
   const confirmed = entry.confirmed ? `<p>Retrouvé en ${escapeHtml(discoveryModeLabel(entry.confirmed.mode))} le ${new Date(entry.confirmed.at).toLocaleDateString('fr-FR')}.</p>` : '';
   const secrets = Object.entries(entry.secrets || {}).map(([key, at]) => `<p>✦ Mission « ${escapeHtml((typeof SECRET_MISSIONS !== 'undefined' ? SECRET_MISSIONS.find(m => m.id === key)?.title : ({companion:'Une présence familière',signal:'Un drôle de signal',runes:'Les trois marques'})[key]) || key)} » · ${new Date(at).toLocaleDateString('fr-FR')}</p>`).join('');

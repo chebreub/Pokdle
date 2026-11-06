@@ -509,6 +509,14 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       FROM wild_encounters WHERE identity=$1 AND status='caught' GROUP BY pokemon_id ORDER BY pokemon_id`, [who.key])).rows
       .map((r) => ({ id: Number(r.pokemon_id), normal: Number(r.normal), shiny: Number(r.shiny) }));
   }
+  // Read existing successful captures, including originals later given away.
+  // Incoming trades prove possession, never a Ball capture by this player.
+  async function captureHistory(c, who) {
+    return (await c.query(`SELECT pokemon_id,COUNT(*) FILTER (WHERE NOT shiny)::int AS normal,COUNT(*) FILTER (WHERE shiny)::int AS shiny
+      FROM wild_encounters WHERE identity=$1 AND status IN ('caught','released','traded') AND kind <> 'trade'
+      GROUP BY pokemon_id ORDER BY pokemon_id`, [who.key])).rows
+      .map((r) => ({ id: Number(r.pokemon_id), normal: Number(r.normal), shiny: Number(r.shiny) }));
+  }
   // 🌿 Relâcher un doublon (3/11) : jamais le dernier exemplaire (normal et shiny comptent à part), 10 par jour.
   async function release(c, who, day, body) {
     const id = Number(body && body.id), shiny = Boolean(body && body.shiny);
@@ -599,7 +607,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       return throwBall(c, who, day, String(body && body.ball || ""));
     }, actionReceipt("throw", body)),
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
-    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS,
+    collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), captureHistory: await captureHistory(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS,
       // Espèces obtenables par lancer de Ball : hautes herbes et expéditions hebdomadaires.
       catchableTotal: new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend), SALAMENCE.pokemonId]).size })),
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
