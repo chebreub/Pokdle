@@ -28,19 +28,27 @@ function drattakPrestigeHtml() {
     ['silhouette','Silhouette','L’ombre sans ailes','Une silhouette immobile, protégée par une cuirasse, contemple le ciel.'],
     ['description','Description','La mémoire de la pierre','Ce Pokémon n’est ni le premier rêveur, ni celui qui vole enfin.']
   ];
+  const retry = p.recovery?.active && !p.eligible;
+  const displayGoal = retry ? p.recovery.goal : p.goal;
   const trialsHtml = trials.map(([mode,label,title,clue]) => {
-    const won = Number(p.wins?.[mode] || 0),goal = Number(p.goal?.modes?.[mode] || 3);
+    const won = Number(p.wins?.[mode] || 0),goal = Number(displayGoal?.modes?.[mode] || 3);
     const done = won >= goal;
     return '<div class="exp-prestige-trial"><b>' + (done ? '✅ ' : '🔒 ') + label + ' · ' + Math.min(won,goal) + '/' + goal + '</b>' +
       '<span>' + (done ? '✦ ' + title + ' : ' + clue : 'Gagne ' + goal + ' parties vérifiées en mode ' + label + ' pour révéler cet indice.') + '</span></div>';
   }).join("");
-  const days = '<p class="exp-note">📅 ' + Math.min(p.days,p.goal.days) + '/' + p.goal.days +
+  const days = '<p class="exp-note">📅 ' + Math.min(p.days,displayGoal.days) + '/' + displayGoal.days +
     ' jours de réussite dans ces modes, sur une période de 30 jours. Une victoire par mode et par jour compte.</p>';
+  const retryInfo = retry ? '<p class="exp-note">🐉 Seconde chance unique après la première fuite : ' +
+    '3 nouveaux jours et 2 victoires par mode, délai de 21 jours. Rencontre ouverte le samedi et le dimanche (heure de Paris). ' +
+    'Après cette reprise, les conditions complètes redeviennent nécessaires.</p>' : '';
   let next = '';
   if (p.needsAccount) next = '<p class="exp-note">Connecte-toi pour garder tes preuves de jeu et débloquer la rencontre.</p>';
   else if (p.cooldown) next = '<p class="exp-note">Drattak a quitté les falaises. Nouvelle tentative à partir du ' +
     escapeHtml(p.nextAttemptDay.split("-").reverse().join("/")) + ', après de nouvelles épreuves.</p>';
-  else if (p.available) next = '<div class="exp-prestige-riddle"><strong>✦ Le secret de la falaise</strong>' +
+  else if (retry && p.recovery.ready && !p.recovery.weekendOpen) next = '<p class="exp-note">🐉 L’événement de seconde chance ouvre le samedi et le dimanche. ' +
+    'Prochain rendez-vous : ' + escapeHtml(p.recovery.nextEventDay.split("-").reverse().join("/")) + '.</p>';
+  else if (p.available) next = '<div class="exp-prestige-riddle"><strong>✦ ' +
+    (retry ? 'Seconde chance · week-end' : 'Le secret de la falaise') + '</strong>' +
     '<p>« Entre celui qui rêvait de voler et celui qui déploie ses ailes, je demeure immobile dans mon armure. Qui suis-je ? »</p>' +
     '<label for="prestige-drattak-answer">Le nom du Pokémon</label>' +
     '<input id="prestige-drattak-answer" type="text" maxlength="50" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ta réponse" />' +
@@ -50,7 +58,7 @@ function drattakPrestigeHtml() {
   else next = '<p class="exp-note">Termine les étapes pour déchiffrer le secret de la falaise et débloquer ta rencontre.</p>';
   return '<section class="exp-card exp-prestige"><h4>🐉 Le rêve de Draby · Quête de Drattak</h4>' +
     '<p class="exp-note">Dans les jeux Pokémon, Draby rêvait de voler en s’élançant des falaises. Sur Pokédle, suis sa lignée et retrouve les indices cachés dans trois modes.</p>' +
-    '<div class="exp-prestige-lineage">' + line + '</div>' + trialsHtml + days + next + '</section>';
+    '<div class="exp-prestige-lineage">' + line + '</div>' + retryInfo + trialsHtml + days + next + '</section>';
 }
 function meetPrestigeDrattak() {
   const answer = document.getElementById("prestige-drattak-answer")?.value?.trim() || "";
@@ -59,7 +67,7 @@ function meetPrestigeDrattak() {
   if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
   return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
     if (!data?.ok) {
-      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_need_three_balls:"Il te faut au moins trois Balls pour ne pas perdre une rare occasion de rencontre.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",
+      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_need_three_balls:"Il te faut au moins trois Balls pour ne pas perdre une rare occasion de rencontre.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",prestige_event_closed:"Le passage de la seconde chance ouvre le samedi et le dimanche.",
         encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
         account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
       // Une requête peut avoir réussi alors que sa réponse s'est perdue.
