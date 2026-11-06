@@ -143,6 +143,21 @@ test("SER-01: account sync never resets historical series best from either devic
   }
 });
 
+test("SER-01: previously corrupted zero wrappers never erase surviving series bests", () => {
+  const valid = {guessSeriesBest:{pixel:{"5":"4",10:7},cry:{"10":6}}};
+  for (const corrupted of [
+    {guessSeriesBest:0},
+    {guessSeriesBest:{pixel:0,cry:null}},
+    {guessSeriesBest:{pixel:{10:0},cry:{10:"not-a-score"}}}
+  ]) {
+    for (const [a,b] of [[valid,corrupted],[corrupted,valid]]) {
+      const result=mergedProfile(a,b);
+      assert.deepEqual(result.guessSeriesBest,{pixel:{"5":4,"10":7},cry:{"10":6}},
+        "intact per-length records win over broken legacy wrappers, in both merge directions");
+    }
+  }
+});
+
 test("SER-01: account sync prefers more found then fewer attempts, ignores invalid copies", () => {
   const a={guessSeriesBest:{pixel:{10:7}},guessSeriesPrecision:{pixel:{5:{found:3,attemptsWon:9},10:{found:7,attemptsWon:17},20:{found:12,attemptsWon:35}}}};
   const b={guessSeriesBest:{pixel:{10:8}},guessSeriesPrecision:{pixel:{5:{found:4,attemptsWon:15},10:{found:7,attemptsWon:19},20:{found:15,attemptsWon:50}}}};
