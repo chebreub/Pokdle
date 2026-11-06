@@ -152,6 +152,13 @@ function wildSfx(kind) {
   }[kind] || [];
   for (const [f, o, d, g, type] of notes) pokedexFxTone(ctx, f, t + o, d, g * v, type);
 }
+// The 72-hour deadline comes from the server and is shown in Paris time.
+function wildLegendExpiryText(iso) {
+  const when = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(when)) return "";
+  return new Intl.DateTimeFormat("fr-FR", {timeZone:"Europe/Paris",weekday:"long",day:"numeric",
+    month:"long",hour:"2-digit",minute:"2-digit"}).format(new Date(when));
+}
 function renderWildEncounter(state, message, intro) {
   const e = state.encounter || state.wild && state.wild.open;
   const p = e && wildPokemon(e.pokemonId);
@@ -170,6 +177,8 @@ function renderWildEncounter(state, message, intro) {
     '<div class="wild-panel">' +
       '<p class="wild-line" aria-live="polite">' + (message || (e.prestige ? "🐉 " + name + (e.shiny ? " <b>shiny</b>" : "") + " t’attend ! Trois lancers, aucune capture garantie." : e.legend ? "👑 " + name + (e.shiny ? " <b>shiny</b>" : "") + " se réveille ! Une seule chance cette semaine." : e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
       '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures && wildCaptures[p.id] ? "⚪ Déjà attrapé" : "🆕 Pas encore attrapé !") + '</span></div>' +
+      (e.legend && e.expiresAt ? '<p class="wild-note">🕒 Rencontre conservée jusqu’au ' +
+        escapeHtml(wildLegendExpiryText(e.expiresAt)) + ' (heure de Paris). Tu peux fermer cet écran et reprendre la même rencontre depuis l’expédition.</p>' : '') +
       wildBallButtons(state, e) +
       (e.legend || e.prestige ? "" : '<button type="button" class="wild-run" data-action="wildRun">Fuir</button>') +
     '</div>';
