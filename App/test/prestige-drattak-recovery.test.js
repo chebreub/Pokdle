@@ -59,6 +59,7 @@ test('PostgreSQL: first failure grants one weekend retry and no duplicate',{
   assert.equal(p.available,false);
   await assert.rejects(service.meetPrestige(me,{answer:'Drackhaus'}),/prestige_event_closed/);
   now=new Date('2026-11-28T12:00:00Z');
+  await service.state(me); // The existing welcome grant supplies 4 Poké + 1 Super Ball.
   p=(await service.prestige(me)).prestige;
   assert.equal(p.available,true);
   const pair=await Promise.allSettled([service.meetPrestige(me,{answer:'Drackhaus'}),service.meetPrestige(me,{answer:'Drackhaus'})]);
