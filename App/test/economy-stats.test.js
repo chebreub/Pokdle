@@ -57,7 +57,7 @@ test("only date-bound SELECTs are issued; no players or raw ledger entries are r
   }};
   const out=await readEconomyStats(db,"2026-11-01","2026-11-03");
   assert.deepEqual([out.coins.gained,out.coins.spent,out.wild.encounters,out.wild.successPerThrow],[0,0,0,null]);
-  assert.equal(queries.length,4);
+  assert.equal(queries.length,5);
   for(const q of queries){
     assert.match(q.sql,/^\s*SELECT /);
     assert.deepEqual(q.params,["2026-11-01","2026-11-03"]);
@@ -66,6 +66,7 @@ test("only date-bound SELECTs are issued; no players or raw ledger entries are r
   }
   assert.equal(JSON.stringify(out).includes("identity"),false);
   assert.equal(JSON.stringify(out).includes("account_id"),false);
+  assert.equal(out.capture.available,false);
 });
 
 const sql={skip:!process.env.QA_DATABASE_URL,timeout:60000};
