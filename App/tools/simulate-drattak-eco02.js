@@ -11,7 +11,8 @@ const SCENARIOS=Object.freeze([
   {id:'C_weekend_2j',days:2,wins:1,gate:'weekend'},
   {id:'D_aleatoire_2j',days:2,wins:1,gate:'random'},
   {id:'E_une_reprise_2j',days:2,wins:1,gate:'always',onlyOnce:true},
-  {id:'F_une_reprise_weekend',days:2,wins:1,gate:'weekend',onlyOnce:true}
+  {id:'F_une_reprise_weekend',days:2,wins:1,gate:'weekend',onlyOnce:true},
+  {id:'G_une_reprise_weekend_3j2v',days:3,wins:2,gate:'weekend',onlyOnce:true}
 ]);
 const MODES=Object.keys(SALAMENCE.modes);
 function unit(seed,account,day,channel){
