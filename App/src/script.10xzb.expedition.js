@@ -60,9 +60,76 @@ function drattakPrestigeHtml() {
     '<p class="exp-note">Dans les jeux Pokémon, Draby rêvait de voler en s’élançant des falaises. Sur Pokédle, suis sa lignée et retrouve les indices cachés dans trois modes.</p>' +
     '<div class="exp-prestige-lineage">' + line + '</div>' + retryInfo + trialsHtml + days + next + '</section>';
 }
+
+ // ECO-07 — une confirmation purement client, avant tout appel POST ouvrant une rencontre.
+ // Les stocks, conditions d'accès et probabilités restent strictement décidés par le serveur.
+let expeditionPendingEncounter = null;
+let expeditionOpeningEncounter = false;
+function expeditionPreflightHtml(kind, bag, chances) {
+  const prestige = kind === "prestige";
+  const total = ["poke", "great", "ultra"].reduce((n, k) => n + Math.max(0, Number(bag?.[k]) || 0), 0);
+  const required = prestige ? 3 : 1; // Contraintes existantes du serveur, jamais une nouvelle règle.
+  const rows = [["poke", "Poké Ball"], ["great", "Super Ball"], ["ultra", "Hyper Ball"]]
+    .map(([k, label]) => '<li>' + ballImg(k, 22) + '<span>' + label + ' : <b>' + Math.max(0, Number(bag?.[k]) || 0) +
+      '</b> disponible(s) · <b>' + Math.max(0, Number(chances?.[k]) || 0) + ' %</b> par lancer</span></li>').join("");
+  const warning = total < required
+    ? '<p class="exp-note">🔒 Stock insuffisant : ' + (prestige ? 'Drattak exige au moins 3 Balls.' : 'Il faut au moins 1 Ball.') + '</p>'
+    : total < 3 ? '<p class="exp-note">⚠️ Avec ' + total + ' Ball' + (total > 1 ? 's' : '') +
+      ', tu ne pourras pas effectuer les 3 lancers si les premiers échouent. La règle actuelle reste inchangée.</p>'
+      : '<p class="exp-note">Tu disposes de suffisamment de Balls pour trois lancers.</p>';
+  return '<div class="exp exp-preflight"><section class="exp-card exp-prestige">' +
+    '<h4>' + (prestige ? '🐉 Se préparer à Drattak' : '👑 Se préparer au légendaire') + '</h4>' +
+    '<p class="exp-note">Tu as ' + total + ' Ball' + (total > 1 ? 's' : '') +
+    '. Trois lancers maximum, une Ball dépensée à chaque lancer et aucune capture garantie.</p>' +
+    '<ul class="ball-gains">' + rows + '</ul>' + warning +
+    '<p class="exp-note">Annuler maintenant ne crée aucune rencontre, ne dépense aucune Ball et conserve ta progression.</p>' +
+    '<div class="challenge-actions">' +
+    (total >= required ? '<button type="button" class="exp-legend-cta" data-action="expeditionConfirmEncounter">Commencer la rencontre</button>' : '') +
+    '<button type="button" class="btn-ghost" data-action="expeditionCancelEncounter">Annuler · garder ma progression</button>' +
+    '</div></section></div>';
+}
+function expeditionPrepareEncounter(kind, answer) {
+  if (expeditionOpeningEncounter) return Promise.resolve();
+  // L'écran montre toujours le sac et l'éligibilité actualisés ; aucun POST de rencontre ici.
+  const detail = kind === "prestige" ? loadDrattakPrestige(true) : loadExpedition(true);
+  return Promise.all([refreshBalls({ announce: false }), detail]).then(([state, progress]) => {
+    if (!state?.bag || !progress || (kind === "prestige" ? !progress.available : !progress.legend?.available)) {
+      if (typeof showToast === "function") showToast("Rencontre indisponible : vérifie ta progression et ton sac.");
+      return;
+    }
+    if (kind === "prestige" && !state.actionScope) {
+      if (typeof showToast === "function") showToast("Recharge ton sac avant d'ouvrir le passage.");
+      return;
+    }
+    expeditionPendingEncounter = { kind, answer: kind === "prestige" ? answer : null };
+    if (typeof ensureOverlay === "function") ensureOverlay("Préparer ma rencontre",
+      expeditionPreflightHtml(kind, state.bag, kind === "prestige" ? progress.chances : progress.legendChances));
+  }).catch(() => {
+    if (typeof showToast === "function") showToast("Impossible de vérifier ton sac pour le moment.");
+  });
+}
+function expeditionCancelEncounter() {
+  expeditionPendingEncounter = null;
+  if (typeof openExpedition === "function") openExpedition();
+}
+function expeditionConfirmEncounter() {
+  const pending = expeditionPendingEncounter;
+  if (!pending || expeditionOpeningEncounter || !document.querySelector("#overlay-body .exp-preflight")) return;
+  expeditionPendingEncounter = null;
+  expeditionOpeningEncounter = true;
+  return Promise.resolve(pending.kind === "prestige"
+    ? expeditionPerformPrestige(pending.answer) : expeditionPerformLegend())
+    .finally(() => { expeditionOpeningEncounter = false; });
+}
+window.expeditionCancelEncounter = expeditionCancelEncounter;
+window.expeditionConfirmEncounter = expeditionConfirmEncounter;
+
 function meetPrestigeDrattak() {
   const answer = document.getElementById("prestige-drattak-answer")?.value?.trim() || "";
   if (!answer) { if (typeof showToast === "function") showToast("Entre ta réponse à l’énigme de la falaise."); return; }
+  return expeditionPrepareEncounter("prestige", answer);
+}
+function expeditionPerformPrestige(answer) {
   const scope = typeof ballState !== "undefined" && ballState?.actionScope;
   if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
   return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
@@ -178,6 +245,9 @@ function claimExpeditionChests() {
   });
 }
 function meetExpeditionLegend() {
+  return expeditionPrepareEncounter("legend");
+}
+function expeditionPerformLegend() {
   return expeditionFetch("/api/expedition/legend", {}).then((d) => {
     if (!d || !d.ok) {
       const msg = { no_balls: "Il te faut au moins une Ball pour le tenter.", encounter_open: "Finis d’abord ta rencontre dans les hautes herbes.", account_required: "Crée un compte pour le tenter." }[d && d.error] || "La rencontre n’a pas pu commencer.";
