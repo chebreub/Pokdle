@@ -180,6 +180,27 @@ function loadExpedition(force) {
   });
 }
 function expeditionLegend(e) { return typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(e.legendId)) : null; }
+// Applies to the new server-provided 72-hour window; the server decides expiry.
+function expeditionLegendExpiryText(iso) {
+  if (!iso || !Number.isFinite(Date.parse(iso))) return "à la fin de la journée";
+  return new Intl.DateTimeFormat("fr-FR", {timeZone:"Europe/Paris",weekday:"long",day:"numeric",
+    month:"long",hour:"2-digit",minute:"2-digit"}).format(new Date(iso));
+}
+function resumeExpeditionLegend() {
+  // GET state first: never re-open, re-roll or debit a Ball by resuming.
+  if (typeof refreshBalls !== "function") return Promise.resolve();
+  return refreshBalls({announce:false}).then((state) => {
+    if (state?.wild?.open?.legend && typeof renderWildEncounter === "function") {
+      if (typeof closeOverlayModal === "function") closeOverlayModal();
+      renderWildEncounter(state);
+    } else {
+      if (typeof showToast === "function") showToast("Cette rencontre n'est plus disponible.");
+      expeditionAt = 0;
+      openExpedition();
+    }
+  });
+}
+window.resumeExpeditionLegend = resumeExpeditionLegend;
 const EXP_DAY_NAMES = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 // La bannière de « Ta journée ».
@@ -188,7 +209,8 @@ function expeditionBannerHtml() {
   if (!e) return "";
   const p = expeditionLegend(e);
   const ready = e.chests.some((c) => c.canClaim);
-  const line = e.legend.available ? "100 % : " + (p ? p.name : "le légendaire") + " t’attend !" : ready ? e.pct + " % · un coffre à ouvrir !" : e.pct + " % · " + e.progress + " / " + e.goal + " participations";
+  const held = e.legend?.pending?.kind === "legend";
+  const line = held ? "👑 Une rencontre légendaire est à reprendre" : e.legend.available ? "100 % : " + (p ? p.name : "le légendaire") + " t’attend !" : ready ? e.pct + " % · un coffre à ouvrir !" : e.pct + " % · " + e.progress + " / " + e.goal + " participations";
   return '<button type="button" class="day-exp" data-action="openExpedition">' + (p ? '<img src="' + escapeHtml(pokedexDetailArtwork(p, false)) + '" alt="" aria-hidden="true">' : "") +
     '<small>🧭 EXPÉDITION · ' + escapeHtml(e.region.toUpperCase()) + '</small><b>' + escapeHtml(line) + '</b><span class="day-exp-bar"><i style="width:' + e.pct + '%"></i></span></button>';
 }
@@ -212,7 +234,16 @@ function expeditionHtml(e) {
   const nBalls = claimable.reduce((n, c) => n + c.balls.length, 0);
   const days = e.days.map((d, i) => '<span class="' + (e.myDays.includes(d) ? "on" : "") + '"><i>' + (e.myDays.includes(d) ? "✓" : "·") + '</i>' + EXP_DAY_NAMES[i] + '</span>').join("");
   let legend;
-  if (e.legend.status === "caught") legend = '<p class="exp-legend-msg">🎉 Tu as attrapé ' + name + ' cette semaine !</p>';
+  if (e.legend.pending?.kind === "legend") {
+    const old = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(Number(e.legend.pending.pokemonId)) : null;
+    const heldName = escapeHtml(old ? old.name : "ton légendaire");
+    legend = '<p class="exp-legend-msg">👑 ' + heldName + ' t’attend toujours !' +
+      (e.legend.pending.expiresAt ? ' Rencontre conservée jusqu’au ' + escapeHtml(expeditionLegendExpiryText(e.legend.pending.expiresAt)) + '.' : '') +
+      ' Même après le changement de semaine, tu reprends les lancers restants sans nouveau tirage.</p>' +
+      '<button type="button" class="exp-legend-cta" data-action="resumeExpeditionLegend">Reprendre ma rencontre</button>';
+  }
+  else if (e.legend.pending) legend = '<p class="exp-legend-msg">Termine ta rencontre en cours avant de tenter un autre légendaire.</p>';
+  else if (e.legend.status === "caught") legend = '<p class="exp-legend-msg">🎉 Tu as attrapé ' + name + ' cette semaine !</p>';
   else if (e.legend.status) legend = '<p class="exp-legend-msg">' + name + ' s’est échappé cette semaine. Il reviendra avec une autre région.</p>';
   else if (e.legend.available) legend = '<button type="button" class="exp-legend-cta" data-action="meetExpeditionLegend">👑 Rencontrer ' + name + '</button><p class="exp-note">3 lancers, son vrai taux de capture : ' + e.legendChances.poke + ' % avec une Poké Ball, ' + e.legendChances.great + ' % Super, ' + e.legendChances.ultra + ' % Hyper.</p>';
   else if (e.legend.reached && e.legend.needsAccount) legend = '<p class="exp-legend-msg">La jauge est pleine ! Crée un compte pour tenter ' + name + '. <a href="/auth/discord">Discord</a> · <a href="/auth/google">Google</a> · <a href="/auth/twitch">Twitch</a></p>';
