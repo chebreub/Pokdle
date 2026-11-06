@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**9 tâches terminées sur 43 actions actives = 20,9 %** après intégration de NIV-02 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
+**10 tâches terminées sur 43 actions actives = 23,3 %** après intégration de SER-01 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **9** | Action vérifiée, PR fusionnée |
+| **Terminé et intégré à main** | **10** | Action vérifiée, PR fusionnée |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **33** | Dont certaines propositions économiques soumises à validation préalable |
+| **Non commencé / à conduire ou à décider** | **32** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (9 actions terminées / 43 actions actives) × 100 = **20,9302 %, arrondi à 20,9 %**.
+**Formule explicite :** (10 actions terminées / 43 actions actives) × 100 = **23,2558 %, arrondi à 23,3 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -27,13 +27,13 @@
 | --- | --- | ---: | ---: | --- |
 | 0 | Ergonomie mobile / PC et mesures | 1 / 7 | 14,3 % | DATA-01 documenté ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
-| 2 | Gameplay, pédagogie, découverte | 1 / 5 | 20 % | NIV-02 : lecture pédagogique facultative des statistiques du mode Stat Mystère |
+| 2 | Gameplay, pédagogie, découverte | 2 / 5 | 40 % | NIV-02 (pédagogie Stat Mystère) et SER-01 (départage personnel des records Pixelisé) |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
 | 4 | Économie et rencontres | 0 / 8 | 0 % | 6 décisions de cadrage consignées le 05/11 : 4 accords de principe soumis aux tests, 1 simulation préalable, 1 sujet à rediscuter ; **aucune règle approuvée pour production** |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **9 / 43** | **20,9 %** | NIV-01 stationné exclu |
+| **Total** | | **10 / 43** | **23,3 %** | NIV-01 stationné exclu |
 
 ## DATA-02 — intégré après fusion de la PR #278
 
@@ -48,6 +48,14 @@
 - **Périmètre** : HTML/CSS + test Node de non-régression ; sans changement de tirage, règles, secret serveur, XP, sauvegardes, captures, Balls ou monnaie.
 - **Validation :** CI Node et navigateur/base requises sur le head exact avant fusion. L'appareil iPhone de Jade et le site de production restent non vérifiés.
 - **Avancement après fusion : 9/43 = 20,9 %**, prochaine tâche autonome **SER-01**. `BUG-MOB-01` reste en investigation réelle.
+
+## SER-01 — intégré après fusion de la PR #280
+
+- [PR #280](https://github.com/chebreub/Pokdle/pull/280) : records personnels Pixelisé départagés par **trouvés puis essais sur les Pokémon trouvés**, avec un champ de précision prospectif séparé du nombre trouvé historique. Séries 5/10/20 indépendantes ; pas d'attribution rétroactive d'essais.
+- **Protection multiappareil** : `guessSeriesBest` reste un objet fusionné par maxima au lieu de devenir 0 ; nouvelles références `guessSeriesPrecision.pixel` fusionnées par priorité au nombre trouvé, puis aux tentatives mesurées.
+- **Limite** : score des défis/leaderboards publics `pixel10` toujours fondé sur les trouvés ; aucun nombre d'essais fourni par le client n'est présenté comme vérifié par serveur. Les autres modes, XP, captures et Pokédollars ne changent pas.
+- **Validation :** tests Node et navigateur/base à vérifier sur le head final avant fusion ; recette Render/Safari réel non revendiquée. [Règles détaillées](qa/SER_01_PIXEL_RECORDS.md).
+- **Avancement après fusion : 10/43 = 23,3 %**, prochaine tâche autonome **MEDIA-01**. `BUG-MOB-01` reste à confirmer sur appareil réel.
 
 ## Journal GitHub vérifié
 
