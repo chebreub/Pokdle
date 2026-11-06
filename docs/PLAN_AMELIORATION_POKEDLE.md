@@ -2,9 +2,19 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi au 06/11/2026 : MOB-03, volets #285 et #287 fusionnés après CI complète verte ; action encore en cours, 13 actions intégrées.**
+> **Suivi au 06/11/2026 : MOB-03 clôturé techniquement, volets #285, #287 et #289 fusionnés ; 14 actions intégrées.**
 
-**Progression validée : 13 tâches terminées / 43 actives = 30,2 %.** Deux actions en cours (MOB-03 et BUG-MOB-01), 28 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression validée : 14 tâches terminées / 43 actives = 32,6 %.** Deux actions en cours (DEX-01 et BUG-MOB-01), 27 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+
+**DEX-01 a ensuite été engagé dans la [PR #290](https://github.com/chebreub/Pokdle/pull/290), encore ouverte et en validation CI.** Le total intégré reste **14/43** ; situation courante : **2 actions en cours** (DEX-01 et BUG-MOB-01), **27 non commencées**. Ne pas compter DEX-01 terminé avant sa fusion.
+
+## MOB-03 — clôture technique vérifiée le 6 novembre 2026
+
+[PR #289](https://github.com/chebreub/Pokdle/pull/289) fusionnée au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67`, après [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42237885834) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42237896376) sur `842484f479dd0ecc01e668281e7512d600a670ac`. Les trois volets (#285, #287, #289) sont intégrés. Le commit fusionné et son arbre ont été contrôlés sur `main`.
+
+Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur `mousedown`, sans envoyer au `pointerdown`. Build, 20 tests Node ciblés et parcours local Chromium/WebKit à 360/390/1366 px réussis ; la CI complète valide aussi le reste des parcours. [Détails et limites](qa/MOB_03_CONTROLS.md).
+
+**À la clôture de MOB-03 : 14/43 = 32,6 % ; 1 action en cours : BUG-MOB-01 ; 28 non commencées ; lot 0 : 4/7. Prochaine action unique : DEX-01.** Aucun clavier iPhone physique ni déploiement Render vérifié. BUG-MOB-01 (appareil de Jade) et MOB-04 (focus/scroll Safari réel) restent distincts et ouverts. NIV-01 reste stationné, exclu du total. Économie, captures et sauvegardes inchangées.
 
 ## À lire en premier à chaque reprise
 
@@ -53,7 +63,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [~] **BUG-MOB-01 · P0** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
 - [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [x] **DATA-01 · P0** : [dictionnaire de grain et couverture](qa/USAGE_EVENT_GRAIN.md) vérifié dans les sources (`trackUsage`, `recordMatchHistory`, `usage-metrics`, Party, dashboard) : distingue visites brutes, sessions navigateur, ouvertures, fins déclarées, commandes de manches et retours Daily. **Dates exactes de mise en production non disponibles** : méthode de lecture de la première observation conservée et limites des 90 jours documentées, **aucune date ni historique inventés**. Documentation uniquement ; pas de nouveau suivi individuel. Clôture du cadrage, pas vérification de dates de déploiement réelles.
-- [~] **MOB-03 · P1** : boutons du champ partagé (#285), chat mobile et célébrations différées (#287) intégrés et testés. Reste : commandes Party/Duel/Défi avec clavier ; recette physique distincte.
+- [x] **MOB-03 · P1** : clôture technique ; boutons du champ partagé (#285), chat/célébrations (#287), commandes Party/Duel/Défi (#289) intégrés après CI verte. Recette iPhone physique distincte ; voir [preuves](qa/MOB_03_CONTROLS.md).
 - [ ] **MOB-04 · P1** : contrôle de focus et scroll dans les jeux rapides, Safari réel.
 - [x] **PC-01 · P1** : [PR #283](https://github.com/chebreub/Pokdle/pull/283) (après fusion) : styles PC compacts à 1366×768 ; grille Course au Pokédex intégrale sans scroll de jeu, avec moteur de dimensionnement inchangé ; commandes et panneau secondaire du jeu classique visibles. Recette deux navigateurs sur plusieurs tailles et refus des doublons.
 - [x] **PC-02 · P1** : [PR #282](https://github.com/chebreub/Pokdle/pull/282) (après fusion) : clavier contextualisé Solo, Défi, Party et Duel ; flèches limitées aux suggestions visibles, Échap ferme la liste avant une modale, Entrée en Duel reliée à un seul gestionnaire, saisie IME/modificateurs protégés. Chats et autres champs non interceptés, sans modification des parties ou récompenses.
@@ -77,7 +87,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **NIV-01 · STATIONNÉ** : proposition initiale de « mes générations » dans Qui est-ce non motivée par un vrai retour ; **ne pas programmer à partir de la plaisanterie Kokiyas**.
 
 ### Lot 3 — Pokédex et collection
-- [ ] **DEX-01 · P1** : vu/découvert, déjà capturé, possédé actuellement clairement distingués.
+- [~] **DEX-01 · P1** : filtres, compteurs et fiches préparés ; historique serveur distinct des exemplaires possédés, échanges reçus exclus des captures personnelles. [Données, tests et limites](qa/DEX_01_STATES.md). CI et fusion requises avant clôture.
 - [ ] **DEX-02 · P1** : montrer les voies d'obtention vraies ; document actuel `docs/PLAN_RARETE_1025.md` = 852 espèces capturables, 173 non capturables maintenant.
 - [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.
@@ -111,7 +121,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
 4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
 
-**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : MOB-03** ; PC-01, PC-02, MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : DEX-01** ; MOB-03, PC-01, PC-02, MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
@@ -261,6 +271,8 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### Clôture PC-01 — 06/11/2026
 
 PR [#283](https://github.com/chebreub/Pokdle/pull/283) fusionnée, commit `e3e804de2c0cc0652280c464fd27c5eaeda69813`. CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42208624207) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42208628864) vertes sur le head `eca06a7fce06700a701ec8ac796cfa1a0b596222`. Placement des indices corrigé, résultat limité à 1 000 px, Course et doublons vérifiés ; détail dans l’état d’avancement. **13/43 = 30,2 %** ; prochaine action **MOB-03**. Render et iPhone réel non vérifiés ; BUG-MOB-01 reste ouvert.
+
+## Historique MOB-03 — états intermédiaires, remplacés par la clôture ci-dessus
 
 ## MOB-03 — premier correctif intégré, chantier encore en cours (06/11/2026)
 
