@@ -21,13 +21,13 @@ URL = "http://127.0.0.1:3194/"
 def wait_app(page):
     page.goto(URL, wait_until="domcontentloaded", timeout=45000)
     page.wait_for_function(
-        'typeof openPartyRoomMode === "function" && '
+        '() => typeof openPartyRoomMode === "function" && '
         'typeof startNormalGame === "function" && '
         'typeof POKEMON_LIST !== "undefined" && POKEMON_LIST.length > 1000',
         timeout=25000,
     )
     page.wait_for_function(
-        '!document.getElementById("app-splash") || '
+        '() => !document.getElementById("app-splash") || '
         'getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"',
         timeout=16000,
     )
@@ -133,15 +133,15 @@ def run_engine(playwright, engine, result):
         guest.locator("#party-join-code").fill(code)
         guest.locator('[data-action="partyJoinRoom"]').click()
         guest.locator("#party-joined").wait_for(state="visible")
-        host.wait_for_function("partyRoomState.room?.players?.length === 2")
+        host.wait_for_function("() => partyRoomState.room?.players?.length === 2")
 
         host.locator("#party-mode-dexrace").click()
-        host.wait_for_function('partyRoomState.room?.gameMode === "dexrace"')
+        host.wait_for_function('() => partyRoomState.room?.gameMode === "dexrace"')
         host.locator("#party-start-btn").click()
         for page in (host, guest):
             page.locator("#dex-race-arena").wait_for(state="visible")
             page.wait_for_function(
-                "document.getElementById('dex-race-board').children.length === 151 && "
+                "() => document.getElementById('dex-race-board').children.length === 151 && "
                 "Number(document.getElementById('dex-race-board').style.getPropertyValue('--race-cols')) > 0"
             )
 
