@@ -1,8 +1,8 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
 > **Après fusion de la PR #299 :** ECO-01 (simulation seule) documentée et intégrée sur la base de `main` `cf38d1c` ; [résultats et limites](qa/ECO_01_SIMULATION.md). DEX-01 à DEX-04 et MOB-03 restent clôturés. **Aucune règle économique ni seconde chance activée.**
-> **19 actions intégrées sur 43 = 44,2 %** après fusion de #299 ; **1 action en cours** (BUG-MOB-01) ; **23 non commencées** ; NIV-01 stationnée.
-> **Prochaine action autonome : ECO-02 (étude événement Drattak)** ; demander arbitrage séparé pour toute règle de production. Les variantes de la simulation ECO-01 sont toujours à décider ; iPhone réel distinct.
+> **19 actions intégrées sur 43 = 44,2 %** après fusion de #299 ; **2 actions en cours** (BUG-MOB-01 et ECO-02 en attente d'arbitrage) ; **22 non commencées** ; NIV-01 stationnée.
+> **Prochaine action autonome : ECO-07 (étude de préparation aux rencontres rares).** La [simulation ECO-02](qa/ECO_02_DRATTAK_EVENT_STUDY.md) existe ; aucune nouvelle règle Drattak autorisée, arbitrage séparé nécessaire. Les variantes ECO-01 restent à décider ; iPhone réel distinct.
 >
 > **Important :** le taux de progression mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
 
@@ -84,7 +84,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 ## 4. Point de reprise exact et sujets en attente
 
-**Prochaine action autonome : `ECO-02` — étude du caractère événementiel de Drattak, sans changement de règles avant validation.** ECO-01 a livré sa simulation [#299](https://github.com/chebreub/Pokdle/pull/299) et [rapport](qa/ECO_01_SIMULATION.md). La variante à retenir est non décidée. DEX-01 à DEX-04 et MOB-03 sont terminés.
+**Prochaine action autonome : `ECO-07` — étudier la préparation des rencontres prestigieuses sans modifier les conditions d'accès avant accord.** L'[étude ECO-02](qa/ECO_02_DRATTAK_EVENT_STUDY.md) compare sept variantes, reste en attente d'arbitrage et ne clôture pas l'action. La [simulation ECO-01](qa/ECO_01_SIMULATION.md) n'autorise pas la seconde chance. DEX-01 à DEX-04 et MOB-03 sont terminés.
 
 **PC-01 :** [PR #283](https://github.com/chebreub/Pokdle/pull/283) : CSS desktop plus compact sur 1366×768, arène Course au Pokédex sur un seul viewport, moteur de dimensionnement inchangé. Recette Chromium/WebKit locale sur deux vrais joueurs, avec 151 cases et refus de doublon ; ni Safari physique ni Render réel revendiqués.
 
@@ -114,7 +114,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 | Action | État de décision | Travail autorisé avant nouvelle validation |
 | --- | --- | --- |
 | **ECO-01** Expéditions légendaires | **Simulation livrée, arbitrage ouvert** | [Scénarios A à E et risques](qa/ECO_01_SIMULATION.md), aucune activation |
-| **ECO-02** Drattak | **Accord de principe, événement à rediscuter** | Concevoir des variantes d'événement spécial, éventuellement aléatoire ; fréquence, reprise, fuite et gains non décidés |
+| **ECO-02** Drattak | **Simulation rédigée, arbitrage ouvert** | [Étude de 7 variantes](qa/ECO_02_DRATTAK_EVENT_STUDY.md), aucun changement du jeu avant accord explicite |
 | **ECO-07** Préparation des rencontres rares | **Accord de principe à tester** | Étudier au moins 3 Balls, chances affichées, annulation sans perte de piste |
 | **ECO-08** Rencontre spéciale conservée | **Accord de principe à tester** | Étudier 72 h, sans nouveau tirage ni Balls gratuites ; ne pas l'appliquer d'office à Drattak |
 | **ECO-03** Récompenses 30/60/90 ₽ | **Non validé, à rediscuter** | Ne pas changer le barème |
