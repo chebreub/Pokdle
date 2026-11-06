@@ -34,6 +34,7 @@ const DEFAULT_PROFILE = {
   nickname: "",
   favoritePokemonId: null,
   discoveries: {},
+  pokedexTrackedTargets: [],
   xp: 0,
   dailyQuests: null,
   dailyQuestsDate: null,
