@@ -61,7 +61,7 @@ test('a cry outside the Cry game follows « Cris des Pokémon » and the volume'
   run.api.playPokemonCry({ id: 25 });
   assert.deepEqual(run.played, [], 'cries turned off: silence, even from the trainer card or the Pokédex');
   // The Cry game is the one place a cry always plays, at the chosen volume.
-  assert.match(between(read('src/script.03.minijeux.js'), 'function playCrySound()', 'let __draftBattleCryAudio'), /cryAudio\.volume = typeof appSoundVolume === "function" \? appSoundVolume\(\) : 1;/);
+  assert.match(between(read('src/script.03.minijeux.js'), 'function playCrySound()', 'let __draftBattleCryAudio'), /audio\.volume = typeof appSoundVolume === "function" \? appSoundVolume\(\) : 1;/);
 });
 
 test('the sound effects are played at the chosen volume', () => {
