@@ -92,6 +92,12 @@ function selectChallengeAC(pokemon) {
   document.getElementById("challenge-name").textContent = pokemon.name;
   document.getElementById("challenge-preview").classList.remove("hidden");
   document.getElementById("challenge-copied").classList.add("hidden");
+  // Selecting a target is deliberate: dismiss the phone keyboard to expose
+  // the existing copy-link action. Typing itself never scrolls the page.
+  if (window.matchMedia?.('(max-width: 640px)').matches) {
+    document.getElementById("challenge-input").blur();
+    document.getElementById("challenge-preview").scrollIntoView({ block: 'nearest', behavior: 'instant' });
+  }
 }
 
 function copyChallengeLink() {
