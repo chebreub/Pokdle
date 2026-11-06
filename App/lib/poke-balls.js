@@ -221,6 +221,11 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
         const n = Number((await c.query(`SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND day=$2 AND NOT ${BONUS_SQL}`, [who.key, g.day])).rows[0].n);
         if (n >= DAILY_CAP) continue;
       }
+      // ECO-04: a guest may have claimed the same chest on another Paris day.
+      // Do not import a duplicate chest slot already held by the account.
+      if (g.source.startsWith("exp:") &&
+          (await c.query("SELECT 1 FROM ball_gains WHERE identity=$1 AND source=$2 LIMIT 1",
+            [who.key, g.source])).rows.length) continue;
       const row = (await c.query(`INSERT INTO ball_gains(identity,day,source,ball,account_id,created_at)
         VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING ball`,
         [who.key,g.day,g.source,g.ball,who.accountId,g.created_at])).rows[0];
@@ -518,8 +523,9 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
         if (row) added.push(row);
       }
     }
-    // A lost HTTP response after a committed claim should be harmless on retry.
-    if (!added.length && !st.chests.some((chest) => chest.claimed)) throw fail("no_chest");
+    // Preserve the existing "no_chest" response on replay. The ledger is
+    // unchanged and the client can reload the current state safely.
+    if (!added.length) throw fail("no_chest");
     return { added };
   }
   async function meetLegend(c, who, day) {
