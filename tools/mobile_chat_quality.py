@@ -3,6 +3,7 @@
 The viewport override exercises keyboard resize/pan handling; it is not a real
 OS keyboard or a physical iPhone test. No production service is used.
 """
+from contextlib import contextmanager
 import json
 import os
 import subprocess
@@ -108,6 +109,7 @@ def case(browser, engine, width, height):
         return evidence
     except Exception:
         host.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'))
+        guest.screenshot(path=str(OUT/f'{engine}-{width}-guest-failure.png'))
         raise
     finally:
         for c in contexts: c.close()
@@ -163,10 +165,13 @@ def celebration_case(browser, engine):
         context.close()
 
 
-def main():
-    OUT.mkdir(parents=True,exist_ok=True)
-    results=[]
-    with (OUT/'server.log').open('w') as log:
+@contextmanager
+def local_server(engine):
+    # Chromium and WebKit are independent player populations. A shared server
+    # would count 14 room joins/creates on one IP inside the 30s production
+    # anti-abuse window (10 allowed), making the second engine fail at setup.
+    # Restart the LOCAL server between engines; keep every rate limit intact.
+    with (OUT/f'{engine}-server.log').open('w') as log:
         server=subprocess.Popen(['node','server.js'],cwd=ROOT/'App',stdout=log,stderr=subprocess.STDOUT,
             env=dict(os.environ,PORT='3195',DATABASE_URL='',DISCORD_CLIENT_ID='',DISCORD_CLIENT_SECRET=''))
         try:
@@ -176,8 +181,18 @@ def main():
                     if server.poll() is not None: raise RuntimeError('QA server exited')
                     time.sleep(.25)
             else: raise RuntimeError('QA server did not start')
-            with sync_playwright() as pw:
-                for engine in os.getenv('QA_BROWSERS','chromium,webkit').split(','):
+            yield
+        finally:
+            server.terminate();server.wait(timeout=10)
+
+
+def main():
+    OUT.mkdir(parents=True,exist_ok=True)
+    results=[]
+    try:
+        with sync_playwright() as pw:
+            for engine in os.getenv('QA_BROWSERS','chromium,webkit').split(','):
+                with local_server(engine):
                     browser=getattr(pw,engine).launch()
                     try:
                         for width,height in [(360,740),(390,844),(1366,768)]:
@@ -186,9 +201,8 @@ def main():
                         celebration_case(browser,engine)
                         results.append({'engine':engine,'celebrations':True,'ok':True})
                     finally: browser.close()
-        finally:
-            server.terminate();server.wait(timeout=10)
-            (OUT/'report.json').write_text(json.dumps(results,indent=2))
+    finally:
+        (OUT/'report.json').write_text(json.dumps(results,indent=2))
     print(json.dumps([dict((k,v) for k,v in r.items() if k!='targets') for r in results]))
 
 if __name__=='__main__': main()
