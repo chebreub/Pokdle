@@ -2,7 +2,7 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi au 06/11/2026 : PC-01 (#283) fusionnée au commit `e3e804de2c0cc0652280c464fd27c5eaeda69813` après CI complète verte ; 13 actions intégrées.**
+> **Suivi au 06/11/2026 : MOB-03, volets #285 et #287 fusionnés après CI complète verte ; action encore en cours, 13 actions intégrées.**
 
 **Progression validée : 13 tâches terminées / 43 actives = 30,2 %.** Deux actions en cours (MOB-03 et BUG-MOB-01), 28 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
@@ -53,7 +53,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [~] **BUG-MOB-01 · P0** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
 - [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [x] **DATA-01 · P0** : [dictionnaire de grain et couverture](qa/USAGE_EVENT_GRAIN.md) vérifié dans les sources (`trackUsage`, `recordMatchHistory`, `usage-metrics`, Party, dashboard) : distingue visites brutes, sessions navigateur, ouvertures, fins déclarées, commandes de manches et retours Daily. **Dates exactes de mise en production non disponibles** : méthode de lecture de la première observation conservée et limites des 90 jours documentées, **aucune date ni historique inventés**. Documentation uniquement ; pas de nouveau suivi individuel. Clôture du cadrage, pas vérification de dates de déploiement réelles.
-- [~] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.
+- [~] **MOB-03 · P1** : boutons du champ partagé (#285), chat mobile et célébrations différées (#287) intégrés et testés. Reste : commandes Party/Duel/Défi avec clavier ; recette physique distincte.
 - [ ] **MOB-04 · P1** : contrôle de focus et scroll dans les jeux rapides, Safari réel.
 - [x] **PC-01 · P1** : [PR #283](https://github.com/chebreub/Pokdle/pull/283) (après fusion) : styles PC compacts à 1366×768 ; grille Course au Pokédex intégrale sans scroll de jeu, avec moteur de dimensionnement inchangé ; commandes et panneau secondaire du jeu classique visibles. Recette deux navigateurs sur plusieurs tailles et refus des doublons.
 - [x] **PC-02 · P1** : [PR #282](https://github.com/chebreub/Pokdle/pull/282) (après fusion) : clavier contextualisé Solo, Défi, Party et Duel ; flèches limitées aux suggestions visibles, Échap ferme la liste avant une modale, Entrée en Duel reliée à un seul gestionnaire, saisie IME/modificateurs protégés. Chats et autres champs non interceptés, sans modification des parties ou récompenses.
@@ -268,11 +268,19 @@ Le calcul de hauteur des suggestions du champ partagé réserve désormais la ra
 
 PR [#285](https://github.com/chebreub/Pokdle/pull/285) fusionnée au commit `ab8f0f4b4904cbd68c03fcc2d00bcf127e141812`. CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42212571024) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42212616154) vertes sur `953651f4`. Vérification Chromium locale avec viewport visuel simulé à 400 px : bouton Deviner à 375 px, accessible. Pas de recette clavier iPhone physique ni Render. Prochaine action : poursuivre MOB-03 sur les autres commandes et les superpositions chat/récompenses. Total inchangé : **13/43**, désormais **2 actions en cours** (MOB-03 et BUG-MOB-01), **28 non commencées**.
 
-## MOB-03 — chat mobile et célébrations (06/11/2026, validation de PR en attente)
+## MOB-03 — chat mobile et célébrations (06/11/2026, PR #287 fusionnée)
 
 Deuxième volet depuis `main` `2994fd5` : le chat Party suit la hauteur et le déplacement du viewport visuel, avec commandes conservées et liste de messages réductible. Son champ explicite `type="text"` réactive la détection existante du clavier et le retrait de la barre mobile. Les célébrations attendent un chat fermé et l'absence de clavier mobile ; la file et les gains restent inchangés.
 
 - Reproduction Chromium avant correction : pour 400 px visibles, le bas du bouton Envoyer était à 831 px, clavier non détecté. Après build : 387 px et clavier détecté.
 - Tests locaux : 20 tests Node chat/MOB-03/célébrations et 8 régressions clavier/Zoom réussis ; Chromium à 360/390/1366 px avec deux joueurs locaux, envoi/réaction réels, conservation du brouillon, fermeture, reprise ordonnée des célébrations et vérification des cibles par coordonnées. Viewports visuels simulés 260/320/400 px, déplacement de 75 px ; CSS servi depuis `dist/`.
-- `tools/mobile_chat_quality.py` ajouté à la CI complète Chromium/WebKit. WebKit local ne démarre pas faute de bibliothèques système : validation attendue dans GitHub, pas déclarée réussie localement. Aucun test Render ni iPhone physique.
+- `tools/mobile_chat_quality.py` ajouté à la CI complète Chromium/WebKit. WebKit local ne démarre pas faute de bibliothèques système : validation GitHub réussie sous Chromium/WebKit, sans la déclarer réussie localement. Aucun test Render ni iPhone physique.
 - Aucun changement de règle, de gain, de capture ou de sauvegarde. **MOB-03 reste en cours ; 13/43 = 30,2 %**. Prochaine vérification ciblée : commandes de proposition Party/Duel/Défi avec clavier ; `BUG-MOB-01` attend toujours l'appareil concerné.
+
+### Validation et livraison du deuxième volet MOB-03
+
+PR [#287](https://github.com/chebreub/Pokdle/pull/287) fusionnée au commit `cd318937864d3c3b6e6dcc8096a09604a3890800` après [CI Node](https://github.com/chebreub/Pokdle/actions/runs/42220094265) et [CI navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42220123139) vertes sur `817f15ef7d9e2ae2bf9d12c9cf842a2afd12480b`. **868 tests Node réussis**, 64 tests ignorés dans le job sans base ; **78/78 PostgreSQL**, **410/410 contrôles généraux**. Chat mobile/PC et file des célébrations validés sous **Chromium et WebKit**, 360/390/1366 px. PC-01, Course au Pokédex, Party et Petit Bac restent verts. Captures finales mobile WebKit et PC Chromium revues ; artefact `revision.txt` = merge candidat `76b8ffbdb048d120c4f5339ff1f5bada67c35e84`, arbre identique au code fusionné.
+
+Le premier run a révélé un défaut d'isolation du nouveau test : ses deux navigateurs partageaient une adresse IP et dépassaient les 10 créations/entrées de salon en 30 s. Reproduit localement ; chaque navigateur dispose désormais de son propre serveur **local**. Aucun seuil serveur ni assertion fonctionnelle n'a été assoupli. La dernière CI complète valide cette correction du scénario.
+
+**MOB-03 reste en cours**, progression **13/43 = 30,2 %**, deux actions en cours et 28 non commencées. **Prochaine étape : commandes de proposition Party/Duel/Défi avec clavier**, en conservant les confirmations, le contexte de partie et l'absence de saut à chaque lettre. Le clavier est simulé via `visualViewport` ; aucun déploiement Render ni iPhone physique vérifié. `BUG-MOB-01` reste distinct et ouvert.
