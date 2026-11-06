@@ -2,11 +2,11 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi au 06/11/2026 : MOB-03 clôturé techniquement, volets #285, #287 et #289 fusionnés ; 14 actions intégrées.**
+> **Suivi au 06/11/2026 : DEX-01 (#290) intégré après MOB-03 ; 15 actions intégrées.**
 
-**Progression validée : 14 tâches terminées / 43 actives = 32,6 %.** Deux actions en cours (DEX-01 et BUG-MOB-01), 27 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression validée : 15 tâches terminées / 43 actives = 34,9 %.** Une action en cours (BUG-MOB-01), 27 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
-**DEX-01 a ensuite été engagé dans la [PR #290](https://github.com/chebreub/Pokdle/pull/290), encore ouverte et en validation CI.** Le total intégré reste **14/43** ; situation courante : **2 actions en cours** (DEX-01 et BUG-MOB-01), **27 non commencées**. Ne pas compter DEX-01 terminé avant sa fusion.
+**DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
 ## MOB-03 — clôture technique vérifiée le 6 novembre 2026
 
@@ -38,7 +38,11 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 - Un geste iPhone est facultatif et ne remplace jamais les boutons accessibles, ni ne valide une dépense, une fuite, un abandon ou un relâchement caché.
 - On vise un **partage lié à une activité** (Dessine-le, défi comparable, collection), pas des sollicitations répétitives.
 
-## Prochaine action (une seule prioritaire)
+## Prochaine action autonome de développement
+
+**DEX-02 — afficher les voies d'obtention exactes.** Confronter `docs/PLAN_RARETE_1025.md` aux routes serveur actuelles, distinguer une simple découverte, une capture réellement disponible et une voie absente. Les 852 espèces capturables et 173 non capturables sont à confirmer contre le code ; ne changer ni économie, ni probabilités, ni expéditions. `BUG-MOB-01` reste en attente d'une recette physique, distincte et non bloquante.
+
+### Incident tactile distinct — suivi ouvert
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
@@ -87,7 +91,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **NIV-01 · STATIONNÉ** : proposition initiale de « mes générations » dans Qui est-ce non motivée par un vrai retour ; **ne pas programmer à partir de la plaisanterie Kokiyas**.
 
 ### Lot 3 — Pokédex et collection
-- [~] **DEX-01 · P1** : filtres, compteurs et fiches préparés ; historique serveur distinct des exemplaires possédés, échanges reçus exclus des captures personnelles. [Données, tests et limites](qa/DEX_01_STATES.md). CI et fusion requises avant clôture.
+- [x] **DEX-01 · P1** : trois états distincts dans filtres, compteurs et fiches ; historique personnel consulté en lecture seule, échange reçu non présenté comme capture et capture cédée préservée. [PR #290](https://github.com/chebreub/Pokdle/pull/290) ; [tests et limites](qa/DEX_01_STATES.md).
 - [ ] **DEX-02 · P1** : montrer les voies d'obtention vraies ; document actuel `docs/PLAN_RARETE_1025.md` = 852 espèces capturables, 173 non capturables maintenant.
 - [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.
