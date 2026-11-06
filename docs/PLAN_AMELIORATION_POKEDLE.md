@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression après intégration de MEDIA-01 : 11 tâches terminées / 43 actives = 25,6 %.** Une investigation en cours (BUG-MOB-01), 31 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression après fusion de PC-02 : 12 tâches terminées / 43 actives = 27,9 %.** Une investigation en cours (BUG-MOB-01), 30 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : PC-02**, raccourcis clavier contextuels sur ordinateur sans intercepter le chat ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : PC-01**, mise en page desktop 1366×768 et grille Course au Pokédex, sans scroll de jeu ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non confirmée sur le téléphone réel** ; l'interception par un toast transparent a été corrigée dans #271, mais le retour de Jade reste à recueillir.
 
@@ -56,7 +56,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.
 - [ ] **MOB-04 · P1** : contrôle de focus et scroll dans les jeux rapides, Safari réel.
 - [ ] **PC-01 · P1** : jeu et panneau secondaire à 1366×768 ; Course au Pokédex sur une grille desktop sans scroll de jeu.
-- [ ] **PC-02 · P1** : Entrée, flèches, Échap dans le contexte du jeu, sans intercepter les messages du chat.
+- [x] **PC-02 · P1** : [PR #282](https://github.com/chebreub/Pokdle/pull/282) (après fusion) : clavier contextualisé Solo, Défi, Party et Duel ; flèches limitées aux suggestions visibles, Échap ferme la liste avant une modale, Entrée en Duel reliée à un seul gestionnaire, saisie IME/modificateurs protégés. Chats et autres champs non interceptés, sans modification des parties ou récompenses.
 
 ### Lot 1 — Logique, reprise, données
 - [x] **LOG-01 · P1** : choix 5/10/20 sans réinitialisation si valeur identique ; confirmation et conservation de l'état/préférence si changement refusé. PR [#261](https://github.com/chebreub/Pokdle/pull/261), **CI Node et navigateurs vertes**, fusionnée au commit `646d83c`.
@@ -111,7 +111,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
 4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
 
-**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : PC-02** ; MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : PC-01** ; PC-02, MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
@@ -159,6 +159,14 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - Secret toujours côté serveur pour les parties vérifiées, URL opaque inchangée ; **aucune modification** des essais, scores, séries, XP, Balls, monnaie, taux, récompenses ou transactions.
 - **Validation :** tests Node dédiés et vérifications navigateur/base exigés sur le même head avant fusion ; pas de recette Safari réel / Render revendiquée. [Procédure et limites](qa/MEDIA_01_CRY_PLAYBACK.md).
 - **Progression après fusion : 11/43 = 25,6 %** ; prochaine action autonome **PC-02**, raccourcis clavier PC dépendant du contexte de jeu. `BUG-MOB-01` demeure en attente de reproduction réelle.
+
+### PC-02 — interactions clavier contextuelles (PR #282, après fusion)
+
+- **Solo, Défi ami, Party, Duel** : flèches haut/bas ne capturent le clavier qu'avec les suggestions visibles ; Entrée valide une sélection active ou effectue l'action normale une seule fois ; Échap referme d'abord la liste, sans fermeture de modale inattendue.
+- **Duel** : retrait d'un deuxième gestionnaire d'Entrée qui pouvait soumettre deux fois la même proposition. Modificateurs et composition IME ignorés. Aucun raccourci global dans les chats, formulaires ou autres modes.
+- **Périmètre** : JavaScript des contrôles et tests Node, aucune modification de la partie, des données sauvegardées, du serveur, de l'économie, de la capture, des Pokédollars ou des Pokéballs. Les contrôles déjà fonctionnels d'autres modes restent en place.
+- **Validation** : tests Node dédiés puis CI Node et navigateur/base sur le head exact avant fusion ; pas de recette iPhone/Safari réelle ni de test manuel Render revendiqué.
+- **Après fusion : 12/43 = 27,9 %** ; prochaine action autonome **PC-01**. `BUG-MOB-01` reste ouvert sans confirmation sur appareil réel.
 
 ## Audits détaillés et documents de reprise
 
