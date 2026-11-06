@@ -123,10 +123,12 @@ test('PostgreSQL: rush keeps a server deadline across reloads, rejects extra tim
  const ended=await answer(service,me,s,correctHL(left)==='higher'?'lower':'higher');assert.deepEqual(ended.coinsAdded,[]);assert.equal(ended.coins.balance,90);
  // Returning after time ran out settles the previous run; it does not restart its timer.
  const late=who('late');s=(await start(service,late,'higher-lower-rush')).arcade;now=new Date(s.endsAt+1);
- const resumed=await start(service,late,'higher-lower-rush');assert.equal(resumed.arcade.phase,'over');assert.equal(resumed.coins.balance,30);
+  const resumed=await start(service,late,'higher-lower-rush');assert.equal(resumed.arcade.phase,'over');assert.equal(resumed.coins.balance,0,'untouched run is not rewarded');
+  assert.equal(resumed.gains.some(g=>g.source==='mode:higherlower'),false,'no Ball without any valid answer');
  // Guests may earn a Ball, but no currency.
  const guest={key:'guest:hl',guestKey:'guest:hl',accountId:null};s=(await start(service,guest,'higher-lower-rush')).arcade;now=new Date(s.endsAt);
- const g=await service.arcadeFinish(guest,body(s));assert.equal(g.coins.balance,0);assert.ok(g.added.some(x=>x.source==='mode:higherlower'));
+  const g=await service.arcadeFinish(guest,body(s));assert.equal(g.coins.balance,0);
+  assert.equal(g.added.some(x=>x.source==='mode:higherlower'),false,'guest cannot passively earn a Ball');
 }));
 
 test('PostgreSQL + HTTP: finish is account-bound, JSON-only and cannot end a rush early',opts,()=>withDb(async db=>{
@@ -141,6 +143,8 @@ test('PostgreSQL + HTTP: finish is account-bound, JSON-only and cannot end a rus
   assert.equal((await post('/api/arcade/finish',{...body(s),actionScope:scope})).error,'round_wait');
   user={id:'other'};assert.equal((await post('/api/arcade/finish',{...body(s),actionScope:scope})).error,'account_changed');
   user={id:'http-hl'};now=new Date(s.endsAt);
-  const done=await post('/api/arcade/finish',{...body(s),actionScope:scope});assert.equal(done.arcade.phase,'over');assert.equal(done.coins.balance,30);
+    const done=await post('/api/arcade/finish',{...body(s),actionScope:scope});assert.equal(done.arcade.phase,'over');
+    assert.equal(done.coins.balance,0,'no coins on no-answer timeout');
+    assert.equal(done.gains.some(x=>x.source==='mode:higherlower'),false);
  }finally{await new Promise(r=>server.close(r));}
 }));
