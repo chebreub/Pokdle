@@ -67,12 +67,15 @@ test("MEDIA-01: autoplay rejection offers replay, changes no round state or reso
   assert.match(f.status(),/navigateur bloque la lecture audio/);
   assert.match(f.status(),/aucun essai/);
   assert.equal(f.label(),"Réessayer le cri");
+  assert.equal(f.elements.get("cry-leave-btn").classList.contains("hidden"),false,
+    "a player with broken audio can exit without declaring a defeat");
   assert.equal(f.button().disabled,false);
   assert.equal(f.timers.size,0);
   assert.equal(f.snapshot(),before);
   f.ctx.playCrySound();await tick();
   assert.equal(f.audios.length,2,"failed audio must be recreated");
   assert.equal(f.status(),"Écoute bien…");
+  assert.equal(f.elements.get("cry-leave-btn").classList.contains("hidden"),true);
   assert.equal(f.snapshot(),before);
   assert.equal(f.audios[1].volume,0.4,"existing sound-volume preference preserved");
 });
@@ -183,6 +186,24 @@ test("MEDIA-01: starting another Cry series round invalidates old sound even wit
   const nextStatus=old.status();
   lateError();
   assert.equal(old.status(),nextStatus);
+});
+
+test("MEDIA-01: a broken cry URL can be left without a counted loss",()=>{
+  const f=fixture(),before=f.snapshot();
+  f.ctx.getPokemonCryUrl=()=>{throw new Error("missing species cry");};
+  f.ctx.playCrySound();
+  assert.equal(f.audios.length,0);
+  assert.match(f.status(),/lien du cri est indisponible/);
+  assert.equal(f.elements.get("cry-leave-btn").classList.contains("hidden"),false);
+  assert.equal(f.snapshot(),before);
+  const html=fs.readFileSync(path.join(__dirname,"../index.html"),"utf8");
+  assert.match(html,/id="cry-leave-btn"[^>]*data-action="goToConfig"/);
+  const navigation=fs.readFileSync(path.join(__dirname,"../src/script.02.statclash.js"),"utf8");
+  const a=navigation.indexOf("function goToConfig()"),b=navigation.indexOf("\nfunction scrollToHomeCategory(",a);
+  assert.ok(a>0 && b>a);
+  const leaveCode=navigation.slice(a,b);
+  assert.match(leaveCode,/stopCrySound\(\)/);
+  assert.doesNotMatch(leaveCode,/verifiedGuessAbandon|surrenderGame\(|recordMatchHistory|finishPartyRound/);
 });
 
 test("MEDIA-01: only the media state changes; existing answer and abandonment paths remain authoritative",()=>{
