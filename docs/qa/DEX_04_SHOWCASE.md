@@ -18,4 +18,4 @@
 
 - `App/test/pokedex-showcase.test.js` : sélection 6 maximum, rejet du septième, absence de partage automatique, sélection liée à la possession, cession avant partage, partage sur clic avec nouvelle réponse API, échec réseau, objectifs, validation des profils et synchronisation.
 - `tools/pokedex_showcase_quality.py` : Chromium et WebKit, largeur mobile 390 px et PC 1366 px, vrais clics, rechargement, contrôle des six slots, exclusion d'un Pokémon cédé juste avant partage, absence de débordement.
-- Validation CI Node et navigateur/base complète requise avant fusion. Pas de revendication de test sur iPhone physique, sur le téléphone de Jade ou sur Render.
+- [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42257529258) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42257529272), sur le head `61e4b5aedd5def44ac94d934749529048dddb0d1` ; [PR #296](https://github.com/chebreub/Pokdle/pull/296) fusionnée au commit `b1704ffbd0b7a5be2406b4476f86c28ecc082428`. Pas de revendication de test sur iPhone physique, sur le téléphone de Jade ou sur Render.
