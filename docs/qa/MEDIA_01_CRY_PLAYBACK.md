@@ -29,6 +29,7 @@
 ## Recette automatisée exigée
 
 - Tests Node `App/test/cry-retry-media-01.test.js` : refus autoplay, ressource `error`, délai, coupure de lecture, URL opaque, lien invalide, sortie sans défaite et retours tardifs, plus maintien des compteurs.
+- **Incident transversal de CI découvert pendant le lot :** sur l'ancien layout de Stat Mystère, à **360 px** la ligne de l'aide introduite par NIV-02 pouvait se replier et pousser la première validation sous la navigation mobile. Correctif CSS ciblé (<380 px, étiquette visuelle « Aide » et intitulé accessible complet préservé), sans modification de la grille ni des essais. Test `App/test/mobile-mystery-entry-360.test.js` et contrôle visuel `mobile-guess-entry` de la suite navigateur. Cette réparation de la CI ne clôture pas `BUG-MOB-01` (téléphone réel).
 - Test existant du volume `App/test/sound-volume-2026-10-31.test.js` actualisé uniquement pour la variable locale du lecteur.
 - Vérifications du shell d'identification, de l'autorité serveur, des parcours navigateurs Chromium/WebKit et des autres modes en CI.
 - Validation Node et navigateur sur **le même commit exact** avant toute fusion.
