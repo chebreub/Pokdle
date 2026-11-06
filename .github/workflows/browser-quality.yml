@@ -139,6 +139,9 @@ jobs:
       - name: Verify Party mobile touch actions
         if: env.QA_FULL == 'true'
         run: python tools/party_mobile_quality.py
+      - name: Verify mobile chat controls and queued celebrations
+        if: env.QA_FULL == 'true'
+        run: python tools/mobile_chat_quality.py
       - name: Diagnose solo mobile touch hit targets (Qui est-ce)
         if: env.QA_FULL == 'true'
         run: python tools/mobile_touch_quality.py

@@ -127,3 +127,32 @@ test('the first achievement check of a page load unlocks quietly; later ones are
   c.evaluateAchievements();
   assert.deepEqual(celebrated, [['b']]);
 });
+
+test('mobile keyboard keeps celebrations queued, then resumes without losing their order', () => {
+  const f = presentationFixture();
+  let keyboard = true;
+  f.c.document.body = { classList: { contains: name => name === 'mobile-keyboard-open' && keyboard } };
+  f.c.celebrateLevelUp(9, 10);
+  f.c.celebrateAchievements([{ title: 'Premier succès', desc: 'Bravo' }]);
+  f.c.runCelebrations();
+  assert.equal(f.shown.length, 0);
+  assert.equal(f.c.celebrationQueue.length, 2);
+  keyboard = false;
+  f.c.runCelebrations();
+  f.done.shift()();
+  f.c.runCelebrations();
+  assert.deepEqual(f.shown.map(s => s.kind), ['level', 'achievement']);
+});
+
+test('an open Party chat delays celebrations even after its keyboard closes', () => {
+  const f = presentationFixture();
+  let chatOpen = true;
+  f.c.document.querySelector = selector => chatOpen && selector.includes('#party-chat:not(.hidden)') ? {} : null;
+  f.c.celebrateLevelUp(9, 10);
+  f.c.runCelebrations();
+  assert.equal(f.shown.length, 0);
+  assert.equal(f.c.celebrationQueue.length, 1);
+  chatOpen = false;
+  f.c.runCelebrations();
+  assert.deepEqual(f.shown.map(s => s.kind), ['level']);
+});

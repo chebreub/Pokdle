@@ -74,10 +74,11 @@ function queueCelebration(item) {
 
 function celebrationOverlayOpen() {
   // These existing dialogs intentionally own the screen. Do not put a level-up
-  // backdrop above a capture, gift, wild encounter, visible XP/result toast or modal.
+  // backdrop above a capture, gift, wild encounter, chat or mobile keyboard.
+  if (document.body?.classList.contains('mobile-keyboard-open')) return true;
   return Boolean(document.querySelector(
     ".fx-catch, .fx-reveal, #wild-scene, #overlay-modal:not(.hidden), #daily-quests-overlay, " +
-    ".gamefeel-layer.is-visible, .xp-toast.is-visible, .lvc-back, .achc"
+    ".gamefeel-layer.is-visible, .xp-toast.is-visible, #party-chat:not(.hidden), .lvc-back, .achc"
   ));
 }
 
