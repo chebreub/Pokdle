@@ -167,12 +167,19 @@ function fitMobileGuessSearch() {
   if (nav && !document.body.classList.contains("mobile-keyboard-open") && nav.getBoundingClientRect().top > top) bottom = Math.min(bottom, nav.getBoundingClientRect().top - 8);
   const rowHeight = 56;
   const field = input.getBoundingClientRect();
-  const needed = field.bottom + 8 + rowHeight * 5 + 2;
+  // Reserve the action row below the in-flow suggestions, including its gap
+  // and the bar's bottom padding. Do not measure the whole bar: its current
+  // list height would feed back into the next calculation while typing.
+  const actions = ["btn-submit", "btn-surrender"].map(id => document.getElementById(id));
+  const actionHeight = Math.max(0, ...actions.map(el => el && getComputedStyle(el).display !== "none" ? el.getBoundingClientRect().height : 0));
+  const barStyle = getComputedStyle(bar);
+  const actionSpace = actionHeight + (parseFloat(barStyle.rowGap) || 0) + (parseFloat(barStyle.paddingBottom) || 0) + 2;
+  const needed = field.bottom + 8 + rowHeight * 5 + 2 + actionSpace;
   const delta = field.top < top ? field.top - top : needed > bottom ? Math.min(field.top - top, needed - bottom) : 0;
   if (Math.abs(delta) > 1) window.scrollBy({ top: Math.round(delta), behavior: "instant" });
   // The list fills the room between the field and the bottom of the visible area.
-  const room = bottom - (field.bottom - delta) - 8;
-  list.style.setProperty("--guess-list-height", Math.max(rowHeight, Math.min(rowHeight * 5 + 2, room)) + "px");
+  const room = bottom - (field.bottom - delta) - 8 - actionSpace;
+  list.style.setProperty("--guess-list-height", Math.max(0, Math.min(rowHeight * 5 + 2, room)) + "px");
 }
 function scheduleMobileGuessSearch() {
   if (mobileGuessSearchFrame) cancelAnimationFrame(mobileGuessSearchFrame);

@@ -261,3 +261,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### Clôture PC-01 — 06/11/2026
 
 PR [#283](https://github.com/chebreub/Pokdle/pull/283) fusionnée, commit `e3e804de2c0cc0652280c464fd27c5eaeda69813`. CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42208624207) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42208628864) vertes sur le head `eca06a7fce06700a701ec8ac796cfa1a0b596222`. Placement des indices corrigé, résultat limité à 1 000 px, Course et doublons vérifiés ; détail dans l’état d’avancement. **13/43 = 30,2 %** ; prochaine action **MOB-03**. Render et iPhone réel non vérifiés ; BUG-MOB-01 reste ouvert.
+
+## MOB-03 — premier correctif en cours (06/11/2026)
+
+Le calcul de hauteur des suggestions du champ partagé réserve désormais la rangée des boutons Deviner/Abandonner, son espacement et la marge basse. Il conserve le dimensionnement stable à la saisie. Tests unitaires : quatre hauteurs visibles (260/320/400/600 px), boutons dans le viewport et absence de scroll répété ; régression Zoom inchangée. Build réussi. Cette première correction ne clôture pas MOB-03 : interactions chat/récompenses et autres commandes restent à vérifier. BUG-MOB-01 et la recette iPhone physique restent distincts. Progression intégrée inchangée : 13/43.
