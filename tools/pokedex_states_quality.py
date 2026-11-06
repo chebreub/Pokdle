@@ -19,7 +19,7 @@ def case(browser, engine, width):
         qa.ready(page,'!document.getElementById("app-splash") || getComputedStyle(document.getElementById("app-splash")).pointerEvents === "none"')
         page.evaluate('''() => {
           closeOverlayModal();
-          playerProfile.discoveries=Object.fromEntries([10,25,150,373,380].map(id=>[id,{source:id===150?'mission':'game',mode:'classic',at:1}]));
+          playerProfile.discoveries=Object.fromEntries([10,25,150,373,380].map(id=>[id,{source:id===25?'capture':id===150?'mission':'game',mode:id===25?'capture':'classic',at:1}]));
           window.qaDiscoveries=JSON.stringify(playerProfile.discoveries);
           openPokedexCollection();
         }''')
@@ -34,6 +34,8 @@ def case(browser, engine, width):
         qa.ready(page,'!!document.querySelector(".pokedex-personal-record")')
         record=page.locator('.pokedex-personal-record')
         assert 'Aucune capture enregistrée' in record.inner_text() and '2 exemplaires' in record.inner_text()
+        assert 'Entrée de collection' in record.inner_text()
+        assert 'Hautes herbes' not in record.inner_text() and 'Pokémon capturé' not in record.inner_text()
         page.screenshot(path=str(OUT/f'{engine}-{width}-received.png'))
         if width<640: page.locator('.pokedex-back-to-list').click()
         page.locator('[data-collection-filter="caught"]').click()
