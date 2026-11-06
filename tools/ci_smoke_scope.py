@@ -62,6 +62,19 @@ def classify(paths: list[str]) -> tuple[str, bool]:
     if all(p.startswith(DAILY_PREFIXES) or p.startswith(("App/test/", "docs/"))
            for p in paths):
         return "daily", db
+    # PC-01 desktop QA is a real two-player browser check. Run it on PR
+    # synchronize before the longer full suite, but only for its own focused
+    # layout files (unknown broad code changes retain the general smoke).
+    desktop_files = {
+        "App/visual-refresh.css", "App/game-shell.css",
+        "App/src/script.10j.game-shell.js", "tools/pc_desktop_quality.py",
+        "tools/ci_smoke_scope.py", "tools/test_ci_smoke_scope.py",
+        ".github/workflows/browser-quality.yml",
+    }
+    if "tools/pc_desktop_quality.py" in paths and all(
+        p in desktop_files or p.startswith("docs/") for p in paths
+    ):
+        return "desktop", db
     # A Party-specific QA file gives an explicit signal; script.07 also owns
     # unrelated profile/saving logic and cannot safely select Party by itself.
     if "tools/party_mobile_quality.py" in paths and all(
