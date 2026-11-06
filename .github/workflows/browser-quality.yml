@@ -124,6 +124,9 @@ jobs:
             general) python tools/guess_flow_quality.py ;;
             *) echo "Unsupported smoke scope: $SMOKE_SUITE"; exit 1 ;;
           esac
+      - name: Verify mobile Party Duel and friend challenge controls
+        if: env.QA_FULL == 'true'
+        run: python tools/mobile_guess_controls_quality.py
       - name: Verify Admin Stats V2 in Chromium and WebKit at three widths
         if: env.QA_FULL == 'true'
         run: python tools/admin_stats_quality.py

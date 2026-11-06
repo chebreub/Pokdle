@@ -211,3 +211,7 @@ PR [#287](https://github.com/chebreub/Pokdle/pull/287) fusionnée au commit `cd3
 Le premier run a révélé un défaut d'isolation du nouveau test : ses deux navigateurs partageaient une adresse IP et dépassaient les 10 créations/entrées de salon en 30 s. Reproduit localement ; chaque navigateur dispose désormais de son propre serveur **local**. Aucun seuil serveur ni assertion fonctionnelle n'a été assoupli. La dernière CI complète valide cette correction du scénario.
 
 **MOB-03 reste en cours**, progression **13/43 = 30,2 %**, deux actions en cours et 28 non commencées. **Prochaine étape : commandes de proposition Party/Duel/Défi avec clavier**, en conservant les confirmations, le contexte de partie et l'absence de saut à chaque lettre. Le clavier est simulé via `visualViewport` ; aucun déploiement Render ni iPhone physique vérifié. `BUG-MOB-01` reste distinct et ouvert.
+
+## Dernier volet MOB-03 — candidat à la clôture technique (06/11/2026)
+
+Party, Duel et Défi ami regroupés dans un seul lot : commandes visibles avec clavier, hauteur des suggestions stable et tap sans déplacement du bouton. [Périmètre, preuves, recette et limites](qa/MOB_03_CONTROLS.md). Tests Chromium locaux réussis aux trois résolutions et tests Node ciblés verts ; **CI complète et fusion encore requises**. Progression intégrée inchangée **13/43** à ce stade ; **14/43 (32,6 %) uniquement après validation et fusion**. Ensuite **DEX-01** ; BUG-MOB-01 et MOB-04 restent distincts de cette clôture technique.

@@ -1206,3 +1206,19 @@
     display:none;
   }
 }
+
+/* MOB-03: stable suggestion space above Party/Duel actions while typing.
+   Limited to these three pickers; other autocompletes keep their own layout. */
+@media (max-width:640px) {
+  #pokdle-app.mobile-keyboard-open :is(#screen-party-room,#screen-multiplayer,#challenge-panel) {overflow-anchor:none;}
+
+  #pokdle-app :is(#party-guess-ac,#multiplayer-guess-ac,#challenge-ac) {
+    max-height:var(--mobile-picker-height,238px)!important;
+  }
+  #pokdle-app.mobile-keyboard-open :is(#party-round-input,.multiplayer-guess-row,#challenge-panel):focus-within :is(#party-guess-ac,#multiplayer-guess-ac,#challenge-ac) {
+    height:var(--mobile-picker-height,238px)!important;
+  }
+  #pokdle-app.mobile-keyboard-open :is(#party-round-input,.multiplayer-guess-row,#challenge-panel):focus-within :is(#party-guess-ac,#multiplayer-guess-ac,#challenge-ac).hidden {
+    display:block!important;visibility:hidden;pointer-events:none;
+  }
+}
