@@ -17,4 +17,4 @@
 
 - `App/test/pokedex-targets.test.js` : ajout/retrait, refus de quatrième cible sans écriture, validation des IDs, secrets masqués, profil et synchronisation, fusion plus récente y compris liste vidée.
 - `tools/pokedex_targets_quality.py` : Chromium/WebKit, 390 et 1366 px, clic réel des commandes, plafond, statut affiché, absence de dévoilement des secrets, persistance après rechargement, absence de débordement.
-- CI Node et navigateur/base complètes exigées sur le head final avant fusion. La preuve navigateur ne couvre pas un téléphone iPhone physique, le téléphone de Jade ni le déploiement Render.
+- [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42250700271) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42251003537) sur le head `0e02036b5b13daa88aa17996b45483ec32297824` ; [PR #295](https://github.com/chebreub/Pokdle/pull/295) fusionnée au commit `967b9c8d91977be6b38af7317e7e047121394efe`. La preuve navigateur ne couvre pas un iPhone physique, le téléphone de Jade ni le déploiement Render.
