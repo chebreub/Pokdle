@@ -65,7 +65,28 @@ function profileMergeUnion(p, o) {
 }
 // albumMedals (📒 album, 01/11/2026): « gen:tier » keys, so a medal won on one device is kept on the other.
 const PROFILE_UNION_FIELDS = ["discoveries", "albumMissionClaims", "regionXpClaims", "secrets", "weeklyLeagueBadges", "albumMedals"];
-const PROFILE_MAX_FIELDS = ["dailyLoginStreak", "xpLevels", "draftScoreAttackRecords", "weeklyLeagueScores", "weeklyLeagueStats", "albumMissionStats"];
+const PROFILE_MAX_FIELDS = ["dailyLoginStreak", "xpLevels", "draftScoreAttackRecords", "weeklyLeagueScores", "weeklyLeagueStats", "albumMissionStats", "guessSeriesBest"];
+
+// SER-01: old guessSeriesBest scores contain only found, never attempts.
+// Keep these historical maxima independently of new Pixel precision records.
+// A new precision record is only comparable with another fully measured run.
+function profilePixelPrecisionEntry(value, total) {
+  if (!value || typeof value !== "object" || Array.isArray(value)
+      || !Number.isSafeInteger(value.found) || value.found < 1 || value.found > total
+      || !Number.isSafeInteger(value.attemptsWon) || value.attemptsWon < value.found) return null;
+  return {found:value.found, attemptsWon:value.attemptsWon};
+}
+function profileMergePixelPrecision(a, b) {
+  const out = {};
+  for (const size of [5, 10, 20]) {
+    const one = profilePixelPrecisionEntry(a && a[size], size);
+    const two = profilePixelPrecisionEntry(b && b[size], size);
+    const best = !one ? two : !two ? one
+      : one.found > two.found || (one.found === two.found && one.attemptsWon <= two.attemptsWon) ? one : two;
+    if (best) out[size] = best;
+  }
+  return out;
+}
 
 function mergeProfileData(p, o, b) {
   const out = { ...o, ...p };
@@ -82,7 +103,7 @@ function mergeProfileData(p, o, b) {
   }
   out.totalQuestsCompleted = profileMergeCounter(p.totalQuestsCompleted, o.totalQuestsCompleted, b ? base.totalQuestsCompleted : null, "totalQuestsCompleted");
   for (const key of Object.keys(out)) {
-    if (/HighScore$/.test(key) || (key.endsWith("Best") && key !== "quiEstCeBest")) out[key] = Math.max(profileMergeNumber(p[key]), profileMergeNumber(o[key]));
+    if (/HighScore$/.test(key) || (key.endsWith("Best") && key !== "quiEstCeBest" && key !== "guessSeriesBest")) out[key] = Math.max(profileMergeNumber(p[key]), profileMergeNumber(o[key]));
   }
   // Legacy 0 means "not recorded"; an explicit flag makes a genuine 0-question win durable.
   const qa = Number(p.quiEstCeBest), qb = Number(o.quiEstCeBest);
@@ -94,6 +115,12 @@ function mergeProfileData(p, o, b) {
   }
   for (const key of PROFILE_UNION_FIELDS) if (key in p || key in o) out[key] = profileMergeUnion(p[key], o[key]);
   for (const key of PROFILE_MAX_FIELDS) if (key in p || key in o) out[key] = profileMergeMax(p[key], o[key]);
+  if (p.guessSeriesPrecision || o.guessSeriesPrecision) {
+    out.guessSeriesPrecision = {
+      ...(o.guessSeriesPrecision || {}), ...(p.guessSeriesPrecision || {}),
+      pixel: profileMergePixelPrecision(p.guessSeriesPrecision?.pixel, o.guessSeriesPrecision?.pixel)
+    };
+  }
   if (p.pioneerMyth || o.pioneerMyth) out.pioneerMyth = true;
   if (String(o.lastDailyLogin || "") > String(p.lastDailyLogin || "")) out.lastDailyLogin = o.lastDailyLogin;
   // The day's XP per game and the day's quests: the same day merges, otherwise the later day wins.
