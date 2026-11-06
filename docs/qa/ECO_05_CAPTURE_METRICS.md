@@ -1,6 +1,6 @@
 # ECO-05 — Statistiques de rencontres et de capture fiables
 
-Statut : développement soumis à validation par PR ; ne clôturer l'action qu'après CI verte, fusion dans `main` et mise à jour du suivi. Cette instrumentation ne modifie aucune règle économique.
+**Statut : intégré.** [PR #305](https://github.com/chebreub/Pokdle/pull/305) fusionnée au commit `dd79cd26f82ff7f75d0a35ac1ba36820bfd27946` après CI Node, PostgreSQL et navigateur vertes ; progression globale **23/43 = 53,5 %**. Cette instrumentation ne modifie aucune règle économique.
 
 ## Source de vérité et grain
 
