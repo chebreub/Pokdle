@@ -87,7 +87,12 @@ function renderGameShell() {
   if (!meta) return;
   const notebook = document.getElementById("shell-notebook");
   if (notebook && notebook.dataset.mode !== gameMode) {
-    notebook.open = !window.matchMedia("(max-width: 640px)").matches;
+    // PC-01: on 1366×768 laptops the hint notebook is still available,
+    // but collapsed by default so typing and the secondary panel stay in view.
+    const compactDesktop = window.matchMedia(
+      "(min-width: 1280px) and (max-width: 1679px) and (max-height: 820px)"
+    ).matches;
+    notebook.open = !window.matchMedia("(max-width: 640px)").matches && !compactDesktop;
     notebook.dataset.mode = gameMode;
   }
   prepareGameShell();
