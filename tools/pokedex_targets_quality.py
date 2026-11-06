@@ -27,7 +27,7 @@ def scenario(browser,engine,width):
         qa.ready(page,'!!document.getElementById("pokedex-tracking-hub")')
         for id in [25,150,373]:
             page.evaluate('(id)=>{pokedexSelectedId=id;return renderPokedexDetail(POKEMON_BY_ID.get(id));}',id)
-            qa.ready(page,f'!!document.querySelector("#pokedex-detail .pokedex-tracking-control button[data-args=\'[ {id} ]\']")'.replace('[ '+str(id)+' ]','['+str(id)+']'))
+            qa.ready(page,'document.querySelector("#pokedex-detail .pokedex-tracking-control button")?.getAttribute("data-args") === "[%d]"' % id)
             button=page.locator('#pokedex-detail .pokedex-tracking-control button')
             assert not button.is_disabled(),(engine,width,id)
             button.click()
