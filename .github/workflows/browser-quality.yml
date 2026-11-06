@@ -177,6 +177,9 @@ jobs:
       - name: Verify an actual two-browser Party Room game
         if: env.QA_FULL == 'true'
         run: python tools/multiplayer_quality.py --output quality-artifacts/multiplayer
+      - name: Verify 1366x768 desktop game and unscrolled Pokédex Race (Chromium/WebKit)
+        if: env.QA_FULL == 'true'
+        run: python tools/pc_desktop_quality.py
       - name: Verify a two-browser Petit Bac round and the solo sheet
         if: env.QA_FULL == 'true'
         run: python tools/petitbac_quality.py
