@@ -26,7 +26,7 @@ test('ECO-02 event gates and assumptions are explicitly hypothetical',()=>{
   assert.equal(isWeekend(1),true);
   assert.equal(isWeekend(2),true);
   assert.equal(isWeekend(3),false);
-  assert.equal(SCENARIOS.length,6);
+  assert.equal(SCENARIOS.length,7);
   assert.equal(SCENARIOS[0].gate,'always');
   assert.equal(SCENARIOS[5].onlyOnce,true);
   assert.equal(ASSUMPTIONS.randomEventDailyChance,0.15);
