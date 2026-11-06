@@ -7,6 +7,25 @@ const PARTY_CHAT_REACTIONS = ['😂', '🔥', '👏', '😱'];
 const PARTY_CHAT_KEEP = 60;
 const partyChat = { open: false, unread: 0, messages: [], code: null, bound: false, sending: false, error: '' };
 
+// A fixed bottom sheet otherwise stays behind the phone keyboard. Follow only
+// the visible viewport; never scroll the game or recreate the message input.
+function fitPartyChatViewport() {
+  const panel = document.getElementById('party-chat');
+  if (!panel) return;
+  const viewport = window.visualViewport;
+  if (!viewport || window.innerWidth > 640 || panel.classList.contains('hidden')) {
+    panel.style.removeProperty('--party-chat-top');
+    panel.style.removeProperty('--party-chat-height');
+    return;
+  }
+  const height = Math.min(window.innerHeight * 0.58, viewport.height);
+  panel.style.setProperty('--party-chat-top', (viewport.offsetTop + viewport.height - height) + 'px');
+  panel.style.setProperty('--party-chat-height', height + 'px');
+}
+window.visualViewport?.addEventListener('resize', fitPartyChatViewport);
+window.visualViewport?.addEventListener('scroll', fitPartyChatViewport);
+window.addEventListener('resize', fitPartyChatViewport);
+
 function partyChatRoom() {
   const room = typeof partyRoomState !== 'undefined' ? partyRoomState.room : null;
   return room && room.code && partyRoomState.code === room.code ? room : null;
@@ -86,7 +105,7 @@ function renderPartyChat() {
       '<div class="pchat-list" id="party-chat-list" role="log" aria-live="polite"></div>' +
       '<div class="pchat-react">' + PARTY_CHAT_REACTIONS.map((emoji) => '<button type="button" data-action="sendPartyChatReaction" data-args=\'["' + emoji + '"]\' aria-label="Réagir ' + emoji + '">' + emoji + '</button>').join('') + '</div>' +
       '<p class="pchat-error" id="party-chat-error" role="status"></p>' +
-      '<form class="pchat-form" id="party-chat-form"><input id="party-chat-input" maxlength="120" autocomplete="off" enterkeyhint="send" placeholder="Écris un message…" aria-label="Message">' +
+      '<form class="pchat-form" id="party-chat-form"><input type="text" id="party-chat-input" maxlength="120" autocomplete="off" enterkeyhint="send" placeholder="Écris un message…" aria-label="Message">' +
       '<button type="submit">Envoyer</button></form>';
     document.body.appendChild(panel);
     panel.querySelector('#party-chat-form').addEventListener('submit', (event) => { event.preventDefault(); sendPartyChatText(); });
@@ -97,6 +116,7 @@ function renderPartyChat() {
   fab.innerHTML = '💬 Chat' + (partyChat.unread ? ' <b>' + Math.min(partyChat.unread, 99) + '</b>' : '');
   fab.setAttribute('aria-label', partyChat.unread ? 'Ouvrir le chat, ' + partyChat.unread + ' nouveau' + (partyChat.unread > 1 ? 'x' : '') + ' message' + (partyChat.unread > 1 ? 's' : '') : 'Ouvrir le chat');
   panel.classList.toggle('hidden', !partyChat.open);
+  fitPartyChatViewport();
   const players = (room.players || []).length;
   document.getElementById('party-chat-sub').textContent = players + ' joueur' + (players > 1 ? 's' : '') + ' · les messages ne sont pas gardés';
   document.getElementById('party-chat-error').textContent = partyChat.error;

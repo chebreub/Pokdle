@@ -656,7 +656,12 @@
 .pchat-form{display:flex;gap:8px;padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
 .pchat-form input{flex:1;min-width:0;height:44px;border-radius:12px;border:1px solid #E4DACB;padding:0 12px;font:600 16px Nunito,sans-serif;background:#fff;color:#2E2A33}
 .pchat-form button{height:44px;padding:0 16px;border:0;border-radius:12px;background:#4069E0;color:#fff;font:800 15px Nunito,sans-serif;cursor:pointer}
-@media (max-width:640px){.pchat{left:0;right:0;bottom:0;height:58vh;border-radius:22px 22px 0 0}}
+@media (max-width:640px){
+  .pchat{left:0;right:0;top:var(--party-chat-top,auto);bottom:0;height:var(--party-chat-height,58vh);border-radius:22px 22px 0 0;overflow:auto}
+  .pchat-list{min-height:0}
+  .pchat-head,.pchat-react,.pchat-error,.pchat-form{flex-shrink:0}
+  .pchat-x{width:44px;height:44px}
+}
 @media (min-width:641px){.pchat{right:24px;bottom:24px;width:360px;height:470px;border-radius:20px}}
 body.theme-dark .pchat{background:#24212d;border-color:#3d3747;color:#F0EAF9}
 body.theme-dark .pchat-head,body.theme-dark .pchat-react button,body.theme-dark .pchat-x,body.theme-dark .pchat-form input{border-color:#3d3747}
