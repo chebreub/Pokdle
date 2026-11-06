@@ -3,6 +3,7 @@
 // Le serveur (lib/poke-balls.js) tire le Pokémon, le shiny (1/500 depuis le 5/11) et chaque lancer. Ici : la scène,
 // la Ball qui tremble, « Gotcha ! », et le Pokémon capturé qui rejoint l'album (marque ⚪).
 let wildCaptures = null;      // { [id]: { normal, shiny } } lu sur le serveur
+let wildCaptureHistory = null; // captures personnelles enregistrées, distinctes de la possession
 let wildCatchableTotal = null; // dénominateur renvoyé par le serveur (herbes + expéditions)
 let wildBusy = false;
 let wildSkipAnim = null;
@@ -37,6 +38,9 @@ function loadWildCaptures() {
   return fetch("/api/wild/collection", { credentials: "same-origin" }).then((r) => r.ok ? r.json() : null).then((data) => {
     if (data && data.ok) {
       wildSyncAlbum(data.captures);
+      wildCaptureHistory = Array.isArray(data.captureHistory)
+        ? Object.fromEntries(data.captureHistory.map(c => [c.id, { normal: Number(c.normal) || 0, shiny: Number(c.shiny) || 0 }]))
+        : null;
       if (Number.isInteger(data.catchableTotal) && data.catchableTotal > 0) wildCatchableTotal = data.catchableTotal;
       if (typeof ballApply === "function") ballApply(data, { announce: false });
     }
@@ -60,6 +64,7 @@ function closeWildGrass() {
   if (scene) scene.remove();
   document.body.classList.remove("modal-open");
   if (typeof refreshBalls === "function") refreshBalls({ announce: false });
+  if (typeof colRefreshVisibleCollection === "function") colRefreshVisibleCollection();
 }
 // Les 3 lancers avant que le Pokémon s'enfuie : des points, et une phrase qui le dit (3/11, « c quoi les points ? »).
 function wildThrowsText(n) {

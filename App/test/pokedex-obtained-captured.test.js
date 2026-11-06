@@ -37,6 +37,7 @@ function fixture() {
   const ctx = {
     playerProfile:profile,pokedexExperienceView:"collection",pokedexCollectionFilter:"all",
     wildCaptures:{25:{normal:1,shiny:0},380:{normal:1,shiny:0}},
+    wildCaptureHistory:{373:{normal:1,shiny:0},380:{normal:1,shiny:0}},
     wildCatchableTotal:852,
     ALBUM_MISSIONS:[{id:"g1_mewtwo",pokemonId:150}],
     SECRET_MISSIONS:[{id:"starters",pokemonId:151}],
@@ -85,7 +86,7 @@ test("filters distinguish all seen, actual capture, rewards and missing entries"
     return f.mons.filter(p=>c.__filter(p)).map(p=>p.id);
   }
   assert.deepEqual(ids("seen"),[10,25,150,151,373,380]);
-  assert.deepEqual(ids("caught"),[25,380]);
+  assert.deepEqual(ids("caught"),[373,380]);
   assert.deepEqual(ids("obtained"),[25,380]);
   assert.deepEqual(ids("missing"),[1009]);
   assert.ok(!ids("obtained").includes(373),"rarity is not bypassed by guessing");
@@ -94,24 +95,25 @@ test("filters distinguish all seen, actual capture, rewards and missing entries"
 test("collection UI shows 852 catchable, 1025 national on real site, and distinguishes mission badges",()=>{
   const f=fixture();
   f.ctx.renderPokedexCollectionHub();
-  assert.match(f.national.innerHTML,/👁️ Vus[\s\S]*?<em>6 \/ 7<\/em>/);
-  assert.match(f.national.innerHTML,/Capturés[\s\S]*?<em>2 \/ 852<\/em>/);
-  assert.match(f.national.innerHTML,/◆ Possédés[\s\S]*?<em>2 \/ 7<\/em>/);
+  assert.match(f.national.innerHTML,/👁️ Découverts[\s\S]*?<em>6 \/ 7<\/em>/);
+  assert.match(f.national.innerHTML,/Déjà capturés[\s\S]*?<em>2 \/ 852<\/em>/);
+  assert.match(f.national.innerHTML,/◆ Possédés actuellement[\s\S]*?<em>2 \/ 7<\/em>/);
   assert.match(f.filters.innerHTML,/Possédés/);
   assert.match(f.intro.textContent,/Une mission ne donne pas directement le Pokémon/);
   const badge=f.ctx.createPokedexCard(f.mons[2]).badge.innerHTML;
   assert.match(badge,/Mission accomplie · Vu/);
   assert.match(f.ctx.createPokedexCard(f.mons[3]).badge.innerHTML,/Secret découvert/);
   assert.match(f.ctx.createPokedexCard(f.mons[0]).badge.innerHTML,/Vu/);
-  assert.match(f.ctx.createPokedexCard(f.mons[5]).badge.innerHTML,/Attrapé/);
+  assert.match(f.ctx.createPokedexCard(f.mons[5]).badge.innerHTML,/Possédé/);
 });
 
 test("missing server capture data never invents 0 captured or 0 owned",()=>{
   const f=fixture();
   f.ctx.wildCaptures=null;
+  f.ctx.wildCaptureHistory=null;
   f.ctx.wildCatchableTotal=null;
   f.ctx.renderPokedexCollectionHub();
-  assert.match(f.national.innerHTML,/Capturés[\s\S]*?<em>… \/ …<\/em>/);
+  assert.match(f.national.innerHTML,/Déjà capturés[\s\S]*?<em>… \/ …<\/em>/);
   assert.match(f.national.innerHTML,/Possédés[\s\S]*?<em>… \/ 7<\/em>/);
 });
 
@@ -151,4 +153,25 @@ test("capture ceremony reuses server catchable total instead of claiming 1025 ca
   assert.doesNotMatch(fx,/Math\.min\(1025, POKEMON_BY_ID\.size\)/);
   const wild=fs.readFileSync(path.join(__dirname,"../src/script.10xz.wild-grass.js"),"utf8");
   assert.match(wild,/wildCatchableTotal = data\.catchableTotal/);
+});
+
+// A received trade is owned without proving a Ball capture; a ceded capture
+// keeps its history even when no copy is currently present. No profile writes.
+test("DEX-01: history and possession stay independent on cards, details and filters",()=>{
+  const f=fixture(),c=f.ctx,before=JSON.stringify(f.profile);
+  assert.equal(c.colEverCaughtCount(25),0);
+  assert.equal(c.colCaughtCount(25),1);
+  assert.match(c.colPersonalStatesHtml(f.mons[1]),/Aucune capture enregistrée/);
+  assert.match(c.colPersonalStatesHtml(f.mons[1]),/1 exemplaire/);
+  assert.equal(c.colEverCaughtCount(373),1);
+  assert.equal(c.colCaughtCount(373),0);
+  assert.match(c.createPokedexCard(f.mons[4]).badge.innerHTML,/Déjà capturé · non possédé/);
+  assert.match(c.colPersonalStatesHtml(f.mons[4]),/Oui · capture enregistrée/);
+  assert.match(c.colPersonalStatesHtml(f.mons[4]),/Possédé actuellement<\/span><b>Non/);
+  c.wildCaptures=null;
+  assert.doesNotMatch(c.createPokedexCard(f.mons[4]).badge.innerHTML,/non possédé/,'unknown inventory is not absence');
+  c.colResetCaptureSnapshot();
+  assert.equal(c.colEverCaughtCount(373),null);
+  assert.match(c.colPersonalStatesHtml(f.mons[4]),/Données indisponibles/);
+  assert.equal(JSON.stringify(f.profile),before);
 });

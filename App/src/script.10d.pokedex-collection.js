@@ -166,6 +166,7 @@ function renderPokedexCollectionHub() {
 }
 function setPokedexExperienceView(view) {
   pokedexExperienceView = view === 'encyclopedia' ? 'encyclopedia' : 'collection';
+  if (pokedexExperienceView === 'collection' && typeof colResetCaptureSnapshot === 'function') colResetCaptureSnapshot();
   if (typeof playPokedexUiSfx === 'function') playPokedexUiSfx('register');
   renderPokedexGrid();
 }
@@ -189,6 +190,7 @@ function openPokedexMissionHub() {
   document.getElementById('album-mission-panel')?.scrollIntoView({ block:'start', behavior:'smooth' });
 }
 function openPokedexCollection() {
+  if (typeof colResetCaptureSnapshot === 'function') colResetCaptureSnapshot();
   pokedexExperienceView='collection';
   pokedexCollectionFilter='all';
   ensurePokedexCollectionHub();
@@ -265,6 +267,7 @@ function pokedexCollectionRecordHtml(pokemon,state) {
   return `<section class="pokedex-personal-record">
     <div class="pokedex-personal-record-head"><span>✓ ENTRÉE ENREGISTRÉE</span><strong>Ton histoire avec ${escapeHtml(pokemon.name)}</strong></div>
     <div class="pokedex-personal-record-grid">
+      ${typeof colPersonalStatesHtml === 'function' ? colPersonalStatesHtml(pokemon) : ''}
       <div><span>Enregistré le</span><b>${date}</b></div>
       <div><span>Origine</span><b>${escapeHtml(typeof discoveryModeLabel==='function'?discoveryModeLabel(entry.mode):String(entry.mode||'Pokédle'))}</b></div>
     </div>

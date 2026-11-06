@@ -77,7 +77,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [ ] **NIV-01 · STATIONNÉ** : proposition initiale de « mes générations » dans Qui est-ce non motivée par un vrai retour ; **ne pas programmer à partir de la plaisanterie Kokiyas**.
 
 ### Lot 3 — Pokédex et collection
-- [ ] **DEX-01 · P1** : vu/découvert, déjà capturé, possédé actuellement clairement distingués.
+- [~] **DEX-01 · P1** : filtres, compteurs et fiches préparés ; historique serveur distinct des exemplaires possédés, échanges reçus exclus des captures personnelles. [Données, tests et limites](qa/DEX_01_STATES.md). CI et fusion requises avant clôture.
 - [ ] **DEX-02 · P1** : montrer les voies d'obtention vraies ; document actuel `docs/PLAN_RARETE_1025.md` = 852 espèces capturables, 173 non capturables maintenant.
 - [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.

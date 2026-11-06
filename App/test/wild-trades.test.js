@@ -122,3 +122,21 @@ test('PostgreSQL: friends swap duplicates, shiny for shiny, 3 a day, re-checked 
     assert.equal((await tr.respond('B', { id: fourth.id, accept: true })).error, 'not_found');
   });
 });
+
+test('PostgreSQL: DEX-01 capture history survives cessions and excludes received trades and failed encounters', { skip: !process.env.QA_DATABASE_URL, timeout: 30000 }, async () => {
+  await withSchema('dexstates_', async (db) => {
+    await initBallsDb(db);
+    const balls = createBallService({ db, clock: () => new Date('2026-11-06T12:00:00Z') });
+    const who = { key: 'guest:dex', guestKey: 'guest:dex', accountId: null };
+    for (const [id,kind,status,shiny] of [[25,'trade','caught',false],[4,'wild','released',false],[4,'wild','traded',true],[7,'legend','caught',false],[8,'trade','released',false],[9,'trade','traded',true],[10,'wild','fled',false],[11,'wild','open',false]]) {
+      await db.query("INSERT INTO wild_encounters(identity,day,pokemon_id,kind,status,shiny) VALUES ($1,'2026-11-06',$2,$3,$4,$5)", [who.key,id,kind,status,shiny]);
+    }
+    await caught(db,'guest:someone-else',150);
+    const before = (await db.query('SELECT * FROM wild_encounters ORDER BY id')).rows;
+    const state = await balls.collection(who);
+    assert.deepEqual(state.captures,[{id:7,normal:1,shiny:0},{id:25,normal:1,shiny:0}]);
+    assert.deepEqual(state.captureHistory,[{id:4,normal:1,shiny:1},{id:7,normal:1,shiny:0}]);
+    assert.deepEqual((await db.query('SELECT * FROM wild_encounters ORDER BY id')).rows,before,'reading the states never changes encounters');
+    assert.deepEqual((await balls.collection(who)).captureHistory,state.captureHistory,'repeated reads are stable');
+  });
+});

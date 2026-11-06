@@ -6,6 +6,12 @@ function colCaughtCount(id) {
   const c = typeof wildCaptures !== "undefined" && wildCaptures ? wildCaptures[id] : null;
   return c ? (Number(c.normal) || 0) + (Number(c.shiny) || 0) : 0;
 }
+function colEverCaughtCount(id) {
+  const history = typeof wildCaptureHistory !== "undefined" ? wildCaptureHistory : null;
+  if (history === null) return null;
+  const c = history[id];
+  return c ? (Number(c.normal) || 0) + (Number(c.shiny) || 0) : 0;
+}
 function colRewardKind(pokemon) {
   const profile = typeof playerProfile !== "undefined" && playerProfile ? playerProfile : null;
   if (!profile || !pokemon) return null;
@@ -32,7 +38,7 @@ function colCollectionProgress(base) {
   let seen = 0, caught = 0, obtained = 0;
   for (const pokemon of base) {
     if (pokedexCollectionState(pokemon).kind === "registered") seen++;
-    if (colCaughtCount(pokemon.id) > 0) caught++;
+    if (colEverCaughtCount(pokemon.id) > 0) caught++;
     if (colIsObtained(pokemon)) obtained++;
   }
   return { seen, caught, obtained };
@@ -42,6 +48,23 @@ function colIsShiny(pokemon, state) {
   return Boolean((state && state.entry && state.entry.shiny) || (c && Number(c.shiny) > 0));
 }
 let colCapturesAsked = false;
+function colResetCaptureSnapshot() {
+  colCapturesAsked = false;
+  if (typeof wildCaptureHistory !== "undefined") wildCaptureHistory = null;
+}
+function colRefreshVisibleCollection() {
+  const screen = document.getElementById("screen-pokedex");
+  if (pokedexExperienceView !== "collection" || !screen || screen.classList.contains("hidden")) return;
+  colResetCaptureSnapshot();
+  renderPokedexGrid();
+}
+function colPersonalStatesHtml(pokemon) {
+  const captured = colEverCaughtCount(pokemon.id);
+  const owned = typeof wildCaptures !== "undefined" && wildCaptures !== null ? colCaughtCount(pokemon.id) : null;
+  return '<div><span>Vu / découvert</span><b>Oui</b></div>' +
+    '<div><span>Déjà capturé avec une Ball</span><b>' + (captured === null ? 'Données indisponibles' : captured > 0 ? 'Oui · capture enregistrée' : 'Aucune capture enregistrée') + '</b></div>' +
+    '<div><span>Possédé actuellement</span><b>' + (owned === null ? 'Données indisponibles' : owned > 0 ? owned + ' exemplaire' + (owned > 1 ? 's' : '') : 'Non') + '</b></div>';
+}
 function colEnsureCaptures() {
   if (colCapturesAsked || typeof loadWildCaptures !== "function") return;
   colCapturesAsked = true;
@@ -51,7 +74,7 @@ function colEnsureCaptures() {
     if (loaded && typeof pokedexExperienceView !== "undefined" && pokedexExperienceView === "collection" && typeof renderPokedexGrid === "function") renderPokedexGrid();
   });
 }
-const COL_FILTERS = [["all", "Tous"], ["seen", "👁️ Vus"], ["caught", "Attrapés"], ["obtained", "◆ Possédés"], ["shiny", "✨ Shinies"], ["missing", "? Manquants"], ["mission", "◆ À mériter"], ["secret", "✦ Secrets"]];
+const COL_FILTERS = [["all", "Tous"], ["seen", "👁️ Découverts"], ["caught", "Déjà capturés"], ["obtained", "◆ Possédés actuellement"], ["shiny", "✨ Shinies"], ["missing", "? Non découverts"], ["mission", "◆ À mériter"], ["secret", "✦ Secrets"]];
 
 if (typeof pokedexCollectionMatchesFilter === "function") {
   const colMatchesBefore = pokedexCollectionMatchesFilter;
@@ -60,7 +83,7 @@ if (typeof pokedexCollectionMatchesFilter === "function") {
     const f = pokedexCollectionFilter;
     if (!["caught", "obtained", "seen", "missing", "shiny"].includes(f)) return colMatchesBefore(pokemon);
     const state = pokedexCollectionState(pokemon);
-    if (f === "caught") return colCaughtCount(pokemon.id) > 0;
+    if (f === "caught") return colEverCaughtCount(pokemon.id) > 0;
     if (f === "obtained") return colIsObtained(pokemon);
     if (f === "seen") return state.kind === "registered";
     if (f === "missing") return state.kind !== "registered";
@@ -84,7 +107,7 @@ if (typeof renderPokedexCollectionHub === "function") {
       id.dataset.vus = "1";
       const h3 = id.querySelector("h3"), p = id.querySelector("p");
       if (h3) h3.textContent = "Ma collection";
-      if (p) p.textContent = "Vu = découvert en jouant ou en mission · Possédé = capturé avec une Ball. Une mission ne donne pas directement le Pokémon.";
+      if (p) p.textContent = "Découvert = vu en jouant ou en mission · Déjà capturé = une capture avec une Ball enregistrée · Possédé actuellement = encore dans ta collection, y compris par échange. Une mission ne donne pas directement le Pokémon.";
     }
     const filters = document.getElementById("pokedex-collection-filters");
     if (filters && !filters.dataset.vus) {
@@ -92,11 +115,15 @@ if (typeof renderPokedexCollectionHub === "function") {
       filters.innerHTML = COL_FILTERS.map(([key, label]) => '<button type="button" data-collection-filter="' + key + '" data-action="setPokedexCollectionFilter" data-args=\'["' + key + '"]\'>' +
         (key === "caught" && typeof moBallSvg === "function" ? moBallSvg("poke") : "") + label + '</button>').join("");
     }
-    filters?.querySelectorAll("[data-collection-filter]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.collectionFilter === pokedexCollectionFilter)));
+    filters?.querySelectorAll("[data-collection-filter]").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.collectionFilter === pokedexCollectionFilter));
+      b.disabled = (b.dataset.collectionFilter === "caught" && (typeof wildCaptureHistory === "undefined" || wildCaptureHistory === null))
+        || (b.dataset.collectionFilter === "obtained" && (typeof wildCaptures === "undefined" || wildCaptures === null));
+    });
     const legend = document.getElementById("pokedex-collection-legend");
     if (legend && !legend.dataset.vus) {
       legend.dataset.vus = "1";
-      legend.innerHTML = '<span class="is-caught"><b>' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + '</b> Capturé avec une Ball (herbes ou expédition)</span><span class="is-seen"><b>👁️</b> Découvert en jouant</span>' +
+      legend.innerHTML = '<span class="is-caught"><b>' + (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + '</b> Déjà capturé : reste enregistré après échange ou cession</span><span class="is-mission"><b>◆</b> Possédé actuellement : capture ou échange reçu</span><span class="is-seen"><b>👁️</b> Découvert en jouant</span>' +
         '<span class="is-mission"><b>◆</b> Mission accomplie : Pokémon vu, à capturer</span><span class="is-unknown"><b>?</b> Pas encore vu</span><span class="is-secret"><b>✦</b> Piste cachée</span>';
     }
     const national = document.getElementById("pokedex-collection-national");
@@ -104,6 +131,7 @@ if (typeof renderPokedexCollectionHub === "function") {
       const base = pokedexCollectionBaseCatalogue(), stats = pokedexCollectionNationalStats();
       const totals = colCollectionProgress(base);
       const loaded = typeof wildCaptures !== "undefined" && wildCaptures !== null;
+      const historyLoaded = typeof wildCaptureHistory !== "undefined" && wildCaptureHistory !== null;
       const catchable = typeof wildCatchableTotal !== "undefined" && Number.isInteger(wildCatchableTotal) && wildCatchableTotal > 0 ? wildCatchableTotal : null;
       const shinies = base.filter((p) => colIsShiny(p, pokedexCollectionState(p))).length;
       const total = stats.total || base.length || 1;
@@ -113,9 +141,9 @@ if (typeof renderPokedexCollectionHub === "function") {
         const amount = known ? String(n) : "…";
         return '<div class="alb-track col-track ' + cls + '" title="' + title + '"><span>' + label + '</span><i><b style="width:' + percent + '%"></b></i><em>' + amount + (max === 0 ? '' : ' / ' + (limit || '…')) + '</em></div>';
       };
-      national.innerHTML = bar("is-seen", "👁️ Vus", totals.seen, total, "Espèces découvertes en jouant") +
-        bar("is-caught", (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + " Capturés", loaded ? totals.caught : null, catchable, "Capturés avec une Ball parmi les espèces sauvages et d'expédition") +
-        bar("is-mission", "◆ Possédés", loaded ? totals.obtained : null, total, "Espèces réellement capturées avec une Ball et encore possédées ; une mission ne donne qu’une découverte") +
+      national.innerHTML = bar("is-seen", "👁️ Découverts", totals.seen, total, "Espèces découvertes en jouant ou en mission") +
+        bar("is-caught", (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + " Déjà capturés", historyLoaded ? totals.caught : null, catchable, "Captures personnelles enregistrées, même après échange ou cession ; recevoir un échange ne compte pas comme une capture") +
+        bar("is-mission", "◆ Possédés actuellement", loaded ? totals.obtained : null, total, "Espèces encore dans ta collection, y compris reçues par échange") +
         bar("is-shiny", "✨ Shinies", shinies, 0, "Shinies trouvés ou capturés") +
         '<div class="pokedex-collection-substats"><span><b>' + stats.formsFound + '</b> / ' + stats.formsTotal + ' formes</span><span><b>' + stats.missions + '</b> récompenses spéciales à débloquer</span></div>';
     }
@@ -131,13 +159,14 @@ if (typeof createPokedexCard === "function") {
     const state = pokedexCollectionState(pokemon);
     if (state.kind !== "registered") return card;
     const n = colCaughtCount(pokemon.id), reward = colRewardKind(pokemon);
+    const ownedKnown = typeof wildCaptures !== "undefined" && wildCaptures !== null;
     const shiny = colIsShiny(pokemon, state);
     card.classList.add(n ? "is-caught" : reward ? "is-mission" : "is-seen");
     if (shiny) card.classList.add("is-shiny-entry");
     const badge = card.querySelector(".pokedex-collection-state");
     if (badge) {
       badge.classList.add(n ? "is-caught" : reward ? "is-mission" : "is-seen");
-      badge.innerHTML = n ? (typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪") + "Attrapé" + (n > 1 ? " ×" + n : "") : reward ? (reward === "secret" ? "✦ Secret découvert" : "◆ Mission accomplie · Vu") : "👁️ Vu";
+      badge.innerHTML = n ? "◆ Possédé" + (n > 1 ? " ×" + n : "") : colEverCaughtCount(pokemon.id) > 0 ? "⚪ Déjà capturé" + (ownedKnown ? " · non possédé" : "") : reward ? (reward === "secret" ? "✦ Secret découvert" : "◆ Mission accomplie · Vu") : "👁️ Vu";
       if (shiny) badge.insertAdjacentHTML("beforeend", " ✨");
     }
     return card;
