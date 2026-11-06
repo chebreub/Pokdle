@@ -370,6 +370,8 @@ Clone partiel : l'historique détaillé commence vers le 2/10.
 
 ## 7. Ce qui servait de mémoire
 
+- **Liens gardés pour un autre projet (pas Pokédle)** : https://x.com/RjeyTech/status/2118413707218727174 (envoyé par Kayan le 6/11, « pour un projet tierce » ; la session n'a pas pu lire X, demander à Kayan de quoi il s'agit le moment venu).
+
 - Ces sessions cloud n'avaient pas de mémoire Claude persistante consultable. La TODO cite une note de mémoire « rythme de livraison » et des fichiers de passation stockés dans l'appli Claude de mon PC (`side-session-notes/…`). Ils n'étaient pas accessibles et ne sont pas recopiés ici.
 - Le contenu de la passation précédente (27/10) est intégré et corrigé dans ce document.
 - Texte exact du rappel automatique Neon (ancien compte) :
