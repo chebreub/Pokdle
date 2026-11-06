@@ -1,6 +1,6 @@
 # ECO-04 — Coffres d'expédition : crédit unique et récupération fiable
 
-**État :** correctif en PR ; ne compter ECO-04 dans les 43 actions qu'après CI verte et fusion. Aucun nouveau barème ni attribution rétroactive.
+**État : terminé et intégré.** [PR #309](https://github.com/chebreub/Pokdle/pull/309) fusionnée dans `main` au commit `be7565087755ed593e26d27cc530692476eba48d` après CI Node, PostgreSQL et navigateur vertes ; **25/43 = 58,1 %**. Aucun nouveau barème ni attribution rétroactive.
 
 ## Situation confirmée avant correction
 

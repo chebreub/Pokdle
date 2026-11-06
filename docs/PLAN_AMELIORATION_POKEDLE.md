@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi opérationnel au 06/11/2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305 et ECO-06 #307 intégrées après CI vertes ; 24/43 actions.**
+> **Suivi opérationnel au 06/11/2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305, ECO-06 #307 et ECO-04 #309 intégrées après CI vertes ; 25/43 actions.**
 
-**Progression intégrée : 24 tâches terminées / 43 actives = 55,8 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 18 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
+**Progression intégrée : 25 tâches terminées / 43 actives = 58,1 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 17 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action autonome : ECO-04 — vérifier la conservation et le crédit unique des coffres d'expédition**, uniquement diagnostic et sécurisation de l'idempotence tant qu'aucun arbitrage de nouvelle attribution automatique n'a été donné. ECO-06 [#307](https://github.com/chebreub/Pokdle/pull/307) est fusionnée et documentée. ECO-03 reste à rediscuter ; aucune modification du barème.
+**Prochaine action autonome : PART-01 — invitation directe Dessine-le**, lot 5 « Invitations et diffusion naturelle », sans obligation de créer un compte pour rejoindre. ECO-04 [#309](https://github.com/chebreub/Pokdle/pull/309) est fusionnée après CI vertes. ECO-03 reste à rediscuter : aucune modification du barème 30/60/90 ₽. L'attribution automatique des coffres expirés ne fait pas partie d'ECO-04 et reste non autorisée.
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -109,7 +109,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **ECO-08 · P1 · TERMINÉE** : [PR #304](https://github.com/chebreub/Pokdle/pull/304), fusion `964424afe3b7e1a61c30faaa8b286f3fa0555ee9`, CI Node et navigateur/PostgreSQL vertes. 72 h glissantes pour les nouveaux légendaires hebdomadaires ; rencontre, shiny et lancers inchangés ; Drattak/habituelles exclus.
 - [x] **ECO-05 · P1 · TERMINÉE** : [PR #305](https://github.com/chebreub/Pokdle/pull/305), fusion `dd79cd26f82ff7f75d0a35ac1ba36820bfd27946` après CI Node/PostgreSQL/navigateur vertes. [Mesures prospectives anonymes](qa/ECO_05_CAPTURE_METRICS.md) par version shiny, espèce/classe, Ball, rang et type de rencontre ; anciens totaux inchangés, taux de capture inchangés, seuil de 10 lancers pour la ventilation espèce.
 - [ ] **ECO-03 · P2 · À REDISCUTER** : proposition 30/60/90 ₽ (différence entre paliers, plafond 90/mode, idempotence) **non acceptée à ce stade**. Ne pas implémenter ni changer les récompenses avant nouvel échange et validation.
-- [ ] **ECO-04 · P2 · ACCORD DE PRINCIPE, À TESTER** : assurer qu'un coffre d'expédition déjà acquis est crédité une seule fois, même s'il n'est pas ouvert immédiatement. Vérifier les cas de reconnexion, requête répétée et interruption avant validation finale.
+- [x] **ECO-04 · P2 · TERMINÉE (sécurisation)** : [PR #309](https://github.com/chebreub/Pokdle/pull/309), fusion `be7565087755ed593e26d27cc530692476eba48d` après CI Node, PostgreSQL et navigateur vertes. [Protocole de fiabilité](qa/ECO_04_EXPEDITION_CHEST_IDEMPOTENCE.md) : double crédit empêché entre jours, emplacements partiels récupérables, adoption invité → compte sans doublon, reprise après réponse perdue. **Pas de distribution automatique des coffres expirés ni de modification du nombre de Balls.**
 - [x] **ECO-06 · P2 · TERMINÉE** : [PR #307](https://github.com/chebreub/Pokdle/pull/307) fusionnée, CI Node/PostgreSQL/navigateur vertes. [Matrice de contrôle](qa/ECO_06_REWARD_AUTHORITY.md) des récompenses vérifiées, preuves Party et mécanismes anti-rejeu ; zéro Pokédollar/Ball pour Higher or Lower 60 s sans réponse serveur. Une partie réellement jouée conserve sa récompense habituelle.
 
 #### Décisions de cadrage économique — 05/11/2026
@@ -123,7 +123,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 | **ECO-07 — Préparation** | **Intégrée par #302.** | Afficher les Balls et les chances de capture avant ouverture ; confirmation explicite ou annulation sans perte de progression. |
 | **ECO-08 — Rencontre spéciale ouverte** | **Intégrée par #304.** | Fenêtre de 72 h sur nouveaux légendaires hebdomadaires, même Pokémon et shiny, aucun tirage additionnel ni Ball offerte ; Drattak exclu. |
 | **ECO-03 — Paliers de Pokédollars** | **À rediscuter ensemble.** | Aucune validation du barème 30/60/90 ₽, du plafond ni de la règle de complément par différence. Conserver les récompenses existantes jusqu'à nouvel arbitrage. |
-| **ECO-04 — Coffres d'expédition** | **Accord de principe sous réserve des tests.** | Sécuriser le crédit unique du coffre acquis, même sans ouverture immédiate. Contrôler attribution, reprise, double clic, déconnexion et répétition de requêtes sans duplication de gains. |
+| **ECO-04 — Coffres d'expédition** | **Sécurisation validée et intégrée par #309.** | Deux Balls par palier inchangées. Idempotence inter-jours et après reconnexion, crédit des emplacements manquants, tests de défaillance. Toute attribution automatique de coffres expirés nécessitera une décision distincte. |
 
 **Conditions de passage à la réalisation :**
 1. Établir pour chaque piste un état actuel vérifié dans le code et, si pertinent, dans les données agrégées, sans confondre règles existantes et propositions.
