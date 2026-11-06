@@ -122,6 +122,19 @@ function profileTrackedTargets(raw) {
   return output;
 }
 
+// DEX-04: personal showcase choices are replaceable (removal must persist).
+function profileShowcaseIds(raw) {
+  const ids = [], seen = new Set();
+  for (const item of Array.isArray(raw) ? raw : []) {
+    if (item === null || item === '' || typeof item === 'boolean') continue;
+    const id = Number(item);
+    if (!Number.isInteger(id) || id < 1 || id > 1025 || seen.has(id)) continue;
+    ids.push(id); seen.add(id);
+    if (ids.length === 6) break;
+  }
+  return ids;
+}
+
 function mergeProfileData(p, o, b) {
   const out = { ...o, ...p };
   const base = b || {};
@@ -133,6 +146,13 @@ function mergeProfileData(p, o, b) {
     const preferP = atP > atO || (atP === atO && "pokedexTrackedTargets" in p);
     out.pokedexTrackedTargets = profileTrackedTargets(preferP ? p.pokedexTrackedTargets : o.pokedexTrackedTargets);
     out.pokedexTrackedUpdatedAt = Math.max(atP, atO);
+  }
+  if ("pokedexShowcaseIds" in p || "pokedexShowcaseIds" in o) {
+    const atP = Math.max(0, profileMergeNumber(p.pokedexShowcaseUpdatedAt));
+    const atO = Math.max(0, profileMergeNumber(o.pokedexShowcaseUpdatedAt));
+    const preferP = atP > atO || (atP === atO && "pokedexShowcaseIds" in p);
+    out.pokedexShowcaseIds = profileShowcaseIds(preferP ? p.pokedexShowcaseIds : o.pokedexShowcaseIds);
+    out.pokedexShowcaseUpdatedAt = Math.max(atP, atO);
   }
   // A level put back by the admin (« Niveau d'un joueur », 31/10/2026, lib/player-level-admin.js) wins
   // over a copy made before it: that copy's XP is the one it replaced, adding it would count it twice.
