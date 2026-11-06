@@ -25,6 +25,7 @@ function fixture({bag={poke:2,great:1,ultra:0},actionScope='scope-verified'}={})
   loadExpedition:async()=>expedition,
   openExpedition:()=>{cancelled++;visible=false;},
   expeditionFetch:async(url,body)=>{posts.push({url,body});return {ok:true,encounter:{pokemonId:373},wild:{}};},
+  expeditionPerformLegend:()=>ctx.expeditionFetch('/api/expedition/legend',{}),
   closeOverlayModal:()=>{visible=false;},ballApply:()=>{},renderWildEncounter:()=>{}
  };
  vm.createContext(ctx);
