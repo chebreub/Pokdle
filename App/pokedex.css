@@ -2840,6 +2840,21 @@ body.theme-dark .pokedex-personal-record .pokedex-acquisition {
   color:#eaf2ff;
   border-color:rgba(255,255,255,.14);
 }
+/* DEX-03: optional personal targets in the existing Pokédex layout. */
+.pokedex-tracking-hub { display:grid; gap:9px; min-width:0; margin:12px 0; padding:12px 14px; border:1px solid rgba(73,119,170,.22); border-radius:15px; background:rgba(130,162,210,.07); }
+.pokedex-targets-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.pokedex-targets-heading h3 { margin:0; font-size:1rem; }
+.pokedex-targets-heading h3 small { font-size:.78rem; font-weight:600; opacity:.7; }
+.pokedex-targets-heading > span, .pokedex-tracking-hub > p { margin:0; font-size:.76rem; opacity:.8; }
+.pokedex-tracking-hub ul { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:8px; list-style:none; margin:0; padding:0; }
+.pokedex-tracking-hub li { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:8px; border:1px solid rgba(73,119,170,.15); border-radius:10px; padding:9px; background:var(--card-bg,rgba(255,255,255,.66)); }
+.pokedex-tracking-hub li > div { min-width:0; display:grid; gap:3px; }
+.pokedex-tracking-hub li b,.pokedex-tracking-hub li small { overflow-wrap:anywhere; }
+.pokedex-tracking-hub li b { font-size:.82rem; }
+.pokedex-tracking-hub li small { font-size:.71rem; opacity:.75; }
+.pokedex-tracking-hub li button { flex-shrink:0; }
+.pokedex-tracking-control { display:flex; flex-wrap:wrap; margin:10px 0; }
+.pokedex-tracking-control button { white-space:normal; }
 .pokedex-personal-record {
   position:relative;
   overflow:hidden;
