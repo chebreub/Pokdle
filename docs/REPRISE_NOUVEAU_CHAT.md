@@ -1,7 +1,7 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
 > **État vérifié le 6 novembre 2026 :** PR #283 fusionnée dans `main` au commit `e3e804de2c0cc0652280c464fd27c5eaeda69813` après CI complète verte sur `eca06a7`.
-> **13 actions intégrées sur 43 = 30,2 %** ; **1 investigation en cours** (BUG-MOB-01) ; **29 non commencées** ; NIV-01 stationnée.
+> **13 actions intégrées sur 43 = 30,2 %** ; **2 actions en cours** (MOB-03 et BUG-MOB-01) ; **28 non commencées** ; NIV-01 stationnée.
 > **Prochaine action : MOB-03.** PC-01 est intégrée ; ne pas recommencer son audit ni sa réalisation.
 >
 > **Important :** le taux de progression mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
@@ -139,6 +139,8 @@ Les autres actions économiques (`ECO-05` version des règles, `ECO-06` autorit�
 
 Ce guide remplace les anciennes instructions qui faisaient encore commencer par `LOG-02` ou `DATA-02`, ou annonçaient **2/43**, **7/43**, **8/43**, **9/43**, **10/43** ou **11/43** ; ces informations étaient dépassées au 5 novembre 2026.
 
-## MOB-03 — premier correctif en cours (06/11/2026)
+## MOB-03 — premier correctif intégré, chantier encore en cours (06/11/2026)
 
 Le calcul de hauteur des suggestions du champ partagé réserve désormais la rangée des boutons Deviner/Abandonner, son espacement et la marge basse. Il conserve le dimensionnement stable à la saisie. Tests unitaires : quatre hauteurs visibles (260/320/400/600 px), boutons dans le viewport et absence de scroll répété ; régression Zoom inchangée. Build réussi. Cette première correction ne clôture pas MOB-03 : interactions chat/récompenses et autres commandes restent à vérifier. BUG-MOB-01 et la recette iPhone physique restent distincts. Progression intégrée inchangée : 13/43.
+
+PR [#285](https://github.com/chebreub/Pokdle/pull/285) fusionnée au commit `ab8f0f4b4904cbd68c03fcc2d00bcf127e141812`. CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42212571024) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42212616154) vertes sur `953651f4`. Vérification Chromium locale avec viewport visuel simulé à 400 px : bouton Deviner à 375 px, accessible. Pas de recette clavier iPhone physique ni Render. Prochaine action : poursuivre MOB-03 sur les autres commandes et les superpositions chat/récompenses. Total inchangé : **13/43**, désormais **2 actions en cours** (MOB-03 et BUG-MOB-01), **28 non commencées**.
