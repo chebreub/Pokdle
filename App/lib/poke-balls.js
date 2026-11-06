@@ -221,6 +221,11 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
         const n = Number((await c.query(`SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND day=$2 AND NOT ${BONUS_SQL}`, [who.key, g.day])).rows[0].n);
         if (n >= DAILY_CAP) continue;
       }
+      // ECO-04: a guest may have claimed the same chest on another Paris day.
+      // Do not import a duplicate chest slot already held by the account.
+      if (g.source.startsWith("exp:") &&
+          (await c.query("SELECT 1 FROM ball_gains WHERE identity=$1 AND source=$2 LIMIT 1",
+            [who.key, g.source])).rows.length) continue;
       const row = (await c.query(`INSERT INTO ball_gains(identity,day,source,ball,account_id,created_at)
         VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING ball`,
         [who.key,g.day,g.source,g.ball,who.accountId,g.created_at])).rows[0];
@@ -475,7 +480,11 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const prev = Number((await c.query(`SELECT COUNT(DISTINCT identity)::int AS p FROM (${parts}) x`, [shiftDay(monday, -7), shiftDay(monday, -1)])).rows[0].p);
     const goal = Math.max(EXP_MIN_GOAL, Math.ceil(prev * 1.5));
     const mine = (await c.query(`SELECT to_char(day,'YYYY-MM-DD') AS d FROM ball_gains WHERE identity=$3 AND day BETWEEN $1 AND $2 AND ${PLAY_SOURCES_SQL} GROUP BY day HAVING COUNT(DISTINCT source)>=2`, [monday, day, who.key])).rows.map((r) => r.d);
-    const claimed = new Set((await c.query("SELECT DISTINCT split_part(source,':',3) AS t FROM ball_gains WHERE identity=$1 AND source LIKE $2", [who.key, "exp:" + monday + ":%"])).rows.map((r) => Number(r.t)));
+    // A chest contains two independently keyed Balls. Presence of only one slot
+    // must never mark the entire chest as claimed (legacy interrupted imports).
+    // Check all days: the same source can never be awarded again tomorrow.
+    const awarded = new Set((await c.query("SELECT source FROM ball_gains WHERE identity=$1 AND source LIKE $2",
+      [who.key, "exp:" + monday + ":%"])).rows.map((r) => r.source));
     const progress = Number(all.n), pct = Math.min(100, Math.floor(progress * 100 / goal));
     const legendRow = (await c.query("SELECT status FROM wild_encounters WHERE identity=$1 AND kind='legend' AND day BETWEEN $2 AND $3 ORDER BY id DESC LIMIT 1", [who.key, monday, sunday])).rows[0];
     // All encounter kinds block new openings; an active legend is resumable
@@ -485,7 +494,13 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { week: monday, endsOn: sunday, region: exp.region, gen: exp.gen, legendId: exp.legend,
       legendChances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(exp.legend, b) * 100)])),
       goal, progress, pct, participants: Number(all.p), myDays: mine, days: Array.from({ length: 7 }, (_, i) => shiftDay(monday, i)),
-      chests: Object.keys(EXP_CHESTS).map(Number).map((tier) => ({ tier, balls: EXP_CHESTS[tier], reached: pct >= tier, claimed: claimed.has(tier), canClaim: pct >= tier && !claimed.has(tier) && mine.length >= 1 })),
+      chests: Object.keys(EXP_CHESTS).map(Number).map((tier) => {
+        const balls = EXP_CHESTS[tier];
+        const saved = balls.reduce((n, _ball, i) => n + Number(awarded.has("exp:" + monday + ":" + tier + ":" + (i + 1))), 0);
+        const remainingBalls = balls.length - saved;
+        return { tier, balls, remainingBalls, reached: pct >= tier,
+          claimed: remainingBalls === 0, canClaim: pct >= tier && remainingBalls > 0 && mine.length >= 1 };
+      }),
       legend: { reached: pct >= 100, eligible, needsAccount: !who.accountId, needsDays: Math.max(0, 2 - mine.length),
         status: legendRow ? legendRow.status : null,
         pending: pending ? {kind:pending.kind,pokemonId:Number(pending.pokemon_id),
@@ -496,11 +511,20 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const st = await expedition(c, who, day), added = [];
     for (const chest of st.chests.filter((x) => x.canClaim)) {
       for (const [i, ball] of chest.balls.entries()) {
-        const row = (await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING RETURNING source,ball",
-          [who.key, day, "exp:" + st.week + ":" + chest.tier + ":" + (i + 1), ball, who.accountId || null])).rows[0];
+        const source = "exp:" + st.week + ":" + chest.tier + ":" + (i + 1);
+        // PK(identity,day,source) is not enough across midnight. The existing
+        // per-identity transaction lock plus this historical source check
+        // prevents a duplicate across claim days without a destructive migration.
+        const row = (await c.query(`INSERT INTO ball_gains(identity,day,source,ball,account_id)
+          SELECT $1,$2,$3,$4,$5 WHERE NOT EXISTS (
+            SELECT 1 FROM ball_gains WHERE identity=$1 AND source=$3
+          ) ON CONFLICT DO NOTHING RETURNING source,ball`,
+          [who.key, day, source, ball, who.accountId || null])).rows[0];
         if (row) added.push(row);
       }
     }
+    // Preserve the existing "no_chest" response on replay. The ledger is
+    // unchanged and the client can reload the current state safely.
     if (!added.length) throw fail("no_chest");
     return { added };
   }

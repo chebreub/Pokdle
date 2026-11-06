@@ -231,7 +231,8 @@ function expeditionHtml(e) {
     c.balls.map((b) => ballImg(b, 18)).join("") + '</small></div>').join("") +
     '<div class="exp-chest is-legend' + (e.legend.reached ? " is-ready" : "") + '"><span aria-hidden="true">👑</span><b>100 %</b><small>' + name + '</small></div>';
   const claimable = e.chests.filter((c) => c.canClaim);
-  const nBalls = claimable.reduce((n, c) => n + c.balls.length, 0);
+  // A legacy partially paid chest displays only the Balls still due.
+  const nBalls = claimable.reduce((n, c) => n + (Number.isInteger(c.remainingBalls) ? c.remainingBalls : c.balls.length), 0);
   const days = e.days.map((d, i) => '<span class="' + (e.myDays.includes(d) ? "on" : "") + '"><i>' + (e.myDays.includes(d) ? "✓" : "·") + '</i>' + EXP_DAY_NAMES[i] + '</span>').join("");
   let legend;
   if (e.legend.pending?.kind === "legend") {
@@ -274,7 +275,20 @@ function openExpedition() {
 }
 function claimExpeditionChests() {
   return expeditionFetch("/api/expedition/chests", {}).then((d) => {
-    if (!d || !d.ok) { if (typeof showToast === "function") showToast("Les coffres n’ont pas pu s’ouvrir. Réessaie."); return; }
+    if (!d || !d.ok) {
+      // A completed claim may have lost its HTTP response: reload server state
+      // rather than suggesting a second payment or claiming another chest.
+      if (d?.error === "no_chest") {
+        if (typeof refreshBalls === "function") refreshBalls({ announce: false });
+        if (typeof loadExpedition === "function") loadExpedition(true).then(() => {
+          if (document.querySelector("#overlay-body .exp")) openExpedition();
+        });
+        if (typeof showToast === "function") showToast("Aucun coffre restant à ouvrir. Ton sac est à jour.");
+        return;
+      }
+      if (typeof showToast === "function") showToast("Les coffres n’ont pas pu s’ouvrir. Réessaie.");
+      return;
+    }
     if (typeof ballApply === "function") ballApply(d, { announce: false });
     expeditionState = d.expedition; expeditionAt = Date.now();
     const great = d.added.filter((a) => a.ball === "great").length, poke = d.added.length - great;

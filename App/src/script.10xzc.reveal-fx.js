@@ -106,7 +106,19 @@ function claimExpeditionChestsFx() {
   const ready = typeof expeditionState !== "undefined" && expeditionState ? expeditionState.chests.filter((c) => c.canClaim) : [];
   return fetch("/api/expedition/chests", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", credentials: "same-origin" })
     .then((r) => r.json().catch(() => null)).then((d) => {
-      if (!d || !d.ok) { if (typeof showToast === "function") showToast("Les coffres n’ont pas pu s’ouvrir. Réessaie."); return; }
+      if (!d || !d.ok) {
+        // The reward may already be committed if the previous response was lost.
+        if (d?.error === "no_chest") {
+          if (typeof refreshBalls === "function") refreshBalls({ announce: false });
+          if (typeof loadExpedition === "function") loadExpedition(true).then(() => {
+            if (document.querySelector("#overlay-body .exp") && typeof openExpedition === "function") openExpedition();
+          });
+          if (typeof showToast === "function") showToast("Aucun coffre restant à ouvrir. Ton sac est à jour.");
+          return;
+        }
+        if (typeof showToast === "function") showToast("Les coffres n’ont pas pu s’ouvrir. Réessaie.");
+        return;
+      }
       if (typeof closeOverlayModal === "function") closeOverlayModal();
       const tiers = ready.map((c) => c.tier + " %").join(" · ");
       return fxReveal({ icon: "🎁", title: "Coffre" + (ready.length > 1 ? "s" : "") + " de l’Expédition" + (tiers ? " · " + tiers : ""), balls: (d.added || []).map((a) => a.ball) }).then(() => {
