@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi opérationnel au 06/11/2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304 et ECO-05 #305 intégrées après CI vertes ; 23/43 actions.**
+> **Suivi opérationnel au 06/11/2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305 et ECO-06 #307 intégrées après CI vertes ; 24/43 actions.**
 
-**Progression intégrée : 23 tâches terminées / 43 actives = 53,5 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 19 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
+**Progression intégrée : 24 tâches terminées / 43 actives = 55,8 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 18 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action autonome sans arbitrage économique : ECO-06**, vérifier l'autorité serveur des récompenses et la résistance au rejeu des modes prioritaires ; aucun changement de barème sans accord. ECO-05 [#305](https://github.com/chebreub/Pokdle/pull/305) est fusionnée et documentée. ECO-03 reste à rediscuter, ECO-04 doit être vérifiée sans nouveau gain injustifié. `BUG-MOB-01` attend un test physique.
+**Prochaine action autonome : ECO-04 — vérifier la conservation et le crédit unique des coffres d'expédition**, uniquement diagnostic et sécurisation de l'idempotence tant qu'aucun arbitrage de nouvelle attribution automatique n'a été donné. ECO-06 [#307](https://github.com/chebreub/Pokdle/pull/307) est fusionnée et documentée. ECO-03 reste à rediscuter ; aucune modification du barème.
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -110,7 +110,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **ECO-05 · P1 · TERMINÉE** : [PR #305](https://github.com/chebreub/Pokdle/pull/305), fusion `dd79cd26f82ff7f75d0a35ac1ba36820bfd27946` après CI Node/PostgreSQL/navigateur vertes. [Mesures prospectives anonymes](qa/ECO_05_CAPTURE_METRICS.md) par version shiny, espèce/classe, Ball, rang et type de rencontre ; anciens totaux inchangés, taux de capture inchangés, seuil de 10 lancers pour la ventilation espèce.
 - [ ] **ECO-03 · P2 · À REDISCUTER** : proposition 30/60/90 ₽ (différence entre paliers, plafond 90/mode, idempotence) **non acceptée à ce stade**. Ne pas implémenter ni changer les récompenses avant nouvel échange et validation.
 - [ ] **ECO-04 · P2 · ACCORD DE PRINCIPE, À TESTER** : assurer qu'un coffre d'expédition déjà acquis est crédité une seule fois, même s'il n'est pas ouvert immédiatement. Vérifier les cas de reconnexion, requête répétée et interruption avant validation finale.
-- [ ] **ECO-06 · P2** : vérifier la réelle autorité serveur des récompenses pour chaque mode prioritaire.
+- [x] **ECO-06 · P2 · TERMINÉE** : [PR #307](https://github.com/chebreub/Pokdle/pull/307) fusionnée, CI Node/PostgreSQL/navigateur vertes. [Matrice de contrôle](qa/ECO_06_REWARD_AUTHORITY.md) des récompenses vérifiées, preuves Party et mécanismes anti-rejeu ; zéro Pokédollar/Ball pour Higher or Lower 60 s sans réponse serveur. Une partie réellement jouée conserve sa récompense habituelle.
 
 #### Décisions de cadrage économique — 05/11/2026
 
