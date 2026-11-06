@@ -1,10 +1,10 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
-> **État confirmé le 5 novembre 2026** — point de départ vérifié : `main` `bc0b6cfeec8f4b583d4e877b1ee14989db533074` (PR #279 fusionnée) ; la PR #280 poursuit les records Pixelisé.  
-> **10 actions terminées sur 43 = 23,3 %** après fusion de #280 ; **1 investigation ouverte** (`BUG-MOB-01`) ; **32 actions non commencées** ; `NIV-01` stationnée et exclue du total.  
-> **DATA-02 (#278), NIV-02 (#279) et SER-01 (#280) livrées après validation CI**. **Prochaine tâche autonome : `MEDIA-01` (Cri Pokémon)** ; vérifier le dernier état du dépôt avant toute nouvelle PR.
+> **État confirmé le 5 novembre 2026** — point de départ vérifié : `main` `89728e9f06294fd3502ab81e511d8c330c52f3a3` (PR #280 fusionnée) ; la PR #281 poursuit la fiabilité audio du jeu Cri.  
+> **11 actions terminées sur 43 = 25,6 %** après fusion de #281 ; **1 investigation ouverte** (`BUG-MOB-01`) ; **31 actions non commencées** ; `NIV-01` stationnée et exclue du total.  
+> **DATA-02 (#278), NIV-02 (#279), SER-01 (#280) et MEDIA-01 (#281) livrées après validation CI**. **Prochaine tâche autonome : `PC-02` (clavier et jeu sur ordinateur)** ; vérifier le dernier état du dépôt avant toute nouvelle PR.
 >
-> **Important :** le taux de 23,3 % mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
+> **Important :** le taux de 25,6 % mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
 
 Ce document sert à **transférer intégralement le contexte du projet dans un nouveau chat**, sans nouvel audit général, sans questions déjà résolues et sans limiter les améliorations aux statistiques. Le développement du site est avancé ; il faut **poursuivre le plan existant**, pas recommencer le projet.
 
@@ -29,13 +29,13 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | --- | --- | --- |
 | 0 | Fiabilité tactile, ergonomie iPhone/PC, compréhension des données | 1 / 7 |
 | 1 | Logique des jeux, reprise de séries, animations/récompenses, données d'usage | 7 / 8 |
-| 2 | Gameplay, maîtrise, pédagogie, découverte de modes | 2 / 5 |
+| 2 | Gameplay, maîtrise, pédagogie, découverte de modes | 3 / 5 |
 | 3 | Pokédex, collection, rareté et objectifs personnels | 0 / 4 |
 | 4 | Économie, captures, Pokéballs, Pokédollars, expéditions, événements rares | 0 / 8 |
 | 5 | Invitations, défis, partage, échanges et diffusion naturelle | 0 / 5 |
 | 6 | Gestes et animations facultatifs, après stabilisation tactile | 0 / 4 |
 | 7 | Recette auprès de joueurs externes et acquisition | 0 / 2 |
-| **Total** | **43 actions actives** | **10 / 43 = 23,3 %** |
+| **Total** | **43 actions actives** | **11 / 43 = 25,6 %** |
 
 **DATA-02 achevée et NIV-02 intégrée : ne pas concentrer davantage le travail sur le dashboard.** Une fois les mesures fiabilisées, reprendre les améliorations concrètes des modes, du mobile, du Pokédex, de l'économie et du multijoueur dans l'ordre des priorités, contraintes et dépendances du plan. Les statistiques servent à orienter le gameplay ; elles ne remplacent pas le gameplay.
 
@@ -53,6 +53,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | **DATA-02** | Segmentation **prospective** admin/session test/non marquée, totaux bruts conservés, historique non ventilable ; pas de preuve d'identités réelles | [#278](https://github.com/chebreub/Pokdle/pull/278) |
 | **NIV-02** | Aide facultative pour interpréter Stat Mystère, exemples fictifs et barres, sans changement aux chances ni à la première lettre déjà présente | [#279](https://github.com/chebreub/Pokdle/pull/279) |
 | **SER-01** | Pilote des records **personnels** Pixelisé : trouvés puis essais connus ; historiques préservés, profils fusionnés sans perdre les records, classement public inchangé et non départagé faute de mesure serveur | [#280](https://github.com/chebreub/Pokdle/pull/280) |
+| **MEDIA-01** | Cry : gérer erreurs de chargement/lecture, délai, retour tardif ; relancer le même son ou quitter vers les modes sans abandon. Secret serveur et économie inchangés | [#281](https://github.com/chebreub/Pokdle/pull/281) |
 
 Autres PR à ne pas confondre avec une action supplémentaire terminée :
 - [#260](https://github.com/chebreub/Pokdle/pull/260) : plan, diagnostic et infrastructure de tests tactiles.
@@ -64,7 +65,9 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 ## 4. Point de reprise exact et sujets en attente
 
-**Prochaine action autonome : `MEDIA-01` — ne pas imposer de défaite lorsqu'un cri Pokémon n'a pas pu être entendu.** Examiner le code du lecteur et le cycle des tentatives ; proposer un repli/réessai clair sur panne de chargement/lecture, sans modification des récompenses ni du nombre d'essais. Tester mobiles Chromium/WebKit et l'absence de validation implicite du jeu.
+**Prochaine action autonome : `PC-02` — clavier contextuel sur les jeux sur ordinateur.** Examiner les contrôles Enter, flèches, Échap déjà existants, puis combler seulement les manques sans intercepter la saisie dans le chat ni les champs de formulaire. Tester clavier/focus et préserver les comportements iPhone/Safari et les actions de récompense.
+
+**MEDIA-01 :** [PR #281](https://github.com/chebreub/Pokdle/pull/281), [protocole et limites](qa/MEDIA_01_CRY_PLAYBACK.md). En cas d'échec audio du jeu Cri, le même son peut être relancé, le chargement a un délai, les erreurs tardives sont invalidées ; une sortie sans déclarer d'abandon est affichée. Aucun essai ou gain n'est inventé. Cela ne prouve pas qu'un haut-parleur a réellement émis un son.
 
 **SER-01 :** [PR #280](https://github.com/chebreub/Pokdle/pull/280), [règles de départage](qa/SER_01_PIXEL_RECORDS.md). Le nombre trouvé historique reste la référence ; seules les nouvelles séries complètes fournissent une précision. L'égalité avec un ancien record sans essais connus ne prouve aucune amélioration. Les classements publics continuent de ne classer que par nombre trouvé.
 
@@ -74,7 +77,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 **En parallèle : `BUG-MOB-01` reste ouvert.** Sur le téléphone de Jade, des boutons en bas de « Qui est-ce ? » ne répondaient pas, puis redevenaient accessibles après scroll. Le correctif #271 traite une cause possible ; **aucune validation réelle sur son appareil**. Ne pas annoncer le P0 résolu ni appliquer des `z-index` / `pointer-events` globaux sans reproduction. Demander modèle, navigateur, comportement du clavier et reproduction **uniquement si ces détails deviennent nécessaires pour cette recette réelle** ; avancer sur d'autres tâches indépendantes en attendant.
 
-**Après `MEDIA-01` :** poursuivre les priorités et les dépendances du plan, sans figer artificiellement une file. Exemples : `DATA-04` (rétention J1/J7), `MOB-03/04`, `PC-01/02`, `DEX-01/02`, `PART-01/02`, ainsi que les simulations économiques. Le P0 mobile conserve sa priorité de sûreté, sans bloquer le reste si la reproduction dépend du retour de Jade.
+**Après `PC-02` :** poursuivre les priorités et les dépendances du plan, sans figer artificiellement une file. Exemples : `DATA-04` (rétention J1/J7), `MOB-03/04`, `PC-01`, `DEX-01/02`, `PART-01/02`, ainsi que les simulations économiques. Le P0 mobile conserve sa priorité de sûreté, sans bloquer le reste si la reproduction dépend du retour de Jade.
 
 ## 5. Économie, captures et décisions réservées au propriétaire
 
@@ -116,7 +119,7 @@ Les autres actions économiques (`ECO-05` version des règles, `ECO-06` autorit�
 > Je veux que tu **reprennes réellement le développement de mon site Pokédle**, sans repartir de zéro et sans limiter l'audit aux statistiques.  
 > **GitHub :** https://github.com/chebreub/Pokdle — **Site :** https://pokdle.fr/  
 > **Lis intégralement et dans cet ordre** : `docs/REPRISE_NOUVEAU_CHAT.md`, `docs/PLAN_AMELIORATION_POKEDLE.md`, `docs/ETAT_AVANCEMENT_POKEDLE.md`, puis les deux audits du 05/11/2026 et les documents liés. **Ce guide fait foi pour le transfert ; le dernier `main`, les PR et les tests font foi pour l'état technique courant.**  
-> **Dernier état après fusion de #280 : 10/43 actions terminées (23,3 %) ; `BUG-MOB-01` toujours en attente de confirmation réelle sur le téléphone de Jade ; prochaine tâche autonome `MEDIA-01`.** Les actions LOG-01/02/03/04, SAVE-01, FX-02, DATA-01, DATA-02, NIV-02 et SER-01 sont déjà intégrées : ne les recommence pas.  
+> **Dernier état après fusion de #281 : 11/43 actions terminées (25,6 %) ; `BUG-MOB-01` toujours en attente de confirmation réelle sur le téléphone de Jade ; prochaine tâche autonome `PC-02`.** Les actions LOG-01/02/03/04, SAVE-01, FX-02, DATA-01, DATA-02, NIV-02, SER-01 et MEDIA-01 sont déjà intégrées : ne les recommence pas.  
 > **Objectif global :** améliorer tous les modes, l'équilibrage, le Pokédex, la collection, les Pokémon rares, l'économie, les captures, les événements spéciaux, le multijoueur, le mobile/PC, les animations, les statistiques et la fidélisation. **Les statistiques ne sont qu'une partie du plan de 43 actions.**  
 > **Travaille maintenant** : vérifie le dernier `main`, le plan et les PR puis réalise le prochain lot sûr et autorisé, avec tests, CI, PR et mise à jour du suivi. Poursuis ensuite selon les priorités sans me reposer les questions déjà tranchées. **Soumets-moi seulement les décisions de gameplay ou d'économie qui exigent mon accord**, notamment Drattak et les expéditions. Ne touche ni aux probabilités de capture ni aux ressources et sauvegardes sans validation.  
 > À chaque étape, dis clairement : **fait / tests et CI / PR fusionnée ou non / vérification réelle en production / progression / prochaine action**. Pour « Go » ou « Suite », continue le plan au lieu de refaire un audit.
@@ -125,7 +128,7 @@ Les autres actions économiques (`ECO-05` version des règles, `ECO-06` autorit�
 
 1. **État technique** : contenu de `main` actuel, commits, PR et tests effectifs.
 2. **Décisions produit** : arbitrages validés et conditions figurant dans le plan, sans transformer des pistes en règles officielles.
-3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **10/43** après la fusion de #280 ; vérifier main pour toute modification ultérieure.
+3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **11/43** après la fusion de #281 ; vérifier main pour toute modification ultérieure.
 4. **Audits historiques** : photographie datée, à confronter aux corrections plus récentes.
 
-Ce guide remplace les anciennes instructions qui faisaient encore commencer par `LOG-02` ou `DATA-02`, ou annonçaient **2/43**, **7/43**, **8/43** ou **9/43** ; ces informations étaient dépassées au 5 novembre 2026.
+Ce guide remplace les anciennes instructions qui faisaient encore commencer par `LOG-02` ou `DATA-02`, ou annonçaient **2/43**, **7/43**, **8/43**, **9/43** ou **10/43** ; ces informations étaient dépassées au 5 novembre 2026.
