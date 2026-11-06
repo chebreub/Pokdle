@@ -22,12 +22,20 @@ const stat = (label,value,note) => '<div class="quick-stat"><strong>' + fmt(valu
   '</strong><span>' + esc(label) + '</span>' +
   (note ? '<small class="quiet">' + esc(note) + '</small>' : '') + '</div>';
 const empty = colSpan => '<tr><td colspan="' + colSpan + '">Aucune opération enregistrée sur cette période.</td></tr>';
+const capTable = (heading, rows, labels = {}) => '<h3>' + esc(heading) + '</h3>' +
+  '<div class="table-scroll"><table><thead><tr><th>Catégorie</th><th>Lancers</th><th>Captures</th><th>Observé</th></tr></thead><tbody>' +
+  (rows.map(row=>{
+    const name = row.pokemonId ? '#' + row.pokemonId : (labels[row.segment] || row.segment);
+    const pct = row.throws ? (100*row.catches/row.throws).toFixed(1).replace('.',',') + ' %' : '—';
+    return '<tr><th scope="row">' + esc(name) + '</th><td>' + fmt(row.throws) +
+      '</td><td>' + fmt(row.catches) + '</td><td>' + esc(pct) + '</td></tr>';
+  }).join('') || empty(4)) + '</tbody></table></div>';
 
 function renderEconomySection(economy) {
   if (!economy) return '<h2 class="section-title">Économie et captures</h2>' +
     '<section class="panel"><h2>Mesures indisponibles</h2>' +
     '<p>La base des Pokédollars, des Balls ou des captures n’a pas répondu. Aucun total n’est estimé.</p></section>';
-  const {coins,balls,wild,startDay,endDay} = economy;
+  const {coins,balls,wild,capture,startDay,endDay} = economy;
   const reportHref = economyExportHref(economy);
   const coinRows = coins.sources.map(row =>
     '<tr><th scope="row">' + esc(COIN_LABELS[row.category] || "Autres") + '</th>' +
@@ -45,6 +53,23 @@ function renderEconomySection(economy) {
     return '<tr><th scope="row">' + esc(label) + '</th><td>' + fmt(used) +
       '</td><td>' + fmt(success) + '</td><td>' + rate + '</td></tr>';
   }).join("");
+  const captureHtml = '<details><summary>Observer les captures par règles, Ball et tentative (ECO-05)</summary>' +
+    '<div class="detail-body"><p>Mesures prospectives depuis l’activation de ce suivi, uniquement sur les lancers réellement exécutés. ' +
+    'Les anciennes captures restent dans les totaux historiques ci-dessus, mais ne sont jamais inventées dans ce tableau. ' +
+    'Les catégories sont indépendantes : ne pas croiser les lignes pour reconstituer une partie individuelle.</p>' +
+    (!capture?.available ? '<p>Aucun lancer instrumenté pour cette période.</p>' :
+      '<p><strong>' + fmt(capture.throws) + ' lancers</strong> mesurés, ' + fmt(capture.catches) +
+      ' captures. Les taux sont des observations et non les probabilités officielles.</p>' +
+      capTable('Version des règles shiny',capture.rules,{'shiny-1-150':'1/150 (historique)','shiny-1-500':'1/500 (depuis 05/11/2026)'}) +
+      capTable('Ball utilisée',capture.balls,{poke:'Poké Ball',great:'Super Ball',ultra:'Hyper Ball'}) +
+      capTable('Ordre du lancer',capture.throwOrder,{'1':'1er lancer','2':'2e lancer','3':'3e lancer'}) +
+      capTable('Type de rencontre',capture.kinds,{wild:'Hautes herbes',legend:'Expédition',prestige:'Prestige'}) +
+      capTable('Classe du taux de capture de l’espèce',capture.classes,
+        {rare:'Rare (< 45)',moderate:'Intermédiaire (45–119)',common:'Courante (120+)',unknown:'Non classée'}) +
+      capTable('Espèces : au moins 10 lancers sur la période',capture.species) +
+      '<p class="quiet">Pour protéger les joueurs, ' + fmt(capture.speciesSuppressed) +
+      ' espèce(s) à moins de 10 lancers ne sont pas détaillées. Les 20 espèces les plus jouées au maximum sont affichées.</p>') +
+    '</div></details>';
   return '<h2 class="section-title">Économie et captures</h2>' +
     '<p class="economy-period">Du <b>' + esc(day(startDay)) + '</b> au <b>' + esc(day(endDay)) +
     '</b> · jours de Paris (contrairement aux visites, mesurées en UTC). Opérations enregistrées, pas joueurs uniques.</p>' +
@@ -84,6 +109,6 @@ function renderEconomySection(economy) {
     '<h3>Lancers et captures par Ball</h3><div class="table-scroll"><table><thead><tr><th>Ball</th><th>Lancers</th><th>Captures</th><th>Captures/lancer</th></tr></thead>' +
     '<tbody>' + types + '</tbody></table></div>' +
     '<p class="quiet">Les taux observés varient avec les Pokémon ciblés, les choix des joueurs et les rencontres encore ouvertes. Ils ne permettent pas de comparer directement la puissance des Balls. Les identités invité/compte peuvent occasionnellement se recouper.</p>' +
-    '</div></details>';
+    '</div></details>' + captureHtml;
 }
 module.exports = {renderEconomySection};
