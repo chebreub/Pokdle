@@ -2053,29 +2053,30 @@ function selectPartyGuessAC(name) {
 }
 
 function handlePartyGuessKey(event) {
-  var list = document.getElementById("party-guess-ac");
-  if (!list) {
-    if (event.key === "Enter") { event.preventDefault(); partySubmitAnswer(); }
-    return;
-  }
-  var items = list.querySelectorAll(".ac-item");
-  if (event.key === "ArrowDown") {
+  if (event.defaultPrevented || event.isComposing || event.keyCode === 229
+    || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+  const list = document.getElementById("party-guess-ac");
+  const visible = Boolean(list && !list.classList.contains("hidden"));
+  const items = visible ? list.querySelectorAll(".ac-item") : [];
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    if (!items.length) return;
     event.preventDefault();
-    partyAcIndex = Math.min(partyAcIndex + 1, items.length - 1);
-    highlightItems(items, partyAcIndex);
-  } else if (event.key === "ArrowUp") {
-    event.preventDefault();
-    partyAcIndex = Math.max(partyAcIndex - 1, -1);
+    partyAcIndex = event.key === "ArrowDown"
+      ? Math.min(partyAcIndex + 1, items.length - 1)
+      : Math.max(partyAcIndex - 1, -1);
     highlightItems(items, partyAcIndex);
   } else if (event.key === "Enter") {
     event.preventDefault();
-    if (partyAcIndex >= 0 && items[partyAcIndex]) {
+    if (visible && partyAcIndex >= 0 && items[partyAcIndex]) {
       selectPartyGuessAC(items[partyAcIndex].dataset.name || items[partyAcIndex].querySelector(".ac-name")?.textContent || "");
     } else {
       partySubmitAnswer();
     }
-  } else if (event.key === "Escape") {
+  } else if (event.key === "Escape" && visible) {
+    event.preventDefault();
+    event.stopPropagation();
     list.classList.add("hidden");
+    partyAcIndex = -1;
   }
 }
 

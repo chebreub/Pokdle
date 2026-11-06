@@ -56,21 +56,29 @@ function filterChallengeAC() {
 }
 
 function handleChallengeKey(e) {
+  if (e.defaultPrevented || e.isComposing || e.keyCode === 229
+    || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
   const list = document.getElementById("challenge-ac");
-  const items = list.querySelectorAll(".ac-item");
-
-  if (e.key === "ArrowDown") {
+  if (!list) return;
+  const visible = !list.classList.contains("hidden");
+  const items = visible ? list.querySelectorAll(".ac-item") : [];
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (!items.length) return;
     e.preventDefault();
-    chalAcIndex = Math.min(chalAcIndex + 1, items.length - 1);
+    chalAcIndex = e.key === "ArrowDown"
+      ? Math.min(chalAcIndex + 1, items.length - 1)
+      : Math.max(chalAcIndex - 1, -1);
     highlightItems(items, chalAcIndex);
-  } else if (e.key === "ArrowUp") {
+  } else if (e.key === "Enter" && visible && chalAcIndex >= 0 && items[chalAcIndex]) {
     e.preventDefault();
-    chalAcIndex = Math.max(chalAcIndex - 1, -1);
-    highlightItems(items, chalAcIndex);
-  } else if (e.key === "Enter" && chalAcIndex >= 0 && items[chalAcIndex]) {
-    const name = items[chalAcIndex].querySelector(".ac-name").textContent;
+    const name = items[chalAcIndex].querySelector(".ac-name")?.textContent;
     const p = POKEMON_LIST.find((pk) => pk.name === name);
     if (p) selectChallengeAC(p);
+  } else if (e.key === "Escape" && visible) {
+    e.preventDefault();
+    e.stopPropagation();
+    list.classList.add("hidden");
+    chalAcIndex = -1;
   }
 }
 
@@ -3983,35 +3991,36 @@ function runMultiplayerBotTurn() {
 
 
 function handleMultiplayerGuessKey(event) {
+  if (event.defaultPrevented || event.isComposing || event.keyCode === 229
+    || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
   const list = document.getElementById("multiplayer-guess-ac");
-  const items = list?.querySelectorAll(".ac-item") || [];
-
-  if (event.key === "ArrowDown") {
+  const input = document.getElementById("multiplayer-guess-input");
+  if (!input || input.disabled) return;
+  const visible = Boolean(list && !list.classList.contains("hidden"));
+  const items = visible ? list.querySelectorAll(".ac-item") : [];
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    if (!items.length) return;
     event.preventDefault();
-    acIndex = Math.min(acIndex + 1, items.length - 1);
-    highlightItems(items, acIndex);
-  } else if (event.key === "ArrowUp") {
-    event.preventDefault();
-    acIndex = Math.max(acIndex - 1, -1);
+    acIndex = event.key === "ArrowDown"
+      ? Math.min(acIndex + 1, items.length - 1)
+      : Math.max(acIndex - 1, -1);
     highlightItems(items, acIndex);
   } else if (event.key === "Enter") {
+    const room = multiplayerLiveState?.room;
+    if (!room || room.status !== "live") return;
     event.preventDefault();
-    if (acIndex >= 0 && items[acIndex]) {
+    if (visible && acIndex >= 0 && items[acIndex]) {
       const name = items[acIndex].querySelector(".ac-name")?.textContent;
-      if (name) {
-        selectMultiplayerGuessAC(name);
-        return;
-      }
+      if (name) { selectMultiplayerGuessAC(name); return; }
     }
     submitMultiplayerGuess();
-  } else if (event.key === "Escape") {
-    list?.classList.add("hidden");
+  } else if (event.key === "Escape" && visible) {
+    event.preventDefault();
+    event.stopPropagation();
+    list.classList.add("hidden");
+    acIndex = -1;
   }
 }
-
-
-
-
 
 function createDefaultMultiplayerLiveState() {
   return {
@@ -4088,14 +4097,8 @@ function ensureMultiplayerGuessInputBindings() {
   input.addEventListener("input", () => {
     updateMultiplayerGuessSubmitState();
   });
-  input.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
-    const room = multiplayerLiveState?.room;
-    const button = document.querySelector('#multiplayer-live-box [data-action="submitMultiplayerGuess"]');
-    if (!room || room.status !== "live" || input.disabled || button?.disabled) return;
-    event.preventDefault();
-    submitMultiplayerGuess();
-  });
+  // Keydown (including Enter) belongs exclusively to handleMultiplayerGuessKey
+  // through initInlineHandlerBindings. A second listener submitted twice.
 }
 
 function canSubmitMultiplayerGuess() {
@@ -5332,10 +5335,14 @@ window.addEventListener('DOMContentLoaded', () => {
     choosePartner(picked.id);
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeOverlayModal();
-    if (event.key !== 'Tab') return;
     const overlay = document.getElementById('overlay-modal');
     if (!overlay || overlay.classList.contains('hidden')) return;
+    if (event.key === 'Escape' && !event.defaultPrevented) {
+      event.preventDefault();
+      closeOverlayModal();
+      return;
+    }
+    if (event.key !== 'Tab') return;
     const controls = [...overlay.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(el => el.getClientRects().length);
     const first = controls[0], last = controls[controls.length - 1];
     if (!first) return;

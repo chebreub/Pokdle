@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**11 tâches terminées sur 43 actions actives = 25,6 %** après intégration de MEDIA-01 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
+**12 tâches terminées sur 43 actions actives = 27,9 %** après intégration de PC-02 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **11** | Action vérifiée, PR fusionnée |
+| **Terminé et intégré à main** | **12** | Action vérifiée, PR fusionnée |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **31** | Dont certaines propositions économiques soumises à validation préalable |
+| **Non commencé / à conduire ou à décider** | **30** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (11 actions terminées / 43 actions actives) × 100 = **25,5814 %, arrondi à 25,6 %**.
+**Formule explicite :** (12 actions terminées / 43 actions actives) × 100 = **27,9070 %, arrondi à 27,9 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,7 +25,7 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 1 / 7 | 14,3 % | DATA-01 documenté ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
+| 0 | Ergonomie mobile / PC et mesures | 2 / 7 | 28,6 % | DATA-01 documenté, PC-02 clavier ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
@@ -33,7 +33,7 @@
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **11 / 43** | **25,6 %** | NIV-01 stationné exclu |
+| **Total** | | **12 / 43** | **27,9 %** | NIV-01 stationné exclu |
 
 ## DATA-02 — intégré après fusion de la PR #278
 
@@ -63,6 +63,14 @@
 - **Aucune défaite implicite :** le joueur peut réessayer le même cri ou quitter vers les modes sans déclarer d'abandon, sans nouveau tirage ni attribution de récompense. L'URL vérifiée reste opaque et le Pokémon secret reste côté serveur. Volume et tentative inchangés.
 - **Validation :** tests Node dédiés + régressions et contrôle navigateur/base à vérifier sur le head exact avant fusion ; Safari iPhone physique et Render réel non revendiqués. [Protocole](qa/MEDIA_01_CRY_PLAYBACK.md).
 - **Progression après fusion : 11/43 = 25,6 %** ; prochaine action autonome **PC-02**, navigation clavier contextuelle sur ordinateur. `BUG-MOB-01` reste ouvert tant que le téléphone de Jade n'a pas servi à reproduire et valider son correctif.
+
+## PC-02 — intégré après fusion de la PR #282
+
+- [PR #282](https://github.com/chebreub/Pokdle/pull/282) : navigation clavier de Solo, Défi, Party et Duel désormais limitée aux suggestions présentes. Flèches sans intercepter le curseur lorsque la liste est masquée ; Échap referme la liste sans déclencher une fermeture de modale ; Entrée respectant les sélections, l'IME et les modificateurs.
+- **Duel** : élimination du deuxième gestionnaire `keydown Enter` branché sur le même input. L'envoi d'une proposition conserve les protections métier côté client et serveur ; ce correctif supprime seulement un déclencheur redondant.
+- **Protection** : aucune écoute globale introduite pour les touches de réponse, pas d'interférence volontaire avec les chats et formulaires, aucun changement de récompense, sauvegarde, Pokémon, score ou économie.
+- **Validation :** tests ciblés `App/test/pc-02-keyboard-context.test.js`, et CI Node/navigateur/base exigée sur head final avant fusion ; Safari réel/production non revendiqués.
+- **Après fusion : 12/43 = 27,9 %**, prochaine action autonome **PC-01** ; `BUG-MOB-01` demeure non vérifié sur téléphone réel.
 
 ## Journal GitHub vérifié
 
@@ -151,7 +159,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
 2. **LOG-02 intégré via PR #266** : tests Node et navigateur verts, merge `9a68b84f`. Un ancien zéro sans indicateur demeure ambigu, aucune migration inventée.
-3. **SAVE-01 (#270), FX-02 (#274) et le cadrage DATA-01 intégrés** ; **prochain chantier DATA-02** : différencier essais/admin et usages réels dans l'interprétation des KPI, sans effacer les journaux.
+3. **SAVE-01 (#270), FX-02 (#274), DATA-01/02 (#276/#278), NIV-02 (#279), SER-01 (#280), MEDIA-01 (#281) et PC-02 (#282) intégrés** ; **prochain chantier PC-01** : confort desktop et grille Course au Pokédex sans scroll de jeu.
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
