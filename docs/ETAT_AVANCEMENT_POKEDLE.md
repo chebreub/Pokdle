@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie vérifiée : 6 novembre 2026, avant fusion de #283.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `bf9a11a9359032655c2cbda75204046bb7798a3f` sur `main`.
+**Photographie vérifiée : 6 novembre 2026, après fusion vérifiée de #283.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `e3e804de2c0cc0652280c464fd27c5eaeda69813` sur `main`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**12 tâches terminées sur 43 actions actives = 27,9 %** ; PC-01 reste à fusionner ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
+**13 tâches terminées sur 43 actions actives = 30,2 %** après intégration de PC-01 ; le pourcentage compte les actions validées, pas le degré de finition global du jeu.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **12** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **2** | PC-01 (#283 ouverte) et BUG-MOB-01 (retour mobile réel à obtenir) |
+| **Terminé et intégré à main** | **13** | Action vérifiée, PR fusionnée |
+| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
 | **Non commencé / à conduire ou à décider** | **29** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (12 actions terminées / 43 actions actives) × 100 = **27,9070 %, arrondi à 27,9 %**.
+**Formule explicite :** (13 actions terminées / 43 actions actives) × 100 = **30,2326 %, arrondi à 30,2 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,7 +25,7 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 2 / 7 | 28,6 % | DATA-01 documenté, PC-02 clavier ; PC-01 en cours ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
+| 0 | Ergonomie mobile / PC et mesures | 3 / 7 | 42,9 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 0 / 4 | 0 % | Définition des voies et états à clarifier |
@@ -33,7 +33,7 @@
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **12 / 43** | **27,9 %** | NIV-01 stationné exclu |
+| **Total** | | **13 / 43** | **30,2 %** | NIV-01 stationné exclu |
 
 ## DATA-02 — intégré après fusion de la PR #278
 
@@ -72,7 +72,7 @@
 - **Validation :** tests ciblés `App/test/pc-02-keyboard-context.test.js`, et CI Node/navigateur/base exigée sur head final avant fusion ; Safari réel/production non revendiqués.
 - **Après fusion : 12/43 = 27,9 %**, prochaine action autonome **PC-01** ; `BUG-MOB-01` demeure non vérifié sur téléphone réel.
 
-## PC-01 — PR #283 ouverte, validation finale en cours
+## PC-01 — fusion vérifiée de la PR #283
 
 - [PR #283](https://github.com/chebreub/Pokdle/pull/283) : mise en page compacte de l'arène Course au Pokédex et du jeu normal sur écran PC 1366×768, sans défilement du plateau. Moteur existant de grille réactive conservé ; seule la densité CSS desktop a changé.
 - **Recette automatisée ciblée** `tools/pc_desktop_quality.py` : deux joueurs en salle isolée, navigateur Chromium + WebKit, résolution 1280×720 / 1366×768 / 1600×900 / 1920×1080 ; 151 cellules vérifiées dans le viewport, champ et boutons visibles, première inscription et doublon refusé. Le scénario jeu classique vérifie le champ de recherche et les deux colonnes.
@@ -87,7 +87,8 @@
 - **Correction minimale :** placement explicite saisie à gauche / indices à droite uniquement sur le PC compact, légende sous les indices, résultat limité à 1 000 px. L'assertion générale de disposition verticale reste valable hors de ce breakpoint ; sur PC compact elle vérifie désormais largeur lisible, absence de chevauchement et alignement. Le contrôle de largeur du résultat reste inchangé.
 - **Tests ciblés renforcés :** vrai CSS `dist/app.min.css?v=…` servi après build, plusieurs essais, largeur des dix colonnes, ouverture du carnet, abandon/résultat et rejeu, sur Chromium et WebKit. Le moteur Course au Pokédex et les règles serveur restent intacts.
 - **Local :** build et 17 tests Python + 5 tests clavier Node réussis ; parcours PC-01 Chromium réussi (jeu classique, quatre tailles de Course, inscription et doublon). WebKit local bloqué au lancement par des bibliothèques système absentes : validation exigée dans la CI, sans déclarer ce test local réussi. Aucune recette physique iPhone ni vérification Render.
-- **Statut à ce point :** PR ouverte, **12/43 intégrées**. Attendre la CI complète du commit final avant fusion, puis actualiser le total à **13/43** et passer à **MOB-03**.
+- **CI finale :** 860 tests Node réussis, 64 ignorés dans le job sans base ; 78/78 tests PostgreSQL isolés réussis. Recette générale **410/410**, PC-01 renforcé **Chromium et WebKit**, suites solo/Party/Petit Bac et audit de dépendances verts. Artefact `revision.txt` = merge candidat `e2832801282f67018536d5c821c389539787ca9b`, même arbre que le code fusionné. Captures finales des indices et résultats revues.
+- **Clôture vérifiée :** PR #283 fusionnée au commit `e3e804de2c0cc0652280c464fd27c5eaeda69813` après CI [Node](https://github.com/chebreub/Pokdle/actions/runs/42208624207) et [navigateur/base complète](https://github.com/chebreub/Pokdle/actions/runs/42208628864) vertes sur `eca06a7fce06700a701ec8ac796cfa1a0b596222`. **13/43 intégrées = 30,2 %** ; prochaine action **MOB-03**. Les limites de recette réelle restent inchangées.
 
 ## Journal GitHub vérifié
 
@@ -176,7 +177,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 
 1. **LOG-03 terminé dans #264.** CI Node et navigateur vertes sur le head exact, merge `cfa0d021`. Le point tactile réel reste ouvert.
 2. **LOG-02 intégré via PR #266** : tests Node et navigateur verts, merge `9a68b84f`. Un ancien zéro sans indicateur demeure ambigu, aucune migration inventée.
-3. **SAVE-01 (#270), FX-02 (#274), DATA-01/02 (#276/#278), NIV-02 (#279), SER-01 (#280), MEDIA-01 (#281) et PC-02 (#282) intégrés** ; **terminer PC-01 (#283), puis MOB-03** : accès au bouton principal au pouce, sans superposition clavier/dock/chat.
+3. **SAVE-01 (#270), FX-02 (#274), DATA-01/02 (#276/#278), NIV-02 (#279), SER-01 (#280), MEDIA-01 (#281) PC-02 (#282) et PC-01 (#283) intégrés** ; **prochain chantier MOB-03** : accès au bouton principal au pouce, sans superposition clavier/dock/chat.
 4. Pendant ce temps, collecter si possible une **reproduction réelle BUG-MOB-01** avec modèle et navigateur. Ce P0 ne doit pas être « résolu » fictivement pour accélérer le plan.
 5. Passer ensuite au gameplay, Pokédex, captures et invitations dans l'ordre des dépendances ; une PR sensible par lot.
 
