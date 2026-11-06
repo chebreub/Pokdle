@@ -41,7 +41,7 @@ function fixture({verified=false,play=()=>Promise.resolve()}={}) {
     gameMode:"cry",gameOver:false,secretPokemon:verified ? null : {id:25,name:"Pikachu"},
     cryAudio:null,attempts:2,guessSeries:{found:3,rounds:[]},playerStats:{wins:0},
     document:{getElementById:el}, Audio, appSoundVolume:()=>0.4,
-    getPokemonCryUrl:()=>"https://cdn.jsdelivr.net/25.ogg",
+    getPokemonCryUrl:p=>"https://cdn.jsdelivr.net/"+p.id+".ogg",
     verifiedGuessCry:()=>verified ? "https://pokdle.fr/api/arcade/cry/opaque-token" : "",
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},
     clearTimeout(id){timers.delete(id);}
@@ -178,8 +178,8 @@ test("MEDIA-01: starting another Cry series round invalidates old sound even wit
   old.ctx.secretPokemon={id:6,name:"Dracaufeu"};
   old.ctx.playCrySound();
   assert.equal(old.audios.length,2);
-  assert.equal(old.audios[1].src,"https://cdn.jsdelivr.net/25.ogg",
-    "test fixture uses fixed URI; actual start picks a fresh Pokémon");
+  assert.equal(old.audios[1].src,"https://cdn.jsdelivr.net/6.ogg",
+    "a new round uses the new Pokémon without reviving the previous sound");
   const nextStatus=old.status();
   lateError();
   assert.equal(old.status(),nextStatus);
