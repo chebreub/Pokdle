@@ -61,6 +61,44 @@ function drattakPrestigeHtml() {
     '<div class="exp-prestige-lineage">' + line + '</div>' + retryInfo + trialsHtml + days + next + '</section>';
 }
 
+function meetPrestigeDrattak() {
+  const answer = document.getElementById("prestige-drattak-answer")?.value?.trim() || "";
+  if (!answer) { if (typeof showToast === "function") showToast("Entre ta réponse à l’énigme de la falaise."); return; }
+  return expeditionPrepareEncounter("prestige", answer);
+}
+function expeditionPerformPrestige(answer) {
+  const scope = typeof ballState !== "undefined" && ballState?.actionScope;
+  if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
+  return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
+    if (!data?.ok) {
+      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_need_three_balls:"Il te faut au moins trois Balls pour ne pas perdre une rare occasion de rencontre.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",prestige_event_closed:"Le passage de la seconde chance ouvre le samedi et le dimanche.",
+        encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
+        account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
+      // Une requête peut avoir réussi alors que sa réponse s'est perdue.
+      // Reprendre l'unique rencontre ouverte plutôt que brûler une nouvelle tentative.
+      if (["prestige_cooldown","encounter_open"].includes(data?.error) && typeof refreshBalls === "function") {
+        return refreshBalls({announce:false}).then((current) => {
+          if (current?.wild?.open?.prestige && typeof renderWildEncounter === "function") {
+            if (typeof closeOverlayModal === "function") closeOverlayModal();
+            renderWildEncounter(current);
+            return;
+          }
+          if (typeof showToast === "function") showToast(message);
+        });
+      }
+      if (typeof showToast === "function") showToast(message);
+      return;
+    }
+    if (typeof closeOverlayModal === "function") closeOverlayModal();
+    if (typeof ballApply === "function") ballApply(data,{announce:false});
+    if (typeof renderWildEncounter === "function") renderWildEncounter(data,null,true);
+    drattakPrestigeAt = 0;
+    const pokemon = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(373) : null;
+    if (pokemon && typeof playPokemonCry === "function") try { playPokemonCry(pokemon,0.6); } catch (_e) {}
+  });
+}
+window.meetPrestigeDrattak = meetPrestigeDrattak;
+
  // ECO-07 — une confirmation purement client, avant tout appel POST ouvrant une rencontre.
  // Les stocks, conditions d'accès et probabilités restent strictement décidés par le serveur.
 let expeditionPendingEncounter = null;
@@ -124,43 +162,6 @@ function expeditionConfirmEncounter() {
 window.expeditionCancelEncounter = expeditionCancelEncounter;
 window.expeditionConfirmEncounter = expeditionConfirmEncounter;
 
-function meetPrestigeDrattak() {
-  const answer = document.getElementById("prestige-drattak-answer")?.value?.trim() || "";
-  if (!answer) { if (typeof showToast === "function") showToast("Entre ta réponse à l’énigme de la falaise."); return; }
-  return expeditionPrepareEncounter("prestige", answer);
-}
-function expeditionPerformPrestige(answer) {
-  const scope = typeof ballState !== "undefined" && ballState?.actionScope;
-  if (!scope) { if (typeof showToast === "function") showToast("Ouvre ton sac ou recharge la page avant de tenter la rencontre."); return; }
-  return expeditionFetch("/api/prestige/drattak/meet",{actionScope:scope,answer}).then((data) => {
-    if (!data?.ok) {
-      const message = { prestige_not_ready:"Épreuve non terminée.",prestige_riddle_wrong:"L’inscription ne réagit pas… Relis les indices de la falaise.",prestige_need_three_balls:"Il te faut au moins trois Balls pour ne pas perdre une rare occasion de rencontre.",prestige_cooldown:"Nouvelle tentative pas encore disponible.",prestige_event_closed:"Le passage de la seconde chance ouvre le samedi et le dimanche.",
-        encounter_open:"Termine d’abord ta rencontre en cours.",no_balls:"Tu dois posséder au moins une Ball.",
-        account_required:"Connecte-toi pour ce défi.",account_changed:"Recharge la page après ton changement de compte." }[data?.error] || "Rencontre indisponible. Réessaie.";
-      // Une requête peut avoir réussi alors que sa réponse s'est perdue.
-      // Reprendre l'unique rencontre ouverte plutôt que brûler une nouvelle tentative.
-      if (["prestige_cooldown","encounter_open"].includes(data?.error) && typeof refreshBalls === "function") {
-        return refreshBalls({announce:false}).then((current) => {
-          if (current?.wild?.open?.prestige && typeof renderWildEncounter === "function") {
-            if (typeof closeOverlayModal === "function") closeOverlayModal();
-            renderWildEncounter(current);
-            return;
-          }
-          if (typeof showToast === "function") showToast(message);
-        });
-      }
-      if (typeof showToast === "function") showToast(message);
-      return;
-    }
-    if (typeof closeOverlayModal === "function") closeOverlayModal();
-    if (typeof ballApply === "function") ballApply(data,{announce:false});
-    if (typeof renderWildEncounter === "function") renderWildEncounter(data,null,true);
-    drattakPrestigeAt = 0;
-    const pokemon = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(373) : null;
-    if (pokemon && typeof playPokemonCry === "function") try { playPokemonCry(pokemon,0.6); } catch (_e) {}
-  });
-}
-window.meetPrestigeDrattak = meetPrestigeDrattak;
 function expeditionFetch(url, body) {
   const opts = body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin" };
   return fetch(url, opts).then((r) => r.json().catch(() => null)).catch(() => null);
