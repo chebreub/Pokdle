@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi au 06/11/2026 : DEX-04 (#296) intégré après DEX-03 ; 18 actions intégrées.**
+> **Suivi au 06/11/2026 : ECO-01 — simulation sans nouvelle règle économique, PR #299 ; 19 actions intégrées après fusion de #299.**
 
-**Progression validée : 18 tâches terminées / 43 actives = 41,9 %.** Une action en cours (BUG-MOB-01), 24 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression après intégration de #299 : 19 tâches terminées / 43 actives = 44,2 %.** Une action en cours (BUG-MOB-01), 23 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**ECO-01 — simuler des variantes d'une occasion limitée d'expédition légendaire, sans déploiement.** Comparer le maintien strict des règles actuelles à d'autres scénarios sur la rareté, les ressources, les coûts et les abus. Aucune modification de taux, tirage ou récompense avant arbitrage explicite. `BUG-MOB-01` reste en attente d'une recette physique, distincte et non bloquante.
+**Prochaine action : ECO-02 — étudier des variantes de l'événement Drattak, sans modifier le gameplay avant arbitrage.** L'étude ECO-01 est livrée dans [la PR #299](https://github.com/chebreub/Pokdle/pull/299) et [son rapport](qa/ECO_01_SIMULATION.md) : A (règle actuelle), B (seconde chance après 3 jours), C (4 jours), D (5 jours), E (coût théorique). **Aucune variante n'est autorisée pour la production** ; l'arbitrage ECO-01 reste ouvert. `BUG-MOB-01` attend toujours le test physique.
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -103,7 +103,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **DEX-04 · P2** : vitrine privée optionnelle de six Pokémon actuellement possédés, palier personnel indicatif et partage volontaire après revalidation de l'inventaire. [PR #296](https://github.com/chebreub/Pokdle/pull/296) et [règles/tests](qa/DEX_04_SHOWCASE.md).
 
 ### Lot 4 — Économie et rencontres **décisions de cadrage, sans autorisation de mise en production**
-- [ ] **ECO-01 · P1 · À SIMULER** : nouvelle occasion limitée pour l'expédition légendaire, sans capture garantie et sous autorité serveur. **Pas d'accord de principe avant comparaison des scénarios.**
+- [x] **ECO-01 · P1 · SIMULATION DOCUMENTÉE** : [PR #299](https://github.com/chebreub/Pokdle/pull/299), [rapport comparatif](qa/ECO_01_SIMULATION.md), tests reproductibles. **La clôture concerne l'étude, pas l'approbation d'une seconde chance : aucun nouveau taux ni règle économique.**
 - [ ] **ECO-02 · P1 · ACCORD DE PRINCIPE, À CADRER** : éviter la remise à zéro intégrale après fuite de Drattak, sous réserve des tests. **Repenser l'expédition comme un rendez-vous particulier, de type événement**, avec éventuelle apparition aléatoire à discuter ; fréquence, déclenchement, récupération et conditions de reprise **non décidés**.
 - [ ] **ECO-07 · P1 · ACCORD DE PRINCIPE, À TESTER** : préparation explicite des rencontres de prestige (proposition : au moins 3 Balls avant ouverture, chances visibles, annulation sans perdre la piste). Définir et vérifier les détails opérationnels avant validation finale.
 - [ ] **ECO-08 · P1 · ACCORD DE PRINCIPE, À TESTER** : proposition de conserver une rencontre spéciale ouverte pendant 72 h, sans nouveau tirage ni nouveau stock gratuit. Durée et conditions exactes à confirmer après tests ; **ne pas appliquer d'office à l'événement Drattak**.
@@ -118,7 +118,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 | Référence | Décision | À faire avant toute modification |
 | --- | --- | --- |
-| **ECO-01 — Expéditions légendaires** | **Simuler et comparer avant de décider.** | Comparer des scénarios de nouvelle occasion limitée et leur effet sur la rareté, la fréquence de rencontre, l'inventaire et le risque d'abus. Ne pas présumer d'une capture garantie. |
+| **ECO-01 — Expéditions légendaires** | **Simulation terminée ; décision non prise.** | Comparer des scénarios de nouvelle occasion limitée et leur effet sur la rareté, la fréquence de rencontre, l'inventaire et le risque d'abus. Ne pas présumer d'une capture garantie. |
 | **ECO-02 — Drattak** | **Accord de principe sous réserve des tests**, **concept événementiel à rediscuter**. | Préserver une partie du travail après fuite est une piste favorable, mais l'expédition doit pouvoir devenir un **rendez-vous particulier, de type événement**, possiblement déclenché de façon aléatoire. **Aucune règle fixée** sur périodicité, hasard, conditions d'accès, fenêtre, progression conservée, reprise ou récompense. Présenter des variantes avant arbitrage. |
 | **ECO-07 — Préparation** | **Accord de principe sous réserve des tests.** | Étudier l'exigence proposée d'au moins trois Balls, l'affichage des chances et une annulation sans perte de piste ; vérifier les situations sans suffisamment de Balls, les interruptions et les tentatives répétées. |
 | **ECO-08 — Rencontre spéciale ouverte** | **Accord de principe sous réserve des tests.** | Évaluer le maintien proposé pendant **72 h**, sans nouveau tirage ni Balls offertes ; tester expiration, reprise, multi-appareils et idempotence. **Pas d'association automatique avec l'événement Drattak**, qui reste à cadrer séparément. |
