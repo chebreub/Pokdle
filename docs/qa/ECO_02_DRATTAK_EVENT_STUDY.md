@@ -65,8 +65,8 @@ Avec G, la probabilité de capture **dans cette cohorte fictive déjà en échec
 ### Sensibilité importante : effet des inventaires et de l'activité
 
 Sur le même modèle d'activité :
-- avec **3 Poké Balls** par nouvelle rencontre : A capture 58,7 % des échecs initiaux d'ici 90 jours, G environ 70–80 % ; les résultats complets sont calculables avec le script ;
-- avec **3 Hyper Balls** : la capture par rencontre monte à 84,16 % ; les cohortes A et G capturent plus souvent et l'écart se réduit ;
+- avec **3 Poké Balls** par nouvelle rencontre : A capture 58,7 % des échecs initiaux d'ici 90 jours et G **70,2 %** ; les résultats complets sont calculables avec le script ;
+- avec **3 Hyper Balls** : la capture par rencontre monte à 84,16 % ; la capture par cohorte atteint **78,2 % (A)** et **91,0 % (G)** à 90 jours ;
 - en activité hypothétique **55 % des jours et 45 % de succès par mode**, les participants remplissent déjà facilement les exigences initiales après 21 jours ; l'écart A/G devient faible. Les paramètres jouent donc **beaucoup** sur la recommandation.
 
 La simulation ne remplace pas la mesure du nombre réel de joueurs ayant ouvert et raté Drattak, de leurs habitudes de jeu, de leurs Balls et du délai entre deux sessions. Ne jamais présenter ces résultats comme une prévision réelle de rétention ou d'achat.
