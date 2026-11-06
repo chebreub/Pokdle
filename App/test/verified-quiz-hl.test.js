@@ -123,10 +123,67 @@ test('PostgreSQL: rush keeps a server deadline across reloads, rejects extra tim
  const ended=await answer(service,me,s,correctHL(left)==='higher'?'lower':'higher');assert.deepEqual(ended.coinsAdded,[]);assert.equal(ended.coins.balance,90);
  // Returning after time ran out settles the previous run; it does not restart its timer.
  const late=who('late');s=(await start(service,late,'higher-lower-rush')).arcade;now=new Date(s.endsAt+1);
- const resumed=await start(service,late,'higher-lower-rush');assert.equal(resumed.arcade.phase,'over');assert.equal(resumed.coins.balance,30);
+  const resumed=await start(service,late,'higher-lower-rush');assert.equal(resumed.arcade.phase,'over');assert.equal(resumed.coins.balance,0,'untouched run is not rewarded');
+  assert.equal(resumed.gains.some(g=>g.source==='mode:higherlower'),false,'no Ball without any valid answer');
  // Guests may earn a Ball, but no currency.
  const guest={key:'guest:hl',guestKey:'guest:hl',accountId:null};s=(await start(service,guest,'higher-lower-rush')).arcade;now=new Date(s.endsAt);
- const g=await service.arcadeFinish(guest,body(s));assert.equal(g.coins.balance,0);assert.ok(g.added.some(x=>x.source==='mode:higherlower'));
+  const g=await service.arcadeFinish(guest,body(s));assert.equal(g.coins.balance,0);
+  assert.equal(g.added.some(x=>x.source==='mode:higherlower'),false,'guest cannot passively earn a Ball');
+}));
+
+test('ECO-06 PostgreSQL: an untouched rush or invalid guess never grants coins or a Ball',opts,()=>withDb(async db=>{
+  let now=new Date('2026-11-03T12:00:00Z');
+  const service=createBallService({db,pokemon:small,secret:'isolated-test',clock:()=>now,randomInt:()=>0});
+  for(const [label,path] of [['start','start'],['finish','finish'],['answer','answer'],['next','next']]){
+    const player=who('eco06-idle-'+label);
+    now=new Date('2026-11-03T12:00:00Z');
+    const s=(await start(service,player,'higher-lower-rush')).arcade;
+    await assert.rejects(answer(service,player,s,'not-a-valid-choice'),/invalid_choice/);
+    now=new Date(s.endsAt+1);
+    let result;
+    if(path==='start') result=await start(service,player,'higher-lower-rush');
+    else if(path==='finish') result=await service.arcadeFinish(player,body(s));
+    else if(path==='answer') result=await answer(service,player,s,'higher');
+    else result=await next(service,player,s);
+    assert.equal(result.arcade.phase,'over');
+    assert.deepEqual(result.coinsAdded,[],'no passive coin grant via '+path);
+    assert.equal(result.added.some(g=>g.source==='mode:higherlower'),false,'no passive Ball via '+path);
+    const [coins,balls]=await Promise.all([
+      db.query("SELECT COUNT(*)::int AS n FROM coin_ledger WHERE identity=$1 AND source='play:higherlower'",[player.key]),
+      db.query("SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND source='mode:higherlower'",[player.key])
+    ]);
+    assert.equal(coins.rows[0].n,0);
+    assert.equal(balls.rows[0].n,0);
+    assert.deepEqual((await service.state(player)).coins.balance,0);
+  }
+}));
+
+test('ECO-06 PostgreSQL: one real accepted rush answer still earns 30 once across parallel expiry requests',opts,()=>withDb(async db=>{
+  let now=new Date('2026-11-03T12:00:00Z');
+  const service=createBallService({db,pokemon:small,secret:'isolated-test',clock:()=>now,randomInt:()=>0});
+  const player=who('eco06-played');
+  const s=(await start(service,player,'higher-lower-rush')).arcade;
+  const valid=await answer(service,player,s,'higher');
+  assert.equal(valid.arcade.phase,'reveal');
+  assert.equal(valid.coins.balance,0);
+  assert.equal(valid.added.some(g=>g.source==='mode:higherlower'),false);
+  now=new Date(s.endsAt+1);
+  const results=await Promise.all([
+    service.arcadeFinish(player,body(s)),
+    answer(service,player,s,'lower'),
+    next(service,player,s)
+  ]);
+  assert.ok(results.every(r=>r.arcade.phase==='over'));
+  assert.deepEqual(results.flatMap(r=>r.coinsAdded).map(x=>x.amount),[30]);
+  assert.equal(results.flatMap(r=>r.added).filter(x=>x.source==='mode:higherlower').length,1);
+  const [coins,balls]=await Promise.all([
+    db.query("SELECT COUNT(*)::int AS n,COALESCE(SUM(amount),0)::int AS amount FROM coin_ledger WHERE identity=$1 AND source='play:higherlower'",[player.key]),
+    db.query("SELECT COUNT(*)::int AS n FROM ball_gains WHERE identity=$1 AND source='mode:higherlower'",[player.key])
+  ]);
+  assert.deepEqual([coins.rows[0].n,coins.rows[0].amount,balls.rows[0].n],[1,30,1]);
+  const replay=await service.arcadeFinish(player,body(s));
+  assert.deepEqual(replay.coinsAdded,[]);
+  assert.equal(replay.coins.balance,30);
 }));
 
 test('PostgreSQL + HTTP: finish is account-bound, JSON-only and cannot end a rush early',opts,()=>withDb(async db=>{
@@ -141,6 +198,8 @@ test('PostgreSQL + HTTP: finish is account-bound, JSON-only and cannot end a rus
   assert.equal((await post('/api/arcade/finish',{...body(s),actionScope:scope})).error,'round_wait');
   user={id:'other'};assert.equal((await post('/api/arcade/finish',{...body(s),actionScope:scope})).error,'account_changed');
   user={id:'http-hl'};now=new Date(s.endsAt);
-  const done=await post('/api/arcade/finish',{...body(s),actionScope:scope});assert.equal(done.arcade.phase,'over');assert.equal(done.coins.balance,30);
+    const done=await post('/api/arcade/finish',{...body(s),actionScope:scope});assert.equal(done.arcade.phase,'over');
+    assert.equal(done.coins.balance,0,'no coins on no-answer timeout');
+    assert.equal(done.gains.some(x=>x.source==='mode:higherlower'),false);
  }finally{await new Promise(r=>server.close(r));}
 }));
