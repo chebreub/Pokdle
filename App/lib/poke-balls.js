@@ -7,7 +7,7 @@
 const crypto = require("node:crypto");
 const verifiedArcade = require("./verified-arcade");
 const wildRarity = require("./wild-rarity");
-const { SALAMENCE, statusForSalamence, verifyDreamAnswer } = require("./prestige-quests");
+const { SALAMENCE, statusForSalamence, recoveryForSalamence, verifyDreamAnswer } = require("./prestige-quests");
 const { verifyPartyRewardProof } = require("./party-rewards");
 const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { HISTORY_TO_LAUNCH } = require("./usage-metrics");
@@ -458,8 +458,10 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   // (ou Drackhaus), épreuves thématiques et énigme de la falaise.
   // Ni les 108 missions locales ni un score déclaré ne créent une capture.
   async function prestige(c, who, day) {
-    const last = (await c.query("SELECT to_char(day,'YYYY-MM-DD') AS day,status FROM wild_encounters WHERE identity=$1 AND kind='prestige' AND pokemon_id=$2 ORDER BY id DESC LIMIT 1",
-      [who.key, SALAMENCE.pokemonId])).rows[0] || null;
+    // The two latest server encounters identify the one-off recovery without any migration.
+    const attempts = (await c.query("SELECT to_char(day,'YYYY-MM-DD') AS day,status FROM wild_encounters WHERE identity=$1 AND kind='prestige' AND pokemon_id=$2 ORDER BY id DESC LIMIT 2",
+      [who.key, SALAMENCE.pokemonId])).rows;
+    const last = attempts[0] || null;
     const modes = Object.keys(SALAMENCE.modes);
     const rows = (await c.query(`SELECT mode,COUNT(*)::int AS wins
       FROM prestige_verified_wins WHERE identity=$1 AND mode=ANY($2::text[]) AND day BETWEEN $3 AND $4 AND day>$5
@@ -473,8 +475,9 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       [who.key,SALAMENCE.lineageIds])).rows.map((r) => Number(r.pokemon_id));
     const wins = Object.fromEntries(rows.map((r) => [r.mode,Number(r.wins)]));
     const result = statusForSalamence({ wins,days,lineageIds,lastAttemptDay:last?.day || null },day,shiftDay);
-    return { ...result, needsAccount:!who.accountId,lastStatus:last?.status || null,
-      available:Boolean(who.accountId) && result.eligible,
+    const recovery = recoveryForSalamence(result, attempts, day, shiftDay);
+    return { ...result, recovery, needsAccount:!who.accountId,lastStatus:last?.status || null,
+      available:Boolean(who.accountId) && (result.eligible || recovery.available),
       chances:Object.fromEntries(BALLS.map((ball) => [ball,Math.round(captureChance(SALAMENCE.pokemonId,ball)*100)])) };
   }
   async function meetPrestige(c, who, day, body = {}) {
@@ -484,7 +487,10 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     await lock(c,who.key);
     const state = await prestige(c, who, day);
     if (state.cooldown) throw fail("prestige_cooldown");
-    if (!state.eligible) throw fail("prestige_not_ready");
+    if (!state.available) {
+      if (state.recovery.ready && !state.recovery.weekendOpen) throw fail("prestige_event_closed");
+      throw fail("prestige_not_ready");
+    }
     if (!verifyDreamAnswer(body.answer)) throw fail("prestige_riddle_wrong",400);
     if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
     const bag = await bagOf(c,who);
