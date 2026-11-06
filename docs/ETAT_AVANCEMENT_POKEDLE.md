@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 6 novembre 2026 : #301 (ECO-02), #302 (ECO-07) et #304 (ECO-08) fusionnées, contrôles GitHub verts. ECO-05 actuellement développé sur branche dédiée ; les bilans historiques ci-dessous restent des photographies des étapes antérieures.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion validée : [PR #304](https://github.com/chebreub/Pokdle/pull/304), `964424afe3b7e1a61c30faaa8b286f3fa0555ee9`.
+**Photographie opérationnelle au 6 novembre 2026 : #301 (ECO-02), #302 (ECO-07), #304 (ECO-08) et #305 (ECO-05) fusionnées et validées sur GitHub. Les bilans historiques ci-dessous restent des photographies des étapes antérieures.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion validée : [PR #305](https://github.com/chebreub/Pokdle/pull/305), `dd79cd26f82ff7f75d0a35ac1ba36820bfd27946`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**22 tâches terminées sur 43 actions actives = 51,2 %** après les PR #301, #302 et #304 ; ECO-05 ne sera comptée qu'après validation et fusion. Le ratio mesure les actions clôturées, pas l'avancement global du jeu.
+**23 tâches terminées sur 43 actions actives = 53,5 %** après la PR #305 (ECO-05) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **22** | Actions vérifiées, PR fusionnées ; dernière livraison #304 |
-| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 (retour sur appareil réel) et ECO-05 (statistiques prospectives en développement) |
+| **Terminé et intégré à main** | **23** | Actions vérifiées, PR fusionnées ; dernière livraison #305 |
+| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
 | **Non commencé / à conduire ou à décider** | **19** | Dont les arbitrages ECO-03/04 et ECO-06, soumis aux garde-fous prévus |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (22 actions terminées / 43 actions actives) × 100 = **51,1628 %, arrondi à 51,2 %**.
+**Formule explicite :** (23 actions terminées / 43 actions actives) × 100 = **53,4884 %, arrondi à 53,5 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -29,11 +29,18 @@
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
-| 4 | Économie et rencontres | 4 / 8 | 50,0 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 préparation #302, ECO-08 légendaire 72 h #304 ; ECO-05 en développement |
+| 4 | Économie et rencontres | 5 / 8 | 62,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 préparation #302, ECO-08 légendaire 72 h #304 et ECO-05 statistiques #305 |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **22 / 43** | **51,2 %** | NIV-01 stationné, exclu |
+| **Total** | | **23 / 43** | **53,5 %** | NIV-01 stationné, exclu ; ECO-03/04/06 restant à traiter |
+
+## ECO-05 — statistiques de capture intégrées après CI et fusion
+
+- [PR #305](https://github.com/chebreub/Pokdle/pull/305) fusionnée sur `main` au commit `dd79cd26f82ff7f75d0a35ac1ba36820bfd27946` ; CI Node, PostgreSQL isolé et navigateur complet **vertes** sur le head de PR.
+- Agrégats prospectifs séparés par version shiny, espèce/classe, type de Ball, rang et type de rencontre ; aucune donnée individuelle, aucune modification du taux shiny 1/500 ou de la formule de capture.
+- Rejeu de reçu sans double comptage, protection du gameplay en cas de panne des métriques, historique inchangé, espèces à faibles effectifs non exportées ; [protocole et limites](qa/ECO_05_CAPTURE_METRICS.md).
+- **23/43 = 53,5 %** ; prochain contrôle technique autonome possible : ECO-06 (autorité serveur des récompenses), sans changer les gains. La recette iPhone physique et le déploiement Render restent non vérifiés.
 
 ## Dernière livraison validée — ECO-08
 
