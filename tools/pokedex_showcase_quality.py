@@ -45,6 +45,7 @@ def scenario(browser,engine,width):
         assert page.locator('#pokedex-detail .pokedex-showcase-control button').is_disabled()
         # A remote trade/release occurred after the cached UI loaded.
         data['captures']=[c for c in data['captures'] if c['id']!=1]
+        page.evaluate('closePokedexMobileDetail()')
         page.locator('#pokedex-showcase-hub [data-action="sharePokedexShowcase"]').click()
         qa.ready(page,'window.__qaShares.length===1')
         shared=page.evaluate('window.__qaShares[0]')
