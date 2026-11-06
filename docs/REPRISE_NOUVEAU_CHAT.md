@@ -58,6 +58,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | **MOB-03** | Commandes solo, Party, Duel et Défi accessibles avec viewport clavier simulé ; chat et célébrations coordonnés | [#285](https://github.com/chebreub/Pokdle/pull/285), [#287](https://github.com/chebreub/Pokdle/pull/287), [#289](https://github.com/chebreub/Pokdle/pull/289) |
 | **PC-01** | PC compact : saisie à gauche et indices lisibles à droite ; résultat à 1 000 px ; Course complète sans scroll, doublon refusé | [#283](https://github.com/chebreub/Pokdle/pull/283) |
 | **DEX-01** | Découvert, capturé personnellement et possédé distingués, captures cédées conservées, échange reçu sans capture inventée | [#290](https://github.com/chebreub/Pokdle/pull/290) |
+| **DEX-02** | Fiches de collection : 845 espèces sauvages, 6 expéditions, Drattak prestige ; mission/secret = découverte seule ; donnée absente = inconnue | [#293](https://github.com/chebreub/Pokdle/pull/293) |
 
 Autres PR à ne pas confondre avec une action supplémentaire terminée :
 - [#260](https://github.com/chebreub/Pokdle/pull/260) : plan, diagnostic et infrastructure de tests tactiles.
