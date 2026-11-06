@@ -12,8 +12,8 @@
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
 | **Terminé et intégré à main** | **19** | Action vérifiée, PR fusionnée |
-| **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 (retour mobile réel à obtenir) |
-| **Non commencé / à conduire ou à décider** | **23** | Dont certaines propositions économiques soumises à validation préalable |
+| **En cours / investigation / PR ouverte** | **2** | BUG-MOB-01 (retour mobile réel à obtenir) et ECO-02 (étude réalisée, arbitrage événementiel ouvert) |
+| **Non commencé / à conduire ou à décider** | **22** | Dont certaines propositions économiques soumises à validation préalable |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
@@ -29,13 +29,17 @@
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
-| 4 | Économie et rencontres | 1 / 8 | 12,5 % | ECO-01 : simulation reproductible et comparaison de cinq scénarios, sans activation de nouvelle règle ; **arbitrage économique toujours ouvert** |
+| 4 | Économie et rencontres | 1 / 8 | 12,5 % | ECO-01 : simulation fusionnée, arbitrage ouvert ; ECO-02 : simulation Drattak de sept variantes, **décision et implémentation encore ouvertes** |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
 | **Total** | | **19 / 43** | **44,2 %** | NIV-01 stationné exclu |
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
+
+## ECO-02 — scénario d'événement Drattak, étude en cours de validation
+
+La [simulation reproductible ECO-02](qa/ECO_02_DRATTAK_EVENT_STUDY.md) compare sept variantes à la règle actuelle, sur 20 000 comptes fictifs conditionnés à un premier échec, sans nouveaux gains, taux ni modifications de base de données. Les résultats restent dépendants des hypothèses d'activité et de Balls. **ECO-02 reste en cours : aucune règle de reprise, période événementielle ni apparition aléatoire autorisée pour la production.** La prochaine action indépendante est ECO-07 (étude de préparation) ; BUG-MOB-01 reste ouvert sur appareil physique. Total intégré inchangé : **19/43**.
 
 ## ECO-01 — étude finalisée après fusion de la PR #299 (sans changement économique)
 
