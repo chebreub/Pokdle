@@ -63,12 +63,52 @@ WHERE day BETWEEN $1::date AND $2::date AND kind IN ('wild','legend','prestige')
 GROUP BY kind,status,shiny,ball
 ORDER BY kind,status,shiny,ball`;
 
+// Cohorts introduced by ECO-05, no retroactive reconstruction of ball/order data.
+const CAPTURE_QUERY = `
+SELECT dimension,segment,SUM(throws)::bigint AS throws,SUM(catches)::bigint AS catches
+FROM capture_stats_daily
+WHERE day BETWEEN $1::date AND $2::date
+GROUP BY dimension,segment ORDER BY dimension,segment`;
+
 const ACTORS_QUERY = `
 SELECT COUNT(DISTINCT identity)::int AS actors
 FROM wild_encounters
 WHERE day BETWEEN $1::date AND $2::date AND kind IN ('wild','legend','prestige')`;
 
-function summarizeEconomy({startDay,endDay,coinRows,ballRows,wildRows,actors=0}) {
+function summarizeCaptureRows(rows = []) {
+  const capture = {prospectiveOnly:true, available:false, throws:0,catches:0,
+    rules:[],balls:[],throwOrder:[],kinds:[],classes:[],species:[],speciesSuppressed:0};
+  const groups = {rules:"rules",ball:"balls",throw_order:"throwOrder",
+    encounter_kind:"kinds",capture_class:"classes"};
+  const allowed = {
+    rules:new Set(["shiny-1-150","shiny-1-500"]),
+    ball:new Set(["poke","great","ultra"]),
+    throw_order:new Set(["1","2","3"]),
+    encounter_kind:new Set(["wild","legend","prestige"]),
+    capture_class:new Set(["rare","moderate","common","unknown"])
+  };
+  for (const row of rows) {
+    const dim = String(row.dimension), segment = String(row.segment);
+    const n = number(row.throws), wins = number(row.catches);
+    if (!Number.isSafeInteger(n) || !Number.isSafeInteger(wins) ||
+        n < 0 || wins < 0 || wins > n) continue;
+    if (dim === "pokemon") {
+      const pokemonId = Number(segment);
+      if (!Number.isInteger(pokemonId) || pokemonId < 1 || pokemonId > 1025) continue;
+      if (n < 10) { capture.speciesSuppressed++; continue; }
+      capture.species.push({pokemonId,throws:n,catches:wins});
+    } else if (allowed[dim]?.has(segment)) {
+      capture[groups[dim]].push({segment,throws:n,catches:wins});
+      if (dim === "rules") { capture.throws += n; capture.catches += wins; }
+    }
+  }
+  capture.species.sort((a,b)=>b.throws-a.throws || a.pokemonId-b.pokemonId);
+  capture.species = capture.species.slice(0,20);
+  capture.available = capture.throws > 0;
+  return capture;
+}
+
+function summarizeEconomy({startDay,endDay,coinRows,ballRows,wildRows,actors=0,captureRows=[]}) {
   const coins = {gained:0,spent:0,net:0,sources:[]};
   for (const r of coinRows) {
     const row = {category:r.category,gained:number(r.gained),spent:number(r.spent),operations:number(r.operations)};
@@ -107,22 +147,23 @@ function summarizeEconomy({startDay,endDay,coinRows,ballRows,wildRows,actors=0})
   if (wild.throws > 0 && wild.caught <= wild.throws) {
     wild.successPerThrow = Math.round(wild.caught * 1000 / wild.throws) / 10;
   }
-  return {startDay,endDay,coins,balls,wild};
+  return {startDay,endDay,coins,balls,wild,capture: summarizeCaptureRows(captureRows)};
 }
 
 async function readEconomyStats(db, startDay, endDay) {
   checkPeriod(startDay,endDay);
   const params = [startDay,endDay];
-  const [coins,balls,wild,actors] = await Promise.all([
+  const [coins,balls,wild,actors,capture] = await Promise.all([
     db.query(COINS_QUERY,params),
     db.query(BALLS_QUERY,params),
     db.query(WILD_QUERY,params),
-    db.query(ACTORS_QUERY,params)
+    db.query(ACTORS_QUERY,params),
+    db.query(CAPTURE_QUERY,params)
   ]);
   return summarizeEconomy({
     startDay,endDay,coinRows:coins.rows,ballRows:balls.rows,wildRows:wild.rows,
-    actors:actors.rows[0]?.actors ?? 0
+    actors:actors.rows[0]?.actors ?? 0, captureRows:capture.rows
   });
 }
 
-module.exports = {readEconomyStats,summarizeEconomy,checkPeriod};
+module.exports = {readEconomyStats,summarizeEconomy,summarizeCaptureRows,checkPeriod};
