@@ -609,7 +609,10 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     skip: (who) => wild(who, (c, day) => skipEncounter(c, who, day)),
     collection: (who) => wild(who, async (c) => ({ captures: await collection(c, who), captureHistory: await captureHistory(c, who), shinyLog: await shinyLog(c, who), zones: ZONE_POOLS,
       // Espèces obtenables par lancer de Ball : hautes herbes et expéditions hebdomadaires.
-      catchableTotal: new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend), SALAMENCE.pokemonId]).size })),
+      catchableTotal: new Set([...WILD_POOL, ...EXPEDITIONS.map((e) => e.legend), SALAMENCE.pokemonId]).size,
+      // DEX-02 : capture possible, distincte de la découverte par mission ou secret.
+      // Uniquement les pools publics effectifs ; aucune probabilité, tirage ou cible secrète du jour.
+      captureRoutes: { wild: WILD_POOL, expedition: EXPEDITIONS.map((e) => e.legend), prestige: SALAMENCE.pokemonId } })),
     expedition: (who) => wild(who, async (c, day) => ({ expedition: await expedition(c, who, day) })),
     claimChests: (who) => wild(who, async (c, day) => { const out = await claimChests(c, who, day); return { ...out, expedition: await expedition(c, who, day) }; }),
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
