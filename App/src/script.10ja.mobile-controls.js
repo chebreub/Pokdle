@@ -17,6 +17,12 @@ function fitMobilePickerControls() {
   const input = document.getElementById(config.input), list = document.getElementById(config.list);
   if (!input || !list || !input.getClientRects().length || input.disabled) return;
   const viewport = window.visualViewport;
+  // This picker sits at the document end. Reserve the keyboard's occluded
+  // space before measuring, so shrinking its list cannot clamp scrollY.
+  if (config.input === 'challenge-input') {
+    input.closest('#challenge-panel')?.style.setProperty('--mobile-picker-inset',
+      Math.max(0, window.innerHeight - (viewport?.height || window.innerHeight) - (viewport?.offsetTop || 0)) + 'px');
+  }
   let top = (viewport?.offsetTop || 0) + 12;
   let bottom = (viewport?.offsetTop || 0) + (viewport?.height || window.innerHeight) - 12;
   const header = document.querySelector('body > header');

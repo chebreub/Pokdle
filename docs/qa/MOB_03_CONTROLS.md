@@ -9,7 +9,7 @@
 
 ## Défauts reproduits
 
-Sur Chromium mobile, viewport visuel simulé à 400 px : après placement du champ dans la zone visible, le bouton Party descendait à 522 px et celui du Duel à 696 px. Le test d'envoi a aussi révélé qu'une perte de focus pendant le tap pouvait déplacer le bouton avant le click : zéro tentative était transmise. Les corrections sont limitées à ces chemins de présentation/interactions.
+Sur Chromium mobile, viewport visuel simulé à 400 px : après placement du champ dans la zone visible, le bouton Party descendait à 522 px et celui du Duel à 696 px. Le test d'envoi a aussi révélé qu'une perte de focus pendant le tap pouvait déplacer le bouton avant le click : zéro tentative était transmise. Les corrections sont limitées à ces chemins de présentation/interactions. Le premier run CI a révélé un second cas à 390 px : le Défi en fin de document était repoussé sous le clavier par le plafonnement du scroll après réduction de la liste. Un espace égal à la partie masquée du viewport est réservé uniquement sous ce panneau pendant sa saisie. Le contrôle renforcé de toute la liste reproduit le défaut localement avant correction puis passe après ; aucune assertion de visibilité n’a été relâchée.
 
 ## Recette automatisée
 

@@ -29,6 +29,7 @@ def fit_check(page, field, list_id, action, width):
             # Enough space for at least one complete touch suggestion.
             box=page.locator('#'+list_id).bounding_box()
             assert box and box['height']>=56,(field,height,box)
+            qa.target(page,'#'+list_id)
             before=page.evaluate('scrollY')
             pos=page.locator(action or '#'+field).bounding_box()['y']
             for query in ['s','sala','zzzzzz','sa']:

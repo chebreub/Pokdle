@@ -1211,6 +1211,7 @@
    Limited to these three pickers; other autocompletes keep their own layout. */
 @media (max-width:640px) {
   #pokdle-app.mobile-keyboard-open :is(#screen-party-room,#screen-multiplayer,#challenge-panel) {overflow-anchor:none;}
+  #pokdle-app.mobile-keyboard-open #challenge-panel:focus-within {margin-bottom:var(--mobile-picker-inset,0px);}
 
   #pokdle-app :is(#party-guess-ac,#multiplayer-guess-ac,#challenge-ac) {
     max-height:var(--mobile-picker-height,238px)!important;
