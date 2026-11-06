@@ -64,6 +64,8 @@ function parisHourOf(date) {
 // La prochaine vague : l'heure ronde à Paris, comptée depuis minuit du lendemain (resetAt).
 function nextBatchAt(resetAt, hour) { return new Date(Date.parse(resetAt) - (24 - hour) * 3600000).toISOString(); }
 const MAX_THROWS = 3;
+// ECO-08: only NEW weekly legendary encounters receive a 72-hour rolling window.
+const LEGEND_HOLD_MS = 72 * 60 * 60 * 1000;
 const SHINY_ODDS = 500;
 // 4/11/2026, choix de Kayan (« plus rare 1/500 ») : le nouveau taux part du 5/11 à minuit (jour de Paris).
 const SHINY_ODDS_FROM = "2026-11-05", SHINY_ODDS_BEFORE = 150;
@@ -182,6 +184,8 @@ async function initBallsDb(db) {
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'wild'");
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS zone TEXT");
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS released_on DATE");
+  // Nullable to retain the legacy midnight deadline for all existing encounters.
+  await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ");
   await db.query("CREATE INDEX IF NOT EXISTS ball_gains_day ON ball_gains(day)");
   // 💰 Le carnet des Pokédollars : un gain (+) ou un achat (−) par ligne ; le solde est la somme.
   await db.query(`CREATE TABLE IF NOT EXISTS coin_ledger(
@@ -367,11 +371,20 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (!row) return null;
     return { id: Number(row.id), pokemonId: Number(row.pokemon_id), shiny: Boolean(row.shiny), throws: Number(row.throws),
       throwsLeft: Math.max(0, MAX_THROWS - Number(row.throws)), status: row.status, ball: row.ball || null, legend: row.kind === "legend", prestige: row.kind === "prestige", zone: row.zone || null,
+      expiresAt: row.kind === "legend" && row.expires_at ? new Date(row.expires_at).toISOString() : null,
       chances: Object.fromEntries(BALLS.map((b) => [b, Math.round(captureChance(Number(row.pokemon_id), b) * 100)])) };
   }
+  // Expiry is checked inside the same transaction as each action. An old row
+  // without expires_at NEVER acquires a new window retroactively.
+  async function expireOpenEncounters(c, who, day) {
+    await c.query(`UPDATE wild_encounters SET status='fled',ended_at=NOW()
+      WHERE identity=$1 AND status='open' AND (
+        (kind='legend' AND expires_at IS NOT NULL AND expires_at <= $3::timestamptz)
+        OR ((kind<>'legend' OR expires_at IS NULL) AND day<>$2::date))`,
+      [who.key, day, clock()]);
+  }
   async function wildState(c, who, day) {
-    // Une rencontre restée ouverte un autre jour : le Pokémon est parti.
-    await c.query("UPDATE wild_encounters SET status='fled',ended_at=NOW() WHERE identity=$1 AND status='open' AND day<>$2", [who.key, day]);
+    await expireOpenEncounters(c, who, day);
     const used = Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_encounters WHERE identity=$1 AND day=$2 AND kind='wild'", [who.key, day])).rows[0].n);
     const open = (await c.query("SELECT * FROM wild_encounters WHERE identity=$1 AND status='open' ORDER BY id DESC LIMIT 1", [who.key])).rows[0];
     const caught = Number((await c.query("SELECT COUNT(DISTINCT pokemon_id)::int AS n FROM wild_encounters WHERE identity=$1 AND status='caught'", [who.key])).rows[0].n);
@@ -400,7 +413,11 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   // Un lancer : le serveur tire, la Ball tremble 0 à 3 fois ; au 3e lancer raté, le Pokémon s'enfuit.
   async function throwBall(c, who, day, ball) {
     if (!BALLS.includes(ball)) throw fail("invalid_ball", 400);
-    const row = (await c.query("SELECT * FROM wild_encounters WHERE identity=$1 AND status='open' AND day=$2 ORDER BY id DESC LIMIT 1 FOR UPDATE", [who.key, day])).rows[0];
+    await expireOpenEncounters(c, who, day);
+    const row = (await c.query(`SELECT * FROM wild_encounters WHERE identity=$1 AND status='open' AND
+      ((kind='legend' AND expires_at IS NOT NULL AND expires_at>$3::timestamptz)
+       OR ((kind<>'legend' OR expires_at IS NULL) AND day=$2::date))
+      ORDER BY id DESC LIMIT 1 FOR UPDATE`, [who.key, day, clock()])).rows[0];
     if (!row) throw fail("no_encounter");
     if ((await bagOf(c, who))[ball] <= 0) throw fail("no_ball_left");
     const chance = captureChance(Number(row.pokemon_id), ball);
@@ -443,6 +460,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { added };
   }
   async function meetLegend(c, who, day) {
+    await expireOpenEncounters(c, who, day);
     const st = await expedition(c, who, day);
     if (!st.legend.reached) throw fail("expedition_not_done");
     if (st.legend.needsAccount) throw fail("account_required", 401);
@@ -451,7 +469,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if ((await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status='open' LIMIT 1", [who.key])).rows.length) throw fail("encounter_open");
     if (!Object.values(await bagOf(c, who)).some((n) => n > 0)) throw fail("no_balls");
     const shiny = randomInt(shinyOddsFor(day)) === 0;
-    const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind) VALUES($1,$2,$3,$4,$5,'legend') RETURNING *", [who.key, who.accountId, day, st.legendId, shiny])).rows[0];
+    const expiresAt = new Date(+clock() + LEGEND_HOLD_MS);
+    const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,kind,expires_at) VALUES($1,$2,$3,$4,$5,'legend',$6) RETURNING *", [who.key, who.accountId, day, st.legendId, shiny, expiresAt])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
   // 🐉 Draby rêve de voler : la quête combine possession réelle d'un Draby
@@ -485,6 +504,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     // Atomicity: the next request cannot issue a second encounter for the same
     // unlocked quest while the first transaction is still committing.
     await lock(c,who.key);
+    await expireOpenEncounters(c, who, day);
     const state = await prestige(c, who, day);
     if (state.cooldown) throw fail("prestige_cooldown");
     if (!state.available) {
@@ -501,7 +521,11 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { encounter:encounterView(row),fresh:true };
   }
   async function skipEncounter(c, who, day) {
-    const r = await c.query("UPDATE wild_encounters SET status='skipped',ended_at=NOW() WHERE identity=$1 AND status='open' AND day=$2", [who.key, day]);
+    await expireOpenEncounters(c, who, day);
+    const r = await c.query(`UPDATE wild_encounters SET status='skipped',ended_at=NOW()
+      WHERE identity=$1 AND status='open' AND
+      ((kind='legend' AND expires_at IS NOT NULL AND expires_at>$3::timestamptz)
+       OR ((kind<>'legend' OR expires_at IS NULL) AND day=$2::date))`, [who.key, day, clock()]);
     return { skipped: r.rowCount > 0 };
   }
   // Le carnet shiny : chaque shiny croisé dans les hautes herbes, attrapé ou non (le plus récent d'abord).
@@ -607,7 +631,10 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     encounter: (who, body) => wild(who, (c, day) => encounter(c, who, day, body && body.zone ? String(body.zone) : null)),
     throwBall: (who, body) => wild(who, async (c, day) => {
       if (body.encounterId !== undefined) {
-        const open = (await c.query("SELECT id,throws FROM wild_encounters WHERE identity=$1 AND status='open' AND day=$2 ORDER BY id DESC LIMIT 1", [who.key, day])).rows[0];
+        const open = (await c.query(`SELECT id,throws FROM wild_encounters WHERE identity=$1 AND status='open' AND
+          ((kind='legend' AND expires_at IS NOT NULL AND expires_at>$3::timestamptz)
+           OR ((kind<>'legend' OR expires_at IS NULL) AND day=$2::date))
+          ORDER BY id DESC LIMIT 1`, [who.key, day, clock()])).rows[0];
         if (!open || Number(open.id) !== body.encounterId || Number(open.throws) !== body.expectedThrows) throw fail("encounter_changed");
       }
       return throwBall(c, who, day, String(body && body.ball || ""));
