@@ -1,6 +1,6 @@
 # ECO-06 — Autorité serveur des récompenses et résistance au rejeu
 
-**État :** correctif ciblé en PR ; ECO-06 ne sera clôturée qu'après validations GitHub et fusion. Périmètre : Pokédollars et Poké Balls liés aux parties (ni modification de l'XP client, ni nouveau système de récompenses).
+**État : terminé et intégré.** [PR #307](https://github.com/chebreub/Pokdle/pull/307) fusionnée dans `main` au commit `e707039678d90874bc929608bef6fe1dc6498887` après CI Node, PostgreSQL et navigateur vertes ; **24/43 = 55,8 %**. Périmètre : Pokédollars et Poké Balls liés aux parties (ni modification de l'XP client, ni nouveau système de récompenses).
 
 ## Chemins effectivement contrôlés (6 novembre 2026)
 
