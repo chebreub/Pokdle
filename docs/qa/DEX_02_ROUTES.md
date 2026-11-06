@@ -17,5 +17,5 @@
 
 - `App/test/pokedex-acquisition-routes.test.js` : bornage exhaustif 852/1 025, cas sauvage / expédition / prestige / mission / secret / sans voie et données indisponibles.
 - `tools/pokedex_routes_quality.py` : Chromium + WebKit 390 et 1 366 px, fiches, variantes, non-divulgation d'identité secrète, absence de débordement, erreur de données. La réponse de collection est simulée pour le test navigateur ; la correspondance au catalogue réel est vérifiée séparément dans Node.
-- CI Node et navigateur/base complètes **à vérifier sur le head final avant fusion**.
+- [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42245771363) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42245771750), sur le head `f64eb68c9a432d0eacc3fb5a578ee0eb34f451a5` ; [PR #293](https://github.com/chebreub/Pokdle/pull/293) fusionnée au commit `692b8e42ab3a86451e2fdf2eea46924a011b934d`.
 - Aucune recette Safari physique, téléphone de Jade ou déploiement Render revendiquée.

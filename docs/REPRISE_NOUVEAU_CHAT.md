@@ -1,8 +1,8 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
-> **État vérifié le 6 novembre 2026 :** DEX-01 fusionné via [#290](https://github.com/chebreub/Pokdle/pull/290) (`904efaa26b9b2e521ad97e680d16ef4fa247c416`) après CI complète verte sur `70f24bd`. MOB-03 reste clôturé : #285, #287 et #289 intégrés.
-> **15 actions intégrées sur 43 = 34,9 %** ; **1 action en cours** (BUG-MOB-01) ; **27 non commencées** ; NIV-01 stationnée.
-> **Prochaine action autonome : DEX-02.** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
+> **État vérifié le 6 novembre 2026 :** DEX-02 fusionné via [#293](https://github.com/chebreub/Pokdle/pull/293) (`692b8e42ab3a86451e2fdf2eea46924a011b934d`) après CI complète verte sur `f64eb68`. DEX-01 et MOB-03 restent clôturés.
+> **16 actions intégrées sur 43 = 37,2 %** ; **1 action en cours** (BUG-MOB-01) ; **26 non commencées** ; NIV-01 stationnée.
+> **Prochaine action autonome : DEX-03.** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
 >
 > **Important :** le taux de progression mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
 
@@ -30,12 +30,12 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | 0 | Fiabilité tactile, ergonomie iPhone/PC, compréhension des données | 4 / 7 |
 | 1 | Logique des jeux, reprise de séries, animations/récompenses, données d'usage | 7 / 8 |
 | 2 | Gameplay, maîtrise, pédagogie, découverte de modes | 3 / 5 |
-| 3 | Pokédex, collection, rareté et objectifs personnels | 1 / 4 |
+| 3 | Pokédex, collection, rareté et objectifs personnels | 2 / 4 |
 | 4 | Économie, captures, Pokéballs, Pokédollars, expéditions, événements rares | 0 / 8 |
 | 5 | Invitations, défis, partage, échanges et diffusion naturelle | 0 / 5 |
 | 6 | Gestes et animations facultatifs, après stabilisation tactile | 0 / 4 |
 | 7 | Recette auprès de joueurs externes et acquisition | 0 / 2 |
-| **Total** | **43 actions actives** | **15 / 43 = 34,9 %** |
+| **Total** | **43 actions actives** | **16 / 43 = 37,2 %** |
 
 **DATA-02 achevée et NIV-02 intégrée : ne pas concentrer davantage le travail sur le dashboard.** Une fois les mesures fiabilisées, reprendre les améliorations concrètes des modes, du mobile, du Pokédex, de l'économie et du multijoueur dans l'ordre des priorités, contraintes et dépendances du plan. Les statistiques servent à orienter le gameplay ; elles ne remplacent pas le gameplay.
 
@@ -58,6 +58,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | **MOB-03** | Commandes solo, Party, Duel et Défi accessibles avec viewport clavier simulé ; chat et célébrations coordonnés | [#285](https://github.com/chebreub/Pokdle/pull/285), [#287](https://github.com/chebreub/Pokdle/pull/287), [#289](https://github.com/chebreub/Pokdle/pull/289) |
 | **PC-01** | PC compact : saisie à gauche et indices lisibles à droite ; résultat à 1 000 px ; Course complète sans scroll, doublon refusé | [#283](https://github.com/chebreub/Pokdle/pull/283) |
 | **DEX-01** | Découvert, capturé personnellement et possédé distingués, captures cédées conservées, échange reçu sans capture inventée | [#290](https://github.com/chebreub/Pokdle/pull/290) |
+| **DEX-02** | Fiches de collection : 845 espèces sauvages, 6 expéditions, Drattak prestige ; mission/secret = découverte seule ; donnée absente = inconnue | [#293](https://github.com/chebreub/Pokdle/pull/293) |
 
 Autres PR à ne pas confondre avec une action supplémentaire terminée :
 - [#260](https://github.com/chebreub/Pokdle/pull/260) : plan, diagnostic et infrastructure de tests tactiles.
@@ -67,9 +68,13 @@ Autres PR à ne pas confondre avec une action supplémentaire terminée :
 
 Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertinentes **avant fusion**. Cela **ne prouve pas** une recette réelle sur iPhone Safari, ni un déploiement Render vérifié manuellement. `SAVE-01` est **local au navigateur** et ne synchronise pas les séries entre appareils.
 
+## DEX-02 — intégré le 6 novembre 2026
+
+**DEX-02 terminé et fusionné :** [PR #293](https://github.com/chebreub/Pokdle/pull/293), merge `692b8e42ab3a86451e2fdf2eea46924a011b934d`, head `f64eb68c9a432d0eacc3fb5a578ee0eb34f451a5`, [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42245771363) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42245771750). Fiches de collection : voies de capture serveur (845 hautes herbes + 6 expéditions + Drattak), découvertes par missions/secrets séparées, absence de voie ou de données affichée sans extrapolation. **16/43 = 37,2 %** ; **1 action en cours** (BUG-MOB-01), **26 non commencées**, **lot 0 : 4/7**, **lot 3 : 2/4**. Prochaine action autonome : **DEX-03** (jusqu'à trois cibles personnelles). Aucune recette physique iPhone ni déploiement Render vérifié.
+
 ## 4. Point de reprise exact et sujets en attente
 
-**Prochaine action autonome : `DEX-02` — afficher les voies d'obtention réelles.** Recouper `docs/PLAN_RARETE_1025.md` et les sources serveur sans inventer de route, confondre mission et capture, ni changer taux ou économie. DEX-01 et MOB-03 sont terminés ; ne pas recommencer ces lots.
+**Prochaine action autonome : `DEX-03` — suivre au plus trois Pokémon ciblés, sans modifier les chances ni révéler de secrets.** DEX-01, DEX-02 et MOB-03 sont terminés ; ne pas recommencer ces lots.
 
 **PC-01 :** [PR #283](https://github.com/chebreub/Pokdle/pull/283) : CSS desktop plus compact sur 1366×768, arène Course au Pokédex sur un seul viewport, moteur de dimensionnement inchangé. Recette Chromium/WebKit locale sur deux vrais joueurs, avec 151 cases et refus de doublon ; ni Safari physique ni Render réel revendiqués.
 
@@ -136,7 +141,7 @@ Les autres actions économiques (`ECO-05` version des règles, `ECO-06` autorit�
 
 1. **État technique** : contenu de `main` actuel, commits, PR et tests effectifs.
 2. **Décisions produit** : arbitrages validés et conditions figurant dans le plan, sans transformer des pistes en règles officielles.
-3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **15/43**, après fusion vérifiée de #290 ; vérifier main pour toute modification ultérieure.
+3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **16/43**, après fusion vérifiée de #293 ; vérifier main pour toute modification ultérieure.
 4. **Audits historiques** : photographie datée, à confronter aux corrections plus récentes.
 
 Ce guide remplace les anciennes instructions qui faisaient encore commencer par `LOG-02` ou `DATA-02`, ou annonçaient **2/43**, **7/43**, **8/43**, **9/43**, **10/43** ou **11/43** ; ces informations étaient dépassées au 5 novembre 2026.
