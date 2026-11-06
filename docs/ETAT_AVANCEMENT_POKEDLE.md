@@ -1,7 +1,7 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
 **Photographie vérifiée : 6 novembre 2026, après fusion de #290 ; DEX-01 clôturé.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67` sur `main`.
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; base de travail documentaire : commit `904efaa26b9b2e521ad97e680d16ef4fa247c416` sur `main` (DEX-01).
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
