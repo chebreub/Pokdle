@@ -186,6 +186,11 @@ async function initBallsDb(db) {
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS released_on DATE");
   // Nullable to retain the legacy midnight deadline for all existing encounters.
   await db.query("ALTER TABLE wild_encounters ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ");
+  // ECO-05: prospective daily totals only, never player IDs or event identifiers.
+  await db.query(`CREATE TABLE IF NOT EXISTS capture_stats_daily(
+    day DATE NOT NULL, dimension TEXT NOT NULL, segment TEXT NOT NULL,
+    throws INT NOT NULL DEFAULT 0, catches INT NOT NULL DEFAULT 0,
+    PRIMARY KEY(day,dimension,segment))`);
   await db.query("CREATE INDEX IF NOT EXISTS ball_gains_day ON ball_gains(day)");
   // 💰 Le carnet des Pokédollars : un gain (+) ou un achat (−) par ligne ; le solde est la somme.
   await db.query(`CREATE TABLE IF NOT EXISTS coin_ledger(
@@ -410,6 +415,36 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const row = (await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,zone) VALUES($1,$2,$3,$4,$5,$6) RETURNING *", [who.key, who.accountId || null, day, pokemonId, shiny, zone || null])).rows[0];
     return { encounter: encounterView(row), fresh: true };
   }
+  function captureRateClass(pokemonId) {
+    const rate = Number(CAPTURE.rates[Number(pokemonId)]);
+    return !Number.isFinite(rate) || rate <= 0 ? "unknown" :
+      rate < 45 ? "rare" : rate < 120 ? "moderate" : "common";
+  }
+  // Six independent cohorts per throw, never the identifying joint intersection.
+  // Same transaction as gameplay; receipt replay skips the action entirely.
+  async function recordCaptureThrow(c, day, row, ball, throws, caught) {
+    const openedOn = typeof row.day === "string" ? row.day.slice(0,10) : new Date(row.day).toISOString().slice(0,10);
+    const dimensions = ["rules","pokemon","capture_class","ball","throw_order","encounter_kind"];
+    const segments = ["shiny-1-" + shinyOddsFor(openedOn), String(Number(row.pokemon_id)),
+      captureRateClass(row.pokemon_id), ball, String(throws), row.kind || "wild"];
+    // Fail-open for telemetry: never roll back a legitimate Ball debit/capture
+    // if its anonymous metric cannot be saved.
+    await c.query("SAVEPOINT eco05_capture_metrics");
+    try {
+      await c.query(`INSERT INTO capture_stats_daily(day,dimension,segment,throws,catches)
+        SELECT $1::date,d.dimension,d.segment,1,$4::int
+        FROM UNNEST($2::text[],$3::text[]) AS d(dimension,segment)
+        ON CONFLICT(day,dimension,segment) DO UPDATE SET
+          throws=capture_stats_daily.throws+EXCLUDED.throws,
+          catches=capture_stats_daily.catches+EXCLUDED.catches`,
+        [day,dimensions,segments,caught ? 1 : 0]);
+    } catch (error) {
+      await c.query("ROLLBACK TO SAVEPOINT eco05_capture_metrics");
+      console.warn("[capture-metrics] aggregate unavailable:", error.code || "query_error");
+    } finally {
+      await c.query("RELEASE SAVEPOINT eco05_capture_metrics");
+    }
+  }
   // Un lancer : le serveur tire, la Ball tremble 0 à 3 fois ; au 3e lancer raté, le Pokémon s'enfuit.
   async function throwBall(c, who, day, ball) {
     if (!BALLS.includes(ball)) throw fail("invalid_ball", 400);
@@ -427,6 +462,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     const shakes = caught ? 3 : randomInt(3);
     const updated = (await c.query(`UPDATE wild_encounters SET throws=$2,used_${ball}=used_${ball}+1,status=$3,ball=$4,ended_at=CASE WHEN $3='open' THEN NULL ELSE NOW() END WHERE id=$1 RETURNING *`,
       [row.id, throws, status, caught ? ball : null])).rows[0];
+    await recordCaptureThrow(c, day, row, ball, throws, caught);
     return { result: { caught, fled: status === "fled", shakes, ball }, encounter: encounterView(updated) };
   }
   // L'Expédition : tout est recalculé depuis les Balls gagnées, rien d'autre n'est gardé.
