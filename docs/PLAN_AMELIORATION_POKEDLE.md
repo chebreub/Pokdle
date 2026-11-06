@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).  
 > **Statut de suivi au 05/11/2026 : LOG-04 fusionné (#268), CI Node et navigateur vertes. LOT 0 — infrastructure de diagnostic intégrée (#260) ; anomalie tactile NON reproduite sur téléphone réel. LOT 1 — LOG-01 (#261) et LOG-03 (#264) intégrés avec CI vertes.**
 
-**Progression après fusion de PC-02 : 12 tâches terminées / 43 actives = 27,9 %.** Une investigation en cours (BUG-MOB-01), 30 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression après fusion de PC-01 : 13 tâches terminées / 43 actives = 30,2 %.** Une investigation en cours (BUG-MOB-01), 29 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 ## À lire en premier à chaque reprise
 
@@ -32,7 +32,7 @@
 
 **BUG-MOB-01 — Identifier le blocage tactile en bas d'écran avant de toucher aux couches CSS.**
 
-Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : PC-01**, mise en page desktop 1366×768 et grille Course au Pokédex, sans scroll de jeu ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
+Ce P0 dépend d'une **vérification sur appareil réel**, encore absente. Le correctif ciblé [#271](https://github.com/chebreub/Pokdle/pull/271) est fusionné (`0422481d`, CI verte), mais BUG-MOB-01 reste en cours. **FX-02 est terminé**, [PR #274](https://github.com/chebreub/Pokdle/pull/274) fusionnée au commit `70e75a2` (CI Node et navigateur/base vertes). **DATA-01 a documenté les unités réelles des compteurs. DATA-02 (#278) apporte la segmentation prospective admin / test / non marqué, avec historique préservé ; 'non marqué' ne prouve pas une activité humaine. Prochaine action autonome : MOB-03**, rendre les commandes mobiles principales accessibles au pouce, sans cacher chat, clavier ou récompenses ; ne pas déduire que l'anomalie tactile de Jade est entièrement résolue. Ne pas bloquer les autres lots à cause d'une hypothèse tactile ni marquer le P0 résolu.
 
 Signalement du 04/11/2026, écran « Qui est-ce ? » et possiblement d'autres jeux : sur téléphone, des cibles en bas ne répondent pas, mais deviennent cliquables lorsqu'on les fait remonter en défilant. Navigateur et modèle **non connus**. Cause **non confirmée sur le téléphone réel** ; l'interception par un toast transparent a été corrigée dans #271, mais le retour de Jade reste à recueillir.
 
@@ -55,7 +55,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **DATA-01 · P0** : [dictionnaire de grain et couverture](qa/USAGE_EVENT_GRAIN.md) vérifié dans les sources (`trackUsage`, `recordMatchHistory`, `usage-metrics`, Party, dashboard) : distingue visites brutes, sessions navigateur, ouvertures, fins déclarées, commandes de manches et retours Daily. **Dates exactes de mise en production non disponibles** : méthode de lecture de la première observation conservée et limites des 90 jours documentées, **aucune date ni historique inventés**. Documentation uniquement ; pas de nouveau suivi individuel. Clôture du cadrage, pas vérification de dates de déploiement réelles.
 - [ ] **MOB-03 · P1** : rendre l'action principale accessible au pouce, sans empilement clavier + dock + chat + récompense.
 - [ ] **MOB-04 · P1** : contrôle de focus et scroll dans les jeux rapides, Safari réel.
-- [ ] **PC-01 · P1** : jeu et panneau secondaire à 1366×768 ; Course au Pokédex sur une grille desktop sans scroll de jeu.
+- [x] **PC-01 · P1** : [PR #283](https://github.com/chebreub/Pokdle/pull/283) (après fusion) : styles PC compacts à 1366×768 ; grille Course au Pokédex intégrale sans scroll de jeu, avec moteur de dimensionnement inchangé ; commandes et panneau secondaire du jeu classique visibles. Recette deux navigateurs sur plusieurs tailles et refus des doublons.
 - [x] **PC-02 · P1** : [PR #282](https://github.com/chebreub/Pokdle/pull/282) (après fusion) : clavier contextualisé Solo, Défi, Party et Duel ; flèches limitées aux suggestions visibles, Échap ferme la liste avant une modale, Entrée en Duel reliée à un seul gestionnaire, saisie IME/modificateurs protégés. Chats et autres champs non interceptés, sans modification des parties ou récompenses.
 
 ### Lot 1 — Logique, reprise, données
@@ -111,7 +111,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 3. Faire valider **les règles exactes**, y compris l'événement Drattak, avant tout changement d'économie ou de progression.
 4. Après validation finale seulement : PR isolée, tests serveur/transactions, absence de duplication, CI verte et vérification de production. Aucune migration destructive.
 
-**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : PC-01** ; PC-02, MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
+**Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : MOB-03** ; PC-01, PC-02, MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
 - [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
@@ -167,6 +167,13 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - **Périmètre** : JavaScript des contrôles et tests Node, aucune modification de la partie, des données sauvegardées, du serveur, de l'économie, de la capture, des Pokédollars ou des Pokéballs. Les contrôles déjà fonctionnels d'autres modes restent en place.
 - **Validation** : tests Node dédiés puis CI Node et navigateur/base sur le head exact avant fusion ; pas de recette iPhone/Safari réelle ni de test manuel Render revendiqué.
 - **Après fusion : 12/43 = 27,9 %** ; prochaine action autonome **PC-01**. `BUG-MOB-01` reste ouvert sans confirmation sur appareil réel.
+
+### PC-01 — affichage PC compact et Course au Pokédex (PR #283, après fusion)
+
+- Sur ordinateurs de **1280×720 à 1920×1080**, et en particulier **1366×768**, la grille 151 cases de Course au Pokédex garde toute sa place, sans scroll de jeu : en-tête, scores, horloge, plateau et saisie sont visibles. Les espaces sont réduits sur les petits écrans PC, la grille conserve son moteur `ResizeObserver`, et le jeu normal gagne de la place pour son panneau secondaire.
+- **Règles inchangées** : premier Pokémon valide prend la case avec son sprite, deuxième proposition refusée sans point, score/calcul serveur, durées, équipes, générations. Aucun changement de taux, récompense, Pokédollars, Balls, base ni sauvegardes.
+- **Vérification intégrée au workflow complet** : `tools/pc_desktop_quality.py` ouvre deux vrais navigateurs dans une salle locale, vérifie le plateau Gen 1 à 1280×720, 1366×768, 1600×900, 1920×1080, les entrées et la capture de case, puis Chromium et WebKit. Tests Node et CI navigateur/base à vérifier sur la PR avant la fusion. Ce n'est pas une recette physique d'iPhone ni une preuve de déploiement Render.
+- **Après fusion** : 13/43 = 30,2 % ; prochaine action autonome **MOB-03**, une amélioration tactile circonscrite indépendante de `BUG-MOB-01`, qui reste ouverte jusqu'au retour réel du téléphone.
 
 ## Audits détaillés et documents de reprise
 
