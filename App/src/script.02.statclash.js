@@ -282,6 +282,9 @@ function startCryGame() {
     return;
   }
 
+  // A new Cry round must discard any previous audio/timer even if the mode
+  // stays "cry" (series: image 1 -> image 2). Never count an audio error.
+  if (typeof stopCrySound === "function") stopCrySound();
   gameMode = "cry";
   if (typeof verifiedGuessStart === "function" && verifiedGuessStart("cry", pool)) return;
   const secret = pickRandomPokemonFromPool(pool) || pool[0];
