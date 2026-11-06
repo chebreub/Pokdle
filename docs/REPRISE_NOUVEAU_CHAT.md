@@ -1,8 +1,8 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
-> **État vérifié le 6 novembre 2026 :** DEX-04 fusionné via [#296](https://github.com/chebreub/Pokdle/pull/296) (`b1704ffbd0b7a5be2406b4476f86c28ecc082428`) après CI complète verte sur `61e4b5a`. DEX-01 à DEX-03 et MOB-03 restent clôturés.
-> **18 actions intégrées sur 43 = 41,9 %** ; **1 action en cours** (BUG-MOB-01) ; **24 non commencées** ; NIV-01 stationnée.
-> **Prochaine action autonome : ECO-01 (simulation hors production).** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
+> **Après fusion de la PR #299 :** ECO-01 (simulation seule) documentée et intégrée sur la base de `main` `cf38d1c` ; [résultats et limites](qa/ECO_01_SIMULATION.md). DEX-01 à DEX-04 et MOB-03 restent clôturés. **Aucune règle économique ni seconde chance activée.**
+> **19 actions intégrées sur 43 = 44,2 %** après fusion de #299 ; **1 action en cours** (BUG-MOB-01) ; **23 non commencées** ; NIV-01 stationnée.
+> **Prochaine action autonome : ECO-02 (étude événement Drattak)** ; demander arbitrage séparé pour toute règle de production. Les variantes de la simulation ECO-01 sont toujours à décider ; iPhone réel distinct.
 >
 > **Important :** le taux de progression mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
 
@@ -31,11 +31,11 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | 1 | Logique des jeux, reprise de séries, animations/récompenses, données d'usage | 7 / 8 |
 | 2 | Gameplay, maîtrise, pédagogie, découverte de modes | 3 / 5 |
 | 3 | Pokédex, collection, rareté et objectifs personnels | 4 / 4 |
-| 4 | Économie, captures, Pokéballs, Pokédollars, expéditions, événements rares | 0 / 8 |
+| 4 | Économie, captures, Pokéballs, Pokédollars, expéditions, événements rares | 1 / 8 |
 | 5 | Invitations, défis, partage, échanges et diffusion naturelle | 0 / 5 |
 | 6 | Gestes et animations facultatifs, après stabilisation tactile | 0 / 4 |
 | 7 | Recette auprès de joueurs externes et acquisition | 0 / 2 |
-| **Total** | **43 actions actives** | **18 / 43 = 41,9 %** |
+| **Total** | **43 actions actives** | **19 / 43 = 44,2 %** |
 
 **DATA-02 achevée et NIV-02 intégrée : ne pas concentrer davantage le travail sur le dashboard.** Une fois les mesures fiabilisées, reprendre les améliorations concrètes des modes, du mobile, du Pokédex, de l'économie et du multijoueur dans l'ordre des priorités, contraintes et dépendances du plan. Les statistiques servent à orienter le gameplay ; elles ne remplacent pas le gameplay.
 
@@ -84,7 +84,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 ## 4. Point de reprise exact et sujets en attente
 
-**Prochaine action autonome : `ECO-01` — simulation comparative hors production d'une éventuelle nouvelle occasion d'expédition, sans modifier les règles actuelles.** DEX-01 à DEX-04 et MOB-03 sont terminés ; ne pas recommencer ces lots.
+**Prochaine action autonome : `ECO-02` — étude du caractère événementiel de Drattak, sans changement de règles avant validation.** ECO-01 a livré sa simulation [#299](https://github.com/chebreub/Pokdle/pull/299) et [rapport](qa/ECO_01_SIMULATION.md). La variante à retenir est non décidée. DEX-01 à DEX-04 et MOB-03 sont terminés.
 
 **PC-01 :** [PR #283](https://github.com/chebreub/Pokdle/pull/283) : CSS desktop plus compact sur 1366×768, arène Course au Pokédex sur un seul viewport, moteur de dimensionnement inchangé. Recette Chromium/WebKit locale sur deux vrais joueurs, avec 151 cases et refus de doublon ; ni Safari physique ni Render réel revendiqués.
 
@@ -113,7 +113,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 | Action | État de décision | Travail autorisé avant nouvelle validation |
 | --- | --- | --- |
-| **ECO-01** Expéditions légendaires | **À simuler avant décision** | Comparer scénarios de nouvelles occasions limitées, sans capture garantie |
+| **ECO-01** Expéditions légendaires | **Simulation livrée, arbitrage ouvert** | [Scénarios A à E et risques](qa/ECO_01_SIMULATION.md), aucune activation |
 | **ECO-02** Drattak | **Accord de principe, événement à rediscuter** | Concevoir des variantes d'événement spécial, éventuellement aléatoire ; fréquence, reprise, fuite et gains non décidés |
 | **ECO-07** Préparation des rencontres rares | **Accord de principe à tester** | Étudier au moins 3 Balls, chances affichées, annulation sans perte de piste |
 | **ECO-08** Rencontre spéciale conservée | **Accord de principe à tester** | Étudier 72 h, sans nouveau tirage ni Balls gratuites ; ne pas l'appliquer d'office à Drattak |
