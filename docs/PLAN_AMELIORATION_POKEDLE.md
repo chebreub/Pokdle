@@ -2,11 +2,13 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi au 06/11/2026 : DEX-01 (#290) intégré après MOB-03 ; 15 actions intégrées.**
+> **Suivi au 06/11/2026 : DEX-02 (#293) intégré après DEX-01 ; 16 actions intégrées.**
 
-**Progression validée : 15 tâches terminées / 43 actives = 34,9 %.** Une action en cours (BUG-MOB-01), 27 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
+**Progression validée : 16 tâches terminées / 43 actives = 37,2 %.** Une action en cours (BUG-MOB-01), 26 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Les 43 tâches n'ont pas le même poids : ce ratio compte des cases clôturées, pas des heures ou la maturité globale du site.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
+
+**DEX-02 terminé et fusionné :** [PR #293](https://github.com/chebreub/Pokdle/pull/293), merge `692b8e42ab3a86451e2fdf2eea46924a011b934d`, head `f64eb68c9a432d0eacc3fb5a578ee0eb34f451a5`, [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42245771363) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42245771750). Fiches de collection : voies de capture serveur (845 hautes herbes + 6 expéditions + Drattak), découvertes par missions/secrets séparées, absence de voie ou de données affichée sans extrapolation. **16/43 = 37,2 %** ; **1 action en cours** (BUG-MOB-01), **26 non commencées**, **lot 0 : 4/7**, **lot 3 : 2/4**. Prochaine action autonome : **DEX-03** (jusqu'à trois cibles personnelles). Aucune recette physique iPhone ni déploiement Render vérifié.
 
 ## MOB-03 — clôture technique vérifiée le 6 novembre 2026
 
@@ -40,7 +42,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**DEX-02 — afficher les voies d'obtention exactes.** Confronter `docs/PLAN_RARETE_1025.md` aux routes serveur actuelles, distinguer une simple découverte, une capture réellement disponible et une voie absente. Les 852 espèces capturables et 173 non capturables sont à confirmer contre le code ; ne changer ni économie, ni probabilités, ni expéditions. `BUG-MOB-01` reste en attente d'une recette physique, distincte et non bloquante.
+**DEX-03 — suivre jusqu'à trois cibles personnelles.** Proposer un suivi volontaire de trois espèces sans modifier les tirages ou chances, promettre une apparition, révéler des secrets, ni transformer une découverte en capture. S'appuyer sur les voies vérifiées par DEX-02 ; conserver les sauvegardes existantes. `BUG-MOB-01` reste en attente d'une recette physique, distincte et non bloquante.
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -92,7 +94,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### Lot 3 — Pokédex et collection
 - [x] **DEX-01 · P1** : trois états distincts dans filtres, compteurs et fiches ; historique personnel consulté en lecture seule, échange reçu non présenté comme capture et capture cédée préservée. [PR #290](https://github.com/chebreub/Pokdle/pull/290) ; [tests et limites](qa/DEX_01_STATES.md).
-- [~] **DEX-02 · P1** : fiches de collection affichant les voies de capture serveur et de découverte (mission/secret), sans confondre les deux. [Règles, cas et limites](qa/DEX_02_ROUTES.md). CI et fusion requises pour clôturer ; 852 capturables / 173 sans voie de capture par Ball.
+- [x] **DEX-02 · P1** : voies de capture confirmées par le serveur (845 hautes herbes, 6 expéditions, Drattak prestige) et voies de découverte (missions/secrets) distinguées dans les fiches, sans changer les règles. [PR #293](https://github.com/chebreub/Pokdle/pull/293) et [tests/limites](qa/DEX_02_ROUTES.md). 852 capturables / 173 sans voie de capture par Ball.
 - [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.
 
