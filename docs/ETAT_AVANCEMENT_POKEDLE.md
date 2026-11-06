@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 6 novembre 2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305 et ECO-06 #307 fusionnées après CI GitHub vertes. Les bilans historiques ci-dessous restent datés de leurs étapes antérieures.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #307](https://github.com/chebreub/Pokdle/pull/307), `e707039678d90874bc929608bef6fe1dc6498887`.
+**Photographie opérationnelle au 6 novembre 2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305, ECO-06 #307 et ECO-04 #309 fusionnées après CI GitHub vertes. Les bilans historiques ci-dessous restent datés de leurs étapes antérieures.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #309](https://github.com/chebreub/Pokdle/pull/309), `be7565087755ed593e26d27cc530692476eba48d`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**24 tâches terminées sur 43 actions actives = 55,8 %** après la PR #307 (ECO-06) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**25 tâches terminées sur 43 actions actives = 58,1 %** après la PR #309 (ECO-04) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **24** | Actions vérifiées, PR fusionnées ; dernière livraison #307 |
+| **Terminé et intégré à main** | **25** | Actions vérifiées, PR fusionnées ; dernière livraison #309 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **18** | Dont ECO-03 (arbitrage), ECO-04 (crédit des coffres) et les autres chantiers non lancés |
+| **Non commencé / à conduire ou à décider** | **17** | Dont ECO-03 (arbitrage), PART-01 et autres chantiers non lancés |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (24 actions terminées / 43 actions actives) × 100 = **55,8140 %, arrondi à 55,8 %**.
+**Formule explicite :** (25 actions terminées / 43 actions actives) × 100 = **58,1395 %, arrondi à 58,1 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -29,11 +29,18 @@
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
-| 4 | Économie et rencontres | 6 / 8 | 75,0 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 préparation #302, ECO-08 légendaire 72 h #304, ECO-05 statistiques #305 et ECO-06 sécurité récompenses #307 |
+| 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
 | 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **24 / 43** | **55,8 %** | NIV-01 stationné, exclu ; ECO-03/04 restent à traiter |
+| **Total** | | **25 / 43** | **58,1 %** | NIV-01 stationné, exclu ; ECO-03 non approuvée, prochain lot 5 PART-01 |
+
+## ECO-04 — coffres d'expédition fiabilisés
+
+- [PR #309](https://github.com/chebreub/Pokdle/pull/309) fusionnée sur `main` au commit `be7565087755ed593e26d27cc530692476eba48d` après CI Node, tests PostgreSQL isolés et navigateur complète **vertes**.
+- Les deux emplacements de Ball par coffre sont contrôlés séparément : un ancien crédit partiel peut être complété sans doublon. Double requête, changement de jour, adoption invité → compte et interruption SQL sont couverts ; ancien journal préservé.
+- La réponse `no_chest` rafraîchit le sac et l'expédition sur le navigateur. Aucune migration, modification de barème, crédit rétroactif ni prolongation des coffres expirés. [Protocole et limites](qa/ECO_04_EXPEDITION_CHEST_IDEMPOTENCE.md).
+- **25/43 = 58,1 % ; lot Économie 7/8.** ECO-03 nécessite une décision du propriétaire, donc prochaine action autonome : **PART-01**, invitations directes Dessine-le (lot 5). La recette iPhone physique et le déploiement Render restent non vérifiés.
 
 ## ECO-06 — autorité serveur des récompenses validée
 
