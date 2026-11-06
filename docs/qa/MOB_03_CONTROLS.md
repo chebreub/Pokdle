@@ -22,3 +22,9 @@ Les tests ciblés existants protègent le clavier PC, les suggestions solo, le c
 La clôture technique de MOB-03 exige les trois volets intégrés et les contrôles automatisés verts ; elle ne clôture ni BUG-MOB-01 (téléphone de Jade), ni MOB-04 (focus/scroll Safari réel). Le viewport clavier est simulé, aucun test sur iPhone physique ni vérification Render n'est revendiqué. Prix, probabilités, gains, captures, sauvegardes et règles serveur restent inchangés.
 
 Après fusion du dernier volet et validation complète : **14/43 = 32,6 %**. Prochaine action autonome : **DEX-01**, distinguer vu/découvert, déjà capturé et possédé actuellement, en s'appuyant sur les données existantes.
+
+## Correctif WebKit après le transfert du 6 novembre
+
+La [CI complète sur `209adfe`](https://github.com/chebreub/Pokdle/actions/runs/42234236464) a échoué en Duel WebKit 360 px : le tap ne produisait aucun `duel:submit-guess`. L’annulation de `pointerdown` pour conserver le focus supprimait le clic tactile sur ce moteur. L’annulation est désormais limitée à `mousedown` (y compris l’événement de compatibilité tactile) ; le gestionnaire `click` existant reste l’unique point d’envoi. Aucun envoi sur appui initial ni nouvelle logique serveur.
+
+Après correction : build, 20 tests Node ciblés et parcours complet `mobile_guess_controls_quality.py` sous Chromium **et WebKit locaux**, à 360/390/1366 px, réussis. Les bibliothèques WebKit manquantes ont été fournies dans un dossier temporaire local ; les assertions du parcours sont inchangées. Ce succès local ne remplace pas la CI finale avant fusion et ne constitue pas une recette iPhone physique.

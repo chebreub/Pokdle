@@ -5,13 +5,14 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync(`${__dirname}/../src/script.10ja.mobile-controls.js`, 'utf8');
 
-test('phone submit keeps focus through pointerdown, with no interception elsewhere', () => {
+test('phone submit keeps focus through mousedown, with no interception elsewhere', () => {
   const handlers = {}, document = { activeElement: {id:'party-guess'}, addEventListener: (name,fn)=>{handlers[name]=fn;} };
   let mobile = true;
   vm.runInNewContext(source, {document,window:{matchMedia:()=>({matches:mobile}),addEventListener(){}}});
+  assert.equal(handlers.pointerdown, undefined, 'do not suppress the WebKit touch click');
   function tap(selector) {
     let prevented = false;
-    handlers.pointerdown({target:{closest:s=>s===selector},preventDefault:()=>{prevented=true;}});
+    handlers.mousedown({target:{closest:s=>s===selector},preventDefault:()=>{prevented=true;}});
     return prevented;
   }
   assert.equal(tap('#party-submit-btn'),true);

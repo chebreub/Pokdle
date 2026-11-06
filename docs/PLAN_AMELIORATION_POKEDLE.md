@@ -288,3 +288,7 @@ Le premier run a révélé un défaut d'isolation du nouveau test : ses deux nav
 ## Dernier volet MOB-03 — candidat à la clôture technique (06/11/2026)
 
 Party, Duel et Défi ami regroupés dans un seul lot : commandes visibles avec clavier, hauteur des suggestions stable et tap sans déplacement du bouton. [Périmètre, preuves, recette et limites](qa/MOB_03_CONTROLS.md). Tests Chromium locaux réussis aux trois résolutions et tests Node ciblés verts ; **CI complète et fusion encore requises**. Progression intégrée inchangée **13/43** à ce stade ; **14/43 (32,6 %) uniquement après validation et fusion**. Ensuite **DEX-01** ; BUG-MOB-01 et MOB-04 restent distincts de cette clôture technique.
+
+### PR #289 — correction de l’échec WebKit du dernier head
+
+Le run complet sur `209adfe` a échoué sur le clic Duel WebKit (distinct du défaut Chromium Défi déjà corrigé). Conservation du focus déplacée de `pointerdown` vers `mousedown`, clic métier unique conservé. Build, 20 tests Node ciblés et parcours local Chromium/WebKit 360/390/1366 px réussis. [Preuves et limites](qa/MOB_03_CONTROLS.md). CI finale et fusion encore requises ; progression intégrée inchangée à 13/43.

@@ -54,8 +54,11 @@ document.addEventListener('focusin', event => {
   if (mobilePickerControls.some(item => item.input === event.target.id)) scheduleMobilePickerControls();
 });
 // Keep focus until the tap reaches its submit handler. Otherwise blur closes
-// the keyboard layout on pointerdown and moves the button away before click.
-document.addEventListener('pointerdown', event => {
+// the keyboard layout on mousedown and moves the button away before click.
+// Cancel only the focus-changing mouse event, including the compatibility
+// event from touch. WebKit can suppress the touch click if pointerdown is
+// cancelled. Submission stays in the existing click handler on both engines.
+document.addEventListener('mousedown', event => {
   if (!window.matchMedia('(max-width: 640px)').matches) return;
   const config = mobilePickerControls.find(item => item.input === document.activeElement?.id);
   if (config?.action && event.target.closest(config.action)) event.preventDefault();
