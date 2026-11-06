@@ -109,9 +109,31 @@ function profileMergePixelPrecision(a, b) {
   return out;
 }
 
+// DEX-03: choices can be removed, so they must not use the union merge used by discoveries.
+function profileTrackedTargets(raw) {
+  const output = [], seen = new Set();
+  for (const value of Array.isArray(raw) ? raw : []) {
+    const id = Number(value);
+    if (!Number.isInteger(id) || id < 1 || id > 1025 || seen.has(id)) continue;
+    output.push(id);
+    seen.add(id);
+    if (output.length === 3) break;
+  }
+  return output;
+}
+
 function mergeProfileData(p, o, b) {
   const out = { ...o, ...p };
   const base = b || {};
+  // Newest explicit choice wins, including clearing all three. Older copies must not
+  // resurrect removed targets; a missing legacy field must not erase a newer one.
+  if ("pokedexTrackedTargets" in p || "pokedexTrackedTargets" in o) {
+    const atP = Math.max(0, profileMergeNumber(p.pokedexTrackedUpdatedAt));
+    const atO = Math.max(0, profileMergeNumber(o.pokedexTrackedUpdatedAt));
+    const preferP = atP > atO || (atP === atO && "pokedexTrackedTargets" in p);
+    out.pokedexTrackedTargets = profileTrackedTargets(preferP ? p.pokedexTrackedTargets : o.pokedexTrackedTargets);
+    out.pokedexTrackedUpdatedAt = Math.max(atP, atO);
+  }
   // A level put back by the admin (« Niveau d'un joueur », 31/10/2026, lib/player-level-admin.js) wins
   // over a copy made before it: that copy's XP is the one it replaced, adding it would count it twice.
   // A common copy from before it is not common either.

@@ -95,7 +95,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 ### Lot 3 — Pokédex et collection
 - [x] **DEX-01 · P1** : trois états distincts dans filtres, compteurs et fiches ; historique personnel consulté en lecture seule, échange reçu non présenté comme capture et capture cédée préservée. [PR #290](https://github.com/chebreub/Pokdle/pull/290) ; [tests et limites](qa/DEX_01_STATES.md).
 - [x] **DEX-02 · P1** : voies de capture confirmées par le serveur (845 hautes herbes, 6 expéditions, Drattak prestige) et voies de découverte (missions/secrets) distinguées dans les fiches, sans changer les règles. [PR #293](https://github.com/chebreub/Pokdle/pull/293) et [tests/limites](qa/DEX_02_ROUTES.md). 852 capturables / 173 sans voie de capture par Ball.
-- [ ] **DEX-03 · P1** : suivre jusqu'à 3 cibles personnelles, sans changer les probabilités ni divulguer les secrets.
+- [~] **DEX-03 · P1** : suivre jusqu'à trois cibles choisies volontairement, sauvegardées dans le profil et fusionnées sans ressusciter les suppressions ; aucune modification de captures, récompenses ou taux. [Tests et limites](qa/DEX_03_TRACKING.md). CI complète et fusion requises avant clôture.
 - [ ] **DEX-04 · P2** : vitrine optionnelle de 6 Pokémon détenus et objectif proche ; partage volontaire.
 
 ### Lot 4 — Économie et rencontres **décisions de cadrage, sans autorisation de mise en production**
