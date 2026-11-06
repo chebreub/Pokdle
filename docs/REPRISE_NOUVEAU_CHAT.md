@@ -1,6 +1,6 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
-> **État vérifié le 6 novembre 2026 :** PR #289 fusionnée dans `main` au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67` après CI complète verte sur `842484f`. MOB-03 clôturé techniquement : #285, #287 et #289 intégrés.
+> **État vérifié le 6 novembre 2026 :** DEX-01 fusionné via [#290](https://github.com/chebreub/Pokdle/pull/290) (`904efaa26b9b2e521ad97e680d16ef4fa247c416`) après CI complète verte sur `70f24bd`. MOB-03 reste clôturé : #285, #287 et #289 intégrés.
 > **15 actions intégrées sur 43 = 34,9 %** ; **1 action en cours** (BUG-MOB-01) ; **27 non commencées** ; NIV-01 stationnée.
 > **Prochaine action autonome : DEX-02.** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
 >
@@ -57,6 +57,7 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | **PC-02** | Flèches/Entrée/Échap contextuels en Solo, Défi, Party et Duel ; envoi d'une proposition en duel par un seul gestionnaire ; IME et chats préservés | [#282](https://github.com/chebreub/Pokdle/pull/282) |
 | **MOB-03** | Commandes solo, Party, Duel et Défi accessibles avec viewport clavier simulé ; chat et célébrations coordonnés | [#285](https://github.com/chebreub/Pokdle/pull/285), [#287](https://github.com/chebreub/Pokdle/pull/287), [#289](https://github.com/chebreub/Pokdle/pull/289) |
 | **PC-01** | PC compact : saisie à gauche et indices lisibles à droite ; résultat à 1 000 px ; Course complète sans scroll, doublon refusé | [#283](https://github.com/chebreub/Pokdle/pull/283) |
+| **DEX-01** | Découvert, capturé personnellement et possédé distingués, captures cédées conservées, échange reçu sans capture inventée | [#290](https://github.com/chebreub/Pokdle/pull/290) |
 
 Autres PR à ne pas confondre avec une action supplémentaire terminée :
 - [#260](https://github.com/chebreub/Pokdle/pull/260) : plan, diagnostic et infrastructure de tests tactiles.
