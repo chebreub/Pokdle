@@ -19,6 +19,20 @@ class SmokeScopeTest(unittest.TestCase):
     def test_wordle_database_test_alone_needs_postgresql_not_browsers(self):
         self.assertEqual(classify(["App/test/daily-wordle.test.js"]), ("none", True))
 
+    def test_pc_desktop_qa_is_focused_and_keeps_db_checks(self):
+        self.assertEqual(classify([
+            ".github/workflows/browser-quality.yml",
+            "App/visual-refresh.css", "App/game-shell.css",
+            "App/src/script.10j.game-shell.js",
+            "tools/pc_desktop_quality.py", "tools/ci_smoke_scope.py",
+            "tools/test_ci_smoke_scope.py",
+        ]), ("desktop", True))
+
+    def test_broad_code_edit_cannot_claim_desktop_only(self):
+        self.assertEqual(classify([
+            "App/server.js", "tools/pc_desktop_quality.py",
+        ]), ("general", True))
+
     def test_party_qa_is_party(self):
         self.assertEqual(classify([
             "App/src/script.07.delegation-party.js",
