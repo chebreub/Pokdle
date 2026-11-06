@@ -52,6 +52,7 @@ test("only date-bound SELECTs are issued; no players or raw ledger entries are r
     if(sql.includes("FROM coin_ledger"))return {rows:[]};
     if(sql.includes("FROM ball_gains"))return {rows:[]};
     if(sql.includes("COUNT(DISTINCT identity)"))return {rows:[{actors:0}]};
+    if(sql.includes("FROM capture_stats_daily"))return {rows:[]};
     if(sql.includes("FROM wild_encounters"))return {rows:[]};
     throw Error("unrecognized query");
   }};
