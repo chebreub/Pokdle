@@ -1923,7 +1923,27 @@ body.theme-dark .dex-search input{color:#f5efe6}
     [data-game-mode="normal"],
     [data-game-mode="daily"],
     [data-game-mode="challenge"]
-  ) .classic-game-command { min-width:0; }
+  ) .classic-game-command { min-width:0; grid-column:1; grid-row:1; }
+  /* prepareGameShell puts history first in the DOM for the stacked layout.
+     Place it explicitly in the wide column while this compact board is active. */
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"][data-finished="false"]:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell > #results-wrap {
+    grid-column:2;
+    grid-row:1;
+  }
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"][data-finished="false"]:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .classic-game-shell::after { grid-column:2; grid-row:1; }
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"][data-finished="false"]:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) .results-legend { grid-column:2; }
   #pokdle-app.design-refresh #screen-game[data-shell="focused"]:is(
     [data-game-mode="normal"],
     [data-game-mode="daily"],
@@ -1937,6 +1957,11 @@ body.theme-dark .dex-search input{color:#f5efe6}
     [data-game-mode="daily"],
     [data-game-mode="challenge"]
   ) .shell-guide {grid-column:1 / -1;}
+  #pokdle-app.design-refresh #screen-game[data-shell="focused"][data-finished="true"]:is(
+    [data-game-mode="normal"],
+    [data-game-mode="daily"],
+    [data-game-mode="challenge"]
+  ) { max-width:1000px !important; }
   #pokdle-app.design-refresh #screen-game[data-shell="focused"][data-finished="true"]:is(
     [data-game-mode="normal"],
     [data-game-mode="daily"],

@@ -433,8 +433,15 @@ def main():
      command=page.locator('#screen-game .classic-game-command').bounding_box()
      results=page.locator('#screen-game #results-wrap').bounding_box()
      expect(command and results,'Game regions are missing')
-     expect(command['y']>=results['y']+results['height'],'Guess history must precede the next input')
-     expect(page.locator('#screen-game').bounding_box()['width']<=1001,'Game exceeds the focused reading width')
+     if 1280<=width<1680 and height<=820:
+      # PC-01 intentionally uses two columns on compact laptops. History is
+      # still first in the DOM, but must occupy the wide right-hand panel.
+      expect(results['x']>=command['x']+command['width'],'Compact desktop history overlaps the command column')
+      expect(abs(results['y']-command['y'])<3,'Compact desktop panels are not aligned')
+      expect(results['width']>=760 and command['width']>=330,'Compact desktop clues or commands are squeezed')
+     else:
+      expect(command['y']>=results['y']+results['height'],'Guess history must precede the next input')
+      expect(page.locator('#screen-game').bounding_box()['width']<=1001,'Game exceeds the focused reading width')
      expect(page.locator('#shell-title').is_visible() or page.locator('#shell-mode').is_visible(),'Game title is missing')
      expect(page.locator('#screen-game > .live-rank-hud').count()==0,'Ranking interrupts the active investigation')
      return screen('screen-game')

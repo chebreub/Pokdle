@@ -79,7 +79,7 @@ def race_geometry(page):
     }""")
 
 
-def test_classic_game(page):
+def test_classic_game(page, engine):
     page.evaluate("() => {closeOverlayModal(); startNormalGame(); closeOverlayModal();}")
     page.wait_for_function(
         "() => !document.getElementById('screen-game').classList.contains('hidden') "
@@ -100,7 +100,47 @@ def test_classic_game(page):
     assert game["topbarBottom"] < 768 and game["inputBottom"] < 768, game
     assert game["documentOverflow"] <= 2, game
     assert len(game["columns"].split()) == 2, "Desktop should have a main game and secondary panel: " + repr(game)
-    page.screenshot(path=str(OUT / "1366-classic.png"), animations="disabled")
+    # Verify the generated stylesheet actually served by the application.
+    styles = page.locator('link[rel="stylesheet"]').evaluate_all('(links) => links.map(e => e.getAttribute("href"))')
+    assert any(href.startswith("dist/app.min.css?v=") for href in styles), styles
+    assert not page.locator('#shell-notebook').evaluate('(e) => e.open')
+    page.evaluate('() => {for(let i=0;i<30 && secretPokemon.name === "Bulbizarre";i++)startNormalGame();}')
+    assert page.evaluate('secretPokemon.name !== "Bulbizarre"')
+    page.locator('#guess-input').fill('Bulbizarre')
+    page.locator('#btn-submit').click()
+    page.locator('#results-body tr').first.wait_for(state='visible')
+    command = page.locator('.classic-game-command').bounding_box()
+    history = page.locator('#results-wrap').bounding_box()
+    assert history['x'] >= command['x'] + command['width'], (command, history)
+    assert abs(history['y'] - command['y']) < 3, (command, history)
+    assert history['width'] >= 760, history
+    assert page.locator('#results-body tr').first.locator('td').count() == 10
+    headers = page.locator('#results-table th').evaluate_all('(cells) => cells.map(e => e.getBoundingClientRect().width)')
+    assert min(headers) >= 50, headers
+    page.locator('#guess-input').fill(page.evaluate('secretPokemon.name === "Carapuce" ? "Salamèche" : "Carapuce"'))
+    page.locator('#btn-submit').click()
+    assert page.locator('#results-body tr').count() == 2
+    assert page.locator('#results-wrap').bounding_box()['width'] >= 760
+    # The notebook remains available after multiple guesses.
+    page.locator('#shell-notebook summary').click()
+    assert page.locator('#shell-notebook').evaluate('(e) => e.open')
+    page.locator('#shell-notebook summary').click()
+    page.screenshot(path=str(OUT / (engine + "-1366-classic.png")), animations="disabled")
+    page.locator('#btn-surrender').click()
+    page.locator('#win-box').wait_for(state='visible')
+    page.wait_for_function("() => document.getElementById('screen-game').dataset.finished === 'true'")
+    win = page.locator('#win-box').bounding_box()
+    history = page.locator('#results-wrap').bounding_box()
+    assert win['width'] <= 1001 and abs(win['x'] - history['x']) < 3, (win, history)
+    assert page.locator('.classic-game-command').is_hidden()
+    assert page.locator('#btn-restart').is_visible()
+    assert page.locator('#btn-result-catalog').is_visible()
+    page.locator("#btn-restart").scroll_into_view_if_needed()
+    page.screenshot(path=str(OUT / (engine + "-1366-result.png")), animations="disabled")
+    page.locator('#btn-restart').click()
+    assert page.locator('#guess-input').is_visible()
+    assert len(page.locator('.classic-game-shell').evaluate('(e) => getComputedStyle(e).gridTemplateColumns').split()) == 2
+    game.update(historyWidth=history['width'], resultWidth=win['width'], generatedStylesheet=True)
     return game
 
 
@@ -119,8 +159,7 @@ def run_engine(playwright, engine, result):
             page.on("pageerror", lambda error: errors.append(str(error)))
             wait_app(page)
 
-        if engine == "chromium":
-            result["classic"] = test_classic_game(host)
+        result.setdefault("classic", {})[engine] = test_classic_game(host, engine)
         for page in (host, guest):
             page.evaluate("() => {closeOverlayModal(); openPartyRoomMode();}")
         host.locator("#party-nickname").fill("PC-01 Host")
