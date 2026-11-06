@@ -12,7 +12,7 @@ function fn(name) {
 }
 function fixture() {
   const input = { value: '', focus() {} };
-  const list = { classList: { add() {} }, querySelectorAll: () => [] };
+  const list = { classList: { add() {}, contains() { return false; } }, querySelectorAll: () => [] };
   const button = { disabled: false };
   const room = { code: 'TEST', gameMode: 'nearest', status: 'playing', roundNumber: 1, round: { roundSerial: 7 } };
   const sent = [], messages = [];
