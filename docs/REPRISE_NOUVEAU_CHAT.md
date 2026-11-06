@@ -1,8 +1,8 @@
 # Reprendre Pokédle dans un nouveau chat — Guide de transfert complet
 
 > **État vérifié le 6 novembre 2026 :** PR #289 fusionnée dans `main` au commit `87d242e8b15b7f18f3f5e75852f4e3b188502e67` après CI complète verte sur `842484f`. MOB-03 clôturé techniquement : #285, #287 et #289 intégrés.
-> **14 actions intégrées sur 43 = 32,6 %** ; **2 actions en cours** (DEX-01 et BUG-MOB-01) ; **27 non commencées** ; NIV-01 stationnée.
-> **Prochaine action unique : DEX-01.** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
+> **15 actions intégrées sur 43 = 34,9 %** ; **1 action en cours** (BUG-MOB-01) ; **27 non commencées** ; NIV-01 stationnée.
+> **Prochaine action autonome : DEX-02.** Ne pas rouvrir l’audit mobile ; les réserves iPhone réel restent distinctes.
 >
 > **Important :** le taux de progression mesure la clôture des **actions de ce plan**, pas le taux d'achèvement ou de qualité du site, qui possède déjà beaucoup de fonctionnalités. Les informations de ce guide sont une photographie : **vérifier le dernier `main`, les PR et la CI avant d'agir**.
 
@@ -30,12 +30,12 @@ Le propriétaire veut un **Pokédle complet, amusant, stable, équilibré, agré
 | 0 | Fiabilité tactile, ergonomie iPhone/PC, compréhension des données | 4 / 7 |
 | 1 | Logique des jeux, reprise de séries, animations/récompenses, données d'usage | 7 / 8 |
 | 2 | Gameplay, maîtrise, pédagogie, découverte de modes | 3 / 5 |
-| 3 | Pokédex, collection, rareté et objectifs personnels | 0 / 4 |
+| 3 | Pokédex, collection, rareté et objectifs personnels | 1 / 4 |
 | 4 | Économie, captures, Pokéballs, Pokédollars, expéditions, événements rares | 0 / 8 |
 | 5 | Invitations, défis, partage, échanges et diffusion naturelle | 0 / 5 |
 | 6 | Gestes et animations facultatifs, après stabilisation tactile | 0 / 4 |
 | 7 | Recette auprès de joueurs externes et acquisition | 0 / 2 |
-| **Total** | **43 actions actives** | **14 / 43 = 32,6 %** |
+| **Total** | **43 actions actives** | **15 / 43 = 34,9 %** |
 
 **DATA-02 achevée et NIV-02 intégrée : ne pas concentrer davantage le travail sur le dashboard.** Une fois les mesures fiabilisées, reprendre les améliorations concrètes des modes, du mobile, du Pokédex, de l'économie et du multijoueur dans l'ordre des priorités, contraintes et dépendances du plan. Les statistiques servent à orienter le gameplay ; elles ne remplacent pas le gameplay.
 
@@ -68,7 +68,7 @@ Les PR techniques clôturées ont passé leurs CI Node et navigateur/base pertin
 
 ## 4. Point de reprise exact et sujets en attente
 
-**Prochaine action unique : `DEX-01` — distinguer vu/découvert, déjà capturé, possédé actuellement.** Comprendre les données existantes et les échanges/cessions ; aucun historique inventé, aucune modification de captures ou sauvegardes pour un libellé. MOB-03 est clôturé techniquement ; ne pas recommencer son audit.
+**Prochaine action autonome : `DEX-02` — afficher les voies d'obtention réelles.** Recouper `docs/PLAN_RARETE_1025.md` et les sources serveur sans inventer de route, confondre mission et capture, ni changer taux ou économie. DEX-01 et MOB-03 sont terminés ; ne pas recommencer ces lots.
 
 **PC-01 :** [PR #283](https://github.com/chebreub/Pokdle/pull/283) : CSS desktop plus compact sur 1366×768, arène Course au Pokédex sur un seul viewport, moteur de dimensionnement inchangé. Recette Chromium/WebKit locale sur deux vrais joueurs, avec 151 cases et refus de doublon ; ni Safari physique ni Render réel revendiqués.
 
@@ -135,12 +135,12 @@ Les autres actions économiques (`ECO-05` version des règles, `ECO-06` autorit�
 
 1. **État technique** : contenu de `main` actuel, commits, PR et tests effectifs.
 2. **Décisions produit** : arbitrages validés et conditions figurant dans le plan, sans transformer des pistes en règles officielles.
-3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **14/43**, après fusion vérifiée de #289 ; vérifier main pour toute modification ultérieure.
+3. **Avancement** : seules les actions réellement terminées, testées et intégrées font monter le compteur ; nombre actuel = **15/43**, après fusion vérifiée de #290 ; vérifier main pour toute modification ultérieure.
 4. **Audits historiques** : photographie datée, à confronter aux corrections plus récentes.
 
 Ce guide remplace les anciennes instructions qui faisaient encore commencer par `LOG-02` ou `DATA-02`, ou annonçaient **2/43**, **7/43**, **8/43**, **9/43**, **10/43** ou **11/43** ; ces informations étaient dépassées au 5 novembre 2026.
 
-**DEX-01 a ensuite été engagé dans la [PR #290](https://github.com/chebreub/Pokdle/pull/290), encore ouverte et en validation CI.** Le total intégré reste **14/43** ; situation courante : **2 actions en cours** (DEX-01 et BUG-MOB-01), **27 non commencées**. Ne pas compter DEX-01 terminé avant sa fusion.
+**DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
 ## MOB-03 — clôture technique vérifiée le 6 novembre 2026
 
