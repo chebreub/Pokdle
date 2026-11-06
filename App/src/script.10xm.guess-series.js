@@ -152,16 +152,74 @@ function setGuessSeriesSize(n) {
 }
 window.setGuessSeriesSize = setGuessSeriesSize;
 
+// SER-01: a historic personal best stores ONLY the number found. Do not
+// pretend to know how many attempts it took. New Pixel runs are compared by
+// found (more is better), then by attempts spent on found Pokémon (fewer is
+// better). Skipped/unfound rounds do not contribute to this attempt total.
+// Existing 5/10/20 records share generation scope, just as before.
+function guessSeriesPixelValidEntry(entry, total) {
+  if (!entry || !GUESS_SERIES_SIZES.includes(total) || typeof entry !== 'object'
+    || !Number.isSafeInteger(entry.found) || entry.found < 1 || entry.found > total
+    || !Number.isSafeInteger(entry.attemptsWon) || entry.attemptsWon < entry.found) return null;
+  return { found:entry.found, attemptsWon:entry.attemptsWon };
+}
+function guessSeriesPixelCompare(a, b) {
+  if (!a) return 0;
+  if (!b) return 1;
+  if (a.found !== b.found) return a.found > b.found ? 1 : -1;
+  return a.attemptsWon < b.attemptsWon ? 1 : a.attemptsWon > b.attemptsWon ? -1 : 0;
+}
+function guessSeriesPixelStatus(s) {
+  if (!s || s.mode !== 'pixel') return null;
+  var historic = (playerProfile && playerProfile.guessSeriesBest && playerProfile.guessSeriesBest.pixel) || {};
+  var n = Number(historic[s.total]);
+  var previousCount = Number.isFinite(n) && n > 0 ? n : 0;
+  var precision = playerProfile && playerProfile.guessSeriesPrecision && playerProfile.guessSeriesPrecision.pixel;
+  var previous = guessSeriesPixelValidEntry(precision && precision[s.total], s.total);
+  var bestCount = Math.max(previousCount, previous ? previous.found : 0);
+  var completed = s.recorded === true && s.index >= s.total
+    && Array.isArray(s.rounds) && s.rounds.length === s.total;
+  var current = completed ? guessSeriesPixelValidEntry(s, s.total) : null;
+  var precisionBetter = Boolean(current && guessSeriesPixelCompare(current, previous) > 0);
+  return {
+    bestCount, previous, current, precisionBetter,
+    countRecord: Boolean(current && current.found > bestCount),
+    // An old score with the same found count has no known attempts:
+    // this is a new *measured reference*, never a retrospective record.
+    firstReference: Boolean(current && current.found === bestCount
+      && (!previous || previous.found < current.found))
+  };
+}
+function guessSeriesPixelSummarySuffix(s) {
+  var state = guessSeriesPixelStatus(s);
+  if (!state) return '';
+  var note = state.current ? ' · ' + state.current.attemptsWon + ' essais sur les ' + state.current.found + ' trouvés' : '';
+  if (state.countRecord) return note + ' · 🏆 Record !';
+  if (state.firstReference) return note + ' · record égalé ; 1re référence d’essais';
+  if (state.current && state.current.found === state.bestCount && state.precisionBetter) {
+    return note + ' · 🏅 Meilleur départage suivi';
+  }
+  if (state.bestCount) {
+    note += ' · record : ' + state.bestCount + ' / ' + s.total;
+    if (state.previous && state.previous.found === state.bestCount) {
+      note += ' · référence suivie : ' + state.previous.attemptsWon + ' essais';
+    }
+  }
+  return note;
+}
+
 function guessSeriesSummaryHtml(s) {
   var avg = s.found ? (s.attemptsWon / s.found).toFixed(1).replace('.', ',') : '—';
   var xp = Math.max(0, (Number(playerProfile && playerProfile.xp) || 0) - s.xpStart);
   var bests = (playerProfile && playerProfile.guessSeriesBest && playerProfile.guessSeriesBest[s.mode]) || {};
   var best = Number(bests[s.total]) || 0;
   var record = s.found > 0 && s.found >= best;
+  var suffix = s.mode === 'pixel' ? guessSeriesPixelSummarySuffix(s)
+    : record ? ' · 🏆 Record !' : best ? ' · record : ' + best + ' / ' + s.total : '';
   var dots = s.rounds.map(function (r) { return '<i class="' + (r.won ? 'is-won' : 'is-lost') + '" title="' + escapeHtml(r.name) + '">' + (r.won ? '✓' : '×') + '</i>'; }).join('');
   return '<div id="guess-series-summary" class="pixel-series-summary"><p class="pss-kicker">SÉRIE TERMINÉE</p>' +
     '<div class="pss-score"><b>' + s.found + '</b><span>/ ' + s.total + ' trouvés</span></div>' +
-    '<p class="pss-line">' + avg + (s.found && s.attemptsWon / s.found < 2 ? ' essai' : ' essais') + ' en moyenne · +' + xp + ' XP' + (record ? ' · 🏆 Record !' : best ? ' · record : ' + best + ' / ' + s.total : '') + '</p>' +
+    '<p class="pss-line">' + avg + (s.found && s.attemptsWon / s.found < 2 ? ' essai' : ' essais') + ' en moyenne · +' + xp + ' XP' + suffix + '</p>' +
     '<div class="pss-dots" aria-label="Résultat de chaque partie">' + dots + '</div></div>';
 }
 
@@ -219,9 +277,30 @@ if (typeof renderGameOverBox === 'function') {
       var anchor = document.querySelector('#win-box .win-inner') || document.getElementById('win-box');
       if (anchor) anchor.insertAdjacentHTML('afterbegin', guessSeriesSummaryHtml(s));
       if (playerProfile) {
+        var changed = false;
         var all = Object.assign({}, playerProfile.guessSeriesBest || {});
         var bests = Object.assign({}, all[s.mode] || {});
-        if (s.found > (Number(bests[s.total]) || 0)) { bests[s.total] = s.found; all[s.mode] = bests; playerProfile.guessSeriesBest = all; try { saveProfile(); } catch (_e) {} }
+        if (s.found > (Number(bests[s.total]) || 0)) {
+          bests[s.total] = s.found;
+          all[s.mode] = bests;
+          playerProfile.guessSeriesBest = all;
+          changed = true;
+        }
+        // New measured precision is independent of legacy count-only scores.
+        // This remains a personal record; the shared pixel10 leaderboard still
+        // receives found alone until server-verified attempts can be supplied.
+        if (s.mode === 'pixel') {
+          var status = guessSeriesPixelStatus(s);
+          if (status && status.precisionBetter) {
+            var precisionAll = Object.assign({}, playerProfile.guessSeriesPrecision || {});
+            var pixel = Object.assign({}, precisionAll.pixel || {});
+            pixel[s.total] = { found:status.current.found, attemptsWon:status.current.attemptsWon };
+            precisionAll.pixel = pixel;
+            playerProfile.guessSeriesPrecision = precisionAll;
+            changed = true;
+          }
+        }
+        if (changed) { try { saveProfile(); } catch (_e) {} }
       }
     }
     return value;
