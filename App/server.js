@@ -1723,15 +1723,17 @@ app.get("/admin/stats", async (req, res) => {
       return { label: USAGE_LABELS[event] || event, values, total: values.reduce((a, b) => a + b, 0) };
     });
   const { renderStatsDashboard } = require("./lib/admin-stats-dashboard");
-  // Cohorts need mature days. Keep D+1 / D+7 based on the same 14
-  // completed UTC days regardless of the dashboard's short-term selection.
-  let retention = null;
+  // DATA-04: cohorts need mature days. J+1 / J+7 on the 28 last finished days of Paris (the days of the
+  // games), whatever the dashboard's display period; admin accounts are left out of both measures.
+  let retention = null, siteRetention = null;
   try {
     if (pgPool) {
-      const retentionEnd = new Date(Date.parse(todayUtc + "T00:00:00.000Z") - 86400000);
-      retention = await require("./lib/daily-retention").dailyRetention(
-        pgPool, usageMetrics.startDay(14, retentionEnd), usageMetrics.utcDay(retentionEnd)
-      );
+      const retentionLib = require("./lib/daily-retention");
+      const retentionEnd = new Date(Date.parse(require("./lib/egg-mystery").parisDay(new Date()) + "T12:00:00Z") - 86400000);
+      const span = [usageMetrics.startDay(28, retentionEnd), retentionEnd.toISOString().slice(0, 10)];
+      const exclude = [...ADMIN_ACCOUNT_IDS].map((id) => "user:" + id);
+      retention = await retentionLib.dailyRetention(pgPool, ...span, exclude);
+      siteRetention = await retentionLib.siteRetention(pgPool, ...span, exclude);
     }
   } catch (error) {
     console.warn("[stats] retention unavailable:", String(error.message || error).slice(0, 120));
@@ -1755,7 +1757,7 @@ app.get("/admin/stats", async (req, res) => {
     days, endDay, livePeriod, generatedAt: new Date().toISOString(),
     adminKey, metrics, segmentRows, segmentStartedAt, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
-    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, economy
+    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, siteRetention, economy
   }));
 });
 

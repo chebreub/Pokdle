@@ -25,7 +25,7 @@ test('PostgreSQL: next day, within 7 days, and new players who came back', { ski
     assert.deepEqual(r.nextDay, { back: 1, base: 7, rate: 14 }, 'only A played the day after');
     assert.deepEqual(r.week, { back: 3, base: 6, rate: 50 }, 'days up to the 3rd have a full week after them');
     assert.deepEqual(r.newWeek, { back: 3, base: 4, rate: 75 }, 'A, C and D came back after their first day; B did not');
-    assert.deepEqual(await dailyRetention(db, d(9), d(10)), { nextDay: { back: 0, base: 0, rate: null }, week: { back: 0, base: 0, rate: null }, newWeek: { back: 0, base: 0, rate: null } });
+    assert.deepEqual(await dailyRetention(db, d(9), d(10)), { from: d(9), to: d(10), nextDay: { back: 0, base: 0, rate: null }, week: { back: 0, base: 0, rate: null }, newWeek: { back: 0, base: 0, rate: null } });
   } finally {
     if (db) await db.end();
     await admin.query('DROP SCHEMA IF EXISTS ' + schema + ' CASCADE').catch(() => {});

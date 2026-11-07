@@ -34,13 +34,30 @@ function kpi(title, value, note, icon) {
     icon + '</span>' + escapeHtml(title) + '</div><strong>' + (typeof value === "string" ? escapeHtml(value) : number(value)) +
     '</strong><small>' + escapeHtml(note) + '</small></div>';
 }
-// « Retour des joueurs » from the Pokémon du jour plays (lib/daily-retention.js).
+// « Retour des joueurs » KPI: the Pokémon du jour (lib/daily-retention.js); the whole site is in retentionSection.
 function retentionKpi(retention) {
   const pct = (part) => part && part.rate != null ? part.rate + " %" : "—";
   if (!retention) return kpi("Retour des joueurs", null, "Indisponible : base du Pokémon du jour injoignable", "↻");
   const note = "Rejouent le lendemain (" + retention.nextDay.back + "/" + retention.nextDay.base + ") · dans les 7 jours : " +
     pct(retention.week) + " · nouveaux revenus en 7 jours : " + pct(retention.newWeek);
   return kpi("Retour des joueurs", pct(retention.nextDay), note, "↻");
+}
+// DATA-04: J+1 / J+7 on mature days, Pokémon du jour and the whole site side by side, with their bases.
+const RETENTION_SMALL_BASE = 20;
+function retentionCell(part) {
+  if (!part || part.rate == null) return '<td>—</td>';
+  const small = part.base < RETENTION_SMALL_BASE ? '<br><span class="pill warn" title="Moins de ' + RETENTION_SMALL_BASE + ' joueurs-jours : à lire avec prudence">petit effectif</span>' : '';
+  return '<td><strong>' + part.rate + ' %</strong> <small>(' + number(part.back) + ' / ' + number(part.base) + ')</small>' + small + '</td>';
+}
+function retentionSection(daily, site) {
+  const row = (label, r) => '<tr><th scope="row">' + escapeHtml(label) + '</th>' + (r ? retentionCell(r.nextDay) + retentionCell(r.week) + retentionCell(r.newWeek) : '<td colspan="3">Indisponible</td>') + '</tr>';
+  const span = (daily || site) ? escapeHtml((daily || site).from) + ' → ' + escapeHtml((daily || site).to) : '';
+  return '<section class="panel"><h2>Retour des joueurs (J+1, J+7)</h2>' +
+    '<div class="table-scroll"><table class="share-steps"><thead><tr><th>Mesure</th><th>Revient le lendemain</th><th>Revient dans les 7 jours</th><th>Nouveaux revenus en 7 jours</th></tr></thead><tbody>' +
+    row("Pokémon du jour", daily) + row("Tout le site (parties enregistrées)", site) + '</tbody></table></div>' +
+    '<p class="quiet">Jours de Paris' + (span ? ' ' + span : '') + ', terminés. Un joueur-jour compte dans « lendemain » seulement si le lendemain est fini, et dans « 7 jours » seulement si les 7 jours suivants le sont : les jours trop récents ne baissent pas le taux. ' +
+    '« Pokémon du jour » : au moins un essai ou un abandon. « Tout le site » : une partie que le serveur garde déjà (jeux du jour, Ball gagnée, rencontre dans les hautes herbes) ; une simple visite ne compte pas. ' +
+    'Comptes admin exclus. Un invité qui se connecte devient une nouvelle identité (taux un peu bas, jamais trop haut). Rien de nouveau n’est collecté.</p></section>';
 }
 function graph(series) {
   const available = series.some(x => x.sessions !== null || x.uniques !== null);
@@ -133,7 +150,7 @@ function renderStatsDashboard(options) {
     generatedAt = new Date().toISOString(), adminKey = "", metrics = null,
     uniqueRows = null, rawRows = null, segmentRows = null, segmentStartedAt = null, labels = {},
     feedbackHtml = "", diagnosticDays = [], diagnosticRows = [],
-    bootedAt = "", retention = null, economy = null
+    bootedAt = "", retention = null, siteRetention = null, economy = null
   } = options;
   const period = PERIODS.includes(days) ? days : 14;
   const calendar = rangeDays(period, endDay);
@@ -281,6 +298,7 @@ body{background:#f3f6fb;color:var(--ink);font-size:14px}
 .columns{grid-template-columns:minmax(0,1.65fr) minmax(310px,1fr)}
 .section-title{font-size:20px;letter-spacing:-.03em;margin:27px 0 13px}
 .panel-head .pill{background:#eaf1fe;color:#31538d;font-weight:750}
+.pill.warn{display:inline-block;margin-top:4px;padding:3px 7px;background:#fff3d6;color:#7a5200;white-space:nowrap}
 .chart-scroll:not(.chart-long) .trend-chart{min-width:0}
 .mode-top-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:19px}
 .mode-row{margin:12px 0}
@@ -354,6 +372,7 @@ ${renderUsageScopes(metrics, segmentRows, segmentStartedAt)}
     <div class="table-scroll"><table><thead><tr><th>Mode multijoueur</th><th>Lancements</th></tr></thead><tbody>${partyRows}</tbody></table></div>
     <p class="quiet">Dessine-le ! et les autres modes Party sont présentés séparément des jeux solo.</p>
   </section>
+  ${retentionSection(retention, siteRetention)}
   <section class="panel"><h2>Partage et découverte</h2>
     <div class="table-scroll"><table class="share-steps"><thead><tr><th>Lien partagé</th><th>1. Partage</th><th>2. Lien ouvert</th><th>3. Partie lancée</th></tr></thead><tbody>${shareSteps}</tbody></table></div>
     <div class="metric-row"><span>Aperçus de liens par les robots des messageries (à part)</span><strong>${number(sharePreviews)}</strong></div>
@@ -374,7 +393,7 @@ ${renderEconomySection(economy)}
     <p><b>1 jour :</b> aujourd’hui UTC, jusqu’à l’heure de consultation ; ce n’est pas une fenêtre glissante de 24 heures.</p>
     <p><b>3 jours :</b> aujourd’hui et les deux jours UTC précédents, avec le dernier jour encore incomplet.</p>
     <p><b>7, 14, 30 et 90 jours :</b> périodes UTC closes hier pour éviter une baisse artificielle durant la journée.</p>
-    <p><b>Retour des joueurs :</b> personnes/jours suivis dans le Pokémon du jour, sur une cohorte distincte des 14 derniers jours complets, pas sur la période sélectionnée.</p>
+    <p><b>Retour des joueurs :</b> joueurs-jours du Pokémon du jour (vignette) et de tout le site (tableau), sur les 28 derniers jours de Paris terminés, pas sur la période sélectionnée ; comptes admin exclus.</p>
     <p><b>Ouvertures :</b> compteur d’accès aux jeux, pas une mesure du nombre de personnes différentes. Les jeux plus anciens ont parfois des événements partagés.</p>
   </section>
 </div>
