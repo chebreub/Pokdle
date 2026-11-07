@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
 > **Suivi opérationnel au 07/11/2026 : GEST-03 [#330](https://github.com/chebreub/Pokdle/pull/330) et ECO-03 [#332](https://github.com/chebreub/Pokdle/pull/332) (option B) fusionnées dans `main` après QA complète verte, avec la correction des sons #329 ; **39/44 actions**.**
 
-**Progression intégrée : 41 tâches terminées / 43 actives = 95,3 %.** Restent MOB-02 et MOB-04 (vérification sur iPhone) ; NIV-01 et GROW-01 sont stationnés et exclus du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md).
+**Progression intégrée : 43 tâches terminées / 43 actives = 100 %.** Plan terminé le 07/11 après les vérifications iPhone de Kayan ; NIV-01 et GROW-01 sont stationnés et exclus du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md).
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action : vérifications sur appareil réel** — MOB-02 et MOB-04 sur iPhone (correctifs du 7/11 dans #333). BUG-MOB-01 confirmé par Jade le 06/11 ; GROW-01 mis de côté et GROW-02 conduit par Kayan (07/11). Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
+**Plan terminé (07/11/2026) : 43/43.** Vérifications iPhone de Kayan bonnes (sons des hautes herbes, Qui est-ce ?, glissement Pokédex, poignée des fenêtres, barre de saisie) ; BUG-MOB-01 confirmé par Jade. **Suite proposée : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).**
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -71,10 +71,10 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### Lot 0 — Fiabilité tactile, ergonomie mobile/PC
 - [x] **BUG-MOB-01 · P0 · CONFIRMÉ PAR JADE (06/11, « C'est parfait merci ! »)** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
-- [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
+- [x] **MOB-02 · P0 · CONFIRMÉ SUR IPHONE (07/11)** : Qui est-ce ? (dernière ligne), fenêtres et poignée réagissent au premier toucher ; aucun calque invisible restant. nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [x] **DATA-01 · P0** : [dictionnaire de grain et couverture](qa/USAGE_EVENT_GRAIN.md) vérifié dans les sources (`trackUsage`, `recordMatchHistory`, `usage-metrics`, Party, dashboard) : distingue visites brutes, sessions navigateur, ouvertures, fins déclarées, commandes de manches et retours Daily. **Dates exactes de mise en production non disponibles** : méthode de lecture de la première observation conservée et limites des 90 jours documentées, **aucune date ni historique inventés**. Documentation uniquement ; pas de nouveau suivi individuel. Clôture du cadrage, pas vérification de dates de déploiement réelles.
 - [x] **MOB-03 · P1** : clôture technique ; boutons du champ partagé (#285), chat/célébrations (#287), commandes Party/Duel/Défi (#289) intégrés après CI verte. Recette iPhone physique distincte ; voir [preuves](qa/MOB_03_CONTROLS.md).
-- [ ] **MOB-04 · P1** : contrôle de focus et scroll dans les jeux rapides, Safari réel.
+- [x] **MOB-04 · P1 · CONFIRMÉ SUR IPHONE (07/11)** : contrôle de focus et scroll dans les jeux rapides, Safari réel ; la barre de saisie reste au-dessus du menu après chaque essai (#333).
 - [x] **MOB-05 · P0 · TERMINÉE (ajoutée le 07/11)** : [PR #317](https://github.com/chebreub/Pokdle/pull/317), fusion `71628dc8effe5c90d335ffac6b08ebfdb7e0bca9`. Signalé par Kayan sur iPhone ([audit](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md#ajout-du-0711--en-tête-et-fenêtres-plus-larges-que-lécran-mob-05)) : l'en-tête débordait de 75 px (bouton du compte hors de l'écran) et les lignes de défis sortaient de la fenêtre. Sous 480 px, logo sans le mot (choix de Kayan) et sac resserré ; sous 360 px connecté, « Paramètres » reste dans le menu du compte ; boutons de défi sous le texte. Mesuré de 320 à 1366 px dans Chromium ; **iPhone physique non vérifié**.
 - [x] **PC-01 · P1** : [PR #283](https://github.com/chebreub/Pokdle/pull/283) (après fusion) : styles PC compacts à 1366×768 ; grille Course au Pokédex intégrale sans scroll de jeu, avec moteur de dimensionnement inchangé ; commandes et panneau secondaire du jeu classique visibles. Recette deux navigateurs sur plusieurs tailles et refus des doublons.
 - [x] **PC-02 · P1** : [PR #282](https://github.com/chebreub/Pokdle/pull/282) (après fusion) : clavier contextualisé Solo, Défi, Party et Duel ; flèches limitées aux suggestions visibles, Échap ferme la liste avant une modale, Entrée en Duel reliée à un seul gestionnaire, saisie IME/modificateurs protégés. Chats et autres champs non interceptés, sans modification des parties ou récompenses.
