@@ -41,6 +41,7 @@ const PER_DAY = 5;
 // choose, a free message between friends, and « 📅 Du jour » (fewer tries at today's Pokémon).
 const PER_DAY_FRIENDS = 20;
 const safety = require("./social-safety");
+const sharedSeries = require("./player-challenge-series");
 const DAY_CHOICES = Object.freeze([1, 3, 7]);
 const NOTE_MAX = 100;
 const DAILY = "jour";
@@ -71,6 +72,10 @@ async function ensureTables(db) {
   // 🗑 Effacer (3/11) : chacun efface de sa liste. La ligne reste (comptée dans les défis du jour) et part au bout de 30 jours.
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS hidden_to BOOLEAN NOT NULL DEFAULT false");
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS hidden_from BOOLEAN NOT NULL DEFAULT false");
+  // PART-02: only new matched series have these server-owned secrets/progress.
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS series_ids JSONB");
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS series_gens INTEGER[]");
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS series_progress JSONB");
 }
 
 const verb = (mode) => (CHALLENGE_MODES[mode]?.kind === "serie" ? "série" : "record");
@@ -109,6 +114,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       left: Math.max(0, Math.min(PER_DAY - sent.others, PER_DAY_FRIENDS - sent.total)), leftFriends: Math.max(0, PER_DAY_FRIENDS - sent.total),
       perDay: PER_DAY, perDayFriends: PER_DAY_FRIENDS, days: DAYS, dayChoices: DAY_CHOICES, noteMax: NOTE_MAX, phrases: PHRASES,
       mystery: compare ? { attempts: MYSTERY_ATTEMPTS } : null,
+      sharedSeries: compare ? { total: sharedSeries.TOTAL, max: sharedSeries.MAX_TRIES, gens:sharedSeries.DEFAULT_GENS } : null,
       daily: today && today.status === "won" ? { tries: Number(today.tries) } : null,
       modes: Object.entries(CHALLENGE_MODES).map(([mode, cfg]) => ({ mode, label: cfg.label, kind: cfg.kind, record: byMode[mode] || 0, ...(cfg.max ? { max: cfg.max } : {}) })),
     };
@@ -119,8 +125,10 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     const from = String(fromId);
     const mystery = mode === MYSTERY;
     const daily = mode === DAILY;
-    const cfg = mystery || daily ? null : CHALLENGE_MODES[mode];
-    if (!mystery && !daily && !cfg) return { ok: false, error: "mode" };
+    const same = mode === sharedSeries.MODE;
+    const cfg = mystery || daily || same ? null : CHALLENGE_MODES[mode];
+    if (!mystery && !daily && !same && !cfg) return { ok: false, error: "mode" };
+    if (same && !compare) return {ok:false,error:"unavailable"};
     const length = days == null ? DAYS : Number(days);
     if (!DAY_CHOICES.includes(length)) return { ok: false, error: "days" };
     const said = Number(phrase);
@@ -134,6 +142,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     if (to === from) return { ok: false, error: "self" };
     let target;
     if (mystery) target = Number(attempts);
+    else if (same) target = sharedSeries.TOTAL;
     else if (daily) {
       // « Du jour » : fewer tries than mine at today's Pokémon (found today).
       const today = await dailyTries(from);
@@ -162,10 +171,19 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     if (open) return { ok: false, error: "already" };
     // « Du jour » ends at midnight in Paris (always sooner than a day from now).
     const expires = daily ? `LEAST(${PARIS_MIDNIGHT}, now() + make_interval(days => $6))` : "now() + make_interval(days => $6)";
-    const row = (await db.query(`INSERT INTO player_challenges(from_id, to_id, mode, target, phrase, expires_at, secret_id, note, day)
-      VALUES ($1, $2, $3, $4, $5, ${expires}, $7, $8, ${daily ? PARIS_TODAY : "NULL"}) RETURNING id`, [from, to, mode, target, said, length, secret ? secret.id : null, message])).rows[0];
+    // A competitive series uses one frozen secret sequence stored only by the server.
+    // Historical "record" challenges keep the original insert path, unchanged.
+    const seriesIds = same ? sharedSeries.pickSeries(pokemon,sharedSeries.DEFAULT_GENS) : null;
+    if (same && !seriesIds) return {ok:false,error:"unavailable"};
+    const row = same
+      ? (await db.query(`INSERT INTO player_challenges(from_id,to_id,mode,target,phrase,expires_at,note,series_ids,series_gens,series_progress)
+          VALUES ($1,$2,$3,$4,$5,${expires},$7,$8::jsonb,$9::int[],$10::jsonb) RETURNING id`,
+        [from,to,mode,target,said,length,message,JSON.stringify(seriesIds),sharedSeries.DEFAULT_GENS,JSON.stringify(sharedSeries.newProgress())])).rows[0]
+      : (await db.query(`INSERT INTO player_challenges(from_id, to_id, mode, target, phrase, expires_at, secret_id, note, day)
+        VALUES ($1, $2, $3, $4, $5, ${expires}, $7, $8, ${daily ? PARIS_TODAY : "NULL"}) RETURNING id`,
+        [from, to, mode, target, said, length, secret ? secret.id : null, message])).rows[0];
     const name = await nameOf(from);
-    const what = mystery ? `Trouve son Pokémon mystère en ${target} essais.` : daily ? `Trouve le Pokémon du jour en moins de ${target} essais, aujourd’hui.` : `Bats sa ${verb(mode)} au ${cfg.label} : ${target}.`;
+    const what = same ? `Même série de ${sharedSeries.TOTAL} Pokémon, mêmes secrets et ${sharedSeries.MAX_TRIES} essais maximum par Pokémon. Jouez tous les deux !` : mystery ? `Trouve son Pokémon mystère en ${target} essais.` : daily ? `Trouve le Pokémon du jour en moins de ${target} essais, aujourd’hui.` : `Bats sa ${verb(mode)} au ${cfg.label} : ${target}.`;
     tell(to, { title: `⚔️ ${name} te défie`, body: what + ` « ${message || PHRASES[said]} »`, url: "/?defis=1", tag: "pokedle-defi" });
     return { ok: true, id: Number(row.id), target };
   }
