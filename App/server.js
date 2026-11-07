@@ -1725,7 +1725,7 @@ app.get("/admin/stats", async (req, res) => {
   const { renderStatsDashboard } = require("./lib/admin-stats-dashboard");
   // DATA-04: cohorts need mature days. J+1 / J+7 on the 28 last finished days of Paris (the days of the
   // games), whatever the dashboard's display period; admin accounts are left out of both measures.
-  let retention = null, siteRetention = null;
+  let retention = null, siteRetention = null, siteActivity = null;
   try {
     if (pgPool) {
       const retentionLib = require("./lib/daily-retention");
@@ -1734,6 +1734,7 @@ app.get("/admin/stats", async (req, res) => {
       const exclude = [...ADMIN_ACCOUNT_IDS].map((id) => "user:" + id);
       retention = await retentionLib.dailyRetention(pgPool, ...span, exclude);
       siteRetention = await retentionLib.siteRetention(pgPool, ...span, exclude);
+      siteActivity = await retentionLib.siteRetention(pgPool, ...span, exclude, retentionLib.SITE_ACTIVITY_SOURCES);
     }
   } catch (error) {
     console.warn("[stats] retention unavailable:", String(error.message || error).slice(0, 120));
@@ -1757,7 +1758,7 @@ app.get("/admin/stats", async (req, res) => {
     days, endDay, livePeriod, generatedAt: new Date().toISOString(),
     adminKey, metrics, segmentRows, segmentStartedAt, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
-    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, siteRetention, economy
+    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, siteRetention, siteActivity, economy
   }));
 });
 
