@@ -2,7 +2,7 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi opérationnel au 07/11/2026 : GEST-01 [#326](https://github.com/chebreub/Pokdle/pull/326) et GEST-02 [#327](https://github.com/chebreub/Pokdle/pull/327) fusionnées dans `main` après QA complète verte, après FX-01 #324 ; **37/44 actions**.**
+> **Suivi opérationnel au 07/11/2026 : GEST-03 [#330](https://github.com/chebreub/Pokdle/pull/330) et ECO-03 [#332](https://github.com/chebreub/Pokdle/pull/332) (option B) fusionnées dans `main` après QA complète verte, avec la correction des sons #329 ; **39/44 actions**.**
 
 **Progression intégrée : 37 tâches terminées / 44 actives = 84,1 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 6 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action : GEST-03 (option)** — lancer la Ball par glissement, réglage facultatif, même appel serveur, même taux, aucune dépense sur geste interrompu ; maquette envoyée le 07/11, accord de Kayan attendu. Le reste demande un appareil réel (BUG-MOB-01, MOB-02, MOB-04), des joueurs externes (GROW-01, GROW-02) ou l'arbitrage de Kayan (ECO-03).
+**Prochaine action : vérifications sur appareil réel** — BUG-MOB-01, MOB-02, MOB-04 sur iPhone (correctifs du 7/11 dans #333), puis GROW-01 (invitations à 3 testeurs dont iPhone et Android) et GROW-02. Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -109,7 +109,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **ECO-07 · P1 · TERMINÉE** : [PR #302](https://github.com/chebreub/Pokdle/pull/302), présentation des Balls et des probabilités avant confirmation ; annulation sans ouvrir la rencontre ou dépenser.
 - [x] **ECO-08 · P1 · TERMINÉE** : [PR #304](https://github.com/chebreub/Pokdle/pull/304), fusion `964424afe3b7e1a61c30faaa8b286f3fa0555ee9`, CI Node et navigateur/PostgreSQL vertes. 72 h glissantes pour les nouveaux légendaires hebdomadaires ; rencontre, shiny et lancers inchangés ; Drattak/habituelles exclus.
 - [x] **ECO-05 · P1 · TERMINÉE** : [PR #305](https://github.com/chebreub/Pokdle/pull/305), fusion `dd79cd26f82ff7f75d0a35ac1ba36820bfd27946` après CI Node/PostgreSQL/navigateur vertes. [Mesures prospectives anonymes](qa/ECO_05_CAPTURE_METRICS.md) par version shiny, espèce/classe, Ball, rang et type de rencontre ; anciens totaux inchangés, taux de capture inchangés, seuil de 10 lancers pour la ventilation espèce.
-- [ ] **ECO-03 · P2 · À REDISCUTER** : proposition 30/60/90 ₽ (différence entre paliers, plafond 90/mode, idempotence) **non acceptée à ce stade**. Ne pas implémenter ni changer les récompenses avant nouvel échange et validation.
+- [x] **ECO-03 · P2 · FAIT (#332, option B choisie le 07/11)** : la meilleure partie du jour compte, une partie meilleure verse la différence (30 → 60 → 90 ₽), 90 ₽ au plus par jeu, idempotent ; plafond 2 000 ₽ inchangé.
 - [x] **ECO-04 · P2 · TERMINÉE (sécurisation)** : [PR #309](https://github.com/chebreub/Pokdle/pull/309), fusion `be7565087755ed593e26d27cc530692476eba48d` après CI Node, PostgreSQL et navigateur vertes. [Protocole de fiabilité](qa/ECO_04_EXPEDITION_CHEST_IDEMPOTENCE.md) : double crédit empêché entre jours, emplacements partiels récupérables, adoption invité → compte sans doublon, reprise après réponse perdue. **Pas de distribution automatique des coffres expirés ni de modification du nombre de Balls.**
 - [x] **ECO-06 · P2 · TERMINÉE** : [PR #307](https://github.com/chebreub/Pokdle/pull/307) fusionnée, CI Node/PostgreSQL/navigateur vertes. [Matrice de contrôle](qa/ECO_06_REWARD_AUTHORITY.md) des récompenses vérifiées, preuves Party et mécanismes anti-rejeu ; zéro Pokédollar/Ball pour Higher or Lower 60 s sans réponse serveur. Une partie réellement jouée conserve sa récompense habituelle.
 
@@ -123,7 +123,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 | **ECO-02 — Drattak** | **Variante G validée et intégrée par #301.** | Une seule seconde chance 21 jours après échec, 3 nouveaux jours et 2 victoires serveur par mode ; ouverture le week-end, sans changer le taux shiny. |
 | **ECO-07 — Préparation** | **Intégrée par #302.** | Afficher les Balls et les chances de capture avant ouverture ; confirmation explicite ou annulation sans perte de progression. |
 | **ECO-08 — Rencontre spéciale ouverte** | **Intégrée par #304.** | Fenêtre de 72 h sur nouveaux légendaires hebdomadaires, même Pokémon et shiny, aucun tirage additionnel ni Ball offerte ; Drattak exclu. |
-| **ECO-03 — Paliers de Pokédollars** | **À rediscuter ensemble.** | Aucune validation du barème 30/60/90 ₽, du plafond ni de la règle de complément par différence. Conserver les récompenses existantes jusqu'à nouvel arbitrage. |
+| **ECO-03 — Paliers de Pokédollars** | **Option B choisie le 07/11, intégrée (#332).** | Barème 30/60/90 ₽ inchangé ; la meilleure partie du jour compte, complément par différence, 90 ₽ au plus par jeu, plafond 2 000 ₽ inchangé. |
 | **ECO-04 — Coffres d'expédition** | **Sécurisation validée et intégrée par #309.** | Deux Balls par palier inchangées. Idempotence inter-jours et après reconnexion, crédit des emplacements manquants, tests de défaillance. Toute attribution automatique de coffres expirés nécessitera une décision distincte. |
 
 **Conditions de passage à la réalisation :**
@@ -145,7 +145,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **FX-01 · P2 · TERMINÉE** : [PR #324](https://github.com/chebreub/Pokdle/pull/324), fusion `f87ec4ba77d055af05ba082399e2060ec367d649`. Réglage « Animations » Normales / ⚡ Rapides / Réduites (maquette validée) : capture, cadeau, coffres et nouvelles entrées deux fois plus courts en Rapides (capture 6,6 s → 3,4 s), résultat immédiat en Réduites ; ancien interrupteur repris, réglage système prioritaire ; les hautes herbes suivent désormais le réglage du site ; « Passer › » dès le lancer ; résultats inchangés (serveur). [Protocole](qa/FX_01_ANIMATION_MODES.md).
 - [x] **GEST-01 · P2 · TERMINÉE** : [PR #326](https://github.com/chebreub/Pokdle/pull/326), fusion `f1f1d1829cccf21200fe4e6635c5414183032a0b`. Fiche Pokédex sur téléphone : flèches ‹ › de 44 px autour de l'image (boutons du bas gardés), noms des voisins, glissement sur l'image seulement (pan-y, seuil ¼ de largeur, filtre en cours suivi), « Animations réduites » respecté ; PC inchangé. [Protocole](qa/GEST_01_DEX_SWIPE.md). **Geste à confirmer sur appareil réel.**
 - [x] **GEST-02 · P2 · TERMINÉE** : [PR #327](https://github.com/chebreub/Pokdle/pull/327), fusion `441a85dc4a98ab6d9435db01b50efc80b737d760`. Sur téléphone, fenêtre générale, panneau des préférés et éditeur du Team Builder se ferment en les tirant par la poignée ou le titre (✕ gardé ; contenu, boutons et champs exclus ; petit tirage = retour en place) ; PC inchangé. [Protocole](qa/GEST_02_SHEET_HANDLE.md). **Geste à confirmer sur appareil réel.**
-- [ ] **GEST-03 · P3 · OPTION** : lancer une Ball par glissement facultatif, même appel serveur, même taux, aucune dépense sur geste interrompu.
+- [x] **GEST-03 · P3 · FAIT (#330)** : lancer une Ball par glissement facultatif (réglage éteint par défaut), même appel serveur, même taux, aucune dépense sur geste interrompu.
 
 ### Lot 7 — Validation et acquisition
 - [ ] **GROW-01 · P2** : test guidé auprès de quelques joueurs externes, compétences Pokémon différentes, appareils réels.

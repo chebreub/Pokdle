@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 7 novembre 2026 : GEST-01 #326 et GEST-02 #327 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte, après FX-01 #324. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #327](https://github.com/chebreub/Pokdle/pull/327), `441a85dc4a98ab6d9435db01b50efc80b737d760`.
+**Photographie opérationnelle au 7 novembre 2026 : GEST-03 #330, ECO-03 #332 (option B) et la correction des sons #329 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #332](https://github.com/chebreub/Pokdle/pull/332), `06910e5c25e220f0aa36221b1e1d286c31314dae`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**37 tâches terminées sur 44 actions actives = 84,1 %** après les PR #326 (GEST-01) et #327 (GEST-02) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**39 tâches terminées sur 44 actions actives = 88,6 %** après les PR #330 (GEST-03) et #332 (ECO-03) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **37** | Actions vérifiées, PR fusionnées ; dernières livraisons #326, #327 |
+| **Terminé et intégré à main** | **39** | Actions vérifiées, PR fusionnées ; dernières livraisons #330, #332 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **6** | ECO-03 (arbitrage), GEST-03 (option, maquette envoyée), MOB-02, MOB-04, GROW-01 et 02 |
+| **Non commencé / à conduire ou à décider** | **4** | MOB-02, MOB-04 (appareil réel), GROW-01 et 02 (joueurs externes) |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **44** | 8 + 8 + 5 + 4 + 8 + 5 + 4 + 2 (MOB-05 ajoutée au lot 0 le 07/11) |
 
-**Formule explicite :** (37 actions terminées / 44 actions actives) × 100 = **84,0909 %, arrondi à 84,1 %**.
+**Formule explicite :** (39 actions terminées / 44 actions actives) × 100 = **88,6364 %, arrondi à 88,6 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -29,11 +29,19 @@
 | 1 | Fiabilité des jeux et sauvegardes | 8 / 8 | 100 % | LOG-01 à LOG-04, SAVE-01, FX-02, DATA-02 et DATA-04 rétention J+1/J+7 (#320) terminés |
 | 2 | Gameplay, pédagogie, découverte | 5 / 5 | 100 % | NIV-02, SER-01, MEDIA-01, DISC-01 carte de découverte (#321), DISC-02 quêtes variées (#322) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
-| 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
+| 4 | Économie et rencontres | 8 / 8 | 100 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 et ECO-03 meilleure partie du jour #332 |
 | 5 | Invitations et diffusion | 5 / 5 | 100 % | PART-01 #311, PART-02 #313, DATA-03 #315, PART-03 carte de capture #316, PART-04 recherche d'échanges #318 |
-| 6 | Gestes et animations | 3 / 4 | 75 % | FX-01 réglage « Animations » (#324), GEST-01 glissement entre fiches (#326), GEST-02 poignée de fermeture (#327) ; GEST-03 en option |
+| 6 | Gestes et animations | 4 / 4 | 100 % | FX-01 réglage « Animations » (#324), GEST-01 glissement entre fiches (#326), GEST-02 poignée de fermeture (#327), GEST-03 lancer au doigt (#330) |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **37 / 44** | **84,1 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel ; GEST-03 option (maquette envoyée) |
+| **Total** | | **39 / 44** | **88,6 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel |
+
+## GEST-03, ECO-03 et sons des hautes herbes — intégrés le 7 novembre
+
+- **Sons** [#329](https://github.com/chebreub/Pokdle/pull/329), fusion `1b5a22159105d6f5175a2d2b2c68487c017b2324` : en « Réduites », la capture sans animation garde ses sons (lancer, chute, secousses, capture ou sortie). Régression de FX-01 signalée par Kayan.
+- **GEST-03** [#330](https://github.com/chebreub/Pokdle/pull/330), fusion `15c92491374b7b602f103cb3f6a7a7eadeed286c` : lancer la Ball d'un glissement vers le haut dans les hautes herbes, réglage facultatif (éteint par défaut), même appel serveur, même taux, rien dépensé sur un geste interrompu. [Protocole](qa/GEST_03_BALL_FLICK.md).
+- **ECO-03** [#332](https://github.com/chebreub/Pokdle/pull/332), fusion `06910e5c25e220f0aa36221b1e1d286c31314dae` (option B choisie par Kayan) : la meilleure partie du jour de chaque jeu vérifié compte ; une partie meilleure verse la différence (30 → 60 → 90 ₽), 90 ₽ au plus par jeu ; plafond 2 000 ₽, Ball du jour, prix et taux inchangés. [Protocole](qa/ECO_03_BEST_GAME.md).
+- Retours iPhone de Kayan (7/11) : vérifications 2, 3, 4 bonnes ; sons en retard après le cri et barre de saisie sous le menu corrigés dans [#333](https://github.com/chebreub/Pokdle/pull/333) ([fiche](qa/IPHONE_SONS_BARRE_2026_11_07.md)).
+- **39/44 = 88,6 % ; lots 4 et 6 : 100 %.** Restent : BUG-MOB-01, MOB-02, MOB-04 (appareil réel), GROW-01 et GROW-02 (joueurs externes).
 
 ## GEST-01 et GEST-02 — intégrées le 7 novembre
 
@@ -266,7 +274,7 @@ Les six réponses du propriétaire sont inscrites dans le [Lot 4 du plan](PLAN_A
 - **ECO-02** : **accord de principe, sous réserve des tests** pour éviter la perte intégrale après fuite de Drattak ; **événement spécial / rendez-vous particulier** souhaité, déclenchement potentiellement aléatoire **à rediscuter** (fréquence, conservation, reprise et récompenses non fixées).
 - **ECO-07** : **accord de principe sous réserve des tests** pour la préparation des rencontres rares (proposition d'au moins trois Balls, chances visibles, annulation sans perdre la piste).
 - **ECO-08** : **accord de principe sous réserve des tests** pour une rencontre spéciale persistante 72 h ; ne pas associer automatiquement au cas Drattak.
-- **ECO-03** : **à rediscuter** ; les paliers 30/60/90 Pokédollars ne sont pas validés.
+- **ECO-03** : option B choisie le 7/11 et intégrée (#332) : la meilleure partie du jour compte, 90 ₽ au plus par jeu.
 - **ECO-04** : **accord de principe sous réserve des tests** pour créditer une seule fois les coffres acquis même sans ouverture immédiate.
 
 **Distinction impérative :** « accord de principe » ≠ autorisation de modifier le code, le paramétrage, les récompenses ni la base de données. Exiger simulation des conséquences, propositions de règles précises, tests/idempotence et **validation finale explicite** du propriétaire avant PR économique et déploiement. Toutes les règles actuelles (capture, shiny, 3 lancers, Balls, Pokédollars, rareté, inventaires) restent identiques. **Aucune tâche économique clôturée** ; progression globale après DATA-01 : **7/43 = 16,3 %**. Prochain chantier autonome : **DATA-02**.
