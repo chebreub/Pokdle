@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 6 novembre 2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305, ECO-06 #307 et ECO-04 #309 fusionnées après CI GitHub vertes. Les bilans historiques ci-dessous restent datés de leurs étapes antérieures.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #309](https://github.com/chebreub/Pokdle/pull/309), `be7565087755ed593e26d27cc530692476eba48d`.
+**Photographie opérationnelle au 7 novembre 2026 : PART-01 #311 fusionnée après CI Node, PostgreSQL et navigateur complète vertes ; les livraisons ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305, ECO-06 #307 et ECO-04 #309 demeurent validées. Les bilans historiques ci-dessous restent datés de leurs étapes antérieures.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #311](https://github.com/chebreub/Pokdle/pull/311), `49bfe0b347f61330dc61acc95ca3ad5aec104f9a`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**25 tâches terminées sur 43 actions actives = 58,1 %** après la PR #309 (ECO-04) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**26 tâches terminées sur 43 actions actives = 60,5 %** après la PR #311 (PART-01) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **25** | Actions vérifiées, PR fusionnées ; dernière livraison #309 |
+| **Terminé et intégré à main** | **26** | Actions vérifiées, PR fusionnées ; dernière livraison métier #311 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **17** | Dont ECO-03 (arbitrage), PART-01 et autres chantiers non lancés |
+| **Non commencé / à conduire ou à décider** | **16** | Dont ECO-03 (arbitrage), PART-02 et les autres chantiers non lancés |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (25 actions terminées / 43 actions actives) × 100 = **58,1395 %, arrondi à 58,1 %**.
+**Formule explicite :** (26 actions terminées / 43 actions actives) × 100 = **60,4651 %, arrondi à 60,5 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -30,10 +30,17 @@
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
 | 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
-| 5 | Invitations et diffusion | 0 / 5 | 0 % | Proposition d'un parcours Dessine-le direct |
+| 5 | Invitations et diffusion | 1 / 5 | 20,0 % | PART-01, invitation directe Dessine-le sans compte, #311 intégrée ; prochain lot PART-02 |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **25 / 43** | **58,1 %** | NIV-01 stationné, exclu ; ECO-03 non approuvée, prochain lot 5 PART-01 |
+| **Total** | | **26 / 43** | **60,5 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, PART-02 prochain |
+
+## PART-01 — invitation directe Dessine-le intégrée
+
+- [PR #311](https://github.com/chebreub/Pokdle/pull/311) fusionnée dans `main` au commit `49bfe0b347f61330dc61acc95ca3ad5aec104f9a`, après CI Node et navigateur/base complète **vertes** sur le même head.
+- Lien `?party=CODE&game=dessin`, création du salon directement en mode Dessine-le, accès invité avec pseudo seul, aperçu anonymisé, contrôle du mode à l'entrée et messages explicites pour expiration, salon complet, partie déjà commencée ou jeu changé.
+- Test navigateur dédié vert sur Chromium mobile et WebKit desktop ; limites de consultation propres à l'aperçu, distinctes de la limite de création et d'entrée. [Protocole](qa/PART_01_DESSIN_INVITATIONS.md).
+- **26/43 = 60,5 % ; lot Invitations 1/5.** Prochaine action autonome : **PART-02**, défis de série comparables à partir des configurations serveur. Aucune recette physique iPhone ni vérification du déploiement Render revendiquée.
 
 ## ECO-04 — coffres d'expédition fiabilisés
 
