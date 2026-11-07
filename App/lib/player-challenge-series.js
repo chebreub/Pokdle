@@ -45,7 +45,7 @@ function outcome(state) {
   const result=scoreCompare(state.to,state.from);
   return result>0 ? "won" : result<0 ? "lost" : "tied";
 }
-function advance(state,side,expectedIndex,pokemonId,pass,secretIds,byId) {
+function advance(state,side,expectedIndex,pokemonId,pass,secretIds,byId,gens = DEFAULT_GENS) {
   const player=state?.[side];
   if(!player || !Number.isInteger(expectedIndex) || expectedIndex<0 ||
       player.done || player.index !== expectedIndex) return {changed:false,replayed:true};
@@ -53,7 +53,7 @@ function advance(state,side,expectedIndex,pokemonId,pass,secretIds,byId) {
       player.index>=TOTAL) return {changed:false,replayed:true};
   if(pass !== true) {
     const id=Number(pokemonId), p=byId.get(id);
-    if(!Number.isSafeInteger(id) || !p || !selectable(p,DEFAULT_GENS))
+    if(!Number.isSafeInteger(id) || !p || !selectable(p,gens))
       return {changed:false,error:"invalid_guess"};
     if(player.guesses.includes(id)) return {changed:false,duplicate:true};
     // The same generation choice applies to either participant.
