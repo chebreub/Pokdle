@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 7 novembre 2026 : PART-03 #316, MOB-05 #317 et PART-04 #318 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte ; MOB-05 ajoutée au plan (signalement de Kayan sur iPhone), qui passe à 44 actions. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #317](https://github.com/chebreub/Pokdle/pull/317), `71628dc8effe5c90d335ffac6b08ebfdb7e0bca9`.
+**Photographie opérationnelle au 7 novembre 2026 : DATA-04 #320, DISC-01 #321 et DISC-02 #322 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte, après PART-03 #316, MOB-05 #317 et PART-04 #318. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #322](https://github.com/chebreub/Pokdle/pull/322), `5ffc6bf8a83511661b2f77987a55166a9c7dc71e`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**31 tâches terminées sur 44 actions actives = 70,5 %** après les PR #316 (PART-03), #317 (MOB-05) et #318 (PART-04) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**34 tâches terminées sur 44 actions actives = 77,3 %** après les PR #320 (DATA-04), #321 (DISC-01) et #322 (DISC-02) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **31** | Actions vérifiées, PR fusionnées ; dernières livraisons #316, #317, #318 |
+| **Terminé et intégré à main** | **34** | Actions vérifiées, PR fusionnées ; dernières livraisons #320, #321, #322 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **12** | Dont ECO-03 (arbitrage), DATA-04 et les autres chantiers non lancés |
+| **Non commencé / à conduire ou à décider** | **9** | ECO-03 (arbitrage), FX-01 (maquette envoyée), GEST-01 à 03, MOB-02, MOB-04, GROW-01 et 02 |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **44** | 8 + 8 + 5 + 4 + 8 + 5 + 4 + 2 (MOB-05 ajoutée au lot 0 le 07/11) |
 
-**Formule explicite :** (31 actions terminées / 44 actions actives) × 100 = **70,4545 %, arrondi à 70,5 %**.
+**Formule explicite :** (34 actions terminées / 44 actions actives) × 100 = **77,2727 %, arrondi à 77,3 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -26,14 +26,21 @@
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
 | 0 | Ergonomie mobile / PC et mesures | 5 / 8 | 62,5 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles, MOB-05 en-tête et défis sur téléphone (#317) ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
-| 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
-| 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
+| 1 | Fiabilité des jeux et sauvegardes | 8 / 8 | 100 % | LOG-01 à LOG-04, SAVE-01, FX-02, DATA-02 et DATA-04 rétention J+1/J+7 (#320) terminés |
+| 2 | Gameplay, pédagogie, découverte | 5 / 5 | 100 % | NIV-02, SER-01, MEDIA-01, DISC-01 carte de découverte (#321), DISC-02 quêtes variées (#322) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
 | 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
 | 5 | Invitations et diffusion | 5 / 5 | 100 % | PART-01 #311, PART-02 #313, DATA-03 #315, PART-03 carte de capture #316, PART-04 recherche d'échanges #318 |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **31 / 44** | **70,5 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, DATA-04 prochain |
+| **Total** | | **34 / 44** | **77,3 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, FX-01 prochain (maquette envoyée) |
+
+## DATA-04, DISC-01 et DISC-02 — intégrées le 7 novembre
+
+- **DATA-04** [#320](https://github.com/chebreub/Pokdle/pull/320), fusion `284e62f8827b89e057b1dcaa26da1c82bb30f7e9` (QA complète verte sur `a655481`) : retour J+1 / J+7 sur jours mûrs, Pokémon du jour et tout le site, comptes admin exclus, rien de nouveau collecté. [Protocole](qa/DATA_04_RETENTION.md).
+- **DISC-01** [#321](https://github.com/chebreub/Pokdle/pull/321), fusion `993002946560d8a66e449bf11646cc8970a50b0f` (QA complète verte sur `6844176`) : carte « À découvrir aujourd'hui » sous les mini-jeux. [Protocole](qa/DISC_01_DISCOVERY_CARD.md).
+- **DISC-02** [#322](https://github.com/chebreub/Pokdle/pull/322), fusion `5ffc6bf8a83511661b2f77987a55166a9c7dc71e` (QA complète verte sur `c003c12`) : quêtes du jour plus variées sans nouveaux gains. [Protocole](qa/DISC_02_QUEST_VARIETY.md).
+- **34/44 = 77,3 % ; lots 1, 2, 3 et 5 terminés.** Prochaine action : **FX-01** (maquette envoyée, accord attendu). Aucune recette physique iPhone ni vérification du déploiement Render revendiquée.
 
 ## PART-03, MOB-05 et PART-04 — intégrées le 7 novembre
 
