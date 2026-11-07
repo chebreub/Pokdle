@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 7 novembre 2026 : FX-01 #324 fusionnée dans `main` après QA complète navigateur/PostgreSQL verte, après DATA-04 #320, DISC-01 #321 et DISC-02 #322. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #324](https://github.com/chebreub/Pokdle/pull/324), `f87ec4ba77d055af05ba082399e2060ec367d649`.
+**Photographie opérationnelle au 7 novembre 2026 : GEST-01 #326 et GEST-02 #327 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte, après FX-01 #324. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #327](https://github.com/chebreub/Pokdle/pull/327), `441a85dc4a98ab6d9435db01b50efc80b737d760`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**35 tâches terminées sur 44 actions actives = 79,5 %** après la PR #324 (FX-01) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**37 tâches terminées sur 44 actions actives = 84,1 %** après les PR #326 (GEST-01) et #327 (GEST-02) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **35** | Actions vérifiées, PR fusionnées ; dernière livraison #324 |
+| **Terminé et intégré à main** | **37** | Actions vérifiées, PR fusionnées ; dernières livraisons #326, #327 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **8** | ECO-03 (arbitrage), GEST-01 à 03, MOB-02, MOB-04, GROW-01 et 02 |
+| **Non commencé / à conduire ou à décider** | **6** | ECO-03 (arbitrage), GEST-03 (option, maquette envoyée), MOB-02, MOB-04, GROW-01 et 02 |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **44** | 8 + 8 + 5 + 4 + 8 + 5 + 4 + 2 (MOB-05 ajoutée au lot 0 le 07/11) |
 
-**Formule explicite :** (35 actions terminées / 44 actions actives) × 100 = **79,5455 %, arrondi à 79,5 %**.
+**Formule explicite :** (37 actions terminées / 44 actions actives) × 100 = **84,0909 %, arrondi à 84,1 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -31,9 +31,15 @@
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
 | 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
 | 5 | Invitations et diffusion | 5 / 5 | 100 % | PART-01 #311, PART-02 #313, DATA-03 #315, PART-03 carte de capture #316, PART-04 recherche d'échanges #318 |
-| 6 | Gestes et animations | 1 / 4 | 25 % | FX-01 réglage « Animations » (#324) ; gestes GEST-01 à 03 après la fiabilité tactile |
+| 6 | Gestes et animations | 3 / 4 | 75 % | FX-01 réglage « Animations » (#324), GEST-01 glissement entre fiches (#326), GEST-02 poignée de fermeture (#327) ; GEST-03 en option |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **35 / 44** | **79,5 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, GEST-01 prochain |
+| **Total** | | **37 / 44** | **84,1 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel ; GEST-03 option (maquette envoyée) |
+
+## GEST-01 et GEST-02 — intégrées le 7 novembre
+
+- **GEST-01** [#326](https://github.com/chebreub/Pokdle/pull/326), fusion `f1f1d1829cccf21200fe4e6635c5414183032a0b` (QA complète verte sur `3a40ba0`) : flèches ‹ › et glissement sur l'image de la fiche Pokédex, sur téléphone. [Protocole](qa/GEST_01_DEX_SWIPE.md).
+- **GEST-02** [#327](https://github.com/chebreub/Pokdle/pull/327), fusion `441a85dc4a98ab6d9435db01b50efc80b737d760` (QA complète verte sur `76d7eea`) : fermer une fenêtre ou un panneau en le tirant par sa poignée, sur téléphone. [Protocole](qa/GEST_02_SHEET_HANDLE.md).
+- **37/44 = 84,1 % ; lot 6 : 3/4.** Les deux gestes sont testés avec des événements tactiles dans Chromium ; **ils restent à confirmer sur un vrai téléphone**. Aucune vérification du déploiement Render revendiquée.
 
 ## FX-01 — réglage « Animations » intégré
 
