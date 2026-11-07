@@ -627,3 +627,20 @@ body.theme-dark .shop-qty button.is-on{background:#f5efe6;border-color:#f5efe6;c
 body.theme-dark .reward-line{background:#3a3320;border-color:#6b5a26;color:#f5efe6}
 body.theme-dark .reward-line.is-training{background:#2f2a35;border-color:rgba(255,255,255,.1);color:#cfc7d6}
 body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;color:#bfe8c8}
+/* MOB-05 (7/11/2026) : sur téléphone, l'en-tête (logo + sac avec Balls et ₽ + Paramètres + compte) dépassait de
+   75 px : le bouton du compte sortait de l'écran à droite et Safari laissait la page glisser de côté. Sous 480 px,
+   le logo garde la Poké Ball sans le mot « Pokédle » et le sac se resserre ; les boutons restent à 40-44 px. */
+@media (max-width:480px){
+  #pokdle-app header .logo-row .logo-wordmark{display:none !important}
+  #pokdle-app header .header-top{min-width:0}
+  #pokdle-app header .header-top .header-actions{flex:0 1 auto !important;min-width:0 !important;gap:6px !important}
+  .ball-bag-btn{flex:0 1 auto !important;gap:4px;padding:4px 9px 4px 6px}
+  .ball-bag-btn .ball-sep{margin:0 1px}
+  #pokdle-app header #account-area{flex:0 0 auto !important}
+}
+@media (max-width:360px){
+  .ball-bag-btn img{width:18px !important;height:18px !important}
+  .ball-bag-btn{font-size:14px}
+  /* Connecté : « Paramètres » reste dans le menu du compte ; l'avatar du compte, lui, reste visible. */
+  #pokdle-app header .header-actions:has(#account-area .account-chip) > .header-action-btn[data-action="openSettingsModal"]{display:none !important}
+}
