@@ -95,5 +95,5 @@ test("the new tracked modes send only aggregate event names and preserve server 
   assert.match(client("script.10xzj.verified-quiz-hl.js"),/solo:higherlowerrush/);
   const server=fs.readFileSync(path.join(__dirname,"../server.js"),"utf8");
   assert.match(server,/\.\.\.Object\.keys\(usageMetrics\.SOLO_CATALOG\)\.map/);
-  assert.match(server,/if \(!USAGE_EVENTS\.has\(event\)\) return res\.status\(400\)/);
+  assert.match(server,/if \(!USAGE_EVENTS\.has\(event\) \|\| SERVER_ONLY_USAGE\.has\(event\)\) return res\.status\(400\)/);
 });

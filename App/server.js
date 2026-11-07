@@ -1447,7 +1447,10 @@ app.get("/confidentialite", (_req, res) => res.sendFile(path.join(__dirname, "co
 // pokdle.fr/appli : the site opens on « 📲 Pokédle en appli » (src/script.10xt.install-app.js).
 app.get(["/appli", "/application", "/installer"], (_req, res) => res.redirect(302, "/?appli=1"));
 // One page per game (/jeux, /jeux/<slug>) and the sitemap that lists them.
-require("./lib/seo-render").mountSeoPages(app);
+require("./lib/seo-render").mountSeoPages(app, {
+  // PART-03: a shared capture card's link, opened by a person; messaging preview robots apart.
+  onCaptureVisit: (req) => recordUsage(usageMetrics.isLinkPreviewAgent(req.get("user-agent")) ? "share:preview" : "share:capture-visit", null, usageSegmentForRequest(req)),
+});
 
 app.get("/api/multiplayer/health", (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, pokemon: POKEMON_LIST.length });
@@ -1466,7 +1469,12 @@ const USAGE_EVENTS = new Set([
   "duel:create", "statclash:create", "share:daily", "share:visit",
   // DATA-03: the three steps of a shared link, each counted apart (aggregates only).
   "share:party", "share:party-visit", "share:preview", "share:daily-start", "share:party-start",
+  // PART-03: « Partager ma capture » (step 1) and its link opened by a person (step 2).
+  "share:capture", "share:capture-visit",
 ]);
+// DATA-03 / PART-03: steps the server observes itself (a link opened, a game really started);
+// a browser can never send them through /api/track.
+const SERVER_ONLY_USAGE = new Set(["share:visit", "share:preview", "share:daily-start", "share:party-visit", "share:party-start", "share:capture-visit"]);
 const USAGE_LABELS = {
   visit: "Visites",
   ...Object.fromEntries(Object.entries(usageMetrics.SOLO_CATALOG).map(([mode, meta]) => ["solo:" + mode, meta.label])),
@@ -1482,6 +1490,8 @@ const USAGE_LABELS = {
   "share:party-visit": "Partage — Party : lien ouvert",
   "share:party-start": "Partage — Party : partie lancée avec un invité du lien",
   "share:preview": "Partage — aperçus de liens (robots des messageries)",
+  "share:capture": "Partage — Capture : carte partagée ou lien copié",
+  "share:capture-visit": "Partage — Capture : lien ouvert",
 };
 const usageDays = new Map(); // dateKey -> { events: Map } (diagnostic since restart only)
 const USAGE_MAX_DAYS = 14;
@@ -1557,7 +1567,7 @@ function usageRateLimited(ip) {
 
 app.post("/api/track", express.json({ limit: "1kb" }), (req, res) => {
   const event = typeof req.body?.event === "string" ? req.body.event : "";
-  if (!USAGE_EVENTS.has(event)) return res.status(400).json({ ok: false });
+  if (!USAGE_EVENTS.has(event) || SERVER_ONLY_USAGE.has(event)) return res.status(400).json({ ok: false });
   if (usageRateLimited(req.ip || "?")) return res.status(429).json({ ok: false });
   recordUsage(event, req.body?.uid, usageSegmentForRequest(req));
   res.json({ ok: true });

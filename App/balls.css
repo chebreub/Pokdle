@@ -627,3 +627,6 @@ body.theme-dark .shop-qty button.is-on{background:#f5efe6;border-color:#f5efe6;c
 body.theme-dark .reward-line{background:#3a3320;border-color:#6b5a26;color:#f5efe6}
 body.theme-dark .reward-line.is-training{background:#2f2a35;border-color:rgba(255,255,255,.1);color:#cfc7d6}
 body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;color:#bfe8c8}
+/* PART-03 : « Partager ma capture » (carte 1080 × 1350, sans pseudo) */
+.wild-end .cc-share{font-weight:800}
+.capture-share img{width:min(100%,320px,calc((100dvh - 260px) * .8))}
