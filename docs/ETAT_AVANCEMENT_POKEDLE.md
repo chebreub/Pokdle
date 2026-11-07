@@ -7,17 +7,17 @@
 
 ## Synthèse à retenir
 
-**41 tâches terminées sur 43 actions actives = 95,3 %** (GROW-01 mis de côté le 07/11) après les PR #330 (GEST-03) et #332 (ECO-03) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**43 tâches terminées sur 43 actions actives = 100 %** — plan terminé le 7/11 (GROW-01 mis de côté le 07/11) après les PR #330 (GEST-03) et #332 (ECO-03) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **41** | Actions vérifiées, PR fusionnées ; dernières livraisons #330, #332 |
+| **Terminé et intégré à main** | **43** | Actions vérifiées, PR fusionnées ; dernières livraisons #330, #332 |
 | **En cours / investigation / PR ouverte** | **0** | BUG-MOB-01 confirmé par Jade sur son téléphone le 06/11 |
-| **Non commencé / à conduire ou à décider** | **2** | MOB-02, MOB-04 (appareil réel) |
+| **Non commencé / à conduire ou à décider** | **0** | MOB-02 et MOB-04 confirmés sur iPhone par Kayan le 07/11 |
 | **Stationné et exclu du total** | **2** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer ; GROW-01, test avec des joueurs extérieurs, mis de côté par Kayan le 07/11 |
 | **Dénominateur suivi** | **43** | 8 + 8 + 5 + 4 + 8 + 5 + 4 + 2 (MOB-05 ajoutée au lot 0 le 07/11) |
 
-**Formule explicite :** (41 actions terminées / 43 actions actives) × 100 = **95,3488 %, arrondi à 95,3 %**.
+**Formule explicite :** (43 actions terminées / 43 actions actives) × 100 = **100 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,7 +25,7 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 6 / 8 | 75 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles, MOB-05 en-tête et défis sur téléphone (#317) ; BUG-MOB-01 confirmé par Jade (06/11) ; restent MOB-02 et MOB-04 |
+| 0 | Ergonomie mobile / PC et mesures | 8 / 8 | 100 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles, MOB-05 en-tête et défis sur téléphone (#317) ; BUG-MOB-01 confirmé par Jade (06/11) ; MOB-02 et MOB-04 confirmés sur iPhone (07/11) |
 | 1 | Fiabilité des jeux et sauvegardes | 8 / 8 | 100 % | LOG-01 à LOG-04, SAVE-01, FX-02, DATA-02 et DATA-04 rétention J+1/J+7 (#320) terminés |
 | 2 | Gameplay, pédagogie, découverte | 5 / 5 | 100 % | NIV-02, SER-01, MEDIA-01, DISC-01 carte de découverte (#321), DISC-02 quêtes variées (#322) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
@@ -33,7 +33,7 @@
 | 5 | Invitations et diffusion | 5 / 5 | 100 % | PART-01 #311, PART-02 #313, DATA-03 #315, PART-03 carte de capture #316, PART-04 recherche d'échanges #318 |
 | 6 | Gestes et animations | 4 / 4 | 100 % | FX-01 réglage « Animations » (#324), GEST-01 glissement entre fiches (#326), GEST-02 poignée de fermeture (#327), GEST-03 lancer au doigt (#330) |
 | 7 | Testeurs externes et acquisition | 1 / 1 | 100 % | GROW-01 mis de côté par Kayan (07/11) ; GROW-02 : vidéos publiées par Kayan lui-même |
-| **Total** | | **41 / 43** | **95,3 %** | NIV-01 et GROW-01 stationnés, exclus ; MOB-02 et MOB-04 en attente du test iPhone de Kayan |
+| **Total** | | **43 / 43** | **100 %** | NIV-01 et GROW-01 stationnés, exclus |
 
 ## GEST-03, ECO-03 et sons des hautes herbes — intégrés le 7 novembre
 
@@ -41,7 +41,7 @@
 - **GEST-03** [#330](https://github.com/chebreub/Pokdle/pull/330), fusion `15c92491374b7b602f103cb3f6a7a7eadeed286c` : lancer la Ball d'un glissement vers le haut dans les hautes herbes, réglage facultatif (éteint par défaut), même appel serveur, même taux, rien dépensé sur un geste interrompu. [Protocole](qa/GEST_03_BALL_FLICK.md).
 - **ECO-03** [#332](https://github.com/chebreub/Pokdle/pull/332), fusion `06910e5c25e220f0aa36221b1e1d286c31314dae` (option B choisie par Kayan) : la meilleure partie du jour de chaque jeu vérifié compte ; une partie meilleure verse la différence (30 → 60 → 90 ₽), 90 ₽ au plus par jeu ; plafond 2 000 ₽, Ball du jour, prix et taux inchangés. [Protocole](qa/ECO_03_BEST_GAME.md).
 - Retours iPhone de Kayan (7/11) : vérifications 2, 3, 4 bonnes ; sons en retard après le cri et barre de saisie sous le menu corrigés dans [#333](https://github.com/chebreub/Pokdle/pull/333) ([fiche](qa/IPHONE_SONS_BARRE_2026_11_07.md)).
-- **39/43 = 90,7 % ; lots 4 et 6 : 100 %.** GROW-01 mis de côté par Kayan (il a écrit à Jade, joueuse qui revient, via les messages du site ; sa réponse servira à confirmer BUG-MOB-01). GROW-02 conduit par Kayan (vidéos). BUG-MOB-01 confirmé par Jade le 06/11 (« C'est parfait merci ! »). **41/43 = 95,3 %.** Restent : MOB-02, MOB-04 (appareil réel ; correctifs iPhone du 7/11 fusionnés dans #333).
+- **39/43 = 90,7 % ; lots 4 et 6 : 100 %.** GROW-01 mis de côté par Kayan (il a écrit à Jade, joueuse qui revient, via les messages du site ; sa réponse servira à confirmer BUG-MOB-01). GROW-02 conduit par Kayan (vidéos). BUG-MOB-01 confirmé par Jade le 06/11 (« C'est parfait merci ! »). **43/43 = 100 %.** Le soir du 7/11, Kayan a refait ses tests iPhone après #333 : sons au bon moment, barre de saisie au-dessus du menu ; Qui est-ce ?, glissement Pokédex et poignée déjà bons. MOB-02 et MOB-04 confirmés : **plan terminé**.
 
 ## GEST-01 et GEST-02 — intégrées le 7 novembre
 
