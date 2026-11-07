@@ -94,9 +94,13 @@ function publicView(row,me,byId,compare) {
     index:player.index,total:TOTAL,max:MAX_TRIES,gens:row.series_gens,
     attempts:player.guesses.length,rows,found:player.found,attemptsWon:player.attemptsWon,
     rounds:player.rounds.map(r=>({won:r.won,tries:r.tries})),
-    opponentDone:Boolean(rival.done),...((ended&&player.done&&rival.done)
-      ? {opponentFound:rival.found,opponentAttemptsWon:rival.attemptsWon,
-          outcome:status==="tied"?"égalité":(status==="won"?(side==="to"?"gagné":"perdu"):(status==="lost"?(side==="to"?"perdu":"gagné"):"non terminé")}
-      : {})};
+    opponentDone:Boolean(rival.done),
+    ...(ended && player.done && rival.done ? {
+      opponentFound:rival.found,opponentAttemptsWon:rival.attemptsWon,
+      outcome:status==="tied" ? "égalité"
+        : status==="won" ? (side==="to" ? "gagné" : "perdu")
+        : status==="lost" ? (side==="to" ? "perdu" : "gagné")
+        : "non terminé"
+    } : {})};
 }
 module.exports={MODE,KIND,TOTAL,MAX_TRIES,DEFAULT_GENS,normalizeGens,selectable,pickSeries,newProgress,scoreCompare,outcome,advance,publicView};
