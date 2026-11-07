@@ -681,3 +681,12 @@ body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;col
 .wild-flick-ball{display:block;width:64px;height:64px;cursor:grab;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
 .wild-flick-ball svg{width:100%;height:100%}
 .wild-flick-hint{order:-1;padding:7px 14px;border-radius:999px;background:#2E2A33;color:#fff;font:800 13px Nunito,sans-serif;white-space:nowrap;pointer-events:none}
+
+/* V2-REL-01 (7/11) : confirmation avant de relâcher un doublon. */
+.tm-confirm .tm-mon img{background:radial-gradient(circle at 50% 60%,#fff 0,#E8F6EC 140%)}
+.tm-confirm.is-shiny .tm-mon img{background:radial-gradient(circle at 50% 60%,#fff 0,#FFE9A8 140%)}
+.tm-confirm h3 b{color:#B07A00}
+.tm-confirm p{margin:4px 0 0;font:700 13px/1.4 Nunito,sans-serif;color:#6B6472}
+.tm-confirm .tm-gain{color:#2E7D46;font-weight:900}
+.tm-confirm-btns{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px}
+.tm-confirm-btns button{min-height:46px}

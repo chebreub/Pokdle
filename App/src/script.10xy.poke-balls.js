@@ -341,7 +341,7 @@ function ballPaidAction(url, payload) {
     }
   }
   return ballFetch(url, pending.body).then((data) => {
-    if (data && (data.ok || ["price_changed", "encounter_changed", "no_ball_left", "no_encounter", "not_enough_coins", "recharge_limit", "reload_required", "action_conflict", "account_changed"].includes(data.error))) {
+    if (data && (data.ok || ["price_changed", "encounter_changed", "no_ball_left", "no_encounter", "not_enough_coins", "recharge_limit", "reload_required", "action_conflict", "account_changed", "release_changed", "last_one", "release_limit", "invalid_pokemon"].includes(data.error))) {
       try { sessionStorage.removeItem(key); } catch (_) {}
     }
     if (!ballState || ballState.actionScope !== scope) return { ok: false, error: "account_changed" };
