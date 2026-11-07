@@ -450,6 +450,122 @@ function pcSentHtml(c) {
   return '<div class="pc-row">' + pcAvatar(c.other) + '<p>' + line + '</p>' + watch + again + '</div>';
 }
 
+// PART-02: shared series. All ten secrets and both scores are server-owned.
+// The client receives only comparisons of its own actual guesses.
+var pcShared = null;
+function pcSharedMatches(text) {
+  var q=pcFold(text);
+  if(!q) return [];
+  var forbidden=new Set((pcShared?.rows||[]).map(function(r){return Number(r.pokemonId);}));
+  var pool=pcSecretPool().filter(function(p){return p.guessable !== false && !forbidden.has(Number(p.id));});
+  return pool.filter(function(p){return pcFold(p.name).startsWith(q);})
+    .concat(pool.filter(function(p){return pcFold(p.name).includes(q)&&!pcFold(p.name).startsWith(q);}))
+    .slice(0,6);
+}
+function pcSharedHtml(g) {
+  var dots=(g.rounds||[]).map(function(r){return '<i class="' + (r.won?'is-won':'is-lost') +
+    '" title="' + (r.won ? 'Trouvé' : 'Non trouvé') + '">' + (r.won?'✓':'×') + '</i>';}).join('');
+  var summary='<p class="pc-shared-score">🎯 ' + Number(g.found) + '/10 trouvés · ' +
+    Number(g.attemptsWon) + ' essais sur les trouvés</p>' +
+    '<div class="pss-dots pc-shared-dots" aria-label="Manches terminées">' + dots + '</div>';
+  var end = g.status !== 'open' ? 'Cette série est clôturée.'
+    : g.done ? 'Ta série est terminée. Ton ami doit encore finir pour déterminer le résultat.' : '';
+  if (g.status !== 'open' && g.outcome) end = g.outcome === 'gagné' ? '🏆 Tu as remporté cette série !' :
+    g.outcome === 'égalité' ? '🤝 Égalité parfaite !' :
+    g.outcome === 'perdu' ? 'Ton ami a remporté la série.' : end;
+  if (g.done) return '<div class="pc-shared">' + summary + '<p class="pc-note">' + escapeHtml(end) + '</p>' +
+    (g.opponentFound !== undefined ? '<p class="pc-shared-result">Toi : ' + Number(g.found) + '/10 · ' +
+      Number(g.attemptsWon) + ' essais | Adversaire : ' + Number(g.opponentFound) + '/10 · ' +
+      Number(g.opponentAttemptsWon) + ' essais</p>' : '') +
+    '<button type="button" class="btn-ghost" data-action="openMyChallenges">Retour à mes défis</button></div>';
+  var guesses=(g.rows||[]).slice().reverse().map(function(row){
+    var p=POKEMON_BY_ID?.get(Number(row.pokemonId));
+    if(!p) return '';
+    return '<div class="pc-try"><div class="pc-try-who"><img src="' + escapeHtml(getPokemonSprite(p)) +
+      '" alt="" /><b>' + escapeHtml(p.name) + '</b></div><div class="pc-try-cells">' +
+      PC_CELLS.map(function(c){
+        return '<div class="pc-cell is-' + escapeHtml(row.cmp[c[0]]||'wrong') + '"><small>' +
+          escapeHtml(c[1]) + '</small>' + escapeHtml(pcCellText(p,c[0],row)) + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  return '<div class="pc-shared">' + summary +
+    '<p class="pc-shared-head"><b>Pokémon ' + (Number(g.index)+1) + '/10</b>' +
+    ' · ' + Number(g.attempts) + '/8 essais · mêmes secrets que ton adversaire</p>' +
+    '<div class="pc-tries">' + (guesses||'<p class="pc-empty">Devine le Pokémon avec les indices du Pokémon du jour.</p>') + '</div>' +
+    '<div class="pc-game-input pc-shared-input"><input type="search" class="pc-shared-guess" autocomplete="off"' +
+      ' placeholder="Tape un Pokémon…" aria-label="Proposer un Pokémon" />' +
+    '<button type="button" class="btn-blue" data-action="pcSharedPlay">Valider</button></div>' +
+    '<div class="pc-suggests pc-shared-suggests"></div><p class="pc-status" role="status" aria-live="polite"></p>' +
+    '<button type="button" class="btn-ghost pc-shared-pass" data-action="pcSharedSkip">Passer ce Pokémon</button></div>';
+}
+function pcSharedRender(focus) {
+  var box=document.querySelector('#overlay-body .pc-shared-wrap');
+  if(!box||!pcShared) return;
+  box.innerHTML=pcSharedHtml(pcShared);
+  var input=box.querySelector('.pc-shared-guess');
+  if(!input) return;
+  input.oninput=function(){
+    var list=box.querySelector('.pc-shared-suggests');
+    if(list) list.innerHTML=pcSharedMatches(input.value).map(function(p){
+      return '<button type="button" class="pc-suggest" data-pc-shared-pick="' + Number(p.id) + '">' +
+        '<img src="' + escapeHtml(getPokemonSprite(p)) + '" alt="" /><span>' + escapeHtml(p.name) + '</span></button>';
+    }).join('');
+  };
+  input.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();pcSharedPlay();}};
+  box.onclick=function(e){var el=e.target.closest('[data-pc-shared-pick]');if(el)pcSharedPlay(Number(el.dataset.pcSharedPick));};
+  if(focus)input.focus({preventScroll:true});
+}
+function openSharedSeriesGame(id) {
+  pcShared=null;
+  ensureOverlay('🎯 Série commune', '<div class="pc-shared-wrap"><p class="pc-empty">Chargement…</p></div>');
+  var overlay=document.getElementById('overlay-modal');if(overlay)overlay.dataset.kind='challenge';
+  pcGet('/api/challenges/series?id='+encodeURIComponent(id)).then(function(data){
+    if(!data||!data.ok)throw Error('unavailable');
+    pcShared=data;pcSharedRender(true);
+  }).catch(function(){
+    var box=document.querySelector('#overlay-body .pc-shared-wrap');
+    if(box)box.textContent='Ce défi ne peut pas être ouvert pour le moment.';
+  });
+}
+function pcSharedPlay(pokemonId) {
+  if(!pcShared||pcShared.done||pcShared.busy)return;
+  var input=document.querySelector('#overlay-body .pc-shared-guess');
+  var status=document.querySelector('#overlay-body .pc-shared .pc-status');
+  var id=Number(pokemonId);
+  if(!id&&input){
+    var exact=pcSharedMatches(input.value).find(function(p){return pcFold(p.name)===pcFold(input.value);});
+    id=Number((exact||pcSharedMatches(input.value)[0])?.id)||0;
+  }
+  if(!id){if(status)status.textContent='Choisis un Pokémon dans la liste.';return;}
+  pcSharedRequest({pokemonId:id});
+}
+function pcSharedSkip(){if(pcShared&&!pcShared.done)pcSharedRequest({pass:true});}
+function pcSharedRequest(action) {
+  if(!pcShared||pcShared.busy)return;
+  var old=pcShared;
+  old.busy=true;
+  pcPost('/api/challenges/series/play',Object.assign({id:old.id,round:old.index},action)).then(function(data){
+    old.busy=false;
+    if(!data||!data.ok){
+      var status=document.querySelector('#overlay-body .pc-shared .pc-status');
+      if(status)status.textContent=data?.error==='invalid_guess'?'Pokémon invalide pour ce défi.':'Proposition impossible. Réessaie.';
+      return;
+    }
+    pcShared=data;
+    pcSharedRender(!data.done);
+    if(data.fresh){
+      pcRefresh().then(function(){showToast('🏁 Série terminée : résultat vérifié des deux côtés !');});
+    }
+  }).catch(function(){
+    old.busy=false;
+    var status=document.querySelector('#overlay-body .pc-shared .pc-status');
+    if(status)status.textContent='Connexion interrompue : réessaie sans perdre ta progression.';
+  });
+}
+window.openSharedSeriesGame=openSharedSeriesGame;
+window.pcSharedPlay=pcSharedPlay;
+window.pcSharedSkip=pcSharedSkip;
+
 // ---- « Trouve ce Pokémon » : the game, in a window, compared by the server
 var pcGame = null;
 var PC_CELLS = [['type1', 'Type 1'], ['type2', 'Type 2'], ['generation', 'Gen'], ['habitat', 'Habitat'], ['color', 'Couleur'], ['stage', 'Stade'], ['height', 'Taille'], ['weight', 'Poids']];
