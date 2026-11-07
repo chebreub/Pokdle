@@ -30,6 +30,6 @@
   "license": "ISC",
   "type": "commonjs",
   "overrides": {
-    "qs": "6.16.0"
+    "qs": "6.16.1"
   }
 }
