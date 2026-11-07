@@ -1,6 +1,6 @@
 # PART-02 — Défis de séries réellement comparables
 
-**État : développement en PR.** Action à compter parmi les 43 uniquement après CI complète verte et fusion dans `main`. Progrès actuel avant fusion : **26/43**.
+**État : terminé et intégré.** [PR #313](https://github.com/chebreub/Pokdle/pull/313) fusionnée dans `main` au commit `9f05205d7795e011e862b1d27b97ca10357dd7ba`, après CI Node et navigateur/PostgreSQL vertes. Progression **27/43 = 62,8 %**. Pas de recette iPhone physique ni déploiement Render vérifié.
 
 ## Défaut fonctionnel observé
 
