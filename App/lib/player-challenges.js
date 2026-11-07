@@ -235,7 +235,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       WHERE status = 'open' AND expires_at <= now() AND (from_id = $1 OR to_id = $1)`, [id]);
     await db.query(`DELETE FROM player_challenges WHERE created_at < now() - make_interval(days => $1)`, [KEEP_DAYS]);
     const rows = (await db.query(`SELECT c.id, c.from_id, c.to_id, c.mode, c.target, c.phrase, c.best, c.status, c.seen_to, c.seen_from,
-        c.secret_id, jsonb_array_length(c.guesses) AS tries, c.note,
+        c.secret_id, jsonb_array_length(c.guesses) AS tries, c.note, c.series_progress,
         to_char(c.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at,
         to_char(c.expires_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS expires_at,
         uf.username AS from_name, uf.partner_id AS from_partner, ut.username AS to_name, ut.partner_id AS to_partner
@@ -246,14 +246,23 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       ok: true, accepting: !off,
       challenges: rows.map((row) => {
         const incoming = row.to_id === id;
-        const mystery = row.mode === MYSTERY;
+        const mystery = row.mode === MYSTERY, matched = row.mode === sharedSeries.MODE;
         const cfg = mystery ? { label: MYSTERY_LABEL, kind: "mystere" } : row.mode === DAILY ? { label: DAILY_LABEL, kind: DAILY }
-          : CHALLENGE_MODES[row.mode] || { label: row.mode, kind: "record" };
+          : matched ? {label:"Série commune de 10 Pokémon",kind:sharedSeries.KIND} : CHALLENGE_MODES[row.mode] || { label: row.mode, kind: "record" };
+        const mine = matched ? row.series_progress?.[incoming ? "to" : "from"] : null;
+        const theirs = matched ? row.series_progress?.[incoming ? "from" : "to"] : null;
+        const bothDone = Boolean(mine?.done && theirs?.done);
         // The hidden Pokémon is named to the one who chose it, and to the other once the challenge is over.
         const named = mystery && row.secret_id && (!incoming || row.status !== "open");
         return {
           id: Number(row.id), incoming, mode: row.mode, label: cfg.label, kind: cfg.kind,
           ...(mystery ? { tries: Number(row.tries) || 0 } : {}), ...(named ? { secretId: Number(row.secret_id) } : {}),
+          ...(matched ? {myFound:Number(mine?.found)||0,myIndex:Number(mine?.index)||0,
+              myDone:Boolean(mine?.done),opponentDone:Boolean(theirs?.done),
+              ...(row.status!=="open" && bothDone ? {
+                myAttemptsWon:Number(mine?.attemptsWon)||0,
+                opponentFound:Number(theirs?.found)||0,opponentAttemptsWon:Number(theirs?.attemptsWon)||0
+              } : {})} : {}),
           target: Number(row.target), best: row.best == null ? null : Number(row.best), ...(cfg.max ? { max: cfg.max } : {}),
           phrase: PHRASES[Number(row.phrase)] || PHRASES[0], ...(row.note ? { note: row.note } : {}), status: row.status,
           seen: incoming ? Boolean(row.seen_to) : Boolean(row.seen_from),
