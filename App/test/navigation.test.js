@@ -25,6 +25,8 @@ function fixture(url = "https://example.test/") {
     showDailyCompletedView: () => false,
     restoreSavedGame: (mode) => { context.restoredMode = mode; context.current = "game"; return true; },
     setPartyStatus: (message) => { context.message = message; },
+    // PART-01: the invitation function is extracted without its enclosing room state.
+    partyRoomState: { room:null }, partyInviteNotice() {}, partyPrefillNickname() {},
     dedicatedStarts: 0, dedicatedRenders: 0,
     speedrunState: null, draftArenaState: null,
     renderSpeedrunScreen: () => { context.dedicatedRenders++; },
