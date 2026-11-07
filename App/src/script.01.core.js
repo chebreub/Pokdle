@@ -72,18 +72,66 @@ const XP_TITLES = [
 // Under the 10 old levels, 50 000 XP made a « Mythe Pokémon »; those players keep a Pionnier badge.
 const XP_LEGACY_MYTH_XP = 50000;
 
+// DISC-02 (7/11/2026): more games get a quest, at most one quest per family of games a day, and not
+// yesterday's quests again. XP stays in the existing range (no new reward); the 4 quests stay optional.
 const QUEST_POOL = [
-  { id: "win_daily", icon: "📅", label: "Gagne le Pokédle du jour", target: 1, xp: 80 },
-  { id: "play_3_modes", icon: "🎲", label: "Joue à 3 modes différents", target: 3, xp: 70 },
-  { id: "hl_streak_10", icon: "📊", label: "10 d'affilée en Higher or Lower", target: 10, xp: 90, comparator: "gte" },
-  { id: "score_attack_500", icon: "🎯", label: "500+ de moyenne BST en Score Attack", target: 500, xp: 80, comparator: "gte" },
-  { id: "score_attack_600", icon: "👑", label: "600+ BST en Score Attack (Master)", target: 600, xp: 150, comparator: "gte" },
-  { id: "stat_clash_win", icon: "⚔️", label: "Gagne 1 Stat Clash", target: 1, xp: 70 },
-  { id: "connections_clear", icon: "🧩", label: "Résous un Poké-Connections", target: 1, xp: 100 },
-  { id: "stat_auction_win", icon: "💰", label: "Gagne 1 Stat Auction", target: 1, xp: 80 },
-  { id: "draft_complete", icon: "🏟️", label: "Termine un draft d'équipe", target: 1, xp: 50 },
-  { id: "pokedex_browse", icon: "📖", label: "Consulte le Pokédex aujourd'hui", target: 1, xp: 30 },
+  { id: "win_daily", icon: "📅", label: "Gagne le Pokédle du jour", target: 1, xp: 80, family: "daily" },
+  { id: "play_3_modes", icon: "🎲", label: "Joue à 3 modes différents", target: 3, xp: 70, family: "variety" },
+  { id: "hl_streak_10", icon: "📊", label: "10 d'affilée en Higher or Lower", target: 10, xp: 90, comparator: "gte", family: "higherlower" },
+  { id: "score_attack_500", icon: "🎯", label: "500+ de moyenne BST en Score Attack", target: 500, xp: 80, comparator: "gte", family: "draft" },
+  { id: "score_attack_600", icon: "👑", label: "600+ BST en Score Attack (Master)", target: 600, xp: 150, comparator: "gte", family: "draft" },
+  { id: "stat_clash_win", icon: "⚔️", label: "Gagne 1 Stat Clash", target: 1, xp: 70, family: "statclash" },
+  { id: "connections_clear", icon: "🧩", label: "Résous un Poké-Connections", target: 1, xp: 100, family: "connections" },
+  { id: "stat_auction_win", icon: "💰", label: "Gagne 1 Stat Auction", target: 1, xp: 80, family: "auction" },
+  { id: "draft_complete", icon: "🏟️", label: "Termine un draft d'équipe", target: 1, xp: 50, family: "draft" },
+  { id: "pokedex_browse", icon: "📖", label: "Consulte le Pokédex aujourd'hui", target: 1, xp: 30, family: "pokedex" },
+  // « Termine une partie de … » : comptée à la fin d'une partie enregistrée (gagnée ou perdue), comme « 3 modes ».
+  { id: "play_pixel", icon: "🟦", label: "Termine une partie de Pixelisé", target: 1, xp: 50, mode: "pixel", family: "guess" },
+  { id: "play_cry", icon: "🔊", label: "Termine une partie de Cri", target: 1, xp: 50, mode: "cry", family: "guess" },
+  { id: "play_description", icon: "📜", label: "Termine une partie de Description", target: 1, xp: 50, mode: "description", family: "guess" },
+  { id: "play_silhouette", icon: "🔍", label: "Termine une partie de Zoom progressif", target: 1, xp: 50, mode: "silhouette", family: "guess" },
+  { id: "play_mystery", icon: "📈", label: "Termine une partie de Stat mystère", target: 1, xp: 50, mode: "mystery", family: "guess" },
+  { id: "play_evolution", icon: "🔗", label: "Termine une partie d'Évolution", target: 1, xp: 50, mode: "evolution", family: "order" },
+  { id: "play_order", icon: "🔢", label: "Termine une partie d'Ordre Pokédex", target: 1, xp: 50, mode: "order", family: "order" },
+  { id: "play_quiz", icon: "❓", label: "Termine un Quiz", target: 1, xp: 50, mode: "quiz", family: "quiz" },
+  { id: "play_odd", icon: "🧐", label: "Termine une partie d'Intrus", target: 1, xp: 50, mode: "odd", family: "quick" },
+  { id: "play_weight", icon: "⚖️", label: "Termine un Duel de poids", target: 1, xp: 50, mode: "weight", family: "quick" },
+  { id: "play_shiny", icon: "✨", label: "Termine une partie de Shiny ou normal", target: 1, xp: 50, mode: "shiny", family: "quick" },
+  { id: "play_quiestce", icon: "🕵️", label: "Termine un Qui est-ce ?", target: 1, xp: 50, mode: "quiestce", family: "quiestce" },
+  { id: "play_petitbac", icon: "✏️", label: "Termine un Petit Bac", target: 1, xp: 50, mode: "petitbac", family: "petitbac" },
 ];
+const DAILY_QUEST_COUNT = 4;
+
+// The quests of a day: same for everyone, the same all day; one per family, none of yesterday's.
+function pickDailyQuestIds(dayKey, avoid = []) {
+  const seed = Date.parse(dayKey + "T00:00:00Z");
+  const rnd = (idx) => {
+    const x = Math.sin(seed + idx * 9301) * 233280;
+    return x - Math.floor(x);
+  };
+  const order = QUEST_POOL.map((q, i) => ({ q, r: rnd(i) })).sort((a, b) => a.r - b.r).map((entry) => entry.q);
+  const skip = new Set(avoid);
+  const picked = [], families = new Set();
+  for (const pass of [true, false]) {
+    for (const q of order) {
+      if (picked.length >= DAILY_QUEST_COUNT) break;
+      if (picked.includes(q.id) || families.has(q.family) || (pass && skip.has(q.id))) continue;
+      picked.push(q.id);
+      families.add(q.family);
+    }
+  }
+  return picked;
+}
+// Each day avoids the quests the day before really had: days are drawn in order from a fixed start (the
+// DISC-02 release), so the result is exact and the same on every device. Before that start: plain draw.
+const QUEST_VARIETY_START = "2026-11-07";
+function dailyQuestIdsFor(dayKey) {
+  const start = Date.parse(QUEST_VARIETY_START + "T12:00:00Z"), end = Date.parse(dayKey + "T12:00:00Z");
+  if (!Number.isFinite(end) || end < start) return pickDailyQuestIds(dayKey);
+  let ids = [];
+  for (let t = start; t <= end; t += 864e5) ids = pickDailyQuestIds(new Date(t).toISOString().slice(0, 10), ids);
+  return ids;
+}
 
 function xpForLevel(level) {
   return 25 * level * (level - 1);
@@ -136,14 +184,9 @@ function ensureDailyQuests() {
   if (!playerProfile) return [];
   const todayKey = getDailyQuestKey();
   if (playerProfile.dailyQuestsDate === todayKey && Array.isArray(playerProfile.dailyQuests)) return playerProfile.dailyQuests;
-  // Génère 4 quêtes aléatoires depuis QUEST_POOL (seed basé sur la date pour stabilité dans la journée)
-  const seed = Date.parse(todayKey + "T00:00:00Z");
-  const rnd = (idx) => {
-    const x = Math.sin(seed + idx * 9301) * 233280;
-    return x - Math.floor(x);
-  };
-  const shuffled = QUEST_POOL.slice().map((q, i) => ({ q, r: rnd(i) })).sort((a, b) => a.r - b.r).map((entry) => entry.q);
-  const picked = shuffled.slice(0, 4).map((q) => ({ ...q, progress: 0, completed: false }));
+  // Already generated quests of the day stay as they are (only a new day draws new ones).
+  const byId = new Map(QUEST_POOL.map((q) => [q.id, q]));
+  const picked = dailyQuestIdsFor(todayKey).map((id) => ({ ...byId.get(id), progress: 0, completed: false }));
   playerProfile.dailyQuests = picked;
   playerProfile.dailyQuestsDate = todayKey;
   try { saveProfile(); } catch (_e) {}
@@ -258,6 +301,9 @@ function progressQuest(questId, amount = 1) {
 // « Joue à 3 modes différents »: every finished game counts, won or lost, once per mode.
 function progressQuestMode(mode) {
   if (!playerProfile || !mode) return;
+  // DISC-02: « Termine une partie de … » for that game, once.
+  const own = ensureDailyQuests().find((q) => q.mode && q.mode === mode && !q.completed);
+  if (own) progressQuest(own.id, 1);
   const quest = ensureDailyQuests().find((q) => q.id === "play_3_modes");
   if (!quest || quest.completed) return;
   const modes = Array.isArray(quest.modes) ? quest.modes : [];

@@ -12,9 +12,15 @@ const core = fs.readFileSync(path.join(__dirname, '../src/script.01.core.js'), '
 const between = (from, to) => core.slice(core.indexOf(from), core.indexOf(to, core.indexOf(from)));
 
 test('every daily quest of the pool is counted somewhere in the game', () => {
-  const ids = [...between('const QUEST_POOL = [', '];').matchAll(/id: "([a-z_0-9]+)"/g)].map((m) => m[1]);
-  assert.ok(ids.length >= 10);
-  for (const id of ids) assert.match(src, new RegExp(`progressQuest\\("${id}"`), `${id} is never counted`);
+  const entries = between('const QUEST_POOL = [', '];').split('\n').filter((l) => /id: "/.test(l))
+    .map((l) => ({ id: l.match(/id: "([a-z_0-9]+)"/)[1], mode: (l.match(/mode: "([a-z-]+)"/) || [])[1] }));
+  assert.ok(entries.length >= 10);
+  // DISC-02: « Termine une partie de … » quests are counted by progressQuestMode, for a mode the game records.
+  const { HISTORY_TO_LAUNCH } = require('../lib/usage-metrics');
+  for (const { id, mode } of entries) {
+    if (mode) assert.ok(Object.prototype.hasOwnProperty.call(HISTORY_TO_LAUNCH, mode), `${id}: ${mode} is never recorded`);
+    else assert.match(src, new RegExp(`progressQuest\\("${id}"`), `${id} is never counted`);
+  }
 });
 
 test('three different finished modes complete the quest, a repeated mode does not count twice', () => {
