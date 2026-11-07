@@ -22,6 +22,9 @@ async function ensureTables(db) {
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), decided_at TIMESTAMPTZ, seen BOOLEAN NOT NULL DEFAULT false)`);
   await db.query("CREATE INDEX IF NOT EXISTS wild_trades_to ON wild_trades(to_id, status)");
   await db.query("CREATE INDEX IF NOT EXISTS wild_trades_from ON wild_trades(from_id, day)");
+  // PART-04 : « Montrer mes doublons à mes amis » (absent = oui, comme avant). Effacé avec le compte.
+  await db.query(`CREATE TABLE IF NOT EXISTS trade_settings (
+    account_id TEXT PRIMARY KEY, share_dupes BOOLEAN NOT NULL DEFAULT true, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
 }
 
 const iso = (column) => `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`;
@@ -48,6 +51,10 @@ function createWildTrades({ db, friends, accountOfPid, playerPid, push = async (
     "SELECT COUNT(*)::int AS n FROM wild_encounters WHERE identity = $1 AND status = 'caught' AND pokemon_id = $2 AND shiny = $3",
     [keyOf(accountId), pokemonId, shiny])).rows[0].n);
 
+  async function sharesDupes(accountId) {
+    const row = (await db.query("SELECT share_dupes FROM trade_settings WHERE account_id = $1", [String(accountId)])).rows[0];
+    return !row || row.share_dupes !== false;
+  }
   async function friendOf(me, pid) {
     const other = typeof pid === "string" && /^[0-9a-f]{16}$/.test(pid) ? await accountOfPid(db, pid) : null;
     if (!other || other === String(me)) return null;
@@ -86,7 +93,43 @@ function createWildTrades({ db, friends, accountOfPid, playerPid, push = async (
     await ready;
     const other = await friendOf(accountId, pid);
     if (!other) return fail("not_friends", 403);
-    return { ok: true, pid, username: await nameOf(other), dupes: await dupesOf(other), mine: await dupesOf(accountId), owned: await owned(accountId) };
+    // PART-04 : un ami qui a choisi de cacher ses doublons n'en montre aucun.
+    const hidden = !await sharesDupes(other);
+    return { ok: true, pid, username: await nameOf(other), hidden, dupes: hidden ? [] : await dupesOf(other), mine: await dupesOf(accountId), owned: await owned(accountId) };
+  }
+
+  // PART-04 · 🔍 Trouver : les doublons de tous mes amis, en une fois. Rien d'autre de leur album n'est envoyé
+  // (ni ce qu'ils possèdent en un seul exemplaire, ni ce qui leur manque) ; un ami qui cache ses doublons,
+  // ou un joueur bloqué dans un sens ou dans l'autre, n'apparaît pas.
+  async function matches(accountId) {
+    await ready;
+    const me = String(accountId);
+    const rows = (await db.query(`SELECT u.discord_id AS other, u.username,
+        EXISTS (SELECT 1 FROM trade_settings s WHERE s.account_id = u.discord_id AND s.share_dupes = false) AS hidden,
+        EXISTS (SELECT 1 FROM (SELECT account_id, blocked_id FROM player_blocks UNION ALL
+          SELECT account_id, blocked_id FROM player_challenge_blocks WHERE blocked_id <> '*') b
+          WHERE (b.account_id = $1 AND b.blocked_id = u.discord_id) OR (b.account_id = u.discord_id AND b.blocked_id = $1)) AS blocked
+      FROM player_friends f JOIN users u ON u.discord_id = CASE WHEN f.from_id = $1 THEN f.to_id ELSE f.from_id END
+      WHERE f.status = 'accepted' AND (f.from_id = $1 OR f.to_id = $1)
+      ORDER BY lower(u.username) LIMIT 100`, [me])).rows.filter((r) => !r.blocked);
+    const byKey = new Map(rows.filter((r) => !r.hidden).map((r) => [keyOf(r.other), { pid: playerPid(r.other), username: r.username || "Un dresseur", dupes: [] }]));
+    if (byKey.size) {
+      const dupes = (await db.query(`SELECT identity, pokemon_id, COUNT(*) FILTER (WHERE NOT shiny)::int AS normal, COUNT(*) FILTER (WHERE shiny)::int AS shiny
+        FROM wild_encounters WHERE identity = ANY($1::text[]) AND status = 'caught' GROUP BY identity, pokemon_id
+        HAVING COUNT(*) FILTER (WHERE NOT shiny) > 1 OR COUNT(*) FILTER (WHERE shiny) > 1 ORDER BY identity, pokemon_id`, [[...byKey.keys()]])).rows;
+      for (const d of dupes) byKey.get(d.identity).dupes.push({ id: Number(d.pokemon_id), normal: Math.max(0, Number(d.normal) - 1), shiny: Math.max(0, Number(d.shiny) - 1) });
+    }
+    const used = Number((await db.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND day = $2", [me, today()])).rows[0].n);
+    return { ok: true, friends: [...byKey.values()].filter((f) => f.dupes.length), friendCount: rows.length,
+      owned: await owned(me), mine: await dupesOf(me), shareDupes: await sharesDupes(me),
+      left: Math.max(0, TRADES_PER_DAY - used), perDay: TRADES_PER_DAY };
+  }
+  async function setShare(accountId, body = {}) {
+    await ready;
+    if (typeof body.share !== "boolean") return fail("invalid", 400);
+    await db.query(`INSERT INTO trade_settings(account_id, share_dupes) VALUES ($1, $2)
+      ON CONFLICT (account_id) DO UPDATE SET share_dupes = EXCLUDED.share_dupes, updated_at = now()`, [String(accountId), body.share]);
+    return { ok: true, shareDupes: body.share };
   }
 
   async function propose(accountId, body = {}) {
@@ -102,7 +145,7 @@ function createWildTrades({ db, friends, accountOfPid, playerPid, push = async (
     if (Number((await db.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND day = $2", [me, day])).rows[0].n) >= TRADES_PER_DAY) return fail("trade_limit", 429);
     if (Number((await db.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND status = 'pending'", [me])).rows[0].n) >= PENDING_MAX) return fail("too_many_pending", 429);
     if (await countOf(db, me, give, shiny) < 2) return fail("not_a_duplicate");
-    if (await countOf(db, other, want, shiny) < 2) return fail("friend_not_a_duplicate");
+    if (!await sharesDupes(other) || await countOf(db, other, want, shiny) < 2) return fail("friend_not_a_duplicate");
     if ((await db.query("SELECT 1 FROM wild_trades WHERE from_id = $1 AND to_id = $2 AND give_id = $3 AND want_id = $4 AND shiny = $5 AND status = 'pending'", [me, other, give, want, shiny])).rowCount) return fail("already_proposed");
     const id = Number((await db.query("INSERT INTO wild_trades(from_id, to_id, give_id, want_id, shiny, day) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", [me, other, give, want, shiny, day])).rows[0].id);
     tell(other, { title: "🔁 " + await nameOf(me) + " te propose un échange", body: "Ouvre Pokédle pour voir le Pokémon proposé.", url: "/?echanges=1", tag: "pokedle-echange" });
@@ -160,7 +203,7 @@ function createWildTrades({ db, friends, accountOfPid, playerPid, push = async (
     return { ok: true, status: "accepted", received: { id: Number(trade.give_id), shiny: Boolean(trade.shiny) } };
   }
 
-  return { list, seen, friendDupes, propose, cancel, respond, dupesOf };
+  return { list, seen, friendDupes, matches, setShare, propose, cancel, respond, dupesOf };
 }
 
 function mountTradeRoutes(app, { express, trades, getUser, log = console }) {
@@ -188,6 +231,8 @@ function mountTradeRoutes(app, { express, trades, getUser, log = console }) {
   };
   app.get("/api/trades", run("list", (user) => trades.list(user.id)));
   app.get("/api/trades/friend", run("friend", (user, _b, req) => trades.friendDupes(user.id, String(req.query.pid || ""))));
+  app.get("/api/trades/matches", run("matches", (user) => trades.matches(user.id)));
+  app.post("/api/trades/settings", json, run("settings", (user, body) => trades.setShare(user.id, { share: body.share })));
   app.post("/api/trades/propose", json, run("propose", (user, body) => trades.propose(user.id, body)));
   app.post("/api/trades/respond", json, run("respond", (user, body) => trades.respond(user.id, { id: body.id, accept: body.accept !== false })));
   app.post("/api/trades/cancel", json, run("cancel", (user, body) => trades.cancel(user.id, body)));

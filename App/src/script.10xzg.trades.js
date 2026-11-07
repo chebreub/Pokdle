@@ -97,9 +97,11 @@ function tradePickFriend(pid, username) {
   });
 }
 function tradePickWant(id) { if (tradeFlow) { tradeFlow.want = Number(id); renderTradeForm(); } }
+function tradePickGive(id) { if (tradeFlow) { tradeFlow.mon = Number(id); renderTradeForm(); } }
 function renderTradeForm() {
   const f = tradeFlow, d = f && f.data;
   if (!d) return;
+  if (f.reverse) return renderTradeFormReverse();
   const give = tradeMon(f.mon), want = tradeMon(f.want);
   const owned = new Set(d.owned || []);
   const list = d.dupes.filter((x) => (f.shiny ? x.shiny : x.normal) > 0);
@@ -112,10 +114,116 @@ function renderTradeForm() {
       const p = tradeMon(x.id); if (!p) return "";
       return '<button type="button" class="' + (x.id === f.want ? "is-on " : "") + (owned.has(x.id) ? "" : "is-new") + '" data-action="tradePickWant" data-args="[' + x.id + ']">' +
         (owned.has(x.id) ? "" : '<em>Il te manque</em>') + '<img src="' + escapeHtml(tradeArt(p, f.shiny)) + '" alt="" loading="lazy" draggable="false">' + escapeHtml(p.name) + '</button>';
-    }).join("") + '</div>' : '<p class="tr-empty">' + escapeHtml(f.friend.username) + ' n’a pas encore de doublon' + (f.shiny ? " shiny" : "") + '. Revenez après quelques captures !</p>') +
+    }).join("") + '</div>' : '<p class="tr-empty">' + escapeHtml(f.friend.username) + (d.hidden ? ' a choisi de ne pas montrer ses doublons.' : ' n’a pas encore de doublon' + (f.shiny ? " shiny" : "") + '. Revenez après quelques captures !') + '</p>') +
     '<button type="button" class="btn-blue tr-send" data-action="tradeSend"' + (f.want ? "" : " disabled") + '>Proposer l’échange à ' + escapeHtml(f.friend.username) + '</button>' +
     '<p class="tr-rule">Entre amis seulement. ' + escapeHtml(f.friend.username) + ' doit accepter. 3 échanges par jour.<br>Un shiny s’échange seulement contre un shiny.</p></div>');
 }
+// --- PART-04 · 🔍 Trouver : partir d'un doublon d'un ami, puis choisir ce qu'on donne ---
+function tradeStartWant(pid, username, id, shiny) {
+  tradeFlow = { mon: null, want: Number(id), shiny: Boolean(shiny), friend: { pid, username }, data: null, reverse: true };
+  ensureOverlay("🔁 Échange avec " + username, '<p class="tr-wait">On prépare l’échange…</p>');
+  tradeGet("/api/trades/friend?pid=" + encodeURIComponent(pid)).then((d) => {
+    if (!tradeFlow || tradeFlow.friend.pid !== pid) return;
+    if (!d || !d.ok) { ensureOverlay("🔁 Échange", '<div class="tr-empty"><p>' + escapeHtml(tradeError(d)) + '</p></div>'); return; }
+    tradeFlow.data = d;
+    const mine = (d.mine || []).filter((x) => (tradeFlow.shiny ? x.shiny : x.normal) > 0 && x.id !== tradeFlow.want);
+    tradeFlow.mon = (mine[0] || {}).id || null;
+    renderTradeForm();
+  });
+}
+function renderTradeFormReverse() {
+  const f = tradeFlow, d = f.data;
+  const give = tradeMon(f.mon), want = tradeMon(f.want);
+  const still = !d.hidden && (d.dupes || []).some((x) => x.id === f.want && (f.shiny ? x.shiny : x.normal) > 0);
+  const mine = (d.mine || []).filter((x) => (f.shiny ? x.shiny : x.normal) > 0 && x.id !== f.want);
+  const card = (label, p, cls) => '<div class="tr-card ' + cls + '"><small>' + label + '</small>' + (p ? '<img src="' + escapeHtml(tradeArt(p, f.shiny)) + '" alt="" draggable="false"><b>' + escapeHtml(p.name) + (f.shiny ? " ✨" : "") + '</b>' : '<span class="tr-q">?</span><b>Choisis</b>') + '</div>';
+  const who = escapeHtml(f.friend.username);
+  ensureOverlay("🔁 Échange avec " + f.friend.username, '<div class="tr">' +
+    '<div class="tr-pair">' + card("TU DONNES", give, "") + '<span class="tr-arrow" aria-hidden="true">⇄</span>' + card("TU REÇOIS", want, "is-want") + '</div>' +
+    (!still ? '<p class="tr-empty">' + who + ' n’a plus ' + escapeHtml(want ? want.name : "ce Pokémon") + (f.shiny ? " shiny" : "") + ' en double.</p>' :
+      '<h4>Choisis un de tes doublons' + (f.shiny ? " shiny" : "") + '</h4>' +
+      (mine.length ? '<div class="tr-mini">' + mine.map((x) => {
+        const p = tradeMon(x.id); if (!p) return "";
+        return '<button type="button" class="' + (x.id === f.mon ? "is-on" : "") + '" data-action="tradePickGive" data-args="[' + x.id + ']">' +
+          '<img src="' + escapeHtml(tradeArt(p, f.shiny)) + '" alt="" loading="lazy" draggable="false">' + escapeHtml(p.name) + ' ×' + ((f.shiny ? x.shiny : x.normal) + 1) + '</button>';
+      }).join("") + '</div>' : '<p class="tr-empty">Tu n’as pas encore de doublon' + (f.shiny ? " shiny" : "") + ' à donner. Attrape encore quelques Pokémon dans les 🌿 hautes herbes !</p>')) +
+    '<button type="button" class="btn-blue tr-send" data-action="tradeSend"' + (still && f.mon && f.want ? "" : " disabled") + '>Proposer l’échange à ' + who + '</button>' +
+    '<p class="tr-rule">Mêmes règles : entre amis, ' + who + ' doit accepter, 3 échanges par jour.<br>Un shiny s’échange seulement contre un shiny ; ton dernier exemplaire est toujours gardé.</p>' +
+    '<button type="button" class="btn-ghost tr-back" data-action="openMyTrades" data-args=\'["find"]\'>← Retour à la recherche</button></div>');
+}
+
+let tradeTab = null;
+let tradeFind = { data: null, q: "", filter: "missing", open: {} };
+function tradeFold(t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
+function tradeFindItems(friend) {
+  const d = tradeFind.data, owned = new Set(d && d.owned || []);
+  const q = tradeFold(tradeFind.q);
+  const shiny = tradeFind.filter === "shiny";
+  return friend.dupes.filter((x) => {
+    if ((shiny ? x.shiny : x.normal) <= 0) return false;
+    if (tradeFind.filter === "missing" && owned.has(x.id)) return false;
+    if (!q) return true;
+    const p = tradeMon(x.id);
+    return Boolean(p) && (tradeFold(p.name).includes(q) || String(x.id) === q.replace(/^0+/, ""));
+  });
+}
+function tradeFindResultsHtml() {
+  const d = tradeFind.data;
+  if (!d) return '<p class="tr-wait">Chargement…</p>';
+  if (!d.friendCount) return '<div class="tr-empty"><p>Il te faut un ami pour échanger.</p><p>Clique sur un pseudo dans un classement, puis 🤝 Ajouter en ami.</p></div>';
+  const owned = new Set(d.owned || []);
+  const shiny = tradeFind.filter === "shiny";
+  const blocks = d.friends.map((f) => {
+    const items = tradeFindItems(f);
+    if (!items.length) return "";
+    const open = tradeFind.open[f.pid] || tradeFind.q;
+    const shown = open ? items : items.slice(0, 6);
+    const missing = items.filter((x) => !owned.has(x.id)).length;
+    return '<div class="trf-friend"><div class="trf-top"><i>' + escapeHtml((f.username || "?").slice(0, 1).toUpperCase()) + '</i><b>' + escapeHtml(f.username) + '</b><small>' +
+      (missing ? missing + " qui te manque" + (missing > 1 ? "nt" : "") : items.length + " doublon" + (items.length > 1 ? "s" : "")) + '</small></div>' +
+      '<div class="tr-mini">' + shown.map((x) => {
+        const p = tradeMon(x.id); if (!p) return "";
+        return '<button type="button" class="' + (owned.has(x.id) ? "" : "is-new") + '" data-action="tradeStartWant" data-args=\'' + JSON.stringify([f.pid, f.username, x.id, shiny]).replace(/'/g, "&#39;") + '\'>' +
+          (owned.has(x.id) ? "" : '<em>Il te manque</em>') + '<img src="' + escapeHtml(tradeArt(p, shiny)) + '" alt="" loading="lazy" draggable="false">' + escapeHtml(p.name) + (shiny ? " ✨" : "") + '</button>';
+      }).join("") + (items.length > shown.length ? '<button type="button" class="trf-more" data-action="tradeFindOpen" data-args=\'' + JSON.stringify([f.pid]).replace(/'/g, "&#39;") + '\'>+' + (items.length - shown.length) + ' ›</button>' : "") + '</div></div>';
+  }).join("");
+  return blocks || '<p class="tr-empty">' + (tradeFind.q ? "Aucun ami n’a « " + escapeHtml(tradeFind.q) + " » en double." : tradeFind.filter === "missing" ? "Tes amis n’ont pas de doublon qui te manque pour l’instant." : "Tes amis n’ont pas encore de doublon" + (shiny ? " shiny" : "") + ".") + '</p>';
+}
+function tradeFindHtml() {
+  const d = tradeFind.data || {};
+  const chip = (key, label) => '<button type="button" class="' + (tradeFind.filter === key ? "is-on" : "") + '" data-action="tradeFindFilter" data-args=\'["' + key + '"]\' aria-pressed="' + (tradeFind.filter === key) + '">' + label + '</button>';
+  const share = d.shareDupes !== false;
+  return '<label class="trf-search"><span aria-hidden="true">🔎</span><input id="trf-q" type="search" autocomplete="off" placeholder="Cherche un Pokémon (ex. Évoli)" value="' + escapeHtml(tradeFind.q) + '" aria-label="Chercher un Pokémon chez tes amis"></label>' +
+    '<div class="trf-chips">' + chip("missing", "Il me manque") + chip("all", "Tous") + chip("shiny", "✨ Shiny") + '</div>' +
+    '<h4>' + (tradeFind.filter === "missing" ? "Doublons de tes amis qui te manquent" : tradeFind.filter === "shiny" ? "Shinies en double chez tes amis" : "Tous les doublons de tes amis") + '</h4>' +
+    '<div id="trf-res">' + tradeFindResultsHtml() + '</div>' +
+    '<p class="trf-note">🔒 Tu vois seulement les <b>doublons</b> de tes amis, jamais tout leur album ni ce qui leur manque. Encore <b>' + (Number(d.left) || 0) + ' / ' + (Number(d.perDay) || 3) + '</b> proposition' + (Number(d.left) > 1 ? "s" : "") + ' aujourd’hui.</p>' +
+    '<button type="button" class="trf-share" role="switch" aria-checked="' + share + '" data-action="tradeToggleShare"><span><b>Montrer mes doublons à mes amis</b><small>' + (share ? "Tes amis peuvent te proposer un échange." : "Caché : tes amis ne voient pas tes doublons et ne peuvent pas te les demander.") + '</small></span><i aria-hidden="true"></i></button>';
+}
+function tradeFindFilter(key) { tradeFind.filter = ["missing", "all", "shiny"].includes(key) ? key : "missing"; renderMyTrades(); }
+function tradeFindOpen(pid) { tradeFind.open[pid] = true; const r = document.getElementById("trf-res"); if (r) r.innerHTML = tradeFindResultsHtml(); }
+function tradeToggleShare() {
+  const d = tradeFind.data;
+  if (!d) return;
+  const next = d.shareDupes === false;
+  tradePost("/api/trades/settings", { share: next }).then((r) => {
+    if (!r || !r.ok) { if (typeof showToast === "function") showToast(tradeError(r)); return; }
+    d.shareDupes = r.shareDupes;
+    if (typeof showToast === "function") showToast(r.shareDupes ? "Tes amis voient de nouveau tes doublons." : "Tes doublons sont cachés à tes amis.");
+    renderMyTrades();
+  });
+}
+function tradeBindSearch() {
+  const input = document.getElementById("trf-q");
+  if (!input || input.dataset.bound) return;
+  input.dataset.bound = "1";
+  input.addEventListener("input", () => {
+    tradeFind.q = input.value.slice(0, 40);
+    const r = document.getElementById("trf-res");
+    if (r) r.innerHTML = tradeFindResultsHtml();
+  });
+}
+
 function tradeSend() {
   const f = tradeFlow;
   if (!f || !f.want) return;
@@ -152,22 +260,37 @@ function tradeRowHtml(t) {
     '<div class="trl-pair">' + mon(mineGive) + '<span class="tr-arrow">⇄</span>' + mon(mineGet) + '</div>' +
     '<div class="trl-legend"><small>Tu donnes</small><small>Tu reçois</small></div>' + (actions ? '<div class="trl-acts">' + actions + '</div>' : "") + '</div>';
 }
-function openMyTrades() {
+function openMyTrades(tab) {
   ensureOverlay("🔁 Mes échanges", '<p class="tr-wait">Chargement…</p>');
-  Promise.all([tradeRefresh(), typeof loadWildCaptures === "function" ? loadWildCaptures() : null]).then(() => {
+  if (typeof tab === "string") tradeTab = tab;
+  Promise.all([tradeRefresh(), typeof loadWildCaptures === "function" ? loadWildCaptures() : null,
+    window.__pokedleAuthed ? tradeGet("/api/trades/matches") : null]).then(([, , matches]) => {
+    if (matches && matches.ok) tradeFind.data = matches;
     const s = tradeState;
     if (!s) { ensureOverlay("🔁 Mes échanges", '<div class="tr-empty"><p>Connecte-toi pour échanger avec tes amis.</p></div>'); return; }
-    const incoming = s.trades.filter((t) => !t.mine && t.status === "pending");
-    const outgoing = s.trades.filter((t) => t.mine && t.status === "pending");
-    const done = s.trades.filter((t) => t.status !== "pending").slice(0, 10);
-    const block = (title, list) => list.length ? '<h4>' + title + '</h4>' + list.map(tradeRowHtml).join("") : "";
-    ensureOverlay("🔁 Mes échanges", '<div class="trs">' +
-      '<p class="trs-intro">Échange tes doublons avec tes amis : ouvre ton 📒 album, touche un Pokémon que tu as en double, puis 🔁 Échanger. Encore <b>' + s.left + ' / ' + s.perDay + '</b> proposition' + (s.left > 1 ? "s" : "") + ' aujourd’hui.</p>' +
-      (block("Reçus", incoming) + block("Envoyés", outgoing) + block("Derniers échanges", done) || '<p class="tr-empty">Aucun échange pour l’instant.</p>') +
-      '<button type="button" class="btn-ghost trs-album" data-action="tradeOpenAlbum">📒 Ouvrir mon album</button></div>');
+    if (!tradeTab) tradeTab = s.trades.some((t) => !t.mine && t.status === "pending") ? "in" : "find";
+    renderMyTrades();
     if (s.news) tradePost("/api/trades/seen", {}).then(() => { if (tradeState) { tradeState.news = 0; if (typeof renderInboxUi === "function") renderInboxUi(); } });
   });
 }
+// 3 onglets (PART-04) : 🔍 Trouver · Reçus · Envoyés (et les derniers échanges).
+function renderMyTrades() {
+  const s = tradeState;
+  if (!s) return;
+  const incoming = s.trades.filter((t) => !t.mine && t.status === "pending");
+  const outgoing = s.trades.filter((t) => t.mine && t.status === "pending");
+  const done = s.trades.filter((t) => t.status !== "pending").slice(0, 10);
+  const block = (title, list) => list.length ? '<h4>' + title + '</h4>' + list.map(tradeRowHtml).join("") : "";
+  const tab = (key, label) => '<button type="button" role="tab" aria-selected="' + (tradeTab === key) + '" class="' + (tradeTab === key ? "is-on" : "") + '" data-action="tradeShowTab" data-args=\'["' + key + '"]\'>' + label + '</button>';
+  const body = tradeTab === "find" ? tradeFindHtml()
+    : tradeTab === "in" ? (block("Reçus", incoming) || '<p class="tr-empty">Aucune proposition reçue pour l’instant.</p>')
+    : (block("Envoyés", outgoing) + block("Derniers échanges", done) || '<p class="tr-empty">Aucun échange envoyé pour l’instant.</p>');
+  ensureOverlay("🔁 Mes échanges", '<div class="trs">' +
+    '<div class="trs-tabs" role="tablist">' + tab("find", "🔍 Trouver") + tab("in", "Reçus" + (incoming.length ? " · " + incoming.length : "")) + tab("out", "Envoyés") + '</div>' +
+    body + (tradeTab === "find" ? "" : '<button type="button" class="btn-ghost trs-album" data-action="tradeOpenAlbum">📒 Ouvrir mon album</button>') + '</div>');
+  if (tradeTab === "find") tradeBindSearch();
+}
+function tradeShowTab(key) { tradeTab = ["find", "in", "out"].includes(key) ? key : "find"; renderMyTrades(); }
 function tradeOpenAlbum() { closeOverlayModal(); if (typeof openAlbumBinder === "function") openAlbumBinder(); }
 function tradeCancel(id) {
   tradePost("/api/trades/cancel", { id: Number(id) }).then((d) => { if (!d || !d.ok) { if (typeof showToast === "function") showToast(tradeError(d)); } openMyTrades(); });
@@ -219,4 +342,5 @@ if (typeof window !== "undefined" && window.addEventListener) {
     setTimeout(() => { tradeRefresh().then(() => { if (fromPush && tradeState) openMyTrades(); }); }, fromPush ? 600 : 2600);
   });
 }
-Object.assign(window, { openTradeMon, tradePartner, tradeRelease, tradeStart, tradePickFriend, tradePickWant, tradeSend, openMyTrades, tradeCancel, tradeAnswer, tradeOpenAlbum, tradePendingCount });
+Object.assign(window, { tradeStartWant, tradePickGive, tradeFindFilter, tradeFindOpen, tradeToggleShare, tradeShowTab, renderMyTrades,
+  openTradeMon, tradePartner, tradeRelease, tradeStart, tradePickFriend, tradePickWant, tradeSend, openMyTrades, tradeCancel, tradeAnswer, tradeOpenAlbum, tradePendingCount });
