@@ -295,6 +295,7 @@ body{background:#f3f6fb;color:var(--ink);font-size:14px}
 .metric-row span{font-size:12px;color:#52637b}
 .metric-row strong{font-size:19px;font-variant-numeric:tabular-nums}
 .table-scroll{background:#fff}
+.share-steps th,.share-steps td{white-space:normal;padding:8px 6px}
 table{font-size:12px}
 table th,table td{padding:10px 12px}
 table .group-heading th{background:#eaf0fa;color:#284571;padding:10px 12px;font-size:12px;letter-spacing:.01em}
@@ -352,7 +353,7 @@ ${renderUsageScopes(metrics, segmentRows, segmentStartedAt)}
     <p class="quiet">Dessine-le ! et les autres modes Party sont présentés séparément des jeux solo.</p>
   </section>
   <section class="panel"><h2>Partage et découverte</h2>
-    <div class="table-scroll"><table><thead><tr><th>Lien partagé</th><th>1. Partage</th><th>2. Lien ouvert</th><th>3. Partie lancée</th></tr></thead><tbody>${shareSteps}</tbody></table></div>
+    <div class="table-scroll"><table class="share-steps"><thead><tr><th>Lien partagé</th><th>1. Partage</th><th>2. Lien ouvert</th><th>3. Partie lancée</th></tr></thead><tbody>${shareSteps}</tbody></table></div>
     <div class="metric-row"><span>Aperçus de liens par les robots des messageries (à part)</span><strong>${number(sharePreviews)}</strong></div>
     <p class="quiet">Trois compteurs indépendants, pas un entonnoir par personne : un partage peut être ouvert plusieurs fois, et un lien ouvert ne lance pas toujours une partie. « Partie lancée » est compté par le serveur (1er essai accepté, ou lancement du salon avec un invité venu du lien), une seule fois. Mesure en place depuis DATA-03 ; avant, « lien ouvert » incluait aussi les robots d’aperçu. Aucun suivi individuel ni attribution par réseau social.</p>
   </section>
