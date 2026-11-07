@@ -2255,3 +2255,21 @@ body.theme-dark .hs-row-text small,body.theme-dark .hs-steps small,body.theme-da
 body.theme-dark .hs-steps li{background:#2f2a36}
 body.theme-dark .hs-steps b,body.theme-dark .hs-steps-head h2{color:#f5efe6}
 body.theme-dark .home-day.hs-sheet{background:none}
+/* 🧭 DISC-01 : carte « À découvrir aujourd'hui » sous les mini-jeux (script.10xzt.discovery-card.js) */
+.disc-card{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:center;margin:18px 0 4px;padding:14px 16px;border-radius:22px;border:2px solid #E4DAFB;background:linear-gradient(135deg,#F1ECFF,#FFF8EF 70%);color:#2E2A33}
+.disc-art{width:96px;height:96px;border-radius:20px;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#fff 0,color-mix(in srgb,var(--disc-tone,#C9B6F5) 45%,#fff) 75%)}
+.disc-art img{width:84px;height:84px;object-fit:contain}
+.disc-body{min-width:0}
+.disc-eyebrow{display:block;margin-bottom:2px;font:900 11px Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7C5BD6}
+.disc-title{display:block;font:700 21px/1.15 Fredoka,Nunito,sans-serif}
+.disc-line{display:block;margin:2px 0 8px;font:700 13.5px/1.4 Nunito,sans-serif;color:#5c5663}
+.disc-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.disc-go{min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#4069E0;color:#fff;font:900 14px Nunito,sans-serif;box-shadow:0 3px 0 #2b4fb8;cursor:pointer}
+.disc-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;background:#E8F6EC;color:#2f7a45;font:800 12px Nunito,sans-serif}
+.disc-tag.is-ball{background:#FFF1C9;color:#6E5600}
+.disc-later{margin-left:auto;min-height:44px;padding:0 4px;border:0;background:none;color:#6B6472;font:800 12.5px Nunito,sans-serif;text-decoration:underline;cursor:pointer}
+.disc-go:focus-visible,.disc-later:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+@media (max-width:420px){.disc-card{grid-template-columns:72px minmax(0,1fr);gap:12px;padding:12px}.disc-art{width:72px;height:72px;border-radius:16px}.disc-art img{width:62px;height:62px}.disc-title{font-size:19px}}
+body.theme-dark .disc-card{background:linear-gradient(135deg,#2c2540,#26222c 70%);border-color:#3b3254;color:#f5efe6}
+body.theme-dark .disc-line,body.theme-dark .disc-later{color:#cfc7d6}
+body.theme-dark .disc-eyebrow{color:#b9a3f5}
