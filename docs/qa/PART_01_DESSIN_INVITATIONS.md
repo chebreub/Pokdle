@@ -13,7 +13,7 @@
 ## Autorité et confidentialité
 
 - Le code est un pointeur vers un salon **en mémoire** sur le serveur : il est valide tant qu'un salon rejointable existe. Il ne constitue ni une réservation, ni un accès à un jeu terminé, ni un compte.
-- L'événement `party:invite-preview` est limité par le mécanisme existant `room-join` et ne communique que `code`, `gameMode` et `seatsLeft` ; pas de pseudo, identifiants, scores, secret Pokémon ou `resumeToken`.
+- L'événement `party:invite-preview` dispose d'une limite distincte (8 demandes par socket et 30 par IP sur 30 secondes), afin que la consultation du lien ne consomme pas la limite de création/entrée `room-join` et ne communique que `code`, `gameMode` et `seatsLeft` ; pas de pseudo, identifiants, scores, secret Pokémon ou `resumeToken`.
 - Les règles de capacité 2–8 joueurs, contrôle serveur du pseudo, impossibilité de rejoindre une partie déjà démarrée, rôle de l'hôte, et récompenses restent inchangées.
 - Les salons vides sont annoncés expirés même pendant la courte période précédant leur nettoyage serveur. Aucune migration, nouvelle donnée utilisateur ou modification de sauvegardes.
 
