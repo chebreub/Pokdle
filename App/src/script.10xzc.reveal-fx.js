@@ -4,6 +4,19 @@
 function fxReduced() {
   try { if (typeof pokedexFxReducedMotion === "function") return pokedexFxReducedMotion(); return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_e) { return false; }
 }
+// FX-01: ⚡ Rapides plays the same effects twice as fast (timers, Web Animations and CSS animations).
+function fxFast() {
+  try { return typeof appAnimationMode === "function" && appAnimationMode() === "fast"; } catch (_e) { return false; }
+}
+function fxMs(ms) { return fxFast() ? Math.round(ms / 2) : ms; }
+const FX_SCOPE = "#wild-scene, .fx-reveal, .fx-catch, .fx-shiny, .fx-shiny-catch, .mo-ball, .mo-fly";
+if (typeof document !== "undefined" && document.addEventListener) {
+  document.addEventListener("animationstart", (e) => {
+    const t = e.target;
+    if (!fxFast() || !t || !t.closest || !t.closest(FX_SCOPE) || !t.getAnimations) return;
+    t.getAnimations().forEach((a) => { if (a.playbackRate === 1) a.playbackRate = 2; });
+  }, true);
+}
 function fxSound(kind) {
   if (typeof getPokedexFxAudioContext !== "function" || typeof pokedexFxTone !== "function") return;
   const ctx = getPokedexFxAudioContext();
@@ -27,8 +40,8 @@ function shinyIntroFx(scene) {
     return '<i style="--dx:' + Math.round(Math.cos(a) * r) + 'px;--dy:' + Math.round(Math.sin(a) * r) + 'px;animation-delay:' + (0.9 + (i % 4) * 0.05) + 's">✦</i>';
   }).join("");
   stage.insertAdjacentHTML("beforeend", '<div class="fx-shiny" aria-hidden="true"><div class="fx-shiny-dim"></div><div class="fx-shiny-ring"></div><div class="fx-shiny-stars">' + stars + '</div><div class="fx-shiny-badge">✨ SHINY</div></div>');
-  setTimeout(() => fxSound("shiny"), 900);
-  setTimeout(() => { const fx = stage.querySelector(".fx-shiny"); if (fx) fx.classList.add("is-done"); }, 3400);
+  setTimeout(() => fxSound("shiny"), fxMs(900));
+  setTimeout(() => { const fx = stage.querySelector(".fx-shiny"); if (fx) fx.classList.add("is-done"); }, fxMs(3400));
 }
 if (typeof renderWildEncounter === "function") {
   const renderWildEncounterBeforeFx = renderWildEncounter;
@@ -82,10 +95,10 @@ function fxReveal({ icon, title, balls }) {
     };
     el.querySelector(".fx-reveal-skip").addEventListener("click", finish);
     if (fxReduced()) { el.classList.add("is-static"); return; }
-    [300, 650, 1000].forEach((ms) => timers.push(setTimeout(() => fxSound("shake"), ms)));
-    timers.push(setTimeout(() => { el.classList.add("is-open"); fxSound("open"); }, 1350));
-    balls.forEach((_, i) => timers.push(setTimeout(() => fxSound("pop"), 1600 + i * 350)));
-    timers.push(setTimeout(finish, 2400 + balls.length * 350));
+    [300, 650, 1000].forEach((ms) => timers.push(setTimeout(() => fxSound("shake"), fxMs(ms))));
+    timers.push(setTimeout(() => { el.classList.add("is-open"); fxSound("open"); }, fxMs(1350)));
+    balls.forEach((_, i) => timers.push(setTimeout(() => fxSound("pop"), fxMs(1600 + i * 350))));
+    timers.push(setTimeout(finish, fxMs(2400 + balls.length * 350)));
   });
 }
 function claimBallGiftFx() {
@@ -202,7 +215,7 @@ function fxCaptureCard(p, shiny, count, ball) {
   const close = () => el.remove();
   el.querySelector("[data-fx-close]").addEventListener("click", close);
   el.querySelector("[data-fx-album]").addEventListener("click", () => { close(); if (typeof closeWildGrass === "function") closeWildGrass(); if (typeof openAlbumBinder === "function") openAlbumBinder(p.gen); });
-  if (shiny && !fxReduced()) setTimeout(() => fxSound("shiny"), 1100);
+  if (shiny && !fxReduced()) setTimeout(() => fxSound("shiny"), fxMs(1100));
   el.querySelector("[data-fx-close]").focus({ preventScroll: true });
 }
 window.fxCaptureCard = fxCaptureCard;

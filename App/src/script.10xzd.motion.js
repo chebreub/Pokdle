@@ -80,13 +80,16 @@ function moSfx(kind) {
 }
 function moAnim(el, frames, opts) {
   if (!el || !el.animate) return Promise.resolve();
-  return el.animate(frames, Object.assign({ fill: "forwards" }, opts)).finished.catch(() => {});
+  // FX-01: ⚡ Rapides halves every duration and delay (same steps, same result).
+  const o = Object.assign({ fill: "forwards" }, opts);
+  if (typeof fxMs === "function") { if (o.duration) o.duration = fxMs(o.duration); if (o.delay) o.delay = fxMs(o.delay); }
+  return el.animate(frames, o).finished.catch(() => {});
 }
 // Une suite d'étapes qu'on peut arrêter d'un coup (« Passer ») : chaque attente rend false si c'est fini.
 function moRunner(onStop) {
   const timers = [];
   const run = { over: false };
-  run.wait = (ms) => new Promise((r) => timers.push(setTimeout(() => r(!run.over), ms)));
+  run.wait = (ms) => new Promise((r) => timers.push(setTimeout(() => r(!run.over), typeof fxMs === "function" ? fxMs(ms) : ms)));
   run.stop = () => { if (run.over) return; run.over = true; timers.forEach(clearTimeout); onStop(); };
   return run;
 }
@@ -162,7 +165,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       // 4. La Ball se referme, tombe et rebondit (écrasée à l'arrivée).
       moAnim(top, [{ transform: "rotate(-48deg)" }, { transform: "rotate(0)" }], { duration: 160, easing: MO_IN });
       moAnim(shadow, [{ opacity: 0, transform: "translateX(-50%) scale(.4)" }, { opacity: 1, transform: "translateX(-50%) scale(1)" }], { duration: 420 });
-      moSfx("close"); setTimeout(() => { if (!run.over) moSfx("land"); }, 400);
+      moSfx("close"); setTimeout(() => { if (!run.over) moSfx("land"); }, fxMs(400));
       await moAnim(el, [{ transform: at(cx, cy - 14, "scale(.84) rotate(-12deg)") },
         { transform: at(cx, ground, "scale(.9,.72)"), offset: .55, easing: MO_OUT },
         { transform: at(cx, ground - 32, "scale(.82,.88)"), offset: .78, easing: MO_IN },
@@ -258,9 +261,9 @@ fxReveal = function ({ title, balls }) {
         const dx = Math.round(to.left + to.width / 2 - from.left - from.width / 2), dy = Math.round(to.top + to.height / 2 - from.top - from.height / 2);
         moAnim(o, [{ transform: place() }, { transform: place("translateY(10px) scale(1.08)"), offset: .18 }, { transform: "translate(calc(-50% + " + dx + "px)," + dy + "px) scale(.3)", opacity: .9 }],
           { duration: 560, delay: i * 90, easing: "cubic-bezier(.6,0,.4,1)" });
-        setTimeout(() => moSfx("collect"), 520 + i * 90);
+        setTimeout(() => moSfx("collect"), fxMs(520 + i * 90));
       });
-      setTimeout(() => { el.remove(); bag.classList.add("fx-bump"); setTimeout(() => bag.classList.remove("fx-bump"), 500); resolve(); }, 620 + n * 90);
+      setTimeout(() => { el.remove(); bag.classList.add("fx-bump"); setTimeout(() => bag.classList.remove("fx-bump"), fxMs(500)); resolve(); }, fxMs(620 + n * 90));
     };
     el.querySelector(".fx-reveal-skip").addEventListener("click", () => { run.stop(); leave(); });
     const run = moRunner(() => {});
@@ -325,9 +328,9 @@ if (typeof shinyIntroFx === "function") {
     shine.classList.add("mo-shine"); shine.removeAttribute("alt"); shine.setAttribute("aria-hidden", "true");
     mon.after(shine);
     const sweep = [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0" }, { maskPosition: "0% 0", webkitMaskPosition: "0% 0" }];
-    shine.animate(sweep, { duration: 900, delay: 1300, easing: "ease-in-out" });
-    setTimeout(() => moSfx("glint"), 1650); setTimeout(() => moSfx("glint"), 2850);
-    shine.animate(sweep, { duration: 900, delay: 2500, easing: "ease-in-out" }).finished.then(() => shine.remove()).catch(() => {});
+    shine.animate(sweep, { duration: fxMs(900), delay: fxMs(1300), easing: "ease-in-out" });
+    setTimeout(() => moSfx("glint"), fxMs(1650)); setTimeout(() => moSfx("glint"), fxMs(2850));
+    shine.animate(sweep, { duration: fxMs(900), delay: fxMs(2500), easing: "ease-in-out" }).finished.then(() => shine.remove()).catch(() => {});
     const fx = stage.querySelector(".fx-shiny");
     if (fx) {
       const second = Array.from({ length: 10 }, (_, i) => {
@@ -356,7 +359,7 @@ if (typeof fxCaptureCard === "function") {
       color.className = "mo-catch-color"; color.setAttribute("aria-hidden", "true");
       img.after(color);
       moAnim(color, [{ maskPosition: "100% 0", webkitMaskPosition: "100% 0" }, { maskPosition: "0% 0", webkitMaskPosition: "0% 0" }], { duration: 900, delay: 900, easing: "ease-in-out" });
-      setTimeout(() => moSfx("sparkle"), 1000);
+      setTimeout(() => moSfx("sparkle"), fxMs(1000));
     }
     (async () => {
       await moAnim(card, [{ transform: "perspective(900px) translateY(40px) scale(.7) rotateY(0)", opacity: 0 }, { transform: "perspective(900px) translateY(0) scale(1) rotateY(0)", opacity: 1, offset: .55 }, { transform: "perspective(900px) rotateY(0)", opacity: 1 }], { duration: 420, easing: MO_BACK });
