@@ -1119,6 +1119,9 @@ const FETCH_TIMEOUT_MS = 8000;
 const RATE_LIMIT_WINDOW_MS = 10_000;
 const RATE_LIMITS = {
   "room-join":   { max: 5,  windowMs: 30_000 },
+  // Reading a public invite should not exhaust the join/create budget.
+  // Still bounded both per socket and per IP to avoid code enumeration.
+  "party-invite-preview": { max: 8, ipMax: 30, windowMs: 30_000 },
   "resume":      { max: 8,  ipMax: 40, windowMs: RATE_LIMIT_WINDOW_MS },
   "guess":       { max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
   "pick":        { max: 6,  windowMs: RATE_LIMIT_WINDOW_MS },
@@ -2860,7 +2863,7 @@ io.on("connection", (socket) => {
   socket.on("party:invite-preview", (payload = {}, ack) => {
     // PART-01: anonymous, rate-limited status without player information.
     try {
-      if (checkRateLimit(socket, "room-join")) return respond(ack, {ok:false,errorCode:"rate_limited",error:"Trop de vérifications. Réessaie dans quelques instants."});
+      if (checkRateLimit(socket, "party-invite-preview")) return respond(ack, {ok:false,errorCode:"rate_limited",error:"Trop de vérifications. Réessaie dans quelques instants."});
       const code = sanitizeRoomCode(payload.code);
       if (!/^[A-Z0-9]{5}$/.test(code)) return respond(ack, {ok:false,errorCode:"invite_invalid",error:"Lien d'invitation invalide."});
       respond(ack, partyInviteStatus(partyRooms.get(code), payload.expectedMode === "dessin" ? "dessin" : null));
