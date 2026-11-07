@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi opérationnel au 06/11/2026 : ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305, ECO-06 #307 et ECO-04 #309 intégrées après CI vertes ; 25/43 actions.**
+> **Suivi opérationnel au 07/11/2026 : PART-01 #311 fusionnée et validée, après ECO-02 #301, ECO-07 #302, ECO-08 #304, ECO-05 #305, ECO-06 #307 et ECO-04 #309 ; 26/43 actions.**
 
-**Progression intégrée : 25 tâches terminées / 43 actives = 58,1 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 17 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
+**Progression intégrée : 26 tâches terminées / 43 actives = 60,5 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 16 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action autonome : PART-01 — invitation directe Dessine-le**, lot 5 « Invitations et diffusion naturelle », sans obligation de créer un compte pour rejoindre. ECO-04 [#309](https://github.com/chebreub/Pokdle/pull/309) est fusionnée après CI vertes. ECO-03 reste à rediscuter : aucune modification du barème 30/60/90 ₽. L'attribution automatique des coffres expirés ne fait pas partie d'ECO-04 et reste non autorisée.
+**Prochaine action autonome : PART-02 — défis de série réellement comparables** : retrouver la configuration serveur et corriger uniquement les incohérences vérifiées, sans divulguer le secret ni modifier les récompenses. PART-01 [#311](https://github.com/chebreub/Pokdle/pull/311) est fusionnée après CI Node, PostgreSQL et navigateur complète vertes. ECO-03 nécessite toujours un arbitrage sur les barèmes et reste inchangée.
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -134,7 +134,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 **Gel maintenu :** probabilités de capture, taux shiny 1/500, nombre de lancers, prix, stocks de Balls, Pokédollars, récompenses et inventaires inchangés. **Prochaine action autonome : DEX-01** ; MOB-03, PC-01, PC-02, MEDIA-01, SER-01, NIV-02, DATA-01, DATA-02, SAVE-01 et FX-02 sont intégrées ; le cadrage économique est distinct.
 
 ### Lot 5 — Invitations et diffusion naturelle
-- [ ] **PART-01 · P1** : invitation directe Dessine-le : pas de compte obligatoire, salon et jeu présélectionnés, lien expiré explicite.
+- [x] **PART-01 · P1 · TERMINÉE** : [PR #311](https://github.com/chebreub/Pokdle/pull/311), fusion `49bfe0b347f61330dc61acc95ca3ad5aec104f9a`. Invitation directe Dessine-le par lien `?party=CODE&game=dessin`, salon créé avec jeu présélectionné côté serveur, pseudo invité sans compte, vérification de validité/capacité et messages d'expiration/jeu changé. [Protocole](qa/PART_01_DESSIN_INVITATIONS.md). CI Node, PostgreSQL et recette navigateur complète vertes, dont Chromium mobile et WebKit desktop.
 - [ ] **PART-02 · P1** : défis de série réellement comparables ; même configuration/secret autorisé par serveur, sans divulgation.
 - [ ] **DATA-03 · P1** : distinguer ouverture du partage, ouverture du lien reçu et partie réellement lancée.
 - [ ] **PART-03 · P2** : carte partageable après vraie capture marquante ; partage natif et lien de repli.
