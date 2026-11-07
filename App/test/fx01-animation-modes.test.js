@@ -63,3 +63,16 @@ test('Rapides halves the effects; the tall grass follows the site setting; setti
   assert.match(party, /data-anim="\$\{mode\}"[^`]*data-action="setAnimationMode"/);
   assert.doesNotMatch(party, /data-setting="reduceMotion"/, 'the old checkbox is replaced');
 });
+
+test('« Réduites » cuts the movement, never the capture sounds', () => {
+  const motion = read('script.10xzd.motion.js');
+  assert.match(motion, /if \(wildReducedMotion\(\)\) \{ moReducedCaptureSounds\(shakes, caught\); return Promise\.resolve\(\); \}/);
+  const played = [];
+  const ctx = { moSfx: (k) => played.push(k), setTimeout: (fn, ms) => played.push(['at', ms]) && fn() };
+  vm.runInNewContext(between(motion, 'function moReducedCaptureSounds', '// --- ⚪ Capture') + ';this.f=moReducedCaptureSounds;', ctx);
+  played.length = 0; ctx.f(3, true);
+  assert.deepEqual(played.filter((x) => typeof x === 'string'), ['throw', 'land', 'tick', 'tick', 'tick', 'caught']);
+  played.length = 0; ctx.f(1, false);
+  assert.deepEqual(played.filter((x) => typeof x === 'string'), ['throw', 'land', 'tick', 'breakFree']);
+  assert.ok(played.filter(Array.isArray).every(([, ms]) => ms <= 1000), 'all within one second');
+});
