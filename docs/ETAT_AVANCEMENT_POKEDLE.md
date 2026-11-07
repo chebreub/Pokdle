@@ -41,7 +41,7 @@
 - **GEST-03** [#330](https://github.com/chebreub/Pokdle/pull/330), fusion `15c92491374b7b602f103cb3f6a7a7eadeed286c` : lancer la Ball d'un glissement vers le haut dans les hautes herbes, réglage facultatif (éteint par défaut), même appel serveur, même taux, rien dépensé sur un geste interrompu. [Protocole](qa/GEST_03_BALL_FLICK.md).
 - **ECO-03** [#332](https://github.com/chebreub/Pokdle/pull/332), fusion `06910e5c25e220f0aa36221b1e1d286c31314dae` (option B choisie par Kayan) : la meilleure partie du jour de chaque jeu vérifié compte ; une partie meilleure verse la différence (30 → 60 → 90 ₽), 90 ₽ au plus par jeu ; plafond 2 000 ₽, Ball du jour, prix et taux inchangés. [Protocole](qa/ECO_03_BEST_GAME.md).
 - Retours iPhone de Kayan (7/11) : vérifications 2, 3, 4 bonnes ; sons en retard après le cri et barre de saisie sous le menu corrigés dans [#333](https://github.com/chebreub/Pokdle/pull/333) ([fiche](qa/IPHONE_SONS_BARRE_2026_11_07.md)).
-- **39/43 = 90,7 % ; lots 4 et 6 : 100 %.** GROW-01 mis de côté par Kayan (il a écrit à un joueur qui revient via les messages du site). Restent : BUG-MOB-01, MOB-02, MOB-04 (appareil réel) et GROW-02.
+- **39/43 = 90,7 % ; lots 4 et 6 : 100 %.** GROW-01 mis de côté par Kayan (il a écrit à Jade, joueuse qui revient, via les messages du site ; sa réponse servira à confirmer BUG-MOB-01). Restent : BUG-MOB-01, MOB-02, MOB-04 (appareil réel) et GROW-02.
 
 ## GEST-01 et GEST-02 — intégrées le 7 novembre
 

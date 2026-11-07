@@ -148,7 +148,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **GEST-03 · P3 · FAIT (#330)** : lancer une Ball par glissement facultatif (réglage éteint par défaut), même appel serveur, même taux, aucune dépense sur geste interrompu.
 
 ### Lot 7 — Validation et acquisition
-- [ ] **GROW-01 · P2 · MIS DE CÔTÉ par Kayan (07/11)** : test guidé auprès de quelques joueurs externes. Kayan ne veut pas solliciter de testeurs ; il a écrit à un joueur qui revient via les messages du site. Ses retours, s'il en donne, seront traités comme ceux d'un testeur. Exclu du total, comme NIV-01.
+- [ ] **GROW-01 · P2 · MIS DE CÔTÉ par Kayan (07/11)** : test guidé auprès de quelques joueurs externes. Kayan ne veut pas solliciter de testeurs ; il a écrit via les messages du site à Jade, joueuse qui revient (c'est elle qui avait signalé BUG-MOB-01). Sa réponse servira aussi à confirmer BUG-MOB-01 sur son téléphone. Exclu du total, comme NIV-01.
 - [ ] **GROW-02 · P2** : séquences réelles de jeu sans visage ni musique, diffusion ciblée avec accord des communautés.
 
 ### Livraison DATA-02 — PR #278 (après fusion)
