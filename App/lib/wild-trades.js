@@ -142,12 +142,25 @@ function createWildTrades({ db, friends, accountOfPid, playerPid, push = async (
     if (!other) return fail("not_friends", 403);
     if (await safety.blockedEither(db, me, other)) return fail("not_friends", 403);
     const day = today();
-    if (Number((await db.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND day = $2", [me, day])).rows[0].n) >= TRADES_PER_DAY) return fail("trade_limit", 429);
-    if (Number((await db.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND status = 'pending'", [me])).rows[0].n) >= PENDING_MAX) return fail("too_many_pending", 429);
-    if (await countOf(db, me, give, shiny) < 2) return fail("not_a_duplicate");
-    if (!await sharesDupes(other) || await countOf(db, other, want, shiny) < 2) return fail("friend_not_a_duplicate");
-    if ((await db.query("SELECT 1 FROM wild_trades WHERE from_id = $1 AND to_id = $2 AND give_id = $3 AND want_id = $4 AND shiny = $5 AND status = 'pending'", [me, other, give, want, shiny])).rowCount) return fail("already_proposed");
-    const id = Number((await db.query("INSERT INTO wild_trades(from_id, to_id, give_id, want_id, shiny, day) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", [me, other, give, want, shiny, day])).rows[0].id);
+    // V2-TRA-01 (7/11) : quota du jour, propositions en attente et doublon de proposition vérifiés puis inscrits
+    // sous un même verrou par joueur : des appuis simultanés ne dépassent jamais 3 propositions par jour.
+    const c = await db.connect();
+    let id;
+    try {
+      await c.query("BEGIN");
+      await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["trades:propose:" + me]);
+      const refuse = async (out) => { await c.query("ROLLBACK"); return out; };
+      if (Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND day = $2", [me, day])).rows[0].n) >= TRADES_PER_DAY) return refuse(fail("trade_limit", 429));
+      if (Number((await c.query("SELECT COUNT(*)::int AS n FROM wild_trades WHERE from_id = $1 AND status = 'pending'", [me])).rows[0].n) >= PENDING_MAX) return refuse(fail("too_many_pending", 429));
+      if (await countOf(c, me, give, shiny) < 2) return refuse(fail("not_a_duplicate"));
+      if (!await sharesDupes(other) || await countOf(c, other, want, shiny) < 2) return refuse(fail("friend_not_a_duplicate"));
+      if ((await c.query("SELECT 1 FROM wild_trades WHERE from_id = $1 AND to_id = $2 AND give_id = $3 AND want_id = $4 AND shiny = $5 AND status = 'pending'", [me, other, give, want, shiny])).rowCount) return refuse(fail("already_proposed"));
+      id = Number((await c.query("INSERT INTO wild_trades(from_id, to_id, give_id, want_id, shiny, day) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", [me, other, give, want, shiny, day])).rows[0].id);
+      await c.query("COMMIT");
+    } catch (error) {
+      await c.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally { c.release(); }
     tell(other, { title: "🔁 " + await nameOf(me) + " te propose un échange", body: "Ouvre Pokédle pour voir le Pokémon proposé.", url: "/?echanges=1", tag: "pokedle-echange" });
     return { ok: true, id };
   }
@@ -171,10 +184,15 @@ function createWildTrades({ db, friends, accountOfPid, playerPid, push = async (
     let trade = null;
     try {
       await c.query("BEGIN");
-      trade = (await c.query("SELECT * FROM wild_trades WHERE id = $1 AND to_id = $2 AND status = 'pending' FOR UPDATE", [tradeId, me])).rows[0];
+      trade = (await c.query("SELECT *, created_at < now() - make_interval(days => $3) AS too_old FROM wild_trades WHERE id = $1 AND to_id = $2 AND status = 'pending' FOR UPDATE", [tradeId, me, ANSWER_DAYS])).rows[0];
       if (!trade) { await c.query("ROLLBACK"); return fail("not_found", 404); }
+      // V2-TRA-01 (7/11) : les 7 jours pour répondre comptent au moment d'accepter, même depuis un vieil écran.
+      if (trade.too_old) {
+        await c.query("UPDATE wild_trades SET status = 'expired', decided_at = now() WHERE id = $1", [tradeId]); await c.query("COMMIT");
+        return fail("expired");
+      }
       const a = trade.from_id, b = trade.to_id, shiny = Boolean(trade.shiny);
-      if (!friends || !await friends.areFriends(a, b)) {
+      if (!friends || !await friends.areFriends(a, b) || await safety.blockedEither(db, a, b)) {
         await c.query("UPDATE wild_trades SET status = 'failed', decided_at = now() WHERE id = $1", [tradeId]); await c.query("COMMIT");
         return fail("not_friends", 403);
       }
