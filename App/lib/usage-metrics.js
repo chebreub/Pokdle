@@ -263,4 +263,12 @@ function summarizeModes(rows, labels = {}) {
   return [...summary.values()].sort((a, b) => b.launches - a.launches || b.completions - a.completions || a.mode.localeCompare(b.mode));
 }
 
-module.exports = { SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, incrementSegmented, recent, recentSegments, segmentTrackingStartedAt, uniqueSlot, recordUnique, recentUniques, summarizeModes };
+// DATA-03: messaging apps fetch a shared link to draw its preview card (WhatsApp, Discord…).
+// Those fetches are counted apart (share:preview), never as a person opening the link.
+const LINK_PREVIEW_AGENT = /bot\b|bot\/|crawler|spider|preview|facebookexternalhit|whatsapp|telegram|slack|discord|skype|embedly|vkshare|pinterest|redditbot|applebot|google-pagerenderer|headless/i;
+function isLinkPreviewAgent(userAgent) {
+  const ua = String(userAgent || "");
+  return !ua || LINK_PREVIEW_AGENT.test(ua);
+}
+
+module.exports = { isLinkPreviewAgent, SOLO_CATALOG, PARTY_CATALOG, HISTORY_TO_LAUNCH, COMPLETION_EVENTS, completionEvent, utcDay, startDay, ensureTable, prune, increment, incrementSegmented, recent, recentSegments, segmentTrackingStartedAt, uniqueSlot, recordUnique, recentUniques, summarizeModes };

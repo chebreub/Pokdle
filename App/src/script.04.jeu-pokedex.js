@@ -66,7 +66,7 @@ async function requestDailyObservedState(found=null,raw='',abandon=false) {
     if(mutation&&!oldDay)throw Error('unavailable');
     const response=await fetch(mutation?(abandon?'/api/daily/abandon':'/api/daily/guess'):'/api/daily',{
       credentials:'same-origin',cache:'no-store',signal:controller.signal,
-      ...(mutation?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:oldDay,accountId,pokemonId:found?.id})}:{})
+      ...(mutation?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:oldDay,accountId,pokemonId:found?.id,...(found&&typeof dailySharedArrival==='function'&&dailySharedArrival(oldDay)?{arrival:'defi'}:{})})}:{})
     });
     const data=await response.json();if(!ownsResult())return false;
     if(!response.ok||!data.ok)throw Error(data.error||'unavailable');
@@ -1894,8 +1894,10 @@ function partyJoinRoom() {
   if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
   if (!code) { setPartyStatus("Entre un code de room."); return; }
   var expectedMode = partyRoomState.inviteCode === code && partyRoomState.inviteExpectedMode === "dessin" ? "dessin" : null;
+  // DATA-03: the code came from an invitation link opened in this tab.
+  var viaLink = partyRoomState.inviteCode === code;
   socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel(),
-    ...(expectedMode ? { expectedMode } : {}) }, function (res) {
+    ...(expectedMode ? { expectedMode } : {}), ...(viaLink ? { via: "link" } : {}) }, function (res) {
     res = res || {};
     if (!res.ok) {
       var message = res.error || "Impossible de rejoindre.";
@@ -1943,6 +1945,8 @@ function partyStartGame() {
 
 function partyCopyInviteLink() {
   if (!partyRoomState.code) { setPartyStatus("Cree ou rejoins une room d'abord."); return; }
+  // DATA-03: step 1, the invitation link was copied (its opening and a real start are counted by the server).
+  if (typeof trackUsage === "function") trackUsage("share:party");
   var isDessin = partyRoomState.room?.gameMode === "dessin";
   var url = location.origin + location.pathname + "?party=" + encodeURIComponent(partyRoomState.code) +
     (isDessin ? "&game=dessin" : "");
@@ -6682,4 +6686,10 @@ function getDraftTeamBstMetrics(team = []) {
 function getDraftScoreAttackResultLabel(average) {
   const rank = DRAFT_SCORE_ATTACK_TARGETS.find((target) => average >= target.min);
   return rank ? rank.label : "Run à améliorer";
+}
+
+// DATA-03: today's Pokémon du jour was opened from a friend's link (?defi=) in this tab.
+// Sent with a guess only; the server counts a start once, at the first guess it accepts.
+function dailySharedArrival(day) {
+  try { return Boolean(day) && sessionStorage.getItem('pokedle_arrival_defi') === String(day); } catch (_e) { return false; }
 }

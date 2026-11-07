@@ -50,3 +50,17 @@ Si l'on veut dater **le vrai démarrage en production** d'un événement, il fau
 - `App/test/usage-metrics.test.js` et `App/test/usage-client.test.js` : tests existants sur les modes, la séparation des fins, l'anonymisation et la conservation.
 
 **Décision DATA-01 :** conserver les règles de calcul existantes, documenter les unités et dates connues / inconnues, puis traiter séparément **DATA-02** (séparer les tests/admin de l'activité de joueurs réelle sans supprimer les journaux). Toute mesure nouvelle des abandons ou des funnels doit faire l'objet d'un chantier ultérieur, avec validation de la vie privée et de l'autorité serveur ; pas d'inférence rétroactive.
+
+## DATA-03 — trois étapes d'un lien partagé (7 novembre 2026)
+
+Trois compteurs **indépendants** par lien partagé, agrégés par jour UTC comme les autres, sans identifiant ni empreinte. Ce n'est **pas** un entonnoir par personne : un partage peut être ouvert plusieurs fois, et un lien ouvert ne lance pas toujours une partie.
+
+| Lien | 1. Partage (navigateur) | 2. Lien ouvert (serveur) | 3. Partie lancée (serveur) |
+| --- | --- | --- | --- |
+| Pokémon du jour `?defi=N-K` | `share:daily` : bouton Partager du résultat (texte prêt, pas forcément envoyé) | `share:visit` : page servie avec un défi valide, **navigateur d'une personne** | `share:daily-start` : **1er essai accepté** par le serveur pour la partie du jour, dans un onglet arrivé par le lien le même jour |
+| Invitation Party `?party=CODE` | `share:party` : « Copier l'invitation » | `share:party-visit` : page servie avec un code de salon au bon format, navigateur d'une personne | `share:party-start` : **1er lancement** d'un salon où un joueur connecté est entré avec le code du lien ; **une fois par salon** |
+
+- **`share:preview`** : les robots d'aperçu des messageries (WhatsApp, Discord, Telegram, Slack, Facebook, Twitter…) et les agents sans user-agent ou headless qui chargent un lien `?defi=` ou `?party=`. Avant DATA-03, ces chargements étaient comptés dans `share:visit` : **les périodes antérieures ne sont pas comparables** et ne sont pas reconstituées.
+- **Autorité serveur** : l'étape 3 n'est comptée qu'après une action acceptée par le serveur (essai enregistré, salon lancé). L'**origine** (« venu du lien ») est déclarée par le navigateur (`arrival: "defi"` dans l'essai, `via: "link"` dans l'entrée en salon) : c'est une indication, pas une preuve. Les essais rejoués, les abandons et les relances d'un même salon ne recomptent jamais.
+- **Hors périmètre** : les défis entre amis (`/api/challenges`) ne passent pas par un lien externe ; l'ancien « Défi ami » `?defi=<code>` (Pokémon choisi) n'est pas un défi du jour et n'est pas compté.
+- **Sources** : `App/server.js` (`sendIndex`, `party:join-room`, `party:start`, `USAGE_EVENTS`), `App/lib/usage-metrics.js` (`isLinkPreviewAgent`), `App/lib/daily-game.js` (`firstGuess`, `onSharedStart`), `App/lib/admin-stats-dashboard.js` (tableau « Partage et découverte »), `App/test/data03-share-steps.test.js`.

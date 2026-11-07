@@ -173,7 +173,12 @@ function renderStatsDashboard(options) {
   const partyJoined = countRows(metrics,"party:join");
   const partyRounds = measured ? metrics.filter(r => r.event.startsWith("party:start:")).reduce((n,r) => n + Number(r.hits || 0),0) : null;
   const shares = countRows(metrics,"share:daily");
-  const shareVisits = countRows(metrics,"share:visit");
+  // DATA-03: three separate steps per shared link (click, link opened by a person, game started).
+  const shareSteps = [
+    ["Pokémon du jour", ["share:daily","share:visit","share:daily-start"]],
+    ["Invitation Party", ["share:party","share:party-visit","share:party-start"]],
+  ].map(([label, events]) => '<tr><th scope="row">' + escapeHtml(label) + '</th>' + events.map(e => '<td>' + number(countRows(metrics,e)) + '</td>').join("") + '</tr>').join("");
+  const sharePreviews = countRows(metrics,"share:preview");
   const peak = Math.max(1,...ranked.map(row => row.launches));
   const mostPlayed = ranked.slice(0,8).map(row =>
     '<div class="mode-row"><div class="mode-label"><span>' + escapeHtml(row.label) +
@@ -290,6 +295,7 @@ body{background:#f3f6fb;color:var(--ink);font-size:14px}
 .metric-row span{font-size:12px;color:#52637b}
 .metric-row strong{font-size:19px;font-variant-numeric:tabular-nums}
 .table-scroll{background:#fff}
+.share-steps th,.share-steps td{white-space:normal;padding:8px 6px}
 table{font-size:12px}
 table th,table td{padding:10px 12px}
 table .group-heading th{background:#eaf0fa;color:#284571;padding:10px 12px;font-size:12px;letter-spacing:.01em}
@@ -346,9 +352,10 @@ ${renderUsageScopes(metrics, segmentRows, segmentStartedAt)}
     <div class="table-scroll"><table><thead><tr><th>Mode multijoueur</th><th>Lancements</th></tr></thead><tbody>${partyRows}</tbody></table></div>
     <p class="quiet">Dessine-le ! et les autres modes Party sont présentés séparément des jeux solo.</p>
   </section>
-  <section class="panel"><h2>Partage et découverte</h2><div class="metric-row"><span>Pokémon du jour partagé</span><strong>${number(shares)}</strong></div>
-    <div class="metric-row"><span>Arrivées via un lien de défi</span><strong>${number(shareVisits)}</strong></div>
-    <p class="quiet">Compteurs d’événements : aucun suivi individuel ni attribution par réseau social.</p>
+  <section class="panel"><h2>Partage et découverte</h2>
+    <div class="table-scroll"><table class="share-steps"><thead><tr><th>Lien partagé</th><th>1. Partage</th><th>2. Lien ouvert</th><th>3. Partie lancée</th></tr></thead><tbody>${shareSteps}</tbody></table></div>
+    <div class="metric-row"><span>Aperçus de liens par les robots des messageries (à part)</span><strong>${number(sharePreviews)}</strong></div>
+    <p class="quiet">Trois compteurs indépendants, pas un entonnoir par personne : un partage peut être ouvert plusieurs fois, et un lien ouvert ne lance pas toujours une partie. « Partie lancée » est compté par le serveur (1er essai accepté, ou lancement du salon avec un invité venu du lien), une seule fois. Mesure en place depuis DATA-03 ; avant, « lien ouvert » incluait aussi les robots d’aperçu. Aucun suivi individuel ni attribution par réseau social.</p>
   </section>
 </div></div>
 ${renderEconomySection(economy)}

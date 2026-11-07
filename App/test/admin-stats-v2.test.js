@@ -47,7 +47,7 @@ test("Wordle, Dossier, Grille, training and both Higher or Lower variants appear
   ];
   const html=renderStatsDashboard({...base,days:3,metrics:rows});
   for(const name of ["Wordle du jour","Dossier du jour","Grille du jour","Wordle Pokémon · Entraînement",
-    "Higher or Lower · 60 s","Higher or Lower · Illimité","Dessine-le !","Arrivées via un lien de défi"]) {
+    "Higher or Lower · 60 s","Higher or Lower · Illimité","Dessine-le !","2. Lien ouvert","3. Partie lancée"]) {
     assert.ok(html.includes(name),name+" should be shown by name");
   }
   const summary=summarizeModes(rows);

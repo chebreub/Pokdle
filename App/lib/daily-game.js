@@ -196,7 +196,8 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
       await client.query("UPDATE daily_plays SET guessed=$3::jsonb,status=$4,finished_at=$5,elapsed_ms=$6,shiny=$7 WHERE identity=$1 AND day=$2",[who.key,day,JSON.stringify(ids),status,finished?now:null,elapsed,shiny]);
       if(status==="won"&&who.accountId&&row.account_id)await recordLeaderboardResultInTransaction(client,{id:who.accountId,username:who.name,avatar:who.avatar},"daily",ids.length,{direction:"asc"},"daily:"+day);
       if(day!==parisDay(clock()))throw dailyError("stale_daily");
-      return {...await snapshot(client,who,{...row,guessed:ids,status,elapsed_ms:elapsed,shiny},r,now),fresh:finished};
+      // DATA-03: the first guess the server accepts for this play (never a retry, never an abandon).
+      return {...await snapshot(client,who,{...row,guessed:ids,status,elapsed_ms:elapsed,shiny},r,now),fresh:finished,firstGuess:!abandon&&row.guessed.length===0};
     });
   }
   async function distribution() {
@@ -248,7 +249,7 @@ function createDailyService({db,pokemon,compare,legacyTarget,clock=()=>new Date(
   }
   return {state,guess:(who,body)=>act(who,body),abandon:(who,body)=>act(who,body,true),distribution,shinies,reactions,react};
 }
-function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,compare,legacyTarget,readyBefore=Promise.resolve(),referrals=null}) {
+function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,compare,legacyTarget,readyBefore=Promise.resolve(),referrals=null,onSharedStart=null}) {
   const service=db&&secret?createDailyService({db,pokemon,compare,legacyTarget}):null;
   const ready=service?readyBefore.then(()=>initDailyDb(db)).then(()=>true).catch(e=>{console.error("[daily] init:",e.message);return false;}):Promise.resolve(false);
   const buckets=new Map();
@@ -279,7 +280,13 @@ function mountDailyRoutes({app,express,db,pokemon,secret,getUser,readCookies,com
     }catch(e){if(!e.status)console.error("[daily] request:",e.message);if(e.status===429)res.set("Retry-After","60");res.status(e.status||503).json({ok:false,error:e.status?e.code:"unavailable"});}
   };
   app.get("/api/daily",handle(who=>service.state(who)));
-  app.post("/api/daily/guess",express.json({limit:"2kb"}),handle((who,req)=>service.guess(who,req.body||{})));
+  app.post("/api/daily/guess",express.json({limit:"2kb"}),handle(async(who,req)=>{
+    const data=await service.guess(who,req.body||{});
+    const first=Boolean(data&&data.firstGuess);
+    if(data)delete data.firstGuess;
+    if(first&&req.body&&req.body.arrival==="defi"&&typeof onSharedStart==="function"){try{onSharedStart(req);}catch(_e){}}
+    return data;
+  }));
   app.post("/api/daily/abandon",express.json({limit:"2kb"}),handle((who,req)=>service.abandon(who,req.body||{})));
   app.get("/api/daily-stats/today",handle(()=>service.distribution()));
   app.get("/api/daily/shinies",handle(who=>service.shinies(who)));

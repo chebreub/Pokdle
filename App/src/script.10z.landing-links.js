@@ -83,6 +83,8 @@ function openLandingGame() {
   }
   if (challenge && !slug) {
     const message = landingChallengeMessage(challenge, typeof getDailyNumber === 'function' ? getDailyNumber() : 0);
+    // DATA-03: remember, for this tab and this day only, that the daily game came from a shared link.
+    try { if (typeof getDailyDateKey === 'function') sessionStorage.setItem('pokedle_arrival_defi', getDailyDateKey()); } catch (e) {}
     landingFriendGoal = message || null;
     try { window.startDailyGame(); } catch (e) { console.warn('[defi] ouverture impossible :', e); }
     renderLandingFriendGoal();
