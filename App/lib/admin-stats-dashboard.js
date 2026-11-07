@@ -177,7 +177,9 @@ function renderStatsDashboard(options) {
   const shareSteps = [
     ["Pokémon du jour", ["share:daily","share:visit","share:daily-start"]],
     ["Invitation Party", ["share:party","share:party-visit","share:party-start"]],
-  ].map(([label, events]) => '<tr><th scope="row">' + escapeHtml(label) + '</th>' + events.map(e => '<td>' + number(countRows(metrics,e)) + '</td>').join("") + '</tr>').join("");
+    // PART-03: a capture card leads to a public Pokémon page, not to a game: no third step.
+    ["Capture", ["share:capture","share:capture-visit",null]],
+  ].map(([label, events]) => '<tr><th scope="row">' + escapeHtml(label) + '</th>' + events.map(e => '<td>' + (e ? number(countRows(metrics,e)) : '—') + '</td>').join("") + '</tr>').join("");
   const sharePreviews = countRows(metrics,"share:preview");
   const peak = Math.max(1,...ranked.map(row => row.launches));
   const mostPlayed = ranked.slice(0,8).map(row =>

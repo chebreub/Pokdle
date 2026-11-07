@@ -333,7 +333,7 @@ function sitemapXml() {
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map(([path, freq, priority]) => '  <url>\n    <loc>' + esc(SITE + path) + '</loc>\n    <changefreq>' + freq + '</changefreq>\n    <priority>' + priority + '</priority>\n  </url>').join('\n') + '\n</urlset>\n';
 }
-function mountSeoPages(app) {
+function mountSeoPages(app, options = {}) {
   const pages = new Map(GAMES.map(game => [game.slug, renderGamePage(game)]));
   const hub = renderHubPage(), about = renderAboutPage(), sitemap = sitemapXml();
   const send = (res, html) => { res.set('Cache-Control', 'public, max-age=3600'); res.type('html').send(html); };
@@ -361,6 +361,10 @@ function mountSeoPages(app) {
     const canonical = seoPokemon.pokemonPath(p.id);
     if (req.path !== canonical) return res.redirect(301, canonical);
     if (!pokemonPages.has(p.id)) pokemonPages.set(p.id, renderPokemonPage(p.id));
+    // PART-03 / DATA-03: a link from « Partager ma capture » was opened (aggregate count only).
+    if (req.query.via === 'capture' && typeof options.onCaptureVisit === 'function') {
+      try { options.onCaptureVisit(req); } catch (_e) {}
+    }
     send(res, pokemonPages.get(p.id));
   });
   // The English addresses assistants and scanners try first.

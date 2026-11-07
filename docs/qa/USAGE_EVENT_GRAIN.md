@@ -64,3 +64,12 @@ Trois compteurs **indépendants** par lien partagé, agrégés par jour UTC comm
 - **Autorité serveur** : l'étape 3 n'est comptée qu'après une action acceptée par le serveur (essai enregistré, salon lancé). L'**origine** (« venu du lien ») est déclarée par le navigateur (`arrival: "defi"` dans l'essai, `via: "link"` dans l'entrée en salon) : c'est une indication, pas une preuve. Les essais rejoués, les abandons et les relances d'un même salon ne recomptent jamais.
 - **Hors périmètre** : les défis entre amis (`/api/challenges`) ne passent pas par un lien externe ; l'ancien « Défi ami » `?defi=<code>` (Pokémon choisi) n'est pas un défi du jour et n'est pas compté.
 - **Sources** : `App/server.js` (`sendIndex`, `party:join-room`, `party:start`, `USAGE_EVENTS`), `App/lib/usage-metrics.js` (`isLinkPreviewAgent`), `App/lib/daily-game.js` (`firstGuess`, `onSharedStart`), `App/lib/admin-stats-dashboard.js` (tableau « Partage et découverte »), `App/test/data03-share-steps.test.js`.
+
+### PART-03 — carte de capture partagée (7 novembre 2026)
+
+| Lien | 1. Partage (navigateur) | 2. Lien ouvert (serveur) | 3. Partie lancée |
+| --- | --- | --- | --- |
+| Capture `/pokemon/<nom>?via=capture` | `share:capture` : partage natif **terminé** (annulation non comptée) ou lien **copié**, une fois par capture ; « Enregistrer l'image » seul ne compte pas | `share:capture-visit` : fiche publique servie avec `?via=capture` à un navigateur d'une personne (robots → `share:preview`, redirections non comptées) | non mesurée : le lien mène à une fiche Pokémon, pas à une partie |
+
+- **Compteurs serveur protégés** : `share:visit`, `share:preview`, `share:daily-start`, `share:party-visit`, `share:party-start` et `share:capture-visit` ne sont plus acceptés par `POST /api/track` (`SERVER_ONLY_USAGE`) : seul le serveur les incrémente. Les étapes 1 (`share:daily`, `share:party`, `share:capture`) restent déclarées par le navigateur.
+- Sources : `App/src/script.10xzs.capture-share.js`, `App/lib/seo-render.js` (`onCaptureVisit`), `App/server.js`, `App/test/part03-capture-share.test.js`.
