@@ -13,15 +13,32 @@ function pokedexFxReducedMotion() {
   if (settings.reduceMotion) return true;
   try { return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches); } catch (_e) { return false; }
 }
+// iPhone (7/11/2026) : le cri du Pokémon (un <audio>) peut mettre le son des effets en pause (« suspended » ou
+// « interrupted »). Les sons demandés pendant cette pause attendaient, puis sortaient tous d'un coup au retour
+// dans l'appli. Maintenant : chaque toucher relance le son, et un son demandé loin d'un toucher pendant une
+// pause est simplement sauté (jamais de rafale en retard).
+let pokedexFxGestureAt = 0;
+function pokedexFxWake(ctx) {
+  if (ctx && ctx.state !== 'running' && ctx.state !== 'closed') { try { ctx.resume().catch(() => {}); } catch (_e) {} }
+}
 function getPokedexFxAudioContext() {
   if (!pokedexFxSettings().soundEffects) return null;
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return null;
-    if (!pokedexFxAudioContext) pokedexFxAudioContext = new Ctx();
-    if (pokedexFxAudioContext.state === 'suspended') pokedexFxAudioContext.resume().catch(() => {});
-    return pokedexFxAudioContext;
+    if (!pokedexFxAudioContext || pokedexFxAudioContext.state === 'closed') pokedexFxAudioContext = new Ctx();
+    const ctx = pokedexFxAudioContext;
+    if (ctx.state !== 'running') {
+      pokedexFxWake(ctx);
+      if (Date.now() - pokedexFxGestureAt > 1500) return null;
+    }
+    return ctx;
   } catch (_e) { return null; }
+}
+if (typeof document !== 'undefined' && document.addEventListener) {
+  const pokedexFxOnGesture = () => { pokedexFxGestureAt = Date.now(); pokedexFxWake(pokedexFxAudioContext); };
+  for (const type of ['touchend', 'pointerdown', 'click', 'keydown']) document.addEventListener(type, pokedexFxOnGesture, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pokedexFxWake(pokedexFxAudioContext); });
 }
 function pokedexFxTone(ctx, frequency, start, duration, gain = 0.035, type = 'sine') {
   if (!ctx) return;
