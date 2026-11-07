@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action : vérifications sur appareil réel** — BUG-MOB-01, MOB-02, MOB-04 sur iPhone (correctifs du 7/11 dans #333), puis GROW-01 (invitations à 3 testeurs dont iPhone et Android) et GROW-02. Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
+**Prochaine action : vérifications sur appareil réel** — BUG-MOB-01, MOB-02, MOB-04 sur iPhone (correctifs du 7/11 dans #333), puis GROW-02 (GROW-01 mis de côté par Kayan le 07/11). Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -148,7 +148,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **GEST-03 · P3 · FAIT (#330)** : lancer une Ball par glissement facultatif (réglage éteint par défaut), même appel serveur, même taux, aucune dépense sur geste interrompu.
 
 ### Lot 7 — Validation et acquisition
-- [ ] **GROW-01 · P2** : test guidé auprès de quelques joueurs externes, compétences Pokémon différentes, appareils réels.
+- [ ] **GROW-01 · P2 · MIS DE CÔTÉ par Kayan (07/11)** : test guidé auprès de quelques joueurs externes. Kayan ne veut pas solliciter de testeurs ; il a écrit via les messages du site à Jade, joueuse qui revient (c'est elle qui avait signalé BUG-MOB-01). Sa réponse servira aussi à confirmer BUG-MOB-01 sur son téléphone. Exclu du total, comme NIV-01.
 - [ ] **GROW-02 · P2** : séquences réelles de jeu sans visage ni musique, diffusion ciblée avec accord des communautés.
 
 ### Livraison DATA-02 — PR #278 (après fusion)
