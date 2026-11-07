@@ -12,6 +12,10 @@ function partyInviteStatus(room, expectedMode = null) {
   if (!room) {
     return { ok:false, errorCode:"invite_expired", error:"Invitation expirée : ce salon n'existe plus. Demande un nouveau lien." };
   }
+  // A hostless room is pending cleanup and is not a viable invitation.
+  if (!(room.players || []).length) {
+    return { ok:false, errorCode:"invite_expired", error:"Invitation expirée : l'hôte a quitté ce salon. Demande un nouveau lien." };
+  }
   if (expectedMode && room.gameMode !== expectedMode) {
     return { ok:false, errorCode:"invite_game_changed", error:"L'hôte a changé de jeu. Demande une nouvelle invitation Dessine-le !" };
   }
