@@ -938,6 +938,7 @@ const statClashRooms = new Map();
 const draftScoreRooms = new Map();
 const partyRooms = new Map();
 const partyRewards = require("./lib/party-rewards");
+const {partyInviteStatus} = require("./lib/party-invites");
 const { dailyCalendar: partyCalendar, dailyGuest: partyDailyGuest } = require("./lib/daily-game");
 const POKEMON_LIST = loadPokemonList();
 const POKEMON_BY_NORMALIZED_NAME = new Map(POKEMON_LIST.map((pokemon) => [normalizeName(pokemon.name), pokemon]));
@@ -1118,6 +1119,9 @@ const FETCH_TIMEOUT_MS = 8000;
 const RATE_LIMIT_WINDOW_MS = 10_000;
 const RATE_LIMITS = {
   "room-join":   { max: 5,  windowMs: 30_000 },
+  // Reading a public invite should not exhaust the join/create budget.
+  // Still bounded both per socket and per IP to avoid code enumeration.
+  "party-invite-preview": { max: 8, ipMax: 30, windowMs: 30_000 },
   "resume":      { max: 8,  ipMax: 40, windowMs: RATE_LIMIT_WINDOW_MS },
   "guess":       { max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
   "pick":        { max: 6,  windowMs: RATE_LIMIT_WINDOW_MS },
@@ -2856,13 +2860,28 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("party:invite-preview", (payload = {}, ack) => {
+    // PART-01: anonymous, rate-limited status without player information.
+    try {
+      if (checkRateLimit(socket, "party-invite-preview")) return respond(ack, {ok:false,errorCode:"rate_limited",error:"Trop de vérifications. Réessaie dans quelques instants."});
+      const code = sanitizeRoomCode(payload.code);
+      if (!/^[A-Z0-9]{5}$/.test(code)) return respond(ack, {ok:false,errorCode:"invite_invalid",error:"Lien d'invitation invalide."});
+      respond(ack, partyInviteStatus(partyRooms.get(code), payload.expectedMode === "dessin" ? "dessin" : null));
+    } catch (_error) {
+      respond(ack, {ok:false,errorCode:"invite_unavailable",error:"Invitation momentanément indisponible."});
+    }
+  });
+
   socket.on("party:create-room", (payload = {}, ack) => {
     try {
       if (checkRateLimit(socket, "room-join")) return respond(ack, { ok: false, error: "Trop de requetes, reessaie dans quelques secondes." });
       const nickname = sanitizeNickname(payload.nickname);
       if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
       const code = generatePartyRoomCode();
-      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode: "guess", selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
+      // Dessine-le can be selected atomically on room creation: friends must
+      // never receive an invite for the default guessing game by accident.
+      const gameMode = payload.gameMode === "dessin" ? "dessin" : "guess";
+      const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode, selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
       const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
       recordUsage("party:create", null, usageSegmentForSocket(socket));
@@ -2879,6 +2898,10 @@ io.on("connection", (socket) => {
       const code = sanitizeRoomCode(payload.code);
       const nickname = sanitizeNickname(payload.nickname);
       const room = partyRooms.get(code);
+      if (payload.expectedMode === "dessin") {
+        const preview = partyInviteStatus(room, "dessin");
+        if (!preview.ok) return respond(ack, preview);
+      }
       if (!room) return respond(ack, { ok: false, error: "Room introuvable." });
       if (!nickname) return respond(ack, { ok: false, error: "Pseudo invalide." });
       if (room.players.length >= PARTY_MAX_PLAYERS) return respond(ack, { ok: false, error: "La room est deja complete (8 max)." });

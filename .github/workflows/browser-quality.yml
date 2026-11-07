@@ -154,6 +154,9 @@ jobs:
       - name: Verify Party mobile touch actions
         if: env.QA_FULL == 'true'
         run: python tools/party_mobile_quality.py
+      - name: Verify PART-01 direct Dessine-le invitations on mobile and desktop
+        if: env.QA_FULL == 'true' || github.event_name == 'pull_request'
+        run: python tools/part01_invite_quality.py
       - name: Verify mobile chat controls and queued celebrations
         if: env.QA_FULL == 'true'
         run: python tools/mobile_chat_quality.py
