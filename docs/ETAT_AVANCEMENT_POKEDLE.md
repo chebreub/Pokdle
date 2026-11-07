@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 7 novembre 2026 : DATA-04 #320, DISC-01 #321 et DISC-02 #322 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte, après PART-03 #316, MOB-05 #317 et PART-04 #318. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #322](https://github.com/chebreub/Pokdle/pull/322), `5ffc6bf8a83511661b2f77987a55166a9c7dc71e`.
+**Photographie opérationnelle au 7 novembre 2026 : FX-01 #324 fusionnée dans `main` après QA complète navigateur/PostgreSQL verte, après DATA-04 #320, DISC-01 #321 et DISC-02 #322. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #324](https://github.com/chebreub/Pokdle/pull/324), `f87ec4ba77d055af05ba082399e2060ec367d649`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**34 tâches terminées sur 44 actions actives = 77,3 %** après les PR #320 (DATA-04), #321 (DISC-01) et #322 (DISC-02) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**35 tâches terminées sur 44 actions actives = 79,5 %** après la PR #324 (FX-01) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **34** | Actions vérifiées, PR fusionnées ; dernières livraisons #320, #321, #322 |
+| **Terminé et intégré à main** | **35** | Actions vérifiées, PR fusionnées ; dernière livraison #324 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **9** | ECO-03 (arbitrage), FX-01 (maquette envoyée), GEST-01 à 03, MOB-02, MOB-04, GROW-01 et 02 |
+| **Non commencé / à conduire ou à décider** | **8** | ECO-03 (arbitrage), GEST-01 à 03, MOB-02, MOB-04, GROW-01 et 02 |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **44** | 8 + 8 + 5 + 4 + 8 + 5 + 4 + 2 (MOB-05 ajoutée au lot 0 le 07/11) |
 
-**Formule explicite :** (34 actions terminées / 44 actions actives) × 100 = **77,2727 %, arrondi à 77,3 %**.
+**Formule explicite :** (35 actions terminées / 44 actions actives) × 100 = **79,5455 %, arrondi à 79,5 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -31,9 +31,14 @@
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
 | 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
 | 5 | Invitations et diffusion | 5 / 5 | 100 % | PART-01 #311, PART-02 #313, DATA-03 #315, PART-03 carte de capture #316, PART-04 recherche d'échanges #318 |
-| 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
+| 6 | Gestes et animations | 1 / 4 | 25 % | FX-01 réglage « Animations » (#324) ; gestes GEST-01 à 03 après la fiabilité tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **34 / 44** | **77,3 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, FX-01 prochain (maquette envoyée) |
+| **Total** | | **35 / 44** | **79,5 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, GEST-01 prochain |
+
+## FX-01 — réglage « Animations » intégré
+
+- [PR #324](https://github.com/chebreub/Pokdle/pull/324), fusion `f87ec4ba77d055af05ba082399e2060ec367d649` (QA complète verte sur `703d33c`) : Normales / ⚡ Rapides / Réduites ; capture 6,6 s → 3,4 s en Rapides, immédiate en Réduites ; les hautes herbes suivent le réglage du site ; résultats inchangés. [Protocole](qa/FX_01_ANIMATION_MODES.md).
+- **35/44 = 79,5 % ; lot 6 : 1/4.** Prochaine action : **GEST-01** sur maquette. Aucune recette physique iPhone ni vérification du déploiement Render revendiquée.
 
 ## DATA-04, DISC-01 et DISC-02 — intégrées le 7 novembre
 

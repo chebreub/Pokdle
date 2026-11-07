@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi opérationnel au 07/11/2026 : DATA-04 [#320](https://github.com/chebreub/Pokdle/pull/320), DISC-01 [#321](https://github.com/chebreub/Pokdle/pull/321) et DISC-02 [#322](https://github.com/chebreub/Pokdle/pull/322) fusionnées dans `main` après QA complète verte, après PART-03 #316, MOB-05 #317 et PART-04 #318 ; **34/44 actions**.**
+> **Suivi opérationnel au 07/11/2026 : FX-01 [#324](https://github.com/chebreub/Pokdle/pull/324) fusionnée dans `main` après QA complète verte, après DATA-04 #320, DISC-01 #321 et DISC-02 #322 ; **35/44 actions**.**
 
-**Progression intégrée : 34 tâches terminées / 44 actives = 77,3 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 9 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
+**Progression intégrée : 35 tâches terminées / 44 actives = 79,5 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 8 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action autonome : FX-01 — réglage « Animations » (Normales / ⚡ Rapides / Réduites) et « Passer › » pendant la capture**, maquette envoyée à Kayan le 07/11, en attente de son accord ; le réglage du site doit aussi s'appliquer aux hautes herbes (aujourd'hui seul le réglage du téléphone y est suivi). Lots 1, 2 et 5 terminés. ECO-03 requiert toujours l'arbitrage des barèmes.
+**Prochaine action autonome : GEST-01 — balayage entre fiches de collection, avec flèches visibles**, sur maquette, sans sacrifier la fiabilité tactile (BUG-MOB-01 toujours en attente d'un test sur appareil réel). Les autres actions ouvertes demandent un appareil réel (MOB-02, MOB-04), des joueurs externes (GROW-01, GROW-02) ou l'arbitrage de Kayan (ECO-03).
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -142,7 +142,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 - [x] **PART-04 · P2 · TERMINÉE** : [PR #318](https://github.com/chebreub/Pokdle/pull/318), fusion `1cb50fa7b7957f6194b406cb3fe1fffaff27f6e1`. Onglet « 🔍 Trouver » dans « Mes échanges » (doublons des amis, ceux qui manquent d'abord, recherche nom/numéro, filtres Il me manque / Tous / Shiny), départ depuis le Pokémon d'un ami ; réglage « Montrer mes doublons à mes amis » (table `trade_settings`, effacée avec le compte). Seuls les doublons sont envoyés, jamais l'album ni ce qui manque ; joueurs bloqués exclus ; règles d'échange inchangées.
 
 ### Lot 6 — Gestes et animations (après correction tactile)
-- [ ] **FX-01 · P2** : réglage « animations rapides », réduire les mouvements et boutons Passer.
+- [x] **FX-01 · P2 · TERMINÉE** : [PR #324](https://github.com/chebreub/Pokdle/pull/324), fusion `f87ec4ba77d055af05ba082399e2060ec367d649`. Réglage « Animations » Normales / ⚡ Rapides / Réduites (maquette validée) : capture, cadeau, coffres et nouvelles entrées deux fois plus courts en Rapides (capture 6,6 s → 3,4 s), résultat immédiat en Réduites ; ancien interrupteur repris, réglage système prioritaire ; les hautes herbes suivent désormais le réglage du site ; « Passer › » dès le lancer ; résultats inchangés (serveur). [Protocole](qa/FX_01_ANIMATION_MODES.md).
 - [ ] **GEST-01 · P2** : balayage entre fiches de collection, avec flèches visibles.
 - [ ] **GEST-02 · P2** : fermer une fiche/panneau par la poignée, avec bouton de fermeture.
 - [ ] **GEST-03 · P3 · OPTION** : lancer une Ball par glissement facultatif, même appel serveur, même taux, aucune dépense sur geste interrompu.
