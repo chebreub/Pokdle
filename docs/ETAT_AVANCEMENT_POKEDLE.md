@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 7 novembre 2026 : PART-02 [#313](https://github.com/chebreub/Pokdle/pull/313) fusionnée dans `main`, après CI Node et navigateur/PostgreSQL vertes ; les livraisons précédentes, notamment PART-01 #311 et ECO-02/04/05/06/07/08, restent validées. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #313](https://github.com/chebreub/Pokdle/pull/313), `9f05205d7795e011e862b1d27b97ca10357dd7ba`.
+**Photographie opérationnelle au 7 novembre 2026 : DATA-03 [#315](https://github.com/chebreub/Pokdle/pull/315) fusionnée dans `main`, après CI Node et QA complète navigateur/PostgreSQL vertes ; PART-02 #313, les livraisons précédentes, notamment PART-01 #311 et ECO-02/04/05/06/07/08, restent validées. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #315](https://github.com/chebreub/Pokdle/pull/315), `aa6aa81e4229c2ade0e7de55b5573bbe69276089`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**27 tâches terminées sur 43 actions actives = 62,8 %** après la PR #313 (PART-02) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**28 tâches terminées sur 43 actions actives = 65,1 %** après la PR #315 (DATA-03) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **27** | Actions vérifiées, PR fusionnées ; dernière livraison métier #313 |
+| **Terminé et intégré à main** | **28** | Actions vérifiées, PR fusionnées ; dernière livraison métier #315 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **15** | Dont ECO-03 (arbitrage), DATA-03 et les autres chantiers non lancés |
+| **Non commencé / à conduire ou à décider** | **14** | Dont ECO-03 (arbitrage), PART-03 et les autres chantiers non lancés |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
 | **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
 
-**Formule explicite :** (27 actions terminées / 43 actions actives) × 100 = **62,7907 %, arrondi à 62,8 %**.
+**Formule explicite :** (28 actions terminées / 43 actions actives) × 100 = **65,1163 %, arrondi à 65,1 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -30,10 +30,17 @@
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
 | 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
-| 5 | Invitations et diffusion | 2 / 5 | 40,0 % | PART-01 invitation directe Dessine-le #311 et PART-02 série comparable #313 intégrées ; prochain lot DATA-03 |
+| 5 | Invitations et diffusion | 3 / 5 | 60,0 % | PART-01 invitation directe Dessine-le #311, PART-02 série comparable #313 et DATA-03 mesure des partages #315 intégrées ; prochain lot PART-03 |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **27 / 43** | **62,8 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, DATA-03 prochain |
+| **Total** | | **28 / 43** | **65,1 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, PART-03 prochain |
+
+## DATA-03 — partage, lien ouvert et partie lancée séparés
+
+- [PR #315](https://github.com/chebreub/Pokdle/pull/315) fusionnée dans `main` au commit `aa6aa81e4229c2ade0e7de55b5573bbe69276089`, après CI Node et QA complète navigateur/PostgreSQL **vertes** sur la tête `f39d04af9266aa18a4d33c1b783d2227c6a8e695`.
+- Trois compteurs agrégés indépendants par lien partagé : partage (navigateur), lien ouvert par une personne (serveur, robots d'aperçu à part dans `share:preview`), partie lancée (serveur : 1er essai accepté du Pokémon du jour, ou 1er lancement d'un salon avec un invité venu du lien, une fois par salon). Tableau à 3 colonnes dans `/admin/stats`.
+- Aucun identifiant, aucune empreinte, pas de migration ni de reconstitution de l'historique ; comptes, inventaires et récompenses inchangés. [Protocole](qa/DATA_03_SHARE_STEPS.md), [définitions](qa/USAGE_EVENT_GRAIN.md).
+- **28/43 = 65,1 % ; lot Invitations 3/5.** Prochaine action autonome : **PART-03**, carte de capture partageable. Aucune recette physique iPhone ni vérification du déploiement Render revendiquée.
 
 ## PART-02 — défi à série commune intégrée
 
