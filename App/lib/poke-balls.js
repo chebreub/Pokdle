@@ -323,17 +323,28 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       COUNT(*) FILTER (WHERE day=$2 AND source LIKE 'shop:recharge:%')::int AS recharges,
       COALESCE(array_agg(substr(source,5)) FILTER (WHERE day=$2 AND source LIKE 'day:%'),'{}') AS done
       FROM coin_ledger WHERE identity=$1`, [who.key, day])).rows[0];
+    // ECO-03 : ₽ déjà gagnés aujourd'hui par mode (sur 90), pour dire au joueur ce qu'il peut encore améliorer.
+    const byMode = {};
+    for (const row of (await c.query(`SELECT split_part(source,':',2) AS mode, SUM(amount)::int AS n FROM coin_ledger
+      WHERE identity=$1 AND day=$2 AND source LIKE 'play:%' GROUP BY 1`, [who.key, day])).rows) byMode[row.mode] = Number(row.n);
     const recharges = Number(r.recharges);
-    return { ...base, balance: Number(r.balance), today: Number(r.today), played: Number(r.played), done: r.done || [],
+    return { ...base, balance: Number(r.balance), today: Number(r.today), played: Number(r.played), done: r.done || [], byMode,
       recharges, rechargePrice: rechargePrice(recharges), rechargeLeft: Math.max(0, RECHARGE_MAX - recharges) };
   }
-  // La 1re partie du jour de chaque mode (3/11, choix de Kayan : un Duel de poids de 20 s ne paie plus à chaque fois) :
-  // 30 ₽ (perdue), 60 ₽ (gagnée), 90 ₽ (belle partie), 2 000 ₽ par jour au plus.
+  // ECO-03 (7/11, option B choisie par Kayan) : la MEILLEURE partie du jour de chaque mode compte. 30 ₽ (perdue),
+  // 60 ₽ (gagnée), 90 ₽ (belle partie) : une partie meilleure que les précédentes verse la différence, jamais plus
+  // de 90 ₽ par mode et par jour, ni plus de 2 000 ₽ par jour pour toutes les parties (inchangés). Une ligne par
+  // palier atteint (« play:<mode> », puis « play:<mode>:60 », « play:<mode>:90 ») : rejouée, elle ne paie pas deux fois.
   async function coinPlay(c, who, day, gain, result) {
     if (!who.accountId) return null;
-    const played = Number((await c.query("SELECT COALESCE(SUM(amount),0)::int AS n FROM coin_ledger WHERE identity=$1 AND day=$2 AND source LIKE 'play:%'", [who.key, day])).rows[0].n);
+    const mode = String(gain.source).replace(/^mode:/, "");
+    const r = (await c.query(`SELECT COALESCE(SUM(amount),0)::int AS played,
+      COALESCE(SUM(amount) FILTER (WHERE split_part(source,':',2)=$3),0)::int AS mine
+      FROM coin_ledger WHERE identity=$1 AND day=$2 AND source LIKE 'play:%'`, [who.key, day, mode])).rows[0];
     const want = gain.ball === "great" ? COIN_PLAY.gold : result === "win" ? COIN_PLAY.win : COIN_PLAY.loss;
-    return coinGrant(c, who, day, "play:" + String(gain.source).replace(/^mode:/, ""), Math.min(want, COIN_PLAY_CAP - played));
+    const mine = Number(r.mine), extra = Math.min(want - mine, COIN_PLAY_CAP - Number(r.played));
+    if (extra <= 0) return null;
+    return coinGrant(c, who, day, mine > 0 ? "play:" + mode + ":" + want : "play:" + mode, extra);
   }
   // Acheter : une recharge de 4 rencontres, ou 1 à 10 Balls d'une sorte. Rien sans compte ni sans assez de ₽.
   async function buy(c, who, day, body) {

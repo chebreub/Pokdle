@@ -34,6 +34,9 @@ function rewardLineHtml(mode) {
   if (!paid) return '<p class="reward-line is-training"><span>🎯 Entraînement : pas de Ball ni de ₽ pour ce jeu pour l’instant</span></p>';
   var source = 'mode:' + (REWARD_SOURCE[mode] || mode);
   var won = (s.gains || []).concat(s.bonus || []).some(function (g) { return g.source === source; });
+  // ECO-03 : la Ball reste celle de la 1re partie ; les ₽ suivent la meilleure partie du jour (jusqu'à 90).
+  var coinsSoFar = s.coins && s.coins.enabled && s.coins.byMode ? Number(s.coins.byMode[REWARD_SOURCE[mode] || mode]) || 0 : null;
+  if (won && coinsSoFar != null && coinsSoFar < 90) return '<p class="reward-line is-done"><span>✓ Ball du jour gagnée · ' + coinsSoFar + ' / 90 ₽ : ta meilleure partie compte, tu peux encore faire mieux</span></p>';
   if (won) return '<p class="reward-line is-done"><span>✓ Récompense du jour gagnée · revient demain</span></p>';
   // Pokédollars and Balls have distinct caps: a paid mode may still grant coins after 10 Balls.
   if (Number(s.today) >= Number(s.cap || 10)) {
@@ -41,7 +44,7 @@ function rewardLineHtml(mode) {
     return '<p class="reward-line is-done"><span>Plafond quotidien des Balls atteint (' + Number(s.cap || 10) + '/' + Number(s.cap || 10) + '). Continue de jouer !' + coinNote + '</span></p>';
   }
   var coins = s.coins && s.coins.enabled ? ' + 30 à 90 ₽' : ' (+ ₽ avec un compte)';
-  return '<p class="reward-line"><span class="reward-ball" aria-hidden="true"></span><span>1re partie du jour : 1 Ball' + coins +
+  return '<p class="reward-line"><span class="reward-ball" aria-hidden="true"></span><span>Aujourd’hui : 1 Ball' + coins +
     ' · <b>Super Ball</b> : ' + escapeHtml(REWARD_GOLD[mode]) + '</span></p>';
 }
 function renderRewardLine() {
