@@ -41,6 +41,8 @@ function pcOpenDraft(gen) {
 }
 // « 📅 Du jour » : fewer tries than the challenger at today's Pokémon du jour.
 var PC_DAILY = 'jour';
+var PC_SAME = 'serie10';
+var PC_SAME_KIND = 'serie_identique';
 // These games send a result at each right answer: only a won challenge is worth a word mid-run.
 var PC_PER_ANSWER = { poids: true, intrus: true };
 var PC_ERRORS = {
@@ -144,7 +146,7 @@ function pcFriendsList() {
 function openChallengeForm(pid, name, mode) {
   if (!window.__pokedleAuthed) { showToast(PC_ERRORS.login); return; }
   pcForm = { pid: String(pid || ''), name: String(name || 'Dresseur'), mode: mode && mode !== PC_MYSTERY && mode !== PC_DAILY ? mode : null, phrase: 0,
-    tab: mode === PC_MYSTERY ? 'pokemon' : mode === PC_DAILY ? 'jour' : null, pokemonId: null, attempts: 8, days: 7, note: '', extra: [] };
+    tab: mode === PC_MYSTERY ? 'pokemon' : mode === PC_DAILY ? 'jour' : mode === PC_SAME ? 'same' : null, pokemonId: null, attempts: 8, days: 7, note: '', extra: [] };
   ensureOverlay('⚔️ Défier ' + pcForm.name, '<div class="pc-form"><p class="pc-empty">Chargement de tes records…</p></div>');
   var overlay = document.getElementById('overlay-modal');
   if (overlay) overlay.dataset.kind = 'challenge';
@@ -170,7 +172,7 @@ function renderChallengeForm() {
   }
   var friend = pcIsFriend(pcForm.pid);
   var tab = function (key, label) { return '<button type="button" role="tab" data-pc-tab="' + key + '" aria-selected="' + (pcForm.tab === key) + '">' + label + '</button>'; };
-  var tabs = '<div class="pc-tabs pc-tabs-3" role="tablist">' + tab('record', '🏆 Record') + (mystery ? tab('pokemon', '🔍 Pokémon') : '') + tab('jour', '📅 Du jour') + '</div>';
+  var tabs = '<div class="pc-tabs pc-tabs-4" role="tablist">' + tab('record', '🏆 Record') + (mystery ? tab('pokemon', '🔍 Pokémon') : '') + (o.sharedSeries ? tab('same', '🎯 Même série') : '') + tab('jour', '📅 Du jour') + '</div>';
   var body = '', ready = true, playFirst = false;
   if (pcForm.tab === 'pokemon') {
     var chosen = pcForm.pokemonId && typeof POKEMON_BY_ID !== 'undefined' ? POKEMON_BY_ID.get(Number(pcForm.pokemonId)) : null;
@@ -184,6 +186,12 @@ function renderChallengeForm() {
         return '<button type="button" data-pc-attempts="' + n + '" aria-pressed="' + (n === pcForm.attempts) + '">' + n + hint + '</button>';
       }).join('') + '</div>';
     ready = Boolean(pcForm.pokemonId);
+  } else if (pcForm.tab === 'same') {
+    body = '<div class="pc-daily"><span class="pc-daily-n">10</span><p><b>Exactement les mêmes dix Pokémon</b>' +
+      '<small>Le serveur choisit une série secrète commune aux deux joueurs. Toutes les générations ; 8 essais maximum par Pokémon. ' +
+      'Chacun joue quand il veut avant l’expiration. Plus de Pokémon trouvés gagne ; en cas d’égalité, moins d’essais sur les Pokémon trouvés.</small></p></div>' +
+      '<p class="pc-note">Ces parties ne remplacent pas tes records Pixelisé, Cri, Zoom ou Description. Aucune réponse n’est envoyée en avance.</p>';
+    ready = Boolean(o.sharedSeries);
   } else if (pcForm.tab === 'jour') {
     body = o.daily
       ? '<div class="pc-daily"><span class="pc-daily-n">' + Number(o.daily.tries) + '</span><p><b>Ton Pokémon du jour : ' + Number(o.daily.tries) + ' essai' + (o.daily.tries > 1 ? 's' : '') + '</b>' +
@@ -271,6 +279,7 @@ function pcSummary() {
     return;
   }
   if (pcForm.tab === 'jour') { line.textContent = ''; return; }
+  if (pcForm.tab === 'same') { line.textContent = 'Deux joueurs, mêmes 10 Pokémon dans le même ordre, validés par le serveur.'; return; }
   var m = pcState.options && pcState.options.modes.find(function (x) { return x.mode === pcForm.mode; });
   if (m) line.textContent = m.record ? pcForm.name + ' devra ' + pcGoalText({ target: m.record, max: m.max }).replace(/^fais/, 'faire') + ' au ' + m.label + '.' : '';
 }
@@ -281,6 +290,7 @@ function pcPayload(pid) {
   if (pcForm.note && pcForm.note.trim() && (pid !== pcForm.pid || pcIsFriend(pid))) base.note = pcForm.note.trim();
   if (pcForm.tab === 'pokemon') return Object.assign(base, { mode: PC_MYSTERY, pokemonId: pcForm.pokemonId, attempts: pcForm.attempts });
   if (pcForm.tab === 'jour') return Object.assign(base, { mode: PC_DAILY });
+  if (pcForm.tab === 'same') return Object.assign(base, { mode: PC_SAME });
   return Object.assign(base, { mode: pcForm.mode });
 }
 // One request per player, one after the other; the first refusal is told, the rest go on.
@@ -320,7 +330,7 @@ function sendChallenge() {
     var who = names.length > 1 ? names.slice(0, -1).join(', ') + ' et ' + names[names.length - 1] : names[0];
     var box = document.querySelector('#overlay-body .pc-form');
     if (box) box.innerHTML = '<div class="pc-sent"><b>Défi envoyé ⚔️</b><p>' + escapeHtml(who) + (names.length > 1 ? ' le verront' : ' le verra') + ' à la prochaine visite. ' +
-      (mystery ? 'Tu seras prévenu s’il trouve ton Pokémon… ou pas.' : daily ? 'Tu seras prévenu si quelqu’un fait moins de ' + Number(target) + ' essais avant minuit.' : 'Tu seras prévenu si quelqu’un fait mieux que ' + Number(target) + '.') + '</p>' +
+      (mystery ? 'Tu seras prévenu s’il trouve ton Pokémon… ou pas.' : daily ? 'Tu seras prévenu si quelqu’un fait moins de ' + Number(target) + ' essais avant minuit.' : pcForm.tab === 'same' ? 'Joue toi aussi les mêmes dix Pokémon depuis Mes défis : chacun a huit essais maximum par manche.' : 'Tu seras prévenu si quelqu’un fait mieux que ' + Number(target) + '.') + '</p>' +
       (result.failed.length ? '<p class="pc-note">Pas envoyé à ' + escapeHtml(result.failed.map(function (x) { return pcNameOf(x.pid); }).join(', ')) + ' : ' + escapeHtml(PC_ERRORS[result.failed[0].error] || 'réessaie plus tard.') + '</p>' : '') +
       (typeof notifAskHtml === 'function' ? notifAskHtml(pcForm.name, 'sent') : '') +
       '<button type="button" class="btn-ghost" data-action="closeOverlayModal">OK</button></div>';
