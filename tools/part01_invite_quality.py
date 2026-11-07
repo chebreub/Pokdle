@@ -81,7 +81,10 @@ def scenario(pw, engine, width):
         pages.append(changed)
         setup(changed, url)
         changed.locator("#party-invite-notice.is-error").wait_for(state="visible")
-        assert "changé de jeu" in changed.locator("#party-invite-notice").inner_text()
+        actual_notice = changed.locator("#party-invite-notice").inner_text()
+        assert "changé de jeu" in actual_notice, (
+            "Expected a changed-game invitation, got: " + repr(actual_notice)
+        )
         changed.locator("#party-nickname").fill("Wrong mode")
         changed.locator('[data-action="partyJoinRoom"]').click()
         ready(changed, 'document.getElementById("party-room-msg").textContent.includes("changé de jeu")')
