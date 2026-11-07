@@ -1,6 +1,6 @@
 # PART-01 — Invitation directe à Dessine-le ! (Pokédle)
 
-**État :** en PR ; ne compter PART-01 dans le total des 43 actions qu'après tests GitHub verts, fusion et vérification du nouveau `main`.
+**État : terminé et intégré.** [PR #311](https://github.com/chebreub/Pokdle/pull/311) fusionnée dans `main` au commit `49bfe0b347f61330dc61acc95ca3ad5aec104f9a`, après tests Node, PostgreSQL et navigateur complète verts ; **26/43 = 60,5 %**. Le parcours d'invitation a passé Chromium mobile et WebKit desktop. Le déploiement Render et la recette sur iPhone réel n'ont pas été vérifiés.
 
 ## Parcours retenu
 
