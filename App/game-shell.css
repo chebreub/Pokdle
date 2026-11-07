@@ -2010,3 +2010,16 @@ body.theme-dark .anim-seg button {color:#cfc7d6;}
 body.theme-dark .anim-seg button.is-on {background:#f5efe6;color:#2E2A33;}
 body.theme-dark .anim-help {color:#cfc7d6;}
 body.theme-dark .anim-help b {color:#f5efe6;}
+/* GEST-02 : poignée pour fermer une fenêtre ou un panneau en tirant vers le bas (téléphone, script.10xzv.sheet-drag.js) */
+.sheet-grab {display:none;}
+@media (max-width:640px) {
+  #overlay-modal .overlay-card {position:relative;}
+  #overlay-modal .overlay-card > .sheet-grab, .tb-editor-sheet > .sheet-grab {display:flex;justify-content:center;align-items:center;height:20px;touch-action:none;cursor:grab;}
+  #overlay-modal .overlay-card > .sheet-grab {position:absolute;top:0;left:0;right:0;z-index:2;}
+  .tb-editor-sheet > .sheet-grab {position:sticky;top:-14px;margin:-14px -14px 4px;background:inherit;z-index:2;}
+  .sheet-grab::before {content:"";width:44px;height:5px;border-radius:3px;background:#CFC5B8;}
+  #overlay-modal .overlay-head, .fav-sheet-head {touch-action:none;}
+  .fav-sheet-grab {touch-action:none;padding:8px 0;margin:-8px auto -4px;background-clip:content-box;}
+}
+.sheet-drag-tip {position:fixed;left:50%;top:max(16px,env(safe-area-inset-top));transform:translateX(-50%);z-index:100000;padding:8px 14px;border-radius:999px;background:#2E2A33;color:#fff;font:800 13px Nunito,sans-serif;pointer-events:none;}
+body.theme-dark .sheet-grab::before {background:#5a5263;}
