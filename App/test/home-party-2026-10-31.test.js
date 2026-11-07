@@ -60,7 +60,7 @@ function lobby({ room = null, nickname = 'Kayan' } = {}) {
   const socket = {
     emit(event, payload, ack) {
       calls.emits.push([event, payload]);
-      ack({ ok: true, code: 'AB3DF', room: { code: 'AB3DF', status: 'waiting', players: [] }, resumeToken: 't' });
+      ack({ ok: true, code: 'AB3DF', room: { code: 'AB3DF', status: 'waiting', gameMode: payload.gameMode || 'guess', players: [] }, resumeToken: 't' });
     },
   };
   const env = {
@@ -95,7 +95,8 @@ test('a game picked on the home is shown in the lobby and applied once the room 
 
   api.partyCreateRoom();
   assert.deepEqual(calls.emits.map((e) => e[0]), ['party:create-room']);
-  assert.deepEqual(calls.modes, ['dessin'], 'the host\'s new room switches to the game');
+  assert.equal(calls.emits[0][1].gameMode, 'dessin', 'the server creates Dessine-le directly');
+  assert.deepEqual(calls.modes, [], 'no racing set-mode event after room creation');
   assert.equal(env.partyRoomState.pendingMode, null);
 });
 
