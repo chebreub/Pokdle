@@ -1866,7 +1866,11 @@ function partyCreateRoom() {
   var input = document.getElementById("party-nickname");
   var nickname = ((input && input.value) || "").trim();
   if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
-  socket.emit("party:create-room", { nickname: nickname, level: partyPlayerLevel() }, function (res) {
+  var selectedMode = partyRoomState.pendingMode;
+  // Create Dessine-le directly on the server; no transient "guess" room
+  // that friends could join before a separate set-mode request completes.
+  socket.emit("party:create-room", { nickname: nickname, level: partyPlayerLevel(),
+    ...(selectedMode === "dessin" ? { gameMode: "dessin" } : {}) }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur de creation."); return; }
     partyRoomState.room = res.room;
@@ -1875,9 +1879,8 @@ function partyCreateRoom() {
     savePartySession(res.code, nickname, res.resumeToken);
     setPartyStatus("");
     renderPartyRoom();
-    var pendingMode = partyRoomState.pendingMode;
     partyRoomState.pendingMode = null;
-    if (pendingMode) partySetMode(pendingMode);
+    if (selectedMode && res.room?.gameMode !== selectedMode) partySetMode(selectedMode);
   });
 }
 
@@ -1890,9 +1893,19 @@ function partyJoinRoom() {
   var code = ((codeEl && codeEl.value) || "").trim();
   if (!nickname) { setPartyStatus("Entre un pseudo d'abord."); return; }
   if (!code) { setPartyStatus("Entre un code de room."); return; }
-  socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel() }, function (res) {
+  var expectedMode = partyRoomState.inviteCode === code && partyRoomState.inviteExpectedMode === "dessin" ? "dessin" : null;
+  socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel(),
+    ...(expectedMode ? { expectedMode } : {}) }, function (res) {
     res = res || {};
-    if (!res.ok) { setPartyStatus(res.error || "Impossible de rejoindre."); return; }
+    if (!res.ok) {
+      var message = res.error || "Impossible de rejoindre.";
+      setPartyStatus(message);
+      if (expectedMode) partyInviteNotice(message, "error");
+      return;
+    }
+    partyRoomState.inviteCode = null;
+    partyRoomState.inviteExpectedMode = null;
+    partyInviteNotice("", null);
     partyRoomState.pendingMode = null;
     partyRoomState.room = res.room;
     partyRoomState.code = res.code;
@@ -1930,9 +1943,11 @@ function partyStartGame() {
 
 function partyCopyInviteLink() {
   if (!partyRoomState.code) { setPartyStatus("Cree ou rejoins une room d'abord."); return; }
-  var url = location.origin + location.pathname + "?party=" + encodeURIComponent(partyRoomState.code);
+  var isDessin = partyRoomState.room?.gameMode === "dessin";
+  var url = location.origin + location.pathname + "?party=" + encodeURIComponent(partyRoomState.code) +
+    (isDessin ? "&game=dessin" : "");
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(function () { setPartyStatus("Lien copie !"); }, function () { setPartyStatus(url); });
+    navigator.clipboard.writeText(url).then(function () { setPartyStatus(isDessin ? "Lien Dessine-le ! copié." : "Lien copié !"); }, function () { setPartyStatus(url); });
   } else {
     setPartyStatus(url);
   }
@@ -2717,19 +2732,65 @@ function renderPartyRoom() {
   if (typeof renderPetitBacSetup === "function") renderPetitBacSetup(room, me, isHost);
 }
 
+// Visible invitation status is deliberately separate from the room's live
+// messages, and is never inserted as HTML from an untrusted room/code.
+function partyInviteNotice(message, state) {
+  var el = document.getElementById("party-invite-notice");
+  if (!el) return;
+  el.hidden = !message;
+  el.textContent = message || "";
+  el.classList.toggle("is-error", state === "error");
+  el.classList.toggle("is-ready", state === "ok");
+  var button = document.querySelector("#party-lobby .party-join-row button");
+  if (button) button.setAttribute("aria-label", state === "ok" ? "Rejoindre Dessine-le ! sans compte" : "Rejoindre le salon");
+}
+
 function initPartyFromUrl() {
   try {
     var params = new URLSearchParams(location.search || "");
     var raw = params.get("party");
     if (!raw) return;
     var code = String(raw).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-    if (!code) return;
+    var expectedMode = params.get("game") === "dessin" ? "dessin" : null;
     openPartyRoomMode();
     var codeEl = document.getElementById("party-join-code");
     if (codeEl) codeEl.value = code;
-    setPartyStatus("Code " + code + " prérempli : saisis ton pseudo puis clique sur Rejoindre.");
-    // Consume the invitation so it cannot reopen the lobby after navigating away.
+    if (typeof partyPrefillNickname === "function") partyPrefillNickname();
+    partyRoomState.inviteCode = code;
+    partyRoomState.inviteExpectedMode = expectedMode;
+
+    if (!/^[A-Z0-9]{5}$/.test(code)) {
+      var invalid = "Lien d'invitation invalide. Demande un nouveau lien à ton ami.";
+      setPartyStatus(invalid);
+      partyInviteNotice(invalid, "error");
+    } else if (expectedMode) {
+      partyInviteNotice("Vérification du salon Dessine-le !…", "pending");
+      var socket = ensurePartyListeners();
+      if (!socket) {
+        partyInviteNotice("Impossible de vérifier le salon pour le moment. Réessaie dans un instant.", "error");
+      } else {
+        // Do not expose an identity, a player list or a reconnect token:
+        // the server responds only with the current public room capacity.
+        socket.emit("party:invite-preview", { code: code, expectedMode: "dessin" }, function (res) {
+          if (partyRoomState.inviteCode !== code || partyRoomState.room?.code === code) return;
+          if (res?.ok) {
+            var free = Number(res.seatsLeft) || 0;
+            partyInviteNotice("🎨 Dessine-le ! · " + free + " place" + (free > 1 ? "s" : "") +
+              " disponible" + (free > 1 ? "s" : "") + ". Saisis un pseudo puis rejoins sans compte.", "ok");
+            setPartyStatus("");
+          } else {
+            var error = res?.error || "Cette invitation n'est plus disponible.";
+            partyInviteNotice(error, "error");
+            setPartyStatus(error);
+          }
+        });
+      }
+    } else {
+      setPartyStatus("Code " + code + " prérempli : saisis ton pseudo puis clique sur Rejoindre.");
+    }
+    // Consume only the invitation parameters; keep unrelated query settings.
     params.delete("party");
+    if (expectedMode) params.delete("game");
     var query = params.toString();
     history.replaceState({ screen: "party", inviteCode: code }, "", location.pathname + (query ? "?" + query : "") + "#party");
   } catch (e) {}
