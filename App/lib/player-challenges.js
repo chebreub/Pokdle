@@ -307,6 +307,75 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     return { ...gameView(row, me), incoming, other: { pid: playerPid(incoming ? row.from_id : row.to_id), username: (incoming ? row.from_name : row.to_name) || "Un dresseur" } };
   }
 
+
+  // PART-02: both players compete on the SAME ten unknown Pokémon.
+  // No secret IDs, seeds or future answers are ever returned to the client.
+  async function seriesGame(accountId, challengeId) {
+    await ready;
+    const me=String(accountId), id=Number(challengeId);
+    if(!Number.isSafeInteger(id)||id<=0||!compare) return {ok:false,error:"unknown"};
+    const row=(await db.query(`SELECT c.*, uf.username AS from_name, ut.username AS to_name
+      FROM player_challenges c LEFT JOIN users uf ON uf.discord_id=c.from_id
+      LEFT JOIN users ut ON ut.discord_id=c.to_id
+      WHERE c.id=$1 AND c.mode=$2 AND (c.from_id=$3 OR c.to_id=$3)`,
+      [id,sharedSeries.MODE,me])).rows[0];
+    if(!row) return {ok:false,error:"unknown"};
+    const incoming=row.to_id===me;
+    return {...sharedSeries.publicView(row,me,byId,compare),incoming,
+      other:{pid:playerPid(incoming?row.from_id:row.to_id),
+        username:(incoming?row.from_name:row.to_name)||"Un dresseur"}};
+  }
+
+  async function seriesPlay(accountId,{id,round,pokemonId,pass}={}) {
+    await ready;
+    const me=String(accountId), challengeId=Number(id);
+    if(!compare || !Number.isSafeInteger(challengeId) || challengeId<=0 ||
+       !Number.isInteger(round) || round<0 || round>=sharedSeries.TOTAL)
+       return {ok:false,error:"invalid_action"};
+    if(pass!==undefined&&typeof pass!=="boolean") return {ok:false,error:"invalid_action"};
+    const client=await db.connect();
+    let row,final=null,side;
+    try {
+      await client.query("BEGIN");
+      row=(await client.query(`SELECT * FROM player_challenges
+        WHERE id=$1 AND mode=$2 AND (from_id=$3 OR to_id=$3) FOR UPDATE`,
+        [challengeId,sharedSeries.MODE,me])).rows[0];
+      if(!row){await client.query("ROLLBACK");return {ok:false,error:"unknown"};}
+      side=row.from_id===me?"from":"to";
+      if(row.status!=="open"||new Date(row.expires_at)<=new Date()){
+        await client.query("ROLLBACK");
+        return {...sharedSeries.publicView(row,me,byId,compare),replayed:true};
+      }
+      const allowed=Array.isArray(row.series_gens)?row.series_gens:sharedSeries.DEFAULT_GENS;
+      const move=sharedSeries.advance(row.series_progress,side,round,pokemonId,pass===true,row.series_ids,byId,allowed);
+      if(!move.changed){
+        await client.query("ROLLBACK");
+        return {...sharedSeries.publicView(row,me,byId,compare),
+          ...(move.error?{ok:false,error:move.error}:move.duplicate?{duplicate:true}:{replayed:true})};
+      }
+      final=sharedSeries.outcome(row.series_progress);
+      row=(await client.query(`UPDATE player_challenges SET series_progress=$2::jsonb,
+        status=COALESCE($3,status),
+        best=CASE WHEN $3 IS NOT NULL THEN ($2::jsonb->'to'->>'found')::int ELSE best END,
+        resolved_at=CASE WHEN $3 IS NOT NULL THEN now() ELSE resolved_at END,
+        seen_from=CASE WHEN $3 IS NOT NULL THEN false ELSE seen_from END,
+        seen_to=CASE WHEN $3 IS NOT NULL THEN false ELSE seen_to END
+        WHERE id=$1 RETURNING *`,
+        [challengeId,JSON.stringify(row.series_progress),final])).rows[0];
+      await client.query("COMMIT");
+    }catch(error){
+      await client.query("ROLLBACK").catch(()=>{});
+      throw error;
+    }finally{client.release();}
+    if(final){
+      const a=row.series_progress.from,b=row.series_progress.to;
+      const summary=`Mêmes 10 Pokémon : ${a.found}/10 contre ${b.found}/10. Départage : essais sur les trouvés (${a.attemptsWon} / ${b.attemptsWon}).`;
+      tell(row.from_id,{title:"🏁 Série commune terminée",body:summary,url:"/?defis=1",tag:"pokedle-defi"});
+      tell(row.to_id,{title:"🏁 Série commune terminée",body:summary,url:"/?defis=1",tag:"pokedle-defi"});
+    }
+    return {...sharedSeries.publicView(row,me,byId,compare),roundFinished:row.series_progress[side].index>round,fresh:Boolean(final)};
+  }
+
   async function guess(accountId, { id, pokemonId } = {}) {
     await ready;
     const me = String(accountId);
@@ -405,7 +474,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     return { ok: true, cancelled: r.rowCount };
   }
 
-  return { options, create, afterResult, list, game, guess, seen, decline, block, setAccepting, hide, cancel };
+  return { options, create, afterResult, list, game, guess, seriesGame, seriesPlay, seen, decline, block, setAccepting, hide, cancel };
 }
 
 // The same notification the 🔔 reminders use, for the players who turned it on.
@@ -469,6 +538,8 @@ function mountChallengeRoutes(app, { express, challenges, getUser, log = console
   app.post("/api/challenges", json, run("create", (user, body) => challenges.create(user.id, body)));
   app.get("/api/challenges/game", run("game", (user, _body, req) => challenges.game(user.id, req.query.id)));
   app.post("/api/challenges/guess", json, run("guess", (user, body) => challenges.guess(user.id, body), limitedGuesses));
+  app.get("/api/challenges/series", run("series", (user, _body, req) => challenges.seriesGame(user.id, req.query.id)));
+  app.post("/api/challenges/series/play", json, run("series-play", (user, body) => challenges.seriesPlay(user.id, body), limitedGuesses));
   app.post("/api/challenges/seen", json, run("seen", (user, body) => challenges.seen(user.id, body.ids)));
   app.post("/api/challenges/decline", json, run("decline", (user, body) => challenges.decline(user.id, body.id)));
   app.post("/api/challenges/block", json, run("block", (user, body) => challenges.block(user.id, body.id)));
