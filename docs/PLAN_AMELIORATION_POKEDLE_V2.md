@@ -5,6 +5,14 @@
 Audit en lecture seule. Aucune modification de code, PR, base de production ou configuration. Les fichiers générés sont des propositions locales pour le dépôt.
 
 
+## Suivi (7/11/2026)
+
+- **V2-FX-01 fait** : [#342](https://github.com/chebreub/Pokdle/pull/342), fusion `94192b0` (QA complète verte). A · Cinéma + carte holo C.
+- **V2-JUR-01 décidé** : Kayan garde les sons de capture Pokémon GO (7/11, « on garde les sons ») ; les sons faits maison restent en secours. Registre des sources à tenir.
+- **V2-REL-01** : PR en cours (confirmation, reçu, nombre attendu, compte).
+
+**Avancement V2 : 2/12** (FX-01, JUR-01).
+
 ## Décision
 
 Le plan V1 n'est pas à recommencer. **42 clôtures sont conservées au niveau de preuve précisé dans l'audit (dont GROW-02 sur déclaration) ; DATA-04 est partiellement rouverte.** Les anomalies nouvelles ne doivent pas servir à rebaptiser comme "absentes" des fonctions déjà livrées.

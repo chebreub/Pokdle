@@ -636,6 +636,9 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     if (today >= RELEASES_PER_DAY) throw fail("release_limit", 429);
     const rows = (await c.query("SELECT id FROM wild_encounters WHERE identity=$1 AND status='caught' AND pokemon_id=$2 AND shiny=$3 ORDER BY id DESC", [who.key, id, shiny])).rows;
     if (rows.length < 2) throw fail("last_one");
+    // V2-REL-01 (7/11) : la page dit combien d'exemplaires elle voyait ; si ce nombre a changé (autre onglet,
+    // échange, double appui), rien n'est relâché et la fiche se met à jour.
+    if (body.expectedCount !== undefined && rows.length !== body.expectedCount) throw fail("release_changed", 409);
     await c.query("UPDATE wild_encounters SET status='released',released_on=$2 WHERE id=$1", [rows[0].id, day]);
     const coins = await coinGrant(c, who, day, "release:" + rows[0].id, shiny ? COIN_RELEASE.shiny : COIN_RELEASE.normal);
     return { released: { id, shiny }, captures: await collection(c, who), coinsEarned: coins ? coins.amount : 0 };
@@ -673,7 +676,9 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   function actionReceipt(operation, body) {
     if (!body.actionId) return null;
     if (typeof body.actionId !== "string" || !/^[a-zA-Z0-9_-]{16,80}$/.test(body.actionId)) throw fail("invalid_action", 400);
-    const payload = operation === "buy" ? [body.item, body.qty || 1, body.expectedPrice] : [body.ball, body.encounterId, body.expectedThrows];
+    const payload = operation === "buy" ? [body.item, body.qty || 1, body.expectedPrice]
+      : operation === "release" ? [Number(body.id), Boolean(body.shiny), body.expectedCount]
+      : [body.ball, body.encounterId, body.expectedThrows];
     return { id: body.actionId, operation, payload: JSON.stringify(payload) };
   }
   const arcadeRun = (who,body,action) => run(who,async (c,day) => {
@@ -731,7 +736,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     meetLegend: (who) => wild(who, (c, day) => meetLegend(c, who, day)),
     prestige: (who) => wild(who, async (c, day) => ({ prestige: await prestige(c, who, day) })),
     meetPrestige: (who, body = {}) => wild(who, (c, day) => meetPrestige(c, who, day, body)),
-    release: (who, body) => wild(who, (c, day) => release(c, who, day, body)),
+    release: (who, body) => wild(who, (c, day) => release(c, who, day, body), actionReceipt("release", body)),
     buy: (who, body) => wild(who, (c, day) => buy(c, who, day, body), actionReceipt("buy", body))
   };
 }
@@ -756,6 +761,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
           const b = req.body || {};
           if (typeof b.actionId !== "string" || !/^[a-zA-Z0-9_-]{16,80}$/.test(b.actionId)) throw fail("reload_required", 400);
           if (paidOperation === "buy" && (!Number.isInteger(b.expectedPrice) || b.expectedPrice < 1)) throw fail("reload_required", 400);
+          if (paidOperation === "release" && (!Number.isInteger(b.expectedCount) || b.expectedCount < 2)) throw fail("reload_required", 400);
           if (paidOperation === "throw" && (!Number.isSafeInteger(b.encounterId) || !Number.isInteger(b.expectedThrows) || b.expectedThrows < 0 || b.expectedThrows >= MAX_THROWS)) throw fail("reload_required", 400);
         }
         const origin = req.get("origin"); if (origin && new URL(origin).host !== req.get("host")) throw fail("origin_denied", 403);
@@ -810,7 +816,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   app.post("/api/wild/throw", express.json({ limit: "1kb" }), handle((who, req) => service.throwBall(who, req.body || {}), "throw"));
   app.post("/api/wild/skip", express.json({ limit: "1kb" }), handle((who) => service.skip(who)));
   app.get("/api/wild/collection", handle((who) => service.collection(who)));
-  app.post("/api/wild/release", express.json({ limit: "1kb" }), handle((who, req) => service.release(who, req.body || {})));
+  app.post("/api/wild/release", express.json({ limit: "1kb" }), handle((who, req) => service.release(who, req.body || {}), "release"));
   app.post("/api/shop/buy", express.json({ limit: "1kb" }), handle((who, req) => service.buy(who, req.body || {}), "buy"));
   app.get("/api/expedition", handle((who) => service.expedition(who)));
   app.post("/api/expedition/chests", express.json({ limit: "1kb" }), handle((who) => service.claimChests(who)));

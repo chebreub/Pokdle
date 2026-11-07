@@ -716,3 +716,11 @@ body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;col
 .wow-holo.is-gold{background-image:linear-gradient(115deg,rgba(255,240,180,0) 35%,rgba(255,240,180,.75) 45%,rgba(255,200,90,.45) 52%,rgba(255,240,180,0) 65%)}
 @keyframes wowHolo{0%{background-position:150% 0}60%,100%{background-position:-50% 0}}
 @media (prefers-reduced-motion:reduce){.wow-dark,.wow-halo,.wow-banner,.wow-trail,.wow-spark,.wow-ring,.wow-flash,.wow-rays,.wow-holo{display:none}.wild-stage.is-wow-tense{transform:none}.wow-caught{animation:none}}
+/* V2-REL-01 (7/11) : confirmation avant de relâcher un doublon. */
+.tm-confirm .tm-mon img{background:radial-gradient(circle at 50% 60%,#fff 0,#E8F6EC 140%)}
+.tm-confirm.is-shiny .tm-mon img{background:radial-gradient(circle at 50% 60%,#fff 0,#FFE9A8 140%)}
+.tm-confirm h3 b{color:#B07A00}
+.tm-confirm p{margin:4px 0 0;font:700 13px/1.4 Nunito,sans-serif;color:#6B6472}
+.tm-confirm .tm-gain{color:#2E7D46;font-weight:900}
+.tm-confirm-btns{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px}
+.tm-confirm-btns button{min-height:46px}

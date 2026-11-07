@@ -22,7 +22,11 @@ const TRADE_ERRORS = {
   too_many_pending: "Trop d’échanges en attente : attends des réponses.", not_a_duplicate: "Ce Pokémon n’est plus en double chez toi.",
   friend_not_a_duplicate: "Ton ami ne l’a plus en double.", already_proposed: "Tu as déjà proposé cet échange.",
   no_longer_available: "L’échange n’est plus possible : un des deux Pokémon n’est plus en double.", last_one: "C’est ton dernier exemplaire : il reste dans ton album.",
-  release_limit: "Tu as déjà relâché 10 doublons aujourd’hui.", login: "Connecte-toi pour échanger avec tes amis.", rate_limited: "Doucement ! Réessaie dans un moment."
+  release_limit: "Tu as déjà relâché 10 doublons aujourd’hui.",
+  release_changed: "Ta collection a changé entre-temps : rien n’a été relâché, regarde la fiche à jour.",
+  previous_action: "Ton relâchement précédent a été terminé. Regarde la fiche à jour.",
+  reload_required: "Recharge la page pour relâcher un doublon.", account_changed: "Tu as changé de compte : recharge la page.",
+  storage_unavailable: "Ton navigateur bloque l’enregistrement de l’action : réessaie hors navigation privée.", login: "Connecte-toi pour échanger avec tes amis.", rate_limited: "Doucement ! Réessaie dans un moment."
 };
 function tradeError(data) { return TRADE_ERRORS[data && data.error] || "Ça n’a pas marché. Réessaie dans un instant."; }
 function tradeBallSvg() { return typeof moBallSvg === "function" ? moBallSvg("poke") : "⚪"; }
@@ -53,19 +57,48 @@ function tradePartner(id) {
   closeOverlayModal();
   if (typeof choosePartner === "function") { choosePartner(Number(id)); if (typeof showToast === "function") showToast("⭐ " + (tradeMon(id)?.name || "Ton Pokémon") + " est ton partenaire !"); }
 }
+// V2-REL-01 (7/11) : relâcher demande toujours une confirmation (surtout pour un shiny), et l'action part avec
+// un identifiant gardé par le navigateur (comme un achat) : un double appui ou une réponse perdue ne relâche
+// jamais deux doublons. Le serveur refuse si le nombre d'exemplaires a changé entre-temps.
 function tradeRelease(id, shiny) {
+  const p = tradeMon(id), n = tradeCounts(id), have = shiny ? n.shiny : n.normal;
+  if (!p || have < 2) { openTradeMon(id); return; }
+  const authed = Boolean(window.__pokedleAuthed);
+  ensureOverlay("🌿 Relâcher " + p.name + (shiny ? " ✨" : ""),
+    '<div class="tm tm-confirm' + (shiny ? " is-shiny" : "") + '">' +
+      '<div class="tm-mon"><img src="' + escapeHtml(tradeArt(p, shiny)) + '" alt="" draggable="false"><div><h3>Relâcher 1 ' + escapeHtml(p.name) + (shiny ? ' <b>shiny</b>' : "") + ' ?</h3>' +
+      '<p>Il retourne dans les herbes. Tu en gardes ' + (have - 1) + ' (×' + have + ' → ×' + (have - 1) + ').</p><p class="tm-gain">' + tradeReleaseGain(authed, shiny) + '</p></div></div>' +
+      '<div class="tm-confirm-btns"><button type="button" class="btn-blue" data-action="tradeReleaseConfirm" data-args=\'' + JSON.stringify([p.id, Boolean(shiny), have]) + '\'>🌿 Oui, relâcher</button>' +
+      '<button type="button" class="btn-ghost" data-action="openTradeMon" data-args=\'' + JSON.stringify([p.id]) + '\'>Annuler</button></div>' +
+    '</div>');
+}
+let tradeReleaseBusy = false;
+function tradeReleaseConfirm(id, shiny, expectedCount) {
+  if (tradeReleaseBusy) return;
   const p = tradeMon(id);
-  tradePost("/api/wild/release", { id: Number(id), shiny: Boolean(shiny) }).then((data) => {
-    if (!data || !data.ok) { if (typeof showToast === "function") showToast(tradeError(data)); return; }
+  tradeReleaseBusy = true;
+  document.querySelectorAll('.tm-confirm-btns button').forEach((b) => { b.disabled = true; });
+  const send = typeof ballPaidAction === "function" ? ballPaidAction("/api/wild/release", { id: Number(id), shiny: Boolean(shiny), expectedCount: Number(expectedCount) })
+    : Promise.resolve({ ok: false, error: "reload_required" });
+  send.then((data) => {
+    if (!data || !data.ok) {
+      if (typeof showToast === "function") showToast(tradeError(data));
+      if (data && ["release_changed", "previous_action", "last_one"].includes(data.error) && typeof ballFetch === "function") {
+        return ballFetch("/api/wild/collection").then((d) => { if (d && d.ok && typeof wildSyncAlbum === "function") wildSyncAlbum(d.captures); openTradeMon(id); });
+      }
+      openTradeMon(id);
+      return;
+    }
     if (typeof wildSyncAlbum === "function") wildSyncAlbum(data.captures);
     // 💰 Avec un compte, le doublon rapporte des Pokédollars (15 ₽, 1 500 ₽ pour un shiny) ; sans compte, de l'XP comme avant.
+    // Une réponse rejouée (même action) ne redonne rien.
     const coins = Number(data.coinsEarned) || 0;
     if (coins > 0) { if (typeof ballApply === "function") ballApply(data, { announce: false }); }
-    else if (typeof awardXp === "function") awardXp(TRADE_RELEASE_XP, "Doublon relâché : " + (p ? p.name : ""));
+    else if (!data.replayed && typeof awardXp === "function") awardXp(TRADE_RELEASE_XP, "Doublon relâché : " + (p ? p.name : ""));
     if (typeof moSfx === "function") moSfx("sparkle");
     if (typeof showToast === "function") showToast("🌿 " + (p ? p.name : "Le Pokémon") + " retourne dans les herbes · +" + (coins > 0 ? coins.toLocaleString("fr-FR") + " ₽" : TRADE_RELEASE_XP + " XP"));
     openTradeMon(id);
-  });
+  }).finally(() => { tradeReleaseBusy = false; });
 }
 
 // --- L'échange : choisir un ami, puis un de ses doublons ---
@@ -343,4 +376,4 @@ if (typeof window !== "undefined" && window.addEventListener) {
   });
 }
 Object.assign(window, { tradeStartWant, tradePickGive, tradeFindFilter, tradeFindOpen, tradeToggleShare, tradeShowTab, renderMyTrades,
-  openTradeMon, tradePartner, tradeRelease, tradeStart, tradePickFriend, tradePickWant, tradeSend, openMyTrades, tradeCancel, tradeAnswer, tradeOpenAlbum, tradePendingCount });
+  openTradeMon, tradePartner, tradeRelease, tradeReleaseConfirm, tradeStart, tradePickFriend, tradePickWant, tradeSend, openMyTrades, tradeCancel, tradeAnswer, tradeOpenAlbum, tradePendingCount });
