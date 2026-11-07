@@ -35,7 +35,8 @@ Correctifs récents à regarder de près : sons des hautes herbes sur iPhone (le
 2. Le plan et son état : `docs/PLAN_AMELIORATION_POKEDLE.md`, `docs/ETAT_AVANCEMENT_POKEDLE.md`, `docs/qa/*.md`.
 3. Le code qui fait foi : `App/src/`, `App/lib/`, `App/server.js`, `App/test/`, et les CSS (`App/*.css`).
 4. Le site en ligne https://pokdle.fr, sur téléphone (largeur 360–430 px) et sur PC.
-5. Si je te les joins : captures et export de `/admin/stats` (période, jeux, rétention, économie). Sans ces chiffres, ne jamais inventer de statistiques.
+5. Le contrôle Osytools du 7/11 (87/100 : vitesse 65, accessibilité 81) et nos premières vérifications : `docs/audits/OSYTOOLS_2026-11-07.md`. Intègre ses 5 points dans ton plan.
+6. Si je te les joins : captures et export de `/admin/stats` (période, jeux, rétention, économie). Sans ces chiffres, ne jamais inventer de statistiques.
 
 ## 4. Ce que j'attends
 
