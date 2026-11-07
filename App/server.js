@@ -2857,9 +2857,8 @@ io.on("connection", (socket) => {
     }
   });
 
-  // PART-01: anonymous, rate-limited preview of a live invitation.
-  // Only a code, the selected game and available capacity are exposed.
   socket.on("party:invite-preview", (payload = {}, ack) => {
+    // PART-01: anonymous, rate-limited status without player information.
     try {
       if (checkRateLimit(socket, "room-join")) return respond(ack, {ok:false,errorCode:"rate_limited",error:"Trop de vérifications. Réessaie dans quelques instants."});
       const code = sanitizeRoomCode(payload.code);
