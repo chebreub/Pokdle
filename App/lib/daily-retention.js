@@ -3,12 +3,17 @@
 // new is collected or stored. A play counts once a guess was made or the day was given up. Days are the
 // days of Paris (daily_plays.day). Identities are an account, or a browser for guests (a guest who later
 // signs in counts as a new identity, so the figures are slightly low, never high).
-const PLAYED = "(jsonb_array_length(guessed) > 0 OR status <> 'playing')";
+// DATA-04 (7/11/2026): a guest row merged into an account the same day (excluded_stats) is not a second player.
+const PLAYED = "(jsonb_array_length(guessed) > 0 OR status <> 'playing') AND NOT excluded_stats";
+const asList = (ids) => (Array.isArray(ids) ? ids : []).map(String).filter(Boolean);
 
-async function dailyRetention(db, fromDay, toDay) {
+// One query for any « identity, day » activity: J+1 and J+7 counted only on mature days (the day after, or
+// the 7 days after, are all inside the window and over). toDay must be a finished day.
+async function cohortRates(db, activitySql, fromDay, toDay, exclude) {
   const r = await db.query(`
-    WITH p AS (SELECT DISTINCT identity, day FROM daily_plays WHERE ${PLAYED} AND day BETWEEN $1::date AND $2::date),
-    firsts AS (SELECT identity, MIN(day) AS first_day FROM daily_plays WHERE ${PLAYED} GROUP BY identity),
+    WITH act AS (SELECT DISTINCT identity, day FROM (${activitySql}) a WHERE NOT (identity = ANY($3::text[]))),
+    p AS (SELECT identity, day FROM act WHERE day BETWEEN $1::date AND $2::date),
+    firsts AS (SELECT identity, MIN(day) AS first_day FROM act GROUP BY identity),
     marked AS (
       SELECT a.day, f.first_day = a.day AS is_new,
         EXISTS (SELECT 1 FROM p b WHERE b.identity = a.identity AND b.day = a.day + 1) AS next_day,
@@ -21,10 +26,38 @@ async function dailyRetention(db, fromDay, toDay) {
       COUNT(*) FILTER (WHERE day <= $2::date - 7 AND week)::int AS back7,
       COUNT(*) FILTER (WHERE is_new AND day <= $2::date - 7)::int AS new7,
       COUNT(*) FILTER (WHERE is_new AND day <= $2::date - 7 AND week)::int AS newback7
-    FROM marked`, [fromDay, toDay]);
+    FROM marked`, [fromDay, toDay, asList(exclude)]);
   const row = r.rows[0] || {};
   const rate = (back, base) => ({ back: Number(back) || 0, base: Number(base) || 0, rate: Number(base) > 0 ? Math.round(100 * Number(back) / Number(base)) : null });
-  return { nextDay: rate(row.back1, row.base1), week: rate(row.back7, row.base7), newWeek: rate(row.newback7, row.new7) };
+  return { from: fromDay, to: toDay, nextDay: rate(row.back1, row.base1), week: rate(row.back7, row.base7), newWeek: rate(row.newback7, row.new7) };
+}
+
+// Return of players to the Pokémon du jour only.
+async function dailyRetention(db, fromDay, toDay, exclude = []) {
+  return cohortRates(db, `SELECT identity, day FROM daily_plays WHERE ${PLAYED}`, fromDay, toDay, exclude);
+}
+
+// DATA-04: return to the whole site, read from the game activity the server already keeps for each
+// identity and Paris day — nothing new is collected. A visit without any recorded play does not count,
+// nor do Balls given by the admin or a Pokémon received in a trade (the other player acted).
+const SITE_SOURCES = [
+  ["daily_plays", `SELECT identity, day FROM daily_plays WHERE ${PLAYED}`],
+  ["wordle_plays", "SELECT identity, day FROM wordle_plays"],
+  ["dossier_plays", "SELECT identity, day FROM dossier_plays"],
+  ["challenge_plays", "SELECT identity, day FROM challenge_plays"],
+  ["grid_plays", "SELECT identity, day FROM grid_plays"],
+  ["petitbac_daily_plays", "SELECT identity, day FROM petitbac_daily_plays"],
+  ["ball_gains", "SELECT identity, day FROM ball_gains WHERE source NOT LIKE 'admin:%'"],
+  ["wild_encounters", "SELECT identity, day FROM wild_encounters WHERE kind <> 'trade'"],
+];
+async function siteRetention(db, fromDay, toDay, exclude = []) {
+  const present = [];
+  for (const [table, sql] of SITE_SOURCES) {
+    if ((await db.query("SELECT to_regclass($1) AS t", [table])).rows[0]?.t) present.push([table, sql]);
+  }
+  if (!present.length) return null;
+  const out = await cohortRates(db, present.map(([, sql]) => sql).join(" UNION ALL "), fromDay, toDay, exclude);
+  return { ...out, sources: present.map(([table]) => table) };
 }
 
 // Today's Pokémon du jour at a glance for /admin/stats: finders, give-ups, reactions, friends invited.
@@ -42,4 +75,4 @@ function todaySectionHtml(t) {
   return `<p style="margin:16px 0 0">🎯 Pokémon du jour aujourd'hui : <b>${n(t.found)}</b> trouvé(s), <b>${n(t.gaveup)}</b> abandon(s) · réactions ${reactions} · 🎁 parrainages : <b>${n(t.friends)}</b></p>`;
 }
 
-module.exports = { dailyRetention, dailyToday, todaySectionHtml };
+module.exports = { dailyRetention, siteRetention, SITE_SOURCES, dailyToday, todaySectionHtml };

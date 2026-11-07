@@ -79,7 +79,9 @@ test("route remains authenticated and measures short windows without writing to 
   const route=server.slice(a,b);
   assert.match(route,/\[1, 3, 7, 14, 30, 90\]/);
   assert.match(route,/livePeriod = days === 1 \|\| days === 3/);
-  assert.match(route,/usageMetrics\.startDay\(14, retentionEnd\)/);
+  // DATA-04: 28 finished Paris days, admin accounts excluded from both return measures.
+  assert.match(route,/usageMetrics\.startDay\(28, retentionEnd\)/);
+  assert.match(route,/const exclude = \[\.\.\.ADMIN_ACCOUNT_IDS\]\.map\(\(id\) => "user:" \+ id\);/);
   for(const header of ["X-Robots-Tag","Referrer-Policy","Cache-Control"])assert.ok(route.includes(header));
   assert.match(route,/res\.status\(403\)/);
   assert.doesNotMatch(route,/INSERT INTO|UPDATE\s+\w+|DELETE FROM/);
