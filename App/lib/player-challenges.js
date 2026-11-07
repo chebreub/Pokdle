@@ -41,6 +41,7 @@ const PER_DAY = 5;
 // choose, a free message between friends, and « 📅 Du jour » (fewer tries at today's Pokémon).
 const PER_DAY_FRIENDS = 20;
 const safety = require("./social-safety");
+const sharedSeries = require("./player-challenge-series");
 const DAY_CHOICES = Object.freeze([1, 3, 7]);
 const NOTE_MAX = 100;
 const DAILY = "jour";
@@ -71,6 +72,10 @@ async function ensureTables(db) {
   // 🗑 Effacer (3/11) : chacun efface de sa liste. La ligne reste (comptée dans les défis du jour) et part au bout de 30 jours.
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS hidden_to BOOLEAN NOT NULL DEFAULT false");
   await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS hidden_from BOOLEAN NOT NULL DEFAULT false");
+  // PART-02: only new matched series have these server-owned secrets/progress.
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS series_ids JSONB");
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS series_gens INTEGER[]");
+  await db.query("ALTER TABLE player_challenges ADD COLUMN IF NOT EXISTS series_progress JSONB");
 }
 
 const verb = (mode) => (CHALLENGE_MODES[mode]?.kind === "serie" ? "série" : "record");
@@ -109,6 +114,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       left: Math.max(0, Math.min(PER_DAY - sent.others, PER_DAY_FRIENDS - sent.total)), leftFriends: Math.max(0, PER_DAY_FRIENDS - sent.total),
       perDay: PER_DAY, perDayFriends: PER_DAY_FRIENDS, days: DAYS, dayChoices: DAY_CHOICES, noteMax: NOTE_MAX, phrases: PHRASES,
       mystery: compare ? { attempts: MYSTERY_ATTEMPTS } : null,
+      sharedSeries: compare ? { total: sharedSeries.TOTAL, max: sharedSeries.MAX_TRIES, gens:sharedSeries.DEFAULT_GENS } : null,
       daily: today && today.status === "won" ? { tries: Number(today.tries) } : null,
       modes: Object.entries(CHALLENGE_MODES).map(([mode, cfg]) => ({ mode, label: cfg.label, kind: cfg.kind, record: byMode[mode] || 0, ...(cfg.max ? { max: cfg.max } : {}) })),
     };
@@ -119,8 +125,10 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     const from = String(fromId);
     const mystery = mode === MYSTERY;
     const daily = mode === DAILY;
-    const cfg = mystery || daily ? null : CHALLENGE_MODES[mode];
-    if (!mystery && !daily && !cfg) return { ok: false, error: "mode" };
+    const same = mode === sharedSeries.MODE;
+    const cfg = mystery || daily || same ? null : CHALLENGE_MODES[mode];
+    if (!mystery && !daily && !same && !cfg) return { ok: false, error: "mode" };
+    if (same && !compare) return {ok:false,error:"unavailable"};
     const length = days == null ? DAYS : Number(days);
     if (!DAY_CHOICES.includes(length)) return { ok: false, error: "days" };
     const said = Number(phrase);
@@ -134,6 +142,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     if (to === from) return { ok: false, error: "self" };
     let target;
     if (mystery) target = Number(attempts);
+    else if (same) target = sharedSeries.TOTAL;
     else if (daily) {
       // « Du jour » : fewer tries than mine at today's Pokémon (found today).
       const today = await dailyTries(from);
@@ -162,10 +171,19 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     if (open) return { ok: false, error: "already" };
     // « Du jour » ends at midnight in Paris (always sooner than a day from now).
     const expires = daily ? `LEAST(${PARIS_MIDNIGHT}, now() + make_interval(days => $6))` : "now() + make_interval(days => $6)";
-    const row = (await db.query(`INSERT INTO player_challenges(from_id, to_id, mode, target, phrase, expires_at, secret_id, note, day)
-      VALUES ($1, $2, $3, $4, $5, ${expires}, $7, $8, ${daily ? PARIS_TODAY : "NULL"}) RETURNING id`, [from, to, mode, target, said, length, secret ? secret.id : null, message])).rows[0];
+    // A competitive series uses one frozen secret sequence stored only by the server.
+    // Historical "record" challenges keep the original insert path, unchanged.
+    const seriesIds = same ? sharedSeries.pickSeries(pokemon,sharedSeries.DEFAULT_GENS) : null;
+    if (same && !seriesIds) return {ok:false,error:"unavailable"};
+    const row = same
+      ? (await db.query(`INSERT INTO player_challenges(from_id,to_id,mode,target,phrase,expires_at,note,series_ids,series_gens,series_progress)
+          VALUES ($1,$2,$3,$4,$5,${expires},$7,$8::jsonb,$9::int[],$10::jsonb) RETURNING id`,
+        [from,to,mode,target,said,length,message,JSON.stringify(seriesIds),sharedSeries.DEFAULT_GENS,JSON.stringify(sharedSeries.newProgress())])).rows[0]
+      : (await db.query(`INSERT INTO player_challenges(from_id, to_id, mode, target, phrase, expires_at, secret_id, note, day)
+        VALUES ($1, $2, $3, $4, $5, ${expires}, $7, $8, ${daily ? PARIS_TODAY : "NULL"}) RETURNING id`,
+        [from, to, mode, target, said, length, secret ? secret.id : null, message])).rows[0];
     const name = await nameOf(from);
-    const what = mystery ? `Trouve son Pokémon mystère en ${target} essais.` : daily ? `Trouve le Pokémon du jour en moins de ${target} essais, aujourd’hui.` : `Bats sa ${verb(mode)} au ${cfg.label} : ${target}.`;
+    const what = same ? `Même série de ${sharedSeries.TOTAL} Pokémon, mêmes secrets et ${sharedSeries.MAX_TRIES} essais maximum par Pokémon. Jouez tous les deux !` : mystery ? `Trouve son Pokémon mystère en ${target} essais.` : daily ? `Trouve le Pokémon du jour en moins de ${target} essais, aujourd’hui.` : `Bats sa ${verb(mode)} au ${cfg.label} : ${target}.`;
     tell(to, { title: `⚔️ ${name} te défie`, body: what + ` « ${message || PHRASES[said]} »`, url: "/?defis=1", tag: "pokedle-defi" });
     return { ok: true, id: Number(row.id), target };
   }
@@ -217,7 +235,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       WHERE status = 'open' AND expires_at <= now() AND (from_id = $1 OR to_id = $1)`, [id]);
     await db.query(`DELETE FROM player_challenges WHERE created_at < now() - make_interval(days => $1)`, [KEEP_DAYS]);
     const rows = (await db.query(`SELECT c.id, c.from_id, c.to_id, c.mode, c.target, c.phrase, c.best, c.status, c.seen_to, c.seen_from,
-        c.secret_id, jsonb_array_length(c.guesses) AS tries, c.note,
+        c.secret_id, jsonb_array_length(c.guesses) AS tries, c.note, c.series_progress,
         to_char(c.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at,
         to_char(c.expires_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS expires_at,
         uf.username AS from_name, uf.partner_id AS from_partner, ut.username AS to_name, ut.partner_id AS to_partner
@@ -228,14 +246,23 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
       ok: true, accepting: !off,
       challenges: rows.map((row) => {
         const incoming = row.to_id === id;
-        const mystery = row.mode === MYSTERY;
+        const mystery = row.mode === MYSTERY, matched = row.mode === sharedSeries.MODE;
         const cfg = mystery ? { label: MYSTERY_LABEL, kind: "mystere" } : row.mode === DAILY ? { label: DAILY_LABEL, kind: DAILY }
-          : CHALLENGE_MODES[row.mode] || { label: row.mode, kind: "record" };
+          : matched ? {label:"Série commune de 10 Pokémon",kind:sharedSeries.KIND} : CHALLENGE_MODES[row.mode] || { label: row.mode, kind: "record" };
+        const mine = matched ? row.series_progress?.[incoming ? "to" : "from"] : null;
+        const theirs = matched ? row.series_progress?.[incoming ? "from" : "to"] : null;
+        const bothDone = Boolean(mine?.done && theirs?.done);
         // The hidden Pokémon is named to the one who chose it, and to the other once the challenge is over.
         const named = mystery && row.secret_id && (!incoming || row.status !== "open");
         return {
           id: Number(row.id), incoming, mode: row.mode, label: cfg.label, kind: cfg.kind,
           ...(mystery ? { tries: Number(row.tries) || 0 } : {}), ...(named ? { secretId: Number(row.secret_id) } : {}),
+          ...(matched ? {myFound:Number(mine?.found)||0,myIndex:Number(mine?.index)||0,
+              myDone:Boolean(mine?.done),opponentDone:Boolean(theirs?.done),
+              ...(row.status!=="open" && bothDone ? {
+                myAttemptsWon:Number(mine?.attemptsWon)||0,
+                opponentFound:Number(theirs?.found)||0,opponentAttemptsWon:Number(theirs?.attemptsWon)||0
+              } : {})} : {}),
           target: Number(row.target), best: row.best == null ? null : Number(row.best), ...(cfg.max ? { max: cfg.max } : {}),
           phrase: PHRASES[Number(row.phrase)] || PHRASES[0], ...(row.note ? { note: row.note } : {}), status: row.status,
           seen: incoming ? Boolean(row.seen_to) : Boolean(row.seen_from),
@@ -278,6 +305,75 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     if (!row || !compare) return { ok: false, error: "unknown" };
     const incoming = row.to_id === me;
     return { ...gameView(row, me), incoming, other: { pid: playerPid(incoming ? row.from_id : row.to_id), username: (incoming ? row.from_name : row.to_name) || "Un dresseur" } };
+  }
+
+
+  // PART-02: both players compete on the SAME ten unknown Pokémon.
+  // No secret IDs, seeds or future answers are ever returned to the client.
+  async function seriesGame(accountId, challengeId) {
+    await ready;
+    const me=String(accountId), id=Number(challengeId);
+    if(!Number.isSafeInteger(id)||id<=0||!compare) return {ok:false,error:"unknown"};
+    const row=(await db.query(`SELECT c.*, uf.username AS from_name, ut.username AS to_name
+      FROM player_challenges c LEFT JOIN users uf ON uf.discord_id=c.from_id
+      LEFT JOIN users ut ON ut.discord_id=c.to_id
+      WHERE c.id=$1 AND c.mode=$2 AND (c.from_id=$3 OR c.to_id=$3)`,
+      [id,sharedSeries.MODE,me])).rows[0];
+    if(!row) return {ok:false,error:"unknown"};
+    const incoming=row.to_id===me;
+    return {...sharedSeries.publicView(row,me,byId,compare),incoming,
+      other:{pid:playerPid(incoming?row.from_id:row.to_id),
+        username:(incoming?row.from_name:row.to_name)||"Un dresseur"}};
+  }
+
+  async function seriesPlay(accountId,{id,round,pokemonId,pass}={}) {
+    await ready;
+    const me=String(accountId), challengeId=Number(id);
+    if(!compare || !Number.isSafeInteger(challengeId) || challengeId<=0 ||
+       !Number.isInteger(round) || round<0 || round>=sharedSeries.TOTAL)
+       return {ok:false,error:"invalid_action"};
+    if(pass!==undefined&&typeof pass!=="boolean") return {ok:false,error:"invalid_action"};
+    const client=await db.connect();
+    let row,final=null,side;
+    try {
+      await client.query("BEGIN");
+      row=(await client.query(`SELECT * FROM player_challenges
+        WHERE id=$1 AND mode=$2 AND (from_id=$3 OR to_id=$3) FOR UPDATE`,
+        [challengeId,sharedSeries.MODE,me])).rows[0];
+      if(!row){await client.query("ROLLBACK");return {ok:false,error:"unknown"};}
+      side=row.from_id===me?"from":"to";
+      if(row.status!=="open"||new Date(row.expires_at)<=new Date()){
+        await client.query("ROLLBACK");
+        return {...sharedSeries.publicView(row,me,byId,compare),replayed:true};
+      }
+      const allowed=Array.isArray(row.series_gens)?row.series_gens:sharedSeries.DEFAULT_GENS;
+      const move=sharedSeries.advance(row.series_progress,side,round,pokemonId,pass===true,row.series_ids,byId,allowed);
+      if(!move.changed){
+        await client.query("ROLLBACK");
+        return {...sharedSeries.publicView(row,me,byId,compare),
+          ...(move.error?{ok:false,error:move.error}:move.duplicate?{duplicate:true}:{replayed:true})};
+      }
+      final=sharedSeries.outcome(row.series_progress);
+      row=(await client.query(`UPDATE player_challenges SET series_progress=$2::jsonb,
+        status=COALESCE($3,status),
+        best=CASE WHEN $3 IS NOT NULL THEN ($2::jsonb->'to'->>'found')::int ELSE best END,
+        resolved_at=CASE WHEN $3 IS NOT NULL THEN now() ELSE resolved_at END,
+        seen_from=CASE WHEN $3 IS NOT NULL THEN false ELSE seen_from END,
+        seen_to=CASE WHEN $3 IS NOT NULL THEN false ELSE seen_to END
+        WHERE id=$1 RETURNING *`,
+        [challengeId,JSON.stringify(row.series_progress),final])).rows[0];
+      await client.query("COMMIT");
+    }catch(error){
+      await client.query("ROLLBACK").catch(()=>{});
+      throw error;
+    }finally{client.release();}
+    if(final){
+      const a=row.series_progress.from,b=row.series_progress.to;
+      const summary=`Mêmes 10 Pokémon : ${a.found}/10 contre ${b.found}/10. Départage : essais sur les trouvés (${a.attemptsWon} / ${b.attemptsWon}).`;
+      tell(row.from_id,{title:"🏁 Série commune terminée",body:summary,url:"/?defis=1",tag:"pokedle-defi"});
+      tell(row.to_id,{title:"🏁 Série commune terminée",body:summary,url:"/?defis=1",tag:"pokedle-defi"});
+    }
+    return {...sharedSeries.publicView(row,me,byId,compare),roundFinished:row.series_progress[side].index>round,fresh:Boolean(final)};
   }
 
   async function guess(accountId, { id, pokemonId } = {}) {
@@ -378,7 +474,7 @@ function createPlayerChallenges({ db, accountOfPid, playerPid, push = async () =
     return { ok: true, cancelled: r.rowCount };
   }
 
-  return { options, create, afterResult, list, game, guess, seen, decline, block, setAccepting, hide, cancel };
+  return { options, create, afterResult, list, game, guess, seriesGame, seriesPlay, seen, decline, block, setAccepting, hide, cancel };
 }
 
 // The same notification the 🔔 reminders use, for the players who turned it on.
@@ -442,6 +538,8 @@ function mountChallengeRoutes(app, { express, challenges, getUser, log = console
   app.post("/api/challenges", json, run("create", (user, body) => challenges.create(user.id, body)));
   app.get("/api/challenges/game", run("game", (user, _body, req) => challenges.game(user.id, req.query.id)));
   app.post("/api/challenges/guess", json, run("guess", (user, body) => challenges.guess(user.id, body), limitedGuesses));
+  app.get("/api/challenges/series", run("series", (user, _body, req) => challenges.seriesGame(user.id, req.query.id)));
+  app.post("/api/challenges/series/play", json, run("series-play", (user, body) => challenges.seriesPlay(user.id, body), limitedGuesses));
   app.post("/api/challenges/seen", json, run("seen", (user, body) => challenges.seen(user.id, body.ids)));
   app.post("/api/challenges/decline", json, run("decline", (user, body) => challenges.decline(user.id, body.id)));
   app.post("/api/challenges/block", json, run("block", (user, body) => challenges.block(user.id, body.id)));

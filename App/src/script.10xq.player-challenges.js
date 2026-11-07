@@ -41,6 +41,8 @@ function pcOpenDraft(gen) {
 }
 // « 📅 Du jour » : fewer tries than the challenger at today's Pokémon du jour.
 var PC_DAILY = 'jour';
+var PC_SAME = 'serie10';
+var PC_SAME_KIND = 'serie_identique';
 // These games send a result at each right answer: only a won challenge is worth a word mid-run.
 var PC_PER_ANSWER = { poids: true, intrus: true };
 var PC_ERRORS = {
@@ -144,7 +146,7 @@ function pcFriendsList() {
 function openChallengeForm(pid, name, mode) {
   if (!window.__pokedleAuthed) { showToast(PC_ERRORS.login); return; }
   pcForm = { pid: String(pid || ''), name: String(name || 'Dresseur'), mode: mode && mode !== PC_MYSTERY && mode !== PC_DAILY ? mode : null, phrase: 0,
-    tab: mode === PC_MYSTERY ? 'pokemon' : mode === PC_DAILY ? 'jour' : null, pokemonId: null, attempts: 8, days: 7, note: '', extra: [] };
+    tab: mode === PC_MYSTERY ? 'pokemon' : mode === PC_DAILY ? 'jour' : mode === PC_SAME ? 'same' : null, pokemonId: null, attempts: 8, days: 7, note: '', extra: [] };
   ensureOverlay('⚔️ Défier ' + pcForm.name, '<div class="pc-form"><p class="pc-empty">Chargement de tes records…</p></div>');
   var overlay = document.getElementById('overlay-modal');
   if (overlay) overlay.dataset.kind = 'challenge';
@@ -170,7 +172,7 @@ function renderChallengeForm() {
   }
   var friend = pcIsFriend(pcForm.pid);
   var tab = function (key, label) { return '<button type="button" role="tab" data-pc-tab="' + key + '" aria-selected="' + (pcForm.tab === key) + '">' + label + '</button>'; };
-  var tabs = '<div class="pc-tabs pc-tabs-3" role="tablist">' + tab('record', '🏆 Record') + (mystery ? tab('pokemon', '🔍 Pokémon') : '') + tab('jour', '📅 Du jour') + '</div>';
+  var tabs = '<div class="pc-tabs pc-tabs-4" role="tablist">' + tab('record', '🏆 Record') + (mystery ? tab('pokemon', '🔍 Pokémon') : '') + (o.sharedSeries ? tab('same', '🎯 Même série') : '') + tab('jour', '📅 Du jour') + '</div>';
   var body = '', ready = true, playFirst = false;
   if (pcForm.tab === 'pokemon') {
     var chosen = pcForm.pokemonId && typeof POKEMON_BY_ID !== 'undefined' ? POKEMON_BY_ID.get(Number(pcForm.pokemonId)) : null;
@@ -184,6 +186,12 @@ function renderChallengeForm() {
         return '<button type="button" data-pc-attempts="' + n + '" aria-pressed="' + (n === pcForm.attempts) + '">' + n + hint + '</button>';
       }).join('') + '</div>';
     ready = Boolean(pcForm.pokemonId);
+  } else if (pcForm.tab === 'same') {
+    body = '<div class="pc-daily"><span class="pc-daily-n">10</span><p><b>Exactement les mêmes dix Pokémon</b>' +
+      '<small>Le serveur choisit une série secrète commune aux deux joueurs. Toutes les générations ; 8 essais maximum par Pokémon. ' +
+      'Chacun joue quand il veut avant l’expiration. Plus de Pokémon trouvés gagne ; en cas d’égalité, moins d’essais sur les Pokémon trouvés.</small></p></div>' +
+      '<p class="pc-note">Ces parties ne remplacent pas tes records Pixelisé, Cri, Zoom ou Description. Aucune réponse n’est envoyée en avance.</p>';
+    ready = Boolean(o.sharedSeries);
   } else if (pcForm.tab === 'jour') {
     body = o.daily
       ? '<div class="pc-daily"><span class="pc-daily-n">' + Number(o.daily.tries) + '</span><p><b>Ton Pokémon du jour : ' + Number(o.daily.tries) + ' essai' + (o.daily.tries > 1 ? 's' : '') + '</b>' +
@@ -271,6 +279,7 @@ function pcSummary() {
     return;
   }
   if (pcForm.tab === 'jour') { line.textContent = ''; return; }
+  if (pcForm.tab === 'same') { line.textContent = 'Deux joueurs, mêmes 10 Pokémon dans le même ordre, validés par le serveur.'; return; }
   var m = pcState.options && pcState.options.modes.find(function (x) { return x.mode === pcForm.mode; });
   if (m) line.textContent = m.record ? pcForm.name + ' devra ' + pcGoalText({ target: m.record, max: m.max }).replace(/^fais/, 'faire') + ' au ' + m.label + '.' : '';
 }
@@ -281,6 +290,7 @@ function pcPayload(pid) {
   if (pcForm.note && pcForm.note.trim() && (pid !== pcForm.pid || pcIsFriend(pid))) base.note = pcForm.note.trim();
   if (pcForm.tab === 'pokemon') return Object.assign(base, { mode: PC_MYSTERY, pokemonId: pcForm.pokemonId, attempts: pcForm.attempts });
   if (pcForm.tab === 'jour') return Object.assign(base, { mode: PC_DAILY });
+  if (pcForm.tab === 'same') return Object.assign(base, { mode: PC_SAME });
   return Object.assign(base, { mode: pcForm.mode });
 }
 // One request per player, one after the other; the first refusal is told, the rest go on.
@@ -320,7 +330,7 @@ function sendChallenge() {
     var who = names.length > 1 ? names.slice(0, -1).join(', ') + ' et ' + names[names.length - 1] : names[0];
     var box = document.querySelector('#overlay-body .pc-form');
     if (box) box.innerHTML = '<div class="pc-sent"><b>Défi envoyé ⚔️</b><p>' + escapeHtml(who) + (names.length > 1 ? ' le verront' : ' le verra') + ' à la prochaine visite. ' +
-      (mystery ? 'Tu seras prévenu s’il trouve ton Pokémon… ou pas.' : daily ? 'Tu seras prévenu si quelqu’un fait moins de ' + Number(target) + ' essais avant minuit.' : 'Tu seras prévenu si quelqu’un fait mieux que ' + Number(target) + '.') + '</p>' +
+      (mystery ? 'Tu seras prévenu s’il trouve ton Pokémon… ou pas.' : daily ? 'Tu seras prévenu si quelqu’un fait moins de ' + Number(target) + ' essais avant minuit.' : pcForm.tab === 'same' ? 'Joue toi aussi les mêmes dix Pokémon depuis Mes défis : chacun a huit essais maximum par manche.' : 'Tu seras prévenu si quelqu’un fait mieux que ' + Number(target) + '.') + '</p>' +
       (result.failed.length ? '<p class="pc-note">Pas envoyé à ' + escapeHtml(result.failed.map(function (x) { return pcNameOf(x.pid); }).join(', ')) + ' : ' + escapeHtml(PC_ERRORS[result.failed[0].error] || 'réessaie plus tard.') + '</p>' : '') +
       (typeof notifAskHtml === 'function' ? notifAskHtml(pcForm.name, 'sent') : '') +
       '<button type="button" class="btn-ghost" data-action="closeOverlayModal">OK</button></div>';
@@ -360,7 +370,38 @@ function pcLeft(c) {
   var ms = Date.parse(c.expiresAt) - Date.now();
   return ms < 86400000 ? 'encore ' + Math.max(1, Math.ceil(ms / 3600000)) + ' h' : 'encore ' + pcDaysLeft(c) + ' j';
 }
+// A same-sequence duel is not a record challenge: both participants play.
+function pcSameInviteHtml(c) {
+  var open = pcOpen(c);
+  var game = open ? '<button type="button" class="btn-blue pc-go" data-action="openSharedSeriesGame" data-args="[' + Number(c.id) + ']">' +
+    (c.myDone ? 'Voir mon score · en attente' : c.myIndex > 0 ? 'Continuer la série · ' + Number(c.myIndex) + '/10' : 'Jouer les 10 Pokémon identiques') + '</button>' : '';
+  var status = open ? (c.myDone ? 'Ta série est terminée. L’autre joueur doit encore finir.' : pcLeft(c)) :
+    c.status === 'won' ? '🏆 Tu as gagné' : c.status === 'tied' ? '🤝 Égalité' : c.status === 'lost' ? 'Partie perdue' : 'Défi terminé';
+  return '<article class="pc-card' + (open ? ' is-open' : '') + '">' +
+    '<div class="pc-who">' + pcAvatar(c.other) + '<div><b>' + escapeHtml(c.other.username) + ' te défie sur la même série</b><small>' + escapeHtml(status) + '</small></div></div>' +
+    '<div class="pc-goal"><span class="pc-mystery">🎯</span><span>10 Pokémon identiques et 8 essais chacun. ' +
+    'Le serveur valide les deux parcours.</span></div>' +
+    '<p class="pc-note">Ton score : ' + Number(c.myFound || 0) + '/10 · ' + (c.myDone ? 'terminé' : 'en cours') + '</p>' +
+    game + (open ? '<details class="pc-more"><summary>Refuser…</summary>' +
+    '<button type="button" data-action="declineChallenge" data-args="[' + Number(c.id) + ']">Refuser ce défi</button></details>' : '') +
+    '</article>';
+}
+function pcSameSentHtml(c) {
+  var open = pcOpen(c), finished = c.myDone;
+  var label = open ? (finished ? 'En attente de ' + escapeHtml(c.other.username) :
+     'À toi de jouer contre ' + escapeHtml(c.other.username)) :
+     c.status === 'tied' ? 'Égalité avec ' + escapeHtml(c.other.username) : 'Série terminée contre ' + escapeHtml(c.other.username);
+  return '<article class="pc-group"><div class="pc-group-head"><span class="pc-mon">🎯</span><div><b>Série commune de 10 Pokémon</b><small>' + label + '</small></div></div>' +
+    '<p class="pc-note">Tu as trouvé ' + Number(c.myFound || 0) + '/10 · ' + (finished ? 'terminé' : 'à jouer') +
+    '. Même ordre et mêmes secrets pour chacun.</p>' +
+    (open ? '<button type="button" class="btn-blue pc-go" data-action="openSharedSeriesGame" data-args="[' +
+      Number(c.id) + ']">' + (finished ? 'Voir mon score' : 'Jouer ma série') + '</button>' +
+      '<button type="button" class="btn-ghost" data-action="pcCancelGroup" data-args=\'' +
+      pcArgs(['serie10:' + c.id,[Number(c.id)]]) + '\'>Annuler ce duel</button>' : '') + '</article>';
+}
+
 function pcIncomingHtml(c) {
+  if (c.kind === PC_SAME_KIND) return pcSameInviteHtml(c);
   var open = pcOpen(c), mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY;
   var state = open ? (daily ? 'avant minuit' : pcLeft(c).replace('encore', 'expire dans'))
     : daily ? (c.status === 'won' ? '✅ Réussi : ' + Number(c.best) + ' essais contre ' + Number(c.target) : c.status === 'declined' ? 'Refusé' : '❌ Pas réussi' + (c.best ? ' (' + Number(c.best) + ' essais)' : ''))
@@ -408,6 +449,122 @@ function pcSentHtml(c) {
   var again = !pcOpen(c) ? '<button type="button" class="btn-ghost pc-again" data-action="openChallengeForm" data-args="' + pcArgs([c.other.pid, c.other.username, c.mode]) + '">' + (c.status === 'won' ? '⚔️ Revanche' : '⚔️ Redéfier') + '</button>' : '';
   return '<div class="pc-row">' + pcAvatar(c.other) + '<p>' + line + '</p>' + watch + again + '</div>';
 }
+
+// PART-02: shared series. All ten secrets and both scores are server-owned.
+// The client receives only comparisons of its own actual guesses.
+var pcShared = null;
+function pcSharedMatches(text) {
+  var q=pcFold(text);
+  if(!q) return [];
+  var forbidden=new Set((pcShared?.rows||[]).map(function(r){return Number(r.pokemonId);}));
+  var pool=pcSecretPool().filter(function(p){return p.guessable !== false && !forbidden.has(Number(p.id));});
+  return pool.filter(function(p){return pcFold(p.name).startsWith(q);})
+    .concat(pool.filter(function(p){return pcFold(p.name).includes(q)&&!pcFold(p.name).startsWith(q);}))
+    .slice(0,6);
+}
+function pcSharedHtml(g) {
+  var dots=(g.rounds||[]).map(function(r){return '<i class="' + (r.won?'is-won':'is-lost') +
+    '" title="' + (r.won ? 'Trouvé' : 'Non trouvé') + '">' + (r.won?'✓':'×') + '</i>';}).join('');
+  var summary='<p class="pc-shared-score">🎯 ' + Number(g.found) + '/10 trouvés · ' +
+    Number(g.attemptsWon) + ' essais sur les trouvés</p>' +
+    '<div class="pss-dots pc-shared-dots" aria-label="Manches terminées">' + dots + '</div>';
+  var end = g.status !== 'open' ? 'Cette série est clôturée.'
+    : g.done ? 'Ta série est terminée. Ton ami doit encore finir pour déterminer le résultat.' : '';
+  if (g.status !== 'open' && g.outcome) end = g.outcome === 'gagné' ? '🏆 Tu as remporté cette série !' :
+    g.outcome === 'égalité' ? '🤝 Égalité parfaite !' :
+    g.outcome === 'perdu' ? 'Ton ami a remporté la série.' : end;
+  if (g.done) return '<div class="pc-shared">' + summary + '<p class="pc-note">' + escapeHtml(end) + '</p>' +
+    (g.opponentFound !== undefined ? '<p class="pc-shared-result">Toi : ' + Number(g.found) + '/10 · ' +
+      Number(g.attemptsWon) + ' essais | Adversaire : ' + Number(g.opponentFound) + '/10 · ' +
+      Number(g.opponentAttemptsWon) + ' essais</p>' : '') +
+    '<button type="button" class="btn-ghost" data-action="openMyChallenges">Retour à mes défis</button></div>';
+  var guesses=(g.rows||[]).slice().reverse().map(function(row){
+    var p=POKEMON_BY_ID?.get(Number(row.pokemonId));
+    if(!p) return '';
+    return '<div class="pc-try"><div class="pc-try-who"><img src="' + escapeHtml(getPokemonSprite(p)) +
+      '" alt="" /><b>' + escapeHtml(p.name) + '</b></div><div class="pc-try-cells">' +
+      PC_CELLS.map(function(c){
+        return '<div class="pc-cell is-' + escapeHtml(row.cmp[c[0]]||'wrong') + '"><small>' +
+          escapeHtml(c[1]) + '</small>' + escapeHtml(pcCellText(p,c[0],row)) + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  return '<div class="pc-shared">' + summary +
+    '<p class="pc-shared-head"><b>Pokémon ' + (Number(g.index)+1) + '/10</b>' +
+    ' · ' + Number(g.attempts) + '/8 essais · mêmes secrets que ton adversaire</p>' +
+    '<div class="pc-tries">' + (guesses||'<p class="pc-empty">Devine le Pokémon avec les indices du Pokémon du jour.</p>') + '</div>' +
+    '<div class="pc-game-input pc-shared-input"><input type="search" class="pc-shared-guess" autocomplete="off"' +
+      ' placeholder="Tape un Pokémon…" aria-label="Proposer un Pokémon" />' +
+    '<button type="button" class="btn-blue" data-action="pcSharedPlay">Valider</button></div>' +
+    '<div class="pc-suggests pc-shared-suggests"></div><p class="pc-status" role="status" aria-live="polite"></p>' +
+    '<button type="button" class="btn-ghost pc-shared-pass" data-action="pcSharedSkip">Passer ce Pokémon</button></div>';
+}
+function pcSharedRender(focus) {
+  var box=document.querySelector('#overlay-body .pc-shared-wrap');
+  if(!box||!pcShared) return;
+  box.innerHTML=pcSharedHtml(pcShared);
+  var input=box.querySelector('.pc-shared-guess');
+  if(!input) return;
+  input.oninput=function(){
+    var list=box.querySelector('.pc-shared-suggests');
+    if(list) list.innerHTML=pcSharedMatches(input.value).map(function(p){
+      return '<button type="button" class="pc-suggest" data-pc-shared-pick="' + Number(p.id) + '">' +
+        '<img src="' + escapeHtml(getPokemonSprite(p)) + '" alt="" /><span>' + escapeHtml(p.name) + '</span></button>';
+    }).join('');
+  };
+  input.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();pcSharedPlay();}};
+  box.onclick=function(e){var el=e.target.closest('[data-pc-shared-pick]');if(el)pcSharedPlay(Number(el.dataset.pcSharedPick));};
+  if(focus)input.focus({preventScroll:true});
+}
+function openSharedSeriesGame(id) {
+  pcShared=null;
+  ensureOverlay('🎯 Série commune', '<div class="pc-shared-wrap"><p class="pc-empty">Chargement…</p></div>');
+  var overlay=document.getElementById('overlay-modal');if(overlay)overlay.dataset.kind='challenge';
+  pcGet('/api/challenges/series?id='+encodeURIComponent(id)).then(function(data){
+    if(!data||!data.ok)throw Error('unavailable');
+    pcShared=data;pcSharedRender(true);
+  }).catch(function(){
+    var box=document.querySelector('#overlay-body .pc-shared-wrap');
+    if(box)box.textContent='Ce défi ne peut pas être ouvert pour le moment.';
+  });
+}
+function pcSharedPlay(pokemonId) {
+  if(!pcShared||pcShared.done||pcShared.busy)return;
+  var input=document.querySelector('#overlay-body .pc-shared-guess');
+  var status=document.querySelector('#overlay-body .pc-shared .pc-status');
+  var id=Number(pokemonId);
+  if(!id&&input){
+    var exact=pcSharedMatches(input.value).find(function(p){return pcFold(p.name)===pcFold(input.value);});
+    id=Number((exact||pcSharedMatches(input.value)[0])?.id)||0;
+  }
+  if(!id){if(status)status.textContent='Choisis un Pokémon dans la liste.';return;}
+  pcSharedRequest({pokemonId:id});
+}
+function pcSharedSkip(){if(pcShared&&!pcShared.done)pcSharedRequest({pass:true});}
+function pcSharedRequest(action) {
+  if(!pcShared||pcShared.busy)return;
+  var old=pcShared;
+  old.busy=true;
+  pcPost('/api/challenges/series/play',Object.assign({id:old.id,round:old.index},action)).then(function(data){
+    old.busy=false;
+    if(!data||!data.ok){
+      var status=document.querySelector('#overlay-body .pc-shared .pc-status');
+      if(status)status.textContent=data?.error==='invalid_guess'?'Pokémon invalide pour ce défi.':'Proposition impossible. Réessaie.';
+      return;
+    }
+    pcShared=data;
+    pcSharedRender(!data.done);
+    if(data.fresh){
+      pcRefresh().then(function(){showToast('🏁 Série terminée : résultat vérifié des deux côtés !');});
+    }
+  }).catch(function(){
+    old.busy=false;
+    var status=document.querySelector('#overlay-body .pc-shared .pc-status');
+    if(status)status.textContent='Connexion interrompue : réessaie sans perdre ta progression.';
+  });
+}
+window.openSharedSeriesGame=openSharedSeriesGame;
+window.pcSharedPlay=pcSharedPlay;
+window.pcSharedSkip=pcSharedSkip;
 
 // ---- « Trouve ce Pokémon » : the game, in a window, compared by the server
 var pcGame = null;
@@ -558,6 +715,7 @@ function pcDayLabel(iso) {
   return 'le ' + new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'long' }).format(new Date(t));
 }
 function pcGroupKey(c) {
+  if (c.kind === PC_SAME_KIND) return 'matched:' + Number(c.id);
   return [c.kind, c.mode, c.target, c.secretId || '', c.note || c.phrase || '', String(c.createdAt || '').slice(0, 16)].join('|');
 }
 function pcSentGroups(sent) {
@@ -573,6 +731,7 @@ function pcMoreMenu(inner) {
   return '<details class="pc-dots"><summary aria-label="Plus d’actions">⋯</summary><div class="pc-dots-menu">' + inner + '</div></details>';
 }
 function pcTodoHtml(c) {
+  if (c.kind === PC_SAME_KIND) return pcSameInviteHtml(c);
   var mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY;
   var goal = mystery
     ? '<div class="pc-goal"><span class="pc-mystery">?</span><span>Trouve son Pokémon mystère en <b class="pc-small-b">' + Number(c.target) + '</b> essais</span></div>'
@@ -597,6 +756,7 @@ function pcPersonState(c) {
   return { cls: '', text: c.best != null ? Number(c.best) + ' / ' + Number(c.target) : 'pas joué', pct: c.best != null ? Math.min(1, Number(c.best) / Number(c.target)) : 0 };
 }
 function pcGroupHtml(g) {
+  if (g.items[0]?.kind === PC_SAME_KIND) return pcSameSentHtml(g.items[0]);
   var c = g.items[0], n = g.items.length, mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY;
   var done = g.items.filter(function (x) { return x.status === 'won'; }).length;
   var p = mystery && c.secretId && typeof POKEMON_BY_ID !== 'undefined' ? POKEMON_BY_ID.get(Number(c.secretId)) : null;
@@ -619,6 +779,17 @@ function pcGroupHtml(g) {
     '<ul class="pc-people">' + people + '</ul></article>';
 }
 function pcDoneParts(c) {
+  if (c.kind === PC_SAME_KIND) {
+    var label = 'Série de 10 Pokémon identiques contre ' + escapeHtml(c.other.username);
+    if (c.status === 'tied') return ['🤝', 'Égalité', label + ' · ' + Number(c.myFound) + '/10'];
+    if (c.status === 'expired') return ['⏳', 'Série non terminée à temps', label];
+    if (c.status === 'declined') return ['🚫', 'Défi refusé', label];
+    if (c.status === 'cancelled') return ['🚫', 'Défi annulé', label];
+    var won = c.incoming ? c.status === 'won' : c.status === 'lost';
+    return [won ? '🏆' : '💪', won ? 'Tu as gagné la série' : 'Série perdue',
+      label + ' · ' + Number(c.myFound) + ' / ' + Number(c.opponentFound) +
+      ' trouvés · ' + Number(c.myAttemptsWon) + ' / ' + Number(c.opponentAttemptsWon) + ' essais'];
+  }
   var mystery = c.kind === 'mystere', daily = c.kind === PC_DAILY, who = escapeHtml(c.other.username), secret = escapeHtml(pcSecretName(c)), label = escapeHtml(c.label);
   if (c.incoming) {
     if (c.status === 'declined') return ['🚫', 'Refusé : le défi de ' + who, mystery ? 'Pokémon mystère' : daily ? 'Pokémon du jour' : label];
@@ -720,6 +891,7 @@ window.pcCancelGroup = pcCancelGroup;
 
 function acceptChallenge(id) {
   var c = pcFind(id);
+  if (c && c.kind === PC_SAME_KIND) return openSharedSeriesGame(c.id);
   if (c && c.kind === 'mystere') return openMysteryGame(c.id);
   if (c && c.kind === PC_DAILY) {
     closeOverlayModal();
