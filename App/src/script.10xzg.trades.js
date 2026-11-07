@@ -23,6 +23,7 @@ const TRADE_ERRORS = {
   friend_not_a_duplicate: "Ton ami ne l’a plus en double.", already_proposed: "Tu as déjà proposé cet échange.",
   no_longer_available: "L’échange n’est plus possible : un des deux Pokémon n’est plus en double.", last_one: "C’est ton dernier exemplaire : il reste dans ton album.",
   release_limit: "Tu as déjà relâché 10 doublons aujourd’hui.",
+  expired: "Cette proposition a expiré : plus de 7 jours sans réponse.",
   release_changed: "Ta collection a changé entre-temps : rien n’a été relâché, regarde la fiche à jour.",
   previous_action: "Ton relâchement précédent a été terminé. Regarde la fiche à jour.",
   reload_required: "Recharge la page pour relâcher un doublon.", account_changed: "Tu as changé de compte : recharge la page.",

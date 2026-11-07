@@ -9,9 +9,10 @@ Audit en lecture seule. Aucune modification de code, PR, base de production ou c
 
 - **V2-FX-01 fait** : [#342](https://github.com/chebreub/Pokdle/pull/342), fusion `94192b0` (QA complète verte). A · Cinéma + carte holo C.
 - **V2-JUR-01 décidé** : Kayan garde les sons de capture Pokémon GO (7/11, « on garde les sons ») ; les sons faits maison restent en secours. Registre des sources à tenir.
-- **V2-REL-01** : PR en cours (confirmation, reçu, nombre attendu, compte).
+- **V2-REL-01 fait** : [#343](https://github.com/chebreub/Pokdle/pull/343), fusion `c5d229d` (QA complète verte). Confirmation, reçu, nombre attendu, compte.
+- **V2-TRA-01** : PR en cours (expiration à l'acceptation, quota sous verrou, blocage revérifié).
 
-**Avancement V2 : 2/12** (FX-01, JUR-01).
+**Avancement V2 : 3/12** (FX-01, JUR-01, REL-01).
 
 ## Décision
 
