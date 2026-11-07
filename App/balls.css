@@ -682,6 +682,40 @@ body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;col
 .wild-flick-ball svg{width:100%;height:100%}
 .wild-flick-hint{order:-1;padding:7px 14px;border-radius:999px;background:#2E2A33;color:#fff;font:800 13px Nunito,sans-serif;white-space:nowrap;pointer-events:none}
 
+/* 🎬 V2-FX-01 (7/11) : captures « wow » — A · Cinéma (rencontre, lancer, secousses, capture) et C · carte holo (1re capture). */
+.wild-stage{transform-origin:var(--wow-x,50%) 100%;transition:transform calc(.45s * var(--wowk,1)) ease-out}
+.wild-scene .wild-head{position:relative;z-index:2;background:#FFF8EF}
+.wild-scene.is-wow-tense{overflow:hidden}
+.wild-stage.is-wow-intro .wild-mon{animation:wowRise calc(1.3s * var(--wowk,1)) cubic-bezier(.3,1.2,.5,1) both,wildIdle 2.6s ease-in-out calc(1.4s * var(--wowk,1)) infinite}
+@keyframes wowRise{0%{opacity:0;transform:translateX(-50%) translateY(40%) scale(.55);filter:brightness(0)}25%{opacity:1;transform:translateX(-50%) translateY(40%) scale(.55);filter:brightness(0)}62%{transform:translateX(-50%) scale(1.05);filter:brightness(0)}70%{transform:translateX(-50%) scale(1);filter:brightness(3) drop-shadow(0 0 18px #fff)}100%{transform:translateX(-50%);filter:brightness(1) drop-shadow(0 8px 0 rgba(46,42,51,.12))}}
+.wow-dark{position:absolute;inset:0;z-index:4;background:#0b0b14;pointer-events:none;animation:wowDark calc(1.3s * var(--wowk,1)) linear both}
+@keyframes wowDark{0%,20%{opacity:.9}55%{opacity:.45}70%,100%{opacity:0}}
+.wow-halo{position:absolute;z-index:2;left:50%;top:48%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:radial-gradient(rgba(255,255,255,.95),rgba(255,255,255,0) 65%);pointer-events:none;opacity:0;animation:wowHalo calc(1.3s * var(--wowk,1)) ease-out both}
+@keyframes wowHalo{0%,64%{opacity:0;transform:scale(.4)}72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+.wow-banner{position:absolute;z-index:6;left:0;top:14px;max-width:88%;padding:9px 18px 9px 14px;border-radius:0 30px 30px 0;background:#2E2A33;color:#fff;font:700 16px/1.2 Fredoka,Nunito,sans-serif;pointer-events:none;animation:wowBanner calc(3s * var(--wowk,1)) ease-out both}
+@keyframes wowBanner{0%,40%{transform:translateX(-110%)}50%,88%{transform:translateX(0)}100%{transform:translateX(-110%)}}
+.wow-trail{position:absolute;z-index:6;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:radial-gradient(#fff 0 30%,#FFE27A 55%,rgba(255,226,122,0) 72%);pointer-events:none;animation:wowTrail calc(.5s * var(--wowk,1)) ease-out forwards}
+@keyframes wowTrail{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(.3)}}
+.wow-spark{position:absolute;z-index:6;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#FFF6C9;box-shadow:0 0 8px #FFE27A;pointer-events:none;opacity:0;animation:wowSpark calc(.6s * var(--wowk,1)) ease-in forwards}
+@keyframes wowSpark{0%{opacity:0;transform:translate(var(--dx),var(--dy))}25%{opacity:1}100%{opacity:0;transform:translate(0,0) scale(.3)}}
+.wild-stage::after{content:"";position:absolute;inset:0;z-index:7;pointer-events:none;background:radial-gradient(circle at var(--wow-x,50%) var(--wow-gy,80%),rgba(10,8,20,0) 22%,rgba(10,8,20,.72) 72%);opacity:0;transition:opacity calc(.8s * var(--wowk,1)) ease}
+.wild-stage.is-wow-tense{transform:scale(1.12);transition-duration:calc(1.2s * var(--wowk,1));transition-timing-function:ease-in-out}
+.wild-stage.is-wow-tense::after{opacity:1}
+.wow-ring{position:absolute;z-index:6;left:var(--wow-x,50%);top:var(--wow-gy,80%);width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;border:6px solid #FFD45C;pointer-events:none;animation:wowRing calc(.8s * var(--wowk,1)) ease-out forwards}
+@keyframes wowRing{from{opacity:1;transform:scale(.2)}to{opacity:0;transform:scale(2.8)}}
+.wow-flash{position:absolute;inset:0;z-index:8;background:#fff;pointer-events:none;animation:wowFlash calc(.4s * var(--wowk,1)) ease-out forwards}
+@keyframes wowFlash{from{opacity:.75}to{opacity:0}}
+.wow-caught{position:absolute;z-index:9;left:0;right:0;top:12%;text-align:center;font:700 46px/1 Fredoka,Nunito,sans-serif;color:#fff;-webkit-text-stroke:2px #2E2A33;text-shadow:0 5px 0 #2E2A33;pointer-events:none;animation:wowCaught calc(.5s * var(--wowk,1)) cubic-bezier(.3,1.6,.5,1) both}
+@keyframes wowCaught{from{opacity:0;transform:scale(0) rotate(-8deg)}to{opacity:1;transform:scale(1) rotate(-4deg)}}
+.fx-catch.is-wow{overflow:hidden}
+.fx-catch.is-wow .fx-catch-card{z-index:1}
+.wow-rays{position:absolute;left:50%;top:50%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;z-index:0;pointer-events:none;background:repeating-conic-gradient(from 0deg,rgba(255,228,140,.5) 0 8deg,rgba(255,228,140,0) 8deg 24deg);animation:wowRaysIn calc(.6s * var(--wowk,1)) ease-out both,wowRays calc(16s * var(--wowk,1)) linear infinite}
+@keyframes wowRaysIn{from{opacity:0}to{opacity:1}}
+@keyframes wowRays{to{transform:rotate(360deg)}}
+.wow-holo{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.55) 45%,rgba(255,170,240,.35) 50%,rgba(150,230,255,.35) 55%,rgba(255,255,255,0) 65%);background-size:250% 100%;background-position:150% 0;mix-blend-mode:screen;animation:wowHolo calc(2.6s * var(--wowk,1)) ease-in-out calc(1.3s * var(--wowk,1)) infinite}
+.wow-holo.is-gold{background-image:linear-gradient(115deg,rgba(255,240,180,0) 35%,rgba(255,240,180,.75) 45%,rgba(255,200,90,.45) 52%,rgba(255,240,180,0) 65%)}
+@keyframes wowHolo{0%{background-position:150% 0}60%,100%{background-position:-50% 0}}
+@media (prefers-reduced-motion:reduce){.wow-dark,.wow-halo,.wow-banner,.wow-trail,.wow-spark,.wow-ring,.wow-flash,.wow-rays,.wow-holo{display:none}.wild-stage.is-wow-tense{transform:none}.wow-caught{animation:none}}
 /* V2-REL-01 (7/11) : confirmation avant de relâcher un doublon. */
 .tm-confirm .tm-mon img{background:radial-gradient(circle at 50% 60%,#fff 0,#E8F6EC 140%)}
 .tm-confirm.is-shiny .tm-mon img{background:radial-gradient(circle at 50% 60%,#fff 0,#FFE9A8 140%)}
