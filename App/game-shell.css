@@ -1970,3 +1970,25 @@ body.theme-dark .dex-search input{color:#f5efe6}
     grid-template-columns:minmax(0,1fr) !important;
   }
 }
+
+/* PART-02: same-sequence friend challenges; readable on narrow devices. */
+.pc-tabs-4 {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
+.pc-tabs-4 button {min-width:0;padding:9px 3px;font-size:clamp(11px,2.6vw,13px);overflow-wrap:anywhere;}
+.pc-shared {display:grid;gap:12px;min-width:0;}
+.pc-shared-score {margin:0;font:900 19px Nunito,sans-serif;color:inherit;}
+.pc-shared-head {margin:0;padding:10px 12px;border-radius:12px;background:#F7F3FF;color:#2E2A33;font:700 14px Nunito,sans-serif;}
+.pc-shared-dots {display:flex;flex-wrap:wrap;gap:5px;}
+.pc-shared-dots i {min-width:22px;min-height:22px;display:grid;place-items:center;}
+.pc-shared-input {display:flex;gap:8px;align-items:center;min-width:0;}
+.pc-shared-input input {flex:1;min-width:0;font-size:16px;}
+.pc-shared-input button {min-height:44px;}
+.pc-shared-pass {width:100%;min-height:42px;}
+.pc-shared .pc-tries {max-height:320px;overflow:auto;}
+.pc-shared-result {font-weight:800;line-height:1.45;}
+#pokdle-app.theme-dark .pc-shared-head {background:#2a2350;color:#e8ecf6;}
+@media(max-width:480px) {
+  .pc-tabs-4 button {padding:8px 1px;font-size:11px;}
+  .pc-shared-input {flex-wrap:wrap;}
+  .pc-shared-input input {flex-basis:100%;width:100%;}
+  .pc-shared-input button {width:100%;}
+}
