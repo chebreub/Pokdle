@@ -949,7 +949,9 @@ const referrals = pgPool ? referralLib.createReferrals({ db: pgPool, accountOfPi
 if (referrals) referralLib.mountReferralRoutes({ app, express, getUser: getSessionUser, referrals });
 // « Jours passés » : earlier Pokémon du jour, 7 days with an account, 7 more per friend invited.
 require("./lib/daily-past").mountPastRoutes({ app, db: pgPool, getUser: getSessionUser, today: () => require("./lib/egg-mystery").parisDay(new Date()) });
-const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, referrals, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
+const dailyService = require("./lib/daily-game").mountDailyRoutes({ app, express, db:pgPool, referrals,
+  // DATA-03: the first guess the server accepts for a play opened from a friend's link.
+  onSharedStart:(req)=>recordUsage("share:daily-start", null, usageSegmentForRequest(req)), pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, compare:require("./lib/daily-comparison").compareDaily, legacyTarget:serverDailyPokemon, readyBefore:authDbReady });
 const wordleService = require("./lib/daily-wordle").mountWordleRoutes({ app, express, db:pgPool, pokemon:POKEMON_LIST, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, readyBefore:authDbReady });
 const dossierService = require("./lib/daily-dossier").mountDossierRoutes({ app, express, db:pgPool, secret:SESSION_SECRET, getUser:getSessionUser, readCookies:parseAuthCookies, daily:dailyService, wordle:wordleService, readyBefore:authDbReady });
 const challengeService = require("./lib/daily-challenge").mountChallengeRoutes({app,express,db:pgPool,pokemon:POKEMON_LIST,secret:SESSION_SECRET,getUser:getSessionUser,readCookies:parseAuthCookies,daily:dailyService,wordle:wordleService,dossier:dossierService,readyBefore:authDbReady});
@@ -1253,8 +1255,12 @@ function sendIndex(req, res) {
   const moved = siteMove.takeTransfer(req, res);
   // A friend's shared result: same page, with a preview that says « Trouvé en 3 essais ».
   const challenge = !moved && sharePreview.parseChallenge(req.query.defi);
+  // DATA-03: a link opened by a person, and the preview robots of messaging apps, apart.
+  const preview = usageMetrics.isLinkPreviewAgent(req.get("user-agent"));
+  const partyCode = !moved && !challenge && typeof req.query.party === "string" ? req.query.party.toUpperCase().replace(/[^A-Z0-9]/g, "") : "";
+  if (/^[A-Z0-9]{5}$/.test(partyCode)) recordUsage(preview ? "share:preview" : "share:party-visit", null, usageSegmentForRequest(req));
   if (challenge) {
-    recordUsage("share:visit", null, usageSegmentForRequest(req));
+    recordUsage(preview ? "share:preview" : "share:visit", null, usageSegmentForRequest(req));
     return res.type("html").send(sharePreview.challengePageHtml(fs.readFileSync(file, "utf8"), challenge));
   }
   if (!moved) return res.sendFile(file);
@@ -1458,6 +1464,8 @@ const USAGE_EVENTS = new Set([
   "party:create", "party:join",
   ...Object.keys(usageMetrics.PARTY_CATALOG),
   "duel:create", "statclash:create", "share:daily", "share:visit",
+  // DATA-03: the three steps of a shared link, each counted apart (aggregates only).
+  "share:party", "share:party-visit", "share:preview", "share:daily-start", "share:party-start",
 ]);
 const USAGE_LABELS = {
   visit: "Visites",
@@ -1467,8 +1475,13 @@ const USAGE_LABELS = {
   ...Object.fromEntries(Object.entries(usageMetrics.PARTY_CATALOG).map(([event, label]) => [event, "Party — " + label])),
   "duel:create": "Duel 1v1 — salons créés",
   "statclash:create": "Stat Clash 1v1 — salons créés",
-  "share:daily": "Pokémon du jour partagé",
-  "share:visit": "Arrivées via lien de défi",
+  "share:daily": "Partage — Pokémon du jour : bouton Partager",
+  "share:visit": "Partage — Pokémon du jour : lien ouvert",
+  "share:daily-start": "Partage — Pokémon du jour : partie lancée depuis le lien",
+  "share:party": "Partage — Party : lien d'invitation copié",
+  "share:party-visit": "Partage — Party : lien ouvert",
+  "share:party-start": "Partage — Party : partie lancée avec un invité du lien",
+  "share:preview": "Partage — aperçus de liens (robots des messageries)",
 };
 const usageDays = new Map(); // dateKey -> { events: Map } (diagnostic since restart only)
 const USAGE_MAX_DAYS = 14;
@@ -2908,6 +2921,8 @@ io.on("connection", (socket) => {
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
       clearPartyRoomCleanup(room);
       const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
+      // DATA-03: the player says the code came from an invitation link (counted only at a real start).
+      if (payload.via === "link") player.viaLink = true;
       recordUsage("party:join", null, usageSegmentForSocket(socket));
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
@@ -2999,6 +3014,11 @@ io.on("connection", (socket) => {
       if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       recordUsage("party:start:" + (room.gameMode || "guess"), null, usageSegmentForSocket(socket));
+      // DATA-03: once per room, the first game started with a player who came through the link.
+      if (!room.shareStartCounted && room.players.some((player) => player.viaLink && player.connected)) {
+        room.shareStartCounted = true;
+        recordUsage("share:party-start", null, usageSegmentForSocket(socket));
+      }
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
