@@ -63,6 +63,11 @@
 #pokdle-app #screen-party-room .party-join-row button { flex: 0 0 auto; width: auto; }
 #pokdle-app #screen-party-room #party-join-code { text-transform: uppercase; letter-spacing: .14em; }
 #pokdle-app #screen-party-room .party-entry-note { text-align: center; font-size: .74rem !important; }
+/* PART-01: direct Dessine-le invitation status, both desktop and mobile. */
+#pokdle-app #screen-party-room .party-invite-notice { margin: 8px 0; padding: 12px 14px; border-radius: 12px; background: var(--party-tint); border: 1px solid var(--party-accent); color: var(--ui-ink); font: 700 .86rem/1.45 Nunito, sans-serif; }
+#pokdle-app #screen-party-room .party-invite-notice.is-error { background: var(--party-warm); border-color: var(--party-warm-ink); color: var(--party-warm-ink); }
+#pokdle-app #screen-party-room .party-invite-notice[hidden] { display: none; }
+@media (max-width: 560px) { #pokdle-app #screen-party-room .party-invite-notice { font-size: .82rem; } }
 #pokdle-app #screen-party-room .party-joined { padding: 24px; }
 #pokdle-app #screen-party-room .party-room-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--ui-soft) !important; border: 1px solid var(--ui-line) !important; border-radius: 16px; padding: 14px 18px; margin-bottom: 24px; }
 #pokdle-app #screen-party-room .party-code-group { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
