@@ -71,6 +71,20 @@ Les autres données de rétention visibles dans le tableau de bord étaient **27
 
 Le projet dispose de styles mobiles dédiés, d'un dock de navigation, d'un gestionnaire visualViewport, de mécanismes prefers-reduced-motion et de traitements spécifiques de la recherche. Ne pas recréer ces éléments sans lecture préalable du code : App/mobile.css, App/src/script.01.core.js, App/src/script.10j.game-shell.js.
 
+### Ajout du 07/11 — en-tête et fenêtres plus larges que l'écran (MOB-05)
+
+Signalé par Kayan sur son iPhone le 07/11, avec deux captures, puis **reproduit** dans Chromium (iPhone SE, 13 et 15 Pro Max émulés, compte connecté) :
+
+- **En-tête trop large sur téléphone.** Logo + sac (Poké Balls, Super Balls, ₽) + Paramètres + compte : 433 px pour 358 px disponibles à 390 px de large. **Le bouton du compte (avatar et menu) sortait de l'écran à droite**, sur toutes les largeurs de téléphone. Sur Safari, ce débordement laisse aussi la page glisser de côté, ce qui coupe les fenêtres (première capture).
+- **Lignes de défis trop serrées.** Dans « Du nouveau dans tes défis » et « Mes défis », le texte, « 👀 Ses essais » et « ⚔️ Redéfier » étaient sur une seule ligne : le 2e bouton sortait de la fenêtre, et le texte s'écrasait à un mot par ligne.
+
+Correctif (action **MOB-05**) :
+- sous 480 px, le logo garde la Poké Ball sans le mot « Pokédle » et le sac se resserre ;
+- sous 360 px, quand on est connecté, « Paramètres » quitte l'en-tête : il reste dans le menu du compte ;
+- les boutons d'une ligne de défi passent sous le texte.
+
+Il reste à confirmer sur un iPhone physique, comme pour BUG-MOB-01 : la reproduction dans Chromium ne vaut pas recette Safari.
+
 ## 4. Fiabilité et fluidité des jeux : points concrets
 
 | Référence | Constat | Risque et action |

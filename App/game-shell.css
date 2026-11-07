@@ -1992,3 +1992,8 @@ body.theme-dark .dex-search input{color:#f5efe6}
   .pc-shared-input input {flex-basis:100%;width:100%;}
   .pc-shared-input button {width:100%;}
 }
+/* MOB-05 : une ligne de défi (« Du nouveau dans tes défis », « Mes défis ») ne met plus le texte et deux boutons
+   côte à côte : le texte garde sa largeur, les boutons passent dessous au lieu de sortir de la fenêtre. */
+.pc-row {flex-wrap:wrap;min-width:0;}
+.pc-row p {flex:1 1 calc(100% - 64px);min-width:0;overflow-wrap:anywhere;}
+.pc-row > p + .pc-again {margin-left:auto;}
