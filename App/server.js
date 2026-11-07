@@ -536,6 +536,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["egg_rounds", "UPDATE egg_rounds SET winner_name = 'Anonyme', found_by = 'deleted' WHERE found_by = $1", [key]],
     ["weekly_awards", "DELETE FROM weekly_awards WHERE discord_id = $1", [id]],
     ["wild_trades", "DELETE FROM wild_trades WHERE from_id = $1 OR to_id = $1", [id]],
+    ["trade_settings", "DELETE FROM trade_settings WHERE account_id = $1", [id]],
     ["daily_reactions", "DELETE FROM daily_reactions WHERE identity = $1", ["user:" + id]],
     ["referrals", "DELETE FROM referrals WHERE referrer_id = $1 OR friend_key = $2", [id, "user:" + id]],
     ["name_overrides", "DELETE FROM name_overrides WHERE account_id = $1", [id]],

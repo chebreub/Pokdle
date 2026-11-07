@@ -524,6 +524,35 @@ body.theme-dark .exp-card{background:#26222c;color:#f5efe6;border-color:rgba(255
 .trl-legend{display:grid;grid-template-columns:1fr 36px 1fr;font:700 11px Nunito,sans-serif;color:#8A8492}.trl-legend small:last-child{grid-column:3}
 .trl-acts{display:flex;gap:8px;margin-top:8px}.trl-acts button{flex:1;min-height:40px}
 .trs-album{width:100%;margin-top:12px}
+/* PART-04 · 🔍 Trouver un échange (7/11/2026, maquette validée) */
+.trs-tabs{display:flex;gap:4px;padding:4px;margin-bottom:12px;border-radius:14px;background:#EEE6DA}
+.trs-tabs button{flex:1;min-height:40px;border:0;border-radius:11px;background:transparent;color:#6B6475;font:800 14px Nunito,sans-serif;cursor:pointer}
+.trs-tabs button.is-on{background:#2E2A33;color:#fff}
+.trf-search{display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:14px;border:2px solid #E3D9CB;background:#fff}
+.trf-search:focus-within{border-color:#4069E0}
+.trf-search input,#pokdle-app.design-refresh .trf-search input[type="search"],#pokdle-app.design-refresh .trf-search input[type="search"]:focus{flex:1;min-width:0;min-height:44px;margin:0 !important;padding:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;outline:0 !important;background:transparent !important;color:inherit;font:800 16px Nunito,sans-serif}
+.trf-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.trf-chips button{min-height:36px;padding:6px 12px;border-radius:999px;border:2px solid #E3D9CB;background:#fff;color:#2E2A33;font:800 13px Nunito,sans-serif;cursor:pointer}
+.trf-chips button.is-on{background:#4069E0;border-color:#4069E0;color:#fff}
+.trf-friend{margin-bottom:10px;padding:10px 12px 12px;border-radius:16px;border:1px solid #EADFD0;background:#fff}
+.trf-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;font:800 15px Nunito,sans-serif;color:#2E2A33}
+.trf-top i{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#E9EEFB;color:#4069E0;font:900 14px Nunito,sans-serif;font-style:normal}
+.trf-top small{margin-left:auto;font:700 12px Nunito,sans-serif;color:#6B6475}
+.trf-friend .tr-mini{row-gap:14px}
+.tr-mini .trf-more{display:grid;place-items:center;color:#4069E0;font:900 14px Nunito,sans-serif;background:#F3F6FE}
+.trf-note{margin:12px 0;padding:10px 12px;border-radius:12px;background:#F3EEE6;font:700 12px/1.5 Nunito,sans-serif;color:#6B6475}
+.trf-share{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:2px solid rgba(46,42,51,.08);background:#fff;color:#2E2A33;text-align:left;cursor:pointer}
+.trf-share span{flex:1;min-width:0}.trf-share b{display:block;font:800 14px Nunito,sans-serif}.trf-share small{display:block;font:700 12px/1.4 Nunito,sans-serif;color:#6B6475}
+.trf-share i{flex:none;position:relative;width:46px;height:28px;border-radius:999px;background:#CFC8D6;transition:background .2s}
+.trf-share i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.trf-share[aria-checked="true"] i{background:#4069E0}.trf-share[aria-checked="true"] i::after{transform:translateX(18px)}
+.trf-share:focus-visible,.trs-tabs button:focus-visible,.trf-chips button:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.tr-back{width:100%;margin-top:10px}
+@media (prefers-reduced-motion:reduce){.trf-share i,.trf-share i::after{transition:none}}
+body.theme-dark .trs-tabs{background:#1f1b24}body.theme-dark .trs-tabs button{color:#cfc7d6}body.theme-dark .trs-tabs button.is-on{background:#f5efe6;color:#2E2A33}
+body.theme-dark .trf-search,body.theme-dark .trf-chips button,body.theme-dark .trf-friend,body.theme-dark .trf-share{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.12)}
+body.theme-dark .trf-search input,body.theme-dark .trf-top{color:#f5efe6}body.theme-dark .trf-note{background:#2f2a35;color:#cfc7d6}
+body.theme-dark .trf-chips button.is-on{background:#4069E0;color:#fff}
 body.theme-dark .tm-act,body.theme-dark .tr-friend,body.theme-dark .tr-with,body.theme-dark .tr-card,body.theme-dark .tr-mini button,body.theme-dark .trl{background:#26222c;color:#f5efe6;border-color:rgba(255,255,255,.12)}
 /* 🎯 Les 3 lancers : des points + une phrase ; le point s'éteint dès que la Ball part (3/11 au soir) */
 .wild-throws{align-items:center;gap:8px;min-width:0}
