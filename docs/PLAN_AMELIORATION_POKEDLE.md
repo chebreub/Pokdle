@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action : vérifications sur appareil réel** — BUG-MOB-01, MOB-02, MOB-04 sur iPhone (correctifs du 7/11 dans #333), puis GROW-02 (GROW-01 mis de côté par Kayan le 07/11). Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
+**Prochaine action : vérifications sur appareil réel** — BUG-MOB-01, MOB-02, MOB-04 sur iPhone (correctifs du 7/11 dans #333), GROW-01 mis de côté et GROW-02 conduit par Kayan (07/11). Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -149,7 +149,7 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### Lot 7 — Validation et acquisition
 - [ ] **GROW-01 · P2 · MIS DE CÔTÉ par Kayan (07/11)** : test guidé auprès de quelques joueurs externes. Kayan ne veut pas solliciter de testeurs ; il a écrit via les messages du site à Jade, joueuse qui revient (c'est elle qui avait signalé BUG-MOB-01). Sa réponse servira aussi à confirmer BUG-MOB-01 sur son téléphone. Exclu du total, comme NIV-01.
-- [ ] **GROW-02 · P2** : séquences réelles de jeu sans visage ni musique, diffusion ciblée avec accord des communautés.
+- [x] **GROW-02 · P2 · FAIT PAR KAYAN (07/11)** : séquences réelles de jeu sans visage ni musique, diffusion ciblée ; Kayan publie déjà ses vidéos lui-même (planifiées avec Metricool, non connecté à ces sessions).
 
 ### Livraison DATA-02 — PR #278 (après fusion)
 
