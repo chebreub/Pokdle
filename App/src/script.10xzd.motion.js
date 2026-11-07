@@ -105,10 +105,20 @@ function moStars(host, x, y, count, spread) {
   }
 }
 
+function moReducedCaptureSounds(shakes, caught) {
+  const at = (ms, kind) => setTimeout(() => moSfx(kind), ms);
+  const n = Math.max(0, Math.min(3, Number(shakes) || 0));
+  at(0, "throw"); at(200, "land");
+  for (let i = 0; i < n; i++) at(400 + i * 200, "tick");
+  at(400 + n * 200, caught ? "caught" : "breakFree");
+}
 // --- ⚪ Capture dans les hautes herbes ---
 wildAnimate = function (scene, ball, shakes, caught) {
   const stage = scene && scene.querySelector(".wild-stage"), mon = scene && scene.querySelector(".wild-mon");
-  if (!stage || !mon || wildReducedMotion()) return Promise.resolve();
+  if (!stage || !mon) return Promise.resolve();
+  // « Animations réduites » coupe les mouvements, pas les sons : le lancer, les secousses et la capture
+  // (ou la sortie) restent audibles, en une seconde, et le résultat s'affiche tout de suite comme avant.
+  if (wildReducedMotion()) { moReducedCaptureSounds(shakes, caught); return Promise.resolve(); }
   stage.classList.remove("is-intro");
   const sr = stage.getBoundingClientRect(), mr = mon.getBoundingClientRect();
   const W = sr.width, H = sr.height;
