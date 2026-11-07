@@ -10,7 +10,14 @@ PORT = 3197
 ORIGIN = "http://127.0.0.1:" + str(PORT)
 
 def ready(page, code, timeout=16000):
-    page.wait_for_function(code, timeout=timeout)
+    # Playwright's wait_for_function string eval violates the production CSP.
+    # Evaluate an arrow callback as in the existing browser quality tests.
+    deadline = time.monotonic() + timeout / 1000
+    while time.monotonic() < deadline:
+        if page.evaluate("() => (" + code + ")"):
+            return
+        page.wait_for_timeout(100)
+    raise AssertionError("Condition not met: " + code)
 
 def setup(page, url):
     page.set_default_timeout(15000)
