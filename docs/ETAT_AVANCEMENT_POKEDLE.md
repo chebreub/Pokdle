@@ -1,23 +1,23 @@
 # Pokédle — État d'avancement du plan d'amélioration
 
-**Photographie opérationnelle au 7 novembre 2026 : DATA-03 [#315](https://github.com/chebreub/Pokdle/pull/315) fusionnée dans `main`, après CI Node et QA complète navigateur/PostgreSQL vertes ; PART-02 #313, les livraisons précédentes, notamment PART-01 #311 et ECO-02/04/05/06/07/08, restent validées. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
-**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #315](https://github.com/chebreub/Pokdle/pull/315), `aa6aa81e4229c2ade0e7de55b5573bbe69276089`.
+**Photographie opérationnelle au 7 novembre 2026 : PART-03 #316, MOB-05 #317 et PART-04 #318 fusionnées dans `main` après QA complète navigateur/PostgreSQL verte ; MOB-05 ajoutée au plan (signalement de Kayan sur iPhone), qui passe à 44 actions. Les bilans historiques ci-dessous conservent leur contexte d'origine.**
+**Dépôt :** [chebreub/Pokdle](https://github.com/chebreub/Pokdle) ; dernière fusion métier vérifiée : [PR #317](https://github.com/chebreub/Pokdle/pull/317), `71628dc8effe5c90d335ffac6b08ebfdb7e0bca9`.
 **Référence des tâches :** [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md).
 **Audits associés :** [UX/gameplay/fidélisation](audits/AUDIT_UX_GAMEPLAY_FIDELISATION_2026-11-05.md) et [économie/captures/rareté](audits/AUDIT_ECONOMIE_CAPTURE_POKEDLE_2026-11-05.md).
 
 ## Synthèse à retenir
 
-**28 tâches terminées sur 43 actions actives = 65,1 %** après la PR #315 (DATA-03) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
+**31 tâches terminées sur 44 actions actives = 70,5 %** après les PR #316 (PART-03), #317 (MOB-05) et #318 (PART-04) ; ratio des actions intégrées, pas estimation du temps ou de la maturité complète du site.
 
 | Statut | Nombre | Règle |
 | --- | ---: | --- |
-| **Terminé et intégré à main** | **28** | Actions vérifiées, PR fusionnées ; dernière livraison métier #315 |
+| **Terminé et intégré à main** | **31** | Actions vérifiées, PR fusionnées ; dernières livraisons #316, #317, #318 |
 | **En cours / investigation / PR ouverte** | **1** | BUG-MOB-01 : test sur appareil réel toujours attendu |
-| **Non commencé / à conduire ou à décider** | **14** | Dont ECO-03 (arbitrage), PART-03 et les autres chantiers non lancés |
+| **Non commencé / à conduire ou à décider** | **12** | Dont ECO-03 (arbitrage), DATA-04 et les autres chantiers non lancés |
 | **Stationné et exclu du total** | **1** | NIV-01, proposition née d'une plaisanterie sur Kokiyas, à ne pas programmer |
-| **Dénominateur suivi** | **43** | 7 + 8 + 5 + 4 + 8 + 5 + 4 + 2 |
+| **Dénominateur suivi** | **44** | 8 + 8 + 5 + 4 + 8 + 5 + 4 + 2 (MOB-05 ajoutée au lot 0 le 07/11) |
 
-**Formule explicite :** (28 actions terminées / 43 actions actives) × 100 = **65,1163 %, arrondi à 65,1 %**.
+**Formule explicite :** (31 actions terminées / 44 actions actives) × 100 = **70,4545 %, arrondi à 70,5 %**.
 
 > **Limites du pourcentage :** chacune des 43 actions a le même poids dans ce calcul, même si certaines représentent une modification de quelques lignes et d'autres plusieurs semaines de travail / arbitrages. Ce n'est **ni** le pourcentage de fonctionnalités déjà présentes sur le site, **ni** une estimation des heures restantes. Les travaux de préparation et de documentation ne gonflent pas artificiellement le nombre de correctifs livrés.
 
@@ -25,15 +25,22 @@
 
 | Lot | Périmètre | Terminées / actives | Part terminée | Travail réalisé ou engagé |
 | --- | --- | ---: | ---: | --- |
-| 0 | Ergonomie mobile / PC et mesures | 4 / 7 | 57,1 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
+| 0 | Ergonomie mobile / PC et mesures | 5 / 8 | 62,5 % | DATA-01 documenté, PC-02 clavier, PC-01 plateau PC, MOB-03 commandes mobiles, MOB-05 en-tête et défis sur téléphone (#317) ; BUG-MOB-01 toujours à confirmer sur téléphone réel |
 | 1 | Fiabilité des jeux et sauvegardes | 7 / 8 | 87,5 % | LOG-01 à LOG-04, SAVE-01, FX-02 et DATA-02 terminés |
 | 2 | Gameplay, pédagogie, découverte | 3 / 5 | 60 % | NIV-02 (Stat Mystère), SER-01 (records Pixelisé), MEDIA-01 (lecture Cri) |
 | 3 | Pokédex et collection | 4 / 4 | 100 % | DEX-01 à DEX-04 terminés |
 | 4 | Économie et rencontres | 7 / 8 | 87,5 % | ECO-01 étude, ECO-02 Drattak #301, ECO-07 #302, ECO-08 72 h #304, ECO-05 statistiques #305, ECO-06 récompenses #307 et ECO-04 coffres #309 ; ECO-03 reste à arbitrer |
-| 5 | Invitations et diffusion | 3 / 5 | 60,0 % | PART-01 invitation directe Dessine-le #311, PART-02 série comparable #313 et DATA-03 mesure des partages #315 intégrées ; prochain lot PART-03 |
+| 5 | Invitations et diffusion | 5 / 5 | 100 % | PART-01 #311, PART-02 #313, DATA-03 #315, PART-03 carte de capture #316, PART-04 recherche d'échanges #318 |
 | 6 | Gestes et animations | 0 / 4 | 0 % | Dépend d'abord de la robustesse tactile |
 | 7 | Testeurs externes et acquisition | 0 / 2 | 0 % | À préparer après stabilisation |
-| **Total** | | **28 / 43** | **65,1 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, PART-03 prochain |
+| **Total** | | **31 / 44** | **70,5 %** | NIV-01 stationné, exclu ; BUG-MOB-01 en attente appareil réel, DATA-04 prochain |
+
+## PART-03, MOB-05 et PART-04 — intégrées le 7 novembre
+
+- **PART-03** [#316](https://github.com/chebreub/Pokdle/pull/316), fusion `32bc56b63097d813aa72fc021258958a3a5aba48` (QA complète verte sur `e0a4c40`) : « 📸 Partager ma capture » après une vraie capture marquante, carte 1080 × 1350 sans pseudo, partage natif ou lien `/pokemon/<nom>?via=capture`, compteurs agrégés. [Protocole](qa/PART_03_CAPTURE_SHARE.md).
+- **MOB-05** [#317](https://github.com/chebreub/Pokdle/pull/317), fusion `71628dc8effe5c90d335ffac6b08ebfdb7e0bca9` : nouvelle action ajoutée après le signalement de Kayan (en-tête plus large que l'écran du téléphone, lignes de défis coupées). Un premier passage de la QA complète a échoué sur le test Dossier en WebKit PC seulement (bouton resté désactivé, hors du périmètre CSS mobile de la PR) ; relance unique verte sur le même commit, et le même test était vert sur #316 et #318.
+- **PART-04** [#318](https://github.com/chebreub/Pokdle/pull/318), fusion `1cb50fa7b7957f6194b406cb3fe1fffaff27f6e1` (QA complète verte sur `0036dac`) : onglet « 🔍 Trouver » des échanges et réglage « Montrer mes doublons à mes amis ».
+- **31/44 = 70,5 % ; lot Invitations 5/5, lot 0 5/8.** Prochaine action autonome : **DATA-04** (rétention J1/J7). Aucune recette physique iPhone ni vérification du déploiement Render revendiquée.
 
 ## DATA-03 — partage, lien ouvert et partie lancée séparés
 
