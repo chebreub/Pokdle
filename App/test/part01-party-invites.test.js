@@ -35,7 +35,9 @@ test("PART-01: explicit invitation errors for missing, hostless, changed, starte
 test("PART-01: existing server guest flow is retained and expected mode is rechecked at join",()=>{
   const server=read("server.js");
   const preview=server.slice(server.indexOf('socket.on("party:invite-preview"'),server.indexOf('socket.on("party:create-room"'));
-  assert.match(preview,/checkRateLimit\(socket, "room-join"\)/);
+  assert.match(preview,/checkRateLimit\(socket, "party-invite-preview"\)/);
+  assert.match(server,/"party-invite-preview": \{ max: 8, ipMax: 30, windowMs: 30_000 \}/);
+
   assert.match(preview,/partyInviteStatus\(partyRooms.get\(code\)/);
   const create=server.slice(server.indexOf('socket.on("party:create-room"'),server.indexOf('socket.on("party:join-room"'));
   assert.match(create,/payload\.gameMode === "dessin"/);
