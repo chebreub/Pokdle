@@ -3382,3 +3382,17 @@ body.theme-dark .pokedex-collection-legend > span {
   #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) > .pokedex-evo-step { flex-direction: row; justify-content: center; gap: 6px; min-width: 0; }
   #screen-pokedex .pokedex-evo-chain:has(> .pokedex-evo-card:nth-child(5)) > .pokedex-evo-step > i { order: -1; transform: rotate(90deg); }
 }
+/* 👆 GEST-01 : image de la fiche avec flèches ‹ › et glissement (script.10xzu.dex-swipe.js) */
+#screen-pokedex .dex-swipe {position:relative;display:flex;align-items:center;justify-content:center;width:100%;min-height:150px;padding:8px 52px;box-sizing:border-box;border-radius:20px;background:radial-gradient(circle at 50% 45%,#fff 0,#FFF6E4 75%);touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+#screen-pokedex .dex-swipe > img {will-change:transform;}
+#screen-pokedex .dex-swipe-chev {position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.94);box-shadow:0 2px 8px rgba(46,42,51,.16);color:#2E2A33;font:900 24px/1 Nunito,sans-serif;display:grid;place-items:center;cursor:pointer;z-index:1;}
+#screen-pokedex .dex-swipe-chev.is-prev {left:6px;}
+#screen-pokedex .dex-swipe-chev.is-next {right:6px;}
+#screen-pokedex .dex-swipe-chev[disabled] {opacity:.35;cursor:default;}
+#screen-pokedex .dex-swipe-chev:focus-visible {outline:3px solid #4069E0;outline-offset:2px;}
+#screen-pokedex .dex-swipe-nbr {display:flex;justify-content:space-between;gap:10px;width:100%;margin:6px 0 2px;font:800 12.5px Nunito,sans-serif;color:#6B6472;}
+#screen-pokedex .dex-swipe-nbr span:last-child {text-align:right;}
+#screen-pokedex .dex-swipe-hint {align-self:center;margin:6px auto 4px;padding:7px 14px;border-radius:999px;background:#2E2A33;color:#fff;font:800 13px Nunito,sans-serif;}
+body.theme-dark #screen-pokedex .dex-swipe {background:radial-gradient(circle at 50% 45%,#3a3442 0,#26222c 75%);}
+body.theme-dark #screen-pokedex .dex-swipe-chev {background:#3a3442;color:#f5efe6;}
+body.theme-dark #screen-pokedex .dex-swipe-nbr {color:#cfc7d6;}
