@@ -3,7 +3,7 @@
 // admin accounts left out, read from the activity the server already keeps (nothing new collected).
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { dailyRetention, siteRetention, SITE_SOURCES } = require('../lib/daily-retention');
+const { dailyRetention, siteRetention, SITE_ACTIVITY_SOURCES } = require('../lib/daily-retention');
 const { renderStatsDashboard } = require('../lib/admin-stats-dashboard');
 
 test('PostgreSQL: mature cohorts, daily vs whole site, admin excluded', { skip: !process.env.QA_DATABASE_URL, timeout: 30000 }, async () => {
@@ -38,7 +38,8 @@ test('PostgreSQL: mature cohorts, daily vs whole site, admin excluded', { skip: 
     assert.deepEqual(d.week, { back: 1, base: 3, rate: 33 });
     assert.deepEqual(d.newWeek, { back: 1, base: 2, rate: 50 }, 'A and B were new on the 20th');
 
-    const s = await siteRetention(db, '2026-10-20', '2026-10-30', ['user:ADMIN']);
+    // La mesure du 7/11 (« toute activité enregistrée ») reste disponible sous son nom (V2-MES-01).
+    const s = await siteRetention(db, '2026-10-20', '2026-10-30', ['user:ADMIN'], SITE_ACTIVITY_SOURCES);
     assert.deepEqual(s.sources, ['daily_plays', 'ball_gains', 'wild_encounters'], 'missing tables are skipped');
     // Site: A20, A21, B20, B21, C29, D20, E20 → J+1 base 7, back A20 + B20 = 2. J+7 base (≤ 23): 6, back 2.
     assert.deepEqual(s.nextDay, { back: 2, base: 7, rate: 29 });
@@ -55,8 +56,8 @@ test('PostgreSQL: mature cohorts, daily vs whole site, admin excluded', { skip: 
 });
 
 test('the site measure only reads tables the server already keeps, never visits', () => {
-  assert.deepEqual(SITE_SOURCES.map(([t]) => t), ['daily_plays', 'wordle_plays', 'dossier_plays', 'challenge_plays', 'grid_plays', 'petitbac_daily_plays', 'ball_gains', 'wild_encounters']);
-  const sql = SITE_SOURCES.map(([, q]) => q).join(' ');
+  assert.deepEqual(SITE_ACTIVITY_SOURCES.map(([t]) => t), ['daily_plays', 'wordle_plays', 'dossier_plays', 'challenge_plays', 'grid_plays', 'petitbac_daily_plays', 'ball_gains', 'wild_encounters']);
+  const sql = SITE_ACTIVITY_SOURCES.map(([, q]) => q).join(' ');
   assert.match(sql, /source NOT LIKE 'admin:%'/);
   assert.match(sql, /kind <> 'trade'/);
   assert.doesNotMatch(sql, /usage_|visits/);
@@ -66,12 +67,12 @@ test('/admin/stats shows both measures with their bases and flags small samples'
   const part = (back, base) => ({ back, base, rate: base ? Math.round(100 * back / base) : null });
   const r = (a, b, c) => ({ from: '2026-10-10', to: '2026-11-06', nextDay: a, week: b, newWeek: c });
   const html = renderStatsDashboard({ days: 7, metrics: [], retention: r(part(12, 40), part(18, 40), part(3, 10)), siteRetention: r(part(30, 80), part(40, 80), part(0, 0)) });
-  assert.match(html, /Retour des joueurs \(J\+1, J\+7\)/);
+  assert.match(html, /Retour des joueurs \(le lendemain, dans les 7 jours\)/);
   assert.match(html, /<th scope="row">Pokémon du jour<\/th><td><strong>30 %<\/strong> <small>\(12 \/ 40\)<\/small><\/td>/);
-  assert.match(html, /<th scope="row">Tout le site \(parties enregistrées\)<\/th><td><strong>38 %<\/strong> <small>\(30 \/ 80\)<\/small><\/td>/);
+  assert.match(html, /<th scope="row">Tout le site : parties jouées<\/th><td><strong>38 %<\/strong> <small>\(30 \/ 80\)<\/small><\/td>/);
   assert.match(html, /\(3 \/ 10\)<\/small><br><span class="pill warn"[^>]*>petit effectif<\/span>/);
   assert.match(html, /2026-10-10 → 2026-11-06/);
   assert.match(html, /Comptes admin exclus/);
   const none = renderStatsDashboard({ days: 7, metrics: [], retention: null, siteRetention: null });
-  assert.match(none, /<th scope="row">Tout le site \(parties enregistrées\)<\/th><td colspan="3">Indisponible<\/td>/);
+  assert.match(none, /<th scope="row">Tout le site : parties jouées<\/th><td colspan="3">Indisponible<\/td>/);
 });

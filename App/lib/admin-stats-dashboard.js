@@ -49,14 +49,18 @@ function retentionCell(part) {
   const small = part.base < RETENTION_SMALL_BASE ? '<br><span class="pill warn" title="Moins de ' + RETENTION_SMALL_BASE + ' joueurs-jours : à lire avec prudence">petit effectif</span>' : '';
   return '<td><strong>' + part.rate + ' %</strong> <small>(' + number(part.back) + ' / ' + number(part.base) + ')</small>' + small + '</td>';
 }
-function retentionSection(daily, site) {
+function retentionSection(daily, site, activity) {
   const row = (label, r) => '<tr><th scope="row">' + escapeHtml(label) + '</th>' + (r ? retentionCell(r.nextDay) + retentionCell(r.week) + retentionCell(r.newWeek) : '<td colspan="3">Indisponible</td>') + '</tr>';
   const span = (daily || site) ? escapeHtml((daily || site).from) + ' → ' + escapeHtml((daily || site).to) : '';
-  return '<section class="panel"><h2>Retour des joueurs (J+1, J+7)</h2>' +
-    '<div class="table-scroll"><table class="share-steps"><thead><tr><th>Mesure</th><th>Revient le lendemain</th><th>Revient dans les 7 jours</th><th>Nouveaux revenus en 7 jours</th></tr></thead><tbody>' +
-    row("Pokémon du jour", daily) + row("Tout le site (parties enregistrées)", site) + '</tbody></table></div>' +
+  return '<section class="panel"><h2>Retour des joueurs (le lendemain, dans les 7 jours)</h2>' +
+    '<div class="table-scroll"><table class="share-steps"><thead><tr><th>Mesure</th><th>Revient le lendemain</th><th>Revient dans les 7 jours (entre J+1 et J+7)</th><th>Nouveaux revenus dans les 7 jours</th></tr></thead><tbody>' +
+    row("Pokémon du jour", daily) + row("Tout le site : parties jouées", site) +
+    (activity !== undefined ? row("Tout le site : toute activité enregistrée (mesure du 7/11)", activity) : '') + '</tbody></table></div>' +
+    '<p class="quiet"><b>« Dans les 7 jours »</b> = revenu au moins une fois entre le lendemain et le 7e jour (pas exactement le 7e jour). ' +
+    '<b>Parties jouées</b> (définition du 8/11) : un essai, une réponse ou une fin dans un jeu du jour, une Ball gagnée en jouant (mini-jeu ou Party Room), une rencontre dans les hautes herbes ; un cadeau, le bonus de bienvenue, un achat, un coffre ou une partie ouverte sans réponse ne comptent pas. ' +
+    '<b>Toute activité enregistrée</b> : l’ancienne mesure, cadeaux et achats compris, gardée pour comparer.</p>' +
     '<p class="quiet">Jours de Paris' + (span ? ' ' + span : '') + ', terminés. Un joueur-jour compte dans « lendemain » seulement si le lendemain est fini, et dans « 7 jours » seulement si les 7 jours suivants le sont : les jours trop récents ne baissent pas le taux. ' +
-    '« Pokémon du jour » : au moins un essai ou un abandon. « Tout le site » : une partie que le serveur garde déjà (jeux du jour, Ball gagnée, rencontre dans les hautes herbes) ; une simple visite ne compte pas. ' +
+    '« Pokémon du jour » : au moins un essai ou un abandon. Une simple visite ne compte jamais. ' +
     'Comptes admin exclus. Un invité qui se connecte devient une nouvelle identité (taux un peu bas, jamais trop haut). Rien de nouveau n’est collecté.</p></section>';
 }
 function graph(series) {
@@ -150,7 +154,7 @@ function renderStatsDashboard(options) {
     generatedAt = new Date().toISOString(), adminKey = "", metrics = null,
     uniqueRows = null, rawRows = null, segmentRows = null, segmentStartedAt = null, labels = {},
     feedbackHtml = "", diagnosticDays = [], diagnosticRows = [],
-    bootedAt = "", retention = null, siteRetention = null, economy = null
+    bootedAt = "", retention = null, siteRetention = null, siteActivity = undefined, economy = null
   } = options;
   const period = PERIODS.includes(days) ? days : 14;
   const calendar = rangeDays(period, endDay);
@@ -372,7 +376,7 @@ ${renderUsageScopes(metrics, segmentRows, segmentStartedAt)}
     <div class="table-scroll"><table><thead><tr><th>Mode multijoueur</th><th>Lancements</th></tr></thead><tbody>${partyRows}</tbody></table></div>
     <p class="quiet">Dessine-le ! et les autres modes Party sont présentés séparément des jeux solo.</p>
   </section>
-  ${retentionSection(retention, siteRetention)}
+  ${retentionSection(retention, siteRetention, siteActivity)}
   <section class="panel"><h2>Partage et découverte</h2>
     <div class="table-scroll"><table class="share-steps"><thead><tr><th>Lien partagé</th><th>1. Partage</th><th>2. Lien ouvert</th><th>3. Partie lancée</th></tr></thead><tbody>${shareSteps}</tbody></table></div>
     <div class="metric-row"><span>Aperçus de liens par les robots des messageries (à part)</span><strong>${number(sharePreviews)}</strong></div>

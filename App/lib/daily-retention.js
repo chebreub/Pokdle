@@ -37,10 +37,25 @@ async function dailyRetention(db, fromDay, toDay, exclude = []) {
   return cohortRates(db, `SELECT identity, day FROM daily_plays WHERE ${PLAYED}`, fromDay, toDay, exclude);
 }
 
-// DATA-04: return to the whole site, read from the game activity the server already keeps for each
-// identity and Paris day — nothing new is collected. A visit without any recorded play does not count,
-// nor do Balls given by the admin or a Pokémon received in a trade (the other player acted).
+// V2-MES-01 (8/11/2026, audit GPT) : « tout le site » ne compte plus que des PARTIES JOUÉES, lues dans ce que
+// le serveur garde déjà : un essai, une réponse ou une fin dans un jeu du jour, une Ball gagnée en jouant
+// (« mode:… » ou Party Room), une rencontre dans les hautes herbes. Un cadeau, le bonus de bienvenue, un achat,
+// un coffre, une série, une Ball de l'admin ou une simple ligne ouverte (« ready ») ne sont pas une partie.
+// La mesure d'avant (« toute activité enregistrée ») reste affichée à part, sous son nom : rien n'est réécrit.
+const RETENTION_DEFINITION = "parties-jouees-2026-11-08";
 const SITE_SOURCES = [
+  ["daily_plays", `SELECT identity, day FROM daily_plays WHERE ${PLAYED}`],
+  ["wordle_plays", "SELECT identity, day FROM wordle_plays WHERE jsonb_array_length(guessed) > 0 OR status <> 'playing'"],
+  ["dossier_plays", "SELECT identity, day FROM dossier_plays WHERE jsonb_array_length(answers) > 0 OR status <> 'playing'"],
+  ["challenge_plays", "SELECT identity, day FROM challenge_plays WHERE jsonb_array_length(answers) > 0 OR jsonb_array_length(guessed) > 0 OR status IN ('completed','abandoned')"],
+  ["grid_plays", "SELECT identity, day FROM grid_plays WHERE status = 'completed' OR jsonb_array_length(misses) > 0 OR EXISTS (SELECT 1 FROM jsonb_array_elements(cells) c WHERE c <> 'null'::jsonb)"],
+  ["petitbac_daily_plays", "SELECT identity, day FROM petitbac_daily_plays WHERE jsonb_array_length(answers) > 0 OR status = 'completed'"],
+  ["ball_gains", "SELECT identity, day FROM ball_gains WHERE source LIKE 'mode:%' OR source = 'party'"],
+  ["wild_encounters", "SELECT identity, day FROM wild_encounters WHERE kind <> 'trade' AND status IS DISTINCT FROM 'test_reset'"],
+];
+// DATA-04 (7/11, mesure d'avant, gardée sous son nom) : toute activité de jeu enregistrée, cadeaux et achats compris.
+// A visit without any recorded row does not count, nor do Balls given by the admin or a Pokémon received in a trade.
+const SITE_ACTIVITY_SOURCES = [
   ["daily_plays", `SELECT identity, day FROM daily_plays WHERE ${PLAYED}`],
   ["wordle_plays", "SELECT identity, day FROM wordle_plays"],
   ["dossier_plays", "SELECT identity, day FROM dossier_plays"],
@@ -50,14 +65,14 @@ const SITE_SOURCES = [
   ["ball_gains", "SELECT identity, day FROM ball_gains WHERE source NOT LIKE 'admin:%'"],
   ["wild_encounters", "SELECT identity, day FROM wild_encounters WHERE kind <> 'trade'"],
 ];
-async function siteRetention(db, fromDay, toDay, exclude = []) {
+async function siteRetention(db, fromDay, toDay, exclude = [], sources = SITE_SOURCES) {
   const present = [];
-  for (const [table, sql] of SITE_SOURCES) {
+  for (const [table, sql] of sources) {
     if ((await db.query("SELECT to_regclass($1) AS t", [table])).rows[0]?.t) present.push([table, sql]);
   }
   if (!present.length) return null;
   const out = await cohortRates(db, present.map(([, sql]) => sql).join(" UNION ALL "), fromDay, toDay, exclude);
-  return { ...out, sources: present.map(([table]) => table) };
+  return { ...out, sources: present.map(([table]) => table), definition: sources === SITE_SOURCES ? RETENTION_DEFINITION : "activite-enregistree-2026-11-07" };
 }
 
 // Today's Pokémon du jour at a glance for /admin/stats: finders, give-ups, reactions, friends invited.
@@ -75,4 +90,4 @@ function todaySectionHtml(t) {
   return `<p style="margin:16px 0 0">🎯 Pokémon du jour aujourd'hui : <b>${n(t.found)}</b> trouvé(s), <b>${n(t.gaveup)}</b> abandon(s) · réactions ${reactions} · 🎁 parrainages : <b>${n(t.friends)}</b></p>`;
 }
 
-module.exports = { dailyRetention, siteRetention, SITE_SOURCES, dailyToday, todaySectionHtml };
+module.exports = { dailyRetention, siteRetention, SITE_SOURCES, SITE_ACTIVITY_SOURCES, RETENTION_DEFINITION, dailyToday, todaySectionHtml };
