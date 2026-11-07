@@ -1997,3 +1997,16 @@ body.theme-dark .dex-search input{color:#f5efe6}
 .pc-row {flex-wrap:wrap;min-width:0;}
 .pc-row p {flex:1 1 calc(100% - 64px);min-width:0;overflow-wrap:anywhere;}
 .pc-row > p + .pc-again {margin-left:auto;}
+/* FX-01 : réglage « Animations » à trois choix (Normales / ⚡ Rapides / Réduites) */
+#pokdle-app #overlay-modal[data-kind="settings"] .app-setting-item.app-setting-anim {flex-direction:column!important;align-items:stretch!important;gap:8px;}
+.anim-seg {display:flex;gap:4px;padding:4px;border-radius:14px;background:#EEE6DA;}
+.anim-seg button {flex:1;min-height:44px;border:0;border-radius:11px;background:transparent;color:#6B6475;font:800 14px Nunito,sans-serif;cursor:pointer;}
+.anim-seg button.is-on {background:#2E2A33;color:#fff;}
+.anim-seg button:focus-visible {outline:3px solid #4069E0;outline-offset:2px;}
+.anim-help {margin:0;font:700 12.5px/1.5 Nunito,sans-serif;color:#6B6475;}
+.anim-help b {color:#2E2A33;}
+body.theme-dark .anim-seg {background:#1f1b24;}
+body.theme-dark .anim-seg button {color:#cfc7d6;}
+body.theme-dark .anim-seg button.is-on {background:#f5efe6;color:#2E2A33;}
+body.theme-dark .anim-help {color:#cfc7d6;}
+body.theme-dark .anim-help b {color:#f5efe6;}

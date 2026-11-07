@@ -13,7 +13,9 @@ function wildPokemon(id) { return typeof POKEMON_BY_ID !== "undefined" ? POKEMON
 function wildArtwork(p, shiny) {
   return typeof pokedexDetailArtwork === "function" ? pokedexDetailArtwork(p, shiny) : getPokemonSprite(p);
 }
+// FX-01: the site's « Animations » setting counts here too (before, only the phone's setting did).
 function wildReducedMotion() {
+  try { if (typeof appAnimationMode === "function") return appAnimationMode() === "reduced"; } catch (_e) {}
   try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_e) { return false; }
 }
 function wildPost(url, body) {

@@ -2592,6 +2592,29 @@ function saveAppSettings(settings) {
   }
 }
 
+// FX-01 (7/11/2026): « Animations » Normales / ⚡ Rapides / Réduites. The old switch (reduceMotion) stays in
+// step with « Réduites », and the system's « réduire les animations » still wins.
+const APP_ANIMATION_MODES = ["normal", "fast", "reduced"];
+function appAnimationMode(settings = getStoredAppSettings()) {
+  try { if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "reduced"; } catch (_e) {}
+  if (APP_ANIMATION_MODES.includes(settings && settings.animations)) return settings.animations;
+  return settings && settings.reduceMotion ? "reduced" : "normal";
+}
+function setAnimationMode(mode) {
+  if (!APP_ANIMATION_MODES.includes(mode)) return;
+  const settings = getStoredAppSettings();
+  settings.animations = mode;
+  settings.reduceMotion = mode === "reduced";
+  saveAppSettings(settings);
+  applyAppSettings(settings);
+  document.querySelectorAll(".anim-seg [data-anim]").forEach((b) => {
+    const on = b.dataset.anim === mode;
+    b.classList.toggle("is-on", on);
+    b.setAttribute("aria-checked", String(on));
+  });
+}
+window.setAnimationMode = setAnimationMode;
+
 function applyAppSettings(settings = getStoredAppSettings()) {
   document.body.classList.toggle("theme-dark", settings.theme === "dark");
   document.body.classList.toggle("density-compact", settings.density === "compact");
@@ -2600,6 +2623,7 @@ function applyAppSettings(settings = getStoredAppSettings()) {
   document.body.classList.toggle("text-scale-large", settings.textScale === "large");
   document.body.classList.toggle("a11y-high-contrast", Boolean(settings.highContrast));
   document.body.classList.toggle("reduce-motion", Boolean(settings.reduceMotion));
+  document.body.classList.toggle("anim-fast", appAnimationMode(settings) === "fast");
   document.body.classList.toggle("seasonal-disabled", settings.seasonalDecorations === false);
 }
 
@@ -3165,10 +3189,14 @@ function openSettingsModal() {
           <span><b>Contraste renforcé</b><small>Renforce les bordures et certains contrastes.</small></span>
           <input type="checkbox" ${settings.highContrast ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="highContrast" data-bool="1" />
         </label>
-        <label class="app-setting-item">
-          <span><b>Réduire les animations</b><small>Limite les transitions et animations décoratives.</small></span>
-          <input type="checkbox" ${settings.reduceMotion ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="reduceMotion" data-bool="1" />
-        </label>
+        <div class="app-setting-item app-setting-anim">
+          <span><b>Animations</b><small>Captures, cadeau, coffres et nouvelles entrées du Pokédex.</small></span>
+          <div class="anim-seg" role="radiogroup" aria-label="Animations">${[["normal", "Normales"], ["fast", "⚡ Rapides"], ["reduced", "Réduites"]].map(([mode, label]) => {
+            const on = appAnimationMode(settings) === mode;
+            return `<button type="button" role="radio" data-anim="${mode}" class="${on ? "is-on" : ""}" aria-checked="${on}" data-action="setAnimationMode" data-args='["${mode}"]'>${label}</button>`;
+          }).join("")}</div>
+          <p class="anim-help">⚡ <b>Rapides</b> : les mêmes animations, deux fois plus courtes, avec « Passer › ». <b>Réduites</b> : presque plus de mouvement, le résultat s’affiche tout de suite.</p>
+        </div>
       </section>
       <section class="app-settings-section">
         <h4>Appli & notifications</h4>
