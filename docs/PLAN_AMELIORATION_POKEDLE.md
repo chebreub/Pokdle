@@ -2,9 +2,9 @@
 
 > **Référence opérationnelle** pour poursuivre ce chantier dans un autre chat, sans réaudit ni perte des décisions.
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
-> **Suivi opérationnel au 07/11/2026 : FX-01 [#324](https://github.com/chebreub/Pokdle/pull/324) fusionnée dans `main` après QA complète verte, après DATA-04 #320, DISC-01 #321 et DISC-02 #322 ; **35/44 actions**.**
+> **Suivi opérationnel au 07/11/2026 : GEST-01 [#326](https://github.com/chebreub/Pokdle/pull/326) et GEST-02 [#327](https://github.com/chebreub/Pokdle/pull/327) fusionnées dans `main` après QA complète verte, après FX-01 #324 ; **37/44 actions**.**
 
-**Progression intégrée : 35 tâches terminées / 44 actives = 79,5 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 8 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
+**Progression intégrée : 37 tâches terminées / 44 actives = 84,1 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 6 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action autonome : GEST-01 — balayage entre fiches de collection, avec flèches visibles**, sur maquette, sans sacrifier la fiabilité tactile (BUG-MOB-01 toujours en attente d'un test sur appareil réel). Les autres actions ouvertes demandent un appareil réel (MOB-02, MOB-04), des joueurs externes (GROW-01, GROW-02) ou l'arbitrage de Kayan (ECO-03).
+**Prochaine action : GEST-03 (option)** — lancer la Ball par glissement, réglage facultatif, même appel serveur, même taux, aucune dépense sur geste interrompu ; maquette envoyée le 07/11, accord de Kayan attendu. Le reste demande un appareil réel (BUG-MOB-01, MOB-02, MOB-04), des joueurs externes (GROW-01, GROW-02) ou l'arbitrage de Kayan (ECO-03).
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -143,8 +143,8 @@ Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot
 
 ### Lot 6 — Gestes et animations (après correction tactile)
 - [x] **FX-01 · P2 · TERMINÉE** : [PR #324](https://github.com/chebreub/Pokdle/pull/324), fusion `f87ec4ba77d055af05ba082399e2060ec367d649`. Réglage « Animations » Normales / ⚡ Rapides / Réduites (maquette validée) : capture, cadeau, coffres et nouvelles entrées deux fois plus courts en Rapides (capture 6,6 s → 3,4 s), résultat immédiat en Réduites ; ancien interrupteur repris, réglage système prioritaire ; les hautes herbes suivent désormais le réglage du site ; « Passer › » dès le lancer ; résultats inchangés (serveur). [Protocole](qa/FX_01_ANIMATION_MODES.md).
-- [ ] **GEST-01 · P2** : balayage entre fiches de collection, avec flèches visibles.
-- [ ] **GEST-02 · P2** : fermer une fiche/panneau par la poignée, avec bouton de fermeture.
+- [x] **GEST-01 · P2 · TERMINÉE** : [PR #326](https://github.com/chebreub/Pokdle/pull/326), fusion `f1f1d1829cccf21200fe4e6635c5414183032a0b`. Fiche Pokédex sur téléphone : flèches ‹ › de 44 px autour de l'image (boutons du bas gardés), noms des voisins, glissement sur l'image seulement (pan-y, seuil ¼ de largeur, filtre en cours suivi), « Animations réduites » respecté ; PC inchangé. [Protocole](qa/GEST_01_DEX_SWIPE.md). **Geste à confirmer sur appareil réel.**
+- [x] **GEST-02 · P2 · TERMINÉE** : [PR #327](https://github.com/chebreub/Pokdle/pull/327), fusion `441a85dc4a98ab6d9435db01b50efc80b737d760`. Sur téléphone, fenêtre générale, panneau des préférés et éditeur du Team Builder se ferment en les tirant par la poignée ou le titre (✕ gardé ; contenu, boutons et champs exclus ; petit tirage = retour en place) ; PC inchangé. [Protocole](qa/GEST_02_SHEET_HANDLE.md). **Geste à confirmer sur appareil réel.**
 - [ ] **GEST-03 · P3 · OPTION** : lancer une Ball par glissement facultatif, même appel serveur, même taux, aucune dépense sur geste interrompu.
 
 ### Lot 7 — Validation et acquisition
