@@ -25,14 +25,18 @@ const CONTACT_PATTERNS = [
   /(\p{Nd}[\p{P}\p{S}\p{Z}\s]*){6,}/u,
   /\b(snap(chat)?|insta(gram)?|ig|whats?\s?app|wh?ats?ap+|telegram|tiktok|tik\s?tok|discord|kik|facebook|fb|messenger|twitter|wechat|skype)\b/i,
 ];
+// V2-SOC-01 (8/11) : the same guard is used by the Party Room chat (lib/party-chat.js).
+function hasContact(text) {
+  // Check a canonical copy; preserve the player's accents and emoji in the stored message.
+  const flat = String(text == null ? "" : text).normalize("NFKD").replace(/[\p{Default_Ignorable_Code_Point}\p{M}]/gu, "");
+  if (CONTACT_PATTERNS.some((re) => re.test(flat))) return true;
+  return /\b(?:s[\s._-]*n[\s._-]*a[\s._-]*p|d[\s._-]*i[\s._-]*s[\s._-]*c[\s._-]*o[\s._-]*r[\s._-]*d|i[\s._-]*n[\s._-]*s[\s._-]*t[\s._-]*a)\b/i.test(flat);
+}
 function checkBody(raw) {
   const body = String(raw == null ? "" : raw).replace(/\r\n?/g, "\n").replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, "").replace(/\n{3,}/g, "\n\n").trim();
   if (!body) return { error: "empty" };
   if ([...body].length > MAX_LEN) return { error: "long" };
-  // Check a canonical copy; preserve the player's accents and emoji in the stored message.
-  const flat = body.normalize("NFKD").replace(/[\p{Default_Ignorable_Code_Point}\p{M}]/gu, "");
-  if (CONTACT_PATTERNS.some((re) => re.test(flat))) return { error: "contact" };
-  if (/\b(?:s[\s._-]*n[\s._-]*a[\s._-]*p|d[\s._-]*i[\s._-]*s[\s._-]*c[\s._-]*o[\s._-]*r[\s._-]*d|i[\s._-]*n[\s._-]*s[\s._-]*t[\s._-]*a)\b/i.test(flat)) return { error: "contact" };
+  if (hasContact(body)) return { error: "contact" };
   return { body };
 }
 
@@ -267,4 +271,4 @@ function mountChatRoutes(app, { express, chat, getUser, log = console, limited =
   app.post("/api/chat/clear", json, run("clear", (user, body) => chat.clear(user.id, { pid: body.pid }), limited));
 }
 
-module.exports = { MAX_LEN, KEEP_DAYS, REPORT_KEEP_DAYS, checkBody, ensureTables, createFriendChat, adminReports, resolveReport, adminSectionHtml, suspensionSectionHtml, mountChatRoutes };
+module.exports = { MAX_LEN, KEEP_DAYS, REPORT_KEEP_DAYS, checkBody, hasContact, ensureTables, createFriendChat, adminReports, resolveReport, adminSectionHtml, suspensionSectionHtml, mountChatRoutes };
