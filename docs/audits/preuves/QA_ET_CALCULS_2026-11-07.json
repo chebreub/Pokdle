@@ -1,0 +1,220 @@
+{
+  "reference": "88494384a068f2224bf5a63c1f3b7d5833e8d4cf",
+  "ci_run": 42383113678,
+  "pr_head": "db33b727d682e3201e3695e377bbf4d19d8e48e1",
+  "qa_revision": "0173fde33870e50de8011247318e1c9bef72590d",
+  "main_browser_report": {
+    "passed": 410,
+    "failed": 0,
+    "widths": [
+      360,
+      390,
+      768,
+      1366,
+      1920,
+      2560
+    ],
+    "distinct_named_cases": 69
+  },
+  "json_reports": 26,
+  "calculations": [
+    {
+      "capture_rate": 3,
+      "par_lancer": [
+        0.032651892686302204,
+        0.045712649760823086,
+        0.06530378537260441
+      ],
+      "au_moins_une_capture_3_lancers_meme_ball": [
+        0.09479205145882763,
+        0.13096453350963955,
+        0.1833960964691551
+      ]
+    },
+    {
+      "capture_rate": 45,
+      "par_lancer": [
+        0.22945317261507167,
+        0.3212344416611003,
+        0.45890634523014334
+      ],
+      "au_moins_une_capture_3_lancers_meme_ball": [
+        0.5424936672302793,
+        0.6872773107070997,
+        0.8415773318484059
+      ]
+    },
+    {
+      "capture_rate": 255,
+      "par_lancer": [
+        0.8,
+        0.95,
+        0.95
+      ],
+      "au_moins_une_capture_3_lancers_meme_ball": [
+        0.992,
+        0.999875,
+        0.999875
+      ]
+    }
+  ],
+  "no_live_statistics": true,
+  "reports": [
+    {
+      "path": "dependency-audit.json",
+      "sha256": "268c167a9dd48451622d5a51bf975df1c8e937087ec27e0ffc7d48c32575593a",
+      "type": "dict",
+      "entries": null
+    },
+    {
+      "path": "mobile-chat/report.json",
+      "sha256": "e2eb47e1f7ea2179e746bc961fc92d4ea444b1b1513b6e6b830fd1142cf33cfd",
+      "type": "list",
+      "entries": 8
+    },
+    {
+      "path": "mobile-touch/report.json",
+      "sha256": "fd168315147581d67c90b50dfd752c4f64ccc780b156a4b7a97ddbc89f497aec",
+      "type": "list",
+      "entries": 6
+    },
+    {
+      "path": "verified-arcade/report.json",
+      "sha256": "a15cdbc528495a1d6e73226dd31282f2ab8687d7a533a4e7db11299da11ad8db",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "dossier/report.json",
+      "sha256": "ba489f81c5b784083e78933bc3d07a5930290abce4eb6485fa2014f855cc277d",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "petitbac/report.json",
+      "sha256": "228d2e2ce01fc082cd2a31d1359360c26c0e03fe63d84b03c114ff8b108c0613",
+      "type": "list",
+      "entries": 2
+    },
+    {
+      "path": "solo-mode-recipe/report.json",
+      "sha256": "eb8e0201f4edebd5e46d962a8ac5e93dd778553c4e2f52a6b0331d72658f93f5",
+      "type": "list",
+      "entries": 44
+    },
+    {
+      "path": "wordle/report.json",
+      "sha256": "5970638c4510187141d5224b955ae3f9423781b128e8da960946812f6e895f3f",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "social-safety/report.json",
+      "sha256": "9d36607f35b421915715523607d631836e9ef56483dbcfc3a100b86189bdbf0b",
+      "type": "list",
+      "entries": 2
+    },
+    {
+      "path": "pokedex-states/report.json",
+      "sha256": "a15cdbc528495a1d6e73226dd31282f2ab8687d7a533a4e7db11299da11ad8db",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "mobile-controls/report.json",
+      "sha256": "892c83a5964ac17027a523088f09a9b2fd4a37a51b3ca1caec1076ac69cb5586",
+      "type": "list",
+      "entries": 6
+    },
+    {
+      "path": "verified-quiz-hl/report.json",
+      "sha256": "2d81ec52f6bd5b54c9972b58ef76c405c12d1f2b16ddcf9cabaf25c63a549667",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "guess-flow/report.json",
+      "sha256": "03b39966b545cf1c88415078e636d13794f9f1348aa3dc7c48e8939f62ba0fd7",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "pokedex-showcase/report.json",
+      "sha256": "a15cdbc528495a1d6e73226dd31282f2ab8687d7a533a4e7db11299da11ad8db",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "halloween/report.json",
+      "sha256": "5444b0bece9223cd8666d9c7ccac7c326fc69e99eef6c7b594eae184d3dd15c3",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "pokedex-targets/report.json",
+      "sha256": "a15cdbc528495a1d6e73226dd31282f2ab8687d7a533a4e7db11299da11ad8db",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "admin-stats/report.json",
+      "sha256": "e6c4e622a82063dc8660c9e711be175ab219ca10efa345ee60048459d6ae8598",
+      "type": "list",
+      "entries": 18
+    },
+    {
+      "path": "party-mobile/report.json",
+      "sha256": "c6c5e98f0617c99a99c70165bdc56bcd1f50f6f84bb3be7689c681354dbdf68c",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "team-facts/report.json",
+      "sha256": "432ec7451a8209eea6121cc9d62adec96fa949cb16b7839dcebddd2b38198b76",
+      "type": "list",
+      "entries": 2
+    },
+    {
+      "path": "multiplayer/report.json",
+      "sha256": "5eabb6adbfabd1c91ac8ac0062f095fb8974ff1914a8f5eab6b4303294c1cec6",
+      "type": "dict",
+      "entries": null
+    },
+    {
+      "path": "pc-desktop/report.json",
+      "sha256": "46ef6032eea8e478283b8b93d1ac50e1674f654f4a558ee4e3a7ef5212dd5126",
+      "type": "dict",
+      "entries": null
+    },
+    {
+      "path": "grid/report.json",
+      "sha256": "5b04a4e2795ab989a172814ce59029414e5198205b303e5cfe539450c90676f0",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "pokedex-routes/report.json",
+      "sha256": "a15cdbc528495a1d6e73226dd31282f2ab8687d7a533a4e7db11299da11ad8db",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "part01-invite/report.json",
+      "sha256": "cc532909a3860b7781073267ad7e7761699259bc5aa77243a97b9c197834bcf9",
+      "type": "list",
+      "entries": 2
+    },
+    {
+      "path": "economy-transactions/report.json",
+      "sha256": "a15cdbc528495a1d6e73226dd31282f2ab8687d7a533a4e7db11299da11ad8db",
+      "type": "list",
+      "entries": 4
+    },
+    {
+      "path": "browser/report.json",
+      "sha256": "8d93279da0b86a557d2729d12fadc37b9b48044c91a9251356fb68c316c3f8ca",
+      "type": "dict",
+      "entries": null
+    }
+  ]
+}
