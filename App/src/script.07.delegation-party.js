@@ -2536,6 +2536,7 @@ const DEFAULT_APP_SETTINGS = {
   pokemonCries: true,
   soundVolume: 100,
   seasonalDecorations: true,
+  ballFlick: false,
 };
 
 // The master volume (31/10/2026): from 10 to 100 %, for the sound effects and the cries alike.
@@ -3197,6 +3198,10 @@ function openSettingsModal() {
           }).join("")}</div>
           <p class="anim-help">⚡ <b>Rapides</b> : les mêmes animations, deux fois plus courtes, avec « Passer › ». <b>Réduites</b> : presque plus de mouvement, le résultat s’affiche tout de suite.</p>
         </div>
+        <label class="app-setting-item">
+          <span><b>Lancer la Ball d’un geste</b><small>Dans les hautes herbes, glisse la Ball vers le haut. Les boutons restent, la chance de capture ne change pas.</small></span>
+          <input type="checkbox" ${settings.ballFlick === true ? "checked" : ""} data-change-action="appSettingFromEl" data-setting="ballFlick" data-bool="1" />
+        </label>
       </section>
       <section class="app-settings-section">
         <h4>Appli & notifications</h4>

@@ -676,3 +676,8 @@ body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;col
 /* PART-03 : « Partager ma capture » (carte 1080 × 1350, sans pseudo) */
 .wild-end .cc-share{font-weight:800}
 .capture-share img{width:min(100%,320px,calc((100dvh - 260px) * .8))}
+/* GEST-03 (option) : lancer la Ball d'un geste dans les hautes herbes (script.10xzw.ball-flick.js) */
+.wild-flick{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:6px;touch-action:none;user-select:none;-webkit-user-select:none}
+.wild-flick-ball{display:block;width:64px;height:64px;cursor:grab;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
+.wild-flick-ball svg{width:100%;height:100%}
+.wild-flick-hint{order:-1;padding:7px 14px;border-radius:999px;background:#2E2A33;color:#fff;font:800 13px Nunito,sans-serif;white-space:nowrap;pointer-events:none}
