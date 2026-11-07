@@ -4,7 +4,7 @@
 > Créé le **5 novembre 2026** depuis `main` `714b41d13cd905936f257b0e59497f2a30b23d4c` (PR #259).
 > **Suivi opérationnel au 07/11/2026 : GEST-03 [#330](https://github.com/chebreub/Pokdle/pull/330) et ECO-03 [#332](https://github.com/chebreub/Pokdle/pull/332) (option B) fusionnées dans `main` après QA complète verte, avec la correction des sons #329 ; **39/44 actions**.**
 
-**Progression intégrée : 37 tâches terminées / 44 actives = 84,1 %.** Une action en cours (BUG-MOB-01, retour physique attendu), 6 non commencées ; NIV-01 est stationné et exclu du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md). Le ratio compte des actions clôturées et ne mesure pas le temps restant.
+**Progression intégrée : 41 tâches terminées / 43 actives = 95,3 %.** Restent MOB-02 et MOB-04 (vérification sur iPhone) ; NIV-01 et GROW-01 sont stationnés et exclus du total. Voir [état d'avancement](ETAT_AVANCEMENT_POKEDLE.md).
 
 **DEX-01 terminé et fusionné :** [PR #290](https://github.com/chebreub/Pokdle/pull/290), merge `904efaa26b9b2e521ad97e680d16ef4fa247c416`, head `70f24bd23050c9706d84cb0572f8ad984310fbff`. [CI Node verte](https://github.com/chebreub/Pokdle/actions/runs/42240637508) et [CI navigateur/base complète verte](https://github.com/chebreub/Pokdle/actions/runs/42240647657) sur ce head. Découvert, capturé personnellement et possédé distingués sans migration, nouveaux gains ou modification des probabilités. **15/43 = 34,9 %**, **1 en cours** (BUG-MOB-01), **27 non commencées**, lot 0 **4/7**, lot 3 **1/4**. Prochaine action autonome : **DEX-02**, voies d'obtention réellement disponibles. iPhone physique et Render non vérifiés.
 
@@ -46,7 +46,7 @@ Le dernier correctif préserve le clic tactile WebKit en conservant le focus sur
 
 ## Prochaine action autonome de développement
 
-**Prochaine action : vérifications sur appareil réel** — BUG-MOB-01, MOB-02, MOB-04 sur iPhone (correctifs du 7/11 dans #333), GROW-01 mis de côté et GROW-02 conduit par Kayan (07/11). Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
+**Prochaine action : vérifications sur appareil réel** — MOB-02 et MOB-04 sur iPhone (correctifs du 7/11 dans #333). BUG-MOB-01 confirmé par Jade le 06/11 ; GROW-01 mis de côté et GROW-02 conduit par Kayan (07/11). Après le plan : maquette d'une rencontre et d'une capture plus « wow » (demande de Kayan).
 
 ### Incident tactile distinct — suivi ouvert
 
@@ -70,7 +70,7 @@ Voir `docs/qa/MOBILE_TACTILE.md` pour le protocole et les outils de diagnostic.
 Légende : `[ ]` à traiter, `[~]` en cours, `[x]` terminé et vérifié. Un lot n'est pas « terminé » si une recette iPhone requise reste absente.
 
 ### Lot 0 — Fiabilité tactile, ergonomie mobile/PC
-- [~] **BUG-MOB-01 · P0** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
+- [x] **BUG-MOB-01 · P0 · CONFIRMÉ PAR JADE (06/11, « C'est parfait merci ! »)** : retour Jade, zone basse non cliquable. [PR #271](https://github.com/chebreub/Pokdle/pull/271) : tests à coordonnées sur deux modes et correctif ciblé du toast de résultat invisible (`pointer-events` seulement pendant son affichage) ; **CI Node et navigateur vertes ; recette sur téléphone réel à vérifier avant de clôturer**. Ne pas conclure que tous les appareils sont touchés.
 - [ ] **MOB-02 · P0** : nettoyer les calques invisibles/effets *uniquement si identifiés comme cause* ; éviter tout patch global de `pointer-events` ou `z-index`.
 - [x] **DATA-01 · P0** : [dictionnaire de grain et couverture](qa/USAGE_EVENT_GRAIN.md) vérifié dans les sources (`trackUsage`, `recordMatchHistory`, `usage-metrics`, Party, dashboard) : distingue visites brutes, sessions navigateur, ouvertures, fins déclarées, commandes de manches et retours Daily. **Dates exactes de mise en production non disponibles** : méthode de lecture de la première observation conservée et limites des 90 jours documentées, **aucune date ni historique inventés**. Documentation uniquement ; pas de nouveau suivi individuel. Clôture du cadrage, pas vérification de dates de déploiement réelles.
 - [x] **MOB-03 · P1** : clôture technique ; boutons du champ partagé (#285), chat/célébrations (#287), commandes Party/Duel/Défi (#289) intégrés après CI verte. Recette iPhone physique distincte ; voir [preuves](qa/MOB_03_CONTROLS.md).
