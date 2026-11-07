@@ -1,0 +1,182 @@
+{
+ "base": "https://pokdle.fr",
+ "at": "2026-11-07T23:57:17.713Z",
+ "runs": [
+  {
+   "device": "téléphone 4G",
+   "visit": "à froid",
+   "version": "9340737699",
+   "wallMs": 10001,
+   "timing": {
+    "ttfb": 966,
+    "dcl": 2783,
+    "load": 4519,
+    "lcp": 2444
+   },
+   "requests": 72,
+   "wireKB": 3821,
+   "declaredKBByType": {
+    "document": 0,
+    "stylesheet": 0,
+    "script": 0,
+    "image": 2855,
+    "font": 115,
+    "fetch": 2,
+    "xhr": 0
+   },
+   "failed": [
+    "ÉCHEC https://pokeapi.co/api/v2/pokemon/1"
+   ],
+   "errors": [],
+   "screens": [
+    {
+     "name": "Pokédex",
+     "ok": true,
+     "ms": 34
+    },
+    {
+     "name": "Tous les jeux",
+     "ok": true,
+     "ms": 5
+    },
+    {
+     "name": "Party Room",
+     "ok": true,
+     "ms": 18
+    }
+   ]
+  },
+  {
+   "device": "téléphone 4G",
+   "visit": "avec le cache",
+   "version": "9340737699",
+   "wallMs": 5862,
+   "timing": {
+    "ttfb": 171,
+    "dcl": 374,
+    "load": 414,
+    "lcp": 276
+   },
+   "requests": 71,
+   "wireKB": 36,
+   "declaredKBByType": {
+    "document": 0,
+    "stylesheet": 0,
+    "script": 0,
+    "image": 2855,
+    "font": 115,
+    "fetch": 1,
+    "xhr": 0
+   },
+   "failed": [
+    "ÉCHEC https://pokeapi.co/api/v2/pokemon/1"
+   ],
+   "errors": [],
+   "screens": [
+    {
+     "name": "Pokédex",
+     "ok": true,
+     "ms": 34
+    },
+    {
+     "name": "Tous les jeux",
+     "ok": true,
+     "ms": 5
+    },
+    {
+     "name": "Party Room",
+     "ok": true,
+     "ms": 11
+    }
+   ]
+  },
+  {
+   "device": "PC",
+   "visit": "à froid",
+   "version": "9340737699",
+   "wallMs": 7469,
+   "timing": {
+    "ttfb": 245,
+    "dcl": 1186,
+    "load": 1996,
+    "lcp": 688
+   },
+   "requests": 176,
+   "wireKB": 6210,
+   "declaredKBByType": {
+    "document": 0,
+    "stylesheet": 0,
+    "script": 0,
+    "image": 5132,
+    "font": 114,
+    "fetch": 2,
+    "xhr": 0
+   },
+   "failed": [
+    "ÉCHEC https://pokeapi.co/api/v2/pokemon/1"
+   ],
+   "errors": [],
+   "screens": [
+    {
+     "name": "Pokédex",
+     "ok": true,
+     "ms": 40
+    },
+    {
+     "name": "Tous les jeux",
+     "ok": true,
+     "ms": 10
+    },
+    {
+     "name": "Party Room",
+     "ok": true,
+     "ms": 14
+    }
+   ]
+  },
+  {
+   "device": "PC",
+   "visit": "avec le cache",
+   "version": "9340737699",
+   "wallMs": 5889,
+   "timing": {
+    "ttfb": 174,
+    "dcl": 348,
+    "load": 378,
+    "lcp": 452
+   },
+   "requests": 176,
+   "wireKB": 36,
+   "declaredKBByType": {
+    "xhr": 0,
+    "document": 0,
+    "stylesheet": 0,
+    "script": 0,
+    "image": 5132,
+    "font": 114,
+    "fetch": 1
+   },
+   "failed": [
+    "ÉCHEC https://pokeapi.co/api/v2/pokemon/1"
+   ],
+   "errors": [],
+   "screens": [
+    {
+     "name": "Pokédex",
+     "ok": true,
+     "ms": 81
+    },
+    {
+     "name": "Tous les jeux",
+     "ok": true,
+     "ms": 4
+    },
+    {
+     "name": "Party Room",
+     "ok": true,
+     "ms": 8
+    }
+   ]
+  }
+ ]
+}
