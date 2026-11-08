@@ -74,7 +74,7 @@ function discArt(action) {
   var theme = typeof MODE_TILE_THEME !== 'undefined' ? MODE_TILE_THEME[action] : null;
   var id = theme && theme.ids && theme.ids[0];
   var p = id && typeof POKEMON_BY_ID !== 'undefined' ? POKEMON_BY_ID.get(Number(id)) : null;
-  var src = p && typeof pokedexDetailArtwork === 'function' ? pokedexDetailArtwork(p, false) : '';
+  var src = id && typeof modeTileArtworkUrl === 'function' ? modeTileArtworkUrl(id) : p && typeof pokedexDetailArtwork === 'function' ? pokedexDetailArtwork(p, false) : '';
   return { src: src, tone: theme && theme.tone || '#C9B6F5', ink: theme && theme.ink || '#5C3FB0' };
 }
 function renderDiscoveryCard() {
