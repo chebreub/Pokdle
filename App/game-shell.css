@@ -2223,3 +2223,26 @@ body.theme-dark #overlay-modal.dex-v2-on .alb-slot.is-miss{background:repeating-
 #pokdle-app.theme-dark .fr-v3-list{background:#26222c;border-color:#3a3442}
 #pokdle-app.theme-dark .fr-v3-list .fr-row{border-color:#3a3442}
 #pokdle-app.theme-dark .fr-v3 .fr-row-main b,#pokdle-app.theme-dark .fr-v3 .is-unread .fr-last{color:#f5efe6}
+
+/* 🎉 Inviter un ami en un appui (8/11) — script.10xzzv.party-friend-invites.js */
+.pfi-who{display:grid;gap:6px}
+.pfi-t{margin:0;font:600 16px Fredoka,Nunito,sans-serif;color:#2E2A33;display:flex;justify-content:space-between;align-items:baseline}
+.pfi-t small{font:700 12px Nunito,sans-serif;color:#6E6878}
+.pfi-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:4px 2px}
+.pfi-row::-webkit-scrollbar{display:none}
+.pfi-row.is-wrap{flex-wrap:wrap;overflow:visible}
+.pfi-friend{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;width:62px;min-height:0;margin:0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer}
+.pfi-friend small{max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 11px Nunito,sans-serif;color:#5E5866}
+.pfi-face{position:relative;display:grid;place-items:center;width:52px;height:52px;border-radius:50%;border:2px solid #ECE4D8;background:#fff;overflow:visible}
+.pfi-face .fr-art{width:46px;height:46px;border-radius:50%}
+.pfi-friend.is-on .pfi-face{border-color:#3E9B57;box-shadow:0 0 0 3px #DDF1E2}
+.pfi-friend.is-on .pfi-face::after{content:"✓";position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;background:#3E9B57;color:#fff;font:900 11px/18px Nunito,sans-serif;text-align:center}
+.pfi-friend.is-on small{color:#1F6136}
+.pfi-friend:focus-visible{outline:3px solid #4069E0;outline-offset:2px;border-radius:12px}
+.pfi-hint{margin:0;font:800 12.5px Nunito,sans-serif;color:#1F6136}
+.pfi-send{width:100%;margin-top:12px}
+.pfi-party{margin:0 0 12px}
+.pfi-card{position:relative}
+.pfi-x{flex:0 0 auto;width:32px;height:32px;min-height:0;padding:0;border:1.5px solid #DCD3C5;border-radius:50%;background:#fff;color:#6E6878;font:900 13px Nunito,sans-serif;cursor:pointer}
+#pokdle-app.theme-dark .pfi-face{background:#26222c;border-color:#3a3442}
+#pokdle-app.theme-dark .pfi-t{color:#f5efe6}
