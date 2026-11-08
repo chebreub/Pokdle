@@ -25,7 +25,9 @@ def case(browser, engine, width):
         }''')
         qa.ready(page,'wildCaptureHistory !== null')
         national=page.locator('#pokedex-collection-national')
-        assert 'Découverts' in national.inner_text() and 'Déjà capturés' in national.inner_text() and 'Possédés actuellement' in national.inner_text()
+        # 9/11/2026 : sur téléphone, 3 compteurs courts (Vus · Attrapés · Shinies) ; sur PC, les 4 barres d'origine.
+        if width<640: assert 'Vus' in national.inner_text() and 'Attrapés' in national.inner_text() and 'Shinies' in national.inner_text()
+        else: assert 'Découverts' in national.inner_text() and 'Déjà capturés' in national.inner_text() and 'Possédés actuellement' in national.inner_text()
         for key,expected in [('seen',[10,25,150,373,380]),('caught',[373,380]),('obtained',[25,380])]:
             page.locator(f'[data-collection-filter="{key}"]').click()
             assert page.evaluate('getFilteredPokedexList().map(p=>p.id)')==expected,(engine,width,key)
