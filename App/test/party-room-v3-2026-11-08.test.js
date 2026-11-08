@@ -19,7 +19,11 @@ test('the original fields and buttons are reused, never duplicated (the QA scrip
 });
 
 test('picking a group game uses the same pending game as the home', () => {
-  for (const key of ['dessin', 'quiestce1v1', 'petitbac', 'dexrace']) assert.match(SRC, new RegExp("key: '" + key + "'"));
+  // Les 12 jeux du salon (mêmes modes que party:set-mode côté serveur).
+  for (const key of ['dessin', 'quiestce1v1', 'petitbac', 'dexrace', 'coop', 'deduction', 'guess', 'nearest', 'typecombo', 'duocriteria', 'statclashparty', 'statclash']) {
+    assert.match(SRC, new RegExp("key: '" + key + "'"));
+    assert.match(read('server.js'), new RegExp('mode !== "' + key + '"'), key + ' is a real room mode');
+  }
   assert.match(SRC, /partyRoomState\.pendingMode = key; if \(typeof renderPartyPendingGame === 'function'\) renderPartyPendingGame\(\);/);
   assert.match(SRC, /clearPartyPendingGame\(\)/, 'touching it again drops it');
   assert.match(SRC, /var label = g \? '▶ Lancer ' \+ g\.name : 'Créer mon salon';/);

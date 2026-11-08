@@ -2130,6 +2130,8 @@ body.theme-dark #overlay-modal.dex-v2-on .alb-slot.is-miss{background:repeating-
 .pl3-menu-t{margin:2px 2px 6px;font:900 11px Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7C5BD6}
 .pl3-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:3px 3px 6px;margin:0 -3px}
 .pl3-strip::-webkit-scrollbar{display:none}
+.pl3-swipe{float:right;font-weight:800;letter-spacing:0;text-transform:none;color:#8A8392}
+#pl3-group{-webkit-mask-image:linear-gradient(to right,#000 85%,transparent);mask-image:linear-gradient(to right,#000 85%,transparent);padding-right:24px}
 #pokdle-app #screen-party-room .pl3-strip>button{flex:0 0 76px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0;margin:0;padding:0;border:0;background:none;box-shadow:none;color:#5E5866;text-align:center;font:800 11px/1.2 Nunito,sans-serif;cursor:pointer}
 .pl3-thumb{display:grid;place-items:center;width:70px;height:70px;border-radius:18px;background:#F6F1FF;border:2px solid #ECE4D8;overflow:hidden}
 .pl3-thumb img{width:60px;height:60px;object-fit:contain}
@@ -2151,10 +2153,12 @@ body.theme-dark #overlay-modal.dex-v2-on .alb-slot.is-miss{background:repeating-
 #pokdle-app #screen-party-room .pl3 .party-entry-panel .party-join-row::before{content:"🔑";align-self:center;font-size:18px}
 #pokdle-app #screen-party-room .pl3 .party-entry-note{margin:0;text-align:center;font-size:12px}
 @media (min-width:861px){
-  #pokdle-app #screen-party-room .pl3{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"feat menu" "entry menu";column-gap:22px;align-items:start}
+  #pokdle-app #screen-party-room .pl3{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"feat menu" "entry menu";grid-template-rows:auto 1fr;column-gap:22px;align-items:start}
   .pl3-stage{min-height:300px}.pl3-hero{height:270px}#pokdle-app #screen-party-room .pl3-stage h3{font-size:38px}
   .pl3-stage.is-any{padding-top:150px}.pl3-f{width:170px;height:170px}
   .pl3-strip{flex-direction:column;overflow:visible;margin:0;padding:0;gap:6px}
+  .pl3-swipe{display:none}
+  #pl3-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));-webkit-mask-image:none;mask-image:none;padding-right:0}
   #pokdle-app #screen-party-room .pl3-strip>button{flex:0 0 auto;flex-direction:row;align-items:center;gap:10px;padding:6px 10px 6px 6px;border:2px solid #ECE4D8;border-radius:16px;background:#fff;text-align:left}
   #pokdle-app #screen-party-room .pl3-strip>button.is-on{border:3px solid #7C5BD6;box-shadow:0 0 0 3px #E9E1FF}
   #pokdle-app #screen-party-room .pl3-strip>button.is-on .pl3-thumb{border:0;box-shadow:none}

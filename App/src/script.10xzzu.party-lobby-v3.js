@@ -12,6 +12,15 @@ var PL3_GAMES = [
   { key: 'quiestce1v1', name: 'Qui est-ce ?', art: 'img/home/132.webp', tint: '#EDE6FF', who: 'À deux', rule: 'Chacun son Pokémon secret : pose des questions oui ou non, tour par tour.' },
   { key: 'petitbac', name: 'Petit Bac', art: 'img/home/201.webp', tint: '#DDF3EC', who: '2 à 8 joueurs', rule: 'Une lettre, vos thèmes, et le premier qui a tout rempli crie STOP.' },
   { key: 'dexrace', name: 'Course au Pokédex', art: 'img/home/479.webp', tint: '#E3ECFF', who: '2 à 8 joueurs', rule: 'Une grille de Pokémon : le premier qui trouve prend la case.' },
+  // Les 8 autres jeux du salon (Kayan : « il y en a plus ») : mêmes modes que le choix de l'hôte dans le salon.
+  { key: 'coop', name: 'Enquête coop', art: 'img/art/65.webp', tint: '#FFF1C7', who: '2 à 8 joueurs', rule: 'Tous dans la même équipe : chacun a des indices différents, 12 essais communs, 3 minutes.' },
+  { key: 'deduction', name: 'Pokémon mystère', art: 'img/art/151.webp', tint: '#FBE3EE', who: '2 à 8 joueurs', rule: 'Le duel jusqu’à 8 : indices privés, proximité des autres en %, le premier qui trouve gagne.' },
+  { key: 'guess', name: 'Course Pokémon', art: 'img/art/149.webp', tint: '#FFE9D2', who: '2 à 8 joueurs', rule: 'Devine le Pokémon le plus vite possible : les points dépendent du rang.' },
+  { key: 'nearest', name: 'Numéro mystère', art: 'img/art/137.webp', tint: '#E3F1FF', who: '2 à 8 joueurs', rule: 'Un numéro du Pokédex est tiré : le Pokémon le plus proche gagne.' },
+  { key: 'typecombo', name: 'Combo de types', art: 'img/art/493.webp', tint: '#F1ECDD', who: '2 à 8 joueurs', rule: 'Deux types tirés au sort : le premier Pokémon valide marque la manche.' },
+  { key: 'duocriteria', name: 'Duo de critères', art: 'img/art/233.webp', tint: '#E8F4FF', who: '2 à 8 joueurs', rule: 'Deux critères croisés (type, couleur, habitat…) : le premier qui coche les deux gagne.' },
+  { key: 'statclashparty', name: 'Stat Clash Party', art: 'img/art/107.webp', tint: '#F2E6FF', who: '2 à 8 joueurs', rule: 'Six manches, une par statistique : tu marques la vraie valeur de la stat choisie.' },
+  { key: 'statclash', name: 'Meilleure stat', art: 'img/art/106.webp', tint: '#EAF6E6', who: '2 à 8 joueurs', rule: 'Choisis la stat la plus élevée du Pokémon : les bons choix marquent des points.' },
 ];
 var PL3_DUEL_ART = { openMultiplayerMode: 25, openStatClashMode: 68, openStatAuctionMode: 52, openDefiAmiFromAllModes: 448 };
 var PL3_NEW_UNTIL = Date.parse('2026-11-13T00:00:00+01:00'); // même date que le badge « Nouveau » de Dessine-le !
@@ -32,7 +41,7 @@ function pl3Build() {
   var pl3 = document.createElement('div');
   pl3.className = 'pl3';
   pl3.innerHTML = '<div class="pl3-feat" id="pl3-feat" aria-live="polite"></div>' +
-    '<div class="pl3-menu"><p class="pl3-menu-t">En groupe</p><div class="pl3-strip" id="pl3-group">' +
+    '<div class="pl3-menu"><p class="pl3-menu-t">En groupe · ' + PL3_GAMES.length + ' jeux<span class="pl3-swipe" aria-hidden="true">glisse →</span></p><div class="pl3-strip" id="pl3-group">' +
     PL3_GAMES.map(function (g) {
       return '<button type="button" class="pl3-game" data-action="pl3Pick" data-args=\'["' + g.key + '"]\' data-pl3="' + g.key + '" aria-pressed="false">' +
         '<span class="pl3-thumb" style="background:' + g.tint + '"><img src="' + g.art + '" alt="" loading="lazy" decoding="async" width="96" height="96"></span>' +
