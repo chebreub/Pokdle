@@ -549,6 +549,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_blocks", "DELETE FROM player_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["chat_suspensions", "DELETE FROM chat_suspensions WHERE account_id = $1", [id]],
     ["friend_messages", "DELETE FROM friend_messages WHERE from_id = $1 OR to_id = $1", [id]],
+    ["party_friend_invites", "DELETE FROM party_friend_invites WHERE from_id = $1 OR to_id = $1", [id]],
     ["friend_reports", "DELETE FROM friend_reports WHERE reporter_id = $1 OR reported_id = $1", [id]],
     ["deleted_accounts", "INSERT INTO deleted_accounts(id) VALUES($1) ON CONFLICT DO NOTHING", [id]],
     ["users", "DELETE FROM users WHERE discord_id = $1", [id]],
@@ -1654,6 +1655,16 @@ const chatReady = pgPool ? friendsReady.then((ok) => ok && chatLib.ensureTables(
 const friendChat = playerFriends ? chatLib.createFriendChat({ db: pgPool, friends: playerFriends, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid, ready: chatReady,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 chatLib.mountChatRoutes(app, { express, chat: friendChat, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// 🎉 Inviter un ami en un appui (8/11/2026) : un ami reçoit l'invitation d'un salon vivant (carte + 🔔).
+const salonInviteLib = require("./lib/party-friend-invites");
+const salonInvitesReady = pgPool ? friendsReady.then((ok) => ok && salonInviteLib.ensureTables(pgPool)).then((ok) => ok !== false).catch((error) => {
+  console.warn("[salon] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+const salonInvites = playerFriends ? salonInviteLib.createPartyFriendInvites({ db: pgPool, friends: playerFriends, accountOfPid: require("./lib/player-ids").accountOfPid, playerPid,
+  roomStatus: (code) => partyInviteStatus(partyRooms.get(code)), ready: salonInvitesReady,
+  push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
+salonInviteLib.mountPartyInviteRoutes(app, { express, invites: salonInvites, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
 // Le script des onglets et du bouton « Tout copier » de /admin/stats (aucune donnée dedans).
 app.get("/admin/stats.js", (_req, res) => {
