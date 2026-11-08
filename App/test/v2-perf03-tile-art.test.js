@@ -21,3 +21,13 @@ test('every tile artwork exists as a light local WebP', () => {
   assert.match(src, /data-fallback="'\+modeCatalogSpriteUrl\(id\)\+'"/, 'the small sprite stays as fallback');
   assert.match(fs.readFileSync(path.join(root, 'src', 'script.10xzt.discovery-card.js'), 'utf8'), /modeTileArtworkUrl\(id\)/);
 });
+
+test('V2-PERF-04: the Expedition legends use the same light WebP', () => {
+  const balls = fs.readFileSync(path.join(root, 'lib', 'poke-balls.js'), 'utf8');
+  const legends = [...balls.matchAll(/legend: (\d+) \}/g)].map((m) => Number(m[1]));
+  assert.equal(legends.length, 6);
+  for (const id of legends) assert.ok(fs.existsSync(path.join(root, 'img', 'art', id + '.webp')), 'missing ' + id);
+  const exp = fs.readFileSync(path.join(root, 'src', 'script.10xzb.expedition.js'), 'utf8');
+  assert.equal((exp.match(/typeof modeTileArtworkUrl === 'function' \? modeTileArtworkUrl\(p\.id\) : pokedexDetailArtwork\(p, false\)/g) || []).length, 2);
+  assert.doesNotMatch(exp, /escapeHtml\(pokedexDetailArtwork\(p, false\)\)/);
+});

@@ -8,6 +8,9 @@ APP = pathlib.Path(__file__).resolve().parent.parent
 src = (APP / "src" / "script.08.catalog.js").read_text(encoding="utf-8")
 block = src[src.index("var MODE_TILE_THEME"):src.index("var MODE_TILE_PROPS")]
 ids = sorted({int(n) for group in re.findall(r"ids:\[([\d,]+)\]", block) for n in group.split(",")})
+# V2-PERF-04 (8/11) : les légendaires de l'Expédition (lib/poke-balls.js, EXPEDITIONS), affichés en silhouette sur l'accueil.
+balls = (APP / "lib" / "poke-balls.js").read_text(encoding="utf-8")
+ids = sorted(set(ids) | {int(n) for n in re.findall(r"legend: (\d+) \}", balls)})
 OUT = APP / "img" / "art"
 OUT.mkdir(parents=True, exist_ok=True)
 total = 0
