@@ -724,3 +724,103 @@ body.theme-dark .reward-line.is-done{background:#203026;border-color:#2f5a3a;col
 .tm-confirm .tm-gain{color:#2E7D46;font-weight:900}
 .tm-confirm-btns{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px}
 .tm-confirm-btns button{min-height:46px}
+
+/* 🧭 Expédition v2 (8/11) : scène de « Ta prochaine capture », carte Expédition de l'accueil, 4 tuiles, écran Expédition */
+.exp2-it{image-rendering:pixelated;flex:0 0 auto}
+.hs-capture.exp2-capture{gap:12px;padding:12px 12px 16px}
+.exp2-scene{position:relative;display:block;height:132px;border-radius:18px;overflow:hidden;background:#7FB069 center bottom/100% auto no-repeat;image-rendering:pixelated;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.exp2-peek{position:absolute;left:50%;bottom:10px;width:92px;height:92px;object-fit:contain;transform:translateX(-50%);filter:brightness(0) opacity(.62)}
+.exp2-grass{position:absolute;left:0;right:0;bottom:0;height:40px;background:center bottom/100% auto no-repeat;image-rendering:pixelated;-webkit-mask-image:linear-gradient(to top,#000 70%,transparent);mask-image:linear-gradient(to top,#000 70%,transparent)}
+.exp2-alert{position:absolute;left:calc(50% + 30px);top:12px;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#FFD45C;color:#2E2A33;font:900 18px/1 Fredoka,Nunito,sans-serif;font-style:normal;box-shadow:0 2px 0 rgba(46,42,51,.25)}
+.exp2-stats{display:flex;flex-wrap:wrap;gap:8px}
+.exp2-stats>span{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:4px 12px 4px 6px;border-radius:999px;background:rgba(255,255,255,.16);font:800 15px/1.2 Nunito,sans-serif;color:#fff}
+.exp2-stats .ball-img{width:22px;height:22px}
+.hs-capture-go .ball-img{width:22px;height:22px}
+@media (prefers-reduced-motion:no-preference){
+  body:not(.reduce-motion) .exp2-alert{animation:exp2Alert 2.6s ease-in-out infinite}
+  body:not(.reduce-motion) .exp2-grass{animation:exp2Rustle 2.6s ease-in-out infinite}
+}
+@keyframes exp2Alert{0%,55%,100%{transform:translateY(0) scale(1)}62%{transform:translateY(-6px) scale(1.12)}70%{transform:translateY(0) scale(1)}}
+@keyframes exp2Rustle{0%,55%,100%{transform:none}60%{transform:translateX(-2px)}65%{transform:translateX(2px)}70%{transform:none}}
+
+/* La carte Expédition sur l'accueil */
+.exp2-home-wrap{display:block;min-width:0}
+.exp2-home{position:relative;display:grid;gap:4px;width:100%;min-height:150px;padding:16px 16px 14px;border:0;border-radius:24px;overflow:hidden;background:linear-gradient(150deg,#1E3A5F,#2B5C8A 60%,#3A6FA0);color:#fff;text-align:left;cursor:pointer;box-shadow:0 6px 20px rgba(46,42,51,.1);font-family:Nunito,sans-serif}
+.exp2-home:hover{filter:brightness(1.05)}
+.exp2-home:focus-visible{outline:3px solid #FFD45C;outline-offset:3px}
+.exp2-home.is-hot{background:linear-gradient(150deg,#5B3A0A,#9A6A00 55%,#C9921A);box-shadow:0 0 0 3px #FFD45C,0 8px 24px rgba(201,146,26,.35)}
+.exp2-home.is-caught{background:linear-gradient(150deg,#1F5A33,#2F7D47)}
+.exp2-home>small,.exp2-home>b,.exp2-home>span{position:relative;z-index:1;max-width:66%}
+.exp2-home>small{font:900 11px/1.2 Nunito,sans-serif;letter-spacing:.08em;opacity:.85}
+.exp2-home>b{font:700 21px/1.15 Fredoka,Nunito,sans-serif}
+.exp2-home-line{font:700 13px/1.35 Nunito,sans-serif;opacity:.9}
+.exp2-home-bar{display:block;height:10px;margin-top:6px;border-radius:999px;background:rgba(255,255,255,.22);overflow:hidden}
+.exp2-home-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#FFD45C,#FFB020)}
+.exp2-home-cta{margin-top:6px;font:600 15px/1.2 Fredoka,Nunito,sans-serif;color:#FFE7A3}
+.exp2-home-leg{position:absolute;right:-14px;bottom:-12px;width:150px;height:150px;object-fit:contain;z-index:0;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+.exp2-home-leg.is-shadow{filter:brightness(0) opacity(.42)}
+/* Accueil : sur téléphone, après « Ta prochaine capture » ; sur PC, sous le Défi du jour (la colonne de droite prend 2 rangées) */
+#pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{order:4}
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{grid-column:1;grid-row:2;margin-top:4px}
+  #pokdle-app.design-refresh #screen-config.hm-on:has(>#exp2-home){grid-template-rows:auto 1fr}
+  #pokdle-app.design-refresh #screen-config.hm-on:has(>#exp2-home)>.hm-side{grid-row:1/span 2}
+  #screen-config.hm-on>#exp2-home .exp2-home{min-height:132px}
+}
+
+/* « Aussi aujourd'hui » : 4 tuiles */
+.hs-more.exp2-more{padding-bottom:12px}
+.exp2-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px 12px 0}
+.exp2-tiles button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:104px;padding:10px 4px 8px;border:2px solid transparent;border-radius:16px;background:#FFF8EF;color:#2E2A33;text-align:center;cursor:pointer;font-family:Nunito,sans-serif}
+.exp2-tiles button:hover{border-color:#F0E2CC}
+.exp2-tiles button:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+.exp2-tiles b{font:700 15px/1.2 Fredoka,Nunito,sans-serif}
+.exp2-tiles small{font:700 12px/1.25 Nunito,sans-serif;color:#5E5866}
+.exp2-dots{display:flex;gap:3px}
+.exp2-dots i{width:7px;height:7px;border-radius:50%;background:#E3D9CB}
+.exp2-dots i.on{background:#E8A21A}
+@media (max-width:359px){.exp2-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+body.theme-dark .exp2-tiles button{background:#322d39;color:#f5efe6}
+body.theme-dark .exp2-tiles small{color:#c9c1d2}
+
+/* L'écran Expédition */
+.exp2-hero{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:220px;border-radius:20px;overflow:hidden;background:#3a5f8a center bottom/cover no-repeat;image-rendering:pixelated;color:#fff}
+.exp2-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(20,24,40,.35),transparent 35%,transparent 55%,rgba(20,24,40,.7));pointer-events:none}
+.exp2-hero-top,.exp2-hero-bot{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px}
+.exp2-hero-top span{padding:4px 10px;border-radius:999px;background:rgba(20,24,40,.45);font:900 11px/1.2 Nunito,sans-serif;letter-spacing:.06em}
+.exp2-hero-bot{flex-wrap:wrap}
+.exp2-hero-bot b{font:700 22px/1.15 Fredoka,Nunito,sans-serif;text-shadow:0 2px 6px rgba(0,0,0,.4)}
+.exp2-hero-leg{position:absolute;left:50%;bottom:22px;z-index:1;width:150px;height:150px;object-fit:contain;transform:translateX(-50%);image-rendering:auto;filter:drop-shadow(0 8px 12px rgba(0,0,0,.35))}
+.exp2-hero-leg.is-shadow{filter:brightness(0) opacity(.7)}
+.exp2-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.9);color:#2E2A33;font:800 13px/1.2 Nunito,sans-serif}
+.exp2-pill.is-hot{background:#FFD45C}
+.exp2-pill.is-ok{background:#DDF1E2;color:#1F6136}
+.exp2 .exp-card h4 em{font:900 13px Nunito,sans-serif;font-style:normal;color:#4069E0}
+.exp2-track{position:relative;height:64px;margin:6px 16px 4px}
+.exp2-track-bar{position:absolute;left:0;right:0;top:10px;height:12px;border-radius:999px;background:#EEE6DA;overflow:hidden}
+.exp2-track-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4069E0,#7C5BD6 60%,#FFB020)}
+.exp2-mark{position:absolute;top:0;display:flex;flex-direction:column;align-items:center;gap:2px;transform:translateX(-50%);text-align:center}
+.exp2-mark svg{width:32px;height:32px}
+.exp2-mark small{display:flex;gap:1px;max-width:84px;font:800 11px/1.2 Nunito,sans-serif;color:#5E5866;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp2-mark small .ball-img{width:16px;height:16px}
+.exp2-mark.is-crown{transform:translateX(-70%)}
+.exp2-mark.is-crown small{display:block}
+.exp2-mark:not(.is-ready):not(.is-open) svg{opacity:.75}
+.exp2-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.exp2-days span{display:grid;justify-items:center;gap:3px;font:900 11px Nunito,sans-serif;color:#6b6472}
+.exp2-days i{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#F1EBE2;font-style:normal;color:#9A928A}
+.exp2-days span.on i{background:#3E9B57;color:#fff}
+.exp2-days span.is-today i{box-shadow:0 0 0 2px #4069E0}
+.exp2-days span.is-today{color:#4069E0}
+.exp2-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}
+.exp2-steps span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;background:rgba(94,73,160,.07);font:800 12px/1.25 Nunito,sans-serif;color:#5c5663;text-align:center}
+.exp2-steps span b{font:700 16px/1.1 Fredoka,Nunito,sans-serif;color:#6c48a3}
+.exp2-steps span.ok{background:#DDF1E2;color:#1F6136}
+.exp2-steps span.ok b{color:#1F6136}
+.exp2-clue{position:relative;margin:10px 0 0;padding:10px 12px;border-radius:14px;background:#f5efff;font:700 13px/1.45 Nunito,sans-serif;color:#332540}
+.exp2-lineage{font-size:12px}
+body.theme-dark .exp2-track-bar,body.theme-dark .exp2-days i{background:#3a3442}
+body.theme-dark .exp2-mark small,body.theme-dark .exp2-days span{color:#c9c1d2}
+body.theme-dark .exp2-steps span{background:rgba(189,165,239,.08);color:#e4dcef}
+body.theme-dark .exp2-steps span b{color:#d4b7ff}
+body.theme-dark .exp2-clue{background:#332a42;color:#f2e6ff}
