@@ -20,16 +20,39 @@ const next=(service,user,s)=>service.arcadeNext(user,body(s));
 const stored=async(db,user,mode)=>(await db.query('SELECT state FROM arcade_runs WHERE identity=$1 AND mode=$2',[user.key,mode])).rows[0].state;
 const correctHL=q=>q.rightValue>=q.leftValue?'higher':'lower';
 
-test('Quiz preserves the 4/4/4/3 mix, 15 distinct questions and the shared written bank',()=>{
+test('Quiz v2 (8/11/2026): 15 questions, 3 silhouettes/3 types/2 stats/2 size/2 gen/2 culture/1 dex, easy to hard',()=>{
  const engine=createQuizHigherLower(all,require('node:crypto').randomInt,()=>new Date());
- for(let n=0;n<30;n++){
+ const {TYPE_CHART}=require('../lib/seo-guides');
+ const byName=new Map(all.map(p=>[p.name,p]));
+ const mult=(atk,p)=>[p.type1,p.type2].filter(Boolean).reduce((m,t)=>m*(TYPE_CHART[atk].no.includes(t)?0:TYPE_CHART[atk].super.includes(t)?2:TYPE_CHART[atk].not.includes(t)?0.5:1),1);
+ const STATS=require('../base-stats.json');
+ for(let n=0;n<40;n++){
   const s={mode:'quiz',round:0};engine.init(s);
-  assert.equal(s.questions.length,15);assert.equal(new Set(s.questions.map(q=>q.question)).size,15);
-  assert.deepEqual(['culture','type','gen','dex'].map(k=>s.questions.filter(q=>q.kind===k).length),[4,4,4,3]);
-  for(const q of s.questions){assert.ok(q.options.length>=3&&q.options.length<=4);assert.equal(new Set(q.options).size,q.options.length);assert.ok(q.answer>=0&&q.answer<q.options.length);}
-  const view=engine.view({...s,phase:'playing'});assert.equal(view.questions,undefined);assert.equal(view.question.answer,undefined);
+  assert.equal(s.questions.length,15);
+  assert.equal(new Set(s.questions.map(q=>q.question+'|'+q.options.join('|'))).size,15);
+  assert.deepEqual(['who','types','stats','size','gen','culture','dex'].map(k=>s.questions.filter(q=>q.kind===k).length),[3,3,2,2,2,2,1]);
+  assert.deepEqual(s.questions.map(q=>q.level),[1,1,1,1,1,2,2,2,2,2,3,3,3,3,3],'easy first, hard last');
+  for(const q of s.questions){
+   assert.equal(q.options.length,4);assert.equal(new Set(q.options).size,4);assert.ok(q.answer>=0&&q.answer<4);
+   if(q.kind!=='culture')assert.ok(typeof q.explain==='string'&&q.explain.includes(q.options[q.answer]),q.question);
+   const featured=q.artIds&&byId(q.artIds[0]);
+   if(q.kind==='types'){const p=featured;const m=q.options.map(t=>mult(t,p));const want=q.level===1?2:q.level===2?0:4;
+    assert.equal(m[q.answer],want,q.question);assert.ok(m.every((x,i)=>i===q.answer||x!==want),q.question);}
+   if(q.kind==='stats'||q.kind==='size'){assert.equal(q.artIds.length,4);assert.deepEqual(q.artIds.map(id=>byId(id).name),q.options);}
+   if(q.kind==='who'){assert.equal(featured.name,q.options[q.answer]);assert.equal(q.silhouette,true);}
+   if(q.kind==='dex'){const id=Number(q.question.match(/n° (\d+)/)[1]);assert.equal(byName.get(q.options[q.answer]).id,id);
+    const others=q.options.filter((_,i)=>i!==q.answer).map(o=>byName.get(o).id);
+    assert.ok(others.every(x=>x!==id&&Math.abs(x-id)<=40));}
+   if(q.kind==='size'){const key=q.question.includes('lourd')?'weight':'height';const v=q.artIds.map(id=>Number(byId(id)[key]));
+    assert.equal(Math.max(...v),v[q.answer]);assert.equal(v.filter(x=>x===v[q.answer]).length,1);}
+   if(q.kind==='stats'){const k=['PV','Attaque','Défense','Attaque Spé.','Défense Spé.','Vitesse'].indexOf(q.explain.split(' de base')[0]);
+    const v=q.artIds.map(id=>STATS[String(id)][k]);assert.equal(Math.max(...v),v[q.answer]);assert.equal(v.filter(x=>x===v[q.answer]).length,1);}
+  }
+  const view=engine.view({...s,phase:'playing'});
+  assert.equal(view.questions,undefined);assert.equal(view.question.answer,undefined);assert.equal(view.question.explain,undefined);assert.equal(view.question.artIds,undefined);
+  assert.equal(engine.view({...s,phase:'reveal'}).reveal.explain,s.questions[0].explain);
  }
- assert.equal(require('../src/script.00b.quiz-bank').length,20);
+ function byId(id){return all.find(p=>p.id===id);}
 });
 
 test('Higher or Lower uses form stats, promotes the right Pokémon and accepts either button on equal values',()=>{

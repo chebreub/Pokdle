@@ -34,7 +34,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
     // Encode the answer as 0/1: true/false would leak it through ciphertext length.
     // A guessing-game picture pads its id (forms go up to 5 digits) for the same reason.
-    const body = question.guess ? {owner:who.key, id:String(question.id).padStart(6,'0'), shiny:0, k:question.cry ? 'c' : 'g', expires}
+    const body = question.guess ? {owner:who.key, id:String(question.id).padStart(6,'0'), shiny:0, k:question.cry ? 'c' : question.quiz ? 'q' : 'g', expires}
       : {owner:who.key, id:question.id, shiny:Number(question.shiny), expires};
     const data = Buffer.concat([cipher.update(JSON.stringify(body)), cipher.final()]);
     return Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url');
@@ -45,6 +45,11 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       const b = Buffer.from(token, 'base64url'), decipher = crypto.createDecipheriv('aes-256-gcm', key, b.subarray(0,12));
       decipher.setAuthTag(b.subarray(12,28));
       const spec = JSON.parse(Buffer.concat([decipher.update(b.subarray(28)), decipher.final()]));
+      // Quiz v2 : l'artwork officiel des Pokémon d'une question (silhouette comprise), sous une adresse opaque.
+      if (spec.k === 'q') {
+        const id = Number(spec.id);
+        return spec.owner === who.key && spec.expires > +clock() && byId.has(id) ? {id, shiny:false} : null;
+      }
       if (spec.k === 'g' || spec.k === 'c') {
         const id = Number(spec.id), src = guessing.spriteOf(id);
         if (spec.owner !== who.key || spec.expires <= +clock() || !guessing.has(id)) return null;
@@ -100,7 +105,11 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     const s = {id:crypto.randomUUID(), startId:body.startId, mode:body.mode, gens:[...new Set(gens)], round:0,
       phase:'playing', score:body.mode === 'weight' && old?.phase === 'over' && !body.restart ? old.score : 0,
       lives:3, recent:[], startedAt:+clock(), answer:null};
-    if (isAdvanced(s)) games.init(s);
+    if (isAdvanced(s)) {
+      games.init(s);
+      if (s.mode === 'quiz') for (const q of s.questions) if (Array.isArray(q.artIds))
+        q.art = q.artIds.map(id => '/api/arcade/art/' + imageToken(who, {id, guess:true, quiz:true}, s.startedAt + TTL));
+    }
     else if (isGuess(s)) {
       s.recent = Array.isArray(old?.recent) ? old.recent : [];
       guessing.init(s);
