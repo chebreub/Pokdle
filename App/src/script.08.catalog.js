@@ -131,8 +131,10 @@ function modeCatalogIsUnlisted(card) {
 function modeCatalogIsPro(card) {
   try { return JSON.parse(card.dataset.args || '[]')[1] === true; } catch (_e) { return false; }
 }
+// V2-PERF-03 (8/11/2026) : l'artwork officiel en WebP 256 px servi par le site (tools/tile-art.py), au lieu du PNG
+// 475 px de jsDelivr (≈ 140 Ko → ≈ 12 Ko). Même image, même cadrage ; le petit sprite reste en secours.
 function modeTileArtworkUrl(id) {
-  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/'+Number(id)+'.png';
+  return 'img/art/'+Number(id)+'.webp';
 }
 function modeTilePropHtml(theme) {
   if (theme.prop === 'types') {
