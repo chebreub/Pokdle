@@ -2023,3 +2023,85 @@ body.theme-dark .anim-help b {color:#f5efe6;}
 }
 .sheet-drag-tip {position:fixed;left:50%;top:max(16px,env(safe-area-inset-top));transform:translateX(-50%);z-index:100000;padding:8px 14px;border-radius:999px;background:#2E2A33;color:#fff;font:800 13px Nunito,sans-serif;pointer-events:none;}
 body.theme-dark .sheet-grab::before {background:#5a5263;}
+
+/* 📕 Pokédex v2 (8/11/2026, « go poke », src/script.10xzzr.dex-v2.js) : objets du jeu, badges dessinés, anneaux. */
+#overlay-modal.dex-v2-on[data-kind="album"] #overlay-title::before{width:38px;height:38px;border:4px solid #fff;background:radial-gradient(circle at 35% 30%,#fff 0 8%,#8FD3FF 16%,#2E86E0 55%,#0E4C9A);box-shadow:0 0 0 2px #8E1E1E,0 0 14px 3px rgba(120,200,255,.55)}
+.dex-leds{display:inline-flex;gap:5px;margin-right:4px}.dex-leds i{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.dex-leds i:nth-child(1){background:#FF6B6B}.dex-leds i:nth-child(2){background:#FFD45C}.dex-leds i:nth-child(3){background:#5FD08A}
+.dex-it{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;vertical-align:-7px;flex:0 0 auto}
+.dex-unown{display:inline-block;width:22px;height:22px;overflow:hidden;vertical-align:-6px;flex:0 0 auto}.dex-unown img{width:22px;height:22px;transform:scale(2.6);image-rendering:pixelated}
+.dex-mini-lens{display:inline-block;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 10%,#8FD3FF 18%,#2E86E0 60%,#0E4C9A);box-shadow:0 0 0 2px #fff}
+#overlay-modal.dex-v2-on .alb-tabs > button{display:inline-flex;align-items:center;gap:6px}
+.dex-tab-ico{display:inline-flex;align-items:center}.dex-tab-ico .dex-it{width:20px;height:20px}
+/* Régions : une ligne qui défile, un anneau par région */
+#overlay-modal.dex-v2-on .alb-chips{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;gap:6px;padding-bottom:4px;scrollbar-width:none}
+#overlay-modal.dex-v2-on .alb-chip.dex-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 5px!important;border-radius:14px;background:#fff;border:1.5px solid #EADFD3;color:#2E2A33}
+.dex-chip .dex-ring{width:26px;height:26px;transform:rotate(-90deg)}.dex-ring .bg{fill:none;stroke:#EDE6DC;stroke-width:5}.dex-ring .fg{fill:none;stroke:#4069E0;stroke-width:5;stroke-linecap:round}
+.dex-chip span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}.dex-chip b{font:900 12.5px Nunito,sans-serif}.dex-chip small{font:800 10px Nunito,sans-serif;color:#8A8290}
+#overlay-modal.dex-v2-on .alb-chip.dex-chip.is-on{background:#2E2A33;border-color:#2E2A33;color:#fff}
+.dex-chip.is-on small{color:#CFC7D6}.dex-chip.is-on .dex-ring .bg{stroke:#4a4458}.dex-chip.is-on .dex-ring .fg{stroke:#FFD45C}
+/* Bandeau de la région */
+#overlay-modal.dex-v2-on .alb-head.dex-head{position:relative;overflow:hidden;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:14px 16px;border-radius:20px;background:linear-gradient(120deg,#FFF1C2,#FFE3A0);border:2px solid #F2D27A}
+.dex-head > h3{grid-column:1/-1;margin:0!important;font:700 24px Fredoka,sans-serif}
+.dex-head .dex-sub{grid-column:1/-1;margin:-6px 0 2px;font:800 12px Nunito,sans-serif;color:#7A5700}
+.dex-head .alb-track{position:relative;z-index:1;display:block!important;background:rgba(255,255,255,.75);border-radius:14px;padding:8px 10px;margin:0!important}
+.dex-head .alb-track > span{display:flex;align-items:center;gap:4px;font:900 11px Nunito,sans-serif;color:#6B6472;text-transform:uppercase}
+.dex-head .alb-track > span .ball-img{width:22px;height:22px}
+.dex-head .alb-track em{display:block;font:700 19px Fredoka,sans-serif;font-style:normal;color:#2E2A33}
+.dex-head .alb-track > i{display:block;height:7px;border-radius:4px;background:#EDE6DC;overflow:hidden;margin:4px 0 2px}
+.dex-head .alb-track > i b{display:block;height:100%;background:#4069E0;border-radius:4px}
+.dex-head .alb-bar{display:none}
+.dex-head .dex-medals-text{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.dex-track{grid-column:1/-1;position:relative;z-index:1;height:52px;margin:4px 18px 0 2px}
+.dex-track-bar{position:absolute;left:0;right:0;top:16px;height:8px;border-radius:4px;background:rgba(255,255,255,.75);overflow:hidden}
+.dex-track-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#C77B3B,#A9B4C2 55%,#E8B923)}
+.dex-mark{position:absolute;top:2px;transform:translateX(-50%)}.dex-mark .dex-badge{display:block;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.dex-badge.is-off{filter:grayscale(1) opacity(.45)}
+.dex-track-label{position:absolute;left:0;bottom:0;font:900 11.5px Nunito,sans-serif;color:#7A5700}
+.dex-deco{position:absolute;right:-6px;bottom:-6px;display:flex;z-index:0;opacity:.95}
+.dex-deco img{width:84px;height:84px;object-fit:contain;margin-left:-22px;filter:drop-shadow(0 6px 6px rgba(120,80,0,.3))}
+@media (min-width:700px){#overlay-modal.dex-v2-on .alb-head.dex-head{grid-template-columns:repeat(3,minmax(0,170px)) 1fr}.dex-head > h3,.dex-head .dex-sub,.dex-track{grid-column:1/4}
+  .dex-head > h3{grid-row:1}.dex-head .dex-sub{grid-row:2}.dex-head .alb-track.is-seen{grid-column:1;grid-row:3}.dex-head .alb-track.is-caught{grid-column:2;grid-row:3}.dex-head .alb-track.is-shiny{grid-column:3;grid-row:3}.dex-track{grid-row:4}}
+.dex-head > h3 > *{display:none}
+#overlay-modal.dex-v2-on .alb-tabs > button{white-space:nowrap}
+@media (max-width:699px){.dex-deco{display:none}}
+/* Filtres avec leur nombre */
+#overlay-modal.dex-v2-on .dex-filter{display:inline-flex;align-items:center;gap:5px}
+.dex-filter .dex-it{width:22px;height:22px;margin:0 -2px 0 -4px}
+.dex-count{font-style:normal;font-weight:800;color:#8A8290}.dex-filter.is-on .dex-count{color:#CFC7D6}
+/* Les cases */
+#overlay-modal.dex-v2-on .alb-slot.is-caught{background:linear-gradient(180deg,#fff 55%,color-mix(in oklab,var(--dex-t,#ccc) 30%,#fff));border:0;box-shadow:0 0 0 1.5px color-mix(in oklab,var(--dex-t,#ccc) 55%,#fff),0 6px 14px -8px rgba(0,0,0,.35)}
+#overlay-modal.dex-v2-on .alb-slot.is-caught > img{filter:drop-shadow(0 6px 5px rgba(0,0,0,.22))}
+#overlay-modal.dex-v2-on .alb-slot.is-caught .alb-origin{background:#fff;border-radius:8px;padding:0 5px 0 1px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+#overlay-modal.dex-v2-on .alb-slot.is-seen{background:#F4EEE6;border:0;box-shadow:inset 0 0 0 1.5px #E5DACB}
+#overlay-modal.dex-v2-on .alb-slot.is-seen > img{filter:grayscale(1) contrast(1.15) brightness(1.05);opacity:.75}
+#overlay-modal.dex-v2-on .alb-slot.is-seen b{color:#4B4452}
+#overlay-modal.dex-v2-on .alb-slot .alb-origin.is-seen .dex-it{width:22px;height:22px;opacity:.8}
+#overlay-modal.dex-v2-on .alb-slot.is-miss{background:repeating-linear-gradient(135deg,#EDE6DC 0 6px,#E8E0D4 6px 12px);border:0;box-shadow:inset 0 0 0 1.5px #DED2C2}
+#overlay-modal.dex-v2-on .alb-slot.is-miss small:not(.dex-where){letter-spacing:.1em;font-weight:900}
+#overlay-modal.dex-v2-on .alb-slot.is-shiny{background:linear-gradient(180deg,#FFFBEA 50%,#FFE38A);border:0;box-shadow:0 0 0 2.5px #E8B923,0 0 16px 2px rgba(255,212,92,.6)}
+.dex-dots{display:flex;justify-content:center;gap:3px;margin-top:3px}.dex-dots i{width:8px;height:8px;border-radius:50%}
+.alb-slot.is-seen .dex-dots{opacity:.5}
+.dex-where{display:block;margin-top:2px;font:900 10px Nunito,sans-serif;color:#2C7A49;opacity:0;transition:opacity .2s}
+#overlay-modal.dex-v2-on .alb-slot.has-zone:hover .dex-where,#overlay-modal.dex-v2-on .alb-slot.has-zone:focus-within .dex-where{opacity:1}
+#overlay-modal.dex-v2-on .alb-slot.has-zone:hover{box-shadow:inset 0 0 0 2px #3E9B57}
+@media (hover:none){.dex-where{opacity:.85}}
+body.theme-dark #overlay-modal.dex-v2-on .alb-head.dex-head{background:linear-gradient(120deg,#3a3020,#2c2418);border-color:#5a4a20}
+body.theme-dark .dex-head .alb-track{background:rgba(0,0,0,.25)}body.theme-dark .dex-head .alb-track em{color:#f5efe6}
+body.theme-dark #overlay-modal.dex-v2-on .alb-chip.dex-chip{background:#2f2a36;border-color:#4a4060;color:#f5efe6}
+body.theme-dark #overlay-modal.dex-v2-on .alb-slot.is-caught{background:linear-gradient(180deg,#2f2a36 55%,color-mix(in oklab,var(--dex-t,#555) 35%,#2f2a36))}
+body.theme-dark #overlay-modal.dex-v2-on .alb-slot.is-seen{background:#231f29;box-shadow:inset 0 0 0 1.5px #3a3346}
+body.theme-dark #overlay-modal.dex-v2-on .alb-slot.is-miss{background:repeating-linear-gradient(135deg,#231f29 0 6px,#26222c 6px 12px)}
+#overlay-modal.dex-v2-on .alb-head.dex-head{width:100%!important;max-width:none!important;box-sizing:border-box}
+#overlay-modal.dex-v2-on .alb-tabs > button{padding:8px 14px!important;flex:0 0 auto!important;width:auto!important}
+@media (min-width:700px){.dex-track{margin-right:28px}}
+@media (max-width:699px){
+  #overlay-modal.dex-v2-on .alb-tabs{display:flex!important;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important}
+  #overlay-modal.dex-v2-on .alb-tabs > button{padding:7px 11px!important;font-size:13px!important}
+  #overlay-modal.dex-v2-on .alb-head.dex-head{gap:6px;padding:12px}
+  .dex-head > h3{font-size:21px}
+  .dex-head .alb-track{padding:6px 7px}
+  .dex-head .alb-track > span{font-size:9.5px;gap:2px;white-space:nowrap;overflow:hidden}
+  .dex-head .alb-track > span .dex-it,.dex-head .alb-track > span .ball-img{width:18px;height:18px}
+  .dex-head .alb-track em{font-size:15px;white-space:nowrap}
+}
