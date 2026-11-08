@@ -187,7 +187,7 @@ function openPokedexMissionHub() {
   switchProfileView('album');
   if (typeof ensureAlbumMissionPanel === 'function') ensureAlbumMissionPanel();
   if (typeof renderAlbumMissions === 'function') renderAlbumMissions();
-  document.getElementById('album-mission-panel')?.scrollIntoView({ block:'start', behavior:'smooth' });
+  document.getElementById('album-mission-panel')?.scrollIntoView({ block:'start', behavior:'auto' });
 }
 function openPokedexCollection() {
   if (typeof colResetCaptureSnapshot === 'function') colResetCaptureSnapshot();
