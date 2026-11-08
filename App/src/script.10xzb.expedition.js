@@ -211,7 +211,7 @@ function expeditionBannerHtml() {
   const ready = e.chests.some((c) => c.canClaim);
   const held = e.legend?.pending?.kind === "legend";
   const line = held ? "👑 Une rencontre légendaire est à reprendre" : e.legend.available ? "100 % : " + (p ? p.name : "le légendaire") + " t’attend !" : ready ? e.pct + " % · un coffre à ouvrir !" : e.pct + " % · " + e.progress + " / " + e.goal + " participations";
-  return '<button type="button" class="day-exp" data-action="openExpedition">' + (p ? '<img src="' + escapeHtml(pokedexDetailArtwork(p, false)) + '" alt="" aria-hidden="true">' : "") +
+  return '<button type="button" class="day-exp" data-action="openExpedition">' + (p ? '<img src="' + escapeHtml(typeof modeTileArtworkUrl === 'function' ? modeTileArtworkUrl(p.id) : pokedexDetailArtwork(p, false)) + '" alt="" aria-hidden="true">' : "") +
     '<small>🧭 EXPÉDITION · ' + escapeHtml(e.region.toUpperCase()) + '</small><b>' + escapeHtml(line) + '</b><span class="day-exp-bar"><i style="width:' + e.pct + '%"></i></span></button>';
 }
 if (typeof renderBallHomeCard === "function") {
@@ -251,7 +251,7 @@ function expeditionHtml(e) {
   else if (e.legend.reached) legend = '<p class="exp-legend-msg">La jauge est pleine ! Encore ' + e.legend.needsDays + ' participation' + (e.legend.needsDays > 1 ? "s" : "") + ' cette semaine pour tenter ' + name + '.</p>';
   else legend = '<p class="exp-note">À 100 % : une rencontre avec ' + name + ' pour chaque participant (2 jours au moins, avec un compte). Son vrai taux de capture, rien de garanti.</p>';
   return '<div class="exp">' +
-    '<div class="exp-hero">' + (p ? '<img src="' + escapeHtml(pokedexDetailArtwork(p, false)) + '" alt="" aria-hidden="true">' : "") +
+    '<div class="exp-hero">' + (p ? '<img src="' + escapeHtml(typeof modeTileArtworkUrl === 'function' ? modeTileArtworkUrl(p.id) : pokedexDetailArtwork(p, false)) + '" alt="" aria-hidden="true">' : "") +
       '<small>SEMAINE DU ' + escapeHtml(e.week.split("-").reverse().slice(0, 2).join("/")) + ' · ' + escapeHtml(e.region.toUpperCase()) + '</small><h3>Réveiller ' + name + '</h3>' +
       '<p>' + (e.progress >= e.goal ? e.progress + ' participations (objectif ' + e.goal + ' atteint)' : e.progress + ' / ' + e.goal + ' participations') + ' · ' + e.participants + ' dresseur' + (e.participants > 1 ? "s" : "") + ' cette semaine</p>' +
       '<div class="exp-bar" role="img" aria-label="' + e.pct + ' %"><i style="width:' + e.pct + '%"></i></div><b class="exp-pct">' + e.pct + ' %</b></div>' +
