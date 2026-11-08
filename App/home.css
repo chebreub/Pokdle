@@ -2782,3 +2782,12 @@ body.theme-dark .disc-eyebrow{color:#b9a3f5}
   #screen-config.hm-on>.hm-side>.hm-duel .hm-duel-title{top:122px;font-size:28px}
   #pokdle-app.design-refresh #screen-config.hm-on>#home-party{margin-top:-28px!important;border-top-left-radius:0!important;border-top-right-radius:0!important;border-top:0!important}
 }
+/* Choix des générations bien visible sur téléphone (8/11, Kayan : « on voit pas assez qu'on peut changer de gen ») :
+   une pastille « Générations : Kanto ▾ » sur sa propre ligne, sous le titre des mini-jeux (avant : une icône seule) */
+@media (max-width:860px){
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger{grid-column:1/-1!important;justify-self:start;width:auto!important;max-width:100%;height:36px!important;margin:2px 0 0!important;padding:0 14px 0 10px!important;gap:6px;border-radius:999px!important;background:#EEF3FF!important;border:1.5px solid #C9D6FB!important;color:#2E2A33}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger>span{display:inline-block!important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 13px Nunito,sans-serif!important;color:#2E2A33}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger>span small{display:inline!important;margin-left:4px;font:900 13px Nunito,sans-serif;color:#4069E0}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger::after{content:"▾";font:900 12px Nunito,sans-serif;color:#4069E0}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger>span::after{content:" · changer";font:700 12px Nunito,sans-serif;color:#6E6878}
+}
