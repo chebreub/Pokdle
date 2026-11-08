@@ -492,3 +492,64 @@ body.theme-dark .win-feedback-invite .btn-link{color:#8FA8FF}
 #pokdle-app.design-refresh #screen-game #win-box.rc-on .win-inner{display:block!important;gap:0!important}
 #pokdle-app.design-refresh #screen-game #win-box.rc-on .rc-head{width:100%}
 #pokdle-app.design-refresh #screen-game #win-box.rc-on .rc-head .win-grade{margin:0 0 0 auto!important}
+/* 🧠 Quiz v2 (8/11/2026, « go quiz ») : barre de 15 cases, scène par catégorie, réponses A/B/C/D, explication. */
+#pokdle-app.design-refresh #quiz-box.qz-on{padding:12px!important;border-radius:24px!important;overflow:hidden}
+#pokdle-app.design-refresh #quiz-box.qz-on :is(#quiz-progress,.quiz-progressbar,.quiz-stats){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;margin:0!important;padding:0!important}
+#quiz-box.qz-on .qz-hud{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+#quiz-box.qz-on .qz-dots{flex:1;display:grid;grid-template-columns:repeat(15,1fr);gap:3px}
+#quiz-box.qz-on .qz-dots i{height:8px;border-radius:4px;background:#E7DFD4}
+#quiz-box.qz-on .qz-dots i.is-ok{background:#3E9B57}#quiz-box.qz-on .qz-dots i.is-ko{background:#E3350D}
+#quiz-box.qz-on .qz-dots i.is-now{background:#4069E0;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #4069E0}
+#quiz-box.qz-on .qz-pill{flex:0 0 auto;height:30px;padding:0 10px;border-radius:15px;background:#fff;border:1.5px solid #EADFD3;display:inline-flex;align-items:center;font:900 12.5px Nunito,sans-serif;color:#2E2A33}
+#quiz-box.qz-on .qz-pill.is-fire{background:#FFE9DF;border-color:#FFC9B0;color:#A3401B}
+#quiz-box.qz-on .qz-scene{position:relative;height:190px;margin:0 -12px;display:grid;place-items:center;overflow:hidden;isolation:isolate;--a:#B7A4F5;--b:#6B4FD0;--c:#2B1E63;background:radial-gradient(120% 100% at 50% 110%,var(--a),var(--b) 55%,var(--c))}
+#quiz-box.qz-on .qz-scene[hidden]{display:none}
+/* Bilan affiché : la barre et la scène disparaissent avant que la page défile jusqu'au bilan (Safari ne recale pas le défilement) */
+#quiz-box.qz-on:has(#quiz-end-card:not(.hidden)) :is(.qz-hud,.qz-scene){display:none}
+#quiz-box.qz-on .qz-scene::before{content:"";position:absolute;inset:-50%;z-index:-1;background:repeating-conic-gradient(rgba(255,255,255,.12) 0 4deg,transparent 4deg 16deg);-webkit-mask:radial-gradient(closest-side,#000 10%,transparent 60%);mask:radial-gradient(closest-side,#000 10%,transparent 60%);animation:qzSpin 40s linear infinite}
+@keyframes qzSpin{to{transform:rotate(360deg)}}
+#quiz-box.qz-on .qz-scene.is-types{--a:#F4B88A;--b:#C2552B;--c:#4A1A0E}
+#quiz-box.qz-on .qz-scene.is-stats{--a:#9EE0C0;--b:#2E8F62;--c:#0E3A2A}
+#quiz-box.qz-on .qz-scene.is-size{--a:#F5DFA0;--b:#B9862A;--c:#4A3008}
+#quiz-box.qz-on .qz-scene.is-gen{--a:#A9D2F7;--b:#3C7BC4;--c:#12305A}
+#quiz-box.qz-on .qz-scene.is-culture{--a:#F7B2CF;--b:#B8467A;--c:#4A1230}
+#quiz-box.qz-on .qz-scene.is-dex{--a:#D7D3E2;--b:#6A6A80;--c:#25252F}
+#quiz-box.qz-on .qz-cat{position:absolute;left:12px;top:12px;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,.92);font:900 11px Nunito,sans-serif;color:#2E2A33;letter-spacing:.03em}
+#quiz-box.qz-on .qz-lvl{position:absolute;right:12px;top:12px;padding:3px 9px;border-radius:10px;font:900 11px Nunito,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+#quiz-box.qz-on .qz-lvl.is-easy{background:#DDF3E3;color:#2C7A49}#quiz-box.qz-on .qz-lvl.is-mid{background:#FFD45C;color:#5C3D00}#quiz-box.qz-on .qz-lvl.is-hard{background:#E3350D;color:#fff}
+#quiz-box.qz-on .qz-solo{display:flex;align-items:center;gap:12px;margin-top:14px}
+#quiz-box.qz-on .qz-solo>img{width:138px;height:138px;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35));animation:qzIn .5s cubic-bezier(.2,1.3,.4,1) both}
+#quiz-box.qz-on .qz-solo>img.is-shadow{filter:brightness(0) drop-shadow(0 0 18px rgba(255,255,255,.6))}
+@keyframes qzIn{from{opacity:0;transform:scale(.8) translateY(8px)}to{opacity:1;transform:none}}
+#quiz-box.qz-on .qz-types{display:flex;flex-direction:column;gap:6px}
+#quiz-box.qz-on .qz-four{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;padding:34px 12px 12px}
+#quiz-box.qz-on .qz-four>span{background:rgba(255,255,255,.15);border-radius:14px;padding:6px 2px;text-align:center}
+#quiz-box.qz-on .qz-four img{display:block;width:62px;height:62px;margin:0 auto;object-fit:contain;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+#quiz-box.qz-on .qz-four small{display:block;margin-top:2px;color:#fff;font:800 11px Nunito,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#quiz-box.qz-on .qz-icon{font-size:64px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-question{margin:14px 4px 4px!important;font:600 21px/1.2 Fredoka,Nunito,sans-serif!important;text-align:left!important}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:12px 0 0!important}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button{display:flex!important;align-items:center;gap:8px;min-height:56px!important;width:100%!important;margin:0!important;padding:8px 10px!important;border-radius:16px!important;border:2px solid transparent!important;background:#F6F1EA!important;color:#2E2A33!important;box-shadow:0 3px 0 #E3D8C9!important;font:800 14.5px/1.2 Nunito,sans-serif!important;text-align:left!important;transform:none}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button:not(:disabled):hover{background:#EFE7DB!important;transform:translateY(-1px)}
+#quiz-box.qz-on .qz-letter{flex:0 0 26px;height:26px;border-radius:9px;display:grid;place-items:center;color:#fff;font:700 14px Fredoka,sans-serif}
+#quiz-box.qz-on #quiz-options>button:nth-child(1) .qz-letter{background:#E3350D}#quiz-box.qz-on #quiz-options>button:nth-child(2) .qz-letter{background:#4069E0}
+#quiz-box.qz-on #quiz-options>button:nth-child(3) .qz-letter{background:#E0A100}#quiz-box.qz-on #quiz-options>button:nth-child(4) .qz-letter{background:#3E9B57}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button.btn-yellow{background:#DDF3E3!important;border-color:#3E9B57!important;box-shadow:0 3px 0 #9CD3AE!important;opacity:1!important;animation:qzGood .45s cubic-bezier(.2,1.4,.4,1)}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button.btn-yellow .qz-letter{background:#3E9B57}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button.btn-red{background:#FDE3DC!important;border-color:#E3350D!important;box-shadow:0 3px 0 #F2B3A4!important;opacity:1!important;animation:qzBad .4s linear}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button.qz-dim{opacity:.45!important}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-options>button.is-verifying{border-color:#4069E0!important}
+@keyframes qzGood{0%{transform:scale(.96)}60%{transform:scale(1.04)}100%{transform:none}}
+@keyframes qzBad{0%,100%{transform:none}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-feedback{margin:10px 4px 0!important;font:800 13px Nunito,sans-serif!important;text-align:left!important}
+#quiz-box.qz-on .qz-explain{margin:8px 0 0;padding:10px 12px;border-radius:14px;background:#EEF3FA;color:#3D4A66;font:700 13px/1.45 Nunito,sans-serif}
+#pokdle-app.design-refresh #quiz-box.qz-on #quiz-next-btn{width:100%!important;min-height:48px!important;margin:12px 0 0!important;border-radius:24px!important}
+#quiz-box.qz-on.qz-done .qz-hud{display:none}
+@media (min-width:861px){#quiz-box.qz-on .qz-scene{height:220px}#quiz-box.qz-on .qz-solo>img{width:160px;height:160px}#quiz-box.qz-on .qz-four img{width:84px;height:84px}}
+@media (prefers-reduced-motion:reduce){#quiz-box.qz-on .qz-scene::before,#quiz-box.qz-on .qz-solo>img,#quiz-box.qz-on #quiz-options>button{animation:none!important}}
+.reduce-motion #quiz-box.qz-on .qz-scene::before,.reduce-motion #quiz-box.qz-on .qz-solo>img,.reduce-motion #pokdle-app #quiz-box.qz-on #quiz-options>button{animation:none!important}
+.theme-dark #quiz-box.qz-on .qz-pill{background:#3a3346;border-color:#4a4060;color:#F5EFE6}
+.theme-dark #pokdle-app #quiz-box.qz-on #quiz-options>button,#pokdle-app.theme-dark #quiz-box.qz-on #quiz-options>button{background:#3a3346!important;color:#F5EFE6!important;box-shadow:0 3px 0 #2a2433!important}
+.theme-dark #quiz-box.qz-on .qz-explain{background:#2f3a52;color:#D6E0F5}
+#pokdle-app.design-refresh #quiz-box.qz-on:not(.qz-done) #quiz-history,#pokdle-app.design-refresh #quiz-box.qz-on #quiz-history:empty{display:none!important}
+#quiz-box.qz-on .qz-types .type-badge{box-shadow:0 4px 10px rgba(0,0,0,.25)}
