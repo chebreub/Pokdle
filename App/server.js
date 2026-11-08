@@ -1655,6 +1655,11 @@ const friendChat = playerFriends ? chatLib.createFriendChat({ db: pgPool, friend
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 chatLib.mountChatRoutes(app, { express, chat: friendChat, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 
+// Le script des onglets et du bouton « Tout copier » de /admin/stats (aucune donnée dedans).
+app.get("/admin/stats.js", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.type("application/javascript").send(require("./lib/admin-stats-dashboard").STATS_CLIENT_JS);
+});
 app.get("/admin/stats", async (req, res) => {
   res.set("Cache-Control", "no-store");
   res.set("X-Robots-Tag", "noindex");
@@ -1692,6 +1697,13 @@ app.get("/admin/stats", async (req, res) => {
     }
   } catch (error) {
     console.warn("[stats] aggregate read unavailable:", String(error.message || error).slice(0, 120));
+  }
+  // La période d'avant, de même longueur : seulement pour les tendances (▲ / ▼) et « Ce qui a bougé ».
+  let previousMetrics = null;
+  try {
+    if (pgPool && metrics) previousMetrics = await usageMetrics.recent(pgPool, days, new Date(end.getTime() - days * 86400000));
+  } catch (error) {
+    console.warn("[stats] previous period unavailable:", String(error.message || error).slice(0, 120));
   }
   // A new segment table must never hide existing dashboard totals if its read fails.
   try {
@@ -1758,7 +1770,7 @@ app.get("/admin/stats", async (req, res) => {
     days, endDay, livePeriod, generatedAt: new Date().toISOString(),
     adminKey, metrics, segmentRows, segmentStartedAt, uniqueRows, rawRows,
     labels: USAGE_LABELS, feedbackHtml, diagnosticDays, diagnosticRows,
-    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, siteRetention, siteActivity, economy
+    bootedAt: usageBootedAt.toISOString().replace("T", " ").slice(0, 16), retention, siteRetention, siteActivity, economy, previousMetrics
   }));
 });
 
