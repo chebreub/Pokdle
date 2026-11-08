@@ -543,6 +543,7 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_message_replies", "DELETE FROM player_message_replies WHERE account_id = $1", [id]],
     ["player_message_reads", "DELETE FROM player_message_reads WHERE account_id = $1", [id]],
     ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
+    ["player_survey_answers", "DELETE FROM player_survey_answers WHERE account_id = $1", [id]],
     ["player_challenges", "DELETE FROM player_challenges WHERE from_id = $1 OR to_id = $1", [id]],
     ["player_challenge_blocks", "DELETE FROM player_challenge_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["player_friends", "DELETE FROM player_friends WHERE from_id = $1 OR to_id = $1", [id]],
@@ -1602,18 +1603,22 @@ if (pgPool) pushReminders.startScheduler({ db: pgPool, webpush, configured: push
 // The admin panel (/admin): news banner, messages to the players and shared photos, for the
 // accounts in ADMIN_ACCOUNT_IDS.
 const playerMessages = require("./lib/player-messages");
+const playerSurveys = require("./lib/player-surveys");
 const adminPanelReady = pgPool ? authDbReady.then(async () => {
   await adminPanel.ensureTables(pgPool);
   await playerMessages.ensureTables(pgPool);
+  await playerSurveys.ensureTables(pgPool);
   return true;
 }).catch((error) => {
   console.warn("[admin] tables unavailable:", String(error.message || error).slice(0, 160));
   return false;
 }) : Promise.resolve(false);
 adminPanel.mountAdminRoutes(app, { express, db: pgPool, ready: adminPanelReady, getSessionUser: (req) => (authReady() ? getSessionUser(req) : null), adminIds: ADMIN_ACCOUNT_IDS,
-  messages: { module: playerMessages, webpush, pushReady: pushRoutes.configured }, reports: { module: require("./lib/friend-chat") } });
+  messages: { module: playerMessages, webpush, pushReady: pushRoutes.configured }, reports: { module: require("./lib/friend-chat") }, surveys: { module: playerSurveys } });
 // The player's 📬 window: the messages the creator wrote to them, and their answers.
 playerMessages.mountPlayerRoutes(app, { express, db: pgPool, ready: adminPanelReady, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// 📊 Sondage unique (9/11/2026) : « Ton avis sur Pokédle ? », une fois par joueur qui a un compte.
+playerSurveys.mountPlayerRoutes(app, { express, db: pgPool, ready: adminPanelReady, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
 // Défis entre joueurs (01/11/2026): « Bats ma série au Higher or Lower : 23 », from a trainer card.
 const challengeLib = require("./lib/player-challenges");
 const challengesReady = pgPool ? authDbReady.then(() => challengeLib.ensureTables(pgPool)).then(() => true).catch((error) => {

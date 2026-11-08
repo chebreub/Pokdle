@@ -18,8 +18,9 @@ const DAILY_CAP = 10;
 const STREAK_EVERY = 7;
 const WELCOME_BALLS = Object.freeze(["poke", "poke", "poke", "poke", "great"]);
 // Hors du plafond de 10 par jour : série, Balls de bienvenue, coffres d'Expédition, et les Balls de test de l'admin.
-// Hors du plafond de 10 : série, Balls offertes, coffres, test de l'admin et Balls achetées à la boutique.
-const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%' OR source LIKE 'shop:%')";
+// Hors du plafond de 10 : série, Balls offertes, coffres, test de l'admin, Balls achetées à la boutique
+// et la Poké Ball de merci du sondage (9/11/2026, lib/player-surveys.js).
+const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%' OR source LIKE 'shop:%' OR source LIKE 'survey:%')";
 // 💰 Pokédollars (3/11/2026, interview puis maquette ; prix d'origine choisis) : compte obligatoire.
 // Jeux du jour une fois par jour, chaque autre partie 30 à 90 ₽ (2 000 ₽ par jour au plus), doublon relâché.
 const COIN_DAILY = Object.freeze({ daily: 300, wordle: 150, dossier: 150, challenge: 150 });
