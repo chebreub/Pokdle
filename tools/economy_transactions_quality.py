@@ -50,6 +50,9 @@ def main():
                             assert body == purchases[0]
                             route.fulfill(json=dict(state, bought=dict(item='poke', qty=1, price=50), replayed=True))
                     page.route('**/api/balls', lambda route: route.fulfill(json=state))
+                    # WebKit reports a fetch cut off by the reload below as a page error, even though the app
+                    # catches it (seen with /api/expedition): answer it at once, it is not part of this check.
+                    page.route('**/api/expedition', lambda route: route.fulfill(json={'ok': False}))
                     page.route('**/api/shop/buy', purchase)
                     page.goto(base, wait_until='domcontentloaded')
                     page.wait_for_function('() => typeof openShop === "function" && typeof ballPaidAction === "function"')
