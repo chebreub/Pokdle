@@ -2521,3 +2521,69 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   body.theme-dark #pokdle-app #screen-pokedex.pokedex-view-collection .pokedex-collection-console{background:#26222c!important;border-color:#3a3442!important;color:#f5efe6!important}
   body.theme-dark #screen-pokedex .colm-gens button{background:#26222c;border-color:#3a3442;color:#f5efe6}
 }
+
+/* 📱 Profil plus court (9/11/2026, maquette validée). */
+#screen-profile .pf2-edit{display:none}
+#screen-profile .pf2-xpbar{display:none}
+#screen-profile .profile-tabs > button.pf2-dup{display:none!important}
+#pokdle-app.design-refresh #screen-profile .profile-numbers-note{display:none!important}
+@media (max-width:640px){
+  #screen-profile .pf2-long{display:none}
+  #pokdle-app.design-refresh #screen-profile .ranking-head{display:flex!important;align-items:center!important;gap:10px!important;min-height:0!important;margin:0 0 10px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
+  #pokdle-app.design-refresh #screen-profile .ranking-head .card-title{flex:1;min-width:0;margin:0!important;font-size:22px!important;order:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pokdle-app.design-refresh #screen-profile .ranking-head-actions{display:contents!important}
+  #pokdle-app.design-refresh #screen-profile .ranking-head-actions [data-action="goToConfig"]{order:1;display:grid!important;place-items:center;flex:0 0 40px;width:40px!important;height:40px!important;min-height:0!important;padding:0!important;border-radius:50%!important;font-size:18px!important}
+  #pokdle-app.design-refresh #screen-profile .ranking-head-actions .pf2-edit{order:3;flex:0 0 auto;width:auto!important;display:inline-flex!important;align-items:center;min-height:36px!important;padding:4px 12px!important;border-radius:999px!important;font-size:13.5px!important}
+  /* Carte de dresseur basse : partenaire · nom · niveau, puis la barre d'XP. */
+  #pokdle-app.design-refresh #screen-profile .profile-hero{display:grid!important;grid-template-columns:78px minmax(0,1fr) 62px!important;grid-template-areas:"art name level" "art chips level" "art partner level" "xp xp xp" "actions actions actions" "shiny shiny shiny"!important;column-gap:12px!important;row-gap:2px!important;align-items:center;padding:14px!important;border-radius:22px!important;text-align:left!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-art,#pokdle-app.design-refresh #screen-profile .profile-hero-main,#pokdle-app.design-refresh #screen-profile .profile-hero-level{display:contents!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle{grid-area:art;width:78px!important;height:78px!important;margin:0!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle img{max-width:88%!important;max-height:88%!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-eyebrow{display:none!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-name{grid-area:name;margin:0!important;font-size:22px!important;line-height:1.1!important;text-align:left!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-chips{grid-area:chips;justify-content:flex-start!important;margin:2px 0 0!important;gap:4px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-chips > *{min-height:0!important;padding:2px 9px!important;font-size:12px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-partner{grid-area:partner;justify-self:start;min-height:0!important;margin:2px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;font-size:12.5px!important;color:#6d6574!important;text-align:left}
+  #pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring{grid-area:level;width:62px!important;height:62px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring svg{width:62px!important;height:62px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring{position:relative!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring > span{position:absolute!important;inset:0!important;display:grid!important;place-content:center!important;text-align:center;line-height:1!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring > span b{font-size:20px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring > span small{font-size:8px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text{grid-area:xp;display:flex!important;flex-direction:row!important;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 8px;margin:10px 0 0!important;text-align:left!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text .pf2-xpbar{display:block!important;flex:1 1 100%!important;width:100%!important;height:8px!important;border-radius:4px;background:#E8E0D2;overflow:hidden}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text .pf2-xpbar b{display:block;height:100%;border-radius:4px;background:#4069E0}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text strong{font-size:12.5px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text span{font-size:12px!important;color:#6d6574}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level-text small{display:none!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-actions{grid-area:actions;display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;margin:10px 0 0!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-actions [data-action="openProfileEditor"]{display:none!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-actions > *{width:100%!important;min-height:40px!important;margin:0!important;padding:6px 8px!important;font-size:14px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-photo{border:1.5px solid #E5D8C5!important;border-radius:999px!important;background:#fff!important;text-decoration:none!important;color:#2E2A33!important;font-weight:800!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero > p,#pokdle-app.design-refresh #screen-profile .profile-hero-main > p{grid-area:shiny;margin:8px 0 0!important;font-size:12.5px!important;text-align:left!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-medals{font-size:12px!important}
+  /* Les 4 tuiles sur une ligne. */
+  #pokdle-app.design-refresh #screen-profile .profile-figures{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;margin:10px 0!important}
+  #pokdle-app.design-refresh #screen-profile .profile-figure{display:grid!important;justify-items:center;gap:1px!important;min-height:0!important;padding:8px 4px!important;border-radius:14px!important;text-align:center}
+  #pokdle-app.design-refresh #screen-profile .profile-figure > span{order:2;font-size:11.5px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-figure > b{order:1;font-size:18px!important;white-space:nowrap}
+  #pokdle-app.design-refresh #screen-profile .profile-figure > b small{font-size:10.5px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-figure > i{order:3;width:80%;margin-top:3px}
+  /* Onglets en pastilles, signe secret discret, « Mes chiffres » en 3 colonnes. */
+  #pokdle-app.design-refresh #screen-profile .profile-tabs{display:flex!important;gap:6px!important;overflow-x:auto;scrollbar-width:none;padding:0!important;margin:0 0 6px!important;background:none!important;border:0!important}
+  #pokdle-app.design-refresh #screen-profile .profile-tabs > button{flex:0 0 auto;min-height:34px!important;padding:4px 13px!important;border-radius:999px!important;font-size:13.5px!important}
+  #pokdle-app.design-refresh #screen-profile #profile-secret-rune{min-height:0!important;margin:0 0 6px!important}
+  #pokdle-app.design-refresh #screen-profile #profile-secret-rune .secret-rune{width:32px!important;height:32px!important;min-height:0!important}
+  #pokdle-app.design-refresh #screen-profile .profile-progress-panel{padding:12px!important}
+  #pokdle-app.design-refresh #screen-profile #profile-numbers-title{margin:0 0 8px!important;font-size:17px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-progress-panel .profile-stat-grid.profile-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card{min-height:0!important;padding:8px 6px!important;text-align:center}
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card span{font-size:11px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-stat-card strong,#pokdle-app.design-refresh #screen-profile .profile-stat-card b{font-size:18px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure > summary{min-height:0!important;padding:11px 12px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-disclosure > summary small{font-size:12px!important}
+}
+@media (min-width:641px){
+  #pokdle-app.design-refresh #screen-profile .profile-hero{padding-top:18px!important;padding-bottom:18px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-circle{width:150px!important;height:150px!important}
+}
