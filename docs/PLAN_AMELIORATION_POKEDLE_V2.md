@@ -5,9 +5,9 @@
 Audit en lecture seule. Aucune modification de code, PR, base de production ou configuration. Les fichiers générés sont des propositions locales pour le dépôt.
 
 
-## État courant (8/11/2026, 1 h 30 heure de Paris) — seule synthèse à jour
+## État courant (8/11/2026, 1 h 50 heure de Paris) — seule synthèse à jour
 
-**Avancement V2 : 10 / 12 actions faites (83 %)**, plus 2 en PR avec QA en cours. PERF-02 (serveur en Europe) est **mis de côté par Kayan** (« plus tard ») et exclu du total. Les sections plus bas gardent le texte d'origine de l'audit ; en cas d'écart, ce tableau fait foi.
+**Plan V2 terminé : 12 / 12 actions faites (100 %).** PERF-02 (serveur en Europe) est **mis de côté par Kayan** (« plus tard ») et exclu du total. Les sections plus bas gardent le texte d'origine de l'audit ; en cas d'écart, ce tableau fait foi.
 
 | ID | État | Preuve (PR, fusion, fiche) | Niveau de preuve |
 |---|---|---|---|
@@ -16,16 +16,18 @@ Audit en lecture seule. Aucune modification de code, PR, base de production ou c
 | V2-MES-01 Retour des joueurs | ✅ Fait | [#345](https://github.com/chebreub/Pokdle/pull/345), `47d33fe` · [fiche](qa/V2_MES_01_RETENTION_DEF.md) | [code] ; [stat] lisible sur cohortes mûres à partir du 15/11 |
 | V2-SOC-01 Chat Party Room | ✅ Fait | [#346](https://github.com/chebreub/Pokdle/pull/346), `1c9d8e2` · [fiche](qa/V2_SOC_01_PARTY_CHAT.md) | [code] + QA deux navigateurs |
 | V2-JUR-01 Droits | ✅ Décidé | Kayan garde les sons Pokémon GO (7/11) ; sons faits maison en secours | [signal] décision du propriétaire |
-| V2-DEP-01 Dépendance `qs` | ⏳ PR en QA | [#348](https://github.com/chebreub/Pokdle/pull/348) · [fiche](qa/V2_DEP_01_QS.md) | [code] `npm audit` : 0 |
+| V2-DEP-01 Dépendance `qs` | ✅ Fait | [#348](https://github.com/chebreub/Pokdle/pull/348), `b382276` · [fiche](qa/V2_DEP_01_QS.md) | [code] `npm audit` : 0 |
 | V2-OBS-01 Mesure du site déployé | ✅ Fait | [#349](https://github.com/chebreub/Pokdle/pull/349), `8757fa3` · [rapport](qa/V2_OBS_01_MESURE_2026-11-08.md) | [site] laboratoire, version `9340737699` |
 | V2-DOC-01 Documentation | ✅ Fait | cette synthèse ; plan V1 marqué terminé (43/43) dans [PLAN_AMELIORATION_POKEDLE.md](PLAN_AMELIORATION_POKEDLE.md) | [code] |
 | V2-PERF-01 Images de l'accueil | ✅ Fait | [#347](https://github.com/chebreub/Pokdle/pull/347), `5d7c445` · [fiche](qa/V2_PERF_01_OSYTOOLS.md) | [code] + capture |
 | V2-ACC-01 Lien Contact | ✅ Fait | [#347](https://github.com/chebreub/Pokdle/pull/347) | [code] |
 | V2-FX-01 Captures « wow » | ✅ Fait | [#342](https://github.com/chebreub/Pokdle/pull/342), `94192b0` · [fiche](qa/V2_FX_01_WOW_CAPTURES.md) | [code] + captures ; iPhone à confirmer |
-| V2-PERF-03 Tuiles de mini-jeux en WebP | ⏳ PR en QA | [#350](https://github.com/chebreub/Pokdle/pull/350) · [fiche](qa/V2_PERF_03_TILE_ART.md) (ajoutée après OBS-01, « go » de Kayan) | [code] + capture |
+| V2-PERF-03 Tuiles de mini-jeux en WebP | ✅ Fait | [#350](https://github.com/chebreub/Pokdle/pull/350), `75e6369` · [fiche](qa/V2_PERF_03_TILE_ART.md) (ajoutée après OBS-01, « go » de Kayan) | [code] + capture |
 | V2-PERF-02 Serveur en Europe | ⏸ Mis de côté | Kayan, 8/11 : « plus tard » (coût) | — |
 
 **Distinctions à garder :** une QA complète verte porte sur le SHA de la PR ; la mise en ligne Render suit la fusion de 2 à 3 minutes ; une vérification sur iPhone réel est un [signal] du propriétaire. Les captures « wow » (FX-01) n'ont pas encore été vues par Kayan sur son iPhone.
+
+**Note QA :** plusieurs QA complètes lancées en même temps ont produit des échecs qui ont passé au 2e essai sans changement de code (#344, #346 1er échec, #350) ; l'échec réel du 2e passage de #346 venait du test ajouté, corrigé. Lancer les QA complètes une ou deux à la fois.
 
 **Prochaines étapes possibles :** refaire le contrôle Osytools et `App/tools/prod-measure.js` après la mise en ligne de #350 ; lire « dans les 7 jours » sur les cohortes mûres (à partir du 15/11) ; PERF-02 quand Kayan le voudra.
 
