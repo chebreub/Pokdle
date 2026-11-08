@@ -101,11 +101,12 @@ def case(browser, engine, width, height):
         # V2-SOC-01 : comme la discussion entre amis, un numéro, une adresse ou une autre appli est refusé par le
         # serveur et n'arrive jamais chez l'autre joueur ; les noms de Pokémon passent.
         for blocked in ['appelle-moi au 06 12 34 56 78', 'toto.kayan@gmail.com', 'ajoute moi sur snap']:
+            # Efface le message d'erreur précédent (état et écran) avant d'envoyer le suivant.
+            host.evaluate('partyChat.error = ""; document.getElementById("party-chat-error").textContent = ""')
             host.locator('#party-chat-input').fill(blocked)
             target(host, '#party-chat-form button', tap=True)
-            ready(host, 'document.getElementById("party-chat-error").textContent.length > 0')
-            assert host.evaluate('partyChat.error') != '', blocked
-            host.evaluate('partyChat.error = ""')
+            ready(host, 'partyChat.error.length > 0 && document.getElementById("party-chat-error").textContent.length > 0')
+        host.evaluate('partyChat.error = ""; document.getElementById("party-chat-error").textContent = ""')
         host.locator('#party-chat-input').fill("C'est Ho-Oh ou Porygon-Z ?")
         target(host, '#party-chat-form button', tap=True)
         ready(guest, "partyChat.messages.some(m=>m.text === \"C'est Ho-Oh ou Porygon-Z ?\")")
