@@ -2751,23 +2751,31 @@ body.theme-dark .disc-eyebrow{color:#b9a3f5}
   #pokdle-app.theme-dark .hp-ring b{background:#26222c}
 }
 @media (max-width:860px){
-  /* L'ordre : Défi du jour, défi reçu, capture, mini-jeux, « Défie tes amis » + ses jeux, Expédition, « Aussi aujourd'hui » */
+  /* L'ordre : Défi du jour, défi reçu, capture, Expédition, mini-jeux, « Défie tes amis » + ses jeux, « Aussi aujourd'hui », le reste */
+  #pokdle-app.design-refresh #screen-config.hm-on>*{order:9}
   #pokdle-app.design-refresh #screen-config.hm-on>#home-inbox{order:1}
   #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner){display:contents!important}
-  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>.hs-capture{order:1}
-  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls.is-beginner{order:1}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>.hs-capture{order:2}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls.is-beginner{order:2}
+  #pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{order:3}
   #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>*,#pokdle-app.design-refresh #screen-config.hm-on>#home-inbox,#pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{grid-column:1/-1}
   #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>*,
   #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-head>div:first-child,
   #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger,
   #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>.home-game-filters,
   #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.btn-ghost,
-  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>#home-games-grid{order:2}
-  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>:is(.home-seo-links,#home-disc-card,.disc-card){order:5}
-  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>.hm-duel{order:3}
-  #pokdle-app.design-refresh #screen-config.hm-on>#home-party{order:3}
-  #pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{order:4}
-  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>.hs-more{order:4}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>#home-games-grid{order:4}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>:is(.home-seo-links,#home-disc-card,.disc-card){order:9}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>.hm-duel{order:5}
+  #pokdle-app.design-refresh #screen-config.hm-on>#home-party{order:5}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>.hs-more{order:6}
+  /* L'Expédition, juste sous la capture : une bande plus basse */
+  #screen-config.hm-on>#exp2-home .exp2-home{min-height:0;padding:12px 14px;gap:2px;border-radius:20px}
+  #screen-config.hm-on>#exp2-home .exp2-home>b{font-size:18px}
+  #screen-config.hm-on>#exp2-home .exp2-home-line{font-size:12.5px}
+  #screen-config.hm-on>#exp2-home .exp2-home-bar{height:8px;margin-top:4px}
+  #screen-config.hm-on>#exp2-home .exp2-home-cta{margin-top:4px;font-size:14px}
+  #screen-config.hm-on>#exp2-home .exp2-home-leg{width:112px;height:112px;right:-8px;bottom:-14px}
   /* « Défie tes amis » et ses 4 jeux : une seule carte */
   #screen-config.hm-on>.hm-side>.hm-duel{height:170px;border-radius:22px 22px 0 0}
   #screen-config.hm-on>.hm-side>.hm-duel .hm-duel-tag{top:104px}

@@ -40,13 +40,14 @@ test('only a finished day changes: data-daily-state="complete" everywhere in the
   for (const line of block.split('\n').filter((l) => /#daily-hero/.test(l))) assert.match(line, /data-daily-state="complete"/, line);
 });
 
-test('phone order: challenge received and capture before the mini-games, « Aussi aujourd’hui » last', () => {
+test('phone order: challenge received, capture and Expédition before the mini-games, « Aussi aujourd’hui » after', () => {
   assert.match(P_CSS, />#home-inbox\{order:1\}/);
-  assert.match(P_CSS, />\.hs-capture\{order:1\}/);
-  assert.match(P_CSS, /#home-games-grid\{order:2\}/);
-  assert.match(P_CSS, />\.hm-side>\.hm-duel\{order:3\}/);
-  assert.match(P_CSS, />#home-party\{order:3\}/);
-  assert.match(P_CSS, />\.hs-more\{order:4\}/);
+  assert.match(P_CSS, />\.hs-capture\{order:2\}/);
+  assert.match(P_CSS, />#exp2-home\{order:3\}/);
+  assert.match(P_CSS, /#home-games-grid\{order:4\}/);
+  assert.match(P_CSS, />\.hm-side>\.hm-duel\{order:5\}/);
+  assert.match(P_CSS, />#home-party\{order:5\}/);
+  assert.match(P_CSS, />\.hs-more\{order:6\}/);
   assert.match(P_CSS, /#home-balls:not\(\.is-beginner\)\{display:contents!important\}/, 'the 3-step beginner card keeps its frame');
 });
 
