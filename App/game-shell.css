@@ -2299,3 +2299,123 @@ body.theme-dark .sv-gift{background:#3a3220;border-color:#6b5a2a}
 @keyframes svUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.sv-veil,.sv{animation:none}}
 body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
+
+/* 📱 Classement : « À gagner cette semaine » en 2 lignes, le détail derrière ⓘ (9/11/2026, maquette validée). */
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact{display:grid;grid-template-columns:52px minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:12px;row-gap:2px;align-items:center;margin:4px 0 14px;padding:10px 12px;border-width:1.5px;border-color:#c9d5ff;border-radius:18px}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-tag{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-main{display:contents}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-art{grid-column:1;grid-row:1/3;width:52px;height:52px}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-text{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:0}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-text h4{font-size:1rem}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-text h4::before{content:"À gagner : "}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-text p:not(.lbv5-prize-time){display:none;flex-basis:100%}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-time{font-size:.8rem}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-time b{font-size:.84rem}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-link{display:none}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-last{grid-column:2;grid-row:2;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:0;border-radius:0;background:none}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-last > span{display:none}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-last p,#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-last small{display:none}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion{display:flex!important;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;white-space:nowrap;font:700 .8rem Nunito,sans-serif;color:#5d5a66}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion::before{content:"👑 Sem. dernière :";flex:0 0 auto}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion b{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion .lbv2-avatar{width:22px!important;height:22px!important}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion b{font-size:.84rem}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion .player-level-pill{display:none}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion strong{font-size:.8rem;color:#5d5a66}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbp2-info{grid-column:3;grid-row:1/3;width:34px;height:34px;min-height:0;padding:0;border:1.5px solid #c9d5ff;border-radius:50%;background:#fff;color:#4069e0;font:800 16px Nunito,sans-serif;cursor:pointer}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact.is-open .lbv5-prize-text p:not(.lbv5-prize-time){display:block}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact.is-open .lbv5-prize-link{display:inline-block}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact.is-open .lbv5-prize-last small{display:block;flex-basis:100%}
+#pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact.is-open .lbp2-info{background:#4069e0;color:#fff}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize.is-compact .lbv5-champion,#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize.is-compact .lbv5-champion strong{color:#c8d2e6}
+#pokdle-app.design-refresh.theme-dark .lbv4 .lbv5-prize.is-compact .lbp2-info{background:#18233b;border-color:#36507f;color:#9db6ff}
+@media (max-width:640px){
+  #pokdle-app.design-refresh .leaderboard-page-bar{gap:10px}
+  #pokdle-app.design-refresh .leaderboard-page-bar [data-action="goToConfig"]{display:grid;place-items:center;width:40px;height:40px;min-height:0;padding:0!important;border-radius:50%;font-size:18px}
+  #pokdle-app.design-refresh .leaderboard-page-bar .lbp2-long{display:none}
+  #pokdle-app.design-refresh .leaderboard-page-bar h2{font-size:24px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact{grid-template-columns:44px minmax(0,1fr) auto;column-gap:10px;padding:8px 10px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-art{width:44px;height:44px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-prize-text h4{font-size:.9rem}
+  #pokdle-app.design-refresh .lbv4 .lbv4-filters{flex-wrap:nowrap;gap:6px}
+  #pokdle-app.design-refresh .lbv4 .lbv4-board-select select{height:38px;min-height:0;padding-top:0;padding-bottom:0;font-size:.86rem}
+  #pokdle-app.design-refresh .lbv4 .lbv4-board-select{flex:0 0 108px;max-width:108px}
+  #pokdle-app.design-refresh .lbv4 .lbv3-scope-tabs{display:flex!important;flex:1 1 auto;min-width:0;gap:3px;padding:3px!important}
+  #pokdle-app.design-refresh .lbv4 .lbv3-scope-tab{flex:1 1 0;min-width:0;min-height:34px!important;height:34px;padding:0 2px!important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:.76rem!important}
+  #pokdle-app.design-refresh .lbv4 .lbv3-stats{white-space:nowrap}
+  #pokdle-app.design-refresh .lbv4 .lbv3-scope-tab[data-lb-scope="today"]{font-size:0!important}
+  #pokdle-app.design-refresh .lbv4 .lbv3-scope-tab[data-lb-scope="today"]::after{content:"Jour";font-size:.8rem}
+  #pokdle-app.design-refresh .lbv4 .lbv5-prize.is-compact .lbv5-champion .lbv2-avatar{display:none}
+  #pokdle-app.design-refresh .lbv4 .lbv3-header{padding:6px 2px!important;flex-direction:row!important;align-items:baseline!important;justify-content:space-between;background:none!important}
+  #pokdle-app.design-refresh .lbv4 .lbv3-header .lbv3-title p{display:none}
+  #pokdle-app.design-refresh .lbv4 .lbv3-header h3{font-size:1.05rem}
+  #pokdle-app.design-refresh .lbv4 .lbv3-stats{display:flex!important;flex-direction:row!important;align-items:baseline;gap:4px;text-align:right}
+  #pokdle-app.design-refresh .lbv4 .lbv3-stats b{font-size:1rem}
+  #pokdle-app.design-refresh .lbv4 .lbv3-stats span{font-size:.78rem}
+  #pokdle-app.design-refresh .lbv4 .lbv5-podium{margin:14px auto 10px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step{padding:18px 6px 10px;gap:2px;border-radius:18px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold{padding:22px 6px 12px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step .lbv5-art{width:46px;height:46px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step.is-gold .lbv5-art{width:62px;height:62px}
+  #pokdle-app.design-refresh .lbv4 .lbv5-step strong{font-size:.95rem}
+  #pokdle-app.design-refresh .lbv4 .lbv2-row{min-height:46px;padding:4px 10px!important;grid-template-columns:34px 30px minmax(0,1fr) auto}
+  #pokdle-app.design-refresh .lbv4 .lbv2-row .lbv2-avatar{width:30px!important;height:30px!important}
+  #pokdle-app.design-refresh .lbv4 .lbv3-list{gap:6px}
+}
+
+/* 📱 Bilan du jour sur téléphone : une carte (9/11/2026, maquette validée). Sur PC, rien ne change. */
+#challenge-content .bj2,#challenge-content .bj2-next{display:none}
+@media (max-width:640px){
+  #screen-challenge:has(#challenge-content .bj2) .challenge-toolbar,
+  #screen-challenge:has(#challenge-content .bj2) .challenge-journey,
+  #screen-challenge:has(#challenge-content .bj2) .challenge-heading,
+  #screen-challenge:has(#challenge-content .bj2) #challenge-message,
+  #screen-challenge:has(#challenge-content .bj2) .challenge-help,
+  #challenge-content:has(.bj2) > .journey-total,
+  #challenge-content:has(.bj2) > .journey-stages,
+  #challenge-content:has(.bj2) > .journey-status,
+  #challenge-content:has(.bj2) > #journey-grid-bonus,
+  #challenge-content:has(.bj2) .challenge-actions .btn-ghost,
+  #challenge-content:has(.bj2-next) > .day-done-card{display:none!important}
+  #screen-challenge:has(#challenge-content .bj2) .challenge-card{padding:12px!important;border:0!important;background:none!important;box-shadow:none!important}
+  #challenge-content .bj2{display:block;text-align:left}
+  #challenge-content .bj2-next{display:block}
+  .bj2-bar{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+  .bj2-bar h2{flex:1;margin:0;font:700 22px Fredoka,Nunito,sans-serif;color:#2E2A33}
+  .bj2-back{display:grid;place-items:center;width:40px;height:40px;min-height:0;padding:0;border:1.5px solid #E5D8C5;border-radius:50%;background:#fff;color:#2E2A33;font:800 18px Nunito,sans-serif;cursor:pointer}
+  .bj2-share{min-height:0;padding:8px 14px;border:1.5px solid #E5D8C5;border-radius:999px;background:#fff;color:#2E2A33;font:800 14px Nunito,sans-serif;cursor:pointer}
+  .bj2-card{padding:14px;border:1.5px solid #EFE4D4;border-radius:20px;background:#fff}
+  .bj2-hero{display:flex;align-items:center;gap:14px}
+  .bj2-ring{--p:0;display:grid;place-items:center;flex:0 0 auto;width:88px;height:88px;border-radius:50%;background:conic-gradient(#4069E0 calc(var(--p)*1%),#E8E0D2 0)}
+  .bj2-ring span{display:grid;place-items:center;width:70px;height:70px;border-radius:50%;background:#fff;line-height:1}
+  .bj2-ring b{font:700 26px Fredoka,Nunito,sans-serif;color:#2E2A33}
+  .bj2-ring small{font:800 11px Nunito,sans-serif;color:#8a8190}
+  .bj2-head{min-width:0}
+  .bj2-head h3{margin:0;font:700 20px Fredoka,Nunito,sans-serif;color:#2E2A33}
+  .bj2-head p{margin:2px 0 0;font:700 13px Nunito,sans-serif;color:#6d6574}
+  .bj2-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .bj2-chip{padding:3px 9px;border-radius:999px;background:#F3EADB;font:900 12.5px Nunito,sans-serif;color:#2E2A33}
+  .bj2-chip.is-fire{background:#FFF1C7}.bj2-chip.is-ranked{background:#E6ECFF}
+  .bj2-four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:12px}
+  .bj2-four button{display:grid;justify-items:center;gap:1px;min-height:0;padding:8px 2px;border:0;border-radius:12px;background:#F7F1E7;color:#2E2A33;cursor:pointer}
+  .bj2-four span{font:800 12px Nunito,sans-serif;color:#6d6574}
+  .bj2-four b{font:900 15px Nunito,sans-serif;color:#4069E0}
+  .bj2-four small{font:800 10.5px Nunito,sans-serif;color:#4069E0}
+  .bj2-four .is-full{background:#E3F4EA}.bj2-four .is-full b{color:#2F8A57}
+  .bj2-four .is-todo{border:1.5px dashed #C9D5FF;background:#fff}
+  .bj2-bonus{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:8px;padding:9px 10px;border:1.5px dashed #E5D8C5;border-radius:12px;background:#FFF8EF;color:#2E2A33;font:800 13.5px Nunito,sans-serif;cursor:pointer}
+  .bj2-bonus b{color:#4069E0}.bj2-bonus.is-done b{color:#2F8A57}
+  #challenge-content:has(.bj2) .challenge-actions{display:block;margin:10px 0 0}
+  #challenge-content:has(.bj2) .challenge-actions .btn-blue{display:block;width:100%;margin:0}
+  .bj2-next{margin-top:10px;padding:12px 14px;border:1.5px solid #EFE4D4;border-radius:20px;background:#fff;text-align:left}
+  .bj2-next h3{margin:0 0 8px;font:600 16px Fredoka,Nunito,sans-serif;color:#2E2A33}
+  .bj2-go{display:flex;flex-wrap:nowrap;gap:6px}
+  .bj2-go button{flex:1 1 auto;white-space:nowrap;min-height:0;padding:8px 6px;border:0;border-radius:999px;background:#F3EADB;color:#2E2A33;font:800 13px Nunito,sans-serif;cursor:pointer}
+  .bj2-go .is-blue{background:#4069E0;color:#fff}
+  body.theme-dark .bj2-bar h2,body.theme-dark .bj2-head h3,body.theme-dark .bj2-ring b,body.theme-dark .bj2-next h3{color:#f5efe6}
+  body.theme-dark .bj2-card,body.theme-dark .bj2-next,body.theme-dark .bj2-ring span,body.theme-dark .bj2-back,body.theme-dark .bj2-share{background:#26222c;border-color:#3a3442;color:#f5efe6}
+  body.theme-dark .bj2-four button,body.theme-dark .bj2-go button,body.theme-dark .bj2-chip{background:#2f2a36;color:#f5efe6}
+  body.theme-dark .bj2-four .is-full{background:#1f3a2b}
+  body.theme-dark .bj2-bonus{background:#221f28;border-color:#3a3442;color:#f5efe6}
+  body.theme-dark .bj2-head p,body.theme-dark .bj2-four span{color:#b5adbb}
+}
