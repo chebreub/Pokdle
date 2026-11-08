@@ -13,13 +13,14 @@ const html = renderStatsDashboard({ days: 7, endDay: day, metrics, previousMetri
 test('one button copies the whole dashboard as plain text, a second one saves it', () => {
   assert.match(html, /<button type="button" id="copy-report" class="export-main">📋 Tout copier pour Claude<\/button>/);
   assert.match(html, /<button type="button" id="download-report" class="export-ghost">⬇ \.txt<\/button>/);
-  const report = html.match(/<textarea id="stats-report"[^>]*>([\s\S]*?)<\/textarea>/)[1];
+  const report = html.match(/<span id="stats-report" hidden data-report="([^"]*)"><\/span>/)[1];
   for (const part of ['== ESSENTIEL ==', '== JEUX ==', '== PARTY ROOM ==', '== RETOUR DES JOUEURS ==', '== ÉCONOMIE ET CAPTURES ==', '== AVIS ET INTERACTIONS ==', '== DIAGNOSTIC'])
     assert.ok(report.includes(part), part);
   assert.match(report, /Exporté le 08\/11 à 11 h 42 \(heure de Paris\)/);
   assert.match(report, /Sessions : 40 \(\+100 % vs période d’avant : 20\)/);
-  assert.match(report, /« Super jeu » &amp; merci/, 'the text is decoded, then escaped once in the page');
-  assert.doesNotMatch(report, /<(section|table|td|div)\b/, 'no HTML in the copied text');
+  assert.match(report, /« Super jeu » &amp; merci/, 'the text is decoded, then escaped once in the attribute');
+  assert.doesNotMatch(html, /<textarea/, 'the copied text is not page text (the QA counts titles)');
+  assert.doesNotMatch(report, /&lt;(section|table|td|div)\b/, 'no HTML in the copied text');
 });
 
 test('trends compare with the previous period of the same length', () => {

@@ -481,7 +481,6 @@ a{color:#345fce}
 .insights{list-style:none;margin:6px 0 0;padding:0}.insights li{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-top:1px solid #edf1f7;font-size:13px;line-height:1.45}.insights li:first-child{border-top:0}
 .insights i{flex:0 0 24px;height:24px;border-radius:8px;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900;background:#eef2ff;color:#345fce}
 .insights .is-up i{background:#dcfce7;color:#1f8a4c}.insights .is-down i{background:#fee2e2;color:#c2410c}.insights .is-warn i{background:#fef3c7;color:#92400e}
-.report-source{position:absolute;left:-9999px;width:1px;height:1px}
 @media(max-width:750px){.tabs{top:4px}.tabs button{flex:1 1 auto;padding:9px 10px;font-size:12px}.export{width:100%}.export-main{flex:1}}
 </style>
 </head><body><main class="main">
@@ -542,7 +541,7 @@ ${sharePanel}
 <details><summary>Diagnostic — événements depuis le dernier redémarrage</summary><div class="detail-body"><p class="footnote">Compteurs mémoire remis à zéro au redémarrage : ${escapeHtml(bootedAt)} UTC. Ils ne sont pas comparables aux totaux persistants.</p>
   <div class="table-scroll"><table><thead><tr><th>Événement</th>${diagCols}<th>Total</th></tr></thead><tbody>${diagRows || '<tr><td colspan="2">Aucun événement de diagnostic.</td></tr>'}</tbody></table></div></div></details>
 </div>
-<textarea id="stats-report" class="report-source" readonly hidden aria-hidden="true" tabindex="-1">${escapeHtml(reportText)}</textarea>
+<span id="stats-report" hidden data-report="${escapeHtml(reportText)}"></span>
 <script src="/admin/stats.js" defer></script>
 <p class="footnote">Page d’administration privée · Données agrégées conservées au maximum 90 jours · Aucune modification des parties, comptes ou récompenses.</p>
 </main></body></html>`;
@@ -566,14 +565,14 @@ const STATS_CLIENT_JS = `(function(){
   var say=function(t){if(status){status.textContent=t;setTimeout(function(){status.textContent='';},4000);}};
   var copy=document.getElementById('copy-report');
   if(copy&&source)copy.addEventListener('click',function(){
-    var text=source.value;
+    var text=source.getAttribute('data-report')||'';
     var done=function(){say('✓ Copié · '+text.length.toLocaleString('fr-FR')+' caractères : colle-le dans le chat.');};
-    var fallback=function(){source.hidden=false;source.select();try{document.execCommand('copy');done();}catch(e){say('Copie impossible : utilise ⬇ .txt');}source.hidden=true;};
+    var fallback=function(){var t=document.createElement('textarea');t.value=text;t.setAttribute('readonly','');t.style.position='fixed';t.style.left='-9999px';document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){say('Copie impossible : utilise ⬇ .txt');}t.remove();};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,fallback);else fallback();
   });
   var dl=document.getElementById('download-report');
   if(dl&&source)dl.addEventListener('click',function(){
-    var blob=new Blob([source.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');
+    var blob=new Blob([source.getAttribute('data-report')||''],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='pokedle-stats-'+new Date().toISOString().slice(0,10)+'.txt';
     document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
   });
