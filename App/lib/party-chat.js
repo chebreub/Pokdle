@@ -3,6 +3,8 @@
 // Nothing is stored: a message is relayed to the room and forgotten. No links, and a message
 // that names the Pokémon being guessed is hidden from the others until the round ends.
 
+const { hasContact } = require("./friend-chat");
+
 const MAX_LENGTH = 120;
 const REACTIONS = ["😂", "🔥", "👏", "😱"];
 // « www.site », « http… » or « mot.fr/… » style addresses: the chat is for talking, not for links.
@@ -16,6 +18,9 @@ function cleanChatText(value) {
   if (!text) return { error: "Message vide." };
   if (text.length > MAX_LENGTH) return { error: `${MAX_LENGTH} caractères au plus.` };
   if (LINK.test(text)) return { error: "Pas de liens dans le chat." };
+  // V2-SOC-01 (8/11, audit GPT) : comme la discussion entre amis, pas d'adresse e-mail, de @pseudo, de numéro
+  // ni de nom d'autre appli (beaucoup de joueurs sont des enfants). Les noms de Pokémon passent.
+  if (hasContact(text)) return { error: "🔒 Pas de liens ni de numéros ici." };
   return { text };
 }
 

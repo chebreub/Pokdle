@@ -98,6 +98,19 @@ def case(browser, engine, width, height):
         ready(host, 'document.getElementById("party-chat-input").value === ""')
         target(host, '.pchat-react button:first-child', tap=True)
         ready(guest, 'partyChat.messages.some(m=>m.reaction === "😂")')
+        # V2-SOC-01 : comme la discussion entre amis, un numéro, une adresse ou une autre appli est refusé par le
+        # serveur et n'arrive jamais chez l'autre joueur ; les noms de Pokémon passent.
+        for blocked in ['appelle-moi au 06 12 34 56 78', 'toto.kayan@gmail.com', 'ajoute moi sur snap']:
+            # Efface le message d'erreur précédent (état et écran) avant d'envoyer le suivant.
+            host.evaluate('partyChat.error = ""; document.getElementById("party-chat-error").textContent = ""')
+            host.locator('#party-chat-input').fill(blocked)
+            target(host, '#party-chat-form button', tap=True)
+            ready(host, 'partyChat.error.length > 0 && document.getElementById("party-chat-error").textContent.length > 0')
+        host.evaluate('partyChat.error = ""; document.getElementById("party-chat-error").textContent = ""')
+        host.locator('#party-chat-input').fill("C'est Ho-Oh ou Porygon-Z ?")
+        target(host, '#party-chat-form button', tap=True)
+        ready(guest, "partyChat.messages.some(m=>m.text === \"C'est Ho-Oh ou Porygon-Z ?\")")
+        assert not guest.evaluate('partyChat.messages.some(m=>/06 12|gmail|snap/.test(m.text||""))'), 'a refused message reached the other player'
         viewport(host)
         target(host, '.pchat-x', tap=True)
         ready(host, 'document.getElementById("party-chat").classList.contains("hidden")')
