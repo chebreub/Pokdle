@@ -82,6 +82,12 @@ jobs:
       - name: Install application dependencies
         run: npm ci
         working-directory: App
+      - name: Quiet PostgreSQL service logs
+        # The service log is printed at the end of the job; thousands of expected
+        # test errors and health-check lines used to push the QA failures out of view.
+        working-directory: App
+        run: |
+          node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.QA_DATABASE_URL});await c.connect();await c.query(\"ALTER SYSTEM SET log_min_messages='panic'\");await c.query(\"ALTER SYSTEM SET log_min_error_statement='panic'\");await c.query('SELECT pg_reload_conf()');await c.end();console.log('PostgreSQL service logs quieted');})().catch(e=>{console.log('Could not quiet PostgreSQL logs:',e.message);})"
       - name: Isolated PostgreSQL integration tests
         # Game regression tests already runs the full Node unit suite on PRs.
         # Keep real PostgreSQL checks here; never connect to production.
