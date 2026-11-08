@@ -126,6 +126,8 @@ const NOTICES = Object.freeze({
   "wild-coins": "+1 000 ₽ dans ton porte-monnaie (pour tester la boutique).",
   suspension: "Discussion mise à jour.",
   report: "Signalement marqué comme traité.",
+  survey: "Sondage lancé : chaque joueur qui a déjà un compte le verra une fois, à sa prochaine visite.",
+  "survey-stopped": "Sondage arrêté : il ne s'affiche plus.",
 });
 
 function page(title, body) {
@@ -188,7 +190,8 @@ ${list ? `<h3>Pseudos remplacés</h3><div class="photos">${list}</div>` : ""}</s
 
 // `db` is the pg pool; `ready` resolves to true once the tables exist.
 // `messages` (optional) writes to the players: { module, webpush, pushReady }, see lib/player-messages.js.
-function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console, messages = null, reports = null }) {
+// `surveys` (optional) : le sondage unique des joueurs, { module } (lib/player-surveys.js).
+function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, today = parisDay, log = console, messages = null, reports = null, surveys = null }) {
   const form = express.urlencoded({ extended: false, limit: "8kb" });
   const ids = () => (typeof adminIds === "function" ? adminIds() : adminIds) || new Set();
   const noStore = (res) => res.set({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex", "Referrer-Policy": "same-origin" });
@@ -247,10 +250,15 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
         try { reportsHtml = reports.module.adminSectionHtml(await reports.module.adminReports(db), escapeHtml) + await reports.module.suspensionSectionHtml(db, escapeHtml); }
         catch (error) { log.error("[admin] reports:", error.message); }
       }
+      let surveyHtml = "";
+      if (surveys) {
+        try { surveyHtml = surveys.module.adminSectionHtml(await surveys.module.adminState(db), escapeHtml); }
+        catch (error) { log.error("[admin] survey:", error.message); surveyHtml = "<section><h2>📊 Sondage</h2><p>Lecture impossible pour le moment.</p></section>"; }
+      }
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
       res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}${wildTestSectionHtml()}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+${reportsHtml}${newsSection(news, day)}${surveyHtml}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}${wildTestSectionHtml()}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
@@ -382,6 +390,27 @@ ${reportsHtml}${newsSection(news, day)}${messagesHtml}${photosSection(photos)}${
     });
   }
 
+  if (surveys) {
+    app.post("/admin/survey", form, async (req, res) => {
+      if (!guard(req, res)) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      try {
+        const made = await surveys.module.create(db, req.body || {});
+        if (made.error) return back(res, { err: made.error });
+        back(res, { ok: "survey" });
+      } catch (error) { log.error("[admin] survey:", error.message); back(res, { err: "Impossible pour le moment." }); }
+    });
+    app.post("/admin/survey/stop", form, async (req, res) => {
+      if (!guard(req, res)) return;
+      if (!sameOrigin(req)) return res.status(403).send("Origine refusée.");
+      const id = Number(req.body && req.body.id);
+      if (!Number.isSafeInteger(id) || id <= 0) return back(res, { err: "Sondage introuvable." });
+      if (!await dbReady()) return back(res, { err: "Base de données indisponible." });
+      try { await surveys.module.stop(db, id); back(res, { ok: "survey-stopped" }); }
+      catch (error) { log.error("[admin] survey stop:", error.message); back(res, { err: "Impossible pour le moment." }); }
+    });
+  }
   if (reports) {
     app.post("/admin/chat/suspension", form, async (req, res) => {
       const admin = guard(req, res);
