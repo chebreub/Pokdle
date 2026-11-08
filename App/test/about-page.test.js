@@ -68,7 +68,7 @@ test('/a-propos is served and listed; the English addresses lead to the French p
 });
 
 test('every footer links to the About page', () => {
-  assert.match(read('index.html'), /<a href="\/jeux">Tous les jeux Pokémon<\/a> · <a href="\/a-propos">À propos<\/a> · <a href="\/confidentialite">Confidentialité<\/a>/);
+  assert.match(read('index.html'), /<a href="\/jeux">Tous les jeux Pokémon<\/a> · <a href="\/a-propos">À propos<\/a> · <a href="\/a-propos#contact">Contact<\/a> · <a href="\/confidentialite">Confidentialité<\/a>/);
   assert.match(renderGamePage(GAMES[0]), /<a href="\/a-propos">À propos<\/a>/);
   assert.match(read('confidentialite.html'), /<a href="\/a-propos">À propos de Pokédle<\/a>/);
 });

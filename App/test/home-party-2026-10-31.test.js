@@ -22,11 +22,13 @@ test('the home names the party games right after the daily, before the solo game
   assert.deepEqual(modes.map((m) => m[2]), GAMES);
   for (const m of modes) assert.equal(m[1], m[2]);
   for (const title of ['Dessine-le !', 'Qui est-ce ?', 'Petit Bac', 'Course au Pokédex']) assert.match(band, new RegExp('<b>' + title.replace('?', '\\?') + '</b>'));
-  // Official artworks only, with the small sprite if the artwork does not load.
+  // Official artworks only (V2-PERF-01, 8/11 : the same artworks, as light local WebP made by tools/home-art.py),
+  // with the small sprite if the artwork does not load.
   const arts = [...band.matchAll(/<img src="([^"]+)" data-fallback="([^"]+)"/g)];
   assert.equal(arts.length, 4);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'tools', 'home-art.py'), 'utf8'), /official-artwork\/\{pid\}\.png/);
   for (const [, src, fallback] of arts) {
-    assert.match(src, /\/sprites\/pokemon\/other\/official-artwork\/\d+\.png$/);
+    assert.match(src, /^img\/home\/\d+\.webp$/);
     assert.match(fallback, /\/sprites\/pokemon\/\d+\.png$/);
   }
   assert.match(band, /data-action="openPartyRoomWithGame" data-args='\[""\]'>Créer un salon/);
