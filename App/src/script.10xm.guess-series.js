@@ -306,3 +306,30 @@ if (typeof renderGameOverBox === 'function') {
     return value;
   };
 }
+
+// La barre « Silhouette 1 / 10 · 5 10 20 » restait affichée en passant à un autre jeu (Quiz, Duel de poids…),
+// qui semblait alors avoir des manches à choisir (signalé par Kayan le 8/11/2026). Elle disparaît dès que le jeu
+// affiché n'est plus celui de la série (la série elle-même reste gardée).
+function guessSeriesSyncBar() {
+  var bar = document.getElementById('guess-series-bar');
+  if (bar && !guessSeriesActive()) bar.remove();
+}
+if (typeof showScreen === 'function') {
+  var showScreenBeforeSeriesBar = showScreen;
+  showScreen = function () {
+    var out = showScreenBeforeSeriesBar.apply(this, arguments);
+    guessSeriesSyncBar();
+    setTimeout(guessSeriesSyncBar, 0);
+    return out;
+  };
+}
+['startWeightBattle', 'startQuizGame', 'openHigherLowerMode', 'openOddOneOutMode', 'openPokeConnectionsMode', 'openShinyMode',
+  'startNormalGame', 'startMysteryStatGame', 'startEvolutionGame', 'startOrderGame'].forEach(function (name) {
+  var original = window[name];
+  if (typeof original !== 'function') return;
+  window[name] = function () {
+    var out = original.apply(this, arguments);
+    setTimeout(guessSeriesSyncBar, 0);
+    return out;
+  };
+});
