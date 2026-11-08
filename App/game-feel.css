@@ -504,6 +504,8 @@ body.theme-dark .win-feedback-invite .btn-link{color:#8FA8FF}
 #quiz-box.qz-on .qz-pill.is-fire{background:#FFE9DF;border-color:#FFC9B0;color:#A3401B}
 #quiz-box.qz-on .qz-scene{position:relative;height:190px;margin:0 -12px;display:grid;place-items:center;overflow:hidden;isolation:isolate;--a:#B7A4F5;--b:#6B4FD0;--c:#2B1E63;background:radial-gradient(120% 100% at 50% 110%,var(--a),var(--b) 55%,var(--c))}
 #quiz-box.qz-on .qz-scene[hidden]{display:none}
+/* Bilan affiché : la barre et la scène disparaissent avant que la page défile jusqu'au bilan (Safari ne recale pas le défilement) */
+#quiz-box.qz-on:has(#quiz-end-card:not(.hidden)) :is(.qz-hud,.qz-scene){display:none}
 #quiz-box.qz-on .qz-scene::before{content:"";position:absolute;inset:-50%;z-index:-1;background:repeating-conic-gradient(rgba(255,255,255,.12) 0 4deg,transparent 4deg 16deg);-webkit-mask:radial-gradient(closest-side,#000 10%,transparent 60%);mask:radial-gradient(closest-side,#000 10%,transparent 60%);animation:qzSpin 40s linear infinite}
 @keyframes qzSpin{to{transform:rotate(360deg)}}
 #quiz-box.qz-on .qz-scene.is-types{--a:#F4B88A;--b:#C2552B;--c:#4A1A0E}

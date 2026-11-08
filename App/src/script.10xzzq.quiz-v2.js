@@ -103,6 +103,13 @@ function qzQueue() {
   var original = window[name];
   if (typeof original !== 'function') return;
   window[name] = function () {
+    // Fin du quiz : on retire la barre et la scène AVANT que le bilan prenne le focus (et fasse défiler la page).
+    // Les retirer après faisait remonter le bilan hors de l'écran sur Safari, qui ne recale pas le défilement.
+    if (name === 'renderQuizQuestion' && qzOn() && typeof quizQuestions !== 'undefined' && quizCurrentIndex >= quizQuestions.length) {
+      var hud = document.getElementById('qz-hud'), scene = document.getElementById('qz-scene');
+      if (hud) hud.innerHTML = '';
+      if (scene) scene.hidden = true;
+    }
     var out = original.apply(this, arguments);
     qzQueue();
     if (out && typeof out.then === 'function') out.then(qzQueue, qzQueue);
