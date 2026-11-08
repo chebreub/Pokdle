@@ -197,10 +197,14 @@ function frPanelHtml() {
   if (!d) return '<p class="fr-empty">Chargement de tes amis…</p>';
   var incoming = frList('incoming'), friends = frList('friends'), outgoing = frList('outgoing'), blocked = frList('blocked');
   var html = '';
+  // « Mes amis » v3 (8/11, maquette validée, « go ») : une liste comme une appli de messages.
+  // Demandes en haut, une ligne par ami (avatar → sa carte, la ligne → la discussion), ⚔️ Défier ;
+  // sur PC, les demandes et « Jouer avec tes amis » / « Invite un ami » passent dans la colonne de droite.
+  var side = '';
   incoming.forEach(function (f) {
-    html += '<div class="fr-req">' + frArt(f) + '<p><b>' + escapeHtml(f.username) + '</b> veut être ton ami<small>Niv. ' + frLevel(f.xp) + '</small></p>' +
+    side += '<div class="fr-req">' + frArt(f) + '<p><b>' + escapeHtml(f.username) + '</b> veut être ton ami<small>Niv. ' + frLevel(f.xp) + '</small></p>' +
       '<div class="fr-req-acts"><button type="button" class="btn-blue" data-action="frRespond" data-args="' + frArgs([f.id, true]) + '">Accepter</button>' +
-      '<button type="button" class="fr-btn" data-action="frRespond" data-args="' + frArgs([f.id, false]) + '">Refuser</button>' +
+      '<button type="button" class="fr-btn fr-req-no" data-action="frRespond" data-args="' + frArgs([f.id, false]) + '" aria-label="Refuser">✕</button>' +
       '<button type="button" class="fr-card-link fr-req-block" data-action="frBlock" data-args="' + frArgs([f.pid, f.username]) + '">Bloquer</button></div></div>';
   });
   var sorts = [['recent', 'Récents'], ['level', 'Niveau'], ['name', 'A → Z']];
@@ -209,11 +213,9 @@ function frPanelHtml() {
       return '<button type="button" class="' + (frSort === o[0] ? 'is-on' : '') + '" aria-pressed="' + (frSort === o[0]) + '" data-action="frSetSort" data-args=\'["' + o[0] + '"]\'>' + o[1] + '</button>';
     }).join('') + '</div>' : '') + '</div>';
   if (friends.length) {
-    // With the chat (script.10xv.friend-chat.js): the last message under the name, and 💬 with its count.
+    // With the chat (script.10xv.friend-chat.js): the last message under the name, its time, and the unread count.
     var convs = typeof chatState !== 'undefined' && chatState ? chatState.convs || {} : {};
     var chatOn = typeof openFriendChat === 'function';
-    // « Mes amis » refait (3/11, maquette validée) : des cartes sur PC (3 colonnes), une liste nette sur téléphone ;
-    // boutons nommés « 💬 Écrire » / « 💬 Répondre » (en bleu s'il y a un message non lu) et « ⚔️ Défier ».
     var lastAt = function (f) { return convs[f.pid] && convs[f.pid].last ? String(convs[f.pid].last.at) : ''; };
     var sorted = friends.slice().sort(function (a, b) {
       if (frSort === 'level') return (Number(b.xp) || 0) - (Number(a.xp) || 0);
@@ -221,23 +223,26 @@ function frPanelHtml() {
       var ua = convs[a.pid] ? Number(convs[a.pid].unread) || 0 : 0, ub = convs[b.pid] ? Number(convs[b.pid].unread) || 0 : 0;
       return (ub > 0) - (ua > 0) || lastAt(b).localeCompare(lastAt(a));
     });
-    html += '<div class="fr-list fr-grid"><div class="fr-cards">' + sorted.map(function (f) {
-      var since = frDay(f.since), conv = convs[f.pid], unread = conv ? Number(conv.unread) || 0 : 0;
-      var meta = 'Niv. ' + frLevel(f.xp) + (since ? ' · ami depuis le ' + since : '');
-      var msg = conv && conv.last ? (conv.last.mine ? '<em>Toi :</em> ' : '') + escapeHtml(conv.last.body) : '<em>' + (chatOn ? 'Pas encore de message' : escapeHtml(meta)) + '</em>';
+    html += '<div class="fr-list fr-v3-list' + (frState.all ? ' is-all' : '') + '">' + sorted.map(function (f) {
+      var conv = convs[f.pid], unread = conv ? Number(conv.unread) || 0 : 0;
+      var msg = conv && conv.last ? (conv.last.mine ? '<em>Toi :</em> ' : '') + escapeHtml(conv.last.body) : '<em>Pas encore de message</em>';
       var name = escapeHtml(f.username);
       return '<div class="fr-row fr-friend' + (unread ? ' is-unread' : '') + '">' +
-        '<button type="button" class="fr-row-main" data-action="openPlayerCard" data-args="' + frArgs([f.pid]) + '" aria-label="Carte de dresseur de ' + name + '">' + frArt(f) +
-          '<span><b>' + name + '</b><small class="fr-meta">' + escapeHtml(meta) + '</small><small class="fr-last">' + msg + '</small></span>' +
-          (unread ? '<i class="pc-badge fr-dot">' + unread + '</i>' : '') + '</button>' +
-        '<p class="fr-msg' + (unread ? ' is-new' : '') + '">' + msg + '</p>' +
+        '<button type="button" class="fr-ava" data-action="openPlayerCard" data-args="' + frArgs([f.pid]) + '" aria-label="Carte de dresseur de ' + name + '">' + frArt(f) + '</button>' +
+        '<button type="button" class="fr-row-main" data-action="' + (chatOn ? 'openFriendChat' : 'openPlayerCard') + '" data-args="' + frArgs(chatOn ? [f.pid, f.username] : [f.pid]) + '" aria-label="' + (chatOn ? (unread ? 'Répondre à ' : 'Écrire à ') : 'Carte de dresseur de ') + name + '">' +
+          '<span><b>' + name + ' <small class="fr-lvl">Niv. ' + frLevel(f.xp) + '</small></b><small class="fr-last">' + msg + '</small></span>' +
+          '<span class="fr-when">' + escapeHtml(frWhen(conv && conv.last && conv.last.at)) + (unread ? '<i class="pc-badge fr-dot">' + unread + '</i>' : '') + '</span></button>' +
         '<div class="fr-acts">' +
-        (chatOn ? '<button type="button" class="fr-btn fr-chat' + (unread ? ' is-blue' : '') + '" data-action="openFriendChat" data-args="' + frArgs([f.pid, f.username]) + '" aria-label="' + (unread ? 'Répondre à ' : 'Écrire à ') + name + '">💬<span> ' + (unread ? 'Répondre' : 'Écrire') + '</span>' + (unread ? '<i class="pc-badge">' + unread + '</i>' : '') + '</button>' : '') +
-        '<button type="button" class="fr-btn fr-duel" data-action="openChallengeForm" data-args="' + frArgs([f.pid, f.username]) + '" aria-label="Défier ' + name + '">⚔️<span> Défier</span></button></div></div>';
-    }).join('') + '</div></div>';
+        (chatOn ? '<button type="button" class="fr-btn fr-chat' + (unread ? ' is-blue' : '') + '" data-action="openFriendChat" data-args="' + frArgs([f.pid, f.username]) + '" aria-label="' + (unread ? 'Répondre à ' : 'Écrire à ') + name + '">💬</button>' : '') +
+        '<button type="button" class="fr-btn fr-duel" data-action="openChallengeForm" data-args="' + frArgs([f.pid, f.username]) + '" aria-label="Défier ' + name + '">⚔️</button></div></div>';
+    }).join('') + (sorted.length > FR_SHOWN && !frState.all ? '<button type="button" class="fr-more" data-action="frShowAll">Voir les ' + (sorted.length - FR_SHOWN) + ' autres</button>' : '') + '</div>';
+    var faces = sorted.slice(0, 3).map(function (f) { return '<span class="fr-face">' + frArt(f) + '</span>'; }).join('');
+    side += '<div class="fr-group"><span class="fr-faces" aria-hidden="true">' + faces + '</span><b>Jouer avec tes amis</b><button type="button" data-action="frShowTab" data-args=\'["party"]\'>Créer un salon</button></div>';
   } else {
     html += '<p class="fr-empty">Pas encore d’ami. Clique sur un pseudo dans un <button type="button" class="party-duels-link" data-action="openLeaderboardV2" data-args=\'["journey","week"]\'>classement</button>, puis <b>🤝 Ajouter en ami</b>.</p>';
   }
+  if (typeof openInviteFriend === 'function') side += '<button type="button" class="fr-invite" data-action="openInviteFriend">🎁 Invite un ami · +100 XP chacun<b>Partager →</b></button>';
+  frSide = side;
   var archives = typeof chatState !== 'undefined' && chatState ? chatState.convs || {} : {};
   var archivedPids = Object.keys(archives).filter(function (pid) { return archives[pid].friends === false; });
   if (archivedPids.length) {
@@ -260,7 +265,27 @@ function frPanelHtml() {
   }
   html += '<p class="fr-note">On ajoute un ami depuis sa carte de dresseur : pas de recherche par pseudo. Une demande sans réponse est effacée au bout de 30 jours.' +
     (typeof openFriendChat === 'function' ? ' Entre amis, les messages sont gardés 30 jours ; 🚩 Signaler et ⛔ Bloquer sont dans la discussion.' : '') + '</p>';
-  return html;
+  return '<div class="fr-v3-box"><div class="fr-v3">' + (frSide ? '<aside class="fr-v3-side">' + frSide + '</aside>' : '') + '<div class="fr-v3-main">' + html + '</div></div></div>';
+}
+var frSide = '';
+var FR_SHOWN = 6;
+// L'heure du dernier message : « 16:31 » aujourd'hui, « hier », sinon « 6 nov. » (heure de Paris).
+function frWhen(iso) {
+  var t = Date.parse(iso || '');
+  if (!Number.isFinite(t)) return '';
+  try {
+    var day = function (x) { return new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' }).format(new Date(x)); };
+    if (day(t) === day(Date.now())) return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).format(new Date(t));
+    if (day(t) === day(Date.now() - 86400000)) return 'hier';
+    return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short' }).format(new Date(t));
+  } catch (_e) { return ''; }
+}
+function frShowAll() {
+  frState.all = true;
+  var list = document.querySelector('.fr-v3-list');
+  if (list) list.classList.add('is-all');
+  var more = list && list.querySelector('.fr-more');
+  if (more) more.remove();
 }
 function renderPartyFriends() {
   var screen = document.getElementById('screen-party-room');
@@ -356,4 +381,5 @@ window.frBlock = frBlock;
 window.frUnblock = frUnblock;
 window.frPaintCard = frPaintCard;
 window.frShowTab = frShowTab;
+window.frShowAll = frShowAll;
 window.openMyFriends = openMyFriends;
