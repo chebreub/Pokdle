@@ -735,7 +735,8 @@ def main():
       expect(all(not x for x in disclosures.evaluate_all('(els)=>els.map(e=>e.open)')),'Mobile profile disclosures should start collapsed')
       cards=page.locator('#screen-profile .profile-stat-grid .profile-stat-card')
       rects=cards.evaluate_all('(els)=>els.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
-      expect(len(rects)==6 and abs(rects[0]['y']-rects[1]['y'])<3 and rects[2]['y']>rects[0]['y'],'Mobile profile figures are not compact 2 per row: '+repr(rects))
+      # 9/11/2026 (profil plus court) : 3 par ligne sur téléphone.
+      expect(len(rects)==6 and abs(rects[0]['y']-rects[2]['y'])<3 and rects[3]['y']>rects[0]['y'],'Mobile profile figures are not compact 3 per row: '+repr(rects))
      else:
       expect(all(disclosures.evaluate_all('(els)=>els.map(e=>e.open)')),'Desktop profile disclosures should start open')
       if width>=1280:
