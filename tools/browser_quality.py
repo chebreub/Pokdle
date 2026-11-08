@@ -168,20 +168,21 @@ def main():
      expect(page.locator('#daily-hero').count()==1,'Daily hero is duplicated')
      expect(page.locator('#home-games-grid .mode-tile').count()==6,'Home discovery shortcuts are missing')
      expect(page.locator('#daily-notebook .notebook-cell').count()==27,'Notebook must retain all nine criteria')
-     hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('.home-discovery').bounding_box();party=page.locator('.home-pathways').bounding_box()
+     hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('#home-games-grid').bounding_box();party=page.locator('.home-pathways').bounding_box()
      expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
      for artwork in page.locator('#home-games-grid .mode-tile-sprite').all():
       artwork.scroll_into_view_if_needed()
       page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=artwork.element_handle())
-     if width in (390,1366): page.locator('.home-discovery').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=85,animations='disabled')
+     if width in (390,1366): page.locator('#home-games-grid').screenshot(path=str(out/f'{width}-cosy-home-games.jpg'),quality=85,animations='disabled')
      page.evaluate('window.scrollTo(0,0)')
      return screen('screen-config')
     check('cosy-home',cosy_home)
     def home_party():
      # « À plusieurs » (31/10/2026): the party games are named on the home, right after the mini-games
+     # (8/11/2026: measured on the games grid, the discovery block has no box of its own on phones).
      # (simplified home, 4/11/2026), and a game opens the Party Room with that game already chosen.
      expect(page.locator('#home-party .home-party-game').count()==4,'Party games are missing on the home')
-     hero=page.locator('#daily-hero').bounding_box();band=page.locator('#home-party').bounding_box();catalog=page.locator('.home-discovery').bounding_box()
+     hero=page.locator('#daily-hero').bounding_box();band=page.locator('#home-party').bounding_box();catalog=page.locator('#home-games-grid').bounding_box()
      expect(hero and band and catalog and catalog['y']>=hero['y']+hero['height'] and band['y']>=catalog['y']+catalog['height'],'À plusieurs must sit right after the mini-games')
      tile=page.locator('#home-party .home-party-game.is-petitbac');tile.scroll_into_view_if_needed()
      if width in (390,1366): page.locator('#home-party').screenshot(path=str(out/f'{width}-home-party.jpg'),quality=85,animations='disabled')
