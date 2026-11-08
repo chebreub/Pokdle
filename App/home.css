@@ -2705,3 +2705,89 @@ body.theme-dark .disc-eyebrow{color:#b9a3f5}
 #screen-config.hm-on .hm-letter{width:clamp(28px,34%,66px);border-radius:24%}
 #screen-config.hm-on .hm-letter b{min-height:0;line-height:1;overflow:hidden;font-size:min(22px,62cqw)}
 @media (max-width:860px){#screen-config.hm-on .hm-letter b{font-size:16px}}
+
+/* 📱 Accueil sur téléphone (8/11, maquettes validées) — script.10xzzt.home-phone.js */
+.hp-score{display:none}
+@media (max-width:640px){
+  /* Journée finie : un bilan court */
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-hero-main{display:grid!important;grid-template-columns:auto auto minmax(0,1fr);column-gap:6px;align-items:center}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-hero-main>*{grid-column:1/-1}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-hero-cta-row,
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-hero-chips{display:contents!important}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-kicker{order:0}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-hero-title{order:1}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .pk-hero-title{font-size:16px!important;line-height:1.2!important;margin-top:4px!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"]{padding:14px 14px 12px!important}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .hp-score{order:2}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-steps{order:3}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-bonus{order:4}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-cta{order:5;grid-column:1/-1;margin-top:8px}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-countdown{order:6;grid-column:1;margin-top:8px}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-remind{order:7;grid-column:2;margin-top:8px}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-ghost{order:8;grid-column:3;justify-self:end;margin-top:8px;white-space:nowrap}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] :is(#daily-hero-note,#daily-hero-status,#daily-hero-streak,.pk-hero-sub){display:none!important}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-countdown[data-short]:not([data-short=""]),
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-remind[data-short]{font-size:0!important;white-space:nowrap}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-countdown[data-short]:not([data-short=""])::after,
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-remind[data-short]::after{content:attr(data-short);font-size:12.5px}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-ghost{font-size:0!important}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-ghost::after{content:"Mon bilan →";font-size:13px}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .hp-score{display:flex;align-items:center;gap:12px;margin-top:8px;padding:8px 12px;border-radius:18px;background:#fff}
+  .hp-ring{--p:0;flex:0 0 auto;display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:conic-gradient(#3E9B57 calc(var(--p)*1%),#E9E2D6 0)}
+  .hp-ring b{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#fff;font:700 18px Fredoka,Nunito,sans-serif;color:#2E2A33}
+  .hp-score-text{flex:1;min-width:0;display:flex;flex-direction:column}
+  .hp-score-text strong{font:600 17px/1.2 Fredoka,Nunito,sans-serif;color:#2E2A33;white-space:nowrap}
+  .hp-score-text small{font:700 13px Nunito,sans-serif;color:#5E5866}
+  .hp-fire{flex:0 0 auto;padding:6px 10px;border-radius:999px;background:#FFD45C;color:#2E2A33;font:900 14px Nunito,sans-serif;white-space:nowrap}
+  #screen-config.hm-on #daily-hero[data-daily-state="complete"] .hp-long{display:none}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] #daily-hero-steps{margin-top:8px!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .daily-hero-steps button{align-items:center!important;text-align:center!important;padding:7px 4px!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .daily-hero-steps button span{font-size:11px!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .daily-hero-steps button b{font:700 15px Fredoka,Nunito,sans-serif!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .daily-hero-bonus button{flex-direction:row!important;justify-content:center!important;align-items:center!important;gap:6px!important;white-space:nowrap;font-size:12px!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #daily-hero[data-daily-state="complete"] .daily-hero-bonus button b{font-size:12px!important}
+  #pokdle-app.theme-dark #daily-hero[data-daily-state="complete"] .hp-score{background:#26222c}
+  #pokdle-app.theme-dark .hp-score-text strong,#pokdle-app.theme-dark .hp-ring b{color:#f5efe6}
+  #pokdle-app.theme-dark .hp-ring b{background:#26222c}
+}
+@media (max-width:860px){
+  /* L'ordre : Défi du jour, défi reçu, capture, Expédition, mini-jeux, « Défie tes amis » + ses jeux, « Aussi aujourd'hui », le reste */
+  #pokdle-app.design-refresh #screen-config.hm-on>*{order:9}
+  #pokdle-app.design-refresh #screen-config.hm-on>#home-inbox{order:1}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner){display:contents!important}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>.hs-capture{order:2}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls.is-beginner{order:2}
+  #pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{order:3}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>*,#pokdle-app.design-refresh #screen-config.hm-on>#home-inbox,#pokdle-app.design-refresh #screen-config.hm-on>#exp2-home{grid-column:1/-1}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>*,
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-head>div:first-child,
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger,
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>.home-game-filters,
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.btn-ghost,
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>#home-games-grid{order:4}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery>:is(.home-seo-links,#home-disc-card,.disc-card){order:9}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>.hm-duel{order:5}
+  #pokdle-app.design-refresh #screen-config.hm-on>#home-party{order:5}
+  #pokdle-app.design-refresh #screen-config.hm-on>.hm-side>#home-balls:not(.is-beginner)>.hs-more{order:6}
+  /* L'Expédition, juste sous la capture : une bande plus basse */
+  #screen-config.hm-on>#exp2-home .exp2-home{min-height:0;padding:12px 14px;gap:2px;border-radius:20px}
+  #screen-config.hm-on>#exp2-home .exp2-home>b{font-size:18px}
+  #screen-config.hm-on>#exp2-home .exp2-home-line{font-size:12.5px}
+  #screen-config.hm-on>#exp2-home .exp2-home-bar{height:8px;margin-top:4px}
+  #screen-config.hm-on>#exp2-home .exp2-home-cta{margin-top:4px;font-size:14px}
+  #screen-config.hm-on>#exp2-home .exp2-home-leg{width:112px;height:112px;right:-8px;bottom:-14px}
+  /* « Défie tes amis » et ses 4 jeux : une seule carte */
+  #screen-config.hm-on>.hm-side>.hm-duel{height:170px;border-radius:22px 22px 0 0}
+  #screen-config.hm-on>.hm-side>.hm-duel .hm-duel-tag{top:104px}
+  #screen-config.hm-on>.hm-side>.hm-duel .hm-duel-title{top:122px;font-size:28px}
+  #pokdle-app.design-refresh #screen-config.hm-on>#home-party{margin-top:-28px!important;border-top-left-radius:0!important;border-top-right-radius:0!important;border-top:0!important}
+}
+/* Choix des générations bien visible sur téléphone (8/11, Kayan : « on voit pas assez qu'on peut changer de gen ») :
+   une pastille « Générations : Kanto ▾ » sur sa propre ligne, sous le titre des mini-jeux (avant : une icône seule) */
+@media (max-width:860px){
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger{grid-column:1/-1!important;justify-self:start;width:auto!important;max-width:100%;height:36px!important;margin:2px 0 0!important;padding:0 14px 0 10px!important;gap:6px;border-radius:999px!important;background:#EEF3FF!important;border:1.5px solid #C9D6FB!important;color:#2E2A33}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger>span{display:inline-block!important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:800 13px Nunito,sans-serif!important;color:#2E2A33}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger>span small{display:inline!important;margin-left:4px;font:900 13px Nunito,sans-serif;color:#4069E0}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger::after{content:"▾";font:900 12px Nunito,sans-serif;color:#4069E0}
+  #pokdle-app.design-refresh #screen-config.hm-on .home-discovery-actions>.generation-trigger>span::after{content:" · changer";font:700 12px Nunito,sans-serif;color:#6E6878}
+}
