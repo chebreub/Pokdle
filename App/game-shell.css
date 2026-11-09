@@ -2587,3 +2587,97 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app.design-refresh #screen-profile .profile-hero{padding-top:18px!important;padding-bottom:18px!important}
   #pokdle-app.design-refresh #screen-profile .profile-hero-circle{width:150px!important;height:150px!important}
 }
+
+/* ===== 📱 Mon compte et Paramètres plus courts sur iPhone (9/11/2026, maquette validée) =====
+   Les versions courtes (am2-*, as2-*) sont cachées sur PC ; sur téléphone elles remplacent les longues. */
+#overlay-modal .am2-ic, #overlay-modal .am2-short, #overlay-modal .am2-badge, #overlay-modal .am2-invite,
+#overlay-modal .am2-lvl, #overlay-modal .am2-xp, #overlay-modal .am2-via,
+#overlay-modal .as2-short, #overlay-modal .as2-seg, #overlay-modal .as2-split, #overlay-modal .as2-short-h {display:none}
+@media (min-width:641px){#pokdle-app #overlay-modal .am2 .am2-ic, #pokdle-app #overlay-modal .am2 .am2-short, #pokdle-app #overlay-modal .am2 .am2-badge, #pokdle-app #overlay-modal .am2 .am2-invite, #pokdle-app #overlay-modal .am2 .am2-lvl, #pokdle-app #overlay-modal .am2 .am2-xp, #pokdle-app #overlay-modal .am2 .am2-via, #pokdle-app #overlay-modal .as2 .as2-short, #pokdle-app #overlay-modal .as2 .as2-seg, #pokdle-app #overlay-modal .as2 .as2-split, #pokdle-app #overlay-modal .as2 .as2-short-h {display:none!important}}
+@media (max-width:640px){
+  /* Mon compte */
+  #pokdle-app #overlay-modal .account-menu-v3.am2 {gap:0}
+  #pokdle-app #overlay-modal .am2 .account-menu-identity {display:flex;align-items:center!important;gap:12px!important;padding:10px 12px;border:1.5px solid #EFE4D4;border-radius:18px;background:#fff}
+  #pokdle-app #overlay-modal .am2 .account-menu-avatar {width:54px!important;height:54px!important;flex:0 0 54px!important;border-radius:50%!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-who .adventure-eyebrow,
+  #pokdle-app #overlay-modal .am2 .account-menu-who > small:not(.am2-lvl):not(.am2-xp) {display:none}
+  #pokdle-app #overlay-modal .am2 .account-menu-identity h4 {display:flex;align-items:center;gap:6px;margin:0;font-size:1.2rem!important;line-height:1.2}
+  #pokdle-app #overlay-modal .am2 .am2-via {display:inline-block;padding:2px 7px;border-radius:999px;background:#EEF0FF;color:#4F5BD5;font:800 10.5px Nunito,sans-serif}
+  #pokdle-app #overlay-modal .am2 .am2-lvl {display:block;margin:1px 0 5px;color:#6B6472;font:800 12.5px Nunito,sans-serif}
+  #pokdle-app #overlay-modal .am2 .am2-xp {display:block;margin-top:3px;color:#8A8190;font:700 11px Nunito,sans-serif}
+  #pokdle-app #overlay-modal .am2 .account-menu-xpbar {height:7px;margin:0}
+  #pokdle-app #overlay-modal .am2 .account-menu-linked {margin-top:4px;font-size:11px!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-stats {gap:6px!important;margin-top:8px}
+  #pokdle-app #overlay-modal .am2 .account-menu-stats > div {padding:6px 4px!important;border-radius:14px!important;text-align:center}
+  #pokdle-app #overlay-modal .am2 .account-menu-stats strong {font-size:1.05rem!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-stats span {font-size:11px}
+  #pokdle-app #overlay-modal .am2 .am2-long {display:none}
+  #pokdle-app #overlay-modal .am2 .am2-short {display:inline}
+  #pokdle-app #overlay-modal .am2 .account-menu-groups {display:block!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-groups h5 {margin:14px 2px 6px}
+  #pokdle-app #overlay-modal .am2 .account-menu-groups .account-menu-links {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-groups section:first-child .account-menu-links {grid-template-columns:repeat(4,minmax(0,1fr))}
+  #pokdle-app #overlay-modal .am2 .account-menu-groups .am2-pill-src {display:none!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-links .am2-tile {position:relative;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:0!important;height:auto;padding:9px 3px 8px!important;border-radius:16px!important;text-align:center;font:800 12.5px/1.15 Nunito,sans-serif!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-groups section:first-child .am2-tile {font-size:12px!important}
+  #pokdle-app #overlay-modal .am2 .am2-tile > b {display:none}
+  #pokdle-app #overlay-modal .am2 .am2-ic {display:grid;place-items:center;width:36px;height:36px;border-radius:12px;font-size:19px;line-height:1}
+  #pokdle-app #overlay-modal .am2 .am2-ic.c1 {background:#FFE9E3}
+  #pokdle-app #overlay-modal .am2 .am2-ic.c2 {background:#E7F0FF}
+  #pokdle-app #overlay-modal .am2 .am2-ic.c3 {background:#E5F6EC}
+  #pokdle-app #overlay-modal .am2 .am2-ic.c4 {background:#F1ECFF}
+  #pokdle-app #overlay-modal .am2 .am2-ic.c5 {background:#FFF1C7}
+  #pokdle-app #overlay-modal .am2 .am2-ic.c6 {background:#EDE7DD}
+  #pokdle-app #overlay-modal .am2 .am2-badge {position:absolute;top:5px;right:6px;display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#E5484D;color:#fff;font:900 11px Nunito,sans-serif;font-style:normal}
+  #pokdle-app #overlay-modal .am2 .am2-tile.is-hot {border-color:#F3B3B5!important;background:#FFF5F5!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-extra {display:flex!important;flex-wrap:wrap;gap:6px!important;margin-top:10px}
+  #pokdle-app #overlay-modal .am2 .account-menu-extra button {flex:1 1 40%;justify-content:center;min-height:40px!important;padding:8px 10px!important;border-radius:999px!important;font-size:13px!important}
+  #pokdle-app #overlay-modal .am2 .account-menu-extra button > b {display:none}
+  #pokdle-app #overlay-modal .am2 .account-menu-extra button.am2-invite {display:flex}
+  #pokdle-app #overlay-modal .am2 .account-menu-extra button.am2-invite .am2-long {display:inline}
+  #pokdle-app #overlay-modal .am2 .account-menu-foot {margin-top:12px;padding-top:0;border-top:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;font-size:12.5px}
+  #pokdle-app #overlay-modal .am2 .account-menu-foot .account-menu-delete {margin:0;padding:0;font-size:12.5px}
+  #pokdle-app.theme-dark #overlay-modal .am2 .account-menu-identity {background:#2a2531;border-color:#3d3646}
+  #pokdle-app.theme-dark #overlay-modal .am2 .am2-tile.is-hot {background:#3a2328!important;border-color:#7a3a40!important}
+  #pokdle-app.theme-dark #overlay-modal .am2 .am2-ic {filter:saturate(.8) brightness(.85)}
+
+  /* Paramètres : une ligne par réglage, des groupes en cartes */
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 {display:block!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-section {display:block!important;margin:0;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-section > h4 {margin:14px 2px 6px;color:#8A8190;font:800 11.5px Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-section:first-child > h4 {margin-top:2px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-long {display:none}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-short-h, #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-split {display:block}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-short {display:block;margin-top:1px;color:#8A8190;font:700 11.5px Nunito,sans-serif}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-setting-item {margin:0!important;min-height:46px;padding:9px 12px!important;border:1.5px solid #EFE4D4!important;border-top-width:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 h4 + .app-setting-item {border-top-width:1.5px!important;border-radius:18px 18px 0 0!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-setting-item:last-child,
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-setting-item:has(+ h4) {border-radius:0 0 18px 18px!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 h4 + .app-setting-item:last-child,
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 h4 + .app-setting-item:has(+ h4) {border-radius:18px!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-setting-item > span:first-child b {font-size:14.5px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-select {position:absolute!important;width:1px!important;min-width:0!important;height:1px!important;padding:0!important;margin:0!important;opacity:0;pointer-events:none;overflow:hidden}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-has-seg {position:relative}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-seg {display:flex;flex:0 0 auto;gap:2px;padding:3px;border-radius:999px;background:#F3EADB}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-seg button {min-height:30px;padding:4px 10px;border:0;border-radius:999px;background:transparent;color:#6B6472;font:800 12.5px Nunito,sans-serif;cursor:pointer}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-seg button.is-on {background:#2E2A33;color:#fff}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume {flex-direction:row!important;align-items:center!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume > span:first-child {flex:0 0 auto}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume .app-volume-row {flex:1;gap:6px;min-width:0}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume .app-volume-row input[type="range"] {min-width:80px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume output {width:40px;text-align:right;font-weight:900;font-size:13px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume .btn-ghost {min-height:32px!important;width:32px!important;padding:0!important;font-size:0!important;border-radius:50%!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-volume .btn-ghost::before {content:"▶";font-size:12px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-anim {flex-direction:row!important;align-items:center!important;flex-wrap:wrap}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-anim .anim-help {display:none}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-anim .anim-seg {flex:0 0 auto;gap:2px;padding:3px;border-radius:999px;background:#F3EADB}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-anim .anim-seg button {flex:0 0 auto;min-height:30px;padding:4px 9px;border-radius:999px;font-size:12.5px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-anim .anim-seg button[data-anim="fast"] {font-size:0}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-anim .anim-seg button[data-anim="fast"]::before {content:"⚡";font-size:13px}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-help {display:block!important}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-reset {display:block;margin:12px auto 0!important}
+  #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .app-setting-item {background:#2a2531!important;border-color:#3d3646!important}
+  #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .as2-seg, #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .as2-anim .anim-seg {background:#1f1b24}
+  #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .as2-seg button {color:#cfc7d6}
+  #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .as2-seg button.is-on {background:#f5efe6;color:#2E2A33}
+}
