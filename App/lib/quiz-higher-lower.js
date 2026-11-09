@@ -106,8 +106,11 @@ function createQuizHigherLower(catalog,randomInt,clock) {
           {artIds:[p.id],explain:p.name+' est apparu en Gen '+g+' ('+REGIONS[g-1]+').'});
       },
       culture(level){
-        const w=written.pop();if(!w)throw fail('unavailable',503);
-        return {kind:'culture',level,question:w.question,options:w.options.slice(),answer:w.answer};
+        // 9/11/2026 : questions écrites avec un niveau (2 ou 3) et une explication ; les réponses sont mélangées
+        // (dans la banque, la bonne est souvent la première).
+        const at=written.findIndex(q=>q.level===level), w=at>=0?written.splice(at,1)[0]:written.pop();if(!w)throw fail('unavailable',503);
+        const right=w.options[w.answer];
+        return build('culture',level,w.question,right,w.options.filter((_,i)=>i!==w.answer),w.explain?{explain:w.explain}:{});
       },
       dex(level){
         const offsets=shuffle([...Array(80).keys()].map(i=>i-40).filter(o=>o!==0));
