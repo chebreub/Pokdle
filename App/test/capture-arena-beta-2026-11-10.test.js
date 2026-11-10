@@ -93,8 +93,10 @@ test('une partie est du pur entrainement et ne change pas la collection', () => 
   assert.equal(c.caState.stage, 'done');
   assert.equal(c.caState.history.length, 1);
   assert.equal(JSON.stringify(c.caState.owned), before, 'aucun Pokemon consomme');
-  assert.match(c.caDoneHtml(), /Recomposer mon equipe/);
+  assert.match(c.caDoneHtml(), /Recomposer mon équipe/);
   assert.match(c.caDoneHtml(), /Faire une capture/);
+  assert.match(src, /Règles du duel/);
+  assert.match(src, /Aucun avantage de rareté ou de shiny/);
   assert.equal(calls.filter(z => z.name === 'fetch').length, 0, 'pas de POST ou sauvegarde en jeu');
   assert.doesNotMatch(src, /awardXp|localStorage|sessionStorage|setItem|api\/coins|api\/balls/);
 });
@@ -112,7 +114,7 @@ test('l ouverture relit les captures et refuse de jouer en cas de panne', async 
   const offline = fixture({ fetch: async () => { throw Error('offline'); } });
   await offline.c.openCaptureArena();
   assert.equal(offline.c.caState.stage, 'loading');
-  assert.match(offline.c.caState.error, /Impossible de verifier/);
+  assert.match(offline.c.caState.error, /Impossible de vérifier/);
   assert.deepEqual(Array.from(offline.c.caState.owned), [], 'ne pas se rabattre sur des decouvertes locales');
 });
 
