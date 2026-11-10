@@ -31,6 +31,16 @@ function rcDexChip(p) {
   } catch (_e) { return ''; }
 }
 
+// Un pas vers la capture, sans recompense supplementaire ni demande reseau.
+function rcCaptureCta(won, state) {
+  if (!won || !state || !state.ok || !state.wild) return '';
+  if (typeof ballTotal !== 'function' || typeof ballGrassLeft !== 'function') return '';
+  if (ballTotal(state) < 1 || ballGrassLeft(state) < 1) return '';
+  var label = state.wild.open ? 'Reprendre la capture' : 'Tenter une capture';
+  return '<button type="button" class="rc-chip rc-capture-cta" data-action="openWildGrass">' +
+    '<span aria-hidden="true">🌿</span>' + label + ' <span aria-hidden="true">→</span></button>';
+}
+
 function rcHeadHtml(p, won) {
   var dex = typeof getPokemonDexNumber === 'function' ? getPokemonDexNumber(p) : p.id;
   var types = typeof typeBadgesHtml === 'function' ? typeBadgesHtml(p.type1, p.type2 || null) : '';
@@ -75,7 +85,8 @@ function rcCompact() {
   if (!row) { row = document.createElement('div'); row.className = 'rc-row'; inner.after(row); }
   if (row.previousElementSibling !== inner) inner.after(row);
   var chips = (document.getElementById('win-new-entry') || box.querySelector('#win-ceremony-progress .win-progress-status.is-new') ? '<span class="rc-chip is-new">✦ Nouveau au Pokédex</span>' : '') +
-    (won ? rcDexChip(p) : '') + (rcStreak() >= 2 ? '<span class="rc-chip is-streak">🔥 Série ' + rcStreak() + '</span>' : '');
+    (won ? rcDexChip(p) : '') + (rcStreak() >= 2 ? '<span class="rc-chip is-streak">🔥 Série ' + rcStreak() + '</span>' : '') +
+    rcCaptureCta(won, typeof ballState !== 'undefined' ? ballState : null);
   var chipBox = row.querySelector('.rc-chips');
   if (!chipBox) { chipBox = document.createElement('div'); chipBox.className = 'rc-chips'; row.prepend(chipBox); }
   if (chipBox.dataset.html !== chips) { chipBox.innerHTML = chips; chipBox.dataset.html = chips; }
@@ -117,6 +128,15 @@ if (typeof renderGameOverBox === 'function') {
     if (head) head.dataset.key = '';
     rcQueue();
     return out;
+  };
+}
+// Les Balls d'un mini-jeu peuvent etre attribuees apres le rendu initial du resultat.
+if (typeof ballApply === 'function') {
+  var rcBallApplyBefore = ballApply;
+  ballApply = function () {
+    var result = rcBallApplyBefore.apply(this, arguments);
+    rcQueue();
+    return result;
   };
 }
 window.rcCompact = rcCompact;
