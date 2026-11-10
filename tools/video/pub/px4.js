@@ -48,6 +48,7 @@ const V = {
   // Format court (10/11, d'après les chiffres TikTok : les gens partent après 10 à 20 s) : chrono de 3 s,
   // pokdle.fr affiché tout du long, fin = le vrai jeu sur le site au lieu du barème.
   hl3: { short: true, chain: [6, 59, 132, 468, 143, 68], zones: ['volcan', 'prairie', 'montagne', 'foret', 'mer'] },
+  hl4: { short: true, chain: [448, 289, 213, 292, 321, 778], zones: ['montagne', 'prairie', 'mer', 'foret', 'volcan'] },
   hl2: { chain: [129, 130, 128, 292, 493, 321, 445, 609], zones: ['mer', 'prairie', 'tour', 'montagne', 'mer', 'volcan', 'tour'] },
   cri2: { rounds: [
     { o: [252, 255, 258, 387], a: 2, z: 'prairie' }, { o: [94, 92, 93, 609], a: 0, z: 'tour' },
