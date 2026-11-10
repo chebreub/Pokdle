@@ -1,0 +1,133 @@
+<!doctype html>
+<!-- Maquette des fonds par mode (10/11/2026) : 6 images 1080 × 1920 côte à côte, captures par mock-fonds.js. -->
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800&display=block" rel="stylesheet">
+<style>
+:root{--ink:#2E2A33;--cream:#FFF8EF;--blue:#4069E0;--yellow:#FFD45C;--lav:#7C5BD6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#ddd;display:flex;gap:40px;padding:40px;width:max-content}
+.f{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:Fredoka,sans-serif;color:var(--ink)}
+.tag{position:absolute;left:50%;transform:translateX(-50%);top:70px;padding:12px 30px;border-radius:999px;background:#fff;border:5px solid var(--ink);font:700 34px Fredoka;white-space:nowrap}
+.t{position:absolute;left:0;right:0;top:170px;text-align:center;font:700 92px/1.05 Fredoka;color:#fff;-webkit-text-stroke:16px var(--ink);paint-order:stroke fill}
+.wm{position:absolute;left:50%;transform:translateX(-50%);bottom:70px;padding:12px 30px;border-radius:999px;background:var(--yellow);border:5px solid var(--ink);font:700 44px Fredoka}
+.timer{position:absolute;left:90px;right:90px;bottom:190px;height:40px;border-radius:20px;border:5px solid var(--ink);background:#fff;overflow:hidden}
+.timer i{position:absolute;left:0;top:0;bottom:0;width:62%;background:#6BE05A}
+.lbl{position:absolute;left:0;right:0;text-align:center;font:700 40px Fredoka;color:var(--ink)}
+
+/* 1 Plus ou moins : crème du site, Poké Balls en filigrane */
+#f1{background:var(--cream)}
+#f1::before{content:'';position:absolute;inset:0;opacity:.07;background-image:radial-gradient(circle at 50% 50%,transparent 26px,var(--ink) 27px,var(--ink) 31px,transparent 32px),linear-gradient(transparent 47px,var(--ink) 47px,var(--ink) 53px,transparent 53px);background-size:140px 140px,140px 140px}
+#f1 .t{color:var(--blue);-webkit-text-stroke:0;font-size:96px}
+.card{position:absolute;left:110px;right:110px;height:560px;border-radius:48px;background:#fff;border:6px solid var(--ink);box-shadow:0 14px 0 rgba(46,42,51,.15)}
+.card img{position:absolute;left:30px;top:50%;transform:translateY(-50%);width:440px}
+.card .n{position:absolute;right:50px;top:110px;font:700 64px Fredoka;text-align:right}
+.card .v{position:absolute;right:50px;top:210px;font:700 150px Fredoka;color:var(--blue);text-align:right}
+.card .v.q{color:#c8c2d0}
+.btns{position:absolute;left:110px;right:110px;top:1560px;display:flex;gap:30px}
+.btns b{flex:1;padding:26px 0;border-radius:999px;text-align:center;font:700 52px Fredoka;color:#fff;border:6px solid var(--ink)}
+.diff{position:absolute;left:50%;transform:translateX(-50%);top:1065px;padding:10px 26px;border-radius:999px;background:var(--ink);color:#fff;font:700 36px Fredoka;white-space:nowrap;z-index:2}
+
+/* 2 Qui a le plus de… : une couleur par stat, ici Vitesse avec des traits de vitesse */
+#f2{background:linear-gradient(160deg,#FF6FA9 0%,#E2457E 55%,#B92D63 100%)}
+#f2::before{content:'';position:absolute;inset:-200px;background:repeating-linear-gradient(-12deg,transparent 0 70px,rgba(255,255,255,.13) 70px 76px,transparent 76px 150px,rgba(255,255,255,.08) 150px 200px);}
+.g4{position:absolute;left:70px;right:70px;top:520px;display:grid;grid-template-columns:1fr 1fr;gap:34px}
+.g4>div{position:relative;height:440px;border-radius:40px;background:rgba(255,255,255,.92);border:6px solid var(--ink)}
+.g4 img{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:300px}
+.g4 .L{position:absolute;left:22px;top:20px;width:66px;height:66px;border-radius:50%;background:var(--ink);color:#fff;font:700 40px/66px Fredoka;text-align:center}
+.g4 .nm{position:absolute;left:0;right:0;bottom:22px;text-align:center;font:700 40px Fredoka}
+.statchip{position:absolute;left:50%;transform:translateX(-50%);top:400px;padding:10px 30px;border-radius:999px;background:#fff;border:5px solid var(--ink);font:700 40px Fredoka;white-space:nowrap}
+
+/* 3 Quel est son type : coupé en biais comme Combo de types */
+#f3{background:linear-gradient(115deg,#4F92D6 0 49.8%,#fff 49.8% 50.6%,#EC8FE6 50.6% 100%)}
+#f3 .mon{position:absolute;left:50%;top:430px;transform:translateX(-50%);width:640px;filter:drop-shadow(0 18px 0 rgba(46,42,51,.25))}
+.opts{position:absolute;left:80px;right:80px;top:1130px;display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.opts div{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:30px;background:#fff;border:6px solid var(--ink);font:700 42px Fredoka}
+.opts span{padding:6px 16px;border-radius:14px;color:#fff;font:700 32px Fredoka}
+
+/* 4 Le plus lourd : soir chaud, balance dessinée */
+#f4{background:linear-gradient(#FFB36B 0%,#FF8A5C 45%,#7C5BD6 100%)}
+#f4 .sun{position:absolute;left:50%;top:560px;width:720px;height:720px;margin-left:-360px;border-radius:50%;background:radial-gradient(#FFE6A6,#FFD45C 60%,rgba(255,212,92,0) 72%)}
+#f4 svg{position:absolute;left:0;top:640px}
+#f4 .a,#f4 .b{position:absolute;width:300px}
+#f4 .kg{position:absolute;padding:8px 22px;border-radius:999px;background:#fff;border:5px solid var(--ink);font:700 40px Fredoka}
+
+/* 5 Pixelisé difficile : dans la coque du Pokédex du site */
+#f5{background:#C8333A}
+#f5::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 0%,rgba(255,255,255,.18),transparent 55%)}
+.lens{position:absolute;left:80px;top:70px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#BDE4FF,#3D8BE0 55%,#1F4FA0);border:10px solid #fff;box-shadow:0 0 0 6px var(--ink)}
+.dots{position:absolute;left:240px;top:90px;display:flex;gap:18px}
+.dots i{width:38px;height:38px;border-radius:50%;border:5px solid var(--ink)}
+#f5 .t{top:250px}
+.screen{position:absolute;left:90px;right:90px;top:520px;height:920px;border-radius:30px;background:#EFE9DD;border:12px solid var(--ink);box-shadow:inset 0 0 0 10px #fff}
+.screen canvas{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:720px;height:720px;image-rendering:pixelated}
+.screen .q{position:absolute;right:30px;top:24px;font:20px 'Press Start 2P';color:var(--ink)}
+#f5 .hint{position:absolute;left:90px;right:90px;top:1490px;display:flex;gap:16px;justify-content:center}
+#f5 .hint b{padding:12px 22px;border-radius:999px;background:#fff;border:5px solid var(--ink);font:700 36px Fredoka}
+
+/* 6 Légendaires / n° du Pokédex : nuit étoilée */
+#f6{background:radial-gradient(circle at 50% 35%,#3B2E7A 0%,#1A1440 55%,#0B0820 100%)}
+#f6 .stars{position:absolute;inset:0}
+#f6 .two{position:absolute;left:0;right:0;top:560px;display:flex;justify-content:space-around}
+#f6 .two div{position:relative;width:440px;text-align:center}
+#f6 .two img{width:430px;filter:drop-shadow(0 0 40px rgba(180,160,255,.6))}
+#f6 .two p{font:700 52px Fredoka;color:#fff;margin-top:10px}
+#f6 .two .no{display:inline-block;margin-top:12px;padding:8px 26px;border-radius:999px;background:rgba(255,255,255,.12);border:4px solid #fff;font:28px 'Press Start 2P';color:var(--yellow)}
+#f6 .vs{position:absolute;left:50%;top:760px;transform:translateX(-50%);font:40px 'Press Start 2P';color:#fff}
+#f6 .t{color:var(--yellow)}
+</style></head><body>
+
+<div class="f" id="f1"><div class="tag">Mode 1 · Plus ou moins, écarts serrés</div>
+ <div class="t">PLUS OU MOINS ?</div><div class="lbl" style="top:300px">Total des stats</div>
+ <div class="card" style="top:420px"><img src="../assets/art-448.png"><div class="n">Lucario</div><div class="v">525</div></div>
+ <div class="diff">écart de 15 au plus !</div>
+ <div class="card" style="top:1000px;top:1010px"><img src="../assets/art-571.png"><div class="n">Zoroark</div><div class="v q">?</div></div>
+ <div class="btns"><b style="background:#E0402E">▲ Plus</b><b style="background:var(--blue)">▼ Moins</b></div>
+ <div class="timer" style="bottom:170px"><i></i></div><div class="wm">pokdle.fr</div></div>
+
+<div class="f" id="f2"><div class="tag">Mode 2 · Qui a le plus de… (1 couleur par stat)</div>
+ <div class="t">QUI EST LE<br>PLUS RAPIDE ?</div><div class="statchip">⚡ Vitesse · 4 valeurs à 15 près</div>
+ <div class="g4"><div><span class="L">A</span><img src="../assets/art-101.png"><div class="nm">Électrode</div></div><div><span class="L">B</span><img src="../assets/art-291.png"><div class="nm">Ninjask</div></div>
+ <div><span class="L">C</span><img src="../assets/art-617.png"><div class="nm">Limaspeed</div></div><div><span class="L">D</span><img src="../assets/art-142.png"><div class="nm">Ptéra</div></div></div>
+ <div class="timer"><i style="background:var(--yellow)"></i></div><div class="wm">pokdle.fr</div></div>
+
+<div class="f" id="f3"><div class="tag">Mode 3 · Quel est son type ? (fond = les vrais types)</div>
+ <div class="t">QUEL EST<br>SON TYPE ?</div>
+ <img class="mon" src="../assets/art-184.png">
+ <div class="opts"><div>A <span style="background:#4F92D6">Eau</span></div><div>B <span style="background:#4F92D6">Eau</span><span style="background:#EC8FE6">Fée</span></div>
+ <div>C <span style="background:#4F92D6">Eau</span><span style="background:#A8A878">Normal</span></div><div>D <span style="background:#EC8FE6">Fée</span></div></div>
+ <div class="timer"><i></i></div><div class="wm">pokdle.fr</div></div>
+
+<div class="f" id="f4"><div class="tag">Mode 4 · Qui est le plus lourd ?</div>
+ <div class="t">QUI EST LE<br>PLUS LOURD ?</div>
+ <div class="sun"></div>
+ <svg width="1080" height="900" viewBox="0 0 1080 900"><g stroke="#2E2A33" stroke-width="12" stroke-linecap="round" fill="none">
+  <path d="M540 120 V760"/><path d="M380 820 H700 L640 760 H440 Z" fill="#fff"/><path d="M150 230 L930 150"/>
+  <path d="M150 230 L60 470 M150 230 L240 470 M930 150 L840 390 M930 150 L1020 390"/>
+  <path d="M40 470 Q150 540 260 470 Z" fill="#fff"/><path d="M820 390 Q930 460 1040 390 Z" fill="#fff"/></g>
+  <circle cx="540" cy="190" r="26" fill="#FFD45C" stroke="#2E2A33" stroke-width="10"/></svg>
+ <img class="a" src="../assets/art-292.png" style="left:0;top:830px"><img class="b" src="../assets/art-790.png" style="left:780px;top:740px">
+ <div class="kg" style="left:70px;top:1240px">Munja</div><div class="kg" style="left:810px;top:1160px">Cosmovum</div>
+ <div class="lbl" style="top:1420px;color:#fff;font-size:46px">1,2 kg ?  999,9 kg ?</div>
+ <div class="timer"><i></i></div><div class="wm">pokdle.fr</div></div>
+
+<div class="f" id="f5"><div class="tag" style="top:230px;display:none"></div><div class="lens"></div>
+ <div class="dots"><i style="background:#E0402E"></i><i style="background:#FFD45C"></i><i style="background:#6BE05A"></i></div>
+ <div class="t">QUI SE CACHE<br>DANS LE POKÉDEX ?</div>
+ <div class="screen"><span class="q">N° ???</span><canvas id="px" width="720" height="720"></canvas></div>
+ <div class="hint"><b>Indice : Gen 7</b><b>Type dans 3 s</b></div>
+ <div class="timer"><i style="background:var(--yellow)"></i></div><div class="wm">pokdle.fr</div>
+ <div class="tag" style="top:1640px">Mode 5 · Pixelisé difficile</div></div>
+
+<div class="f" id="f6"><canvas class="stars" id="st" width="1080" height="1920"></canvas><div class="tag">Mode 6 · Légendaires / n° du Pokédex</div>
+ <div class="t">LEQUEL VIENT<br>EN PREMIER ?</div>
+ <div class="two"><div><img src="../assets/art-382.png"><p>Kyogre</p><span class="no">N° ???</span></div><div><img src="../assets/art-251.png"><p>Celebi</p><span class="no">N° ???</span></div></div>
+ <div class="vs">VS</div>
+ <div class="lbl" style="top:1240px;color:#fff;font-size:44px">Le n° du Pokédex national</div>
+ <div class="timer"><i></i></div><div class="wm">pokdle.fr</div></div>
+
+<script>
+const im = new Image(); im.onload = () => { const c = document.getElementById('px'), x = c.getContext('2d'), s = document.createElement('canvas'); s.width = s.height = 14; const y = s.getContext('2d'); y.drawImage(im, 0, 0, 14, 14); x.imageSmoothingEnabled = false; x.drawImage(s, 0, 0, 720, 720); document.body.dataset.ok = 1; }; im.src = '../assets/art-778.png';
+const st = document.getElementById('st').getContext('2d'); let r = 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+for (let i = 0; i < 260; i++) { st.fillStyle = 'rgba(255,255,255,' + (0.3 + rnd() * 0.7) + ')'; const z = rnd() * 5 + 1; st.fillRect(rnd() * 1080, rnd() * 1920, z, z); }
+</script>
+</body></html>
