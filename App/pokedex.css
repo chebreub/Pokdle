@@ -3468,3 +3468,7 @@ body.theme-dark .capture-arena .ca-last{background:#2B4539;color:#E0F5E6}
 body.theme-dark .capture-arena .ca-rules{background:#342E3B;border-color:#5E5261}
 body.theme-dark .capture-arena .ca-rules summary{color:#B9CEFF}
 body.theme-dark .capture-arena .ca-rules p{color:#E2D8E7}
+
+.capture-arena .ca-between{display:grid;gap:13px;justify-items:stretch;padding:10px 2px}
+.capture-arena .ca-between .ca-last{min-height:72px;align-content:center;font-size:14px}
+.capture-arena .ca-between>button{min-height:46px}
