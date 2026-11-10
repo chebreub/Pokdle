@@ -77,3 +77,23 @@ test('un joueur connecté trouve le parrainage sans masquer les cadeaux et coffr
   assert.doesNotMatch(busy, /openInviteFriend/, 'ne pas remplacer un cadeau ou un coffre à ouvrir');
   assert.equal((busy.match(/class="hs-row"/g) || []).length, 3, 'toujours trois lignes maximum');
 });
+
+
+test('première visite : le cadeau du jour reste accessible depuis les 3 étapes', () => {
+  const ctx = load();
+  const newbie = { bag: {}, today: 0, cap: 10, gains: [], wild: { left: 4, caught: 0 }, streak: { days: 0 }, giftAvailable: true };
+  assert.equal(ctx.homeSimpleBeginner(newbie), true, 'le cadeau offert ne doit pas masquer le parcours pédagogique');
+  const gift = ctx.homeSimpleStepsHtml(newbie);
+  assert.match(gift, /Joue, gagne des Balls, attrape/);
+  assert.match(gift, /data-action="claimBallGift"/);
+  assert.match(gift, /Ouvrir ma Poké Ball offerte/);
+  assert.equal((gift.match(/<li>/g) || []).length, 3, 'garder les trois étapes');
+
+  const absent = ctx.homeSimpleStepsHtml({ ...newbie, giftAvailable: false });
+  assert.doesNotMatch(absent, /claimBallGift/, 'ne pas proposer un cadeau déjà ouvert');
+  assert.doesNotMatch(ctx.homeSimpleStepsHtml(), /claimBallGift/, 'aucune promesse si l’état serveur est inconnu');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'home.css'), 'utf8');
+  assert.match(css, /\.hs-beginner-gift:focus-visible/, 'bouton accessible au clavier');
+  assert.match(css, /\.hs-beginner-gift\{[^}]*min-height:48px/, 'cible tactile 48px');
+  assert.match(src, /homeSimpleStepsHtml\(s\)/, 'transmettre le véritable état serveur au rendu');
+});
