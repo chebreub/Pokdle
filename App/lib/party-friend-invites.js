@@ -37,23 +37,38 @@ function createPartyFriendInvites({ db, friends, accountOfPid, playerPid, roomSt
     if (!status || !status.ok) return { ok: false, error: (status && status.errorCode) || "invite_expired" };
     const list = Array.from(new Set((Array.isArray(pids) ? pids : []).map((p) => String(p || "")).filter(Boolean))).slice(0, PER_SEND);
     if (!list.length) return { ok: true, sent: 0 };
-    const today = Number((await db.query(`SELECT COUNT(*)::int AS n FROM party_friend_invites WHERE from_id = $1 AND created_at >= ${PARIS_DAY_START}`, [String(me)])).rows[0]?.n) || 0;
-    if (today >= PER_DAY) return { ok: false, error: "daily_limit" };
+    // 9/11/2026 (audit) : compter, chercher un doublon puis insérer se fait sous un verrou par joueur, dans une transaction :
+    // deux envois simultanés ne donnent plus deux invitations (ni deux notifications), ni un dépassement du quota.
     const name = await nameOf(me);
     const label = GAME_LABELS[status.gameMode] || "la Party Room";
+    const client = typeof db.connect === "function" ? await db.connect() : null;
+    const q = (text, params) => (client || db).query(text, params);
+    const toTell = [];
     let sent = 0;
-    for (const pid of list) {
-      if (today + sent >= PER_DAY) break;
-      const other = await accountOfPid(db, pid);
-      if (!other || String(other) === String(me)) continue;
-      if (!(await friends.areFriends(me, other))) continue;
-      const again = await db.query(`SELECT 1 FROM party_friend_invites WHERE from_id = $1 AND to_id = $2 AND code = $3
-        AND created_at > now() - interval '${KEEP_MINUTES} minutes'`, [String(me), String(other), code]);
-      if (again.rows.length) { sent += 1; continue; }
-      await db.query("INSERT INTO party_friend_invites (from_id, to_id, code, game_mode) VALUES ($1, $2, $3, $4)", [String(me), String(other), code, status.gameMode || null]);
-      tell(other, { title: "🎉 " + name + " t’invite à " + label, body: "Son salon t’attend dans la Party Room : rejoins-le maintenant.", url: "/?party=" + encodeURIComponent(code), tag: "pokedle-salon-" + code });
-      sent += 1;
+    try {
+      if (client) { await q("BEGIN"); await q("SELECT pg_advisory_xact_lock(hashtext($1))", ["party-invite:" + String(me)]); }
+      const today = Number((await q(`SELECT COUNT(*)::int AS n FROM party_friend_invites WHERE from_id = $1 AND created_at >= ${PARIS_DAY_START}`, [String(me)])).rows[0]?.n) || 0;
+      if (today >= PER_DAY) { if (client) await q("ROLLBACK"); return { ok: false, error: "daily_limit" }; }
+      for (const pid of list) {
+        if (today + sent >= PER_DAY) break;
+        const other = await accountOfPid(db, pid);
+        if (!other || String(other) === String(me)) continue;
+        if (!(await friends.areFriends(me, other))) continue;
+        const again = await q(`SELECT 1 FROM party_friend_invites WHERE from_id = $1 AND to_id = $2 AND code = $3
+          AND created_at > now() - interval '${KEEP_MINUTES} minutes'`, [String(me), String(other), code]);
+        if (again.rows.length) { sent += 1; continue; }
+        await q("INSERT INTO party_friend_invites (from_id, to_id, code, game_mode) VALUES ($1, $2, $3, $4)", [String(me), String(other), code, status.gameMode || null]);
+        toTell.push(other);
+        sent += 1;
+      }
+      if (client) await q("COMMIT");
+    } catch (error) {
+      if (client) await q("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      if (client) client.release();
     }
+    for (const other of toTell) tell(other, { title: "🎉 " + name + " t’invite à " + label, body: "Son salon t’attend dans la Party Room : rejoins-le maintenant.", url: "/?party=" + encodeURIComponent(code), tag: "pokedle-salon-" + code });
     return { ok: true, sent };
   }
 
