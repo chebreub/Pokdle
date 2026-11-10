@@ -36,13 +36,14 @@ function homeSimpleIcon(name) {
 }
 
 // Nouveau joueur : les 3 étapes, sans chiffres ni compteurs.
-function homeSimpleStepsHtml() {
+function homeSimpleStepsHtml(s) {
   return '<div class="hs-steps-head"><h2>Joue, gagne des Balls, attrape</h2></div>' +
     '<ol class="hs-steps">' +
     '<li><span class="hs-step-ico is-find">' + homeSimpleIcon('find') + '</span><b>1. Devine</b><small>le Pokémon du jour ou un mini-jeu</small></li>' +
     '<li><span class="hs-step-ico is-ball">' + ballImg('poke', 24) + '</span><b>2. Gagne</b><small>une Ball dans les mini-jeux marqués +1 Ball</small></li>' +
     '<li><span class="hs-step-ico is-grass">' + homeSimpleIcon('grass') + '</span><b>3. Attrape</b><small>dans les hautes herbes, remplis ton album</small></li>' +
-    '</ol>';
+    '</ol>' +
+    (s && s.giftAvailable ? '<button type="button" class="hs-beginner-gift" data-action="claimBallGift">' + ballImg('poke', 24) + '🎁 Ouvrir ma Poké Ball offerte</button>' : '');
 }
 
 // Joueur qui revient : la prochaine capture.
@@ -128,7 +129,7 @@ if (typeof renderBallHomeCard === 'function') {
       card.classList.add('home-simple');
       card.classList.toggle('is-beginner', beginner);
       card.setAttribute('aria-label', beginner ? 'Comment ça marche' : 'Ta prochaine capture');
-      card.innerHTML = beginner ? homeSimpleStepsHtml() : homeSimpleCaptureHtml(s) + homeSimpleMoreRows(s);
+      card.innerHTML = beginner ? homeSimpleStepsHtml(s) : homeSimpleCaptureHtml(s) + homeSimpleMoreRows(s);
       document.getElementById('screen-config')?.classList.add('home-simple-on');
     }
     homeSimpleOrder();
