@@ -3461,3 +3461,10 @@ body.theme-dark .capture-arena .ca-last{background:#2B4539;color:#E0F5E6}
   .capture-arena .ca-versus img{height:72px;width:72px}
   .capture-arena .ca-versus strong{font-size:13px}
 }
+
+.capture-arena .ca-rules{border:1px solid #D9D2E0;border-radius:10px;padding:9px 12px;font-size:12px;background:#FCFAF7}
+.capture-arena .ca-rules summary{cursor:pointer;font-weight:900;color:#425CB0}
+.capture-arena .ca-rules p{margin-top:8px;color:#554D5C;font-weight:700}
+body.theme-dark .capture-arena .ca-rules{background:#342E3B;border-color:#5E5261}
+body.theme-dark .capture-arena .ca-rules summary{color:#B9CEFF}
+body.theme-dark .capture-arena .ca-rules p{color:#E2D8E7}
