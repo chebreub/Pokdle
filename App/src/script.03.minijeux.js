@@ -2453,7 +2453,11 @@ function randomUniqueChoices(baseList, correctValue, count = 4) {
 }
 
 function buildQuizQuestionPool() {
-  const pool = QUIZ_QUESTIONS.slice();
+  // Les réponses des questions écrites sont mélangées (dans la banque, la bonne est souvent la première).
+  const pool = QUIZ_QUESTIONS.map((q) => {
+    const options = shuffleArray(q.options.slice());
+    return { ...q, options, answer: options.indexOf(q.options[q.answer]) };
+  });
 
   const base = getPokemonUiList({ includeAltForms: false }).filter((p) => Number.isInteger(p.id) && p.id <= 1025);
   const sampled = shuffleArray(base.slice()).slice(0, 120);
