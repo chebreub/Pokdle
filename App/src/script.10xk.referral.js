@@ -98,8 +98,20 @@ function copyInviteLink() {
   var input = document.getElementById('invite-friend-url');
   if (!input) return;
   var done = function () { if (typeof showToast === 'function') showToast('Lien copié ✓'); };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(input.value).then(done).catch(function () { input.select(); });
-  else { input.select(); try { document.execCommand('copy'); done(); } catch (_e) {} }
+  var fallback = function () {
+    // Safari/iOS et contextes sans Clipboard API : la sélection reste disponible.
+    input.focus();
+    input.select();
+    try {
+      if (document.execCommand && document.execCommand('copy')) { done(); return; }
+    } catch (_e) {}
+    if (typeof showToast === 'function') showToast('Lien sélectionné : copie-le manuellement');
+  };
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try { return navigator.clipboard.writeText(input.value).then(done, fallback); }
+    catch (_e) { fallback(); return; }
+  }
+  fallback();
 }
 window.copyInviteLink = copyInviteLink;
 
