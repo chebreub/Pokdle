@@ -54,8 +54,8 @@ function caPokemonHtml(p, small) {
 }
 function caTypeLabel(p) { return caTypes(p).map(function (t) { return escapeHtml(t); }).join(' / '); }
 function caPickHtml() {
-  if (!caState.owned.length) return '<div class="ca-empty"><p>Tu n’as pas encore de Pokemon capture et possede.</p>' +
-    '<p>Les decouvertes du Pokedex ne suffisent pas : attrape un Pokemon dans les hautes herbes.</p>' +
+  if (!caState.owned.length) return '<div class="ca-empty"><p>Tu n’as pas encore de Pokémon capturé et possédé.</p>' +
+    '<p>Les découvertes du Pokédex ne suffisent pas : attrape un Pokémon dans les hautes herbes.</p>' +
     '<button type="button" class="btn-blue" data-action="caGoGrass">Explorer les hautes herbes</button></div>';
   var chosen = caState.selected;
   var cards = caState.owned.map(function (p) {
@@ -65,8 +65,8 @@ function caPickHtml() {
       caPokemonHtml(p, true) + '<b>' + escapeHtml(p.name) + '</b><small>' + caTypeLabel(p) +
       '</small><span>' + (selected ? 'Position ' + (picked + 1) + ' ✓' : 'Choisir') + '</span></button>';
   }).join('');
-  return '<p class="ca-instructions">Compose une equipe de 1 a 3 Pokemon deja captures. L’ordre de selection determine celui des manches.</p>' +
-    '<p class="ca-count" aria-live="polite"><b>' + chosen.length + ' / 3</b> Pokemon selectionnes</p>' +
+  return '<p class="ca-instructions">Compose une équipe de 1 à 3 Pokémon déjà capturés. L’ordre de sélection détermine celui des manches.</p>' +
+    '<p class="ca-count" aria-live="polite"><b>' + chosen.length + ' / 3</b> Pokémon sélectionnés</p>' +
     '<div class="ca-mon-grid">' + cards + '</div>' +
     '<button type="button" class="btn-blue ca-start" data-action="caStart"' + (chosen.length ? '' : ' disabled') +
       '>Commencer · ' + chosen.length + ' manche' + (chosen.length > 1 ? 's' : '') + '</button>';
@@ -74,7 +74,7 @@ function caPickHtml() {
 function caLastHtml() {
   var last = caState.history[caState.history.length - 1];
   if (!last) return '';
-  var result = last.outcome > 0 ? 'Manche gagnee !' : last.outcome < 0 ? 'Manche perdue' : 'Egalite';
+  var result = last.outcome > 0 ? 'Manche gagnée !' : last.outcome < 0 ? 'Manche perdue' : 'Égalité';
   return '<div class="ca-last" role="status"><b>' + result + '</b><span>' +
     escapeHtml(last.player.name) + ' (' + escapeHtml(last.move) + ' : ' + last.ours + ') · ' +
     escapeHtml(last.enemy.name) + ' (' + escapeHtml(last.enemyMove) + ' : ' + last.theirs +
@@ -83,7 +83,7 @@ function caLastHtml() {
 function caFightHtml() {
   var player = caLookup(caState.selected[caState.round]);
   var enemy = caState.enemies[caState.round];
-  if (!player || !enemy) return '<p>La manche est indisponible. Recommence l’entrainement.</p>';
+  if (!player || !enemy) return '<p>La manche est indisponible. Recommence l’entraînement.</p>';
   var buttons = caTypes(player).map(function (type) {
     return '<button type="button" class="ca-attack" data-action="caAttack" data-args=\'["' +
       escapeHtml(type) + '"]\'><b>' + escapeHtml(type) + '</b><small>Puissance : ' + caPower(type, enemy) + '</small></button>';
@@ -93,31 +93,32 @@ function caFightHtml() {
     '</strong><small>' + caTypeLabel(player) + '</small></div><span aria-hidden="true">VS</span><div>' +
     caPokemonHtml(enemy, false) + '<strong>' + escapeHtml(enemy.name) +
     '</strong><small>' + caTypeLabel(enemy) + '</small></div></div>' +
-    '<p class="ca-instructions">Choisis le type d’attaque. Les deux Pokemon frappent : l’efficacité des types decide de cette manche.</p>' +
+    '<p class="ca-instructions">Choisis le type d’attaque. Les deux Pokémon frappent : l’efficacité des types décide de cette manche.</p>' +
     '<div class="ca-attacks">' + buttons + '</div>';
 }
 function caDoneHtml() {
   var wins = caState.history.filter(function (h) { return h.outcome > 0; }).length;
   var losses = caState.history.filter(function (h) { return h.outcome < 0; }).length;
   var draws = caState.history.length - wins - losses;
-  var verdict = wins > losses ? 'Victoire de ton equipe !' : losses > wins ? 'L’equipe adverse l’emporte' : 'Match nul !';
+  var verdict = wins > losses ? 'Victoire de ton équipe !' : losses > wins ? 'L’équipe adverse l’emporte' : 'Match nul !';
   return '<div class="ca-end" role="status"><span aria-hidden="true">⚔️</span><h3>' + verdict + '</h3>' +
-    '<strong>' + wins + ' gagnee' + (wins > 1 ? 's' : '') + ' · ' + losses + ' perdue' + (losses > 1 ? 's' : '') +
-    ' · ' + draws + ' egalite' + (draws > 1 ? 's' : '') + '</strong></div>' +
+    '<strong>' + wins + ' gagnée' + (wins > 1 ? 's' : '') + ' · ' + losses + ' perdue' + (losses > 1 ? 's' : '') +
+    ' · ' + draws + ' égalité' + (draws > 1 ? 's' : '') + '</strong></div>' +
     '<div class="ca-history">' + caState.history.map(function (h, i) {
       return '<div><b>' + (i + 1) + '. ' + escapeHtml(h.player.name) + ' / ' + escapeHtml(h.enemy.name) +
         '</b><span>' + h.ours + ' - ' + h.theirs + '</span></div>';
     }).join('') + '</div>' +
-    '<div class="ca-actions"><button type="button" class="btn-blue" data-action="openCaptureArena">Recomposer mon equipe</button>' +
+    '<div class="ca-actions"><button type="button" class="btn-blue" data-action="openCaptureArena">Recomposer mon équipe</button>' +
     '<button type="button" class="btn-ghost" data-action="caGoGrass">Faire une capture</button></div>';
 }
 function caRender() {
   var el = document.querySelector('#overlay-body .capture-arena');
   if (!el) return;
-  var lead = '<p class="ca-disclaimer">BETA · Entrainement solo · Pokemon captures uniquement · Aucun gain d’XP, de monnaie ou de Ball</p>';
+  var lead = '<p class="ca-disclaimer">BÊTA · Entraînement solo · Pokémon capturés uniquement · Aucun gain d’XP, de monnaie ou de Ball</p>' +
+    '<details class="ca-rules"><summary>Règles du duel</summary><p>Chaque Pokémon combat une manche. Une attaque neutre vaut 10 points, les types modifient sa puissance (0 à 40). L’adversaire choisit son type d’attaque le plus efficace. Le score le plus élevé gagne la manche. Aucun avantage de rareté ou de shiny.</p></details>';
   el.innerHTML = lead + (caState.error
-    ? '<p role="alert">' + escapeHtml(caState.error) + '</p><button type="button" class="btn-blue" data-action="openCaptureArena">Reessayer</button>'
-    : caState.stage === 'loading' ? '<p role="status">Lecture de tes captures…</p>'
+    ? '<p role="alert">' + escapeHtml(caState.error) + '</p><button type="button" class="btn-blue" data-action="openCaptureArena">Réessayer</button>'
+    : caState.stage === 'loading' ? '<p role="status">Vérification de tes captures…</p>'
     : caState.stage === 'pick' ? caPickHtml()
     : caState.stage === 'fight' ? caFightHtml() : caDoneHtml());
 }
@@ -135,7 +136,7 @@ async function openCaptureArena() {
     caState.owned = caOwnedFromServer(data);
     caState.stage = 'pick';
   } catch (_e) {
-    caState.error = 'Impossible de verifier tes captures pour le moment. Reessaie dans un instant.';
+    caState.error = 'Impossible de vérifier tes captures pour le moment. Réessaie dans un instant.';
   }
   caRender();
 }
@@ -153,7 +154,7 @@ function caStart() {
   if (caState.selected.some(function (id) { return !caState.owned.some(function (p) { return p.id === id; }); })) return;
   var enemies = caPickEnemies(caState.selected, caState.selected.length);
   if (enemies.length !== caState.selected.length) {
-    caState.error = 'Adversaires indisponibles. Reessaie plus tard.';
+    caState.error = 'Adversaires indisponibles. Réessaie plus tard.';
   } else {
     caState.enemies = enemies; caState.history = []; caState.round = 0; caState.stage = 'fight';
   }
@@ -181,8 +182,8 @@ function caEnsureEntry() {
   var switcher = hub.querySelector('.pokedex-experience-switch');
   if (!switcher) return;
   switcher.insertAdjacentHTML('afterend',
-    '<div class="ca-entry"><span><b>⚔️ Arène des Captures</b><small>Utilise tes vrais Pokemon captures dans des duels de types.</small></span>' +
-    '<button type="button" class="btn-blue" data-action="openCaptureArena">Essayer l’arene</button></div>');
+    '<div class="ca-entry"><span><b>⚔️ Arène des Captures</b><small>Utilise tes Pokémon capturés dans des duels de types.</small></span>' +
+    '<button type="button" class="btn-blue" data-action="openCaptureArena">Essayer l’arène</button></div>');
 }
 if (typeof renderPokedexCollectionHub === 'function') {
   var caBeforeCollectionHub = renderPokedexCollectionHub;
