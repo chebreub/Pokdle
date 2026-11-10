@@ -58,3 +58,28 @@ Vidéo de 32 s dans le style de la présentation : accroche « 3 Pokémon pixeli
 5. Son : `./mix.sh pix3` (sans musique, avec l'ambiance nature) ; `./mixm.sh pix3 <musique.mp3> out/Pokedle-pix3-musique.mp4` (musique à 0,30, à 40 % pendant les cris, entrée en 1 s, fondu de 3 s, sans l'ambiance).
 
 Pour d'autres Pokémon : changer les numéros et les mauvaises réponses dans `pub/cap-pix3.js`, les noms et les cris dans `pub/pix3.js` (`N.g`), et recaler les clés `KA`, `KB`, `KC` sur les événements des nouvelles captures.
+
+## « Devine le Pokémon ! » : 6 pixelisés (`pub/px6.js`, 04/11)
+
+Format d'une vidéo TikTok à 1,4 M de vues : 6 Pokémon (~66 s), une Ball lancée sur la plateforme de nos décors pixel art, le Pokémon se précise en 3 temps (3 pts → 2 pts → 1 pt), puis « ! », son nom et son vrai cri. Le n°6 (Forgelina) reste pixelisé : « Écris ta réponse en commentaire ». Fin : barème du score sur 15. Sons officiels de Pokémon GO (lancer, chute, sortie, clic), vrais cris, ambiance nature, pas de musique.
+
+1. `./fetch-assets.sh 131 229 350 609 823 959 && python3 pub/ambience.py && python3 pub/timer.py` (tic-tac qui accélère), puis copier `App/img/zones/*.png` en `assets/zone-*.png` et `App/sfx/go/{throw,land,appear,caught}.mp3` en `assets/go-*.mp3`.
+2. `python3 -m http.server 4180 --bind 127.0.0.1`, vérifier avec `PAGE=pub/px6.html node render.js px6 --stills 2,8,55.5,64`.
+3. `PAGE=pub/px6.html node render.js px6 && ./mix.sh px6` → `out/Pokedle-px6.mp4`.
+
+Pour d'autres Pokémon : la liste `Q` de `pub/px6.js` (numéro, nom, décor) ; la finesse des 3 étapes dans `GRID` (et `GRID_MYSTERY` pour le dernier).
+
+Version avec musique (fournie par Kayan, rangée dans `assets/music/`, ignorée par git) : `./mixm.sh px6 assets/music/trainer-battle.mp3 out/Pokedle-px6-musique.mp4` (sans l'ambiance, musique baissée pendant les cris).
+
+## Trois formats de quiz (`pub/px4.js`, 05/11)
+
+Même décor que px6, artworks officiels, chrono `assets/sfx/timer4.wav` (`python3 pub/timer.py 4`), sons officiels de Pokémon GO, vrais cris, dernière question sans réponse (« réponds en commentaire »), barème du score à la fin :
+- `hl` « Plus ou moins ? » (total des stats, en chaîne : Pikachu, Lucario, Caratroc, Monaflèmit, Mimiqui, Ptéra, Ectoplasma, puis Lokhlass en mystère) ;
+- `cri` « Devine le cri » (4 choix A-D ; mystère : Gallame, réponse C) ;
+- `stat` « Qui a le plus de… ? » (PV, Attaque, Défense, Atq Spé, Déf Spé, puis Vitesse en mystère : Ninjask, réponse A).
+
+`PAGE=pub/px4.html node render.js hl && ./mixm.sh hl assets/music/trainer-battle.mp3 out/Pokedle-hl-musique.mp4` (pareil pour `cri`, `stat`). Les questions sont dans `V` de `pub/px4.js`. `px6b` (6 autres pixelisés, Terraiste en mystère) : `PAGE=pub/px6.html node render.js px6b`.
+
+## « C'est qui ? » : 5 dessins ratés de Dessine-le ! (`pub/dessin.js`, 05/11)
+
+Vrais dessins de la Party Room envoyés par Kayan (`docs/promo/dessine-le/`). `python3 pub/dessin-prep.py` (dans `tools/video/`) découpe chaque dessin et calcule l'ordre d'apparition du trait (`assets/dessin/`), puis `./fetch-assets.sh 522 951 890 1008 405`. Rendu : `PAGE=pub/dessin.html node render.js dessin && ./mixm.sh dessin assets/music/trainer-battle.mp3 out/Pokedle-dessin-musique.mp4`. Les réponses du salon affichées sont seulement celles visibles sur les captures (pseudos masqués). Le 5e (Luxray) reste en mystère.
