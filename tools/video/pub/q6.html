@@ -1,0 +1,143 @@
+<!doctype html>
+<!-- Quiz courts du 12 au 22/11/2026 (contenu : pub/q6-content.json, fait par pub/q6-gen.js).
+     « PAGE=pub/q6.html node render.js zoom1 ». Fin dessinée (plus de capture du site). -->
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=block" rel="stylesheet">
+<style>
+:root{--ink:#2E2A33;--cream:#FFF8EF;--blue:#4069E0;--yellow:#FFD45C;--green:#3FBF5A;--red:#E0402E;--lav:#7C5BD6}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:Fredoka,sans-serif;color:var(--ink)}
+.layer{position:absolute;inset:0;display:none}
+.stroke{color:#fff;-webkit-text-stroke:16px var(--ink);paint-order:stroke fill}
+/* fonds */
+#bgCream{background:var(--cream)}
+#bgCream::before{content:'';position:absolute;inset:0;opacity:.07;background-image:radial-gradient(circle at 50% 50%,transparent 26px,var(--ink) 27px,var(--ink) 31px,transparent 32px),linear-gradient(transparent 47px,var(--ink) 47px,var(--ink) 53px,transparent 53px);background-size:140px 140px,140px 140px}
+#bgZone{background-size:cover;background-position:center;image-rendering:pixelated}
+#bgZone::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,0) 30%,rgba(0,0,0,.2))}
+#bgDex{background:#C8333A}
+#bgDex::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 0%,rgba(255,255,255,.18),transparent 55%)}
+#lens{position:absolute;left:70px;top:60px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#BDE4FF,#3D8BE0 55%,#1F4FA0);border:10px solid #fff;box-shadow:0 0 0 6px var(--ink)}
+#dots{position:absolute;left:210px;top:80px;display:flex;gap:16px}
+#dots i{width:34px;height:34px;border-radius:50%;border:5px solid var(--ink)}
+#bgSpot{background:radial-gradient(circle at 50% 42%,#4A4F7A 0%,#23233F 45%,#0E0E1C 100%)}
+#bgType{}
+#bgVf{}
+#bgStat{}
+#bgStat::before{content:'';position:absolute;inset:-200px;background:repeating-linear-gradient(-12deg,transparent 0 70px,rgba(255,255,255,.12) 70px 76px,transparent 76px 150px,rgba(255,255,255,.07) 150px 200px)}
+#bgNight{background:radial-gradient(circle at 50% 35%,#3B2E7A 0%,#1A1440 55%,#0B0820 100%)}
+#bgSky{background:linear-gradient(#7FC8F8 0%,#BDE6FF 60%,#E9F7FF 100%)}
+#bgSky::before{content:'';position:absolute;left:40px;top:300px;bottom:300px;width:40px;background:repeating-linear-gradient(#2E2A33 0 6px,transparent 6px 60px);opacity:.25}
+#bgSky::after{content:'';position:absolute;right:40px;top:300px;bottom:300px;width:40px;background:repeating-linear-gradient(#2E2A33 0 6px,transparent 6px 60px);opacity:.25}
+#bgSun{background:linear-gradient(#FFB36B 0%,#FF8A5C 45%,#7C5BD6 100%)}
+#sun{position:absolute;left:50%;top:640px;width:760px;height:760px;margin-left:-380px;border-radius:50%;background:radial-gradient(#FFE6A6,#FFD45C 60%,rgba(255,212,92,0) 72%)}
+canvas.stars{position:absolute;inset:0}
+/* commun */
+#title{position:absolute;left:0;right:0;top:110px;text-align:center;font:700 92px/1.04 Fredoka;transform-origin:50% 50%}
+#title.dark{color:var(--blue);-webkit-text-stroke:0}
+#sub{position:absolute;left:50%;transform:translateX(-50%);top:330px;padding:10px 30px;border-radius:999px;background:#fff;border:5px solid var(--ink);font:700 42px Fredoka;white-space:nowrap;z-index:2}
+#hook{position:absolute;left:60px;right:60px;top:820px;text-align:center;font:700 74px/1.15 Fredoka}
+#wm{position:absolute;left:50%;transform:translateX(-50%);bottom:56px;padding:12px 30px;border-radius:999px;background:var(--yellow);border:5px solid var(--ink);font:700 44px Fredoka;z-index:5}
+#timer{position:absolute;left:90px;right:90px;bottom:160px;height:42px;border-radius:21px;border:5px solid var(--ink);background:#fff;overflow:hidden;z-index:4}
+#fill{position:absolute;left:0;top:0;bottom:0}
+#qn{position:absolute;left:0;right:0;bottom:214px;text-align:center;font:700 44px Fredoka;-webkit-text-stroke:10px var(--ink);color:#fff;paint-order:stroke fill;z-index:4}
+/* une image */
+#frame{position:absolute;left:50%;top:430px;width:660px;height:660px;margin-left:-330px;overflow:hidden;display:none}
+#frame.box{border-radius:48px;background:#fff;border:8px solid var(--ink);box-shadow:0 16px 0 rgba(46,42,51,.25)}
+#frame.screen{border-radius:30px;background:#EFE9DD;border:12px solid var(--ink);box-shadow:inset 0 0 0 10px #fff}
+#frame img,#frame canvas{position:absolute;left:50%;top:50%;width:560px;height:560px;margin:-280px 0 0 -280px;object-fit:contain}
+#frame canvas{image-rendering:pixelated}
+#frame .no{position:absolute;right:26px;top:18px;font:700 34px Fredoka;color:var(--ink);opacity:.6}
+#opts{position:absolute;left:60px;right:60px;top:1150px;display:none;grid-template-columns:1fr 1fr;gap:24px}
+#opts>div{position:relative;display:flex;align-items:center;gap:14px;padding:22px 22px;border-radius:30px;background:#fff;border:6px solid var(--ink);font:700 44px Fredoka;white-space:nowrap;overflow:hidden}
+#opts>div b{flex:none;width:58px;height:58px;border-radius:50%;background:var(--ink);color:#fff;font:700 36px/58px Fredoka;text-align:center}
+#opts span{padding:6px 14px;border-radius:14px;color:#fff;font:700 34px Fredoka}
+#opts .ok{background:#D9F7D6;border-color:var(--green);box-shadow:0 0 0 8px var(--green)}
+#opts .bad{opacity:.35}
+#stmt{position:absolute;left:70px;right:70px;top:1000px;padding:30px 34px;border-radius:36px;background:#fff;border:6px solid var(--ink);font:700 58px/1.15 Fredoka;text-align:center;display:none}
+#vfb{position:absolute;left:90px;right:90px;top:1330px;display:none;gap:34px}
+#vfb b{flex:1;padding:30px 0;border-radius:999px;text-align:center;font:700 64px Fredoka;color:#fff;border:6px solid var(--ink)}
+#vfb .ok{box-shadow:0 0 0 12px #6BE05A}
+#vfb .bad{opacity:.3}
+/* grille de 4 */
+#grid{position:absolute;left:60px;right:60px;top:440px;display:none;grid-template-columns:1fr 1fr;gap:30px}
+#grid>div{position:relative;height:460px;border-radius:40px;background:rgba(255,255,255,.95);border:6px solid var(--ink)}
+#grid img{position:absolute;left:50%;top:42%;width:310px;height:310px;margin:-155px 0 0 -155px;object-fit:contain}
+#grid .L{position:absolute;left:20px;top:18px;width:66px;height:66px;border-radius:50%;background:var(--ink);color:#fff;font:700 40px/66px Fredoka;text-align:center}
+#grid .nm{position:absolute;left:0;right:0;bottom:62px;text-align:center;font:700 40px Fredoka;white-space:nowrap}
+#grid .val{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);padding:2px 22px;border-radius:999px;background:var(--ink);color:#fff;font:700 40px Fredoka;opacity:0}
+#grid .ok{border-color:var(--green);box-shadow:0 0 0 10px var(--green);background:#E9FBE6}
+#grid .ok .val{background:var(--green)}
+#grid .bad{opacity:.55}
+/* plus ou moins */
+.card{position:absolute;left:100px;right:100px;height:520px;border-radius:48px;background:#fff;border:6px solid var(--ink);box-shadow:0 14px 0 rgba(46,42,51,.15);display:none}
+.card img{position:absolute;left:24px;top:50%;width:430px;height:430px;margin-top:-215px;object-fit:contain}
+.card .n{position:absolute;right:46px;top:110px;font:700 60px Fredoka;text-align:right;white-space:nowrap}
+.card .v{position:absolute;right:46px;top:200px;font:700 150px Fredoka;color:var(--blue);text-align:right}
+.card .v.q{color:#c8c2d0}
+#btns{position:absolute;left:100px;right:100px;top:1560px;display:none;gap:30px}
+#btns b{flex:1;padding:24px 0;border-radius:999px;text-align:center;font:700 54px Fredoka;color:#fff;border:6px solid var(--ink)}
+#btns .ok{box-shadow:0 0 0 10px #6BE05A}
+#btns .bad{opacity:.3}
+#diff{position:absolute;left:50%;transform:translateX(-50%);padding:10px 26px;border-radius:999px;background:var(--ink);color:#fff;font:700 38px Fredoka;white-space:nowrap;z-index:3;display:none}
+/* duel côte à côte */
+#duo{position:absolute;left:50px;right:50px;top:520px;display:none;justify-content:space-between}
+#duo>div{position:relative;width:470px;height:720px;border-radius:44px;background:rgba(255,255,255,.95);border:6px solid var(--ink)}
+#duo img{position:absolute;left:50%;top:44%;width:400px;height:400px;margin:-200px 0 0 -200px;object-fit:contain}
+#duo .L{position:absolute;left:20px;top:18px;width:70px;height:70px;border-radius:50%;background:var(--ink);color:#fff;font:700 42px/70px Fredoka;text-align:center}
+#duo .nm{position:absolute;left:0;right:0;bottom:120px;text-align:center;font:700 50px Fredoka;white-space:nowrap}
+#duo .val{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);padding:6px 28px;border-radius:999px;background:#E9E3F2;font:700 52px Fredoka;white-space:nowrap}
+#duo .ok{border-color:var(--green);box-shadow:0 0 0 12px var(--green)}
+#duo .ok .val{background:var(--green);color:#fff}
+#vs{position:absolute;left:50%;top:840px;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:var(--yellow);border:7px solid var(--ink);font:700 50px/106px Fredoka;text-align:center;z-index:3;display:none}
+/* balance */
+#scale{position:absolute;left:0;top:700px;display:none}
+.pan{position:absolute;width:440px;text-align:center;display:none}
+.pan img{width:400px;height:400px;object-fit:contain;filter:drop-shadow(0 12px 0 rgba(46,42,51,.25))}
+.pan .kg{display:inline-block;margin-top:6px;padding:8px 24px;border-radius:999px;background:#fff;border:5px solid var(--ink);font:700 46px Fredoka;white-space:nowrap}
+.pan .kg.ok{background:#D9F7D6;border-color:var(--green);box-shadow:0 0 0 8px var(--green)}
+.pan .L{position:absolute;left:30px;top:10px;width:76px;height:76px;border-radius:50%;background:var(--ink);color:#fff;font:700 46px/76px Fredoka}
+/* cartes */
+#card{position:absolute;left:60px;right:60px;top:300px;border-radius:44px;background:#fff;border:7px solid var(--ink);padding:56px 40px;text-align:center;z-index:6;box-shadow:0 16px 0 rgba(46,42,51,.2);display:none}
+#card .big{font:700 74px/1.08 Fredoka;color:var(--blue)}
+#card .mid{font:700 52px/1.2 Fredoka;margin-top:26px}
+#card .sm{font:600 40px/1.3 Fredoka;color:#6b6475;margin-top:22px}
+#card .site{color:var(--ink);background:var(--yellow);display:inline-block;padding:12px 50px;border-radius:999px;border:6px solid var(--ink);margin-top:34px;font-size:86px}
+#card .trio{position:relative;height:420px;margin-top:20px}
+#card .trio img{position:absolute;top:0;width:360px;height:360px;object-fit:contain;filter:drop-shadow(0 12px 0 rgba(46,42,51,.18))}
+#card .game{display:inline-block;margin-top:18px;padding:10px 30px;border-radius:24px;background:#EEF2FF;border:5px solid var(--blue);font:700 50px Fredoka;color:var(--blue)}
+</style></head><body>
+<div id="stage">
+ <div id="bgCream" class="layer"></div>
+ <div id="bgZone" class="layer"></div>
+ <div id="bgDex" class="layer"><div id="lens"></div><div id="dots"><i style="background:#E0402E"></i><i style="background:#FFD45C"></i><i style="background:#6BE05A"></i></div></div>
+ <div id="bgSpot" class="layer"></div>
+ <div id="bgType" class="layer"></div>
+ <div id="bgVf" class="layer"></div>
+ <div id="bgStat" class="layer"></div>
+ <div id="bgNight" class="layer"><canvas class="stars" id="stars" width="1080" height="1920"></canvas></div>
+ <div id="bgSky" class="layer"></div>
+ <div id="bgSun" class="layer"><div id="sun"></div></div>
+ <div id="title" class="stroke"></div><div id="sub"></div>
+ <div id="frame"><img id="fimg"><canvas id="fcv" width="560" height="560"></canvas><div class="no"></div></div>
+ <div id="stmt"></div>
+ <div id="opts"></div>
+ <div id="vfb"><b style="background:#3FBF5A">✓ VRAI</b><b style="background:#E0402E">✗ FAUX</b></div>
+ <div id="grid"></div>
+ <div id="cTop" class="card"><img><div class="n"></div><div class="v"></div></div>
+ <div id="cBot" class="card"><img><div class="n"></div><div class="v"></div></div>
+ <div id="diff"></div><div id="btns"><b style="background:#E0402E">▲ Plus</b><b style="background:#4069E0">▼ Moins</b></div>
+ <div id="duo"></div><div id="vs">VS</div>
+ <svg id="scale" width="1080" height="900" viewBox="0 0 1080 900"><g stroke="#2E2A33" stroke-width="12" stroke-linecap="round" fill="none">
+  <path d="M540 150 V780"/><path d="M380 840 H700 L640 780 H440 Z" fill="#fff"/>
+  <g id="beam"><path d="M190 190 H890"/></g></g>
+  <circle cx="540" cy="190" r="26" fill="#FFD45C" stroke="#2E2A33" stroke-width="10"/></svg>
+ <div id="panA" class="pan"><span class="L">A</span><img><div class="kg"></div></div>
+ <div id="panB" class="pan"><span class="L">B</span><img><div class="kg"></div></div>
+ <div id="hook" class="stroke"></div>
+ <div id="qn"></div><div id="timer"><div id="fill"></div></div>
+ <div id="wm">pokdle.fr</div>
+ <div id="card"></div>
+</div>
+<script src="q6.js"></script>
+</body></html>

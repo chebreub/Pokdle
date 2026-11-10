@@ -1,53 +1,44 @@
 # Planning des vidéos TikTok / Shorts (à partir du 11/11/2026)
 
 3 vidéos par jour : **12 h 30 · 18 h 30 · 21 h** (Paris). Format court : 30-35 s, ~3 s par question,
-pokdle.fr affiché tout du long, fin sur le vrai jeu du site (« Joue à la version complète »), la dernière
+pokdle.fr affiché tout du long, fin dessinée « Joue en entier sur le site », la dernière
 question reste en mystère (« ta réponse en commentaire », réponse épinglée le lendemain).
 
 Règles : plus dur (pièges, valeurs serrées, pas que Gen 1), artworks officiels, jamais de voix ni de visage.
 Musique : bibliothèque `assets/audio/pokemon-oras/` sur `main` (ne pas modifier les fichiers).
 Maquette des fonds : `out/maquette-fonds.png` (page `pub/fonds.html`).
 
-## Les modes
+## Les modes (moteur `pub/q6.html` + `pub/q6.js`, contenu `pub/q6-content.json` fait par `node pub/q6-gen.js`)
 
-| # | Mode | Fond | Musique | Jeu du site montré à la fin |
-|---|------|------|---------|-----------------------------|
-| 1 | Plus ou moins, écarts serrés (≤ 15) | crème du site + Poké Balls | 12 Cycling | Higher or Lower |
-| 2 | Qui a le plus de… ? (1 couleur par stat) | dégradé de la stat | 16 Surf | Meilleure stat |
-| 3 | Quel est son type ? | coupé en biais aux 2 vrais types | 03 Route 101 | Combo de types |
-| 4 | Qui est le plus lourd / le plus grand ? | soir chaud + balance | 08 Rustboro City | Duel de poids |
-| 5 | Pixelisé difficile | coque du Pokédex | 22 Mt Pyre | Pokémon pixelisé |
-| 6 | Lequel vient en premier ? (n° Pokédex) | nuit étoilée | 27 Soaring Dreams | Pokédex |
-| 7 | Silhouette : tu le reconnais ? | projecteur sur fond sombre | 24 Dive | Silhouette |
-| 8 | Zoom progressif | décor de zone en pixel art | 13 Verdanturf Town | Zoom progressif |
-| 9 | L'intrus (lequel n'est pas…) | lavande Party Room | 19 Lilycove City | Intrus |
-| 10 | L'évolution manquante (A → ? → C) | herbe + flèches | 06 Petalburg City | Évolutions |
-| 11 | Vrai ou faux express (5 affirmations) | vert / rouge coupé | 21 Poke Mart | Quiz |
-| 12 | Le Pokémon du jour en 5 essais (pastilles) | jaune du Pokémon du jour | 01 Littleroot Town | Pokémon du jour |
-| 13 | La plus faible stat (l'inverse, que des pièges) | gris orage | 23 Mt Pyre Exterior | Meilleure stat |
-| 14 | Légendaires : qui a le plus de… ? | nuit étoilée | 17 Southern Island | Draft |
+Réponses calculées avec les vraies données (`assets/q5data.json`, tiré de `App/pokemon.js` et `App/base-stats.json`).
+Fin dessinée « Joue en entier sur le site » + le nom du jeu + 3 artworks (plus de capture du site : affichage bancal).
+**Pas de vidéo « L'intrus » ni « Évolutions »** (Kayan, 10/11 : ça ne percera pas).
 
-Spécial dimanche soir : « Ton score de la semaine » (best-of des 3 meilleures questions de la semaine).
+| Mode | Fond | Musique (ORAS) | Jeu nommé à la fin |
+|------|------|----------------|--------------------|
+| zoom : Quel est ce Pokémon ? (zoom ×8 → ×4) | décor de zone en pixel art | 13 Verdanturf Town | Zoom progressif |
+| pixel : Qui se cache dans le Pokédex ? | coque du Pokédex | 22 Mt Pyre | Pokémon pixelisé |
+| silh : À qui est cette ombre ? | projecteur sombre | 24 Dive | Zoom progressif |
+| type : Quel est son type ? | biais neutre → les vrais types | 03 Route 101 | Combo de types |
+| vf : Vrai ou faux ? | biais neutre → vert / rouge | 21 Poke Mart | Quiz Pokémon |
+| plus / moins : Qui a le plus / moins de… ? | une couleur par stat | 16 Surf / 23 Mt Pyre Exterior | Clash de stats |
+| legend : Légendaires, qui a le plus ? | nuit étoilée | 17 Southern Island | Clash de stats |
+| pom : Plus ou moins ? (écart ≤ 15) | crème du site | 12 Cycling | Higher or Lower |
+| premier : Lequel vient en premier ? | nuit étoilée | 27 Soaring Dreams | Ordre Pokédex |
+| grand : Qui est le plus grand ? | ciel + règle | 10 Dewford Town | Pokédex |
+| lourd : Qui est le plus lourd ? | soir + balance | 08 Rustboro City | Duel de poids |
 
-## Calendrier
+Rendu : `PAGE=pub/q6.html node render.js <nom>` puis `./mixm.sh <nom> "assets/music/oras/<titre>.mp3" out/Q6-<nom>.mp4`.
+Les 36 vidéos du 11 au 22/11 sont sur la branche `videos` (`q-MMJJ-HHhMM-<nom>.mp4`) et programmées dans Metricool
+(TikTok + YouTube Shorts, 12 h 30 · 18 h 30 · 21 h).
 
-| Jour | 12 h 30 | 18 h 30 | 21 h |
-|------|---------|---------|------|
-| Mer 11/11 | 3 Type | 1 Plus ou moins serré | 4 Plus lourd |
-| Jeu 12/11 | 7 Silhouette | 2 Qui a le plus (Vitesse) | 5 Pixelisé difficile |
-| Ven 13/11 | 10 Évolution manquante | 6 Lequel en premier | 9 L'intrus |
-| Sam 14/11 | 11 Vrai ou faux | 1 Plus ou moins (Attaque seule) | 8 Zoom |
-| Dim 15/11 | 12 Pokémon du jour | 13 Plus faible stat | Best-of de la semaine |
-| Lun 16/11 | 3 Type (Gen 8-9) | 4 Plus grand | 14 Légendaires |
-| Mar 17/11 | 7 Silhouette (formes régionales) | 2 Qui a le plus (Déf. Spé.) | 5 Pixelisé (Gen 5) |
-| Mer 18/11 | 6 Lequel en premier (évolutions croisées) | 10 Évolution manquante | 9 L'intrus (types) |
-| Jeu 19/11 | 11 Vrai ou faux (types) | 1 Plus ou moins (Vitesse seule) | 8 Zoom (starters) |
-| Ven 20/11 | 12 Pokémon du jour | 13 Plus faible stat | 4 Plus lourd (Méga) |
-| Sam 21/11 | 3 Type (doubles types rares) | 14 Légendaires | 7 Silhouette (Gen 9) |
-| Dim 22/11 | 2 Qui a le plus (PV) | 5 Pixelisé (fabuleux) | Best-of de la semaine |
+## Idées pour la suite
 
-Après le 22/11 : on garde les 3 formats qui ont fait le plus de vues et de commentaires (Metricool),
-on en lance 1 nouveau par semaine, et on arrête ceux qui restent sous 200 vues.
+- **Stat Clash à faire jouer** (idée de Kayan) : « Construis le meilleur Pokémon » : pour chaque stat, 2 Pokémon au choix
+  (PV : Leuphorie ou Ronflex ?…), le viewer note ses 6 lettres en commentaire (« ABBAAB »), le total de chaque choix
+  s'affiche à la fin : « 600+ : Maître ». Chacun compare son score en commentaire.
+- **Projet futur** : l'appli Google Play de PokeQuizz (https://play.google.com/store/apps/details?id=com.pokequizz.app),
+  à regarder pour une appli Pokédle (rappel : TWA abandonnée le 31/10 pour le coût).
 
 ## Suivi (à remplir après chaque publication)
 
@@ -56,6 +47,39 @@ on en lance 1 nouveau par semaine, et on arrête ceux qui restent sous 200 vues.
 | 10/11 | 13 h 36 | Plus ou moins (hl3) | MOINS (Mackogneur 505 < Ronflex 540) | | |
 | 10/11 | 19 h 45 | Qui a le plus de… pièges (stat3) | C Monaflèmit (Atq 160) ; avant : C, D, B | | |
 | 10/11 | 21 h | Plus ou moins pièges (hl4) | MOINS (Mimiqui 476 < Wailord 500) | | |
-| 11/11 | 12 h 30 | Quel est son type ? (type1, Route 101) | B Spectre / Fée (Mimiqui) ; avant : B, D, A, D | | |
-| 11/11 | 18 h 30 | Plus ou moins serré (pom1, Cycling) | MOINS (Mentali 525 < Amphinobi 530) ; avant : M, P, M, P | | |
-| 11/11 | 21 h | Qui est le plus lourd ? (lourd1, Rustboro City) | B Dracolosse 210 kg (Rayquaza 206,5 kg) ; avant : A, B, A, B | | |
+| 11/11 | 12 h 30 | type1 | B Spectre / Fée (Mimiqui) ; avant : B, D, A, D | | |
+| 11/11 | 18 h 30 | pom1 | MOINS (Mentali 525 contre Amphinobi 530) ; avant : M, P, M, P | | |
+| 11/11 | 21 h | lourd1 | B Dracolosse (210 kg contre 206,5 kg) ; avant : A, B, A, B | | |
+| 12/11 | 12 h 30 | zoom1 | D Miraidon ; avant : B, C, A, D | | |
+| 12/11 | 18 h 30 | plus1 | D Élekable (95 en Vitesse) ; avant : D, B, D, B | | |
+| 12/11 | 21 h | pixel1 | C Celebi ; avant : C, D, D, B | | |
+| 13/11 | 12 h 30 | type4 | B Psy / Vol (Lugia) ; avant : D, C, D, B | | |
+| 13/11 | 18 h 30 | premier1 | B Mew (n° 151 contre 157) ; avant : A, B, B, B | | |
+| 13/11 | 21 h | silh1 | B Zoroark ; avant : A, D, D, D | | |
+| 14/11 | 12 h 30 | vf1 | VRAI (Ectoplasma est de type Poison) ; avant : F, V, V, F | | |
+| 14/11 | 18 h 30 | pom2 | PLUS (Pingoléon 86 contre Oratoria 74) ; avant : P, P, M, M | | |
+| 14/11 | 21 h | zoom2 | B Darkrai ; avant : B, C, D, B | | |
+| 15/11 | 12 h 30 | type2 | D Eau / Combat (Palmaval) ; avant : C, B, A, C | | |
+| 15/11 | 18 h 30 | moins1 | A Braségali (80 en PV) ; avant : B, D, A, D | | |
+| 15/11 | 21 h | grand1 | A Tartard (1,3 m contre 1,2 m) ; avant : B, B, A, A | | |
+| 16/11 | 12 h 30 | legend1 | C Regigigas (110 en PV) ; avant : A, C, D, C | | |
+| 16/11 | 18 h 30 | pixel2 | B Archéduc ; avant : D, B, B, A | | |
+| 16/11 | 21 h | zoom3 | C Kyogre ; avant : B, D, C, B | | |
+| 17/11 | 12 h 30 | plus2 | D Félinferno (95 en PV) ; avant : B, D, A, A | | |
+| 17/11 | 18 h 30 | silh2 | B Cresselia ; avant : D, B, D, C | | |
+| 17/11 | 21 h | pixel5 | D Deoxys ; avant : D, B, D, C | | |
+| 18/11 | 12 h 30 | premier2 | A Rhinastoc (n° 464 contre 497) ; avant : A, B, B, A | | |
+| 18/11 | 18 h 30 | vf2 | VRAI (Carchacrok est de type Sol) ; avant : F, V, F, F | | |
+| 18/11 | 21 h | pixel3 | B Lanssorien ; avant : A, C, A, B | | |
+| 19/11 | 12 h 30 | type3 | A Plante / Spectre (Archéduc) ; avant : B, C, A, B | | |
+| 19/11 | 18 h 30 | pom3 | PLUS (Dracolosse 80 contre Nidoqueen 76) ; avant : M, M, P, P | | |
+| 19/11 | 21 h | zoom4 | A Necrozma ; avant : A, C, A, D | | |
+| 20/11 | 12 h 30 | moins2 | D Crocorible (117 en Attaque) ; avant : D, A, A, B | | |
+| 20/11 | 18 h 30 | lourd2 | A Absol (47 kg contre 45,2 kg) ; avant : A, A, B, B | | |
+| 20/11 | 21 h | silh3 | A Solgaleo ; avant : A, B, A, D | | |
+| 21/11 | 12 h 30 | plus3 | C Scorvol (75 en Déf. Spé.) ; avant : D, C, D, C | | |
+| 21/11 | 18 h 30 | legend2 | C Tokorico (95 en Atq. Spé.) ; avant : B, B, D, C | | |
+| 21/11 | 21 h | pixel4 | B Ho-Oh ; avant : D, C, D, B | | |
+| 22/11 | 12 h 30 | pom4 | MOINS (Nidoqueen 505 contre Dimoret 510) ; avant : M, P, M, M | | |
+| 22/11 | 18 h 30 | grand2 | A Latios (2 m contre 1,5 m) ; avant : A, B, B, B | | |
+| 22/11 | 21 h | zoom5 | C Rayquaza ; avant : B, A, D, C | | |
