@@ -127,3 +127,44 @@ test('entree visible depuis le Pokedex sans doublon', () => {
   assert.equal((html.match(/data-action="openCaptureArena"/g) || []).length, 1);
   assert.match(html, /Arène des Captures/);
 });
+
+
+test('une double pression sur attaque ne peut pas jouer deux manches consecutives', () => {
+  const { c } = fixture();
+  c.caState.stage = 'pick';
+  c.caState.owned = [POKEMON[0], POKEMON[1]];
+  c.caState.selected = [25, 130];
+  c.caStart();
+  assert.equal(c.caState.stage, 'fight');
+  c.caAttack('Électrik');
+  assert.equal(c.caState.history.length, 1);
+  assert.equal(c.caState.stage, 'between', 'attendre explicitement la manche suivante');
+  assert.match(c.caBetweenHtml(), /data-action="caNext"/);
+  c.caAttack('Eau');
+  assert.equal(c.caState.history.length, 1, 'double pression ignoree');
+  c.caNext();
+  assert.equal(c.caState.stage, 'fight');
+  c.caAttack('Eau');
+  assert.equal(c.caState.stage, 'done');
+  assert.equal(c.caState.history.length, 2);
+  c.caNext();
+  assert.equal(c.caState.stage, 'done', 'ne pas rouvrir apres la fin');
+});
+
+test('une ancienne reponse reseau ne remplace jamais la derniere equipe chargee', async () => {
+  let resolveOld;
+  let count = 0;
+  const { c } = fixture({
+    fetch: () => {
+      count++;
+      if (count === 1) return new Promise(done => { resolveOld = done; });
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true, captures: [captured(130)] }) });
+    }
+  });
+  const oldRequest = c.openCaptureArena();
+  await c.openCaptureArena();
+  resolveOld({ ok: true, json: async () => ({ ok: true, captures: [captured(25)] }) });
+  await oldRequest;
+  assert.deepEqual(Array.from(c.caState.owned, p => p.id), [130], 'garder la derniere reponse seulement');
+  assert.equal(c.caState.stage, 'pick');
+});
