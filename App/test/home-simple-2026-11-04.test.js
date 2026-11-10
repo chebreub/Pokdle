@@ -56,3 +56,24 @@ test('« Aussi aujourd’hui » keeps 3 lines at most and always leads to the Eg
   assert.match(html, /openHomeDayMore/);
   assert.match(html, /claimBallGift/);
 });
+
+
+test('un joueur connecté trouve le parrainage sans masquer les cadeaux et coffres prioritaires', () => {
+  const ctx = load();
+  const base = { authenticated: true, giftAvailable: false };
+  const html = ctx.homeSimpleMoreRows(base);
+  assert.match(html, /data-action="openInviteFriend"/);
+  assert.match(html, /100 XP chacun/);
+  assert.equal((html.match(/class="hs-row"/g) || []).length, 2);
+
+  const guest = ctx.homeSimpleMoreRows({ ...base, authenticated: false });
+  assert.doesNotMatch(guest, /openInviteFriend/, 'un invité ne peut pas générer un lien de parrainage');
+
+  ctx.expeditionState = { legend: { available: true }, chests: [] };
+  vm.runInContext('expeditionState = this.expeditionState', ctx);
+  const busy = ctx.homeSimpleMoreRows({ ...base, giftAvailable: true });
+  assert.match(busy, /data-action="claimBallGift"/);
+  assert.match(busy, /data-action="openExpedition"/);
+  assert.doesNotMatch(busy, /openInviteFriend/, 'ne pas remplacer un cadeau ou un coffre à ouvrir');
+  assert.equal((busy.match(/class="hs-row"/g) || []).length, 3, 'toujours trois lignes maximum');
+});
