@@ -116,8 +116,8 @@ test('tabs switch what is under the card; phones hide the card for Missions and 
   assert.match(adventure, /Votre lien est au plus haut\. L’aventure continue !/);
   const css = read('trainer-profile.css');
   assert.match(css, /#screen-profile:is\(\.profile-view-album, \.profile-view-secrets\) :is\(\.profile-hero, \.profile-figures\) \{ display: none; \}/);
-  // Loaded last, after every older profile rule.
-  assert.match(read('build.mjs'), /"halloween\.css", "trainer-profile\.css"\]/);
+  // Loaded after every older profile rule (only draft-arena.css, scoped to the Draft screen, follows).
+  assert.match(read('build.mjs'), /"halloween\.css", "trainer-profile\.css", "draft-arena\.css"\]/);
   assert.match(html, /dist\/halloween\.min\.css">\n {2}<link rel="stylesheet" href="dist\/trainer-profile\.min\.css">/);
 });
 

@@ -803,6 +803,31 @@ function draftScoreTier(bst) {
   return { key: "standard", label: "Standard" };
 }
 
+// Présentation du Score Attack (arène de nuit) : un Pokémon emblématique par génération.
+const DRAFT_GEN_MASCOTS = { 1: 150, 2: 249, 3: 384, 4: 483, 5: 643, 6: 716, 7: 791, 8: 888, 9: 1007 };
+const DRAFT_GEN_POOL_SIZES = new Map();
+function getDraftGenPoolSize(gen) {
+  if (!DRAFT_GEN_POOL_SIZES.has(gen)) DRAFT_GEN_POOL_SIZES.set(gen, getDraftPoolForGeneration(gen).length);
+  return DRAFT_GEN_POOL_SIZES.get(gen);
+}
+function draftGenRegion(gen) {
+  const match = /\(([^)]+)\)/.exec(draftGenLabel(gen));
+  return match ? match[1] : `Gen ${gen}`;
+}
+// « Rejouer » sur l'écran de résultat : nouvelle draft solo dans la même génération.
+function replayDraftScoreAttackGen() {
+  const gen = draftArenaState?.selectedGen;
+  if (!gen || draftArenaState?.scoreAttackRoom) return restartDraftArenaRun();
+  restartDraftArenaRun();
+  selectDraftGeneration(gen);
+  const screen = document.getElementById("screen-draft-score-attack");
+  if (screen && typeof screen.scrollIntoView === "function") {
+    screen.scrollIntoView({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth", block: "start" });
+  }
+}
+// Cartes déjà montrées (index:id) : seules les nouvelles cartes jouent l'animation d'arrivée.
+let draftShownOptionKeys = new Set();
+
 function mountDraftModeCard(mode = "arena") {
   const card = document.getElementById("draft-mode-card");
   const arenaScreen = document.getElementById("screen-draft-arena");
@@ -1169,6 +1194,10 @@ function renderDraftArena() {
   screen.classList.toggle("is-mode-score-attack", draftArenaState.mode === "scoreAttack");
   screen.classList.toggle("is-drafting", draftArenaState.mode === "scoreAttack" && draftArenaState.phase !== "gen");
   screen.classList.toggle("is-mode-arena", draftArenaState.mode !== "scoreAttack");
+  // Draft Score Attack « arène de nuit » (draft-arena.css) : styles isolés sous .dsa.
+  screen.classList.toggle("dsa", isScoreAttackMode);
+  screen.classList.toggle("dsa-is-result", isScoreAttackMode && draftFinished);
+  screen.classList.toggle("dsa-room", isScoreAttackMode && Boolean(draftArenaState.scoreAttackRoom || draftArenaState.scoreAttackRoomError));
   if (scoreRerollButton) {
     const canReroll = draftArenaState.mode === "scoreAttack"
       && draftArenaState.phase === "draft"
@@ -1201,7 +1230,23 @@ function renderDraftArena() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "draft-gen-btn" + (draftArenaState.selectedGen === cfg.gen ? " active" : "");
-      btn.textContent = cfg.label;
+      if (isScoreAttackMode) {
+        // Tuile illustrée : région, Pokémon emblématique, taille du catalogue et record.
+        const mascot = typeof POKEMON_BY_ID !== "undefined" ? POKEMON_BY_ID.get(DRAFT_GEN_MASCOTS[cfg.gen]) : null;
+        const genRecord = getDraftScoreAttackRecord(cfg.gen);
+        btn.classList.add("dsa-gen-tile");
+        btn.style.setProperty("--dsa-i", String(cfg.gen - 1));
+        btn.dataset.gen = String(cfg.gen);
+        btn.setAttribute("aria-label", `${cfg.label}, ${getDraftGenPoolSize(cfg.gen)} Pokémon${genRecord ? `, record ${genRecord}` : ""}`);
+        btn.innerHTML =
+          `<span class="dsa-gen-num">GEN ${cfg.gen}</span>` +
+          `<b class="dsa-gen-region">${escapeHtml(draftGenRegion(cfg.gen))}</b>` +
+          `<small class="dsa-gen-count">${getDraftGenPoolSize(cfg.gen)} Pokémon</small>` +
+          (genRecord ? `<span class="dsa-gen-record">🏆 ${genRecord}</span>` : "") +
+          (mascot ? `<img class="dsa-gen-art" src="${pokedexDetailArtwork(mascot, false)}" alt="" loading="lazy" data-fallback="${getPokemonSprite(mascot)}" />` : "");
+      } else {
+        btn.textContent = cfg.label;
+      }
       btn.disabled = draftArenaState.phase !== "gen" && !canHostRelaunch;
       btn.addEventListener("click", () => selectDraftGeneration(cfg.gen));
       genButtons.appendChild(btn);
@@ -1238,11 +1283,17 @@ function renderDraftArena() {
       options.appendChild(msg);
     } else {
       let optionIdx = 0;
+      const shownKeys = new Set();
       for (const option of draftArenaState.options) {
         const card = document.createElement("button");
         card.type = "button";
         card.className = "dsc-card" + (option.shiny ? " is-shiny" : "") + (option.locked ? " picked locked" : "");
         card.style.setProperty("--draft-i", String(optionIdx));
+        // Arène de nuit : teinte du type, et l'animation d'arrivée seulement pour une carte nouvelle.
+        const optionKey = optionIdx + ":" + option.pokemon.id;
+        shownKeys.add(optionKey);
+        if (!draftShownOptionKeys.has(optionKey)) card.classList.add("dsa-new");
+        card.style.setProperty("--dsa-type", pokemonTypeColor(option.pokemon.type1));
         optionIdx += 1;
         const spriteId = getPokemonSpriteId(option.pokemon);
         const normalSprite = getPokemonSprite(option.pokemon);
@@ -1264,7 +1315,7 @@ function renderDraftArena() {
         if (isScoreAttack && !optLoading) card.dataset.tier = tier.key;
         const tierLabel = isScoreAttack ? tier.label : metrics.rarityLabel;
         const typesHtml = isScoreAttack
-          ? `<div class="dsc-types">${[option.pokemon.type1, option.pokemon.type2].filter(Boolean).map((type) => `<span>${escapeHtml(type)}</span>`).join("")}</div>`
+          ? `<div class="dsc-types">${[option.pokemon.type1, option.pokemon.type2].filter(Boolean).map((type) => `<span style="--dsa-t:${pokemonTypeColor(type)}">${escapeHtml(type)}</span>`).join("")}</div>`
           : "";
         // With an empty team the projected average is the card's own BST: said once is enough.
         const projectionHtml = isScoreAttack && !draftArenaState.team.length
@@ -1272,8 +1323,9 @@ function renderDraftArena() {
           : `<div class="dsc-proj">${isScoreAttack ? "→ moy." : "Moy."} <b>${optLoading ? "\u2026" : projectedAverage}</b></div>`;
         const canRerollOption = isScoreAttack && !option.locked && draftArenaState.scoreAttackRerollsLeft > 0 && !draftArenaState.duelMode;
         const rerollBtn = canRerollOption
-          ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Reroll cette option (1 jeton)" aria-label="Reroll ${escapeHtml(option.pokemon.name)}">↻</button>`
+          ? `<button type="button" class="draft-option-reroll" data-pokemon-id="${option.pokemon.id}" title="Relancer cette carte (1 relance)" aria-label="Relancer ${escapeHtml(option.pokemon.name)} (1 relance)">↻</button>`
           : "";
+        const lockedBadge = isScoreAttack && option.locked ? '<span class="dsa-locked-badge">✓ Drafté</span>' : "";
         card.innerHTML = `
           ${rerollBtn}
           <div class="dsc-top"><span class="dsc-tier">${optLoading ? "\u2026" : escapeHtml(tierLabel)}</span><span class="dsc-bst">${optLoading ? "\u2026" : metrics.statGlobal}</span></div>
@@ -1282,6 +1334,7 @@ function renderDraftArena() {
           ${typesHtml}
           ${projectionHtml}
           ${sparkle}
+          ${lockedBadge}
         `;
         card.disabled = Boolean(option.locked);
         if (!option.locked) {
@@ -1303,6 +1356,7 @@ function renderDraftArena() {
         }
         options.appendChild(card);
       }
+      draftShownOptionKeys = shownKeys;
     }
   }
 
@@ -1325,8 +1379,11 @@ function renderDraftArena() {
       }
 
       const normalSprite = getPokemonSprite(member.pokemon);
-      const shownSprite = member.shiny ? getPokemonShinySprite(member.pokemon) : normalSprite;
+      const shownSprite = isScoreAttackMode && typeof pokedexDetailArtwork === "function"
+        ? pokedexDetailArtwork(member.pokemon, member.shiny)
+        : member.shiny ? getPokemonShinySprite(member.pokemon) : normalSprite;
       const item = document.createElement("div");
+      item.style.setProperty("--dsa-type", pokemonTypeColor(member.pokemon.type1));
       const metrics = getDraftCachedPokemonPowerData(member.pokemon);
       const isLatest = index === draftArenaState.team.length - 1;
       const typesHtml = [member.pokemon.type1, member.pokemon.type2].filter(Boolean).map((type) => typeBadgeHtml(type)).join("");
@@ -1409,17 +1466,38 @@ function renderDraftArena() {
         const medal = avg >= 600 ? "👑" : avg >= 550 ? "🏆" : avg >= 500 ? "🥇" : "🎯";
         const isNew = Boolean(draftArenaState.scoreAttackNewRecord);
         const rec = getDraftScoreAttackRecord(draftArenaState.selectedGen);
+        const previousRecord = Number(draftArenaState.scoreAttackPreviousRecord) || 0;
         const recHtml = isNew
-          ? `<div class="dse-record is-new">🎉 Nouveau record !</div>`
+          ? `<div class="dse-record is-new">🎉 Nouveau record !${previousRecord ? ` <small>(avant : ${previousRecord})</small>` : ""}</div>`
           : (rec ? `<div class="dse-record">Record Gen ${draftArenaState.selectedGen} : <b>${rec}</b></div>` : "");
+        // Équipe mise en scène, MVP = plus gros BST (même règle que le résumé de run).
+        const teamMetricsList = draftArenaState.team.map((member) => ({ member, bst: Number(getDraftCachedPokemonPowerData(member.pokemon).statGlobal) || 0 }));
+        const mvpBst = Math.max(0, ...teamMetricsList.map((entry) => entry.bst));
+        const mvpIndex = teamMetricsList.findIndex((entry) => entry.bst === mvpBst);
+        const teamShowcase = `<div class="dse-team" aria-label="Ton équipe">` + teamMetricsList.map(({ member, bst }, index) => {
+          const memberTier = draftScoreTier(bst).key;
+          return `<div class="dse-member${index === mvpIndex ? " is-mvp" : ""}${member.shiny ? " is-shiny" : ""}" data-tier="${memberTier}" style="--dsa-i:${index};--dsa-type:${pokemonTypeColor(member.pokemon.type1)}">` +
+            (index === mvpIndex ? `<span class="dse-mvp">👑 MVP</span>` : "") +
+            `<img src="${pokedexDetailArtwork(member.pokemon, member.shiny)}" alt="" loading="lazy" data-fallback="${getPokemonSprite(member.pokemon)}" />` +
+            `<b>${escapeHtml(member.pokemon.name)}</b><span class="dse-member-bst">${bst}</span>` +
+            (member.shiny ? `<span class="dse-member-shiny">✨</span>` : "") +
+          `</div>`;
+        }).join("") + `</div>`;
+        const exactAverage = draftArenaState.team.length ? (bstMetrics.total / draftArenaState.team.length).toFixed(2).replace(".", ",") : "0";
+        const solo = !draftArenaState.scoreAttackRoom;
+        const regionLabel = escapeHtml(draftGenRegion(draftArenaState.selectedGen));
         endActions.innerHTML =
           `<div class="dse-reveal" data-tier="${tier}">` +
-            `<div class="dse-badge">${medal}</div>` +
-            `<div class="dse-rank">${escapeHtml(rankLabel)}</div>` +
-            `<div class="dse-score"><b class="dse-num" data-target="${avg}">0</b><small>Moyenne BST finale</small></div>` +
+            `<div class="dse-kicker">${escapeHtml(draftGenLabel(draftArenaState.selectedGen))} · Draft terminé</div>` +
             recHtml +
+            `<div class="dse-badge">${medal}</div>` +
+            `<div class="dse-score"><b class="dse-num" data-target="${avg}">0</b><small>Moyenne BST finale</small></div>` +
+            `<div class="dse-rank">${escapeHtml(rankLabel)}</div>` +
+            `<div class="dse-detail">Total BST ${bstMetrics.total} · moyenne exacte ${exactAverage}</div>` +
+            teamShowcase +
             `<div class="dse-buttons">` +
-              `<button type="button" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouvelle draft</button>` +
+              (solo ? `<button type="button" class="btn-yellow dse-replay" data-action="replayDraftScoreAttackGen">🔁 Rejouer en ${regionLabel}</button>` : "") +
+              `<button type="button" class="${solo ? "btn-ghost" : "btn-yellow"}" data-action="restartDraftArenaRun">🎲 Changer de génération</button>` +
               `<button type="button" class="btn-blue" data-action="openLeaderboard" data-args='["${lbMode}"]'>🏆 Classement</button>` +
               `<button type="button" class="btn-ghost" data-action="shareDraftScore">📤 Partager</button>` +
             `</div>` +

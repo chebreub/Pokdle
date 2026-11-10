@@ -1,0 +1,749 @@
+/* ==========================================================================
+   Draft Score Attack — « arène de nuit » (refonte visuelle, novembre 2026)
+   Inspirée de l'édition Reddit. Tout est isolé sous #screen-draft-score-attack.dsa
+   (classe posée par renderDraftArena en mode Score Attack) : aucun autre mode n'est
+   touché. La logique du jeu ne dépend d'aucune de ces règles.
+   La scène reste sombre dans les deux thèmes du site : c'est l'ambiance du mode.
+   ========================================================================== */
+
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack {
+  --dsa-bg-1: #0b1030;
+  --dsa-bg-2: #1b1450;
+  --dsa-panel: rgba(255, 255, 255, .06);
+  --dsa-panel-2: rgba(255, 255, 255, .1);
+  --dsa-line: rgba(255, 255, 255, .13);
+  --dsa-text: #f4f6ff;
+  --dsa-muted: #aab3d8;
+  --dsa-blue: #4f8dff;
+  --dsa-violet: #8b5cf6;
+  --dsa-red: #ff5a3c;
+  --dsa-gold: #ffcc33;
+  --dsa-green: #2fbf71;
+  --dsa-standard: #9aa6b8;
+  --dsa-solide: #4f9dff;
+  --dsa-elite: #b57bff;
+  --dsa-master: #ffcc33;
+}
+
+/* ---------- la scène ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--dsa-text) !important;
+  background:
+    radial-gradient(110% 55% at 0% 0%, rgba(47, 118, 255, .3), transparent 60%),
+    radial-gradient(90% 50% at 100% 8%, rgba(139, 92, 246, .32), transparent 62%),
+    radial-gradient(80% 45% at 50% 100%, rgba(228, 56, 47, .16), transparent 70%),
+    linear-gradient(180deg, var(--dsa-bg-1), var(--dsa-bg-2)) !important;
+  border: 1px solid rgba(139, 92, 246, .35) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 24px 60px rgba(11, 16, 48, .35), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card > .draft-panel::before { display: none !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card :is(h2, h3, b, strong) { color: inherit; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card .card-desc { color: var(--dsa-muted) !important; }
+
+/* En-tête : titre lumineux, boutons lisibles sur fond nuit */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card > .ranking-head {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card > .ranking-head .card-title {
+  color: #fff !important;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  background: none !important;
+  text-shadow: 0 2px 18px rgba(139, 92, 246, .45);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .ranking-head-actions .btn-ghost,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons .btn-ghost,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-empty-actions .btn-ghost {
+  background: var(--dsa-panel-2) !important;
+  color: var(--dsa-text) !important;
+  border: 1px solid var(--dsa-line) !important;
+  box-shadow: none !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack :is(.ranking-head-actions, .dse-buttons, .draft-score-attack-actions) .btn-blue {
+  background: linear-gradient(135deg, #5b97ff, #2f6bff) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 8px 20px rgba(47, 118, 255, .35) !important;
+}
+
+/* Message d'état */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-status {
+  background: rgba(0, 0, 0, .22) !important;
+  color: var(--dsa-muted) !important;
+  border: 1px solid var(--dsa-line) !important;
+  border-radius: 12px !important;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Panneaux */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card > .draft-panel {
+  background: var(--dsa-panel) !important;
+  border: 1px solid var(--dsa-line) !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+  color: var(--dsa-text) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card > .draft-panel h3 {
+  color: #fff !important;
+  font-size: .82rem !important;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-panel-picks > .card-desc { display: none !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .pokedex-muted { color: var(--dsa-muted) !important; }
+
+/* Avant le choix d'une génération : seules les tuiles (sauf salon 1v1 ouvert) */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack:not(.is-drafting):not(.dsa-room) :is(.draft-panel-picks, .draft-panel-team) { display: none !important; }
+
+/* ---------- 1) tuiles de génération ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-panel-gen {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 4px 2px 2px !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-panel-gen h3 { text-align: center; margin-bottom: 12px !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-gen-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile {
+  --c1: #2f76ff;
+  --c2: #7a2bd0;
+  position: relative;
+  overflow: hidden;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 1px;
+  min-height: 132px !important;
+  height: auto !important;
+  padding: 14px 16px !important;
+  text-align: left !important;
+  color: #fff !important;
+  background: linear-gradient(140deg, var(--c1), var(--c2)) !important;
+  border: 1px solid rgba(255, 255, 255, .18) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .35) !important;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .2s ease;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(100% 80% at 0% 0%, rgba(255, 255, 255, .28), transparent 55%);
+  pointer-events: none;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile > :not(img) { position: relative; z-index: 1; text-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-num { font-size: .72rem; font-weight: 900; letter-spacing: .12em; opacity: .9; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-region { font-size: 1.35rem; font-weight: 900; line-height: 1.1; color: #fff !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-count { font-size: .74rem; font-weight: 700; opacity: .85; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-record {
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .35);
+  font-size: .74rem;
+  font-weight: 900;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-art {
+  position: absolute;
+  right: -10px;
+  bottom: -14px;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  opacity: .95;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .45));
+  transition: transform .25s ease;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 30px rgba(0, 0, 0, .4) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile:hover .dsa-gen-art { transform: scale(1.08) rotate(-4deg); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile:active { transform: scale(.97); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile:disabled { opacity: .45; cursor: default; transform: none; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile.active { outline: 3px solid var(--dsa-gold); outline-offset: 2px; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="1"] { --c1: #e4382f; --c2: #ff7a45; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="2"] { --c1: #c9a227; --c2: #8a6d1a; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="3"] { --c1: #1f8a37; --c2: #2fb36b; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="4"] { --c1: #3d5bd9; --c2: #7a8cff; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="5"] { --c1: #2c2c3a; --c2: #6b6b85; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="6"] { --c1: #2f76ff; --c2: #7a2bd0; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="7"] { --c1: #ff8a00; --c2: #e0a800; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="8"] { --c1: #7a2bd0; --c2: #e4387f; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile[data-gen="9"] { --c1: #b5172f; --c2: #7a2bd0; }
+
+/* ---------- jauge et moyenne ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero {
+  background: var(--dsa-panel) !important;
+  border: 1px solid var(--dsa-line) !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+  color: var(--dsa-text) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-label { color: var(--dsa-muted) !important; font-weight: 800; letter-spacing: .1em; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-score {
+  font-weight: 900 !important;
+  font-variant-numeric: tabular-nums;
+  color: #fff !important;
+  -webkit-text-fill-color: currentColor;
+  background: none !important;
+  text-shadow: 0 0 22px rgba(139, 92, 246, .55);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-gauge {
+  height: 10px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, .1) !important;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .4);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-gauge span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--dsa-blue), var(--dsa-violet) 60%, var(--dsa-gold)) !important;
+  box-shadow: 0 0 12px rgba(139, 92, 246, .7);
+  transition: width .5s cubic-bezier(.2, .9, .3, 1);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-goals,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-goal b { color: var(--dsa-muted) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-goal:nth-child(1) b { color: var(--dsa-master) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-goal:nth-child(2) b { color: var(--dsa-elite) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-goal:nth-child(3) b { color: var(--dsa-solide) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-sub { color: #dfe4ff !important; font-weight: 700; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-chip {
+  background: rgba(0, 0, 0, .25) !important;
+  border: 1px solid var(--dsa-line) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  color: var(--dsa-text) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-chip span { color: var(--dsa-muted) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-chip b { color: #fff !important; font-variant-numeric: tabular-nums; }
+
+/* ---------- 2) cartes de la vague ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options { gap: 14px !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card {
+  --dsa-type: #7c8db5;
+  --dsa-tier: var(--dsa-standard);
+  --dsa-glow: rgba(154, 166, 184, .25);
+  position: relative;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 10px 12px !important;
+  min-height: 0 !important;
+  border-radius: 20px !important;
+  color: var(--dsa-text) !important;
+  text-align: center;
+  background:
+    radial-gradient(120% 70% at 50% 22%, color-mix(in srgb, var(--dsa-type) 50%, transparent), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03)) !important;
+  border: 1.5px solid color-mix(in srgb, var(--dsa-tier) 70%, transparent) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35) !important;
+  transition: transform .16s ease, box-shadow .25s ease, filter .25s ease, opacity .25s ease;
+  cursor: pointer;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card[data-tier="solide"] { --dsa-tier: var(--dsa-solide); --dsa-glow: rgba(79, 157, 255, .45); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card[data-tier="elite"] { --dsa-tier: var(--dsa-elite); --dsa-glow: rgba(181, 123, 255, .5); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card[data-tier="master"] { --dsa-tier: var(--dsa-master); --dsa-glow: rgba(255, 204, 51, .55); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card[data-tier="master"]:not(.locked) {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 204, 51, .35), 0 0 22px rgba(255, 204, 51, .22) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card[data-rarity="loading"] { --dsa-tier: rgba(255, 255, 255, .25); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card:not(:disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .4), 0 0 20px 2px var(--dsa-glow) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card:not(:disabled):active { transform: scale(.97); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-top {
+  display: flex !important;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 2px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card .dsc-tier {
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--dsa-tier) !important;
+  font-size: .7rem !important;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-bst {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .38) !important;
+  color: var(--dsa-tier) !important;
+  font-size: .95rem !important;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-art {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  margin: 2px 0 0;
+  background: transparent !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card .dsc-art img {
+  width: 132px !important;
+  height: 132px !important;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .45));
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-name {
+  margin-top: 4px;
+  color: #fff !important;
+  font-size: 1rem !important;
+  font-weight: 900;
+  line-height: 1.15;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-types span {
+  background: var(--dsa-t, #7c8db5) !important;
+  color: #fff !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .4);
+  font-size: .68rem !important;
+  font-weight: 900;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-proj {
+  margin-top: 6px;
+  color: var(--dsa-muted) !important;
+  font-size: .78rem !important;
+  background: transparent !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-proj b { color: #fff !important; font-variant-numeric: tabular-nums; }
+
+/* Relance d'une carte : pastille ronde bien visible */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .draft-option-reroll {
+  position: absolute !important;
+  top: 40px !important;
+  right: 8px !important;
+  z-index: 3;
+  display: grid !important;
+  place-items: center;
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  background: #262d63 !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, .25) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .45) !important;
+  font-size: 1.05rem !important;
+  font-weight: 900;
+  transition: transform .2s ease, background .2s ease;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .draft-option-reroll:hover { background: #3a43a0 !important; transform: rotate(-90deg); }
+
+/* Carte draftée : grisée, badge net */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.locked {
+  opacity: 1;
+  cursor: default;
+  border-color: rgba(47, 191, 113, .55) !important;
+  box-shadow: none !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.locked :is(.dsc-art img, .dsc-types, .dsc-top) { filter: grayscale(.85) brightness(.75); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-locked-badge {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--dsa-green);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .4);
+}
+
+/* Shiny : liseré doré et reflet */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.is-shiny {
+  border-color: #ffe27a !important;
+  background:
+    radial-gradient(120% 70% at 50% 22%, rgba(255, 226, 122, .42), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .04)) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.is-shiny::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .35) 45%, transparent 60%);
+  background-size: 250% 100%;
+  pointer-events: none;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-shiny-mark {
+  position: static !important;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 226, 122, .18) !important;
+  color: #ffe27a !important;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+/* Relance de vague */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-attack-actions { display: flex; justify-content: flex-end; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-score-reroll { border-radius: 999px !important; font-weight: 900; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-score-reroll:disabled { opacity: .45; box-shadow: none !important; }
+
+/* ---------- équipe (6 emplacements) ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team { gap: 10px !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card {
+  --dsa-type: #7c8db5;
+  position: relative;
+  min-height: 0 !important;
+  border-radius: 18px !important;
+  color: var(--dsa-text) !important;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--dsa-type) 45%, transparent), rgba(255, 255, 255, .04) 72%) !important;
+  border: 1.5px solid color-mix(in srgb, var(--dsa-type) 65%, white 8%) !important;
+  box-shadow: none !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card img {
+  width: 78px !important;
+  height: 78px !important;
+  object-fit: contain;
+  image-rendering: auto !important;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, .45));
+  background: transparent !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card b { color: #fff !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card small { color: var(--dsa-muted) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card .draft-team-slot-label {
+  background: rgba(0, 0, 0, .3) !important;
+  color: var(--dsa-muted) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.is-latest .draft-team-slot-label { background: var(--dsa-gold) !important; color: #2a1d00 !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.is-shiny { border-color: #ffe27a !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.placeholder {
+  background: rgba(255, 255, 255, .04) !important;
+  border: 1.5px dashed rgba(255, 255, 255, .22) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.placeholder .draft-team-empty-icon {
+  background: rgba(255, 255, 255, .08) !important;
+  color: var(--dsa-muted) !important;
+  border: 0 !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.placeholder b { color: var(--dsa-muted) !important; }
+/* prochain emplacement à remplir */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card:not(.placeholder) + .draft-team-card.placeholder,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team > .draft-team-card.placeholder:first-child {
+  border-color: var(--dsa-gold) !important;
+  box-shadow: 0 0 0 3px rgba(255, 204, 51, .14) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-summary-card {
+  background: rgba(0, 0, 0, .22) !important;
+  border: 1px solid var(--dsa-line) !important;
+  color: var(--dsa-text) !important;
+  box-shadow: none !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-summary-card span,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-summary-card small { color: var(--dsa-muted) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-summary-card b { color: #fff !important; }
+
+/* ---------- 3) résultat ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.dsa-is-result:not(.dsa-room) :is(.draft-panel-team, .draft-score-hero, #draft-status) { display: none !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.dsa-is-result:not(.dsa-room) .draft-panel-picks { grid-column: 1 / -1 !important; background: transparent !important; border: 0 !important; padding: 0 !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.dsa-is-result:not(.dsa-room) .draft-panel-picks > h3,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.dsa-is-result:not(.dsa-room) #draft-options { display: none !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-end-actions {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-reveal {
+  --dsa-tier: var(--dsa-standard);
+  --dsa-glow: rgba(154, 166, 184, .3);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px 8px 8px !important;
+  text-align: center;
+  color: var(--dsa-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-reveal[data-tier="solide"] { --dsa-tier: var(--dsa-solide); --dsa-glow: rgba(79, 157, 255, .5); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-reveal[data-tier="elite"] { --dsa-tier: var(--dsa-elite); --dsa-glow: rgba(181, 123, 255, .55); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-reveal[data-tier="master"] { --dsa-tier: var(--dsa-master); --dsa-glow: rgba(255, 204, 51, .6); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-kicker {
+  color: var(--dsa-gold);
+  font-size: .74rem;
+  font-weight: 900;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-record {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08) !important;
+  color: var(--dsa-muted) !important;
+  font-size: .82rem;
+  font-weight: 800;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-record b { color: #fff !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-record.is-new { background: var(--dsa-gold) !important; color: #2a1d00 !important; font-weight: 900; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-badge { font-size: 1.6rem; line-height: 1; margin-top: 4px; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-score {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 200px;
+  height: 200px;
+  margin: 2px auto 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--dsa-tier) 34%, transparent), transparent 70%) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-score::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 999px;
+  background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--dsa-tier) 75%, transparent), transparent 30%, color-mix(in srgb, var(--dsa-tier) 60%, transparent), transparent 62%);
+  -webkit-mask: radial-gradient(circle, transparent 62%, #000 63%, #000 68%, transparent 69%);
+  mask: radial-gradient(circle, transparent 62%, #000 63%, #000 68%, transparent 69%);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-num {
+  font-size: 4.4rem !important;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.03em;
+  color: #fff !important;
+  -webkit-text-fill-color: currentColor;
+  background: none !important;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 26px var(--dsa-glow);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-score small {
+  color: var(--dsa-muted) !important;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-rank {
+  color: var(--dsa-tier) !important;
+  font-size: 1.6rem !important;
+  font-weight: 900;
+  text-shadow: 0 0 18px var(--dsa-glow);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-detail { color: var(--dsa-muted); font-size: .82rem; font-variant-numeric: tabular-nums; }
+
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-team {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin: 14px 0 4px;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member {
+  --dsa-type: #7c8db5;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px 10px;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--dsa-type) 40%, transparent), rgba(255, 255, 255, .04) 72%);
+  border: 1px solid var(--dsa-line);
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member img { width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .45)); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member b { max-width: 100%; color: #fff !important; font-size: .82rem; line-height: 1.15; margin-top: 2px; overflow-wrap: break-word; hyphens: auto; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member-bst { font-weight: 900; font-variant-numeric: tabular-nums; color: var(--dsa-standard); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member[data-tier="solide"] .dse-member-bst { color: var(--dsa-solide); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member[data-tier="elite"] .dse-member-bst { color: var(--dsa-elite); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member[data-tier="master"] .dse-member-bst { color: var(--dsa-master); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member.is-mvp { border-color: var(--dsa-gold); box-shadow: 0 0 0 1px rgba(255, 204, 51, .4), 0 0 20px rgba(255, 204, 51, .25); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member.is-shiny { border-color: #ffe27a; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-mvp {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--dsa-gold);
+  color: #2a1d00;
+  font-size: .68rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member-shiny { position: absolute; top: 6px; right: 8px; font-size: .9rem; }
+
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; border-radius: 999px !important; font-weight: 900; white-space: nowrap; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons .dse-replay {
+  grid-column: 1 / -1;
+  min-height: 54px;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, #ff7a45, #e4382f) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 10px 24px rgba(228, 56, 47, .4) !important;
+}
+
+/* ---------- 1v1 sur fond nuit ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-room-status,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-wrap,
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-empty {
+  background: rgba(0, 0, 0, .2) !important;
+  border-color: var(--dsa-line) !important;
+  color: var(--dsa-text) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-player {
+  background: var(--dsa-panel) !important;
+  border: 1px solid var(--dsa-line) !important;
+  color: var(--dsa-text) !important;
+}
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-player.is-self { border-color: rgba(79, 141, 255, .6) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-player.is-opponent { border-color: rgba(255, 90, 60, .55) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack :is(.draft-score-vs-title, .draft-score-vs-name b, .draft-score-vs-metric b, .draft-score-vs-lead, .draft-score-vs-h2h) { color: #fff !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack :is(.draft-score-vs-status, .draft-score-vs-metric span, .draft-score-vs-share, .draft-score-vs-empty span) { color: var(--dsa-muted) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-slot { background: rgba(255, 255, 255, .06) !important; border-color: var(--dsa-line) !important; color: var(--dsa-muted) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-vs-slot b { color: #fff !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack :is(.draft-score-vs-versus) { color: var(--dsa-gold) !important; text-shadow: 0 0 14px rgba(255, 204, 51, .5); }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack :is(.draft-score-vs-metric, .draft-score-vs-lead, .draft-score-vs-h2h, .draft-score-reaction-btn, .draft-score-vs-leave) {
+  background: rgba(255, 255, 255, .07) !important;
+  border-color: var(--dsa-line) !important;
+  color: var(--dsa-text) !important;
+}
+
+/* ---------- barre d'actions sur téléphone (posée dans <body>) ---------- */
+#pokdle-app #draft-mobile-bar {
+  background: rgba(16, 20, 58, .92) !important;
+  border: 1px solid rgba(139, 92, 246, .4) !important;
+  box-shadow: 0 10px 30px rgba(11, 16, 48, .45) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#pokdle-app #draft-mobile-bar .btn-ghost {
+  background: rgba(255, 255, 255, .12) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, .2) !important;
+}
+
+/* ---------- animations (désactivées si « réduire les animations ») ---------- */
+/* réglage du site « animations réduites » (body.reduce-motion) respecté aussi */
+@media (prefers-reduced-motion: no-preference) {
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile { animation: dsaDealIn .45s cubic-bezier(.2, .9, .3, 1.2) both; animation-delay: calc(var(--dsa-i, 0) * 40ms); }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.dsa-new { animation: dsaDealIn .42s cubic-bezier(.2, .9, .3, 1.25) both; animation-delay: calc(var(--draft-i, 0) * 55ms); }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.picked:not(.locked) { animation: dsaPick .3s ease forwards; }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card:not(.locked) .dsc-art img { animation: dsaFloat 3.4s ease-in-out infinite; animation-delay: calc(var(--draft-i, 0) * -.45s); }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.is-shiny::after { animation: dsaShimmer 2.4s linear infinite; }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.is-latest { animation: dsaPop .45s cubic-bezier(.2, .9, .3, 1.5) both; }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack .dse-score::before { animation: dsaSpin 9s linear infinite; }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member { animation: dsaDealIn .45s cubic-bezier(.2, .9, .3, 1.25) both; animation-delay: calc(.45s + var(--dsa-i, 0) * 80ms); }
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack .dse-rank,
+  #pokdle-app:not(.reduce-motion) #screen-draft-score-attack.dsa.is-mode-score-attack .dse-record.is-new { animation: dsaFadeUp .4s ease both .3s; }
+}
+@keyframes dsaDealIn { from { opacity: 0; transform: translateY(18px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes dsaPick { 45% { transform: scale(1.05); box-shadow: 0 0 26px 6px var(--dsa-glow); } to { transform: translateY(-14px) scale(.9); opacity: .4; } }
+@keyframes dsaPop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes dsaFloat { 50% { transform: translateY(-4px); } }
+@keyframes dsaShimmer { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+@keyframes dsaSpin { to { transform: rotate(360deg); } }
+@keyframes dsaFadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---------- ordinateur ---------- */
+@media (min-width: 1024px) {
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-score-hero .dsh-score { font-size: 3rem !important; }
+}
+
+/* ---------- téléphone ---------- */
+@media (max-width: 700px) {
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-mode-card { border-radius: 20px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-gen-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-tile { min-height: 112px !important; padding: 12px !important; border-radius: 18px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-region { font-size: 1.15rem; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-art { width: 86px; height: 86px; right: -12px; bottom: -14px; }
+
+  /* équipe compacte au-dessus des cartes : 6 emplacements sur une ligne */
+  /* l'équipe passe juste avant les cartes : tout ce qui suit le panneau des cartes garde sa place */
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.is-drafting:not(.dsa-is-result) #draft-mode-card > .draft-panel-picks,
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.is-drafting:not(.dsa-is-result) #draft-mode-card > .draft-panel-picks ~ * { order: 1; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack.is-drafting:not(.dsa-is-result) #draft-mode-card > .draft-panel-picks ~ .draft-panel-team { order: 0; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .draft-panel-team > h3 { display: none !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 6px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card {
+    aspect-ratio: 1;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center;
+    border-radius: 12px !important;
+  }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card img { width: 90% !important; height: 90% !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card .draft-team-card-body { display: none !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team .draft-team-card.placeholder .draft-team-empty-icon {
+    width: auto !important;
+    height: auto !important;
+    background: transparent !important;
+    font-size: .8rem;
+  }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-team-metrics { display: none !important; }
+
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card { padding: 8px 8px 10px !important; border-radius: 18px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card .dsc-art img { width: 96px !important; height: 96px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-name { font-size: .9rem !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .draft-option-reroll { width: 40px !important; height: 40px !important; min-height: 40px !important; }
+
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-team { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member img { width: 72px; height: 72px; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-score { width: 170px; height: 170px; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-num { font-size: 3.6rem !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons .btn-ghost[data-action="restartDraftArenaRun"] { grid-column: 1 / -1; }
+}
+@media (max-width: 360px) {
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-member b { font-size: .7rem; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-name { font-size: .82rem !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-gen-buttons { gap: 8px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dsa-gen-art { width: 70px; height: 70px; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options { gap: 10px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card .dsc-art img { width: 84px !important; height: 84px !important; }
+  #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dse-buttons button { font-size: .85rem; padding-inline: 8px !important; }
+}
+
+/* ---------- barre du jeu (← Jeux, Comment jouer) sur la scène ---------- */
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack :is(.shell-mode, .dedicated-help summary) { color: #fff !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dedicated-help summary { background: rgba(255, 255, 255, .1) !important; border-color: rgba(255, 255, 255, .25) !important; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dedicated-help[open] > :not(summary) { color: #2E2A33; }
+#pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.locked .dsc-name { color: var(--dsa-muted) !important; }
