@@ -456,6 +456,10 @@ body.theme-dark .win-feedback-invite .btn-link{color:#8FA8FF}
 #win-box.rc-on .rc-chip{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:14px;background:#F6F1EA;color:#4B4452;font:800 12px Nunito,sans-serif;white-space:nowrap}
 #win-box.rc-on .rc-chip.is-new{background:#FFF1C2;color:#7A5700}
 #win-box.rc-on .rc-chip.is-streak{background:#FFE9DF;color:#A3401B}
+#win-box.rc-on .rc-chip.rc-capture-cta{height:auto;min-height:40px;padding:0 12px;border:1px solid #A4D7B0;background:#ECF8EE;color:#215E39;font-family:Nunito,sans-serif;font-size:12px;cursor:pointer;transition:background .16s ease}
+#win-box.rc-on .rc-chip.rc-capture-cta:hover{background:#DDF1E1}
+#win-box.rc-on .rc-chip.rc-capture-cta:focus-visible{outline:3px solid #4069E0;outline-offset:2px}
+body.theme-dark #win-box.rc-on .rc-chip.rc-capture-cta{background:#254B38;border-color:#437F58;color:#E1F9E8}
 #win-box.rc-on .rc-bar{width:44px;height:5px;border-radius:3px;background:#E3DCD2;overflow:hidden}
 #win-box.rc-on .rc-bar i{display:block;height:100%;background:#4069E0;border-radius:3px}
 #pokdle-app.design-refresh #win-box.rc-on.rc-on .win-btns{display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;gap:6px!important;width:100%!important}

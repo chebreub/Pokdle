@@ -2423,7 +2423,7 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 /* 📱 Pokédex › Ma collection plus courte sur iPhone (9/11/2026, maquette validée). Sur PC, rien ne change. */
 #screen-pokedex .colm-stats,#screen-pokedex .colm-gens,#screen-pokedex .colm-short{display:none}
 @media (max-width:640px){
-  #screen-pokedex .colm-long{display:none}
+  #screen-pokedex .colm-long{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
   #screen-pokedex .colm-short{display:inline}
   /* En-tête : titre et flèche ronde sur une ligne, sans grand bandeau. */
   #pokdle-app #screen-pokedex > .card{position:relative}
@@ -2518,6 +2518,7 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app #screen-pokedex .pokedex-grid .pokedex-card.is-shiny-entry{border:2px solid #E8B400!important}
   body.theme-dark #screen-pokedex .colm-st{background:#2f2a36}
   body.theme-dark #screen-pokedex .colm-st b{color:#f5efe6}
+  body.theme-dark #screen-pokedex .colm-st small,body.theme-dark #screen-pokedex .colm-st em,body.theme-dark #screen-pokedex .colm-st b i{color:#d6cfdc}
   body.theme-dark #pokdle-app #screen-pokedex.pokedex-view-collection .pokedex-collection-console{background:#26222c!important;border-color:#3a3442!important;color:#f5efe6!important}
   body.theme-dark #screen-pokedex .colm-gens button{background:#26222c;border-color:#3a3442;color:#f5efe6}
 }
@@ -2560,7 +2561,7 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app.design-refresh #screen-profile .profile-hero-actions [data-action="openProfileEditor"]{display:none!important}
   #pokdle-app.design-refresh #screen-profile .profile-hero-actions > *{width:100%!important;min-height:40px!important;margin:0!important;padding:6px 8px!important;font-size:14px!important}
   #pokdle-app.design-refresh #screen-profile .profile-hero-photo{border:1.5px solid #E5D8C5!important;border-radius:999px!important;background:#fff!important;text-decoration:none!important;color:#2E2A33!important;font-weight:800!important}
-  #pokdle-app.design-refresh #screen-profile .profile-hero > p,#pokdle-app.design-refresh #screen-profile .profile-hero-main > p{grid-area:shiny;margin:8px 0 0!important;font-size:12.5px!important;text-align:left!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero > p,#pokdle-app.design-refresh #screen-profile .profile-hero-main > p{grid-area:auto;grid-column:1 / -1;margin:8px 0 0!important;font-size:12.5px!important;text-align:left!important}
   #pokdle-app.design-refresh #screen-profile .profile-hero-medals{font-size:12px!important}
   /* Les 4 tuiles sur une ligne. */
   #pokdle-app.design-refresh #screen-profile .profile-figures{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;margin:10px 0!important}
@@ -2611,7 +2612,7 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app #overlay-modal .am2 .account-menu-stats > div {padding:6px 4px!important;border-radius:14px!important;text-align:center}
   #pokdle-app #overlay-modal .am2 .account-menu-stats strong {font-size:1.05rem!important}
   #pokdle-app #overlay-modal .am2 .account-menu-stats span {font-size:11px}
-  #pokdle-app #overlay-modal .am2 .am2-long {display:none}
+  #pokdle-app #overlay-modal .am2 .am2-long {position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
   #pokdle-app #overlay-modal .am2 .am2-short {display:inline}
   #pokdle-app #overlay-modal .am2 .account-menu-groups {display:block!important}
   #pokdle-app #overlay-modal .am2 .account-menu-groups h5 {margin:14px 2px 6px}
@@ -2634,7 +2635,7 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app #overlay-modal .am2 .account-menu-extra button {flex:1 1 40%;justify-content:center;min-height:40px!important;padding:8px 10px!important;border-radius:999px!important;font-size:13px!important}
   #pokdle-app #overlay-modal .am2 .account-menu-extra button > b {display:none}
   #pokdle-app #overlay-modal .am2 .account-menu-extra button.am2-invite {display:flex}
-  #pokdle-app #overlay-modal .am2 .account-menu-extra button.am2-invite .am2-long {display:inline}
+  #pokdle-app #overlay-modal .am2 .account-menu-extra button.am2-invite .am2-long {position:static!important;width:auto!important;height:auto!important;margin:0!important;overflow:visible!important;clip:auto!important;display:inline}
   #pokdle-app #overlay-modal .am2 .account-menu-foot {margin-top:12px;padding-top:0;border-top:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;font-size:12.5px}
   #pokdle-app #overlay-modal .am2 .account-menu-foot .account-menu-delete {margin:0;padding:0;font-size:12.5px}
   #pokdle-app.theme-dark #overlay-modal .am2 .account-menu-identity {background:#2a2531;border-color:#3d3646}
@@ -2646,7 +2647,7 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-section {display:block!important;margin:0;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
   #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-section > h4 {margin:14px 2px 6px;color:#8A8190;font:800 11.5px Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase}
   #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-settings-section:first-child > h4 {margin-top:2px}
-  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-long {display:none}
+  #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-long {position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
   #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-short-h, #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-split {display:block}
   #pokdle-app #overlay-modal[data-kind="settings"] .as2 .as2-short {display:block;margin-top:1px;color:#8A8190;font:700 11.5px Nunito,sans-serif}
   #pokdle-app #overlay-modal[data-kind="settings"] .as2 .app-setting-item {margin:0!important;min-height:46px;padding:9px 12px!important;border:1.5px solid #EFE4D4!important;border-top-width:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}

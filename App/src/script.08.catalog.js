@@ -86,7 +86,7 @@ var MODE_TILE_PROPS = Object.freeze({
   podium:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M9 20V8h6v12M3 20v-7h6M15 20v-9h6v9M2 20h20"/></svg>'
 });
 // Three game families (decided 13/10/2026), plus the tools kept apart from the games.
-var MODE_CATALOG_FAMILY_LABELS = Object.freeze({ guess:'Deviner', play:'Jouer', social:'Entre amis', tools:'Outils' });
+var MODE_CATALOG_FAMILY_LABELS = Object.freeze({ guess:'Deviner', play:'Arcade', social:'Entre amis', tools:'Outils' });
 var MODE_CATALOG_FAMILY_COPY = Object.freeze({ guess:'retrouve le Pokémon mystère', play:'quiz, logique, records et draft', social:'de 2 à 8 joueurs', tools:'équipes, types, succès et records' });
 // In the tools view the tools section gets a tool name.
 var MODE_CATALOG_TOOL_SECTIONS = Object.freeze({ tools:['Outils du dresseur','équipes, types, succès et records'] });

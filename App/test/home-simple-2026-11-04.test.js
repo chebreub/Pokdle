@@ -56,3 +56,44 @@ test('« Aussi aujourd’hui » keeps 3 lines at most and always leads to the Eg
   assert.match(html, /openHomeDayMore/);
   assert.match(html, /claimBallGift/);
 });
+
+
+test('un joueur connecté trouve le parrainage sans masquer les cadeaux et coffres prioritaires', () => {
+  const ctx = load();
+  const base = { authenticated: true, giftAvailable: false };
+  const html = ctx.homeSimpleMoreRows(base);
+  assert.match(html, /data-action="openInviteFriend"/);
+  assert.match(html, /100 XP chacun/);
+  assert.equal((html.match(/class="hs-row"/g) || []).length, 2);
+
+  const guest = ctx.homeSimpleMoreRows({ ...base, authenticated: false });
+  assert.doesNotMatch(guest, /openInviteFriend/, 'un invité ne peut pas générer un lien de parrainage');
+
+  ctx.expeditionState = { legend: { available: true }, chests: [] };
+  vm.runInContext('expeditionState = this.expeditionState', ctx);
+  const busy = ctx.homeSimpleMoreRows({ ...base, giftAvailable: true });
+  assert.match(busy, /data-action="claimBallGift"/);
+  assert.match(busy, /data-action="openExpedition"/);
+  assert.doesNotMatch(busy, /openInviteFriend/, 'ne pas remplacer un cadeau ou un coffre à ouvrir');
+  assert.equal((busy.match(/class="hs-row"/g) || []).length, 3, 'toujours trois lignes maximum');
+});
+
+
+test('première visite : le cadeau du jour reste accessible depuis les 3 étapes', () => {
+  const ctx = load();
+  const newbie = { bag: {}, today: 0, cap: 10, gains: [], wild: { left: 4, caught: 0 }, streak: { days: 0 }, giftAvailable: true };
+  assert.equal(ctx.homeSimpleBeginner(newbie), true, 'le cadeau offert ne doit pas masquer le parcours pédagogique');
+  const gift = ctx.homeSimpleStepsHtml(newbie);
+  assert.match(gift, /Joue, gagne des Balls, attrape/);
+  assert.match(gift, /data-action="claimBallGift"/);
+  assert.match(gift, /Ouvrir ma Poké Ball offerte/);
+  assert.equal((gift.match(/<li>/g) || []).length, 3, 'garder les trois étapes');
+
+  const absent = ctx.homeSimpleStepsHtml({ ...newbie, giftAvailable: false });
+  assert.doesNotMatch(absent, /claimBallGift/, 'ne pas proposer un cadeau déjà ouvert');
+  assert.doesNotMatch(ctx.homeSimpleStepsHtml(), /claimBallGift/, 'aucune promesse si l’état serveur est inconnu');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'home.css'), 'utf8');
+  assert.match(css, /\.hs-beginner-gift:focus-visible/, 'bouton accessible au clavier');
+  assert.match(css, /\.hs-beginner-gift\{[^}]*min-height:48px/, 'cible tactile 48px');
+  assert.match(src, /homeSimpleStepsHtml\(s\)/, 'transmettre le véritable état serveur au rendu');
+});
