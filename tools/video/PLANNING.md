@@ -56,3 +56,6 @@ on en lance 1 nouveau par semaine, et on arrête ceux qui restent sous 200 vues.
 | 10/11 | 13 h 36 | Plus ou moins (hl3) | MOINS (Mackogneur 505 < Ronflex 540) | | |
 | 10/11 | 19 h 45 | Qui a le plus de… pièges (stat3) | C Monaflèmit (Atq 160) ; avant : C, D, B | | |
 | 10/11 | 21 h | Plus ou moins pièges (hl4) | MOINS (Mimiqui 476 < Wailord 500) | | |
+| 11/11 | 12 h 30 | Quel est son type ? (type1, Route 101) | B Spectre / Fée (Mimiqui) ; avant : B, D, A, D | | |
+| 11/11 | 18 h 30 | Plus ou moins serré (pom1, Cycling) | MOINS (Mentali 525 < Amphinobi 530) ; avant : M, P, M, P | | |
+| 11/11 | 21 h | Qui est le plus lourd ? (lourd1, Rustboro City) | B Dracolosse 210 kg (Rayquaza 206,5 kg) ; avant : A, B, A, B | | |
