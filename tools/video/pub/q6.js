@@ -40,6 +40,7 @@ async function setup(name) {
   const ids = new Set(); Q.forEach((q) => { [q.id, q.prev].forEach((i) => i && ids.add(i)); if (MODE !== 'type' && q.o && typeof q.o[0] === 'number' && ['grid', 'pair', 'lourd'].includes(MODE)) q.o.forEach((i) => ids.add(i)); });
   for (const i of ids) IMG[i] = await load(art(i));
   if (MODE === 'zoom') await Promise.all(ZONES.map((z) => load('../assets/zones/' + z + '.png')));
+  if (MODE === 'zoom') for (const q of Q) if (q.seed != null) q.f = focus(IMG[q.id], q.seed);
   await document.fonts.ready; await document.fonts.load('700 92px Fredoka', 'ÉÀ?');
   const st = $('stars').getContext('2d'); let r = 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
   for (let i = 0; i < 260; i++) { st.fillStyle = 'rgba(255,255,255,' + (0.3 + rnd() * 0.7) + ')'; const z = rnd() * 5 + 1; st.fillRect(rnd() * 1080, rnd() * 1920, z, z); }
@@ -58,6 +59,16 @@ async function setup(name) {
   if (KIND === 'pom') $('title').classList.add('dark');
   renderAt(0);
   return TOTAL;
+}
+// Zoom : un point au milieu d'une zone pleine du dessin (jamais du vide), choisi avec la graine de la question.
+function focus(img, seed) {
+  const N = 100, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d'); x.drawImage(img, 0, 0, N, N);
+  const a = x.getImageData(0, 0, N, N).data, W = 8, ok = [];
+  for (let y = W; y < N - W; y += 2) for (let X = W; X < N - W; X += 2) {
+    let full = 0, n = 0; for (let dy = -W; dy <= W; dy += 2) for (let dx = -W; dx <= W; dx += 2) { n++; if (a[((y + dy) * N + X + dx) * 4 + 3] > 200) full++; }
+    if (full / n > 0.97) ok.push([X / N, y / N]);
+  }
+  return ok.length ? ok[seed % ok.length] : [0.5, 0.45];
 }
 function crier(q) { return MODE === 'pom' ? q.id : (MODE === 'grid' || MODE === 'pair' || MODE === 'lourd') ? q.o[q.a] : q.id; }
 function html(id, h) { const e = $(id); if (e.dataset.h !== h) { e.innerHTML = h; e.dataset.h = h; } return e; }
@@ -115,7 +126,7 @@ function renderAt(t) {
     const sz = big - 100; im.style.width = im.style.height = cv.style.width = cv.style.height = sz + 'px'; im.style.margin = cv.style.margin = (-sz / 2) + 'px 0 0 ' + (-sz / 2) + 'px';
     im.src = art(q.id); fr.querySelector('.no').textContent = MODE === 'pixel' ? (rev ? fmtNo(q.id) : 'N° ????') : '';
     let sc = 0.3 + 0.7 * enter, filt = 'none', origin = '50% 50%';
-    if (MODE === 'zoom') { const z = rev ? lerp(4.2, 1, eInOut(seg(lt, T1, T1 + 0.45))) : lerp(8, 4.2, tk); sc = z; origin = (q.f[0] * 100).toFixed(1) + '% ' + (q.f[1] * 100).toFixed(1) + '%'; }
+    if (MODE === 'zoom') { const z0 = VID.gray ? 12 : 8, z1 = VID.gray ? 6 : 4.2; const z = rev ? lerp(z1, 1, eInOut(seg(lt, T1, T1 + 0.45))) : lerp(z0, z1, tk); if (VID.gray) filt = 'grayscale(' + (rev ? 1 - seg(lt, T1, T1 + 0.4) : 1) + ')'; sc = z; origin = (q.f[0] * 100).toFixed(1) + '% ' + (q.f[1] * 100).toFixed(1) + '%'; }
     if (MODE === 'silh') { const b = rev ? seg(lt, T1, T1 + 0.3) : 0; filt = 'brightness(' + b + ')' + (b < 1 ? ' drop-shadow(0 0 30px rgba(140,160,255,.35))' : ''); }
     im.style.transformOrigin = origin; im.style.transform = 'scale(' + sc.toFixed(3) + ')'; im.style.filter = filt;
     const px = MODE === 'pixel' && !rev; cv.style.display = px ? 'block' : 'none'; im.style.display = px ? 'none' : 'block';
