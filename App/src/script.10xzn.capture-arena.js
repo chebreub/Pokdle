@@ -2,6 +2,7 @@
 // Seuls les Pokemon ACTUELLEMENT possedes, renvoyes par /api/wild/collection, sont eligibles.
 // Pas d'XP, de piece, de classement, d'alteration d'inventaire ou de resultat sauvegarde.
 var caState = { stage: 'loading', owned: [], selected: [], enemies: [], history: [], round: 0, error: '' };
+var caRequestSerial = 0;
 var CA_ENEMY_IDS = [6, 157, 257, 392, 503, 655, 724, 815, 908, 130, 248, 282, 445, 448, 609, 703, 752, 823, 887, 934];
 
 function caTypes(p) { return [p && p.type1, p && p.type2].filter(function (t, i, a) { return Boolean(t) && a.indexOf(t) === i; }); }
@@ -96,6 +97,10 @@ function caFightHtml() {
     '<p class="ca-instructions">Choisis le type d’attaque. Les deux Pokémon frappent : l’efficacité des types décide de cette manche.</p>' +
     '<div class="ca-attacks">' + buttons + '</div>';
 }
+function caBetweenHtml() {
+  return '<div class="ca-between">' + caLastHtml() +
+    '<button type="button" class="btn-blue" data-action="caNext">Manche suivante →</button></div>';
+}
 function caDoneHtml() {
   var wins = caState.history.filter(function (h) { return h.outcome > 0; }).length;
   var losses = caState.history.filter(function (h) { return h.outcome < 0; }).length;
@@ -120,9 +125,11 @@ function caRender() {
     ? '<p role="alert">' + escapeHtml(caState.error) + '</p><button type="button" class="btn-blue" data-action="openCaptureArena">Réessayer</button>'
     : caState.stage === 'loading' ? '<p role="status">Vérification de tes captures…</p>'
     : caState.stage === 'pick' ? caPickHtml()
-    : caState.stage === 'fight' ? caFightHtml() : caDoneHtml());
+    : caState.stage === 'fight' ? caFightHtml()
+    : caState.stage === 'between' ? caBetweenHtml() : caDoneHtml());
 }
 async function openCaptureArena() {
+  var request = ++caRequestSerial;
   caState = { stage: 'loading', owned: [], selected: [], enemies: [], history: [], round: 0, error: '' };
   if (typeof ensureOverlay !== 'function') return;
   ensureOverlay('⚔️ Arène des Captures', '<div class="capture-arena"></div>');
@@ -132,13 +139,15 @@ async function openCaptureArena() {
     var response = await fetch('/api/wild/collection', { credentials: 'same-origin', cache: 'no-store' });
     if (!response.ok) throw Error('unavailable');
     var data = await response.json();
+    if (request !== caRequestSerial) return;
     if (!data || !data.ok || !Array.isArray(data.captures)) throw Error('unavailable');
     caState.owned = caOwnedFromServer(data);
     caState.stage = 'pick';
   } catch (_e) {
+    if (request !== caRequestSerial) return;
     caState.error = 'Impossible de vérifier tes captures pour le moment. Réessaie dans un instant.';
   }
-  caRender();
+  if (request === caRequestSerial) caRender();
 }
 function caToggle(id) {
   if (caState.stage !== 'pick') return;
@@ -169,7 +178,12 @@ function caAttack(type) {
   caState.history.push({ player: player, enemy: enemy, move: type, enemyMove: enemyMove,
     ours: ours, theirs: theirs, outcome: Math.sign(ours - theirs) });
   caState.round++;
-  if (caState.round >= caState.selected.length) caState.stage = 'done';
+  caState.stage = caState.round >= caState.selected.length ? 'done' : 'between';
+  caRender();
+}
+function caNext() {
+  if (caState.stage !== 'between') return;
+  caState.stage = 'fight';
   caRender();
 }
 function caGoGrass() {
@@ -197,4 +211,5 @@ window.openCaptureArena = openCaptureArena;
 window.caToggle = caToggle;
 window.caStart = caStart;
 window.caAttack = caAttack;
+window.caNext = caNext;
 window.caGoGrass = caGoGrass;
