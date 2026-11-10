@@ -71,6 +71,8 @@ function homeSimpleMoreRows(s) {
   if (e && (e.legend && e.legend.available || (e.chests || []).some(function (c) { return c.canClaim; }))) {
     rows.push(homeSimpleRow('openExpedition', '🧭 Expédition', e.legend && e.legend.available ? 'Le légendaire t’attend' : 'Un coffre à ouvrir', '<span class="hs-dot" aria-hidden="true"></span>'));
   }
+  // Garder les récompenses disponibles prioritaires ; proposer le partage seulement si une place reste.
+  if (s.authenticated) rows.push(homeSimpleRow('openInviteFriend', '🎁 Invite un ami', '+100 XP chacun après son premier Pokémon du jour'));
   try {
     var goal = typeof albumNextGoal === 'function' && typeof albumDiscoveries === 'function' && Object.keys(albumDiscoveries()).length ? albumNextGoal() : null;
     if (goal) rows.push(homeSimpleRow('openAlbumBinder', '📒 Ton album · ' + escapeHtml(goal.stats.name) + ' ' + goal.stats.found + '/' + goal.stats.total, 'Plus que ' + goal.left + ' pour la médaille ' + goal.tier.icon));
