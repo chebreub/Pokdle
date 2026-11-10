@@ -46,6 +46,7 @@ function mo2DecorateLobby() {
 // Une scène à la fois, seulement pour les tuiles à l'écran, sur l'écran ouvert.
 function mo2Step() {
   if (document.hidden || (typeof hmReduced === 'function' && hmReduced())) return;
+  if (document.querySelector('.hm-has-scene.hm-play')) return; // une scène à la fois (audit du 9/11)
   var tiles = Array.prototype.filter.call(document.querySelectorAll('#screen-all-modes .hm-has-scene, #party-lobby .hm-has-scene'), function (t) {
     return t.isConnected && hmLive.seen.has(t) && t.getClientRects().length;
   });

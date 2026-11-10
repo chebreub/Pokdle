@@ -127,6 +127,8 @@ function hmObserve(el) {
 }
 function hmStep() {
   if (document.hidden || hmReduced()) return;
+  // 9/11/2026 (audit) : une scène dure 2,7 s ; on attend qu'elle soit finie avant d'en lancer une autre.
+  if (document.querySelector('.hm-has-scene.hm-play')) return;
   var tiles = Array.prototype.filter.call(document.querySelectorAll('#home-games-grid .hm-has-scene, #home-party .hm-has-scene'), function (t) { return t.isConnected && hmLive.seen.has(t); });
   if (!tiles.length) return;
   hmPlay(tiles[hmLive.k++ % tiles.length]);

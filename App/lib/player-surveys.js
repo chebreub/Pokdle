@@ -83,17 +83,35 @@ async function answer(db, accountId, { id, a1, a2, comment } = {}) {
   const one = face(a1), two = survey.q2 ? face(a2) : null;
   if (!one || (survey.q2 && !two)) return { ok: false, error: "pick" };
   const text = cleanComment(comment);
-  const r = await db.query(`INSERT INTO player_survey_answers(survey_id, account_id, status, a1, a2, comment, answered_at)
-    VALUES ($1, $2, 'answered', $3, $4, $5, now())
-    ON CONFLICT (survey_id, account_id) DO UPDATE SET status = 'answered', a1 = EXCLUDED.a1, a2 = EXCLUDED.a2, comment = EXCLUDED.comment, answered_at = now()
-    WHERE player_survey_answers.status = 'seen' RETURNING 1`, [id, String(accountId), one, two, text || null]);
-  if (!r.rows.length) return { ok: false, error: "already" };
+  // 9/11/2026 (audit) : la réponse et la Poké Ball sont écrites ensemble (une panne entre les deux ne laisse plus
+  // une réponse enregistrée sans la Ball promise). Sans table des Balls (tests), le merci reste sans Ball.
+  const client = typeof db.connect === "function" ? await db.connect() : null;
+  const q = (sql, params) => (client || db).query(sql, params);
   let ball = false;
   try {
-    const g = await db.query(`INSERT INTO ball_gains(identity, day, source, ball, account_id) VALUES ($1, ${PARIS_DAY}, $2, 'poke', $3)
-      ON CONFLICT DO NOTHING RETURNING 1`, ["user:" + accountId, "survey:" + id, String(accountId)]);
-    ball = g.rows.length > 0;
-  } catch (_error) { ball = false; } // pas de table des Balls : le merci reste
+    if (client) await q("BEGIN");
+    const r = await q(`INSERT INTO player_survey_answers(survey_id, account_id, status, a1, a2, comment, answered_at)
+      VALUES ($1, $2, 'answered', $3, $4, $5, now())
+      ON CONFLICT (survey_id, account_id) DO UPDATE SET status = 'answered', a1 = EXCLUDED.a1, a2 = EXCLUDED.a2, comment = EXCLUDED.comment, answered_at = now()
+      WHERE player_survey_answers.status = 'seen' RETURNING 1`, [id, String(accountId), one, two, text || null]);
+    if (!r.rows.length) { if (client) await q("ROLLBACK"); return { ok: false, error: "already" }; }
+    if (client) await q("SAVEPOINT survey_ball");
+    try {
+      const g = await q(`INSERT INTO ball_gains(identity, day, source, ball, account_id) VALUES ($1, ${PARIS_DAY}, $2, 'poke', $3)
+        ON CONFLICT DO NOTHING RETURNING 1`, ["user:" + accountId, "survey:" + id, String(accountId)]);
+      ball = g.rows.length > 0;
+    } catch (error) {
+      if (error && error.code !== "42P01") throw error; // seule l'absence de la table des Balls est tolérée
+      if (client) await q("ROLLBACK TO SAVEPOINT survey_ball");
+      ball = false;
+    }
+    if (client) await q("COMMIT");
+  } catch (error) {
+    if (client) await q("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    if (client) client.release();
+  }
   return { ok: true, ball };
 }
 
