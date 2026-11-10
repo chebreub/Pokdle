@@ -49,13 +49,17 @@ const V = {
   // pokdle.fr affiché tout du long, fin = le vrai jeu sur le site au lieu du barème.
   hl3: { short: true, chain: [6, 59, 132, 468, 143, 68], zones: ['volcan', 'prairie', 'montagne', 'foret', 'mer'] },
   hl4: { short: true, chain: [448, 289, 213, 292, 321, 778], zones: ['montagne', 'prairie', 'mer', 'foret', 'volcan'] },
+  // Pièges (10/11) : Leuphorie > Wailord en PV, Caratroc la meilleure Défense, Monaflèmit l'Attaque.
+  stat3: { short: true, rounds: [
+    { s: 0, l: 'DE PV ?', o: [321, 143, 242, 446], z: 'mer' }, { s: 2, l: 'DE DÉFENSE ?', o: [208, 411, 306, 213], z: 'montagne' },
+    { s: 5, l: 'DE VITESSE ?', o: [101, 291, 617, 142], z: 'foret' }, { s: 1, l: 'D’ATTAQUE ?', o: [464, 149, 289, 68], z: 'volcan', mystery: true }] },
   hl2: { chain: [129, 130, 128, 292, 493, 321, 445, 609], zones: ['mer', 'prairie', 'tour', 'montagne', 'mer', 'volcan', 'tour'] },
   cri2: { rounds: [
     { o: [252, 255, 258, 387], a: 2, z: 'prairie' }, { o: [94, 92, 93, 609], a: 0, z: 'tour' },
     { o: [658, 448, 571, 727], a: 3, z: 'volcan' }, { o: [150, 151, 251, 385], a: 1, z: 'montagne' },
     { o: [6, 149, 445, 373], a: 2, z: 'foret' }, { o: [778, 25, 777, 702], a: 0, z: 'mer', mystery: true }] }
 };
-for (const r of V.stat.rounds) r.a = r.o.reduce((b, id, k) => (M[id][1][r.s] > M[r.o[b]][1][r.s] ? k : b), 0);
+for (const r of [...V.stat.rounds, ...V.stat3.rounds]) r.a = r.o.reduce((b, id, k) => (M[id][1][r.s] > M[r.o[b]][1][r.s] ? k : b), 0);
 
 let KIND = 'hl', ROUNDS = [], START = [], R = 7.4, CARD_M = 0, END = 0, TOTAL = 0;
 var S = { audio: [], total: 0 };
@@ -75,7 +79,7 @@ async function setup(name) {
   const A = S.audio, go = (f, t, vol) => A.push({ file: 'assets/go-' + f + '.mp3', t: +t.toFixed(3), vol });
   const cry = (id, t, vol = 1.5) => A.push({ file: 'assets/cry-' + id + '.ogg', t: +t.toFixed(3), vol, cry: true });
   SHORT = !!v.short; if (SHORT) { H1 = 4.0; HS = 4.95; HR = 5.4; }
-  const tick = (t) => A.push({ file: SHORT ? 'assets/sfx/timer3.wav' : 'assets/sfx/timer4.wav', t: +t.toFixed(3), vol: 0.9 });
+  const tick = (t) => A.push({ file: SHORT && !v.rounds ? 'assets/sfx/timer3.wav' : 'assets/sfx/timer4.wav', t: +t.toFixed(3), vol: 0.9 });
   let zones;
   if (KIND === 'hl') {
     R = HR; ROUNDS = v.chain.slice(1).map((id, k) => ({ id, prev: v.chain[k], z: v.zones[k], mystery: k === v.chain.length - 2 }));
