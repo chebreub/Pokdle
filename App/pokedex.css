@@ -3396,3 +3396,68 @@ body.theme-dark .pokedex-collection-legend > span {
 body.theme-dark #screen-pokedex .dex-swipe {background:radial-gradient(circle at 50% 45%,#3a3442 0,#26222c 75%);}
 body.theme-dark #screen-pokedex .dex-swipe-chev {background:#3a3442;color:#f5efe6;}
 body.theme-dark #screen-pokedex .dex-swipe-nbr {color:#cfc7d6;}
+
+/* Arène des Captures beta : accessible depuis Ma collection, sans modifier les jeux existants. */
+#pokedex-collection-hub .ca-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid #C9D9FA;border-radius:15px;background:linear-gradient(110deg,#EDF4FF,#FAF6FF);margin:10px 0 14px}
+#pokedex-collection-hub .ca-entry>span{display:grid;gap:3px;min-width:0}
+#pokedex-collection-hub .ca-entry b{font:800 15px Nunito,system-ui,sans-serif;color:#274572}
+#pokedex-collection-hub .ca-entry small{font:700 12px Nunito,system-ui,sans-serif;color:#5C6477}
+#pokedex-collection-hub .ca-entry button{flex:0 0 auto;white-space:nowrap;min-height:42px}
+.capture-arena{display:grid;gap:14px;max-width:760px;margin:0 auto;color:#2E2A33;font-family:Nunito,system-ui,sans-serif}
+.capture-arena p{margin:0;line-height:1.45}
+.capture-arena .ca-disclaimer{color:#5B5361;font:800 11px Nunito,system-ui,sans-serif;line-height:1.45;letter-spacing:.02em;background:#F5F0E9;border-radius:10px;padding:10px 12px}
+.capture-arena .ca-instructions{color:#554D5C;font-weight:700;font-size:14px}
+.capture-arena .ca-count{display:flex;align-items:center;gap:10px;font-size:13px;color:#625F6A}
+.capture-arena .ca-count b{font-size:16px;color:#355CB8}
+.capture-arena .ca-mon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;max-height:330px;overflow-y:auto;padding:2px}
+.capture-arena .ca-mon{min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px;border:2px solid #DCD4E2;background:#FFFDF9;color:#2E2A33;border-radius:16px;min-height:150px;padding:9px 7px;cursor:pointer;font-family:inherit}
+.capture-arena .ca-mon img{width:72px;height:72px;object-fit:contain}
+.capture-arena .ca-mon b{font-weight:900;font-size:13px;max-width:100%;overflow-wrap:anywhere}
+.capture-arena .ca-mon small{color:#645E67;font-weight:700;font-size:11px}
+.capture-arena .ca-mon span{font-size:11px;font-weight:900;color:#4669AA;margin-top:auto}
+.capture-arena .ca-mon.is-picked{border-color:#3C77DF;background:#EEF5FF;box-shadow:inset 0 0 0 1px #3C77DF}
+.capture-arena .ca-mon:focus-visible,.capture-arena .ca-attack:focus-visible{outline:3px solid #355CB8;outline-offset:3px}
+.capture-arena .ca-start{width:100%;min-height:48px}
+.capture-arena .ca-progress{font-size:14px;font-weight:900;color:#446AC7;text-align:center}
+.capture-arena .ca-versus{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;border:1px solid #DDD5E0;border-radius:19px;padding:15px 10px;background:linear-gradient(90deg,#EDF4FF,#FFF7E9)}
+.capture-arena .ca-versus>div{display:grid;justify-items:center;align-items:center;gap:5px;min-width:0;text-align:center}
+.capture-arena .ca-versus img{height:90px;width:90px;object-fit:contain}
+.capture-arena .ca-versus strong{font-size:15px;font-weight:900;overflow-wrap:anywhere}
+.capture-arena .ca-versus small{font-size:12px;font-weight:700;color:#625C69}
+.capture-arena .ca-versus>span{font-weight:900;font-size:22px;color:#DF6945}
+.capture-arena .ca-attacks{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.capture-arena .ca-attack{border:2px solid #C4D7F5;border-radius:12px;background:#EDF4FF;color:#27446C;min-height:58px;padding:8px 12px;font-family:inherit;cursor:pointer;display:grid;gap:2px;text-align:center}
+.capture-arena .ca-attack:hover{background:#DCEBFF}
+.capture-arena .ca-attack b{font-weight:900;font-size:15px}
+.capture-arena .ca-attack small{font-size:12px;font-weight:700}
+.capture-arena .ca-last{display:grid;gap:3px;text-align:center;border-radius:12px;padding:9px;background:#EEF7EA;color:#315D39;font-size:12px}
+.capture-arena .ca-end{text-align:center;display:grid;justify-items:center;gap:8px;padding:12px}
+.capture-arena .ca-end>span{font-size:44px}
+.capture-arena .ca-end h3{font-size:24px;font-weight:900;margin:0}
+.capture-arena .ca-history{display:grid;gap:6px}
+.capture-arena .ca-history>div{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;border-radius:10px;background:#F4F0EB;font-size:12px}
+.capture-arena .ca-history b{font-weight:800}
+.capture-arena .ca-history span{font-weight:900;white-space:nowrap}
+.capture-arena .ca-actions{display:flex;flex-wrap:wrap;gap:8px}
+.capture-arena .ca-actions>button{flex:1 1 170px;min-height:44px}
+.capture-arena .ca-empty{display:grid;gap:12px;padding:12px}
+body.theme-dark #pokedex-collection-hub .ca-entry{background:linear-gradient(120deg,#2D3850,#332943);border-color:#495976}
+body.theme-dark #pokedex-collection-hub .ca-entry b{color:#ECF2FF}
+body.theme-dark #pokedex-collection-hub .ca-entry small{color:#BBC5D9}
+body.theme-dark .capture-arena{color:#EEE9F2}
+body.theme-dark .capture-arena .ca-disclaimer,body.theme-dark .capture-arena .ca-history>div{background:#342E3B;color:#E1D9E5}
+body.theme-dark .capture-arena .ca-instructions,body.theme-dark .capture-arena .ca-count,body.theme-dark .capture-arena .ca-mon small,body.theme-dark .capture-arena .ca-versus small{color:#CEC7D1}
+body.theme-dark .capture-arena .ca-mon{background:#322D39;border-color:#4E455A;color:#F5EFFA}
+body.theme-dark .capture-arena .ca-mon.is-picked{background:#273B56;border-color:#80A8ED}
+body.theme-dark .capture-arena .ca-mon span{color:#ACC9FF}
+body.theme-dark .capture-arena .ca-versus{background:linear-gradient(90deg,#28354B,#483527);border-color:#5E5261}
+body.theme-dark .capture-arena .ca-attack{background:#253D56;color:#F0F6FF;border-color:#52739F}
+body.theme-dark .capture-arena .ca-last{background:#2B4539;color:#E0F5E6}
+@media(max-width:520px){
+  #pokedex-collection-hub .ca-entry{flex-wrap:wrap}
+  #pokedex-collection-hub .ca-entry button{width:100%}
+  .capture-arena .ca-mon-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:370px}
+  .capture-arena .ca-versus{padding:10px 6px;gap:4px}
+  .capture-arena .ca-versus img{height:72px;width:72px}
+  .capture-arena .ca-versus strong{font-size:13px}
+}
