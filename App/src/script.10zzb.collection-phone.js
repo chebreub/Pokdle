@@ -15,7 +15,7 @@ function colmStatsHtml() {
   var total = base.length || 1;
   var pct = Math.max(0, Math.min(100, Math.round(totals.seen * 100 / total)));
   var item = function (name) { return typeof dexItem === 'function' ? dexItem(name, 'colm-ico') : ''; };
-  var ever = historyLoaded && totals.caught !== totals.obtained ? '<em>' + totals.caught + ' capturé' + (totals.caught > 1 ? 's' : '') + ' en tout</em>' : '';
+  var ever = historyLoaded && totals.caught !== totals.obtained ? '<em>' + totals.caught + ' capturé' + (totals.caught > 1 ? 's' : '') + ' en tout</em>' : '<em>échanges compris</em>';
   return '<div class="colm-stats" aria-label="Ta collection">' +
     '<div class="colm-st"><small>' + item('poke-radar') + 'Vus</small><b>' + totals.seen + '<i> / ' + total + '</i></b><span class="colm-bar"><i style="width:' + pct + '%"></i></span></div>' +
     '<div class="colm-st is-caught"><small>' + item('poke-ball') + 'Attrapés</small><b>' + (loaded ? totals.obtained : '…') + '</b>' + ever + '</div>' +

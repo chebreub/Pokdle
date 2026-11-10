@@ -100,7 +100,7 @@ def main():
      try:
       page.locator('#home-game-filters button').filter(has_text='Deviner').click()
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
-      page.locator('#home-game-filters button').filter(has_text='Jouer').click()
+      page.locator('#home-game-filters button').filter(has_text='Arcade').click()
       play=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
       expect(len(play)==10 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
       page.evaluate('openLoginWelcome()')
@@ -295,8 +295,8 @@ def main():
     def family_chips():
      chips=page.locator('#mode-family-filters button')
      labels=[t.strip() for t in chips.all_inner_texts()]
-     expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Jouer') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
-     chips.filter(has_text='Jouer').click()
+     expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Arcade') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
+     chips.filter(has_text='Arcade').click()
      expect(page.locator('#screen-all-modes .mode-tile:visible').count()==15,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
      expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openEmulatorMode"]\']').is_visible(),'Tools chip does not reach the emulator')
