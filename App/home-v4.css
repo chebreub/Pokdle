@@ -348,3 +348,10 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   /* L'accueil téléphone est une grille à 2 colonnes : les catégories prennent toute la ligne. */
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on #home-game-filters{grid-column:1 / -1!important}
 }
+@media (min-width:861px){
+  /* Visiteur sur PC : les 3 étapes à gauche, le cadeau à droite (plus de vide sur la moitié de la carte). */
+  #pokdle-app #screen-config.hv4.hv4.hv4.hv4-guest #home-balls:has(.hs-steps){display:grid!important;grid-template-columns:minmax(0,1fr) 300px;align-items:center;gap:12px 22px}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hv4-guest #home-balls:has(.hs-steps)>.hs-steps-head{grid-column:1 / -1;max-width:none}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hv4-guest #home-balls:has(.hs-steps)>.hs-steps{grid-column:1;max-width:none;margin:0}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hv4-guest #home-balls:has(.hs-steps)>:not(.hs-steps-head):not(.hs-steps){grid-column:2;max-width:none;width:100%;margin:0}
+}
