@@ -2871,3 +2871,64 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 .reduce-motion #party-lobby.pt-on .pt-tile *{animation:none!important}.reduce-motion #party-lobby.pt-on .pt-fx{display:none}
 #pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name b,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>b{position:absolute;left:12px;top:11px;right:auto;margin:0}
 @media (min-width:861px){#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name b,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>b{left:14px;top:12px}}
+
+/* ⚔️ Défi par lien (11/11/2026, maquette validée « go défi ») — script.10zzzzd.link-duels.js. Téléphone d'abord. */
+#overlay-modal[data-kind="duel"] .overlay-card{max-width:520px}
+.ld-wrap{display:block}
+.ld-card{display:flex;flex-direction:column;gap:10px}
+.ld-k{font:900 11px Nunito,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7C5BD6}
+.ld-card h3{margin:0;font:700 24px/1.12 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.ld-card p{margin:0;font-weight:700;font-size:14.5px;line-height:1.4;color:#5A5263}
+.ld-score{--ld:#7C5BD6;position:relative;overflow:hidden;padding:14px 16px;border-radius:22px;background:linear-gradient(150deg,var(--ld),color-mix(in oklab,var(--ld) 60%,#4069E0));color:#fff}
+.ld-score small{display:block;font:900 11px Nunito,sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:.9}
+.ld-score b{display:block;font:700 44px/1.05 Fredoka,Nunito,sans-serif}
+.ld-score span{font-weight:800;font-size:13px;opacity:.95}
+.ld-score img{position:absolute;right:-10px;bottom:-14px;width:118px;height:118px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.3))}
+.ld-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:0;border-radius:18px;font:800 16px Nunito,sans-serif;cursor:pointer}
+.ld-btn.is-yellow{background:#FFD45C;color:#2E2A33;box-shadow:0 4px 0 #C99A1C}
+.ld-btn.is-dark{background:#2E2A33;color:#fff;box-shadow:0 4px 0 #000}
+.ld-btn.is-white{background:#fff;color:#2E2A33;box-shadow:0 3px 0 rgba(46,42,51,.15);border:1px solid #EEE3D6}
+.ld-btn.is-wa{background:#25D366;color:#fff;box-shadow:0 3px 0 #1A9E4C}
+.ld-share3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ld-share3 .ld-btn{min-height:46px;font-size:14.5px}
+.ld-note{padding:10px 12px;border-radius:14px;background:#FFF1C7;color:#5A4500!important;font-size:13px!important}
+.ld-hint{font-size:12.5px!important;text-align:center}
+.ld-link{border:0;background:none;padding:0;color:#4069E0;font:inherit;text-decoration:underline;cursor:pointer}
+.ld-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ld-chips span{padding:6px 10px;border-radius:999px;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.08);font-weight:800;font-size:12.5px;color:#2E2A33}
+.ld-name{display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:12.5px;color:#6F6672}
+.ld-name input{min-height:46px;padding:0 14px;border:2px solid #EEE3D6;border-radius:14px;font:700 16px Nunito,sans-serif;background:#fff;color:#2E2A33}
+.ld-banner{padding:12px;border-radius:18px;text-align:center;background:#E3F4E8;color:#1F5C33;font:700 21px Fredoka,Nunito,sans-serif}
+.ld-banner.is-lost{background:#F4EEE6;color:#2E2A33}
+.ld-vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.ld-vs>span{font:700 18px Fredoka,Nunito,sans-serif;color:#7C5BD6}
+.ld-pl{position:relative;padding:12px 8px;border-radius:20px;background:#fff;text-align:center;box-shadow:0 3px 0 rgba(46,42,51,.1)}
+.ld-pl img{width:58px;height:58px;object-fit:contain}
+.ld-pl b{display:block;font:700 32px/1 Fredoka,Nunito,sans-serif;color:#2E2A33}
+.ld-pl small{font-weight:800;font-size:12px;color:#6F6672}
+.ld-pl.is-win{box-shadow:0 0 0 3px #3E9B57,0 4px 0 #3E9B57}
+.ld-crown{position:absolute;left:8px;top:6px;font-size:20px}
+.ld-board{margin-top:4px;padding:10px 12px;border-radius:18px;background:#fff;border:1px solid #EEE3D6}
+.ld-board h4{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 4px;font:700 16px Fredoka,Nunito,sans-serif;color:#2E2A33}
+.ld-board h4 small{font:800 12px Nunito,sans-serif;color:#7C5BD6}
+.ld-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #F1E9DE;font-weight:800;font-size:14px;color:#2E2A33}
+.ld-row:last-of-type{border-bottom:0}
+.ld-row small{color:#6F6672;font-size:12px;min-width:62px;text-align:right}
+.ld-row.is-me{background:#FFF8E1;margin:0 -6px;padding:7px 6px;border-radius:10px}
+.ld-board .ld-hint{margin-top:6px;text-align:left}
+.ld-game{display:flex;flex-direction:column;gap:10px}
+.ld-top{display:flex;justify-content:space-between;align-items:baseline;font:700 19px Fredoka,Nunito,sans-serif;color:#2E2A33}
+.ld-top span{font:800 13px Nunito,sans-serif;color:#6F6672}
+.ld-dots{display:flex;gap:4px}
+.ld-dots i{flex:1;height:8px;border-radius:4px;background:#E6DCCF}
+.ld-dots i.is-won{background:#3E9B57}.ld-dots i.is-lost{background:#C9C1B8}.ld-dots i.is-cur{background:#FFD45C}
+.ld-target{padding:8px 12px;border-radius:12px;background:#EDE6FF;color:#4B2FA0!important;font-size:13px!important}
+.ld-pass{align-self:center}
+.ld-home-btn{display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:52px;padding:6px 16px;border:0;border-radius:16px;background:#FFD45C;color:#2E2A33;box-shadow:0 4px 0 #C99A1C;font:800 15px Nunito,sans-serif;cursor:pointer;line-height:1.15}
+.ld-home-btn small{font-size:11.5px;font-weight:800;opacity:.75}
+#pokdle-app.theme-dark .ld-card h3,#pokdle-app.theme-dark .ld-top{color:#f5efe6}
+#pokdle-app.theme-dark .ld-card p{color:#cfc7d8}
+#pokdle-app.theme-dark :is(.ld-pl,.ld-board,.ld-btn.is-white,.ld-chips span){background:#26222c;color:#f5efe6;border-color:#3a3442}
+#pokdle-app.theme-dark :is(.ld-pl b,.ld-row){color:#f5efe6}
+@media (min-width:700px){.ld-card h3{font-size:27px}}
+#screen-config .home-party-actions .ld-home-btn{flex:1 1 100%;width:100%;align-items:center;text-align:center}
