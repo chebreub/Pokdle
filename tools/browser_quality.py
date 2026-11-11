@@ -281,9 +281,14 @@ def main():
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
      page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=sprite.element_handle())
-     art=cry.locator('.mode-tile-art').bounding_box();pic=sprite.bounding_box();prop=cry.locator('.mode-tile-prop svg').bounding_box()
-     expect(pic['width']>=80,'Mascot is a tiny thumbnail: '+repr(pic))
-     expect(prop and prop['width']>=18,'Mechanic object is missing: '+repr(prop))
+     art=cry.locator('.mode-tile-art').bounding_box();pic=sprite.bounding_box()
+     # 11/11/2026 (PR #383) : chaque jeu a sa scène animée ; dans la scène du Cri, le haut-parleur, les ondes et
+     # l'égaliseur remplacent le petit objet dessiné, et le Pokémon partage la place avec eux.
+     scene=cry.locator('.hm-scene.is-cry')
+     expect(scene.count()==1,'Cry card lost its animated scene')
+     expect(pic['width']>=56,'Mascot is a tiny thumbnail: '+repr(pic))
+     speaker=scene.locator('.hm-spk svg').bounding_box()
+     expect(speaker and speaker['width']>=18,'Mechanic object is missing: '+repr(speaker))
      expect(pic['x']>=art['x']-1 and pic['x']+pic['width']<=art['x']+art['width']+1,'Mascot escapes its scene')
      return {'tiles':tiles.count(),'sprite':pic['width']}
     check('tile-art',tile_art,False)
