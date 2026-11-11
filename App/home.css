@@ -2952,3 +2952,45 @@ body.theme-dark .disc-eyebrow{color:#b9a3f5}
 @keyframes mo2Shine{0%,78%{left:-60%}92%,100%{left:130%}}
 @media (prefers-reduced-motion:reduce){:is(#screen-all-modes,#party-lobby).hm-on .mo2-idle *,:is(#screen-all-modes,#party-lobby).hm-on .mo2-idle *::after{animation:none!important}}
 .reduce-motion :is(#screen-all-modes,#party-lobby).hm-on .mo2-idle *,.reduce-motion :is(#screen-all-modes,#party-lobby).hm-on .mo2-idle *::after{animation:none!important}
+
+/* Grande tuile des jeux sur l'accueil (11/11/2026, script.10zzg.home-carousel.js) : un jeu à la fois, qui défile. */
+#pokdle-app.design-refresh #screen-config .hc-box{position:relative}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on{display:flex!important;grid-template-columns:none!important;gap:12px!important;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:26px;padding:0!important}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on::-webkit-scrollbar{display:none}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on>.all-modes-card.mode-tile{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex!important;flex-direction:column!important;align-items:stretch;grid-template:none!important;padding:0!important;border-radius:26px!important;overflow:hidden;background:radial-gradient(130% 120% at 85% 100%,color-mix(in oklab,var(--tile-tone) 55%,#fff),color-mix(in oklab,var(--tile-tone) 18%,#fff) 70%)!important;border:0!important;box-shadow:0 12px 28px rgba(46,42,51,.14)!important}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile>.mode-tile-art{flex:0 0 auto;width:100%;height:190px!important;position:relative;border-radius:0!important;background:transparent!important;--hc-k:1.5}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile>.mode-tile-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:4px 20px 20px!important;text-align:left}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-family{display:inline-block!important;align-self:flex-start;background:rgba(255,255,255,.75);border-radius:999px;padding:3px 10px;font-weight:800;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tile-ink,#2E2A33)}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-title{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:26px;line-height:1.05;color:#2E2A33}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-desc{display:block!important;-webkit-line-clamp:unset;font-weight:700;font-size:14px;line-height:1.35;color:#3b3540}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-foot{display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:center;gap:10px;margin-top:8px!important}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-go{display:inline-flex!important;align-items:center;height:42px;padding:0 18px;border-radius:14px;background:#2E2A33;color:#fff;font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:16px}
+/* Flèches : seulement au survol, sur un écran à souris. */
+#pokdle-app.design-refresh #screen-config .hc-arrow{position:absolute;top:50%;width:46px;height:46px;margin-top:-23px;border:0;border-radius:50%;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.18);display:none;place-items:center;cursor:pointer;opacity:0;transition:opacity .2s;z-index:4}
+#pokdle-app.design-refresh #screen-config .hc-arrow svg{width:18px;height:18px;fill:none;stroke:#2E2A33;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#pokdle-app.design-refresh #screen-config .hc-arrow.is-prev{left:12px}
+#pokdle-app.design-refresh #screen-config .hc-arrow.is-next{right:12px}
+@media (hover:hover) and (pointer:fine){
+  #pokdle-app.design-refresh #screen-config .hc-arrow{display:grid}
+  #pokdle-app.design-refresh #screen-config .hc-box:hover .hc-arrow,#pokdle-app.design-refresh #screen-config .hc-arrow:focus-visible{opacity:1}
+}
+/* Points : le point actif se remplit pendant les 5 s. */
+#pokdle-app.design-refresh #screen-config .hc-dots{display:flex;justify-content:center;gap:6px;margin:10px 0 2px}
+#pokdle-app.design-refresh #screen-config .hc-dot{width:9px;height:9px;padding:0;border:0;border-radius:999px;background:#D9CFC4;position:relative;overflow:hidden;cursor:pointer;transition:width .25s}
+#pokdle-app.design-refresh #screen-config .hc-dot.is-on{width:30px;background:#E6DDD2}
+#pokdle-app.design-refresh #screen-config .hc-dot i{position:absolute;left:0;top:0;bottom:0;width:0;background:#2E2A33;border-radius:999px}
+#pokdle-app.design-refresh #screen-config .hc-dot:not(.is-on) i{width:0!important}
+/* La scène animée (dessinée pour une petite tuile de 200 x 124) est agrandie d'un bloc. */
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .hm-scene{inset:auto;left:50%;top:50%;width:200px;height:124px;margin:-62px 0 0 -100px;transform:scale(var(--hc-k));border-radius:0;overflow:visible}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile:not(.hm-has-scene) .mode-tile-art .mode-tile-sprite{width:150px!important;height:150px!important;max-width:none;object-fit:contain}
+#pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile:not(.hm-has-scene) .mode-tile-prop{right:14px;bottom:14px;top:auto;left:auto}
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on>.all-modes-card.mode-tile{flex-direction:row-reverse!important;min-height:300px}
+  #pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile>.mode-tile-art{flex:0 0 46%;width:auto;height:auto!important;min-height:300px;--hc-k:2.3}
+  #pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile:not(.hm-has-scene) .mode-tile-art .mode-tile-sprite{width:220px!important;height:220px!important}
+  #pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile>.mode-tile-body{padding:28px 10px 28px 80px!important;justify-content:center}
+  #pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-title{font-size:40px}
+  #pokdle-app.design-refresh #screen-config.hm-on #home-games-grid.hc-on .mode-tile-desc{font-size:16px;max-width:440px}
+}
+/* Les petits blocs déplacés en bas de l'accueil. */
+#pokdle-app.design-refresh #screen-config .hc-tail{display:grid;gap:14px;margin-top:22px}
