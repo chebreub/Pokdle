@@ -242,7 +242,6 @@ function frPanelHtml() {
     html += '<p class="fr-empty">Pas encore d’ami. Clique sur un pseudo dans un <button type="button" class="party-duels-link" data-action="openLeaderboardV2" data-args=\'["journey","week"]\'>classement</button>, puis <b>🤝 Ajouter en ami</b>.</p>';
   }
   if (typeof openInviteFriend === 'function') side += '<button type="button" class="fr-invite" data-action="openInviteFriend">🎁 Invite un ami · +100 XP chacun<b>Partager →</b></button>';
-  frSide = side;
   var archives = typeof chatState !== 'undefined' && chatState ? chatState.convs || {} : {};
   var archivedPids = Object.keys(archives).filter(function (pid) { return archives[pid].friends === false; });
   if (archivedPids.length) {
@@ -251,8 +250,17 @@ function frPanelHtml() {
       return '<div class="fr-row"><button type="button" class="fr-row-main" data-action="openFriendChat" data-args="' + frArgs([pid, conv.username]) + '"><span><b>' + escapeHtml(conv.username) + '</b><small>Lire ou signaler' + (conv.unread ? ' · ' + Number(conv.unread) + ' non lus' : '') + '</small></span></button></div>';
     }).join('') + '</details>';
   }
+  // Sur PC (11/11/2026, maquette validée) : les demandes envoyées en pastilles dans la colonne de droite,
+  // avec l'explication en petit dessous ; sur téléphone, la liste d'origine reste dans la page.
   if (outgoing.length) {
-    html += '<h4 class="fr-sub">En attente de réponse</h4><div class="fr-list">' + outgoing.map(function (f) {
+    side += '<div class="fr-pend"><h4>Demandes envoyées <small>' + outgoing.length + '</small></h4><div class="fr-pend-list">' + outgoing.map(function (f) {
+      return '<span class="fr-pend-chip">' + frAvatar(f) + '<b>' + escapeHtml(f.username) + '</b><button type="button" data-action="frCancel" data-args="' + frArgs([f.pid]) + '" aria-label="Annuler la demande à ' + escapeHtml(f.username) + '">✕</button></span>';
+    }).join('') + '</div><p>✕ annule la demande.</p></div>';
+  }
+  side += '<p class="fr-side-note">ⓘ On ajoute un ami depuis sa carte de dresseur.' + (typeof openFriendChat === 'function' ? ' Messages gardés 30 jours ; Signaler et Bloquer sont dans la discussion.' : '') + '</p>';
+  frSide = side;
+  if (outgoing.length) {
+    html += '<h4 class="fr-sub fr-out-sub">En attente de réponse</h4><div class="fr-list fr-out-list">' + outgoing.map(function (f) {
       return '<div class="fr-row"><span class="fr-row-main">' + frAvatar(f) + '<span><b>' + escapeHtml(f.username) + '</b><small>Demande envoyée</small></span></span>' +
         '<button type="button" class="fr-card-link" data-action="frCancel" data-args="' + frArgs([f.pid]) + '">Annuler</button></div>';
     }).join('') + '</div>';
@@ -263,7 +271,7 @@ function frPanelHtml() {
         '<button type="button" class="fr-card-link" data-action="frUnblock" data-args="' + frArgs([f.pid]) + '">Débloquer</button></div>';
     }).join('') + '</details>';
   }
-  html += '<p class="fr-note">On ajoute un ami depuis sa carte de dresseur : pas de recherche par pseudo. Une demande sans réponse est effacée au bout de 30 jours.' +
+  html += '<p class="fr-note fr-main-note">On ajoute un ami depuis sa carte de dresseur : pas de recherche par pseudo. Une demande sans réponse est effacée au bout de 30 jours.' +
     (typeof openFriendChat === 'function' ? ' Entre amis, les messages sont gardés 30 jours ; 🚩 Signaler et ⛔ Bloquer sont dans la discussion.' : '') + '</p>';
   return '<div class="fr-v3-box"><div class="fr-v3">' + (frSide ? '<aside class="fr-v3-side">' + frSide + '</aside>' : '') + '<div class="fr-v3-main">' + html + '</div></div></div>';
 }
