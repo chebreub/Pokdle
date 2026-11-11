@@ -223,4 +223,15 @@
 #pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.is-wrong,#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.qz-ko{border-color:#E5463F!important;background:#FDE8E7!important;box-shadow:0 4px 0 #E5463F!important}
 @media (min-width:861px){#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button{min-height:68px;font-size:18px!important}}
 /* L'en-tête de l'Intrus : le titre s'écrasait (« I. ») à côté des boutons ; on le cache, « ← Jeux » suffit. */
-#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .dedicated-toolbar .shell-mode{display:none}
+@media (max-width:860px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .dedicated-toolbar .shell-mode{display:none!important}}
+
+/* Cosy (11/11, Kayan : « ça fait un peu trop, on perd le côté cosy ») : pour les grilles de plusieurs Pokémon
+   (Intrus, Duel de poids), la couleur du type devient une teinte pastel ; carte crème, nom en encre,
+   liseré et ombre douce de la couleur du type. */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card{background:radial-gradient(120% 90% at 50% 100%,color-mix(in oklab,var(--t) 26%,#fff),#FFFDF9 75%)!important;border:2px solid color-mix(in oklab,var(--t) 35%,#fff)!important;box-shadow:0 4px 0 color-mix(in oklab,var(--t) 35%,#fff)!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card-name,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card strong{color:#2E2A33!important;text-shadow:none!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card img{filter:drop-shadow(0 6px 6px rgba(60,30,10,.16))!important}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:color-mix(in oklab,var(--t) 18%,#fff)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-answer,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card.is-correct{border-color:#3E9B57!important;box-shadow:0 4px 0 #3E9B57!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-wrong{border-color:#E5463F!important;box-shadow:0 4px 0 #E5463F!important}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{max-width:820px;margin:0 auto;gap:14px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:170px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:110px!important;height:110px!important}}
