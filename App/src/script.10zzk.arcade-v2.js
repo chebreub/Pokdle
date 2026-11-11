@@ -32,10 +32,26 @@ function av2HigherLower() {
   screen.classList.toggle('av2-playing', playing);
   screen.classList.toggle('av2-over', over);
   if (!root) return;
+  screen.classList.toggle('av2-lobby', Boolean(root.querySelector('.higher-lower-lobby')));
+  // Menu des modes : des icônes dessinées à la place des emojis.
+  var AV2_MODE_ICONS = {
+    infinite: '<svg viewBox="0 0 48 24"><path d="M24 12c-5-6-9-9-14-9a9 9 0 0 0 0 18c5 0 9-3 14-9s9-9 14-9a9 9 0 0 1 0 18c-5 0-9-3-14-9z" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/></svg>',
+    rush60: '<svg viewBox="0 0 32 32"><circle cx="16" cy="18" r="11" fill="none" stroke="#fff" stroke-width="3.5"/><path d="M16 11v7l5 3M12 3h8" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/></svg>',
+    versus: '<b>VS</b>'
+  };
+  root.querySelectorAll('.higher-lower-mode-card').forEach(function (card) {
+    var icon = card.querySelector('.higher-lower-mode-icon');
+    if (!icon || icon.dataset.av2) return;
+    var args = card.getAttribute('data-args') || '';
+    var key = /rush60/.test(args) ? 'rush60' : /infinite/.test(args) ? 'infinite' : 'versus';
+    card.classList.add('av2-mode-' + key);
+    icon.dataset.av2 = '1';
+    icon.innerHTML = AV2_MODE_ICONS[key];
+  });
   root.querySelectorAll('.higher-lower-sprite, .higher-lower-card-mini img').forEach(av2Artwork);
   // Version B (11/11/2026, « B ») : chaque moitié prend la couleur du type de son Pokémon.
-  root.querySelectorAll('.higher-lower-card-pokemon').forEach(function (card) {
-    var img = card.querySelector('.higher-lower-sprite');
+  root.querySelectorAll('.higher-lower-card-pokemon, .higher-lower-card-mini').forEach(function (card) {
+    var img = card.querySelector('img');
     var mon = img && av2ByName && av2ByName.get(img.getAttribute('alt'));
     var c = mon && typeof FAV_TYPE_COLORS !== 'undefined' ? FAV_TYPE_COLORS[mon.type1] : null;
     if (c) card.style.setProperty('--t', c);
