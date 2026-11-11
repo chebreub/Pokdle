@@ -259,8 +259,12 @@ function hv4Layout() {
   row.classList.toggle('has-exp', Boolean(authed && exp));
 }
 
+// Les tuiles défilent de côté : leurs images (6 à 9, légères) se chargent tout de suite, sans attendre d'être à l'écran.
+function hv4EagerArt() {
+  document.querySelectorAll('#home-games-grid img[loading="lazy"]').forEach(function (img) { img.loading = 'eager'; });
+}
 function hv4Refresh() {
-  try { hv4Lang(); hv4Hero(); hv4Filters(); hv4Discovery(); hv4Layout(); } catch (_e) {}
+  try { hv4Lang(); hv4Hero(); hv4Filters(); hv4Discovery(); hv4Layout(); hv4EagerArt(); } catch (_e) {}
 }
 // Les rendus d'origine se font en premier ; la V4 range ensuite.
 ['renderDailyHero', 'applyDailyHomeSummary', 'renderBallHomeCard', 'renderHomeDiscovery', 'goToConfig'].forEach(function (name) {
