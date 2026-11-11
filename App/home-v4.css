@@ -269,3 +269,6 @@
   #pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:15px}
   #pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-go{min-height:32px;padding:0 10px;font-size:12px}
 }
+
+#screen-config.hv4.hv4.hv4 .hv4-row.has-exp:not(.has-balls) .hv4-main{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:860px){#screen-config.hv4.hv4.hv4 .hv4-row.has-exp:not(.has-balls) .hv4-main{grid-template-columns:minmax(0,1fr)}}

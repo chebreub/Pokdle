@@ -256,7 +256,7 @@ function hv4Layout() {
   if (gb.dataset.h !== gh) { gb.innerHTML = gh; gb.dataset.h = gh; }
   hv4CaptureAlt();
   row.classList.toggle('has-balls', Boolean(authed && balls));
-  row.classList.toggle('has-exp', Boolean(authed && exp));
+  row.classList.toggle('has-exp', Boolean(exp));
 }
 
 // Les tuiles défilent de côté : leurs images (6 à 9, légères) se chargent tout de suite, sans attendre d'être à l'écran.
