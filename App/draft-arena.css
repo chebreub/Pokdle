@@ -747,3 +747,6 @@
 #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dedicated-help summary { background: rgba(255, 255, 255, .1) !important; border-color: rgba(255, 255, 255, .25) !important; }
 #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack .dedicated-help[open] > :not(summary) { color: #2E2A33; }
 #pokdle-app #screen-draft-score-attack.dsa.is-mode-score-attack #draft-options .dsc-card.locked .dsc-name { color: var(--dsa-muted) !important; }
+
+/* 11/11/2026 : l'ancien halo orangé de l'écran du Draft dépassait du cadre de nuit (bande crème en haut à gauche sur PC). */
+#pokdle-app #screen-draft-score-attack.dsa { background-image: none !important; }

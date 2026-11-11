@@ -296,7 +296,7 @@ function applyDraftScoreAttackRoomState(roomState) {
     const self = getDraftScoreAttackRoomSelf(roomState);
     if (self && newEvent.side && newEvent.side !== self.side) {
       const opp = roomState.players?.find((p) => !p.isSelf);
-      showDraftScoreOpponentToast(`⚡ ${opp?.nickname || "Adversaire"} a choisi !`);
+      showDraftScoreOpponentToast(`${opp?.nickname || "Adversaire"} a choisi !`);
     }
   }
   draftArenaState.scoreAttackRoom = roomState || null;
@@ -509,7 +509,7 @@ function showDraftScoreFinaleOverlay(room) {
   if (!self?.result || !opp?.result) return;
   const selfWon = room.winnerSide === self.side;
   const tie = room.winnerSide === "tie";
-  const title = tie ? "🤝 ÉGALITÉ !" : selfWon ? "🏆 VICTOIRE !" : "💀 DÉFAITE";
+  const title = tie ? "ÉGALITÉ !" : selfWon ? "VICTOIRE !" : "DÉFAITE";
   const titleClass = tie ? "is-tie" : selfWon ? "is-win" : "is-lose";
   const buildTeamRow = (player, side) => {
     const team = Array.isArray(player.result?.team) ? player.result.team : [];
@@ -546,7 +546,7 @@ function showDraftScoreFinaleOverlay(room) {
       <div class="dsf-actions">
         <button class="btn-red" type="button" id="dsf-close">Continuer</button>
       </div>
-      <div class="dsf-rematch-hint">${self.isHost ? "💡 Clique sur une génération en bas pour relancer un duel." : "💡 En attente de l'hôte pour choisir une nouvelle génération…"}</div>
+      <div class="dsf-rematch-hint">${self.isHost ? "Clique sur une génération en bas pour relancer un duel." : "En attente de l'hôte pour choisir une nouvelle génération…"}</div>
     </div>`;
   document.body.appendChild(overlay);
   // Animate score counters
@@ -599,12 +599,12 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
     return `<div class="draft-score-vs-slot is-filled${entry.shiny ? " is-shiny" : ""}" data-rarity="${Number(entry.bst) >= 600 ? "legendary" : Number(entry.bst) >= 500 ? "strong" : Number(entry.bst) >= 400 ? "decent" : "common"}" data-slot-key="${entry.id}-${i}" title="${escapeHtml(entry.name)} (BST ${entry.bst})"><img src="${escapeHtml(sprite)}" alt="${escapeHtml(entry.name)}" loading="lazy" data-fallback="${pokemon?.sprite || ''}" /><b>${entry.bst}</b></div>`;
   }).join("");
   const status = player.hasSubmitted
-    ? "✅ Soumis"
+    ? "Soumis"
     : filled === 0
-      ? "⏳ Choisit ses Pokémon…"
+      ? "Choisit ses Pokémon…"
       : filled < DRAFT_TEAM_SIZE
-        ? `🔥 ${filled}/6 picks`
-        : "📤 Envoi du score…";
+        ? `${filled}/6 picks`
+        : "Envoi du score…";
   return `
     <div class="draft-score-vs-player ${isSelf ? "is-self" : "is-opponent"} ${player.connected ? "" : "is-disconnected"}">
       <div class="draft-score-vs-head">
@@ -623,11 +623,11 @@ function renderDraftScoreAttackPlayerCard(player, isSelf) {
 function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoom) {
   if (!draftArenaState?.scoreAttackRoomError && !room) {
     return `<div class="draft-score-vs-empty">
-      <b>🎯 Score Attack solo</b>
+      <b>Score Attack solo</b>
       <span>Drafte pour battre ton record perso, ou défie un ami en duel live ci-dessous.</span>
       <div class="draft-score-vs-empty-actions">
-        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">🆚 Créer un salon 1v1</button>
-        <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">🔗 Rejoindre par code</button>
+        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">Créer un salon 1v1</button>
+        <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">Rejoindre par code</button>
       </div>
     </div>`;
   }
@@ -636,8 +636,8 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
       <b>Score Attack 1v1</b>
       <span>${escapeHtml(draftArenaState.scoreAttackRoomError || "Room indisponible.")}</span>
       <div class="draft-score-vs-empty-actions">
-        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">🆚 Créer une room</button>
-        <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">🔗 Rejoindre</button>
+        <button class="btn-blue" type="button" data-action="createDraftScoreAttackRoom">Créer une room</button>
+        <button class="btn-ghost" type="button" data-action="joinDraftScoreAttackRoom">Rejoindre</button>
       </div>
     </div>`;
   }
@@ -645,31 +645,31 @@ function renderDraftScoreAttackRoomStatus(room = draftArenaState?.scoreAttackRoo
   const opponent = getDraftScoreAttackRoomOpponent(room);
   let headTitle = "";
   if (room.status === "finished") {
-    if (room.winnerSide === "tie") headTitle = "🤝 Égalité parfaite";
-    else if (self && room.winnerSide === self.side) headTitle = "🏆 VICTOIRE !";
-    else headTitle = "💀 Défaite";
+    if (room.winnerSide === "tie") headTitle = "Égalité parfaite";
+    else if (self && room.winnerSide === self.side) headTitle = "VICTOIRE !";
+    else headTitle = "Défaite";
   } else if (!opponent) {
-    headTitle = `⏳ En attente d'un adversaire • Code : ${escapeHtml(room.code || "-")}`;
+    headTitle = `En attente d'un adversaire • Code : ${escapeHtml(room.code || "-")}`;
   } else {
-    headTitle = `⚔️ DUEL EN COURS • Code ${escapeHtml(room.code || "-")}`;
+    headTitle = `DUEL EN COURS • Code ${escapeHtml(room.code || "-")}`;
   }
   const selfCard = self ? renderDraftScoreAttackPlayerCard(self, true) : "";
   const oppCard = opponent ? renderDraftScoreAttackPlayerCard(opponent, false) : `<div class="draft-score-vs-player is-opponent is-waiting"><div class="draft-score-vs-head"><div class="draft-score-vs-name"><b>En attente…</b></div></div><div class="draft-score-vs-slots">${Array.from({ length: DRAFT_TEAM_SIZE }, () => `<div class="draft-score-vs-slot is-empty"><span>?</span></div>`).join("")}</div><div class="draft-score-vs-share">Partage le code <b>${escapeHtml(room.code || "")}</b> à ton ami pour le faire rejoindre.</div></div>`;
   const selfAvg = self?.progress?.average || self?.result?.average || 0;
   const oppAvg = opponent?.progress?.average || opponent?.result?.average || 0;
   const leadIndicator = (selfAvg > 0 || oppAvg > 0) && opponent
-    ? `<div class="draft-score-vs-lead">${selfAvg > oppAvg ? "🔥 Tu mènes !" : oppAvg > selfAvg ? "⚠️ Tu es mené" : "⚖️ Égalité"} (${selfAvg} vs ${oppAvg})</div>`
+    ? `<div class="draft-score-vs-lead">${selfAvg > oppAvg ? "Tu mènes !" : oppAvg > selfAvg ? "Tu es mené" : "Égalité"} (${selfAvg} vs ${oppAvg})</div>`
     : "";
   let headToHeadHtml = "";
   if (opponent?.nickname) {
     const h2h = getDraftScoreHeadToHead(opponent.nickname);
     const total = h2h.wins + h2h.losses + h2h.draws;
     if (total > 0) {
-      const ledTxt = h2h.wins > h2h.losses ? "🏆 Tu mènes" : h2h.losses > h2h.wins ? "💀 Tu es mené" : "⚖️ Vous êtes à égalité";
+      const ledTxt = h2h.wins > h2h.losses ? "Tu mènes" : h2h.losses > h2h.wins ? "Tu es mené" : "Vous êtes à égalité";
       headToHeadHtml = `<div class="draft-score-vs-h2h"><span>${ledTxt} contre <b>${escapeHtml(opponent.nickname)}</b></span><span class="draft-score-h2h-numbers"><b class="is-win">${h2h.wins}V</b> · <b class="is-lose">${h2h.losses}D</b>${h2h.draws ? ` · <b class="is-tie">${h2h.draws}N</b>` : ""}</span></div>`;
     }
   }
-  const leaveBtn = `<button class="draft-score-vs-leave" type="button" data-action="leaveDraftScoreAttackRoom" title="Quitter la room">🚪 Quitter</button>`;
+  const leaveBtn = `<button class="draft-score-vs-leave" type="button" data-action="leaveDraftScoreAttackRoom" title="Quitter la room">Quitter</button>`;
   const canReact = Boolean(opponent && room.status === "live");
   const reactionBar = canReact
     ? `<div class="draft-score-reaction-bar">${["🔥", "😱", "😈", "👍", "🤡", "💀", "👀", "🎯"].map((emoji) => `<button class="draft-score-reaction-btn" type="button" data-action="sendDraftScoreReaction" data-args='["${emoji}"]' title="Envoyer ${emoji}">${emoji}</button>`).join("")}</div>`
@@ -716,7 +716,7 @@ function selectDraftGeneration(gen) {
   draftArenaState.message = draftArenaState.mode !== "scoreAttack"
     ? `Génération sélectionnée : ${draftGenLabel(gen)}. Choisis ton premier Pokémon.`
     : draftArenaState.scoreAttackPro
-      ? `🔥 Score Attack PRO ${draftGenLabel(gen)}. Drafte 6 Pokémon — les bonus tombent à la fin !`
+      ? `Score Attack PRO ${draftGenLabel(gen)}. Drafte 6 Pokémon — les bonus tombent à la fin !`
       : draftScoreIntroMessage(gen);
 
   fillDraftArenaOptions();
@@ -840,8 +840,8 @@ function mountDraftModeCard(mode = "arena") {
   // Adapter le titre + sous-titre selon le mode actif
   const title = card.querySelector(".card-title");
   if (title) title.textContent = mode === "scoreAttack"
-    ? (draftArenaState?.scoreAttackPro ? "🔥 Draft Score Attack PRO" : "🎯 Draft Score Attack")
-    : "🏟️ Draft Arènes";
+    ? (draftArenaState?.scoreAttackPro ? "Draft Score Attack PRO" : "Draft Score Attack")
+    : "Draft Arènes";
   const desc = card.querySelector(".card-desc");
   if (desc) desc.textContent = mode === "scoreAttack"
     ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."
@@ -855,7 +855,7 @@ function requestDraftRestart() {
   const inProgress = draftArenaState?.mode === "scoreAttack" && draftArenaState.phase === "draft"
     && draftArenaState.team.length > 0 && !draftArenaState.duelMode;
   if (!inProgress) return restartDraftAndShowGenerations();
-  ensureOverlay("Nouvelle draft ?", `<p class="card-desc">Ta draft en cours (${draftArenaState.team.length}/${DRAFT_TEAM_SIZE}) sera perdue.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="closeOverlayModal">Continuer ma draft</button><button class="btn-blue" type="button" data-action="confirmDraftRestart">🎲 Nouvelle draft</button></div>`);
+  ensureOverlay("Nouvelle draft ?", `<p class="card-desc">Ta draft en cours (${draftArenaState.team.length}/${DRAFT_TEAM_SIZE}) sera perdue.</p><div class="reset-confirm-actions"><button class="btn-ghost" type="button" data-action="closeOverlayModal">Continuer ma draft</button><button class="btn-blue" type="button" data-action="confirmDraftRestart">Nouvelle draft</button></div>`);
 }
 function confirmDraftRestart() {
   closeOverlayModal();
@@ -870,7 +870,7 @@ function restartDraftAndShowGenerations() {
   }
 }
 function openDraftDuelChoice() {
-  ensureOverlay("Défier un ami", `<p class="card-desc">Même tirage pour vous deux : la meilleure moyenne BST gagne.</p><div class="reset-confirm-actions"><button class="btn-blue" type="button" data-action="startDraftDuelFromChoice" data-args='["create"]'>🆚 Créer un salon</button><button class="btn-ghost" type="button" data-action="startDraftDuelFromChoice" data-args='["join"]'>🔗 Rejoindre par code</button></div>`);
+  ensureOverlay("Défier un ami", `<p class="card-desc">Même tirage pour vous deux : la meilleure moyenne BST gagne.</p><div class="reset-confirm-actions"><button class="btn-blue" type="button" data-action="startDraftDuelFromChoice" data-args='["create"]'>Créer un salon</button><button class="btn-ghost" type="button" data-action="startDraftDuelFromChoice" data-args='["join"]'>Rejoindre par code</button></div>`);
 }
 function startDraftDuelFromChoice(kind) {
   closeOverlayModal();
@@ -894,7 +894,7 @@ function renderDraftMobileBar() {
     document.body.appendChild(bar);
   }
   const rerolls = draftArenaState.scoreAttackRerollsLeft;
-  bar.innerHTML = `<button type="button" class="btn-ghost" data-action="rerollDraftScoreAttackWave" ${rerolls > 0 ? "" : "disabled"}>↻ Vague (${rerolls})</button><button type="button" class="btn-blue" data-action="requestDraftRestart">🎲 Nouvelle draft</button>`;
+  bar.innerHTML = `<button type="button" class="btn-ghost" data-action="rerollDraftScoreAttackWave" ${rerolls > 0 ? "" : "disabled"}>↻ Vague (${rerolls})</button><button type="button" class="btn-blue" data-action="requestDraftRestart">Nouvelle draft</button>`;
   const tabbar = document.getElementById("mobile-tabbar");
   const tabRect = tabbar ? tabbar.getBoundingClientRect() : null;
   const top = tabRect && tabRect.height > 0 ? tabRect.top : window.innerHeight;
@@ -930,7 +930,7 @@ function restartDraftArenaRun() {
     draftArenaState.scoreAttackSubmitted = false;
   }
   draftArenaState.message = previousMode === "scoreAttack"
-    ? (previousPro ? "🔥 Score Attack PRO prêt. Choisis une génération." : "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.")
+    ? (previousPro ? "Score Attack PRO prêt. Choisis une génération." : "Score Attack prêt. Choisis une génération pour viser la meilleure moyenne BST.")
     : "Choisis une génération pour commencer le draft.";
   renderDraftArena();
 }
@@ -962,7 +962,7 @@ async function pickDraftArenaOption(pokemonId) {
       draftArenaState.scoreAttackNewRecord = isNewRecord;
       draftArenaState.scoreAttackPreviousRecord = previousRecord;
       draftArenaState.runSummary = {
-        status: `${getDraftScoreAttackResultLabel(metrics.average)} • Moyenne ${metrics.average}${isNewRecord ? " 🏆 NOUVEAU RECORD !" : ""}`,
+        status: `${getDraftScoreAttackResultLabel(metrics.average)} • Moyenne ${metrics.average}${isNewRecord ? " NOUVEAU RECORD !" : ""}`,
         mvpName: draftArenaState.team
           .slice()
           .sort((left, right) => (getDraftCachedPokemonPowerData(right.pokemon).statGlobal || 0) - (getDraftCachedPokemonPowerData(left.pokemon).statGlobal || 0))[0]?.pokemon?.name || "-",
@@ -970,7 +970,7 @@ async function pickDraftArenaOption(pokemonId) {
         offenseLabel: `${draftArenaState.scoreAttackRerollsLeft} reroll${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""} restant${draftArenaState.scoreAttackRerollsLeft > 1 ? "s" : ""}${previousRecord > 0 ? ` • Précédent record : ${previousRecord}` : ""}`,
       };
       draftArenaState.message = isNewRecord
-        ? `🏆 NOUVEAU RECORD Gen ${draftArenaState.selectedGen} : moyenne BST ${metrics.average} ! (avant : ${previousRecord || 0})`
+        ? `NOUVEAU RECORD Gen ${draftArenaState.selectedGen} : moyenne BST ${metrics.average} ! (avant : ${previousRecord || 0})`
         : `Score Attack terminé : moyenne BST ${metrics.average}. ${getDraftScoreAttackResultLabel(metrics.average)}.`;
       // XP + quêtes Score Attack
       awardXp(Math.round(metrics.average / 10), `Score Attack ${metrics.average} BST`, "scoreattack");
@@ -1084,8 +1084,8 @@ function renderDraftArena() {
   const draftFinished = draftArenaState.phase === "result" && draftArenaState.team.length >= DRAFT_TEAM_SIZE && !draftArenaState.evaluating;
 
   if (pageTitle) pageTitle.textContent = isScoreAttackMode
-    ? (draftArenaState.scoreAttackPro ? "🔥 Draft Score Attack PRO" : "🎯 Draft Score Attack")
-    : "🎴 Draft Arènes";
+    ? (draftArenaState.scoreAttackPro ? "Draft Score Attack PRO" : "Draft Score Attack")
+    : "Draft Arènes";
   if (pageDesc) {
     pageDesc.textContent = isScoreAttackMode
       ? "Drafte 6 Pokémon, optimise la moyenne BST et défie un ami en 1v1 Score."
@@ -1112,10 +1112,10 @@ function renderDraftArena() {
     const selfRoom = room ? getDraftScoreAttackRoomSelf(room) : null;
     const isLiveDuel = isDuel && room?.status === "live";
     if (isDuel) {
-      restartBtn.textContent = isLiveDuel ? "⏳ Partie en cours…" : (selfRoom?.isHost ? "🎮 Nouvelle partie" : "⏳ En attente de l'hôte");
+      restartBtn.textContent = isLiveDuel ? "Partie en cours…" : (selfRoom?.isHost ? "Nouvelle partie" : "En attente de l'hôte");
       restartBtn.disabled = isLiveDuel || !selfRoom?.isHost;
     } else {
-      restartBtn.textContent = isScoreAttackMode ? "🎲 Nouvelle draft" : "🎲 Nouveau draft";
+      restartBtn.textContent = isScoreAttackMode ? "Nouvelle draft" : "Nouveau draft";
       restartBtn.disabled = false;
     }
     restartBtn.dataset.action = "requestDraftRestart";
@@ -1128,7 +1128,7 @@ function renderDraftArena() {
       duelBtn.type = "button";
       duelBtn.className = "btn-ghost";
       duelBtn.dataset.action = "openDraftDuelChoice";
-      duelBtn.textContent = "🆚 Défier un ami";
+      duelBtn.textContent = "Défier un ami";
       restartBtn.before(duelBtn);
     }
     if (duelBtn) duelBtn.classList.toggle("hidden", !isScoreAttackMode || Boolean(draftArenaState.scoreAttackRoom));
@@ -1139,7 +1139,7 @@ function renderDraftArena() {
     const record = isScoreAttack ? getDraftScoreAttackRecord(draftArenaState.selectedGen) : 0;
     if (isScoreAttack && draftArenaState.selectedGen) {
       recordBadge.classList.remove("hidden");
-      recordBadge.textContent = `🏆 Record Gen ${draftArenaState.selectedGen} : ${record || "-"}`;
+      recordBadge.textContent = `Record Gen ${draftArenaState.selectedGen} : ${record || "-"}`;
       if (draftArenaState.scoreAttackNewRecord) recordBadge.classList.add("is-new-record");
       else recordBadge.classList.remove("is-new-record");
     } else {
@@ -1212,7 +1212,7 @@ function renderDraftArena() {
       const canHostReroll = Boolean(selfRoom?.isHost) && room?.status === "live" && !someoneLocked && duelRerollsLeft > 0;
       scoreRerollButton.classList.toggle("hidden", !selfRoom?.isHost || room?.status !== "live");
       scoreRerollButton.disabled = !canHostReroll;
-      scoreRerollButton.textContent = `🔄 Relancer la vague duel (${duelRerollsLeft})`;
+      scoreRerollButton.textContent = `Relancer la vague duel (${duelRerollsLeft})`;
     } else {
       scoreRerollButton.classList.toggle("hidden", draftArenaState.mode !== "scoreAttack" || draftArenaState.phase !== "draft");
       scoreRerollButton.disabled = !canReroll;
@@ -1242,7 +1242,7 @@ function renderDraftArena() {
           `<span class="dsa-gen-num">GEN ${cfg.gen}</span>` +
           `<b class="dsa-gen-region">${escapeHtml(draftGenRegion(cfg.gen))}</b>` +
           `<small class="dsa-gen-count">${getDraftGenPoolSize(cfg.gen)} Pokémon</small>` +
-          (genRecord ? `<span class="dsa-gen-record">🏆 ${genRecord}</span>` : "") +
+          (genRecord ? `<span class="dsa-gen-record">${genRecord}</span>` : "") +
           (mascot ? `<img class="dsa-gen-art" src="${pokedexDetailArtwork(mascot, false)}" alt="" loading="lazy" data-fallback="${getPokemonSprite(mascot)}" />` : "");
       } else {
         btn.textContent = cfg.label;
@@ -1276,7 +1276,7 @@ function renderDraftArena() {
       msg.className = "pokedex-muted";
       // En duel actif : message d'attente du serveur. Sinon : message reset.
       if (draftArenaState.duelMode && draftArenaState.scoreAttackRoom?.duel) {
-        msg.textContent = "⏳ Chargement de la wave du duel… Si bloqué, l'hôte peut cliquer sur une génération pour relancer.";
+        msg.textContent = "Chargement de la wave du duel… Si bloqué, l'hôte peut cliquer sur une génération pour relancer.";
       } else {
         msg.textContent = "Aucune option disponible. Réinitialise le draft.";
       }
@@ -1439,10 +1439,10 @@ function renderDraftArena() {
           '<div class="dsh-sub">' + sub + '</div>' +
         '</div>' +
         '<div class="dsh-stats">' +
-          '<div class="dsh-chip"><span>\ud83c\udfc6 Record G' + draftArenaState.selectedGen + '</span><b>' + (rec || "\u2013") + '</b></div>' +
-          (window.__pokedleAuthed ? '<div class="dsh-chip dsh-chip-rank"><span>\ud83c\udfc5 Ton rang</span><b id="dsh-rank-val">\u2026</b></div>' : '') +
-          '<div class="dsh-chip"><span>\ud83d\udd04 Relances</span><b>' + draftArenaState.scoreAttackRerollsLeft + '</b></div>' +
-          '<div class="dsh-chip dsh-chip-team"><span>\ud83d\udc65 \u00c9quipe</span><b>' + draftArenaState.team.length + '/' + DRAFT_TEAM_SIZE + '</b></div>' +
+          '<div class="dsh-chip"><span>Record G' + draftArenaState.selectedGen + '</span><b>' + (rec || "\u2013") + '</b></div>' +
+          (window.__pokedleAuthed ? '<div class="dsh-chip dsh-chip-rank"><span>Ton rang</span><b id="dsh-rank-val">\u2026</b></div>' : '') +
+          '<div class="dsh-chip"><span>Relances</span><b>' + draftArenaState.scoreAttackRerollsLeft + '</b></div>' +
+          '<div class="dsh-chip dsh-chip-team"><span>\u00c9quipe</span><b>' + draftArenaState.team.length + '/' + DRAFT_TEAM_SIZE + '</b></div>' +
         '</div>';
       scoreHero.classList.remove("hidden");
       updateDraftRankChip(draftArenaState.selectedGen);
@@ -1463,12 +1463,14 @@ function renderDraftArena() {
         const avg = bstMetrics.average || 0;
         const rankLabel = getDraftScoreAttackResultLabel(avg);
         const tier = avg >= 600 ? "master" : avg >= 550 ? "elite" : avg >= 500 ? "solide" : "rookie";
-        const medal = avg >= 600 ? "👑" : avg >= 550 ? "🏆" : avg >= 500 ? "🥇" : "🎯";
+        // 11/11/2026 : plus d'emoji (Kayan : « les emojis sont moches ») : une étoile dessinée à la couleur du palier.
+        const medalColor = avg >= 600 ? "#FFD45C" : avg >= 550 ? "#B79CF0" : avg >= 500 ? "#6F95F2" : "#B9B2BE";
+        const medal = `<svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#2E2A33" stroke="${medalColor}" stroke-width="3"/><path d="M20 8.5l3.4 7 7.6 1.1-5.5 5.4 1.3 7.6L20 26l-6.8 3.6 1.3-7.6L9 16.6l7.6-1.1z" fill="${medalColor}"/></svg>`;
         const isNew = Boolean(draftArenaState.scoreAttackNewRecord);
         const rec = getDraftScoreAttackRecord(draftArenaState.selectedGen);
         const previousRecord = Number(draftArenaState.scoreAttackPreviousRecord) || 0;
         const recHtml = isNew
-          ? `<div class="dse-record is-new">🎉 Nouveau record !${previousRecord ? ` <small>(avant : ${previousRecord})</small>` : ""}</div>`
+          ? `<div class="dse-record is-new">Nouveau record !${previousRecord ? ` <small>(avant : ${previousRecord})</small>` : ""}</div>`
           : (rec ? `<div class="dse-record">Record Gen ${draftArenaState.selectedGen} : <b>${rec}</b></div>` : "");
         // Équipe mise en scène, MVP = plus gros BST (même règle que le résumé de run).
         const teamMetricsList = draftArenaState.team.map((member) => ({ member, bst: Number(getDraftCachedPokemonPowerData(member.pokemon).statGlobal) || 0 }));
@@ -1477,10 +1479,10 @@ function renderDraftArena() {
         const teamShowcase = `<div class="dse-team" aria-label="Ton équipe">` + teamMetricsList.map(({ member, bst }, index) => {
           const memberTier = draftScoreTier(bst).key;
           return `<div class="dse-member${index === mvpIndex ? " is-mvp" : ""}${member.shiny ? " is-shiny" : ""}" data-tier="${memberTier}" style="--dsa-i:${index};--dsa-type:${pokemonTypeColor(member.pokemon.type1)}">` +
-            (index === mvpIndex ? `<span class="dse-mvp">👑 MVP</span>` : "") +
+            (index === mvpIndex ? `<span class="dse-mvp">MVP</span>` : "") +
             `<img src="${pokedexDetailArtwork(member.pokemon, member.shiny)}" alt="" loading="lazy" data-fallback="${getPokemonSprite(member.pokemon)}" />` +
             `<b>${escapeHtml(member.pokemon.name)}</b><span class="dse-member-bst">${bst}</span>` +
-            (member.shiny ? `<span class="dse-member-shiny">✨</span>` : "") +
+            (member.shiny ? `<span class="dse-member-shiny">Shiny</span>` : "") +
           `</div>`;
         }).join("") + `</div>`;
         const exactAverage = draftArenaState.team.length ? (bstMetrics.total / draftArenaState.team.length).toFixed(2).replace(".", ",") : "0";
@@ -1496,10 +1498,10 @@ function renderDraftArena() {
             `<div class="dse-detail">Total BST ${bstMetrics.total} · moyenne exacte ${exactAverage}</div>` +
             teamShowcase +
             `<div class="dse-buttons">` +
-              (solo ? `<button type="button" class="btn-yellow dse-replay" data-action="replayDraftScoreAttackGen">🔁 Rejouer en ${regionLabel}</button>` : "") +
-              `<button type="button" class="${solo ? "btn-ghost" : "btn-yellow"}" data-action="restartDraftArenaRun">🎲 Changer de génération</button>` +
-              `<button type="button" class="btn-blue" data-action="openLeaderboard" data-args='["${lbMode}"]'>🏆 Classement</button>` +
-              `<button type="button" class="btn-ghost" data-action="shareDraftScore">📤 Partager</button>` +
+              (solo ? `<button type="button" class="btn-yellow dse-replay" data-action="replayDraftScoreAttackGen">Rejouer en ${regionLabel}</button>` : "") +
+              `<button type="button" class="${solo ? "btn-ghost" : "btn-yellow"}" data-action="restartDraftArenaRun">Changer de génération</button>` +
+              `<button type="button" class="btn-blue" data-action="openLeaderboard" data-args='["${lbMode}"]'>Classement</button>` +
+              `<button type="button" class="btn-ghost" data-action="shareDraftScore">Partager</button>` +
             `</div>` +
           `</div>`;
         endActions.classList.remove("hidden");
@@ -1511,8 +1513,8 @@ function renderDraftArena() {
         }
       } else {
         endActions.innerHTML =
-          `<div class="draft-end-headline">🏆 Run terminée</div>` +
-          `<div class="draft-end-buttons"><button type="button" class="btn-yellow" data-action="restartDraftArenaRun">🎲 Nouvelle draft</button></div>`;
+          `<div class="draft-end-headline">Run terminée</div>` +
+          `<div class="draft-end-buttons"><button type="button" class="btn-yellow" data-action="restartDraftArenaRun">Nouvelle draft</button></div>`;
         endActions.classList.remove("hidden");
       }
     } else {
