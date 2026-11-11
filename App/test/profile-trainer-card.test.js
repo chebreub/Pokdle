@@ -117,7 +117,7 @@ test('tabs switch what is under the card; phones hide the card for Missions and 
   const css = read('trainer-profile.css');
   assert.match(css, /#screen-profile:is\(\.profile-view-album, \.profile-view-secrets\) :is\(\.profile-hero, \.profile-figures\) \{ display: none; \}/);
   // Loaded after every older profile rule (only draft-arena.css and arcade-v2.css, scoped to game screens, follow).
-  assert.match(read('build.mjs'), /"halloween\.css", "trainer-profile\.css", "draft-arena\.css"(, "arcade-v2\.css")?\]/);
+  assert.match(read('build.mjs'), /"halloween\.css", "trainer-profile\.css", "draft-arena\.css"(, "arcade-v2\.css")?(, "home-v4\.css")?\]/);
   assert.match(html, /dist\/halloween\.min\.css">\n {2}<link rel="stylesheet" href="dist\/trainer-profile\.min\.css">/);
 });
 
