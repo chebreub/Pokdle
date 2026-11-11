@@ -76,7 +76,7 @@ function lobby({ room = null, nickname = 'Kayan' } = {}) {
     renderPartyRoom: () => { if (!env.partyRoomState.room) env.renderPartyPendingGame(); },
     setPartyStatus: () => {},
     savePartySession: () => {},
-    partyPlayerLevel: () => 7,
+    partyPlayerLevel: () => 7, partyPlayerPartner: () => null,
     partySetMode: (mode) => calls.modes.push(mode),
     escapeHtml: (s) => String(s),
   };

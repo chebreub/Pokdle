@@ -17,8 +17,8 @@ function fixture() {
  return {context,elements,rows};
 }
 test('every former menu destination remains reachable and categorized',()=>{
- assert.equal(cards.length,31); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
- for(const action of ['openEggGame','startPartyMode','openTypeComboSolo','openTeamsScreen','openLeaderboard','openPartyRoomMode']) assert.ok(cards.some(card=>card.markup.includes(action)),action);
+ assert.equal(cards.length,32); assert.ok(cards.every(card=>['solo','friends','explore'].includes(card.dataset.category)));
+ for(const action of ['openEggGame','startPartyMode','openTypeComboSolo','openTeamsScreen','openEmulatorMode','openLeaderboard','openPartyRoomMode']) assert.ok(cards.some(card=>card.markup.includes(action)),action);
  // Entre amis is one door: the two-player games live in the Party Room lobby.
  const lobby=html.slice(html.indexOf('id="party-lobby"'),html.indexOf('id="party-joined"'));
  for(const action of ['openMultiplayerMode','openStatClashMode','openStatAuctionMode','openDefiAmiFromAllModes']) assert.ok(lobby.includes('data-action="'+action+'"'),action);
@@ -33,7 +33,7 @@ test('search ignores accents, matches unordered words and recovers from no resul
  const {context,rows,elements}=fixture();context.setModeCatalogCategory('all');elements['mode-search'].value='attack draft';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='table des types';context.renderModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,1);
  elements['mode-search'].value='zzzznoresult';context.renderModeCatalog();assert.equal(elements['mode-empty'].hidden,false);
- context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,31);
+ context.resetModeCatalog();assert.equal(rows.filter(card=>!card.hidden).length,32);
  assert.ok(!rows.some(card=>card.markup.includes('openDraftArenaMode')),'Draft Arènes was removed');
 });
 test('search matches the start of words so short queries stay precise',()=>{
@@ -97,6 +97,3 @@ test('the Outils chip opens the tools and any family chip brings back the games'
  assert.ok(rows.filter(card=>!card.hidden).every(card=>card.dataset.category==='solo'));
 });
 
-test('the emulator is no longer offered in the catalog (11/11/2026: ROM emulator removed from the list)',()=>{
- assert.ok(!cards.some(card=>card.markup.includes('openEmulatorMode')));
-});

@@ -49,7 +49,7 @@ test('Party Rooms carry the level each browser sends, from 1 to 100', () => {
   const server = read('server.js');
   const sanitize = Function(server.match(/function sanitizePartyLevel\(value\) \{[\s\S]*?\n\}/)[0] + '; return sanitizePartyLevel;')();
   assert.deepEqual([70, 1, 100, 0, 101, 7.5, '12', null].map(sanitize), [70, 1, 100, null, null, null, 12, null]);
-  assert.equal((server.match(/joinPlayerToPartyRoom\(room, socket, nickname, sanitizePartyLevel\(payload\.level\)\)/g) || []).length, 2);
+  assert.equal((server.match(/joinPlayerToPartyRoom\(room, socket, nickname, sanitizePartyLevel\(payload\.level\), sanitizePartyPartner\(payload\.partner\)\)/g) || []).length, 2);
   assert.match(server, /level: player\.level \|\| null,/);
   const client = read('src/script.04.jeu-pokedex.js');
   assert.equal((client.match(/level: partyPlayerLevel\(\)/g) || []).length, 2);

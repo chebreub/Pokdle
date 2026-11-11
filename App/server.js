@@ -1836,7 +1836,13 @@ function sanitizePartyLevel(value) {
   return Number.isInteger(level) && level >= 1 && level <= 100 ? level : null;
 }
 
-function joinPlayerToPartyRoom(room, socket, nickname, level = null) {
+// 11/11/2026 : le partenaire du joueur (n° du Pokédex) s'affiche dans l'intro de la partie.
+function sanitizePartyPartner(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id >= 1 && id <= 1025 ? id : null;
+}
+
+function joinPlayerToPartyRoom(room, socket, nickname, level = null, partner = null) {
   // Snapshot the real signed account/guest identity, never trust nickname or client payload.
   const account = getSessionUser(socket.request);
   const guestId = partyDailyGuest(SESSION_SECRET, parseAuthCookies(socket.request).pokdle_daily);
@@ -1849,6 +1855,7 @@ function joinPlayerToPartyRoom(room, socket, nickname, level = null) {
     id: socket.id,
     nickname,
     level,
+    partner,
     rewardIdentity,
     connected: true,
     score: 0,
@@ -1944,6 +1951,8 @@ function publicPartyRoomState(room, viewerId = null) {
     totalRounds: Number(room.totalRounds) || PARTY_TOTAL_ROUNDS,
     deadlineAt: room.deadlineAt || null,
     gameMode,
+    surprise: Boolean(room.surprise),
+    intro: room.intro ? { id: room.intro.id, mode: room.intro.mode, surprise: room.intro.surprise, pool: room.intro.pool, durationMs: room.intro.durationMs, remainingMs: Math.max(0, room.intro.endsAt - Date.now()) } : null,
     raceFormat: room.raceFormat || "duel",
     bacOptions: gameMode === "petitbac" ? petitBacParty.publicOptions(room, POKEMON_LIST) : null,
     raceDuration: room.raceDuration === 0 ? 0 : room.raceDuration === 300 ? 300 : 180,
@@ -1953,6 +1962,7 @@ function publicPartyRoomState(room, viewerId = null) {
       id: player.id,
       nickname: player.nickname,
       level: player.level || null,
+      partner: player.partner || null,
       connected: player.connected,
       reconnectUntil: player.connected ? null : (Number(player.reconnectUntil) || null),
       raceTeam: player.raceTeam || "blue",
@@ -2048,6 +2058,71 @@ async function startPartyGame(room) {
     player.usedStatKeys = [];
   }
   await startPartyRound(room);
+}
+
+// 11/11/2026 : intro de la partie, « Jeu surprise ».
+// La Course au Pokédex reste hors de la roue : elle se prépare (équipes, une génération).
+const PARTY_SURPRISE_MODES = ["dessin", "quiestce1v1", "petitbac", "coop", "deduction", "guess", "nearest", "typecombo", "duocriteria", "statclashparty", "statclash"];
+const PARTY_INTRO_MS = 3200;
+const PARTY_INTRO_WHEEL_MS = 6500;
+
+// Même règle que party:set-mode (gardée à l'identique là-bas, que les tests lisent).
+function applyPartyMode(room, mode) {
+  if (room.gameMode !== mode && room.status === "complete") {
+    room.status = "waiting";
+    room.roundNumber = 0;
+    room.target = null;
+    room.nearestTarget = null;
+    for (const p of room.players) { p.correct = false; p.lastGain = 0; p.nearestPick = null; }
+  }
+  room.gameMode = mode;
+  if (mode === "dexrace") {
+    room.selectedGens = [room.selectedGens?.[0] || 1];
+    room.totalRounds = 1;
+    dexRace.balanceRaceTeams(room);
+  } else {
+    room.totalRounds = partyTotalRoundsForMode(mode, room.configuredRounds, room.bacRounds);
+  }
+}
+
+function partyModeStartError(room) {
+  if (room.gameMode === "dexrace") {
+    const error = dexRace.raceStartError(room);
+    if (error) return error;
+  }
+  if (room.gameMode === "petitbac" && !petitBacParty.publicOptions(room, POKEMON_LIST).letters) return "Aucune lettre ne convient à ces thèmes : change un thème ou les générations.";
+  if (room.gameMode === "quiestce1v1" && room.players.filter((player) => player.connected).length !== 2) return "Qui est-ce ? se joue à deux exactement.";
+  return null;
+}
+
+function partySurprisePool(room) {
+  const two = room.players.filter((player) => player.connected).length === 2;
+  return PARTY_SURPRISE_MODES.filter((mode) => mode !== "quiestce1v1" || two);
+}
+
+async function launchPartyAfterIntro(room, introId, hostSocket) {
+  if (!room.intro || room.intro.id !== introId) return;
+  room.intro = null;
+  room.introTimer = null;
+  if (partyRooms.get(room.code) !== room || room.status === "playing") return;
+  const fail = function (error) {
+    emitPartyRoomState(room);
+    io.to(room.hostId).emit("party:start-failed", { error });
+  };
+  if (room.players.some((player) => !player.connected)) return fail("Un joueur s'est déconnecté : relance quand il est revenu.");
+  if (room.players.filter((player) => player.connected).length < PARTY_MIN_PLAYERS) return fail("Il faut au moins 2 joueurs connectes.");
+  const error = partyModeStartError(room);
+  if (error) return fail(error);
+  await startPartyGame(room);
+  if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return fail("Aucune cible disponible.");
+  if (room.gameMode === "typecombo" && !room.typeCombo) return fail("Aucune combinaison disponible.");
+  recordUsage("party:start:" + (room.gameMode || "guess"), null, usageSegmentForSocket(hostSocket));
+  // DATA-03: once per room, the first game started with a player who came through the link.
+  if (!room.shareStartCounted && room.players.some((player) => player.viaLink && player.connected)) {
+    room.shareStartCounted = true;
+    recordUsage("share:party-start", null, usageSegmentForSocket(hostSocket));
+  }
+  emitPartyRoomState(room);
 }
 
 function endPartyRound(room) {
@@ -2938,7 +3013,7 @@ io.on("connection", (socket) => {
       const gameMode = payload.gameMode === "dessin" ? "dessin" : "guess";
       const room = { code, status: "waiting", createdAt: Date.now(), hostId: socket.id, players: [], cleanupTimer: null, gameMode, selectedGens: [1, 2, 3, 4, 5, 6, 7, 8, 9] };
       partyRooms.set(code, room);
-      const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
+      const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level), sanitizePartyPartner(payload.partner));
       recordUsage("party:create", null, usageSegmentForSocket(socket));
       emitPartyRoomState(room);
       respond(ack, { ok: true, code, resumeToken: player.reconnectToken, room: publicPartyRoomState(room, socket.id) });
@@ -2962,7 +3037,7 @@ io.on("connection", (socket) => {
       if (room.players.length >= PARTY_MAX_PLAYERS) return respond(ack, { ok: false, error: "La room est deja complete (8 max)." });
       if (room.status !== "waiting") return respond(ack, { ok: false, error: "La partie a deja demarre." });
       clearPartyRoomCleanup(room);
-      const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level));
+      const player = joinPlayerToPartyRoom(room, socket, nickname, sanitizePartyLevel(payload.level), sanitizePartyPartner(payload.partner));
       // DATA-03: the player says the code came from an invitation link (counted only at a real start).
       if (payload.via === "link") player.viaLink = true;
       recordUsage("party:join", null, usageSegmentForSocket(socket));
@@ -3043,24 +3118,33 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut lancer." });
+      if (room.intro) return respond(ack, { ok: false, error: "La partie démarre…" });
       if (room.players.some((player) => !player.connected)) return respond(ack, { ok: false, error: "Attends la reconnexion d'un joueur ou la fin de son delai avant de lancer." });
       if (room.players.filter((player) => player.connected).length < PARTY_MIN_PLAYERS) return respond(ack, { ok: false, error: "Il faut au moins 2 joueurs connectes." });
       if (room.status === "playing") return respond(ack, { ok: false, error: "Une manche est deja en cours." });
-      if (room.gameMode === "dexrace") {
-        const error = dexRace.raceStartError(room);
+      // 11/11/2026 : « Jeu surprise » = le serveur tire le jeu (la roue de l'intro tombe dessus chez tout le monde).
+      let pool = null;
+      if (room.surprise) {
+        pool = partySurprisePool(room);
+        const order = pool.slice().sort(() => Math.random() - 0.5);
+        let picked = null;
+        for (const mode of order) {
+          applyPartyMode(room, mode);
+          if (!partyModeStartError(room)) { picked = mode; break; }
+        }
+        if (!picked) return respond(ack, { ok: false, error: "Aucun jeu ne convient pour l'instant." });
+      } else {
+        const error = partyModeStartError(room);
         if (error) return respond(ack, { ok: false, error });
       }
-      if (room.gameMode === "petitbac" && !petitBacParty.publicOptions(room, POKEMON_LIST).letters) return respond(ack, { ok: false, error: "Aucune lettre ne convient à ces thèmes : change un thème ou les générations." });
-      if (room.gameMode === "quiestce1v1" && room.players.filter((player) => player.connected).length !== 2) return respond(ack, { ok: false, error: "Qui est-ce ? se joue à deux exactement." });
-      await startPartyGame(room);
-      if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return respond(ack, { ok: false, error: "Aucune cible disponible." });
-      if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
-      recordUsage("party:start:" + (room.gameMode || "guess"), null, usageSegmentForSocket(socket));
-      // DATA-03: once per room, the first game started with a player who came through the link.
-      if (!room.shareStartCounted && room.players.some((player) => player.viaLink && player.connected)) {
-        room.shareStartCounted = true;
-        recordUsage("share:party-start", null, usageSegmentForSocket(socket));
-      }
+      // L'intro (joueurs, roue, carte du jeu) dure le même temps pour tous ; la partie démarre ensuite,
+      // donc aucun chrono de manche ne tourne pendant l'animation.
+      const durationMs = pool ? PARTY_INTRO_WHEEL_MS : PARTY_INTRO_MS;
+      const introId = crypto.randomBytes(6).toString("hex");
+      room.intro = { id: introId, mode: room.gameMode, surprise: Boolean(pool), pool, durationMs, endsAt: Date.now() + durationMs };
+      room.introTimer = setTimeout(function () {
+        launchPartyAfterIntro(room, introId, socket).catch(function (error) { console.error("[party] intro:", error.message); });
+      }, durationMs);
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
     } catch (error) {
@@ -3245,9 +3329,17 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le mode." });
+      if (room.intro) return respond(ack, { ok: false, error: "La partie démarre…" });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer le mode en cours de party." });
       const mode = String(payload.mode || "");
+      // 11/11/2026 : « Jeu surprise » (le serveur tirera le jeu au lancement, la roue de l'intro tombe dessus).
+      if (mode === "surprise") {
+        room.surprise = true;
+        emitPartyRoomState(room);
+        return respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
+      }
       if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "petitbac" && mode !== "coop" && mode !== "dexrace" && mode !== "dessin") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      room.surprise = false;
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
         room.roundNumber = 0;
@@ -3275,6 +3367,7 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer le nombre de manches." });
+      if (room.intro) return respond(ack, { ok: false, error: "La partie démarre…" });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer en cours de party." });
       const rounds = Number(payload.rounds);
       if (![5, 10, 15, 20].includes(rounds)) return respond(ack, { ok: false, error: "Choisis 5, 10, 15 ou 20 manches." });
@@ -3292,6 +3385,7 @@ io.on("connection", (socket) => {
       const room = findPartyRoomBySocket(socket.id);
       if (!room) return respond(ack, { ok: false, error: "Aucune room active." });
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut changer les generations." });
+      if (room.intro) return respond(ack, { ok: false, error: "La partie démarre…" });
       if (room.status !== "waiting" && room.status !== "complete") return respond(ack, { ok: false, error: "Impossible de changer en cours de party." });
       let gens = Array.isArray(payload.gens) ? payload.gens.map(Number).filter((g) => Number.isInteger(g) && g >= 1 && g <= 9) : [];
       gens = Array.from(new Set(gens)).sort((a, b) => a - b);
