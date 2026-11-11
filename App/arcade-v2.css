@@ -239,3 +239,5 @@
    que le pastel, sans le plein saturé. Nom en encre, liseré et ombre de la couleur du type. */
 #pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card{background:linear-gradient(170deg,color-mix(in oklab,var(--t) 30%,#fff),color-mix(in oklab,var(--t) 52%,#fff))!important;border:2px solid color-mix(in oklab,var(--t) 60%,#fff)!important;box-shadow:0 4px 0 color-mix(in oklab,var(--t) 65%,#fff)!important}
 #pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:#fff}
+/* PC large : les 6 cartes de l'Intrus sur une seule ligne (comme avant, la QA PC le vérifie). */
+@media (min-width:1100px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;max-width:1120px;gap:12px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:210px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:110px!important;height:110px!important}}
