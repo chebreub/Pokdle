@@ -235,3 +235,7 @@
 #pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-answer,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card.is-correct{border-color:#3E9B57!important;box-shadow:0 4px 0 #3E9B57!important}
 #pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-wrong{border-color:#E5463F!important;box-shadow:0 4px 0 #E5463F!important}
 @media (min-width:861px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{max-width:820px;margin:0 auto;gap:14px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:170px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:110px!important;height:110px!important}}
+/* Entre-deux (11/11, « un entre 2 ? ») : teinte franche mais douce, la couleur du type plus présente
+   que le pastel, sans le plein saturé. Nom en encre, liseré et ombre de la couleur du type. */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card{background:linear-gradient(170deg,color-mix(in oklab,var(--t) 30%,#fff),color-mix(in oklab,var(--t) 52%,#fff))!important;border:2px solid color-mix(in oklab,var(--t) 60%,#fff)!important;box-shadow:0 4px 0 color-mix(in oklab,var(--t) 65%,#fff)!important}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:#fff}
