@@ -3105,3 +3105,87 @@ body.theme-dark .disc-eyebrow{color:#b9a3f5}
 :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-stats i{animation:l1StatBar 2.6s var(--hm-out) both;animation-delay:calc(var(--i) * .07s)}
 @keyframes l1StatBar{0%{width:0}24%,100%{width:var(--w)}}
 :is(#screen-config,#screen-all-modes).hm-on .hm-shadow.is-stat{right:7%}
+
+/* Scènes, lot 2 (11/11/2026, script.10zzi.scenes-lot2.js) : Évolution, Ordre, Combo, Speedrun, Shiny, Draft. Noms d'animation en « l2 ». */
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-scene :is(.hm-evo-a,.hm-evo-b,.hm-ord-mon,.hm-combo-mon,.hm-speed-mon,.hm-flipcard,.hm-draft-mon) .mode-tile-sprite{position:static;width:100%;height:100%;transform:none}
+:is(#screen-config,#screen-all-modes).hm-on :is(.hm-evo-a,.hm-evo-b,.hm-ord-mon,.hm-combo-mon,.hm-speed-mon,.hm-flipcard,.hm-draft-mon){position:absolute;z-index:2}
+/* Évolution */
+:is(#screen-config,#screen-all-modes).hm-on .hm-evo-a{left:9%;top:44%;width:44px;height:44px;margin-top:-22px}
+:is(#screen-config,#screen-all-modes).hm-on .hm-evo-b{right:7%;top:44%;width:66px;height:66px;margin-top:-33px}
+:is(#screen-config,#screen-all-modes).hm-on .hm-evo-arrow{position:absolute;left:41%;top:44%;width:30px;margin-top:-6px;z-index:2;fill:none;stroke:var(--tile-ink,#2F51B8);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-evo-arrow{animation:l2Arrow 2.6s ease-in-out both}
+@keyframes l2Arrow{0%,10%{opacity:0;transform:translateX(-6px)}25%,55%{opacity:1;transform:none}62%,100%{opacity:.35}}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-evo-b .mode-tile-sprite{animation:l2Evolve 2.6s var(--hm-out) both}
+@keyframes l2Evolve{0%,38%{filter:brightness(0) invert(1) opacity(.9);transform:scale(.5)}50%{filter:brightness(0) invert(1);transform:scale(.8)}62%{filter:brightness(1.6);transform:scale(1.12)}72%,100%{filter:none;transform:scale(1)}}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-evo-a .mode-tile-sprite{animation:l2Wiggle .35s ease-in-out 3 alternate both}
+@keyframes l2Wiggle{from{transform:rotate(-8deg)}to{transform:rotate(8deg) translateY(-3px)}}
+/* Ordre Pokédex */
+:is(#screen-config,#screen-all-modes).hm-on .hm-ord{position:absolute;left:50%;top:70%;translate:-50% 0;display:flex;gap:5px;z-index:3}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-ord i{display:grid!important;width:auto;height:auto;place-items:center;padding:3px 6px;border-radius:7px;background:#fff;font:900 10px/1 Nunito,sans-serif!important;color:#2E2A33;box-shadow:0 2px 0 rgba(0,0,0,.1);font-style:normal}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-ord i.is-q{background:var(--tile-ink,#2F7A1F);color:#fff;position:relative;overflow:hidden;min-width:30px;height:16px}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-ord i.is-q u{display:block!important;text-decoration:none;grid-area:1/1;font:900 10px/16px Nunito,sans-serif!important;color:#fff}
+:is(#screen-config,#screen-all-modes).hm-on .hm-ord i.is-q u+u{opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-ord i.is-q u:first-child{animation:l2QOut 2.6s linear both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-ord i.is-q u+u{animation:l2QIn 2.6s var(--hm-spring) both}
+@keyframes l2QOut{0%,52%{opacity:1;transform:none}58%,100%{opacity:0;transform:translateY(-10px)}}
+@keyframes l2QIn{0%,54%{opacity:0;transform:translateY(10px)}62%,100%{opacity:1;transform:none}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-ord-mon{left:50%;top:36%;width:54px;height:54px;margin:-27px}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-ord-mon .mode-tile-sprite{animation:l2Reveal 2.6s var(--hm-out) both}
+@keyframes l2Reveal{0%,54%{filter:brightness(0) opacity(.7);transform:scale(.9)}62%{filter:brightness(1.6);transform:scale(1.12)}70%,100%{filter:none;transform:scale(1)}}
+/* Combo de types */
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-ty{position:absolute;top:22%;z-index:3;padding:3px 9px;border-radius:999px;font:900 10px/1.2 Nunito,sans-serif!important;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+:is(#screen-config,#screen-all-modes).hm-on .hm-ty.is-l{left:16%;background:#4F8FE8}
+:is(#screen-config,#screen-all-modes).hm-on .hm-ty.is-r{right:16%;background:#5FC9D6}
+:is(#screen-config,#screen-all-modes).hm-on .hm-ty-plus{position:absolute;left:50%;top:22%;translate:-50% 0;z-index:3;font:900 13px/1.3 Nunito,sans-serif;color:var(--tile-ink,#1F6E6A)}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-ty.is-l{animation:l2TyL 2.6s var(--hm-spring) both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-ty.is-r{animation:l2TyR 2.6s var(--hm-spring) both}
+@keyframes l2TyL{0%{opacity:0;transform:translateX(-30px)}18%,100%{opacity:1;transform:none}}
+@keyframes l2TyR{0%,10%{opacity:0;transform:translateX(30px)}28%,100%{opacity:1;transform:none}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-combo-mon{left:50%;top:58%;width:64px;height:64px;margin:-32px}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-combo-mon .mode-tile-sprite{animation:l2Reveal 2.6s var(--hm-out) both}
+/* Speedrun */
+:is(#screen-config,#screen-all-modes).hm-on .hm-clock{position:absolute;left:12%;top:24%;width:26px;height:26px;border-radius:50%;border:3px solid var(--tile-ink,#4E5E00);background:#fff;z-index:3}
+:is(#screen-config,#screen-all-modes).hm-on .hm-clock i{position:absolute;left:50%;top:3px;width:2px;height:8px;margin-left:-1px;background:var(--tile-ink,#4E5E00);transform-origin:50% 8px;border-radius:1px}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-clock i{animation:hmSpin .65s linear 4}
+:is(#screen-config,#screen-all-modes).hm-on .hm-speed-mon{left:50%;top:48%;width:58px;height:58px;margin:-29px}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-speed-mon{animation:l2Zip 2.6s ease-in-out both}
+@keyframes l2Zip{0%{transform:translateX(-90px)}22%{transform:translateX(10px)}30%{transform:translateX(0)}52%{transform:translateX(70px);opacity:1}53%{opacity:0;transform:translateX(70px)}54%{opacity:0;transform:translateX(-80px)}55%{opacity:1}76%,100%{transform:translateX(0)}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-dash{position:absolute;left:14%;top:48%;width:36%;z-index:1}
+:is(#screen-config,#screen-all-modes).hm-on .hm-dash i{display:block;height:3px;margin:5px 0;border-radius:2px;background:linear-gradient(90deg,transparent,var(--tile-ink,#4E5E00));opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-dash i{animation:l2Dash .5s ease-out 4 both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-dash i:nth-child(2){animation-delay:.12s;width:70%;margin-left:20%}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-dash i:nth-child(3){animation-delay:.24s}
+@keyframes l2Dash{0%{opacity:0;transform:scaleX(.3);transform-origin:right}40%{opacity:.7}100%{opacity:0;transform:scaleX(1)}}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-count{position:absolute;right:12%;top:22%;z-index:3;display:grid!important;width:auto!important;padding:3px 8px;border-radius:8px;background:#2E2A33;overflow:hidden;height:20px!important}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-count u{display:block!important;text-decoration:none;grid-area:1/1;font:900 12px/14px Nunito,sans-serif!important;color:#fff;opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-count u:first-child{opacity:1}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-count u:nth-child(1){animation:l2N1 2.6s linear both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-count u:nth-child(2){animation:l2N2 2.6s linear both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-count u:nth-child(3){animation:l2N3 2.6s linear both}
+@keyframes l2N1{0%,28%{opacity:1;transform:none}32%,100%{opacity:0;transform:translateY(-12px)}}
+@keyframes l2N2{0%,28%{opacity:0;transform:translateY(12px)}32%,72%{opacity:1;transform:none}76%,100%{opacity:0;transform:translateY(-12px)}}
+@keyframes l2N3{0%,72%{opacity:0;transform:translateY(12px)}78%,100%{opacity:1;transform:scale(1.15)}}
+/* Shiny ou normal */
+:is(#screen-config,#screen-all-modes).hm-on .hm-flipcard{left:50%;top:46%;width:72px;height:72px;margin:-36px;transform-style:preserve-3d}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-flipcard .hm-flip-back{position:absolute;inset:0;width:100%;height:100%;filter:hue-rotate(205deg) saturate(1.6) brightness(1.08);opacity:0;object-fit:contain}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-flipcard{animation:l2Turn 2.6s ease-in-out both}
+@keyframes l2Turn{0%,22%{transform:rotateY(0)}34%{transform:rotateY(90deg)}46%,100%{transform:rotateY(0)}}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-flipcard .hm-flip-back{animation:l2ShinyOn 2.6s linear both}
+@keyframes l2ShinyOn{0%,33%{opacity:0}34%,96%{opacity:1}100%{opacity:0}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-sparkles i{position:absolute;width:10px;height:10px;z-index:4;opacity:0;background:#FFD45C;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+:is(#screen-config,#screen-all-modes).hm-on .hm-sparkles i:nth-child(1){left:24%;top:20%}:is(#screen-config,#screen-all-modes).hm-on .hm-sparkles i:nth-child(2){right:22%;top:28%;width:14px;height:14px}
+:is(#screen-config,#screen-all-modes).hm-on .hm-sparkles i:nth-child(3){left:30%;top:66%;width:8px;height:8px}:is(#screen-config,#screen-all-modes).hm-on .hm-sparkles i:nth-child(4){right:28%;top:62%}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-sparkles i{animation:l2Twinkle .7s ease-in-out both;animation-delay:calc(.95s + var(--d,0s))}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-sparkles i:nth-child(2){--d:.15s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-sparkles i:nth-child(3){--d:.3s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-sparkles i:nth-child(4){--d:.45s}
+@keyframes l2Twinkle{0%{opacity:0;transform:scale(0) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}100%{opacity:0;transform:scale(.4) rotate(90deg)}}
+/* Draft */
+:is(#screen-config,#screen-all-modes).hm-on .hm-slots{position:absolute;left:50%;top:76%;translate:-50% 0;display:flex;gap:4px;z-index:3}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-slots i{display:block;width:13px;height:13px;border-radius:4px;border:2px dashed rgba(46,42,51,.3);background:rgba(255,255,255,.6)}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-slots i{animation:l2Slot 2.6s var(--hm-spring) both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-slots i:nth-child(2){animation-delay:.18s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-slots i:nth-child(3){animation-delay:.36s}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-slots i:nth-child(4){animation-delay:.54s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-slots i:nth-child(5){animation-delay:.72s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-slots i:nth-child(6){animation-delay:.9s}
+@keyframes l2Slot{0%,8%{transform:scale(1);border-style:dashed;background:rgba(255,255,255,.6)}14%{transform:scale(1.3);border:2px solid var(--tile-ink,#2F4A70);background:var(--tile-ink,#2F4A70)}22%,100%{transform:scale(1);border:2px solid var(--tile-ink,#2F4A70);background:var(--tile-ink,#2F4A70)}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-draft-mon{left:50%;top:40%;width:62px;height:62px;margin:-31px}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-score{position:absolute;right:12%;top:20%;z-index:3;padding:2px 8px;border-radius:8px;background:#FFD45C;font:900 12px/1.3 Fredoka,Nunito,sans-serif!important;color:#2E2A33;opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-score{animation:l2Score 2.6s var(--hm-spring) both}
+@keyframes l2Score{0%,62%{opacity:0;transform:scale(.4)}70%,96%{opacity:1;transform:scale(1)}100%{opacity:0}}

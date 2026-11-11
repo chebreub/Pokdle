@@ -34,3 +34,13 @@ test('lot 1: six guessing games get their own scene, with animation names that c
   assert.ok(names.length >= 15);
   assert.equal(new Set(names).size, names.length, 'each lot-1 animation name is unique');
 });
+
+test('lot 2: six more games get their scene, with unique animation names', () => {
+  const lot = fs.readFileSync(path.join(__dirname, '../src/script.10zzi.scenes-lot2.js'), 'utf8');
+  for (const key of ['startEvolutionChainGame', 'startPokedexOrderGame', 'openTypeComboSolo', 'openSpeedrunMode', 'openShinyMode', 'openDraftScoreAttackMode']) assert.match(lot, new RegExp('HM_SCENES\\.' + key + ' = '), key);
+  assert.doesNotMatch(lot, /[\u{1F300}-\u{1FAFF}]/u, 'no emoji');
+  const all = fs.readdirSync(path.join(__dirname, '..')).filter((f) => f.endsWith('.css')).map((f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
+  const names = [...all.matchAll(/@keyframes (l2\w+)/g)].map((m) => m[1]);
+  assert.ok(names.length >= 15);
+  assert.equal(new Set(names).size, names.length, 'each lot-2 animation name is unique');
+});
