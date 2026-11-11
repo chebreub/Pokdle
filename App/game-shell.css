@@ -2779,3 +2779,95 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 }
 #pokdle-app #screen-party-room.party-tab-friends #party-duels.is-chips{display:none!important}
 .fr-v3-side .fr-pend{order:3}.fr-v3-side .fr-invite{order:4}.fr-v3-side .fr-side-note{order:5}
+
+/* 🎉 Tuiles des jeux de la Party Room (11/11/2026, maquette validée) — script.10zzl.party-tiles.js
+   La couleur du jeu (--c) en fond doux, un grand artwork dans le coin, le nom en gros, les joueurs en pastille. */
+#pokdle-app #screen-party-room #party-lobby.pt-on .pl3-strip>button.pt-tile{position:relative;overflow:hidden;flex:0 0 132px;height:150px;display:block;padding:12px 12px;border-radius:20px;text-align:left;
+  background:linear-gradient(160deg,color-mix(in oklab,var(--c) 22%,#fff),color-mix(in oklab,var(--c) 45%,#fff));border:2px solid color-mix(in oklab,var(--c) 40%,#fff);box-shadow:0 4px 0 color-mix(in oklab,var(--c) 55%,#fff);color:#2E2A33;transition:transform .15s}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in oklab,var(--c) 55%,#fff)}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-thumb{position:absolute;right:-10px;bottom:-8px;width:100px;height:100px;border:0;border-radius:0;background:none!important;overflow:visible;display:block}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-thumb img{width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 6px 6px rgba(40,20,10,.18));animation:ptBreathe 4s ease-in-out infinite;animation-delay:var(--d,0s);transform-origin:50% 90%}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name{position:relative;z-index:1;display:block}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name b,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>b{position:relative;z-index:1;display:block;max-width:100%;font:600 15.5px/1.12 Fredoka,Nunito,sans-serif;color:#2E2A33}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name small,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>small{position:absolute;z-index:1;left:10px;bottom:10px;display:block;max-width:calc(100% - 20px);padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.88);font:800 11px Nunito,sans-serif;color:#5A5263;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name{position:static}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.is-on{border:3px solid var(--c);box-shadow:0 0 0 4px color-mix(in oklab,var(--c) 25%,#fff),0 4px 0 var(--c)}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.is-on::after{content:"✓ Choisi";position:absolute;z-index:2;right:8px;bottom:10px;padding:3px 8px;border-radius:999px;background:var(--c);color:#fff;font:900 11px Nunito,sans-serif}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .new-game-badge{z-index:3}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile:focus-visible{outline:3px solid #2E2A33;outline-offset:2px}
+#party-lobby.pt-on #pl3-group{-webkit-mask-image:none;mask-image:none;padding-right:0}
+#party-lobby.pt-on .pl3-strip{gap:10px;padding:4px 2px 8px}
+@media (min-width:861px){
+  #pokdle-app #screen-party-room #party-lobby.pt-on .pl3-strip>button.pt-tile{height:118px;padding:12px 14px;flex:initial}
+  #pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-thumb,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-thumb img{width:108px;height:108px}
+  #pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name b,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>b{max-width:62%;font-size:17px}
+  #pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name small,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>small{left:12px;bottom:11px;max-width:60%}
+  #pokdle-app #screen-party-room #party-lobby.pt-on #pl3-duo .pt-tile{height:104px}
+  #pokdle-app #screen-party-room #party-lobby.pt-on #pl3-duo .pt-tile .pl3-thumb,#pokdle-app #screen-party-room #party-lobby.pt-on #pl3-duo .pt-tile .pl3-thumb img{width:88px;height:88px}
+  #pokdle-app #screen-party-room #party-lobby.pt-on #pl3-duo .pt-tile>b{font-size:15.5px}
+  #pokdle-app #screen-party-room #party-lobby.pt-on #pl3-duo .pt-tile>small{-webkit-line-clamp:unset;display:block}
+}
+/* Les scènes : une à la fois (classe pt-play posée 2,4 s), en surimpression sur l'artwork. */
+.pt-fx{position:absolute;z-index:1;right:0;top:0;bottom:0;width:58%;pointer-events:none;opacity:0}
+.pt-tile.pt-play .pt-fx{opacity:1}
+.pt-fx i{position:absolute;font-style:normal;display:block}
+.pt-fx-draw svg{position:absolute;left:4%;top:30%;width:92%;height:56%;overflow:visible}
+.pt-fx-draw path{fill:none;stroke:#2E2A33;stroke-width:4;stroke-linecap:round;stroke-dasharray:140;stroke-dashoffset:140}
+.pt-play .pt-fx-draw path{animation:ptDraw 1.6s ease-out forwards}
+.pt-fx-who .pt-card{right:14%;top:18%;width:34px;height:44px;border-radius:7px;background:#fff;border:2px solid var(--c);display:grid;place-items:center;font:700 20px Fredoka,sans-serif;color:var(--c);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+.pt-play .pt-fx-who .pt-card{animation:ptFlip 1.4s ease-in-out}
+.pt-fx-bac .pt-letter{right:12%;top:16%;width:36px;height:36px;border-radius:10px;background:#fff;border:2px solid var(--c);overflow:hidden;font:700 22px/36px Fredoka,sans-serif;color:#2E2A33;text-align:center}
+.pt-fx-bac .pt-letter span{display:block;width:100%;word-spacing:100px;line-height:36px}
+.pt-play .pt-fx-bac .pt-letter span{animation:ptRoll 1.6s steps(8) forwards}
+.pt-fx-race .pt-cells{right:10%;top:14%;display:grid;grid-template-columns:repeat(3,11px);gap:3px}
+.pt-fx-race .pt-cells u{width:11px;height:11px;border-radius:3px;background:rgba(255,255,255,.85);text-decoration:none}
+.pt-play .pt-fx-race .pt-cells u{animation:ptCell .3s ease-out forwards}
+.pt-play .pt-fx-race .pt-cells u:nth-child(2){animation-delay:.15s}.pt-play .pt-fx-race .pt-cells u:nth-child(4){animation-delay:.3s}.pt-play .pt-fx-race .pt-cells u:nth-child(9){animation-delay:.45s}.pt-play .pt-fx-race .pt-cells u:nth-child(5){animation-delay:.6s}.pt-play .pt-fx-race .pt-cells u:nth-child(7){animation-delay:.75s}
+.pt-fx-race .pt-cells u:nth-child(3),.pt-fx-race .pt-cells u:nth-child(6),.pt-fx-race .pt-cells u:nth-child(8){animation:none!important}
+.pt-fx-coop .pt-lens{left:6%;top:24%;width:34px;height:34px;border-radius:50%;border:4px solid #2E2A33;background:rgba(255,255,255,.35)}
+.pt-fx-coop .pt-lens::after{content:"";position:absolute;right:-12px;bottom:-10px;width:14px;height:5px;border-radius:3px;background:#2E2A33;transform:rotate(45deg)}
+.pt-play .pt-fx-coop .pt-lens{animation:ptLens 2s ease-in-out}
+.pt-fx-mystery .pt-q{right:16%;top:6%;font:700 40px Fredoka,sans-serif;color:#fff;-webkit-text-stroke:3px var(--c);paint-order:stroke fill}
+.pt-play .pt-fx-mystery .pt-q{animation:ptPulse 1.2s ease-in-out 2}
+.pt-fx-speed .pt-lines{left:0;top:30%;width:70%}
+.pt-fx-speed .pt-lines u{display:block;height:4px;margin:8px 0;border-radius:2px;background:rgba(255,255,255,.95);text-decoration:none;transform:translateX(120%)}
+.pt-play .pt-fx-speed .pt-lines u{animation:ptDash .55s linear 3}
+.pt-play .pt-fx-speed .pt-lines u:nth-child(2){animation-delay:.15s;width:70%}.pt-play .pt-fx-speed .pt-lines u:nth-child(3){animation-delay:.3s;width:50%}
+.pt-fx-number .pt-num{right:8%;top:14%;height:26px;padding:0 8px;border-radius:999px;background:#fff;border:2px solid var(--c);overflow:hidden;font:800 13px/22px Nunito,sans-serif;color:#2E2A33;width:62px;text-align:center}
+.pt-fx-number .pt-num span{display:block;word-spacing:100px;line-height:22px}
+.pt-play .pt-fx-number .pt-num span{animation:ptRollN 1.6s steps(5) forwards}
+.pt-fx-combo .pt-chip{top:18%;width:30px;height:14px;border-radius:999px}
+.pt-fx-combo .is-a{left:6%;background:#F08030}.pt-fx-combo .is-b{right:6%;background:#6A3AE8}
+.pt-play .pt-fx-combo .is-a{animation:ptChipA 1.6s ease-in-out forwards}.pt-play .pt-fx-combo .is-b{animation:ptChipB 1.6s ease-in-out forwards}
+.pt-fx-duo .pt-tick{top:14%;width:24px;height:24px;border-radius:50%;background:#3E9B57;color:#fff;font:900 14px/24px Nunito,sans-serif;text-align:center;transform:scale(0)}
+.pt-fx-duo .is-a{right:40%}.pt-fx-duo .is-b{right:12%}
+.pt-play .pt-fx-duo .pt-tick{animation:ptPop .4s ease-out forwards}.pt-play .pt-fx-duo .is-b{animation-delay:.5s}
+.pt-fx-stat .pt-bar{right:8%;top:18%;width:60%;height:10px;border-radius:999px;background:rgba(255,255,255,.75);overflow:hidden}
+.pt-fx-stat .pt-bar u{display:block;height:100%;width:0;border-radius:999px;background:var(--c)}
+.pt-play .pt-fx-stat .pt-bar u{animation:ptBar 1.4s ease-out forwards}
+.pt-fx-vs .pt-vs{right:24%;top:20%;font:700 30px Fredoka,sans-serif;color:#fff;-webkit-text-stroke:3px #2E2A33;paint-order:stroke fill;transform:scale(0) rotate(-12deg)}
+.pt-play .pt-fx-vs .pt-vs{animation:ptStamp .5s cubic-bezier(.2,1.6,.4,1) forwards}
+.pt-fx-coin .pt-coin{right:18%;top:-30px;width:28px;height:28px;border-radius:50%;background:#FFD45C;border:3px solid #C99A1E;font:900 14px/22px Nunito,sans-serif;text-align:center;color:#7A5A00}
+.pt-play .pt-fx-coin .pt-coin{animation:ptCoin 1.2s cubic-bezier(.3,1.4,.5,1) forwards}
+.pt-fx-send .pt-plane{left:0;top:40%;width:0;height:0;border-left:22px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.15))}
+.pt-play .pt-fx-send .pt-plane{animation:ptFly 1.6s ease-in-out forwards}
+@keyframes ptBreathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.03)}}
+@keyframes ptDraw{to{stroke-dashoffset:0}}
+@keyframes ptFlip{0%,100%{transform:rotateY(0)}50%{transform:rotateY(180deg)}}
+@keyframes ptRoll{to{transform:translateY(-288px)}}
+@keyframes ptRollN{to{transform:translateY(-110px)}}
+@keyframes ptCell{to{background:var(--c);transform:scale(1.1)}}
+@keyframes ptLens{0%{transform:translate(0,0)}50%{transform:translate(40px,-10px)}100%{transform:translate(10px,6px)}}
+@keyframes ptPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+@keyframes ptDash{from{transform:translateX(120%)}to{transform:translateX(-130%)}}
+@keyframes ptChipA{60%,100%{transform:translateX(22px)}}
+@keyframes ptChipB{60%,100%{transform:translateX(-22px)}}
+@keyframes ptPop{to{transform:scale(1)}}
+@keyframes ptBar{to{width:92%}}
+@keyframes ptStamp{to{transform:scale(1) rotate(-12deg)}}
+@keyframes ptCoin{to{transform:translateY(64px)}}
+@keyframes ptFly{0%{transform:translate(0,0)}100%{transform:translate(110px,-40px)}}
+@media (prefers-reduced-motion:reduce){#party-lobby.pt-on .pt-tile *,#party-lobby.pt-on .pt-tile{animation:none!important}#party-lobby.pt-on .pt-fx{display:none}}
+.reduce-motion #party-lobby.pt-on .pt-tile *{animation:none!important}.reduce-motion #party-lobby.pt-on .pt-fx{display:none}
+#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name b,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>b{position:absolute;left:12px;top:11px;right:auto;margin:0}
+@media (min-width:861px){#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile .pl3-name b,#pokdle-app #screen-party-room #party-lobby.pt-on .pt-tile.party-duel-link>b{left:14px;top:12px}}
