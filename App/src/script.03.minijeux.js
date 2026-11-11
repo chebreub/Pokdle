@@ -8,6 +8,13 @@ const HIGHER_LOWER_STATS = [
   { key: "speed", label: "Vitesse", icon: "💨" },
 ];
 
+// « Plus de Vitesse » / « Moins d'Attaque » : la stat est écrite sur les boutons eux-mêmes.
+function higherLowerMoreLabel(statMeta, more) {
+  const label = String(statMeta && statMeta.label || "");
+  const vowel = /^[aeiouyàâéèêîïôûAEIOUYÀÂÉÈÊÎÏÔÛ]/.test(label);
+  return (more ? "Plus " : "Moins ") + (vowel ? "d’" : "de ") + label;
+}
+
 let higherLowerState = null;
 const higherLowerTimeouts = new Set();
 let higherLowerRushIntervalId = null;
@@ -227,7 +234,7 @@ function answerHigherLower(choice) {
       renderHigherLowerScreen();
       notifyPartyRoundFromScreenMode(higherLowerState.score >= 5, `score ${higherLowerState.score}`);
     }
-  }, higherLowerState.mode === "rush60" ? 900 : 1800);
+  }, higherLowerState.mode === "rush60" ? 900 : (correct ? 1000 : 1800));
 }
 
 function higherLowerIsPartyRound() {
@@ -436,11 +443,11 @@ function renderHigherLowerScreen() {
     scoreHtml = `<span>Score : <b>${state.score}</b></span><span>Record : <b>${state.highScore}</b></span>`;
   }
   root.innerHTML = `
-    <div class="higher-lower-board">
+    <div class="higher-lower-board" data-stat="${escapeHtml(statMeta.key)}">
       <div class="higher-lower-scoreline">${scoreHtml}</div>
       ${state.roomError ? `<p class="higher-lower-feedback is-wrong" role="status">${escapeHtml(state.roomError)}</p>` : ""}
       ${isVersus && state.isAnimating && !isReveal ? `<p role="status">Validation de la réponse…</p>` : ""}
-      <div class="higher-lower-stat-banner">Stat à comparer : <b>${statMeta.icon} ${escapeHtml(statMeta.label)}</b></div>
+      <div class="higher-lower-stat-banner" data-stat="${escapeHtml(statMeta.key)}"><small>Stat à comparer</small><b>${statMeta.icon} ${escapeHtml(statMeta.label)}</b></div>
       <div class="higher-lower-pair">
         <div class="higher-lower-card-pokemon side-left">
           <img class="higher-lower-sprite" src="${escapeHtml(leftSprite)}" alt="${escapeHtml(state.left.pokemon.name)}" />
@@ -456,8 +463,8 @@ function renderHigherLowerScreen() {
       </div>
       ${isReveal ? `<p class="higher-lower-feedback ${state.lastCorrect ? "is-correct" : "is-wrong"}">${state.lastCorrect ? "✅ Bien vu !" : "❌ Raté."} ${escapeHtml(state.right.pokemon.name)} a <b>${state.right.statValue}</b> en ${escapeHtml(statMeta.label)}.</p>` : `
         <div class="higher-lower-actions">
-          <button class="btn-red higher-lower-btn-higher" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["higher"]' ${state.isAnimating ? "disabled" : ""}>▲ Plus haut</button>
-          <button class="btn-blue higher-lower-btn-lower" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["lower"]' ${state.isAnimating ? "disabled" : ""}>▼ Plus bas</button>
+          <button class="btn-red higher-lower-btn-higher" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["higher"]' ${state.isAnimating ? "disabled" : ""}>▲ ${escapeHtml(higherLowerMoreLabel(statMeta, true))}</button>
+          <button class="btn-blue higher-lower-btn-lower" type="button" data-action="${isVersus ? "answerHigherLowerVersus" : "answerHigherLower"}" data-args='["lower"]' ${state.isAnimating ? "disabled" : ""}>▼ ${escapeHtml(higherLowerMoreLabel(statMeta, false))}</button>
         </div>
       `}
     </div>`;

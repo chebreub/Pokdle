@@ -19,16 +19,19 @@ function nextDelay(mode,nextAt=1900,serverNow=1000){
   return rtt=>ctx.verifiedHLNextDelay({mode,nextAt,serverNow},rtt);
 }
 
-test('only Rush anticipates /next; the server still enforces 60 s and 900 ms',()=>{
+test('Rush and infinite anticipate /next; the server still enforces 60 s, 900 ms and 1 s',()=>{
   const rush=nextDelay('higher-lower-rush');
   assert.equal(rush(0),930);
   assert.equal(rush(100),830);
   assert.equal(rush(400),530);
   assert.equal(rush(10000),30,'round-trip compensation cannot exceed the reveal');
-  assert.equal(nextDelay('higher-lower')(400),930,'infinite mode retains its existing pacing');
+  const inf=nextDelay('higher-lower',2000,1000);
+  assert.equal(inf(0),1030);
+  assert.equal(inf(400),630,'infinite mode now overlaps the network time too (11/11)');
+  assert.equal(inf(10000),30);
   const server=fs.readFileSync(path.join(__dirname,'../lib/quiz-higher-lower.js'),'utf8');
   assert.match(server,/s\.endsAt=\+clock\(\)\+60000/);
-  assert.match(server,/s\.nextAt=\+clock\(\)\+\(s\.mode==='higher-lower-rush'\?900:1800\)/);
+  assert.match(server,/s\.nextAt=\+clock\(\)\+\(s\.mode==='higher-lower-rush'\?900:1000\)/);
 });
 
 function runner(responses, clock=()=>1000){
@@ -121,7 +124,7 @@ test('an error unrelated to timing is never silently retried',async()=>{
 test('the answer RTT is measured and the visible deadline is set separately from server readiness',()=>{
   assert.match(script,/const requestStarted=performance\.now\(\)/);
   assert.match(script,/applyVerifiedHL\(data,state,performance\.now\(\)-requestStarted\)/);
-  assert.match(script,/revealReadyMono=s\.mode==='higher-lower-rush'&&s\.phase==='reveal' \? performance\.now\(\)\+900 : 0/);
+  assert.match(script,/revealReadyMono=s\.phase==='reveal' \? performance\.now\(\)\+\(s\.mode==='higher-lower-rush'\?900:1000\) : 0/);
   assert.match(script,/verifiedHLNextDelay\(s,state\.networkRttMs\)/);
-  assert.match(script,/state\.mode==='rush60'\s*\? Math\.max\(0,\(state\.revealReadyMono\|\|0\)-performance\.now\(\)\) : 0/);
+  assert.match(script,/const revealLeft=Math\.max\(0,\(state\.revealReadyMono\|\|0\)-performance\.now\(\)\)/);
 });

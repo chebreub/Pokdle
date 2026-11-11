@@ -63,7 +63,9 @@ function av2HigherLower() {
     if (b.dataset.av2) return;
     b.dataset.av2 = '1';
     var up = b.classList.contains('higher-lower-btn-higher');
-    b.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="' + (up ? 'M10 3l7 8h-4v6H7v-6H3z' : 'M10 17l7-8h-4V3H7v6H3z') + '"/></svg>' + (up ? 'Plus haut' : 'Plus bas');
+    // Le libellé d'origine nomme la stat (« Plus de Vitesse ») : on le garde, sans la flèche texte.
+    var label = (b.textContent || '').replace(/^[▲▼\s]+/, '').trim() || (up ? 'Plus haut' : 'Plus bas');
+    b.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="' + (up ? 'M10 3l7 8h-4v6H7v-6H3z' : 'M10 17l7-8h-4V3H7v6H3z') + '"/></svg>' + escapeHtml(label);
   });
   var over2 = root.querySelector('.higher-lower-gameover');
   if (over2) {

@@ -172,7 +172,7 @@ function createQuizHigherLower(catalog,randomInt,clock) {
       s.phase=s.round===14?'over':'reveal';
     } else {
       s.phase=s.mode==='higher-lower'&&!correct?'over':'reveal';
-      s.nextAt=+clock()+(s.mode==='higher-lower-rush'?900:1800);
+      s.nextAt=+clock()+(s.mode==='higher-lower-rush'?900:1000);
     }
   }
   function next(s) {

@@ -20,7 +20,19 @@
 #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline{display:flex;justify-content:flex-end;gap:8px;order:-1;background:none!important;padding:0!important}
 #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline span{background:#fff;border-radius:999px;padding:6px 12px;font-weight:800;font-size:13.5px;color:var(--av-ink);box-shadow:0 2px 0 rgba(46,42,51,.1)}
 #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline b{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:15px}
-#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner{display:none}
+/* Stat de la manche bien visible (Kayan, 11/11 : « on voit pas bien quelle stat on demande ») : gros bandeau à la couleur de la stat, rappelé sur les cartes et les boutons. */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board{--hls:#4069E0}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board[data-stat="hp"]{--hls:#D9433B}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board[data-stat="attack"]{--hls:#E0762E}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board[data-stat="defense"]{--hls:#C9A21A}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board[data-stat="spAttack"]{--hls:#4C6FD9}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board[data-stat="spDefense"]{--hls:#3E9B57}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board[data-stat="speed"]{--hls:#D6488F}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner{order:-1;display:flex!important;align-items:center;justify-content:center;gap:10px;margin:0!important;padding:10px 16px!important;border:0!important;border-radius:18px!important;background:var(--hls)!important;color:#fff!important;box-shadow:0 4px 0 color-mix(in oklab,var(--hls) 70%,#000)!important;text-align:center}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner small{font:900 12px Nunito,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner b{font:700 26px/1.1 Fredoka,Nunito,sans-serif;color:#fff!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button{font-size:17px!important;line-height:1.15;white-space:normal}
+@media (max-width:640px){#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner{padding:8px 12px!important}#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner b{font-size:22px}#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner small{display:none}}
 #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{position:relative;display:grid!important;grid-template-columns:1fr!important;gap:14px!important;align-items:stretch}
 #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{position:relative;display:block!important;min-height:178px;padding:16px 18px!important;border-radius:26px!important;background:radial-gradient(circle at 85% 95%,var(--av-soft),#fff 70%)!important;border:2px solid var(--av-line)!important;box-shadow:0 4px 0 var(--av-line)!important;text-align:left!important;overflow:hidden}
 #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon h4{margin:0!important;text-align:left!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:23px;color:var(--av-ink);max-width:62%;line-height:1.1}
@@ -241,3 +253,8 @@
 #pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:#fff}
 /* PC large : les 6 cartes de l'Intrus sur une seule ligne (comme avant, la QA PC le vérifie). */
 @media (min-width:1100px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;max-width:1120px;gap:12px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:210px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:110px!important;height:110px!important}}
+
+/* Higher or Lower (11/11) : le score passe au-dessus du bandeau de la stat (il le recouvrait), et la stat
+   reprend sa couleur sur chaque carte. */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline{position:static!important;order:-2!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{display:inline-block!important;background:var(--hls)!important;color:#fff!important;border-radius:11px!important;padding:5px 12px!important;font:700 17px/1.1 Fredoka,Nunito,sans-serif!important;text-transform:none!important;letter-spacing:0!important;box-shadow:0 2px 0 rgba(0,0,0,.18)}
