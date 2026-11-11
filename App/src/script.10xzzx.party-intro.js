@@ -82,6 +82,14 @@ function piStop() {
   piState.el = null;
 }
 
+function piFadeOut() {
+  var el = piState.el;
+  if (!el || el.classList.contains('is-out')) return;
+  el.classList.add('is-out');
+  el.style.pointerEvents = 'none';
+  setTimeout(function () { if (piState.el === el) piStop(); }, 220);
+}
+
 function piStart(room) {
   var intro = room.intro;
   piStop();
@@ -194,6 +202,8 @@ function piSync() {
   }
   // Lancement annulé (un joueur est parti) : l'intro s'arrête tout de suite. Si la partie a commencé, elle finit seule.
   if (piState.el && (!room || (!room.intro && room.status !== 'playing'))) piStop();
+  // La partie a commencé : l'intro laisse passer les clics tout de suite et s'efface en 0,2 s (le champ de réponse est prêt).
+  else if (piState.el && room && room.status === 'playing' && !room.intro) piFadeOut();
   piSurpriseTile(room);
 }
 

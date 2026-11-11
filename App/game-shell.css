@@ -2723,3 +2723,4 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 .pi.is-still .pi-card{opacity:1}
 .pi-surprise-tile .pi-dice svg{width:28px;height:28px;display:block}
 @media (min-width:900px){.pi-wheel{top:24%}.pi-wlabel{top:calc(24% + min(330px,80vw,42vh) + 22px)}}
+.pi.is-out{opacity:0;transition:opacity .2s ease-out;pointer-events:none}
