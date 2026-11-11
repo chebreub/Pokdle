@@ -77,3 +77,52 @@ if (typeof renderHigherLowerScreen === 'function') {
   var av2HlBefore = renderHigherLowerScreen;
   renderHigherLowerScreen = function () { var r = av2HlBefore.apply(this, arguments); try { av2HigherLower(); } catch (_e) {} return r; };
 }
+
+// Duel de poids (même identité) : les deux Pokémon dans la couleur de leur type, en grand, sur une balance
+// qui penche vers le plus lourd après la réponse ; les deux poids s'affichent. Les cartes restent les boutons.
+function av2Weight() {
+  var game = document.getElementById('screen-game'), box = document.getElementById('weight-box');
+  if (!game || !box) return;
+  var on = !box.classList.contains('hidden');
+  game.classList.toggle('av2', on);
+  game.classList.toggle('av2-wt', on);
+  if (!on || typeof weightBattleState === 'undefined' || !weightBattleState) return;
+  var st = weightBattleState, pair = [st.left, st.right];
+  var cards = box.querySelectorAll('#weight-grid .versus-card');
+  cards.forEach(function (card, i) {
+    var mon = pair[i];
+    if (!mon) return;
+    var c = typeof FAV_TYPE_COLORS !== 'undefined' ? FAV_TYPE_COLORS[mon.type1] : null;
+    if (c) card.style.setProperty('--t', c);
+    var img = card.querySelector('img');
+    if (img && typeof pokedexDetailArtwork === 'function' && !img.dataset.av2Art) {
+      img.dataset.av2Art = '1';
+      var fb = img.src;
+      img.addEventListener('error', function () { if (img.src !== fb) img.src = fb; }, { once: true });
+      img.src = pokedexDetailArtwork(mon, false);
+    }
+    var kg = card.querySelector('.av2-kg');
+    if (!kg) { kg = document.createElement('span'); kg.className = 'av2-kg'; card.appendChild(kg); }
+    kg.textContent = st.revealed && mon.weight != null ? String(mon.weight).replace('.', ',') + ' kg' : '? kg';
+  });
+  var beam = box.querySelector('.av2-scale');
+  if (!beam) {
+    beam = document.createElement('div');
+    beam.className = 'av2-scale';
+    beam.setAttribute('aria-hidden', 'true');
+    beam.innerHTML = '<i class="av2-beam"></i><i class="av2-post"></i><i class="av2-foot"></i>';
+    box.querySelector('#weight-grid').after(beam);
+  }
+  var tilt = 0;
+  if (st.revealed && st.left && st.right) tilt = Number(st.left.weight) >= Number(st.right.weight) ? -7 : 7;
+  beam.style.setProperty('--tilt', tilt + 'deg');
+  box.classList.toggle('av2-revealed', Boolean(st.revealed));
+}
+if (typeof renderWeightBattlePanel === 'function') {
+  var av2WtBefore = renderWeightBattlePanel;
+  renderWeightBattlePanel = function () { var r = av2WtBefore.apply(this, arguments); try { av2Weight(); } catch (_e) {} return r; };
+}
+if (typeof hideCustomModeSurfaces === 'function') {
+  var av2HideBefore = hideCustomModeSurfaces;
+  hideCustomModeSurfaces = function () { var r = av2HideBefore.apply(this, arguments); var g = document.getElementById('screen-game'); if (g) g.classList.remove('av2', 'av2-wt'); return r; };
+}
