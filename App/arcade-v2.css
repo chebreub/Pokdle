@@ -1,0 +1,243 @@
+/* Écrans de jeu « identité Pokédle » (11/11/2026, script.10zzk.arcade-v2.js).
+   Fond crème ; la couleur du jeu (--av) en accent seulement ; en-tête sur une ligne ; grandes cartes blanches
+   à liseré ; boutons posés en bas. Code couleur : Plus haut = orange, Plus bas = bleu. Pas d'emoji. */
+
+#pokdle-app .av2{--av:#3E9B57;--av-soft:#DFF3E4;--av-line:#BFE3C9;--av-up:#F0743E;--av-up-d:#C4572A;--av-down:#4069E0;--av-down-d:#2C4FB8;--av-ink:#2E2A33}
+#pokdle-app .av2.av2-hl{--av:#3E9B57;--av-soft:#DFF3E4;--av-line:#BFE3C9}
+
+/* La carte du jeu devient une scène crème avec un léger dégradé de la couleur du jeu en haut. */
+#pokdle-app .av2>.card{position:relative;overflow:hidden;background:#FFF8EF!important;border:0!important;border-radius:28px!important;box-shadow:0 10px 30px rgba(46,42,51,.08)!important}
+#pokdle-app .av2>.card::before{content:"";position:absolute;left:0;right:0;top:0;height:300px;background:linear-gradient(180deg,var(--av-soft),rgba(255,248,239,0));pointer-events:none;z-index:0}
+#pokdle-app .av2>.card>*{position:relative;z-index:1}
+#pokdle-app .av2 .dedicated-toolbar{border-bottom:0!important;padding-bottom:4px}
+#pokdle-app .av2 .dedicated-toolbar .btn-ghost,#pokdle-app .av2 .dedicated-help summary{background:#fff!important;border:0!important;box-shadow:0 2px 0 rgba(46,42,51,.12)!important;border-radius:999px!important}
+#pokdle-app .av2 .shell-mode{font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:17px;color:var(--av-ink)}
+/* Pendant la partie : plus de titre ni de texte d'explication (ils restent dans « Comment jouer »). */
+#pokdle-app .av2.av2-playing .ranking-head,#pokdle-app .av2.av2-playing .card-desc,#pokdle-app .av2.av2-over .card-desc{display:none!important}
+
+/* Higher or Lower — partie */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board{display:flex;flex-direction:column;gap:12px;background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline{display:flex;justify-content:flex-end;gap:8px;order:-1;background:none!important;padding:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline span{background:#fff;border-radius:999px;padding:6px 12px;font-weight:800;font-size:13.5px;color:var(--av-ink);box-shadow:0 2px 0 rgba(46,42,51,.1)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline b{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:15px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-banner{display:none}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{position:relative;display:grid!important;grid-template-columns:1fr!important;gap:14px!important;align-items:stretch}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{position:relative;display:block!important;min-height:178px;padding:16px 18px!important;border-radius:26px!important;background:radial-gradient(circle at 85% 95%,var(--av-soft),#fff 70%)!important;border:2px solid var(--av-line)!important;box-shadow:0 4px 0 var(--av-line)!important;text-align:left!important;overflow:hidden}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon h4{margin:0!important;text-align:left!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:23px;color:var(--av-ink);max-width:62%;line-height:1.1}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-sprite{position:absolute!important;right:4px;bottom:2px;width:150px!important;height:150px!important;max-width:none!important;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.18));margin:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value{display:flex!important;flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px!important;background:none!important;padding:0!important;border:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{display:inline-block;background:var(--av);color:#fff!important;border-radius:11px;padding:4px 11px;font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:15px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:64px!important;line-height:1;color:var(--av-ink)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-stat-value b{color:#C9C1B8}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-correct .higher-lower-stat-value b{color:#2F7D4A}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-wrong .higher-lower-stat-value b{color:#C2342B}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-correct{border-color:#3E9B57!important;box-shadow:0 4px 0 #3E9B57!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-wrong{border-color:#E5463F!important;box-shadow:0 4px 0 #E5463F!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-vs{position:absolute!important;left:50%;top:50%;width:52px!important;height:52px!important;margin:-26px 0 0 -26px;z-index:3;display:grid!important;place-items:center;border-radius:50%!important;background:#fff!important;border:3px solid var(--av-ink)!important;color:var(--av-ink)!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:17px;box-shadow:0 3px 0 rgba(46,42,51,.15)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;margin:4px -6px 0;padding:14px;border-radius:24px;background:#F6EFE6}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button{display:flex;align-items:center;justify-content:center;gap:8px;height:60px;border-radius:18px!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important;font-size:19px!important;color:#fff!important;border:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button svg{width:20px;height:20px;fill:#fff}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-btn-higher{background:var(--av-up)!important;box-shadow:0 4px 0 var(--av-up-d)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-btn-lower{background:var(--av-down)!important;box-shadow:0 4px 0 var(--av-down-d)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-feedback{border-radius:16px!important;font-weight:800;text-align:center}
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{grid-template-columns:1fr 1fr!important;gap:90px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{min-height:300px}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-sprite{width:220px!important;height:220px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value{position:absolute;left:18px;bottom:16px}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{position:absolute;top:-210px;left:0}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b{font-size:88px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{max-width:520px;margin:6px auto 0;width:100%}
+}
+
+/* Higher or Lower — fin de partie : une carte blanche, puis Rejouer (bleu) et les autres boutons en blanc. */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover{background:#fff!important;border:2px solid var(--av-line)!important;border-radius:26px!important;box-shadow:0 4px 0 var(--av-line)!important;padding:22px 18px!important;text-align:center}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover h3{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:34px;color:var(--av)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-final-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-final-actions button{height:52px;border-radius:16px!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important;font-size:16px!important;background:#fff!important;color:var(--av-ink)!important;border:2px solid #EEE3D6!important;box-shadow:0 3px 0 rgba(46,42,51,.12)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-final-actions button:first-child{grid-column:1/-1;background:var(--av-down)!important;color:#fff!important;border-color:var(--av-down)!important;box-shadow:0 4px 0 var(--av-down-d)!important;height:58px;font-size:18px!important}
+
+/* Sombre : même logique, fond nuit. */
+#pokdle-app.theme-dark .av2>.card{background:#1F1B24!important}
+#pokdle-app.theme-dark .av2>.card::before{background:linear-gradient(180deg,color-mix(in oklab,var(--av) 35%,#1F1B24),rgba(31,27,36,0))}
+#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon,#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover{background:#2A2530!important}
+#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon h4,#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b,#pokdle-app.theme-dark .av2 .shell-mode{color:#F5EFE6}
+#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{background:#2A2530}
+
+/* ===== Higher or Lower, version B (11/11/2026, choisie par Kayan) : l'écran coupé en deux, chaque moitié
+   à la couleur du type de son Pokémon ; nom, stat et valeur en blanc et en grand ; VS sur la coupure ;
+   deux boutons blancs posés en bas. Remplace la mise en page des cartes ci-dessus. ===== */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl.av2-playing>.card{padding-bottom:12px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board{position:relative;gap:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline{position:absolute;right:12px;top:12px;z-index:6}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{gap:0!important;border-radius:26px;overflow:hidden;box-shadow:0 10px 24px rgba(46,42,51,.16)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{--t:#8E8A99;min-height:calc((100svh - 300px) / 2)!important;max-height:340px;border:0!important;border-radius:0!important;box-shadow:none!important;padding:22px 20px!important;background:linear-gradient(160deg,color-mix(in oklab,var(--t) 82%,#fff),color-mix(in oklab,var(--t) 92%,#000))!important;color:#fff}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-left{padding-top:58px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right{padding-bottom:90px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon h4{color:#fff!important;font-size:27px!important;text-shadow:0 2px 0 rgba(0,0,0,.15);max-width:58%}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-sprite{width:min(210px,48vw)!important;height:min(210px,48vw)!important;right:-6px!important;bottom:auto!important;top:50%;transform:translateY(-50%);filter:drop-shadow(0 12px 16px rgba(0,0,0,.28))!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-sprite{top:42%}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value{gap:2px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{background:none!important;padding:0!important;color:rgba(255,255,255,.92)!important;font-family:Nunito,sans-serif!important;font-weight:800!important;font-size:15px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b{color:#fff!important;font-size:88px!important;text-shadow:0 4px 0 rgba(0,0,0,.12)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-stat-value b{color:rgba(255,255,255,.55)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-correct .higher-lower-stat-value b,#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-wrong .higher-lower-stat-value b{color:#fff!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-correct{box-shadow:inset 0 0 0 6px #3E9B57!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-wrong{box-shadow:inset 0 0 0 6px #E5463F!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-vs{width:66px!important;height:66px!important;margin:-33px 0 0 -33px;background:#FFF8EF!important;border:0!important;font-size:22px;box-shadow:0 6px 14px rgba(0,0,0,.22)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{position:absolute;left:14px;right:14px;bottom:14px;margin:0!important;padding:0!important;background:none!important;z-index:5}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button{background:rgba(255,255,255,.94)!important;color:var(--av-ink)!important;box-shadow:0 4px 0 rgba(0,0,0,.18)!important;height:58px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button svg{fill:var(--av-ink)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-feedback{margin-top:10px!important}
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{grid-template-columns:1fr 1fr!important;gap:0!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{min-height:470px!important;max-height:none;padding:64px 28px 100px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-sprite{width:260px!important;height:260px!important;top:auto;bottom:24px;transform:none}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-sprite{top:auto}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value{position:static}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{position:static}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b{font-size:110px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{left:50%;right:auto;width:520px;margin-left:-260px!important}
+}
+/* Code couleur gardé sur les boutons blancs : flèche et texte orange pour Plus haut, bleus pour Plus bas. */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-higher{color:#D45A26!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-higher svg{fill:#F0743E}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-lower{color:#2C4FB8!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-lower svg{fill:#4069E0}
+
+/* Higher or Lower : menu des modes en grandes tuiles de couleur (orange infini, bleu 60 s, encre versus). */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl.av2-lobby .card-desc,#pokdle-app.design-refresh #screen-higher-lower.av2-hl.av2-lobby .ranking-head{display:none!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-lobby h3{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:24px;text-align:left;margin:6px 2px 12px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-modes{display:grid!important;grid-template-columns:1fr!important;gap:12px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card{display:grid!important;grid-template-columns:64px 1fr;grid-template-rows:auto auto auto;column-gap:14px;align-items:center;text-align:left!important;padding:16px!important;border:0!important;border-radius:24px!important;color:#fff!important;box-shadow:0 5px 0 rgba(0,0,0,.18)!important;min-height:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card.av2-mode-infinite{background:linear-gradient(150deg,#F7A35C,#E5763F)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card.av2-mode-rush60{background:linear-gradient(150deg,#7DA7F2,#4F7FE0)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card.av2-mode-versus{background:linear-gradient(150deg,#4A4452,#2E2A33)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-icon{grid-row:1/4;width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,.2);display:grid;place-items:center;margin:0!important;font-size:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-icon svg{width:40px;height:40px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-icon b{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:24px;color:#FFD45C}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card h4{margin:0!important;color:#fff!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:21px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card p{margin:2px 0 6px!important;color:rgba(255,255,255,.92)!important;font-weight:700;font-size:13.5px;line-height:1.35}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-record{justify-self:start;background:rgba(255,255,255,.92)!important;color:#2E2A33!important;border-radius:999px;padding:4px 11px;font-weight:800;font-size:12.5px}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-modes{grid-template-columns:repeat(3,1fr)!important}#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-card{grid-template-columns:1fr;text-align:left!important;align-items:start}#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-mode-icon{grid-row:auto;margin-bottom:10px!important}}
+
+/* Higher or Lower : fin de partie, les deux Pokémon dans leurs couleurs, Rejouer en bleu. */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl.av2-over .ranking-head{display:none!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover{border:0!important;box-shadow:0 10px 24px rgba(46,42,51,.12)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover h3{color:#2E2A33!important;font-size:30px!important;margin:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover>p{font-weight:700;color:#5A5263}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-record{display:inline-block;background:#F1E9FB;color:#5B3FB8!important;border-radius:999px;padding:5px 12px;font-weight:800}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-final-pair{display:grid!important;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:14px 0 4px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-mini{border:0!important;border-radius:20px!important;padding:10px 8px!important;color:#fff!important;background:linear-gradient(160deg,color-mix(in oklab,var(--t,#8E8A99) 82%,#fff),color-mix(in oklab,var(--t,#8E8A99) 92%,#000))!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-mini img{width:84px!important;height:84px!important;object-fit:contain}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-mini span{color:#fff!important;font-weight:800}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-mini b{display:block;font-family:Fredoka,Nunito,sans-serif;font-size:30px;color:#fff!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-mini.is-wrong{box-shadow:inset 0 0 0 4px #E5463F}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-final-vs{width:44px;height:44px;border-radius:50%;background:#FFF8EF;display:grid;place-items:center;font-family:Fredoka,Nunito,sans-serif;font-weight:700;color:#2E2A33!important;box-shadow:0 3px 8px rgba(0,0,0,.15)}
+/* Kayan (11/11) : les deux boutons sous le Pokémon à deviner (sur PC il est à droite), sinon on croit que
+   « Plus haut » = celui de gauche et « Plus bas » = celui de droite. Sur téléphone ils sont déjà dans sa moitié. */
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{left:calc(50% + 28px)!important;right:28px!important;width:auto!important;margin-left:0!important}
+}
+
+/* ===== Duel de poids (même identité) ===== */
+#pokdle-app.design-refresh #screen-game.av2-wt{--av:#A9713F;--av-soft:#F5E6D3}
+#pokdle-app.design-refresh #screen-game.av2-wt #shell-intro{display:none}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-box{position:relative;background:linear-gradient(180deg,#F5E6D3,#FFF8EF 60%)!important;border:0!important;border-radius:28px!important;box-shadow:0 10px 24px rgba(46,42,51,.08)!important;padding:18px 14px 20px!important;overflow:hidden}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-status{font-family:Fredoka,Nunito,sans-serif!important;font-weight:700!important;font-size:24px!important;line-height:1.2;text-align:center;text-transform:none!important;letter-spacing:0!important;color:#2E2A33!important;margin:4px 0 14px!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-box.av2-revealed #weight-status{font-size:18px!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;position:relative;z-index:2}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card{--t:#8E8A99;position:relative;display:flex!important;flex-direction:column;align-items:center;gap:8px;padding:14px 8px 12px!important;border:0!important;border-radius:24px!important;background:linear-gradient(160deg,color-mix(in oklab,var(--t) 82%,#fff),color-mix(in oklab,var(--t) 92%,#000))!important;box-shadow:0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;min-height:0!important;cursor:pointer;transition:transform .12s}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card:active{transform:translateY(3px)}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card{display:flex!important;flex-direction:column;align-items:center;gap:6px;background:none!important;border:0!important;box-shadow:none!important;padding:0!important;width:100%}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card img{width:min(140px,36vw)!important;height:min(140px,36vw)!important;object-fit:contain;filter:drop-shadow(0 10px 12px rgba(0,0,0,.25))!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card strong{color:#fff!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:18px;text-shadow:0 2px 0 rgba(0,0,0,.15)}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:rgba(255,255,255,.94);color:#2E2A33;border-radius:999px;padding:4px 12px;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:16px}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card.is-correct{box-shadow:0 0 0 5px #3E9B57,0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card.is-wrong{opacity:.75}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card[disabled]{cursor:default}
+/* La balance, sous les deux Pokémon : elle penche vers le plus lourd après la réponse. */
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-scale{position:relative;height:84px;margin:-6px 10px 4px}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-beam{position:absolute;left:4%;right:4%;top:14px;height:12px;border-radius:8px;background:#8A6440;transform:rotate(var(--tilt,0deg));transition:transform .7s cubic-bezier(.3,1.6,.5,1);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-post{position:absolute;left:50%;top:18px;width:14px;height:56px;margin-left:-7px;border-radius:7px;background:#8A6440}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-foot{position:absolute;left:50%;top:70px;width:110px;height:12px;margin-left:-55px;border-radius:7px;background:#8A6440}
+#pokdle-app.reduce-motion #screen-game.av2-wt .av2-beam{transition:none}
+#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-actions{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-actions .card-desc{display:none}
+#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-buttons{display:grid!important;grid-template-columns:1fr;gap:10px}
+#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-buttons button{height:54px;border-radius:16px!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important;font-size:17px!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-restart{background:#4069E0!important;color:#fff!important;box-shadow:0 4px 0 #2C4FB8!important;border:0!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-result-catalog{background:#fff!important;color:#2E2A33!important;border:2px solid #EEE3D6!important;box-shadow:0 3px 0 rgba(46,42,51,.12)!important}
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-game.av2-wt #weight-box{padding:26px 40px 28px!important}
+  #pokdle-app.design-refresh #screen-game.av2-wt #weight-status{font-size:30px!important}
+  #pokdle-app.design-refresh #screen-game.av2-wt #weight-grid{gap:40px!important;max-width:760px;margin:0 auto}
+  #pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card img{width:200px!important;height:200px!important}
+  #pokdle-app.design-refresh #screen-game.av2-wt .av2-scale{max-width:760px;margin:-6px auto 6px}
+  #pokdle-app.design-refresh #screen-game.av2-wt .weight-result-buttons{grid-template-columns:1fr 1fr;max-width:520px;margin:0 auto}
+}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card .pokemon-mini-card.is-silhouette{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card::before,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card::after{display:none!important}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-scale{margin-top:14px;z-index:1}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-beam{left:12%;right:12%}
+#pokdle-app.design-refresh #screen-game.av2-wt #weight-status{font-size:20px!important}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-game.av2-wt .av2-beam{transform:rotate(calc(var(--tilt,0deg) * .5))}#pokdle-app.design-refresh #screen-game.av2-wt #weight-status{font-size:26px!important}}
+#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-actions:focus,#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-actions:focus-visible{outline:0!important;box-shadow:none!important}
+
+/* ===== Intrus (même identité) ===== */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd{--av:#7C5BD6;--av-soft:#ECE6FB;--av-line:#DCD2F6}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head{display:flex!important;flex-direction:row;align-items:center;gap:10px;margin:2px 0 8px}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head .card-title{display:none}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head-actions{width:100%}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-new-puzzle-btn{width:100%;height:50px;border-radius:16px!important;background:#fff!important;color:#2E2A33!important;border:2px solid #EEE3D6!important;box-shadow:0 3px 0 rgba(46,42,51,.12)!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-meta-row{display:flex!important;flex-wrap:wrap;gap:6px!important;align-items:center}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-meta-row>span{width:auto!important;background:#fff!important;border:0!important;border-radius:999px!important;padding:5px 11px!important;font-weight:800;font-size:12.5px;color:#2E2A33!important;box-shadow:0 2px 0 rgba(46,42,51,.1)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-puzzle-source{display:none!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-difficulty-picker{width:auto!important;background:#fff!important;border:0!important;border-radius:999px!important;padding:3px 6px 3px 11px!important;box-shadow:0 2px 0 rgba(46,42,51,.1)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-status{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:20px;line-height:1.25;color:#2E2A33!important;text-align:center;margin:12px 0!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{--t:#8E8A99;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:150px;padding:12px 6px!important;border:0!important;border-radius:22px!important;background:linear-gradient(160deg,color-mix(in oklab,var(--t) 82%,#fff),color-mix(in oklab,var(--t) 92%,#000))!important;box-shadow:0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;transition:transform .12s}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card:active{transform:translateY(3px)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:96px!important;height:96px!important;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.25))}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card-name{color:#fff!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:16px;text-shadow:0 2px 0 rgba(0,0,0,.15)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-revealed:not(.is-answer){opacity:.55}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-answer{box-shadow:0 0 0 5px #3E9B57,0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;opacity:1}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-wrong{box-shadow:0 0 0 5px #E5463F,0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;opacity:1}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{grid-template-columns:repeat(3,1fr)!important;gap:16px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:200px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:130px!important;height:130px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head-actions{width:auto}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-new-puzzle-btn{width:auto;padding:0 22px}}
+
+/* ===== Quiz (même identité) : réponses en grandes cartes blanches, lettre dans une pastille de couleur ===== */
+#pokdle-app.design-refresh #screen-game.av2-qz #shell-intro{display:none}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-box{background:#FFF8EF!important;border:0!important;border-radius:28px!important;box-shadow:0 10px 24px rgba(46,42,51,.08)!important;padding:14px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #qz-scene{border-radius:22px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-question{font-family:Fredoka,Nunito,sans-serif!important;font-weight:700!important;font-size:21px!important;line-height:1.25;color:#2E2A33!important;margin:14px 4px 12px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button{display:flex!important;align-items:center;gap:10px;min-height:60px;padding:10px 12px!important;border-radius:18px!important;background:#fff!important;color:#2E2A33!important;border:2px solid #EEE3D6!important;box-shadow:0 4px 0 rgba(46,42,51,.12)!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important;font-size:16px!important;text-align:left;justify-content:flex-start}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(46,42,51,.12)!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options .qz-letter{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:#fff!important;font-size:15px}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(1) .qz-letter{background:#E5463F!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(2) .qz-letter{background:#4069E0!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(3) .qz-letter{background:#E0A82E!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(4) .qz-letter{background:#3E9B57!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.is-correct,#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.qz-ok{border-color:#3E9B57!important;background:#E6F4EA!important;box-shadow:0 4px 0 #3E9B57!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.is-wrong,#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.qz-ko{border-color:#E5463F!important;background:#FDE8E7!important;box-shadow:0 4px 0 #E5463F!important}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button{min-height:68px;font-size:18px!important}}
+/* L'en-tête de l'Intrus : le titre s'écrasait (« I. ») à côté des boutons ; on le cache, « ← Jeux » suffit. */
+@media (max-width:860px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .dedicated-toolbar .shell-mode{display:none!important}}
+
+/* Cosy (11/11, Kayan : « ça fait un peu trop, on perd le côté cosy ») : pour les grilles de plusieurs Pokémon
+   (Intrus, Duel de poids), la couleur du type devient une teinte pastel ; carte crème, nom en encre,
+   liseré et ombre douce de la couleur du type. */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card{background:radial-gradient(120% 90% at 50% 100%,color-mix(in oklab,var(--t) 26%,#fff),#FFFDF9 75%)!important;border:2px solid color-mix(in oklab,var(--t) 35%,#fff)!important;box-shadow:0 4px 0 color-mix(in oklab,var(--t) 35%,#fff)!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card-name,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card strong{color:#2E2A33!important;text-shadow:none!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .pokemon-mini-card img{filter:drop-shadow(0 6px 6px rgba(60,30,10,.16))!important}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:color-mix(in oklab,var(--t) 18%,#fff)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-answer,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card.is-correct{border-color:#3E9B57!important;box-shadow:0 4px 0 #3E9B57!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-wrong{border-color:#E5463F!important;box-shadow:0 4px 0 #E5463F!important}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{max-width:820px;margin:0 auto;gap:14px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:170px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:110px!important;height:110px!important}}
+/* Entre-deux (11/11, « un entre 2 ? ») : teinte franche mais douce, la couleur du type plus présente
+   que le pastel, sans le plein saturé. Nom en encre, liseré et ombre de la couleur du type. */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card,#pokdle-app.design-refresh #screen-game.av2-wt #weight-grid .versus-card{background:linear-gradient(170deg,color-mix(in oklab,var(--t) 30%,#fff),color-mix(in oklab,var(--t) 52%,#fff))!important;border:2px solid color-mix(in oklab,var(--t) 60%,#fff)!important;box-shadow:0 4px 0 color-mix(in oklab,var(--t) 65%,#fff)!important}
+#pokdle-app.design-refresh #screen-game.av2-wt .av2-kg{background:#fff}
+/* PC large : les 6 cartes de l'Intrus sur une seule ligne (comme avant, la QA PC le vérifie). */
+@media (min-width:1100px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;max-width:1120px;gap:12px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:210px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:110px!important;height:110px!important}}

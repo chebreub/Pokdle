@@ -29,7 +29,7 @@ test('every draft-arena.css rule stays on the Score Attack screen', () => {
 });
 
 test('the new sheet is bundled last and its animations follow both reduce-motion settings', () => {
-  assert.match(read('build.mjs'), /"trainer-profile\.css", "draft-arena\.css"\]/);
+  assert.match(read('build.mjs'), /"trainer-profile\.css", "draft-arena\.css"(, "arcade-v2\.css")?\]/);
   assert.match(read('index.html'), /dist\/trainer-profile\.min\.css">\n {2}<link rel="stylesheet" href="dist\/draft-arena\.min\.css">/);
   const motion = css.slice(css.indexOf('@media (prefers-reduced-motion: no-preference)'), css.indexOf('@keyframes'));
   assert.ok(motion.includes('animation'));
