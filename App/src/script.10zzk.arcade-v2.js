@@ -33,6 +33,13 @@ function av2HigherLower() {
   screen.classList.toggle('av2-over', over);
   if (!root) return;
   root.querySelectorAll('.higher-lower-sprite, .higher-lower-card-mini img').forEach(av2Artwork);
+  // Version B (11/11/2026, « B ») : chaque moitié prend la couleur du type de son Pokémon.
+  root.querySelectorAll('.higher-lower-card-pokemon').forEach(function (card) {
+    var img = card.querySelector('.higher-lower-sprite');
+    var mon = img && av2ByName && av2ByName.get(img.getAttribute('alt'));
+    var c = mon && typeof FAV_TYPE_COLORS !== 'undefined' ? FAV_TYPE_COLORS[mon.type1] : null;
+    if (c) card.style.setProperty('--t', c);
+  });
   // La stat sans emoji, dans une pastille ; la valeur en très gros.
   root.querySelectorAll('.higher-lower-stat-banner b, .higher-lower-stat-value span, .higher-lower-card-mini b').forEach(av2Clean);
   root.querySelectorAll('.higher-lower-scoreline span').forEach(function (s) { s.childNodes.forEach(function (n) { if (n.nodeType === 3) n.textContent = n.textContent.replace(AV2_EMOJI, ''); }); });

@@ -64,3 +64,44 @@
 #pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon,#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-gameover{background:#2A2530!important}
 #pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon h4,#pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b,#pokdle-app.theme-dark .av2 .shell-mode{color:#F5EFE6}
 #pokdle-app.theme-dark.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{background:#2A2530}
+
+/* ===== Higher or Lower, version B (11/11/2026, choisie par Kayan) : l'écran coupé en deux, chaque moitié
+   à la couleur du type de son Pokémon ; nom, stat et valeur en blanc et en grand ; VS sur la coupure ;
+   deux boutons blancs posés en bas. Remplace la mise en page des cartes ci-dessus. ===== */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl.av2-playing>.card{padding-bottom:12px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-board{position:relative;gap:0!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-scoreline{position:absolute;right:12px;top:12px;z-index:6}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{gap:0!important;border-radius:26px;overflow:hidden;box-shadow:0 10px 24px rgba(46,42,51,.16)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{--t:#8E8A99;min-height:calc((100svh - 300px) / 2)!important;max-height:340px;border:0!important;border-radius:0!important;box-shadow:none!important;padding:22px 20px!important;background:linear-gradient(160deg,color-mix(in oklab,var(--t) 82%,#fff),color-mix(in oklab,var(--t) 92%,#000))!important;color:#fff}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-left{padding-top:58px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right{padding-bottom:90px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon h4{color:#fff!important;font-size:27px!important;text-shadow:0 2px 0 rgba(0,0,0,.15);max-width:58%}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-sprite{width:min(210px,48vw)!important;height:min(210px,48vw)!important;right:-6px!important;bottom:auto!important;top:50%;transform:translateY(-50%);filter:drop-shadow(0 12px 16px rgba(0,0,0,.28))!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-sprite{top:42%}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value{gap:2px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{background:none!important;padding:0!important;color:rgba(255,255,255,.92)!important;font-family:Nunito,sans-serif!important;font-weight:800!important;font-size:15px!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b{color:#fff!important;font-size:88px!important;text-shadow:0 4px 0 rgba(0,0,0,.12)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-stat-value b{color:rgba(255,255,255,.55)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-correct .higher-lower-stat-value b,#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-wrong .higher-lower-stat-value b{color:#fff!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-correct{box-shadow:inset 0 0 0 6px #3E9B57!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right.is-wrong{box-shadow:inset 0 0 0 6px #E5463F!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-vs{width:66px!important;height:66px!important;margin:-33px 0 0 -33px;background:#FFF8EF!important;border:0!important;font-size:22px;box-shadow:0 6px 14px rgba(0,0,0,.22)!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{position:absolute;left:14px;right:14px;bottom:14px;margin:0!important;padding:0!important;background:none!important;z-index:5}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button{background:rgba(255,255,255,.94)!important;color:var(--av-ink)!important;box-shadow:0 4px 0 rgba(0,0,0,.18)!important;height:58px}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions button svg{fill:var(--av-ink)}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-feedback{margin-top:10px!important}
+@media (min-width:861px){
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-pair{grid-template-columns:1fr 1fr!important;gap:0!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-card-pokemon{min-height:470px!important;max-height:none;padding:64px 28px 100px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-sprite{width:260px!important;height:260px!important;top:auto;bottom:24px;transform:none}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .side-right .higher-lower-sprite{top:auto}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value{position:static}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value span{position:static}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-stat-value b{font-size:110px!important}
+  #pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions{left:50%;right:auto;width:520px;margin-left:-260px!important}
+}
+/* Code couleur gardé sur les boutons blancs : flèche et texte orange pour Plus haut, bleus pour Plus bas. */
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-higher{color:#D45A26!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-higher svg{fill:#F0743E}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-lower{color:#2C4FB8!important}
+#pokdle-app.design-refresh #screen-higher-lower.av2-hl .higher-lower-actions .higher-lower-btn-lower svg{fill:#4069E0}
