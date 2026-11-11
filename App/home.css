@@ -3189,3 +3189,74 @@ body.theme-dark .disc-eyebrow{color:#b9a3f5}
 #pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-score{position:absolute;right:12%;top:20%;z-index:3;padding:2px 8px;border-radius:8px;background:#FFD45C;font:900 12px/1.3 Fredoka,Nunito,sans-serif!important;color:#2E2A33;opacity:0}
 :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-score{animation:l2Score 2.6s var(--hm-spring) both}
 @keyframes l2Score{0%,62%{opacity:0;transform:scale(.4)}70%,96%{opacity:1;transform:scale(1)}100%{opacity:0}}
+
+/* Scènes, lot 3 (11/11/2026, script.10zzj.scenes-lot3.js) : Pokémon du jour, Œuf, Préférés, Marathon. Animations « l3 ». */
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-scene :is(.hm-daily-mon,.hm-egg,.hm-favgrid i,.hm-run-mon) .mode-tile-sprite{position:static;width:100%;height:100%;transform:none}
+:is(#screen-config,#screen-all-modes).hm-on :is(.hm-daily-mon,.hm-egg,.hm-run-mon){position:absolute;z-index:2}
+/* Pokémon du jour */
+:is(#screen-config,#screen-all-modes).hm-on .hm-daily-mon{left:50%;top:38%;width:60px;height:60px;margin:-30px}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-scene.is-daily .mode-tile-sprite{filter:brightness(0) opacity(.75)}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-daily-mon .mode-tile-sprite{animation:l3Reveal 2.6s var(--hm-out) both}
+@keyframes l3Reveal{0%,58%{filter:brightness(0) opacity(.75);transform:scale(.92)}63%{filter:brightness(1.7);transform:scale(1.14)}72%,96%{filter:none;transform:scale(1)}100%{filter:brightness(0) opacity(.75)}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-clues{position:absolute;left:50%;top:72%;translate:-50% 0;display:flex;gap:4px;z-index:3}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-clues i{display:block;padding:2px 6px;border-radius:6px;font:900 9px/1.3 Nunito,sans-serif!important;font-style:normal;color:#fff;background:#fff;opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-clues i.is-g{--c:#9AA0A8}:is(#screen-config,#screen-all-modes).hm-on .hm-clues i.is-y{--c:#E0A82E}:is(#screen-config,#screen-all-modes).hm-on .hm-clues i.is-n{--c:#3E9B57}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-clues i{animation:l3Clue 2.6s var(--hm-spring) both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-clues i:nth-child(2){animation-delay:.25s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-clues i:nth-child(3){animation-delay:.5s}
+@keyframes l3Clue{0%,4%{opacity:0;transform:translateY(8px) scale(.6)}14%,62%{opacity:1;transform:none;background:var(--c)}70%,100%{opacity:0}}
+/* Œuf mystère */
+:is(#screen-config,#screen-all-modes).hm-on .hm-egg{left:50%;top:46%;width:64px;height:64px;margin:-32px;transform-origin:50% 90%}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-egg{animation:l3Shake 2.6s ease-in-out both}
+@keyframes l3Shake{0%,8%{transform:none}12%{transform:rotate(-10deg)}16%{transform:rotate(9deg)}20%{transform:rotate(-6deg)}24%,34%{transform:none}38%{transform:rotate(-12deg)}42%{transform:rotate(12deg)}46%{transform:rotate(-8deg)}50%,100%{transform:none}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-crack{position:absolute;left:18%;top:42%;width:64%;z-index:3;fill:none;stroke:#2E2A33;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-crack{animation:l3Crack 2.6s ease-out both}
+@keyframes l3Crack{0%,48%{stroke-dashoffset:60}60%,94%{stroke-dashoffset:0}100%{stroke-dashoffset:60}}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-hint{position:absolute;right:10%;top:18%;z-index:4;padding:2px 8px;border-radius:8px;background:#2E2A33;color:#FFD45C;font:900 10px/1.4 Nunito,sans-serif!important;opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-hint{animation:l3Pop 2.6s var(--hm-spring) both}
+@keyframes l3Pop{0%,62%{opacity:0;transform:scale(.4) translateY(8px)}72%,94%{opacity:1;transform:none}100%{opacity:0}}
+/* Mes Pokémon préférés */
+:is(#screen-config,#screen-all-modes).hm-on .hm-favgrid{position:absolute;left:50%;top:48%;translate:-50% -50%;display:grid;grid-template-columns:repeat(3,30px);gap:4px;z-index:2}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-favgrid i{display:block;width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.75);box-shadow:0 2px 0 rgba(0,0,0,.08);overflow:hidden}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-favgrid i{animation:l3Cell 2.6s var(--hm-spring) both}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-favgrid i:nth-child(2){animation-delay:.1s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-favgrid i:nth-child(3){animation-delay:.2s}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-favgrid i:nth-child(4){animation-delay:.3s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-favgrid i:nth-child(5){animation-delay:.4s}:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-favgrid i:nth-child(6){animation-delay:.5s}
+@keyframes l3Cell{0%{transform:scale(.4);opacity:.3}14%,100%{transform:none;opacity:1}}
+:is(#screen-config,#screen-all-modes).hm-on .hm-heart{position:absolute;left:calc(50% + 32px);top:calc(48% - 40px);width:18px;z-index:4;fill:#E5463F;opacity:0}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-heart{animation:l3Heart 2.6s var(--hm-spring) both}
+@keyframes l3Heart{0%,58%{opacity:0;transform:scale(0)}66%{opacity:1;transform:scale(1.4)}74%,94%{opacity:1;transform:scale(1)}100%{opacity:0}}
+/* Marathon */
+:is(#screen-config,#screen-all-modes).hm-on .hm-track{position:absolute;left:12%;right:20%;top:74%;height:8px;border-radius:999px;background:rgba(255,255,255,.8);z-index:2}
+:is(#screen-config,#screen-all-modes).hm-on .hm-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:var(--tile-ink,#8A3F0E)}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-fill{animation:l3Fill 2.6s ease-in-out both}
+@keyframes l3Fill{0%{width:0}30%{width:33%}36%{width:33%}62%{width:66%}68%{width:66%}90%,100%{width:100%}}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile .hm-track u{display:block;text-decoration:none;position:absolute;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#fff;border:2px solid var(--tile-ink,#8A3F0E)}
+:is(#screen-config,#screen-all-modes).hm-on .hm-track u.is-1{left:33%}:is(#screen-config,#screen-all-modes).hm-on .hm-track u.is-2{left:66%}:is(#screen-config,#screen-all-modes).hm-on .hm-track u.is-3{left:100%}
+:is(#screen-config,#screen-all-modes).hm-on .hm-flag{position:absolute;right:10%;top:56%;width:18px;z-index:3;fill:#FFD45C;stroke:#2E2A33;stroke-width:2;stroke-linejoin:round}
+:is(#screen-config,#screen-all-modes).hm-on .hm-run-mon{left:6%;top:40%;width:52px;height:52px;margin-top:-26px}
+:is(#screen-config,#screen-all-modes).hm-on .hm-play .hm-run-mon{animation:l3Run 2.6s ease-in-out both}
+/* Qui est-ce ? et Petit Bac en solo : scènes de la Party Room, dans « Tous les jeux » aussi (copie des règles de l'accueil). */
+#screen-all-modes.hm-on .hm-who{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:3px;z-index:2;perspective:200px}
+#screen-all-modes.hm-on .hm-who>i{width:18%;height:58%;border-radius:7px;background:#7C5BD6;color:#fff;display:grid;place-items:center;font:700 13px Fredoka,sans-serif;box-shadow:0 3px 0 rgba(0,0,0,.12)}
+#screen-all-modes.hm-on .hm-who .is-ditto{width:38%;height:80%}
+#screen-all-modes.hm-on .hm-play .hm-who .is-c1{animation:hmFlip 2.6s ease-in-out both}
+#screen-all-modes.hm-on .hm-play .hm-who .is-c2{animation:hmFlip 2.6s ease-in-out .25s both}
+#screen-all-modes.hm-on .hm-play .hm-who .is-c3{animation:hmFlip 2.6s ease-in-out .5s both}
+#screen-all-modes.hm-on .hm-play .hm-who .is-ditto{animation:hmWobble 2.6s var(--hm-spring) both}
+#screen-all-modes.hm-on .hm-letter{position:absolute;left:10%;top:50%;width:34%;aspect-ratio:1;translate:0 -50%;z-index:2;overflow:hidden;border-radius:12px;background:#2E2A33;box-shadow:0 4px 0 rgba(0,0,0,.15),0 0 14px rgba(255,255,255,.6)}
+#screen-all-modes.hm-on .hm-letter>i{display:flex;flex-direction:column;transform:translateY(-400%)}
+#screen-all-modes.hm-on .hm-letter b{flex:0 0 100%;width:100%;display:grid;place-items:center;color:#FFD45C;font:700 22px Fredoka,sans-serif}
+#screen-all-modes.hm-on .hm-letter>i{height:100%}
+#screen-all-modes.hm-on .hm-play .hm-letter>i{animation:hmRoll 2.6s cubic-bezier(.2,.7,.3,1) both}
+#screen-all-modes.hm-on .hm-stop{position:absolute;left:8%;bottom:6%;z-index:4;padding:1px 6px;border-radius:7px;background:#E3350D;color:#fff;font:900 10px Nunito,sans-serif;opacity:0;rotate:-8deg}
+#screen-all-modes.hm-on .hm-play .hm-stop{animation:hmStamp 2.6s var(--hm-spring) .4s both}
+#screen-all-modes.hm-on .hm-unown{position:absolute;right:4%;bottom:4%;width:46%;height:86%;z-index:2;animation:hmFloat 2.4s ease-in-out infinite}
+#screen-all-modes.hm-on .hm-letter{width:min(34%,66px);left:max(10%,calc(50% - 84px))}
+#screen-all-modes.hm-on .hm-unown{width:min(46%,92px);right:max(4%,calc(50% - 100px))}
+#screen-all-modes.hm-on .hm-who>i{width:min(18%,34px);height:min(58%,50px)}
+#screen-all-modes.hm-on .hm-who .is-ditto{width:min(38%,84px)}
+#screen-all-modes.hm-on .hm-letter{width:clamp(28px,34%,66px);border-radius:24%}
+#screen-all-modes.hm-on .hm-letter b{min-height:0;line-height:1;overflow:hidden;font-size:min(22px,62cqw)}
+#pokdle-app.design-refresh #screen-all-modes.hm-on .hm-scene :is(.is-ditto,.hm-unown) .mode-tile-sprite{position:static;width:100%;height:100%;transform:none}
+#pokdle-app.design-refresh #screen-all-modes.hm-on .mode-tile .hm-letter b{display:grid!important;grid-column:auto;align-self:auto;padding:0!important;color:#FFD45C!important;font:700 22px Fredoka,sans-serif!important}
+#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .hm-scene.is-who~.mode-tile-sprite.is-second,#pokdle-app.design-refresh :is(#screen-config,#screen-all-modes).hm-on .mode-tile-art:has(.hm-scene.is-who)>.mode-tile-sprite.is-second{display:none}
+@keyframes l3Run{0%{left:6%}30%,36%{left:24%;transform:translateY(-6px)}62%,68%{left:42%;transform:none}90%,100%{left:58%;transform:translateY(-6px)}}
