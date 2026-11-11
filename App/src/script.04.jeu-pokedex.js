@@ -1826,6 +1826,11 @@ function ensurePartyListeners() {
   var socket = ensureMultiplayerSocket();
   if (!socket || partyRoomState.listenersBound) return socket;
   partyRoomState.listenersBound = true;
+  // 11/11/2026 : le serveur annule le lancement si un joueur part pendant l'intro (script.10xzzx.party-intro.js).
+  socket.on("party:start-failed", function (res) {
+    if (typeof piStop === "function") piStop();
+    setPartyStatus((res && res.error) || "Impossible de lancer.");
+  });
   socket.on("party:room-state", function (room) {
     if (room?.roundNumber !== partyRoomState.room?.roundNumber || room?.status !== partyRoomState.room?.status) setPartyStatus("");
     partyRoomState.room = room;
@@ -1859,6 +1864,11 @@ function setPartyStatus(message) {
 function partyPlayerLevel() {
   return typeof getXpTier === "function" ? getXpTier(Number(playerProfile?.xp) || 0).level : null;
 }
+// 11/11/2026 : le partenaire du joueur (n° du Pokédex), montré dans l'intro de la partie.
+function partyPlayerPartner() {
+  var id = Number(playerProfile?.favoritePokemonId);
+  return Number.isInteger(id) && id >= 1 && id <= 1025 ? id : null;
+}
 
 function partyCreateRoom() {
   var socket = ensurePartyListeners();
@@ -1869,7 +1879,7 @@ function partyCreateRoom() {
   var selectedMode = partyRoomState.pendingMode;
   // Create Dessine-le directly on the server; no transient "guess" room
   // that friends could join before a separate set-mode request completes.
-  socket.emit("party:create-room", { nickname: nickname, level: partyPlayerLevel(),
+  socket.emit("party:create-room", { nickname: nickname, level: partyPlayerLevel(), partner: partyPlayerPartner(),
     ...(selectedMode === "dessin" ? { gameMode: "dessin" } : {}) }, function (res) {
     res = res || {};
     if (!res.ok) { setPartyStatus(res.error || "Erreur de creation."); return; }
@@ -1896,7 +1906,7 @@ function partyJoinRoom() {
   var expectedMode = partyRoomState.inviteCode === code && partyRoomState.inviteExpectedMode === "dessin" ? "dessin" : null;
   // DATA-03: the code came from an invitation link opened in this tab.
   var viaLink = partyRoomState.inviteCode === code;
-  socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel(),
+  socket.emit("party:join-room", { nickname: nickname, code: code, level: partyPlayerLevel(), partner: partyPlayerPartner(),
     ...(expectedMode ? { expectedMode } : {}), ...(viaLink ? { via: "link" } : {}) }, function (res) {
     res = res || {};
     if (!res.ok) {
