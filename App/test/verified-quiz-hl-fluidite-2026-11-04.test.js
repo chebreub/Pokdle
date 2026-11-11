@@ -74,5 +74,5 @@ test('Higher or Lower shows a pending status without changing authoritative outc
   assert.match(client,/Math\.min\(previous\.endsMono,candidate\)/);
   const gameplay=fs.readFileSync(path.join(__dirname,'../lib/quiz-higher-lower.js'),'utf8');
   assert.match(gameplay,/s\.endsAt=\+clock\(\)\+60000/);
-  assert.match(gameplay,/s\.nextAt=\+clock\(\)\+\(s\.mode==='higher-lower-rush'\?900:1800\)/);
+  assert.match(gameplay,/s\.nextAt=\+clock\(\)\+\(s\.mode==='higher-lower-rush'\?900:1000\)/);
 });
