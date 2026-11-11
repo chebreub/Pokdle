@@ -56,6 +56,7 @@ test('carrousel : glissement vertical rendu à la page, flèches au-dessus des t
 });
 test('tuiles : grand artwork officiel en couleur, une seule tuile bouge à la fois, jamais avec Animations réduites', () => {
   assert.match(css, /\.mode-tile-art>\.hc-back\{display:block!important/);
+  assert.match(css, /\.mode-tile-art>:not\(\.hc-back\)\{opacity:0!important/, 'la scène reste dans la page (QA : images des tuiles visibles)');
   assert.match(css, /color-mix\(in oklab,var\(--t\) 72%,#fff\)/);
   assert.match(js, /hv4\.hopI = \(\(hv4\.hopI \|\| 0\) \+ 1\) % tiles\.length/);
   assert.match(js, /reduce-motion/);
