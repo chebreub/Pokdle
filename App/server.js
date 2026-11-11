@@ -545,6 +545,8 @@ app.post("/api/account/delete", express.json({ limit: "1kb" }), async (req, res)
     ["player_messages", "DELETE FROM player_messages WHERE account_id = $1", [id]],
     ["player_survey_answers", "DELETE FROM player_survey_answers WHERE account_id = $1", [id]],
     ["player_challenges", "DELETE FROM player_challenges WHERE from_id = $1 OR to_id = $1", [id]],
+    ["link_duel_entries", "DELETE FROM link_duel_entries WHERE account_id = $1 OR identity = $2", [id, "user:" + id]],
+    ["link_duels", "DELETE FROM link_duels WHERE creator_id = $1", [id]],
     ["player_challenge_blocks", "DELETE FROM player_challenge_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
     ["player_friends", "DELETE FROM player_friends WHERE from_id = $1 OR to_id = $1", [id]],
     ["player_blocks", "DELETE FROM player_blocks WHERE account_id = $1 OR blocked_id = $1", [id]],
@@ -1272,6 +1274,18 @@ function sendIndex(req, res) {
 }
 
 app.get(["/", "/index.html"], (req, res) => sendIndex(req, res));
+app.get("/d/:token", async (req, res) => {
+  res.set("Cache-Control", "no-cache");
+  const file = fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX;
+  const token = String(req.params.token || "");
+  const preview = usageMetrics.isLinkPreviewAgent(req.get("user-agent"));
+  recordUsage(preview ? "share:duel-preview" : "share:duel-visit", null, usageSegmentForRequest(req));
+  let data = null;
+  try { data = linkDuels && require("./lib/link-duels").TOKEN_RE.test(token) ? await linkDuels.preview(token) : null; } catch (_e) { data = null; }
+  const html = fs.readFileSync(file, "utf8");
+  return res.type("html").send(data ? require("./lib/link-duels").duelPageHtml(html, data)
+    : require("./lib/link-duels").duelShell(html));
+});
 // The version of the page's script (01/11/2026): a page left open since before a deploy keeps its old
 // script, which cannot open what came after. The page asks this now and then and offers to reload.
 const SITE_BUILD = (() => {
@@ -1633,6 +1647,26 @@ playerChallenges = pgPool ? challengeLib.createPlayerChallenges({ db: pgPool, ac
   checkNote: require("./lib/friend-chat").checkBody,
   push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
 challengeLib.mountChallengeRoutes(app, { express, challenges: playerChallenges, getUser: (req) => (authReady() ? getSessionUser(req) : null) });
+// ⚔️ Défi par lien (11/11/2026) : /d/<jeton>, relevé sans compte ni salon, même série de 10 (lib/link-duels.js).
+const linkDuelLib = require("./lib/link-duels");
+const linkDuelsReady = pgPool ? challengesReady.then(() => linkDuelLib.ensureTables(pgPool)).then(() => true).catch((error) => {
+  console.warn("[duels] tables unavailable:", String(error.message || error).slice(0, 160));
+  return false;
+}) : Promise.resolve(false);
+const linkDuelName = async (id) => {
+  const override = require("./lib/name-overrides").overriddenName(id);
+  if (override) return override;
+  return (await pgPool.query("SELECT username FROM users WHERE discord_id = $1", [String(id)])).rows[0]?.username || "Un dresseur";
+};
+const linkDuelBlocked = async (a, b) => (await pgPool.query(`SELECT 1 FROM player_challenge_blocks
+    WHERE ((account_id = $1 AND blocked_id = $2) OR (account_id = $2 AND blocked_id = $1)) LIMIT 1`, [String(a), String(b)])).rowCount > 0 ||
+  (await pgPool.query(`SELECT 1 FROM player_blocks WHERE (account_id = $1 AND blocked_id = $2) OR (account_id = $2 AND blocked_id = $1) LIMIT 1`, [String(a), String(b)])
+    .catch(() => ({ rowCount: 0 }))).rowCount > 0;
+const linkDuels = pgPool ? linkDuelLib.createLinkDuels({ db: pgPool, pokemon: POKEMON_LIST, compare: require("./lib/daily-comparison").compareDaily,
+  secret: SESSION_SECRET, ready: linkDuelsReady, nameOf: linkDuelName, blocked: linkDuelBlocked,
+  push: challengeLib.pushSender({ db: pgPool, webpush, configured: pushRoutes.configured }) }) : null;
+linkDuelLib.mountLinkDuelRoutes(app, { express, duels: linkDuels, getUser: (req) => (authReady() ? getSessionUser(req) : null),
+  readCookies: parseAuthCookies, secret: SESSION_SECRET });
 // Amis (01/11/2026): both accept; the private chat between friends comes next.
 const friendLib = require("./lib/player-friends");
 const friendsReady = pgPool ? challengesReady.then(() => friendLib.ensureTables(pgPool)).then(() => true).catch((error) => {
