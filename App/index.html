@@ -57,6 +57,7 @@
   <link rel="stylesheet" href="dist/petit-bac.min.css">
   <link rel="stylesheet" href="dist/halloween.min.css">
   <link rel="stylesheet" href="dist/trainer-profile.min.css">
+  <link rel="stylesheet" href="dist/draft-arena.min.css">
   <style>
     /* Splash de chargement : doit être stylé avant l'arrivée des CSS externes. */
     #app-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: linear-gradient(135deg, #e4382f 0%, #b32b35 45%, #1d3d7c 55%, #2f76ff 100%); transition: opacity 0.4s ease; }
@@ -897,14 +898,14 @@ EVs: 252 Atk / 4 Def / 252 Spe
             <h2 class="card-title">Draft Arènes</h2>
             <div class="ranking-head-actions">
               <div class="draft-multi-dropdown scoreattack-only">
-                <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">🆚 Multi ▾</button>
+                <button class="btn-ghost draft-multi-toggle" type="button" aria-haspopup="true">Multi ▾</button>
                 <div class="draft-multi-menu" role="menu">
-                  <button id="draft-score-room-create" class="btn-blue scoreattack-only" type="button" data-action="createDraftScoreAttackRoom">💰 Créer 1v1 Score</button>
-                  <button id="draft-score-room-join" class="btn-ghost scoreattack-only" type="button" data-action="joinDraftScoreAttackRoom">💰 Rejoindre 1v1</button>
+                  <button id="draft-score-room-create" class="btn-blue scoreattack-only" type="button" data-action="createDraftScoreAttackRoom">Créer 1v1 Score</button>
+                  <button id="draft-score-room-join" class="btn-ghost scoreattack-only" type="button" data-action="joinDraftScoreAttackRoom">Rejoindre 1v1</button>
                   <button id="draft-score-room-leave" class="btn-ghost scoreattack-only" type="button" data-action="leaveDraftScoreAttackRoom">Quitter 1v1</button>
                 </div>
               </div>
-              <button id="draft-restart-btn" class="btn-ghost" data-action="restartDraftArenaRun">🎲 Nouveau draft</button>
+              <button id="draft-restart-btn" class="btn-ghost" data-action="restartDraftArenaRun">Nouveau draft</button>
               <button class="btn-ghost" data-action="goToConfig">&#8592; Retour</button>
             </div>
           </div>
@@ -915,7 +916,7 @@ EVs: 252 Atk / 4 Def / 252 Spe
           <span id="draft-gen-badge" class="tag-gen">Génération : -</span>
           <span id="draft-picks-badge" class="tag-tries">Équipe : 0 / 6</span>
           <span id="draft-bst-average-badge" class="tag-tries">Moy. BST : -</span>
-          <span id="draft-score-record-badge" class="tag-tries hidden scoreattack-only">🏆 Record : -</span>
+          <span id="draft-score-record-badge" class="tag-tries hidden scoreattack-only">Record : -</span>
           <span id="draft-shiny-badge" class="tag-tries">Shiny : 0</span>
           <span id="draft-badge-count" class="tag-tries arena-only">Badges : 0 / 8</span>
         </div>
