@@ -825,7 +825,9 @@ def main():
      # A pointer left over a button lifts it on hover; measure the resting layout.
      page.mouse.move(0,0)
      gen_rects=gens.evaluate_all('(els)=>els.slice(0,9).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
-     expect(max(abs(r['y']-gen_rects[0]['y']) for r in gen_rects)<3,'Draft generations do not fit one desktop row: '+repr(gen_rects))
+     # Refonte « arène de nuit » (PR #380) : les 9 générations en grande grille de 3 x 3, alignée.
+     rows=sorted({round(r['y']) for r in gen_rects}); cols=sorted({round(r['x']) for r in gen_rects})
+     expect(len(rows)==3 and len(cols)==3,'Draft generations are not a tidy 3 x 3 desktop grid: '+repr(gen_rects))
      gens.first.click()
      page.wait_for_timeout(150)
      draft_options=page.locator('#screen-draft-score-attack #draft-options')
