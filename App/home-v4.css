@@ -355,3 +355,30 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app #screen-config.hv4.hv4.hv4.hv4-guest #home-balls:has(.hs-steps)>.hs-steps{grid-column:1;max-width:none;margin:0}
   #pokdle-app #screen-config.hv4.hv4.hv4.hv4-guest #home-balls:has(.hs-steps)>:not(.hs-steps-head):not(.hs-steps){grid-column:2;max-width:none;width:100%;margin:0}
 }
+
+/* V4.2 · retour des scènes animées dans les tuiles (Kayan, 11/11 au soir : « on ne voit plus les tuiles animées »).
+   Une tuile qui a une scène la montre en grand dans tout le bas de la carte colorée ; la grande image fixe ne sert
+   plus qu'aux tuiles sans scène. Les tuiles « Entre amis » n'affichent plus leur image en double. */
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-art{inset:46px 0 0 0!important;width:auto!important;height:auto!important;overflow:hidden!important;border-radius:0 0 18px 18px;--hc-k:.86!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-art>:not(.hc-back){opacity:1!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-art>.hc-back,
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.hv4-ptile .mode-tile-art>.hc-back{display:none!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .hm-scene{top:50%!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .hs-ball-tag{z-index:4}
+@media (min-width:861px) and (max-width:1180px){#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-art{--hc-k:.8!important}}
+@media (max-width:860px){#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-art{inset:40px 0 0 0!important;width:auto!important;height:auto!important;--hc-k:.74!important}}
+
+/* Lisibilité du Défi du jour (Kayan : « jaune sur jaune, on ne lit pas Bac »). Pastilles blanches pleines,
+   texte encre, plus d'italique ni de pointillés ; épreuves finies en vert foncé. */
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero :is(.daily-hero-steps button,.daily-hero-bonus button,.pk-chip){background:#fff!important;border:0!important;box-shadow:0 2px 0 rgba(122,90,0,.22)!important;color:#2E2A33!important;opacity:1!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero :is(.daily-hero-steps,.daily-hero-bonus) :is(button,button *){font-style:normal!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps button{font:800 13px/1.2 Nunito,sans-serif!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps b{color:#7A5200!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps .is-done button{background:#E3F4E8!important;box-shadow:0 2px 0 #9BCFA9!important;color:#1F5C33!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps .is-done b{color:#1F5C33!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-bonus button{font:800 13.5px/1.2 Nunito,sans-serif!important;min-height:40px}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-bonus button :is(b,strong,em,span:last-child){color:#2E2A33!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .pk-chip{font-weight:800!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .hs-ball-tag{top:10px!important;right:10px!important;bottom:auto!important;left:auto!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-title{max-width:62%}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps button *{font-size:13px!important}
