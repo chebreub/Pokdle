@@ -676,3 +676,62 @@ body.theme-dark .pchat-msg.is-mine{background:#7C5BD6;border-color:#7C5BD6;color
 body.theme-dark .pchat-msg.is-masked{background:#35303d;color:#cfc6d8}
 body.theme-dark .pchat-head small,body.theme-dark .pchat-empty{color:#b8aec6}
 body.theme-dark .pchat-error{color:#f3aaaa}
+
+/* 🎉 Salon v2 (11/11/2026, maquette validée « go salon ») — script.10zzzzc.party-salon-v2.js.
+   Tuiles colorées avec le Pokémon du jeu, filtres, jeu choisi en grand, « Lancer » collé en bas. */
+#pokdle-app #screen-party-room .psv .psv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+#pokdle-app #screen-party-room .psv .psv-chips button{min-height:38px;padding:0 14px;border:0;border-radius:999px;background:#F4EEE6;color:#2E2A33;font:800 13px Nunito,sans-serif;cursor:pointer}
+#pokdle-app #screen-party-room .psv .psv-chips button[aria-pressed="true"]{background:#2E2A33;color:#fff}
+#pokdle-app #screen-party-room .psv #party-mode-select{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+#pokdle-app #screen-party-room .psv #party-mode-select.hidden{display:none!important}
+#pokdle-app #screen-party-room .psv .psv-tile{--c:#7C5BD6;position:relative;display:block!important;height:132px;min-height:0!important;padding:11px 12px!important;overflow:hidden;text-align:left;border-radius:18px!important;
+  background:linear-gradient(160deg,color-mix(in oklab,var(--c) 22%,#fff),color-mix(in oklab,var(--c) 55%,#fff))!important;border:2px solid color-mix(in oklab,var(--c) 45%,#fff)!important;box-shadow:0 3px 0 color-mix(in oklab,var(--c) 55%,#fff)!important;transition:transform .15s}
+#pokdle-app #screen-party-room .psv .psv-tile:hover{transform:translateY(-2px)}
+#pokdle-app #screen-party-room .psv .psv-tile.psv-off{display:none!important}
+#pokdle-app #screen-party-room .psv .psv-tile .pmt-emoji,#pokdle-app #screen-party-room .psv .psv-tile .pmt-text>span{display:none!important}
+#pokdle-app #screen-party-room .psv .psv-tile .pmt-text{position:static!important;display:block!important;gap:0}
+#pokdle-app #screen-party-room .psv .psv-tile .pmt-text b{position:relative;z-index:1;display:block;max-width:72%;color:#2E2A33;font:600 16px/1.12 Fredoka,Nunito,sans-serif!important}
+#pokdle-app #screen-party-room .psv .psv-tile .pmt-tag{position:absolute;z-index:1;left:11px;bottom:10px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.9);color:#5A5263!important;font:800 11px Nunito,sans-serif!important;letter-spacing:0!important;text-transform:none!important}
+#pokdle-app #screen-party-room .psv .psv-tile .psv-art{position:absolute;right:-8px;bottom:-8px;width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(40,20,10,.2));pointer-events:none}
+#pokdle-app #screen-party-room .psv .psv-tile .pmt-check{display:none!important}
+#pokdle-app #screen-party-room .psv .psv-tile.is-active,#pokdle-app #screen-party-room .psv .psv-tile[aria-pressed="true"]{border-color:#2E2A33!important;box-shadow:0 0 0 3px #2E2A33,0 6px 0 #2E2A33!important;transform:translateY(-2px)}
+#pokdle-app #screen-party-room .psv .psv-tile.is-active::after,#pokdle-app #screen-party-room .psv .psv-tile[aria-pressed="true"]::after{content:"✓ Choisi";position:absolute;z-index:2;right:8px;top:8px;padding:3px 9px;border-radius:999px;background:#2E2A33;color:#fff;font:900 11px Nunito,sans-serif}
+#pokdle-app #screen-party-room .psv .psv-tile .party-new-badge,
+#pokdle-app #screen-party-room .psv .psv-tile.psv-rand{background:linear-gradient(135deg,#FFD45C,#F08A4B 50%,#7C5BD6)!important;border-color:#fff!important;box-shadow:0 3px 0 #C99A1C!important}
+#pokdle-app #screen-party-room .psv .psv-tile.psv-rand .pmt-text b{color:#fff}
+#pokdle-app #screen-party-room .psv .psv-tile .psv-dice{position:absolute;right:12px;bottom:6px;font-size:52px;line-height:1}
+#pokdle-app #screen-party-room .psv .psv-tile:disabled{cursor:default}
+/* Le jeu choisi en grand, avec sa règle. */
+#pokdle-app #screen-party-room .psv .psv-pick{--c:#7C5BD6;display:flex;align-items:center;gap:16px;margin:14px 0 4px;padding:12px 16px;border-radius:20px;background:linear-gradient(120deg,color-mix(in oklab,var(--c) 25%,#fff),#fff);border:2px solid color-mix(in oklab,var(--c) 45%,#fff)}
+#pokdle-app #screen-party-room .psv .psv-pick.psv-none .psv-pick-art,#pokdle-app #screen-party-room .psv .psv-pick.psv-none .psv-pick-k,#pokdle-app #screen-party-room .psv .psv-pick.psv-none .psv-pick-name{display:none}
+#pokdle-app #screen-party-room .psv .psv-pick-art{flex:0 0 84px;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(40,20,10,.2))}
+#pokdle-app #screen-party-room .psv .psv-pick-k{font:900 11px Nunito,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in oklab,var(--c) 75%,#000)}
+#pokdle-app #screen-party-room .psv .psv-pick-name{margin:1px 0 2px;font:700 20px/1.15 Fredoka,Nunito,sans-serif;color:#2E2A33}
+#pokdle-app #screen-party-room .psv .psv-pick .party-mode-hint{margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:#5A5263;font:700 13.5px/1.4 Nunito,sans-serif}
+/* « Lancer » toujours visible en bas. */
+#pokdle-app #screen-party-room .psv~#party-action-dock,#pokdle-app #screen-party-room #party-action-dock.psv-dock{position:sticky;bottom:12px;z-index:5;background:#2E2A33!important;color:#fff;border:0!important;border-radius:20px!important;box-shadow:0 8px 24px rgba(46,42,51,.25)!important}
+#pokdle-app #screen-party-room #party-action-dock.psv-dock .party-eyebrow{color:#FFD45C!important}
+#pokdle-app #screen-party-room #party-action-dock.psv-dock p{color:#E9E3EE!important}
+#pokdle-app #screen-party-room #party-action-dock.psv-dock #party-start-btn:not(:disabled){background:#FFD45C!important;color:#2E2A33!important;box-shadow:0 3px 0 #C99A1C!important}
+@media (max-width:1100px){#pokdle-app #screen-party-room .psv #party-mode-select{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (max-width:700px){
+  #pokdle-app #screen-party-room .psv #party-mode-select{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #pokdle-app #screen-party-room .psv .psv-tile{height:108px}
+  #pokdle-app #screen-party-room .psv .psv-tile .psv-art{width:78px;height:78px}
+  #pokdle-app #screen-party-room .psv .psv-tile .pmt-text b{font-size:15px!important}
+  #pokdle-app #screen-party-room .psv .psv-pick{padding:10px 12px;gap:12px}
+  #pokdle-app #screen-party-room .psv .psv-pick-art{flex-basis:62px;width:62px;height:62px}
+  #pokdle-app #screen-party-room .psv .psv-pick-name{font-size:17px}
+  #pokdle-app #screen-party-room #party-action-dock.psv-dock{bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+}
+#pokdle-app.theme-dark #screen-party-room .psv .psv-chips button{background:#3a3442;color:#f5efe6}
+#pokdle-app.theme-dark #screen-party-room .psv .psv-pick{background:#26222c}
+#pokdle-app.theme-dark #screen-party-room .psv .psv-pick-name{color:#f5efe6}
+@media (prefers-reduced-motion:reduce){#pokdle-app #screen-party-room .psv .psv-tile{transition:none}}
+#pokdle-app #screen-party-room .psv .psv-tile .pmt-text b{position:absolute!important;top:11px;left:12px;right:12px;max-width:72%}
+#pokdle-app #screen-party-room .psv .psv-tile.psv-rand .pmt-text b{max-width:60%}
+#pokdle-app #screen-party-room .psv .psv-tile .new-game-badge{position:absolute!important;z-index:2;top:8px!important;right:8px!important;left:auto!important;bottom:auto!important;margin:0!important}
+#pokdle-app #screen-party-room .psv .psv-tile.is-active .new-game-badge,#pokdle-app #screen-party-room .psv .psv-tile[aria-pressed="true"] .new-game-badge{display:none}
+#pokdle-app #screen-party-room .psv~* #party-gens-select button,#pokdle-app #screen-party-room .psv #party-gens-select button,#pokdle-app #screen-party-room #party-gens-select button{min-width:38px;padding:0 8px}
+#pokdle-app #screen-party-room .psv .psv-tile.is-active .pmt-text b,#pokdle-app #screen-party-room .psv .psv-tile[aria-pressed="true"] .pmt-text b,#pokdle-app #screen-party-room .psv .psv-tile:has(.new-game-badge) .pmt-text b{max-width:56%}
+@media (max-width:700px){#pokdle-app #screen-party-room .psv .psv-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-4px}#pokdle-app #screen-party-room .psv .psv-chips::-webkit-scrollbar{display:none}#pokdle-app #screen-party-room .psv .psv-chips button{flex:0 0 auto;font-size:13px}}
