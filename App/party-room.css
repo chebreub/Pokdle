@@ -708,8 +708,8 @@ body.theme-dark .pchat-error{color:#f3aaaa}
 #pokdle-app #screen-party-room .psv .psv-pick-k{font:900 11px Nunito,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:color-mix(in oklab,var(--c) 75%,#000)}
 #pokdle-app #screen-party-room .psv .psv-pick-name{margin:1px 0 2px;font:700 20px/1.15 Fredoka,Nunito,sans-serif;color:#2E2A33}
 #pokdle-app #screen-party-room .psv .psv-pick .party-mode-hint{margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:#5A5263;font:700 13.5px/1.4 Nunito,sans-serif}
-/* « Lancer » toujours visible en bas. */
-#pokdle-app #screen-party-room .psv~#party-action-dock,#pokdle-app #screen-party-room #party-action-dock.psv-dock{position:sticky;bottom:12px;z-index:5;background:#2E2A33!important;color:#fff;border:0!important;border-radius:20px!important;box-shadow:0 8px 24px rgba(46,42,51,.25)!important}
+/* « Lancer » dans une barre sombre, dans le défilement normal (jamais collée ni flottante : règle de la QA Party Room). */
+#pokdle-app #screen-party-room #party-action-dock.psv-dock{background:#2E2A33!important;color:#fff;border:0!important;border-radius:20px!important;box-shadow:0 8px 24px rgba(46,42,51,.25)!important}
 #pokdle-app #screen-party-room #party-action-dock.psv-dock .party-eyebrow{color:#FFD45C!important}
 #pokdle-app #screen-party-room #party-action-dock.psv-dock p{color:#E9E3EE!important}
 #pokdle-app #screen-party-room #party-action-dock.psv-dock #party-start-btn:not(:disabled){background:#FFD45C!important;color:#2E2A33!important;box-shadow:0 3px 0 #C99A1C!important}
@@ -722,7 +722,6 @@ body.theme-dark .pchat-error{color:#f3aaaa}
   #pokdle-app #screen-party-room .psv .psv-pick{padding:10px 12px;gap:12px}
   #pokdle-app #screen-party-room .psv .psv-pick-art{flex-basis:62px;width:62px;height:62px}
   #pokdle-app #screen-party-room .psv .psv-pick-name{font-size:17px}
-  #pokdle-app #screen-party-room #party-action-dock.psv-dock{bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 }
 #pokdle-app.theme-dark #screen-party-room .psv .psv-chips button{background:#3a3442;color:#f5efe6}
 #pokdle-app.theme-dark #screen-party-room .psv .psv-pick{background:#26222c}

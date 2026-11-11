@@ -26,7 +26,7 @@ test('les filtres ne sont réécrits que s’ils changent (pas de boucle avec l�
   assert.match(js, /if \(chips\.dataset\.html !== chipsHtml\)/);
   assert.match(js, /window\.psvSetCat = psvSetCat/);
 });
-test('« Lancer » collé en bas, au-dessus de la barre d’onglets sur téléphone', () => {
-  assert.match(css, /#party-action-dock\.psv-dock\{position:sticky;bottom:12px/);
-  assert.match(css, /#party-action-dock\.psv-dock\{bottom:calc\(78px \+ env\(safe-area-inset-bottom,0px\)\)\}/);
+test('« Lancer » reste dans le défilement : jamais collé ni flottant sur la Party Room', () => {
+  assert.doesNotMatch(css, /#party-action-dock[^{]*\{[^}]*position:\s*(sticky|fixed)/);
+  assert.match(css, /#party-action-dock\.psv-dock\{background:#2E2A33!important/);
 });
