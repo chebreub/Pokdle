@@ -15,7 +15,7 @@ function merge() {
 }
 
 test('a stale common copy no longer doubles the XP, and a broken copy never spreads', () => {
-  const { profileMergeCounter, mergeSyncBlobs } = merge();
+  const { profileMergeCounter, mergeSyncBlobs, profileCounterCeiling } = merge();
   assert.equal(profileMergeCounter(300, 7, 0, 'xp'), 307, 'progress on both devices still adds up');
   assert.equal(profileMergeCounter(131400, 131500, 1000, 'xp'), 181500, 'a stale copy adds at most 50 000 XP, never doubles');
   assert.equal(profileMergeCounter(5.6e16, 131400, 120000, 'xp'), 131400, 'a broken copy is ignored');
@@ -23,7 +23,8 @@ test('a stale common copy no longer doubles the XP, and a broken copy never spre
   // Twenty reloads with the same old common copy: before, the XP doubled each time.
   let a = 131400, b = 131400;
   for (let i = 0; i < 20; i++) { a = profileMergeCounter(a, b, 1000, 'xp'); b = a; }
-  assert.ok(a <= 247500, 'stays under the ceiling: ' + a);
+  // 11/11/2026: compare to today's ceiling (it grows by 30 000 a day since 10/11), not to a fixed number.
+  assert.ok(a <= profileCounterCeiling('xp'), 'stays under the ceiling: ' + a);
   const blob = (xp) => ({ profile: JSON.stringify({ xp }), stats: JSON.stringify({ played: 10, wins: 5, totalAttempts: 40 }) });
   assert.equal(JSON.parse(mergeSyncBlobs(blob(5.6e16), blob(131400), blob(130000)).profile).xp, 131400);
 });

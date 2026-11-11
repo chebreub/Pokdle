@@ -475,7 +475,7 @@ function openOnboardingModal() {
           <p>
             <span class="legend-chip lc-ok">Vert</span> exact ·
             <span class="legend-chip lc-close">Jaune</span> proche ·
-            <span class="legend-chip lc-wrong">Rouge</span> faux.
+            <span class="legend-chip lc-wrong">Gris</span> faux.
             Les flèches indiquent si le mystère est plus récent/grand/lourd (↑) ou plus ancien/petit/léger (↓).
           </p>
           <div class="onboarding-example" aria-hidden="true">
