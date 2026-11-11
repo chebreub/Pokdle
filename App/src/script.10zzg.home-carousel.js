@@ -58,7 +58,24 @@ function hcBuild() {
   hcStart();
 }
 
+// Fond plein : le Pokémon du jeu en très grand, estompé, derrière la scène (Kayan : « ça fait beaucoup de vide »).
+function hcBackdrops() {
+  hcTiles().forEach(function (t) {
+    var art = t.querySelector('.mode-tile-art');
+    var img = t.querySelector('.mode-tile-sprite');
+    if (!art || !img || art.querySelector('.hc-back')) return;
+    var b = document.createElement('img');
+    b.className = 'hc-back';
+    b.alt = '';
+    b.setAttribute('aria-hidden', 'true');
+    b.decoding = 'async';
+    b.src = img.currentSrc || img.src;
+    art.insertBefore(b, art.firstChild);
+  });
+}
+
 function hcDots() {
+  hcBackdrops();
   var dots = document.querySelector('.hc-dots'), tiles = hcTiles();
   if (!dots) return;
   dots.innerHTML = tiles.map(function (t, i) {
