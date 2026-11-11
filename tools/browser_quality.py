@@ -299,7 +299,7 @@ def main():
      chips.filter(has_text='Arcade').click()
      expect(page.locator('#screen-all-modes .mode-tile:visible').count()==15,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
-     expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openEmulatorMode"]\']').is_visible(),'Tools chip does not reach the emulator')
+     expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openTypeChartScreen"]\']').is_visible(),'Tools chip does not reach the type chart')
      chips.filter(has_text='Tous').click()
      return labels
     check('family-chips',family_chips,False)

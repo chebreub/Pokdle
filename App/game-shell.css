@@ -2682,3 +2682,6 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .as2-seg button {color:#cfc7d6}
   #pokdle-app.theme-dark #overlay-modal[data-kind="settings"] .as2 .as2-seg button.is-on {background:#f5efe6;color:#2E2A33}
 }
+
+/* 11/11/2026 : l'aide du Pokémon du jour montre le vrai gris des cases fausses (avant : rouge, qui n'existe pas dans la grille). */
+.onboarding-step .legend-chip.lc-wrong, .onboarding-example .legend-chip.lc-wrong {background:#CFC7BD !important;color:#2E2A33 !important}
