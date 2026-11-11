@@ -2724,3 +2724,58 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 .pi-surprise-tile .pi-dice svg{width:28px;height:28px;display:block}
 @media (min-width:900px){.pi-wheel{top:24%}.pi-wlabel{top:calc(24% + min(330px,80vw,42vh) + 22px)}}
 .pi.is-out{opacity:0;transition:opacity .2s ease-out;pointer-events:none}
+
+/* ⚔️🎉🤝 Party Room et Mes amis sur PC (11/11/2026, maquette validée, « go ») — script.10xs.inbox-visibility.js, script.10xu.friends.js
+   « Mes défis » en une ligne de pastilles (partout) ; sur PC, tout le contenu à la même largeur, le salon à gauche et
+   les jeux à droite (3 colonnes, « À deux » sur une ligne) ; « Mes amis » : demandes envoyées en pastilles à droite. */
+#pokdle-app #screen-party-room #party-duels.is-chips{display:flex!important;align-items:center;gap:10px;padding:8px 10px!important}
+#pokdle-app #screen-party-room #party-duels .party-duels-t{flex:0 0 auto;margin:0;font:600 16px Fredoka,Nunito,sans-serif;white-space:nowrap}
+.party-duels-chips{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.party-duels-chips::-webkit-scrollbar{display:none}
+.party-duels-chip{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 4px;border-radius:999px;background:#F7F2EA;color:#2E2A33}
+.party-duels-chip.is-hot{background:#EEF3FF;box-shadow:inset 0 0 0 1.5px #C9D6FB}
+.party-duels-chip>:first-child{flex:0 0 auto;width:30px!important;height:30px!important;min-width:0!important;font-size:13px!important}
+.party-duels-chip>:first-child img{max-width:30px;max-height:30px}
+.party-duels-chip p{display:flex;align-items:baseline;gap:5px;margin:0 4px 0 0;white-space:nowrap;font:700 13px Nunito,sans-serif}
+.party-duels-chip p b{font-weight:800}.party-duels-chip p small{font:700 12px Nunito,sans-serif;color:#7A7383}
+#pokdle-app .party-duels-chip .btn-blue,#pokdle-app .party-duels-chip .btn-ghost{width:auto;min-height:30px;margin:0;padding:0 12px;border-radius:999px;font-size:12.5px}
+.party-duels.is-chips .party-duels-empty{flex:1;margin:0;font-size:13px}
+.party-duels-all{flex:0 0 auto;min-height:0;margin:0;padding:6px 4px;border:0;background:none;box-shadow:none;color:#4069E0;font:800 13px Nunito,sans-serif;white-space:nowrap;cursor:pointer}
+#pokdle-app.theme-dark .party-duels-chip{background:#26324b;color:#e8ecf6}
+#pokdle-app.theme-dark .party-duels-chip p small{color:#b8c2d8}
+/* Demandes envoyées (colonne de droite de « Mes amis », PC) */
+.fr-pend,.fr-side-note{display:none}
+.fr-pend{padding:12px;border:1.5px solid #ECE4D8;border-radius:18px;background:#fff}
+.fr-pend h4{display:flex;align-items:center;gap:6px;margin:0 0 8px;font:600 15px Fredoka,Nunito,sans-serif;color:#2E2A33}
+.fr-pend h4 small{padding:1px 8px;border-radius:999px;background:#F1E9DE;font:800 11.5px Nunito,sans-serif;color:#6E6878}
+.fr-pend-list{display:flex;flex-wrap:wrap;gap:6px}
+.fr-pend-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 3px 3px 3px;border:1px solid #ECE4D8;border-radius:999px;background:#fff;font:800 12.5px Nunito,sans-serif;color:#2E2A33}
+.fr-pend-chip>:first-child{width:26px!important;height:26px!important;min-width:0!important;font-size:12px!important}
+.fr-pend-chip>:first-child img{max-width:26px;max-height:26px}
+#pokdle-app .fr-pend-chip button{width:24px;min-height:24px;height:24px;margin:0;padding:0;border:0;border-radius:50%;background:none;box-shadow:none;color:#9A8F86;font:900 12px Nunito,sans-serif;cursor:pointer}
+#pokdle-app .fr-pend-chip button:hover{background:#F7F2EA;color:#C2342B}
+.fr-pend p,.fr-side-note{margin:8px 0 0;font:700 12px/1.4 Nunito,sans-serif;color:#7A7383}
+@container (min-width:760px){
+  .fr-v3 .fr-pend{display:block}.fr-v3 .fr-side-note{display:block;margin:0}
+  .fr-v3 .fr-out-sub,.fr-v3 .fr-out-list,.fr-v3 .fr-main-note{display:none}
+  .fr-v3{grid-template-columns:minmax(0,1fr) 330px}
+}
+#pokdle-app.theme-dark .fr-pend,#pokdle-app.theme-dark .fr-pend-chip{background:#26222c;border-color:#3a3442;color:#f5efe6}
+@media (min-width:861px){
+  /* Une seule largeur pour les onglets, les défis, le salon et les amis. */
+  #pokdle-app #screen-party-room :is(#party-seg,#party-duels,#party-lobby,#party-friends){width:auto;max-width:1180px;margin-left:auto;margin-right:auto}
+  #pokdle-app #screen-party-room #party-seg{display:flex;width:fit-content;margin-left:max(0px,calc((100% - 1180px)/2));border-radius:999px}
+  #pokdle-app #screen-party-room #party-seg button{flex:0 0 auto;padding:0 22px;border-radius:999px}
+  #pokdle-app #screen-party-room #party-lobby{padding:0}
+  #pokdle-app #screen-party-room .pl3{grid-template-columns:440px minmax(0,1fr);column-gap:18px}
+  #pokdle-app #screen-party-room .pl3-feat,#pokdle-app #screen-party-room .pl3 .party-entry-panel{max-width:440px}
+  #pokdle-app #screen-party-room .pl3-menu{padding:14px;border:1px solid #EADFD0;border-radius:20px;background:#fff}
+  .pl3-stage{min-height:230px}.pl3-stage.is-any{padding-top:110px}.pl3-f{width:128px;height:128px}.pl3-hero{height:210px}
+  #pokdle-app #screen-party-room .pl3-stage h3{font-size:30px}
+  #pl3-group{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}
+  #pokdle-app #screen-party-room #pl3-duo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  #pokdle-app #screen-party-room #pl3-duo .party-duel-link small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #pokdle-app.theme-dark #screen-party-room .pl3-menu{background:#1f2b42;border-color:#33425f}
+}
+#pokdle-app #screen-party-room.party-tab-friends #party-duels.is-chips{display:none!important}
+.fr-v3-side .fr-pend{order:3}.fr-v3-side .fr-invite{order:4}.fr-v3-side .fr-side-note{order:5}

@@ -67,17 +67,22 @@ function renderPartyDuels() {
   var s = inboxChallenges();
   var rows = s.waiting.concat(s.list.filter(function (c) { return !c.incoming && c.status === 'open'; }), s.news).slice(0, 3);
   var count = s.waiting.length + s.news.length;
-  box.innerHTML = '<div class="party-duels-head"><h3>⚔️ Mes défis' + (count ? ' <i class="pc-badge">' + count + '</i>' : '') + '</h3>' +
-    '<button type="button" class="btn-ghost" data-action="openMyChallenges">Tout voir</button></div>' +
-    (rows.length ? rows.map(function (c) {
+  // 11/11/2026 (maquette validée, « go ») : une seule ligne de pastilles au lieu de 3 grosses lignes
+  // (« Mes défis prend de la place ») ; les pastilles glissent sur téléphone. Mêmes boutons, mêmes actions.
+  box.classList.add('is-chips');
+  box.innerHTML = '<h3 class="party-duels-t">⚔️ Mes défis' + (count ? ' <i class="pc-badge">' + count + '</i>' : '') + '</h3>' +
+    (rows.length ? '<div class="party-duels-chips">' + rows.map(function (c) {
+      var name = escapeHtml(c.other.username);
       var action = c.incoming && pcOpen(c)
         ? '<button type="button" class="btn-blue" data-action="acceptChallenge" data-args="[' + Number(c.id) + ']">' + (c.kind === 'mystere' && c.tries ? 'Continuer' : 'Relever') + '</button>'
         : !pcOpen(c) ? '<button type="button" class="btn-ghost" data-action="openChallengeForm" data-args="' + pcArgs([c.other.pid, c.other.username, c.mode]) + '">Revanche</button>' : '';
-      var text = c.incoming ? escapeHtml(c.other.username) + ' · ' + escapeHtml(inboxDescribe(c))
-        : pcOpen(c) ? 'Tu as défié ' + escapeHtml(c.other.username) + ' · encore ' + pcDaysLeft(c) + ' j'
-        : escapeHtml(c.other.username) + (c.status === 'won' ? ' a relevé ton défi 🏆' : ' n’a pas relevé ton défi 💪');
-      return '<div class="party-duels-row">' + pcAvatar(c.other) + '<p>' + text + '</p>' + action + '</div>';
-    }).join('') : '<p class="party-duels-empty">Défie un joueur : clique sur son pseudo dans un <button type="button" class="party-duels-link" data-action="openLeaderboardV2" data-args=\'["journey","week"]\'>classement</button>, puis ⚔️ Défier.</p>');
+      var text = c.incoming ? '<b>' + name + '</b><small>te défie</small>'
+        : pcOpen(c) ? '<b>' + name + '</b><small>encore ' + pcDaysLeft(c) + ' j</small>'
+        : '<b>' + name + '</b><small>' + (c.status === 'won' ? 'a relevé ton défi' : 'n’a pas relevé') + '</small>';
+      var title = c.incoming ? c.other.username + ' · ' + inboxDescribe(c) : pcOpen(c) ? 'Tu as défié ' + c.other.username + ' · encore ' + pcDaysLeft(c) + ' j' : '';
+      return '<div class="party-duels-chip' + (c.incoming && pcOpen(c) ? ' is-hot' : '') + '" title="' + escapeHtml(title) + '">' + pcAvatar(c.other) + '<p>' + text + '</p>' + action + '</div>';
+    }).join('') + '</div>' : '<p class="party-duels-empty">Défie un joueur : clique sur son pseudo dans un <button type="button" class="party-duels-link" data-action="openLeaderboardV2" data-args=\'["journey","week"]\'>classement</button>, puis ⚔️ Défier.</p>') +
+    '<button type="button" class="party-duels-all" data-action="openMyChallenges">Tout voir <span aria-hidden="true">→</span></button>';
 }
 function renderInboxUi() {
   var n = inboxCounts();
