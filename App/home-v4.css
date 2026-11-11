@@ -382,3 +382,5 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
 #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .hs-ball-tag{top:10px!important;right:10px!important;bottom:auto!important;left:auto!important}
 #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hm-has-scene .mode-tile-title{max-width:62%}
 #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps button *{font-size:13px!important}
+/* La pastille de langue n'est qu'un emplacement : sur téléphone elle n'a pas de place et chevauchait le logo. */
+@media (max-width:640px){#pokdle-app .hv4-lang{display:none!important}}
