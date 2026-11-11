@@ -171,19 +171,28 @@ function hv4RowBtn(action, title, line, cls, pct) {
     (pct != null ? '<i class="hv4-bar"><u style="width:' + pct + '%"></u></i>' : '') + '</span><em aria-hidden="true">→</em></button>';
 }
 function hv4Dex() {
-  var stats = typeof pokedexCollectionNationalStats === 'function' ? pokedexCollectionNationalStats() : null;
-  if (!stats) return '';
-  var caught = 0, shiny = 0;
-  if (typeof wildCaptures !== 'undefined' && wildCaptures) {
-    Object.keys(wildCaptures).forEach(function (id) { var c = wildCaptures[id] || {}; if ((c.normal || 0) + (c.shiny || 0) > 0) caught++; if (c.shiny > 0) shiny++; });
+  // Mêmes chiffres que Pokédex › Ma collection (colCollectionProgress) : « Vus » = Pokémon enregistrés,
+  // « Attrapés » = encore à toi (échanges compris). Un Pokémon attrapé compte toujours comme vu.
+  if (typeof pokedexCollectionBaseCatalogue !== 'function') return '';
+  var base = pokedexCollectionBaseCatalogue(), total = base.length || 1025;
+  var loaded = typeof wildCaptures !== 'undefined' && wildCaptures !== null;
+  if (!loaded && !hv4.capAsked && typeof loadWildCaptures === 'function') {
+    hv4.capAsked = true;
+    loadWildCaptures().then(function () { if (typeof wildCaptures !== 'undefined' && wildCaptures !== null) hv4Refresh(); else hv4.capAsked = false; }, function () { hv4.capAsked = false; });
   }
-  var total = stats.total || 1025, bar = function (n, color) { return '<i class="hv4-bar"><u style="width:' + Math.max(1, Math.round(n / total * 100)) + '%;background:' + color + '"></u></i>'; };
-  var known = typeof wildCaptures !== 'undefined' && wildCaptures;
-  var bs = typeof ballState !== 'undefined' && ballState && ballState.wild ? ballState.wild : null;
-  if (!known && bs && Number.isFinite(Number(bs.caught))) { caught = Number(bs.caught); }
-  return '<div class="hv4-card hv4-dex"><span class="hv4-k" style="color:#C8333A">Mon Pokédex</span><h3>' + stats.found + ' / ' + total + ' vus' + (known || bs ? ' · ' + caught + ' attrapé' + (caught > 1 ? 's' : '') : '') + '</h3>' +
-    '<div class="hv4-bars"><span>👁️ Vus</span>' + bar(stats.found, '#4069E0') + '<b>' + stats.found + '</b>' +
-    (known || bs ? '<span>Attrapés</span>' + bar(caught, '#E0402E') + '<b>' + caught + '</b>' : '') + (known ? '<span>✨ Shinies</span>' + bar(shiny, '#D9A21B') + '<b>' + shiny + '</b>' : '') + '</div>' +
+  var seen = 0, caught = 0, shiny = 0;
+  base.forEach(function (p) {
+    var st = typeof pokedexCollectionState === 'function' ? pokedexCollectionState(p) : { kind: '' };
+    var own = loaded && typeof colIsObtained === 'function' && colIsObtained(p);
+    if (st.kind === 'registered' || own) seen++;
+    if (own) caught++;
+    if (typeof colIsShiny === 'function' && colIsShiny(p, st)) shiny++;
+  });
+  var bar = function (n, color) { return '<i class="hv4-bar"><u style="width:' + (n ? Math.max(2, Math.round(n / total * 100)) : 0) + '%;background:' + color + '"></u></i>'; };
+  return '<div class="hv4-card hv4-dex"><span class="hv4-k" style="color:#C8333A">Mon Pokédex</span><h3>' + seen + ' / ' + total + ' vus' + (loaded ? ' · ' + caught + ' attrapé' + (caught > 1 ? 's' : '') : '') + '</h3>' +
+    '<div class="hv4-bars"><span>👁️ Vus</span>' + bar(seen, '#4069E0') + '<b>' + seen + '</b>' +
+    '<span>Attrapés</span>' + bar(caught, '#E0402E') + '<b>' + (loaded ? caught : '…') + '</b>' +
+    '<span>✨ Shinies</span>' + bar(shiny, '#D9A21B') + '<b>' + shiny + '</b></div>' +
     '<button type="button" class="hv4-ghost" data-action="openAlbumBinder">📒 Ouvrir mon Pokédex</button></div>';
 }
 function hv4Rewards() {
@@ -261,7 +270,52 @@ function hv4Layout() {
 
 // Les tuiles défilent de côté : leurs images (6 à 9, légères) se chargent tout de suite, sans attendre d'être à l'écran.
 function hv4EagerArt() {
+  if (typeof hcBackdrops === 'function') hcBackdrops();
   document.querySelectorAll('#home-games-grid img[loading="lazy"]').forEach(function (img) { img.loading = 'eager'; });
+  hv4HopStart();
+  hv4Ends();
+}
+function hv4Ends() {
+  var grid = document.getElementById('home-games-grid'), box = grid && grid.closest('.hc-box');
+  if (!box) return;
+  var upd = function () {
+    box.classList.toggle('hv4-at-start', grid.scrollLeft <= 4);
+    box.classList.toggle('hv4-at-end', grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 4);
+  };
+  // Flèches : une page entière de tuiles à la fois (comme la maquette), au lieu d'une seule tuile.
+  box.querySelectorAll('.hc-arrow').forEach(function (a) {
+    if (a.hv4Page) return;
+    a.hv4Page = true;
+    a.addEventListener('click', function (e) {
+      e.stopImmediatePropagation();
+      if (typeof hcStop === 'function') hcStop();
+      var dir = a.classList.contains('is-prev') ? -1 : 1;
+      var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduce-motion');
+      grid.scrollBy({ left: dir * grid.clientWidth * 0.98, behavior: reduce ? 'auto' : 'smooth' });
+    }, true);
+  });
+  if (!grid.hv4Ends) { grid.hv4Ends = true; grid.addEventListener('scroll', function () { clearTimeout(grid.hv4T); grid.hv4T = setTimeout(upd, 60); }, { passive: true }); }
+  upd();
+}
+// Un seul artwork saute à la fois, parmi les tuiles visibles ; rien si l'onglet est caché, l'accueil fermé
+// ou « Animations réduites ».
+function hv4HopStart() {
+  if (hv4.hop) return;
+  hv4.hop = setInterval(function () {
+    var grid = document.getElementById('home-games-grid'), scr = document.getElementById('screen-config');
+    if (!grid || !scr || document.hidden || !scr.classList.contains('active') && scr.offsetParent === null) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.classList.contains('reduce-motion')) return;
+    var g = grid.getBoundingClientRect();
+    if (g.bottom < 0 || g.top > innerHeight) return;
+    var tiles = Array.prototype.filter.call(grid.querySelectorAll(':scope > .mode-tile'), function (t) {
+      var r = t.getBoundingClientRect(); return r.width && r.left >= g.left - 4 && r.right <= g.right + 4;
+    });
+    if (!tiles.length) return;
+    hv4.hopI = ((hv4.hopI || 0) + 1) % tiles.length;
+    var t = tiles[hv4.hopI];
+    t.classList.add('hv4-hop');
+    setTimeout(function () { t.classList.remove('hv4-hop'); }, 950);
+  }, 2800);
 }
 function hv4Refresh() {
   try { hv4Lang(); hv4Hero(); hv4Filters(); hv4Discovery(); hv4Layout(); hv4EagerArt(); } catch (_e) {}

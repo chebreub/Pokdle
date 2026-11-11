@@ -185,7 +185,7 @@
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on:not(.hv4-guest)[data-hv4-day="done"]>.home-discovery{order:2}
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on>.hc-tail{order:9}
   /* La barre d'onglets du bas ne cache jamais la fin de la page. */
-  #pokdle-app #screen-config.hv4.hv4.hv4{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  /* Pas de marge en plus pour la barre du bas : le body la réserve déjà (mobile.css), sinon un grand vide avant le pied de page. */
 }
 @media (prefers-reduced-motion:reduce){#screen-config.hv4.hv4.hv4 #home-games-grid.hc-on{scroll-behavior:auto}}
 #pokdle-app.theme-dark #screen-config.hv4.hv4.hv4 :is(.hv4-card,.home-pathways.hv4-week){background:#26222c;border-color:#3a3442;color:#f5efe6}
@@ -272,3 +272,79 @@
 
 #screen-config.hv4.hv4.hv4 .hv4-row.has-exp:not(.has-balls) .hv4-main{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 @media (max-width:860px){#screen-config.hv4.hv4.hv4 .hv4-row.has-exp:not(.has-balls) .hv4-main{grid-template-columns:minmax(0,1fr)}}
+
+/* V4.1 · tuiles fidèles à la maquette : carte colorée (couleur du jeu), grand artwork officiel en bas à droite,
+   titre lisible. La petite scène de l'accueil est remplacée ici par un saut de l'artwork, une tuile à la fois. */
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.all-modes-card.mode-tile:not(.hv4-ptile){--t:var(--tile-tone,#B9A6F2);background:linear-gradient(160deg,color-mix(in oklab,var(--t) 30%,#fff) 0%,color-mix(in oklab,var(--t) 72%,#fff) 100%)!important;border:2px solid color-mix(in oklab,var(--t) 75%,#fff)!important;box-shadow:0 4px 0 color-mix(in oklab,var(--t) 70%,#5a4a5a)!important;color:#2E2A33!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-art{position:absolute!important;inset:auto -12px -14px auto!important;width:138px!important;height:138px!important;overflow:visible!important;pointer-events:none}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile:not(.hv4-ptile) .mode-tile-art>:not(.hc-back){display:none!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-art>.hc-back{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:1!important;filter:drop-shadow(0 6px 6px rgba(40,20,10,.22))!important;transform:none;transform-origin:50% 90%;max-width:none!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-title{color:#2E2A33!important;font:600 17px/1.1 Fredoka,Nunito,sans-serif!important;max-width:100%}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-desc{color:color-mix(in oklab,var(--tile-ink,#5A5263) 85%,#000)!important;max-width:58%!important;font-weight:800!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .hs-ball-tag{background:#fff!important;box-shadow:0 1px 0 rgba(46,42,51,.12)}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile.hv4-hop .hc-back{animation:hv4Hop .9s cubic-bezier(.3,.7,.4,1)}
+@keyframes hv4Hop{0%{transform:none}30%{transform:translateY(-12px) scale(1.04)}55%{transform:translateY(0) scale(1.06,.94)}75%{transform:translateY(-4px)}100%{transform:none}}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile:hover .hc-back{transform:scale(1.05) rotate(-2deg);transition:transform .2s}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.hv4-ptile .mode-tile-art{width:138px!important;height:138px!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.hv4-ptile .mode-tile-art>.mode-tile-sprite{display:block!important;width:100%!important;height:100%!important;object-fit:contain;filter:drop-shadow(0 6px 6px rgba(40,20,10,.22))}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-art{width:118px!important;height:118px!important;right:-10px!important;bottom:-10px!important;opacity:1!important}
+@media (max-width:860px){
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-art,#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.hv4-ptile .mode-tile-art{width:108px!important;height:108px!important;right:-10px!important;bottom:-10px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-title{font-size:15.5px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-art{width:96px!important;height:96px!important}
+}
+@media (prefers-reduced-motion:reduce){#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .hc-back{animation:none!important;transition:none!important}}
+body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .hc-back{animation:none!important;transition:none!important}
+#pokdle-app.theme-dark #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.all-modes-card.mode-tile:not(.hv4-ptile){background:linear-gradient(160deg,color-mix(in oklab,var(--t) 30%,#2a2530),color-mix(in oklab,var(--t) 55%,#2a2530))!important;color:#F5EFE8!important}
+#pokdle-app.theme-dark #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-title{color:#FFF8EF!important}
+#pokdle-app.theme-dark #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-desc{color:#EDE3F2!important}
+/* Lisibilité : la description coupée (« Compare les… ») n'apportait rien, la catégorie suffit ; la flèche « précédent »
+   se cache au début du carrousel (elle couvrait le titre de la 1re tuile). */
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on>.mode-tile .mode-tile-desc{display:none!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 .hc-box.hv4-at-start .hc-arrow.is-prev,#pokdle-app #screen-config.hv4.hv4.hv4 .hc-box.hv4-at-end .hc-arrow.is-next{opacity:0!important;pointer-events:none!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-later{position:relative;z-index:2;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.85);text-decoration:none}
+/* Expédition : le légendaire bien visible (silhouette tant qu'il n'est pas rencontrable). */
+#pokdle-app #screen-config.hv4.hv4.hv4 .hv4-main>#exp2-home .exp2-home-leg{width:170px!important;height:170px!important;right:-6px!important;bottom:-6px!important;top:auto!important;opacity:1!important}
+@media (max-width:860px){#pokdle-app #screen-config.hv4.hv4.hv4 .hv4-main>#exp2-home .exp2-home-leg{width:120px!important;height:120px!important}}
+@media (max-width:860px){
+  /* Les 4 catégories tiennent sur une ligne (« Entre amis » était caché hors de l'écran). */
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-game-filters{flex:1 1 100%!important;width:100%!important;max-width:none!important;flex-wrap:wrap!important;overflow:visible!important;gap:6px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-game-filters>button{min-height:40px!important;padding:0 14px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-tag{display:none!important}
+}
+@media (max-width:860px){
+  /* Zones tactiles : 40 px au moins pour tout ce qu'on touche du doigt sur l'accueil. */
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero :is(.pk-cta-ghost,.pk-chip-remind,.daily-hero-steps button,.pk-steps button){min-height:40px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero :is(.daily-hero-steps,.pk-steps) button{padding-top:4px!important;padding-bottom:4px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 :is(.generation-trigger,.home-discovery .btn-ghost){min-height:40px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-go{min-height:38px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-disc-card.hv4-disc .disc-later{min-height:36px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 .hc-dot{position:relative}
+  #pokdle-app #screen-config.hv4.hv4.hv4 .hc-dot::after{content:"";position:absolute;inset:-16px -5px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 .hc-tail .home-seo-links a{display:inline-flex;align-items:center;min-height:40px}
+}
+/* Le carrousel ne défile qu'à l'horizontale : avec 8 px de trop en hauteur, un glissement vertical sur les tuiles
+   restait « accroché » au carrousel au lieu de faire défiler la page (téléphone, navigateur et appli installée). */
+#pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on{overflow-y:hidden!important;overscroll-behavior-y:auto!important;touch-action:pan-x pan-y}
+/* Les flèches restent au-dessus des tuiles (une tuile qui saute ou qui défile passait devant). */
+#pokdle-app #screen-config.hv4.hv4.hv4 .hc-box>#home-games-grid{position:relative;z-index:0}
+#pokdle-app #screen-config.hv4.hv4.hv4 .hc-box>.hc-arrow{z-index:6!important}
+@media (max-width:860px){
+  /* Les 4 catégories sur une seule ligne, parts égales (2 lignes repoussaient les tuiles sous le 1er écran). */
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-game-filters{flex-wrap:nowrap!important;gap:6px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #home-game-filters>button{flex:1 1 auto!important;min-width:0!important;padding:0 9px!important;white-space:nowrap;font-size:13px!important}
+  /* La silhouette du Pokémon du jour reste dans le coin, derrière le texte, jamais sur le bouton. */
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-deco{top:2px;right:2px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-sil{width:88px;height:88px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-qm{left:32px;top:20px;font-size:28px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-q{max-width:72%}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-ring{width:74px;height:74px;margin-top:2px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-ring::before{inset:8px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-ring b{font-size:21px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .hv4-ring small{display:none}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero :is(.pk-cta,.pk-hero-actions,button){position:relative;z-index:2}
+}
+@media (max-width:860px){
+  /* L'accueil téléphone est une grille à 2 colonnes : les catégories prennent toute la ligne. */
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on #home-game-filters{grid-column:1 / -1!important}
+}
