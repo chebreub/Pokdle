@@ -71,3 +71,8 @@ test('la langue n’est qu’un emplacement visuel', () => {
   assert.match(js, /hv4-lang/);
   assert.doesNotMatch(js, /i18n|translate\(/);
 });
+
+test('les scènes animées restent visibles dans les tuiles, pas d’image en double dans « Entre amis »', () => {
+  assert.match(css, /\.mode-tile\.hm-has-scene \.mode-tile-art>:not\(\.hc-back\)\{opacity:1!important\}/);
+  assert.match(css, /\.hv4-ptile \.mode-tile-art>\.hc-back\{display:none!important\}/);
+});
