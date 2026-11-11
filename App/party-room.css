@@ -682,7 +682,7 @@ body.theme-dark .pchat-error{color:#f3aaaa}
 #pokdle-app #screen-party-room .psv .psv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
 #pokdle-app #screen-party-room .psv .psv-chips button{min-height:38px;padding:0 14px;border:0;border-radius:999px;background:#F4EEE6;color:#2E2A33;font:800 13px Nunito,sans-serif;cursor:pointer}
 #pokdle-app #screen-party-room .psv .psv-chips button[aria-pressed="true"]{background:#2E2A33;color:#fff}
-#pokdle-app #screen-party-room .psv #party-mode-select{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+#pokdle-app #screen-party-room .psv #party-mode-select{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
 #pokdle-app #screen-party-room .psv #party-mode-select.hidden{display:none!important}
 #pokdle-app #screen-party-room .psv .psv-tile{--c:#7C5BD6;position:relative;display:block!important;height:132px;min-height:0!important;padding:11px 12px!important;overflow:hidden;text-align:left;border-radius:18px!important;
   background:linear-gradient(160deg,color-mix(in oklab,var(--c) 22%,#fff),color-mix(in oklab,var(--c) 55%,#fff))!important;border:2px solid color-mix(in oklab,var(--c) 45%,#fff)!important;box-shadow:0 3px 0 color-mix(in oklab,var(--c) 55%,#fff)!important;transition:transform .15s}
@@ -713,12 +713,16 @@ body.theme-dark .pchat-error{color:#f3aaaa}
 #pokdle-app #screen-party-room #party-action-dock.psv-dock .party-eyebrow{color:#FFD45C!important}
 #pokdle-app #screen-party-room #party-action-dock.psv-dock p{color:#E9E3EE!important}
 #pokdle-app #screen-party-room #party-action-dock.psv-dock #party-start-btn:not(:disabled){background:#FFD45C!important;color:#2E2A33!important;box-shadow:0 3px 0 #C99A1C!important}
-@media (max-width:1100px){#pokdle-app #screen-party-room .psv #party-mode-select{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media (max-width:700px){
-  #pokdle-app #screen-party-room .psv #party-mode-select{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-  #pokdle-app #screen-party-room .psv .psv-tile{height:108px}
-  #pokdle-app #screen-party-room .psv .psv-tile .psv-art{width:78px;height:78px}
-  #pokdle-app #screen-party-room .psv .psv-tile .pmt-text b{font-size:15px!important}
+  /* 3 colonnes aussi sur téléphone (règle de la QA Party Room : grille compacte). */
+  #pokdle-app #screen-party-room .psv #party-mode-select{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+  #pokdle-app #screen-party-room .psv .psv-tile{height:104px;padding:9px 9px!important;border-radius:16px!important}
+  #pokdle-app #screen-party-room .psv .psv-tile .psv-art{width:62px;height:62px;right:-6px;bottom:-6px}
+  #pokdle-app #screen-party-room .psv .psv-tile .pmt-text b{font-size:13.5px!important;top:9px!important;left:9px!important;max-width:92%!important}
+  #pokdle-app #screen-party-room .psv .psv-tile .pmt-tag{display:none!important}
+  #pokdle-app #screen-party-room .psv .psv-tile .psv-dice{font-size:38px}
+  #pokdle-app #screen-party-room .psv .psv-tile.is-active::after,#pokdle-app #screen-party-room .psv .psv-tile[aria-pressed="true"]::after{content:"✓";padding:2px 7px;top:auto;bottom:6px;left:8px;right:auto}
+
   #pokdle-app #screen-party-room .psv .psv-pick{padding:10px 12px;gap:12px}
   #pokdle-app #screen-party-room .psv .psv-pick-art{flex-basis:62px;width:62px;height:62px}
   #pokdle-app #screen-party-room .psv .psv-pick-name{font-size:17px}
@@ -734,3 +738,4 @@ body.theme-dark .pchat-error{color:#f3aaaa}
 #pokdle-app #screen-party-room .psv~* #party-gens-select button,#pokdle-app #screen-party-room .psv #party-gens-select button,#pokdle-app #screen-party-room #party-gens-select button{min-width:38px;padding:0 8px}
 #pokdle-app #screen-party-room .psv .psv-tile.is-active .pmt-text b,#pokdle-app #screen-party-room .psv .psv-tile[aria-pressed="true"] .pmt-text b,#pokdle-app #screen-party-room .psv .psv-tile:has(.new-game-badge) .pmt-text b{max-width:56%}
 @media (max-width:700px){#pokdle-app #screen-party-room .psv .psv-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-4px}#pokdle-app #screen-party-room .psv .psv-chips::-webkit-scrollbar{display:none}#pokdle-app #screen-party-room .psv .psv-chips button{flex:0 0 auto;font-size:13px}}
+@media (max-width:700px){#pokdle-app #screen-party-room .psv .psv-tile .new-game-badge{top:auto!important;bottom:6px!important;left:6px!important;right:auto!important;font-size:9.5px!important}#pokdle-app #screen-party-room .psv .psv-tile:has(.new-game-badge) .pmt-text b{max-width:92%!important}}
