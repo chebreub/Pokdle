@@ -184,3 +184,43 @@
 #pokdle-app.design-refresh #screen-game.av2-wt #weight-status{font-size:20px!important}
 @media (min-width:861px){#pokdle-app.design-refresh #screen-game.av2-wt .av2-beam{transform:rotate(calc(var(--tilt,0deg) * .5))}#pokdle-app.design-refresh #screen-game.av2-wt #weight-status{font-size:26px!important}}
 #pokdle-app.design-refresh #screen-game.av2-wt .weight-result-actions:focus,#pokdle-app.design-refresh #screen-game.av2-wt .weight-result-actions:focus-visible{outline:0!important;box-shadow:none!important}
+
+/* ===== Intrus (même identité) ===== */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd{--av:#7C5BD6;--av-soft:#ECE6FB;--av-line:#DCD2F6}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head{display:flex!important;flex-direction:row;align-items:center;gap:10px;margin:2px 0 8px}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head .card-title{display:none}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head-actions{width:100%}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-new-puzzle-btn{width:100%;height:50px;border-radius:16px!important;background:#fff!important;color:#2E2A33!important;border:2px solid #EEE3D6!important;box-shadow:0 3px 0 rgba(46,42,51,.12)!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-meta-row{display:flex!important;flex-wrap:wrap;gap:6px!important;align-items:center}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-meta-row>span{width:auto!important;background:#fff!important;border:0!important;border-radius:999px!important;padding:5px 11px!important;font-weight:800;font-size:12.5px;color:#2E2A33!important;box-shadow:0 2px 0 rgba(46,42,51,.1)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-puzzle-source{display:none!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-difficulty-picker{width:auto!important;background:#fff!important;border:0!important;border-radius:999px!important;padding:3px 6px 3px 11px!important;box-shadow:0 2px 0 rgba(46,42,51,.1)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-status{font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:20px;line-height:1.25;color:#2E2A33!important;text-align:center;margin:12px 0!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{--t:#8E8A99;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:150px;padding:12px 6px!important;border:0!important;border-radius:22px!important;background:linear-gradient(160deg,color-mix(in oklab,var(--t) 82%,#fff),color-mix(in oklab,var(--t) 92%,#000))!important;box-shadow:0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;transition:transform .12s}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card:active{transform:translateY(3px)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:96px!important;height:96px!important;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.25))}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card-name{color:#fff!important;font-family:Fredoka,Nunito,sans-serif;font-weight:700;font-size:16px;text-shadow:0 2px 0 rgba(0,0,0,.15)}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-revealed:not(.is-answer){opacity:.55}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-answer{box-shadow:0 0 0 5px #3E9B57,0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;opacity:1}
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card.is-wrong{box-shadow:0 0 0 5px #E5463F,0 5px 0 color-mix(in oklab,var(--t) 70%,#000)!important;opacity:1}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-grid{grid-template-columns:repeat(3,1fr)!important;gap:16px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card{min-height:200px}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .odd-card img{width:130px!important;height:130px!important}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .ranking-head-actions{width:auto}#pokdle-app.design-refresh #screen-odd-one-out.av2-odd #odd-new-puzzle-btn{width:auto;padding:0 22px}}
+
+/* ===== Quiz (même identité) : réponses en grandes cartes blanches, lettre dans une pastille de couleur ===== */
+#pokdle-app.design-refresh #screen-game.av2-qz #shell-intro{display:none}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-box{background:#FFF8EF!important;border:0!important;border-radius:28px!important;box-shadow:0 10px 24px rgba(46,42,51,.08)!important;padding:14px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #qz-scene{border-radius:22px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-question{font-family:Fredoka,Nunito,sans-serif!important;font-weight:700!important;font-size:21px!important;line-height:1.25;color:#2E2A33!important;margin:14px 4px 12px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button{display:flex!important;align-items:center;gap:10px;min-height:60px;padding:10px 12px!important;border-radius:18px!important;background:#fff!important;color:#2E2A33!important;border:2px solid #EEE3D6!important;box-shadow:0 4px 0 rgba(46,42,51,.12)!important;font-family:Fredoka,Nunito,sans-serif!important;font-weight:600!important;font-size:16px!important;text-align:left;justify-content:flex-start}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(46,42,51,.12)!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options .qz-letter{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:#fff!important;font-size:15px}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(1) .qz-letter{background:#E5463F!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(2) .qz-letter{background:#4069E0!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(3) .qz-letter{background:#E0A82E!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button:nth-child(4) .qz-letter{background:#3E9B57!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.is-correct,#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.qz-ok{border-color:#3E9B57!important;background:#E6F4EA!important;box-shadow:0 4px 0 #3E9B57!important}
+#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.is-wrong,#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button.qz-ko{border-color:#E5463F!important;background:#FDE8E7!important;box-shadow:0 4px 0 #E5463F!important}
+@media (min-width:861px){#pokdle-app.design-refresh #screen-game.av2-qz #quiz-options button{min-height:68px;font-size:18px!important}}
+/* L'en-tête de l'Intrus : le titre s'écrasait (« I. ») à côté des boutons ; on le cache, « ← Jeux » suffit. */
+#pokdle-app.design-refresh #screen-odd-one-out.av2-odd .dedicated-toolbar .shell-mode{display:none}

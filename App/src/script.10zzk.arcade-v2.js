@@ -124,5 +124,55 @@ if (typeof renderWeightBattlePanel === 'function') {
 }
 if (typeof hideCustomModeSurfaces === 'function') {
   var av2HideBefore = hideCustomModeSurfaces;
-  hideCustomModeSurfaces = function () { var r = av2HideBefore.apply(this, arguments); var g = document.getElementById('screen-game'); if (g) g.classList.remove('av2', 'av2-wt'); return r; };
+  hideCustomModeSurfaces = function () { var r = av2HideBefore.apply(this, arguments); var g = document.getElementById('screen-game'); if (g) g.classList.remove('av2', 'av2-wt', 'av2-qz'); return r; };
+}
+
+// Intrus (même identité) : six grandes cartes aux couleurs du type de chaque Pokémon, artworks ; l'indice
+// en bulle sous la question. Les cartes restent les boutons du jeu.
+function av2Odd() {
+  var screen = document.getElementById('screen-odd-one-out');
+  if (!screen) return;
+  screen.classList.add('av2', 'av2-odd', 'av2-playing');
+  var newBtn = document.getElementById('odd-new-puzzle-btn');
+  av2Clean(newBtn);
+  if (typeof oddOneOutState === 'undefined' || !oddOneOutState) return;
+  var cards = document.querySelectorAll('#odd-grid .odd-card');
+  cards.forEach(function (card, i) {
+    var mon = oddOneOutState.cards[i];
+    if (!mon) return;
+    var c = typeof FAV_TYPE_COLORS !== 'undefined' ? FAV_TYPE_COLORS[mon.type1] : null;
+    if (c) card.style.setProperty('--t', c);
+    var img = card.querySelector('img');
+    if (img && typeof pokedexDetailArtwork === 'function' && !img.dataset.av2Art) {
+      img.dataset.av2Art = '1';
+      var fb = img.src;
+      img.addEventListener('error', function () { if (img.src !== fb) img.src = fb; }, { once: true });
+      img.src = pokedexDetailArtwork(mon, false);
+    }
+  });
+}
+if (typeof renderOddOneOutPuzzle === 'function') {
+  var av2OddBefore = renderOddOneOutPuzzle;
+  renderOddOneOutPuzzle = function () { var r = av2OddBefore.apply(this, arguments); try { av2Odd(); } catch (_e) {} return r; };
+}
+
+// Quiz (même identité) : la scène de la question en couleur, les réponses A/B/C/D en grandes cartes
+// blanches avec la lettre dans une pastille de couleur. Pas d'emoji dans l'étiquette de catégorie.
+function av2Quiz() {
+  var game = document.getElementById('screen-game'), box = document.getElementById('quiz-box');
+  if (!game || !box) return;
+  var on = !box.classList.contains('hidden');
+  game.classList.toggle('av2-qz', on);
+  if (on) game.classList.add('av2');
+  box.querySelectorAll('.qz-cat').forEach(av2Clean);
+}
+['renderQuizQuestion', 'showQuizQuestion', 'renderQuizV2'].forEach(function (name) {
+  if (typeof window[name] !== 'function') return;
+  var before = window[name];
+  window[name] = function () { var r = before.apply(this, arguments); try { av2Quiz(); } catch (_e) {} return r; };
+});
+if (typeof MutationObserver === 'function') {
+  var av2QzObs = new MutationObserver(function () { try { av2Quiz(); } catch (_e) {} });
+  var av2QzStart = function () { var b = document.getElementById('quiz-box'); if (b) av2QzObs.observe(b, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', av2QzStart); else av2QzStart();
 }
