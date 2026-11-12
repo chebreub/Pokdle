@@ -33,3 +33,16 @@ test('pastilles et boutons sur fonds opaques (contrastes lisibles)', () => {
 test('seules les couleurs changent : rien n’est caché dans la carte', () => {
   assert.doesNotMatch(block, /display:none|visibility:hidden/);
 });
+
+// 12/11 au soir : une accolade perdue au rebase plaçait tout le bloc du profil dans « @media (max-width:640px) » :
+// la carte n'était en Aurore que sur téléphone. Les blocs de home-v4.css doivent commencer hors de toute règle.
+test('home-v4.css : accolades équilibrées, blocs Accueil et Profil hors de toute @media', () => {
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, (c) => ' '.repeat(c.length));
+  const depthAt = (index) => { let d = 0; for (let i = 0; i < index; i++) { if (plain[i] === '{') d++; else if (plain[i] === '}') d--; } return d; };
+  assert.equal(depthAt(plain.length), 0, 'accolades équilibrées');
+  for (const marker of ['/* Accueil épuré', '/* Profil épuré Aurore', '/* Menu « Pilule »']) {
+    const at = css.indexOf(marker);
+    assert.ok(at > 0, marker);
+    assert.equal(depthAt(at), 0, marker + ' doit être hors de toute @media');
+  }
+});
