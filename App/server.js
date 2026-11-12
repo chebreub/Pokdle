@@ -1003,11 +1003,11 @@ const STAT_CLASH_SESSION_RECORD_DEFAULT = Object.freeze({
 const STAT_CLASH_STAT_KEYS = ["hp", "attack", "defense", "spAttack", "spDefense", "speed"];
 const STAT_CLASH_STAT_LABELS = {
   hp: "PV",
-  attack: "Attack",
-  defense: "Defense",
-  spAttack: "Special Attack",
-  spDefense: "Special Defense",
-  speed: "Speed",
+  attack: "Attaque",
+  defense: "Défense",
+  spAttack: "Attaque Spé.",
+  spDefense: "Défense Spé.",
+  speed: "Vitesse",
 };
 const STAT_CLASH_STATS_CACHE = new Map();
 const STAT_CLASH_STATS_CACHE_MAX = 1500;

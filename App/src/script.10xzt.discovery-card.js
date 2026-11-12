@@ -6,8 +6,8 @@
 // comptée par les compteurs existants (solo:<mode>).
 var DISC_CANDIDATES = [
   // [action, mode du journal des parties, phrase]
-  ['startEvolutionChainGame', 'evolution', 'Remets la famille dans le bon ordre, du bébé à la forme finale.'],
-  ['startPokedexOrderGame', 'order', 'Classe des Pokémon dans l’ordre du Pokédex national.'],
+  ['startEvolutionChainGame', 'evolution', 'Une famille d’évolution avec un trou au milieu : trouve le Pokémon qui manque.'],
+  ['startPokedexOrderGame', 'order', 'Deux numéros du Pokédex : trouve le Pokémon qui se cache entre les deux.'],
   ['startPixelGame', 'pixel', 'Une image très pixelisée qui se précise à chaque essai.'],
   ['startCryGame', 'cry', 'Un cri, et à toi de trouver qui le pousse.'],
   ['startDescriptionMode', 'description', 'Une entrée du Pokédex, nom caché : de qui parle-t-elle ?'],

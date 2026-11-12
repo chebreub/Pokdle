@@ -1531,11 +1531,11 @@ const STAT_CLASH_INTER_ROUND_DELAY_MS = 1800;
 const STAT_CLASH_SCORE_ANIMATION_MS = 1600;
 const STAT_CLASH_STATS = [
   { key: "hp", label: "PV", short: "PV" },
-  { key: "attack", label: "Attack", short: "ATK" },
-  { key: "defense", label: "Defense", short: "DEF" },
-  { key: "spAttack", label: "Special Attack", short: "SPA" },
-  { key: "spDefense", label: "Special Defense", short: "SPD" },
-  { key: "speed", label: "Speed", short: "SPE" },
+  { key: "attack", label: "Attaque", short: "ATQ" },
+  { key: "defense", label: "Défense", short: "DÉF" },
+  { key: "spAttack", label: "Attaque Spé.", short: "A.SPÉ" },
+  { key: "spDefense", label: "Défense Spé.", short: "D.SPÉ" },
+  { key: "speed", label: "Vitesse", short: "VIT" },
 ];
 
 // === STAT CLASH — extensions DA / gameplay / règles maison ===

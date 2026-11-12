@@ -109,7 +109,19 @@ async def run():
                     await page.locator('#dossier-result [data-action="goToConfig"]').click();assert await page.locator('#screen-dossier').is_hidden()
                     case.update(ok=True,checks=['Wordle loss -> dossier','no answer leak','wrong continues','double click','reload','503 recovery','9/10 end','corrections','bonus unlock','20/20','abandon','mobile overflow','return home'])
                 except Exception as e:
-                    case['error']=str(e);case['pageErrors']=errors;await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'),full_page=True)
+                    case['error']=str(e);case['pageErrors']=errors
+                    # Diagnosis of the intermittent WebKit 1366 failure (seen on main and on #392): the page's own state,
+                    # what sits under « Question suivante », visible overlays, and the requests the fake server received.
+                    try:
+                        case['calls']=len(calls);case['saved']=len(saved)
+                        case['debug']=await page.evaluate('''()=>{const b=document.querySelector('.dossier-continue'),opt=document.querySelector('.dossier-option'),hit=n=>{if(!n)return null;const r=n.getBoundingClientRect(),e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {top:Math.round(r.top),h:Math.round(r.height),hit:e?((e.closest&&e.closest('button')||e).className||e.tagName).toString().slice(0,80):null}};
+                          return {busy:typeof dailyDossierBusy!=='undefined'?dailyDossierBusy:null,feedback:typeof dailyDossierFeedback!=='undefined'?dailyDossierFeedback:null,serial:typeof dailyDossierSerial!=='undefined'?dailyDossierSerial:null,
+                            answered:dailyDossierState?.answered,finished:dailyDossierState?.finished,account:typeof dailyObservedAccountId==='function'?dailyObservedAccountId():null,
+                            dossierHidden:document.getElementById('screen-dossier')?.classList.contains('hidden'),message:(document.getElementById('dossier-message')?.textContent||'').slice(0,120),
+                            continueBtn:hit(b),firstOption:hit(opt),optionDisabled:opt?opt.disabled:null,scrollY:Math.round(scrollY),
+                            overlays:[...document.querySelectorAll('[role=dialog],[aria-modal=true],.lvc-back,.achc,.toast,.gf-float')].filter(e=>getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden'&&e.getBoundingClientRect().width>0).map(e=>(e.id||e.className).toString().slice(0,60)).slice(0,8)}}''')
+                    except Exception as debug_error:case['debugError']=str(debug_error)[:200]
+                    await page.screenshot(path=str(OUT/f'{engine}-{width}-failure.png'),full_page=True)
                 finally:await ctx.close()
                 if case['ok'] or attempt==2 or engine!='webkit':
                     if attempt==2: case['retried']=True
