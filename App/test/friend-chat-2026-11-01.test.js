@@ -152,7 +152,8 @@ test('wired in: card, friends list, counts, admin, account deletion, privacy', (
   assert.match(inbox, /\(n\.friends \|\| 0\) \+ \(n\.chat \|\| 0\)\);/);
   const panel = read('lib/admin-panel.js');
   assert.match(panel, /app\.post\("\/admin\/reports\/done", form,/);
-  assert.match(panel, /\$\{reportsHtml\}\$\{newsSection\(news, day\)\}/, 'reports first in /admin');
+  // 12/11 : panneau rangé en groupes, les signalements ouvrent le 1er groupe (Modération).
+  assert.match(panel, /\["moderation", "🛡️ Modération", \[\[reportsHtml, true\]/, 'reports first in /admin');
   const server = read('server.js');
   assert.match(server, /reports: \{ module: require\("\.\/lib\/friend-chat"\) \}/);
   assert.match(server, /\["friend_messages", "DELETE FROM friend_messages WHERE from_id = \$1 OR to_id = \$1", \[id\]\]/);

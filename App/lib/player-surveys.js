@@ -190,14 +190,15 @@ ${s.live ? `<details><summary class="btn ghost">⏹ Arrêter le sondage…</summ
 .sv-bar i{display:block;height:12px;min-width:4px;border-radius:6px;background:#C9BFB2}.sv-bar i.sv-f3{background:var(--blue)}.sv-bar i.sv-f2{background:#F2C14E}.sv-bar b{text-align:right}
 .sv-cm{border-top:1px solid var(--line);padding:8px 0;overflow-wrap:anywhere}.sv-cm small{display:block;color:var(--muted)}#survey details{margin-top:10px}#survey summary{list-style:none}#survey summary::-webkit-details-marker{display:none}
 .sv-old{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.sv-old>summary{font-weight:800;cursor:pointer}
+.sv-new{margin-top:14px}.sv-new>summary{list-style:none}.sv-new>summary::-webkit-details-marker{display:none}
 </style>${head}${older.map((s) => block(s, false)).join("")}
-<h3>➕ Nouveau sondage</h3><p class="hint">Il remplace celui en cours. Chaque joueur qui a déjà un compte le voit une seule fois, à sa prochaine visite, pendant ${LIVE_DAYS} jours. Réponses : 😕 Pas fan · 🙂 Ça va · 😍 J'adore, plus un mot facultatif (${COMMENT_MAX} caractères). Merci = +1 Poké Ball.</p>
+<details class="sv-new"><summary class="btn ghost">➕ Nouveau sondage…</summary><p class="hint">Il remplace celui en cours. Chaque joueur qui a déjà un compte le voit une seule fois, à sa prochaine visite, pendant ${LIVE_DAYS} jours. Réponses : 😕 Pas fan · 🙂 Ça va · 😍 J'adore, plus un mot facultatif (${COMMENT_MAX} caractères). Merci = +1 Poké Ball.</p>
 <form method="post" action="/admin/survey">
 <label for="sv-title">Titre</label><input id="sv-title" name="title" maxlength="${TEXT_MAX}" required value="Ton avis sur Pokédle ?">
 <label for="sv-q1">Question 1</label><input id="sv-q1" name="q1" maxlength="${TEXT_MAX}" required placeholder="Le nouveau look du site">
 <label for="sv-q2">Question 2 (facultative)</label><input id="sv-q2" name="q2" maxlength="${TEXT_MAX}" placeholder="Les nouveautés">
 <label for="sv-hint">Petite ligne sous la question 2 (facultative)</label><input id="sv-hint" name="hint" maxlength="120" placeholder="Pokédex, hautes herbes, Party Room…">
-<div class="row"><button class="primary" type="submit">Lancer le sondage</button></div></form></section>`;
+<div class="row"><button class="primary" type="submit">Lancer le sondage</button></div></form></details></section>`;
 }
 
 function createRateLimit(limit = 30, windowMs = 600000) {

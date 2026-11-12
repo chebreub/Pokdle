@@ -152,7 +152,57 @@ textarea{width:100%;font:inherit;padding:12px;border:1px solid var(--line);borde
 label.check{display:flex;gap:8px;align-items:center;font-weight:700}label.check input{width:auto}h3{font:700 17px Fredoka,system-ui,sans-serif;margin:20px 0 8px}
 .message{border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 10px}.message .meta{color:var(--muted);font-size:14px;margin-bottom:6px}.message .body{overflow-wrap:anywhere;margin-bottom:8px}
 .answer{border-left:4px solid #7C5BD6;background:var(--bg);border-radius:8px;padding:8px 12px;margin:0 0 8px;overflow-wrap:anywhere}.message summary{list-style:none}.message summary::-webkit-details-marker{display:none}
+/* Panneau rangé (12/11) */
+body{padding:0}main{max-width:none}
+.adm-top{background:radial-gradient(ellipse 55% 90% at 85% 5%,rgba(255,140,200,.45),transparent 60%),radial-gradient(ellipse 60% 80% at 0% 110%,rgba(90,120,255,.5),transparent 60%),linear-gradient(118deg,#2A1F6B 0%,#5A2E9E 50%,#9A3C8E 100%);color:#fff;padding:18px 24px 64px}
+.adm-bar{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.adm-bar h1{margin:0;color:#fff}.adm-bar small{color:#F3E8FF;font-weight:800}.adm-bar .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;border-radius:999px;background:#4A3192;color:#fff;font-weight:800;text-decoration:none}
+.glance{max-width:1180px;margin:-44px auto 0;padding:0 24px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.glance-tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;color:var(--ink);text-decoration:none;box-shadow:0 8px 20px rgba(60,30,110,.08)}
+.glance-tile b{display:block;font:700 24px Fredoka,system-ui,sans-serif}.glance-tile span{display:block;color:var(--muted);font-size:13.5px}.glance-tile em{display:inline-block;margin-top:6px;font-style:normal;font-weight:800;font-size:13px;color:var(--blue)}
+.glance-tile.is-alert{border-color:#F2B8B2;background:#FFF4F2}.glance-tile.is-alert b{color:var(--red)}
+.adm-wrap{max-width:1180px;margin:20px auto 40px;padding:0 24px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+.adm-wrap > .notice{grid-column:1/-1}
+.adm-nav{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:8px}
+.adm-nav a{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:800}.adm-nav a:hover{background:var(--bg)}
+.adm-nav a i{margin-left:auto;font-style:normal;background:var(--red);color:#fff;border-radius:999px;padding:0 7px;font-size:12px;line-height:20px}
+.grp{background:none!important;border:0!important;padding:0!important;margin:0 0 22px!important;scroll-margin-top:12px}
+.grp-t{font:700 21px Fredoka,system-ui,sans-serif;margin:0 0 10px}
+.cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}.cell{min-width:0}.cell.wide{grid-column:1/-1}.cell > section{margin:0}
+main > .notice{max-width:1132px;margin:16px auto 0}
+@media (max-width:760px){
+  .adm-top{padding:14px 16px 56px}.adm-bar small{display:none}.adm-bar h1{font-size:21px}.pill{min-height:34px;padding:0 11px;font-size:13.5px}
+  .glance{grid-template-columns:1fr 1fr;padding:0 12px;margin-top:-40px;gap:8px}.glance-tile{padding:10px 12px}.glance-tile b{font-size:20px}
+  .adm-wrap{grid-template-columns:1fr;padding:0 12px;margin-top:14px;gap:12px}
+  .adm-nav{position:static;flex-direction:row;overflow-x:auto;padding:4px;border-radius:999px}.adm-nav a{flex:0 0 auto;white-space:nowrap;padding:8px 12px;border-radius:999px;font-size:14px}
+  .cells{grid-template-columns:1fr}
+  .grp{display:none}.grp:target{display:block}.adm-body:not(:has(.grp:target)) .grp:first-child{display:block}
+}
 </style></head><body><main>${body}</main></body></html>`;
+}
+
+// Panneau admin rangé (12/11/2026, maquette validée) : en-tête Aurore, « En un coup d'œil » (4 cases), puis les
+// sections en 3 groupes (Modération, Communiquer, Outils) ; menu à gauche sur PC, onglets sur téléphone (CSS seul,
+// la CSP refuse les scripts dans la page). Les formulaires et leurs actions ne changent pas.
+function adminLayoutHtml({ user, ok, err, glance, groups }) {
+  const g = glance || {};
+  const until = g.news && g.news.until ? g.news.until.split("-").reverse().slice(0, 2).join("/") : "";
+  const tiles = [
+    ["moderation", g.reports ? "is-alert" : "", String(g.reports || 0), g.reports === 1 ? "signalement à traiter" : "signalements à traiter", "Voir"],
+    ["communiquer", "", g.news ? "En ligne" : "Aucune", g.news ? "annonce jusqu'au " + until : "annonce dans le bandeau", "Changer"],
+    ["communiquer", "", g.survey ? String(g.survey.answered) : "—", g.survey ? "réponses au sondage · " + g.survey.comments + " mot" + (g.survey.comments > 1 ? "s" : "") : "pas de sondage en cours", "Lire"],
+    ["communiquer", "", String(g.replies || 0), "réponses de joueurs à tes messages", "Lire"],
+  ].map(([anchor, cls, big, line, go]) => `<a class="glance-tile ${cls}" href="#${anchor}"><b>${escapeHtml(big)}</b><span>${escapeHtml(line)}</span><em>${go} →</em></a>`).join("");
+  const badge = (id) => id === "moderation" && g.reports ? `<i>${g.reports}</i>` : id === "communiquer" && g.replies ? `<i>${g.replies}</i>` : "";
+  const nav = groups.map(([id, title]) => `<a href="#${id}">${escapeHtml(title)}${badge(id)}</a>`).join("");
+  const body = groups.map(([id, title, cells]) => {
+    const html = cells.filter(([h]) => h).map(([h, wide]) => `<div class="cell${wide ? " wide" : ""}">${h}</div>`).join("");
+    return html ? `<section class="grp" id="${id}"><h2 class="grp-t">${escapeHtml(title)}</h2><div class="cells">${html}</div></section>` : "";
+  }).join("");
+  return `<header class="adm-top"><div class="adm-bar"><h1>🛠️ Panneau admin</h1><small>Pokédle · connecté : ${escapeHtml(user.username || user.id)}</small><span class="sp"></span><a class="pill" href="/admin/stats">📊 Stats</a><a class="pill" href="/">↩ Site</a></div></header>
+<div class="glance">${tiles}</div>
+${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
+<div class="adm-wrap"><nav class="adm-nav" aria-label="Sections du panneau">${nav}</nav><div class="adm-body">${body}</div></div>`;
 }
 
 function newsSection(state, today) {
@@ -226,6 +276,7 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
     const day = today();
     try {
       const [news, photos] = await Promise.all([readNews(db, day), sharedPhotos(db)]);
+      const glance = { reports: 0, replies: 0, survey: null, news: news.news || null };
       let namesHtml = "";
       try {
         const [players, replaced] = await Promise.all([
@@ -241,24 +292,39 @@ function mountAdminRoutes(app, { express, db, ready, getSessionUser, adminIds, t
       if (messages) {
         try {
           const pushCount = await db.query("SELECT COUNT(*)::int AS n FROM push_subscriptions WHERE account_id IS NOT NULL").then((r) => r.rows[0].n, () => NaN);
-          messagesHtml = messages.module.adminSectionHtml(await messages.module.adminState(db), pushCount);
+          const msgState = await messages.module.adminState(db);
+          glance.replies = msgState.messages.reduce((n, m) => n + m.replies.length, 0);
+          messagesHtml = messages.module.adminSectionHtml(msgState, pushCount);
         } catch (error) { log.error("[admin] messages:", error.message); messagesHtml = "<section><h2>Écrire aux joueurs</h2><p>Lecture impossible pour le moment.</p></section>"; }
       }
       // 🚩 Reports from the chat between friends (lib/friend-chat.js), first when one waits.
-      let reportsHtml = "";
+      let reportsHtml = "", suspensionHtml = "";
       if (reports) {
-        try { reportsHtml = reports.module.adminSectionHtml(await reports.module.adminReports(db), escapeHtml) + await reports.module.suspensionSectionHtml(db, escapeHtml); }
+        try {
+          const list = await reports.module.adminReports(db);
+          glance.reports = list.filter((r) => r.status === "open").length;
+          reportsHtml = reports.module.adminSectionHtml(list, escapeHtml);
+          suspensionHtml = await reports.module.suspensionSectionHtml(db, escapeHtml);
+        }
         catch (error) { log.error("[admin] reports:", error.message); }
       }
       let surveyHtml = "";
       if (surveys) {
-        try { surveyHtml = surveys.module.adminSectionHtml(await surveys.module.adminState(db), escapeHtml); }
+        try {
+          const surveyState = await surveys.module.adminState(db);
+          const live = surveyState.find((x) => x.live);
+          if (live) glance.survey = { answered: live.answered, comments: live.comments };
+          surveyHtml = surveys.module.adminSectionHtml(surveyState, escapeHtml);
+        }
         catch (error) { log.error("[admin] survey:", error.message); surveyHtml = "<section><h2>📊 Sondage</h2><p>Lecture impossible pour le moment.</p></section>"; }
       }
       const ok = NOTICES[req.query.ok];
       const err = typeof req.query.err === "string" ? oneLine(req.query.err).slice(0, 160) : "";
-      res.send(page("Pokédle · Admin", `<h1>Panneau admin</h1>${ok ? `<div class="notice ok">${escapeHtml(ok)}</div>` : ""}${err ? `<div class="notice err">${escapeHtml(err)}</div>` : ""}
-${reportsHtml}${newsSection(news, day)}${surveyHtml}${messagesHtml}${photosSection(photos)}${namesHtml}${levelHtml}${wildTestSectionHtml()}<p class="hint">Connecté : ${escapeHtml(user.username || user.id)} · <a href="/">Retour au site</a></p>`));
+      res.send(page("Pokédle · Admin", adminLayoutHtml({ user, ok, err, glance, groups: [
+        ["moderation", "🛡️ Modération", [[reportsHtml, true], [suspensionHtml], [photosSection(photos)], [namesHtml]]],
+        ["communiquer", "📣 Communiquer", [[newsSection(news, day)], [surveyHtml], [messagesHtml, true]]],
+        ["outils", "🧰 Outils", [[levelHtml], [wildTestSectionHtml()]]],
+      ] })));
     } catch (error) {
       log.error("[admin] page:", error.message);
       res.status(503).send(page("Admin", "<h1>Panneau admin</h1><section><p>Lecture impossible pour le moment.</p></section>"));
