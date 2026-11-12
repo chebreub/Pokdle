@@ -38,6 +38,19 @@ def submit_name(page, name):
     wait(page, "gameOver === true")
 
 
+def dismiss_registration(page):
+    """Close the « Nouvelle entrée · Pokédex » card if it is still open after a win.
+    The standard card closes itself after 2.3 s (closePokedexRegistration); a click that starts just before
+    that would wait for a detached button (seen on Chromium and WebKit 1366). Either way, it must be gone."""
+    card = page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
+    if card.is_visible():
+        try:
+            card.click(timeout=3000)
+        except Exception:
+            pass  # closed on its own between the check and the click
+    page.wait_for_function("() => { const l = document.getElementById('pokedex-registration-layer'); return !l || l.classList.contains('hidden'); }", timeout=5000)
+
+
 def run():
     cases = []
     with sync_playwright() as playwright:
@@ -326,9 +339,7 @@ def run():
                         submit_name(page, chain["names"][1])
                         assert page.evaluate("gameMode") == "evolution", "Mode unexpectedly switched"
                         assert page.locator("#win-box").is_visible(), "Winning Evolution lacks a result"
-                        celebration = page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
-                        if celebration.is_visible():
-                            celebration.click()
+                        dismiss_registration(page)
                         # Completed Party must not restart via a solo button.
                         page.evaluate("""() => {
                             partySession={currentModeKey:'evolution',completed:true,roundResolved:true};
@@ -372,9 +383,7 @@ def run():
                         submit_name(page, puzzle["name"])
                         assert page.evaluate("gameMode") == "order"
                         assert page.locator("#win-box").is_visible(), "Winning Ordre lacks a result"
-                        celebration = page.locator('#pokedex-registration-layer:not(.hidden) [data-action="closePokedexRegistration"]')
-                        if celebration.is_visible():
-                            celebration.click()
+                        dismiss_registration(page)
                         button = page.locator("#btn-restart")
                         if width < 640:
                             button.tap()
