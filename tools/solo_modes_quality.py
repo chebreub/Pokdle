@@ -260,7 +260,10 @@ def run():
                             wrong_card.click()
                         assert page.evaluate("weightBattleState.revealed && gameOver"), "Duel did not finish"
                         assert page.locator("#weight-result-actions").is_visible(), "Missing replay beside the answer"
-                        assert "était le plus lourd" in page.locator("#weight-result-detail").inner_text()
+                        # Since #392 the result compares both weights: « Raté ! Ronflex pèse 460 kg, Pikachu 6 kg : 77 fois plus lourd. »
+                        loss_text = page.locator("#weight-result-detail").inner_text()
+                        # (equal weights: « … pèsent tous les deux 120 kg. »)
+                        assert loss_text.startswith("Raté !") and " kg" in loss_text, loss_text
                         assert page.evaluate("document.activeElement?.id") == "weight-result-actions", "Focus stayed on disabled card"
                         if width < 640:
                             actions = page.locator("#weight-result-actions").bounding_box()
