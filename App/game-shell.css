@@ -2932,3 +2932,17 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 #pokdle-app.theme-dark :is(.ld-pl b,.ld-row){color:#f5efe6}
 @media (min-width:700px){.ld-card h3{font-size:27px}}
 #screen-config .home-party-actions .ld-home-btn{flex:1 1 100%;width:100%;align-items:center;text-align:center}
+
+/* Stat Clash 1v1 : le plateau ne déborde plus (12/11).
+   Avant : style.css imposait 3 colonnes d'au moins 300 + 500 + 300 px (1 140 px) dans un écran limité à 1 000 px,
+   donc le panneau du Bot était coupé sur PC ; et cette règle, placée après celle « 1 colonne », gardait 3 colonnes
+   de 978 px sur téléphone. Ici : l'écran de Stat Clash a un peu plus de place sur PC, les colonnes se resserrent
+   au lieu de déborder, et sous 980 px tout passe sur une colonne. Rien d'autre ne change. */
+#pokdle-app.design-refresh #screen-stat-clash.focused-mode-screen{max-width:1240px!important}
+#screen-stat-clash .stat-clash-board,
+#screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-board{grid-template-columns:minmax(0,.9fr) minmax(0,1.6fr) minmax(0,.9fr)!important;width:100%;max-width:100%}
+#screen-stat-clash .stat-clash-board>*{min-width:0}
+@media (max-width:980px){
+  #screen-stat-clash .stat-clash-board,
+  #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-board{grid-template-columns:minmax(0,1fr)!important}
+}
