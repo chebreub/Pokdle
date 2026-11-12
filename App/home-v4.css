@@ -441,4 +441,38 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring::before{inset:7px}
   #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring b{font-size:18px}
   #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring small{display:none}
+
+/* Profil épuré Aurore (12/11, maquette validée) : la carte de dresseur prend les couleurs Aurore de l'accueil,
+   sur la page crème. Rien ne change dans son contenu ni dans la page autour.
+   Pastilles et boutons sur fonds opaques (les contrastes sont vérifiés par la QA). */
+#pokdle-app.design-refresh #screen-profile .profile-hero{background-color:#4A2A8E!important;background-image:radial-gradient(ellipse 55% 90% at 85% 5%,rgba(255,140,200,.45),transparent 60%),radial-gradient(ellipse 60% 80% at 0% 110%,rgba(90,120,255,.5),transparent 60%),linear-gradient(118deg,#2A1F6B 0%,#5A2E9E 50%,#9A3C8E 100%)!important;border:0!important;box-shadow:0 14px 34px rgba(60,30,110,.22)!important;color:#fff!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-circle{background:radial-gradient(circle at 50% 60%,#B56BC8,#6A3AAE 55%,#3A2478 100%)!important;box-shadow:0 0 0 4px rgba(255,255,255,.18)}
+#pokdle-app.design-refresh #screen-profile .profile-hero-circle img{filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
+#pokdle-app.design-refresh #screen-profile .profile-hero-circle img.is-photo{filter:none}
+#pokdle-app.design-refresh #screen-profile .profile-hero-empty{color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-partner{background:#3A2478!important;color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile button.profile-hero-partner{color:#FFE08A!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-eyebrow{color:#FFE08A!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-name{color:#fff!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-title{background:#3A2478!important;border:1px solid #C9A23E;color:#FFE08A!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-pioneer{background:#3A2478!important;color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .profile-hero-medals{background:#3A2478!important;border-color:#C9A23E!important;color:#FFE6A8!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero :is(.profile-hero-line,.profile-shinies-empty){color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .profile-shinies-title{color:#FFE08A!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .shiny-showcase-item small{color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-actions .btn-blue{background:#fff!important;color:#2E2A33!important;border:0!important;box-shadow:0 4px 0 rgba(30,12,60,.35)!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-actions .btn-ghost{background:#5B3AA6!important;color:#fff!important;border:1px solid #8E73D6!important;box-shadow:none!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-photo{color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring-track{stroke:#5B3AA6!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring-fill{stroke:#FFD45C!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring b{color:#fff!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero .profile-ring small{color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-level strong{color:#fff!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-level :is(span,small){color:#F3E8FF!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-level-text .pf2-xpbar{background:#5B3AA6!important}
+#pokdle-app.design-refresh #screen-profile .profile-hero-level-text .pf2-xpbar b{background:linear-gradient(90deg,#FFD45C,#FFB547)!important}
+@media (max-width:760px){
+  #pokdle-app.design-refresh #screen-profile .profile-hero-level{background:transparent!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-partner{padding:2px 10px!important;border-radius:999px!important;font-size:12.5px!important}
+  #pokdle-app.design-refresh #screen-profile .profile-hero-photo{background:#5B3AA6!important;border:1px solid #8E73D6!important;color:#fff!important}
 }
