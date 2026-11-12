@@ -6,7 +6,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const css = fs.readFileSync(path.join(__dirname, '../home-v4.css'), 'utf8');
-const block = css.slice(css.indexOf('/* Profil épuré Aurore'));
+const profileAt = css.indexOf('/* Profil épuré Aurore');
+const nextAt = css.indexOf('/* Accueil téléphone « appli »', profileAt);
+const block = css.slice(profileAt, nextAt > profileAt ? nextAt : undefined);
 
 test('la carte de dresseur devient une carte Aurore', () => {
   assert.ok(block.length > 100, 'bloc du profil présent');
@@ -40,7 +42,7 @@ test('home-v4.css : accolades équilibrées, blocs Accueil et Profil hors de tou
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, (c) => ' '.repeat(c.length));
   const depthAt = (index) => { let d = 0; for (let i = 0; i < index; i++) { if (plain[i] === '{') d++; else if (plain[i] === '}') d--; } return d; };
   assert.equal(depthAt(plain.length), 0, 'accolades équilibrées');
-  for (const marker of ['/* Accueil épuré', '/* Profil épuré Aurore', '/* Menu « Pilule »']) {
+  for (const marker of ['/* Accueil épuré', '/* Profil épuré Aurore', '/* Menu « Pilule »', '/* Accueil téléphone « appli »']) {
     const at = css.indexOf(marker);
     assert.ok(at > 0, marker);
     assert.equal(depthAt(at), 0, marker + ' doit être hors de toute @media');

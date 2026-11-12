@@ -477,3 +477,105 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app.design-refresh #screen-profile .profile-hero-partner{padding:2px 10px!important;border-radius:999px!important;font-size:12.5px!important}
   #pokdle-app.design-refresh #screen-profile .profile-hero-photo{background:#5B3AA6!important;border:1px solid #8E73D6!important;color:#fff!important}
 }
+
+/* Accueil téléphone « appli » (12/11, maquette validée : « Go appli ») : 4 rubriques sans cadre au lieu de 9 cartes.
+   Défi du jour plus court, « Aujourd'hui » en bulles (script.10zzzzf.home-app.js), Mini-jeux, Entre amis.
+   Les cartes remplacées restent dans la page (PC, lecteurs d'écran) ; rien ne change au-dessus de 640 px. */
+#hva-today,.hva-h,#hva-party-head{display:none}
+@media (max-width:640px){
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva{display:flex!important;flex-direction:column}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva > #daily-hero{order:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva > #hva-today{order:1!important;display:block}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery :is(.home-discovery-head,#hva-x){order:2!important;display:flex!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery :is(#home-game-filters){order:3!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery :is(.hc-box,#hva-x){order:4!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery :is(.hc-dots,#hva-x){order:5!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva > #hva-party-head{order:6!important;display:flex}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hm-side > :is(.hm-duel,#hva-x){order:7!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva > #home-party{order:8!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva > .hc-tail{order:9!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva > #hv4-row{display:none!important}
+
+  /* Défi du jour, plus court (à jouer / en cours ; la journée finie garde son bilan court) */
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero.hv4-hero:not(.hv4-done){padding:16px 16px 14px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) .pk-hero-main{display:flex!important;flex-wrap:wrap;align-items:center;gap:0 8px}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) :is(.pk-hero-cta-row,.pk-hero-chips){display:contents!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) .pk-kicker{order:1;flex:1 1 100%}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) .hv4-q{order:2;flex:1 1 100%;max-width:calc(100% - 92px);margin:4px 0 0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-cta{order:3;flex:1 1 100%;width:100%;min-height:52px!important;margin:12px 0 0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps{order:4;flex:1 1 100%;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px!important;margin:14px 0 0!important;padding:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps li{min-width:0;margin:0}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps button{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:5px!important;width:100%;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:#E9DDFB!important;font:800 11.5px/1.15 Nunito,sans-serif!important;text-align:center;opacity:1!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps button::before{content:"";display:block;height:6px;border-radius:3px;background:#5B3AA6}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps .is-next button{color:#fff!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps .is-next button::before{background:#FFD45C}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps .is-done button{color:#fff!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps .is-done button::before{background:#7DDB9A}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps button > span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps .hp-long{display:none}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-steps button > b{display:none}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva #daily-hero:not(.hv4-done) #daily-hero-steps .is-done button > b{display:block!important;font:900 11px Nunito,sans-serif!important;color:#C9F2D5!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-countdown{order:5;margin-top:12px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-remind{order:6;margin-top:12px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) :is(#daily-hero-countdown,#daily-hero-remind){flex:0 0 auto;min-height:32px!important;height:32px;padding:0 11px!important;border-radius:999px!important;font-size:0!important;white-space:nowrap}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) :is(#daily-hero-countdown,#daily-hero-remind)[data-short]::after{content:attr(data-short);font:800 12.5px Nunito,sans-serif}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) :is(#daily-hero-countdown,#daily-hero-remind) > *{display:none!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-ghost{order:7;flex:0 0 auto;width:auto!important;margin:12px 0 0 auto!important;min-height:32px!important;padding:0!important;font-size:13px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-bonus{order:8;flex:1 1 100%;display:flex!important;flex-wrap:nowrap;align-items:center;gap:8px!important;margin:10px 0 0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-bonus::before{content:"★ Bonus";flex:0 0 auto;font:900 12px Nunito,sans-serif;color:#FFE08A}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-bonus button{flex:1 1 0;min-width:0;min-height:34px!important;padding:0 10px!important;border:0!important;border-radius:999px!important;background:#4A3192!important;color:#fff!important;box-shadow:none!important;font:800 12.5px Nunito,sans-serif!important;display:flex!important;align-items:center;justify-content:space-between;gap:6px}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #daily-hero:not(.hv4-done) #daily-hero-bonus button b{font:900 11px Nunito,sans-serif!important;color:#FFE08A!important}
+
+  /* Aujourd'hui */
+  #pokdle-app #hva-today{padding:18px 16px 0}
+  #pokdle-app .hva-head,#pokdle-app .hva-phead{display:flex;align-items:baseline;gap:8px}
+  #pokdle-app .hva-head h2,#pokdle-app .hva-h{display:block;margin:0;font:600 19px Fredoka,sans-serif;color:#2E2A33}
+  #pokdle-app .hva-more{margin-left:auto;min-height:32px;padding:0;border:0;background:none;box-shadow:none;color:#4069E0;font:900 13px Nunito,sans-serif;cursor:pointer}
+  #pokdle-app .hva-bubs{display:flex;gap:14px;overflow-x:auto;margin:0 -16px;padding:12px 16px 6px;scrollbar-width:none;scroll-snap-type:x proximity}
+  #pokdle-app .hva-bubs::-webkit-scrollbar{display:none}
+  #pokdle-app .hva-bub{flex:0 0 auto;width:66px;margin:0;padding:0;border:0;background:none;box-shadow:none;text-align:center;color:#4A4352;font:800 11.5px/1.15 Nunito,sans-serif;scroll-snap-align:start;cursor:pointer}
+  #pokdle-app .hva-bub .hva-c{position:relative;display:grid;place-items:center;width:62px;height:62px;margin:0 auto 6px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px #F1E2C8}
+  #pokdle-app .hva-bub .hva-c img{width:40px;height:40px;object-fit:contain;image-rendering:pixelated}
+  #pokdle-app .hva-bub .hva-c img.hva-zone{width:62px;height:62px;border-radius:50%;object-fit:cover}
+  #pokdle-app .hva-bub.is-hot .hva-c{box-shadow:0 0 0 3px #FFD45C,0 0 0 5px #FFF8EF,0 0 0 6.5px #E8B53A}
+  #pokdle-app .hva-bub b{display:block;font:900 12px Nunito,sans-serif;color:#2E2A33}
+  #pokdle-app .hva-bub small{display:block;margin-top:1px;font:800 10.5px Nunito,sans-serif;color:#7A7084;white-space:nowrap}
+  #pokdle-app .hva-badge{position:absolute;right:-3px;top:-3px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#D93A2F;color:#fff;font:900 11px/16px Nunito,sans-serif;font-style:normal;border:2px solid #FFF8EF}
+  #pokdle-app .hva-ring{position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(#4069E0 var(--p),#E8DCCB 0);-webkit-mask:radial-gradient(circle,transparent 33px,#000 34px);mask:radial-gradient(circle,transparent 33px,#000 34px)}
+  #pokdle-app .hva-cap{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 0;padding:10px 12px;border:0;border-radius:18px;background:#E9F6EC;box-shadow:none;text-align:left;cursor:pointer}
+  #pokdle-app .hva-cap img{flex:0 0 auto;width:58px;height:44px;border-radius:12px;object-fit:cover;image-rendering:pixelated}
+  #pokdle-app .hva-cap span{flex:1;min-width:0}
+  #pokdle-app .hva-cap b{display:block;font:600 15.5px Fredoka,sans-serif;color:#1F5C33}
+  #pokdle-app .hva-cap small{display:block;font:800 12px/1.3 Nunito,sans-serif;color:#2F6B42}
+  #pokdle-app .hva-cap em{flex:0 0 auto;display:grid;place-items:center;min-height:38px;padding:0 14px;border-radius:12px;background:#2F8F4E;color:#fff;font:900 13px Nunito,sans-serif;font-style:normal}
+
+  /* Mini-jeux : un titre court, la génération en pastille, « Tous les jeux » en lien */
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head{display:flex!important;align-items:center;gap:8px;margin:22px 16px 0!important;padding:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head > div:not(.home-discovery-actions){position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head .home-discovery-actions{display:flex!important;flex:1;align-items:center;gap:8px;margin:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head .generation-trigger{order:1;width:auto!important;min-height:30px!important;margin:0!important;padding:0 10px!important;border-radius:999px!important;background:#F2F5FF!important;border:1.5px solid #C9D6FA!important;box-shadow:none!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head .generation-trigger svg{display:none}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head .generation-trigger > span{font-size:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head .generation-trigger small{font:900 12.5px Nunito,sans-serif!important;color:#4069E0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .home-discovery-head .btn-ghost{order:2;margin-left:auto!important;width:auto!important;min-height:32px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:#4069E0!important;font:900 13px Nunito,sans-serif!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-game-filters{margin:10px 0 0!important;padding:0 16px!important;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-game-filters::-webkit-scrollbar{display:none}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-game-filters button{flex:0 0 auto;min-height:36px!important}
+
+  /* Entre amis : un titre, une seule carte, « Créer un salon » et « J'ai un code » côte à côte */
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva > #hva-party-head{margin:22px 16px 10px}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva .hm-side > :is(.hm-duel,#hva-x){margin:0 16px!important;border-radius:22px 22px 0 0!important;overflow:hidden}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party{margin:0 16px!important;border-radius:0 0 22px 22px!important;border-top:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party .home-party-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party .home-party-actions > *{width:100%!important;margin:0!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party .home-party-cta{order:1}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party .home-party-join{order:2;min-height:48px!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party .ld-home-btn{order:3;grid-column:1 / -1;min-height:36px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:#5A3FA6!important;font:900 13px Nunito,sans-serif!important}
+  #pokdle-app #screen-config.hv4.hv4.hv4.hva #home-party .ld-home-btn small{display:inline!important;margin-left:4px;font:800 12px Nunito,sans-serif;color:#7A6A9E}
+  /* Titre des mini-jeux sur une ligne : « Mini-jeux · Kanto ▾ ········ Tous les jeux → » */
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery :is(.home-discovery-head,#hva-x){flex-direction:row!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:center!important;text-align:left!important;grid-template-columns:none!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery-head > .hva-h{flex:0 0 auto}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery-head > .home-discovery-actions{display:flex!important;flex:1 1 auto!important;justify-content:flex-start!important;width:auto!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery-actions>.generation-trigger>span::after{content:none!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hm-side > :is(.hm-duel,#hva-x){width:auto!important}
+}

@@ -168,8 +168,16 @@ def main():
      expect(page.locator('#daily-hero').count()==1,'Daily hero is duplicated')
      expect(page.locator('#home-games-grid .mode-tile').count()==6,'Home discovery shortcuts are missing')
      expect(page.locator('#daily-notebook .notebook-cell').count()==27,'Notebook must retain all nine criteria')
-     hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('#home-games-grid').bounding_box();party=page.locator('.home-pathways').bounding_box()
-     expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
+     hero=page.locator('#daily-hero').bounding_box();catalog=page.locator('#home-games-grid').bounding_box()
+     if width<=640:
+      # Accueil « appli » (12/11/2026) : sur téléphone, « Aujourd'hui » (bulles) passe entre le Défi du jour et les
+      # mini-jeux ; la carte de l'Œuf (.home-pathways) reste dans la page, remplacée à l'écran par sa bulle.
+      today=page.locator('#hva-today').bounding_box()
+      expect(page.locator('.home-pathways').count()==1 and page.locator('#hva-today [data-action="openEggGame"]').count()==1,'The egg is missing from the phone home')
+      expect(hero and catalog and today and today['y']>=hero['y']+hero['height'] and catalog['y']>=today['y']+today['height'],'Daily, today and catalog sections are out of order')
+     else:
+      party=page.locator('.home-pathways').bounding_box()
+      expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
      for artwork in page.locator('#home-games-grid .mode-tile-sprite').all():
       artwork.scroll_into_view_if_needed()
       page.wait_for_function('(img)=>img.complete && img.naturalWidth>0',arg=artwork.element_handle())
