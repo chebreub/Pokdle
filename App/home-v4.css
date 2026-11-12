@@ -579,3 +579,19 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .home-discovery-actions>.generation-trigger>span::after{content:none!important}
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hm-side > :is(.hm-duel,#hva-x){width:auto!important}
 }
+
+/* Bas de l'accueil sur téléphone (12/11, suite de l'accueil « appli ») : les outils sur une ligne, les liens des
+   jeux sur une rangée qui glisse. Les boutons du pied de page (Soutenir, Donne ton avis, Installer l'appli) gardent
+   leur style cosy (Kayan : « c'était bien mieux avant »). */
+@media (max-width:640px){
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail{gap:12px!important;margin:24px 16px 0!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip{display:flex!important;align-items:center;gap:10px;min-height:52px;padding:4px 6px 4px 14px!important;border:1px solid #EFE4D4!important;border-radius:16px!important;background:#fff!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip > div{flex:1;min-width:0}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip strong{font:800 14.5px Nunito,sans-serif!important;color:#2E2A33!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip .btn-ghost{width:auto!important;min-height:44px!important;padding:0 10px!important;border:0!important;background:none!important;box-shadow:none!important;color:#4069E0!important;font:900 13.5px Nunito,sans-serif!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip .secret-rune{flex:0 0 auto;width:40px!important;height:40px!important;min-height:0!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-seo-links{flex-wrap:nowrap!important;overflow-x:auto;margin:0 -16px!important;padding:0 16px 4px!important;scrollbar-width:none}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-seo-links::-webkit-scrollbar{display:none}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-seo-links > *{flex:0 0 auto;white-space:nowrap}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip strong{white-space:nowrap;font-size:14px!important}
+}

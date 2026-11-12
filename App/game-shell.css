@@ -3031,3 +3031,11 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #screen-stat-clash .stat-clash-stat-btn{padding:8px 10px!important;min-height:0!important}
   #screen-stat-clash .stat-clash-reveal-vs{font-size:15px}
 }
+/* Bulle « Astuce : générations » (12/11) : à gauche du bouton sur PC, au-dessus sur téléphone, la flèche vise le bouton. */
+.generation-hint.is-above::before {top:auto;bottom:-6px;left:var(--arrow-x,22px);}
+.generation-hint.is-below::before {left:var(--arrow-x,22px);}
+.generation-hint.is-left::before {left:auto;right:-6px;top:calc(50% - 6px);}
+.generation-hint.is-above {animation-name:generationHintAbove;}
+.generation-hint.is-left {animation-name:generationHintLeft;}
+@keyframes generationHintAbove {from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes generationHintLeft {from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
