@@ -580,9 +580,9 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hm-side > :is(.hm-duel,#hva-x){width:auto!important}
 }
 
-/* Bas de page sur téléphone (12/11, suite de l'accueil « appli ») : une seule liste (Soutenir, Donne ton avis,
-   Installer l'appli), puis la mention et les liens en petit ; les outils sur une ligne, les liens des jeux sur une
-   rangée qui glisse. Les mêmes boutons et liens qu'avant, rien n'est retiré. */
+/* Bas de l'accueil sur téléphone (12/11, suite de l'accueil « appli ») : les outils sur une ligne, les liens des
+   jeux sur une rangée qui glisse. Les boutons du pied de page (Soutenir, Donne ton avis, Installer l'appli) gardent
+   leur style cosy (Kayan : « c'était bien mieux avant »). */
 @media (max-width:640px){
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail{gap:12px!important;margin:24px 16px 0!important}
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip{display:flex!important;align-items:center;gap:10px;min-height:52px;padding:4px 6px 4px 14px!important;border:1px solid #EFE4D4!important;border-radius:16px!important;background:#fff!important}
@@ -593,18 +593,5 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-seo-links{flex-wrap:nowrap!important;overflow-x:auto;margin:0 -16px!important;padding:0 16px 4px!important;scrollbar-width:none}
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-seo-links::-webkit-scrollbar{display:none}
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-seo-links > *{flex:0 0 auto;white-space:nowrap}
-  #pokdle-app.design-refresh .site-footer{display:flex!important;flex-direction:column;gap:0;padding-top:18px!important;text-align:center}
-  #pokdle-app.design-refresh .site-footer > .site-footer-support{order:1}
-  #pokdle-app.design-refresh .site-footer > .site-footer-feedback{order:2}
-  #pokdle-app.design-refresh .site-footer > .site-footer-install{order:3}
-  #pokdle-app.design-refresh .site-footer > .site-footer-brand{order:4;margin:16px 0 2px!important}
-  #pokdle-app.design-refresh .site-footer > .site-footer-note{order:5}
-  #pokdle-app.design-refresh .site-footer > .site-footer-links{order:6}
-  #pokdle-app.design-refresh .site-footer > :is(.site-footer-support,.site-footer-feedback,.site-footer-install){margin:0!important;border:1px solid #EFE4D4;border-top-width:0;background:#fff;text-align:left}
-  #pokdle-app.design-refresh .site-footer > .site-footer-support{border-top-width:1px;border-radius:16px 16px 0 0}
-  #pokdle-app.design-refresh .site-footer > .site-footer-install,#pokdle-app.design-refresh .site-footer:not(:has(.site-footer-install)) > .site-footer-feedback{border-radius:0 0 16px 16px}
-  #pokdle-app.design-refresh .site-footer > :is(.site-footer-support,.site-footer-feedback,.site-footer-install) > :is(a,button){display:flex!important;align-items:center;justify-content:space-between;width:100%!important;min-height:52px!important;margin:0!important;padding:0 16px!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:#2E2A33!important;font:800 14.5px Nunito,sans-serif!important;text-align:left;text-decoration:none!important}
-  #pokdle-app.design-refresh .site-footer > :is(.site-footer-support,.site-footer-feedback,.site-footer-install) > :is(a,button)::after{content:"›"!important;display:inline!important;position:static!important;margin-left:12px;color:#B8AEC2;font:700 22px Fredoka,sans-serif;background:none!important}
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hc-tail .home-tools-strip strong{white-space:nowrap;font-size:14px!important}
-  #pokdle-app.design-refresh .site-footer{margin-top:10px!important;border-top:0!important}
 }

@@ -16,11 +16,13 @@ test('la bulle des générations se place à gauche (PC) ou au-dessus (télépho
   for (const side of ['is-above', 'is-below', 'is-left']) assert.ok(shell.includes('.generation-hint.' + side), side);
 });
 
-test('bas de page téléphone : une liste, rien de caché, seulement sous 640 px', () => {
-  const at = css.indexOf('/* Bas de page sur téléphone');
+test('bas de l’accueil téléphone : outils et liens resserrés, rien de caché, pied de page inchangé', () => {
+  const at = css.indexOf('/* Bas de l\'accueil sur téléphone');
   assert.ok(at > 0);
   const block = css.slice(at);
   assert.ok(block.indexOf('@media (max-width:640px){') > 0);
   assert.doesNotMatch(block.replace(/[^{}]*::-webkit-scrollbar\{display:none\}/g, ''), /display:none/);
-  for (const part of ['.site-footer-support', '.site-footer-feedback', '.site-footer-install']) assert.ok(block.includes(part), part);
+  assert.ok(block.includes('.home-tools-strip') && block.includes('.home-seo-links'));
+  // Les boutons du pied de page gardent leur style cosy (choix de Kayan, 12/11).
+  assert.ok(!css.includes('.site-footer-support{order'), 'pied de page inchangé');
 });
