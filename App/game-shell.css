@@ -2946,3 +2946,88 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   #screen-stat-clash .stat-clash-board,
   #screen-stat-clash .stat-clash-shell.mode-room.is-lobby-layout .stat-clash-board{grid-template-columns:minmax(0,1fr)!important}
 }
+
+/* Stat Clash 1v1, habillage (12/11, maquette validée) : tableau des scores Aurore en haut, stats en français et en
+   couleur, artwork officiel en grand, révélation qui dit qui gagne la manche. Règles, bot et 1v1 en ligne inchangés. */
+#screen-stat-clash .stat-clash-scoreboard{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;margin:10px 0 14px;padding:12px 18px;border-radius:22px;color:#fff;
+  background:radial-gradient(ellipse 55% 90% at 85% 5%,rgba(255,140,200,.45),transparent 60%),radial-gradient(ellipse 60% 80% at 0% 110%,rgba(90,120,255,.5),transparent 60%),linear-gradient(118deg,#2A1F6B 0%,#5A2E9E 50%,#9A3C8E 100%);box-shadow:0 10px 26px rgba(60,30,110,.22)}
+#screen-stat-clash .scb-side{display:flex;align-items:center;gap:10px;min-width:0}
+#screen-stat-clash .scb-right{justify-content:flex-end}
+#screen-stat-clash .scb-ava{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:linear-gradient(140deg,#FFD45C,#F08A4B);color:#2E2A33;font:700 20px Fredoka,Nunito,sans-serif;box-shadow:0 0 0 3px rgba(255,255,255,.28)}
+#screen-stat-clash .scb-ava.is-rival{background:linear-gradient(140deg,#B9A6F2,#7C5BD6);color:#fff;font-size:20px}
+#screen-stat-clash .scb-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 17px Fredoka,Nunito,sans-serif}
+#screen-stat-clash .scb-pts{font:700 40px/1 Fredoka,Nunito,sans-serif;font-variant-numeric:tabular-nums}
+#screen-stat-clash .scb-mid{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+#screen-stat-clash .scb-round{font:900 12px Nunito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#FFE08A}
+#screen-stat-clash .scb-pips{display:flex;gap:5px}
+#screen-stat-clash .scb-pips i{width:22px;height:7px;border-radius:5px;background:rgba(255,255,255,.22)}
+#screen-stat-clash .scb-pips i.is-done{background:rgba(255,255,255,.85)}
+#screen-stat-clash .scb-pips i.is-current{background:#FFD45C}
+#screen-stat-clash .scb-won{font-weight:800;font-size:12px;color:#EADCF8}
+/* Boutons de stats : une couleur par stat, nom lisible en français. */
+#screen-stat-clash .stat-clash-stat-btn{--st:#8E8A99;align-items:flex-start!important;text-align:left;padding:10px 12px!important;border-radius:14px!important;border:2px solid color-mix(in oklab,var(--st) 45%,#fff)!important;background:color-mix(in oklab,var(--st) 12%,#fff)!important}
+#screen-stat-clash .stat-clash-stat-btn.stat-hp{--st:#E5534B}
+#screen-stat-clash .stat-clash-stat-btn.stat-attack{--st:#EE8130}
+#screen-stat-clash .stat-clash-stat-btn.stat-defense{--st:#D9A51E}
+#screen-stat-clash .stat-clash-stat-btn.stat-spAttack{--st:#6C8CF0}
+#screen-stat-clash .stat-clash-stat-btn.stat-spDefense{--st:#3E9B57}
+#screen-stat-clash .stat-clash-stat-btn.stat-speed{--st:#E05D9C}
+#screen-stat-clash .stat-clash-stat-btn span{display:flex;align-items:center;gap:8px;text-transform:none!important;letter-spacing:0!important;font:700 15px Fredoka,Nunito,sans-serif!important;color:#2E2A33!important}
+#screen-stat-clash .stat-clash-stat-btn .stat-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--st);color:#fff;font-style:normal;font-size:14px}
+#screen-stat-clash .stat-clash-stat-btn b{padding-left:36px;font-size:12px!important;color:#7A6E66!important}
+#screen-stat-clash .stat-clash-stat-btn:hover:not(:disabled){background:color-mix(in oklab,var(--st) 22%,#fff)!important;border-color:var(--st)!important;box-shadow:0 6px 14px color-mix(in oklab,var(--st) 30%,transparent)!important}
+#screen-stat-clash .stat-clash-stat-btn.is-selected{border-color:var(--st)!important;box-shadow:0 0 0 3px color-mix(in oklab,var(--st) 35%,transparent)!important}
+#screen-stat-clash .stat-clash-stat-btn.is-used,#screen-stat-clash .stat-clash-stat-btn.is-locked-rule{opacity:.5;filter:grayscale(.7)}
+#screen-stat-clash .stat-clash-remaining-chip{text-transform:none!important;letter-spacing:0!important;font-weight:800!important}
+/* Le Pokémon tiré : artwork officiel en grand, net (pas de rendu pixelisé). */
+#pokdle-app #screen-stat-clash .stat-clash-sprite-wrap img.is-artwork{width:min(220px,58vw)!important;height:min(220px,58vw)!important;max-width:none!important;max-height:none!important;image-rendering:auto!important}
+/* Révélation : qui gagne la manche se voit tout de suite. */
+#screen-stat-clash .stat-clash-reveal-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;align-items:center;gap:10px!important}
+#screen-stat-clash .stat-clash-reveal-row>.stat-clash-reveal-card{width:auto!important;min-width:0;margin:0!important}
+#screen-stat-clash .stat-clash-reveal-vs{font:700 18px Fredoka,Nunito,sans-serif;color:#7C5BD6}
+#screen-stat-clash .stat-clash-reveal-card{border-radius:16px!important}
+#screen-stat-clash .stat-clash-reveal-card span{text-transform:none!important;letter-spacing:0!important;font-size:12.5px!important}
+#screen-stat-clash .stat-clash-reveal-card b{font-family:Fredoka,Nunito,sans-serif;font-size:16px!important}
+#screen-stat-clash .stat-clash-reveal-card small{font:700 30px/1.1 Fredoka,Nunito,sans-serif!important}
+#screen-stat-clash .stat-clash-reveal-card.is-round-win{border-color:#3E9B57!important;background:#E3F4E8!important;box-shadow:0 0 0 3px rgba(62,155,87,.25)}
+#screen-stat-clash .stat-clash-reveal-card.is-round-win small{color:#1F6B36!important}
+#screen-stat-clash .stat-clash-reveal-card.is-round-loss{opacity:.8}
+#screen-stat-clash .stat-clash-reveal-card.is-round-loss small{color:#7A6E66!important}
+#screen-stat-clash .stat-clash-reveal-verdict{margin:8px 0 2px;text-align:center;font:700 16px Fredoka,Nunito,sans-serif;color:#2E2A33}
+#screen-stat-clash .stat-clash-reveal-stat span{text-transform:none!important;letter-spacing:0!important;font-size:11px!important}
+#pokdle-app.theme-dark #screen-stat-clash .stat-clash-stat-btn{background:color-mix(in oklab,var(--st) 18%,#1f1b26)!important}
+#pokdle-app.theme-dark #screen-stat-clash .stat-clash-stat-btn span,#pokdle-app.theme-dark #screen-stat-clash .stat-clash-reveal-verdict{color:#F4EEF8!important}
+#pokdle-app.theme-dark #screen-stat-clash .stat-clash-reveal-card.is-round-win{background:rgba(62,155,87,.18)!important}
+@media (max-width:700px){
+  #screen-stat-clash .stat-clash-scoreboard{grid-template-columns:1fr 1fr;gap:8px 10px;padding:10px 12px;border-radius:18px}
+  #screen-stat-clash .scb-mid{grid-column:1/-1;order:3}
+  #screen-stat-clash .scb-side{gap:8px;padding:4px 8px;border-radius:14px;background:rgba(255,255,255,.1)}
+  #screen-stat-clash .scb-ava{width:32px;height:32px;font-size:15px}
+  #screen-stat-clash .scb-name{font-size:13px}
+  #screen-stat-clash .scb-pts{font-size:26px}
+  #screen-stat-clash .scb-pips i{width:16px}
+  #screen-stat-clash .stat-clash-stat-btn span{font-size:14px!important}
+  #screen-stat-clash .stat-clash-reveal-card small{font-size:24px!important}
+  #screen-stat-clash .stat-clash-reveal-row{gap:6px!important}
+  /* Les 6 boutons de stats doivent arriver vite sous le Pokémon (10 s pour choisir). */
+  #pokdle-app #screen-stat-clash .stat-clash-sprite-wrap img.is-artwork{width:min(150px,40vw)!important;height:min(150px,40vw)!important}
+  #pokdle-app #screen-stat-clash .stat-clash-sprite-wrap{height:auto!important;min-height:0!important}
+  #screen-stat-clash .stat-clash-pokemon-meta p,#screen-stat-clash .stat-clash-timer small,#screen-stat-clash .stat-clash-remaining-block{display:none!important}
+  #screen-stat-clash .stat-clash-randomizer-head strong{font-size:13px}
+  /* En partie, le score est déjà dans le tableau du haut : la carte « Toi » commence par les boutons. */
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-player-card.side-left .stat-clash-player-head,
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-player-card.side-left .stat-clash-player-copy,
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-randomizer-head{display:none!important}
+  /* Le chrono en anneau dans le coin de la carte du Pokémon, comme sur la maquette. */
+  #screen-stat-clash .stat-clash-randomizer{position:relative}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-timer{position:absolute!important;top:8px;right:8px;margin:0!important;padding:0!important;width:auto!important;z-index:3;background:none!important;border:0!important;box-shadow:none!important}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-timer-track{display:none!important}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-timer-ring{width:52px!important;height:52px!important;min-width:0!important}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-timer-ring span{font-size:20px!important}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-randomizer{min-height:0!important;padding:10px!important}
+  #pokdle-app #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-sprite-wrap{height:170px!important;padding:0!important;margin:0!important}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-pokemon-meta{margin:0!important;padding:0!important}
+  #screen-stat-clash .stat-clash-shell:has(.stat-clash-scoreboard) .stat-clash-pokemon-meta h3{margin:2px 0 0!important;font-size:22px!important}
+  #screen-stat-clash .stat-clash-stat-btn{padding:8px 10px!important;min-height:0!important}
+  #screen-stat-clash .stat-clash-reveal-vs{font-size:15px}
+}
