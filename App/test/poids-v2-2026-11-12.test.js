@@ -1,6 +1,6 @@
 'use strict';
 // Duel de poids v2 (12/11) : le résultat reste lisible (phrase qui compare les deux poids, badges),
-// la fiche « Nouvelle entrée » devient une pastille au lieu de couvrir le résultat, « Manche suivante → ».
+// la fiche « Nouvelle entrée » s'ouvre au clic sur « Manche suivante » au lieu de couvrir le résultat.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -28,9 +28,12 @@ test('la phrase donne les deux poids et l’écart', () => {
   assert.equal(ctx.poidsComparison(v, 5), 'A et B pèsent tous les deux 10 kg.');
 });
 
-test('la découverte d’un Pokémon devient une pastille en Duel de poids solo, pas en Party Room', () => {
+test('la grande fiche du nouveau Pokémon attend « Manche suivante » au lieu de couvrir le résultat (solo seulement)', () => {
   assert.match(src, /celebrateStandardDiscovery = function \(pokemon, mode, at\)/);
   assert.match(src, /mode === 'weight' && pokemon && box && !box\.classList\.contains\('hidden'\) && poidsSoloResult\(state\)/);
+  assert.match(src, /poidsPendingDiscovery = \{ pokemon, mode \}/);
+  assert.match(src, /closest\?\.\('#weight-restart, #weight-result-catalog'\)/);
+  assert.match(src, /poidsCelebrateBefore\(pending\.pokemon, pending\.mode, Date\.now\(\)\)/);
   assert.match(src, /partySession\?\.currentModeKey === 'weight'/);
   assert.match(src, /return poidsCelebrateBefore\.apply\(this, arguments\)/);
 });
@@ -39,5 +42,4 @@ test('le bouton dit « Manche suivante → » ou « ↻ Nouvelle série », et r
   assert.match(src, /won \? 'Manche suivante →' : '↻ Nouvelle série'/);
   assert.doesNotMatch(src, /replayWeightBattle\(\)|startWeightBattle\(\)/);
   assert.match(css, /\.pv2-heavy\{/);
-  assert.match(css, /\.pv2-new-entry\{/);
 });

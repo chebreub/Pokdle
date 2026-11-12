@@ -1,12 +1,11 @@
 // Duel de poids v2 (maquette validée le 12/11) : le résultat reste lisible et c'est le joueur qui passe à la suite.
-// - La fiche « Nouvelle entrée · Pokédex » ne couvre plus le résultat : elle devient une pastille sous la balance
-//   (même principe que l'écran de victoire des autres jeux, voir markResultDiscovery).
+// - La fiche « Nouvelle entrée · Pokédex » ne couvre plus le résultat : elle s'ouvre quand le joueur passe à la suite.
 // - Une phrase compare les deux poids (« 77 fois plus lourd », « 12 kg de plus »).
 // - « ✓ Le plus lourd » et « Ton choix » sur les cartes.
 // - Le bouton dit « Manche suivante → » après une bonne réponse et « ↻ Nouvelle série » après une erreur ;
 //   Entrée ou Espace le déclenchent au clavier.
 // Rien ne change dans le tirage, la vérification par le serveur, la série, le record, les Balls et les ₽,
-// ni dans les manches de la Party Room (pas de pastille ni de bouton solo pendant une partie de salon).
+// ni dans les manches de la Party Room (rien de tout ça pendant une partie de salon).
 
 function poidsKg(value) {
   const n = Number(value);
@@ -35,7 +34,6 @@ function poidsDecorate() {
   const box = document.getElementById('weight-box');
   const state = typeof weightBattleState !== 'undefined' ? weightBattleState : null;
   if (!box || box.classList.contains('hidden') || !state?.left || !state?.right) return;
-  if (!state.revealed) document.getElementById('weight-new-entry')?.remove();
   const correctId = Number(state.left.weight) >= Number(state.right.weight) ? state.left.id : state.right.id;
   const shownCorrect = typeof secretPokemon !== 'undefined' && secretPokemon?.id ? secretPokemon.id : correctId;
   // Badges sur les cartes.
@@ -77,29 +75,28 @@ if (typeof renderWeightBattlePanel === 'function') {
   renderWeightBattlePanel = function () { const r = poidsRenderBefore.apply(this, arguments); try { poidsDecorate(); } catch (_e) {} return r; };
 }
 
-// La découverte d'un Pokémon pendant un Duel de poids solo : une pastille dans le résultat au lieu de la grande fiche.
+// La découverte d'un Pokémon pendant un Duel de poids solo (option A, choisie le 12/11) : la grande fiche
+// « Nouvelle entrée · Pokédex » ne s'ouvre plus par-dessus le résultat. Elle attend que le joueur appuie sur
+// « Manche suivante » / « Nouvelle série » / « Choisir un autre jeu » : il voit d'abord les deux poids, puis la fiche.
+let poidsPendingDiscovery = null;
 if (typeof celebrateStandardDiscovery === 'function') {
   const poidsCelebrateBefore = celebrateStandardDiscovery;
   celebrateStandardDiscovery = function (pokemon, mode, at) {
     const box = document.getElementById('weight-box');
     const state = typeof weightBattleState !== 'undefined' ? weightBattleState : null;
     if (mode === 'weight' && pokemon && box && !box.classList.contains('hidden') && poidsSoloResult(state) && Date.now() - (Number(at) || Date.now()) <= 12000) {
-      document.getElementById('weight-new-entry')?.remove();
-      const dexId = Number(pokemon.baseId || pokemon.id);
-      const line = document.createElement('button');
-      line.type = 'button';
-      line.id = 'weight-new-entry';
-      line.className = 'pv2-new-entry';
-      line.dataset.action = 'openRegisteredPokemonInPokedex';
-      line.dataset.args = JSON.stringify([Number(pokemon.id)]);
-      line.innerHTML = `<span>✦ Nouveau au Pokédex</span><b>#${String(dexId).padStart(3, '0')} ${escapeHtml(pokemon.name)}</b><small>Voir la fiche →</small>`;
-      const actions = document.getElementById('weight-result-actions');
-      if (actions) actions.prepend(line); else box.appendChild(line);
-      if (typeof playPokedexUiSfx === 'function') playPokedexUiSfx('register');
+      poidsPendingDiscovery = { pokemon, mode };
       return true;
     }
     return poidsCelebrateBefore.apply(this, arguments);
   };
+  document.addEventListener('click', (event) => {
+    if (!poidsPendingDiscovery || !event.target?.closest?.('#weight-restart, #weight-result-catalog')) return;
+    const pending = poidsPendingDiscovery;
+    poidsPendingDiscovery = null;
+    // Après le clic : la manche suivante (ou le catalogue) se prépare derrière, la fiche s'ouvre par-dessus.
+    setTimeout(() => { try { poidsCelebrateBefore(pending.pokemon, pending.mode, Date.now()); } catch (_e) {} }, 0);
+  }, true);
 }
 
 // Entrée ou Espace : manche suivante, seulement quand le résultat solo est affiché et que rien n'est ouvert par-dessus.
