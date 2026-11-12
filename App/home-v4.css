@@ -411,3 +411,34 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app.design-refresh .mobile-tabbar button[data-tab="game"] span{color:#fff!important;font-weight:900!important}
   #pokdle-app.design-refresh .mobile-tabbar button[data-tab="game"].active{box-shadow:0 3px 0 #2C4CB4,0 0 0 3px rgba(64,105,224,.28)!important}
 }
+/* Accueil épuré, défi du jour en carte Aurore (direction validée le 12/11 : fond crème, une seule carte forte par page).
+   Contenu, boutons, épreuves et états (à jouer / en cours / terminé) inchangés : seules les couleurs changent.
+   Le bouton principal reste jaune (couleur réservée au Pokémon du jour). */
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero{background:radial-gradient(ellipse 55% 90% at 85% 5%,rgba(255,140,200,.45),transparent 60%),radial-gradient(ellipse 60% 80% at 0% 110%,rgba(90,120,255,.5),transparent 60%),linear-gradient(118deg,#2A1F6B 0%,#5A2E9E 50%,#9A3C8E 100%)!important;box-shadow:0 14px 34px rgba(60,30,110,.22)!important;color:#fff}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .pk-kicker{color:#FFE08A!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-q{color:#fff}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .pk-hero-title{color:#F3E8FF!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .pk-hero-sub,#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero :is(.pk-hero-note,#daily-hero-status){color:#E6DAF5!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero #daily-hero-cta{background:#FFD45C!important;color:#2E2A33!important;box-shadow:0 4px 0 #C9961A!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero #daily-hero-ghost{color:#fff!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .pk-chip{background:rgba(255,255,255,.14)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .daily-hero-steps button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .daily-hero-steps b{color:#FFE08A}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .daily-hero-steps .is-done button{background:rgba(62,155,87,.32);border-color:rgba(127,224,160,.45);color:#D6F5DF}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .daily-hero-steps .is-done b{color:#B8F0C8}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .daily-hero-steps .is-next button{background:#fff;color:#2E2A33;box-shadow:0 0 0 2px #FFD45C}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .daily-hero-steps .is-next b{color:#9A6A00}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-sil{filter:brightness(0) invert(1) opacity(.22)}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-qm{color:#FFD45C}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-ring{background:conic-gradient(#FFD45C calc(var(--p)*1%),rgba(255,255,255,.22) 0)}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-ring::before{background:#3A2478}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-ring b{color:#fff}#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero .hv4-ring small{color:#E6DAF5}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-done{background:radial-gradient(ellipse 55% 90% at 85% 5%,rgba(255,140,200,.4),transparent 60%),linear-gradient(118deg,#2A1F6B 0%,#5A2E9E 50%,#9A3C8E 100%)!important;border:0!important;box-shadow:0 8px 22px rgba(60,30,110,.18)!important}
+#pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-done .hv4-ring::before{background:#3A2478}
+@media (max-width:640px){
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring{width:60px;height:60px;margin-top:0}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-deco{top:-4px;right:12px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring::before{inset:7px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring b{font-size:18px}
+  #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring small{display:none}
+}
