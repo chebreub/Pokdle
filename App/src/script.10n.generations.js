@@ -81,10 +81,21 @@ function showGenerationHintOnce() {
   generationHintShownThisVisit=true;
   const hint=document.createElement('div');hint.id='generation-hint';hint.className='generation-hint';hint.setAttribute('role','status');
   hint.textContent='Astuce : choisis ici les générations des Pokémon à deviner.';
+  // 12/11/2026 : la bulle s'affichait sous le bouton et cachait la ligne des récompenses (Duel de poids, Stat Clash).
+  // Sur PC elle se place à gauche du bouton (sur sa ligne, souvent vide) ; sur téléphone au-dessus (sur l'en-tête
+  // du site) ; dessous seulement s'il n'y a pas la place ailleurs.
   const r=button.getBoundingClientRect();
-  hint.style.top=Math.round(r.bottom+window.scrollY+10)+'px';
-  hint.style.left=Math.round(Math.max(12,Math.min(r.left+window.scrollX,window.innerWidth-272)))+'px';
-  document.body.appendChild(hint);
+  hint.style.visibility='hidden';document.body.appendChild(hint);
+  const w=hint.offsetWidth,h=hint.offsetHeight,sx=window.scrollX,sy=window.scrollY;
+  let top,left,side;
+  if(window.innerWidth>=700&&r.left-w-14>=12){side='left';top=r.top+r.height/2-h/2;left=r.left-w-14;}
+  else if(r.top-h-12>=4){side='above';top=r.top-h-12;left=Math.max(12,Math.min(r.left,window.innerWidth-w-12));}
+  else{side='below';top=r.bottom+10;left=Math.max(12,Math.min(r.left,window.innerWidth-w-12));}
+  hint.classList.add('is-'+side);
+  hint.style.top=Math.round(top+sy)+'px';hint.style.left=Math.round(left+sx)+'px';
+  // La flèche vise le bouton.
+  if(side!=='left')hint.style.setProperty('--arrow-x',Math.round(Math.max(14,Math.min(w-26,r.left+r.width/2-left-6)))+'px');
+  hint.style.visibility='';
   const close=()=>{hint.remove();document.removeEventListener('pointerdown',close,true);};
   document.addEventListener('pointerdown',close,true);setTimeout(close,6000);
 }
