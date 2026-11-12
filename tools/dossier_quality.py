@@ -7,6 +7,16 @@ async def ready(page,condition):
     # Name the condition that never came true, so a failure says which step stalled.
     try: await page.wait_for_function('() => ('+condition+')',timeout=12000)
     except Exception as error: raise AssertionError('Timed out waiting for: '+condition) from error
+    # Sur PC la page défile en douceur (html{scroll-behavior:smooth}) et le Dossier ramène la question à l'écran
+    # après chaque réponse. WebKit ne voit pas ce défilement comme un mouvement : le clic suivant partait à
+    # l'ancienne position du bouton et tombait à côté (échec intermittent WebKit 1366, diagnostiqué le 12/11/2026).
+    # Comme un joueur, on attend que la page ait fini de défiler avant de cliquer.
+    await page.evaluate('''() => new Promise((done) => {
+      let last = -1, same = 0, frames = 0;
+      const tick = () => { const y = scrollY; same = y === last ? same + 1 : 0; last = y;
+        if (same >= 4 || ++frames > 120) return done(); requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    })''')
 async def run():
     reports=[]
     async with async_playwright() as pw:
