@@ -73,9 +73,15 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       s.question.image = '/api/arcade/art/' + imageToken(who, s.question, s.startedAt + TTL);
     }
   }
+  // 💡 La silhouette du coup de pouce (illimité, Stat Mystère) n'est envoyée qu'une fois méritée, sous une adresse opaque.
+  function guessView(s) {
+    const v = guessing.view(s);
+    if (v.help && v.help.silhouette && s.helpImage) v.helpImage = s.helpImage;
+    return v;
+  }
   function view(s) {
     if (isGuess(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,
-      ...(s.image ? {image:s.image} : {}),...(s.cry ? {cry:s.cry} : {}),...(s.clue ? {clue:s.clue} : {}),...guessing.view(s)};
+      ...(s.image ? {image:s.image} : {}),...(s.cry ? {cry:s.cry} : {}),...(s.clue ? {clue:s.clue} : {}),...guessView(s)};
     if (isAdvanced(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,score:s.score,answer:s.answer,...games.view(s)};
     const q = s.question;
     return {mode:s.mode, sessionId:s.id, round:s.round, phase:s.phase, score:s.score, lives:s.lives,
@@ -117,6 +123,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       if (s.mode === 'cry') s.cry = '/api/arcade/cry/' + imageToken(who, {id:s.secretId, guess:true, cry:true}, s.startedAt + TTL);
       else if (s.mode === 'description') s.clue = await describe(guessing.get(s.secretId), guessing.speciesOf(s.secretId));
       else if (s.mode === 'pixel' || s.mode === 'silhouette') s.image = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
+      else if (guessGames.HELP[s.mode]) s.helpImage = '/api/arcade/art/' + imageToken(who, {id:s.secretId, guess:true}, s.startedAt + TTL);
     } else question(s, who);
     await save(c,who,s); return {arcade:view(s)};
   }

@@ -4,6 +4,9 @@ const { dailyCalendar, dailyGuest, issueDailyGuest } = require("./daily-game");
 const { recordLeaderboardResultInTransaction } = require("./leaderboard-store");
 const { DAILY_MAX, wordlePoints } = require("./daily-points");
 const MAX_TRIES = 6;
+// 💡 Coup de pouce (12/11/2026, « wordle dur ») : le type du Pokémon après 3 lignes, sa génération après 5.
+// Même aide pour tout le monde : le classement reste juste, le barème ne change pas.
+const WORDLE_HELP = Object.freeze({ type: 3, gen: 5 });
 function wordleLetters(name) {
   return String(name).replace(/♀/g,"F").replace(/♂/g,"M").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g,"");
 }
@@ -92,6 +95,7 @@ function createWordleService({db,pokemon,clock=()=>new Date(),randomInt=crypto.r
       attempts:row.guessed.length,points:wordlePoints(row.status==="won",row.guessed.length),maxPoints:DAILY_MAX.wordle,
       ranked:row.status==="won"&&Boolean(row.account_id),elapsedMs:row.elapsed_ms===null?null:Number(row.elapsed_ms),
       rows:row.guessed.map(id=>{const p=byId.get(Number(id)),letters=wordleLetters(p.name);return {pokemonId:p.id,name:p.name,letters,pattern:wordlePattern(p.name),colors:compareLetters(letters,answer)};}),
+      ...(row.guessed.length>=WORDLE_HELP.type||finished?{help:{type1:target.type1,...(row.guessed.length>=WORDLE_HELP.gen||finished?{gen:Number(target.gen||target.generation)||null}:{})}}:{}),
       ...(finished?{answerId:target.id,answerName:target.name}:{})};
   }
   async function act(who,body=null,abandon=false) {
@@ -174,4 +178,4 @@ function mountWordleRoutes({app,express,db,pokemon,secret,getUser,readCookies,da
   if(service)service.ready=ready;
   return service;
 }
-module.exports={MAX_TRIES,wordleLetters,wordlePattern,compareLetters,initWordleDb,createWordleService,mountWordleRoutes};
+module.exports={MAX_TRIES,WORDLE_HELP,wordleLetters,wordlePattern,compareLetters,initWordleDb,createWordleService,mountWordleRoutes};

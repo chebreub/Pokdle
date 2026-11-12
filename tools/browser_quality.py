@@ -453,6 +453,10 @@ def main():
       expect(results['x']>=command['x']+command['width'],'Compact desktop history overlaps the command column')
       expect(abs(results['y']-command['y'])<3,'Compact desktop panels are not aligned')
       expect(results['width']>=760 and command['width']>=330,'Compact desktop clues or commands are squeezed')
+     elif page.evaluate("gameMode")in('normal','mystery'):
+      # Coup de pouce (12/11/2026, choix de Kayan) : en illimité et Stat Mystère, la case de saisie passe au-dessus
+      # des essais et le plus récent est en tête, juste sous la case.
+      expect(results['y']>=command['y']+command['height'],'The next input must sit above the guess history')
      else:
       expect(command['y']>=results['y']+results['height'],'Guess history must precede the next input')
       expect(page.locator('#screen-game').bounding_box()['width']<=1001,'Game exceeds the focused reading width')

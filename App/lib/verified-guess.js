@@ -8,6 +8,11 @@ const MODES = Object.freeze(['pixel', 'silhouette', 'cry', 'description', 'norma
 // Stat Mystère : les stats de base embarquées (même source que le navigateur et le Higher or Lower).
 const STATS = require('../base-stats.json');
 const MYSTERY_LETTER_AFTER = 5;
+// 💡 Coup de pouce (12/11/2026) : l'illimité et Stat Mystère étaient abandonnés 3 fois sur 4 (9 fois sur 10 pour
+// Stat Mystère). Le serveur envoie une aide de plus à mesure que les essais montent, jamais avant.
+// Illimité : silhouette floue au 8e essai, 1re lettre au 12e. Stat Mystère (types et stats déjà donnés,
+// lettre au 5e) : génération au 3e essai, silhouette floue au 7e.
+const HELP = Object.freeze({ normal: { silhouette: 8, letter: 12 }, mystery: { gen: 3, silhouette: 7 } });
 // PokeAPI n'a d'entrées Pokédex en français que jusqu'au n° 898 : le mystère de la Description vient de là
 // (on peut quand même proposer n'importe quel Pokémon des générations choisies, comme avant).
 const DESCRIPTION_LAST_FRENCH_SPECIES = 898;
@@ -46,8 +51,18 @@ function createGuessGames(catalog, randomInt) {
     return { type1: p.type1, type2: p.type2 || null, stats: ok ? stats : null,
       ...(s.phase === 'over' || s.guesses.length >= MYSTERY_LETTER_AFTER ? { letter: [...String(p.name)][0].toUpperCase() } : {}) };
   }
+  function help(s) {
+    const at = HELP[s.mode];
+    if (!at) return null;
+    const p = byId.get(s.secretId), n = s.guesses.length, over = s.phase === 'over', out = {};
+    if (at.silhouette && (over || n >= at.silhouette)) out.silhouette = true;
+    if (at.letter && (over || n >= at.letter)) out.letter = [...String(p.name)][0].toUpperCase();
+    if (at.gen && (over || n >= at.gen)) out.gen = genOf(p);
+    return out;
+  }
   function view(s) {
-    return { attempts: s.guesses.length, rows: rows(s), won: s.won, ...(s.mode === 'mystery' ? { mystery: mysteryClues(s) } : {}),
+    const h = help(s);
+    return { attempts: s.guesses.length, rows: rows(s), won: s.won, ...(s.mode === 'mystery' ? { mystery: mysteryClues(s) } : {}), ...(h ? { help: h } : {}),
       ...(s.phase === 'over' ? { answerId: s.secretId } : {}) };
   }
   function result(s) { return { mode: s.mode, result: s.won ? 'win' : 'loss', score: s.guesses.length }; }
@@ -101,4 +116,4 @@ function createFlavorLoader(fetcher = fetch, randomInt = require('node:crypto').
     return safe ? text.replace(new RegExp(safe, 'gi'), 'ce Pokémon') : text;
   };
 }
-module.exports = { MODES, MAX_GUESSES, DESCRIPTION_LAST_FRENCH_SPECIES, createGuessGames, createFlavorLoader };
+module.exports = { MODES, HELP, MAX_GUESSES, DESCRIPTION_LAST_FRENCH_SPECIES, createGuessGames, createFlavorLoader };
