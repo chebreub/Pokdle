@@ -384,3 +384,30 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
 #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero .daily-hero-steps button *{font-size:13px!important}
 /* La pastille de langue n'est qu'un emplacement : sur téléphone elle n'a pas de place et chevauchait le logo. */
 @media (max-width:640px){#pokdle-app .hv4-lang{display:none!important}}
+
+/* Menu « Pilule » (direction validée le 12/11, version épurée) :
+   - PC : les liens dans une pilule claire, la page ouverte en blanc ;
+   - téléphone : Accueil · Pokédex · ▶ Jouer (bouton rond bleu au centre) · Amis · Profil.
+     Le bouton reste dans la hauteur de la barre (rien ne dépasse sur le contenu). Les boutons et leurs actions ne changent pas. */
+@media (min-width:641px){
+  #pokdle-app.design-refresh > header #global-nav{flex:0 0 auto!important;width:auto!important;max-width:max-content!important;margin-inline:auto!important;background:#F5EDE2!important;border:1px solid #ECDFCD!important;border-radius:999px!important;padding:4px!important;gap:2px!important}
+  #pokdle-app.design-refresh > header #global-nav .nav-pill{border-radius:999px!important;color:#7A6E66!important;background:transparent!important;padding:8px 16px!important;box-shadow:none!important}
+  #pokdle-app.design-refresh > header #global-nav .nav-pill:hover{background:rgba(255,255,255,.6)!important;color:#2E2A33!important}
+  #pokdle-app.design-refresh > header #global-nav .nav-pill.active{background:#fff!important;color:#2E2A33!important;box-shadow:0 2px 6px rgba(80,50,20,.12)!important}
+  #pokdle-app.design-refresh.theme-dark > header #global-nav{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.12)!important}
+  #pokdle-app.design-refresh.theme-dark > header #global-nav .nav-pill{color:#C9BFD6!important}
+  #pokdle-app.design-refresh.theme-dark > header #global-nav .nav-pill.active{background:#2B2533!important;color:#fff!important}
+}
+@media (max-width:640px){
+  #pokdle-app .mobile-tabbar{align-items:center!important}
+  #pokdle-app .mobile-tabbar [data-tab="home"]{order:1}
+  #pokdle-app .mobile-tabbar [data-tab="pokedex"]{order:2}
+  #pokdle-app .mobile-tabbar [data-tab="game"]{order:3}
+  #pokdle-app .mobile-tabbar [data-tab="social"]{order:4}
+  #pokdle-app .mobile-tabbar [data-tab="profile"]{order:5}
+  #pokdle-app.design-refresh .mobile-tabbar button[data-tab="game"]{flex:0 0 60px!important;width:60px;min-width:60px!important;height:52px;min-height:52px!important;margin:0 4px;border-radius:18px!important;
+    background:linear-gradient(180deg,#5A82F0,#4069E0)!important;color:#fff!important;box-shadow:0 3px 0 #2C4CB4,0 6px 14px rgba(64,105,224,.32)!important}
+  #pokdle-app.design-refresh .mobile-tabbar button[data-tab="game"] svg{width:22px!important;height:22px!important}
+  #pokdle-app.design-refresh .mobile-tabbar button[data-tab="game"] span{color:#fff!important;font-weight:900!important}
+  #pokdle-app.design-refresh .mobile-tabbar button[data-tab="game"].active{box-shadow:0 3px 0 #2C4CB4,0 0 0 3px rgba(64,105,224,.28)!important}
+}
