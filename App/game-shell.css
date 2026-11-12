@@ -3076,3 +3076,30 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
   @keyframes lbaRow{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
   @keyframes lbaMe{0%,100%{box-shadow:0 0 0 0 rgba(64,105,224,0)}40%{box-shadow:0 0 0 4px rgba(64,105,224,.35)}}
 }
+
+/* 💡 Coup de pouce (12/11) : carte au-dessus de la case de saisie (illimité, Stat Mystère) et sous le nom mystère
+   (Wordle). Illimité et Stat Mystère : la case de saisie en haut, puis le dernier essai (le plus récent d'abord). */
+.cdp-card{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;margin:0 0 12px;padding:12px 14px;border-radius:18px;background:#fff;border:1px solid #EADFD0;box-shadow:0 6px 18px rgba(60,30,110,.08);font-family:Nunito,sans-serif;color:#2E2A33}
+.cdp-card.has-sil{grid-template-columns:auto minmax(0,1fr);column-gap:14px;align-items:center}
+.cdp-card.has-sil > :not(.cdp-sil){grid-column:2}
+.cdp-sil{grid-row:1 / span 3;width:88px;height:88px;border-radius:18px;background:radial-gradient(circle at 50% 60%,#EDE6FF,#D8CCF7);display:grid;place-items:center;overflow:hidden}
+.cdp-sil img{width:92%;height:92%;object-fit:contain;filter:brightness(0) opacity(.82) blur(1.4px);-webkit-user-drag:none;user-select:none;pointer-events:none}
+.cdp-k{font:900 11px Nunito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7C5BD6}
+.cdp-card b{font:600 17px/1.25 Fredoka,sans-serif;color:#2E2A33}
+.cdp-next{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font:800 12.5px Nunito,sans-serif;color:#6B6472}
+.cdp-dots{display:flex;gap:3px}.cdp-dots i{width:9px;height:6px;border-radius:3px;background:#E8DCCB}.cdp-dots i.on{background:#7C5BD6}
+.cdp-card.is-teaser{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:10px;padding:8px 12px;box-shadow:none}
+.cdp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.cdp-chip{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;background:var(--c,#4069E0);color:#fff;font:900 13px Nunito,sans-serif}
+.cdp-chip.is-lock{background:#F3EEE6;color:#6B6472}
+#wordle-board > #cdp-wordle{margin:10px 0 4px}
+.theme-dark .cdp-card{background:#29262F;border-color:#3A3642;color:#F3EEE8}.theme-dark .cdp-card b{color:#F3EEE8}.theme-dark .cdp-next{color:#B5ADBB}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top{display:flex!important;flex-direction:column!important}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > *{width:100%;max-width:100%}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > :is(#win-box,.win-box){order:0!important}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > #cdp-card{order:1!important}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > :is(#classic-game-command,.classic-game-command){order:2!important}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > #results-wrap{order:3!important;margin-top:12px}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > :is(#results-legend,.results-legend){order:4!important}
+#pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > :is(#shell-guide,.shell-guide){order:5!important}
+.wordle-train-cta .cdp-cta{min-height:48px;padding:0 22px;font-size:16px}

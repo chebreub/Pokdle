@@ -15,7 +15,8 @@ var HOME_TILE_MODES = {
   openOddOneOutMode: 'odd', startQuizGame: 'quiz', openPokeConnectionsMode: 'poke-connections',
   startNormalGame: 'normal', startPixelGame: 'pixel', startDescriptionMode: 'description', startCryGame: 'cry',
   startMysteryStatGame: 'mystery', openDraftScoreAttackMode: 'draft', openTypeComboSolo: 'typecombo',
-  openSpeedrunMode: 'speedrun', openQuiEstCeMode: 'quiestce', openPetitBacMode: 'petitbac', openShinyMode: 'shiny'
+  openSpeedrunMode: 'speedrun', openQuiEstCeMode: 'quiestce', openPetitBacMode: 'petitbac', openShinyMode: 'shiny',
+  startWordleTraining: 'wordletraining'
 };
 var HOME_TILE_SOURCES = { 'higher-lower': 'higherlower', 'poke-connections': 'connections' };
 

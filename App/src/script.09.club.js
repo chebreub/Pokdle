@@ -80,7 +80,7 @@ function renderHomeDiscovery(force = false) {
   // Curated choices, not a live popularity ranking; 'popular' remains the internal filter key.
   const shelves = {
     popular: ["startSilhouetteGame", "openHigherLowerMode", "startWeightBattle", "openOddOneOutMode", "startQuizGame", "openPokeConnectionsMode"],
-    guess: ["startNormalGame", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
+    guess: ["startNormalGame", "startWordleTraining", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
     play: ["openPokeConnectionsMode", "startQuizGame", "openHigherLowerMode", "openDraftScoreAttackMode", "openOddOneOutMode", "openTypeComboSolo", "openSpeedrunMode", "startWeightBattle", "openQuiEstCeMode", "openPetitBacMode"]
   };
   grid.replaceChildren(...(shelves[homeGameFilter] || shelves.popular).map(entry => [].concat(entry)).map(([key, pro]) => modeTileCloneForHome(key, Boolean(pro))).filter(Boolean));
