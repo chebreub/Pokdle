@@ -441,6 +441,7 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring::before{inset:7px}
   #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring b{font-size:18px}
   #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero.hv4-progress .hv4-ring small{display:none}
+}
 
 /* Profil épuré Aurore (12/11, maquette validée) : la carte de dresseur prend les couleurs Aurore de l'accueil,
    sur la page crème. Rien ne change dans son contenu ni dans la page autour.
