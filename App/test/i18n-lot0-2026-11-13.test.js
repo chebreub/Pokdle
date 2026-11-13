@@ -73,3 +73,14 @@ test('le build met les textes et les noms en tête du script, avant tous les mor
   assert.match(build, /i18n\/pokemon-names\.json/);
   assert.match(read('src/script.00a.i18n.js'), /var I18N_AUTO_DETECT = false;/, 'langue du téléphone : seulement au lot 1');
 });
+
+test('le sélecteur 🌐 : pastille-bouton, drapeaux en SVG, menu, bandeau en EN/ES, ligne des Paramètres', () => {
+  const src = read('src/script.10zzzzp.lang-picker.js');
+  assert.match(src, /data-action', 'toggleLangMenu'/, 'la pastille de l’en-tête ouvre le menu');
+  for (const l of ['fr', 'en', 'es']) assert.match(src, new RegExp(l + ": '<svg class=\"lang-flag\""), 'drapeau ' + l + ' dessiné en SVG');
+  assert.doesNotMatch(src, /🇫🇷|🇬🇧|🇪🇸/, 'pas de drapeau emoji (Windows ne les affiche pas)');
+  assert.match(src, /getLang\(\) === 'fr' \|\| langUi\.bannerClosed/, 'bandeau seulement en anglais ou en espagnol');
+  assert.match(src, /lang-setting-row/, 'ligne « Langue » dans les Paramètres');
+  assert.doesNotMatch(src, /location\.reload/, 'changer de langue ne recharge pas la page');
+  assert.match(read('home-v4.css'), /svg\.lang-flag\{display:inline-block!important/, 'le drapeau reste visible dans la pastille, même sur téléphone');
+});
