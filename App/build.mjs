@@ -20,7 +20,9 @@ try {
     const langs = {};
     for (const lang of ["fr", "en", "es"]) langs[lang] = JSON.parse(readFileSync(`i18n/${lang}.json`, "utf8"));
     const names = JSON.parse(readFileSync("i18n/pokemon-names.json", "utf8"));
-    const i18nData = "var I18N_DATA = " + JSON.stringify({ texts: langs, names: { en: names.en, es: names.es } }) + ";\n";
+    // Lot 1a : les textes déjà écrits dans la page (en-tête, menus, accueil), du français vers l'anglais et l'espagnol.
+    const ui = JSON.parse(readFileSync("i18n/ui.json", "utf8"));
+    const i18nData = "var I18N_DATA = " + JSON.stringify({ texts: langs, names: { en: names.en, es: names.es }, ui: { en: ui.en, es: ui.es, patterns: ui.patterns || [] } }) + ";\n";
     const merged = i18nData + parts.map((f) => readFileSync(`src/${f}`, "utf8")).join("");
     if (merged.length > 1000) {
       writeFileSync("script.js", merged);
