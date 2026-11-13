@@ -9,6 +9,7 @@ const { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED, GENERATIONS, STARTERS, LEGEND
 const { SITE_URL: SITE } = require('./site-move');
 const seoPokemon = require('./seo-pokemon');
 const seoPokemonI18n = require('./seo-pokemon-i18n');
+const seoGamesI18n = require('./seo-games-i18n');
 
 const SUPPORT_URL = 'https://ko-fi.com/chebreub';
 const ARTWORK = id => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + Number(id) + '.png';
@@ -119,7 +120,7 @@ function layout({ title, description, path, body, data, image = '/og-image.png',
     '<meta name="theme-color" content="#FFF8EF">\n' + ICON_LINKS + FONTS + '<style>' + STYLE + '</style>\n' +
     '<script type="application/ld+json">' + jsonLd(data) + '</script>\n</head>\n<body>\n' +
     (ui
-      ? '<header class="top"><a class="brand" href="/?lang=' + lang + '">Pokédle</a><nav aria-label="Navigation"><a href="/' + lang + '/pokemon">' + ui.nav[0] + '</a><a href="/?lang=' + lang + '">' + ui.nav[1] + '</a></nav></header>\n' +
+      ? '<header class="top"><a class="brand" href="/?lang=' + lang + '">Pokédle</a><nav aria-label="Navigation"><a href="' + seoGamesI18n.PATHS[lang] + '">' + seoGamesI18n.HUB[lang].name + '</a><a href="/' + lang + '/pokemon">' + ui.nav[0] + '</a><a href="/?lang=' + lang + '">' + ui.nav[1] + '</a></nav></header>\n' +
         '<main>\n' + body + '\n</main>\n' +
         '<footer><a class="support" href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">' + ui.support + '</a><p>' + esc(ui.footer) + '</p>' +
         '<p><a href="/?lang=' + lang + '">' + ui.footerLinks[0] + '</a> · <a href="/' + lang + '/pokemon">' + ui.footerLinks[1] + '</a> · <a href="' + esc(alternates ? alternates.fr : '/') + '" hreflang="fr">' + ui.footerLinks[2] + '</a></p></footer>\n</body>\n</html>\n'
@@ -154,7 +155,7 @@ function renderGamePage(game) {
     ...(game.faq?.length ? [{ '@type': 'FAQPage', mainEntity: game.faq.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) }] : []),
   ] };
   // Each game page shows its own link preview (tools/og-game-images.js builds them).
-  return layout({ title: game.title, description: game.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg' });
+  return layout({ title: game.title, description: game.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg', alternates: seoGamesI18n.alternates(game.slug) });
 }
 function renderHubPage() {
   const body =
@@ -388,10 +389,44 @@ function renderPokemonHubI18n(lang) {
   const data = { '@context': 'https://schema.org', '@graph': [{ '@type': 'CollectionPage', name: ui.hubH1 + ' · Pokédle', url: SITE + '/' + lang + '/pokemon', inLanguage: lang }, breadcrumb([['Pokédle', '/?lang=' + lang], ['Pokémon', '/' + lang + '/pokemon']])] };
   return layout({ title: ui.hubTitle, description: ui.hubDescription, path: '/' + lang + '/pokemon', body, data, lang, alternates: { fr: '/pokemon', en: '/en/pokemon', es: '/es/pokemon' } });
 }
+// 🌐 Lot 6b : les pages de jeux traduites (5 pour l'instant) et leur liste, en anglais et en espagnol.
+function renderGamePageI18n(frSlug, lang) {
+  const game = BY_SLUG.get(frSlug), page = seoGamesI18n.PAGES[frSlug] && seoGamesI18n.PAGES[frSlug][lang], H = seoGamesI18n.HUB[lang];
+  if (!game || !page || !H) return null;
+  const path = seoGamesI18n.gamePath(frSlug, lang);
+  const others = Object.keys(seoGamesI18n.PAGES).filter(s => s !== frSlug);
+  const card = (s) => { const g = BY_SLUG.get(s), t = seoGamesI18n.PAGES[s][lang]; return '<li><a href="' + esc(seoGamesI18n.gamePath(s, lang)) + '"><img src="' + esc(ARTWORK(g.sprite)) + '" alt="" width="56" height="56" loading="lazy"><b>' + esc(t.name) + '</b><small>' + esc(t.short) + '</small></a></li>'; };
+  const body =
+    '<p class="crumbs"><a href="/?lang=' + lang + '">Pokédle</a> › <a href="' + seoGamesI18n.PATHS[lang] + '">' + H.name + '</a> › ' + esc(page.name) + '</p>\n' +
+    '<section class="hero"><div><p class="kicker">' + esc(H.kicker) + '</p><h1>' + esc(page.h1) + '</h1><p class="lead">' + esc(page.lead) + '</p>' +
+    '<a class="cta" href="/?lang=' + lang + '&amp;jeu=' + esc(frSlug) + '">▶ ' + esc(page.cta || page.name) + '</a><span class="free">' + H.free + '</span></div>' +
+    '<img src="' + esc(ARTWORK(game.sprite)) + '" alt="' + esc(H.illustration.replace(/^, /, '') + page.name) + '" width="180" height="180"></section>\n' +
+    '<h2>' + H.how + '</h2>\n<div class="panel"><ol>' + page.steps.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol></div>\n' +
+    '<h2>' + H.good + '</h2>\n<div class="panel"><ul>' + page.facts.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>\n' +
+    (page.tips.length ? '<h2>' + H.tips + '</h2>\n<div class="panel"><ul>' + page.tips.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>\n' : '') +
+    (page.faq.length ? '<h2>' + H.faq + '</h2>\n<div class="panel faq">' + page.faq.map(([q, a]) => '<h3>' + esc(q) + '</h3><p>' + esc(a) + '</p>').join('') + '</div>\n' : '') +
+    '<h2>' + H.others + '</h2>\n<ul class="grid">' + others.map(card).join('') + '</ul>\n<p><a href="/' + lang + '/pokemon">' + H.all + ' →</a></p>';
+  const data = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebApplication', name: page.name + ' · Pokédle', url: SITE + path, description: page.description, applicationCategory: 'GameApplication', operatingSystem: 'Web browser', inLanguage: lang, isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' } },
+    breadcrumb([['Pokédle', '/?lang=' + lang], [H.name, seoGamesI18n.PATHS[lang]], [page.name, path]]),
+    ...(page.faq.length ? [{ '@type': 'FAQPage', mainEntity: page.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }] : []),
+  ] };
+  return layout({ title: page.title, description: page.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg', lang, alternates: seoGamesI18n.alternates(frSlug) });
+}
+function renderGamesHubI18n(lang) {
+  const H = seoGamesI18n.HUB[lang];
+  if (!H) return null;
+  const cards = Object.keys(seoGamesI18n.PAGES).map(s => { const g = BY_SLUG.get(s), t = seoGamesI18n.PAGES[s][lang]; return '<li><a href="' + esc(seoGamesI18n.gamePath(s, lang)) + '"><img src="' + esc(ARTWORK(g.sprite)) + '" alt="" width="56" height="56" loading="lazy"><b>' + esc(t.name) + '</b><small>' + esc(t.short) + '</small></a></li>'; }).join('');
+  const body = '<p class="crumbs"><a href="/?lang=' + lang + '">Pokédle</a> › ' + H.name + '</p>\n<h1>' + esc(H.h1) + '</h1>\n<p class="lead">' + esc(H.lead) + '</p>\n<ul class="grid">' + cards + '</ul>\n' +
+    '<p><a href="/jeux" hreflang="fr">' + H.more + ' →</a> · <a href="/' + lang + '/pokemon">' + H.all + ' →</a></p>';
+  const data = { '@context': 'https://schema.org', '@graph': [{ '@type': 'CollectionPage', name: H.h1, url: SITE + seoGamesI18n.PATHS[lang], inLanguage: lang }, breadcrumb([['Pokédle', '/?lang=' + lang], [H.name, seoGamesI18n.PATHS[lang]]])] };
+  return layout({ title: H.title, description: H.description, path: seoGamesI18n.PATHS[lang], body, data, lang, alternates: { fr: '/jeux', en: seoGamesI18n.PATHS.en, es: seoGamesI18n.PATHS.es } });
+}
 function sitemapXml() {
   const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/guides', 'weekly', '0.6'], ...GUIDES.map(guide => ['/guides/' + guide.slug, 'monthly', '0.7']), ['/a-propos', 'yearly', '0.3'], ['/confidentialite', 'yearly', '0.2'],
     ['/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemon.pokemonPath(p.id), 'monthly', '0.5']),
-    ...seoPokemonI18n.LANGS.flatMap(lang => [['/' + lang + '/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemonI18n.pokemonPath(p.id, lang), 'monthly', '0.5'])])];
+    ...seoPokemonI18n.LANGS.flatMap(lang => [['/' + lang + '/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemonI18n.pokemonPath(p.id, lang), 'monthly', '0.5'])]),
+    ...seoGamesI18n.LANGS.flatMap(lang => [[seoGamesI18n.PATHS[lang], 'weekly', '0.8'], ...Object.keys(seoGamesI18n.PAGES).map(s => [seoGamesI18n.gamePath(s, lang), 'monthly', '0.8'])])];
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map(([path, freq, priority]) => '  <url>\n    <loc>' + esc(SITE + path) + '</loc>\n    <changefreq>' + freq + '</changefreq>\n    <priority>' + priority + '</priority>\n  </url>').join('\n') + '\n</urlset>\n';
 }
@@ -429,6 +464,18 @@ function mountSeoPages(app, options = {}) {
     }
     send(res, pokemonPages.get(p.id));
   });
+  // 🌐 Lot 6b : /en/games et /es/juegos (5 pages de jeux traduites + la liste).
+  for (const lang of seoGamesI18n.LANGS) {
+    const hubPage = renderGamesHubI18n(lang), base = seoGamesI18n.PATHS[lang];
+    const gamePages = new Map(Object.keys(seoGamesI18n.PAGES).map(s => [seoGamesI18n.PAGES[s][lang].slug, renderGamePageI18n(s, lang)]));
+    app.get([base, base + '/'], (_req, res) => send(res, hubPage));
+    app.get(base + '/:slug', (req, res) => {
+      const slug = String(req.params.slug || '').toLowerCase();
+      if (gamePages.has(slug)) return send(res, gamePages.get(slug));
+      if (seoGamesI18n.PAGES[slug]) return res.redirect(301, seoGamesI18n.gamePath(slug, lang));
+      res.redirect(302, '/jeux/' + (BY_SLUG.has(slug) ? slug : ''));
+    });
+  }
   // 🌐 Lot 6a : /en/pokemon et /es/pokemon, une page par Pokémon et par langue, rendue à la demande et gardée.
   const i18nPages = new Map(), i18nHubs = new Map();
   for (const lang of seoPokemonI18n.LANGS) {
@@ -453,4 +500,4 @@ function mountSeoPages(app, options = {}) {
   app.get('/privacy', (_req, res) => res.redirect(301, '/confidentialite'));
   app.get('/sitemap.xml', (_req, res) => { res.set('Cache-Control', 'public, max-age=86400'); res.type('application/xml').send(sitemap); });
 }
-module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, renderGuidePage, renderGuidesHub, renderPokemonPage, renderPokemonHub, renderPokemonPageI18n, renderPokemonHubI18n, sitemapXml, mountSeoPages };
+module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, renderGuidePage, renderGuidesHub, renderPokemonPage, renderPokemonHub, renderPokemonPageI18n, renderPokemonHubI18n, renderGamePageI18n, renderGamesHubI18n, sitemapXml, mountSeoPages };

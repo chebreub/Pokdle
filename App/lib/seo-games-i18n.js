@@ -1,0 +1,127 @@
+'use strict';
+// 🌐 Traduction, lot 6b (13/11/2026) : les 5 pages de jeux les plus cherchées, en anglais (/en/games/…)
+// et en espagnol (/es/juegos/…). Même contenu que la page française (lib/seo-games.js) : chaque règle
+// y est vérifiée contre le code ; si une règle change, changer aussi ces traductions.
+// Les autres pages de jeux restent en français pour l'instant.
+const PATHS = { en: '/en/games', es: '/es/juegos' };
+const HUB = {
+  en: { name: 'Games', title: 'Free Pokémon games: Pokémon of the day, Wordle, quiz… · Pokédle', h1: 'Pokémon games on Pokédle',
+    lead: 'Guess the Pokémon of the day, find the Pokémon Wordle, test yourself with the quiz. Every game is free, ad-free and plays in your browser, on phone or computer.',
+    description: 'Free Pokémon games in your browser: Pokémon of the day, Pokémon Wordle, pixelated Pokémon, a 15-question quiz and Higher or Lower. No ads, no sign-up.',
+    more: 'More games (in French for now)', kicker: 'Pokémon game', how: 'How to play', good: 'Good to know', tips: 'Tips', faq: 'Frequently asked questions', others: 'More Pokémon games', free: 'Free, no ads, no sign-up.', illustration: ', illustration of ', all: 'All 1025 Pokémon' },
+  es: { name: 'Juegos', title: 'Juegos Pokémon gratis: Pokémon del día, Wordle, quiz… · Pokédle', h1: 'Juegos Pokémon en Pokédle',
+    lead: 'Adivina el Pokémon del día, resuelve el Wordle Pokémon o ponte a prueba con el quiz. Todos los juegos son gratis, sin anuncios y se juegan en el navegador, en el móvil o en el ordenador.',
+    description: 'Juegos Pokémon gratis en el navegador: Pokémon del día, Wordle Pokémon, Pokémon pixelado, un quiz de 15 preguntas y Higher or Lower. Sin anuncios ni registro.',
+    more: 'Más juegos (en francés por ahora)', kicker: 'Juego Pokémon', how: 'Cómo se juega', good: 'Conviene saber', tips: 'Consejos', faq: 'Preguntas frecuentes', others: 'Más juegos Pokémon', free: 'Gratis, sin anuncios, sin registro.', illustration: ', ilustración de ', all: 'Los 1025 Pokémon' },
+};
+
+const PAGES = {
+  'pokemon-du-jour': {
+    en: { slug: 'pokemon-of-the-day', name: 'Pokémon of the day', short: 'The same mystery Pokémon for everyone, every day.',
+      title: 'Pokémon of the day: guess the mystery Pokémon | Pokédle',
+      description: 'Every day, a mystery Pokémon, the same for everyone. Guess a name: type, generation, height, weight… every guess gets you closer. Free, no ads.',
+      h1: 'The Pokémon of the day: guess the mystery Pokémon', cta: 'Play the Pokémon of the day',
+      lead: 'Every day at midnight, a new mystery Pokémon, the same for everyone. Guess names and combine the clues to find it in as few guesses as possible.',
+      steps: ['Guess the name of a Pokémon, from any generation.', 'Pokédle compares it with the mystery Pokémon on 9 criteria: generation, form, types, habitat, color, evolution stage, height and weight. Green: right. Orange: close. The arrows tell you whether to aim for a newer or older generation, or a taller or heavier Pokémon.', 'Combine the clues until you find the right Pokémon. The fewer guesses, the more points.'],
+      facts: ['No limit on guesses: you can always find it.', 'Up to 40 points if you find it on the first try.', 'The Pokémon changes every day at midnight (Paris time) and does not come back for a year.', 'It is the first round of the daily run: Investigation, Wordle, Case file then Challenge, for 100 points in total.', 'With a Discord, Google or Twitch account, your result enters the daily leaderboard and your win streak is saved.', 'Every Pokémon of the day you find joins your collection, with a chance of being shiny: 1 in 40, 1 in 30 from a 7-day streak, 1 in 20 from 30 days.'],
+      tips: ['Start with a dual-type, medium-sized Pokémon: every right or close clue rules out many candidates at once.', 'Look at the generation first: the “↑ newer” or “↓ older” badge cuts the Pokédex in two.', 'The investigation notebook keeps the generation range and what you have learned: read it before each guess.', 'The height and weight arrows tell apart two Pokémon of the same type.'],
+      faq: [['What time does the Pokémon of the day change?', 'At midnight, Paris time. The countdown on the home page shows the time left.'], ['Is it the same Pokémon for everyone?', 'Yes: all players look for the same mystery Pokémon on the same day.'], ['How many guesses do I get?', 'As many as you want. The fewer you need, the more points you get: up to 40 on the first try.'], ['Do I need an account to play?', 'No. A Discord, Google or Twitch account is only used to enter the leaderboard and keep your streak on all your devices.'], ['Can you catch a shiny Pokémon?', 'Yes: every Pokémon of the day you find has a chance of being shiny, 1 in 40 at first, then 1 in 30 and 1 in 20 if you keep your streak.']] },
+    es: { slug: 'pokemon-del-dia', name: 'Pokémon del día', short: 'El mismo Pokémon misterioso para todos, cada día.',
+      title: 'Pokémon del día: adivina el Pokémon misterioso | Pokédle',
+      description: 'Cada día, un Pokémon misterioso, el mismo para todos. Propón un nombre: tipo, generación, altura, peso… cada intento te acerca. Gratis, sin anuncios.',
+      h1: 'El Pokémon del día: adivina el Pokémon misterioso', cta: 'Jugar al Pokémon del día',
+      lead: 'Cada día a medianoche, un nuevo Pokémon misterioso, el mismo para todos. Propón nombres y cruza las pistas para encontrarlo con los menos intentos posibles.',
+      steps: ['Propón el nombre de un Pokémon, de cualquier generación.', 'Pokédle lo compara con el Pokémon misterioso en 9 criterios: generación, forma, tipos, hábitat, color, etapa evolutiva, altura y peso. Verde: correcto. Naranja: cerca. Las flechas indican si hay que buscar una generación más reciente o más antigua, o un Pokémon más alto o más pesado.', 'Cruza las pistas hasta encontrar el Pokémon correcto. Cuantos menos intentos, más puntos.'],
+      facts: ['Sin límite de intentos: siempre puedes encontrarlo.', 'Hasta 40 puntos si aciertas al primer intento.', 'El Pokémon cambia cada día a medianoche (hora de París) y no vuelve antes de un año.', 'Es la primera prueba del recorrido del día: Investigación, Wordle, Expediente y Desafío, 100 puntos en total.', 'Con una cuenta de Discord, Google o Twitch, tu resultado entra en la clasificación del día y se guarda tu racha de victorias.', 'Cada Pokémon del día encontrado se une a tu colección, con una probabilidad de ser shiny: 1 entre 40, 1 entre 30 desde 7 días de racha, 1 entre 20 desde 30 días.'],
+      tips: ['Empieza con un Pokémon de dos tipos y de tamaño medio: cada criterio correcto o cercano descarta muchos candidatos de golpe.', 'Mira primero la generación: la etiqueta «↑ más reciente» o «↓ más antigua» parte la Pokédex en dos.', 'El cuaderno de investigación guarda el rango de generaciones y lo que has aprendido: reléelo antes de cada intento.', 'Las flechas de altura y peso distinguen a dos Pokémon del mismo tipo.'],
+      faq: [['¿A qué hora cambia el Pokémon del día?', 'A medianoche, hora de París. La cuenta atrás de la página de inicio indica el tiempo que queda.'], ['¿Es el mismo Pokémon para todos?', 'Sí: todos los jugadores buscan el mismo Pokémon misterioso el mismo día.'], ['¿Cuántos intentos tengo?', 'Los que quieras. Cuantos menos uses, más puntos: hasta 40 al primer intento.'], ['¿Hace falta una cuenta para jugar?', 'No. Una cuenta de Discord, Google o Twitch solo sirve para entrar en la clasificación y guardar tu racha en todos tus dispositivos.'], ['¿Se puede atrapar un Pokémon shiny?', 'Sí: cada Pokémon del día encontrado tiene una probabilidad de ser shiny, 1 entre 40 al principio, luego 1 entre 30 y 1 entre 20 si mantienes la racha.']] },
+  },
+  'wordle-pokemon': {
+    en: { slug: 'pokemon-wordle', name: 'Pokémon Wordle', short: 'A Pokémon’s name in 6 guesses, letter by letter.',
+      title: 'Pokémon Wordle: find the name in 6 guesses | Pokédle',
+      description: 'The Pokémon Wordle: find a Pokémon’s name in 6 guesses. Green, right spot; orange, wrong spot. A new word every day, free.',
+      h1: 'Pokémon Wordle: today’s name in 6 guesses', cta: 'Start the daily run',
+      lead: 'The famous word game, Pokémon style: one name to find in six guesses, with colors to guide you. It is the second round of the daily run.',
+      steps: ['First finish the Pokémon of the day Investigation: the Wordle opens right after.', 'Guess a Pokémon’s name. Each letter changes color: green if it is in the right spot, orange if it is elsewhere in the name.', 'Find the name in six guesses at most. The faster you are, the more points you get.'],
+      facts: ['The Wordle Pokémon is not the Investigation one, and it does not come back for 30 days.', 'Names are at most 15 letters long.', 'Up to 10 points for the daily run: 10, 8, 6, 4, 2 then 1 depending on the number of guesses.', 'One Wordle a day, the same for everyone.'],
+      tips: ['For your first guess, pick a name of the right length with varied letters.', 'An orange letter is in the name but not in that spot: try it elsewhere next time.', 'Names with a hyphen or a digit count too, like Porygon-Z.'],
+      faq: [['Does the Pokémon Wordle change every day?', 'Yes, at midnight Paris time, with the same name for everyone.'], ['Why won’t the Wordle open?', 'It is part of the daily run: first finish the Pokémon of the day Investigation, and it opens right after.']] },
+    es: { slug: 'wordle-pokemon', name: 'Wordle Pokémon', short: 'El nombre de un Pokémon en 6 intentos, letra a letra.',
+      title: 'Wordle Pokémon: encuentra el nombre en 6 intentos | Pokédle',
+      description: 'El Wordle de los Pokémon: encuentra el nombre de un Pokémon en 6 intentos. Verde, lugar correcto; naranja, lugar equivocado. Una palabra nueva cada día, gratis.',
+      h1: 'Wordle Pokémon: el nombre del día en 6 intentos', cta: 'Empezar el recorrido del día',
+      lead: 'El famoso juego de letras, versión Pokémon: un nombre que encontrar en seis intentos, con colores para guiarte. Es la segunda prueba del recorrido del día.',
+      steps: ['Termina primero la Investigación del Pokémon del día: el Wordle se abre justo después.', 'Propón el nombre de un Pokémon. Cada letra se colorea: verde si está en su lugar, naranja si está en otra parte del nombre.', 'Encuentra el nombre en seis intentos como máximo. Cuanto más rápido, más puntos.'],
+      facts: ['El Pokémon del Wordle no es el de la Investigación, y no vuelve antes de 30 días.', 'Los nombres tienen como máximo 15 letras.', 'Hasta 10 puntos para el recorrido del día: 10, 8, 6, 4, 2 y luego 1 según el número de intentos.', 'Un solo Wordle al día, el mismo para todos.'],
+      tips: ['Para el primer intento, elige un nombre de la longitud correcta con letras variadas.', 'Una letra naranja está en el nombre pero no en ese lugar: pruébala en otro sitio en el siguiente intento.', 'Los nombres con guion o con número también cuentan, como Porygon-Z.'],
+      faq: [['¿Cambia el Wordle Pokémon cada día?', 'Sí, a medianoche hora de París, con el mismo nombre para todos.'], ['¿Por qué no se abre el Wordle?', 'Forma parte del recorrido del día: termina primero la Investigación del Pokémon del día y se abre justo después.']] },
+  },
+  'pokemon-pixelise': {
+    en: { slug: 'pixelated-pokemon', name: 'Pixelated Pokémon', short: 'A blurry picture, sharper with every guess.',
+      title: 'Pixelated Pokémon: guess the blurry Pokémon | Pokédle',
+      description: 'A blurred picture, a Pokémon to recognize: it gets sharper with every guess. And every day, the Challenge: 10 pixelated Pokémon in 3 minutes.',
+      h1: 'Pixelated Pokémon: recognize the blurry Pokémon',
+      lead: 'The picture starts out blurred, then gets sharper with every guess. A perfect game to test your eye, solo or every day in the Challenge.',
+      steps: ['Look at the blurry picture of the Pokémon.', 'Guess a name: with each mistake, the picture gets sharper and comparison clues are added.', 'Find the Pokémon before the picture is completely clear.'],
+      facts: ['Eight levels of sharpness, and no limit on guesses in solo.', 'The daily Challenge (4th round of the daily run): 10 pixelated Pokémon in 3 minutes, 6 guesses each, and a button to skip.', 'In the Challenge, the generation is revealed after 2 mistakes and the types after 4.'],
+      tips: ['Look at the large patches of color: they often give the Pokémon away before the details.', 'In the daily Challenge, skip a Pokémon that blocks you without hesitating: the clock is ticking.'],
+      faq: [['How many guesses do I get?', 'As many as you want in solo. In the daily Challenge, 6 guesses per Pokémon.']] },
+    es: { slug: 'pokemon-pixelado', name: 'Pokémon pixelado', short: 'Una imagen borrosa, más nítida en cada intento.',
+      title: 'Pokémon pixelado: adivina el Pokémon borroso | Pokédle',
+      description: 'Una imagen borrosa, un Pokémon que reconocer: se vuelve más nítida en cada intento. Y cada día, el Desafío: 10 Pokémon pixelados en 3 minutos.',
+      h1: 'Pokémon pixelado: reconoce el Pokémon borroso',
+      lead: 'La imagen empieza borrosa y se vuelve cada vez más nítida con cada intento. Un juego perfecto para poner a prueba tu vista, en solitario o cada día en el Desafío.',
+      steps: ['Observa la imagen borrosa del Pokémon.', 'Propón un nombre: con cada error, la imagen se vuelve más nítida y se añaden pistas de comparación.', 'Encuentra el Pokémon antes de que la imagen sea del todo clara.'],
+      facts: ['Ocho niveles de nitidez y sin límite de intentos en solitario.', 'El Desafío del día (4.ª prueba del recorrido): 10 Pokémon pixelados en 3 minutos, 6 intentos cada uno y un botón para pasar.', 'En el Desafío, la generación se revela tras 2 errores y los tipos tras 4.'],
+      tips: ['Fíjate en las grandes manchas de color: a menudo delatan al Pokémon antes que los detalles.', 'En el Desafío del día, pasa sin dudar un Pokémon que te bloquee: el reloj corre.'],
+      faq: [['¿Cuántos intentos tengo?', 'Los que quieras en solitario. En el Desafío del día, 6 intentos por Pokémon.']] },
+  },
+  'quiz-pokemon': {
+    en: { slug: 'pokemon-quiz', name: 'Pokémon Quiz', short: 'Fifteen questions about the Pokémon world.',
+      title: 'Free Pokémon Quiz: 15 questions | Pokédle',
+      description: 'Test your knowledge with the Pokémon Quiz: 15 multiple-choice questions on Pokédex numbers, types, generations and the Pokémon world.',
+      h1: 'Pokémon Quiz: 15 questions',
+      lead: 'Pokédex numbers, types, generations and Pokémon trivia: fifteen four-choice questions to see whether you are a real trainer.',
+      steps: ['Read the question and pick one of the four answers.', 'The right answer shows up at once.', 'Go through the fifteen questions and beat your record.'],
+      facts: ['Over 100 possible questions, drawn at random every game.', 'The Quiz is also a possible event of the weekly League: 12 right answers out of 15.', 'Your best score is saved.'],
+      tips: ['Questions about Pokédex numbers come up often: the starters open almost every generation (Bulbasaur No. 1, Chikorita No. 152, Treecko No. 252), they make good landmarks.', 'First rule out the impossible answers among the four.'],
+      faq: [['How many questions in a game?', 'Fifteen four-choice questions, drawn from over 100.']] },
+    es: { slug: 'quiz-pokemon', name: 'Quiz Pokémon', short: 'Quince preguntas sobre el mundo Pokémon.',
+      title: 'Quiz Pokémon gratis: 15 preguntas | Pokédle',
+      description: 'Pon a prueba tus conocimientos con el Quiz Pokémon: 15 preguntas de 4 opciones sobre los números de la Pokédex, los tipos, las generaciones y el mundo Pokémon.',
+      h1: 'Quiz Pokémon: 15 preguntas',
+      lead: 'Números de la Pokédex, tipos, generaciones y cultura Pokémon: quince preguntas de cuatro opciones para ver si eres un verdadero entrenador.',
+      steps: ['Lee la pregunta y elige entre las cuatro respuestas.', 'La respuesta correcta aparece al instante.', 'Encadena las quince preguntas y bate tu récord.'],
+      facts: ['Más de 100 preguntas posibles, sorteadas en cada partida.', 'El Quiz también es una prueba posible de la Liga de la semana: 12 respuestas correctas de 15.', 'Se guarda tu mejor puntuación.'],
+      tips: ['Las preguntas sobre los números de la Pokédex salen a menudo: los iniciales abren casi cada generación (Bulbasaur n.º 1, Chikorita n.º 152, Treecko n.º 252), son buenas referencias.', 'Descarta primero las respuestas imposibles entre las cuatro.'],
+      faq: [['¿Cuántas preguntas hay en una partida?', 'Quince preguntas de cuatro opciones, sorteadas entre más de 100.']] },
+  },
+  'higher-or-lower-pokemon': {
+    en: { slug: 'pokemon-higher-or-lower', name: 'Higher or Lower', short: 'Which Pokémon has the higher stat? Extend your streak.',
+      title: 'Pokémon Higher or Lower: which stat is higher? | Pokédle',
+      description: 'Two Pokémon, one stat: which one is higher? Chain right answers to extend your streak, solo, in 60 seconds or in a duel.',
+      h1: 'Higher or Lower: which Pokémon has the higher stat?',
+      lead: 'HP, Attack, Speed… Two Pokémon face off on a base stat. Guess which one wins and push your streak as far as you can.',
+      steps: ['Look at the two Pokémon and the stat being compared.', 'Pick the one with the higher value.', 'Keep going as long as you are right: the streak ends at the first mistake.'],
+      facts: ['Three ways to play: endless streak, 60 seconds (mistakes cost nothing) or a live duel for two.', 'A streak of 8 is a possible event of the weekly League.', 'Your record is saved.'],
+      tips: ['Legendaries and fully evolved Pokémon almost always have the highest stats.', 'Watch out for exceptions: Chansey has huge HP but very low Defense.', 'In 60-second mode, mistakes cost nothing: answer fast rather than perfectly.'],
+      faq: [] },
+    es: { slug: 'higher-or-lower-pokemon', name: 'Higher or Lower', short: '¿Qué Pokémon tiene la estadística más alta? Alarga tu racha.',
+      title: 'Higher or Lower Pokémon: ¿más o menos? | Pokédle',
+      description: 'Dos Pokémon, una estadística: ¿cuál es más alta? Encadena aciertos para alargar tu racha, en solitario, en 60 segundos o en duelo.',
+      h1: 'Higher or Lower: ¿qué Pokémon tiene la estadística más alta?',
+      lead: 'PS, Ataque, Velocidad… Dos Pokémon se enfrentan en una estadística base. Adivina cuál gana y alarga tu racha lo más posible.',
+      steps: ['Mira los dos Pokémon y la estadística comparada.', 'Elige el que tenga el valor más alto.', 'Sigue mientras aciertes: la racha termina en el primer error.'],
+      facts: ['Tres formas de jugar: racha sin fin, 60 segundos (los errores no cuestan nada) o duelo en directo a dos.', 'Una racha de 8 es una prueba posible de la Liga de la semana.', 'Se guarda tu récord.'],
+      tips: ['Los legendarios y los Pokémon totalmente evolucionados casi siempre tienen las estadísticas más altas.', 'Cuidado con las excepciones: Chansey tiene unos PS enormes pero una Defensa muy baja.', 'En el modo 60 segundos, los errores no cuestan nada: responde rápido en vez de perfecto.'],
+      faq: [] },
+  },
+};
+
+const LANGS = ['en', 'es'];
+const SLUG_TO_FR = { en: new Map(), es: new Map() };
+for (const [fr, page] of Object.entries(PAGES)) for (const lang of LANGS) SLUG_TO_FR[lang].set(page[lang].slug, fr);
+const gamePath = (fr, lang) => (PAGES[fr] ? PATHS[lang] + '/' + PAGES[fr][lang].slug : null);
+const alternates = (fr) => (PAGES[fr] ? { fr: '/jeux/' + fr, en: gamePath(fr, 'en'), es: gamePath(fr, 'es') } : null);
+
+module.exports = { LANGS, PATHS, HUB, PAGES, SLUG_TO_FR, gamePath, alternates };

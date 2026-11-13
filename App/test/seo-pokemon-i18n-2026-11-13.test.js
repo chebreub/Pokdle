@@ -50,3 +50,25 @@ test('routes : nom de la langue, ancien nom français ou numéro → adresse can
   assert.match((await call('/en/pokemon/charizard')).body, /<h1>Charizard<\/h1>/);
   assert.match((await call('/en/pokemon')).body, /All 1025 Pokémon/);
 });
+
+test('lot 6b : 5 pages de jeux en anglais et en espagnol, mêmes règles que la page française', () => {
+  const G = require('../lib/seo-games-i18n');
+  const { GAMES } = require('../lib/seo-games');
+  for (const fr of Object.keys(G.PAGES)) {
+    const frGame = GAMES.find((g) => g.slug === fr);
+    assert.ok(frGame, fr);
+    for (const lang of G.LANGS) {
+      const page = G.PAGES[fr][lang];
+      // Même nombre d'étapes, de faits et d'astuces que la page française (une règle ne doit pas manquer).
+      assert.equal(page.steps.length, frGame.steps.length, fr + ' ' + lang + ' étapes');
+      assert.equal(page.facts.length, frGame.facts.length, fr + ' ' + lang + ' faits');
+      assert.equal(page.tips.length, (frGame.tips || []).length, fr + ' ' + lang + ' astuces');
+      const html = render.renderGamePageI18n(fr, lang);
+      assert.match(html, new RegExp('<html lang="' + lang + '">'));
+      assert.match(html, new RegExp('href="/\\?lang=' + lang + '&amp;jeu=' + fr + '"'), 'le bouton ouvre le jeu dans la langue');
+      assert.match(html, /hreflang="x-default" href="https:\/\/pokdle\.fr\/jeux\//);
+    }
+    assert.match(render.renderGamePage(frGame), /hreflang="en"/, 'la page française pointe vers sa traduction');
+  }
+  assert.match(render.renderGamePageI18n('wordle-pokemon', 'en'), /<link rel="canonical" href="https:\/\/pokdle\.fr\/en\/games\/pokemon-wordle">/);
+});
