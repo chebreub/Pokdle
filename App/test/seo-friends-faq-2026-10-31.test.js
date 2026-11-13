@@ -29,14 +29,14 @@ test('tips and frequent questions show on the page and in its structured data', 
   for (const game of GAMES) for (const [question, answer] of game.faq || []) assert.ok(question.endsWith('?') && answer.length > 10, game.slug);
 });
 
-test('the friends page names the twelve games of the Party Room, Dessine-le ! and the chat', () => {
+test('the friends page names the thirteen games of the Party Room, Dessine-le ! and the chat', () => {
   const game = GAMES.find((g) => g.slug === 'jeux-pokemon-entre-amis');
   const listed = game.facts[0].replace(/^Les jeux : /, '').replace(/\.$/, '').split(/, | et /);
   const tiles = [...read('index.html').matchAll(/class="party-mode-btn party-mode-tile"[^>]*>.*?<b>([^<]+)<\/b>/g)].map((m) => m[1]);
-  assert.equal(tiles.length, 12);
+  assert.equal(tiles.length, 13);
   assert.equal(listed.length, tiles.length);
   for (const name of tiles) assert.ok(game.facts[0].includes(name), name + ' is named on the page');
-  assert.match(game.short, /douze mini-jeux/);
+  assert.match(game.short, /treize mini-jeux/);
   assert.match(game.lead, /chat/);
   assert.ok(game.related.includes('dessine-le-pokemon'));
 });

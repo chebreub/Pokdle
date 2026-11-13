@@ -634,11 +634,11 @@ const GAMES = [
   },
   {
     slug: 'jeux-pokemon-entre-amis', group: 'friends', sprite: 39, name: 'Party Room',
-    short: 'De 2 à 8 joueurs : douze mini-jeux Pokémon entre amis.',
+    short: 'De 2 à 8 joueurs : treize mini-jeux Pokémon entre amis.',
     title: 'Jeux Pokémon entre amis en ligne, de 2 à 8 | Pokédle',
     description: 'Crée un salon, envoie le lien et jouez de 2 à 8, chacun sur son téléphone : Dessine-le !, Petit Bac, Qui est-ce ?… Gratuit, sans compte.',
     h1: 'Jeux Pokémon entre amis : la Party Room',
-    lead: 'Un salon, un lien à envoyer, et chacun joue sur son téléphone ou son ordinateur, dans la même pièce ou à distance. Douze mini-jeux Pokémon pour 2 à 8 joueurs, avec un chat pour se chambrer.',
+    lead: 'Un salon, un lien à envoyer, et chacun joue sur son téléphone ou son ordinateur, dans la même pièce ou à distance. Treize mini-jeux Pokémon pour 2 à 8 joueurs, avec un chat pour se chambrer.',
     cta: 'Ouvrir la Party Room',
     steps: [
       'Crée un salon : Pokédle te donne un code et un lien d’invitation.',
@@ -647,7 +647,7 @@ const GAMES = [
       'Sur l’accueil, tu peux aussi choisir le jeu d’abord (Dessine-le !, Qui est-ce ?, Petit Bac, Course au Pokédex) : le salon s’ouvre avec ce jeu.',
     ],
     facts: [
-      'Les jeux : Dessine-le !, Course au Pokédex, Enquête coop, Pokémon mystère, Qui est-ce ? (à deux), Petit Bac, Numéro mystère, Course Pokémon, Combo de types, Duo de critères, Meilleure stat et Stat Clash Party.',
+      'Les jeux : Dessine-le !, Dernière lettre, Course au Pokédex, Enquête coop, Pokémon mystère, Qui est-ce ? (à deux), Petit Bac, Numéro mystère, Course Pokémon, Combo de types, Duo de critères, Meilleure stat et Stat Clash Party.',
       'Un chat dans le salon, avec des réactions, pour se chambrer entre deux manches. Rien n’est gardé.',
       'Pas besoin de compte : un pseudo suffit.',
       'On rejoint un salon avant le début de la partie.',

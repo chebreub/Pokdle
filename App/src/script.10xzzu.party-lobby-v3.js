@@ -9,6 +9,7 @@
 
 var PL3_GAMES = [
   { key: 'dessin', name: 'Dessine-le !', art: 'img/home/235.webp', tint: '#FDE7DD', who: '2 à 8 joueurs', rule: 'Un joueur dessine un Pokémon, les autres le devinent. Indices lettres, puis type et génération.' },
+  { key: 'lastletter', name: 'Dernière lettre', art: 'img/art/25.webp', tint: '#FBE4EE', who: '2 à 8 joueurs', rule: 'Chacun son tour : un Pokémon qui commence par la dernière lettre du précédent. Le dernier en vie gagne.' },
   { key: 'quiestce1v1', name: 'Qui est-ce ?', art: 'img/home/132.webp', tint: '#EDE6FF', who: 'À deux', rule: 'Chacun son Pokémon secret : pose des questions oui ou non, tour par tour.' },
   { key: 'petitbac', name: 'Petit Bac', art: 'img/home/201.webp', tint: '#DDF3EC', who: '2 à 8 joueurs', rule: 'Une lettre, vos thèmes, et le premier qui a tout rempli crie STOP.' },
   { key: 'dexrace', name: 'Course au Pokédex', art: 'img/home/479.webp', tint: '#E3ECFF', who: '2 à 8 joueurs', rule: 'Une grille de Pokémon : le premier qui trouve prend la case.' },

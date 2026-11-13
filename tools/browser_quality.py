@@ -1003,7 +1003,7 @@ def main():
      page.evaluate('openSpeedrunMode()');screen('screen-speedrun');start_btn=page.locator('.speedrun-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Speedrun start CTA is not primary blue');start_btn.click();expect(page.locator('.speedrun-pokemon').is_visible(),'Speedrun sprite stage missing');expect(page.locator('#speedrun-timer').is_visible(),'Speedrun timer missing');return screen('screen-speedrun')
     check('d2-speedrun-shell',d2_speedrun_shell)
     def d2_type_combo_shell():
-     page.evaluate('openTypeComboSolo()');screen('screen-type-combo');start_btn=page.locator('.tc-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Type Combo start CTA is not primary blue');start_btn.click();expect(page.locator('.tc-combo').is_visible(),'Type Combo prompt stage missing');expect(page.locator('#type-combo-timer').is_visible(),'Type Combo timer missing');return screen('screen-type-combo')
+     page.evaluate('openTypeComboSolo()');screen('screen-type-combo');start_btn=page.locator('.tc-start-btn');expect('btn-blue' in (start_btn.get_attribute('class') or ''),'Type Combo start CTA is not primary blue');start_btn.click();page.locator('.tc-combo').wait_for(state='visible',timeout=8000);expect(page.locator('.tc-combo').is_visible(),'Type Combo prompt stage missing');expect(page.locator('#type-combo-timer').is_visible(),'Type Combo timer missing');return screen('screen-type-combo')
     check('d2-type-combo-shell',d2_type_combo_shell)
     def pc3_arcade_desktop():
      if width<1280: return {'skipped':'desktop-only'}

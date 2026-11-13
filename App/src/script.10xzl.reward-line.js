@@ -9,7 +9,7 @@ var REWARD_GOLD = {
   quiestce: 'trouvé en 8 essais au plus', quiz: '12 / 15 ou plus', speedrun: '25 Pokémon ou plus',
   'higher-lower': 'série de 15 ou plus', 'higher-lower-rush': '25 points ou plus', odd: '10 énigmes ou plus',
   weight: 'série de 10 ou plus', petitbac: '6 bonnes réponses ou plus', shiny: '20 bonnes réponses ou plus',
-  'poke-connections': 'les 4 groupes trouvés', typecombo: '10 points ou plus', 'stat-clash': 'une victoire',
+  'poke-connections': 'les 4 groupes trouvés', typecombo: '10 combos ou plus', 'stat-clash': 'une victoire',
   'stat-auction': 'une victoire', draft: 'palier Elite (550+)', lastletter: '20 points ou plus', rankthem: '32 points sur 40', weakspots: '8 Pokémon parfaits sur 10'
 };
 // Le nom de la source côté serveur (mode:<…>) quand il diffère du mode.

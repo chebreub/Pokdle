@@ -12,6 +12,7 @@ var PSV_GAMES = {
   deduction: ['#E06AA0', 'img/art/151.webp', 'Déduction', 'deduction', 'Pokémon mystère'],
   quiestce1v1: ['#7C5BD6', 'img/home/132.webp', 'À deux', 'deduction', 'Qui est-ce ?'],
   dessin: ['#F08A4B', 'img/home/235.webp', '2 à 8', 'words', 'Dessine-le !'],
+  lastletter: ['#C2477E', 'img/art/25.webp', '2 à 8', 'words', 'Dernière lettre'],
   petitbac: ['#3FA06A', 'img/home/201.webp', '2 à 8', 'words', 'Petit Bac'],
   nearest: ['#2E9FD8', 'img/art/137.webp', 'Flair', 'speed', 'Numéro mystère'],
   guess: ['#E07B32', 'img/art/149.webp', 'Rapidité', 'speed', 'Course Pokémon'],

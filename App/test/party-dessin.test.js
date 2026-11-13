@@ -142,7 +142,7 @@ test('a refresh keeps the drawer, the finds and the feed', () => {
 
 test('server: the mode is allowed, pieces are relayed with a rate limit, hints refresh the room', () => {
   const server = fs.readFileSync(path.join(__dirname, '../server.js'), 'utf8');
-  assert.match(server, /mode !== "dexrace" && mode !== "dessin"\) return respond/);
+  assert.match(server, /mode !== "dexrace" && mode !== "dessin" && mode !== "lastletter"\) return respond/);
   assert.match(server, /socket\.on\("party:dessin-draw"/);
   assert.match(server, /"party-draw":\s+\{ max: 160, ipMax: 400/);
   assert.match(server, /for \(const other of room\.players\) if \(other\.connected && other\.id !== socket\.id\) io\.to\(other\.id\)\.emit\("party:dessin-draw", relay\)/);

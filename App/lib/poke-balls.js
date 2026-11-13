@@ -139,6 +139,8 @@ const GOLD = Object.freeze({
   // Draft Score Attack (il ne donnait aucune Ball) : Super Ball au palier Elite (moyenne 550+).
   typecombo: AT_LEAST(10), "stat-clash": ({ result }) => result === "win", "stat-auction": ({ result }) => result === "win", draft: AT_LEAST(550),
   "poke-connections": ({ result, score }) => result === "win" && score >= 4,
+  // 🧬 Combo de types vérifié par le serveur (13/11/2026) : le score compté est le nombre de combos trouvés,
+  // Super Ball à 10 combos (lib/type-combo.js).
   // 🔗 Dernière lettre (13/11/2026) : Super Ball à 20 points.
   lastletter: AT_LEAST(20),
   // 🔢 Classe-les (13/11/2026) : Super Ball à 32 / 40.
