@@ -42,6 +42,7 @@ const SOLO_CATALOG = Object.freeze({
   draft: {label:"Draft Arènes",group:"Arcade"},
   statclash: {label:"Stat Clash",group:"Arcade"},
   typecombo: {label:"Combo de types",group:"Arcade"},
+  lastletter: {label:"Dernière lettre",group:"Arcade"},
   emulator: {label:"Émulateur",group:"Autres"},
 });
 
@@ -81,6 +82,7 @@ const HISTORY_TO_LAUNCH = Object.freeze({
   "stat-auction": "statauction",
   "stat-clash": "statclash",
   typecombo: "typecombo",
+  lastletter: "lastletter",
   shiny: "shiny",
   challenge: "challenge",
 });

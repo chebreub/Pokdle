@@ -138,7 +138,9 @@ const GOLD = Object.freeze({
   // Équilibrage (4/11/2026, maquette validée) : Combo dès 10 points, Stat Clash et Enchères à la victoire,
   // Draft Score Attack (il ne donnait aucune Ball) : Super Ball au palier Elite (moyenne 550+).
   typecombo: AT_LEAST(10), "stat-clash": ({ result }) => result === "win", "stat-auction": ({ result }) => result === "win", draft: AT_LEAST(550),
-  "poke-connections": ({ result, score }) => result === "win" && score >= 4
+  "poke-connections": ({ result, score }) => result === "win" && score >= 4,
+  // 🔗 Dernière lettre (13/11/2026) : Super Ball à 20 points.
+  lastletter: AT_LEAST(20)
 });
 // Les jeux du jour passent par leur propre vérification, pas par une déclaration du navigateur.
 const ARCADE = Object.freeze([...Object.keys(HISTORY_TO_LAUNCH).filter((mode) => !["daily", "challenge"].includes(mode)), "draft"]);

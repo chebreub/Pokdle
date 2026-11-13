@@ -4,6 +4,7 @@
 // disappears by itself. The tiles are matched by the action they open, wherever they appear.
 var NEW_GAME_BADGES = [
   { selector: '[data-args=\'["openShinyMode"]\']', until: '2026-11-13' },
+  { selector: '[data-args=\'["openLastLetterMode"]\']', until: '2026-11-27' },
   { selector: '[data-args=\'["dessin"]\']', until: '2026-11-12' },
 ];
 

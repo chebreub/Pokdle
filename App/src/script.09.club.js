@@ -81,7 +81,7 @@ function renderHomeDiscovery(force = false) {
   const shelves = {
     popular: ["startSilhouetteGame", "openHigherLowerMode", "startWeightBattle", "openOddOneOutMode", "startQuizGame", "openPokeConnectionsMode"],
     guess: ["startNormalGame", "startWordleTraining", "startSilhouetteGame", "startPixelGame", "startDescriptionMode", "startCryGame", "startMysteryStatGame"],
-    play: ["openPokeConnectionsMode", "startQuizGame", "openHigherLowerMode", "openDraftScoreAttackMode", "openOddOneOutMode", "openTypeComboSolo", "openSpeedrunMode", "startWeightBattle", "openQuiEstCeMode", "openPetitBacMode"]
+    play: ["openLastLetterMode", "openPokeConnectionsMode", "startQuizGame", "openHigherLowerMode", "openDraftScoreAttackMode", "openOddOneOutMode", "openTypeComboSolo", "openSpeedrunMode", "startWeightBattle", "openQuiEstCeMode", "openPetitBacMode"]
   };
   grid.replaceChildren(...(shelves[homeGameFilter] || shelves.popular).map(entry => [].concat(entry)).map(([key, pro]) => modeTileCloneForHome(key, Boolean(pro))).filter(Boolean));
 }
