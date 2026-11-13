@@ -142,7 +142,9 @@ const GOLD = Object.freeze({
   // 🔗 Dernière lettre (13/11/2026) : Super Ball à 20 points.
   lastletter: AT_LEAST(20),
   // 🔢 Classe-les (13/11/2026) : Super Ball à 32 / 40.
-  rankthem: AT_LEAST(32)
+  rankthem: AT_LEAST(32),
+  // ⚡ Faiblesses éclair (13/11/2026) : Super Ball à 8 Pokémon parfaits sur 10.
+  weakspots: AT_LEAST(8)
 });
 // Les jeux du jour passent par leur propre vérification, pas par une déclaration du navigateur.
 const ARCADE = Object.freeze([...Object.keys(HISTORY_TO_LAUNCH).filter((mode) => !["daily", "challenge"].includes(mode)), "draft"]);
