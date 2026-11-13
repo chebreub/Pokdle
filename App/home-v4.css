@@ -635,6 +635,68 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
   #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hva .hm-side > :is(.hm-duel,#hva-x){width:auto!important}
 }
 
+/* 🖥️ Accueil PC « A » (13/11, maquette validée) : à partir de 1 280 px, le Défi du jour, les mini-jeux et la Party Room
+   à gauche ; à droite, sous « Défie tes amis », un seul panneau blanc « Ta journée » (script.10zzzzq.home-pc-day.js).
+   Les cartes qu'il remplace restent dans la page (téléphone, tablette, lecteurs d'écran), cachées à l'écran ici seulement. */
+.hpd-day{display:none}
+@media (min-width:1280px){
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd{grid-template-columns:minmax(0,1fr) 360px!important;grid-auto-flow:row dense!important;align-items:start}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>#starter-card{order:-1!important;grid-column:1/-1!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>#daily-hero{order:0!important;grid-column:1!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>#hm-side{order:0!important;grid-column:2!important;grid-row:span 3;display:flex!important;flex-direction:column;gap:14px;align-self:start}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>.home-discovery{order:1!important;grid-column:1!important;min-width:0}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>#home-party{order:2!important;grid-column:1!important;min-width:0}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>#hv4-row{order:3!important;grid-column:1/-1!important}
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd>.hc-tail{order:9!important;grid-column:1/-1!important}
+  /* Journée finie : « Défie tes amis » s'efface, le panneau monte en haut à droite. */
+  #pokdle-app.design-refresh #screen-config.hv4.hv4.hv4.hm-on.hpd[data-hv4-day="done"]>#hm-side>.hm-duel{display:none!important}
+  /* Les cartes remplacées par le panneau (gardées dans la page). */
+  #pokdle-app #screen-config.hv4.hpd #hv4-row>.hv4-main,
+  #pokdle-app #screen-config.hv4.hpd #hv4-row>.hv4-sub,
+  #pokdle-app #screen-config.hv4.hpd #home-balls{display:none!important}
+  #pokdle-app #screen-config.hv4.hpd #hv4-row:not(:has(.hv4-guest-box:not(:empty))){display:none!important}
+  #pokdle-app #screen-config.hv4.hpd #hm-side .hpd-day{display:block}
+  .hpd-day{background:#fff;border:1px solid #EFE6DA;border-radius:22px;padding:4px 0 6px;box-shadow:0 6px 18px rgba(46,42,51,.04)}
+  .hpd-k{display:block;padding:14px 18px 4px;font:900 11.5px Nunito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A8194}
+  .hpd-cap{display:flex;gap:14px;align-items:center;padding:10px 16px 14px}
+  .hpd-zone{position:relative;flex:none;width:104px;height:76px;border-radius:14px;background:center/cover no-repeat;image-rendering:pixelated}
+  .hpd-zone i{position:absolute;top:6px;right:8px;width:20px;height:20px;border-radius:50%;background:#FFD45C;color:#2E2A33;font:900 13px/20px Nunito,sans-serif;text-align:center;font-style:normal}
+  .hpd-t{display:flex;flex-direction:column;min-width:0;flex:1}
+  .hpd-t b{font:800 14.5px/1.25 Nunito,sans-serif;color:#2E2A33}
+  .hpd-t small{font:700 12.5px/1.35 Nunito,sans-serif;color:#6C6475;margin-top:2px}
+  .hpd-go{align-self:flex-start;margin-top:9px;min-height:36px;padding:0 14px;border:0;border-radius:12px;background:#4069E0;color:#fff;font:900 13.5px Nunito,sans-serif;cursor:pointer}
+  .hpd-go:hover{background:#3358c9}
+  .hpd-row{display:flex;align-items:center;gap:12px;width:100%;padding:11px 16px;border:0;border-top:1px solid #F2EBE1;background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit}
+  .hpd-row:hover{background:#FBF7F1}
+  .hpd-row.is-hot .hpd-t b{color:#C8412F}
+  .hpd-ico{flex:none;width:40px;height:40px;border-radius:12px;background:#F6F1EA;display:grid;place-items:center;overflow:hidden}
+  .hpd-ico img{width:32px;height:32px;image-rendering:pixelated}
+  .hpd-ico img.hpd-art{width:40px;height:40px;object-fit:contain;image-rendering:auto}
+  .hpd-ico img.is-shadow{filter:brightness(0) opacity(.45)}
+  .hpd-row em{flex:none;font:900 13px Nunito,sans-serif;font-style:normal;color:#4069E0}
+  .hpd-bar{display:block;height:5px;margin-top:6px;border-radius:9px;background:#EFE7DC;overflow:hidden}
+  .hpd-bar u{display:block;height:100%;border-radius:9px;background:#4069E0}
+  #pokdle-app.theme-dark .hpd-day{background:#221e28;border-color:#3a3442}
+  #pokdle-app.theme-dark .hpd-row{border-color:#332d3b}
+  #pokdle-app.theme-dark .hpd-row:hover{background:#2a2531}
+  #pokdle-app.theme-dark .hpd-t b{color:#efe9f5}
+  #pokdle-app.theme-dark .hpd-t small{color:#b9b0c4}
+  #pokdle-app.theme-dark .hpd-ico{background:#2e2836}
+  #pokdle-app.theme-dark .hpd-bar{background:#3a3442}
+  /* Les mini-jeux dans la colonne de gauche : 4 tuiles visibles (5 sur un grand écran), le carrousel fait le reste. */
+  #pokdle-app #screen-config.hv4.hv4.hv4.hpd #home-games-grid.hc-on{grid-auto-columns:calc((100% - 3 * 12px) / 4)!important}
+  .hpd-row em{font-size:13.5px}
+  .hpd-row em.hpd-chev{font-size:22px;line-height:1;color:#B5ACBE}
+  .hpd-row em:not(:empty){min-width:14px;text-align:right}
+}
+@media (min-width:1800px){
+  #pokdle-app #screen-config.hv4.hv4.hv4.hpd #home-games-grid.hc-on{grid-auto-columns:calc((100% - 4 * 12px) / 5)!important}
+}
+/* Très grand écran (2 200 px et plus) : l'accueil peut s'élargir, la colonne de gauche prend la place. */
+@media (min-width:2200px){
+  #pokdle-app.design-refresh[data-screen="screen-config"]{--desktop-shell-max:2000px}
+}
+
 /* Bas de l'accueil sur téléphone (12/11, suite de l'accueil « appli ») : les outils sur une ligne, les liens des
    jeux sur une rangée qui glisse. Les boutons du pied de page (Soutenir, Donne ton avis, Installer l'appli) gardent
    leur style cosy (Kayan : « c'était bien mieux avant »). */

@@ -175,6 +175,13 @@ def main():
       today=page.locator('#hva-today').bounding_box()
       expect(page.locator('.home-pathways').count()==1 and page.locator('#hva-today [data-action="openEggGame"]').count()==1,'The egg is missing from the phone home')
       expect(hero and catalog and today and today['y']>=hero['y']+hero['height'] and catalog['y']>=today['y']+today['height'],'Daily, today and catalog sections are out of order')
+     elif width>=1280:
+      # Accueil PC « A » (13/11/2026) : à droite, « Ta journée » remplace à l'écran les cartes Capture, Expédition,
+      # Cette semaine (Œuf), Pokédex et Récompenses, qui restent dans la page ; les mini-jeux suivent le Défi du jour.
+      day=page.locator('#hpd-day').bounding_box()
+      expect(page.locator('.home-pathways').count()==1 and page.locator('#hpd-day [data-action="openEggGame"]').count()==1,'The egg is missing from the PC home')
+      expect(hero and catalog and day and catalog['y']>=hero['y']+hero['height'] and day['x']>=catalog['x']+catalog['width'],'Daily, catalog and « Ta journée » are out of place')
+      if width==1366: page.locator('#hpd-day').screenshot(path=str(out/f'{width}-home-day.jpg'),quality=85,animations='disabled')
      else:
       party=page.locator('.home-pathways').bounding_box()
       expect(hero and catalog and party and catalog['y']>=hero['y']+hero['height'] and party['y']>=catalog['y']+catalog['height'],'Daily, catalog and social sections are out of order')
