@@ -50,3 +50,15 @@ test('en français, la page n’est jamais touchée', () => {
   assert.match(read('build.mjs'), /i18n\/ui\.json/);
   assert.match(read('src/script.00a.i18n.js'), /var I18N_AUTO_DETECT = false;/, 'langue du téléphone : après le lot 1b (Pokémon du jour)');
 });
+
+test('lot 1b : la recherche accepte les noms anglais et espagnols, seulement hors du français', () => {
+  const core = read('src/script.01.core.js'), mini = read('src/script.03.minijeux.js'), deleg = read('src/script.07.delegation-party.js');
+  assert.match(core, /normAlt: typeof pokemonName === "function"/);
+  assert.match(mini, /const alt = typeof getLang === "function" && getLang\(\) !== "fr";/, 'en français, les suggestions ne changent pas');
+  assert.match(deleg, /getLang\(\) !== "fr" \? activeAltNameMap\.get\(key\)/, 'un nom anglais tapé est reconnu (Charizard → Dracaufeu)');
+  const dom = read('src/script.10zzzzr.i18n-dom.js');
+  for (const root of ['#screen-game', '#screen-higher-lower', '#screen-odd-one-out', '#screen-poke-connections', '#screen-all-modes', '#overlay-modal']) assert.ok(dom.includes("'" + root + "'"), root);
+  const en = page('en');
+  assert.equal(en.i18nTranslateText('✓ Type 1 : Électrik', 'en'), '✓ Type 1: Electric');
+  assert.equal(en.i18nTranslateText('Forêt', 'en'), 'Forest');
+});

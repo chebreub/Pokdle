@@ -6,7 +6,8 @@
 // En français il ne se passe rien : le site reste exactement le même (la QA cherche des textes français).
 // Un texte sans traduction reste en français (bandeau « traduction en cours »). Les textes d'origine sont gardés :
 // revenir au français les remet tels quels, sans recharger.
-var I18N_DOM_ROOTS = ['header', '#news-ticker', '#mobile-tabbar', '#screen-config', '.site-footer'];
+// Lot 1b : le Pokémon du jour et les jeux de devinette (#screen-game), Higher or Lower, l'Intrus, Poké-Connections et « Tous les jeux ».
+var I18N_DOM_ROOTS = ['header', '#news-ticker', '#mobile-tabbar', '#screen-config', '.site-footer', '#screen-game', '#screen-higher-lower', '#screen-odd-one-out', '#screen-poke-connections', '#screen-all-modes', '#overlay-modal'];
 var I18N_DOM_ATTRS = ['aria-label', 'title', 'placeholder'];
 var I18N_WEEKDAYS = {
   fr: ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'],
@@ -37,14 +38,27 @@ function i18nNameIndex() {
 }
 
 // Français → { key, nums, pokes, days, months } ; null si rien à chercher.
-function i18nNormalize(text) {
-  var idx = i18nNameIndex(), pokes = [], days = [], months = [], nums = [];
+// Les valeurs des indices (types, couleurs, habitats) : cherchées seulement si le texte entier n'a pas été trouvé,
+// pour ne jamais casser une phrase où « Rare » ou « Normal » est un mot ordinaire.
+var I18N_VALUES = {
+  fr: ['Acier', 'Combat', 'Dragon', 'Eau', 'Feu', 'Fée', 'Glace', 'Insecte', 'Normal', 'Plante', 'Poison', 'Psy', 'Roche', 'Sol', 'Spectre', 'Ténèbres', 'Vol', 'Électrik',
+    'Blanc', 'Bleu', 'Brun', 'Gris', 'Jaune', 'Noir', 'Rose', 'Rouge', 'Vert', 'Violet', 'Eau douce', 'Forêt', 'Grotte', 'Mer', 'Montagne', 'Prairie', 'Rare', 'Sentier accidenté', 'Urbain'],
+  en: ['Steel', 'Fighting', 'Dragon', 'Water', 'Fire', 'Fairy', 'Ice', 'Bug', 'Normal', 'Grass', 'Poison', 'Psychic', 'Rock', 'Ground', 'Ghost', 'Dark', 'Flying', 'Electric',
+    'White', 'Blue', 'Brown', 'Gray', 'Yellow', 'Black', 'Pink', 'Red', 'Green', 'Purple', 'Fresh water', 'Forest', 'Cave', 'Sea', 'Mountain', 'Grassland', 'Rare', 'Rough terrain', 'Urban'],
+  es: ['Acero', 'Lucha', 'Dragón', 'Agua', 'Fuego', 'Hada', 'Hielo', 'Bicho', 'Normal', 'Planta', 'Veneno', 'Psíquico', 'Roca', 'Tierra', 'Fantasma', 'Siniestro', 'Volador', 'Eléctrico',
+    'Blanco', 'Azul', 'Marrón', 'Gris', 'Amarillo', 'Negro', 'Rosa', 'Rojo', 'Verde', 'Morado', 'Agua dulce', 'Bosque', 'Cueva', 'Mar', 'Montaña', 'Pradera', 'Raro', 'Terreno agreste', 'Urbano']
+};
+var I18N_VALUES_RE = new RegExp('(^|[^\\p{L}])(' + I18N_VALUES.fr.slice().sort(function (a, b) { return b.length - a.length; }).join('|') + ')(?![\\p{L}])', 'gu');
+
+function i18nNormalize(text, withValues) {
+  var idx = i18nNameIndex(), pokes = [], days = [], months = [], nums = [], vals = [];
   var s = text.replace(/#/g, '＃'); // un « # » écrit dans le texte (« Jour #236 ») n'est pas un nombre
   if (idx.re) s = s.replace(idx.re, function (all, pre, name) { pokes.push(idx.byName[name]); return pre + '%P'; });
   s = s.replace(/(^|[^\p{L}])(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)(?![\p{L}])/giu, function (all, pre, d) { days.push(I18N_WEEKDAYS.fr.indexOf(d.toLowerCase())); return pre + '%W'; });
   s = s.replace(/(^|[^\p{L}])(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)(?![\p{L}])/giu, function (all, pre, m) { months.push(I18N_MONTHS.fr.indexOf(m.toLowerCase())); return pre + '%M'; });
+  if (withValues) s = s.replace(I18N_VALUES_RE, function (all, pre, v) { vals.push(I18N_VALUES.fr.indexOf(v)); return pre + '%V'; });
   s = s.replace(/\d[\d\s.,]*/g, function (n) { nums.push(n); return '#'; });
-  return { key: s, nums: nums, pokes: pokes, days: days, months: months };
+  return { key: s, nums: nums, pokes: pokes, days: days, months: months, vals: vals };
 }
 
 // Chaque texte n'est cherché qu'une fois par langue (l'accueil bouge souvent : scènes animées, comptes à rebours).
@@ -63,6 +77,7 @@ function i18nTranslateRaw(text, lang) {
   if (!core) return null;
   var n = i18nNormalize(core);
   var out = Object.prototype.hasOwnProperty.call(dict, n.key) ? dict[n.key] : null;
+  if (out === null) { var nv = i18nNormalize(core, true); if (nv.vals.length && Object.prototype.hasOwnProperty.call(dict, nv.key)) { n = nv; out = dict[nv.key]; } }
   if (out === null) {
     // Motifs avec une partie libre, comme un pseudo (« L’Œuf mystère a éclos : Marco l’a trouvé »).
     var pats = I18N_DATA.ui.patterns || [], col = lang === 'en' ? 1 : 2;
@@ -70,17 +85,19 @@ function i18nTranslateRaw(text, lang) {
     if (n.pokes.length && n.key.replace(/%P/g, '').trim().length <= 2) out = n.key; // un nom seul (avec « ! »)
     else return null;
   }
-  var i = 0, p = 0, d = 0, m = 0;
+  var i = 0, p = 0, d = 0, m = 0, v = 0;
   // « # » prend le nombre suivant ; « {2} » prend le 2e nombre du texte (quand une langue en saute un).
-  out = out.replace(/\{(\d)\}|#|%P|%W|%M/g, function (tok, at) {
+  out = out.replace(/\{(\d)\}|#|%P|%W|%M|%V/g, function (tok, at) {
     if (at) return n.nums[Number(at) - 1] || '';
+    if (tok === '%V') return I18N_VALUES[lang][n.vals[v++]] || '';
     if (tok === '#') return n.nums[i++] || '';
     if (tok === '%P') { var poke = n.pokes[p++]; return poke ? (typeof pokemonName === 'function' ? pokemonName(poke, lang) : poke.name) : ''; }
     if (tok === '%W') return I18N_WEEKDAYS[lang][n.days[d++]] || '';
     return I18N_MONTHS[lang][n.months[m++]] || '';
   });
   var lead = text.match(/^\s*/)[0], trail = text.match(/\s*$/)[0];
-  return lead + out.replace(/＃/g, '#').trim() + trail;
+  // Pas d'espace avant « : ! ? ; » en anglais et en espagnol (il vient du nombre français « 1 : »).
+  return lead + out.replace(/＃/g, '#').replace(/[ \u00a0\u202f]+([:!?;])/g, '$1').trim() + trail;
 }
 
 function i18nDomNode(node, lang) {
@@ -148,7 +165,11 @@ function i18nDomWatch() {
 
 function i18nDomRefresh() { i18nDomWatch(); i18nDomApply(); }
 
-window.addEventListener('pokdle:lang', i18nDomRefresh);
+window.addEventListener('pokdle:lang', function () {
+  // Les suggestions déjà calculées ne tenaient pas compte des noms de l'autre langue.
+  try { if (typeof guessCache !== 'undefined') guessCache.clear(); } catch (_e) { /* jeux */ }
+  i18nDomRefresh();
+});
 (function i18nDomBoot() {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', i18nDomRefresh); else i18nDomRefresh();
 })();

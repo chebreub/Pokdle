@@ -644,7 +644,8 @@ function getPokemonSprite(pokemon) {
 }
 
 function findPokemon(name) {
-  return activeNameMap.get(norm(name)) || null;
+  const key = norm(name);
+  return activeNameMap.get(key) || (typeof getLang === "function" && getLang() !== "fr" ? activeAltNameMap.get(key) : null) || null;
 }
 
 var _appToastTimer = null;
