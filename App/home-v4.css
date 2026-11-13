@@ -6,6 +6,61 @@
 #pokdle-app .hv4-lang svg{width:14px;height:14px;fill:none;stroke:#5A5263;stroke-width:1.4}
 #pokdle-app.theme-dark .hv4-lang{background:#26222c;border-color:#3a3442;color:#e8e2ee}
 @media (max-width:420px){#pokdle-app .hv4-lang{padding:0 8px;height:30px;font-size:12px}#pokdle-app .hv4-lang svg{display:none}}
+/* 🌐 Sélecteur de langue (lot 0 de la traduction, 13/11) : la pastille de l'en-tête devient un bouton avec le drapeau,
+   le menu s'ouvre sous elle sur PC et en panneau du bas sur téléphone. Drapeaux en SVG (pas d'emoji : Windows ne les affiche pas). */
+#pokdle-app header .hv4-lang.lang-chip{cursor:pointer;gap:6px;font:900 12.5px Nunito,sans-serif;color:#2E2A33}
+#pokdle-app header .hv4-lang.lang-chip:hover{border-color:#C9D6F5;background:#F6F8FF}
+#pokdle-app header .hv4-lang.lang-chip[aria-expanded="true"]{border-color:#4069E0;box-shadow:0 0 0 2px rgba(64,105,224,.18)}
+#pokdle-app header .hv4-lang.lang-chip .lang-caret{font-size:10px;color:#8A8194}
+.lang-flag{display:inline-block;width:20px;height:14px;border-radius:3px;box-shadow:0 0 0 1px rgba(46,42,51,.16);flex:none;vertical-align:middle;overflow:hidden}
+.lang-veil{position:fixed;inset:0;z-index:2147483000;background:transparent}
+.lang-pop{position:fixed;z-index:2147483001;width:258px;padding:12px 10px 10px;border-radius:18px;background:#fff;border:1px solid #EEE3D6;box-shadow:0 18px 44px rgba(46,42,51,.18);font-family:Nunito,sans-serif;color:#2E2A33}
+.lang-pop .lang-sheet-grip{display:none}
+.lang-pop-title{margin:0 6px 8px;font:800 15px Fredoka,Nunito,sans-serif}
+.lang-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:#2E2A33;font:800 15px Nunito,sans-serif;text-align:left;cursor:pointer}
+.lang-opt .lang-flag{width:28px;height:19px}
+.lang-opt:hover,.lang-opt:focus-visible{background:#F6F2EC;outline:none}
+.lang-opt.is-on{background:#EEF2FF;color:#4069E0}
+.lang-opt-name{flex:1}
+.lang-opt-tick{font-weight:900}
+.lang-opt-beta{font:800 11px Nunito,sans-serif;color:#8A8194;text-transform:lowercase}
+.lang-pop-note{margin:8px 6px 0;padding-top:8px;border-top:1px solid #F0E8DD;font:600 12px/1.4 Nunito,sans-serif;color:#6C6475}
+@media (max-width:640px){
+  #pokdle-app header .hv4-lang.lang-chip{display:inline-flex!important;height:30px;padding:0 7px;gap:0}
+  #pokdle-app header .hv4-lang.lang-chip :is(.lang-code,.lang-caret){display:none}
+  .lang-veil{background:rgba(46,42,51,.38)}
+  .lang-pop{left:0!important;right:0!important;top:auto!important;bottom:0;width:auto;padding:8px 16px calc(16px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;border:0}
+  .lang-pop .lang-sheet-grip{display:block;width:44px;height:5px;margin:0 auto 12px;border-radius:9px;background:#E3DACE}
+  .lang-opt{min-height:54px;font-size:16px}
+}
+.lang-banner{display:flex;align-items:center;gap:10px;max-width:1180px;margin:0 auto 12px;padding:8px 8px 8px 16px;border-radius:16px;background:#F1ECFF;border:1px solid #D9CCF7;color:#4A3A8C;font:800 14px Nunito,sans-serif}
+.lang-banner span{flex:1;min-width:0}
+.lang-banner-x{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#4A3A8C;font:900 15px Nunito,sans-serif;cursor:pointer}
+.lang-setting-row{display:flex!important;align-items:center;justify-content:space-between;gap:12px}
+.lang-seg{display:inline-flex;gap:4px;padding:3px;border-radius:999px;background:#F6F2EC}
+.lang-seg button{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 10px;border:0;border-radius:999px;background:transparent;color:#2E2A33;font:900 12.5px Nunito,sans-serif;cursor:pointer}
+.lang-seg button.is-on{background:#4069E0;color:#fff}
+.lang-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#pokdle-app.theme-dark header .hv4-lang.lang-chip{color:#e8e2ee}
+#pokdle-app.theme-dark .lang-pop{background:#26222c;border-color:#3a3442;color:#e8e2ee}
+#pokdle-app.theme-dark .lang-opt{color:#e8e2ee}
+#pokdle-app.theme-dark .lang-opt:hover{background:#322c3a}
+#pokdle-app.theme-dark .lang-opt.is-on{background:#2b3358;color:#AFC2FF}
+#pokdle-app.theme-dark .lang-pop-note{border-color:#3a3442;color:#b9b0c4}
+#pokdle-app.theme-dark .lang-seg{background:#322c3a}
+#pokdle-app.theme-dark .lang-seg button{color:#e8e2ee}
+#pokdle-app.theme-dark .lang-banner{background:#2d2547;border-color:#463a6e;color:#d9ceff}
+#pokdle-app.theme-dark .lang-banner-x{color:#d9ceff}
+#pokdle-app header .hv4-lang.lang-chip svg.lang-flag{display:inline-block!important;width:20px;height:14px;fill:initial;stroke:none}
+#pokdle-app #overlay-modal .app-setting-item.lang-setting-row{flex-direction:row!important;align-items:center!important;min-height:0!important}
+#pokdle-app #overlay-modal .app-setting-item.lang-setting-row > span:first-child{flex:1;display:block}
+#pokdle-app #overlay-modal .app-setting-item.lang-setting-row .lang-seg{display:inline-flex!important;flex-direction:row!important;flex-wrap:nowrap!important;flex:none!important;width:auto!important;gap:4px!important}
+#pokdle-app #overlay-modal .lang-setting-row .lang-seg button{flex:none!important;width:auto!important;min-width:0!important}
+/* Même look que les autres choix des Paramètres (Clair · Sombre…). */
+#pokdle-app #overlay-modal .lang-seg{background:#F3EBE0}
+#pokdle-app #overlay-modal .lang-seg button.is-on{background:#2E2A33;color:#fff}
+#pokdle-app #overlay-modal .lang-seg button span{color:inherit!important;font:inherit!important;display:inline!important;margin:0!important}
+#pokdle-app #overlay-modal .lang-seg button span.lang-sr{position:absolute!important}
 
 /* ---------- Défi du jour ---------- */
 #pokdle-app #screen-config.hv4.hv4.hv4 #daily-hero.hv4-hero{position:relative;overflow:hidden;border:0!important;border-radius:26px!important;padding:22px 26px!important;background:radial-gradient(110% 120% at 82% 38%,#FFE9A8,#FFD45C 46%,#F5B544)!important;box-shadow:0 5px 0 #D9A21B!important;color:#2E2A33}

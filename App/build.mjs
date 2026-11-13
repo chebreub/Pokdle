@@ -15,7 +15,13 @@ mkdirSync("dist", { recursive: true });
 try {
   const parts = readdirSync("src").filter((f) => /^script\.\d+.*\.js$/.test(f)).sort();
   if (parts.length) {
-    const merged = parts.map((f) => readFileSync(`src/${f}`, "utf8")).join("");
+    // 🌐 Traduction (lot 0, 13/11/2026) : les textes de chaque langue (i18n/*.json) et les noms officiels des
+    // Pokémon (i18n/pokemon-names.json) arrivent en tête du script, avant tous les morceaux.
+    const langs = {};
+    for (const lang of ["fr", "en", "es"]) langs[lang] = JSON.parse(readFileSync(`i18n/${lang}.json`, "utf8"));
+    const names = JSON.parse(readFileSync("i18n/pokemon-names.json", "utf8"));
+    const i18nData = "var I18N_DATA = " + JSON.stringify({ texts: langs, names: { en: names.en, es: names.es } }) + ";\n";
+    const merged = i18nData + parts.map((f) => readFileSync(`src/${f}`, "utf8")).join("");
     if (merged.length > 1000) {
       writeFileSync("script.js", merged);
       console.log(`[build] script.js recollé depuis ${parts.length} morceaux (${merged.length} octets).`);
