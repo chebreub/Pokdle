@@ -3242,3 +3242,63 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 #screen-weak-spots .ws-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0}
 @media (prefers-reduced-motion:reduce){#screen-weak-spots .ws-type{transition:none}}
 #pokdle-app.theme-dark #screen-weak-spots :is(.ws-mon,.ws-pill){background:#2c283c;color:#F3EEF8;border-color:#514758}
+/* 🔗 Dernière lettre en Party Room (13/11/2026, maquette validée : « go 1 ») : joueurs avec leurs ❤️, barre du tour,
+   « À toi » ou « Au tour de… », la chaîne (le plus récent en haut), puis le podium. */
+#screen-party-room.ll-party-on :is(#party-timer,#party-round-recap,#party-answer-msg){display:none!important}
+.party-lastletter{display:flex;flex-direction:column;gap:12px;margin:6px auto 0;width:100%;max-width:600px;box-sizing:border-box}
+/* La fin a son propre podium (survie d'abord) : le classement aux points du salon se cache pour ne pas le contredire. */
+#screen-party-room.ll-party-end .party-roster{display:none}
+#pokdle-app #screen-party-room.ll-party-end .party-room-layout{grid-template-columns:minmax(0,1fr)}
+.party-lastletter .llp-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.party-lastletter .llp-pl{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;border-radius:14px;background:#fff;border:2px solid #EFE3D1;font-size:12px;font-weight:800;text-align:center;min-width:0}
+.party-lastletter .llp-pl b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.party-lastletter .llp-pl small{font-size:11px;letter-spacing:1px;color:#6b6472}
+.party-lastletter .llp-pl img{width:36px;height:36px;object-fit:contain}
+.party-lastletter .llp-ini{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#EDE6FF;color:#7C5BD6;font-family:Fredoka,sans-serif;font-weight:700}
+.party-lastletter .llp-pl.is-on{border-color:#FFD45C;box-shadow:0 0 0 3px #FFD45C;background:#FFFBEF}
+.party-lastletter .llp-pl.is-out{opacity:.45}
+.party-lastletter .llp-pl.is-off b::after{content:" · hors ligne";font-weight:700;color:#9a2f25}
+.party-lastletter .llp-given{position:absolute;top:-7px;right:-5px;min-width:20px;padding:1px 6px;border-radius:10px;background:#4069E0;color:#fff;font-size:11px}
+.party-lastletter .llp-bar{height:8px;border-radius:6px;background:#EADFCE;overflow:hidden}
+.party-lastletter .llp-bar i{display:block;height:100%;width:100%;background:#4069E0;border-radius:6px;transition:width .2s linear}
+.party-lastletter .llp-bar i.is-low{background:#E0564A}
+.party-lastletter .llp-ask,.party-lastletter .llp-wait{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;font-family:Fredoka,sans-serif;font-weight:600;font-size:19px;text-align:center}
+.party-lastletter .llp-wait{padding:12px;border:2px dashed #D9CDBB;border-radius:16px;background:#fff;font-size:17px}
+.party-lastletter .llp-wait b{color:#7C5BD6}
+.party-lastletter .llp-big{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:#FFD45C;color:#2E2A33;font-size:32px;font-weight:700}
+.party-lastletter .llp-big.is-small{width:40px;height:40px;font-size:24px;border-radius:12px}
+.party-lastletter .llp-sec{font-size:15px;color:#6b6472}
+.party-lastletter .llp-next{margin:0;text-align:center;font-weight:800;color:#6b6472;font-size:13px}
+.party-lastletter .llp-form{display:flex;gap:8px}
+.party-lastletter .llp-field{position:relative;flex:1;min-width:0}
+.party-lastletter .llp-field input{width:100%;box-sizing:border-box;border:2px solid #D9CDBB;border-radius:14px;padding:12px;font:700 16px Nunito,sans-serif;background:#fff;color:#2E2A33}
+.party-lastletter .llp-field input.is-wrong{animation:llp-shake .3s}
+@keyframes llp-shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.party-lastletter .llp-ac{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.party-lastletter .llp-ac:empty{display:none}
+.party-lastletter .llp-ac button{display:flex;align-items:center;gap:8px;padding:6px 10px;border:2px solid #E2D6C4;border-radius:12px;background:#fff;font:800 15px Nunito,sans-serif;color:#2E2A33;text-align:left;cursor:pointer}
+.party-lastletter .llp-msg{margin:0;min-height:1.2em;text-align:center;font-weight:800;color:#9a2f25;font-size:14px}
+.party-lastletter .llp-feed{display:flex;flex-direction:column;gap:7px}
+.party-lastletter .llp-bub{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:14px;background:#fff;border:2px solid #EFE3D1}
+.party-lastletter .llp-bub.is-me{border-color:#C9D6FF}
+.party-lastletter .llp-bub img{width:38px;height:38px;object-fit:contain}
+.party-lastletter .llp-bub b{font-family:Fredoka,sans-serif;font-weight:600;font-size:16px}
+.party-lastletter .llp-bub small{display:block;color:#6b6472;font-weight:800;font-size:12px}
+.party-lastletter .llp-last{background:#FFD45C;border-radius:5px;padding:0 2px}
+.party-lastletter .llp-lost{padding:7px 10px;border-radius:14px;background:#FDECEA;border:2px solid #F3C2BD;color:#9a2f25;font-weight:800;font-size:13px}
+.party-lastletter .llp-note{padding:7px 10px;border-radius:14px;background:#F3EEFF;border:2px solid #DCD0FA;color:#5A3FB0;font-weight:800;font-size:13px}
+.party-lastletter .llp-end{text-align:center}
+.party-lastletter .llp-end h4{margin:4px 0 0;font-family:Fredoka,sans-serif;font-size:24px}
+.party-lastletter .llp-podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin:14px 0}
+.party-lastletter .llp-step{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;width:96px;padding:8px 4px;border-radius:14px 14px 6px 6px;background:#fff;border:2px solid #EFE3D1;font-size:13px}
+.party-lastletter .llp-step img{width:48px;height:48px;object-fit:contain}
+.party-lastletter .llp-step small{color:#6b6472;font-weight:800}
+.party-lastletter .llp-step.is-g{min-height:140px;background:#FFF1C4;border-color:#FFD45C}
+.party-lastletter .llp-step.is-s{min-height:112px}
+.party-lastletter .llp-step.is-b{min-height:98px}
+.party-lastletter .llp-stats{padding:10px 12px;border-radius:14px;background:#fff;border:2px solid #EFE3D1;font-weight:700;font-size:14px;text-align:left;line-height:1.6}
+.ll-party-setup{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.ll-party-setup .ll-party-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ll-party-setup .ll-party-note{margin:0;font-size:13px;font-weight:700;color:#6b6472}
+#pokdle-app.theme-dark .party-lastletter :is(.llp-pl,.llp-bub,.llp-wait,.llp-stats,.llp-step,.llp-ac button,.llp-field input){background:#2c283c;color:#F3EEF8;border-color:#514758}
+@media (prefers-reduced-motion:reduce){.party-lastletter .llp-bar i{transition:none}.party-lastletter .llp-field input.is-wrong{animation:none}}

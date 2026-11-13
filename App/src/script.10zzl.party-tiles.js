@@ -5,7 +5,7 @@
 // « Animations réduites ». Mêmes boutons, mêmes actions (pl3Pick, modes à deux) : seul l'habillage change.
 
 var PT_GAMES = {
-  dessin: ['#F08A4B', 'draw'], quiestce1v1: ['#7C5BD6', 'who'], petitbac: ['#3FA06A', 'bac'], dexrace: ['#4069E0', 'race'],
+  dessin: ['#F08A4B', 'draw'], lastletter: ['#C2477E', 'bac'], quiestce1v1: ['#7C5BD6', 'who'], petitbac: ['#3FA06A', 'bac'], dexrace: ['#4069E0', 'race'],
   coop: ['#D9A21B', 'coop'], deduction: ['#E06AA0', 'mystery'], guess: ['#E07B32', 'speed'], nearest: ['#2E9FD8', 'number'],
   typecombo: ['#8C7A55', 'combo'], duocriteria: ['#3B8FD1', 'duo'], statclashparty: ['#B0563A', 'stat'], statclash: ['#5E7F9E', 'stat']
 };

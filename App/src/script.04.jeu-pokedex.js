@@ -2227,7 +2227,7 @@ function partyAllGens() {
   partySetGens([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
-var PARTY_MODE_SHORT_LABELS = { dessin: "Dessine-le !", dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", quiestce1v1: "Qui est-ce ?", petitbac: "Petit Bac", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
+var PARTY_MODE_SHORT_LABELS = { dessin: "Dessine-le !", lastletter: "Dernière lettre", dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", quiestce1v1: "Qui est-ce ?", petitbac: "Petit Bac", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" };
 function showPartyRoundBanner(room) {
   var panel = document.getElementById("party-round");
   if (!panel || !room) return;
@@ -2377,7 +2377,7 @@ function renderPartyRoom() {
   if (joined) joined.dataset.partyPhase = partyPhase;
   var roundNo = Number(room.roundNumber) || 0;
   var total = Number(room.totalRounds) || 5;
-  var modeLabels = { dessin: "Dessine-le !", dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", quiestce1v1: "Qui est-ce ?", petitbac: "Petit Bac", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
+  var modeLabels = { dessin: "Dessine-le !", lastletter: "Dernière lettre", dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère", quiestce1v1: "Qui est-ce ?", petitbac: "Petit Bac", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash" };
   var modeLabel = modeLabels[room.gameMode] || "";
   var statusEl = document.getElementById("party-room-status-badge");
   if (statusEl) {
@@ -2680,7 +2680,7 @@ function renderPartyRoom() {
   // Sélecteur du nombre de manches (hôte uniquement)
   var roundsSel = document.getElementById("party-rounds-select");
   // Stat Clash Party (one round per stat) and the Pokédex race have a fixed number of rounds.
-  var fixedRounds = room.gameMode === "statclashparty" || room.gameMode === "dexrace" || room.gameMode === "petitbac";
+  var fixedRounds = room.gameMode === "statclashparty" || room.gameMode === "dexrace" || room.gameMode === "petitbac" || room.gameMode === "lastletter";
   if (roundsSel) roundsSel.classList.toggle("hidden", fixedRounds || !(room.status === "waiting" || room.status === "complete"));
   [5, 10, 15, 20].forEach(function (n) {
     var rb = document.getElementById("party-rounds-" + n);
@@ -2698,6 +2698,7 @@ function renderPartyRoom() {
     petitbac: "Petit Bac de 2 à 8 : 3, 5 ou 10 lettres, et des thèmes que l’hôte choisit (types, régions, couleurs, attaques, villes…). Chacun remplit sa feuille en privé ; le premier qui a tout rempli crie STOP et les autres ont 10 secondes. Puis on vérifie ensemble : tout est juste d’office, la majorité peut refuser une réponse. Réponse unique : 2 points ; partagée : 1 point. Petites fautes pardonnées.",
     nearest: "Un numéro du Pokédex est tiré au sort. Propose un Pokémon des générations choisies : le plus petit écart gagne 100 points. Une seule réponse, révélée à la fin. Les ex æquo gagnent ensemble, sans bonus de vitesse.",
     guess: "Course Pokémon : devine le Pokémon le plus vite possible. Les points dépendent du rang de bonne réponse.",
+    lastletter: "Dernière lettre de 2 à 8 : chacun son tour, un Pokémon qui commence par la dernière lettre du précédent, jamais deux fois le même. Un mauvais nom ne coûte rien ; si le temps est écoulé, tu perds une vie et le joueur suivant reçoit une nouvelle lettre. Le dernier en vie gagne.",
     typecombo: "Combo de types : deux types sont tirés parmi les combinaisons existantes. Le premier Pokémon valide marque la manche (plus le combo est rare, plus ça paie).",
     duocriteria: "Duo de critères : type, couleur, habitat, génération ou stade — deux critères croisés, le premier Pokémon qui coche les deux cases gagne. Rapidité bonus !",
     statclash: "Meilleure stat : choisis la stat la plus élevée du Pokémon. Les bons choix marquent des points.",

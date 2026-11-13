@@ -21,7 +21,7 @@ async function ensureTables(db) {
 }
 
 const GAME_LABELS = Object.freeze({ dessin: "Dessine-le !", dexrace: "Course au Pokédex", coop: "Enquête coop", deduction: "Pokémon mystère",
-  quiestce1v1: "Qui est-ce ?", petitbac: "Petit Bac", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types",
+  quiestce1v1: "Qui est-ce ?", petitbac: "Petit Bac", nearest: "Numéro mystère", guess: "Course Pokémon", typecombo: "Combo de types", lastletter: "Dernière lettre",
   duocriteria: "Duo de critères", statclash: "Meilleure stat", statclashparty: "Stat Clash Party" });
 
 // roomStatus(code) -> { ok, gameMode } : la même réponse que les liens d'invitation (lib/party-invites.js).

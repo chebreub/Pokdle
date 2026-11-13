@@ -58,6 +58,7 @@ const PARTY_CATALOG = Object.freeze({
   "party:start:guess":"Course Pokémon",
   "party:start:typecombo":"Combo de types",
   "party:start:duocriteria":"Duo de critères",
+  "party:start:lastletter":"Dernière lettre",
   "party:start:statclash":"Meilleure stat",
   "party:start:statclashparty":"Stat Clash",
   "party:start:dessin":"Dessine-le !",

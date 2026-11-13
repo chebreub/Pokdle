@@ -7,7 +7,7 @@
 // Pas d'emoji (Kayan : « les emojis sont moches ») : artworks officiels et dessins SVG.
 // « Réduire les animations » : une carte fixe avec la barre d'attente, rien ne bouge.
 
-var PI_SHORT = { dessin: 'Dessine-le !', quiestce1v1: 'Qui est-ce ?', petitbac: 'Petit Bac', dexrace: 'Course Dex', coop: 'Enquête', deduction: 'Mystère', guess: 'Course', nearest: 'Numéro', typecombo: 'Combo', duocriteria: 'Duo', statclashparty: 'Stat Clash', statclash: 'Meilleure stat' };
+var PI_SHORT = { dessin: 'Dessine-le !', lastletter: 'Dernière lettre', quiestce1v1: 'Qui est-ce ?', petitbac: 'Petit Bac', dexrace: 'Course Dex', coop: 'Enquête', deduction: 'Mystère', guess: 'Course', nearest: 'Numéro', typecombo: 'Combo', duocriteria: 'Duo', statclashparty: 'Stat Clash', statclash: 'Meilleure stat' };
 var PI_SLICE = ['#FFD45C', '#C9B6F2', '#9FD8C6', '#F6B6A8', '#FFE59A', '#F8C6DE', '#FFCF9E', '#B9D4F7', '#E8E1C9', '#B5E0F2', '#D9C9F5', '#C8EBC4'];
 var piState = { id: null, raf: 0, el: null };
 

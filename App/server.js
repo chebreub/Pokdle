@@ -13,6 +13,7 @@ const { createOAuthStateStore } = require("./lib/oauth-state");
 const nearestParty = require("./lib/party-nearest");
 const dexRace = require("./lib/party-dexrace");
 const dessinParty = require("./lib/party-dessin");
+const lastLetterParty = require("./lib/party-lastletter");
 const partyChat = require("./lib/party-chat");
 const deductionParty = require("./lib/party-deduction");
 const quiEstCeParty = require("./lib/party-quiestce");
@@ -1953,7 +1954,7 @@ function publicPartyRoomState(room, viewerId = null) {
     ? partyRewards.issuePartyRewardProof(SESSION_SECRET, room, viewer.rewardIdentity, partyCalendar(new Date()).day)
     : null;
   const gameMode = room.gameMode || "guess";
-  const roundState = room.status === "waiting" ? null : gameMode === "dexrace" ? dexRace.publicRace(room) : gameMode === "dessin"
+  const roundState = room.status === "waiting" ? null : gameMode === "dexrace" ? dexRace.publicRace(room) : gameMode === "lastletter" ? lastLetterParty.publicLastLetter(room) : gameMode === "dessin"
     ? dessinParty.publicDessin(room, viewerId, revealed)
     : gameMode === "coop"
     ? coopParty.publicCoopRound(room, viewerId, revealed)
@@ -1989,6 +1990,7 @@ function publicPartyRoomState(room, viewerId = null) {
     intro: room.intro ? { id: room.intro.id, mode: room.intro.mode, surprise: room.intro.surprise, pool: room.intro.pool, durationMs: room.intro.durationMs, remainingMs: Math.max(0, room.intro.endsAt - Date.now()) } : null,
     raceFormat: room.raceFormat || "duel",
     bacOptions: gameMode === "petitbac" ? petitBacParty.publicOptions(room, POKEMON_LIST) : null,
+    llOptions: gameMode === "lastletter" ? lastLetterParty.options(room) : null,
     raceDuration: room.raceDuration === 0 ? 0 : room.raceDuration === 300 ? 300 : 180,
     selectedGens: Array.isArray(room.selectedGens) ? room.selectedGens : [1, 2, 3, 4, 5, 6, 7, 8, 9],
     round: roundState,
@@ -2059,6 +2061,8 @@ function pickPartyTarget(room) {
 
 function partyTotalRoundsForMode(mode, configured, bacRounds) {
   if (mode === "dexrace") return 1;
+  // 🔗 Dernière lettre : une seule partie, jusqu'au dernier joueur en vie.
+  if (mode === "lastletter") return 1;
   // Stat Clash Party : chaque statistique se joue une seule fois, donc exactement
   // six manches, quel que soit le réglage de l'hôte (gardé pour les autres jeux).
   if (mode === "statclashparty") return 6;
@@ -2096,7 +2100,7 @@ async function startPartyGame(room) {
 
 // 11/11/2026 : intro de la partie, « Jeu surprise ».
 // La Course au Pokédex reste hors de la roue : elle se prépare (équipes, une génération).
-const PARTY_SURPRISE_MODES = ["dessin", "quiestce1v1", "petitbac", "coop", "deduction", "guess", "nearest", "typecombo", "duocriteria", "statclashparty", "statclash"];
+const PARTY_SURPRISE_MODES = ["dessin", "lastletter", "quiestce1v1", "petitbac", "coop", "deduction", "guess", "nearest", "typecombo", "duocriteria", "statclashparty", "statclash"];
 const PARTY_INTRO_MS = 3200;
 const PARTY_INTRO_WHEEL_MS = 6500;
 
@@ -2148,7 +2152,7 @@ async function launchPartyAfterIntro(room, introId, hostSocket) {
   const error = partyModeStartError(room);
   if (error) return fail(error);
   await startPartyGame(room);
-  if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return fail("Aucune cible disponible.");
+  if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin" && room.gameMode !== "lastletter") return fail("Aucune cible disponible.");
   if (room.gameMode === "typecombo" && !room.typeCombo) return fail("Aucune combinaison disponible.");
   recordUsage("party:start:" + (room.gameMode || "guess"), null, usageSegmentForSocket(hostSocket));
   // DATA-03: once per room, the first game started with a player who came through the link.
@@ -2241,6 +2245,7 @@ function resetPartyCampaign(room) {
   room.dessin = null;
   room.dessinUsed = [];
   room.dessinOrder = null;
+  room.lastLetter = null;
   for (const player of room.players || []) {
     player.score = 0;
     player.correct = false;
@@ -2260,6 +2265,10 @@ function forcePartyRoundEnd(room) {
   if (!room || room.status !== "playing") return;
   if (room.gameMode === "dexrace") {
     room.race.endedReason = "time"; endPartyRound(room);
+  } else if (room.gameMode === "lastletter") {
+    // 🔗 Dernière lettre : le tour est passé sans bon nom : −1 ❤️, puis le joueur suivant.
+    if (lastLetterParty.timeoutLastLetter(room).ended) endPartyRound(room);
+    else armPartyLastLetterTurn(room);
   } else if (room.gameMode === "dessin" && room.dessin?.phase === "choose") {
     // No choice in time: the easy Pokémon is drawn.
     dessinParty.chooseDessin(room, null, 0);
@@ -2281,6 +2290,15 @@ function armPartyPhaseTimer(room, ms) {
   clearPartyRoundTimer(room);
   room.deadlineAt = Date.now() + ms;
   room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, ms);
+}
+
+// 🔗 Dernière lettre : l'horloge suit le tour en cours (fin du tour + la marge réseau).
+function armPartyLastLetterTurn(room) {
+  const ll = room.lastLetter;
+  if (!ll || ll.endedReason) return;
+  clearPartyRoundTimer(room);
+  room.deadlineAt = ll.endsAt;
+  room.roundTimer = setTimeout(function () { forcePartyRoundEnd(room); }, Math.max(0, ll.endsAt + lastLetterParty.GRACE_MS - Date.now()));
 }
 
 function advancePartyPetitBac(room) {
@@ -2310,6 +2328,11 @@ async function startPartyRound(room) {
   // Dispatch selon le mode de la party
   if (room.gameMode === "dexrace") {
     dexRace.startRace(room, POKEMON_LIST);
+  } else if (room.gameMode === "lastletter") {
+    lastLetterParty.startLastLetter(room, POKEMON_LIST);
+    room.roundStartedAt = Date.now();
+    armPartyLastLetterTurn(room);
+    return;
   } else if (room.gameMode === "dessin") {
     dessinParty.startDessinRound(room, POKEMON_LIST);
   } else if (room.gameMode === "coop") {
@@ -2768,6 +2791,10 @@ function handlePartyDisconnect(socketId, voluntary) {
       room.hostId = next.id;
     }
     if (room.status === "playing" && room.gameMode === "dexrace" && dexRace.raceMissingSide(room)) { room.race.endedReason = "departure"; endPartyRound(room); }
+    if (room.status === "playing" && room.gameMode === "lastletter") {
+      if (lastLetterParty.departLastLetter(room).ended) endPartyRound(room);
+      else armPartyLastLetterTurn(room);
+    }
     if (room.status === "playing" && room.gameMode === "deduction" && deductionParty.allDeductionPlayersGaveUp(room)) endPartyRound(room);
     if (room.status === "playing" && room.gameMode === "nearest" && nearestParty.allNearestSubmitted(room)) resolvePartyNearestRound(room);
     // « Dessine-le ! »: no drawer, no drawing; and the round ends once everyone left has found.
@@ -3123,6 +3150,7 @@ io.on("connection", (socket) => {
       if (Array.isArray(room.quiLog)) room.quiLog.forEach((entry) => { if (entry.by === previousId) entry.by = socket.id; });
       petitBacParty.rekeyPetitBac(room, previousId, socket.id);
       dessinParty.rekeyDessin(room, previousId, socket.id);
+      lastLetterParty.rekeyLastLetter(room, previousId, socket.id);
       if (room.race?.roster) room.race.roster.forEach((member) => { if (member.id === previousId) member.id = socket.id; });
       if (room.race?.claims instanceof Map) {
         for (const claim of room.race.claims.values()) if (claim.playerId === previousId) claim.playerId = socket.id;
@@ -3190,7 +3218,7 @@ io.on("connection", (socket) => {
     try {
       if (checkRateLimit(socket, "party-guess")) return respond(ack, { ok: false, error: "Trop de requetes." });
       const room = findPartyRoomBySocket(socket.id);
-      if (!room || room.status !== "playing" || (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin")) return respond(ack, { ok: false, error: "Aucune manche en cours." });
+      if (!room || room.status !== "playing" || (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin" && room.gameMode !== "lastletter")) return respond(ack, { ok: false, error: "Aucune manche en cours." });
       const player = room.players.find((entry) => entry.id === socket.id);
       if (!player) return respond(ack, { ok: false, error: "Tu n'es pas dans la room." });
       if (room.gameMode === "dexrace") {
@@ -3198,6 +3226,13 @@ io.on("connection", (socket) => {
         if (result.error) return respond(ack, { ok: false, error: result.error });
         if (result.full) { room.race.endedReason = "full"; endPartyRound(room); }
         if (result.claimed) emitPartyRoomState(room);
+        return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
+      }
+      if (room.gameMode === "lastletter") {
+        const result = lastLetterParty.submitLastLetter(room, player, payload);
+        if (result.error) return respond(ack, { ok: false, error: result.error });
+        if (result.ended) endPartyRound(room); else armPartyLastLetterTurn(room);
+        emitPartyRoomState(room);
         return respond(ack, { ok: true, ...result, room: publicPartyRoomState(room, socket.id) });
       }
       if (room.gameMode === "dessin") {
@@ -3291,6 +3326,7 @@ io.on("connection", (socket) => {
       if (room.hostId !== socket.id) return respond(ack, { ok: false, error: "Seul l'hote peut reveler la manche." });
       if (room.status !== "playing") return respond(ack, { ok: false, error: "Aucune manche en cours." });
       if (room.gameMode === "dexrace") return respond(ack, { ok: false, error: "La course se termine au chrono (s’il est activé) ou quand la grille est complète." });
+      if (room.gameMode === "lastletter") return respond(ack, { ok: false, error: "La partie se termine quand il ne reste qu’un joueur en vie." });
       // Petit Bac: the host moves on to the next phase (vote, then the score).
       if (room.gameMode === "nearest") { resolvePartyNearestRound(room); } else if (room.gameMode === "petitbac") { advancePartyPetitBac(room); } else if (isPartyStatMode(room)) { resolvePartyStatRound(room); } else { endPartyRound(room); }
       emitPartyRoomState(room);
@@ -3332,7 +3368,7 @@ io.on("connection", (socket) => {
       if ((Number(room.roundNumber) || 1) >= (Number(room.totalRounds) || PARTY_TOTAL_ROUNDS)) return respond(ack, { ok: false, error: "La party est terminee." });
       room.roundNumber = (Number(room.roundNumber) || 1) + 1;
       await startPartyRound(room);
-      if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin") return respond(ack, { ok: false, error: "Aucune cible disponible." });
+      if (!room.target && room.gameMode !== "dexrace" && room.gameMode !== "dessin" && room.gameMode !== "lastletter") return respond(ack, { ok: false, error: "Aucune cible disponible." });
       if (room.gameMode === "typecombo" && !room.typeCombo) return respond(ack, { ok: false, error: "Aucune combinaison disponible." });
       emitPartyRoomState(room);
       respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
@@ -3372,7 +3408,7 @@ io.on("connection", (socket) => {
         emitPartyRoomState(room);
         return respond(ack, { ok: true, room: publicPartyRoomState(room, socket.id) });
       }
-      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "petitbac" && mode !== "coop" && mode !== "dexrace" && mode !== "dessin") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
+      if (mode !== "guess" && mode !== "statclash" && mode !== "statclashparty" && mode !== "typecombo" && mode !== "duocriteria" && mode !== "nearest" && mode !== "deduction" && mode !== "quiestce1v1" && mode !== "petitbac" && mode !== "coop" && mode !== "dexrace" && mode !== "dessin" && mode !== "lastletter") return respond(ack, { ok: false, error: "Ce mode n'est pas disponible." });
       room.surprise = false;
       if (room.gameMode !== mode && room.status === "complete") {
         room.status = "waiting";
@@ -3431,6 +3467,15 @@ io.on("connection", (socket) => {
     } catch (error) {
       respond(ack, { ok: false, error: "Impossible de changer les generations." });
     }
+  });
+
+  // 🔗 Dernière lettre : l'hôte choisit le temps par tour et le nombre de vies.
+  socket.on("party:lastletter-options", (payload = {}, ack) => {
+    const room = findPartyRoomBySocket(socket.id);
+    if (!room || room.gameMode !== "lastletter" || room.hostId !== socket.id || !["waiting","complete"].includes(room.status) || room.intro) return respond(ack, {ok:false,error:"Seul l’hôte règle la prochaine partie."});
+    const result = lastLetterParty.setLastLetterOptions(room, payload);
+    if (result.error) return respond(ack, {ok:false,error:result.error});
+    emitPartyRoomState(room); respond(ack, {ok:true,room:publicPartyRoomState(room,socket.id)});
   });
 
   socket.on("party:petitbac-options", (payload = {}, ack) => {
