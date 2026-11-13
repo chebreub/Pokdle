@@ -20,7 +20,20 @@ const WELCOME_BALLS = Object.freeze(["poke", "poke", "poke", "poke", "great"]);
 // Hors du plafond de 10 par jour : série, Balls de bienvenue, coffres d'Expédition, et les Balls de test de l'admin.
 // Hors du plafond de 10 : série, Balls offertes, coffres, test de l'admin, Balls achetées à la boutique
 // et la Poké Ball de merci du sondage (9/11/2026, lib/player-surveys.js).
-const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%' OR source LIKE 'shop:%' OR source LIKE 'survey:%')";
+// 🌱 Et les cadeaux des « 3 premiers jours » (13/11/2026, lib : starterOf plus bas).
+const BONUS_SQL = "(source='streak' OR source LIKE 'welcome:%' OR source LIKE 'exp:%' OR source LIKE 'admin:%' OR source LIKE 'shop:%' OR source LIKE 'survey:%' OR source LIKE 'starter:%')";
+// 🌱 « Tes 3 premiers jours » (13/11/2026, maquette validée : « go 2 ») : seulement pour un joueur dont la toute
+// 1re Ball date de la mise en ligne ou après. Chaque jour a ses étapes, cochées par le serveur avec ce qu'il sait
+// déjà (Pokémon du jour, Ball d'un mini-jeu, capture) ; un jour réussi se réclame une fois, le suivant attend le
+// lendemain (les jours n'ont pas besoin de se suivre). Cadeaux hors plafond : Super Ball, Hyper Ball, puis Évoli.
+const STARTER_LAUNCH = "2026-11-13";
+const STARTER_WINDOW_DAYS = 30;
+const STARTER_GIFT_ID = 133;
+const STARTER_DAYS = Object.freeze([
+  { steps: ["daily", "mode", "capture"], gift: { ball: "great" } },
+  { steps: ["daily", "mode"], gift: { ball: "ultra" } },
+  { steps: ["daily", "capture"], gift: { pokemon: STARTER_GIFT_ID } }
+]);
 // 💰 Pokédollars (3/11/2026, interview puis maquette ; prix d'origine choisis) : compte obligatoire.
 // Jeux du jour une fois par jour, chaque autre partie 30 à 90 ₽ (2 000 ₽ par jour au plus), doublon relâché.
 const COIN_DAILY = Object.freeze({ daily: 300, wordle: 150, dossier: 150, challenge: 150 });
@@ -232,7 +245,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
       }
       // ECO-04: a guest may have claimed the same chest on another Paris day.
       // Do not import a duplicate chest slot already held by the account.
-      if (g.source.startsWith("exp:") &&
+      if ((g.source.startsWith("exp:") || g.source.startsWith("starter:")) &&
           (await c.query("SELECT 1 FROM ball_gains WHERE identity=$1 AND source=$2 LIMIT 1",
             [who.key, g.source])).rows.length) continue;
       const row = (await c.query(`INSERT INTO ball_gains(identity,day,source,ball,account_id,created_at)
@@ -386,7 +399,52 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
     return { ok: true, verifiedModes: verifiedArcade.MODES, actionScope: crypto.createHash("sha256").update(who.key).digest("hex"), day, resetAt: cal.resetAt, cap: DAILY_CAP, today: today.length, gains: today, added, bag,
       giftAvailable: today.length < DAILY_CAP && !today.some((g) => g.source === "gift"), authenticated: Boolean(who.accountId),
       bonus, streak: await streakOf(c, who, day), welcomeBalls: WELCOME_BALLS.length,
-      wild: await wildState(c, who, day), coins: await coinState(c, who, day), coinsAdded };
+      wild: await wildState(c, who, day), coins: await coinState(c, who, day), coinsAdded, starter: await starterOf(c, who, day) };
+  }
+  // 🌱 Les « 3 premiers jours » : où en est le joueur, et ce que chaque étape du jour demande.
+  async function starterOf(c, who, day) {
+    const read = async (sql, args) => {
+      await c.query("SAVEPOINT starter_read");
+      try { const rows = (await c.query(sql, args)).rows; await c.query("RELEASE SAVEPOINT starter_read"); return rows; }
+      catch (_e) { await c.query("ROLLBACK TO SAVEPOINT starter_read"); return []; }
+    };
+    const first = (await c.query("SELECT to_char(MIN(day),'YYYY-MM-DD') AS d FROM ball_gains WHERE identity=$1 AND source NOT LIKE 'starter:%' AND source NOT LIKE 'admin:%'", [who.key])).rows[0].d;
+    if (first && (first < STARTER_LAUNCH || first < shiftDay(day, -STARTER_WINDOW_DAYS))) return null;
+    // Un joueur qui jouait au Pokémon du jour avant les Balls n'est pas nouveau.
+    const oldDaily = (await read("SELECT 1 FROM daily_plays WHERE identity=$1 AND day<$2 LIMIT 1", [who.key, STARTER_LAUNCH])).length;
+    if (oldDaily) return null;
+    const claims = (await c.query("SELECT source,to_char(day,'YYYY-MM-DD') AS d FROM ball_gains WHERE identity=$1 AND source LIKE 'starter:%'", [who.key])).rows;
+    const gift = (await c.query("SELECT to_char(day,'YYYY-MM-DD') AS d FROM wild_encounters WHERE identity=$1 AND kind='starter' LIMIT 1", [who.key])).rows[0];
+    const claimed = claims.map((r) => ({ n: Number(r.source.slice(8)), d: r.d })).concat(gift ? [{ n: 3, d: gift.d }] : []);
+    const done = claimed.length, last = claimed.reduce((m, r) => (r.d > m ? r.d : m), "");
+    if (done >= STARTER_DAYS.length) return last === day ? { day: done, total: STARTER_DAYS.length, finished: true, claimedToday: true, gifts: STARTER_DAYS.map((d) => d.gift) } : null;
+    const won = (await read("SELECT 1 FROM daily_plays WHERE identity=$1 AND day=$2 AND status='won'", [who.key, day])).length > 0;
+    const mode = (await c.query("SELECT 1 FROM ball_gains WHERE identity=$1 AND day=$2 AND source LIKE 'mode:%' LIMIT 1", [who.key, day])).rows.length > 0;
+    const caughtEver = (await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND status IN ('caught','released','traded') AND kind NOT IN ('trade','starter') LIMIT 1", [who.key])).rows.length > 0;
+    const caughtToday = (await c.query("SELECT 1 FROM wild_encounters WHERE identity=$1 AND day=$2 AND status IN ('caught','released','traded') AND kind NOT IN ('trade','starter') LIMIT 1", [who.key, day])).rows.length > 0;
+    // Le jour suivant attend le lendemain du dernier jour réussi.
+    const waiting = last === day;
+    const index = waiting ? done - 1 : done;
+    const plan = STARTER_DAYS[index];
+    const check = { daily: won, mode, capture: index === 0 ? caughtEver : caughtToday };
+    const steps = plan.steps.map((key) => ({ key, done: waiting ? true : Boolean(check[key]) }));
+    return { day: index + 1, total: STARTER_DAYS.length, steps, claimedToday: waiting, claimable: !waiting && steps.every((x) => x.done),
+      gifts: STARTER_DAYS.map((d) => d.gift), giftId: STARTER_GIFT_ID };
+  }
+  // Réclamer le cadeau du jour : revérifié ici (étapes faites, une fois par jour, jamais deux fois le même jour du programme).
+  async function claimStarter(c, who, day) {
+    await lock(c, who.key);
+    const st = await starterOf(c, who, day);
+    if (!st || !st.claimable) throw fail("starter_not_ready");
+    const plan = STARTER_DAYS[st.day - 1];
+    if (plan.gift.ball) {
+      const row = (await c.query("INSERT INTO ball_gains(identity,day,source,ball,account_id) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING RETURNING source,ball",
+        [who.key, day, "starter:" + st.day, plan.gift.ball, who.accountId || null])).rows[0];
+      return { starterClaimed: { day: st.day, ball: plan.gift.ball, granted: Boolean(row) } };
+    }
+    await c.query("INSERT INTO wild_encounters(identity,account_id,day,pokemon_id,shiny,status,kind,ended_at) VALUES($1,$2,$3,$4,false,'caught','starter',now())",
+      [who.key, who.accountId || null, day, plan.gift.pokemon]);
+    return { starterClaimed: { day: st.day, pokemon: plan.gift.pokemon }, captures: await collection(c, who) };
   }
   // Le sac = les Balls gagnées moins les Balls lancées.
   async function bagOf(c, who) {
@@ -632,7 +690,7 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   // Incoming trades prove possession, never a Ball capture by this player.
   async function captureHistory(c, who) {
     return (await c.query(`SELECT pokemon_id,COUNT(*) FILTER (WHERE NOT shiny)::int AS normal,COUNT(*) FILTER (WHERE shiny)::int AS shiny
-      FROM wild_encounters WHERE identity=$1 AND status IN ('caught','released','traded') AND kind <> 'trade'
+      FROM wild_encounters WHERE identity=$1 AND status IN ('caught','released','traded') AND kind NOT IN ('trade','starter')
       GROUP BY pokemon_id ORDER BY pokemon_id`, [who.key])).rows
       .map((r) => ({ id: Number(r.pokemon_id), normal: Number(r.normal), shiny: Number(r.shiny) }));
   }
@@ -709,6 +767,8 @@ function createBallService({ db, clock = () => new Date(), randomInt = crypto.ra
   return {
     state: (who) => run(who),
     gift: (who) => run(who, async () => [{ source: "gift", ball: "poke" }]),
+    // 🌱 Le cadeau d'un des « 3 premiers jours ».
+    claimStarter: (who) => run(who, async (c, day) => { const r = await claimStarter(c, who, day); const out = []; out.response = r; return out; }),
     arcadeStart: (who, body) => arcadeRun(who,body,'start'),
     arcadeNext: (who, body) => arcadeRun(who,body,'next'),
     arcadeAnswer: (who, body) => arcadeRun(who,body,'answer'),
@@ -820,6 +880,7 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   });
   app.get("/api/balls", handle((who) => service.state(who)));
   app.post("/api/balls/gift", express.json({ limit: "1kb" }), handle((who) => service.gift(who)));
+  app.post("/api/starter/claim", express.json({ limit: "1kb" }), handle((who) => service.claimStarter(who)));
   app.post("/api/balls/earn", express.json({ limit: "1kb" }), handle((who, req) => service.earn(who, req.body || {})));
   app.post("/api/wild/encounter", express.json({ limit: "1kb" }), handle((who, req) => service.encounter(who, req.body || {})));
   app.post("/api/wild/throw", express.json({ limit: "1kb" }), handle((who, req) => service.throwBall(who, req.body || {}), "throw"));
@@ -836,4 +897,4 @@ function mountBallRoutes({ app, express, db, secret, getUser, readCookies, ready
   return service;
 }
 
-module.exports = { SALAMENCE, COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, shinyOddsFor, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
+module.exports = { STARTER_DAYS, STARTER_LAUNCH, STARTER_GIFT_ID, SALAMENCE, COIN_PARTY, COIN_DAILY, COIN_PLAY, COIN_PLAY_CAP, COIN_RELEASE, SHOP_PRICES, SHOP_MAX_QTY, RECHARGE_MAX, rechargePrice, RELEASES_PER_DAY, ZONES, ZONE_POOLS, WILD_ENCOUNTER_TABLE, ZONE_ENCOUNTER_TABLES, ACQUISITION_CATALOGUE, ENCOUNTERS_PER_BATCH, BATCH_HOURS, EXPEDITIONS, EXP_CHESTS, weekStart, expeditionOf, STREAK_EVERY, WELCOME_BALLS, siteLegendIds, DAILY_CAP, BALLS, GOLD, ARCADE, ENCOUNTERS_PER_DAY, MAX_THROWS, SHINY_ODDS, shinyOddsFor, WILD_POOL, captureChance, missionPokemonIds, arcadeGain, initBallsDb, createBallService, mountBallRoutes };
