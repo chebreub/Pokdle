@@ -692,10 +692,6 @@ body.reduce-motion #pokdle-app #screen-config.hv4.hv4.hv4 #home-games-grid.hc-on
 @media (min-width:1800px){
   #pokdle-app #screen-config.hv4.hv4.hv4.hpd #home-games-grid.hc-on{grid-auto-columns:calc((100% - 4 * 12px) / 5)!important}
 }
-/* Très grand écran (2 200 px et plus) : l'accueil peut s'élargir, la colonne de gauche prend la place. */
-@media (min-width:2200px){
-  #pokdle-app.design-refresh[data-screen="screen-config"]{--desktop-shell-max:2000px}
-}
 
 /* Bas de l'accueil sur téléphone (12/11, suite de l'accueil « appli ») : les outils sur une ligne, les liens des
    jeux sur une rangée qui glisse. Les boutons du pied de page (Soutenir, Donne ton avis, Installer l'appli) gardent

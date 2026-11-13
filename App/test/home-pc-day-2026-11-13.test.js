@@ -23,7 +23,8 @@ test('la mise en page ne touche que les écrans d’au moins 1 280 px', () => {
   const media = block.slice(block.indexOf('@media (min-width:1280px){'));
   assert.ok(media.includes('#hv4-row>.hv4-main') && media.includes('#home-balls{display:none!important}'), 'les cartes remplacées sont cachées à l’écran, sur PC seulement');
   assert.match(media, /#hm-side \.hpd-day\{display:block\}/);
-  assert.match(css, /\[data-screen="screen-config"\]\{--desktop-shell-max:2000px\}/, 'très grand écran : l’accueil s’élargit');
+  // Très grand écran : la largeur reste plafonnée à ≈ 1 760 px (règle de la refonte PC, vérifiée par la QA pc0).
+  assert.doesNotMatch(css, /--desktop-shell-max:2000px/);
 });
 
 test('la QA navigateur suit le nouvel accueil PC', () => {
