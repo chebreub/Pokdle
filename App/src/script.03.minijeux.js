@@ -901,6 +901,9 @@ function finalizeTypeComboGame() {
     try { awardXp(50, "Record Combo de types"); } catch (e) {}
   }
   renderTypeComboScreen();
+  // Stats : la fin de partie n'était jamais comptée (« 0 fin » dans /admin/stats, 12/11/2026).
+  // Seulement le compteur anonyme : rien d'autre ne change (pas d'historique, de Ball ni de classement en plus).
+  try { if (typeof trackUsage === "function") trackUsage("complete:typecombo:" + (st.solved >= 5 ? "win" : "loss")); } catch (e) {}
   if (typeof submitLeaderboardResult === "function" && st.score > 0) submitLeaderboardResult("typecombo", st.score);
   if (typeof showGameFeelResult === "function") {
     showGameFeelResult({ mode: "type-combo", result: st.solved >= 5 ? "win" : "loss", attempts: st.score, targetName: st.solved + " combos · " + st.score + " pts" }, []);
