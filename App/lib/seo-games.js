@@ -352,13 +352,13 @@ const GAMES = [
       'Ton meilleur score est gardé.',
     ],
     tips: [
-      'Les questions sur les numéros du Pokédex reviennent souvent : entraîne-toi avec l’Ordre Pokédex.',
+      'Les questions sur les numéros du Pokédex reviennent souvent : les starters ouvrent presque chaque génération (Bulbizarre n° 1, Germignon n° 152, Arcko n° 252), ce sont de bons repères.',
       'Élimine d’abord les réponses impossibles parmi les quatre.',
     ],
     faq: [
       ['Combien de questions dans une partie ?', 'Quinze questions à quatre choix, tirées parmi plus de 100.'],
     ],
-    related: ['poke-connections', 'ordre-pokedex', 'ligue-pokemon'],
+    related: ['poke-connections', 'speedrun-pokedex', 'ligue-pokemon'],
   },
   {
     slug: 'higher-or-lower-pokemon', group: 'play', sprite: 248, name: 'Higher or Lower',
@@ -452,50 +452,6 @@ const GAMES = [
       'Évite de deviner trop tôt : une mauvaise réponse coûte 2 questions.',
     ],
     related: ['jeux-pokemon-entre-amis', 'intrus-pokemon', 'devine-le-pokemon'],
-  },
-  {
-    slug: 'evolution-pokemon', group: 'play', sprite: 130, name: 'Chaîne d’évolution',
-    short: 'Retrouve le Pokémon qui manque dans la lignée.',
-    title: 'Évolution Pokémon : trouve le chaînon manquant | Pokédle',
-    description: 'Une lignée d’évolution à trois stades, celui du milieu est caché : retrouve le Pokémon manquant. Toutes générations, gratuit et sans pub.',
-    h1: 'Chaîne d’évolution : le chaînon manquant',
-    lead: 'Le premier et le dernier stade sont affichés, celui du milieu a disparu. Connais-tu toutes les évolutions ?',
-    steps: [
-      'Regarde la lignée : le Pokémon du milieu est caché.',
-      'Propose le Pokémon manquant.',
-      'Trouve-le, puis passe à la lignée suivante.',
-    ],
-    facts: [
-      'Essais illimités.',
-      'Choisis les générations à réviser.',
-    ],
-    tips: [
-      'Le Pokémon caché est le stade du milieu : il ressemble souvent aux deux autres.',
-      'Pense aux lignées de trois Pokémon, comme celles des starters.',
-    ],
-    related: ['ordre-pokedex', 'pokedex', 'quiz-pokemon'],
-  },
-  {
-    slug: 'ordre-pokedex', group: 'play', sprite: 1, name: 'Ordre Pokédex',
-    short: 'Quel Pokémon se cache entre ces deux numéros ?',
-    title: 'Ordre Pokédex : le Pokémon entre deux numéros | Pokédle',
-    description: 'Deux voisins du Pokédex, un numéro au milieu : quel Pokémon s’y cache ? Teste ta mémoire du Pokédex national, génération par génération.',
-    h1: 'Ordre Pokédex : qui se cache entre ces deux numéros ?',
-    lead: 'Le Pokédex national range chaque Pokémon par numéro. On te montre deux voisins : retrouve celui qui se trouve entre les deux.',
-    steps: [
-      'Regarde les deux Pokémon et leurs numéros.',
-      'Propose le Pokémon qui se trouve entre eux dans le Pokédex.',
-      'Trouve-le et passe au suivant.',
-    ],
-    facts: [
-      'Choisis les générations à réviser.',
-      'Un bon entraînement pour le Quiz, qui pose aussi des questions sur les numéros du Pokédex.',
-    ],
-    tips: [
-      'Les starters ouvrent presque chaque génération : Bulbizarre (n° 1), Germignon (n° 152), Arcko (n° 252)… ce sont de bons repères (la 5e commence par Victini, n° 494).',
-      'Les légendaires et les fabuleux ferment souvent une génération, comme Mew (n° 151) ou Celebi (n° 251).',
-    ],
-    related: ['evolution-pokemon', 'quiz-pokemon', 'pokedex'],
   },
   {
     slug: 'combo-de-types', group: 'play', sprite: 131, name: 'Combo de types',
@@ -730,7 +686,7 @@ const GAMES = [
     faq: [
       ['Combien de Pokémon dans le Pokédex ?', '1 025 espèces, de Kanto à Paldea, et plus de 200 formes alternatives.'],
     ],
-    related: ['table-des-types', 'team-builder', 'evolution-pokemon'],
+    related: ['table-des-types', 'team-builder', 'quiz-pokemon'],
   },
   {
     slug: 'pokemon-prefere-par-type', group: 'tools', sprite: 6, name: 'Mes Pokémon préférés',

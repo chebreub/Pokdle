@@ -22,7 +22,7 @@ test('tips and frequent questions show on the page and in its structured data', 
   assert.deepEqual(faq.mainEntity[0], { '@type': 'Question', name: game.faq[0][0], acceptedAnswer: { '@type': 'Answer', text: game.faq[0][1] } });
   assert.match(html, /chance d’être shiny : 1 sur 40, 1 sur 30 dès 7 jours de série, 1 sur 20 dès 30 jours/, 'the shiny odds of lib/daily-game.js');
   // A page without questions keeps its two blocks of structured data, and no empty section.
-  const plain = page('ordre-pokedex');
+  const plain = page('speedrun-pokedex');
   assert.doesNotMatch(plain, /Questions fréquentes/);
   assert.equal(graph(plain).length, 2);
   for (const game of GAMES) assert.ok(game.tips?.length >= 2, game.slug + ' has tips');

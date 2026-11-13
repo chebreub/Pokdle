@@ -21,8 +21,6 @@ const LANDING_GAMES = Object.freeze({
   'shiny-ou-normal': ['openShinyMode'],
   'pokemon-prefere-par-type': ['openRankingMode'],
   'qui-est-ce-pokemon': ['openQuiEstCeMode'],
-  'evolution-pokemon': ['startEvolutionChainGame'],
-  'ordre-pokedex': ['startPokedexOrderGame'],
   'combo-de-types': ['openTypeComboSolo'],
   'duel-de-poids': ['startWeightBattle'],
   'speedrun-pokedex': ['openSpeedrunMode'],

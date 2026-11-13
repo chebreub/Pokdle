@@ -964,8 +964,10 @@ function renderTypeComboScreen() {
         '<h3>⏱️ Temps écoulé</h3>' +
         '<div class="tc-final-score">' + st.score + '</div>' +
         '<p>' + st.solved + ' combos réussis' + (isRecord ? ' · <b>🏆 Nouveau record !</b>' : (' · record : ' + st.highScore)) + '</p>' +
-        (st.found && st.found.length ? typeComboFoundHtml(st.found) : '') +
+        // 13/11/2026 : « Rejouer » juste sous le score ; la liste des Pokémon trouvés vient après, en grille serrée
+        // (elle s'empilait en une seule colonne et repoussait les boutons tout en bas).
         '<div class="tc-actions"><button class="btn-blue" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
+        (st.found && st.found.length ? typeComboFoundHtml(st.found) : '') +
       '</div>';
     return;
   }

@@ -3103,3 +3103,11 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 #pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > :is(#results-legend,.results-legend){order:4!important}
 #pokdle-app.design-refresh #screen-game .classic-game-shell.cdp-top.cdp-top > :is(#shell-guide,.shell-guide){order:5!important}
 .wordle-train-cta .cdp-cta{min-height:48px;padding:0 22px;font-size:16px}
+
+/* Combo de types : fin de partie (13/11/2026). La liste « Tes combos » prenait une seule colonne (le bloc se
+   réduisait à la largeur d'une carte) et repoussait « Rejouer » tout en bas : grille sur toute la largeur, petites cartes. */
+#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found {width:100%;box-sizing:border-box;margin:14px auto 0;}
+#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-list {grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;}
+#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-card {padding:4px 2px 6px;border-radius:14px;font-size:.72rem;line-height:1.15;}
+#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-card img {width:44px;height:44px;}
+#pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-card span {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
