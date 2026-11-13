@@ -49,6 +49,8 @@ startTypeComboGame = async function () {
   }
   if (!tcvOn()) return startTypeComboLocal.apply(this, arguments);
   tcv.busy = true; tcv.finishing = false;
+  // L'écran rouvert (ou un autre départ) pendant la demande : la réponse arrivée ensuite ne le remplace pas.
+  var opened = typeComboState;
   var root = document.getElementById('type-combo-root');
   if (root) root.innerHTML = '<p class="tc-meta">Le serveur tire la première paire…</p>';
   var body = { mode: 'typecombo', startId: crypto.randomUUID(), restart: true };
@@ -59,7 +61,7 @@ startTypeComboGame = async function () {
     data = await verifiedArcadeRequest('start', body);
   }
   tcv.busy = false;
-  if (document.body.dataset.screen !== 'screen-type-combo') return;
+  if (document.body.dataset.screen !== 'screen-type-combo' || typeComboState !== opened) return;
   // Le serveur ne répond pas : la partie d'avant, en entraînement.
   if (!data || !data.ok) return startTypeComboLocal.apply(this, arguments);
   try { trackUsage('solo:typecombo'); } catch (_e) { /* stats */ }
