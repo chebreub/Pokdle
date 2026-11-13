@@ -3302,3 +3302,44 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 .ll-party-setup .ll-party-note{margin:0;font-size:13px;font-weight:700;color:#6b6472}
 #pokdle-app.theme-dark .party-lastletter :is(.llp-pl,.llp-bub,.llp-wait,.llp-stats,.llp-step,.llp-ac button,.llp-field input){background:#2c283c;color:#F3EEF8;border-color:#514758}
 @media (prefers-reduced-motion:reduce){.party-lastletter .llp-bar i{transition:none}.party-lastletter .llp-field input.is-wrong{animation:none}}
+/* 🌱 « Tes 3 premiers jours » (13/11/2026, maquette validée : « go 2 ») : la carte en haut de l'accueil et la fête du cadeau. */
+.starter-card{margin:0 0 14px;padding:14px;border-radius:22px;background:#fff;border:2px solid #E2D6C4;box-shadow:0 6px 0 #EFE3D1;color:#2E2A33}
+.starter-card .st-head{display:flex;align-items:center;gap:8px}
+.starter-card .st-head h2{margin:0;font-family:Fredoka,sans-serif;font-size:20px;flex:1}
+.starter-card .st-badge{font-size:12px;font-weight:800;color:#7C5BD6;background:#EDE6FF;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.starter-card .st-x{border:0;background:transparent;color:#8E8A93;font-size:16px;padding:4px 6px;cursor:pointer}
+.starter-card .st-lead{margin:4px 0 8px;font-size:13px;color:#6b6472;font-weight:700}
+.starter-card .st-step{display:flex;align-items:center;gap:10px;padding:9px 10px;margin-top:7px;border-radius:14px;border:2px solid #EFE3D1;background:#FFFDF8}
+.starter-card .st-step.is-now{border-color:#4069E0;background:#F3F6FF}
+.starter-card .st-step.is-done{opacity:.8}
+.starter-card .st-n{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#EDE6FF;color:#7C5BD6;font-weight:800}
+.starter-card .st-step.is-done .st-n{background:#5DBE7E;color:#fff}
+.starter-card .st-txt{flex:1;min-width:0}
+.starter-card .st-txt b{display:block;font-size:14px}
+.starter-card .st-txt small{color:#6b6472;font-weight:700;font-size:12px}
+.starter-card .st-go{flex:none;border:0;border-radius:12px;padding:7px 12px;background:#4069E0;color:#fff;font:800 13px Nunito,sans-serif;box-shadow:0 3px 0 #2b4cb0;cursor:pointer}
+.starter-card .st-go.is-done{background:#E8F6EC;color:#2F7D4F;box-shadow:none}
+.starter-card .st-gift{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;border-radius:14px;background:#FFF1C4;border:2px dashed #E6C04A;font-weight:800;font-size:13px}
+.starter-card .st-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px}
+.st-days{display:flex;gap:6px;margin-top:10px}
+.st-days .st-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:12px;border:2px solid #EFE3D1;background:#fff;font-size:11px;font-weight:800;text-align:center;line-height:1.2}
+.st-days .st-day img{width:26px;height:26px;object-fit:contain}
+.st-days .st-day.is-ok{background:#E8F6EC;border-color:#BFE3CB}
+.st-days .st-day.is-on{border-color:#4069E0;background:#F3F6FF}
+.st-party{text-align:center}
+.st-party h3{margin:8px 0 4px;font-family:Fredoka,sans-serif;font-size:22px}
+.st-party p{margin:0 0 6px;color:#6b6472;font-weight:700}
+.st-party-gift{object-fit:contain}
+.st-party.is-anim .st-party-gift{animation:st-pop .6s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes st-pop{0%{transform:scale(.3) rotate(-20deg);opacity:0}100%{transform:none;opacity:1}}
+.st-party-actions{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+#pokdle-app.theme-dark .starter-card,#pokdle-app.theme-dark .st-days .st-day,#pokdle-app.theme-dark .starter-card .st-step{background:#2c283c;color:#F3EEF8;border-color:#514758}
+@media (prefers-reduced-motion:reduce){.st-party.is-anim .st-party-gift{animation:none}}
+/* La carte passe avant tout le reste de l'accueil (l'accueil range ses blocs avec « order »), sur toute la largeur sur PC. */
+#pokdle-app #screen-config.hm-on>#starter-card,#screen-config.hm-on>#starter-card{order:-1!important;grid-column:1/-1;width:100%;box-sizing:border-box}
+/* Sur PC, la carte passe sous le Défi du jour, les étapes côte à côte. */
+@media (min-width:900px){
+  #screen-config.hm-on>#starter-card{display:grid;grid-template-columns:repeat(var(--st-n,3),minmax(0,1fr));column-gap:10px;align-items:stretch}
+  #screen-config.hm-on>#starter-card>:not(.st-step){grid-column:1/-1}
+  #screen-config.hm-on>#starter-card>.st-step{margin-top:4px}
+}
