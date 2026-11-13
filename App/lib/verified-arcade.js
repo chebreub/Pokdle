@@ -7,7 +7,8 @@ const guessGames = require('./verified-guess');
 const lastLetter = require('./last-letter');
 const rankThem = require('./rank-them');
 const weakSpots = require('./weak-spots');
-const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES, ...guessGames.MODES, ...lastLetter.MODES, ...rankThem.MODES, ...weakSpots.MODES]);
+const typeCombo = require('./type-combo');
+const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES, ...guessGames.MODES, ...lastLetter.MODES, ...rankThem.MODES, ...weakSpots.MODES, ...typeCombo.MODES]);
 const TTL = 24 * 60 * 60 * 1000;
 const fail = (code, status = 409) => Object.assign(new Error(code), {code, status});
 async function initVerifiedArcadeDb(db) {
@@ -25,7 +26,10 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   // 🔗 Dernière lettre (13/11/2026) : la chaîne, les tours et l'horloge restent sur le serveur (lib/last-letter.js).
   const letterGame = lastLetter.createLastLetter(catalog, randomInt, clock);
   const isLetter = s => lastLetter.MODES.includes(s.mode);
-  const expireAny = s => games.expire(s) || letterGame.expire(s);
+  // 🧬 Combo de types (13/11/2026) : les paires, les réponses, le chrono et le score restent sur le serveur (lib/type-combo.js).
+  const comboGame = typeCombo.createTypeCombo(catalog, randomInt, clock);
+  const isCombo = s => typeCombo.MODES.includes(s.mode);
+  const expireAny = s => games.expire(s) || letterGame.expire(s) || comboGame.expire(s);
   // 🔢 Classe-les (13/11/2026) : les 5 Pokémon, le critère et le bon ordre restent sur le serveur (lib/rank-them.js).
   const rankGame = rankThem.createRankThem(catalog, randomInt);
   // ⚡ Faiblesses éclair (13/11/2026) : les 10 Pokémon et leurs faiblesses restent sur le serveur (lib/weak-spots.js).
@@ -39,6 +43,8 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   function verifiedTimedEarning(s) {
     // Dernière lettre : une partie sans aucune bonne réponse ne rapporte rien.
     if (isLetter(s)) return Array.isArray(s.chain) && s.chain.some(c => c.by === 'me') ? {earned:letterGame.result(s)} : {};
+    // Combo de types : il faut au moins une paire trouvée.
+    if (isCombo(s)) return s.solved > 0 ? {earned:comboGame.result(s)} : {};
     if (s.mode === 'higher-lower-rush' && !(s.round > 0 || ['higher','lower'].includes(s.answer?.choice))) return {};
     return {earned:games.result(s)};
   }
@@ -97,6 +103,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   function view(s) {
     if (isLetter(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,...letterGame.view(s)};
+    if (isCombo(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,...comboGame.view(s)};
     if (isRank(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,...roundGameOf(s).view(s)};
     if (isGuess(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,
       ...(s.image ? {image:s.image} : {}),...(s.cry ? {cry:s.cry} : {}),...(s.clue ? {clue:s.clue} : {}),...guessView(s)};
@@ -130,6 +137,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       phase:'playing', score:body.mode === 'weight' && old?.phase === 'over' && !body.restart ? old.score : 0,
       lives:3, recent:[], startedAt:+clock(), answer:null};
     if (isLetter(s)) letterGame.init(s);
+    else if (isCombo(s)) comboGame.init(s);
     else if (isRank(s)) roundGameOf(s).init(s);
     else if (isAdvanced(s)) {
       games.init(s);
@@ -164,6 +172,14 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       if (body.round === s.round - 1 && mine && mine.id === Number(body.choice)) return {arcade:view(s), replayed:true};
       if (s.round !== body.round) throw fail('round_changed');
       letterGame.answer(s, body.choice); await save(c,who,s);
+      return {arcade:view(s)};
+    }
+    if (isCombo(s)) {
+      if (s.phase === 'over') return {arcade:view(s), replayed:true};
+      // Un bon nom rejoué par le réseau (la paire a déjà changé) ne compte pas deux fois.
+      if (body.round === s.round - 1 && s.last && s.last.round === body.round && s.last.text === body.choice) return {arcade:view(s), replayed:true};
+      if (s.round !== body.round) throw fail('round_changed');
+      comboGame.answer(s, body.choice); await save(c,who,s);
       return {arcade:view(s)};
     }
     if (s.round !== body.round) throw fail('round_changed');
@@ -210,6 +226,12 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
       if (s.round !== body.round) throw fail('round_changed');
       letterGame.pass(s); await save(c,who,s); return {arcade:view(s)};
     }
+    if (isCombo(s)) {
+      // « Passer » : une autre paire.
+      if (s.phase === 'over' || s.round === body.round + 1) return {arcade:view(s),replayed:true};
+      if (s.round !== body.round) throw fail('round_changed');
+      comboGame.pass(s); await save(c,who,s); return {arcade:view(s)};
+    }
     if (isAdvanced(s) && s.phase === 'over') return {arcade:view(s),replayed:true};
     if (isRank(s) && s.phase === 'over') return {arcade:view(s),replayed:true};
     if (s.mode !== 'shiny' && !isAdvanced(s) && !isRank(s)) throw fail('invalid_mode',400);
@@ -222,7 +244,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function finish(c,who,body) {
     const s = await current(c,who,body);
-    if (s.mode !== 'higher-lower-rush' && !isLetter(s)) throw fail('invalid_mode',400);
+    if (s.mode !== 'higher-lower-rush' && !isLetter(s) && !isCombo(s)) throw fail('invalid_mode',400);
     if (s.phase === 'over') return {arcade:view(s),replayed:true};
     if (!expireAny(s)) throw fail('round_wait');
     await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)};
