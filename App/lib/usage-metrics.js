@@ -44,6 +44,7 @@ const SOLO_CATALOG = Object.freeze({
   typecombo: {label:"Combo de types",group:"Arcade"},
   lastletter: {label:"Dernière lettre",group:"Arcade"},
   rankthem: {label:"Classe-les",group:"Arcade"},
+  weakspots: {label:"Faiblesses éclair",group:"Arcade"},
   emulator: {label:"Émulateur",group:"Autres"},
 });
 
@@ -85,6 +86,7 @@ const HISTORY_TO_LAUNCH = Object.freeze({
   typecombo: "typecombo",
   lastletter: "lastletter",
   rankthem: "rankthem",
+  weakspots: "weakspots",
   shiny: "shiny",
   challenge: "challenge",
 });

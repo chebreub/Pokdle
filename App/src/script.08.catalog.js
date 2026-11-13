@@ -7,7 +7,7 @@ var MODE_CATALOG_DIFFICULTY = Object.freeze({
   startDailyGame:'medium', openEggGame:'easy', startNormalGame:'medium', startSilhouetteGame:'medium', startPixelGame:'medium',
   startDescriptionMode:'hard', startCryGame:'hard', startMysteryStatGame:'hard', openOddOneOutMode:'medium', openShinyMode:'medium', openRankingMode:'easy', startWordleTraining:'medium', openQuiEstCeMode:'easy', openPetitBacMode:'medium',
   startQuizGame:'medium', startEvolutionChainGame:'easy', startPokedexOrderGame:'medium', openPokeConnectionsMode:'hard',
-  openTypeComboSolo:'hard', openLastLetterMode:'medium', openRankThemMode:'medium', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
+  openTypeComboSolo:'hard', openLastLetterMode:'medium', openRankThemMode:'medium', openWeakSpotsMode:'hard', startWeightBattle:'easy', openHigherLowerMode:'easy', openSpeedrunMode:'hard',
   startPartyMode:'medium', openDraftScoreAttackMode:'hard', openPartyRoomMode:'medium',
   openMultiplayerMode:'medium', openStatClashMode:'hard', openStatAuctionMode:'hard', openDefiAmiFromAllModes:'medium'
 });
@@ -33,6 +33,7 @@ var MODE_TILE_THEME = Object.freeze({
   startEvolutionChainGame:{ids:[130,129],tone:'#8FB2FF',ink:'#2F51B8',prop:'chain'},
   openLastLetterMode:{ids:[25,65],tone:'#B9A6F2',ink:'#4B2FA0',prop:'chain'},
   openRankThemMode:{ids:[143,6],tone:'#A8DCC9',ink:'#1F6B52',prop:'numbers'},
+  openWeakSpotsMode:{ids:[149],tone:'#9FC4F2',ink:'#1F4F8C',prop:'grid'},
   startPokedexOrderGame:{ids:[1],tone:'#9ADB7E',ink:'#2F7A1F',prop:'numbers'},
   openTypeComboSolo:{ids:[131],tone:'#8FDCD8',ink:'#1F6E6A',prop:'types',types:['water','ice']},
   startWeightBattle:{ids:[143,50],tone:'#E3C99A',ink:'#6B4E1E',prop:'balance'},

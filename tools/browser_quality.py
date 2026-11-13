@@ -284,7 +284,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==24,'Solo catalogue should list 24 games: '+str(tiles.count()))
+     expect(tiles.count()==25,'Solo catalogue should list 25 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
@@ -310,7 +310,7 @@ def main():
      labels=[t.strip() for t in chips.all_inner_texts()]
      expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Arcade') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
      chips.filter(has_text='Arcade').click()
-     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==15,'Jouer chip does not narrow the list')
+     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==16,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
      expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openTypeChartScreen"]\']').is_visible(),'Tools chip does not reach the type chart')
      chips.filter(has_text='Tous').click()

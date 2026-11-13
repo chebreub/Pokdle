@@ -15,6 +15,7 @@ var DISC_CANDIDATES = [
   ['openDraftScoreAttackMode', 'draft', 'Six choix pour une équipe de rêve : vise le meilleur total.'],
   ['openQuiEstCeMode', 'quiestce', 'Le vrai Qui est-ce ? en Pokémon : pose les bonnes questions.'],
   ['openPetitBacMode', 'petitbac', 'Une lettre, des catégories : remplis ta grille avant la fin.'],
+  ['openWeakSpotsMode', 'weakspots', 'Un Pokémon, 20 secondes : touche tous les types qui lui font mal.'],
   ['openRankThemMode', 'rankthem', '5 Pokémon à ranger : du plus rapide au plus lent, du plus lourd au plus léger…'],
   ['openLastLetterMode', 'lastletter', 'Contre le Bot : un Pokémon qui commence par la dernière lettre du précédent.'],
   ['openShinyMode', 'shiny', 'Shiny ou normal ? Trois vies pour ne pas te tromper.'],
