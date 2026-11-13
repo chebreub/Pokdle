@@ -1400,15 +1400,18 @@ function getPokemonCountForGeneration(gen, { includeAltForms = true } = {}) {
   return getPokemonUiList({ gens: [gen], includeAltForms }).length;
 }
 
+// 🌐 Lot 1b : les noms anglais et espagnols aussi (cherchés seulement quand le site n'est pas en français).
 const FULL_SEARCH_INDEX = getPokemonCatalog().map((pokemon) => ({
   pokemon,
   normName: norm(pokemon.name),
+  normAlt: typeof pokemonName === "function" ? [...new Set(["en", "es"].map((l) => norm(pokemonName(pokemon, l))))].filter((n) => n !== norm(pokemon.name)) : [],
 }));
 
 const POKEMON_BY_ID = new Map(getPokemonCatalog().map((p) => [p.id, p]));
 
 let activeSearchIndex = [];
 let activeNameMap = new Map(); // normalized name -> pokemon (active pool)
+let activeAltNameMap = new Map(); // 🌐 nom anglais ou espagnol normalisé -> pokemon (même pool)
 
 const guessCache = new Map();
 const challengeCache = new Map();

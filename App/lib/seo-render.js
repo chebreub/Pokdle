@@ -8,6 +8,8 @@ const { GAMES, GROUPS } = require('./seo-games');
 const { GUIDES, TYPE_CHART, TYPE_ICONS, PUBLISHED, GENERATIONS, STARTERS, LEGENDARIES, MYTHICALS } = require('./seo-guides');
 const { SITE_URL: SITE } = require('./site-move');
 const seoPokemon = require('./seo-pokemon');
+const seoPokemonI18n = require('./seo-pokemon-i18n');
+const seoGamesI18n = require('./seo-games-i18n');
 
 const SUPPORT_URL = 'https://ko-fi.com/chebreub';
 const ARTWORK = id => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + Number(id) + '.png';
@@ -105,20 +107,28 @@ function guideCardHtml(guide) {
   return '<li><a href="/guides/' + esc(guide.slug) + '"><img src="' + esc(ARTWORK(guide.sprite)) + '" alt="' + esc(pokemonName(guide.sprite)) + '" width="56" height="56" loading="lazy"><b>' + esc(guide.name) + '</b><small>' + esc(guide.short) + '</small></a></li>';
 }
 const guidesFor = (slug) => GUIDES.filter(guide => guide.games.includes(slug));
-function layout({ title, description, path, body, data, image = '/og-image.png', imageSize = [1200, 630] }) {
+// 🌐 Lot 6a : lang (fr par défaut) et alternates ({ fr, en, es } → balises hreflang) pour les pages Pokémon traduites.
+function layout({ title, description, path, body, data, image = '/og-image.png', imageSize = [1200, 630], lang = 'fr', alternates = null }) {
   const url = SITE + path;
+  const ui = lang === 'fr' ? null : seoPokemonI18n.UI[lang];
+  const hreflang = alternates ? Object.entries(alternates).map(([l, href]) => '<link rel="alternate" hreflang="' + l + '" href="' + esc(SITE + href) + '">\n').join('') + '<link rel="alternate" hreflang="x-default" href="' + esc(SITE + alternates.fr) + '">\n' : '';
   // A Pokémon page shows its official artwork (square) in link previews.
   const imageUrl = /^https?:\/\//.test(image) ? image : SITE + image;
-  return '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
-    '<title>' + esc(title) + '</title>\n<meta name="description" content="' + esc(description) + '">\n<link rel="canonical" href="' + esc(url) + '">\n' +
-    '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + esc(imageUrl) + '">\n<meta property="og:image:width" content="' + imageSize[0] + '">\n<meta property="og:image:height" content="' + imageSize[1] + '">\n<meta property="og:locale" content="fr_FR">\n<meta name="twitter:card" content="' + (imageSize[0] === imageSize[1] ? 'summary' : 'summary_large_image') + '">\n' +
+  return '<!doctype html>\n<html lang="' + lang + '">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+    '<title>' + esc(title) + '</title>\n<meta name="description" content="' + esc(description) + '">\n<link rel="canonical" href="' + esc(url) + '">\n' + hreflang +
+    '<meta property="og:type" content="website">\n<meta property="og:site_name" content="Pokédle">\n<meta property="og:title" content="' + esc(title) + '">\n<meta property="og:description" content="' + esc(description) + '">\n<meta property="og:url" content="' + esc(url) + '">\n<meta property="og:image" content="' + esc(imageUrl) + '">\n<meta property="og:image:width" content="' + imageSize[0] + '">\n<meta property="og:image:height" content="' + imageSize[1] + '">\n<meta property="og:locale" content="' + (ui ? ui.locale : 'fr_FR') + '">\n<meta name="twitter:card" content="' + (imageSize[0] === imageSize[1] ? 'summary' : 'summary_large_image') + '">\n' +
     '<meta name="theme-color" content="#FFF8EF">\n' + ICON_LINKS + FONTS + '<style>' + STYLE + '</style>\n' +
     '<script type="application/ld+json">' + jsonLd(data) + '</script>\n</head>\n<body>\n' +
-    '<header class="top"><a class="brand" href="/">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Jeux</a><a href="/pokemon">Pokémon</a><a href="/guides">Guides</a><a href="/">Jouer</a></nav></header>\n' +
+    (ui
+      ? '<header class="top"><a class="brand" href="/?lang=' + lang + '">Pokédle</a><nav aria-label="Navigation"><a href="' + seoGamesI18n.PATHS[lang] + '">' + seoGamesI18n.HUB[lang].name + '</a><a href="/' + lang + '/pokemon">' + ui.nav[0] + '</a><a href="/?lang=' + lang + '">' + ui.nav[1] + '</a></nav></header>\n' +
+        '<main>\n' + body + '\n</main>\n' +
+        '<footer><a class="support" href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">' + ui.support + '</a><p>' + esc(ui.footer) + '</p>' +
+        '<p><a href="/?lang=' + lang + '">' + ui.footerLinks[0] + '</a> · <a href="/' + lang + '/pokemon">' + ui.footerLinks[1] + '</a> · <a href="' + esc(alternates ? alternates.fr : '/') + '" hreflang="fr">' + ui.footerLinks[2] + '</a></p></footer>\n</body>\n</html>\n'
+      : '<header class="top"><a class="brand" href="/">Pokédle</a><nav aria-label="Navigation"><a href="/jeux">Jeux</a><a href="/pokemon">Pokémon</a><a href="/guides">Guides</a><a href="/">Jouer</a></nav></header>\n' +
     '<main>\n' + body + '\n</main>\n' +
     '<footer><a class="support" href="' + SUPPORT_URL + '" target="_blank" rel="noopener noreferrer">☕ Soutenir Pokédle</a>' +
     '<p>Pokédle est un projet de fan gratuit, sans publicité, non affilié à Nintendo, Game Freak ou The Pokémon Company. Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.</p>' +
-    '<p><a href="/">Accueil</a> · <a href="/jeux">Tous les jeux</a> · <a href="/pokemon">Les 1025 Pokémon</a> · <a href="/guides">Guides</a> · <a href="/a-propos">À propos</a> · <a href="/confidentialite">Confidentialité</a></p></footer>\n</body>\n</html>\n';
+    '<p><a href="/">Accueil</a> · <a href="/jeux">Tous les jeux</a> · <a href="/pokemon">Les 1025 Pokémon</a> · <a href="/guides">Guides</a> · <a href="/a-propos">À propos</a> · <a href="/confidentialite">Confidentialité</a></p></footer>\n</body>\n</html>\n');
 }
 function breadcrumb(items) {
   return { '@type': 'BreadcrumbList', itemListElement: items.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: SITE + path })) };
@@ -145,7 +155,7 @@ function renderGamePage(game) {
     ...(game.faq?.length ? [{ '@type': 'FAQPage', mainEntity: game.faq.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) }] : []),
   ] };
   // Each game page shows its own link preview (tools/og-game-images.js builds them).
-  return layout({ title: game.title, description: game.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg' });
+  return layout({ title: game.title, description: game.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg', alternates: seoGamesI18n.alternates(game.slug) });
 }
 function renderHubPage() {
   const body =
@@ -308,7 +318,7 @@ function renderPokemonPage(id) {
   return layout({
     title: f.name + ' (n° ' + f.id + ') : type ' + f.types.join('/') + ', faiblesses, taille et poids · Pokédle',
     description: f.name + ', Pokémon n° ' + f.id + ' de type ' + f.types.join(' et ') + ' (' + f.gen + ord + ' génération' + (f.region ? ', ' + f.region : '') + ').' + (weakTitle.length ? ' Faible contre ' + weakTitle.join(', ') + '.' : '') + ' Taille, poids, stats et indices pour le deviner.',
-    path: f.path, body, data, image: ARTWORK(f.id), imageSize: [475, 475],
+    path: f.path, body, data, image: ARTWORK(f.id), imageSize: [475, 475], alternates: seoPokemonI18n.alternates(f.id),
   });
 }
 function renderPokemonHub() {
@@ -325,11 +335,98 @@ function renderPokemonHub() {
     { '@type': 'CollectionPage', name: 'Les 1025 Pokémon · Pokédle', url: SITE + '/pokemon', inLanguage: 'fr' },
     breadcrumb([['Pokédle', '/'], ['Pokémon', '/pokemon']]),
   ] };
-  return layout({ title: 'Liste des 1025 Pokémon par génération : types et faiblesses · Pokédle', description: 'La liste des 1025 Pokémon de la 1re à la 9e génération, avec une fiche par Pokémon : types, faiblesses et résistances, taille, poids, stats et indices du Pokémon du jour.', path: '/pokemon', body, data });
+  return layout({ title: 'Liste des 1025 Pokémon par génération : types et faiblesses · Pokédle', description: 'La liste des 1025 Pokémon de la 1re à la 9e génération, avec une fiche par Pokémon : types, faiblesses et résistances, taille, poids, stats et indices du Pokémon du jour.', path: '/pokemon', body, data, alternates: { fr: '/pokemon', en: '/en/pokemon', es: '/es/pokemon' } });
+}
+// 🌐 Lot 6a : la même page en anglais ou en espagnol (mêmes faits, mots traduits, liens entre les langues).
+function renderPokemonPageI18n(id, lang) {
+  const p = seoPokemon.BASE[Number(id) - 1];
+  if (!p || !seoPokemonI18n.UI[lang]) return null;
+  const I = seoPokemonI18n, ui = I.UI[lang], f = I.facts(p, lang);
+  const chip = (frType) => '<span class="type"><img src="/img/type-icons/' + esc(TYPE_ICONS[frType]) + '.svg" alt="" width="18" height="18">' + esc(I.type(frType, lang)) + '</span>';
+  const link = (o) => '<a href="' + esc(I.pokemonPath(o.id, lang)) + '">' + esc(I.nameOf(o, lang)) + '</a>';
+  const tags = [f.legendary && ui.tags[0], f.mythical && ui.tags[1], f.starter && ui.tags[2]].filter(Boolean);
+  const factRows = [[ui.facts[0], ui.no + f.id], [ui.facts[1], String(f.gen) + (f.region ? ' · ' + f.region : '')], [ui.facts[2], I.num(f.height, lang) + ' m'], [ui.facts[3], I.num(f.weight, lang) + ' kg'],
+    [ui.facts[4], f.color], [ui.facts[5], f.habitat], [ui.facts[6], f.stage], [ui.facts[7], f.firstGames + ' (' + f.year + ')']].filter(([, v]) => v);
+  const weakRow = (label, list) => list.length ? '<div><b>' + label + '</b>' + list.map(chip).join('') + '</div>' : '';
+  const statsHtml = f.stats ? '<div class="panel stats">' + f.stats.map(st => '<div><span>' + esc(st.label) + '</span><b>' + st.value + '</b><i style="width:' + Math.max(4, Math.round(st.value / 255 * 100)) + '%"></i></div>').join('') +
+    '<div class="total"><span>' + ui.total + '</span><b>' + f.total + '</b><span></span></div></div>' : '';
+  const faq = I.faq(f, lang), intro = I.intro(f, lang);
+  const body =
+    '<p class="crumbs"><a href="/?lang=' + lang + '">Pokédle</a> › <a href="/' + lang + '/pokemon">Pokémon</a> › ' + esc(f.name) + '</p>\n' +
+    '<section class="hero"><div><p class="kicker">' + esc(ui.kicker(f)) + '</p><h1>' + esc(f.name) + '</h1><p class="chips">' + f.frTypes.map(chip).join('') + '</p>' +
+      (tags.length ? '<p class="tags">' + tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</p>' : '') +
+      '<p class="lead">' + esc(intro) + '</p>' +
+      '<div class="ctas"><a class="cta" href="/?lang=' + lang + '">' + ui.play + '</a><a class="cta alt" href="/?lang=' + lang + '&amp;pokedex=' + f.id + '">' + ui.dex + '</a></div>' +
+      '<span class="free">' + ui.free + '</span></div>' +
+    '<img src="' + esc(ARTWORK(f.id)) + '" alt="' + esc(f.name + ui.art) + '" width="180" height="180"></section>\n' +
+    '<h2>' + esc(ui.sheet(f.name)) + '</h2>\n<ul class="facts">' + factRows.map(([k, v]) => '<li><small>' + esc(k) + '</small><b>' + esc(v) + '</b></li>').join('') + '</ul>\n' +
+    '<h2>' + esc(ui.weakTitle(f.name)) + '</h2>\n<p>' + esc(ui.weakLead(f.name, f.types.join(' / '))) + '</p>\n' +
+    '<div class="weak">' + weakRow(ui.weakRows[0], f.weakFr.x4) + weakRow(ui.weakRows[1], f.weakFr.x2) + weakRow(ui.weakRows[2], f.weakFr.half) + weakRow(ui.weakRows[3], f.weakFr.quarter) + weakRow(ui.weakRows[4], f.weakFr.none) + '</div>\n' +
+    (statsHtml ? '<h2>' + ui.stats + '</h2>\n' + statsHtml + '\n' : '') +
+    '<h2>' + ui.guessTitle + '</h2>\n<p>' + esc(ui.guessLead(f.name)) + '</p>\n' +
+    '<ul class="facts">' + I.dailyClues(f, lang).map(([k, v]) => '<li><small>' + esc(k) + '</small><b>' + esc(v) + '</b></li>').join('') + '</ul>\n' +
+    '<p class="ctas" style="margin-top:14px"><a class="cta alt" href="/?lang=' + lang + '&amp;jeu=pokemon-pixelise">' + ui.games[0] + '</a><a class="cta alt" href="/?lang=' + lang + '&amp;jeu=devine-le-pokemon">' + ui.games[1] + '</a><a class="cta alt" href="/?lang=' + lang + '&amp;jeu=cri-pokemon">' + ui.games[2] + '</a></p>\n' +
+    '<h2>' + ui.faq + '</h2>\n<div class="panel faq">' + faq.map(([q, r]) => '<h3>' + esc(q) + '</h3><p>' + esc(r) + '</p>').join('') + '</div>\n' +
+    '<h2>' + esc(ui.sameType(f.types[0])) + '</h2>\n<ul class="mons">' + f.sameType.map(o => '<li><a href="' + esc(I.pokemonPath(o.id, lang)) + '">' + monImg(o.id, 72) + '</a>' + link(o) + '<small>' + ui.no + o.id + '</small></li>').join('') + '</ul>\n' +
+    '<p class="pager"><span>' + (f.prev ? '← ' + link(f.prev) : '') + '</span><a href="/' + lang + '/pokemon#gen-' + f.gen + '">' + esc(ui.genLink(f.gen)) + '</a><span>' + (f.next ? link(f.next) + ' →' : '') + '</span></p>';
+  const data = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', name: ui.pageName(f.name), url: SITE + f.path, inLanguage: lang, primaryImageOfPage: ARTWORK(f.id), description: intro },
+    breadcrumb([['Pokédle', '/?lang=' + lang], ['Pokémon', '/' + lang + '/pokemon'], [f.name, f.path]]),
+    { '@type': 'FAQPage', mainEntity: faq.map(([q, r]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: r } })) },
+  ] };
+  return layout({ title: ui.title(f), description: ui.description(f, f.weak.x4.concat(f.weak.x2).slice(0, 3)), path: f.path, body, data, image: ARTWORK(f.id), imageSize: [475, 475], lang, alternates: I.alternates(f.id) });
+}
+function renderPokemonHubI18n(lang) {
+  const I = seoPokemonI18n, ui = I.UI[lang];
+  if (!ui) return null;
+  const gens = GENERATIONS.map(g => {
+    const list = seoPokemon.BASE.filter(p => p.gen === g.gen);
+    return '<h2 id="gen-' + g.gen + '">' + esc(ui.hubGen(g.gen, I.region(g.region, lang), list.length)) + '</h2>\n' +
+      '<ul class="alpha">' + list.map(p => '<li><small>' + String(p.id).padStart(4, '0') + '</small> <a href="' + esc(I.pokemonPath(p.id, lang)) + '">' + esc(I.nameOf(p, lang)) + '</a></li>').join('') + '</ul>';
+  }).join('\n');
+  const body = '<p class="crumbs"><a href="/?lang=' + lang + '">Pokédle</a> › Pokémon</p>\n<h1>' + ui.hubH1 + '</h1>\n<p class="lead">' + esc(ui.hubLead) + '</p>\n' +
+    '<p class="ctas"><a class="cta" href="/?lang=' + lang + '">' + ui.play + '</a></p>\n' + gens;
+  const data = { '@context': 'https://schema.org', '@graph': [{ '@type': 'CollectionPage', name: ui.hubH1 + ' · Pokédle', url: SITE + '/' + lang + '/pokemon', inLanguage: lang }, breadcrumb([['Pokédle', '/?lang=' + lang], ['Pokémon', '/' + lang + '/pokemon']])] };
+  return layout({ title: ui.hubTitle, description: ui.hubDescription, path: '/' + lang + '/pokemon', body, data, lang, alternates: { fr: '/pokemon', en: '/en/pokemon', es: '/es/pokemon' } });
+}
+// 🌐 Lot 6b : les pages de jeux traduites (5 pour l'instant) et leur liste, en anglais et en espagnol.
+function renderGamePageI18n(frSlug, lang) {
+  const game = BY_SLUG.get(frSlug), page = seoGamesI18n.PAGES[frSlug] && seoGamesI18n.PAGES[frSlug][lang], H = seoGamesI18n.HUB[lang];
+  if (!game || !page || !H) return null;
+  const path = seoGamesI18n.gamePath(frSlug, lang);
+  const others = Object.keys(seoGamesI18n.PAGES).filter(s => s !== frSlug);
+  const card = (s) => { const g = BY_SLUG.get(s), t = seoGamesI18n.PAGES[s][lang]; return '<li><a href="' + esc(seoGamesI18n.gamePath(s, lang)) + '"><img src="' + esc(ARTWORK(g.sprite)) + '" alt="" width="56" height="56" loading="lazy"><b>' + esc(t.name) + '</b><small>' + esc(t.short) + '</small></a></li>'; };
+  const body =
+    '<p class="crumbs"><a href="/?lang=' + lang + '">Pokédle</a> › <a href="' + seoGamesI18n.PATHS[lang] + '">' + H.name + '</a> › ' + esc(page.name) + '</p>\n' +
+    '<section class="hero"><div><p class="kicker">' + esc(H.kicker) + '</p><h1>' + esc(page.h1) + '</h1><p class="lead">' + esc(page.lead) + '</p>' +
+    '<a class="cta" href="/?lang=' + lang + '&amp;jeu=' + esc(frSlug) + '">▶ ' + esc(page.cta || page.name) + '</a><span class="free">' + H.free + '</span></div>' +
+    '<img src="' + esc(ARTWORK(game.sprite)) + '" alt="' + esc(H.illustration.replace(/^, /, '') + page.name) + '" width="180" height="180"></section>\n' +
+    '<h2>' + H.how + '</h2>\n<div class="panel"><ol>' + page.steps.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol></div>\n' +
+    '<h2>' + H.good + '</h2>\n<div class="panel"><ul>' + page.facts.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>\n' +
+    (page.tips.length ? '<h2>' + H.tips + '</h2>\n<div class="panel"><ul>' + page.tips.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>\n' : '') +
+    (page.faq.length ? '<h2>' + H.faq + '</h2>\n<div class="panel faq">' + page.faq.map(([q, a]) => '<h3>' + esc(q) + '</h3><p>' + esc(a) + '</p>').join('') + '</div>\n' : '') +
+    '<h2>' + H.others + '</h2>\n<ul class="grid">' + others.map(card).join('') + '</ul>\n<p><a href="/' + lang + '/pokemon">' + H.all + ' →</a></p>';
+  const data = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebApplication', name: page.name + ' · Pokédle', url: SITE + path, description: page.description, applicationCategory: 'GameApplication', operatingSystem: 'Web browser', inLanguage: lang, isAccessibleForFree: true, offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' } },
+    breadcrumb([['Pokédle', '/?lang=' + lang], [H.name, seoGamesI18n.PATHS[lang]], [page.name, path]]),
+    ...(page.faq.length ? [{ '@type': 'FAQPage', mainEntity: page.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }] : []),
+  ] };
+  return layout({ title: page.title, description: page.description, path, body, data, image: game.ogImage || '/img/og/' + game.slug + '.jpg', lang, alternates: seoGamesI18n.alternates(frSlug) });
+}
+function renderGamesHubI18n(lang) {
+  const H = seoGamesI18n.HUB[lang];
+  if (!H) return null;
+  const cards = Object.keys(seoGamesI18n.PAGES).map(s => { const g = BY_SLUG.get(s), t = seoGamesI18n.PAGES[s][lang]; return '<li><a href="' + esc(seoGamesI18n.gamePath(s, lang)) + '"><img src="' + esc(ARTWORK(g.sprite)) + '" alt="" width="56" height="56" loading="lazy"><b>' + esc(t.name) + '</b><small>' + esc(t.short) + '</small></a></li>'; }).join('');
+  const body = '<p class="crumbs"><a href="/?lang=' + lang + '">Pokédle</a> › ' + H.name + '</p>\n<h1>' + esc(H.h1) + '</h1>\n<p class="lead">' + esc(H.lead) + '</p>\n<ul class="grid">' + cards + '</ul>\n' +
+    '<p><a href="/jeux" hreflang="fr">' + H.more + ' →</a> · <a href="/' + lang + '/pokemon">' + H.all + ' →</a></p>';
+  const data = { '@context': 'https://schema.org', '@graph': [{ '@type': 'CollectionPage', name: H.h1, url: SITE + seoGamesI18n.PATHS[lang], inLanguage: lang }, breadcrumb([['Pokédle', '/?lang=' + lang], [H.name, seoGamesI18n.PATHS[lang]]])] };
+  return layout({ title: H.title, description: H.description, path: seoGamesI18n.PATHS[lang], body, data, lang, alternates: { fr: '/jeux', en: seoGamesI18n.PATHS.en, es: seoGamesI18n.PATHS.es } });
 }
 function sitemapXml() {
   const urls = [['/', 'daily', '1.0'], ['/jeux', 'weekly', '0.9'], ...GAMES.map(game => ['/jeux/' + game.slug, 'monthly', game.group === 'daily' ? '0.8' : '0.7']), ['/guides', 'weekly', '0.6'], ...GUIDES.map(guide => ['/guides/' + guide.slug, 'monthly', '0.7']), ['/a-propos', 'yearly', '0.3'], ['/confidentialite', 'yearly', '0.2'],
-    ['/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemon.pokemonPath(p.id), 'monthly', '0.5'])];
+    ['/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemon.pokemonPath(p.id), 'monthly', '0.5']),
+    ...seoPokemonI18n.LANGS.flatMap(lang => [['/' + lang + '/pokemon', 'monthly', '0.6'], ...seoPokemon.BASE.map(p => [seoPokemonI18n.pokemonPath(p.id, lang), 'monthly', '0.5'])]),
+    ...seoGamesI18n.LANGS.flatMap(lang => [[seoGamesI18n.PATHS[lang], 'weekly', '0.8'], ...Object.keys(seoGamesI18n.PAGES).map(s => [seoGamesI18n.gamePath(s, lang), 'monthly', '0.8'])])];
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.map(([path, freq, priority]) => '  <url>\n    <loc>' + esc(SITE + path) + '</loc>\n    <changefreq>' + freq + '</changefreq>\n    <priority>' + priority + '</priority>\n  </url>').join('\n') + '\n</urlset>\n';
 }
@@ -367,10 +464,40 @@ function mountSeoPages(app, options = {}) {
     }
     send(res, pokemonPages.get(p.id));
   });
+  // 🌐 Lot 6b : /en/games et /es/juegos (5 pages de jeux traduites + la liste).
+  for (const lang of seoGamesI18n.LANGS) {
+    const hubPage = renderGamesHubI18n(lang), base = seoGamesI18n.PATHS[lang];
+    const gamePages = new Map(Object.keys(seoGamesI18n.PAGES).map(s => [seoGamesI18n.PAGES[s][lang].slug, renderGamePageI18n(s, lang)]));
+    app.get([base, base + '/'], (_req, res) => send(res, hubPage));
+    app.get(base + '/:slug', (req, res) => {
+      const slug = String(req.params.slug || '').toLowerCase();
+      if (gamePages.has(slug)) return send(res, gamePages.get(slug));
+      if (seoGamesI18n.PAGES[slug]) return res.redirect(301, seoGamesI18n.gamePath(slug, lang));
+      res.redirect(302, '/jeux/' + (BY_SLUG.has(slug) ? slug : ''));
+    });
+  }
+  // 🌐 Lot 6a : /en/pokemon et /es/pokemon, une page par Pokémon et par langue, rendue à la demande et gardée.
+  const i18nPages = new Map(), i18nHubs = new Map();
+  for (const lang of seoPokemonI18n.LANGS) {
+    app.get(['/' + lang + '/pokemon', '/' + lang + '/pokemon/'], (_req, res) => {
+      if (!i18nHubs.has(lang)) i18nHubs.set(lang, renderPokemonHubI18n(lang));
+      send(res, i18nHubs.get(lang));
+    });
+    app.get('/' + lang + '/pokemon/:slug', (req, res, next) => {
+      const slug = String(req.params.slug || '').toLowerCase();
+      const p = seoPokemonI18n.BY_SLUG[lang].get(slug) || seoPokemon.BY_SLUG.get(slug) || (/^\d{1,4}$/.test(slug) ? seoPokemon.BASE[Number(slug) - 1] : null);
+      if (!p) return next();
+      const canonical = seoPokemonI18n.pokemonPath(p.id, lang);
+      if (req.path !== canonical) return res.redirect(301, canonical);
+      const key = lang + ':' + p.id;
+      if (!i18nPages.has(key)) i18nPages.set(key, renderPokemonPageI18n(p.id, lang));
+      send(res, i18nPages.get(key));
+    });
+  }
   // The English addresses assistants and scanners try first.
   app.get('/about', (_req, res) => res.redirect(301, '/a-propos'));
   app.get('/contact', (_req, res) => res.redirect(301, '/a-propos#contact'));
   app.get('/privacy', (_req, res) => res.redirect(301, '/confidentialite'));
   app.get('/sitemap.xml', (_req, res) => { res.set('Cache-Control', 'public, max-age=86400'); res.type('application/xml').send(sitemap); });
 }
-module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, renderGuidePage, renderGuidesHub, renderPokemonPage, renderPokemonHub, sitemapXml, mountSeoPages };
+module.exports = { SITE, renderGamePage, renderHubPage, renderAboutPage, renderGuidePage, renderGuidesHub, renderPokemonPage, renderPokemonHub, renderPokemonPageI18n, renderPokemonHubI18n, renderGamePageI18n, renderGamesHubI18n, sitemapXml, mountSeoPages };

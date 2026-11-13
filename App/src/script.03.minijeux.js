@@ -2722,6 +2722,7 @@ function rebuildActiveSearchIndex() {
 
   activeSearchIndex = [];
   activeNameMap = new Map();
+  activeAltNameMap = new Map();
 
   for (const entry of FULL_SEARCH_INDEX) {
     if (!activeIds.has(entry.pokemon.id)) continue;
@@ -2729,6 +2730,7 @@ function rebuildActiveSearchIndex() {
     if (!activeNameMap.has(entry.normName)) {
       activeNameMap.set(entry.normName, entry.pokemon);
     }
+    for (const alt of entry.normAlt || []) if (!activeAltNameMap.has(alt)) activeAltNameMap.set(alt, entry.pokemon);
   }
 
   guessCache.clear();
@@ -2743,8 +2745,10 @@ function searchPokemonFast(qNorm, indexEntries, cache, excludedNames) {
     const source = parent || indexEntries;
 
     baseEntries = [];
+    // 🌐 En anglais ou en espagnol, le nom dans ces langues est aussi cherché (« Gholdengo » trouve Gromago).
+    const alt = typeof getLang === "function" && getLang() !== "fr";
     for (const entry of source) {
-      if (entry.normName.includes(qNorm)) {
+      if (entry.normName.includes(qNorm) || (alt && entry.normAlt && entry.normAlt.some((n) => n.includes(qNorm)))) {
         baseEntries.push(entry);
       }
     }
