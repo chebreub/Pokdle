@@ -3155,3 +3155,43 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 @media (prefers-reduced-motion:reduce){#screen-last-letter .ll-field input.is-wrong{animation:none}}
 #pokdle-app.theme-dark #screen-last-letter :is(.ll-bub,.ll-pill,.ll-field input,.ll-ac,.ll-ac button){background:#2c283c;color:#F3EEF8;border-color:#514758}
 #pokdle-app.theme-dark #screen-last-letter .ll-bub.is-me{background:#2E3A66;border-color:#4A5A99}
+
+/* 🔢 Classe-les (13/11/2026, maquette validée). */
+#screen-rank-them .rt-playing .rt-intro{display:none}
+#screen-rank-them .rt-status{text-align:center;color:var(--ui-muted,#6b6472);font-weight:700;margin:18px 0}
+#screen-rank-them .rt-meta{display:flex;justify-content:space-between;gap:8px;margin:2px 0 8px}
+#screen-rank-them .rt-pill{background:#fff;border:1px solid #E6DCCD;border-radius:999px;padding:4px 12px;font-weight:900;font-size:.88rem}
+#screen-rank-them .rt-dots{display:flex;gap:4px;margin-bottom:10px}
+#screen-rank-them .rt-dots i{flex:1;height:7px;border-radius:9px;background:#E8DFD1}
+#screen-rank-them .rt-dots i.is-cur{background:#4069E0}
+#screen-rank-them .rt-dots i.is-full{background:#3BAA63}
+#screen-rank-them .rt-dots i.is-good{background:#9BD3AC}
+#screen-rank-them .rt-dots i.is-low{background:#C9C2BA}
+#screen-rank-them .rt-crit{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#2E2A33;color:#fff;border-radius:16px;padding:11px 14px;margin-bottom:10px}
+#screen-rank-them .rt-crit b{font-family:Fredoka,Nunito,sans-serif;font-size:1.08rem;font-weight:600}
+#screen-rank-them .rt-crit small{color:#CFC6DA;font-size:.76rem;text-align:right}
+#screen-rank-them .rt-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;touch-action:none}
+#screen-rank-them .rt-list.is-revealed{touch-action:auto}
+#screen-rank-them .rt-card{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #E6DCCD;border-radius:16px;padding:4px 8px;font-weight:800;cursor:grab;user-select:none;-webkit-user-select:none;transition:transform .15s ease}
+#screen-rank-them .rt-card.is-drag{transition:none;cursor:grabbing;box-shadow:0 10px 26px rgba(46,42,51,.22);border-color:#4069E0;position:relative;z-index:3}
+#screen-rank-them .rt-list.is-revealed .rt-card{cursor:default}
+#screen-rank-them .rt-n{flex:none;width:26px;height:26px;border-radius:50%;background:#2E2A33;color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:900}
+#screen-rank-them .rt-card img{width:52px;height:52px;object-fit:contain;flex:none;pointer-events:none}
+#screen-rank-them .rt-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#screen-rank-them .rt-move{display:flex;gap:4px}
+#screen-rank-them .rt-move button{width:38px;height:38px;border-radius:12px;border:1px solid #E6DCCD;background:#FFF8EF;color:#2E2A33;font-size:.85rem;cursor:pointer}
+#screen-rank-them .rt-move button:disabled{opacity:.3;cursor:default}
+#screen-rank-them .rt-val{flex:none;font-size:.85rem;background:#fff;border:1px solid #E6DCCD;border-radius:999px;padding:2px 9px}
+#screen-rank-them .rt-card.is-ok{border-color:#3BAA63;background:#EAF7EF}
+#screen-rank-them .rt-card.is-ko{border-color:#C9C2BA;background:repeating-linear-gradient(135deg,#F6F1EA 0 8px,#EFE8DE 8px 16px)}
+#screen-rank-them .rt-go{display:block;width:100%;margin-top:12px;min-height:48px}
+#screen-rank-them .rt-res{margin:12px 0 0;background:#F2EEEA;border-radius:14px;padding:9px 12px;font-size:.92rem}
+#screen-rank-them .rt-res.is-full{background:#EAF7EF;color:#1E6B35}
+#screen-rank-them .rt-over{text-align:center;margin-top:12px}
+#screen-rank-them .rt-over h3{margin:4px 0}
+#screen-rank-them .rt-final{font-family:Fredoka,Nunito,sans-serif;font-size:3rem;font-weight:700;color:#1F6B52;line-height:1.1}
+#screen-rank-them .rt-final small{font-size:1.2rem;color:var(--ui-muted,#6b6472)}
+#screen-rank-them .rt-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+@media (prefers-reduced-motion:reduce){#screen-rank-them .rt-card{transition:none}}
+#pokdle-app.theme-dark #screen-rank-them :is(.rt-card,.rt-pill,.rt-val,.rt-move button){background:#2c283c;color:#F3EEF8;border-color:#514758}
+#pokdle-app.theme-dark #screen-rank-them .rt-card.is-ok{background:#1F3B2A;border-color:#3BAA63}
