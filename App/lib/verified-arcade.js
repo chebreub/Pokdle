@@ -4,7 +4,8 @@
 const crypto = require('node:crypto');
 const advanced = require('./quiz-higher-lower');
 const guessGames = require('./verified-guess');
-const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES, ...guessGames.MODES]);
+const lastLetter = require('./last-letter');
+const MODES = Object.freeze(['weight', 'shiny', ...advanced.MODES, ...guessGames.MODES, ...lastLetter.MODES]);
 const TTL = 24 * 60 * 60 * 1000;
 const fail = (code, status = 409) => Object.assign(new Error(code), {code, status});
 async function initVerifiedArcadeDb(db) {
@@ -19,10 +20,16 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   // Pokémon pixelisé et Zoom progressif : le mystère reste sur le serveur (lib/verified-guess.js).
   const guessing = guessGames.createGuessGames(catalog, randomInt);
   const isGuess = s => guessGames.MODES.includes(s.mode);
+  // 🔗 Dernière lettre (13/11/2026) : la chaîne, les tours et l'horloge restent sur le serveur (lib/last-letter.js).
+  const letterGame = lastLetter.createLastLetter(catalog, randomInt, clock);
+  const isLetter = s => lastLetter.MODES.includes(s.mode);
+  const expireAny = s => games.expire(s) || letterGame.expire(s);
   // ECO-06: a timed run that never received an accepted answer is not a
   // completed play eligible for Balls or coins. No new saved state needed:
   // round > 0 proves that a prior answer was followed by next().
   function verifiedTimedEarning(s) {
+    // Dernière lettre : une partie sans aucune bonne réponse ne rapporte rien.
+    if (isLetter(s)) return Array.isArray(s.chain) && s.chain.some(c => c.by === 'me') ? {earned:letterGame.result(s)} : {};
     if (s.mode === 'higher-lower-rush' && !(s.round > 0 || ['higher','lower'].includes(s.answer?.choice))) return {};
     return {earned:games.result(s)};
   }
@@ -80,6 +87,7 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     return v;
   }
   function view(s) {
+    if (isLetter(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,...letterGame.view(s)};
     if (isGuess(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,
       ...(s.image ? {image:s.image} : {}),...(s.cry ? {cry:s.cry} : {}),...(s.clue ? {clue:s.clue} : {}),...guessView(s)};
     if (isAdvanced(s)) return {mode:s.mode,sessionId:s.id,round:s.round,phase:s.phase,score:s.score,answer:s.answer,...games.view(s)};
@@ -103,15 +111,16 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
     if (!Array.isArray(gens) || !gens.length || gens.length > 9 || gens.some(g => !Number.isInteger(g) || g < 1 || g > 9)) throw fail('invalid_generations',400);
     if (body.restart !== undefined && typeof body.restart !== 'boolean') throw fail('invalid_action',400);
     const old = await read(c, who, body.mode);
-    if (old && !body.restart && old.startedAt + TTL > +clock() && games.expire(old)) {
+    if (old && !body.restart && old.startedAt + TTL > +clock() && expireAny(old)) {
       await save(c,who,old); return {arcade:view(old),...verifiedTimedEarning(old)};
     }
-    const sameGens = (body.mode !== 'weight' && !guessGames.MODES.includes(body.mode)) || JSON.stringify([...new Set(gens)].sort()) === JSON.stringify([...(old?.gens || [])].sort());
+    const sameGens = (body.mode !== 'weight' && !guessGames.MODES.includes(body.mode) && !lastLetter.MODES.includes(body.mode)) || JSON.stringify([...new Set(gens)].sort()) === JSON.stringify([...(old?.gens || [])].sort());
     if (old && old.startedAt + TTL > +clock() && (old.startId === body.startId || (!body.restart && sameGens && old.phase !== 'over'))) return {arcade:view(old)};
     const s = {id:crypto.randomUUID(), startId:body.startId, mode:body.mode, gens:[...new Set(gens)], round:0,
       phase:'playing', score:body.mode === 'weight' && old?.phase === 'over' && !body.restart ? old.score : 0,
       lives:3, recent:[], startedAt:+clock(), answer:null};
-    if (isAdvanced(s)) {
+    if (isLetter(s)) letterGame.init(s);
+    else if (isAdvanced(s)) {
       games.init(s);
       if (s.mode === 'quiz') for (const q of s.questions) if (Array.isArray(q.artIds))
         q.art = q.artIds.map(id => '/api/arcade/art/' + imageToken(who, {id, guess:true, quiz:true}, s.startedAt + TTL));
@@ -136,7 +145,16 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function answer(c,who,body) {
     const s = await current(c,who,body);
-    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)}; }
+    if (expireAny(s)) { await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)}; }
+    if (isLetter(s)) {
+      if (s.phase === 'over') return {arcade:view(s), replayed:true};
+      // Une réponse rejouée par le réseau après avoir été acceptée ne compte pas deux fois.
+      const mine = s.chain.filter(x => x.by === 'me').pop();
+      if (body.round === s.round - 1 && mine && mine.id === Number(body.choice)) return {arcade:view(s), replayed:true};
+      if (s.round !== body.round) throw fail('round_changed');
+      letterGame.answer(s, body.choice); await save(c,who,s);
+      return {arcade:view(s)};
+    }
     if (s.round !== body.round) throw fail('round_changed');
     if (isGuess(s)) {
       // Un essai rejoué (réseau) ou un nom déjà proposé ne compte pas deux fois.
@@ -163,7 +181,13 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function next(c,who,body) {
     const s = await current(c,who,body);
-    if (games.expire(s)) { await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)}; }
+    if (expireAny(s)) { await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)}; }
+    if (isLetter(s)) {
+      // « Changer de lettre ».
+      if (s.phase === 'over' || s.round === body.round + 1) return {arcade:view(s),replayed:true};
+      if (s.round !== body.round) throw fail('round_changed');
+      letterGame.pass(s); await save(c,who,s); return {arcade:view(s)};
+    }
     if (isAdvanced(s) && s.phase === 'over') return {arcade:view(s),replayed:true};
     if (s.mode !== 'shiny' && !isAdvanced(s)) throw fail('invalid_mode',400);
     if (s.round === body.round + 1 && s.phase === 'playing') return {arcade:view(s),replayed:true};
@@ -174,9 +198,9 @@ function createVerifiedArcade({pokemon, secret, clock = () => new Date(), random
   }
   async function finish(c,who,body) {
     const s = await current(c,who,body);
-    if (s.mode !== 'higher-lower-rush') throw fail('invalid_mode',400);
+    if (s.mode !== 'higher-lower-rush' && !isLetter(s)) throw fail('invalid_mode',400);
     if (s.phase === 'over') return {arcade:view(s),replayed:true};
-    if (!games.expire(s)) throw fail('round_wait');
+    if (!expireAny(s)) throw fail('round_wait');
     await save(c,who,s); return {arcade:view(s),...verifiedTimedEarning(s)};
   }
   async function abandon(c,who,body) {

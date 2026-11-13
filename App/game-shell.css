@@ -3111,3 +3111,47 @@ body.reduce-motion .sv-veil,body.reduce-motion .sv{animation:none}
 #pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-card {padding:4px 2px 6px;border-radius:14px;font-size:.72rem;line-height:1.15;}
 #pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-card img {width:44px;height:44px;}
 #pokdle-app.design-refresh #screen-type-combo .tc-gameover .tc-found-card span {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* 🔗 Dernière lettre (13/11/2026, maquette validée). */
+#screen-last-letter .ll-status{text-align:center;color:var(--ui-muted,#6b6472);font-weight:700;margin:18px 0}
+#screen-last-letter .ll-meta{display:flex;justify-content:space-between;gap:8px;margin:2px 0 8px}
+#screen-last-letter .ll-pill{background:#fff;border:1px solid #E6DCCD;border-radius:999px;padding:4px 12px;font-weight:900;font-size:.88rem}
+#screen-last-letter .ll-timer{height:9px;border-radius:9px;background:#E8DFD1;overflow:hidden;margin-bottom:12px}
+#screen-last-letter .ll-timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#4069E0,#7C5BD6);border-radius:9px}
+#screen-last-letter .ll-timer i.is-low{background:linear-gradient(90deg,#E0533F,#F08A3C)}
+#screen-last-letter .ll-chain{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+#screen-last-letter .ll-bub{display:flex;align-items:center;gap:8px;max-width:84%;padding:5px 12px 5px 6px;border-radius:16px;background:#fff;border:1px solid #EADFCE}
+#screen-last-letter .ll-bub img{width:40px;height:40px;object-fit:contain;flex:none}
+#screen-last-letter .ll-bub b{display:block;font-size:1rem;line-height:1.1}
+#screen-last-letter .ll-bub small{display:block;font-size:.72rem;color:var(--ui-muted,#6b6472);font-weight:800}
+#screen-last-letter .ll-bub.is-me{align-self:flex-end;background:#EAF0FF;border-color:#C9D6FF}
+#screen-last-letter .ll-bub.is-bot{align-self:flex-start}
+#screen-last-letter .ll-last{color:#fff;background:#4069E0;border-radius:6px;padding:0 3px;margin-left:1px}
+#screen-last-letter .ll-stuck{align-self:center;font-size:.82rem;font-weight:900;color:#1E6B35;background:#E3F5E7;border-radius:999px;padding:3px 12px}
+#screen-last-letter .ll-note{text-align:center;font-weight:800;font-size:.88rem;margin:0 0 8px;color:var(--ui-muted,#6b6472)}
+#screen-last-letter .ll-note.is-good{color:#1E6B35}
+#screen-last-letter .ll-ask{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#2E2A33;color:#fff;border-radius:18px;padding:11px 14px;margin:4px 0 10px;font-family:Fredoka,Nunito,sans-serif;font-size:1.15rem}
+#screen-last-letter .ll-big{display:inline-grid;place-items:center;min-width:38px;height:38px;padding:0 6px;border-radius:10px;background:#FFD45C;color:#2E2A33;font-size:1.45rem}
+#screen-last-letter .ll-sec{margin-left:auto;font-family:Nunito,sans-serif;font-weight:900;font-size:.95rem;opacity:.85}
+#screen-last-letter .ll-form{display:flex;gap:8px;align-items:flex-start}
+#screen-last-letter .ll-field{position:relative;flex:1}
+#screen-last-letter .ll-field input{width:100%;box-sizing:border-box;min-height:48px;border:2px solid #4069E0;border-radius:14px;padding:10px 12px;font-weight:800;font-size:1rem;background:#fff;color:#2E2A33}
+#screen-last-letter .ll-field input.is-wrong{animation:llShake .3s}
+#screen-last-letter .ll-form>.btn-blue{min-height:48px;padding:0 18px;border-radius:14px}
+#screen-last-letter .ll-ac{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;display:flex;flex-direction:column;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(46,42,51,.18);overflow:hidden}
+#screen-last-letter .ll-ac:empty{display:none}
+#screen-last-letter .ll-ac button{display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:#fff;text-align:left;font-weight:800;font-size:.95rem;color:#2E2A33;cursor:pointer}
+#screen-last-letter .ll-ac button+button{border-top:1px solid #F0E8DC}
+#screen-last-letter .ll-ac img{width:28px;height:28px;object-fit:contain}
+#screen-last-letter .ll-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0 12px}
+#screen-last-letter .ll-playing .ll-intro{display:none}
+#screen-last-letter .ll-foot small{color:var(--ui-muted,#6b6472);font-size:.78rem}
+#screen-last-letter .ll-over{text-align:center}
+#screen-last-letter .ll-over h3{margin:4px 0}
+#screen-last-letter .ll-final{font-family:Fredoka,Nunito,sans-serif;font-size:3rem;font-weight:700;color:#4B2FA0;line-height:1.1}
+#screen-last-letter .ll-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0 14px}
+#screen-last-letter .ll-chain.is-recap{max-width:520px;margin:0 auto;text-align:left}
+@keyframes llShake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){#screen-last-letter .ll-field input.is-wrong{animation:none}}
+#pokdle-app.theme-dark #screen-last-letter :is(.ll-bub,.ll-pill,.ll-field input,.ll-ac,.ll-ac button){background:#2c283c;color:#F3EEF8;border-color:#514758}
+#pokdle-app.theme-dark #screen-last-letter .ll-bub.is-me{background:#2E3A66;border-color:#4A5A99}

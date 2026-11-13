@@ -59,8 +59,12 @@ test('the window shows the steps of the device in hand, and a real button where 
   assert.match(load({ device: 'iphone', standalone: true }).c.installWindowHtml(), /déjà installé/);
 });
 
-test('the home card: from the third day with a visit, never once installed, opened or closed', () => {
-  const { c, store, listeners } = load({ device: 'iphone' });
+test('the home card: from the third day with a visit (second on iPhone), never once installed, opened or closed', () => {
+  // 13/11/2026 : sur iPhone, la barre de Safari flotte sur le bas de la page ; la carte y arrive dès le 2e jour.
+  const phone = load({ device: 'iphone' });
+  phone.c.today = '2026-11-01'; assert.equal(phone.c.installCardWanted(), false);
+  phone.c.today = '2026-11-02'; assert.equal(phone.c.installCardWanted(), true);
+  const { c, store, listeners } = load({ device: 'android' });
   c.today = '2026-11-01'; assert.equal(c.installCardWanted(), false);
   assert.equal(c.installCardWanted(), false, 'the same day counts once');
   c.today = '2026-11-02'; assert.equal(c.installCardWanted(), false);

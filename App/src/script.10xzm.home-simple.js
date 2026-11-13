@@ -16,7 +16,7 @@ var HOME_TILE_MODES = {
   startNormalGame: 'normal', startPixelGame: 'pixel', startDescriptionMode: 'description', startCryGame: 'cry',
   startMysteryStatGame: 'mystery', openDraftScoreAttackMode: 'draft', openTypeComboSolo: 'typecombo',
   openSpeedrunMode: 'speedrun', openQuiEstCeMode: 'quiestce', openPetitBacMode: 'petitbac', openShinyMode: 'shiny',
-  startWordleTraining: 'wordletraining'
+  startWordleTraining: 'wordletraining', openLastLetterMode: 'lastletter'
 };
 var HOME_TILE_SOURCES = { 'higher-lower': 'higherlower', 'poke-connections': 'connections' };
 

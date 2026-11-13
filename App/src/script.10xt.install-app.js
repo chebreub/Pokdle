@@ -129,7 +129,9 @@ function installCardWanted() {
   if (installIsStandalone() || installStore(INSTALL_CARD_KEY)) return false;
   // On a PC browser with no install prompt (Firefox…), the card would only explain a dead end.
   if (installPlatform() === 'pc' && !installPromptEvent) return false;
-  return installVisitDays() >= 3;
+  // 13/11/2026 : sur iPhone dans Safari, la barre d'adresse d'iOS 26 flotte par-dessus le bas de la page ; en appli
+  // elle n'existe pas. La carte arrive donc dès le 2e jour de visite sur iPhone (3e ailleurs).
+  return installVisitDays() >= (installPlatform() === 'iphone' ? 2 : 3);
 }
 function renderInstallHomeCard() {
   var home = document.getElementById('screen-config');

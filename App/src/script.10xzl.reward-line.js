@@ -10,14 +10,14 @@ var REWARD_GOLD = {
   'higher-lower': 'série de 15 ou plus', 'higher-lower-rush': '25 points ou plus', odd: '10 énigmes ou plus',
   weight: 'série de 10 ou plus', petitbac: '6 bonnes réponses ou plus', shiny: '20 bonnes réponses ou plus',
   'poke-connections': 'les 4 groupes trouvés', typecombo: '10 points ou plus', 'stat-clash': 'une victoire',
-  'stat-auction': 'une victoire', draft: 'palier Elite (550+)'
+  'stat-auction': 'une victoire', draft: 'palier Elite (550+)', lastletter: '20 points ou plus'
 };
 // Le nom de la source côté serveur (mode:<…>) quand il diffère du mode.
 var REWARD_SOURCE = { 'higher-lower': 'higherlower', 'higher-lower-rush': 'higherlower', 'poke-connections': 'connections', 'stat-auction': 'statauction', 'stat-clash': 'statclash' };
 var REWARD_SCREENS = {
   'screen-type-combo': 'typecombo', 'screen-speedrun': 'speedrun', 'screen-poke-connections': 'poke-connections',
   'screen-qui-est-ce': 'quiestce', 'screen-odd-one-out': 'odd', 'screen-stat-auction': 'stat-auction',
-  'screen-stat-clash': 'stat-clash', 'screen-draft-score-attack': 'draft', 'screen-shiny': 'shiny'
+  'screen-stat-clash': 'stat-clash', 'screen-draft-score-attack': 'draft', 'screen-shiny': 'shiny', 'screen-last-letter': 'lastletter'
 };
 function rewardModeNow() {
   var screen = document.body && document.body.dataset.screen;

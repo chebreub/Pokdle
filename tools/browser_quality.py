@@ -102,7 +102,7 @@ def main():
       expect(page.locator('#home-games-grid [data-args=\'["startPixelGame"]\']').is_visible(),'Guess filter omits Pixel')
       page.locator('#home-game-filters button').filter(has_text='Arcade').click()
       play=page.locator('#home-games-grid .mode-tile').evaluate_all('(els)=>els.map(e=>e.dataset.args)')
-      expect(len(play)==10 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
+      expect(len(play)==11 and any('openDraftScoreAttackMode' in args for args in play) and any('openPokeConnectionsMode' in args for args in play),'Jouer filter should gather quiz, arcade and Draft games: '+repr(play))
       page.evaluate('openLoginWelcome()')
       expect(page.locator('.login-welcome a[href="/auth/discord"]').is_visible(),'Existing Discord provider missing')
       expect(page.locator('.login-welcome [data-action="closeOverlayModal"]').is_visible(),'Guest option missing')
@@ -284,7 +284,7 @@ def main():
     def tile_art():
      # Every game card shows its mascot and a drawn object for its mechanic.
      tiles=page.locator('#screen-all-modes .mode-tile:visible')
-     expect(tiles.count()==22,'Solo catalogue should list 22 games: '+str(tiles.count()))
+     expect(tiles.count()==23,'Solo catalogue should list 23 games: '+str(tiles.count()))
      cry=page.locator('#screen-all-modes .mode-tile[data-args=\'["startCryGame"]\']')
      cry.scroll_into_view_if_needed()
      sprite=cry.locator('.mode-tile-sprite').first
@@ -310,7 +310,7 @@ def main():
      labels=[t.strip() for t in chips.all_inner_texts()]
      expect(len(labels)==4 and labels[0].startswith('Tous') and labels[1].startswith('Deviner') and labels[2].startswith('Arcade') and labels[-1].startswith('Outils'),'Family chips should be Tous, Deviner, Jouer, Outils: '+repr(labels))
      chips.filter(has_text='Arcade').click()
-     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==13,'Jouer chip does not narrow the list')
+     expect(page.locator('#screen-all-modes .mode-tile:visible').count()==14,'Jouer chip does not narrow the list')
      chips.filter(has_text='Outils').click()
      expect(page.locator('#screen-all-modes .mode-tile[data-args=\'["openTypeChartScreen"]\']').is_visible(),'Tools chip does not reach the type chart')
      chips.filter(has_text='Tous').click()
