@@ -98,7 +98,7 @@ test('wired in the server, the admin panel, the page and the privacy page', () =
   const admin = read('lib/admin-panel.js');
   assert.match(admin, /app\.post\("\/admin\/survey", form/);
   assert.match(admin, /app\.post\("\/admin\/survey\/stop", form/);
-  assert.match(admin, /\$\{newsSection\(news, day\)\}\$\{surveyHtml\}/);
+  assert.match(admin, /\[\[newsSection\(news, day\)\], \[surveyHtml\]/);
   const js = read('src/script.10xzzw.survey.js');
   assert.match(js, /fetch\('\/api\/survey'/);
   assert.match(js, /svPost\('\/api\/survey\/skip'/);
