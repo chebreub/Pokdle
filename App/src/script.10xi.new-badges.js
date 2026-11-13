@@ -5,6 +5,7 @@
 var NEW_GAME_BADGES = [
   { selector: '[data-args=\'["openShinyMode"]\']', until: '2026-11-13' },
   { selector: '[data-args=\'["openLastLetterMode"]\']', until: '2026-11-27' },
+  { selector: '[data-args=\'["openRankThemMode"]\']', until: '2026-11-27' },
   { selector: '[data-args=\'["dessin"]\']', until: '2026-11-12' },
 ];
 

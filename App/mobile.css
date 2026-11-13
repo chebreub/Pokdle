@@ -1223,13 +1223,3 @@
     display:block!important;visibility:hidden;pointer-events:none;
   }
 }
-
-/* Safari iPhone (iOS 26), essai ?navtest=1 (13/11/2026) : sous le menu du bas, un fond en fondu (couleur du fond de la
-   page, thème sombre compris) jusqu'au bas de l'écran, pour que la page ne se voie plus entre notre menu et la barre
-   flottante de Safari. Voir script.10zzzzi.ios-safe-nav.js. */
-#ios-safe-nav-fade {display:none;}
-@media (max-width:640px) {
-  html.ios-safe-nav #ios-safe-nav-fade {display:block;position:fixed;left:0;right:0;bottom:0;height:calc(env(safe-area-inset-bottom) + 84px);z-index:1990;pointer-events:none;
-    background:linear-gradient(to bottom,transparent,var(--ios-fade-c,#FFF8EF) 55%);}
-  html.ios-safe-nav body.mobile-keyboard-open #ios-safe-nav-fade {display:none;}
-}

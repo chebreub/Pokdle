@@ -140,7 +140,9 @@ const GOLD = Object.freeze({
   typecombo: AT_LEAST(10), "stat-clash": ({ result }) => result === "win", "stat-auction": ({ result }) => result === "win", draft: AT_LEAST(550),
   "poke-connections": ({ result, score }) => result === "win" && score >= 4,
   // 🔗 Dernière lettre (13/11/2026) : Super Ball à 20 points.
-  lastletter: AT_LEAST(20)
+  lastletter: AT_LEAST(20),
+  // 🔢 Classe-les (13/11/2026) : Super Ball à 32 / 40.
+  rankthem: AT_LEAST(32)
 });
 // Les jeux du jour passent par leur propre vérification, pas par une déclaration du navigateur.
 const ARCADE = Object.freeze([...Object.keys(HISTORY_TO_LAUNCH).filter((mode) => !["daily", "challenge"].includes(mode)), "draft"]);
