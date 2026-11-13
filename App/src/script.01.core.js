@@ -2149,8 +2149,7 @@ function getPartyModePool() {
     { key: "quiz", label: "Quiz Pokémon", launch: startQuizGame, canLaunch: () => true },
     { key: "mystery", label: "Stat Mystère", launch: startMysteryStatGame, canLaunch: () => basePool.length > 0 },
     { key: "weight", label: "Duel de poids", launch: startWeightBattle, canLaunch: () => noAltPool.length >= 2 },
-    { key: "evolution", label: "Chaîne d'évolution", launch: startEvolutionChainGame, canLaunch: () => hasPartyEvolutionCandidate() },
-    { key: "order", label: "Ordre Pokédex", launch: startPokedexOrderGame, canLaunch: () => getPokedexOrderCandidates(noAltPool).length > 0 },
+    // Chaîne d'évolution et Ordre Pokédex retirés le 13/11/2026 (« bcp trop simple », Kayan).
     { key: "description", label: "Description Pokédex", launch: startDescriptionMode, canLaunch: () => basePool.length > 0 },
     { key: "odd", label: "Intrus Pokémon", launch: openOddOneOutMode, canLaunch: () => true },
     // Modes à écran dédié (résolus via notifyPartyRoundFromScreenMode à la fin de leur run).

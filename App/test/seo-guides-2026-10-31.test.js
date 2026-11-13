@@ -128,7 +128,7 @@ test('the generations guide: every number range, count and record comes from the
   assert.match(text, /La 5e, celle d’Unys, avec 156 nouveaux Pokémon/);
   assert.match(text, /La 6e, celle de Kalos, avec 72 nouveaux Pokémon/);
   assert.match(text, /Bulbizarre \(n° 1\), Germignon \(n° 152\), Arcko \(n° 252\)… Seule exception, la 5e commence par Victini \(n° 494\)/);
-  assert.match(JSON.stringify(GAMES.find((game) => game.slug === 'ordre-pokedex').tips), /la 5e commence par Victini, n° 494/);
+  assert.match(JSON.stringify(GAMES.find((game) => game.slug === 'quiz-pokemon').tips), /Bulbizarre n° 1, Germignon n° 152, Arcko n° 252/);
   assert.deepEqual([1, 152, 252].map((id) => byId(id).name), ['Bulbizarre', 'Germignon', 'Arcko']);
   const regions = read('src/script.10d.pokedex-collection.js').match(/POKEDEX_COLLECTION_REGIONS = \[([^\]]+)\]/)[1].replace(/'/g, '').split(',');
   assert.deepEqual(GENERATIONS.map((g) => g.region), regions, 'the region names of the site');

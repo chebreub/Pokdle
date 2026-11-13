@@ -901,6 +901,9 @@ function finalizeTypeComboGame() {
     try { awardXp(50, "Record Combo de types"); } catch (e) {}
   }
   renderTypeComboScreen();
+  // Stats : la fin de partie n'était jamais comptée (« 0 fin » dans /admin/stats, 12/11/2026).
+  // Seulement le compteur anonyme : rien d'autre ne change (pas d'historique, de Ball ni de classement en plus).
+  try { if (typeof trackUsage === "function") trackUsage("complete:typecombo:" + (st.solved >= 5 ? "win" : "loss")); } catch (e) {}
   if (typeof submitLeaderboardResult === "function" && st.score > 0) submitLeaderboardResult("typecombo", st.score);
   if (typeof showGameFeelResult === "function") {
     showGameFeelResult({ mode: "type-combo", result: st.solved >= 5 ? "win" : "loss", attempts: st.score, targetName: st.solved + " combos · " + st.score + " pts" }, []);
@@ -961,8 +964,10 @@ function renderTypeComboScreen() {
         '<h3>⏱️ Temps écoulé</h3>' +
         '<div class="tc-final-score">' + st.score + '</div>' +
         '<p>' + st.solved + ' combos réussis' + (isRecord ? ' · <b>🏆 Nouveau record !</b>' : (' · record : ' + st.highScore)) + '</p>' +
-        (st.found && st.found.length ? typeComboFoundHtml(st.found) : '') +
+        // 13/11/2026 : « Rejouer » juste sous le score ; la liste des Pokémon trouvés vient après, en grille serrée
+        // (elle s'empilait en une seule colonne et repoussait les boutons tout en bas).
         '<div class="tc-actions"><button class="btn-blue" type="button" data-action="startTypeComboGame">🔁 Rejouer</button><button class="btn-ghost" type="button" data-action="goToConfig">← Retour</button></div>' +
+        (st.found && st.found.length ? typeComboFoundHtml(st.found) : '') +
       '</div>';
     return;
   }

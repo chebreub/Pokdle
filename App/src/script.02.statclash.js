@@ -1830,9 +1830,14 @@ async function startStatClashBotRound() {
 
 function startStatClashBotGame() {
   if (!statClashState) return;
+  // 13/11/2026 : sans règle choisie, la partie ne se lançait pas (« ⚡ Partie rapide » ne faisait rien, seul un petit
+  // texte en bas de l'écran le disait). Une règle est maintenant tirée au hasard et la partie part tout de suite.
   if (statClashState.houseRuleEnabled && !STAT_CLASH_IMPOSABLE_RULE_IDS.has(statClashState.pendingImposedRuleBySide?.left)) {
-    statClashState.statusText = "Choisis une règle à imposer au bot avant de lancer.";
-    return renderStatClashScreen();
+    const drawn = getRandomStatClashRuleFromSet(STAT_CLASH_IMPOSABLE_RULE_IDS);
+    if (drawn) {
+      statClashState.pendingImposedRuleBySide = { ...(statClashState.pendingImposedRuleBySide || {}), left: drawn.id };
+      if (typeof showToast === "function") showToast("🎲 Règle tirée au hasard : " + drawn.label);
+    }
   }
   resetStatClashRuntime();
   statClashState.mode = "bot";

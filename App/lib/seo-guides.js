@@ -190,8 +190,8 @@ const GUIDES = [
     description: 'De Kanto à Paldea : les 9 générations Pokémon, leurs régions, leurs premiers jeux, leur année et les numéros du Pokédex de chacune.',
     h1: 'Les 9 générations Pokémon, de Kanto à Paldea',
     lead: 'Depuis 1996, chaque génération apporte une nouvelle région et de nouveaux Pokémon : 1025 en tout, sur 9 générations. Voici le tableau complet, avec les numéros du Pokédex de chacune.',
-    cta: { href: '/?jeu=ordre-pokedex', label: 'S’entraîner à l’Ordre Pokédex' },
-    games: ['ordre-pokedex', 'speedrun-pokedex', 'quiz-pokemon'],
+    cta: { href: '/?jeu=speedrun-pokedex', label: 'S’entraîner au Speedrun Pokédex' },
+    games: ['speedrun-pokedex', 'quiz-pokemon', 'devine-le-pokemon'],
     sections: [
       { h2: 'Le tableau des générations', p: ['Les années sont celles de la sortie au Japon. Les numéros sont ceux du Pokédex national.'], table: 'generations' },
       {
@@ -222,7 +222,7 @@ const GUIDES = [
     h1: 'Les starters Pokémon de chaque génération',
     lead: 'Au début de chaque aventure, on choisit un Pokémon parmi trois : un Plante, un Feu et un Eau. Voici les 27 starters, de Kanto à Paldea, avec leur évolution finale.',
     cta: { href: '/?jeu=devine-le-pokemon', label: 'Deviner des Pokémon' },
-    games: ['devine-le-pokemon', 'evolution-pokemon', 'pokemon-pixelise'],
+    games: ['devine-le-pokemon', 'pokemon-pixelise', 'quiz-pokemon'],
     sections: [
       {
         h2: 'Le triangle Plante, Feu, Eau',

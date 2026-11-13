@@ -33,9 +33,6 @@ test('tableau des scores et verdict de la manche', () => {
   assert.match(clash, /remporte la manche/);
 });
 
-test('la carte « À découvrir » décrit bien Évolution et Ordre Pokédex', () => {
-  assert.doesNotMatch(disc, /Remets la famille dans le bon ordre/);
-  assert.doesNotMatch(disc, /Classe des Pokémon dans l’ordre/);
-  assert.match(disc, /trouve le Pokémon qui manque/);
-  assert.match(disc, /trouve le Pokémon qui se cache entre les deux/);
+test('Évolution et Ordre Pokédex ne sont plus proposés par la carte « À découvrir » (retirés le 13/11)', () => {
+  assert.doesNotMatch(disc, /startEvolutionChainGame|startPokedexOrderGame/);
 });
