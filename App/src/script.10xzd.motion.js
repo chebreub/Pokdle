@@ -141,7 +141,24 @@ wildAnimate = function (scene, ball, shakes, caught) {
   mon.style.animation = "none";
   mon.style.transformOrigin = "50% " + Math.round(((cy - 14 - (mr.top - sr.top)) / mr.height) * 100) + "%";
   return new Promise((resolve) => {
-    const run = moRunner(() => { wildSkipAnim = null; resolve(); });
+    const effects = [];
+    const pulse = (x, y, groundPulse) => {
+      const ring = document.createElement("i");
+      ring.className = "mo-capture-ring" + (groundPulse ? " is-ground" : "");
+      ring.setAttribute("aria-hidden", "true");
+      ring.style.left = x + "px"; ring.style.top = y + "px";
+      effects.push(ring); stage.appendChild(ring);
+      moAnim(ring, groundPulse ? [
+        { opacity: .8, transform: "scale(.2)" }, { opacity: 0, transform: "scale(1.6)" }
+      ] : [
+        { opacity: 0, transform: "scale(1.4) rotate(-30deg)" },
+        { opacity: 1, offset: .25 }, { opacity: 0, transform: "scale(.12) rotate(80deg)" }
+      ], { duration: groundPulse ? 420 : 600, easing: MO_OUT }).then(() => ring.remove());
+    };
+    const run = moRunner(() => {
+      effects.forEach(node => { node.getAnimations().forEach(a => a.cancel()); node.remove(); });
+      wildSkipAnim = null; resolve();
+    });
     wildSkipAnim = run.stop;
     (async () => {
       // 1. Élan : la Ball monte dans le champ et recule un peu.
@@ -169,6 +186,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       await moAnim(mon, [{ filter: "brightness(1) invert(0) drop-shadow(0 0 0 rgba(255,77,77,0))" }, { filter: "brightness(0) invert(1) drop-shadow(0 0 14px rgba(255,77,77,.85))" }], { duration: 240 });
       if (run.over) return;
       const bx = cx, by = cy - 14;
+      pulse(bx, by, false);
       beam.innerHTML = Array.from({ length: 8 }, (_, i) => {
         const a = (i / 8) * Math.PI * 2 + 0.3;
         return '<line x1="' + Math.round(bx + Math.cos(a) * mr.width * 0.55) + '" y1="' + Math.round(by + Math.sin(a) * mr.height * 0.55) + '" x2="' + Math.round(bx) + '" y2="' + Math.round(by) + '"/>';
@@ -181,7 +199,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       // 4. La Ball se referme, tombe et rebondit (écrasée à l'arrivée).
       moAnim(top, [{ transform: "rotate(-48deg)" }, { transform: "rotate(0)" }], { duration: 160, easing: MO_IN });
       moAnim(shadow, [{ opacity: 0, transform: "translateX(-50%) scale(.4)" }, { opacity: 1, transform: "translateX(-50%) scale(1)" }], { duration: 420 });
-      moSfx("close"); setTimeout(() => { if (!run.over) moSfx("land"); }, fxMs(400));
+      moSfx("close"); setTimeout(() => { if (!run.over) { moSfx("land"); pulse(cx, ground + 22, true); } }, fxMs(400));
       await moAnim(el, [{ transform: at(cx, cy - 14, "scale(.84) rotate(-12deg)") },
         { transform: at(cx, ground, "scale(.9,.72)"), offset: .55, easing: MO_OUT },
         { transform: at(cx, ground - 32, "scale(.82,.88)"), offset: .78, easing: MO_IN },
@@ -191,8 +209,18 @@ wildAnimate = function (scene, ball, shakes, caught) {
       // 5. Les balancements, avec des pauses (le suspense).
       for (let i = 0; i < shakes; i++) {
         if (!(await run.wait(380))) return;
-        const r = i % 2 ? 22 : -22;
+        const r = (i % 2 ? 1 : -1) * (22 + i * 5);
         moSfx("tick");
+        moAnim(el.querySelector(".mo-btn"), [
+          { fill: "#fff", filter: "drop-shadow(0 0 0 #ff5948)" },
+          { fill: "#ff5948", filter: "drop-shadow(0 0 5px #ff5948)", offset: .35 },
+          { fill: "#fff", filter: "drop-shadow(0 0 0 #ff5948)" }
+        ], { duration: 520 });
+        moAnim(shadow, [
+          { transform: "translateX(-50%) scale(1)" },
+          { transform: "translateX(calc(-50% + " + Math.round(r * .35) + "px)) scale(.85)", offset: .35 },
+          { transform: "translateX(-50%) scale(1)" }
+        ], { duration: 520 });
         await moAnim(el, [{ transform: at(cx, ground, "scale(.82) rotate(0)") },
           { transform: at(cx + r * 0.35, ground, "scale(.82) rotate(" + r + "deg)"), offset: .35 },
           { transform: at(cx - r * 0.1, ground, "scale(.82) rotate(" + (-r * 0.3) + "deg)"), offset: .7 },
@@ -203,6 +231,7 @@ wildAnimate = function (scene, ball, shakes, caught) {
       if (caught) {
         // 6a. « Clic » : le bouton brille, des étoiles sortent.
         moSfx("caught"); stage.classList.add("is-caught");
+        moAnim(el.querySelector(".mo-btn"), [{ fill: "#fff" }, { fill: "#62df91", filter: "drop-shadow(0 0 7px #62df91)" }], { duration: 180 });
         moAnim(el, [{ transform: at(cx, ground, "scale(.82)") }, { transform: at(cx, ground, "scale(.94,.72)") }, { transform: at(cx, ground, "scale(.82)") }], { duration: 260, easing: MO_BACK });
         moAnim(el.querySelector(".mo-ball-svg"), [{ filter: "brightness(1)" }, { filter: "brightness(1.5) drop-shadow(0 0 10px #fff)" }, { filter: "brightness(.9)" }], { duration: 520 });
         moStars(stage, cx, ground - 18, 3);
