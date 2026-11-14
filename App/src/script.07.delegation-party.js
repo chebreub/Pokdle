@@ -104,7 +104,7 @@ function copyChallengeLink() {
   if (!challengeSelected) return;
 
   const encoded = btoa(String(challengeSelected.id));
-  const url = `${window.location.origin}${window.location.pathname}?defi=${encoded}`;
+  const url = `${window.location.origin}${i18nSharePath()}?defi=${encoded}`;
 
   navigator.clipboard.writeText(url).then(() => {
     document.getElementById("challenge-copied").classList.remove("hidden");

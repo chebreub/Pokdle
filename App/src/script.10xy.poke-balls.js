@@ -314,7 +314,7 @@ if (typeof goToConfig === "function") {
   };
 }
 function initBalls() {
-  if (location.pathname !== "/" && location.pathname !== "/index.html") return;
+  if (location.pathname !== "/" && location.pathname !== "/index.html" && !i18nPathLang()) return;
   renderBallHeader();
   refreshBalls({ announce: true });
 }

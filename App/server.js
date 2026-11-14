@@ -1252,7 +1252,9 @@ function recordVisitDb() {
   pgPool.query("INSERT INTO visits (day, hits) VALUES (CURRENT_DATE, 1) ON CONFLICT (day) DO UPDATE SET hits = visits.hits + 1").catch(() => {});
 }
 const sharePreview = require("./lib/share-preview");
-function sendIndex(req, res) {
+const homeI18n = require("./lib/home-i18n");
+// lang : "en" ou "es" pour /en et /es (lib/home-i18n.js), rien pour l'accueil français.
+function sendIndex(req, res, lang) {
   // L'index n'est jamais mise en cache : c'est elle qui porte les URLs versionnées.
   res.set("Cache-Control", "no-cache");
   recordVisitDb();
@@ -1267,14 +1269,28 @@ function sendIndex(req, res) {
   if (/^[A-Z0-9]{5}$/.test(partyCode)) recordUsage(preview ? "share:preview" : "share:party-visit", null, usageSegmentForRequest(req));
   if (challenge) {
     recordUsage(preview ? "share:preview" : "share:visit", null, usageSegmentForRequest(req));
-    return res.type("html").send(sharePreview.challengePageHtml(fs.readFileSync(file, "utf8"), challenge));
+    return res.type("html").send(sharePreview.challengePageHtml(localized(fs.readFileSync(file, "utf8")), challenge));
   }
-  if (!moved) return res.sendFile(file);
+  if (!moved && !lang) return res.sendFile(file);
+  if (!moved) return res.type("html").send(localized(fs.readFileSync(file, "utf8")));
   res.set("Cache-Control", "no-store");
-  res.type("html").send(injectTransfer(fs.readFileSync(file, "utf8"), moved));
+  res.type("html").send(injectTransfer(localized(fs.readFileSync(file, "utf8")), moved));
+  // Si l'accueil a changé sans que lib/home-i18n.js suive, on sert la page française plutôt qu'une erreur.
+  function localized(html) {
+    if (!lang) return html;
+    try { return homeI18n.homeHtml(html, lang); } catch (error) { console.error("[home-i18n]", error.message); return html; }
+  }
 }
 
 app.get(["/", "/index.html"], (req, res) => sendIndex(req, res));
+// 🌐 /en et /es : le même accueil, présenté en anglais ou en espagnol. « /en/ » casserait les adresses relatives
+// de la page (dist/…) : on renvoie vers « /en ».
+for (const lang of homeI18n.LANGS) {
+  app.get("/" + lang, (req, res) => {
+    if (req.path !== "/" + lang) return res.redirect(301, "/" + lang + req.url.slice(req.path.length));
+    sendIndex(req, res, lang);
+  });
+}
 app.get("/d/:token", async (req, res) => {
   res.set("Cache-Control", "no-cache");
   const file = fs.existsSync(DIST_INDEX) ? DIST_INDEX : SOURCE_INDEX;

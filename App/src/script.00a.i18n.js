@@ -13,12 +13,38 @@ var I18N_LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES' };
 var I18N_AUTO_DETECT = false;
 var i18nLang = 'fr';
 
+// La langue portée par l'adresse de l'accueil : « /en » → 'en', « /es » → 'es', sinon rien.
+function i18nPathLang() {
+  try {
+    var m = /^\/(en|es)\/?$/.exec(location.pathname || '');
+    return m ? m[1] : null;
+  } catch (_e) { return null; }
+}
+// Le chemin de l'accueil pour un lien à partager : toujours « / », pour que l'ami garde sa propre langue.
+function i18nSharePath() {
+  try { return i18nPathLang() ? '/' : (location.pathname || '/'); } catch (_e) { return '/'; }
+}
+// Sur un accueil (/, /en, /es), l'adresse suit la langue choisie dans 🌐 (sinon recharger /en remettrait l'anglais).
+function i18nSyncHomePath(lang) {
+  try {
+    var path = location.pathname;
+    if (path !== '/' && path !== '/index.html' && !i18nPathLang()) return;
+    var want = lang === 'fr' ? '/' : '/' + lang;
+    if (path !== want) history.replaceState(history.state, '', want + location.search + location.hash);
+  } catch (_e) { /* pas d'historique */ }
+}
+
 function i18nDetect() {
   var pick = null;
   try {
     var q = new URLSearchParams(location.search).get('lang');
     if (q && I18N_LANGS.indexOf(q) >= 0) { pick = q; localStorage.setItem(I18N_KEY, q); }
   } catch (_e) { /* pas d'adresse ou mode privé */ }
+  // 🌐 Les accueils /en et /es (14/11) : l'adresse dit la langue, comme ?lang=.
+  if (!pick) {
+    var fromPath = i18nPathLang();
+    if (fromPath) { pick = fromPath; try { localStorage.setItem(I18N_KEY, fromPath); } catch (_e) { /* mode privé */ } }
+  }
   if (!pick) { try { var saved = localStorage.getItem(I18N_KEY); if (I18N_LANGS.indexOf(saved) >= 0) pick = saved; } catch (_e) { /* mode privé */ } }
   if (!pick && I18N_AUTO_DETECT && typeof navigator !== 'undefined') {
     var nav = String((navigator.languages && navigator.languages[0]) || navigator.language || '').slice(0, 2).toLowerCase();

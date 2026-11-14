@@ -65,7 +65,7 @@ test('lot 6b : 5 pages de jeux en anglais et en espagnol, mêmes règles que la 
       assert.equal(page.tips.length, (frGame.tips || []).length, fr + ' ' + lang + ' astuces');
       const html = render.renderGamePageI18n(fr, lang);
       assert.match(html, new RegExp('<html lang="' + lang + '">'));
-      assert.match(html, new RegExp('href="/\\?lang=' + lang + '&amp;jeu=' + fr + '"'), 'le bouton ouvre le jeu dans la langue');
+      assert.match(html, new RegExp('href="/' + lang + '\\?jeu=' + fr + '"'), 'le bouton ouvre le jeu dans la langue');
       assert.match(html, /hreflang="x-default" href="https:\/\/pokdle\.fr\/jeux\//);
     }
     assert.match(render.renderGamePage(frGame), /hreflang="en"/, 'la page française pointe vers sa traduction');
