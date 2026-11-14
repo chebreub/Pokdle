@@ -12,6 +12,10 @@ const WILD_ZONES = [
 const WILD_ZONE_KEY = "pokdle_wild_zone";
 let wildZonePools = null;
 let wildZoneChoice = null;
+let wildZoneFilter = "missing";
+let wildZonePage = 0;
+let wildZoneLoadSerial = 0;
+let wildZoneLoadState = "idle";
 function wildZoneOf(key) { return WILD_ZONES.find((z) => z.key === key) || null; }
 function wildZoneImg(key) { return "/img/zones/" + key + ".png"; }
 function wildZoneRemembered() {
@@ -19,20 +23,36 @@ function wildZoneRemembered() {
 }
 function wildZoneRemember(key) { try { localStorage.setItem(WILD_ZONE_KEY, key); } catch (_e) { /* rien */ } }
 function wildZoneLoadPools() {
-  if (wildZonePools) return Promise.resolve(wildZonePools);
-  return fetch("/api/wild/collection", { credentials: "same-origin" }).then((r) => r.ok ? r.json() : null).then((data) => {
-    if (data && data.ok) {
+  const serial = ++wildZoneLoadSerial;
+  wildZoneLoadState = "loading";
+  // Relecture à chaque ouverture : les échanges / relâchements changent la possession.
+  // Une erreur ne doit jamais afficher une ancienne collection comme si elle était à jour.
+  return fetch("/api/wild/collection", { credentials: "same-origin", cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((data) => {
+    if (serial !== wildZoneLoadSerial) return null;
+    if (data && data.ok && Array.isArray(data.captures) && data.zones && WILD_ZONES.every(z => Array.isArray(data.zones[z.key]))) {
       if (typeof wildSyncAlbum === "function") wildSyncAlbum(data.captures);
-      if (data.zones) wildZonePools = data.zones;
+      wildZonePools = data.zones;
+      wildZoneLoadState = "ready";
+    } else {
+      wildZoneLoadState = "error";
+      return null;
     }
     return wildZonePools;
-  }).catch(() => wildZonePools);
+  }).catch(() => { if (serial === wildZoneLoadSerial) wildZoneLoadState = "error"; return null; });
+}
+function wildOwned(id) {
+  const c = typeof wildCaptures !== "undefined" && wildCaptures && wildCaptures[id];
+  return Boolean(c && (Number(c.normal) > 0 || Number(c.shiny) > 0));
+}
+function wildZoneProgress(key) {
+  if (wildZoneLoadState !== "ready" || !wildCaptures || !Array.isArray(wildZonePools && wildZonePools[key])) return null;
+  const ids = [...new Set(wildZonePools[key].map(Number).filter(id => Number.isInteger(id) && id > 0))];
+  const owned = ids.filter(wildOwned).length;
+  return { ids, owned, total: ids.length, missing: ids.length - owned, percent: ids.length ? Math.round(owned / ids.length * 100) : 0 };
 }
 function wildZoneMissing(key) {
-  const ids = wildZonePools && wildZonePools[key];
-  if (!ids) return null;
-  const caught = typeof wildCaptures !== "undefined" && wildCaptures ? wildCaptures : {};
-  return ids.filter((id) => !caught[id]).length;
+  const progress = wildZoneProgress(key);
+  return progress ? progress.missing : null;
 }
 function wildZoneTypeDots(zone) {
   return zone.types.map((t) => '<i style="background:' + (typeof pokemonTypeColor === "function" ? pokemonTypeColor(t) : "#999") + '" title="' + escapeHtml(t) + '"></i>').join("");
@@ -42,40 +62,100 @@ function wildZoneArt(id) {
   return p ? (typeof pokedexDetailArtwork === "function" ? pokedexDetailArtwork(p, false) : getPokemonSprite(p)) : "";
 }
 
+// Chaînes déjà vérifiées dans le Pokédex local, jamais déduites de numéros voisins.
+// Ce sont des chaînes de trois espèces, pas des familles exhaustives (branches / bébés).
+function wildCollectionChains(id) {
+  if (!wildCaptures || typeof getEvolutionChainCandidates !== "function" || typeof POKEMON_LIST === "undefined") return [];
+  const available = new Set(Object.values(wildZonePools || {}).flat().map(Number));
+  return getEvolutionChainCandidates(POKEMON_LIST).map(chain => ({ chain, owned: chain.filter(p => wildOwned(p.id)).length }))
+    .filter(item => id ? item.chain.some(p => p.id === Number(id)) :
+      item.owned > 0 && item.owned < item.chain.length && item.chain.every(p => wildOwned(p.id) || available.has(p.id)))
+    .sort((a, b) => b.owned - a.owned || a.chain[0].id - b.chain[0].id).slice(0, id ? 1 : 2);
+}
+function wildChainHtml(item) {
+  return '<div class="wz-chain"><div class="wz-chain-mons">' + item.chain.map(p =>
+    '<span class="wz-species' + (wildOwned(p.id) ? '' : ' is-missing') + '" title="' + escapeHtml(p.name) + (wildOwned(p.id) ? ' · Possédé' : ' · Manquant') + '">' +
+    '<img src="' + escapeHtml(wildZoneArt(p.id)) + '" alt="' + escapeHtml(p.name) + (wildOwned(p.id) ? ', possédé' : ', manquant') + '" width="48" height="48" loading="lazy"></span>').join('') +
+    '</div><span><b>Chaîne ' + escapeHtml(item.chain[0].name) + '</b><small>' + item.owned + ' / ' + item.chain.length + ' possédés</small></span></div>';
+}
+function wildZoneCollectionHtml(zone) {
+  if (wildZoneLoadState === "loading" || wildZoneLoadState === "idle") return '<p class="wz-status" role="status">Lecture de ta collection…</p>';
+  if (wildZoneLoadState === "error") return '<p class="wz-status" role="status">Collection indisponible. Tu peux toujours explorer. <button type="button" data-action="wildZoneRetry">Réessayer</button></p>';
+  if (!zone) return '<p class="wz-status">Choisis une zone pour voir les espèces qui te manquent. La rencontre reste aléatoire.</p>';
+  const progress = wildZoneProgress(zone.key);
+  if (!progress) return '';
+  const missing = wildZoneFilter !== "owned";
+  const ids = progress.ids.filter(id => missing ? !wildOwned(id) : wildOwned(id));
+  const pages = Math.max(1, Math.ceil(ids.length / 6));
+  wildZonePage = Math.max(0, Math.min(wildZonePage, pages - 1));
+  const mons = ids.slice(wildZonePage * 6, wildZonePage * 6 + 6).map(id => {
+    const p = wildPokemon(id);
+    return p ? '<span class="wz-species' + (missing ? ' is-missing' : '') + '"><img src="' + escapeHtml(wildZoneArt(id)) + '" alt="" width="48" height="48" loading="lazy"><small>' + escapeHtml(p.name) + '</small></span>' : '';
+  }).join('');
+  return '<section class="wz-preview" aria-label="Collection de la zone"><div class="wz-preview-head"><b>' + escapeHtml(zone.name) + ' · ' + progress.owned + ' / ' + progress.total + ' possédés</b>' +
+    '<div class="wz-filters"><button type="button" data-action="wildZoneSetFilter" data-args=\'["missing"]\' aria-pressed="' + missing + '">Manquants</button>' +
+    '<button type="button" data-action="wildZoneSetFilter" data-args=\'["owned"]\' aria-pressed="' + !missing + '">Possédés</button></div></div>' +
+    '<div class="wz-species-grid">' + (mons || '<p>' + (missing ? 'Toutes les espèces de cette zone sont dans ta collection !' : 'Tes premières captures rempliront cette zone.') + '</p>') + '</div>' +
+    (pages > 1 ? '<div class="wz-pages"><button type="button" data-action="wildZoneTurnPage" data-args="[-1]" aria-label="Espèces précédentes"' + (!wildZonePage ? ' disabled' : '') + '>←</button><span>' + (wildZonePage + 1) + ' / ' + pages + '</span><button type="button" data-action="wildZoneTurnPage" data-args="[1]" aria-label="Espèces suivantes"' + (wildZonePage === pages - 1 ? ' disabled' : '') + '>→</button></div>' : '') +
+    '<small class="wz-preview-note">Possession actuelle · la rencontre reste aléatoire.</small></section>';
+}
+function wildZoneSetFilter(filter) { wildZoneFilter = filter === "owned" ? "owned" : "missing"; wildZonePage = 0; renderWildZonePicker(false); }
+function wildZoneTurnPage(delta) { wildZonePage += delta < 0 ? -1 : 1; renderWildZonePicker(false); }
+function wildZoneRetry() {
+  const request = wildZoneLoadPools();
+  renderWildZonePicker(false);
+  request.then(() => { if (document.querySelector("#wild-scene .wz-pick")) renderWildZonePicker(false); });
+}
+
 // --- L'écran « Où veux-tu chercher ? » ---
-function renderWildZonePicker() {
+function renderWildZonePicker(focus = true) {
   const scene = wildScene();
+  const scroll = scene.querySelector('.wz-pick')?.scrollTop || 0;
+  const active = document.activeElement;
+  const focusAction = scene.contains(active) && active?.dataset.action;
+  const focusArgs = focusAction && active.dataset.args;
   const s = typeof ballState !== "undefined" && ballState ? ballState : null;
   const pick = wildZoneChoice || wildZoneRemembered();
   const zone = wildZoneOf(pick);
   const tiles = WILD_ZONES.map((z) => {
-    const missing = wildZoneMissing(z.key);
+    const progress = wildZoneProgress(z.key);
     return '<button type="button" class="wz-tile' + (z.key === pick ? " is-on" : "") + '" data-action="wildZonePick" data-args=\'["' + z.key + '"]\' aria-pressed="' + (z.key === pick) + '" style="background-image:url(' + wildZoneImg(z.key) + ')">' +
       '<img src="' + escapeHtml(wildZoneArt(z.mascot)) + '" alt="" draggable="false" loading="lazy">' +
-      '<span class="wz-lab"><b>' + escapeHtml(z.name) + '</b><small><span class="wz-dots">' + wildZoneTypeDots(z) + '</span>' +
-      (missing === null ? "" : '<em title="Pokémon que tu n’as pas encore attrapés ici">' + missing + '</em>') + '</small></span></button>';
+      '<span class="wz-lab"><b>' + escapeHtml(z.name) + '</b><small class="wz-type-names">' + escapeHtml(z.types.join(' · ')) + '</small>' +
+      (progress ? '<span class="wz-progress"><span class="wz-meter" aria-hidden="true"><i style="width:' + progress.percent + '%"></i></span><small>' + progress.owned + ' / ' + progress.total + ' possédés</small></span>' : '<small>Collection à vérifier</small>') + '</span></button>';
   }).join("");
   scene.innerHTML = wildHead(s) +
-    '<div class="wz-pick"><h3>Où veux-tu chercher ?</h3>' +
-    '<p>Chaque zone a ses types. En jaune : les Pokémon que tu n’as pas encore attrapés.</p>' +
+    '<div class="wz-pick"><div class="wz-heading"><h3>Où pars-tu aujourd’hui ?</h3><button type="button" class="btn-ghost" data-action="wildOpenAlbum">Mon album →</button></div>' +
+    '<p>Choisis une zone. La rencontre reste une surprise.</p>' +
     '<div class="wz-grid">' + tiles + '</div>' +
     '<button type="button" class="wz-rand' + (pick === "hasard" ? " is-on" : "") + '" data-action="wildZonePick" data-args=\'["hasard"]\' aria-pressed="' + (pick === "hasard") + '">🎲 Au hasard <small>toutes les zones</small></button>' +
-    '<button type="button" class="wz-go" data-action="wildZoneGo">' + (zone ? "Chercher : " + escapeHtml(zone.name) : "Chercher au hasard") + ' →</button>' +
+    '<button type="button" class="wz-go" data-action="wildZoneGo">' + (zone ? "Explorer : " + escapeHtml(zone.name) : "Explorer au hasard") + ' →</button>' +
+    wildZoneCollectionHtml(zone) +
+    (wildZoneLoadState === 'ready' && wildCollectionChains().length ? '<section class="wz-chains"><h4>Des chaînes à compléter</h4><div>' + wildCollectionChains().map(wildChainHtml).join('') + '</div><small>Ces espèces peuvent vivre dans différentes zones.</small></section>' : '') +
     '<p class="wz-note">Gratuit · change de zone à chaque rencontre</p></div>';
-  scene.querySelector(".wz-go")?.focus({ preventScroll: true });
+  if (focus) scene.querySelector(".wz-go")?.focus({ preventScroll: true });
+  else {
+    scene.querySelector('.wz-pick').scrollTop = scroll;
+    Array.from(scene.querySelectorAll('[data-action]')).find(el => el.dataset.action === focusAction && el.dataset.args === focusArgs)?.focus({ preventScroll: true });
+  }
 }
 function wildZonePick(key) {
   wildZoneChoice = key === "hasard" || wildZoneOf(key) ? key : "hasard";
   wildZoneRemember(wildZoneChoice);
+  wildZonePage = 0;
   if (typeof moSfx === "function") moSfx("pop");
-  renderWildZonePicker();
+  renderWildZonePicker(false);
 }
 function wildZoneGo() {
+  if (wildZoneLoadState === 'loading') { ++wildZoneLoadSerial; wildZoneLoadState = 'idle'; }
   const key = wildZoneChoice || wildZoneRemembered();
   wildStartEncounter(key === "hasard" ? null : key);
 }
 window.wildZonePick = wildZonePick;
 window.wildZoneGo = wildZoneGo;
+window.wildZoneSetFilter = wildZoneSetFilter;
+window.wildZoneTurnPage = wildZoneTurnPage;
+window.wildZoneRetry = wildZoneRetry;
 
 // --- La rencontre, dans la zone choisie ---
 function wildStartEncounter(zone) {
@@ -109,8 +189,11 @@ if (typeof openWildGrass === "function") {
     const canMeet = s && s.wild && !s.wild.open && Number(s.wild.left) > 0 && ["poke", "great", "ultra"].some((b) => Number(bag[b]) > 0);
     if (!canMeet) return openWildGrassBeforeZones.apply(this, arguments);
     wildZoneChoice = null;
+    wildZonePage = 0;
+    wildZoneFilter = "missing";
+    const request = wildZoneLoadPools();
     renderWildZonePicker();
-    wildZoneLoadPools().then(() => { if (document.querySelector("#wild-scene .wz-pick")) renderWildZonePicker(); });
+    request.then(() => { if (document.querySelector("#wild-scene .wz-pick")) renderWildZonePicker(false); });
   };
   window.openWildGrass = openWildGrass;
 }

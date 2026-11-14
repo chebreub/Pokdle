@@ -67,6 +67,7 @@ function wildScene() {
   return scene;
 }
 function closeWildGrass() {
+  if (typeof wildZoneLoadState !== "undefined" && wildZoneLoadState === "loading") { ++wildZoneLoadSerial; wildZoneLoadState = "idle"; }
   const scene = document.getElementById("wild-scene");
   if (scene) scene.remove();
   document.body.classList.remove("modal-open");
@@ -170,6 +171,7 @@ function renderWildEncounter(state, message, intro) {
   scene.innerHTML = wildHead(state) +
     '<div class="wild-stage' + (e.shiny ? " is-shiny" : "") + (intro && !wildReducedMotion() ? " is-intro" : "") + '">' +
       wildBackdropHtml() +
+      '<div class="wild-nameplate"><strong>' + name + '</strong><small>N° ' + String(p.id).padStart(3, '0') + ' · ' + escapeHtml([p.type1, p.type2].filter(Boolean).join(' / ')) + '</small></div>' +
       '<img class="wild-mon" src="' + escapeHtml(wildArtwork(p, e.shiny)) + '" data-fallback="' + escapeHtml(getPokemonSprite(p)) + '" alt="' + name + (e.shiny ? " shiny" : "") + '" draggable="false">' +
       (e.shiny ? wildSparklesHtml() : "") +
       '<div class="wild-ball" aria-hidden="true"><div class="wild-ball-arc"><div class="wild-ball-sh">' + ballImg("poke", 48) + '</div></div></div>' +
@@ -178,7 +180,7 @@ function renderWildEncounter(state, message, intro) {
     '</div>' +
     '<div class="wild-panel">' +
       '<p class="wild-line" aria-live="polite">' + (message || (e.prestige ? "🐉 " + name + (e.shiny ? " <b>shiny</b>" : "") + " t’attend ! Trois lancers, aucune capture garantie." : e.legend ? "👑 " + name + (e.shiny ? " <b>shiny</b>" : "") + " se réveille ! Une seule chance cette semaine." : e.shiny ? "✨ Un " + name + " <b>shiny</b> sauvage apparaît !" : "Un " + name + " sauvage apparaît !")) + '</p>' +
-      '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures && wildCaptures[p.id] ? "⚪ Déjà attrapé" : "🆕 Pas encore attrapé !") + '</span></div>' +
+      '<div class="wild-meta">' + wildThrowsHtml(e) + '<span>' + (wildCaptures === null ? "Collection à vérifier" : wildCaptures[p.id] && (Number(wildCaptures[p.id].normal) > 0 || Number(wildCaptures[p.id].shiny) > 0) ? "⚪ Dans ta collection" : "🆕 Absent de ta collection") + '</span></div>' +
       (e.legend && e.expiresAt ? '<p class="wild-note">🕒 Rencontre conservée jusqu’au ' +
         escapeHtml(wildLegendExpiryText(e.expiresAt)) + ' (heure de Paris). Tu peux fermer cet écran et reprendre la même rencontre depuis l’expédition.</p>' : '') +
       wildBallButtons(state, e) +

@@ -38,9 +38,9 @@ if (typeof renderWildEncounter === 'function') {
 
 // --- A · Le lancer, les secousses et la capture ---
 function wowTrail(stage, until) {
-  var last = 0;
+  var last = 0, alive = true, frame = null;
   var tick = function (now) {
-    if (!stage.isConnected || now > until) return;
+    if (!alive || !stage.isConnected || now > until) return;
     var ball = stage.querySelector('.mo-ball');
     if (ball && now - last > 34) {
       last = now;
@@ -53,9 +53,10 @@ function wowTrail(stage, until) {
         setTimeout(function () { dot.remove(); }, wowMs(520));
       }
     }
-    requestAnimationFrame(tick);
+    frame = requestAnimationFrame(tick);
   };
-  requestAnimationFrame(tick);
+  frame = requestAnimationFrame(tick);
+  return function () { alive = false; if (frame !== null) cancelAnimationFrame(frame); };
 }
 function wowSparks(stage, x, y) {
   var html = '';
@@ -80,7 +81,7 @@ if (typeof wildAnimate === 'function') {
     stage.style.setProperty('--wow-gy', Math.round(ground) + 'px');
     var t = wowCaptureTimeline(shakes), timers = [];
     var at = function (ms, fn) { timers.push(setTimeout(fn, wowMs(ms))); };
-    wowTrail(stage, performance.now() + wowMs(t.impact + 60));
+    var stopTrail = wowTrail(stage, performance.now() + wowMs(t.impact + 60));
     at(t.impact, function () { wowSparks(stage, cx, cy - 14); });
     if (shakes > 0) at(t.landed, function () { scene.classList.add('is-wow-tense'); stage.classList.add('is-wow-tense'); });
     if (caught) at(t.click, function () {
@@ -89,9 +90,10 @@ if (typeof wildAnimate === 'function') {
     });
     else at(t.click - 100, function () { scene.classList.remove('is-wow-tense'); stage.classList.remove('is-wow-tense'); });
     var clean = function () {
+      stopTrail();
       timers.forEach(clearTimeout);
       scene.classList.remove('is-wow-tense');
-      if (stage.isConnected) { stage.classList.remove('is-wow-tense'); stage.querySelectorAll('.wow-trail,.wow-spark').forEach(function (n) { n.remove(); }); }
+      if (stage.isConnected) { stage.classList.remove('is-wow-tense'); stage.querySelectorAll('.wow-trail,.wow-spark,.wow-ring,.wow-flash,.wow-caught').forEach(function (n) { n.remove(); }); }
     };
     return wildAnimateBeforeWow.apply(this, arguments).then(function (v) { clean(); return v; }, function (err) { clean(); throw err; });
   };
