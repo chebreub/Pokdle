@@ -80,7 +80,10 @@ function showGenerationHintOnce() {
   try{if(localStorage.getItem(GENERATION_PICKED_KEY))return;}catch(_e){return;}
   generationHintShownThisVisit=true;
   const hint=document.createElement('div');hint.id='generation-hint';hint.className='generation-hint';hint.setAttribute('role','status');
-  hint.textContent='Astuce : choisis ici les générations des Pokémon à deviner.';
+  const hintFr='Astuce : choisis ici les générations des Pokémon à deviner.';
+  // 14/11/2026 : la bulle est posée dans <body>, hors des zones traduites à l'affichage (i18n/ui.json).
+  const hintLang=typeof getLang==='function'?getLang():'fr';
+  hint.textContent=(hintLang!=='fr'&&typeof i18nTranslateText==='function'&&i18nTranslateText(hintFr,hintLang))||hintFr;
   // 12/11/2026 : la bulle s'affichait sous le bouton et cachait la ligne des récompenses (Duel de poids, Stat Clash).
   // Sur PC elle se place à gauche du bouton (sur sa ligne, souvent vide) ; sur téléphone au-dessus (sur l'en-tête
   // du site) ; dessous seulement s'il n'y a pas la place ailleurs.
