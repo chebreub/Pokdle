@@ -171,7 +171,6 @@ function renderWildEncounter(state, message, intro) {
   scene.innerHTML = wildHead(state) +
     '<div class="wild-stage' + (e.shiny ? " is-shiny" : "") + (intro && !wildReducedMotion() ? " is-intro" : "") + '">' +
       wildBackdropHtml() +
-      '<div class="wild-nameplate"><strong>' + name + '</strong><small>N° ' + String(p.id).padStart(3, '0') + ' · ' + escapeHtml([p.type1, p.type2].filter(Boolean).join(' / ')) + '</small></div>' +
       '<img class="wild-mon" src="' + escapeHtml(wildArtwork(p, e.shiny)) + '" data-fallback="' + escapeHtml(getPokemonSprite(p)) + '" alt="' + name + (e.shiny ? " shiny" : "") + '" draggable="false">' +
       (e.shiny ? wildSparklesHtml() : "") +
       '<div class="wild-ball" aria-hidden="true"><div class="wild-ball-arc"><div class="wild-ball-sh">' + ballImg("poke", 48) + '</div></div></div>' +
