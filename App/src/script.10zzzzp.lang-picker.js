@@ -104,6 +104,7 @@ function pickLang(l) {
   closeLangMenu();
   if (l === getLang()) return;
   if (!setLang(l)) return;
+  i18nSyncHomePath(l);
   langUi.bannerClosed = false;
   langRefresh();
   if (typeof showToast === 'function') showToast('🌐 ' + LANG_NAMES[l] + ' · ' + t('lang.saved'));

@@ -1958,7 +1958,7 @@ function partyCopyInviteLink() {
   // DATA-03: step 1, the invitation link was copied (its opening and a real start are counted by the server).
   if (typeof trackUsage === "function") trackUsage("share:party");
   var isDessin = partyRoomState.room?.gameMode === "dessin";
-  var url = location.origin + location.pathname + "?party=" + encodeURIComponent(partyRoomState.code) +
+  var url = location.origin + i18nSharePath() + "?party=" + encodeURIComponent(partyRoomState.code) +
     (isDessin ? "&game=dessin" : "");
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(function () { setPartyStatus(isDessin ? "Lien Dessine-le ! copié." : "Lien copié !"); }, function () { setPartyStatus(url); });
