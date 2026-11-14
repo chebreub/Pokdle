@@ -154,6 +154,12 @@ wildAnimate = function (scene, ball, shakes, caught) {
         const t = i / 12, x = sx + 14 + (cx - sx - 14) * t, y = H - 52 + (cy - (H - 52)) * t - Math.sin(Math.PI * t) * peak;
         path.push({ transform: at(x, y, "rotate(" + Math.round(-t * 720) + "deg) scale(" + (1 - t * 0.2).toFixed(3) + ")"), offset: t });
       }
+      // L'ombre se déplace sur le sol pendant le vol, sans changer sa durée ni le résultat.
+      moAnim(shadow, [
+        { opacity: .28, transform: "translateX(" + (sx + 14 - cx - 22) + "px) scale(1.1)" },
+        { opacity: .1, transform: "translateX(" + ((sx + 14 - cx) / 2 - 22) + "px) scale(.45)", offset: .5 },
+        { opacity: 0, transform: "translateX(-22px) scale(.35)" }
+      ], { duration: 620, easing: "linear" });
       await moAnim(el, path, { duration: 620, easing: "cubic-bezier(.3,.2,.5,1)" });
       if (run.over) return;
       // 3. Impact : la Ball s'ouvre, flash, le Pokémon devient blanc et se fait aspirer par un rayon rouge.
