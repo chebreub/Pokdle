@@ -41,10 +41,35 @@ async function renderNewsTicker() {
   try { items = await newsTickerItems(); } catch (_error) { items = []; }
   if (items.length < 2) { ticker.hidden = true; return; }
   const html = items.map(item => '<button type="button" class="news-ticker-item" data-action="' + escapeHtml(item.action) + '"><span aria-hidden="true">' + escapeHtml(item.icon) + "</span>" + escapeHtml(item.text) + "</button>").join("");
-  // The second copy makes the loop seamless: clickable, but skipped by keyboard and screen readers.
-  track.innerHTML = '<div class="news-ticker-group">' + html + '</div><div class="news-ticker-group" aria-hidden="true">' + html.replaceAll("<button ", '<button tabindex="-1" ') + "</div>";
-  ticker.style.setProperty("--ticker-duration", Math.max(28, items.length * 9) + "s");
+  newsTickerState = { html, count: items.length };
   ticker.hidden = false;
+  newsTickerFill();
+}
+// The second copy makes the loop seamless: clickable, but skipped by keyboard and screen readers.
+// 13/11/2026 : avec peu de messages (2 courts), une série était moins large qu'un grand écran et laissait un
+// vide à droite. Chaque série répète maintenant les messages jusqu'à couvrir la largeur du bandeau ; la durée
+// grandit avec, pour garder la même vitesse.
+let newsTickerState = null;
+function newsTickerFill() {
+  const ticker = document.getElementById("news-ticker"), track = ticker?.querySelector(".news-ticker-track");
+  if (!ticker || !track || !newsTickerState) return;
+  const { html, count } = newsTickerState;
+  const hidden = html.replaceAll("<button ", '<button tabindex="-1" ');
+  track.innerHTML = '<div class="news-ticker-group">' + html + '</div><div class="news-ticker-group" aria-hidden="true">' + hidden + "</div>";
+  const one = track.firstElementChild ? track.firstElementChild.scrollWidth : 0;
+  const wide = ticker.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 0);
+  const repeat = one > 0 && wide > 0 ? Math.min(12, Math.max(1, Math.ceil(wide / one))) : 1;
+  if (repeat > 1) {
+    // Les copies en plus ne sont lues ni au clavier ni par les lecteurs d'écran.
+    const group = html + hidden.replaceAll("<button ", '<button aria-hidden="true" ').repeat(repeat - 1);
+    track.innerHTML = '<div class="news-ticker-group">' + group + '</div><div class="news-ticker-group" aria-hidden="true">' + hidden.repeat(repeat) + "</div>";
+  }
+  ticker.style.setProperty("--ticker-duration", Math.max(28, count * 9) * repeat + "s");
+  ticker.dataset.repeat = String(repeat);
+}
+if (typeof window !== "undefined" && window.addEventListener) {
+  let newsTickerResize = null;
+  window.addEventListener("resize", () => { clearTimeout(newsTickerResize); newsTickerResize = setTimeout(newsTickerFill, 250); });
 }
 if (typeof document !== "undefined") {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(renderNewsTicker, 400));

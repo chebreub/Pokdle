@@ -363,6 +363,11 @@ Kayan change de compte Claude (son compte du travail prend le relais le 14/11 à
 
 ### État au 13/11 au soir
 - `main` est vert. Dernières mises en ligne du 13/11 : pages Google des 3 nouveaux jeux (#407), Combo de types vérifié par le serveur + 🔗 Dernière lettre en Party Room (#408, en ligne 13 h 37), « Tes 3 premiers jours » (#409, en ligne 15 h 58).
+- **⏱ Dernier état, 14/11 vers 0 h 30 (le plus récent : lire ceci d'abord)** :
+  - En ligne : #411 (lot 0, sélecteur 🌐 avec drapeaux, 23 h 28) et #412 (accueil PC « A », 0 h 20).
+  - **#413 en ligne à 0 h 44** (traduction lots 1a, 1b, 6a, 6b) : Kayan doit renvoyer le sitemap dans la Search Console.
+  - **Correctif du bandeau d'actualités** (« go ») : avec 2 messages courts, un vide restait à droite sur grand écran ; chaque série répète maintenant les messages jusqu'à couvrir la largeur (`newsTickerFill` dans `App/src/script.10t.news-ticker.js`, test `news-ticker-fill-2026-11-13`). PR #414 ouverte à 0 h 45 avec cette passation : attendre que la QA complète soit verte puis le « go merge » de Kayan.
+  - **Suite proposée à Kayan (pas encore validée)** : 1) un bandeau « 🇬🇧 Pokédle is available in English · Switch » pour un visiteur dont le navigateur est en anglais ou en espagnol (le site ne change pas tout seul : sans risque pour la QA ni pour Google ; maquette d'abord) ; 2) les autres pages de jeux en `/en/` et `/es/` par petits lots ; 3) Party Room (lot 3).
 - **Fin de soirée du 13/11 (vers 23 h 30)** :
   - **PR #411 « Traduction lot 0 »** (fondations + sélecteur 🌐 avec drapeaux) : Kayan a dit « go merge » ; à merger dès que la QA complète est verte sur son SHA de tête. Si elle n'est pas mergée en arrivant : vérifier la QA, merger (`merge`), prévenir Kayan de la mise en ligne.
   - **Accueil PC « A »** (maquette A validée : « ok a ») : fait et testé, PR à ouvrir juste après #411 (même branche, repartie de `main`). Voir la ligne « 13/11 : 🖥️ Accueil PC « A » » dans l'historique.
